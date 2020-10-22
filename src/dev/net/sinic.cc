@@ -87,7 +87,8 @@ Device::Device(const Params &p)
       rxDmaEvent([this]{ rxDmaDone(); }, name()),
       txDmaEvent([this]{ txDmaDone(); }, name()),
       dmaReadDelay(p.dma_read_delay), dmaReadFactor(p.dma_read_factor),
-      dmaWriteDelay(p.dma_write_delay), dmaWriteFactor(p.dma_write_factor)
+      dmaWriteDelay(p.dma_write_delay), dmaWriteFactor(p.dma_write_factor),
+      sinicDeviceStats(this)
 {
     interface = new Interface(name() + ".int0", this);
     reset();
@@ -96,33 +97,15 @@ Device::Device(const Params &p)
 Device::~Device()
 {}
 
-void
-Device::regStats()
+Device::DeviceStats::DeviceStats(Stats::Group *parent)
+    : Stats::Group(parent, "SinicDevice"),
+      ADD_STAT(totalVnicDistance, "Total vnic distance"),
+      ADD_STAT(numVnicDistance, "Number of vnic distance measurements"),
+      ADD_STAT(maxVnicDistance, "Maximum vnic distance"),
+      ADD_STAT(avgVnicDistance, "Average vnic distance",
+               totalVnicDistance / numVnicDistance),
+      _maxVnicDistance(0)
 {
-    Base::regStats();
-
-    _maxVnicDistance = 0;
-
-    maxVnicDistance
-        .name(name() + ".maxVnicDistance")
-        .desc("maximum vnic distance")
-        ;
-
-    totalVnicDistance
-        .name(name() + ".totalVnicDistance")
-        .desc("total vnic distance")
-        ;
-    numVnicDistance
-        .name(name() + ".numVnicDistance")
-        .desc("number of vnic distance measurements")
-        ;
-
-    avgVnicDistance
-        .name(name() + ".avgVnicDistance")
-        .desc("average vnic distance")
-        ;
-
-    avgVnicDistance = totalVnicDistance / numVnicDistance;
 }
 
 void
@@ -130,7 +113,7 @@ Device::resetStats()
 {
     Base::resetStats();
 
-    _maxVnicDistance = 0;
+    sinicDeviceStats._maxVnicDistance = 0;
 }
 
 Port &
@@ -774,11 +757,11 @@ Device::rxKick()
             rxState = rxBeginCopy;
 
             int vnic_distance = rxFifo.countPacketsBefore(vnic->rxIndex);
-            totalVnicDistance += vnic_distance;
-            numVnicDistance += 1;
-            if (vnic_distance > _maxVnicDistance) {
-                maxVnicDistance = vnic_distance;
-                _maxVnicDistance = vnic_distance;
+            sinicDeviceStats.totalVnicDistance += vnic_distance;
+            sinicDeviceStats.numVnicDistance += 1;
+            if (vnic_distance > sinicDeviceStats._maxVnicDistance) {
+                sinicDeviceStats.maxVnicDistance = vnic_distance;
+                sinicDeviceStats._maxVnicDistance = vnic_distance;
             }
 
             break;
@@ -816,7 +799,7 @@ Device::rxKick()
             if (ip) {
                 DPRINTF(Ethernet, "ID is %d\n", ip->id());
                 vnic->rxDoneData |= Regs::RxDone_IpPacket;
-                rxIpChecksums++;
+                etherDeviceStats.rxIpChecksums++;
                 if (cksum(ip) != 0) {
                     DPRINTF(EthernetCksum, "Rx IP Checksum Error\n");
                     vnic->rxDoneData |= Regs::RxDone_IpError;
@@ -829,14 +812,14 @@ Device::rxKick()
                             tcp->sport(), tcp->dport(), tcp->seq(),
                             tcp->ack());
                     vnic->rxDoneData |= Regs::RxDone_TcpPacket;
-                    rxTcpChecksums++;
+                    etherDeviceStats.rxTcpChecksums++;
                     if (cksum(tcp) != 0) {
                         DPRINTF(EthernetCksum, "Rx TCP Checksum Error\n");
                         vnic->rxDoneData |= Regs::RxDone_TcpError;
                     }
                 } else if (udp) {
                     vnic->rxDoneData |= Regs::RxDone_UdpPacket;
-                    rxUdpChecksums++;
+                    etherDeviceStats.rxUdpChecksums++;
                     if (cksum(udp) != 0) {
                         DPRINTF(EthernetCksum, "Rx UDP Checksum Error\n");
                         vnic->rxDoneData |= Regs::RxDone_UdpError;
@@ -996,8 +979,8 @@ Device::transmit()
 #endif
 
     DDUMP(EthernetData, packet->data, packet->length);
-    txBytes += packet->length;
-    txPackets++;
+    etherDeviceStats.txBytes += packet->length;
+    etherDeviceStats.txPackets++;
 
     DPRINTF(Ethernet, "Packet Transmit: successful txFifo Available %d\n",
             txFifo.avail());
@@ -1081,19 +1064,19 @@ Device::txKick()
                 if (tcp) {
                     tcp->sum(0);
                     tcp->sum(cksum(tcp));
-                    txTcpChecksums++;
+                    etherDeviceStats.txTcpChecksums++;
                 }
 
                 UdpPtr udp(ip);
                 if (udp) {
                     udp->sum(0);
                     udp->sum(cksum(udp));
-                    txUdpChecksums++;
+                    etherDeviceStats.txUdpChecksums++;
                 }
 
                 ip->sum(0);
                 ip->sum(cksum(ip));
-                txIpChecksums++;
+                etherDeviceStats.txIpChecksums++;
             }
         }
 
@@ -1153,8 +1136,8 @@ Device::rxFilter(const EthPacketPtr &packet)
 bool
 Device::recvPacket(EthPacketPtr packet)
 {
-    rxBytes += packet->length;
-    rxPackets++;
+    etherDeviceStats.rxBytes += packet->length;
+    etherDeviceStats.rxPackets++;
 
     DPRINTF(Ethernet, "Receiving packet from wire, rxFifo Available is %d\n",
             rxFifo.avail());

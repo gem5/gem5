@@ -271,15 +271,20 @@ class Device : public Base
  * Statistics
  */
   private:
-    Stats::Scalar totalVnicDistance;
-    Stats::Scalar numVnicDistance;
-    Stats::Scalar maxVnicDistance;
-    Stats::Formula avgVnicDistance;
+    struct DeviceStats : public Stats::Group
+    {
+        DeviceStats(Stats::Group *parent);
 
-    int _maxVnicDistance;
+        Stats::Scalar totalVnicDistance;
+        Stats::Scalar numVnicDistance;
+        Stats::Scalar maxVnicDistance;
+        Stats::Formula avgVnicDistance;
+
+        int _maxVnicDistance;
+    } sinicDeviceStats;
+
 
   public:
-    void regStats() override;
     void resetStats() override;
 
 /**

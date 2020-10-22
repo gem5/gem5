@@ -740,28 +740,28 @@ NSGigE::devIntrPost(uint32_t interrupts)
 
     if (interrupts & regs.imr) {
         if (interrupts & ISR_SWI) {
-            totalSwi++;
+            etherDeviceStats.totalSwi++;
         }
         if (interrupts & ISR_RXIDLE) {
-            totalRxIdle++;
+            etherDeviceStats.totalRxIdle++;
         }
         if (interrupts & ISR_RXOK) {
-            totalRxOk++;
+            etherDeviceStats.totalRxOk++;
         }
         if (interrupts & ISR_RXDESC) {
-            totalRxDesc++;
+            etherDeviceStats.totalRxDesc++;
         }
         if (interrupts & ISR_TXOK) {
-            totalTxOk++;
+            etherDeviceStats.totalTxOk++;
         }
         if (interrupts & ISR_TXIDLE) {
-            totalTxIdle++;
+            etherDeviceStats.totalTxIdle++;
         }
         if (interrupts & ISR_TXDESC) {
-            totalTxDesc++;
+            etherDeviceStats.totalTxDesc++;
         }
         if (interrupts & ISR_RXORN) {
-            totalRxOrn++;
+            etherDeviceStats.totalRxOrn++;
         }
     }
 
@@ -773,7 +773,7 @@ NSGigE::devIntrPost(uint32_t interrupts)
         Tick when = curTick();
         if ((regs.isr & regs.imr & ISR_NODELAY) == 0)
             when += intrDelay;
-        postedInterrupts++;
+        etherDeviceStats.postedInterrupts++;
         cpuIntrPost(when);
     }
 }
@@ -790,28 +790,28 @@ NSGigE::devIntrClear(uint32_t interrupts)
         panic("Cannot clear a reserved interrupt");
 
     if (regs.isr & regs.imr & ISR_SWI) {
-        postedSwi++;
+        etherDeviceStats.postedSwi++;
     }
     if (regs.isr & regs.imr & ISR_RXIDLE) {
-        postedRxIdle++;
+        etherDeviceStats.postedRxIdle++;
     }
     if (regs.isr & regs.imr & ISR_RXOK) {
-        postedRxOk++;
+        etherDeviceStats.postedRxOk++;
     }
     if (regs.isr & regs.imr & ISR_RXDESC) {
-            postedRxDesc++;
+        etherDeviceStats.postedRxDesc++;
     }
     if (regs.isr & regs.imr & ISR_TXOK) {
-        postedTxOk++;
+        etherDeviceStats.postedTxOk++;
     }
     if (regs.isr & regs.imr & ISR_TXIDLE) {
-        postedTxIdle++;
+        etherDeviceStats.postedTxIdle++;
     }
     if (regs.isr & regs.imr & ISR_TXDESC) {
-        postedTxDesc++;
+        etherDeviceStats.postedTxDesc++;
     }
     if (regs.isr & regs.imr & ISR_RXORN) {
-        postedRxOrn++;
+        etherDeviceStats.postedRxOrn++;
     }
 
     interrupts &= ~ISR_NOIMPL;
@@ -1096,8 +1096,8 @@ NSGigE::rxKick()
             rxDmaLen = is64bit ? sizeof(rxDesc64.link) : sizeof(rxDesc32.link);
             rxDmaFree = dmaDescFree;
 
-            descDmaReads++;
-            descDmaRdBytes += rxDmaLen;
+            etherDeviceStats.descDmaReads++;
+            etherDeviceStats.descDmaRdBytes += rxDmaLen;
 
             if (doRxDmaRead())
                 goto exit;
@@ -1109,8 +1109,8 @@ NSGigE::rxKick()
             rxDmaLen = is64bit ? sizeof(rxDesc64) : sizeof(rxDesc32);
             rxDmaFree = dmaDescFree;
 
-            descDmaReads++;
-            descDmaRdBytes += rxDmaLen;
+            etherDeviceStats.descDmaReads++;
+            etherDeviceStats.descDmaRdBytes += rxDmaLen;
 
             if (doRxDmaRead())
                 goto exit;
@@ -1216,7 +1216,7 @@ NSGigE::rxKick()
             IpPtr ip(rxPacket);
             if (extstsEnable && ip) {
                 extsts |= EXTSTS_IPPKT;
-                rxIpChecksums++;
+                etherDeviceStats.rxIpChecksums++;
                 if (cksum(ip) != 0) {
                     DPRINTF(EthernetCksum, "Rx IP Checksum Error\n");
                     extsts |= EXTSTS_IPERR;
@@ -1225,7 +1225,7 @@ NSGigE::rxKick()
                 UdpPtr udp(ip);
                 if (tcp) {
                     extsts |= EXTSTS_TCPPKT;
-                    rxTcpChecksums++;
+                    etherDeviceStats.rxTcpChecksums++;
                     if (cksum(tcp) != 0) {
                         DPRINTF(EthernetCksum, "Rx TCP Checksum Error\n");
                         extsts |= EXTSTS_TCPERR;
@@ -1233,7 +1233,7 @@ NSGigE::rxKick()
                     }
                 } else if (udp) {
                     extsts |= EXTSTS_UDPPKT;
-                    rxUdpChecksums++;
+                    etherDeviceStats.rxUdpChecksums++;
                     if (cksum(udp) != 0) {
                         DPRINTF(EthernetCksum, "Rx UDP Checksum Error\n");
                         extsts |= EXTSTS_UDPERR;
@@ -1267,8 +1267,8 @@ NSGigE::rxKick()
             }
             rxDmaFree = dmaDescFree;
 
-            descDmaWrites++;
-            descDmaWrBytes += rxDmaLen;
+            etherDeviceStats.descDmaWrites++;
+            etherDeviceStats.descDmaWrBytes += rxDmaLen;
 
             if (doRxDmaWrite())
                 goto exit;
@@ -1376,8 +1376,8 @@ NSGigE::transmit()
 #endif
 
         DDUMP(EthernetData, txFifo.front()->data, txFifo.front()->length);
-        txBytes += txFifo.front()->length;
-        txPackets++;
+        etherDeviceStats.txBytes += txFifo.front()->length;
+        etherDeviceStats.txPackets++;
 
         DPRINTF(Ethernet, "Successful Xmit! now txFifoAvail is %d\n",
                 txFifo.avail());
@@ -1513,8 +1513,8 @@ NSGigE::txKick()
             txDmaLen = is64bit ? sizeof(txDesc64.link) : sizeof(txDesc32.link);
             txDmaFree = dmaDescFree;
 
-            descDmaReads++;
-            descDmaRdBytes += txDmaLen;
+            etherDeviceStats.descDmaReads++;
+            etherDeviceStats.descDmaRdBytes += txDmaLen;
 
             if (doTxDmaRead())
                 goto exit;
@@ -1527,8 +1527,8 @@ NSGigE::txKick()
             txDmaLen = is64bit ? sizeof(txDesc64) : sizeof(txDesc32);
             txDmaFree = dmaDescFree;
 
-            descDmaReads++;
-            descDmaRdBytes += txDmaLen;
+            etherDeviceStats.descDmaReads++;
+            etherDeviceStats.descDmaRdBytes += txDmaLen;
 
             if (doTxDmaRead())
                 goto exit;
@@ -1602,7 +1602,7 @@ NSGigE::txKick()
                         if (udp) {
                             udp->sum(0);
                             udp->sum(cksum(udp));
-                            txUdpChecksums++;
+                            etherDeviceStats.txUdpChecksums++;
                         } else {
                             Debug::breakpoint();
                             warn_once("UDPPKT set, but not UDP!\n");
@@ -1612,7 +1612,7 @@ NSGigE::txKick()
                         if (tcp) {
                             tcp->sum(0);
                             tcp->sum(cksum(tcp));
-                            txTcpChecksums++;
+                            etherDeviceStats.txTcpChecksums++;
                         } else {
                             warn_once("TCPPKT set, but not UDP!\n");
                         }
@@ -1621,7 +1621,7 @@ NSGigE::txKick()
                         if (ip) {
                             ip->sum(0);
                             ip->sum(cksum(ip));
-                            txIpChecksums++;
+                            etherDeviceStats.txIpChecksums++;
                         } else {
                             warn_once("IPPKT set, but not UDP!\n");
                         }
@@ -1674,8 +1674,8 @@ NSGigE::txKick()
                         sizeof(txDesc32.cmdsts) + sizeof(txDesc32.extsts);
                 }
 
-                descDmaWrites++;
-                descDmaWrBytes += txDmaLen;
+                etherDeviceStats.descDmaWrites++;
+                etherDeviceStats.descDmaWrBytes += txDmaLen;
 
                 transmit();
                 txPacket = 0;
@@ -1948,8 +1948,8 @@ NSGigE::rxFilter(const EthPacketPtr &packet)
 bool
 NSGigE::recvPacket(EthPacketPtr packet)
 {
-    rxBytes += packet->length;
-    rxPackets++;
+    etherDeviceStats.rxBytes += packet->length;
+    etherDeviceStats.rxPackets++;
 
     DPRINTF(Ethernet, "Receiving packet from wire, rxFifoAvail=%d\n",
             rxFifo.avail());
@@ -1983,7 +1983,7 @@ NSGigE::recvPacket(EthPacketPtr packet)
             }
         }
 #endif
-        droppedPackets++;
+        etherDeviceStats.droppedPackets++;
         devIntrPost(ISR_RXORN);
         return false;
     }
