@@ -60,6 +60,7 @@
 
 IdeDisk::IdeDisk(const Params &p)
     : SimObject(p), ctrl(NULL), image(p.image), diskDelay(p.delay),
+      ideDiskStats(this),
       dmaTransferEvent([this]{ doDmaTransfer(); }, name()),
       dmaReadCG(NULL),
       dmaReadWaitEvent([this]{ doDmaRead(); }, name()),
@@ -386,37 +387,18 @@ IdeDisk::doDmaDataRead()
     schedule(dmaReadWaitEvent, curTick() + totalDiskDelay);
 }
 
-void
-IdeDisk::regStats()
+IdeDisk::
+IdeDiskStats::IdeDiskStats(Stats::Group *parent)
+    : Stats::Group(parent, "IdeDisk"),
+      ADD_STAT(dmaReadFullPages,
+               "Number of full page size DMA reads (not PRD)."),
+      ADD_STAT(dmaReadBytes,
+               "Number of bytes transfered via DMA reads (not PRD)."),
+      ADD_STAT(dmaReadTxs, "Number of DMA read transactions (not PRD)."),
+      ADD_STAT(dmaWriteFullPages, "Number of full page size DMA writes."),
+      ADD_STAT(dmaWriteBytes, "Number of bytes transfered via DMA writes."),
+      ADD_STAT(dmaWriteTxs, "Number of DMA write transactions.")
 {
-    SimObject::regStats();
-
-    using namespace Stats;
-    dmaReadFullPages
-        .name(name() + ".dma_read_full_pages")
-        .desc("Number of full page size DMA reads (not PRD).")
-        ;
-    dmaReadBytes
-        .name(name() + ".dma_read_bytes")
-        .desc("Number of bytes transfered via DMA reads (not PRD).")
-        ;
-    dmaReadTxs
-        .name(name() + ".dma_read_txs")
-        .desc("Number of DMA read transactions (not PRD).")
-        ;
-
-    dmaWriteFullPages
-        .name(name() + ".dma_write_full_pages")
-        .desc("Number of full page size DMA writes.")
-        ;
-    dmaWriteBytes
-        .name(name() + ".dma_write_bytes")
-        .desc("Number of bytes transfered via DMA writes.")
-        ;
-    dmaWriteTxs
-        .name(name() + ".dma_write_txs")
-        .desc("Number of DMA write transactions.")
-        ;
 }
 
 void
@@ -445,10 +427,10 @@ IdeDisk::doDmaRead()
         assert(dmaReadCG->complete() < MAX_DMA_SIZE);
         ctrl->dmaRead(pciToDma(dmaReadCG->addr()), dmaReadCG->size(),
                 &dmaReadWaitEvent, dataBuffer + dmaReadCG->complete());
-        dmaReadBytes += dmaReadCG->size();
-        dmaReadTxs++;
+        ideDiskStats.dmaReadBytes += dmaReadCG->size();
+        ideDiskStats.dmaReadTxs++;
         if (dmaReadCG->size() == chunkBytes)
-            dmaReadFullPages++;
+            ideDiskStats.dmaReadFullPages++;
         dmaReadCG->next();
     } else {
         assert(dmaReadCG->done());
@@ -530,10 +512,10 @@ IdeDisk::doDmaWrite()
                 &dmaWriteWaitEvent, dataBuffer + dmaWriteCG->complete());
         DPRINTF(IdeDisk, "doDmaWrite: not done curPrd byte count %d, eot %#x\n",
                 curPrd.getByteCount(), curPrd.getEOT());
-        dmaWriteBytes += dmaWriteCG->size();
-        dmaWriteTxs++;
+        ideDiskStats.dmaWriteBytes += dmaWriteCG->size();
+        ideDiskStats.dmaWriteTxs++;
         if (dmaWriteCG->size() == chunkBytes)
-            dmaWriteFullPages++;
+            ideDiskStats.dmaWriteFullPages++;
         dmaWriteCG->next();
     } else {
         DPRINTF(IdeDisk, "doDmaWrite: done curPrd byte count %d, eot %#x\n",

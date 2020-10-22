@@ -139,8 +139,13 @@ class CopyEngine : public PciDevice
 
   private:
 
-    Stats::Vector bytesCopied;
-    Stats::Vector copiesProcessed;
+    struct CopyEngineStats : public Stats::Group
+    {
+        CopyEngineStats(Stats::Group *parent, const uint8_t& channel_count);
+
+        Stats::Vector bytesCopied;
+        Stats::Vector copiesProcessed;
+    } copyEngineStats;
 
     // device registers
     CopyEngineReg::Regs regs;
@@ -157,8 +162,6 @@ class CopyEngine : public PciDevice
     }
     CopyEngine(const Params &params);
     ~CopyEngine();
-
-    void regStats() override;
 
     Port &getPort(const std::string &if_name,
             PortID idx = InvalidPortID) override;

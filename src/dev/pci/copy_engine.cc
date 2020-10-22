@@ -58,7 +58,8 @@
 using namespace CopyEngineReg;
 
 CopyEngine::CopyEngine(const Params &p)
-    : PciDevice(p)
+    : PciDevice(p),
+      copyEngineStats(this, p.ChanCnt)
 {
     // All Reg regs are initialized to 0 by default
     regs.chanCount = p.ChanCnt;
@@ -425,23 +426,20 @@ CopyEngine::CopyEngineChannel::channelWrite(Packet *pkt, Addr daddr, int size)
     }
 }
 
-void
-CopyEngine::regStats()
+CopyEngine::
+CopyEngineStats::CopyEngineStats(Stats::Group *parent,
+                                 const uint8_t &channel_count)
+    : Stats::Group(parent, "CopyEngine"),
+      ADD_STAT(bytesCopied, "Number of bytes copied by each engine"),
+      ADD_STAT(copiesProcessed, "Number of copies processed by each engine")
 {
-    PciDevice::regStats();
-
-    using namespace Stats;
     bytesCopied
-        .init(regs.chanCount)
-        .name(name() + ".bytes_copied")
-        .desc("Number of bytes copied by each engine")
-        .flags(total)
+        .init(channel_count)
+        .flags(Stats::total)
         ;
     copiesProcessed
-        .init(regs.chanCount)
-        .name(name() + ".copies_processed")
-        .desc("Number of copies processed by each engine")
-        .flags(total)
+        .init(channel_count)
+        .flags(Stats::total)
         ;
 }
 
@@ -521,8 +519,8 @@ CopyEngine::CopyEngineChannel::writeCopyBytes()
     cePort.dmaAction(MemCmd::WriteReq, ce->pciToDma(curDmaDesc->dest),
                      curDmaDesc->len, &writeCompleteEvent, copyBuffer, 0);
 
-    ce->bytesCopied[channelId] += curDmaDesc->len;
-    ce->copiesProcessed[channelId]++;
+    ce->copyEngineStats.bytesCopied[channelId] += curDmaDesc->len;
+    ce->copyEngineStats.copiesProcessed[channelId]++;
 }
 
 void

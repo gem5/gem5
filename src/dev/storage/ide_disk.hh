@@ -252,12 +252,17 @@ class IdeDisk : public SimObject
     /** DMA Aborted */
     bool dmaAborted;
 
-    Stats::Scalar dmaReadFullPages;
-    Stats::Scalar dmaReadBytes;
-    Stats::Scalar dmaReadTxs;
-    Stats::Scalar dmaWriteFullPages;
-    Stats::Scalar dmaWriteBytes;
-    Stats::Scalar dmaWriteTxs;
+    struct IdeDiskStats : public Stats::Group
+    {
+        IdeDiskStats(Stats::Group *parent);
+
+        Stats::Scalar dmaReadFullPages;
+        Stats::Scalar dmaReadBytes;
+        Stats::Scalar dmaReadTxs;
+        Stats::Scalar dmaWriteFullPages;
+        Stats::Scalar dmaWriteBytes;
+        Stats::Scalar dmaWriteTxs;
+    } ideDiskStats;
 
   public:
     typedef IdeDiskParams Params;
@@ -272,11 +277,6 @@ class IdeDisk : public SimObject
      * Reset the device state
      */
     void reset(int id);
-
-    /**
-     * Register Statistics
-     */
-    void regStats() override;
 
     /**
      * Set the controller for this device
