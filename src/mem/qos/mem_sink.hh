@@ -181,11 +181,16 @@ class MemSinkCtrl : public MemCtrl
     /** Next request service time */
     Tick nextRequest;
 
-    /** Count the number of read retries */
-    Stats::Scalar numReadRetries;
+    struct MemSinkCtrlStats : public Stats::Group
+    {
+        MemSinkCtrlStats(Stats::Group *parent);
 
-    /** Count the number of write retries */
-    Stats::Scalar numWriteRetries;
+        /** Count the number of read retries */
+        Stats::Scalar numReadRetries;
+
+        /** Count the number of write retries */
+        Stats::Scalar numWriteRetries;
+    };
 
     /**
      * QoS-aware (per priority) incoming read requests packets queue
@@ -247,8 +252,7 @@ class MemSinkCtrl : public MemCtrl
     */
     bool recvTimingReq(PacketPtr pkt);
 
-    /** Registers statistics */
-    void regStats() override;
+    MemSinkCtrlStats stats;
 };
 
 } // namespace QoS

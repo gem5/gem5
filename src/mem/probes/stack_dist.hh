@@ -50,8 +50,6 @@ class StackDistProbe : public BaseMemProbe
   public:
     StackDistProbe(const StackDistProbeParams &params);
 
-    void regStats() override;
-
   protected:
     void handleRequest(const ProbePoints::PacketInfo &pkt_info) override;
 
@@ -66,23 +64,27 @@ class StackDistProbe : public BaseMemProbe
     const bool disableLogHists;
 
   protected:
-    // Reads linear histogram
-    Stats::Histogram readLinearHist;
-
-    // Reads logarithmic histogram
-    Stats::SparseHistogram readLogHist;
-
-    // Writes linear histogram
-    Stats::Histogram writeLinearHist;
-
-    // Writes logarithmic histogram
-    Stats::SparseHistogram writeLogHist;
-
-    // Writes logarithmic histogram
-    Stats::Scalar infiniteSD;
-
-  protected:
     StackDistCalc calc;
+
+    struct StackDistProbeStats : public Stats::Group
+    {
+        StackDistProbeStats(StackDistProbe* parent);
+
+        // Reads linear histogram
+        Stats::Histogram readLinearHist;
+
+        // Reads logarithmic histogram
+        Stats::SparseHistogram readLogHist;
+
+        // Writes linear histogram
+        Stats::Histogram writeLinearHist;
+
+        // Writes logarithmic histogram
+        Stats::SparseHistogram writeLogHist;
+
+        // Writes logarithmic histogram
+        Stats::Scalar infiniteSD;
+    } stats;
 };
 
 

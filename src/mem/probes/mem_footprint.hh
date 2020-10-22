@@ -57,7 +57,6 @@ class MemFootprintProbe : public BaseMemProbe
     typedef std::unordered_set<Addr> AddrSet;
 
     MemFootprintProbe(const MemFootprintProbeParams &p);
-    void regStats() override;
     // Fix footprint tracking state on stat reset
     void statReset();
 
@@ -72,14 +71,19 @@ class MemFootprintProbe : public BaseMemProbe
     void insertAddr(Addr addr, AddrSet *set, uint64_t limit);
     void handleRequest(const ProbePoints::PacketInfo &pkt_info) override;
 
-    /// Footprint at cache line size granularity
-    Stats::Scalar fpCacheLine;
-    /// Footprint at cache line size granularity, since simulation begin
-    Stats::Scalar fpCacheLineTotal;
-    /// Footprint at page granularity
-    Stats::Scalar fpPage;
-    /// Footprint at page granularity, since simulation begin
-    Stats::Scalar fpPageTotal;
+    struct MemFootprintProbeStats : public Stats::Group
+    {
+        MemFootprintProbeStats(MemFootprintProbe *parent);
+
+        /// Footprint at cache line size granularity
+        Stats::Scalar cacheLine;
+        /// Footprint at cache line size granularity, since simulation begin
+        Stats::Scalar cacheLineTotal;
+        /// Footprint at page granularity
+        Stats::Scalar page;
+        /// Footprint at page granularity, since simulation begin
+        Stats::Scalar pageTotal;
+    };
 
     // Addr set to track unique cache lines accessed
     AddrSet cacheLines;
@@ -90,6 +94,8 @@ class MemFootprintProbe : public BaseMemProbe
     // Addr set to track unique pages accessed since simulation begin
     AddrSet pagesAll;
     System *system;
+
+    MemFootprintProbeStats stats;
 };
 
 #endif  //__MEM_PROBES_MEM_FOOTPRINT_HH__
