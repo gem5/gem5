@@ -239,14 +239,12 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     std::unique_ptr<Base::CompressionData> compress(
         const std::vector<Chunk>& chunks);
 
+    std::unique_ptr<Base::CompressionData> compress(
+        const std::vector<Chunk>& chunks,
+        Cycles& comp_lat, Cycles& decomp_lat) override;
+
     using BaseDictionaryCompressor::compress;
 
-    /**
-     * Decompress data.
-     *
-     * @param comp_data Compressed cache line.
-     * @param data The cache line to be decompressed.
-     */
     void decompress(const CompressionData* comp_data, uint64_t* data) override;
 
     /**

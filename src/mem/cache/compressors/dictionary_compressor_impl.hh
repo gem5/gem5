@@ -145,6 +145,21 @@ DictionaryCompressor<T>::compress(const std::vector<Chunk>& chunks)
 }
 
 template <class T>
+std::unique_ptr<Base::CompressionData>
+DictionaryCompressor<T>::compress(const std::vector<Chunk>& chunks,
+    Cycles& comp_lat, Cycles& decomp_lat)
+{
+    // Set latencies based on the degree of parallelization, and any extra
+    // latencies due to shifting or packaging
+    comp_lat = Cycles(compExtraLatency +
+        (chunks.size() / compChunksPerCycle));
+    decomp_lat = Cycles(decompExtraLatency +
+        (chunks.size() / decompChunksPerCycle));
+
+    return compress(chunks);
+}
+
+template <class T>
 T
 DictionaryCompressor<T>::decompressValue(const Pattern* pattern)
 {

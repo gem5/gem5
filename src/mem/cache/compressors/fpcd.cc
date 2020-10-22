@@ -54,26 +54,6 @@ FPCD::addToDictionary(DictionaryEntry data)
     }
 }
 
-std::unique_ptr<Base::CompressionData>
-FPCD::compress(const std::vector<Chunk>& chunks,
-    Cycles& comp_lat, Cycles& decomp_lat)
-{
-    std::unique_ptr<Base::CompressionData> comp_data =
-        DictionaryCompressor<uint32_t>::compress(chunks);
-
-    // Set compression latency (Accounts for zero checks, ones check, match
-    // previous check, match penultimate check, repeated values check, pattern
-    // selection, shifting, at a rate of 16B per cycle)
-    comp_lat = Cycles(blkSize/2);
-
-    // Set decompression latency. The original claim of 2 cycles is likely
-    // too unrealistic
-    decomp_lat = Cycles(4);
-
-    // Return compressed line
-    return comp_data;
-}
-
 } // namespace Compressor
 
 Compressor::FPCD*

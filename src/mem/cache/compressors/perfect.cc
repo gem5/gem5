@@ -41,9 +41,7 @@
 namespace Compressor {
 
 Perfect::Perfect(const Params &p)
-  : Base(p), compressedSize(8 * blkSize / p.max_compression_ratio),
-    compressionLatency(p.compression_latency),
-    decompressionLatency(p.decompression_latency)
+  : Base(p), compressedSize(8 * blkSize / p.max_compression_ratio)
 {
 }
 
@@ -56,8 +54,12 @@ Perfect::compress(const std::vector<Chunk>& chunks,
 
     // Set relevant metadata
     comp_data->setSizeBits(compressedSize);
-    comp_lat = compressionLatency;
-    decomp_lat = decompressionLatency;
+
+    // Set latencies based on the degree of parallelization, and any extra
+    // latencies due to shifting or packaging
+    comp_lat = Cycles((chunks.size() / compChunksPerCycle) + compExtraLatency);
+    decomp_lat = Cycles((chunks.size() / decompChunksPerCycle) +
+        decompExtraLatency);
 
     return comp_data;
 }

@@ -41,6 +41,15 @@ class BaseCacheCompressor(SimObject):
         "Minimum percentage of the block size, a compressed block must "
         "achieve to be stored in compressed format")
 
+    comp_chunks_per_cycle = Param.Unsigned(1,
+        "Number of chunks that can be compressed in parallel per cycle.")
+    comp_extra_latency = Param.Cycles(1, "Number of extra cycles required "
+        "to finish compression (e.g., due to shifting and packaging).")
+    decomp_chunks_per_cycle = Param.Unsigned(1,
+        "Number of chunks that can be decompressed in parallel per cycle.")
+    decomp_extra_latency = Param.Cycles(1, "Number of extra cycles required "
+        "to finish decompression (e.g., due to shifting and packaging).")
+
 class BaseDictionaryCompressor(BaseCacheCompressor):
     type = 'BaseDictionaryCompressor'
     abstract = True
@@ -57,12 +66,24 @@ class Base64Delta8(BaseDictionaryCompressor):
 
     chunk_size_bits = 64
 
+    # Base-delta compressors achieve 1-cycle latencies
+    comp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    comp_extra_latency = 0
+    decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    decomp_extra_latency = 0
+
 class Base64Delta16(BaseDictionaryCompressor):
     type = 'Base64Delta16'
     cxx_class = 'Compressor::Base64Delta16'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 64
+
+    # Base-delta compressors achieve 1-cycle latencies
+    comp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    comp_extra_latency = 0
+    decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    decomp_extra_latency = 0
 
 class Base64Delta32(BaseDictionaryCompressor):
     type = 'Base64Delta32'
@@ -71,12 +92,24 @@ class Base64Delta32(BaseDictionaryCompressor):
 
     chunk_size_bits = 64
 
+    # Base-delta compressors achieve 1-cycle latencies
+    comp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    comp_extra_latency = 0
+    decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    decomp_extra_latency = 0
+
 class Base32Delta8(BaseDictionaryCompressor):
     type = 'Base32Delta8'
     cxx_class = 'Compressor::Base32Delta8'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 32
+
+    # Base-delta compressors achieve 1-cycle latencies
+    comp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    comp_extra_latency = 0
+    decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    decomp_extra_latency = 0
 
 class Base32Delta16(BaseDictionaryCompressor):
     type = 'Base32Delta16'
@@ -85,6 +118,12 @@ class Base32Delta16(BaseDictionaryCompressor):
 
     chunk_size_bits = 32
 
+    # Base-delta compressors achieve 1-cycle latencies
+    comp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    comp_extra_latency = 0
+    decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    decomp_extra_latency = 0
+
 class Base16Delta8(BaseDictionaryCompressor):
     type = 'Base16Delta8'
     cxx_class = 'Compressor::Base16Delta8'
@@ -92,15 +131,35 @@ class Base16Delta8(BaseDictionaryCompressor):
 
     chunk_size_bits = 16
 
+    # Base-delta compressors achieve 1-cycle latencies
+    comp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    comp_extra_latency = 0
+    decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    decomp_extra_latency = 0
+
 class CPack(BaseDictionaryCompressor):
     type = 'CPack'
     cxx_class = 'Compressor::CPack'
     cxx_header = "mem/cache/compressors/cpack.hh"
 
+    comp_chunks_per_cycle = 2
+    # Accounts for pattern matching, length generation, packaging and shifting
+    comp_extra_latency = 5
+    decomp_chunks_per_cycle = 2
+    decomp_extra_latency = 1
+
 class FPCD(BaseDictionaryCompressor):
     type = 'FPCD'
     cxx_class = 'Compressor::FPCD'
     cxx_header = "mem/cache/compressors/fpcd.hh"
+
+    # Accounts for checking all patterns, selecting patterns, and shifting
+    # The original claim of a decompression latency of 2 cycles would likely
+    # generate an unrealistically complex circuit
+    comp_chunks_per_cycle = 4
+    comp_extra_latency = 1
+    decomp_chunks_per_cycle = 4
+    decomp_extra_latency = 0
 
     dictionary_size = 2
 
@@ -116,8 +175,17 @@ class MultiCompressor(BaseCacheCompressor):
     encoding_in_tags = Param.Bool(False, "If set the bits to inform which "
         "sub-compressor compressed some data are added to its corresponding "
         "tag entry.")
-    extra_decomp_lat = Param.Unsigned(0, "Extra latency to be added to the "
-        "sub-compressor's decompression latency")
+
+    # Use the sub-compressors' latencies
+    comp_chunks_per_cycle = 0
+    decomp_chunks_per_cycle = 0
+
+    # Assume extra 1 cycle to select the results of the winning sub-compressor
+    comp_extra_latency = 1
+
+    # Multi-compressors may need a couple of extra cycles to the select
+    # which sub-compressor should be used to decompress the data
+    decomp_extra_latency = 1
 
 class PerfectCompressor(BaseCacheCompressor):
     type = 'PerfectCompressor'
@@ -128,10 +196,11 @@ class PerfectCompressor(BaseCacheCompressor):
 
     max_compression_ratio = Param.Int("Maximum compression ratio allowed")
 
-    compression_latency = Param.Cycles(1,
-        "Number of cycles to perform data compression")
-    decompression_latency = Param.Cycles(1,
-        "Number of cycles to perform data decompression")
+    # In a perfect world compression and decompression happen in 1 cycle
+    comp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    comp_extra_latency = 0
+    decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    decomp_extra_latency = 0
 
 class RepeatedQwordsCompressor(BaseDictionaryCompressor):
     type = 'RepeatedQwordsCompressor'
@@ -140,6 +209,12 @@ class RepeatedQwordsCompressor(BaseDictionaryCompressor):
 
     chunk_size_bits = 64
 
+    # Assume 1-cycle latencies
+    comp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    comp_extra_latency = 0
+    decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    decomp_extra_latency = 0
+
 class ZeroCompressor(BaseDictionaryCompressor):
     type = 'ZeroCompressor'
     cxx_class = 'Compressor::Zero'
@@ -147,8 +222,13 @@ class ZeroCompressor(BaseDictionaryCompressor):
 
     chunk_size_bits = 64
 
+    # Assume 1-cycle latencies
+    comp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    comp_extra_latency = 0
+    decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
+    decomp_extra_latency = 0
+
 class BDI(MultiCompressor):
-    encoding_in_tags=True
     compressors = [
         ZeroCompressor(size_threshold_percentage=99),
         RepeatedQwordsCompressor(size_threshold_percentage=99),
@@ -159,3 +239,8 @@ class BDI(MultiCompressor):
         Base32Delta16(size_threshold_percentage=99),
         Base16Delta8(size_threshold_percentage=99),
     ]
+
+    # By default assume that the encoding is stored in the tags, and is
+    # retrieved and decoded while (and ends before) the data is being read.
+    decomp_extra_latency = 0
+    encoding_in_tags=True
