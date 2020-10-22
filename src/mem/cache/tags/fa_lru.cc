@@ -63,7 +63,7 @@ FALRUBlk::print() const
 FALRU::FALRU(const Params &p)
     : BaseTags(p),
 
-      cacheTracking(p.min_tracked_cache_size, size, blkSize)
+      cacheTracking(p.min_tracked_cache_size, size, blkSize, this)
 {
     if (!isPowerOf2(blkSize))
         fatal("cache block size (in bytes) `%d' must be a power of two",
@@ -104,13 +104,6 @@ FALRU::tagsInit()
     tail->data = &dataBlks[(numBlocks - 1) * blkSize];
 
     cacheTracking.init(head, tail);
-}
-
-void
-FALRU::regStats()
-{
-    BaseTags::regStats();
-    cacheTracking.regStats(name());
 }
 
 void
@@ -286,6 +279,51 @@ FALRU::moveToTail(FALRUBlk *blk)
 }
 
 void
+printSize(std::ostream &stream, size_t size)
+{
+    static const char *SIZES[] = { "B", "kB", "MB", "GB", "TB", "ZB" };
+    int div = 0;
+    while (size >= 1024 && div < (sizeof SIZES / sizeof *SIZES)) {
+        div++;
+        size >>= 10;
+    }
+    stream << size << SIZES[div];
+}
+
+FALRU::CacheTracking::CacheTracking(unsigned min_size, unsigned max_size,
+                                    unsigned block_size, Stats::Group *parent)
+    : Stats::Group(parent),
+      blkSize(block_size),
+      minTrackedSize(min_size),
+      numTrackedCaches(max_size > min_size ?
+                       floorLog2(max_size) - floorLog2(min_size) : 0),
+      inAllCachesMask(mask(numTrackedCaches)),
+      boundaries(numTrackedCaches),
+      ADD_STAT(hits, "The number of hits in each cache size."),
+      ADD_STAT(misses, "The number of misses in each cache size."),
+      ADD_STAT(accesses, "The number of accesses to the FA LRU cache.")
+{
+    fatal_if(numTrackedCaches > sizeof(CachesMask) * 8,
+             "Not enough bits (%s) in type CachesMask type to keep "
+             "track of %d caches\n", sizeof(CachesMask),
+             numTrackedCaches);
+
+    hits
+        .init(numTrackedCaches + 1);
+    misses
+        .init(numTrackedCaches + 1);
+
+    for (unsigned i = 0; i < numTrackedCaches + 1; ++i) {
+      std::stringstream size_str;
+      printSize(size_str, minTrackedSize << i);
+      hits.subname(i, size_str.str());
+      hits.subdesc(i, "Hits in a " + size_str.str() + " cache");
+      misses.subname(i, size_str.str());
+      misses.subdesc(i, "Misses in a " + size_str.str() + " cache");
+    }
+}
+
+void
 FALRU::CacheTracking::check(const FALRUBlk *head, const FALRUBlk *tail) const
 {
 #ifdef FALRU_DEBUG
@@ -412,42 +450,3 @@ FALRU::CacheTracking::recordAccess(FALRUBlk *blk)
     accesses++;
 }
 
-void
-printSize(std::ostream &stream, size_t size)
-{
-    static const char *SIZES[] = { "B", "kB", "MB", "GB", "TB", "ZB" };
-    int div = 0;
-    while (size >= 1024 && div < (sizeof SIZES / sizeof *SIZES)) {
-        div++;
-        size >>= 10;
-    }
-    stream << size << SIZES[div];
-}
-
-void
-FALRU::CacheTracking::regStats(std::string name)
-{
-    hits
-        .init(numTrackedCaches + 1)
-        .name(name + ".falru_hits")
-        .desc("The number of hits in each cache size.")
-        ;
-    misses
-        .init(numTrackedCaches + 1)
-        .name(name + ".falru_misses")
-        .desc("The number of misses in each cache size.")
-        ;
-    accesses
-        .name(name + ".falru_accesses")
-        .desc("The number of accesses to the FA LRU cache.")
-        ;
-
-    for (unsigned i = 0; i < numTrackedCaches + 1; ++i) {
-        std::stringstream size_str;
-        printSize(size_str, minTrackedSize << i);
-        hits.subname(i, size_str.str());
-        hits.subdesc(i, "Hits in a " + size_str.str() + " cache");
-        misses.subname(i, size_str.str());
-        misses.subdesc(i, "Misses in a " + size_str.str() + " cache");
-    }
-}
