@@ -24,7 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.FastModelGIC import FastModelGIC, SCFastModelGIC
-from m5.objects.Gic import ArmInterruptPin
+from m5.objects.Gic import ArmSPI
 from m5.objects.RealView import VExpress_GEM5_Base, HDLcd
 
 class VExpressFastmodel(VExpress_GEM5_Base):
@@ -37,7 +37,7 @@ class VExpressFastmodel(VExpress_GEM5_Base):
 
     hdlcd = HDLcd(
         pxl_clk=VExpress_GEM5_Base.dcc.osc_pxl, pio_addr=0x2b000000,
-        interrupt=ArmInterruptPin(num=95))
+        interrupt=ArmSPI(num=95))
 
     def __init__(self, *args, **kwargs):
         super(VExpressFastmodel, self).__init__(*args, **kwargs)
