@@ -44,8 +44,8 @@ def abspath(d):
 
 AddOption('--debug-build', dest='debug_build', action='store_true',
           help='Build with debug info, and disable optimizations.')
-AddOption('--no-test-xml', dest='no_tests', action='store_true',
-          help='Omit test output xml files from the build.')
+AddOption('--run-tests', dest='run_tests', action='store_true',
+          help='Enable test output xml files as build targets.')
 AddOption('--verbose', dest='verbose', action='store_true')
 
 # Universal settings.
@@ -118,8 +118,7 @@ def GTest(env, name, *srcs, **kwargs):
     need_qemu_to_run = 'HAVE_QEMU' in env;
 
     # If we can run this test...
-    if (not need_qemu_to_run or env['HAVE_QEMU']) \
-        and not GetOption('no_tests'):
+    if GetOption('run_tests') and (not need_qemu_to_run or env['HAVE_QEMU']):
         # An XML file which holds the results of the test.
         xml = Dir('test').Dir('result').File('%s.xml' % name)
         # The basic command line for the test.

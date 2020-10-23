@@ -175,7 +175,7 @@ some other prefix corresponding to that host.
 ### SCons command line flags
 
 --debug-build: Compile with the -g option, and -O0.
---no-test-xml: Exclude the test result XML files from the build.
+--run-tests:   Allow the test result XML files to be build targets.
 --verbose:     Show build command lines and full command output.
 
 ## External dependency detection
