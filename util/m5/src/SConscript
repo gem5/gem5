@@ -97,13 +97,17 @@ if env['HAVE_JAVA']:
     # A wrapper to make the m5 ops available in Java through the JNI.
     #
     java_env = shared_env.Clone()
+    pkg_dir = Dir('java').Dir('gem5')
+    srcs = [ pkg_dir.File('Ops.java') ]
+    if java_env['HAVE_JUNIT']:
+        srcs.append(pkg_dir.File('OpsTest.java'))
     # SCons provides Java and JavaH builders, but the JavaH builder assumes
     # that the javah tool exists. Java has dropped that tool in favor of a -h
     # option on javac which the Java builder doesn't know how to use. To get
     # around this, we set up our own builder which does the "right thing" here.
     java_env.Command([ Dir('java').File('gem5_Ops.h'),
                        Dir('out').Dir('java').File('gem5Ops.jar') ],
-                     Dir('java').Dir('gem5').File('Ops.java'),
+                     srcs,
                      MakeAction([
                          '${JAVAC} ${JAVACFLAGS} -d ${OUT} '
                          '${SOURCES} -h ${JAVA_DIR}',

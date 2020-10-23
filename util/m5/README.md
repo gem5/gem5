@@ -223,6 +223,10 @@ will catch attempts to use them and verify that they were used correctly. When
 running these tests under gem5, set the RUNNING_IN_GEM5 environment variable
 which will tell the test to expect the trigger mechanism to actually work.
 
+A junit test exists for the Java jar, in a file named 'OpsTest.java'. That test
+can be run on its own through its own main function, or through the junit
+framework.
+
 
 
 # Command line utility
