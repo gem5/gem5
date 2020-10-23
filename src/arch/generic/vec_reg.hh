@@ -192,11 +192,11 @@ class VecRegT
 
     /** Zero the container. */
     template<bool Condition = !Const>
-    typename std::enable_if<Condition, void>::type
+    typename std::enable_if_t<Condition, void>
     zero() { container.zero(); }
 
     template<bool Condition = !Const>
-    typename std::enable_if<Condition, MyClass&>::type
+    typename std::enable_if_t<Condition, MyClass&>
     operator=(const MyClass& that)
     {
         container = that.container;
@@ -211,7 +211,7 @@ class VecRegT
 
     /** Index operator. */
     template<bool Condition = !Const>
-    typename std::enable_if<Condition, VecElem&>::type
+    typename std::enable_if_t<Condition, VecElem&>
     operator[](size_t idx)
     {
         return container.template raw_ptr<VecElem>()[idx];
@@ -475,18 +475,18 @@ class LaneData
 
   public:
     template <typename T> explicit
-    LaneData(typename std::enable_if<sizeof(T) == ByteSz, const T&>::type t)
+    LaneData(typename std::enable_if_t<sizeof(T) == ByteSz, const T&> t)
                 : _val(t) {}
 
     template <typename T>
-    typename std::enable_if<sizeof(T) == ByteSz, MyClass&>::type
+    typename std::enable_if_t<sizeof(T) == ByteSz, MyClass&>
     operator=(const T& that)
     {
         _val = that;
         return *this;
     }
     template<typename T,
-             typename std::enable_if<sizeof(T) == ByteSz, int>::type I = 0>
+             typename std::enable_if_t<sizeof(T) == ByteSz, int> I = 0>
     operator T() const {
         return *static_cast<const T*>(&_val);
     }
@@ -552,7 +552,7 @@ class VecLaneT
      */
     /** @{ */
     template <bool Assignable = !Const>
-    typename std::enable_if<Assignable, MyClass&>::type
+    typename std::enable_if_t<Assignable, MyClass&>
     operator=(const VecElem& that) {
         container = that;
         return *this;
@@ -563,7 +563,7 @@ class VecLaneT
      * not allowed, pre-treatment of the rhs is required to conform.
      */
     template <bool Assignable = !Const, typename T>
-    typename std::enable_if<Assignable, MyClass&>::type
+    typename std::enable_if_t<Assignable, MyClass&>
     operator=(const T& that) {
         static_assert(sizeof(T) >= sizeof(VecElem),
                 "Attempt to perform widening bitwise copy.");
@@ -577,8 +577,8 @@ class VecLaneT
     operator VecElem() const { return container; }
 
     /** Constification. */
-    template <bool Cond = !Const, typename std::enable_if<Cond, int>::type = 0>
-    operator VecLaneT<typename std::enable_if<Cond, VecElem>::type, true>()
+    template <bool Cond = !Const, typename std::enable_if_t<Cond, int> = 0>
+    operator VecLaneT<typename std::enable_if_t<Cond, VecElem>, true>()
     {
         return VecLaneT<VecElem, true>(container);
     }

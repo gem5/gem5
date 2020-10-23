@@ -812,8 +812,8 @@ class FunctorProxy : public ProxyInfo
  */
 template <class T>
 class FunctorProxy<T,
-    typename std::enable_if<std::is_constructible<std::function<Result()>,
-        const T &>::value>::type> : public ProxyInfo
+    typename std::enable_if_t<std::is_constructible<std::function<Result()>,
+        const T &>::value>> : public ProxyInfo
 {
   private:
     std::function<Result()> functor;

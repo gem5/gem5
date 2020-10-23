@@ -52,9 +52,8 @@ struct StateInitializer
 };
 
 template <typename ABI>
-struct StateInitializer<ABI, typename std::enable_if<
-    std::is_constructible<typename ABI::State, const ThreadContext *>::value
-    >::type>
+struct StateInitializer<ABI, typename std::enable_if_t<
+    std::is_constructible<typename ABI::State, const ThreadContext *>::value>>
 {
     static typename ABI::State
     init(const ThreadContext *tc)
@@ -152,9 +151,9 @@ template <typename Ret>
 std::false_type foo(void (*)(ThreadContext *, const Ret &ret));
 
 template <typename ABI, typename Ret>
-struct ResultStorer<ABI, Ret, typename std::enable_if<
+struct ResultStorer<ABI, Ret, typename std::enable_if_t<
     std::is_same<void (*)(ThreadContext *, const Ret &, typename ABI::State &),
-                 decltype(&Result<ABI, Ret>::store)>::value>::type>
+                 decltype(&Result<ABI, Ret>::store)>::value>>
 {
     static void
     store(ThreadContext *tc, const Ret &ret, typename ABI::State &state)

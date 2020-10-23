@@ -134,16 +134,16 @@ class ConstProxyPtr
     using Type = T;
 
     template <typename ...Args,
-              typename std::enable_if<std::is_constructible<
-                  Proxy, Args&&...>::value, int>::type = 0>
+              typename std::enable_if_t<std::is_constructible<
+                  Proxy, Args&&...>::value, int> = 0>
     explicit ConstProxyPtr(Addr _ptr, Args&&... args) :
         proxy(std::make_shared<Proxy>(args...))
     {
         setAddr(_ptr);
     }
     template <typename ...Args,
-              typename std::enable_if<std::is_constructible<
-                  Proxy, Args&&...>::value, int>::type = 0>
+              typename std::enable_if_t<std::is_constructible<
+                  Proxy, Args&&...>::value, int> = 0>
     explicit ConstProxyPtr(Args&&... args) :
         proxy(std::make_shared<Proxy>(args...))
     {
@@ -151,7 +151,7 @@ class ConstProxyPtr
     }
 
     template <typename O, typename Enabled=
-        typename std::enable_if<std::is_assignable<T *, O *>::value>::type>
+        typename std::enable_if_t<std::is_assignable<T *, O *>::value>>
     ConstProxyPtr(const ConstProxyPtr<O, Proxy> &other) :
         proxy(other.proxy), buffer(other.buffer)
     {}
@@ -171,14 +171,14 @@ class ConstProxyPtr
     operator bool() const { return (bool)buffer; }
 
     template <typename A>
-    typename std::enable_if<std::is_integral<A>::value, CPP>::type
+    typename std::enable_if_t<std::is_integral<A>::value, CPP>
     operator + (A a) const
     {
         return CPP(addr() + a * sizeof(T), proxy);
     }
 
     template <typename A>
-    typename std::enable_if<std::is_integral<A>::value, CPP>::type
+    typename std::enable_if_t<std::is_integral<A>::value, CPP>
     operator - (A a) const
     {
         return CPP(addr() - a * sizeof(T), proxy);
@@ -225,8 +225,7 @@ class ConstProxyPtr
 };
 
 template <typename T, typename Proxy, typename A>
-typename std::enable_if<std::is_integral<A>::value,
-                        ConstProxyPtr<T, Proxy>>::type
+typename std::enable_if_t<std::is_integral<A>::value, ConstProxyPtr<T, Proxy>>
 operator + (A a, const ConstProxyPtr<T, Proxy> &other)
 {
     return other + a;
@@ -243,16 +242,16 @@ class ProxyPtr : public ConstProxyPtr<T, Proxy>
 
   public:
     template <typename ...Args,
-              typename std::enable_if<std::is_constructible<
-                  Proxy, Args&&...>::value, int>::type = 0>
+              typename std::enable_if_t<std::is_constructible<
+                  Proxy, Args&&...>::value, int> = 0>
     explicit ProxyPtr(Addr _ptr, Args&&... args) : CPP(_ptr, args...) {}
     template <typename ...Args,
-              typename std::enable_if<std::is_constructible<
-                  Proxy, Args&&...>::value, int>::type = 0>
+              typename std::enable_if_t<std::is_constructible<
+                  Proxy, Args&&...>::value, int> = 0>
     explicit ProxyPtr(Args&&... args) : CPP(0, args...) {}
 
     template <typename O, typename Enabled=
-        typename std::enable_if<std::is_assignable<T *, O *>::value>::type>
+        typename std::enable_if_t<std::is_assignable<T *, O *>::value>>
     ProxyPtr(const ProxyPtr<O, Proxy> &other) : CPP(other) {}
 
     ProxyPtr(const PP &other) : CPP(other) {}
@@ -266,14 +265,14 @@ class ProxyPtr : public ConstProxyPtr<T, Proxy>
     }
 
     template <typename A>
-    typename std::enable_if<std::is_integral<A>::value, PP>::type
+    typename std::enable_if_t<std::is_integral<A>::value, PP>
     operator + (A a) const
     {
         return PP(this->addr() + a * sizeof(T), this->proxy);
     }
 
     template <typename A>
-    typename std::enable_if<std::is_integral<A>::value, PP>::type
+    typename std::enable_if_t<std::is_integral<A>::value, PP>
     operator - (A a) const
     {
         return PP(this->addr() - a * sizeof(T), this->proxy);
@@ -324,7 +323,7 @@ class ProxyPtr : public ConstProxyPtr<T, Proxy>
 };
 
 template <typename T, typename Proxy, typename A>
-typename std::enable_if<std::is_integral<A>::value, ProxyPtr<T, Proxy>>::type
+typename std::enable_if_t<std::is_integral<A>::value, ProxyPtr<T, Proxy>>
 operator + (A a, const ProxyPtr<T, Proxy> &other)
 {
     return other + a;

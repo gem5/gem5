@@ -53,8 +53,7 @@ namespace GuestABI
 // With no arguments to gather, call the target function and store the
 // result.
 template <typename ABI, bool store_ret, typename Ret>
-static typename std::enable_if<!std::is_void<Ret>::value && store_ret,
-                Ret>::type
+static typename std::enable_if_t<!std::is_void<Ret>::value && store_ret, Ret>
 callFrom(ThreadContext *tc, typename ABI::State &state,
         std::function<Ret(ThreadContext *)> target)
 {
@@ -64,8 +63,7 @@ callFrom(ThreadContext *tc, typename ABI::State &state,
 }
 
 template <typename ABI, bool store_ret, typename Ret>
-static typename std::enable_if<!std::is_void<Ret>::value && !store_ret,
-                Ret>::type
+static typename std::enable_if_t<!std::is_void<Ret>::value && !store_ret, Ret>
 callFrom(ThreadContext *tc, typename ABI::State &state,
         std::function<Ret(ThreadContext *)> target)
 {
@@ -85,7 +83,7 @@ callFrom(ThreadContext *tc, typename ABI::State &state,
 // case above.
 template <typename ABI, bool store_ret, typename Ret,
           typename NextArg, typename ...Args>
-static typename std::enable_if<!std::is_void<Ret>::value, Ret>::type
+static typename std::enable_if_t<!std::is_void<Ret>::value, Ret>
 callFrom(ThreadContext *tc, typename ABI::State &state,
         std::function<Ret(ThreadContext *, NextArg, Args...)> target)
 {

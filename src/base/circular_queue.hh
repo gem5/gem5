@@ -469,7 +469,7 @@ class CircularQueue : private std::vector<T>
          * @ingroup api_base_utils
          */
         template<typename Idx>
-        typename std::enable_if<std::is_integral<Idx>::value,reference>::type
+        typename std::enable_if_t<std::is_integral<Idx>::value, reference>
         operator[](const Idx& index) { return *(*this + index); }
 
         /**

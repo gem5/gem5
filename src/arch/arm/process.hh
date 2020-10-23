@@ -94,9 +94,9 @@ namespace GuestABI
 
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
-    typename std::enable_if<
+    typename std::enable_if_t<
         std::is_base_of<ArmProcess32::SyscallABI, ABI>::value &&
-        ABI::template IsWide<Arg>::value>::type>
+        ABI::template IsWide<Arg>::value>>
 {
     static Arg
     get(ThreadContext *tc, typename ABI::State &state)

@@ -73,8 +73,8 @@ namespace GuestABI
 
 template <typename Arg>
 struct Argument<X86ISA::EmuLinux::SyscallABI32, Arg,
-    typename std::enable_if<
-        X86ISA::EmuLinux::SyscallABI32::IsWide<Arg>::value>::type>
+    typename std::enable_if_t<
+        X86ISA::EmuLinux::SyscallABI32::IsWide<Arg>::value>>
 {
     using ABI = X86ISA::EmuLinux::SyscallABI32;
 

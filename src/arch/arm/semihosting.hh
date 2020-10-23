@@ -595,7 +595,7 @@ namespace GuestABI
 
 template <typename Arg>
 struct Argument<ArmSemihosting::Abi64, Arg,
-    typename std::enable_if<std::is_integral<Arg>::value>::type>
+    typename std::enable_if_t<std::is_integral<Arg>::value>>
 {
     static Arg
     get(ThreadContext *tc, ArmSemihosting::Abi64::State &state)
@@ -606,7 +606,7 @@ struct Argument<ArmSemihosting::Abi64, Arg,
 
 template <typename Arg>
 struct Argument<ArmSemihosting::Abi32, Arg,
-    typename std::enable_if<std::is_integral<Arg>::value>::type>
+    typename std::enable_if_t<std::is_integral<Arg>::value>>
 {
     static Arg
     get(ThreadContext *tc, ArmSemihosting::Abi32::State &state)
@@ -619,8 +619,8 @@ struct Argument<ArmSemihosting::Abi32, Arg,
 };
 
 template <typename Abi>
-struct Argument<Abi, ArmSemihosting::InPlaceArg, typename std::enable_if<
-    std::is_base_of<ArmSemihosting::AbiBase, Abi>::value>::type>
+struct Argument<Abi, ArmSemihosting::InPlaceArg, typename std::enable_if_t<
+    std::is_base_of<ArmSemihosting::AbiBase, Abi>::value>>
 {
     static ArmSemihosting::InPlaceArg
     get(ThreadContext *tc, typename Abi::State &state)

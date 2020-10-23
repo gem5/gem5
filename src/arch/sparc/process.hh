@@ -79,8 +79,8 @@ namespace GuestABI
 
 template <typename ABI>
 struct Result<ABI, SyscallReturn,
-    typename std::enable_if<std::is_base_of<
-        SparcProcess::SyscallABI, ABI>::value>::type>
+    typename std::enable_if_t<std::is_base_of<
+        SparcProcess::SyscallABI, ABI>::value>>
 {
     static void
     store(ThreadContext *tc, const SyscallReturn &ret)
@@ -160,8 +160,7 @@ namespace GuestABI
 
 template <typename Arg>
 struct Argument<Sparc32Process::SyscallABI, Arg,
-    typename std::enable_if<
-        Sparc32Process::SyscallABI::IsWide<Arg>::value>::type>
+    typename std::enable_if_t<Sparc32Process::SyscallABI::IsWide<Arg>::value>>
 {
     using ABI = Sparc32Process::SyscallABI;
 

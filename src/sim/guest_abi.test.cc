@@ -106,7 +106,7 @@ struct Argument<TestABI_1D, int>
 
 template <typename Arg>
 struct Argument<TestABI_1D, Arg,
-    typename std::enable_if<std::is_floating_point<Arg>::value>::type>
+    typename std::enable_if_t<std::is_floating_point<Arg>::value>>
 {
     static Arg
     get(ThreadContext *tc, TestABI_1D::State &state)
@@ -127,7 +127,7 @@ struct Result<TestABI_1D, int>
 
 template <typename Ret>
 struct Result<TestABI_1D, Ret,
-    typename std::enable_if<std::is_floating_point<Ret>::value>::type>
+    typename std::enable_if_t<std::is_floating_point<Ret>::value>>
 {
     static void
     store(ThreadContext *tc, const Ret &ret)
@@ -181,7 +181,7 @@ struct Argument<TestABI_2D, int>
 
 template <typename Arg>
 struct Argument<TestABI_2D, Arg,
-    typename std::enable_if<std::is_floating_point<Arg>::value>::type>
+    typename std::enable_if_t<std::is_floating_point<Arg>::value>>
 {
     static Arg
     get(ThreadContext *tc, TestABI_2D::State &state)
@@ -202,7 +202,7 @@ struct Result<TestABI_2D, int>
 
 template <typename Ret>
 struct Result<TestABI_2D, Ret,
-    typename std::enable_if<std::is_floating_point<Ret>::value>::type>
+    typename std::enable_if_t<std::is_floating_point<Ret>::value>>
 {
     static void
     store(ThreadContext *tc, const Ret &ret)

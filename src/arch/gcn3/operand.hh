@@ -264,7 +264,7 @@ namespace Gcn3ISA
          * primitive types (i.e., 8b to 64b primitives).
          */
         template<bool Condition = (NumDwords == 1 || NumDwords == 2) && Const>
-        typename std::enable_if<Condition, const DataType>::type
+        typename std::enable_if_t<Condition, const DataType>
         operator[](size_t idx) const
         {
             assert(idx < NumVecElemPerVecReg);
@@ -307,7 +307,7 @@ namespace Gcn3ISA
          * primitive types (i.e., 8b to 64b primitives).
          */
         template<bool Condition = (NumDwords == 1 || NumDwords == 2) && !Const>
-        typename std::enable_if<Condition, DataType&>::type
+        typename std::enable_if_t<Condition, DataType&>
         operator[](size_t idx)
         {
             assert(!scalar);
@@ -392,7 +392,7 @@ namespace Gcn3ISA
          * that we need to perform computation on.
          */
         template<bool Condition = NumDwords == 1 || NumDwords == 2>
-        typename std::enable_if<Condition, DataType>::type
+        typename std::enable_if_t<Condition, DataType>
         rawData() const
         {
             assert(sizeof(DataType) <= sizeof(srfData));
@@ -491,7 +491,7 @@ namespace Gcn3ISA
          * bit access to scalar data. primarily used for setting vcc bits.
          */
         template<bool Condition = NumDwords == 1 || NumDwords == 2>
-        typename std::enable_if<Condition, void>::type
+        typename std::enable_if_t<Condition, void>
         setBit(int bit, int bit_val)
         {
             DataType &sgpr = *((DataType*)srfData.data());
@@ -499,7 +499,7 @@ namespace Gcn3ISA
         }
 
         template<bool Condition = (NumDwords == 1 || NumDwords == 2) && !Const>
-        typename std::enable_if<Condition, ScalarOperand&>::type
+        typename std::enable_if_t<Condition, ScalarOperand&>
         operator=(DataType rhs)
         {
             std::memcpy((void*)srfData.data(), (void*)&rhs, sizeof(DataType));

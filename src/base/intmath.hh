@@ -59,7 +59,7 @@ power(uint32_t n, uint32_t e)
  * @ingroup api_base_utils
  */
 template <class T>
-inline typename std::enable_if<std::is_integral<T>::value, int>::type
+inline typename std::enable_if_t<std::is_integral<T>::value, int>
 floorLog2(T x)
 {
     assert(x > 0);
