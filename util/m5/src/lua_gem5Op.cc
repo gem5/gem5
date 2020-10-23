@@ -101,6 +101,20 @@ do_exit(lua_State *L)
 }
 
 static int
+do_sum(lua_State *L)
+{
+    uint64_t a = lua_tointeger(L, 1);
+    uint64_t b = lua_tointeger(L, 2);
+    uint64_t c = lua_tointeger(L, 3);
+    uint64_t d = lua_tointeger(L, 4);
+    uint64_t e = lua_tointeger(L, 5);
+    uint64_t f = lua_tointeger(L, 6);
+    uint64_t sum = m5_sum(a, b, c, d, e, f);
+    lua_pushinteger(L, sum);
+    return 1;
+}
+
+static int
 do_fail(lua_State *L)
 {
     uint64_t ns_delay = lua_tointeger(L, 1);

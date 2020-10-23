@@ -52,6 +52,7 @@ public class gem5Op {
 
     public native void exit(long ns_delay);
     public native void fail(long ns_delay, long code);
+    public native long sum(long a, long b, long c, long d, long e, long f);
     public native long init_param(long key_str1, long key_str2);
     public native void checkpoint(long ns_delay, long ns_period);
     public native void reset_stats(long ns_delay, long ns_period);

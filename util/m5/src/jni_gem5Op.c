@@ -105,6 +105,16 @@ Java_jni_gem5Op_fail(JNIEnv *env, jobject obj, jlong j_ns_delay, jlong j_code)
 }
 
 JNIEXPORT jlong JNICALL
+Java_jni_gem5Op_sum(JNIEnv *env, jobject obj, jlong a, jlong b, jlong c,
+                    jlong d, jlong e, jlong f)
+{
+    uint64_t result = m5_sum(a, b, c, d, e, f);
+    if (result & 0x8000000000000000ULL)
+        printf("Truncated return value from sum() to 63 bits\n");
+    return (result & 0x7FFFFFFFFFFFFFFFULL);
+}
+
+JNIEXPORT jlong JNICALL
 Java_jni_gem5Op_init_1param(JNIEnv *env, jobject obj, jlong j_key_str1,
                            jlong j_key_str2)
 {
