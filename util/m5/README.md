@@ -341,14 +341,9 @@ library only if that trigger mechanism is supported for that ABI.
 
 # Java jar
 
-To use the gem5 java jar, you will need to load the corresponding .so.
-
-```shell
-System.loadLibrary("gem5Ops");
-```
-
 In your java source, import the gem5Op class which will have methods for
-calling each of the gem5 operations.
+calling each of the gem5 operations. The .so library will be loaded
+automatically.
 
 ```shell
 import gem5.Ops

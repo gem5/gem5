@@ -42,6 +42,10 @@ package gem5;
  */
 
 public class Ops {
+    static {
+        System.loadLibrary("gem5Ops");
+    }
+
     public native void arm(long address);
     public native void quiesce();
     public native void quiesce_ns(long ns);
