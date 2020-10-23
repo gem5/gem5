@@ -91,12 +91,47 @@ else:
 main['ENV']['PATH'] = os.environ['PATH']
 # Pass through terminal information to, for instance, enable color output.
 main['ENV']['TERM'] = os.environ['TERM']
+# Pass through the java CLASSPATH (if it exists) so we can find libraries.
+main['ENV']['CLASSPATH'] = os.environ.get('CLASSPATH', '')
 
 # Detect some dependencies of some forms of the m5 utility/library.
+def CheckForJavaPkg(context, pkg_name):
+    context.Message('Checking for java package %s...' % pkg_name)
+    result = main['HAVE_JAVA'] and \
+             context.TryAction('${JAVAC} ${JAVACFLAGS} ${SOURCES}',
+                               'import %s.*;' % pkg_name, '.java')[0]
+    context.Result(result)
+    return result
+
+def CheckForPkgConfigPackage(context, package):
+    context.Message('Checking for pkg-config package %s...' % package)
+    result = main['HAVE_PKG_CONFIG'] and \
+             os.system('pkg-config --exists %s' % package) == 0
+    context.Result(result)
+    return result;
+
+conf = Configure(main, conf_dir=build_dir.Dir('.scons_config'),
+        log_file=build_dir.File('scons_config.log'), custom_tests={
+        'CheckForJavaPkg' : CheckForJavaPkg,
+        'CheckForPkgConfigPackage' : CheckForPkgConfigPackage
+})
 main['HAVE_JAVA'] = all(key in main for key in ('JAVAC', 'JAR'))
-main['HAVE_PKG_CONFIG'] = main.Detect('pkg-config') is not None
-main['HAVE_LUA51'] = (main['HAVE_PKG_CONFIG'] and
-                      os.system('pkg-config --exists lua51') == 0)
+if not main['HAVE_JAVA']:
+    print('javac and/or jar not detected, not building java wrapper.')
+
+main['HAVE_JUNIT'] = conf.CheckForJavaPkg('org.junit')
+if main['HAVE_JAVA'] and not main['HAVE_JUNIT']:
+    print('junit test framework not found, not build java wrapper test')
+
+main['HAVE_PKG_CONFIG'] = conf.CheckProg('pkg-config')
+if not main['HAVE_PKG_CONFIG']:
+    print("pkg-config not detected, can't check for lua51.")
+
+main['HAVE_LUA51'] = conf.CheckForPkgConfigPackage('lua51')
+if not main['HAVE_LUA51']:
+    print('lua 5.1 not detected, not building lua wrapper.')
+
+conf.Finish()
 
 # Put the sconsign file in the build dir so everything can be deleted at once.
 main.SConsignFile(os.path.join(abspath(build_dir), 'sconsign'))
