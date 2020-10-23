@@ -37,7 +37,7 @@ m5 = 'm5.cc'
 m5_mmap = 'm5_mmap.c'
 usage = 'usage.cc'
 
-jni = 'java/gem5/ops.c'
+jni = 'java/gem5/ops.cc'
 lua = 'lua_gem5Op.cc'
 
 all_call_types = list(env['CALL_TYPE'].values())
@@ -117,6 +117,11 @@ if env['HAVE_JAVA']:
                      OUT=Dir('out').Dir('java'), JAVA_DIR=Dir('java'))
     # Set include paths to the C headers from the JDK which scons found for us.
     java_env.Append(CPPPATH='${JAVAINCLUDES}')
+    for ct in all_call_types:
+        if ct.default:
+            java_env.Append(CXXFLAGS=[ '-DCALL_TYPE_DEFAULT=%s' % ct.name ])
+        java_env.Append(CXXFLAGS=[ '-DCALL_TYPE_%s_ENABLED=%s' %
+                                   (ct.name, '1' if ct.enabled else '0') ])
     java_env.SharedLibrary('out/java/gem5Ops',
                            [ jni ] + m5op_shared + m5_mmap_shared)
 

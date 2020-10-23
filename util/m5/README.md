@@ -345,15 +345,22 @@ library only if that trigger mechanism is supported for that ABI.
 
 # Java jar
 
-In your java source, import the gem5Op class which will have methods for
-calling each of the gem5 operations. The .so library will be loaded
-automatically.
+In your java source, import the gem5Op class.
 
-```shell
+```java
 import gem5.Ops
 ```
 
-These methods will all use the magic instruction based trigger mechanism.
+This class provides a static map named callTypes which map from each of the
+call type names ("addr", "inst", or "semi") to an Ops instance. That instance
+will provide a set of methods which trigger each of the gem5 operations using
+the requested trigger mechanism. The call type "default" maps to whatever the
+default call type is for the current ABI.
+
+```shell
+gem5.Ops gem5_ops = gem5.Ops.callTypes.get("default");
+long sum = gem5_ops.sum(1, 2, 3, 4, 5, 6);
+```
 
 
 

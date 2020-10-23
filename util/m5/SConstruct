@@ -39,6 +39,8 @@ googletest_dir = ext_dir.Dir('googletest')
 src_dir = Dir('src')
 build_dir = Dir('build')
 
+main.SConsignFile(build_dir.File("sconsign").abspath)
+
 def abspath(d):
     return os.path.abspath(str(d))
 

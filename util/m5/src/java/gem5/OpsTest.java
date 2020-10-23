@@ -34,15 +34,25 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
+import java.util.Random;
+import java.util.Map;
+
 import gem5.Ops;
 
 public class OpsTest {
 
     @Test
     public void m5SumShouldReturnSum() {
-        gem5.Ops gem5_ops = new gem5.Ops();
+        Random rand = new Random();
 
-        long a = 1, b = 2, c = 3, d = 4, e = 5, f = 6;
+        gem5.Ops gem5_ops = gem5.Ops.callTypes.get("default");
+
+        long a = rand.nextInt(1000);
+        long b = rand.nextInt(1000);
+        long c = rand.nextInt(1000);
+        long d = rand.nextInt(1000);
+        long e = rand.nextInt(1000);
+        long f = rand.nextInt(1000);
 
         long sum = gem5_ops.sum(a, b, c, d, e, f);
         assertEquals(a + b + c + d + e + f, sum);

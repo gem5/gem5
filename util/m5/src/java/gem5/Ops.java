@@ -37,13 +37,25 @@
 
 package gem5;
 
+import java.util.*;
+
 /**
  * Java class to implement JNI for m5Ops
  */
 
 public class Ops {
+    private Ops() {}
+
+    private static native void setupCallTypes();
+    private long dispatchTablePtr;
+
+    private static Map<String, Ops> _callTypes;
+    public static final Map<String, Ops> callTypes;
+
     static {
         System.loadLibrary("gem5Ops");
+        setupCallTypes();
+        callTypes = Collections.unmodifiableMap(_callTypes);
     }
 
     public native void arm(long address);
@@ -73,5 +85,4 @@ public class Ops {
     public native void panic();
     public native void work_begin(long workid, long threadid);
     public native void work_end(long workid, long threadid);
-
 }
