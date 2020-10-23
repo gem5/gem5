@@ -352,3 +352,9 @@ def format Mrrc15() {{
     return decodeMcrrMrrc15(machInst);
     '''
 }};
+
+def format Gem5Op() {{
+    decode_block = '''
+    return new Gem5Op(machInst);
+    '''
+}};

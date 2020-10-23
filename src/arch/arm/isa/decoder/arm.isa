@@ -119,7 +119,7 @@ format DataOp {
                 0xa, 0xb: VfpData::vfpData();
             } // CPNUM
             1: decode CPNUM { // 27-24=1110,4 ==1
-                0x1: M5ops::m5ops();
+                0x1: Gem5Op::gem5op();
                 0xa, 0xb: ShortFpTransfer::shortFpTransfer();
                 0xe: McrMrc14::mcrMrc14();
                 0xf: McrMrc15::mcrMrc15();

@@ -3029,47 +3029,6 @@ template StaticInstPtr decodeFpAdvSIMD<%(df)sDecoder>(ExtMachInst machInst);
 }'''
 }};
 
-output decoder {{
-namespace Aarch64
-{
-    StaticInstPtr
-    decodeGem5Ops(ExtMachInst machInst)
-    {
-        const uint32_t m5func = bits(machInst, 23, 16);
-        switch (m5func) {
-          case M5OP_ARM: return new Arm(machInst);
-          case M5OP_QUIESCE: return new Quiesce(machInst);
-          case M5OP_QUIESCE_NS: return new QuiesceNs64(machInst);
-          case M5OP_QUIESCE_CYCLE: return new QuiesceCycles64(machInst);
-          case M5OP_QUIESCE_TIME: return new QuiesceTime64(machInst);
-          case M5OP_RPNS: return new Rpns64(machInst);
-          case M5OP_WAKE_CPU: return new WakeCPU64(machInst);
-          case M5OP_DEPRECATED1: return new Deprecated_ivlb(machInst);
-          case M5OP_DEPRECATED2: return new Deprecated_ivle(machInst);
-          case M5OP_DEPRECATED3: return new Deprecated_exit (machInst);
-          case M5OP_EXIT: return new M5exit64(machInst);
-          case M5OP_FAIL: return new M5fail64(machInst);
-          case M5OP_SUM: return new M5sum64(machInst);
-          case M5OP_LOAD_SYMBOL: return new Loadsymbol(machInst);
-          case M5OP_INIT_PARAM: return new Initparam64(machInst);
-          case M5OP_RESET_STATS: return new Resetstats64(machInst);
-          case M5OP_DUMP_STATS: return new Dumpstats64(machInst);
-          case M5OP_DUMP_RESET_STATS: return new Dumpresetstats64(machInst);
-          case M5OP_CHECKPOINT: return new M5checkpoint64(machInst);
-          case M5OP_WRITE_FILE: return new M5writefile64(machInst);
-          case M5OP_READ_FILE: return new M5readfile64(machInst);
-          case M5OP_DEBUG_BREAK: return new M5break(machInst);
-          case M5OP_SWITCH_CPU: return new M5switchcpu(machInst);
-          case M5OP_ADD_SYMBOL: return new M5addsymbol64(machInst);
-          case M5OP_PANIC: return new M5panic(machInst);
-          case M5OP_WORK_BEGIN: return new M5workbegin64(machInst);
-          case M5OP_WORK_END: return new M5workend64(machInst);
-          default: return new Unknown64(machInst);
-        }
-    }
-}
-}};
-
 def format Aarch64() {{
     decode_block = '''
     {
@@ -3105,7 +3064,7 @@ def format Aarch64() {{
             return decodeDataProcReg(machInst);
         } else if (bits(machInst, 24) == 1 &&
                    bits(machInst, 31, 28) == 0xF) {
-            return decodeGem5Ops(machInst);
+            return new Gem5Op64(machInst);
         } else {
             // bit 27:25=111
             switch(decoderFlavor){

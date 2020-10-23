@@ -82,7 +82,7 @@ decode BIGTHUMB {
                         default: WarnUnimpl::cdp(); // cdp2
                     }
                     0x1: decode LTCOPROC {
-                        0x1: M5ops::m5ops();
+                        0x1: Gem5Op::gem5op();
                         0xa, 0xb: ShortFpTransfer::shortFpTransfer();
                         0xe: McrMrc14::mcrMrc14();
                         0xf: McrMrc15::mcrMrc15();
@@ -147,7 +147,7 @@ decode BIGTHUMB {
                         default: WarnUnimpl::cdp(); // cdp2
                     }
                     0x1: decode LTCOPROC {
-                        0x1: M5ops::m5ops();
+                        0x1: Gem5Op::gem5op();
                         0xa, 0xb: ShortFpTransfer::shortFpTransfer();
                         0xe: McrMrc14::mcrMrc14();
                         0xf: McrMrc15::mcrMrc15();
