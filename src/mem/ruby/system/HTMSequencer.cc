@@ -63,10 +63,37 @@ HTMSequencer::htmRetCodeConversion(
 }
 
 HTMSequencer::HTMSequencer(const RubyHTMSequencerParams &p)
-    : Sequencer(p)
+    : Sequencer(p),
+      ADD_STAT(m_htm_transaction_cycles, "number of cycles spent in an outer "
+                                         "transaction"),
+      ADD_STAT(m_htm_transaction_instructions, "number of instructions spent "
+                                               "in an outer transaction"),
+      ADD_STAT(m_htm_transaction_abort_cause, "cause of htm transaction abort")
 {
     m_htmstart_tick = 0;
     m_htmstart_instruction = 0;
+
+    // hardware transactional memory
+    m_htm_transaction_cycles
+        .init(10)
+        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan)
+        ;
+    m_htm_transaction_instructions
+        .init(10)
+        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan)
+        ;
+    auto num_causes = static_cast<int>(HtmFailureFaultCause::NUM_CAUSES);
+    m_htm_transaction_abort_cause
+        .init(num_causes)
+        .flags(Stats::total | Stats::pdf | Stats::dist | Stats::nozero)
+        ;
+
+    for (unsigned cause_idx = 0; cause_idx < num_causes; ++cause_idx) {
+        m_htm_transaction_abort_cause.subname(
+            cause_idx,
+            htmFailureToStr(HtmFailureFaultCause(cause_idx)));
+    }
+
 }
 
 HTMSequencer::~HTMSequencer()
@@ -178,8 +205,6 @@ HTMSequencer::htmCallback(Addr address,
 void
 HTMSequencer::regStats()
 {
-    Sequencer::regStats();
-
     // hardware transactional memory
     m_htm_transaction_cycles
         .init(10)

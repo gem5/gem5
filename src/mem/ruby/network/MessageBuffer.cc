@@ -58,7 +58,14 @@ MessageBuffer::MessageBuffer(const Params &p)
     m_time_last_time_enqueue(0), m_time_last_time_pop(0),
     m_last_arrival_time(0), m_strict_fifo(p.ordered),
     m_randomization(p.randomization),
-    m_allow_zero_latency(p.allow_zero_latency)
+    m_allow_zero_latency(p.allow_zero_latency),
+    ADD_STAT(m_not_avail_count, "Number of times this buffer did not have "
+                                "N slots available"),
+    ADD_STAT(m_buf_msgs, "Average number of messages in buffer"),
+    ADD_STAT(m_stall_time, "Average number of cycles messages are stalled in "
+                           "this MB"),
+    ADD_STAT(m_stall_count, "Number of times messages were stalled"),
+    ADD_STAT(m_occupancy, "Average occupancy of buffer capacity")
 {
     m_msg_counter = 0;
     m_consumer = NULL;
@@ -76,6 +83,28 @@ MessageBuffer::MessageBuffer(const Params &p)
     m_stall_time = 0;
 
     m_dequeue_callback = nullptr;
+
+    // stats
+    m_not_avail_count
+        .flags(Stats::nozero);
+
+    m_buf_msgs
+        .flags(Stats::nozero);
+
+    m_stall_count
+        .flags(Stats::nozero);
+
+    m_occupancy
+        .flags(Stats::nozero);
+
+    m_stall_time
+        .flags(Stats::nozero);
+
+    if (m_max_size > 0) {
+        m_occupancy = m_buf_msgs / m_max_size;
+    } else {
+        m_occupancy = 0;
+    }
 }
 
 unsigned int
@@ -455,41 +484,6 @@ MessageBuffer::isReady(Tick current_time) const
 {
     return ((m_prio_heap.size() > 0) &&
         (m_prio_heap.front()->getLastEnqueueTime() <= current_time));
-}
-
-void
-MessageBuffer::regStats()
-{
-    m_not_avail_count
-        .name(name() + ".not_avail_count")
-        .desc("Number of times this buffer did not have N slots available")
-        .flags(Stats::nozero);
-
-    m_buf_msgs
-        .name(name() + ".avg_buf_msgs")
-        .desc("Average number of messages in buffer")
-        .flags(Stats::nozero);
-
-    m_stall_count
-        .name(name() + ".num_msg_stalls")
-        .desc("Number of times messages were stalled")
-        .flags(Stats::nozero);
-
-    m_occupancy
-        .name(name() + ".avg_buf_occ")
-        .desc("Average occupancy of buffer capacity")
-        .flags(Stats::nozero);
-
-    m_stall_time
-        .name(name() + ".avg_stall_time")
-        .desc("Average number of cycles messages are stalled in this MB")
-        .flags(Stats::nozero);
-
-    if (m_max_size > 0) {
-        m_occupancy = m_buf_msgs / m_max_size;
-    } else {
-        m_occupancy = 0;
-    }
 }
 
 uint32_t

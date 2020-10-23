@@ -140,7 +140,6 @@ class CacheMemory : public SimObject
     void print(std::ostream& out) const;
     void printData(std::ostream& out) const;
 
-    void regStats();
     bool checkResourceAvailable(CacheResourceType res, Addr addr);
     void recordRequestType(CacheRequestType requestType, Addr addr);
 
@@ -149,29 +148,24 @@ class CacheMemory : public SimObject
     void htmCommitTransaction();
 
   public:
-    Stats::Scalar m_demand_hits;
-    Stats::Scalar m_demand_misses;
-    Stats::Formula m_demand_accesses;
+    struct CacheMemoryStats : public Stats::Group
+    {
+        CacheMemoryStats(Stats::Group *parent);
 
-    Stats::Scalar m_sw_prefetches;
-    Stats::Scalar m_hw_prefetches;
-    Stats::Formula m_prefetches;
+        Stats::Scalar numDataArrayReads;
+        Stats::Scalar numDataArrayWrites;
+        Stats::Scalar numTagArrayReads;
+        Stats::Scalar numTagArrayWrites;
 
-    Stats::Vector m_accessModeType;
+        Stats::Scalar numTagArrayStalls;
+        Stats::Scalar numDataArrayStalls;
 
-    Stats::Scalar numDataArrayReads;
-    Stats::Scalar numDataArrayWrites;
-    Stats::Scalar numTagArrayReads;
-    Stats::Scalar numTagArrayWrites;
-
-    Stats::Scalar numTagArrayStalls;
-    Stats::Scalar numDataArrayStalls;
-
-    // hardware transactional memory
-    Stats::Histogram htmTransCommitReadSet;
-    Stats::Histogram htmTransCommitWriteSet;
-    Stats::Histogram htmTransAbortReadSet;
-    Stats::Histogram htmTransAbortWriteSet;
+        // hardware transactional memory
+        Stats::Histogram htmTransCommitReadSet;
+        Stats::Histogram htmTransCommitWriteSet;
+        Stats::Histogram htmTransAbortReadSet;
+        Stats::Histogram htmTransAbortWriteSet;
+    };
 
     int getCacheSize() const { return m_cache_size; }
     int getCacheAssoc() const { return m_cache_assoc; }
@@ -229,6 +223,18 @@ class CacheMemory : public SimObject
      * false.
      */
     bool m_use_occupancy;
+
+    public:
+      CacheMemoryStats cacheMemoryStats;
+      Stats::Scalar m_demand_hits;
+      Stats::Scalar m_demand_misses;
+      Stats::Formula m_demand_accesses;
+
+      Stats::Scalar m_sw_prefetches;
+      Stats::Scalar m_hw_prefetches;
+      Stats::Formula m_prefetches;
+
+      Stats::Vector m_accessModeType;
 };
 
 std::ostream& operator<<(std::ostream& out, const CacheMemory& obj);

@@ -155,8 +155,6 @@ class MessageBuffer : public SimObject
         return RubyDummyPort::instance();
     }
 
-    void regStats() override;
-
     // Function for figuring out if any of the messages in the buffer need
     // to be updated with the data from the packet.
     // Return value indicates the number of messages that were updated.
@@ -243,8 +241,6 @@ class MessageBuffer : public SimObject
     unsigned int m_stalled_at_cycle_start;
     unsigned int m_msgs_this_cycle;
 
-    Stats::Scalar m_not_avail_count;  // count the # of times I didn't have N
-                                      // slots available
     uint64_t m_msg_counter;
     int m_priority_rank;
     const bool m_strict_fifo;
@@ -254,6 +250,8 @@ class MessageBuffer : public SimObject
     int m_input_link_id;
     int m_vnet_id;
 
+    Stats::Scalar m_not_avail_count;  // count the # of times I didn't have N
+                                      // slots available
     Stats::Average m_buf_msgs;
     Stats::Average m_stall_time;
     Stats::Scalar m_stall_count;

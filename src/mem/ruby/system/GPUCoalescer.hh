@@ -243,7 +243,6 @@ class GPUCoalescer : public RubyPort
     void printProgress(std::ostream& out) const;
     void resetStats() override;
     void collateStats();
-    void regStats() override;
 
     // each store request needs two callbacks:
     //  (1) writeCallback is called when the store is received and processed

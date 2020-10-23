@@ -95,7 +95,6 @@ class Sequencer : public RubyPort
     virtual void wakeup(); // Used only for deadlock detection
     void resetStats() override;
     void collateStats();
-    void regStats() override;
 
     void writeCallback(Addr address,
                        DataBlock& data,

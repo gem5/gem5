@@ -56,51 +56,28 @@ RubyPrefetcher::RubyPrefetcher(const Params &p)
     negativeFilter(p.unit_filter),
     nonUnitFilter(p.nonunit_filter),
     m_prefetch_cross_pages(p.cross_page),
-    m_page_shift(p.sys->getPageShift())
+    m_page_shift(p.sys->getPageShift()),
+    rubyPrefetcherStats(this)
 {
     assert(m_num_streams > 0);
     assert(m_num_startup_pfs <= MAX_PF_INFLIGHT);
 }
 
-void
-RubyPrefetcher::regStats()
+RubyPrefetcher::
+RubyPrefetcherStats::RubyPrefetcherStats(Stats::Group *parent)
+    : Stats::Group(parent, "RubyPrefetcher"),
+      ADD_STAT(numMissObserved, "Number of misses observed"),
+      ADD_STAT(numAllocatedStreams, "Number of streams allocated for "
+                                    "prefetching"),
+      ADD_STAT(numPrefetchRequested, "Number of prefetch requests made"),
+      ADD_STAT(numHits, "Number of prefetched blocks accessed "
+                        "(for the first time)"),
+      ADD_STAT(numPartialHits, "Number of misses observed for a block being "
+                               "prefetched"),
+      ADD_STAT(numPagesCrossed, "Number of prefetches across pages"),
+      ADD_STAT(numMissedPrefetchedBlocks, "Number of misses for blocks that "
+                                          "were prefetched, yet missed")
 {
-    SimObject::regStats();
-
-    numMissObserved
-        .name(name() + ".miss_observed")
-        .desc("number of misses observed")
-        ;
-
-    numAllocatedStreams
-        .name(name() + ".allocated_streams")
-        .desc("number of streams allocated for prefetching")
-        ;
-
-    numPrefetchRequested
-        .name(name() + ".prefetches_requested")
-        .desc("number of prefetch requests made")
-        ;
-
-    numHits
-        .name(name() + ".hits")
-        .desc("number of prefetched blocks accessed (for the first time)")
-        ;
-
-    numPartialHits
-        .name(name() + ".partial_hits")
-        .desc("number of misses observed for a block being prefetched")
-        ;
-
-    numPagesCrossed
-        .name(name() + ".pages_crossed")
-        .desc("number of prefetches across pages")
-        ;
-
-    numMissedPrefetchedBlocks
-        .name(name() + ".misses_on_prefetched_blocks")
-        .desc("number of misses for blocks that were prefetched, yet missed")
-        ;
 }
 
 void
@@ -108,7 +85,7 @@ RubyPrefetcher::observeMiss(Addr address, const RubyRequestType& type)
 {
     DPRINTF(RubyPrefetcher, "Observed miss for %#x\n", address);
     Addr line_addr = makeLineAddress(address);
-    numMissObserved++;
+    rubyPrefetcherStats.numMissObserved++;
 
     // check to see if we have already issued a prefetch for this block
     uint32_t index = 0;
@@ -118,12 +95,12 @@ RubyPrefetcher::observeMiss(Addr address, const RubyRequestType& type)
             if (pfEntry->requestCompleted[index]) {
                 // We prefetched too early and now the prefetch block no
                 // longer exists in the cache
-                numMissedPrefetchedBlocks++;
+                rubyPrefetcherStats.numMissedPrefetchedBlocks++;
                 return;
             } else {
                 // The controller has issued the prefetch request,
                 // but the request for the block arrived earlier.
-                numPartialHits++;
+                rubyPrefetcherStats.numPartialHits++;
                 observePfMiss(line_addr);
                 return;
             }
@@ -152,7 +129,7 @@ RubyPrefetcher::observeMiss(Addr address, const RubyRequestType& type)
 void
 RubyPrefetcher::observePfMiss(Addr address)
 {
-    numPartialHits++;
+    rubyPrefetcherStats.numPartialHits++;
     DPRINTF(RubyPrefetcher, "Observed partial hit for %#x\n", address);
     issueNextPrefetch(address, NULL);
 }
@@ -160,7 +137,7 @@ RubyPrefetcher::observePfMiss(Addr address)
 void
 RubyPrefetcher::observePfHit(Addr address)
 {
-    numHits++;
+    rubyPrefetcherStats.numHits++;
     DPRINTF(RubyPrefetcher, "Observed hit for %#x\n", address);
     issueNextPrefetch(address, NULL);
 }
@@ -193,11 +170,11 @@ RubyPrefetcher::issueNextPrefetch(Addr address, PrefetchEntry *stream)
             stream->m_is_valid = false;
             return;
         }
-        numPagesCrossed++;
+        rubyPrefetcherStats.numPagesCrossed++;
     }
 
     // launch next prefetch
-    numPrefetchRequested++;
+    rubyPrefetcherStats.numPrefetchRequested++;
     stream->m_address = line_addr;
     stream->m_use_time = m_controller->curCycle();
     DPRINTF(RubyPrefetcher, "Requesting prefetch for %#x\n", line_addr);
@@ -227,7 +204,7 @@ void
 RubyPrefetcher::initializeStream(Addr address, int stride,
      uint32_t index, const RubyRequestType& type)
 {
-    numAllocatedStreams++;
+    rubyPrefetcherStats.numAllocatedStreams++;
 
     // initialize the stream prefetcher
     PrefetchEntry *mystream = &(m_array[index]);
@@ -251,11 +228,11 @@ RubyPrefetcher::initializeStream(Addr address, int stride,
                 mystream->m_is_valid = false;
                 return;
             }
-            numPagesCrossed++;
+            rubyPrefetcherStats.numPagesCrossed++;
         }
 
         // launch prefetch
-        numPrefetchRequested++;
+        rubyPrefetcherStats.numPrefetchRequested++;
         DPRINTF(RubyPrefetcher, "Requesting prefetch for %#x\n", line_addr);
         m_controller->enqueuePrefetch(line_addr, m_array[index].m_type);
     }

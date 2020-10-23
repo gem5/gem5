@@ -46,6 +46,7 @@
 #define __MEM_RUBY_PROFILER_PROFILER_HH__
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -70,7 +71,7 @@ class Profiler
     RubySystem *m_ruby_system;
 
     void wakeup();
-    void regStats(const std::string &name);
+    void regStats();
     void collateStats();
 
     AddressProfiler* getAddressProfiler() { return m_address_profiler_ptr; }
@@ -90,58 +91,101 @@ class Profiler
     AddressProfiler* m_address_profiler_ptr;
     AddressProfiler* m_inst_profiler_ptr;
 
-    Stats::Histogram delayHistogram;
-    std::vector<Stats::Histogram *> delayVCHistogram;
+    struct ProfilerStats : public Stats::Group
+    {
+        ProfilerStats(Stats::Group *parent, Profiler *profiler);
 
-    //! Histogram for number of outstanding requests per cycle.
-    Stats::Histogram m_outstandReqHistSeqr;
-    Stats::Histogram m_outstandReqHistCoalsr;
+        struct PerRequestTypeStats : public Stats::Group
+        {
+            PerRequestTypeStats(Stats::Group *parent);
 
-    //! Histogram for holding latency profile of all requests.
-    Stats::Histogram m_latencyHistSeqr;
-    Stats::Histogram m_latencyHistCoalsr;
-    std::vector<Stats::Histogram *> m_typeLatencyHistSeqr;
-    std::vector<Stats::Histogram *> m_typeLatencyHistCoalsr;
+            // Histogram of the latency of each request type
+            std::vector<Stats::Histogram *> m_typeLatencyHistSeqr;
+            std::vector<Stats::Histogram *> m_typeLatencyHistCoalsr;
 
-    //! Histogram for holding latency profile of all requests that
-    //! hit in the controller connected to this sequencer.
-    Stats::Histogram m_hitLatencyHistSeqr;
-    std::vector<Stats::Histogram *> m_hitTypeLatencyHistSeqr;
+            // Histogram of the latency of requests that hit in the controller
+            // connected to this sequencer for each type of request
+            std::vector<Stats::Histogram *> m_hitTypeLatencyHistSeqr;
 
-    //! Histograms for profiling the latencies for requests that
-    //! did not required external messages.
-    std::vector<Stats::Histogram *> m_hitMachLatencyHistSeqr;
-    std::vector< std::vector<Stats::Histogram *> > m_hitTypeMachLatencyHistSeqr;
+            // Histogram of the latency of requests that miss in the controller
+            // connected to this sequencer for each type of request
+            std::vector<Stats::Histogram *> m_missTypeLatencyHistSeqr;
+            std::vector<Stats::Histogram *> m_missTypeLatencyHistCoalsr;
+        } perRequestTypeStats;
 
-    //! Histogram for holding latency profile of all requests that
-    //! miss in the controller connected to this sequencer.
-    Stats::Histogram m_missLatencyHistSeqr;
-    Stats::Histogram m_missLatencyHistCoalsr;
-    std::vector<Stats::Histogram *> m_missTypeLatencyHistSeqr;
-    std::vector<Stats::Histogram *> m_missTypeLatencyHistCoalsr;
+        struct PerMachineTypeStats : public Stats::Group
+        {
+            PerMachineTypeStats(Stats::Group *parent);
 
-    //! Histograms for profiling the latencies for requests that
-    //! required external messages.
-    std::vector<Stats::Histogram *> m_missMachLatencyHistSeqr;
-    std::vector< std::vector<Stats::Histogram *> > m_missTypeMachLatencyHistSeqr;
-    std::vector<Stats::Histogram *> m_missMachLatencyHistCoalsr;
-    std::vector< std::vector<Stats::Histogram *> > m_missTypeMachLatencyHistCoalsr;
+            //! Histograms for profiling the latencies for requests that
+            //! did not required external messages.
+            std::vector<Stats::Histogram *> m_hitMachLatencyHistSeqr;
 
-    //! Histograms for recording the breakdown of miss latency
-    std::vector<Stats::Histogram *> m_IssueToInitialDelayHistSeqr;
-    std::vector<Stats::Histogram *> m_InitialToForwardDelayHistSeqr;
-    std::vector<Stats::Histogram *> m_ForwardToFirstResponseDelayHistSeqr;
-    std::vector<Stats::Histogram *> m_FirstResponseToCompletionDelayHistSeqr;
-    Stats::Scalar m_IncompleteTimesSeqr[MachineType_NUM];
-    std::vector<Stats::Histogram *> m_IssueToInitialDelayHistCoalsr;
-    std::vector<Stats::Histogram *> m_InitialToForwardDelayHistCoalsr;
-    std::vector<Stats::Histogram *> m_ForwardToFirstResponseDelayHistCoalsr;
-    std::vector<Stats::Histogram *> m_FirstResponseToCompletionDelayHistCoalsr;
+            //! Histograms for profiling the latencies for requests that
+            //! required external messages.
+            std::vector<Stats::Histogram *> m_missMachLatencyHistSeqr;
+            std::vector<Stats::Histogram *> m_missMachLatencyHistCoalsr;
+
+            //! Histograms for recording the breakdown of miss latency
+            std::vector<Stats::Histogram *> m_IssueToInitialDelayHistSeqr;
+            std::vector<Stats::Histogram *> m_InitialToForwardDelayHistSeqr;
+            std::vector<Stats::Histogram *>
+              m_ForwardToFirstResponseDelayHistSeqr;
+            std::vector<Stats::Histogram *>
+              m_FirstResponseToCompletionDelayHistSeqr;
+            std::vector<Stats::Scalar *> m_IncompleteTimesSeqr;
+            std::vector<Stats::Histogram *> m_IssueToInitialDelayHistCoalsr;
+            std::vector<Stats::Histogram *> m_InitialToForwardDelayHistCoalsr;
+            std::vector<Stats::Histogram *>
+              m_ForwardToFirstResponseDelayHistCoalsr;
+            std::vector<Stats::Histogram *>
+              m_FirstResponseToCompletionDelayHistCoalsr;
+        } perMachineTypeStats;
+
+        struct PerRequestTypeMachineTypeStats : public Stats::Group
+        {
+            PerRequestTypeMachineTypeStats(Stats::Group *parent);
+
+            //! Histograms for profiling the latencies for requests that
+            //! did not required external messages.
+            std::vector< std::vector<Stats::Histogram *> >
+              m_hitTypeMachLatencyHistSeqr;
+
+            //! Histograms for profiling the latencies for requests that
+            //! required external messages.
+            std::vector< std::vector<Stats::Histogram *> >
+              m_missTypeMachLatencyHistSeqr;
+            std::vector< std::vector<Stats::Histogram *> >
+              m_missTypeMachLatencyHistCoalsr;
+        } perRequestTypeMachineTypeStats;
+
+        Stats::Histogram delayHistogram;
+        std::vector<Stats::Histogram *> delayVCHistogram;
+
+        //! Histogram for number of outstanding requests per cycle.
+        Stats::Histogram m_outstandReqHistSeqr;
+        Stats::Histogram m_outstandReqHistCoalsr;
+
+        //! Histogram for holding latency profile of all requests.
+        Stats::Histogram m_latencyHistSeqr;
+        Stats::Histogram m_latencyHistCoalsr;
+
+        //! Histogram for holding latency profile of all requests that
+        //! hit in the controller connected to this sequencer.
+        Stats::Histogram m_hitLatencyHistSeqr;
+
+        //! Histogram for holding latency profile of all requests that
+        //! miss in the controller connected to this sequencer.
+        Stats::Histogram m_missLatencyHistSeqr;
+        Stats::Histogram m_missLatencyHistCoalsr;
+    };
 
     //added by SS
     const bool m_hot_lines;
     const bool m_all_instructions;
     const uint32_t m_num_vnets;
+
+    ProfilerStats rubyProfilerStats;
 };
 
 #endif // __MEM_RUBY_PROFILER_PROFILER_HH__

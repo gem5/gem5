@@ -83,7 +83,8 @@ using m5::stl_helpers::operator<<;
 Profiler::Profiler(const RubySystemParams &p, RubySystem *rs)
     : m_ruby_system(rs), m_hot_lines(p.hot_lines),
       m_all_instructions(p.all_instructions),
-      m_num_vnets(p.number_of_virtual_networks)
+      m_num_vnets(p.number_of_virtual_networks),
+      rubyProfilerStats(rs, this)
 {
     m_address_profiler_ptr = new AddressProfiler(p.num_of_sequencers, this);
     m_address_profiler_ptr->setHotLines(m_hot_lines);
@@ -100,244 +101,254 @@ Profiler::~Profiler()
 {
 }
 
-void
-Profiler::regStats(const std::string &pName)
+Profiler::
+ProfilerStats::ProfilerStats(Stats::Group *parent, Profiler *profiler)
+    : Stats::Group(parent),
+      perRequestTypeStats(parent),
+      perMachineTypeStats(parent),
+      perRequestTypeMachineTypeStats(parent),
+      ADD_STAT(delayHistogram, "delay histogram for all message"),
+      ADD_STAT(m_outstandReqHistSeqr, ""),
+      ADD_STAT(m_outstandReqHistCoalsr, ""),
+      ADD_STAT(m_latencyHistSeqr, ""),
+      ADD_STAT(m_latencyHistCoalsr, ""),
+      ADD_STAT(m_hitLatencyHistSeqr, ""),
+      ADD_STAT(m_missLatencyHistSeqr, ""),
+      ADD_STAT(m_missLatencyHistCoalsr, "")
 {
-    if (!m_all_instructions) {
-        m_address_profiler_ptr->regStats(pName);
-    }
-
-    if (m_all_instructions) {
-        m_inst_profiler_ptr->regStats(pName);
-    }
-
     delayHistogram
         .init(10)
-        .name(pName + ".delayHist")
-        .desc("delay histogram for all message")
         .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-    for (int i = 0; i < m_num_vnets; i++) {
-        delayVCHistogram.push_back(new Stats::Histogram());
+    for (int i = 0; i < profiler->m_num_vnets; i++) {
+        delayVCHistogram.push_back(new Stats::Histogram(this));
         delayVCHistogram[i]
             ->init(10)
-            .name(pName + csprintf(".delayVCHist.vnet_%i", i))
+            .name(csprintf("delayVCHist.vnet_%i", i))
             .desc(csprintf("delay histogram for vnet_%i", i))
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
     }
 
     m_outstandReqHistSeqr
         .init(10)
-        .name(pName + ".outstanding_req_hist_seqr")
-        .desc("")
         .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
     m_outstandReqHistCoalsr
         .init(10)
-        .name(pName + ".outstanding_req_hist_coalsr")
-        .desc("")
         .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
     m_latencyHistSeqr
         .init(10)
-        .name(pName + ".latency_hist_seqr")
-        .desc("")
         .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
     m_latencyHistCoalsr
         .init(10)
-        .name(pName + ".latency_hist_coalsr")
-        .desc("")
         .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
     m_hitLatencyHistSeqr
         .init(10)
-        .name(pName + ".hit_latency_hist_seqr")
-        .desc("")
         .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
     m_missLatencyHistSeqr
         .init(10)
-        .name(pName + ".miss_latency_hist_seqr")
-        .desc("")
         .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
     m_missLatencyHistCoalsr
         .init(10)
-        .name(pName + ".miss_latency_hist_coalsr")
-        .desc("")
         .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+}
 
+Profiler::ProfilerStats::
+PerRequestTypeStats::PerRequestTypeStats(Stats::Group *parent)
+    : Stats::Group(parent, "RequestType")
+{
     for (int i = 0; i < RubyRequestType_NUM; i++) {
-        m_typeLatencyHistSeqr.push_back(new Stats::Histogram());
+        m_typeLatencyHistSeqr.push_back(new Stats::Histogram(this));
         m_typeLatencyHistSeqr[i]
             ->init(10)
-            .name(pName + csprintf(".%s.latency_hist_seqr",
-                                    RubyRequestType(i)))
+            .name(csprintf("%s.latency_hist_seqr", RubyRequestType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_typeLatencyHistCoalsr.push_back(new Stats::Histogram());
+        m_typeLatencyHistCoalsr.push_back(new Stats::Histogram(this));
         m_typeLatencyHistCoalsr[i]
             ->init(10)
-            .name(pName + csprintf(".%s.latency_hist_coalsr",
-                                    RubyRequestType(i)))
+            .name(csprintf("%s.latency_hist_coalsr", RubyRequestType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_hitTypeLatencyHistSeqr.push_back(new Stats::Histogram());
+        m_hitTypeLatencyHistSeqr.push_back(new Stats::Histogram(this));
         m_hitTypeLatencyHistSeqr[i]
             ->init(10)
-            .name(pName + csprintf(".%s.hit_latency_hist_seqr",
-                                    RubyRequestType(i)))
+            .name(csprintf("%s.hit_latency_hist_seqr", RubyRequestType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_missTypeLatencyHistSeqr.push_back(new Stats::Histogram());
+        m_missTypeLatencyHistSeqr.push_back(new Stats::Histogram(this));
         m_missTypeLatencyHistSeqr[i]
             ->init(10)
-            .name(pName + csprintf(".%s.miss_latency_hist_seqr",
-                                    RubyRequestType(i)))
+            .name(csprintf("%s.miss_latency_hist_seqr", RubyRequestType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_missTypeLatencyHistCoalsr.push_back(new Stats::Histogram());
+        m_missTypeLatencyHistCoalsr.push_back(new Stats::Histogram(this));
         m_missTypeLatencyHistCoalsr[i]
             ->init(10)
-            .name(pName + csprintf(".%s.miss_latency_hist_coalsr",
-                                    RubyRequestType(i)))
+            .name(csprintf("%s.miss_latency_hist_coalsr", RubyRequestType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
     }
+}
 
+Profiler::ProfilerStats::
+PerMachineTypeStats::PerMachineTypeStats(Stats::Group *parent)
+    : Stats::Group(parent, "MachineType")
+{
     for (int i = 0; i < MachineType_NUM; i++) {
-        m_hitMachLatencyHistSeqr.push_back(new Stats::Histogram());
+        m_hitMachLatencyHistSeqr.push_back(new Stats::Histogram(this));
         m_hitMachLatencyHistSeqr[i]
             ->init(10)
-            .name(pName + csprintf(".%s.hit_mach_latency_hist_seqr",
-                                    MachineType(i)))
+            .name(csprintf("%s.hit_mach_latency_hist_seqr", MachineType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_missMachLatencyHistSeqr.push_back(new Stats::Histogram());
+        m_missMachLatencyHistSeqr.push_back(new Stats::Histogram(this));
         m_missMachLatencyHistSeqr[i]
             ->init(10)
-            .name(pName + csprintf(".%s.miss_mach_latency_hist_seqr",
-                                    MachineType(i)))
+            .name(csprintf("%s.miss_mach_latency_hist_seqr", MachineType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_missMachLatencyHistCoalsr.push_back(new Stats::Histogram());
+        m_missMachLatencyHistCoalsr.push_back(new Stats::Histogram(this));
         m_missMachLatencyHistCoalsr[i]
             ->init(10)
-            .name(pName + csprintf(".%s.miss_mach_latency_hist_coalsr",
-                                    MachineType(i)))
+            .name(csprintf("%s.miss_mach_latency_hist_coalsr",
+                           MachineType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_IssueToInitialDelayHistSeqr.push_back(new Stats::Histogram());
+        m_IssueToInitialDelayHistSeqr.push_back(new Stats::Histogram(this));
         m_IssueToInitialDelayHistSeqr[i]
             ->init(10)
-            .name(pName + csprintf(
-                ".%s.miss_latency_hist_seqr.issue_to_initial_request",
+            .name(csprintf(
+                "%s.miss_latency_hist_seqr.issue_to_initial_request",
                 MachineType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_IssueToInitialDelayHistCoalsr.push_back(new Stats::Histogram());
+        m_IssueToInitialDelayHistCoalsr.push_back(new Stats::Histogram(this));
         m_IssueToInitialDelayHistCoalsr[i]
             ->init(10)
-            .name(pName + csprintf(
-                ".%s.miss_latency_hist_coalsr.issue_to_initial_request",
+            .name(csprintf(
+                "%s.miss_latency_hist_coalsr.issue_to_initial_request",
                 MachineType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_InitialToForwardDelayHistSeqr.push_back(new Stats::Histogram());
+        m_InitialToForwardDelayHistSeqr.push_back(new Stats::Histogram(this));
         m_InitialToForwardDelayHistSeqr[i]
             ->init(10)
-            .name(pName + csprintf(".%s.miss_latency_hist_seqr.initial_to_forward",
-                                   MachineType(i)))
+            .name(csprintf("%s.miss_latency_hist_seqr.initial_to_forward",
+                           MachineType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_InitialToForwardDelayHistCoalsr.push_back(new Stats::Histogram());
+        m_InitialToForwardDelayHistCoalsr
+            .push_back(new Stats::Histogram(this));
         m_InitialToForwardDelayHistCoalsr[i]
             ->init(10)
-            .name(pName + csprintf(".%s.miss_latency_hist_coalsr.initial_to_forward",
-                                   MachineType(i)))
+            .name(csprintf("%s.miss_latency_hist_coalsr.initial_to_forward",
+                           MachineType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_ForwardToFirstResponseDelayHistSeqr.push_back(new Stats::Histogram());
+        m_ForwardToFirstResponseDelayHistSeqr
+            .push_back(new Stats::Histogram(this));
+
         m_ForwardToFirstResponseDelayHistSeqr[i]
             ->init(10)
-            .name(pName + csprintf(
-                ".%s.miss_latency_hist_seqr.forward_to_first_response",
+            .name(csprintf(
+                "%s.miss_latency_hist_seqr.forward_to_first_response",
                 MachineType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_ForwardToFirstResponseDelayHistCoalsr.push_back(new Stats::Histogram());
+        m_ForwardToFirstResponseDelayHistCoalsr
+            .push_back(new Stats::Histogram(this));
         m_ForwardToFirstResponseDelayHistCoalsr[i]
             ->init(10)
-            .name(pName + csprintf(
-                ".%s.miss_latency_hist_coalsr.forward_to_first_response",
+            .name(csprintf(
+                "%s.miss_latency_hist_coalsr.forward_to_first_response",
                 MachineType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_FirstResponseToCompletionDelayHistSeqr.push_back(new Stats::Histogram());
+        m_FirstResponseToCompletionDelayHistSeqr
+            .push_back(new Stats::Histogram(this));
         m_FirstResponseToCompletionDelayHistSeqr[i]
             ->init(10)
-            .name(pName + csprintf(
-                ".%s.miss_latency_hist_seqr.first_response_to_completion",
+            .name(csprintf(
+                "%s.miss_latency_hist_seqr.first_response_to_completion",
                 MachineType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-        m_FirstResponseToCompletionDelayHistCoalsr.push_back(new Stats::Histogram());
+        m_FirstResponseToCompletionDelayHistCoalsr
+            .push_back(new Stats::Histogram(this));
         m_FirstResponseToCompletionDelayHistCoalsr[i]
             ->init(10)
-            .name(pName + csprintf(
-                ".%s.miss_latency_hist_coalsr.first_response_to_completion",
+            .name(csprintf(
+                "%s.miss_latency_hist_coalsr.first_response_to_completion",
                 MachineType(i)))
             .desc("")
             .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
+        m_IncompleteTimesSeqr.push_back(new Stats::Scalar(this));
         m_IncompleteTimesSeqr[i]
-            .name(pName + csprintf(".%s.incomplete_times_seqr", MachineType(i)))
+            ->name(csprintf("%s.incomplete_times_seqr", MachineType(i)))
             .desc("")
             .flags(Stats::nozero);
     }
+}
 
+Profiler::ProfilerStats::
+PerRequestTypeMachineTypeStats::
+PerRequestTypeMachineTypeStats(Stats::Group *parent)
+    : Stats::Group(parent, "RequestTypeMachineType")
+{
     for (int i = 0; i < RubyRequestType_NUM; i++) {
-        m_hitTypeMachLatencyHistSeqr.push_back(std::vector<Stats::Histogram *>());
-        m_missTypeMachLatencyHistSeqr.push_back(std::vector<Stats::Histogram *>());
-        m_missTypeMachLatencyHistCoalsr.push_back(std::vector<Stats::Histogram *>());
+        m_hitTypeMachLatencyHistSeqr
+            .push_back(std::vector<Stats::Histogram *>());
+        m_missTypeMachLatencyHistSeqr
+            .push_back(std::vector<Stats::Histogram *>());
+        m_missTypeMachLatencyHistCoalsr
+            .push_back(std::vector<Stats::Histogram *>());
 
         for (int j = 0; j < MachineType_NUM; j++) {
-            m_hitTypeMachLatencyHistSeqr[i].push_back(new Stats::Histogram());
+            m_hitTypeMachLatencyHistSeqr[i]
+                .push_back(new Stats::Histogram(this));
             m_hitTypeMachLatencyHistSeqr[i][j]
                 ->init(10)
-                .name(pName + csprintf(".%s.%s.hit_type_mach_latency_hist_seqr",
-                                       RubyRequestType(i), MachineType(j)))
+                .name(csprintf("%s.%s.hit_type_mach_latency_hist_seqr",
+                               RubyRequestType(i), MachineType(j)))
                 .desc("")
                 .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-            m_missTypeMachLatencyHistSeqr[i].push_back(new Stats::Histogram());
+            m_missTypeMachLatencyHistSeqr[i]
+                .push_back(new Stats::Histogram(this));
             m_missTypeMachLatencyHistSeqr[i][j]
                 ->init(10)
-                .name(pName + csprintf(".%s.%s.miss_type_mach_latency_hist_seqr",
-                                       RubyRequestType(i), MachineType(j)))
+                .name(csprintf("%s.%s.miss_type_mach_latency_hist_seqr",
+                               RubyRequestType(i), MachineType(j)))
                 .desc("")
                 .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-            m_missTypeMachLatencyHistCoalsr[i].push_back(new Stats::Histogram());
+            m_missTypeMachLatencyHistCoalsr[i]
+                .push_back(new Stats::Histogram(this));
             m_missTypeMachLatencyHistCoalsr[i][j]
                 ->init(10)
-                .name(pName + csprintf(".%s.%s.miss_type_mach_latency_hist_coalsr",
-                                       RubyRequestType(i), MachineType(j)))
+                .name(csprintf("%s.%s.miss_type_mach_latency_hist_coalsr",
+                               RubyRequestType(i), MachineType(j)))
                 .desc("")
                 .flags(Stats::nozero | Stats::pdf | Stats::oneline);
         }
@@ -361,10 +372,11 @@ Profiler::collateStats()
              it != m_ruby_system->m_abstract_controls[i].end(); ++it) {
 
             AbstractController *ctr = (*it).second;
-            delayHistogram.add(ctr->getDelayHist());
+            rubyProfilerStats.delayHistogram.add(ctr->getDelayHist());
 
             for (uint32_t i = 0; i < m_num_vnets; i++) {
-                delayVCHistogram[i]->add(ctr->getDelayVCHist(i));
+                rubyProfilerStats.
+                    delayVCHistogram[i]->add(ctr->getDelayVCHist(i));
             }
         }
     }
@@ -377,12 +389,14 @@ Profiler::collateStats()
             AbstractController *ctr = (*it).second;
             Sequencer *seq = ctr->getCPUSequencer();
             if (seq != NULL) {
-                m_outstandReqHistSeqr.add(seq->getOutstandReqHist());
+                rubyProfilerStats.
+                    m_outstandReqHistSeqr.add(seq->getOutstandReqHist());
             }
 #ifdef BUILD_GPU
             GPUCoalescer *coal = ctr->getGPUCoalescer();
             if (coal != NULL) {
-                m_outstandReqHistCoalsr.add(coal->getOutstandReqHist());
+                rubyProfilerStats.
+                    m_outstandReqHistCoalsr.add(coal->getOutstandReqHist());
             }
 #endif
         }
@@ -397,48 +411,80 @@ Profiler::collateStats()
             Sequencer *seq = ctr->getCPUSequencer();
             if (seq != NULL) {
                 // add all the latencies
-                m_latencyHistSeqr.add(seq->getLatencyHist());
-                m_hitLatencyHistSeqr.add(seq->getHitLatencyHist());
-                m_missLatencyHistSeqr.add(seq->getMissLatencyHist());
+                rubyProfilerStats.
+                        m_latencyHistSeqr.add(seq->getLatencyHist());
+                rubyProfilerStats.
+                        m_hitLatencyHistSeqr.add(seq->getHitLatencyHist());
+                rubyProfilerStats.
+                        m_missLatencyHistSeqr.add(seq->getMissLatencyHist());
 
                 // add the per request type latencies
                 for (uint32_t j = 0; j < RubyRequestType_NUM; ++j) {
-                    m_typeLatencyHistSeqr[j]
+                    rubyProfilerStats
+                        .perRequestTypeStats
+                        .m_typeLatencyHistSeqr[j]
                         ->add(seq->getTypeLatencyHist(j));
-                    m_hitTypeLatencyHistSeqr[j]
+                    rubyProfilerStats
+                        .perRequestTypeStats
+                        .m_hitTypeLatencyHistSeqr[j]
                         ->add(seq->getHitTypeLatencyHist(j));
-                    m_missTypeLatencyHistSeqr[j]
+                    rubyProfilerStats
+                        .perRequestTypeStats
+                        .m_missTypeLatencyHistSeqr[j]
                         ->add(seq->getMissTypeLatencyHist(j));
                 }
 
                 // add the per machine type miss latencies
                 for (uint32_t j = 0; j < MachineType_NUM; ++j) {
-                    m_hitMachLatencyHistSeqr[j]
+                    rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_hitMachLatencyHistSeqr[j]
                         ->add(seq->getHitMachLatencyHist(j));
-                    m_missMachLatencyHistSeqr[j]
+                    rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_missMachLatencyHistSeqr[j]
                         ->add(seq->getMissMachLatencyHist(j));
 
-                    m_IssueToInitialDelayHistSeqr[j]->add(
-                        seq->getIssueToInitialDelayHist(MachineType(j)));
+                    rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_IssueToInitialDelayHistSeqr[j]
+                        ->add(seq->getIssueToInitialDelayHist(MachineType(j)));
 
-                    m_InitialToForwardDelayHistSeqr[j]->add(
-                        seq->getInitialToForwardDelayHist(MachineType(j)));
-                    m_ForwardToFirstResponseDelayHistSeqr[j]->add(seq->
-                        getForwardRequestToFirstResponseHist(MachineType(j)));
+                    rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_InitialToForwardDelayHistSeqr[j]
+                        ->add(seq
+                            ->getInitialToForwardDelayHist(MachineType(j)));
+                    rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_ForwardToFirstResponseDelayHistSeqr[j]
+                        ->add(seq
+                            ->getForwardRequestToFirstResponseHist(
+                                MachineType(j)));
 
-                    m_FirstResponseToCompletionDelayHistSeqr[j]->add(seq->
-                        getFirstResponseToCompletionDelayHist(
-                            MachineType(j)));
-                    m_IncompleteTimesSeqr[j] +=
-                        seq->getIncompleteTimes(MachineType(j));
+                    rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_FirstResponseToCompletionDelayHistSeqr[j]
+                        ->add(seq
+                            ->getFirstResponseToCompletionDelayHist(
+                                MachineType(j)));
+
+                    *(rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_IncompleteTimesSeqr[j]) +=
+                            seq->getIncompleteTimes(MachineType(j));
                 }
 
                 // add the per (request, machine) type miss latencies
                 for (uint32_t j = 0; j < RubyRequestType_NUM; j++) {
                     for (uint32_t k = 0; k < MachineType_NUM; k++) {
-                        m_hitTypeMachLatencyHistSeqr[j][k]->add(
+                        rubyProfilerStats
+                            .perRequestTypeMachineTypeStats
+                            .m_hitTypeMachLatencyHistSeqr[j][k]->add(
                                 seq->getHitTypeMachLatencyHist(j,k));
-                        m_missTypeMachLatencyHistSeqr[j][k]->add(
+                        rubyProfilerStats
+                            .perRequestTypeMachineTypeStats
+                            .m_missTypeMachLatencyHistSeqr[j][k]->add(
                                 seq->getMissTypeMachLatencyHist(j,k));
                     }
                 }
@@ -447,40 +493,61 @@ Profiler::collateStats()
             GPUCoalescer *coal = ctr->getGPUCoalescer();
             if (coal != NULL) {
                 // add all the latencies
-                m_latencyHistCoalsr.add(coal->getLatencyHist());
-                m_missLatencyHistCoalsr.add(coal->getMissLatencyHist());
+                rubyProfilerStats.
+                    m_latencyHistCoalsr.add(coal->getLatencyHist());
+                rubyProfilerStats.
+                    m_missLatencyHistCoalsr.add(coal->getMissLatencyHist());
 
                 // add the per request type latencies
                 for (uint32_t j = 0; j < RubyRequestType_NUM; ++j) {
-                    m_typeLatencyHistCoalsr[j]
+                    rubyProfilerStats
+                        .perRequestTypeStats
+                        .m_typeLatencyHistCoalsr[j]
                         ->add(coal->getTypeLatencyHist(j));
-                    m_missTypeLatencyHistCoalsr[j]
+                    rubyProfilerStats
+                        .perRequestTypeStats
+                        .m_missTypeLatencyHistCoalsr[j]
                         ->add(coal->getMissTypeLatencyHist(j));
                 }
 
                 // add the per machine type miss latencies
                 for (uint32_t j = 0; j < MachineType_NUM; ++j) {
-                    m_missMachLatencyHistCoalsr[j]
+                    rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_missMachLatencyHistCoalsr[j]
                         ->add(coal->getMissMachLatencyHist(j));
 
-                    m_IssueToInitialDelayHistCoalsr[j]->add(
-                        coal->getIssueToInitialDelayHist(MachineType(j)));
+                    rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_IssueToInitialDelayHistCoalsr[j]
+                        ->add(coal->getIssueToInitialDelayHist(
+                            MachineType(j)));
 
-                    m_InitialToForwardDelayHistCoalsr[j]->add(
-                        coal->getInitialToForwardDelayHist(MachineType(j)));
-                    m_ForwardToFirstResponseDelayHistCoalsr[j]->add(coal->
-                        getForwardRequestToFirstResponseHist(MachineType(j)));
+                    rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_InitialToForwardDelayHistCoalsr[j]
+                        ->add(coal->getInitialToForwardDelayHist(
+                            MachineType(j)));
+                    rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_ForwardToFirstResponseDelayHistCoalsr[j]
+                        ->add(coal->getForwardRequestToFirstResponseHist(
+                            MachineType(j)));
 
-                    m_FirstResponseToCompletionDelayHistCoalsr[j]->add(coal->
-                        getFirstResponseToCompletionDelayHist(
+                    rubyProfilerStats
+                        .perMachineTypeStats
+                        .m_FirstResponseToCompletionDelayHistCoalsr[j]
+                        ->add(coal->getFirstResponseToCompletionDelayHist(
                             MachineType(j)));
                 }
 
                 // add the per (request, machine) type miss latencies
                 for (uint32_t j = 0; j < RubyRequestType_NUM; j++) {
                     for (uint32_t k = 0; k < MachineType_NUM; k++) {
-                        m_missTypeMachLatencyHistCoalsr[j][k]->add(
-                                coal->getMissTypeMachLatencyHist(j,k));
+                        rubyProfilerStats
+                            .perRequestTypeMachineTypeStats
+                            .m_missTypeMachLatencyHistCoalsr[j][k]
+                            ->add(coal->getMissTypeMachLatencyHist(j,k));
                     }
                 }
             }
@@ -504,3 +571,4 @@ Profiler::addAddressTraceSample(const RubyRequest& msg, NodeID id)
                            msg.getType(), msg.getAccessMode(), id, false);
     }
 }
+

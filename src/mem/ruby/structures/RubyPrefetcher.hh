@@ -123,8 +123,6 @@ class RubyPrefetcher : public SimObject
         void setController(AbstractController *_ctrl)
         { m_controller = _ctrl; }
 
-        void regStats();
-
     private:
         struct UnitFilterEntry
         {
@@ -236,20 +234,25 @@ class RubyPrefetcher : public SimObject
 
         const Addr m_page_shift;
 
-        //! Count of accesses to the prefetcher
-        Stats::Scalar numMissObserved;
-        //! Count of prefetch streams allocated
-        Stats::Scalar numAllocatedStreams;
-        //! Count of prefetch requests made
-        Stats::Scalar numPrefetchRequested;
-        //! Count of successful prefetches
-        Stats::Scalar numHits;
-        //! Count of partial successful prefetches
-        Stats::Scalar numPartialHits;
-        //! Count of pages crossed
-        Stats::Scalar numPagesCrossed;
-        //! Count of misses incurred for blocks that were prefetched
-        Stats::Scalar numMissedPrefetchedBlocks;
+        struct RubyPrefetcherStats : public Stats::Group
+        {
+            RubyPrefetcherStats(Stats::Group *parent);
+
+            //! Count of accesses to the prefetcher
+            Stats::Scalar numMissObserved;
+            //! Count of prefetch streams allocated
+            Stats::Scalar numAllocatedStreams;
+            //! Count of prefetch requests made
+            Stats::Scalar numPrefetchRequested;
+            //! Count of successful prefetches
+            Stats::Scalar numHits;
+            //! Count of partial successful prefetches
+            Stats::Scalar numPartialHits;
+            //! Count of pages crossed
+            Stats::Scalar numPagesCrossed;
+            //! Count of misses incurred for blocks that were prefetched
+            Stats::Scalar numMissedPrefetchedBlocks;
+        } rubyPrefetcherStats;
 };
 
 #endif // __MEM_RUBY_STRUCTURES_PREFETCHER_HH__
