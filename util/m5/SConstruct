@@ -42,9 +42,16 @@ build_dir = Dir('build')
 def abspath(d):
     return os.path.abspath(str(d))
 
+AddOption('--debug-build', dest='debug_build', action='store_true',
+          help='Build with debug info, and disable optimizations.')
+
 # Universal settings.
-main.Append(CXXFLAGS=[ '-O2' ])
-main.Append(CCFLAGS=[ '-O2' ])
+if GetOption('debug_build'):
+    main.Append(CXXFLAGS=[ '-O0', '-g' ])
+    main.Append(CCFLAGS=[ '-O0', '-g' ])
+else:
+    main.Append(CXXFLAGS=[ '-O2' ])
+    main.Append(CCFLAGS=[ '-O2' ])
 main.Append(CPPPATH=[ common_include ])
 
 # Propogate the environment's PATH setting.

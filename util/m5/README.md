@@ -143,6 +143,8 @@ build products. This includes:
 
 ## Build options
 
+### SCons variables
+
 There are some variables which set build options which need to be controlled on
 a per ABI level. Currently, these are:
 
@@ -169,6 +171,10 @@ Note that the default setting for the x86 cross compiler prefix is blank,
 meaning that the native/host compiler will be used. If building on a non-x86
 host, then you'll need to set an appopriate prefix and may be able to clear
 some other prefix corresponding to that host.
+
+### SCons command line flags
+
+--debug-build: Compile with the -g option, and -O0.
 
 ## External dependency detection
 
