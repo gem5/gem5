@@ -105,16 +105,24 @@ if env['HAVE_JAVA']:
     # that the javah tool exists. Java has dropped that tool in favor of a -h
     # option on javac which the Java builder doesn't know how to use. To get
     # around this, we set up our own builder which does the "right thing" here.
-    java_env.Command([ Dir('java').File('gem5_Ops.h'),
-                       Dir('out').Dir('java').File('gem5Ops.jar') ],
-                     srcs,
-                     MakeAction([
-                         '${JAVAC} ${JAVACFLAGS} -d ${OUT} '
-                         '${SOURCES} -h ${JAVA_DIR}',
-                         '${JAR} cvf ${TARGETS[1]} ${CLS_DIR}/*.class' ],
-                        'JAVA'),
-                     CLS_DIR=Dir('out').Dir('java').Dir('gem5'),
-                     OUT=Dir('out').Dir('java'), JAVA_DIR=Dir('java'))
+    jni_header = Dir('java').File('gem5_Ops.h')
+
+    java_files = []
+    class_files = []
+    def check_for_java(arg, dirname, fnames):
+        for filename in fnames:
+            base, extension = os.path.splitext(filename)
+            if extension == '.java':
+                java_files.append(dirname.File(filename))
+                class_files.append(dirname.File(base + '.class'))
+
+    Dir('java').walk(check_for_java, None)
+
+    java_env.Command([ jni_header ] + class_files, java_files,
+                     MakeAction('${JAVAC} ${JAVACFLAGS} -d ${JAVA_DIR} '
+                                '${SOURCES} -h ${JAVA_DIR}',
+                                'JAVA'), JAVA_DIR=Dir('java'))
+
     # Set include paths to the C headers from the JDK which scons found for us.
     java_env.Append(CPPPATH='${JAVAINCLUDES}')
     for ct in all_call_types:
@@ -122,9 +130,11 @@ if env['HAVE_JAVA']:
             java_env.Append(CXXFLAGS=[ '-DCALL_TYPE_DEFAULT=%s' % ct.name ])
         java_env.Append(CXXFLAGS=[ '-DCALL_TYPE_%s_ENABLED=%s' %
                                    (ct.name, '1' if ct.enabled else '0') ])
-    java_env.SharedLibrary('out/java/gem5Ops',
-                           [ jni ] + m5op_shared + m5_mmap_shared)
+    jni_lib = java_env.SharedLibrary(
+            'java/gem5Ops', [ jni ] + m5op_shared + m5_mmap_shared)
 
+    java_env.Jar(Dir('out').File('gem5Ops.jar'),
+                 jni_lib + class_files, JARCHDIR=Dir('java'))
 
 if env['HAVE_LUA51']:
     #

@@ -79,6 +79,7 @@ if not GetOption('verbose'):
     main['ASPPCOMSTR'] = ComStr('ASPP')
     main['ARCOMSTR'] = ComStr('AR')
     main['RANLIBCOMSTR'] = ComStr('RANLIB')
+    main['JARCOMSTR'] = ComStr('JAR')
 
     def MakeAction(action, string, *args, **kwargs):
         def func(target, source, env, executor):

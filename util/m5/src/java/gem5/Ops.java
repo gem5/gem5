@@ -37,6 +37,7 @@
 
 package gem5;
 
+import java.io.*;
 import java.util.*;
 
 /**
@@ -53,7 +54,21 @@ public class Ops {
     public static final Map<String, Ops> callTypes;
 
     static {
-        System.loadLibrary("gem5Ops");
+        try {
+            File temp_lib = File.createTempFile("gem5Ops", ".so");
+            temp_lib.deleteOnExit();
+
+            InputStream in = Ops.class.getResourceAsStream("/libgem5Ops.so");
+            byte[] buffer = new byte[in.available()];
+            in.read(buffer);
+            OutputStream out = new FileOutputStream(temp_lib);
+            out.write(buffer);
+
+            System.load(temp_lib.getAbsolutePath());
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
         setupCallTypes();
         callTypes = Collections.unmodifiableMap(_callTypes);
     }
