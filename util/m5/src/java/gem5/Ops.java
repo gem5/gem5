@@ -35,13 +35,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package jni;
+package gem5;
 
 /**
  * Java class to implement JNI for m5Ops
  */
 
-public class gem5Op {
+public class Ops {
     public native void arm(long address);
     public native void quiesce();
     public native void quiesce_ns(long ns);

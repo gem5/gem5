@@ -38,38 +38,38 @@
 #include <stdint.h>
 
 #include "gem5/m5ops.h"
-#include "jni_gem5Op.h"
+#include "java/gem5_Ops.h"
 
 /*
  * C library interface for gem5Op JNI
  */
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_arm(JNIEnv *env, jobject obj, jlong j_address)
+Java_gem5_Ops_arm(JNIEnv *env, jobject obj, jlong j_address)
 {
     m5_arm(j_address);
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_quiesce(JNIEnv *env, jobject obj)
+Java_gem5_Ops_quiesce(JNIEnv *env, jobject obj)
 {
     m5_quiesce();
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_quiesce_1ns(JNIEnv *env, jobject obj, jlong j_ns)
+Java_gem5_Ops_quiesce_1ns(JNIEnv *env, jobject obj, jlong j_ns)
 {
     m5_quiesce_ns(j_ns);
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_quiesce_1cycle(JNIEnv *env, jobject obj, jlong j_cycles)
+Java_gem5_Ops_quiesce_1cycle(JNIEnv *env, jobject obj, jlong j_cycles)
 {
     m5_quiesce_cycle(j_cycles);
 }
 
 JNIEXPORT jlong JNICALL
-Java_jni_gem5Op_quiesce_1time(JNIEnv *env, jobject obj)
+Java_gem5_Ops_quiesce_1time(JNIEnv *env, jobject obj)
 {
     uint64_t time = m5_quiesce_time();
     if (time & 0x8000000000000000ULL)
@@ -78,7 +78,7 @@ Java_jni_gem5Op_quiesce_1time(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT jlong JNICALL
-Java_jni_gem5Op_rpns(JNIEnv *env, jobject obj)
+Java_gem5_Ops_rpns(JNIEnv *env, jobject obj)
 {
     uint64_t time = m5_rpns();
     if (time & 0x8000000000000000ULL)
@@ -87,25 +87,25 @@ Java_jni_gem5Op_rpns(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_wake_1cpu(JNIEnv *env, jobject obj, jlong j_cpuid)
+Java_gem5_Ops_wake_1cpu(JNIEnv *env, jobject obj, jlong j_cpuid)
 {
     m5_wake_cpu(j_cpuid);
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_exit(JNIEnv *env, jobject obj, jlong j_ns_delay)
+Java_gem5_Ops_exit(JNIEnv *env, jobject obj, jlong j_ns_delay)
 {
     m5_exit(j_ns_delay);
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_fail(JNIEnv *env, jobject obj, jlong j_ns_delay, jlong j_code)
+Java_gem5_Ops_fail(JNIEnv *env, jobject obj, jlong j_ns_delay, jlong j_code)
 {
     m5_fail(j_ns_delay, j_code);
 }
 
 JNIEXPORT jlong JNICALL
-Java_jni_gem5Op_sum(JNIEnv *env, jobject obj, jlong a, jlong b, jlong c,
+Java_gem5_Ops_sum(JNIEnv *env, jobject obj, jlong a, jlong b, jlong c,
                     jlong d, jlong e, jlong f)
 {
     uint64_t result = m5_sum(a, b, c, d, e, f);
@@ -115,7 +115,7 @@ Java_jni_gem5Op_sum(JNIEnv *env, jobject obj, jlong a, jlong b, jlong c,
 }
 
 JNIEXPORT jlong JNICALL
-Java_jni_gem5Op_init_1param(JNIEnv *env, jobject obj, jlong j_key_str1,
+Java_gem5_Ops_init_1param(JNIEnv *env, jobject obj, jlong j_key_str1,
                            jlong j_key_str2)
 {
     uint64_t param = m5_init_param(j_key_str1, j_key_str2);
@@ -125,35 +125,35 @@ Java_jni_gem5Op_init_1param(JNIEnv *env, jobject obj, jlong j_key_str1,
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_checkpoint(JNIEnv *env, jobject obj,
+Java_gem5_Ops_checkpoint(JNIEnv *env, jobject obj,
                            jlong j_ns_delay, jlong j_ns_period)
 {
     m5_checkpoint(j_ns_delay, j_ns_period);
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_reset_1stats(JNIEnv *env, jobject obj,
+Java_gem5_Ops_reset_1stats(JNIEnv *env, jobject obj,
                              jlong j_ns_delay, jlong j_ns_period)
 {
     m5_reset_stats(j_ns_delay, j_ns_period);
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_dump_1stats(JNIEnv *env, jobject obj,
+Java_gem5_Ops_dump_1stats(JNIEnv *env, jobject obj,
                             jlong j_ns_delay, jlong j_ns_period)
 {
     m5_dump_stats(j_ns_delay, j_ns_period);
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_dump_1reset_1stats(JNIEnv *env, jobject obj,
+Java_gem5_Ops_dump_1reset_1stats(JNIEnv *env, jobject obj,
                                   jlong j_ns_delay, jlong j_ns_period)
 {
     m5_dump_reset_stats(j_ns_delay, j_ns_period);
 }
 
 JNIEXPORT jlong JNICALL
-Java_jni_gem5Op_read_1file(JNIEnv *env, jobject obj,
+Java_gem5_Ops_read_1file(JNIEnv *env, jobject obj,
                            jbyteArray j_buffer, jlong j_len, jlong j_offset)
 {
     jbyte *buffer = (*env)->GetByteArrayElements(env, j_buffer, 0);
@@ -165,7 +165,7 @@ Java_jni_gem5Op_read_1file(JNIEnv *env, jobject obj,
 }
 
 JNIEXPORT jlong JNICALL
-Java_jni_gem5Op_write_1file(JNIEnv *env, jobject obj,
+Java_gem5_Ops_write_1file(JNIEnv *env, jobject obj,
                             jbyteArray j_buffer, jlong j_len, jlong j_offset,
                             jstring j_filename)
 {
@@ -180,25 +180,25 @@ Java_jni_gem5Op_write_1file(JNIEnv *env, jobject obj,
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_debug_1break(JNIEnv *env, jobject obj)
+Java_gem5_Ops_debug_1break(JNIEnv *env, jobject obj)
 {
     m5_debug_break();
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_switch_1cpu (JNIEnv *env, jobject obj)
+Java_gem5_Ops_switch_1cpu (JNIEnv *env, jobject obj)
 {
     m5_switch_cpu();
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_dist_1toggle_1sync(JNIEnv *env, jobject obj)
+Java_gem5_Ops_dist_1toggle_1sync(JNIEnv *env, jobject obj)
 {
     m5_dist_toggle_sync();
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_add_symbol(JNIEnv *env, jobject obj,
+Java_gem5_Ops_add_symbol(JNIEnv *env, jobject obj,
         jlong j_addr, jstring j_symbol)
 {
     const char *symbol = (*env)->GetStringUTFChars(env, j_symbol, NULL);
@@ -209,26 +209,26 @@ Java_jni_gem5Op_add_symbol(JNIEnv *env, jobject obj,
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_load_1symbol(JNIEnv *env, jobject obj)
+Java_gem5_Ops_load_1symbol(JNIEnv *env, jobject obj)
 {
     m5_load_symbol();
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_panic(JNIEnv *env, jobject obj)
+Java_gem5_Ops_panic(JNIEnv *env, jobject obj)
 {
     m5_panic();
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_work_1begin(JNIEnv *env, jobject obj,
+Java_gem5_Ops_work_1begin(JNIEnv *env, jobject obj,
                             jlong j_workid, jlong j_threadid)
 {
     m5_work_begin(j_workid, j_threadid);
 }
 
 JNIEXPORT void JNICALL
-Java_jni_gem5Op_work_1end(JNIEnv *env, jobject obj,
+Java_gem5_Ops_work_1end(JNIEnv *env, jobject obj,
                           jlong j_workid, jlong j_threadid)
 {
     m5_work_end(j_workid, j_threadid);

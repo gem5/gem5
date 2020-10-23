@@ -37,7 +37,7 @@ m5 = 'm5.cc'
 m5_mmap = 'm5_mmap.c'
 usage = 'usage.cc'
 
-jni = 'jni_gem5Op.c'
+jni = 'java/gem5/ops.c'
 lua = 'lua_gem5Op.cc'
 
 all_call_types = list(env['CALL_TYPE'].values())
@@ -101,18 +101,19 @@ if env['HAVE_JAVA']:
     # that the javah tool exists. Java has dropped that tool in favor of a -h
     # option on javac which the Java builder doesn't know how to use. To get
     # around this, we set up our own builder which does the "right thing" here.
-    java_env.Command([ 'jni_gem5Op.h', 'out/gem5OpJni.jar' ],
-                     'jni/gem5Op.java',
+    java_env.Command([ Dir('java').File('gem5_Ops.h'),
+                       Dir('out').Dir('java').File('gem5Ops.jar') ],
+                     Dir('java').Dir('gem5').File('Ops.java'),
                      MakeAction([
                          '${JAVAC} ${JAVACFLAGS} -d ${OUT} '
-                         '${SOURCES} -h ${CWD}',
-                         '${JAR} cvf ${TARGETS[1]} ${JNI_DIR}/*.class' ],
+                         '${SOURCES} -h ${JAVA_DIR}',
+                         '${JAR} cvf ${TARGETS[1]} ${CLS_DIR}/*.class' ],
                         'JAVA'),
-                     JNI_DIR=Dir('out').Dir('jni'),
-                     OUT=Dir('out'), CWD=Dir('.'))
+                     CLS_DIR=Dir('out').Dir('java').Dir('gem5'),
+                     OUT=Dir('out').Dir('java'), JAVA_DIR=Dir('java'))
     # Set include paths to the C headers from the JDK which scons found for us.
     java_env.Append(CPPPATH='${JAVAINCLUDES}')
-    java_env.SharedLibrary('out/gem5OpJni',
+    java_env.SharedLibrary('out/java/gem5Ops',
                            [ jni ] + m5op_shared + m5_mmap_shared)
 
 
