@@ -55,7 +55,7 @@ write_file(const DispatchTable &dt, const std::string &filename,
     char buf[256 * 1024];
     int offset = 0;
 
-    memset(buf, 0, sizeof(buf));
+    std::memset(buf, 0, sizeof(buf));
 
     while (true) {
         src.seekg(offset);

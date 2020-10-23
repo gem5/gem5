@@ -27,6 +27,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cstring>
 #include <sstream>
 
 #include "args.hh"
@@ -85,7 +86,7 @@ test_m5_read_file(void *buffer, uint64_t len, uint64_t offset)
         chunks[i] = chunk_idx++;
 
     // Copy out to the requested buffer.
-    memcpy(buffer, ((uint8_t *)chunks) + (chunk_size - at_start), len);
+    std::memcpy(buffer, ((uint8_t *)chunks) + (chunk_size - at_start), len);
 
     // Clean up.
     delete [] chunks;

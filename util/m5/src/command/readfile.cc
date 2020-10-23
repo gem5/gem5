@@ -44,7 +44,7 @@ read_file(const DispatchTable &dt, std::ostream &os)
     // Touch all buffer pages to ensure they are mapped in the
     // page table. This is required in the case of X86_FS, where
     // Linux does demand paging.
-    memset(buf, 0, sizeof(buf));
+    std::memset(buf, 0, sizeof(buf));
 
     int len;
     int offset = 0;

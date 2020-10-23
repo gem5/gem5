@@ -67,7 +67,7 @@ test_m5_write_file(void *buffer, uint64_t len, uint64_t offset,
     if (test_written_data.size() < required_size)
         test_written_data.resize(required_size);
 
-    memcpy(test_written_data.data() + offset, buffer, len);
+    std::memcpy(test_written_data.data() + offset, buffer, len);
 
     return len;
 }
@@ -133,7 +133,7 @@ class TempFile
         for (size_t i = 0; i < num_chunks; i++)
             *buf32++ = val++;
         if (leftovers)
-            memcpy(buf32, &val, leftovers);
+            std::memcpy(buf32, &val, leftovers);
 
         // Make sure our new contents are out there.
         msync(_buf, _size, MS_SYNC | MS_INVALIDATE);

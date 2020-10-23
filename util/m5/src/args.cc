@@ -49,7 +49,7 @@ Args::pack(const std::string &str, uint64_t regs[], int num_regs)
     const size_t MaxLen = num_regs * RegSize;
     const char *arg = str.c_str();
 
-    memset(regs, 0, MaxLen);
+    std::memset(regs, 0, MaxLen);
 
     size_t len = str.size();
 
