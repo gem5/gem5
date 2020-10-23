@@ -70,7 +70,21 @@ def GTest(env, name, *srcs, **kwargs):
 
     if not srcs:
         srcs = [ name + '.cc', name + '.test.cc' ]
-    env['GTEST_ENV'].Program('test/%s' % name, srcs, **kwargs)
+    test_bin = env['GTEST_ENV'].Program('test/bin/%s' % name, srcs, **kwargs)
+
+    # The native environment doesn't need QEMU, and doesn't define HAVE_QEMU.
+    need_qemu_to_run = 'HAVE_QEMU' in env;
+
+    # If we can run this test...
+    if not need_qemu_to_run or env['HAVE_QEMU']:
+        # An XML file which holds the results of the test.
+        xml = Dir('test').Dir('result').File('%s.xml' % name)
+        # The basic command line for the test.
+        cmd = '${SOURCES[0]} --gtest_output=xml:${TARGETS[0]}'
+        if need_qemu_to_run:
+            # A prefix that runs it in QEMU if necessary.
+            cmd = '${QEMU} -L ${QEMU_SYSROOT} -- ' + cmd
+        AlwaysBuild(env.Command(xml, test_bin, cmd))
 
 main.AddMethod(GTest)
 
@@ -89,6 +103,7 @@ main['CXX'] = '${CROSS_COMPILE}g++'
 main['AS'] = '${CROSS_COMPILE}as'
 main['LD'] = '${CROSS_COMPILE}ld'
 main['AR'] = '${CROSS_COMPILE}ar'
+main['QEMU'] = 'qemu-${QEMU_ARCH}'
 
 class CallType(object):
     def __init__(self, name):
@@ -145,6 +160,13 @@ for root, dirs, files in os.walk(abspath(src_dir)):
         # in a copy of the primary environment.
         env.SConscript(Dir(root).File('SConsopts'),
                        exports=[ 'env', 'get_abi_opt' ])
+
+        # Check if this version of QEMU is available for running unit tests.
+        env['HAVE_QEMU'] = env.Detect('${QEMU}') is not None
+        if env['HAVE_QEMU'] and env.Detect('${CC}'):
+            sysroot_cmd = env.subst('${CC} -print-sysroot')
+            sysroot = os.popen(sysroot_cmd).read().strip()
+            env['QEMU_SYSROOT'] = sysroot
 
         # Once all the options have been configured, set up build targets for
         # this abi.

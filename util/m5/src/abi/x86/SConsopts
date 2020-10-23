@@ -27,6 +27,7 @@ Import('*')
 
 env['ABI'] = 'x86'
 get_abi_opt('CROSS_COMPILE', '')
+get_abi_opt('QEMU_ARCH', 'x86_64')
 env.Append(CXXFLAGS='-DM5OP_ADDR=0xFFFF0000')
 env.Append(CCFLAGS='-DM5OP_ADDR=0xFFFF0000')
 

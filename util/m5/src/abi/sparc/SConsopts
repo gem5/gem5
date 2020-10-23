@@ -27,6 +27,7 @@ Import('*')
 
 env['ABI'] = 'sparc'
 get_abi_opt('CROSS_COMPILE', 'sparc64-linux-gnu-')
+get_abi_opt('QEMU_ARCH', 'sparc64')
 env.Append(CXXFLAGS='-m64')
 
 env['CALL_TYPE']['inst'].impl('m5op.S', 'verify_inst.cc', default=True)

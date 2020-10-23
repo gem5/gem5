@@ -27,6 +27,7 @@ Import('*')
 
 env['ABI'] = 'thumb'
 get_abi_opt('CROSS_COMPILE', 'arm-linux-gnueabihf-')
+get_abi_opt('QEMU_ARCH', 'arm')
 env.Append(CXXFLAGS=[ '-mthumb', '-march=armv7', '-mfpu=neon' ])
 
 env['CALL_TYPE']['inst'].impl('m5op.S', 'verify_inst.cc', default=True)

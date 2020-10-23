@@ -27,6 +27,7 @@ Import('*')
 
 env['ABI'] = 'aarch64'
 get_abi_opt('CROSS_COMPILE', 'aarch64-linux-gnu-')
+get_abi_opt('QEMU_ARCH', 'aarch64')
 
 env['CALL_TYPE']['inst'].impl('m5op.S', 'verify_inst.cc', default=True)
 env['CALL_TYPE']['addr'].impl('m5op_addr.S')
