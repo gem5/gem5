@@ -112,7 +112,8 @@ if env['HAVE_JAVA']:
                      OUT=Dir('out'), CWD=Dir('.'))
     # Set include paths to the C headers from the JDK which scons found for us.
     java_env.Append(CPPPATH='${JAVAINCLUDES}')
-    java_env.SharedLibrary('out/gem5OpJni', [ jni ] + m5op_shared)
+    java_env.SharedLibrary('out/gem5OpJni',
+                           [ jni ] + m5op_shared + m5_mmap_shared)
 
 
 if env['HAVE_LUA51']:
