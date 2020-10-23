@@ -93,7 +93,7 @@ first identify what ABI(s) you're targetting.
 
    ABI   | Description  | Triggers
 ---------|--------------|----------
- aarch64 | 64 bit ARM   | instruction, adddress, semihosting
+ arm64   | 64 bit ARM   | instruction, adddress, semihosting
  arm     | 32 bit ARM   | instruction
  thumb   | ARM thumb    | instruction
  sparc   | 64 bit SPARC | instruction
@@ -161,7 +161,7 @@ scons x86.CROSS_COMPILE=x86_64-linux-gnu- build/x86/out/m5
 
    ABI   | QEMU_ARCH |     CROSS_COMPILE
 ---------|-----------|---------------------
- aarch64 | aarch64   | aarch64-linux-gnu-
+ arm64   | aarch64   | aarch64-linux-gnu-
  arm     | arm       | arm-linux-gnueabihf-
  thumb   | arm       | arm-linux-gnueabihf-
  sparc   | sparc64   | sparc64-linux-gnu-
@@ -245,7 +245,7 @@ varies based on the ABI.
 
    ABI   | Default call type
 ---------|-------------------
- aarch64 | instruction
+ arm64   | instruction
  arm     | instruction
  thumb   | instruction
  sparc   | instruction

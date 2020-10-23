@@ -25,7 +25,7 @@
 
 Import('*')
 
-env['ABI'] = 'aarch64'
+env['ABI'] = 'arm64'
 get_abi_opt('CROSS_COMPILE', 'aarch64-linux-gnu-')
 get_abi_opt('QEMU_ARCH', 'aarch64')
 
