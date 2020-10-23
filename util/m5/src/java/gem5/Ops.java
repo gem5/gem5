@@ -53,6 +53,10 @@ public class Ops {
     private static Map<String, Ops> _callTypes;
     public static final Map<String, Ops> callTypes;
 
+    public static native void setAddr(long addr);
+    public static native void mapMem();
+    public static native void unmapMem();
+
     static {
         try {
             File temp_lib = File.createTempFile("gem5Ops", ".so");

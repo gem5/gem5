@@ -362,6 +362,19 @@ gem5.Ops gem5_ops = gem5.Ops.callTypes.get("default");
 long sum = gem5_ops.sum(1, 2, 3, 4, 5, 6);
 ```
 
+To configure the address based trigger mechanism, you can use these static
+methods.
+
+void setAddr(long addr);
+Set the address for the "magic" address region.
+
+void mapMem();
+Map the "magic" physical address region into the process' address space, likely
+by mmapping the "/dev/mem" device file.
+
+void unmapMem();
+Unmap the "magic" physical address region that was previously mapped.
+
 
 
 # lua module

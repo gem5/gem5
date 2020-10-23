@@ -44,6 +44,7 @@
 #include "call_type/semi_dt.hh"
 #include "gem5/m5ops.h"
 #include "java/gem5_Ops.h"
+#include "m5_mmap.h"
 
 #define _stringify(x) #x
 #define stringify(x) _stringify(x)
@@ -106,6 +107,24 @@ Java_gem5_Ops_setupCallTypes(JNIEnv *env, jclass clazz)
     }
 
     env->DeleteLocalRef(map);
+}
+
+JNIEXPORT void JNICALL
+Java_gem5_Ops_setAddr(JNIEnv *env, jclass clazz, jlong addr)
+{
+    m5op_addr = addr;
+}
+
+JNIEXPORT void JNICALL
+Java_gem5_Ops_mapMem(JNIEnv *env, jclass clazz)
+{
+    map_m5_mem();
+}
+
+JNIEXPORT void JNICALL
+Java_gem5_Ops_unmapMem(JNIEnv *env, jclass clazz)
+{
+    unmap_m5_mem();
 }
 
 static DispatchTable *
