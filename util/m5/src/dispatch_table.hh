@@ -25,8 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DISPATCH_TABLE_HH__
-#define __DISPATCH_TABLE_HH__
+#ifndef __DISPATCH_TABLE_H__
+#define __DISPATCH_TABLE_H__
 
 #include <gem5/asm/generic/m5ops.h>
 #include <gem5/m5ops.h>
@@ -44,4 +44,4 @@ M5OP_FOREACH
 #undef M5OP
 };
 
-#endif // __DISPATCH_TABLE_HH__
+#endif // __DISPATCH_TABLE_H__

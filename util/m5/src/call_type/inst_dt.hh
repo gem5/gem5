@@ -25,28 +25,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cstring>
+#ifndef __CALL_TYPE_INST_DT_HH__
+#define __CALL_TYPE_INST_DT_HH__
 
-#include "args.hh"
-#include "call_type.hh"
-#include "call_type/inst_dt.hh"
+#include "dispatch_table.hh"
 
 namespace
 {
 
-class InstCallType : public CallType
-{
-  public:
-    InstCallType() : CallType("inst") {}
-
-    bool isDefault() const override { return CALL_TYPE_IS_DEFAULT; }
-    const DispatchTable &getDispatch() const override { return inst_dispatch; }
-
-    void
-    printDesc(std::ostream &os) const override
-    {
-        os << "Use the instruction based invocation method.";
-    }
-} inst_call_type;
+DispatchTable inst_dispatch = {
+#define M5OP(name, func) .name = &::name,
+M5OP_FOREACH
+#undef M5OP
+};
 
 } // anonymous namespace
+
+#endif // __CALL_TYPE_INST_DT_HH__

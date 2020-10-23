@@ -29,25 +29,12 @@
 
 #include "args.hh"
 #include "call_type.hh"
-#include "dispatch_table.hh"
+#include "call_type/addr_dt.hh"
 #include "m5_mmap.h"
 #include "usage.hh"
 
-extern "C"
-{
-#define M5OP(name, func) __typeof__(name) M5OP_MERGE_TOKENS(name, _addr);
-M5OP_FOREACH
-#undef M5OP
-}
-
 namespace
 {
-
-DispatchTable addr_dispatch = {
-#define M5OP(name, func) .name = &::M5OP_MERGE_TOKENS(name, _addr),
-M5OP_FOREACH
-#undef M5OP
-};
 
 #if defined(M5OP_ADDR)
 const bool DefaultAddrDefined = true;

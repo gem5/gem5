@@ -29,23 +29,10 @@
 
 #include "args.hh"
 #include "call_type.hh"
-#include "dispatch_table.hh"
-
-extern "C"
-{
-#define M5OP(name, func) __typeof__(name) M5OP_MERGE_TOKENS(name, _semi);
-M5OP_FOREACH
-#undef M5OP
-}
+#include "call_type/semi_dt.hh"
 
 namespace
 {
-
-DispatchTable semi_dispatch = {
-#define M5OP(name, func) .name = &::M5OP_MERGE_TOKENS(name, _semi),
-M5OP_FOREACH
-#undef M5OP
-};
 
 class SemiCallType : public CallType
 {
