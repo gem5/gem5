@@ -50,8 +50,11 @@
 
 ThermalDomain::ThermalDomain(const Params &p)
     : SimObject(p), _initTemperature(p.initial_temperature),
-    node(NULL), subsystem(NULL)
+    node(NULL), subsystem(NULL),
+    ADD_STAT(currentTemp, "Temperature in centigrade degrees")
 {
+    currentTemp
+        .method(this, &ThermalDomain::currentTemperature);
 }
 
 double
@@ -68,18 +71,6 @@ ThermalDomain::setSubSystem(SubSystem * ss)
 
     ppThermalUpdate = new ProbePointArg<double>(subsystem->getProbeManager(),
                                                 "thermalUpdate");
-}
-
-void
-ThermalDomain::regStats()
-{
-    SimObject::regStats();
-
-    currentTemp
-        .method(this, &ThermalDomain::currentTemperature)
-        .name(params().name + ".temp")
-        .desc("Temperature in centigrate degrees")
-        ;
 }
 
 void

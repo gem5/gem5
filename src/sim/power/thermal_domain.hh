@@ -93,7 +93,6 @@ class ThermalDomain : public SimObject, public ThermalEntity
       */
     void setSubSystem(SubSystem * ss);
 
-    void regStats() override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
