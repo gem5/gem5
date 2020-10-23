@@ -176,6 +176,7 @@ some other prefix corresponding to that host.
 
 --debug-build: Compile with the -g option, and -O0.
 --no-test-xml: Exclude the test result XML files from the build.
+--verbose:     Show build command lines and full command output.
 
 ## External dependency detection
 

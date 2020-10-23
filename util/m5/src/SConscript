@@ -103,8 +103,11 @@ if env['HAVE_JAVA']:
     # around this, we set up our own builder which does the "right thing" here.
     java_env.Command([ 'jni_gem5Op.h', 'out/gem5OpJni.jar' ],
                      'jni/gem5Op.java',
-                     [ '${JAVAC} ${JAVACFLAGS} -d ${OUT} ${SOURCES} -h ${CWD}',
-                       '${JAR} cvf ${TARGETS[1]} ${JNI_DIR}/*.class' ],
+                     MakeAction([
+                         '${JAVAC} ${JAVACFLAGS} -d ${OUT} '
+                         '${SOURCES} -h ${CWD}',
+                         '${JAR} cvf ${TARGETS[1]} ${JNI_DIR}/*.class' ],
+                        'JAVA'),
                      JNI_DIR=Dir('out').Dir('jni'),
                      OUT=Dir('out'), CWD=Dir('.'))
     # Set include paths to the C headers from the JDK which scons found for us.

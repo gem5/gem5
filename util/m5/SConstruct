@@ -46,6 +46,7 @@ AddOption('--debug-build', dest='debug_build', action='store_true',
           help='Build with debug info, and disable optimizations.')
 AddOption('--no-test-xml', dest='no_tests', action='store_true',
           help='Omit test output xml files from the build.')
+AddOption('--verbose', dest='verbose', action='store_true')
 
 # Universal settings.
 if GetOption('debug_build'):
@@ -55,6 +56,36 @@ else:
     main.Append(CXXFLAGS=[ '-O2' ])
     main.Append(CCFLAGS=[ '-O2' ])
 main.Append(CPPPATH=[ common_include ])
+
+if not GetOption('verbose'):
+    # A functor which returns a shorter summary string to replace the normal
+    # scons output when running a command.
+    class ComStr(object):
+        def __init__(self, cmd):
+            self.cmd = cmd
+
+        def __call__(self, target, source, env, for_signature=None):
+            tgts = list([str(t).strip() for t in target])
+            return self.cmd + ' ' + ', '.join(tgts)
+    main['CXXCOMSTR'] = ComStr('CXX')
+    main['SHCXXCOMSTR'] = ComStr('SHCXX')
+    main['CCCOMSTR'] = ComStr('CC')
+    main['SHCCCOMSTR'] = ComStr('SHCC')
+    main['LINKCOMSTR'] = ComStr('LINK')
+    main['SHLINKCOMSTR'] = ComStr('SHLINK')
+    main['ASCOMSTR'] = ComStr('AS')
+    main['ASPPCOMSTR'] = ComStr('ASPP')
+    main['ARCOMSTR'] = ComStr('AR')
+    main['RANLIBCOMSTR'] = ComStr('RANLIB')
+
+    def MakeAction(action, string, *args, **kwargs):
+        def func(target, source, env, executor):
+            tgts = list([str(t).strip() for t in target])
+            return string + ' ' + ', '.join(tgts)
+        return Action(action, func, *args, **kwargs)
+else:
+    def MakeAction(action, string, *args, **kwargs):
+        return Action(action, *args, **kwargs)
 
 # Propogate the environment's PATH setting.
 main['ENV']['PATH'] = os.environ['PATH']
@@ -93,10 +124,14 @@ def GTest(env, name, *srcs, **kwargs):
         xml = Dir('test').Dir('result').File('%s.xml' % name)
         # The basic command line for the test.
         cmd = '${SOURCES[0]} --gtest_output=xml:${TARGETS[0]}'
+        cmd_str = 'TEST'
         if need_qemu_to_run:
             # A prefix that runs it in QEMU if necessary.
             cmd = '${QEMU} -L ${QEMU_SYSROOT} -- ' + cmd
-        AlwaysBuild(env.Command(xml, test_bin, cmd))
+            cmd_str = 'QEMU_TEST'
+        AlwaysBuild(env.Command(xml, test_bin, MakeAction(cmd, cmd_str)))
+
+Export('MakeAction')
 
 main.AddMethod(GTest)
 
