@@ -238,7 +238,7 @@ global_vars.AddVariables(
     ('MARSHAL_CCFLAGS_EXTRA', 'Extra C and C++ marshal compiler flags', ''),
     ('MARSHAL_LDFLAGS_EXTRA', 'Extra marshal linker flags', ''),
     ('PYTHON_CONFIG', 'Python config binary to use',
-     [ 'python3-config', 'python-config', 'python2.7-config', 'python2-config']
+     [ 'python3-config', 'python-config']
     ),
     ('PROTOC', 'protoc tool', environ.get('PROTOC', 'protoc')),
     ('BATCH', 'Use batch pool for build and tests', False),
