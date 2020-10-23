@@ -114,6 +114,6 @@ if failing_files:
             "fixes for commit in\n"
             "the following files: ", file=sys.stderr)
         for f in staged_mismatch:
-            print("\t%s".format(f), file=sys.stderr)
+            print("\t{}".format(f), file=sys.stderr)
         print("Please `git --add' them", file=sys.stderr)
     sys.exit(1)
