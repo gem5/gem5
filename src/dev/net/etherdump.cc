@@ -100,9 +100,3 @@ EtherDump::dumpPacket(EthPacketPtr &packet)
     stream->write(reinterpret_cast<char *>(packet->data), pkthdr.caplen);
     stream->flush();
 }
-
-EtherDump *
-EtherDumpParams::create() const
-{
-    return new EtherDump(*this);
-}

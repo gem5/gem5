@@ -169,9 +169,3 @@ EmuLinux::pageFault(ThreadContext *tc)
 }
 
 } // namespace X86ISA
-
-X86ISA::EmuLinux *
-X86EmuLinuxParams::create() const
-{
-    return new X86ISA::EmuLinux(*this);
-}

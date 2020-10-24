@@ -54,6 +54,9 @@ SectorTags::SectorTags(const SectorTagsParams &p)
       sectorShift(floorLog2(blkSize)), sectorMask(numBlocksPerSector - 1),
       sectorStats(stats, *this)
 {
+    // There must be a indexing policy
+    fatal_if(!p.indexing_policy, "An indexing policy is required");
+
     // Check parameters
     fatal_if(blkSize < 4 || !isPowerOf2(blkSize),
              "Block size must be at least 4 and a power of 2");
@@ -322,13 +325,4 @@ SectorTags::anyBlk(std::function<bool(CacheBlk &)> visitor)
         }
     }
     return false;
-}
-
-SectorTags *
-SectorTagsParams::create() const
-{
-    // There must be a indexing policy
-    fatal_if(!indexing_policy, "An indexing policy is required");
-
-    return new SectorTags(*this);
 }

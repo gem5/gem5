@@ -126,9 +126,3 @@ FsFreebsd::~FsFreebsd()
 }
 
 } // namespace ArmISA
-
-ArmISA::FsFreebsd *
-ArmFsFreebsdParams::create() const
-{
-    return new ArmISA::FsFreebsd(*this);
-}

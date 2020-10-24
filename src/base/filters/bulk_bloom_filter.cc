@@ -96,10 +96,3 @@ Bulk::permute(Addr addr) const
 }
 
 } // namespace BloomFilter
-
-BloomFilter::Bulk*
-BloomFilterBulkParams::create() const
-{
-    return new BloomFilter::Bulk(*this);
-}
-

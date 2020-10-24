@@ -42,6 +42,9 @@
 NonCachingSimpleCPU::NonCachingSimpleCPU(const NonCachingSimpleCPUParams &p)
     : AtomicSimpleCPU(p)
 {
+    assert(p.numThreads == 1);
+    fatal_if(!FullSystem && p.workload.size() != 1,
+             "only one workload allowed");
 }
 
 void
@@ -62,13 +65,4 @@ NonCachingSimpleCPU::sendPacket(RequestPort &port, const PacketPtr &pkt)
     } else {
         return port.sendAtomic(pkt);
     }
-}
-
-NonCachingSimpleCPU *
-NonCachingSimpleCPUParams::create() const
-{
-    assert(numThreads == 1);
-    if (!FullSystem && workload.size() != 1)
-        fatal("only one workload allowed");
-    return new NonCachingSimpleCPU(*this);
 }

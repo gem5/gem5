@@ -251,9 +251,3 @@ DVFSHandler::unserialize(CheckpointIn &cp)
     }
     UpdateEvent::dvfsHandler = this;
 }
-
-DVFSHandler*
-DVFSHandlerParams::create() const
-{
-    return new DVFSHandler(*this);
-}

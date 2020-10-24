@@ -118,10 +118,3 @@ MemTraceProbe::handleRequest(const ProbePoints::PacketInfo &pkt_info)
 
     traceStream->write(pkt_msg);
 }
-
-
-MemTraceProbe *
-MemTraceProbeParams::create() const
-{
-    return new MemTraceProbe(*this);
-}

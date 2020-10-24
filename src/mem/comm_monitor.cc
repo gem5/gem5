@@ -57,12 +57,6 @@ CommMonitor::CommMonitor(const Params &params)
             name(), samplePeriodTicks, samplePeriod * 1E3);
 }
 
-CommMonitor*
-CommMonitorParams::create() const
-{
-    return new CommMonitor(*this);
-}
-
 void
 CommMonitor::init()
 {

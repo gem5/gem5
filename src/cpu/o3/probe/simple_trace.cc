@@ -63,9 +63,3 @@ void SimpleTrace::regProbeListeners()
     listeners.push_back(new DynInstListener(this, "Fetch",
                 &SimpleTrace::traceFetch));
 }
-
-SimpleTrace*
-SimpleTraceParams::create() const
-{
-    return new SimpleTrace(*this);
-}

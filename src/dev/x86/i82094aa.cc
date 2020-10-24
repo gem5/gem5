@@ -291,9 +291,3 @@ X86ISA::I82094AA::unserialize(CheckpointIn &cp)
         redirTable[i] = (RedirTableEntry)redirTableArray[i];
     }
 }
-
-X86ISA::I82094AA *
-I82094AAParams::create() const
-{
-    return new X86ISA::I82094AA(*this);
-}

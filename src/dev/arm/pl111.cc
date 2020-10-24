@@ -742,11 +742,3 @@ Pl111::getAddrRanges() const
     ranges.push_back(RangeSize(pioAddr, pioSize));
     return ranges;
 }
-
-Pl111 *
-Pl111Params::create() const
-{
-    return new Pl111(*this);
-}
-
-

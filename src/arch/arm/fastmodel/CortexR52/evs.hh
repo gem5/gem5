@@ -117,6 +117,7 @@ class ScxEvsCortexR52 : public Types::Base
     const Params &params;
 
   public:
+    ScxEvsCortexR52(const Params &p) : ScxEvsCortexR52(p.name.c_str(), p) {}
     ScxEvsCortexR52(const sc_core::sc_module_name &mod_name, const Params &p);
 
     void

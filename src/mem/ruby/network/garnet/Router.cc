@@ -283,9 +283,3 @@ Router::functionalWrite(Packet *pkt)
 
     return num_functional_writes;
 }
-
-Router *
-GarnetRouterParams::create() const
-{
-    return new Router(*this);
-}

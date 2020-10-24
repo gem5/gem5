@@ -156,9 +156,3 @@ ScalarRegisterFile::scheduleWriteOperandsFromLoad(Wavefront *w,
         }
     }
 }
-
-ScalarRegisterFile*
-ScalarRegisterFileParams::create() const
-{
-    return new ScalarRegisterFile(*this);
-}

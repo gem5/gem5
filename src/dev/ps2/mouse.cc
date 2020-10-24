@@ -166,9 +166,3 @@ PS2Mouse::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(resolution);
     UNSERIALIZE_SCALAR(sampleRate);
 }
-
-PS2Mouse *
-PS2MouseParams::create() const
-{
-    return new PS2Mouse(*this);
-}

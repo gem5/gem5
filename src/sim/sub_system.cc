@@ -66,9 +66,3 @@ SubSystem::getStaticPower() const
         ret += obj->getStaticPower();
     return ret;
 }
-
-SubSystem *
-SubSystemParams::create() const
-{
-    return new SubSystem(*this);
-}

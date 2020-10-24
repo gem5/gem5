@@ -212,9 +212,3 @@ TreePLRU::instantiateEntry()
 }
 
 } // namespace ReplacementPolicy
-
-ReplacementPolicy::TreePLRU*
-TreePLRURPParams::create() const
-{
-    return new ReplacementPolicy::TreePLRU(*this);
-}

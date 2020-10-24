@@ -2463,9 +2463,3 @@ IGbE::unserialize(CheckpointIn &cp)
     txDescCache.unserializeSection(cp, "TxDescCache");
     rxDescCache.unserializeSection(cp, "RxDescCache");
 }
-
-IGbE *
-IGbEParams::create() const
-{
-    return new IGbE(*this);
-}

@@ -1467,9 +1467,3 @@ MemCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
     // pass it to the memory controller
     return ctrl.recvTimingReq(pkt);
 }
-
-MemCtrl*
-MemCtrlParams::create() const
-{
-    return new MemCtrl(*this);
-}

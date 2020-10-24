@@ -39,9 +39,3 @@ SEWorkload::syscall(ThreadContext *tc)
 {
     tc->getProcessPtr()->syscall(tc);
 }
-
-SEWorkload *
-SEWorkloadParams::create() const
-{
-    return new SEWorkload(*this);
-}

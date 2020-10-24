@@ -81,10 +81,3 @@ AmbaFake::write(PacketPtr pkt)
     pkt->makeAtomicResponse();
     return pioDelay;
 }
-
-
-AmbaFake *
-AmbaFakeParams::create() const
-{
-    return new AmbaFake(*this);
-}

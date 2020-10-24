@@ -410,9 +410,3 @@ GPUComputeDriver::ldsApeLimit(Addr apeBase) const
 {
     return (apeBase & 0xFFFFFFFF00000000UL) | 0xFFFFFFFF;
 }
-
-GPUComputeDriver*
-GPUComputeDriverParams::create() const
-{
-    return new GPUComputeDriver(*this);
-}

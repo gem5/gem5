@@ -54,12 +54,6 @@ ThermalReference::ThermalReference(const Params &p)
 {
 }
 
-ThermalReference *
-ThermalReferenceParams::create() const
-{
-    return new ThermalReference(*this);
-}
-
 void
 ThermalReference::serialize(CheckpointOut &cp) const
 {
@@ -85,12 +79,6 @@ ThermalReference::getEquation(ThermalNode * n, unsigned nnodes,
 ThermalResistor::ThermalResistor(const Params &p)
     : SimObject(p), _resistance(p.resistance), node1(NULL), node2(NULL)
 {
-}
-
-ThermalResistor *
-ThermalResistorParams::create() const
-{
-    return new ThermalResistor(*this);
 }
 
 void
@@ -138,12 +126,6 @@ ThermalResistor::getEquation(ThermalNode * n, unsigned nnodes,
 ThermalCapacitor::ThermalCapacitor(const Params &p)
     : SimObject(p), _capacitance(p.capacitance), node1(NULL), node2(NULL)
 {
-}
-
-ThermalCapacitor *
-ThermalCapacitorParams::create() const
-{
-    return new ThermalCapacitor(*this);
 }
 
 void
@@ -194,12 +176,6 @@ ThermalCapacitor::getEquation(ThermalNode * n, unsigned nnodes,
 ThermalModel::ThermalModel(const Params &p)
     : ClockedObject(p), stepEvent([this]{ doStep(); }, name()), _step(p.step)
 {
-}
-
-ThermalModel *
-ThermalModelParams::create() const
-{
-    return new ThermalModel(*this);
 }
 
 void

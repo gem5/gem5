@@ -348,10 +348,3 @@ GarnetSyntheticTraffic::printAddr(Addr a)
 {
     cachePort.printAddr(a);
 }
-
-
-GarnetSyntheticTraffic *
-GarnetSyntheticTrafficParams::create() const
-{
-    return new GarnetSyntheticTraffic(*this);
-}

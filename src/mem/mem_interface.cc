@@ -1118,12 +1118,6 @@ DRAMInterface::minBankPrep(const MemPacketQueue& queue,
     return make_pair(bank_mask, hidden_bank_prep);
 }
 
-DRAMInterface*
-DRAMInterfaceParams::create() const
-{
-    return new DRAMInterface(*this);
-}
-
 DRAMInterface::Rank::Rank(const DRAMInterfaceParams &_p,
                          int _rank, DRAMInterface& _dram)
     : EventManager(&_dram), dram(_dram),
@@ -2033,12 +2027,6 @@ NVMInterface::NVMInterface(const NVMInterfaceParams &_p)
     rowsPerBank = capacity / (rowBufferSize *
                     banksPerRank * ranksPerChannel);
 
-}
-
-NVMInterface*
-NVMInterfaceParams::create() const
-{
-    return new NVMInterface(*this);
 }
 
 NVMInterface::Rank::Rank(const NVMInterfaceParams &_p,

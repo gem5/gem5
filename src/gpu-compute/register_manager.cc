@@ -135,9 +135,3 @@ RegisterManager::regStats()
 {
     policy->regStats();
 }
-
-RegisterManager*
-RegisterManagerParams::create() const
-{
-    return new RegisterManager(*this);
-}

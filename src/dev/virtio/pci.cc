@@ -222,9 +222,3 @@ PciVirtIO::kick()
     interruptDeliveryPending = true;
     intrPost();
 }
-
-PciVirtIO *
-PciVirtIOParams::create() const
-{
-    return new PciVirtIO(*this);
-}

@@ -92,9 +92,3 @@ FIFO::instantiateEntry()
 }
 
 } // namespace ReplacementPolicy
-
-ReplacementPolicy::FIFO*
-FIFORPParams::create() const
-{
-    return new ReplacementPolicy::FIFO(*this);
-}

@@ -54,6 +54,9 @@ BaseSetAssoc::BaseSetAssoc(const Params &p)
      sequentialAccess(p.sequential_access),
      replacementPolicy(p.replacement_policy)
 {
+    // There must be a indexing policy
+    fatal_if(!p.indexing_policy, "An indexing policy is required");
+
     // Check parameters
     if (blkSize < 4 || !isPowerOf2(blkSize)) {
         fatal("Block size must be at least 4 and a power of 2");
@@ -89,13 +92,4 @@ BaseSetAssoc::invalidate(CacheBlk *blk)
 
     // Invalidate replacement data
     replacementPolicy->invalidate(blk->replacementData);
-}
-
-BaseSetAssoc *
-BaseSetAssocParams::create() const
-{
-    // There must be a indexing policy
-    fatal_if(!indexing_policy, "An indexing policy is required");
-
-    return new BaseSetAssoc(*this);
 }

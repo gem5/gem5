@@ -50,9 +50,3 @@ CPack::addToDictionary(DictionaryEntry data)
 }
 
 } // namespace Compressor
-
-Compressor::CPack*
-CPackParams::create() const
-{
-    return new Compressor::CPack(*this);
-}

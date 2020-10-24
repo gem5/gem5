@@ -122,9 +122,3 @@ PropFairPolicy::schedule(const RequestorID pkt_id, const uint64_t pkt_size)
 }
 
 } // namespace QoS
-
-QoS::PropFairPolicy *
-QoSPropFairPolicyParams::create() const
-{
-    return new QoS::PropFairPolicy(*this);
-}

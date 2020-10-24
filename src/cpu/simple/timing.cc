@@ -1290,14 +1290,3 @@ TimingSimpleCPU::htmSendAbortSignal(HtmFailureFaultCause cause)
 
     sendData(req, data, nullptr, true);
 }
-
-
-////////////////////////////////////////////////////////////////////////
-//
-//  TimingSimpleCPU Simulation Object
-//
-TimingSimpleCPU *
-TimingSimpleCPUParams::create() const
-{
-    return new TimingSimpleCPU(*this);
-}

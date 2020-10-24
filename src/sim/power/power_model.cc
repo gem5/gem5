@@ -87,12 +87,6 @@ PowerModel::regProbePoints()
     ));
 }
 
-PowerModel*
-PowerModelParams::create() const
-{
-    return new PowerModel(*this);
-}
-
 double
 PowerModel::getDynamicPower() const
 {

@@ -135,9 +135,3 @@ KernelWorkload::unserialize(CheckpointIn &cp)
 {
     kernelSymtab.unserialize("symtab", cp);
 }
-
-KernelWorkload *
-KernelWorkloadParams::create() const
-{
-    return new KernelWorkload(*this);
-}

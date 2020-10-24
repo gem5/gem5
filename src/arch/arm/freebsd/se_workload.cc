@@ -154,9 +154,3 @@ EmuFreebsd::syscall(ThreadContext *tc)
 }
 
 } // namespace ArmISA
-
-ArmISA::EmuFreebsd *
-ArmEmuFreebsdParams::create() const
-{
-    return new ArmISA::EmuFreebsd(*this);
-}

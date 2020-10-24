@@ -317,9 +317,3 @@ SignaturePath::auxiliaryPrefetcher(Addr ppn, stride_t current_block,
 }
 
 } // namespace Prefetcher
-
-Prefetcher::SignaturePath*
-SignaturePathPrefetcherParams::create() const
-{
-    return new Prefetcher::SignaturePath(*this);
-}

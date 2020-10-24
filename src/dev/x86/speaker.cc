@@ -83,9 +83,3 @@ X86ISA::Speaker::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(controlVal);
 }
-
-X86ISA::Speaker *
-PcSpeakerParams::create() const
-{
-    return new X86ISA::Speaker(*this);
-}

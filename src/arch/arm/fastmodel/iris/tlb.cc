@@ -65,9 +65,3 @@ Iris::TLB::translateTiming(const RequestPtr &req, ::ThreadContext *tc,
     assert(translation);
     translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
-
-Iris::TLB *
-IrisTLBParams::create() const
-{
-    return new Iris::TLB(*this);
-}

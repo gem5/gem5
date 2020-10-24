@@ -263,9 +263,3 @@ PowerDomain::PowerDomainStats::regStats()
         .flags(Stats::nozero)
         ;
 }
-
-PowerDomain*
-PowerDomainParams::create() const
-{
-    return new PowerDomain(*this);
-}

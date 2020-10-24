@@ -93,9 +93,3 @@ Random::instantiateEntry()
 }
 
 } // namespace ReplacementPolicy
-
-ReplacementPolicy::Random*
-RandomRPParams::create() const
-{
-    return new ReplacementPolicy::Random(*this);
-}

@@ -216,12 +216,6 @@ RangeAddrMapper::RangeAddrMapper(const RangeAddrMapperParams &p) :
     }
 }
 
-RangeAddrMapper*
-RangeAddrMapperParams::create() const
-{
-    return new RangeAddrMapper(*this);
-}
-
 Addr
 RangeAddrMapper::remapAddr(Addr addr) const
 {

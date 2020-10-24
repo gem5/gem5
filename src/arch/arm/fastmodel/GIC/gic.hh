@@ -83,6 +83,7 @@ class SCGIC : public scx_evs_GIC
     const SCFastModelGICParams &_params;
 
   public:
+    SCGIC(const SCFastModelGICParams &p) : SCGIC(p, p.name.c_str()) {}
     SCGIC(const SCFastModelGICParams &params, sc_core::sc_module_name _name);
 
     SignalInterruptInitiatorSocket signalInterrupt;

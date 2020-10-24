@@ -278,9 +278,3 @@ RubyTester::print(std::ostream& out) const
 {
     out << "[RubyTester]" << std::endl;
 }
-
-RubyTester *
-RubyTesterParams::create() const
-{
-    return new RubyTester(*this);
-}

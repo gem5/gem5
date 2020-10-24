@@ -88,12 +88,6 @@ ThermalDomain::emitUpdate()
     ppThermalUpdate->notify(node->temp);
 }
 
-ThermalDomain *
-ThermalDomainParams::create() const
-{
-    return new ThermalDomain(*this);
-}
-
 void
 ThermalDomain::serialize(CheckpointOut &cp) const
 {

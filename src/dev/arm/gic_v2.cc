@@ -1090,9 +1090,3 @@ GicV2::BankedRegs::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ARRAY(intConfig, 2);
     UNSERIALIZE_ARRAY(intPriority, SGI_MAX + PPI_MAX);
 }
-
-GicV2 *
-GicV2Params::create() const
-{
-    return new GicV2(*this);
-}

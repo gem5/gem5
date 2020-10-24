@@ -90,9 +90,3 @@ LFU::instantiateEntry()
 }
 
 } // namespace ReplacementPolicy
-
-ReplacementPolicy::LFU*
-LFURPParams::create() const
-{
-    return new ReplacementPolicy::LFU(*this);
-}

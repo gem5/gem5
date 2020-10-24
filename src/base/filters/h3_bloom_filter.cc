@@ -390,10 +390,3 @@ H3::hash(Addr addr, int hash_number) const
 }
 
 } // namespace BloomFilter
-
-BloomFilter::H3*
-BloomFilterH3Params::create() const
-{
-    return new BloomFilter::H3(*this);
-}
-

@@ -362,9 +362,3 @@ LoopPredictor::getSizeInBits() const
         loopTableConfidenceBits + loopTableTagBits +
         loopTableAgeBits + useDirectionBit);
 }
-
-LoopPredictor *
-LoopPredictorParams::create() const
-{
-    return new LoopPredictor(*this);
-}

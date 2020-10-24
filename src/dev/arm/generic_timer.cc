@@ -1584,27 +1584,3 @@ GenericTimerMem::timerCtrlWrite(Addr addr, size_t size, uint64_t data,
              "(0x%x:%i), assuming WI\n", addr, size);
     }
 }
-
-SystemCounter *
-SystemCounterParams::create() const
-{
-    return new SystemCounter(*this);
-}
-
-GenericTimer *
-GenericTimerParams::create() const
-{
-    return new GenericTimer(*this);
-}
-
-GenericTimerFrame *
-GenericTimerFrameParams::create() const
-{
-    return new GenericTimerFrame(*this);
-}
-
-GenericTimerMem *
-GenericTimerMemParams::create() const
-{
-    return new GenericTimerMem(*this);
-}

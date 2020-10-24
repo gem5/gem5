@@ -209,9 +209,3 @@ IrregularStreamBuffer::addStructuralToPhysicalEntry(
 }
 
 } // namespace Prefetcher
-
-Prefetcher::IrregularStreamBuffer*
-IrregularStreamBufferPrefetcherParams::create() const
-{
-    return new Prefetcher::IrregularStreamBuffer(*this);
-}

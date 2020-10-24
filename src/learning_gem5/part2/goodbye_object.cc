@@ -94,9 +94,3 @@ GoodbyeObject::fillBuffer()
         exitSimLoop(buffer, 0, curTick() + bandwidth * bytes_copied);
     }
 }
-
-GoodbyeObject*
-GoodbyeObjectParams::create() const
-{
-    return new GoodbyeObject(*this);
-}

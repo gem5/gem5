@@ -207,9 +207,3 @@ VectorRegisterFile::scheduleWriteOperandsFromLoad(
         mask = mask >> 4;
     }
 }
-
-VectorRegisterFile*
-VectorRegisterFileParams::create() const
-{
-    return new VectorRegisterFile(*this);
-}

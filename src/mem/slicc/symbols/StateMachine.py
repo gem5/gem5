@@ -539,12 +539,6 @@ using namespace std;
         num_in_ports = len(self.in_ports)
 
         code('''
-$c_ident *
-${c_ident}Params::create() const
-{
-    return new $c_ident(*this);
-}
-
 int $c_ident::m_num_controllers = 0;
 std::vector<Stats::Vector *>  $c_ident::eventVec;
 std::vector<std::vector<Stats::Vector *> >  $c_ident::transVec;

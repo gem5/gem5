@@ -82,11 +82,3 @@ SerialNullDevice::readData()
 {
     panic("SerialNullDevice does not have pending data.\n");
 }
-
-
-
-SerialNullDevice *
-SerialNullDeviceParams::create() const
-{
-    return new SerialNullDevice(*this);
-}

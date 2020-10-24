@@ -244,9 +244,3 @@ PIF::addEventProbeRetiredInsts(SimObject *obj, const char *name)
 }
 
 } // namespace Prefetcher
-
-Prefetcher::PIF*
-PIFPrefetcherParams::create() const
-{
-    return new Prefetcher::PIF(*this);
-}

@@ -310,9 +310,3 @@ NoncoherentXBar::recvFunctional(PacketPtr pkt, PortID cpu_side_port_id)
     // forward the request to the appropriate destination
     memSidePorts[dest_id]->sendFunctional(pkt);
 }
-
-NoncoherentXBar*
-NoncoherentXBarParams::create() const
-{
-    return new NoncoherentXBar(*this);
-}

@@ -164,9 +164,3 @@ VirtIOBlock::RequestQueue::onNotifyDescriptor(VirtDescriptor *desc)
     produceDescriptor(desc, sizeof(BlkRequest) + data_size + sizeof(Status));
     parent.kick();
 }
-
-VirtIOBlock *
-VirtIOBlockParams::create() const
-{
-    return new VirtIOBlock(*this);
-}

@@ -61,12 +61,6 @@
 
 using namespace std;
 
-Sequencer *
-RubySequencerParams::create() const
-{
-    return new Sequencer(*this);
-}
-
 Sequencer::Sequencer(const Params &p)
     : RubyPort(p), m_IncompleteTimes(MachineType_NUM),
       deadlockCheckEvent([this]{ wakeup(); }, "Sequencer deadlock check")

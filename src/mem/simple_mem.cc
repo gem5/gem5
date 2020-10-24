@@ -301,9 +301,3 @@ SimpleMemory::MemoryPort::recvRespRetry()
 {
     memory.recvRespRetry();
 }
-
-SimpleMemory*
-SimpleMemoryParams::create() const
-{
-    return new SimpleMemory(*this);
-}

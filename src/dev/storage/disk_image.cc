@@ -159,12 +159,6 @@ RawDiskImage::write(const uint8_t *data, std::streampos offset)
     return stream.tellp() - pos;
 }
 
-RawDiskImage *
-RawDiskImageParams::create() const
-{
-    return new RawDiskImage(*this);
-}
-
 ////////////////////////////////////////////////////////////////////////
 //
 // Copy on Write Disk image
@@ -440,10 +434,4 @@ CowDiskImage::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(cowFilename);
     cowFilename = cp.getCptDir() + "/" + cowFilename;
     open(cowFilename);
-}
-
-CowDiskImage *
-CowDiskImageParams::create() const
-{
-    return new CowDiskImage(*this);
 }

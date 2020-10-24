@@ -228,11 +228,3 @@ SimpleMemobj::sendRangeChange()
     instPort.sendRangeChange();
     dataPort.sendRangeChange();
 }
-
-
-
-SimpleMemobj*
-SimpleMemobjParams::create() const
-{
-    return new SimpleMemobj(*this);
-}

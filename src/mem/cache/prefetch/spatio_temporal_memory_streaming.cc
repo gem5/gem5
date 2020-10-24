@@ -247,9 +247,3 @@ STeMS::reconstructSequence(
 }
 
 } // namespace Prefetcher
-
-Prefetcher::STeMS*
-STeMSPrefetcherParams::create() const
-{
-   return new Prefetcher::STeMS(*this);
-}

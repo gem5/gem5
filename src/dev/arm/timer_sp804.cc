@@ -280,9 +280,3 @@ Sp804::unserialize(CheckpointIn &cp)
     timer0.unserializeSection(cp, "timer0");
     timer1.unserializeSection(cp, "timer1");
 }
-
-Sp804 *
-Sp804Params::create() const
-{
-    return new Sp804(*this);
-}

@@ -759,9 +759,3 @@ ISA::unserialize(CheckpointIn &cp)
 }
 
 }
-
-SparcISA::ISA *
-SparcISAParams::create() const
-{
-    return new SparcISA::ISA(*this);
-}

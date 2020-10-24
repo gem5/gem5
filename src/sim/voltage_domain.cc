@@ -124,12 +124,6 @@ VoltageDomain::startup() {
     }
 }
 
-VoltageDomain *
-VoltageDomainParams::create() const
-{
-    return new VoltageDomain(*this);
-}
-
 void
 VoltageDomain::serialize(CheckpointOut &cp) const
 {

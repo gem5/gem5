@@ -387,9 +387,3 @@ DRAMSim2::MemoryPort::recvRespRetry()
 {
     memory.recvRespRetry();
 }
-
-DRAMSim2*
-DRAMSim2Params::create() const
-{
-    return new DRAMSim2(*this);
-}

@@ -110,18 +110,6 @@ NetworkLink::resetStats()
     m_link_utilized = 0;
 }
 
-NetworkLink *
-NetworkLinkParams::create() const
-{
-    return new NetworkLink(*this);
-}
-
-CreditLink *
-CreditLinkParams::create() const
-{
-    return new CreditLink(*this);
-}
-
 uint32_t
 NetworkLink::functionalWrite(Packet *pkt)
 {

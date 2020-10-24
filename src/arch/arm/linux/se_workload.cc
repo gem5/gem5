@@ -863,9 +863,3 @@ EmuLinux::syscall(ThreadContext *tc)
 }
 
 } // namespace ArmISA
-
-ArmISA::EmuLinux *
-ArmEmuLinuxParams::create() const
-{
-    return new ArmISA::EmuLinux(*this);
-}

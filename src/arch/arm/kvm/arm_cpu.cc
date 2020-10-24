@@ -841,9 +841,3 @@ ArmKvmCPU::updateTCStateVFP(uint64_t id, bool show_warnings)
             warn("Unhandled VFP register: 0x%x\n", id);
     }
 }
-
-ArmKvmCPU *
-ArmKvmCPUParams::create() const
-{
-    return new ArmKvmCPU(*this);
-}

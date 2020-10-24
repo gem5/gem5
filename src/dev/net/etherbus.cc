@@ -105,9 +105,3 @@ EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
 
     return true;
 }
-
-EtherBus *
-EtherBusParams::create() const
-{
-    return new EtherBus(*this);
-}

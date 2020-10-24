@@ -145,9 +145,3 @@ BRRIP::instantiateEntry()
 }
 
 } // namespace ReplacementPolicy
-
-ReplacementPolicy::BRRIP*
-BRRIPRPParams::create() const
-{
-    return new ReplacementPolicy::BRRIP(*this);
-}

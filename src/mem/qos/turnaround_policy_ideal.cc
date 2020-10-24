@@ -96,9 +96,3 @@ TurnaroundPolicyIdeal::selectBusState()
 }
 
 } // namespace QoS
-
-QoS::TurnaroundPolicyIdeal *
-QoSTurnaroundPolicyIdealParams::create() const
-{
-    return new QoS::TurnaroundPolicyIdeal(*this);
-}

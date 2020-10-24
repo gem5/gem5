@@ -411,9 +411,3 @@ ISA::unserialize(CheckpointIn &cp)
 }
 
 }
-
-RiscvISA::ISA *
-RiscvISAParams::create() const
-{
-    return new RiscvISA::ISA(*this);
-}

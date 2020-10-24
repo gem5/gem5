@@ -73,9 +73,3 @@ Perfect::decompress(const CompressionData* comp_data,
 }
 
 } // namespace Compressor
-
-Compressor::Perfect*
-PerfectCompressorParams::create() const
-{
-    return new Compressor::Perfect(*this);
-}

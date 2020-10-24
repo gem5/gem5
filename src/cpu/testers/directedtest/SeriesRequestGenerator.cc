@@ -108,9 +108,3 @@ SeriesRequestGenerator::performCallback(uint32_t proc, Addr address)
         m_active_node = 0;
     }
 }
-
-SeriesRequestGenerator *
-SeriesRequestGeneratorParams::create() const
-{
-    return new SeriesRequestGenerator(*this);
-}

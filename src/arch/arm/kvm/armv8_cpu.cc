@@ -395,9 +395,3 @@ ArmV8KvmCPU::getSysRegMap() const
 
     return sysRegMap;
 }
-
-ArmV8KvmCPU *
-ArmV8KvmCPUParams::create() const
-{
-    return new ArmV8KvmCPU(*this);
-}

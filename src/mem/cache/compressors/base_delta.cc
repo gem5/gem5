@@ -72,39 +72,3 @@ Base16Delta8::Base16Delta8(const Params &p)
 }
 
 } // namespace Compressor
-
-Compressor::Base64Delta8*
-Base64Delta8Params::create() const
-{
-    return new Compressor::Base64Delta8(*this);
-}
-
-Compressor::Base64Delta16*
-Base64Delta16Params::create() const
-{
-    return new Compressor::Base64Delta16(*this);
-}
-
-Compressor::Base64Delta32*
-Base64Delta32Params::create() const
-{
-    return new Compressor::Base64Delta32(*this);
-}
-
-Compressor::Base32Delta8*
-Base32Delta8Params::create() const
-{
-    return new Compressor::Base32Delta8(*this);
-}
-
-Compressor::Base32Delta16*
-Base32Delta16Params::create() const
-{
-    return new Compressor::Base32Delta16(*this);
-}
-
-Compressor::Base16Delta8*
-Base16Delta8Params::create() const
-{
-    return new Compressor::Base16Delta8(*this);
-}

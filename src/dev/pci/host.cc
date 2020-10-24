@@ -217,9 +217,3 @@ GenericPciHost::mapPciInterrupt(const PciBusAddr &addr, PciIntPin pin) const
     return dev->interruptLine();
 }
 
-
-GenericPciHost *
-GenericPciHostParams::create() const
-{
-    return new GenericPciHost(*this);
-}

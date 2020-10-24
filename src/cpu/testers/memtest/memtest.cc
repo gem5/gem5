@@ -321,9 +321,3 @@ MemTest::recvRetry()
         reschedule(noRequestEvent, clockEdge(progressCheck), true);
     }
 }
-
-MemTest *
-MemTestParams::create() const
-{
-    return new MemTest(*this);
-}

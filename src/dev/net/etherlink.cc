@@ -264,9 +264,3 @@ EtherLink::Link::unserialize(const string &base, CheckpointIn &cp)
              "in-flight packets may have been dropped.\n");
     }
 }
-
-EtherLink *
-EtherLinkParams::create() const
-{
-    return new EtherLink(*this);
-}

@@ -171,10 +171,3 @@ PS2Keyboard::keyPress(uint32_t key, bool down)
     for (uint8_t c : keys)
         send(c);
 }
-
-
-PS2Keyboard *
-PS2KeyboardParams::create() const
-{
-    return new PS2Keyboard(*this);
-}

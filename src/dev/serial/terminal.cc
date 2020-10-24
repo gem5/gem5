@@ -359,9 +359,3 @@ Terminal::writeData(uint8_t c)
             isprint(c) ? c : ' ', (int)c);
 
 }
-
-Terminal *
-TerminalParams::create() const
-{
-    return new Terminal(*this);
-}

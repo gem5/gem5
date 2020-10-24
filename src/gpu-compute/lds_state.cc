@@ -64,15 +64,6 @@ LdsState::LdsState(const Params &params) :
 }
 
 /**
- * Needed by the SWIG compiler
- */
-LdsState *
-LdsStateParams::create() const
-{
-    return new LdsState(*this);
-}
-
-/**
  * set the parent and name based on the parent
  */
 void

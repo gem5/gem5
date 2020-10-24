@@ -133,9 +133,3 @@ SBOOE::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 } // namespace Prefetcher
-
-Prefetcher::SBOOE*
-SBOOEPrefetcherParams::create() const
-{
-    return new Prefetcher::SBOOE(*this);
-}

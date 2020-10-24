@@ -255,9 +255,3 @@ IndirectMemory::checkAccessMatchOnActiveEntries(Addr addr)
 }
 
 } // namespace Prefetcher
-
-Prefetcher::IndirectMemory*
-IndirectMemoryPrefetcherParams::create() const
-{
-    return new Prefetcher::IndirectMemory(*this);
-}

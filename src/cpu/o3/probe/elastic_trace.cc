@@ -919,9 +919,3 @@ ElasticTrace::flushTraces()
     delete dataTraceStream;
     delete instTraceStream;
 }
-
-ElasticTrace*
-ElasticTraceParams::create() const
-{
-    return new ElasticTrace(*this);
-}

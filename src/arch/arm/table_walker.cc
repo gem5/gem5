@@ -2251,12 +2251,6 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool longDescriptor)
     }
 }
 
-ArmISA::TableWalker *
-ArmTableWalkerParams::create() const
-{
-    return new ArmISA::TableWalker(*this);
-}
-
 LookupLevel
 TableWalker::toLookupLevel(uint8_t lookup_level_as_int)
 {

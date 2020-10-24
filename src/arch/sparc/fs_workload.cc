@@ -50,9 +50,3 @@ FsWorkload::initState()
 }
 
 } // namespace SparcISA
-
-SparcISA::FsWorkload *
-SparcFsWorkloadParams::create() const
-{
-    return new SparcISA::FsWorkload(*this);
-}

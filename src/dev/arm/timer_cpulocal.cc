@@ -439,9 +439,3 @@ CpuLocalTimer::unserialize(CheckpointIn &cp)
     for (int i = 0; i < sys->threads.size(); i++)
         localTimer[i]->unserializeSection(cp, csprintf("timer%d", i));
 }
-
-CpuLocalTimer *
-CpuLocalTimerParams::create() const
-{
-    return new CpuLocalTimer(*this);
-}

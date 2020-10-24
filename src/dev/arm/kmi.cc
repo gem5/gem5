@@ -219,9 +219,3 @@ Pl050::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(clkdiv);
     paramIn(cp, "raw_ints", rawInterrupts);
 }
-
-Pl050 *
-Pl050Params::create() const
-{
-    return new Pl050(*this);
-}

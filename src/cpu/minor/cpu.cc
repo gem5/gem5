@@ -291,12 +291,6 @@ MinorCPU::wakeupOnEvent(unsigned int stage_id)
     pipeline->start();
 }
 
-MinorCPU *
-MinorCPUParams::create() const
-{
-    return new MinorCPU(*this);
-}
-
 Port &
 MinorCPU::getInstPort()
 {

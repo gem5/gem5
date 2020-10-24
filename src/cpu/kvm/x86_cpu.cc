@@ -1621,9 +1621,3 @@ X86KvmCPU::setVCpuEvents(const struct kvm_vcpu_events &events)
     if (ioctl(KVM_SET_VCPU_EVENTS, (void *)&events) == -1)
         panic("KVM: Failed to set guest debug registers\n");
 }
-
-X86KvmCPU *
-X86KvmCPUParams::create() const
-{
-    return new X86KvmCPU(*this);
-}

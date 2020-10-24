@@ -82,9 +82,3 @@ RealView::clearPciInt(int line)
 {
     gic->clearInt(line);
 }
-
-RealView *
-RealViewParams::create() const
-{
-    return new RealView(*this);
-}

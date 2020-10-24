@@ -142,9 +142,3 @@ IsaFake::write(PacketPtr pkt)
     }
     return pioDelay;
 }
-
-IsaFake *
-IsaFakeParams::create() const
-{
-    return new IsaFake(*this);
-}

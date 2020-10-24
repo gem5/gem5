@@ -183,9 +183,3 @@ Switch::functionalWrite(Packet *pkt)
     }
     return num_functional_writes;
 }
-
-Switch *
-SwitchParams::create() const
-{
-    return new Switch(*this);
-}

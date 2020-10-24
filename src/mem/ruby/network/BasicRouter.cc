@@ -45,9 +45,3 @@ BasicRouter::print(std::ostream& out) const
 {
     out << name();
 }
-
-BasicRouter *
-BasicRouterParams::create() const
-{
-    return new BasicRouter(*this);
-}

@@ -87,13 +87,3 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
 }
 
 } // namespace Trace
-
-////////////////////////////////////////////////////////////////////////
-//
-//  ExeTracer Simulation Object
-//
-Trace::SparcNativeTrace *
-SparcNativeTraceParams::create() const
-{
-    return new Trace::SparcNativeTrace(*this);
-};

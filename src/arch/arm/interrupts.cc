@@ -39,12 +39,6 @@
 
 #include "arch/arm/system.hh"
 
-ArmISA::Interrupts *
-ArmInterruptsParams::create() const
-{
-    return new ArmISA::Interrupts(*this);
-}
-
 bool
 ArmISA::Interrupts::takeInt(InterruptTypes int_type) const
 {

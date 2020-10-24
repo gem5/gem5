@@ -62,12 +62,6 @@ operator<<(ostream& out, const CacheMemory& obj)
     return out;
 }
 
-CacheMemory *
-RubyCacheParams::create() const
-{
-    return new CacheMemory(*this);
-}
-
 CacheMemory::CacheMemory(const Params &p)
     : SimObject(p),
     dataArray(p.dataArrayBanks, p.dataAccessLatency,

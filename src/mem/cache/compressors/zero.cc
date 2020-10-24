@@ -76,9 +76,3 @@ Zero::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
 }
 
 } // namespace Compressor
-
-Compressor::Zero*
-ZeroCompressorParams::create() const
-{
-    return new Compressor::Zero(*this);
-}

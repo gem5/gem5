@@ -80,9 +80,3 @@ Multi::getPacket()
 }
 
 } // namespace Prefetcher
-
-Prefetcher::Multi*
-MultiPrefetcherParams::create() const
-{
-    return new Prefetcher::Multi(*this);
-}

@@ -94,9 +94,3 @@ FixedPriorityPolicy::schedule(const RequestorID id, const uint64_t data)
 }
 
 } // namespace QoS
-
-QoS::FixedPriorityPolicy *
-QoSFixedPriorityPolicyParams::create() const
-{
-    return new QoS::FixedPriorityPolicy(*this);
-}

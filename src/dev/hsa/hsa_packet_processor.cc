@@ -657,12 +657,6 @@ AQLRingBuffer::allocEntry(uint32_t nBufReq)
     return nBufReq;
 }
 
-HSAPacketProcessor *
-HSAPacketProcessorParams::create() const
-{
-    return new HSAPacketProcessor(*this);
-}
-
 void
 HSAPacketProcessor::finishPkt(void *pvPkt, uint32_t rl_idx)
 {

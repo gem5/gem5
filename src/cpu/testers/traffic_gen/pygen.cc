@@ -90,9 +90,3 @@ pybind_init_tracers(py::module &m_native)
 
 static EmbeddedPyBind _py_tracers("trace", pybind_init_tracers);
 
-PyTrafficGen*
-PyTrafficGenParams::create() const
-{
-    return new PyTrafficGen(*this);
-}
-

@@ -389,19 +389,7 @@ MemSinkCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
 
 } // namespace QoS
 
-QoS::MemSinkCtrl*
-QoSMemSinkCtrlParams::create() const
-{
-    return new QoS::MemSinkCtrl(*this);
-}
-
 QoSMemSinkInterface::QoSMemSinkInterface(const QoSMemSinkInterfaceParams &_p)
     : AbstractMemory(_p)
 {
-}
-
-QoSMemSinkInterface*
-QoSMemSinkInterfaceParams::create() const
-{
-    return new QoSMemSinkInterface(*this);
 }

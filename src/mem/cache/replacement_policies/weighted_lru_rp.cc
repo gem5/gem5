@@ -122,9 +122,3 @@ WeightedLRU::invalidate(const std::shared_ptr<ReplacementData>&
 }
 
 } // namespace ReplacementPolicy
-
-ReplacementPolicy::WeightedLRU*
-WeightedLRURPParams::create() const
-{
-    return new ReplacementPolicy::WeightedLRU(*this);
-}

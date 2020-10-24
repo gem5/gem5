@@ -233,9 +233,3 @@ SimpleIndirectPredictor::getTag(Addr br_addr)
 {
     return (br_addr >> instShift) & ((0x1<<tagBits)-1);
 }
-
-SimpleIndirectPredictor *
-SimpleIndirectPredictorParams::create() const
-{
-    return new SimpleIndirectPredictor(*this);
-}

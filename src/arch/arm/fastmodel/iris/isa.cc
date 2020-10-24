@@ -40,9 +40,3 @@ Iris::ISA::serialize(CheckpointOut &cp) const
         miscRegs[i] = tc->readMiscRegNoEffect(i);
     SERIALIZE_ARRAY(miscRegs, ArmISA::NUM_PHYS_MISCREGS);
 }
-
-Iris::ISA *
-IrisISAParams::create() const
-{
-    return new Iris::ISA(*this);
-}

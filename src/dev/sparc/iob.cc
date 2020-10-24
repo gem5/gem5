@@ -375,9 +375,3 @@ Iob::unserialize(CheckpointIn &cp)
         paramIn(cp, "source", jIntBusy[x].source);
     };
 }
-
-Iob *
-IobParams::create() const
-{
-    return new Iob(*this);
-}

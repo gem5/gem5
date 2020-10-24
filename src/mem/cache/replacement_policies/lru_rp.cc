@@ -94,9 +94,3 @@ LRU::instantiateEntry()
 }
 
 } // namespace ReplacementPolicy
-
-ReplacementPolicy::LRU*
-LRURPParams::create() const
-{
-    return new ReplacementPolicy::LRU(*this);
-}

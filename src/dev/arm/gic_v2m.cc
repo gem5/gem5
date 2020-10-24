@@ -64,18 +64,6 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-Gicv2m *
-Gicv2mParams::create() const
-{
-    return new Gicv2m(*this);
-}
-
-Gicv2mFrame *
-Gicv2mFrameParams::create() const
-{
-    return new Gicv2mFrame(*this);
-}
-
 Gicv2m::Gicv2m(const Params &p)
     : PioDevice(p), pioDelay(p.pio_delay), frames(p.frames), gic(p.gic)
 {

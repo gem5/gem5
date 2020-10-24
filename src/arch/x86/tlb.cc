@@ -571,9 +571,3 @@ TLB::getTableWalkerPort()
 }
 
 } // namespace X86ISA
-
-X86ISA::TLB *
-X86TLBParams::create() const
-{
-    return new X86ISA::TLB(*this);
-}

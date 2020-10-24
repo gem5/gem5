@@ -68,9 +68,3 @@ HelloObject::processEvent()
         schedule(event, curTick() + latency);
     }
 }
-
-HelloObject*
-HelloObjectParams::create() const
-{
-    return new HelloObject(*this);
-}

@@ -1501,9 +1501,3 @@ Device::unserialize(CheckpointIn &cp)
 }
 
 } // namespace Sinic
-
-Sinic::Device *
-SinicParams::create() const
-{
-    return new Sinic::Device(*this);
-}

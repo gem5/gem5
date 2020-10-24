@@ -202,9 +202,3 @@ Multi::MultiStats::regStats()
 }
 
 } // namespace Compressor
-
-Compressor::Multi*
-MultiCompressorParams::create() const
-{
-    return new Compressor::Multi(*this);
-}

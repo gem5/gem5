@@ -1043,10 +1043,3 @@ operator << (std::ostream &os, const ArmSemihosting::InPlaceArg &ipa)
     ccprintf(os, "[%#x-%#x)", ipa.addr, ipa.addr + ipa.size - 1);
     return os;
 }
-
-
-ArmSemihosting *
-ArmSemihostingParams::create() const
-{
-    return new ArmSemihosting(*this);
-}

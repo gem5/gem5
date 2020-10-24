@@ -35,9 +35,3 @@ SimpleObject::SimpleObject(const SimpleObjectParams &params) :
 {
     std::cout << "Hello World! From a SimObject!" << std::endl;
 }
-
-SimpleObject*
-SimpleObjectParams::create() const
-{
-    return new SimpleObject(*this);
-}

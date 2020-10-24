@@ -103,9 +103,3 @@ A9SCU::write(PacketPtr pkt)
     pkt->makeAtomicResponse();
     return pioDelay;
 }
-
-A9SCU *
-A9SCUParams::create() const
-{
-    return new A9SCU(*this);
-}

@@ -138,9 +138,3 @@ X86ISA::Cmos::unserialize(CheckpointIn &cp)
     // Serialize the timer
     rtc.unserialize("rtc", cp);
 }
-
-X86ISA::Cmos *
-CmosParams::create() const
-{
-    return new X86ISA::Cmos(*this);
-}

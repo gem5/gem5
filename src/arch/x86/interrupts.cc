@@ -773,12 +773,6 @@ X86ISA::Interrupts::unserialize(CheckpointIn &cp)
     }
 }
 
-X86ISA::Interrupts *
-X86LocalApicParams::create() const
-{
-    return new X86ISA::Interrupts(*this);
-}
-
 void
 X86ISA::Interrupts::processApicTimerEvent()
 {

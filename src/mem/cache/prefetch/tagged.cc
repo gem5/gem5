@@ -56,9 +56,3 @@ Tagged::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 } // namespace Prefetcher
-
-Prefetcher::Tagged*
-TaggedPrefetcherParams::create() const
-{
-   return new Prefetcher::Tagged(*this);
-}

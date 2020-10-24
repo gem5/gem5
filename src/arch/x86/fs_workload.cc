@@ -377,9 +377,3 @@ FsWorkload::writeOutMPTable(Addr fp, Addr &fpSize, Addr &tableSize, Addr table)
 }
 
 } // namespace X86ISA
-
-X86ISA::FsWorkload *
-X86FsWorkloadParams::create() const
-{
-    return new X86ISA::FsWorkload(*this);
-}

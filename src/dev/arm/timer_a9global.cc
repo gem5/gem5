@@ -308,9 +308,3 @@ A9GlobalTimer::unserialize(CheckpointIn &cp)
 {
     global_timer.unserialize(cp);
 }
-
-A9GlobalTimer *
-A9GlobalTimerParams::create() const
-{
-    return new A9GlobalTimer(*this);
-}

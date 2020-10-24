@@ -68,21 +68,3 @@ X86ISA::ACPI::RSDT::RSDT(const Params &p) :
 X86ISA::ACPI::XSDT::XSDT(const Params &p) :
     SysDescTable(p, "XSDT", 1), entries(p.entries)
 {}
-
-X86ISA::ACPI::RSDP *
-X86ACPIRSDPParams::create() const
-{
-    return new X86ISA::ACPI::RSDP(*this);
-}
-
-X86ISA::ACPI::RSDT *
-X86ACPIRSDTParams::create() const
-{
-    return new X86ISA::ACPI::RSDT(*this);
-}
-
-X86ISA::ACPI::XSDT *
-X86ACPIXSDTParams::create() const
-{
-    return new X86ISA::ACPI::XSDT(*this);
-}

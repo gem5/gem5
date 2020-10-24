@@ -216,9 +216,3 @@ SkewedAssociative::getPossibleEntries(const Addr addr) const
 
     return entries;
 }
-
-SkewedAssociative *
-SkewedAssociativeParams::create() const
-{
-    return new SkewedAssociative(*this);
-}

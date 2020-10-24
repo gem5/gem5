@@ -106,9 +106,3 @@ void
 Iris::Interrupts::unserialize(CheckpointIn &cp)
 {
 }
-
-Iris::Interrupts *
-IrisInterruptsParams::create() const
-{
-    return new Iris::Interrupts(*this);
-}

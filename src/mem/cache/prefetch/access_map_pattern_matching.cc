@@ -264,15 +264,3 @@ AMPM::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 } // namespace Prefetcher
-
-Prefetcher::AccessMapPatternMatching*
-AccessMapPatternMatchingParams::create() const
-{
-    return new Prefetcher::AccessMapPatternMatching(*this);
-}
-
-Prefetcher::AMPM*
-AMPMPrefetcherParams::create() const
-{
-    return new Prefetcher::AMPM(*this);
-}

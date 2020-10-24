@@ -42,9 +42,3 @@
 Display::Display(const DisplayParams &p)
   : SimObject(p)
 {}
-
-Display *
-DisplayParams::create() const
-{
-    return new Display(*this);
-}

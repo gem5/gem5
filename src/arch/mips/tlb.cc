@@ -256,9 +256,3 @@ TLB::index(bool advance)
 
     return *pte;
 }
-
-MipsISA::TLB *
-MipsTLBParams::create() const
-{
-    return new MipsISA::TLB(*this);
-}

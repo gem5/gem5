@@ -638,9 +638,3 @@ RubySystem::functionalWrite(PacketPtr pkt)
 
     return true;
 }
-
-RubySystem *
-RubySystemParams::create() const
-{
-    return new RubySystem(*this);
-}

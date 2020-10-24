@@ -99,9 +99,3 @@ MRU::instantiateEntry()
 }
 
 } // namespace ReplacementPolicy
-
-ReplacementPolicy::MRU*
-MRURPParams::create() const
-{
-    return new ReplacementPolicy::MRU(*this);
-}

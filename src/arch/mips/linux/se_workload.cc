@@ -477,9 +477,3 @@ SyscallDescTable<MipsISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
 };
 
 } // namespace MipsISA
-
-MipsISA::EmuLinux *
-MipsEmuLinuxParams::create() const
-{
-    return new MipsISA::EmuLinux(*this);
-}

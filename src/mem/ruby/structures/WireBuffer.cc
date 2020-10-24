@@ -141,9 +141,3 @@ void
 WireBuffer::wakeup()
 {
 }
-
-WireBuffer *
-RubyWireBufferParams::create() const
-{
-    return new WireBuffer(*this);
-}

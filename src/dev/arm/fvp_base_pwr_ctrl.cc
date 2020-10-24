@@ -310,9 +310,3 @@ FVPBasePwrCtrl::startCoreUp(ThreadContext *const tc)
     ArmISA::Reset().invoke(tc);
     tc->activate();
 }
-
-FVPBasePwrCtrl *
-FVPBasePwrCtrlParams::create() const
-{
-    return new FVPBasePwrCtrl(*this);
-}

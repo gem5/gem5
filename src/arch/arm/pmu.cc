@@ -807,9 +807,3 @@ PMU::SWIncrementEvent::write(uint64_t val)
 }
 
 } // namespace ArmISA
-
-ArmISA::PMU *
-ArmPMUParams::create() const
-{
-    return new ArmISA::PMU(*this);
-}

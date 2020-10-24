@@ -133,9 +133,3 @@ InvalidateGenerator::performCallback(uint32_t proc, Addr address)
     }
 
 }
-
-InvalidateGenerator *
-InvalidateGeneratorParams::create() const
-{
-    return new InvalidateGenerator(*this);
-}

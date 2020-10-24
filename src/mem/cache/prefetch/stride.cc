@@ -202,15 +202,3 @@ StridePrefetcherHashedSetAssociative::extractTag(const Addr addr) const
 }
 
 } // namespace Prefetcher
-
-Prefetcher::StridePrefetcherHashedSetAssociative*
-StridePrefetcherHashedSetAssociativeParams::create() const
-{
-    return new Prefetcher::StridePrefetcherHashedSetAssociative(*this);
-}
-
-Prefetcher::Stride*
-StridePrefetcherParams::create() const
-{
-    return new Prefetcher::Stride(*this);
-}

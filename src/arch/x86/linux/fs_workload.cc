@@ -128,9 +128,3 @@ FsLinux::initState()
 }
 
 } // namespace X86ISA
-
-X86ISA::FsLinux *
-X86FsLinuxParams::create() const
-{
-    return new X86ISA::FsLinux(*this);
-}

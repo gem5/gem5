@@ -120,9 +120,3 @@ MemFootprintProbe::statReset()
     cacheLines.clear();
     pages.clear();
 }
-
-MemFootprintProbe *
-MemFootprintProbeParams::create() const
-{
-    return new MemFootprintProbe(*this);
-}

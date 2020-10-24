@@ -133,10 +133,3 @@ VncInput::captureFrameBuffer()
 
     ++captureCurrentFrame;
 }
-
-// create the VNC Replayer object
-VncInput *
-VncInputParams::create() const
-{
-    return new VncInput(*this);
-}

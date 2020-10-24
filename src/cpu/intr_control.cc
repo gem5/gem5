@@ -74,9 +74,3 @@ IntrControl::havePosted(int cpu_id) const
     auto *tc = sys->threads[cpu_id];
     return tc->getCpuPtr()->checkInterrupts(tc->threadId());
 }
-
-IntrControl *
-IntrControlParams::create() const
-{
-    return new IntrControl(*this);
-}

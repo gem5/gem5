@@ -55,9 +55,3 @@ FPCD::addToDictionary(DictionaryEntry data)
 }
 
 } // namespace Compressor
-
-Compressor::FPCD*
-FPCDParams::create() const
-{
-    return new Compressor::FPCD(*this);
-}

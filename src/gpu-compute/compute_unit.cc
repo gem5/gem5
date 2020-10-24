@@ -1355,12 +1355,6 @@ ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
     delete pkt;
 }
 
-ComputeUnit*
-ComputeUnitParams::create() const
-{
-    return new ComputeUnit(*this);
-}
-
 bool
 ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
 {

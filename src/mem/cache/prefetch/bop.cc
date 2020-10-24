@@ -261,9 +261,3 @@ BOP::notifyFill(const PacketPtr& pkt)
 }
 
 } // namespace Prefetcher
-
-Prefetcher::BOP*
-BOPPrefetcherParams::create() const
-{
-   return new Prefetcher::BOP(*this);
-}

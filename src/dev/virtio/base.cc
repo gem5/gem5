@@ -484,9 +484,3 @@ VirtIODummyDevice::VirtIODummyDevice(const VirtIODummyDeviceParams &params)
     : VirtIODeviceBase(params, ID_INVALID, 0, 0)
 {
 }
-
-VirtIODummyDevice *
-VirtIODummyDeviceParams::create() const
-{
-    return new VirtIODummyDevice(*this);
-}

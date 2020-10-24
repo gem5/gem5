@@ -55,12 +55,6 @@ MemCheckerMonitor::MemCheckerMonitor(const Params &params)
 MemCheckerMonitor::~MemCheckerMonitor()
 {}
 
-MemCheckerMonitor*
-MemCheckerMonitorParams::create() const
-{
-    return new MemCheckerMonitor(*this);
-}
-
 void
 MemCheckerMonitor::init()
 {

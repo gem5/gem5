@@ -136,9 +136,3 @@ RubyDirectedTester::wakeup()
         exitSimLoop("Ruby DirectedTester completed");
     }
 }
-
-RubyDirectedTester *
-RubyDirectedTesterParams::create() const
-{
-    return new RubyDirectedTester(*this);
-}

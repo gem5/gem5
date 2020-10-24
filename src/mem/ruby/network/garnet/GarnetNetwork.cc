@@ -556,12 +556,6 @@ GarnetNetwork::print(ostream& out) const
     out << "[GarnetNetwork]";
 }
 
-GarnetNetwork *
-GarnetNetworkParams::create() const
-{
-    return new GarnetNetwork(*this);
-}
-
 uint32_t
 GarnetNetwork::functionalWrite(Packet *pkt)
 {

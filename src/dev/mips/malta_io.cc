@@ -143,9 +143,3 @@ MaltaIO::startup()
     rtc.startup();
     pitimer.startup();
 }
-
-MaltaIO *
-MaltaIOParams::create() const
-{
-    return new MaltaIO(*this);
-}

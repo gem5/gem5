@@ -179,12 +179,6 @@ SimpleNetwork::print(ostream& out) const
     out << "[SimpleNetwork]";
 }
 
-SimpleNetwork *
-SimpleNetworkParams::create() const
-{
-    return new SimpleNetwork(*this);
-}
-
 /*
  * The simple network has an array of switches. These switches have buffers
  * that need to be accessed for functional reads and writes. Also the links

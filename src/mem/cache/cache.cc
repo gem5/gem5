@@ -67,6 +67,8 @@ Cache::Cache(const CacheParams &p)
     : BaseCache(p, p.system->cacheLineSize()),
       doFastWrites(true)
 {
+    assert(p.tags);
+    assert(p.replacement_policy);
 }
 
 void
@@ -1428,13 +1430,4 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
     }
 
     return BaseCache::sendMSHRQueuePacket(mshr);
-}
-
-Cache*
-CacheParams::create() const
-{
-    assert(tags);
-    assert(replacement_policy);
-
-    return new Cache(*this);
 }

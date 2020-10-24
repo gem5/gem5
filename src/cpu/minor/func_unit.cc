@@ -44,36 +44,6 @@
 #include "debug/MinorTiming.hh"
 #include "enums/OpClass.hh"
 
-MinorOpClass *
-MinorOpClassParams::create() const
-{
-    return new MinorOpClass(*this);
-}
-
-MinorOpClassSet *
-MinorOpClassSetParams::create() const
-{
-    return new MinorOpClassSet(*this);
-}
-
-MinorFUTiming *
-MinorFUTimingParams::create() const
-{
-    return new MinorFUTiming(*this);
-}
-
-MinorFU *
-MinorFUParams::create() const
-{
-    return new MinorFU(*this);
-}
-
-MinorFUPool *
-MinorFUPoolParams::create() const
-{
-    return new MinorFUPool(*this);
-}
-
 MinorOpClassSet::MinorOpClassSet(const MinorOpClassSetParams &params) :
     SimObject(params),
     opClasses(params.opClasses),

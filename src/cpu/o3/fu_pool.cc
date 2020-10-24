@@ -245,24 +245,3 @@ FUPool::isDrained() const
 
     return is_drained;
 }
-
-//
-
-////////////////////////////////////////////////////////////////////////////
-//
-//  The SimObjects we use to get the FU information into the simulator
-//
-////////////////////////////////////////////////////////////////////////////
-
-//
-//    FUPool - Contails a list of FUDesc objects to make available
-//
-
-//
-//  The FuPool object
-//
-FUPool *
-FUPoolParams::create() const
-{
-    return new FUPool(*this);
-}

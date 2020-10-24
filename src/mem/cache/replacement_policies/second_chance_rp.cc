@@ -134,9 +134,3 @@ SecondChance::instantiateEntry()
 }
 
 } // namespace ReplacementPolicy
-
-ReplacementPolicy::SecondChance*
-SecondChanceRPParams::create() const
-{
-    return new ReplacementPolicy::SecondChance(*this);
-}

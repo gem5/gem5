@@ -53,9 +53,3 @@ RedirectPath::RedirectPath(const RedirectPathParams &p)
         _hostPaths.push_back(normalizePath(hp));
     }
 }
-
-RedirectPath*
-RedirectPathParams::create() const
-{
-    return new RedirectPath(*this);
-}

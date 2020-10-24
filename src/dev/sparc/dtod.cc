@@ -86,9 +86,3 @@ DumbTOD::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(todTime);
 }
-
-DumbTOD *
-DumbTODParams::create() const
-{
-    return new DumbTOD(*this);
-}

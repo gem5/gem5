@@ -86,12 +86,6 @@ GarnetIntLink::print(std::ostream& out) const
     out << name();
 }
 
-GarnetIntLink *
-GarnetIntLinkParams::create() const
-{
-    return new GarnetIntLink(*this);
-}
-
 GarnetExtLink::GarnetExtLink(const Params &p)
     : BasicExtLink(p)
 {
@@ -158,10 +152,4 @@ void
 GarnetExtLink::print(std::ostream& out) const
 {
     out << name();
-}
-
-GarnetExtLink *
-GarnetExtLinkParams::create() const
-{
-    return new GarnetExtLink(*this);
 }

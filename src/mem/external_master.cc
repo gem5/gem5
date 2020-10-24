@@ -93,12 +93,6 @@ ExternalMaster::init()
     }
 }
 
-ExternalMaster *
-ExternalMasterParams::create() const
-{
-    return new ExternalMaster(*this);
-}
-
 void
 ExternalMaster::registerHandler(const std::string &handler_name,
     Handler *handler)

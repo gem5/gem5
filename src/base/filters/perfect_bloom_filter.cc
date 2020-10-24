@@ -79,10 +79,3 @@ Perfect::getTotalCount() const
 }
 
 } // namespace BloomFilter
-
-BloomFilter::Perfect*
-BloomFilterPerfectParams::create() const
-{
-    return new BloomFilter::Perfect(*this);
-}
-

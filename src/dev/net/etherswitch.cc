@@ -345,9 +345,3 @@ EtherSwitch::Interface::PortFifo::unserialize(CheckpointIn &cp)
 
     }
 }
-
-EtherSwitch *
-EtherSwitchParams::create() const
-{
-    return new EtherSwitch(*this);
-}

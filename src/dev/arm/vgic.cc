@@ -552,9 +552,3 @@ VGic::vcpuIntData::unserialize(CheckpointIn &cp)
         paramIn(cp, "lr", LR[i]);
     }
 }
-
-VGic *
-VGicParams::create() const
-{
-    return new VGic(*this);
-}

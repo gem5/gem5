@@ -241,12 +241,6 @@ EnergyCtrl::unserialize(CheckpointIn &cp)
     }
 }
 
-EnergyCtrl *
-EnergyCtrlParams::create() const
-{
-    return new EnergyCtrl(*this);
-}
-
 void
 EnergyCtrl::startup()
 {

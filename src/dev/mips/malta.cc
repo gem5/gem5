@@ -95,9 +95,3 @@ Malta::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(intr_sum_type, Malta::Max_CPUs);
 }
-
-Malta *
-MaltaParams::create() const
-{
-    return new Malta(*this);
-}

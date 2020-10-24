@@ -110,10 +110,3 @@ Multi::getTotalCount() const
 }
 
 } // namespace BloomFilter
-
-BloomFilter::Multi*
-BloomFilterMultiParams::create() const
-{
-    return new BloomFilter::Multi(*this);
-}
-

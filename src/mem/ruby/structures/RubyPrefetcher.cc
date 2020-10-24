@@ -48,12 +48,6 @@
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-RubyPrefetcher*
-RubyPrefetcherParams::create() const
-{
-    return new RubyPrefetcher(*this);
-}
-
 RubyPrefetcher::RubyPrefetcher(const Params &p)
     : SimObject(p), m_num_streams(p.num_streams),
     m_array(p.num_streams), m_train_misses(p.train_misses),

@@ -469,16 +469,4 @@ EtherTap::sendReal(const void *data, size_t len)
     return true;
 }
 
-EtherTap *
-EtherTapParams::create() const
-{
-    return new EtherTap(*this);
-}
-
 #endif
-
-EtherTapStub *
-EtherTapStubParams::create() const
-{
-    return new EtherTapStub(*this);
-}

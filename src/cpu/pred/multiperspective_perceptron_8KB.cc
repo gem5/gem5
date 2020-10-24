@@ -64,9 +64,3 @@ MultiperspectivePerceptron8KB::createSpecs() {
     addSpec(new SGHISTPATH(0, 4, 3, 1.65625, 0, 6, *this));
     addSpec(new SGHISTPATH(1, 2, 5, 2.53125, 0, 5, *this));
 }
-
-    MultiperspectivePerceptron8KB*
-MultiperspectivePerceptron8KBParams::create() const
-{
-    return new MultiperspectivePerceptron8KB(*this);
-}

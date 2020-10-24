@@ -90,10 +90,3 @@ Block::hash(Addr addr) const
 }
 
 } // namespace BloomFilter
-
-BloomFilter::Block*
-BloomFilterBlockParams::create() const
-{
-    return new BloomFilter::Block(*this);
-}
-

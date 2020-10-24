@@ -343,9 +343,3 @@ MemChecker::reset(Addr addr, size_t size)
         byte_trackers.erase(addr + i);
     }
 }
-
-MemChecker*
-MemCheckerParams::create() const
-{
-    return new MemChecker(*this);
-}

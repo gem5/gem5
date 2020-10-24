@@ -95,9 +95,3 @@ MultiBitSel::hash(Addr addr, int hash_number) const
 
 } // namespace BloomFilter
 
-BloomFilter::MultiBitSel*
-BloomFilterMultiBitSelParams::create() const
-{
-    return new BloomFilter::MultiBitSel(*this);
-}
-

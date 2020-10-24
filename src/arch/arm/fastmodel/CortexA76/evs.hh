@@ -93,6 +93,7 @@ class ScxEvsCortexA76 : public Types::Base
     const Params &params;
 
   public:
+    ScxEvsCortexA76(const Params &p) : ScxEvsCortexA76(p.name.c_str(), p) {}
     ScxEvsCortexA76(const sc_core::sc_module_name &mod_name, const Params &p);
 
     void before_end_of_elaboration() override;

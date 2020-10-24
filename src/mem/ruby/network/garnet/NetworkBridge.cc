@@ -263,9 +263,3 @@ NetworkBridge::wakeup()
     }
     assert(!link_srcQueue->getSize());
 }
-
-NetworkBridge *
-NetworkBridgeParams::create() const
-{
-    return new NetworkBridge(*this);
-}

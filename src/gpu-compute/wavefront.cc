@@ -44,12 +44,6 @@
 #include "gpu-compute/simple_pool_manager.hh"
 #include "gpu-compute/vector_register_file.hh"
 
-Wavefront*
-WavefrontParams::create() const
-{
-    return new Wavefront(*this);
-}
-
 Wavefront::Wavefront(const Params &p)
   : SimObject(p), wfSlotId(p.wf_slot_id), simdId(p.simdId),
     maxIbSize(p.max_ib_size), _gpuISA(*this),

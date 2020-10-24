@@ -671,9 +671,3 @@ NetworkInterface::functionalWrite(Packet *pkt)
     }
     return num_functional_writes;
 }
-
-NetworkInterface *
-GarnetNetworkInterfaceParams::create() const
-{
-    return new NetworkInterface(*this);
-}

@@ -190,12 +190,6 @@ TAGE_SC_L_64KB_StatisticalCorrector::gUpdates(ThreadID tid, Addr pc,
             igehl, inb, logInb, wi, bi);
 }
 
-TAGE_SC_L_64KB_StatisticalCorrector*
-TAGE_SC_L_64KB_StatisticalCorrectorParams::create() const
-{
-    return new TAGE_SC_L_64KB_StatisticalCorrector(*this);
-}
-
 int
 TAGE_SC_L_TAGE_64KB::gindex_ext(int index, int bank) const
 {
@@ -309,19 +303,7 @@ TAGE_SC_L_TAGE_64KB::handleTAGEUpdate(Addr branch_pc, bool taken,
     }
 }
 
-TAGE_SC_L_TAGE_64KB*
-TAGE_SC_L_TAGE_64KBParams::create() const
-{
-    return new TAGE_SC_L_TAGE_64KB(*this);
-}
-
 TAGE_SC_L_64KB::TAGE_SC_L_64KB(const TAGE_SC_L_64KBParams &params)
   : TAGE_SC_L(params)
 {
-}
-
-TAGE_SC_L_64KB*
-TAGE_SC_L_64KBParams::create() const
-{
-    return new TAGE_SC_L_64KB(*this);
 }

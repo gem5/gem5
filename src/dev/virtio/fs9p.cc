@@ -472,15 +472,7 @@ VirtIO9PDiod::terminateDiod()
         // Managed to kill diod
         return;
     }
-
 }
-VirtIO9PDiod *
-VirtIO9PDiodParams::create() const
-{
-    return new VirtIO9PDiod(*this);
-}
-
-
 
 
 VirtIO9PSocket::VirtIO9PSocket(const Params &params)
@@ -568,11 +560,4 @@ void
 VirtIO9PSocket::SocketDataEvent::process(int revent)
 {
     parent.serverDataReady();
-}
-
-
-VirtIO9PSocket *
-VirtIO9PSocketParams::create() const
-{
-    return new VirtIO9PSocket(*this);
 }

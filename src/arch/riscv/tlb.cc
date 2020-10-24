@@ -512,9 +512,3 @@ TLB::TlbStats::TlbStats(Stats::Group *parent)
         read_accesses + write_accesses)
 {
 }
-
-RiscvISA::TLB *
-RiscvTLBParams::create() const
-{
-    return new TLB(*this);
-}

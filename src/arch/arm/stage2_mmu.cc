@@ -140,9 +140,3 @@ Stage2MMU::Stage2Translation::finish(const Fault &_fault,
         event->process();
     }
 }
-
-ArmISA::Stage2MMU *
-ArmStage2MMUParams::create() const
-{
-    return new ArmISA::Stage2MMU(*this);
-}

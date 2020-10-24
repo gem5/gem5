@@ -74,12 +74,6 @@ ProbeListener::~ProbeListener()
     manager->removeListener(name, *this);
 }
 
-ProbeListenerObject*
-ProbeListenerObjectParams::create() const
-{
-    return new ProbeListenerObject(*this);
-}
-
 bool
 ProbeManager::addListener(std::string pointName, ProbeListener &listener)
 {

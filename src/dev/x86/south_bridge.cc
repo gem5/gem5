@@ -43,9 +43,3 @@ SouthBridge::SouthBridge(const Params &p) : SimObject(p),
     assert(pc);
     pc->southBridge = this;
 }
-
-SouthBridge *
-SouthBridgeParams::create() const
-{
-    return new SouthBridge(*this);
-}

@@ -137,9 +137,3 @@ EmuLinux::syscall(ThreadContext *tc)
 }
 
 } // namespace SparcISA
-
-SparcISA::EmuLinux *
-SparcEmuLinuxParams::create() const
-{
-    return new SparcISA::EmuLinux(*this);
-}

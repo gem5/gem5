@@ -273,9 +273,3 @@ PowerState::PowerStateStats::preDumpStats()
      */
     powerState.computeStats();
 }
-
-PowerState*
-PowerStateParams::create() const
-{
-    return new PowerState(*this);
-}

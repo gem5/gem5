@@ -69,9 +69,3 @@ BareMetal::initState()
 }
 
 } // namespace RiscvISA
-
-RiscvISA::BareMetal *
-RiscvBareMetalParams::create() const
-{
-    return new RiscvISA::BareMetal(*this);
-}

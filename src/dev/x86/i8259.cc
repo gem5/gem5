@@ -364,9 +364,3 @@ X86ISA::I8259::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(initControlWord);
     UNSERIALIZE_SCALAR(autoEOI);
 }
-
-X86ISA::I8259 *
-I8259Params::create() const
-{
-    return new X86ISA::I8259(*this);
-}

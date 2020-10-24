@@ -70,15 +70,3 @@ void X86ISA::E820Table::writeTo(PortProxy& proxy, Addr countAddr, Addr addr)
         writeVal(entries[i]->type, proxy, addr);
     }
 }
-
-E820Table *
-X86E820TableParams::create() const
-{
-    return new E820Table(*this);
-}
-
-E820Entry *
-X86E820EntryParams::create() const
-{
-    return new E820Entry(*this);
-}

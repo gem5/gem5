@@ -313,21 +313,3 @@ RealViewTemperatureSensor::read() const
     // Report a dummy 25 degrees temperature
     return 25000000;
 }
-
-RealViewCtrl *
-RealViewCtrlParams::create() const
-{
-    return new RealViewCtrl(*this);
-}
-
-RealViewOsc *
-RealViewOscParams::create() const
-{
-    return new RealViewOsc(*this);
-}
-
-RealViewTemperatureSensor *
-RealViewTemperatureSensorParams::create() const
-{
-    return new RealViewTemperatureSensor(*this);
-}

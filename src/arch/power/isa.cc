@@ -54,10 +54,3 @@ ISA::params() const
 }
 
 }
-
-PowerISA::ISA *
-PowerISAParams::create() const
-{
-    return new PowerISA::ISA(*this);
-}
-

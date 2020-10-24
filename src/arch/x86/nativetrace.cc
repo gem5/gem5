@@ -186,13 +186,3 @@ X86NativeTrace::check(NativeTraceRecord *record)
 }
 
 } // namespace Trace
-
-////////////////////////////////////////////////////////////////////////
-//
-//  ExeTracer Simulation Object
-//
-Trace::X86NativeTrace *
-X86NativeTraceParams::create() const
-{
-    return new Trace::X86NativeTrace(*this);
-}

@@ -44,12 +44,6 @@ SimpleExtLink::print(std::ostream& out) const
     out << name();
 }
 
-SimpleExtLink *
-SimpleExtLinkParams::create() const
-{
-    return new SimpleExtLink(*this);
-}
-
 SimpleIntLink::SimpleIntLink(const Params &p)
     : BasicIntLink(p)
 {
@@ -64,10 +58,4 @@ void
 SimpleIntLink::print(std::ostream& out) const
 {
     out << name();
-}
-
-SimpleIntLink *
-SimpleIntLinkParams::create() const
-{
-    return new SimpleIntLink(*this);
 }

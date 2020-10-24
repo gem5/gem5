@@ -61,9 +61,3 @@ RubyPortProxy::makeRequest(PacketPtr pkt)
     panic("RubyPortProxy::makeRequest should not be called");
     return RequestStatus_NULL;
 }
-
-RubyPortProxy*
-RubyPortProxyParams::create() const
-{
-    return new RubyPortProxy(*this);
-}

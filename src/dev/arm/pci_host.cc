@@ -68,10 +68,3 @@ GenericArmPciHost::mapPciInterrupt(const PciBusAddr &addr, PciIntPin pin) const
         fatal("Unsupported PCI interrupt routing policy.");
     }
 }
-
-
-GenericArmPciHost *
-GenericArmPciHostParams::create() const
-{
-    return new GenericArmPciHost(*this);
-}

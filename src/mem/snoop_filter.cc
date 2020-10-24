@@ -420,9 +420,3 @@ SnoopFilter::regStats()
         .desc("Number of snoops hitting in the snoop filter with multiple "\
               "(>1) holders of the requested data.");
 }
-
-SnoopFilter *
-SnoopFilterParams::create() const
-{
-    return new SnoopFilter(*this);
-}

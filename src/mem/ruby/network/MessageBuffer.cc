@@ -528,9 +528,3 @@ MessageBuffer::functionalAccess(Packet *pkt, bool is_read)
 
     return num_functional_accesses;
 }
-
-MessageBuffer *
-MessageBufferParams::create() const
-{
-    return new MessageBuffer(*this);
-}

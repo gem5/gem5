@@ -278,9 +278,3 @@ TLB::index(bool advance)
 
     return *pte;
 }
-
-PowerISA::TLB *
-PowerTLBParams::create() const
-{
-    return new PowerISA::TLB(*this);
-}

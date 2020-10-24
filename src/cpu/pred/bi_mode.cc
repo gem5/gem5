@@ -225,9 +225,3 @@ BiModeBP::updateGlobalHistReg(ThreadID tid, bool taken)
                                (globalHistoryReg[tid] << 1);
     globalHistoryReg[tid] &= historyRegisterMask;
 }
-
-BiModeBP*
-BiModeBPParams::create() const
-{
-    return new BiModeBP(*this);
-}

@@ -1197,9 +1197,3 @@ IdeDisk::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ENUM(dmaState);
     UNSERIALIZE_ARRAY(dataBuffer, MAX_DMA_SIZE);
 }
-
-IdeDisk *
-IdeDiskParams::create() const
-{
-    return new IdeDisk(*this);
-}

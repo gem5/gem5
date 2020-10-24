@@ -12,12 +12,6 @@ HMCController::HMCController(const HMCControllerParams &p) :
     assert(p.port_cpu_side_ports_connection_count == 1);
 }
 
-HMCController*
-HMCControllerParams::create() const
-{
-    return new HMCController(*this);
-}
-
 // Since this module is a load distributor, all its request ports have the same
 //  range so we should keep only one of the ranges and ignore the others
 void HMCController::recvRangeChange(PortID mem_side_port_id)

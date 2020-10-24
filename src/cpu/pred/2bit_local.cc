@@ -133,9 +133,3 @@ void
 LocalBP::uncondBranch(ThreadID tid, Addr pc, void *&bp_history)
 {
 }
-
-LocalBP*
-LocalBPParams::create() const
-{
-    return new LocalBP(*this);
-}

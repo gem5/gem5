@@ -41,6 +41,22 @@
 
 ////////////////////////////////////////////////////////////////////////////
 //
+//  The SimObjects we use to get the FU information into the simulator
+//
+////////////////////////////////////////////////////////////////////////////
+
+//
+//  We use 2 objects to specify this data in the INI file:
+//    (1) OpDesc - Describes the operation class & latencies
+//                   (multiple OpDesc objects can refer to the same
+//                   operation classes)
+//    (2) FUDesc - Describes the operations available in the unit &
+//                   the number of these units
+//
+//
+
+////////////////////////////////////////////////////////////////////////////
+//
 //  Structures used ONLY during the initialization phase...
 //
 //

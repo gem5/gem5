@@ -279,12 +279,6 @@ FALRU::moveToTail(FALRUBlk *blk)
     }
 }
 
-FALRU *
-FALRUParams::create() const
-{
-    return new FALRU(*this);
-}
-
 void
 FALRU::CacheTracking::check(const FALRUBlk *head, const FALRUBlk *tail) const
 {

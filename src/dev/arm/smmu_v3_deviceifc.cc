@@ -259,9 +259,3 @@ SMMUv3DeviceInterface::drain()
     }
     return DrainState::Drained;
 }
-
-SMMUv3DeviceInterface*
-SMMUv3DeviceInterfaceParams::create() const
-{
-    return new SMMUv3DeviceInterface(*this);
-}

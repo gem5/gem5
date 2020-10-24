@@ -39,18 +39,6 @@
 
 #include "cpu/pred/multiperspective_perceptron_tage_8KB.hh"
 
-MPP_TAGE_8KB*
-MPP_TAGE_8KBParams::create() const
-{
-    return new MPP_TAGE_8KB(*this);
-}
-
-MPP_LoopPredictor_8KB*
-MPP_LoopPredictor_8KBParams::create() const
-{
-    return new MPP_LoopPredictor_8KB(*this);
-}
-
 MPP_StatisticalCorrector_8KB::MPP_StatisticalCorrector_8KB(
         const MPP_StatisticalCorrector_8KBParams &p)
   : MPP_StatisticalCorrector(p)
@@ -167,12 +155,6 @@ MPP_StatisticalCorrector_8KB::getSizeInBits() const
     return bits;
 }
 
-MPP_StatisticalCorrector_8KB*
-MPP_StatisticalCorrector_8KBParams::create() const
-{
-    return new MPP_StatisticalCorrector_8KB(*this);
-}
-
 MultiperspectivePerceptronTAGE8KB::MultiperspectivePerceptronTAGE8KB(
         const MultiperspectivePerceptronTAGE8KBParams &p)
     : MultiperspectivePerceptronTAGE(p)
@@ -187,10 +169,4 @@ MultiperspectivePerceptronTAGE8KB::createSpecs()
     addSpec(new GHISTMODPATH(3, 7, 1, 2.24, 0, 6, *this));
     addSpec(new IMLI(1, 2.23, 0, 6, *this));
     addSpec(new IMLI(4, 1.98, 0, 6, *this));
-}
-
-MultiperspectivePerceptronTAGE8KB*
-MultiperspectivePerceptronTAGE8KBParams::create() const
-{
-    return new MultiperspectivePerceptronTAGE8KB(*this);
 }

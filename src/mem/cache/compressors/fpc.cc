@@ -95,9 +95,3 @@ FPC::instantiateDictionaryCompData() const
 }
 
 } // namespace Compressor
-
-Compressor::FPC*
-FPCParams::create() const
-{
-    return new Compressor::FPC(*this);
-}

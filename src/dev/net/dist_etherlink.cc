@@ -253,10 +253,4 @@ DistEtherLink::LocalIface::LocalIface(const std::string &name,
     rx->setDistInt(m);
 }
 
-DistEtherLink *
-DistEtherLinkParams::create() const
-{
-    return new DistEtherLink(*this);
-}
-
 

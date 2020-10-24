@@ -128,10 +128,3 @@ StackDistProbe::handleRequest(const ProbePoints::PacketInfo &pkt_info)
             writeLogHist.sample(sd_lg2);
     }
 }
-
-
-StackDistProbe *
-StackDistProbeParams::create() const
-{
-    return new StackDistProbe(*this);
-}

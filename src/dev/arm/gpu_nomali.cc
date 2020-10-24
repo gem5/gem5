@@ -374,17 +374,3 @@ CustomNoMaliGpu::onReset()
     for (const auto &reg : idRegs)
         writeRegRaw(reg.first, reg.second);
 }
-
-
-
-NoMaliGpu *
-NoMaliGpuParams::create() const
-{
-    return new NoMaliGpu(*this);
-}
-
-CustomNoMaliGpu *
-CustomNoMaliGpuParams::create() const
-{
-    return new CustomNoMaliGpu(*this);
-}

@@ -325,9 +325,3 @@ Pl011::unserialize(CheckpointIn &cp)
     paramIn(cp, "imsc_serial", imsc);
     paramIn(cp, "rawInt_serial", rawInt);
 }
-
-Pl011 *
-Pl011Params::create() const
-{
-    return new Pl011(*this);
-}

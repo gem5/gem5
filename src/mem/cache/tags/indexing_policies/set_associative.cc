@@ -71,9 +71,3 @@ SetAssociative::getPossibleEntries(const Addr addr) const
 {
     return sets[extractSet(addr)];
 }
-
-SetAssociative*
-SetAssociativeParams::create() const
-{
-    return new SetAssociative(*this);
-}

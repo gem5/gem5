@@ -1692,10 +1692,3 @@ TLB::testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
                                domain, lookup_level);
     }
 }
-
-
-ArmISA::TLB *
-ArmTLBParams::create() const
-{
-    return new ArmISA::TLB(*this);
-}

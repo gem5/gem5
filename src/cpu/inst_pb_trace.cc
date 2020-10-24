@@ -174,11 +174,3 @@ InstPBTrace::traceMem(StaticInstPtr si, Addr a, Addr s, unsigned f)
 }
 
 } // namespace Trace
-
-
-Trace::InstPBTrace*
-InstPBTraceParams::create() const
-{
-    return new Trace::InstPBTrace(*this);
-}
-

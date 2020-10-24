@@ -66,9 +66,3 @@ MMU::invalidateMiscReg(TLBType type)
         getDTBPtr()->invalidateMiscReg();
     }
 }
-
-ArmISA::MMU *
-ArmMMUParams::create() const
-{
-    return new ArmISA::MMU(*this);
-}

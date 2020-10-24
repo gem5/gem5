@@ -209,10 +209,3 @@ SimpleMemDelay::delayResp(PacketPtr pkt)
         return 0;
     }
 }
-
-
-SimpleMemDelay *
-SimpleMemDelayParams::create() const
-{
-    return new SimpleMemDelay(*this);
-}

@@ -112,9 +112,3 @@ VirtIOConsole::TermTransQueue::onNotifyDescriptor(VirtDescriptor *desc)
     produceDescriptor(desc, 0);
     parent.kick();
 }
-
-VirtIOConsole *
-VirtIOConsoleParams::create() const
-{
-    return new VirtIOConsole(*this);
-}

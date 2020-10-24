@@ -294,9 +294,3 @@ Gicv3::unserialize(CheckpointIn & cp)
         cpuInterfaces[cpu_interface_id]->unserializeSection(cp,
             csprintf("cpuInterface.%i", cpu_interface_id));
 }
-
-Gicv3 *
-Gicv3Params::create() const
-{
-    return new Gicv3(*this);
-}

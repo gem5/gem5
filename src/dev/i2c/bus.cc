@@ -234,9 +234,3 @@ I2CBus::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(i2cAddr);
     UNSERIALIZE_SCALAR(message);
 }
-
-I2CBus*
-I2CBusParams::create() const
-{
-    return new I2CBus(*this);
-}

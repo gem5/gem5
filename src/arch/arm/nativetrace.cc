@@ -219,13 +219,3 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
 }
 
 } // namespace Trace
-
-////////////////////////////////////////////////////////////////////////
-//
-//  ExeTracer Simulation Object
-//
-Trace::ArmNativeTrace *
-ArmNativeTraceParams::create() const
-{
-    return new Trace::ArmNativeTrace(*this);
-}

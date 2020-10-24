@@ -1363,9 +1363,3 @@ TarmacParserRecord::iSetStateToStr(ISetState isetstate) const
 }
 
 } // namespace Trace
-
-Trace::TarmacParser *
-TarmacParserParams::create() const
-{
-    return new Trace::TarmacParser(*this);
-}

@@ -58,12 +58,6 @@ TrafficGen::TrafficGen(const TrafficGenParams &p)
 {
 }
 
-TrafficGen*
-TrafficGenParams::create() const
-{
-    return new TrafficGen(*this);
-}
-
 void
 TrafficGen::init()
 {

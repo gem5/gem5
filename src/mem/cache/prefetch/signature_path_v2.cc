@@ -129,9 +129,3 @@ SignaturePathV2::handlePageCrossingLookahead(signature_t signature,
 }
 
 } // namespace Prefetcher
-
-Prefetcher::SignaturePathV2*
-SignaturePathPrefetcherV2Params::create() const
-{
-    return new Prefetcher::SignaturePathV2(*this);
-}

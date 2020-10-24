@@ -56,17 +56,6 @@
 #include "debug/Drain.hh"
 
 /**
- * Create this device
- */
-
-FlashDevice*
-FlashDeviceParams::create() const
-{
-    return new FlashDevice(*this);
-}
-
-
-/**
  * Flash Device constructor and destructor
  */
 

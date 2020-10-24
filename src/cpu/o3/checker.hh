@@ -51,7 +51,14 @@
 class O3Checker : public Checker<O3CPUImpl>
 {
   public:
-    O3Checker(const Params &p) : Checker<O3CPUImpl>(p) {}
+    O3Checker(const Params &p) : Checker<O3CPUImpl>(p)
+    {
+        // The checker should check all instructions executed by the main
+        // cpu and therefore any parameters for early exit don't make much
+        // sense.
+        fatal_if(p.max_insts_any_thread || p.max_insts_all_threads ||
+                 p.progress_interval, "Invalid checker parameters");
+    }
 };
 
 #endif // __CPU_O3_CHECKER_HH__

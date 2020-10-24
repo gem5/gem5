@@ -82,12 +82,6 @@ TraceCPU::~TraceCPU()
 
 }
 
-TraceCPU*
-TraceCPUParams::create() const
-{
-    return new TraceCPU(*this);
-}
-
 void
 TraceCPU::updateNumOps(uint64_t rob_num)
 {

@@ -387,9 +387,3 @@ DRAMsim3::MemoryPort::recvRespRetry()
 {
     memory.recvRespRetry();
 }
-
-DRAMsim3*
-DRAMsim3Params::create() const
-{
-    return new DRAMsim3(*this);
-}

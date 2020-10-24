@@ -273,10 +273,3 @@ MmioVirtIO::setInterrupts(uint32_t value)
         interrupt->clear();
     }
 }
-
-
-MmioVirtIO *
-MmioVirtIOParams::create() const
-{
-    return new MmioVirtIO(*this);
-}

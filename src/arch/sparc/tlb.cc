@@ -1507,9 +1507,3 @@ TLB::unserialize(CheckpointIn &cp)
 }
 
 } // namespace SparcISA
-
-SparcISA::TLB *
-SparcTLBParams::create() const
-{
-    return new SparcISA::TLB(*this);
-}

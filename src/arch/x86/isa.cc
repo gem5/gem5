@@ -435,9 +435,3 @@ ISA::setThreadContext(ThreadContext *_tc)
 }
 
 }
-
-X86ISA::ISA *
-X86ISAParams::create() const
-{
-    return new X86ISA::ISA(*this);
-}

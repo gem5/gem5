@@ -47,9 +47,3 @@ ThermalNode::ThermalNode(const ThermalNodeParams &p)
     : SimObject(p), id(-1), isref(false), temp(0.0f)
 {
 }
-
-ThermalNode *
-ThermalNodeParams::create() const
-{
-    return new ThermalNode(*this);
-}

@@ -78,9 +78,3 @@ SimpleUart::write(PacketPtr pkt)
     pkt->makeAtomicResponse();
     return pioDelay;
 }
-
-SimpleUart *
-SimpleUartParams::create() const
-{
-    return new SimpleUart(*this);
-}

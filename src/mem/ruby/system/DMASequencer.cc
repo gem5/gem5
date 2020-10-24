@@ -199,9 +199,3 @@ DMASequencer::recordRequestType(DMASequencerRequestType requestType)
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
             DMASequencerRequestType_to_string(requestType));
 }
-
-DMASequencer *
-DMASequencerParams::create() const
-{
-    return new DMASequencer(*this);
-}

@@ -305,9 +305,3 @@ X86ISA::I8042::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(dataReg);
     UNSERIALIZE_SCALAR(lastCommand);
 }
-
-X86ISA::I8042 *
-I8042Params::create() const
-{
-    return new X86ISA::I8042(*this);
-}

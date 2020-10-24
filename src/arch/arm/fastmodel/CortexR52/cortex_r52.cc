@@ -160,15 +160,3 @@ CortexR52Cluster::getPort(const std::string &if_name, PortID idx)
 }
 
 } // namespace FastModel
-
-FastModel::CortexR52 *
-FastModelCortexR52Params::create() const
-{
-    return new FastModel::CortexR52(*this);
-}
-
-FastModel::CortexR52Cluster *
-FastModelCortexR52ClusterParams::create() const
-{
-    return new FastModel::CortexR52Cluster(*this);
-}

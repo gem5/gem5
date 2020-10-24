@@ -752,17 +752,6 @@ UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams &p) :
     setValues();
 }
 
-/**
- * Create the parameters of this device
- */
-
-UFSHostDevice*
-UFSHostDeviceParams::create() const
-{
-    return new UFSHostDevice(*this);
-}
-
-
 void
 UFSHostDevice::regStats()
 {

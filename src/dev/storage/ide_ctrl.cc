@@ -566,9 +566,3 @@ IdeController::Channel::unserialize(const std::string &base, CheckpointIn &cp)
     paramIn(cp, base + ".selectBit", selectBit);
     select(selectBit);
 }
-
-IdeController *
-IdeControllerParams::create() const
-{
-    return new IdeController(*this);
-}

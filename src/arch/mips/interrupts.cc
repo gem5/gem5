@@ -184,9 +184,3 @@ Interrupts::interruptsPending() const
 }
 
 }
-
-MipsISA::Interrupts *
-MipsInterruptsParams::create() const
-{
-    return new MipsISA::Interrupts(*this);
-}

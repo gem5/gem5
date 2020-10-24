@@ -59,6 +59,8 @@
 NoncoherentCache::NoncoherentCache(const NoncoherentCacheParams &p)
     : BaseCache(p, p.system->cacheLineSize())
 {
+    assert(p.tags);
+    assert(p.replacement_policy);
 }
 
 void
@@ -346,13 +348,4 @@ NoncoherentCache::evictBlock(CacheBlk *blk)
     invalidateBlock(blk);
 
     return pkt;
-}
-
-NoncoherentCache*
-NoncoherentCacheParams::create() const
-{
-    assert(tags);
-    assert(replacement_policy);
-
-    return new NoncoherentCache(*this);
 }

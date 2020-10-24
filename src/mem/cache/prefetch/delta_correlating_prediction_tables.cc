@@ -158,15 +158,3 @@ DCPT::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 } // namespace Prefetcher
-
-Prefetcher::DeltaCorrelatingPredictionTables*
-DeltaCorrelatingPredictionTablesParams::create() const
-{
-   return new Prefetcher::DeltaCorrelatingPredictionTables(*this);
-}
-
-Prefetcher::DCPT*
-DCPTPrefetcherParams::create() const
-{
-    return new Prefetcher::DCPT(*this);
-}

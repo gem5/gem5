@@ -358,9 +358,3 @@ DumpStats::process(ThreadContext *tc)
 }
 
 } // namespace ArmISA
-
-ArmISA::FsLinux *
-ArmFsLinuxParams::create() const
-{
-    return new ArmISA::FsLinux(*this);
-}

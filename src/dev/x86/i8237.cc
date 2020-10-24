@@ -135,9 +135,3 @@ X86ISA::I8237::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(maskReg);
 }
-
-X86ISA::I8237 *
-I8237Params::create() const
-{
-    return new X86ISA::I8237(*this);
-}

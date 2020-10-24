@@ -43,9 +43,3 @@ void
 IntrControl::clear(int cpu_id, int int_num, int index)
 {
 }
-
-IntrControl *
-IntrControlParams::create() const
-{
-    return new IntrControl(*this);
-}

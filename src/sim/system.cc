@@ -651,9 +651,3 @@ System::getRequestorName(RequestorID requestor_id)
     const auto& requestor_info = requestors[requestor_id];
     return requestor_info.req_name;
 }
-
-System *
-SystemParams::create() const
-{
-    return new System(*this);
-}

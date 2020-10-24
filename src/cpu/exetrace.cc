@@ -199,13 +199,3 @@ Trace::ExeTracerRecord::dump()
 }
 
 } // namespace Trace
-
-////////////////////////////////////////////////////////////////////////
-//
-//  ExeTracer Simulation Object
-//
-Trace::ExeTracer *
-ExeTracerParams::create() const
-{
-    return new Trace::ExeTracer(*this);
-}

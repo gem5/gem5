@@ -48,30 +48,12 @@ BasicLink::print(std::ostream& out) const
     out << name();
 }
 
-BasicLink *
-BasicLinkParams::create() const
-{
-    return new BasicLink(*this);
-}
-
 BasicExtLink::BasicExtLink(const Params &p)
     : BasicLink(p)
 {
 }
 
-BasicExtLink *
-BasicExtLinkParams::create() const
-{
-    return new BasicExtLink(*this);
-}
-
 BasicIntLink::BasicIntLink(const Params &p)
     : BasicLink(p)
 {
-}
-
-BasicIntLink *
-BasicIntLinkParams::create() const
-{
-    return new BasicIntLink(*this);
 }

@@ -568,9 +568,3 @@ ISA::processCP0Event(BaseCPU *cpu, CP0EventType cp0EventType)
 }
 
 }
-
-MipsISA::ISA *
-MipsISAParams::create() const
-{
-    return new MipsISA::ISA(*this);
-}

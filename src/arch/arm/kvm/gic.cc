@@ -425,9 +425,3 @@ MuxingKvmGic::fromKvmToGicV2()
        assert((cpuPriority[cpu] & ~0xff) == 0);
     }
 }
-
-MuxingKvmGic *
-MuxingKvmGicParams::create() const
-{
-    return new MuxingKvmGic(*this);
-}

@@ -48,9 +48,3 @@ SlimAMPM::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 } // namespace Prefetcher
-
-Prefetcher::SlimAMPM*
-SlimAMPMPrefetcherParams::create() const
-{
-    return new Prefetcher::SlimAMPM(*this);
-}

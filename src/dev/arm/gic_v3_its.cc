@@ -1286,9 +1286,3 @@ Gicv3Its::moveAllPendingState(
 
     rd2->updateDistributor();
 }
-
-Gicv3Its *
-Gicv3ItsParams::create() const
-{
-    return new Gicv3Its(*this);
-}

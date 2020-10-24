@@ -204,9 +204,3 @@ PS2TouchKit::mouseAt(uint16_t x, uint16_t y, uint8_t buttons)
 
     send(resp, sizeof(resp));
 }
-
-PS2TouchKit *
-PS2TouchKitParams::create() const
-{
-    return new PS2TouchKit(*this);
-}

@@ -1117,9 +1117,3 @@ CoherentXBar::regStats()
 
     snoopFanout.init(0, snoopPorts.size(), 1);
 }
-
-CoherentXBar *
-CoherentXBarParams::create() const
-{
-    return new CoherentXBar(*this);
-}

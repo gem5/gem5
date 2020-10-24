@@ -157,9 +157,3 @@ FsWorkload::getBootLoader(Loader::ObjectFile *const obj)
 }
 
 } // namespace ArmISA
-
-ArmISA::FsWorkload *
-ArmFsWorkloadParams::create() const
-{
-    return new ArmISA::FsWorkload(*this);
-}

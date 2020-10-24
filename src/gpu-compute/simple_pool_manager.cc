@@ -35,12 +35,6 @@
 
 #include "base/logging.hh"
 
-SimplePoolManager *
-SimplePoolManagerParams::create() const
-{
-    return new SimplePoolManager(*this);
-}
-
 // return the min number of elements that the manager can reserve given
 // a request for "size" elements
 uint32_t

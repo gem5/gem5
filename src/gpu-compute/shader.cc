@@ -154,12 +154,6 @@ Shader::updateContext(int cid) {
     assert(gpuTc);
 }
 
-Shader*
-ShaderParams::create() const
-{
-    return new Shader(*this);
-}
-
 void
 Shader::execScheduledAdds()
 {

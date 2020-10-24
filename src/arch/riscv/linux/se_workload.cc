@@ -783,9 +783,3 @@ SyscallDescTable<SEWorkload::SyscallABI> EmuLinux::syscallDescs32 = {
 };
 
 } // namespace RiscvISA
-
-RiscvISA::EmuLinux *
-RiscvEmuLinuxParams::create() const
-{
-    return new RiscvISA::EmuLinux(*this);
-}

@@ -113,9 +113,3 @@ MathExprPowerModel::regStats()
 {
     PowerModelState::regStats();
 }
-
-MathExprPowerModel*
-MathExprPowerModelParams::create() const
-{
-    return new MathExprPowerModel(*this);
-}

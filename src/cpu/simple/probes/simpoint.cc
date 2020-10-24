@@ -138,10 +138,3 @@ SimPoint::profile(const std::pair<SimpleThread*, StaticInstPtr>& p)
         }
     }
 }
-
-/** SimPoint SimObject */
-SimPoint*
-SimPointParams::create() const
-{
-    return new SimPoint(*this);
-}

@@ -267,9 +267,3 @@ FaultModel::print(void)
         cout << "\n";
     }
 }
-
-FaultModel *
-FaultModelParams::create() const
-{
-    return new FaultModel(*this);
-}

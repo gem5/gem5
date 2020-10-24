@@ -56,9 +56,3 @@ BadDevice::write(PacketPtr pkt)
 {
     panic("Device %s not imlpmented\n", devname);
 }
-
-BadDevice *
-BadDeviceParams::create() const
-{
-    return new BadDevice(*this);
-}

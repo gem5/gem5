@@ -550,33 +550,3 @@ PciDevice::unserialize(CheckpointIn &cp)
     pxcap.pxdc2 = tmp32;
     pioPort.sendRangeChange();
 }
-
-PciBarNone *
-PciBarNoneParams::create() const
-{
-    return new PciBarNone(*this);
-}
-
-PciIoBar *
-PciIoBarParams::create() const
-{
-    return new PciIoBar(*this);
-}
-
-PciLegacyIoBar *
-PciLegacyIoBarParams::create() const
-{
-    return new PciLegacyIoBar(*this);
-}
-
-PciMemBar *
-PciMemBarParams::create() const
-{
-    return new PciMemBar(*this);
-}
-
-PciMemUpperBar *
-PciMemUpperBarParams::create() const
-{
-    return new PciMemUpperBar(*this);
-}

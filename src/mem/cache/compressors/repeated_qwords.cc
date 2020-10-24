@@ -78,9 +78,3 @@ RepeatedQwords::compress(const std::vector<Chunk>& chunks,
 }
 
 } // namespace Compressor
-
-Compressor::RepeatedQwords*
-RepeatedQwordsCompressorParams::create() const
-{
-    return new Compressor::RepeatedQwords(*this);
-}

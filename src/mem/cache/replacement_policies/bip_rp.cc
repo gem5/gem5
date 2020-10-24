@@ -57,9 +57,3 @@ BIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 } // namespace ReplacementPolicy
-
-ReplacementPolicy::BIP*
-BIPRPParams::create() const
-{
-    return new ReplacementPolicy::BIP(*this);
-}

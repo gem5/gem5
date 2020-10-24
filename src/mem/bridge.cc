@@ -390,9 +390,3 @@ Bridge::BridgeResponsePort::getAddrRanges() const
 {
     return ranges;
 }
-
-Bridge *
-BridgeParams::create() const
-{
-    return new Bridge(*this);
-}

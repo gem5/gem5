@@ -194,15 +194,3 @@ ArmPPI::clear()
     _active = false;
     platform->gic->clearPPInt(intNum, targetContext());
 }
-
-ArmSPIGen *
-ArmSPIParams::create() const
-{
-    return new ArmSPIGen(*this);
-}
-
-ArmPPIGen *
-ArmPPIParams::create() const
-{
-    return new ArmPPIGen(*this);
-}

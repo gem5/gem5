@@ -221,9 +221,3 @@ GPUCommandProcessor::shader()
 {
     return _shader;
 }
-
-GPUCommandProcessor*
-GPUCommandProcessorParams::create() const
-{
-    return new GPUCommandProcessor(*this);
-}

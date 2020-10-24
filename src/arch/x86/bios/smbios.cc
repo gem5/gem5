@@ -322,15 +322,3 @@ X86ISA::SMBios::SMBiosTable::writeOut(PortProxy& proxy, Addr addr,
     intChecksum = -intChecksum;
     proxy.writeBlob(addr + 0x15, &intChecksum, 1);
 }
-
-X86ISA::SMBios::BiosInformation *
-X86SMBiosBiosInformationParams::create() const
-{
-    return new X86ISA::SMBios::BiosInformation(*this);
-}
-
-X86ISA::SMBios::SMBiosTable *
-X86SMBiosSMBiosTableParams::create() const
-{
-    return new X86ISA::SMBios::SMBiosTable(*this);
-}

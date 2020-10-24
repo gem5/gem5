@@ -790,9 +790,3 @@ TAGEBase::getSizeInBits() const {
     bits += logUResetPeriod;
     return bits;
 }
-
-TAGEBase*
-TAGEBaseParams::create() const
-{
-    return new TAGEBase(*this);
-}

@@ -826,9 +826,3 @@ SMMUv3::getPort(const std::string &name, PortID id)
         return ClockedObject::getPort(name, id);
     }
 }
-
-SMMUv3*
-SMMUv3Params::create() const
-{
-    return new SMMUv3(*this);
-}

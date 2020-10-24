@@ -181,12 +181,6 @@ SrcClockDomain::startup()
     signalPerfLevelUpdate();
 }
 
-SrcClockDomain *
-SrcClockDomainParams::create() const
-{
-    return new SrcClockDomain(*this);
-}
-
 DerivedClockDomain::DerivedClockDomain(const Params &p) :
     ClockDomain(p, p.clk_domain->voltageDomain()),
     parent(*p.clk_domain),
@@ -226,10 +220,4 @@ DerivedClockDomain::updateClockPeriod()
     for (auto c = children.begin(); c != children.end(); ++c) {
         (*c)->updateClockPeriod();
     }
-}
-
-DerivedClockDomain *
-DerivedClockDomainParams::create() const
-{
-    return new DerivedClockDomain(*this);
 }

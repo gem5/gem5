@@ -62,12 +62,6 @@ HTMSequencer::htmRetCodeConversion(
     }
 }
 
-HTMSequencer *
-RubyHTMSequencerParams::create() const
-{
-    return new HTMSequencer(*this);
-}
-
 HTMSequencer::HTMSequencer(const RubyHTMSequencerParams &p)
     : Sequencer(p)
 {

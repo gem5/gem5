@@ -448,9 +448,3 @@ SyscallDescTable<PowerISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
 };
 
 } // namespace PowerISA
-
-PowerISA::EmuLinux *
-PowerEmuLinuxParams::create() const
-{
-    return new PowerISA::EmuLinux(*this);
-}

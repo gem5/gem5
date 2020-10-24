@@ -171,12 +171,6 @@ RegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
 {
 }
 
-RegisterFile*
-RegisterFileParams::create() const
-{
-    return new RegisterFile(*this);
-}
-
 // Events
 
 // Mark a register as free in the scoreboard/busy vector

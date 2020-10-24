@@ -230,12 +230,6 @@ ExternalSlave::init()
     }
 }
 
-ExternalSlave *
-ExternalSlaveParams::create() const
-{
-    return new ExternalSlave(*this);
-}
-
 void
 ExternalSlave::registerHandler(const std::string &handler_name,
     Handler *handler)

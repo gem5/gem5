@@ -95,9 +95,3 @@ T1000::calcPciMemAddr(Addr addr)
 {
     panic("Need implementation\n");
 }
-
-T1000 *
-T1000Params::create() const
-{
-    return new T1000(*this);
-}

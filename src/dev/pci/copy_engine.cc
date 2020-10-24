@@ -730,9 +730,3 @@ CopyEngine::CopyEngineChannel::drainResume()
     DPRINTF(DMACopyEngine, "Restarting state machine at state %d\n", nextState);
     restartStateMachine();
 }
-
-CopyEngine *
-CopyEngineParams::create() const
-{
-    return new CopyEngine(*this);
-}

@@ -182,9 +182,3 @@ MmDisk::serialize(CheckpointOut &cp) const
     }
     ClockedObject::serialize(cp);
 }
-
-MmDisk *
-MmDiskParams::create() const
-{
-    return new MmDisk(*this);
-}

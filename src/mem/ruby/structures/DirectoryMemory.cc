@@ -158,9 +158,3 @@ DirectoryMemory::recordRequestType(DirectoryRequestType requestType) {
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
             DirectoryRequestType_to_string(requestType));
 }
-
-DirectoryMemory *
-RubyDirectoryMemoryParams::create() const
-{
-    return new DirectoryMemory(*this);
-}

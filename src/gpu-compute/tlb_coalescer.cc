@@ -552,11 +552,3 @@ TLBCoalescer::regStats()
 
     localLatency = localqueuingCycles / uncoalescedAccesses;
 }
-
-
-TLBCoalescer*
-TLBCoalescerParams::create() const
-{
-    return new TLBCoalescer(*this);
-}
-

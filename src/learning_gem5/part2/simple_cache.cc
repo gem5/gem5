@@ -431,10 +431,3 @@ SimpleCache::SimpleCacheStats::SimpleCacheStats(Stats::Group *parent)
 {
     missLatency.init(16); // number of buckets
 }
-
-
-SimpleCache*
-SimpleCacheParams::create() const
-{
-    return new SimpleCache(*this);
-}

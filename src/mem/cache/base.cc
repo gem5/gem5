@@ -2498,9 +2498,3 @@ WriteAllocator::updateMode(Addr write_addr, unsigned write_size,
     }
     nextAddr = write_addr + write_size;
 }
-
-WriteAllocator*
-WriteAllocatorParams::create() const
-{
-    return new WriteAllocator(*this);
-}

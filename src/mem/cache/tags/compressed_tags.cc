@@ -204,9 +204,3 @@ CompressedTags::anyBlk(std::function<bool(CacheBlk &)> visitor)
     }
     return false;
 }
-
-CompressedTags *
-CompressedTagsParams::create() const
-{
-    return new CompressedTags(*this);
-}

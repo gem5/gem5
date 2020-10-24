@@ -360,9 +360,3 @@ GPUDispatcher::scheduleDispatch()
         schedule(&tickEvent, curTick() + shader->clockPeriod());
     }
 }
-
-GPUDispatcher *
-GPUDispatcherParams::create() const
-{
-    return new GPUDispatcher(*this);
-}

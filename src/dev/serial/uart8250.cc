@@ -319,9 +319,3 @@ Uart8250::unserialize(CheckpointIn &cp)
     if (txintrwhen != 0)
         schedule(txIntrEvent, txintrwhen);
 }
-
-Uart8250 *
-Uart8250Params::create() const
-{
-    return new Uart8250(*this);
-}

@@ -39,6 +39,7 @@
 #define __CPU_DUMMY_CHECKER_HH__
 
 #include "cpu/checker/cpu.hh"
+#include "params/DummyChecker.hh"
 
 /**
  * Specific non-templated derived class used for SimObject configuration.
@@ -46,9 +47,15 @@
 class DummyChecker : public CheckerCPU
 {
   public:
-    DummyChecker(const Params &p)
-          : CheckerCPU(p)
-    { }
+    DummyChecker(const Params &p) : CheckerCPU(p)
+    {
+        // The checker should check all instructions executed by the main
+        // cpu and therefore any parameters for early exit don't make much
+        // sense.
+        fatal_if(p.max_insts_any_thread || p.max_insts_all_threads ||
+                 p.progress_interval, "Invalid checker parameters");
+
+    }
 };
 
 #endif // __CPU_DUMMY_CHECKER_HH__

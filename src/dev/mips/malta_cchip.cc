@@ -139,10 +139,3 @@ void
 MaltaCChip::unserialize(CheckpointIn &cp)
 {
 }
-
-MaltaCChip *
-MaltaCChipParams::create() const
-{
-    return new MaltaCChip(*this);
-}
-

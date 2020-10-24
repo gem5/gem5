@@ -82,9 +82,3 @@ SimpleDisk::write(Addr addr, baddr_t block, int count)
 {
     panic("unimplemented!\n");
 }
-
-SimpleDisk *
-SimpleDiskParams::create() const
-{
-    return new SimpleDisk(*this);
-}

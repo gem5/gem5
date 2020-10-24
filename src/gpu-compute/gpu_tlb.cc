@@ -1514,10 +1514,3 @@ namespace X86ISA
         TLBFootprint.clear();
     }
 } // namespace X86ISA
-
-X86ISA::GpuTLB*
-X86GPUTLBParams::create() const
-{
-    return new X86ISA::GpuTLB(*this);
-}
-

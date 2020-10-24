@@ -259,9 +259,3 @@ Sp805::unserialize(CheckpointIn &cp)
         reschedule(timeoutEvent, when, true);
     }
 }
-
-Sp805 *
-Sp805Params::create() const
-{
-    return new Sp805(*this);
-}

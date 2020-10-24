@@ -729,11 +729,3 @@ VncServer::frameBufferResized()
             detach();
     }
 }
-
-// create the VNC server object
-VncServer *
-VncServerParams::create() const
-{
-    return new VncServer(*this);
-}
-

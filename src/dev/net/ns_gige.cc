@@ -2365,9 +2365,3 @@ NSGigE::unserialize(CheckpointIn &cp)
         schedule(intrEvent, intrEventTick);
     }
 }
-
-NSGigE *
-NSGigEParams::create() const
-{
-    return new NSGigE(*this);
-}

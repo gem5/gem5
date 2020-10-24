@@ -689,10 +689,3 @@ HDLcd::PixelPump::dumpSettings()
     inform("PixelPump vertical fron porch: %u", t.vFrontPorch);
     inform("PixelPump vertical fron porch: %u", t.vSync);
 }
-
-
-HDLcd *
-HDLcdParams::create() const
-{
-    return new HDLcd(*this);
-}

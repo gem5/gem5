@@ -343,12 +343,6 @@ TournamentBP::squash(ThreadID tid, void *bp_history)
     delete history;
 }
 
-TournamentBP*
-TournamentBPParams::create() const
-{
-    return new TournamentBP(*this);
-}
-
 #ifdef DEBUG
 int
 TournamentBP::BPHistory::newCount = 0;

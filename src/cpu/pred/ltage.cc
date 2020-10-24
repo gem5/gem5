@@ -146,9 +146,3 @@ LTAGE::regStats()
 {
     TAGE::regStats();
 }
-
-LTAGE*
-LTAGEParams::create() const
-{
-    return new LTAGE(*this);
-}

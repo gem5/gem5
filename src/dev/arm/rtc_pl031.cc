@@ -237,11 +237,3 @@ PL031::unserialize(CheckpointIn &cp)
         schedule(matchEvent, event_time);
     }
 }
-
-
-
-PL031 *
-PL031Params::create() const
-{
-    return new PL031(*this);
-}

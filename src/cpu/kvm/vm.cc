@@ -64,6 +64,12 @@ Kvm *Kvm::instance = NULL;
 Kvm::Kvm()
     : kvmFD(-1), apiVersion(-1), vcpuMMapSize(0)
 {
+    static bool created = false;
+    if (created)
+        warn_once("Use of multiple KvmVMs is currently untested!");
+
+    created = true;
+
     kvmFD = ::open("/dev/kvm", O_RDWR);
     if (kvmFD == -1)
         fatal("KVM: Failed to open /dev/kvm\n");
@@ -578,17 +584,4 @@ KvmVM::ioctl(int request, long p1) const
     assert(vmFD != -1);
 
     return ::ioctl(vmFD, request, p1);
-}
-
-
-KvmVM *
-KvmVMParams::create() const
-{
-    static bool created = false;
-    if (created)
-        warn_once("Use of multiple KvmVMs is currently untested!\n");
-
-    created = true;
-
-    return new KvmVM(*this);
 }

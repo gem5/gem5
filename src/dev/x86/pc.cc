@@ -134,9 +134,3 @@ Pc::clearPciInt(int line)
 {
     warn_once("Tried to clear PCI interrupt %d\n", line);
 }
-
-Pc *
-PcParams::create() const
-{
-    return new Pc(*this);
-}

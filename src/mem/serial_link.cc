@@ -420,9 +420,3 @@ SerialLink::SerialLinkResponsePort::getAddrRanges() const
 {
     return ranges;
 }
-
-SerialLink *
-SerialLinkParams::create() const
-{
-    return new SerialLink(*this);
-}

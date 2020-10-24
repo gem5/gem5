@@ -242,12 +242,6 @@ MPP_TAGE::isHighConfidence(TAGEBase::BranchInfo *bi) const
 
 }
 
-MPP_TAGE*
-MPP_TAGEParams::create() const
-{
-    return new MPP_TAGE(*this);
-}
-
 bool
 MPP_LoopPredictor::calcConf(int index) const
 {
@@ -259,12 +253,6 @@ bool
 MPP_LoopPredictor::optionalAgeInc() const
 {
     return ((random_mt.random<int>() & 7) == 0);
-}
-
-MPP_LoopPredictor*
-MPP_LoopPredictorParams::create() const
-{
-    return new MPP_LoopPredictor(*this);
 }
 
 MPP_StatisticalCorrector::MPP_StatisticalCorrector(

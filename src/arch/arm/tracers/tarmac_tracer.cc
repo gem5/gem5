@@ -93,9 +93,3 @@ TarmacTracer::getInstRecord(Tick when, ThreadContext *tc,
 }
 
 } // namespace Trace
-
-Trace::TarmacTracer *
-TarmacTracerParams::create() const
-{
-    return new Trace::TarmacTracer(*this);
-}
