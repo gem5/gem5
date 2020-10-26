@@ -297,7 +297,7 @@ class DownloadedProgram(UniqueFixture):
             gzipped_filename = self.filename + ".gz"
             urllib.request.urlretrieve(self.url, gzipped_filename)
 
-            with open(self.filename, 'w') as outfile:
+            with open(self.filename, 'wb') as outfile:
                 with gzip.open(gzipped_filename, 'r') as infile:
                     shutil.copyfileobj(infile, outfile)
 
