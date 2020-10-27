@@ -42,6 +42,7 @@
 
 #include <string>
 
+#include "base/cprintf.hh"
 #include "cpu/intr_control.hh"
 #include "debug/IdeCtrl.hh"
 #include "dev/storage/ide_disk.hh"
@@ -61,18 +62,6 @@ enum BMIRegOffset {
     BMIDescTablePtr = 0x4
 };
 
-// PCI config space registers
-enum ConfRegOffset {
-    PrimaryTiming = 0x40,
-    SecondaryTiming = 0x42,
-    DeviceTiming = 0x44,
-    UDMAControl = 0x48,
-    UDMATiming = 0x4A,
-    IDEConfig = 0x54
-};
-
-static const uint16_t timeRegWithDecodeEn = 0x8000;
-
 IdeController::Channel::Channel(string newName) : _name(newName)
 {
     bmiRegs.reset();
@@ -81,10 +70,9 @@ IdeController::Channel::Channel(string newName) : _name(newName)
 }
 
 IdeController::IdeController(const Params &p)
-    : PciDevice(p), primary(name() + ".primary"),
+    : PciDevice(p), configSpaceRegs(name() + ".config_space_regs"),
+    primary(name() + ".primary"),
     secondary(name() + ".secondary"),
-    primaryTiming(htole(timeRegWithDecodeEn)),
-    secondaryTiming(htole(timeRegWithDecodeEn)),
     ioShift(p.io_shift), ctrlOffset(p.ctrl_offset)
 {
 
@@ -115,6 +103,26 @@ IdeController::IdeController(const Params &p)
 
     primary.select(false);
     secondary.select(false);
+}
+
+void
+IdeController::ConfigSpaceRegs::serialize(CheckpointOut &cp) const
+{
+    SERIALIZE_SCALAR(primaryTiming);
+    SERIALIZE_SCALAR(secondaryTiming);
+    SERIALIZE_SCALAR(deviceTiming);
+    SERIALIZE_SCALAR(udmaControl);
+    SERIALIZE_SCALAR(udmaTiming);
+}
+
+void
+IdeController::ConfigSpaceRegs::unserialize(CheckpointIn &cp)
+{
+    UNSERIALIZE_SCALAR(primaryTiming);
+    UNSERIALIZE_SCALAR(secondaryTiming);
+    UNSERIALIZE_SCALAR(deviceTiming);
+    UNSERIALIZE_SCALAR(udmaControl);
+    UNSERIALIZE_SCALAR(udmaTiming);
 }
 
 bool
@@ -151,79 +159,16 @@ Tick
 IdeController::readConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    if (offset < PCI_DEVICE_SPECIFIC) {
+    if (offset < PCI_DEVICE_SPECIFIC)
         return PciDevice::readConfig(pkt);
-    }
 
-    switch (pkt->getSize()) {
-      case sizeof(uint8_t):
-        switch (offset) {
-          case DeviceTiming:
-            pkt->setLE<uint8_t>(deviceTiming);
-            break;
-          case UDMAControl:
-            pkt->setLE<uint8_t>(udmaControl);
-            break;
-          case PrimaryTiming + 1:
-            pkt->setLE<uint8_t>(bits(htole(primaryTiming), 15, 8));
-            break;
-          case SecondaryTiming + 1:
-            pkt->setLE<uint8_t>(bits(htole(secondaryTiming), 15, 8));
-            break;
-          case IDEConfig:
-            pkt->setLE<uint8_t>(bits(htole(ideConfig), 7, 0));
-            break;
-          case IDEConfig + 1:
-            pkt->setLE<uint8_t>(bits(htole(ideConfig), 15, 8));
-            break;
-          default:
-            panic("Invalid PCI configuration read for size 1 at offset: %#x!\n",
-                    offset);
-        }
-        DPRINTF(IdeCtrl, "PCI read offset: %#x size: 1 data: %#x\n", offset,
-                (uint32_t)pkt->getLE<uint8_t>());
-        break;
-      case sizeof(uint16_t):
-        switch (offset) {
-          case UDMAControl:
-            pkt->setLE<uint16_t>(udmaControl);
-            break;
-          case PrimaryTiming:
-            pkt->setLE<uint16_t>(primaryTiming);
-            break;
-          case SecondaryTiming:
-            pkt->setLE<uint16_t>(secondaryTiming);
-            break;
-          case UDMATiming:
-            pkt->setLE<uint16_t>(udmaTiming);
-            break;
-          case IDEConfig:
-            pkt->setLE<uint16_t>(ideConfig);
-            break;
-          default:
-            panic("Invalid PCI configuration read for size 2 offset: %#x!\n",
-                    offset);
-        }
-        DPRINTF(IdeCtrl, "PCI read offset: %#x size: 2 data: %#x\n", offset,
-                (uint32_t)pkt->getLE<uint16_t>());
-        break;
-      case sizeof(uint32_t):
-        switch (offset) {
-          case PrimaryTiming:
-            pkt->setLE<uint32_t>(primaryTiming);
-            break;
-          case IDEConfig:
-            pkt->setLE<uint32_t>(ideConfig);
-            break;
-          default:
-            panic("No 32bit reads implemented for this device.");
-        }
-        DPRINTF(IdeCtrl, "PCI read offset: %#x size: 4 data: %#x\n", offset,
-                (uint32_t)pkt->getLE<uint32_t>());
-        break;
-      default:
-        panic("invalid access size(?) for PCI configspace!\n");
-    }
+    size_t size = pkt->getSize();
+
+    configSpaceRegs.read(offset, pkt->getPtr<void>(), size);
+
+    DPRINTF(IdeCtrl, "PCI read offset: %#x size: %d data: %#x\n", offset, size,
+            pkt->getUintX(ByteOrder::little));
+
     pkt->makeAtomicResponse();
     return configDelay;
 }
@@ -233,73 +178,18 @@ Tick
 IdeController::writeConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDevice::writeConfig(pkt);
-    } else {
-        switch (pkt->getSize()) {
-          case sizeof(uint8_t):
-            switch (offset) {
-              case DeviceTiming:
-                deviceTiming = pkt->getLE<uint8_t>();
-                break;
-              case UDMAControl:
-                udmaControl = pkt->getLE<uint8_t>();
-                break;
-              case IDEConfig:
-                replaceBits(ideConfig, 7, 0, pkt->getLE<uint8_t>());
-                break;
-              case IDEConfig + 1:
-                replaceBits(ideConfig, 15, 8, pkt->getLE<uint8_t>());
-                break;
-              default:
-                panic("Invalid PCI configuration write "
-                        "for size 1 offset: %#x!\n", offset);
-            }
-            DPRINTF(IdeCtrl, "PCI write offset: %#x size: 1 data: %#x\n",
-                    offset, (uint32_t)pkt->getLE<uint8_t>());
-            break;
-          case sizeof(uint16_t):
-            switch (offset) {
-              case UDMAControl:
-                udmaControl = pkt->getLE<uint16_t>();
-                break;
-              case PrimaryTiming:
-                primaryTiming = pkt->getLE<uint16_t>();
-                break;
-              case SecondaryTiming:
-                secondaryTiming = pkt->getLE<uint16_t>();
-                break;
-              case UDMATiming:
-                udmaTiming = pkt->getLE<uint16_t>();
-                break;
-              case IDEConfig:
-                ideConfig = pkt->getLE<uint16_t>();
-                break;
-              default:
-                panic("Invalid PCI configuration write "
-                        "for size 2 offset: %#x!\n",
-                        offset);
-            }
-            DPRINTF(IdeCtrl, "PCI write offset: %#x size: 2 data: %#x\n",
-                    offset, (uint32_t)pkt->getLE<uint16_t>());
-            break;
-          case sizeof(uint32_t):
-            switch (offset) {
-              case PrimaryTiming:
-                primaryTiming = pkt->getLE<uint32_t>();
-                break;
-              case IDEConfig:
-                ideConfig = pkt->getLE<uint32_t>();
-                break;
-              default:
-                panic("Write of unimplemented PCI config. register: %x\n", offset);
-            }
-            break;
-          default:
-            panic("invalid access size(?) for PCI configspace!\n");
-        }
-        pkt->makeAtomicResponse();
-    }
+
+    if (offset < PCI_DEVICE_SPECIFIC)
+        return PciDevice::writeConfig(pkt);
+
+    size_t size = pkt->getSize();
+
+    DPRINTF(IdeCtrl, "PCI write offset: %#x size: %d data: %#x\n",
+            offset, size, pkt->getUintX(ByteOrder::little));
+
+    configSpaceRegs.write(offset, pkt->getConstPtr<void>(), size);
+
+    pkt->makeAtomicResponse();
     return configDelay;
 }
 
@@ -510,12 +400,7 @@ IdeController::serialize(CheckpointOut &cp) const
     secondary.serialize("secondary", cp);
 
     // Serialize config registers
-    SERIALIZE_SCALAR(primaryTiming);
-    SERIALIZE_SCALAR(secondaryTiming);
-    SERIALIZE_SCALAR(deviceTiming);
-    SERIALIZE_SCALAR(udmaControl);
-    SERIALIZE_SCALAR(udmaTiming);
-    SERIALIZE_SCALAR(ideConfig);
+    configSpaceRegs.serialize(cp);
 }
 
 void
@@ -543,12 +428,7 @@ IdeController::unserialize(CheckpointIn &cp)
     secondary.unserialize("secondary", cp);
 
     // Unserialize config registers
-    UNSERIALIZE_SCALAR(primaryTiming);
-    UNSERIALIZE_SCALAR(secondaryTiming);
-    UNSERIALIZE_SCALAR(deviceTiming);
-    UNSERIALIZE_SCALAR(udmaControl);
-    UNSERIALIZE_SCALAR(udmaTiming);
-    UNSERIALIZE_SCALAR(ideConfig);
+    configSpaceRegs.unserialize(cp);
 }
 
 void

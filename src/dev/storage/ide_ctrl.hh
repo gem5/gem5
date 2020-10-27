@@ -37,6 +37,7 @@
 #include "base/bitunion.hh"
 #include "dev/io_device.hh"
 #include "dev/pci/device.hh"
+#include "dev/reg_bank.hh"
 #include "params/IdeController.hh"
 
 class IdeDisk;
@@ -61,6 +62,43 @@ class IdeController : public PciDevice
         Bitfield<3> rw;
         Bitfield<0> startStop;
     EndBitUnion(BMICommandReg)
+
+    /** Registers used in device specific PCI configuration */
+    class ConfigSpaceRegs : public RegisterBankLE
+    {
+      public:
+        ConfigSpaceRegs(const std::string &name) :
+            RegisterBankLE(name, PCI_DEVICE_SPECIFIC)
+        {
+            // None of these registers are actually hooked up to control
+            // anything, so they have no specially defined behaviors. They
+            // just store values for now, but should presumably do something
+            // in a more accurate model.
+            addRegisters({primaryTiming, secondaryTiming, deviceTiming, raz0,
+                          udmaControl, raz1, udmaTiming, raz2});
+        }
+
+        enum {
+            TimeRegWithDecodeEnabled = 0x8000
+        };
+
+        /* Offset in config space */
+        /* 0x40-0x41 */ Register16 primaryTiming =
+                            {"primary timing", TimeRegWithDecodeEnabled};
+        /* 0x42-0x43 */ Register16 secondaryTiming =
+                            {"secondary timing", TimeRegWithDecodeEnabled};
+        /* 0x44      */ Register8 deviceTiming = {"device timing"};
+        /* 0x45-0x47 */ RegisterRaz raz0 = {"raz0", 3};
+        /* 0x48      */ Register8 udmaControl = {"udma control"};
+        /* 0x49      */ RegisterRaz raz1 = {"raz1", 1};
+        /* 0x4a-0x4b */ Register16 udmaTiming = {"udma timing"};
+        /* 0x4c-...  */ RegisterRaz raz2 = {"raz2", PCI_CONFIG_SIZE - 0x4c};
+
+        void serialize(CheckpointOut &cp) const;
+        void unserialize(CheckpointIn &cp);
+    };
+
+    ConfigSpaceRegs configSpaceRegs;
 
     struct Channel
     {
@@ -120,13 +158,6 @@ class IdeController : public PciDevice
 
     Channel primary;
     Channel secondary;
-
-    /** Registers used in device specific PCI configuration */
-    uint16_t primaryTiming, secondaryTiming;
-    uint8_t deviceTiming = 0;
-    uint8_t udmaControl = 0;
-    uint16_t udmaTiming = 0;
-    uint16_t ideConfig = 0;
 
     uint32_t ioShift, ctrlOffset;
 
