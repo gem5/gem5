@@ -52,7 +52,7 @@ class RubyPort(ClockedObject):
                "has multiple ports (e.g., I/D ports) all of the ports for a "
                "single CPU can connect to one RubyPort.")
    slave    = DeprecatedParam(in_ports,
-                        '`slave` is now called `in_port`')
+                        '`slave` is now called `in_ports`')
 
    interrupt_out_port = VectorRequestPort("Port to connect to x86 interrupt "
                         "controller to send the CPU requests from outside.")
