@@ -29,7 +29,10 @@
 #ifndef __DEV_X86_I8237_HH__
 #define __DEV_X86_I8237_HH__
 
+#include <array>
+
 #include "dev/io_device.hh"
+#include "dev/reg_bank.hh"
 #include "params/I8237.hh"
 
 namespace X86ISA
@@ -37,9 +40,56 @@ namespace X86ISA
 
 class I8237 : public BasicPioDevice
 {
+  public:
+    using Register = RegisterBankLE::Register8;
+
   protected:
     Tick latency;
     uint8_t maskReg = 0;
+
+    RegisterBankLE regs;
+
+    struct Channel
+    {
+        class ChannelAddrReg : public Register
+        {
+          public:
+            ChannelAddrReg(Channel &);
+        };
+
+        class ChannelRemainingReg : public Register
+        {
+          public:
+            ChannelRemainingReg(Channel &);
+        };
+
+        int number;
+
+        ChannelAddrReg addrReg;
+        ChannelRemainingReg remainingReg;
+
+        Channel(int _num) : number(_num), addrReg(*this), remainingReg(*this)
+        {}
+    };
+
+    class WriteOnlyReg : public Register
+    {
+      public:
+        WriteOnlyReg(const std::string &new_name, Addr offset);
+    };
+
+    std::array<Channel, 4> channels;
+
+    Register statusCommandReg;
+    WriteOnlyReg requestReg;
+    WriteOnlyReg setMaskBitReg;
+    WriteOnlyReg modeReg;
+    WriteOnlyReg clearFlipFlopReg;
+    Register temporaryMasterClearReg;
+    WriteOnlyReg clearMaskReg;
+    WriteOnlyReg writeMaskReg;
+
+    void setMaskBit(Register &reg, const uint8_t &command);
 
   public:
     typedef I8237Params Params;
@@ -50,7 +100,7 @@ class I8237 : public BasicPioDevice
         return dynamic_cast<const Params &>(_params);
     }
 
-    I8237(const Params &p) : BasicPioDevice(p, 16), latency(p.pio_latency) {}
+    I8237(const Params &p);
 
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
