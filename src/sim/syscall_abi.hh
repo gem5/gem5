@@ -28,6 +28,7 @@
 #ifndef __SIM_SYSCALL_ABI_HH__
 #define __SIM_SYSCALL_ABI_HH__
 
+#include "base/bitfield.hh"
 #include "base/types.hh"
 #include "cpu/thread_context.hh"
 #include "sim/guest_abi.hh"
