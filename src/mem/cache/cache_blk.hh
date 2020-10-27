@@ -160,7 +160,7 @@ class CacheBlk : public TaggedEntry
     /**
      * Invalidate the block and clear all state.
      */
-    virtual void invalidate()
+    virtual void invalidate() override
     {
         TaggedEntry::invalidate();
 
