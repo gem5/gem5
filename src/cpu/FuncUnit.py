@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2017-2018, 2022 ARM Limited
+# Copyright (c) 2010, 2017-2018, 2020, 2022 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -62,6 +62,7 @@ class OpClass(Enum):
         "SimdMisc",
         "SimdMult",
         "SimdMultAcc",
+        "SimdMatMultAcc",
         "SimdShift",
         "SimdShiftAcc",
         "SimdDiv",
@@ -74,6 +75,7 @@ class OpClass(Enum):
         "SimdFloatMisc",
         "SimdFloatMult",
         "SimdFloatMultAcc",
+        "SimdFloatMatMultAcc",
         "SimdFloatSqrt",
         "SimdReduceAdd",
         "SimdReduceAlu",

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2017-2018, 2022 ARM Limited
+ * Copyright (c) 2010, 2017-2018, 2020, 2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -72,6 +72,7 @@ static const OpClass SimdCvtOp = enums::SimdCvt;
 static const OpClass SimdMiscOp = enums::SimdMisc;
 static const OpClass SimdMultOp = enums::SimdMult;
 static const OpClass SimdMultAccOp = enums::SimdMultAcc;
+static const OpClass SimdMatMultAccOp = enums::SimdMatMultAcc;
 static const OpClass SimdShiftOp = enums::SimdShift;
 static const OpClass SimdShiftAccOp = enums::SimdShiftAcc;
 static const OpClass SimdDivOp = enums::SimdDiv;
@@ -87,6 +88,7 @@ static const OpClass SimdFloatDivOp = enums::SimdFloatDiv;
 static const OpClass SimdFloatMiscOp = enums::SimdFloatMisc;
 static const OpClass SimdFloatMultOp = enums::SimdFloatMult;
 static const OpClass SimdFloatMultAccOp = enums::SimdFloatMultAcc;
+static const OpClass SimdFloatMatMultAccOp = enums::SimdFloatMatMultAcc;
 static const OpClass SimdFloatSqrtOp = enums::SimdFloatSqrt;
 static const OpClass SimdFloatReduceCmpOp = enums::SimdFloatReduceCmp;
 static const OpClass SimdFloatReduceAddOp = enums::SimdFloatReduceAdd;

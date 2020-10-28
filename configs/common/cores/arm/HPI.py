@@ -1420,6 +1420,7 @@ class HPI_FloatSimdFU(MinorFU):
             "SimdMisc",
             "SimdMult",
             "SimdMultAcc",
+            "SimdMatMultAcc",
             "SimdShift",
             "SimdShiftAcc",
             "SimdSqrt",
@@ -1431,6 +1432,7 @@ class HPI_FloatSimdFU(MinorFU):
             "SimdFloatMisc",
             "SimdFloatMult",
             "SimdFloatMultAcc",
+            "SimdFloatMatMultAcc",
             "SimdFloatSqrt",
         ]
     )

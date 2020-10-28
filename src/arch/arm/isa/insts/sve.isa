@@ -3971,7 +3971,7 @@ let {{
             fplibMul<DestElement>(srcElemA, srcElemB, fpscr), fpscr);
     '''
     # FMMLA (vectors)
-    sveMatMulInst('fmmla', 'Fmmla', 'SimdFloatMultAccOp', floatTypes,
+    sveMatMulInst('fmmla', 'Fmmla', 'SimdFloatMatMultAccOp', floatTypes,
                   numDestRows=2, numDestCols=2, K=2,
                   elt_mul_op=fmmlaCode)
 
@@ -4265,17 +4265,17 @@ let {{
                       sbclbCode, isTop=False, isAdd=False)
     mmlaCode = ('destElem += srcElemA * srcElemB')
     # SMMLA (vectors)
-    sveMatMulInst('smmla', 'Smmla', 'SimdMultAccOp',
+    sveMatMulInst('smmla', 'Smmla', 'SimdMatMultAccOp',
                   (('int32_t', 'int8_t', 'int8_t'),),
                   numDestRows=2, numDestCols=2, K=8,
                   elt_mul_op=mmlaCode)
     # USMMLA (vectors)
-    sveMatMulInst('usmmla', 'Usmmla', 'SimdMultAccOp',
+    sveMatMulInst('usmmla', 'Usmmla', 'SimdMatMultAccOp',
                   (('int32_t', 'uint8_t', 'int8_t'),),
                   numDestRows=2, numDestCols=2, K=8,
                   elt_mul_op=mmlaCode)
     # UMMLA (vectors)
-    sveMatMulInst('ummla', 'Ummla', 'SimdMultAccOp',
+    sveMatMulInst('ummla', 'Ummla', 'SimdMatMultAccOp',
                   (('uint32_t', 'uint8_t', 'uint8_t'),),
                   numDestRows=2, numDestCols=2, K=8,
                   elt_mul_op=mmlaCode)
