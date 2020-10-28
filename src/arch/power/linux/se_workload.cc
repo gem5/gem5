@@ -1,4 +1,7 @@
 /*
+ * Copyright 2003-2005 The Regents of The University of Michigan
+ * Copyright 2007-2008 The Florida State University
+ * Copyright 2009 The University of Edinburgh
  * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without

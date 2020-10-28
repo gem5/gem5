@@ -1,4 +1,5 @@
 /*
+ * Copyright 2003-2004 The Regents of The University of Michigan
  * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
