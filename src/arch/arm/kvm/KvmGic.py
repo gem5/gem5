@@ -41,3 +41,6 @@ from m5.objects.Gic import GicV2
 class MuxingKvmGic(GicV2):
     type = 'MuxingKvmGic'
     cxx_header = "arch/arm/kvm/gic.hh"
+
+    simulate_gic = Param.Bool(False,
+        "Forcing the simulation to use the gem5 GIC instead of the host GIC")

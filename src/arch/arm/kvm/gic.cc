@@ -170,7 +170,8 @@ MuxingKvmGic::MuxingKvmGic(const MuxingKvmGicParams &p)
       kernelGic(nullptr),
       usingKvm(false)
 {
-    if (auto vm = system.getKvmVM()) {
+    auto vm = system.getKvmVM();
+    if (vm && !p.simulate_gic) {
         kernelGic = new KvmKernelGicV2(*vm, p.cpu_addr, p.dist_addr,
                                        p.it_lines);
     }
