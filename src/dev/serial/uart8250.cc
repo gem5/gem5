@@ -47,14 +47,14 @@ using namespace std;
 void
 Uart8250::processIntrEvent(int intrBit)
 {
-    if (intrBit & IER) {
+    if (intrBit & registers.ier.get()) {
        DPRINTF(Uart, "UART InterEvent, interrupting\n");
        platform->postConsoleInt();
        status |= intrBit;
        lastTxInt = curTick();
-    }
-    else
+    } else {
        DPRINTF(Uart, "UART InterEvent, not interrupting\n");
+    }
 
 }
 
@@ -84,89 +84,141 @@ Uart8250::scheduleIntr(Event *event)
 
 
 Uart8250::Uart8250(const Params &p)
-    : Uart(p, 8), IER(0), LCR(0), MCR(0), lastTxInt(0),
+    : Uart(p, 8), registers(this, name() + ".registers"), lastTxInt(0),
       txIntrEvent([this]{ processIntrEvent(TX_INT); }, "TX"),
       rxIntrEvent([this]{ processIntrEvent(RX_INT); }, "RX")
 {
 }
 
+Uart8250::Registers::Registers(Uart8250 *uart, const std::string &new_name) :
+    RegisterBankLE(new_name, 0), rbrThr(rbr, thr), rbrThrDll(rbrThr, dll),
+    ierDlh(ier, dlh), iirFcr(iir, fcr)
+{
+    rbr.reader(uart, &Uart8250::readRbr);
+    thr.writer(uart, &Uart8250::writeThr);
+    ier.writer(uart, &Uart8250::writeIer);
+    iir.reader(uart, &Uart8250::readIir);
+
+    lcr.writer([this](auto &reg, const auto &value) {
+            reg.update(value);
+            rbrThrDll.select(value.dlab);
+            ierDlh.select(value.dlab);
+        });
+
+    mcr.writer([](auto &reg, const auto &value) {
+            if (value == (UART_MCR_LOOP | 0x0A))
+                reg.update(0x9A);
+        });
+
+    lsr.readonly().
+        reader([device = uart->device](auto &reg) {
+            Lsr lsr = 0;
+            if (device->dataAvailable())
+                lsr.rdr = 1;
+            lsr.tbe = 1;
+            lsr.txEmpty = 1;
+            return lsr;
+        });
+
+    msr.readonly();
+
+    addRegisters({rbrThrDll, ierDlh, iirFcr, lcr, mcr, lsr, msr, sr});
+}
+
+uint8_t
+Uart8250::readRbr(Register8 &reg)
+{
+    uint8_t data = 0;
+    if (device->dataAvailable())
+        data = device->readData();
+    else
+        DPRINTF(Uart, "empty read of RX register\n");
+
+    status &= ~RX_INT;
+    platform->clearConsoleInt();
+
+    if (device->dataAvailable() && registers.ier.get().rdi)
+        scheduleIntr(&rxIntrEvent);
+
+    return data;
+}
+
+void
+Uart8250::writeThr(Register8 &reg, const uint8_t &data)
+{
+    device->writeData(data);
+    platform->clearConsoleInt();
+    status &= ~TX_INT;
+    if (registers.ier.get().thri)
+        scheduleIntr(&txIntrEvent);
+}
+
+Uart8250::Iir
+Uart8250::readIir(Register<Iir> &reg)
+{
+    DPRINTF(Uart, "IIR Read, status = %#x\n", (uint32_t)status);
+
+    Iir iir = 0;
+    if (status & RX_INT) {
+        // Rx data interrupt has a higher priority.
+        iir.id = (uint8_t)InterruptIds::Rx;
+    } else if (status & TX_INT) {
+        iir.id = (uint8_t)InterruptIds::Tx;
+        // Tx interrupts are cleared on IIR reads.
+        status &= ~TX_INT;
+    } else {
+        iir.pending = 1;
+    }
+    return iir;
+}
+
+void
+Uart8250::writeIer(Register<Ier> &reg, const Ier &ier)
+{
+    reg.update(ier);
+
+    if (ier.thri) {
+        DPRINTF(Uart, "IER: IER_THRI set, scheduling TX intrrupt\n");
+        if (curTick() - lastTxInt > 225 * SimClock::Int::ns) {
+            DPRINTF(Uart, "-- Interrupting Immediately... %d,%d\n",
+                    curTick(), lastTxInt);
+            txIntrEvent.process();
+        } else {
+            DPRINTF(Uart, "-- Delaying interrupt... %d,%d\n",
+                    curTick(), lastTxInt);
+            scheduleIntr(&txIntrEvent);
+        }
+    } else {
+        DPRINTF(Uart, "IER: IER_THRI cleared, descheduling TX intrrupt\n");
+        if (txIntrEvent.scheduled())
+            deschedule(txIntrEvent);
+        if (status & TX_INT)
+            platform->clearConsoleInt();
+        status &= ~TX_INT;
+    }
+
+    if (ier.rdi && device->dataAvailable()) {
+        DPRINTF(Uart, "IER: IER_RDI set, scheduling RX intrrupt\n");
+        scheduleIntr(&rxIntrEvent);
+    } else {
+        DPRINTF(Uart, "IER: IER_RDI cleared, descheduling RX intrrupt\n");
+        if (rxIntrEvent.scheduled())
+            deschedule(rxIntrEvent);
+        if (status & RX_INT)
+            platform->clearConsoleInt();
+        status &= ~RX_INT;
+    }
+}
+
 Tick
 Uart8250::read(PacketPtr pkt)
 {
-    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
-    assert(pkt->getSize() == 1);
-
     Addr daddr = pkt->getAddr() - pioAddr;
 
-    DPRINTF(Uart, " read register %#x\n", daddr);
+    DPRINTF(Uart, "Read register %#x\n", daddr);
 
-    switch (daddr) {
-        case 0x0:
-            if (!(LCR & 0x80)) { // read byte
-                if (device->dataAvailable())
-                    pkt->setRaw(device->readData());
-                else {
-                    pkt->setRaw((uint8_t)0);
-                    // A limited amount of these are ok.
-                    DPRINTF(Uart, "empty read of RX register\n");
-                }
-                status &= ~RX_INT;
-                platform->clearConsoleInt();
+    registers.read(daddr, pkt->getPtr<void>(), pkt->getSize());
 
-                if (device->dataAvailable() && (IER & UART_IER_RDI))
-                    scheduleIntr(&rxIntrEvent);
-            } else { // dll divisor latch
-               ;
-            }
-            break;
-        case 0x1:
-            if (!(LCR & 0x80)) { // Intr Enable Register(IER)
-                pkt->setRaw(IER);
-            } else { // DLM divisor latch MSB
-                ;
-            }
-            break;
-        case 0x2: // Intr Identification Register (IIR)
-            DPRINTF(Uart, "IIR Read, status = %#x\n", (uint32_t)status);
-
-            if (status & RX_INT) /* Rx data interrupt has a higher priority */
-                pkt->setRaw(IIR_RXID);
-            else if (status & TX_INT) {
-                pkt->setRaw(IIR_TXID);
-                //Tx interrupts are cleared on IIR reads
-                status &= ~TX_INT;
-            } else
-                pkt->setRaw(IIR_NOPEND);
-
-            break;
-        case 0x3: // Line Control Register (LCR)
-            pkt->setRaw(LCR);
-            break;
-        case 0x4: // Modem Control Register (MCR)
-            pkt->setRaw(MCR);
-            break;
-        case 0x5: // Line Status Register (LSR)
-            uint8_t lsr;
-            lsr = 0;
-            // check if there are any bytes to be read
-            if (device->dataAvailable())
-                lsr = UART_LSR_DR;
-            lsr |= UART_LSR_TEMT | UART_LSR_THRE;
-            pkt->setRaw(lsr);
-            break;
-        case 0x6: // Modem Status Register (MSR)
-            pkt->setRaw((uint8_t)0);
-            break;
-        case 0x7: // Scratch Register (SCR)
-            pkt->setRaw((uint8_t)0); // doesn't exist with at 8250.
-            break;
-        default:
-            panic("Tried to access a UART port that doesn't exist\n");
-            break;
-    }
-/*    uint32_t d32 = *data;
-    DPRINTF(Uart, "Register read to register %#x returned %#x\n", daddr, d32);
-*/
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -174,88 +226,13 @@ Uart8250::read(PacketPtr pkt)
 Tick
 Uart8250::write(PacketPtr pkt)
 {
-
-    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
-    assert(pkt->getSize() == 1);
-
     Addr daddr = pkt->getAddr() - pioAddr;
 
-    DPRINTF(Uart, " write register %#x value %#x\n", daddr,
+    DPRINTF(Uart, "Write register %#x value %#x\n", daddr,
             pkt->getRaw<uint8_t>());
 
-    switch (daddr) {
-        case 0x0:
-            if (!(LCR & 0x80)) { // write byte
-                device->writeData(pkt->getRaw<uint8_t>());
-                platform->clearConsoleInt();
-                status &= ~TX_INT;
-                if (UART_IER_THRI & IER)
-                    scheduleIntr(&txIntrEvent);
-            } else { // dll divisor latch
-               ;
-            }
-            break;
-        case 0x1:
-            if (!(LCR & 0x80)) { // Intr Enable Register(IER)
-                IER = pkt->getRaw<uint8_t>();
-                if (UART_IER_THRI & IER)
-                {
-                    DPRINTF(Uart,
-                            "IER: IER_THRI set, scheduling TX intrrupt\n");
-                    if (curTick() - lastTxInt > 225 * SimClock::Int::ns) {
-                        DPRINTF(Uart, "-- Interrupting Immediately... %d,%d\n",
-                                curTick(), lastTxInt);
-                        txIntrEvent.process();
-                    } else {
-                        DPRINTF(Uart, "-- Delaying interrupt... %d,%d\n",
-                                curTick(), lastTxInt);
-                        scheduleIntr(&txIntrEvent);
-                    }
-                }
-                else
-                {
-                    DPRINTF(Uart, "IER: IER_THRI cleared, "
-                            "descheduling TX intrrupt\n");
-                    if (txIntrEvent.scheduled())
-                        deschedule(txIntrEvent);
-                    if (status & TX_INT)
-                        platform->clearConsoleInt();
-                    status &= ~TX_INT;
-                }
+    registers.write(daddr, pkt->getPtr<void>(), pkt->getSize());
 
-                if ((UART_IER_RDI & IER) && device->dataAvailable()) {
-                    DPRINTF(Uart,
-                            "IER: IER_RDI set, scheduling RX intrrupt\n");
-                    scheduleIntr(&rxIntrEvent);
-                } else {
-                    DPRINTF(Uart, "IER: IER_RDI cleared, "
-                            "descheduling RX intrrupt\n");
-                    if (rxIntrEvent.scheduled())
-                        deschedule(rxIntrEvent);
-                    if (status & RX_INT)
-                        platform->clearConsoleInt();
-                    status &= ~RX_INT;
-                }
-             } else { // DLM divisor latch MSB
-                ;
-            }
-            break;
-        case 0x2: // FIFO Control Register (FCR)
-            break;
-        case 0x3: // Line Control Register (LCR)
-            LCR = pkt->getRaw<uint8_t>();
-            break;
-        case 0x4: // Modem Control Register (MCR)
-            if (pkt->getRaw<uint8_t>() == (UART_MCR_LOOP | 0x0A))
-                    MCR = 0x9A;
-            break;
-        case 0x7: // Scratch Register (SCR)
-            // We are emulating a 8250 so we don't have a scratch reg
-            break;
-        default:
-            panic("Tried to access a UART port that doesn't exist\n");
-            break;
-    }
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -263,9 +240,8 @@ Uart8250::write(PacketPtr pkt)
 void
 Uart8250::dataAvailable()
 {
-    // if the kernel wants an interrupt when we have data
-    if (IER & UART_IER_RDI)
-    {
+    // If the kernel wants an interrupt when we have data.
+    if (registers.ier.get().rdi) {
         platform->postConsoleInt();
         status |= RX_INT;
     }
@@ -284,9 +260,9 @@ void
 Uart8250::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(status);
-    SERIALIZE_SCALAR(IER);
-    SERIALIZE_SCALAR(LCR);
-    SERIALIZE_SCALAR(MCR);
+    paramOut(cp, "IER", registers.ier);
+    paramOut(cp, "LCR", registers.lcr);
+    paramOut(cp, "MCR", registers.mcr);
     Tick rxintrwhen;
     if (rxIntrEvent.scheduled())
         rxintrwhen = rxIntrEvent.when();
@@ -305,9 +281,9 @@ void
 Uart8250::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(status);
-    UNSERIALIZE_SCALAR(IER);
-    UNSERIALIZE_SCALAR(LCR);
-    UNSERIALIZE_SCALAR(MCR);
+    paramIn(cp, "IER", registers.ier);
+    paramIn(cp, "LCR", registers.lcr);
+    paramIn(cp, "MCR", registers.mcr);
     Tick rxintrwhen;
     Tick txintrwhen;
     UNSERIALIZE_SCALAR(rxintrwhen);
