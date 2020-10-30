@@ -68,7 +68,7 @@ class Platform;
 class Uart8250 : public Uart
 {
   protected:
-    uint8_t IER, DLAB, LCR, MCR;
+    uint8_t IER, LCR, MCR;
     Tick lastTxInt;
 
     void processIntrEvent(int intrBit);

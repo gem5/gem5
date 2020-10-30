@@ -84,7 +84,7 @@ Uart8250::scheduleIntr(Event *event)
 
 
 Uart8250::Uart8250(const Params &p)
-    : Uart(p, 8), IER(0), DLAB(0), LCR(0), MCR(0), lastTxInt(0),
+    : Uart(p, 8), IER(0), LCR(0), MCR(0), lastTxInt(0),
       txIntrEvent([this]{ processIntrEvent(TX_INT); }, "TX"),
       rxIntrEvent([this]{ processIntrEvent(RX_INT); }, "RX")
 {
@@ -285,7 +285,6 @@ Uart8250::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(status);
     SERIALIZE_SCALAR(IER);
-    SERIALIZE_SCALAR(DLAB);
     SERIALIZE_SCALAR(LCR);
     SERIALIZE_SCALAR(MCR);
     Tick rxintrwhen;
@@ -307,7 +306,6 @@ Uart8250::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(status);
     UNSERIALIZE_SCALAR(IER);
-    UNSERIALIZE_SCALAR(DLAB);
     UNSERIALIZE_SCALAR(LCR);
     UNSERIALIZE_SCALAR(MCR);
     Tick rxintrwhen;
