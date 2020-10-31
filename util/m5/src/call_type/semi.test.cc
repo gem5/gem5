@@ -54,57 +54,73 @@ class DefaultCallType : public CallType
     const DispatchTable &getDispatch() const override { return dt; }
 };
 
-DefaultCallType default_call_type;
+DefaultCallType defaultCallType;
 
-TEST(SemiCallType, Detect)
+class SemiCallTypeTest : public testing::Test
 {
-    CallType *ct;
+  protected:
+    CallType *ct = nullptr;
+};
 
+TEST_F(SemiCallTypeTest, EmptyArgs)
+{
     // Semi should not be selected if there are no arguments.
     Args empty({});
-    default_call_type.init_called = false;
+    defaultCallType.init_called = false;
     ct = CallType::detect(empty);
-    EXPECT_EQ(ct, &default_call_type);
-    EXPECT_TRUE(default_call_type.init_called);
-
-    // Inst should not be selected if --semi isn't the first argument.
-    Args one_arg({"one"});
-    default_call_type.init_called = false;
-    ct = CallType::detect(one_arg);
-    EXPECT_EQ(ct, &default_call_type);
-    EXPECT_TRUE(default_call_type.init_called);
-
-    // Semi should be selected if --semi is the first argument.
-    Args selected({"--semi"});
-    default_call_type.init_called = false;
-    ct = CallType::detect(selected);
-    EXPECT_NE(ct, &default_call_type);
-    EXPECT_NE(ct, nullptr);
-    EXPECT_FALSE(default_call_type.init_called);
-
-    Args extra({"--semi", "foo"});
-    default_call_type.init_called = false;
-    ct = CallType::detect(extra);
-    EXPECT_NE(ct, &default_call_type);
-    EXPECT_NE(ct, nullptr);
-    EXPECT_FALSE(default_call_type.init_called);
-
-    // Semi should not be selected if --semi isn't first.
-    Args not_first({"foo", "--semi"});
-    default_call_type.init_called = false;
-    ct = CallType::detect(not_first);
-    EXPECT_EQ(ct, &default_call_type);
-    EXPECT_TRUE(default_call_type.init_called);
+    EXPECT_EQ(ct, &defaultCallType);
+    EXPECT_TRUE(defaultCallType.init_called);
 }
 
-sigjmp_buf intercept_env;
-siginfo_t intercept_siginfo;
+TEST_F(SemiCallTypeTest, NotAnyArg)
+{
+    // Inst should not be selected if --semi isn't the first argument.
+    Args one_arg({"one"});
+    defaultCallType.init_called = false;
+    ct = CallType::detect(one_arg);
+    EXPECT_EQ(ct, &defaultCallType);
+    EXPECT_TRUE(defaultCallType.init_called);
+}
+
+TEST_F(SemiCallTypeTest, FirstArg)
+{
+    // Semi should be selected if --semi is the first argument.
+    Args selected({"--semi"});
+    defaultCallType.init_called = false;
+    ct = CallType::detect(selected);
+    EXPECT_NE(ct, &defaultCallType);
+    EXPECT_NE(ct, nullptr);
+    EXPECT_FALSE(defaultCallType.init_called);
+}
+
+TEST_F(SemiCallTypeTest, ExtraArg)
+{
+    Args extra({"--semi", "foo"});
+    defaultCallType.init_called = false;
+    ct = CallType::detect(extra);
+    EXPECT_NE(ct, &defaultCallType);
+    EXPECT_NE(ct, nullptr);
+    EXPECT_FALSE(defaultCallType.init_called);
+}
+
+TEST_F(SemiCallTypeTest, NotFirstArg)
+{
+    // Semi should not be selected if --semi isn't first.
+    Args not_first({"foo", "--semi"});
+    defaultCallType.init_called = false;
+    ct = CallType::detect(not_first);
+    EXPECT_EQ(ct, &defaultCallType);
+    EXPECT_TRUE(defaultCallType.init_called);
+}
+
+sigjmp_buf interceptEnv;
+siginfo_t interceptSiginfo;
 
 void
-sigill_handler(int sig, siginfo_t *info, void *ucontext)
+sigillHandler(int sig, siginfo_t *info, void *ucontext)
 {
-    std::memcpy(&intercept_siginfo, info, sizeof(intercept_siginfo));
-    siglongjmp(intercept_env, 1);
+    std::memcpy(&interceptSiginfo, info, sizeof(interceptSiginfo));
+    siglongjmp(interceptEnv, 1);
 }
 
 TEST(SemiCallType, Sum)
@@ -136,14 +152,14 @@ TEST(SemiCallType, Sum)
 
     struct sigaction sigill_action;
     std::memset(&sigill_action, 0, sizeof(sigill_action));
-    sigill_action.sa_sigaction = &sigill_handler;
+    sigill_action.sa_sigaction = &sigillHandler;
     sigill_action.sa_flags = SA_SIGINFO | SA_RESETHAND;
 
     struct sigaction old_sigill_action;
 
     sigaction(SIGILL, &sigill_action, &old_sigill_action);
 
-    if (!sigsetjmp(intercept_env, 1)) {
+    if (!sigsetjmp(interceptEnv, 1)) {
         (*dt.m5_sum)(2, 2, 0, 0, 0, 0);
         sigaction(SIGILL, &old_sigill_action, nullptr);
         ADD_FAILURE() << "Didn't die when attempting to run \"sum\".";
@@ -151,7 +167,7 @@ TEST(SemiCallType, Sum)
     }
 
     // Back from siglongjump.
-    auto &info = intercept_siginfo;
+    auto &info = interceptSiginfo;
 
     EXPECT_EQ(info.si_signo, SIGILL);
     EXPECT_TRUE(info.si_code == ILL_ILLOPC || info.si_code == ILL_ILLOPN);

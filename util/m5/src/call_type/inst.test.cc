@@ -58,24 +58,34 @@ class DefaultCallType : public CallType
 
 DefaultCallType defaultCallType;
 
-TEST(InstCallType, Detect)
+class InstCallTypeTest : public testing::Test
 {
-    CallType *ct;
+  protected:
+    CallType *ct = nullptr;
+};
 
+TEST_F(InstCallTypeTest, EmptyArgs)
+{
     // Inst should not be selected if there are no arguments.
     Args empty({});
     defaultCallType.init_called = false;
     ct = CallType::detect(empty);
     EXPECT_EQ(ct, &defaultCallType);
     EXPECT_TRUE(defaultCallType.init_called);
+}
 
+TEST_F(InstCallTypeTest, NotAnyArg)
+{
     // Inst should not be selected if --inst isn't the first argument.
     Args one_arg({"one"});
     defaultCallType.init_called = false;
     ct = CallType::detect(one_arg);
     EXPECT_EQ(ct, &defaultCallType);
     EXPECT_TRUE(defaultCallType.init_called);
+}
 
+TEST_F(InstCallTypeTest, FirstArg)
+{
     // Inst should be selected if --inst is the first argument.
     Args selected({"--inst"});
     defaultCallType.init_called = false;
@@ -83,14 +93,20 @@ TEST(InstCallType, Detect)
     EXPECT_NE(ct, &defaultCallType);
     EXPECT_NE(ct, nullptr);
     EXPECT_FALSE(defaultCallType.init_called);
+}
 
+TEST_F(InstCallTypeTest, ExtraArg)
+{
     Args extra({"--inst", "foo"});
     defaultCallType.init_called = false;
     ct = CallType::detect(extra);
     EXPECT_NE(ct, &defaultCallType);
     EXPECT_NE(ct, nullptr);
     EXPECT_FALSE(defaultCallType.init_called);
+}
 
+TEST_F(InstCallTypeTest, NotFirstArg)
+{
     // Inst should not be selected if --inst isn't first.
     Args not_first({"foo", "--inst"});
     defaultCallType.init_called = false;
@@ -103,7 +119,7 @@ sigjmp_buf interceptEnv;
 siginfo_t interceptSiginfo;
 
 void
-sigill_handler(int sig, siginfo_t *info, void *ucontext)
+sigillHandler(int sig, siginfo_t *info, void *ucontext)
 {
     std::memcpy(&interceptSiginfo, info, sizeof(interceptSiginfo));
     siglongjmp(interceptEnv, 1);
@@ -138,7 +154,7 @@ TEST(InstCallType, Sum)
 
     struct sigaction sigill_action;
     std::memset(&sigill_action, 0, sizeof(sigill_action));
-    sigill_action.sa_sigaction = &sigill_handler;
+    sigill_action.sa_sigaction = &sigillHandler;
     sigill_action.sa_flags = SA_SIGINFO | SA_RESETHAND;
 
     struct sigaction old_sigill_action;
