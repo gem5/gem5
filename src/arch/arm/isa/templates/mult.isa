@@ -57,7 +57,7 @@ def template Mult3Constructor {{
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
             }
         }
     }
@@ -87,7 +87,7 @@ def template Mult4Constructor {{
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
             }
         }
     }

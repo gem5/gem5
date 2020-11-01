@@ -69,7 +69,7 @@ def template MicroMemConstructor {{
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
             }
         }
     }
@@ -103,7 +103,7 @@ def template MicroMemPairConstructor {{
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
             }
         }
     }
@@ -128,7 +128,7 @@ def template MicroNeonMemDeclare {{
             %(constructor)s;
             if (!(condCode == COND_AL || condCode == COND_UC)) {
                 for (int x = 0; x < _numDestRegs; x++) {
-                    _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                    setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
                 }
             }
         }
@@ -170,7 +170,7 @@ def template MicroSetPCCPSRConstructor {{
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             flags[IsCondControl] = true;
             for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
             }
         } else {
             flags[IsUncondControl] = true;
@@ -219,7 +219,7 @@ def template MicroNeonMixDeclare {{
             %(constructor)s;
             if (!(condCode == COND_AL || condCode == COND_UC)) {
                 for (int x = 0; x < _numDestRegs; x++) {
-                    _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                    setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
                 }
             }
         }
@@ -272,7 +272,7 @@ def template MicroNeonMixLaneDeclare {{
             %(constructor)s;
             if (!(condCode == COND_AL || condCode == COND_UC)) {
                 for (int x = 0; x < _numDestRegs; x++) {
-                    _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                    setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
                 }
             }
         }
@@ -305,7 +305,7 @@ def template MicroIntMovConstructor {{
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
             }
         }
     }
@@ -338,7 +338,7 @@ def template MicroIntImmConstructor {{
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
             }
         }
     }
@@ -399,7 +399,7 @@ def template MicroIntRegConstructor {{
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
             }
         }
     }
@@ -434,7 +434,7 @@ def template MacroMemConstructor {{
     %(constructor)s;
     if (!(condCode == COND_AL || condCode == COND_UC)) {
         for (int x = 0; x < _numDestRegs; x++) {
-            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
         }
     }
 }
@@ -548,7 +548,7 @@ def template VMemMultConstructor {{
     %(constructor)s;
     if (!(condCode == COND_AL || condCode == COND_UC)) {
         for (int x = 0; x < _numDestRegs; x++) {
-            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
         }
     }
 }
@@ -575,7 +575,7 @@ def template VMemSingleConstructor {{
     %(constructor)s;
     if (!(condCode == COND_AL || condCode == COND_UC)) {
         for (int x = 0; x < _numDestRegs; x++) {
-            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
         }
     }
 }
@@ -605,7 +605,7 @@ def template MacroVFPMemConstructor {{
     %(constructor)s;
     if (!(condCode == COND_AL || condCode == COND_UC)) {
         for (int x = 0; x < _numDestRegs; x++) {
-            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
         }
     }
 }

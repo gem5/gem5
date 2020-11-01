@@ -38,10 +38,10 @@ Trap::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 
     printMnemonic(response, mnemonic);
     ccprintf(response, " ");
-    printReg(response, _srcRegIdx[0]);
+    printReg(response, srcRegIdx(0));
     ccprintf(response, ", 0x%x", trapNum);
     ccprintf(response, ", or ");
-    printReg(response, _srcRegIdx[1]);
+    printReg(response, srcRegIdx(1));
     return response.str();
 }
 

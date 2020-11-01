@@ -46,8 +46,8 @@ string
 Load::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
-    ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", " <<
-        offset << '(' << registerName(_srcRegIdx[0]) << ')';
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
+        offset << '(' << registerName(srcRegIdx(0)) << ')';
     return ss.str();
 }
 
@@ -55,8 +55,8 @@ string
 Store::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
-    ss << mnemonic << ' ' << registerName(_srcRegIdx[1]) << ", " <<
-        offset << '(' << registerName(_srcRegIdx[0]) << ')';
+    ss << mnemonic << ' ' << registerName(srcRegIdx(1)) << ", " <<
+        offset << '(' << registerName(srcRegIdx(0)) << ')';
     return ss.str();
 }
 

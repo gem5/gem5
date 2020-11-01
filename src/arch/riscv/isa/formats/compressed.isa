@@ -36,7 +36,7 @@ def format CROp(code, *opt_flags) {{
 }};
 
 def format CIAddi4spnOp(imm_code, code, imm_type='int64_t', *opt_flags) {{
-    regs = ['_destRegIdx[0]', '_srcRegIdx[0]']
+    regs = ['destRegIdx(0)', 'srcRegIdx(0)']
     iop = InstObjParams(name, Name, 'ImmOp<%s>' % imm_type,
         {'code': code, 'imm_code': imm_code,
          'regs': ','.join(regs)}, opt_flags)
@@ -49,7 +49,7 @@ def format CIAddi4spnOp(imm_code, code, imm_type='int64_t', *opt_flags) {{
 def format CIOp(imm_code, code, imm_type='int64_t', *opt_flags) {{
     iop = InstObjParams(name, Name, 'ImmOp<%s>' % imm_type,
         {'code': code, 'imm_code': imm_code,
-         'regs': '_destRegIdx[0]'}, opt_flags)
+         'regs': 'destRegIdx(0)'}, opt_flags)
     header_output = ImmDeclare.subst(iop)
     decoder_output = ImmConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -89,10 +89,10 @@ def format CBOp(code, *opt_flags) {{
                 if (CIMM3<2:2> > 0)
                     imm |= ~((int64_t)0xFF);
                """
-    regs = '_srcRegIdx[0]'
+    regs = 'srcRegIdx(0)'
     iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
         {'code': code, 'imm_code': imm_code,
-         'regs': '_srcRegIdx[0]'}, opt_flags)
+         'regs': 'srcRegIdx(0)'}, opt_flags)
     header_output = BranchDeclare.subst(iop)
     decoder_output = ImmConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -162,7 +162,7 @@ def template CBasicExecute {{
 }};
 
 def format CompressedROp(code, *opt_flags) {{
-    regs = ['_destRegIdx[0]','_srcRegIdx[1]']
+    regs = ['destRegIdx(0)','srcRegIdx(1)']
     iop = InstObjParams(name, Name, 'RegOp',
         {'code': code, 'regs': ','.join(regs)}, opt_flags)
     header_output = CBasicDeclare.subst(iop)

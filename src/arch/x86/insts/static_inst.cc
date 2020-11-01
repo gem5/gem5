@@ -107,14 +107,14 @@ namespace X86ISA
     X86StaticInst::printSrcReg(std::ostream &os, int reg, int size) const
     {
         if (_numSrcRegs > reg)
-            printReg(os, _srcRegIdx[reg], size);
+            printReg(os, srcRegIdx(reg), size);
     }
 
     void
     X86StaticInst::printDestReg(std::ostream &os, int reg, int size) const
     {
         if (_numDestRegs > reg)
-            printReg(os, _destRegIdx[reg], size);
+            printReg(os, destRegIdx(reg), size);
     }
 
     void

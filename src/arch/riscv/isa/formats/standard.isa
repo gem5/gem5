@@ -275,7 +275,7 @@ def template JumpExecute {{
     %(class_name)s::branchTarget(ThreadContext *tc) const
     {
         PCState pc = tc->pcState();
-        pc.set((tc->readIntReg(_srcRegIdx[0].index()) + imm)&~0x1);
+        pc.set((tc->readIntReg(srcRegIdx(0).index()) + imm)&~0x1);
         return pc;
     }
 
@@ -286,10 +286,10 @@ def template JumpExecute {{
         std::stringstream ss;
         ss << mnemonic << ' ';
         if (QUADRANT == 0x3)
-            ss << registerName(_destRegIdx[0]) << ", "
-               << imm << "(" << registerName(_srcRegIdx[0]) << ")";
+            ss << registerName(destRegIdx(0)) << ", "
+               << imm << "(" << registerName(srcRegIdx(0)) << ")";
         else
-            ss << registerName(_srcRegIdx[0]);
+            ss << registerName(srcRegIdx(0));
         return ss.str();
     }
 }};
@@ -409,7 +409,7 @@ def format ROp(code, *opt_flags) {{
 
 def format IOp(code, imm_type='int64_t', imm_code='imm = sext<12>(IMM12);',
               *opt_flags) {{
-    regs = ['_destRegIdx[0]','_srcRegIdx[0]']
+    regs = ['destRegIdx(0)','srcRegIdx(0)']
     iop = InstObjParams(name, Name, 'ImmOp<%s>' % imm_type,
         {'imm_code': imm_code, 'code': code,
          'regs': ','.join(regs)}, opt_flags)
@@ -420,7 +420,7 @@ def format IOp(code, imm_type='int64_t', imm_code='imm = sext<12>(IMM12);',
 }};
 
 def format FenceOp(code, imm_type='int64_t', *opt_flags) {{
-    regs = ['_destRegIdx[0]','_srcRegIdx[0]']
+    regs = ['destRegIdx(0)','srcRegIdx(0)']
     iop = InstObjParams(name, Name, 'ImmOp<%s>' % imm_type,
         {'code': code, 'imm_code': 'imm = sext<12>(IMM12);',
          'regs': ','.join(regs)}, opt_flags)
@@ -438,7 +438,7 @@ def format BOp(code, *opt_flags) {{
                       IMMSIGN << 12;
                 imm = sext<13>(imm);
                """
-    regs = ['_srcRegIdx[0]','_srcRegIdx[1]']
+    regs = ['srcRegIdx(0)','srcRegIdx(1)']
     iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
         {'code': code, 'imm_code': imm_code,
          'regs': ','.join(regs)}, opt_flags)
@@ -449,7 +449,7 @@ def format BOp(code, *opt_flags) {{
 }};
 
 def format Jump(code, *opt_flags) {{
-    regs = ['_srcRegIdx[0]']
+    regs = ['srcRegIdx(0)']
     iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
         {'code': code, 'imm_code': 'imm = sext<12>(IMM12);',
          'regs': ','.join(regs)}, opt_flags)
@@ -460,7 +460,7 @@ def format Jump(code, *opt_flags) {{
 }};
 
 def format UOp(code, *opt_flags) {{
-    regs = ['_destRegIdx[0]']
+    regs = ['destRegIdx(0)']
     iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
         {'code': code, 'imm_code': 'imm = IMM20;',
          'regs': ','.join(regs)}, opt_flags)
@@ -479,7 +479,7 @@ def format JOp(code, *opt_flags) {{
                 imm = sext<21>(imm);
                """
     pc = 'pc.set(pc.pc() + imm);'
-    regs = ['_destRegIdx[0]']
+    regs = ['destRegIdx(0)']
     iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
         {'code': code, 'imm_code': imm_code,
          'regs': ','.join(regs)}, opt_flags)

@@ -43,8 +43,8 @@ CompRegOp::generateDisassembly(
         Addr pc, const Loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", " <<
-        registerName(_srcRegIdx[0]);
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
+        registerName(srcRegIdx(0));
     return ss.str();
 }
 

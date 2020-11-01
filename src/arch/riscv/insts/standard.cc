@@ -46,12 +46,12 @@ string
 RegOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
-    ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", " <<
-        registerName(_srcRegIdx[0]);
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
+        registerName(srcRegIdx(0));
     if (_numSrcRegs >= 2)
-        ss << ", " << registerName(_srcRegIdx[1]);
+        ss << ", " << registerName(srcRegIdx(1));
     if (_numSrcRegs >= 3)
-        ss << ", " << registerName(_srcRegIdx[2]);
+        ss << ", " << registerName(srcRegIdx(2));
     return ss.str();
 }
 
@@ -59,14 +59,14 @@ string
 CSROp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
-    ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", ";
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
     auto data = CSRData.find(csr);
     if (data != CSRData.end())
         ss << data->second.name;
     else
         ss << "?? (" << hex << "0x" << csr << dec << ")";
     if (_numSrcRegs > 0)
-        ss << ", " << registerName(_srcRegIdx[0]);
+        ss << ", " << registerName(srcRegIdx(0));
     else
         ss << uimm;
     return ss.str();
@@ -77,8 +77,8 @@ SystemOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     if (strcmp(mnemonic, "fence_vma") == 0) {
         stringstream ss;
-        ss << mnemonic << ' ' << registerName(_srcRegIdx[0]) << ", " <<
-            registerName(_srcRegIdx[1]);
+        ss << mnemonic << ' ' << registerName(srcRegIdx(0)) << ", " <<
+            registerName(srcRegIdx(1));
         return ss.str();
     }
 

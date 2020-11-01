@@ -40,11 +40,11 @@ Mem::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 
     printMnemonic(response, mnemonic);
     if (store) {
-        printReg(response, _srcRegIdx[0]);
+        printReg(response, srcRegIdx(0));
         ccprintf(response, ", ");
     }
     ccprintf(response, "[");
-    if (_srcRegIdx[!store ? 0 : 1].index() != 0) {
+    if (srcRegIdx(!store ? 0 : 1).index() != 0) {
         printSrcReg(response, !store ? 0 : 1);
         ccprintf(response, " + ");
     }
@@ -52,7 +52,7 @@ Mem::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     ccprintf(response, "]");
     if (load) {
         ccprintf(response, ", ");
-        printReg(response, _destRegIdx[0]);
+        printReg(response, destRegIdx(0));
     }
 
     return response.str();
@@ -67,12 +67,12 @@ MemImm::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 
     printMnemonic(response, mnemonic);
     if (save) {
-        printReg(response, _srcRegIdx[0]);
+        printReg(response, srcRegIdx(0));
         ccprintf(response, ", ");
     }
     ccprintf(response, "[");
-    if (_srcRegIdx[!save ? 0 : 1].index() != 0) {
-        printReg(response, _srcRegIdx[!save ? 0 : 1]);
+    if (srcRegIdx(!save ? 0 : 1).index() != 0) {
+        printReg(response, srcRegIdx(!save ? 0 : 1));
         ccprintf(response, " + ");
     }
     if (imm >= 0)
@@ -81,7 +81,7 @@ MemImm::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         ccprintf(response, "-%#x]", -imm);
     if (load) {
         ccprintf(response, ", ");
-        printReg(response, _destRegIdx[0]);
+        printReg(response, destRegIdx(0));
     }
 
     return response.str();

@@ -419,8 +419,11 @@ def template SveIndexedMemVIMicroopDeclare {{
                 // The first micro-op is responsible for pinning the
                 // destination and the fault status registers
                 assert(_numDestRegs == 2);
-               _destRegIdx[0].setNumPinnedWrites(numElems - 1);
-               _destRegIdx[1].setNumPinnedWrites(numElems - 1);
+                for (int i = 0; i < _numDestRegs; i++) {
+                    auto dr = destRegIdx(i);
+                    dr.setNumPinnedWrites(numElems - 1);
+                    setDestRegIdx(i, dr);
+                }
             }
         }
 
@@ -500,8 +503,11 @@ def template SveIndexedMemSVMicroopDeclare {{
                 // The first micro-op is responsible for pinning the
                 // destination and the fault status registers
                 assert(_numDestRegs == 2);
-               _destRegIdx[0].setNumPinnedWrites(numElems - 1);
-               _destRegIdx[1].setNumPinnedWrites(numElems - 1);
+                for (int i = 0; i < _numDestRegs; i++) {
+                    auto dr = destRegIdx(i);
+                    dr.setNumPinnedWrites(numElems - 1);
+                    setDestRegIdx(i, dr);
+                }
             }
         }
 

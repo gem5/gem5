@@ -40,7 +40,7 @@ bool
 IntOp::printPseudoOps(std::ostream &os, Addr pc,
                       const Loader::SymbolTable *symbab) const
 {
-    if (!std::strcmp(mnemonic, "or") && _srcRegIdx[0].index() == 0) {
+    if (!std::strcmp(mnemonic, "or") && srcRegIdx(0).index() == 0) {
         printMnemonic(os, "mov");
         printSrcReg(os, 1);
         ccprintf(os, ", ");
@@ -55,7 +55,7 @@ IntOpImm::printPseudoOps(std::ostream &os, Addr pc,
                          const Loader::SymbolTable *symbab) const
 {
     if (!std::strcmp(mnemonic, "or")) {
-        if (_numSrcRegs > 0 && _srcRegIdx[0].index() == 0) {
+        if (_numSrcRegs > 0 && srcRegIdx(0).index() == 0) {
             if (imm == 0) {
                 printMnemonic(os, "clr");
             } else {
@@ -83,7 +83,7 @@ IntOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     if (printPseudoOps(response, pc, symtab))
         return response.str();
     printMnemonic(response, mnemonic);
-    printRegArray(response, _srcRegIdx, _numSrcRegs);
+    printRegArray(response, &srcRegIdx(0), _numSrcRegs);
     if (_numDestRegs && _numSrcRegs)
         response << ", ";
     printDestReg(response, 0);
@@ -98,7 +98,7 @@ IntOpImm::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     if (printPseudoOps(response, pc, symtab))
         return response.str();
     printMnemonic(response, mnemonic);
-    printRegArray(response, _srcRegIdx, _numSrcRegs);
+    printRegArray(response, &srcRegIdx(0), _numSrcRegs);
     if (_numSrcRegs > 0)
         response << ", ";
     ccprintf(response, "%#x", imm);

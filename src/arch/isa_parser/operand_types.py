@@ -44,8 +44,8 @@ class Operand(object):
     derived classes encapsulates the traits of a particular operand
     type (e.g., "32-bit integer register").'''
 
-    src_reg_constructor = '\n\t_srcRegIdx[_numSrcRegs++] = RegId(%s, %s);'
-    dst_reg_constructor = '\n\t_destRegIdx[_numDestRegs++] = RegId(%s, %s);'
+    src_reg_constructor = '\n\tsetSrcRegIdx(_numSrcRegs++, RegId(%s, %s));'
+    dst_reg_constructor = '\n\tsetDestRegIdx(_numDestRegs++, RegId(%s, %s));'
 
     def buildReadCode(self, func = None):
         subst_dict = {"name": self.base_name,
@@ -473,11 +473,11 @@ class VecElemOperand(Operand):
         numAccessNeeded = 1
 
         if self.is_src:
-            c_src = ('\n\t_srcRegIdx[_numSrcRegs++] = RegId(%s, %s, %s);' %
+            c_src = ('\n\tsetSrcRegIdx(_numSrcRegs++, RegId(%s, %s, %s));' %
                     (self.reg_class, self.reg_spec, self.elem_spec))
 
         if self.is_dest:
-            c_dest = ('\n\t_destRegIdx[_numDestRegs++] = RegId(%s, %s, %s);' %
+            c_dest = ('\n\tsetDestRegIdx(_numDestRegs++, RegId(%s, %s, %s));' %
                     (self.reg_class, self.reg_spec, self.elem_spec))
             c_dest += '\n\t_numVecElemDestRegs++;'
         return c_src + c_dest

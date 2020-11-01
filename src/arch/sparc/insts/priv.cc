@@ -65,7 +65,7 @@ WrPriv::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     ccprintf(response, " ");
     // If the first reg is %g0, don't print it.
     // This improves readability
-    if (_srcRegIdx[0].index() != 0) {
+    if (srcRegIdx(0).index() != 0) {
         printSrcReg(response, 0);
         ccprintf(response, ", ");
     }
@@ -86,7 +86,7 @@ WrPrivImm::generateDisassembly(
     ccprintf(response, " ");
     // If the first reg is %g0, don't print it.
     // This improves readability
-    if (_srcRegIdx[0].index() != 0) {
+    if (srcRegIdx(0).index() != 0) {
         printSrcReg(response, 0);
         ccprintf(response, ", ");
     }

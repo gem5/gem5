@@ -59,7 +59,7 @@ SparcStaticInst::printMnemonic(std::ostream &os, const char *mnemonic)
 }
 
 void
-SparcStaticInst::printRegArray(std::ostream &os, const RegId indexArray[],
+SparcStaticInst::printRegArray(std::ostream &os, const RegId *indexArray,
                                int num) const
 {
     if (num <= 0)
@@ -81,14 +81,14 @@ void
 SparcStaticInst::printSrcReg(std::ostream &os, int reg) const
 {
     if (_numSrcRegs > reg)
-        printReg(os, _srcRegIdx[reg]);
+        printReg(os, srcRegIdx(reg));
 }
 
 void
 SparcStaticInst::printDestReg(std::ostream &os, int reg) const
 {
     if (_numDestRegs > reg)
-        printReg(os, _destRegIdx[reg]);
+        printReg(os, destRegIdx(reg));
 }
 
 void
@@ -257,10 +257,10 @@ SparcStaticInst::generateDisassembly(
     // a third one, it's a read-modify-write dest (Rc),
     // e.g. for CMOVxx
     if (_numSrcRegs > 0)
-        printReg(ss, _srcRegIdx[0]);
+        printReg(ss, srcRegIdx(0));
     if (_numSrcRegs > 1) {
         ss << ",";
-        printReg(ss, _srcRegIdx[1]);
+        printReg(ss, srcRegIdx(1));
     }
 
     // just print the first dest... if there's a second one,
@@ -268,7 +268,7 @@ SparcStaticInst::generateDisassembly(
     if (_numDestRegs > 0) {
         if (_numSrcRegs > 0)
             ss << ",";
-        printReg(ss, _destRegIdx[0]);
+        printReg(ss, destRegIdx(0));
     }
 
     return ss.str();

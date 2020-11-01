@@ -53,13 +53,13 @@ MemDispOp::generateDisassembly(
             // If the instruction updates the source register with the
             // EA, then this source register is placed in position 0,
             // therefore we print the last destination register.
-            printReg(ss, _destRegIdx[_numDestRegs-1]);
+            printReg(ss, destRegIdx(_numDestRegs-1));
         }
     }
 
     // Print the data register for a store
     else {
-        printReg(ss, _srcRegIdx[1]);
+        printReg(ss, srcRegIdx(1));
     }
 
     // Print the displacement
@@ -67,7 +67,7 @@ MemDispOp::generateDisassembly(
 
     // Print the address register
     ss << "(";
-    printReg(ss, _srcRegIdx[0]);
+    printReg(ss, srcRegIdx(0));
     ss << ")";
 
     return ss.str();

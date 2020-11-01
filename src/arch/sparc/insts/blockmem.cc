@@ -41,17 +41,17 @@ BlockMemMicro::generateDisassembly(
 
     printMnemonic(response, mnemonic);
     if (save) {
-        printReg(response, _srcRegIdx[0]);
+        printReg(response, srcRegIdx(0));
         ccprintf(response, ", ");
     }
     ccprintf(response, "[ ");
-    printReg(response, _srcRegIdx[!save ? 0 : 1]);
+    printReg(response, srcRegIdx(!save ? 0 : 1));
     ccprintf(response, " + ");
-    printReg(response, _srcRegIdx[!save ? 1 : 2]);
+    printReg(response, srcRegIdx(!save ? 1 : 2));
     ccprintf(response, " ]");
     if (load) {
         ccprintf(response, ", ");
-        printReg(response, _destRegIdx[0]);
+        printReg(response, destRegIdx(0));
     }
 
     return response.str();
@@ -67,18 +67,18 @@ BlockMemImmMicro::generateDisassembly(
 
     printMnemonic(response, mnemonic);
     if (save) {
-        printReg(response, _srcRegIdx[1]);
+        printReg(response, srcRegIdx(1));
         ccprintf(response, ", ");
     }
     ccprintf(response, "[ ");
-    printReg(response, _srcRegIdx[0]);
+    printReg(response, srcRegIdx(0));
     if (imm >= 0)
         ccprintf(response, " + 0x%x ]", imm);
     else
         ccprintf(response, " + -0x%x ]", -imm);
     if (load) {
         ccprintf(response, ", ");
-        printReg(response, _destRegIdx[0]);
+        printReg(response, destRegIdx(0));
     }
 
     return response.str();

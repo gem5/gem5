@@ -81,8 +81,8 @@ LoadReservedMicro::generateDisassembly(
         Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
-    ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", ("
-            << registerName(_srcRegIdx[0]) << ')';
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ("
+            << registerName(srcRegIdx(0)) << ')';
     return ss.str();
 }
 
@@ -110,9 +110,9 @@ StoreCondMicro::generateDisassembly(
         Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
-    ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", "
-            << registerName(_srcRegIdx[1]) << ", ("
-            << registerName(_srcRegIdx[0]) << ')';
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+            << registerName(srcRegIdx(1)) << ", ("
+            << registerName(srcRegIdx(0)) << ')';
     return ss.str();
 }
 
@@ -140,9 +140,9 @@ AtomicMemOpMicro::generateDisassembly(
         Addr pc, const Loader::SymbolTable *symtab) const
 {
     stringstream ss;
-    ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", "
-            << registerName(_srcRegIdx[1]) << ", ("
-            << registerName(_srcRegIdx[0]) << ')';
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+            << registerName(srcRegIdx(1)) << ", ("
+            << registerName(srcRegIdx(0)) << ')';
     return ss.str();
 }
 

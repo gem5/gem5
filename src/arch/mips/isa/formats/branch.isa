@@ -182,12 +182,12 @@ output decoder {{
         // branches) or a destination (the link reg for
         // unconditional branches)
         if (_numSrcRegs == 1) {
-            printReg(ss, _srcRegIdx[0]);
+            printReg(ss, srcRegIdx(0));
             ss << ", ";
         } else if(_numSrcRegs == 2) {
-            printReg(ss, _srcRegIdx[0]);
+            printReg(ss, srcRegIdx(0));
             ss << ", ";
-            printReg(ss, _srcRegIdx[1]);
+            printReg(ss, srcRegIdx(1));
             ss << ", ";
         }
 
@@ -219,11 +219,11 @@ output decoder {{
             else
                 ccprintf(ss, "0x%x", disp);
         } else if (_numSrcRegs == 1) {
-             printReg(ss, _srcRegIdx[0]);
+             printReg(ss, srcRegIdx(0));
         } else if(_numSrcRegs == 2) {
-            printReg(ss, _srcRegIdx[0]);
+            printReg(ss, srcRegIdx(0));
             ss << ", ";
-            printReg(ss, _srcRegIdx[1]);
+            printReg(ss, srcRegIdx(1));
         }
 
         return ss.str();

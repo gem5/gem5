@@ -187,7 +187,7 @@ output decoder {{
         // just print the first dest... if there's a second one,
         // it's generally implicit
         if (_numDestRegs > 0) {
-            printReg(ss, _destRegIdx[0]);
+            printReg(ss, destRegIdx(0));
             ss << ", ";
         }
 
@@ -195,12 +195,12 @@ output decoder {{
         // a third one, it's a read-modify-write dest (Rc),
         // e.g. for CMOVxx
         if (_numSrcRegs > 0) {
-            printReg(ss, _srcRegIdx[0]);
+            printReg(ss, srcRegIdx(0));
         }
 
         if (_numSrcRegs > 1) {
             ss << ", ";
-            printReg(ss, _srcRegIdx[1]);
+            printReg(ss, srcRegIdx(1));
         }
 
         return ss.str();
@@ -216,12 +216,12 @@ output decoder {{
 
         // Destination Registers are implicit for HI/LO ops
         if (_numSrcRegs > 0) {
-            printReg(ss, _srcRegIdx[0]);
+            printReg(ss, srcRegIdx(0));
         }
 
         if (_numSrcRegs > 1) {
             ss << ", ";
-            printReg(ss, _srcRegIdx[1]);
+            printReg(ss, srcRegIdx(1));
         }
 
         return ss.str();
@@ -235,10 +235,10 @@ output decoder {{
 
         ccprintf(ss, "%-10s ", mnemonic);
 
-        if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
-            printReg(ss, _destRegIdx[0]);
-        } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
-            printReg(ss, _srcRegIdx[0]);
+        if (_numDestRegs > 0 && destRegIdx(0).index() < 32) {
+            printReg(ss, destRegIdx(0));
+        } else if (_numSrcRegs > 0 && srcRegIdx(0).index() < 32) {
+            printReg(ss, srcRegIdx(0));
         }
 
         return ss.str();
@@ -252,10 +252,10 @@ output decoder {{
 
         ccprintf(ss, "%-10s ", mnemonic);
 
-        if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
-            printReg(ss, _destRegIdx[0]);
-        } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
-            printReg(ss, _srcRegIdx[0]);
+        if (_numDestRegs > 0 && destRegIdx(0).index() < 32) {
+            printReg(ss, destRegIdx(0));
+        } else if (_numSrcRegs > 0 && srcRegIdx(0).index() < 32) {
+            printReg(ss, srcRegIdx(0));
         }
 
         return ss.str();
@@ -269,10 +269,10 @@ output decoder {{
 
         ccprintf(ss, "%-10s ", mnemonic);
 
-        if (_numDestRegs > 0 && _destRegIdx[0].index() < 32) {
-            printReg(ss, _destRegIdx[0]);
-        } else if (_numSrcRegs > 0 && _srcRegIdx[0].index() < 32) {
-            printReg(ss, _srcRegIdx[0]);
+        if (_numDestRegs > 0 && destRegIdx(0).index() < 32) {
+            printReg(ss, destRegIdx(0));
+        } else if (_numSrcRegs > 0 && srcRegIdx(0).index() < 32) {
+            printReg(ss, srcRegIdx(0));
         }
 
         return ss.str();
@@ -287,13 +287,13 @@ output decoder {{
         ccprintf(ss, "%-10s ", mnemonic);
 
         if (_numDestRegs > 0) {
-            printReg(ss, _destRegIdx[0]);
+            printReg(ss, destRegIdx(0));
         }
 
         ss << ", ";
 
         if (_numSrcRegs > 0) {
-            printReg(ss, _srcRegIdx[0]);
+            printReg(ss, srcRegIdx(0));
             ss << ", ";
         }
 

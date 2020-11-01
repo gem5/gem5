@@ -875,11 +875,11 @@ def template AmoPairOpConstructor {{
         uint32_t r2 = RegId(IntRegClass, result).index() + 1 ;
 
         d2_src = _numSrcRegs ;
-        _srcRegIdx[_numSrcRegs++] = RegId(IntRegClass, d2);
+        setSrcRegIdx(_numSrcRegs++, RegId(IntRegClass, d2));
         r2_src = _numSrcRegs ;
-        _srcRegIdx[_numSrcRegs++] = RegId(IntRegClass, r2);
+        setSrcRegIdx(_numSrcRegs++, RegId(IntRegClass, r2));
         r2_dst = _numDestRegs ;
-        _destRegIdx[_numDestRegs++] = RegId(IntRegClass, r2);
+        setDestRegIdx(_numDestRegs++, RegId(IntRegClass, r2));
         flags[IsStore] = false;
         flags[IsLoad] = false;
     }

@@ -46,7 +46,7 @@ Branch::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     std::stringstream response;
 
     printMnemonic(response, mnemonic);
-    printRegArray(response, _srcRegIdx, _numSrcRegs);
+    printRegArray(response, &srcRegIdx(0), _numSrcRegs);
     if (_numDestRegs && _numSrcRegs)
             response << ", ";
     printDestReg(response, 0);
@@ -61,7 +61,7 @@ BranchImm13::generateDisassembly(
     std::stringstream response;
 
     printMnemonic(response, mnemonic);
-    printRegArray(response, _srcRegIdx, _numSrcRegs);
+    printRegArray(response, &srcRegIdx(0), _numSrcRegs);
     if (_numSrcRegs > 0)
         response << ", ";
     ccprintf(response, "0x%x", imm);

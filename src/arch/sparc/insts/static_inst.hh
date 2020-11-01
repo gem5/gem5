@@ -99,7 +99,7 @@ class SparcStaticInst : public StaticInst
     void printDestReg(std::ostream &os, int reg) const;
 
     void printRegArray(std::ostream &os,
-        const RegId indexArray[], int num) const;
+        const RegId *indexArray, int num) const;
 
     void advancePC(PCState &pcState) const override;
 

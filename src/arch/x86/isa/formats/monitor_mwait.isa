@@ -28,7 +28,7 @@ output decoder {{
 
         printMnemonic(response, mnemonic);
         ccprintf(response, " ");
-        printReg(response, _srcRegIdx[0], machInst.opSize);
+        printReg(response, srcRegIdx(0), machInst.opSize);
         return response.str();
     }
 }};
@@ -105,7 +105,7 @@ output decoder {{
     {
         std::stringstream response;
 
-        // Although mwait could take hints from eax and ecx, the _srcRegIdx
+        // Although mwait could take hints from eax and ecx, the srcRegIdx
         // is not set, and thus should not be printed here
         printMnemonic(response, mnemonic);
         return response.str();

@@ -93,6 +93,12 @@ class StaticInst : public RefCounted, public StaticInstFlags
         MaxInstDestRegs = TheISA::MaxInstDestRegs       //< Max dest regs
     };
 
+  private:
+    /// See destRegIdx().
+    RegId _destRegIdx[MaxInstDestRegs];
+    /// See srcRegIdx().
+    RegId _srcRegIdx[MaxInstSrcRegs];
+
   protected:
 
     /// Flag values for this instruction.
@@ -232,9 +238,13 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// Only the entries from 0 through numDestRegs()-1 are valid.
     const RegId& destRegIdx(int i) const { return _destRegIdx[i]; }
 
+    void setDestRegIdx(int i, const RegId &val) { _destRegIdx[i] = val; }
+
     /// Return logical index (architectural reg num) of i'th source reg.
     /// Only the entries from 0 through numSrcRegs()-1 are valid.
     const RegId& srcRegIdx(int i)  const { return _srcRegIdx[i]; }
+
+    void setSrcRegIdx(int i, const RegId &val) { _srcRegIdx[i] = val; }
 
     /// Pointer to a statically allocated "null" instruction object.
     static StaticInstPtr nullStaticInstPtr;
@@ -246,11 +256,6 @@ class StaticInst : public RefCounted, public StaticInstFlags
     const ExtMachInst machInst;
 
   protected:
-
-    /// See destRegIdx().
-    RegId _destRegIdx[MaxInstDestRegs];
-    /// See srcRegIdx().
-    RegId _srcRegIdx[MaxInstSrcRegs];
 
     /**
      * Base mnemonic (e.g., "add").  Used by generateDisassembly()

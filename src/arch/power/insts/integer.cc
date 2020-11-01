@@ -43,7 +43,7 @@ IntOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     string myMnemonic(mnemonic);
 
     // Special cases
-    if (!myMnemonic.compare("or") && _srcRegIdx[0] == _srcRegIdx[1]) {
+    if (!myMnemonic.compare("or") && srcRegIdx(0) == srcRegIdx(1)) {
         myMnemonic = "mr";
         printSecondSrc = false;
     } else if (!myMnemonic.compare("mtlr") || !myMnemonic.compare("cmpi")) {
@@ -59,7 +59,7 @@ IntOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 
     // Print the first destination only
     if (_numDestRegs > 0 && printDest) {
-        printReg(ss, _destRegIdx[0]);
+        printReg(ss, destRegIdx(0));
     }
 
     // Print the (possibly) two source registers
@@ -67,10 +67,10 @@ IntOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         if (_numDestRegs > 0 && printDest) {
             ss << ", ";
         }
-        printReg(ss, _srcRegIdx[0]);
+        printReg(ss, srcRegIdx(0));
         if (_numSrcRegs > 1 && printSecondSrc) {
           ss << ", ";
-          printReg(ss, _srcRegIdx[1]);
+          printReg(ss, srcRegIdx(1));
         }
     }
 
@@ -96,7 +96,7 @@ IntImmOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 
     // Print the first destination only
     if (_numDestRegs > 0) {
-        printReg(ss, _destRegIdx[0]);
+        printReg(ss, destRegIdx(0));
     }
 
     // Print the source register
@@ -104,7 +104,7 @@ IntImmOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
         if (_numDestRegs > 0) {
             ss << ", ";
         }
-        printReg(ss, _srcRegIdx[0]);
+        printReg(ss, srcRegIdx(0));
     }
 
     // Print the immediate value last
@@ -124,7 +124,7 @@ IntShiftOp::generateDisassembly(
 
     // Print the first destination only
     if (_numDestRegs > 0) {
-        printReg(ss, _destRegIdx[0]);
+        printReg(ss, destRegIdx(0));
     }
 
     // Print the first source register
@@ -132,7 +132,7 @@ IntShiftOp::generateDisassembly(
         if (_numDestRegs > 0) {
             ss << ", ";
         }
-        printReg(ss, _srcRegIdx[0]);
+        printReg(ss, srcRegIdx(0));
     }
 
     // Print the shift
@@ -152,7 +152,7 @@ IntRotateOp::generateDisassembly(
 
     // Print the first destination only
     if (_numDestRegs > 0) {
-        printReg(ss, _destRegIdx[0]);
+        printReg(ss, destRegIdx(0));
     }
 
     // Print the first source register
@@ -160,7 +160,7 @@ IntRotateOp::generateDisassembly(
         if (_numDestRegs > 0) {
             ss << ", ";
         }
-        printReg(ss, _srcRegIdx[0]);
+        printReg(ss, srcRegIdx(0));
     }
 
     // Print the shift, mask begin and mask end
