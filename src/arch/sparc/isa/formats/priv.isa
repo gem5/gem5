@@ -33,6 +33,7 @@ def template ControlRegConstructor {{
 %(class_name)s::%(class_name)s(ExtMachInst machInst) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, "%(reg_name)s")
 {
+    %(set_reg_idx_arr)s;
     %(constructor)s;
 }
 }};

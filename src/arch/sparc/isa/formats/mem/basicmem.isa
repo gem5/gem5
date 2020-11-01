@@ -37,6 +37,9 @@ def template MemDeclare {{
          */
         class %(class_name)s : public %(base_class)s
         {
+          private:
+            %(reg_idx_arr_decl)s;
+
           public:
 
             /// Constructor.

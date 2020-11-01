@@ -30,120 +30,43 @@
 //
 
 def template BlockMemDeclare {{
-        /**
-         * Static instruction class for a block memory operation
-         */
-        class %(class_name)s : public %(base_class)s
-        {
-          public:
-            // Constructor
-            %(class_name)s(ExtMachInst machInst);
+    /**
+     * Static instruction class for a block memory operation
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst);
 
-          protected:
-            class %(class_name)s_0 : public %(base_class)sMicro
-            {
-              public:
-                // Constructor
-                %(class_name)s_0(ExtMachInst machInst);
-                Fault execute(ExecContext *,
-                              Trace::InstRecord *) const override;
-                Fault initiateAcc(ExecContext *,
-                                  Trace::InstRecord *) const override;
-                Fault completeAcc(PacketPtr, ExecContext *,
-                                  Trace::InstRecord *) const override;
-            };
+      protected:
+        class %(class_name)s_0;
+        class %(class_name)s_1;
+        class %(class_name)s_2;
+        class %(class_name)s_3;
+        class %(class_name)s_4;
+        class %(class_name)s_5;
+        class %(class_name)s_6;
+        class %(class_name)s_7;
+    };
+}};
 
-            class %(class_name)s_1 : public %(base_class)sMicro
-            {
-              public:
-                // Constructor
-                %(class_name)s_1(ExtMachInst machInst);
-                Fault execute(ExecContext *,
-                              Trace::InstRecord *) const override;
-                Fault initiateAcc(ExecContext *,
-                                  Trace::InstRecord *) const override;
-                Fault completeAcc(PacketPtr, ExecContext *,
-                                  Trace::InstRecord *) const override;
-            };
+def template BlockMemMicroDeclare {{
+    class %(class_name)s::%(class_name)s_%(micro_pc)s :
+        public %(base_class)sMicro
+    {
+      private:
+        %(reg_idx_arr_decl)s;
 
-            class %(class_name)s_2 : public %(base_class)sMicro
-            {
-              public:
-                // Constructor
-                %(class_name)s_2(ExtMachInst machInst);
-                Fault execute(ExecContext *,
-                              Trace::InstRecord *) const override;
-                Fault initiateAcc(ExecContext *,
-                                  Trace::InstRecord *) const override;
-                Fault completeAcc(PacketPtr, ExecContext *,
-                                  Trace::InstRecord *) const override;
-            };
+      public:
+        // Constructor
+        %(class_name)s_%(micro_pc)s(ExtMachInst machInst);
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
+    };
 
-            class %(class_name)s_3 : public %(base_class)sMicro
-            {
-              public:
-                // Constructor
-                %(class_name)s_3(ExtMachInst machInst);
-                Fault execute(ExecContext *,
-                              Trace::InstRecord *) const override;
-                Fault initiateAcc(ExecContext *,
-                                  Trace::InstRecord *) const override;
-                Fault completeAcc(PacketPtr, ExecContext *,
-                                  Trace::InstRecord *) const override;
-            };
-
-            class %(class_name)s_4 : public %(base_class)sMicro
-            {
-              public:
-                // Constructor
-                %(class_name)s_4(ExtMachInst machInst);
-                Fault execute(ExecContext *,
-                              Trace::InstRecord *) const override;
-                Fault initiateAcc(ExecContext *,
-                                  Trace::InstRecord *) const override;
-                Fault completeAcc(PacketPtr, ExecContext *,
-                                  Trace::InstRecord *) const override;
-            };
-
-            class %(class_name)s_5 : public %(base_class)sMicro
-            {
-              public:
-                // Constructor
-                %(class_name)s_5(ExtMachInst machInst);
-                Fault execute(ExecContext *,
-                              Trace::InstRecord *) const override;
-                Fault initiateAcc(ExecContext *,
-                                  Trace::InstRecord *) const override;
-                Fault completeAcc(PacketPtr, ExecContext *,
-                                  Trace::InstRecord *) const override;
-            };
-
-            class %(class_name)s_6 : public %(base_class)sMicro
-            {
-              public:
-                // Constructor
-                %(class_name)s_6(ExtMachInst machInst);
-                Fault execute(ExecContext *,
-                              Trace::InstRecord *) const override;
-                Fault initiateAcc(ExecContext *,
-                                  Trace::InstRecord *) const override;
-                Fault completeAcc(PacketPtr, ExecContext *,
-                                  Trace::InstRecord *) const override;
-            };
-
-            class %(class_name)s_7 : public %(base_class)sMicro
-            {
-              public:
-                // Constructor
-                %(class_name)s_7(ExtMachInst machInst);
-                Fault execute(ExecContext *,
-                              Trace::InstRecord *) const override;
-                Fault initiateAcc(ExecContext *,
-                                  Trace::InstRecord *) const override;
-                Fault completeAcc(PacketPtr, ExecContext *,
-                                  Trace::InstRecord *) const override;
-            };
-        };
 }};
 
 // Basic instruction class constructor template.
@@ -170,6 +93,7 @@ def template BlockMemMicroConstructor {{
                 %(base_class)sMicro("%(mnemonic)s[%(micro_pc)s]",
                         machInst, %(op_class)s, %(micro_pc)s * 8)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         %(set_flags)s;
     }
@@ -184,9 +108,12 @@ let {{
         addrCalcReg = 'EA = Rs1 + Rs2 + offset;'
         addrCalcImm = 'EA = Rs1 + imm + offset;'
         iop = InstObjParams(name, Name, 'BlockMem', code, opt_flags)
-        iop_imm = InstObjParams(name, Name + 'Imm', 'BlockMemImm', code, opt_flags)
-        header_output = BlockMemDeclare.subst(iop) + BlockMemDeclare.subst(iop_imm)
-        decoder_output = BlockMemConstructor.subst(iop) + BlockMemConstructor.subst(iop_imm)
+        iop_imm = InstObjParams(name, Name + 'Imm', 'BlockMemImm',
+                                code, opt_flags)
+        header_output = BlockMemDeclare.subst(iop) + \
+                        BlockMemDeclare.subst(iop_imm)
+        decoder_output = BlockMemConstructor.subst(iop) + \
+                         BlockMemConstructor.subst(iop_imm)
         decode_block = ROrImmDecode.subst(iop)
         matcher = re.compile(r'Frd_N')
         exec_output = ''
@@ -195,7 +122,8 @@ let {{
             if (microPc == 7):
                 flag_code = "flags[IsLastMicroop] = true;"
             elif (microPc == 0):
-                flag_code = "flags[IsDelayedCommit] = true; flags[IsFirstMicroop] = true;"
+                flag_code = "flags[IsDelayedCommit] = true; " \
+                            "flags[IsFirstMicroop] = true;"
             else:
                 flag_code = "flags[IsDelayedCommit] = true;"
             pcedCode = matcher.sub("Frd_%d" % microPc, code)
@@ -209,6 +137,8 @@ let {{
                     "fault_check": faultCode, "micro_pc": microPc,
                     "set_flags": flag_code, "EA_trunc" : TruncateEA},
                     opt_flags)
+            header_output += BlockMemMicroDeclare.subst(iop)
+            header_output += BlockMemMicroDeclare.subst(iop_imm)
             decoder_output += BlockMemMicroConstructor.subst(iop)
             decoder_output += BlockMemMicroConstructor.subst(iop_imm)
             exec_output += doDualSplitExecute(

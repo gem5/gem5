@@ -34,6 +34,9 @@ def template NopDeclare {{
  */
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     %(class_name)s(ExtMachInst machInst);
 };
