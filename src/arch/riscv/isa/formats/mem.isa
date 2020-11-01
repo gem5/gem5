@@ -37,6 +37,9 @@ def template LoadStoreDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst);
@@ -53,6 +56,7 @@ def template LoadStoreConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst):
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         %(offset_code)s;
     }

@@ -38,23 +38,31 @@ def template AtomicMemOpDeclare {{
         // Constructor
         %(class_name)s(ExtMachInst machInst);
 
-    protected:
-
+      protected:
         /*
          * The main RMW part of an AMO
          */
-        class %(class_name)sRMW : public %(base_class)sMicro
-        {
-          public:
-            // Constructor
-            %(class_name)sRMW(ExtMachInst machInst, %(class_name)s *_p);
+        class %(class_name)sRMW;
+    };
+}};
 
-            Fault execute(ExecContext *, Trace::InstRecord *) const override;
-            Fault initiateAcc(ExecContext *,
-                              Trace::InstRecord *) const override;
-            Fault completeAcc(PacketPtr, ExecContext *,
-                              Trace::InstRecord *) const override;
-        };
+def template AtomicMemOpRMWDeclare {{
+    /*
+     * The main RMW part of an AMO
+     */
+    class %(class_name)s::%(class_name)sRMW : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        // Constructor
+        %(class_name)sRMW(ExtMachInst machInst, %(class_name)s *_p);
+
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
     };
 }};
 
@@ -68,20 +76,25 @@ def template LRSCDeclare {{
         // Constructor
         %(class_name)s(ExtMachInst machInst);
 
-    protected:
+      protected:
+        class %(class_name)sMicro;
+    };
+}};
 
-        class %(class_name)sMicro : public %(base_class)sMicro
-        {
-          public:
-            // Constructor
-            %(class_name)sMicro(ExtMachInst machInst, %(class_name)s *_p);
+def template LRSCMicroDeclare {{
+    class %(class_name)s::%(class_name)sMicro : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
 
-            Fault execute(ExecContext *, Trace::InstRecord *) const override;
-            Fault initiateAcc(ExecContext *,
-                              Trace::InstRecord *) const override;
-            Fault completeAcc(PacketPtr, ExecContext *,
-                              Trace::InstRecord *) const override;
-        };
+      public:
+        // Constructor
+        %(class_name)sMicro(ExtMachInst machInst, %(class_name)s *_p);
+
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
     };
 }};
 
@@ -141,8 +154,9 @@ def template LRSCMacroConstructor {{
 def template LRSCMicroConstructor {{
     %(class_name)s::%(class_name)sMicro::%(class_name)sMicro(
         ExtMachInst machInst, %(class_name)s *_p)
-            : %(base_class)sMicro("%(mnemonic)s", machInst, %(op_class)s)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -204,6 +218,7 @@ def template AtomicMemOpRMWConstructor {{
         ExtMachInst machInst, %(class_name)s *_p)
             : %(base_class)s("%(mnemonic)s[l]", machInst, %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
 
         // overwrite default flags
@@ -472,12 +487,13 @@ def format LoadReserved(memacc_code, postacc_code={{ }}, ea_code={{EA = Rs1;}},
 
     mem_flags = makeList(mem_flags)
     inst_flags = makeList(inst_flags)
-    iop = InstObjParams(name, Name, 'LoadReserved',
+    iop = InstObjParams(name, Name, 'LoadReservedMicro',
         {'ea_code': ea_code, 'memacc_code': memacc_code,
         'postacc_code': postacc_code}, inst_flags)
     iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
         '|'.join(['Request::%s' % flag for flag in mem_flags]) + ';'
 
+    header_output += LRSCMicroDeclare.subst(iop)
     decoder_output += LRSCMicroConstructor.subst(iop)
     decode_block += BasicDecode.subst(iop)
     exec_output += LoadReservedExecute.subst(iop) \
@@ -499,12 +515,13 @@ def format StoreCond(memacc_code, postacc_code={{ }}, ea_code={{EA = Rs1;}},
 
     mem_flags = makeList(mem_flags)
     inst_flags = makeList(inst_flags)
-    iop = InstObjParams(name, Name, 'StoreCond',
+    iop = InstObjParams(name, Name, 'StoreCondMicro',
         {'ea_code': ea_code, 'memacc_code': memacc_code,
         'postacc_code': postacc_code}, inst_flags)
     iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
         '|'.join(['Request::%s' % flag for flag in mem_flags]) + ';'
 
+    header_output += LRSCMicroDeclare.subst(iop)
     decoder_output += LRSCMicroConstructor.subst(iop)
     decode_block += BasicDecode.subst(iop)
     exec_output += StoreCondExecute.subst(iop) \
@@ -536,6 +553,7 @@ def format AtomicMemOp(memacc_code, amoop_code, postacc_code={{ }},
     rmw_iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
           '|'.join(['Request::%s' % flag for flag in rmw_mem_flags]) + ';'
 
+    header_output += AtomicMemOpRMWDeclare.subst(rmw_iop)
     decoder_output += AtomicMemOpRMWConstructor.subst(rmw_iop)
     decode_block += BasicDecode.subst(rmw_iop)
     exec_output += AtomicMemOpRMWExecute.subst(rmw_iop) \
