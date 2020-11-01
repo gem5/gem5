@@ -676,6 +676,31 @@ BaseCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
     }
 }
 
+void
+BaseCache::updateBlockData(CacheBlk *blk, const PacketPtr cpkt,
+    bool has_old_data)
+{
+    DataUpdate data_update(regenerateBlkAddr(blk), blk->isSecure());
+    if (ppDataUpdate->hasListeners()) {
+        if (has_old_data) {
+            data_update.oldData = std::vector<uint64_t>(blk->data,
+                blk->data + (blkSize / sizeof(uint64_t)));
+        }
+    }
+
+    // Actually perform the data update
+    if (cpkt) {
+        cpkt->writeDataToBlock(blk->data, blkSize);
+    }
+
+    if (ppDataUpdate->hasListeners()) {
+        if (cpkt) {
+            data_update.newData = std::vector<uint64_t>(blk->data,
+                blk->data + (blkSize / sizeof(uint64_t)));
+        }
+        ppDataUpdate->notify(data_update);
+    }
+}
 
 void
 BaseCache::cmpAndSwap(CacheBlk *blk, PacketPtr pkt)
@@ -691,6 +716,13 @@ BaseCache::cmpAndSwap(CacheBlk *blk, PacketPtr pkt)
     uint8_t *blk_data = blk->data + offset;
 
     assert(sizeof(uint64_t) >= pkt->getSize());
+
+    // Get a copy of the old block's contents for the probe before the update
+    DataUpdate data_update(regenerateBlkAddr(blk), blk->isSecure());
+    if (ppDataUpdate->hasListeners()) {
+        data_update.oldData = std::vector<uint64_t>(blk->data,
+            blk->data + (blkSize / sizeof(uint64_t)));
+    }
 
     overwrite_mem = true;
     // keep a copy of our possible write value, and copy what is at the
@@ -714,6 +746,12 @@ BaseCache::cmpAndSwap(CacheBlk *blk, PacketPtr pkt)
     if (overwrite_mem) {
         std::memcpy(blk_data, &overwrite_val, pkt->getSize());
         blk->setCoherenceBits(CacheBlk::DirtyBit);
+
+        if (ppDataUpdate->hasListeners()) {
+            data_update.newData = std::vector<uint64_t>(blk->data,
+                blk->data + (blkSize / sizeof(uint64_t)));
+            ppDataUpdate->notify(data_update);
+        }
     }
 }
 
@@ -961,6 +999,14 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
     // isWrite() will be true for them
     if (pkt->cmd == MemCmd::SwapReq) {
         if (pkt->isAtomicOp()) {
+            // Get a copy of the old block's contents for the probe before
+            // the update
+            DataUpdate data_update(regenerateBlkAddr(blk), blk->isSecure());
+            if (ppDataUpdate->hasListeners()) {
+                data_update.oldData = std::vector<uint64_t>(blk->data,
+                    blk->data + (blkSize / sizeof(uint64_t)));
+            }
+
             // extract data from cache and save it into the data field in
             // the packet as a return value from this atomic op
             int offset = tags->extractBlkOffset(pkt->getAddr());
@@ -969,6 +1015,13 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
 
             // execute AMO operation
             (*(pkt->getAtomicOp()))(blk_data);
+
+            // Inform of this block's data contents update
+            if (ppDataUpdate->hasListeners()) {
+                data_update.newData = std::vector<uint64_t>(blk->data,
+                    blk->data + (blkSize / sizeof(uint64_t)));
+                ppDataUpdate->notify(data_update);
+            }
 
             // set block status to dirty
             blk->setCoherenceBits(CacheBlk::DirtyBit);
@@ -983,7 +1036,7 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
         assert(blk->isSet(CacheBlk::WritableBit));
         // Write or WriteLine at the first cache with block in writable state
         if (blk->checkWrite(pkt)) {
-            pkt->writeDataToBlock(blk->data, blkSize);
+            updateBlockData(blk, pkt, true);
         }
         // Always mark the line as dirty (and thus transition to the
         // Modified state) even if we are a failed StoreCond so we
@@ -1170,6 +1223,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             return true;
         }
 
+        const bool has_old_data = blk && blk->isValid();
         if (!blk) {
             // need to do a replacement
             blk = allocateBlock(pkt, writebacks);
@@ -1206,7 +1260,8 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
-        pkt->writeDataToBlock(blk->data, blkSize);
+
+        updateBlockData(blk, pkt, has_old_data);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
 
@@ -1240,6 +1295,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // of the block as well.
         assert(blkSize == pkt->getSize());
 
+        const bool has_old_data = blk && blk->isValid();
         if (!blk) {
             if (pkt->writeThrough()) {
                 // if this is a write through packet, we don't try to
@@ -1279,7 +1335,8 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
-        pkt->writeDataToBlock(blk->data, blkSize);
+
+        updateBlockData(blk, pkt, has_old_data);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
 
         incHitCount(pkt);
@@ -1352,6 +1409,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
     assert(pkt->isResponse());
     Addr addr = pkt->getAddr();
     bool is_secure = pkt->isSecure();
+    const bool has_old_data = blk && blk->isValid();
 #if TRACING_ON
     const std::string old_state = blk ? blk->print() : "";
 #endif
@@ -1433,7 +1491,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         assert(pkt->hasData());
         assert(pkt->getSize() == blkSize);
 
-        pkt->writeDataToBlock(blk->data, blkSize);
+        updateBlockData(blk, pkt, has_old_data);
     }
     // The block will be ready when the payload arrives and the fill is done
     blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
@@ -1506,6 +1564,9 @@ BaseCache::invalidateBlock(CacheBlk *blk)
     if (blk->wasPrefetched()) {
         stats.unusedPrefetches++;
     }
+
+    // Notify that the data contents for this address are no longer present
+    updateBlockData(blk, nullptr, blk->isValid());
 
     // If handling a block present in the Tags, let it do its invalidation
     // process, which will update stats and invalidate the block itself
@@ -2325,6 +2386,8 @@ BaseCache::regProbePoints()
     ppHit = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Hit");
     ppMiss = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Miss");
     ppFill = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Fill");
+    ppDataUpdate =
+        new ProbePointArg<DataUpdate>(this->getProbeManager(), "Data Update");
 }
 
 ///////////////
