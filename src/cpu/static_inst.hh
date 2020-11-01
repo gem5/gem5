@@ -93,11 +93,16 @@ class StaticInst : public RefCounted, public StaticInstFlags
         MaxInstDestRegs = TheISA::MaxInstDestRegs       //< Max dest regs
     };
 
+    using RegIdArrayPtr = RegId (StaticInst:: *)[];
+
   private:
-    /// See destRegIdx().
-    RegId _destRegIdx[MaxInstDestRegs];
     /// See srcRegIdx().
     RegId _srcRegIdx[MaxInstSrcRegs];
+    RegIdArrayPtr _srcRegIdxPtr = nullptr;
+
+    /// See destRegIdx().
+    RegId _destRegIdx[MaxInstDestRegs];
+    RegIdArrayPtr _destRegIdxPtr = nullptr;
 
   protected:
 
@@ -236,15 +241,23 @@ class StaticInst : public RefCounted, public StaticInstFlags
 
     /// Return logical index (architectural reg num) of i'th destination reg.
     /// Only the entries from 0 through numDestRegs()-1 are valid.
-    const RegId& destRegIdx(int i) const { return _destRegIdx[i]; }
+    const RegId &destRegIdx(int i) const { return (this->*_destRegIdxPtr)[i]; }
 
-    void setDestRegIdx(int i, const RegId &val) { _destRegIdx[i] = val; }
+    void
+    setDestRegIdx(int i, const RegId &val)
+    {
+        (this->*_destRegIdxPtr)[i] = val;
+    }
 
     /// Return logical index (architectural reg num) of i'th source reg.
     /// Only the entries from 0 through numSrcRegs()-1 are valid.
-    const RegId& srcRegIdx(int i)  const { return _srcRegIdx[i]; }
+    const RegId &srcRegIdx(int i) const { return (this->*_srcRegIdxPtr)[i]; }
 
-    void setSrcRegIdx(int i, const RegId &val) { _srcRegIdx[i] = val; }
+    void
+    setSrcRegIdx(int i, const RegId &val)
+    {
+        (this->*_srcRegIdxPtr)[i] = val;
+    }
 
     /// Pointer to a statically allocated "null" instruction object.
     static StaticInstPtr nullStaticInstPtr;
@@ -283,10 +296,15 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// the fields that are meaningful for the particular
     /// instruction.
     StaticInst(const char *_mnemonic, ExtMachInst _machInst, OpClass __opClass)
-        : _opClass(__opClass), _numSrcRegs(0), _numDestRegs(0),
-          _numFPDestRegs(0), _numIntDestRegs(0), _numCCDestRegs(0),
-          _numVecDestRegs(0), _numVecElemDestRegs(0), _numVecPredDestRegs(0),
-          machInst(_machInst), mnemonic(_mnemonic), cachedDisassembly(0)
+        : _srcRegIdxPtr(
+                reinterpret_cast<RegIdArrayPtr>(&StaticInst::_srcRegIdx)),
+          _destRegIdxPtr(
+                reinterpret_cast<RegIdArrayPtr>(&StaticInst::_destRegIdx)),
+          _opClass(__opClass),
+          _numSrcRegs(0), _numDestRegs(0), _numFPDestRegs(0),
+          _numIntDestRegs(0), _numCCDestRegs(0), _numVecDestRegs(0),
+          _numVecElemDestRegs(0), _numVecPredDestRegs(0), machInst(_machInst),
+          mnemonic(_mnemonic), cachedDisassembly(0)
     { }
 
   public:
