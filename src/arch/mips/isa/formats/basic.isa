@@ -35,19 +35,23 @@ def template BasicDeclare {{
          */
         class %(class_name)s : public %(base_class)s
         {
+          private:
+            %(reg_idx_arr_decl)s;
           public:
-                /// Constructor.
-                %(class_name)s(MachInst machInst);
-                Fault execute(ExecContext *,
-                              Trace::InstRecord *) const override;
+            /// Constructor.
+            %(class_name)s(MachInst machInst);
+            Fault execute(ExecContext *,
+                          Trace::InstRecord *) const override;
         };
 }};
 
 // Basic instruction class constructor template.
 def template BasicConstructor {{
-        %(class_name)s::%(class_name)s(MachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+        %(class_name)s::%(class_name)s(MachInst machInst) :
+            %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
         {
-                %(constructor)s;
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
         }
 }};
 
