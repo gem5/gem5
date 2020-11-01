@@ -271,6 +271,19 @@ class StaticInst : public RefCounted, public StaticInstFlags
   protected:
 
     /**
+     * Set the pointers which point to the arrays of source and destination
+     * register indices. These will be defined in derived classes which know
+     * what size they need to be, and installed here so they can be accessed
+     * with the base class accessors.
+     */
+    void
+    setRegIdxArrays(RegIdArrayPtr src, RegIdArrayPtr dest)
+    {
+        _srcRegIdxPtr = src;
+        _destRegIdxPtr = dest;
+    }
+
+    /**
      * Base mnemonic (e.g., "add").  Used by generateDisassembly()
      * methods.  Also useful to readily identify instructions from
      * within the debugger when #cachedDisassembly has not been
