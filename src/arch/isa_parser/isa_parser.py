@@ -105,6 +105,21 @@ class Template(object):
 
             operands = SubOperandList(self.parser, compositeCode, d.operands)
 
+            myDict['reg_idx_arr_decl'] = \
+                'RegId srcRegIdxArr[%d]; RegId destRegIdxArr[%d]' % \
+                (d.operands.numSrcRegs, d.operands.numDestRegs)
+
+            # The reinterpret casts are largely because an array with a known
+            # size cannot be passed as an argument which is an array with an
+            # unknown size in C++.
+            myDict['set_reg_idx_arr'] = '''
+    setRegIdxArrays(
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+            '''
+
             myDict['op_decl'] = operands.concatAttrStrings('op_decl')
             if operands.readPC or operands.setPC:
                 myDict['op_decl'] += 'TheISA::PCState __parserAutoPCState;\n'
