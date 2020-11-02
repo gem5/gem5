@@ -47,7 +47,10 @@ def format MonitorInst(code, *opt_flags) {{
 def template MwaitDeclare {{
     class %(class_name)s : public %(base_class)s
     {
-        public:
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
         // Constructor.
         %(class_name)s(ExtMachInst machInst);
         Fault execute(ExecContext *, Trace::InstRecord *) const override;

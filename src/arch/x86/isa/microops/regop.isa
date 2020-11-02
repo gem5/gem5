@@ -103,6 +103,9 @@ def template MicroRegOpImmExecute {{
 def template MicroRegOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
@@ -123,6 +126,9 @@ def template MicroRegOpImmDeclare {{
 
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
@@ -148,6 +154,7 @@ def template MicroRegOpConstructor {{
                 _src1, _src2, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         %(cond_control_flag_init)s;
     }
@@ -173,6 +180,7 @@ def template MicroRegOpImmConstructor {{
                 _src1, _imm8, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         %(cond_control_flag_init)s;
     }

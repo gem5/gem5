@@ -54,6 +54,9 @@ def template MicroLimmOpExecute {{
 def template MicroLimmOpDeclare {{
     class %(class_name)s : public X86ISA::X86MicroopBase
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       protected:
         const RegIndex dest;
         const uint64_t imm;
@@ -96,6 +99,7 @@ def template MicroLimmOpConstructor {{
                 setFlags, %(op_class)s),
                 dest(_dest.index()), imm(_imm), dataSize(_dataSize)
     {
+        %(set_reg_idx_arr)s;
         foldOBit = (dataSize == 1 && !machInst.rex.present) ? 1 << 6 : 0;
         %(constructor)s;
     }

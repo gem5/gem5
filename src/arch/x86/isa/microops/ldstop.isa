@@ -70,6 +70,9 @@ def template MicroLeaExecute {{
 def template MicroLeaDeclare {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
@@ -220,6 +223,9 @@ def template MicroStoreCompleteAcc {{
 def template MicroLdStOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
@@ -241,6 +247,9 @@ def template MicroLdStOpDeclare {{
 def template MicroLdStSplitOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
@@ -270,6 +279,7 @@ def template MicroLdStOpConstructor {{
                 _disp, _segment, _data,
                 _dataSize, _addressSize, _memFlags, %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -287,6 +297,7 @@ def template MicroLdStSplitOpConstructor {{
                 _disp, _segment, _dataLow, _dataHi,
                 _dataSize, _addressSize, _memFlags, %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};

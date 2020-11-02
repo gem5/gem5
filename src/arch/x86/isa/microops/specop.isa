@@ -77,6 +77,9 @@ output header {{
 def template MicroFaultDeclare {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
                 uint64_t setFlags, Fault _fault, uint8_t _cc);
@@ -125,6 +128,7 @@ def template MicroFaultConstructor {{
             Fault _fault, uint8_t _cc) :
         %(base_class)s(machInst, instMnem, setFlags, _fault, _cc)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -209,6 +213,9 @@ let {{
 def template MicroFenceOpDeclare {{
     class %(class_name)s : public X86ISA::X86MicroopBase
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
@@ -224,6 +231,7 @@ def template MicroFenceOpConstructor {{
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 setFlags, %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};

@@ -57,6 +57,9 @@ output header {{
 def template SeqOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
                 uint64_t setFlags, uint16_t _target, uint8_t _cc);
@@ -104,6 +107,7 @@ def template SeqOpConstructor {{
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 setFlags, _target, _cc)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         %(cond_control_flag_init)s;
     }

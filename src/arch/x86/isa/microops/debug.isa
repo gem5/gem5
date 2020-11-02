@@ -68,19 +68,6 @@ output header {{
             return response.str();
         }
     };
-
-    class MicroDebugFlags : public MicroDebug
-    {
-      protected:
-        uint8_t cc;
-
-      public:
-        MicroDebugFlags(ExtMachInst _machInst, const char *mnem,
-                const char *instMnem, uint64_t setFlags,
-                GenericISA::M5DebugFault *_fault, uint8_t _cc);
-
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-    };
 }};
 
 output decoder {{
@@ -91,6 +78,24 @@ output decoder {{
                                setFlags, No_OpClass),
         fault(_fault)
     {}
+}};
+
+def template MicroDebugFlagsDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      protected:
+        uint8_t cc;
+
+      public:
+        %(class_name)s(ExtMachInst _machInst, const char *mnem,
+                       const char *instMnem, uint64_t setFlags,
+                       GenericISA::M5DebugFault *_fault, uint8_t _cc);
+
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    };
 }};
 
 def template MicroDebugFlagsExecute {{
@@ -116,6 +121,7 @@ def template MicroDebugFlagsConstructor {{
         %(base_class)s(machInst, mnem, instMnem, setFlags, _fault),
         cc(_cc)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -125,6 +131,8 @@ let {{
             {"code": "",
              "cond_test": "checkCondition(ccFlagBits | cfofBits | \
                                               dfBit | ecfBit | ezfBit, cc)"})
+
+    header_output = MicroDebugFlagsDeclare.subst(iop)
     exec_output = MicroDebugFlagsExecute.subst(iop)
     decoder_output = MicroDebugFlagsConstructor.subst(iop)
 }};

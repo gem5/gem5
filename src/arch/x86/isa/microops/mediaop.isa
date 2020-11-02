@@ -49,6 +49,9 @@ def template MediaOpExecute {{
 def template MediaOpRegDeclare {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
@@ -63,6 +66,9 @@ def template MediaOpImmDeclare {{
 
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
@@ -82,6 +88,7 @@ def template MediaOpRegConstructor {{
                 _src1, _src2, _dest, _srcSize, _destSize, _ext,
                 %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -95,6 +102,7 @@ def template MediaOpImmConstructor {{
                 _src1, _imm8, _dest, _srcSize, _destSize, _ext,
                 %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
