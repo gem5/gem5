@@ -338,8 +338,18 @@ ROB<Impl>::doSquash(ThreadID tid)
 
     bool robTailUpdate = false;
 
+    unsigned int numInstsToSquash = squashWidth;
+
+    // If the CPU is exiting, squash all of the instructions
+    // it is told to, even if that exceeds the squashWidth.
+    // Set the number to the number of entries (the max).
+    if (cpu->isThreadExiting(tid))
+    {
+        numInstsToSquash = numEntries;
+    }
+
     for (int numSquashed = 0;
-         numSquashed < squashWidth &&
+         numSquashed < numInstsToSquash &&
          squashIt[tid] != instList[tid].end() &&
          (*squashIt[tid])->seqNum > squashedSeqNum[tid];
          ++numSquashed)
