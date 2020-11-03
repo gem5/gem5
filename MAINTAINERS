@@ -6,15 +6,18 @@ the patch before it can be pushed. These people will automatically be emailed
 when you upload the patch to Gerrit (https://gem5-review.googlesource.com).
 These keywords mostly follow the directory structure.
 
-Individuals on the project management committee are maintainers for all of the
-gem5 components (i.e., they can review any patch as the maintainer). These
-individuals are required to review any patches to components without explicit
-maintainers.
+Maintainers have the following responsibilities:
+1. That at least one maintainer of each subsystem reviews all changes to that
+   subsystem (they will be automatically tagged and emailed on each new
+   change).
+2. They will complete your reviews in a timely manner (within a few business
+   days).
+3. They pledge to uphold gem5's community standards and its code of conduct by
+   being polite and professional in their code reviews. See CODE-OF-CONDUCT.md.
 
 PMC Members (general maintainers):
-  Ali Saidi <asaidi@gmail.com>
   Andreas Sandberg <andreas.sandberg@arm.com>
-  Brad Beckmann <brad.beckmann@amd.com>
+  Brad Beckmann <bradford.beckmann@gmail.com>
   David Wood <david@cs.wisc.edu>
   Gabe Black <gabe.black@gmail.com>
   Giacomo Travaglini <giacomo.travaglini@arm.com>
@@ -29,65 +32,90 @@ arch-arm:
   Andreas Sandberg <andreas.sandberg@arm.com>
   Giacomo Travaglini <giacomo.travaglini@arm.com>
 arch-gcn3:
-  Tony Gutierrez <anthony.gutierrez@amd.com>
+  UNSUPPORTED
 arch-mips:
+  UNSUPPORTED
 arch-power:
+  Boris Shingarov <shingarov@labware.com>
 arch-riscv:
-  Alec Roelke <ar4jc@virginia.edu>
+  UNSUPPORTED
 arch-sparc:
   Gabe Black <gabe.black@gmail.com>
 arch-x86:
   Gabe Black <gabe.black@gmail.com>
 
 base:
+  Bobby Bruce <bbruce@ucdavis.edu>
+base-stats:
+  UNSUPPORTED
 
 configs:
   Jason Lowe-Power <jason@lowepower.com>
 
 cpu: General changes to all CPU models (e.g., BaseCPU)
+  Gabe Black <gabe.black@gmail.com>
+  Jason Lowe-Power <jason@lowepower.com>
 cpu-kvm:
   Andreas Sandberg <andreas.sandberg@arm.com>
 cpu-minor:
+  Zhengrong Wang <seanyukigeek@gmail.com>
 cpu-o3:
+  UNSUPPORTED
 cpu-simple:
+  Jason Lowe-Power <jason@lowepower.com>
+  Gabe Black <gabe.black@gmail.com>
 
 dev:
+  Gabe Black <gabe.black@gmail.com>
 dev-hsa:
-  Tony Gutierrez <anthony.gutierrez@amd.com>
+  UNSUPPORTED
 dev-virtio:
   Andreas Sandberg <andreas.sandberg@arm.com>
-
 dev-arm:
   Andreas Sandberg <andreas.sandberg@arm.com>
   Giacomo Travaglini <giacomo.travaglini@arm.com>
 
+doc:
+  Bobby Bruce <bbruce@ucdavis.edu>
+
 ext: Components external to gem5
+  Bobby Bruce <bbruce@ucdavis.edu>
+  Jason Lowe-Power <jason@lowepower.com>
+ext-testlib:
+  Bobby Bruce <bbruce@ucdavis.edu>
+  Hoa Nguyen <hoanguyen@ucdavis.edu>
 
 fastmodel: Changes relating to ARM Fast Models
   Gabe Black <gabe.black@gmail.com>
 
 gpu-compute:
-  Tony Gutierrez <anthony.gutierrez@amd.com>
   Matt Poremba <matthew.poremba@amd.com>
 
-learning-gem5: The code and configs for the Learning gem5 book (see
-               learning.gem5.com)
+learning-gem5: The code and configs for the Learning gem5 book
   Jason Lowe-Power <jason@lowepower.com>
 
 mem: General memory system (e.g., XBar, Packet)
   Nikos Nikoleris <nikos.nikoleris@arm.com>
 mem-cache: Classic caches and coherence
   Nikos Nikoleris <nikos.nikoleris@arm.com>
+mem-dram:
+  Nikos Nikoleris <nikos.nikoleris@arm.com>
 mem-garnet: Garnet subcomponent of Ruby
-  Tushar Krishna <tushar@ece.gatech.edu>
+  Srikant Bharadwaj <srikant.bharadwaj@amd.com>
 mem-ruby: Ruby structures and protocols
-  Brad Beckmann <brad.beckmann@amd.com>
   Jason Lowe-Power <jason@lowepower.com>
 
 misc: Anything outside of the other categories
+  Bobby Bruce <bbruce@ucdavis.edu>
+  Jason Lowe-Power <jason@lowepower.com>
 
 python: Python SimObject wrapping and infrastructure
   Andreas Sandberg <andreas.sandberg@arm.com>
+  Jason Lowe-Power <jason@lowepower.com>
+
+resources: The gem5-resources repo with auxiliary resources for simulation
+  Bobby Bruce <bbruce@ucdavis.edu>
+  Jason Lowe-Power <jason@lowepower.com>
 
 scons: Build system
   Gabe Black <gabe.black@gmail.com>
@@ -95,13 +123,8 @@ scons: Build system
 sim: General simulation components
   Jason Lowe-Power <jason@lowepower.com>
 sim-se: Syscall emulation
-  Brandon Potter <brandon.potter@amd.com>
-sim-power: Power modeling
-  Andreas Sandberg <andreas.sandberg@arm.com>
+  UNSUPPORTED
 
-stats: Updates to statistics for regressions
-
-system: System boot code and related components
 system-arm:
   Andreas Sandberg <andreas.sandberg@arm.com>
   Giacomo Travaglini <giacomo.travaglini@arm.com>
@@ -109,8 +132,16 @@ system-arm:
 systemc: Code for the gem5 SystemC implementation and interface
   Gabe Black <gabe.black@gmail.com>
 
-tests: testing changes (not stats updates for tests. See stats:)
+tests: testing changes
   Bobby Bruce <bbruce@ucdavis.edu>
 
 util:
   Gabe Black <gabe.black@gmail.com>
+util-docker:
+  Bobby Bruce <bbruce@ucdavis.edu>
+util-m5:
+  Gabe Black <gabe.black@gmail.com>
+
+website: The gem5-website repo which contains the gem5.org site
+  Bobby Bruce <bbruce@ucdavis.edu>
+  Hoa Nguyen <hoanguyen@ucdavis.edu>
