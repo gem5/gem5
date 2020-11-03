@@ -213,6 +213,8 @@ def addOptions(parser):
              "only parameters of its children.")
     parser.add_argument("--vio-9p", action="store_true",
                         help=Options.vio_9p_help)
+    parser.add_argument("--dtb-gen", action="store_true",
+                        help="Doesn't run simulation, it generates a DTB only")
     return parser
 
 def build(options):
@@ -367,6 +369,10 @@ def run(checkpoint_dir=m5.options.outdir):
     sys.exit(event.getCode())
 
 
+def generateDtb(root):
+    root.system.generateDtb(os.path.join(m5.options.outdir, "system.dtb"))
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Generic ARM big.LITTLE configuration")
@@ -375,7 +381,10 @@ def main():
     root = build(options)
     root.apply_config(options.param)
     instantiate(options)
-    run()
+    if options.dtb_gen:
+      generateDtb(root)
+    else:
+      run()
 
 
 if __name__ == "__m5_main__":
