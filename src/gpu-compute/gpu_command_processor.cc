@@ -93,6 +93,10 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
     DPRINTF(GPUCommandProc, "GPU machine code is %lli bytes from start of the "
         "kernel object\n", akc.kernel_code_entry_byte_offset);
 
+    DPRINTF(GPUCommandProc,"GPUCommandProc: Sending dispatch pkt to %lu\n",
+        (uint64_t)tc->cpuId());
+
+
     Addr machine_code_addr = (Addr)disp_pkt->kernel_object
         + akc.kernel_code_entry_byte_offset;
 
@@ -163,6 +167,54 @@ void
 GPUCommandProcessor::submitVendorPkt(void *raw_pkt, uint32_t queue_id,
     Addr host_pkt_addr)
 {
+    hsaPP->finishPkt(raw_pkt, queue_id);
+}
+
+/**
+ * submitAgentDispatchPkt() is for accepting agent dispatch packets.
+ * These packets will control the dispatch of Wg on the device, and inform
+ * the host when a specified number of Wg have been executed on the device.
+ *
+ * For now it simply finishes the pkt.
+ */
+void
+GPUCommandProcessor::submitAgentDispatchPkt(void *raw_pkt, uint32_t queue_id,
+    Addr host_pkt_addr)
+{
+    //Parse the Packet, see what it wants us to do
+    _hsa_agent_dispatch_packet_t * agent_pkt =
+        (_hsa_agent_dispatch_packet_t *)raw_pkt;
+
+    if (agent_pkt->type == AgentCmd::Nop) {
+        DPRINTF(GPUCommandProc, "Agent Dispatch Packet NOP\n");
+    } else if (agent_pkt->type == AgentCmd::Steal) {
+        //This is where we steal the HSA Task's completion signal
+        int kid = agent_pkt->arg[0];
+        DPRINTF(GPUCommandProc,
+            "Agent Dispatch Packet Stealing signal handle for kernel %d\n",
+            kid);
+
+        HSAQueueEntry *task = dispatcher.hsaTask(kid);
+        uint64_t signal_addr = task->completionSignal();// + sizeof(uint64_t);
+
+        uint64_t return_address = agent_pkt->return_address;
+        DPRINTF(GPUCommandProc, "Return Addr: %p\n",return_address);
+        //*return_address = signal_addr;
+        Addr *new_signal_addr = new Addr;
+        *new_signal_addr  = (Addr)signal_addr;
+        dmaWriteVirt(return_address, sizeof(Addr), nullptr, new_signal_addr, 0);
+
+        DPRINTF(GPUCommandProc,
+            "Agent Dispatch Packet Stealing signal handle from kid %d :" \
+            "(%x:%x) writing into %x\n",
+            kid,signal_addr,new_signal_addr,return_address);
+
+    } else
+    {
+        panic("The agent dispatch packet provided an unknown argument in" \
+        "arg[0],currently only 0(nop) or 1(return kernel signal) is accepted");
+    }
+
     hsaPP->finishPkt(raw_pkt, queue_id);
 }
 

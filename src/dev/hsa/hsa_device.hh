@@ -57,6 +57,18 @@ class HSADevice : public DmaDevice
     HSAPacketProcessor& hsaPacketProc();
 
     /**
+     * submitAgentDispatchPkt() accepts AQL dispatch packets from the HSA
+     * packet processor. Not all devices will accept AQL dispatch packets,
+     * so the default implementation will fatal.
+     * Implementation added to steal kernel signals.
+     */
+    virtual void
+    submitAgentDispatchPkt(void *raw_pkt, uint32_t qID, Addr host_pkt_addr)
+    {
+        fatal("%s does not accept dispatch packets\n", name());
+    }
+
+    /**
      * submitDispatchPkt() accepts AQL dispatch packets from the HSA packet
      * processor. Not all devices will accept AQL dispatch packets, so the
      * default implementation will fatal.

@@ -38,6 +38,7 @@
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/linux/linux.hh"
 #include "base/chunk_generator.hh"
+#include "debug/GPUAgentDisp.hh"
 #include "debug/GPUDisp.hh"
 #include "debug/GPUMem.hh"
 #include "debug/GPUShader.hh"
@@ -231,6 +232,7 @@ Shader::dispatchWorkgroups(HSAQueueEntry *task)
     bool scheduledSomething = false;
     int cuCount = 0;
     int curCu = nextSchedCu;
+    int disp_count(0);
 
     while (cuCount < n_cu) {
         //Every time we try a CU, update nextSchedCu
@@ -244,6 +246,8 @@ Shader::dispatchWorkgroups(HSAQueueEntry *task)
         if (!task->dispComplete() && can_disp) {
             scheduledSomething = true;
             DPRINTF(GPUDisp, "Dispatching a workgroup to CU %d: WG %d\n",
+                            curCu, task->globalWgId());
+            DPRINTF(GPUAgentDisp, "Dispatching a workgroup to CU %d: WG %d\n",
                             curCu, task->globalWgId());
             DPRINTF(GPUWgLatency, "WG Begin cycle:%d wg:%d cu:%d\n",
                     curTick(), task->globalWgId(), curCu);
@@ -259,11 +263,14 @@ Shader::dispatchWorkgroups(HSAQueueEntry *task)
             cuList[curCu]->dispWorkgroup(task, num_wfs_in_wg);
 
             task->markWgDispatch();
+            ++disp_count;
         }
 
         ++cuCount;
         curCu = nextSchedCu;
     }
+
+     DPRINTF(GPUWgLatency, "Shader Dispatched %d Wgs\n", disp_count);
 
     return scheduledSomething;
 }

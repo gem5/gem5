@@ -71,6 +71,7 @@ Source('tlb_coalescer.cc')
 Source('vector_register_file.cc')
 Source('wavefront.cc')
 
+DebugFlag('GPUAgentDisp')
 DebugFlag('GPUCoalescer')
 DebugFlag('GPUCommandProc')
 DebugFlag('GPUDriver')

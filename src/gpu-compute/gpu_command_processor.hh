@@ -65,6 +65,13 @@ class GPUCommandProcessor : public HSADevice
     void setShader(Shader *shader);
     Shader* shader();
 
+    enum AgentCmd {
+      Nop = 0,
+      Steal = 1
+    };
+
+    void submitAgentDispatchPkt(void *raw_pkt, uint32_t queue_id,
+                           Addr host_pkt_addr) override;
     void submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
                            Addr host_pkt_addr) override;
     void submitVendorPkt(void *raw_pkt, uint32_t queue_id,

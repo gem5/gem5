@@ -329,6 +329,10 @@ class HSAPacketProcessor: public DmaDevice
     void schedAQLProcessing(uint32_t rl_idx);
     void schedAQLProcessing(uint32_t rl_idx, Tick delay);
 
+    void sendAgentDispatchCompletionSignal(void *pkt,
+                                           hsa_signal_value_t signal);
+    void sendCompletionSignal(hsa_signal_value_t signal);
+
     class DepSignalsReadDmaEvent : public Event
     {
       protected:
