@@ -154,6 +154,18 @@ MemCtrl::recvAtomic(PacketPtr pkt)
     return latency;
 }
 
+Tick
+MemCtrl::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
+{
+    Tick latency = recvAtomic(pkt);
+    if (dram) {
+        dram->getBackdoor(backdoor);
+    } else if (nvm) {
+        nvm->getBackdoor(backdoor);
+    }
+    return latency;
+}
+
 bool
 MemCtrl::readQueueFull(unsigned int neededEntries) const
 {
@@ -1459,6 +1471,13 @@ Tick
 MemCtrl::MemoryPort::recvAtomic(PacketPtr pkt)
 {
     return ctrl.recvAtomic(pkt);
+}
+
+Tick
+MemCtrl::MemoryPort::recvAtomicBackdoor(
+        PacketPtr pkt, MemBackdoorPtr &backdoor)
+{
+    return ctrl.recvAtomicBackdoor(pkt, backdoor);
 }
 
 bool

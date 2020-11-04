@@ -251,13 +251,15 @@ class MemCtrl : public QoS::MemCtrl
 
       protected:
 
-        Tick recvAtomic(PacketPtr pkt);
+        Tick recvAtomic(PacketPtr pkt) override;
+        Tick recvAtomicBackdoor(
+                PacketPtr pkt, MemBackdoorPtr &backdoor) override;
 
-        void recvFunctional(PacketPtr pkt);
+        void recvFunctional(PacketPtr pkt) override;
 
-        bool recvTimingReq(PacketPtr);
+        bool recvTimingReq(PacketPtr) override;
 
-        virtual AddrRangeList getAddrRanges() const;
+        AddrRangeList getAddrRanges() const override;
 
     };
 
@@ -701,6 +703,7 @@ class MemCtrl : public QoS::MemCtrl
   protected:
 
     Tick recvAtomic(PacketPtr pkt);
+    Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor);
     void recvFunctional(PacketPtr pkt);
     bool recvTimingReq(PacketPtr pkt);
 
