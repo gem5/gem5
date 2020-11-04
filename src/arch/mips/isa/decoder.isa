@@ -738,7 +738,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x01: tlbr({{
                         MipsISA::PTE *PTEntry =
                             dynamic_cast<MipsISA::TLB *>(
-                                xc->tcBase()->getITBPtr())->
+                                xc->tcBase()->getMMUPtr()->itb)->
                                 getEntry(Index & 0x7FFFFFFF);
                         if (PTEntry == NULL) {
                             fatal("Invalid PTE Entry received on "
@@ -819,7 +819,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             (1 << newEntry.AddrShiftAmount) - 1;
 
                         auto ptr = dynamic_cast<MipsISA::TLB *>(
-                            xc->tcBase()->getITBPtr());
+                            xc->tcBase()->getMMUPtr()->itb);
                         Config3Reg config3 = Config3;
                         PageGrainReg pageGrain = PageGrain;
                         int SP = 0;
@@ -885,7 +885,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             (1 << newEntry.AddrShiftAmount) - 1;
 
                         auto ptr = dynamic_cast<MipsISA::TLB *>(
-                            xc->tcBase()->getITBPtr());
+                            xc->tcBase()->getMMUPtr()->itb);
                         Config3Reg config3 = Config3;
                         PageGrainReg pageGrain = PageGrain;
                         int SP = 0;
@@ -909,7 +909,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             vpn = ((EntryHi >> 11) & 0xFFFFFFFC);
                         }
                         tlbIndex = dynamic_cast<MipsISA::TLB *>(
-                            xc->tcBase()->getITBPtr())->
+                            xc->tcBase()->getMMUPtr()->itb)->
                             probeEntry(vpn, entryHi.asid);
                         // Check TLB for entry matching EntryHi
                         if (tlbIndex != -1) {

@@ -76,6 +76,7 @@ output exec {{
 #include "arch/mips/dt_constants.hh"
 #include "arch/mips/faults.hh"
 #include "arch/mips/isa_traits.hh"
+#include "arch/mips/mmu.hh"
 #include "arch/mips/mt.hh"
 #include "arch/mips/mt_constants.hh"
 #include "arch/mips/pagetable.hh"
