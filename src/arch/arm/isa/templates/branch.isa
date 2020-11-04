@@ -35,34 +35,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-def template BranchImmDeclare {{
-class %(class_name)s : public %(base_class)s
-{
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, int32_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-};
-}};
-
-def template BranchImmConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          int32_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
-    {
-        %(constructor)s;
-        if (!(condCode == COND_AL || condCode == COND_UC)) {
-            for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
-            }
-            flags[IsCondControl] = true;
-        } else {
-            flags[IsUncondControl] = true;
-        }
-
-    }
-}};
-
 def template BranchImmCondDeclare {{
 class %(class_name)s : public %(base_class)s
 {
@@ -98,35 +70,6 @@ def template BranchImmCondConstructor {{
     }
 }};
 
-def template BranchRegDeclare {{
-class %(class_name)s : public %(base_class)s
-{
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _op1);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-};
-}};
-
-def template BranchRegConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _op1)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1)
-    {
-        %(constructor)s;
-        if (!(condCode == COND_AL || condCode == COND_UC)) {
-            for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
-            }
-            flags[IsCondControl] = true;
-        } else {
-            flags[IsUncondControl] = true;
-        }
-        if (%(is_ras_pop)s)
-            flags[IsReturn] = true;
-    }
-}};
-
 def template BranchRegCondDeclare {{
 class %(class_name)s : public %(base_class)s
 {
@@ -157,17 +100,6 @@ def template BranchRegCondConstructor {{
         if (%(is_ras_pop)s)
             flags[IsReturn] = true;
     }
-}};
-
-def template BranchRegRegDeclare {{
-class %(class_name)s : public %(base_class)s
-{
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst,
-                       IntRegIndex _op1, IntRegIndex _op2);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-};
 }};
 
 def template BranchTableDeclare {{

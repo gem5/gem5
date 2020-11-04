@@ -183,33 +183,6 @@ def template MicroSetPCCPSRConstructor {{
 // Integer = Integer op Integer microops
 //
 
-def template MicroIntDeclare {{
-    class %(class_name)s : public %(base_class)s
-    {
-      public:
-        %(class_name)s(ExtMachInst machInst,
-                       RegIndex _ura, RegIndex _urb, RegIndex _urc);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-    };
-}};
-
-def template MicroIntConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                   RegIndex _ura,
-                                   RegIndex _urb,
-                                   RegIndex _urc)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _ura, _urb, _urc)
-    {
-        %(constructor)s;
-        if (!(condCode == COND_AL || condCode == COND_UC)) {
-            for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
-            }
-        }
-    }
-}};
-
 def template MicroNeonMemExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
