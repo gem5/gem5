@@ -38,7 +38,9 @@
 #ifndef __CPU_SIMPLE_NONCACHING_HH__
 #define __CPU_SIMPLE_NONCACHING_HH__
 
+#include "base/addr_range_map.hh"
 #include "cpu/simple/atomic.hh"
+#include "mem/backdoor.hh"
 #include "params/NonCachingSimpleCPU.hh"
 
 /**
@@ -53,7 +55,10 @@ class NonCachingSimpleCPU : public AtomicSimpleCPU
     void verifyMemoryMode() const override;
 
   protected:
+    AddrRangeMap<MemBackdoorPtr, 1> memBackdoors;
+
     Tick sendPacket(RequestPort &port, const PacketPtr &pkt) override;
+    Tick fetchInstMem() override;
 };
 
 #endif // __CPU_SIMPLE_NONCACHING_HH__

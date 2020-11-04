@@ -674,15 +674,7 @@ AtomicSimpleCPU::tick()
                 //if (decoder.needMoreBytes())
                 //{
                     icache_access = true;
-                    Packet ifetch_pkt = Packet(ifetch_req, MemCmd::ReadReq);
-                    ifetch_pkt.dataStatic(&inst);
-
-                    icache_latency = sendPacket(icachePort, &ifetch_pkt);
-
-                    assert(!ifetch_pkt.isError());
-
-                    // ifetch_req is initialized to read the instruction
-                    // directly into the CPU object's inst field.
+                    icache_latency = fetchInstMem();
                 //}
             }
 
@@ -745,6 +737,21 @@ AtomicSimpleCPU::tick()
 
     if (_status != Idle)
         reschedule(tickEvent, curTick() + latency, true);
+}
+
+Tick
+AtomicSimpleCPU::fetchInstMem()
+{
+    Packet pkt = Packet(ifetch_req, MemCmd::ReadReq);
+
+    // ifetch_req is initialized to read the instruction
+    // directly into the CPU object's inst field.
+    pkt.dataStatic(&inst);
+
+    Tick latency = sendPacket(icachePort, &pkt);
+    assert(!pkt.isError());
+
+    return latency;
 }
 
 void

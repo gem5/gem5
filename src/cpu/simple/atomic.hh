@@ -57,7 +57,6 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     void init() override;
 
   protected:
-
     EventFunctionWrapper tickEvent;
 
     const int width;
@@ -102,6 +101,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     bool tryCompleteDrain();
 
     virtual Tick sendPacket(RequestPort &port, const PacketPtr &pkt);
+    virtual Tick fetchInstMem();
 
     /**
      * An AtomicCPUPort overrides the default behaviour of the

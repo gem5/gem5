@@ -59,10 +59,37 @@ NonCachingSimpleCPU::verifyMemoryMode() const
 Tick
 NonCachingSimpleCPU::sendPacket(RequestPort &port, const PacketPtr &pkt)
 {
-    if (system->isMemAddr(pkt->getAddr())) {
-        system->getPhysMem().access(pkt);
-        return 0;
-    } else {
-        return port.sendAtomic(pkt);
+    MemBackdoorPtr bd = nullptr;
+    Tick latency = port.sendAtomicBackdoor(pkt, bd);
+
+    // If the target gave us a backdoor for next time and we didn't
+    // already have it, record it.
+    if (bd && memBackdoors.insert(bd->range(), bd) != memBackdoors.end()) {
+        // Install a callback to erase this backdoor if it goes away.
+        auto callback = [this](const MemBackdoor &backdoor) {
+                for (auto it = memBackdoors.begin();
+                        it != memBackdoors.end(); it++) {
+                    if (it->second == &backdoor) {
+                        memBackdoors.erase(it);
+                        return;
+                    }
+                }
+                panic("Got invalidation for unknown memory backdoor.");
+            };
+        bd->addInvalidationCallback(callback);
     }
+    return latency;
+}
+
+Tick
+NonCachingSimpleCPU::fetchInstMem()
+{
+    auto bd_it = memBackdoors.contains(ifetch_req->getPaddr());
+    if (bd_it == memBackdoors.end())
+        return AtomicSimpleCPU::fetchInstMem();
+
+    auto *bd = bd_it->second;
+    Addr offset = ifetch_req->getPaddr() - bd->range().start();
+    memcpy(&inst, bd->ptr() + offset, ifetch_req->getSize());
+    return 0;
 }
