@@ -227,16 +227,31 @@ class AbstractMemory : public ClockedObject
      */
     void setBackingStore(uint8_t* pmem_addr);
 
+    void
+    getBackdoor(MemBackdoorPtr &bd_ptr)
+    {
+        if (lockedAddrList.empty() && backdoor.ptr())
+            bd_ptr = &backdoor;
+    }
+
     /**
      * Get the list of locked addresses to allow checkpointing.
      */
-    const std::list<LockedAddr>& getLockedAddrList() const
-    { return lockedAddrList; }
+    const std::list<LockedAddr> &
+    getLockedAddrList() const
+    {
+        return lockedAddrList;
+    }
 
     /**
      * Add a locked address to allow for checkpointing.
      */
-    void addLockedAddr(LockedAddr addr) { lockedAddrList.push_back(addr); }
+    void
+    addLockedAddr(LockedAddr addr)
+    {
+        backdoor.invalidate();
+        lockedAddrList.push_back(addr);
+    }
 
     /** read the system pointer
      * Implemented for completeness with the setter

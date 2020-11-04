@@ -80,9 +80,7 @@ Tick
 SimpleMemory::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor)
 {
     Tick latency = recvAtomic(pkt);
-
-    if (backdoor.ptr())
-        _backdoor = &backdoor;
+    getBackdoor(_backdoor);
     return latency;
 }
 

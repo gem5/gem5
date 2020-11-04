@@ -269,6 +269,7 @@ AbstractMemory::trackLoadLocked(PacketPtr pkt)
     DPRINTF(LLSC, "Adding lock record: context %d addr %#x\n",
             req->contextId(), paddr);
     lockedAddrList.push_front(LockedAddr(req));
+    backdoor.invalidate();
 }
 
 
