@@ -1,3 +1,9 @@
+# Version 20.1.0.1
+
+**[HOTFIX]** A patch was applied to fix the Garnet network interface stats.
+Previously, the flit source delay was computed using both tick and cycles.
+This bug affected the overall behavior of the Garnet Network Model.
+
 # Version 20.1.0.0
 
 Thank you to everyone that made this release possible!
