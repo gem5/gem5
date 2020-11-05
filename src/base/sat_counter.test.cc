@@ -360,3 +360,98 @@ TEST(SatCounterTest, NegativeAddSubAssignment)
     ASSERT_EQ(counter, value);
 }
 
+/** Test max and min when using SatCounter16. */
+TEST(SatCounterTest, Size16)
+{
+    const uint16_t bits_16 = 9;
+    const uint16_t max_value_16 = (1 << bits_16) - 1;
+    SatCounter16 counter_16(bits_16);
+
+    // Increasing
+    counter_16++;
+    ASSERT_EQ(counter_16, 1);
+    counter_16 <<= 1;
+    ASSERT_EQ(counter_16, 2);
+    counter_16 += 2 * max_value_16;
+    ASSERT_EQ(counter_16, max_value_16);
+    counter_16++;
+    ASSERT_EQ(counter_16, max_value_16);
+    counter_16 <<= 1;
+    ASSERT_EQ(counter_16, max_value_16);
+
+    // Decreasing
+    counter_16--;
+    ASSERT_EQ(counter_16, max_value_16 - 1);
+    counter_16 >>= 1;
+    ASSERT_EQ(counter_16, (max_value_16 - 1) >> 1);
+    counter_16 -= 2 * max_value_16;
+    ASSERT_EQ(counter_16, 0);
+    counter_16--;
+    ASSERT_EQ(counter_16, 0);
+    counter_16 >>= 1;
+    ASSERT_EQ(counter_16, 0);
+}
+
+/** Test max and min when using SatCounter32. */
+TEST(SatCounterTest, Size32)
+{
+    const uint32_t bits_32 = 17;
+    const uint32_t max_value_32 = (1 << bits_32) - 1;
+    SatCounter32 counter_32(bits_32);
+
+    // Increasing
+    counter_32++;
+    ASSERT_EQ(counter_32, 1);
+    counter_32 <<= 1;
+    ASSERT_EQ(counter_32, 2);
+    counter_32 += 2 * max_value_32;
+    ASSERT_EQ(counter_32, max_value_32);
+    counter_32++;
+    ASSERT_EQ(counter_32, max_value_32);
+    counter_32 <<= 1;
+    ASSERT_EQ(counter_32, max_value_32);
+
+    // Decreasing
+    counter_32--;
+    ASSERT_EQ(counter_32, max_value_32 - 1);
+    counter_32 >>= 1;
+    ASSERT_EQ(counter_32, (max_value_32 - 1) >> 1);
+    counter_32 -= 2 * max_value_32;
+    ASSERT_EQ(counter_32, 0);
+    counter_32--;
+    ASSERT_EQ(counter_32, 0);
+    counter_32 >>= 1;
+    ASSERT_EQ(counter_32, 0);
+}
+
+/** Test max and min when using SatCounter64. */
+TEST(SatCounterTest, Size64)
+{
+    const uint64_t bits_64 = 33;
+    const uint64_t max_value_64 = (1ULL << bits_64) - 1;
+    SatCounter64 counter_64(bits_64);
+
+    // Increasing
+    counter_64++;
+    ASSERT_EQ(counter_64, 1);
+    counter_64 <<= 1;
+    ASSERT_EQ(counter_64, 2);
+    counter_64 += max_value_64;
+    ASSERT_EQ(counter_64, max_value_64);
+    counter_64++;
+    ASSERT_EQ(counter_64, max_value_64);
+    counter_64 <<= 1;
+    ASSERT_EQ(counter_64, max_value_64);
+
+    // Decreasing
+    counter_64--;
+    ASSERT_EQ(counter_64, max_value_64 - 1);
+    counter_64 >>= 1;
+    ASSERT_EQ(counter_64, (max_value_64 - 1) >> 1);
+    counter_64 -= max_value_64;
+    ASSERT_EQ(counter_64, 0);
+    counter_64--;
+    ASSERT_EQ(counter_64, 0);
+    counter_64 >>= 1;
+    ASSERT_EQ(counter_64, 0);
+}
