@@ -25,9 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import subprocess
 from testlib import *
-import platform
 
 
 if config.bin_path:
@@ -76,6 +74,6 @@ for cpu_type in cpu_types:
 test_boot('atomic', '4', 'systemd', constants.supported_hosts)
 
 #KVM
-if(support_kvm() and (platform.machine() == constants.host_x86_64_tag)):
+if(support_kvm()):
     test_boot('kvm', '1', 'init', (constants.host_x86_64_tag,))
     test_boot('kvm', '4', 'systemd', (constants.host_x86_64_tag,))
