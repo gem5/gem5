@@ -73,6 +73,7 @@ RUN mkdir -p /patch && cd /patch && \
 RUN git -C /HIP/ checkout 0e3d824e && git -C /HIP/ apply /patch/hip.patch_v2 && \
     git -C /hipBLAS/ checkout ee57787e && git -C /hipBLAS/ apply /patch/hipBLAS.patch && \
     git -C /rocBLAS/ checkout cbff4b4e && git -C /rocBLAS/ apply /patch/rocBLAS.patch && \
+    git -C /rocm-cmake/ checkout 12670acb && \
     git -C /MIOpenGEMM/ checkout 9547fb9e && \
     git -C /MIOpen/ checkout 01d6ca55c && git -C /MIOpen/ apply /patch/miopen-conv.patch
 
