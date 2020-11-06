@@ -523,9 +523,10 @@ class AddrRange
             const int intlv_bit = masks_lsb[i];
             if (intlv_bit > 0) {
                 // on every iteration we add one bit from the input
-                // address, and therefore the lowest invtl_bit has
-                // also shifted to the left by i positions.
-                a = insertBits(a << 1, intlv_bit + i - 1, 0, a);
+                // address, but the lowest invtl_bit in the iteration is
+                // always in the right position because they are sorted
+                // increasingly from the LSB
+                a = insertBits(a << 1, intlv_bit - 1, 0, a);
             } else {
                 a <<= 1;
             }

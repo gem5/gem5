@@ -769,8 +769,8 @@ TEST(AddrRangeTest, AddRemoveInterleavBitsAcrossRange)
     std::vector<Addr> masks;
     masks.push_back(1 << 2);
     masks.push_back(1 << 3);
-    masks.push_back(1 << 16);
-    masks.push_back(1 << 30);
+    masks.push_back(1 << 7);
+    masks.push_back(1 << 11);
     uint8_t intlv_match = 0xF;
     AddrRange r(start, end, masks, intlv_match);
 
@@ -779,7 +779,35 @@ TEST(AddrRangeTest, AddRemoveInterleavBitsAcrossRange)
         /*
          * As intlv_match = 0xF, all the interleaved bits should be set.
          */
-        EXPECT_EQ(i | (1 << 2) | (1 << 3) | (1 << 16) | (1 << 30),
+        EXPECT_EQ(i | (1 << 2) | (1 << 3) | (1 << 7) | (1 << 11),
+                  r.addIntlvBits(removedBits));
+    }
+}
+
+TEST(AddrRangeTest, AddRemoveInterleavBitsAcrossContiguousRange)
+{
+    /*
+     * This purpose of this test is to ensure that removing then adding
+     * interleaving bits has no net effect.
+     * E.g.:
+     * addr_range.addIntlvBits(add_range.removeIntlvBits(an_address)) should
+     * always return an_address.
+     */
+    Addr start = 0x00000;
+    Addr end   = 0x10000;
+    std::vector<Addr> masks;
+    masks.push_back(1 << 2);
+    masks.push_back(1 << 3);
+    masks.push_back(1 << 4);
+    uint8_t intlv_match = 0x7;
+    AddrRange r(start, end, masks, intlv_match);
+
+    for (Addr i = 0; i < 0xFFF; i++) {
+        Addr removedBits = r.removeIntlvBits(i);
+        /*
+         * As intlv_match = 0x7, all the interleaved bits should be set.
+         */
+        EXPECT_EQ(i | (1 << 2) | (1 << 3) | (1 << 4),
                   r.addIntlvBits(removedBits));
     }
 }
