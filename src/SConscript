@@ -399,8 +399,8 @@ class ProtoBuf(SourceFile):
 
         # Currently, we stick to generating the C++ headers, so we
         # only need to track the source and header.
-        self.cc_file = File(modname + '.pb.cc')
-        self.hh_file = File(modname + '.pb.h')
+        self.cc_file = self.tnode.dir.File(modname + '.pb.cc')
+        self.hh_file = self.tnode.dir.File(modname + '.pb.h')
 
 
 exectuable_classes = []
@@ -1024,8 +1024,9 @@ if env['HAVE_PROTOC'] and env['HAVE_PROTOBUF']:
         # specify the proto_path to avoid having the generated files
         # include the path.
         env.Command([proto.cc_file, proto.hh_file], proto.tnode,
-                    MakeAction('${PROTOC} --cpp_out ${TARGET.dir} '
-                               '--proto_path ${SOURCE.dir} $SOURCE',
+                    MakeAction('${PROTOC} --cpp_out ${BUILDDIR} '
+                               '--proto_path ${BUILDDIR} '
+                               '${SOURCE.get_abspath()}',
                                Transform("PROTOC")))
 
         # Add the C++ source file
