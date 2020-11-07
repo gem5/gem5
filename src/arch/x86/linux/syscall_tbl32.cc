@@ -25,6 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/syscall.h>
+
 #include "arch/x86/linux/linux.hh"
 #include "arch/x86/linux/se_workload.hh"
 #include "arch/x86/linux/syscalls.hh"
