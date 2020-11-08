@@ -65,7 +65,7 @@ Export('env')
 
 build_env = [(opt, env[opt]) for opt in export_vars]
 
-from m5.util import code_formatter, compareVersions
+from m5.util import code_formatter, compareVersions, readCommand
 
 ########################################################################
 # Code for adding source files of various types
@@ -386,6 +386,34 @@ class SimObject(PySource):
 
         bisect.insort_right(SimObject.modnames, self.modname)
 
+
+# This regular expression is simplistic and assumes that the import takes up
+# the entire line, doesn't have the keyword "public", uses double quotes, has
+# no whitespace at the end before or after the ;, and is all on one line. This
+# should still cover most cases, and a completely accurate scanner would be
+# MUCH more complex.
+protoc_import_re = re.compile(r'^import\s+\"(.*\.proto)\"\;$', re.M)
+
+def protoc_scanner(node, env, path):
+    deps = []
+    for imp in protoc_import_re.findall(node.get_text_contents()):
+        deps.append(Dir(env['BUILDDIR']).File(imp))
+    return deps
+
+env.Append(SCANNERS=Scanner(function=protoc_scanner, skeys=['.proto']))
+
+def protoc_emitter(target, source, env):
+    root, ext = os.path.splitext(source[0].get_abspath())
+    return [root + '.pb.cc', root + '.pb.h'], source
+
+env.Append(BUILDERS={'ProtoBufCC' : Builder(
+            action=MakeAction('${PROTOC} --cpp_out ${BUILDDIR} '
+                              '--proto_path ${BUILDDIR} '
+                              '${SOURCE.get_abspath()}',
+                              Transform("PROTOC")),
+            emitter=protoc_emitter
+        )})
+
 class ProtoBuf(SourceFile):
     '''Add a Protocol Buffer to build'''
 
@@ -400,20 +428,7 @@ class ProtoBuf(SourceFile):
         modname,ext = self.extname
         assert ext == 'proto'
 
-        # Currently, we stick to generating the C++ headers, so we
-        # only need to track the source and header.
-        self.cc_file = self.tnode.dir.File(modname + '.pb.cc')
-        self.hh_file = self.tnode.dir.File(modname + '.pb.h')
-
-        # Use both the source and header as the target, and the .proto
-        # file as the source. When executing the protoc compiler, also
-        # specify the proto_path to avoid having the generated files
-        # include the path.
-        env.Command([self.cc_file, self.hh_file], self.tnode,
-                    MakeAction('${PROTOC} --cpp_out ${BUILDDIR} '
-                               '--proto_path ${BUILDDIR} '
-                               '${SOURCE.get_abspath()}',
-                               Transform("PROTOC")))
+        self.cc_file, self.hh_file = env.ProtoBufCC(source=source)
 
         # Add the C++ source file
         Source(self.cc_file, tags=self.tags,
