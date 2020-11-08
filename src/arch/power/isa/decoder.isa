@@ -278,6 +278,10 @@ decode OPCODE default Unknown::unknown() {
                 0x100: mtlr({{ LR = Rs; }});
                 0x120: mtctr({{ CTR = Rs; }});
             }
+            512: mcrxr({{
+                CR = insertCRField(CR, BF, XER<31:28>);
+                XER = XER<27:0>;
+                }});
         }
 
         // All loads with an index register. The non-update versions
