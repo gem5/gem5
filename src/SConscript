@@ -393,6 +393,9 @@ class ProtoBuf(SourceFile):
         '''Specify the source file, and any tags'''
         super(ProtoBuf, self).__init__(source, tags, add_tags)
 
+        if not env['HAVE_PROTOC'] or not env['HAVE_PROTOBUF']:
+            error('Got protobuf to build, but lacks support!')
+
         # Get the file name and the extension
         modname,ext = self.extname
         assert ext == 'proto'
@@ -401,6 +404,20 @@ class ProtoBuf(SourceFile):
         # only need to track the source and header.
         self.cc_file = self.tnode.dir.File(modname + '.pb.cc')
         self.hh_file = self.tnode.dir.File(modname + '.pb.h')
+
+        # Use both the source and header as the target, and the .proto
+        # file as the source. When executing the protoc compiler, also
+        # specify the proto_path to avoid having the generated files
+        # include the path.
+        env.Command([self.cc_file, self.hh_file], self.tnode,
+                    MakeAction('${PROTOC} --cpp_out ${BUILDDIR} '
+                               '--proto_path ${BUILDDIR} '
+                               '${SOURCE.get_abspath()}',
+                               Transform("PROTOC")))
+
+        # Add the C++ source file
+        Source(self.cc_file, tags=self.tags,
+                append={'CXXFLAGS': '-Wno-array-bounds'})
 
 
 exectuable_classes = []
@@ -1015,25 +1032,6 @@ if env['USE_PYTHON']:
                                Transform("SO PyBind")))
         env.Depends(cc_file, depends + extra_deps)
         Source(cc_file)
-
-# Build all protocol buffers if we have got protoc and protobuf available
-if env['HAVE_PROTOC'] and env['HAVE_PROTOBUF']:
-    for proto in ProtoBuf.all:
-        # Use both the source and header as the target, and the .proto
-        # file as the source. When executing the protoc compiler, also
-        # specify the proto_path to avoid having the generated files
-        # include the path.
-        env.Command([proto.cc_file, proto.hh_file], proto.tnode,
-                    MakeAction('${PROTOC} --cpp_out ${BUILDDIR} '
-                               '--proto_path ${BUILDDIR} '
-                               '${SOURCE.get_abspath()}',
-                               Transform("PROTOC")))
-
-        # Add the C++ source file
-        Source(proto.cc_file, tags=proto.tags,
-                append={'CXXFLAGS': '-Wno-array-bounds'})
-elif ProtoBuf.all:
-    error('Got protobuf to build, but lacks support!')
 
 #
 # Handle debug flags
