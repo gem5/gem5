@@ -41,6 +41,7 @@ from __future__ import print_function
 
 import array
 import bisect
+import distutils.spawn
 import functools
 import imp
 import os
@@ -435,6 +436,45 @@ class ProtoBuf(SourceFile):
                 append={'CXXFLAGS': '-Wno-array-bounds'})
 
 
+
+env['PROTOC_GRPC'] = distutils.spawn.find_executable('grpc_cpp_plugin')
+if env['PROTOC_GRPC']:
+    env.Append(LIBS=['grpc++'])
+
+def protoc_grpc_emitter(target, source, env):
+    root, ext = os.path.splitext(source[0].get_abspath())
+    return [root + '.grpc.pb.cc', root + '.grpc.pb.h'], source
+
+env.Append(BUILDERS={'GrpcProtoBufCC' : Builder(
+            action=MakeAction('${PROTOC} --grpc_out ${BUILDDIR} '
+                              '--plugin=protoc-gen-grpc=${PROTOC_GRPC} '
+                              '--proto_path ${BUILDDIR} '
+                              '${SOURCE.get_abspath()}',
+                              Transform("PROTOC")),
+            emitter=protoc_grpc_emitter
+        )})
+
+class GrpcProtoBuf(SourceFile):
+    '''Add a GRPC protocol buffer to the build'''
+
+    def __init__(self, source, tags=None, add_tags=None):
+        '''Specify the source file, and any tags'''
+
+        super(GrpcProtoBuf, self).__init__(source, tags, add_tags)
+
+        if not env['PROTOC_GRPC']:
+            error('No grpc_cpp_plugin found')
+
+        self.cc_file, self.hh_file = env.GrpcProtoBufCC(source=source)
+
+        # We still need to build the normal protobuf code too.
+        self.protobuf = ProtoBuf(source, tags=self.tags)
+
+        # Add the C++ source file.
+        Source(self.cc_file, tags=self.tags,
+                append={'CXXFLAGS': '-Wno-array-bounds'})
+
+
 exectuable_classes = []
 class ExecutableMeta(type):
     '''Meta class for Executables.'''
@@ -573,6 +613,7 @@ Export('Source')
 Export('PySource')
 Export('SimObject')
 Export('ProtoBuf')
+Export('GrpcProtoBuf')
 Export('Executable')
 Export('UnitTest')
 Export('GTest')
