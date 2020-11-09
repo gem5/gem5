@@ -1146,6 +1146,94 @@ let {{
     # UDOT (element)
     intDotInst('udot', 'UdotElemDX', 'SimdAluOp', False, False, False, 2, True)
     intDotInst('udot', 'UdotElemQX', 'SimdAluOp', False, False, False, 4, True)
+    # SUDOT (element)
+    intDotInst('sudot', 'SudotElemDX', 'SimdAluOp', True, True, False, 2, True)
+    intDotInst('sudot', 'SudotElemQX', 'SimdAluOp', True, True, False, 4, True)
+    # USDOT (vector)
+    intDotInst('usdot', 'UsdotDX', 'SimdAluOp', True, False, True, 2, False)
+    intDotInst('usdot', 'UsdotQX', 'SimdAluOp', True, False, True, 4, False)
+    # USDOT (element)
+    intDotInst('usdot', 'UsdotElemDX', 'SimdAluOp', True, False, True, 2, True)
+    intDotInst('usdot', 'UsdotElemQX', 'SimdAluOp', True, False, True, 4, True)
+
+    def intMatMulInst(name, Name, opClass,
+                      destIsSigned, src1IsSigned, src2IsSigned):
+        destType = "int32_t" if destIsSigned else "uint32_t"
+        src1Type = "int8_t" if src1IsSigned else "uint8_t"
+        src2Type = "int8_t" if src2IsSigned else "uint8_t"
+        matMulCode = '''
+        using Src1Element = %(src1Type)s;
+        using Src2Element = %(src2Type)s;
+
+        // Neon MM instructions always generate four output elements
+        // from 16 pairs of source elements.
+        static_assert(sizeof(Element) == 4 * sizeof(Src1Element));
+        static_assert(sizeof(Element) == 4 * sizeof(Src2Element));
+
+        // Extended source element types to avoid overflow of intermediate
+        // calculations.
+        using ExtendedSrc1Element =
+                typename vector_element_traits::
+                    extend_element<Element, Src1Element>::type;
+        using ExtendedSrc2Element =
+                typename vector_element_traits::
+                    extend_element<Element, Src2Element>::type;
+
+        // Properties of the matrices
+        constexpr unsigned destMatSize = 2; // Dest Matrices are dim 2x2
+        constexpr unsigned K = 8;           // Src matrices are dim 2x8 & 8x2
+
+        constexpr unsigned eltsPerMatrix = destMatSize * destMatSize;
+
+        Element destMat[eltsPerMatrix] = {0};
+        for (unsigned j = 0; j < eltsPerMatrix; ++j) {
+            destMat[j] = letoh(destReg.elements[j]);
+        }
+
+        Element src1MatPacked[eltsPerMatrix] = {0};
+        Element src2MatPacked[eltsPerMatrix] = {0};
+        for (unsigned j = 0; j < eltsPerMatrix; ++j) {
+            src1MatPacked[j] = letoh(srcReg1.elements[j]);
+            src2MatPacked[j] = letoh(srcReg2.elements[j]);
+        }
+
+        Src1Element *src1Mat =
+            reinterpret_cast<Src1Element*>(&src1MatPacked);
+        Src2Element *src2Mat =
+            reinterpret_cast<Src2Element*>(&src2MatPacked);
+
+        unsigned destEltIdx = 0;
+        for (unsigned rowIdx = 0; rowIdx < destMatSize; ++rowIdx) {
+            for (unsigned colIdx = 0; colIdx < destMatSize; ++colIdx) {
+                Element destElem = destMat[destEltIdx];
+                for (unsigned k = 0; k < K; ++k) {
+                    const ExtendedSrc1Element src1Elem =
+                        static_cast<ExtendedSrc1Element>
+                                            (src1Mat[K * rowIdx + k]);
+                    const ExtendedSrc2Element src2Elem =
+                        static_cast<ExtendedSrc2Element>
+                                            (src2Mat[K * colIdx + k]);
+
+                    destElem += src1Elem * src2Elem;
+                }
+                destMat[destEltIdx++] = destElem;
+            }
+        }
+
+        for (unsigned j = 0; j < eltsPerMatrix; ++j) {
+            destReg.elements[j] = htole(destMat[j]);
+        }
+        ''' % dict(src1Type=src1Type, src2Type=src2Type)
+        threeEqualRegInstX(name, Name, opClass, (destType,), 4,
+                           matMulCode, readDest=True, byElem=False,
+                           complex=True)
+
+    # SMMLA
+    intMatMulInst('smmla', 'SmmlaQX', 'SimdMatMultAccOp', True, True, True)
+    # USMMLA
+    intMatMulInst('usmmla', 'UsmmlaQX', 'SimdMatMultAccOp', True, False, True)
+    # UMMLA
+    intMatMulInst('ummla', 'UmmlaQX', 'SimdMatMultAccOp', False, False, False)
 
     # CLS
     clsCode = '''

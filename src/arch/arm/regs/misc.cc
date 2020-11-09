@@ -4005,6 +4005,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_AA64ISAR1_EL1)
       .reset([p,release=release](){
           AA64ISAR1 isar1_el1 = p.id_aa64isar1_el1;
+          isar1_el1.i8mm = release->has(ArmExtension::FEAT_I8MM) ? 0x1 : 0x0;
           isar1_el1.apa = release->has(ArmExtension::FEAT_PAuth) ? 0x1 : 0x0;
           isar1_el1.jscvt = release->has(ArmExtension::FEAT_JSCVT) ? 0x1 : 0x0;
           isar1_el1.fcma = release->has(ArmExtension::FEAT_FCMA) ? 0x1 : 0x0;

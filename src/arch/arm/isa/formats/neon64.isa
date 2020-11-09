@@ -510,6 +510,7 @@ namespace Aarch64
     decodeNeon3RegExtension(ExtMachInst machInst)
     {
         uint8_t q      = bits(machInst, 30);
+        uint8_t u      = bits(machInst, 29);
         uint8_t qu     = bits(machInst, 30, 29);
         uint8_t size   = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 15, 11);
@@ -546,6 +547,20 @@ namespace Aarch64
                 default:
                   return new Unknown64(machInst);
               }
+          case 0x13:
+              if (q) {
+                  return new UsdotQX<int32_t>(machInst, vd, vn, vm);
+              } else {
+                  return new UsdotDX<int32_t>(machInst, vd, vn, vm);
+              }
+          case 0x14:
+              if (u) {
+                  return new UmmlaQX<uint32_t>(machInst, vd, vn, vm);
+              } else {
+                  return new SmmlaQX<int32_t>(machInst, vd, vn, vm);
+              }
+          case 0x15:
+              return new UsmmlaQX<int32_t>(machInst, vd, vn, vm);
           case 0x18:
           case 0x19:
           case 0x1a:
@@ -1590,9 +1605,6 @@ namespace Aarch64
                 return decodeNeonSThreeImmHAndWReg<SqrdmulhElemDX,
                                                    SqrdmulhElemQX>(
                     q, size, machInst, vd, vn, vm, index);
-          case 0xf:
-            return decodeNeonSThreeImmHAndWReg<SqrdmlshElemDX, SqrdmlshElemQX>(
-                    q, size, machInst, vd, vn, vm, index);
           case 0xe:
               switch (qu) {
                 case 0b00:
@@ -1609,6 +1621,39 @@ namespace Aarch64
                                                   vd, vn, vm_dp, index_dp);
                 default:
                   return new Unknown64(machInst);
+              }
+          case 0xf:
+              if (u) {
+                   // Armv8.2-RDMA SQRDMLSH(elem)
+                   return decodeNeonSThreeImmHAndWReg<SqrdmlshElemDX,
+                                                      SqrdmlshElemQX>(
+                       q, size, machInst, vd, vn, vm, index);
+              } else {
+                  switch (size) {
+                  case 0x0:
+                      if (q) {
+                          return new SudotElemQX<int32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      } else {
+                          return new SudotElemDX<int32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      }
+                  case 0x1:
+                       // Armv8.2-BF16 BFDOT(elem)
+                       return new Unknown64(machInst);
+                  case 0x2:
+                      if (q) {
+                          return new UsdotElemQX<int32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      } else {
+                          return new UsdotElemDX<int32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      }
+                  case 0x3:
+                  default:
+                       // Armv8.2-BF16 BFMLALB(elem), BFMLALT(elem)
+                       return new Unknown64(machInst);
+                  }
               }
           default:
             return new Unknown64(machInst);

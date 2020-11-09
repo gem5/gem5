@@ -127,6 +127,7 @@ namespace ArmISA
     EndBitUnion(AA64ISAR0)
 
     BitUnion64(AA64ISAR1)
+        Bitfield<55, 52> i8mm;
         Bitfield<43, 40> specres;
         Bitfield<39, 36> sb;
         Bitfield<35, 32> frintts;
