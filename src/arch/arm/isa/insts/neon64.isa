@@ -1,6 +1,6 @@
 // -*- mode: c++ -*-
 
-// Copyright (c) 2012-2013, 2015-2018 ARM Limited
+// Copyright (c) 2012-2013, 2015-2018, 2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1993,9 +1993,9 @@ let {{
             Element carryBit =
                 (((unsigned)srcElem1 & 0x1) +
                  ((unsigned)srcElem2 & 0x1)) >> 1;
-            // Use division instead of a shift to ensure the sign extension works
-            // right. The compiler will figure out if it can be a shift. Mask the
-            // inputs so they get truncated correctly.
+            // Use division instead of a shift to ensure the sign extension
+            // works right. The compiler will figure out if it can be a shift.
+            // Mask the inputs so they get truncated correctly.
             destElem = (((srcElem1 & ~(Element)1) / 2) +
                         ((srcElem2 & ~(Element)1) / 2)) + carryBit;
     '''
@@ -2035,9 +2035,9 @@ let {{
     hsubCode = '''
             Element borrowBit =
                 (((srcElem1 & 0x1) - (srcElem2 & 0x1)) >> 1) & 0x1;
-            // Use division instead of a shift to ensure the sign extension works
-            // right. The compiler will figure out if it can be a shift. Mask the
-            // inputs so they get truncated correctly.
+            // Use division instead of a shift to ensure the sign extension
+            // works right. The compiler will figure out if it can be a shift.
+            // Mask the inputs so they get truncated correctly.
             destElem = (((srcElem1 & ~(Element)1) / 2) -
                         ((srcElem2 & ~(Element)1) / 2)) - borrowBit;
     '''
@@ -2802,7 +2802,8 @@ let {{
             FPSCR fpscr = (FPSCR) FpscrQc;
             destElem = srcElem1;
             if (srcElem1 < 0 ||
-                    ((BigElement)destElem & mask(sizeof(Element) * 8)) != srcElem1) {
+                    ((BigElement)destElem & mask(sizeof(Element) * 8))
+                     != srcElem1) {
                 fpscr.qc = 1;
                 destElem = mask(sizeof(Element) * 8);
                 if (srcElem1 < 0)
@@ -2821,9 +2822,9 @@ let {{
             Element carryBit =
                 (((unsigned)srcElem1 & 0x1) +
                  ((unsigned)srcElem2 & 0x1) + 1) >> 1;
-            // Use division instead of a shift to ensure the sign extension works
-            // right. The compiler will figure out if it can be a shift. Mask the
-            // inputs so they get truncated correctly.
+            // Use division instead of a shift to ensure the sign extension
+            // works right. The compiler will figure out if it can be a shift.
+            // Mask the inputs so they get truncated correctly.
             destElem = (((srcElem1 & ~(Element)1) / 2) +
                         ((srcElem2 & ~(Element)1) / 2)) + carryBit;
     '''
@@ -3013,7 +3014,8 @@ let {{
             if (bits(destElem, sizeof(Element) * 8 - 1) == 0) {
                 if (bits(tmp, sizeof(Element) * 8 - 1) == 1 ||
                         tmp < srcElem1 || tmp < destElem) {
-                    destElem = (((Element) 1) << (sizeof(Element) * 8 - 1)) - 1;
+                    destElem = (((Element) 1) << (sizeof(Element) * 8 - 1))
+                               - 1;
                     fpscr.qc = 1;
                 } else {
                     destElem = tmp;
@@ -3021,9 +3023,11 @@ let {{
             } else {
                 Element absDestElem = (~destElem) + 1;
                 if (absDestElem < srcElem1) {
-                    // Still check for positive sat., no need to check for negative sat.
+                    // Still check for positive sat., no need to check for
+                    // negative sat.
                     if (bits(tmp, sizeof(Element) * 8 - 1) == 1) {
-                        destElem = (((Element) 1) << (sizeof(Element) * 8 - 1)) - 1;
+                        destElem = (((Element) 1) << (sizeof(Element) * 8 - 1))
+                                   - 1;
                         fpscr.qc = 1;
                     } else {
                         destElem = tmp;

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2013 ARM Limited
+// Copyright (c) 2012-2013, 2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1213,13 +1213,17 @@ namespace Aarch64
 
             switch (imm5_pos) {
               case 0:
-                return new InsElemX<uint8_t>(machInst, vd, vn, index1, index2);
+                return new InsElemX<uint8_t>(
+                        machInst, vd, vn, index1, index2);
               case 1:
-                return new InsElemX<uint16_t>(machInst, vd, vn, index1, index2);
+                return new InsElemX<uint16_t>(
+                        machInst, vd, vn, index1, index2);
               case 2:
-                return new InsElemX<uint32_t>(machInst, vd, vn, index1, index2);
+                return new InsElemX<uint32_t>(
+                        machInst, vd, vn, index1, index2);
               case 3:
-                return new InsElemX<uint64_t>(machInst, vd, vn, index1, index2);
+                return new InsElemX<uint64_t>(
+                        machInst, vd, vn, index1, index2);
               default:
                 return new Unknown64(machInst);
             }
@@ -1547,14 +1551,16 @@ namespace Aarch64
             if (u || (size == 0x0 || size == 0x3))
                 return new Unknown64(machInst);
             else
-                return decodeNeonSThreeImmHAndWReg<SqdmullElemX, SqdmullElem2X>(
-                    q, size, machInst, vd, vn, vm, index);
+                return decodeNeonSThreeImmHAndWReg
+                    <SqdmullElemX, SqdmullElem2X>(
+                        q, size, machInst, vd, vn, vm, index);
           case 0xc:
             if (u || (size == 0x0 || size == 0x3))
                 return new Unknown64(machInst);
             else
-                return decodeNeonSThreeImmHAndWReg<SqdmulhElemDX, SqdmulhElemQX>(
-                    q, size, machInst, vd, vn, vm, index);
+                return decodeNeonSThreeImmHAndWReg
+                    <SqdmulhElemDX, SqdmulhElemQX>(
+                        q, size, machInst, vd, vn, vm, index);
           case 0xd:
             if (u)
                 return decodeNeonSThreeImmHAndWReg<SqrdmlahElemDX,
@@ -2176,11 +2182,14 @@ namespace Aarch64
 
         switch (opcode) {
           case 0x9:
-            return decodeNeonSThreeHAndWReg<SqdmlalScX>(size, machInst, vd, vn, vm);
+            return decodeNeonSThreeHAndWReg<SqdmlalScX>(
+                    size, machInst, vd, vn, vm);
           case 0xb:
-            return decodeNeonSThreeHAndWReg<SqdmlslScX>(size, machInst, vd, vn, vm);
+            return decodeNeonSThreeHAndWReg<SqdmlslScX>(
+                    size, machInst, vd, vn, vm);
           case 0xd:
-            return decodeNeonSThreeHAndWReg<SqdmullScX>(size, machInst, vd, vn, vm);
+            return decodeNeonSThreeHAndWReg<SqdmullScX>(
+                    size, machInst, vd, vn, vm);
           default:
             return new Unknown64(machInst);
         }
