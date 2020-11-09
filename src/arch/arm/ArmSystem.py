@@ -81,6 +81,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_F32MM",  # Optional in Armv8.2
         "FEAT_F64MM",  # Optional in Armv8.2
         "FEAT_I8MM",  # Optional in Armv8.2
+        "FEAT_DOTPROD",  # Optional in Armv8.2
         # Armv8.3
         "FEAT_FCMA",
         "FEAT_JSCVT",
@@ -169,6 +170,7 @@ class ArmDefaultRelease(Armv8):
         "FEAT_F32MM",
         "FEAT_F64MM",
         "FEAT_I8MM",
+        "FEAT_DOTPROD",
         # Armv8.3
         "FEAT_FCMA",
         "FEAT_JSCVT",
@@ -205,6 +207,7 @@ class Armv82(Armv81):
         "FEAT_F32MM",
         "FEAT_F64MM",
         "FEAT_I8MM",
+        "FEAT_DOTPROD",
     ]
 
 

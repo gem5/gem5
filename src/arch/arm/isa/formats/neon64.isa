@@ -510,6 +510,7 @@ namespace Aarch64
     decodeNeon3RegExtension(ExtMachInst machInst)
     {
         uint8_t q      = bits(machInst, 30);
+        uint8_t qu     = bits(machInst, 30, 29);
         uint8_t size   = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 15, 11);
 
@@ -532,6 +533,19 @@ namespace Aarch64
             else
                 return decodeNeonSThreeHAndWReg<SqrdmlshDX>(
                     size, machInst, vd, vn, vm);
+          case 0x12:
+              switch (qu) {
+                case 0b00:
+                  return new SdotDX<int32_t>(machInst, vd, vn, vm);
+                case 0b01:
+                  return new UdotDX<uint32_t>(machInst, vd, vn, vm);
+                case 0b10:
+                  return new SdotQX<int32_t>(machInst, vd, vn, vm);
+                case 0b11:
+                  return new UdotQX<uint32_t>(machInst, vd, vn, vm);
+                default:
+                  return new Unknown64(machInst);
+              }
           case 0x18:
           case 0x19:
           case 0x1a:
@@ -1351,6 +1365,7 @@ namespace Aarch64
     {
         uint8_t q = bits(machInst, 30);
         uint8_t u = bits(machInst, 29);
+        uint8_t qu = bits(machInst, 30, 29);
         uint8_t size = bits(machInst, 23, 22);
         uint8_t L = bits(machInst, 21);
         uint8_t M = bits(machInst, 20);
@@ -1386,6 +1401,11 @@ namespace Aarch64
             index_fp = H;
         }
         RegIndex vm_fp = (RegIndex) (uint8_t) (vmh << 4 | vm_bf);
+
+        // Index and 2nd register operand for FEAT_DOTPROD and
+        // FEAT_I8MM instructions
+        uint8_t index_dp = (H << 1) | L;
+        RegIndex vm_dp = (RegIndex) (uint8_t) (M << 4 | vm_bf);
 
         switch (opcode) {
           case 0x0:
@@ -1573,6 +1593,23 @@ namespace Aarch64
           case 0xf:
             return decodeNeonSThreeImmHAndWReg<SqrdmlshElemDX, SqrdmlshElemQX>(
                     q, size, machInst, vd, vn, vm, index);
+          case 0xe:
+              switch (qu) {
+                case 0b00:
+                  return new SdotElemDX<int32_t>(machInst,
+                                                 vd, vn, vm_dp, index_dp);
+                case 0b01:
+                  return new UdotElemDX<uint32_t>(machInst,
+                                                  vd, vn, vm_dp, index_dp);
+                case 0b10:
+                  return new SdotElemQX<int32_t>(machInst,
+                                                 vd, vn, vm_dp, index_dp);
+                case 0b11:
+                  return new UdotElemQX<uint32_t>(machInst,
+                                                  vd, vn, vm_dp, index_dp);
+                default:
+                  return new Unknown64(machInst);
+              }
           default:
             return new Unknown64(machInst);
         }

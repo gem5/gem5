@@ -3988,6 +3988,7 @@ ISA::initializeMiscRegMetadata()
               isar0_el1.sha1 = 0;
               isar0_el1.aes = 0;
           }
+          isar0_el1.dp = release->has(ArmExtension::FEAT_DOTPROD) ? 0x1 : 0x0;
           isar0_el1.atomic = release->has(ArmExtension::FEAT_LSE) ? 0x2 : 0x0;
           isar0_el1.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;
           isar0_el1.tme = release->has(ArmExtension::TME) ? 0x1 : 0x0;

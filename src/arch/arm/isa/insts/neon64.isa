@@ -1082,6 +1082,71 @@ let {{
                        complex=True)
     threeEqualRegInstX("fcmla", "FcmlaQX", "SimdFloatMultAccOp",
                        floatTypes, 4, fcmla_vec, True, complex=True)
+
+    def intDotInst(name, Name, opClass,
+                   destIsSigned, src1IsSigned, src2IsSigned,
+                   rCount, byElem):
+        destType = "int32_t" if destIsSigned else "uint32_t"
+        src1Type = "int8_t" if src1IsSigned else "uint8_t"
+        src2Type = "int8_t" if src2IsSigned else "uint8_t"
+        dotCode = '''
+        using Src1Element = %(src1Type)s;
+        using Src2Element = %(src2Type)s;
+
+        // Neon dot instructions always generate one output element
+        // from 4 pairs of source elements.
+        static_assert(sizeof(Element) == 4 * sizeof(Src1Element));
+        static_assert(sizeof(Element) == 4 * sizeof(Src2Element));
+
+        // Extended source element types to avoid overflow of intermediate
+        // calculations.
+        using ExtendedSrc1Element =
+                typename vector_element_traits::
+                    extend_element<Element, Src1Element>::type;
+        using ExtendedSrc2Element =
+                typename vector_element_traits::
+                    extend_element<Element, Src2Element>::type;
+
+        for (unsigned i = 0; i < eCount; ++i) {
+            Element src1ElemsPacked = letoh(srcReg1.elements[i]);
+            Element src2ElemsPacked = letoh(srcReg2.elements[%(src2Index)s]);
+
+            Src1Element *src1Elems =
+                reinterpret_cast<Src1Element*>(&src1ElemsPacked);
+            Src2Element *src2Elems =
+                reinterpret_cast<Src2Element*>(&src2ElemsPacked);
+
+            // Dot instructions accumulate into the dest reg
+            Element destElem = letoh(destReg.elements[i]);
+
+            for (unsigned j = 0; j < 4; ++j) {
+                ExtendedSrc1Element src1Elem =
+                    static_cast<ExtendedSrc1Element>(src1Elems[j]);
+                ExtendedSrc2Element src2Elem =
+                    static_cast<ExtendedSrc2Element>(src2Elems[j]);
+                destElem += src1Elem * src2Elem;
+            }
+            destReg.elements[i] = htole(destElem);
+        }
+        ''' % dict(src1Type=src1Type, src2Type=src2Type,
+                   src2Index="imm" if byElem else "i")
+        threeEqualRegInstX(name, Name, opClass, (destType,), rCount,
+                           dotCode, readDest=True, byElem=byElem,
+                           complex=True)
+
+    # SDOT (vector)
+    intDotInst('sdot', 'SdotDX', 'SimdAluOp', True, True, True, 2, False)
+    intDotInst('sdot', 'SdotQX', 'SimdAluOp', True, True, True, 4, False)
+    # SDOT (element)
+    intDotInst('sdot', 'SdotElemDX', 'SimdAluOp', True, True, True, 2, True)
+    intDotInst('sdot', 'SdotElemQX', 'SimdAluOp', True, True, True, 4, True)
+    # UDOT (vector)
+    intDotInst('udot', 'UdotDX', 'SimdAluOp', False, False, False, 2, False)
+    intDotInst('udot', 'UdotQX', 'SimdAluOp', False, False, False, 4, False)
+    # UDOT (element)
+    intDotInst('udot', 'UdotElemDX', 'SimdAluOp', False, False, False, 2, True)
+    intDotInst('udot', 'UdotElemQX', 'SimdAluOp', False, False, False, 4, True)
+
     # CLS
     clsCode = '''
             unsigned count = 0;
