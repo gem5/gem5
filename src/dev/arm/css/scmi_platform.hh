@@ -292,8 +292,8 @@ class Platform : public Scp
 
     Port& getPort(const std::string &if_name, PortID idx) override;
 
-    void raiseInterrupt(const Doorbell *doorbell);
-    void clearInterrupt(const Doorbell *doorbell);
+    void raiseInterrupt(const Doorbell *doorbell) override;
+    void clearInterrupt(const Doorbell *doorbell) override;
 
     static uint32_t
     protocolID(const Message &msg)
