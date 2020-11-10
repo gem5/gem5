@@ -1847,6 +1847,7 @@ namespace Gcn3ISA
           InFmt_SOPK *iFmt)
         : Inst_SOPK(iFmt, "s_setreg_imm32_b32")
     {
+        setFlag(ALU);
     } // Inst_SOPK__S_SETREG_IMM32_B32
 
     Inst_SOPK__S_SETREG_IMM32_B32::~Inst_SOPK__S_SETREG_IMM32_B32()
@@ -1860,6 +1861,28 @@ namespace Gcn3ISA
     void
     Inst_SOPK__S_SETREG_IMM32_B32::execute(GPUDynInstPtr gpuDynInst)
     {
+        ScalarRegI16 simm16 = instData.SIMM16;
+        ScalarRegU32 hwregId = simm16 & 0x3f;
+        ScalarRegU32 offset = (simm16 >> 6) & 31;
+        ScalarRegU32 size = ((simm16 >> 11) & 31) + 1;
+
+        ScalarOperandU32 hwreg(gpuDynInst, hwregId);
+        ScalarRegU32 simm32 = extData.imm_u32;
+        hwreg.read();
+
+        ScalarRegU32 mask = (((1U << size) - 1U) << offset);
+        hwreg = ((hwreg.rawData() & ~mask)
+                    | ((simm32 << offset) & mask));
+        hwreg.write();
+
+        if (hwregId==1 && size==2
+                        && (offset==4 || offset==0)) {
+            warn_once("Be cautious that s_setreg_imm32_b32 has no real effect "
+                            "on FP modes: %s\n", gpuDynInst->disassemble());
+            return;
+        }
+
+        // panic if not changing MODE of floating-point numbers
         panicUnimplemented();
     }
 
