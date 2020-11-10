@@ -4907,9 +4907,9 @@ ISA::initializeMiscRegMetadata()
       .hyp().mon()
       .mapsTo(MISCREG_VTCR);
     InitReg(MISCREG_VSTTBR_EL2)
-      .hyp().mon();
+      .hypSecure().mon();
     InitReg(MISCREG_VSTCR_EL2)
-      .hyp().mon();
+      .hypSecure().mon();
     InitReg(MISCREG_TTBR0_EL3)
       .mon();
     InitReg(MISCREG_TCR_EL3)
