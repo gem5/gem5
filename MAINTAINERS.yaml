@@ -63,7 +63,10 @@ arch-arm:
     - Giacomo Travaglini <giacomo.travaglini@arm.com>
 
 arch-gcn3:
-  status: orphaned
+  status: maintained
+  maintainers:
+    - Matt Poremba <matthew.poremba@amd.com>
+    - Matt Sinclair <sinclair@cs.wisc.edu>
 
 arch-mips:
   status: orphaned
@@ -90,6 +93,7 @@ base:
   status: maintained
   maintainers:
     - Bobby Bruce <bbruce@ucdavis.edu>
+    - Daniel Carvalho <odanrc@yahoo.com.br>
 
 base-stats:
   status: orphaned
@@ -132,7 +136,9 @@ dev:
     - Gabe Black <gabe.black@gmail.com>
 
 dev-hsa:
-  status: orphaned
+  status: maintained
+  maintainers:
+    - Matt Poremba <matthew.poremba@amd.com>
 
 dev-virtio:
   status: maintained
@@ -175,6 +181,7 @@ gpu-compute:
   status: maintained
   maintainers:
     - Matt Poremba <matthew.poremba@amd.com>
+    - Matt Sinclair <sinclair@cs.wisc.edu>
 
 learning-gem5:
   desc: >-
@@ -196,6 +203,7 @@ mem-cache:
   status: maintained
   maintainers:
     - Nikos Nikoleris <nikos.nikoleris@arm.com>
+    - Daniel Carvalho <odanrc@yahoo.com.br>
 
 mem-dram:
   status: maintained
@@ -215,6 +223,7 @@ mem-ruby:
   status: maintained
   maintainers:
     - Jason Lowe-Power <jason@lowepower.com>
+    - Matt Sinclair <sinclair@cs.wisc.edu>
 
 misc:
   desc: >-
