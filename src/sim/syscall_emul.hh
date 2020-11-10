@@ -1480,6 +1480,8 @@ cloneFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
         cp->pTable->shared = true;
         cp->useForClone = true;
     }
+
+    ctc->setUseForClone(true);
     cp->initState();
     p->clone(tc, ctc, cp, flags);
 

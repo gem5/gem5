@@ -77,11 +77,16 @@ MinorCPU::MinorCPU(const MinorCPUParams &params) :
 
     pipeline = new Minor::Pipeline(*this, params);
     activityRecorder = pipeline->getActivityRecorder();
+
+    fetchEventWrapper = NULL;
 }
 
 MinorCPU::~MinorCPU()
 {
     delete pipeline;
+
+    if (fetchEventWrapper != NULL)
+        delete fetchEventWrapper;
 
     for (ThreadID thread_id = 0; thread_id < threads.size(); thread_id++) {
         delete threads[thread_id];
@@ -266,7 +271,17 @@ MinorCPU::activateContext(ThreadID thread_id)
     /* Wake up the thread, wakeup the pipeline tick */
     threads[thread_id]->activate();
     wakeupOnEvent(Minor::Pipeline::CPUStageId);
-    pipeline->wakeupFetch(thread_id);
+
+    if (!threads[thread_id]->getUseForClone())//the thread is not cloned
+    {
+        pipeline->wakeupFetch(thread_id);
+    } else { //the thread from clone
+        if (fetchEventWrapper != NULL)
+            delete fetchEventWrapper;
+        fetchEventWrapper = new EventFunctionWrapper([this, thread_id]
+                  { pipeline->wakeupFetch(thread_id); }, "wakeupFetch");
+        schedule(*fetchEventWrapper, clockEdge(Cycles(0)));
+    }
 
     BaseCPU::activateContext(thread_id);
 }

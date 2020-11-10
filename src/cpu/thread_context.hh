@@ -91,8 +91,16 @@ class ThreadContext : public PCEventScope
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
     using VecPredRegContainer = TheISA::VecPredRegContainer;
+    bool useForClone = false;
 
   public:
+
+    bool getUseForClone() { return useForClone; }
+
+    void setUseForClone(bool newUseForClone)
+    {
+        useForClone = newUseForClone;
+    }
 
     enum Status
     {
