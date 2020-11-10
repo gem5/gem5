@@ -269,8 +269,8 @@ VIPERCoalescer::invTCPCallback(Addr addr)
 
     if (m_num_pending_invs == 0) {
         std::vector<PacketPtr> pkt_list { m_cache_inv_pkt };
-        completeHitCallback(pkt_list);
         m_cache_inv_pkt = nullptr;
+        completeHitCallback(pkt_list);
     }
 }
 
