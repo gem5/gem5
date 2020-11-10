@@ -39497,17 +39497,61 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_LOAD_SBYTE::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
+            wf->rdGmReqsInPipe--;
+            wf->rdLmReqsInPipe--;
+            gpuDynInst->exec_mask = wf->execMask();
+            wf->computeUnit->vrf[wf->simdId]->
+                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = gpuDynInst->wavefront()->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+
+        addr.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+            gpuDynInst->computeUnit()->globalMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->rdGmReqsInPipe--;
+            wf->outstandingReqsRdGm++;
+        } else {
+            fatal("Non global flat instructions not implemented yet.\n");
+        }
+
+        gpuDynInst->wavefront()->outstandingReqs++;
+        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
     Inst_FLAT__FLAT_LOAD_SBYTE::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
+        initMemRead<VecElemI8>(gpuDynInst);
     } // initiateAcc
 
     void
     Inst_FLAT__FLAT_LOAD_SBYTE::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        VecOperandI32 vdst(gpuDynInst, extData.VDST);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                vdst[lane] = (VecElemI32)((reinterpret_cast<VecElemI8*>(
+                    gpuDynInst->d_data))[lane]);
+            }
+        }
+        vdst.write();
     }
 
     Inst_FLAT__FLAT_LOAD_USHORT::Inst_FLAT__FLAT_LOAD_USHORT(InFmt_FLAT *iFmt)
