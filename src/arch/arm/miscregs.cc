@@ -1230,7 +1230,7 @@ canReadCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
                            miscRegInfo[reg][MISCREG_MON_NS1_RD];
         break;
       case MODE_HYP:
-        canRead = miscRegInfo[reg][MISCREG_HYP_RD];
+        canRead = miscRegInfo[reg][MISCREG_HYP_NS_RD];
         break;
       default:
         undefined = true;
@@ -1276,7 +1276,7 @@ canWriteCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
                             miscRegInfo[reg][MISCREG_MON_NS1_WR];
         break;
       case MODE_HYP:
-        canWrite =  miscRegInfo[reg][MISCREG_HYP_WR];
+        canWrite =  miscRegInfo[reg][MISCREG_HYP_NS_WR];
         break;
       default:
         undefined = true;
@@ -1397,8 +1397,13 @@ canReadAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
         return secure ? miscRegInfo[reg][MISCREG_PRI_S_RD] :
             miscRegInfo[reg][MISCREG_PRI_NS_RD];
       case EL2:
-        return el2_host ? miscRegInfo[reg][MISCREG_HYP_E2H_RD] :
-            miscRegInfo[reg][MISCREG_HYP_RD];
+        if (el2_host) {
+            return secure ? miscRegInfo[reg][MISCREG_HYP_E2H_S_RD] :
+                miscRegInfo[reg][MISCREG_HYP_E2H_NS_RD];
+        } else {
+            return secure ? miscRegInfo[reg][MISCREG_HYP_S_RD] :
+                miscRegInfo[reg][MISCREG_HYP_NS_RD];
+        }
       case EL3:
         return el2_host ? miscRegInfo[reg][MISCREG_MON_E2H_RD] :
             secure ? miscRegInfo[reg][MISCREG_MON_NS0_RD] :
@@ -1428,8 +1433,13 @@ canWriteAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
         return secure ? miscRegInfo[reg][MISCREG_PRI_S_WR] :
             miscRegInfo[reg][MISCREG_PRI_NS_WR];
       case EL2:
-        return el2_host ? miscRegInfo[reg][MISCREG_HYP_E2H_WR] :
-            miscRegInfo[reg][MISCREG_HYP_WR];
+        if (el2_host) {
+            return secure ? miscRegInfo[reg][MISCREG_HYP_E2H_S_WR] :
+                miscRegInfo[reg][MISCREG_HYP_E2H_NS_WR];
+        } else {
+            return secure ? miscRegInfo[reg][MISCREG_HYP_S_WR] :
+                miscRegInfo[reg][MISCREG_HYP_NS_WR];
+        }
       case EL3:
         return el2_host ? miscRegInfo[reg][MISCREG_MON_E2H_WR] :
             secure ? miscRegInfo[reg][MISCREG_MON_NS0_WR] :

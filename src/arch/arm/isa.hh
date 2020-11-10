@@ -252,12 +252,30 @@ namespace ArmISA
                 privNonSecureRead(v);
                 return *this;
             }
+            chain hypE2HSecureRead(bool v = true) const {
+                info[MISCREG_HYP_E2H_S_RD] = v;
+                return *this;
+            }
+            chain hypE2HNonSecureRead(bool v = true) const {
+                info[MISCREG_HYP_E2H_NS_RD] = v;
+                return *this;
+            }
             chain hypE2HRead(bool v = true) const {
-                info[MISCREG_HYP_E2H_RD] = v;
+                hypE2HSecureRead(v);
+                hypE2HNonSecureRead(v);
+                return *this;
+            }
+            chain hypE2HSecureWrite(bool v = true) const {
+                info[MISCREG_HYP_E2H_S_WR] = v;
+                return *this;
+            }
+            chain hypE2HNonSecureWrite(bool v = true) const {
+                info[MISCREG_HYP_E2H_NS_WR] = v;
                 return *this;
             }
             chain hypE2HWrite(bool v = true) const {
-                info[MISCREG_HYP_E2H_WR] = v;
+                hypE2HSecureWrite(v);
+                hypE2HNonSecureWrite(v);
                 return *this;
             }
             chain hypE2H(bool v = true) const {
@@ -265,14 +283,39 @@ namespace ArmISA
                 hypE2HWrite(v);
                 return *this;
             }
+            chain hypSecureRead(bool v = true) const {
+                info[MISCREG_HYP_S_RD] = v;
+                return *this;
+            }
+            chain hypNonSecureRead(bool v = true) const {
+                info[MISCREG_HYP_NS_RD] = v;
+                return *this;
+            }
             chain hypRead(bool v = true) const {
                 hypE2HRead(v);
-                info[MISCREG_HYP_RD] = v;
+                hypSecureRead(v);
+                hypNonSecureRead(v);
+                return *this;
+            }
+            chain hypSecureWrite(bool v = true) const {
+                info[MISCREG_HYP_S_WR] = v;
+                return *this;
+            }
+            chain hypNonSecureWrite(bool v = true) const {
+                info[MISCREG_HYP_NS_WR] = v;
                 return *this;
             }
             chain hypWrite(bool v = true) const {
                 hypE2HWrite(v);
-                info[MISCREG_HYP_WR] = v;
+                hypSecureWrite(v);
+                hypNonSecureWrite(v);
+                return *this;
+            }
+            chain hypSecure(bool v = true) const {
+                hypE2HSecureRead(v);
+                hypE2HSecureWrite(v);
+                hypSecureRead(v);
+                hypSecureWrite(v);
                 return *this;
             }
             chain hyp(bool v = true) const {

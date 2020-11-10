@@ -1121,11 +1121,15 @@ namespace ArmISA
         MISCREG_PRI_S_RD,
         MISCREG_PRI_S_WR,
         // Hypervisor mode
-        MISCREG_HYP_RD,
-        MISCREG_HYP_WR,
+        MISCREG_HYP_NS_RD,
+        MISCREG_HYP_NS_WR,
+        MISCREG_HYP_S_RD,
+        MISCREG_HYP_S_WR,
         // Hypervisor mode, HCR_EL2.E2H == 1
-        MISCREG_HYP_E2H_RD,
-        MISCREG_HYP_E2H_WR,
+        MISCREG_HYP_E2H_NS_RD,
+        MISCREG_HYP_E2H_NS_WR,
+        MISCREG_HYP_E2H_S_RD,
+        MISCREG_HYP_E2H_S_WR,
         // Monitor mode, SCR.NS == 0
         MISCREG_MON_NS0_RD,
         MISCREG_MON_NS0_WR,
