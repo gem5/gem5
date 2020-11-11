@@ -58,12 +58,8 @@ class Gem5Extension: public tlm::tlm_extension<Gem5Extension>
         getExtension(const tlm::tlm_generic_payload &payload);
     PacketPtr getPacket();
 
-    bool isPipeThrough() const { return pipeThrough; }
-    void setPipeThrough() { pipeThrough = true; }
-
   private:
     PacketPtr Packet;
-    bool pipeThrough;
 };
 
 }

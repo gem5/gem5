@@ -181,7 +181,6 @@ TlmToGem5Bridge<BITWIDTH>::handleBeginReq(tlm::tlm_generic_payload &trans)
     // world and we can pipe through the original packet. Otherwise, we
     // generate a new packet based on the transaction.
     if (extension != nullptr) {
-        extension->setPipeThrough();
         pkt = extension->getPacket();
     } else {
         pkt = payload2packet(_id, trans);
@@ -306,7 +305,6 @@ TlmToGem5Bridge<BITWIDTH>::b_transport(tlm::tlm_generic_payload &trans,
     // If there is an extension, this transaction was initiated by the gem5
     // world and we can pipe through the original packet.
     if (extension != nullptr) {
-        extension->setPipeThrough();
         pkt = extension->getPacket();
     } else {
         pkt = payload2packet(_id, trans);
@@ -343,7 +341,6 @@ TlmToGem5Bridge<BITWIDTH>::transport_dbg(tlm::tlm_generic_payload &trans)
     // If there is an extension, this transaction was initiated by the gem5
     // world and we can pipe through the original packet.
     if (extension != nullptr) {
-        extension->setPipeThrough();
         bmp.sendFunctional(extension->getPacket());
     } else {
         auto pkt = payload2packet(_id, trans);
@@ -369,7 +366,6 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
     // If there is an extension, this transaction was initiated by the gem5
     // world and we can pipe through the original packet.
     if (extension != nullptr) {
-        extension->setPipeThrough();
         pkt = extension->getPacket();
     } else {
         pkt = payload2packet(_id, trans);
@@ -447,8 +443,6 @@ TlmToGem5Bridge<BITWIDTH>::recvTimingResp(PacketPtr pkt)
     // delete it. The packet travels back with the transaction.
     if (extension == nullptr)
         destroyPacket(pkt);
-    else
-        sc_assert(extension->isPipeThrough());
 
     sendBeginResp(trans, delay);
     trans.release();

@@ -41,7 +41,6 @@ namespace Gem5SystemC
 Gem5Extension::Gem5Extension(PacketPtr _packet)
 {
     packet = _packet;
-    pipeThrough = false;
 }
 
 Gem5Extension &
