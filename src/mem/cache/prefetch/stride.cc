@@ -187,7 +187,7 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
     }
 }
 
-inline uint32_t
+uint32_t
 StridePrefetcherHashedSetAssociative::extractSet(const Addr pc) const
 {
     const Addr hash1 = pc >> 1;
