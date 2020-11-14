@@ -117,7 +117,7 @@ class ProtocolTester : public ClockedObject
     typedef AddressManager::Location Location;
     typedef AddressManager::Value Value;
 
-    void init();
+    void init() override;
     RequestorID requestorId() { return _requestorId; };
     Port& getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
