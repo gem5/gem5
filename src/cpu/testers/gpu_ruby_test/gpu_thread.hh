@@ -90,8 +90,8 @@ class GpuThread : public ClockedObject
             : Event(CPU_Tick_Pri), thread(_thread), desc(_description)
         {}
         void setDesc(std::string _description) { desc = _description; }
-        void process() { thread->wakeup(); }
-        const std::string name() { return desc; }
+        void process() override { thread->wakeup(); }
+        const std::string name() const override { return desc; }
     };
 
     GpuThreadEvent threadEvent;
@@ -105,8 +105,13 @@ class GpuThread : public ClockedObject
         DeadlockCheckEvent(GpuThread* _thread)
             : Event(CPU_Tick_Pri), thread(_thread)
         {}
-        void process() { thread->checkDeadlock(); }
-        const std::string name() const { return "Tester deadlock check"; }
+        void process() override { thread->checkDeadlock(); }
+
+        const std::string
+        name() const override
+        {
+            return "Tester deadlock check";
+        }
     };
 
     DeadlockCheckEvent deadlockCheckEvent;
