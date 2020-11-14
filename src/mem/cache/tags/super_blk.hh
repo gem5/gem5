@@ -90,7 +90,7 @@ class CompressionBlk : public SectorSubBlk
      * variables will remain the same.
      */
     CompressionBlk& operator=(CompressionBlk&& other);
-    CacheBlk& operator=(CacheBlk&& other);
+    CacheBlk& operator=(CacheBlk&& other) override;
     ~CompressionBlk() = default;
 
     /**
