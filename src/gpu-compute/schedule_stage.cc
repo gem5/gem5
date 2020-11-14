@@ -144,6 +144,9 @@ ScheduleStage::exec()
                     wf->incLGKMInstsIssued();
                 }
             }
+            if (gpu_dyn_inst->isStore() && gpu_dyn_inst->isGlobalSeg()) {
+                wf->incExpInstsIssued();
+            }
         }
     }
 

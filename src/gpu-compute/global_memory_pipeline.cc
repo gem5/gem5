@@ -193,6 +193,10 @@ GlobalMemPipeline::exec()
                 mp->disassemble(), mp->seqNum());
         mp->initiateAcc(mp);
 
+        if (mp->isStore() && mp->isGlobalSeg()) {
+            mp->wavefront()->decExpInstsIssued();
+        }
+
         if (((mp->isMemSync() && !mp->isEndOfKernel()) || !mp->isMemSync())) {
             /**
              * if we are not in out-of-order data delivery mode
