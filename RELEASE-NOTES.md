@@ -1,3 +1,16 @@
+# Version 20.1.0.2
+
+**[HOTFIX]** This hotfix release fixes known two bugs:
+
+* A "ValueError: invalid literal for int() with base..." error was being thrown in certain circumstances due to a non-integer being passed to "MemorySize" via a division operation. This has been rectified.
+* An assertion in Stats could be triggered due to a name collision between two ThreadStateStats objects, due to both erroneously sharing the same ThreadID. This has been fixed.
+
+# Version 20.1.0.1
+
+**[HOTFIX]** A patch was applied to fix the Garnet network interface stats.
+Previously, the flit source delay was computed using both tick and cycles.
+This bug affected the overall behavior of the Garnet Network Model.
+
 # Version 20.1.0.0
 
 Thank you to everyone that made this release possible!
