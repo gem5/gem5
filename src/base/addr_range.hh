@@ -473,12 +473,18 @@ class AddrRange
      * ---------------------------------
      *
      * @param a the input address
-     * @return the new address
+     * @return the new address, or the input address if not interleaved
      *
      * @ingroup api_addr_range
      */
     inline Addr removeIntlvBits(Addr a) const
     {
+        // Directly return the address if the range is not interleaved
+        // to prevent undefined behavior.
+        if (!interleaved()) {
+            return a;
+        }
+
         // Get the LSB set from each mask
         int masks_lsb[masks.size()];
         for (int i = 0; i < masks.size(); i++) {
@@ -511,6 +517,12 @@ class AddrRange
      */
     inline Addr addIntlvBits(Addr a) const
     {
+        // Directly return the address if the range is not interleaved
+        // to prevent undefined behavior.
+        if (!interleaved()) {
+            return a;
+        }
+
         // Get the LSB set from each mask
         int masks_lsb[masks.size()];
         for (int i = 0; i < masks.size(); i++) {
