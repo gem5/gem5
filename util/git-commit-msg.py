@@ -109,10 +109,12 @@ commit_message = open(sys.argv[1]).read()
 commit_message_lines = commit_message.splitlines()
 commit_header = commit_message_lines[0]
 commit_header_match = \
-    re.search("^(\S[\w\-][,\s*[\w\-]+]*:.+\S$)", commit_header)
+    re.search("^(fixup! )?(\S[\w\-][,\s*[\w\-]+]*:.+\S$)", commit_header)
 if ((commit_header_match is None)):
     _printErrorQuit("Invalid commit header")
-_validateTags(commit_header)
+if commit_header_match.group(1) == "fixup! ":
+    sys.exit(0)
+_validateTags(commit_header_match.group(2))
 
 # Make sure commit title does not exceed threshold. This line is limited to
 # a smaller number because version control systems may add a prefix, causing
