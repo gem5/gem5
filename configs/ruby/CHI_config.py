@@ -112,8 +112,13 @@ class NoC_Params:
     router_buffer_size = 4
     cntrl_msg_size = 8
     data_width = 32
-    cross_links = []
-    cross_link_latency = 0
+    # Map of (src,dst) -> weight,latency (cycles)
+    # Customizes the weight and latency for the link between the routers src
+    # and dst.
+    # The custom latency applies in both directions unless both (src,dst) and
+    # (dst,src) are present.
+    # A new link is created if no src->dst link exists.
+    custom_links = {}
 
 
 class CHI_Node(SubSystem):
