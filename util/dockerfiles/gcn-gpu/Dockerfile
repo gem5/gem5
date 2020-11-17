@@ -54,20 +54,21 @@ RUN pip install -U setuptools scons==3.1.2 six
 ARG gem5_dist=http://dist.gem5.org/dist/develop
 
 # Install ROCm 1.6 binaries
-RUN wget -qO- ${gem5_dist}/apt_1.6.2.tar.bz2 \
+RUN wget -qO- ${gem5_dist}/apt_1.6.4.tar.bz2 \
     | tar -xjv \
-    && cd apt_1.6.2/pool/main/ \
+    && cd apt_1.6.4/pool/main/ \
     && dpkg -i h/hsakmt-roct-dev/* \
     && dpkg -i h/hsa-ext-rocr-dev/* \
     && dpkg -i h/hsa-rocr-dev/* \
     && dpkg -i r/rocm-utils/* \
     && dpkg -i h/hcc/* \
     && dpkg -i r/rocm-opencl/* \
-    && dpkg -i r/rocm-opencl-dev/*
+    && dpkg -i r/rocm-opencl-dev/* \
+    && dpkg -i h/hip_base/* \
+    && dpkg -i h/hip_hcc/*
 
 # Get ROCm libraries we need to compile from source (and ROCm-profiler)
-RUN git clone --single-branch https://github.com/ROCm-Developer-Tools/HIP/ && \
-    git clone --single-branch https://github.com/ROCmSoftwarePlatform/hipBLAS/ && \
+RUN git clone --single-branch https://github.com/ROCmSoftwarePlatform/hipBLAS/ && \
     git clone --single-branch https://github.com/ROCmSoftwarePlatform/rocBLAS/ && \
     git clone --single-branch https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/ && \
     git clone --single-branch https://github.com/ROCmSoftwarePlatform/MIOpen/ && \
@@ -77,12 +78,10 @@ RUN git clone --single-branch https://github.com/ROCm-Developer-Tools/HIP/ && \
 # Apply patches to various repos
 RUN mkdir -p /patch && cd /patch && \
     wget ${gem5_dist}/rocm_patches/hipBLAS.patch && \
-    wget ${gem5_dist}/rocm_patches/hip.patch_v2 && \
     wget ${gem5_dist}/rocm_patches/miopen-conv.patch && \
     wget ${gem5_dist}/rocm_patches/rocBLAS.patch
 
-RUN git -C /HIP/ checkout 0e3d824e && git -C /HIP/ apply /patch/hip.patch_v2 && \
-    git -C /hipBLAS/ checkout ee57787e && git -C /hipBLAS/ apply /patch/hipBLAS.patch && \
+RUN git -C /hipBLAS/ checkout ee57787e && git -C /hipBLAS/ apply /patch/hipBLAS.patch && \
     git -C /rocBLAS/ checkout cbff4b4e && git -C /rocBLAS/ apply /patch/rocBLAS.patch && \
     git -C /rocm-cmake/ checkout 12670acb && \
     git -C /MIOpenGEMM/ checkout 9547fb9e && \
@@ -97,17 +96,13 @@ ENV PATH ${ROCM_PATH}/bin:${HCC_HOME}/bin:${HSA_PATH}/bin:${HIP_PATH}/bin:${PATH
 ENV HCC_AMDGPU_TARGET gfx801
 
 # Create build dirs for machine learning ROCm installs
-RUN mkdir -p /HIP/build && \
-    mkdir -p /rocBLAS/build && \
+RUN mkdir -p /rocBLAS/build && \
     mkdir -p /hipBLAS/build && \
     mkdir -p /rocm-cmake/build && \
     mkdir -p /MIOpenGEMM/build && \
     mkdir -p /MIOpen/build
 
 # Do the builds, empty build dir to trim image size
-WORKDIR /HIP/build
-RUN cmake .. && make -j$(nproc) && make install && rm -rf *
-
 WORKDIR /rocBLAS/build
 RUN CXX=/opt/rocm/bin/hcc cmake -DCMAKE_CXX_FLAGS="--amdgpu-target=gfx801" .. && \
     make -j$(nproc) && make install && rm -rf *
@@ -144,7 +139,7 @@ RUN CXX=/opt/rocm/hcc/bin/hcc cmake \
     -DMIOPEN_CACHE_DIR=/.cache/miopen \
     -DMIOPEN_AMDGCN_ASSEMBLER_PATH=/opt/rocm/opencl/bin \
     -DHALF_INCLUDE_DIR=/MIOpen/half-1.12.0/include \
-    -DCMAKE_CXX_FLAGS="-isystem /usr/include/x86_64-linux-gnu" .. && \
+    -DCMAKE_CXX_FLAGS="-isystem /usr/include/x86_64-linux-gnu -DDGPU" .. && \
     make -j$(nproc) && make install && rm -rf *
 
 # Re-set defaults
@@ -166,4 +161,5 @@ RUN dpkg -i package/rocm-profiler_4.0.6036_amd64.deb
 # Always use python3 and create a link to config command for gem5 to find
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 RUN ln -sf /usr/bin/python3.9-config /usr/bin/python3-config
+
 WORKDIR /
