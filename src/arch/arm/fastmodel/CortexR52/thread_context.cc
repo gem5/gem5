@@ -36,10 +36,10 @@ namespace FastModel
 {
 
 CortexR52TC::CortexR52TC(
-        ::BaseCPU *cpu, int id, System *system, ::BaseTLB *dtb, ::BaseTLB *itb,
+        ::BaseCPU *cpu, int id, System *system, ::BaseMMU *mmu,
         ::BaseISA *isa, iris::IrisConnectionInterface *iris_if,
         const std::string &iris_path) :
-    ThreadContext(cpu, id, system, dtb, itb, isa, iris_if, iris_path)
+    ThreadContext(cpu, id, system, mmu, isa, iris_if, iris_path)
 {}
 
 bool

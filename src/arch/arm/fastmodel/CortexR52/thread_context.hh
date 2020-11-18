@@ -44,7 +44,7 @@ class CortexR52TC : public Iris::ThreadContext
 
   public:
     CortexR52TC(::BaseCPU *cpu, int id, System *system,
-                ::BaseTLB *dtb, ::BaseTLB *itb, ::BaseISA *isa,
+                ::BaseMMU *mmu, ::BaseISA *isa,
                 iris::IrisConnectionInterface *iris_if,
                 const std::string &iris_path);
 
