@@ -59,6 +59,7 @@
 #ifndef __SYSTEMC_TLM_BRIDGE_GEM5_TO_TLM_HH__
 #define __SYSTEMC_TLM_BRIDGE_GEM5_TO_TLM_HH__
 
+#include <functional>
 #include <string>
 
 #include "mem/port.hh"
@@ -72,6 +73,11 @@
 
 namespace sc_gem5
 {
+
+using PacketToPayloadConversionStep =
+    std::function<void(PacketPtr pkt, tlm::tlm_generic_payload &trans)>;
+
+void addPacketToPayloadConversionStep(PacketToPayloadConversionStep step);
 
 tlm::tlm_generic_payload *packet2payload(PacketPtr packet);
 

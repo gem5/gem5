@@ -58,6 +58,8 @@
 
 #include "systemc/tlm_bridge/gem5_to_tlm.hh"
 
+#include <utility>
+
 #include "params/Gem5ToTlmBridge32.hh"
 #include "params/Gem5ToTlmBridge64.hh"
 #include "sim/system.hh"
@@ -72,6 +74,27 @@ namespace sc_gem5
  * tlm transactions in the system.
  */
 Gem5SystemC::MemoryManager mm;
+
+namespace
+{
+/**
+ * Hold all the callbacks necessary to convert a gem5 packet to tlm payload.
+ */
+std::vector<PacketToPayloadConversionStep> extraPacketToPayloadSteps;
+}  // namespace
+
+/**
+ * Notify the Gem5ToTlm bridge that we need an extra step to properly convert a
+ * gem5 packet to tlm payload. This can be useful when there exists a SystemC
+ * extension that requires information in gem5 packet. For example, if a user
+ * defined a SystemC extension the carries stream_id, the user may add a step
+ * here to read stream_id out and set the extension properly.
+ */
+void
+addPacketToPayloadConversionStep(PacketToPayloadConversionStep step)
+{
+    extraPacketToPayloadSteps.push_back(std::move(step));
+}
 
 /**
  * Convert a gem5 packet to a TLM payload by copying all the relevant
@@ -109,6 +132,11 @@ packet2payload(PacketPtr packet)
     // Attach the packet pointer to the TLM transaction to keep track.
     auto *extension = new Gem5SystemC::Gem5Extension(packet);
     trans->set_auto_extension(extension);
+
+    // Apply all conversion steps necessary in this specific setup.
+    for (auto &step : extraPacketToPayloadSteps) {
+        step(packet, *trans);
+    }
 
     return trans;
 }

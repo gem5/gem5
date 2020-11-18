@@ -57,6 +57,8 @@
 
 #include "systemc/tlm_bridge/tlm_to_gem5.hh"
 
+#include <utility>
+
 #include "params/TlmToGem5Bridge32.hh"
 #include "params/TlmToGem5Bridge64.hh"
 #include "sim/system.hh"
@@ -65,6 +67,27 @@
 
 namespace sc_gem5
 {
+
+namespace
+{
+/**
+ * Hold all the callbacks necessary to convert a tlm payload to gem5 packet.
+ */
+std::vector<PayloadToPacketConversionStep> extraPayloadToPacketSteps;
+}  // namespace
+
+/**
+ * Notify the Tlm2Gem5 bridge that we need an extra step to properly convert a
+ * tlm payload to gem5 packet. This can be useful when there exists a SystemC
+ * extension that carries extra information. For example, SystemC user might
+ * define an extension to store stream_id, the user may then add an extra step
+ * to set the generated request's stream_id accordingly.
+ */
+void
+addPayloadToPacketConversionStep(PayloadToPacketConversionStep step)
+{
+    extraPayloadToPacketSteps.push_back(std::move(step));
+}
 
 PacketPtr
 payload2packet(RequestorID _id, tlm::tlm_generic_payload &trans)
@@ -95,6 +118,11 @@ payload2packet(RequestorID _id, tlm::tlm_generic_payload &trans)
      */
     auto pkt = new Packet(req, cmd);
     pkt->dataStatic(trans.get_data_ptr());
+
+    // Apply all conversion steps necessary in this specific setup.
+    for (auto &step : extraPayloadToPacketSteps) {
+        step(pkt, trans);
+    }
 
     return pkt;
 }
