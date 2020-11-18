@@ -509,7 +509,7 @@ class FastModelGIC(BaseGic):
         ]
         ranges += [
             AddrRange(its_bases[i], size=2 * gic_frame_size)
-            for i in xrange(sc_gic.its_count)
+            for i in range(sc_gic.its_count)
         ]
 
         return ranges
