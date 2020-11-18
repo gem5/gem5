@@ -94,12 +94,12 @@ namespace X86ISA {
               case VendorAndLargestExtFunc:
                 {
                   ISA *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
-                  const char *vendor_string = isa->getVendorString().c_str();
+                  auto vendor_string = isa->getVendorString();
                   result = CpuidResult(
                           0x80000000 + NumExtendedCpuidFuncs - 1,
-                          stringToRegister(vendor_string),
-                          stringToRegister(vendor_string + 4),
-                          stringToRegister(vendor_string + 8));
+                          stringToRegister(vendor_string.c_str()),
+                          stringToRegister(vendor_string.c_str() + 4),
+                          stringToRegister(vendor_string.c_str() + 8));
                 }
                 break;
               case FamilyModelSteppingBrandFeatures:
@@ -155,12 +155,12 @@ namespace X86ISA {
               case VendorAndLargestStdFunc:
                 {
                   ISA *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
-                  const char *vendor_string = isa->getVendorString().c_str();
+                  auto vendor_string = isa->getVendorString();
                   result = CpuidResult(
                           NumExtendedCpuidFuncs - 1,
-                          stringToRegister(vendor_string),
-                          stringToRegister(vendor_string + 4),
-                          stringToRegister(vendor_string + 8));
+                          stringToRegister(vendor_string.c_str()),
+                          stringToRegister(vendor_string.c_str() + 4),
+                          stringToRegister(vendor_string.c_str() + 8));
                 }
                 break;
               case FamilyModelStepping:
