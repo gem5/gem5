@@ -145,7 +145,7 @@ def toBool(value):
         return True
     if value in ('false', 'f', 'no', 'n', '0'):
         return False
-    return result
+    raise ValueError("cannot convert '%s' to bool" % value)
 
 def toFrequency(value):
     return toMetricFloat(value, 'frequency', 'Hz')
