@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import output
+from . import output
 
 class FileData(dict):
     def __init__(self, filename):
@@ -47,7 +47,7 @@ class RunData(dict):
     def __getattribute__(self, attr):
         if attr == 'total':
             total = 0.0
-            for value in self.itervalues():
+            for value in self.values():
                 total += value
             return total
 
@@ -55,7 +55,7 @@ class RunData(dict):
             return FileData(self.filename)
 
         if attr == 'maxsymlen':
-            return max([ len(sym) for sym in self.iterkeys() ])
+            return max([ len(sym) for sym in self.keys() ])
 
         return super(RunData, self).__getattribute__(attr)
 
@@ -69,7 +69,7 @@ class RunData(dict):
         total = float(self.total)
 
         # swap (string,count) order so we can sort on count
-        symbols = [ (count,name) for name,count in self.iteritems() ]
+        symbols = [ (count,name) for name,count in self.items() ]
         symbols.sort(reverse=True)
         if limit is not None:
             symbols = symbols[:limit]
@@ -79,7 +79,8 @@ class RunData(dict):
 
         symbolf = "%-" + str(maxsymlen + 1) + "s %.2f%%"
         for number,name in symbols:
-            print >>output, symbolf % (name, 100.0 * (float(number) / total))
+            print(symbolf % (name, 100.0 * (float(number) / total)),
+                file=output)
 
 class PCData(RunData):
     def __init__(self, filename=None, categorize=None, showidle=True):
@@ -109,16 +110,16 @@ class FuncNode(object):
         nodes = {}
         for line in filedata['function data']:
             data = line.split(' ')
-            node_id = long(data[0], 16)
+            node_id = int(data[0], 16)
             node = FuncNode()
             node.symbol = data[1]
             if node.symbol == '':
                 node.symbol = 'unknown'
-            node.count = long(data[2])
-            node.children = [ long(child, 16) for child in data[3:] ]
+            node.count = int(data[2])
+            node.children = [ int(child, 16) for child in data[3:] ]
             nodes[node_id] = node
 
-        for node in nodes.itervalues():
+        for node in nodes.values():
             children = []
             for cid in node.children:
                 child = nodes[cid]
@@ -126,8 +127,8 @@ class FuncNode(object):
                 child.parent = node
             node.children = tuple(children)
         if not nodes:
-            print filedata.filename
-            print nodes
+            print(filedata.filename)
+            print(nodes)
         return nodes[0]
 
     def total(self):
@@ -156,7 +157,7 @@ class FuncNode(object):
 
     def dump(self):
         kids = [ child.symbol for child in self.children]
-        print '%s %d <%s>' % (self.symbol, self.count, ', '.join(kids))
+        print('%s %d <%s>' % (self.symbol, self.count, ', '.join(kids)))
         for child in self.children:
             child.dump()
 
@@ -207,7 +208,7 @@ class FuncData(RunData):
             import sys
             output = sys.stdout
 
-        items = [ (val,key) for key,val in self.iteritems() ]
+        items = [ (val,key) for key,val in self.items() ]
         items.sort(reverse=True)
         for val,key in items:
             if maxcount is not None:
@@ -216,7 +217,7 @@ class FuncData(RunData):
                 maxcount -= 1
 
             percent = val * 100.0 / self.total
-            print >>output, '%-30s %8s' % (key, '%3.2f%%' % percent)
+            print('%-30s %8s' % (key, '%3.2f%%' % percent), file=output)
 
 class Profile(object):
     # This list controls the order of values in stacked bar data output
@@ -265,8 +266,8 @@ class Profile(object):
             self.data[run] = {}
 
         if cpu in self.data[run]:
-            raise AttributeError, \
-                  'data already stored for run %s and cpu %s' % (run, cpu)
+            raise AttributeError(
+                'data already stored for run %s and cpu %s' % (run, cpu))
 
         self.data[run][cpu] = data
 
@@ -274,12 +275,12 @@ class Profile(object):
         try:
             return self.data[run][cpu]
         except KeyError:
-            print run, cpu
+            print(run, cpu)
             return None
 
     def alldata(self):
-        for run,cpus in self.data.iteritems():
-            for cpu,data in cpus.iteritems():
+        for run,cpus in self.data.items():
+            for cpu,data in cpus.items():
                 yield run,cpu,data
 
     def get(self, job, stat, system=None):
@@ -287,7 +288,7 @@ class Profile(object):
             system = job.system
 
         if system is None:
-            raise AttributeError, 'The job must have a system set'
+            raise AttributeError('The job must have a system set')
 
         cpu = '%s.run%d' % (system, self.cpu)
 
@@ -299,16 +300,16 @@ class Profile(object):
         for category in self.categories:
             val = float(data.get(category, 0.0))
             if val < 0.0:
-                raise ValueError, 'value is %f' % val
+                raise ValueError('value is %f' % val)
             values.append(val)
         total = sum(values)
         return [ v / total * 100.0 for v in values ]
 
     def dump(self):
         for run,cpu,data in self.alldata():
-            print 'run %s, cpu %s' % (run, cpu)
+            print('run %s, cpu %s' % (run, cpu))
             data.dump()
-            print
+            print()
 
     def write_dot(self, threshold, jobfile=None, jobs=None):
         import pydot
@@ -356,12 +357,12 @@ class Profile(object):
         for job in thejobs:
             cpu =  '%s.run%d' % (job.system, self.cpu)
             symbols = self.getdata(job.name, cpu)
-            print job.name
+            print(job.name)
             symbols.display(limit=limit, maxsymlen=maxsymlen)
-            print
+            print()
 
 
-from categories import func_categorize, pc_categorize
+from .categories import func_categorize, pc_categorize
 class PCProfile(Profile):
     def __init__(self, categorize=pc_categorize):
         super(PCProfile, self).__init__(PCData, categorize)
@@ -372,7 +373,7 @@ class FuncProfile(Profile):
         super(FuncProfile, self).__init__(FuncData, categorize)
 
 def usage(exitcode = None):
-    print '''\
+    print('''\
 Usage: %s [-bc] [-g <dir>] [-j <jobfile>] [-n <num>]
 
     -c           groups symbols into categories
@@ -381,7 +382,7 @@ Usage: %s [-bc] [-g <dir>] [-j <jobfile>] [-n <num>]
     -g <d>       draw graphs and send output to <d>
     -j <jobfile> specify a different jobfile (default is Test.py)
     -n <n>       selects number of top symbols to print (default 5)
-''' % sys.argv[0]
+''' % sys.argv[0])
 
     if exitcode is not None:
         sys.exit(exitcode)
@@ -389,7 +390,7 @@ Usage: %s [-bc] [-g <dir>] [-j <jobfile>] [-n <num>]
 if __name__ == '__main__':
     import getopt, re, sys
     from os.path import expanduser
-    from output import StatOutput
+    from .output import StatOutput
 
     # default option values
     numsyms = 10
@@ -437,7 +438,7 @@ if __name__ == '__main__':
             textout = True
 
     if args:
-        print "'%s'" % args, len(args)
+        print("'%s'" % args, len(args))
         usage(1)
 
     if inputfile:

@@ -40,12 +40,12 @@ import gobject
 import cairo
 import re
 
-from point import Point
-import parse
-import colours
-import model
-from model import Id, BlobModel, BlobDataSelect, special_state_chars
-import blobs
+from .point import Point
+from . import parse
+from . import colours
+from . import model
+from .model import Id, BlobModel, BlobDataSelect, special_state_chars
+from . import blobs
 
 class BlobView(object):
     """The canvas view of the pipeline"""
@@ -382,7 +382,7 @@ class Overlay(object):
 
         widths = [0] * num_columns
         for line in lines:
-            for i in xrange(0, len(line)):
+            for i in range(len(line)):
                 widths[i] = max(widths[i], text_width(line[i]))
 
         # Calculate the size of the speech bubble
@@ -408,7 +408,7 @@ class Overlay(object):
         id_size = Point(id_width, text_size)
 
         # Draw the rows in the table
-        for i in xrange(0, len(insts)):
+        for i in range(0, len(insts)):
             row_point = text_point
             inst = insts[i]
             line = lines[i]
@@ -419,7 +419,7 @@ class Overlay(object):
             row_point += Point(1.0, 0.0).scale(id_width)
             row_point += text_step
             # Draw the columns of each row
-            for j in xrange(0, len(line)):
+            for j in range(0, len(line)):
                 row_point += gap_step
                 cr.move_to(*row_point.to_pair())
                 cr.show_text(line[j])
@@ -454,7 +454,7 @@ class BlobWindow(object):
             self.miniViewHBox = gtk.HBox(homogeneous=True, spacing=2)
 
             # Draw mini views
-            for i in xrange(1, self.miniViewCount + 1):
+            for i in range(1, self.miniViewCount + 1):
                 miniView = BlobView(self.model)
                 miniView.set_time_index(0)
                 miniView.masterScale = Point(0.1, 0.1)
@@ -469,18 +469,18 @@ class BlobWindow(object):
         self.window.add(self.vbox)
 
         def show_event(picChar, event):
-            print '**** Comments for', event.unit, \
-                'at time', self.view.time
-            for name, value in event.pairs.iteritems():
-                print name, '=', value
+            print('**** Comments for', event.unit, \
+                'at time', self.view.time)
+            for name, value in event.pairs.items():
+                print(name, '=', value)
             for comment in event.comments:
-                print comment
+                print(comment)
             if picChar in event.visuals:
                 # blocks = event.visuals[picChar].elems()
-                print '**** Colour data'
+                print('**** Colour data')
                 objs = event.find_ided_objects(self.model, picChar, True)
                 for obj in objs:
-                    print ' '.join(obj.table_line())
+                    print(' '.join(obj.table_line()))
 
         def clicked_da(da, b):
             point = Point(b.x, b.y)
@@ -506,7 +506,7 @@ class BlobWindow(object):
         self.view.set_da_size()
         self.view.da.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         self.view.da.connect('button-press-event', clicked_da)
-        self.window.connect('destroy', lambda(widget): gtk.main_quit())
+        self.window.connect('destroy', lambda widget: gtk.main_quit())
 
         def resize(window, event):
             """Resize DrawingArea to match new window size"""

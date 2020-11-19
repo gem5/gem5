@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 # Copyright (c) 2003-2004 The Regents of The University of Michigan
 # All rights reserved.
@@ -29,7 +29,7 @@
 import re, sys, math
 
 def usage():
-    print '''\
+    print('''\
 Usage: %s [-E] [-F] [ -G <get> ] [-d <db> ] [-g <graphdir> ] [-h <host>] [-p]
        [-s <system>] [-r <runs> ] [-T <samples>] [-u <username>]
        <command> [command args]
@@ -46,7 +46,7 @@ Usage: %s [-E] [-F] [ -G <get> ] [-d <db> ] [-g <graphdir> ] [-h <host>] [-p]
 
        database    <command>          Where command is drop, init, or clean
 
-''' % sys.argv[0]
+''' % sys.argv[0])
     sys.exit(1)
 
 def getopts(list, flags):
@@ -65,7 +65,7 @@ def commands(options, command, args):
     if command == 'database':
         if len(args) == 0: raise CommandException
 
-        import dbinit
+        from . import dbinit
         mydb = dbinit.MyDB(options)
 
         if args[0] == 'drop':
@@ -96,7 +96,7 @@ def commands(options, command, args):
 
         raise CommandException
 
-    import db
+    from . import db
     source = db.Database()
     source.host = options.host
     source.db = options.db
@@ -167,14 +167,14 @@ def commands(options, command, args):
         source.method = 'sum'
 
         def disp(*args):
-            print "%-35s %12s %12s %4s %5s %5s %5s %10s" % args
+            print("%-35s %12s %12s %4s %5s %5s %5s %10s" % args)
 
         # temporary variable containing a bunch of dashes
         d = '-' * 100
 
         #loop through all the stats selected
         for stat in stats:
-            print "%s:" % stat.name
+            print("%s:" % stat.name)
             disp("run name", "average", "stdev", ">10%", ">1SDV", ">2SDV",
                  "SAMP", "CV")
             disp(d[:35], d[:12], d[:12], d[:4], d[:5], d[:5], d[:5], d[:10])
@@ -244,10 +244,10 @@ def commands(options, command, args):
 
     if options.ticks:
         if not options.graph:
-            print 'only displaying sample %s' % options.ticks
+            print('only displaying sample %s' % options.ticks)
         source.ticks = [ int(x) for x in options.ticks.split() ]
 
-    from output import StatOutput
+    from .output import StatOutput
     output = StatOutput(options.jobfile, source)
     output.xlabel = 'System Configuration'
     output.colormap = 'RdYlGn'
@@ -274,7 +274,7 @@ def commands(options, command, args):
     if len(args):
         raise CommandException
 
-    from info import ProxyGroup
+    from .info import ProxyGroup
     proxy = ProxyGroup(system = source[options.system])
     system = proxy.system
 

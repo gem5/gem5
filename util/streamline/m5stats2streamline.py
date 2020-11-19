@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 # Copyright (c) 2012, 2014 ARM Limited
 # All rights reserved
@@ -59,7 +59,7 @@
 # Subsequent versions should be backward compatible
 
 import re, sys, os
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 import gzip
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as minidom
@@ -109,7 +109,7 @@ parser.add_argument("--verbose", action="store_true",
 args = parser.parse_args()
 
 if not re.match("(.*)\.apc", args.output_path):
-    print "ERROR: <dest .apc folder> should end with '.apc'!"
+    print("ERROR: <dest .apc folder> should end with '.apc'!")
     sys.exit(1)
 
 # gzipped BMP files for visual annotation is supported in Streamline 5.14.
@@ -130,13 +130,13 @@ end_tick = -1
 def parseConfig(config_file):
     global num_cpus, num_l2
 
-    print "\n==============================="
-    print "Parsing gem5 config.ini file..."
-    print config_file
-    print "===============================\n"
+    print("\n===============================")
+    print("Parsing gem5 config.ini file...")
+    print(config_file)
+    print("===============================\n")
     config = ConfigParser()
     if not config.read(config_file):
-        print "ERROR: config file '", config_file, "' not found"
+        print("ERROR: config file '", config_file, "' not found")
         sys.exit(1)
 
     if config.has_section("system.cpu"):
@@ -153,9 +153,9 @@ def parseConfig(config_file):
         while config.has_section("system.l2_cache" + str(num_l2)):
             num_l2 += 1
 
-    print "Num CPUs:", num_cpus
-    print "Num L2s:", num_l2
-    print ""
+    print("Num CPUs:", num_cpus)
+    print("Num L2s:", num_l2)
+    print("")
 
     return (num_cpus, num_l2)
 
@@ -379,7 +379,7 @@ def addFrameHeader(frame_type, body, core):
     elif frame_type == "Idle":
         code = 9
     else:
-        print "ERROR: Unknown frame type:", frame_type
+        print("ERROR: Unknown frame type:", frame_type)
         sys.exit(1)
 
     packed_code = packed32(code)
@@ -542,10 +542,10 @@ def exitIdleFrame(timestamp, core):
 
 ####################################################################
 def parseProcessInfo(task_file):
-    print "\n==============================="
-    print "Parsing Task file..."
-    print task_file
-    print "===============================\n"
+    print("\n===============================")
+    print("Parsing Task file...")
+    print(task_file)
+    print("===============================\n")
 
     global start_tick, end_tick, num_cpus
     global process_dict, thread_dict, process_list
@@ -583,8 +583,8 @@ def parseProcessInfo(task_file):
         else:
             process_file = open(task_file, 'rb')
     except:
-        print "ERROR opening task file:", task_file
-        print "Make sure context switch task dumping is enabled in gem5."
+        print("ERROR opening task file:", task_file)
+        print("Make sure context switch task dumping is enabled in gem5.")
         sys.exit(1)
 
     process_re = re.compile("tick=(\d+)\s+(\d+)\s+cpu_id=(\d+)\s+" +
@@ -605,18 +605,18 @@ def parseProcessInfo(task_file):
 
             if not task_name_failure_warned:
                 if task_name == "FailureIn_curTaskName":
-                    print "-------------------------------------------------"
-                    print "WARNING: Task name not set correctly!"
-                    print "Process/Thread info will not be displayed correctly"
-                    print "Perhaps forgot to apply m5struct.patch to kernel?"
-                    print "-------------------------------------------------"
+                    print("-------------------------------------------------")
+                    print("WARNING: Task name not set correctly!")
+                    print("Process/Thread info will not be displayed correctly")
+                    print("Perhaps forgot to apply m5struct.patch to kernel?")
+                    print("-------------------------------------------------")
                     task_name_failure_warned = True
 
             if not tgid in process_dict:
                 if tgid == pid:
                     # new task is parent as well
                     if args.verbose:
-                        print "new process", uid, pid, tgid, task_name
+                        print("new process", uid, pid, tgid, task_name)
                     if tgid == 0:
                         # new process is the "idle" task
                         process = Task(uid, pid, tgid, "idle", True, tick)
@@ -639,16 +639,16 @@ def parseProcessInfo(task_file):
                 if tgid == pid:
                     if process_dict[tgid].task_name == "_Unknown_":
                         if args.verbose:
-                            print "new process", \
-                                process_dict[tgid].uid, pid, tgid, task_name
+                            print("new process", \
+                                process_dict[tgid].uid, pid, tgid, task_name)
                         process_dict[tgid].task_name = task_name
                     if process_dict[tgid].task_name != task_name and tgid != 0:
                         process_dict[tgid].task_name = task_name
 
             if not pid in thread_dict:
                 if args.verbose:
-                    print "new thread", \
-                       uid, process_dict[tgid].uid, pid, tgid, task_name
+                    print("new thread", \
+                       uid, process_dict[tgid].uid, pid, tgid, task_name)
                 thread = Task(uid, pid, tgid, task_name, False, tick)
                 uid += 1
                 thread_dict[pid] = thread
@@ -658,7 +658,7 @@ def parseProcessInfo(task_file):
                     thread_dict[pid].task_name = task_name
 
             if args.verbose:
-                print tick, uid, cpu_id, pid, tgid, task_name
+                print(tick, uid, cpu_id, pid, tgid, task_name)
 
             task = thread_dict[pid]
             event = Event(tick, task)
@@ -666,26 +666,26 @@ def parseProcessInfo(task_file):
             unified_event_list.append(event)
 
             if len(unified_event_list) == num_events:
-                print "Truncating at", num_events, "events!"
+                print("Truncating at", num_events, "events!")
                 break
-    print "Found %d events." % len(unified_event_list)
+    print("Found %d events." % len(unified_event_list))
 
     for process in process_list:
         if process.pid > 9990: # fix up framebuffer ticks
             process.tick = start_tick
-        print process.uid, process.pid, process.tgid, \
-            process.task_name, str(process.tick)
+        print(process.uid, process.pid, process.tgid, \
+            process.task_name, str(process.tick))
         for thread in process.children:
             if thread.pid > 9990:
                 thread.tick = start_tick
-            print "\t", thread.uid, thread.pid, thread.tgid, \
-                thread.task_name, str(thread.tick)
+            print("\t", thread.uid, thread.pid, thread.tgid, \
+                thread.task_name, str(thread.tick))
 
     end_tick = tick
 
-    print "Start tick:", start_tick
-    print "End tick:  ", end_tick
-    print ""
+    print("Start tick:", start_tick)
+    print("End tick:  ", end_tick)
+    print("")
 
     return
 
@@ -696,7 +696,7 @@ def initOutput(output_path):
 
 def ticksToNs(tick):
     if ticks_in_ns < 0:
-        print "ticks_in_ns not set properly!"
+        print("ticks_in_ns not set properly!")
         sys.exit(1)
 
     return tick / ticks_in_ns
@@ -763,7 +763,7 @@ class StatsEntry(object):
                     per_cpu_name = re.sub("#", "", self.name)
 
                 self.per_cpu_name.append(per_cpu_name)
-                print "\t", per_cpu_name
+                print("\t", per_cpu_name)
 
                 self.per_cpu_regex_string.\
                     append("^" + per_cpu_name + "\s+[\d\.]+")
@@ -787,7 +787,7 @@ class Stats(object):
         self.next_key = 1
 
     def register(self, name, group, group_index, per_cpu):
-        print "registering stat:", name, "group:", group, group_index
+        print("registering stat:", name, "group:", group, group_index)
         self.stats_list.append(StatsEntry(name, group, group_index, per_cpu, \
             self.next_key))
         self.next_key += 1
@@ -795,7 +795,7 @@ class Stats(object):
     # Union of all stats to accelerate parsing speed
     def createStatsRegex(self):
         regex_strings = [];
-        print "\nnum entries in stats_list", len(self.stats_list)
+        print("\nnum entries in stats_list", len(self.stats_list))
         for entry in self.stats_list:
             if entry.per_cpu:
                 for i in range(num_cpus):
@@ -807,17 +807,17 @@ class Stats(object):
 
 
 def registerStats(config_file):
-    print "==============================="
-    print "Parsing stats config.ini file..."
-    print config_file
-    print "==============================="
+    print("===============================")
+    print("Parsing stats config.ini file...")
+    print(config_file)
+    print("===============================")
 
     config = ConfigParser()
     if not config.read(config_file):
-        print "ERROR: config file '", config_file, "' not found!"
+        print("ERROR: config file '", config_file, "' not found!")
         sys.exit(1)
 
-    print "\nRegistering Stats..."
+    print("\nRegistering Stats...")
 
     stats = Stats()
 
@@ -860,10 +860,10 @@ def registerStats(config_file):
 # Parse and read in gem5 stats file
 # Streamline counters are organized per CPU
 def readGem5Stats(stats, gem5_stats_file):
-    print "\n==============================="
-    print "Parsing gem5 stats file..."
-    print gem5_stats_file
-    print "===============================\n"
+    print("\n===============================")
+    print("Parsing gem5 stats file...")
+    print(gem5_stats_file)
+    print("===============================\n")
     ext = os.path.splitext(gem5_stats_file)[1]
 
     window_start_regex = \
@@ -882,7 +882,7 @@ def readGem5Stats(stats, gem5_stats_file):
         else:
             f = open(gem5_stats_file, "r")
     except:
-        print "ERROR opening stats file", gem5_stats_file, "!"
+        print("ERROR opening stats file", gem5_stats_file, "!")
         sys.exit(1)
 
     stats_not_found_list = stats.stats_list[:]
@@ -893,9 +893,9 @@ def readGem5Stats(stats, gem5_stats_file):
         try:
             line = f.readline()
         except IOError:
-            print ""
-            print "WARNING: IO error in stats file"
-            print "(gzip stream not closed properly?)...continuing for now"
+            print("")
+            print("WARNING: IO error in stats file")
+            print("(gzip stream not closed properly?)...continuing for now")
             error = True
         if not line:
             break
@@ -906,8 +906,8 @@ def readGem5Stats(stats, gem5_stats_file):
             if m:
                 sim_freq = int(m.group(1)) # ticks in 1 sec
                 ticks_in_ns = int(sim_freq / 1e9)
-                print "Simulation frequency found! 1 tick == %e sec\n" \
-                        % (1.0 / sim_freq)
+                print("Simulation frequency found! 1 tick == %e sec\n" \
+                        % (1.0 / sim_freq))
 
         # Final tick in gem5 stats: current absolute timestamp
         m = final_tick_regex.match(line)
@@ -920,25 +920,25 @@ def readGem5Stats(stats, gem5_stats_file):
 
         if (window_end_regex.match(line) or error):
             if args.verbose:
-                print "new window"
+                print("new window")
             for stat in stats.stats_list:
                 if stat.per_cpu:
                     for i in range(num_cpus):
                         if not stat.per_cpu_found[i]:
                             if not stat.not_found_at_least_once:
-                                print "WARNING: stat not found in window #", \
-                                    window_num, ":", stat.per_cpu_name[i]
-                                print "suppressing further warnings for " + \
-                                    "this stat"
+                                print("WARNING: stat not found in window #", \
+                                    window_num, ":", stat.per_cpu_name[i])
+                                print("suppressing further warnings for " + \
+                                    "this stat")
                                 stat.not_found_at_least_once = True
                             stat.values[i].append(str(0))
                         stat.per_cpu_found[i] = False
                 else:
                     if not stat.found:
                         if not stat.not_found_at_least_once:
-                            print "WARNING: stat not found in window #", \
-                                window_num, ":", stat.name
-                            print "suppressing further warnings for this stat"
+                            print("WARNING: stat not found in window #", \
+                                window_num, ":", stat.name)
+                            print("suppressing further warnings for this stat")
                             stat.not_found_at_least_once = True
                         stat.values.append(str(0))
                     stat.found = False
@@ -960,7 +960,7 @@ def readGem5Stats(stats, gem5_stats_file):
                             else:
                                 value = str(int(float(m.group(1))))
                             if args.verbose:
-                                print stat.per_cpu_name[i], value
+                                print(stat.per_cpu_name[i], value)
                             stat.values[i].append(value)
                             stat.per_cpu_found[i] = True
                             all_found = True
@@ -976,7 +976,7 @@ def readGem5Stats(stats, gem5_stats_file):
                     if m:
                         value = str(int(float(m.group(1))))
                         if args.verbose:
-                            print stat.name, value
+                            print(stat.name, value)
                         stat.values.append(value)
                         stat.found = True
                         stats_not_found_list.remove(stat)
@@ -1048,7 +1048,7 @@ def writeCookiesThreads(blob):
     thread_list = []
     for process in process_list:
         if process.uid > 0:
-            print "cookie", process.task_name, process.uid
+            print("cookie", process.task_name, process.uid)
             writeBinary(blob, cookieNameFrame(process.uid, process.task_name))
 
         # pid and tgid need to be positive values -- no longer true?
@@ -1058,8 +1058,8 @@ def writeCookiesThreads(blob):
     # Threads need to be sorted in timestamp order
     thread_list.sort(key = lambda x: x.tick)
     for thread in thread_list:
-        print "thread", thread.task_name, (ticksToNs(thread.tick)),\
-                thread.tgid, thread.pid
+        print("thread", thread.task_name, (ticksToNs(thread.tick)),\
+                thread.tgid, thread.pid)
         writeBinary(blob, threadNameFrame(ticksToNs(thread.tick),\
                 thread.pid, thread.task_name))
 
@@ -1070,7 +1070,7 @@ def writeSchedEvents(blob):
             timestamp = ticksToNs(event.tick)
             pid = event.task.tgid
             tid = event.task.pid
-            if process_dict.has_key(event.task.tgid):
+            if event.task.tgid in process_dict:
                 cookie = process_dict[event.task.tgid].uid
             else:
                 cookie = 0
@@ -1084,7 +1084,7 @@ def writeSchedEvents(blob):
             state = 0
 
             if args.verbose:
-                print cpu, timestamp, pid, tid, cookie
+                print(cpu, timestamp, pid, tid, cookie)
 
             writeBinary(blob,\
                 schedSwitchFrame(cpu, timestamp, pid, tid, cookie, state))
@@ -1163,7 +1163,7 @@ def writeVisualAnnotations(blob, input_path, output_path):
             writeBinary(blob, annotateFrame(0, annotate_pid, ticksToNs(tick), \
                                 len(userspace_body), userspace_body))
 
-    print "\nfound", frame_count, "frames for visual annotation.\n"
+    print("\nfound", frame_count, "frames for visual annotation.\n")
 
 
 def createApcProject(input_path, output_path, stats):
@@ -1177,13 +1177,13 @@ def createApcProject(input_path, output_path, stats):
 
     writeCookiesThreads(blob)
 
-    print "writing Events"
+    print("writing Events")
     writeSchedEvents(blob)
 
-    print "writing Counters"
+    print("writing Counters")
     writeCounters(blob, stats)
 
-    print "writing Visual Annotations"
+    print("writing Visual Annotations")
     writeVisualAnnotations(blob, input_path, output_path)
 
     doSessionXML(output_path)
@@ -1203,7 +1203,7 @@ output_path = args.output_path
 # Make sure input path exists
 ####
 if not os.path.exists(input_path):
-    print "ERROR: Input path %s does not exist!" % input_path
+    print("ERROR: Input path %s does not exist!" % input_path)
     sys.exit(1)
 
 ####
@@ -1228,14 +1228,14 @@ stats = registerStats(stat_config_file)
 # Check if both stats.txt and stats.txt.gz exist and warn if both exist
 if os.path.exists(input_path + "/stats.txt") and \
     os.path.exists(input_path + "/stats.txt.gz"):
-    print "WARNING: Both stats.txt.gz and stats.txt exist. \
-            Using stats.txt.gz by default."
+    print("WARNING: Both stats.txt.gz and stats.txt exist. \
+            Using stats.txt.gz by default.")
 
 gem5_stats_file = input_path + "/stats.txt.gz"
 if not os.path.exists(gem5_stats_file):
     gem5_stats_file = input_path + "/stats.txt"
 if not os.path.exists(gem5_stats_file):
-    print "ERROR: stats.txt[.gz] file does not exist in %s!" % input_path
+    print("ERROR: stats.txt[.gz] file does not exist in %s!" % input_path)
     sys.exit(1)
 
 readGem5Stats(stats, gem5_stats_file)
@@ -1245,4 +1245,4 @@ readGem5Stats(stats, gem5_stats_file)
 ####
 createApcProject(input_path, output_path, stats)
 
-print "All done!"
+print("All done!")

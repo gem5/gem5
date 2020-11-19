@@ -24,8 +24,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import division
+
 import operator, re, types
+from functools import reduce
 
 class ProxyError(Exception):
     pass
@@ -53,7 +54,7 @@ def value(stat, *args):
 def values(stat, run):
     stat = unproxy(stat)
     result = []
-    for i in xrange(len(stat)):
+    for i in range(len(stat)):
         val = value(stat, run, i)
         if val is None:
             return None
@@ -69,9 +70,9 @@ def len(stat):
 
 class Value(object):
     def __scalar__(self):
-        raise AttributeError, "must define __scalar__ for %s" % (type (self))
+        raise AttributeError("must define __scalar__ for %s" % (type (self)))
     def __vector__(self):
-        raise AttributeError, "must define __vector__ for %s" % (type (self))
+        raise AttributeError("must define __vector__ for %s" % (type (self)))
 
     def __add__(self, other):
         return BinaryProxy(operator.__add__, self, other)
@@ -114,7 +115,7 @@ class Scalar(Value):
         return False
 
     def __value__(self, run):
-        raise AttributeError, '__value__ must be defined'
+        raise AttributeError('__value__ must be defined')
 
 class VectorItemProxy(Value):
     def __init__(self, proxy, index):
@@ -138,7 +139,7 @@ class Vector(Value):
         return True
 
     def __value__(self, run, index):
-        raise AttributeError, '__value__ must be defined'
+        raise AttributeError('__value__ must be defined')
 
     def __getitem__(self, index):
         return VectorItemProxy(self, index)
@@ -162,14 +163,14 @@ class VectorConstant(Vector):
         return str(self.constant)
 
 def WrapValue(value):
-    if isinstance(value, (int, long, float)):
+    if isinstance(value, (int, float)):
         return ScalarConstant(value)
     if isinstance(value, (list, tuple)):
         return VectorConstant(value)
     if isinstance(value, Value):
         return value
 
-    raise AttributeError, 'Only values can be wrapped'
+    raise AttributeError('Only values can be wrapped')
 
 class Statistic(object):
     def __getattr__(self, attr):
@@ -182,7 +183,7 @@ class Statistic(object):
 
     def __setattr__(self, attr, value):
         if attr == 'stat':
-            raise AttributeError, '%s is read only' % stat
+            raise AttributeError('%s is read only' % stat)
         if attr in ('source', 'ticks'):
             if getattr(self, attr) != value:
                 if hasattr(self, 'data'):
@@ -290,8 +291,8 @@ class BinaryProxy(ValueProxy):
         len1 = len(self.arg1)
 
         if len0 != len1:
-            raise AttributeError, \
-                  "vectors of different lengths %d != %d" % (len0, len1)
+            raise AttributeError(
+                "vectors of different lengths %d != %d" % (len0, len1))
 
         return len0
 
@@ -342,8 +343,8 @@ class AttrProxy(Proxy):
         proxy = unproxy(self.proxy)
         try:
             attr = getattr(proxy, self.attr)
-        except AttributeError, e:
-            raise ProxyError, e
+        except AttributeError as e:
+            raise ProxyError(e)
         return unproxy(attr)
 
     def __str__(self):
@@ -372,7 +373,7 @@ class ScalarStat(Statistic,Scalar):
         return self.data[run][0][0]
 
     def display(self, run=None):
-        import display
+        from . import display
         p = display.Print()
         p.name = self.name
         p.desc = self.desc
@@ -392,11 +393,11 @@ class VectorStat(Statistic,Vector):
         return self.x
 
     def display(self, run=None):
-        import display
+        from . import display
         d = display.VectorDisplay()
         d.name = self.name
         d.desc = self.desc
-        d.value = [ value(self, run, i) for i in xrange(len(self)) ]
+        d.value = [ value(self, run, i) for i in range(len(self)) ]
         d.flags = self.flags
         d.precision = self.precision
         d.display()
@@ -420,7 +421,7 @@ class SimpleDist(Statistic):
         self.samples = samples
 
     def display(self, name, desc, flags, precision):
-        import display
+        from . import display
         p = display.Print()
         p.flags = flags
         p.precision = precision
@@ -490,7 +491,7 @@ class FullDist(SimpleDist):
         self.size = size
 
     def display(self, name, desc, flags, precision):
-        import display
+        from . import display
         p = display.Print()
         p.flags = flags
         p.precision = precision
@@ -542,7 +543,7 @@ class FullDist(SimpleDist):
             self.minval = min(self.minval, other.minval)
             self.maxval = max(self.maxval, other.maxval)
             self.under -= under
-            self.vec = map(lambda x,y: x - y, self.vec, other.vec)
+            self.vec = list(map(lambda x,y: x - y, self.vec, other.vec))
             self.over -= over
         return self
 
@@ -559,7 +560,7 @@ class FullDist(SimpleDist):
             self.minval = min(self.minval, other.minval)
             self.maxval = max(self.maxval, other.maxval)
             self.under += other.under
-            self.vec = map(lambda x,y: x + y, self.vec, other.vec)
+            self.vec = list(map(lambda x,y: x + y, self.vec, other.vec))
             self.over += other.over
         return self
 
@@ -572,14 +573,14 @@ class FullDist(SimpleDist):
 
         if self.samples:
             self.under /= other
-            for i in xrange(len(self.vec)):
+            for i in range(len(self.vec)):
                 self.vec[i] /= other
             self.over /= other
         return self
 
 class Dist(Statistic):
     def display(self):
-        import display
+        from . import display
         if not display.all and not (self.flags & flags.printable):
             return
 
@@ -608,7 +609,7 @@ class Dist(Statistic):
 
 class VectorDist(Statistic):
     def display(self):
-        import display
+        from . import display
         if not display.all and not (self.flags & flags.printable):
             return
 
@@ -657,8 +658,8 @@ class VectorDist(Statistic):
     def comparable(self, other):
         return self.name == other.name and \
                alltrue(map(lambda x, y : x.comparable(y),
-                           self.dist,
-                           other.dist))
+                       self.dist,
+                       other.dist))
 
     def __eq__(self, other):
         return alltrue(map(lambda x, y : x == y, self.dist, other.dist))
@@ -693,20 +694,20 @@ class VectorDist(Statistic):
 
 class Vector2d(Statistic):
     def display(self):
-        import display
+        from . import display
         if not display.all and not (self.flags & flags.printable):
             return
 
         d = display.VectorDisplay()
         d.__dict__.update(self.__dict__)
 
-        if self.__dict__.has_key('ysubnames'):
+        if 'ysubnames' in self.__dict__:
             ysubnames = list(self.ysubnames)
             slack = self.x - len(ysubnames)
             if slack > 0:
                 ysubnames.extend(['']*slack)
         else:
-            ysubnames = range(self.x)
+            ysubnames = list(range(self.x))
 
         for x,sname in enumerate(ysubnames):
             o = x * self.y

@@ -95,7 +95,7 @@ class Maintainers(object):
 
     def __init__(self, ydict: Mapping[str, Any]):
         self._subsystems = {}
-        for tag, maint in ydict.items():
+        for tag, maint in list(ydict.items()):
             self._subsystems[tag] = Maintainers._parse_subsystem(tag, maint)
 
     @classmethod
@@ -152,7 +152,7 @@ class Maintainers(object):
                          description=ydict.get('desc', ''))
 
     def __iter__(self) -> Iterator[Tuple[str, Subsystem]]:
-        return iter(self._subsystems.items())
+        return iter(list(self._subsystems.items()))
 
     def __getitem__(self, key: str) -> Subsystem:
         return self._subsystems[key]

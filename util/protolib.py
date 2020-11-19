@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 # Copyright (c) 2013 ARM Limited
 # All rights reserved
@@ -91,7 +91,7 @@ def openFileRd(in_file):
         except IOError:
             proto_in = open(in_file, 'rb')
     except IOError:
-        print "Failed to open ", in_file, " for reading"
+        print("Failed to open ", in_file, " for reading")
         exit(-1)
     return proto_in
 

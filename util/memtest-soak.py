@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.7
+#! /usr/bin/env python3
 
 # Copyright (c) 2015 ARM Limited
 # All rights reserved
@@ -53,7 +53,7 @@ parser.add_option('-t', '--ticks', type='int', default=100000000000)
 (options, args) = parser.parse_args()
 
 if len(args) != 1:
-    print "Error: Expecting a single argument specifying the gem5 binary"
+    print("Error: Expecting a single argument specifying the gem5 binary")
     sys.exit(1)
 
 gem5_binary = args[0]
@@ -62,7 +62,7 @@ for i in range(options.count):
     status = subprocess.call([gem5_binary, 'configs/example/memtest.py',
                               '-r', '-m %d' % (options.ticks)])
     if status != 0:
-        print "Error: memtest run failed\n"
+        print("Error: memtest run failed\n")
         sys.exit(1)
 
-print "memtest soak finished without errors"
+print("memtest soak finished without errors")

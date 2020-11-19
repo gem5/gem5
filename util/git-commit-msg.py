@@ -46,7 +46,7 @@ def _printErrorQuit(error_message):
     print(error_message)
 
     print("The commit has been cancelled, but a copy of it can be found in "
-            + sys.argv[1] + " : ")
+          + sys.argv[1] + " : ")
 
     print("""
 --------------------------------------------------------------------------

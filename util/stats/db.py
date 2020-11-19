@@ -79,7 +79,7 @@ class StatData(object):
         self.prereq = int(row[5])
         self.precision = int(row[6])
 
-        import flags
+        from . import flags
         self.flags = 0
         if int(row[4]): self.flags |= flags.printable
         if int(row[7]): self.flags |= flags.nozero
@@ -114,7 +114,7 @@ class Result(object):
 
     def __getitem__(self, run):
         if run not in self.data:
-            self.data[run] = [ [ 0.0 ] * self.y for i in xrange(self.x) ]
+            self.data[run] = [ [ 0.0 ] * self.y for i in range(self.x) ]
         return self.data[run]
 
 class Database(object):
@@ -152,7 +152,7 @@ class Database(object):
         if run is None:
             return None
 
-        from info import ProxyError, scalar, vector, value, values, total, len
+        from .info import ProxyError, scalar, vector, value, values, total, len
         if system is None and hasattr(job, 'system'):
             system = job.system
 
@@ -183,7 +183,7 @@ class Database(object):
         x = self
         while len(path) > 1:
             name = path.pop(0)
-            if not x.__dict__.has_key(name):
+            if name not in x.__dict__:
                 x.__dict__[name] = Node(fullname + name)
             x = x.__dict__[name]
             fullname = '%s%s.' % (fullname, name)
@@ -216,7 +216,7 @@ class Database(object):
         self.query('select sd_stat,sd_x,sd_y,sd_name,sd_descr from subdata')
         for result in self.cursor.fetchall():
             subdata = SubData(result)
-            if self.allSubData.has_key(subdata.stat):
+            if subdata.stat in self.allSubData:
                 self.allSubData[subdata.stat].append(subdata)
             else:
                 self.allSubData[subdata.stat] = [ subdata ]
@@ -227,7 +227,7 @@ class Database(object):
 
         StatData.db = self
         self.query('select * from stats')
-        import info
+        from . import info
         for result in self.cursor.fetchall():
             stat = info.NewStat(self, StatData(result))
             self.append(stat)
@@ -239,17 +239,17 @@ class Database(object):
     # Desc: Prints all runs matching a given user, if no argument
     #       is given all runs are returned
     def listRuns(self, user=None):
-        print '%-40s %-10s %-5s' % ('run name', 'user', 'id')
-        print '-' * 62
+        print('%-40s %-10s %-5s' % ('run name', 'user', 'id'))
+        print('-' * 62)
         for run in self.allRuns:
             if user == None or user == run.user:
-                print '%-40s %-10s %-10d' % (run.name, run.user, run.run)
+                print('%-40s %-10s %-10d' % (run.name, run.user, run.run))
 
     # Name: listTicks
     # Desc: Prints all samples for a given run
     def listTicks(self, runs=None):
-        print "tick"
-        print "----------------------------------------"
+        print("tick")
+        print("----------------------------------------")
         sql = 'select distinct dt_tick from data where dt_stat=1180 and ('
         if runs != None:
             first = True
@@ -263,7 +263,7 @@ class Database(object):
             sql += ')'
         self.query(sql)
         for r in self.cursor.fetchall():
-            print r[0]
+            print(r[0])
 
     # Name: retTicks
     # Desc: Prints all samples for a given run
@@ -289,8 +289,8 @@ class Database(object):
     #         the optional argument is a regular expression that can
     #         be used to prune the result set
     def listStats(self, regex=None):
-        print '%-60s %-8s %-10s' % ('stat name', 'id', 'type')
-        print '-' * 80
+        print('%-60s %-8s %-10s' % ('stat name', 'id', 'type'))
+        print('-' * 80)
 
         rx = None
         if regex != None:
@@ -301,15 +301,15 @@ class Database(object):
         for stat in stats:
             stat = self.allStatNames[stat]
             if rx == None or rx.match(stat.name):
-                print '%-60s %-8s %-10s' % (stat.name, stat.stat, stat.type)
+                print('%-60s %-8s %-10s' % (stat.name, stat.stat, stat.type))
 
     # Name: liststats
     # Desc: Prints all statistics that appear in the database,
     #         the optional argument is a regular expression that can
     #         be used to prune the result set
     def listFormulas(self, regex=None):
-        print '%-60s %s' % ('formula name', 'formula')
-        print '-' * 80
+        print('%-60s %s' % ('formula name', 'formula'))
+        print('-' * 80)
 
         rx = None
         if regex != None:
@@ -320,7 +320,7 @@ class Database(object):
         for stat in stats:
             stat = self.allStatNames[stat]
             if stat.type == 'FORMULA' and (rx == None or rx.match(stat.name)):
-                print '%-60s %s' % (stat.name, self.allFormulas[stat.stat])
+                print('%-60s %s' % (stat.name, self.allFormulas[stat.stat]))
 
     def getStat(self, stats):
         if type(stats) is not list:
@@ -400,7 +400,7 @@ class Database(object):
         elif value == 'stdev':
             self._method = self.stdev
         else:
-            raise AttributeError, "can only set get to: sum | avg | stdev"
+            raise AttributeError("can only set get to: sum | avg | stdev")
 
     def data(self, stat, ticks=None):
         if ticks is None:
@@ -413,9 +413,9 @@ class Database(object):
         ymax = 0
         for x in self.cursor.fetchall():
             data = Data(x)
-            if not runs.has_key(data.run):
+            if data.run not in runs:
                 runs[data.run] = {}
-            if not runs[data.run].has_key(data.x):
+            if data.x not in runs[data.run]:
                 runs[data.run][data.x] = {}
 
             xmax = max(xmax, data.x)
@@ -423,10 +423,10 @@ class Database(object):
             runs[data.run][data.x][data.y] = data.data
 
         results = Result(xmax + 1, ymax + 1)
-        for run,data in runs.iteritems():
+        for run,data in runs.items():
             result = results[run]
-            for x,ydata in data.iteritems():
-                for y,data in ydata.iteritems():
+            for x,ydata in data.items():
+                for y,data in ydata.items():
                     result[x][y] = data
         return results
 

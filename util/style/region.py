@@ -57,7 +57,7 @@ class Region(tuple):
             args = tuple(arg)
 
         if len(args) != 2:
-            raise(AttributeError, \
+            raise AttributeError(
                 "Only one or two arguments allowed, %d provided" % (alen, ))
 
         return tuple.__new__(cls, args)
@@ -233,8 +233,8 @@ class Regions(object):
 all_regions = Regions(Region(neg_inf, pos_inf))
 
 if __name__ == '__main__':
-    x = Regions(*((i, i + 1) for i in xrange(0,30,2)))
-    y = Regions(*((i, i + 4) for i in xrange(0,30,5)))
+    x = Regions(*((i, i + 1) for i in range(0,30,2)))
+    y = Regions(*((i, i + 4) for i in range(0,30,5)))
     z = Region(6,7)
     n = Region(9,10)
 

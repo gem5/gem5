@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 import os
 import re
@@ -93,7 +93,7 @@ def find_copyright_block(lines, lang_type):
                 return
 
     else:
-        raise AttributeError, "Could not handle language %s" % lang_type
+        raise AttributeError("Could not handle language %s" % lang_type)
 
 date_range_re = re.compile(r'([0-9]{4})\s*-\s*([0-9]{4})')
 def process_dates(dates):
@@ -104,7 +104,7 @@ def process_dates(dates):
         match = date_range_re.match(date)
         if match:
             f,l = [ int(d) for d in match.groups() ]
-            for i in xrange(f, l+1):
+            for i in range(f, l+1):
                 output.add(i)
         else:
             try:
@@ -140,12 +140,12 @@ def get_data(lang_type, lines):
         try:
             dates = process_dates(dates)
         except Exception:
-            print dates
-            print owner
+            print(dates)
+            print(owner)
             raise
 
         authors = []
-        for i in xrange(start,end+1):
+        for i in range(start,end+1):
             line = lines[i]
             if not authors:
                 match = authors_re.search(line)
@@ -154,7 +154,7 @@ def get_data(lang_type, lines):
             else:
                 match = more_authors_re.search(line)
                 if not match:
-                    for j in xrange(i, end+1):
+                    for j in range(i, end+1):
                         line = lines[j].strip()
                         if not line:
                             end = j
@@ -202,7 +202,7 @@ usage_str = """usage:
 %s [-v] <directory>"""
 
 def usage(exitcode):
-    print usage_str % sys.argv[0]
+    print(usage_str % sys.argv[0])
     if exitcode is not None:
         sys.exit(exitcode)
 
@@ -233,7 +233,7 @@ if __name__ == '__main__':
         elif os.path.isdir(base):
             files += find_files(base)
         else:
-            raise AttributeError, "can't access '%s'" %  base
+            raise AttributeError("can't access '%s'" %  base)
 
     copyrights = {}
     counts = {}
@@ -249,11 +249,11 @@ if __name__ == '__main__':
         lt = lang_type(filename, lines[0])
         try:
             data = get_data(lt, lines)
-        except Exception, e:
+        except Exception as e:
             if verbose:
                 if len(e.args) == 1:
                     e.args = ('%s (%s))' % (e, filename), )
-                print "could not parse %s: %s" % (filename, e)
+                print("could not parse %s: %s" % (filename, e))
             continue
 
         for owner, dates, authors, start, end in data:
@@ -265,9 +265,9 @@ if __name__ == '__main__':
             copyrights[owner] |= dates
             counts[owner] += 1
 
-    info = [ (counts[o], d, o) for o,d in copyrights.items() ]
+    info = [ (counts[o], d, o) for o,d in list(copyrights.items()) ]
 
     for count,dates,owner in sorted(info, reverse=True):
         if show_counts:
             owner = '%s (%s files)' % (owner, count)
-        print 'Copyright (c) %s %s' % (datestr(dates), owner)
+        print('Copyright (c) %s %s' % (datestr(dates), owner))

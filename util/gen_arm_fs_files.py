@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 # Copyright (c) 2020 ARM Limited
 # All rights reserved.
@@ -48,7 +48,7 @@ import sys
 import os
 
 def run_cmd(explanation, working_dir, cmd, stdout = None):
-    print "Running phase '%s'" % explanation
+    print("Running phase '%s'" % explanation)
     sys.stdout.flush()
 
     # some of the commands need $PWD to be properly set
@@ -61,7 +61,7 @@ def run_cmd(explanation, working_dir, cmd, stdout = None):
     if return_code == 0:
         return
 
-    print "Error running phase %s. Returncode: %d" % (explanation, return_code)
+    print("Error running phase %s. Returncode: %d" % (explanation, return_code))
     sys.exit(1)
 
 def linux_clone():
@@ -339,37 +339,37 @@ parser.add_option("-j", "--make-jobs", type = "int", default = 1,
     help = "Number of jobs to use with the 'make' commands. Default value: "
            "%default")
 parser.add_option("-b", "--fs-binaries", action="append",
-    choices=all_binaries.keys(), default=[],
+    choices=list(all_binaries.keys()), default=[],
     help = "List of FS files to be generated. Defaulting to all")
 
 (options, args) = parser.parse_args()
 
 if args:
-    print "Unrecognized argument(s) %s." % args
+    print("Unrecognized argument(s) %s." % args)
     sys.exit(1)
 
 if not os.path.isdir(options.dest_dir):
-    print "Error: %s is not a directory." % options.dest_dir
+    print("Error: %s is not a directory." % options.dest_dir)
     sys.exit(1)
 
 if not os.path.isdir(options.gem5_dir):
-    print "Error: %s is not a directory." % options.gem5_dir
+    print("Error: %s is not a directory." % options.gem5_dir)
     sys.exit(1)
 
 if machine() != "x86_64":
-    print "Error: This script should run in a x86_64 machine"
+    print("Error: This script should run in a x86_64 machine")
     sys.exit(1)
 
 binaries_dir = options.dest_dir + "/binaries"
 
 if os.path.exists(binaries_dir):
-    print "Error: %s already exists." % binaries_dir
+    print("Error: %s already exists." % binaries_dir)
     sys.exit(1)
 
 revisions_dir = options.dest_dir + "/revisions"
 
 if os.path.exists(revisions_dir):
-    print "Error: %s already exists." %revisions_dir
+    print("Error: %s already exists." %revisions_dir)
     sys.exit(1)
 
 os.mkdir(binaries_dir);
@@ -384,11 +384,11 @@ run_cmd("write revision of gem5 repo",
     rev_file)
 rev_file.close()
 
-binaries = options.fs_binaries if options.fs_binaries else all_binaries.keys()
+binaries = options.fs_binaries if options.fs_binaries else list(all_binaries.keys())
 for fs_binary in binaries:
     all_binaries[fs_binary]()
 
-print "Done! All the generated files can be found in %s" % binaries_dir
+print("Done! All the generated files can be found in %s" % binaries_dir)
 
 sys.exit(0)
 

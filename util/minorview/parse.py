@@ -59,14 +59,14 @@ def list_parser(names):
             ret.append([elem])
 
     if len(accum) > 0:
-        print 'Non matching brackets in', names
+        print('Non matching brackets in', names)
 
     return ret
 
 def map2(f, ls):
     """map to a depth of 2.  That is, given a list of lists, apply
     f to those innermost elements """
-    return map(lambda l: map(f, l), ls)
+    return [list(map(f, l)) for l in ls]
 
 def remove_trailing_ws(line):
     return re.sub('\s*$', '', line)

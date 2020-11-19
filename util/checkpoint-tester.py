@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.7
+#! /usr/bin/env python3
 
 # Copyright (c) 2010 Advanced Micro Devices, Inc.
 # All rights reserved.
@@ -78,15 +78,15 @@ parser.add_option('-d', '--directory', default='checkpoint-test')
 interval = options.interval
 
 if os.path.exists(options.directory):
-    print 'Error: test directory', options.directory, 'exists'
-    print '       Tester needs to create directory from scratch'
+    print('Error: test directory', options.directory, 'exists')
+    print('       Tester needs to create directory from scratch')
     sys.exit(1)
 
 top_dir = options.directory
 os.mkdir(top_dir)
 
 cmd_echo = open(os.path.join(top_dir, 'command'), 'w')
-print >>cmd_echo, ' '.join(sys.argv)
+print(' '.join(sys.argv), file=cmd_echo)
 cmd_echo.close()
 
 m5_binary = args[0]
@@ -97,7 +97,7 @@ initial_args = ['--take-checkpoints', '%d,%d' % (interval, interval)]
 
 cptdir = os.path.join(top_dir, 'm5out')
 
-print '===> Running initial simulation.'
+print('===> Running initial simulation.')
 subprocess.call([m5_binary] + ['-red', cptdir] + options + initial_args)
 
 dirs = os.listdir(cptdir)
@@ -115,7 +115,7 @@ cpts.sort()
 # original checkpoint N+1.  Thus the number of tests we can run is one
 # less than tha number of checkpoints.
 for i in range(1, len(cpts)):
-    print '===> Running test %d of %d.' % (i, len(cpts)-1)
+    print('===> Running test %d of %d.' % (i, len(cpts)-1))
     mydir = os.path.join(top_dir, 'test.%d' % i)
     subprocess.call([m5_binary] + ['-red', mydir] + options + initial_args +
                     ['--max-checkpoints' , '1', '--checkpoint-dir', cptdir,
@@ -129,7 +129,7 @@ for i in range(1, len(cpts)):
     diffout.close()
     # print out the diff
     diffout = open(diff_name)
-    print diffout.read(),
+    print(diffout.read(), end=' ')
     diffout.close()
 
 

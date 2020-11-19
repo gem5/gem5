@@ -73,12 +73,12 @@ def upgrader(cpt):
     for sec in cpt.sections():
         if re.search('.*\.hdlcd$', sec):
             options = {}
-            for new, old in option_names.items():
+            for new, old in list(option_names.items()):
                 options[new] = cpt.get(sec, old)
 
             cpt.remove_section(sec)
             cpt.add_section(sec)
-            for key, value in options.items():
+            for key, value in list(options.items()):
                 cpt.set(sec, key, value)
 
             # Create a DMA engine section. The LCD controller will

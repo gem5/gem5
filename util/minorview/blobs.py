@@ -46,11 +46,11 @@ import cairo
 import re
 import math
 
-from point import Point
-import parse
-import colours
-from colours import backgroundColour, black
-import model
+from .point import Point
+from . import parse
+from . import colours
+from .colours import backgroundColour, black
+from . import model
 
 def centre_size_to_sides(centre, size):
     """Returns a 4-tuple of the relevant ordinates of the left,
@@ -106,7 +106,7 @@ def striped_box(cr, centre, size, colours):
         cr.line_to(left, top)
         stroke_and_fill(cr, colours[0])
         # Stripes
-        for i in xrange(1, num_colours - 1):
+        for i in range(1, num_colours - 1):
             xOffset = x_stripe_width * i
             cr.move_to(left + xOffset - half_x_stripe_width, bottom)
             cr.line_to(left + xOffset + half_x_stripe_width, bottom)
@@ -223,7 +223,7 @@ class Block(Blob):
 
         if len(strips) == 0:
             strips = [[colours.errorColour]]
-            print 'Problem with the colour of event:', event
+            print('Problem with the colour of event:', event)
 
         num_strips = len(strips)
         strip_proportion = 1.0 / num_strips
@@ -273,7 +273,7 @@ class Block(Blob):
         cr.set_line_width(view.midLineWidth / view.pitch.x)
 
         # Draw the strips and their blocks
-        for strip_index in xrange(0, num_strips):
+        for strip_index in range(num_strips):
             num_blocks = len(strips[strip_index])
             block_proportion = 1.0 / num_blocks
             firstBlockOffset = (num_blocks / 2.0) - 0.5
@@ -285,7 +285,7 @@ class Block(Blob):
             block_centre = (strip_centre + strip_step.scale(strip_index) -
                 (block_size * block_step_base.scale(firstBlockOffset)))
 
-            for block_index in xrange(0, num_blocks):
+            for block_index in range(num_blocks):
                 striped_box(cr, block_centre +
                     block_step.scale(block_index), block_size,
                     strips[strip_index][block_index])
@@ -390,7 +390,7 @@ class Key(Blob):
         cr.select_font_face('Helvetica', cairo.FONT_SLANT_NORMAL,
             cairo.FONT_WEIGHT_BOLD)
 
-        for i in xrange(0, num_colours):
+        for i in range(num_colours):
             centre = first_blob_centre + blob_step.scale(i)
             box(cr, centre, real_blob_size)
 

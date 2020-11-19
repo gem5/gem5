@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 #
 # Copyright (c) 2016 ARM Limited
 # All rights reserved
@@ -42,9 +42,7 @@ import subprocess
 from .region import *
 from .style import modified_regions
 
-class AbstractRepo(object):
-    __metaclass__ = ABCMeta
-
+class AbstractRepo(object, metaclass=ABCMeta):
     def file_path(self, fname):
         """Get the absolute path to a file relative within the repository. The
         input file name must be a valid path within the repository.

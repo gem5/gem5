@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 # Copyright (c) 2014 ARM Limited
 # All rights reserved
@@ -41,7 +41,7 @@ try:
     import matplotlib.pyplot as plt
     import numpy as np
 except ImportError:
-    print "Failed to import matplotlib and numpy"
+    print("Failed to import matplotlib and numpy")
     exit(-1)
 
 import sys
@@ -54,13 +54,13 @@ import re
 def main():
 
     if len(sys.argv) != 3:
-        print "Usage: ", sys.argv[0], "-u|p|e <simout directory>"
+        print("Usage: ", sys.argv[0], "-u|p|e <simout directory>")
         exit(-1)
 
     if len(sys.argv[1]) != 2 or sys.argv[1][0] != '-' or \
             not sys.argv[1][1] in "upe":
-        print "Choose -u (utilisation), -p (total power), or -e " \
-            "(power efficiency)"
+        print("Choose -u (utilisation), -p (total power), or -e " \
+            "(power efficiency)")
         exit(-1)
 
     # Choose the appropriate mode, either utilisation, total power, or
@@ -70,13 +70,13 @@ def main():
     try:
         stats = open(sys.argv[2] + '/stats.txt', 'r')
     except IOError:
-        print "Failed to open ", sys.argv[2] + '/stats.txt', " for reading"
+        print("Failed to open ", sys.argv[2] + '/stats.txt', " for reading")
         exit(-1)
 
     try:
         simout = open(sys.argv[2] + '/simout', 'r')
     except IOError:
-        print "Failed to open ", sys.argv[2] + '/simout', " for reading"
+        print("Failed to open ", sys.argv[2] + '/simout', " for reading")
         exit(-1)
 
     # Get the burst size, number of banks and the maximum stride from
@@ -95,7 +95,7 @@ def main():
     simout.close()
 
     if not got_sweep:
-        print "Failed to establish sweep details, ensure simout is up-to-date"
+        print("Failed to establish sweep details, ensure simout is up-to-date")
         exit(-1)
 
     # Now parse the stats
@@ -120,7 +120,7 @@ def main():
 
     # Sanity check
     if not (len(peak_bw) == len(bus_util) and len(bus_util) == len(avg_pwr)):
-        print "Peak bandwidth, bus utilisation, and average power do not match"
+        print("Peak bandwidth, bus utilisation, and average power do not match")
         exit(-1)
 
     # Collect the selected metric as our Z-axis, we do this in a 2D
@@ -139,7 +139,7 @@ def main():
             # avg_pwr is in mW, peak_bw in MiByte/s, bus_util in percent
             z.append(avg_pwr[j] / (bus_util[j] / 100.0 * peak_bw[j] / 1000.0))
         else:
-            print "Unexpected mode %s" % mode
+            print("Unexpected mode %s" % mode)
             exit(-1)
 
         i += 1
@@ -152,7 +152,7 @@ def main():
 
     # We should have a 2D grid with as many columns as banks
     if len(zs) != banks:
-        print "Unexpected number of data points in stats output"
+        print("Unexpected number of data points in stats output")
         exit(-1)
 
     fig = plt.figure()

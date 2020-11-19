@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 # Copyright (c) 2015 ARM Limited
 # All rights reserved
@@ -95,22 +95,22 @@ import sys
 try:
     import inst_dep_record_pb2
 except:
-    print "Did not find proto definition, attempting to generate"
+    print("Did not find proto definition, attempting to generate")
     from subprocess import call
     error = call(['protoc', '--python_out=util', '--proto_path=src/proto',
                   'src/proto/inst_dep_record.proto'])
     if not error:
         import inst_dep_record_pb2
-        print "Generated proto definitions for instruction dependency record"
+        print("Generated proto definitions for instruction dependency record")
     else:
-        print "Failed to import proto definitions"
+        print("Failed to import proto definitions")
         exit(-1)
 
 DepRecord = inst_dep_record_pb2.InstDepRecord
 
 def main():
     if len(sys.argv) != 3:
-        print "Usage: ", sys.argv[0], " <ASCII input> <protobuf output>"
+        print("Usage: ", sys.argv[0], " <ASCII input> <protobuf output>")
         exit(-1)
 
     # Open the file in write mode
@@ -120,7 +120,7 @@ def main():
     try:
         ascii_in = open(sys.argv[1], 'r')
     except IOError:
-        print "Failed to open ", sys.argv[1], " for reading"
+        print("Failed to open ", sys.argv[1], " for reading")
         exit(-1)
 
     # Write the magic number in 4-byte Little Endian, similar to what
@@ -135,10 +135,10 @@ def main():
     header.window_size = 120
     protolib.encodeMessage(proto_out, header)
 
-    print "Creating enum name,value lookup from proto"
+    print("Creating enum name,value lookup from proto")
     enumValues = {}
     for namestr, valdesc in DepRecord.DESCRIPTOR.enum_values_by_name.items():
-        print '\t', namestr, valdesc.number
+        print('\t', namestr, valdesc.number)
         enumValues[namestr] = valdesc.number
 
     num_records = 0
@@ -149,32 +149,32 @@ def main():
         inst_info_list = inst_info_str.split(',')
         dep_record = DepRecord()
 
-        dep_record.seq_num = long(inst_info_list[0])
-        dep_record.pc = long(inst_info_list[1])
-        dep_record.weight = long(inst_info_list[2])
+        dep_record.seq_num = int(inst_info_list[0])
+        dep_record.pc = int(inst_info_list[1])
+        dep_record.weight = int(inst_info_list[2])
         # If the type is not one of the enum values, it should be a key error
         try:
             dep_record.type = enumValues[inst_info_list[3]]
         except KeyError:
-            print "Seq. num", dep_record.seq_num, "has unsupported type", \
-                inst_info_list[3]
+            print("Seq. num", dep_record.seq_num, "has unsupported type", \
+                inst_info_list[3])
             exit(-1)
 
         if dep_record.type == DepRecord.INVALID:
-            print "Seq. num", dep_record.seq_num, "is of INVALID type"
+            print("Seq. num", dep_record.seq_num, "is of INVALID type")
             exit(-1)
 
         # If the instruction is a load or store record the physical addr,
         # size flags in addition to recording the computation delay
         if dep_record.type in [DepRecord.LOAD, DepRecord.STORE]:
             p_addr, size, flags, comp_delay = inst_info_list[4:8]
-            dep_record.p_addr = long(p_addr)
+            dep_record.p_addr = int(p_addr)
             dep_record.size = int(size)
             dep_record.flags = int(flags)
-            dep_record.comp_delay = long(comp_delay)
+            dep_record.comp_delay = int(comp_delay)
         else:
             comp_delay = inst_info_list[4]
-            dep_record.comp_delay = long(comp_delay)
+            dep_record.comp_delay = int(comp_delay)
 
         # Parse the register and order dependencies both of which are
         # repeated fields. An empty list is valid.
@@ -184,17 +184,17 @@ def main():
             # if the string is ",4", split(',') returns 2 items: '', '4'
             # long('') gives error, so check if the item is non-empty
             if a_dep:
-                dep_record.rob_dep.append(long(a_dep))
+                dep_record.rob_dep.append(int(a_dep))
 
         reg_deps = reg_dep_str.split(',')
         for a_dep in reg_deps:
             if a_dep:
-                dep_record.reg_dep.append(long(a_dep))
+                dep_record.reg_dep.append(int(a_dep))
 
         protolib.encodeMessage(proto_out, dep_record)
         num_records += 1
 
-    print "Converted", num_records, "records."
+    print("Converted", num_records, "records.")
     # We're done
     ascii_in.close()
     proto_out.close()

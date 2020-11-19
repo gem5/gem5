@@ -166,7 +166,7 @@ def plotLowPStates(plot_dir, stats_fname, bank_util_list, seqbytes_list,
                         results[delay][bank_util][seq_bytes][state] = \
                             int(stime)
                     #### state energy values ####
-                    elif line.strip().split()[0] in StatToKey.keys():
+                    elif line.strip().split()[0] in list(StatToKey.keys()):
                         # Example format:
                         # system.mem_ctrls_0.actEnergy                 35392980
                         statistic, e_val = line.strip().split()[0:2]
@@ -211,14 +211,14 @@ def plotIdle(plot_dir):
     fig, ax = plt.subplots()
     width = 0.35
     ind = np.arange(len(States))
-    l1 = ax.bar(ind, map(lambda x : idleResults[x], States), width)
+    l1 = ax.bar(ind, [idleResults[x] for x in States], width)
 
     ax.xaxis.set_ticks(ind + width/2)
     ax.xaxis.set_ticklabels(States)
     ax.set_ylabel('Time (ps) spent in a power state')
     fig.suptitle("Idle 50 us")
 
-    print "saving plot:", idlePlotName(plot_dir)
+    print("saving plot:", idlePlotName(plot_dir))
     plt.savefig(idlePlotName(plot_dir), format='eps')
     plt.close(fig)
 
@@ -251,16 +251,15 @@ def plotStackedStates(delay, states_list, bottom_state, plot_name, ylabel_str):
         # Must have a bottom of the stack first
         state = bottom_state
 
-        l_states[state] = map(lambda x: results[delay][bank_util][x][state],
-                              seqBytesValues)
+        l_states[state] = [results[delay][bank_util][x][state] \
+            for x in seqBytesValues]
         p_states[state] = ax[sub_idx].bar(ind, l_states[state], width,
                                           color=StackColors[state])
 
         time_sum = l_states[state]
         for state in states_list[1:]:
-            l_states[state] = map(lambda x:
-                                  results[delay][bank_util][x][state],
-                                  seqBytesValues)
+            l_states[state] = [results[delay][bank_util][x][state] \
+                for x in seqBytesValues]
             # Now add on top of the bottom = sum of values up until now
             p_states[state] = ax[sub_idx].bar(ind, l_states[state], width,
                                               color=StackColors[state],
@@ -280,11 +279,11 @@ def plotStackedStates(delay, states_list, bottom_state, plot_name, ylabel_str):
     myFontSize='small'
     fontP = FontProperties()
     fontP.set_size(myFontSize)
-    fig.legend(map(lambda x: p_states[x], states_list), states_list,
+    fig.legend([p_states[x] for x in states_list], states_list,
                prop=fontP)
 
     plt.savefig(plot_name,  format='eps', bbox_inches='tight')
-    print "saving plot:", plot_name
+    print("saving plot:", plot_name)
     plt.close(fig)
 
 # These plat name functions are also called in the main script

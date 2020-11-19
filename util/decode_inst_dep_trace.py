@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 # Copyright (c) 2013 - 2015 ARM Limited
 # All rights reserved
@@ -95,20 +95,20 @@ import sys
 try:
     import inst_dep_record_pb2
 except:
-    print "Did not find proto definition, attempting to generate"
+    print("Did not find proto definition, attempting to generate")
     from subprocess import call
     error = call(['protoc', '--python_out=util', '--proto_path=src/proto',
                   'src/proto/inst_dep_record.proto'])
     if not error:
         import inst_dep_record_pb2
-        print "Generated proto definitions for instruction dependency record"
+        print("Generated proto definitions for instruction dependency record")
     else:
-        print "Failed to import proto definitions"
+        print("Failed to import proto definitions")
         exit(-1)
 
 def main():
     if len(sys.argv) != 3:
-        print "Usage: ", sys.argv[0], " <protobuf input> <ASCII output>"
+        print("Usage: ", sys.argv[0], " <protobuf input> <ASCII output>")
         exit(-1)
 
     # Open the file on read mode
@@ -117,32 +117,32 @@ def main():
     try:
         ascii_out = open(sys.argv[2], 'w')
     except IOError:
-        print "Failed to open ", sys.argv[2], " for writing"
+        print("Failed to open ", sys.argv[2], " for writing")
         exit(-1)
 
     # Read the magic number in 4-byte Little Endian
     magic_number = proto_in.read(4)
 
     if magic_number != "gem5":
-        print "Unrecognized file"
+        print("Unrecognized file")
         exit(-1)
 
-    print "Parsing packet header"
+    print("Parsing packet header")
 
     # Add the packet header
     header = inst_dep_record_pb2.InstDepRecordHeader()
     protolib.decodeMessage(proto_in, header)
 
-    print "Object id:", header.obj_id
-    print "Tick frequency:", header.tick_freq
+    print("Object id:", header.obj_id)
+    print("Tick frequency:", header.tick_freq)
 
-    print "Parsing packets"
+    print("Parsing packets")
 
-    print "Creating enum value,name lookup from proto"
+    print("Creating enum value,name lookup from proto")
     enumNames = {}
     desc = inst_dep_record_pb2.InstDepRecord.DESCRIPTOR
-    for namestr, valdesc in desc.enum_values_by_name.items():
-        print '\t', valdesc.number, namestr
+    for namestr, valdesc in list(desc.enum_values_by_name.items()):
+        print('\t', valdesc.number, namestr)
         enumNames[valdesc.number] = namestr
 
     num_packets = 0
@@ -170,8 +170,8 @@ def main():
         try:
             ascii_out.write(',%s' % enumNames[packet.type])
         except KeyError:
-            print "Seq. num", packet.seq_num, "has unsupported type", \
-                packet.type
+            print("Seq. num", packet.seq_num, "has unsupported type", \
+                packet.type)
             exit(-1)
 
 
@@ -202,9 +202,9 @@ def main():
         # New line
         ascii_out.write('\n')
 
-    print "Parsed packets:", num_packets
-    print "Packets with at least 1 reg dep:", num_regdeps
-    print "Packets with at least 1 rob dep:", num_robdeps
+    print("Parsed packets:", num_packets)
+    print("Packets with at least 1 reg dep:", num_regdeps)
+    print("Packets with at least 1 rob dep:", num_robdeps)
 
     # We're done
     ascii_out.close()

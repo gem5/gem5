@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 # Copyright (c) 2013-2014 ARM Limited
 # All rights reserved
@@ -49,27 +49,27 @@ import sys
 try:
     import inst_pb2
 except:
-    print "Did not find protobuf inst definitions, attempting to generate"
+    print("Did not find protobuf inst definitions, attempting to generate")
     from subprocess import call
     error = call(['protoc', '--python_out=util', '--proto_path=src/proto',
                   'src/proto/inst.proto'])
     if not error:
-        print "Generated inst proto definitions"
+        print("Generated inst proto definitions")
 
         try:
             import google.protobuf
         except:
-            print "Please install Python protobuf module"
+            print("Please install Python protobuf module")
             exit(-1)
 
         import inst_pb2
     else:
-        print "Failed to import inst proto definitions"
+        print("Failed to import inst proto definitions")
         exit(-1)
 
 def main():
     if len(sys.argv) != 3:
-        print "Usage: ", sys.argv[0], " <protobuf input> <ASCII output>"
+        print("Usage: ", sys.argv[0], " <protobuf input> <ASCII output>")
         exit(-1)
 
     # Open the file in read mode
@@ -78,32 +78,32 @@ def main():
     try:
         ascii_out = open(sys.argv[2], 'w')
     except IOError:
-        print "Failed to open ", sys.argv[2], " for writing"
+        print("Failed to open ", sys.argv[2], " for writing")
         exit(-1)
 
     # Read the magic number in 4-byte Little Endian
     magic_number = proto_in.read(4)
 
     if magic_number != "gem5":
-        print "Unrecognized file", sys.argv[1]
+        print("Unrecognized file", sys.argv[1])
         exit(-1)
 
-    print "Parsing instruction header"
+    print("Parsing instruction header")
 
     # Add the packet header
     header = inst_pb2.InstHeader()
     protolib.decodeMessage(proto_in, header)
 
-    print "Object id:", header.obj_id
-    print "Tick frequency:", header.tick_freq
-    print "Memory addresses included:", header.has_mem
+    print("Object id:", header.obj_id)
+    print("Tick frequency:", header.tick_freq)
+    print("Memory addresses included:", header.has_mem)
 
     if header.ver != 0:
-        print "Warning: file version newer than decoder:", header.ver
-        print "This decoder may not understand how to decode this file"
+        print("Warning: file version newer than decoder:", header.ver)
+        print("This decoder may not understand how to decode this file")
 
 
-    print "Parsing instructions"
+    print("Parsing instructions")
 
     num_insts = 0
     inst = inst_pb2.Inst()
@@ -138,7 +138,7 @@ def main():
         ascii_out.write('\n')
         num_insts += 1
 
-    print "Parsed instructions:", num_insts
+    print("Parsed instructions:", num_insts)
 
     # We're done
     ascii_out.close()

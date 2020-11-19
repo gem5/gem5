@@ -33,12 +33,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import parse
-import colours
-from colours import unknownColour
-from point import Point
+from . import parse
+from . import colours
+from .colours import unknownColour
+from .point import Point
 import re
-import blobs
+from . import blobs
 from time import time as wall_time
 import os
 
@@ -109,7 +109,7 @@ class Id(BlobVisualData):
                 return int(string)
 
         if m is None:
-            print 'Invalid Id string', string
+            print('Invalid Id string', string)
         else:
             elems = m.groups()
 
@@ -195,7 +195,7 @@ class Branch(BlobVisualData):
             self.id = special_view_decoder(Id)(id)
             # self.branch = special_view_decoder(Branch)(branch)
         else:
-            print "Bad Branch data:", string
+            print("Bad Branch data:", string)
         return self
 
     def to_striped_block(self, select):
@@ -210,11 +210,11 @@ class Counts(BlobVisualData):
         self.counts = []
 
     def from_string(self, string):
-        self.counts = map(int, re.split('/', string))
+        self.counts = list(map(int, re.split('/', string)))
         return self
 
     def to_striped_block(self, select):
-        return map(colours.number_to_colour, self.counts)
+        return list(map(colours.number_to_colour, self.counts))
 
 class Colour(BlobVisualData):
     """A fixed colour block, used for special colour decoding"""
@@ -277,8 +277,8 @@ class TwoDColours(ColourPattern):
         """Factory for making decoders for particular block types"""
         def decode(pairs):
             if dataName not in pairs:
-                print 'TwoDColours: no event data called:', \
-                    dataName, 'in:', pairs
+                print('TwoDColours: no event data called:', \
+                    dataName, 'in:', pairs)
                 return class_([[Colour(colours.errorColour)]])
             else:
                 parsed = parse.list_parser(pairs[dataName])
@@ -296,8 +296,8 @@ class TwoDColours(ColourPattern):
         at strip=0, elem=1"""
         def decode(pairs):
             if dataName not in pairs:
-                print 'TwoDColours: no event data called:', \
-                    dataName, 'in:', pairs
+                print('TwoDColours: no event data called:', \
+                    dataName, 'in:', pairs)
                 return class_([[Colour(colours.errorColour)]])
             else:
                 strips = int(picPairs['strips'])
@@ -308,17 +308,17 @@ class TwoDColours(ColourPattern):
                 parsed = parse.parse_indexed_list(raw_iv_pairs)
 
                 array = [[Colour(colours.emptySlotColour)
-                    for i in xrange(0, strip_elems)]
-                    for j in xrange(0, strips)]
+                    for i in range(0, strip_elems)]
+                    for j in range(0, strips)]
 
                 for index, value in parsed:
                     try:
                         array[index % strips][index / strips] = \
                             special_view_decoder(elemClass)(value)
                     except:
-                        print "Element out of range strips: %d," \
+                        print("Element out of range strips: %d," \
                             " stripelems %d, index: %d" % (strips,
-                            strip_elems, index)
+                            strip_elems, index))
 
                 # return class_(array)
                 return class_(array)
@@ -347,8 +347,8 @@ class FrameColours(ColourPattern):
         """Factory for element type"""
         def decode(pairs):
             if dataName not in pairs:
-                print 'FrameColours: no event data called:', dataName, \
-                    'in:', pairs
+                print('FrameColours: no event data called:', dataName, \
+                    'in:', pairs)
                 return class_([Colour(colours.errorColour)])
             else:
                 parsed = parse.list_parser(pairs[dataName])
@@ -389,7 +389,7 @@ special_state_names = {
     'w': '(w)rite'
     }
 
-special_state_chars = special_state_colours.keys()
+special_state_chars = list(special_state_colours.keys())
 
 # The complete set of available block data types
 decoder_element_classes = {
@@ -455,7 +455,7 @@ class Inst(IdedObj):
         else:
             addrStr = '0x%x' % self.addr
         ret = [addrStr, self.disassembly]
-        for name, value in self.pairs.iteritems():
+        for name, value in self.pairs.items():
             ret.append("%s=%s" % (name, str(value)))
         return ret
 
@@ -532,7 +532,7 @@ class BlobEvent(object):
                     line = model.find_line(lineId)
                     if line is not None:
                         ret.append(line)
-            map(find_inst, blocks)
+            list(map(find_inst, blocks))
         return sorted(ret)
 
 class BlobModel(object):
@@ -554,7 +554,7 @@ class BlobModel(object):
         self.lines = {}
         self.numEvents = 0
 
-        for unit, events in self.unitEvents.iteritems():
+        for unit, events in self.unitEvents.items():
             self.unitEvents[unit] = []
 
     def add_blob(self, blob):
@@ -599,7 +599,7 @@ class BlobModel(object):
         if event.unit in self.unitEvents:
             events = self.unitEvents[event.unit]
             if len(events) > 0 and events[len(events)-1].time > event.time:
-                print "Bad event ordering"
+                print("Bad event ordering")
             events.append(event)
         self.numEvents += 1
         self.lastTime = max(self.lastTime, event.time)
@@ -608,10 +608,10 @@ class BlobModel(object):
         """Extract a list of all the times from the seen events.  Call after
         reading events to give a safe index list to use for time indices"""
         times = {}
-        for unitEvents in self.unitEvents.itervalues():
+        for unitEvents in self.unitEvents.values():
             for event in unitEvents:
                 times[event.time] = 1
-        self.times = times.keys()
+        self.times = list(times.keys())
         self.times.sort()
 
     def find_line(self, id):
@@ -752,10 +752,10 @@ class BlobModel(object):
         next_progress_print_event_count = 1000
 
         if not os.access(file, os.R_OK):
-            print 'Can\'t open file', file
+            print('Can\'t open file', file)
             exit(1)
         else:
-            print 'Opening file', file
+            print('Opening file', file)
 
         f = open(file)
 
@@ -793,7 +793,7 @@ class BlobModel(object):
                 # When the time changes, resolve comments
                 if event_time != time:
                     if self.numEvents > next_progress_print_event_count:
-                        print ('Parsed to time: %d' % event_time)
+                        print(('Parsed to time: %d' % event_time))
                         next_progress_print_event_count = (
                             self.numEvents + 1000)
                     update_comments(comments, time)
@@ -838,9 +838,9 @@ class BlobModel(object):
 
         end_wall_time = wall_time()
 
-        print 'Total events:', minor_trace_line_count, 'unique events:', \
-            self.numEvents
-        print 'Time to parse:', end_wall_time - start_wall_time
+        print('Total events:', minor_trace_line_count, 'unique events:', \
+            self.numEvents)
+        print('Time to parse:', end_wall_time - start_wall_time)
 
     def add_blob_picture(self, offset, pic, nameDict):
         """Add a parsed ASCII-art pipeline markup to the model"""
@@ -913,7 +913,7 @@ class BlobModel(object):
                         direc = direc,
                         size = (Point(1, 1) + arrow_point - start)))
                 else:
-                    print 'Bad arrow', start
+                    print('Bad arrow', start)
 
             char = pic_at(start)
             if char == '-\\':
@@ -983,7 +983,7 @@ class BlobModel(object):
             elif typ == 'block':
                 ret = blobs.Block(char, unit, Point(0,0), colour)
             else:
-                print "Bad picture blog type:", typ
+                print("Bad picture blog type:", typ)
 
             if 'hideId' in pairs:
                 hide = pairs['hideId']
@@ -1007,7 +1007,7 @@ class BlobModel(object):
                     if decoder is not None:
                         ret.visualDecoder = decoder
                     else:
-                        print 'Bad visualDecoder requested:', decoderName
+                        print('Bad visualDecoder requested:', decoderName)
 
                 if 'border' in pairs:
                     border = pairs['border']
@@ -1056,10 +1056,10 @@ class BlobModel(object):
         macros = {}
 
         if not os.access(filename, os.R_OK):
-            print 'Can\'t open file', filename
+            print('Can\'t open file', filename)
             exit(1)
         else:
-            print 'Opening file', filename
+            print('Opening file', filename)
 
         f = open(filename)
         l = get_line(f)
@@ -1099,7 +1099,7 @@ class BlobModel(object):
                     # Setup the events structure
                     self.unitEvents[unit] = []
                 else:
-                    print 'Problem with Blob line:', l
+                    print('Problem with Blob line:', l)
 
             l = get_line(f)
 

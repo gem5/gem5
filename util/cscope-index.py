@@ -61,8 +61,8 @@ for dirpath,subdirs,files in os.walk(os.path.join(cwd, 'src')):
     # find C/C++ sources
     okfiles = [f for f in files if oksuffix(f)]
     if okfiles:
-        print >> file_list, \
-              '\n'.join([os.path.join(dirpath, f) for f in okfiles])
+        print('\n'.join([os.path.join(dirpath, f) for f in okfiles]),
+            file=file_list)
 
 file_list.close()
 

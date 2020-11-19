@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 import string, sys, subprocess, os
 
 # Compile DSENT to generate the Python module and then import it.
@@ -60,15 +60,15 @@ import dsent
 def parseConfig(config_file):
     config = ConfigParser()
     if not config.read(config_file):
-        print("ERROR: config file '", config_file, "' not found")
+        print(("ERROR: config file '", config_file, "' not found"))
         sys.exit(1)
 
     if not config.has_section("system.ruby.network"):
-        print("ERROR: Ruby network not found in '", config_file)
+        print(("ERROR: Ruby network not found in '", config_file))
         sys.exit(1)
 
     if config.get("system.ruby.network", "type") != "GarnetNetwork_d" :
-        print("ERROR: Garnet network not used in '", config_file)
+        print(("ERROR: Garnet network not used in '", config_file))
         sys.exit(1)
 
     number_of_virtual_networks = config.getint("system.ruby.network",

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 # Copyright (c) 2013-2014 ARM Limited
 # All rights reserved
@@ -50,7 +50,7 @@ import packet_pb2
 
 def main():
     if len(sys.argv) != 3:
-        print "Usage: ", sys.argv[0], " <protobuf input> <ASCII output>"
+        print("Usage: ", sys.argv[0], " <protobuf input> <ASCII output>")
         exit(-1)
 
     # Open the file in read mode
@@ -59,29 +59,29 @@ def main():
     try:
         ascii_out = open(sys.argv[2], 'w')
     except IOError:
-        print "Failed to open ", sys.argv[2], " for writing"
+        print("Failed to open ", sys.argv[2], " for writing")
         exit(-1)
 
     # Read the magic number in 4-byte Little Endian
     magic_number = proto_in.read(4)
 
     if magic_number != "gem5":
-        print "Unrecognized file", sys.argv[1]
+        print("Unrecognized file", sys.argv[1])
         exit(-1)
 
-    print "Parsing packet header"
+    print("Parsing packet header")
 
     # Add the packet header
     header = packet_pb2.PacketHeader()
     protolib.decodeMessage(proto_in, header)
 
-    print "Object id:", header.obj_id
-    print "Tick frequency:", header.tick_freq
+    print("Object id:", header.obj_id)
+    print("Tick frequency:", header.tick_freq)
 
     for id_string in header.id_strings:
-        print 'Master id %d: %s' % (id_string.key, id_string.value)
+        print('Master id %d: %s' % (id_string.key, id_string.value))
 
-    print "Parsing packets"
+    print("Parsing packets")
 
     num_packets = 0
     packet = packet_pb2.Packet()
@@ -104,7 +104,7 @@ def main():
         else:
             ascii_out.write('\n')
 
-    print "Parsed packets:", num_packets
+    print("Parsed packets:", num_packets)
 
     # We're done
     ascii_out.close()

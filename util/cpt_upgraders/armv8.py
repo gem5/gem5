@@ -18,10 +18,10 @@ def upgrader(cpt):
         # v8 has 128 normal fp and 32 special fp regs compared
         # to v7's 64 normal fp and 8 special fp regs.
         # Insert the extra normal fp registers at end of v7 normal fp regs
-        for x in xrange(64):
+        for x in range(64):
             fpr.insert(64, "0")
         # Append the extra special registers
-        for x in xrange(24):
+        for x in range(24):
             fpr.append("0")
         cpt.set(sec, 'floatRegs.i', ' '.join(str(x) for x in fpr))
 
@@ -70,7 +70,7 @@ def upgrader(cpt):
         # splice in the new misc registers, ~200 -> 605 registers,
         # ordering does not remain consistent
         mr_old = cpt.get(sec, 'miscRegs').split()
-        mr_new = [ '0' for x in xrange(605) ]
+        mr_new = [ '0' for x in range(605) ]
 
         # map old v7 miscRegs to new v8 miscRegs
         mr_new[0] = mr_old[0] # CPSR

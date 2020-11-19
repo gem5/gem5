@@ -29,10 +29,11 @@ from matplotlib.font_manager import FontProperties
 from matplotlib.numerix import array, arange, reshape, shape, transpose, zeros
 from matplotlib.numerix import Float
 from matplotlib.ticker import NullLocator
+from functools import reduce
 
 matplotlib.interactive(False)
 
-from chart import ChartOptions
+from .chart import ChartOptions
 
 class BarChart(ChartOptions):
     def __init__(self, default=None, **kwargs):
@@ -66,7 +67,7 @@ class BarChart(ChartOptions):
         data = array(data)
         dim = len(shape(data))
         if dim not in (1, 2, 3):
-            raise AttributeError, "Input data must be a 1, 2, or 3d matrix"
+            raise AttributeError("Input data must be a 1, 2, or 3d matrix")
         self.inputdata = data
 
         # If the input data is a 1d matrix, then it describes a
@@ -100,7 +101,7 @@ class BarChart(ChartOptions):
         err = array(err)
         dim = len(shape(err))
         if dim not in (1, 2, 3):
-            raise AttributeError, "Input err must be a 1, 2, or 3d matrix"
+            raise AttributeError("Input err must be a 1, 2, or 3d matrix")
         self.inputerr = err
 
         if dim == 1:
@@ -147,12 +148,12 @@ class BarChart(ChartOptions):
     #
     def graph(self):
         if self.chartdata is None:
-            raise AttributeError, "Data not set for bar chart!"
+            raise AttributeError("Data not set for bar chart!")
 
         dim = len(shape(self.inputdata))
         cshape = shape(self.chartdata)
         if self.charterr is not None and shape(self.charterr) != cshape:
-            raise AttributeError, 'Dimensions of error and data do not match'
+            raise AttributeError('Dimensions of error and data do not match')
 
         if dim == 1:
             colors = self.gen_colors(cshape[2])
@@ -247,10 +248,10 @@ class BarChart(ChartOptions):
             if dim == 1:
                 lbars = bars[0][0]
             if dim == 2:
-                lbars = [ bars[i][0][0] for i in xrange(len(bars))]
+                lbars = [ bars[i][0][0] for i in range(len(bars))]
             if dim == 3:
                 number = len(bars[0])
-                lbars = [ bars[0][number - j - 1][0] for j in xrange(number)]
+                lbars = [ bars[0][number - j - 1][0] for j in range(number)]
 
             if self.fig_legend:
                 self.figure.legend(lbars, self.legend, self.legend_loc,
@@ -306,7 +307,7 @@ if __name__ == '__main__':
     # generate a data matrix of the given shape
     size = reduce(lambda x,y: x*y, myshape)
     #data = [ random.randrange(size - i) + 10 for i in xrange(size) ]
-    data = [ float(i)/100.0 for i in xrange(size) ]
+    data = [ float(i)/100.0 for i in range(size) ]
     data = reshape(data, myshape)
 
     # setup some test bar charts
@@ -316,11 +317,11 @@ if __name__ == '__main__':
 
         chart1.xlabel = 'Benchmark'
         chart1.ylabel = 'Bandwidth (GBps)'
-        chart1.legend = [ 'x%d' % x for x in xrange(myshape[-1]) ]
-        chart1.xticks = [ 'xtick%d' % x for x in xrange(myshape[0]) ]
+        chart1.legend = [ 'x%d' % x for x in range(myshape[-1]) ]
+        chart1.xticks = [ 'xtick%d' % x for x in range(myshape[0]) ]
         chart1.title = 'this is the title'
         if len(myshape) > 2:
-            chart1.xsubticks = [ '%d' % x for x in xrange(myshape[1]) ]
+            chart1.xsubticks = [ '%d' % x for x in range(myshape[1]) ]
         chart1.graph()
         chart1.savefig('/tmp/test1.png')
         chart1.savefig('/tmp/test1.ps')
