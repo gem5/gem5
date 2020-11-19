@@ -824,7 +824,7 @@ class DictImporter(object):
             return mod
 
         if fullname == 'm5.defines':
-            mod.__dict__['buildEnv'] = m5.util.SmartDict(build_env)
+            mod.__dict__['buildEnv'] = dict(build_env)
             return mod
 
         source = self.modules[fullname]
@@ -894,7 +894,7 @@ def makeDefinesPyFile(target, source, env):
 import _m5.core
 import m5.util
 
-buildEnv = m5.util.SmartDict($build_env)
+buildEnv = dict($build_env)
 
 compileDate = _m5.core.compileDate
 gem5Version = _m5.core.gem5Version
