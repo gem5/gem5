@@ -1421,19 +1421,19 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   action(l10m_profileMiss, "l10m", desc="l10m miss profile") {
-    ++L1D0cache.demand_misses;
+    L1D0cache.profileDemandMiss();
   }
 
   action(l11m_profileMiss, "l11m", desc="l11m miss profile") {
-    ++L1D1cache.demand_misses;
+    L1D1cache.profileDemandMiss();
   }
 
   action(l1im_profileMiss, "l1lm", desc="l1im miss profile") {
-    ++L1Icache.demand_misses;
+    L1Icache.profileDemandMiss();
   }
 
   action(l2m_profileMiss, "l2m", desc="l2m miss profile") {
-    ++L2cache.demand_misses;
+    L2cache.profileDemandMiss();
   }
 
   action(yy_recycleProbeQueue, "yy", desc="recycle probe queue") {

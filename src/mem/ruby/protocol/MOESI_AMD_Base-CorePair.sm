@@ -1267,35 +1267,35 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   action(l2m_profileMiss, "l2m", desc="l2m miss profile") {
-    ++L2cache.demand_misses;
+    L2cache.profileDemandMiss();
   }
 
   action(l10m_profileMiss, "l10m", desc="l10m miss profile") {
-    ++L1D0cache.demand_misses;
+    L1D0cache.profileDemandMiss();
   }
 
   action(l11m_profileMiss, "l11m", desc="l11m miss profile") {
-    ++L1D1cache.demand_misses;
+    L1D1cache.profileDemandMiss();
   }
 
   action(l1im_profileMiss, "l1lm", desc="l1im miss profile") {
-    ++L1Icache.demand_misses;
+    L1Icache.profileDemandMiss();
   }
 
   action(l10h_profileHit, "l10h", desc="l10h hit profile") {
-    ++L1D0cache.demand_hits;
+    L1D0cache.profileDemandHit();
   }
 
   action(l11h_profileHit, "l11h", desc="l11h hit profile") {
-    ++L1D1cache.demand_hits;
+    L1D1cache.profileDemandHit();
   }
 
   action(l1ih_profileHit, "l1lh", desc="l1ih hit profile") {
-    ++L1Icache.demand_hits;
+    L1Icache.profileDemandHit();
   }
 
   action(l2h_profileHit, "l2h", desc="l2h hit profile") {
-    ++L2cache.demand_hits;
+    L2cache.profileDemandHit();
   }
 
   action(yy_recycleProbeQueue, "yy", desc="recycle probe queue") {

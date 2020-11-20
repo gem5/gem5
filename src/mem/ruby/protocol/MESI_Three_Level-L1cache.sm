@@ -774,11 +774,11 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(uu_profileMiss, "\um", desc="Profile the demand miss") {
-      ++cache.demand_misses;
+    cache.profileDemandMiss();
   }
 
   action(uu_profileHit, "\uh", desc="Profile the demand hit") {
-      ++cache.demand_hits;
+    cache.profileDemandHit();
   }
 
 

@@ -956,19 +956,19 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(uu_profileInstMiss, "\uim", desc="Profile the demand miss") {
-      ++L1Icache.demand_misses;
+    L1Icache.profileDemandMiss();
   }
 
   action(uu_profileInstHit, "\uih", desc="Profile the demand hit") {
-      ++L1Icache.demand_hits;
+    L1Icache.profileDemandHit();
   }
 
   action(uu_profileDataMiss, "\udm", desc="Profile the demand miss") {
-      ++L1Dcache.demand_misses;
+    L1Dcache.profileDemandMiss();
   }
 
   action(uu_profileDataHit, "\udh", desc="Profile the demand hit") {
-      ++L1Dcache.demand_hits;
+    L1Dcache.profileDemandHit();
   }
 
   action(po_observeHit, "\ph", desc="Inform the prefetcher about the hit") {

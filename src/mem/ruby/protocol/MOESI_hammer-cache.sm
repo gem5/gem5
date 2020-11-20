@@ -1266,27 +1266,27 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
   }
 
   action(uu_profileL1DataMiss, "\udm", desc="Profile the demand miss") {
-      ++L1Dcache.demand_misses;
+    L1Dcache.profileDemandMiss();
   }
 
   action(uu_profileL1DataHit, "\udh", desc="Profile the demand hits") {
-      ++L1Dcache.demand_hits;
+    L1Dcache.profileDemandHit();
   }
 
   action(uu_profileL1InstMiss, "\uim", desc="Profile the demand miss") {
-      ++L1Icache.demand_misses;
+    L1Icache.profileDemandMiss();
   }
 
   action(uu_profileL1InstHit, "\uih", desc="Profile the demand hits") {
-      ++L1Icache.demand_hits;
+    L1Icache.profileDemandHit();
   }
 
   action(uu_profileL2Miss, "\um", desc="Profile the demand miss") {
-      ++L2cache.demand_misses;
+    L2cache.profileDemandMiss();
   }
 
   action(uu_profileL2Hit, "\uh", desc="Profile the demand hits") {
-      ++L2cache.demand_hits;
+    L2cache.profileDemandHit();
   }
 
   action(zz_stallAndWaitMandatoryQueue, "\z", desc="Send the head of the mandatory queue to the back of the queue.") {

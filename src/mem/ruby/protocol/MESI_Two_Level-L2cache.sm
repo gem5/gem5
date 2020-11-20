@@ -732,11 +732,11 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   action(uu_profileMiss, "\um", desc="Profile the demand miss") {
-      ++L2cache.demand_misses;
+    L2cache.profileDemandMiss();
   }
 
   action(uu_profileHit, "\uh", desc="Profile the demand hit") {
-      ++L2cache.demand_hits;
+    L2cache.profileDemandHit();
   }
 
   action(nn_addSharer, "\n", desc="Add L1 sharer to list") {

@@ -350,11 +350,11 @@ machine(MachineType:L1Cache, "MI Example L1 Cache")
   }
 
   action(p_profileMiss, "pi", desc="Profile cache miss") {
-      ++cacheMemory.demand_misses;
+    cacheMemory.profileDemandMiss();
   }
 
   action(p_profileHit, "ph", desc="Profile cache hit") {
-      ++cacheMemory.demand_hits;
+    cacheMemory.profileDemandHit();
   }
 
   action(r_load_hit, "r", desc="Notify sequencer the load completed.") {

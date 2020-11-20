@@ -639,9 +639,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   //deallocated in dt_deallocateTBE (only for WB) as it checks the L3Hit flag of the TBE entry.
   action(pr_profileL3HitMiss, "pr_l3hm", desc="L3 Hit or Miss Profile") {
     if (tbe.L3Hit) {
-      ++L3CacheMemory.demand_hits;
+      L3CacheMemory.profileDemandHit();
     } else {
-      ++L3CacheMemory.demand_misses;
+      L3CacheMemory.profileDemandMiss();
     }
   }
 

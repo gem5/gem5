@@ -211,8 +211,8 @@ structure (CacheMemory, external = "yes") {
   int getNumBlocks();
   Addr getAddressAtIdx(int);
 
-  Scalar demand_misses;
-  Scalar demand_hits;
+  void profileDemandHit();
+  void profileDemandMiss();
 }
 
 structure (WireBuffer, inport="yes", outport="yes", external = "yes") {

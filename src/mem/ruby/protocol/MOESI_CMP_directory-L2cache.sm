@@ -1560,11 +1560,11 @@ machine(MachineType:L2Cache, "Token protocol")
   }
 
   action(uu_profileMiss, "\um", desc="Profile the demand miss") {
-      ++L2cache.demand_misses;
+    L2cache.profileDemandMiss();
   }
 
   action(uu_profileHit, "\uh", desc="Profile the demand hit") {
-      ++L2cache.demand_hits;
+    L2cache.profileDemandHit();
   }
 
   action(y_copyCacheStateToDir, "y", desc="Copy cache state to directory state") {

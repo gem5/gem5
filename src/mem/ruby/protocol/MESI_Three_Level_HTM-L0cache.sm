@@ -915,19 +915,19 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
   }
 
   action(uu_profileInstMiss, "\ui", desc="Profile the demand miss") {
-        ++Icache.demand_misses;
+    Icache.profileDemandMiss();
   }
 
   action(uu_profileInstHit, "\uih", desc="Profile the demand hit") {
-        ++Icache.demand_hits;
+    Icache.profileDemandHit();
   }
 
   action(uu_profileDataMiss, "\ud", desc="Profile the demand miss") {
-        ++Dcache.demand_misses;
+    Dcache.profileDemandMiss();
   }
 
   action(uu_profileDataHit, "\udh", desc="Profile the demand hit") {
-        ++Dcache.demand_hits;
+    Dcache.profileDemandHit();
   }
 
   // store conditionals

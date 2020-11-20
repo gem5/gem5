@@ -529,11 +529,11 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
 
   // added for profiling
   action(uu_profileDataMiss, "\udm", desc="Profile the demand miss"){
-      ++L1cache.demand_misses;
+    L1cache.profileDemandMiss();
   }
 
   action(uu_profileDataHit, "\udh", desc="Profile the demand hit"){
-      ++L1cache.demand_hits;
+    L1cache.profileDemandHit();
   }
 
 

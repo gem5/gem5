@@ -68,16 +68,7 @@ CacheMemory::CacheMemory(const Params &p)
               p.start_index_bit, p.ruby_system),
     tagArray(p.tagArrayBanks, p.tagAccessLatency,
              p.start_index_bit, p.ruby_system),
-    cacheMemoryStats(this),
-    ADD_STAT(m_demand_hits, "Number of cache demand hits"),
-    ADD_STAT(m_demand_misses, "Number of cache demand misses"),
-    ADD_STAT(m_demand_accesses, "Number of cache demand accesses",
-                                  m_demand_hits + m_demand_misses),
-    ADD_STAT(m_sw_prefetches, "Number of software prefetches"),
-    ADD_STAT(m_hw_prefetches, "Number of hardware prefetches"),
-    ADD_STAT(m_prefetches, "Number of prefetches",
-                          m_sw_prefetches + m_hw_prefetches),
-    ADD_STAT(m_accessModeType, "")
+    cacheMemoryStats(this)
 {
     m_cache_size = p.size;
     m_cache_assoc = p.assoc;
@@ -88,26 +79,6 @@ CacheMemory::CacheMemory(const Params &p)
     m_block_size = p.block_size;  // may be 0 at this point. Updated in init()
     m_use_occupancy = dynamic_cast<ReplacementPolicy::WeightedLRU*>(
                                     m_replacementPolicy_ptr) ? true : false;
-
-    m_sw_prefetches
-        .flags(Stats::nozero);
-
-    m_hw_prefetches
-        .flags(Stats::nozero);
-
-    m_prefetches
-        .flags(Stats::nozero);
-
-    m_accessModeType
-        .init(RubyRequestType_NUM)
-        .flags(Stats::pdf | Stats::total);
-
-    for (int i = 0; i < RubyAccessMode_NUM; i++) {
-        m_accessModeType
-            .subname(i, RubyAccessMode_to_string(RubyAccessMode(i)))
-            .flags(Stats::nozero)
-            ;
-    }
 }
 
 void
@@ -559,7 +530,16 @@ CacheMemoryStats::CacheMemoryStats(Stats::Group *parent)
                                        "transaction"),
       ADD_STAT(htmTransAbortReadSet, "Read set size of a aborted transaction"),
       ADD_STAT(htmTransAbortWriteSet, "Write set size of a aborted "
-                                      "transaction")
+                                      "transaction"),
+      ADD_STAT(m_demand_hits, "Number of cache demand hits"),
+      ADD_STAT(m_demand_misses, "Number of cache demand misses"),
+      ADD_STAT(m_demand_accesses, "Number of cache demand accesses",
+               m_demand_hits + m_demand_misses),
+      ADD_STAT(m_sw_prefetches, "Number of software prefetches"),
+      ADD_STAT(m_hw_prefetches, "Number of hardware prefetches"),
+      ADD_STAT(m_prefetches, "Number of prefetches",
+               m_sw_prefetches + m_hw_prefetches),
+      ADD_STAT(m_accessModeType, "")
 {
     numDataArrayReads
         .flags(Stats::nozero);
@@ -595,6 +575,25 @@ CacheMemoryStats::CacheMemoryStats(Stats::Group *parent)
         .init(8)
         .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan);
 
+    m_sw_prefetches
+        .flags(Stats::nozero);
+
+    m_hw_prefetches
+        .flags(Stats::nozero);
+
+    m_prefetches
+        .flags(Stats::nozero);
+
+    m_accessModeType
+        .init(RubyRequestType_NUM)
+        .flags(Stats::pdf | Stats::total);
+
+    for (int i = 0; i < RubyAccessMode_NUM; i++) {
+        m_accessModeType
+            .subname(i, RubyAccessMode_to_string(RubyAccessMode(i)))
+            .flags(Stats::nozero)
+            ;
+    }
 }
 
 // assumption: SLICC generated files will only call this function
@@ -737,4 +736,16 @@ CacheMemory::htmCommitTransaction()
     cacheMemoryStats.htmTransCommitWriteSet.sample(htmWriteSetSize);
     DPRINTF(HtmMem, "htmCommitTransaction: read set=%u write set=%u\n",
         htmReadSetSize, htmWriteSetSize);
+}
+
+void
+CacheMemory::profileDemandHit()
+{
+    cacheMemoryStats.m_demand_hits++;
+}
+
+void
+CacheMemory::profileDemandMiss()
+{
+    cacheMemoryStats.m_demand_misses++;
 }
