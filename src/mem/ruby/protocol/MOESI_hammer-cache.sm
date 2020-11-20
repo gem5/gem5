@@ -1285,12 +1285,12 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
       ++L2cache.demand_misses;
   }
 
-  action(uu_profileL2Hit, "\uh", desc="Profile the demand hits ") {
+  action(uu_profileL2Hit, "\uh", desc="Profile the demand hits") {
       ++L2cache.demand_hits;
   }
 
   action(zz_stallAndWaitMandatoryQueue, "\z", desc="Send the head of the mandatory queue to the back of the queue.") {
-    stall_and_wait(mandatoryQueue_in, address);    
+    stall_and_wait(mandatoryQueue_in, address);
   }
 
   action(z_stall, "z", desc="stall") {

@@ -353,7 +353,7 @@ machine(MachineType:L1Cache, "MI Example L1 Cache")
       ++cacheMemory.demand_misses;
   }
 
-  action(p_profileHit, "ph", desc="Profile cache miss") {
+  action(p_profileHit, "ph", desc="Profile cache hit") {
       ++cacheMemory.demand_hits;
   }
 
