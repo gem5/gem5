@@ -100,6 +100,16 @@ class BRRIPRP(BaseReplacementPolicy):
 class RRIPRP(BRRIPRP):
     btp = 100
 
+class DRRIPRP(DuelingRP):
+    # The constituency_size and the team_size must be manually provided, where:
+    #     constituency_size = num_cache_entries /
+    #         (num_dueling_sets * num_entries_per_set)
+    # The paper assumes that:
+    #     num_dueling_sets = 32
+    #     team_size = num_entries_per_set
+    replacement_policy_a = BRRIPRP()
+    replacement_policy_b = RRIPRP()
+
 class NRURP(BRRIPRP):
     btp = 100
     num_bits = 1
