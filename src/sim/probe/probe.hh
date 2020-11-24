@@ -119,6 +119,10 @@ class ProbeListener
   public:
     ProbeListener(ProbeManager *manager, const std::string &name);
     virtual ~ProbeListener();
+    ProbeListener(const ProbeListener& other) = delete;
+    ProbeListener& operator=(const ProbeListener& other) = delete;
+    ProbeListener(ProbeListener&& other) noexcept = delete;
+    ProbeListener& operator=(ProbeListener&& other) noexcept = delete;
 
   protected:
     ProbeManager *const manager;
