@@ -244,6 +244,10 @@ class RealViewOsc(ClockDomain):
 
     freq = Param.Clock("Default frequency")
 
+    # These are currently only used for the device tree.
+    min_freq = Param.Clock("0t", "Minimum frequency")
+    max_freq = Param.Clock("0t", "Maximum frequency")
+
     def generateDeviceTree(self, state):
         phandle = state.phandle(self)
         node = FdtNode("osc@" + format(long(phandle), 'x'))
@@ -251,8 +255,16 @@ class RealViewOsc(ClockDomain):
         node.append(FdtPropertyWords("arm,vexpress-sysreg,func",
                                      [0x1, int(self.device)]))
         node.append(FdtPropertyWords("#clock-cells", [0]))
-        freq = int(1.0/self.freq.value) # Values are stored as a clock period
-        node.append(FdtPropertyWords("freq-range", [freq, freq]))
+
+        minf = self.min_freq if self.min_freq.value else self.freq
+        maxf = self.max_freq if self.max_freq.value else self.freq
+
+        # Values are stored as a clock period.
+        def to_freq(prop):
+            return int(1.0 / prop.value)
+
+        node.append(FdtPropertyWords("freq-range",
+                                     [to_freq(minf), to_freq(maxf)]))
         node.append(FdtPropertyStrings("clock-output-names",
                                        ["oscclk" + str(phandle)]))
         node.appendPhandle(self)
@@ -288,10 +300,12 @@ Express (V2M-P1) motherboard. See ARM DUI 0447J for details.
     class Temperature(RealViewTemperatureSensor):
         site, position, dcc = (0, 0, 0)
 
-    osc_mcc = Osc(device=0, freq="50MHz")
-    osc_clcd = Osc(device=1, freq="23.75MHz")
+    osc_mcc = Osc(device=0, min_freq="25MHz", max_freq="60MHz", freq="50MHz")
+    osc_clcd = Osc(device=1, min_freq="23.75MHz", max_freq="63.5MHz",
+                   freq="23.75MHz")
     osc_peripheral = Osc(device=2, freq="24MHz")
-    osc_system_bus = Osc(device=4, freq="24MHz")
+    osc_system_bus = Osc(device=4, min_freq="2MHz", max_freq="230MHz",
+                         freq="24MHz")
 
     # See Table 4.19 in ARM DUI 0447J (Motherboard Express uATX TRM).
     temp_crtl = Temperature(device=0)
@@ -322,11 +336,12 @@ ARM DUI 0604E for details.
         site, position, dcc = (1, 0, 0)
 
     # See Table 2.8 in ARM DUI 0604E (CoreTile Express A15x2 TRM)
-    osc_cpu = Osc(device=0, freq="60MHz")
-    osc_hsbm = Osc(device=4, freq="40MHz")
-    osc_pxl = Osc(device=5, freq="23.75MHz")
-    osc_smb = Osc(device=6, freq="50MHz")
-    osc_sys = Osc(device=7, freq="60MHz")
+    osc_cpu = Osc(device=0, min_freq="20MHz", max_freq="60MHz", freq="60MHz")
+    osc_hsbm = Osc(device=4, min_freq="20MHz", max_freq="40MHz", freq="40MHz")
+    osc_pxl = Osc(device=5, min_freq="23.76MHz", max_freq="165MHz",
+                  freq="23.75MHz")
+    osc_smb = Osc(device=6, min_freq="20MHz", max_freq="50MHz", freq="50MHz")
+    osc_sys = Osc(device=7, min_freq="20MHz", max_freq="60MHz", freq="60MHz")
     osc_ddr = Osc(device=8, freq="40MHz")
 
     def generateDeviceTree(self, state):
