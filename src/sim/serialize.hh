@@ -171,7 +171,7 @@ class CheckpointIn
  */
 class Serializable
 {
-  protected:
+  public:
     class ScopedCheckpointSection {
       public:
         /**
@@ -224,7 +224,6 @@ class Serializable
         void nameOut(CheckpointIn &cp) {};
     };
 
-  public:
     /**
      * @ingroup api_serialize
      */
