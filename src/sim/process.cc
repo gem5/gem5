@@ -128,7 +128,8 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
       _pid(params.pid), _ppid(params.ppid),
       _pgid(params.pgid), drivers(params.drivers),
       fds(make_shared<FDArray>(params.input, params.output, params.errout)),
-      childClearTID(0)
+      childClearTID(0),
+      ADD_STAT(numSyscalls, "Number of system calls")
 {
     if (_pid >= System::maxPID)
         fatal("_pid is too large: %d", _pid);
@@ -249,19 +250,6 @@ Process::clone(ThreadContext *otc, ThreadContext *ntc,
 
     np->argv.insert(np->argv.end(), argv.begin(), argv.end());
     np->envp.insert(np->envp.end(), envp.begin(), envp.end());
-}
-
-void
-Process::regStats()
-{
-    SimObject::regStats();
-
-    using namespace Stats;
-
-    numSyscalls
-        .name(name() + ".numSyscalls")
-        .desc("Number of system calls")
-        ;
 }
 
 void

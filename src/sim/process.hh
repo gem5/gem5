@@ -105,9 +105,6 @@ class Process : public SimObject
     Addr getStartPC();
     ::Loader::ObjectFile *getInterpreter();
 
-    // override of virtual SimObject method: register statistics
-    void regStats() override;
-
     void allocateMem(Addr vaddr, int64_t size, bool clobber = false);
 
     /// Attempt to fix up a fault at vaddr by allocating a page on the stack.
@@ -161,8 +158,6 @@ class Process : public SimObject
 
     // system object which owns this process
     System *system;
-
-    Stats::Scalar numSyscalls;  // track how many system calls are executed
 
     // flag for using architecture specific page table
     bool useArchPT;
@@ -286,6 +281,8 @@ class Process : public SimObject
 
     // Process was forked with SIGCHLD set.
     bool *sigchld;
+
+    Stats::Scalar numSyscalls;  // track how many system calls are executed
 };
 
 #endif // __PROCESS_HH__

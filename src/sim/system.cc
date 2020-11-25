@@ -483,7 +483,7 @@ System::regStats()
     SimObject::regStats();
 
     for (uint32_t j = 0; j < numWorkIds ; j++) {
-        workItemStats[j] = new Stats::Histogram();
+        workItemStats[j] = new Stats::Histogram(this);
         stringstream namestr;
         ccprintf(namestr, "work_item_type%d", j);
         workItemStats[j]->init(20)
