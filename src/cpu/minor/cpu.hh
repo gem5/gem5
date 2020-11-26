@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2012-2014, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -180,6 +180,12 @@ class MinorCPU : public BaseCPU
         std::random_shuffle(prio_list.begin(), prio_list.end());
         return prio_list;
     }
+
+    /** The tick method in the MinorCPU is simply updating the cycle
+     * counters as the ticking of the pipeline stages is already
+     * handled by the Pipeline object.
+     */
+    void tick() { updateCycleCounters(BaseCPU::CPU_STATE_ON); }
 
     /** Interface for stages to signal that they have become active after
      *  a callback or eventq event where the pipeline itself may have

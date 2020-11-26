@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -121,6 +121,9 @@ Pipeline::minorTrace() const
 void
 Pipeline::evaluate()
 {
+    /** We tick the CPU to update the BaseCPU cycle counters */
+    cpu.tick();
+
     /* Note that it's important to evaluate the stages in order to allow
      *  'immediate', 0-time-offset TimeBuffer activity to be visible from
      *  later stages to earlier ones in the same cycle */
