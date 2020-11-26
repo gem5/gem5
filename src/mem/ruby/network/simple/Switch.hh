@@ -73,7 +73,7 @@ class Switch : public BasicRouter
     void collateStats();
     void regStats();
     const Stats::Formula & getMsgCount(unsigned int type) const
-    { return m_msg_counts[type]; }
+    { return *(switchStats.m_msg_counts[type]); }
 
     void print(std::ostream& out) const;
     void init_net_ptr(SimpleNetwork* net_ptr) { m_network_ptr = net_ptr; }
@@ -93,10 +93,17 @@ class Switch : public BasicRouter
     unsigned m_num_connected_buffers;
     std::vector<MessageBuffer*> m_port_buffers;
 
-    // Statistical variables
-    Stats::Formula m_avg_utilization;
-    Stats::Formula m_msg_counts[MessageSizeType_NUM];
-    Stats::Formula m_msg_bytes[MessageSizeType_NUM];
+
+  public:
+    struct SwitchStats : public Stats::Group
+    {
+        SwitchStats(Stats::Group *parent);
+
+        // Statistical variables
+        Stats::Formula m_avg_utilization;
+        Stats::Formula* m_msg_counts[MessageSizeType_NUM];
+        Stats::Formula* m_msg_bytes[MessageSizeType_NUM];
+    } switchStats;
 };
 
 inline std::ostream&

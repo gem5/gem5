@@ -90,9 +90,15 @@ class SimpleNetwork : public Network
     const int m_endpoint_bandwidth;
     const bool m_adaptive_routing;
 
-    //Statistical variables
-    Stats::Formula m_msg_counts[MessageSizeType_NUM];
-    Stats::Formula m_msg_bytes[MessageSizeType_NUM];
+
+    struct NetworkStats : public Stats::Group
+    {
+        NetworkStats(Stats::Group *parent);
+
+        //Statistical variables
+        Stats::Formula* m_msg_counts[MessageSizeType_NUM];
+        Stats::Formula* m_msg_bytes[MessageSizeType_NUM];
+    } networkStats;
 };
 
 inline std::ostream&

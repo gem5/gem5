@@ -52,8 +52,9 @@ using namespace std;
 using m5::stl_helpers::operator<<;
 
 Switch::Switch(const Params &p)
-  : BasicRouter(p), perfectSwitch(m_id, this, p.virt_nets),
-    m_num_connected_buffers(0)
+  : BasicRouter(p),
+    perfectSwitch(m_id, this, p.virt_nets), m_num_connected_buffers(0),
+    switchStats(this)
 {
     m_port_buffers.reserve(p.port_buffers.size());
     for (auto& buffer : p.port_buffers) {
@@ -108,32 +109,35 @@ Switch::regStats()
     BasicRouter::regStats();
 
     for (auto& throttle : throttles) {
-        throttle.regStats(name());
+        throttle.regStats();
     }
 
-    m_avg_utilization.name(name() + ".percent_links_utilized");
     for (const auto& throttle : throttles) {
-        m_avg_utilization += throttle.getUtilization();
+        switchStats.m_avg_utilization += throttle.getUtilization();
     }
-    m_avg_utilization /= Stats::constant(throttles.size());
+    switchStats.m_avg_utilization /= Stats::constant(throttles.size());
 
     for (unsigned int type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
-        m_msg_counts[type]
-            .name(name() + ".msg_count." +
-                MessageSizeType_to_string(MessageSizeType(type)))
-            .flags(Stats::nozero)
+        switchStats.m_msg_counts[type] = new Stats::Formula(&switchStats,
+            csprintf("msg_count.%s",
+                MessageSizeType_to_string(MessageSizeType(type))).c_str());
+        switchStats.m_msg_counts[type]
+            ->flags(Stats::nozero)
             ;
-        m_msg_bytes[type]
-            .name(name() + ".msg_bytes." +
-                MessageSizeType_to_string(MessageSizeType(type)))
-            .flags(Stats::nozero)
+
+        switchStats.m_msg_bytes[type] = new Stats::Formula(&switchStats,
+            csprintf("msg_bytes.%s",
+                MessageSizeType_to_string(MessageSizeType(type))).c_str());
+        switchStats.m_msg_bytes[type]
+            ->flags(Stats::nozero)
             ;
 
         for (const auto& throttle : throttles) {
-            m_msg_counts[type] += throttle.getMsgCount(type);
+            *(switchStats.m_msg_counts[type]) += throttle.getMsgCount(type);
         }
-        m_msg_bytes[type] = m_msg_counts[type] * Stats::constant(
+        *(switchStats.m_msg_bytes[type]) =
+            *(switchStats.m_msg_counts[type]) * Stats::constant(
                 Network::MessageSizeType_to_int(MessageSizeType(type)));
     }
 }
@@ -182,4 +186,12 @@ Switch::functionalWrite(Packet *pkt)
         num_functional_writes += m_port_buffers[i]->functionalWrite(pkt);
     }
     return num_functional_writes;
+}
+
+Switch::
+SwitchStats::SwitchStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      m_avg_utilization(this, "percent_links_utilized")
+{
+
 }

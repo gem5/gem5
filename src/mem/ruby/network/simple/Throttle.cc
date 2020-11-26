@@ -51,8 +51,10 @@ static int network_message_to_size(Message* net_msg_ptr);
 Throttle::Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
                    int link_bandwidth_multiplier, int endpoint_bandwidth,
                    Switch *em)
-    : Consumer(em), m_switch_id(sID), m_switch(em), m_node(node),
-      m_ruby_system(rs)
+    : Consumer(em),
+      m_switch_id(sID), m_switch(em), m_node(node),
+      m_ruby_system(rs),
+      throttleStats(em, node)
 {
     m_vnets = 0;
 
@@ -122,7 +124,8 @@ Throttle::operateVnet(int vnet, int &bw_remaining, bool &schedule_wakeup,
                          m_switch->cyclesToTicks(m_link_latency));
 
             // Count the message
-            m_msg_counts[net_msg_ptr->getMessageSize()][vnet]++;
+            (*(throttleStats.
+                m_msg_counts[net_msg_ptr->getMessageSize()]))[vnet]++;
             DPRINTF(RubyNetwork, "%s\n", *out);
         }
 
@@ -200,26 +203,27 @@ Throttle::wakeup()
 }
 
 void
-Throttle::regStats(string parent)
+Throttle::regStats()
 {
-    m_link_utilization
-        .name(parent + csprintf(".throttle%i", m_node) + ".link_utilization");
-
     for (MessageSizeType type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
-        m_msg_counts[(unsigned int)type]
-            .init(Network::getNumberOfVirtualNetworks())
-            .name(parent + csprintf(".throttle%i", m_node) + ".msg_count." +
-                    MessageSizeType_to_string(type))
-            .flags(Stats::nozero)
-            ;
-        m_msg_bytes[(unsigned int) type]
-            .name(parent + csprintf(".throttle%i", m_node) + ".msg_bytes." +
-                    MessageSizeType_to_string(type))
+        throttleStats.m_msg_counts[(unsigned int)type] =
+            new Stats::Vector(&throttleStats,
+            csprintf("msg_count.%s", MessageSizeType_to_string(type)).c_str());
+        throttleStats.m_msg_counts[(unsigned int)type]
+            ->init(Network::getNumberOfVirtualNetworks())
             .flags(Stats::nozero)
             ;
 
-        m_msg_bytes[(unsigned int) type] = m_msg_counts[type] * Stats::constant(
+        throttleStats.m_msg_bytes[(unsigned int) type] =
+            new Stats::Formula(&throttleStats,
+            csprintf("msg_bytes.%s", MessageSizeType_to_string(type)).c_str());
+        throttleStats.m_msg_bytes[(unsigned int) type]
+            ->flags(Stats::nozero)
+            ;
+
+        *(throttleStats.m_msg_bytes[(unsigned int) type]) =
+            *(throttleStats.m_msg_counts[type]) * Stats::constant(
                 Network::MessageSizeType_to_int(type));
     }
 }
@@ -236,7 +240,8 @@ Throttle::collateStats()
     double time_delta = double(m_ruby_system->curCycle() -
                                m_ruby_system->getStartCycle());
 
-    m_link_utilization = 100.0 * m_link_utilization_proxy / time_delta;
+    throttleStats.m_link_utilization =
+        100.0 * m_link_utilization_proxy / time_delta;
 }
 
 void
@@ -258,4 +263,12 @@ network_message_to_size(Message *net_msg_ptr)
         size *= BROADCAST_SCALING;
 
     return size;
+}
+
+Throttle::
+ThrottleStats::ThrottleStats(Stats::Group *parent, const NodeID &nodeID)
+    : Stats::Group(parent, csprintf("throttle%02i", nodeID).c_str()),
+      m_link_utilization(this, "link_utilization")
+{
+
 }
