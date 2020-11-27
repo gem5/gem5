@@ -185,6 +185,8 @@ class Profiler
     const bool m_all_instructions;
     const uint32_t m_num_vnets;
 
+
+  public:
     ProfilerStats rubyProfilerStats;
 };
 

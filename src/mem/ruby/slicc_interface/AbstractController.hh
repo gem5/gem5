@@ -151,9 +151,9 @@ class AbstractController : public ClockedObject, public Consumer
     MachineID getMachineID() const { return m_machineID; }
     RequestorID getRequestorId() const { return m_id; }
 
-    Stats::Histogram& getDelayHist() { return m_delayHistogram; }
+    Stats::Histogram& getDelayHist() { return stats.m_delayHistogram; }
     Stats::Histogram& getDelayVCHist(uint32_t index)
-    { return *(m_delayVCHistogram[index]); }
+    { return *(stats.m_delayVCHistogram[index]); }
 
     bool respondsTo(Addr addr)
     {
@@ -204,14 +204,6 @@ class AbstractController : public ClockedObject, public Consumer
     std::unordered_map<Addr, TransMapPair> m_inTrans;
     std::unordered_map<Addr, TransMapPair> m_outTrans;
 
-    // Initialized by the SLICC compiler for all combinations of event and
-    // states. Only histograms with samples will appear in the stats
-    std::vector<std::vector<std::vector<Stats::Histogram*>>> m_inTransLatHist;
-
-    // Initialized by the SLICC compiler for all events.
-    // Only histograms with samples will appear in the stats.
-    std::vector<Stats::Histogram*> m_outTransLatHist;
-
     /**
      * Profiles an event that initiates a protocol transactions for a specific
      * line (e.g. events triggered by incoming request messages).
@@ -241,10 +233,10 @@ class AbstractController : public ClockedObject, public Consumer
     {
         auto iter = m_inTrans.find(addr);
         assert(iter != m_inTrans.end());
-        m_inTransLatHist[iter->second.transaction]
-                        [iter->second.state]
-                        [(unsigned)finalState]->sample(
-                          ticksToCycles(curTick() - iter->second.time));
+        stats.m_inTransLatHist[iter->second.transaction]
+                              [iter->second.state]
+                              [(unsigned)finalState]->sample(
+                                ticksToCycles(curTick() - iter->second.time));
        m_inTrans.erase(iter);
     }
 
@@ -272,7 +264,7 @@ class AbstractController : public ClockedObject, public Consumer
     {
         auto iter = m_outTrans.find(addr);
         assert(iter != m_outTrans.end());
-        m_outTransLatHist[iter->second.transaction]->sample(
+        stats.m_outTransLatHist[iter->second.transaction]->sample(
             ticksToCycles(curTick() - iter->second.time));
         m_outTrans.erase(iter);
     }
@@ -307,15 +299,6 @@ class AbstractController : public ClockedObject, public Consumer
     const unsigned int m_buffer_size;
     Cycles m_recycle_latency;
     const Cycles m_mandatory_queue_latency;
-
-    //! Counter for the number of cycles when the transitions carried out
-    //! were equal to the maximum allowed
-    Stats::Scalar m_fully_busy_cycles;
-
-    //! Histogram for profiling delay for the messages this controller
-    //! cares for
-    Stats::Histogram m_delayHistogram;
-    std::vector<Stats::Histogram *> m_delayVCHistogram;
 
     /**
      * Port that forwards requests and receives responses from the
@@ -362,6 +345,30 @@ class AbstractController : public ClockedObject, public Consumer
     AddrRangeMap<AddrMapEntry, 3> downstreamAddrMap;
 
     NetDest downstreamDestinations;
+
+  public:
+    struct ControllerStats : public Stats::Group
+    {
+        ControllerStats(Stats::Group *parent);
+
+        // Initialized by the SLICC compiler for all combinations of event and
+        // states. Only histograms with samples will appear in the stats
+        std::vector<std::vector<std::vector<Stats::Histogram*>>>
+          m_inTransLatHist;
+
+        // Initialized by the SLICC compiler for all events.
+        // Only histograms with samples will appear in the stats.
+        std::vector<Stats::Histogram*> m_outTransLatHist;
+
+        //! Counter for the number of cycles when the transitions carried out
+        //! were equal to the maximum allowed
+        Stats::Scalar m_fully_busy_cycles;
+
+        //! Histogram for profiling delay for the messages this controller
+        //! cares for
+        Stats::Histogram m_delayHistogram;
+        std::vector<Stats::Histogram *> m_delayVCHistogram;
+    } stats;
 
 };
 

@@ -815,13 +815,20 @@ $c_ident::regStats()
 {
     AbstractController::regStats();
 
+    // For each type of controllers, one controller of that type is picked
+    // to aggregate stats of all controllers of that type. 
     if (m_version == 0) {
+
+        Profiler *profiler = params().ruby_system->getProfiler();
+        Stats::Group *profilerStatsPtr = &profiler->rubyProfilerStats;
+
         for (${ident}_Event event = ${ident}_Event_FIRST;
              event < ${ident}_Event_NUM; ++event) {
-            Stats::Vector *t = new Stats::Vector();
+            std::string stat_name =
+                "${c_ident}." + ${ident}_Event_to_string(event);
+            Stats::Vector *t =
+                new Stats::Vector(profilerStatsPtr, stat_name.c_str());
             t->init(m_num_controllers);
-            t->name(params().ruby_system->name() + ".${c_ident}." +
-                ${ident}_Event_to_string(event));
             t->flags(Stats::pdf | Stats::total | Stats::oneline |
                      Stats::nozero);
 
@@ -835,13 +842,12 @@ $c_ident::regStats()
 
             for (${ident}_Event event = ${ident}_Event_FIRST;
                  event < ${ident}_Event_NUM; ++event) {
-
-                Stats::Vector *t = new Stats::Vector();
+                std::string stat_name = "${c_ident}." +
+                    ${ident}_State_to_string(state) +
+                    "." + ${ident}_Event_to_string(event);
+                Stats::Vector *t =
+                    new Stats::Vector(profilerStatsPtr, stat_name.c_str());
                 t->init(m_num_controllers);
-                t->name(params().ruby_system->name() + ".${c_ident}." +
-                        ${ident}_State_to_string(state) +
-                        "." + ${ident}_Event_to_string(event));
-
                 t->flags(Stats::pdf | Stats::total | Stats::oneline |
                          Stats::nozero);
                 transVec[state].push_back(t);
@@ -850,29 +856,30 @@ $c_ident::regStats()
     }
     for (${ident}_Event event = ${ident}_Event_FIRST;
                  event < ${ident}_Event_NUM; ++event) {
-        Stats::Histogram* t = new Stats::Histogram;
-        m_outTransLatHist.push_back(t);
+        std::string stat_name =
+            "outTransLatHist." + ${ident}_Event_to_string(event);
+        Stats::Histogram* t = new Stats::Histogram(&stats, stat_name.c_str());
+        stats.m_outTransLatHist.push_back(t);
         t->init(5);
-        t->name(name() + ".outTransLatHist." +
-                    ${ident}_Event_to_string(event));
         t->flags(Stats::pdf | Stats::total |
                  Stats::oneline | Stats::nozero);
     }
     for (${ident}_Event event = ${ident}_Event_FIRST;
                  event < ${ident}_Event_NUM; ++event) {
-        m_inTransLatHist.emplace_back();
+        stats.m_inTransLatHist.emplace_back();
         for (${ident}_State initial_state = ${ident}_State_FIRST;
              initial_state < ${ident}_State_NUM; ++initial_state) {
-            m_inTransLatHist.back().emplace_back();
+            stats.m_inTransLatHist.back().emplace_back();
             for (${ident}_State final_state = ${ident}_State_FIRST;
                  final_state < ${ident}_State_NUM; ++final_state) {
-                Stats::Histogram* t = new Stats::Histogram;
-                m_inTransLatHist.back().back().push_back(t);
+                std::string stat_name = "inTransLatHist." +
+                    ${ident}_Event_to_string(event) + "." +
+                    ${ident}_State_to_string(initial_state) + "." +
+                    ${ident}_State_to_string(final_state);
+                Stats::Histogram* t =
+                    new Stats::Histogram(&stats, stat_name.c_str());
+                stats.m_inTransLatHist.back().back().push_back(t);
                 t->init(5);
-                t->name(name() + ".inTransLatHist." +
-                            ${ident}_Event_to_string(event) + "." +
-                            ${ident}_State_to_string(initial_state) + "." +
-                            ${ident}_State_to_string(final_state));
                 t->flags(Stats::pdf | Stats::total |
                          Stats::oneline | Stats::nozero);
             }
@@ -1231,7 +1238,7 @@ ${ident}_Controller::wakeup()
         assert(counter <= m_transitions_per_cycle);
         if (counter == m_transitions_per_cycle) {
             // Count how often we are fully utilized
-            m_fully_busy_cycles++;
+            stats.m_fully_busy_cycles++;
 
             // Wakeup in another cycle and try again
             scheduleEvent(Cycles(1));

@@ -56,7 +56,8 @@ AbstractController::AbstractController(const Params &p)
       m_buffer_size(p.buffer_size), m_recycle_latency(p.recycle_latency),
       m_mandatory_queue_latency(p.mandatory_queue_latency),
       memoryPort(csprintf("%s.memory", name()), this),
-      addrRanges(p.addr_ranges.begin(), p.addr_ranges.end())
+      addrRanges(p.addr_ranges.begin(), p.addr_ranges.end()),
+      stats(this)
 {
     if (m_version == 0) {
         // Combine the statistics from all controllers
@@ -68,11 +69,11 @@ AbstractController::AbstractController(const Params &p)
 void
 AbstractController::init()
 {
-    m_delayHistogram.init(10);
+    stats.m_delayHistogram.init(10);
     uint32_t size = Network::getNumberOfVirtualNetworks();
     for (uint32_t i = 0; i < size; i++) {
-        m_delayVCHistogram.push_back(new Stats::Histogram());
-        m_delayVCHistogram[i]->init(10);
+        stats.m_delayVCHistogram.push_back(new Stats::Histogram(this));
+        stats.m_delayVCHistogram[i]->init(10);
     }
 
     if (getMemReqQueue()) {
@@ -106,10 +107,10 @@ AbstractController::init()
 void
 AbstractController::resetStats()
 {
-    m_delayHistogram.reset();
+    stats.m_delayHistogram.reset();
     uint32_t size = Network::getNumberOfVirtualNetworks();
     for (uint32_t i = 0; i < size; i++) {
-        m_delayVCHistogram[i]->reset();
+        stats.m_delayVCHistogram[i]->reset();
     }
 }
 
@@ -117,19 +118,14 @@ void
 AbstractController::regStats()
 {
     ClockedObject::regStats();
-
-    m_fully_busy_cycles
-        .name(name() + ".fully_busy_cycles")
-        .desc("cycles for which number of transistions == max transitions")
-        .flags(Stats::nozero);
 }
 
 void
 AbstractController::profileMsgDelay(uint32_t virtualNetwork, Cycles delay)
 {
-    assert(virtualNetwork < m_delayVCHistogram.size());
-    m_delayHistogram.sample(delay);
-    m_delayVCHistogram[virtualNetwork]->sample(delay);
+    assert(virtualNetwork < stats.m_delayVCHistogram.size());
+    stats.m_delayHistogram.sample(delay);
+    stats.m_delayVCHistogram[virtualNetwork]->sample(delay);
 }
 
 void
@@ -422,4 +418,18 @@ AbstractController::MemoryPort::MemoryPort(const std::string &_name,
                                            PortID id)
     : RequestPort(_name, _controller, id), controller(_controller)
 {
+}
+
+AbstractController::
+ControllerStats::ControllerStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      m_fully_busy_cycles(this, "fully_busy_cycles",
+                          "cycles for which number of transistions == max "
+                          "transitions"),
+      m_delayHistogram(this, "delay_histogram")
+{
+    m_fully_busy_cycles
+        .flags(Stats::nozero);
+    m_delayHistogram
+        .flags(Stats::nozero);
 }
