@@ -36,7 +36,7 @@ from m5.proxy import *
 from m5.objects.ClockedObject import ClockedObject
 from m5.SimObject import SimObject
 
-if buildEnv['FULL_SYSTEM']:
+if buildEnv.get('FULL_SYSTEM', False):
     class X86PagetableWalker(SimObject):
         type = 'X86PagetableWalker'
         cxx_class = 'X86ISA::Walker'
@@ -50,7 +50,7 @@ class X86GPUTLB(ClockedObject):
     size = Param.Int(64, "TLB size (number of entries)")
     assoc = Param.Int(64, "TLB associativity")
 
-    if buildEnv['FULL_SYSTEM']:
+    if buildEnv.get('FULL_SYSTEM', False):
         walker = Param.X86PagetableWalker(X86PagetableWalker(),
                                           "page table walker")
 
