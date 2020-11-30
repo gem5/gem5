@@ -63,5 +63,6 @@ git push  --set-upstream origin ray-mybranch
 
 
 > 关于分支的说明
+> 
 > 所有ray创建的分支将使用ray作为开头。首先，大家创建一个自己的master分支，然后在该分支的基础上创建tutorial分支等。
 
