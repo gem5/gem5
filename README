@@ -36,5 +36,32 @@ If you have questions, please send mail to gem5-users@gem5.org
 
 Enjoy using gem5 and please share your modifications and extensions.
 
+# 关于分支的使用
+
+首先，使用如下命令clone该仓库
+```
+git clone https://github.com/Raymondwo/gem5-src.git
+```
+
+然后，在stable分支的基础上，创建自己的分支。
+```
+git checkout stable
+git checkout -b ray-mybranch
+```
+
+修改本地文件，例如readme。
+```
+git add readme
+git commmit -m "modify the readme file"
+```
+
+上传本地分支到远程。
+
+```
+git push  --set-upstream origin ray-mybranch
+```
+
+
 > 关于分支的说明
-> 所有ray创建的分支将使用ray作为开头
+> 所有ray创建的分支将使用ray作为开头。首先，大家创建一个自己的master分支，然后在该分支的基础上创建tutorial分支等。
+
