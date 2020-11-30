@@ -35,3 +35,6 @@ images.
 If you have questions, please send mail to gem5-users@gem5.org
 
 Enjoy using gem5 and please share your modifications and extensions.
+
+> 关于分支的说明
+> 所有ray创建的分支将使用ray作为开头
