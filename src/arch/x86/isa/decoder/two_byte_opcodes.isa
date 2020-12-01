@@ -145,9 +145,8 @@
             // instructions.
             //0x04: loadall_or_reset_or_hang();
             0x4: BasicOperate::gem5Op({{
-                uint64_t ret;
                 bool recognized = PseudoInst::pseudoInst<X86PseudoInstABI>(
-                        xc->tcBase(), IMMEDIATE, ret);
+                        xc->tcBase(), IMMEDIATE);
                 if (!recognized)
                     fault = std::make_shared<InvalidOpcode>();
             }}, IsNonSpeculative);
