@@ -43,12 +43,22 @@ class GerritBotConfig:
     @staticmethod
     def DefaultConfig():
         default_config = GerritBotConfig()
+
+        # path to the file containing the username and password of the
+        # Gerrit bot
         default_config.auth_file_path = ".data/auth"
+
+        # path to the file containing the previous time a query to Gerrit
+        # REST API was made
         default_config.time_tracker_file_path = ".data/prev_query_time"
-        # query changes made within 2 days if not specified
+
+        # query changes made within 2 days if prev_query_time is not specified
         default_config.default_query_age = "2d"
-        default_config.maintainers_file_path = None # the maintainers library
-                                                    # will figure the path out
+
+        # path to the maintainers file
+        # if it is `None`, the maintainers library will figure that out
+        default_config.maintainers_file_path = None
+
         default_config.api_entry_point = "https://gem5-review.googlesource.com"
         default_config.projects_prefix = "public/gem5"
         default_config.query_limit = 1000 # at most 1000 new changes per query
@@ -95,8 +105,7 @@ class GerritBot:
 
         return prev_query_time
 
-    def __update_time_tracker_file(self, file_path):
-        prev_query_time = time.time()
+    def __update_time_tracker_file(self, file_path, prev_query_time):
         with open(file_path, "w") as f:
             f.write(f"{prev_query_time}\n")
             f.write(f"# The above time is the result of calling time.time() "
@@ -125,9 +134,13 @@ class GerritBot:
     def _pre_run(self):
         self.prev_query_time = \
             self.__read_time_tracker_file(self.config.time_tracker_file_path)
+        self.curr_time = time.time()
         if self.prev_query_time > 0:
+            # adding 10 seconds to the query age to make sure that
+            # we won't miss any new changes
             self.query_age = \
-              convert_time_in_seconds(int(time.time() - self.prev_query_time))
+              convert_time_in_seconds(
+                int(self.curr_time - self.prev_query_time + 10))
         else:
             self.query_age = self.config.default_query_age
 
@@ -138,7 +151,8 @@ class GerritBot:
                                       self.gerrit_api)
 
     def _post_run(self):
-        self.__update_time_tracker_file(self.config.time_tracker_file_path)
+        self.__update_time_tracker_file(self.config.time_tracker_file_path,
+                                        self.curr_time)
 
     def run(self):
         self._pre_run()
