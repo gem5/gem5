@@ -262,6 +262,15 @@ class ProbePointArg : public ProbePoint
     }
 
     /**
+     * Informs whether any listeners are attached to this probe. This can
+     * be used to avoid performing costly tasks needed by the probe when
+     * nobody is listening.
+     *
+     * @return Whether this probe has any listener.
+     */
+    bool hasListeners() const { return listeners.size() > 0; }
+
+    /**
      * @brief adds a ProbeListener to this ProbePoints notify list.
      * @param l the ProbeListener to add to the notify list.
      */
