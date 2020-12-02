@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2020 The Regents of the University of California
 # All Rights Reserved.
 #
@@ -56,7 +54,8 @@ def convert_time_in_seconds(delta):
 
 # End of Utility functions
 
-def add_maintainers_to_change(change, maintainers, gerrit_api):
+def add_maintainers_to_change(change, maintainers, maintainers_account_ids,
+                              gerrit_api):
     tags, message = parse_commit_subject(change["subject"])
     change_id = change["id"]
     maintainer_emails = set()
@@ -68,4 +67,10 @@ def add_maintainers_to_change(change, maintainers, gerrit_api):
             print((f"warning: `change-{change_id}` has an unknown tag: "
                    f"`{tag}`"))
     for email in maintainer_emails:
-        gerrit_api.add_reviewer(change_id, email)
+        try:
+            account_id = maintainers_account_ids[email]
+            gerrit_api.add_reviewer(change_id, account_id)
+        except KeyError:
+            # if cannot find the account id of a maintainer
+            # then use the email address
+            gerrit_api.add_reviewer(change_id, email)

@@ -30,6 +30,7 @@ from gerrit import GerritResponseParser as Parser
 from gerrit import GerritRestAPI
 from util import add_maintainers_to_change, convert_time_in_seconds
 
+import json
 import time
 
 import sys
@@ -51,6 +52,11 @@ class GerritBotConfig:
         # path to the file containing the previous time a query to Gerrit
         # REST API was made
         default_config.time_tracker_file_path = ".data/prev_query_time"
+
+        # path to the file containing the map each maintainer email address
+        # to the one account id (ie, the "_account_id" field of ReviewerInfo)
+        default_config.maintainer_account_ids_file_path = \
+            ".data/maintainer_ids.json"
 
         # query changes made within 2 days if prev_query_time is not specified
         default_config.default_query_age = "2d"
@@ -78,8 +84,9 @@ class GerritBot:
 
         self.account_id = self.__get_bot_account_id()
         self.maintainers = maint.lib.maintainers.Maintainers.from_file(
-                                            self.config.maintainers_file_path)
-
+            self.config.maintainers_file_path)
+        self.maintainer_account_ids = self.__read_maintainer_account_id_file(
+            self.maintainers, self.config.maintainer_account_ids_file_path)
     def __read_auth_file(self, auth_file_path):
         username = ""
         password = ""
@@ -110,6 +117,51 @@ class GerritBot:
             f.write(f"{prev_query_time}\n")
             f.write(f"# The above time is the result of calling time.time() "
                     f"in Python.")
+
+    def __read_maintainer_account_id_file(self, maintainers, file_path):
+        account_ids = {}
+        try:
+            with open(file_path, "r") as f:
+                account_ids = json.load(f)
+        except (FileNotFoundError, json.decoder.JSONDecodeError):
+            # create a placeholder file
+            with open(file_path, "w") as f:
+                json.dump(account_ids, f)
+        account_ids = self.__update_maintainer_account_id_file(file_path,
+                                                               maintainers)
+        return account_ids
+
+    def __update_maintainer_account_id_file(self, file_path, maintainers):
+        # get the current map
+        with open(file_path, "r") as f:
+            account_ids = json.load(f)
+        # get maintainer email addresses
+        email_addresses = set()
+        for tag, subsys in maintainers:
+            for maint in subsys.maintainers:
+                email_addresses.add(maint[1])
+        # get account ids of the addresses
+        for email_address in email_addresses:
+            if email_address in account_ids:
+                continue
+            account_id = self.__get_one_account_id(email_address)
+            if account_id:
+                account_ids[email_address] = account_id
+        # write the map to a json file
+        with open(file_path, "w") as f:
+            json.dump(account_ids, f, indent=4)
+        return account_ids
+
+    def __get_one_account_id(self, email_address):
+        query = f"email:{email_address}"
+        response = self.gerrit_api.query_account(query, 1)
+        accounts = Parser.get_json_content(response)
+        if len(accounts) == 0:
+            print(f"warn: unable to obtain the account id of "
+                  f"\"{email_address}\"")
+            print(vars(response))
+            return None
+        return accounts[0]["_account_id"]
 
     def __get_bot_account_id(self):
         account_info = Parser.parse(self.gerrit_api.get_account("self"))
@@ -147,7 +199,9 @@ class GerritBot:
     def _run(self):
         new_changes = self.__query_new_changes(self.query_age)
         for new_change in new_changes:
-            add_maintainers_to_change(new_change, self.maintainers,
+            add_maintainers_to_change(new_change,
+                                      self.maintainers,
+                                      self.maintainer_account_ids,
                                       self.gerrit_api)
 
     def _post_run(self):

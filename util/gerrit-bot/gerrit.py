@@ -84,6 +84,15 @@ class GerritRestAPI:
         """ get an account detail from an account_id """
         return self._get(f"/accounts/{account_id}")
 
+    # https://gerrit-review.googlesource.com/Documentation/
+    # rest-api-accounts.html#query-account
+    def query_account(self, query, limit = None):
+        """ get accounts based on the query """
+        params = { "q": query }
+        if limit:
+            params["n"] = str(limit)
+        return self._get(f"/accounts/", params)
+
     # --------------- Changes Endpoints ---------------
     # https://gerrit-review.googlesource.com/Documentation/
     # rest-api-changes.html#list-changes
@@ -91,9 +100,9 @@ class GerritRestAPI:
         """ query changes with maximum limit returned queries """
         endpoint = f"/changes/"
         params = { "q": query }
-        if not limit == None:
+        if limit:
             params["n"] = str(limit)
-        if not optional_field == None:
+        if optional_field:
             params["o"] = optional_field
         return self._get(endpoint, params)
 

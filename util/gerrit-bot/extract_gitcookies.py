@@ -52,10 +52,10 @@ def parse_gitcookies(input_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description=("Extract username and password from .gitcookies",
-                     "or from the script used to write .gitcookies file")
+        description=("Extract username and password from .gitcookies"
+                     "or from the script used to write .gitcookies file"))
     parser.add_argument("input",
-                        help = ("Path to a .gitcookies file or a file with ",
+                        help = ("Path to a .gitcookies file or a file with "
                                 "a similar format"))
     parser.add_argument("output", help="Path to the output file")
     args = parser.parse_args()
