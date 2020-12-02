@@ -46,6 +46,7 @@
 #include "base/cprintf.hh"
 #include "base/debug.hh"
 #include "base/logging.hh"
+#include "base/stats/storage.hh"
 #include "base/str.hh"
 
 namespace gem5
@@ -69,7 +70,7 @@ nameMap()
 }
 
 Info::Info()
-    : flags(none), precision(-1), prereq(0), storageParams(NULL)
+    : flags(none), precision(-1), prereq(0), storageParams()
 {
     id = id_count++;
     if (debug_break_id >= 0 and debug_break_id == id)
@@ -78,6 +79,18 @@ Info::Info()
 
 Info::~Info()
 {
+}
+
+StorageParams const*
+Info::getStorageParams() const
+{
+    return storageParams.get();
+}
+
+void
+Info::setStorageParams(const StorageParams *const params)
+{
+    return storageParams.reset(params);
 }
 
 bool

@@ -99,7 +99,7 @@ InfoAccess::setInfo(Group *parent, Info *info)
 void
 InfoAccess::setParams(const StorageParams *params)
 {
-    info()->storageParams = params;
+    info()->setStorageParams(params);
 }
 
 void

@@ -31,6 +31,7 @@
 
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -100,8 +101,8 @@ class Info
     static int id_count;
     int id;
 
-  public:
-    const StorageParams *storageParams;
+  private:
+    std::unique_ptr<const StorageParams> storageParams;
 
   public:
     Info();
@@ -117,6 +118,15 @@ class Info
     void setName(const std::string &name, bool old_style=true);
 
     void setSeparator(std::string _sep) { separatorString = _sep;}
+
+    /**
+     * Getter for the storage params. These parameters should only be modified
+     * using the respective setter.
+     * @sa setStorageParams
+     */
+    StorageParams const* getStorageParams() const;
+    /** Setter for the storage params. */
+    void setStorageParams(const StorageParams *const params);
 
     /**
      * Check that this stat has been set up properly and is ready for
