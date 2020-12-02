@@ -58,6 +58,7 @@ else:
     main.Append(CXXFLAGS=[ '-O2' ])
     main.Append(CCFLAGS=[ '-O2' ])
 main.Append(CPPPATH=[ common_include ])
+main.Append(CXXFLAGS=[ '-std=c++14' ])
 
 if not GetOption('verbose'):
     # A functor which returns a shorter summary string to replace the normal
