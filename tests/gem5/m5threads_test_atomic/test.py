@@ -57,7 +57,7 @@ for cpu in cpu_types:
         config_args=['--cpu-type', cpu,
                      '--num-cores', '8',
                      '--cmd', joinpath(base_path, binary)],
-        valid_isas=('SPARC',),
+        valid_isas=(constants.sparc_tag,),
         valid_hosts=constants.supported_hosts,
         length = constants.long_tag,
     )

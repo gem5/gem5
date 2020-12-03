@@ -59,5 +59,5 @@ gem5_verify_config(
     fixtures=(test_program,),
     config=os.path.join(config.base_dir, 'configs', 'example','se.py'),
     config_args=['--cmd', joinpath(test_program.path, filename)],
-    valid_isas=('X86',)
+    valid_isas=(constants.x86_tag,)
 )

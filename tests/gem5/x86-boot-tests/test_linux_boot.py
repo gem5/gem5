@@ -60,7 +60,7 @@ def test_boot(cpu_type, num_cpus, boot_type, host):
             '--num-cpus', num_cpus,
             '--boot-type', boot_type,
         ],
-        valid_isas = ('X86',),
+        valid_isas = (constants.x86_tag,),
         valid_hosts = host,
         length = constants.long_tag,
     )

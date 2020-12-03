@@ -83,7 +83,7 @@ def asm_test(test, #The full path of the test
         gem5_args = gem5_args,
         config = config_file,
         config_args = config_args,
-        valid_isas = ('RISCV',),
+        valid_isas = (constants.riscv_tag,),
         valid_hosts = constants.supported_hosts
     )
 

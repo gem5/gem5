@@ -30,15 +30,15 @@ Test file for the insttest binary running on the SPARC ISA
 from testlib import *
 
 test_progs = {
-    'sparc': ('insttest',)
+    constants.sparc_tag : ('insttest',)
 }
 
 cpu_types = {
-    'sparc' : ('AtomicSimpleCPU', 'TimingSimpleCPU')
+    constants.sparc_tag : ('AtomicSimpleCPU', 'TimingSimpleCPU')
 }
 
 supported_os = {
-    'sparc' : ('linux',)
+    constants.sparc_tag : ('linux',)
 }
 
 base_path = joinpath(config.bin_path, 'insttest')
@@ -48,15 +48,17 @@ for isa in test_progs:
     for binary in test_progs[isa]:
         for  operating_s in supported_os[isa]:
             import os
-            url = urlbase + isa + '/' + operating_s + '/' + binary
-            path = joinpath(base_path, isa, operating_s, binary)
+            url = urlbase + isa.lower() + '/' + operating_s + '/' + binary
+            path = joinpath(base_path, isa.lower(), operating_s, binary)
 
             try:
                 program = DownloadedProgram(url, path, binary)
             except:
                 continue
 
-            ref_path = joinpath(getcwd(), 'ref', isa, operating_s, binary)
+            ref_path = joinpath(
+                getcwd(), 'ref', isa.lower(), operating_s, binary
+            )
             verifiers = (
                 verifier.MatchStdoutNoPerf(joinpath(ref_path, 'simout')),
             )
@@ -71,6 +73,6 @@ for isa in test_progs:
                         'example','se.py'),
                     config_args=['--cmd', joinpath(path, binary),
                         '--cpu-type', cpu, '--caches'],
-                    valid_isas=(isa.upper(),),
+                    valid_isas=(isa,),
                     length = constants.long_tag,
                 )

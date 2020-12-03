@@ -46,23 +46,25 @@ from testlib import *
 workloads = ('Bubblesort','FloatMM')
 
 valid_isas = {
-    'x86': ('AtomicSimpleCPU', 'TimingSimpleCPU', 'DerivO3CPU'),
-    'arm': ('AtomicSimpleCPU', 'TimingSimpleCPU', 'MinorCPU', 'DerivO3CPU'),
-    'riscv': ('AtomicSimpleCPU', 'TimingSimpleCPU', 'MinorCPU', 'DerivO3CPU'),
+    constants.x86_tag : ('AtomicSimpleCPU', 'TimingSimpleCPU', 'DerivO3CPU'),
+    constants.arm_tag:
+        ('AtomicSimpleCPU', 'TimingSimpleCPU', 'MinorCPU', 'DerivO3CPU'),
+    constants.riscv_tag:
+        ('AtomicSimpleCPU', 'TimingSimpleCPU', 'MinorCPU', 'DerivO3CPU'),
 }
 
 base_path = joinpath(config.bin_path, 'cpu_tests')
 
 base_url = config.resource_url + '/gem5/cpu_tests/benchmarks/bin/'
 for isa in valid_isas:
-    path = joinpath(base_path, isa)
+    path = joinpath(base_path, isa.lower())
     for workload in workloads:
         ref_path = joinpath(getcwd(), 'ref', workload)
         verifiers = (
                 verifier.MatchStdout(ref_path),
         )
 
-        url = base_url + isa + '/' + workload
+        url = base_url + isa.lower() + '/' + workload
         workload_binary = DownloadedProgram(url, path, workload)
         binary = joinpath(workload_binary.path, workload)
 
@@ -72,6 +74,6 @@ for isa in valid_isas:
                   verifiers=verifiers,
                   config=joinpath(getcwd(), 'run.py'),
                   config_args=['--cpu={}'.format(cpu), binary],
-                  valid_isas=(isa.upper(),),
+                  valid_isas=(isa,),
                   fixtures=[workload_binary]
             )

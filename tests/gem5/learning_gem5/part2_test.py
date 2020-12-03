@@ -35,7 +35,7 @@ gem5_verify_config(
     verifiers = (get_verifier('simple'),),
     config=joinpath(config_path, 'run_simple.py'),
     config_args = [],
-    valid_isas=("NULL",),
+    valid_isas=(constants.null_tag,),
 )
 
 gem5_verify_config(
@@ -43,7 +43,7 @@ gem5_verify_config(
     verifiers =(get_verifier('hello_goodbye'),),
     config=joinpath(config_path, 'hello_goodbye.py'),
     config_args = [],
-    valid_isas=("NULL",),
+    valid_isas=(constants.null_tag,),
 )
 
 gem5_verify_config(
@@ -51,7 +51,8 @@ gem5_verify_config(
     verifiers =(verifier.MatchStdoutNoPerf(joinpath(ref_path, 'hello')),),
     config=joinpath(config_path, 'simple_memobj.py'),
     config_args = [],
-    valid_isas=("X86",), # note: by default the above script uses x86
+    # note: by default the above script uses x86
+    valid_isas=(constants.x86_tag,),
 )
 
 gem5_verify_config(
@@ -59,7 +60,8 @@ gem5_verify_config(
     verifiers =(verifier.MatchStdoutNoPerf(joinpath(ref_path, 'hello')),),
     config=joinpath(config_path, 'simple_cache.py'),
     config_args = [],
-    valid_isas=("X86",), # note: by default the above script uses x86
+    # note: by default the above script uses x86
+    valid_isas=(constants.x86_tag,),
 )
 
 # Note: for simple memobj and simple cache I want to use the traffic generator

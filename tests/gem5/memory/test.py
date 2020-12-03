@@ -85,6 +85,6 @@ for basename_noext, args in null_tests:
         config=joinpath(config.base_dir, 'configs',
             'example', basename_noext + '.py'),
         config_args=args,
-        valid_isas=('NULL',),
+        valid_isas=(constants.null_tag,),
         valid_hosts=constants.supported_hosts,
     )

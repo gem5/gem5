@@ -35,7 +35,7 @@ gem5_verify_config(
     config=joinpath(config_path, 'simple.py'),
     config_args = [],
     length = constants.quick_tag,
-    valid_isas=('X86', 'RISCV', 'ARM'),
+    valid_isas=(constants.x86_tag, constants.riscv_tag, constants.arm_tag),
 )
 
 # The "quick" two level tests.
@@ -45,5 +45,5 @@ gem5_verify_config(
     config=joinpath(config_path, 'two_level.py'),
     config_args = [],
     length = constants.quick_tag,
-    valid_isas=('X86', 'RISCV', 'ARM'),
+    valid_isas=(constants.x86_tag, constants.riscv_tag, constants.arm_tag),
 )

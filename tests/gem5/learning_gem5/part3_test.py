@@ -39,8 +39,8 @@ gem5_verify_config(
     config=joinpath(config_path, 'simple_ruby.py'),
     config_args = [],
     protocol = 'MSI',
-    valid_isas=("X86",), # Currently only x86 has the threads test
-    valid_hosts=constants.target_host["X86"], # dynamically linked
+    valid_isas=(constants.x86_tag,), # Currently only x86 has the threads test
+    valid_hosts=constants.target_host[constants.x86_tag], # dynamically linked
 )
 
 gem5_verify_config(
@@ -49,5 +49,5 @@ gem5_verify_config(
     config=joinpath(config_path, 'ruby_test.py'),
     config_args = [],
     protocol = 'MSI',
-    valid_isas=("X86",), # Currently only x86 has the threads test
+    valid_isas=(constants.x86_tag,), # Currently only x86 has the threads test
 )

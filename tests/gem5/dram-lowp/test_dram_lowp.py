@@ -36,7 +36,7 @@ gem5_verify_config(
     verifiers=verifiers,
     config=joinpath(config.base_dir, 'configs', 'dram','low_power_sweep.py'),
     config_args=['-p', 'close_adaptive', '-r', '2'],
-    valid_isas=('NULL',),
+    valid_isas=(constants.null_tag,),
     valid_hosts=constants.supported_hosts,
 )
 
@@ -46,6 +46,6 @@ gem5_verify_config(
     verifiers=verifiers,
     config=joinpath(config.base_dir, 'configs', 'dram','low_power_sweep.py'),
     config_args=['-p', 'open_adaptive', '-r', '2'],
-    valid_isas=('NULL',),
+    valid_isas=(constants.null_tag,),
     valid_hosts=constants.supported_hosts,
 )
