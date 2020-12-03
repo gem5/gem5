@@ -251,7 +251,7 @@ class CacheBlk : public TaggedEntry
     void clearPrefetched() { _prefetched = false; }
 
     /** Marks this blocks as a recently prefetched block. */
-    void setPrefetched() { _prefetched = false; }
+    void setPrefetched() { _prefetched = true; }
 
     /**
      * Get tick at which block's data will be available for access.
