@@ -31,7 +31,7 @@ import re
 import os
 from testlib import *
 
-common_isas = [constants.x86_tag, constants.arm_tag, constants.riscv_tag]
+common_isas = [constants.gcn3_x86_tag, constants.arm_tag, constants.riscv_tag]
 
 for isa in constants.supported_isas:
     if isa is constants.null_tag: continue

@@ -46,16 +46,25 @@ from testlib import *
 workloads = ('Bubblesort','FloatMM')
 
 valid_isas = {
-    constants.x86_tag : ('AtomicSimpleCPU', 'TimingSimpleCPU', 'DerivO3CPU'),
+    constants.gcn3_x86_tag :
+        ('AtomicSimpleCPU', 'TimingSimpleCPU', 'DerivO3CPU'),
     constants.arm_tag:
         ('AtomicSimpleCPU', 'TimingSimpleCPU', 'MinorCPU', 'DerivO3CPU'),
     constants.riscv_tag:
         ('AtomicSimpleCPU', 'TimingSimpleCPU', 'MinorCPU', 'DerivO3CPU'),
 }
 
+
 base_path = joinpath(config.bin_path, 'cpu_tests')
 
 base_url = config.resource_url + '/gem5/cpu_tests/benchmarks/bin/'
+
+isa_url = {
+    constants.gcn3_x86_tag : base_url + "x86"
+    constants.arm_tag : base_url + "arm"
+    constants.riscv_tag : base_url + "riscv"
+}
+
 for isa in valid_isas:
     path = joinpath(base_path, isa.lower())
     for workload in workloads:
@@ -64,7 +73,7 @@ for isa in valid_isas:
                 verifier.MatchStdout(ref_path),
         )
 
-        url = base_url + isa.lower() + '/' + workload
+        url = isa_url[isa] + '/' + workload
         workload_binary = DownloadedProgram(url, path, workload)
         binary = joinpath(workload_binary.path, workload)
 

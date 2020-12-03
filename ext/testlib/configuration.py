@@ -233,6 +233,7 @@ def define_constants(constants):
 
     constants.isa_tag_type = 'isa'
     constants.x86_tag = 'X86'
+    constants.gcn3_x86_tag = 'GCN3_X86'
     constants.sparc_tag = 'SPARC'
     constants.riscv_tag = 'RISCV'
     constants.arm_tag = 'ARM'
@@ -256,6 +257,7 @@ def define_constants(constants):
     constants.supported_tags = {
         constants.isa_tag_type : (
             constants.x86_tag,
+            constants.gcn3_x86_tag,
             constants.sparc_tag,
             constants.riscv_tag,
             constants.arm_tag,
@@ -283,6 +285,7 @@ def define_constants(constants):
     constants.target_host = {
         constants.arm_tag   : (constants.host_arm_tag,),
         constants.x86_tag   : (constants.host_x86_64_tag,),
+        constants.gcn3_x86_tag : (constants.host_x86_64_tag,),
         constants.sparc_tag : (constants.host_x86_64_tag,),
         constants.riscv_tag : (constants.host_x86_64_tag,),
         constants.mips_tag  : (constants.host_x86_64_tag,),

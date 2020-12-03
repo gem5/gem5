@@ -45,7 +45,7 @@ Test file for the util m5 exit assembly instruction.
 from testlib import *
 
 static_progs = {
-    constants.x86_tag : ('hello64-static', 'hello32-static'),
+    constants.gcn3_x86_tag : ('hello64-static', 'hello32-static'),
     constants.arm_tag : ('hello64-static', 'hello32-static'),
     constants.mips_tag : ('hello',),
     constants.riscv_tag : ('hello',),
@@ -53,11 +53,12 @@ static_progs = {
 }
 
 dynamic_progs = {
-    constants.x86_tag : ('hello64-dynamic',)
+    constants.gcn3_x86_tag : ('hello64-dynamic',)
 }
 
 cpu_types = {
-    constants.x86_tag : ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU'),
+    constants.gcn3_x86_tag :
+        ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU'),
     constants.arm_tag :  ('TimingSimpleCPU', 'AtomicSimpleCPU','DerivO3CPU'),
     constants.mips_tag : ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU'),
     constants.riscv_tag :
@@ -65,18 +66,10 @@ cpu_types = {
     constants.sparc_tag : ('TimingSimpleCPU', 'AtomicSimpleCPU')
 }
 
-supported_os = {
-    constants.x86_tag : ('linux',),
-    constants.arm_tag : ('linux',),
-    constants.mips_tag : ('linux',),
-    constants.riscv_tag : ('linux',),
-    constants.sparc_tag : ('linux',)
-}
-
 # We only want to test x86, arm, and riscv on quick. Mips and sparc will be
 # left for long.
 os_length = {
-    constants.x86_tag : constants.quick_tag,
+    constants.gcn3_x86_tag : constants.quick_tag,
     constants.arm_tag : constants.quick_tag,
     constants.mips_tag : constants.long_tag,
     constants.riscv_tag : constants.quick_tag,
@@ -87,18 +80,26 @@ base_path = joinpath(config.bin_path, 'hello')
 
 urlbase = config.resource_url + '/test-progs/hello/bin/'
 
+isa_urls = {
+    constants.gcn3_x86_tag : urlbase + "x86/linux",
+    constants.arm_tag : urlbase + "arm/linux",
+    constants.mips_tag : urlbase + "mips/linux",
+    constants.riscv_tag : urlbase + "riscv/linux",
+    constants.sparc_tag : urlbase + "sparc/linux",
+}
+
 ref_path = joinpath(getcwd(), 'ref')
 verifiers = (
     verifier.MatchStdoutNoPerf(joinpath(ref_path, 'simout')),
 )
 
-def verify_config(isa, binary, operating_s, cpu, hosts):
-    url = urlbase + isa.lower() + '/' + operating_s + '/' + binary
-    path = joinpath(base_path, isa.lower(), operating_s)
+def verify_config(isa, binary, cpu, hosts):
+    url = isa_urls[isa] + '/' + binary
+    path = joinpath(base_path, isa.lower())
     hello_program = DownloadedProgram(url, path, binary)
 
     gem5_verify_config(
-        name='test-' + binary + '-' + operating_s + "-" + cpu,
+        name='test-' + binary + '-' + cpu,
         fixtures=(hello_program,),
         verifiers=verifiers,
         config=joinpath(config.base_dir, 'configs', 'example','se.py'),
@@ -112,15 +113,11 @@ def verify_config(isa, binary, operating_s, cpu, hosts):
 # Run statically linked hello worlds
 for isa in static_progs:
     for binary in static_progs[isa]:
-        for operating_s in supported_os[isa]:
-            for cpu in cpu_types[isa]:
-                verify_config(isa, binary, operating_s, cpu,
-                        constants.supported_hosts)
+        for cpu in cpu_types[isa]:
+            verify_config(isa, binary, cpu, constants.supported_hosts)
 
 # Run dynamically linked hello worlds
 for isa in dynamic_progs:
     for binary in dynamic_progs[isa]:
-        for operating_s in supported_os[isa]:
-            for cpu in cpu_types[isa]:
-               verify_config(isa, binary, operating_s, cpu,
-                       constants.target_host[isa])
+        for cpu in cpu_types[isa]:
+            verify_config(isa, binary, cpu, constants.target_host[isa])
