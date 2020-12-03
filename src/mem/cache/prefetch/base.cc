@@ -125,6 +125,7 @@ Base::observeAccess(const PacketPtr &pkt, bool miss) const
     bool read = pkt->isRead();
     bool inv = pkt->isInvalidate();
 
+    if (!miss && !prefetchOnAccess) return false;
     if (pkt->req->isUncacheable()) return false;
     if (fetch && !onInst) return false;
     if (!fetch && !onData) return false;
@@ -236,10 +237,8 @@ Base::regProbeListeners()
                                                 true));
         listeners.push_back(new PrefetchListener(*this, pm, "Fill", true,
                                                  false));
-        if (prefetchOnAccess) {
-            listeners.push_back(new PrefetchListener(*this, pm, "Hit", false,
-                                                     false));
-        }
+        listeners.push_back(new PrefetchListener(*this, pm, "Hit", false,
+                                                 false));
     }
 }
 
