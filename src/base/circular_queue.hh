@@ -59,7 +59,7 @@
  *   - Round is the counter of how many times the Tail has wrapped around.
  * A queue is empty when
  *     Head == (Tail + 1 mod Capacity) && IsEmpty?.
- * Conversely, a queue if full when
+ * Conversely, a queue is full when
  *     Head == (Tail + 1 mod Capacity) && !IsEmpty?.
  * Comments may show depictions of the underlying vector in the following
  * format: '|' delimit the 'cells' of the underlying vector. '-' represents
@@ -90,9 +90,9 @@ class CircularQueue : private std::vector<T>
     using typename Base::reference;
     using typename Base::const_reference;
     const uint32_t _capacity;
-    uint32_t _head;
-    uint32_t _tail;
-    uint32_t _empty;
+    uint32_t _head = 1;
+    uint32_t _tail = 0;
+    uint32_t _empty = true;
 
     /** Counter for how many times the tail wraps around.
      * Some parts of the code rely on getting the past the end iterator, and
@@ -100,7 +100,7 @@ class CircularQueue : private std::vector<T>
      * ambiguity, we need the round number to guarantee that it did not become
      * a before-the-beginning iterator.
      */
-    uint32_t _round;
+    uint32_t _round = 0;
 
     /** General modular addition. */
     static uint32_t
@@ -126,12 +126,14 @@ class CircularQueue : private std::vector<T>
             return -((op2 - op1) % size);
     }
 
-    void increase(uint32_t& v, size_t delta = 1)
+    void
+    increase(uint32_t& v, size_t delta=1)
     {
         v = moduloAdd(v, delta, _capacity);
     }
 
-    void decrease(uint32_t& v)
+    void
+    decrease(uint32_t& v)
     {
         v = (v ? v : _capacity) - 1;
     }
@@ -152,17 +154,19 @@ class CircularQueue : private std::vector<T>
      *     (4,F,0,1,R): |[o|o]|(x,R)|-|        (4,F,3,0): |o]|(x,R)|-|[o|
      */
   public:
-    struct iterator {
-        CircularQueue* _cq;
-        uint32_t _idx;
-        uint32_t _round;
-
+    struct iterator
+    {
       public:
+        CircularQueue* _cq = nullptr;
+        uint32_t _idx = 0;
+        uint32_t _round = 0;
+
         /**
          * @ingroup api_base_utils
          */
         iterator(CircularQueue* cq, uint32_t idx, uint32_t round)
             : _cq(cq), _idx(idx), _round(round) {}
+        iterator() = default;
 
         /**
          * Iterator Traits
@@ -188,13 +192,9 @@ class CircularQueue : private std::vector<T>
         /**
          * @ingroup api_base_utils
          */
-        iterator() : _cq(nullptr), _idx(0), _round(0) { }
-
-        /**
-         * @ingroup api_base_utils
-         */
         iterator(const iterator& it)
-            : _cq(it._cq), _idx(it._idx), _round(it._round) {}
+            : _cq(it._cq), _idx(it._idx), _round(it._round)
+        {}
 
         /**
          * @ingroup api_base_utils
@@ -207,11 +207,6 @@ class CircularQueue : private std::vector<T>
             _round = it._round;
             return *this;
         }
-
-        /**
-         * @ingroup api_base_utils
-         */
-        ~iterator() { _cq = nullptr; _idx = 0; _round = 0; }
 
         /**
          * Test dereferenceability.
@@ -246,7 +241,8 @@ class CircularQueue : private std::vector<T>
          *
          * @ingroup api_base_utils
          */
-        bool operator==(const iterator& that) const
+        bool
+        operator==(const iterator& that) const
         {
             return _cq == that._cq && _idx == that._idx &&
                 _round == that._round;
@@ -259,28 +255,27 @@ class CircularQueue : private std::vector<T>
          *
          * @ingroup api_base_utils
          */
-        bool operator!=(const iterator& that)
-        {
-            return !(*this == that);
-        }
+        bool operator!=(const iterator& that) { return !(*this == that); }
 
         /**
          * Dereference operator.
          *
          * @ingroup api_base_utils
          */
-        reference operator*()
+        reference
+        operator*()
         {
-            /* this has to be dereferenceable. */
+            // This has to be dereferenceable.
             return (*_cq)[_idx];
         }
 
         /**
          * @ingroup api_base_utils
          */
-        const_reference operator*() const
+        const_reference
+        operator*() const
         {
-            /* this has to be dereferenceable. */
+            // This has to be dereferenceable.
             return (*_cq)[_idx];
         }
 
@@ -290,25 +285,20 @@ class CircularQueue : private std::vector<T>
          *
          * @ingroup api_base_utils
          */
-        pointer operator->()
-        {
-            return &((*_cq)[_idx]);
-        }
+        pointer operator->() { return &((*_cq)[_idx]); }
 
         /**
          * @ingroup api_base_utils
          */
-        const_pointer operator->() const
-        {
-            return &((*_cq)[_idx]);
-        }
+        const_pointer operator->() const { return &((*_cq)[_idx]); }
 
         /**
          * Pre-increment operator.
          *
          * @ingroup api_base_utils
          */
-        iterator& operator++()
+        iterator&
+        operator++()
         {
             /* this has to be dereferenceable. */
             _cq->increase(_idx);
@@ -358,7 +348,8 @@ class CircularQueue : private std::vector<T>
          *
          * @ingroup api_base_utils
          */
-        iterator& operator--()
+        iterator&
+        operator--()
         {
             /* this has to be decrementable. */
             assert(decrementable());
@@ -373,14 +364,21 @@ class CircularQueue : private std::vector<T>
          *
          * @ingroup api_base_utils
          */
-        iterator operator--(int ) { iterator t = *this; --*this; return t; }
+        iterator
+        operator--(int)
+        {
+            iterator t = *this;
+            --*this;
+            return t;
+        }
 
         /**
          * RandomAccessIterator requirements.
          *
          * @ingroup api_base_utils
          */
-        iterator& operator+=(const difference_type& t)
+        iterator&
+        operator+=(const difference_type& t)
         {
             assert(_cq);
             _round += (t + _idx) / _cq->capacity();
@@ -391,7 +389,8 @@ class CircularQueue : private std::vector<T>
         /**
          * @ingroup api_base_utils
          */
-        iterator& operator-=(const difference_type& t)
+        iterator&
+        operator-=(const difference_type& t)
         {
             assert(_cq);
 
@@ -410,7 +409,8 @@ class CircularQueue : private std::vector<T>
          *
          * @ingroup api_base_utils
          */
-        iterator operator+(const difference_type& t)
+        iterator
+        operator+(const difference_type& t)
         {
             iterator ret(*this);
             return ret += t;
@@ -419,7 +419,8 @@ class CircularQueue : private std::vector<T>
         /**
          * @ingroup api_base_utils
          */
-        friend iterator operator+(const difference_type& t, iterator& it)
+        friend iterator
+        operator+(const difference_type& t, iterator& it)
         {
             iterator ret = it;
             return ret += t;
@@ -430,7 +431,8 @@ class CircularQueue : private std::vector<T>
          *
          * @ingroup api_base_utils
          */
-        iterator operator-(const difference_type& t)
+        iterator
+        operator-(const difference_type& t)
         {
             iterator ret(*this);
             return ret -= t;
@@ -439,7 +441,8 @@ class CircularQueue : private std::vector<T>
         /**
          * @ingroup api_base_utils
          */
-        friend iterator operator-(const difference_type& t, iterator& it)
+        friend iterator
+        operator-(const difference_type& t, iterator& it)
         {
             iterator ret = it;
             return ret -= t;
@@ -451,7 +454,8 @@ class CircularQueue : private std::vector<T>
          *
          * @ingroup api_base_utils
          */
-        difference_type operator-(const iterator& that)
+        difference_type
+        operator-(const iterator& that)
         {
             /* If a is already at the end, we can safely return 0. */
             auto ret = _cq->sub(this->_idx, that._idx, _cq->capacity());
@@ -470,7 +474,10 @@ class CircularQueue : private std::vector<T>
          */
         template<typename Idx>
         typename std::enable_if_t<std::is_integral<Idx>::value, reference>
-        operator[](const Idx& index) { return *(*this + index); }
+        operator[](const Idx& index)
+        {
+            return *(*this + index);
+        }
 
         /**
          * Comparisons.
@@ -488,21 +495,17 @@ class CircularQueue : private std::vector<T>
         /**
          * @ingroup api_base_utils
          */
-        bool
-        operator>(const iterator& that) const
-        { return !(*this <= that); }
+        bool operator>(const iterator& that) const { return !(*this <= that); }
 
         /**
          * @ingroup api_base_utils
          */
-        bool operator>=(const iterator& that) const
-        { return !(*this < that); }
+        bool operator>=(const iterator& that) const { return !(*this < that); }
 
         /**
          * @ingroup api_base_utils
          */
-        bool operator<=(const iterator& that) const
-        { return !(that < *this); }
+        bool operator<=(const iterator& that) const { return !(that < *this); }
 
         /**
          * OutputIterator has no extra requirements.
@@ -519,8 +522,7 @@ class CircularQueue : private std::vector<T>
     /**
      * @ingroup api_base_utils
      */
-    explicit CircularQueue(uint32_t size = 0)
-        : _capacity(size), _head(1), _tail(0), _empty(true), _round(0)
+    explicit CircularQueue(uint32_t size=0) : _capacity(size)
     {
         Base::resize(size);
     }
@@ -533,7 +535,8 @@ class CircularQueue : private std::vector<T>
      *
      * @ingroup api_base_utils
      */
-    void flush()
+    void
+    flush()
     {
         _head = 1;
         _round = 0;
@@ -544,7 +547,8 @@ class CircularQueue : private std::vector<T>
     /**
      * Test if the index is in the range of valid elements.
      */
-    bool isValidIdx(size_t idx) const
+    bool
+    isValidIdx(size_t idx) const
     {
         /* An index is invalid if:
          *   - The queue is empty.
@@ -568,7 +572,8 @@ class CircularQueue : private std::vector<T>
      * Test if the index is in the range of valid elements.
      * The round counter is used to disambiguate aliasing.
      */
-    bool isValidIdx(size_t idx, uint32_t round) const
+    bool
+    isValidIdx(size_t idx, uint32_t round) const
     {
         /* An index is valid if:
          *   - The queue is not empty.
@@ -630,7 +635,8 @@ class CircularQueue : private std::vector<T>
     /**
      * @ingroup api_base_utils
      */
-    uint32_t size() const
+    uint32_t
+    size() const
     {
         if (_empty)
             return 0;
@@ -640,12 +646,14 @@ class CircularQueue : private std::vector<T>
             return _capacity - _head + _tail + 1;
     }
 
-    uint32_t moduloAdd(uint32_t s1, uint32_t s2) const
+    uint32_t
+    moduloAdd(uint32_t s1, uint32_t s2) const
     {
         return moduloAdd(s1, s2, _capacity);
     }
 
-    uint32_t moduloSub(uint32_t s1, uint32_t s2) const
+    uint32_t
+    moduloSub(uint32_t s1, uint32_t s2) const
     {
         return moduloSub(s1, s2, _capacity);
     }
@@ -660,9 +668,11 @@ class CircularQueue : private std::vector<T>
      *
      * @ingroup api_base_utils
      */
-    void pop_front(size_t num_elem = 1)
+    void
+    pop_front(size_t num_elem=1)
     {
-        if (num_elem == 0) return;
+        if (num_elem == 0)
+            return;
         auto hIt = begin();
         hIt += num_elem;
         assert(hIt <= end());
@@ -675,9 +685,10 @@ class CircularQueue : private std::vector<T>
      *
      * @ingroup api_base_utils
      */
-    void pop_back()
+    void
+    pop_back()
     {
-        assert (!_empty);
+        assert(!_empty);
         _empty = _head == _tail;
         if (_tail == 0)
             --_round;
@@ -689,7 +700,8 @@ class CircularQueue : private std::vector<T>
      *
      * @ingroup api_base_utils
      */
-    void push_back(typename Base::value_type val)
+    void
+    push_back(typename Base::value_type val)
     {
         advance_tail();
         (*this)[_tail] = val;
@@ -701,7 +713,8 @@ class CircularQueue : private std::vector<T>
      *
      * @ingroup api_base_utils
      */
-    void advance_tail()
+    void
+    advance_tail()
     {
         increase(_tail);
         if (_tail == 0)
@@ -720,7 +733,8 @@ class CircularQueue : private std::vector<T>
      *
      * @ingroup api_base_utils
      */
-    void advance_tail(uint32_t len)
+    void
+    advance_tail(uint32_t len)
     {
         for (auto idx = 0; idx < len; idx++)
             advance_tail();
@@ -741,7 +755,8 @@ class CircularQueue : private std::vector<T>
      *
      * @ingroup api_base_utils
      */
-    bool full() const
+    bool
+    full() const
     {
         return !_empty &&
             (_tail + 1 == _head || (_tail + 1 == _capacity && _head == 0));
@@ -752,7 +767,8 @@ class CircularQueue : private std::vector<T>
      *
      * @ingroup api_base_utils
      */
-    iterator begin()
+    iterator
+    begin()
     {
         if (_empty)
             return end();
@@ -766,7 +782,8 @@ class CircularQueue : private std::vector<T>
     /**
      * @ingroup api_base_utils
      */
-    iterator begin() const
+    iterator
+    begin() const
     {
         if (_empty)
             return end();
@@ -781,7 +798,8 @@ class CircularQueue : private std::vector<T>
     /**
      * @ingroup api_base_utils
      */
-    iterator end()
+    iterator
+    end()
     {
         auto poi = moduloAdd(_tail, 1);
         auto round = _round;
@@ -793,7 +811,8 @@ class CircularQueue : private std::vector<T>
     /**
      * @ingroup api_base_utils
      */
-    iterator end() const
+    iterator
+    end() const
     {
         auto poi = moduloAdd(_tail, 1);
         auto round = _round;
@@ -809,7 +828,8 @@ class CircularQueue : private std::vector<T>
      * possible, then the round value is _round, unless _tail is at the end of
      * the storage, in which case the PTE wraps up and becomes _round + 1
      */
-    iterator getIterator(size_t idx)
+    iterator
+    getIterator(size_t idx)
     {
         assert(isValidIdx(idx) || moduloAdd(_tail, 1) == idx);
         if (_empty)
