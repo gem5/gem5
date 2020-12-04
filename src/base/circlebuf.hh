@@ -74,7 +74,9 @@ class CircleBuf : public CircularQueue<T>
      * @param len Number of elements to copy
      */
     template <class OutputIterator>
-    void peek(OutputIterator out, size_t len) const {
+    void
+    peek(OutputIterator out, size_t len) const
+    {
         peek(out, 0, len);
     }
 
@@ -86,9 +88,11 @@ class CircleBuf : public CircularQueue<T>
      * @param len Number of elements to copy
      */
     template <class OutputIterator>
-    void peek(OutputIterator out, off_t offset, size_t len) const {
+    void
+    peek(OutputIterator out, off_t offset, size_t len) const
+    {
         panic_if(offset + len > size(),
-                 "Trying to read past end of circular buffer.\n");
+                 "Trying to read past end of circular buffer.");
 
         std::copy(begin() + offset, begin() + offset + len, out);
     }
@@ -100,7 +104,9 @@ class CircleBuf : public CircularQueue<T>
      * @param len Number of elements to read
      */
     template <class OutputIterator>
-    void read(OutputIterator out, size_t len) {
+    void
+    read(OutputIterator out, size_t len)
+    {
         peek(out, len);
         pop_front(len);
     }
@@ -112,7 +118,9 @@ class CircleBuf : public CircularQueue<T>
      * @param len Number of elements to read
      */
     template <class InputIterator>
-    void write(InputIterator in, size_t len) {
+    void
+    write(InputIterator in, size_t len)
+    {
         // Writes that are larger than the backing store are allowed,
         // but only the last part of the buffer will be written.
         if (len > capacity()) {
@@ -143,8 +151,7 @@ class Fifo
     typedef T value_type;
 
   public:
-    Fifo(size_t size)
-        : buf(size) {}
+    Fifo(size_t size) : buf(size) {}
 
     bool empty() const { return buf.empty(); }
     size_t size() const { return buf.size(); }
@@ -158,9 +165,10 @@ class Fifo
     void read(OutputIterator out, size_t len) { buf.read(out, len); }
 
     template <class InputIterator>
-    void write(InputIterator in, size_t len) {
-        panic_if(size() + len > capacity(),
-                 "Trying to overfill FIFO buffer.\n");
+    void
+    write(InputIterator in, size_t len)
+    {
+        panic_if(size() + len > capacity(), "Trying to overfill FIFO buffer.");
         buf.write(in, len);
     }
 
@@ -181,8 +189,7 @@ arrayParamOut(CheckpointOut &cp, const std::string &name,
 
 template <typename T>
 void
-arrayParamIn(CheckpointIn &cp, const std::string &name,
-             CircleBuf<T> &param)
+arrayParamIn(CheckpointIn &cp, const std::string &name, CircleBuf<T> &param)
 {
     std::vector<T> temp;
     arrayParamIn(cp, name, temp);
@@ -193,8 +200,7 @@ arrayParamIn(CheckpointIn &cp, const std::string &name,
 
 template <typename T>
 void
-arrayParamOut(CheckpointOut &cp, const std::string &name,
-              const Fifo<T> &param)
+arrayParamOut(CheckpointOut &cp, const std::string &name, const Fifo<T> &param)
 {
     std::vector<T> temp(param.size());
     param.peek(temp.begin(), temp.size());
@@ -203,14 +209,13 @@ arrayParamOut(CheckpointOut &cp, const std::string &name,
 
 template <typename T>
 void
-arrayParamIn(CheckpointIn &cp, const std::string &name,
-             Fifo<T> &param)
+arrayParamIn(CheckpointIn &cp, const std::string &name, Fifo<T> &param)
 {
     std::vector<T> temp;
     arrayParamIn(cp, name, temp);
 
     fatal_if(param.capacity() < temp.size(),
-             "Trying to unserialize data into too small FIFO\n");
+             "Trying to unserialize data into too small FIFO");
 
     param.flush();
     param.write(temp.cbegin(), temp.size());
