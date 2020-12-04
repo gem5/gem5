@@ -223,11 +223,11 @@ class BaseDynInst : public ExecContext, public RefCounted
     uint8_t *memData;
 
     /** Load queue index. */
-    int16_t lqIdx;
+    ssize_t lqIdx;
     LQIterator lqIt;
 
     /** Store queue index. */
-    int16_t sqIdx;
+    ssize_t sqIdx;
     SQIterator sqIt;
 
 
