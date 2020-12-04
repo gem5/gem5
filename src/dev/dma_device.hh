@@ -46,6 +46,7 @@
 
 #include "base/circlebuf.hh"
 #include "dev/io_device.hh"
+#include "mem/port_proxy.hh"
 #include "params/DmaDevice.hh"
 #include "sim/drain.hh"
 #include "sim/system.hh"
@@ -471,6 +472,7 @@ class DmaReadFifo : public Drainable, public Serializable
     const Request::Flags reqFlags;
 
     DmaPort &port;
+    PortProxy proxy;
 
   private:
     class DmaDoneEvent : public Event

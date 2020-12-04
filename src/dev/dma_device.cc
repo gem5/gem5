@@ -45,7 +45,6 @@
 #include "base/chunk_generator.hh"
 #include "debug/DMA.hh"
 #include "debug/Drain.hh"
-#include "mem/port_proxy.hh"
 #include "sim/clocked_object.hh"
 #include "sim/system.hh"
 
@@ -286,7 +285,8 @@ DmaReadFifo::DmaReadFifo(DmaPort &_port, size_t size,
                          unsigned max_pending,
                          Request::Flags flags)
     : maxReqSize(max_req_size), fifoSize(size),
-      reqFlags(flags), port(_port), buffer(size)
+      reqFlags(flags), port(_port), proxy(port, port.sys->cacheLineSize()),
+      buffer(size)
 {
     freeRequests.resize(max_pending);
     for (auto &e : freeRequests)
@@ -403,7 +403,7 @@ DmaReadFifo::resumeFillFunctional()
                 "fifo_space=%#x block_remaining=%#x\n",
                 nextAddr, xfer_size, fifo_space, block_remaining);
 
-        port.sys->physProxy.readBlob(nextAddr, tmp_buffer.data(), xfer_size);
+        proxy.readBlob(nextAddr, tmp_buffer.data(), xfer_size);
         buffer.write(tmp_buffer.begin(), xfer_size);
         nextAddr += xfer_size;
     }
