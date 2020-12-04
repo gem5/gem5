@@ -83,7 +83,7 @@ class DmaPort : public RequestPort, public Drainable
      * @param pkt Response packet to handler
      * @param delay Additional delay for scheduling the completion event
      */
-    void handleResp(PacketPtr pkt, Tick delay = 0);
+    void handleResp(PacketPtr pkt, Tick delay=0);
 
     struct DmaReqState : public Packet::SenderState
     {
@@ -95,13 +95,13 @@ class DmaPort : public RequestPort, public Drainable
         const Addr totBytes;
 
         /** Number of bytes that have been acked for this transaction. */
-        Addr numBytes;
+        Addr numBytes = 0;
 
         /** Amount to delay completion of dma by */
         const Tick delay;
 
         DmaReqState(Event *ce, Addr tb, Tick _delay)
-            : completionEvent(ce), totBytes(tb), numBytes(0), delay(_delay)
+            : completionEvent(ce), totBytes(tb), delay(_delay)
         {}
     };
 
@@ -124,11 +124,11 @@ class DmaPort : public RequestPort, public Drainable
     EventFunctionWrapper sendEvent;
 
     /** Number of outstanding packets the dma port has. */
-    uint32_t pendingCount;
+    uint32_t pendingCount = 0;
 
     /** If the port is currently waiting for a retry before it can
      * send whatever it is that it's sending. */
-    bool inRetry;
+    bool inRetry = false;
 
     /** Default streamId */
     const uint32_t defaultSid;
@@ -145,17 +145,16 @@ class DmaPort : public RequestPort, public Drainable
 
   public:
 
-    DmaPort(ClockedObject *dev, System *s,
-            uint32_t sid = 0, uint32_t ssid = 0);
+    DmaPort(ClockedObject *dev, System *s, uint32_t sid=0, uint32_t ssid=0);
 
     RequestPtr
     dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-              uint8_t *data, Tick delay, Request::Flags flag = 0);
+              uint8_t *data, Tick delay, Request::Flags flag=0);
 
     RequestPtr
     dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
               uint8_t *data, uint32_t sid, uint32_t ssid, Tick delay,
-              Request::Flags flag = 0);
+              Request::Flags flag=0);
 
     bool dmaPending() const { return pendingCount > 0; }
 
@@ -170,30 +169,32 @@ class DmaDevice : public PioDevice
   public:
     typedef DmaDeviceParams Params;
     DmaDevice(const Params &p);
-    virtual ~DmaDevice() { }
+    virtual ~DmaDevice() = default;
 
-    void dmaWrite(Addr addr, int size, Event *event, uint8_t *data,
-                  uint32_t sid, uint32_t ssid, Tick delay = 0)
+    void
+    dmaWrite(Addr addr, int size, Event *event, uint8_t *data,
+             uint32_t sid, uint32_t ssid, Tick delay=0)
     {
         dmaPort.dmaAction(MemCmd::WriteReq, addr, size, event, data,
                           sid, ssid, delay);
     }
 
-    void dmaWrite(Addr addr, int size, Event *event, uint8_t *data,
-                  Tick delay = 0)
+    void
+    dmaWrite(Addr addr, int size, Event *event, uint8_t *data, Tick delay=0)
     {
         dmaPort.dmaAction(MemCmd::WriteReq, addr, size, event, data, delay);
     }
 
-    void dmaRead(Addr addr, int size, Event *event, uint8_t *data,
-                 uint32_t sid, uint32_t ssid, Tick delay = 0)
+    void
+    dmaRead(Addr addr, int size, Event *event, uint8_t *data,
+            uint32_t sid, uint32_t ssid, Tick delay=0)
     {
         dmaPort.dmaAction(MemCmd::ReadReq, addr, size, event, data,
                           sid, ssid, delay);
     }
 
-    void dmaRead(Addr addr, int size, Event *event, uint8_t *data,
-                 Tick delay = 0)
+    void
+    dmaRead(Addr addr, int size, Event *event, uint8_t *data, Tick delay=0)
     {
         dmaPort.dmaAction(MemCmd::ReadReq, addr, size, event, data, delay);
     }
@@ -229,19 +230,16 @@ class DmaCallback : public Drainable
      * complete until count is 0, which ensures that all outstanding
      * DmaChunkEvents associated with this DmaCallback have fired.
      */
-    DrainState drain() override
+    DrainState
+    drain() override
     {
         return count ? DrainState::Draining : DrainState::Drained;
     }
 
   protected:
-    int count;
+    int count = 0;
 
-    DmaCallback()
-        : count(0)
-    { }
-
-    virtual ~DmaCallback() { }
+    virtual ~DmaCallback() = default;
 
     /**
      * Callback function invoked on completion of all chunks.
@@ -254,7 +252,8 @@ class DmaCallback : public Drainable
      * Since the object may delete itself here, callers should not use
      * the object pointer after calling this function.
      */
-    void chunkComplete()
+    void
+    chunkComplete()
     {
         if (--count == 0) {
             process();
@@ -271,7 +270,8 @@ class DmaCallback : public Drainable
      * Request a chunk event.  Chunks events should be provided to each DMA
      * request that wishes to participate in this DmaCallback.
      */
-    Event *getChunkEvent()
+    Event *
+    getChunkEvent()
     {
         ++count;
         return new EventFunctionWrapper([this]{ chunkComplete(); }, name(),
@@ -328,7 +328,7 @@ class DmaReadFifo : public Drainable, public Serializable
     DmaReadFifo(DmaPort &port, size_t size,
                 unsigned max_req_size,
                 unsigned max_pending,
-                Request::Flags flags = 0);
+                Request::Flags flags=0);
 
     ~DmaReadFifo();
 
@@ -359,7 +359,9 @@ class DmaReadFifo : public Drainable, public Serializable
     bool tryGet(uint8_t *dst, size_t len);
 
     template<typename T>
-    bool tryGet(T &value) {
+    bool
+    tryGet(T &value)
+    {
         return tryGet(static_cast<T *>(&value), sizeof(T));
     };
 
@@ -374,7 +376,9 @@ class DmaReadFifo : public Drainable, public Serializable
     void get(uint8_t *dst, size_t len);
 
     template<typename T>
-    T get() {
+    T
+    get()
+    {
         T value;
         get(static_cast<uint8_t *>(&value), sizeof(T));
         return value;
@@ -417,15 +421,15 @@ class DmaReadFifo : public Drainable, public Serializable
      * Has the DMA engine sent out the last request for the active
      * block?
      */
-    bool atEndOfBlock() const {
-        return nextAddr == endAddr;
-    }
+    bool atEndOfBlock() const { return nextAddr == endAddr; }
 
     /**
      * Is the DMA engine active (i.e., are there still in-flight
      * accesses)?
      */
-    bool isActive() const {
+    bool
+    isActive() const
+    {
         return !(pendingRequests.empty() && atEndOfBlock());
     }
 
@@ -487,8 +491,8 @@ class DmaReadFifo : public Drainable, public Serializable
 
       private:
         DmaReadFifo *parent;
-        bool _done;
-        bool _canceled;
+        bool _done = false;
+        bool _canceled = false;
         size_t _requestSize;
         std::vector<uint8_t> _data;
     };
@@ -516,8 +520,8 @@ class DmaReadFifo : public Drainable, public Serializable
   private: // Internal state
     Fifo<uint8_t> buffer;
 
-    Addr nextAddr;
-    Addr endAddr;
+    Addr nextAddr = 0;
+    Addr endAddr = 0;
 
     std::deque<DmaDoneEventUPtr> pendingRequests;
     std::deque<DmaDoneEventUPtr> freeRequests;

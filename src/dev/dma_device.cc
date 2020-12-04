@@ -54,9 +54,7 @@ DmaPort::DmaPort(ClockedObject *dev, System *s,
     : RequestPort(dev->name() + ".dma", dev),
       device(dev), sys(s), requestorId(s->getRequestorId(dev)),
       sendEvent([this]{ sendDma(); }, dev->name()),
-      pendingCount(0), inRetry(false),
-      defaultSid(sid),
-      defaultSSid(ssid)
+      defaultSid(sid), defaultSSid(ssid)
 { }
 
 void
@@ -66,7 +64,7 @@ DmaPort::handleResp(PacketPtr pkt, Tick delay)
     assert(pkt->isResponse());
 
     // get the DMA sender state
-    DmaReqState *state = dynamic_cast<DmaReqState*>(pkt->senderState);
+    auto *state = dynamic_cast<DmaReqState*>(pkt->senderState);
     assert(state);
 
     DPRINTF(DMA, "Received response %s for addr: %#x size: %d nb: %d,"  \
@@ -121,8 +119,8 @@ DmaDevice::DmaDevice(const Params &p)
 void
 DmaDevice::init()
 {
-    if (!dmaPort.isConnected())
-        panic("DMA port of %s not connected to anything!", name());
+    panic_if(!dmaPort.isConnected(),
+             "DMA port of %s not connected to anything!", name());
     PioDevice::init();
 }
 
@@ -158,7 +156,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
     // We're only interested in this when there will only be one request.
     // For simplicity, we return the last request, which would also be
     // the only request in that case.
-    RequestPtr req = NULL;
+    RequestPtr req = nullptr;
 
     DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,
             event ? event->scheduled() : -1);
@@ -269,8 +267,9 @@ DmaPort::sendDma()
 
             handleResp(pkt, lat);
         }
-    } else
+    } else {
         panic("Unknown memory mode.");
+    }
 }
 
 Port &
@@ -287,9 +286,7 @@ DmaReadFifo::DmaReadFifo(DmaPort &_port, size_t size,
                          unsigned max_pending,
                          Request::Flags flags)
     : maxReqSize(max_req_size), fifoSize(size),
-      reqFlags(flags), port(_port),
-      buffer(size),
-      nextAddr(0), endAddr(0)
+      reqFlags(flags), port(_port), buffer(size)
 {
     freeRequests.resize(max_pending);
     for (auto &e : freeRequests)
@@ -346,8 +343,7 @@ DmaReadFifo::tryGet(uint8_t *dst, size_t len)
 void
 DmaReadFifo::get(uint8_t *dst, size_t len)
 {
-    const bool success(tryGet(dst, len));
-    panic_if(!success, "Buffer underrun in DmaReadFifo::get()\n");
+    panic_if(!tryGet(dst, len), "Buffer underrun in DmaReadFifo::get()");
 }
 
 void
@@ -473,13 +469,13 @@ DmaReadFifo::handlePending()
 DrainState
 DmaReadFifo::drain()
 {
-    return pendingRequests.empty() ? DrainState::Drained : DrainState::Draining;
+    return pendingRequests.empty() ?
+        DrainState::Drained : DrainState::Draining;
 }
 
 
-DmaReadFifo::DmaDoneEvent::DmaDoneEvent(DmaReadFifo *_parent,
-                                        size_t max_size)
-    : parent(_parent), _done(false), _canceled(false), _data(max_size, 0)
+DmaReadFifo::DmaDoneEvent::DmaDoneEvent(DmaReadFifo *_parent, size_t max_size)
+    : parent(_parent), _data(max_size, 0)
 {
 }
 
