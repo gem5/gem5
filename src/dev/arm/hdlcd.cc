@@ -65,25 +65,9 @@ HDLcd::HDLcd(const HDLcdParams &p)
       pixelBufferSize(p.pixel_buffer_size),
       virtRefreshRate(p.virt_refresh_rate),
 
-      // Registers
-      version(VERSION_RESETV),
-      int_rawstat(0), int_mask(0),
-
-      fb_base(0), fb_line_length(0), fb_line_count(0), fb_line_pitch(0),
-      bus_options(BUS_OPTIONS_RESETV),
-
-      v_sync(0), v_back_porch(0), v_data(0), v_front_porch(0),
-      h_sync(0), h_back_porch(0), h_data(0), h_front_porch(0),
-      polarities(0),
-
-      command(0),
-
-      pixel_format(0),
-      red_select(0), green_select(0), blue_select(0),
-
       virtRefreshEvent([this]{ virtRefresh(); }, name()),
       // Other
-      imgFormat(p.frame_format), pic(NULL), conv(PixelConverter::rgba8888_le),
+      imgFormat(p.frame_format),
       pixelPump(*this, *p.pxl_clk, p.pixel_chunk),
       stats(this)
 {
@@ -91,10 +75,6 @@ HDLcd::HDLcd(const HDLcdParams &p)
         vnc->setFrameBuffer(&pixelPump.fb);
 
     imgWriter = createImgWriter(imgFormat, &pixelPump.fb);
-}
-
-HDLcd::~HDLcd()
-{
 }
 
 HDLcd::
@@ -234,12 +214,12 @@ HDLcd::read(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr &&
            pkt->getAddr() < pioAddr + pioSize);
 
-    const Addr daddr(pkt->getAddr() - pioAddr);
+    const Addr daddr = pkt->getAddr() - pioAddr;
     panic_if(pkt->getSize() != 4,
              "Unhandled read size (address: 0x.4x, size: %u)",
              daddr, pkt->getSize());
 
-    const uint32_t data(readReg(daddr));
+    const uint32_t data = readReg(daddr);
     DPRINTF(HDLcd, "read register 0x%04x: 0x%x\n", daddr, data);
 
     pkt->setLE<uint32_t>(data);
@@ -254,11 +234,11 @@ HDLcd::write(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr &&
            pkt->getAddr() < pioAddr + pioSize);
 
-    const Addr daddr(pkt->getAddr() - pioAddr);
+    const Addr daddr = pkt->getAddr() - pioAddr;
     panic_if(pkt->getSize() != 4,
              "Unhandled read size (address: 0x.4x, size: %u)",
              daddr, pkt->getSize());
-    const uint32_t data(pkt->getLE<uint32_t>());
+    const uint32_t data = pkt->getLE<uint32_t>();
     DPRINTF(HDLcd, "write register 0x%04x: 0x%x\n", daddr, data);
 
     writeReg(daddr, data);
@@ -430,8 +410,8 @@ HDLcd::writeReg(Addr offset, uint32_t value)
 PixelConverter
 HDLcd::pixelConverter() const
 {
-    ByteOrder byte_order(
-        pixel_format.big_endian ? ByteOrder::big : ByteOrder::little);
+    ByteOrder byte_order =
+        pixel_format.big_endian ? ByteOrder::big : ByteOrder::little;
 
     /* Some Linux kernels have a broken driver that swaps the red and
      * blue color select registers. */
@@ -467,17 +447,15 @@ HDLcd::createDmaEngine()
         return;
     }
 
-    const uint32_t dma_burst_flags(bus_options.burst_len);
-    const uint32_t dma_burst_len(
-        dma_burst_flags ?
-        (1UL << (findMsbSet(dma_burst_flags) - 1)) :
-        MAX_BURST_LEN);
+    const uint32_t dma_burst_flags = bus_options.burst_len;
+    const uint32_t dma_burst_len = dma_burst_flags ?
+        (1UL << (findMsbSet(dma_burst_flags) - 1)) : MAX_BURST_LEN;
     // Some drivers seem to set the DMA line count incorrectly. This
     // could either be a driver bug or a specification bug. Unlike for
     // timings, the specification does not require 1 to be added to
     // the DMA engine's line count.
-    const uint32_t dma_lines(
-        fb_line_count + (workaroundDmaLineCount ? 1 : 0));
+    const uint32_t dma_lines =
+        fb_line_count + (workaroundDmaLineCount ? 1 : 0);
 
     dmaEngine.reset(new DmaEngine(
                         *this, pixelBufferSize,
@@ -583,7 +561,7 @@ HDLcd::pxlFrameDone()
 void
 HDLcd::setInterrupts(uint32_t ints, uint32_t mask)
 {
-    const bool old_ints(intStatus());
+    const bool old_ints = intStatus();
 
     int_mask = mask;
     int_rawstat = ints;
@@ -673,7 +651,7 @@ HDLcd::DmaEngine::onIdle()
 void
 HDLcd::PixelPump::dumpSettings()
 {
-    const DisplayTimings &t(timings());
+    const DisplayTimings &t = timings();
 
     inform("PixelPump width: %u", t.width);
     inform("PixelPump height: %u", t.height);

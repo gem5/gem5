@@ -91,7 +91,6 @@ class HDLcd: public AmbaDmaDevice
 {
   public:
     HDLcd(const HDLcdParams &p);
-    ~HDLcd();
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -226,28 +225,31 @@ class HDLcd: public AmbaDmaDevice
      * HDLCD register contents.
      */
     /**@{*/
-    const VersionReg version;       /**< Version register */
-    uint32_t int_rawstat;           /**< Interrupt raw status register */
-    uint32_t int_mask;              /**< Interrupt mask register */
-    uint32_t fb_base;               /**< Frame buffer base address register */
-    uint32_t fb_line_length;        /**< Frame buffer Line length register */
-    FbLineCountReg fb_line_count;   /**< Frame buffer Line count register */
-    int32_t fb_line_pitch;          /**< Frame buffer Line pitch register */
-    BusOptsReg bus_options;         /**< Bus options register */
-    TimingReg v_sync;               /**< Vertical sync width register */
-    TimingReg v_back_porch;         /**< Vertical back porch width register */
-    TimingReg v_data;               /**< Vertical data width register */
-    TimingReg v_front_porch;        /**< Vertical front porch width register */
-    TimingReg h_sync;               /**< Horizontal sync width register */
-    TimingReg h_back_porch;         /**< Horizontal back porch width register */
-    TimingReg h_data;               /**< Horizontal data width register */
-    TimingReg h_front_porch;        /**< Horizontal front porch width reg */
-    PolaritiesReg polarities;       /**< Polarities register */
-    CommandReg command;             /**< Command register */
-    PixelFormatReg pixel_format;    /**< Pixel format register */
-    ColorSelectReg red_select;      /**< Red color select register */
-    ColorSelectReg green_select;    /**< Green color select register */
-    ColorSelectReg blue_select;     /**< Blue color select register */
+    const VersionReg version = VERSION_RESETV;
+                                    /**< Version register */
+    uint32_t int_rawstat = 0;       /**< Interrupt raw status register */
+    uint32_t int_mask = 0;          /**< Interrupt mask register */
+    uint32_t fb_base = 0;           /**< Frame buffer base address register */
+    uint32_t fb_line_length = 0;    /**< Frame buffer Line length register */
+                                    /**< Frame buffer Line count register */
+    FbLineCountReg fb_line_count = 0;
+    int32_t fb_line_pitch = 0;      /**< Frame buffer Line pitch register */
+    BusOptsReg bus_options = BUS_OPTIONS_RESETV;
+                                    /**< Bus options register */
+    TimingReg v_sync = 0;           /**< Vertical sync width register */
+    TimingReg v_back_porch = 0;     /**< Vertical back porch width register */
+    TimingReg v_data = 0;           /**< Vertical data width register */
+    TimingReg v_front_porch = 0;    /**< Vertical front porch width register */
+    TimingReg h_sync = 0;           /**< Horizontal sync width register */
+    TimingReg h_back_porch = 0;     /**< Horizontal back porch width reg */
+    TimingReg h_data = 0;           /**< Horizontal data width register */
+    TimingReg h_front_porch = 0;    /**< Horizontal front porch width reg */
+    PolaritiesReg polarities = 0;   /**< Polarities register */
+    CommandReg command = 0;         /**< Command register */
+    PixelFormatReg pixel_format = 0;/**< Pixel format register */
+    ColorSelectReg red_select = 0;  /**< Red color select register */
+    ColorSelectReg green_select = 0;/**< Green color select register */
+    ColorSelectReg blue_select = 0; /**< Blue color select register */
     /** @} */
 
     uint32_t readReg(Addr offset);
@@ -298,7 +300,9 @@ class HDLcd: public AmbaDmaDevice
      * @see setInterrupts
      * @param ints Set of interrupts to raise
      */
-    void intRaise(uint32_t ints) {
+    void
+    intRaise(uint32_t ints)
+    {
         setInterrupts(int_rawstat | ints, int_mask);
     }
 
@@ -308,7 +312,9 @@ class HDLcd: public AmbaDmaDevice
      * @see setInterrupts
      * @param ints Set of interrupts to clear
      */
-    void intClear(uint32_t ints) {
+    void
+    intClear(uint32_t ints)
+    {
         setInterrupts(int_rawstat & ~ints, int_mask);
     }
 
@@ -330,7 +336,9 @@ class HDLcd: public AmbaDmaDevice
         void onVSyncBegin() override { return parent.pxlVSyncBegin(); }
         void onVSyncEnd() override { return parent.pxlVSyncEnd(); }
 
-        void onUnderrun(unsigned x, unsigned y) override {
+        void
+        onUnderrun(unsigned x, unsigned y) override
+        {
             parent.pxlUnderrun();
         }
 
@@ -351,10 +359,10 @@ class HDLcd: public AmbaDmaDevice
     Enums::ImageFormat imgFormat;
 
     /** Picture of what the current frame buffer looks like */
-    OutputStream *pic;
+    OutputStream *pic = nullptr;
 
     /** Cached pixel converter, set when the converter is enabled. */
-    PixelConverter conv;
+    PixelConverter conv = PixelConverter::rgba8888_le;
 
     PixelPump pixelPump;
 
