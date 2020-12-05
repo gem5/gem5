@@ -137,6 +137,8 @@ class DmaPort : public RequestPort, public Drainable
     /** Default substreamId */
     const uint32_t defaultSSid;
 
+    const int cacheLineSize;
+
   protected:
 
     bool recvTimingResp(PacketPtr pkt) override;
@@ -473,6 +475,8 @@ class DmaReadFifo : public Drainable, public Serializable
 
     DmaPort &port;
     PortProxy proxy;
+
+    const int cacheLineSize;
 
   private:
     class DmaDoneEvent : public Event

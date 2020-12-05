@@ -53,7 +53,7 @@ DmaPort::DmaPort(ClockedObject *dev, System *s,
     : RequestPort(dev->name() + ".dma", dev),
       device(dev), sys(s), requestorId(s->getRequestorId(dev)),
       sendEvent([this]{ sendDma(); }, dev->name()),
-      defaultSid(sid), defaultSSid(ssid)
+      defaultSid(sid), defaultSSid(ssid), cacheLineSize(s->cacheLineSize())
 { }
 
 void
@@ -159,7 +159,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
     DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,
             event ? event->scheduled() : -1);
-    for (ChunkGenerator gen(addr, size, sys->cacheLineSize());
+    for (ChunkGenerator gen(addr, size, cacheLineSize);
          !gen.done(); gen.next()) {
 
         req = std::make_shared<Request>(
@@ -286,7 +286,7 @@ DmaReadFifo::DmaReadFifo(DmaPort &_port, size_t size,
                          Request::Flags flags)
     : maxReqSize(max_req_size), fifoSize(size),
       reqFlags(flags), port(_port), proxy(port, port.sys->cacheLineSize()),
-      buffer(size)
+      cacheLineSize(port.sys->cacheLineSize()), buffer(size)
 {
     freeRequests.resize(max_pending);
     for (auto &e : freeRequests)
@@ -392,8 +392,7 @@ void
 DmaReadFifo::resumeFillFunctional()
 {
     const size_t fifo_space = buffer.capacity() - buffer.size();
-    const size_t kvm_watermark = port.sys->cacheLineSize();
-    if (fifo_space >= kvm_watermark || buffer.capacity() < kvm_watermark) {
+    if (fifo_space >= cacheLineSize || buffer.capacity() < cacheLineSize) {
         const size_t block_remaining = endAddr - nextAddr;
         const size_t xfer_size = std::min(fifo_space, block_remaining);
         std::vector<uint8_t> tmp_buffer(xfer_size);
