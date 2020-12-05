@@ -37,8 +37,7 @@
 
 #include "base/stats/group.hh"
 
-#include <cassert>
-
+#include "base/logging.hh"
 #include "base/stats/info.hh"
 #include "base/trace.hh"
 #include "debug/Stats.hh"
@@ -112,7 +111,8 @@ Group::addStat(Stats::Info *info)
 void
 Group::addStatGroup(const char *name, Group *block)
 {
-    assert(statGroups.find(name) == statGroups.end());
+    panic_if(statGroups.find(name) != statGroups.end(),
+             "Stats of the same group share the same name `%s`.\n", name);
 
     statGroups[name] = block;
 }
