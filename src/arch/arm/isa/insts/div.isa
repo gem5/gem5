@@ -45,7 +45,7 @@ let {{
         Dest_sw = Op1_sw / Op2_sw;
     }
     '''
-    sdivIop = InstObjParams("sdiv", "Sdiv", "RegRegRegOp",
+    sdivIop = ArmInstObjParams("sdiv", "Sdiv", "RegRegRegOp",
                             { "code": sdivCode,
                               "predicate_test": predicateTest,
                               "op_class": "IntDivOp"}, [])
@@ -60,7 +60,7 @@ let {{
         Dest_uw = Op1_uw / Op2_uw;
     }
     '''
-    udivIop = InstObjParams("udiv", "Udiv", "RegRegRegOp",
+    udivIop = ArmInstObjParams("udiv", "Udiv", "RegRegRegOp",
                             { "code": udivCode,
                               "predicate_test": predicateTest,
                               "op_class": "IntDivOp"}, [])

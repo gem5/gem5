@@ -58,9 +58,9 @@ let {{
             instFlags += ["IsCall"]
 
 
-        bIop = InstObjParams(mnem, mnem.capitalize(), "BranchImmCond",
-                             {"code": bCode, "predicate_test": predicateTest,
-                             "brTgtCode" : br_tgt_code}, instFlags)
+        bIop = ArmInstObjParams(mnem, mnem.capitalize(), "BranchImmCond",
+                { "code" : bCode, "predicate_test" : predicateTest,
+                  "brTgtCode" : br_tgt_code }, instFlags)
         header_output += BranchImmCondDeclare.subst(bIop)
         decoder_output += BranchImmCondConstructor.subst(bIop) + \
                        BranchTarget.subst(bIop)
@@ -138,10 +138,10 @@ let {{
         code = blxCode % {"link": linkStr,
                           "newPC": newPC,
                           "branch": branchStr}
-        blxIop = InstObjParams(mnem, Name, base,
-                               {"code": code, "brTgtCode" : br_tgt_code,
-                                "predicate_test": predicateTest,
-                                "is_ras_pop" : isRasPop }, instFlags)
+        blxIop = ArmInstObjParams(mnem, Name, base,
+                { "code" : code, "brTgtCode" : br_tgt_code,
+                  "predicate_test": predicateTest,
+                  "is_ras_pop" : isRasPop }, instFlags)
         header_output += declare.subst(blxIop)
         decoder_output += constructor.subst(blxIop)
         exec_output += PredOpExecute.subst(blxIop)
@@ -159,11 +159,11 @@ let {{
     IWNPC = Op1;
     '''
 
-    bxjIop = InstObjParams("bxj", "BxjReg", "BranchRegCond",
-                           {"code": bxjcode,
-                            "predicate_test": predicateTest,
-                            "is_ras_pop": "op1 == INTREG_LR" },
-                           ["IsIndirectControl"])
+    bxjIop = ArmInstObjParams("bxj", "BxjReg", "BranchRegCond",
+                              { "code": bxjcode,
+                                "predicate_test": predicateTest,
+                                "is_ras_pop": "op1 == INTREG_LR" },
+                              ["IsIndirectControl"])
     header_output += BranchRegCondDeclare.subst(bxjIop)
     decoder_output += BranchRegCondConstructor.subst(bxjIop)
     exec_output += PredOpExecute.subst(bxjIop)
@@ -173,10 +173,10 @@ let {{
         code = 'NPC = (uint32_t)(PC + imm);\n'
         br_tgt_code = '''pcs.instNPC((uint32_t)(branchPC.instPC() + imm));'''
         predTest = "Op1 %(test)s 0" % {"test": test}
-        iop = InstObjParams(mnem, mnem.capitalize(), "BranchImmReg",
-                            {"code": code, "predicate_test": predTest,
-                            "brTgtCode" : br_tgt_code},
-                            ["IsDirectControl"])
+        iop = ArmInstObjParams(mnem, mnem.capitalize(), "BranchImmReg",
+                               { "code" : code, "predicate_test" : predTest,
+                                 "brTgtCode" : br_tgt_code},
+                               ["IsDirectControl"])
         header_output += BranchImmRegDeclare.subst(iop)
         decoder_output += BranchImmRegConstructor.subst(iop) + \
                           BranchTarget.subst(iop)
@@ -200,11 +200,11 @@ let {{
             '''
             accCode = 'NPC = PC + 2 * (Mem_ub)'
             mnem = "tbb"
-        iop = InstObjParams(mnem, mnem.capitalize(), "BranchRegReg",
-                            {'ea_code': eaCode,
-                             'memacc_code': accCode,
-                             'predicate_test': predicateTest},
-                             ["IsIndirectControl"])
+        iop = ArmInstObjParams(mnem, mnem.capitalize(), "BranchRegReg",
+                               { 'ea_code' : eaCode,
+                                 'memacc_code' : accCode,
+                                 'predicate_test' : predicateTest},
+                               ["IsIndirectControl"])
         header_output += BranchTableDeclare.subst(iop)
         decoder_output += BranchRegRegConstructor.subst(iop)
         exec_output += LoadExecute.subst(iop) + \

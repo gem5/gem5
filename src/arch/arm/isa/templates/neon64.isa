@@ -43,6 +43,9 @@ def template NeonX2RegOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     typedef _Element Element;
 
@@ -53,6 +56,7 @@ class %(class_name)s : public %(base_class)s
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 
@@ -64,6 +68,9 @@ def template NeonX2RegImmOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     typedef _Element Element;
 
@@ -75,6 +82,7 @@ class %(class_name)s : public %(base_class)s
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 
@@ -86,6 +94,9 @@ def template NeonX1RegOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     typedef _Element Element;
 
@@ -94,6 +105,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 
@@ -105,6 +117,9 @@ def template NeonX1RegImmOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     typedef _Element Element;
 
@@ -115,6 +130,7 @@ class %(class_name)s : public %(base_class)s
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 
@@ -126,6 +142,9 @@ def template NeonX1Reg2ImmOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     typedef _Element Element;
 
@@ -137,6 +156,7 @@ class %(class_name)s : public %(base_class)s
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm1, _imm2)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 
@@ -148,6 +168,9 @@ def template NeonX1RegImmOnlyOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     typedef _Element Element;
 
@@ -156,6 +179,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 
@@ -250,6 +274,9 @@ def template NeonXUnequalRegOpExecute {{
 def template MicroNeonMemDeclare64 {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       protected:
         // True if the base register is SP (used for SP alignment checking)
         bool baseIsSP;
@@ -267,6 +294,7 @@ def template MicroNeonMemDeclare64 {{
                              _ura, _imm),
             baseIsSP(_baseIsSP), accSize(_accSize), eSize(_eSize)
         {
+            %(set_reg_idx_arr)s;
             memAccessFlags |= extraMemFlags;
             %(constructor)s;
         }
@@ -431,6 +459,9 @@ def template NeonStoreCompleteAcc64 {{
 def template VMemMultDeclare64 {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         // Constructor
         %(class_name)s(ExtMachInst machInst, RegIndex rn, RegIndex vd,
@@ -442,6 +473,9 @@ def template VMemMultDeclare64 {{
 def template VMemSingleDeclare64 {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         // Constructor
         %(class_name)s(ExtMachInst machInst, RegIndex rn, RegIndex vd,
@@ -460,6 +494,7 @@ def template VMemMultConstructor64 {{
                 "%(mnemonic)s", machInst, %(op_class)s, rn, vd, rm,
                 _eSize, _dataSize, _numStructElems, _numRegs, _wb)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -474,6 +509,7 @@ def template VMemSingleConstructor64 {{
                 _eSize, _dataSize, _numStructElems, _index, _wb,
                 _replicate)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -481,6 +517,9 @@ def template VMemSingleConstructor64 {{
 def template MicroNeonMixDeclare64 {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _op1,
                        uint8_t _eSize, uint8_t _dataSize,
@@ -490,6 +529,7 @@ def template MicroNeonMixDeclare64 {{
                            _dest, _op1, _eSize, _dataSize, _numStructElems,
                            _numRegs, _step)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
         }
 
@@ -500,6 +540,9 @@ def template MicroNeonMixDeclare64 {{
 def template MicroNeonMixLaneDeclare64 {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _op1,
                        uint8_t _eSize, uint8_t _dataSize,
@@ -509,6 +552,7 @@ def template MicroNeonMixLaneDeclare64 {{
                            _dest, _op1, _eSize, _dataSize, _numStructElems,
                            _lane, _step, _replicate)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
         }
 

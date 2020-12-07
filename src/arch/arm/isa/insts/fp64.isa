@@ -52,9 +52,9 @@ let {{
         AA64FpDestP2_uw = 0;
         AA64FpDestP3_uw = 0;
     '''
-    fmovImmSIop = InstObjParams("fmov", "FmovImmS", "FpRegImmOp",
-                                { "code": fmovImmSCode,
-                                  "op_class": "FloatMiscOp" }, [])
+    fmovImmSIop = ArmInstObjParams("fmov", "FmovImmS", "FpRegImmOp",
+                                   { "code": fmovImmSCode,
+                                     "op_class": "FloatMiscOp" }, [])
     fmovImmSIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
     header_output  += FpRegImmOpDeclare.subst(fmovImmSIop);
     decoder_output += FpRegImmOpConstructor.subst(fmovImmSIop);
@@ -66,9 +66,9 @@ let {{
         AA64FpDestP2_uw = 0;
         AA64FpDestP3_uw = 0;
     '''
-    fmovImmDIop = InstObjParams("fmov", "FmovImmD", "FpRegImmOp",
-                                { "code": fmovImmDCode,
-                                  "op_class": "FloatMiscOp" }, [])
+    fmovImmDIop = ArmInstObjParams("fmov", "FmovImmD", "FpRegImmOp",
+                                   { "code": fmovImmDCode,
+                                     "op_class": "FloatMiscOp" }, [])
     fmovImmDIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
     header_output  += FpRegImmOpDeclare.subst(fmovImmDIop);
     decoder_output += AA64FpRegImmOpConstructor.subst(fmovImmDIop);
@@ -80,9 +80,9 @@ let {{
         AA64FpDestP2_uw = 0;
         AA64FpDestP3_uw = 0;
     '''
-    fmovRegSIop = InstObjParams("fmov", "FmovRegS", "FpRegRegOp",
-                                { "code": fmovRegSCode,
-                                  "op_class": "FloatMiscOp" }, [])
+    fmovRegSIop = ArmInstObjParams("fmov", "FmovRegS", "FpRegRegOp",
+                                   { "code": fmovRegSCode,
+                                     "op_class": "FloatMiscOp" }, [])
     fmovRegSIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
     header_output  += FpRegRegOpDeclare.subst(fmovRegSIop);
     decoder_output += AA64FpRegRegOpConstructor.subst(fmovRegSIop);
@@ -94,9 +94,9 @@ let {{
         AA64FpDestP2_uw = 0;
         AA64FpDestP3_uw = 0;
     '''
-    fmovRegDIop = InstObjParams("fmov", "FmovRegD", "FpRegRegOp",
-                                { "code": fmovRegDCode,
-                                  "op_class": "FloatMiscOp" }, [])
+    fmovRegDIop = ArmInstObjParams("fmov", "FmovRegD", "FpRegRegOp",
+                                   { "code": fmovRegDCode,
+                                     "op_class": "FloatMiscOp" }, [])
     fmovRegDIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
     header_output  += FpRegRegOpDeclare.subst(fmovRegDIop);
     decoder_output += AA64FpRegRegOpConstructor.subst(fmovRegDIop);
@@ -108,9 +108,9 @@ let {{
         AA64FpDestP2_uw = 0;
         AA64FpDestP3_uw = 0;
     '''
-    fmovCoreRegWIop = InstObjParams("fmov", "FmovCoreRegW", "FpRegRegOp",
-                                    { "code": fmovCoreRegWCode,
-                                      "op_class": "FloatMiscOp" }, [])
+    fmovCoreRegWIop = ArmInstObjParams("fmov", "FmovCoreRegW", "FpRegRegOp",
+                                       { "code": fmovCoreRegWCode,
+                                         "op_class": "FloatMiscOp" }, [])
     fmovCoreRegWIop.snippets["code"] += zeroSveVecRegUpperPartCode % \
         "AA64FpDest"
     header_output  += FpRegRegOpDeclare.subst(fmovCoreRegWIop);
@@ -123,9 +123,9 @@ let {{
         AA64FpDestP2_uw = 0;
         AA64FpDestP3_uw = 0;
     '''
-    fmovCoreRegXIop = InstObjParams("fmov", "FmovCoreRegX", "FpRegRegOp",
-                                    { "code": fmovCoreRegXCode,
-                                      "op_class": "FloatMiscOp" }, [])
+    fmovCoreRegXIop = ArmInstObjParams("fmov", "FmovCoreRegX", "FpRegRegOp",
+                                       { "code": fmovCoreRegXCode,
+                                         "op_class": "FloatMiscOp" }, [])
     fmovCoreRegXIop.snippets["code"] += zeroSveVecRegUpperPartCode % \
         "AA64FpDest"
     header_output  += FpRegRegOpDeclare.subst(fmovCoreRegXIop);
@@ -138,9 +138,9 @@ let {{
         AA64FpDestP1_uw = AA64FpDestP1_uw;
         AA64FpDestP2_uw = XOp1_ud;
         AA64FpDestP3_uw = XOp1_ud >> 32;'''
-    fmovUCoreRegXIop = InstObjParams("fmov", "FmovUCoreRegX", "FpRegRegOp",
-                                    { "code": fmovUCoreRegXCode,
-                                      "op_class": "FloatMiscOp" }, [])
+    fmovUCoreRegXIop = ArmInstObjParams("fmov", "FmovUCoreRegX", "FpRegRegOp",
+                                        { "code": fmovUCoreRegXCode,
+                                          "op_class": "FloatMiscOp" }, [])
     fmovUCoreRegXIop.snippets["code"] += zeroSveVecRegUpperPartCode % \
         "AA64FpDest"
     header_output  += FpRegRegOpDeclare.subst(fmovUCoreRegXIop);
@@ -150,9 +150,9 @@ let {{
     fmovRegCoreWCode = vfp64EnabledCheckCode + '''
         WDest = AA64FpOp1P0_uw;
     '''
-    fmovRegCoreWIop = InstObjParams("fmov", "FmovRegCoreW", "FpRegRegOp",
-                                     { "code": fmovRegCoreWCode,
-                                       "op_class": "FloatMiscOp" }, [])
+    fmovRegCoreWIop = ArmInstObjParams("fmov", "FmovRegCoreW", "FpRegRegOp",
+                                       { "code": fmovRegCoreWCode,
+                                         "op_class": "FloatMiscOp" }, [])
     header_output  += FpRegRegOpDeclare.subst(fmovRegCoreWIop);
     decoder_output += AA64FpRegRegOpConstructor.subst(fmovRegCoreWIop);
     exec_output    += BasicExecute.subst(fmovRegCoreWIop);
@@ -160,9 +160,9 @@ let {{
     fmovRegCoreXCode = vfp64EnabledCheckCode + '''
         XDest = ( ((uint64_t) AA64FpOp1P1_uw) << 32) | AA64FpOp1P0_uw;
     '''
-    fmovRegCoreXIop = InstObjParams("fmov", "FmovRegCoreX", "FpRegRegOp",
-                                     { "code": fmovRegCoreXCode,
-                                       "op_class": "FloatMiscOp" }, [])
+    fmovRegCoreXIop = ArmInstObjParams("fmov", "FmovRegCoreX", "FpRegRegOp",
+                                       { "code": fmovRegCoreXCode,
+                                         "op_class": "FloatMiscOp" }, [])
     header_output  += FpRegRegOpDeclare.subst(fmovRegCoreXIop);
     decoder_output += AA64FpRegRegOpConstructor.subst(fmovRegCoreXIop);
     exec_output    += BasicExecute.subst(fmovRegCoreXIop);
@@ -170,9 +170,9 @@ let {{
     fmovURegCoreXCode = vfp64EnabledCheckCode + '''
         XDest = ( ((uint64_t) AA64FpOp1P3_uw) << 32) | AA64FpOp1P2_uw;
     '''
-    fmovURegCoreXIop = InstObjParams("fmov", "FmovURegCoreX", "FpRegRegOp",
-                                    { "code":     fmovURegCoreXCode,
-                                      "op_class": "FloatMiscOp" }, [])
+    fmovURegCoreXIop = ArmInstObjParams("fmov", "FmovURegCoreX", "FpRegRegOp",
+                                        { "code":     fmovURegCoreXCode,
+                                          "op_class": "FloatMiscOp" }, [])
     header_output  += FpRegRegOpDeclare.subst(fmovURegCoreXIop);
     decoder_output += AA64FpRegRegOpConstructor.subst(fmovURegCoreXIop);
     exec_output    += BasicExecute.subst(fmovURegCoreXIop);
@@ -314,9 +314,9 @@ let {{
                 FpscrExc = fpscr;
             '''
 
-            iop = InstObjParams(name.lower(), name + suffix,
-                                "FpRegRegRegRegOp",
-                                { "code": code, "op_class": opClass }, [])
+            iop = ArmInstObjParams(name.lower(), name + suffix,
+                                   "FpRegRegRegRegOp",
+                                   { "code": code, "op_class": opClass }, [])
             iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
 
             header_output  += AA64FpRegRegRegRegOpDeclare.subst(iop)
@@ -347,19 +347,19 @@ let {{
         global header_output, decoder_output, exec_output
 
         code = halfIntConvCode2 % { "op": halfOp }
-        hIop = InstObjParams(name, Name + "H", base,
+        hIop = ArmInstObjParams(name, Name + "H", base,
                 { "code": code,
                   "op_class": opClass }, [])
         hIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
 
         code = singleIntConvCode2 % { "op": singleOp }
-        sIop = InstObjParams(name, Name + "S", base,
+        sIop = ArmInstObjParams(name, Name + "S", base,
                 { "code": code,
                   "op_class": opClass }, [])
         sIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
 
         code = doubleIntConvCode2 % { "op": doubleOp }
-        dIop = InstObjParams(name, Name + "D", base,
+        dIop = ArmInstObjParams(name, Name + "D", base,
                 { "code": code,
                   "op_class": opClass }, [])
         dIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
@@ -416,17 +416,17 @@ let {{
         global header_output, decoder_output, exec_output
 
         code = halfIntConvCode % { "op": halfOp }
-        hIop = InstObjParams(name, Name + "H", base,
+        hIop = ArmInstObjParams(name, Name + "H", base,
                 { "code": code,
                   "op_class": opClass }, [])
         hIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         code = singleIntConvCode % { "op": singleOp }
-        sIop = InstObjParams(name, Name + "S", base,
+        sIop = ArmInstObjParams(name, Name + "S", base,
                 { "code": code,
                   "op_class": opClass }, [])
         sIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         code = doubleIntConvCode % { "op": doubleOp }
-        dIop = InstObjParams(name, Name + "D", base,
+        dIop = ArmInstObjParams(name, Name + "D", base,
                 { "code": code,
                   "op_class": opClass }, [])
         dIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
@@ -462,7 +462,7 @@ let {{
         for code, op, suffix in [[hCode, halfOp, "H"],
                                  [sCode, singleOp, "S"],
                                  [dCode, doubleOp, "D"]]:
-            iop = InstObjParams(name, Name + suffix, base,
+            iop = ArmInstObjParams(name, Name + suffix, base,
                 { "code": code % { "op": op },
                   "op_class": opClass }, [])
             iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
@@ -552,9 +552,10 @@ let {{
 
                 instName = "Fcvt%s%sIntFp%s" %(regL, us, "D" if isDouble else "S")
                 mnem     = "%scvtf" %(us.lower())
-                fcvtIntFpDIop = InstObjParams(mnem, instName, "FpRegRegOp",
-                                              { "code": fcvtIntFpDCode,
-                                                "op_class": "FloatCvtOp" }, [])
+                fcvtIntFpDIop = ArmInstObjParams(mnem, instName, "FpRegRegOp",
+                                                 { "code": fcvtIntFpDCode,
+                                                   "op_class": "FloatCvtOp" },
+                                                 [])
                 fcvtIntFpDIop.snippets["code"] += \
                         zeroSveVecRegUpperPartCode % "AA64FpDest"
 
@@ -594,9 +595,9 @@ let {{
                                              "X" if isXReg   else "W",
                                              "D" if isDouble else "S", rmode)
             mnem     = "fcvt%s%s" %(rmode, "s" if isSigned else "u")
-            fcvtFpIntIop = InstObjParams(mnem, instName, "FpRegRegOp",
-                                        { "code": fcvtFpIntCode,
-                                        "op_class": "FloatCvtOp" }, [])
+            fcvtFpIntIop = ArmInstObjParams(mnem, instName, "FpRegRegOp",
+                                            { "code": fcvtFpIntCode,
+                                              "op_class": "FloatCvtOp" }, [])
             header_output  += FpRegRegOpDeclare.subst(fcvtFpIntIop);
             decoder_output += FpRegRegOpConstructor.subst(fcvtFpIntIop);
             exec_output    += BasicExecute.subst(fcvtFpIntIop);
@@ -617,7 +618,7 @@ let {{
         AA64FpDestP3_uw = 0;
         FpscrExc = fpscr;
     '''
-    fcvtFpSFpDIop = InstObjParams("fcvt", "FCvtFpSFpD", "FpRegRegOp",
+    fcvtFpSFpDIop = ArmInstObjParams("fcvt", "FCvtFpSFpD", "FpRegRegOp",
                                      { "code": fcvtFpSFpDCode,
                                        "op_class": "FloatCvtOp" }, [])
     fcvtFpSFpDIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
@@ -635,9 +636,9 @@ let {{
         AA64FpDestP3_uw = 0;
         FpscrExc = fpscr;
     '''
-    fcvtFpDFpSIop = InstObjParams("fcvt", "FcvtFpDFpS", "FpRegRegOp",
-                                 {"code":     fcvtFpDFpSCode,
-                                  "op_class": "FloatCvtOp" }, [])
+    fcvtFpDFpSIop = ArmInstObjParams("fcvt", "FcvtFpDFpS", "FpRegRegOp",
+                                     {"code":     fcvtFpDFpSCode,
+                                      "op_class": "FloatCvtOp" }, [])
     fcvtFpDFpSIop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
     header_output  += FpRegRegOpDeclare.subst(fcvtFpDFpSIop);
     decoder_output += AA64FpRegRegOpConstructor.subst(fcvtFpDFpSIop);
@@ -668,9 +669,9 @@ let {{
         '''
 
         instName = "FcvtFpHFp%s" %("D" if isDouble else "S")
-        fcvtFpHFpIop = InstObjParams("fcvt", instName, "FpRegRegOp",
-                                     { "code": code,
-                                       "op_class": "FloatCvtOp" }, [])
+        fcvtFpHFpIop = ArmInstObjParams("fcvt", instName, "FpRegRegOp",
+                                        { "code": code,
+                                          "op_class": "FloatCvtOp" }, [])
         fcvtFpHFpIop.snippets["code"] += zeroSveVecRegUpperPartCode % \
                 "AA64FpDest"
         header_output  += FpRegRegOpDeclare.subst(fcvtFpHFpIop);
@@ -693,9 +694,9 @@ let {{
                "64" if isDouble else "32")
 
         instName = "FcvtFp%sFpH" %("D" if isDouble else "S")
-        fcvtFpFpHIop = InstObjParams("fcvt", instName, "FpRegRegOp",
-                                     { "code": code,
-                                       "op_class": "FloatCvtOp" }, [])
+        fcvtFpFpHIop = ArmInstObjParams("fcvt", instName, "FpRegRegOp",
+                                        { "code": code,
+                                          "op_class": "FloatCvtOp" }, [])
         fcvtFpFpHIop.snippets["code"] += zeroSveVecRegUpperPartCode % \
                 "AA64FpDest"
         header_output  += FpRegRegOpDeclare.subst(fcvtFpFpHIop);
@@ -734,12 +735,12 @@ let {{
         typeName = "Imm" if isImm else "Reg"
         instName = "FCmp%s%s%s" %(""  if isQuiet  else "E", typeName,
                                   "D" if isDouble else "S")
-        fcmpIop = InstObjParams("fcmp%s" %(""  if isQuiet else "e"), instName,
-                                "FpReg%sOp" %(typeName),
-                               {"code":     fcmpCode,
-                                "op_class": "FloatCmpOp"}, [])
+        fcmpIop = ArmInstObjParams("fcmp%s" % ("" if isQuiet else "e"),
+                                   instName, "FpReg%sOp" % typeName,
+                                   { "code": fcmpCode,
+                                     "op_class": "FloatCmpOp"}, [])
 
-        declareTemp     = eval("FpReg%sOpDeclare"         %(typeName));
+        declareTemp     = eval("FpReg%sOpDeclare" %(typeName));
         constructorTemp = eval("AA64FpReg%sOpConstructor" %(typeName));
         header_output  += declareTemp.subst(fcmpIop);
         decoder_output += constructorTemp.subst(fcmpIop);
@@ -781,10 +782,10 @@ let {{
 
         instName = "FCCmp%sReg%s" %(""  if isQuiet  else "E",
                                     "D" if isDouble else "S")
-        fccmpIop = InstObjParams("fccmp%s" %(""  if isQuiet  else "e"),
-                                 instName, "FpCondCompRegOp",
-                                {"code":           fccmpCode,
-                                 "op_class":       "FloatCmpOp"}, [])
+        fccmpIop = ArmInstObjParams("fccmp%s" % ("" if isQuiet else "e"),
+                                    instName, "FpCondCompRegOp",
+                                    { "code" : fccmpCode,
+                                      "op_class" : "FloatCmpOp"}, [])
         header_output  += DataXCondCompRegDeclare.subst(fccmpIop);
         decoder_output += DataXCondCompRegConstructor.subst(fccmpIop);
         exec_output    += BasicExecute.subst(fccmpIop);
@@ -827,9 +828,9 @@ let {{
                                          "D" if isDouble else "S",
                                          "X" if isXReg   else "W")
         mnem = "fcvtz%s" %("s" if isSigned else "u")
-        fcvtFpFixedIop = InstObjParams(mnem, instName, "FpRegRegImmOp",
-                                       { "code": fcvtFpFixedCode,
-                                         "op_class": "FloatCvtOp" }, [])
+        fcvtFpFixedIop = ArmInstObjParams(mnem, instName, "FpRegRegImmOp",
+                                          { "code": fcvtFpFixedCode,
+                                            "op_class": "FloatCvtOp" }, [])
         header_output  += FpRegRegImmOpDeclare.subst(fcvtFpFixedIop);
         decoder_output += AA64FpRegRegImmOpConstructor.subst(fcvtFpFixedIop);
         exec_output    += BasicExecute.subst(fcvtFpFixedIop);
@@ -850,9 +851,9 @@ let {{
 
         instName = "FJcvtFpSFixedDW"
         mnem = "fjcvtzs"
-        fcvtFpFixedIop = InstObjParams(mnem, instName, "FpRegRegOp",
-                                       { "code": fcvtFpFixedCode,
-                                         "op_class": "FloatCvtOp" }, [])
+        fcvtFpFixedIop = ArmInstObjParams(mnem, instName, "FpRegRegOp",
+                                          { "code": fcvtFpFixedCode,
+                                            "op_class": "FloatCvtOp" }, [])
         header_output  += FpRegRegOpDeclare.subst(fcvtFpFixedIop);
         decoder_output += AA64FpRegRegOpConstructor.subst(fcvtFpFixedIop);
         exec_output    += BasicExecute.subst(fcvtFpFixedIop);
@@ -891,9 +892,9 @@ let {{
                                          "D" if isDouble else "S",
                                          srcRegType)
         mnem = "%scvtf" %("s" if isSigned else "u")
-        fcvtFixedFpIop = InstObjParams(mnem, instName, "FpRegRegImmOp",
-                                       { "code":     fcvtFixedFpCode,
-                                         "op_class": "FloatCvtOp" }, [])
+        fcvtFixedFpIop = ArmInstObjParams(mnem, instName, "FpRegRegImmOp",
+                                          { "code":     fcvtFixedFpCode,
+                                            "op_class": "FloatCvtOp" }, [])
         fcvtFixedFpIop.snippets["code"] += zeroSveVecRegUpperPartCode % \
                 "AA64FpDest"
         header_output  += FpRegRegImmOpDeclare.subst(fcvtFixedFpIop);
@@ -940,9 +941,9 @@ let {{
             AA64FpDestP3_uw = 0;
         '''
 
-        iop = InstObjParams("fcsel", "FCSel%s" %("D" if isDouble else "S"),
-                            "FpCondSelOp", { "code":     code,
-                                             "op_class": "FloatCvtOp" })
+        iop = ArmInstObjParams("fcsel", "FCSel%s" %("D" if isDouble else "S"),
+                               "FpCondSelOp", { "code":     code,
+                                                "op_class": "FloatCvtOp" })
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output  += DataXCondSelDeclare.subst(iop)
         decoder_output += DataXCondSelConstructor.subst(iop)

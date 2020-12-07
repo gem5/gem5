@@ -51,6 +51,9 @@ let {{
 def template DataImmDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
@@ -66,6 +69,7 @@ def template DataImmConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm, _rotC)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -87,6 +91,9 @@ def template DataImmConstructor {{
 def template DataRegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
@@ -104,6 +111,7 @@ def template DataRegConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _shiftAmt, _shiftType)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -130,6 +138,9 @@ def template DataRegConstructor {{
 def template DataRegRegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
@@ -147,6 +158,7 @@ def template DataRegRegConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _shift, _shiftType)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {

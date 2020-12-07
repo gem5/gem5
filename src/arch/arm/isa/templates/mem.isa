@@ -588,8 +588,10 @@ def template RfeDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _base, int _mode, bool _wb);
@@ -607,8 +609,10 @@ def template SrsDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _regMode, int _mode, bool _wb);
@@ -626,8 +630,10 @@ def template SwapDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _op1, uint32_t _base);
@@ -645,8 +651,10 @@ def template LoadStoreDImmDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _dest2,
@@ -665,8 +673,10 @@ def template StoreExDImmDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _result, uint32_t _dest, uint32_t _dest2,
@@ -685,8 +695,10 @@ def template LoadStoreImmDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _base, bool _add, int32_t _imm);
@@ -710,8 +722,10 @@ def template StoreExImmDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _result, uint32_t _dest, uint32_t _base,
@@ -730,8 +744,10 @@ def template StoreDRegDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _dest2,
@@ -752,8 +768,10 @@ def template StoreRegDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _base, bool _add,
@@ -779,8 +797,10 @@ def template LoadDRegDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _dest2,
@@ -801,8 +821,10 @@ def template LoadRegDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _base, bool _add,
@@ -828,8 +850,10 @@ def template LoadImmDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _base, bool _add, int32_t _imm);
@@ -853,6 +877,7 @@ def template RfeConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        (IntRegIndex)_base, (AddrMode)_mode, _wb)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -883,6 +908,7 @@ def template SrsConstructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (OperatingMode)_regMode, (AddrMode)_mode, _wb)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -907,6 +933,7 @@ def template SwapConstructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_op1, (IntRegIndex)_base)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -924,6 +951,7 @@ def template LoadStoreDImmConstructor {{
                  (IntRegIndex)_dest, (IntRegIndex)_dest2,
                  (IntRegIndex)_base, _add, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -950,6 +978,7 @@ def template StoreExDImmConstructor {{
                  (IntRegIndex)_result, (IntRegIndex)_dest, (IntRegIndex)_dest2,
                  (IntRegIndex)_base, _add, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -975,6 +1004,7 @@ def template LoadStoreImmConstructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_base, _add, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -1001,6 +1031,7 @@ def template StoreExImmConstructor {{
                  (IntRegIndex)_result, (IntRegIndex)_dest,
                  (IntRegIndex)_base, _add, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -1030,6 +1061,7 @@ def template StoreDRegConstructor {{
                  _shiftAmt, (ArmShiftType)_shiftType,
                  (IntRegIndex)_index)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -1058,6 +1090,7 @@ def template StoreRegConstructor {{
                  _shiftAmt, (ArmShiftType)_shiftType,
                  (IntRegIndex)_index)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -1087,6 +1120,7 @@ def template LoadDRegConstructor {{
                  _shiftAmt, (ArmShiftType)_shiftType,
                  (IntRegIndex)_index)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -1128,6 +1162,7 @@ def template LoadRegConstructor {{
                  _shiftAmt, (ArmShiftType)_shiftType,
                  (IntRegIndex)_index)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         M5_VAR_USED bool conditional = false;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -1194,6 +1229,7 @@ def template LoadImmConstructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_base, _add, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         M5_VAR_USED bool conditional = false;
         if (!(condCode == COND_AL || condCode == COND_UC)) {

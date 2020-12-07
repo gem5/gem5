@@ -38,6 +38,9 @@
 def template BranchImm64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, int64_t _imm);
@@ -49,6 +52,7 @@ def template BranchImm64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, int64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -56,6 +60,9 @@ def template BranchImm64Constructor {{
 def template BranchImmCond64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, int64_t _imm,
@@ -69,6 +76,7 @@ def template BranchImmCond64Constructor {{
             ExtMachInst machInst, int64_t _imm, ConditionCode _condCode) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm, _condCode)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -76,6 +84,9 @@ def template BranchImmCond64Constructor {{
 def template BranchReg64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _op1);
@@ -87,6 +98,7 @@ def template BranchReg64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -94,6 +106,9 @@ def template BranchReg64Constructor {{
 def template BranchRegReg64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, IntRegIndex _op2);
@@ -106,6 +121,7 @@ def template BranchRegReg64Constructor {{
                                    IntRegIndex _op2) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, _op2)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -113,6 +129,9 @@ def template BranchRegReg64Constructor {{
 def template BranchImmReg64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, int64_t imm, IntRegIndex _op1);
@@ -125,6 +144,7 @@ def template BranchImmReg64Constructor {{
                                    IntRegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm, _op1)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -132,6 +152,9 @@ def template BranchImmReg64Constructor {{
 def template BranchImmImmReg64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, int64_t _imm1, int64_t _imm2,
@@ -147,6 +170,7 @@ def template BranchImmImmReg64Constructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _imm1, _imm2, _op1)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};

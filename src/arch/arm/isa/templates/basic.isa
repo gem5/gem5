@@ -45,6 +45,9 @@ def template BasicDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst);
@@ -57,6 +60,7 @@ def template BasicConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -70,6 +74,7 @@ def template BasicConstructor64 {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};

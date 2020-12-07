@@ -45,12 +45,11 @@
 
 let {{
     microLdrUopCode = "IWRa = cSwap(Mem_uw, ((CPSR)Cpsr).e);"
-    microLdrUopIop = InstObjParams('ldr_uop', 'MicroLdrUop',
-                                   'MicroMemOp',
-                                   {'memacc_code': microLdrUopCode,
-                                    'ea_code': 'EA = URb + (up ? imm : -imm);',
-                                    'predicate_test': predicateTest},
-                                   ['IsMicroop'])
+    microLdrUopIop = ArmInstObjParams('ldr_uop', 'MicroLdrUop', 'MicroMemOp',
+            { 'memacc_code' : microLdrUopCode,
+              'ea_code' : 'EA = URb + (up ? imm : -imm);',
+              'predicate_test' : predicateTest },
+            ['IsMicroop'])
 
     microLdr2UopCode = '''
                         uint64_t data = Mem_ud;
@@ -58,43 +57,41 @@ let {{
                         IWDest2 = cSwap((uint32_t) (data >> 32),
                                         ((CPSR)Cpsr).e);
                         '''
-    microLdr2UopIop = InstObjParams('ldr2_uop', 'MicroLdr2Uop',
-                                   'MicroMemPairOp',
-                                   {'memacc_code': microLdr2UopCode,
-                                    'ea_code': 'EA = URb + (up ? imm : -imm);',
-                                    'predicate_test': predicateTest},
-                                   ['IsMicroop'])
+    microLdr2UopIop = ArmInstObjParams('ldr2_uop', 'MicroLdr2Uop',
+            'MicroMemPairOp',
+            { 'memacc_code' : microLdr2UopCode,
+              'ea_code' : 'EA = URb + (up ? imm : -imm);',
+              'predicate_test' : predicateTest },
+            ['IsMicroop'])
 
     microLdrFpUopCode = "Fa_uw = cSwap(Mem_uw, ((CPSR)Cpsr).e);"
-    microLdrFpUopIop = InstObjParams('ldrfp_uop', 'MicroLdrFpUop',
-                                      'MicroMemOp',
-                                      {'memacc_code': microLdrFpUopCode,
-                                       'ea_code': vfpEnabledCheckCode +
-                                           'EA = URb + (up ? imm : -imm);',
-                                       'predicate_test': predicateTest},
-                                      ['IsMicroop'])
+    microLdrFpUopIop = ArmInstObjParams('ldrfp_uop', 'MicroLdrFpUop',
+            'MicroMemOp',
+            { 'memacc_code' : microLdrFpUopCode,
+              'ea_code' : vfpEnabledCheckCode +
+                  'EA = URb + (up ? imm : -imm);',
+              'predicate_test': predicateTest },
+            ['IsMicroop'])
 
     microLdrDBFpUopCode = "Fa_uw = cSwap(Mem_uw, ((CPSR)Cpsr).e);"
-    microLdrDBFpUopIop = InstObjParams('ldrfp_uop', 'MicroLdrDBFpUop',
-                                      'MicroMemOp',
-                                      {'memacc_code': microLdrFpUopCode,
-                                       'ea_code': vfpEnabledCheckCode + '''
-                                        EA = URb + (up ? imm : -imm) +
-                                             (((CPSR)Cpsr).e ? 4 : 0);
-                                        ''',
-                                       'predicate_test': predicateTest},
-                                      ['IsMicroop'])
+    microLdrDBFpUopIop = ArmInstObjParams('ldrfp_uop', 'MicroLdrDBFpUop',
+            'MicroMemOp',
+            { 'memacc_code' : microLdrFpUopCode,
+              'ea_code' : vfpEnabledCheckCode + '''
+                  EA = URb + (up ? imm : -imm) + (((CPSR)Cpsr).e ? 4 : 0);
+              ''',
+              'predicate_test' : predicateTest },
+            ['IsMicroop'])
 
     microLdrDTFpUopCode = "Fa_uw = cSwap(Mem_uw, ((CPSR)Cpsr).e);"
-    microLdrDTFpUopIop = InstObjParams('ldrfp_uop', 'MicroLdrDTFpUop',
-                                      'MicroMemOp',
-                                      {'memacc_code': microLdrFpUopCode,
-                                       'ea_code': vfpEnabledCheckCode + '''
-                                        EA = URb + (up ? imm : -imm) -
-                                             (((CPSR)Cpsr).e ? 4 : 0);
-                                        ''',
-                                       'predicate_test': predicateTest},
-                                      ['IsMicroop'])
+    microLdrDTFpUopIop = ArmInstObjParams('ldrfp_uop', 'MicroLdrDTFpUop',
+            'MicroMemOp',
+            { 'memacc_code' : microLdrFpUopCode,
+              'ea_code' : vfpEnabledCheckCode + '''
+                  EA = URb + (up ? imm : -imm) - (((CPSR)Cpsr).e ? 4 : 0);
+              ''',
+              'predicate_test': predicateTest },
+            ['IsMicroop'])
 
     microRetUopCode = '''
         CPSR old_cpsr = Cpsr;
@@ -114,58 +111,53 @@ let {{
         SevMailbox = 1;
     '''
 
-    microLdrRetUopIop = InstObjParams('ldr_ret_uop', 'MicroLdrRetUop',
-                                      'MicroMemOp',
-                                      {'memacc_code':
-                                          microRetUopCode % 'Mem_uw',
-                                       'ea_code':
-                                          'EA = URb + (up ? imm : -imm);',
-                                       'predicate_test': condPredicateTest},
-                                      ['IsMicroop','IsNonSpeculative',
-                                       'IsSerializeAfter', 'IsSquashAfter'])
+    microLdrRetUopIop = ArmInstObjParams('ldr_ret_uop', 'MicroLdrRetUop',
+            'MicroMemOp',
+            { 'memacc_code' : microRetUopCode % 'Mem_uw',
+              'ea_code' : 'EA = URb + (up ? imm : -imm);',
+              'predicate_test' : condPredicateTest },
+            ['IsMicroop','IsNonSpeculative',
+             'IsSerializeAfter', 'IsSquashAfter'])
 
     microStrUopCode = "Mem = cSwap(URa_uw, ((CPSR)Cpsr).e);"
-    microStrUopIop = InstObjParams('str_uop', 'MicroStrUop',
-                                   'MicroMemOp',
-                                   {'memacc_code': microStrUopCode,
-                                    'postacc_code': "",
-                                    'ea_code': 'EA = URb + (up ? imm : -imm);',
-                                    'predicate_test': predicateTest},
-                                   ['IsMicroop'])
+    microStrUopIop = ArmInstObjParams('str_uop', 'MicroStrUop', 'MicroMemOp',
+            { 'memacc_code' : microStrUopCode,
+              'postacc_code' : "",
+              'ea_code' : 'EA = URb + (up ? imm : -imm);',
+              'predicate_test' : predicateTest },
+            ['IsMicroop'])
 
     microStrFpUopCode = "Mem = cSwap(Fa_uw, ((CPSR)Cpsr).e);"
-    microStrFpUopIop = InstObjParams('strfp_uop', 'MicroStrFpUop',
-                                     'MicroMemOp',
-                                     {'memacc_code': microStrFpUopCode,
-                                      'postacc_code': "",
-                                      'ea_code': vfpEnabledCheckCode +
-                                           'EA = URb + (up ? imm : -imm);',
-                                      'predicate_test': predicateTest},
-                                     ['IsMicroop'])
+    microStrFpUopIop = ArmInstObjParams('strfp_uop', 'MicroStrFpUop',
+            'MicroMemOp',
+            { 'memacc_code' : microStrFpUopCode,
+              'postacc_code' : "",
+              'ea_code' : vfpEnabledCheckCode +
+                  'EA = URb + (up ? imm : -imm);',
+              'predicate_test' : predicateTest },
+            ['IsMicroop'])
 
     microStrDBFpUopCode = "Mem = cSwap(Fa_uw, ((CPSR)Cpsr).e);"
-    microStrDBFpUopIop = InstObjParams('strfp_uop', 'MicroStrDBFpUop',
-                                       'MicroMemOp',
-                                       {'memacc_code': microStrFpUopCode,
-                                        'postacc_code': "",
-                                        'ea_code': vfpEnabledCheckCode + '''
-                                         EA = URb + (up ? imm : -imm) +
-                                              (((CPSR)Cpsr).e ? 4 : 0);
-                                         ''',
-                                        'predicate_test': predicateTest},
-                                       ['IsMicroop'])
+    microStrDBFpUopIop = ArmInstObjParams('strfp_uop', 'MicroStrDBFpUop',
+            'MicroMemOp',
+            { 'memacc_code' : microStrFpUopCode,
+              'postacc_code' : "",
+              'ea_code': vfpEnabledCheckCode + '''
+                  EA = URb + (up ? imm : -imm) + (((CPSR)Cpsr).e ? 4 : 0);
+              ''',
+              'predicate_test' : predicateTest },
+            ['IsMicroop'])
 
     microStrDTFpUopCode = "Mem = cSwap(Fa_uw, ((CPSR)Cpsr).e);"
-    microStrDTFpUopIop = InstObjParams('strfp_uop', 'MicroStrDTFpUop',
-                                       'MicroMemOp',
-                                       {'memacc_code': microStrFpUopCode,
-                                        'postacc_code': "",
-                                        'ea_code': vfpEnabledCheckCode + '''
-                                         EA = URb + (up ? imm : -imm) -
-                                              (((CPSR)Cpsr).e ? 4 : 0);
-                                         ''',
-                                        'predicate_test': predicateTest},
-                                       ['IsMicroop'])
+    microStrDTFpUopIop = ArmInstObjParams('strfp_uop', 'MicroStrDTFpUop',
+            'MicroMemOp',
+            { 'memacc_code' : microStrFpUopCode,
+              'postacc_code' : "",
+              'ea_code' : vfpEnabledCheckCode + '''
+                  EA = URb + (up ? imm : -imm) - (((CPSR)Cpsr).e ? 4 : 0);
+              ''',
+              'predicate_test' : predicateTest },
+            ['IsMicroop'])
 
     header_output = decoder_output = exec_output = ''
 
@@ -244,24 +236,22 @@ let {{
         loadMemAccCode = convCode + regSetCode
         storeMemAccCode = regGetCode + convCode
 
-        loadIop = InstObjParams('ldrneon%(size)d_uop' % subst,
-                                'MicroLdrNeon%(size)dUop' % subst,
-                                'MicroNeonMemOp',
-                                { 'mem_decl' : memDecl,
-                                  'size' : size,
-                                  'memacc_code' : loadMemAccCode,
-                                  'ea_code' : simdEnabledCheckCode + eaCode,
-                                  'predicate_test' : predicateTest },
-                                [ 'IsMicroop', 'IsLoad' ])
-        storeIop = InstObjParams('strneon%(size)d_uop' % subst,
-                                 'MicroStrNeon%(size)dUop' % subst,
-                                 'MicroNeonMemOp',
-                                 { 'mem_decl' : memDecl,
-                                   'size' : size,
-                                   'memacc_code' : storeMemAccCode,
-                                   'ea_code' : simdEnabledCheckCode + eaCode,
-                                   'predicate_test' : predicateTest },
-                                 [ 'IsMicroop', 'IsStore' ])
+        loadIop = ArmInstObjParams('ldrneon%(size)d_uop' % subst,
+                'MicroLdrNeon%(size)dUop' % subst, 'MicroNeonMemOp',
+                { 'mem_decl' : memDecl,
+                  'size' : size,
+                  'memacc_code' : loadMemAccCode,
+                  'ea_code' : simdEnabledCheckCode + eaCode,
+                  'predicate_test' : predicateTest },
+                [ 'IsMicroop', 'IsLoad' ])
+        storeIop = ArmInstObjParams('strneon%(size)d_uop' % subst,
+                'MicroStrNeon%(size)dUop' % subst, 'MicroNeonMemOp',
+                { 'mem_decl' : memDecl,
+                  'size' : size,
+                  'memacc_code' : storeMemAccCode,
+                  'ea_code' : simdEnabledCheckCode + eaCode,
+                  'predicate_test' : predicateTest },
+                [ 'IsMicroop', 'IsStore' ])
 
         exec_output += NeonLoadExecute.subst(loadIop) + \
                        NeonLoadInitiateAcc.subst(loadIop) + \
@@ -343,12 +333,12 @@ let {{
                 "loadConv" : loadConv,
                 "unloadConv" : unloadConv }
         microDeintNeonIop = \
-            InstObjParams('deintneon%duop' % (dRegs * 2),
-                          'MicroDeintNeon%dUop' % (dRegs * 2),
-                          'MicroNeonMixOp',
-                          { 'predicate_test': predicateTest,
-                            'code' : microDeintNeonCode },
-                            ['IsMicroop'])
+            ArmInstObjParams('deintneon%duop' % (dRegs * 2),
+                             'MicroDeintNeon%dUop' % (dRegs * 2),
+                             'MicroNeonMixOp',
+                             { 'predicate_test': predicateTest,
+                               'code' : microDeintNeonCode },
+                               ['IsMicroop'])
         header_output += MicroNeonMixDeclare.subst(microDeintNeonIop)
         exec_output += MicroNeonMixExecute.subst(microDeintNeonIop)
 
@@ -389,12 +379,12 @@ let {{
                 "loadConv" : loadConv,
                 "unloadConv" : unloadConv }
         microInterNeonIop = \
-            InstObjParams('interneon%duop' % (dRegs * 2),
-                          'MicroInterNeon%dUop' % (dRegs * 2),
-                          'MicroNeonMixOp',
-                          { 'predicate_test': predicateTest,
-                            'code' : microInterNeonCode },
-                            ['IsMicroop'])
+            ArmInstObjParams('interneon%duop' % (dRegs * 2),
+                             'MicroInterNeon%dUop' % (dRegs * 2),
+                             'MicroNeonMixOp',
+                             { 'predicate_test': predicateTest,
+                               'code' : microInterNeonCode },
+                             ['IsMicroop'])
         header_output += MicroNeonMixDeclare.subst(microInterNeonIop)
         exec_output += MicroNeonMixExecute.subst(microInterNeonIop)
 }};
@@ -461,14 +451,13 @@ let {{
             ''' % { "sRegs" : sRegs, "dRegs" : dRegs,
                     "loadRegs" : loadRegs, "unloadRegs" : unloadRegs }
 
-            microUnpackNeonIop = \
-                InstObjParams('unpackneon%dto%duop' % (sRegs * 2, dRegs * 2),
-                              'MicroUnpackNeon%dto%dUop' %
-                                    (sRegs * 2, dRegs * 2),
-                              'MicroNeonMixLaneOp',
-                              { 'predicate_test': predicateTest,
-                                'code' : microUnpackNeonCode },
-                                ['IsMicroop'])
+            microUnpackNeonIop = ArmInstObjParams(
+                    'unpackneon%dto%duop' % (sRegs * 2, dRegs * 2),
+                    'MicroUnpackNeon%dto%dUop' % (sRegs * 2, dRegs * 2),
+                    'MicroNeonMixLaneOp',
+                    { 'predicate_test' : predicateTest,
+                      'code' : microUnpackNeonCode },
+                    ['IsMicroop'])
             header_output += MicroNeonMixLaneDeclare.subst(microUnpackNeonIop)
             exec_output += MicroNeonMixExecute.subst(microUnpackNeonIop)
 
@@ -511,14 +500,13 @@ let {{
             ''' % { "sRegs" : sRegs, "dRegs" : dRegs,
                     "loadRegs" : loadRegs, "unloadRegs" : unloadRegs }
 
-            microUnpackAllNeonIop = \
-                InstObjParams('unpackallneon%dto%duop' % (sRegs * 2, dRegs * 2),
-                              'MicroUnpackAllNeon%dto%dUop' %
-                                    (sRegs * 2, dRegs * 2),
-                              'MicroNeonMixOp',
-                              { 'predicate_test': predicateTest,
-                                'code' : microUnpackAllNeonCode },
-                                ['IsMicroop'])
+            microUnpackAllNeonIop = ArmInstObjParams(
+                    'unpackallneon%dto%duop' % (sRegs * 2, dRegs * 2),
+                    'MicroUnpackAllNeon%dto%dUop' % (sRegs * 2, dRegs * 2),
+                    'MicroNeonMixOp',
+                    { 'predicate_test' : predicateTest,
+                      'code' : microUnpackAllNeonCode },
+                    ['IsMicroop'])
             header_output += MicroNeonMixDeclare.subst(microUnpackAllNeonIop)
             exec_output += MicroNeonMixExecute.subst(microUnpackAllNeonIop)
 
@@ -564,14 +552,13 @@ let {{
             ''' % { "sRegs" : sRegs, "dRegs" : dRegs,
                     "loadRegs" : loadRegs, "unloadRegs" : unloadRegs }
 
-            microPackNeonIop = \
-                InstObjParams('packneon%dto%duop' % (sRegs * 2, dRegs * 2),
-                              'MicroPackNeon%dto%dUop' %
-                                    (sRegs * 2, dRegs * 2),
-                              'MicroNeonMixLaneOp',
-                              { 'predicate_test': predicateTest,
-                                'code' : microPackNeonCode },
-                                ['IsMicroop'])
+            microPackNeonIop = ArmInstObjParams(
+                    'packneon%dto%duop' % (sRegs * 2, dRegs * 2),
+                    'MicroPackNeon%dto%dUop' % (sRegs * 2, dRegs * 2),
+                    'MicroNeonMixLaneOp',
+                    { 'predicate_test': predicateTest,
+                      'code' : microPackNeonCode },
+                    ['IsMicroop'])
             header_output += MicroNeonMixLaneDeclare.subst(microPackNeonIop)
             exec_output += MicroNeonMixExecute.subst(microPackNeonIop)
 }};
@@ -597,23 +584,23 @@ let {{
 //
 
 let {{
-    microAddiUopIop = InstObjParams('addi_uop', 'MicroAddiUop',
-                                    'MicroIntImmOp',
-                                    {'code': 'URa = URb + imm;',
-                                     'predicate_test': predicateTest},
-                                    ['IsMicroop'])
+    microAddiUopIop = ArmInstObjParams('addi_uop', 'MicroAddiUop',
+                                       'MicroIntImmOp',
+                                       {'code': 'URa = URb + imm;',
+                                        'predicate_test': predicateTest},
+                                       ['IsMicroop'])
 
     microAddUopCode = '''
         URa = URb + shift_rm_imm(URc, shiftAmt, shiftType, OptShiftRmCondCodesC);
     '''
 
-    microAddXiUopIop = InstObjParams('addxi_uop', 'MicroAddXiUop',
-                                     'MicroIntImmXOp',
-                                     'XURa = XURb + imm;',
-                                     ['IsMicroop'])
+    microAddXiUopIop = ArmInstObjParams('addxi_uop', 'MicroAddXiUop',
+                                        'MicroIntImmXOp',
+                                        'XURa = XURb + imm;',
+                                        ['IsMicroop'])
 
-    microAddXiSpAlignUopIop = InstObjParams('addxi_uop', 'MicroAddXiSpAlignUop',
-                                            'MicroIntImmXOp', '''
+    microAddXiSpAlignUopIop = ArmInstObjParams('addxi_uop',
+            'MicroAddXiSpAlignUop', 'MicroIntImmXOp', '''
         if (isSP((IntRegIndex) urb) && bits(XURb, 3, 0) &&
             SPAlignmentCheckEnabled(xc->tcBase())) {
             return std::make_shared<SPAlignmentFault>();
@@ -621,50 +608,47 @@ let {{
         XURa = XURb + imm;
     ''', ['IsMicroop'])
 
-    microAddXERegUopIop = InstObjParams('addxr_uop', 'MicroAddXERegUop',
-                                        'MicroIntRegXOp',
-                                        'XURa = XURb + ' + \
-                                            'extendReg64(XURc, type, shiftAmt, 64);',
-                                        ['IsMicroop'])
+    microAddXERegUopIop = ArmInstObjParams('addxr_uop',
+            'MicroAddXERegUop', 'MicroIntRegXOp',
+            'XURa = XURb + extendReg64(XURc, type, shiftAmt, 64);',
+            ['IsMicroop'])
 
-    microAddUopIop = InstObjParams('add_uop', 'MicroAddUop',
-                                   'MicroIntRegOp',
-                                   {'code': microAddUopCode,
-                                    'predicate_test': pickPredicate(microAddUopCode)},
-                                   ['IsMicroop'])
+    microAddUopIop = ArmInstObjParams('add_uop', 'MicroAddUop',
+            'MicroIntRegOp',
+            { 'code' : microAddUopCode,
+              'predicate_test': pickPredicate(microAddUopCode)},
+            ['IsMicroop'])
 
-    microSubiUopIop = InstObjParams('subi_uop', 'MicroSubiUop',
-                                    'MicroIntImmOp',
-                                    {'code': 'URa = URb - imm;',
-                                     'predicate_test': predicateTest},
-                                    ['IsMicroop'])
+    microSubiUopIop = ArmInstObjParams('subi_uop', 'MicroSubiUop',
+            'MicroIntImmOp',
+            { 'code' : 'URa = URb - imm;',
+              'predicate_test' : predicateTest},
+            ['IsMicroop'])
 
-    microSubXiUopIop = InstObjParams('subxi_uop', 'MicroSubXiUop',
-                                     'MicroIntImmXOp',
-                                     'XURa = XURb - imm;',
-                                     ['IsMicroop'])
+    microSubXiUopIop = ArmInstObjParams('subxi_uop', 'MicroSubXiUop',
+            'MicroIntImmXOp', 'XURa = XURb - imm;', ['IsMicroop'])
 
     microSubUopCode = '''
         URa = URb - shift_rm_imm(URc, shiftAmt, shiftType, OptShiftRmCondCodesC);
     '''
-    microSubUopIop = InstObjParams('sub_uop', 'MicroSubUop',
-                                   'MicroIntRegOp',
-                                   {'code': microSubUopCode,
-                                    'predicate_test': pickPredicate(microSubUopCode)},
-                                   ['IsMicroop'])
+    microSubUopIop = ArmInstObjParams('sub_uop', 'MicroSubUop',
+            'MicroIntRegOp',
+            { 'code' : microSubUopCode,
+              'predicate_test' : pickPredicate(microSubUopCode) },
+            ['IsMicroop'])
 
-    microUopRegMovIop = InstObjParams('uopReg_uop', 'MicroUopRegMov',
-                                   'MicroIntMov',
-                                   {'code': 'IWRa = URb;',
-                                    'predicate_test': predicateTest},
-                                   ['IsMicroop'])
+    microUopRegMovIop = ArmInstObjParams('uopReg_uop', 'MicroUopRegMov',
+            'MicroIntMov',
+            { 'code' : 'IWRa = URb;',
+              'predicate_test' : predicateTest },
+            ['IsMicroop'])
 
-    microUopRegMovRetIop = InstObjParams('movret_uop', 'MicroUopRegMovRet',
-                                      'MicroIntMov',
-                                     {'code': microRetUopCode % 'URb',
-                                      'predicate_test': predicateTest},
-                                     ['IsMicroop', 'IsNonSpeculative',
-                                      'IsSerializeAfter', 'IsSquashAfter'])
+    microUopRegMovRetIop = ArmInstObjParams('movret_uop', 'MicroUopRegMovRet',
+            'MicroIntMov',
+            { 'code': microRetUopCode % 'URb',
+              'predicate_test': predicateTest},
+            [ 'IsMicroop', 'IsNonSpeculative',
+              'IsSerializeAfter', 'IsSquashAfter'])
 
     setPCCPSRDecl = '''
                     CPSR cpsrOrCondCodes = URc;
@@ -684,11 +668,11 @@ let {{
                     CondCodesGE = new_cpsr.ge;
                     '''
 
-    microUopSetPCCPSRIop = InstObjParams('uopSet_uop', 'MicroUopSetPCCPSR',
-                                         'MicroSetPCCPSR',
-                                         {'code': setPCCPSRDecl,
-                                          'predicate_test': predicateTest},
-                                         ['IsMicroop', 'IsSerializeAfter'])
+    microUopSetPCCPSRIop = ArmInstObjParams('uopSet_uop', 'MicroUopSetPCCPSR',
+            'MicroSetPCCPSR',
+            { 'code' : setPCCPSRDecl,
+              'predicate_test' : predicateTest },
+            ['IsMicroop', 'IsSerializeAfter'])
 
     header_output = MicroIntImmDeclare.subst(microAddiUopIop) + \
                     MicroIntImmDeclare.subst(microAddXiUopIop) + \
@@ -729,46 +713,49 @@ let {{
 }};
 
 let {{
-    iop = InstObjParams("ldmstm", "LdmStm", 'MacroMemOp', "", [])
+    iop = ArmInstObjParams("ldmstm", "LdmStm", 'MacroMemOp', "", [])
     header_output = MacroMemDeclare.subst(iop)
     decoder_output = MacroMemConstructor.subst(iop)
 
-    iop = InstObjParams("ldpstp", "LdpStp", 'PairMemOp', "", [])
+    iop = ArmInstObjParams("ldpstp", "LdpStp", 'PairMemOp', "", [])
     header_output += PairMemDeclare.subst(iop)
     decoder_output += PairMemConstructor.subst(iop)
 
-    iopImm = InstObjParams("bigfpmemimm", "BigFpMemImm", "BigFpMemImmOp", "")
-    iopPre = InstObjParams("bigfpmempre", "BigFpMemPre", "BigFpMemPreOp", "")
-    iopPost = InstObjParams("bigfpmempost", "BigFpMemPost", "BigFpMemPostOp", "")
+    iopImm = ArmInstObjParams(
+            "bigfpmemimm", "BigFpMemImm", "BigFpMemImmOp", "")
+    iopPre = ArmInstObjParams(
+            "bigfpmempre", "BigFpMemPre", "BigFpMemPreOp", "")
+    iopPost = ArmInstObjParams(
+            "bigfpmempost", "BigFpMemPost", "BigFpMemPostOp", "")
     for iop in (iopImm, iopPre, iopPost):
         header_output += BigFpMemImmDeclare.subst(iop)
         decoder_output += BigFpMemImmConstructor.subst(iop)
 
-    iop = InstObjParams("bigfpmemreg", "BigFpMemReg", "BigFpMemRegOp", "")
+    iop = ArmInstObjParams("bigfpmemreg", "BigFpMemReg", "BigFpMemRegOp", "")
     header_output += BigFpMemRegDeclare.subst(iop)
     decoder_output += BigFpMemRegConstructor.subst(iop)
 
-    iop = InstObjParams("bigfpmemlit", "BigFpMemLit", "BigFpMemLitOp", "")
+    iop = ArmInstObjParams("bigfpmemlit", "BigFpMemLit", "BigFpMemLitOp", "")
     header_output += BigFpMemLitDeclare.subst(iop)
     decoder_output += BigFpMemLitConstructor.subst(iop)
 
-    iop = InstObjParams("vldmult", "VldMult", 'VldMultOp', "", [])
+    iop = ArmInstObjParams("vldmult", "VldMult", 'VldMultOp', "", [])
     header_output += VMemMultDeclare.subst(iop)
     decoder_output += VMemMultConstructor.subst(iop)
 
-    iop = InstObjParams("vldsingle", "VldSingle", 'VldSingleOp', "", [])
+    iop = ArmInstObjParams("vldsingle", "VldSingle", 'VldSingleOp', "", [])
     header_output += VMemSingleDeclare.subst(iop)
     decoder_output += VMemSingleConstructor.subst(iop)
 
-    iop = InstObjParams("vstmult", "VstMult", 'VstMultOp', "", [])
+    iop = ArmInstObjParams("vstmult", "VstMult", 'VstMultOp', "", [])
     header_output += VMemMultDeclare.subst(iop)
     decoder_output += VMemMultConstructor.subst(iop)
 
-    iop = InstObjParams("vstsingle", "VstSingle", 'VstSingleOp', "", [])
+    iop = ArmInstObjParams("vstsingle", "VstSingle", 'VstSingleOp', "", [])
     header_output += VMemSingleDeclare.subst(iop)
     decoder_output += VMemSingleConstructor.subst(iop)
 
-    vfpIop = InstObjParams("vldmstm", "VLdmStm", 'MacroVFPMemOp', "", [])
+    vfpIop = ArmInstObjParams("vldmstm", "VLdmStm", 'MacroVFPMemOp', "", [])
     header_output += MacroVFPMemDeclare.subst(vfpIop)
     decoder_output += MacroVFPMemConstructor.subst(vfpIop)
 }};

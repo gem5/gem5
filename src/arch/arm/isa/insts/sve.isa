@@ -1263,8 +1263,8 @@ let {{
             %(op)s
             AA64FpDest_x[i] = destElem;
         }''' % {'op': op}
-        iop = InstObjParams(name, 'Sve' + Name, 'SveAdrOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveAdrOp',
+                               {'code': code, 'op_class': opClass}, [])
         header_output += SveAdrOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in types:
@@ -1301,7 +1301,7 @@ let {{
         CondCodesC = !last;
         CondCodesV = false;
         '''%{'op': op, 'stype': srcType}
-        iop = InstObjParams(name, 'Sve' + Name, 'SveWhileOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveWhileOp',
                 {'code': code, 'op_class': opClass, 'srcIs32b': srcSize}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         header_output += SveWhileOpDeclare.subst(iop)
@@ -1326,7 +1326,7 @@ let {{
             CondCodesV = !CondCodesC;
         }
         ''' % {'op': op}
-        iop = InstObjParams(name, 'Sve' + Name, 'SveCompTermOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveCompTermOp',
                 {'code': code, 'op_class': opClass}, [])
         header_output += SveCompTermOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
@@ -1361,7 +1361,7 @@ let {{
         else:
             code += '''
         %(op)s''' % {'op': op}
-        iop = InstObjParams(name, 'Sve' + Name, 'SvePredCountOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SvePredCountOp',
                 {'code': code, 'op_class': opClass, 'srcIs32b': srcSize,
                  'destIsVec': destType}, [])
         header_output += SvePredCountOpDeclare.subst(iop)
@@ -1384,8 +1384,8 @@ let {{
         }
         XDest = count;
         '''
-        iop = InstObjParams(name, 'Sve' + Name, 'SvePredCountPredOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SvePredCountPredOp',
+                               {'code': code, 'op_class': opClass}, [])
         header_output += SvePredCountPredOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in types:
@@ -1414,7 +1414,7 @@ let {{
         for (unsigned i = 0; i < eCount; i++) {
             AA64FpDest_x[i] = srcElem1 + i * srcElem2;
         }'''
-        iop = InstObjParams('index', 'SveIndex'+fmt, 'SveIndex'+fmt+'Op',
+        iop = ArmInstObjParams('index', 'SveIndex'+fmt, 'SveIndex'+fmt+'Op',
             {'code': code, 'op_class': 'SimdAluOp'})
         if fmt == IndexFormat.ImmImm:
             header_output += SveIndexIIOpDeclare.subst(iop)
@@ -1456,10 +1456,10 @@ let {{
         code += '''
             AA64FpDest_xd[i] = destElem;
         }'''
-        iop = InstObjParams(name, 'Sve' + Name,
-                            'SveUnaryPredOp' if predType != PredType.NONE
-                            else 'SveUnaryUnpredOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name,
+                               'SveUnaryPredOp' if predType != PredType.NONE
+                               else 'SveUnaryUnpredOp',
+                               {'code': code, 'op_class': opClass}, [])
         if predType != PredType.NONE:
             header_output += SveWideningUnaryPredOpDeclare.subst(iop)
         else:
@@ -1499,10 +1499,10 @@ let {{
         code += '''
             AA64FpDest_x[i] = destElem;
         }'''
-        iop = InstObjParams(name, 'Sve' + Name,
-                            'SveUnaryPredOp' if predType != PredType.NONE
-                            else 'SveUnaryUnpredOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name,
+                               'SveUnaryPredOp' if predType != PredType.NONE
+                               else 'SveUnaryUnpredOp',
+                               {'code': code, 'op_class': opClass}, [])
         if predType != PredType.NONE:
             header_output += SveUnaryPredOpDeclare.subst(iop)
         else:
@@ -1559,8 +1559,8 @@ let {{
                'assign': assign_code
                }
 
-        iop = InstObjParams(name, 'Sve' + Name, 'SveUnaryPredOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveUnaryPredOp',
+                               {'code': code, 'op_class': opClass}, [])
         header_output += SveWideningUnaryPredOpDeclare.subst(iop)
         exec_output += SveWideningOpExecute.subst(iop)
         for type in types:
@@ -1590,8 +1590,8 @@ let {{
         }
         AA64FpDest_x[0] = destElem;
         ''' % {'op': op, 'identity': identity}
-        iop = InstObjParams(name, 'Sve' + Name, 'SveReducOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveReducOp',
+                               {'code': code, 'op_class': opClass}, [])
         header_output += SveReducOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in types:
@@ -1620,8 +1620,8 @@ let {{
             AA64FpDest_xd[i] = 0;
         }
         ''' % {'op': op, 'identity': identity}
-        iop = InstObjParams(name, 'Sve' + Name, 'SveReducOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveReducOp',
+                               {'code': code, 'op_class': opClass}, [])
         header_output += SveWideningReducOpDeclare.subst(iop)
         exec_output += SveWideningOpExecute.subst(iop)
         for type in types:
@@ -1669,8 +1669,8 @@ let {{
             AA64FpDest_x[i] = 0;  // zero upper part
         }
         ''' % {'op': op, 'identity': identity}
-        iop = InstObjParams(name, 'Sve' + Name, 'SveReducOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveReducOp',
+                               {'code': code, 'op_class': opClass}, [])
         header_output += SveReducOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in types:
@@ -1711,7 +1711,7 @@ let {{
         code += '''
             AA64FpDest_x[i] = destElem;
         }'''
-        iop = InstObjParams(name, 'Sve' + Name,
+        iop = ArmInstObjParams(name, 'Sve' + Name,
                 'SveBinImmPredOp' if predType != PredType.NONE
                 else 'SveBinImmUnpredConstrOp',
                 {'code': code, 'op_class': opClass}, [])
@@ -1759,7 +1759,7 @@ let {{
         code += '''
             AA64FpDest_x[i] = destElem;
         }'''
-        iop = InstObjParams(name, 'Sve' + Name,
+        iop = ArmInstObjParams(name, 'Sve' + Name,
                 'Sve%sWideImm%sOp' % (
                     'Unary' if isUnary else 'Bin',
                     'Unpred' if predType == PredType.NONE else 'Pred'),
@@ -1812,10 +1812,10 @@ let {{
         code += '''
             AA64FpDest_x[i] = destElem;
         }'''
-        iop = InstObjParams(name, 'Sve' + Name,
-                            'SveBinDestrPredOp' if predType != PredType.NONE
-                            else 'SveBinUnpredOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name,
+                               'SveBinDestrPredOp' if predType != PredType.NONE
+                               else 'SveBinUnpredOp',
+                               {'code': code, 'op_class': opClass}, [])
         if predType != PredType.NONE:
             header_output += SveBinDestrPredOpDeclare.subst(iop)
         else:
@@ -1857,8 +1857,8 @@ let {{
 
         baseClass = 'SveBinIdxUnpredOp'
 
-        iop = InstObjParams(name, 'Sve' + Name, baseClass,
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, baseClass,
+                               {'code': code, 'op_class': opClass}, [])
         header_output += SveBinIdxUnpredOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in types:
@@ -1913,8 +1913,8 @@ let {{
             baseClass = 'SveBinDestrPredOp'
         else:
             baseClass = 'SveBinConstrPredOp'
-        iop = InstObjParams(name, 'Sve' + Name, baseClass,
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, baseClass,
+                               {'code': code, 'op_class': opClass}, [])
         if predType == PredType.NONE:
             header_output += SveBinUnpredOpDeclare.subst(iop)
         elif isDestructive:
@@ -1963,8 +1963,8 @@ let {{
         CondCodesV = 0;'''
             extraPrologCode += '''
         auto& destPred = PDest;'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SvePredLogicalOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SvePredLogicalOp',
+                               {'code': code, 'op_class': opClass}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         header_output += SvePredLogicalOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
@@ -1981,8 +1981,8 @@ let {{
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());'''
         code += iterCode
-        iop = InstObjParams(name, 'Sve' + Name, 'SvePredBinPermOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SvePredBinPermOp',
+                               {'code': code, 'op_class': opClass}, [])
         header_output += SveBinUnpredOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in types:
@@ -2018,9 +2018,9 @@ let {{
         }''' % {'op': op,
                 'src_elem_2_ty': 'Element' if isImm else 'const Element&',
                 'src_elem_2': 'imm' if isImm else 'AA64FpOp2_x[i]'}
-        iop = InstObjParams(name, 'Sve' + Name,
-                            'SveCmpImmOp' if isImm else 'SveCmpOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name,
+                               'SveCmpImmOp' if isImm else 'SveCmpOp',
+                               {'code': code, 'op_class': opClass}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         if isImm:
             header_output += SveCmpImmOpDeclare.subst(iop)
@@ -2048,8 +2048,8 @@ let {{
             }
             AA64FpDest_x[i] = destElem;
         }''' % {'op': op}
-        iop = InstObjParams(name, 'Sve' + Name, 'SveTerPredOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveTerPredOp',
+                               {'code': code, 'op_class': opClass}, [])
         header_output += SveTerPredOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in types:
@@ -2086,8 +2086,8 @@ let {{
             AA64FpDest_x[i] = auxDest[i];
         }''' % {'op': op}
 
-        iop = InstObjParams(name, 'Sve' + Name, 'SveBinIdxUnpredOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveBinIdxUnpredOp',
+                               {'code': code, 'op_class': opClass}, [])
         header_output += SveBinIdxUnpredOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in types:
@@ -2109,8 +2109,8 @@ let {{
             %(op)s
             AA64FpDest_x[i] = destElem;
         }''' % {'op': op}
-        iop = InstObjParams(name, 'Sve' + Name, 'SveTerImmUnpredOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveTerImmUnpredOp',
+                               {'code': code, 'op_class': opClass}, [])
         header_output += SveTerImmUnpredOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in types:
@@ -2138,8 +2138,8 @@ let {{
                       destPred.noneActive(destPred, eCount);
         CondCodesC = !destPred.lastActive(destPred, eCount);
         CondCodesV = 0;'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SvePtrueOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SvePtrueOp',
+                               {'code': code, 'op_class': opClass}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         header_output += SvePtrueOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
@@ -2186,8 +2186,8 @@ let {{
                 'op2Suffix': op2Suffix,
                 'op2Index': '(i * sizeof(Element)) / 8' if wideop else 'i'
                 }
-        iop = InstObjParams(name, 'Sve' + Name, 'SveIntCmpOp',
-                            {
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveIntCmpOp',
+                               {
                                 'code': code,
                                 'op_class': opClass,
                                 'op2IsWide': 'true' if wideop else 'false',
@@ -2226,8 +2226,8 @@ let {{
                       destPred.noneActive(tmpPred, eCount);
         CondCodesC = !destPred.lastActive(tmpPred, eCount);
         CondCodesV = 0;'''%{'op': op}
-        iop = InstObjParams(name, 'Sve' + Name, 'SveIntCmpImmOp',
-                            {'code': code, 'op_class': opClass,}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveIntCmpImmOp',
+                               {'code': code, 'op_class': opClass,}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         header_output += SveIntCmpImmOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
@@ -2274,7 +2274,7 @@ let {{
         %(op)s;
         XDest = destElem;
         '''%{'op': op, 'dstType': dstType}
-        iop = InstObjParams(name, 'Sve' + Name, 'SveElemCountOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveElemCountOp',
                 {'code': code, 'op_class': opClass, 'dstIsVec': destType,
                  'dstIs32b': 'true' if dstIs32b else 'false'}, [])
         header_output += SveElemCountOpDeclare.subst(iop)
@@ -2328,10 +2328,11 @@ let {{
         CondCodesV = 0;'''
             extraPrologCode += '''
         auto& destPred = PDest;'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SvePartBrkOp',
-                            {'code': code, 'op_class': opClass,
-                            'isMerging': 'true' if predType == PredType.MERGE
-                                                else 'false'}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SvePartBrkOp',
+                               {'code': code, 'op_class': opClass,
+                                'isMerging':
+                                    'true' if predType == PredType.MERGE
+                                           else 'false'}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         header_output += SvePartBrkOpDeclare.subst(iop)
         exec_output += SveNonTemplatedOpExecute.subst(iop)
@@ -2372,8 +2373,8 @@ let {{
         CondCodesV = 0;'''
             extraPrologCode += '''
         auto& destPred = PDest;'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SvePartBrkPropOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SvePartBrkPropOp',
+                               {'code': code, 'op_class': opClass}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         header_output += SvePartBrkPropOpDeclare.subst(iop)
         exec_output += SveNonTemplatedOpExecute.subst(iop)
@@ -2406,8 +2407,8 @@ let {{
         CondCodesV = 0;'''
             extraPrologCode += '''
         auto& destPred = PDest;'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SvePartBrkPropOp',
-                            {'code': code, 'op_class': opClass}, [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SvePartBrkPropOp',
+                               {'code': code, 'op_class': opClass}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         header_output += SvePartBrkPropOpDeclare.subst(iop)
         exec_output += SveNonTemplatedOpExecute.subst(iop)
@@ -2467,15 +2468,15 @@ let {{
                     AA64FpDest_x[i] = (Element)0x0;
                 }
                 '''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveSelectOp',
-                            {'code': code, 'op_class': opClass,
-                             'isCond': 'true' if isCond else 'false',
-                             'isScalar': 'true'
-                             if destType == DstRegType.Scalar else 'false',
-                             'isSimdFp': 'true'
-                             if destType == DstRegType.SimdFpScalar
-                             else 'false'},
-                            [])
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveSelectOp',
+                               {'code': code, 'op_class': opClass,
+                                'isCond': 'true' if isCond else 'false',
+                                'isScalar': 'true'
+                                if destType == DstRegType.Scalar else 'false',
+                                'isSimdFp': 'true'
+                                if destType == DstRegType.SimdFpScalar
+                                else 'false'},
+                               [])
         header_output += SveSelectOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in types:
@@ -2515,7 +2516,7 @@ let {{
         CondCodesV = 0;'''
         extraPrologCode = '''
         auto& destPred = PDest;'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveUnaryPredPredOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveUnaryPredPredOp',
                 {'code': code, 'op_class': opClass}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         header_output += SveUnaryPredOpDeclare.subst(iop)
@@ -2554,7 +2555,7 @@ let {{
         CondCodesV = 0;'''
         extraPrologCode = '''
         auto& destPred = PDest;'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveUnaryPredPredOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveUnaryPredPredOp',
                 {'code': code, 'op_class': opClass}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         header_output += SveUnaryPredOpDeclare.subst(iop)
@@ -2579,7 +2580,7 @@ let {{
             }
             AA64FpDest_x[i] = val;
         }'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveTblOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveTblOp',
                 {'code': code, 'op_class': opClass}, [])
         header_output += SveBinUnpredOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
@@ -2636,7 +2637,7 @@ let {{
         code += '''
         }
         '''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveUnpackOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveUnpackOp',
                 {'code': code, 'op_class': opClass}, [])
         if regType == SrcRegType.Predicate:
             iop.snippets['code'] = extraPrologCode + iop.snippets['code']
@@ -2657,7 +2658,7 @@ let {{
                        POp1_ub.noneActive(GpOp_ub, eCount);
         CondCodesC = !POp1_ub.lastActive(GpOp_ub, eCount);
         CondCodesV = 0;'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SvePredTestOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SvePredTestOp',
                 {'code': code, 'op_class': opClass}, [])
         header_output += SvePredicateTestOpDeclare.subst(iop)
         exec_output += SveNonTemplatedOpExecute.subst(iop)
@@ -2681,7 +2682,7 @@ let {{
                 x++;
             }
         }'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveUnaryPredOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveUnaryPredOp',
                 {'code': code, 'op_class': opClass}, [])
         header_output += SveUnaryPredOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
@@ -2705,7 +2706,7 @@ let {{
         M5_VAR_USED auto& destPred = PDest;'''
         baseClass = ('SvePredUnaryWImplicitSrcOp' if predType == PredType.NONE
                      else 'SvePredUnaryWImplicitSrcPredOp')
-        iop = InstObjParams(name, 'Sve' + Name, baseClass,
+        iop = ArmInstObjParams(name, 'Sve' + Name, baseClass,
                 {'code': code, 'op_class': opClass}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         if predType == PredType.NONE:
@@ -2724,7 +2725,7 @@ let {{
         M5_VAR_USED auto& destPred = Ffr;'''
         baseClass = ('SveWImplicitSrcDstOp' if isSetFfr
                      else 'SvePredUnaryWImplicitDstOp')
-        iop = InstObjParams(name, 'Sve' + Name, baseClass,
+        iop = ArmInstObjParams(name, 'Sve' + Name, baseClass,
                 {'code': code, 'op_class': opClass}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         if isSetFfr:
@@ -2755,7 +2756,7 @@ let {{
                 AA64FpDest_x[i] = auxOp1[pos-eCount];
         }
         '''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveBinImmUnpredDestrOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveBinImmUnpredDestrOp',
                 {'code': code, 'op_class': opClass}, [])
         header_output += SveBinImmUnpredOpDeclare.subst(iop);
         exec_output += SveOpExecute.subst(iop)
@@ -2791,7 +2792,7 @@ let {{
             AA64FpDest_x[i] = auxDest[i];
         }
         '''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveBinDestrPredOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveBinDestrPredOp',
                 {'code': code, 'op_class': opClass}, [])
         header_output += SveBinDestrPredOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
@@ -2812,7 +2813,7 @@ let {{
         for (int i = 0; i < eCount; ++i) {
             AA64FpDest_x[i] = srcElem1;
         }'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveBinImmIdxUnpredOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveBinImmIdxUnpredOp',
                 {'code': code, 'op_class': opClass}, [])
         header_output += SveBinImmUnpredOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
@@ -2856,7 +2857,7 @@ let {{
             destPred.set_raw(i, auxPOp1.get_raw(eCount - i - 1));'''
         code += '''
         }'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveUnaryUnpredOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveUnaryUnpredOp',
                 {'code': code, 'op_class': opClass}, [])
         if srcType == SrcRegType.Predicate:
             iop.snippets['code'] = extraPrologCode + iop.snippets['code']
@@ -2885,7 +2886,7 @@ let {{
             AA64FpDest_x[i] = AA64FpDestMerge_x[i-1];
         }
         AA64FpDest_x[0] = srcElem1;'''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveUnarySca2VecUnpredOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveUnarySca2VecUnpredOp',
                 {'code': code, 'op_class': opClass,
                  'isSimdFp': 'true' if srcType == SrcRegType.SimdFpScalar
                                   else 'false'}, [])
@@ -2922,7 +2923,7 @@ let {{
             }
             AA64FpDestMerge_xd[i] = res;
         }'''
-        iop = InstObjParams(name, 'Sve' + Name,
+        iop = ArmInstObjParams(name, 'Sve' + Name,
                 'SveDotProdIdxOp' if isIndexed else
                 'SveDotProdOp',
                 {'code': code, 'op_class': opClass}, [])
@@ -2954,7 +2955,7 @@ let {{
             AA64FpDest_x[i] = 0;
         }
         AA64FpDest_x[0] = destElem;'''%{'op': op}
-        iop = InstObjParams(name, 'Sve' + Name, 'SveOrdReducOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveOrdReducOp',
                 {'code': code, 'op_class': opClass}, [])
         header_output += SveReducOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
@@ -3001,7 +3002,7 @@ let {{
             AA64FpDest_x[2 * i + 1] = acc_i;
         }
         '''
-        iop = InstObjParams(name, 'Sve' + Name, 'SveComplexOp',
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveComplexOp',
                 {'code': code, 'op_class': opClass}, [])
         header_output += SveComplexOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
@@ -3081,7 +3082,7 @@ let {{
             AA64FpDest_x[i] = auxDest[i];
         }
         '''
-        iop = InstObjParams(name, 'Sve' + Name,
+        iop = ArmInstObjParams(name, 'Sve' + Name,
                 'SveComplexIdxOp' if predType == PredType.NONE
                                   else 'SveComplexOp',
                 {'code': code, 'op_class': opClass}, [])
@@ -4117,7 +4118,7 @@ let {{
                 xc->tcBase());
         XDest = eCount * (int64_t) imm;
     '''
-    rdvlIop = InstObjParams('rdvl', 'SveRdvl', 'RegImmOp', rdvlCode, [])
+    rdvlIop = ArmInstObjParams('rdvl', 'SveRdvl', 'RegImmOp', rdvlCode, [])
     header_output += RegImmOpDeclare.subst(rdvlIop)
     decoder_output += RegImmOpConstructor.subst(rdvlIop)
     exec_output += BasicExecute.subst(rdvlIop)

@@ -141,18 +141,16 @@ def format DataOp(code, flagtype = logic) {{
     immCode = '''uint32_t op2 = shift_rm_imm(Rm, shift_size,
                                              shift, OptShiftRmCondCodesC);
                  op2 = op2;''' + code
-    regIop = InstObjParams(name, Name, 'PredIntOp',
-                           {"code": regCode,
-                            "predicate_test": pickPredicate(regCode)})
-    immIop = InstObjParams(name, Name + "Imm", 'PredIntOp',
-                           {"code": immCode,
-                            "predicate_test": pickPredicate(imm)})
-    regCcIop = InstObjParams(name, Name + "Cc", 'PredIntOp',
-                         {"code": regCode + regCcCode,
-                          "predicate_test": pickPredicate(regCode + regCcCode)})
-    immCcIop = InstObjParams(name, Name + "ImmCc", 'PredIntOp',
-                         {"code": immCode + immCcCode,
-                          "predicate_test": pickPredicate(immCode + immCcCode)})
+    regIop = ArmInstObjParams(name, Name, 'PredIntOp',
+            { "code" : regCode, "predicate_test" : pickPredicate(regCode) })
+    immIop = ArmInstObjParams(name, Name + "Imm", 'PredIntOp',
+            { "code" : immCode, "predicate_test" : pickPredicate(imm) })
+    regCcIop = ArmInstObjParams(name, Name + "Cc", 'PredIntOp',
+            { "code" : regCode + regCcCode,
+              "predicate_test" : pickPredicate(regCode + regCcCode) })
+    immCcIop = ArmInstObjParams(name, Name + "ImmCc", 'PredIntOp',
+            { "code" : immCode + immCcCode,
+              "predicate_test" : pickPredicate(immCode + immCcCode) })
     header_output = BasicDeclare.subst(regIop) + \
                     BasicDeclare.subst(immIop) + \
                     BasicDeclare.subst(regCcIop) + \
@@ -170,12 +168,12 @@ def format DataOp(code, flagtype = logic) {{
 
 def format DataImmOp(code, flagtype = logic) {{
     code += "resTemp = resTemp;"
-    iop = InstObjParams(name, Name, 'PredImmOp',
-                        {"code": code,
-                         "predicate_test": pickPredicate(code)})
-    ccIop = InstObjParams(name, Name + "Cc", 'PredImmOp',
-              {"code": code + getImmCcCode(flagtype),
-               "predicate_test": pickPredicate(code + getImmCcCode(flagtype))})
+    iop = ArmInstObjParams(name, Name, 'PredImmOp',
+            { "code" : code, "predicate_test" : pickPredicate(code) })
+    ccIop = ArmInstObjParams(name, Name + "Cc", 'PredImmOp',
+            { "code" : code + getImmCcCode(flagtype),
+              "predicate_test" :
+                  pickPredicate(code + getImmCcCode(flagtype)) })
     header_output = BasicDeclare.subst(iop) + \
                     BasicDeclare.subst(ccIop)
     decoder_output = BasicConstructor.subst(iop) + \
@@ -186,10 +184,9 @@ def format DataImmOp(code, flagtype = logic) {{
 }};
 
 def format PredOp(code, *opt_flags) {{
-    iop = InstObjParams(name, Name, 'PredOp',
-                        {"code": code,
-                         "predicate_test": pickPredicate(code)},
-                        opt_flags)
+    iop = ArmInstObjParams(name, Name, 'PredOp',
+            { "code" : code, "predicate_test" : pickPredicate(code) },
+            opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -197,10 +194,9 @@ def format PredOp(code, *opt_flags) {{
 }};
 
 def format PredImmOp(code, *opt_flags) {{
-    iop = InstObjParams(name, Name, 'PredImmOp',
-                        {"code": code,
-                         "predicate_test": pickPredicate(code)},
-                        opt_flags)
+    iop = ArmInstObjParams(name, Name, 'PredImmOp',
+            { "code" : code, "predicate_test": pickPredicate(code) },
+            opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)

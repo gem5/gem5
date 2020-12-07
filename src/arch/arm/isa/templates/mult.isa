@@ -38,6 +38,9 @@
 def template Mult3Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _reg0,
@@ -52,6 +55,7 @@ def template Mult3Constructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _reg0, _reg1, _reg2)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -64,6 +68,9 @@ def template Mult3Constructor {{
 def template Mult4Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
@@ -80,6 +87,7 @@ def template Mult4Constructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _reg0, _reg1, _reg2, _reg3)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {

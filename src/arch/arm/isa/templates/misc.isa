@@ -38,6 +38,9 @@
 def template MrsDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest);
@@ -49,6 +52,7 @@ def template MrsConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -61,6 +65,9 @@ def template MrsConstructor {{
 def template MrsBankedRegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     uint8_t byteMask;
     bool r;
@@ -79,6 +86,7 @@ def template MrsBankedRegConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest),
         byteMask(_sysM), r(_r)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -91,6 +99,9 @@ def template MrsBankedRegConstructor {{
 def template MsrBankedRegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     bool r;
 
@@ -108,6 +119,7 @@ def template MsrBankedRegConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, _sysM),
         r(_r)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -120,6 +132,9 @@ def template MsrBankedRegConstructor {{
 def template MsrRegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, uint8_t mask);
@@ -132,6 +147,7 @@ def template MsrRegConstructor {{
                                    uint8_t mask) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, mask)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -144,6 +160,9 @@ def template MsrRegConstructor {{
 def template MsrImmDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, uint32_t imm, uint8_t mask);
@@ -156,6 +175,7 @@ def template MsrImmConstructor {{
                                    uint8_t mask) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, imm, mask)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -168,6 +188,9 @@ def template MsrImmConstructor {{
 def template MrrcOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, MiscRegIndex _op1,
@@ -183,6 +206,7 @@ def template MrrcOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, op1, dest,
                        dest2, imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -195,6 +219,9 @@ def template MrrcOpConstructor {{
 def template McrrOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, IntRegIndex _op2,
@@ -210,6 +237,7 @@ def template McrrOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, op1, op2,
                        dest, imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -222,6 +250,9 @@ def template McrrOpConstructor {{
 def template ImmOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, uint64_t _imm);
@@ -233,6 +264,7 @@ def template ImmOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -245,6 +277,9 @@ def template ImmOpConstructor {{
 def template RegImmOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm);
@@ -257,6 +292,7 @@ def template RegImmOpConstructor {{
             IntRegIndex _dest, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -269,6 +305,9 @@ def template RegImmOpConstructor {{
 def template RegRegOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1);
@@ -281,6 +320,7 @@ def template RegRegOpConstructor {{
                                    IntRegIndex _dest, IntRegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -293,6 +333,9 @@ def template RegRegOpConstructor {{
 def template RegRegRegImmOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
@@ -308,6 +351,7 @@ def template RegRegRegImmOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -320,6 +364,9 @@ def template RegRegRegImmOpConstructor {{
 def template RegRegRegRegOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
@@ -335,6 +382,7 @@ def template RegRegRegRegOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _op3)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -347,6 +395,9 @@ def template RegRegRegRegOpConstructor {{
 def template RegRegRegOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
@@ -361,6 +412,7 @@ def template RegRegRegOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -373,6 +425,9 @@ def template RegRegRegOpConstructor {{
 def template RegRegImmOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1,
@@ -387,6 +442,7 @@ def template RegRegImmOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -399,6 +455,9 @@ def template RegRegImmOpConstructor {{
 def template MiscRegRegImmOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest, IntRegIndex _op1,
@@ -413,6 +472,7 @@ def template MiscRegRegImmOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -425,6 +485,9 @@ def template MiscRegRegImmOpConstructor {{
 def template RegMiscRegImmOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, MiscRegIndex _op1,
@@ -439,6 +502,7 @@ def template RegMiscRegImmOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -451,6 +515,9 @@ def template RegMiscRegImmOpConstructor {{
 def template RegImmImmOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
@@ -465,6 +532,7 @@ def template RegImmImmOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _imm1, _imm2)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -477,6 +545,9 @@ def template RegImmImmOpConstructor {{
 def template RegRegImmImmOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1,
@@ -492,6 +563,7 @@ def template RegRegImmImmOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm1, _imm2)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -504,6 +576,9 @@ def template RegRegImmImmOpConstructor {{
 def template RegImmRegOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
@@ -518,6 +593,7 @@ def template RegImmRegOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _imm, _op1)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -530,6 +606,9 @@ def template RegImmRegOpConstructor {{
 def template RegImmRegShiftOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm,
@@ -547,6 +626,7 @@ def template RegImmRegShiftOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _imm, _op1, _shiftAmt, _shiftType)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -559,6 +639,9 @@ def template RegImmRegShiftOpConstructor {{
 def template MiscRegRegImmMemOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         // Constructor
         %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,

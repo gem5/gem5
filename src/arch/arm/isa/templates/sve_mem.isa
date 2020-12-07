@@ -36,6 +36,9 @@
 def template SveMemFillSpillOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       protected:
         typedef uint8_t TPElem;
         typedef uint8_t RegElemType;
@@ -47,6 +50,7 @@ def template SveMemFillSpillOpDeclare {{
             %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                 _dest, _base, _imm)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
         }
 
@@ -67,6 +71,9 @@ def template SveContigMemSSOpDeclare {{
     %(tpl_header)s
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       protected:
         typedef RegElemType TPElem;
 
@@ -77,6 +84,7 @@ def template SveContigMemSSOpDeclare {{
             %(base_class)s(mnem, machInst, %(op_class)s,
                     _dest, _gp, _base, _offset)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
         }
 
@@ -97,6 +105,9 @@ def template SveContigMemSIOpDeclare {{
     %(tpl_header)s
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       protected:
         typedef RegElemType TPElem;
 
@@ -107,6 +118,7 @@ def template SveContigMemSIOpDeclare {{
             %(base_class)s(mnem, machInst, %(op_class)s,
                     _dest, _gp, _base, _imm)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
         }
 
@@ -400,6 +412,9 @@ def template SveIndexedMemVIMicroopDeclare {{
     %(tpl_header)s
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       protected:
         typedef RegElemType TPElem;
 
@@ -425,6 +440,7 @@ def template SveIndexedMemVIMicroopDeclare {{
             firstFault(_firstFault),
             memAccessFlags(ArmISA::TLB::AllowUnaligned)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
             if (_opClass == MemReadOp && elemIndex == 0) {
                 // The first micro-op is responsible for pinning the
@@ -478,6 +494,9 @@ def template SveIndexedMemSVMicroopDeclare {{
     %(tpl_header)s
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       protected:
         typedef RegElemType TPElem;
 
@@ -509,6 +528,7 @@ def template SveIndexedMemSVMicroopDeclare {{
             numElems(_numElems), firstFault(_firstFault),
             memAccessFlags(ArmISA::TLB::AllowUnaligned)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
             if (_opClass == MemReadOp && elemIndex == 0) {
                 // The first micro-op is responsible for pinning the
@@ -755,11 +775,14 @@ def template SveFirstFaultWritebackMicroopDeclare {{
         StaticInst *macroOp;
 
       public:
+        %(reg_idx_arr_decl)s;
+
         SveFirstFaultWritebackMicroop(const char* mnem, ExtMachInst machInst,
                 OpClass __opClass, int _numElems, StaticInst *_macroOp) :
             MicroOp(mnem, machInst, __opClass),
             numElems(_numElems), macroOp(_macroOp)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
         }
 
@@ -807,6 +830,9 @@ def template SveFirstFaultWritebackMicroopExecute {{
 def template SveGatherLoadCpySrcVecMicroopDeclare {{
     class SveGatherLoadCpySrcVecMicroop : public MicroOp
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       protected:
         IntRegIndex op1;
 
@@ -817,6 +843,7 @@ def template SveGatherLoadCpySrcVecMicroopDeclare {{
                 IntRegIndex _op1, StaticInst *_macroOp) :
             MicroOp(mnem, machInst, SimdAluOp), op1(_op1), macroOp(_macroOp)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
         }
 
@@ -856,6 +883,9 @@ def template SveStructMemSIMicroopDeclare {{
     template<class _Element>
     class %(class_name)s : public %(base_class)s
     {
+      public:
+        %(reg_idx_arr_decl)s;
+
       protected:
         typedef _Element Element;
         typedef _Element TPElem;
@@ -1129,6 +1159,9 @@ def template SveStructMemSSMicroopDeclare {{
     template <class _Element>
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       protected:
         typedef _Element Element;
         typedef _Element TPElem;
@@ -1154,6 +1187,7 @@ def template SveStructMemSSMicroopDeclare {{
             numRegs(_numRegs), regIndex(_regIndex),
             memAccessFlags(ArmISA::TLB::AllowUnaligned)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
             baseIsSP = isSP(_base);
         }
@@ -1212,6 +1246,9 @@ def template SveIntrlvMicroopDeclare {{
     template <class _Element>
     class %(class_name)s: public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       protected:
         typedef _Element Element;
         typedef _Element TPElem;
@@ -1229,6 +1266,7 @@ def template SveIntrlvMicroopDeclare {{
             MicroOp(mnem, machInst, SimdAluOp), dest(_dest), op1(_op1),
             numRegs(_numRegs), regIndex(_regIndex), macroOp(_macroOp)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
         }
 
@@ -1250,6 +1288,9 @@ def template SveDeIntrlvMicroopDeclare {{
     template <class _Element>
     class %(class_name)s : public %(base_class)s
     {
+      public:
+        %(reg_idx_arr_decl)s;
+
       protected:
         typedef _Element Element;
         typedef _Element TPElem;
@@ -1266,6 +1307,7 @@ def template SveDeIntrlvMicroopDeclare {{
             MicroOp(mnem, machInst, SimdAluOp), dest(_dest),
             numRegs(_numRegs), regIndex(_regIndex), macroOp(_macroOp)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
         }
 

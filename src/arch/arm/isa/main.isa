@@ -54,6 +54,8 @@
 //
 namespace ArmISA;
 
+##include "arminstobjparams.isa"
+
 //Include the bitfield definitions
 ##include "bitfields.isa"
 

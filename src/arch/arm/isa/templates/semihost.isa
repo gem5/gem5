@@ -51,6 +51,7 @@ def template SemihostConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -74,6 +75,7 @@ def template SemihostConstructor64 {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
 
         // In AArch64 there is only one instruction for issuing

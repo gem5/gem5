@@ -42,6 +42,7 @@ def template AA64FpRegRegOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                 _dest, _op1, mode)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -52,6 +53,7 @@ def template AA64FpRegImmOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                 _dest, _imm, mode)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -63,6 +65,7 @@ def template AA64FpRegRegImmOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm, mode)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -74,6 +77,7 @@ def template AA64FpRegRegRegOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, mode)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -81,6 +85,9 @@ def template AA64FpRegRegRegOpConstructor {{
 def template AA64FpRegRegRegRegOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
@@ -97,6 +104,7 @@ def template AA64FpRegRegRegRegOpConstructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _op3, mode)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};

@@ -78,7 +78,7 @@ let {{
                                "op2": 'Op164',
                                "op":  opcode }
 
-        iop = InstObjParams(mnem, mnem, templateBase+"Op", code, optArgs)
+        iop = ArmInstObjParams(mnem, mnem, templateBase+"Op", code, optArgs)
         header_output += eval(templateBase + "Declare").subst(iop)
         decoder_output += eval(templateBase + "Constructor").subst(iop)
         exec_output += BasicExecute.subst(iop)
@@ -94,7 +94,7 @@ let {{
             """
         regoptype = 'RegOp'
 
-        iop = InstObjParams(mnem, mnem, regoptype, code, optArgs)
+        iop = ArmInstObjParams(mnem, mnem, regoptype, code, optArgs)
         header_output += eval(templateBase + "Declare").subst(iop)
         decoder_output += eval(templateBase + "Constructor").subst(iop)
         exec_output += BasicExecute.subst(iop)

@@ -134,11 +134,11 @@ let {{
                 eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX2RegImmOp" if byElem else "DataX2RegOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name,
+                               "DataX2RegImmOp" if byElem else "DataX2RegOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if byElem:
             header_output += NeonX2RegImmOpDeclare.subst(iop)
@@ -244,11 +244,11 @@ let {{
                     eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;''' % { "reg" : reg }
 
-        iop = InstObjParams(name, Name,
-                            "DataX2RegImmOp" if byElem else "DataX2RegOp",
-                            { "code": eWalkCode,
-                              "r_count": 2,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name,
+                               "DataX2RegImmOp" if byElem else "DataX2RegOp",
+                               { "code": eWalkCode,
+                                 "r_count": 2,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if byElem:
             header_output += NeonX2RegImmOpDeclare.subst(iop)
@@ -332,11 +332,11 @@ let {{
                 eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX1RegImmOp" if hasImm else "DataX1RegOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name,
+                               "DataX1RegImmOp" if hasImm else "DataX1RegOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if hasImm:
             header_output += NeonX1RegImmOpDeclare.subst(iop)
@@ -384,11 +384,11 @@ let {{
             eWalkCode += '''
         AA64FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX1RegImmOp" if hasImm else "DataX1RegOp",
-                            { "code": eWalkCode,
-                              "r_count": 2,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name,
+                               "DataX1RegImmOp" if hasImm else "DataX1RegOp",
+                               { "code": eWalkCode,
+                                 "r_count": 2,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if hasImm:
             header_output += NeonX1RegImmOpDeclare.subst(iop)
@@ -456,11 +456,11 @@ let {{
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
 
-        iop = InstObjParams(name, Name,
-                            "DataX1RegImmOp" if hasImm else "DataX1RegOp",
-                            { "code": eWalkCode,
-                              "r_count": 2,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name,
+                               "DataX1RegImmOp" if hasImm else "DataX1RegOp",
+                               { "code": eWalkCode,
+                                 "r_count": 2,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if hasImm:
             header_output += NeonX1RegImmOpDeclare.subst(iop)
@@ -492,11 +492,10 @@ let {{
                 eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX2RegOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name, "DataX2RegOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX2RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
@@ -528,11 +527,10 @@ let {{
             eWalkCode += '''
         AA64FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX1Reg2ImmOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name, "DataX1Reg2ImmOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1Reg2ImmOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
@@ -566,11 +564,10 @@ let {{
             eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX1RegOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name, "DataX1RegOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
@@ -613,11 +610,10 @@ let {{
             eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX1RegOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name, "DataX1RegOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         if long:
@@ -666,11 +662,10 @@ let {{
                 eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX1RegOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name, "DataX1RegOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         exec_output += NeonXUnequalRegOpExecute.subst(iop)
@@ -709,11 +704,10 @@ let {{
                 eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataXImmOnlyOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name, "DataXImmOnlyOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegImmOnlyOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
@@ -739,11 +733,10 @@ let {{
                 eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX1RegOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name, "DataX1RegOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
@@ -772,11 +765,10 @@ let {{
                 eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX2RegImmOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name, "DataX2RegImmOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX2RegImmOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
@@ -801,11 +793,10 @@ let {{
             eWalkCode += '''
         AA64FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX1RegImmOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name, "DataX1RegImmOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegImmOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
@@ -832,11 +823,10 @@ let {{
             eWalkCode += '''
         %sDest = srcReg.elements[imm];
         ''' % gprSpec
-        iop = InstObjParams(name, Name,
-                            "DataX1RegImmOp",
-                            { "code": eWalkCode,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name, "DataX1RegImmOp",
+                               { "code": eWalkCode,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         header_output += NeonX1RegImmOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -897,11 +887,10 @@ let {{
                 code += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
-        iop = InstObjParams(name, Name,
-                            "DataX2RegOp",
-                            { "code": code,
-                              "r_count": rCount,
-                              "op_class": opClass }, [])
+        iop = ArmInstObjParams(name, Name, "DataX2RegOp",
+                               { "code": code,
+                                 "r_count": rCount,
+                                 "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX2RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)

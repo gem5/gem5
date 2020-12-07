@@ -107,8 +107,8 @@ let {{
             if 'memacc_epilog_code' in codeBlobsCopy:
                 del codeBlobsCopy['memacc_epilog_code']
 
-            iop = InstObjParams(name, Name, base,
-                                codeBlobsCopy, instFlagsCopy)
+            iop = ArmInstObjParams(name, Name, base,
+                                   codeBlobsCopy, instFlagsCopy)
             if 'memacc_epilog_code' in codeBlobs:
                 iop.snippets['memacc_code'] += codeBlobs['memacc_epilog_code']
             header_output = self.declareTemplate.subst(iop)
@@ -118,16 +118,16 @@ let {{
                           self.completeAccTemplate.subst(iop)
 
             if wbDecl is not None or pcDecl is not None:
-                iop = InstObjParams(name, macroName, base,
-                                    { "wb_decl" : wbDecl,
-                                      "pc_decl" : pcDecl,
-                                      "acc_name" : Name,
-                                      "use_uops" : use_uops,
-                                      "use_pc" : use_pc,
-                                      "use_wb" : use_wb,
-                                      "fa_code" : '',
-                                      "is_ras_pop" : is_ras_pop },
-                                    ['IsMacroop'])
+                iop = ArmInstObjParams(name, macroName, base,
+                                       { "wb_decl" : wbDecl,
+                                         "pc_decl" : pcDecl,
+                                         "acc_name" : Name,
+                                         "use_uops" : use_uops,
+                                         "use_pc" : use_pc,
+                                         "use_wb" : use_wb,
+                                         "fa_code" : '',
+                                         "is_ras_pop" : is_ras_pop },
+                                       ['IsMacroop'])
                 header_output += self.declareTemplate.subst(iop)
                 decoder_output += self.constructTemplate.subst(iop)
                 exec_output += PanicExecute.subst(iop) + \

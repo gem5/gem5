@@ -130,11 +130,13 @@ let {{
                                      secondOpRe.sub(immOp2, vCode))
 
         immCode = secondOpRe.sub(immOp2, code)
-        immIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataImmOp",
+        immIop = ArmInstObjParams(mnem, mnem.capitalize() + suffix,
+                       "DataImmOp",
                        {"code" : immCode,
                         "is_branch" : isBranch,
                         "predicate_test": pickPredicate(immCode)}, instFlags)
-        immIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
+        immIopCc = ArmInstObjParams(mnem + "s",
+             mnem.capitalize() + suffix + "Cc",
              "DataImmOp",
              {"code" : immCode + immCcCode,
               "is_branch" : isBranch,
@@ -175,11 +177,13 @@ let {{
             regCode = re.sub('OptShiftRmCondCodesC', 'CondCodesC', regCode)
             regCcCode = re.sub('OptShiftRmCondCodesC', 'CondCodesC', regCcCode)
 
-        regIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataRegOp",
+        regIop = ArmInstObjParams(mnem, mnem.capitalize() + suffix,
+                       "DataRegOp",
                        {"code" : regCode, "is_ras_pop" : isRasPop,
                         "is_branch" : isBranch,
                         "predicate_test": pickPredicate(regCode)}, instFlags)
-        regIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
+        regIopCc = ArmInstObjParams(mnem + "s",
+                         mnem.capitalize() + suffix + "Cc",
                          "DataRegOp",
                          {"code" : regCode + regCcCode,
                           "predicate_test": pickPredicate(regCode + regCcCode),
@@ -215,11 +219,11 @@ let {{
                                         secondOpRe.sub(regRegOp2, vCode))
 
         regRegCode = secondOpRe.sub(regRegOp2, code)
-        regRegIop = InstObjParams(mnem, mnem.capitalize() + suffix,
+        regRegIop = ArmInstObjParams(mnem, mnem.capitalize() + suffix,
                           "DataRegRegOp",
                           {"code" : regRegCode,
                            "predicate_test": pickPredicate(regRegCode)})
-        regRegIopCc = InstObjParams(mnem + "s",
+        regRegIopCc = ArmInstObjParams(mnem + "s",
                 mnem.capitalize() + suffix + "Cc",
                 "DataRegRegOp",
                 {"code" : regRegCode + regRegCcCode,

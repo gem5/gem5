@@ -53,13 +53,13 @@ let {{
     }
     '''
 
-    svcIop = InstObjParams("svc", "Svc", "ImmOp",
-                           { "code": svcCode,
-                             "predicate_test": predicateTest,
-                             "thumb_semihost": '0xAB',
-                             "arm_semihost": '0x123456' },
-                           ["IsSyscall", "IsNonSpeculative",
-                            "IsSerializeAfter"])
+    svcIop = ArmInstObjParams("svc", "Svc", "ImmOp",
+                              { "code": svcCode,
+                                "predicate_test": predicateTest,
+                                "thumb_semihost": '0xAB',
+                                "arm_semihost": '0x123456' },
+                              ["IsSyscall", "IsNonSpeculative",
+                               "IsSerializeAfter"])
     header_output = ImmOpDeclare.subst(svcIop)
     decoder_output = SemihostConstructor.subst(svcIop)
     exec_output = PredOpExecute.subst(svcIop)
@@ -79,12 +79,12 @@ let {{
     }
     '''
 
-    hltIop = InstObjParams("hlt", "Hlt", "ImmOp",
-                           { "code": hltCode,
-                             "predicate_test": predicateTest,
-                             "thumb_semihost": '0x3C',
-                             "arm_semihost": '0xF000' },
-                           ["IsNonSpeculative", "IsSerializeAfter"])
+    hltIop = ArmInstObjParams("hlt", "Hlt", "ImmOp",
+                              { "code": hltCode,
+                                "predicate_test": predicateTest,
+                                "thumb_semihost": '0x3C',
+                                "arm_semihost": '0xF000' },
+                              ["IsNonSpeculative", "IsSerializeAfter"])
     header_output += ImmOpDeclare.subst(hltIop)
     decoder_output += SemihostConstructor.subst(hltIop)
     exec_output += PredOpExecute.subst(hltIop)
@@ -110,10 +110,10 @@ let {{
     }
     '''
 
-    smcIop = InstObjParams("smc", "Smc", "PredOp",
-                           { "code": smcCode,
-                             "predicate_test": predicateTest },
-                           ["IsNonSpeculative", "IsSerializeAfter"])
+    smcIop = ArmInstObjParams("smc", "Smc", "PredOp",
+                              { "code": smcCode,
+                                "predicate_test": predicateTest },
+                              ["IsNonSpeculative", "IsSerializeAfter"])
     header_output += BasicDeclare.subst(smcIop)
     decoder_output += BasicConstructor.subst(smcIop)
     exec_output += PredOpExecute.subst(smcIop)
@@ -134,10 +134,10 @@ let {{
     }
     '''
 
-    hvcIop = InstObjParams("hvc", "Hvc", "ImmOp",
-                           { "code": hvcCode,
-                             "predicate_test": predicateTest },
-                           ["IsNonSpeculative", "IsSerializeAfter"])
+    hvcIop = ArmInstObjParams("hvc", "Hvc", "ImmOp",
+                              { "code": hvcCode,
+                                "predicate_test": predicateTest },
+                              ["IsNonSpeculative", "IsSerializeAfter"])
     header_output += ImmOpDeclare.subst(hvcIop)
     decoder_output += ImmOpConstructor.subst(hvcIop)
     exec_output += PredOpExecute.subst(hvcIop)
@@ -172,11 +172,11 @@ let {{
         NPC = (old_cpsr.mode == MODE_HYP) ? ElrHyp : LR;
     '''
 
-    eretIop = InstObjParams("eret", "Eret", "PredOp",
-                           { "code": eretCode,
-                             "predicate_test": predicateTest },
-                           ["IsNonSpeculative", "IsSerializeAfter",
-                            "IsSquashAfter"])
+    eretIop = ArmInstObjParams("eret", "Eret", "PredOp",
+                               { "code": eretCode,
+                                 "predicate_test": predicateTest },
+                               ["IsNonSpeculative", "IsSerializeAfter",
+                                "IsSquashAfter"])
     header_output += BasicDeclare.subst(eretIop)
     decoder_output += BasicConstructor.subst(eretIop)
     exec_output += PredOpExecute.subst(eretIop)
@@ -209,9 +209,9 @@ let {{
 
         instCode = implCode % data
 
-        crcIop = InstObjParams(mnem, mnem.capitalize(), "RegRegRegOp",
-                               { "code": instCode,
-                                 "predicate_test": predicateTest }, [])
+        crcIop = ArmInstObjParams(mnem, mnem.capitalize(), "RegRegRegOp",
+                                  { "code": instCode,
+                                    "predicate_test": predicateTest }, [])
         header_output += RegRegRegOpDeclare.subst(crcIop)
         decoder_output += RegRegRegOpConstructor.subst(crcIop)
         exec_output += PredOpExecute.subst(crcIop)
@@ -238,19 +238,19 @@ let {{
         Dest = cpsr & (cpsr.mode == MODE_USER ? ApsrMask : CpsrMask);
     '''
 
-    mrsCpsrIop = InstObjParams("mrs", "MrsCpsr", "MrsOp",
-                               { "code": mrsCpsrCode,
-                                 "predicate_test": condPredicateTest },
-                               ["IsSerializeBefore"])
+    mrsCpsrIop = ArmInstObjParams("mrs", "MrsCpsr", "MrsOp",
+                                  { "code": mrsCpsrCode,
+                                    "predicate_test": condPredicateTest },
+                                  ["IsSerializeBefore"])
     header_output += MrsDeclare.subst(mrsCpsrIop)
     decoder_output += MrsConstructor.subst(mrsCpsrIop)
     exec_output += PredOpExecute.subst(mrsCpsrIop)
 
     mrsSpsrCode = "Dest = Spsr"
-    mrsSpsrIop = InstObjParams("mrs", "MrsSpsr", "MrsOp",
-                               { "code": mrsSpsrCode,
-                                 "predicate_test": predicateTest },
-                               ["IsSerializeBefore"])
+    mrsSpsrIop = ArmInstObjParams("mrs", "MrsSpsr", "MrsOp",
+                                  { "code": mrsSpsrCode,
+                                    "predicate_test": predicateTest },
+                                  ["IsSerializeBefore"])
     header_output += MrsDeclare.subst(mrsSpsrIop)
     decoder_output += MrsConstructor.subst(mrsSpsrIop)
     exec_output += PredOpExecute.subst(mrsSpsrIop)
@@ -270,10 +270,10 @@ let {{
                                                           mnemonic);
         }
     '''
-    mrsBankedRegIop = InstObjParams("mrs", "MrsBankedReg", "MrsOp",
-                                    { "code": mrsBankedRegCode,
-                                      "predicate_test": predicateTest },
-                                    ["IsSerializeBefore"])
+    mrsBankedRegIop = ArmInstObjParams("mrs", "MrsBankedReg", "MrsOp",
+                                       { "code": mrsBankedRegCode,
+                                         "predicate_test": predicateTest },
+                                       ["IsSerializeBefore"])
     header_output += MrsBankedRegDeclare.subst(mrsBankedRegIop)
     decoder_output += MrsBankedRegConstructor.subst(mrsBankedRegIop)
     exec_output += PredOpExecute.subst(mrsBankedRegIop)
@@ -302,10 +302,11 @@ let {{
                                                           mnemonic);
         }
     '''
-    msrBankedRegIop = InstObjParams("msr", "MsrBankedReg", "MsrRegOp",
-                                    { "code": msrBankedRegCode,
-                                      "predicate_test": predicateTest },
-                                    ["IsSerializeAfter", "IsNonSpeculative"])
+    msrBankedRegIop = ArmInstObjParams("msr", "MsrBankedReg", "MsrRegOp",
+                                       { "code": msrBankedRegCode,
+                                         "predicate_test": predicateTest },
+                                       ["IsSerializeAfter",
+                                        "IsNonSpeculative"])
     header_output += MsrBankedRegDeclare.subst(msrBankedRegIop)
     decoder_output += MsrBankedRegConstructor.subst(msrBankedRegIop)
     exec_output += PredOpExecute.subst(msrBankedRegIop)
@@ -327,19 +328,19 @@ let {{
         CondCodesV = new_cpsr.v;
         CondCodesGE = new_cpsr.ge;
     '''
-    msrCpsrRegIop = InstObjParams("msr", "MsrCpsrReg", "MsrRegOp",
-                                  { "code": msrCpsrRegCode,
-                                    "predicate_test": condPredicateTest },
-                                  ["IsSerializeAfter","IsNonSpeculative"])
+    msrCpsrRegIop = ArmInstObjParams("msr", "MsrCpsrReg", "MsrRegOp",
+                                     { "code": msrCpsrRegCode,
+                                       "predicate_test": condPredicateTest },
+                                     ["IsSerializeAfter","IsNonSpeculative"])
     header_output += MsrRegDeclare.subst(msrCpsrRegIop)
     decoder_output += MsrRegConstructor.subst(msrCpsrRegIop)
     exec_output += PredOpExecute.subst(msrCpsrRegIop)
 
     msrSpsrRegCode = "Spsr = spsrWriteByInstr(Spsr, Op1, byteMask, false);"
-    msrSpsrRegIop = InstObjParams("msr", "MsrSpsrReg", "MsrRegOp",
-                                  { "code": msrSpsrRegCode,
-                                    "predicate_test": predicateTest },
-                                  ["IsSerializeAfter","IsNonSpeculative"])
+    msrSpsrRegIop = ArmInstObjParams("msr", "MsrSpsrReg", "MsrRegOp",
+                                     { "code": msrSpsrRegCode,
+                                       "predicate_test": predicateTest },
+                                     ["IsSerializeAfter","IsNonSpeculative"])
     header_output += MsrRegDeclare.subst(msrSpsrRegIop)
     decoder_output += MsrRegConstructor.subst(msrSpsrRegIop)
     exec_output += PredOpExecute.subst(msrSpsrRegIop)
@@ -360,19 +361,19 @@ let {{
         CondCodesV = new_cpsr.v;
         CondCodesGE = new_cpsr.ge;
     '''
-    msrCpsrImmIop = InstObjParams("msr", "MsrCpsrImm", "MsrImmOp",
-                                  { "code": msrCpsrImmCode,
-                                    "predicate_test": condPredicateTest },
-                                  ["IsSerializeAfter","IsNonSpeculative"])
+    msrCpsrImmIop = ArmInstObjParams("msr", "MsrCpsrImm", "MsrImmOp",
+                                     { "code": msrCpsrImmCode,
+                                       "predicate_test": condPredicateTest },
+                                     ["IsSerializeAfter","IsNonSpeculative"])
     header_output += MsrImmDeclare.subst(msrCpsrImmIop)
     decoder_output += MsrImmConstructor.subst(msrCpsrImmIop)
     exec_output += PredOpExecute.subst(msrCpsrImmIop)
 
     msrSpsrImmCode = "Spsr = spsrWriteByInstr(Spsr, imm, byteMask, false);"
-    msrSpsrImmIop = InstObjParams("msr", "MsrSpsrImm", "MsrImmOp",
-                                  { "code": msrSpsrImmCode,
-                                    "predicate_test": predicateTest },
-                                  ["IsSerializeAfter","IsNonSpeculative"])
+    msrSpsrImmIop = ArmInstObjParams("msr", "MsrSpsrImm", "MsrImmOp",
+                                     { "code": msrSpsrImmCode,
+                                       "predicate_test": predicateTest },
+                                     ["IsSerializeAfter","IsNonSpeculative"])
     header_output += MsrImmDeclare.subst(msrSpsrImmIop)
     decoder_output += MsrImmConstructor.subst(msrSpsrImmIop)
     exec_output += PredOpExecute.subst(msrSpsrImmIop)
@@ -381,9 +382,9 @@ let {{
     uint32_t val = Op1;
     Dest = swap_byte(val);
     '''
-    revIop = InstObjParams("rev", "Rev", "RegRegOp",
-                           { "code": revCode,
-                             "predicate_test": predicateTest }, [])
+    revIop = ArmInstObjParams("rev", "Rev", "RegRegOp",
+                              { "code": revCode,
+                                "predicate_test": predicateTest }, [])
     header_output += RegRegOpDeclare.subst(revIop)
     decoder_output += RegRegOpConstructor.subst(revIop)
     exec_output += PredOpExecute.subst(revIop)
@@ -395,9 +396,9 @@ let {{
            (bits(val, 31, 24) << 16) |
            (bits(val, 23, 16) << 24);
     '''
-    rev16Iop = InstObjParams("rev16", "Rev16", "RegRegOp",
-                             { "code": rev16Code,
-                               "predicate_test": predicateTest }, [])
+    rev16Iop = ArmInstObjParams("rev16", "Rev16", "RegRegOp",
+                                { "code": rev16Code,
+                                  "predicate_test": predicateTest }, [])
     header_output += RegRegOpDeclare.subst(rev16Iop)
     decoder_output += RegRegOpConstructor.subst(rev16Iop)
     exec_output += PredOpExecute.subst(rev16Iop)
@@ -406,9 +407,9 @@ let {{
     uint16_t val = Op1;
     Dest = sext<16>(swap_byte(val));
     '''
-    revshIop = InstObjParams("revsh", "Revsh", "RegRegOp",
-                             { "code": revshCode,
-                               "predicate_test": predicateTest }, [])
+    revshIop = ArmInstObjParams("revsh", "Revsh", "RegRegOp",
+                                { "code": revshCode,
+                                  "predicate_test": predicateTest }, [])
     header_output += RegRegOpDeclare.subst(revshIop)
     decoder_output += RegRegOpConstructor.subst(revshIop)
     exec_output += PredOpExecute.subst(revshIop)
@@ -416,9 +417,9 @@ let {{
     rbitCode = '''
     Dest = reverseBits(Op1);
     '''
-    rbitIop = InstObjParams("rbit", "Rbit", "RegRegOp",
-                            { "code": rbitCode,
-                              "predicate_test": predicateTest }, [])
+    rbitIop = ArmInstObjParams("rbit", "Rbit", "RegRegOp",
+                               { "code": rbitCode,
+                                 "predicate_test": predicateTest }, [])
     header_output += RegRegOpDeclare.subst(rbitIop)
     decoder_output += RegRegOpConstructor.subst(rbitIop)
     exec_output += PredOpExecute.subst(rbitIop)
@@ -426,9 +427,9 @@ let {{
     clzCode = '''
         Dest = (Op1 == 0) ? 32 : (31 - findMsbSet(Op1));
     '''
-    clzIop = InstObjParams("clz", "Clz", "RegRegOp",
-                           { "code": clzCode,
-                             "predicate_test": predicateTest }, [])
+    clzIop = ArmInstObjParams("clz", "Clz", "RegRegOp",
+                              { "code": clzCode,
+                                "predicate_test": predicateTest }, [])
     header_output += RegRegOpDeclare.subst(clzIop)
     decoder_output += RegRegOpConstructor.subst(clzIop)
     exec_output += PredOpExecute.subst(clzIop)
@@ -440,9 +441,10 @@ let {{
             CpsrQ = 1 << 27;
         Dest = res;
     '''
-    ssatIop = InstObjParams("ssat", "Ssat", "RegImmRegShiftOp",
-                            { "code": ssatCode,
-                              "predicate_test": pickPredicate(ssatCode) }, [])
+    ssatIop = ArmInstObjParams("ssat", "Ssat", "RegImmRegShiftOp",
+                               { "code": ssatCode,
+                                 "predicate_test": pickPredicate(ssatCode) },
+                               [])
     header_output += RegImmRegShiftOpDeclare.subst(ssatIop)
     decoder_output += RegImmRegShiftOpConstructor.subst(ssatIop)
     exec_output += PredOpExecute.subst(ssatIop)
@@ -454,9 +456,10 @@ let {{
             CpsrQ = 1 << 27;
         Dest = res;
     '''
-    usatIop = InstObjParams("usat", "Usat", "RegImmRegShiftOp",
-                            { "code": usatCode,
-                              "predicate_test": pickPredicate(usatCode) }, [])
+    usatIop = ArmInstObjParams("usat", "Usat", "RegImmRegShiftOp",
+                               { "code": usatCode,
+                                 "predicate_test": pickPredicate(usatCode) },
+                               [])
     header_output += RegImmRegShiftOpDeclare.subst(usatIop)
     decoder_output += RegImmRegShiftOpConstructor.subst(usatIop)
     exec_output += PredOpExecute.subst(usatIop)
@@ -474,9 +477,10 @@ let {{
         replaceBits(resTemp, 31, 16, res);
         Dest = resTemp;
     '''
-    ssat16Iop = InstObjParams("ssat16", "Ssat16", "RegImmRegOp",
-                              { "code": ssat16Code,
-                                "predicate_test": pickPredicate(ssat16Code) }, [])
+    ssat16Iop = ArmInstObjParams("ssat16", "Ssat16", "RegImmRegOp",
+                                 { "code": ssat16Code,
+                                   "predicate_test":
+                                       pickPredicate(ssat16Code) }, [])
     header_output += RegImmRegOpDeclare.subst(ssat16Iop)
     decoder_output += RegImmRegOpConstructor.subst(ssat16Iop)
     exec_output += PredOpExecute.subst(ssat16Iop)
@@ -494,28 +498,29 @@ let {{
         replaceBits(resTemp, 31, 16, res);
         Dest = resTemp;
     '''
-    usat16Iop = InstObjParams("usat16", "Usat16", "RegImmRegOp",
-                              { "code": usat16Code,
-                                "predicate_test": pickPredicate(usat16Code) }, [])
+    usat16Iop = ArmInstObjParams("usat16", "Usat16", "RegImmRegOp",
+                                 { "code": usat16Code,
+                                   "predicate_test":
+                                       pickPredicate(usat16Code) }, [])
     header_output += RegImmRegOpDeclare.subst(usat16Iop)
     decoder_output += RegImmRegOpConstructor.subst(usat16Iop)
     exec_output += PredOpExecute.subst(usat16Iop)
 
-    sxtbIop = InstObjParams("sxtb", "Sxtb", "RegImmRegOp",
-                            { "code":
-                              "Dest = sext<8>((uint8_t)(Op1_ud >> imm));",
-                              "predicate_test": predicateTest }, [])
+    sxtbIop = ArmInstObjParams("sxtb", "Sxtb", "RegImmRegOp",
+                               { "code":
+                                 "Dest = sext<8>((uint8_t)(Op1_ud >> imm));",
+                                 "predicate_test": predicateTest }, [])
     header_output += RegImmRegOpDeclare.subst(sxtbIop)
     decoder_output += RegImmRegOpConstructor.subst(sxtbIop)
     exec_output += PredOpExecute.subst(sxtbIop)
 
-    sxtabIop = InstObjParams("sxtab", "Sxtab", "RegRegRegImmOp",
-                             { "code":
-                               '''
-                                   Dest = sext<8>((uint8_t)(Op2_ud >> imm)) +
-                                          Op1;
-                               ''',
-                               "predicate_test": predicateTest }, [])
+    sxtabIop = ArmInstObjParams("sxtab", "Sxtab", "RegRegRegImmOp",
+                                { "code":
+                                  '''
+                                  Dest = sext<8>((uint8_t)(Op2_ud >> imm)) +
+                                             Op1;
+                                  ''',
+                                  "predicate_test": predicateTest }, [])
     header_output += RegRegRegImmOpDeclare.subst(sxtabIop)
     decoder_output += RegRegRegImmOpConstructor.subst(sxtabIop)
     exec_output += PredOpExecute.subst(sxtabIop)
@@ -527,9 +532,9 @@ let {{
                 sext<8>(bits(Op1, (imm + 23) % 32, (imm + 16) % 32)));
     Dest = resTemp;
     '''
-    sxtb16Iop = InstObjParams("sxtb16", "Sxtb16", "RegImmRegOp",
-                              { "code": sxtb16Code,
-                                "predicate_test": predicateTest }, [])
+    sxtb16Iop = ArmInstObjParams("sxtb16", "Sxtb16", "RegImmRegOp",
+                                 { "code": sxtb16Code,
+                                   "predicate_test": predicateTest }, [])
     header_output += RegImmRegOpDeclare.subst(sxtb16Iop)
     decoder_output += RegImmRegOpConstructor.subst(sxtb16Iop)
     exec_output += PredOpExecute.subst(sxtb16Iop)
@@ -543,9 +548,9 @@ let {{
                 bits(Op1, 31, 16));
     Dest = resTemp;
     '''
-    sxtab16Iop = InstObjParams("sxtab16", "Sxtab16", "RegRegRegImmOp",
-                               { "code": sxtab16Code,
-                                 "predicate_test": predicateTest }, [])
+    sxtab16Iop = ArmInstObjParams("sxtab16", "Sxtab16", "RegRegRegImmOp",
+                                  { "code": sxtab16Code,
+                                    "predicate_test": predicateTest }, [])
     header_output += RegRegRegImmOpDeclare.subst(sxtab16Iop)
     decoder_output += RegRegRegImmOpConstructor.subst(sxtab16Iop)
     exec_output += PredOpExecute.subst(sxtab16Iop)
@@ -555,9 +560,9 @@ let {{
     rotated = (rotated | (rotated << 32)) >> imm;
     Dest = sext<16>((uint16_t)rotated);
     '''
-    sxthIop = InstObjParams("sxth", "Sxth", "RegImmRegOp",
-                              { "code": sxthCode,
-                                "predicate_test": predicateTest }, [])
+    sxthIop = ArmInstObjParams("sxth", "Sxth", "RegImmRegOp",
+                               { "code": sxthCode,
+                                 "predicate_test": predicateTest }, [])
     header_output += RegImmRegOpDeclare.subst(sxthIop)
     decoder_output += RegImmRegOpConstructor.subst(sxthIop)
     exec_output += PredOpExecute.subst(sxthIop)
@@ -567,24 +572,24 @@ let {{
     rotated = (rotated | (rotated << 32)) >> imm;
     Dest = sext<16>((uint16_t)rotated) + Op1;
     '''
-    sxtahIop = InstObjParams("sxtah", "Sxtah", "RegRegRegImmOp",
-                             { "code": sxtahCode,
-                               "predicate_test": predicateTest }, [])
+    sxtahIop = ArmInstObjParams("sxtah", "Sxtah", "RegRegRegImmOp",
+                                { "code": sxtahCode,
+                                  "predicate_test": predicateTest }, [])
     header_output += RegRegRegImmOpDeclare.subst(sxtahIop)
     decoder_output += RegRegRegImmOpConstructor.subst(sxtahIop)
     exec_output += PredOpExecute.subst(sxtahIop)
 
-    uxtbIop = InstObjParams("uxtb", "Uxtb", "RegImmRegOp",
-                            { "code": "Dest = (uint8_t)(Op1_ud >> imm);",
-                              "predicate_test": predicateTest }, [])
+    uxtbIop = ArmInstObjParams("uxtb", "Uxtb", "RegImmRegOp",
+                               { "code": "Dest = (uint8_t)(Op1_ud >> imm);",
+                                 "predicate_test": predicateTest }, [])
     header_output += RegImmRegOpDeclare.subst(uxtbIop)
     decoder_output += RegImmRegOpConstructor.subst(uxtbIop)
     exec_output += PredOpExecute.subst(uxtbIop)
 
-    uxtabIop = InstObjParams("uxtab", "Uxtab", "RegRegRegImmOp",
-                             { "code":
-                               "Dest = (uint8_t)(Op2_ud >> imm) + Op1;",
-                               "predicate_test": predicateTest }, [])
+    uxtabIop = ArmInstObjParams("uxtab", "Uxtab", "RegRegRegImmOp",
+                                { "code":
+                                  "Dest = (uint8_t)(Op2_ud >> imm) + Op1;",
+                                  "predicate_test": predicateTest }, [])
     header_output += RegRegRegImmOpDeclare.subst(uxtabIop)
     decoder_output += RegRegRegImmOpConstructor.subst(uxtabIop)
     exec_output += PredOpExecute.subst(uxtabIop)
@@ -596,9 +601,9 @@ let {{
                 (uint8_t)(bits(Op1, (imm + 23) % 32, (imm + 16) % 32)));
     Dest = resTemp;
     '''
-    uxtb16Iop = InstObjParams("uxtb16", "Uxtb16", "RegImmRegOp",
-                              { "code": uxtb16Code,
-                                "predicate_test": predicateTest }, [])
+    uxtb16Iop = ArmInstObjParams("uxtb16", "Uxtb16", "RegImmRegOp",
+                                 { "code": uxtb16Code,
+                                   "predicate_test": predicateTest }, [])
     header_output += RegImmRegOpDeclare.subst(uxtb16Iop)
     decoder_output += RegImmRegOpConstructor.subst(uxtb16Iop)
     exec_output += PredOpExecute.subst(uxtb16Iop)
@@ -612,9 +617,9 @@ let {{
                 bits(Op1, 31, 16));
     Dest = resTemp;
     '''
-    uxtab16Iop = InstObjParams("uxtab16", "Uxtab16", "RegRegRegImmOp",
-                               { "code": uxtab16Code,
-                                 "predicate_test": predicateTest }, [])
+    uxtab16Iop = ArmInstObjParams("uxtab16", "Uxtab16", "RegRegRegImmOp",
+                                  { "code": uxtab16Code,
+                                    "predicate_test": predicateTest }, [])
     header_output += RegRegRegImmOpDeclare.subst(uxtab16Iop)
     decoder_output += RegRegRegImmOpConstructor.subst(uxtab16Iop)
     exec_output += PredOpExecute.subst(uxtab16Iop)
@@ -624,9 +629,9 @@ let {{
     rotated = (rotated | (rotated << 32)) >> imm;
     Dest = (uint16_t)rotated;
     '''
-    uxthIop = InstObjParams("uxth", "Uxth", "RegImmRegOp",
-                              { "code": uxthCode,
-                                "predicate_test": predicateTest }, [])
+    uxthIop = ArmInstObjParams("uxth", "Uxth", "RegImmRegOp",
+                               { "code": uxthCode,
+                                 "predicate_test": predicateTest }, [])
     header_output += RegImmRegOpDeclare.subst(uxthIop)
     decoder_output += RegImmRegOpConstructor.subst(uxthIop)
     exec_output += PredOpExecute.subst(uxthIop)
@@ -636,9 +641,9 @@ let {{
     rotated = (rotated | (rotated << 32)) >> imm;
     Dest = (uint16_t)rotated + Op1;
     '''
-    uxtahIop = InstObjParams("uxtah", "Uxtah", "RegRegRegImmOp",
-                             { "code": uxtahCode,
-                               "predicate_test": predicateTest }, [])
+    uxtahIop = ArmInstObjParams("uxtah", "Uxtah", "RegRegRegImmOp",
+                                { "code": uxtahCode,
+                                  "predicate_test": predicateTest }, [])
     header_output += RegRegRegImmOpDeclare.subst(uxtahIop)
     decoder_output += RegRegRegImmOpConstructor.subst(uxtahIop)
     exec_output += PredOpExecute.subst(uxtahIop)
@@ -654,9 +659,9 @@ let {{
         }
         Dest = resTemp;
     '''
-    selIop = InstObjParams("sel", "Sel", "RegRegRegOp",
-                           { "code": selCode,
-                             "predicate_test": predicateTest }, [])
+    selIop = ArmInstObjParams("sel", "Sel", "RegRegRegOp",
+                              { "code": selCode,
+                                "predicate_test": predicateTest }, [])
     header_output += RegRegRegOpDeclare.subst(selIop)
     decoder_output += RegRegRegOpConstructor.subst(selIop)
     exec_output += PredOpExecute.subst(selIop)
@@ -672,9 +677,9 @@ let {{
         }
         Dest = resTemp;
     '''
-    usad8Iop = InstObjParams("usad8", "Usad8", "RegRegRegOp",
-                             { "code": usad8Code,
-                               "predicate_test": predicateTest }, [])
+    usad8Iop = ArmInstObjParams("usad8", "Usad8", "RegRegRegOp",
+                                { "code": usad8Code,
+                                  "predicate_test": predicateTest }, [])
     header_output += RegRegRegOpDeclare.subst(usad8Iop)
     decoder_output += RegRegRegOpConstructor.subst(usad8Iop)
     exec_output += PredOpExecute.subst(usad8Iop)
@@ -690,9 +695,9 @@ let {{
         }
         Dest = Op3 + resTemp;
     '''
-    usada8Iop = InstObjParams("usada8", "Usada8", "RegRegRegRegOp",
-                              { "code": usada8Code,
-                                "predicate_test": predicateTest }, [])
+    usada8Iop = ArmInstObjParams("usada8", "Usada8", "RegRegRegRegOp",
+                                 { "code": usada8Code,
+                                   "predicate_test": predicateTest }, [])
     header_output += RegRegRegRegOpDeclare.subst(usada8Iop)
     decoder_output += RegRegRegRegOpConstructor.subst(usada8Iop)
     exec_output += PredOpExecute.subst(usada8Iop)
@@ -706,17 +711,17 @@ let {{
 
         return softwareBreakpoint32(xc, imm16);
     '''
-    bkptIop = InstObjParams("bkpt", "BkptInst", "PredOp", bkptCode)
+    bkptIop = ArmInstObjParams("bkpt", "BkptInst", "PredOp", bkptCode)
     header_output += BasicDeclare.subst(bkptIop)
     decoder_output += BasicConstructor.subst(bkptIop)
     exec_output += BasicExecute.subst(bkptIop)
 
-    nopIop = InstObjParams("nop", "NopInst", "ArmStaticInst", "", ['IsNop'])
+    nopIop = ArmInstObjParams("nop", "NopInst", "ArmStaticInst", "", ['IsNop'])
     header_output += BasicDeclare.subst(nopIop)
     decoder_output += BasicConstructor64.subst(nopIop)
     exec_output += BasicExecute.subst(nopIop)
 
-    yieldIop = InstObjParams("yield", "YieldInst", "PredOp", \
+    yieldIop = ArmInstObjParams("yield", "YieldInst", "PredOp", \
             { "code" : "", "predicate_test" : predicateTest })
     header_output += BasicDeclare.subst(yieldIop)
     decoder_output += BasicConstructor.subst(yieldIop)
@@ -749,7 +754,7 @@ let {{
     // and SEV interrupts
     SevMailbox = 1;
     '''
-    wfeIop = InstObjParams("wfe", "WfeInst", "PredOp", \
+    wfeIop = ArmInstObjParams("wfe", "WfeInst", "PredOp", \
             { "code" : wfeCode,
               "pred_fixup" : wfePredFixUpCode,
               "predicate_test" : predicateTest },
@@ -788,7 +793,7 @@ let {{
     }
     tc->getCpuPtr()->clearInterrupt(tc->threadId(), INT_ABT, 0);
     '''
-    wfiIop = InstObjParams("wfi", "WfiInst", "PredOp", \
+    wfiIop = ArmInstObjParams("wfi", "WfiInst", "PredOp", \
             { "code" : wfiCode, "predicate_test" : predicateTest },
             ["IsNonSpeculative", "IsQuiesce",
              "IsSerializeAfter", "IsUnverifiable"])
@@ -808,7 +813,7 @@ let {{
         sendEvent(oc);
     }
     '''
-    sevIop = InstObjParams("sev", "SevInst", "PredOp", \
+    sevIop = ArmInstObjParams("sev", "SevInst", "PredOp", \
             { "code" : sevCode, "predicate_test" : predicateTest },
             ["IsNonSpeculative", "IsSquashAfter", "IsUnverifiable"])
     header_output += BasicDeclare.subst(sevIop)
@@ -818,14 +823,14 @@ let {{
     sevlCode = '''
     SevMailbox = 1;
     '''
-    sevlIop = InstObjParams("sevl", "SevlInst", "PredOp", \
+    sevlIop = ArmInstObjParams("sevl", "SevlInst", "PredOp", \
             { "code" : sevlCode, "predicate_test" : predicateTest },
             ["IsNonSpeculative", "IsSquashAfter", "IsUnverifiable"])
     header_output += BasicDeclare.subst(sevlIop)
     decoder_output += BasicConstructor.subst(sevlIop)
     exec_output += BasicExecute.subst(sevlIop)
 
-    itIop = InstObjParams("it", "ItInst", "PredOp", \
+    itIop = ArmInstObjParams("it", "ItInst", "PredOp", \
             { "code" : ";",
               "predicate_test" : predicateTest }, [])
     header_output += BasicDeclare.subst(itIop)
@@ -834,9 +839,9 @@ let {{
     unknownCode = '''
         return std::make_shared<UndefinedInstruction>(machInst, true);
     '''
-    unknownIop = InstObjParams("unknown", "Unknown", "UnknownOp", \
-                               { "code": unknownCode,
-                                 "predicate_test": predicateTest })
+    unknownIop = ArmInstObjParams("unknown", "Unknown", "UnknownOp", \
+                                  { "code": unknownCode,
+                                    "predicate_test": predicateTest })
     header_output += BasicDeclare.subst(unknownIop)
     decoder_output += BasicConstructor.subst(unknownIop)
     exec_output += PredOpExecute.subst(unknownIop)
@@ -844,9 +849,9 @@ let {{
     ubfxCode = '''
         Dest = bits(Op1, imm2, imm1);
     '''
-    ubfxIop = InstObjParams("ubfx", "Ubfx", "RegRegImmImmOp",
-                            { "code": ubfxCode,
-                              "predicate_test": predicateTest }, [])
+    ubfxIop = ArmInstObjParams("ubfx", "Ubfx", "RegRegImmImmOp",
+                               { "code": ubfxCode,
+                                 "predicate_test": predicateTest }, [])
     header_output += RegRegImmImmOpDeclare.subst(ubfxIop)
     decoder_output += RegRegImmImmOpConstructor.subst(ubfxIop)
     exec_output += PredOpExecute.subst(ubfxIop)
@@ -855,9 +860,9 @@ let {{
         int32_t resTemp = bits(Op1, imm2, imm1);
         Dest = resTemp | -(resTemp & (1 << (imm2 - imm1)));
     '''
-    sbfxIop = InstObjParams("sbfx", "Sbfx", "RegRegImmImmOp",
-                            { "code": sbfxCode,
-                              "predicate_test": predicateTest }, [])
+    sbfxIop = ArmInstObjParams("sbfx", "Sbfx", "RegRegImmImmOp",
+                               { "code": sbfxCode,
+                                 "predicate_test": predicateTest }, [])
     header_output += RegRegImmImmOpDeclare.subst(sbfxIop)
     decoder_output += RegRegImmImmOpConstructor.subst(sbfxIop)
     exec_output += PredOpExecute.subst(sbfxIop)
@@ -865,9 +870,9 @@ let {{
     bfcCode = '''
         Dest = Op1 & ~(mask(imm2 - imm1 + 1) << imm1);
     '''
-    bfcIop = InstObjParams("bfc", "Bfc", "RegRegImmImmOp",
-                           { "code": bfcCode,
-                             "predicate_test": predicateTest }, [])
+    bfcIop = ArmInstObjParams("bfc", "Bfc", "RegRegImmImmOp",
+                              { "code": bfcCode,
+                                "predicate_test": predicateTest }, [])
     header_output += RegRegImmImmOpDeclare.subst(bfcIop)
     decoder_output += RegRegImmImmOpConstructor.subst(bfcIop)
     exec_output += PredOpExecute.subst(bfcIop)
@@ -876,9 +881,9 @@ let {{
         uint32_t bitMask = (mask(imm2 - imm1 + 1) << imm1);
         Dest = ((Op1 << imm1) & bitMask) | (Dest & ~bitMask);
     '''
-    bfiIop = InstObjParams("bfi", "Bfi", "RegRegImmImmOp",
-                           { "code": bfiCode,
-                             "predicate_test": predicateTest }, [])
+    bfiIop = ArmInstObjParams("bfi", "Bfi", "RegRegImmImmOp",
+                              { "code": bfiCode,
+                                "predicate_test": predicateTest }, [])
     header_output += RegRegImmImmOpDeclare.subst(bfiIop)
     decoder_output += RegRegImmImmOpConstructor.subst(bfiIop)
     exec_output += PredOpExecute.subst(bfiIop)
@@ -901,9 +906,9 @@ let {{
     Dest = MiscOp1;
     '''
 
-    mrc14Iop = InstObjParams("mrc", "Mrc14", "RegMiscRegImmOp",
-                             { "code": mrc14code,
-                               "predicate_test": predicateTest }, [])
+    mrc14Iop = ArmInstObjParams("mrc", "Mrc14", "RegMiscRegImmOp",
+                                { "code": mrc14code,
+                                  "predicate_test": predicateTest }, [])
     header_output += RegMiscRegImmOpDeclare.subst(mrc14Iop)
     decoder_output += RegMiscRegImmOpConstructor.subst(mrc14Iop)
     exec_output += PredOpExecute.subst(mrc14Iop)
@@ -926,10 +931,10 @@ let {{
     }
     MiscDest = Op1;
     '''
-    mcr14Iop = InstObjParams("mcr", "Mcr14", "MiscRegRegImmOp",
-                             { "code": mcr14code,
-                               "predicate_test": predicateTest },
-                               ["IsSerializeAfter","IsNonSpeculative"])
+    mcr14Iop = ArmInstObjParams("mcr", "Mcr14", "MiscRegRegImmOp",
+                                { "code": mcr14code,
+                                  "predicate_test": predicateTest },
+                                ["IsSerializeAfter","IsNonSpeculative"])
     header_output += MiscRegRegImmOpDeclare.subst(mcr14Iop)
     decoder_output += MiscRegRegImmOpConstructor.subst(mcr14Iop)
     exec_output += PredOpExecute.subst(mcr14Iop)
@@ -959,9 +964,9 @@ let {{
     Dest = MiscNsBankedOp1;
     '''
 
-    mrc15Iop = InstObjParams("mrc", "Mrc15", "RegMiscRegImmOp",
-                             { "code": mrc15code,
-                               "predicate_test": predicateTest }, [])
+    mrc15Iop = ArmInstObjParams("mrc", "Mrc15", "RegMiscRegImmOp",
+                                { "code": mrc15code,
+                                  "predicate_test": predicateTest }, [])
     header_output += RegMiscRegImmOpDeclare.subst(mrc15Iop)
     decoder_output += RegMiscRegImmOpConstructor.subst(mrc15Iop)
     exec_output += PredOpExecute.subst(mrc15Iop)
@@ -992,10 +997,10 @@ let {{
     }
     MiscNsBankedDest = Op1;
     '''
-    mcr15Iop = InstObjParams("mcr", "Mcr15", "MiscRegRegImmOp",
-                             { "code": mcr15code,
-                               "predicate_test": predicateTest },
-                               ["IsSerializeAfter","IsNonSpeculative"])
+    mcr15Iop = ArmInstObjParams("mcr", "Mcr15", "MiscRegRegImmOp",
+                                { "code": mcr15code,
+                                  "predicate_test": predicateTest },
+                                ["IsSerializeAfter","IsNonSpeculative"])
     header_output += MiscRegRegImmOpDeclare.subst(mcr15Iop)
     decoder_output += MiscRegRegImmOpConstructor.subst(mcr15Iop)
     exec_output += PredOpExecute.subst(mcr15Iop)
@@ -1026,9 +1031,9 @@ let {{
     Dest = bits(MiscNsBankedOp164, 63, 32);
     Dest2 = bits(MiscNsBankedOp164, 31, 0);
     '''
-    mrrc15Iop = InstObjParams("mrrc", "Mrrc15", "MrrcOp",
-                              { "code": mrrc15code,
-                                "predicate_test": predicateTest }, [])
+    mrrc15Iop = ArmInstObjParams("mrrc", "Mrrc15", "MrrcOp",
+                                 { "code": mrrc15code,
+                                   "predicate_test": predicateTest }, [])
     header_output += MrrcOpDeclare.subst(mrrc15Iop)
     decoder_output += MrrcOpConstructor.subst(mrrc15Iop)
     exec_output += PredOpExecute.subst(mrrc15Iop)
@@ -1059,9 +1064,9 @@ let {{
     }
     MiscNsBankedDest64 = ((uint64_t) Op1 << 32) | Op2;
     '''
-    mcrr15Iop = InstObjParams("mcrr", "Mcrr15", "McrrOp",
-                              { "code": mcrr15code,
-                                "predicate_test": predicateTest }, [])
+    mcrr15Iop = ArmInstObjParams("mcrr", "Mcrr15", "McrrOp",
+                                 { "code": mcrr15code,
+                                   "predicate_test": predicateTest }, [])
     header_output += McrrOpDeclare.subst(mcrr15Iop)
     decoder_output += McrrOpConstructor.subst(mcrr15Iop)
     exec_output += PredOpExecute.subst(mcrr15Iop)
@@ -1071,9 +1076,9 @@ let {{
         NextThumb = true;
         NextJazelle = true;
     '''
-    enterxIop = InstObjParams("enterx", "Enterx", "PredOp",
-                              { "code": enterxCode,
-                                "predicate_test": predicateTest }, [])
+    enterxIop = ArmInstObjParams("enterx", "Enterx", "PredOp",
+                                 { "code": enterxCode,
+                                   "predicate_test": predicateTest }, [])
     header_output += BasicDeclare.subst(enterxIop)
     decoder_output += BasicConstructor.subst(enterxIop)
     exec_output += PredOpExecute.subst(enterxIop)
@@ -1082,9 +1087,9 @@ let {{
         NextThumb = true;
         NextJazelle = false;
     '''
-    leavexIop = InstObjParams("leavex", "Leavex", "PredOp",
-                              { "code": leavexCode,
-                                "predicate_test": predicateTest }, [])
+    leavexIop = ArmInstObjParams("leavex", "Leavex", "PredOp",
+                                 { "code": leavexCode,
+                                   "predicate_test": predicateTest }, [])
     header_output += BasicDeclare.subst(leavexIop)
     decoder_output += BasicConstructor.subst(leavexIop)
     exec_output += PredOpExecute.subst(leavexIop)
@@ -1095,10 +1100,10 @@ let {{
         Cpsr = cpsr;
         fault = checkSETENDEnabled(xc->tcBase(), cpsr);
     '''
-    setendIop = InstObjParams("setend", "Setend", "ImmOp",
-                              { "code": setendCode,
-                                "predicate_test": predicateTest },
-                              ["IsSerializeAfter","IsNonSpeculative"])
+    setendIop = ArmInstObjParams("setend", "Setend", "ImmOp",
+                                 { "code": setendCode,
+                                   "predicate_test": predicateTest },
+                                 ["IsSerializeAfter","IsNonSpeculative"])
     header_output += ImmOpDeclare.subst(setendIop)
     decoder_output += ImmOpConstructor.subst(setendIop)
     exec_output += PredOpExecute.subst(setendIop)
@@ -1106,9 +1111,9 @@ let {{
     clrexCode = '''
         LLSCLock = 0;
     '''
-    clrexIop = InstObjParams("clrex", "Clrex","PredOp",
-                             { "code": clrexCode,
-                               "predicate_test": predicateTest },[])
+    clrexIop = ArmInstObjParams("clrex", "Clrex","PredOp",
+                                { "code": clrexCode,
+                                  "predicate_test": predicateTest },[])
     header_output += BasicDeclare.subst(clrexIop)
     decoder_output += BasicConstructor.subst(clrexIop)
     exec_output += PredOpExecute.subst(clrexIop)
@@ -1143,13 +1148,13 @@ let {{
                                             Request::DST_POC);
         EA = Op1;
     '''
-    McrDcimvacIop = InstObjParams("mcr", "McrDcimvac",
-                                  "MiscRegRegImmOp",
-                                  {"memacc_code": McrDcCheckCode,
-                                   "postacc_code": "",
-                                   "ea_code": McrDcimvacCode,
-                                   "predicate_test": predicateTest},
-                                ['IsStore'])
+    McrDcimvacIop = ArmInstObjParams("mcr", "McrDcimvac",
+                                     "MiscRegRegImmOp",
+                                     {"memacc_code": McrDcCheckCode,
+                                      "postacc_code": "",
+                                      "ea_code": McrDcimvacCode,
+                                      "predicate_test": predicateTest},
+                                     ['IsStore'])
     header_output += MiscRegRegImmMemOpDeclare.subst(McrDcimvacIop)
     decoder_output += MiscRegRegImmOpConstructor.subst(McrDcimvacIop)
     exec_output += Mcr15Execute.subst(McrDcimvacIop) + \
@@ -1161,13 +1166,13 @@ let {{
                                             Request::DST_POC);
         EA = Op1;
     '''
-    McrDccmvacIop = InstObjParams("mcr", "McrDccmvac",
-                                  "MiscRegRegImmOp",
-                                  {"memacc_code": McrDcCheckCode,
-                                   "postacc_code": "",
-                                   "ea_code": McrDccmvacCode,
-                                   "predicate_test": predicateTest},
-                                ['IsStore'])
+    McrDccmvacIop = ArmInstObjParams("mcr", "McrDccmvac",
+                                     "MiscRegRegImmOp",
+                                     {"memacc_code": McrDcCheckCode,
+                                      "postacc_code": "",
+                                      "ea_code": McrDccmvacCode,
+                                      "predicate_test": predicateTest},
+                                     ['IsStore'])
     header_output += MiscRegRegImmMemOpDeclare.subst(McrDccmvacIop)
     decoder_output += MiscRegRegImmOpConstructor.subst(McrDccmvacIop)
     exec_output += Mcr15Execute.subst(McrDccmvacIop) + \
@@ -1179,13 +1184,13 @@ let {{
                                             Request::DST_POU);
         EA = Op1;
     '''
-    McrDccmvauIop = InstObjParams("mcr", "McrDccmvau",
-                                  "MiscRegRegImmOp",
-                                  {"memacc_code": McrDcCheckCode,
-                                   "postacc_code": "",
-                                   "ea_code": McrDccmvauCode,
-                                   "predicate_test": predicateTest},
-                                ['IsStore'])
+    McrDccmvauIop = ArmInstObjParams("mcr", "McrDccmvau",
+                                     "MiscRegRegImmOp",
+                                     {"memacc_code": McrDcCheckCode,
+                                      "postacc_code": "",
+                                      "ea_code": McrDccmvauCode,
+                                      "predicate_test": predicateTest},
+                                     ['IsStore'])
     header_output += MiscRegRegImmMemOpDeclare.subst(McrDccmvauIop)
     decoder_output += MiscRegRegImmOpConstructor.subst(McrDccmvauIop)
     exec_output += Mcr15Execute.subst(McrDccmvauIop) + \
@@ -1198,13 +1203,13 @@ let {{
                                             Request::DST_POC);
         EA = Op1;
     '''
-    McrDccimvacIop = InstObjParams("mcr", "McrDccimvac",
-                                  "MiscRegRegImmOp",
-                                  {"memacc_code": McrDcCheckCode,
-                                   "postacc_code": "",
-                                   "ea_code": McrDccimvacCode,
-                                   "predicate_test": predicateTest},
-                                ['IsStore'])
+    McrDccimvacIop = ArmInstObjParams("mcr", "McrDccimvac",
+                                     "MiscRegRegImmOp",
+                                     {"memacc_code": McrDcCheckCode,
+                                      "postacc_code": "",
+                                      "ea_code": McrDccimvacCode,
+                                      "predicate_test": predicateTest},
+                                     ['IsStore'])
     header_output += MiscRegRegImmMemOpDeclare.subst(McrDccimvacIop)
     decoder_output += MiscRegRegImmOpConstructor.subst(McrDccimvacIop)
     exec_output += Mcr15Execute.subst(McrDccimvacIop) + \
@@ -1219,10 +1224,10 @@ let {{
                 EC_TRAPPED_CP15_MCR_MRC);
         }
     '''
-    isbIop = InstObjParams("isb", "Isb", "ImmOp",
-                             {"code": isbCode,
-                               "predicate_test": predicateTest},
-                                ['IsSquashAfter'])
+    isbIop = ArmInstObjParams("isb", "Isb", "ImmOp",
+                              { "code": isbCode,
+                                "predicate_test": predicateTest},
+                              ['IsSquashAfter'])
     header_output += ImmOpDeclare.subst(isbIop)
     decoder_output += ImmOpConstructor.subst(isbIop)
     exec_output += PredOpExecute.subst(isbIop)
@@ -1235,8 +1240,8 @@ let {{
                 EC_TRAPPED_CP15_MCR_MRC);
         }
     '''
-    dsbIop = InstObjParams("dsb", "Dsb", "ImmOp",
-                             {"code": dsbCode,
+    dsbIop = ArmInstObjParams("dsb", "Dsb", "ImmOp",
+                              {"code": dsbCode,
                                "predicate_test": predicateTest},
                               ['IsReadBarrier', 'IsWriteBarrier',
                                'IsSerializeAfter'])
@@ -1252,18 +1257,18 @@ let {{
                 EC_TRAPPED_CP15_MCR_MRC);
         }
     '''
-    dmbIop = InstObjParams("dmb", "Dmb", "ImmOp",
-                             {"code": dmbCode,
+    dmbIop = ArmInstObjParams("dmb", "Dmb", "ImmOp",
+                              {"code": dmbCode,
                                "predicate_test": predicateTest},
-                               ['IsReadBarrier', 'IsWriteBarrier'])
+                              ['IsReadBarrier', 'IsWriteBarrier'])
     header_output += ImmOpDeclare.subst(dmbIop)
     decoder_output += ImmOpConstructor.subst(dmbIop)
     exec_output += PredOpExecute.subst(dmbIop)
 
     dbgCode = '''
     '''
-    dbgIop = InstObjParams("dbg", "Dbg", "PredOp",
-                             {"code": dbgCode,
+    dbgIop = ArmInstObjParams("dbg", "Dbg", "PredOp",
+                              {"code": dbgCode,
                                "predicate_test": predicateTest})
     header_output += BasicDeclare.subst(dbgIop)
     decoder_output += BasicConstructor.subst(dbgIop)
@@ -1294,10 +1299,10 @@ let {{
     }
     Cpsr = cpsr;
     '''
-    cpsIop = InstObjParams("cps", "Cps", "ImmOp",
-                           { "code": cpsCode,
-                             "predicate_test": predicateTest },
-                           ["IsSerializeAfter","IsNonSpeculative"])
+    cpsIop = ArmInstObjParams("cps", "Cps", "ImmOp",
+                              { "code": cpsCode,
+                                "predicate_test": predicateTest },
+                              ["IsSerializeAfter","IsNonSpeculative"])
     header_output += ImmOpDeclare.subst(cpsIop)
     decoder_output += ImmOpConstructor.subst(cpsIop)
     exec_output += PredOpExecute.subst(cpsIop)

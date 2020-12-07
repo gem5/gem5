@@ -84,15 +84,14 @@ let {{
         Name = mnem.capitalize()
 
         if unCc:
-            iop = InstObjParams(mnem, Name, base,
-                            {"code" : code,
-                             "predicate_test": pickPredicate(code),
-                             "op_class": "IntMultOp" })
+            iop = ArmInstObjParams(mnem, Name, base,
+                    { "code" : code, "predicate_test": pickPredicate(code),
+                      "op_class": "IntMultOp" })
         if doCc:
-            iopCc = InstObjParams(mnem + "s", Name + "Cc", base,
-                              {"code" : code + ccCode,
-                               "predicate_test": pickPredicate(code + ccCode),
-                               "op_class": "IntMultOp" })
+            iopCc = ArmInstObjParams(mnem + "s", Name + "Cc", base,
+                    { "code" : code + ccCode,
+                      "predicate_test": pickPredicate(code + ccCode),
+                      "op_class": "IntMultOp" })
 
         if regs == 3:
             declare = Mult3Declare

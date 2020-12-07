@@ -96,8 +96,8 @@ let {{
         ''' + code
         ccCode = createCcCode64(carryCode64[flagType], overflowCode64[flagType])
         Name = mnem.capitalize() + suffix
-        iop = InstObjParams(mnem, Name, base, code)
-        iopCc = InstObjParams(mnem + "s", Name + "Cc", base, code + ccCode)
+        iop = ArmInstObjParams(mnem, Name, base, code)
+        iopCc = ArmInstObjParams(mnem + "s", Name + "Cc", base, code + ccCode)
 
         def subst(iop):
             global header_output, decoder_output, exec_output
@@ -154,8 +154,8 @@ let {{
         global header_output, decoder_output, exec_output
         classNamePrefix = mnem[0].upper() + mnem[1:]
         templateBase = "DataXImm"
-        iop = InstObjParams(mnem, classNamePrefix + "64",
-                            templateBase + "Op", code, optArgs)
+        iop = ArmInstObjParams(mnem, classNamePrefix + "64",
+                               templateBase + "Op", code, optArgs)
         header_output += eval(templateBase + "Declare").subst(iop)
         decoder_output += eval(templateBase + "Constructor").subst(iop)
         exec_output += BasicExecute.subst(iop)
@@ -166,13 +166,14 @@ let {{
         templateBase = "DataX%dReg" % regOps
         classNamePrefix = mnem[0].upper() + mnem[1:]
         if overrideOpClass:
-            iop = InstObjParams(mnem, classNamePrefix + "64",
-                                templateBase + "Op",
-                                { 'code': code, 'op_class': overrideOpClass},
-                                optArgs)
+            iop = ArmInstObjParams(mnem, classNamePrefix + "64",
+                                   templateBase + "Op",
+                                   { 'code': code,
+                                     'op_class': overrideOpClass },
+                                   optArgs)
         else:
-            iop = InstObjParams(mnem, classNamePrefix + "64",
-                                templateBase + "Op", code, optArgs)
+            iop = ArmInstObjParams(mnem, classNamePrefix + "64",
+                                   templateBase + "Op", code, optArgs)
         header_output += eval(templateBase + "Declare").subst(iop)
         decoder_output += eval(templateBase + "Constructor").subst(iop)
         exec_output += BasicExecute.subst(iop)
@@ -342,9 +343,9 @@ let {{
     mrsCode = mrs_check_code + '''
         XDest = MiscOp1_ud;
     '''
-    mrsIop = InstObjParams("mrs", "Mrs64", "RegMiscRegImmOp64",
-                           mrsCode,
-                           ["IsSerializeBefore"])
+    mrsIop = ArmInstObjParams("mrs", "Mrs64", "RegMiscRegImmOp64",
+                              mrsCode,
+                              ["IsSerializeBefore"])
     header_output += RegMiscRegOp64Declare.subst(mrsIop)
     decoder_output += RegMiscRegOp64Constructor.subst(mrsIop)
     exec_output += BasicExecute.subst(mrsIop)
@@ -360,9 +361,9 @@ let {{
     msrCode = msr_check_code + '''
         MiscDest_ud = XOp1;
     '''
-    msrIop = InstObjParams("msr", "Msr64", "MiscRegRegImmOp64",
-                           msrCode,
-                           ["IsSerializeAfter", "IsNonSpeculative"])
+    msrIop = ArmInstObjParams("msr", "Msr64", "MiscRegRegImmOp64",
+                              msrCode,
+                              ["IsSerializeAfter", "IsNonSpeculative"])
     header_output += MiscRegRegOp64Declare.subst(msrIop)
     decoder_output += MiscRegRegOp64Constructor.subst(msrIop)
     exec_output += BasicExecute.subst(msrIop)
@@ -386,13 +387,13 @@ let {{
 
    '''
 
-    msrDCZVAIop = InstObjParams("dc zva", "Dczva", "SysDC64",
-                                { "ea_code" : msrdczva_ea_code,
-                                  "memacc_code" : ';',
-                                  "use_uops" : 0,
-                                  "op_wb" : ";",
-                                  "fa_code" : ";"},
-                                ['IsStore']);
+    msrDCZVAIop = ArmInstObjParams("dc zva", "Dczva", "SysDC64",
+                                   { "ea_code" : msrdczva_ea_code,
+                                     "memacc_code" : ';',
+                                     "use_uops" : 0,
+                                     "op_wb" : ";",
+                                     "fa_code" : ";"},
+                                   ['IsStore']);
     header_output += DCStore64Declare.subst(msrDCZVAIop);
     decoder_output += DCStore64Constructor.subst(msrDCZVAIop);
     exec_output += DCStore64Execute.subst(msrDCZVAIop);
@@ -417,13 +418,13 @@ let {{
            EA &= ~(op_size - 1);
     '''
 
-    msrDCCVAUIop = InstObjParams("dc cvau", "Dccvau", "SysDC64",
-                                 { "ea_code" : msrdccvau_ea_code,
-                                   "memacc_code" : ';',
-                                   "use_uops" : 0,
-                                   "op_wb" : ";",
-                                   "fa_code" : cachem_fa},
-                                 ['IsStore']);
+    msrDCCVAUIop = ArmInstObjParams("dc cvau", "Dccvau", "SysDC64",
+                                    { "ea_code" : msrdccvau_ea_code,
+                                      "memacc_code" : ';',
+                                      "use_uops" : 0,
+                                      "op_wb" : ";",
+                                      "fa_code" : cachem_fa},
+                                    ['IsStore']);
     header_output += DCStore64Declare.subst(msrDCCVAUIop);
     decoder_output += DCStore64Constructor.subst(msrDCCVAUIop);
     exec_output += DCStore64Execute.subst(msrDCCVAUIop);
@@ -441,13 +442,13 @@ let {{
            EA &= ~(op_size - 1);
     '''
 
-    msrDCCVACIop = InstObjParams("dc cvac", "Dccvac", "SysDC64",
-                                 { "ea_code" : msrdccvac_ea_code,
-                                   "memacc_code" : ';',
-                                   "use_uops" : 0,
-                                   "op_wb" : ";",
-                                   "fa_code" : cachem_fa},
-                                 ['IsStore']);
+    msrDCCVACIop = ArmInstObjParams("dc cvac", "Dccvac", "SysDC64",
+                                    { "ea_code" : msrdccvac_ea_code,
+                                      "memacc_code" : ';',
+                                      "use_uops" : 0,
+                                      "op_wb" : ";",
+                                      "fa_code" : cachem_fa},
+                                    ['IsStore']);
     header_output += DCStore64Declare.subst(msrDCCVACIop);
     decoder_output += DCStore64Constructor.subst(msrDCCVACIop);
     exec_output += DCStore64Execute.subst(msrDCCVACIop);
@@ -466,13 +467,13 @@ let {{
            EA &= ~(op_size - 1);
     '''
 
-    msrDCCIVACIop = InstObjParams("dc civac", "Dccivac", "SysDC64",
-                                  { "ea_code" : msrdccivac_ea_code,
-                                    "memacc_code" : ';',
-                                    "use_uops" : 0,
-                                    "op_wb" : ";",
-                                    "fa_code" : cachem_fa},
-                                  ['IsStore']);
+    msrDCCIVACIop = ArmInstObjParams("dc civac", "Dccivac", "SysDC64",
+                                     { "ea_code" : msrdccivac_ea_code,
+                                       "memacc_code" : ';',
+                                       "use_uops" : 0,
+                                       "op_wb" : ";",
+                                       "fa_code" : cachem_fa},
+                                     ['IsStore']);
     header_output += DCStore64Declare.subst(msrDCCIVACIop);
     decoder_output += DCStore64Constructor.subst(msrDCCIVACIop);
     exec_output += DCStore64Execute.subst(msrDCCIVACIop);
@@ -497,13 +498,13 @@ let {{
            EA &= ~(op_size - 1);
     '''
 
-    msrDCIVACIop = InstObjParams("dc ivac", "Dcivac", "SysDC64",
-                                 { "ea_code" : msrdcivac_ea_code,
-                                   "memacc_code" : ';',
-                                   "use_uops" : 0,
-                                   "op_wb" : ";",
-                                   "fa_code" : cachem_fa},
-                                 ['IsStore']);
+    msrDCIVACIop = ArmInstObjParams("dc ivac", "Dcivac", "SysDC64",
+                                    { "ea_code" : msrdcivac_ea_code,
+                                      "memacc_code" : ';',
+                                      "use_uops" : 0,
+                                      "op_wb" : ";",
+                                      "fa_code" : cachem_fa},
+                                    ['IsStore']);
     header_output += DCStore64Declare.subst(msrDCIVACIop);
     decoder_output += DCStore64Constructor.subst(msrDCIVACIop);
     exec_output += DCStore64Execute.subst(msrDCIVACIop);
@@ -533,9 +534,9 @@ let {{
             }
 
         '''
-        msrIop = InstObjParams("msr", inst_name, "MiscRegImmOp64",
-                               msrImmPermission + code,
-                               ["IsSerializeAfter", "IsNonSpeculative"])
+        msrIop = ArmInstObjParams("msr", inst_name, "MiscRegImmOp64",
+                                  msrImmPermission + code,
+                                  ["IsSerializeAfter", "IsNonSpeculative"])
         header_output += MiscRegOp64Declare.subst(msrIop)
         decoder_output += MiscRegOp64Constructor.subst(msrIop)
         exec_output += BasicExecute.subst(msrIop)
@@ -561,8 +562,8 @@ let {{
     def buildDataXCompInst(mnem, instType, suffix, code):
         global header_output, decoder_output, exec_output
         templateBase = "DataXCond%s" % instType
-        iop = InstObjParams(mnem, mnem.capitalize() + suffix + "64",
-                            templateBase + "Op", code)
+        iop = ArmInstObjParams(mnem, mnem.capitalize() + suffix + "64",
+                               templateBase + "Op", code)
         header_output += eval(templateBase + "Declare").subst(iop)
         decoder_output += eval(templateBase + "Constructor").subst(iop)
         exec_output += BasicExecute.subst(iop)

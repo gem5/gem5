@@ -285,8 +285,10 @@ def template StoreEx64CompleteAcc {{
 def template DCStore64Declare {{
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, IntRegIndex _base,
                        MiscRegIndex _dest, uint64_t _imm);
@@ -310,6 +312,7 @@ def template DCStore64Constructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _base, _dest, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         assert(!%(use_uops)d);
     }
@@ -376,8 +379,10 @@ def template DCStore64InitiateAcc {{
 def template LoadStoreImm64Declare {{
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 IntRegIndex _dest, IntRegIndex _base, int64_t _imm);
@@ -398,8 +403,10 @@ def template LoadStoreImm64Declare {{
 def template LoadStoreImmU64Declare {{
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 IntRegIndex _dest, IntRegIndex _base, int64_t _imm,
@@ -422,8 +429,10 @@ def template LoadStoreImmU64Declare {{
 def template LoadStoreImmDU64Declare {{
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 IntRegIndex _dest, IntRegIndex _dest2, IntRegIndex _base,
@@ -449,8 +458,10 @@ def template StoreImmDEx64Declare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 IntRegIndex _result, IntRegIndex _dest, IntRegIndex _dest2,
@@ -467,8 +478,10 @@ def template StoreImmDEx64Declare {{
 def template LoadStoreReg64Declare {{
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 IntRegIndex _dest, IntRegIndex _base, IntRegIndex _offset,
@@ -490,8 +503,10 @@ def template LoadStoreReg64Declare {{
 def template LoadStoreRegU64Declare {{
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 IntRegIndex _dest, IntRegIndex _base, IntRegIndex _offset,
@@ -515,8 +530,10 @@ def template LoadStoreRegU64Declare {{
 def template LoadStoreRaw64Declare {{
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                        IntRegIndex _base);
@@ -537,8 +554,10 @@ def template LoadStoreRaw64Declare {{
 def template LoadStoreEx64Declare {{
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                        IntRegIndex _base, IntRegIndex _result);
@@ -559,8 +578,10 @@ def template LoadStoreEx64Declare {{
 def template LoadStoreLit64Declare {{
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, int64_t _imm);
 
@@ -580,8 +601,10 @@ def template LoadStoreLit64Declare {{
 def template LoadStoreLitU64Declare {{
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, int64_t _imm,
                 bool noAlloc = false, bool exclusive = false,
@@ -606,6 +629,7 @@ def template LoadStoreImm64Constructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         (IntRegIndex)_dest, (IntRegIndex)_base, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
 #if %(use_uops)d
         assert(numMicroops >= 2);
@@ -626,6 +650,7 @@ def template LoadStoreImmU64Constructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest, _base, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         assert(!%(use_uops)d);
         setExcAcRel(exclusive, acrel);
@@ -639,6 +664,7 @@ def template LoadStoreImmDU64Constructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest, _dest2, _base, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         assert(!%(use_uops)d);
         setExcAcRel(exclusive, acrel);
@@ -652,6 +678,7 @@ def template StoreImmDEx64Constructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _result, _dest, _dest2, _base, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         assert(!%(use_uops)d);
     }
@@ -665,6 +692,7 @@ def template LoadStoreReg64Constructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest, _base, _offset, _type, _shiftAmt)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
 #if %(use_uops)d
         assert(numMicroops >= 2);
@@ -687,6 +715,7 @@ def template LoadStoreRegU64Constructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest, _base, _offset, _type, _shiftAmt)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         assert(!%(use_uops)d);
         setExcAcRel(exclusive, acrel);
@@ -698,6 +727,7 @@ def template LoadStoreRaw64Constructor {{
             IntRegIndex _dest, IntRegIndex _base) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _base)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -708,6 +738,7 @@ def template LoadStoreEx64Constructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest, _base, _result)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -718,6 +749,7 @@ def template LoadStoreLit64Constructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
 #if %(use_uops)d
         assert(numMicroops >= 2);
@@ -738,6 +770,7 @@ def template LoadStoreLitU64Constructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         assert(!%(use_uops)d);
         setExcAcRel(exclusive, acrel);
@@ -821,8 +854,10 @@ def template AmoOpCompleteAcc {{
 def template AmoOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
-      public:
+      private:
+        %(reg_idx_arr_decl)s;
 
+      public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                        IntRegIndex _base, IntRegIndex _result);
@@ -847,6 +882,7 @@ def template AmoOpConstructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest, _base, _result)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         flags[IsStore] = false;
         flags[IsLoad] = false;
@@ -856,6 +892,9 @@ def template AmoOpConstructor {{
 def template AmoPairOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         uint32_t d2_src ;
         uint32_t r2_src ;
@@ -884,6 +923,7 @@ def template AmoPairOpConstructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest,  _base, _result)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
 
         uint32_t d2 = RegId(IntRegClass, dest).index() + 1 ;
@@ -903,6 +943,9 @@ def template AmoPairOpConstructor {{
 def template AmoArithmeticOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
+      private:
+        %(reg_idx_arr_decl)s;
+
       public:
         bool isXZR ;
         /// Constructor.
@@ -928,6 +971,7 @@ def template AmoArithmeticOpConstructor {{
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                           _dest,  _base, _result)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         isXZR = false;
         uint32_t r2 = RegId(IntRegClass, dest).index() ;

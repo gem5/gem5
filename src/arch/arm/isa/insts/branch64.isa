@@ -50,8 +50,8 @@ let {{
             bCode += 'XLR = RawPC + 4;\n'
             instFlags += ['IsCall']
 
-        bIop = InstObjParams(mnem, mnem.capitalize() + "64",
-                             "BranchImm64", bCode, instFlags)
+        bIop = ArmInstObjParams(mnem, mnem.capitalize() + "64",
+                                "BranchImm64", bCode, instFlags)
         header_output += BranchImm64Declare.subst(bIop)
         decoder_output += BranchImm64Constructor.subst(bIop)
         exec_output += BasicExecute.subst(bIop)
@@ -65,8 +65,8 @@ let {{
             bCode += 'XLR = RawPC + 4;\n'
             instFlags += ['IsCall']
 
-        bIop = InstObjParams(mnem, mnem.capitalize() + "64",
-                             "BranchReg64", bCode, instFlags)
+        bIop = ArmInstObjParams(mnem, mnem.capitalize() + "64",
+                                "BranchReg64", bCode, instFlags)
         header_output += BranchReg64Declare.subst(bIop)
         decoder_output += BranchReg64Constructor.subst(bIop)
         exec_output += BasicExecute.subst(bIop)
@@ -82,8 +82,8 @@ let {{
             bCode += 'XLR = RawPC + 4;\n'
             instFlags += ['IsCall']
 
-        bIop = InstObjParams(mnem, mnem.capitalize(),
-                             "BranchRegReg64", bCode, instFlags)
+        bIop = ArmInstObjParams(mnem, mnem.capitalize(),
+                                "BranchRegReg64", bCode, instFlags)
         header_output += BranchRegReg64Declare.subst(bIop)
         decoder_output += BranchRegReg64Constructor.subst(bIop)
         exec_output += BasicExecute.subst(bIop)
@@ -101,8 +101,8 @@ let {{
             bCode += 'XLR = RawPC + 4;\n'
             instFlags += ['IsCall']
 
-        bIop = InstObjParams(mnem, mnem.capitalize(),
-                             "BranchReg64", bCode, instFlags)
+        bIop = ArmInstObjParams(mnem, mnem.capitalize(),
+                                "BranchReg64", bCode, instFlags)
         header_output += BranchReg64Declare.subst(bIop)
         decoder_output += BranchReg64Constructor.subst(bIop)
         exec_output += BasicExecute.subst(bIop)
@@ -118,8 +118,8 @@ let {{
             bCode += 'XLR = RawPC + 4;\n'
             instFlags += ['IsCall']
 
-        bIop = InstObjParams(mnem, mnem.capitalize(),
-                             "BranchRegReg64", bCode, instFlags)
+        bIop = ArmInstObjParams(mnem, mnem.capitalize(),
+                                "BranchRegReg64", bCode, instFlags)
         header_output += BranchRegReg64Declare.subst(bIop)
         decoder_output += BranchRegReg64Constructor.subst(bIop)
         exec_output += BasicExecute.subst(bIop)
@@ -137,8 +137,8 @@ let {{
             bCode += 'XLR = RawPC + 4;\n'
             instFlags += ['IsCall']
 
-        bIop = InstObjParams(mnem, mnem.capitalize(),
-                             "BranchReg64", bCode, instFlags)
+        bIop = ArmInstObjParams(mnem, mnem.capitalize(),
+                                "BranchReg64", bCode, instFlags)
         header_output += BranchReg64Declare.subst(bIop)
         decoder_output += BranchReg64Constructor.subst(bIop)
         exec_output += BasicExecute.subst(bIop)
@@ -152,8 +152,8 @@ let {{
         else
             NPC = NPC;
     '''
-    bIop = InstObjParams("b", "BCond64", "BranchImmCond64", bCode,
-                         ['IsCondControl', 'IsDirectControl'])
+    bIop = ArmInstObjParams("b", "BCond64", "BranchImmCond64", bCode,
+                            ['IsCondControl', 'IsDirectControl'])
     header_output += BranchImmCond64Declare.subst(bIop)
     decoder_output += BranchImmCond64Constructor.subst(bIop)
     exec_output += BasicExecute.subst(bIop)
@@ -163,7 +163,7 @@ let {{
              'currEL(xc->tcBase()), true);\n')
     instFlags = ['IsIndirectControl', 'IsUncondControl', 'IsReturn']
 
-    bIop = InstObjParams('ret', 'Ret64', "BranchRet64", bCode, instFlags)
+    bIop = ArmInstObjParams('ret', 'Ret64', "BranchRet64", bCode, instFlags)
     header_output += BranchReg64Declare.subst(bIop)
     decoder_output += BranchReg64Constructor.subst(bIop)
     exec_output += BasicExecute.subst(bIop)
@@ -175,7 +175,7 @@ let {{
     bCode += (' if (fault == NoFault)\n'
               '    NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
              'currEL(xc->tcBase()), true);\n')
-    bIop = InstObjParams('retaa', 'Retaa', "BranchRetA64", bCode, instFlags)
+    bIop = ArmInstObjParams('retaa', 'Retaa', "BranchRetA64", bCode, instFlags)
     header_output += BasicDeclare.subst(bIop)
     decoder_output += BasicConstructor64.subst(bIop)
     exec_output += BasicExecute.subst(bIop)
@@ -187,7 +187,7 @@ let {{
     bCode += (' if (fault == NoFault)\n'
               '    NPC = purifyTaggedAddr(XOp1, xc->tcBase(), '
              'currEL(xc->tcBase()), true);\n')
-    bIop = InstObjParams('retab', 'Retab', "BranchRetA64", bCode, instFlags)
+    bIop = ArmInstObjParams('retab', 'Retab', "BranchRetA64", bCode, instFlags)
     header_output += BasicDeclare.subst(bIop)
     decoder_output += BasicConstructor64.subst(bIop)
     exec_output += BasicExecute.subst(bIop)
@@ -257,8 +257,8 @@ let {{
                 }
     '''
     instFlags = ['IsSerializeAfter', 'IsNonSpeculative', 'IsSquashAfter']
-    bIop = InstObjParams('eret', 'Eret64', "BranchEret64",
-                          bCode%{'op': ''}, instFlags)
+    bIop = ArmInstObjParams('eret', 'Eret64', "BranchEret64",
+                            bCode%{'op': ''}, instFlags)
     header_output += BasicDeclare.subst(bIop)
     decoder_output += BasicConstructor64.subst(bIop)
     exec_output += BasicExecute.subst(bIop)
@@ -267,8 +267,8 @@ let {{
     pac_code = '''
                 fault = authIA(xc->tcBase(), newPc, XOp1, &newPc);
                 '''
-    bIop = InstObjParams('eretaa', 'Eretaa', "BranchEretA64",
-                         bCode % {'op': pac_code} , instFlags)
+    bIop = ArmInstObjParams('eretaa', 'Eretaa', "BranchEretA64",
+                            bCode % {'op': pac_code} , instFlags)
     header_output  += BasicDeclare.subst(bIop)
     decoder_output += BasicConstructor64.subst(bIop)
     exec_output    += BasicExecute.subst(bIop)
@@ -277,8 +277,8 @@ let {{
     pac_code = '''
                 fault = authIB(xc->tcBase(), newPc, XOp1, &newPc);
                 '''
-    bIop = InstObjParams('eretab', 'Eretab', "BranchEretA64",
-                         bCode % {'op': pac_code} , instFlags)
+    bIop = ArmInstObjParams('eretab', 'Eretab', "BranchEretA64",
+                            bCode % {'op': pac_code} , instFlags)
     header_output += BasicDeclare.subst(bIop)
     decoder_output += BasicConstructor64.subst(bIop)
     exec_output += BasicExecute.subst(bIop)
@@ -289,9 +289,9 @@ let {{
                 'purifyTaggedAddr(RawPC + imm, xc->tcBase(), '
                 'currEL(xc->tcBase()), true) : NPC;\n')
         code = code % {"test": test}
-        iop = InstObjParams(mnem, mnem.capitalize() + "64",
-                            "BranchImmReg64", code,
-                            ['IsCondControl', 'IsDirectControl'])
+        iop = ArmInstObjParams(mnem, mnem.capitalize() + "64",
+                               "BranchImmReg64", code,
+                               ['IsCondControl', 'IsDirectControl'])
         header_output += BranchImmReg64Declare.subst(iop)
         decoder_output += BranchImmReg64Constructor.subst(iop)
         exec_output += BasicExecute.subst(iop)
@@ -302,9 +302,9 @@ let {{
                 'purifyTaggedAddr(RawPC + imm2, xc->tcBase(), '
                 'currEL(xc->tcBase()), true) : NPC;\n')
         code = code % {"test": test}
-        iop = InstObjParams(mnem, mnem.capitalize() + "64",
-                            "BranchImmImmReg64", code,
-                            ['IsCondControl', 'IsDirectControl'])
+        iop = ArmInstObjParams(mnem, mnem.capitalize() + "64",
+                               "BranchImmImmReg64", code,
+                               ['IsCondControl', 'IsDirectControl'])
         header_output += BranchImmImmReg64Declare.subst(iop)
         decoder_output += BranchImmImmReg64Constructor.subst(iop)
         exec_output += BasicExecute.subst(iop)

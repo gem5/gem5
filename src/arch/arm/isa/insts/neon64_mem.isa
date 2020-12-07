@@ -139,7 +139,7 @@ let {{
         loadMemAccCode = convCode + regSetCode
         storeMemAccCode = regGetCode + convCode
 
-        loadIop = InstObjParams(name + 'ld',
+        loadIop = ArmInstObjParams(name + 'ld',
                 'MicroNeonLoad64',
                 'MicroNeonMemOp',
             {   'mem_decl' : memDecl,
@@ -149,7 +149,7 @@ let {{
             [ 'IsMicroop', 'IsLoad' ])
         loadIop.snippets["memacc_code"] += zeroSveVecRegUpperPartCode % \
             "AA64FpDest"
-        storeIop = InstObjParams(name + 'st',
+        storeIop = ArmInstObjParams(name + 'st',
                 'MicroNeonStore64',
                 'MicroNeonMemOp',
             {   'mem_decl' : memDecl,
@@ -266,9 +266,9 @@ let {{
                 }
             '''
 
-            iop = InstObjParams(name, Name, 'MicroNeonMixOp64',
-                                { 'code' : eCode, 'op_class' : 'No_OpClass' },
-                                ['IsMicroop'])
+            iop = ArmInstObjParams(name, Name, 'MicroNeonMixOp64',
+                    { 'code' : eCode, 'op_class' : 'No_OpClass' },
+                    ['IsMicroop'])
             header_output += MicroNeonMixDeclare64.subst(iop)
             exec_output += MicroNeonMixExecute64.subst(iop)
 
@@ -329,9 +329,9 @@ let {{
                     output[%(v)d], %(p)d, 0x2);
                 ''' % { 'v': v, 'p': p}
 
-            iop = InstObjParams(name, Name, 'MicroNeonMixOp64',
-                                { 'code' : eCode, 'op_class' : 'No_OpClass' },
-                                ['IsMicroop'])
+            iop = ArmInstObjParams(name, Name, 'MicroNeonMixOp64',
+                    { 'code' : eCode, 'op_class' : 'No_OpClass' },
+                    ['IsMicroop'])
             header_output += MicroNeonMixDeclare64.subst(iop)
             exec_output += MicroNeonMixExecute64.subst(iop)
 
@@ -398,8 +398,8 @@ let {{
                     output[%(v)d], %(p)d, 0x2);
                 ''' % { 'v' : v, 'p' : p }
 
-            iop = InstObjParams(name, Name, 'MicroNeonMixLaneOp64',
-                                { 'code' : eCode }, ['IsMicroop'])
+            iop = ArmInstObjParams(name, Name, 'MicroNeonMixLaneOp64',
+                                   { 'code' : eCode }, ['IsMicroop'])
             header_output += MicroNeonMixLaneDeclare64.subst(iop)
             exec_output += MicroNeonMixExecute64.subst(iop)
 
@@ -447,8 +447,8 @@ let {{
                     output[%(v)d], %(p)d, 0x2);
                 ''' % { 'v' : v, 'p' : p }
 
-            iop = InstObjParams(name, Name, 'MicroNeonMixLaneOp64',
-                                { 'code' : eCode }, ['IsMicroop'])
+            iop = ArmInstObjParams(name, Name, 'MicroNeonMixLaneOp64',
+                                   { 'code' : eCode }, ['IsMicroop'])
             header_output += MicroNeonMixLaneDeclare64.subst(iop)
             exec_output += MicroNeonMixExecute64.subst(iop)
 
@@ -469,19 +469,21 @@ let {{
 
 let {{
 
-    iop = InstObjParams('vldmult64', 'VldMult64', 'VldMultOp64', '', [])
+    iop = ArmInstObjParams('vldmult64', 'VldMult64', 'VldMultOp64', '', [])
     header_output += VMemMultDeclare64.subst(iop)
     decoder_output += VMemMultConstructor64.subst(iop)
 
-    iop = InstObjParams('vstmult64', 'VstMult64', 'VstMultOp64', '', [])
+    iop = ArmInstObjParams('vstmult64', 'VstMult64', 'VstMultOp64', '', [])
     header_output += VMemMultDeclare64.subst(iop)
     decoder_output += VMemMultConstructor64.subst(iop)
 
-    iop = InstObjParams('vldsingle64', 'VldSingle64', 'VldSingleOp64', '', [])
+    iop = ArmInstObjParams(
+            'vldsingle64', 'VldSingle64', 'VldSingleOp64', '', [])
     header_output += VMemSingleDeclare64.subst(iop)
     decoder_output += VMemSingleConstructor64.subst(iop)
 
-    iop = InstObjParams('vstsingle64', 'VstSingle64', 'VstSingleOp64', '', [])
+    iop = ArmInstObjParams(
+            'vstsingle64', 'VstSingle64', 'VstSingleOp64', '', [])
     header_output += VMemSingleDeclare64.subst(iop)
     decoder_output += VMemSingleConstructor64.subst(iop)
 

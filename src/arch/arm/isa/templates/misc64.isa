@@ -38,6 +38,9 @@
 def template ImmOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,uint64_t _imm);
@@ -50,6 +53,7 @@ def template ImmOp64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -57,6 +61,9 @@ def template ImmOp64Constructor {{
 def template RegRegImmImmOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
@@ -73,6 +80,7 @@ def template RegRegImmImmOp64Constructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm1, _imm2)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -80,6 +88,9 @@ def template RegRegImmImmOp64Constructor {{
 def template RegRegRegImmOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1,
@@ -95,6 +106,7 @@ def template RegRegRegImmOp64Constructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -102,6 +114,9 @@ def template RegRegRegImmOp64Constructor {{
 def template MiscRegOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest, uint64_t _imm);
@@ -115,6 +130,7 @@ def template MiscRegOp64Constructor {{
                                    uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -122,6 +138,9 @@ def template MiscRegOp64Constructor {{
 def template MiscRegRegOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
@@ -137,6 +156,7 @@ def template MiscRegRegOp64Constructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -144,6 +164,9 @@ def template MiscRegRegOp64Constructor {{
 def template RegMiscRegOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
@@ -159,6 +182,7 @@ def template RegMiscRegOp64Constructor {{
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};
@@ -168,6 +192,7 @@ class %(class_name)s : public %(base_class)s
 {
   private:
     bool data;
+    %(reg_idx_arr_decl)s;
 
   public:
     // Constructor
@@ -180,6 +205,7 @@ def template XPauthOpRegRegConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest)
     {
+        %(set_reg_idx_arr)s;
         data = bits(machInst, 10);
         %(constructor)s;
     }
@@ -188,6 +214,9 @@ def template XPauthOpRegRegConstructor {{
 def template RegNoneDeclare {{
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest);
@@ -200,6 +229,7 @@ def template RegNoneConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
     }
 }};

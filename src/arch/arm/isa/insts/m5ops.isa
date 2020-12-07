@@ -43,20 +43,20 @@ let {{
     if (!recognized)
         fault = std::make_shared<UndefinedInstruction>(machInst, true);
     '''
-    gem5OpIop = InstObjParams("gem5op", "Gem5Op64", "PredOp",
-                              { "code": gem5OpCode + 'X0 = ret;',
-                                "predicate_test": predicateTest },
-                                [ "IsNonSpeculative", "IsUnverifiable" ]);
+    gem5OpIop = ArmInstObjParams("gem5op", "Gem5Op64", "PredOp",
+                                 { "code": gem5OpCode + 'X0 = ret;',
+                                   "predicate_test": predicateTest },
+                                 [ "IsNonSpeculative", "IsUnverifiable" ]);
     header_output += BasicDeclare.subst(gem5OpIop)
     decoder_output += BasicConstructor.subst(gem5OpIop)
     exec_output += PredOpExecute.subst(gem5OpIop)
 
-    gem5OpIop = InstObjParams("gem5op", "Gem5Op", "PredOp",
-                              { "code": gem5OpCode + \
-                                'R0 = bits(ret, 31, 0);\n' + \
-                                'R1 = bits(ret, 63, 32);',
-                                "predicate_test": predicateTest },
-                                [ "IsNonSpeculative", "IsUnverifiable" ]);
+    gem5OpIop = ArmInstObjParams("gem5op", "Gem5Op", "PredOp",
+                                 { "code": gem5OpCode + \
+                                   'R0 = bits(ret, 31, 0);\n' + \
+                                   'R1 = bits(ret, 63, 32);',
+                                   "predicate_test": predicateTest },
+                                 [ "IsNonSpeculative", "IsUnverifiable" ]);
     header_output += BasicDeclare.subst(gem5OpIop)
     decoder_output += BasicConstructor.subst(gem5OpIop)
     exec_output += PredOpExecute.subst(gem5OpIop)

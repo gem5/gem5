@@ -52,6 +52,9 @@ def template NeonRegRegRegOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     typedef _Element Element;
 
@@ -62,6 +65,7 @@ class %(class_name)s : public %(base_class)s
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -78,6 +82,9 @@ def template NeonRegRegRegImmOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     typedef _Element Element;
 
@@ -89,6 +96,7 @@ class %(class_name)s : public %(base_class)s
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -105,6 +113,9 @@ def template NeonRegRegImmOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     typedef _Element Element;
 
@@ -115,6 +126,7 @@ class %(class_name)s : public %(base_class)s
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -131,6 +143,9 @@ def template NeonRegImmOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     typedef _Element Element;
 
@@ -139,6 +154,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {
@@ -155,6 +171,9 @@ def template NeonRegRegOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
 {
+  private:
+    %(reg_idx_arr_decl)s;
+
   protected:
     typedef _Element Element;
 
@@ -165,6 +184,7 @@ class %(class_name)s : public %(base_class)s
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1)
     {
+        %(set_reg_idx_arr)s;
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             for (int x = 0; x < _numDestRegs; x++) {

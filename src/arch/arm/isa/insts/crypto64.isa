@@ -92,11 +92,11 @@ let {{
         crypto_prefix = enable_check + cryptoRegRegRegPrefix
         cryptocode = crypto_prefix + crypto_func + cryptoSuffix
 
-        cryptoiop = InstObjParams(name, Name, "RegRegRegOp",
-                                { "code": cryptocode,
-                                  "r_count": 4,
-                                  "predicate_test": predicateTest,
-                                  "op_class": opClass}, [])
+        cryptoiop = ArmInstObjParams(name, Name, "RegRegRegOp",
+                                     { "code": cryptocode,
+                                       "r_count": 4,
+                                       "predicate_test": predicateTest,
+                                       "op_class": opClass}, [])
         header_output += RegRegRegOpDeclare.subst(cryptoiop)
         decoder_output += RegRegRegOpConstructor.subst(cryptoiop)
         exec_output += CryptoPredOpExecute.subst(cryptoiop)
@@ -107,11 +107,11 @@ let {{
         crypto_prefix = enable_check + cryptoRegRegPrefix
         cryptocode = crypto_prefix + crypto_func + cryptoSuffix
 
-        cryptoiop = InstObjParams(name, Name, "RegRegOp",
-                                { "code": cryptocode,
-                                  "r_count": 4,
-                                  "predicate_test": predicateTest,
-                                  "op_class": opClass}, [])
+        cryptoiop = ArmInstObjParams(name, Name, "RegRegOp",
+                                     { "code": cryptocode,
+                                       "r_count": 4,
+                                       "predicate_test": predicateTest,
+                                       "op_class": opClass}, [])
         header_output += RegRegOpDeclare.subst(cryptoiop)
         decoder_output += RegRegOpConstructor.subst(cryptoiop)
         exec_output += CryptoPredOpExecute.subst(cryptoiop)

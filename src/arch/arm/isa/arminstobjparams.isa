@@ -1,7 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2007-2008 The Florida State University
-// All rights reserved.
+// Copyright 2021 Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -26,11 +25,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// The most basic instruction format...
-def format BasicOp(code, *flags) {{
-        iop = ArmInstObjParams(name, Name, 'ArmStaticInst', code, flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+let {{
+
+class ArmInstObjParams(InstObjParams):
+    def __init__(self, *args, **kwargs):
+        super(ArmInstObjParams, self).__init__(*args, **kwargs)
+        self.padSrcRegIdx(self.operands.numDestRegs)
+
 }};
