@@ -107,7 +107,8 @@ class Template(object):
 
             myDict['reg_idx_arr_decl'] = \
                 'RegId srcRegIdxArr[%d]; RegId destRegIdxArr[%d]' % \
-                (d.operands.numSrcRegs, d.operands.numDestRegs)
+                (d.operands.numSrcRegs + d.srcRegIdxPadding,
+                 d.operands.numDestRegs + d.destRegIdxPadding)
 
             # The reinterpret casts are largely because an array with a known
             # size cannot be passed as an argument which is an array with an
@@ -391,6 +392,9 @@ class InstObjParams(object):
 
         self.operands = OperandList(parser, compositeCode)
 
+        self.srcRegIdxPadding = 0
+        self.destRegIdxPadding = 0
+
         # The header of the constructor declares the variables to be used
         # in the body of the constructor.
         header = ''
@@ -463,6 +467,12 @@ class InstObjParams(object):
             self.fp_enable_check = 'fault = checkVecEnableFault(xc);'
         else:
             self.fp_enable_check = ''
+
+    def padSrcRegIdx(self, padding):
+        self.srcRegIdxPadding = padding
+
+    def padDestRegIdx(self, padding):
+        self.destRegIdxPadding = padding
 
 
 #######################
