@@ -135,7 +135,7 @@ class OperandList(object):
 
         parser.maxInstSrcRegs = max(parser.maxInstSrcRegs, self.numSrcRegs)
         parser.maxInstDestRegs = max(parser.maxInstDestRegs, self.numDestRegs)
-        parser.maxMiscDestRegs = max(parser.maxInstDestRegs,
+        parser.maxMiscDestRegs = max(parser.maxMiscDestRegs,
                                      self.numMiscDestRegs)
 
         # now make a final pass to finalize op_desc fields that may depend
