@@ -1004,7 +1004,7 @@ InstructionQueue<Impl>::wakeDependents(const DynInstPtr &completed_inst)
          dest_reg_idx++)
     {
         PhysRegIdPtr dest_reg =
-            completed_inst->renamedDestRegIdx(dest_reg_idx);
+            completed_inst->regs.renamedDestIdx(dest_reg_idx);
 
         // Special case of uniq or control registers.  They are not
         // handled by the IQ and thus have no dependency graph entry.
@@ -1242,7 +1242,7 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
                      src_reg_idx++)
                 {
                     PhysRegIdPtr src_reg =
-                        squashed_inst->renamedSrcRegIdx(src_reg_idx);
+                        squashed_inst->regs.renamedSrcIdx(src_reg_idx);
 
                     // Only remove it from the dependency graph if it
                     // was placed there in the first place.
@@ -1253,7 +1253,7 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
                     // overwritten.  The only downside to this is it
                     // leaves more room for error.
 
-                    if (!squashed_inst->isReadySrcRegIdx(src_reg_idx) &&
+                    if (!squashed_inst->regs.readySrcIdx(src_reg_idx) &&
                         !src_reg->isFixedMapping()) {
                         dependGraph.remove(src_reg->flatIndex(),
                                            squashed_inst);
@@ -1315,7 +1315,7 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
              dest_reg_idx++)
         {
             PhysRegIdPtr dest_reg =
-                squashed_inst->renamedDestRegIdx(dest_reg_idx);
+                squashed_inst->regs.renamedDestIdx(dest_reg_idx);
             if (dest_reg->isFixedMapping()){
                 continue;
             }
@@ -1341,8 +1341,8 @@ InstructionQueue<Impl>::addToDependents(const DynInstPtr &new_inst)
          src_reg_idx++)
     {
         // Only add it to the dependency graph if it's not ready.
-        if (!new_inst->isReadySrcRegIdx(src_reg_idx)) {
-            PhysRegIdPtr src_reg = new_inst->renamedSrcRegIdx(src_reg_idx);
+        if (!new_inst->regs.readySrcIdx(src_reg_idx)) {
+            PhysRegIdPtr src_reg = new_inst->regs.renamedSrcIdx(src_reg_idx);
 
             // Check the IQ's scoreboard to make sure the register
             // hasn't become ready while the instruction was in flight
@@ -1389,7 +1389,7 @@ InstructionQueue<Impl>::addToProducers(const DynInstPtr &new_inst)
          dest_reg_idx < total_dest_regs;
          dest_reg_idx++)
     {
-        PhysRegIdPtr dest_reg = new_inst->renamedDestRegIdx(dest_reg_idx);
+        PhysRegIdPtr dest_reg = new_inst->regs.renamedDestIdx(dest_reg_idx);
 
         // Some registers have fixed mapping, and there is no need to track
         // dependencies as these instructions must be executed at commit.

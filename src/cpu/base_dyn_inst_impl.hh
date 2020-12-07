@@ -64,6 +64,7 @@ BaseDynInst<Impl>::BaseDynInst(const StaticInstPtr &_staticInst,
   : staticInst(_staticInst), cpu(cpu),
     thread(nullptr),
     traceData(nullptr),
+    regs(staticInst->numSrcRegs(), staticInst->numDestRegs()),
     macroop(_macroop),
     memData(nullptr),
     savedReq(nullptr),
@@ -80,7 +81,9 @@ BaseDynInst<Impl>::BaseDynInst(const StaticInstPtr &_staticInst,
 template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(const StaticInstPtr &_staticInst,
                                const StaticInstPtr &_macroop)
-    : staticInst(_staticInst), traceData(NULL), macroop(_macroop)
+    : staticInst(_staticInst), traceData(NULL),
+    regs(staticInst->numSrcRegs(), staticInst->numDestRegs()),
+    macroop(_macroop)
 {
     seqNum = 0;
     initVars();
@@ -214,8 +217,7 @@ template <class Impl>
 void
 BaseDynInst<Impl>::markSrcRegReady(RegIndex src_idx)
 {
-    _readySrcRegIdx[src_idx] = true;
-
+    regs.readySrcIdx(src_idx, true);
     markSrcRegReady();
 }
 
@@ -228,7 +230,7 @@ BaseDynInst<Impl>::eaSrcsReady() const
     // stored)
 
     for (int i = 1; i < numSrcRegs(); ++i) {
-        if (!_readySrcRegIdx[i])
+        if (!regs.readySrcIdx(i))
             return false;
     }
 
@@ -253,7 +255,7 @@ BaseDynInst<Impl>::setSquashed()
     // ensures that dest regs will be pinned to the same phys register if
     // re-rename happens.
     for (int idx = 0; idx < numDestRegs(); idx++) {
-        PhysRegIdPtr phys_dest_reg = renamedDestRegIdx(idx);
+        PhysRegIdPtr phys_dest_reg = regs.renamedDestIdx(idx);
         if (phys_dest_reg->isPinned()) {
             phys_dest_reg->incrNumPinnedWrites();
             if (isPinnedRegsWritten())

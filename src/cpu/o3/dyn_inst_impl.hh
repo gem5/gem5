@@ -41,6 +41,8 @@
 #ifndef __CPU_O3_DYN_INST_IMPL_HH__
 #define __CPU_O3_DYN_INST_IMPL_HH__
 
+#include <algorithm>
+
 #include "cpu/o3/dyn_inst.hh"
 #include "debug/O3PipeView.hh"
 
@@ -102,7 +104,7 @@ template <class Impl>
 void
 BaseO3DynInst<Impl>::initVars()
 {
-    this->_readySrcRegIdx.reset();
+    this->regs.init();
 
     _numDestMiscRegs = 0;
 

@@ -1436,12 +1436,12 @@ DefaultIEW<Impl>::writebackInsts()
 
             for (int i = 0; i < inst->numDestRegs(); i++) {
                 // Mark register as ready if not pinned
-                if (inst->renamedDestRegIdx(i)->
+                if (inst->regs.renamedDestIdx(i)->
                         getNumPinnedWritesToComplete() == 0) {
                     DPRINTF(IEW,"Setting Destination Register %i (%s)\n",
-                            inst->renamedDestRegIdx(i)->index(),
-                            inst->renamedDestRegIdx(i)->className());
-                    scoreboard->setReg(inst->renamedDestRegIdx(i));
+                            inst->regs.renamedDestIdx(i)->index(),
+                            inst->regs.renamedDestIdx(i)->className());
+                    scoreboard->setReg(inst->regs.renamedDestIdx(i));
                 }
             }
 
