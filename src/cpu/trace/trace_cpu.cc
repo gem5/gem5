@@ -67,19 +67,15 @@ TraceCPU::TraceCPU(const TraceCPUParams &params)
 
     // Check that the python parameters for sizes of ROB, store buffer and
     // load buffer do not overflow the corresponding C++ variables.
-    fatal_if(params.sizeROB > UINT16_MAX, "ROB size set to %d exceeds the "
-                "max. value of %d.\n", params.sizeROB, UINT16_MAX);
-    fatal_if(params.sizeStoreBuffer > UINT16_MAX, "ROB size set to %d "
-                "exceeds the max. value of %d.\n", params.sizeROB,
-                UINT16_MAX);
-    fatal_if(params.sizeLoadBuffer > UINT16_MAX, "Load buffer size set to"
-                " %d exceeds the max. value of %d.\n",
+    fatal_if(params.sizeROB > UINT16_MAX,
+             "ROB size set to %d exceeds the max. value of %d.",
+             params.sizeROB, UINT16_MAX);
+    fatal_if(params.sizeStoreBuffer > UINT16_MAX,
+             "ROB size set to %d exceeds the max. value of %d.",
+             params.sizeROB, UINT16_MAX);
+    fatal_if(params.sizeLoadBuffer > UINT16_MAX,
+             "Load buffer size set to %d exceeds the max. value of %d.",
                 params.sizeLoadBuffer, UINT16_MAX);
-}
-
-TraceCPU::~TraceCPU()
-{
-
 }
 
 void
@@ -104,8 +100,8 @@ TraceCPU::takeOverFrom(BaseCPU *oldCPU)
 void
 TraceCPU::init()
 {
-    DPRINTF(TraceCPUInst, "Instruction fetch request trace file is \"%s\"."
-            "\n", instTraceFile);
+    DPRINTF(TraceCPUInst, "Instruction fetch request trace file is \"%s\".\n",
+            instTraceFile);
     DPRINTF(TraceCPUData, "Data memory request trace file is \"%s\".\n",
             dataTraceFile);
 
@@ -119,7 +115,7 @@ TraceCPU::init()
 
     // Set the trace offset as the minimum of that in both traces
     traceOffset = std::min(first_icache_tick, first_dcache_tick);
-    inform("%s: Time offset (tick) found as min of both traces is %lli.\n",
+    inform("%s: Time offset (tick) found as min of both traces is %lli.",
             name(), traceOffset);
 
     // Schedule next icache and dcache event by subtracting the offset
@@ -153,8 +149,9 @@ TraceCPU::schedIcacheNext()
     bool sched_next = icacheGen.tryNext();
     // If packet sent successfully, schedule next event
     if (sched_next) {
-        DPRINTF(TraceCPUInst, "Scheduling next icacheGen event "
-                "at %d.\n", curTick() + icacheGen.tickDelta());
+        DPRINTF(TraceCPUInst,
+                "Scheduling next icacheGen event at %d.\n",
+                curTick() + icacheGen.tickDelta());
         schedule(icacheNextEvent, curTick() + icacheGen.tickDelta());
         ++traceStats.numSchedIcacheEvent;
     } else {
@@ -191,7 +188,7 @@ TraceCPU::checkAndSchedExitEvent()
     } else {
         // Schedule event to indicate execution is complete as both
         // instruction and data access traces have been played back.
-        inform("%s: Execution complete.\n", name());
+        inform("%s: Execution complete.", name());
         // If the replay is configured to exit early, that is when any one
         // execution is complete then exit immediately and return. Otherwise,
         // schedule the counted exit that counts down completion of each Trace
@@ -203,22 +200,25 @@ TraceCPU::checkAndSchedExitEvent()
         }
     }
 }
- TraceCPU::TraceStats::TraceStats(TraceCPU *trace)
-    : Stats::Group(trace),
+
+TraceCPU::TraceStats::TraceStats(TraceCPU *trace) :
+    Stats::Group(trace),
     ADD_STAT(numSchedDcacheEvent,
-     "Number of events scheduled to trigger data request generator"),
+            "Number of events scheduled to trigger data request generator"),
     ADD_STAT(numSchedIcacheEvent,
-     "Number of events scheduled to trigger instruction request generator"),
+            "Number of events scheduled to trigger instruction request "
+            "generator"),
     ADD_STAT(numOps, "Number of micro-ops simulated by the Trace CPU"),
     ADD_STAT(cpi, "Cycles per micro-op used as a proxy for CPI",
-     trace->baseStats.numCycles / numOps)
+            trace->baseStats.numCycles / numOps)
 {
-        cpi.precision(6);
+    cpi.precision(6);
 }
+
 TraceCPU::ElasticDataGen::
 ElasticDataGenStatGroup::ElasticDataGenStatGroup(Stats::Group *parent,
-                                                 const std::string& _name)
-    : Stats::Group(parent, _name.c_str()),
+                                                 const std::string& _name) :
+    Stats::Group(parent, _name.c_str()),
     ADD_STAT(maxDependents, "Max number of dependents observed on a node"),
     ADD_STAT(maxReadyListSize, "Max size of the ready list observed"),
     ADD_STAT(numSendAttempted, "Number of first attempts to send a request"),
@@ -238,15 +238,15 @@ TraceCPU::ElasticDataGen::init()
     DPRINTF(TraceCPUData, "Initializing data memory request generator "
             "DcacheGen: elastic issue with retry.\n");
 
-    if (!readNextWindow())
-        panic("Trace has %d elements. It must have at least %d elements.\n",
-              depGraph.size(), 2 * windowSize);
+    panic_if(!readNextWindow(),
+            "Trace has %d elements. It must have at least %d elements.",
+            depGraph.size(), 2 * windowSize);
     DPRINTF(TraceCPUData, "After 1st read, depGraph size:%d.\n",
             depGraph.size());
 
-    if (!readNextWindow())
-        panic("Trace has %d elements. It must have at least %d elements.\n",
-              depGraph.size(), 2 * windowSize);
+    panic_if(!readNextWindow(),
+            "Trace has %d elements. It must have at least %d elements.",
+            depGraph.size(), 2 * windowSize);
     DPRINTF(TraceCPUData, "After 2st read, depGraph size:%d.\n",
             depGraph.size());
 
@@ -255,15 +255,17 @@ TraceCPU::ElasticDataGen::init()
         printReadyList();
     }
     auto free_itr = readyList.begin();
-    DPRINTF(TraceCPUData, "Execute tick of the first dependency free node %lli"
-            " is %d.\n", free_itr->seqNum, free_itr->execTick);
+    DPRINTF(TraceCPUData,
+            "Execute tick of the first dependency free node %lli is %d.\n",
+            free_itr->seqNum, free_itr->execTick);
     // Return the execute tick of the earliest ready node so that an event
     // can be scheduled to call execute()
     return (free_itr->execTick);
 }
 
 void
-TraceCPU::ElasticDataGen::adjustInitTraceOffset(Tick& offset) {
+TraceCPU::ElasticDataGen::adjustInitTraceOffset(Tick& offset)
+{
     for (auto& free_node : readyList) {
         free_node.execTick -= offset;
     }
@@ -278,7 +280,6 @@ TraceCPU::ElasticDataGen::exit()
 bool
 TraceCPU::ElasticDataGen::readNextWindow()
 {
-
     // Read and add next window
     DPRINTF(TraceCPUData, "Reading next window from file.\n");
 
@@ -328,9 +329,10 @@ TraceCPU::ElasticDataGen::readNextWindow()
     return true;
 }
 
-template<typename T> void
+template<typename T>
+void
 TraceCPU::ElasticDataGen::addDepsOnParent(GraphNode *new_node,
-                                            T& dep_array, uint8_t& num_dep)
+                                          T& dep_array, uint8_t& num_dep)
 {
     for (auto& a_dep : dep_array) {
         // The convention is to set the dependencies starting with the first
@@ -380,8 +382,9 @@ TraceCPU::ElasticDataGen::execute()
     // then issue it, i.e. add the node to readyList.
     while (!depFreeQueue.empty()) {
         if (checkAndIssue(depFreeQueue.front(), false)) {
-            DPRINTF(TraceCPUData, "Removing from depFreeQueue: seq. num "
-                "%lli.\n", (depFreeQueue.front())->seqNum);
+            DPRINTF(TraceCPUData,
+                    "Removing from depFreeQueue: seq. num %lli.\n",
+                    (depFreeQueue.front())->seqNum);
             depFreeQueue.pop();
         } else {
             break;
@@ -434,8 +437,9 @@ TraceCPU::ElasticDataGen::execute()
         // are based on successful sending of the load as complete.
         if (node_ptr->isLoad() && !node_ptr->isStrictlyOrdered()) {
             // If execute succeeded mark its dependents as complete
-            DPRINTF(TraceCPUData, "Node seq. num %lli sent. Waking up "
-                    "dependents..\n", node_ptr->seqNum);
+            DPRINTF(TraceCPUData,
+                    "Node seq. num %lli sent. Waking up dependents..\n",
+                    node_ptr->seqNum);
 
             auto child_itr = (node_ptr->dependents).begin();
             while (child_itr != (node_ptr->dependents).end()) {
@@ -556,7 +560,6 @@ TraceCPU::ElasticDataGen::execute()
 PacketPtr
 TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
 {
-
     DPRINTF(TraceCPUData, "Executing memory request %lli (phys addr %d, "
             "virt addr %d, pc %#x, size %d, flags %d).\n",
             node_ptr->seqNum, node_ptr->physAddr, node_ptr->virtAddr,
@@ -639,32 +642,32 @@ TraceCPU::ElasticDataGen::checkAndIssue(const GraphNode* node_ptr, bool first)
     // If this is the first attempt, print a debug message to indicate this.
     if (first) {
         DPRINTFR(TraceCPUData, "\t\tseq. num %lli(%s) with rob num %lli is now"
-            " dependency free.\n", node_ptr->seqNum, node_ptr->typeToStr(),
-            node_ptr->robNum);
+                " dependency free.\n", node_ptr->seqNum, node_ptr->typeToStr(),
+                node_ptr->robNum);
     }
 
     // Check if resources are available to issue the specific node
     if (hwResource.isAvailable(node_ptr)) {
         // If resources are free only then add to readyList
-        DPRINTFR(TraceCPUData, "\t\tResources available for seq. num %lli. Adding"
-            " to readyList, occupying resources.\n", node_ptr->seqNum);
+        DPRINTFR(TraceCPUData, "\t\tResources available for seq. num %lli. "
+                "Adding to readyList, occupying resources.\n",
+                node_ptr->seqNum);
         // Compute the execute tick by adding the compute delay for the node
         // and add the ready node to the ready list
         addToSortedReadyList(node_ptr->seqNum,
-                                owner.clockEdge() + node_ptr->compDelay);
+                             owner.clockEdge() + node_ptr->compDelay);
         // Account for the resources taken up by this issued node.
         hwResource.occupy(node_ptr);
         return true;
-
     } else {
         if (first) {
             // Although dependencies are complete, resources are not available.
-            DPRINTFR(TraceCPUData, "\t\tResources unavailable for seq. num %lli."
-                " Adding to depFreeQueue.\n", node_ptr->seqNum);
+            DPRINTFR(TraceCPUData, "\t\tResources unavailable for seq. num "
+                    "%lli. Adding to depFreeQueue.\n", node_ptr->seqNum);
             depFreeQueue.push(node_ptr);
         } else {
-            DPRINTFR(TraceCPUData, "\t\tResources unavailable for seq. num %lli. "
-                "Still pending issue.\n", node_ptr->seqNum);
+            DPRINTFR(TraceCPUData, "\t\tResources unavailable for seq. num "
+                    "%lli. Still pending issue.\n", node_ptr->seqNum);
         }
         return false;
     }
@@ -739,7 +742,7 @@ TraceCPU::ElasticDataGen::completeMemAccess(PacketPtr pkt)
 
 void
 TraceCPU::ElasticDataGen::addToSortedReadyList(NodeSeqNum seq_num,
-                                                    Tick exec_tick)
+                                               Tick exec_tick)
 {
     ReadyNode ready_node;
     ready_node.seqNum = seq_num;
@@ -752,17 +755,19 @@ TraceCPU::ElasticDataGen::addToSortedReadyList(NodeSeqNum seq_num,
     // and return
     if (itr == readyList.end()) {
         readyList.insert(itr, ready_node);
-        elasticStats.maxReadyListSize = std::max<double>(readyList.size(),
-                                        elasticStats.maxReadyListSize.value());
+        elasticStats.maxReadyListSize =
+            std::max<double>(readyList.size(),
+                             elasticStats.maxReadyListSize.value());
         return;
     }
 
     // If the new node has its execution tick equal to the first node in the
     // list then go to the next node. If the first node in the list failed
     // to execute, its position as the first is thus maintained.
-    if (retryPkt)
+    if (retryPkt) {
         if (retryPkt->req->getReqInstSeqNum() == itr->seqNum)
             itr++;
+    }
 
     // Increment the iterator and compare the node pointed to by it to the new
     // node till the position to insert the new node is found.
@@ -770,23 +775,24 @@ TraceCPU::ElasticDataGen::addToSortedReadyList(NodeSeqNum seq_num,
     while (!found && itr != readyList.end()) {
         // If the execution tick of the new node is less than the node then
         // this is the position to insert
-        if (exec_tick < itr->execTick)
+        if (exec_tick < itr->execTick) {
             found = true;
         // If the execution tick of the new node is equal to the node then
         // sort in ascending order of sequence numbers
-        else if (exec_tick == itr->execTick) {
+        } else if (exec_tick == itr->execTick) {
             // If the sequence number of the new node is less than the node
             // then this is the position to insert
-            if (seq_num < itr->seqNum)
+            if (seq_num < itr->seqNum) {
                 found = true;
             // Else go to next node
-            else
+            } else {
                 itr++;
-        }
-        // If the execution tick of the new node is greater than the node then
-        // go to the next node
-        else
+            }
+        } else {
+            // If the execution tick of the new node is greater than the node
+            // then go to the next node.
             itr++;
+        }
     }
     readyList.insert(itr, ready_node);
     // Update the stat for max size reached of the readyList
@@ -795,8 +801,8 @@ TraceCPU::ElasticDataGen::addToSortedReadyList(NodeSeqNum seq_num,
 }
 
 void
-TraceCPU::ElasticDataGen::printReadyList() {
-
+TraceCPU::ElasticDataGen::printReadyList()
+{
     auto itr = readyList.begin();
     if (itr == readyList.end()) {
         DPRINTF(TraceCPUData, "readyList is empty.\n");
@@ -813,8 +819,8 @@ TraceCPU::ElasticDataGen::printReadyList() {
 }
 
 TraceCPU::ElasticDataGen::HardwareResource::HardwareResource(
-    uint16_t max_rob, uint16_t max_stores, uint16_t max_loads)
-  : sizeROB(max_rob),
+        uint16_t max_rob, uint16_t max_stores, uint16_t max_loads) :
+    sizeROB(max_rob),
     sizeStoreBuffer(max_stores),
     sizeLoadBuffer(max_loads),
     oldestInFlightRobNum(UINT64_MAX),
@@ -845,8 +851,9 @@ void
 TraceCPU::ElasticDataGen::HardwareResource::release(const GraphNode* done_node)
 {
     assert(!inFlightNodes.empty());
-    DPRINTFR(TraceCPUData, "\tClearing done seq. num %d from inFlightNodes..\n",
-        done_node->seqNum);
+    DPRINTFR(TraceCPUData,
+            "\tClearing done seq. num %d from inFlightNodes..\n",
+            done_node->seqNum);
 
     assert(inFlightNodes.find(done_node->seqNum) != inFlightNodes.end());
     inFlightNodes.erase(done_node->seqNum);
@@ -861,9 +868,10 @@ TraceCPU::ElasticDataGen::HardwareResource::release(const GraphNode* done_node)
         oldestInFlightRobNum = inFlightNodes.begin()->second;
     }
 
-    DPRINTFR(TraceCPUData, "\tCleared. inFlightNodes.size() = %d, "
-        "oldestInFlightRobNum = %d\n", inFlightNodes.size(),
-        oldestInFlightRobNum);
+    DPRINTFR(TraceCPUData,
+            "\tCleared. inFlightNodes.size() = %d, "
+            "oldestInFlightRobNum = %d\n", inFlightNodes.size(),
+            oldestInFlightRobNum);
 
     // A store is considered complete when a request is sent, thus ROB entry is
     // freed. But it occupies an entry in the Store Buffer until its response
@@ -891,21 +899,21 @@ TraceCPU::ElasticDataGen::HardwareResource::releaseStoreBuffer()
 
 bool
 TraceCPU::ElasticDataGen::HardwareResource::isAvailable(
-    const GraphNode* new_node) const
+        const GraphNode* new_node) const
 {
     uint16_t num_in_flight_nodes;
     if (inFlightNodes.empty()) {
         num_in_flight_nodes = 0;
         DPRINTFR(TraceCPUData, "\t\tChecking resources to issue seq. num %lli:"
-            " #in-flight nodes = 0", new_node->seqNum);
+                " #in-flight nodes = 0", new_node->seqNum);
     } else if (new_node->robNum > oldestInFlightRobNum) {
         // This is the intuitive case where new dep-free node is younger
         // instruction than the oldest instruction in-flight. Thus we make sure
         // in_flight_nodes does not overflow.
         num_in_flight_nodes = new_node->robNum - oldestInFlightRobNum;
         DPRINTFR(TraceCPUData, "\t\tChecking resources to issue seq. num %lli:"
-            " #in-flight nodes = %d - %d =  %d", new_node->seqNum,
-             new_node->robNum, oldestInFlightRobNum, num_in_flight_nodes);
+                " #in-flight nodes = %d - %d =  %d", new_node->seqNum,
+                new_node->robNum, oldestInFlightRobNum, num_in_flight_nodes);
     } else {
         // This is the case where an instruction older than the oldest in-
         // flight instruction becomes dep-free. Thus we must have already
@@ -914,12 +922,12 @@ TraceCPU::ElasticDataGen::HardwareResource::isAvailable(
         // be updated in occupy(). We simply let this node issue now.
         num_in_flight_nodes = 0;
         DPRINTFR(TraceCPUData, "\t\tChecking resources to issue seq. num %lli:"
-            " new oldestInFlightRobNum = %d, #in-flight nodes ignored",
-            new_node->seqNum, new_node->robNum);
+                " new oldestInFlightRobNum = %d, #in-flight nodes ignored",
+                new_node->seqNum, new_node->robNum);
     }
     DPRINTFR(TraceCPUData, ", LQ = %d/%d, SQ  = %d/%d.\n",
-        numInFlightLoads, sizeLoadBuffer,
-        numInFlightStores, sizeStoreBuffer);
+            numInFlightLoads, sizeLoadBuffer,
+            numInFlightStores, sizeStoreBuffer);
     // Check if resources are available to issue the specific node
     if (num_in_flight_nodes >= sizeROB) {
         return false;
@@ -934,23 +942,25 @@ TraceCPU::ElasticDataGen::HardwareResource::isAvailable(
 }
 
 bool
-TraceCPU::ElasticDataGen::HardwareResource::awaitingResponse() const {
+TraceCPU::ElasticDataGen::HardwareResource::awaitingResponse() const
+{
     // Return true if there is at least one read or write request in flight
     return (numInFlightStores != 0 || numInFlightLoads != 0);
 }
 
 void
-TraceCPU::ElasticDataGen::HardwareResource::printOccupancy() {
+TraceCPU::ElasticDataGen::HardwareResource::printOccupancy()
+{
     DPRINTFR(TraceCPUData, "oldestInFlightRobNum = %d, "
             "LQ = %d/%d, SQ  = %d/%d.\n",
             oldestInFlightRobNum,
             numInFlightLoads, sizeLoadBuffer,
             numInFlightStores, sizeStoreBuffer);
 }
-TraceCPU::FixedRetryGen::
-FixedRetryGenStatGroup::FixedRetryGenStatGroup(Stats::Group *parent,
-                                               const std::string& _name)
-    : Stats::Group(parent, _name.c_str()),
+
+TraceCPU::FixedRetryGen::FixedRetryGenStatGroup::FixedRetryGenStatGroup(
+        Stats::Group *parent, const std::string& _name) :
+    Stats::Group(parent, _name.c_str()),
     ADD_STAT(numSendAttempted, "Number of first attempts to send a request"),
     ADD_STAT(numSendSucceeded, "Number of successful first attempts"),
     ADD_STAT(numSendFailed, "Number of failed first attempts"),
@@ -980,7 +990,6 @@ TraceCPU::FixedRetryGen::tryNext()
 {
     // If there is a retry packet, try to send it
     if (retryPkt) {
-
         DPRINTF(TraceCPUInst, "Trying to send retry packet.\n");
 
         if (!port.sendTimingReq(retryPkt)) {
@@ -990,7 +999,6 @@ TraceCPU::FixedRetryGen::tryNext()
         }
         ++fixedStats.numRetrySucceeded;
     } else {
-
         DPRINTF(TraceCPUInst, "Trying to send packet for currElement.\n");
 
         // try sending current element
@@ -1063,7 +1071,7 @@ TraceCPU::FixedRetryGen::nextExecute()
 
 bool
 TraceCPU::FixedRetryGen::send(Addr addr, unsigned size, const MemCmd& cmd,
-              Request::FlagsType flags, Addr pc)
+        Request::FlagsType flags, Addr pc)
 {
 
     // Create new request
@@ -1172,11 +1180,10 @@ TraceCPU::DcachePort::recvReqRetry()
 }
 
 TraceCPU::ElasticDataGen::InputStream::InputStream(
-    const std::string& filename,
-    const double time_multiplier)
-    : trace(filename),
-      timeMultiplier(time_multiplier),
-      microOpCount(0)
+        const std::string& filename, const double time_multiplier) :
+    trace(filename),
+    timeMultiplier(time_multiplier),
+    microOpCount(0)
 {
     // Create a protobuf message for the header and read it from the stream
     ProtoMessage::InstDepRecordHeader header_msg;
@@ -1284,8 +1291,8 @@ TraceCPU::ElasticDataGen::GraphNode::removeRegDep(NodeSeqNum reg_dep)
             own_reg_dep = 0;
             assert(numRegDep > 0);
             --numRegDep;
-            DPRINTFR(TraceCPUData, "\tFor %lli: Marking register dependency %lli "
-                    "done.\n", seqNum, reg_dep);
+            DPRINTFR(TraceCPUData, "\tFor %lli: Marking register dependency "
+                    "%lli done.\n", seqNum, reg_dep);
             return true;
         }
     }
@@ -1303,8 +1310,9 @@ TraceCPU::ElasticDataGen::GraphNode::removeRobDep(NodeSeqNum rob_dep)
             own_rob_dep = 0;
             assert(numRobDep > 0);
             --numRobDep;
-            DPRINTFR(TraceCPUData, "\tFor %lli: Marking ROB dependency %lli "
-                "done.\n", seqNum, rob_dep);
+            DPRINTFR(TraceCPUData,
+                    "\tFor %lli: Marking ROB dependency %lli done.\n",
+                    seqNum, rob_dep);
             return true;
         }
     }
@@ -1312,7 +1320,8 @@ TraceCPU::ElasticDataGen::GraphNode::removeRobDep(NodeSeqNum rob_dep)
 }
 
 void
-TraceCPU::ElasticDataGen::GraphNode::clearRegDep() {
+TraceCPU::ElasticDataGen::GraphNode::clearRegDep()
+{
     for (auto& own_reg_dep : regDep) {
         own_reg_dep = 0;
     }
@@ -1320,7 +1329,8 @@ TraceCPU::ElasticDataGen::GraphNode::clearRegDep() {
 }
 
 void
-TraceCPU::ElasticDataGen::GraphNode::clearRobDep() {
+TraceCPU::ElasticDataGen::GraphNode::clearRobDep()
+{
     for (auto& own_rob_dep : robDep) {
         own_rob_dep = 0;
     }
