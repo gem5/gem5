@@ -40,65 +40,66 @@
 
 // Basic instruction class declaration template.
 def template BasicDeclare {{
-        /**
-         * Static instruction class for "%(mnemonic)s".
-         */
-        class %(class_name)s : public %(base_class)s
-        {
-          public:
-                /// Constructor.
-                %(class_name)s(ExtMachInst machInst);
-                Fault execute(ExecContext *,
-                              Trace::InstRecord *) const override;
-        };
+    /**
+     * Static instruction class for "%(mnemonic)s".
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst);
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    };
 }};
 
 // Basic instruction class constructor template.
 def template BasicConstructor {{
-        %(class_name)s::%(class_name)s(ExtMachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
-        {
-                %(constructor)s;
-                if (!(condCode == COND_AL || condCode == COND_UC)) {
-                    for (int x = 0; x < _numDestRegs; x++) {
-                        setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
-                    }
-                }
+    %(class_name)s::%(class_name)s(ExtMachInst machInst) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                setSrcRegIdx(_numSrcRegs++, destRegIdx(x));
+            }
         }
+    }
 }};
 
 def template BasicConstructor64 {{
-        %(class_name)s::%(class_name)s(ExtMachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
-        {
-            %(constructor)s;
-        }
+    %(class_name)s::%(class_name)s(ExtMachInst machInst) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+    }
 }};
 
 
 // Basic instruction class execute method template.
 def template BasicExecute {{
-        Fault %(class_name)s::execute(
+    Fault
+    %(class_name)s::execute(
             ExecContext *xc, Trace::InstRecord *traceData) const
-        {
-                Fault fault = NoFault;
+    {
+        Fault fault = NoFault;
 
-                %(op_decl)s;
-                %(op_rd)s;
-                %(code)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
 
-                if (fault == NoFault)
-                {
-                    %(op_wb)s;
-                }
-                return fault;
+        if (fault == NoFault) {
+            %(op_wb)s;
         }
+        return fault;
+    }
 }};
 
 // Basic decode template.
 def template BasicDecode {{
-        return new %(class_name)s(machInst);
+    return new %(class_name)s(machInst);
 }};
 
 // Basic decode template, passing mnemonic in as string arg to constructor.
 def template BasicDecodeWithMnemonic {{
-        return new %(class_name)s("%(mnemonic)s", machInst);
+    return new %(class_name)s("%(mnemonic)s", machInst);
 }};

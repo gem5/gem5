@@ -38,18 +38,17 @@
 def template ImmOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
-  protected:
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst,uint64_t _imm);
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,uint64_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template ImmOp64Constructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
         %(constructor)s;
     }
@@ -58,24 +57,21 @@ def template ImmOp64Constructor {{
 def template RegRegImmImmOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
-  protected:
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst,
-                       IntRegIndex _dest, IntRegIndex _op1,
-                       uint64_t _imm1, uint64_t _imm2);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                   IntRegIndex _dest, IntRegIndex _op1,
+                   uint64_t _imm1, uint64_t _imm2);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegRegImmImmOp64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          uint64_t _imm1,
-                                          uint64_t _imm2)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _imm1, _imm2)
+                                   IntRegIndex _dest, IntRegIndex _op1,
+                                   uint64_t _imm1, uint64_t _imm2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _imm1, _imm2)
     {
         %(constructor)s;
     }
@@ -84,24 +80,20 @@ def template RegRegImmImmOp64Constructor {{
 def template RegRegRegImmOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
-  protected:
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst,
-                       IntRegIndex _dest, IntRegIndex _op1,
-                       IntRegIndex _op2, uint64_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1,
+                   IntRegIndex _op2, uint64_t _imm);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegRegRegImmOp64Constructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          IntRegIndex _op2,
-                                          uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _imm)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                                   IntRegIndex _op1, IntRegIndex _op2,
+                                   uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _imm)
     {
         %(constructor)s;
     }
@@ -110,21 +102,18 @@ def template RegRegRegImmOp64Constructor {{
 def template MiscRegOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-                uint64_t _imm);
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest, uint64_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template MiscRegOp64Constructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          MiscRegIndex _dest,
-                                          uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _imm)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
+                                   uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
         %(constructor)s;
     }
@@ -133,22 +122,20 @@ def template MiscRegOp64Constructor {{
 def template MiscRegRegOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-                IntRegIndex _op1, uint64_t _imm);
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
+            IntRegIndex _op1, uint64_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template MiscRegRegOp64Constructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          MiscRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _imm)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
+                                   IntRegIndex _op1, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _imm)
     {
         %(constructor)s;
     }
@@ -157,22 +144,20 @@ def template MiscRegRegOp64Constructor {{
 def template RegMiscRegOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                MiscRegIndex _op1, uint64_t _imm);
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+            MiscRegIndex _op1, uint64_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegMiscRegOp64Constructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          MiscRegIndex _op1,
-                                          uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _imm)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                                   MiscRegIndex _op1, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _imm)
     {
         %(constructor)s;
     }
@@ -181,22 +166,20 @@ def template RegMiscRegOp64Constructor {{
 def template XPauthOpRegRegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    private:
-        bool data;
+  private:
+    bool data;
 
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template XPauthOpRegRegConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest)
     {
-
         data = bits(machInst, 10);
         %(constructor)s;
     }
@@ -205,17 +188,17 @@ def template XPauthOpRegRegConstructor {{
 def template RegNoneDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest);
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
 def template RegNoneConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest)
     {
         %(constructor)s;
     }

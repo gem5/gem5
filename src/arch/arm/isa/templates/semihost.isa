@@ -48,8 +48,8 @@
 // when a semihosting immediate is recognized.
 
 def template SemihostConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -71,8 +71,8 @@ def template SemihostConstructor {{
 }};
 
 def template SemihostConstructor64 {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
         %(constructor)s;
 

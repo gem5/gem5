@@ -51,22 +51,20 @@ let {{
 def template DataImmDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                IntRegIndex _op1, uint32_t _imm, bool _rotC=true);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+            IntRegIndex _op1, uint32_t _imm, bool _rotC=true);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataImmConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          uint32_t _imm,
-                                          bool _rotC)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _imm, _rotC)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                                   IntRegIndex _op1, uint32_t _imm,
+                                   bool _rotC) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _imm, _rotC)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -89,24 +87,22 @@ def template DataImmConstructor {{
 def template DataRegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                IntRegIndex _op1, IntRegIndex _op2,
-                int32_t _shiftAmt, ArmShiftType _shiftType);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+            IntRegIndex _op1, IntRegIndex _op2,
+            int32_t _shiftAmt, ArmShiftType _shiftType);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataRegConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          IntRegIndex _op2,
-                                          int32_t _shiftAmt,
-                                          ArmShiftType _shiftType)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _shiftAmt, _shiftType)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                                   IntRegIndex _op1, IntRegIndex _op2,
+                                   int32_t _shiftAmt,
+                                   ArmShiftType _shiftType) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _shiftAmt, _shiftType)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -115,7 +111,7 @@ def template DataRegConstructor {{
             }
         }
 
-        if (%(is_branch)s && !isFloating() && !isVector()){
+        if (%(is_branch)s && !isFloating() && !isVector()) {
             flags[IsControl] = true;
             flags[IsIndirectControl] = true;
             if (condCode == COND_AL || condCode == COND_UC)
@@ -134,24 +130,22 @@ def template DataRegConstructor {{
 def template DataRegRegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _shift,
-                ArmShiftType _shiftType);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+            IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _shift,
+            ArmShiftType _shiftType);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataRegRegConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          IntRegIndex _op2,
-                                          IntRegIndex _shift,
-                                          ArmShiftType _shiftType)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _shift, _shiftType)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                                   IntRegIndex _op1, IntRegIndex _op2,
+                                   IntRegIndex _shift,
+                                   ArmShiftType _shiftType) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _shift, _shiftType)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -163,8 +157,9 @@ def template DataRegRegConstructor {{
 }};
 
 def template PredOpExecute {{
-    Fault %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         uint64_t resTemp = 0;
@@ -172,11 +167,9 @@ def template PredOpExecute {{
         %(op_decl)s;
         %(op_rd)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             %(code)s;
-            if (fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(op_wb)s;
             }
         } else {
@@ -188,8 +181,9 @@ def template PredOpExecute {{
 }};
 
 def template QuiescePredOpExecute {{
-    Fault %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         uint64_t resTemp = 0;
@@ -197,11 +191,9 @@ def template QuiescePredOpExecute {{
         %(op_decl)s;
         %(op_rd)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             %(code)s;
-            if (fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(op_wb)s;
             }
         } else {
@@ -215,8 +207,9 @@ def template QuiescePredOpExecute {{
 }};
 
 def template QuiescePredOpExecuteWithFixup {{
-    Fault %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         uint64_t resTemp = 0;
@@ -224,11 +217,9 @@ def template QuiescePredOpExecuteWithFixup {{
         %(op_decl)s;
         %(op_rd)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             %(code)s;
-            if (fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(op_wb)s;
             }
         } else {

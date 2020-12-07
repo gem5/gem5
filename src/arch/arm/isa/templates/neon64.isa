@@ -45,12 +45,13 @@ class %(class_name)s : public %(base_class)s
 {
   protected:
     typedef _Element Element;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2)
+                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2)
     {
         %(constructor)s;
     }
@@ -65,13 +66,14 @@ class %(class_name)s : public %(base_class)s
 {
   protected:
     typedef _Element Element;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
                    IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _imm)
+                   uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _imm)
     {
         %(constructor)s;
     }
@@ -86,12 +88,11 @@ class %(class_name)s : public %(base_class)s
 {
   protected:
     typedef _Element Element;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
     {
         %(constructor)s;
     }
@@ -106,12 +107,13 @@ class %(class_name)s : public %(base_class)s
 {
   protected:
     typedef _Element Element;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _imm)
+                   IntRegIndex _dest, IntRegIndex _op1, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _imm)
     {
         %(constructor)s;
     }
@@ -126,13 +128,14 @@ class %(class_name)s : public %(base_class)s
 {
   protected:
     typedef _Element Element;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
                    IntRegIndex _dest, IntRegIndex _op1, uint64_t _imm1,
-                   uint64_t _imm2)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _imm1, _imm2)
+                   uint64_t _imm2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _imm1, _imm2)
     {
         %(constructor)s;
     }
@@ -147,12 +150,11 @@ class %(class_name)s : public %(base_class)s
 {
   protected:
     typedef _Element Element;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _imm)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
         %(constructor)s;
     }
@@ -169,7 +171,8 @@ def template NeonXExecDeclare {{
 
 def template NeonXEqualRegOpExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(ExecContext *xc,
+    Fault
+    %(class_name)s<Element>::execute(ExecContext *xc,
             Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -180,19 +183,20 @@ def template NeonXEqualRegOpExecute {{
         const unsigned eCount = rCount * sizeof(uint32_t) / sizeof(Element);
         const unsigned eCountFull = 4 * sizeof(uint32_t) / sizeof(Element);
 
-        union RegVect {
+        union RegVect
+        {
             uint32_t regs[rCount];
             Element elements[eCount];
         };
 
-        union FullRegVect {
+        union FullRegVect
+        {
             uint32_t regs[4];
             Element elements[eCountFull];
         };
 
         %(code)s;
-        if (fault == NoFault)
-        {
+        if (fault == NoFault) {
             %(op_wb)s;
         }
 
@@ -202,7 +206,8 @@ def template NeonXEqualRegOpExecute {{
 
 def template NeonXUnequalRegOpExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(ExecContext *xc,
+    Fault
+    %(class_name)s<Element>::execute(ExecContext *xc,
             Trace::InstRecord *traceData) const
     {
         typedef typename bigger_type_t<Element>::type BigElement;
@@ -214,25 +219,27 @@ def template NeonXUnequalRegOpExecute {{
         const unsigned eCount = rCount * sizeof(uint32_t) / sizeof(Element);
         const unsigned eCountFull = 4 * sizeof(uint32_t) / sizeof(Element);
 
-        union RegVect {
+        union RegVect
+        {
             uint32_t regs[rCount];
             Element elements[eCount];
             BigElement bigElements[eCount / 2];
         };
 
-        union BigRegVect {
+        union BigRegVect
+        {
             uint32_t regs[2 * rCount];
             BigElement elements[eCount];
         };
 
-        union FullRegVect {
+        union FullRegVect
+        {
             uint32_t regs[4];
             Element elements[eCountFull];
         };
 
         %(code)s;
-        if (fault == NoFault)
-        {
+        if (fault == NoFault) {
             %(op_wb)s;
         }
 
@@ -255,8 +262,8 @@ def template MicroNeonMemDeclare64 {{
       public:
         %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _ura,
                        uint32_t _imm, unsigned extraMemFlags, bool _baseIsSP,
-                       uint8_t _accSize, uint8_t _eSize)
-            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest,
+                       uint8_t _accSize, uint8_t _eSize) :
+            %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest,
                              _ura, _imm),
             baseIsSP(_baseIsSP), accSize(_accSize), eSize(_eSize)
         {
@@ -272,8 +279,9 @@ def template MicroNeonMemDeclare64 {{
 }};
 
 def template NeonLoadExecute64 {{
-    Fault %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -302,7 +310,8 @@ def template NeonLoadExecute64 {{
 }};
 
 def template NeonLoadInitiateAcc64 {{
-    Fault %(class_name)s::initiateAcc(
+    Fault
+    %(class_name)s::initiateAcc(
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -314,8 +323,7 @@ def template NeonLoadInitiateAcc64 {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = initiateMemRead(xc, EA, accSize,
-                                    memAccessFlags,
+            fault = initiateMemRead(xc, EA, accSize, memAccessFlags,
                                     std::vector<bool>(accSize, true));
         }
 
@@ -324,7 +332,8 @@ def template NeonLoadInitiateAcc64 {{
 }};
 
 def template NeonLoadCompleteAcc64 {{
-    Fault %(class_name)s::completeAcc(
+    Fault
+    %(class_name)s::completeAcc(
         PacketPtr pkt, ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -349,7 +358,8 @@ def template NeonLoadCompleteAcc64 {{
 }};
 
 def template NeonStoreExecute64 {{
-    Fault %(class_name)s::execute(
+    Fault
+    %(class_name)s::execute(
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -382,7 +392,8 @@ def template NeonStoreExecute64 {{
 }};
 
 def template NeonStoreInitiateAcc64 {{
-    Fault %(class_name)s::initiateAcc(
+    Fault
+    %(class_name)s::initiateAcc(
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -409,7 +420,8 @@ def template NeonStoreInitiateAcc64 {{
 }};
 
 def template NeonStoreCompleteAcc64 {{
-    Fault %(class_name)s::completeAcc(
+    Fault
+    %(class_name)s::completeAcc(
         PacketPtr pkt, ExecContext *xc, Trace::InstRecord *traceData) const
     {
         return NoFault;
@@ -435,7 +447,7 @@ def template VMemSingleDeclare64 {{
         %(class_name)s(ExtMachInst machInst, RegIndex rn, RegIndex vd,
                        RegIndex rm, uint8_t eSize, uint8_t dataSize,
                        uint8_t numStructElems, uint8_t index, bool wb,
-                       bool replicate = false);
+                       bool replicate=false);
     };
 }};
 
@@ -505,8 +517,9 @@ def template MicroNeonMixLaneDeclare64 {{
 }};
 
 def template MicroNeonMixExecute64 {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         uint64_t resTemp = 0;
@@ -515,8 +528,7 @@ def template MicroNeonMixExecute64 {{
         %(op_rd)s;
 
         %(code)s;
-        if (fault == NoFault)
-        {
+        if (fault == NoFault) {
             %(op_wb)s;
         }
 

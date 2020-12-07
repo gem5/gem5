@@ -38,21 +38,20 @@
 def template DataXImmDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                IntRegIndex _op1, uint64_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, uint64_t _imm);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataXImmConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _imm)
+                                   IntRegIndex _dest, IntRegIndex _op1,
+                                   uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _imm)
     {
         %(constructor)s;
     }
@@ -61,24 +60,22 @@ def template DataXImmConstructor {{
 def template DataXSRegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                IntRegIndex _op1, IntRegIndex _op2,
-                int32_t _shiftAmt, ArmShiftType _shiftType);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _op2,
+                   int32_t _shiftAmt, ArmShiftType _shiftType);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataXSRegConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          IntRegIndex _op2,
-                                          int32_t _shiftAmt,
-                                          ArmShiftType _shiftType)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _shiftAmt, _shiftType)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                                   IntRegIndex _op1, IntRegIndex _op2,
+                                   int32_t _shiftAmt,
+                                   ArmShiftType _shiftType) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _shiftAmt, _shiftType)
     {
         %(constructor)s;
     }
@@ -87,24 +84,22 @@ def template DataXSRegConstructor {{
 def template DataXERegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                IntRegIndex _op1, IntRegIndex _op2,
-                ArmExtendType _extendType, int32_t _shiftAmt);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+            IntRegIndex _op1, IntRegIndex _op2,
+            ArmExtendType _extendType, int32_t _shiftAmt);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataXERegConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          IntRegIndex _op2,
-                                          ArmExtendType _extendType,
-                                          int32_t _shiftAmt)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _extendType, _shiftAmt)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                                   IntRegIndex _op1, IntRegIndex _op2,
+                                   ArmExtendType _extendType,
+                                   int32_t _shiftAmt) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _extendType, _shiftAmt)
     {
         %(constructor)s;
     }
@@ -113,19 +108,17 @@ def template DataXERegConstructor {{
 def template DataX1RegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                       IntRegIndex _op1);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataX1RegConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
+                                   IntRegIndex _dest, IntRegIndex _op1) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
     {
         %(constructor)s;
     }
@@ -134,21 +127,19 @@ def template DataX1RegConstructor {{
 def template DataX2RegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                       IntRegIndex _op1, IntRegIndex _op2);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _op2);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataX2RegConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          IntRegIndex _op2)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                                   IntRegIndex _op1, IntRegIndex _op2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2)
     {
         %(constructor)s;
     }
@@ -157,22 +148,20 @@ def template DataX2RegConstructor {{
 def template DataX2RegImmDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                       IntRegIndex _op1, IntRegIndex _op2, uint64_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _op2, uint64_t _imm);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataX2RegImmConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          IntRegIndex _op2,
-                                          uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _imm)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                                   IntRegIndex _op1, IntRegIndex _op2,
+                                   uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _imm)
     {
         %(constructor)s;
     }
@@ -181,22 +170,20 @@ def template DataX2RegImmConstructor {{
 def template DataX3RegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                       IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _op3);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _op3);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataX3RegConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          IntRegIndex _op2,
-                                          IntRegIndex _op3)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _op3)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                                   IntRegIndex _op1, IntRegIndex _op2,
+                                   IntRegIndex _op3) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _op3)
     {
         %(constructor)s;
     }
@@ -205,22 +192,20 @@ def template DataX3RegConstructor {{
 def template DataXCondCompImmDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
-                       uint64_t _imm, ConditionCode _condCode, uint8_t _defCc);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
+                   uint64_t _imm, ConditionCode _condCode, uint8_t _defCc);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataXCondCompImmConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _op1,
-                                          uint64_t _imm,
-                                          ConditionCode _condCode,
-                                          uint8_t _defCc)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _op1, _imm, _condCode, _defCc)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
+                                   uint64_t _imm, ConditionCode _condCode,
+                                   uint8_t _defCc) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _op1, _imm, _condCode, _defCc)
     {
         %(constructor)s;
     }
@@ -229,23 +214,20 @@ def template DataXCondCompImmConstructor {{
 def template DataXCondCompRegDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
-                       IntRegIndex _op2, ConditionCode _condCode,
-                       uint8_t _defCc);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
+                   IntRegIndex _op2, ConditionCode _condCode, uint8_t _defCc);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataXCondCompRegConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _op1,
-                                          IntRegIndex _op2,
-                                          ConditionCode _condCode,
-                                          uint8_t _defCc)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _op1, _op2, _condCode, _defCc)
+                                   IntRegIndex _op1, IntRegIndex _op2,
+                                   ConditionCode _condCode, uint8_t _defCc) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _op1, _op2, _condCode, _defCc)
     {
         %(constructor)s;
     }
@@ -254,23 +236,21 @@ def template DataXCondCompRegConstructor {{
 def template DataXCondSelDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                       IntRegIndex _op1, IntRegIndex _op2,
-                       ConditionCode _condCode);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _op2,
+                   ConditionCode _condCode);
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template DataXCondSelConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex _dest,
-                                          IntRegIndex _op1,
-                                          IntRegIndex _op2,
-                                          ConditionCode _condCode)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _condCode)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                                   IntRegIndex _op1, IntRegIndex _op2,
+                                   ConditionCode _condCode) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _condCode)
     {
         %(constructor)s;
     }

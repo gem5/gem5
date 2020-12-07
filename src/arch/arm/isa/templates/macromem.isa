@@ -62,8 +62,8 @@ def template MicroMemConstructor {{
                                    RegIndex _ura,
                                    RegIndex _urb,
                                    bool _up,
-                                   uint8_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                                   uint8_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                          _ura, _urb, _up, _imm)
     {
         %(constructor)s;
@@ -96,9 +96,9 @@ def template MicroMemPairConstructor {{
                                    RegIndex _dreg2,
                                    RegIndex _base,
                                    bool _up,
-                                   uint8_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dreg1, _dreg2, _base, _up, _imm)
+                                   uint8_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dreg1, _dreg2, _base, _up, _imm)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -120,8 +120,8 @@ def template MicroNeonMemDeclare {{
     {
       public:
         %(class_name)s(ExtMachInst machInst, RegIndex _dest,
-                       RegIndex _ura, uint32_t _imm, unsigned extraMemFlags)
-            : %(base_class)s("%(mnemonic)s", machInst,
+                       RegIndex _ura, uint32_t _imm, unsigned extraMemFlags) :
+            %(base_class)s("%(mnemonic)s", machInst,
                               %(op_class)s, _dest, _ura, _imm)
         {
             memAccessFlags |= extraMemFlags;
@@ -162,8 +162,8 @@ def template MicroSetPCCPSRConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                    IntRegIndex _ura,
                                    IntRegIndex _urb,
-                                   IntRegIndex _urc)
-          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                                   IntRegIndex _urc) :
+          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                            _ura, _urb, _urc)
     {
         %(constructor)s;
@@ -239,11 +239,9 @@ def template MicroNeonMixExecute {{
         %(op_decl)s;
         %(op_rd)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             %(code)s;
-            if (fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(op_wb)s;
             }
         } else {
@@ -331,9 +329,9 @@ def template MicroIntImmConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                    RegIndex _ura,
                                    RegIndex _urb,
-                                   int32_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _ura, _urb, _imm)
+                                   int32_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _ura, _urb, _imm)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -348,8 +346,8 @@ def template MicroIntImmXConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                    RegIndex _ura,
                                    RegIndex _urb,
-                                   int32_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                                   int32_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                          _ura, _urb, _imm)
     {
         %(constructor)s;
@@ -370,9 +368,9 @@ def template MicroIntRegDeclare {{
 def template MicroIntXERegConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                    RegIndex _ura, RegIndex _urb, RegIndex _urc,
-                                   ArmExtendType _type, uint32_t _shiftAmt)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _ura, _urb, _urc, _type, _shiftAmt)
+                                   ArmExtendType _type, uint32_t _shiftAmt) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _ura, _urb, _urc, _type, _shiftAmt)
     {
         %(constructor)s;
     }
@@ -392,9 +390,10 @@ def template MicroIntXERegDeclare {{
 def template MicroIntRegConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                    RegIndex _ura, RegIndex _urb, RegIndex _urc,
-                                   int32_t _shiftAmt, ArmShiftType _shiftType)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _ura, _urb, _urc, _shiftAmt, _shiftType)
+                                   int32_t _shiftAmt,
+                                   ArmShiftType _shiftType) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _ura, _urb, _urc, _shiftAmt, _shiftType)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -416,19 +415,18 @@ def template MacroMemDeclare {{
  */
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex rn,
-                bool index, bool up, bool user, bool writeback, bool load,
-                uint32_t reglist);
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex rn, bool index, bool up,
+            bool user, bool writeback, bool load, uint32_t reglist);
 };
 }};
 
 def template MacroMemConstructor {{
 %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex rn,
         bool index, bool up, bool user, bool writeback, bool load,
-        uint32_t reglist)
-    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, rn,
+        uint32_t reglist) :
+    %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, rn,
                      index, up, user, writeback, load, reglist)
 {
     %(constructor)s;
@@ -453,8 +451,8 @@ class %(class_name)s : public %(base_class)s
 
 def template BigFpMemImmConstructor {{
 %(class_name)s::%(class_name)s(const char *mnemonic, ExtMachInst machInst,
-        bool load, IntRegIndex dest, IntRegIndex base, int64_t imm)
-    : %(base_class)s(mnemonic, machInst, %(op_class)s, load, dest, base, imm)
+        bool load, IntRegIndex dest, IntRegIndex base, int64_t imm) :
+    %(base_class)s(mnemonic, machInst, %(op_class)s, load, dest, base, imm)
 {
     %(constructor)s;
 }
@@ -474,9 +472,9 @@ class %(class_name)s : public %(base_class)s
 def template BigFpMemRegConstructor {{
 %(class_name)s::%(class_name)s(const char *mnemonic, ExtMachInst machInst,
         bool load, IntRegIndex dest, IntRegIndex base,
-        IntRegIndex offset, ArmExtendType type, int64_t imm)
-    : %(base_class)s(mnemonic, machInst, %(op_class)s, load, dest, base,
-                     offset, type, imm)
+        IntRegIndex offset, ArmExtendType type, int64_t imm) :
+    %(base_class)s(mnemonic, machInst, %(op_class)s, load, dest, base,
+                   offset, type, imm)
 {
     %(constructor)s;
 }
@@ -494,8 +492,8 @@ class %(class_name)s : public %(base_class)s
 
 def template BigFpMemLitConstructor {{
 %(class_name)s::%(class_name)s(const char *mnemonic, ExtMachInst machInst,
-        IntRegIndex dest, int64_t imm)
-    : %(base_class)s(mnemonic, machInst, %(op_class)s, dest, imm)
+        IntRegIndex dest, int64_t imm) :
+    %(base_class)s(mnemonic, machInst, %(op_class)s, dest, imm)
 {
     %(constructor)s;
 }
@@ -504,13 +502,13 @@ def template BigFpMemLitConstructor {{
 def template PairMemDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(const char *mnemonic, ExtMachInst machInst,
-                uint32_t size, bool fp, bool load, bool noAlloc, bool signExt,
-                bool exclusive, bool acrel, uint32_t imm,
-                AddrMode mode, IntRegIndex rn, IntRegIndex rt,
-                IntRegIndex rt2);
+  public:
+    // Constructor
+    %(class_name)s(const char *mnemonic, ExtMachInst machInst,
+            uint32_t size, bool fp, bool load, bool noAlloc, bool signExt,
+            bool exclusive, bool acrel, uint32_t imm,
+            AddrMode mode, IntRegIndex rn, IntRegIndex rt,
+            IntRegIndex rt2);
 };
 }};
 
@@ -518,10 +516,10 @@ def template PairMemConstructor {{
 %(class_name)s::%(class_name)s(const char *mnemonic, ExtMachInst machInst,
         uint32_t size, bool fp, bool load, bool noAlloc, bool signExt,
         bool exclusive, bool acrel, uint32_t imm, AddrMode mode,
-        IntRegIndex rn, IntRegIndex rt, IntRegIndex rt2)
-    : %(base_class)s(mnemonic, machInst, %(op_class)s, size,
-                     fp, load, noAlloc, signExt, exclusive, acrel,
-                     imm, mode, rn, rt, rt2)
+        IntRegIndex rn, IntRegIndex rt, IntRegIndex rt2) :
+    %(base_class)s(mnemonic, machInst, %(op_class)s, size,
+                   fp, load, noAlloc, signExt, exclusive, acrel,
+                   imm, mode, rn, rt, rt2)
 {
     %(constructor)s;
 }
@@ -530,20 +528,20 @@ def template PairMemConstructor {{
 def template VMemMultDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, unsigned width,
-                RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
-                uint32_t size, uint32_t align, RegIndex rm);
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, unsigned width,
+            RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
+            uint32_t size, uint32_t align, RegIndex rm);
 };
 }};
 
 def template VMemMultConstructor {{
 %(class_name)s::%(class_name)s(ExtMachInst machInst, unsigned width,
         RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
-        uint32_t size, uint32_t align, RegIndex rm)
-    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, width,
-                     rn, vd, regs, inc, size, align, rm)
+        uint32_t size, uint32_t align, RegIndex rm) :
+    %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, width,
+                   rn, vd, regs, inc, size, align, rm)
 {
     %(constructor)s;
     if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -557,20 +555,20 @@ def template VMemMultConstructor {{
 def template VMemSingleDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, bool all, unsigned width,
-                RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
-                uint32_t size, uint32_t align, RegIndex rm, unsigned lane = 0);
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, bool all, unsigned width,
+            RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
+            uint32_t size, uint32_t align, RegIndex rm, unsigned lane=0);
 };
 }};
 
 def template VMemSingleConstructor {{
 %(class_name)s::%(class_name)s(ExtMachInst machInst, bool all, unsigned width,
         RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
-        uint32_t size, uint32_t align, RegIndex rm, unsigned lane)
-    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, all, width,
-                     rn, vd, regs, inc, size, align, rm, lane)
+        uint32_t size, uint32_t align, RegIndex rm, unsigned lane) :
+    %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, all, width,
+                   rn, vd, regs, inc, size, align, rm, lane)
 {
     %(constructor)s;
     if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -587,20 +585,20 @@ def template MacroVFPMemDeclare {{
  */
 class %(class_name)s : public %(base_class)s
 {
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex rn,
-                RegIndex vd, bool single, bool up, bool writeback,
-                bool load, uint32_t offset);
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex rn,
+            RegIndex vd, bool single, bool up, bool writeback,
+            bool load, uint32_t offset);
 };
 }};
 
 def template MacroVFPMemConstructor {{
 %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex rn,
         RegIndex vd, bool single, bool up, bool writeback, bool load,
-        uint32_t offset)
-    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, rn,
-                     vd, single, up, writeback, load, offset)
+        uint32_t offset) :
+    %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, rn,
+                   vd, single, up, writeback, load, offset)
 {
     %(constructor)s;
     if (!(condCode == COND_AL || condCode == COND_UC)) {

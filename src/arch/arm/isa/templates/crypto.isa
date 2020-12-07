@@ -47,15 +47,14 @@ def template CryptoPredOpExecute {{
 
         const unsigned rCount = %(r_count)d;
 
-        union RegVect {
+        union RegVect
+        {
             uint32_t regs[rCount];
         };
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             %(code)s;
-            if (fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(op_wb)s;
             }
         } else {

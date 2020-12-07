@@ -54,12 +54,13 @@ class %(class_name)s : public %(base_class)s
     typedef _DElement DElement;
     typedef _SElement TPSElem;
     typedef _DElement TPDElem;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _gp)
+                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _gp)
     {
         %(constructor)s;
     }
@@ -75,12 +76,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _gp)
+                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _gp)
     {
         %(constructor)s;
     }
@@ -96,12 +98,11 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
     {
         %(constructor)s;
     }
@@ -117,12 +118,12 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, %(isSimdFp)s)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, %(isSimdFp)s)
     {
         %(constructor)s;
     }
@@ -138,12 +139,11 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _imm)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
         %(constructor)s;
     }
@@ -159,13 +159,14 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
                    IntRegIndex _dest, uint64_t _imm, IntRegIndex _gp,
-                   bool _isMerging = true)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _imm, _gp, _isMerging)
+                   bool _isMerging=true) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _imm, _gp, _isMerging)
     {
         %(constructor)s;
     }
@@ -202,12 +203,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, uint64_t _imm, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _imm, _gp)
+                   IntRegIndex _dest, uint64_t _imm, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _imm, _gp)
     {
         %(constructor)s;
     }
@@ -223,12 +225,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op2, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op2, _gp)
+                   IntRegIndex _dest, IntRegIndex _op2, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op2, _gp)
     {
         %(constructor)s;
     }
@@ -244,13 +247,14 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
                    IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   IntRegIndex _gp, SvePredType _predType)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _gp, _predType)
+                   IntRegIndex _gp, SvePredType _predType) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _gp, _predType)
     {
         %(constructor)s;
     }
@@ -266,12 +270,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2)
+                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2)
     {
         %(constructor)s;
     }
@@ -287,13 +292,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   uint8_t _index)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _index)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _op2, uint8_t _index) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _index)
     {
         %(constructor)s;
     }
@@ -309,13 +314,14 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
                    IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   IntRegIndex _gp, bool _isSel = false)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _gp, _isSel)
+                   IntRegIndex _gp, bool _isSel=false) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _gp, _isSel)
     {
         %(constructor)s;
     }
@@ -331,13 +337,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _gp)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _gp)
     {
         %(constructor)s;
     }
@@ -353,13 +359,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _gp, %(op2IsWide)s)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _gp, %(op2IsWide)s)
     {
         %(constructor)s;
     }
@@ -375,13 +381,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, uint64_t _imm,
-                   IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _imm, _gp)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, uint64_t _imm, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _imm, _gp)
     {
         %(constructor)s;
     }
@@ -397,13 +403,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _gp)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _gp)
     {
         %(constructor)s;
     }
@@ -419,12 +425,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _imm)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _imm)
     {
         %(constructor)s;
     }
@@ -440,12 +447,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _gp)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _gp)
     {
         %(constructor)s;
     }
@@ -467,10 +475,10 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _gp)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _gp)
     {
         %(constructor)s;
     }
@@ -486,12 +494,13 @@ class SveIndexII : public SveIndexIIOp
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    SveIndexII(ExtMachInst machInst,
-            IntRegIndex _dest, int8_t _imm1, int8_t _imm2)
-        : SveIndexIIOp("%(mnemonic)s", machInst, %(op_class)s,
-                _dest, _imm1, _imm2)
+    SveIndexII(ExtMachInst machInst, IntRegIndex _dest,
+               int8_t _imm1, int8_t _imm2) :
+        SveIndexIIOp("%(mnemonic)s", machInst, %(op_class)s,
+                     _dest, _imm1, _imm2)
     {
         %(constructor)s;
     }
@@ -507,12 +516,13 @@ class SveIndexIR : public SveIndexIROp
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    SveIndexIR(ExtMachInst machInst,
-            IntRegIndex _dest, int8_t _imm, IntRegIndex _op)
-        : SveIndexIROp("%(mnemonic)s", machInst, %(op_class)s,
-                _dest, _imm, _op)
+    SveIndexIR(ExtMachInst machInst, IntRegIndex _dest,
+               int8_t _imm, IntRegIndex _op) :
+        SveIndexIROp("%(mnemonic)s", machInst, %(op_class)s,
+                     _dest, _imm, _op)
     {
         %(constructor)s;
     }
@@ -528,12 +538,13 @@ class SveIndexRI : public SveIndexRIOp
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    SveIndexRI(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _op, int8_t _imm)
-        : SveIndexRIOp("%(mnemonic)s", machInst, %(op_class)s,
-                _dest, _op, _imm)
+    SveIndexRI(ExtMachInst machInst, IntRegIndex _dest,
+               IntRegIndex _op, int8_t _imm) :
+        SveIndexRIOp("%(mnemonic)s", machInst, %(op_class)s,
+                     _dest, _op, _imm)
     {
         %(constructor)s;
     }
@@ -549,12 +560,13 @@ class SveIndexRR : public SveIndexRROp
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    SveIndexRR(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2)
-        : SveIndexRROp("%(mnemonic)s", machInst, %(op_class)s,
-                _dest, _op1, _op2)
+    SveIndexRR(ExtMachInst machInst, IntRegIndex _dest,
+               IntRegIndex _op1, IntRegIndex _op2) :
+        SveIndexRROp("%(mnemonic)s", machInst, %(op_class)s,
+                     _dest, _op1, _op2)
     {
         %(constructor)s;
     }
@@ -570,11 +582,11 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-            IntRegIndex _op1)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                _dest, _op1, %(srcIs32b)s, %(destIsVec)s)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, %(srcIs32b)s, %(destIsVec)s)
     {
         %(constructor)s;
     }
@@ -590,11 +602,12 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-            IntRegIndex _op1, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                _dest, _op1, _gp)
+                   IntRegIndex _op1, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _gp)
     {
         %(constructor)s;
     }
@@ -611,12 +624,11 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, uint8_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _imm)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint8_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
         %(constructor)s;
     }
@@ -632,13 +644,14 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
         IntRegIndex _dest, IntRegIndex _base, IntRegIndex _offset,
-        uint8_t _mult, SveAdrOffsetFormat _offsetFormat)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-            _dest, _base, _offset, _mult, _offsetFormat)
+        uint8_t _mult, SveAdrOffsetFormat _offsetFormat) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _base, _offset, _mult, _offsetFormat)
     {
         %(constructor)s;
     }
@@ -654,11 +667,12 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                   IntRegIndex _op1, IntRegIndex _op2)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, %(srcIs32b)s)
+                   IntRegIndex _op1, IntRegIndex _op2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, %(srcIs32b)s)
     {
         %(constructor)s;
     }
@@ -674,9 +688,10 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, IntRegIndex _op2)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, _op2)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, IntRegIndex _op2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, _op2)
     {
         %(constructor)s;
     }
@@ -692,10 +707,11 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1,
-            int64_t _op2, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1,
+            int64_t _op2, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1,
                 _op2, _gp)
     {
         %(constructor)s;
@@ -712,10 +728,11 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-            uint8_t _pattern, uint8_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest,
+            uint8_t _pattern, uint8_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest,
                 _pattern, _imm, %(dstIsVec)s, %(dstIs32b)s)
     {
         %(constructor)s;
@@ -731,8 +748,8 @@ class %(class_name)s : public %(base_class)s
 {
   public:
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _gp,
-            IntRegIndex _op1)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest,
+            IntRegIndex _op1) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest,
                 _gp, _op1, %(isMerging)s)
     {
         %(constructor)s;
@@ -749,8 +766,8 @@ class %(class_name)s : public %(base_class)s
 {
   public:
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-            IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest,
+            IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest,
                 _op1, _op2, _gp)
     {
         %(constructor)s;
@@ -767,10 +784,11 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-            IntRegIndex _op1, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest,
+            IntRegIndex _op1, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest,
                 _op1, _gp, %(isCond)s, %(isScalar)s, %(isSimdFp)s)
     {
         %(constructor)s;
@@ -791,11 +809,10 @@ class %(class_name)s : public %(base_class)s
     typedef _DElement DElement;
     typedef _SElement TPSElem;
     typedef _DElement TPDElem;
+
   public:
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
     {
         %(constructor)s;
     }
@@ -808,8 +825,8 @@ def template SvePredicateTestOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
   public:
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, _gp)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, _gp)
     {
         %(constructor)s;
     }
@@ -822,8 +839,8 @@ def template SvePredUnaryOpWImplicitSrcDeclare {{
 class %(class_name)s : public %(base_class)s
 {
   public:
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest)
     {
         %(constructor)s;
     }
@@ -836,8 +853,8 @@ def template SvePredUnaryPredOpWImplicitSrcDeclare {{
 class %(class_name)s : public %(base_class)s
 {
   public:
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _gp)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _gp)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _gp) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _gp)
     {
         %(constructor)s;
     }
@@ -850,8 +867,8 @@ def template SvePredUnaryOpWImplicitDstDeclare {{
 class %(class_name)s : public %(base_class)s
 {
   public:
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1)
     {
         %(constructor)s;
     }
@@ -864,8 +881,8 @@ def template SveOpWImplicitSrcDstDeclare {{
 class %(class_name)s : public %(base_class)s
 {
   public:
-    %(class_name)s(ExtMachInst machInst)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    %(class_name)s(ExtMachInst machInst) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(constructor)s;
     }
@@ -886,11 +903,10 @@ class %(class_name)s : public %(base_class)s
     typedef _DElement TPDElem;
 
   public:
-    %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _imm)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                   IntRegIndex _op1, IntRegIndex _op2, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _imm)
     {
         %(constructor)s;
         esize = sizeof(Element);
@@ -913,9 +929,9 @@ class %(class_name)s : public %(base_class)s
 
   public:
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2)
+                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2)
     {
         %(constructor)s;
         esize = sizeof(Element);
@@ -932,13 +948,14 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
                    IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   IntRegIndex _gp, uint8_t _rot)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _gp, _rot)
+                   IntRegIndex _gp, uint8_t _rot) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _gp, _rot)
     {
         %(constructor)s;
     }
@@ -954,13 +971,14 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
                    IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   uint8_t _rot, uint8_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _rot, _imm)
+                   uint8_t _rot, uint8_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _rot, _imm)
     {
         %(constructor)s;
     }
@@ -971,7 +989,8 @@ class %(class_name)s : public %(base_class)s
 
 def template SveWideningOpExecute {{
     template <class SElement, class DElement>
-    Fault %(class_name)s<SElement, DElement>::execute(ExecContext *xc,
+    Fault
+    %(class_name)s<SElement, DElement>::execute(ExecContext *xc,
             Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -979,8 +998,7 @@ def template SveWideningOpExecute {{
         %(op_rd)s;
 
         %(code)s;
-        if (fault == NoFault)
-        {
+        if (fault == NoFault) {
             %(op_wb)s;
         }
 
@@ -989,7 +1007,8 @@ def template SveWideningOpExecute {{
 }};
 
 def template SveNonTemplatedOpExecute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
             Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -997,8 +1016,7 @@ def template SveNonTemplatedOpExecute {{
         %(op_rd)s;
 
         %(code)s;
-        if (fault == NoFault)
-        {
+        if (fault == NoFault) {
             %(op_wb)s;
         }
 
@@ -1008,7 +1026,8 @@ def template SveNonTemplatedOpExecute {{
 
 def template SveOpExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(ExecContext *xc,
+    Fault
+    %(class_name)s<Element>::execute(ExecContext *xc,
             Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -1016,8 +1035,7 @@ def template SveOpExecute {{
         %(op_rd)s;
 
         %(code)s;
-        if (fault == NoFault)
-        {
+        if (fault == NoFault) {
             %(op_wb)s;
         }
 

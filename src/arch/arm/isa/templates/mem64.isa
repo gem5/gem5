@@ -45,8 +45,9 @@ let {{
 }};
 
 def template Load64Execute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -69,8 +70,9 @@ def template Load64Execute {{
 }};
 
 def template Load64FpExecute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -93,8 +95,9 @@ def template Load64FpExecute {{
 }};
 
 def template Store64Execute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -109,7 +112,7 @@ def template Store64Execute {{
 
         if (fault == NoFault) {
             fault = writeMemAtomicLE(xc, traceData, Mem, EA,
-                                     memAccessFlags, NULL);
+                                     memAccessFlags, nullptr);
         }
 
         if (fault == NoFault) {
@@ -121,8 +124,9 @@ def template Store64Execute {{
 }};
 
 def template Store64InitiateAcc {{
-    Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -137,7 +141,7 @@ def template Store64InitiateAcc {{
 
         if (fault == NoFault) {
             fault = writeMemTimingLE(xc, traceData, Mem, EA, memAccessFlags,
-                                     NULL);
+                                     nullptr);
         }
 
         return fault;
@@ -145,8 +149,9 @@ def template Store64InitiateAcc {{
 }};
 
 def template StoreEx64Execute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -178,8 +183,9 @@ def template StoreEx64Execute {{
 }};
 
 def template StoreEx64InitiateAcc {{
-    Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -194,7 +200,7 @@ def template StoreEx64InitiateAcc {{
 
         if (fault == NoFault) {
             fault = writeMemTimingLE(xc, traceData, Mem, EA, memAccessFlags,
-                                     NULL);
+                                     nullptr);
         }
 
         return fault;
@@ -202,8 +208,9 @@ def template StoreEx64InitiateAcc {{
 }};
 
 def template Load64InitiateAcc {{
-    Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -221,8 +228,9 @@ def template Load64InitiateAcc {{
 }};
 
 def template Load64CompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -245,16 +253,18 @@ def template Load64CompleteAcc {{
 }};
 
 def template Store64CompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         return NoFault;
     }
 }};
 
 def template StoreEx64CompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -296,9 +306,9 @@ def template DCStore64Declare {{
 
 def template DCStore64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _base,
-                                   MiscRegIndex _dest, uint64_t _imm)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                          _base, _dest, _imm)
+                                   MiscRegIndex _dest, uint64_t _imm) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        _base, _dest, _imm)
     {
         %(constructor)s;
         assert(!%(use_uops)d);
@@ -306,8 +316,9 @@ def template DCStore64Constructor {{
 }};
 
 def template DCStore64Execute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -322,8 +333,8 @@ def template DCStore64Execute {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemAtomic(xc, NULL, EA,
-                                   op_size, memAccessFlags, NULL,
+            fault = writeMemAtomic(xc, nullptr, EA,
+                                   op_size, memAccessFlags, nullptr,
                                    std::vector<bool>(op_size, true));
         }
 
@@ -336,8 +347,9 @@ def template DCStore64Execute {{
 }};
 
 def template DCStore64InitiateAcc {{
-    Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -351,8 +363,8 @@ def template DCStore64InitiateAcc {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemTiming(xc, NULL, EA, op_size,
-                                   memAccessFlags, NULL,
+            fault = writeMemTiming(xc, nullptr, EA, op_size,
+                                   memAccessFlags, nullptr,
                                    std::vector<bool>(op_size, true));
         }
 
@@ -590,9 +602,9 @@ def template LoadStoreLitU64Declare {{
 
 def template LoadStoreImm64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, int64_t _imm)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                 (IntRegIndex)_dest, (IntRegIndex)_base, _imm)
+            IntRegIndex _dest, IntRegIndex _base, int64_t _imm) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        (IntRegIndex)_dest, (IntRegIndex)_base, _imm)
     {
         %(constructor)s;
 #if %(use_uops)d
@@ -610,9 +622,9 @@ def template LoadStoreImm64Constructor {{
 def template LoadStoreImmU64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             IntRegIndex _dest, IntRegIndex _base, int64_t _imm,
-            bool noAlloc, bool exclusive, bool acrel)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                 _dest, _base, _imm)
+            bool noAlloc, bool exclusive, bool acrel) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        _dest, _base, _imm)
     {
         %(constructor)s;
         assert(!%(use_uops)d);
@@ -623,9 +635,9 @@ def template LoadStoreImmU64Constructor {{
 def template LoadStoreImmDU64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             IntRegIndex _dest, IntRegIndex _dest2, IntRegIndex _base,
-            int64_t _imm, bool noAlloc, bool exclusive, bool acrel)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                 _dest, _dest2, _base, _imm)
+            int64_t _imm, bool noAlloc, bool exclusive, bool acrel) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        _dest, _dest2, _base, _imm)
     {
         %(constructor)s;
         assert(!%(use_uops)d);
@@ -636,9 +648,9 @@ def template LoadStoreImmDU64Constructor {{
 def template StoreImmDEx64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             IntRegIndex _result, IntRegIndex _dest, IntRegIndex _dest2,
-            IntRegIndex _base, int64_t _imm)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                 _result, _dest, _dest2, _base, _imm)
+            IntRegIndex _base, int64_t _imm) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        _result, _dest, _dest2, _base, _imm)
     {
         %(constructor)s;
         assert(!%(use_uops)d);
@@ -649,9 +661,9 @@ def template StoreImmDEx64Constructor {{
 def template LoadStoreReg64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             IntRegIndex _dest, IntRegIndex _base, IntRegIndex _offset,
-            ArmExtendType _type, uint32_t _shiftAmt)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                 _dest, _base, _offset, _type, _shiftAmt)
+            ArmExtendType _type, uint32_t _shiftAmt) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        _dest, _base, _offset, _type, _shiftAmt)
     {
         %(constructor)s;
 #if %(use_uops)d
@@ -671,9 +683,9 @@ def template LoadStoreRegU64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             IntRegIndex _dest, IntRegIndex _base, IntRegIndex _offset,
             ArmExtendType _type, uint32_t _shiftAmt,
-            bool noAlloc, bool exclusive, bool acrel)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                 _dest, _base, _offset, _type, _shiftAmt)
+            bool noAlloc, bool exclusive, bool acrel) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        _dest, _base, _offset, _type, _shiftAmt)
     {
         %(constructor)s;
         assert(!%(use_uops)d);
@@ -683,8 +695,8 @@ def template LoadStoreRegU64Constructor {{
 
 def template LoadStoreRaw64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _base)
+            IntRegIndex _dest, IntRegIndex _base) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _base)
     {
         %(constructor)s;
     }
@@ -692,9 +704,9 @@ def template LoadStoreRaw64Constructor {{
 
 def template LoadStoreEx64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _result)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                          _dest, _base, _result)
+            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _result) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        _dest, _base, _result)
     {
         %(constructor)s;
     }
@@ -702,8 +714,8 @@ def template LoadStoreEx64Constructor {{
 
 def template LoadStoreLit64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, int64_t _imm)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            IntRegIndex _dest, int64_t _imm) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, _imm)
     {
         %(constructor)s;
@@ -722,8 +734,8 @@ def template LoadStoreLit64Constructor {{
 def template LoadStoreLitU64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             IntRegIndex _dest, int64_t _imm,
-            bool noAlloc, bool exclusive, bool acrel)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            bool noAlloc, bool exclusive, bool acrel) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, _imm)
     {
         %(constructor)s;
@@ -735,8 +747,9 @@ def template LoadStoreLitU64Constructor {{
 // Atomic operations in memory
 
 def template AmoOpExecute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            Trace::InstRecord *traceData) const
     {
         Addr EA;
 
@@ -764,8 +777,9 @@ def template AmoOpExecute {{
 }};
 
 def template AmoOpInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Addr EA;
 
@@ -785,8 +799,9 @@ def template AmoOpInitiateAcc {{
 }};
 
 def template AmoOpCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
@@ -828,9 +843,9 @@ def template AmoOpDeclare {{
 
 def template AmoOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _result)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                          _dest, _base, _result)
+            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _result) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        _dest, _base, _result)
     {
         %(constructor)s;
         flags[IsStore] = false;
@@ -865,9 +880,9 @@ def template AmoPairOpDeclare {{
 
 def template AmoPairOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _result)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                          _dest,  _base, _result)
+            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _result) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        _dest,  _base, _result)
     {
         %(constructor)s;
 
@@ -909,8 +924,8 @@ def template AmoArithmeticOpDeclare {{
 
 def template AmoArithmeticOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _result)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _result) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                           _dest,  _base, _result)
     {
         %(constructor)s;
@@ -918,7 +933,7 @@ def template AmoArithmeticOpConstructor {{
         uint32_t r2 = RegId(IntRegClass, dest).index() ;
         flags[IsStore] = false;
         flags[IsLoad] = false;
-        if (r2 == 31){
+        if (r2 == 31) {
             isXZR = true;
         }
     }

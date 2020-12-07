@@ -54,12 +54,13 @@ class %(class_name)s : public %(base_class)s
 {
   protected:
     typedef _Element Element;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2)
+                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -79,13 +80,14 @@ class %(class_name)s : public %(base_class)s
 {
   protected:
     typedef _Element Element;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
                    IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _op2, _imm)
+                   uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _imm)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -105,12 +107,13 @@ class %(class_name)s : public %(base_class)s
 {
   protected:
     typedef _Element Element;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1, _imm)
+                   IntRegIndex _dest, IntRegIndex _op1, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _imm)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -130,10 +133,11 @@ class %(class_name)s : public %(base_class)s
 {
   protected:
     typedef _Element Element;
+
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -153,12 +157,13 @@ class %(class_name)s : public %(base_class)s
 {
   protected:
     typedef _Element Element;
+
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _dest, _op1)
+                   IntRegIndex _dest, IntRegIndex _op1) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -206,7 +211,8 @@ output header {{
 
 def template NeonEqualRegExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(ExecContext *xc,
+    Fault
+    %(class_name)s<Element>::execute(ExecContext *xc,
             Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -217,21 +223,21 @@ def template NeonEqualRegExecute {{
         const unsigned eCount = rCount * sizeof(uint32_t) / sizeof(Element);
         const unsigned eCountFull = 4 * sizeof(uint32_t) / sizeof(Element);
 
-        union RegVect {
+        union RegVect
+        {
             uint32_t regs[rCount];
             Element elements[eCount];
         };
 
-        union FullRegVect {
+        union FullRegVect
+        {
             uint32_t regs[4];
             Element elements[eCountFull];
         };
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             %(code)s;
-            if (fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(op_wb)s;
             }
         } else {
@@ -244,7 +250,7 @@ def template NeonEqualRegExecute {{
 
 output header {{
         template <typename T>
-            struct bigger_type_t;
+        struct bigger_type_t;
 
         template<> struct bigger_type_t<uint8_t> { typedef uint16_t type; };
         template<> struct bigger_type_t<uint16_t> { typedef uint32_t type; };
@@ -257,7 +263,8 @@ output header {{
 
 def template NeonUnequalRegExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(ExecContext *xc,
+    Fault
+    %(class_name)s<Element>::execute(ExecContext *xc,
             Trace::InstRecord *traceData) const
     {
         typedef typename bigger_type_t<Element>::type BigElement;
@@ -268,22 +275,22 @@ def template NeonUnequalRegExecute {{
         const unsigned rCount = %(r_count)d;
         const unsigned eCount = rCount * sizeof(uint32_t) / sizeof(Element);
 
-        union RegVect {
+        union RegVect
+        {
             uint32_t regs[rCount];
             Element elements[eCount];
             BigElement bigElements[eCount / 2];
         };
 
-        union BigRegVect {
+        union BigRegVect
+        {
             uint32_t regs[2 * rCount];
             BigElement elements[eCount];
         };
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             %(code)s;
-            if (fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(op_wb)s;
             }
         } else {

@@ -40,8 +40,9 @@
 
 
 def template PanicExecute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            Trace::InstRecord *traceData) const
     {
         panic("Execute function executed when it shouldn't be!\n");
         return NoFault;
@@ -49,8 +50,9 @@ def template PanicExecute {{
 }};
 
 def template PanicInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         panic("InitiateAcc function executed when it shouldn't be!\n");
         return NoFault;
@@ -58,8 +60,9 @@ def template PanicInitiateAcc {{
 }};
 
 def template PanicCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         panic("CompleteAcc function executed when it shouldn't be!\n");
         return NoFault;
@@ -68,8 +71,9 @@ def template PanicCompleteAcc {{
 
 
 def template SwapExecute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -79,8 +83,7 @@ def template SwapExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             %(preacc_code)s;
 
             if (fault == NoFault) {
@@ -104,8 +107,9 @@ def template SwapExecute {{
 }};
 
 def template SwapInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -115,8 +119,7 @@ def template SwapInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             %(preacc_code)s;
 
             if (fault == NoFault) {
@@ -132,16 +135,16 @@ def template SwapInitiateAcc {{
 }};
 
 def template SwapCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
         %(op_decl)s;
         %(op_rd)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             // ARM instructions will not have a pkt if the predicate is false
             getMemLE(pkt, Mem, traceData);
             uint64_t memData = Mem;
@@ -158,8 +161,9 @@ def template SwapCompleteAcc {{
 }};
 
 def template LoadExecute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -168,8 +172,7 @@ def template LoadExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             if (fault == NoFault) {
                 fault = readMemAtomicLE(
                         xc, traceData, EA, Mem, memAccessFlags);
@@ -189,7 +192,8 @@ def template LoadExecute {{
 
 def template NeonLoadExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(
+    Fault
+    %(class_name)s<Element>::execute(
             ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -203,8 +207,7 @@ def template NeonLoadExecute {{
         MemUnion memUnion;
         uint8_t *dataPtr = memUnion.bytes;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             if (fault == NoFault) {
                 const auto size = %(size)d;
                 fault = readMemAtomic(xc, EA, dataPtr,
@@ -225,8 +228,9 @@ def template NeonLoadExecute {{
 }};
 
 def template StoreExecute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -235,8 +239,7 @@ def template StoreExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             if (fault == NoFault) {
                 %(memacc_code)s;
             }
@@ -259,7 +262,8 @@ def template StoreExecute {{
 
 def template NeonStoreExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(
+    Fault
+    %(class_name)s<Element>::execute(
             ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -273,8 +277,7 @@ def template NeonStoreExecute {{
         MemUnion memUnion;
         uint8_t *dataPtr = memUnion.bytes;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             if (fault == NoFault) {
                 %(memacc_code)s;
             }
@@ -298,8 +301,9 @@ def template NeonStoreExecute {{
 }};
 
 def template StoreExExecute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -308,8 +312,7 @@ def template StoreExExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             if (fault == NoFault) {
                 %(memacc_code)s;
             }
@@ -337,8 +340,9 @@ def template StoreExExecute {{
 }};
 
 def template StoreExInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -347,8 +351,7 @@ def template StoreExInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             if (fault == NoFault) {
                 %(memacc_code)s;
             }
@@ -366,8 +369,9 @@ def template StoreExInitiateAcc {{
 }};
 
 def template StoreInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -376,8 +380,7 @@ def template StoreInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             if (fault == NoFault) {
                 %(memacc_code)s;
             }
@@ -396,7 +399,8 @@ def template StoreInitiateAcc {{
 
 def template NeonStoreInitiateAcc {{
     template <class Element>
-    Fault %(class_name)s<Element>::initiateAcc(
+    Fault
+    %(class_name)s<Element>::initiateAcc(
             ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -407,8 +411,7 @@ def template NeonStoreInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             MemUnion memUnion;
             if (fault == NoFault) {
                 %(memacc_code)s;
@@ -429,8 +432,9 @@ def template NeonStoreInitiateAcc {{
 }};
 
 def template LoadInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -439,8 +443,7 @@ def template LoadInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             if (fault == NoFault) {
                 fault = initiateMemRead(xc, traceData, EA, Mem,
                                         memAccessFlags);
@@ -455,7 +458,8 @@ def template LoadInitiateAcc {{
 
 def template NeonLoadInitiateAcc {{
     template <class Element>
-    Fault %(class_name)s<Element>::initiateAcc(
+    Fault
+    %(class_name)s<Element>::initiateAcc(
             ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -466,8 +470,7 @@ def template NeonLoadInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             if (fault == NoFault) {
                 const auto size = %(size)d;
                 fault = initiateMemRead(xc, EA, size, memAccessFlags,
@@ -482,16 +485,16 @@ def template NeonLoadInitiateAcc {{
 }};
 
 def template LoadCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
         %(op_decl)s;
         %(op_rd)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             // ARM instructions will not have a pkt if the predicate is false
             getMemLE(pkt, Mem, traceData);
 
@@ -510,9 +513,9 @@ def template LoadCompleteAcc {{
 
 def template NeonLoadCompleteAcc {{
     template <class Element>
-    Fault %(class_name)s<Element>::completeAcc(
-            PacketPtr pkt, ExecContext *xc,
-            Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s<Element>::completeAcc(
+            PacketPtr pkt, ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -520,8 +523,7 @@ def template NeonLoadCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             // ARM instructions will not have a pkt if the predicate is false
             MemUnion &memUnion = *(MemUnion *)pkt->getPtr<uint8_t>();
 
@@ -539,8 +541,9 @@ def template NeonLoadCompleteAcc {{
 }};
 
 def template StoreCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         return NoFault;
     }
@@ -548,7 +551,8 @@ def template StoreCompleteAcc {{
 
 def template NeonStoreCompleteAcc {{
     template <class Element>
-    Fault %(class_name)s<Element>::completeAcc(
+    Fault
+    %(class_name)s<Element>::completeAcc(
             PacketPtr pkt, ExecContext *xc, Trace::InstRecord *traceData) const
     {
         return NoFault;
@@ -556,16 +560,16 @@ def template NeonStoreCompleteAcc {{
 }};
 
 def template StoreExCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
         %(op_decl)s;
         %(op_rd)s;
 
-        if (%(predicate_test)s)
-        {
+        if (%(predicate_test)s) {
             uint64_t writeResult = pkt->req->getExtraData();
             %(postacc_code)s;
 
@@ -845,9 +849,9 @@ def template LoadImmDeclare {{
 
 def template RfeConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          uint32_t _base, int _mode, bool _wb)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         (IntRegIndex)_base, (AddrMode)_mode, _wb)
+            uint32_t _base, int _mode, bool _wb) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       (IntRegIndex)_base, (AddrMode)_mode, _wb)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -875,8 +879,8 @@ def template RfeConstructor {{
 
 def template SrsConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            uint32_t _regMode, int _mode, bool _wb)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            uint32_t _regMode, int _mode, bool _wb) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (OperatingMode)_regMode, (AddrMode)_mode, _wb)
     {
         %(constructor)s;
@@ -899,8 +903,8 @@ def template SrsConstructor {{
 
 def template SwapConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            uint32_t _dest, uint32_t _op1, uint32_t _base)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            uint32_t _dest, uint32_t _op1, uint32_t _base) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_op1, (IntRegIndex)_base)
     {
         %(constructor)s;
@@ -915,8 +919,8 @@ def template SwapConstructor {{
 def template LoadStoreDImmConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             uint32_t _dest, uint32_t _dest2,
-            uint32_t _base, bool _add, int32_t _imm)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            uint32_t _base, bool _add, int32_t _imm) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_dest2,
                  (IntRegIndex)_base, _add, _imm)
     {
@@ -941,10 +945,9 @@ def template LoadStoreDImmConstructor {{
 def template StoreExDImmConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             uint32_t _result, uint32_t _dest, uint32_t _dest2,
-            uint32_t _base, bool _add, int32_t _imm)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                 (IntRegIndex)_result,
-                 (IntRegIndex)_dest, (IntRegIndex)_dest2,
+            uint32_t _base, bool _add, int32_t _imm) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                 (IntRegIndex)_result, (IntRegIndex)_dest, (IntRegIndex)_dest2,
                  (IntRegIndex)_base, _add, _imm)
     {
         %(constructor)s;
@@ -968,8 +971,8 @@ def template StoreExDImmConstructor {{
 
 def template LoadStoreImmConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            uint32_t _dest, uint32_t _base, bool _add, int32_t _imm)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            uint32_t _dest, uint32_t _base, bool _add, int32_t _imm) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_base, _add, _imm)
     {
         %(constructor)s;
@@ -993,8 +996,8 @@ def template LoadStoreImmConstructor {{
 def template StoreExImmConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             uint32_t _result, uint32_t _dest, uint32_t _base,
-            bool _add, int32_t _imm)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            bool _add, int32_t _imm) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_result, (IntRegIndex)_dest,
                  (IntRegIndex)_base, _add, _imm)
     {
@@ -1020,8 +1023,8 @@ def template StoreExImmConstructor {{
 def template StoreDRegConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             uint32_t _dest, uint32_t _dest2, uint32_t _base, bool _add,
-            int32_t _shiftAmt, uint32_t _shiftType, uint32_t _index)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            int32_t _shiftAmt, uint32_t _shiftType, uint32_t _index) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_dest2,
                  (IntRegIndex)_base, _add,
                  _shiftAmt, (ArmShiftType)_shiftType,
@@ -1049,8 +1052,8 @@ def template StoreDRegConstructor {{
 def template StoreRegConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             uint32_t _dest, uint32_t _base, bool _add,
-            int32_t _shiftAmt, uint32_t _shiftType, uint32_t _index)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            int32_t _shiftAmt, uint32_t _shiftType, uint32_t _index) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_base, _add,
                  _shiftAmt, (ArmShiftType)_shiftType,
                  (IntRegIndex)_index)
@@ -1077,8 +1080,8 @@ def template StoreRegConstructor {{
 def template LoadDRegConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             uint32_t _dest, uint32_t _dest2, uint32_t _base, bool _add,
-            int32_t _shiftAmt, uint32_t _shiftType, uint32_t _index)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            int32_t _shiftAmt, uint32_t _shiftType, uint32_t _index) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_dest2,
                  (IntRegIndex)_base, _add,
                  _shiftAmt, (ArmShiftType)_shiftType,
@@ -1119,8 +1122,8 @@ def template LoadDRegConstructor {{
 def template LoadRegConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
             uint32_t _dest, uint32_t _base, bool _add,
-            int32_t _shiftAmt, uint32_t _shiftType, uint32_t _index)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            int32_t _shiftAmt, uint32_t _shiftType, uint32_t _index) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_base, _add,
                  _shiftAmt, (ArmShiftType)_shiftType,
                  (IntRegIndex)_index)
@@ -1187,8 +1190,8 @@ def template LoadRegConstructor {{
 
 def template LoadImmConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            uint32_t _dest, uint32_t _base, bool _add, int32_t _imm)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+            uint32_t _dest, uint32_t _base, bool _add, int32_t _imm) :
+         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_base, _add, _imm)
     {
         %(constructor)s;
