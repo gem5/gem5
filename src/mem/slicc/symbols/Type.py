@@ -1,4 +1,4 @@
-# Copyright (c) 2020 ARM Limited
+# Copyright (c) 2020-2021 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -259,23 +259,7 @@ $klass ${{self.c_ident}}$parent
         code('}')
 
         # ******** Copy constructor ********
-        if not self.isGlobal:
-            code('${{self.c_ident}}(const ${{self.c_ident}}&other)')
-
-            # Call superclass constructor
-            if "interface" in self:
-                code('    : ${{self["interface"]}}(other)')
-
-            code('{')
-            code.indent()
-
-            for dm in self.data_members.values():
-                code('m_${{dm.ident}} = other.m_${{dm.ident}};')
-
-            code.dedent()
-            code('}')
-        else:
-            code('${{self.c_ident}}(const ${{self.c_ident}}&) = default;')
+        code('${{self.c_ident}}(const ${{self.c_ident}}&) = default;')
 
         # ******** Assignment operator ********
 

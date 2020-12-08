@@ -62,12 +62,7 @@ class Message
           m_DelayedTicks(0), m_msg_counter(0)
     { }
 
-    Message(const Message &other)
-        : m_time(other.m_time),
-          m_LastEnqueueTime(other.m_LastEnqueueTime),
-          m_DelayedTicks(other.m_DelayedTicks),
-          m_msg_counter(other.m_msg_counter)
-    { }
+    Message(const Message &other) = default;
 
     virtual ~Message() { }
 
