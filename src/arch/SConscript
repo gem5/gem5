@@ -185,8 +185,6 @@ def ISADesc(desc, decoder_splits=1, exec_splits=1):
     add_gen('exec-g.cc.inc')
     add_gen('exec-ns.cc.inc')
 
-    add_gen('max_inst_regs.hh')
-
 
     # These generated files are also top level sources.
     def source_gen(name):

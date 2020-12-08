@@ -32,7 +32,6 @@
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/mips/generated/max_inst_regs.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
 
@@ -40,10 +39,6 @@ class ThreadContext;
 
 namespace MipsISA
 {
-
-using MipsISAInst::MaxInstSrcRegs;
-using MipsISAInst::MaxInstDestRegs;
-using MipsISAInst::MaxMiscDestRegs;
 
 // Constants Related to the number of registers
 const int NumIntArchRegs = 32;

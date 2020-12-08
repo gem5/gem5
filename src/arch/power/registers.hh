@@ -31,18 +31,11 @@
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/power/generated/max_inst_regs.hh"
 #include "arch/power/miscregs.hh"
 #include "base/types.hh"
 
-namespace PowerISA {
-
-using PowerISAInst::MaxInstSrcRegs;
-using PowerISAInst::MaxInstDestRegs;
-
-// Power writes a misc register outside of the isa parser, so it can't
-// be detected by it. Manually add it here.
-const int MaxMiscDestRegs = PowerISAInst::MaxMiscDestRegs + 1;
+namespace PowerISA
+{
 
 // Not applicable to Power
 using VecElem = ::DummyVecElem;

@@ -133,11 +133,6 @@ class OperandList(object):
         self.predRead = any(i.hasReadPred() for i in self.items)
         self.predWrite = any(i.hasWritePred() for i in self.items)
 
-        parser.maxInstSrcRegs = max(parser.maxInstSrcRegs, self.numSrcRegs)
-        parser.maxInstDestRegs = max(parser.maxInstDestRegs, self.numDestRegs)
-        parser.maxMiscDestRegs = max(parser.maxMiscDestRegs,
-                                     self.numMiscDestRegs)
-
         # now make a final pass to finalize op_desc fields that may depend
         # on the register enumeration
         for op_desc in self.items:

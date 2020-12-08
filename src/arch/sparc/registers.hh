@@ -31,17 +31,12 @@
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/sparc/generated/max_inst_regs.hh"
 #include "arch/sparc/miscregs.hh"
 #include "arch/sparc/sparc_traits.hh"
 #include "base/types.hh"
 
 namespace SparcISA
 {
-
-using SparcISAInst::MaxInstSrcRegs;
-using SparcISAInst::MaxInstDestRegs;
-using SparcISAInst::MaxMiscDestRegs;
 
 // Not applicable to SPARC
 using VecElem = ::DummyVecElem;

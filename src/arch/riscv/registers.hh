@@ -52,15 +52,11 @@
 #include "arch/generic/types.hh"
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/riscv/generated/max_inst_regs.hh"
 #include "base/bitunion.hh"
 #include "base/types.hh"
 
-namespace RiscvISA {
-
-using RiscvISAInst::MaxInstSrcRegs;
-using RiscvISAInst::MaxInstDestRegs;
-const int MaxMiscDestRegs = 2;
+namespace RiscvISA
+{
 
 // Not applicable to RISC-V
 using VecElem = ::DummyVecElem;

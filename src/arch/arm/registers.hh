@@ -42,22 +42,14 @@
 #define __ARCH_ARM_REGISTERS_HH__
 
 #include "arch/arm/ccregs.hh"
-#include "arch/arm/generated/max_inst_regs.hh"
 #include "arch/arm/intregs.hh"
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
 
-namespace ArmISA {
-
-
-// For a predicated instruction, we need all the
-// destination registers to also be sources
-const int MaxInstSrcRegs = ArmISAInst::MaxInstDestRegs +
-    ArmISAInst::MaxInstSrcRegs;
-using ArmISAInst::MaxInstDestRegs;
-using ArmISAInst::MaxMiscDestRegs;
+namespace ArmISA
+{
 
 // Number of VecElem per Vector Register considering only pre-SVE
 // Advanced SIMD registers.

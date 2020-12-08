@@ -41,7 +41,6 @@
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/x86/generated/max_inst_regs.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/ccr.hh"
 #include "arch/x86/regs/misc.hh"
@@ -49,9 +48,7 @@
 
 namespace X86ISA
 {
-using X86ISAInst::MaxInstSrcRegs;
-using X86ISAInst::MaxInstDestRegs;
-using X86ISAInst::MaxMiscDestRegs;
+
 const int NumMiscRegs = NUM_MISCREGS;
 
 const int NumIntArchRegs = NUM_INTREGS;
