@@ -381,7 +381,7 @@ ArmV8KvmCPU::getSysRegMap() const
         const bool writeable(
             info[MISCREG_USR_NS_WR] || info[MISCREG_USR_S_WR] ||
             info[MISCREG_PRI_S_WR] || info[MISCREG_PRI_NS_WR] ||
-            info[MISCREG_HYP_WR] ||
+            info[MISCREG_HYP_NS_WR] ||
             info[MISCREG_MON_NS0_WR] || info[MISCREG_MON_NS1_WR]);
         const bool implemented(
             info[MISCREG_IMPLEMENTED] || info[MISCREG_WARN_NOT_FAIL]);
