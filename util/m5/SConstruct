@@ -232,15 +232,23 @@ for root, dirs, files in os.walk(abspath(src_dir)):
         #
         # This also considers scons command line settings which may look like
         # environment variables, but are set after "scons" on the command line.
-        def get_abi_opt(name, default):
+        def _extract_abi_opt_val(name, default):
             var_name = env.subst('${ABI}.%s' % name)
-            env[name] = os.environ.get(
-                    var_name, ARGUMENTS.get(var_name, default))
+            return os.environ.get(var_name, ARGUMENTS.get(var_name, default))
+        def get_abi_opt(name, default):
+            env[name] = _extract_abi_opt_val(name, default)
+        def append_abi_opt(name):
+            env.Append(**{ name: _extract_abi_opt_val(name, '') })
 
         # Process the ABI's settings in the SConsopts file, storing them
         # in a copy of the primary environment.
         env.SConscript(Dir(root).File('SConsopts'),
                        exports=[ 'env', 'get_abi_opt' ])
+
+        # The user can pass extra build flags for each ABI
+        append_abi_opt('CCFLAGS')
+        append_abi_opt('CXXFLAGS')
+        append_abi_opt('LINKFLAGS')
 
         # Check if this version of QEMU is available for running unit tests.
         env['HAVE_QEMU'] = env.Detect('${QEMU}') is not None
