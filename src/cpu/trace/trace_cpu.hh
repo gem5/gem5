@@ -38,8 +38,8 @@
 #ifndef __CPU_TRACE_TRACE_CPU_HH__
 #define __CPU_TRACE_TRACE_CPU_HH__
 
-#include <array>
 #include <cstdint>
+#include <list>
 #include <queue>
 #include <set>
 #include <unordered_map>
@@ -555,18 +555,11 @@ class TraceCPU : public BaseCPU
         class GraphNode
         {
           public:
-            /**
-             * The maximum no. of ROB dependencies. There can be at most 2
-             * order dependencies which could exist for a store. For a load
-             * and comp node there can be at most one order dependency.
-             */
-            static const uint8_t maxRobDep = 2;
+            /** Typedef for the list containing the ROB dependencies */
+            typedef std::list<NodeSeqNum> RobDepList;
 
-            /** Typedef for the array containing the ROB dependencies */
-            typedef std::array<NodeSeqNum, maxRobDep> RobDepArray;
-
-            /** Typedef for the array containing the register dependencies */
-            typedef std::array<NodeSeqNum, TheISA::MaxInstSrcRegs> RegDepArray;
+            /** Typedef for the list containing the register dependencies */
+            typedef std::list<NodeSeqNum> RegDepList;
 
             /** Instruction sequence number */
             NodeSeqNum seqNum;
@@ -595,23 +588,17 @@ class TraceCPU : public BaseCPU
             /** Instruction PC */
             Addr pc;
 
-            /** Array of order dependencies. */
-            RobDepArray robDep;
-
-            /** Number of order dependencies */
-            uint8_t numRobDep;
+            /** List of order dependencies. */
+            RobDepList robDep;
 
             /** Computational delay */
             uint64_t compDelay;
 
             /**
-             * Array of register dependencies (incoming) if any. Maximum number
+             * List of register dependencies (incoming) if any. Maximum number
              * of source registers used to set maximum size of the array
              */
-            RegDepArray regDep;
-
-            /** Number of register dependencies */
-            uint8_t numRegDep;
+            RegDepList regDep;
 
             /**
              * A vector of nodes dependent (outgoing) on this node. A
@@ -628,12 +615,6 @@ class TraceCPU : public BaseCPU
 
             /** Is the node a compute (non load/store) node */
             bool isComp() const { return (type == Record::COMP); }
-
-            /** Initialize register dependency array to all zeroes */
-            void clearRegDep();
-
-            /** Initialize register dependency array to all zeroes */
-            void clearRobDep();
 
             /** Remove completed instruction from register dependency array */
             bool removeRegDep(NodeSeqNum reg_dep);
@@ -891,14 +872,11 @@ class TraceCPU : public BaseCPU
          * to the list of dependents of the parent node.
          *
          * @param   new_node    new node to add to the graph
-         * @tparam  dep_array   the dependency array of type rob or register,
+         * @tparam  dep_list    the dependency list of type rob or register,
          *                      that is to be iterated, and may get modified
-         * @param   num_dep     the number of dependencies set in the array
-         *                      which may get modified during iteration
          */
         template<typename T>
-        void addDepsOnParent(GraphNode *new_node, T& dep_array,
-                             uint8_t& num_dep);
+        void addDepsOnParent(GraphNode *new_node, T& dep_list);
 
         /**
          * This is the main execute function which consumes nodes from the

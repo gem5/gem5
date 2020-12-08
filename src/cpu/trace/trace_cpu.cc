@@ -308,15 +308,15 @@ TraceCPU::ElasticDataGen::readNextWindow()
         }
 
         // Annotate the ROB dependencies of the new node onto the parent nodes.
-        addDepsOnParent(new_node, new_node->robDep, new_node->numRobDep);
+        addDepsOnParent(new_node, new_node->robDep);
         // Annotate the register dependencies of the new node onto the parent
         // nodes.
-        addDepsOnParent(new_node, new_node->regDep, new_node->numRegDep);
+        addDepsOnParent(new_node, new_node->regDep);
 
         num_read++;
         // Add to map
         depGraph[new_node->seqNum] = new_node;
-        if (new_node->numRobDep == 0 && new_node->numRegDep == 0) {
+        if (new_node->robDep.empty() && new_node->regDep.empty()) {
             // Source dependencies are already complete, check if resources
             // are available and issue. The execution time is approximated
             // to current time plus the computational delay.
@@ -331,18 +331,12 @@ TraceCPU::ElasticDataGen::readNextWindow()
 
 template<typename T>
 void
-TraceCPU::ElasticDataGen::addDepsOnParent(GraphNode *new_node,
-                                          T& dep_array, uint8_t& num_dep)
+TraceCPU::ElasticDataGen::addDepsOnParent(GraphNode *new_node, T& dep_list)
 {
-    for (auto& a_dep : dep_array) {
-        // The convention is to set the dependencies starting with the first
-        // index in the ROB and register dependency arrays. Thus, when we reach
-        // a dependency equal to the initialisation value of zero, we know have
-        // iterated over all dependencies and can break.
-        if (a_dep == 0)
-            break;
+    auto dep_it = dep_list.begin();
+    while (dep_it != dep_list.end()) {
         // We look up the valid dependency, i.e. the parent of this node
-        auto parent_itr = depGraph.find(a_dep);
+        auto parent_itr = depGraph.find(*dep_it);
         if (parent_itr != depGraph.end()) {
             // If the parent is found, it is yet to be executed. Append a
             // pointer to the new node to the dependents list of the parent
@@ -351,12 +345,12 @@ TraceCPU::ElasticDataGen::addDepsOnParent(GraphNode *new_node,
             auto num_depts = parent_itr->second->dependents.size();
             elasticStats.maxDependents = std::max<double>(num_depts,
                                         elasticStats.maxDependents.value());
+            dep_it++;
         } else {
             // The dependency is not found in the graph. So consider
             // the execution of the parent is complete, i.e. remove this
             // dependency.
-            a_dep = 0;
-            num_dep--;
+            dep_it = dep_list.erase(dep_it);
         }
     }
 }
@@ -449,8 +443,8 @@ TraceCPU::ElasticDataGen::execute()
                     (*child_itr)->removeRobDep(node_ptr->seqNum)) {
 
                     // Check if the child node has become dependency free
-                    if ((*child_itr)->numRobDep == 0 &&
-                        (*child_itr)->numRegDep == 0) {
+                    if ((*child_itr)->robDep.empty() &&
+                        (*child_itr)->regDep.empty()) {
 
                         // Source dependencies are complete, check if
                         // resources are available and issue
@@ -637,7 +631,7 @@ bool
 TraceCPU::ElasticDataGen::checkAndIssue(const GraphNode* node_ptr, bool first)
 {
     // Assert the node is dependency-free
-    assert(node_ptr->numRobDep == 0 && node_ptr->numRegDep == 0);
+    assert(node_ptr->robDep.empty() && node_ptr->regDep.empty());
 
     // If this is the first attempt, print a debug message to indicate this.
     if (first) {
@@ -1219,28 +1213,23 @@ TraceCPU::ElasticDataGen::InputStream::read(GraphNode* element)
         element->compDelay = pkt_msg.comp_delay() * timeMultiplier;
 
         // Repeated field robDepList
-        element->clearRobDep();
-        assert((pkt_msg.rob_dep()).size() <= element->maxRobDep);
+        element->robDep.clear();
         for (int i = 0; i < (pkt_msg.rob_dep()).size(); i++) {
-            element->robDep[element->numRobDep] = pkt_msg.rob_dep(i);
-            element->numRobDep += 1;
+            element->robDep.push_back(pkt_msg.rob_dep(i));
         }
 
         // Repeated field
-        element->clearRegDep();
-        assert((pkt_msg.reg_dep()).size() <= TheISA::MaxInstSrcRegs);
+        element->regDep.clear();
         for (int i = 0; i < (pkt_msg.reg_dep()).size(); i++) {
             // There is a possibility that an instruction has both, a register
             // and order dependency on an instruction. In such a case, the
             // register dependency is omitted
             bool duplicate = false;
-            for (int j = 0; j < element->numRobDep; j++) {
-                duplicate |= (pkt_msg.reg_dep(i) == element->robDep[j]);
+            for (auto &dep: element->robDep) {
+                duplicate |= (pkt_msg.reg_dep(i) == dep);
             }
-            if (!duplicate) {
-                element->regDep[element->numRegDep] = pkt_msg.reg_dep(i);
-                element->numRegDep += 1;
-            }
+            if (!duplicate)
+                element->regDep.push_back(pkt_msg.reg_dep(i));
         }
 
         // Optional fields
@@ -1285,14 +1274,13 @@ TraceCPU::ElasticDataGen::InputStream::read(GraphNode* element)
 bool
 TraceCPU::ElasticDataGen::GraphNode::removeRegDep(NodeSeqNum reg_dep)
 {
-    for (auto& own_reg_dep : regDep) {
-        if (own_reg_dep == reg_dep) {
-            // If register dependency is found, make it zero and return true
-            own_reg_dep = 0;
-            assert(numRegDep > 0);
-            --numRegDep;
-            DPRINTFR(TraceCPUData, "\tFor %lli: Marking register dependency "
-                    "%lli done.\n", seqNum, reg_dep);
+    for (auto it = regDep.begin(); it != regDep.end(); it++) {
+        if (*it == reg_dep) {
+            // If register dependency is found, erase it.
+            regDep.erase(it);
+            DPRINTFR(TraceCPUData,
+                    "\tFor %lli: Marking register dependency %lli done.\n",
+                    seqNum, reg_dep);
             return true;
         }
     }
@@ -1304,12 +1292,10 @@ TraceCPU::ElasticDataGen::GraphNode::removeRegDep(NodeSeqNum reg_dep)
 bool
 TraceCPU::ElasticDataGen::GraphNode::removeRobDep(NodeSeqNum rob_dep)
 {
-    for (auto& own_rob_dep : robDep) {
-        if (own_rob_dep == rob_dep) {
-            // If the rob dependency is found, make it zero and return true
-            own_rob_dep = 0;
-            assert(numRobDep > 0);
-            --numRobDep;
+    for (auto it = robDep.begin(); it != robDep.end(); it++) {
+        if (*it == rob_dep) {
+            // If the rob dependency is found, erase it.
+            robDep.erase(it);
             DPRINTFR(TraceCPUData,
                     "\tFor %lli: Marking ROB dependency %lli done.\n",
                     seqNum, rob_dep);
@@ -1317,24 +1303,6 @@ TraceCPU::ElasticDataGen::GraphNode::removeRobDep(NodeSeqNum rob_dep)
         }
     }
     return false;
-}
-
-void
-TraceCPU::ElasticDataGen::GraphNode::clearRegDep()
-{
-    for (auto& own_reg_dep : regDep) {
-        own_reg_dep = 0;
-    }
-    numRegDep = 0;
-}
-
-void
-TraceCPU::ElasticDataGen::GraphNode::clearRobDep()
-{
-    for (auto& own_rob_dep : robDep) {
-        own_rob_dep = 0;
-    }
-    numRobDep = 0;
 }
 
 bool
@@ -1349,12 +1317,13 @@ TraceCPU::ElasticDataGen::GraphNode::removeDepOnInst(NodeSeqNum done_seq_num)
         assert(regdep_found);
     }
     // Return true if the node is dependency free
-    return (numRobDep == 0 && numRegDep == 0);
+    return robDep.empty() && regDep.empty();
 }
 
 void
 TraceCPU::ElasticDataGen::GraphNode::writeElementAsTrace() const
 {
+#if TRACING_ON
     DPRINTFR(TraceCPUData, "%lli", seqNum);
     DPRINTFR(TraceCPUData, ",%s", typeToStr());
     if (isLoad() || isStore()) {
@@ -1363,17 +1332,13 @@ TraceCPU::ElasticDataGen::GraphNode::writeElementAsTrace() const
         DPRINTFR(TraceCPUData, ",%i", flags);
     }
     DPRINTFR(TraceCPUData, ",%lli", compDelay);
-    int i = 0;
     DPRINTFR(TraceCPUData, "robDep:");
-    while (robDep[i] != 0) {
-        DPRINTFR(TraceCPUData, ",%lli", robDep[i]);
-        i++;
+    for (auto &dep: robDep) {
+        DPRINTFR(TraceCPUData, ",%lli", dep);
     }
-    i = 0;
     DPRINTFR(TraceCPUData, "regDep:");
-    while (regDep[i] != 0) {
-        DPRINTFR(TraceCPUData, ",%lli", regDep[i]);
-        i++;
+    for (auto &dep: regDep) {
+        DPRINTFR(TraceCPUData, ",%lli", dep);
     }
     auto child_itr = dependents.begin();
     DPRINTFR(TraceCPUData, "dependents:");
@@ -1383,6 +1348,7 @@ TraceCPU::ElasticDataGen::GraphNode::writeElementAsTrace() const
     }
 
     DPRINTFR(TraceCPUData, "\n");
+#endif // TRACING_ON
 }
 
 std::string
