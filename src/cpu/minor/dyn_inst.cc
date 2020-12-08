@@ -79,7 +79,7 @@ void
 MinorDynInst::init()
 {
     if (!bubbleInst) {
-        bubbleInst = new MinorDynInst();
+        bubbleInst = new MinorDynInst(StaticInst::nullStaticInstPtr);
         assert(bubbleInst->isBubble());
         /* Make bubbleInst immortal */
         bubbleInst->incref();

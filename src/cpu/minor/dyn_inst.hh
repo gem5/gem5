@@ -162,7 +162,7 @@ class MinorDynInst : public RefCounted
     static MinorDynInstPtr bubbleInst;
 
   public:
-    StaticInstPtr staticInst;
+    const StaticInstPtr staticInst;
 
     InstId id;
 
@@ -229,17 +229,18 @@ class MinorDynInst : public RefCounted
     /** Flat register indices so that, when clearing the scoreboard, we
      *  have the same register indices as when the instruction was marked
      *  up */
-    RegId flatDestRegIdx[TheISA::MaxInstDestRegs];
+    std::vector<RegId> flatDestRegIdx;
 
   public:
-    MinorDynInst(InstId id_ = InstId(), Fault fault_ = NoFault) :
-        staticInst(NULL), id(id_), traceData(NULL),
+    MinorDynInst(StaticInstPtr si, InstId id_=InstId(), Fault fault_=NoFault) :
+        staticInst(si), id(id_), traceData(NULL),
         pc(TheISA::PCState(0)), fault(fault_),
         triedToPredict(false), predictedTaken(false),
         fuIndex(0), inLSQ(false), translationFault(NoFault),
         inStoreBuffer(false), canEarlyIssue(false), predicate(true),
         memAccPredicate(true), instToWaitFor(0), extraCommitDelay(Cycles(0)),
-        extraCommitDelayExpr(NULL), minimumCommitCycle(Cycles(0))
+        extraCommitDelayExpr(NULL), minimumCommitCycle(Cycles(0)),
+        flatDestRegIdx(si ? si->numDestRegs() : 0)
     { }
 
   public:

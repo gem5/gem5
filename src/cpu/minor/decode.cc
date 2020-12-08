@@ -182,9 +182,9 @@ Decode::evaluate()
                         static_inst->fetchMicroop(
                                 decode_info.microopPC.microPC());
 
-                    output_inst = new MinorDynInst(inst->id);
+                    output_inst =
+                        new MinorDynInst(static_micro_inst, inst->id);
                     output_inst->pc = decode_info.microopPC;
-                    output_inst->staticInst = static_micro_inst;
                     output_inst->fault = NoFault;
 
                     /* Allow a predicted next address only on the last

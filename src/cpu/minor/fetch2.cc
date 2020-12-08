@@ -356,7 +356,8 @@ Fetch2::evaluate()
 
                 /* Make a new instruction and pick up the line, stream,
                  *  prediction, thread ids from the incoming line */
-                dyn_inst = new MinorDynInst(line_in->id);
+                dyn_inst = new MinorDynInst(
+                        StaticInst::nullStaticInstPtr, line_in->id);
 
                 /* Fetch and prediction sequence numbers originate here */
                 dyn_inst->id.fetchSeqNum = fetch_info.fetchSeqNum;
@@ -393,9 +394,15 @@ Fetch2::evaluate()
                  *  instructions longer than sizeof(MachInst) */
 
                 if (decoder->instReady()) {
+                    /* Note that the decoder can update the given PC.
+                     *  Remember not to assign it until *after* calling
+                     *  decode */
+                    StaticInstPtr decoded_inst =
+                        decoder->decode(fetch_info.pc);
+
                     /* Make a new instruction and pick up the line, stream,
                      *  prediction, thread ids from the incoming line */
-                    dyn_inst = new MinorDynInst(line_in->id);
+                    dyn_inst = new MinorDynInst(decoded_inst, line_in->id);
 
                     /* Fetch and prediction sequence numbers originate here */
                     dyn_inst->id.fetchSeqNum = fetch_info.fetchSeqNum;
@@ -403,12 +410,6 @@ Fetch2::evaluate()
                     /* To complete the set, test that exec sequence number
                      *  has not been set */
                     assert(dyn_inst->id.execSeqNum == 0);
-
-                    /* Note that the decoder can update the given PC.
-                     *  Remember not to assign it until *after* calling
-                     *  decode */
-                    StaticInstPtr decoded_inst = decoder->decode(fetch_info.pc);
-                    dyn_inst->staticInst = decoded_inst;
 
                     dyn_inst->pc = fetch_info.pc;
                     DPRINTF(Fetch, "decoder inst %s\n", *dyn_inst);
