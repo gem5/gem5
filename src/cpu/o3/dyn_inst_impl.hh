@@ -106,8 +106,6 @@ BaseO3DynInst<Impl>::initVars()
 {
     this->regs.init();
 
-    _numDestMiscRegs = 0;
-
 #if TRACING_ON
     // Value -1 indicates that particular phase
     // hasn't happened (yet).

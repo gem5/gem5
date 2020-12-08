@@ -93,17 +93,13 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     using BaseDynInst<Impl>::cpu;
 
     /** Values to be written to the destination misc. registers. */
-    std::array<RegVal, TheISA::MaxMiscDestRegs> _destMiscRegVal;
+    std::vector<RegVal> _destMiscRegVal;
 
     /** Indexes of the destination misc. registers. They are needed to defer
      * the write accesses to the misc. registers until the commit stage, when
      * the instruction is out of its speculative state.
      */
-    std::array<short, TheISA::MaxMiscDestRegs> _destMiscRegIdx;
-
-    /** Number of destination misc. registers. */
-    uint8_t _numDestMiscRegs;
-
+    std::vector<short> _destMiscRegIdx;
 
   public:
 #if TRACING_ON
@@ -139,17 +135,13 @@ class BaseO3DynInst : public BaseDynInst<Impl>
          * committed instead of making a new entry. If not, make a new
          * entry and record the write.
          */
-        for (int idx = 0; idx < _numDestMiscRegs; idx++) {
-            if (_destMiscRegIdx[idx] == misc_reg) {
-               _destMiscRegVal[idx] = val;
-               return;
-            }
+        for (auto &idx: _destMiscRegIdx) {
+            if (idx == misc_reg)
+                return;
         }
 
-        assert(_numDestMiscRegs < TheISA::MaxMiscDestRegs);
-        _destMiscRegIdx[_numDestMiscRegs] = misc_reg;
-        _destMiscRegVal[_numDestMiscRegs] = val;
-        _numDestMiscRegs++;
+        _destMiscRegIdx.push_back(misc_reg);
+        _destMiscRegVal.push_back(val);
     }
 
     /** Reads a misc. register, including any side-effects the read
@@ -185,7 +177,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         bool no_squash_from_TC = this->thread->noSquashFromTC;
         this->thread->noSquashFromTC = true;
 
-        for (int i = 0; i < _numDestMiscRegs; i++)
+        for (int i = 0; i < _destMiscRegIdx.size(); i++)
             this->cpu->setMiscReg(
                 _destMiscRegIdx[i], _destMiscRegVal[i], this->threadNumber);
 
