@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2019 ARM Limited
+ * Copyright (c) 2013, 2018-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -93,6 +93,8 @@ class SMMUv3 : public ClockedObject
     SMMURequestPort    requestPort;
     SMMUTableWalkPort tableWalkPort;
     SMMUControlPort   controlPort;
+
+    const bool irqInterfaceEnable;
 
     ARMArchTLB  tlb;
     ConfigCache configCache;

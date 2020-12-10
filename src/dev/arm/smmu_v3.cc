@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2019 ARM Limited
+ * Copyright (c) 2013, 2018-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -58,6 +58,7 @@ SMMUv3::SMMUv3(const SMMUv3Params &params) :
     requestPort(name() + ".request", *this),
     tableWalkPort(name() + ".walker", *this),
     controlPort(name() + ".control", *this, params.reg_map),
+    irqInterfaceEnable(params.irq_interface_enable),
     tlb(params.tlb_entries, params.tlb_assoc, params.tlb_policy, this),
     configCache(params.cfg_entries, params.cfg_assoc, params.cfg_policy, this),
     ipaCache(params.ipa_entries, params.ipa_assoc, params.ipa_policy, this),
@@ -626,6 +627,13 @@ SMMUv3::writeControl(PacketPtr pkt)
         case offsetof(SMMURegs, cr0):
             assert(pkt->getSize() == sizeof(uint32_t));
             regs.cr0 = regs.cr0ack = pkt->getLE<uint32_t>();
+            break;
+        case offsetof(SMMURegs, irq_ctrl):
+            assert(pkt->getSize() == sizeof(uint32_t));
+            if (irqInterfaceEnable) {
+                warn("SMMUv3::%s No support for interrupt sources", __func__);
+                regs.irq_ctrl = regs.irq_ctrlack = pkt->getLE<uint32_t>();
+            }
             break;
 
         case offsetof(SMMURegs, cr1):
