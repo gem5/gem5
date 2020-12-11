@@ -106,7 +106,7 @@ class Maintainers(object):
 
     @classmethod
     def from_yaml(cls, yaml_str: str) -> "Maintainers":
-        return cls(yaml.load(yaml_str))
+        return cls(yaml.load(yaml_str, Loader=yaml.SafeLoader))
 
     @classmethod
     def _load_maintainers_file(cls,
@@ -117,9 +117,9 @@ class Maintainers(object):
 
         if isinstance(path_or_file, str):
             with open(path_or_file, 'r') as fin:
-                return yaml.load(fin)
+                return yaml.load(fin, Loader=yaml.SafeLoader)
         else:
-            return yaml.load(path_or_file)
+            return yaml.load(path_or_file, Loader=yaml.SafeLoader)
 
     @classmethod
     def _parse_subsystem(cls, tag: str, ydict: Mapping[str, Any]) -> Subsystem:
