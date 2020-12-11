@@ -491,7 +491,7 @@ class Request
     void
     setSubStreamId(uint32_t ssid)
     {
-        assert(privateFlags.isSet(VALID_STREAM_ID));
+        assert(hasStreamId());
         _substreamId = ssid;
         privateFlags.set(VALID_SUBSTREAM_ID);
     }
@@ -541,8 +541,8 @@ class Request
     // mem. accesses
     void splitOnVaddr(Addr split_addr, RequestPtr &req1, RequestPtr &req2)
     {
-        assert(privateFlags.isSet(VALID_VADDR));
-        assert(privateFlags.noneSet(VALID_PADDR));
+        assert(hasVaddr());
+        assert(!hasPaddr());
         assert(split_addr > _vaddr && split_addr < _vaddr + _size);
         req1 = std::make_shared<Request>(*this);
         req2 = std::make_shared<Request>(*this);
@@ -569,7 +569,7 @@ class Request
     Addr
     getPaddr() const
     {
-        assert(privateFlags.isSet(VALID_PADDR));
+        assert(hasPaddr());
         return _paddr;
     }
 
@@ -584,7 +584,7 @@ class Request
 
     Counter getInstCount() const
     {
-        assert(privateFlags.isSet(VALID_INST_COUNT));
+        assert(hasInstCount());
         return _instCount;
     }
 
@@ -623,7 +623,7 @@ class Request
     unsigned
     getSize() const
     {
-        assert(privateFlags.isSet(VALID_SIZE));
+        assert(hasSize());
         return _size;
     }
 
@@ -658,7 +658,7 @@ class Request
     Tick
     time() const
     {
-        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(hasPaddr() || hasVaddr());
         return _time;
     }
 
@@ -701,7 +701,7 @@ class Request
     HtmFailureFaultCause
     getHtmAbortCause() const
     {
-        assert(privateFlags.isSet(VALID_HTM_ABORT_CAUSE));
+        assert(hasHtmAbortCause());
         return _htmAbortCause;
     }
 
@@ -717,7 +717,7 @@ class Request
     Flags
     getFlags()
     {
-        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(hasPaddr() || hasVaddr());
         return _flags;
     }
 
@@ -728,7 +728,7 @@ class Request
     void
     setFlags(Flags flags)
     {
-        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(hasPaddr() || hasVaddr());
         _flags.set(flags);
     }
 
@@ -736,7 +736,7 @@ class Request
     setCacheCoherenceFlags(CacheCoherenceFlags extraFlags)
     {
         // TODO: do mem_sync_op requests have valid paddr/vaddr?
-        assert(privateFlags.isSet(VALID_PADDR | VALID_VADDR));
+        assert(hasPaddr() || hasVaddr());
         _cacheCoherenceFlags.set(extraFlags);
     }
 
@@ -776,7 +776,7 @@ class Request
     ArchFlagsType
     getArchFlags() const
     {
-        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(hasPaddr() || hasVaddr());
         return _flags & ARCH_BITS;
     }
 
@@ -791,7 +791,7 @@ class Request
     uint64_t
     getExtraData() const
     {
-        assert(privateFlags.isSet(VALID_EXTRA_DATA));
+        assert(extraDataValid());
         return _extraData;
     }
 
@@ -813,7 +813,7 @@ class Request
     ContextID
     contextId() const
     {
-        assert(privateFlags.isSet(VALID_CONTEXT_ID));
+        assert(hasContextId());
         return _contextId;
     }
 
@@ -826,7 +826,7 @@ class Request
     uint32_t
     streamId() const
     {
-        assert(privateFlags.isSet(VALID_STREAM_ID));
+        assert(hasStreamId());
         return _streamId;
     }
 
@@ -839,7 +839,7 @@ class Request
     uint32_t
     substreamId() const
     {
-        assert(privateFlags.isSet(VALID_SUBSTREAM_ID));
+        assert(hasSubstreamId());
         return _substreamId;
     }
 
@@ -860,7 +860,7 @@ class Request
     Addr
     getPC() const
     {
-        assert(privateFlags.isSet(VALID_PC));
+        assert(hasPC());
         return _pc;
     }
 
@@ -897,7 +897,7 @@ class Request
     InstSeqNum
     getReqInstSeqNum() const
     {
-        assert(privateFlags.isSet(VALID_INST_SEQ_NUM));
+        assert(hasInstSeqNum());
         return _reqInstSeqNum;
     }
 
