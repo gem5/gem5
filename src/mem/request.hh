@@ -489,7 +489,7 @@ class Request
     }
 
     void
-    setSubStreamId(uint32_t ssid)
+    setSubstreamId(uint32_t ssid)
     {
         assert(hasStreamId());
         _substreamId = ssid;

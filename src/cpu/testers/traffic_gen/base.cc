@@ -183,12 +183,12 @@ BaseTrafficGen::update()
         // try to pick and assign them to the new packet
         if (streamGenerator) {
             auto sid = streamGenerator->pickStreamID();
-            auto ssid = streamGenerator->pickSubStreamID();
+            auto ssid = streamGenerator->pickSubstreamID();
 
             pkt->req->setStreamId(sid);
 
             if (streamGenerator->ssidValid()) {
-                pkt->req->setSubStreamId(ssid);
+                pkt->req->setSubstreamId(ssid);
             }
         }
 

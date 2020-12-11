@@ -169,7 +169,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
             gen.addr(), gen.size(), flag, requestorId);
 
         req->setStreamId(sid);
-        req->setSubStreamId(ssid);
+        req->setSubstreamId(ssid);
 
         req->taskId(ContextSwitchTaskId::DMA);
         PacketPtr pkt = new Packet(req, cmd);

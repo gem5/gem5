@@ -64,7 +64,7 @@ class StreamGen
     virtual ~StreamGen() {};
 
     virtual uint32_t pickStreamID() = 0;
-    virtual uint32_t pickSubStreamID() = 0;
+    virtual uint32_t pickSubstreamID() = 0;
 
     /**
      * Factory method for constructing a Stream generator.
@@ -92,7 +92,7 @@ class StreamGen
      * Store preset Stream and Substream IDs to use for requests
      * This is the set of available streamIDs the generator can
      * pick. The actual ID being picked for a specific memory
-     * request is selected by the pickStreamID and pickSubStreamID
+     * request is selected by the pickStreamID and pickSubstreamID
      * methods.
      */
     std::vector<uint32_t> streamIds;
@@ -114,7 +114,7 @@ class FixedStreamGen : public StreamGen
     uint32_t pickStreamID() override
     { return streamIds[0]; }
 
-    uint32_t pickSubStreamID() override
+    uint32_t pickSubstreamID() override
     { return substreamIds[0]; }
 };
 
@@ -128,7 +128,7 @@ class RandomStreamGen : public StreamGen
     uint32_t pickStreamID() override
     { return randomPick(streamIds); }
 
-    uint32_t pickSubStreamID() override
+    uint32_t pickSubstreamID() override
     { return randomPick(substreamIds); }
 
   protected:
