@@ -45,6 +45,7 @@ if buildEnv["PROTOCOL"] == "CHI":
     import ruby.CHI_config as CHI
 
 from topologies.BaseTopology import SimpleTopology
+from topologies.CustomMeshDotWriter import generate_dot
 
 
 class CustomMesh(SimpleTopology):
@@ -146,6 +147,9 @@ class CustomMesh(SimpleTopology):
         node_router = self._Router(
             router_id=len(self._routers), latency=self.node_router_latency
         )
+        node_router._row = mesh_router._row
+        node_router._col = mesh_router._col
+        node_router._main = False
         self._routers.append(node_router)
 
         # connect node_router <-> mesh router
@@ -206,6 +210,8 @@ class CustomMesh(SimpleTopology):
                         )
                     )
                     self._link_count += 1
+                    c._row = router._row
+                    c._col = router._col
         else:
             # try to circulate all nodes to all routers, some routers may be
             # connected to zero or more than one node.
@@ -227,6 +233,8 @@ class CustomMesh(SimpleTopology):
                         )
                     )
                     self._link_count += 1
+                    c._row = router._row
+                    c._col = router._col
                 idx = (idx + 1) % len(router_idx_list)
 
     # --------------------------------------------------------------------------
@@ -310,6 +318,15 @@ class CustomMesh(SimpleTopology):
             for i in range(num_mesh_routers)
         ]
 
+        # Assign helpers later needed by generate_dot
+        for row in range(num_rows):
+            for col in range(num_cols):
+                router_id = col + (row * num_cols)
+                assert self._routers[router_id].router_id.value == router_id
+                self._routers[router_id]._row = row
+                self._routers[router_id]._col = col
+                self._routers[router_id]._main = True
+
         self._link_count = 0
         self._int_links = []
         self._ext_links = []
@@ -357,6 +374,8 @@ class CustomMesh(SimpleTopology):
         pairing = getattr(options, "pairing", None)
         if pairing != None:
             self._autoPairHNFandSNF(hnf_list, mem_ctrls, pairing)
+
+        generate_dot(network, num_rows, num_cols)
 
     # --------------------------------------------------------------------------
     # _autoPair
