@@ -61,7 +61,6 @@
 #include "debug/WorkItems.hh"
 #include "dev/net/dist_iface.hh"
 #include "params/BaseCPU.hh"
-#include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_events.hh"
@@ -100,18 +99,10 @@ const std::string DIST_SIZE = "dist-size";
 
 } // namespace InitParamKey
 
-static inline void
-panicFsOnlyPseudoInst(const char *name)
-{
-    panic("Pseudo inst \"%s\" is only available in Full System mode.", name);
-}
-
 void
 arm(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "PseudoInst::arm()\n");
-    if (!FullSystem)
-        panicFsOnlyPseudoInst("arm");
 
     auto *workload = tc->getSystemPtr()->workload;
     if (workload)
@@ -211,8 +202,6 @@ void
 loadsymbol(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "PseudoInst::loadsymbol()\n");
-    if (!FullSystem)
-        panicFsOnlyPseudoInst("loadsymbol");
 
     const string &filename = tc->getCpuPtr()->system->params().symbolfile;
     if (filename.empty()) {
@@ -266,8 +255,6 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 {
     DPRINTF(PseudoInst, "PseudoInst::addsymbol(0x%x, 0x%x)\n",
             addr, symbolAddr);
-    if (!FullSystem)
-        panicFsOnlyPseudoInst("addSymbol");
 
     std::string symbol;
     tc->getVirtProxy().readString(symbol, symbolAddr);
@@ -285,10 +272,6 @@ initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
 {
     DPRINTF(PseudoInst, "PseudoInst::initParam() key:%s%s\n", (char *)&key_str1,
             (char *)&key_str2);
-    if (!FullSystem) {
-        panicFsOnlyPseudoInst("initParam");
-        return 0;
-    }
 
     // The key parameter string is passed in via two 64-bit registers. We copy
     // out the characters from the 64-bit integer variables here, and
@@ -375,10 +358,6 @@ readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
 {
     DPRINTF(PseudoInst, "PseudoInst::readfile(0x%x, 0x%x, 0x%x)\n",
             vaddr, len, offset);
-    if (!FullSystem) {
-        panicFsOnlyPseudoInst("readfile");
-        return 0;
-    }
 
     const string &file = tc->getSystemPtr()->params().readfile;
     if (file.empty()) {
