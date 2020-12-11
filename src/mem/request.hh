@@ -576,6 +576,12 @@ class Request
     /**
      * Accessor for instruction count.
      */
+    bool
+    hasInstCount() const
+    {
+      return privateFlags.isSet(VALID_INST_COUNT);
+    }
+
     Counter getInstCount() const
     {
         assert(privateFlags.isSet(VALID_INST_COUNT));
@@ -686,6 +692,12 @@ class Request
     /**
      * Accessor for hardware transactional memory abort cause.
      */
+    bool
+    hasHtmAbortCause() const
+    {
+      return privateFlags.isSet(VALID_HTM_ABORT_CAUSE);
+    }
+
     HtmFailureFaultCause
     getHtmAbortCause() const
     {
@@ -803,6 +815,12 @@ class Request
     {
         assert(privateFlags.isSet(VALID_CONTEXT_ID));
         return _contextId;
+    }
+
+    bool
+    hasStreamId() const
+    {
+      return privateFlags.isSet(VALID_STREAM_ID);
     }
 
     uint32_t
