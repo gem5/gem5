@@ -1091,6 +1091,15 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
     pkt->dataStatic(data);
 
     if (mmio_req->isLocalAccess()) {
+        // Since the PC has already been advanced by KVM, set the next
+        // PC to the current PC. KVM doesn't use that value, and that
+        // way any gem5 op or syscall which needs to know what the next
+        // PC is will be able to get a reasonable value.
+        //
+        // We won't be able to rewind the current PC to the "correct"
+        // value without figuring out how big the current instruction
+        // is, and that's probably not worth the effort.
+        tc->setNPC(tc->instAddr());
         // We currently assume that there is no need to migrate to a
         // different event queue when doing local accesses. Currently, they
         // are only used for m5ops, so it should be a valid assumption.

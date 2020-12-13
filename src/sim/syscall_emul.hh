@@ -1509,8 +1509,7 @@ cloneFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     desc->returnInto(ctc, 0);
 
     TheISA::PCState cpc = tc->pcState();
-    if (!p->kvmInSE)
-        cpc.advance();
+    cpc.advance();
     ctc->pcState(cpc);
     ctc->activate();
 
