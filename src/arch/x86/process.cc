@@ -326,7 +326,7 @@ X86_64Process::initState()
 
             tc->setMiscReg(MISCREG_TR, tssSel);
             tc->setMiscReg(MISCREG_TR_BASE, tss_base_addr);
-            tc->setMiscReg(MISCREG_TR_EFF_BASE, 0);
+            tc->setMiscReg(MISCREG_TR_EFF_BASE, tss_base_addr);
             tc->setMiscReg(MISCREG_TR_LIMIT, tss_limit);
             tc->setMiscReg(MISCREG_TR_ATTR, tss_attr);
 
