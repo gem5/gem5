@@ -68,11 +68,8 @@ namespace X86ISA
                       std::vector<AuxVector<IntType> > extraAuxvs);
 
       public:
-        Addr gdtStart()
-        { return _gdtStart; }
-
-        Addr gdtSize()
-        { return _gdtSize; }
+        Addr gdtStart() const { return _gdtStart; }
+        Addr gdtSize() const { return _gdtSize; }
 
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
                    Process *process, RegVal flags) override;
@@ -159,7 +156,7 @@ namespace X86ISA
         I386Process(const ProcessParams &params,
                     ::Loader::ObjectFile *objFile);
 
-        const VSyscallPage &getVSyscallPage() { return vsyscallPage; }
+        const VSyscallPage &getVSyscallPage() const { return vsyscallPage; }
 
         void argsInit(int pageSize);
         void initState() override;
