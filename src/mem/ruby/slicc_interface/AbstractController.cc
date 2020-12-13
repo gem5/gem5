@@ -87,7 +87,7 @@ AbstractController::init()
     for (auto abs_cntrl : params().downstream_destinations) {
         MachineID mid = abs_cntrl->getMachineID();
         const AddrRangeList &ranges = abs_cntrl->getAddrRanges();
-        for (const auto addr_range : ranges) {
+        for (const auto &addr_range : ranges) {
             auto i = downstreamAddrMap.intersects(addr_range);
             if (i == downstreamAddrMap.end()) {
                 i = downstreamAddrMap.insert(addr_range, AddrMapEntry());
