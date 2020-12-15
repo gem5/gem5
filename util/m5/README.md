@@ -98,6 +98,7 @@ first identify what ABI(s) you're targetting.
  thumb   | ARM thumb    | instruction
  sparc   | 64 bit SPARC | instruction
  x86     | amd64/x86_64 | instruction, address
+ riscv   | 64 bit RISCV | instruction
 
 ## SCons
 
@@ -166,6 +167,7 @@ scons x86.CROSS_COMPILE=x86_64-linux-gnu- build/x86/out/m5
  thumb   | arm       | arm-linux-gnueabihf-
  sparc   | sparc64   | sparc64-linux-gnu-
  x86     | x86_64    |
+ riscv   | riscv64   | riscv64-linux-gnu-
 
 Note that the default setting for the x86 cross compiler prefix is blank,
 meaning that the native/host compiler will be used. If building on a non-x86
@@ -254,6 +256,7 @@ varies based on the ABI.
  thumb   | instruction
  sparc   | instruction
  x86     | address
+ riscv   | instruction
 
 The default is usually to use a magic instruction, which for most ABIs is the
 only mechanism that's supported, and is what the m5 utility would
