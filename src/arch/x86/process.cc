@@ -387,7 +387,7 @@ X86_64Process::initState()
 
             tc->setMiscReg(MISCREG_CR4, cr4);
 
-            CR4 cr8 = 0;
+            CR8 cr8 = 0;
             tc->setMiscReg(MISCREG_CR8, cr8);
 
             tc->setMiscReg(MISCREG_MXCSR, 0x1f80);
