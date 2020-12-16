@@ -352,8 +352,8 @@ X86_64Process::initState()
             cr0.pg = 1; // Turn on paging.
             cr0.cd = 0; // Don't disable caching.
             cr0.nw = 0; // This is bit is defined to be ignored.
-            cr0.am = 1; // No alignment checking
-            cr0.wp = 1; // Supervisor mode can write read only pages
+            cr0.am = 0; // No alignment checking
+            cr0.wp = 0; // Supervisor mode can write read only pages
             cr0.ne = 1;
             cr0.et = 1; // This should always be 1
             cr0.ts = 0; // We don't do task switching, so causing fp exceptions
