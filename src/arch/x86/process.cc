@@ -343,8 +343,8 @@ X86_64Process::initState()
             efer.lme = 1; // Enable long mode.
             efer.lma = 1; // Activate long mode.
             efer.nxe = 1; // Enable nx support.
-            efer.svme = 0; // Enable svm support for now.
-            efer.ffxsr = 0; // Turn on fast fxsave and fxrstor.
+            efer.svme = 0; // Disable svm support for now.
+            efer.ffxsr = 0; // Disable fast fxsave and fxrstor.
             tc->setMiscReg(MISCREG_EFER, efer);
 
             //Set up the registers that describe the operating mode.
@@ -372,7 +372,7 @@ X86_64Process::initState()
 
             CR4 cr4 = 0;
             //Turn on pae.
-            cr4.osxsave = 0; // Enable XSAVE and Proc Extended States
+            cr4.osxsave = 0; // Disable XSAVE and Proc Extended States
             cr4.osxmmexcpt = 0; // Operating System Unmasked Exception
             cr4.osfxsr = 1; // Operating System FXSave/FSRSTOR Support
             cr4.pce = 0; // Performance-Monitoring Counter Enable
