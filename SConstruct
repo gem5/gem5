@@ -139,7 +139,7 @@ if GetOption('no_lto') and GetOption('force_lto'):
 #
 ########################################################################
 
-main = Environment()
+main = Environment(tools=['default', 'git'])
 
 from gem5_scons.util import get_termcap
 termcap = get_termcap()
@@ -259,7 +259,7 @@ global_vars.Save(global_vars_file, main)
 
 # Parse EXTRAS variable to build list of all directories where we're
 # look for sources etc.  This list is exported as extras_dir_list.
-base_dir = main.srcdir.abspath
+base_dir = Dir('#src').abspath
 if main['EXTRAS']:
     extras_dir_list = makePathListAbsolute(main['EXTRAS'].split(':'))
 else:
@@ -1027,7 +1027,7 @@ export_vars += ['USE_FENV', 'TARGET_ISA', 'TARGET_GPU_ISA',
 # value of the variable.
 def build_config_file(target, source, env):
     (variable, value) = [s.get_contents().decode('utf-8') for s in source]
-    with open(str(target[0]), 'w') as f:
+    with open(str(target[0].abspath), 'w') as f:
         print('#define', variable, value, file=f)
     return None
 
@@ -1040,7 +1040,7 @@ def config_emitter(target, source, env):
     # extract variable name from Builder arg
     variable = str(target[0])
     # True target is config header file
-    target = joinpath('config', variable.lower() + '.hh')
+    target = Dir('config').File(variable.lower() + '.hh')
     val = env[variable]
     if isinstance(val, bool):
         # Force value to 0/1
@@ -1049,9 +1049,9 @@ def config_emitter(target, source, env):
         val = '"' + val + '"'
 
     # Sources are variable name & value (packaged in SCons Value nodes)
-    return ([target], [Value(variable), Value(val)])
+    return [target], [Value(variable), Value(val)]
 
-config_builder = Builder(emitter = config_emitter, action = config_action)
+config_builder = Builder(emitter=config_emitter, action=config_action)
 
 main.Append(BUILDERS = { 'ConfigFile' : config_builder })
 
@@ -1105,7 +1105,7 @@ if sys.platform != "darwin":
 main.AddMethod(add_local_rpath, 'AddLocalRPATH')
 
 # builds in ext are shared across all configs in the build root.
-ext_dir = abspath(joinpath(str(main.root), 'ext'))
+ext_dir = Dir('#ext').abspath
 ext_build_dirs = []
 for root, dirs, files in os.walk(ext_dir):
     if 'SConscript' in files:
@@ -1193,7 +1193,7 @@ for variant_path in variant_paths:
         # normally determined by name of $VARIANT_DIR, but can be
         # overridden by '--default=' arg on command line.
         default = GetOption('default')
-        opts_dir = joinpath(main.root.abspath, 'build_opts')
+        opts_dir = Dir('#build_opts').abspath
         if default:
             default_vars_files = [joinpath(build_root, 'variables', default),
                                   joinpath(opts_dir, default)]

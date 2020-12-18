@@ -71,22 +71,14 @@ def common_config(env):
     # https://github.com/SCons/scons/issues/2811
     env['IMPLICIT_COMMAND_DEPENDENCIES'] = 0
     env.Decider('MD5-timestamp')
-    env.root = env.Dir('#')
-    env.srcdir = env.root.Dir('src')
 
     # add useful python code PYTHONPATH so it can be used by subprocesses
     # as well
     env.AppendENVPath('PYTHONPATH', extra_python_paths)
 
-gem5_tool_list = [
-    'git',
-]
-
 def generate(env):
     common_config(env)
     SCons.Tool.default.generate(env)
-    for tool in gem5_tool_list:
-        SCons.Tool.Tool(tool)(env)
 
 def exists(env):
     return 1
