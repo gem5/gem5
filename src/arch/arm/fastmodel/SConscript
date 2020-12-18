@@ -244,7 +244,7 @@ class ProjectFileParser(Grammar):
 
 
 license_count = int(env['ARMLMD_LICENSE_COUNT'])
-arm_licenses = list((Value(i) for i in range(license_count)))
+arm_licenses = list((Value(object()) for i in range(license_count)))
 license_cycle = cycle(arm_licenses)
 
 class ArmFastModelComponent(object):
