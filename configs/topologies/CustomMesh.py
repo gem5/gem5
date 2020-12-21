@@ -153,7 +153,7 @@ class CustomMesh(SimpleTopology):
     # distributeNodes
     # --------------------------------------------------------------------------
 
-    def _createRNFRouter(self, noc_params, mesh_router):
+    def _createRNFRouter(self, mesh_router):
         # Create a zero-latency router bridging node controllers
         # and the mesh router
         node_router = self._Router(router_id=len(self._routers))
@@ -177,7 +177,7 @@ class CustomMesh(SimpleTopology):
                 dst_node=mesh_router,
                 src_outport="rnf2mesh_out",
                 dst_inport="rnf2mesh_in",
-                latency=noc_params.node_link_latency,
+                latency=self._node_link_latency,
             )
         )
         self._link_count += 1
@@ -189,14 +189,14 @@ class CustomMesh(SimpleTopology):
                 dst_node=node_router,
                 src_outport="mesh2rnf_out",
                 dst_inport="mesh2rnf_in",
-                latency=noc_params.node_link_latency,
+                latency=self._node_link_latency,
             )
         )
         self._link_count += 1
 
         return node_router
 
-    def distributeNodes(self, noc_params, node_params, node_list):
+    def distributeNodes(self, node_params, node_list):
         if len(node_list) == 0:
             return
 
@@ -217,7 +217,7 @@ class CustomMesh(SimpleTopology):
                 # and the mesh router
                 # for non-RNF nodes, node router is mesh router
                 if isinstance(node, CHI.CHI_RNF):
-                    router = self._createRNFRouter(noc_params, router)
+                    router = self._createRNFRouter(router)
 
                 # connect all ctrls in the node to node_router
                 ctrls = node.getNetworkSideControllers()
@@ -243,7 +243,7 @@ class CustomMesh(SimpleTopology):
                 router = self._routers[ridx]
 
                 if isinstance(node, CHI.CHI_RNF):
-                    router = self._createRNFRouter(noc_params, router)
+                    router = self._createRNFRouter(router)
                 ctrls = node.getNetworkSideControllers()
                 for c in ctrls:
                     self._ext_links.append(
@@ -275,6 +275,9 @@ class CustomMesh(SimpleTopology):
         self._Router = Router
 
         self.node_router_latency = 1 if options.network == "garnet" else 0
+
+        self._router_link_latency = options.router_link_latency
+        self._node_link_latency = options.node_link_latency
         self._custom_links = options.custom_links
 
         # classify nodes into different types
@@ -367,23 +370,23 @@ class CustomMesh(SimpleTopology):
         self._makeCustomMesh()
 
         # Place CHI_RNF on the mesh
-        self.distributeNodes(options, rnf_params, rnf_nodes)
+        self.distributeNodes(rnf_params, rnf_nodes)
 
         # Place CHI_HNF on the mesh
-        self.distributeNodes(options, hnf_params, hnf_nodes)
+        self.distributeNodes(hnf_params, hnf_nodes)
 
         # Place CHI_MN on the mesh
-        self.distributeNodes(options, mn_params, mn_nodes)
+        self.distributeNodes(mn_params, mn_nodes)
 
         # Place CHI_SNF_MainMem on the mesh
-        self.distributeNodes(options, mem_params, mem_nodes)
+        self.distributeNodes(mem_params, mem_nodes)
 
         # Place all IO mem nodes on the mesh
-        self.distributeNodes(options, io_mem_params, io_mem_nodes)
+        self.distributeNodes(io_mem_params, io_mem_nodes)
 
         # Place all IO request nodes on the mesh
-        self.distributeNodes(options, rni_dma_params, rni_dma_nodes)
-        self.distributeNodes(options, rni_io_params, rni_io_nodes)
+        self.distributeNodes(rni_dma_params, rni_dma_nodes)
+        self.distributeNodes(rni_io_params, rni_io_nodes)
 
         # Set up
         network.int_links = self._int_links
