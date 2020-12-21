@@ -56,6 +56,7 @@
 #include "mem/cache/mshr.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/queue_entry.hh"
+#include "mem/cache/tags/compressed_tags.hh"
 #include "mem/cache/tags/super_blk.hh"
 #include "params/BaseCache.hh"
 #include "params/WriteAllocator.hh"
@@ -123,6 +124,12 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     tags->tagsInit();
     if (prefetcher)
         prefetcher->setCache(this);
+
+    fatal_if(compressor && !dynamic_cast<CompressedTags*>(tags),
+        "The tags of compressed cache %s must derive from CompressedTags",
+        name());
+    warn_if(!compressor && dynamic_cast<CompressedTags*>(tags),
+        "Compressed cache %s does not have a compression algorithm", name());
     if (compressor)
         compressor->setCache(this);
 }
