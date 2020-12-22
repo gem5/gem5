@@ -85,7 +85,7 @@ def install_style_hooks(env):
 
         # Use a relative symlink if the hooks live in the source directory,
         # and the hooks directory is not a symlink to an absolute path.
-        if hook.is_under(env.root) and not abs_symlink_hooks:
+        if hook.is_under(env.Dir("#")) and not abs_symlink_hooks:
             script_path = os.path.relpath(
                 os.path.realpath(script.get_abspath()),
                 os.path.realpath(hook.Dir(".").get_abspath()))
@@ -108,8 +108,8 @@ def install_style_hooks(env):
         print("Input exception, exiting scons.\n")
         sys.exit(1)
 
-    git_style_script = env.root.Dir("util").File("git-pre-commit.py")
-    git_msg_script = env.root.Dir("ext").File("git-commit-msg")
+    git_style_script = env.Dir("#util").File("git-pre-commit.py")
+    git_msg_script = env.Dir("#ext").File("git-commit-msg")
 
     hook_install("pre-commit", git_style_script)
     hook_install("commit-msg", git_msg_script)
