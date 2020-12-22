@@ -383,9 +383,9 @@ def template CSRExecute {{
                             xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
                             break;
                           case CSR_MIP: case CSR_MIE:
-                            if (oldinterrupt.mei == newinterrupt.mei &&
-                                oldinterrupt.mti == newinterrupt.mti &&
-                                oldinterrupt.msi == newinterrupt.msi) {
+                            if (oldinterrupt.mei != newinterrupt.mei ||
+                                oldinterrupt.mti != newinterrupt.mti ||
+                                oldinterrupt.msi != newinterrupt.msi) {
                                 xc->setMiscReg(CSRData.at(csr).physIndex,data);
                             } else {
                                 std::string error = "Interrupt m bits are "
