@@ -130,6 +130,9 @@ GlobalMemPipeline::exec()
         DPRINTF(GPUMem, "CU%d: WF[%d][%d]: Completing global mem instr %s\n",
                 m->cu_id, m->simdId, m->wfSlotId, m->disassemble());
         m->completeAcc(m);
+        if (m->isFlat() && m->isLoad()) {
+            w->decLGKMInstsIssued();
+        }
         w->decVMemInstsIssued();
 
         if (m->isLoad() || m->isAtomicRet()) {
@@ -192,6 +195,10 @@ GlobalMemPipeline::exec()
         DPRINTF(GPUCoalescer, "initiateAcc for %s seqNum %d\n",
                 mp->disassemble(), mp->seqNum());
         mp->initiateAcc(mp);
+
+        if (mp->isFlat() && mp->isStore()) {
+            mp->wavefront()->decLGKMInstsIssued();
+        }
 
         if (mp->isStore() && mp->isGlobalSeg()) {
             mp->wavefront()->decExpInstsIssued();

@@ -819,7 +819,6 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
     if (executedAs() == Enums::SC_GLOBAL) {
         // no transormation for global segment
         wavefront()->execUnitId =  wavefront()->flatGmUnitId;
-        wavefront()->decLGKMInstsIssued();
         if (isLoad()) {
             wavefront()->rdLmReqsInPipe--;
         } else if (isStore()) {
