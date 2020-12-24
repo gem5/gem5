@@ -60,6 +60,44 @@ TEST(ChunkGeneratorTest, AdvanceToNextChunk)
 }
 
 /*
+ * A test to check skipping over bytes.
+ */
+TEST(ChunkGeneratorTest, SkipBytes)
+{
+    ChunkGenerator chunk_generator(0, 1024, 8);
+    EXPECT_EQ(0, chunk_generator.addr());
+    EXPECT_TRUE(chunk_generator.next());
+    EXPECT_EQ(8, chunk_generator.addr());
+
+    chunk_generator.setNext(23);
+    EXPECT_EQ(23 - 8, chunk_generator.size());
+    EXPECT_TRUE(chunk_generator.next());
+    EXPECT_EQ(23, chunk_generator.addr());
+    EXPECT_EQ(1, chunk_generator.size());
+    EXPECT_TRUE(chunk_generator.next());
+    EXPECT_EQ(24, chunk_generator.addr());
+    EXPECT_EQ(8, chunk_generator.size());
+
+    chunk_generator.setNext(32);
+    EXPECT_EQ(32 - 24, chunk_generator.size());
+    EXPECT_TRUE(chunk_generator.next());
+    EXPECT_EQ(32, chunk_generator.addr());
+    EXPECT_EQ(8, chunk_generator.size());
+
+    chunk_generator.setNext(64);
+    EXPECT_EQ(64 - 32, chunk_generator.size());
+    EXPECT_TRUE(chunk_generator.next());
+    EXPECT_EQ(64, chunk_generator.addr());
+    EXPECT_EQ(8, chunk_generator.size());
+
+    chunk_generator.setNext(2048);
+    EXPECT_EQ(1024 - 64, chunk_generator.size());
+    EXPECT_TRUE(chunk_generator.last());
+    EXPECT_FALSE(chunk_generator.next());
+    EXPECT_TRUE(chunk_generator.done());
+}
+
+/*
  * A test to consume chunks until the last chunk.
  */
 TEST(ChunkGeneratorTest, AdvanceToLastChunk)

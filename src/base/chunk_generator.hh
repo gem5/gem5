@@ -35,6 +35,7 @@
  */
 
 #include <algorithm>
+#include <cassert>
 
 #include "base/intmath.hh"
 #include "base/types.hh"
@@ -61,6 +62,8 @@ class ChunkGenerator
     Addr nextAddr;
     /** The size of the current chunk (in bytes). */
     Addr curSize;
+    /** The size of the next chunk (in bytes). */
+    Addr nextSize;
     /** The number of bytes remaining in the region after the current chunk. */
     Addr sizeLeft;
     /** The start address so we can calculate offset in writing block. */
@@ -96,12 +99,13 @@ class ChunkGenerator
                 // ... even if startAddr is already chunk-aligned
                 nextAddr += chunkSize;
             }
+            nextAddr = std::min(nextAddr, startAddr + totalSize);
         }
 
         // How many bytes are left between curAddr and the end of this chunk?
-        Addr left_in_chunk = nextAddr - curAddr;
-        curSize = std::min(totalSize, left_in_chunk);
+        curSize = nextAddr - curAddr;
         sizeLeft = totalSize - curSize;
+        nextSize = std::min(sizeLeft, chunkSize);
     }
 
     /**
@@ -142,6 +146,32 @@ class ChunkGenerator
     bool last() const { return sizeLeft == 0; }
 
     /**
+     * Grow this chunk to cover additional bytes which are already handled.
+     * @param next The first byte of the next chunk.
+     *
+     * @ingroup api_chunk_generator
+     */
+    void
+    setNext(Addr next)
+    {
+        assert(next >= nextAddr);
+
+        const Addr skipping = std::min(next - nextAddr, sizeLeft);
+
+        sizeLeft -= skipping;
+        curSize += skipping;
+        nextAddr = next;
+
+        assert(chunkSize);
+
+        // nextSize will be enough to get to an alignment boundary,
+        nextSize = roundUp(next, chunkSize) - next;
+        // or if it's already aligned, to the following boundary or the end.
+        if (!nextSize)
+            nextSize = std::min(sizeLeft, chunkSize);
+    }
+
+    /**
      * Advance generator to next chunk.
      * @return True if successful, false if unsuccessful
      * (because we were at the last chunk).
@@ -157,9 +187,10 @@ class ChunkGenerator
         }
 
         curAddr = nextAddr;
-        curSize = std::min(sizeLeft, chunkSize);
+        curSize = nextSize;
         sizeLeft -= curSize;
         nextAddr += curSize;
+        nextSize = std::min(sizeLeft, chunkSize);
         return true;
     }
 };
