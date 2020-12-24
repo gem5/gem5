@@ -44,9 +44,11 @@
 #include <deque>
 #include <memory>
 
+#include "base/addr_range_map.hh"
 #include "base/chunk_generator.hh"
 #include "base/circlebuf.hh"
 #include "dev/io_device.hh"
+#include "mem/backdoor.hh"
 #include "mem/port_proxy.hh"
 #include "params/DmaDevice.hh"
 #include "sim/drain.hh"
@@ -57,12 +59,12 @@ class ClockedObject;
 class DmaPort : public RequestPort, public Drainable
 {
   private:
+    AddrRangeMap<MemBackdoorPtr, 1> memBackdoors;
 
     /**
-     * Take the first packet of the transmit list and attempt to send
-     * it as a timing request. If it is successful, schedule the
-     * sending of the next packet, otherwise remember that we are
-     * waiting for a retry.
+     * Take the first request on the transmit list and attempt to send a timing
+     * packet from it. If it is successful, schedule the sending of the next
+     * packet. Otherwise remember that we are waiting for a retry.
      */
     void trySendTimingReq();
 
@@ -74,18 +76,6 @@ class DmaPort : public RequestPort, public Drainable
      * list.
      */
     void sendDma();
-
-    /**
-     * Handle a response packet by updating the corresponding DMA
-     * request state to reflect the bytes received, and also update
-     * the pending request counter. If the DMA request that this
-     * packet is part of is complete, then signal the completion event
-     * if present, potentially with a delay added to it.
-     *
-     * @param pkt Response packet to handler
-     * @param delay Additional delay for scheduling the completion event
-     */
-    void handleResp(PacketPtr pkt, Tick delay=0);
 
     struct DmaReqState : public Packet::SenderState
     {
@@ -131,6 +121,27 @@ class DmaPort : public RequestPort, public Drainable
 
         PacketPtr createPacket();
     };
+
+    /** Send the next packet from a DMA request in atomic mode. */
+    bool sendAtomicReq(DmaReqState *state);
+    /**
+     * Send the next packet from a DMA request in atomic mode, and request
+     * and/or use memory backdoors if possible.
+     */
+    bool sendAtomicBdReq(DmaReqState *state);
+
+    /**
+     * Handle a response packet by updating the corresponding DMA
+     * request state to reflect the bytes received, and also update
+     * the pending request counter. If the DMA request that this
+     * packet is part of is complete, then signal the completion event
+     * if present, potentially with a delay added to it.
+     *
+     * @param pkt Response packet to handler
+     * @param delay Additional delay for scheduling the completion event
+     */
+    void handleRespPacket(PacketPtr pkt, Tick delay=0);
+    void handleResp(DmaReqState *state, Addr addr, Addr size, Tick delay=0);
 
   public:
     /** The device that owns this port. */

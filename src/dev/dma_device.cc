@@ -40,8 +40,13 @@
 
 #include "dev/dma_device.hh"
 
+#include <algorithm>
+#include <cassert>
+#include <cstring>
 #include <utility>
 
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "debug/DMA.hh"
 #include "debug/Drain.hh"
 #include "sim/clocked_object.hh"
@@ -56,7 +61,7 @@ DmaPort::DmaPort(ClockedObject *dev, System *s,
 { }
 
 void
-DmaPort::handleResp(PacketPtr pkt, Tick delay)
+DmaPort::handleRespPacket(PacketPtr pkt, Tick delay)
 {
     // Should always see a response with a sender state.
     assert(pkt->isResponse());
@@ -65,16 +70,24 @@ DmaPort::handleResp(PacketPtr pkt, Tick delay)
     auto *state = dynamic_cast<DmaReqState*>(pkt->senderState);
     assert(state);
 
+    handleResp(state, pkt->getAddr(), pkt->req->getSize(), delay);
+
+    delete pkt;
+}
+
+void
+DmaPort::handleResp(DmaReqState *state, Addr addr, Addr size, Tick delay)
+{
     DPRINTF(DMA, "Received response %s for addr: %#x size: %d nb: %d,"  \
             " tot: %d sched %d\n",
-            pkt->cmdString(), pkt->getAddr(), pkt->req->getSize(),
+            MemCmd(state->cmd).toString(), addr, size,
             state->numBytes, state->totBytes,
             state->completionEvent ?
             state->completionEvent->scheduled() : 0);
 
     // Update the number of bytes received based on the request rather
     // than the packet as the latter could be rounded up to line sizes.
-    state->numBytes += pkt->req->getSize();
+    state->numBytes += size;
     assert(state->totBytes >= state->numBytes);
 
     // If we have reached the total number of bytes for this DMA request,
@@ -88,8 +101,6 @@ DmaPort::handleResp(PacketPtr pkt, Tick delay)
         }
         delete state;
     }
-
-    delete pkt;
 
     // We might be drained at this point, if so signal the drain event.
     if (pendingCount == 0)
@@ -121,7 +132,7 @@ DmaPort::recvTimingResp(PacketPtr pkt)
     assert(pkt->req->isUncacheable() ||
            !(pkt->cacheResponding() && !pkt->hasSharers()));
 
-    handleResp(pkt);
+    handleRespPacket(pkt);
 
     return true;
 }
@@ -226,6 +237,92 @@ DmaPort::trySendTimingReq()
             transmitList.size(), inRetry ? 1 : 0);
 }
 
+bool
+DmaPort::sendAtomicReq(DmaReqState *state)
+{
+    PacketPtr pkt = state->createPacket();
+    DPRINTF(DMA, "Sending  DMA for addr: %#x size: %d\n",
+            state->gen.addr(), state->gen.size());
+    Tick lat = sendAtomic(pkt);
+
+    // Check if we're done, since handleResp may delete state.
+    bool done = !state->gen.next();
+    handleRespPacket(pkt, lat);
+    return done;
+}
+
+bool
+DmaPort::sendAtomicBdReq(DmaReqState *state)
+{
+    bool done = false;
+
+    auto bd_it = memBackdoors.contains(state->gen.addr());
+    if (bd_it == memBackdoors.end()) {
+        // We don't have a backdoor for this address, so use a packet.
+
+        PacketPtr pkt = state->createPacket();
+        DPRINTF(DMA, "Sending DMA for addr: %#x size: %d\n",
+                state->gen.addr(), state->gen.size());
+
+        MemBackdoorPtr bd = nullptr;
+        Tick lat = sendAtomicBackdoor(pkt, bd);
+
+        // If we got a backdoor, record it.
+        if (bd && memBackdoors.insert(bd->range(), bd) != memBackdoors.end()) {
+            // Invalidation callback which finds this backdoor and removes it.
+            auto callback = [this](const MemBackdoor &backdoor) {
+                for (auto it = memBackdoors.begin();
+                        it != memBackdoors.end(); it++) {
+                    if (it->second == &backdoor) {
+                        memBackdoors.erase(it);
+                        return;
+                    }
+                }
+                panic("Got invalidation for unknown memory backdoor.");
+            };
+            bd->addInvalidationCallback(callback);
+        }
+
+        // Check if we're done now, since handleResp may delete state.
+        done = !state->gen.next();
+        handleRespPacket(pkt, lat);
+    } else {
+        // We have a backdoor that can at least partially satisfy this request.
+        DPRINTF(DMA, "Handling DMA for addr: %#x size %d through backdoor\n",
+                state->gen.addr(), state->gen.size());
+
+        const auto *bd = bd_it->second;
+        // Offset of this access into the backdoor.
+        const Addr offset = state->gen.addr() - bd->range().start();
+        // How many bytes we still need.
+        const Addr remaining = state->totBytes - state->gen.complete();
+        // How many bytes this backdoor can provide, starting from offset.
+        const Addr available = bd->range().size() - offset;
+
+        // How many bytes we're going to handle through this backdoor.
+        const Addr handled = std::min(remaining, available);
+
+        // If there's a buffer for data, read/write it.
+        if (state->data) {
+            uint8_t *bd_data = bd->ptr() + offset;
+            uint8_t *state_data = state->data + state->gen.complete();
+            if (MemCmd(state->cmd).isRead())
+                memcpy(state_data, bd_data, handled);
+            else
+                memcpy(bd_data, state_data, handled);
+        }
+
+        // Advance the chunk generator past this region of memory.
+        state->gen.setNext(state->gen.addr() + handled);
+
+        // Check if we're done now, since handleResp may delete state.
+        done = !state->gen.next();
+        handleResp(state, state->gen.addr(), handled);
+    }
+
+    return done;
+}
+
 void
 DmaPort::sendDma()
 {
@@ -234,8 +331,8 @@ DmaPort::sendDma()
     assert(transmitList.size());
 
     if (sys->isTimingMode()) {
-        // if we are either waiting for a retry or are still waiting
-        // after sending the last packet, then do not proceed
+        // If we are either waiting for a retry or are still waiting after
+        // sending the last packet, then do not proceed.
         if (inRetry || sendEvent.scheduled()) {
             DPRINTF(DMA, "Can't send immediately, waiting to send\n");
             return;
@@ -243,22 +340,16 @@ DmaPort::sendDma()
 
         trySendTimingReq();
     } else if (sys->isAtomicMode()) {
-        // send everything there is to send in zero time
+        const bool bypass = sys->bypassCaches();
+
+        // Send everything there is to send in zero time.
         while (!transmitList.empty()) {
             DmaReqState *state = transmitList.front();
             transmitList.pop_front();
 
             bool done = state->gen.done();
-            while (!done) {
-                PacketPtr pkt = state->createPacket();
-                DPRINTF(DMA, "Sending  DMA for addr: %#x size: %d\n",
-                        pkt->req->getPaddr(), pkt->req->getSize());
-                Tick lat = sendAtomic(pkt);
-
-                // Check if we're done now, since handleResp may delete state.
-                done = !state->gen.next();
-                handleResp(pkt, lat);
-            }
+            while (!done)
+                done = bypass ? sendAtomicBdReq(state) : sendAtomicReq(state);
         }
     } else {
         panic("Unknown memory mode.");
