@@ -44,6 +44,7 @@
 #include <deque>
 #include <memory>
 
+#include "base/chunk_generator.hh"
 #include "base/circlebuf.hh"
 #include "dev/io_device.hh"
 #include "mem/port_proxy.hh"
@@ -101,9 +102,34 @@ class DmaPort : public RequestPort, public Drainable
         /** Amount to delay completion of dma by */
         const Tick delay;
 
-        DmaReqState(Event *ce, Addr tb, Tick _delay)
-            : completionEvent(ce), totBytes(tb), delay(_delay)
+        /** Object to track what chunks of bytes to send at a time. */
+        ChunkGenerator gen;
+
+        /** Pointer to a buffer for the data. */
+        uint8_t *const data = nullptr;
+
+        /** The flags to use for requests. */
+        const Request::Flags flags;
+
+        /** The requestor ID to use for requests. */
+        const RequestorID id;
+
+        /** Stream IDs. */
+        const uint32_t sid;
+        const uint32_t ssid;
+
+        /** Command for the request. */
+        const Packet::Command cmd;
+
+        DmaReqState(Packet::Command _cmd, Addr addr, Addr chunk_sz, Addr tb,
+                    uint8_t *_data, Request::Flags _flags, RequestorID _id,
+                    uint32_t _sid, uint32_t _ssid, Event *ce, Tick _delay)
+            : completionEvent(ce), totBytes(tb), delay(_delay),
+              gen(addr, tb, chunk_sz), data(_data), flags(_flags), id(_id),
+              sid(_sid), ssid(_ssid), cmd(_cmd)
         {}
+
+        PacketPtr createPacket();
     };
 
   public:
@@ -119,7 +145,7 @@ class DmaPort : public RequestPort, public Drainable
 
   protected:
     /** Use a deque as we never do any insertion or removal in the middle */
-    std::deque<PacketPtr> transmitList;
+    std::deque<DmaReqState *> transmitList;
 
     /** Event used to schedule a future sending from the transmit list. */
     EventFunctionWrapper sendEvent;
@@ -127,9 +153,8 @@ class DmaPort : public RequestPort, public Drainable
     /** Number of outstanding packets the dma port has. */
     uint32_t pendingCount = 0;
 
-    /** If the port is currently waiting for a retry before it can
-     * send whatever it is that it's sending. */
-    bool inRetry = false;
+    /** The packet (if any) waiting for a retry to send. */
+    PacketPtr inRetry = nullptr;
 
     /** Default streamId */
     const uint32_t defaultSid;
@@ -143,8 +168,6 @@ class DmaPort : public RequestPort, public Drainable
 
     bool recvTimingResp(PacketPtr pkt) override;
     void recvReqRetry() override;
-
-    void queueDma(PacketPtr pkt);
 
   public:
 
