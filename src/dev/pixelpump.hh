@@ -65,37 +65,51 @@ struct DisplayTimings : public Serializable
     void unserialize(CheckpointIn &cp) override;
 
     /** How many pixel clocks are required for one line? */
-    Cycles cyclesPerLine() const {
+    Cycles
+    cyclesPerLine() const
+    {
         return Cycles(hSync + hBackPorch +  width + hBackPorch);
     }
 
     /** How many pixel clocks are required for one frame? */
-    Cycles cyclesPerFrame() const {
+    Cycles
+    cyclesPerFrame() const
+    {
         return Cycles(cyclesPerLine() * linesPerFrame());
     }
 
     /** Calculate the first line of the vsync signal */
-    unsigned lineVSyncStart() const {
+    unsigned
+    lineVSyncStart() const
+    {
         return 0;
     }
 
     /** Calculate the first line of the vertical back porch */
-    unsigned lineVBackPorchStart() const {
+    unsigned
+    lineVBackPorchStart() const
+    {
         return lineVSyncStart() + vSync;
     }
 
     /** Calculate the first line of the visible region */
-    unsigned lineFirstVisible() const {
+    unsigned
+    lineFirstVisible() const
+    {
         return lineVBackPorchStart() + vBackPorch;
     }
 
     /** Calculate the first line of the back porch */
-    unsigned lineFrontPorchStart() const {
+    unsigned
+    lineFrontPorchStart() const
+    {
         return lineFirstVisible() + height;
     }
 
     /** Calculate the total number of lines in a frame */
-    unsigned linesPerFrame() const {
+    unsigned
+    linesPerFrame() const
+    {
         return lineFrontPorchStart() + vFrontPorch;
     }
 
@@ -176,7 +190,9 @@ class BasePixelPump
     bool underrun() const { return _underrun; }
 
     /** Is the current line within the visible range? */
-    bool visibleLine() const {
+    bool
+    visibleLine() const
+    {
         return line >= _timings.lineFirstVisible() &&
             line < _timings.lineFrontPorchStart();
     }
@@ -185,7 +201,9 @@ class BasePixelPump
     unsigned posX() const { return _posX; }
 
     /** Current pixel position within the visible area */
-    unsigned posY() const {
+    unsigned
+    posY() const
+    {
         return visibleLine() ? line - _timings.lineFirstVisible() : 0;
     }
 
@@ -269,7 +287,10 @@ class BasePixelPump
         void unserialize(CheckpointIn &cp) override;
 
         const std::string name() const override { return _name; }
-        void process() override {
+
+        void
+        process() override
+        {
             (parent.*func)();
         }
 
