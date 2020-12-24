@@ -408,7 +408,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
      * @param the id of the event to obtain
      * @return a pointer to the event with id eventId
      */
-    PMUEvent* getEvent(uint64_t eventId);
+    std::shared_ptr<PMUEvent> getEvent(uint64_t eventId);
 
     /** State of a counter within the PMU. **/
     struct CounterState : public Serializable
@@ -442,7 +442,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
          *
          * @param the event to attach the counter to
          */
-        void attach(PMUEvent* event);
+        void attach(const std::shared_ptr<PMUEvent> &event);
 
         /**
          * Obtain the counter id
@@ -482,7 +482,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
 
       protected: /* Configuration */
         /** PmuEvent currently in use (if any) **/
-        PMUEvent *sourceEvent;
+        std::shared_ptr<PMUEvent> sourceEvent;
 
         /** id of the counter instance **/
         uint64_t counterId;
@@ -612,7 +612,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
     const uint64_t cycleCounterEventId;
 
     /** The event that implements the software increment **/
-    SWIncrementEvent *swIncrementEvent;
+    std::shared_ptr<SWIncrementEvent> swIncrementEvent;
 
   protected: /* Configuration and constants */
     /** Constant (configuration-dependent) part of the PMCR */
@@ -627,7 +627,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
     /**
      * List of event types supported by this PMU.
      */
-    std::map<EventTypeId, PMUEvent*> eventMap;
+    std::map<EventTypeId, std::shared_ptr<PMUEvent>> eventMap;
 };
 
 } // namespace ArmISA
