@@ -141,7 +141,7 @@ DmaPort::recvReqRetry()
     trySendTimingReq();
 }
 
-RequestPtr
+void
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, uint32_t sid, uint32_t ssid, Tick delay,
                    Request::Flags flag)
@@ -151,10 +151,6 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
     // i.e. cache line size
     DmaReqState *reqState = new DmaReqState(event, size, delay);
 
-    // (functionality added for Table Walker statistics)
-    // We're only interested in this when there will only be one request.
-    // For simplicity, we return the last request, which would also be
-    // the only request in that case.
     RequestPtr req = nullptr;
 
     DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,
@@ -186,16 +182,14 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
     // just created, for atomic this involves actually completing all
     // the requests
     sendDma();
-
-    return req;
 }
 
-RequestPtr
+void
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, Tick delay, Request::Flags flag)
 {
-    return dmaAction(cmd, addr, size, event, data,
-                     defaultSid, defaultSSid, delay, flag);
+    dmaAction(cmd, addr, size, event, data,
+              defaultSid, defaultSSid, delay, flag);
 }
 
 void

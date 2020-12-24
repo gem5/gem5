@@ -150,11 +150,11 @@ class DmaPort : public RequestPort, public Drainable
 
     DmaPort(ClockedObject *dev, System *s, uint32_t sid=0, uint32_t ssid=0);
 
-    RequestPtr
+    void
     dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
               uint8_t *data, Tick delay, Request::Flags flag=0);
 
-    RequestPtr
+    void
     dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
               uint8_t *data, uint32_t sid, uint32_t ssid, Tick delay,
               Request::Flags flag=0);
