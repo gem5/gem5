@@ -75,6 +75,7 @@
 
 #include <fstream>
 #include <memory>
+#include <vector>
 
 #include "base/framebuffer.hh"
 #include "base/imgwriter.hh"
@@ -252,6 +253,8 @@ class HDLcd: public AmbaDmaDevice
     ColorSelectReg blue_select = 0; /**< Blue color select register */
     /** @} */
 
+    std::vector<uint8_t> lineBuffer;
+
     uint32_t readReg(Addr offset);
     void writeReg(Addr offset, uint32_t value);
 
@@ -267,6 +270,7 @@ class HDLcd: public AmbaDmaDevice
 
   public: // Pixel pump callbacks
     bool pxlNext(Pixel &p);
+    size_t lineNext(std::vector<Pixel>::iterator pixel_it, size_t line_length);
     void pxlVSyncBegin();
     void pxlVSyncEnd();
     void pxlUnderrun();
@@ -326,12 +330,19 @@ class HDLcd: public AmbaDmaDevice
     {
       public:
         PixelPump(HDLcd &p, ClockDomain &pxl_clk, unsigned pixel_chunk)
-            : BasePixelPump(p, pxl_clk, pixel_chunk), parent(p) {}
+            : BasePixelPump(p, pxl_clk, pixel_chunk), parent(p)
+        {}
 
         void dumpSettings();
 
       protected:
         bool nextPixel(Pixel &p) override { return parent.pxlNext(p); }
+        size_t
+        nextLine(std::vector<Pixel>::iterator pixel_it,
+                 size_t line_length) override
+        {
+            return parent.lineNext(pixel_it, line_length);
+        }
 
         void onVSyncBegin() override { return parent.pxlVSyncBegin(); }
         void onVSyncEnd() override { return parent.pxlVSyncEnd(); }
@@ -347,6 +358,8 @@ class HDLcd: public AmbaDmaDevice
       protected:
         HDLcd &parent;
     };
+
+    Addr bypassLineAddress = 0;
 
     /** Handler for fast frame refresh in KVM-mode */
     void virtRefresh();

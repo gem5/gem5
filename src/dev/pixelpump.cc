@@ -37,6 +37,8 @@
 
 #include "dev/pixelpump.hh"
 
+#include "base/logging.hh"
+
 const DisplayTimings DisplayTimings::vga(
     640, 480,
     48, 96, 16,
@@ -281,16 +283,12 @@ BasePixelPump::renderFrame()
 void
 BasePixelPump::renderLine()
 {
-    const unsigned pos_y(posY());
+    const unsigned pos_y = posY();
+    const size_t _width = fb.width();
 
-    Pixel pixel(0, 0, 0);
-    for (_posX = 0; _posX < _timings.width; ++_posX) {
-        if (!nextPixel(pixel)) {
-            panic("Unexpected underrun in BasePixelPump (%u, %u)\n",
-                 _posX, pos_y);
-        }
-        fb.pixel(_posX, pos_y) = pixel;
-    }
+    auto pixel_it = fb.pixels.begin() + _width * pos_y;
+    panic_if(nextLine(pixel_it, _width) != _width,
+            "Unexpected underrun in BasePixelPump (%u, %u)", _width, pos_y);
 }
 
 

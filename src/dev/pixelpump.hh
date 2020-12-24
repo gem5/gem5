@@ -38,6 +38,8 @@
 #ifndef __DEV_PIXELPUMP_HH__
 #define __DEV_PIXELPUMP_HH__
 
+#include <vector>
+
 #include "base/framebuffer.hh"
 #include "sim/clocked_object.hh"
 
@@ -171,7 +173,7 @@ class BasePixelPump
     /** Update frame size using display timing */
     void updateTimings(const DisplayTimings &timings);
 
-    /** Render an entire frame in KVM execution mode */
+    /** Render an entire frame in non-caching mode */
     void renderFrame();
 
     /** Starting pushing pixels in timing mode */
@@ -218,6 +220,28 @@ class BasePixelPump
      * @return true on success, false on buffer underrun
      */
     virtual bool nextPixel(Pixel &p) = 0;
+
+    /**
+     * Get the next line of pixels directly from memory. This is for use from
+     * the renderFrame which is called in non-caching mode.
+     *
+     * The default implementation falls back to calling nextPixel over and
+     * over, but a more efficient implementation could retrieve the entire line
+     * of pixels all at once using fewer access to memory which bypass any
+     * intermediate structures like an incoming FIFO.
+     *
+     * @param ps          A vector iterator to store retrieved pixels into.
+     * @param line_length The number of pixels being requested.
+     * @return The number of pixels actually retrieved.
+     */
+    virtual size_t
+    nextLine(std::vector<Pixel>::iterator ps, size_t line_length)
+    {
+        size_t count = 0;
+        while (count < line_length && nextPixel(*ps++))
+            count++;
+        return count;
+    }
 
     /** First pixel clock of the first VSync line. */
     virtual void onVSyncBegin() {};

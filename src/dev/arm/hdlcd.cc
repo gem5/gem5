@@ -37,6 +37,7 @@
 
 #include "dev/arm/hdlcd.hh"
 
+#include "base/compiler.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "base/vnc/vncinput.hh"
@@ -505,6 +506,25 @@ HDLcd::pxlNext(Pixel &p)
     }
 }
 
+size_t
+HDLcd::lineNext(std::vector<Pixel>::iterator pixel_it, size_t line_length)
+{
+    const size_t byte_count = line_length * conv.length;
+
+    lineBuffer.resize(byte_count);
+    dmaRead(bypassLineAddress, byte_count, nullptr, lineBuffer.data());
+
+    bypassLineAddress += fb_line_pitch;
+
+    uint8_t *bufPtr = lineBuffer.data();
+    for (size_t i = 0; i < line_length; i++) {
+        *pixel_it++ = conv.toPixel(bufPtr);
+        bufPtr += conv.length;
+    }
+
+    return line_length;
+}
+
 void
 HDLcd::pxlVSyncBegin()
 {
@@ -516,7 +536,11 @@ void
 HDLcd::pxlVSyncEnd()
 {
     DPRINTF(HDLcd, "End of VSYNC, starting DMA engine\n");
-    dmaEngine->startFrame(fb_base);
+    if (sys->bypassCaches()) {
+        bypassLineAddress = fb_base;
+    } else {
+        dmaEngine->startFrame(fb_base);
+    }
 }
 
 void
