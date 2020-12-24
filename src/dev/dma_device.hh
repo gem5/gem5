@@ -49,7 +49,6 @@
 #include "base/circlebuf.hh"
 #include "dev/io_device.hh"
 #include "mem/backdoor.hh"
-#include "mem/port_proxy.hh"
 #include "params/DmaDevice.hh"
 #include "sim/drain.hh"
 #include "sim/system.hh"
@@ -508,7 +507,6 @@ class DmaReadFifo : public Drainable, public Serializable
     const Request::Flags reqFlags;
 
     DmaPort &port;
-    PortProxy proxy;
 
     const int cacheLineSize;
 
@@ -554,8 +552,8 @@ class DmaReadFifo : public Drainable, public Serializable
     /** Try to issue new DMA requests during normal execution*/
     void resumeFillTiming();
 
-    /** Try to bypass DMA requests in KVM execution mode */
-    void resumeFillFunctional();
+    /** Try to bypass DMA requests in non-caching mode */
+    void resumeFillBypass();
 
   private: // Internal state
     Fifo<uint8_t> buffer;

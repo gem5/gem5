@@ -370,8 +370,8 @@ DmaReadFifo::DmaReadFifo(DmaPort &_port, size_t size,
                          unsigned max_pending,
                          Request::Flags flags)
     : maxReqSize(max_req_size), fifoSize(size),
-      reqFlags(flags), port(_port), proxy(port, port.sys->cacheLineSize()),
-      cacheLineSize(port.sys->cacheLineSize()), buffer(size)
+      reqFlags(flags), port(_port), cacheLineSize(port.sys->cacheLineSize()),
+      buffer(size)
 {
     freeRequests.resize(max_pending);
     for (auto &e : freeRequests)
@@ -465,7 +465,7 @@ DmaReadFifo::resumeFill()
     const bool old_eob(atEndOfBlock());
 
     if (port.sys->bypassCaches())
-        resumeFillFunctional();
+        resumeFillBypass();
     else
         resumeFillTiming();
 
@@ -474,7 +474,7 @@ DmaReadFifo::resumeFill()
 }
 
 void
-DmaReadFifo::resumeFillFunctional()
+DmaReadFifo::resumeFillBypass()
 {
     const size_t fifo_space = buffer.capacity() - buffer.size();
     if (fifo_space >= cacheLineSize || buffer.capacity() < cacheLineSize) {
@@ -483,11 +483,13 @@ DmaReadFifo::resumeFillFunctional()
         std::vector<uint8_t> tmp_buffer(xfer_size);
 
         assert(pendingRequests.empty());
-        DPRINTF(DMA, "KVM Bypassing startAddr=%#x xfer_size=%#x " \
+        DPRINTF(DMA, "Direct bypass startAddr=%#x xfer_size=%#x " \
                 "fifo_space=%#x block_remaining=%#x\n",
                 nextAddr, xfer_size, fifo_space, block_remaining);
 
-        proxy.readBlob(nextAddr, tmp_buffer.data(), xfer_size);
+        port.dmaAction(MemCmd::ReadReq, nextAddr, xfer_size, nullptr,
+                tmp_buffer.data(), 0, reqFlags);
+
         buffer.write(tmp_buffer.begin(), xfer_size);
         nextAddr += xfer_size;
     }
