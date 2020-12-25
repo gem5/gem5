@@ -49,8 +49,6 @@
 #include "base/cprintf.hh"
 #include "base/logging.hh"
 
-using namespace std;
-
 namespace Debug {
 
 //
@@ -93,8 +91,8 @@ findFlag(const std::string &name)
 Flag::Flag(const char *name, const char *desc)
     : _name(name), _desc(desc)
 {
-    pair<FlagsMap::iterator, bool> result =
-        allFlags().insert(make_pair(name, this));
+    std::pair<FlagsMap::iterator, bool> result =
+        allFlags().insert(std::make_pair(name, this));
 
     if (!result.second)
         panic("Flag %s already defined!", name);
@@ -106,7 +104,7 @@ Flag::Flag(const char *name, const char *desc)
 
 Flag::~Flag()
 {
-    // should find and remove flag.
+    allFlags().erase(name());
 }
 
 void
