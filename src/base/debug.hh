@@ -73,7 +73,6 @@ class Flag
     virtual bool status() const = 0;
 
     operator bool() const { return status(); }
-    bool operator!() const { return !status(); }
 
     static void globalEnable();
     static void globalDisable();
