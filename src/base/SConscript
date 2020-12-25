@@ -40,6 +40,7 @@ Source('channel_addr.cc')
 Source('cprintf.cc', add_tags='gtest lib')
 GTest('cprintf.test', 'cprintf.test.cc')
 Source('debug.cc')
+GTest('debug.test', 'debug.test.cc', 'debug.cc')
 if env['USE_FENV']:
     Source('fenv.c')
 if env['USE_PNG']:

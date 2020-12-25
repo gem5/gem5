@@ -94,8 +94,7 @@ Flag::Flag(const char *name, const char *desc)
     std::pair<FlagsMap::iterator, bool> result =
         allFlags().insert(std::make_pair(name, this));
 
-    if (!result.second)
-        panic("Flag %s already defined!", name);
+    panic_if(!result.second, "Flag %s already defined!", name);
 
     ++allFlagsVersion;
 
