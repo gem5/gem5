@@ -100,6 +100,8 @@ Flag::Flag(const char *name, const char *desc)
         panic("Flag %s already defined!", name);
 
     ++allFlagsVersion;
+
+    sync();
 }
 
 Flag::~Flag()

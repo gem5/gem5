@@ -82,15 +82,13 @@ class Flag
 class SimpleFlag : public Flag
 {
   protected:
-    bool _tracing; // tracing is enabled and flag is on
-    bool _status;  // flag status
+    bool _tracing = false; // tracing is enabled and flag is on
+    bool _status = false;  // flag status
 
     void sync() override { _tracing = _globalEnable && _status; }
 
   public:
-    SimpleFlag(const char *name, const char *desc)
-        : Flag(name, desc), _status(false)
-    { }
+    SimpleFlag(const char *name, const char *desc) : Flag(name, desc) {}
 
     bool status() const override { return _tracing; }
 
