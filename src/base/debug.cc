@@ -137,13 +137,13 @@ CompoundFlag::disable()
 }
 
 bool
-CompoundFlag::status() const
+CompoundFlag::enabled() const
 {
     if (_kids.empty())
         return false;
 
     for (auto& k : _kids) {
-        if (!k->status())
+        if (!k->enabled())
             return false;
     }
 
@@ -188,7 +188,7 @@ dumpDebugFlags()
     FlagsMap::iterator end = allFlags().end();
     for (; i != end; ++i) {
         SimpleFlag *f = dynamic_cast<SimpleFlag *>(i->second);
-        if (f && f->status())
+        if (f && f->enabled())
             cprintf("%s\n", f->name());
     }
 }

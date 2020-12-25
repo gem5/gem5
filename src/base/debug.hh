@@ -70,9 +70,9 @@ class Flag
 
     virtual void enable() = 0;
     virtual void disable() = 0;
-    virtual bool status() const = 0;
+    virtual bool enabled() const = 0;
 
-    operator bool() const { return status(); }
+    operator bool() const { return enabled(); }
 
     static void globalEnable();
     static void globalDisable();
@@ -82,17 +82,17 @@ class SimpleFlag : public Flag
 {
   protected:
     bool _tracing = false; // tracing is enabled and flag is on
-    bool _status = false;  // flag status
+    bool _enabled = false; // flag enablement status
 
-    void sync() override { _tracing = _globalEnable && _status; }
+    void sync() override { _tracing = _globalEnable && _enabled; }
 
   public:
     SimpleFlag(const char *name, const char *desc) : Flag(name, desc) {}
 
-    bool status() const override { return _tracing; }
+    bool enabled() const override { return _tracing; }
 
-    void enable() override  { _status = true;  sync(); }
-    void disable() override { _status = false; sync(); }
+    void enable() override  { _enabled = true;  sync(); }
+    void disable() override { _enabled = false; sync(); }
 };
 
 class CompoundFlag : public Flag
@@ -113,7 +113,7 @@ class CompoundFlag : public Flag
 
     void enable() override;
     void disable() override;
-    bool status() const override;
+    bool enabled() const override;
 };
 
 typedef std::map<std::string, Flag *> FlagsMap;
