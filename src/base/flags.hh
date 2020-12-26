@@ -58,17 +58,6 @@ class Flags
     /**
      * @ingroup api_flags
      */
-    template <typename U>
-    const Flags<T> &
-    operator=(const Flags<U> &flags)
-    {
-        _flags = flags._flags;
-        return *this;
-    }
-
-    /**
-     * @ingroup api_flags
-     */
     const Flags<T> &
     operator=(T flags)
     {
