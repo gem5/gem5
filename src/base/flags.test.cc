@@ -99,16 +99,6 @@ TEST(FlagsTest, FlagsAssignmentOverwrite)
     ASSERT_EQ(uint32_t(flags_a), uint32_t(flags_b));
 }
 
-/** Test isSet for any bit set. */
-TEST(FlagsTest, IsSetAny)
-{
-    const uint32_t value = (1 << 3);
-    const Flags<uint32_t> flags_a;
-    const Flags<uint32_t> flags_b(value);
-    ASSERT_FALSE(flags_a.isSet());
-    ASSERT_TRUE(flags_b.isSet());
-}
-
 /** Test isSet for multiple bits set. */
 TEST(FlagsTest, IsSetValue)
 {
@@ -131,19 +121,6 @@ TEST(FlagsTest, IsSetType)
     ASSERT_FALSE(flags.isSet(value_c));
 }
 
-/** Test if all bits are set with allSet. */
-TEST(FlagsTest, AllSet)
-{
-    const uint32_t value_b = (1 << 5) | (1 << 6);
-    const uint32_t value_c = std::numeric_limits<uint32_t>::max();
-    const Flags<uint32_t> flags_a;
-    const Flags<uint32_t> flags_b(value_b);
-    const Flags<uint32_t> flags_c(value_c);
-    ASSERT_FALSE(flags_a.allSet());
-    ASSERT_FALSE(flags_b.allSet());
-    ASSERT_TRUE(flags_c.allSet());
-}
-
 /** Test allSet comparing against another flag. */
 TEST(FlagsTest, AllSetMatch)
 {
@@ -152,16 +129,6 @@ TEST(FlagsTest, AllSetMatch)
     const Flags<uint32_t> flags(value_a);
     ASSERT_TRUE(flags.allSet(value_a));
     ASSERT_FALSE(flags.allSet(value_b));
-}
-
-/** Test if no bits are set with noneSet. */
-TEST(FlagsTest, NoneSet)
-{
-    const uint32_t value_b = (1 << 5) | (1 << 6);
-    const Flags<uint32_t> flags_a;
-    const Flags<uint32_t> flags_b(value_b);
-    ASSERT_TRUE(flags_a.noneSet());
-    ASSERT_FALSE(flags_b.noneSet());
 }
 
 /** Test noneSet comparing against another flag. */
@@ -182,7 +149,7 @@ TEST(FlagsTest, Clear)
     const uint32_t value = (1 << 5) | (1 << 6);
     Flags<uint32_t> flags(value);
     flags.clear();
-    ASSERT_TRUE(flags.noneSet());
+    ASSERT_EQ(0, uint32_t(flags));
 }
 
 /** Test clearing specific bits. */

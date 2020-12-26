@@ -72,13 +72,6 @@ class Flags
     }
 
     /**
-     * Verifies whether any bit in the flags is set.
-     *
-     * @return True if any flag bit is set; false otherwise.
-     */
-    bool isSet() const { return _flags; }
-
-    /**
      * Verifies whether any bit matching the given mask is set.
      *
      * @param mask The mask containing the bits to verify.
@@ -87,26 +80,12 @@ class Flags
     bool isSet(Type mask) const { return (_flags & mask); }
 
     /**
-     * Verifies whether all bits in the flags are set.
-     *
-     * @return True if all flag bits are set; false otherwise.
-     */
-    bool allSet() const { return !(~_flags); }
-
-    /**
      * Verifies whether no bits matching the given mask are set.
      *
      * @param mask The mask containing the bits to verify.
      * @return True if matching bits are set; false otherwise.
      */
     bool allSet(Type mask) const { return (_flags & mask) == mask; }
-
-    /**
-     * Verifies whether no bits in the flags are set.
-     *
-     * @return True if all flag bits are cleared; false otherwise.
-     */
-    bool noneSet() const { return _flags == 0; }
 
     /**
      * Verifies whether no bits matching the given mask are set.
