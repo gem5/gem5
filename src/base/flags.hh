@@ -29,10 +29,14 @@
 #ifndef __BASE_FLAGS_HH__
 #define __BASE_FLAGS_HH__
 
+#include <type_traits>
+
 template <typename T>
 class Flags
 {
   private:
+    static_assert(std::is_unsigned<T>::value, "Flag type must be unsigned");
+
     T _flags;
 
   public:
