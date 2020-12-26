@@ -135,7 +135,7 @@ class Flags
      * @param mask Mask used to determine which bits are replaced.
      */
     void
-    update(Type flags, Type mask)
+    replace(Type flags, Type mask)
     {
         _flags = (_flags & ~mask) | (flags & mask);
     }

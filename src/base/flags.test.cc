@@ -192,11 +192,11 @@ TEST(FlagsTest, ConditionalSet)
 }
 
 /**
- * Test updating a masked selection of bits. This means that bits of the
+ * Test replacing a masked selection of bits. This means that bits of the
  * original value that match the mask will be replaced by the bits of
  * the new value that match the mask.
  */
-TEST(FlagsTest, UpdateOverlapping)
+TEST(FlagsTest, ReplaceOverlapping)
 {
     const uint32_t value_a = (1 << 4) | (1 << 5) | (1 << 6);
     const uint32_t value_b = (1 << 3) | (1 << 5) | (1 << 9);
@@ -207,6 +207,6 @@ TEST(FlagsTest, UpdateOverlapping)
     // (1 << 10) is not set in both values, so it remains not set
     const uint32_t result = (1 << 5) | (1 << 6) | (1 << 9);
     Flags<uint32_t> flags(value_a);
-    flags.update(value_b, mask);
+    flags.replace(value_b, mask);
     ASSERT_EQ(result, uint32_t(flags));
 }
