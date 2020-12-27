@@ -318,9 +318,18 @@ class SimObject : public EventManager, public Serializable, public Drainable,
     void unserialize(CheckpointIn &cp) override {};
 
     /**
-     * Serialize all SimObjects in the system.
+     * Create a checkpoint by serializing all SimObjects in the system.
+     *
+     * This is the entry point in the process of checkpoint creation,
+     * so it will create the checkpoint file and then unfold into
+     * the serialization of all the sim objects declared.
+     *
+     * Each SimObject instance is explicitly and individually serialized
+     * in its own section. As such, the serialization functions should not
+     * be called on sim objects anywhere else; otherwise, these objects
+     * would be needlessly serialized more than once.
      */
-    static void serializeAll(CheckpointOut &cp);
+    static void serializeAll(const std::string &cpt_dir);
 
 #ifdef DEBUG
   public:
@@ -391,5 +400,15 @@ class SimObjectResolver
 #ifdef DEBUG
 void debugObjectBreak(const char *objs);
 #endif
+
+/**
+ * To avoid circular dependencies the unserialization of SimObjects must be
+ * implemented here.
+ *
+ * @ingroup api_serialize
+ */
+void objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param);
+
+void debug_serialize(const std::string &cpt_dir);
 
 #endif // __SIM_OBJECT_HH__

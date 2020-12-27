@@ -46,21 +46,12 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+#include <cassert>
 #include <cerrno>
-#include <fstream>
-#include <list>
-#include <set>
-#include <string>
-#include <vector>
 
 #include "base/inifile.hh"
-#include "base/output.hh"
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
-#include "sim/sim_object.hh"
-
-// For stat reset hack
-#include "sim/stat_control.hh"
 
 int ckptMaxCount = 0;
 int ckptCount = 0;
@@ -92,20 +83,19 @@ Serializable::unserializeSection(CheckpointIn &cp, const char *name)
 }
 
 void
-Serializable::serializeAll(const std::string &cpt_dir)
+Serializable::generateCheckpointOut(const std::string &cpt_dir,
+        std::ofstream &outstream)
 {
     std::string dir = CheckpointIn::setDir(cpt_dir);
     if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
             fatal("couldn't mkdir %s\n", dir);
 
     std::string cpt_file = dir + CheckpointIn::baseFilename;
-    std::ofstream outstream(cpt_file.c_str());
+    outstream = std::ofstream(cpt_file.c_str());
     time_t t = time(NULL);
-    if (!outstream.is_open())
+    if (!outstream)
         fatal("Unable to open file %s for writing\n", cpt_file.c_str());
     outstream << "## checkpoint generated: " << ctime(&t);
-
-    SimObject::serializeAll(outstream);
 }
 
 Serializable::ScopedCheckpointSection::~ScopedCheckpointSection()
@@ -219,21 +209,4 @@ CheckpointIn::visitSection(const std::string &section,
     IniFile::VisitSectionCallback cb)
 {
     db->visitSection(section, cb);
-}
-
-void
-objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param)
-{
-    const std::string &section(Serializable::currentSection());
-    std::string path;
-    if (!cp.find(section, name, path)) {
-        fatal("Can't unserialize '%s:%s'\n", section, name);
-    }
-    param = SimObject::getSimObjectResolver()->resolveSimObject(path);
-}
-
-void
-debug_serialize(const std::string &cpt_dir)
-{
-    Serializable::serializeAll(cpt_dir);
 }

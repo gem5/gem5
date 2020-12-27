@@ -129,8 +129,11 @@ SimObject::getPort(const std::string &if_name, PortID idx)
 // static function: serialize all SimObjects.
 //
 void
-SimObject::serializeAll(CheckpointOut &cp)
+SimObject::serializeAll(const std::string &cpt_dir)
 {
+    std::ofstream cp;
+    Serializable::generateCheckpointOut(cpt_dir, cp);
+
     SimObjectList::reverse_iterator ri = simObjectList.rbegin();
     SimObjectList::reverse_iterator rend = simObjectList.rend();
 
@@ -193,4 +196,21 @@ SimObject::getSimObjectResolver()
 {
     assert(_objNameResolver);
     return _objNameResolver;
+}
+
+void
+objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param)
+{
+    const std::string &section(Serializable::currentSection());
+    std::string path;
+    if (!cp.find(section, name, path)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
+    param = SimObject::getSimObjectResolver()->resolveSimObject(path);
+}
+
+void
+debug_serialize(const std::string &cpt_dir)
+{
+    SimObject::serializeAll(cpt_dir);
 }

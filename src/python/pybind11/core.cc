@@ -307,7 +307,7 @@ pybind_init_core(py::module_ &m_native)
      * Serialization helpers
      */
     m_core
-        .def("serializeAll", &Serializable::serializeAll)
+        .def("serializeAll", &SimObject::serializeAll)
         .def("getCheckpoint", [](const std::string &cpt_dir) {
             SimObject::setSimObjectResolver(&pybindSimObjectResolver);
             return new CheckpointIn(cpt_dir);
