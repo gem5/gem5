@@ -44,6 +44,9 @@
 #ifndef __CPU_MINOR_SCOREBOARD_HH__
 #define __CPU_MINOR_SCOREBOARD_HH__
 
+#include <vector>
+
+#include "base/types.hh"
 #include "cpu/minor/cpu.hh"
 #include "cpu/minor/dyn_inst.hh"
 #include "cpu/minor/trace.hh"

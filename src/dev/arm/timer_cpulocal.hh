@@ -38,9 +38,15 @@
 #ifndef __DEV_ARM_LOCALTIMER_HH__
 #define __DEV_ARM_LOCALTIMER_HH__
 
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 #include "base/bitunion.hh"
+#include "base/types.hh"
 #include "dev/io_device.hh"
 #include "params/CpuLocalTimer.hh"
+#include "sim/serialize.hh"
 
 /** @file
  * This implements the cpu local timer from the Cortex-A9 MPCore

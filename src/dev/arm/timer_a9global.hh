@@ -39,9 +39,15 @@
 #ifndef __DEV_ARM_GLOBAL_TIMER_HH__
 #define __DEV_ARM_GLOBAL_TIMER_HH__
 
+#include <cstdint>
+
+#include "base/types.hh"
 #include "base/bitunion.hh"
+#include "base/types.hh"
 #include "dev/io_device.hh"
 #include "params/A9GlobalTimer.hh"
+#include "sim/eventq.hh"
+#include "sim/serialize.hh"
 
 /** @file
  * This implements the Cortex A9-MPCore global timer from TRM rev r4p1.

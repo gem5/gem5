@@ -37,10 +37,13 @@
 
 #include "sim/power_state.hh"
 
+#include <cassert>
+
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/PowerDomain.hh"
 #include "sim/power_domain.hh"
+#include "sim/serialize.hh"
 
 PowerState::PowerState(const PowerStateParams &p) :
     SimObject(p), _currState(p.default_state),

@@ -32,6 +32,7 @@
 #ifndef __BASE_TRACE_HH__
 #define __BASE_TRACE_HH__
 
+#include <ostream>
 #include <string>
 #include <sstream>
 

@@ -41,6 +41,7 @@
 #include <sstream>
 #include <typeinfo>
 
+#include "base/trace.hh"
 #include "debug/MinorTiming.hh"
 #include "enums/OpClass.hh"
 

@@ -30,6 +30,8 @@
 
 #include <unistd.h>
 
+#include "base/str.hh"
+
 static std::string
 normalizePath(std::string path)
 {

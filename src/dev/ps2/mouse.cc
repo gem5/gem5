@@ -45,6 +45,7 @@
 #include "debug/PS2.hh"
 #include "dev/ps2/types.hh"
 #include "params/PS2Mouse.hh"
+#include "sim/serialize.hh"
 
 PS2Mouse::PS2Mouse(const PS2MouseParams &p)
     : PS2Device(p),

@@ -39,11 +39,11 @@
 
 #include <algorithm>
 
-#include "base/statistics.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/VoltageDomain.hh"
 #include "params/VoltageDomain.hh"
-#include "sim/sim_object.hh"
+#include "sim/serialize.hh"
 
 VoltageDomain::VoltageDomain(const Params &p)
     : SimObject(p), voltageOpPoints(p.voltage), _perfLevel(0), stats(*this)

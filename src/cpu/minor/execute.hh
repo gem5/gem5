@@ -45,6 +45,9 @@
 #ifndef __CPU_MINOR_EXECUTE_HH__
 #define __CPU_MINOR_EXECUTE_HH__
 
+#include <vector>
+
+#include "base/types.hh"
 #include "cpu/minor/buffers.hh"
 #include "cpu/minor/cpu.hh"
 #include "cpu/minor/func_unit.hh"

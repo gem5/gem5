@@ -43,6 +43,7 @@
 #ifndef __CPU_TRAFFIC_GEN_BASE_GEN_HH__
 #define __CPU_TRAFFIC_GEN_BASE_GEN_HH__
 
+#include <cstdint>
 #include <string>
 
 #include "base/types.hh"

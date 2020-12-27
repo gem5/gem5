@@ -33,10 +33,13 @@
 #ifndef __DEV_NET_I8254XGBE_HH__
 #define __DEV_NET_I8254XGBE_HH__
 
+#include <cstdint>
 #include <deque>
 #include <string>
 
 #include "base/inet.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
 #include "debug/EthernetDesc.hh"
 #include "debug/EthernetIntr.hh"
 #include "dev/net/etherdevice.hh"
@@ -47,6 +50,7 @@
 #include "dev/pci/device.hh"
 #include "params/IGbE.hh"
 #include "sim/eventq.hh"
+#include "sim/serialize.hh"
 
 class IGbEInt;
 

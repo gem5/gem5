@@ -38,8 +38,14 @@
 #ifndef __DEV_ARM_SP804_HH__
 #define __DEV_ARM_SP804_HH__
 
+#include <cstdint>
+
+#include "base/bitunion.hh"
+#include "base/types.hh"
 #include "dev/arm/amba_device.hh"
 #include "params/Sp804.hh"
+#include "sim/eventq.hh"
+#include "sim/serialize.hh"
 
 /** @file
  * This implements the dual Sp804 timer block

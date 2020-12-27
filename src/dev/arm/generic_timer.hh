@@ -38,11 +38,20 @@
 #ifndef __DEV_ARM_GENERIC_TIMER_HH__
 #define __DEV_ARM_GENERIC_TIMER_HH__
 
+#include <cstdint>
+#include <vector>
+
 #include "arch/arm/isa_device.hh"
 #include "arch/arm/system.hh"
+#include "base/addr_range.hh"
+#include "base/bitunion.hh"
+#include "base/types.hh"
 #include "dev/arm/base_gic.hh"
 #include "dev/arm/generic_timer_miscregs_types.hh"
 #include "sim/core.hh"
+#include "sim/drain.hh"
+#include "sim/eventq.hh"
+#include "sim/serialize.hh"
 #include "sim/sim_object.hh"
 
 /// @file

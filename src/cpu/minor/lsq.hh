@@ -45,10 +45,14 @@
 #ifndef __CPU_MINOR_NEW_LSQ_HH__
 #define __CPU_MINOR_NEW_LSQ_HH__
 
+#include <string>
+#include <vector>
+
 #include "cpu/minor/buffers.hh"
 #include "cpu/minor/cpu.hh"
 #include "cpu/minor/pipe_data.hh"
 #include "cpu/minor/trace.hh"
+#include "mem/packet.hh"
 
 namespace Minor
 {

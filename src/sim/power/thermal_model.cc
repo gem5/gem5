@@ -44,6 +44,7 @@
 #include "sim/clocked_object.hh"
 #include "sim/linear_solver.hh"
 #include "sim/power/thermal_domain.hh"
+#include "sim/serialize.hh"
 #include "sim/sim_object.hh"
 
 /**

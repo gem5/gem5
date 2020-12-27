@@ -48,10 +48,14 @@
 #ifndef __DEV_DIST_ETHERLINK_HH__
 #define __DEV_DIST_ETHERLINK_HH__
 
+#include <cassert>
 #include <iostream>
 
+#include "base/types.hh"
 #include "dev/net/etherlink.hh"
 #include "params/DistEtherLink.hh"
+#include "sim/serialize.hh"
+#include "sim/sim_object.hh"
 
 class DistIface;
 class EthPacketData;

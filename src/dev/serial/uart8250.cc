@@ -41,6 +41,7 @@
 #include "dev/platform.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "sim/serialize.hh"
 
 using namespace std;
 

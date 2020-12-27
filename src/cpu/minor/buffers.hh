@@ -47,8 +47,10 @@
 #include <iostream>
 #include <queue>
 #include <sstream>
+#include <string>
 
 #include "base/logging.hh"
+#include "base/types.hh"
 #include "cpu/activity.hh"
 #include "cpu/minor/trace.hh"
 #include "cpu/timebuf.hh"

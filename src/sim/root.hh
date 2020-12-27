@@ -53,6 +53,7 @@
 
 #include "base/statistics.hh"
 #include "base/time.hh"
+#include "base/types.hh"
 #include "params/Root.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"

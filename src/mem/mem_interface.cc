@@ -41,6 +41,7 @@
 #include "mem/mem_interface.hh"
 
 #include "base/bitfield.hh"
+#include "base/cprintf.hh"
 #include "base/trace.hh"
 #include "debug/DRAM.hh"
 #include "debug/DRAMPower.hh"

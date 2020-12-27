@@ -46,6 +46,7 @@
 #define __DEV_NET_ETHERLINK_HH__
 
 #include <queue>
+#include <utility>
 
 #include "base/types.hh"
 #include "dev/net/etherint.hh"

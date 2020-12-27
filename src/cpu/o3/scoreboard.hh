@@ -30,15 +30,13 @@
 #ifndef __CPU_O3_SCOREBOARD_HH__
 #define __CPU_O3_SCOREBOARD_HH__
 
-#include <iostream>
-#include <utility>
+#include <cassert>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
-#include "cpu/o3/comm.hh"
+#include "cpu/reg_class.hh"
 #include "debug/Scoreboard.hh"
-
 /**
  * Implements a simple scoreboard to track which registers are
  * ready. This class operates on the unified physical register space,

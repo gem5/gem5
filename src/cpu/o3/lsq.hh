@@ -42,10 +42,16 @@
 #ifndef __CPU_O3_LSQ_HH__
 #define __CPU_O3_LSQ_HH__
 
+#include <cassert>
+#include <cstdint>
+#include <list>
 #include <map>
 #include <queue>
+#include <vector>
 
 #include "arch/generic/tlb.hh"
+#include "base/flags.hh"
+#include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "cpu/utils.hh"

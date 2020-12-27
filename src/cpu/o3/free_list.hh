@@ -44,7 +44,6 @@
 
 #include <iostream>
 #include <queue>
-#include <vector>
 
 #include "base/logging.hh"
 #include "base/trace.hh"

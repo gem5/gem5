@@ -40,12 +40,10 @@
 #include <set>
 #include <utility>
 
-#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/DVFS.hh"
 #include "params/DVFSHandler.hh"
-#include "sim/clock_domain.hh"
-#include "sim/eventq.hh"
+#include "sim/serialize.hh"
 #include "sim/stat_control.hh"
 #include "sim/voltage_domain.hh"
 

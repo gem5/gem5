@@ -31,6 +31,7 @@
 #include <algorithm>
 
 #include "base/cast.hh"
+#include "base/cprintf.hh"
 #include "base/random.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/MessageBuffer.hh"

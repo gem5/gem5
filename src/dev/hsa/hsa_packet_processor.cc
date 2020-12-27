@@ -35,10 +35,13 @@
 
 #include "dev/hsa/hsa_packet_processor.hh"
 
+#include <cassert>
 #include <cstring>
 
 #include "base/chunk_generator.hh"
 #include "base/compiler.hh"
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "debug/HSAPacketProcessor.hh"
 #include "dev/dma_device.hh"
 #include "dev/hsa/hsa_device.hh"

@@ -37,8 +37,11 @@
 
 #include "dev/arm/timer_cpulocal.hh"
 
+#include <cassert>
+
 #include "arch/arm/system.hh"
 #include "base/intmath.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/Timer.hh"

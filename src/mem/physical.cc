@@ -54,6 +54,7 @@
 #include "debug/AddrRanges.hh"
 #include "debug/Checkpoint.hh"
 #include "mem/abstract_mem.hh"
+#include "sim/serialize.hh"
 
 /**
  * On Linux, MAP_NORESERVE allow us to simulate a very large memory

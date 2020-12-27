@@ -41,6 +41,8 @@
 
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "cpu/base.hh"
 #include "debug/Timer.hh"
 #include "dev/arm/base_gic.hh"

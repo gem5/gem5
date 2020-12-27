@@ -41,6 +41,7 @@
 #include "debug/Checkpoint.hh"
 #include "dev/i2c/device.hh"
 #include "mem/packet_access.hh"
+#include "sim/serialize.hh"
 
 // clang complains about std::set being overloaded with Packet::set if
 // we open up the entire namespace std

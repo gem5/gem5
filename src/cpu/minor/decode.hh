@@ -45,6 +45,8 @@
 #ifndef __CPU_MINOR_DECODE_HH__
 #define __CPU_MINOR_DECODE_HH__
 
+#include <vector>
+
 #include "cpu/minor/buffers.hh"
 #include "cpu/minor/cpu.hh"
 #include "cpu/minor/dyn_inst.hh"

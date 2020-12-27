@@ -37,7 +37,7 @@
 
 #include "mem/mem_checker.hh"
 
-#include <cassert>
+#include "base/logging.hh"
 
 void
 MemChecker::WriteCluster::startWrite(MemChecker::Serial serial, Tick _start,
@@ -54,9 +54,9 @@ MemChecker::WriteCluster::startWrite(MemChecker::Serial serial, Tick _start,
     ++numIncomplete;
 
     if (complete != TICK_FUTURE) {
-       // Reopen a closed write cluster
-        assert(_start < complete);  // should open a new write cluster, instead;
-        // also somewhat fishy wrt causality / ordering of calls vs time
+        // Reopen a closed write cluster
+        assert(_start < complete); // Should open a new write cluster instead
+        // Also somewhat fishy wrt causality / ordering of calls vs time
         // progression TODO: Check me!
         complete = TICK_FUTURE;
     }
@@ -67,13 +67,14 @@ MemChecker::WriteCluster::startWrite(MemChecker::Serial serial, Tick _start,
 }
 
 void
-MemChecker::WriteCluster::completeWrite(MemChecker::Serial serial, Tick _complete)
+MemChecker::WriteCluster::completeWrite(MemChecker::Serial serial,
+    Tick _complete)
 {
     auto it = writes.find(serial);
 
     if (it == writes.end()) {
-        warn("Could not locate write transaction: serial = %d, complete = %d\n",
-             serial, _complete);
+        warn("Could not locate write transaction: serial = %d, "
+             "complete = %d\n", serial, _complete);
         return;
     }
 
@@ -90,9 +91,9 @@ MemChecker::WriteCluster::completeWrite(MemChecker::Serial serial, Tick _complet
         // All writes have completed, this cluster is now complete and will be
         // assigned the max of completion tick values among all writes.
         //
-        // Note that we cannot simply keep updating complete, because that would
-        // count the cluster as closed already.  Instead, we keep TICK_FUTURE
-        // until all writes have completed.
+        // Note that we cannot simply keep updating complete, because that
+        // would count the cluster as closed already.  Instead, we keep
+        // TICK_FUTURE until all writes have completed.
         complete = completeMax;
     }
 }
@@ -124,7 +125,8 @@ MemChecker::ByteTracker::startRead(MemChecker::Serial serial, Tick start)
 }
 
 bool
-MemChecker::ByteTracker::inExpectedData(Tick start, Tick complete, uint8_t data)
+MemChecker::ByteTracker::inExpectedData(Tick start, Tick complete,
+    uint8_t data)
 {
     _lastExpectedData.clear();
 
@@ -259,7 +261,8 @@ MemChecker::ByteTracker::startWrite(MemChecker::Serial serial, Tick start,
 }
 
 void
-MemChecker::ByteTracker::completeWrite(MemChecker::Serial serial, Tick complete)
+MemChecker::ByteTracker::completeWrite(MemChecker::Serial serial,
+    Tick complete)
 {
     getIncompleteWriteCluster()->completeWrite(serial, complete);
     pruneTransactions();
@@ -282,7 +285,7 @@ MemChecker::ByteTracker::pruneTransactions()
 
     // Pruning of readObservations
     readObservations.erase(readObservations.begin(),
-                           lastCompletedTransaction(&readObservations, before));
+        lastCompletedTransaction(&readObservations, before));
 
     // Pruning of writeClusters
     if (!writeClusters.empty()) {

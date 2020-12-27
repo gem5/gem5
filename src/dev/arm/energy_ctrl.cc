@@ -43,6 +43,7 @@
 #include "mem/packet_access.hh"
 #include "params/EnergyCtrl.hh"
 #include "sim/dvfs_handler.hh"
+#include "sim/serialize.hh"
 
 EnergyCtrl::EnergyCtrl(const Params &p)
     : BasicPioDevice(p, PIO_NUM_FIELDS * 4),        // each field is 32 bit

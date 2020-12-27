@@ -36,14 +36,16 @@
 #ifndef __DEV_HSA_HSA_PACKET_PROCESSOR__
 #define __DEV_HSA_HSA_PACKET_PROCESSOR__
 
+#include <algorithm>
 #include <cstdint>
+#include <vector>
 
-#include <queue>
-
+#include "base/types.hh"
 #include "dev/dma_device.hh"
 #include "dev/hsa/hsa.h"
 #include "dev/hsa/hsa_queue.hh"
 #include "params/HSAPacketProcessor.hh"
+#include "sim/eventq.hh"
 
 #define AQL_PACKET_SIZE 64
 #define PAGE_SIZE 4096

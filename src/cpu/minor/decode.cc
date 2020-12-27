@@ -37,6 +37,8 @@
 
 #include "cpu/minor/decode.hh"
 
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "cpu/minor/pipeline.hh"
 #include "debug/Decode.hh"
 

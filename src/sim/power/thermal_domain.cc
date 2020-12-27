@@ -46,6 +46,7 @@
 #include "sim/linear_solver.hh"
 #include "sim/power/thermal_model.hh"
 #include "sim/probe/probe.hh"
+#include "sim/serialize.hh"
 #include "sim/sub_system.hh"
 
 ThermalDomain::ThermalDomain(const Params &p)

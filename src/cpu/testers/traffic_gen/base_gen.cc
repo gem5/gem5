@@ -40,11 +40,7 @@
 #include <algorithm>
 
 #include "base/logging.hh"
-#include "base/random.hh"
-#include "base/trace.hh"
 #include "cpu/testers/traffic_gen/base.hh"
-#include "debug/TrafficGen.hh"
-#include "sim/system.hh"
 
 BaseGen::BaseGen(SimObject &obj, RequestorID requestor_id, Tick _duration)
     : _name(obj.name()), requestorId(requestor_id),

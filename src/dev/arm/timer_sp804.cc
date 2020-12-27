@@ -37,7 +37,10 @@
 
 #include "dev/arm/timer_sp804.hh"
 
+#include <cassert>
+
 #include "base/intmath.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/Timer.hh"

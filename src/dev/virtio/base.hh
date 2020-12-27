@@ -38,11 +38,15 @@
 #ifndef __DEV_VIRTIO_BASE_HH__
 #define __DEV_VIRTIO_BASE_HH__
 
+#include <cstdint>
 #include <functional>
+#include <vector>
 
 #include "base/bitunion.hh"
+#include "base/types.hh"
 #include "dev/virtio/virtio_ring.h"
 #include "mem/port_proxy.hh"
+#include "sim/serialize.hh"
 #include "sim/sim_object.hh"
 
 struct VirtIODeviceBaseParams;

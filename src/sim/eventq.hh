@@ -40,6 +40,7 @@
 #include <climits>
 #include <functional>
 #include <iosfwd>
+#include <list>
 #include <memory>
 #include <string>
 

@@ -41,6 +41,8 @@
 
 #include "arch/decoder.hh"
 #include "arch/utility.hh"
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "cpu/minor/pipeline.hh"
 #include "cpu/pred/bpred_unit.hh"
 #include "debug/Branch.hh"

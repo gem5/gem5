@@ -44,11 +44,13 @@
 
 #include "dev/net/etherlink.hh"
 
+#include <cassert>
 #include <cmath>
 #include <deque>
 #include <string>
 #include <vector>
 
+#include "base/logging.hh"
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Ethernet.hh"

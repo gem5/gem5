@@ -41,6 +41,7 @@
 #include "debug/VIO.hh"
 #include "params/VirtIODeviceBase.hh"
 #include "params/VirtIODummyDevice.hh"
+#include "sim/serialize.hh"
 
 VirtDescriptor::VirtDescriptor(PortProxy &_memProxy, ByteOrder bo,
                                VirtQueue &_queue, Index descIndex)

@@ -37,6 +37,11 @@
 
 #include "dev/arm/gic_v3_its.hh"
 
+#include <cassert>
+#include <functional>
+
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "debug/AddrRanges.hh"
 #include "debug/Drain.hh"
 #include "debug/GIC.hh"

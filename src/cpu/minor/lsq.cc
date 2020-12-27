@@ -42,7 +42,7 @@
 
 #include "arch/locked_mem.hh"
 #include "base/logging.hh"
-#include "cpu/minor/cpu.hh"
+#include "base/trace.hh"
 #include "cpu/minor/exec_context.hh"
 #include "cpu/minor/execute.hh"
 #include "cpu/minor/pipeline.hh"

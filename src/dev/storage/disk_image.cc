@@ -47,6 +47,7 @@
 #include "debug/DiskImageRead.hh"
 #include "debug/DiskImageWrite.hh"
 #include "sim/byteswap.hh"
+#include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 
 using namespace std;

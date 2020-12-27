@@ -44,15 +44,22 @@
 #ifndef __CPU_MINOR_FUNC_UNIT_HH__
 #define __CPU_MINOR_FUNC_UNIT_HH__
 
+#include <cstdint>
+#include <ostream>
+#include <string>
+#include <vector>
+
+#include "base/types.hh"
+#include "cpu/func_unit.hh"
 #include "cpu/minor/buffers.hh"
 #include "cpu/minor/dyn_inst.hh"
-#include "cpu/func_unit.hh"
 #include "cpu/timing_expr.hh"
 #include "params/MinorFU.hh"
 #include "params/MinorFUPool.hh"
 #include "params/MinorOpClass.hh"
 #include "params/MinorOpClassSet.hh"
 #include "sim/clocked_object.hh"
+#include "sim/sim_object.hh"
 
 /** Boxing for MinorOpClass to get around a build problem with C++11 but
  *  also allow for future additions to op class checking */

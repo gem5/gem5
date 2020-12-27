@@ -29,6 +29,7 @@
 #ifndef __SIM_EXIT_HH__
 #define __SIM_EXIT_HH__
 
+#include <functional>
 #include <string>
 
 #include "base/types.hh"

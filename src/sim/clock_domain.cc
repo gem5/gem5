@@ -41,12 +41,14 @@
 #include <algorithm>
 #include <functional>
 
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/ClockDomain.hh"
 #include "params/ClockDomain.hh"
 #include "params/DerivedClockDomain.hh"
 #include "params/SrcClockDomain.hh"
 #include "sim/clocked_object.hh"
+#include "sim/serialize.hh"
 #include "sim/voltage_domain.hh"
 
 ClockDomain::ClockDomainStats::ClockDomainStats(ClockDomain &cd)

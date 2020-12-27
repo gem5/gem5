@@ -28,6 +28,7 @@
 #ifndef __ARCH_GENERIC_INTERRUPTS_HH__
 #define __ARCH_GENERIC_INTERRUPTS_HH__
 
+#include "base/logging.hh"
 #include "params/BaseInterrupts.hh"
 #include "sim/sim_object.hh"
 

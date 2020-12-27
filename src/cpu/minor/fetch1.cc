@@ -42,6 +42,8 @@
 #include <sstream>
 
 #include "base/cast.hh"
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "cpu/minor/pipeline.hh"
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"

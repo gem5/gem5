@@ -46,8 +46,12 @@
 #ifndef __SIM_DVFS_HANDLER_HH__
 #define __SIM_DVFS_HANDLER_HH__
 
+#include <cassert>
+#include <map>
 #include <vector>
 
+#include "base/logging.hh"
+#include "base/types.hh"
 #include "debug/DVFS.hh"
 #include "params/DVFSHandler.hh"
 #include "sim/clock_domain.hh"

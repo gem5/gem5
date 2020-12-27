@@ -49,11 +49,13 @@
 #include <iostream>
 
 #include "base/refcnt.hh"
-#include "cpu/minor/buffers.hh"
+#include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/minor/buffers.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/timing_expr.hh"
 #include "sim/faults.hh"
+#include "sim/insttracer.hh"
 
 namespace Minor
 {

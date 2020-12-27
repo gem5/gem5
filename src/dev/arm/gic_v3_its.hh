@@ -38,9 +38,15 @@
 #ifndef __DEV_ARM_GICV3_ITS_H__
 #define __DEV_ARM_GICV3_ITS_H__
 
+#include <cstdint>
+#include <memory>
 #include <queue>
+#include <vector>
 
+#include "base/addr_range.hh"
+#include "base/bitunion.hh"
 #include "base/coroutine.hh"
+#include "base/types.hh"
 #include "dev/dma_device.hh"
 #include "params/Gicv3Its.hh"
 

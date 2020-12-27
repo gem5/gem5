@@ -44,6 +44,7 @@
 #define __SIM_POWER_STATE_HH__
 
 #include <set>
+#include <vector>
 
 #include "base/callback.hh"
 #include "base/statistics.hh"

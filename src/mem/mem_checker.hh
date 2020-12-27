@@ -38,13 +38,15 @@
 #ifndef __MEM_MEM_CHECKER_HH__
 #define __MEM_MEM_CHECKER_HH__
 
+#include <cassert>
+#include <cstdint>
 #include <list>
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "base/logging.hh"
+#include "base/cprintf.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/MemChecker.hh"

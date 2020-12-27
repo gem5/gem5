@@ -37,6 +37,9 @@
 
 #include "dev/arm/smmu_v3_proc.hh"
 
+#include <cassert>
+#include <functional>
+
 #include "dev/arm/smmu_v3.hh"
 #include "sim/system.hh"
 
