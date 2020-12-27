@@ -29,6 +29,8 @@
 
 #include "sim/sim_object.hh"
 
+#include <cassert>
+
 #include "base/logging.hh"
 #include "base/match.hh"
 #include "base/trace.hh"
@@ -45,6 +47,7 @@
 // static list of all SimObjects, used for initialization etc.
 //
 SimObject::SimObjectList SimObject::simObjectList;
+SimObjectResolver *SimObject::_objNameResolver = NULL;
 
 //
 // SimObject constructor: used to maintain static simObjectList
@@ -177,4 +180,18 @@ SimObject::find(const char *name)
     }
 
     return NULL;
+}
+
+void
+SimObject::setSimObjectResolver(SimObjectResolver *resolver)
+{
+    assert(!_objNameResolver);
+    _objNameResolver = resolver;
+}
+
+SimObjectResolver *
+SimObject::getSimObjectResolver()
+{
+    assert(_objNameResolver);
+    return _objNameResolver;
 }

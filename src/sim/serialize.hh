@@ -61,7 +61,6 @@
 
 class IniFile;
 class SimObject;
-class SimObjectResolver;
 
 typedef std::ostream CheckpointOut;
 
@@ -71,12 +70,10 @@ class CheckpointIn
 
     IniFile *db;
 
-    SimObjectResolver &objNameResolver;
-
     const std::string _cptDir;
 
   public:
-    CheckpointIn(const std::string &cpt_dir, SimObjectResolver &resolver);
+    CheckpointIn(const std::string &cpt_dir);
     ~CheckpointIn();
 
     /**
@@ -89,9 +86,6 @@ class CheckpointIn
 
     bool find(const std::string &section, const std::string &entry,
               std::string &value);
-
-    bool findObj(const std::string &section, const std::string &entry,
-                 SimObject *&value);
 
     bool entryExists(const std::string &section, const std::string &entry);
     bool sectionExists(const std::string &section);

@@ -58,6 +58,7 @@
 
 class EventManager;
 class ProbeManager;
+class SimObjectResolver;
 
 /**
  * Abstract superclass for simulation objects.  Represents things that
@@ -146,6 +147,9 @@ class SimObject : public EventManager, public Serializable, public Drainable,
 
     /** List of all instantiated simulation objects. */
     static SimObjectList simObjectList;
+
+    /** Helper to resolve an object given its name. */
+    static SimObjectResolver *_objNameResolver;
 
     /** Manager coordinates hooking up probe points with listeners. */
     ProbeManager *probeManager;
@@ -332,6 +336,22 @@ class SimObject : public EventManager, public Serializable, public Drainable,
      * @ingroup api_simobject
      */
     static SimObject *find(const char *name);
+
+    /**
+     * There is a single object name resolver, and it is only set when
+     * simulation is restoring from checkpoints.
+     *
+     * @param Pointer to the single sim object name resolver.
+     */
+    static void setSimObjectResolver(SimObjectResolver *resolver);
+
+    /**
+     * There is a single object name resolver, and it is only set when
+     * simulation is restoring from checkpoints.
+     *
+     * @return Pointer to the single sim object name resolver.
+     */
+    static SimObjectResolver *getSimObjectResolver();
 };
 
 /* Add PARAMS(ClassName) to every descendant of SimObject that needs

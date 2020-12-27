@@ -264,9 +264,8 @@ CheckpointIn::dir()
     return currentDirectory;
 }
 
-CheckpointIn::CheckpointIn(const std::string &cpt_dir,
-        SimObjectResolver &resolver)
-    : db(new IniFile), objNameResolver(resolver), _cptDir(setDir(cpt_dir))
+CheckpointIn::CheckpointIn(const std::string &cpt_dir)
+    : db(new IniFile), _cptDir(setDir(cpt_dir))
 {
     std::string filename = getCptDir() + "/" + CheckpointIn::baseFilename;
     if (!db->load(filename)) {
@@ -308,28 +307,6 @@ CheckpointIn::find(const std::string &section, const std::string &entry,
 {
     return db->find(section, entry, value);
 }
-/**
- * @param section Here we mention the section we are looking for
- * (example: currentsection).
- * @param entry Mention the SimObject we are looking for (example:
- * interruput time) in the section.
- * @param value Give the value at the said entry.
- *
- * @return Returns true if a SimObject exists in the section.
- *
- */
-bool
-CheckpointIn::findObj(const std::string &section, const std::string &entry,
-                    SimObject *&value)
-{
-    std::string path;
-
-    if (!db->find(section, entry, path))
-        return false;
-
-    value = objNameResolver.resolveSimObject(path);
-    return true;
-}
 
 bool
 CheckpointIn::sectionExists(const std::string &section)
@@ -348,9 +325,11 @@ void
 objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param)
 {
     const std::string &section(Serializable::currentSection());
-    if (!cp.findObj(section, name, param)) {
+    std::string path;
+    if (!cp.find(section, name, path)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
     }
+    param = SimObject::getSimObjectResolver()->resolveSimObject(path);
 }
 
 void

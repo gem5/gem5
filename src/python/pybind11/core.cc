@@ -310,7 +310,8 @@ pybind_init_core(py::module_ &m_native)
         .def("serializeAll", &Serializable::serializeAll)
         .def("unserializeGlobals", &Serializable::unserializeGlobals)
         .def("getCheckpoint", [](const std::string &cpt_dir) {
-            return new CheckpointIn(cpt_dir, pybindSimObjectResolver);
+            SimObject::setSimObjectResolver(&pybindSimObjectResolver);
+            return new CheckpointIn(cpt_dir);
         })
 
         ;
