@@ -49,7 +49,6 @@
 #include <cassert>
 #include <cerrno>
 
-#include "base/inifile.hh"
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 
@@ -155,18 +154,14 @@ CheckpointIn::dir()
 }
 
 CheckpointIn::CheckpointIn(const std::string &cpt_dir)
-    : db(new IniFile), _cptDir(setDir(cpt_dir))
+    : db(), _cptDir(setDir(cpt_dir))
 {
     std::string filename = getCptDir() + "/" + CheckpointIn::baseFilename;
-    if (!db->load(filename)) {
+    if (!db.load(filename)) {
         fatal("Can't load checkpoint file '%s'\n", filename);
     }
 }
 
-CheckpointIn::~CheckpointIn()
-{
-    delete db;
-}
 /**
  * @param section Here we mention the section we are looking for
  * (example: currentsection).
@@ -179,7 +174,7 @@ CheckpointIn::~CheckpointIn()
 bool
 CheckpointIn::entryExists(const std::string &section, const std::string &entry)
 {
-    return db->entryExists(section, entry);
+    return db.entryExists(section, entry);
 }
 /**
  * @param section Here we mention the section we are looking for
@@ -195,18 +190,18 @@ bool
 CheckpointIn::find(const std::string &section, const std::string &entry,
         std::string &value)
 {
-    return db->find(section, entry, value);
+    return db.find(section, entry, value);
 }
 
 bool
 CheckpointIn::sectionExists(const std::string &section)
 {
-    return db->sectionExists(section);
+    return db.sectionExists(section);
 }
 
 void
 CheckpointIn::visitSection(const std::string &section,
     IniFile::VisitSectionCallback cb)
 {
-    db->visitSection(section, cb);
+    db.visitSection(section, cb);
 }

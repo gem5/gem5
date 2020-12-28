@@ -60,21 +60,18 @@
 #include "base/logging.hh"
 #include "sim/serialize_handlers.hh"
 
-class IniFile;
-
 typedef std::ostream CheckpointOut;
 
 class CheckpointIn
 {
   private:
-
-    IniFile *db;
+    IniFile db;
 
     const std::string _cptDir;
 
   public:
     CheckpointIn(const std::string &cpt_dir);
-    ~CheckpointIn();
+    ~CheckpointIn() = default;
 
     /**
      * @return Returns the current directory being used for creating
