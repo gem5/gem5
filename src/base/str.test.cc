@@ -285,6 +285,58 @@ TEST(StrTest, ToNumberUnsigned8BitIntNegative)
     EXPECT_FALSE(to_number(input, output));
 }
 
+/** Test that a double that can be converted to int is always rounded down. */
+TEST(StrTest, ToNumberUnsigned8BitIntRoundDown)
+{
+    uint8_t output;
+    std::string input_1 = "2.99";
+    EXPECT_TRUE(to_number(input_1, output));
+    EXPECT_EQ(2, output);
+
+    std::string input_2 = "3.99";
+    EXPECT_TRUE(to_number(input_2, output));
+    EXPECT_EQ(3, output);
+}
+
+/**
+ * Test that a double can still be converted to int as long as it is below
+ * the numerical limit + 1.
+ */
+TEST(StrTest, ToNumber8BitUnsignedLimit)
+{
+    uint8_t output;
+    std::string input = "255.99";
+    EXPECT_TRUE(to_number(input, output));
+    EXPECT_EQ(255, output);
+}
+
+/**
+ * Test that a double cannot be converted to int when it passes the numerical
+ * limit.
+ */
+TEST(StrTest, ToNumber8BitUnsignedOutOfRange)
+{
+    uint8_t output;
+    std::string input = "256.99";
+    EXPECT_FALSE(to_number(input, output));
+}
+
+/** Test that a scientific number cannot be converted to int. */
+TEST(StrTest, ToNumberUnsignedScientific)
+{
+    uint32_t output;
+    std::string input = "8.234e+08";
+    EXPECT_FALSE(to_number(input, output));
+}
+
+/** Test that a negative scientific number cannot be converted to int. */
+TEST(StrTest, ToNumberIntScientificNegative)
+{
+    int32_t output;
+    std::string input = "-8.234e+08";
+    EXPECT_FALSE(to_number(input, output));
+}
+
 TEST(StrTest, ToNumber64BitInt)
 {
     int64_t output;
@@ -375,6 +427,16 @@ TEST(StrTest, ToNumberDoubleNegative)
     double output;
     std::string input = "-1.2345";
     double expected_output = -1.2345;
+    EXPECT_TRUE(to_number(input, output));
+    EXPECT_EQ(expected_output, output);
+}
+
+/** Test that a scientific number is converted properly to double. */
+TEST(StrTest, ToNumberScientific)
+{
+    double output;
+    std::string input = "8.234e+08";
+    double expected_output = 823400000;
     EXPECT_TRUE(to_number(input, output));
     EXPECT_EQ(expected_output, output);
 }

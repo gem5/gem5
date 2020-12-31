@@ -112,6 +112,10 @@ typename std::enable_if_t<std::is_integral<T>::value &&
                           std::is_signed<T>::value, T>
 __to_number(const std::string &value)
 {
+    // Cannot parse scientific numbers
+    if (value.find('e') != std::string::npos) {
+        throw std::invalid_argument("Cannot convert scientific to integral");
+    }
     // start big and narrow it down if needed, determine the base dynamically
     long long r = std::stoll(value, nullptr, 0);
     if (r < std::numeric_limits<T>::lowest()
@@ -126,6 +130,10 @@ typename std::enable_if_t<std::is_integral<T>::value &&
                           !std::is_signed<T>::value, T>
 __to_number(const std::string &value)
 {
+    // Cannot parse scientific numbers
+    if (value.find('e') != std::string::npos) {
+        throw std::invalid_argument("Cannot convert scientific to integral");
+    }
     // start big and narrow it down if needed, determine the base dynamically
     unsigned long long r = std::stoull(value, nullptr, 0);
     if (r > std::numeric_limits<T>::max())
@@ -137,6 +145,10 @@ template <class T>
 typename std::enable_if_t<std::is_enum<T>::value, T>
 __to_number(const std::string &value)
 {
+    // Cannot parse scientific numbers
+    if (value.find('e') != std::string::npos) {
+        throw std::invalid_argument("Cannot convert scientific to integral");
+    }
     auto r = __to_number<typename std::underlying_type<T>::type>(value);
     return static_cast<T>(r);
 }
