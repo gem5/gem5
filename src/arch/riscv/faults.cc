@@ -113,7 +113,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             tval = MISCREG_MTVAL;
 
             status.mpp = pp;
-            status.mpie = status.sie;
+            status.mpie = status.mie;
             status.mie = 0;
             break;
           default:
@@ -122,8 +122,12 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         }
 
         // Set fault cause, privilege, and return PC
-        tc->setMiscReg(cause,
-                       (isInterrupt() << (sizeof(uint64_t) * 4 - 1)) | _code);
+        // Interrupt is indicated on the MSB of cause (bit 63 in RV64)
+        uint64_t _cause = _code;
+        if (isInterrupt()) {
+           _cause |= (1L << 63);
+        }
+        tc->setMiscReg(cause, _cause);
         tc->setMiscReg(epc, tc->instAddr());
         tc->setMiscReg(tval, trap_value());
         tc->setMiscReg(MISCREG_PRV, prv);
