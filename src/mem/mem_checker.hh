@@ -47,6 +47,7 @@
 #include <vector>
 
 #include "base/cprintf.hh"
+#include "base/named.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/MemChecker.hh"

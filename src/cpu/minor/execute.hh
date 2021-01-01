@@ -47,6 +47,7 @@
 
 #include <vector>
 
+#include "base/named.hh"
 #include "base/types.hh"
 #include "cpu/minor/buffers.hh"
 #include "cpu/minor/cpu.hh"

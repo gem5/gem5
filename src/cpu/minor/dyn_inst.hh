@@ -48,6 +48,7 @@
 
 #include <iostream>
 
+#include "base/named.hh"
 #include "base/refcnt.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"

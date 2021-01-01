@@ -48,6 +48,7 @@
 #include <string>
 #include <vector>
 
+#include "base/named.hh"
 #include "cpu/minor/buffers.hh"
 #include "cpu/minor/cpu.hh"
 #include "cpu/minor/pipe_data.hh"
