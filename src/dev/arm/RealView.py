@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2020 ARM Limited
+# Copyright (c) 2009-2021 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -1299,11 +1299,18 @@ class VExpress_GEM5_V1_Base(VExpress_GEM5_Base):
             ]
 
 class VExpress_GEM5_V1(VExpress_GEM5_V1_Base):
+    """
+    We subclass VExpress_GEM5_V1_Base in order to alias it to
+    VExpress_GEM5_V1, which is what gem5 scripts are currently using
+    """
+    pass
+
+class VExpress_GEM5_V1_HDLcd(VExpress_GEM5_V1_Base):
     hdlcd  = HDLcd(pxl_clk=VExpress_GEM5_V1_Base.dcc.osc_pxl,
                    pio_addr=0x2b000000, interrupt=ArmSPI(num=95))
 
     def _on_chip_devices(self):
-        return super(VExpress_GEM5_V1,self)._on_chip_devices() + [
+        return super(VExpress_GEM5_V1_HDLcd,self)._on_chip_devices() + [
                 self.hdlcd,
             ]
 
@@ -1327,11 +1334,18 @@ class VExpress_GEM5_V2_Base(VExpress_GEM5_Base):
                 cur_sys, boot_loader)
 
 class VExpress_GEM5_V2(VExpress_GEM5_V2_Base):
+    """
+    We subclass VExpress_GEM5_V2_Base in order to alias it to
+    VExpress_GEM5_V2, which is what gem5 scripts are currently using
+    """
+    pass
+
+class VExpress_GEM5_V2_HDLcd(VExpress_GEM5_V2_Base):
     hdlcd  = HDLcd(pxl_clk=VExpress_GEM5_V2_Base.dcc.osc_pxl,
                    pio_addr=0x2b000000, interrupt=ArmSPI(num=95))
 
     def _on_chip_devices(self):
-        return super(VExpress_GEM5_V2,self)._on_chip_devices() + [
+        return super(VExpress_GEM5_V2_HDLcd,self)._on_chip_devices() + [
                 self.hdlcd,
             ]
 
