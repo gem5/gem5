@@ -55,8 +55,6 @@
 };
 
 &dp0 {
-	status = "ok";
-
 	port {
 		dp0_output: endpoint@0 {
 			remote-endpoint = <&dp0_virt_input>;
