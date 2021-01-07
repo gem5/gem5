@@ -39,8 +39,10 @@
 #define __BASE_STATS_GROUP_HH__
 
 #include <map>
-#include <vector>
 #include <string>
+#include <vector>
+
+#include "base/stats/units.hh"
 
 /**
  * Convenience macro to add a stat to a statistics group.
@@ -58,13 +60,15 @@
  *
  *     Group()
  *         : ADD_STAT(scalar0, "Description of scalar0"),
- *           scalar1(this, "scalar1", "Description of scalar1")
+ *           scalar1(this, "scalar1", UNIT_UNSPECIFIED,
+ *                   "Description of scalar1")
  *     {
  *     }
  * };
  * \endcode
  */
-#define ADD_STAT(n, ...) n(this, # n, __VA_ARGS__)
+
+#define ADD_STAT(n, ...) n(this, #n, __VA_ARGS__)
 
 namespace Stats {
 

@@ -29,8 +29,9 @@
 #ifndef __BASE_STATS_INFO_HH__
 #define __BASE_STATS_INFO_HH__
 
-#include "base/stats/types.hh"
 #include "base/flags.hh"
+#include "base/stats/types.hh"
+#include "base/stats/units.hh"
 
 namespace Stats {
 
@@ -73,6 +74,8 @@ class Info
     std::string name;
     /** The separator string used for vectors, dist, etc. */
     static std::string separatorString;
+    /** The unit of the stat. */
+    const Units::Base* unit = UNIT_UNSPECIFIED;
     /** The description of the stat. */
     std::string desc;
     /** The formatting flags. */

@@ -1,0 +1,350 @@
+/*
+ * Copyright (c) 2021 The Regents of the University of California.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#ifndef __BASE_STATS_UNITS_HH__
+#define __BASE_STATS_UNITS_HH__
+
+#include <type_traits>
+
+#include "base/cprintf.hh"
+
+/**
+ * Convenience macros to declare the unit of a stat.
+ */
+#define UNIT_CYCLE Stats::Units::Cycle::get()
+#define UNIT_TICK Stats::Units::Tick::get()
+#define UNIT_SECOND Stats::Units::Second::get()
+#define UNIT_BIT Stats::Units::Bit::get()
+#define UNIT_BYTE Stats::Units::Byte::get()
+#define UNIT_JOULE Stats::Units::Joule::get()
+#define UNIT_VOLT Stats::Units::Volt::get()
+#define UNIT_CELSIUS Stats::Units::DegreeCelsius::get()
+#define UNIT_RATE(T1, T2) Stats::Units::Rate<T1, T2>::get()
+#define UNIT_RATIO Stats::Units::Ratio::get()
+#define UNIT_COUNT Stats::Units::Count::get()
+#define UNIT_UNSPECIFIED Stats::Units::Unspecified::get()
+
+#define UNIT_WATT UNIT_RATE(Stats::Units::Joule, Stats::Units::Second)
+
+namespace Stats {
+
+/**
+ * Units for Stats.
+ *
+ * This header file provides an ability to associate a stat object with a
+ * specific unit.
+ *
+ * The supported units are:
+ *   - Cycle: represents clock cycles.
+ *   - Tick: represents the count of gem5's Tick.
+ *   - Second: represents the base unit of time defined by SI.
+ *   - Bit: represents the number of computer bits.
+ *   - Byte: represents 8 bits.
+ *   - Volt: a SI derived unit measuring potential difference.
+ *   - Joule: represents joule, a unit of energy, as defined by SI.
+ *   - Watt: represents 1 watt, where 1 watt = 1 joule / second.
+ *   - Celsius: represents 1 Celsius degree as defined by SI.
+ *   - Rate(T1, T2): represents the unit of a quantity of T1 divided by
+ *                   a quantity of T2.
+ *   - Ratio: represents the unit of a quantity of unit T divided by a quantity
+ *            of T.
+ *   - Count: represents the count of a quantity that is not defined above.
+ *   - Unspecified: the unit of the stat is unspecified.
+ *
+ * Each unit class is intended to be a singleton, which means only each unit
+ * class has at most one object of that class exist throughout the program.
+ * Therefore, copy constructors and assignment operators are deleted functions.
+ *
+ * When any of the following criteria is met, a new unit should be added,
+ *   - The new unit is significant enough to be not included in Count unit.
+ *     (e.g. Cycle unit, Tick unit)
+ */
+namespace Units {
+
+/**
+ * The Base class is the parent class of all unit classes.
+ * This class is intended to an abstract class specifying common behaviors of
+ * all unit classes.
+ */
+class Base
+{
+  public:
+    virtual std::string getUnitString() const = 0;
+};
+
+class Cycle : public Base
+{
+  private:
+    Cycle() {}
+  public:
+    Cycle(Cycle const&) = delete;
+    void operator=(Cycle const&) = delete;
+    static Cycle*
+    get()
+    {
+        static Cycle instance;
+        return &instance;
+    }
+    static std::string toString() { return "Cycle"; }
+    std::string getUnitString() const override { return Cycle::toString(); }
+};
+
+class Tick : public Base
+{
+  private:
+    Tick() {}
+  public:
+    Tick(Tick const&) = delete;
+    void operator=(Tick const&) = delete;
+    static Tick*
+    get()
+    {
+        static Tick instance;
+        return &instance;
+    }
+    static std::string toString() { return "Tick"; }
+    std::string getUnitString() const override { return Tick::toString(); }
+};
+
+class Second : public Base
+{
+  private:
+    Second() {}
+  public:
+    Second(Second const&) = delete;
+    void operator=(Second const&) = delete;
+    static Second*
+    get()
+    {
+        static Second instance;
+        return &instance;
+    }
+    static std::string toString() { return "Second"; }
+    std::string getUnitString() const override { return Second::toString(); }
+};
+
+class Bit : public Base
+{
+  private:
+    Bit() {}
+  public:
+    Bit(Bit const&) = delete;
+    void operator=(Bit const&) = delete;
+    static Bit*
+    get()
+    {
+        static Bit instance;
+        return &instance;
+    }
+    static std::string toString() { return "Bit"; }
+    std::string getUnitString() const override { return Bit::toString(); }
+};
+
+class Byte : public Base
+{
+  private:
+    Byte() {}
+  public:
+    Byte(Byte const&) = delete;
+    void operator=(Byte const&) = delete;
+    static Byte*
+    get()
+    {
+        static Byte instance;
+        return &instance;
+    }
+    static std::string toString() { return "Byte"; }
+    std::string getUnitString() const override { return Byte::toString(); }
+};
+
+class Watt : public Base
+{
+  private:
+    Watt() {}
+  public:
+    Watt(Watt const&) = delete;
+    void operator=(Watt const&) = delete;
+    static Watt*
+    get()
+    {
+        static Watt instance;
+        return &instance;
+    }
+    static std::string toString() { return "Watt"; }
+    std::string getUnitString() const override { return Watt::toString(); }
+};
+
+
+class Joule : public Base
+{
+  private:
+    Joule() {}
+  public:
+    Joule(Joule const&) = delete;
+    void operator=(Joule const&) = delete;
+    static Joule*
+    get()
+    {
+        static Joule instance;
+        return &instance;
+    }
+    static std::string toString() { return "Joule"; }
+    std::string getUnitString() const override { return Joule::toString(); }
+};
+
+class Volt : public Base
+{
+  private:
+    Volt() {}
+  public:
+    Volt(Volt const&) = delete;
+    void operator=(Volt const&) = delete;
+    static Volt*
+    get()
+    {
+        static Volt instance;
+        return &instance;
+    }
+    static std::string toString() { return "Volt"; }
+    std::string getUnitString() const override { return Volt::toString(); }
+};
+
+class DegreeCelsius : public Base
+{
+  private:
+    DegreeCelsius() {}
+  public:
+    DegreeCelsius(DegreeCelsius const&) = delete;
+    void operator=(DegreeCelsius const&) = delete;
+    static DegreeCelsius*
+    get()
+    {
+        static DegreeCelsius instance;
+        return &instance;
+    }
+    static std::string toString() { return "Celsius"; }
+    std::string
+    getUnitString() const override
+    {
+       return DegreeCelsius::toString();
+    }
+};
+
+
+class Count : public Base
+{
+  private:
+    Count() {}
+  public:
+    Count(Count const&) = delete;
+    void operator=(Count const&) = delete;
+    static Count*
+    get()
+    {
+        static Count instance;
+        return &instance;
+    }
+    static std::string toString() { return "Count"; }
+    std::string getUnitString() const override { return Count::toString(); }
+};
+
+template <typename T1, typename T2>
+class Rate : public Base
+{
+  static_assert(std::is_base_of<Base, T1>::value,
+                "Rate(T1,T2) must have T1 and T2 derived from"
+                "Stats::Units::Base");
+  static_assert(std::is_base_of<Base, T2>::value,
+                "Rate(T1,T2) must have T1 and T2 derived from"
+                "Stats::Units::Base");
+  private:
+    Rate<T1,T2>() {}
+  public:
+    Rate<T1,T2>(Rate<T1,T2> const&) = delete;
+    void operator=(Rate<T1,T2> const&) = delete;
+    static Rate<T1,T2>*
+    get()
+    {
+        static Rate<T1,T2> instance;
+        return &instance;
+    }
+    static std::string
+    toString()
+    {
+        return csprintf("(%s/%s)", T1::toString(), T2::toString());
+    }
+    std::string
+    getUnitString() const override
+    {
+        return Rate<T1,T2>::toString();
+    }
+};
+
+class Ratio : public Base
+{
+  private:
+    Ratio() {}
+  public:
+    Ratio(Ratio const&) = delete;
+    void operator=(Ratio const&) = delete;
+    static Ratio*
+    get()
+    {
+        static Ratio instance;
+        return &instance;
+    }
+    static std::string toString() { return "Ratio"; }
+    std::string getUnitString() const override { return Ratio::toString(); }
+};
+
+class Unspecified : public Base
+{
+  private:
+    Unspecified() {}
+  public:
+    Unspecified(Unspecified const&) = delete;
+    void operator=(Unspecified const&) = delete;
+    static Unspecified*
+    get()
+    {
+        static Unspecified instance;
+        return &instance;
+    }
+    static std::string toString() { return "Unspecified"; }
+    std::string
+    getUnitString() const override
+    {
+        return Unspecified::toString();
+    }
+};
+
+} // namespace Units
+
+} // namespace Stats
+
+#endif // __BASE_STATS_UNITS_HH__
