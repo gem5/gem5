@@ -91,7 +91,8 @@ class PixelConverter
     /**
      * Color channel conversion and scaling helper class.
      */
-    struct Channel {
+    struct Channel
+    {
         /**
          * @param offset Offset in bits.
          * @param width Width in bits.

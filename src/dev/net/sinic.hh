@@ -129,7 +129,8 @@ class Device : public Base
         uint64_t RxStatus;     // 0x78
     } regs;
 
-    struct VirtualReg {
+    struct VirtualReg
+    {
         uint64_t RxData;
         uint64_t RxDone;
         uint64_t TxData;

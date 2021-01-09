@@ -92,7 +92,8 @@ class MathExpr
     // Match operators
     const int MAX_PRIO = 4;
     typedef double (*binOp)(double, double);
-    struct OpSearch {
+    struct OpSearch
+    {
         bool binary;
         Operator op;
         int priority;

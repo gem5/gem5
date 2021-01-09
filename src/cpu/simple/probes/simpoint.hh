@@ -98,7 +98,8 @@ class SimPoint : public ProbeListenerObject
     OutputStream *simpointStream;
 
     /** Basic Block information */
-    struct BBInfo {
+    struct BBInfo
+    {
         /** Unique ID */
         uint64_t id;
         /** Num of static insts in BB */

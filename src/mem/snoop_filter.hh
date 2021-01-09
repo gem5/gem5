@@ -212,7 +212,8 @@ class SnoopFilter : public SimObject
     * outstanding request to this line (requested) or already share a
     * cache line with this address (holder).
     */
-    struct SnoopItem {
+    struct SnoopItem
+    {
         SnoopMask requested;
         SnoopMask holder;
     };
@@ -268,7 +269,8 @@ class SnoopFilter : public SimObject
      * made to the snoop filter while performing the lookup must be undone.
      * This structure keeps track of the state previous to such changes.
      */
-    struct ReqLookupResult {
+    struct ReqLookupResult
+    {
         /** Iterator used to store the result from lookupRequest. */
         SnoopFilterCache::iterator it;
 
@@ -312,7 +314,8 @@ class SnoopFilter : public SimObject
     };
 
     /** Statistics */
-    struct SnoopFilterStats : public Stats::Group {
+    struct SnoopFilterStats : public Stats::Group
+    {
         SnoopFilterStats(Stats::Group *parent);
 
         Stats::Scalar totRequests;

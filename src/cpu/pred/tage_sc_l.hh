@@ -63,7 +63,8 @@ class TAGE_SC_L_TAGE : public TAGEBase
     const bool truncatePathHist;
 
   public:
-    struct BranchInfo : public TAGEBase::BranchInfo {
+    struct BranchInfo : public TAGEBase::BranchInfo
+    {
         bool lowConf;
         bool highConf;
         bool altConf;

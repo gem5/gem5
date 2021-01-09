@@ -98,7 +98,8 @@ class Fetch2 : public Named
   protected:
     /** Data members after this line are cycle-to-cycle state */
 
-    struct Fetch2ThreadInfo {
+    struct Fetch2ThreadInfo
+    {
 
         /** Default constructor */
         Fetch2ThreadInfo() :

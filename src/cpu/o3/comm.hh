@@ -51,7 +51,8 @@
 
 /** Struct that defines the information passed from fetch to decode. */
 template<class Impl>
-struct DefaultFetchDefaultDecode {
+struct DefaultFetchDefaultDecode
+{
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     int size;
@@ -64,7 +65,8 @@ struct DefaultFetchDefaultDecode {
 
 /** Struct that defines the information passed from decode to rename. */
 template<class Impl>
-struct DefaultDecodeDefaultRename {
+struct DefaultDecodeDefaultRename
+{
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     int size;
@@ -74,7 +76,8 @@ struct DefaultDecodeDefaultRename {
 
 /** Struct that defines the information passed from rename to IEW. */
 template<class Impl>
-struct DefaultRenameDefaultIEW {
+struct DefaultRenameDefaultIEW
+{
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     int size;
@@ -84,7 +87,8 @@ struct DefaultRenameDefaultIEW {
 
 /** Struct that defines the information passed from IEW to commit. */
 template<class Impl>
-struct DefaultIEWDefaultCommit {
+struct DefaultIEWDefaultCommit
+{
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     int size;
@@ -102,7 +106,8 @@ struct DefaultIEWDefaultCommit {
 };
 
 template<class Impl>
-struct IssueStruct {
+struct IssueStruct
+{
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     int size;
@@ -112,9 +117,11 @@ struct IssueStruct {
 
 /** Struct that defines all backwards communication. */
 template<class Impl>
-struct TimeBufStruct {
+struct TimeBufStruct
+{
     typedef typename Impl::DynInstPtr DynInstPtr;
-    struct decodeComm {
+    struct decodeComm
+    {
         TheISA::PCState nextPC;
         DynInstPtr mispredictInst;
         DynInstPtr squashInst;
@@ -130,12 +137,14 @@ struct TimeBufStruct {
 
     decodeComm decodeInfo[Impl::MaxThreads];
 
-    struct renameComm {
+    struct renameComm
+    {
     };
 
     renameComm renameInfo[Impl::MaxThreads];
 
-    struct iewComm {
+    struct iewComm
+    {
         // Also eventually include skid buffer space.
         unsigned freeIQEntries;
         unsigned freeLQEntries;
@@ -153,7 +162,8 @@ struct TimeBufStruct {
 
     iewComm iewInfo[Impl::MaxThreads];
 
-    struct commitComm {
+    struct commitComm
+    {
         /////////////////////////////////////////////////////////////////////
         // This code has been re-structured for better packing of variables
         // instead of by stage which is the more logical way to arrange the

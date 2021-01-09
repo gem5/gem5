@@ -44,7 +44,8 @@ class X86NativeTrace : public NativeTrace
     uint64_t oldRcxVal, oldR11Val;
     uint64_t oldRealRcxVal, oldRealR11Val;
 
-    struct ThreadState {
+    struct ThreadState
+    {
         uint64_t rax;
         uint64_t rcx;
         uint64_t rdx;

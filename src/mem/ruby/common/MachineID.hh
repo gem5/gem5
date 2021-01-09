@@ -83,7 +83,8 @@ operator!=(const MachineID & obj1, const MachineID & obj2)
 
 namespace std {
     template<>
-    struct hash<MachineID> {
+    struct hash<MachineID>
+    {
         inline size_t operator()(const MachineID& id) const {
             size_t hval = MachineType_base_level(id.type) << 16 | id.num;
             return hval;

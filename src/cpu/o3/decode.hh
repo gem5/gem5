@@ -246,7 +246,8 @@ class DefaultDecode
     bool wroteToTimeBuffer;
 
     /** Source of possible stalls. */
-    struct Stalls {
+    struct Stalls
+    {
         bool rename;
     };
 
@@ -292,7 +293,8 @@ class DefaultDecode
      */
     bool squashAfterDelaySlot[Impl::MaxThreads];
 
-    struct DecodeStats : public Stats::Group {
+    struct DecodeStats : public Stats::Group
+    {
         DecodeStats(O3CPU *cpu);
 
         /** Stat for total number of idle cycles. */

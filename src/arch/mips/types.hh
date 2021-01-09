@@ -72,7 +72,8 @@ enum RoundMode{
     RND_NEAREST
 };
 
-struct CoreSpecific {
+struct CoreSpecific
+{
     CoreSpecific()
         : CP0_IntCtl_IPTI(0), CP0_IntCtl_IPPCI(0), CP0_SrsCtl_HSS(0),
           CP0_PRId_CompanyOptions(0), CP0_PRId_CompanyID(0),

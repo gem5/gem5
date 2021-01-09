@@ -480,7 +480,8 @@ class DefaultCommit
     int htmStarts[Impl::MaxThreads];
     int htmStops[Impl::MaxThreads];
 
-    struct CommitStats : public Stats::Group {
+    struct CommitStats : public Stats::Group
+    {
         CommitStats(O3CPU *cpu, DefaultCommit *commit);
         /** Stat for the total number of squashed instructions discarded by
          * commit.

@@ -117,7 +117,8 @@ class EtherSwitch : public SimObject
         class PortFifo : public Serializable
         {
           protected:
-            struct EntryOrder {
+            struct EntryOrder
+            {
                 bool operator() (const PortFifoEntry& lhs,
                                  const PortFifoEntry& rhs) const
                 {
@@ -171,7 +172,8 @@ class EtherSwitch : public SimObject
         EventFunctionWrapper txEvent;
     };
 
-    struct SwitchTableEntry {
+    struct SwitchTableEntry
+    {
             Interface *interface;
             Tick lastUseTime;
         };

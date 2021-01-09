@@ -91,7 +91,8 @@ class PowerLinux : public Linux
     } tgt_stat64;
 
     /// For times().
-    struct tms {
+    struct tms
+    {
         int32_t tms_utime;      //!< user time
         int32_t tms_stime;      //!< system time
         int32_t tms_cutime;     //!< user time of children

@@ -96,7 +96,8 @@ class VncInput : public SimObject
         ClientCutText           = 6
     };
 
-    struct M5_ATTR_PACKED PixelFormat {
+    struct M5_ATTR_PACKED PixelFormat
+    {
         uint8_t bpp;
         uint8_t depth;
         uint8_t bigendian;
@@ -110,19 +111,22 @@ class VncInput : public SimObject
         uint8_t padding[3];
     };
 
-    struct M5_ATTR_PACKED PixelFormatMessage {
+    struct M5_ATTR_PACKED PixelFormatMessage
+    {
         uint8_t type;
         uint8_t padding[3];
         PixelFormat px;
     };
 
-    struct M5_ATTR_PACKED PixelEncodingsMessage {
+    struct M5_ATTR_PACKED PixelEncodingsMessage
+    {
         uint8_t type;
         uint8_t padding;
         uint16_t num_encodings;
     };
 
-    struct M5_ATTR_PACKED FrameBufferUpdateReq {
+    struct M5_ATTR_PACKED FrameBufferUpdateReq
+    {
         uint8_t type;
         uint8_t incremental;
         uint16_t x;
@@ -131,21 +135,24 @@ class VncInput : public SimObject
         uint16_t height;
     };
 
-    struct M5_ATTR_PACKED KeyEventMessage {
+    struct M5_ATTR_PACKED KeyEventMessage
+    {
         uint8_t type;
         uint8_t down_flag;
         uint8_t padding[2];
         uint32_t key;
     };
 
-    struct M5_ATTR_PACKED PointerEventMessage {
+    struct M5_ATTR_PACKED PointerEventMessage
+    {
         uint8_t type;
         uint8_t button_mask;
         uint16_t x;
         uint16_t y;
     };
 
-    struct M5_ATTR_PACKED ClientCutTextMessage {
+    struct M5_ATTR_PACKED ClientCutTextMessage
+    {
         uint8_t type;
         uint8_t padding[3];
         uint32_t length;

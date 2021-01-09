@@ -67,7 +67,8 @@ class ArmKvmCPU : public BaseKvmCPU
     void dump();
 
   protected:
-    struct KvmIntRegInfo {
+    struct KvmIntRegInfo
+    {
         /** KVM ID */
         const uint64_t id;
         /** gem5 index */
@@ -76,7 +77,8 @@ class ArmKvmCPU : public BaseKvmCPU
         const char *name;
     };
 
-    struct KvmCoreMiscRegInfo {
+    struct KvmCoreMiscRegInfo
+    {
         /** KVM ID */
         const uint64_t id;
         /** gem5 index */

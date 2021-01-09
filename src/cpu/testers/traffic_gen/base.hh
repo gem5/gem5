@@ -191,7 +191,8 @@ class BaseTrafficGen : public ClockedObject
     /** Reqs waiting for response **/
     std::unordered_map<RequestPtr,Tick> waitingResp;
 
-    struct StatGroup : public Stats::Group {
+    struct StatGroup : public Stats::Group
+    {
         StatGroup(Stats::Group *parent);
 
         /** Count the number of dropped requests. */

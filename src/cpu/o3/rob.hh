@@ -321,7 +321,8 @@ class ROB
     ThreadID numThreads;
 
 
-    struct ROBStats : public Stats::Group {
+    struct ROBStats : public Stats::Group
+    {
         ROBStats(Stats::Group *parent);
 
         // The number of rob_reads

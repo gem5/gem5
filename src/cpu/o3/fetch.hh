@@ -449,7 +449,8 @@ class DefaultFetch
     int numInst;
 
     /** Source of possible stalls. */
-    struct Stalls {
+    struct Stalls
+    {
         bool decode;
         bool drain;
     };

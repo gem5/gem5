@@ -165,7 +165,8 @@ class AbstractMemory : public ClockedObject
      */
     System *_system;
 
-    struct MemStats : public Stats::Group {
+    struct MemStats : public Stats::Group
+    {
         MemStats(AbstractMemory &mem);
 
         void regStats() override;

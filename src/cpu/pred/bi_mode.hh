@@ -65,7 +65,8 @@ class BiModeBP : public BPredUnit
   private:
     void updateGlobalHistReg(ThreadID tid, bool taken);
 
-    struct BPHistory {
+    struct BPHistory
+    {
         unsigned globalHistoryReg;
         // was the taken array's prediction used?
         // true: takenPred used

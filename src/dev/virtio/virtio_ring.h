@@ -59,7 +59,8 @@
 #define VIRTIO_RING_F_EVENT_IDX		29
 
 /* Virtio ring descriptors: 16 bytes.  These can chain together via "next". */
-struct vring_desc {
+struct vring_desc
+{
     /* Address (guest-physical). */
     uint64_t addr;
     /* Length. */
@@ -70,27 +71,31 @@ struct vring_desc {
     uint16_t next;
 };
 
-struct vring_avail {
+struct vring_avail
+{
     uint16_t flags;
     uint16_t idx;
     uint16_t ring[];
 };
 
 /* u32 is used here for ids for padding reasons. */
-struct vring_used_elem {
+struct vring_used_elem
+{
     /* Index of start of used descriptor chain. */
     uint32_t id;
     /* Total length of the descriptor chain which was used (written to) */
     uint32_t len;
 };
 
-struct vring_used {
+struct vring_used
+{
     uint16_t flags;
     uint16_t idx;
     struct vring_used_elem ring[];
 };
 
-struct vring {
+struct vring
+{
     unsigned int num;
 
     struct vring_desc *desc;

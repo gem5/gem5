@@ -32,7 +32,8 @@
 #include "arch/mips/linux/hwrpb.hh"
 
 namespace Linux {
-    struct thread_info {
+    struct thread_info
+    {
         struct pcb_struct       pcb;
         Addr_a                  task;
     };

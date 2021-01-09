@@ -51,7 +51,8 @@ BitUnion32(UserDescFlags)
     Bitfield<6> useable;
 EndBitUnion(UserDescFlags)
 
-struct UserDesc32 {
+struct UserDesc32
+{
     uint32_t entry_number;
     uint32_t base_addr;
     uint32_t limit;

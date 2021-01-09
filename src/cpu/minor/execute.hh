@@ -145,7 +145,8 @@ class Execute : public Named
         DrainAllInsts /* Discarding all remaining insts */
     };
 
-    struct ExecuteThreadInfo {
+    struct ExecuteThreadInfo
+    {
         /** Constructor */
         ExecuteThreadInfo(unsigned int insts_committed) :
             inputIndex(0),

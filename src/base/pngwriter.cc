@@ -73,7 +73,8 @@ writePng(png_structp pngPtr, png_bytep data, png_size_t length)
     strmPtr->write(reinterpret_cast<const char *>(data), length);
 }
 
-struct PngWriter::PngStructHandle {
+struct PngWriter::PngStructHandle
+{
   private:
     // Make PngStructHandle uncopyable
     PngStructHandle(const PngStructHandle&) = delete;

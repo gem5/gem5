@@ -160,7 +160,8 @@ class Network : public ClockedObject
 
   private:
     // Global address map
-    struct AddrMapNode {
+    struct AddrMapNode
+    {
         NodeID id;
         AddrRangeList ranges;
     };

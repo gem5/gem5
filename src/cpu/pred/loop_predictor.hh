@@ -83,7 +83,8 @@ class LoopPredictor : public SimObject
     const unsigned initialLoopAge;
     const bool optionalAgeReset;
 
-    struct LoopPredictorStats : public Stats::Group {
+    struct LoopPredictorStats : public Stats::Group
+    {
         LoopPredictorStats(Stats::Group *parent);
         Stats::Scalar correct;
         Stats::Scalar wrong;

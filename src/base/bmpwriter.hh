@@ -75,7 +75,8 @@ class  BmpWriter : public ImgWriter
     void write(std::ostream &bmp) const override;
 
   private:
-    struct M5_ATTR_PACKED FileHeader {
+    struct M5_ATTR_PACKED FileHeader
+    {
         unsigned char magic_number[2];
         uint32_t size;
         uint16_t reserved1;
@@ -97,12 +98,14 @@ class  BmpWriter : public ImgWriter
         uint32_t ClrImportant;
     };
 
-    struct M5_ATTR_PACKED CompleteV1Header {
+    struct M5_ATTR_PACKED CompleteV1Header
+    {
         FileHeader file;
         InfoHeaderV1 info;
     };
 
-    struct M5_ATTR_PACKED BmpPixel32 {
+    struct M5_ATTR_PACKED BmpPixel32
+    {
         BmpPixel32 &operator=(const Pixel &rhs) {
             red = rhs.red;
             green = rhs.green;

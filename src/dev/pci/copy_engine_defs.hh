@@ -62,7 +62,8 @@ const uint32_t DESC_CTRL_CP_STS     = 0x00000008;
 const uint32_t DESC_CTRL_FRAME      = 0x00000010;
 const uint32_t DESC_CTRL_NULL       = 0x00000020;
 
-struct DmaDesc {
+struct DmaDesc
+{
     uint32_t len;
     uint32_t command;
     Addr src;
@@ -91,7 +92,8 @@ struct DmaDesc {
     inline void NAME(uint64_t d) { replaceBits(_data, OFFSET+BITS-1, OFFSET,d); }
 
 template<class T>
-struct Reg {
+struct Reg
+{
     T _data;
     T operator()() { return _data; }
     const Reg<T> &operator=(T d) { _data = d; return *this;}
@@ -109,7 +111,8 @@ struct Reg {
 };
 
 
-struct Regs : public Serializable {
+struct Regs : public Serializable
+{
     uint8_t chanCount;
     uint8_t xferCap;
 
@@ -141,7 +144,8 @@ struct Regs : public Serializable {
 
 };
 
-struct ChanRegs : public Serializable {
+struct ChanRegs : public Serializable
+{
     struct CHANCTRL : public Reg<uint16_t> { // channelX + 0x00
         using Reg<uint16_t>::operator =;
         ADD_FIELD16(interrupt_disable,0,1);

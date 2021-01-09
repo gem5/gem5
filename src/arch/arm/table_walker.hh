@@ -894,7 +894,8 @@ class TableWalker : public ClockedObject
     bool _haveLargeAsid64;
 
     /** Statistics */
-   struct TableWalkerStats : public Stats::Group {
+    struct TableWalkerStats : public Stats::Group
+    {
         TableWalkerStats(Stats::Group *parent);
         Stats::Scalar walks;
         Stats::Scalar walksShortDescriptor;

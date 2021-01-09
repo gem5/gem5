@@ -504,7 +504,8 @@ class ElasticTrace : public ProbeListenerObject
      */
     bool hasCompCompleted(TraceInfo* past_record, Tick execute_tick) const;
 
-    struct ElasticTraceStats : public Stats::Group {
+    struct ElasticTraceStats : public Stats::Group
+    {
         ElasticTraceStats(Stats::Group *parent);
 
         /** Number of register dependencies recorded during tracing */

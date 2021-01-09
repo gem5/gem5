@@ -112,7 +112,8 @@ namespace ArmISA
         SelfDebug * selfDebug;
 
         /** MiscReg metadata **/
-        struct MiscRegLUTEntry {
+        struct MiscRegLUTEntry
+        {
             uint32_t lower;  // Lower half mapped to this register
             uint32_t upper;  // Upper half mapped to this register
             uint64_t _reset; // value taken on reset (i.e. initialization)

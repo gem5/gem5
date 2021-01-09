@@ -60,7 +60,8 @@
 #include "params/VirtIO9PSocket.hh"
 #include "sim/system.hh"
 
-struct P9MsgInfo {
+struct P9MsgInfo
+{
     P9MsgInfo(P9MsgType _type, std::string _name)
         : type(_type), name(_name) {}
 

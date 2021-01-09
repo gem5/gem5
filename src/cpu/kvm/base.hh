@@ -780,7 +780,8 @@ class BaseKvmCPU : public BaseCPU
 
   public:
     /* @{ */
-    struct StatGroup : public Stats::Group {
+    struct StatGroup : public Stats::Group
+    {
         StatGroup(Stats::Group *parent);
         Stats::Scalar committedInsts;
         Stats::Scalar numVMExits;

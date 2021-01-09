@@ -185,7 +185,8 @@ class BPredUnit : public SimObject
     void dump();
 
   private:
-    struct PredictorHistory {
+    struct PredictorHistory
+    {
         /**
          * Makes a predictor history struct that contains any
          * information needed to update the predictor, BTB, and RAS.
@@ -277,7 +278,8 @@ class BPredUnit : public SimObject
     /** The indirect target predictor. */
     IndirectPredictor * iPred;
 
-    struct BPredUnitStats : public Stats::Group {
+    struct BPredUnitStats : public Stats::Group
+    {
         BPredUnitStats(Stats::Group *parent);
 
         /** Stat for number of BP lookups. */

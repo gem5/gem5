@@ -86,19 +86,22 @@ class ArmFreebsd32 : public ArmFreebsd
     static const unsigned TGT_MAP_FIXED     = 0x0010;
 
     /// Limit struct for getrlimit/setrlimit.
-    struct rlimit {
+    struct rlimit
+    {
         uint32_t  rlim_cur;     //!< soft limit
         uint32_t  rlim_max;     //!< hard limit
     };
 
     /// For gettimeofday().
-    struct timeval {
+    struct timeval
+    {
         int32_t tv_sec;         //!< seconds
         int32_t tv_usec;        //!< microseconds
     };
 
     // For writev/readv
-    struct tgt_iovec {
+    struct tgt_iovec
+    {
         uint32_t iov_base; // void *
         uint32_t iov_len;
     };
@@ -170,7 +173,8 @@ class ArmFreebsd32 : public ArmFreebsd
     } tgt_stat64;
 
     /// For getrusage().
-    struct rusage {
+    struct rusage
+    {
         struct timeval ru_utime;        //!< user time used
         struct timeval ru_stime;        //!< system time used
         int32_t ru_maxrss;              //!< max rss
@@ -190,7 +194,8 @@ class ArmFreebsd32 : public ArmFreebsd
     };
 
     /// For times().
-    struct tms {
+    struct tms
+    {
         int32_t tms_utime;      //!< user time
         int32_t tms_stime;      //!< system time
         int32_t tms_cutime;     //!< user time of children
@@ -269,19 +274,22 @@ class ArmFreebsd64 : public ArmFreebsd
     };
 
     /// Limit struct for getrlimit/setrlimit.
-    struct rlimit {
+    struct rlimit
+    {
         uint64_t  rlim_cur;     //!< soft limit
         uint64_t  rlim_max;     //!< hard limit
     };
 
     /// For gettimeofday().
-    struct timeval {
+    struct timeval
+    {
         int64_t tv_sec;         //!< seconds
         int64_t tv_usec;        //!< microseconds
     };
 
     // For writev/readv
-    struct tgt_iovec {
+    struct tgt_iovec
+    {
         uint64_t iov_base; // void *
         uint64_t iov_len;
     };
@@ -335,7 +343,8 @@ class ArmFreebsd64 : public ArmFreebsd
     } tgt_stat64;
 
     /// For getrusage().
-    struct rusage {
+    struct rusage
+    {
         struct timeval ru_utime;        //!< user time used
         struct timeval ru_stime;        //!< system time used
         int64_t ru_maxrss;              //!< max rss
@@ -355,7 +364,8 @@ class ArmFreebsd64 : public ArmFreebsd
     };
 
     /// For times().
-    struct tms {
+    struct tms
+    {
         int64_t tms_utime;      //!< user time
         int64_t tms_stime;      //!< system time
         int64_t tms_cutime;     //!< user time of children

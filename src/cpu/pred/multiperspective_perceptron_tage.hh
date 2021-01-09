@@ -52,7 +52,8 @@ class MPP_TAGE : public TAGEBase
 {
     std::vector<unsigned int> tunedHistoryLengths;
   public:
-    struct BranchInfo : public TAGEBase::BranchInfo {
+    struct BranchInfo : public TAGEBase::BranchInfo
+    {
         BranchInfo(TAGEBase &tage) : TAGEBase::BranchInfo(tage)
         {}
         virtual ~BranchInfo()
@@ -145,7 +146,8 @@ class MPP_StatisticalCorrector : public StatisticalCorrector
     };
 
   public:
-    struct BranchInfo : public StatisticalCorrector::BranchInfo {
+    struct BranchInfo : public StatisticalCorrector::BranchInfo
+    {
         virtual ~BranchInfo()
         {}
     };

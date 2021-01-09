@@ -53,7 +53,8 @@ EtherDump::EtherDump(const Params &p)
 #define PCAP_VERSION_MAJOR      2
 #define PCAP_VERSION_MINOR      4
 
-struct pcap_file_header {
+struct pcap_file_header
+{
     uint32_t magic;
     uint16_t version_major;
     uint16_t version_minor;
@@ -63,7 +64,8 @@ struct pcap_file_header {
     uint32_t linktype;          // data link type (DLT_*)
 };
 
-struct pcap_pkthdr {
+struct pcap_pkthdr
+{
     uint32_t seconds;
     uint32_t microseconds;
     uint32_t caplen;            // length of portion present

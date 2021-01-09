@@ -80,12 +80,14 @@ class FlashDevice : public AbstractNVM
     };
 
     /** Every logical address maps to a physical block and a physical page*/
-    struct PageMapEntry {
+    struct PageMapEntry
+    {
         uint32_t page;
         uint32_t block;
     };
 
-    struct CallBackEntry {
+    struct CallBackEntry
+    {
         Tick time;
         std::function<void()> function;
     };

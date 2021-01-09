@@ -70,7 +70,8 @@ class ArmNativeTrace : public NativeTrace
     };
 
   protected:
-    struct ThreadState {
+    struct ThreadState
+    {
         bool changed[STATE_NUMVALS];
         uint64_t state[2][STATE_NUMVALS];
         uint64_t *newState;

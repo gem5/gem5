@@ -249,7 +249,8 @@ MultiperspectivePerceptron::findBest(ThreadID tid,
     if (threshold < 0) {
         return;
     }
-    struct BestPair {
+    struct BestPair
+    {
         int index;
         int mpreds;
         bool operator<(BestPair const &bp) const

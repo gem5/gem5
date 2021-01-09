@@ -176,7 +176,8 @@ class GicV2 : public BaseGic, public BaseGicRegisters
     uint32_t itLines;
 
     /** Registers "banked for each connected processor" per ARM IHI0048B */
-    struct BankedRegs : public Serializable {
+    struct BankedRegs : public Serializable
+    {
         /** GICD_I{S,C}ENABLER0
          * interrupt enable bits for first 32 interrupts, 1b per interrupt */
         uint32_t intEnabled;

@@ -100,7 +100,8 @@ class TrafficGen : public BaseTrafficGen
     size_t nextState();
 
     /** Struct to represent a probabilistic transition during parsing. */
-    struct Transition {
+    struct Transition
+    {
         uint32_t from;
         uint32_t to;
         double p;

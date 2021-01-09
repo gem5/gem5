@@ -51,7 +51,8 @@
 #include "cpu/inst_seq.hh"
 #include "debug/MemDepUnit.hh"
 
-struct SNHash {
+struct SNHash
+{
     size_t operator() (const InstSeqNum &seq_num) const {
         unsigned a = (unsigned)seq_num;
         unsigned hash = (((a >> 14) ^ ((a >> 2) & 0xffff))) & 0x7FFFFFFF;

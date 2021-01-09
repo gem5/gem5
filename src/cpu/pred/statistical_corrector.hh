@@ -66,7 +66,8 @@ class StatisticalCorrector : public SimObject
         }
     }
     // histories used for the statistical corrector
-    struct SCThreadHistory {
+    struct SCThreadHistory
+    {
         SCThreadHistory() {
             bwHist = 0;
             numOrdinalHistories = 0;
@@ -182,7 +183,8 @@ class StatisticalCorrector : public SimObject
     int8_t firstH;
     int8_t secondH;
 
-    struct StatisticalCorrectorStats : public Stats::Group {
+    struct StatisticalCorrectorStats : public Stats::Group
+    {
         StatisticalCorrectorStats(Stats::Group *parent);
         Stats::Scalar correct;
         Stats::Scalar wrong;

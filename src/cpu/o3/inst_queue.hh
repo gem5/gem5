@@ -332,7 +332,8 @@ class InstructionQueue
      * numbers (and hence are older) will be at the top of the
      * priority queue.
      */
-    struct pqCompare {
+    struct pqCompare
+    {
         bool operator() (const DynInstPtr &lhs, const DynInstPtr &rhs) const
         {
             return lhs->seqNum > rhs->seqNum;
@@ -359,7 +360,8 @@ class InstructionQueue
     typedef typename std::map<InstSeqNum, DynInstPtr>::iterator NonSpecMapIt;
 
     /** Entry for the list age ordering by op class. */
-    struct ListOrderEntry {
+    struct ListOrderEntry
+    {
         OpClass queueType;
         InstSeqNum oldestInst;
     };

@@ -37,7 +37,8 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 
-struct ltseqnum {
+struct ltseqnum
+{
     bool operator()(const InstSeqNum &lhs, const InstSeqNum &rhs) const
     {
         return lhs > rhs;

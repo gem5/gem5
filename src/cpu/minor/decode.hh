@@ -88,7 +88,8 @@ class Decode : public Named
   protected:
     /** Data members after this line are cycle-to-cycle state */
 
-    struct DecodeThreadInfo {
+    struct DecodeThreadInfo
+    {
 
         /** Default Constructor */
         DecodeThreadInfo() :

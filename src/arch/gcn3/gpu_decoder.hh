@@ -1351,7 +1351,8 @@ namespace Gcn3ISA
         GPUStaticInst* decode_invalid(MachInst);
     };
 
-    struct InFmt_DS {
+    struct InFmt_DS
+    {
         unsigned int   OFFSET0 : 8;
         unsigned int   OFFSET1 : 8;
         unsigned int       GDS : 1;
@@ -1360,14 +1361,16 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 6;
     };
 
-    struct InFmt_DS_1 {
+    struct InFmt_DS_1
+    {
         unsigned int      ADDR : 8;
         unsigned int     DATA0 : 8;
         unsigned int     DATA1 : 8;
         unsigned int      VDST : 8;
     };
 
-    struct InFmt_EXP {
+    struct InFmt_EXP
+    {
         unsigned int        EN : 4;
         unsigned int       TGT : 6;
         unsigned int     COMPR : 1;
@@ -1377,14 +1380,16 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 6;
     };
 
-    struct InFmt_EXP_1 {
+    struct InFmt_EXP_1
+    {
         unsigned int     VSRC0 : 8;
         unsigned int     VSRC1 : 8;
         unsigned int     VSRC2 : 8;
         unsigned int     VSRC3 : 8;
     };
 
-    struct InFmt_FLAT {
+    struct InFmt_FLAT
+    {
         unsigned int  pad_0_15 : 16;
         unsigned int       GLC : 1;
         unsigned int       SLC : 1;
@@ -1393,7 +1398,8 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 6;
     };
 
-    struct InFmt_FLAT_1 {
+    struct InFmt_FLAT_1
+    {
         unsigned int      ADDR : 8;
         unsigned int      DATA : 8;
         unsigned int pad_16_22 : 7;
@@ -1401,11 +1407,13 @@ namespace Gcn3ISA
         unsigned int      VDST : 8;
     };
 
-    struct InFmt_INST {
+    struct InFmt_INST
+    {
         unsigned int  ENCODING : 32;
     };
 
-    struct InFmt_MIMG {
+    struct InFmt_MIMG
+    {
         unsigned int   pad_0_7 : 8;
         unsigned int     DMASK : 4;
         unsigned int     UNORM : 1;
@@ -1419,7 +1427,8 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 6;
     };
 
-    struct InFmt_MIMG_1 {
+    struct InFmt_MIMG_1
+    {
         unsigned int     VADDR : 8;
         unsigned int     VDATA : 8;
         unsigned int     SRSRC : 5;
@@ -1428,7 +1437,8 @@ namespace Gcn3ISA
         unsigned int       D16 : 1;
     };
 
-    struct InFmt_MTBUF {
+    struct InFmt_MTBUF
+    {
         unsigned int    OFFSET : 12;
         unsigned int     OFFEN : 1;
         unsigned int     IDXEN : 1;
@@ -1439,7 +1449,8 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 6;
     };
 
-    struct InFmt_MTBUF_1 {
+    struct InFmt_MTBUF_1
+    {
         unsigned int     VADDR : 8;
         unsigned int     VDATA : 8;
         unsigned int     SRSRC : 5;
@@ -1449,7 +1460,8 @@ namespace Gcn3ISA
         unsigned int   SOFFSET : 8;
     };
 
-    struct InFmt_MUBUF {
+    struct InFmt_MUBUF
+    {
         unsigned int    OFFSET : 12;
         unsigned int     OFFEN : 1;
         unsigned int     IDXEN : 1;
@@ -1462,7 +1474,8 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 6;
     };
 
-    struct InFmt_MUBUF_1 {
+    struct InFmt_MUBUF_1
+    {
         unsigned int     VADDR : 8;
         unsigned int     VDATA : 8;
         unsigned int     SRSRC : 5;
@@ -1471,7 +1484,8 @@ namespace Gcn3ISA
         unsigned int   SOFFSET : 8;
     };
 
-    struct InFmt_SMEM {
+    struct InFmt_SMEM
+    {
         unsigned int     SBASE : 6;
         unsigned int     SDATA : 7;
         unsigned int pad_13_15 : 3;
@@ -1481,18 +1495,21 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 6;
     };
 
-    struct InFmt_SMEM_1 {
+    struct InFmt_SMEM_1
+    {
         unsigned int    OFFSET : 20;
     };
 
-    struct InFmt_SOP1 {
+    struct InFmt_SOP1
+    {
         unsigned int     SSRC0 : 8;
         unsigned int        OP : 8;
         unsigned int      SDST : 7;
         unsigned int  ENCODING : 9;
     };
 
-    struct InFmt_SOP2 {
+    struct InFmt_SOP2
+    {
         unsigned int     SSRC0 : 8;
         unsigned int     SSRC1 : 8;
         unsigned int      SDST : 7;
@@ -1500,27 +1517,31 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 2;
     };
 
-    struct InFmt_SOPC {
+    struct InFmt_SOPC
+    {
         unsigned int     SSRC0 : 8;
         unsigned int     SSRC1 : 8;
         unsigned int        OP : 7;
         unsigned int  ENCODING : 9;
     };
 
-    struct InFmt_SOPK {
+    struct InFmt_SOPK
+    {
         unsigned int    SIMM16 : 16;
         unsigned int      SDST : 7;
         unsigned int        OP : 5;
         unsigned int  ENCODING : 4;
     };
 
-    struct InFmt_SOPP {
+    struct InFmt_SOPP
+    {
         unsigned int    SIMM16 : 16;
         unsigned int        OP : 7;
         unsigned int  ENCODING : 9;
     };
 
-    struct InFmt_VINTRP {
+    struct InFmt_VINTRP
+    {
         unsigned int      VSRC : 8;
         unsigned int  ATTRCHAN : 2;
         unsigned int      ATTR : 6;
@@ -1529,14 +1550,16 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 6;
     };
 
-    struct InFmt_VOP1 {
+    struct InFmt_VOP1
+    {
         unsigned int      SRC0 : 9;
         unsigned int        OP : 8;
         unsigned int      VDST : 8;
         unsigned int  ENCODING : 7;
     };
 
-    struct InFmt_VOP2 {
+    struct InFmt_VOP2
+    {
         unsigned int      SRC0 : 9;
         unsigned int     VSRC1 : 8;
         unsigned int      VDST : 8;
@@ -1544,7 +1567,8 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 1;
     };
 
-    struct InFmt_VOP3 {
+    struct InFmt_VOP3
+    {
         unsigned int      VDST : 8;
         unsigned int       ABS : 3;
         unsigned int pad_11_14 : 4;
@@ -1553,7 +1577,8 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 6;
     };
 
-    struct InFmt_VOP3_1 {
+    struct InFmt_VOP3_1
+    {
         unsigned int      SRC0 : 9;
         unsigned int      SRC1 : 9;
         unsigned int      SRC2 : 9;
@@ -1561,7 +1586,8 @@ namespace Gcn3ISA
         unsigned int       NEG : 3;
     };
 
-    struct InFmt_VOP3_SDST_ENC {
+    struct InFmt_VOP3_SDST_ENC
+    {
         unsigned int      VDST : 8;
         unsigned int      SDST : 7;
         unsigned int     CLAMP : 1;
@@ -1569,14 +1595,16 @@ namespace Gcn3ISA
         unsigned int  ENCODING : 6;
     };
 
-    struct InFmt_VOPC {
+    struct InFmt_VOPC
+    {
         unsigned int      SRC0 : 9;
         unsigned int     VSRC1 : 8;
         unsigned int        OP : 8;
         unsigned int  ENCODING : 7;
     };
 
-    struct InFmt_VOP_DPP {
+    struct InFmt_VOP_DPP
+    {
         unsigned int       SRC0 : 8;
         unsigned int   DPP_CTRL : 9;
         unsigned int  pad_17_18 : 2;
@@ -1589,7 +1617,8 @@ namespace Gcn3ISA
         unsigned int   ROW_MASK : 4;
     };
 
-    struct InFmt_VOP_SDWA {
+    struct InFmt_VOP_SDWA
+    {
         unsigned int       SRC0 : 8;
         unsigned int    DST_SEL : 3;
         unsigned int DST_UNUSED : 2;

@@ -86,7 +86,8 @@ using namespace RiscvISA;
  *   writing to M mode registers)
  */
 
-struct PlicOutput {
+struct PlicOutput
+{
   std::vector<uint32_t> maxID;
   std::vector<uint32_t> maxPriority;
 };

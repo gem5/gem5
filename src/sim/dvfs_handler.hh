@@ -223,7 +223,8 @@ class DVFSHandler : public SimObject
      * Update performance level event, encapsulates all the required information
      * for a future call to change a domain's performance level.
      */
-    struct UpdateEvent : public Event {
+    struct UpdateEvent : public Event
+    {
         UpdateEvent() : Event(DVFS_Update_Pri), domainIDToSet(0),
                         perfLevelToSet(0) {}
 

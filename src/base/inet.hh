@@ -550,12 +550,14 @@ class Ip6Ptr
 // Dnet supplied ipv6 opt header is incomplete and
 // newer NIC card filters expect a more robust
 // ipv6 header option declaration.
-struct ip6_opt_fragment {
+struct ip6_opt_fragment
+{
     uint16_t offlg;
     uint32_t ident;
 };
 
-struct ip6_opt_routing_type2 {
+struct ip6_opt_routing_type2
+{
     uint8_t type;
     uint8_t segleft;
     uint32_t reserved;
@@ -563,7 +565,8 @@ struct ip6_opt_routing_type2 {
 };
 
 #define HOME_ADDRESS_OPTION 0xC9
-struct M5_ATTR_PACKED ip6_opt_dstopts {
+struct M5_ATTR_PACKED ip6_opt_dstopts
+{
     uint8_t type;
     uint8_t length;
     ip6_addr_t addr;

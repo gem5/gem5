@@ -132,7 +132,8 @@ class RiscvLinux64 : public RiscvLinux
     typedef uint64_t blksize_t;
     typedef uint64_t blkcnt_t;
 
-    struct timespec {
+    struct timespec
+    {
         time_t tv_sec;
         int64_t tv_nsec;
     };
@@ -297,12 +298,14 @@ class RiscvLinux32 : public RiscvLinux
     typedef int64_t time_t;
 
     /// Limit struct for getrlimit/setrlimit.
-    struct rlimit {
+    struct rlimit
+    {
         uint32_t  rlim_cur;     //!< soft limit
         uint32_t  rlim_max;     //!< hard limit
     };
 
-    struct timespec {
+    struct timespec
+    {
         time_t tv_sec;
         int32_t tv_nsec;
     };

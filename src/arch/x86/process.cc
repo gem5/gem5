@@ -279,7 +279,8 @@ X86_64Process::initState()
         TSShigh TSSDescHigh = 0;
         TSSDescHigh.base = bits(TSSVirtAddr, 63, 32);
 
-        struct TSSDesc {
+        struct TSSDesc
+        {
             uint64_t low;
             uint64_t high;
         } tssDescVal = {TSSDescLow, TSSDescHigh};

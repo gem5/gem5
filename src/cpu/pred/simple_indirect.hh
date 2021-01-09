@@ -87,7 +87,8 @@ class SimpleIndirectPredictor : public IndirectPredictor
     };
 
 
-    struct ThreadInfo {
+    struct ThreadInfo
+    {
         ThreadInfo() : headHistEntry(0), ghr(0) { }
 
         std::deque<HistoryEntry> pathHist;

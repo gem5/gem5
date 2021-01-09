@@ -1011,7 +1011,8 @@ TableWalker::processWalkAArch64()
     // (grain_size + N*stride), for N = {1, 2, 3}.
     // A value of 64 will never succeed and a value of 0 will always succeed.
     if (start_lookup_level == MAX_LOOKUP_LEVELS) {
-        struct GrainMap {
+        struct GrainMap
+        {
             GrainSize grain_size;
             unsigned lookup_level_cutoff[MAX_LOOKUP_LEVELS];
         };

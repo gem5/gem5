@@ -54,7 +54,8 @@ namespace Prefetcher {
 class Queued : public Base
 {
   protected:
-    struct DeferredPacket : public BaseTLB::Translation {
+    struct DeferredPacket : public BaseTLB::Translation
+    {
         /** Owner of the packet */
         Queued *owner;
         /** Prefetch info corresponding to this packet */

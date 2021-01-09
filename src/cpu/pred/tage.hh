@@ -60,7 +60,8 @@ class TAGE: public BPredUnit
   protected:
     TAGEBase *tage;
 
-    struct TageBranchInfo {
+    struct TageBranchInfo
+    {
         TAGEBase::BranchInfo *tageBranchInfo;
 
         TageBranchInfo(TAGEBase &tage) : tageBranchInfo(tage.makeBranchInfo())

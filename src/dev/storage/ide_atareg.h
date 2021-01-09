@@ -64,7 +64,8 @@
  *             ATA_* : ATA only
  *             ATAPI_* : ATAPI only.
  */
-struct ataparams {
+struct ataparams
+{
     /* drive info */
     uint16_t	atap_config;		/* 0: general configuration */
 #define WDC_CFG_ATAPI_MASK		0xc000

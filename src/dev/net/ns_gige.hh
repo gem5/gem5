@@ -58,7 +58,8 @@ const uint8_t  EEPROM_PMATCH0_ADDR = 0xC; // EEPROM Address of PMATCH word 0
 /**
  * Ethernet device registers
  */
-struct dp_regs {
+struct dp_regs
+{
     uint32_t    command;
     uint32_t    config;
     uint32_t    mear;
@@ -95,7 +96,8 @@ struct dp_regs {
     uint32_t    tesr;
 };
 
-struct dp_rom {
+struct dp_rom
+{
     /**
      * for perfect match memory.
      * the linux driver doesn't use any other ROM

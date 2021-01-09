@@ -371,7 +371,8 @@ class HSAPacketProcessor: public DmaDevice
     /**
      * Calls getCurrentEntry once the queueEntry has been dmaRead.
      */
-    struct dma_series_ctx {
+    struct dma_series_ctx
+    {
         // deal with the fact dma ops can complete out of issue order
         uint32_t pkts_ttl;
         uint32_t pkts_2_go;

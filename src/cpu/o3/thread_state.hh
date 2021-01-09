@@ -61,7 +61,8 @@ class Process;
  * thread's process, such as syscalls and checking valid addresses.
  */
 template <class Impl>
-struct O3ThreadState : public ThreadState {
+struct O3ThreadState : public ThreadState
+{
     typedef ThreadContext::Status Status;
     typedef typename Impl::O3CPU O3CPU;
 

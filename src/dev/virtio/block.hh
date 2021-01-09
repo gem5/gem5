@@ -81,7 +81,8 @@ class VirtIOBlock : public VirtIODeviceBase
      * @note This needs to be changed if the supported feature set
      * changes!
      */
-    struct M5_ATTR_PACKED Config {
+    struct M5_ATTR_PACKED Config
+    {
         uint64_t capacity;
     };
     Config config;
@@ -122,7 +123,8 @@ class VirtIOBlock : public VirtIODeviceBase
     /** @} */
 
     /** VirtIO block device request as sent by guest */
-    struct M5_ATTR_PACKED BlkRequest {
+    struct M5_ATTR_PACKED BlkRequest
+    {
         RequestType type;
         uint32_t reserved;
         uint64_t sector;

@@ -295,7 +295,8 @@ class DefaultRename
      * the instruction's sequence number, the arch register, the old physical
      * register for that arch. register, and the new physical register.
      */
-    struct RenameHistory {
+    struct RenameHistory
+    {
         RenameHistory(InstSeqNum _instSeqNum, const RegId& _archReg,
                       PhysRegIdPtr _newPhysReg,
                       PhysRegIdPtr _prevPhysReg)
@@ -388,7 +389,8 @@ class DefaultRename
     /** Structures whose free entries impact the amount of instructions that
      * can be renamed.
      */
-    struct FreeEntries {
+    struct FreeEntries
+    {
         unsigned iqEntries;
         unsigned robEntries;
         unsigned lqEntries;
@@ -407,7 +409,8 @@ class DefaultRename
     bool emptyROB[Impl::MaxThreads];
 
     /** Source of possible stalls. */
-    struct Stalls {
+    struct Stalls
+    {
         bool iew;
         bool commit;
     };
@@ -478,7 +481,8 @@ class DefaultRename
      */
     inline void incrFullStat(const FullSource &source);
 
-    struct RenameStats : public Stats::Group {
+    struct RenameStats : public Stats::Group
+    {
         RenameStats(Stats::Group *parent);
 
         /** Stat for total number of cycles spent squashing. */

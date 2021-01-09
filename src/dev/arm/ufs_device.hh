@@ -185,7 +185,8 @@ class UFSHostDevice : public DmaDevice
      * As defined in:
      * http://www.jedec.org/standards-documents/results/jesd223
      */
-    struct HCIMem {
+    struct HCIMem
+    {
         /**
          * Specify the host capabilities
          */
@@ -253,7 +254,8 @@ class UFSHostDevice : public DmaDevice
      * dWord1: UPIU header DW-1
      * dWord2: UPIU header DW-2
      */
-    struct UTPUPIUHeader {
+    struct UTPUPIUHeader
+    {
         uint32_t dWord0;
         uint32_t dWord1;
         uint32_t dWord2;
@@ -267,7 +269,8 @@ class UFSHostDevice : public DmaDevice
      * senseDataLen: Sense data length DW-8 U16
      * senseData: Sense data field DW-8 to DW-12
      */
-    struct UTPUPIURSP {
+    struct UTPUPIURSP
+    {
         struct UTPUPIUHeader header;
         uint32_t residualTransferCount;
         uint32_t reserved[4];
@@ -283,7 +286,8 @@ class UFSHostDevice : public DmaDevice
      * inputParam3: Input param 3 DW-5
      * reserved: Reserver DW-6 to DW-7
      */
-    struct UTPUPIUTaskReq {
+    struct UTPUPIUTaskReq
+    {
         struct UTPUPIUHeader header;
         uint32_t inputParam1;
         uint32_t inputParam2;
@@ -298,7 +302,8 @@ class UFSHostDevice : public DmaDevice
      * reserved: Reserved for future use DW-2
      * size: size of physical segment DW-3
      */
-    struct UFSHCDSGEntry {
+    struct UFSHCDSGEntry
+    {
         uint32_t baseAddr;
         uint32_t upperAddr;
         uint32_t reserved;
@@ -312,7 +317,8 @@ class UFSHostDevice : public DmaDevice
      * PRDTable: Physcial Region Descriptor
      * All lengths as defined by JEDEC220
      */
-    struct UTPTransferCMDDesc {
+    struct UTPTransferCMDDesc
+    {
         uint8_t commandUPIU[128];
         uint8_t responseUPIU[128];
         struct UFSHCDSGEntry PRDTable[128];
@@ -321,7 +327,8 @@ class UFSHostDevice : public DmaDevice
     /**
      * UPIU tranfer message.
      */
-    struct UPIUMessage {
+    struct UPIUMessage
+    {
         struct UTPUPIUHeader header;
         uint32_t dataOffset;
         uint32_t dataCount;
@@ -338,7 +345,8 @@ class UFSHostDevice : public DmaDevice
      * PRDTableLength: Physical region descriptor length DW-7
      * PRDTableOffset: Physical region descriptor offset DW-7
      */
-    struct UTPTransferReqDesc {
+    struct UTPTransferReqDesc
+    {
 
         /**
          * struct RequestDescHeader
@@ -347,7 +355,8 @@ class UFSHostDevice : public DmaDevice
          * dword2: Descriptor Header DW2
          * dword3: Descriptor Header DW3
          */
-        struct RequestDescHeader {
+        struct RequestDescHeader
+        {
             uint32_t dWord0;
             uint32_t dWord1;
             uint32_t dWord2;
@@ -371,7 +380,8 @@ class UFSHostDevice : public DmaDevice
      * SCSI reply structure. In here is all the information that is needed to
      * build a SCSI reply.
      */
-    struct SCSIReply {
+    struct SCSIReply
+    {
         void reset() {
             memset(static_cast<void*>(this), 0, sizeof(*this));
         }
@@ -391,7 +401,8 @@ class UFSHostDevice : public DmaDevice
      * This structure is defined in the SCSI standard, and can also be found in
      * the UFS standard. http://www.jedec.org/standards-documents/results/jesd220
      */
-    struct LUNInfo {
+    struct LUNInfo
+    {
         uint32_t dWord0;
         uint32_t dWord1;
         uint32_t vendor0;
@@ -422,7 +433,8 @@ class UFSHostDevice : public DmaDevice
      * @filePointer this does not point to a file, but to a position on the disk
      * image (which is from the software systems perspective a position in a file)
      */
-    struct transferInfo {
+    struct transferInfo
+    {
         std::vector <uint8_t> buffer;
         uint32_t size;
         uint64_t offset;
@@ -434,7 +446,8 @@ class UFSHostDevice : public DmaDevice
      * transfer completion info.
      * This information is needed by transferDone to finish the transfer.
      */
-    struct transferDoneInfo {
+    struct transferDoneInfo
+    {
         Addr responseStartAddr;
         uint32_t reqPos;
         struct UTPUPIURSP requestOut;
@@ -448,7 +461,8 @@ class UFSHostDevice : public DmaDevice
     /**
      * Transfer start information.
      */
-    struct transferStart {
+    struct transferStart
+    {
         struct UTPTransferReqDesc* destination;
         uint32_t mask;
         Addr address;
@@ -460,7 +474,8 @@ class UFSHostDevice : public DmaDevice
     /**
      * Task start information. This is for the device, so no lun id needed.
      */
-    struct taskStart {
+    struct taskStart
+    {
         struct UTPUPIUTaskReq destination;
         uint32_t mask;
         Addr address;
@@ -472,7 +487,8 @@ class UFSHostDevice : public DmaDevice
      * After a SCSI command has been identified, the SCSI resume function will
      * handle it. This information will provide context information.
      */
-    struct SCSIResumeInfo {
+    struct SCSIResumeInfo
+    {
         struct UTPTransferReqDesc* RequestIn;
         int reqPos;
         Addr finalAddress;
@@ -485,7 +501,8 @@ class UFSHostDevice : public DmaDevice
      * Disk transfer burst information. Needed to allow communication between the
      * disk transactions and dma transactions.
      */
-    struct writeToDiskBurst {
+    struct writeToDiskBurst
+    {
         Addr start;
         uint64_t SCSIDiskOffset;
         uint32_t size;

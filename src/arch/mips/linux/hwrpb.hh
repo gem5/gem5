@@ -28,7 +28,8 @@
 #include "arch/mips/linux/aligned.hh"
 
 namespace Linux {
-    struct pcb_struct {
+    struct pcb_struct
+    {
         uint64_ta rpb_ksp;
         uint64_ta rpb_usp;
         uint64_ta rpb_ptbr;

@@ -329,7 +329,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     EventFunctionWrapper fetchEvent;
 
-    struct IprEvent : Event {
+    struct IprEvent : Event
+    {
         Packet *pkt;
         TimingSimpleCPU *cpu;
         IprEvent(Packet *_pkt, TimingSimpleCPU *_cpu, Tick t);

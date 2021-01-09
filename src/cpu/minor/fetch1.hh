@@ -236,7 +236,8 @@ class Fetch1 : public Named
 
     /** Stage cycle-by-cycle state */
 
-    struct Fetch1ThreadInfo {
+    struct Fetch1ThreadInfo
+    {
 
         /** Consturctor to initialize all fields. */
         Fetch1ThreadInfo() :

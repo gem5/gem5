@@ -151,7 +151,8 @@ class TournamentBP : public BPredUnit
      * when the BP can use this information to update/restore its
      * state properly.
      */
-    struct BPHistory {
+    struct BPHistory
+    {
 #ifdef DEBUG
         BPHistory()
         { newCount++; }

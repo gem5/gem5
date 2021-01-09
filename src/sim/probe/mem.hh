@@ -50,7 +50,8 @@ namespace ProbePoints {
  * the packet and underlying request can be safely passed on, and
  * consequently modified or even deleted.
  */
-struct PacketInfo {
+struct PacketInfo
+{
     MemCmd cmd;
     Addr addr;
     uint32_t size;

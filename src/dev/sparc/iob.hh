@@ -86,17 +86,20 @@ class Iob : public PioDevice
         NumDeviceIds
     };
 
-    struct IntMan {
+    struct IntMan
+    {
         int cpu;
         int vector;
     };
 
-    struct IntCtl {
+    struct IntCtl
+    {
         bool mask;
         bool pend;
     };
 
-    struct IntBusy {
+    struct IntBusy
+    {
         bool busy;
         int source;
     };

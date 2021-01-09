@@ -108,7 +108,8 @@ class CowDiskImage : public DiskImage
     static const uint32_t VersionMinor;
 
   protected:
-    struct Sector {
+    struct Sector
+    {
         uint8_t data[SectorSize];
     };
     typedef std::unordered_map<uint64_t, Sector *> SectorTable;

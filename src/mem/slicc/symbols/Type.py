@@ -511,7 +511,8 @@ ${{self.c_ident}} &operator++(${{self.c_ident}} &e);
 // define a hash function for the MachineType class
 namespace std {
 template<>
-struct hash<MachineType> {
+struct hash<MachineType>
+{
     std::size_t operator()(const MachineType &mtype) const {
         return hash<size_t>()(static_cast<size_t>(mtype));
     }

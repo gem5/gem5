@@ -101,7 +101,8 @@ namespace X86ISA
 
         AddrRange m5opRange;
 
-        struct TlbStats : public Stats::Group {
+        struct TlbStats : public Stats::Group
+        {
             TlbStats(Stats::Group *parent);
 
             Stats::Scalar rdAccesses;

@@ -431,7 +431,8 @@ class TAGEBase : public SimObject
 
     // Keep per-thread histories to
     // support SMT.
-    struct ThreadHistory {
+    struct ThreadHistory
+    {
         // Speculative path history
         // (LSB of branch address)
         int pathHist;
@@ -482,7 +483,8 @@ class TAGEBase : public SimObject
 
     bool initialized;
 
-    struct TAGEBaseStats : public Stats::Group {
+    struct TAGEBaseStats : public Stats::Group
+    {
         TAGEBaseStats(Stats::Group *parent, unsigned nHistoryTables);
         // stats
         Stats::Scalar longestMatchProviderCorrect;

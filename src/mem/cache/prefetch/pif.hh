@@ -71,7 +71,8 @@ class PIF : public Queued
          * The temporal compactor tracks a small number of the
          * most-recently-observed spatial region records.
          */
-        struct CompactorEntry {
+        struct CompactorEntry
+        {
             Addr trigger;
             std::vector<bool> prec;
             std::vector<bool> succ;

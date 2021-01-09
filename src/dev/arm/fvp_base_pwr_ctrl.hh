@@ -114,7 +114,8 @@ class FVPBasePwrCtrl : public BasicPioDevice
         PSYSR  = 0x10
     };
 
-    struct Registers {
+    struct Registers
+    {
         uint32_t ppoffr;
         uint32_t pponr;
         uint32_t pcoffr;

@@ -50,7 +50,8 @@ struct VirtIO9PBaseParams;
 typedef uint8_t P9MsgType;
 typedef uint16_t P9Tag;
 
-struct M5_ATTR_PACKED P9MsgHeader {
+struct M5_ATTR_PACKED P9MsgHeader
+{
     /** Length including header */
     uint32_t len;
     /** Message type */
@@ -120,7 +121,8 @@ class VirtIO9PBase : public VirtIODeviceBase
      * @note The fields in this structure depend on the features
      * exposed to the guest.
      */
-    struct M5_ATTR_PACKED Config {
+    struct M5_ATTR_PACKED Config
+    {
         uint16_t len;
         char tag[];
     };

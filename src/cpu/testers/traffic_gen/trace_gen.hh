@@ -63,7 +63,8 @@ class TraceGen : public BaseGen
     /**
      * This struct stores a line in the trace file.
      */
-    struct TraceElement {
+    struct TraceElement
+    {
 
         /** Specifies if the request is to be a read or a write */
         MemCmd cmd;

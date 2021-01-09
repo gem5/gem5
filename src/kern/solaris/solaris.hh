@@ -56,7 +56,8 @@ class Solaris : public OperatingSystem
     typedef uint32_t nlink_t;
     //@}
 
-    struct tgt_timespec {
+    struct tgt_timespec
+    {
         int64_t tv_sec;
         int64_t tv_nsec;
     };

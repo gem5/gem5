@@ -307,7 +307,8 @@ union MSIXTable {
 };
 
 #define MSIXVECS_PER_PBA 64
-struct MSIXPbaEntry {
+struct MSIXPbaEntry
+{
     uint64_t bits;
 };
 
@@ -315,7 +316,8 @@ struct MSIXPbaEntry {
  *  Defines the PCI Express capability register and its associated bitfields
  *  for a PCIe device.
  */
-struct PXCAP {
+struct PXCAP
+{
     uint8_t data[48];
     struct {
         uint16_t pxid; /* 0:7  cid

@@ -47,7 +47,8 @@ namespace ArmISA
 typedef uint64_t XReg;
 
 /// 128-bit NEON vector register.
-struct VReg {
+struct VReg
+{
     XReg hi;
     XReg lo;
 };

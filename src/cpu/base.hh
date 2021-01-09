@@ -146,7 +146,8 @@ class BaseCPU : public ClockedObject
     const unsigned int _cacheLineSize;
 
     /** Global CPU statistics that are merged into the Root object. */
-    struct GlobalStats : public Stats::Group {
+    struct GlobalStats : public Stats::Group
+    {
         GlobalStats(::Stats::Group *parent);
 
         ::Stats::Value simInsts;

@@ -89,7 +89,8 @@ typedef GenericISA::SimplePCState<MachInst> PCState;
 namespace std {
 
 template<>
-struct hash<PowerISA::ExtMachInst> : public hash<uint32_t> {
+struct hash<PowerISA::ExtMachInst> : public hash<uint32_t>
+{
     size_t operator()(const PowerISA::ExtMachInst &emi) const {
         return hash<uint32_t>::operator()((uint32_t)emi);
     };

@@ -186,7 +186,8 @@ enum IntTypes
 };
 
 // Receive Descriptor struct
-struct RxDesc {
+struct RxDesc
+{
     union {
         struct {
             Addr buf;
@@ -221,7 +222,8 @@ struct RxDesc {
     };
 };
 
-struct TxDesc {
+struct TxDesc
+{
     uint64_t d1;
     uint64_t d2;
 };
@@ -294,9 +296,11 @@ inline int utcmd(TxDesc *d) { assert(isContext(d)); return bits(d->d2,24,31); }
     inline uint64_t NAME() { return bits(_data, OFFSET+BITS-1, OFFSET); } \
     inline void NAME(uint64_t d) { replaceBits(_data, OFFSET+BITS-1, OFFSET,d); }
 
-struct Regs : public Serializable {
+struct Regs : public Serializable
+{
     template<class T>
-    struct Reg {
+    struct Reg
+    {
         T _data;
         T operator()() { return _data; }
         const Reg<T> &operator=(T d) { _data = d; return *this;}

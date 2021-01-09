@@ -141,7 +141,8 @@ class MultiperspectivePerceptron : public BPredUnit
     /**
      * Entry of the branch filter
      */
-    struct FilterEntry {
+    struct FilterEntry
+    {
         /** Has this branch been taken at least once? */
         bool seenTaken;
         /** Has this branch been not taken at least once? */
@@ -215,7 +216,8 @@ class MultiperspectivePerceptron : public BPredUnit
     /**
      * Base class to implement the predictor tables.
      */
-    struct HistorySpec {
+    struct HistorySpec
+    {
         /** First parameter */
         const int p1;
         /** Second parameter */
@@ -287,7 +289,8 @@ class MultiperspectivePerceptron : public BPredUnit
     static int xlat4[];
 
     /** History data is kept for each thread */
-    struct ThreadData {
+    struct ThreadData
+    {
         ThreadData(int num_filter, int n_local_histories,
             int local_history_length, int assoc,
             const std::vector<std::vector<int>> &blurrypath_bits,

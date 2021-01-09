@@ -60,7 +60,8 @@ class IrregularStreamBuffer : public Queued
      * Training Unit Entry datatype, it holds the last accessed address and
      * its secure flag
      */
-    struct TrainingUnitEntry : public TaggedEntry {
+    struct TrainingUnitEntry : public TaggedEntry
+    {
         Addr lastAddress;
         bool lastAddressSecure;
     };
@@ -68,7 +69,8 @@ class IrregularStreamBuffer : public Queued
     AssociativeSet<TrainingUnitEntry> trainingUnit;
 
     /** Address Mapping entry, holds an address and a confidence counter */
-    struct AddressMapping {
+    struct AddressMapping
+    {
         Addr address;
         SatCounter8 counter;
         AddressMapping(unsigned bits) : address(0), counter(bits)

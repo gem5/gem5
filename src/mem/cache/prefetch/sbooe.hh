@@ -77,7 +77,8 @@ class SBOOE : public Queued
         /** Holds the current sum of the latency buffer latency */
         Tick latencyBufferSum;
 
-        struct SandboxEntry {
+        struct SandboxEntry
+        {
             /** Cache line predicted by the candidate prefetcher */
             Addr line;
             /** Tick when the simulated prefetch is expected to be filled */

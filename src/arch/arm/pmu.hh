@@ -290,7 +290,8 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
     /**
      * Event definition base class
      */
-    struct PMUEvent {
+    struct PMUEvent
+    {
 
         PMUEvent() {}
 
@@ -341,7 +342,8 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
         std::set<PMU::CounterState*> userCounters;
     };
 
-    struct RegularEvent : public PMUEvent {
+    struct RegularEvent : public PMUEvent
+    {
         typedef std::pair<SimObject*, std::string> EventTypeEntry;
 
         void addMicroarchitectureProbe(SimObject* object,
@@ -407,7 +409,8 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
     PMUEvent* getEvent(uint64_t eventId);
 
     /** State of a counter within the PMU. **/
-    struct CounterState : public Serializable {
+    struct CounterState : public Serializable
+    {
         CounterState(PMU &pmuReference, uint64_t counter_id)
             : eventId(0), filter(0), enabled(false),
               overflow64(false), sourceEvent(nullptr),

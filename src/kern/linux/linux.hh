@@ -108,7 +108,8 @@ class Linux : public OperatingSystem
     static const int _SYS_NMLN = 65;
 
     /// Interface struct for uname().
-    struct utsname {
+    struct utsname
+    {
         char sysname[_SYS_NMLN];        //!< System name.
         char nodename[_SYS_NMLN];       //!< Node name.
         char release[_SYS_NMLN];        //!< OS release.
@@ -117,19 +118,22 @@ class Linux : public OperatingSystem
     };
 
     /// Limit struct for getrlimit/setrlimit.
-    struct rlimit {
+    struct rlimit
+    {
         uint64_t  rlim_cur;     //!< soft limit
         uint64_t  rlim_max;     //!< hard limit
     };
 
     /// For gettimeofday().
-    struct timeval {
+    struct timeval
+    {
         int64_t tv_sec;         //!< seconds
         int64_t tv_usec;        //!< microseconds
     };
 
     /// For clock_gettime().
-    struct timespec {
+    struct timespec
+    {
         time_t tv_sec;         //!< seconds
         int64_t tv_nsec;        //!< nanoseconds
     };
@@ -138,7 +142,8 @@ class Linux : public OperatingSystem
     static const int M5_SC_CLK_TCK = 100;
 
     /// For times().
-    struct tms {
+    struct tms
+    {
         int64_t tms_utime;      //!< user time
         int64_t tms_stime;      //!< system time
         int64_t tms_cutime;     //!< user time of children
@@ -146,7 +151,8 @@ class Linux : public OperatingSystem
     };
 
     // For writev/readv
-    struct tgt_iovec {
+    struct tgt_iovec
+    {
         uint64_t iov_base; // void *
         uint64_t iov_len;
     };
@@ -211,7 +217,8 @@ class Linux : public OperatingSystem
     static const int TGT_RUSAGE_CHILDREN = -1;
     static const int TGT_RUSAGE_BOTH     = -2;
 
-    struct rusage {
+    struct rusage
+    {
         struct timeval ru_utime;        //!< user time used
         struct timeval ru_stime;        //!< system time used
         int64_t ru_maxrss;              //!< max rss
