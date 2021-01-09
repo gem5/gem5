@@ -50,7 +50,8 @@
 #include "params/TAGE_SC_L_64KB_StatisticalCorrector.hh"
 #include "params/TAGE_SC_L_TAGE_64KB.hh"
 
-class TAGE_SC_L_TAGE_64KB : public TAGE_SC_L_TAGE {
+class TAGE_SC_L_TAGE_64KB : public TAGE_SC_L_TAGE
+{
     public:
     TAGE_SC_L_TAGE_64KB(const TAGE_SC_L_TAGE_64KBParams &p) : TAGE_SC_L_TAGE(p)
     {}

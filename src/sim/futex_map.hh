@@ -38,7 +38,8 @@
  * FutexKey class defines an unique identifier for a particular futex in the
  * system. The tgid and an address are the unique values needed as the key.
  */
-class FutexKey {
+class FutexKey
+{
   public:
     uint64_t addr;
     uint64_t tgid;
@@ -65,7 +66,8 @@ namespace std {
  * WaiterState defines internal state of a waiter thread. The state
  * includes a pointer to the thread's context and its associated bitmask.
  */
-class WaiterState {
+class WaiterState
+{
   public:
     ThreadContext* tc;
     int bitmask;

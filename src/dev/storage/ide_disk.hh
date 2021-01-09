@@ -72,7 +72,8 @@ typedef struct PrdEntry {
     uint16_t endOfTable;
 } PrdEntry_t;
 
-class PrdTableEntry {
+class PrdTableEntry
+{
   public:
     PrdEntry_t entry;
 

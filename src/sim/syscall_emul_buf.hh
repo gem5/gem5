@@ -51,7 +51,8 @@
  * and copyOut() methods copy the user-space buffer to and from the
  * simulator-space buffer, respectively.
  */
-class BaseBufferArg {
+class BaseBufferArg
+{
 
   public:
 

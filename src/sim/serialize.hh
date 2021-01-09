@@ -169,7 +169,8 @@ class CheckpointIn
 class Serializable
 {
   public:
-    class ScopedCheckpointSection {
+    class ScopedCheckpointSection
+    {
       public:
         /**
          * This is the constructor for Scoped checkpoint section helper

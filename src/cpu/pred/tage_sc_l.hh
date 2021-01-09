@@ -49,7 +49,8 @@
 #include "params/TAGE_SC_L_LoopPredictor.hh"
 #include "params/TAGE_SC_L_TAGE.hh"
 
-class TAGE_SC_L_TAGE : public TAGEBase {
+class TAGE_SC_L_TAGE : public TAGEBase
+{
     const unsigned firstLongTagTable;
     const unsigned longTagsSize;
     const unsigned shortTagsSize;

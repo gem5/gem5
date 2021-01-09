@@ -71,7 +71,8 @@ class PCEventScope
 class PCEventQueue : public PCEventScope
 {
   protected:
-    class MapCompare {
+    class MapCompare
+    {
       public:
         bool
         operator()(PCEvent * const &l, PCEvent * const &r) const

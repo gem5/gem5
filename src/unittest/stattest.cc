@@ -63,7 +63,8 @@ testfunc()
     return 9.8;
 }
 
-class TestClass {
+class TestClass
+{
   public:
     double operator()() { return 9.7; }
 };

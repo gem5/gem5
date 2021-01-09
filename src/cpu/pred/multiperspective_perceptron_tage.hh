@@ -48,7 +48,8 @@
 #include "params/MPP_TAGE.hh"
 #include "params/MultiperspectivePerceptronTAGE.hh"
 
-class MPP_TAGE : public TAGEBase {
+class MPP_TAGE : public TAGEBase
+{
     std::vector<unsigned int> tunedHistoryLengths;
   public:
     struct BranchInfo : public TAGEBase::BranchInfo {
@@ -82,7 +83,8 @@ class MPP_TAGE : public TAGEBase {
                                     bool taken, Addr branch_pc, Addr target);
 };
 
-class MPP_LoopPredictor : public LoopPredictor {
+class MPP_LoopPredictor : public LoopPredictor
+{
   public:
     MPP_LoopPredictor(const MPP_LoopPredictorParams &p) : LoopPredictor(p)
     {}
@@ -91,7 +93,8 @@ class MPP_LoopPredictor : public LoopPredictor {
     bool optionalAgeInc() const override;
 };
 
-class MPP_StatisticalCorrector : public StatisticalCorrector {
+class MPP_StatisticalCorrector : public StatisticalCorrector
+{
   protected:
     int8_t thirdH;
     // global branch history variation GEHL

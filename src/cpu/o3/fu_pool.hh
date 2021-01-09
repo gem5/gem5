@@ -89,7 +89,8 @@ class FUPool : public SimObject
      * by iterating through it, thus leaving free units at the head of the
      * queue.
      */
-    class FUIdxQueue {
+    class FUIdxQueue
+    {
       public:
         /** Constructs a circular queue of FU indices. */
         FUIdxQueue()

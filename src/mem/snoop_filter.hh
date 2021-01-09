@@ -83,7 +83,8 @@
  * (4) ordering: there is no single point of order in the system.  Instead,
  *     requesting MSHRs track order between local requests and remote snoops
  */
-class SnoopFilter : public SimObject {
+class SnoopFilter : public SimObject
+{
   public:
 
     // Change for systems with more than 256 ports tracked by this object

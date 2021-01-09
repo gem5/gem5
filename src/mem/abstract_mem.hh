@@ -59,7 +59,8 @@ class System;
  * Locked address class that represents a physical address and a
  * context id.
  */
-class LockedAddr {
+class LockedAddr
+{
 
   private:
 

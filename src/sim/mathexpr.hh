@@ -44,7 +44,8 @@
 #include <string>
 #include <vector>
 
-class MathExpr {
+class MathExpr
+{
   public:
 
     MathExpr(std::string expr);
@@ -102,7 +103,8 @@ class MathExpr {
     /** Operator list */
     std::array<OpSearch, uNeg + 1> ops;
 
-    class Node {
+    class Node
+    {
       public:
         Node() : op(nInvalid), l(0), r(0), value(0) {}
         std::string toStr() const {

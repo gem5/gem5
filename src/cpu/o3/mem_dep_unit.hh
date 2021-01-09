@@ -173,7 +173,8 @@ class MemDepUnit
      *  when the instruction is ready to execute and what instructions depend
      *  upon it.
      */
-    class MemDepEntry {
+    class MemDepEntry
+    {
       public:
         /** Constructs a memory dependence entry. */
         MemDepEntry(const DynInstPtr &new_inst)

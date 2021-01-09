@@ -39,7 +39,8 @@
  * bool value is used as an additional tag data of the entry.
  */
 template<class Entry>
-class AssociativeSet {
+class AssociativeSet
+{
     static_assert(std::is_base_of<TaggedEntry, Entry>::value,
                   "Entry must derive from TaggedEntry");
 

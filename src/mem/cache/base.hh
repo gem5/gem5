@@ -1362,7 +1362,8 @@ class BaseCache : public ClockedObject
  * line) we switch to NO_ALLOCATE when writes should not allocate in
  * the cache but rather send a whole line write to the memory below.
  */
-class WriteAllocator : public SimObject {
+class WriteAllocator : public SimObject
+{
   public:
     WriteAllocator(const WriteAllocatorParams &p) :
         SimObject(p),

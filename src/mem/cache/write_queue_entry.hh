@@ -73,7 +73,8 @@ class WriteQueueEntry : public QueueEntry, public Printable
     friend class WriteQueue;
 
   public:
-    class TargetList : public std::list<Target> {
+    class TargetList : public std::list<Target>
+    {
 
       public:
 

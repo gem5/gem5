@@ -63,7 +63,8 @@ class TableWalker : public ClockedObject
   public:
     class WalkerState;
 
-    class DescriptorBase {
+    class DescriptorBase
+    {
       public:
         DescriptorBase() : lookupLevel(L0) {}
 
@@ -89,7 +90,8 @@ class TableWalker : public ClockedObject
         }
     };
 
-    class L1Descriptor : public DescriptorBase {
+    class L1Descriptor : public DescriptorBase
+    {
       public:
         /** Type of page table entry ARM DDI 0406B: B3-8*/
         enum EntryType {
@@ -240,7 +242,8 @@ class TableWalker : public ClockedObject
     };
 
     /** Level 2 page table descriptor */
-    class L2Descriptor : public DescriptorBase {
+    class L2Descriptor : public DescriptorBase
+    {
       public:
         /** The raw bits of the entry. */
         uint32_t     data;
@@ -372,7 +375,8 @@ class TableWalker : public ClockedObject
     };
 
     /** Long-descriptor format (LPAE) */
-    class LongDescriptor : public DescriptorBase {
+    class LongDescriptor : public DescriptorBase
+    {
       public:
         /** Descriptor type */
         enum EntryType {

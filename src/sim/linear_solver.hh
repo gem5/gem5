@@ -49,7 +49,8 @@
  * N+1 coefficients.
  */
 
-class LinearEquation {
+class LinearEquation
+{
   public:
     LinearEquation(unsigned unknowns) {
         eq = std::vector <double> (unknowns + 1, 0);
@@ -104,7 +105,8 @@ class LinearEquation {
     std::vector <double> eq;
 };
 
-class LinearSystem {
+class LinearSystem
+{
   public:
     LinearSystem(unsigned unknowns) {
         for (unsigned i = 0; i < unknowns; i++)

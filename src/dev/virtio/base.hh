@@ -292,8 +292,9 @@ class VirtDescriptor
  * @note Queues must be registered with
  * VirtIODeviceBase::registerQueue() to be active.
  */
-class VirtQueue : public Serializable {
-public:
+class VirtQueue : public Serializable
+{
+  public:
     virtual ~VirtQueue() {};
 
     /** @{

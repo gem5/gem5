@@ -51,7 +51,8 @@ class MultiperspectivePerceptron : public BPredUnit
     /**
      * Branch information data
      */
-    class MPPBranchInfo {
+    class MPPBranchInfo
+    {
         /** pc of the branch */
         const unsigned int pc;
         /** pc of the branch, shifted 2 bits to the right */
@@ -167,7 +168,8 @@ class MultiperspectivePerceptron : public BPredUnit
      * Local history entries, each enty contains the history of directions
      * taken by a given branch.
      */
-    class LocalHistories {
+    class LocalHistories
+    {
         /** The array of histories */
         std::vector<unsigned int> localHistories;
         /** Size in bits of each history entry */
@@ -480,7 +482,8 @@ class MultiperspectivePerceptron : public BPredUnit
 
     /** Available features */
 
-    class GHIST : public HistorySpec {
+    class GHIST : public HistorySpec
+    {
       public:
         GHIST(int p1, int p2, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -531,7 +534,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
     };
 
-    class ACYCLIC : public HistorySpec {
+    class ACYCLIC : public HistorySpec
+    {
       public:
         ACYCLIC(int p1, int p2, int p3, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -579,7 +583,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
     };
 
-    class MODHIST : public HistorySpec {
+    class MODHIST : public HistorySpec
+    {
       public:
         MODHIST(int p1, int p2, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -608,7 +613,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
     };
 
-    class BIAS : public HistorySpec {
+    class BIAS : public HistorySpec
+    {
       public:
         BIAS(double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -623,7 +629,8 @@ class MultiperspectivePerceptron : public BPredUnit
     };
 
 
-    class RECENCY : public HistorySpec {
+    class RECENCY : public HistorySpec
+    {
       public:
         RECENCY(int p1, int p2, int p3, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -665,7 +672,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
     };
 
-    class IMLI : public HistorySpec {
+    class IMLI : public HistorySpec
+    {
         public:
             IMLI(int p1, double coeff, int size, int width,
                     MultiperspectivePerceptron &mpp)
@@ -686,7 +694,8 @@ class MultiperspectivePerceptron : public BPredUnit
             }
     };
 
-    class PATH : public HistorySpec {
+    class PATH : public HistorySpec
+    {
       public:
         PATH(int p1, int p2, int p3, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -732,7 +741,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
     };
 
-    class LOCAL : public HistorySpec {
+    class LOCAL : public HistorySpec
+    {
       public:
         LOCAL(int p1, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -754,7 +764,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
     };
 
-    class MODPATH : public HistorySpec {
+    class MODPATH : public HistorySpec
+    {
       public:
         MODPATH(int p1, int p2, int p3, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -781,7 +792,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
     };
 
-    class GHISTPATH : public HistorySpec {
+    class GHISTPATH : public HistorySpec
+    {
       public:
         GHISTPATH(int p1, int p2, int p3, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -853,7 +865,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
     };
 
-    class GHISTMODPATH : public HistorySpec {
+    class GHISTMODPATH : public HistorySpec
+    {
       public:
         GHISTMODPATH(int p1, int p2, int p3, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -885,7 +898,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
     };
 
-    class BLURRYPATH : public HistorySpec {
+    class BLURRYPATH : public HistorySpec
+    {
       public:
         BLURRYPATH(int p1, int p2, int p3, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -931,7 +945,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
     };
 
-    class RECENCYPOS : public HistorySpec {
+    class RECENCYPOS : public HistorySpec
+    {
       public:
         RECENCYPOS(int p1, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)
@@ -972,7 +987,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
     };
 
-    class SGHISTPATH : public HistorySpec {
+    class SGHISTPATH : public HistorySpec
+    {
       public:
         SGHISTPATH(int p1, int p2, int p3, double coeff, int size, int width,
                 MultiperspectivePerceptron &mpp)

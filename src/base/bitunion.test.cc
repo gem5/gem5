@@ -131,7 +131,8 @@ EmptyThirtyTwo emptyThirtyTwo;
 EmptySixteen emptySixteen;
 EmptyEight emptyEight(0);
 
-class BitUnionData : public testing::Test {
+class BitUnionData : public testing::Test
+{
   protected:
     SixtyFour sixtyFour;
     Split split;

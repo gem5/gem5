@@ -33,7 +33,8 @@
 
 class Process;
 
-class BasicSignal {
+class BasicSignal
+{
   public:
     Process *sender;
     Process *receiver;

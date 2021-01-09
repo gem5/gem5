@@ -63,7 +63,8 @@ SyscallReturn unimplementedFunc(SyscallDesc *desc, ThreadContext *tc);
  * bound to the ISAs in the architecture specific code
  * (i.e. arch/X86/linux/process.cc).
  */
-class SyscallDesc {
+class SyscallDesc
+{
   public:
     /**
      * Interface for invoking the system call funcion pointer. Note that

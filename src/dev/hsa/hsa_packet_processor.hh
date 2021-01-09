@@ -69,7 +69,8 @@ class HSADevice;
 class HWScheduler;
 
 // Our internal representation of an HSA queue
-class HSAQueueDescriptor {
+class HSAQueueDescriptor
+{
     public:
         uint64_t     basePointer;
         uint64_t     doorbellPointer;

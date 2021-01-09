@@ -100,8 +100,8 @@ class Clint : public BasicPioDevice
      * ...:             reserved[1]
      * 0xBFF8:          mtime (read-only)
      */
-    class ClintRegisters: public RegisterBankLE {
-
+    class ClintRegisters: public RegisterBankLE
+    {
       public:
         const Addr mtimecmpStart = 0x4000;
         const Addr mtimeStart = 0xBFF8;

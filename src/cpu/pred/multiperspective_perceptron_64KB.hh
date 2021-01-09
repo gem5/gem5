@@ -43,7 +43,8 @@
 #include "cpu/pred/multiperspective_perceptron.hh"
 #include "params/MultiperspectivePerceptron64KB.hh"
 
-class MultiperspectivePerceptron64KB : public MultiperspectivePerceptron {
+class MultiperspectivePerceptron64KB : public MultiperspectivePerceptron
+{
     void createSpecs() override;
     public:
     MultiperspectivePerceptron64KB(

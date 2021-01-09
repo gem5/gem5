@@ -182,7 +182,8 @@ class Plic : public BasicPioDevice
      *
      * ... reserved[3]
      */
-    class PlicRegisters: public RegisterBankLE {
+    class PlicRegisters: public RegisterBankLE
+    {
       public:
         const Addr pendingStart = 0x1000;
         const Addr enableStart = 0x2000;

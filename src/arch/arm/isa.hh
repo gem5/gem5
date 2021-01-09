@@ -136,7 +136,8 @@ namespace ArmISA
         /** Metadata table accessible via the value of the register */
         static std::vector<struct MiscRegLUTEntry> lookUpMiscReg;
 
-        class MiscRegLUTEntryInitializer {
+        class MiscRegLUTEntryInitializer
+        {
             struct MiscRegLUTEntry &entry;
             std::bitset<NUM_MISCREG_INFOS> &info;
             typedef const MiscRegLUTEntryInitializer& chain;

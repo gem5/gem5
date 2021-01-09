@@ -91,7 +91,8 @@ namespace ArmISA {
  * @see The ARM Architecture Refererence Manual (DDI 0487A)
  *
  */
-class PMU : public SimObject, public ArmISA::BaseISADevice {
+class PMU : public SimObject, public ArmISA::BaseISADevice
+{
   public:
     PMU(const ArmPMUParams &p);
     ~PMU();

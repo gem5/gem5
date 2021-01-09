@@ -49,7 +49,8 @@ struct SyscallFlagTransTable {
 /// functions, and syscall-number mappings specific to an operating system
 /// syscall interface.
 ///
-class OperatingSystem {
+class OperatingSystem
+{
 
   public:
 

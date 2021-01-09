@@ -110,7 +110,8 @@ class CacheBlk : public TaggedEntry
      * Represents that the indicated thread context has a "lock" on
      * the block, in the LL/SC sense.
      */
-    class Lock {
+    class Lock
+    {
       public:
         ContextID contextId;     // locking context
         Addr lowAddr;      // low address of lock range

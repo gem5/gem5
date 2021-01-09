@@ -63,7 +63,8 @@ class PacketQueue : public Drainable
 {
   private:
     /** A deferred packet, buffered to transmit later. */
-    class DeferredPacket {
+    class DeferredPacket
+    {
       public:
         Tick tick;      ///< The tick when the packet is ready to transmit
         PacketPtr pkt;  ///< Pointer to the packet to transmit

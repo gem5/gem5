@@ -44,7 +44,9 @@
 #include "params/HiFive.hh"
 
 using namespace RiscvISA;
-class HiFive : public Platform {
+
+class HiFive : public Platform
+{
   public:
     System *system;
     Clint *clint;

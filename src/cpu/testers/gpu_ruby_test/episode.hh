@@ -47,7 +47,8 @@ class Episode
     typedef AddressManager::Location Location;
     typedef AddressManager::Value Value;
 
-    class Action {
+    class Action
+    {
       public:
         enum class Type {
             ACQUIRE,

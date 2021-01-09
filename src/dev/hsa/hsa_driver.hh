@@ -79,7 +79,8 @@ class HSADriver : public EmulatedDriver
         HSADriver *driver;
         ThreadContext *tc;
     };
-    class EventTableEntry {
+    class EventTableEntry
+    {
       public:
         EventTableEntry() :
             mailBoxPtr(0), tc(nullptr), threadWaiting(false), setEvent(false)
@@ -118,7 +119,8 @@ class HSADriver : public EmulatedDriver
     // reset all events when one of those events wake up this thread. The
     // signal events that can wake up this thread are stored in signalEvents
     // whereas the timer wakeup event is stored in timerEvent.
-    class EventList {
+    class EventList
+    {
       public:
         EventList() : driver(nullptr), timerEvent(nullptr, nullptr) {}
         EventList(HSADriver *hsa_driver, ThreadContext *thrd_cntxt)

@@ -121,7 +121,8 @@ class MSHR : public QueueEntry, public Printable
     /** True if the entry is just a simple forward from an upper level */
     bool isForward;
 
-    class Target : public QueueEntry::Target {
+    class Target : public QueueEntry::Target
+    {
       public:
 
         enum Source {
@@ -159,7 +160,8 @@ class MSHR : public QueueEntry, public Printable
         {}
     };
 
-    class TargetList : public std::list<Target> {
+    class TargetList : public std::list<Target>
+    {
 
       public:
         bool needsWritable;

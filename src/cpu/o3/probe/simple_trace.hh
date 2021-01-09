@@ -49,7 +49,8 @@
 #include "params/SimpleTrace.hh"
 #include "sim/probe/probe.hh"
 
-class SimpleTrace : public ProbeListenerObject {
+class SimpleTrace : public ProbeListenerObject
+{
 
   public:
     SimpleTrace(const SimpleTraceParams &params):

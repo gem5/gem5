@@ -51,7 +51,8 @@ class Sequencer;
  * length object, so that while writing the data to a file one does not
  * need to copy the meta data and the actual data separately.
  */
-class TraceRecord {
+class TraceRecord
+{
   public:
     int m_cntrl_id;
     Tick m_time;

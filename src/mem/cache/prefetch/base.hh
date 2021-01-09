@@ -87,7 +87,8 @@ class Base : public ClockedObject
      * Class containing the information needed by the prefetch to train and
      * generate new prefetch requests.
      */
-    class PrefetchInfo {
+    class PrefetchInfo
+    {
         /** The address used to train and generate prefetches */
         Addr address;
         /** The program counter that generated this address. */

@@ -43,7 +43,8 @@
 #include "params/MPP_StatisticalCorrector_64KB.hh"
 #include "params/MultiperspectivePerceptronTAGE64KB.hh"
 
-class MPP_StatisticalCorrector_64KB : public MPP_StatisticalCorrector {
+class MPP_StatisticalCorrector_64KB : public MPP_StatisticalCorrector
+{
     const unsigned numEntriesSecondLocalHistories;
     const unsigned numEntriesThirdLocalHistories;
 

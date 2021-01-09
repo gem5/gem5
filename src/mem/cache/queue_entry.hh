@@ -80,7 +80,8 @@ class QueueEntry : public Packet::SenderState
      * stored in a target containing its availability, order and other info,
      * and the queue entry stores these similar targets in a list.
      */
-    class Target {
+    class Target
+    {
       public:
         const Tick recvTime;  //!< Time when request was received (for stats)
         const Tick readyTime; //!< Time when request is ready to be serviced

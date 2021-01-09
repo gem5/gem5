@@ -70,7 +70,8 @@
 // the current TBETable would be cumbersome since the TBETable is indexed
 // by the transaction address.
 
-class TBEStorage {
+class TBEStorage
+{
   public:
     TBEStorage(Stats::Group *parent, int number_of_TBEs);
 
