@@ -456,6 +456,33 @@ class BoolCompare(LineVerifier):
                               "comparisons with false/False.\n")
         return line
 
+class ClassBraces(LineVerifier):
+    """ Check if the opening braces of classes are not on the same line of
+        the class name.
+
+        @todo Make this work for multi-line class declarations. e.g.,
+
+            class MultiLineClass
+              : public BaseClass {
+    """
+
+    languages = set(('C', 'C++'))
+    test_name = 'class opening brace position'
+    opt_name = 'classbrace'
+
+    regex = re.compile(r'\A(\s*)(class\s+[A-Z].*\S)\s*\{')
+
+    def check_line(self, line, **kwargs):
+        return self.regex.search(line) == None
+
+    def fix_line(self, line, **kwargs):
+        match = self.regex.search(line)
+        if match:
+            # Group 1 is indentation, group 2 is class declaration
+            line = match.group(1) + match.group(2) + "\n" + \
+                match.group(1) + "{"
+        return line
+
 def is_verifier(cls):
     """Determine if a class is a Verifier that can be instantiated"""
 
