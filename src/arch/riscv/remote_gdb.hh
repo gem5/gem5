@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2021 Huawei International
  * Copyright (c) 2017 The University of Virginia
  * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
@@ -57,9 +58,71 @@ class RemoteGDB : public BaseRemoteGDB
     {
       using BaseGdbRegCache::BaseGdbRegCache;
       private:
+        /**
+         * RISC-V Register Cache
+         * Order and sizes of registers found in ext/gdb-xml/riscv.xml
+         * To add support for more CSRs:
+         * 1. Uncomment relevant lines in ext/gdb-xml/riscv-64bit-csr.xml
+         * 2. Add register to struct below
+         * 3. Modify RiscvGdbRegCache::getRegs and setRegs
+         */
         struct {
             uint64_t gpr[NumIntArchRegs];
             uint64_t pc;
+            uint64_t fpu[NumFloatRegs];
+            uint32_t fflags;
+            uint32_t frm;
+            uint32_t fcsr;
+            // Placeholder for byte alignment
+            uint32_t placeholder;
+            uint64_t cycle;
+            uint64_t time;
+            uint64_t ustatus;
+            uint64_t uie;
+            uint64_t utvec;
+            uint64_t uscratch;
+            uint64_t uepc;
+            uint64_t ucause;
+            uint64_t utval;
+            uint64_t uip;
+            uint64_t sstatus;
+            uint64_t sedeleg;
+            uint64_t sideleg;
+            uint64_t sie;
+            uint64_t stvec;
+            uint64_t scounteren;
+            uint64_t sscratch;
+            uint64_t sepc;
+            uint64_t scause;
+            uint64_t stval;
+            uint64_t sip;
+            uint64_t satp;
+            uint64_t mvendorid;
+            uint64_t marchid;
+            uint64_t mimpid;
+            uint64_t mhartid;
+            uint64_t mstatus;
+            uint64_t misa;
+            uint64_t medeleg;
+            uint64_t mideleg;
+            uint64_t mie;
+            uint64_t mtvec;
+            uint64_t mcounteren;
+            uint64_t mscratch;
+            uint64_t mepc;
+            uint64_t mcause;
+            uint64_t mtval;
+            uint64_t mip;
+            uint64_t hstatus;
+            uint64_t hedeleg;
+            uint64_t hideleg;
+            uint64_t hie;
+            uint64_t htvec;
+            uint64_t hscratch;
+            uint64_t hepc;
+            uint64_t hcause;
+            uint64_t hbadaddr;
+            uint64_t hip;
         } r;
       public:
         char *data() const { return (char *)&r; }
@@ -79,6 +142,19 @@ class RemoteGDB : public BaseRemoteGDB
   public:
     RemoteGDB(System *_system, ThreadContext *tc, int _port);
     BaseGdbRegCache *gdbRegs() override;
+    /**
+     * Informs GDB remote serial protocol that XML features are supported
+     * GDB then queries for xml blobs using qXfer:features:read:xxx.xml
+     */
+    std::vector<std::string>
+    availableFeatures() const
+    {
+        return {"qXfer:features:read+"};
+    };
+    /**
+     * Reply to qXfer:features:read:xxx.xml qeuries
+     */
+    bool getXferFeaturesRead(const std::string &annex, std::string &output);
 };
 
 } // namespace RiscvISA
