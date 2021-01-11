@@ -732,12 +732,10 @@ BaseCPU::waitForRemoteGDB() const
 
 BaseCPU::GlobalStats::GlobalStats(::Stats::Group *parent)
     : ::Stats::Group(parent),
-    simInsts(this, "sim_insts", "Number of instructions simulated"),
-    simOps(this, "sim_ops", "Number of ops (including micro ops) simulated"),
-    hostInstRate(this, "host_inst_rate",
-                 "Simulator instruction rate (inst/s)"),
-    hostOpRate(this, "host_op_rate",
-               "Simulator op (including micro ops) rate (op/s)")
+    ADD_STAT(simInsts, "Number of instructions simulated"),
+    ADD_STAT(simOps, "Number of ops (including micro ops) simulated"),
+    ADD_STAT(hostInstRate, "Simulator instruction rate (inst/s)"),
+    ADD_STAT(hostOpRate, "Simulator op (including micro ops) rate (op/s)")
 {
     simInsts
         .functor(BaseCPU::numSimulatedInsts)

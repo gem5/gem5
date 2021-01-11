@@ -2104,67 +2104,44 @@ BaseCache::CacheCmdStats::regStatsFromParent()
 BaseCache::CacheStats::CacheStats(BaseCache &c)
     : Stats::Group(&c), cache(c),
 
-    demandHits(this, "demand_hits", "number of demand (read+write) hits"),
-
-    overallHits(this, "overall_hits", "number of overall hits"),
-    demandMisses(this, "demand_misses",
-                 "number of demand (read+write) misses"),
-    overallMisses(this, "overall_misses", "number of overall misses"),
-    demandMissLatency(this, "demand_miss_latency",
-                      "number of demand (read+write) miss cycles"),
-    overallMissLatency(this, "overall_miss_latency",
-                       "number of overall miss cycles"),
-    demandAccesses(this, "demand_accesses",
-                   "number of demand (read+write) accesses"),
-    overallAccesses(this, "overall_accesses",
-                    "number of overall (read+write) accesses"),
-    demandMissRate(this, "demand_miss_rate",
-                   "miss rate for demand accesses"),
-    overallMissRate(this, "overall_miss_rate",
-                    "miss rate for overall accesses"),
-    demandAvgMissLatency(this, "demand_avg_miss_latency",
-                         "average overall miss latency"),
-    overallAvgMissLatency(this, "overall_avg_miss_latency",
-                          "average overall miss latency"),
-    blocked_cycles(this, "blocked_cycles",
-                   "number of cycles access was blocked"),
-    blocked_causes(this, "blocked", "number of cycles access was blocked"),
-    avg_blocked(this, "avg_blocked_cycles",
-                "average number of cycles each access was blocked"),
-    unusedPrefetches(this, "unused_prefetches",
-                     "number of HardPF blocks evicted w/o reference"),
-    writebacks(this, "writebacks", "number of writebacks"),
-    demandMshrHits(this, "demand_mshr_hits",
-                   "number of demand (read+write) MSHR hits"),
-    overallMshrHits(this, "overall_mshr_hits",
-                    "number of overall MSHR hits"),
-    demandMshrMisses(this, "demand_mshr_misses",
-                     "number of demand (read+write) MSHR misses"),
-    overallMshrMisses(this, "overall_mshr_misses",
-                      "number of overall MSHR misses"),
-    overallMshrUncacheable(this, "overall_mshr_uncacheable_misses",
-                           "number of overall MSHR uncacheable misses"),
-    demandMshrMissLatency(this, "demand_mshr_miss_latency",
-                          "number of demand (read+write) MSHR miss cycles"),
-    overallMshrMissLatency(this, "overall_mshr_miss_latency",
-                           "number of overall MSHR miss cycles"),
-    overallMshrUncacheableLatency(this, "overall_mshr_uncacheable_latency",
-                                  "number of overall MSHR uncacheable cycles"),
-    demandMshrMissRate(this, "demand_mshr_miss_rate",
-                       "mshr miss rate for demand accesses"),
-    overallMshrMissRate(this, "overall_mshr_miss_rate",
-                        "mshr miss rate for overall accesses"),
-    demandAvgMshrMissLatency(this, "demand_avg_mshr_miss_latency",
-                             "average overall mshr miss latency"),
-    overallAvgMshrMissLatency(this, "overall_avg_mshr_miss_latency",
-                              "average overall mshr miss latency"),
-    overallAvgMshrUncacheableLatency(
-        this, "overall_avg_mshr_uncacheable_latency",
-        "average overall mshr uncacheable latency"),
-    replacements(this, "replacements", "number of replacements"),
-
-    dataExpansions(this, "data_expansions", "number of data expansions"),
-    dataContractions(this, "data_contractions", "number of data contractions"),
+    ADD_STAT(demandHits, "number of demand (read+write) hits"),
+    ADD_STAT(overallHits, "number of overall hits"),
+    ADD_STAT(demandMisses, "number of demand (read+write) misses"),
+    ADD_STAT(overallMisses, "number of overall misses"),
+    ADD_STAT(demandMissLatency, "number of demand (read+write) miss cycles"),
+    ADD_STAT(overallMissLatency, "number of overall miss cycles"),
+    ADD_STAT(demandAccesses, "number of demand (read+write) accesses"),
+    ADD_STAT(overallAccesses, "number of overall (read+write) accesses"),
+    ADD_STAT(demandMissRate, "miss rate for demand accesses"),
+    ADD_STAT(overallMissRate, "miss rate for overall accesses"),
+    ADD_STAT(demandAvgMissLatency, "average overall miss latency"),
+    ADD_STAT(overallAvgMissLatency, "average overall miss latency"),
+    ADD_STAT(blockedCycles, "number of cycles access was blocked"),
+    ADD_STAT(blockedCauses, "number of cycles access was blocked"),
+    ADD_STAT(avgBlocked,"average number of cycles each access was blocked"),
+    ADD_STAT(unusedPrefetches,
+             "number of HardPF blocks evicted w/o reference"),
+    ADD_STAT(writebacks, "number of writebacks"),
+    ADD_STAT(demandMshrHits, "number of demand (read+write) MSHR hits"),
+    ADD_STAT(overallMshrHits, "number of overall MSHR hits"),
+    ADD_STAT(demandMshrMisses, "number of demand (read+write) MSHR misses"),
+    ADD_STAT(overallMshrMisses, "number of overall MSHR misses"),
+    ADD_STAT(overallMshrUncacheable,
+             "number of overall MSHR uncacheable misses"),
+    ADD_STAT(demandMshrMissLatency,
+             "number of demand (read+write) MSHR miss cycles"),
+    ADD_STAT(overallMshrMissLatency, "number of overall MSHR miss cycles"),
+    ADD_STAT(overallMshrUncacheableLatency,
+             "number of overall MSHR uncacheable cycles"),
+    ADD_STAT(demandMshrMissRate, "mshr miss rate for demand accesses"),
+    ADD_STAT(overallMshrMissRate, "mshr miss rate for overall accesses"),
+    ADD_STAT(demandAvgMshrMissLatency, "average overall mshr miss latency"),
+    ADD_STAT(overallAvgMshrMissLatency, "average overall mshr miss latency"),
+    ADD_STAT(overallAvgMshrUncacheableLatency,
+             "average overall mshr uncacheable latency"),
+    ADD_STAT(replacements, "number of replacements"),
+    ADD_STAT(dataExpansions, "number of data expansions"),
+    ADD_STAT(dataContractions, "number of data contractions"),
     cmd(MemCmd::NUM_MEM_CMDS)
 {
     for (int idx = 0; idx < MemCmd::NUM_MEM_CMDS; ++idx)
@@ -2269,24 +2246,24 @@ BaseCache::CacheStats::regStats()
         overallAvgMissLatency.subname(i, system->getRequestorName(i));
     }
 
-    blocked_cycles.init(NUM_BLOCKED_CAUSES);
-    blocked_cycles
+    blockedCycles.init(NUM_BLOCKED_CAUSES);
+    blockedCycles
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
         ;
 
 
-    blocked_causes.init(NUM_BLOCKED_CAUSES);
-    blocked_causes
+    blockedCauses.init(NUM_BLOCKED_CAUSES);
+    blockedCauses
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
         ;
 
-    avg_blocked
+    avgBlocked
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
         ;
-    avg_blocked = blocked_cycles / blocked_causes;
+    avgBlocked = blockedCycles / blockedCauses;
 
     unusedPrefetches.flags(nozero);
 

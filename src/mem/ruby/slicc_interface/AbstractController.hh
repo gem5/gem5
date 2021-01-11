@@ -151,9 +151,9 @@ class AbstractController : public ClockedObject, public Consumer
     MachineID getMachineID() const { return m_machineID; }
     RequestorID getRequestorId() const { return m_id; }
 
-    Stats::Histogram& getDelayHist() { return stats.m_delayHistogram; }
+    Stats::Histogram& getDelayHist() { return stats.delayHistogram; }
     Stats::Histogram& getDelayVCHist(uint32_t index)
-    { return *(stats.m_delayVCHistogram[index]); }
+    { return *(stats.delayVCHistogram[index]); }
 
     bool respondsTo(Addr addr)
     {
@@ -233,7 +233,7 @@ class AbstractController : public ClockedObject, public Consumer
     {
         auto iter = m_inTrans.find(addr);
         assert(iter != m_inTrans.end());
-        stats.m_inTransLatHist[iter->second.transaction]
+        stats.inTransLatHist[iter->second.transaction]
                               [iter->second.state]
                               [(unsigned)finalState]->sample(
                                 ticksToCycles(curTick() - iter->second.time));
@@ -264,7 +264,7 @@ class AbstractController : public ClockedObject, public Consumer
     {
         auto iter = m_outTrans.find(addr);
         assert(iter != m_outTrans.end());
-        stats.m_outTransLatHist[iter->second.transaction]->sample(
+        stats.outTransLatHist[iter->second.transaction]->sample(
             ticksToCycles(curTick() - iter->second.time));
         m_outTrans.erase(iter);
     }
@@ -354,20 +354,20 @@ class AbstractController : public ClockedObject, public Consumer
         // Initialized by the SLICC compiler for all combinations of event and
         // states. Only histograms with samples will appear in the stats
         std::vector<std::vector<std::vector<Stats::Histogram*>>>
-          m_inTransLatHist;
+          inTransLatHist;
 
         // Initialized by the SLICC compiler for all events.
         // Only histograms with samples will appear in the stats.
-        std::vector<Stats::Histogram*> m_outTransLatHist;
+        std::vector<Stats::Histogram*> outTransLatHist;
 
         //! Counter for the number of cycles when the transitions carried out
         //! were equal to the maximum allowed
-        Stats::Scalar m_fully_busy_cycles;
+        Stats::Scalar fullyBusyCycles;
 
         //! Histogram for profiling delay for the messages this controller
         //! cares for
-        Stats::Histogram m_delayHistogram;
-        std::vector<Stats::Histogram *> m_delayVCHistogram;
+        Stats::Histogram delayHistogram;
+        std::vector<Stats::Histogram *> delayVCHistogram;
     } stats;
 
 };

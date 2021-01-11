@@ -63,11 +63,11 @@ BaseXBar::BaseXBar(const BaseXBarParams &p)
       gotAllAddrRanges(false), defaultPortID(InvalidPortID),
       useDefaultRange(p.use_default_range),
 
-      transDist(this, "trans_dist", "Transaction distribution"),
-      pktCount(this, "pkt_count",
-              "Packet count per connected requestor and responder (bytes)"),
-      pktSize(this, "pkt_size", "Cumulative packet size per connected "
-             "requestor and responder (bytes)")
+      ADD_STAT(transDist, "Transaction distribution"),
+      ADD_STAT(pktCount,
+               "Packet count per connected requestor and responder (bytes)"),
+      ADD_STAT(pktSize, "Cumulative packet size per connected requestor and "
+                        "responder (bytes)")
 {
 }
 

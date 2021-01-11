@@ -54,15 +54,14 @@ Root::RootStats &rootStats = Root::RootStats::instance;
 
 Root::RootStats::RootStats()
     : Stats::Group(nullptr),
-    simSeconds(this, "sim_seconds", "Number of seconds simulated"),
-    simTicks(this, "sim_ticks", "Number of ticks simulated"),
-    finalTick(this, "final_tick",
-              "Number of ticks from beginning of simulation "
-              "(restored from checkpoints and never reset)"),
-    simFreq(this, "sim_freq", "Frequency of simulated ticks"),
-    hostSeconds(this, "host_seconds", "Real time elapsed on the host"),
-    hostTickRate(this, "host_tick_rate", "Simulator tick rate (ticks/s)"),
-    hostMemory(this, "host_mem_usage", "Number of bytes of host memory used"),
+    ADD_STAT(simSeconds, "Number of seconds simulated"),
+    ADD_STAT(simTicks, "Number of ticks simulated"),
+    ADD_STAT(finalTick, "Number of ticks from beginning of simulation "
+                        "(restored from checkpoints and never reset)"),
+    ADD_STAT(simFreq, "Frequency of simulated ticks"),
+    ADD_STAT(hostSeconds, "Real time elapsed on the host"),
+    ADD_STAT(hostTickRate, "Simulator tick rate (ticks/s)"),
+    ADD_STAT(hostMemory, "Number of bytes of host memory used"),
 
     statTime(true),
     startTick(0)

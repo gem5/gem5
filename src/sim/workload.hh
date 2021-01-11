@@ -44,13 +44,20 @@ class Workload : public SimObject
 
     struct WorkloadStats : public Stats::Group
     {
-        Stats::Scalar arm;
-        Stats::Scalar quiesce;
+        struct InstStats: public Stats::Group
+        {
+            Stats::Scalar arm;
+            Stats::Scalar quiesce;
+
+            InstStats(Stats::Group *parent) : Stats::Group(parent, "inst"),
+                ADD_STAT(arm, "number of arm instructions executed"),
+                ADD_STAT(quiesce, "number of quiesce instructions executed")
+            {}
+
+        } instStats;
 
         WorkloadStats(Workload *workload) : Stats::Group(workload),
-            arm(this, "inst.arm", "number of arm instructions executed"),
-            quiesce(this, "inst.quiesce",
-                    "number of quiesce instructions executed")
+            instStats(workload)
         {}
     } stats;
 
@@ -58,8 +65,8 @@ class Workload : public SimObject
     Workload(const WorkloadParams &_params) : SimObject(_params), stats(this)
     {}
 
-    void recordQuiesce() { stats.quiesce++; }
-    void recordArm() { stats.arm++; }
+    void recordQuiesce() { stats.instStats.quiesce++; }
+    void recordArm() { stats.instStats.arm++; }
 
     System *system = nullptr;
 

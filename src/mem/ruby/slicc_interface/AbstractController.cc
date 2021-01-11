@@ -69,11 +69,11 @@ AbstractController::AbstractController(const Params &p)
 void
 AbstractController::init()
 {
-    stats.m_delayHistogram.init(10);
+    stats.delayHistogram.init(10);
     uint32_t size = Network::getNumberOfVirtualNetworks();
     for (uint32_t i = 0; i < size; i++) {
-        stats.m_delayVCHistogram.push_back(new Stats::Histogram(this));
-        stats.m_delayVCHistogram[i]->init(10);
+        stats.delayVCHistogram.push_back(new Stats::Histogram(this));
+        stats.delayVCHistogram[i]->init(10);
     }
 
     if (getMemReqQueue()) {
@@ -107,10 +107,10 @@ AbstractController::init()
 void
 AbstractController::resetStats()
 {
-    stats.m_delayHistogram.reset();
+    stats.delayHistogram.reset();
     uint32_t size = Network::getNumberOfVirtualNetworks();
     for (uint32_t i = 0; i < size; i++) {
-        stats.m_delayVCHistogram[i]->reset();
+        stats.delayVCHistogram[i]->reset();
     }
 }
 
@@ -123,9 +123,9 @@ AbstractController::regStats()
 void
 AbstractController::profileMsgDelay(uint32_t virtualNetwork, Cycles delay)
 {
-    assert(virtualNetwork < stats.m_delayVCHistogram.size());
-    stats.m_delayHistogram.sample(delay);
-    stats.m_delayVCHistogram[virtualNetwork]->sample(delay);
+    assert(virtualNetwork < stats.delayVCHistogram.size());
+    stats.delayHistogram.sample(delay);
+    stats.delayVCHistogram[virtualNetwork]->sample(delay);
 }
 
 void
@@ -423,13 +423,12 @@ AbstractController::MemoryPort::MemoryPort(const std::string &_name,
 AbstractController::
 ControllerStats::ControllerStats(Stats::Group *parent)
     : Stats::Group(parent),
-      m_fully_busy_cycles(this, "fully_busy_cycles",
-                          "cycles for which number of transistions == max "
-                          "transitions"),
-      m_delayHistogram(this, "delay_histogram")
+      ADD_STAT(fullyBusyCycles,
+               "cycles for which number of transistions == max transitions"),
+      ADD_STAT(delayHistogram, "delay_histogram")
 {
-    m_fully_busy_cycles
+    fullyBusyCycles
         .flags(Stats::nozero);
-    m_delayHistogram
+    delayHistogram
         .flags(Stats::nozero);
 }

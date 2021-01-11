@@ -45,8 +45,8 @@ BaseDictionaryCompressor::BaseDictionaryCompressor(const Params &p)
 BaseDictionaryCompressor::DictionaryStats::DictionaryStats(
     BaseStats& base_group, BaseDictionaryCompressor& _compressor)
   : Stats::Group(&base_group), compressor(_compressor),
-    patterns(this, "pattern",
-        "Number of data entries that were compressed to this pattern")
+    ADD_STAT(patterns,
+             "Number of data entries that were compressed to this pattern")
 {
 }
 

@@ -854,17 +854,17 @@ $c_ident::regStats()
         std::string stat_name =
             "outTransLatHist." + ${ident}_Event_to_string(event);
         Stats::Histogram* t = new Stats::Histogram(&stats, stat_name.c_str());
-        stats.m_outTransLatHist.push_back(t);
+        stats.outTransLatHist.push_back(t);
         t->init(5);
         t->flags(Stats::pdf | Stats::total |
                  Stats::oneline | Stats::nozero);
     }
     for (${ident}_Event event = ${ident}_Event_FIRST;
                  event < ${ident}_Event_NUM; ++event) {
-        stats.m_inTransLatHist.emplace_back();
+        stats.inTransLatHist.emplace_back();
         for (${ident}_State initial_state = ${ident}_State_FIRST;
              initial_state < ${ident}_State_NUM; ++initial_state) {
-            stats.m_inTransLatHist.back().emplace_back();
+            stats.inTransLatHist.back().emplace_back();
             for (${ident}_State final_state = ${ident}_State_FIRST;
                  final_state < ${ident}_State_NUM; ++final_state) {
                 std::string stat_name = "inTransLatHist." +
@@ -873,7 +873,7 @@ $c_ident::regStats()
                     ${ident}_State_to_string(final_state);
                 Stats::Histogram* t =
                     new Stats::Histogram(&stats, stat_name.c_str());
-                stats.m_inTransLatHist.back().back().push_back(t);
+                stats.inTransLatHist.back().back().push_back(t);
                 t->init(5);
                 t->flags(Stats::pdf | Stats::total |
                          Stats::oneline | Stats::nozero);
@@ -1231,7 +1231,7 @@ ${ident}_Controller::wakeup()
         assert(counter <= m_transitions_per_cycle);
         if (counter == m_transitions_per_cycle) {
             // Count how often we are fully utilized
-            stats.m_fully_busy_cycles++;
+            stats.fullyBusyCycles++;
 
             // Wakeup in another cycle and try again
             scheduleEvent(Cycles(1));

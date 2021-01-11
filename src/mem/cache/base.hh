@@ -1069,12 +1069,12 @@ class BaseCache : public ClockedObject
         Stats::Formula overallAvgMissLatency;
 
         /** The total number of cycles blocked for each blocked cause. */
-        Stats::Vector blocked_cycles;
+        Stats::Vector blockedCycles;
         /** The number of times this cache blocked for each blocked cause. */
-        Stats::Vector blocked_causes;
+        Stats::Vector blockedCauses;
 
         /** The average number of cycles blocked for each blocked cause. */
-        Stats::Formula avg_blocked;
+        Stats::Formula avgBlocked;
 
         /** The number of times a HW-prefetched block is evicted w/o
          * reference. */
@@ -1224,7 +1224,7 @@ class BaseCache : public ClockedObject
     {
         uint8_t flag = 1 << cause;
         if (blocked == 0) {
-            stats.blocked_causes[cause]++;
+            stats.blockedCauses[cause]++;
             blockedCycle = curCycle();
             cpuSidePort.setBlocked();
         }
@@ -1245,7 +1245,7 @@ class BaseCache : public ClockedObject
         blocked &= ~flag;
         DPRINTF(Cache,"Unblocking for cause %d, mask=%d\n", cause, blocked);
         if (blocked == 0) {
-            stats.blocked_cycles[cause] += curCycle() - blockedCycle;
+            stats.blockedCycles[cause] += curCycle() - blockedCycle;
             cpuSidePort.clearBlocked();
         }
     }
