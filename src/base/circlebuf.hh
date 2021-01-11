@@ -40,32 +40,55 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iterator>
 #include <vector>
 
-#include "base/circular_queue.hh"
 #include "base/logging.hh"
 #include "sim/serialize.hh"
 
 /**
- * Circular buffer backed by a vector though a CircularQueue.
+ * Circular buffer backed by a vector.
  *
- * The data in the cricular buffer is stored in a standard
- * vector.
- *
+ * The data in the cricular buffer is stored in a standard vector.
  */
 template<typename T>
-class CircleBuf : public CircularQueue<T>
+class CircleBuf
 {
+  private:
+    std::vector<T> buffer;
+    size_t start = 0;
+    size_t used = 0;
+    size_t maxSize;
+
   public:
-    explicit CircleBuf(size_t size)
-        : CircularQueue<T>(size) {}
-    using CircularQueue<T>::empty;
-    using CircularQueue<T>::size;
-    using CircularQueue<T>::capacity;
-    using CircularQueue<T>::begin;
-    using CircularQueue<T>::end;
-    using CircularQueue<T>::pop_front;
-    using CircularQueue<T>::advance_tail;
+    using value_type = T;
+    using iterator = typename std::vector<T>::iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
+
+    explicit CircleBuf(size_t size) : buffer(size), maxSize(size) {}
+
+    bool empty() const { return used == 0; }
+    size_t size() const { return used; }
+    size_t capacity() const { return maxSize; }
+
+    iterator begin() { return buffer.begin() + start % maxSize; }
+    const_iterator begin() const { return buffer.begin() + start % maxSize; }
+    iterator end() { return buffer.begin() + (start + used) % maxSize; }
+    const_iterator
+    end() const
+    {
+        return buffer.begin() + (start + used) % maxSize;
+    }
+
+    /**
+     * Throw away any data in the buffer.
+     */
+    void
+    flush()
+    {
+        start = 0;
+        used = 0;
+    }
 
     /**
      * Copy buffer contents without advancing the read pointer
@@ -91,10 +114,27 @@ class CircleBuf : public CircularQueue<T>
     void
     peek(OutputIterator out, off_t offset, size_t len) const
     {
-        panic_if(offset + len > size(),
+        panic_if(offset + len > used,
                  "Trying to read past end of circular buffer.");
 
-        std::copy(begin() + offset, begin() + offset + len, out);
+        if (!len)
+            return;
+
+        // The iterator for the next byte to copy out.
+        auto next_it = buffer.begin() + (start + offset) % maxSize;
+        // How much there is to copy from until the end of the buffer.
+        const size_t to_end = buffer.end() - next_it;
+
+        // If the data to be copied wraps, take care of the first part.
+        if (to_end < len) {
+            // Copy it.
+            out = std::copy_n(next_it, to_end, out);
+            // Start copying again at the start of buffer.
+            next_it = buffer.begin();
+            len -= to_end;
+        }
+        // Copy the remaining (or only) chunk of data.
+        std::copy_n(next_it, len, out);
     }
 
     /**
@@ -108,11 +148,15 @@ class CircleBuf : public CircularQueue<T>
     read(OutputIterator out, size_t len)
     {
         peek(out, len);
-        pop_front(len);
+        used -= len;
+        start += len;
     }
 
     /**
-     * Add elements to the end of the ring buffers and advance.
+     * Add elements to the end of the ring buffers and advance. Writes which
+     * would exceed the capacity of the queue fill the avaialble space, and
+     * then continue overwriting the head of the queue. The head advances as
+     * if that data had been read out.
      *
      * @param in Input iterator/pointer
      * @param len Number of elements to read
@@ -121,15 +165,42 @@ class CircleBuf : public CircularQueue<T>
     void
     write(InputIterator in, size_t len)
     {
-        // Writes that are larger than the backing store are allowed,
-        // but only the last part of the buffer will be written.
-        if (len > capacity()) {
-            in += len - capacity();
-            len = capacity();
+        if (!len)
+            return;
+
+        // Writes that are larger than the buffer size are allowed, but only
+        // the last part of the date will be written since the rest will be
+        // overwritten and not remain in the buffer.
+        if (len > maxSize) {
+            in += len - maxSize;
+            flush();
+            len = maxSize;
         }
 
-        std::copy(in, in + len, end());
-        advance_tail(len);
+        // How much existing data will be overwritten?
+        const size_t overflow = std::max<size_t>(0, used + len - maxSize);
+        // The iterator of the next byte to add.
+        auto next_it = buffer.begin() + (start + used) % maxSize;
+        // How much there is to copy to the end of the buffer.
+        const size_t to_end = buffer.end() - next_it;
+
+        // If this addition wraps, take care of the first part here.
+        if (to_end < len) {
+            // Copy it.
+            std::copy_n(in, to_end, next_it);
+            // Update state to reflect what's left.
+            next_it = buffer.begin();
+            std::advance(in, to_end);
+            len -= to_end;
+            used += to_end;
+        }
+        // Copy the remaining (or only) chunk of data.
+        std::copy_n(in, len, next_it);
+        used += len;
+
+        // Don't count data that was overwritten.
+        used -= overflow;
+        start += overflow;
     }
 };
 
