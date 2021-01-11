@@ -49,10 +49,10 @@
 #include "sim/root.hh"
 
 Root *Root::_root = NULL;
-Root::Stats Root::Stats::instance;
-Root::Stats &rootStats = Root::Stats::instance;
+Root::RootStats Root::RootStats::instance;
+Root::RootStats &rootStats = Root::RootStats::instance;
 
-Root::Stats::Stats()
+Root::RootStats::RootStats()
     : Stats::Group(nullptr),
     simSeconds(this, "sim_seconds", "Number of seconds simulated"),
     simTicks(this, "sim_ticks", "Number of ticks simulated"),
@@ -92,7 +92,7 @@ Root::Stats::Stats()
 }
 
 void
-Root::Stats::resetStats()
+Root::RootStats::resetStats()
 {
     statTime.setTimer();
     startTick = curTick();
@@ -180,7 +180,7 @@ Root::Root(const RootParams &p)
     // stat formulas. The most convenient way to implement that is by
     // having a single global stat group for global stats. Merge that
     // group into the root object here.
-    mergeStatGroup(&Root::Stats::instance);
+    mergeStatGroup(&Root::RootStats::instance);
 }
 
 void
