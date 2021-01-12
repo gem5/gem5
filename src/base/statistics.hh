@@ -81,9 +81,8 @@
 #include "base/intmath.hh"
 #include "base/str.hh"
 #include "base/types.hh"
-
-/** The current simulated tick. */
-extern Tick curTick();
+// For curTick().
+#include "sim/core.hh"
 
 /* A namespace for all of the Statistics */
 namespace Stats {
