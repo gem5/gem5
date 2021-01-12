@@ -61,7 +61,7 @@ Tick
 PL031::read(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
-    assert(pkt->getSize() == 4);
+    assert(pkt->getSize() <= 4);
     Addr daddr = pkt->getAddr() - pioAddr;
     uint32_t data;
 
@@ -99,22 +99,7 @@ PL031::read(PacketPtr pkt)
         break;
     }
 
-    switch(pkt->getSize()) {
-      case 1:
-        pkt->setLE<uint8_t>(data);
-        break;
-      case 2:
-        pkt->setLE<uint16_t>(data);
-        break;
-      case 4:
-        pkt->setLE<uint32_t>(data);
-        break;
-      default:
-        panic("Uart read size too big?\n");
-        break;
-    }
-
-
+    pkt->setUintX(data, ByteOrder::little);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -123,7 +108,7 @@ Tick
 PL031::write(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
-    assert(pkt->getSize() == 4);
+    assert(pkt->getSize() <= 4);
     Addr daddr = pkt->getAddr() - pioAddr;
     DPRINTF(Timer, "Writing to RTC at offset: %#x\n", daddr);
 

@@ -1029,26 +1029,9 @@ UFSHostDevice::read(PacketPtr pkt)
 Tick
 UFSHostDevice::write(PacketPtr pkt)
 {
-    uint32_t data = 0;
+    assert(pkt->getSize() <= 4);
 
-    switch (pkt->getSize()) {
-
-      case 1:
-        data = pkt->getLE<uint8_t>();
-        break;
-
-      case 2:
-        data = pkt->getLE<uint16_t>();
-        break;
-
-      case 4:
-        data = pkt->getLE<uint32_t>();
-        break;
-
-      default:
-        panic("Undefined UFSHCD controller write size!\n");
-        break;
-    }
+    const uint32_t data = pkt->getUintX(ByteOrder::little);
 
     switch (pkt->getAddr() & 0xFF)
     {

@@ -64,6 +64,7 @@ Tick
 Pl011::read(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
+    assert(pkt->getSize() <= 4);
 
     Addr daddr = pkt->getAddr() - pioAddr;
 
@@ -145,22 +146,7 @@ Pl011::read(PacketPtr pkt)
         break;
     }
 
-    switch(pkt->getSize()) {
-      case 1:
-        pkt->setLE<uint8_t>(data);
-        break;
-      case 2:
-        pkt->setLE<uint16_t>(data);
-        break;
-      case 4:
-        pkt->setLE<uint32_t>(data);
-        break;
-      default:
-        panic("Uart read size too big?\n");
-        break;
-    }
-
-
+    pkt->setUintX(data, ByteOrder::little);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -170,6 +156,7 @@ Pl011::write(PacketPtr pkt)
 {
 
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
+    assert(pkt->getSize() <= 4);
 
     Addr daddr = pkt->getAddr() - pioAddr;
 
@@ -179,23 +166,7 @@ Pl011::write(PacketPtr pkt)
     // use a temporary data since the uart registers are read/written with
     // different size operations
     //
-    uint32_t data = 0;
-
-    switch(pkt->getSize()) {
-      case 1:
-        data = pkt->getLE<uint8_t>();
-        break;
-      case 2:
-        data = pkt->getLE<uint16_t>();
-        break;
-      case 4:
-        data = pkt->getLE<uint32_t>();
-        break;
-      default:
-        panic("Uart write size too big?\n");
-        break;
-    }
-
+    const uint32_t data = pkt->getUintX(ByteOrder::little);
 
     switch (daddr) {
         case UART_DR:
