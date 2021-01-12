@@ -39,10 +39,17 @@
 #include <string>
 
 #include "base/types.hh"
-#include "sim/eventq.hh"
+
+namespace Gem5Internal
+{
+
+// This pointer is maintained by curEventQueue in src/sim/eventq.hh.
+extern __thread Tick *_curTickPtr;
+
+} // namespace Gem5Internal
 
 /// The universal simulation clock.
-inline Tick curTick() { return _curEventQueue->getCurTick(); }
+inline Tick curTick() { return *Gem5Internal::_curTickPtr; }
 
 /// These are variables that are set based on the simulator frequency
 ///@{

@@ -41,6 +41,13 @@
 
 using namespace std;
 
+namespace Gem5Internal
+{
+
+__thread Tick *_curTickPtr;
+
+} // namespace Gem5Internal
+
 namespace SimClock {
 /// The simulated frequency of curTick(). (In ticks per second)
 Tick Frequency;
