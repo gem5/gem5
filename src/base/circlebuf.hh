@@ -62,23 +62,12 @@ class CircleBuf
 
   public:
     using value_type = T;
-    using iterator = typename std::vector<T>::iterator;
-    using const_iterator = typename std::vector<T>::const_iterator;
 
     explicit CircleBuf(size_t size) : buffer(size), maxSize(size) {}
 
     bool empty() const { return used == 0; }
     size_t size() const { return used; }
     size_t capacity() const { return maxSize; }
-
-    iterator begin() { return buffer.begin() + start % maxSize; }
-    const_iterator begin() const { return buffer.begin() + start % maxSize; }
-    iterator end() { return buffer.begin() + (start + used) % maxSize; }
-    const_iterator
-    end() const
-    {
-        return buffer.begin() + (start + used) % maxSize;
-    }
 
     /**
      * Throw away any data in the buffer.
