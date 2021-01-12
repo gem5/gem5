@@ -44,15 +44,17 @@
 
 #include <sys/signal.h>
 
+#include <cstdint>
 #include <exception>
 #include <map>
 #include <string>
 
 #include "arch/types.hh"
-#include "base/intmath.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"
+#include "base/types.hh"
 #include "cpu/pc_event.hh"
+#include "sim/eventq.hh"
 
 class System;
 class ThreadContext;

@@ -33,7 +33,9 @@
 #define __BASE_TRACE_HH__
 
 #include <string>
+#include <sstream>
 
+#include "base/compiler.hh"
 #include "base/cprintf.hh"
 #include "base/debug.hh"
 #include "base/match.hh"

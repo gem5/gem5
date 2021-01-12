@@ -37,6 +37,7 @@
 #include <string>
 #include <vector>
 
+#include "base/statistics.hh"
 #include "gpu-compute/fetch_unit.hh"
 
 // Instruction fetch stage.

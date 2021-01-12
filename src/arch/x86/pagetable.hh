@@ -39,18 +39,15 @@
 #ifndef __ARCH_X86_PAGETABLE_HH__
 #define __ARCH_X86_PAGETABLE_HH__
 
-#include <iostream>
-#include <string>
-#include <vector>
+#include <cstdint>
 
 #include "arch/x86/isa_traits.hh"
 #include "base/bitunion.hh"
 #include "base/types.hh"
 #include "base/trie.hh"
-#include "debug/MMU.hh"
 #include "mem/port_proxy.hh"
+#include "sim/serialize.hh"
 
-class Checkpoint;
 class ThreadContext;
 
 namespace X86ISA

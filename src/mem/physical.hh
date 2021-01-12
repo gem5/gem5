@@ -38,8 +38,14 @@
 #ifndef __MEM_PHYSICAL_HH__
 #define __MEM_PHYSICAL_HH__
 
+#include <cstdint>
+#include <string>
+#include <vector>
+
+#include "base/addr_range.hh"
 #include "base/addr_range_map.hh"
 #include "mem/packet.hh"
+#include "sim/serialize.hh"
 
 /**
  * Forward declaration to avoid header dependencies.

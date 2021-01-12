@@ -37,6 +37,7 @@
 #include <string>
 
 #include "base/types.hh"
+#include "debug/MMU.hh"
 #include "mem/page_table.hh"
 #include "sim/system.hh"
 

@@ -48,12 +48,16 @@
 #ifndef __MEM_REQUEST_HH__
 #define __MEM_REQUEST_HH__
 
+#include <algorithm>
 #include <cassert>
-#include <climits>
+#include <cstdint>
+#include <functional>
+#include <limits>
+#include <memory>
+#include <vector>
 
 #include "base/amo.hh"
 #include "base/flags.hh"
-#include "base/logging.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "mem/htm.hh"

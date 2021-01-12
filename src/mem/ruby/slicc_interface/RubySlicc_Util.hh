@@ -47,6 +47,7 @@
 #define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_UTIL_HH__
 
 #include <cassert>
+#include <climits>
 
 #include "debug/RubySlicc.hh"
 #include "mem/packet.hh"

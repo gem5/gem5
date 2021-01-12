@@ -34,8 +34,8 @@
 #include <vector>
 
 #include "sim/core.hh"
+#include "sim/serialize.hh"
 
-class Checkpoint;
 class PollQueue;
 
 class PollEvent : public Serializable
