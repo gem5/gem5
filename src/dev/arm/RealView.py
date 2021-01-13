@@ -964,7 +964,11 @@ Memory map:
        0x10020000-0x1002ffff: gem5 MHU
 
    0x14000000-0x17ffffff: Reserved (Off-chip, PSRAM, CS1)
-   0x18000000-0x1bffffff: Reserved (Off-chip, Peripherals, CS2)
+
+   0x18000000-0x1bffffff: Off-chip, Peripherals, CS2
+       0x18000000-0x19ffffff: VRAM
+       0x1a000000-0x1bffffff: Reserved
+
    0x1c000000-0x1fffffff: Peripheral block 1 (Off-chip, CS3):
        0x1c010000-0x1c01ffff: realview_io (VE system control regs.)
        0x1c060000-0x1c06ffff: KMI0 (keyboard)
@@ -1171,6 +1175,10 @@ Interrupts:
     flash1 = SimpleMemory(range=AddrRange(0x0c000000, 0x10000000),
                           conf_table_reported=False)
 
+    # VRAM
+    vram = SimpleMemory(range=AddrRange(0x18000000, size='32MB'),
+                        conf_table_reported=False)
+
     def _off_chip_devices(self):
         return [
             self.realview_io,
@@ -1190,6 +1198,7 @@ Interrupts:
     def _off_chip_memory(self):
         return [
             self.flash1,
+            self.vram,
         ]
 
     def __init__(self, **kwargs):
