@@ -66,6 +66,8 @@ from m5.objects.Scmi import *
 from m5.objects.SMMUv3 import SMMUv3
 from m5.objects.PciDevice import PciLegacyIoBar, PciIoBar
 
+from m5.objects.CfiMemory import CfiMemory
+
 # Platforms with KVM support should generally use in-kernel GIC
 # emulation. Use a GIC model that automatically switches between
 # gem5's GIC model and KVM's GIC model if KVM is available.
@@ -1165,8 +1167,8 @@ Interrupts:
     ]
 
     # NOR flash, flash1
-    flash1 = SimpleMemory(range=AddrRange(0x0c000000, 0x10000000),
-                          conf_table_reported=False)
+    flash1 = CfiMemory(range=AddrRange(0x0c000000, 0x10000000),
+                       conf_table_reported=False)
 
     # VRAM
     vram = SimpleMemory(range=AddrRange(0x18000000, size='32MB'),
