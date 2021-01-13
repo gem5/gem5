@@ -43,7 +43,11 @@ def help():
     for name, flag in filter(lambda kv: isinstance(kv[1], CompoundFlag),
                              sorted_flags):
         print("    %s: %s" % (name, flag.desc))
-        printList([ c.name for c in flag.kids() ], indent=8)
+        # The list of kids for flag "All" is too long, so it is not printed
+        if name != "All":
+            printList([ c.name for c in flag.kids() ], indent=8)
+        else:
+            print("        All Base Flags")
     print()
     print("Formatting Flags:")
     for name, flag in filter(lambda kv: isinstance(kv[1], SimpleFlag)

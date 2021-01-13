@@ -633,6 +633,19 @@ def CompoundFlag(name, flags, desc=None):
 def DebugFormatFlag(name, desc=None):
     DebugFlag(name, desc, True)
 
+# Create a compound debug flag that encapsulates all flags: "All". This
+# flag should not be used within C++ code - it is a compound meta flag
+def _createAllDebugFlag():
+    simple_flags = []
+    for name,flag in sorted(debug_flags.items()):
+        n, compound, desc, fmt = flag
+        assert n == name
+        if not compound and not fmt:
+            simple_flags.append(n)
+
+    CompoundFlag("All", simple_flags,
+        "Controls all debug flags. It should not be used within C++ code.")
+
 Export('DebugFlag')
 Export('CompoundFlag')
 Export('DebugFormatFlag')
@@ -1174,6 +1187,8 @@ namespace Debug {
 
     code.write(str(target[0]))
 
+# Generate the files for the debug and debug-format flags
+_createAllDebugFlag()
 for name,flag in sorted(debug_flags.items()):
     n, compound, desc, fmt = flag
     assert n == name
