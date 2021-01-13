@@ -110,7 +110,9 @@ pybind_init_debug(py::module_ &m_native)
             })
         ;
 
-    py::class_<Debug::SimpleFlag>(m_debug, "SimpleFlag", c_flag);
+    py::class_<Debug::SimpleFlag>(m_debug, "SimpleFlag", c_flag)
+        .def_property_readonly("isFormat", &Debug::SimpleFlag::isFormat)
+        ;
     py::class_<Debug::CompoundFlag>(m_debug, "CompoundFlag", c_flag)
         .def("kids", &Debug::CompoundFlag::kids)
         ;

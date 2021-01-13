@@ -102,10 +102,6 @@ GTest('chunk_generator.test', 'chunk_generator.test.cc')
 DebugFlag('Annotate', "State machine annotation debugging")
 DebugFlag('AnnotateQ', "State machine annotation queue debugging")
 DebugFlag('AnnotateVerbose', "Dump all state machine annotation details")
-DebugFlag('FmtFlag', "Show the --debug-flag that enabled each debug message")
-DebugFlag('FmtStackTrace',
-    "Print a stack trace after every debug message")
-DebugFlag('FmtTicksOff', "Don't show tick count on debug messages")
 DebugFlag('GDBAcc', "Remote debugger accesses")
 DebugFlag('GDBExtra', "Dump extra information on reads and writes")
 DebugFlag('GDBMisc', "Breakpoints, traps, watchpoints, etc.")
@@ -124,3 +120,8 @@ CompoundFlag('GDBAll',
 CompoundFlag('AnnotateAll', ['Annotate', 'AnnotateQ', 'AnnotateVerbose'],
     desc="All Annotation flags")
 
+DebugFormatFlag('FmtFlag',
+    "Show the --debug-flag that enabled each debug message")
+DebugFormatFlag('FmtStackTrace',
+    "Print a stack trace after every debug message")
+DebugFormatFlag('FmtTicksOff', "Don't show tick count on debug messages")

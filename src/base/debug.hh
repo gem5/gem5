@@ -81,18 +81,31 @@ class Flag
 class SimpleFlag : public Flag
 {
   protected:
+    /** Whether this flag changes debug formatting. */
+    const bool _isFormat = false;
+
     bool _tracing = false; // tracing is enabled and flag is on
     bool _enabled = false; // flag enablement status
 
     void sync() override { _tracing = _globalEnable && _enabled; }
 
   public:
-    SimpleFlag(const char *name, const char *desc) : Flag(name, desc) {}
+    SimpleFlag(const char *name, const char *desc, bool is_format=false)
+      : Flag(name, desc), _isFormat(is_format)
+    {}
 
     bool enabled() const override { return _tracing; }
 
     void enable() override  { _enabled = true;  sync(); }
     void disable() override { _enabled = false; sync(); }
+
+    /**
+     * Checks whether this flag is a conventional debug flag, or a flag that
+     * modifies the way debug information is printed.
+     *
+     * @return True if this flag is a debug-formatting flag.
+     */
+    bool isFormat() const { return _isFormat; }
 };
 
 class CompoundFlag : public Flag

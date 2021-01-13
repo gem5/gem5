@@ -618,20 +618,24 @@ Export('GTest')
 # Debug Flags
 #
 debug_flags = {}
-def DebugFlag(name, desc=None):
+def DebugFlag(name, desc=None, fmt=False):
     if name in debug_flags:
         raise AttributeError("Flag {} already specified".format(name))
-    debug_flags[name] = (name, (), desc)
+    debug_flags[name] = (name, (), desc, fmt)
 
 def CompoundFlag(name, flags, desc=None):
     if name in debug_flags:
         raise AttributeError("Flag {} already specified".format(name))
 
     compound = tuple(flags)
-    debug_flags[name] = (name, compound, desc)
+    debug_flags[name] = (name, compound, desc, False)
+
+def DebugFormatFlag(name, desc=None):
+    DebugFlag(name, desc, True)
 
 Export('DebugFlag')
 Export('CompoundFlag')
+Export('DebugFormatFlag')
 
 ########################################################################
 #
@@ -1109,11 +1113,14 @@ namespace Debug {
 ''')
 
     for name, flag in sorted(source[0].read().items()):
-        n, compound, desc = flag
+        n, compound, desc, fmt = flag
         assert n == name
 
         if not compound:
-            code('SimpleFlag $name("$name", "$desc");')
+            if fmt:
+                code('SimpleFlag $name("$name", "$desc", true);')
+            else:
+                code('SimpleFlag $name("$name", "$desc", false);')
         else:
             comp_code('CompoundFlag $name("$name", "$desc", {')
             comp_code.indent()
@@ -1132,7 +1139,7 @@ def makeDebugFlagHH(target, source, env):
     assert(len(target) == 1 and len(source) == 1)
 
     val = eval(source[0].get_contents())
-    name, compound, desc = val
+    name, compound, desc, fmt = val
 
     code = code_formatter()
 
@@ -1168,7 +1175,7 @@ namespace Debug {
     code.write(str(target[0]))
 
 for name,flag in sorted(debug_flags.items()):
-    n, compound, desc = flag
+    n, compound, desc, fmt = flag
     assert n == name
 
     hh_file = 'debug/%s.hh' % name

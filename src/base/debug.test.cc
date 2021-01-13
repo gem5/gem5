@@ -60,6 +60,17 @@ TEST(DebugFlagDeathTest, UniqueNames)
     EXPECT_EQ(expected, actual);
 }
 
+/** Test format attribute. */
+TEST(DebugFlagTest, IsFormat)
+{
+    Debug::SimpleFlag flag_a("FlagIsFormatTestA", "", true);
+    EXPECT_TRUE(flag_a.isFormat());
+    Debug::SimpleFlag flag_b("FlagIsFormatTestB", "", false);
+    EXPECT_FALSE(flag_b.isFormat());
+    Debug::SimpleFlag flag_c("FlagIsFormatTestC", "");
+    EXPECT_FALSE(flag_c.isFormat());
+}
+
 /** Test enabling and disabling simple flags, as well as the global enabler. */
 TEST(DebugSimpleFlagTest, Enabled)
 {

@@ -35,8 +35,8 @@ def help():
     sorted_flags = sorted(flags.items(), key=lambda kv: kv[0])
 
     print("Base Flags:")
-    for name, flag in filter(lambda kv: not isinstance(kv[1], CompoundFlag),
-                             sorted_flags):
+    for name, flag in filter(lambda kv: isinstance(kv[1], SimpleFlag)
+                             and not kv[1].isFormat, sorted_flags):
         print("    %s: %s" % (name, flag.desc))
     print()
     print("Compound Flags:")
@@ -44,6 +44,11 @@ def help():
                              sorted_flags):
         print("    %s: %s" % (name, flag.desc))
         printList([ c.name for c in flag.kids() ], indent=8)
+    print()
+    print("Formatting Flags:")
+    for name, flag in filter(lambda kv: isinstance(kv[1], SimpleFlag)
+                             and kv[1].isFormat, sorted_flags):
+        print("    %s: %s" % (name, flag.desc))
     print()
 
 class AllFlags(Mapping):
