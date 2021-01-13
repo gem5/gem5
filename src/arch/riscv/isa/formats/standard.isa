@@ -356,6 +356,7 @@ def template CSRExecute {{
             break;
         }
         auto mask = CSRMasks.find(csr);
+        auto olddata_all = olddata;
         if (mask != CSRMasks.end())
             olddata &= mask->second;
         DPRINTF(RiscvMisc, "Reading CSR %s: %#x\n", CSRData.at(csr).name,
@@ -374,23 +375,32 @@ def template CSRExecute {{
                         fault = std::make_shared<IllegalInstFault>(
                                 error, machInst);
                     } else {
-                        DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n", data,
+                        auto newdata_all = data;
+                        if (mask != CSRMasks.end()) {
+                            // we must keep those original bits not in mask
+                            // olddata and data only contain thebits visable
+                            // in current privilige level
+                            newdata_all = (olddata_all & (~mask->second))
+                                          | data;
+                        }
+                        DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n",
+                                newdata_all,
                                 CSRData.at(csr).name);
-                        INTERRUPT oldinterrupt = olddata;
-                        INTERRUPT newinterrupt = data;
                         switch (csr) {
                           case CSR_FCSR:
                             xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
                             xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
                             break;
                           case CSR_MIP: case CSR_MIE:
-                            if (oldinterrupt.mei != newinterrupt.mei ||
-                                oldinterrupt.mti != newinterrupt.mti ||
-                                oldinterrupt.msi != newinterrupt.msi) {
-                                xc->setMiscReg(CSRData.at(csr).physIndex,data);
+                          case CSR_SIP: case CSR_SIE:
+                          case CSR_UIP: case CSR_UIE:
+                          case CSR_MSTATUS: case CSR_SSTATUS: case CSR_USTATUS:
+                            if (newdata_all != olddata_all) {
+                                xc->setMiscReg(CSRData.at(csr).physIndex,
+                                               newdata_all);
                             } else {
-                                std::string error = "Interrupt m bits are "
-                                                    "read-only\n";
+                                std::string error = "Only bits in mask are "
+                                                    "allowed to be set\n";
                                 fault = std::make_shared<IllegalInstFault>(
                                         error, machInst);
                             }
