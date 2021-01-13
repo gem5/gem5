@@ -72,12 +72,31 @@ class Interrupts : public BaseInterrupts
     {
         INTERRUPT mask = 0;
         STATUS status = tc->readMiscReg(MISCREG_STATUS);
-        if (status.mie)
-            mask.mei = mask.mti = mask.msi = 1;
-        if (status.sie)
-            mask.sei = mask.sti = mask.ssi = 1;
-        if (status.uie)
-            mask.uei = mask.uti = mask.usi = 1;
+        PrivilegeMode prv = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
+        switch (prv) {
+            case PRV_U:
+                mask.mei = mask.mti = mask.msi = 1;
+                mask.sei = mask.sti = mask.ssi = 1;
+                if (status.uie)
+                    mask.uei = mask.uti = mask.usi = 1;
+                break;
+            case PRV_S:
+                mask.mei = mask.mti = mask.msi = 1;
+                if (status.sie)
+                    mask.sei = mask.sti = mask.ssi = 1;
+                mask.uei = mask.uti = mask.usi = 0;
+                break;
+            case PRV_M:
+                if (status.mie)
+                     mask.mei = mask.mti = mask.msi = 1;
+                mask.sei = mask.sti = mask.ssi = 0;
+                mask.uei = mask.uti = mask.usi = 0;
+                break;
+            default:
+                panic("Unknown privilege mode %d.", prv);
+                break;
+        }
+
         return std::bitset<NumInterruptTypes>(mask);
     }
 
