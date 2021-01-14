@@ -122,20 +122,25 @@ DefaultDecode<Impl>::name() const
 template <class Impl>
 DefaultDecode<Impl>::DecodeStats::DecodeStats(O3CPU *cpu)
     : Stats::Group(cpu, "decode"),
-      ADD_STAT(idleCycles, "Number of cycles decode is idle"),
-      ADD_STAT(blockedCycles, "Number of cycles decode is blocked"),
-      ADD_STAT(runCycles, "Number of cycles decode is running"),
-      ADD_STAT(unblockCycles, "Number of cycles decode is unblocking"),
-      ADD_STAT(squashCycles, "Number of cycles decode is squashing"),
-      ADD_STAT(branchResolved, "Number of times decode resolved a "
-          " branch"),
-      ADD_STAT(branchMispred, "Number of times decode detected a branch"
-          " misprediction"),
-      ADD_STAT(controlMispred,"Number of times decode detected an"
-          " instruction incorrectly predicted as a control"),
-      ADD_STAT(decodedInsts, "Number of instructions handled by decode"),
-      ADD_STAT(squashedInsts, "Number of squashed instructions handled"
-          " by decode")
+      ADD_STAT(idleCycles, UNIT_CYCLE, "Number of cycles decode is idle"),
+      ADD_STAT(blockedCycles, UNIT_CYCLE,
+               "Number of cycles decode is blocked"),
+      ADD_STAT(runCycles, UNIT_CYCLE, "Number of cycles decode is running"),
+      ADD_STAT(unblockCycles, UNIT_CYCLE,
+               "Number of cycles decode is unblocking"),
+      ADD_STAT(squashCycles, UNIT_CYCLE,
+               "Number of cycles decode is squashing"),
+      ADD_STAT(branchResolved, UNIT_COUNT,
+               "Number of times decode resolved a branch"),
+      ADD_STAT(branchMispred, UNIT_COUNT,
+               "Number of times decode detected a branch misprediction"),
+      ADD_STAT(controlMispred, UNIT_COUNT,
+               "Number of times decode detected an instruction incorrectly "
+               "predicted as a control"),
+      ADD_STAT(decodedInsts, UNIT_COUNT,
+               "Number of instructions handled by decode"),
+      ADD_STAT(squashedInsts, UNIT_COUNT,
+               "Number of squashed instructions handled by decode")
 {
     idleCycles.prereq(idleCycles);
     blockedCycles.prereq(blockedCycles);

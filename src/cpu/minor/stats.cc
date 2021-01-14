@@ -42,19 +42,22 @@ namespace Minor
 
 MinorStats::MinorStats(BaseCPU *base_cpu)
     : Stats::Group(base_cpu),
-    ADD_STAT(numInsts, "Number of instructions committed"),
-    ADD_STAT(numOps, "Number of ops (including micro ops) committed"),
-    ADD_STAT(numDiscardedOps,
+    ADD_STAT(numInsts, UNIT_COUNT, "Number of instructions committed"),
+    ADD_STAT(numOps, UNIT_COUNT,
+             "Number of ops (including micro ops) committed"),
+    ADD_STAT(numDiscardedOps, UNIT_COUNT,
              "Number of ops (including micro ops) which were discarded before "
              "commit"),
-    ADD_STAT(numFetchSuspends,
+    ADD_STAT(numFetchSuspends, UNIT_COUNT,
              "Number of times Execute suspended instruction fetching"),
-    ADD_STAT(quiesceCycles,
+    ADD_STAT(quiesceCycles, UNIT_CYCLE,
              "Total number of cycles that CPU has spent quiesced or waiting "
              "for an interrupt"),
-    ADD_STAT(cpi, "CPI: cycles per instruction"),
-    ADD_STAT(ipc, "IPC: instructions per cycle"),
-    ADD_STAT(committedInstType, "Class of committed instruction")
+    ADD_STAT(cpi, UNIT_RATE(Stats::Units::Cycle, Stats::Units::Count),
+             "CPI: cycles per instruction"),
+    ADD_STAT(ipc, UNIT_RATE(Stats::Units::Count, Stats::Units::Cycle),
+             "IPC: instructions per cycle"),
+    ADD_STAT(committedInstType, UNIT_COUNT, "Class of committed instruction")
 {
     quiesceCycles.prereq(quiesceCycles);
 

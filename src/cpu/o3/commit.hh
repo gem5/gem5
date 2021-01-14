@@ -512,7 +512,7 @@ class DefaultCommit
         /** Total number of committed branches. */
         Stats::Vector branches;
         /** Total number of vector instructions */
-        Stats::Vector vector;
+        Stats::Vector vectorInstructions;
         /** Total number of floating point instructions */
         Stats::Vector floating;
         /** Total number of integer instructions */

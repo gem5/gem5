@@ -400,9 +400,11 @@ StatisticalCorrector::getSizeInBits() const
 StatisticalCorrector::StatisticalCorrectorStats::StatisticalCorrectorStats(
     Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(correct, "Number of time the SC predictor is the"
-          " provider and the prediction is correct"),
-      ADD_STAT(wrong, "Number of time the SC predictor is the"
-          " provider and the prediction is wrong")
+      ADD_STAT(correct, UNIT_COUNT,
+               "Number of time the SC predictor is the provider and the "
+               "prediction is correct"),
+      ADD_STAT(wrong, UNIT_COUNT,
+               "Number of time the SC predictor is the provider and the "
+               "prediction is wrong")
 {
 }

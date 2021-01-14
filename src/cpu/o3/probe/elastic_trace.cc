@@ -878,24 +878,28 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
 
 ElasticTrace::ElasticTraceStats::ElasticTraceStats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(numRegDep, "Number of register dependencies recorded during"
-          " tracing"),
-      ADD_STAT(numOrderDepStores, "Number of commit order (rob) dependencies"
-          " for a store recorded on a past load/store during tracing"),
-      ADD_STAT(numIssueOrderDepLoads, "Number of loads that got assigned"
-          " issue order dependency because they were dependency-free"),
-      ADD_STAT(numIssueOrderDepStores, "Number of stores that got assigned"
-          " issue order dependency because they were dependency-free"),
-      ADD_STAT(numIssueOrderDepOther, "Number of non load/store insts that"
-          " got assigned issue order dependency because they were"
-          " dependency-free"),
-      ADD_STAT(numFilteredNodes, "No. of nodes filtered out before writing"
-          " the output trace"),
-      ADD_STAT(maxNumDependents, "Maximum number or dependents on any"
-          " instruction"),
-      ADD_STAT(maxTempStoreSize, "Maximum size of the temporary store during"
-          " the run"),
-      ADD_STAT(maxPhysRegDepMapSize, "Maximum size of register dependency map")
+      ADD_STAT(numRegDep, UNIT_COUNT,
+               "Number of register dependencies recorded during tracing"),
+      ADD_STAT(numOrderDepStores, UNIT_COUNT,
+               "Number of commit order (rob) dependencies for a store "
+               "recorded on a past load/store during tracing"),
+      ADD_STAT(numIssueOrderDepLoads, UNIT_COUNT,
+               "Number of loads that got assigned issue order dependency "
+               "because they were dependency-free"),
+      ADD_STAT(numIssueOrderDepStores, UNIT_COUNT,
+               "Number of stores that got assigned issue order dependency "
+               "because they were dependency-free"),
+      ADD_STAT(numIssueOrderDepOther, UNIT_COUNT,
+               "Number of non load/store insts that got assigned issue order "
+               "dependency because they were dependency-free"),
+      ADD_STAT(numFilteredNodes, UNIT_COUNT,
+               "No. of nodes filtered out before writing the output trace"),
+      ADD_STAT(maxNumDependents, UNIT_COUNT,
+               "Maximum number or dependents on any instruction"),
+      ADD_STAT(maxTempStoreSize, UNIT_COUNT,
+               "Maximum size of the temporary store during the run"),
+      ADD_STAT(maxPhysRegDepMapSize, UNIT_COUNT,
+               "Maximum size of register dependency map")
 {
 }
 

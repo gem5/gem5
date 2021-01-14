@@ -200,17 +200,18 @@ TraceCPU::checkAndSchedExitEvent()
         }
     }
 }
-
-TraceCPU::TraceStats::TraceStats(TraceCPU *trace) :
+ TraceCPU::TraceStats::TraceStats(TraceCPU *trace) :
     Stats::Group(trace),
-    ADD_STAT(numSchedDcacheEvent,
-            "Number of events scheduled to trigger data request generator"),
-    ADD_STAT(numSchedIcacheEvent,
-            "Number of events scheduled to trigger instruction request "
-            "generator"),
-    ADD_STAT(numOps, "Number of micro-ops simulated by the Trace CPU"),
-    ADD_STAT(cpi, "Cycles per micro-op used as a proxy for CPI",
-            trace->baseStats.numCycles / numOps)
+    ADD_STAT(numSchedDcacheEvent, UNIT_COUNT,
+             "Number of events scheduled to trigger data request generator"),
+    ADD_STAT(numSchedIcacheEvent, UNIT_COUNT,
+             "Number of events scheduled to trigger instruction request generator"),
+    ADD_STAT(numOps, UNIT_COUNT,
+             "Number of micro-ops simulated by the Trace CPU"),
+    ADD_STAT(cpi,
+             UNIT_RATE(Stats::Units::Cycle, Stats::Units::Count),
+             "Cycles per micro-op used as a proxy for CPI",
+             trace->baseStats.numCycles / numOps)
 {
     cpi.precision(6);
 }
@@ -219,16 +220,21 @@ TraceCPU::ElasticDataGen::
 ElasticDataGenStatGroup::ElasticDataGenStatGroup(Stats::Group *parent,
                                                  const std::string& _name) :
     Stats::Group(parent, _name.c_str()),
-    ADD_STAT(maxDependents, "Max number of dependents observed on a node"),
-    ADD_STAT(maxReadyListSize, "Max size of the ready list observed"),
-    ADD_STAT(numSendAttempted, "Number of first attempts to send a request"),
-    ADD_STAT(numSendSucceeded, "Number of successful first attempts"),
-    ADD_STAT(numSendFailed, "Number of failed first attempts"),
-    ADD_STAT(numRetrySucceeded, "Number of successful retries"),
-    ADD_STAT(numSplitReqs, "Number of split requests"),
-    ADD_STAT(numSOLoads, "Number of strictly ordered loads"),
-    ADD_STAT(numSOStores, "Number of strictly ordered stores"),
-    ADD_STAT(dataLastTick, "Last tick simulated from the elastic data trace")
+    ADD_STAT(maxDependents, UNIT_COUNT,
+             "Max number of dependents observed on a node"),
+    ADD_STAT(maxReadyListSize, UNIT_COUNT,
+             "Max size of the ready list observed"),
+    ADD_STAT(numSendAttempted, UNIT_COUNT,
+             "Number of first attempts to send a request"),
+    ADD_STAT(numSendSucceeded, UNIT_COUNT,
+             "Number of successful first attempts"),
+    ADD_STAT(numSendFailed, UNIT_COUNT, "Number of failed first attempts"),
+    ADD_STAT(numRetrySucceeded, UNIT_COUNT, "Number of successful retries"),
+    ADD_STAT(numSplitReqs, UNIT_COUNT, "Number of split requests"),
+    ADD_STAT(numSOLoads, UNIT_COUNT, "Number of strictly ordered loads"),
+    ADD_STAT(numSOStores, UNIT_COUNT, "Number of strictly ordered stores"),
+    ADD_STAT(dataLastTick, UNIT_TICK,
+             "Last tick simulated from the elastic data trace")
 {
 }
 
@@ -955,11 +961,14 @@ TraceCPU::ElasticDataGen::HardwareResource::printOccupancy()
 TraceCPU::FixedRetryGen::FixedRetryGenStatGroup::FixedRetryGenStatGroup(
         Stats::Group *parent, const std::string& _name) :
     Stats::Group(parent, _name.c_str()),
-    ADD_STAT(numSendAttempted, "Number of first attempts to send a request"),
-    ADD_STAT(numSendSucceeded, "Number of successful first attempts"),
-    ADD_STAT(numSendFailed, "Number of failed first attempts"),
-    ADD_STAT(numRetrySucceeded, "Number of successful retries"),
-    ADD_STAT(instLastTick, "Last tick simulated from the fixed inst trace")
+    ADD_STAT(numSendAttempted, UNIT_COUNT,
+             "Number of first attempts to send a request"),
+    ADD_STAT(numSendSucceeded, UNIT_COUNT,
+             "Number of successful first attempts"),
+    ADD_STAT(numSendFailed, UNIT_COUNT, "Number of failed first attempts"),
+    ADD_STAT(numRetrySucceeded, UNIT_COUNT, "Number of successful retries"),
+    ADD_STAT(instLastTick, UNIT_TICK,
+             "Last tick simulated from the fixed inst trace")
 {
 
 }

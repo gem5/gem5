@@ -270,16 +270,21 @@ LSQUnit<Impl>::name() const
 template <class Impl>
 LSQUnit<Impl>::LSQUnitStats::LSQUnitStats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(forwLoads, "Number of loads that had data forwarded from"
-          " stores"),
-      ADD_STAT(squashedLoads, "Number of loads squashed"),
-      ADD_STAT(ignoredResponses, "Number of memory responses ignored"
-          " because the instruction is squashed"),
-      ADD_STAT(memOrderViolation, "Number of memory ordering violations"),
-      ADD_STAT(squashedStores, "Number of stores squashed"),
-      ADD_STAT(rescheduledLoads, "Number of loads that were rescheduled"),
-      ADD_STAT(blockedByCache, "Number of times an access to memory failed"
-          " due to the cache being blocked")
+      ADD_STAT(forwLoads, UNIT_COUNT,
+               "Number of loads that had data forwarded from stores"),
+      ADD_STAT(squashedLoads, UNIT_COUNT,
+               "Number of loads squashed"),
+      ADD_STAT(ignoredResponses, UNIT_COUNT,
+               "Number of memory responses ignored because the instruction is "
+               "squashed"),
+      ADD_STAT(memOrderViolation, UNIT_COUNT,
+               "Number of memory ordering violations"),
+      ADD_STAT(squashedStores, UNIT_COUNT, "Number of stores squashed"),
+      ADD_STAT(rescheduledLoads, UNIT_COUNT,
+               "Number of loads that were rescheduled"),
+      ADD_STAT(blockedByCache, UNIT_COUNT,
+               "Number of times an access to memory failed due to the cache "
+               "being blocked")
 {
 }
 

@@ -147,28 +147,35 @@ template <class Impl>
 DefaultCommit<Impl>::CommitStats::CommitStats(O3CPU *cpu,
                                               DefaultCommit *commit)
     : Stats::Group(cpu, "commit"),
-      ADD_STAT(commitSquashedInsts, "The number of squashed insts skipped by"
-          " commit"),
-      ADD_STAT(commitNonSpecStalls, "The number of times commit has been"
-          " forced to stall to communicate backwards"),
-      ADD_STAT(branchMispredicts, "The number of times a branch was"
-          " mispredicted"),
-      ADD_STAT(numCommittedDist, "Number of insts commited each cycle"),
-      ADD_STAT(instsCommitted, "Number of instructions committed"),
-      ADD_STAT(opsCommitted, "Number of ops (including micro ops) committed"),
-      ADD_STAT(memRefs, "Number of memory references committed"),
-      ADD_STAT(loads, "Number of loads committed"),
-      ADD_STAT(amos, "Number of atomic instructions committed"),
-      ADD_STAT(membars, "Number of memory barriers committed"),
-      ADD_STAT(branches, "Number of branches committed"),
-      ADD_STAT(vector, "Number of committed Vector instructions."),
-      ADD_STAT(floating, "Number of committed floating point"
-          " instructions."),
-      ADD_STAT(integer, "Number of committed integer instructions."),
-      ADD_STAT(functionCalls, "Number of function calls committed."),
-      ADD_STAT(committedInstType, "Class of committed instruction"),
-      ADD_STAT(commitEligibleSamples, "number cycles where commit BW limit"
-          " reached")
+      ADD_STAT(commitSquashedInsts, UNIT_COUNT,
+               "The number of squashed insts skipped by commit"),
+      ADD_STAT(commitNonSpecStalls, UNIT_COUNT,
+               "The number of times commit has been forced to stall to "
+               "communicate backwards"),
+      ADD_STAT(branchMispredicts, UNIT_COUNT,
+               "The number of times a branch was mispredicted"),
+      ADD_STAT(numCommittedDist, UNIT_COUNT,
+               "Number of insts commited each cycle"),
+      ADD_STAT(instsCommitted, UNIT_COUNT, "Number of instructions committed"),
+      ADD_STAT(opsCommitted, UNIT_COUNT,
+               "Number of ops (including micro ops) committed"),
+      ADD_STAT(memRefs, UNIT_COUNT, "Number of memory references committed"),
+      ADD_STAT(loads, UNIT_COUNT, "Number of loads committed"),
+      ADD_STAT(amos, UNIT_COUNT, "Number of atomic instructions committed"),
+      ADD_STAT(membars, UNIT_COUNT, "Number of memory barriers committed"),
+      ADD_STAT(branches, UNIT_COUNT, "Number of branches committed"),
+      ADD_STAT(vectorInstructions, UNIT_COUNT,
+               "Number of committed Vector instructions."),
+      ADD_STAT(floating, UNIT_COUNT,
+               "Number of committed floating point instructions."),
+      ADD_STAT(integer, UNIT_COUNT,
+               "Number of committed integer instructions."),
+      ADD_STAT(functionCalls, UNIT_COUNT,
+               "Number of function calls committed."),
+      ADD_STAT(committedInstType, UNIT_COUNT,
+               "Class of committed instruction"),
+      ADD_STAT(commitEligibleSamples, UNIT_CYCLE,
+               "number cycles where commit BW limit reached")
 {
     using namespace Stats;
 
@@ -208,7 +215,7 @@ DefaultCommit<Impl>::CommitStats::CommitStats(O3CPU *cpu,
         .init(cpu->numThreads)
         .flags(total);
 
-    vector
+    vectorInstructions
         .init(cpu->numThreads)
         .flags(total);
 
@@ -1473,7 +1480,7 @@ DefaultCommit<Impl>::updateComInstStats(const DynInstPtr &inst)
         stats.floating[tid]++;
     // Vector Instruction
     if (inst->isVector())
-        stats.vector[tid]++;
+        stats.vectorInstructions[tid]++;
 
     // Function Calls
     if (inst->isCall())

@@ -607,18 +607,18 @@ Fetch2::isDrained()
 
 Fetch2::Fetch2Stats::Fetch2Stats(MinorCPU *cpu)
       : Stats::Group(cpu, "fetch2"),
-      ADD_STAT(intInstructions,
-       "Number of integer instructions successfully decoded"),
-      ADD_STAT(fpInstructions,
-       "Number of floating point instructions successfully decoded"),
-      ADD_STAT(vecInstructions,
-       "Number of SIMD instructions successfully decoded"),
-      ADD_STAT(loadInstructions,
-       "Number of memory load instructions successfully decoded"),
-      ADD_STAT(storeInstructions,
-       "Number of memory store instructions successfully decoded"),
-      ADD_STAT(amoInstructions,
-       "Number of memory atomic instructions successfully decoded")
+      ADD_STAT(intInstructions, UNIT_COUNT,
+               "Number of integer instructions successfully decoded"),
+      ADD_STAT(fpInstructions, UNIT_COUNT,
+               "Number of floating point instructions successfully decoded"),
+      ADD_STAT(vecInstructions, UNIT_COUNT,
+               "Number of SIMD instructions successfully decoded"),
+      ADD_STAT(loadInstructions, UNIT_COUNT,
+               "Number of memory load instructions successfully decoded"),
+      ADD_STAT(storeInstructions, UNIT_COUNT,
+               "Number of memory store instructions successfully decoded"),
+      ADD_STAT(amoInstructions, UNIT_COUNT,
+               "Number of memory atomic instructions successfully decoded")
 {
         intInstructions
             .flags(Stats::total);

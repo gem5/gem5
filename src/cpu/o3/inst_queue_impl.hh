@@ -177,32 +177,41 @@ template <class Impl>
 InstructionQueue<Impl>::
 IQStats::IQStats(O3CPU *cpu, const unsigned &total_width)
     : Stats::Group(cpu),
-    ADD_STAT(instsAdded,
+    ADD_STAT(instsAdded, UNIT_COUNT,
              "Number of instructions added to the IQ (excludes non-spec)"),
-    ADD_STAT(nonSpecInstsAdded,
+    ADD_STAT(nonSpecInstsAdded, UNIT_COUNT,
              "Number of non-speculative instructions added to the IQ"),
-    ADD_STAT(instsIssued, "Number of instructions issued"),
-    ADD_STAT(intInstsIssued, "Number of integer instructions issued"),
-    ADD_STAT(floatInstsIssued, "Number of float instructions issued"),
-    ADD_STAT(branchInstsIssued, "Number of branch instructions issued"),
-    ADD_STAT(memInstsIssued, "Number of memory instructions issued"),
-    ADD_STAT(miscInstsIssued, "Number of miscellaneous instructions issued"),
-    ADD_STAT(squashedInstsIssued, "Number of squashed instructions issued"),
-    ADD_STAT(squashedInstsExamined,
+    ADD_STAT(instsIssued, UNIT_COUNT, "Number of instructions issued"),
+    ADD_STAT(intInstsIssued, UNIT_COUNT,
+             "Number of integer instructions issued"),
+    ADD_STAT(floatInstsIssued, UNIT_COUNT,
+             "Number of float instructions issued"),
+    ADD_STAT(branchInstsIssued, UNIT_COUNT,
+             "Number of branch instructions issued"),
+    ADD_STAT(memInstsIssued, UNIT_COUNT,
+             "Number of memory instructions issued"),
+    ADD_STAT(miscInstsIssued, UNIT_COUNT,
+             "Number of miscellaneous instructions issued"),
+    ADD_STAT(squashedInstsIssued, UNIT_COUNT,
+             "Number of squashed instructions issued"),
+    ADD_STAT(squashedInstsExamined, UNIT_COUNT,
              "Number of squashed instructions iterated over during squash; "
              "mainly for profiling"),
-    ADD_STAT(squashedOperandsExamined,
+    ADD_STAT(squashedOperandsExamined, UNIT_COUNT,
              "Number of squashed operands that are examined and possibly "
              "removed from graph"),
-    ADD_STAT(squashedNonSpecRemoved,
+    ADD_STAT(squashedNonSpecRemoved, UNIT_COUNT,
              "Number of squashed non-spec instructions that were removed"),
-    ADD_STAT(numIssuedDist, "Number of insts issued each cycle"),
-    ADD_STAT(statFuBusy, "attempts to use FU when none available"),
-    ADD_STAT(statIssuedInstType, "Type of FU issued"),
-    ADD_STAT(issueRate, "Inst issue rate",
-             instsIssued / cpu->baseStats.numCycles),
-    ADD_STAT(fuBusy, "FU busy when requested"),
-    ADD_STAT(fuBusyRate, "FU busy rate (busy events/executed inst)")
+    ADD_STAT(numIssuedDist, UNIT_COUNT, "Number of insts issued each cycle"),
+    ADD_STAT(statFuBusy, UNIT_COUNT,
+             "attempts to use FU when none available"),
+    ADD_STAT(statIssuedInstType, UNIT_COUNT,
+             "Number of instructions issued per FU type, per thread"),
+    ADD_STAT(issueRate, UNIT_RATE(Stats::Units::Count, Stats::Units::Cycle),
+             "Inst issue rate", instsIssued / cpu->baseStats.numCycles),
+    ADD_STAT(fuBusy, UNIT_COUNT, "FU busy when requested"),
+    ADD_STAT(fuBusyRate, UNIT_RATE(Stats::Units::Count, Stats::Units::Count),
+             "FU busy rate (busy events/executed inst)")
 {
     instsAdded
         .prereq(instsAdded);
@@ -314,21 +323,28 @@ template <class Impl>
 InstructionQueue<Impl>::
 IQIOStats::IQIOStats(Stats::Group *parent)
     : Stats::Group(parent),
-    ADD_STAT(intInstQueueReads, "Number of integer instruction queue reads"),
-    ADD_STAT(intInstQueueWrites, "Number of integer instruction queue writes"),
-    ADD_STAT(intInstQueueWakeupAccesses, "Number of integer instruction queue "
-                                         "wakeup accesses"),
-    ADD_STAT(fpInstQueueReads, "Number of floating instruction queue reads"),
-    ADD_STAT(fpInstQueueWrites, "Number of floating instruction queue writes"),
-    ADD_STAT(fpInstQueueWakeupAccesses, "Number of floating instruction queue "
-                                        "wakeup accesses"),
-    ADD_STAT(vecInstQueueReads, "Number of vector instruction queue reads"),
-    ADD_STAT(vecInstQueueWrites, "Number of vector instruction queue writes"),
-    ADD_STAT(vecInstQueueWakeupAccesses, "Number of vector instruction queue "
-                                         "wakeup accesses"),
-    ADD_STAT(intAluAccesses, "Number of integer alu accesses"),
-    ADD_STAT(fpAluAccesses, "Number of floating point alu accesses"),
-    ADD_STAT(vecAluAccesses, "Number of vector alu accesses")
+    ADD_STAT(intInstQueueReads, UNIT_COUNT,
+             "Number of integer instruction queue reads"),
+    ADD_STAT(intInstQueueWrites, UNIT_COUNT,
+             "Number of integer instruction queue writes"),
+    ADD_STAT(intInstQueueWakeupAccesses, UNIT_COUNT,
+             "Number of integer instruction queue wakeup accesses"),
+    ADD_STAT(fpInstQueueReads, UNIT_COUNT,
+             "Number of floating instruction queue reads"),
+    ADD_STAT(fpInstQueueWrites, UNIT_COUNT,
+             "Number of floating instruction queue writes"),
+    ADD_STAT(fpInstQueueWakeupAccesses, UNIT_COUNT,
+             "Number of floating instruction queue wakeup accesses"),
+    ADD_STAT(vecInstQueueReads, UNIT_COUNT,
+             "Number of vector instruction queue reads"),
+    ADD_STAT(vecInstQueueWrites, UNIT_COUNT,
+             "Number of vector instruction queue writes"),
+    ADD_STAT(vecInstQueueWakeupAccesses, UNIT_COUNT,
+             "Number of vector instruction queue wakeup accesses"),
+    ADD_STAT(intAluAccesses, UNIT_COUNT, "Number of integer alu accesses"),
+    ADD_STAT(fpAluAccesses, UNIT_COUNT,
+             "Number of floating point alu accesses"),
+    ADD_STAT(vecAluAccesses, UNIT_COUNT, "Number of vector alu accesses")
 {
     using namespace Stats;
     intInstQueueReads
