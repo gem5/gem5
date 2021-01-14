@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2016-2017 ARM Limited
+ * Copyright (c) 2014, 2016-2017, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -305,6 +305,14 @@ public:
     /** @{
      * @name Low-level Device Interface
      */
+
+    /**
+     * Reset cached state in this queue and in the associated
+     * ring buffers. A client of this method should be the
+     * VirtIODeviceBase::reset.
+     */
+    void reset();
+
     /**
      * Set the base address of this queue.
      *
@@ -463,6 +471,14 @@ public:
         VirtRing<T>(PortProxy &proxy, ByteOrder bo, uint16_t size) :
             header{0, 0}, ring(size), _proxy(proxy), _base(0), byteOrder(bo)
         {}
+
+        /** Reset any state in the ring buffer. */
+        void
+        reset()
+        {
+            header = {0, 0};
+            _base = 0;
+        };
 
         /**
          * Set the base address of the VirtIO ring buffer.

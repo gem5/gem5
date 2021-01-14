@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2016 ARM Limited
+ * Copyright (c) 2014, 2016, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -256,6 +256,16 @@ VirtQueue::unserialize(CheckpointIn &cp)
 }
 
 void
+VirtQueue::reset()
+{
+    _address = 0;
+    _last_avail = 0;
+
+    avail.reset();
+    used.reset();
+}
+
+void
 VirtQueue::setAddress(Addr address)
 {
     const Addr addr_avail(address + _size * sizeof(struct vring_desc));
@@ -366,7 +376,7 @@ VirtIODeviceBase::reset()
     _deviceStatus = 0;
 
     for (QueueID i = 0; i < _queues.size(); ++i)
-        _queues[i]->setAddress(0);
+        _queues[i]->reset();
 }
 
 void
