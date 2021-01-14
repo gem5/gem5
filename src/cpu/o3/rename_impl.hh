@@ -612,7 +612,8 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
 
         if (inst->isLoad()) {
             if (calcFreeLQEntries(tid) <= 0) {
-                DPRINTF(Rename, "[tid:%i] Cannot rename due to no free LQ\n");
+                DPRINTF(Rename, "[tid:%i] Cannot rename due to no free LQ\n",
+                        tid);
                 source = LQ;
                 incrFullStat(source);
                 break;
@@ -621,7 +622,8 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
 
         if (inst->isStore() || inst->isAtomic()) {
             if (calcFreeSQEntries(tid) <= 0) {
-                DPRINTF(Rename, "[tid:%i] Cannot rename due to no free SQ\n");
+                DPRINTF(Rename, "[tid:%i] Cannot rename due to no free SQ\n",
+                        tid);
                 source = SQ;
                 incrFullStat(source);
                 break;
