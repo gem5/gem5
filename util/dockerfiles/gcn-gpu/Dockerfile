@@ -40,7 +40,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libboost-filesystem-dev \
     libboost-system-dev \
     libboost-dev \
-    libpng12-dev
+    libpng12-dev \
+    gdb
 
 # Use python 3.9 by default
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
