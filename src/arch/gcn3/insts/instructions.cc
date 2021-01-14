@@ -3800,7 +3800,7 @@ namespace Gcn3ISA
             wf->computeUnit->cu_id, wf->wgId, refCount);
 
         wf->computeUnit->registerManager->freeRegisters(wf);
-        wf->computeUnit->completedWfs++;
+        wf->computeUnit->stats.completedWfs++;
         wf->computeUnit->activeWaves--;
 
         panic_if(wf->computeUnit->activeWaves < 0, "CU[%d] Active waves less "
@@ -3811,7 +3811,7 @@ namespace Gcn3ISA
 
         for (int i = 0; i < wf->vecReads.size(); i++) {
             if (wf->rawDist.find(i) != wf->rawDist.end()) {
-                wf->readsPerWrite.sample(wf->vecReads.at(i));
+                wf->stats.readsPerWrite.sample(wf->vecReads.at(i));
             }
         }
         wf->vecReads.clear();
@@ -3853,7 +3853,7 @@ namespace Gcn3ISA
             if (!kernelEnd || !relNeeded) {
                 wf->computeUnit->shader->dispatcher().notifyWgCompl(wf);
                 wf->setStatus(Wavefront::S_STOPPED);
-                wf->computeUnit->completedWGs++;
+                wf->computeUnit->stats.completedWGs++;
 
                 return;
             }
@@ -3877,7 +3877,7 @@ namespace Gcn3ISA
             // call shader to prepare the flush operations
             wf->computeUnit->shader->prepareFlush(gpuDynInst);
 
-            wf->computeUnit->completedWGs++;
+            wf->computeUnit->stats.completedWGs++;
         } else {
             wf->computeUnit->shader->dispatcher().scheduleDispatch();
         }

@@ -37,9 +37,10 @@
 #include <queue>
 #include <string>
 
+#include "base/statistics.hh"
+#include "base/stats/group.hh"
 #include "gpu-compute/misc.hh"
 #include "params/ComputeUnit.hh"
-#include "sim/stats.hh"
 
 /*
  * @file local_memory_pipeline.hh
@@ -75,19 +76,18 @@ class LocalMemPipeline
     }
 
     const std::string& name() const { return _name; }
-    void regStats();
 
     void
     incLoadVRFBankConflictCycles(int num_cycles)
     {
-        loadVrfBankConflictCycles += num_cycles;
+        stats.loadVrfBankConflictCycles += num_cycles;
     }
 
   private:
     ComputeUnit &computeUnit;
     const std::string _name;
     int lmQueueSize;
-    Stats::Scalar loadVrfBankConflictCycles;
+
     // Local Memory Request Fifo: all shared memory requests
     // are issued to this FIFO from the memory pipelines
     std::queue<GPUDynInstPtr> lmIssuedRequests;
@@ -95,6 +95,14 @@ class LocalMemPipeline
     // Local Memory Response Fifo: all responses of shared memory
     // requests are sent to this FIFO from LDS
     std::queue<GPUDynInstPtr> lmReturnedRequests;
+
+  protected:
+    struct LocalMemPipelineStats : public Stats::Group
+    {
+        LocalMemPipelineStats(Stats::Group *parent);
+
+        Stats::Scalar loadVrfBankConflictCycles;
+    } stats;
 };
 
 #endif // __LOCAL_MEMORY_PIPELINE_HH__

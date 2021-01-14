@@ -50,7 +50,8 @@ TLBCoalescer::TLBCoalescer(const Params &p)
                     false, Event::CPU_Tick_Pri),
       cleanupEvent([this]{ processCleanupEvent(); },
                    "Cleanup issuedTranslationsTable hashmap",
-                   false, Event::Maximum_Pri)
+                   false, Event::Maximum_Pri),
+      stats(this)
 {
     // create the response ports based on the number of connected ports
     for (size_t i = 0; i < p.port_cpu_side_ports_connection_count; ++i) {
@@ -256,11 +257,11 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
         sender_state->reqCnt.push_back(req_cnt);
 
         // update statistics
-        coalescer->uncoalescedAccesses++;
+        coalescer->stats.uncoalescedAccesses++;
         req_cnt = sender_state->reqCnt.back();
         DPRINTF(GPUTLB, "receiving pkt w/ req_cnt %d\n", req_cnt);
-        coalescer->queuingCycles -= (curTick() * req_cnt);
-        coalescer->localqueuingCycles -= curTick();
+        coalescer->stats.queuingCycles -= (curTick() * req_cnt);
+        coalescer->stats.localqueuingCycles -= curTick();
     }
 
     // FIXME if you want to coalesce not based on the issueTime
@@ -302,7 +303,7 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
     // and make necessary allocations.
     if (!coalescedReq_cnt || !didCoalesce) {
         if (update_stats)
-            coalescer->coalescedAccesses++;
+            coalescer->stats.coalescedAccesses++;
 
         std::vector<PacketPtr> new_array;
         new_array.push_back(pkt);
@@ -339,7 +340,7 @@ TLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
     bool update_stats = !sender_state->prefetch;
 
     if (update_stats)
-        coalescer->uncoalescedAccesses++;
+        coalescer->stats.uncoalescedAccesses++;
 
     // If there is a pending timing request for this virtual address
     // print a warning message. This is a temporary caveat of
@@ -467,7 +468,7 @@ TLBCoalescer::processProbeTLBEvent()
                     // by the one we just sent counting all the way from
                     // the top of TLB hiearchy (i.e., from the CU)
                     int req_cnt = tmp_sender_state->reqCnt.back();
-                    queuingCycles += (curTick() * req_cnt);
+                    stats.queuingCycles += (curTick() * req_cnt);
 
                     DPRINTF(GPUTLB, "%s sending pkt w/ req_cnt %d\n",
                             name(), req_cnt);
@@ -475,7 +476,7 @@ TLBCoalescer::processProbeTLBEvent()
                     // pkt_cnt is number of packets we coalesced into the one
                     // we just sent but only at this coalescer level
                     int pkt_cnt = iter->second[vector_index].size();
-                    localqueuingCycles += (curTick() * pkt_cnt);
+                    stats.localqueuingCycles += (curTick() * pkt_cnt);
                 }
 
                 DPRINTF(GPUTLB, "Successfully sent TLB request for page %#x",
@@ -520,35 +521,14 @@ TLBCoalescer::processCleanupEvent()
     }
 }
 
-void
-TLBCoalescer::regStats()
+TLBCoalescer::TLBCoalescerStats::TLBCoalescerStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(uncoalescedAccesses, "Number of uncoalesced TLB accesses"),
+      ADD_STAT(coalescedAccesses, "Number of coalesced TLB accesses"),
+      ADD_STAT(queuingCycles, "Number of cycles spent in queue"),
+      ADD_STAT(localqueuingCycles,
+               "Number of cycles spent in queue for all incoming reqs"),
+      ADD_STAT(localLatency, "Avg. latency over all incoming pkts")
 {
-    ClockedObject::regStats();
-
-    uncoalescedAccesses
-        .name(name() + ".uncoalesced_accesses")
-        .desc("Number of uncoalesced TLB accesses")
-        ;
-
-    coalescedAccesses
-        .name(name() + ".coalesced_accesses")
-        .desc("Number of coalesced TLB accesses")
-        ;
-
-    queuingCycles
-        .name(name() + ".queuing_cycles")
-        .desc("Number of cycles spent in queue")
-        ;
-
-    localqueuingCycles
-        .name(name() + ".local_queuing_cycles")
-        .desc("Number of cycles spent in queue for all incoming reqs")
-        ;
-
-    localLatency
-        .name(name() + ".local_latency")
-        .desc("Avg. latency over all incoming pkts")
-        ;
-
     localLatency = localqueuingCycles / uncoalescedAccesses;
 }

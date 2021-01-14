@@ -142,8 +142,3 @@ ScalarMemPipeline::exec()
                 computeUnit.cu_id, mp->simdId, mp->wfSlotId);
     }
 }
-
-void
-ScalarMemPipeline::regStats()
-{
-}

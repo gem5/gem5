@@ -46,10 +46,11 @@ ExecStage::ExecStage(const ComputeUnitParams &p, ComputeUnit &cu,
     : computeUnit(cu), fromSchedule(from_schedule),
       lastTimeInstExecuted(false),
       thisTimeInstExecuted(false), instrExecuted (false),
-      executionResourcesUsed(0), _name(cu.name() + ".ExecStage")
+      executionResourcesUsed(0), _name(cu.name() + ".ExecStage"),
+      stats(&cu)
 
 {
-    numTransActiveIdle = 0;
+    stats.numTransActiveIdle = 0;
     idle_dur = 0;
 }
 
@@ -64,22 +65,22 @@ ExecStage::collectStatistics(enum STAT_STATUS stage, int unitId) {
     if (stage == IdleExec) {
         // count cycles when no instruction to a specific execution resource
         // is executed
-        numCyclesWithNoInstrTypeIssued[unitId]++;
+        stats.numCyclesWithNoInstrTypeIssued[unitId]++;
     } else if (stage == BusyExec) {
         // count the number of cycles an instruction to a specific execution
         // resource type was issued
-        numCyclesWithInstrTypeIssued[unitId]++;
+        stats.numCyclesWithInstrTypeIssued[unitId]++;
         thisTimeInstExecuted = true;
         instrExecuted = true;
         ++executionResourcesUsed;
     } else if (stage == PostExec) {
         // count the number of transitions from active to idle
         if (lastTimeInstExecuted && !thisTimeInstExecuted) {
-            ++numTransActiveIdle;
+            ++stats.numTransActiveIdle;
         }
 
         if (!lastTimeInstExecuted && thisTimeInstExecuted) {
-            idleDur.sample(idle_dur);
+            stats.idleDur.sample(idle_dur);
             idle_dur = 0;
         } else if (!thisTimeInstExecuted) {
             idle_dur++;
@@ -89,11 +90,11 @@ ExecStage::collectStatistics(enum STAT_STATUS stage, int unitId) {
         // track the number of cycles we either issued at least
         // instruction or issued no instructions at all
         if (instrExecuted) {
-            numCyclesWithInstrIssued++;
+            stats.numCyclesWithInstrIssued++;
         } else {
-            numCyclesWithNoIssue++;
+            stats.numCyclesWithNoIssue++;
         }
-        spc.sample(executionResourcesUsed);
+        stats.spc.sample(executionResourcesUsed);
     }
 }
 
@@ -196,57 +197,35 @@ ExecStage::exec()
     collectStatistics(PostExec, 0);
 }
 
-void
-ExecStage::regStats()
+ExecStage::ExecStageStats::ExecStageStats(Stats::Group *parent)
+    : Stats::Group(parent, "ExecStage"),
+      ADD_STAT(numTransActiveIdle,
+               "number of CU transitions from active to idle"),
+      ADD_STAT(numCyclesWithNoIssue, "number of cycles the CU issues nothing"),
+      ADD_STAT(numCyclesWithInstrIssued,
+               "number of cycles the CU issued at least one instruction"),
+      ADD_STAT(spc,
+               "Execution units active per cycle (Exec unit=SIMD,MemPipe)"),
+      ADD_STAT(idleDur, "duration of idle periods in cycles"),
+      ADD_STAT(numCyclesWithInstrTypeIssued, "Number of cycles at least one "
+               "instruction issued to execution resource type"),
+      ADD_STAT(numCyclesWithNoInstrTypeIssued, "Number of clks no instructions"
+               " issued to execution resource type")
 {
-    numTransActiveIdle
-       .name(name() + ".num_transitions_active_to_idle")
-       .desc("number of CU transitions from active to idle")
-        ;
+    ComputeUnit *compute_unit = static_cast<ComputeUnit*>(parent);
 
-    numCyclesWithNoIssue
-        .name(name() + ".num_cycles_with_no_issue")
-        .desc("number of cycles the CU issues nothing")
-        ;
-
-    numCyclesWithInstrIssued
-        .name(name() + ".num_cycles_with_instr_issued")
-        .desc("number of cycles the CU issued at least one instruction")
-        ;
-
-    spc
-        .init(0, computeUnit.numExeUnits(), 1)
-        .name(name() + ".spc")
-        .desc("Execution units active per cycle (Exec unit=SIMD,MemPipe)")
-        ;
-
-    idleDur
-        .init(0,75,5)
-        .name(name() + ".idle_duration_in_cycles")
-        .desc("duration of idle periods in cycles")
-        ;
-
-    numCyclesWithInstrTypeIssued
-        .init(computeUnit.numExeUnits())
-        .name(name() + ".num_cycles_issue_exec_rsrc")
-        .desc("Number of cycles at least one instruction issued to "
-              "execution resource type")
-        ;
-
-    numCyclesWithNoInstrTypeIssued
-        .init(computeUnit.numExeUnits())
-       .name(name() + ".num_cycles_no_issue_exec_rsrc")
-       .desc("Number of clks no instructions issued to execution "
-             "resource type")
-       ;
+    spc.init(0, compute_unit->numExeUnits(), 1);
+    idleDur.init(0, 75, 5);
+    numCyclesWithInstrTypeIssued.init(compute_unit->numExeUnits());
+    numCyclesWithNoInstrTypeIssued.init(compute_unit->numExeUnits());
 
     int c = 0;
-    for (int i = 0; i < computeUnit.numVectorALUs; i++,c++) {
+    for (int i = 0; i < compute_unit->numVectorALUs; i++,c++) {
         std::string s = "VectorALU" + std::to_string(i);
         numCyclesWithNoInstrTypeIssued.subname(c, s);
         numCyclesWithInstrTypeIssued.subname(c, s);
     }
-    for (int i = 0; i < computeUnit.numScalarALUs; i++,c++) {
+    for (int i = 0; i < compute_unit->numScalarALUs; i++,c++) {
         std::string s = "ScalarALU" + std::to_string(i);
         numCyclesWithNoInstrTypeIssued.subname(c, s);
         numCyclesWithInstrTypeIssued.subname(c, s);
@@ -256,7 +235,4 @@ ExecStage::regStats()
 
     numCyclesWithNoInstrTypeIssued.subname(c, "SharedMemPipe");
     numCyclesWithInstrTypeIssued.subname(c++, "SharedMemPipe");
-
-    numCyclesWithNoInstrTypeIssued.subname(c, "ScalarMemPipe");
-    numCyclesWithInstrTypeIssued.subname(c++, "ScalarMemPipe");
 }

@@ -47,6 +47,7 @@
 #include "base/callback.hh"
 #include "base/logging.hh"
 #include "base/statistics.hh"
+#include "base/stats/group.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
@@ -169,35 +170,6 @@ namespace X86ISA
         int missLatency1;
         int missLatency2;
 
-        // local_stats are as seen from the TLB
-        // without taking into account coalescing
-        Stats::Scalar localNumTLBAccesses;
-        Stats::Scalar localNumTLBHits;
-        Stats::Scalar localNumTLBMisses;
-        Stats::Formula localTLBMissRate;
-
-        // global_stats are as seen from the
-        // CU's perspective taking into account
-        // all coalesced requests.
-        Stats::Scalar globalNumTLBAccesses;
-        Stats::Scalar globalNumTLBHits;
-        Stats::Scalar globalNumTLBMisses;
-        Stats::Formula globalTLBMissRate;
-
-        // from the CU perspective (global)
-        Stats::Scalar accessCycles;
-        // from the CU perspective (global)
-        Stats::Scalar pageTableCycles;
-        Stats::Scalar numUniquePages;
-        // from the perspective of this TLB
-        Stats::Scalar localCycles;
-        // from the perspective of this TLB
-        Stats::Formula localLatency;
-        // I take the avg. per page and then
-        // the avg. over all pages.
-        Stats::Scalar avgReuseDistance;
-
-        void regStats() override;
         void updatePageFootprint(Addr virt_page_addr);
         void printAccessPattern();
 
@@ -426,6 +398,40 @@ namespace X86ISA
         void exitCallback();
 
         EventFunctionWrapper exitEvent;
+
+      protected:
+        struct GpuTLBStats : public Stats::Group
+        {
+            GpuTLBStats(Stats::Group *parent);
+
+            // local_stats are as seen from the TLB
+            // without taking into account coalescing
+            Stats::Scalar localNumTLBAccesses;
+            Stats::Scalar localNumTLBHits;
+            Stats::Scalar localNumTLBMisses;
+            Stats::Formula localTLBMissRate;
+
+            // global_stats are as seen from the
+            // CU's perspective taking into account
+            // all coalesced requests.
+            Stats::Scalar globalNumTLBAccesses;
+            Stats::Scalar globalNumTLBHits;
+            Stats::Scalar globalNumTLBMisses;
+            Stats::Formula globalTLBMissRate;
+
+            // from the CU perspective (global)
+            Stats::Scalar accessCycles;
+            // from the CU perspective (global)
+            Stats::Scalar pageTableCycles;
+            Stats::Scalar numUniquePages;
+            // from the perspective of this TLB
+            Stats::Scalar localCycles;
+            // from the perspective of this TLB
+            Stats::Formula localLatency;
+            // I take the avg. per page and then
+            // the avg. over all pages.
+            Stats::Scalar avgReuseDistance;
+        } stats;
     };
 }
 

@@ -106,7 +106,8 @@ ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
     _numBarrierSlots(p.num_barrier_slots),
     globalSeqNum(0), wavefrontSize(p.wf_size),
     scoreboardCheckToSchedule(p),
-    scheduleToExecute(p)
+    scheduleToExecute(p),
+    stats(this, p.n_wf)
 {
     /**
      * This check is necessary because std::bitset only provides conversion
@@ -367,7 +368,7 @@ ComputeUnit::startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
     w->initRegState(task, w->actualWgSzTotal);
     w->start(_n_wave++, task->codeAddr());
 
-    waveLevelParallelism.sample(activeWaves);
+    stats.waveLevelParallelism.sample(activeWaves);
     activeWaves++;
 }
 
@@ -612,22 +613,22 @@ ComputeUnit::hasDispResources(HSAQueueEntry *task, int &num_wfs_in_wg)
             freeWfSlots, numMappedWfs, vregAvail, sregAvail);
 
     if (!vregAvail) {
-        ++numTimesWgBlockedDueVgprAlloc;
+        ++stats.numTimesWgBlockedDueVgprAlloc;
     }
 
     if (!sregAvail) {
-        ++numTimesWgBlockedDueSgprAlloc;
+        ++stats.numTimesWgBlockedDueSgprAlloc;
     }
 
     // Return true if enough WF slots to submit workgroup and if there are
     // enough VGPRs to schedule all WFs to their SIMD units
     bool ldsAvail = lds.canReserve(task->ldsSize());
     if (!ldsAvail) {
-        wgBlockedDueLdsAllocation++;
+        stats.wgBlockedDueLdsAllocation++;
     }
 
     if (!barrier_avail) {
-        wgBlockedDueBarrierAllocation++;
+        stats.wgBlockedDueBarrierAllocation++;
     }
 
     // Return true if the following are all true:
@@ -734,7 +735,7 @@ ComputeUnit::exec()
     scoreboardCheckStage.exec();
     fetchStage.exec();
 
-    totalCycles++;
+    stats.totalCycles++;
 
     // Put this CU to sleep if there is no more work to be done.
     if (!isDone()) {
@@ -1032,8 +1033,8 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
         fatal("pkt is not a read nor a write\n");
     }
 
-    tlbCycles -= curTick();
-    ++tlbRequests;
+    stats.tlbCycles -= curTick();
+    ++stats.tlbRequests;
 
     PortID tlbPort_index = perLaneTLB ? index : 0;
 
@@ -1075,7 +1076,7 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
             // update the hitLevel distribution
             int hit_level = translation_state->hitLevel;
             assert(hit_level != -1);
-            hitsPerTLBLevel[hit_level]++;
+            stats.hitsPerTLBLevel[hit_level]++;
 
             // New SenderState for the memory access
             X86ISA::GpuTLB::TranslationState *sender_state =
@@ -1346,7 +1347,7 @@ ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
         // for the first cache block.
         if (compute_unit->headTailMap.count(gpuDynInst)) {
             Tick headTick = compute_unit->headTailMap.at(gpuDynInst);
-            compute_unit->headTailLatency.sample(curTick() - headTick);
+            compute_unit->stats.headTailLatency.sample(curTick() - headTick);
             compute_unit->headTailMap.erase(gpuDynInst);
         }
 
@@ -1381,7 +1382,7 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
             pkt->req->getVaddr(), line);
 
     assert(pkt->senderState);
-    computeUnit->tlbCycles += curTick();
+    computeUnit->stats.tlbCycles += curTick();
 
     // pop off the TLB translation state
     X86ISA::GpuTLB::TranslationState *translation_state =
@@ -1402,7 +1403,7 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
 
     // update the hitLevel distribution
     int hit_level = translation_state->hitLevel;
-    computeUnit->hitsPerTLBLevel[hit_level]++;
+    computeUnit->stats.hitsPerTLBLevel[hit_level]++;
 
     delete translation_state->tlbEntry;
     assert(!translation_state->ports.size());
@@ -1789,560 +1790,16 @@ ComputeUnit::ITLBPort::recvReqRetry()
 }
 
 void
-ComputeUnit::regStats()
-{
-    ClockedObject::regStats();
-
-    vALUInsts
-        .name(name() + ".valu_insts")
-        .desc("Number of vector ALU insts issued.")
-        ;
-    vALUInstsPerWF
-        .name(name() + ".valu_insts_per_wf")
-        .desc("The avg. number of vector ALU insts issued per-wavefront.")
-        ;
-    sALUInsts
-        .name(name() + ".salu_insts")
-        .desc("Number of scalar ALU insts issued.")
-        ;
-    sALUInstsPerWF
-        .name(name() + ".salu_insts_per_wf")
-        .desc("The avg. number of scalar ALU insts issued per-wavefront.")
-        ;
-    instCyclesVALU
-        .name(name() + ".inst_cycles_valu")
-        .desc("Number of cycles needed to execute VALU insts.")
-        ;
-    instCyclesSALU
-        .name(name() + ".inst_cycles_salu")
-        .desc("Number of cycles needed to execute SALU insts.")
-        ;
-    threadCyclesVALU
-        .name(name() + ".thread_cycles_valu")
-        .desc("Number of thread cycles used to execute vector ALU ops. "
-              "Similar to instCyclesVALU but multiplied by the number of "
-              "active threads.")
-        ;
-    vALUUtilization
-        .name(name() + ".valu_utilization")
-        .desc("Percentage of active vector ALU threads in a wave.")
-        ;
-    ldsNoFlatInsts
-        .name(name() + ".lds_no_flat_insts")
-        .desc("Number of LDS insts issued, not including FLAT "
-              "accesses that resolve to LDS.")
-        ;
-    ldsNoFlatInstsPerWF
-        .name(name() + ".lds_no_flat_insts_per_wf")
-        .desc("The avg. number of LDS insts (not including FLAT "
-              "accesses that resolve to LDS) per-wavefront.")
-        ;
-    flatVMemInsts
-        .name(name() + ".flat_vmem_insts")
-        .desc("The number of FLAT insts that resolve to vmem issued.")
-        ;
-    flatVMemInstsPerWF
-        .name(name() + ".flat_vmem_insts_per_wf")
-        .desc("The average number of FLAT insts that resolve to vmem "
-              "issued per-wavefront.")
-        ;
-    flatLDSInsts
-        .name(name() + ".flat_lds_insts")
-        .desc("The number of FLAT insts that resolve to LDS issued.")
-        ;
-    flatLDSInstsPerWF
-        .name(name() + ".flat_lds_insts_per_wf")
-        .desc("The average number of FLAT insts that resolve to LDS "
-              "issued per-wavefront.")
-        ;
-    vectorMemWrites
-        .name(name() + ".vector_mem_writes")
-        .desc("Number of vector mem write insts (excluding FLAT insts).")
-        ;
-    vectorMemWritesPerWF
-        .name(name() + ".vector_mem_writes_per_wf")
-        .desc("The average number of vector mem write insts "
-              "(excluding FLAT insts) per-wavefront.")
-        ;
-    vectorMemReads
-        .name(name() + ".vector_mem_reads")
-        .desc("Number of vector mem read insts (excluding FLAT insts).")
-        ;
-    vectorMemReadsPerWF
-        .name(name() + ".vector_mem_reads_per_wf")
-        .desc("The avg. number of vector mem read insts (excluding "
-              "FLAT insts) per-wavefront.")
-        ;
-    scalarMemWrites
-        .name(name() + ".scalar_mem_writes")
-        .desc("Number of scalar mem write insts.")
-        ;
-    scalarMemWritesPerWF
-        .name(name() + ".scalar_mem_writes_per_wf")
-        .desc("The average number of scalar mem write insts per-wavefront.")
-        ;
-    scalarMemReads
-        .name(name() + ".scalar_mem_reads")
-        .desc("Number of scalar mem read insts.")
-        ;
-    scalarMemReadsPerWF
-        .name(name() + ".scalar_mem_reads_per_wf")
-        .desc("The average number of scalar mem read insts per-wavefront.")
-        ;
-
-    vALUInstsPerWF = vALUInsts / completedWfs;
-    sALUInstsPerWF = sALUInsts / completedWfs;
-    vALUUtilization = (threadCyclesVALU / (64 * instCyclesVALU)) * 100;
-    ldsNoFlatInstsPerWF = ldsNoFlatInsts / completedWfs;
-    flatVMemInstsPerWF = flatVMemInsts / completedWfs;
-    flatLDSInstsPerWF = flatLDSInsts / completedWfs;
-    vectorMemWritesPerWF = vectorMemWrites / completedWfs;
-    vectorMemReadsPerWF = vectorMemReads / completedWfs;
-    scalarMemWritesPerWF = scalarMemWrites / completedWfs;
-    scalarMemReadsPerWF = scalarMemReads / completedWfs;
-
-    vectorMemReadsPerKiloInst
-        .name(name() + ".vector_mem_reads_per_kilo_inst")
-        .desc("Number of vector mem reads per kilo-instruction")
-        ;
-    vectorMemReadsPerKiloInst = (vectorMemReads / numInstrExecuted) * 1000;
-    vectorMemWritesPerKiloInst
-        .name(name() + ".vector_mem_writes_per_kilo_inst")
-        .desc("Number of vector mem writes per kilo-instruction")
-        ;
-    vectorMemWritesPerKiloInst = (vectorMemWrites / numInstrExecuted) * 1000;
-    vectorMemInstsPerKiloInst
-        .name(name() + ".vector_mem_insts_per_kilo_inst")
-        .desc("Number of vector mem insts per kilo-instruction")
-        ;
-    vectorMemInstsPerKiloInst =
-        ((vectorMemReads + vectorMemWrites) / numInstrExecuted) * 1000;
-    scalarMemReadsPerKiloInst
-        .name(name() + ".scalar_mem_reads_per_kilo_inst")
-        .desc("Number of scalar mem reads per kilo-instruction")
-    ;
-    scalarMemReadsPerKiloInst = (scalarMemReads / numInstrExecuted) * 1000;
-    scalarMemWritesPerKiloInst
-        .name(name() + ".scalar_mem_writes_per_kilo_inst")
-        .desc("Number of scalar mem writes per kilo-instruction")
-    ;
-    scalarMemWritesPerKiloInst = (scalarMemWrites / numInstrExecuted) * 1000;
-    scalarMemInstsPerKiloInst
-        .name(name() + ".scalar_mem_insts_per_kilo_inst")
-        .desc("Number of scalar mem insts per kilo-instruction")
-        ;
-    scalarMemInstsPerKiloInst =
-        ((scalarMemReads + scalarMemWrites) / numInstrExecuted) * 1000;
-
-    instCyclesVMemPerSimd
-       .init(numVectorALUs)
-       .name(name() + ".inst_cycles_vector_memory")
-       .desc("Number of cycles to send address, command, data from VRF to "
-             "vector memory unit, per SIMD")
-       ;
-
-    instCyclesScMemPerSimd
-       .init(numVectorALUs)
-       .name(name() + ".inst_cycles_scalar_memory")
-       .desc("Number of cycles to send address, command, data from SRF to "
-             "scalar memory unit, per SIMD")
-       ;
-
-    instCyclesLdsPerSimd
-       .init(numVectorALUs)
-       .name(name() + ".inst_cycles_lds")
-       .desc("Number of cycles to send address, command, data from VRF to "
-             "LDS unit, per SIMD")
-       ;
-
-    globalReads
-        .name(name() + ".global_mem_reads")
-        .desc("Number of reads to the global segment")
-    ;
-    globalWrites
-        .name(name() + ".global_mem_writes")
-        .desc("Number of writes to the global segment")
-    ;
-    globalMemInsts
-        .name(name() + ".global_mem_insts")
-        .desc("Number of memory instructions sent to the global segment")
-    ;
-    globalMemInsts = globalReads + globalWrites;
-    argReads
-        .name(name() + ".arg_reads")
-        .desc("Number of reads to the arg segment")
-    ;
-    argWrites
-        .name(name() + ".arg_writes")
-        .desc("NUmber of writes to the arg segment")
-    ;
-    argMemInsts
-        .name(name() + ".arg_mem_insts")
-        .desc("Number of memory instructions sent to the arg segment")
-    ;
-    argMemInsts = argReads + argWrites;
-    spillReads
-        .name(name() + ".spill_reads")
-        .desc("Number of reads to the spill segment")
-    ;
-    spillWrites
-        .name(name() + ".spill_writes")
-        .desc("Number of writes to the spill segment")
-    ;
-    spillMemInsts
-        .name(name() + ".spill_mem_insts")
-        .desc("Number of memory instructions sent to the spill segment")
-    ;
-    spillMemInsts = spillReads + spillWrites;
-    groupReads
-        .name(name() + ".group_reads")
-        .desc("Number of reads to the group segment")
-    ;
-    groupWrites
-        .name(name() + ".group_writes")
-        .desc("Number of writes to the group segment")
-    ;
-    groupMemInsts
-        .name(name() + ".group_mem_insts")
-        .desc("Number of memory instructions sent to the group segment")
-    ;
-    groupMemInsts = groupReads + groupWrites;
-    privReads
-        .name(name() + ".private_reads")
-        .desc("Number of reads to the private segment")
-    ;
-    privWrites
-        .name(name() + ".private_writes")
-        .desc("Number of writes to the private segment")
-    ;
-    privMemInsts
-        .name(name() + ".private_mem_insts")
-        .desc("Number of memory instructions sent to the private segment")
-    ;
-    privMemInsts = privReads + privWrites;
-    readonlyReads
-        .name(name() + ".readonly_reads")
-        .desc("Number of reads to the readonly segment")
-    ;
-    readonlyWrites
-        .name(name() + ".readonly_writes")
-        .desc("Number of memory instructions sent to the readonly segment")
-    ;
-    readonlyMemInsts
-        .name(name() + ".readonly_mem_insts")
-        .desc("Number of memory instructions sent to the readonly segment")
-    ;
-    readonlyMemInsts = readonlyReads + readonlyWrites;
-    kernargReads
-        .name(name() + ".kernarg_reads")
-        .desc("Number of reads sent to the kernarg segment")
-    ;
-    kernargWrites
-        .name(name() + ".kernarg_writes")
-        .desc("Number of memory instructions sent to the kernarg segment")
-    ;
-    kernargMemInsts
-        .name(name() + ".kernarg_mem_insts")
-        .desc("Number of memory instructions sent to the kernarg segment")
-    ;
-    kernargMemInsts = kernargReads + kernargWrites;
-
-    tlbCycles
-        .name(name() + ".tlb_cycles")
-        .desc("total number of cycles for all uncoalesced requests")
-        ;
-
-    tlbRequests
-        .name(name() + ".tlb_requests")
-        .desc("number of uncoalesced requests")
-        ;
-
-    tlbLatency
-        .name(name() + ".avg_translation_latency")
-        .desc("Avg. translation latency for data translations")
-        ;
-
-    tlbLatency = tlbCycles / tlbRequests;
-
-    hitsPerTLBLevel
-       .init(4)
-       .name(name() + ".TLB_hits_distribution")
-       .desc("TLB hits distribution (0 for page table, x for Lx-TLB")
-       ;
-
-    // fixed number of TLB levels
-    for (int i = 0; i < 4; ++i) {
-        if (!i)
-            hitsPerTLBLevel.subname(i,"page_table");
-        else
-            hitsPerTLBLevel.subname(i, csprintf("L%d_TLB",i));
-    }
-
-    execRateDist
-        .init(0, 10, 2)
-        .name(name() + ".inst_exec_rate")
-        .desc("Instruction Execution Rate: Number of executed vector "
-              "instructions per cycle")
-        ;
-
-    ldsBankConflictDist
-       .init(0, wfSize(), 2)
-       .name(name() + ".lds_bank_conflicts")
-       .desc("Number of bank conflicts per LDS memory packet")
-       ;
-
-    ldsBankAccesses
-        .name(name() + ".lds_bank_access_cnt")
-        .desc("Total number of LDS bank accesses")
-        ;
-
-    pageDivergenceDist
-        // A wavefront can touch up to N pages per memory instruction where
-        // N is equal to the wavefront size
-        // The number of pages per bin can be configured (here it's 4).
-       .init(1, wfSize(), 4)
-       .name(name() + ".page_divergence_dist")
-       .desc("pages touched per wf (over all mem. instr.)")
-       ;
-
-    controlFlowDivergenceDist
-        .init(1, wfSize(), 4)
-        .name(name() + ".warp_execution_dist")
-        .desc("number of lanes active per instruction (oval all instructions)")
-        ;
-
-    activeLanesPerGMemInstrDist
-        .init(1, wfSize(), 4)
-        .name(name() + ".gmem_lanes_execution_dist")
-        .desc("number of active lanes per global memory instruction")
-        ;
-
-    activeLanesPerLMemInstrDist
-        .init(1, wfSize(), 4)
-        .name(name() + ".lmem_lanes_execution_dist")
-        .desc("number of active lanes per local memory instruction")
-        ;
-
-    numInstrExecuted
-        .name(name() + ".num_instr_executed")
-        .desc("number of instructions executed")
-        ;
-
-    numVecOpsExecuted
-        .name(name() + ".num_vec_ops_executed")
-        .desc("number of vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedF16
-        .name(name() + ".num_vec_ops_f16_executed")
-        .desc("number of f16 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedF32
-        .name(name() + ".num_vec_ops_f32_executed")
-        .desc("number of f32 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedF64
-        .name(name() + ".num_vec_ops_f64_executed")
-        .desc("number of f64 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedFMA16
-        .name(name() + ".num_vec_ops_fma16_executed")
-        .desc("number of fma16 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedFMA32
-        .name(name() + ".num_vec_ops_fma32_executed")
-        .desc("number of fma32 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedFMA64
-        .name(name() + ".num_vec_ops_fma64_executed")
-        .desc("number of fma64 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedMAD16
-        .name(name() + ".num_vec_ops_mad16_executed")
-        .desc("number of mad16 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedMAD32
-        .name(name() + ".num_vec_ops_mad32_executed")
-        .desc("number of mad32 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedMAD64
-        .name(name() + ".num_vec_ops_mad64_executed")
-        .desc("number of mad64 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedMAC16
-        .name(name() + ".num_vec_ops_mac16_executed")
-        .desc("number of mac16 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedMAC32
-        .name(name() + ".num_vec_ops_mac32_executed")
-        .desc("number of mac32 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedMAC64
-        .name(name() + ".num_vec_ops_mac64_executed")
-        .desc("number of mac64 vec ops executed (e.g. WF size/inst)")
-        ;
-
-    numVecOpsExecutedTwoOpFP
-        .name(name() + ".num_vec_ops_two_op_fp_executed")
-        .desc("number of two op FP vec ops executed (e.g. WF size/inst)")
-        ;
-
-    totalCycles
-        .name(name() + ".num_total_cycles")
-        .desc("number of cycles the CU ran for")
-        ;
-
-    ipc
-        .name(name() + ".ipc")
-        .desc("Instructions per cycle (this CU only)")
-        ;
-
-    vpc
-        .name(name() + ".vpc")
-        .desc("Vector Operations per cycle (this CU only)")
-        ;
-
-    vpc_f16
-        .name(name() + ".vpc_f16")
-        .desc("F16 Vector Operations per cycle (this CU only)")
-        ;
-
-    vpc_f32
-        .name(name() + ".vpc_f32")
-        .desc("F32 Vector Operations per cycle (this CU only)")
-        ;
-
-    vpc_f64
-        .name(name() + ".vpc_f64")
-        .desc("F64 Vector Operations per cycle (this CU only)")
-        ;
-
-    numALUInstsExecuted
-        .name(name() + ".num_alu_insts_executed")
-        .desc("Number of dynamic non-GM memory insts executed")
-        ;
-
-    wgBlockedDueBarrierAllocation
-        .name(name() + ".wg_blocked_due_barrier_alloc")
-        .desc("WG dispatch was blocked due to lack of barrier resources")
-        ;
-
-    wgBlockedDueLdsAllocation
-        .name(name() + ".wg_blocked_due_lds_alloc")
-        .desc("Workgroup blocked due to LDS capacity")
-        ;
-
-    ipc = numInstrExecuted / totalCycles;
-    vpc = numVecOpsExecuted / totalCycles;
-    vpc_f16 = numVecOpsExecutedF16 / totalCycles;
-    vpc_f32 = numVecOpsExecutedF32 / totalCycles;
-    vpc_f64 = numVecOpsExecutedF64 / totalCycles;
-
-    numTimesWgBlockedDueVgprAlloc
-        .name(name() + ".times_wg_blocked_due_vgpr_alloc")
-        .desc("Number of times WGs are blocked due to VGPR allocation per "
-              "SIMD")
-        ;
-
-    numTimesWgBlockedDueSgprAlloc
-        .name(name() + ".times_wg_blocked_due_sgpr_alloc")
-        .desc("Number of times WGs are blocked due to SGPR allocation per "
-              "SIMD")
-        ;
-
-    dynamicGMemInstrCnt
-        .name(name() + ".global_mem_instr_cnt")
-        .desc("dynamic non-flat global memory instruction count")
-        ;
-
-    dynamicFlatMemInstrCnt
-        .name(name() + ".flat_global_mem_instr_cnt")
-        .desc("dynamic flat global memory instruction count")
-        ;
-
-    dynamicLMemInstrCnt
-        .name(name() + ".local_mem_instr_cnt")
-        .desc("dynamic local memory intruction count")
-        ;
-
-    numALUInstsExecuted = numInstrExecuted - dynamicGMemInstrCnt -
-        dynamicLMemInstrCnt;
-
-    completedWfs
-        .name(name() + ".num_completed_wfs")
-        .desc("number of completed wavefronts")
-        ;
-
-    completedWGs
-        .name(name() + ".num_completed_wgs")
-        .desc("number of completed workgroups")
-        ;
-
-    numCASOps
-        .name(name() + ".num_CAS_ops")
-        .desc("number of compare and swap operations")
-        ;
-
-    numFailedCASOps
-        .name(name() + ".num_failed_CAS_ops")
-        .desc("number of compare and swap operations that failed")
-        ;
-
-    headTailLatency
-        .init(0, 1000000, 10000)
-        .name(name() + ".head_tail_latency")
-        .desc("ticks between first and last cache block arrival at coalescer")
-        .flags(Stats::pdf | Stats::oneline)
-        ;
-
-    waveLevelParallelism
-        .init(0, shader->n_wf * numVectorALUs, 1)
-        .name(name() + ".wlp")
-        .desc("wave level parallelism: count of active waves at wave launch")
-        ;
-
-    instInterleave
-        .init(numVectorALUs, 0, 20, 1)
-        .name(name() + ".interleaving")
-        .desc("Measure of instruction interleaving per SIMD")
-        ;
-
-    // register stats of pipeline stages
-    fetchStage.regStats();
-    scoreboardCheckStage.regStats();
-    scheduleStage.regStats();
-    execStage.regStats();
-
-    // register stats of memory pipelines
-    globalMemoryPipe.regStats();
-    localMemoryPipe.regStats();
-    scalarMemoryPipe.regStats();
-
-    registerManager->regStats();
-}
-
-void
 ComputeUnit::updateInstStats(GPUDynInstPtr gpuDynInst)
 {
     if (gpuDynInst->isScalar()) {
         if (gpuDynInst->isALU() && !gpuDynInst->isWaitcnt()) {
-            sALUInsts++;
-            instCyclesSALU++;
+            stats.sALUInsts++;
+            stats.instCyclesSALU++;
         } else if (gpuDynInst->isLoad()) {
-            scalarMemReads++;
+            stats.scalarMemReads++;
         } else if (gpuDynInst->isStore()) {
-            scalarMemWrites++;
+            stats.scalarMemWrites++;
         }
     } else {
         if (gpuDynInst->isALU()) {
@@ -2350,45 +1807,46 @@ ComputeUnit::updateInstStats(GPUDynInstPtr gpuDynInst)
             if (shader->total_valu_insts == shader->max_valu_insts) {
                 exitSimLoop("max vALU insts");
             }
-            vALUInsts++;
-            instCyclesVALU++;
-            threadCyclesVALU += gpuDynInst->wavefront()->execMask().count();
+            stats.vALUInsts++;
+            stats.instCyclesVALU++;
+            stats.threadCyclesVALU
+                += gpuDynInst->wavefront()->execMask().count();
         } else if (gpuDynInst->isFlat()) {
             if (gpuDynInst->isLocalMem()) {
-                flatLDSInsts++;
+                stats.flatLDSInsts++;
             } else {
-                flatVMemInsts++;
+                stats.flatVMemInsts++;
             }
         } else if (gpuDynInst->isLocalMem()) {
-            ldsNoFlatInsts++;
+            stats.ldsNoFlatInsts++;
         } else if (gpuDynInst->isLoad()) {
-            vectorMemReads++;
+            stats.vectorMemReads++;
         } else if (gpuDynInst->isStore()) {
-            vectorMemWrites++;
+            stats.vectorMemWrites++;
         }
 
         if (gpuDynInst->isLoad()) {
             switch (gpuDynInst->executedAs()) {
               case Enums::SC_SPILL:
-                spillReads++;
+                stats.spillReads++;
                 break;
               case Enums::SC_GLOBAL:
-                globalReads++;
+                stats.globalReads++;
                 break;
               case Enums::SC_GROUP:
-                groupReads++;
+                stats.groupReads++;
                 break;
               case Enums::SC_PRIVATE:
-                privReads++;
+                stats.privReads++;
                 break;
               case Enums::SC_READONLY:
-                readonlyReads++;
+                stats.readonlyReads++;
                 break;
               case Enums::SC_KERNARG:
-                kernargReads++;
+                stats.kernargReads++;
                 break;
               case Enums::SC_ARG:
-                argReads++;
+                stats.argReads++;
                 break;
               case Enums::SC_NONE:
                 /**
@@ -2403,25 +1861,25 @@ ComputeUnit::updateInstStats(GPUDynInstPtr gpuDynInst)
         } else if (gpuDynInst->isStore()) {
             switch (gpuDynInst->executedAs()) {
               case Enums::SC_SPILL:
-                spillWrites++;
+                stats.spillWrites++;
                 break;
               case Enums::SC_GLOBAL:
-                globalWrites++;
+                stats.globalWrites++;
                 break;
               case Enums::SC_GROUP:
-                groupWrites++;
+                stats.groupWrites++;
                 break;
               case Enums::SC_PRIVATE:
-                privWrites++;
+                stats.privWrites++;
                 break;
               case Enums::SC_READONLY:
-                readonlyWrites++;
+                stats.readonlyWrites++;
                 break;
               case Enums::SC_KERNARG:
-                kernargWrites++;
+                stats.kernargWrites++;
                 break;
               case Enums::SC_ARG:
-                argWrites++;
+                stats.argWrites++;
                 break;
               case Enums::SC_NONE:
                 /**
@@ -2635,4 +2093,242 @@ ComputeUnit::LDSPort::recvReqRetry()
             retries.pop();
         }
     }
+}
+
+ComputeUnit::ComputeUnitStats::ComputeUnitStats(Stats::Group *parent, int n_wf)
+    : Stats::Group(parent),
+      ADD_STAT(vALUInsts, "Number of vector ALU insts issued."),
+      ADD_STAT(vALUInstsPerWF, "The avg. number of vector ALU insts issued "
+               "per-wavefront."),
+      ADD_STAT(sALUInsts, "Number of scalar ALU insts issued."),
+      ADD_STAT(sALUInstsPerWF, "The avg. number of scalar ALU insts issued "
+               "per-wavefront."),
+      ADD_STAT(instCyclesVALU,
+               "Number of cycles needed to execute VALU insts."),
+      ADD_STAT(instCyclesSALU,
+               "Number of cycles needed to execute SALU insts."),
+      ADD_STAT(threadCyclesVALU, "Number of thread cycles used to execute "
+               "vector ALU ops. Similar to instCyclesVALU but multiplied by "
+               "the number of active threads."),
+      ADD_STAT(vALUUtilization,
+               "Percentage of active vector ALU threads in a wave."),
+      ADD_STAT(ldsNoFlatInsts, "Number of LDS insts issued, not including FLAT"
+               " accesses that resolve to LDS."),
+      ADD_STAT(ldsNoFlatInstsPerWF, "The avg. number of LDS insts (not "
+               "including FLAT accesses that resolve to LDS) per-wavefront."),
+      ADD_STAT(flatVMemInsts,
+               "The number of FLAT insts that resolve to vmem issued."),
+      ADD_STAT(flatVMemInstsPerWF, "The average number of FLAT insts that "
+               "resolve to vmem issued per-wavefront."),
+      ADD_STAT(flatLDSInsts,
+               "The number of FLAT insts that resolve to LDS issued."),
+      ADD_STAT(flatLDSInstsPerWF, "The average number of FLAT insts that "
+               "resolve to LDS issued per-wavefront."),
+      ADD_STAT(vectorMemWrites,
+               "Number of vector mem write insts (excluding FLAT insts)."),
+      ADD_STAT(vectorMemWritesPerWF, "The average number of vector mem write "
+               "insts (excluding FLAT insts) per-wavefront."),
+      ADD_STAT(vectorMemReads,
+               "Number of vector mem read insts (excluding FLAT insts)."),
+      ADD_STAT(vectorMemReadsPerWF, "The avg. number of vector mem read insts "
+               "(excluding FLAT insts) per-wavefront."),
+      ADD_STAT(scalarMemWrites, "Number of scalar mem write insts."),
+      ADD_STAT(scalarMemWritesPerWF,
+               "The average number of scalar mem write insts per-wavefront."),
+      ADD_STAT(scalarMemReads, "Number of scalar mem read insts."),
+      ADD_STAT(scalarMemReadsPerWF,
+               "The average number of scalar mem read insts per-wavefront."),
+      ADD_STAT(vectorMemReadsPerKiloInst,
+               "Number of vector mem reads per kilo-instruction"),
+      ADD_STAT(vectorMemWritesPerKiloInst,
+               "Number of vector mem writes per kilo-instruction"),
+      ADD_STAT(vectorMemInstsPerKiloInst,
+               "Number of vector mem insts per kilo-instruction"),
+      ADD_STAT(scalarMemReadsPerKiloInst,
+               "Number of scalar mem reads per kilo-instruction"),
+      ADD_STAT(scalarMemWritesPerKiloInst,
+               "Number of scalar mem writes per kilo-instruction"),
+      ADD_STAT(scalarMemInstsPerKiloInst,
+               "Number of scalar mem insts per kilo-instruction"),
+      ADD_STAT(instCyclesVMemPerSimd, "Number of cycles to send address, "
+               "command, data from VRF to vector memory unit, per SIMD"),
+      ADD_STAT(instCyclesScMemPerSimd, "Number of cycles to send address, "
+               "command, data from SRF to scalar memory unit, per SIMD"),
+      ADD_STAT(instCyclesLdsPerSimd, "Number of cycles to send address, "
+               "command, data from VRF to LDS unit, per SIMD"),
+      ADD_STAT(globalReads, "Number of reads to the global segment"),
+      ADD_STAT(globalWrites, "Number of writes to the global segment"),
+      ADD_STAT(globalMemInsts,
+               "Number of memory instructions sent to the global segment"),
+      ADD_STAT(argReads, "Number of reads to the arg segment"),
+      ADD_STAT(argWrites, "NUmber of writes to the arg segment"),
+      ADD_STAT(argMemInsts,
+               "Number of memory instructions sent to the arg segment"),
+      ADD_STAT(spillReads, "Number of reads to the spill segment"),
+      ADD_STAT(spillWrites, "Number of writes to the spill segment"),
+      ADD_STAT(spillMemInsts,
+               "Number of memory instructions sent to the spill segment"),
+      ADD_STAT(groupReads, "Number of reads to the group segment"),
+      ADD_STAT(groupWrites, "Number of writes to the group segment"),
+      ADD_STAT(groupMemInsts,
+               "Number of memory instructions sent to the group segment"),
+      ADD_STAT(privReads, "Number of reads to the private segment"),
+      ADD_STAT(privWrites, "Number of writes to the private segment"),
+      ADD_STAT(privMemInsts,
+               "Number of memory instructions sent to the private segment"),
+      ADD_STAT(readonlyReads, "Number of reads to the readonly segment"),
+      ADD_STAT(readonlyWrites,
+               "Number of memory instructions sent to the readonly segment"),
+      ADD_STAT(readonlyMemInsts,
+               "Number of memory instructions sent to the readonly segment"),
+      ADD_STAT(kernargReads, "Number of reads sent to the kernarg segment"),
+      ADD_STAT(kernargWrites,
+               "Number of memory instructions sent to the kernarg segment"),
+      ADD_STAT(kernargMemInsts,
+               "Number of memory instructions sent to the kernarg segment"),
+      ADD_STAT(waveLevelParallelism,
+               "wave level parallelism: count of active waves at wave launch"),
+      ADD_STAT(tlbRequests, "number of uncoalesced requests"),
+      ADD_STAT(tlbCycles,
+               "total number of cycles for all uncoalesced requests"),
+      ADD_STAT(tlbLatency, "Avg. translation latency for data translations"),
+      ADD_STAT(hitsPerTLBLevel,
+               "TLB hits distribution (0 for page table, x for Lx-TLB)"),
+      ADD_STAT(ldsBankAccesses, "Total number of LDS bank accesses"),
+      ADD_STAT(ldsBankConflictDist,
+               "Number of bank conflicts per LDS memory packet"),
+      ADD_STAT(pageDivergenceDist,
+               "pages touched per wf (over all mem. instr.)"),
+      ADD_STAT(dynamicGMemInstrCnt,
+               "dynamic non-flat global memory instruction count"),
+      ADD_STAT(dynamicFlatMemInstrCnt,
+               "dynamic flat global memory instruction count"),
+      ADD_STAT(dynamicLMemInstrCnt, "dynamic local memory intruction count"),
+      ADD_STAT(wgBlockedDueBarrierAllocation,
+               "WG dispatch was blocked due to lack of barrier resources"),
+      ADD_STAT(wgBlockedDueLdsAllocation,
+               "Workgroup blocked due to LDS capacity"),
+      ADD_STAT(numInstrExecuted, "number of instructions executed"),
+      ADD_STAT(execRateDist, "Instruction Execution Rate: Number of executed "
+               "vector instructions per cycle"),
+      ADD_STAT(numVecOpsExecuted,
+               "number of vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedF16,
+               "number of f16 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedF32,
+               "number of f32 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedF64,
+               "number of f64 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedFMA16,
+               "number of fma16 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedFMA32,
+               "number of fma32 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedFMA64,
+               "number of fma64 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedMAC16,
+               "number of mac16 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedMAC32,
+               "number of mac32 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedMAC64,
+               "number of mac64 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedMAD16,
+               "number of mad16 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedMAD32,
+               "number of mad32 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedMAD64,
+               "number of mad64 vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(numVecOpsExecutedTwoOpFP,
+               "number of two op FP vec ops executed (e.g. WF size/inst)"),
+      ADD_STAT(totalCycles, "number of cycles the CU ran for"),
+      ADD_STAT(vpc, "Vector Operations per cycle (this CU only)"),
+      ADD_STAT(vpc_f16, "F16 Vector Operations per cycle (this CU only)"),
+      ADD_STAT(vpc_f32, "F32 Vector Operations per cycle (this CU only)"),
+      ADD_STAT(vpc_f64, "F64 Vector Operations per cycle (this CU only)"),
+      ADD_STAT(ipc, "Instructions per cycle (this CU only)"),
+      ADD_STAT(controlFlowDivergenceDist, "number of lanes active per "
+               "instruction (over all instructions)"),
+      ADD_STAT(activeLanesPerGMemInstrDist,
+               "number of active lanes per global memory instruction"),
+      ADD_STAT(activeLanesPerLMemInstrDist,
+               "number of active lanes per local memory instruction"),
+      ADD_STAT(numALUInstsExecuted,
+               "Number of dynamic non-GM memory insts executed"),
+      ADD_STAT(numTimesWgBlockedDueVgprAlloc, "Number of times WGs are "
+               "blocked due to VGPR allocation per SIMD"),
+      ADD_STAT(numTimesWgBlockedDueSgprAlloc, "Number of times WGs are "
+               "blocked due to SGPR allocation per SIMD"),
+      ADD_STAT(numCASOps, "number of compare and swap operations"),
+      ADD_STAT(numFailedCASOps,
+               "number of compare and swap operations that failed"),
+      ADD_STAT(completedWfs, "number of completed wavefronts"),
+      ADD_STAT(completedWGs, "number of completed workgroups"),
+      ADD_STAT(headTailLatency, "ticks between first and last cache block "
+               "arrival at coalescer"),
+      ADD_STAT(instInterleave, "Measure of instruction interleaving per SIMD")
+{
+    ComputeUnit *cu = static_cast<ComputeUnit*>(parent);
+
+    instCyclesVMemPerSimd.init(cu->numVectorALUs);
+    instCyclesScMemPerSimd.init(cu->numVectorALUs);
+    instCyclesLdsPerSimd.init(cu->numVectorALUs);
+
+    hitsPerTLBLevel.init(4);
+    execRateDist.init(0, 10, 2);
+    ldsBankConflictDist.init(0, cu->wfSize(), 2);
+
+    pageDivergenceDist.init(1, cu->wfSize(), 4);
+    controlFlowDivergenceDist.init(1, cu->wfSize(), 4);
+    activeLanesPerGMemInstrDist.init(1, cu->wfSize(), 4);
+    activeLanesPerLMemInstrDist.init(1, cu->wfSize(), 4);
+
+    headTailLatency.init(0, 1000000, 10000).flags(Stats::pdf | Stats::oneline);
+    waveLevelParallelism.init(0, n_wf * cu->numVectorALUs, 1);
+    instInterleave.init(cu->numVectorALUs, 0, 20, 1);
+
+    vALUInstsPerWF = vALUInsts / completedWfs;
+    sALUInstsPerWF = sALUInsts / completedWfs;
+    vALUUtilization = (threadCyclesVALU / (64 * instCyclesVALU)) * 100;
+    ldsNoFlatInstsPerWF = ldsNoFlatInsts / completedWfs;
+    flatVMemInstsPerWF = flatVMemInsts / completedWfs;
+    flatLDSInstsPerWF = flatLDSInsts / completedWfs;
+    vectorMemWritesPerWF = vectorMemWrites / completedWfs;
+    vectorMemReadsPerWF = vectorMemReads / completedWfs;
+    scalarMemWritesPerWF = scalarMemWrites / completedWfs;
+    scalarMemReadsPerWF = scalarMemReads / completedWfs;
+
+    vectorMemReadsPerKiloInst = (vectorMemReads / numInstrExecuted) * 1000;
+    vectorMemWritesPerKiloInst = (vectorMemWrites / numInstrExecuted) * 1000;
+    vectorMemInstsPerKiloInst =
+        ((vectorMemReads + vectorMemWrites) / numInstrExecuted) * 1000;
+    scalarMemReadsPerKiloInst = (scalarMemReads / numInstrExecuted) * 1000;
+    scalarMemWritesPerKiloInst = (scalarMemWrites / numInstrExecuted) * 1000;
+    scalarMemInstsPerKiloInst =
+        ((scalarMemReads + scalarMemWrites) / numInstrExecuted) * 1000;
+
+    globalMemInsts = globalReads + globalWrites;
+    argMemInsts = argReads + argWrites;
+    spillMemInsts = spillReads + spillWrites;
+    groupMemInsts = groupReads + groupWrites;
+    privMemInsts = privReads + privWrites;
+    readonlyMemInsts = readonlyReads + readonlyWrites;
+    kernargMemInsts = kernargReads + kernargWrites;
+
+    tlbLatency = tlbCycles / tlbRequests;
+
+    // fixed number of TLB levels
+    for (int i = 0; i < 4; ++i) {
+        if (!i)
+            hitsPerTLBLevel.subname(i,"page_table");
+        else
+            hitsPerTLBLevel.subname(i, csprintf("L%d_TLB",i));
+    }
+
+    ipc = numInstrExecuted / totalCycles;
+    vpc = numVecOpsExecuted / totalCycles;
+    vpc_f16 = numVecOpsExecutedF16 / totalCycles;
+    vpc_f32 = numVecOpsExecutedF32 / totalCycles;
+    vpc_f64 = numVecOpsExecutedF64 / totalCycles;
+
+    numALUInstsExecuted = numInstrExecuted - dynamicGMemInstrCnt -
+        dynamicLMemInstrCnt;
 }

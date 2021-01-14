@@ -39,7 +39,8 @@
 #include <utility>
 #include <vector>
 
-#include "sim/stats.hh"
+#include "base/statistics.hh"
+#include "base/stats/group.hh"
 
 class ComputeUnit;
 class ScheduleToExecute;
@@ -81,20 +82,6 @@ class ExecStage
     void dumpDispList();
 
     const std::string& name() const { return _name; }
-    void regStats();
-    // number of idle cycles
-    Stats::Scalar numCyclesWithNoIssue;
-    // number of busy cycles
-    Stats::Scalar numCyclesWithInstrIssued;
-    // number of cycles during which at least one
-    // instruction was issued to an execution resource type
-    Stats::Vector numCyclesWithInstrTypeIssued;
-    // number of idle cycles during which the scheduler
-    // issued no instructions targeting a specific
-    // execution resource type
-    Stats::Vector numCyclesWithNoInstrTypeIssued;
-    // SIMDs active per cycle
-    Stats::Distribution spc;
 
   private:
     void collectStatistics(enum STAT_STATUS stage, int unitId);
@@ -105,11 +92,33 @@ class ExecStage
     bool lastTimeInstExecuted;
     bool thisTimeInstExecuted;
     bool instrExecuted;
-    Stats::Scalar  numTransActiveIdle;
-    Stats::Distribution idleDur;
     int executionResourcesUsed;
     uint64_t idle_dur;
     const std::string _name;
+
+  protected:
+    struct ExecStageStats : public Stats::Group
+    {
+        ExecStageStats(Stats::Group *parent);
+
+        // number of transitions from active to idle
+        Stats::Scalar numTransActiveIdle;
+        // number of idle cycles
+        Stats::Scalar numCyclesWithNoIssue;
+        // number of busy cycles
+        Stats::Scalar numCyclesWithInstrIssued;
+        // SIMDs active per cycle
+        Stats::Distribution spc;
+        // duration of idle periods in cycles
+        Stats::Distribution idleDur;
+        // number of cycles during which at least one
+        // instruction was issued to an execution resource type
+        Stats::Vector numCyclesWithInstrTypeIssued;
+        // number of idle cycles during which the scheduler
+        // issued no instructions targeting a specific
+        // execution resource type
+        Stats::Vector numCyclesWithNoInstrTypeIssued;
+    } stats;
 };
 
 #endif // __EXEC_STAGE_HH__

@@ -67,7 +67,7 @@ namespace X86ISA
         : ClockedObject(p), configAddress(0), size(p.size),
           cleanupEvent([this]{ cleanup(); }, name(), false,
                        Event::Maximum_Pri),
-          exitEvent([this]{ exitCallback(); }, name())
+          exitEvent([this]{ exitCallback(); }, name()), stats(this)
     {
         assoc = p.assoc;
         assert(assoc <= size);
@@ -402,12 +402,12 @@ namespace X86ISA
                     return tlb_hit;
                 }
 
-                localNumTLBAccesses++;
+                stats.localNumTLBAccesses++;
 
                 if (!entry) {
-                    localNumTLBMisses++;
+                    stats.localNumTLBMisses++;
                 } else {
-                    localNumTLBHits++;
+                    stats.localNumTLBHits++;
                 }
             }
         }
@@ -499,10 +499,10 @@ namespace X86ISA
                 DPRINTF(GPUTLB, "Paging enabled.\n");
                 // The vaddr already has the segment base applied.
                 TlbEntry *entry = lookup(vaddr);
-                localNumTLBAccesses++;
+                stats.localNumTLBAccesses++;
 
                 if (!entry) {
-                    localNumTLBMisses++;
+                    stats.localNumTLBMisses++;
                     if (timing) {
                         latency = missLatency1;
                     }
@@ -544,7 +544,7 @@ namespace X86ISA
                         DPRINTF(GPUTLB, "Miss was serviced.\n");
                     }
                 } else {
-                    localNumTLBHits++;
+                    stats.localNumTLBHits++;
 
                     if (timing) {
                         latency = hitLatency;
@@ -659,89 +659,6 @@ namespace X86ISA
     {
     }
 
-    void
-    GpuTLB::regStats()
-    {
-        ClockedObject::regStats();
-
-        localNumTLBAccesses
-            .name(name() + ".local_TLB_accesses")
-            .desc("Number of TLB accesses")
-            ;
-
-        localNumTLBHits
-            .name(name() + ".local_TLB_hits")
-            .desc("Number of TLB hits")
-            ;
-
-        localNumTLBMisses
-            .name(name() + ".local_TLB_misses")
-            .desc("Number of TLB misses")
-            ;
-
-        localTLBMissRate
-            .name(name() + ".local_TLB_miss_rate")
-            .desc("TLB miss rate")
-            ;
-
-        accessCycles
-            .name(name() + ".access_cycles")
-            .desc("Cycles spent accessing this TLB level")
-            ;
-
-        pageTableCycles
-            .name(name() + ".page_table_cycles")
-            .desc("Cycles spent accessing the page table")
-            ;
-
-        localTLBMissRate = 100 * localNumTLBMisses / localNumTLBAccesses;
-
-        numUniquePages
-            .name(name() + ".unique_pages")
-            .desc("Number of unique pages touched")
-            ;
-
-        localCycles
-            .name(name() + ".local_cycles")
-            .desc("Number of cycles spent in queue for all incoming reqs")
-            ;
-
-        localLatency
-            .name(name() + ".local_latency")
-            .desc("Avg. latency over incoming coalesced reqs")
-            ;
-
-        localLatency = localCycles / localNumTLBAccesses;
-
-        globalNumTLBAccesses
-            .name(name() + ".global_TLB_accesses")
-            .desc("Number of TLB accesses")
-            ;
-
-        globalNumTLBHits
-            .name(name() + ".global_TLB_hits")
-            .desc("Number of TLB hits")
-            ;
-
-        globalNumTLBMisses
-            .name(name() + ".global_TLB_misses")
-            .desc("Number of TLB misses")
-            ;
-
-        globalTLBMissRate
-            .name(name() + ".global_TLB_miss_rate")
-            .desc("TLB miss rate")
-            ;
-
-        globalTLBMissRate = 100 * globalNumTLBMisses / globalNumTLBAccesses;
-
-        avgReuseDistance
-            .name(name() + ".avg_reuse_distance")
-            .desc("avg. reuse distance over all pages (in ticks)")
-            ;
-
-    }
-
     /**
      * Do the TLB lookup for this coalesced request and schedule
      * another event <TLB access latency> cycles later.
@@ -768,10 +685,10 @@ namespace X86ISA
         int req_cnt = sender_state->reqCnt.back();
 
         if (update_stats) {
-            accessCycles -= (curTick() * req_cnt);
-            localCycles -= curTick();
+            stats.accessCycles -= (curTick() * req_cnt);
+            stats.localCycles -= curTick();
             updatePageFootprint(virt_page_addr);
-            globalNumTLBAccesses += req_cnt;
+            stats.globalNumTLBAccesses += req_cnt;
         }
 
         tlbOutcome lookup_outcome = TLB_MISS;
@@ -795,11 +712,11 @@ namespace X86ISA
                 // the reqCnt has an entry per level, so its size tells us
                 // which level we are in
                 sender_state->hitLevel = sender_state->reqCnt.size();
-                globalNumTLBHits += req_cnt;
+                stats.globalNumTLBHits += req_cnt;
             }
         } else {
             if (update_stats)
-                globalNumTLBMisses += req_cnt;
+                stats.globalNumTLBMisses += req_cnt;
         }
 
         /*
@@ -981,16 +898,16 @@ namespace X86ISA
             handleTranslationReturn(virtPageAddr, TLB_HIT, pkt);
 
             if (update_stats) {
-                accessCycles += (req_cnt * curTick());
-                localCycles += curTick();
+                stats.accessCycles += (req_cnt * curTick());
+                stats.localCycles += curTick();
             }
 
         } else if (outcome == TLB_MISS) {
 
             DPRINTF(GPUTLB, "This is a TLB miss\n");
             if (update_stats) {
-                accessCycles += (req_cnt*curTick());
-                localCycles += curTick();
+                stats.accessCycles += (req_cnt*curTick());
+                stats.localCycles += curTick();
             }
 
             if (hasMemSidePort) {
@@ -998,8 +915,8 @@ namespace X86ISA
                 // the reply back till when we propagate it to the coalescer
                 // above.
                 if (update_stats) {
-                    accessCycles += (req_cnt * 1);
-                    localCycles += 1;
+                    stats.accessCycles += (req_cnt * 1);
+                    stats.localCycles += 1;
                 }
 
                 /**
@@ -1022,7 +939,7 @@ namespace X86ISA
                         "addr %#x\n", virtPageAddr);
 
                 if (update_stats)
-                    pageTableCycles -= (req_cnt*curTick());
+                    stats.pageTableCycles -= (req_cnt*curTick());
 
                 TLBEvent *tlb_event = translationReturnEvent[virtPageAddr];
                 assert(tlb_event);
@@ -1032,7 +949,7 @@ namespace X86ISA
             }
         } else if (outcome == PAGE_WALK) {
             if (update_stats)
-                pageTableCycles += (req_cnt*curTick());
+                stats.pageTableCycles += (req_cnt*curTick());
 
             // Need to access the page table and update the TLB
             DPRINTF(GPUTLB, "Doing a page walk for address %#x\n",
@@ -1222,17 +1139,17 @@ namespace X86ISA
         // functional mode means no coalescing
         // global metrics are the same as the local metrics
         if (update_stats) {
-            tlb->globalNumTLBAccesses++;
+            tlb->stats.globalNumTLBAccesses++;
 
             if (success) {
                 sender_state->hitLevel = sender_state->reqCnt.size();
-                tlb->globalNumTLBHits++;
+                tlb->stats.globalNumTLBHits++;
             }
         }
 
         if (!success) {
             if (update_stats)
-                tlb->globalNumTLBMisses++;
+                tlb->stats.globalNumTLBMisses++;
             if (tlb->hasMemSidePort) {
                 // there is a TLB below -> propagate down the TLB hierarchy
                 tlb->memSidePort[0]->sendFunctional(pkt);
@@ -1405,7 +1322,7 @@ namespace X86ISA
         bool first_page_access = ret.second;
 
         if (first_page_access) {
-            numUniquePages++;
+            stats.numUniquePages++;
         } else  {
             int accessed_before;
             accessed_before  = curTick() - ret.first->second.lastTimeAccessed;
@@ -1417,7 +1334,7 @@ namespace X86ISA
 
         if (accessDistance) {
             ret.first->second.localTLBAccesses
-                .push_back(localNumTLBAccesses.value());
+                .push_back(stats.localNumTLBAccesses.value());
         }
     }
 
@@ -1506,11 +1423,36 @@ namespace X86ISA
         }
 
         if (!TLBFootprint.empty()) {
-            avgReuseDistance =
+            stats.avgReuseDistance =
                 sum_avg_reuse_distance_per_page / TLBFootprint.size();
         }
 
         //clear the TLBFootprint map
         TLBFootprint.clear();
+    }
+
+    GpuTLB::GpuTLBStats::GpuTLBStats(Stats::Group *parent)
+        : Stats::Group(parent),
+          ADD_STAT(localNumTLBAccesses, "Number of TLB accesses"),
+          ADD_STAT(localNumTLBHits, "Number of TLB hits"),
+          ADD_STAT(localNumTLBMisses, "Number of TLB misses"),
+          ADD_STAT(localTLBMissRate, "TLB miss rate"),
+          ADD_STAT(globalNumTLBAccesses, "Number of TLB accesses"),
+          ADD_STAT(globalNumTLBHits, "Number of TLB hits"),
+          ADD_STAT(globalNumTLBMisses, "Number of TLB misses"),
+          ADD_STAT(globalTLBMissRate, "TLB miss rate"),
+          ADD_STAT(accessCycles, "Cycles spent accessing this TLB level"),
+          ADD_STAT(pageTableCycles, "Cycles spent accessing the page table"),
+          ADD_STAT(numUniquePages, "Number of unique pages touched"),
+          ADD_STAT(localCycles, "Number of cycles spent in queue for all "
+                   "incoming reqs"),
+          ADD_STAT(localLatency, "Avg. latency over incoming coalesced reqs"),
+          ADD_STAT(avgReuseDistance, "avg. reuse distance over all pages (in "
+                   "ticks)")
+    {
+        localLatency = localCycles / localNumTLBAccesses;
+
+        localTLBMissRate = 100 * localNumTLBMisses / localNumTLBAccesses;
+        globalTLBMissRate = 100 * globalNumTLBMisses / globalNumTLBAccesses;
     }
 } // namespace X86ISA

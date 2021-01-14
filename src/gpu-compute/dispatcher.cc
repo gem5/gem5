@@ -49,28 +49,13 @@ GPUDispatcher::GPUDispatcher(const Params &p)
     : SimObject(p), shader(nullptr), gpuCmdProc(nullptr),
       tickEvent([this]{ exec(); },
           "GPU Dispatcher tick", false, Event::CPU_Tick_Pri),
-      dispatchActive(false)
+      dispatchActive(false), stats(this)
 {
     schedule(&tickEvent, 0);
 }
 
 GPUDispatcher::~GPUDispatcher()
 {
-}
-
-void
-GPUDispatcher::regStats()
-{
-    numKernelLaunched
-    .name(name() + ".num_kernel_launched")
-    .desc("number of kernel launched")
-    ;
-
-    cyclesWaitingForDispatch
-    .name(name() + ".cycles_wait_dispatch")
-    .desc("number of cycles with outstanding wavefronts "
-          "that are waiting to be dispatched")
-    ;
 }
 
 HSAQueueEntry*
@@ -127,7 +112,7 @@ GPUDispatcher::unserialize(CheckpointIn &cp)
 void
 GPUDispatcher::dispatch(HSAQueueEntry *task)
 {
-    ++numKernelLaunched;
+    ++stats.numKernelLaunched;
 
     DPRINTF(GPUDisp, "launching kernel: %s, dispatch ID: %d\n",
             task->kernelName(), task->dispatchId());
@@ -158,7 +143,7 @@ GPUDispatcher::exec()
     DPRINTF(GPUAgentDisp, "Launching %d Kernels\n", execIds.size());
 
     if (execIds.size() > 0) {
-        ++cyclesWaitingForDispatch;
+        ++stats.cyclesWaitingForDispatch;
     }
 
     /**
@@ -367,4 +352,12 @@ GPUDispatcher::scheduleDispatch()
     if (!tickEvent.scheduled()) {
         schedule(&tickEvent, curTick() + shader->clockPeriod());
     }
+}
+
+GPUDispatcher::GPUDispatcherStats::GPUDispatcherStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(numKernelLaunched, "number of kernel launched"),
+      ADD_STAT(cyclesWaitingForDispatch, "number of cycles with outstanding "
+               "wavefronts that are waiting to be dispatched")
+{
 }

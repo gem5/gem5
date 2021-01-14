@@ -63,12 +63,12 @@ class AtomicOpCAS : public TypedAtomicOpFunctor<T>
     void
     execute(T *b)
     {
-        computeUnit->numCASOps++;
+        computeUnit->stats.numCASOps++;
 
         if (*b == c) {
             *b = s;
         } else {
-            computeUnit->numFailedCASOps++;
+            computeUnit->stats.numFailedCASOps++;
         }
     }
     AtomicOpFunctor* clone () { return new AtomicOpCAS(c, s, computeUnit); }

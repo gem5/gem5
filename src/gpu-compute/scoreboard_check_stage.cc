@@ -49,7 +49,7 @@ ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams &p,
                                            ScoreboardCheckToSchedule
                                            &to_schedule)
     : computeUnit(cu), toSchedule(to_schedule),
-      _name(cu.name() + ".ScoreboardCheckStage")
+      _name(cu.name() + ".ScoreboardCheckStage"), stats(&cu)
 {
 }
 
@@ -62,7 +62,7 @@ ScoreboardCheckStage::collectStatistics(nonrdytype_e rdyStatus)
 {
     panic_if(rdyStatus == NRDY_ILLEGAL || rdyStatus >= NRDY_CONDITIONS,
              "Instruction ready status %d is illegal!!!", rdyStatus);
-    stallCycles[rdyStatus]++;
+    stats.stallCycles[rdyStatus]++;
 }
 
 // Return true if this wavefront is ready
@@ -266,14 +266,13 @@ ScoreboardCheckStage::exec()
     }
 }
 
-void
-ScoreboardCheckStage::regStats()
+ScoreboardCheckStage::
+ScoreboardCheckStageStats::ScoreboardCheckStageStats(Stats::Group *parent)
+    : Stats::Group(parent, "ScoreboardCheckStage"),
+      ADD_STAT(stallCycles, "number of cycles wave stalled in SCB")
 {
-    stallCycles
-        .init(NRDY_CONDITIONS)
-        .name(name() + ".stall_cycles")
-        .desc("number of cycles wave stalled in SCB")
-        ;
+    stallCycles.init(NRDY_CONDITIONS);
+
     stallCycles.subname(NRDY_WF_STOP, csprintf("WFStop"));
     stallCycles.subname(NRDY_IB_EMPTY, csprintf("IBEmpty"));
     stallCycles.subname(NRDY_WAIT_CNT, csprintf("WaitCnt"));

@@ -63,9 +63,6 @@ class RegisterManager : public SimObject
     void setParent(ComputeUnit *cu);
     void exec();
 
-    // Stats related variables and methods
-    void regStats();
-
     // lookup virtual to physical register translation
     int mapVgpr(Wavefront* w, int vgprIndex);
     int mapSgpr(Wavefront* w, int sgprIndex);

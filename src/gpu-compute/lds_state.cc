@@ -189,10 +189,10 @@ LdsState::processPacket(PacketPtr packet)
     // the number of conflicts this packet will have when accessing the LDS
     unsigned bankConflicts = countBankConflicts(packet, &bankAccesses);
     // count the total number of physical LDS bank accessed
-    parent->ldsBankAccesses += bankAccesses;
+    parent->stats.ldsBankAccesses += bankAccesses;
     // count the LDS bank conflicts. A number set to 1 indicates one
     // access per bank maximum so there are no bank conflicts
-    parent->ldsBankConflictDist.sample(bankConflicts-1);
+    parent->stats.ldsBankConflictDist.sample(bankConflicts-1);
 
     GPUDynInstPtr dynInst = getDynInstr(packet);
     // account for the LDS bank conflict overhead

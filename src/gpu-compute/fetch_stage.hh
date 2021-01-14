@@ -38,6 +38,7 @@
 #include <vector>
 
 #include "base/statistics.hh"
+#include "base/stats/group.hh"
 #include "gpu-compute/fetch_unit.hh"
 
 // Instruction fetch stage.
@@ -61,8 +62,6 @@ class FetchStage
 
     // Stats related variables and methods
     const std::string& name() const { return _name; }
-    void regStats();
-    Stats::Distribution instFetchInstReturned;
     FetchUnit &fetchUnit(int simdId) { return _fetchUnit.at(simdId); }
 
   private:
@@ -73,6 +72,14 @@ class FetchStage
     // instantiated per VALU/SIMD
     std::vector<FetchUnit> _fetchUnit;
     const std::string _name;
+
+  protected:
+    struct FetchStageStats : public Stats::Group
+    {
+        FetchStageStats(Stats::Group *parent);
+
+        Stats::Distribution instFetchInstReturned;
+    } stats;
 };
 
 #endif // __FETCH_STAGE_HH__

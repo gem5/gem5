@@ -49,7 +49,7 @@ Wavefront::Wavefront(const Params &p)
     maxIbSize(p.max_ib_size), _gpuISA(*this),
     vmWaitCnt(-1), expWaitCnt(-1), lgkmWaitCnt(-1),
     vmemInstsIssued(0), expInstsIssued(0), lgkmInstsIssued(0),
-    barId(WFBarrier::InvalidID)
+    barId(WFBarrier::InvalidID), stats(this)
 {
     lastTrace = 0;
     execUnitId = -1;
@@ -95,75 +95,6 @@ Wavefront::Wavefront(const Params &p)
     rawDist.clear();
     lastInstExec = 0;
     vecReads.clear();
-}
-
-void
-Wavefront::regStats()
-{
-    SimObject::regStats();
-
-    // FIXME: the name of the WF needs to be unique
-    numTimesBlockedDueWAXDependencies
-        .name(name() + ".timesBlockedDueWAXDependencies")
-        .desc("number of times the wf's instructions are blocked due to WAW "
-              "or WAR dependencies")
-        ;
-
-    // FIXME: the name of the WF needs to be unique
-    numTimesBlockedDueRAWDependencies
-        .name(name() + ".timesBlockedDueRAWDependencies")
-        .desc("number of times the wf's instructions are blocked due to RAW "
-              "dependencies")
-        ;
-
-    numInstrExecuted
-        .name(name() + ".num_instr_executed")
-        .desc("number of instructions executed by this WF slot")
-        ;
-
-    schCycles
-        .name(name() + ".sch_cycles")
-        .desc("number of cycles spent in schedule stage")
-        ;
-
-    schStalls
-        .name(name() + ".sch_stalls")
-        .desc("number of cycles WF is stalled in SCH stage")
-        ;
-
-    schRfAccessStalls
-        .name(name() + ".sch_rf_access_stalls")
-        .desc("number of cycles wave selected in SCH but RF denied adding "
-              "instruction")
-        ;
-
-    schResourceStalls
-        .name(name() + ".sch_resource_stalls")
-        .desc("number of cycles stalled in sch by resource not available")
-        ;
-
-    schOpdNrdyStalls
-        .name(name() + ".sch_opd_nrdy_stalls")
-        .desc("number of cycles stalled in sch waiting for RF reads to "
-              "complete")
-        ;
-
-    schLdsArbStalls
-        .name(name() + ".sch_lds_arb_stalls")
-        .desc("number of cycles wave stalled due to LDS-VRF arbitration")
-        ;
-
-    vecRawDistance
-        .init(0,20,1)
-        .name(name() + ".vec_raw_distance")
-        .desc("Count of RAW distance in dynamic instructions for this WF")
-        ;
-
-    readsPerWrite
-        .init(0,4,1)
-        .name(name() + ".vec_reads_per_write")
-        .desc("Count of Vector reads per write for this WF")
-        ;
 }
 
 void
@@ -959,17 +890,19 @@ Wavefront::exec()
     }
     computeUnit->srf[simdId]->waveExecuteInst(this, ii);
 
-    computeUnit->shader->vectorInstSrcOperand[ii->numSrcVecOperands()]++;
-    computeUnit->shader->vectorInstDstOperand[ii->numDstVecOperands()]++;
-    computeUnit->numInstrExecuted++;
-    numInstrExecuted++;
+    computeUnit->shader->incVectorInstSrcOperand(ii->numSrcVecOperands());
+    computeUnit->shader->incVectorInstDstOperand(ii->numDstVecOperands());
+    computeUnit->stats.numInstrExecuted++;
+    stats.numInstrExecuted++;
     computeUnit->instExecPerSimd[simdId]++;
-    computeUnit->execRateDist.sample(computeUnit->totalCycles.value() -
-                                     computeUnit->lastExecCycle[simdId]);
-    computeUnit->lastExecCycle[simdId] = computeUnit->totalCycles.value();
+    computeUnit->stats.execRateDist.sample(
+                                    computeUnit->stats.totalCycles.value() -
+                                    computeUnit->lastExecCycle[simdId]);
+    computeUnit->lastExecCycle[simdId] =
+        computeUnit->stats.totalCycles.value();
 
     if (lastInstExec) {
-        computeUnit->instInterleave[simdId].
+        computeUnit->stats.instInterleave[simdId].
             sample(computeUnit->instExecPerSimd[simdId] - lastInstExec);
     }
     lastInstExec = computeUnit->instExecPerSimd[simdId];
@@ -987,8 +920,8 @@ Wavefront::exec()
                 if (ii->isSrcOperand(i)) {
                     // This check should never fail, but to be safe we check
                     if (rawDist.find(vgpr+n) != rawDist.end()) {
-                        vecRawDistance.
-                            sample(numInstrExecuted.value() - rawDist[vgpr+n]);
+                        stats.vecRawDistance.sample(
+                            stats.numInstrExecuted.value() - rawDist[vgpr+n]);
                     }
                     // increment number of reads to this register
                     vecReads[vgpr+n]++;
@@ -997,12 +930,12 @@ Wavefront::exec()
                     // for the first write to each physical register
                     if (rawDist.find(vgpr+n) != rawDist.end()) {
                         // sample the number of reads that were performed
-                        readsPerWrite.sample(vecReads[vgpr+n]);
+                        stats.readsPerWrite.sample(vecReads[vgpr+n]);
                     }
                     // on a write, reset count of reads to 0
                     vecReads[vgpr+n] = 0;
 
-                    rawDist[vgpr+n] = numInstrExecuted.value();
+                    rawDist[vgpr+n] = stats.numInstrExecuted.value();
                 }
             }
         }
@@ -1023,26 +956,29 @@ Wavefront::exec()
 
     if (computeUnit->shader->hsail_mode==Shader::SIMT) {
         const int num_active_lanes = execMask().count();
-        computeUnit->controlFlowDivergenceDist.sample(num_active_lanes);
-        computeUnit->numVecOpsExecuted += num_active_lanes;
+        computeUnit->stats.controlFlowDivergenceDist.sample(num_active_lanes);
+        computeUnit->stats.numVecOpsExecuted += num_active_lanes;
 
         if (ii->isF16() && ii->isALU()) {
             if (ii->isF32() || ii->isF64()) {
                 fatal("Instruction is tagged as both (1) F16, and (2)"
                        "either F32 or F64.");
             }
-            computeUnit->numVecOpsExecutedF16 += num_active_lanes;
+            computeUnit->stats.numVecOpsExecutedF16 += num_active_lanes;
             if (ii->isFMA()) {
-                computeUnit->numVecOpsExecutedFMA16 += num_active_lanes;
-                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedFMA16 += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
             }
             else if (ii->isMAC()) {
-                computeUnit->numVecOpsExecutedMAC16 += num_active_lanes;
-                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedMAC16 += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
             }
             else if (ii->isMAD()) {
-                computeUnit->numVecOpsExecutedMAD16 += num_active_lanes;
-                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedMAD16 += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
             }
         }
         if (ii->isF32() && ii->isALU()) {
@@ -1050,18 +986,21 @@ Wavefront::exec()
                 fatal("Instruction is tagged as both (1) F32, and (2)"
                        "either F16 or F64.");
             }
-            computeUnit->numVecOpsExecutedF32 += num_active_lanes;
+            computeUnit->stats.numVecOpsExecutedF32 += num_active_lanes;
             if (ii->isFMA()) {
-                computeUnit->numVecOpsExecutedFMA32 += num_active_lanes;
-                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedFMA32 += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
             }
             else if (ii->isMAC()) {
-                computeUnit->numVecOpsExecutedMAC32 += num_active_lanes;
-                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedMAC32 += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
             }
             else if (ii->isMAD()) {
-                computeUnit->numVecOpsExecutedMAD32 += num_active_lanes;
-                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedMAD32 += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
             }
         }
         if (ii->isF64() && ii->isALU()) {
@@ -1069,24 +1008,29 @@ Wavefront::exec()
                 fatal("Instruction is tagged as both (1) F64, and (2)"
                        "either F16 or F32.");
             }
-            computeUnit->numVecOpsExecutedF64 += num_active_lanes;
+            computeUnit->stats.numVecOpsExecutedF64 += num_active_lanes;
             if (ii->isFMA()) {
-                computeUnit->numVecOpsExecutedFMA64 += num_active_lanes;
-                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedFMA64 += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
             }
             else if (ii->isMAC()) {
-                computeUnit->numVecOpsExecutedMAC64 += num_active_lanes;
-                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedMAC64 += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
             }
             else if (ii->isMAD()) {
-                computeUnit->numVecOpsExecutedMAD64 += num_active_lanes;
-                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedMAD64 += num_active_lanes;
+                computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
             }
         }
         if (isGmInstruction(ii)) {
-            computeUnit->activeLanesPerGMemInstrDist.sample(num_active_lanes);
+            computeUnit->stats.activeLanesPerGMemInstrDist.sample(
+                                                            num_active_lanes);
         } else if (isLmInstruction(ii)) {
-            computeUnit->activeLanesPerLMemInstrDist.sample(num_active_lanes);
+            computeUnit->stats.activeLanesPerLMemInstrDist.sample(
+                                                            num_active_lanes);
         }
     }
 
@@ -1133,14 +1077,14 @@ Wavefront::exec()
                 computeUnit->cyclesToTicks(computeUnit->vrf_gm_bus_latency));
             computeUnit->vectorGlobalMemUnit.
                 set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
-            computeUnit->instCyclesVMemPerSimd[simdId] +=
+            computeUnit->stats.instCyclesVMemPerSimd[simdId] +=
                 computeUnit->vrf_gm_bus_latency;
         } else {
             computeUnit->srfToScalarMemPipeBus.set(computeUnit->
                 cyclesToTicks(computeUnit->srf_scm_bus_latency));
             computeUnit->scalarMemUnit.
                 set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
-            computeUnit->instCyclesScMemPerSimd[simdId] +=
+            computeUnit->stats.instCyclesScMemPerSimd[simdId] +=
                 computeUnit->srf_scm_bus_latency;
         }
     // GM or Flat as GM Store
@@ -1150,14 +1094,14 @@ Wavefront::exec()
                 cyclesToTicks(Cycles(2 * computeUnit->vrf_gm_bus_latency)));
             computeUnit->vectorGlobalMemUnit.
                 set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
-            computeUnit->instCyclesVMemPerSimd[simdId] +=
+            computeUnit->stats.instCyclesVMemPerSimd[simdId] +=
                 (2 * computeUnit->vrf_gm_bus_latency);
         } else {
             computeUnit->srfToScalarMemPipeBus.set(computeUnit->
                 cyclesToTicks(Cycles(2 * computeUnit->srf_scm_bus_latency)));
             computeUnit->scalarMemUnit.
                 set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
-            computeUnit->instCyclesScMemPerSimd[simdId] +=
+            computeUnit->stats.instCyclesScMemPerSimd[simdId] +=
                 (2 * computeUnit->srf_scm_bus_latency);
         }
     } else if ((ii->isAtomic() || ii->isMemSync()) &&
@@ -1167,14 +1111,14 @@ Wavefront::exec()
                 cyclesToTicks(Cycles(2 * computeUnit->vrf_gm_bus_latency)));
             computeUnit->vectorGlobalMemUnit.
                 set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
-            computeUnit->instCyclesVMemPerSimd[simdId] +=
+            computeUnit->stats.instCyclesVMemPerSimd[simdId] +=
                 (2 * computeUnit->vrf_gm_bus_latency);
         } else {
             computeUnit->srfToScalarMemPipeBus.set(computeUnit->
                 cyclesToTicks(Cycles(2 * computeUnit->srf_scm_bus_latency)));
             computeUnit->scalarMemUnit.
                 set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
-            computeUnit->instCyclesScMemPerSimd[simdId] +=
+            computeUnit->stats.instCyclesScMemPerSimd[simdId] +=
                 (2 * computeUnit->srf_scm_bus_latency);
         }
     // LM or Flat as LM Load
@@ -1183,7 +1127,7 @@ Wavefront::exec()
             cyclesToTicks(computeUnit->vrf_lm_bus_latency));
         computeUnit->vectorSharedMemUnit.
             set(computeUnit->shader->cyclesToTicks(computeUnit->issuePeriod));
-        computeUnit->instCyclesLdsPerSimd[simdId] +=
+        computeUnit->stats.instCyclesLdsPerSimd[simdId] +=
             computeUnit->vrf_lm_bus_latency;
     // LM or Flat as LM Store
     } else if (ii->isStore() && (ii->isLocalMem() || flat_as_lm)) {
@@ -1191,7 +1135,7 @@ Wavefront::exec()
             cyclesToTicks(Cycles(2 * computeUnit->vrf_lm_bus_latency)));
         computeUnit->vectorSharedMemUnit.
             set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
-        computeUnit->instCyclesLdsPerSimd[simdId] +=
+        computeUnit->stats.instCyclesLdsPerSimd[simdId] +=
             (2 * computeUnit->vrf_lm_bus_latency);
     // LM or Flat as LM, Atomic or MemFence
     } else if ((ii->isAtomic() || ii->isMemSync()) &&
@@ -1200,7 +1144,7 @@ Wavefront::exec()
             cyclesToTicks(Cycles(2 * computeUnit->vrf_lm_bus_latency)));
         computeUnit->vectorSharedMemUnit.
             set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
-        computeUnit->instCyclesLdsPerSimd[simdId] +=
+        computeUnit->stats.instCyclesLdsPerSimd[simdId] +=
             (2 * computeUnit->vrf_lm_bus_latency);
     } else {
         panic("Bad instruction type!\n");
@@ -1452,4 +1396,32 @@ void
 Wavefront::releaseBarrier()
 {
     barId = WFBarrier::InvalidID;
+}
+
+Wavefront::WavefrontStats::WavefrontStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(numInstrExecuted,
+               "number of instructions executed by this WF slot"),
+      ADD_STAT(schCycles, "number of cycles spent in schedule stage"),
+      ADD_STAT(schStalls, "number of cycles WF is stalled in SCH stage"),
+      ADD_STAT(schRfAccessStalls, "number of cycles wave selected in SCH but "
+               "RF denied adding instruction"),
+      ADD_STAT(schResourceStalls, "number of cycles stalled in sch by resource"
+               " not available"),
+      ADD_STAT(schOpdNrdyStalls, "number of cycles stalled in sch waiting for "
+               "RF reads to complete"),
+      ADD_STAT(schLdsArbStalls,
+               "number of cycles wave stalled due to LDS-VRF arbitration"),
+      // FIXME: the name of the WF needs to be unique
+      ADD_STAT(numTimesBlockedDueWAXDependencies, "number of times the wf's "
+               "instructions are blocked due to WAW or WAR dependencies"),
+      // FIXME: the name of the WF needs to be unique
+      ADD_STAT(numTimesBlockedDueRAWDependencies, "number of times the wf's "
+               "instructions are blocked due to RAW dependencies"),
+      ADD_STAT(vecRawDistance,
+               "Count of RAW distance in dynamic instructions for this WF"),
+      ADD_STAT(readsPerWrite, "Count of Vector reads per write for this WF")
+{
+    vecRawDistance.init(0, 20, 1);
+    readsPerWrite.init(0, 4, 1);
 }

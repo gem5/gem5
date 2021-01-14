@@ -115,26 +115,8 @@ class TLBCoalescer : public ClockedObject
 
     CoalescingTable issuedTranslationsTable;
 
-    // number of packets the coalescer receives
-    Stats::Scalar uncoalescedAccesses;
-    // number packets the coalescer send to the TLB
-    Stats::Scalar coalescedAccesses;
-
-    // Number of cycles the coalesced requests spend waiting in
-    // coalescerFIFO. For each packet the coalescer receives we take into
-    // account the number of all uncoalesced requests this pkt "represents"
-    Stats::Scalar queuingCycles;
-
-    // On average how much time a request from the
-    // uncoalescedAccesses that reaches the TLB
-    // spends waiting?
-    Stats::Scalar localqueuingCycles;
-    // localqueuingCycles/uncoalescedAccesses
-    Stats::Formula localLatency;
-
     bool canCoalesce(PacketPtr pkt1, PacketPtr pkt2);
     void updatePhysAddresses(PacketPtr pkt);
-    void regStats() override;
 
     class CpuSidePort : public ResponsePort
     {
@@ -211,6 +193,29 @@ class TLBCoalescer : public ClockedObject
     // this FIFO queue keeps track of the virt. page
     // addresses that are pending cleanup
     std::queue<Addr> cleanupQueue;
+
+  protected:
+    struct TLBCoalescerStats : public Stats::Group
+    {
+        TLBCoalescerStats(Stats::Group *parent);
+
+        // number of packets the coalescer receives
+        Stats::Scalar uncoalescedAccesses;
+        // number packets the coalescer send to the TLB
+        Stats::Scalar coalescedAccesses;
+
+        // Number of cycles the coalesced requests spend waiting in
+        // coalescerFIFO. For each packet the coalescer receives we take into
+        // account the number of all uncoalesced requests this pkt "represents"
+        Stats::Scalar queuingCycles;
+
+        // On average how much time a request from the
+        // uncoalescedAccesses that reaches the TLB
+        // spends waiting?
+        Stats::Scalar localqueuingCycles;
+        // localqueuingCycles/uncoalescedAccesses
+        Stats::Formula localLatency;
+    } stats;
 };
 
 #endif // __TLB_COALESCER_HH__

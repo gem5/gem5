@@ -129,9 +129,3 @@ RegisterManager::freeRegisters(Wavefront* w)
 {
     policy->freeRegisters(w);
 }
-
-void
-RegisterManager::regStats()
-{
-    policy->regStats();
-}

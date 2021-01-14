@@ -38,7 +38,7 @@
 
 FetchStage::FetchStage(const ComputeUnitParams &p, ComputeUnit &cu)
     : numVectorALUs(p.num_SIMDs), computeUnit(cu),
-      _name(cu.name() + ".FetchStage")
+      _name(cu.name() + ".FetchStage"), stats(&cu)
 {
     for (int j = 0; j < numVectorALUs; ++j) {
         FetchUnit newFetchUnit(p, cu);
@@ -79,7 +79,7 @@ FetchStage::processFetchReturn(PacketPtr pkt)
     const unsigned num_instructions = pkt->req->getSize() /
         sizeof(TheGpuISA::RawMachInst);
 
-    instFetchInstReturned.sample(num_instructions);
+    stats.instFetchInstReturned.sample(num_instructions);
     uint32_t simdId = wavefront->simdId;
     _fetchUnit[simdId].processFetchReturn(pkt);
 }
@@ -90,13 +90,10 @@ FetchStage::fetch(PacketPtr pkt, Wavefront *wavefront)
     _fetchUnit[wavefront->simdId].fetch(pkt, wavefront);
 }
 
-void
-FetchStage::regStats()
+FetchStage::FetchStageStats::FetchStageStats(Stats::Group *parent)
+    : Stats::Group(parent, "FetchStage"),
+      ADD_STAT(instFetchInstReturned, "For each instruction fetch request "
+               "received record how many instructions you got from it")
 {
-    instFetchInstReturned
-        .init(1, 32, 1)
-        .name(name() + ".inst_fetch_instr_returned")
-        .desc("For each instruction fetch request recieved record how many "
-              "instructions you got from it")
-        ;
+        instFetchInstReturned.init(1, 32, 1);
 }

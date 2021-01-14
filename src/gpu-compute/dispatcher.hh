@@ -48,6 +48,7 @@
 #include <vector>
 
 #include "base/statistics.hh"
+#include "base/stats/group.hh"
 #include "dev/hsa/hsa_packet.hh"
 #include "params/GPUDispatcher.hh"
 #include "sim/sim_object.hh"
@@ -67,7 +68,6 @@ class GPUDispatcher : public SimObject
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-    void regStats() override;
     void setCommandProcessor(GPUCommandProcessor *gpu_cmd_proc);
     void setShader(Shader *new_shader);
     void exec();
@@ -91,9 +91,15 @@ class GPUDispatcher : public SimObject
     std::queue<int> doneIds;
     // is there a kernel in execution?
     bool dispatchActive;
-    /*statistics*/
-    Stats::Scalar numKernelLaunched;
-    Stats::Scalar cyclesWaitingForDispatch;
+
+  protected:
+    struct GPUDispatcherStats : public Stats::Group
+    {
+        GPUDispatcherStats(Stats::Group *parent);
+
+        Stats::Scalar numKernelLaunched;
+        Stats::Scalar cyclesWaitingForDispatch;
+    } stats;
 };
 
 #endif // __GPU_COMPUTE_DISPATCHER_HH__

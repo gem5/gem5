@@ -37,6 +37,8 @@
 #include <queue>
 #include <string>
 
+#include "base/statistics.hh"
+#include "base/stats/group.hh"
 #include "gpu-compute/misc.hh"
 #include "params/ComputeUnit.hh"
 #include "sim/stats.hh"
@@ -95,11 +97,10 @@ class GlobalMemPipeline
     }
 
     const std::string &name() const { return _name; }
-    void regStats();
     void
     incLoadVRFBankConflictCycles(int num_cycles)
     {
-        loadVrfBankConflictCycles += num_cycles;
+        stats.loadVrfBankConflictCycles += num_cycles;
     }
 
     bool coalescerReady(GPUDynInstPtr mp) const;
@@ -113,10 +114,6 @@ class GlobalMemPipeline
     int gmQueueSize;
     int maxWaveRequests;
 
-    // number of cycles of delaying the update of a VGPR that is the
-    // target of a load instruction (or the load component of an atomic)
-    // The delay is due to VRF bank conflicts
-    Stats::Scalar loadVrfBankConflictCycles;
     // Counters to track the inflight loads and stores
     // so that we can provide the proper backpressure
     // on the number of inflight memory operations.
@@ -144,6 +141,17 @@ class GlobalMemPipeline
     // Global Memory Request FIFO: all global memory requests
     // are issued to this FIFO from the memory pipelines
     std::queue<GPUDynInstPtr> gmIssuedRequests;
+
+  protected:
+    struct GlobalMemPipelineStats : public Stats::Group
+    {
+        GlobalMemPipelineStats(Stats::Group *parent);
+
+        // number of cycles of delaying the update of a VGPR that is the
+        // target of a load instruction (or the load component of an atomic)
+        // The delay is due to VRF bank conflicts
+        Stats::Scalar loadVrfBankConflictCycles;
+    } stats;
 };
 
 #endif // __GLOBAL_MEMORY_PIPELINE_HH__

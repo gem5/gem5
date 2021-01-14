@@ -180,8 +180,3 @@ StaticRegisterManagerPolicy::freeRegisters(Wavefront *w)
     w->reservedScalarRegs = 0;
     w->startSgprIndex = 0;
 }
-
-void
-StaticRegisterManagerPolicy::regStats()
-{
-}

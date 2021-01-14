@@ -69,11 +69,11 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
                     ->mapVgpr(w, vgprIdx + j);
                 if (regBusy(pVgpr)) {
                     if (ii->isDstOperand(i)) {
-                        w->numTimesBlockedDueWAXDependencies++;
+                        w->stats.numTimesBlockedDueWAXDependencies++;
                     } else if (ii->isSrcOperand(i)) {
                         DPRINTF(GPUVRF, "RAW stall: WV[%d]: %s: physReg[%d]\n",
                                 w->wfDynId, ii->disassemble(), pVgpr);
-                        w->numTimesBlockedDueRAWDependencies++;
+                        w->stats.numTimesBlockedDueRAWDependencies++;
                     }
                     return false;
                 }
@@ -125,13 +125,13 @@ VectorRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
 {
     // increment count of number of DWORDs read from VRF
     int DWORDs = ii->numSrcVecDWORDs();
-    registerReads += (DWORDs * w->execMask().count());
+    stats.registerReads += (DWORDs * w->execMask().count());
 
     uint64_t mask = w->execMask().to_ullong();
     int srams = w->execMask().size() / 4;
     for (int i = 0; i < srams; i++) {
         if (mask & 0xF) {
-            sramReads += DWORDs;
+            stats.sramReads += DWORDs;
         }
         mask = mask >> 4;
     }
@@ -163,13 +163,13 @@ VectorRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
 
         // increment count of number of DWORDs written to VRF
         DWORDs = ii->numDstVecDWORDs();
-        registerWrites += (DWORDs * w->execMask().count());
+        stats.registerWrites += (DWORDs * w->execMask().count());
 
         mask = w->execMask().to_ullong();
         srams = w->execMask().size() / 4;
         for (int i = 0; i < srams; i++) {
             if (mask & 0xF) {
-                sramWrites += DWORDs;
+                stats.sramWrites += DWORDs;
             }
             mask = mask >> 4;
         }
@@ -196,13 +196,13 @@ VectorRegisterFile::scheduleWriteOperandsFromLoad(
     }
     // increment count of number of DWORDs written to VRF
     int DWORDs = ii->numDstVecDWORDs();
-    registerWrites += (DWORDs * ii->exec_mask.count());
+    stats.registerWrites += (DWORDs * ii->exec_mask.count());
 
     uint64_t mask = ii->exec_mask.to_ullong();
     int srams = ii->exec_mask.size() / 4;
     for (int i = 0; i < srams; i++) {
         if (mask & 0xF) {
-            sramWrites += DWORDs;
+            stats.sramWrites += DWORDs;
         }
         mask = mask >> 4;
     }

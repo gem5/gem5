@@ -62,7 +62,6 @@ class RegisterFile : public SimObject
     virtual ~RegisterFile();
     virtual void setParent(ComputeUnit *_computeUnit);
     int numRegs() const { return _numRegs; }
-    virtual void regStats() override;
 
     // State functions
 
@@ -154,18 +153,23 @@ class RegisterFile : public SimObject
 
     // numer of registers in this register file
     int _numRegs;
-    // Stats
-    // Total number of register reads, incremented once per DWORD per thread
-    Stats::Scalar registerReads;
-    // Total number of register writes, incremented once per DWORD per thread
-    Stats::Scalar registerWrites;
 
-    // Number of register file SRAM activations for reads.
-    // The register file may be implemented with multiple SRAMs. This stat
-    // tracks how many times the SRAMs are accessed for reads.
-    Stats::Scalar sramReads;
-    // Number of register file SRAM activations for writes
-    Stats::Scalar sramWrites;
+    struct RegisterFileStats : public Stats::Group
+    {
+        RegisterFileStats(Stats::Group *parent);
+
+        // Total number of register reads per DWORD per thread
+        Stats::Scalar registerReads;
+        // Total number of register writes per DWORD per thread
+        Stats::Scalar registerWrites;
+
+        // Number of register file SRAM activations for reads.
+        // The register file may be implemented with multiple SRAMs. This stat
+        // tracks how many times the SRAMs are accessed for reads.
+        Stats::Scalar sramReads;
+        // Number of register file SRAM activations for writes
+        Stats::Scalar sramWrites;
+    } stats;
 };
 
 #endif // __REGISTER_FILE_HH__

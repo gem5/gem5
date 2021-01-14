@@ -40,7 +40,8 @@
 #include <utility>
 #include <vector>
 
-#include "sim/stats.hh"
+#include "base/statistics.hh"
+#include "base/stats/group.hh"
 
 class ComputeUnit;
 class ScoreboardCheckToSchedule;
@@ -78,7 +79,6 @@ class ScoreboardCheckStage
 
     // Stats related variables and methods
     const std::string& name() const { return _name; }
-    void regStats();
 
   private:
     void collectStatistics(nonrdytype_e rdyStatus);
@@ -94,10 +94,15 @@ class ScoreboardCheckStage
      */
     ScoreboardCheckToSchedule &toSchedule;
 
-    // Stats
-    Stats::Vector stallCycles;
-
     const std::string _name;
+
+  protected:
+    struct ScoreboardCheckStageStats : public Stats::Group
+    {
+        ScoreboardCheckStageStats(Stats::Group *parent);
+
+        Stats::Vector stallCycles;
+    } stats;
 };
 
 #endif // __SCOREBOARD_CHECK_STAGE_HH__

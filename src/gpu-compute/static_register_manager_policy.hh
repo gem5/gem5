@@ -58,8 +58,6 @@ class StaticRegisterManagerPolicy : public RegisterManagerPolicy
         int scalarDemand) override;
 
     void freeRegisters(Wavefront *w) override;
-
-    void regStats() override;
 };
 
 #endif // __STATIC_REGISTER_MANAGER_POLICY_HH__

@@ -42,6 +42,7 @@
 #include "base/callback.hh"
 #include "base/compiler.hh"
 #include "base/statistics.hh"
+#include "base/stats/group.hh"
 #include "base/types.hh"
 #include "config/the_gpu_isa.hh"
 #include "enums/PrefetchType.hh"
@@ -320,12 +321,6 @@ class ComputeUnit : public ClockedObject
     // tracks the last cycle a vector instruction was executed on a SIMD
     std::vector<uint64_t> lastExecCycle;
 
-    // Track the amount of interleaving between wavefronts on each SIMD.
-    // This stat is sampled using instExecPerSimd to compute the number of
-    // instructions that have been executed on a SIMD between a WF executing
-    // two successive instructions.
-    Stats::VectorDistribution instInterleave;
-
     // tracks the number of dyn inst executed per SIMD
     std::vector<uint64_t> instExecPerSimd;
 
@@ -472,148 +467,6 @@ class ComputeUnit : public ClockedObject
     LdsState &lds;
 
   public:
-    Stats::Scalar vALUInsts;
-    Stats::Formula vALUInstsPerWF;
-    Stats::Scalar sALUInsts;
-    Stats::Formula sALUInstsPerWF;
-    Stats::Scalar instCyclesVALU;
-    Stats::Scalar instCyclesSALU;
-    Stats::Scalar threadCyclesVALU;
-    Stats::Formula vALUUtilization;
-    Stats::Scalar ldsNoFlatInsts;
-    Stats::Formula ldsNoFlatInstsPerWF;
-    Stats::Scalar flatVMemInsts;
-    Stats::Formula flatVMemInstsPerWF;
-    Stats::Scalar flatLDSInsts;
-    Stats::Formula flatLDSInstsPerWF;
-    Stats::Scalar vectorMemWrites;
-    Stats::Formula vectorMemWritesPerWF;
-    Stats::Scalar vectorMemReads;
-    Stats::Formula vectorMemReadsPerWF;
-    Stats::Scalar scalarMemWrites;
-    Stats::Formula scalarMemWritesPerWF;
-    Stats::Scalar scalarMemReads;
-    Stats::Formula scalarMemReadsPerWF;
-
-    Stats::Formula vectorMemReadsPerKiloInst;
-    Stats::Formula vectorMemWritesPerKiloInst;
-    Stats::Formula vectorMemInstsPerKiloInst;
-    Stats::Formula scalarMemReadsPerKiloInst;
-    Stats::Formula scalarMemWritesPerKiloInst;
-    Stats::Formula scalarMemInstsPerKiloInst;
-
-    // Cycles required to send register source (addr and data) from
-    // register files to memory pipeline, per SIMD.
-    Stats::Vector instCyclesVMemPerSimd;
-    Stats::Vector instCyclesScMemPerSimd;
-    Stats::Vector instCyclesLdsPerSimd;
-
-    Stats::Scalar globalReads;
-    Stats::Scalar globalWrites;
-    Stats::Formula globalMemInsts;
-    Stats::Scalar argReads;
-    Stats::Scalar argWrites;
-    Stats::Formula argMemInsts;
-    Stats::Scalar spillReads;
-    Stats::Scalar spillWrites;
-    Stats::Formula spillMemInsts;
-    Stats::Scalar groupReads;
-    Stats::Scalar groupWrites;
-    Stats::Formula groupMemInsts;
-    Stats::Scalar privReads;
-    Stats::Scalar privWrites;
-    Stats::Formula privMemInsts;
-    Stats::Scalar readonlyReads;
-    Stats::Scalar readonlyWrites;
-    Stats::Formula readonlyMemInsts;
-    Stats::Scalar kernargReads;
-    Stats::Scalar kernargWrites;
-    Stats::Formula kernargMemInsts;
-
-    int activeWaves;
-    Stats::Distribution waveLevelParallelism;
-
-    void updateInstStats(GPUDynInstPtr gpuDynInst);
-
-    // the following stats compute the avg. TLB accesslatency per
-    // uncoalesced request (only for data)
-    Stats::Scalar tlbRequests;
-    Stats::Scalar tlbCycles;
-    Stats::Formula tlbLatency;
-    // hitsPerTLBLevel[x] are the hits in Level x TLB. x = 0 is the page table.
-    Stats::Vector hitsPerTLBLevel;
-
-    Stats::Scalar ldsBankAccesses;
-    Stats::Distribution ldsBankConflictDist;
-
-    // over all memory instructions executed over all wavefronts
-    // how many touched 0-4 pages, 4-8, ..., 60-64 pages
-    Stats::Distribution pageDivergenceDist;
-    // count of non-flat global memory vector instructions executed
-    Stats::Scalar dynamicGMemInstrCnt;
-    // count of flat global memory vector instructions executed
-    Stats::Scalar dynamicFlatMemInstrCnt;
-    Stats::Scalar dynamicLMemInstrCnt;
-
-    Stats::Scalar wgBlockedDueBarrierAllocation;
-    Stats::Scalar wgBlockedDueLdsAllocation;
-    // Number of instructions executed, i.e. if 64 (or 32 or 7) lanes are
-    // active when the instruction is committed, this number is still
-    // incremented by 1
-    Stats::Scalar numInstrExecuted;
-    // Number of cycles among successive instruction executions across all
-    // wavefronts of the same CU
-    Stats::Distribution execRateDist;
-    // number of individual vector operations executed
-    Stats::Scalar numVecOpsExecuted;
-    // number of individual f16 vector operations executed
-    Stats::Scalar numVecOpsExecutedF16;
-    // number of individual f32 vector operations executed
-    Stats::Scalar numVecOpsExecutedF32;
-    // number of individual f64 vector operations executed
-    Stats::Scalar numVecOpsExecutedF64;
-    // number of individual FMA 16,32,64 vector operations executed
-    Stats::Scalar numVecOpsExecutedFMA16;
-    Stats::Scalar numVecOpsExecutedFMA32;
-    Stats::Scalar numVecOpsExecutedFMA64;
-    // number of individual MAC 16,32,64 vector operations executed
-    Stats::Scalar numVecOpsExecutedMAC16;
-    Stats::Scalar numVecOpsExecutedMAC32;
-    Stats::Scalar numVecOpsExecutedMAC64;
-    // number of individual MAD 16,32,64 vector operations executed
-    Stats::Scalar numVecOpsExecutedMAD16;
-    Stats::Scalar numVecOpsExecutedMAD32;
-    Stats::Scalar numVecOpsExecutedMAD64;
-    // total number of two op FP vector operations executed
-    Stats::Scalar numVecOpsExecutedTwoOpFP;
-    // Total cycles that something is running on the GPU
-    Stats::Scalar totalCycles;
-    Stats::Formula vpc; // vector ops per cycle
-    Stats::Formula vpc_f16; // vector ops per cycle
-    Stats::Formula vpc_f32; // vector ops per cycle
-    Stats::Formula vpc_f64; // vector ops per cycle
-    Stats::Formula ipc; // vector instructions per cycle
-    Stats::Distribution controlFlowDivergenceDist;
-    Stats::Distribution activeLanesPerGMemInstrDist;
-    Stats::Distribution activeLanesPerLMemInstrDist;
-    // number of vector ALU instructions received
-    Stats::Formula numALUInstsExecuted;
-    // number of times a WG can not start due to lack of free VGPRs in SIMDs
-    Stats::Scalar numTimesWgBlockedDueVgprAlloc;
-    // number of times a WG can not start due to lack of free SGPRs in SIMDs
-    Stats::Scalar numTimesWgBlockedDueSgprAlloc;
-    Stats::Scalar numCASOps;
-    Stats::Scalar numFailedCASOps;
-    Stats::Scalar completedWfs;
-    Stats::Scalar completedWGs;
-
-    // distrubtion in latency difference between first and last cache block
-    // arrival ticks
-    Stats::Distribution headTailLatency;
-
-    void
-    regStats() override;
-
     LdsState &
     getLds() const
     {
@@ -1081,6 +934,158 @@ class ComputeUnit : public ClockedObject
     // a particular GPUDynInst. This is used to calculate the difference
     // between the first and last chace block arrival times.
     std::unordered_map<GPUDynInstPtr, Tick> headTailMap;
+
+  public:
+    void updateInstStats(GPUDynInstPtr gpuDynInst);
+    int activeWaves;
+
+    struct ComputeUnitStats : public Stats::Group
+    {
+        ComputeUnitStats(Stats::Group *parent, int n_wf);
+
+        Stats::Scalar vALUInsts;
+        Stats::Formula vALUInstsPerWF;
+        Stats::Scalar sALUInsts;
+        Stats::Formula sALUInstsPerWF;
+        Stats::Scalar instCyclesVALU;
+        Stats::Scalar instCyclesSALU;
+        Stats::Scalar threadCyclesVALU;
+        Stats::Formula vALUUtilization;
+        Stats::Scalar ldsNoFlatInsts;
+        Stats::Formula ldsNoFlatInstsPerWF;
+        Stats::Scalar flatVMemInsts;
+        Stats::Formula flatVMemInstsPerWF;
+        Stats::Scalar flatLDSInsts;
+        Stats::Formula flatLDSInstsPerWF;
+        Stats::Scalar vectorMemWrites;
+        Stats::Formula vectorMemWritesPerWF;
+        Stats::Scalar vectorMemReads;
+        Stats::Formula vectorMemReadsPerWF;
+        Stats::Scalar scalarMemWrites;
+        Stats::Formula scalarMemWritesPerWF;
+        Stats::Scalar scalarMemReads;
+        Stats::Formula scalarMemReadsPerWF;
+
+        Stats::Formula vectorMemReadsPerKiloInst;
+        Stats::Formula vectorMemWritesPerKiloInst;
+        Stats::Formula vectorMemInstsPerKiloInst;
+        Stats::Formula scalarMemReadsPerKiloInst;
+        Stats::Formula scalarMemWritesPerKiloInst;
+        Stats::Formula scalarMemInstsPerKiloInst;
+
+        // Cycles required to send register source (addr and data) from
+        // register files to memory pipeline, per SIMD.
+        Stats::Vector instCyclesVMemPerSimd;
+        Stats::Vector instCyclesScMemPerSimd;
+        Stats::Vector instCyclesLdsPerSimd;
+
+        Stats::Scalar globalReads;
+        Stats::Scalar globalWrites;
+        Stats::Formula globalMemInsts;
+        Stats::Scalar argReads;
+        Stats::Scalar argWrites;
+        Stats::Formula argMemInsts;
+        Stats::Scalar spillReads;
+        Stats::Scalar spillWrites;
+        Stats::Formula spillMemInsts;
+        Stats::Scalar groupReads;
+        Stats::Scalar groupWrites;
+        Stats::Formula groupMemInsts;
+        Stats::Scalar privReads;
+        Stats::Scalar privWrites;
+        Stats::Formula privMemInsts;
+        Stats::Scalar readonlyReads;
+        Stats::Scalar readonlyWrites;
+        Stats::Formula readonlyMemInsts;
+        Stats::Scalar kernargReads;
+        Stats::Scalar kernargWrites;
+        Stats::Formula kernargMemInsts;
+
+        Stats::Distribution waveLevelParallelism;
+
+        // the following stats compute the avg. TLB accesslatency per
+        // uncoalesced request (only for data)
+        Stats::Scalar tlbRequests;
+        Stats::Scalar tlbCycles;
+        Stats::Formula tlbLatency;
+        // hitsPerTLBLevel[x] are the hits in Level x TLB.
+        // x = 0 is the page table.
+        Stats::Vector hitsPerTLBLevel;
+
+        Stats::Scalar ldsBankAccesses;
+        Stats::Distribution ldsBankConflictDist;
+
+        // over all memory instructions executed over all wavefronts
+        // how many touched 0-4 pages, 4-8, ..., 60-64 pages
+        Stats::Distribution pageDivergenceDist;
+        // count of non-flat global memory vector instructions executed
+        Stats::Scalar dynamicGMemInstrCnt;
+        // count of flat global memory vector instructions executed
+        Stats::Scalar dynamicFlatMemInstrCnt;
+        Stats::Scalar dynamicLMemInstrCnt;
+
+        Stats::Scalar wgBlockedDueBarrierAllocation;
+        Stats::Scalar wgBlockedDueLdsAllocation;
+        // Number of instructions executed, i.e. if 64 (or 32 or 7) lanes are
+        // active when the instruction is committed, this number is still
+        // incremented by 1
+        Stats::Scalar numInstrExecuted;
+        // Number of cycles among successive instruction executions across all
+        // wavefronts of the same CU
+        Stats::Distribution execRateDist;
+        // number of individual vector operations executed
+        Stats::Scalar numVecOpsExecuted;
+        // number of individual f16 vector operations executed
+        Stats::Scalar numVecOpsExecutedF16;
+        // number of individual f32 vector operations executed
+        Stats::Scalar numVecOpsExecutedF32;
+        // number of individual f64 vector operations executed
+        Stats::Scalar numVecOpsExecutedF64;
+        // number of individual FMA 16,32,64 vector operations executed
+        Stats::Scalar numVecOpsExecutedFMA16;
+        Stats::Scalar numVecOpsExecutedFMA32;
+        Stats::Scalar numVecOpsExecutedFMA64;
+        // number of individual MAC 16,32,64 vector operations executed
+        Stats::Scalar numVecOpsExecutedMAC16;
+        Stats::Scalar numVecOpsExecutedMAC32;
+        Stats::Scalar numVecOpsExecutedMAC64;
+        // number of individual MAD 16,32,64 vector operations executed
+        Stats::Scalar numVecOpsExecutedMAD16;
+        Stats::Scalar numVecOpsExecutedMAD32;
+        Stats::Scalar numVecOpsExecutedMAD64;
+        // total number of two op FP vector operations executed
+        Stats::Scalar numVecOpsExecutedTwoOpFP;
+        // Total cycles that something is running on the GPU
+        Stats::Scalar totalCycles;
+        Stats::Formula vpc; // vector ops per cycle
+        Stats::Formula vpc_f16; // vector ops per cycle
+        Stats::Formula vpc_f32; // vector ops per cycle
+        Stats::Formula vpc_f64; // vector ops per cycle
+        Stats::Formula ipc; // vector instructions per cycle
+        Stats::Distribution controlFlowDivergenceDist;
+        Stats::Distribution activeLanesPerGMemInstrDist;
+        Stats::Distribution activeLanesPerLMemInstrDist;
+        // number of vector ALU instructions received
+        Stats::Formula numALUInstsExecuted;
+        // number of times a WG cannot start due to lack of free VGPRs in SIMDs
+        Stats::Scalar numTimesWgBlockedDueVgprAlloc;
+        // number of times a WG cannot start due to lack of free SGPRs in SIMDs
+        Stats::Scalar numTimesWgBlockedDueSgprAlloc;
+        Stats::Scalar numCASOps;
+        Stats::Scalar numFailedCASOps;
+        Stats::Scalar completedWfs;
+        Stats::Scalar completedWGs;
+
+        // distrubtion in latency difference between first and last cache block
+        // arrival ticks
+        Stats::Distribution headTailLatency;
+
+        // Track the amount of interleaving between wavefronts on each SIMD.
+        // This stat is sampled using instExecPerSimd to compute the number
+        // of instructions that have been executed on a SIMD between a WF
+        // executing two successive instructions.
+        Stats::VectorDistribution instInterleave;
+    } stats;
 };
 
 #endif // __COMPUTE_UNIT_HH__

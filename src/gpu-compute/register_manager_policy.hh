@@ -76,9 +76,6 @@ class RegisterManagerPolicy
     // free all remaining registers held by specified WF
     virtual void freeRegisters(Wavefront *w) = 0;
 
-    // stats
-    virtual void regStats() = 0;
-
   protected:
     ComputeUnit *cu;
 };
