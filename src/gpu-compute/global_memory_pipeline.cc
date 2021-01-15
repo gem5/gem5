@@ -130,7 +130,7 @@ GlobalMemPipeline::exec()
         DPRINTF(GPUMem, "CU%d: WF[%d][%d]: Completing global mem instr %s\n",
                 m->cu_id, m->simdId, m->wfSlotId, m->disassemble());
         m->completeAcc(m);
-        if (m->isFlat() && m->isLoad()) {
+        if (m->isFlat() && (m->isLoad() || m->isAtomicRet())) {
             w->decLGKMInstsIssued();
         }
         w->decVMemInstsIssued();
