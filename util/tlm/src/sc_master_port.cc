@@ -47,7 +47,7 @@ SCMasterPort::generatePacket(tlm::tlm_generic_payload& trans)
     Request::Flags flags;
     auto req = std::make_shared<Request>(
         trans.get_address(), trans.get_data_length(), flags,
-        owner.masterId);
+        owner.id);
 
     MemCmd cmd;
 

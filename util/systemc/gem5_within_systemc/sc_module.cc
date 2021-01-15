@@ -71,6 +71,7 @@ void
 setTickFrequency()
 {
     ::setClockFrequency(1000000000000);
+    ::fixClockFrequency();
 }
 
 Module::Module(sc_core::sc_module_name name) : sc_core::sc_channel(name),
