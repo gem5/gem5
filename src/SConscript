@@ -1261,7 +1261,7 @@ for name,flag in sorted(debug_flags.items()):
 
 env.Command('debug/flags.cc', Value(debug_flags),
             MakeAction(makeDebugFlagCC, Transform("TRACING", 0)))
-Source('debug/flags.cc')
+Source('debug/flags.cc', add_tags='gem5 trace')
 
 # version tags
 tags = \
