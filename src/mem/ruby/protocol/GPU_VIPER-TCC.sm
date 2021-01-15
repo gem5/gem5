@@ -108,6 +108,7 @@ machine(MachineType:TCC, "TCC Cache")
     MachineID From,     desc="Waiting for writeback from...";
     NetDest Destination, desc="Data destination";
     int numAtomics,     desc="number remaining atomics";
+    int atomicDoneCnt,  desc="number AtomicDones triggered";
   }
 
   structure(TBETable, external="yes") {
@@ -256,9 +257,17 @@ machine(MachineType:TCC, "TCC Cache")
       peek(triggerQueue_in, TriggerMsg) {
         TBE tbe := TBEs.lookup(in_msg.addr);
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        if (tbe.numAtomics == 0) {
+
+        // There is a possible race where multiple AtomicDone triggers can be
+        // sent if another Atomic to the same address is issued after the
+        // AtomicDone is triggered but before the message arrives here. For
+        // that case we count the number of AtomicDones in flight for this
+        // address and only call AtomicDone to deallocate the TBE when it is
+        // the last in flight message.
+        if (tbe.numAtomics == 0 && tbe.atomicDoneCnt == 1) {
             trigger(Event:AtomicDone, in_msg.addr, cache_entry, tbe);
         } else {
+            tbe.atomicDoneCnt := tbe.atomicDoneCnt - 1;
             trigger(Event:AtomicNotDone, in_msg.addr, cache_entry, tbe);
         }
       }
@@ -453,6 +462,7 @@ machine(MachineType:TCC, "TCC Cache")
       set_tbe(TBEs.lookup(address));
       tbe.Destination.clear();
       tbe.numAtomics := 0;
+      tbe.atomicDoneCnt := 0;
     }
     if (coreRequestNetwork_in.isReady(clockEdge())) {
       peek(coreRequestNetwork_in, CPURequestMsg) {
@@ -573,6 +583,7 @@ machine(MachineType:TCC, "TCC Cache")
     tbe.numAtomics := tbe.numAtomics - 1;
     if (tbe.numAtomics==0) {
       enqueue(triggerQueue_out, TriggerMsg, 1) {
+        tbe.atomicDoneCnt := tbe.atomicDoneCnt + 1;
         out_msg.addr := address;
         out_msg.Type := TriggerType:AtomicDone;
       }
