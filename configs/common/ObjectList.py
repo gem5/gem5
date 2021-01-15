@@ -162,7 +162,7 @@ class EnumList(ObjectList):
             if not key.startswith("Num_"):
                 self._sub_classes[key] = value
 
-
+rp_list = ObjectList(getattr(m5.objects, 'BaseReplacementPolicy', None))
 bp_list = ObjectList(getattr(m5.objects, 'BranchPredictor', None))
 cpu_list = CPUList(getattr(m5.objects, 'BaseCPU', None))
 hwp_list = ObjectList(getattr(m5.objects, 'BasePrefetcher', None))
