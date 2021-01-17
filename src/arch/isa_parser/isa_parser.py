@@ -1436,11 +1436,12 @@ StaticInstPtr
     # END OF GRAMMAR RULES
 
     def updateExportContext(self):
-
-        # create a continuation that allows us to grab the current parser
-        def wrapInstObjParams(*args):
-            return InstObjParams(self, *args)
-        self.exportContext['InstObjParams'] = wrapInstObjParams
+        # Create a wrapper class that allows us to grab the current parser.
+        class InstObjParamsWrapper(InstObjParams):
+            def __init__(iop, *args, **kwargs):
+                super(InstObjParamsWrapper, iop).__init__(
+                        self, *args, **kwargs)
+        self.exportContext['InstObjParams'] = InstObjParamsWrapper
         self.exportContext.update(self.templateMap)
 
     def defFormat(self, id, params, code, lineno):
