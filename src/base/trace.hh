@@ -172,7 +172,6 @@ class Named
  * \def DPRINTF(x, ...)
  * \def DPRINTFS(x, s, ...)
  * \def DPRINTFR(x, ...)
- * \def DDUMPN(data, count)
  * \def DPRINTFN(...)
  * \def DPRINTFNR(...)
  * \def DPRINTF_UNCONDITIONAL(x, ...)
@@ -214,10 +213,6 @@ class Named
     }                                                  \
 } while (0)
 
-#define DDUMPN(data, count) do {                                       \
-    Trace::getDebugLogger()->dump(curTick(), name(), data, count);     \
-} while (0)
-
 #define DPRINTFN(...) do {                                             \
     Trace::getDebugLogger()->dprintf(curTick(), name(), __VA_ARGS__);  \
 } while (0)
@@ -237,7 +232,6 @@ class Named
 #define DPRINTF(x, ...) do {} while (0)
 #define DPRINTFS(x, ...) do {} while (0)
 #define DPRINTFR(...) do {} while (0)
-#define DDUMPN(data, count) do {} while (0)
 #define DPRINTFN(...) do {} while (0)
 #define DPRINTFNR(...) do {} while (0)
 #define DPRINTF_UNCONDITIONAL(x, ...) do {} while (0)
