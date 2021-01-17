@@ -37,14 +37,6 @@
 #include "base/cprintf.hh"
 #include "base/logging.hh"
 #include "base/output.hh"
-#include "sim/eventq.hh"
-
-namespace Gem5Internal
-{
-
-__thread Tick *_curTickPtr;
-
-} // namespace Gem5Internal
 
 namespace SimClock {
 /// The simulated frequency of curTick(). (In ticks per second)
