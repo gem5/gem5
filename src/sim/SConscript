@@ -63,7 +63,7 @@ Source('port.cc')
 Source('python.cc', add_tags='python')
 Source('redirect_path.cc')
 Source('root.cc')
-Source('serialize.cc')
+Source('serialize.cc', add_tags='gem5 serialize')
 Source('drain.cc')
 Source('se_workload.cc')
 Source('sim_events.cc')
@@ -87,10 +87,13 @@ Source('stats.cc')
 Source('workload.cc')
 Source('mem_pool.cc')
 
+env.TagImplies('gem5 serialize', 'gem5 trace')
+
 GTest('byteswap.test', 'byteswap.test.cc', '../base/types.cc')
 GTest('guest_abi.test', 'guest_abi.test.cc')
 GTest('port.test', 'port.test.cc', 'port.cc')
 GTest('proxy_ptr.test', 'proxy_ptr.test.cc')
+GTest('serialize.test', 'serialize.test.cc', with_tag('gem5 serialize'))
 GTest('serialize_handlers.test', 'serialize_handlers.test.cc')
 
 if env['TARGET_ISA'] != 'null':
