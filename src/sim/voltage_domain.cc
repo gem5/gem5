@@ -139,7 +139,7 @@ VoltageDomain::unserialize(CheckpointIn &cp)
 
 VoltageDomain::VoltageDomainStats::VoltageDomainStats(VoltageDomain &vd)
     : Stats::Group(&vd),
-    ADD_STAT(voltage, "Voltage in Volts")
+    ADD_STAT(voltage, UNIT_VOLT, "Voltage in Volts")
 {
     voltage.method(&vd, &VoltageDomain::voltage);
 }

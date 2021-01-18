@@ -51,7 +51,7 @@
 ThermalDomain::ThermalDomain(const Params &p)
     : SimObject(p), _initTemperature(p.initial_temperature),
     node(NULL), subsystem(NULL),
-    ADD_STAT(currentTemp, "Temperature in centigrade degrees")
+    ADD_STAT(currentTemp, UNIT_CELSIUS, "Temperature")
 {
     currentTemp
         .functor([this]() { return currentTemperature().toCelsius(); });

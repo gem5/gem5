@@ -53,7 +53,7 @@
 
 ClockDomain::ClockDomainStats::ClockDomainStats(ClockDomain &cd)
     : Stats::Group(&cd),
-    ADD_STAT(clock, "Clock period in ticks")
+    ADD_STAT(clock, UNIT_TICK, "Clock period in ticks")
 {
     // Expose the current clock period as a stat for observability in
     // the dumps
