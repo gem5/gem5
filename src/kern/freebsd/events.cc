@@ -45,13 +45,8 @@ namespace FreeBSD
 {
 
 void
-onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul)
+onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul, uint64_t time)
 {
-    int arg_num = 0;
-
-    // Get the time in native size
-    uint64_t time = TheISA::getArgument(tc, arg_num,  (uint16_t)-1, false);
-
     // convert parameter to ns
     if (div)
         time /= div;

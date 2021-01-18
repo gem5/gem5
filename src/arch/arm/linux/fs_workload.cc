@@ -230,28 +230,23 @@ FsLinux::startup()
 
     // With ARM udelay() is #defined to __udelay
     // newer kernels use __loop_udelay and __loop_const_udelay symbols
-    skipUDelay = addKernelFuncEvent<SkipUDelay<SkipFunc>>(
+    skipUDelay = addSkipFunc<SkipUDelay>(
         "__loop_udelay", "__udelay", 1000, 0);
-    if (!skipUDelay)
-        skipUDelay = addKernelFuncEventOrPanic<SkipUDelay<SkipFunc>>(
-         "__udelay", "__udelay", 1000, 0);
+    if (!skipUDelay) {
+        skipUDelay = addSkipFuncOrPanic<SkipUDelay>(
+                "__udelay", "__udelay", 1000, 0);
+    }
 
     // constant arguments to udelay() have some precomputation done ahead of
     // time. Constant comes from code.
-    skipConstUDelay = addKernelFuncEvent<SkipUDelay<SkipFunc>>(
+    skipConstUDelay = addSkipFunc<SkipUDelay>(
         "__loop_const_udelay", "__const_udelay", 1000, 107374);
     if (!skipConstUDelay) {
-        skipConstUDelay = addKernelFuncEventOrPanic<SkipUDelay<SkipFunc>>(
+        skipConstUDelay = addSkipFuncOrPanic<SkipUDelay>(
             "__const_udelay", "__const_udelay", 1000, 107374);
     }
 
-    if (getArch() == Loader::Arm64) {
-        debugPrintk = addKernelFuncEvent<
-            DebugPrintk<SkipFuncLinux64>>("dprintk");
-    } else {
-        debugPrintk = addKernelFuncEvent<
-            DebugPrintk<SkipFuncLinux32>>("dprintk");
-    }
+    debugPrintk = addSkipFunc<DebugPrintk>("dprintk");
 }
 
 void
