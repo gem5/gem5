@@ -325,6 +325,13 @@ class StaticInst : public RefCounted, public StaticInstFlags
 
     virtual void advancePC(TheISA::PCState &pcState) const = 0;
 
+    virtual TheISA::PCState
+    buildRetPC(const TheISA::PCState &curPC,
+            const TheISA::PCState &callPC) const
+    {
+        panic("buildRetPC not defined!");
+    }
+
     /**
      * Return the microop that goes with a particular micropc. This should
      * only be defined/used in macroops which will contain microops

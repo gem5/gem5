@@ -64,6 +64,15 @@ output header {{
             pc.advance();
         }
 
+        PCState
+        buildRetPC(const PCState &curPC, const PCState &callPC) const override
+        {
+            PCState ret = callPC;
+            ret.advance();
+            ret.pc(curPC.npc());
+            return ret;
+        }
+
         size_t
         asBytes(void *buf, size_t max_size) override
         {

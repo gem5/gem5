@@ -201,6 +201,14 @@ class ArmStaticInst : public StaticInst
 
     uint64_t getEMI() const override { return machInst; }
 
+    PCState
+    buildRetPC(const PCState &curPC, const PCState &callPC) const override
+    {
+        PCState retPC = callPC;
+        retPC.uEnd();
+        return retPC;
+    }
+
     std::string generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const override;
 

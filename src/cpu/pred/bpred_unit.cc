@@ -170,7 +170,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             // If it's a function return call, then look up the address
             // in the RAS.
             TheISA::PCState rasTop = RAS[tid].top();
-            target = TheISA::buildRetPC(pc, rasTop);
+            target = inst->buildRetPC(pc, rasTop);
 
             // Record the top entry of the RAS, and its index.
             predict_record.usedRAS = true;

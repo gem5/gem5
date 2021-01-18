@@ -40,15 +40,6 @@ class ThreadContext;
 
 namespace MipsISA {
 
-inline PCState
-buildRetPC(const PCState &curPC, const PCState &callPC)
-{
-    PCState ret = callPC;
-    ret.advance();
-    ret.pc(curPC.npc());
-    return ret;
-}
-
 ////////////////////////////////////////////////////////////////////////
 //
 // Floating Point Utility Functions

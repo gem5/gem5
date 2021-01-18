@@ -56,6 +56,15 @@ class RiscvStaticInst : public StaticInst
 
     void advancePC(PCState &pc) const override { pc.advance(); }
 
+    PCState
+    buildRetPC(const PCState &curPC, const PCState &callPC) const override
+    {
+        PCState retPC = callPC;
+        retPC.advance();
+        retPC.pc(curPC.npc());
+        return retPC;
+    }
+
     size_t
     asBytes(void *buf, size_t size) override
     {

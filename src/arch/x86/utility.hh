@@ -44,15 +44,6 @@
 
 namespace X86ISA
 {
-
-    inline PCState
-    buildRetPC(const PCState &curPC, const PCState &callPC)
-    {
-        PCState retPC = callPC;
-        retPC.uEnd();
-        return retPC;
-    }
-
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);

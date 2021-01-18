@@ -56,14 +56,6 @@ class ArmSystem;
 
 namespace ArmISA {
 
-inline PCState
-buildRetPC(const PCState &curPC, const PCState &callPC)
-{
-    PCState retPC = callPC;
-    retPC.uEnd();
-    return retPC;
-}
-
 inline bool
 testPredicate(uint32_t nz, uint32_t c, uint32_t v, ConditionCode code)
 {

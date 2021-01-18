@@ -98,15 +98,6 @@ issignalingnan<double>(double val)
         && (reinterpret_cast<uint64_t&>(val)&0x0004000000000000ULL);
 }
 
-inline PCState
-buildRetPC(const PCState &curPC, const PCState &callPC)
-{
-    PCState retPC = callPC;
-    retPC.advance();
-    retPC.pc(curPC.npc());
-    return retPC;
-}
-
 inline void
 copyRegs(ThreadContext *src, ThreadContext *dest)
 {

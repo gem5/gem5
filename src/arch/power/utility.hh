@@ -37,14 +37,6 @@
 
 namespace PowerISA {
 
-inline PCState
-buildRetPC(const PCState &curPC, const PCState &callPC)
-{
-    PCState retPC = callPC;
-    retPC.advance();
-    return retPC;
-}
-
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 
 static inline void

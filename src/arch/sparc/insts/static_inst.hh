@@ -116,6 +116,15 @@ class SparcStaticInst : public StaticInst
     {
         return simpleAsBytes(buf, size, machInst);
     }
+
+    PCState
+    buildRetPC(const PCState &curPC, const PCState &callPC) const override
+    {
+        PCState ret = callPC;
+        ret.uEnd();
+        ret.pc(curPC.npc());
+        return ret;
+    }
 };
 
 }

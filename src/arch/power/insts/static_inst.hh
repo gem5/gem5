@@ -69,6 +69,14 @@ class PowerStaticInst : public StaticInst
         pcState.advance();
     }
 
+    PCState
+    buildRetPC(const PCState &curPC, const PCState &callPC) const override
+    {
+        PCState retPC = callPC;
+        retPC.advance();
+        return retPC;
+    }
+
     size_t
     asBytes(void *buf, size_t max_size) override
     {

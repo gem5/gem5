@@ -41,15 +41,6 @@
 namespace SparcISA
 {
 
-inline PCState
-buildRetPC(const PCState &curPC, const PCState &callPC)
-{
-    PCState ret = callPC;
-    ret.uEnd();
-    ret.pc(curPC.npc());
-    return ret;
-}
-
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 
 void copyMiscRegs(ThreadContext *src, ThreadContext *dest);

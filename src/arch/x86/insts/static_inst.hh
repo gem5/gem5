@@ -185,6 +185,14 @@ class X86StaticInst : public StaticInst
     {
         pcState.advance();
     }
+
+    PCState
+    buildRetPC(const PCState &curPC, const PCState &callPC) const override
+    {
+        PCState retPC = callPC;
+        retPC.uEnd();
+        return retPC;
+    }
 };
 }
 
