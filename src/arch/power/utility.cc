@@ -55,11 +55,4 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     dest->pcState(src->pcState());
 }
 
-uint64_t
-getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
-{
-    panic("getArgument not implemented for POWER.\n");
-    return 0;
-}
-
 } // namespace PowerISA

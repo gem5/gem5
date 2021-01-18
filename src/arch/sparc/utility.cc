@@ -31,31 +31,8 @@
 #include "arch/sparc/faults.hh"
 #include "mem/port_proxy.hh"
 
-namespace SparcISA {
-
-
-// The caller uses %o0-%05 for the first 6 arguments even if their floating
-// point. Double precision floating point values take two registers/args.
-// Quads, structs, and unions are passed as pointers. All arguments beyond
-// the sixth are passed on the stack past the 16 word window save area,
-// space for the struct/union return pointer, and space reserved for the
-// first 6 arguments which the caller may use but doesn't have to.
-uint64_t
-getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
+namespace SparcISA
 {
-    panic_if(!FullSystem, "getArgument() only implemented for full system");
-
-    const int NumArgumentRegs = 6;
-    if (number < NumArgumentRegs) {
-        return tc->readIntReg(8 + number);
-    } else {
-        Addr sp = tc->readIntReg(StackPointerReg);
-        PortProxy &vp = tc->getVirtProxy();
-        uint64_t arg = vp.read<uint64_t>(sp + 92 +
-                            (number-NumArgumentRegs) * sizeof(uint64_t));
-        return arg;
-    }
-}
 
 void
 copyMiscRegs(ThreadContext *src, ThreadContext *dest)

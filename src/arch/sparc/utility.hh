@@ -50,8 +50,6 @@ buildRetPC(const PCState &curPC, const PCState &callPC)
     return ret;
 }
 
-uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
-
 static inline bool
 inUserMode(ThreadContext *tc)
 {

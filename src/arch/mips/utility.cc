@@ -43,12 +43,6 @@ using namespace MipsISA;
 namespace MipsISA {
 
 uint64_t
-getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
-{
-    panic("getArgument() not implemented\n");
-}
-
-uint64_t
 fpConvert(ConvertType cvt_type, double fp_val)
 {
 
