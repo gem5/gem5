@@ -101,8 +101,6 @@ const std::vector<int> ReturnValueRegs = {10, 11};
 const std::vector<int> ArgumentRegs = {10, 11, 12, 13, 14, 15, 16, 17};
 const int AMOTempReg = 32;
 
-const int SyscallPseudoReturnReg = 10;
-const std::vector<int> SyscallArgumentRegs = {10, 11, 12, 13, 14, 15, 16};
 const int SyscallNumReg = 17;
 
 const std::vector<std::string> IntRegNames = {
