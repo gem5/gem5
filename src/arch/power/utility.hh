@@ -58,12 +58,6 @@ advancePC(PCState &pc, const StaticInstPtr &inst)
     pc.advance();
 }
 
-static inline bool
-inUserMode(ThreadContext *tc)
-{
-    return 0;
-}
-
 } // namespace PowerISA
 
 

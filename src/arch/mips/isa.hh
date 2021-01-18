@@ -140,6 +140,26 @@ namespace MipsISA
         // dummy
         int flattenCCIndex(int reg) const { return reg; }
         int flattenMiscIndex(int reg) const { return reg; }
+
+        bool
+        inUserMode() const override
+        {
+            RegVal Stat = readMiscRegNoEffect(MISCREG_STATUS);
+            RegVal Dbg = readMiscRegNoEffect(MISCREG_DEBUG);
+
+            if (// EXL, ERL or CU0 set, CP0 accessible
+                (Stat & 0x10000006) == 0 &&
+                // DM bit set, CP0 accessible
+                (Dbg & 0x40000000) == 0 &&
+                // KSU = 0, kernel mode is base mode
+                (Stat & 0x00000018) != 0) {
+                // Unable to use Status_CU0, etc directly,
+                // using bitfields & masks.
+                return true;
+            } else {
+                return false;
+            }
+        }
     };
 }
 

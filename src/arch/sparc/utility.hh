@@ -50,14 +50,6 @@ buildRetPC(const PCState &curPC, const PCState &callPC)
     return ret;
 }
 
-static inline bool
-inUserMode(ThreadContext *tc)
-{
-    PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
-    HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-    return !(pstate.priv || hpstate.hpriv);
-}
-
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 
 void copyMiscRegs(ThreadContext *src, ThreadContext *dest);

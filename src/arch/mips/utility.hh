@@ -65,22 +65,6 @@ bool isNan(void *val_ptr, int size);
 bool isQnan(void *val_ptr, int size);
 bool isSnan(void *val_ptr, int size);
 
-static inline bool
-inUserMode(ThreadContext *tc)
-{
-    RegVal Stat = tc->readMiscReg(MISCREG_STATUS);
-    RegVal Dbg = tc->readMiscReg(MISCREG_DEBUG);
-
-    if ((Stat & 0x10000006) == 0 &&  // EXL, ERL or CU0 set, CP0 accessible
-        (Dbg & 0x40000000) == 0 &&   // DM bit set, CP0 accessible
-        (Stat & 0x00000018) != 0) {  // KSU = 0, kernel mode is base mode
-        // Unable to use Status_CU0, etc directly, using bitfields & masks
-        return true;
-    } else {
-        return false;
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////
 //
 //  Translation stuff

@@ -157,12 +157,6 @@ advancePC(PCState &pc, const StaticInstPtr &inst)
     inst->advancePC(pc);
 }
 
-static inline bool
-inUserMode(ThreadContext *tc)
-{
-    return true;
-}
-
 } // namespace RiscvISA
 
 #endif // __ARCH_RISCV_UTILITY_HH__

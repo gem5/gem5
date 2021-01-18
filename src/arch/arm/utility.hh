@@ -111,21 +111,9 @@ inUserMode(CPSR cpsr)
 }
 
 static inline bool
-inUserMode(ThreadContext *tc)
-{
-    return inUserMode(tc->readMiscRegNoEffect(MISCREG_CPSR));
-}
-
-static inline bool
 inPrivilegedMode(CPSR cpsr)
 {
     return !inUserMode(cpsr);
-}
-
-static inline bool
-inPrivilegedMode(ThreadContext *tc)
-{
-    return !inUserMode(tc);
 }
 
 bool isSecure(ThreadContext *tc);

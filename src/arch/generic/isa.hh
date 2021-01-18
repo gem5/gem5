@@ -56,6 +56,7 @@ class BaseISA : public SimObject
     virtual void setThreadContext(ThreadContext *_tc) { tc = _tc; }
 
     virtual uint64_t getExecutingAsid() const { return 0; }
+    virtual bool inUserMode() const = 0;
 };
 
 #endif // __ARCH_GENERIC_ISA_HH__

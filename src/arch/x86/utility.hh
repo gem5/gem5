@@ -53,17 +53,6 @@ namespace X86ISA
         return retPC;
     }
 
-    static inline bool
-    inUserMode(ThreadContext *tc)
-    {
-        if (!FullSystem) {
-            return true;
-        } else {
-            HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
-            return m5reg.cpl == 3;
-        }
-    }
-
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);

@@ -28,6 +28,7 @@
 #ifndef __ARCH_ARM_FASTMODEL_IRIS_ISA_HH__
 #define __ARCH_ARM_FASTMODEL_IRIS_ISA_HH__
 
+#include "arch/arm/utility.hh"
 #include "arch/generic/isa.hh"
 
 namespace Iris
@@ -39,6 +40,13 @@ class ISA : public BaseISA
     ISA(const Params &p) : BaseISA(p) {}
 
     void serialize(CheckpointOut &cp) const;
+
+    bool
+    inUserMode() const override
+    {
+        CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
+        return ::inUserMode(cpsr);
+    }
 };
 
 } // namespace Iris

@@ -95,6 +95,8 @@ class ISA : public BaseISA
     int flattenCCIndex(int reg) const { return reg; }
     int flattenMiscIndex(int reg) const { return reg; }
 
+    bool inUserMode() const override { return true; }
+
     void serialize(CheckpointOut &cp) const;
     void unserialize(CheckpointIn &cp);
 

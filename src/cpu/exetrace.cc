@@ -60,11 +60,11 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
 {
     std::stringstream outs;
 
-    if (!Debug::ExecUser || !Debug::ExecKernel) {
-        bool in_user_mode = TheISA::inUserMode(thread);
-        if (in_user_mode && !Debug::ExecUser) return;
-        if (!in_user_mode && !Debug::ExecKernel) return;
-    }
+    const bool in_user_mode = thread->getIsaPtr()->inUserMode();
+    if (in_user_mode && !Debug::ExecUser)
+        return;
+    if (!in_user_mode && !Debug::ExecKernel)
+        return;
 
     if (Debug::ExecAsid) {
         outs << "A" << std::dec <<
@@ -77,7 +77,7 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     Addr cur_pc = pc.instAddr();
     Loader::SymbolTable::const_iterator it;
     ccprintf(outs, "%#x", cur_pc);
-    if (Debug::ExecSymbol && (!FullSystem || !TheISA::inUserMode(thread)) &&
+    if (Debug::ExecSymbol && (!FullSystem || !in_user_mode) &&
             (it = Loader::debugSymbolTable.findNearest(cur_pc)) !=
                 Loader::debugSymbolTable.end()) {
         Addr delta = cur_pc - it->address;

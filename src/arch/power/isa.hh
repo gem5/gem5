@@ -126,6 +126,12 @@ class ISA : public BaseISA
         return reg;
     }
 
+    bool
+    inUserMode() const override
+    {
+        return false;
+    }
+
     using Params = PowerISAParams;
 
     ISA(const Params &p);

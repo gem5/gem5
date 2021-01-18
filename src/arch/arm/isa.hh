@@ -48,6 +48,7 @@
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
+#include "arch/arm/utility.hh"
 #include "arch/generic/isa.hh"
 #include "arch/generic/traits.hh"
 #include "debug/Checkpoint.hh"
@@ -890,6 +891,13 @@ namespace ArmISA
         getExecutingAsid() const override
         {
             return readMiscRegNoEffect(MISCREG_CONTEXTIDR);
+        }
+
+        bool
+        inUserMode() const override
+        {
+            CPSR cpsr = miscRegs[MISCREG_CPSR];
+            return ArmISA::inUserMode(cpsr);
         }
     };
 }

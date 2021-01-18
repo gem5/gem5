@@ -223,6 +223,14 @@ class ISA : public BaseISA
 
     using Params = SparcISAParams;
 
+    bool
+    inUserMode() const override
+    {
+        PSTATE pstate = readMiscRegNoEffect(MISCREG_PSTATE);
+        HPSTATE hpstate = readMiscRegNoEffect(MISCREG_HPSTATE);
+        return !(pstate.priv || hpstate.hpriv);
+    }
+
     ISA(const Params &p);
 };
 }

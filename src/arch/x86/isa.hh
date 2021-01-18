@@ -103,6 +103,13 @@ namespace X86ISA
         int flattenCCIndex(int reg) const { return reg; }
         int flattenMiscIndex(int reg) const { return reg; }
 
+        bool
+        inUserMode() const override
+        {
+            HandyM5Reg m5reg = readMiscRegNoEffect(MISCREG_M5_REG);
+            return m5reg.cpl == 3;
+        }
+
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
 
