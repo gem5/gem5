@@ -215,6 +215,11 @@ class ISA : public BaseISA
     int flattenCCIndex(int reg) const { return reg; }
     int flattenMiscIndex(int reg) const { return reg; }
 
+    uint64_t
+    getExecutingAsid() const override
+    {
+        return readMiscRegNoEffect(MISCREG_MMU_P_CONTEXT);
+    }
 
     typedef SparcISAParams Params;
     const Params &params() const;

@@ -66,8 +66,10 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
         if (!in_user_mode && !Debug::ExecKernel) return;
     }
 
-    if (Debug::ExecAsid)
-        outs << "A" << std::dec << TheISA::getExecutingAsid(thread) << " ";
+    if (Debug::ExecAsid) {
+        outs << "A" << std::dec <<
+            thread->getIsaPtr()->getExecutingAsid() << " ";
+    }
 
     if (Debug::ExecThread)
         outs << "T" << thread->threadId() << " : ";

@@ -66,12 +66,6 @@ inUserMode(ThreadContext *tc)
     return 0;
 }
 
-inline uint64_t
-getExecutingAsid(ThreadContext *tc)
-{
-    return 0;
-}
-
 } // namespace PowerISA
 
 

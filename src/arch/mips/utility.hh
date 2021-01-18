@@ -108,12 +108,6 @@ advancePC(PCState &pc, const StaticInstPtr &inst)
     pc.advance();
 }
 
-inline uint64_t
-getExecutingAsid(ThreadContext *tc)
-{
-    return 0;
-}
-
 };
 
 

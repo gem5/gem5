@@ -77,13 +77,6 @@ namespace X86ISA
         inst->advancePC(pc);
     }
 
-    inline uint64_t
-    getExecutingAsid(ThreadContext *tc)
-    {
-        return 0;
-    }
-
-
     /**
      * Reconstruct the rflags register from the internal gem5 register
      * state.

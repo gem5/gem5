@@ -411,12 +411,6 @@ advancePC(PCState &pc, const StaticInstPtr &inst)
 Addr truncPage(Addr addr);
 Addr roundPage(Addr addr);
 
-inline uint64_t
-getExecutingAsid(ThreadContext *tc)
-{
-    return tc->readMiscReg(MISCREG_CONTEXTIDR);
-}
-
 // Decodes the register index to access based on the fields used in a MSR
 // or MRS instruction
 bool

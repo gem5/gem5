@@ -887,6 +887,12 @@ namespace ArmISA
         const Params &params() const;
 
         ISA(const Params &p);
+
+        uint64_t
+        getExecutingAsid() const override
+        {
+            return readMiscRegNoEffect(MISCREG_CONTEXTIDR);
+        }
     };
 }
 

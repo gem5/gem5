@@ -176,12 +176,6 @@ inUserMode(ThreadContext *tc)
     return true;
 }
 
-inline uint64_t
-getExecutingAsid(ThreadContext *tc)
-{
-    return 0;
-}
-
 } // namespace RiscvISA
 
 #endif // __ARCH_RISCV_UTILITY_HH__
