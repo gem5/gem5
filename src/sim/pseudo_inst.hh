@@ -45,34 +45,13 @@
 
 class ThreadContext;
 
-#include "arch/utility.hh"
 #include "base/bitfield.hh"
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "base/types.hh" // For Tick and Addr data types.
+#include "cpu/thread_context.hh"
 #include "debug/PseudoInst.hh"
 #include "sim/guest_abi.hh"
-
-struct PseudoInstABI
-{
-    using State = int;
-};
-
-namespace GuestABI
-{
-
-template <>
-struct Argument<PseudoInstABI, uint64_t>
-{
-    static uint64_t
-    get(ThreadContext *tc, PseudoInstABI::State &state)
-    {
-        uint64_t result =
-            TheISA::getArgument(tc, state, sizeof(uint64_t), false);
-        state++;
-        return result;
-    }
-};
-
-} // namespace GuestABI
 
 namespace PseudoInst
 {
