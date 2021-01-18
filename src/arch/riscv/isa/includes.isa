@@ -81,6 +81,7 @@ output exec {{
 #include "arch/generic/memhelpers.hh"
 #include "arch/riscv/faults.hh"
 #include "arch/riscv/mmu.hh"
+#include "arch/riscv/reg_abi.hh"
 #include "arch/riscv/registers.hh"
 #include "arch/riscv/utility.hh"
 #include "base/condcodes.hh"

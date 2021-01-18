@@ -51,8 +51,8 @@ if env['TARGET_ISA'] == 'riscv':
     Source('process.cc')
     Source('pagetable.cc')
     Source('pagetable_walker.cc')
+    Source('reg_abi.cc')
     Source('remote_gdb.cc')
-    Source('se_workload.cc')
     Source('tlb.cc')
 
     Source('linux/se_workload.cc')

@@ -36,12 +36,11 @@
 
 
 def format M5Op() {{
-    iop = InstObjParams(name, Name, 'PseudoOp',
-                        'uint64_t result;\n'
-                        'PseudoInst::pseudoInst<PseudoInstABI>('
-                            'xc->tcBase(), M5FUNC, result);\n'
-                        'a0 = result',
-                        ['IsNonSpeculative', 'IsSerializeAfter'])
+    iop = InstObjParams(name, Name, 'PseudoOp', '''
+            uint64_t result;
+            PseudoInst::pseudoInst<RegABI64>(xc->tcBase(), M5FUNC, result);
+            a0 = result''',
+            ['IsNonSpeculative', 'IsSerializeAfter'])
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)

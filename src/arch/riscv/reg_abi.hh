@@ -25,61 +25,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_RISCV_SE_WORKLOAD_HH__
-#define __ARCH_RISCV_SE_WORKLOAD_HH__
+#ifndef __ARCH_RISCV_REG_ABI_HH__
+#define __ARCH_RISCV_REG_ABI_HH__
 
-#include "arch/riscv/reg_abi.hh"
-#include "arch/riscv/registers.hh"
-#include "params/RiscvSEWorkload.hh"
-#include "sim/se_workload.hh"
+#include <vector>
+
 #include "sim/syscall_abi.hh"
 
 namespace RiscvISA
 {
 
-class SEWorkload : public ::SEWorkload
+//FIXME RISCV needs to handle 64 bit arguments in its 32 bit ISA.
+struct RegABI64 : public GenericSyscallABI64
 {
-  public:
-    using Params = RiscvSEWorkloadParams;
-
-  protected:
-    const Params &_params;
-
-  public:
-    const Params &params() const { return _params; }
-
-    SEWorkload(const Params &p) : ::SEWorkload(p), _params(p) {}
-
-    ::Loader::Arch getArch() const override { return ::Loader::Riscv64; }
-
-    //FIXME RISCV needs to handle 64 bit arguments in its 32 bit ISA.
-    using SyscallABI = RegABI64;
+    static const std::vector<int> ArgumentRegs;
 };
 
 } // namespace RiscvISA
 
-namespace GuestABI
-{
-
-template <>
-struct Result<RiscvISA::SEWorkload::SyscallABI, SyscallReturn>
-{
-    static void
-    store(ThreadContext *tc, const SyscallReturn &ret)
-    {
-        if (ret.suppressed() || ret.needsRetry())
-            return;
-
-        if (ret.successful()) {
-            // no error
-            tc->setIntReg(RiscvISA::ReturnValueReg, ret.returnValue());
-        } else {
-            // got an error, return details
-            tc->setIntReg(RiscvISA::ReturnValueReg, ret.encodedValue());
-        }
-    }
-};
-
-} // namespace GuestABI
-
-#endif // __ARCH_RISCV_SE_WORKLOAD_HH__
+#endif // __ARCH_RISCV_REG_ABI_HH__

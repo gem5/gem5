@@ -93,11 +93,8 @@ const int NumCCRegs = 0;
 const int ZeroReg = 0;
 const int ReturnAddrReg = 1;
 const int StackPointerReg = 2;
-const int GlobalPointerReg = 3;
 const int ThreadPointerReg = 4;
-const int FramePointerReg = 8;
 const int ReturnValueReg = 10;
-const std::vector<int> ReturnValueRegs = {10, 11};
 const std::vector<int> ArgumentRegs = {10, 11, 12, 13, 14, 15, 16, 17};
 const int AMOTempReg = 32;
 

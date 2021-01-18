@@ -25,13 +25,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/riscv/se_workload.hh"
+#include "arch/riscv/reg_abi.hh"
 
 namespace RiscvISA
 {
 
-const std::vector<int> SEWorkload::SyscallABI::ArgumentRegs = {
-    10, 11, 12, 13, 14, 15, 16
-};
+const std::vector<int> RegABI64::ArgumentRegs = {10, 11, 12, 13, 14, 15, 16};
 
 } // namespace RiscvISA
