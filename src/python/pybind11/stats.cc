@@ -67,6 +67,7 @@ cast_stat_info(const Stats::Info *info)
     } while (0)
 
     TRY_CAST(Stats::ScalarInfo);
+    TRY_CAST(Stats::DistInfo);
 
     return py::cast(info);
 
@@ -145,6 +146,38 @@ pybind_init_stats(py::module_ &m_native)
         .def("value", &Stats::ScalarInfo::value)
         .def("result", &Stats::ScalarInfo::result)
         .def("total", &Stats::ScalarInfo::total)
+        ;
+
+    py::class_<Stats::DistInfo, Stats::Info,
+                std::unique_ptr<Stats::DistInfo, py::nodelete>>(
+                    m, "DistInfo")
+        .def_property_readonly("min_val", [](const Stats::DistInfo &info) {
+                return info.data.min_val;
+            })
+        .def_property_readonly("max_val", [](const Stats::DistInfo &info) {
+                return info.data.max_val;
+            })
+        .def_property_readonly("bucket_size", [](const Stats::DistInfo &info) {
+                return info.data.bucket_size;
+            })
+        .def_property_readonly("values", [](const Stats::DistInfo &info) {
+                return info.data.cvec;
+            })
+        .def_property_readonly("overflow", [](const Stats::DistInfo &info) {
+                return info.data.overflow;
+            })
+        .def_property_readonly("underflow", [](const Stats::DistInfo &info) {
+                return info.data.underflow;
+            })
+        .def_property_readonly("sum", [](const Stats::DistInfo &info) {
+                return info.data.sum;
+            })
+        .def_property_readonly("logs", [](const Stats::DistInfo &info) {
+                return info.data.logs;
+            })
+        .def_property_readonly("squares", [](const Stats::DistInfo &info) {
+                return info.data.squares;
+            })
         ;
 
     py::class_<Stats::Group, std::unique_ptr<Stats::Group, py::nodelete>>(
