@@ -87,12 +87,6 @@ testPredicate(uint32_t nz, uint32_t c, uint32_t v, ConditionCode code)
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 
-static inline void
-copyMiscRegs(ThreadContext *src, ThreadContext *dest)
-{
-    panic("Copy Misc. Regs Not Implemented Yet\n");
-}
-
 /** Send an event (SEV) to a specific PE if there isn't
  * already a pending event */
 void sendEvent(ThreadContext *tc);

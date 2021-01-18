@@ -32,7 +32,8 @@
 
 #include "base/logging.hh"
 
-namespace PowerISA {
+namespace PowerISA
+{
 
 void
 copyRegs(ThreadContext *src, ThreadContext *dest)
@@ -45,8 +46,7 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     for (int i = 0; i < NumFloatRegs; ++i)
         dest->setFloatReg(i, src->readFloatReg(i));
 
-    // Copy misc. registers
-    copyMiscRegs(src, dest);
+    //TODO Copy misc. registers.
 
     // Lastly copy PC/NPC
     dest->pcState(src->pcState());

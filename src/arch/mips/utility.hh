@@ -73,7 +73,6 @@ RoundPage(Addr addr)
 }
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);
-void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
 inline void
 advancePC(PCState &pc, const StaticInstPtr &inst)
