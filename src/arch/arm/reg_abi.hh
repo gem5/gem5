@@ -25,35 +25,52 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_ARM_SE_WORKLOAD_HH__
-#define __ARCH_ARM_SE_WORKLOAD_HH__
+#ifndef __ARCH_ARM_REG_ABI_HH__
+#define __ARCH_ARM_REG_ABI_HH__
 
-#include "arch/arm/reg_abi.hh"
-#include "params/ArmSEWorkload.hh"
-#include "sim/se_workload.hh"
+#include <vector>
+
+#include "base/logging.hh"
+#include "sim/syscall_abi.hh"
 
 namespace ArmISA
 {
 
-class SEWorkload : public ::SEWorkload
+struct RegABI32 : public GenericSyscallABI32
 {
-  public:
-    using Params = ArmSEWorkloadParams;
+    static const std::vector<int> ArgumentRegs;
+};
 
-  protected:
-    const Params &_params;
-
-  public:
-    const Params &params() const { return _params; }
-
-    SEWorkload(const Params &p) : ::SEWorkload(p), _params(p) {}
-
-    ::Loader::Arch getArch() const override { return ::Loader::Arm64; }
-
-    using SyscallABI32 = RegABI32;
-    using SyscallABI64 = RegABI64;
+struct RegABI64 : public GenericSyscallABI64
+{
+    static const std::vector<int> ArgumentRegs;
 };
 
 } // namespace ArmISA
 
-#endif // __ARCH_ARM_SE_WORKLOAD_HH__
+namespace GuestABI
+{
+
+template <typename ABI, typename Arg>
+struct Argument<ABI, Arg,
+    typename std::enable_if_t<
+        std::is_base_of<ArmISA::RegABI32, ABI>::value &&
+        ABI::template IsWide<Arg>::value>>
+{
+    static Arg
+    get(ThreadContext *tc, typename ABI::State &state)
+    {
+        // 64 bit arguments are passed starting in an even register.
+        if (state % 2)
+            state++;
+        panic_if(state + 1 >= ABI::ArgumentRegs.size(),
+                "Ran out of syscall argument registers.");
+        auto low = ABI::ArgumentRegs[state++];
+        auto high = ABI::ArgumentRegs[state++];
+        return (Arg)ABI::mergeRegs(tc, low, high);
+    }
+};
+
+} // namespace GuestABI
+
+#endif // __ARCH_ARM_GEM5_OP_HH__

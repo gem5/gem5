@@ -25,17 +25,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/arm/se_workload.hh"
+#include "arch/arm/reg_abi.hh"
 
 namespace ArmISA
 {
 
-const std::vector<int> SEWorkload::SyscallABI32::ArgumentRegs = {
-    0, 1, 2, 3, 4, 5, 6
-};
-
-const std::vector<int> SEWorkload::SyscallABI64::ArgumentRegs = {
-    0, 1, 2, 3, 4, 5, 6
-};
+const std::vector<int> RegABI32::ArgumentRegs = {0, 1, 2, 3, 4, 5, 6};
+const std::vector<int> RegABI64::ArgumentRegs = {0, 1, 2, 3, 4, 5, 6};
 
 } // namespace ArmISA
