@@ -1,3 +1,15 @@
+# Copyright (c) 2021 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005 The Regents of The University of Michigan
 # Copyright (c) 2010 Advanced Micro Devices, Inc.
 # All rights reserved.
@@ -88,9 +100,40 @@ def assertStr(value):
     if not isinstance(value, str):
         raise TypeError("wrong type '%s' should be str" % type(value))
 
+def _split_suffix(value, suffixes):
+    '''Split a string based on a suffix from a list of suffixes.
 
-# memory size configuration stuff
+    :param value: String value to test for a matching suffix.
+    :param suffixes: Container of suffixes to test.
+
+    :returns: A tuple of (value, suffix). Suffix is the empty string
+              if there is no match.
+
+    '''
+    matches = [ sfx for sfx in suffixes if value.endswith(sfx) ]
+    assert len(matches) <= 1
+
+    return (value[:-len(matches[0])], matches[0]) if matches \
+        else (value, '')
+
+
 def toNum(value, target_type, units, prefixes, converter):
+    '''Convert a string using units and prefixes to (typically) a float or
+    integer.
+
+    String values are assumed to either be a naked magnitude without a
+    unit or prefix, or a magnitude with a unit and an optional prefix.
+
+    :param value: String value to convert.
+    :param target_type: Type name for error messages.
+    :param units: Unit (string) or list of valid units.
+    :param prefixes: Mapping of prefixes to multipliers.
+    :param converter: Helper function to convert magnitude to native
+                      type.
+
+    :returns: Tuple of (converted value, unit)
+
+    '''
     assertStr(value)
 
     def convert(val):
@@ -100,22 +143,28 @@ def toNum(value, target_type, units, prefixes, converter):
             raise ValueError(
                 "cannot convert '%s' to %s" % (value, target_type))
 
-    if units and not value.endswith(units):
-        units = None
+    # Units can be None, the empty string, or a list/tuple. Convert
+    # to a tuple for consistent handling.
     if not units:
-        return convert(value)
+        units = tuple()
+    elif isinstance(units, str):
+        units = (units,)
+    else:
+        units = tuple(units)
 
-    value = value[:-len(units)]
+    magnitude_prefix, unit = _split_suffix(value, units)
 
-    prefix = next((p for p in prefixes.keys() if value.endswith(p)), None)
-    if not prefix:
-        return convert(value)
-    value = value[:-len(prefix)]
+    # We only allow a prefix if there is a unit
+    if unit:
+        magnitude, prefix = _split_suffix(magnitude_prefix, prefixes)
+        scale = prefixes[prefix] if prefix else 1
+    else:
+        magnitude, prefix, scale = magnitude_prefix, '', 1
 
-    return convert(value) * prefixes[prefix]
+    return convert(magnitude) * scale, unit
 
 def toFloat(value, target_type='float', units=None, prefixes=[]):
-    return toNum(value, target_type, units, prefixes, float)
+    return toNum(value, target_type, units, prefixes, float)[0]
 
 def toMetricFloat(value, target_type='float', units=None):
     return toFloat(value, target_type, units, metric_prefixes)
@@ -124,8 +173,8 @@ def toBinaryFloat(value, target_type='float', units=None):
     return toFloat(value, target_type, units, binary_prefixes)
 
 def toInteger(value, target_type='integer', units=None, prefixes=[]):
-    intifier = lambda x: int(x, 0)
-    return toNum(value, target_type, units, prefixes, intifier)
+    return toNum(value, target_type, units, prefixes,
+                 lambda x: int(x, 0))[0]
 
 def toMetricInteger(value, target_type='integer', units=None):
     return toInteger(value, target_type, units, metric_prefixes)
