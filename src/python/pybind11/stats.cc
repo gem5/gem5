@@ -67,6 +67,7 @@ cast_stat_info(const Stats::Info *info)
     } while (0)
 
     TRY_CAST(Stats::ScalarInfo);
+    TRY_CAST(Stats::VectorInfo);
     TRY_CAST(Stats::DistInfo);
 
     return py::cast(info);
@@ -146,6 +147,25 @@ pybind_init_stats(py::module_ &m_native)
         .def("value", &Stats::ScalarInfo::value)
         .def("result", &Stats::ScalarInfo::result)
         .def("total", &Stats::ScalarInfo::total)
+        ;
+
+    py::class_<Stats::VectorInfo, Stats::Info,
+               std::unique_ptr<Stats::VectorInfo, py::nodelete>>(
+                    m, "VectorInfo")
+        .def_readwrite("subnames", &Stats::VectorInfo::subnames)
+        .def_readwrite("subdescs", &Stats::VectorInfo::subdescs)
+        .def_property_readonly("size", [](const Stats::VectorInfo &info) {
+                return info.size();
+            })
+        .def_property_readonly("value", [](const Stats::VectorInfo &info) {
+                return info.value();
+            })
+        .def_property_readonly("result", [](const Stats::VectorInfo &info) {
+                return info.result();
+            })
+        .def_property_readonly("total", [](const Stats::VectorInfo &info) {
+                return info.total();
+            })
         ;
 
     py::class_<Stats::DistInfo, Stats::Info,
