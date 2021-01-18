@@ -60,9 +60,9 @@ base_path = joinpath(config.bin_path, 'cpu_tests')
 base_url = config.resource_url + '/gem5/cpu_tests/benchmarks/bin/'
 
 isa_url = {
-    constants.gcn3_x86_tag : base_url + "x86"
-    constants.arm_tag : base_url + "arm"
-    constants.riscv_tag : base_url + "riscv"
+    constants.gcn3_x86_tag : base_url + "x86",
+    constants.arm_tag : base_url + "arm",
+    constants.riscv_tag : base_url + "riscv",
 }
 
 for isa in valid_isas:
