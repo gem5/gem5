@@ -67,6 +67,11 @@ cast_stat_info(const Stats::Info *info)
     } while (0)
 
     TRY_CAST(Stats::ScalarInfo);
+    /* FormulaInfo is a subclass of VectorInfo. Therefore, a cast to
+     * FormulaInfo must be attempted before a cast to VectorInfo. Otherwise
+     * instances of ForumlaInfo will be cast to VectorInfo.
+     */
+    TRY_CAST(Stats::FormulaInfo);
     TRY_CAST(Stats::VectorInfo);
     TRY_CAST(Stats::DistInfo);
 
@@ -165,6 +170,14 @@ pybind_init_stats(py::module_ &m_native)
             })
         .def_property_readonly("total", [](const Stats::VectorInfo &info) {
                 return info.total();
+            })
+        ;
+
+    py::class_<Stats::FormulaInfo, Stats::VectorInfo,
+               std::unique_ptr<Stats::FormulaInfo, py::nodelete>>(
+                      m, "FormulaInfo")
+        .def_property_readonly("str", [](const Stats::FormulaInfo &info) {
+                return info.str();
             })
         ;
 
