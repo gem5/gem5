@@ -105,6 +105,7 @@ output exec {{
 #include "arch/arm/htm.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/pauth_helpers.hh"
+#include "arch/arm/reg_abi.hh"
 #include "arch/arm/semihosting.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/memhelpers.hh"

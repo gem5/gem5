@@ -47,6 +47,7 @@
 #include "arch/arm/faults.hh"
 #include "arch/arm/isa.hh"
 #include "arch/arm/pagetable.hh"
+#include "arch/arm/reg_abi.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/stage2_lookup.hh"
 #include "arch/arm/stage2_mmu.hh"
@@ -146,9 +147,14 @@ TLB::finalizePhysical(const RequestPtr &req,
             [func, mode](ThreadContext *tc, PacketPtr pkt) -> Cycles
             {
                 uint64_t ret;
-                PseudoInst::pseudoInst<PseudoInstABI>(tc, func, ret);
+                if (inAArch64(tc))
+                    PseudoInst::pseudoInst<RegABI64>(tc, func, ret);
+                else
+                    PseudoInst::pseudoInst<RegABI32>(tc, func, ret);
+
                 if (mode == Read)
                     pkt->setLE(ret);
+
                 return Cycles(1);
             }
         );

@@ -38,13 +38,14 @@
 let {{
     gem5OpCode = '''
     uint64_t ret;
-    bool recognized = PseudoInst::pseudoInst<PseudoInstABI>(
-            xc->tcBase(), bits(machInst, 23, 16), ret);
-    if (!recognized)
+    int func = bits(machInst, 23, 16);
+    auto *tc = xc->tcBase();
+    if (!PseudoInst::pseudoInst<%s>(tc, func, ret))
         fault = std::make_shared<UndefinedInstruction>(machInst, true);
     '''
     gem5OpIop = ArmInstObjParams("gem5op", "Gem5Op64", "PredOp",
-                                 { "code": gem5OpCode + 'X0 = ret;',
+                                 { "code": gem5OpCode % "RegABI64" +
+                                   'X0 = ret;',
                                    "predicate_test": predicateTest },
                                  [ "IsNonSpeculative", "IsUnverifiable" ]);
     header_output += BasicDeclare.subst(gem5OpIop)
@@ -52,7 +53,7 @@ let {{
     exec_output += PredOpExecute.subst(gem5OpIop)
 
     gem5OpIop = ArmInstObjParams("gem5op", "Gem5Op", "PredOp",
-                                 { "code": gem5OpCode + \
+                                 { "code": gem5OpCode % "RegABI32" + \
                                    'R0 = bits(ret, 31, 0);\n' + \
                                    'R1 = bits(ret, 63, 32);',
                                    "predicate_test": predicateTest },
