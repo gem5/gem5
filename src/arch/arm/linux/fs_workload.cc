@@ -151,7 +151,7 @@ FsLinux::initState()
         DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
         DDUMP(Loader, boot_data, size << 2);
 
-        system->physProxy.writeBlob(params().dtb_addr + _loadAddrOffset,
+        system->physProxy.writeBlob(params().dtb_addr,
                                     boot_data, size << 2);
 
         delete[] boot_data;
@@ -170,7 +170,7 @@ FsLinux::initState()
         for (auto *tc: system->threads) {
             tc->setIntReg(0, 0);
             tc->setIntReg(1, params().machine_type);
-            tc->setIntReg(2, params().dtb_addr + _loadAddrOffset);
+            tc->setIntReg(2, params().dtb_addr);
         }
     }
 }
