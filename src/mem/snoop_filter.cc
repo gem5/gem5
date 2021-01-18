@@ -387,22 +387,24 @@ SnoopFilter::updateResponse(const Packet* cpkt, const ResponsePort&
             __func__, sf_item.requested, sf_item.holder);
 }
 
-SnoopFilter::SnoopFilterStats::SnoopFilterStats(Stats::Group *parent):
-Stats::Group(parent),
-ADD_STAT(totRequests,"Total number of requests made to the snoop filter."),
-ADD_STAT(hitSingleRequests,
-              "Number of requests hitting in the snoop filter with a single "\
-              "holder of the requested data."),
-ADD_STAT(hitMultiRequests,
-              "Number of requests hitting in the snoop filter with multiple "\
-              "(>1) holders of the requested data."),
-ADD_STAT(totSnoops,"Total number of snoops made to the snoop filter."),
-ADD_STAT(hitSingleSnoops,
-              "Number of snoops hitting in the snoop filter with a single "\
-              "holder of the requested data."),
-ADD_STAT(hitMultiSnoops,
-              "Number of snoops hitting in the snoop filter with multiple "\
-              "(>1) holders of the requested data.")
+SnoopFilter::SnoopFilterStats::SnoopFilterStats(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(totRequests, UNIT_COUNT,
+               "Total number of requests made to the snoop filter."),
+      ADD_STAT(hitSingleRequests, UNIT_COUNT,
+               "Number of requests hitting in the snoop filter with a single "
+               "holder of the requested data."),
+      ADD_STAT(hitMultiRequests, UNIT_COUNT,
+               "Number of requests hitting in the snoop filter with multiple "
+               "(>1) holders of the requested data."),
+      ADD_STAT(totSnoops, UNIT_COUNT,
+               "Total number of snoops made to the snoop filter."),
+      ADD_STAT(hitSingleSnoops, UNIT_COUNT,
+               "Number of snoops hitting in the snoop filter with a single "
+               "holder of the requested data."),
+      ADD_STAT(hitMultiSnoops, UNIT_COUNT,
+               "Number of snoops hitting in the snoop filter with multiple "
+               "(>1) holders of the requested data.")
 {}
 
 void

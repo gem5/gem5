@@ -278,23 +278,23 @@ MemCtrl::MemCtrlStats::MemCtrlStats(MemCtrl &mc)
     : Stats::Group(&mc),
     memCtrl(mc),
 
-    ADD_STAT(avgPriority,
+    ADD_STAT(avgPriority, UNIT_COUNT,
              "Average QoS priority value for accepted requests"),
-    ADD_STAT(avgPriorityDistance,
-             "Average QoS priority distance between assigned and "
-             "queued values"),
+    ADD_STAT(avgPriorityDistance, UNIT_COUNT,
+             "Average QoS priority distance between assigned and queued "
+             "values"),
 
-    ADD_STAT(priorityMinLatency,
+    ADD_STAT(priorityMinLatency, UNIT_SECOND,
              "per QoS priority minimum request to response latency (s)"),
-    ADD_STAT(priorityMaxLatency,
-        "per QoS priority maximum request to response latency (s)"),
-    ADD_STAT(numReadWriteTurnArounds,
+    ADD_STAT(priorityMaxLatency, UNIT_SECOND,
+             "per QoS priority maximum request to response latency (s)"),
+    ADD_STAT(numReadWriteTurnArounds, UNIT_COUNT,
              "Number of turnarounds from READ to WRITE"),
-    ADD_STAT(numWriteReadTurnArounds,
+    ADD_STAT(numWriteReadTurnArounds, UNIT_COUNT,
              "Number of turnarounds from WRITE to READ"),
-    ADD_STAT(numStayReadState,
+    ADD_STAT(numStayReadState, UNIT_COUNT,
              "Number of times bus staying in READ state"),
-    ADD_STAT(numStayWriteState,
+    ADD_STAT(numStayWriteState, UNIT_COUNT,
              "Number of times bus staying in WRITE state")
 {
 }

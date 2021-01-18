@@ -299,9 +299,10 @@ FALRU::CacheTracking::CacheTracking(unsigned min_size, unsigned max_size,
                        floorLog2(max_size) - floorLog2(min_size) : 0),
       inAllCachesMask(mask(numTrackedCaches)),
       boundaries(numTrackedCaches),
-      ADD_STAT(hits, "The number of hits in each cache size."),
-      ADD_STAT(misses, "The number of misses in each cache size."),
-      ADD_STAT(accesses, "The number of accesses to the FA LRU cache.")
+      ADD_STAT(hits, UNIT_COUNT, "The number of hits in each cache size."),
+      ADD_STAT(misses, UNIT_COUNT, "The number of misses in each cache size."),
+      ADD_STAT(accesses, UNIT_COUNT,
+               "The number of accesses to the FA LRU cache.")
 {
     fatal_if(numTrackedCaches > sizeof(CachesMask) * 8,
              "Not enough bits (%s) in type CachesMask type to keep "

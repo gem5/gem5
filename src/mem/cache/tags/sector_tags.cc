@@ -338,7 +338,7 @@ SectorTags::regenerateBlkAddr(const CacheBlk* blk) const
 SectorTags::SectorTagsStats::SectorTagsStats(BaseTagStats &base_group,
     SectorTags& _tags)
   : Stats::Group(&base_group), tags(_tags),
-    ADD_STAT(evictionsReplacement,
+    ADD_STAT(evictionsReplacement, UNIT_COUNT,
              "Number of blocks evicted due to a replacement")
 {
 }

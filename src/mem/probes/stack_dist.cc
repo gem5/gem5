@@ -56,11 +56,12 @@ StackDistProbe::StackDistProbe(const StackDistProbeParams &p)
 StackDistProbe::
 StackDistProbeStats::StackDistProbeStats(StackDistProbe *parent)
     : Stats::Group(parent),
-      ADD_STAT(readLinearHist, "Reads linear distribution"),
-      ADD_STAT(readLogHist, "Reads logarithmic distribution"),
-      ADD_STAT(writeLinearHist, "Writes linear distribution"),
-      ADD_STAT(writeLogHist, "Writes logarithmic distribution"),
-      ADD_STAT(infiniteSD, "Number of requests with infinite stack distance")
+      ADD_STAT(readLinearHist, UNIT_COUNT, "Reads linear distribution"),
+      ADD_STAT(readLogHist, UNIT_RATIO, "Reads logarithmic distribution"),
+      ADD_STAT(writeLinearHist, UNIT_COUNT, "Writes linear distribution"),
+      ADD_STAT(writeLogHist, UNIT_RATIO, "Writes logarithmic distribution"),
+      ADD_STAT(infiniteSD, UNIT_COUNT,
+               "Number of requests with infinite stack distance")
 {
     using namespace Stats;
 

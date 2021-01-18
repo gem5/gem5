@@ -226,14 +226,16 @@ Queued::getPacket()
 }
 Queued::QueuedStats::QueuedStats(Stats::Group *parent)
     : Stats::Group(parent),
-    ADD_STAT(pfIdentified, "number of prefetch candidates identified"),
-    ADD_STAT(pfBufferHit,
-     "number of redundant prefetches already in prefetch queue"),
-    ADD_STAT(pfInCache,
-     "number of redundant prefetches already in cache/mshr dropped"),
-    ADD_STAT(pfRemovedFull,
-     "number of prefetches dropped due to prefetch queue size"),
-    ADD_STAT(pfSpanPage, "number of prefetches that crossed the page")
+    ADD_STAT(pfIdentified, UNIT_COUNT,
+             "number of prefetch candidates identified"),
+    ADD_STAT(pfBufferHit, UNIT_COUNT,
+             "number of redundant prefetches already in prefetch queue"),
+    ADD_STAT(pfInCache, UNIT_COUNT,
+             "number of redundant prefetches already in cache/mshr dropped"),
+    ADD_STAT(pfRemovedFull, UNIT_COUNT,
+             "number of prefetches dropped due to prefetch queue size"),
+    ADD_STAT(pfSpanPage, UNIT_COUNT,
+             "number of prefetches that crossed the page")
 {
 }
 

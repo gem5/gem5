@@ -111,19 +111,25 @@ AbstractMemory::setBackingStore(uint8_t* pmem_addr)
 
 AbstractMemory::MemStats::MemStats(AbstractMemory &_mem)
     : Stats::Group(&_mem), mem(_mem),
-    ADD_STAT(bytesRead, "Number of bytes read from this memory"),
-    ADD_STAT(bytesInstRead,
+    ADD_STAT(bytesRead, UNIT_BYTE, "Number of bytes read from this memory"),
+    ADD_STAT(bytesInstRead, UNIT_BYTE,
              "Number of instructions bytes read from this memory"),
-    ADD_STAT(bytesWritten, "Number of bytes written to this memory"),
-    ADD_STAT(numReads, "Number of read requests responded to by this memory"),
-    ADD_STAT(numWrites,
+    ADD_STAT(bytesWritten, UNIT_BYTE,
+             "Number of bytes written to this memory"),
+    ADD_STAT(numReads, UNIT_COUNT,
+             "Number of read requests responded to by this memory"),
+    ADD_STAT(numWrites, UNIT_COUNT,
              "Number of write requests responded to by this memory"),
-    ADD_STAT(numOther, "Number of other requests responded to by this memory"),
-    ADD_STAT(bwRead, "Total read bandwidth from this memory (bytes/s)"),
-    ADD_STAT(bwInstRead,
+    ADD_STAT(numOther, UNIT_COUNT,
+             "Number of other requests responded to by this memory"),
+    ADD_STAT(bwRead, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
+             "Total read bandwidth from this memory (bytes/s)"),
+    ADD_STAT(bwInstRead, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
              "Instruction read bandwidth from this memory (bytes/s)"),
-    ADD_STAT(bwWrite, "Write bandwidth from this memory (bytes/s)"),
-    ADD_STAT(bwTotal, "Total bandwidth to/from this memory (bytes/s)")
+    ADD_STAT(bwWrite, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
+             "Write bandwidth from this memory (bytes/s)"),
+    ADD_STAT(bwTotal, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
+             "Total bandwidth to/from this memory (bytes/s)")
 {
 }
 
