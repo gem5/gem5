@@ -70,6 +70,9 @@ class EtherDevice : public PciDevice
         Stats::Scalar txPackets;
         Stats::Scalar rxPackets;
 
+        Stats::Formula txBandwidth;
+        Stats::Formula rxBandwidth;
+
         Stats::Scalar txIpChecksums;
         Stats::Scalar rxIpChecksums;
 
@@ -89,9 +92,6 @@ class EtherDevice : public PciDevice
         Stats::Formula totPackets;
         Stats::Formula totBytes;
         Stats::Formula totPacketRate;
-
-        Stats::Formula txBandwidth;
-        Stats::Formula rxBandwidth;
 
         Stats::Formula txPacketRate;
         Stats::Formula rxPacketRate;
