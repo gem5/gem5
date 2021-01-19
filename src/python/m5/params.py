@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014, 2017-2019 ARM Limited
+# Copyright (c) 2012-2014, 2017-2019, 2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -1693,6 +1693,43 @@ class Energy(Float):
         value = convert.toEnergy(value)
         super(Energy, self).__init__(value)
 
+class Temperature(ParamValue):
+    cxx_type = 'Temperature'
+    cmd_line_settable = True
+    ex_str = "1C"
+
+    def __init__(self, value):
+        self.value = convert.toTemperature(value)
+
+    def __call__(self, value):
+        self.__init__(value)
+        return value
+
+    def getValue(self):
+        from _m5.core import Temperature
+        return Temperature.fromKelvin(self.value)
+
+    def config_value(self):
+        return self
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "base/temperature.hh"')
+
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        # Assume that base/str.hh will be included anyway
+        # code('#include "base/str.hh"')
+        pass
+
+    @classmethod
+    def cxx_ini_parse(self, code, src, dest, ret):
+        code('double _temp;')
+        code('bool _ret = to_number(%s, _temp);' % src)
+        code('if (_ret)')
+        code('    %s = Temperature(_temp);' % dest)
+        code('%s _ret;' % ret)
+
 class NetworkBandwidth(float,ParamValue):
     cxx_type = 'float'
     ex_str = "1Gbps"
@@ -2231,6 +2268,7 @@ __all__ = ['Param', 'VectorParam',
            'IpAddress', 'IpNetmask', 'IpWithPort',
            'MemorySize', 'MemorySize32',
            'Latency', 'Frequency', 'Clock', 'Voltage', 'Current', 'Energy',
+           'Temperature',
            'NetworkBandwidth', 'MemoryBandwidth',
            'AddrRange',
            'MaxAddr', 'MaxTick', 'AllMemory',

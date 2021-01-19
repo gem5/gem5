@@ -275,3 +275,16 @@ class ConvertTestSuite(unittest.TestCase):
         self.assertEqual(conv('42'), 42)
         self.assertEqual(conv('42J'), 42)
         self.assertEqual(conv('42kJ'), 42e3)
+
+    def test_temperature(self):
+        conv = convert.toTemperature
+
+        self.assertEqual(conv("1.0K"), 1.0)
+        self.assertEqual(conv("1.0mK"), 1.0e-3)
+
+        self.assertEqual(conv("0C"), 273.15)
+        self.assertEqual(conv("-1C"), 272.15)
+        self.assertRaises(ValueError, conv, "1.0")
+        self.assertRaises(ValueError, conv, "-1K")
+
+        self.assertEqual(conv("32F"), 273.15)

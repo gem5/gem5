@@ -292,3 +292,25 @@ def toCurrent(value):
 
 def toEnergy(value):
     return toMetricFloat(value, 'energy', 'J')
+
+def toTemperature(value):
+    """Convert a string value specified to a temperature in Kelvin"""
+
+    magnitude, unit = toNum(value,
+                            target_type='temperature',
+                            units=('K', 'C', 'F'),
+                            prefixes=metric_prefixes,
+                            converter=float)
+    if unit == 'K':
+        kelvin = magnitude
+    elif unit == 'C':
+        kelvin = magnitude + 273.15
+    elif unit == 'F':
+        kelvin = (magnitude + 459.67) / 1.8
+    else:
+        raise ValueError(f"'{value}' needs a valid temperature unit.")
+
+    if kelvin < 0:
+        raise ValueError(f"{value} is an invalid temperature")
+
+    return kelvin

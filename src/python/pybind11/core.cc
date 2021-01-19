@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019 ARM Limited
+ * Copyright (c) 2017, 2019, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -52,6 +52,7 @@
 #include "base/logging.hh"
 #include "base/random.hh"
 #include "base/socket.hh"
+#include "base/temperature.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
 #include "sim/drain.hh"
@@ -218,6 +219,38 @@ pybind_init_core(py::module &m_native)
         .def("__int__", &Cycles::operator uint64_t)
         .def("__add__", &Cycles::operator+)
         .def("__sub__", &Cycles::operator-)
+        ;
+
+    py::class_<Temperature>(m_core, "Temperature")
+        .def(py::init<>())
+        .def(py::init<double>())
+        .def_static("from_celsius", &Temperature::fromCelsius)
+        .def_static("from_kelvin", &Temperature::fromKelvin)
+        .def_static("from_fahrenheit", &Temperature::fromFahrenheit)
+        .def("celsius", &Temperature::toCelsius)
+        .def("kelvin", &Temperature::toKelvin)
+        .def("fahrenheit", &Temperature::toFahrenheit)
+        .def(py::self == py::self)
+        .def(py::self != py::self)
+        .def(py::self < py::self)
+        .def(py::self <= py::self)
+        .def(py::self > py::self)
+        .def(py::self >= py::self)
+        .def(py::self + py::self)
+        .def(py::self - py::self)
+        .def(py::self * float())
+        .def(float() * py::self)
+        .def(py::self / float())
+        .def("__str__", [](const Temperature &t) {
+                std::stringstream s;
+                s << t;
+                return s.str();
+            })
+        .def("__repr__", [](const Temperature &t) {
+                std::stringstream s;
+                s << "Temperature(" << t.toKelvin() << ")";
+                return s.str();
+            })
         ;
 
     py::class_<tm>(m_core, "tm")
