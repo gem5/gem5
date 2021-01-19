@@ -36,7 +36,6 @@
 
 #include "arch/power/faults.hh"
 #include "arch/power/pagetable.hh"
-#include "arch/power/utility.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"

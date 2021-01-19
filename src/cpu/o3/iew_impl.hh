@@ -48,7 +48,6 @@
 
 #include <queue>
 
-#include "arch/utility.hh"
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/fu_pool.hh"

@@ -42,7 +42,6 @@
 
 #include <sstream>
 
-#include "arch/utility.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"

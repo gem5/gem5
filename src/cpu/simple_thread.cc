@@ -42,7 +42,6 @@
 
 #include <string>
 
-#include "arch/utility.hh"
 #include "base/callback.hh"
 #include "base/compiler.hh"
 #include "base/cprintf.hh"

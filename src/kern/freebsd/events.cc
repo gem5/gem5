@@ -34,7 +34,6 @@
 
 #include <sstream>
 
-#include "arch/utility.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/DebugPrintf.hh"

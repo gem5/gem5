@@ -44,7 +44,6 @@
 #include <algorithm>
 
 #include "arch/remote_gdb.hh"
-#include "arch/utility.hh"
 #include "base/compiler.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"

@@ -38,7 +38,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "arch/utility.hh"
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"

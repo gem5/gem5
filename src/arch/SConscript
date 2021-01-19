@@ -64,7 +64,6 @@ env.SwitchingHeaders(
         registers.hh
         remote_gdb.hh
         types.hh
-        utility.hh
         '''),
     env.subst('${TARGET_ISA}'))
 

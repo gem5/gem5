@@ -33,7 +33,6 @@
 #define __ARCH_POWER_PAGETABLE_H__
 
 #include "arch/power/isa_traits.hh"
-#include "arch/power/utility.hh"
 #include "sim/serialize.hh"
 
 namespace PowerISA

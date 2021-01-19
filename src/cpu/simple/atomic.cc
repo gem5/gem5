@@ -42,7 +42,6 @@
 #include "cpu/simple/atomic.hh"
 
 #include "arch/locked_mem.hh"
-#include "arch/utility.hh"
 #include "base/output.hh"
 #include "config/the_isa.hh"
 #include "cpu/exetrace.hh"

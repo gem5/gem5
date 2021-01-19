@@ -31,7 +31,6 @@
 
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/miscregs.hh"
-#include "arch/sparc/utility.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
 

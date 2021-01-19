@@ -40,7 +40,6 @@
 #include <string>
 
 #include "arch/decoder.hh"
-#include "arch/utility.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/minor/pipeline.hh"

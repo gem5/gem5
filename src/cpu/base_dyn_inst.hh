@@ -51,7 +51,6 @@
 #include <string>
 
 #include "arch/generic/tlb.hh"
-#include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
