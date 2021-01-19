@@ -39,6 +39,7 @@
 
 #include "base/statistics.hh"
 #include "params/ThermalCapacitor.hh"
+#include "params/ThermalModel.hh"
 #include "params/ThermalReference.hh"
 #include "params/ThermalResistor.hh"
 #include "sim/clocked_object.hh"
@@ -253,24 +254,37 @@ ThermalModel::startup()
     schedule(stepEvent, curTick() + SimClock::Int::s * _step);
 }
 
-void ThermalModel::addDomain(ThermalDomain * d) {
+void
+ThermalModel::addDomain(ThermalDomain * d)
+{
     domains.push_back(d);
     entities.push_back(d);
 }
-void ThermalModel::addReference(ThermalReference * r) {
+
+void
+ThermalModel::addReference(ThermalReference * r)
+{
     references.push_back(r);
     entities.push_back(r);
 }
-void ThermalModel::addCapacitor(ThermalCapacitor * c) {
+
+void
+ThermalModel::addCapacitor(ThermalCapacitor * c)
+{
     capacitors.push_back(c);
     entities.push_back(c);
 }
-void ThermalModel::addResistor(ThermalResistor * r) {
+
+void
+ThermalModel::addResistor(ThermalResistor * r)
+{
     resistors.push_back(r);
     entities.push_back(r);
 }
 
-double ThermalModel::getTemp() const {
+double
+ThermalModel::getTemp() const
+{
     // Just pick the highest temperature
     double temp = 0;
     for (auto & n : eq_nodes)

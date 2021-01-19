@@ -40,16 +40,16 @@
 
 #include <vector>
 
-#include "params/ThermalCapacitor.hh"
-#include "params/ThermalModel.hh"
-#include "params/ThermalReference.hh"
-#include "params/ThermalResistor.hh"
 #include "sim/clocked_object.hh"
 #include "sim/power/thermal_domain.hh"
 #include "sim/power/thermal_entity.hh"
 #include "sim/power/thermal_node.hh"
 #include "sim/sim_object.hh"
 
+struct ThermalCapacitorParams;
+struct ThermalModelParams;
+struct ThermalReferenceParams;
+struct ThermalResistorParams;
 
 /**
  * A ThermalResistor is used to model a thermal resistance between two
