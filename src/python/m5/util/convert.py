@@ -62,7 +62,7 @@ metric_prefixes = {
     'Gi': gibi,
     'G': giga,
     'M': mega,
-    'ki': kibi,
+    'Ki': kibi,
     'k': kilo,
     'Mi': mebi,
     'm': milli,
@@ -84,7 +84,7 @@ binary_prefixes = {
     'G' : gibi,
     'Mi': mebi,
     'M' : mebi,
-    'ki': kibi,
+    'Ki': kibi,
     'k' : kibi,
 }
 
