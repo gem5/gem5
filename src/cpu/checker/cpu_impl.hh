@@ -72,7 +72,7 @@ Checker<Impl>::advancePC(const Fault &fault)
             if (curStaticInst->isLastMicroop())
                 curMacroStaticInst = StaticInst::nullStaticInstPtr;
             TheISA::PCState pcState = thread->pcState();
-            TheISA::advancePC(pcState, curStaticInst);
+            curStaticInst->advancePC(pcState);
             thread->pcState(pcState);
             DPRINTF(Checker, "Advancing PC to %s.\n", thread->pcState());
         }

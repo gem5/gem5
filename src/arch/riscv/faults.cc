@@ -141,7 +141,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         pcState.set(addr);
     } else {
         invokeSE(tc, inst);
-        advancePC(pcState, inst);
+        inst->advancePC(pcState);
     }
     tc->pcState(pcState);
 }

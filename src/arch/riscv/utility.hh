@@ -142,12 +142,6 @@ registerName(RegId reg)
     }
 }
 
-inline void
-advancePC(PCState &pc, const StaticInstPtr &inst)
-{
-    inst->advancePC(pc);
-}
-
 } // namespace RiscvISA
 
 #endif // __ARCH_RISCV_UTILITY_HH__

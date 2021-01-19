@@ -72,14 +72,6 @@ RoundPage(Addr addr)
     return (addr + PageBytes - 1) & ~(PageBytes - 1);
 }
 
-void copyRegs(ThreadContext *src, ThreadContext *dest);
-
-inline void
-advancePC(PCState &pc, const StaticInstPtr &inst)
-{
-    pc.advance();
-}
-
 };
 
 

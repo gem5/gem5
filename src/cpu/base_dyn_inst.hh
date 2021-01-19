@@ -590,7 +590,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     mispredicted()
     {
         TheISA::PCState tempPC = pc;
-        TheISA::advancePC(tempPC, staticInst);
+        staticInst->advancePC(tempPC);
         return !(tempPC == predPC);
     }
 

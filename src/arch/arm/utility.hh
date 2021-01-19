@@ -375,12 +375,6 @@ isGenericTimerSystemAccessTrapEL3(const MiscRegIndex miscReg,
 
 bool SPAlignmentCheckEnabled(ThreadContext* tc);
 
-inline void
-advancePC(PCState &pc, const StaticInstPtr &inst)
-{
-    inst->advancePC(pc);
-}
-
 Addr truncPage(Addr addr);
 Addr roundPage(Addr addr);
 

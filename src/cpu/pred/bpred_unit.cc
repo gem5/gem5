@@ -227,7 +227,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                         RAS[tid].pop();
                         predict_record.pushedRAS = false;
                     }
-                    TheISA::advancePC(target, inst);
+                    inst->advancePC(target);
                 }
             } else {
                 predict_record.wasIndirect = true;
@@ -256,7 +256,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                         RAS[tid].pop();
                         predict_record.pushedRAS = false;
                     }
-                    TheISA::advancePC(target, inst);
+                    inst->advancePC(target);
                 }
                 iPred->recordIndirect(pc.instAddr(), target.instAddr(), seqNum,
                         tid);
@@ -266,7 +266,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         if (inst->isReturn()) {
            predict_record.wasReturn = true;
         }
-        TheISA::advancePC(target, inst);
+        inst->advancePC(target);
     }
     predict_record.target = target.instAddr();
 

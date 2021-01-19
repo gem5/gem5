@@ -39,12 +39,6 @@ namespace PowerISA {
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 
-inline void
-advancePC(PCState &pc, const StaticInstPtr &inst)
-{
-    pc.advance();
-}
-
 } // namespace PowerISA
 
 

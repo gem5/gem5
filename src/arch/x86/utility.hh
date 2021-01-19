@@ -46,12 +46,6 @@ namespace X86ISA
 {
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
-    inline void
-    advancePC(PCState &pc, const StaticInstPtr &inst)
-    {
-        inst->advancePC(pc);
-    }
-
     /**
      * Reconstruct the rflags register from the internal gem5 register
      * state.

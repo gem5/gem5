@@ -527,7 +527,7 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(
     bool predict_taken;
 
     if (!inst->isControl()) {
-        TheISA::advancePC(nextPC, inst->staticInst);
+        inst->staticInst->advancePC(nextPC);
         inst->setPredTarg(nextPC);
         inst->setPredTaken(false);
         return false;

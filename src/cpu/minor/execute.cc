@@ -39,7 +39,6 @@
 
 #include "arch/locked_mem.hh"
 #include "arch/registers.hh"
-#include "arch/utility.hh"
 #include "cpu/minor/cpu.hh"
 #include "cpu/minor/exec_context.hh"
 #include "cpu/minor/fetch1.hh"
@@ -239,9 +238,8 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
     /* The reason for the branch data we're about to generate, set below */
     BranchData::Reason reason = BranchData::NoBranch;
 
-    if (fault == NoFault)
-    {
-        TheISA::advancePC(target, inst->staticInst);
+    if (fault == NoFault) {
+        inst->staticInst->advancePC(target);
         thread->pcState(target);
 
         DPRINTF(Branch, "Advancing current PC from: %s to: %s\n",

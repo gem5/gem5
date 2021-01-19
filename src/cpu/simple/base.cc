@@ -41,7 +41,6 @@
 
 #include "cpu/simple/base.hh"
 
-#include "arch/utility.hh"
 #include "base/cprintf.hh"
 #include "base/inifile.hh"
 #include "base/loader/symtab.hh"
@@ -481,7 +480,7 @@ BaseSimpleCPU::advancePC(const Fault &fault)
             if (curStaticInst->isLastMicroop())
                 curMacroStaticInst = StaticInst::nullStaticInstPtr;
             TheISA::PCState pcState = thread->pcState();
-            TheISA::advancePC(pcState, curStaticInst);
+            curStaticInst->advancePC(pcState);
             thread->pcState(pcState);
         }
     }

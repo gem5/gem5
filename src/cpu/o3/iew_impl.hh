@@ -460,7 +460,7 @@ DefaultIEW<Impl>::squashDueToBranch(const DynInstPtr& inst, ThreadID tid)
         toCommit->branchTaken[tid] = inst->pcState().branching();
 
         TheISA::PCState pc = inst->pcState();
-        TheISA::advancePC(pc, inst->staticInst);
+        inst->staticInst->advancePC(pc);
 
         toCommit->pc[tid] = pc;
         toCommit->mispredictInst[tid] = inst;

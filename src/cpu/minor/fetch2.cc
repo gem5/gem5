@@ -455,7 +455,7 @@ Fetch2::evaluate()
 #endif
 
                     /* Advance PC for the next instruction */
-                    TheISA::advancePC(fetch_info.pc, decoded_inst);
+                    decoded_inst->advancePC(fetch_info.pc);
 
                     /* Predict any branches and issue a branch if
                      *  necessary */

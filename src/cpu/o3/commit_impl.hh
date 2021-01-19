@@ -1109,7 +1109,7 @@ DefaultCommit<Impl>::commitInsts()
 
                 cpu->traceFunctions(pc[tid].instAddr());
 
-                TheISA::advancePC(pc[tid], head_inst->staticInst);
+                head_inst->staticInst->advancePC(pc[tid]);
 
                 // Keep track of the last sequence number commited
                 lastCommitedSeqNum[tid] = head_inst->seqNum;
