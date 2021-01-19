@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2018 ARM Limited
+# Copyright (c) 2016-2018, 2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -63,4 +63,4 @@ class PowerModel(SimObject):
     pm_type = Param.PMType("All", "Type of power model")
 
     # Ambient temperature to be used when no thermal model is present
-    ambient_temp = Param.Float(25.0, "Ambient temperature")
+    ambient_temp = Param.Temperature("25.0C", "Ambient temperature")

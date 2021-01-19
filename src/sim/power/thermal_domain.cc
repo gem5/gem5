@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -49,7 +49,7 @@
 #include "sim/sub_system.hh"
 
 ThermalDomain::ThermalDomain(const Params &p)
-    : SimObject(p), _initTemperature(p.initial_temperature),
+    : SimObject(p), _initTemperature(p.initial_temperature.toCelsius()),
     node(NULL), subsystem(NULL),
     ADD_STAT(currentTemp, "Temperature in centigrade degrees")
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,7 +51,7 @@
  * ThermalReference
  */
 ThermalReference::ThermalReference(const Params &p)
-    : SimObject(p), _temperature(p.temperature), node(NULL)
+    : SimObject(p), _temperature(p.temperature.toCelsius()), node(NULL)
 {
 }
 

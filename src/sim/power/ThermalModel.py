@@ -1,4 +1,4 @@
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2015, 2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -77,7 +77,7 @@ class ThermalReference(SimObject, object):
     ]
 
     # Static temperature which may change over time
-    temperature = Param.Float(25.0, "Operational temperature in Celsius")
+    temperature = Param.Temperature("25.0C", "Operational temperature")
 
 
 # Represents a thermal capacitor

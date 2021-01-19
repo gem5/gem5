@@ -66,7 +66,7 @@ PowerModel::PowerModel(const Params &p)
     // The temperature passed here will be overwritten, if there is
     // a thermal model present
     for (auto & pms: states_pm){
-        pms->setTemperature(p.ambient_temp);
+        pms->setTemperature(p.ambient_temp.toCelsius());
     }
 
     dynamicPower
