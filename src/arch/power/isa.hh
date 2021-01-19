@@ -133,6 +133,8 @@ class ISA : public BaseISA
         return false;
     }
 
+    void copyRegsFrom(ThreadContext *src) override;
+
     using Params = PowerISAParams;
 
     ISA(const Params &p);

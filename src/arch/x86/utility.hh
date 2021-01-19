@@ -44,8 +44,6 @@
 
 namespace X86ISA
 {
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
-
     /**
      * Reconstruct the rflags register from the internal gem5 register
      * state.

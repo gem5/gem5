@@ -98,21 +98,6 @@ issignalingnan<double>(double val)
         && (reinterpret_cast<uint64_t&>(val)&0x0004000000000000ULL);
 }
 
-inline void
-copyRegs(ThreadContext *src, ThreadContext *dest)
-{
-    // First loop through the integer registers.
-    for (int i = 0; i < NumIntRegs; ++i)
-        dest->setIntReg(i, src->readIntReg(i));
-
-    // Second loop through the float registers.
-    for (int i = 0; i < NumFloatRegs; ++i)
-        dest->setFloatReg(i, src->readFloatReg(i));
-
-    // Lastly copy PC/NPC
-    dest->pcState(src->pcState());
-}
-
 inline std::string
 registerName(RegId reg)
 {

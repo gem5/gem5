@@ -192,6 +192,21 @@ ISA::ISA(const Params &p) : BaseISA(p)
     clear();
 }
 
+void
+ISA::copyRegsFrom(ThreadContext *src)
+{
+    // First loop through the integer registers.
+    for (int i = 0; i < NumIntRegs; ++i)
+        tc->setIntReg(i, src->readIntReg(i));
+
+    // Second loop through the float registers.
+    for (int i = 0; i < NumFloatRegs; ++i)
+        tc->setFloatReg(i, src->readFloatReg(i));
+
+    // Lastly copy PC/NPC
+    tc->pcState(src->pcState());
+}
+
 void ISA::clear()
 {
     std::fill(miscRegFile.begin(), miscRegFile.end(), 0);

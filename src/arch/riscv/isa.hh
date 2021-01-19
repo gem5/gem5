@@ -96,6 +96,7 @@ class ISA : public BaseISA
     int flattenMiscIndex(int reg) const { return reg; }
 
     bool inUserMode() const override { return true; }
+    void copyRegsFrom(ThreadContext *src) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

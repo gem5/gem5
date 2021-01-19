@@ -45,7 +45,6 @@ if env['TARGET_ISA'] == 'sparc':
     Source('solaris/solaris.cc')
     Source('tlb.cc')
     Source('ua2005.cc')
-    Source('utility.cc')
 
     SimObject('SparcFsWorkload.py')
     SimObject('SparcInterrupts.py')

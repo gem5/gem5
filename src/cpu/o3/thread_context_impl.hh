@@ -154,7 +154,7 @@ O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
 
     // Prevent squashing
     thread->noSquashFromTC = true;
-    TheISA::copyRegs(tc, this);
+    getIsaPtr()->copyRegsFrom(tc);
     thread->noSquashFromTC = false;
 
     if (!FullSystem)

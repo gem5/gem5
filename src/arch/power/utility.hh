@@ -31,15 +31,4 @@
 #ifndef __ARCH_POWER_UTILITY_HH__
 #define __ARCH_POWER_UTILITY_HH__
 
-#include "base/types.hh"
-#include "cpu/static_inst.hh"
-#include "cpu/thread_context.hh"
-
-namespace PowerISA {
-
-void copyRegs(ThreadContext *src, ThreadContext *dest);
-
-} // namespace PowerISA
-
-
 #endif // __ARCH_POWER_UTILITY_HH__

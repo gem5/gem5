@@ -152,6 +152,42 @@ ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string)
     clear();
 }
 
+static void
+copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+{
+    // This function assumes no side effects other than TLB invalidation
+    // need to be considered while copying state. That will likely not be
+    // true in the future.
+    for (int i = 0; i < NUM_MISCREGS; ++i) {
+        if (!isValidMiscReg(i))
+             continue;
+
+        dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
+    }
+
+    // The TSC has to be updated with side-effects if the CPUs in a
+    // CPU switch have different frequencies.
+    dest->setMiscReg(MISCREG_TSC, src->readMiscReg(MISCREG_TSC));
+
+    dest->getMMUPtr()->flushAll();
+}
+
+void
+ISA::copyRegsFrom(ThreadContext *src)
+{
+    //copy int regs
+    for (int i = 0; i < NumIntRegs; ++i)
+         tc->setIntRegFlat(i, src->readIntRegFlat(i));
+    //copy float regs
+    for (int i = 0; i < NumFloatRegs; ++i)
+         tc->setFloatRegFlat(i, src->readFloatRegFlat(i));
+    //copy condition-code regs
+    for (int i = 0; i < NumCCRegs; ++i)
+         tc->setCCRegFlat(i, src->readCCRegFlat(i));
+    copyMiscRegs(src, tc);
+    tc->pcState(src->pcState());
+}
+
 RegVal
 ISA::readMiscRegNoEffect(int miscReg) const
 {

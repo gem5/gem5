@@ -29,7 +29,10 @@
 #ifndef __ARCH_SPARC_LINUX_LINUX_HH__
 #define __ARCH_SPARC_LINUX_LINUX_HH__
 
+#include "arch/sparc/asi.hh"
+#include "arch/sparc/miscregs.hh"
 #include "arch/sparc/utility.hh"
+#include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
 
 class SparcLinux : public Linux
@@ -216,7 +219,7 @@ class SparcLinux : public Linux
               ThreadContext *ptc, ThreadContext *ctc,
               uint64_t stack, uint64_t tls)
     {
-        SparcISA::copyRegs(ptc, ctc);
+        ctc->getIsaPtr()->copyRegsFrom(ptc);
         ctc->setIntReg(SparcISA::INTREG_OTHERWIN, 0);
         ctc->setIntReg(SparcISA::INTREG_CANRESTORE, 0);
         ctc->setIntReg(SparcISA::INTREG_CANSAVE, SparcISA::NWindows - 2);

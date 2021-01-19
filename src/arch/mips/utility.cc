@@ -205,23 +205,4 @@ isSnan(void *val_ptr, int size)
     }
 }
 
-void
-copyRegs(ThreadContext *src, ThreadContext *dest)
-{
-    // First loop through the integer registers.
-    for (int i = 0; i < NumIntRegs; i++)
-        dest->setIntRegFlat(i, src->readIntRegFlat(i));
-
-    // Then loop through the floating point registers.
-    for (int i = 0; i < NumFloatRegs; i++)
-        dest->setFloatRegFlat(i, src->readFloatRegFlat(i));
-
-    // Copy misc. registers
-    for (int i = 0; i < MISCREG_NUMREGS; i++)
-        dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
-
-    // Copy over the PC State
-    dest->pcState(src->pcState());
-}
-
 } // namespace MipsISA

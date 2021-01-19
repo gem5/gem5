@@ -39,6 +39,7 @@
 
 #include "arch/power/miscregs.hh"
 #include "arch/power/registers.hh"
+#include "cpu/thread_context.hh"
 #include "params/PowerISA.hh"
 
 namespace PowerISA
@@ -56,6 +57,23 @@ ISA::ISA(const Params &p) : BaseISA(p)
             { NUM_MISCREGS }
     });
     clear();
+}
+
+void
+ISA::copyRegsFrom(ThreadContext *src)
+{
+    // First loop through the integer registers.
+    for (int i = 0; i < NumIntRegs; ++i)
+        tc->setIntReg(i, src->readIntReg(i));
+
+    // Then loop through the floating point registers.
+    for (int i = 0; i < NumFloatRegs; ++i)
+        tc->setFloatReg(i, src->readFloatReg(i));
+
+    //TODO Copy misc. registers
+
+    // Lastly copy PC/NPC
+    tc->pcState(src->pcState());
 }
 
 }

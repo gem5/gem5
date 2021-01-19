@@ -160,6 +160,8 @@ namespace MipsISA
                 return false;
             }
         }
+
+        void copyRegsFrom(ThreadContext *src) override;
     };
 }
 

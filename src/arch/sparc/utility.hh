@@ -29,20 +29,4 @@
 #ifndef __ARCH_SPARC_UTILITY_HH__
 #define __ARCH_SPARC_UTILITY_HH__
 
-#include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/miscregs.hh"
-#include "arch/sparc/tlb.hh"
-#include "base/bitfield.hh"
-#include "base/logging.hh"
-#include "cpu/static_inst.hh"
-#include "cpu/thread_context.hh"
-#include "sim/full_system.hh"
-
-namespace SparcISA
-{
-
-void copyRegs(ThreadContext *src, ThreadContext *dest);
-
-} // namespace SparcISA
-
 #endif

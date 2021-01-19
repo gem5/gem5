@@ -54,7 +54,7 @@ class X86Linux : public Linux
                           ThreadContext *ptc, ThreadContext *ctc,
                           uint64_t stack, uint64_t tls)
     {
-        X86ISA::copyRegs(ptc, ctc);
+        ctc->getIsaPtr()->copyRegsFrom(ptc);
 
         if (flags & TGT_CLONE_SETTLS) {
             ctc->setMiscRegNoEffect(X86ISA::MISCREG_FS_BASE, tls);

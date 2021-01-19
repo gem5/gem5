@@ -200,7 +200,7 @@ class RiscvLinux64 : public RiscvLinux
               ThreadContext *ptc, ThreadContext *ctc,
               uint64_t stack, uint64_t tls)
     {
-        RiscvISA::copyRegs(ptc, ctc);
+        ctc->getIsaPtr()->copyRegsFrom(ptc);
         if (flags & TGT_CLONE_SETTLS)
             ctc->setIntReg(RiscvISA::ThreadPointerReg, tls);
         if (stack)
@@ -374,7 +374,7 @@ class RiscvLinux32 : public RiscvLinux
               ThreadContext *ptc, ThreadContext *ctc,
               uint64_t stack, uint64_t tls)
     {
-        RiscvISA::copyRegs(ptc, ctc);
+        ctc->getIsaPtr()->copyRegsFrom(ptc);
         if (stack)
             ctc->setIntReg(RiscvISA::StackPointerReg, stack);
     }

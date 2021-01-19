@@ -57,7 +57,7 @@ class ArmLinux : public Linux
               ThreadContext *ptc, ThreadContext *ctc,
               uint64_t stack, uint64_t tls)
     {
-        ArmISA::copyRegs(ptc, ctc);
+        ctc->getIsaPtr()->copyRegsFrom(ptc);
 
         if (flags & TGT_CLONE_SETTLS) {
             /* TPIDR_EL0 is architecturally mapped to TPIDRURW, so

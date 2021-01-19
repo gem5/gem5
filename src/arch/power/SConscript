@@ -48,7 +48,6 @@ if env['TARGET_ISA'] == 'power':
     Source('remote_gdb.cc')
     Source('se_workload.cc')
     Source('tlb.cc')
-    Source('utility.cc')
 
     SimObject('PowerInterrupts.py')
     SimObject('PowerISA.py')

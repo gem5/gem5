@@ -163,6 +163,25 @@ ISA::clear()
     }
 }
 
+void
+ISA::copyRegsFrom(ThreadContext *src)
+{
+    // First loop through the integer registers.
+    for (int i = 0; i < NumIntRegs; i++)
+        tc->setIntRegFlat(i, src->readIntRegFlat(i));
+
+    // Then loop through the floating point registers.
+    for (int i = 0; i < NumFloatRegs; i++)
+        tc->setFloatRegFlat(i, src->readFloatRegFlat(i));
+
+    // Copy misc. registers
+    for (int i = 0; i < MISCREG_NUMREGS; i++)
+        tc->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
+
+    // Copy over the PC State
+    tc->pcState(src->pcState());
+}
+
 
 void
 ISA::configCP()

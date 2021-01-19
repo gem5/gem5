@@ -231,6 +231,8 @@ class ISA : public BaseISA
         return !(pstate.priv || hpstate.hpriv);
     }
 
+    void copyRegsFrom(ThreadContext *src) override;
+
     ISA(const Params &p);
 };
 }

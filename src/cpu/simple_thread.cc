@@ -165,7 +165,7 @@ SimpleThread::halt()
 void
 SimpleThread::copyArchRegs(ThreadContext *src_tc)
 {
-    TheISA::copyRegs(src_tc, this);
+    getIsaPtr()->copyRegsFrom(src_tc);
 }
 
 // hardware transactional memory

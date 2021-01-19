@@ -905,6 +905,8 @@ namespace ArmISA
             CPSR cpsr = miscRegs[MISCREG_CPSR];
             return ArmISA::inUserMode(cpsr);
         }
+
+        void copyRegsFrom(ThreadContext *src) override;
     };
 }
 

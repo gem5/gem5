@@ -55,49 +55,6 @@
 namespace ArmISA
 {
 
-static void
-copyVecRegs(ThreadContext *src, ThreadContext *dest)
-{
-    auto src_mode = src->getIsaPtr()->vecRegRenameMode(src);
-
-    // The way vector registers are copied (VecReg vs VecElem) is relevant
-    // in the O3 model only.
-    if (src_mode == Enums::Full) {
-        for (auto idx = 0; idx < NumVecRegs; idx++)
-            dest->setVecRegFlat(idx, src->readVecRegFlat(idx));
-    } else {
-        for (auto idx = 0; idx < NumVecRegs; idx++)
-            for (auto elem_idx = 0; elem_idx < NumVecElemPerVecReg; elem_idx++)
-                dest->setVecElemFlat(
-                    idx, elem_idx, src->readVecElemFlat(idx, elem_idx));
-    }
-}
-
-void
-copyRegs(ThreadContext *src, ThreadContext *dest)
-{
-    for (int i = 0; i < NUM_INTREGS; i++)
-        dest->setIntRegFlat(i, src->readIntRegFlat(i));
-
-    for (int i = 0; i < NUM_CCREGS; i++)
-        dest->setCCReg(i, src->readCCReg(i));
-
-    for (int i = 0; i < NUM_MISCREGS; i++)
-        dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
-
-    copyVecRegs(src, dest);
-
-    // setMiscReg "with effect" will set the misc register mapping correctly.
-    // e.g. updateRegMap(val)
-    dest->setMiscReg(MISCREG_CPSR, src->readMiscRegNoEffect(MISCREG_CPSR));
-
-    // Copy over the PC State
-    dest->pcState(src->pcState());
-
-    // Invalidate the tlb misc register cache
-    static_cast<MMU *>(dest->getMMUPtr())->invalidateMiscReg();
-}
-
 void
 sendEvent(ThreadContext *tc)
 {

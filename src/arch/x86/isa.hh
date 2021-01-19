@@ -110,6 +110,8 @@ namespace X86ISA
             return m5reg.cpl == 3;
         }
 
+        void copyRegsFrom(ThreadContext *src) override;
+
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
 
