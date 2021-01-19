@@ -45,7 +45,6 @@
 #include "sim/clocked_object.hh"
 #include "sim/linear_solver.hh"
 #include "sim/power/thermal_domain.hh"
-#include "sim/serialize.hh"
 #include "sim/sim_object.hh"
 
 /**
@@ -54,18 +53,6 @@
 ThermalReference::ThermalReference(const Params &p)
     : SimObject(p), _temperature(p.temperature), node(NULL)
 {
-}
-
-void
-ThermalReference::serialize(CheckpointOut &cp) const
-{
-    SERIALIZE_SCALAR(_temperature);
-}
-
-void
-ThermalReference::unserialize(CheckpointIn &cp)
-{
-    UNSERIALIZE_SCALAR(_temperature);
 }
 
 LinearEquation
@@ -81,18 +68,6 @@ ThermalReference::getEquation(ThermalNode * n, unsigned nnodes,
 ThermalResistor::ThermalResistor(const Params &p)
     : SimObject(p), _resistance(p.resistance), node1(NULL), node2(NULL)
 {
-}
-
-void
-ThermalResistor::serialize(CheckpointOut &cp) const
-{
-    SERIALIZE_SCALAR(_resistance);
-}
-
-void
-ThermalResistor::unserialize(CheckpointIn &cp)
-{
-    UNSERIALIZE_SCALAR(_resistance);
 }
 
 LinearEquation
@@ -128,18 +103,6 @@ ThermalResistor::getEquation(ThermalNode * n, unsigned nnodes,
 ThermalCapacitor::ThermalCapacitor(const Params &p)
     : SimObject(p), _capacitance(p.capacitance), node1(NULL), node2(NULL)
 {
-}
-
-void
-ThermalCapacitor::serialize(CheckpointOut &cp) const
-{
-    SERIALIZE_SCALAR(_capacitance);
-}
-
-void
-ThermalCapacitor::unserialize(CheckpointIn &cp)
-{
-    UNSERIALIZE_SCALAR(_capacitance);
 }
 
 LinearEquation
@@ -178,18 +141,6 @@ ThermalCapacitor::getEquation(ThermalNode * n, unsigned nnodes,
 ThermalModel::ThermalModel(const Params &p)
     : ClockedObject(p), stepEvent([this]{ doStep(); }, name()), _step(p.step)
 {
-}
-
-void
-ThermalModel::serialize(CheckpointOut &cp) const
-{
-    SERIALIZE_SCALAR(_step);
-}
-
-void
-ThermalModel::unserialize(CheckpointIn &cp)
-{
-    UNSERIALIZE_SCALAR(_step);
 }
 
 void

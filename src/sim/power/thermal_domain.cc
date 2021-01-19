@@ -46,7 +46,6 @@
 #include "sim/linear_solver.hh"
 #include "sim/power/thermal_model.hh"
 #include "sim/probe/probe.hh"
-#include "sim/serialize.hh"
 #include "sim/sub_system.hh"
 
 ThermalDomain::ThermalDomain(const Params &p)
@@ -78,18 +77,6 @@ void
 ThermalDomain::emitUpdate()
 {
     ppThermalUpdate->notify(node->temp);
-}
-
-void
-ThermalDomain::serialize(CheckpointOut &cp) const
-{
-    SERIALIZE_SCALAR(_initTemperature);
-}
-
-void
-ThermalDomain::unserialize(CheckpointIn &cp)
-{
-    UNSERIALIZE_SCALAR(_initTemperature);
 }
 
 

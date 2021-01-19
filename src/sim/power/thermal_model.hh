@@ -62,9 +62,6 @@ class ThermalResistor : public SimObject, public ThermalEntity
     typedef ThermalResistorParams Params;
     ThermalResistor(const Params &p);
 
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
-
     void setNodes(ThermalNode * n1, ThermalNode * n2) {
         node1 = n1;
         node2 = n2;
@@ -75,7 +72,7 @@ class ThermalResistor : public SimObject, public ThermalEntity
 
   private:
     /* Resistance value in K/W */
-    double _resistance;
+    const double _resistance;
     /* Nodes connected to the resistor */
     ThermalNode * node1, * node2;
 };
@@ -91,9 +88,6 @@ class ThermalCapacitor : public SimObject, public ThermalEntity
     typedef ThermalCapacitorParams Params;
     ThermalCapacitor(const Params &p);
 
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
-
     LinearEquation getEquation(ThermalNode * tn, unsigned n,
                                double step) const override;
 
@@ -104,7 +98,7 @@ class ThermalCapacitor : public SimObject, public ThermalEntity
 
   private:
     /* Capacitance value in J/K */
-    double _capacitance;
+    const double _capacitance;
     /* Nodes connected to the resistor */
     ThermalNode * node1, * node2;
 };
@@ -128,11 +122,8 @@ class ThermalReference : public SimObject, public ThermalEntity
     LinearEquation getEquation(ThermalNode * tn, unsigned n,
                                double step) const override;
 
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
-
     /* Fixed temperature value in centigrate degrees */
-    double _temperature;
+    const double _temperature;
     /* Nodes connected to the resistor */
     ThermalNode * node;
 };
@@ -164,8 +155,6 @@ class ThermalModel : public ClockedObject
     void startup() override;
     void doStep();
 
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
   private:
 
     /* Keep track of all components used for the thermal model */
@@ -184,8 +173,7 @@ class ThermalModel : public ClockedObject
     EventFunctionWrapper stepEvent;
 
     /** Step in seconds for thermal updates */
-    double _step;
-
+    const double _step;
 };
 
 #endif
