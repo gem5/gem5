@@ -498,16 +498,17 @@ TLB::unserialize(CheckpointIn &cp)
 
 TLB::TlbStats::TlbStats(Stats::Group *parent)
   : Stats::Group(parent),
-    ADD_STAT(read_hits, "read hits"),
-    ADD_STAT(read_misses, "read misses"),
-    ADD_STAT(read_accesses, "read accesses"),
-    ADD_STAT(write_hits, "write hits"),
-    ADD_STAT(write_misses, "write misses"),
-    ADD_STAT(write_accesses, "write accesses"),
-    ADD_STAT(hits, "Total TLB (read and write) hits", read_hits + write_hits),
-    ADD_STAT(misses, "Total TLB (read and write) misses",
-        read_misses + write_misses),
-    ADD_STAT(accesses, "Total TLB (read and write) accesses",
-        read_accesses + write_accesses)
+    ADD_STAT(read_hits, UNIT_COUNT, "read hits"),
+    ADD_STAT(read_misses, UNIT_COUNT, "read misses"),
+    ADD_STAT(read_accesses, UNIT_COUNT, "read accesses"),
+    ADD_STAT(write_hits, UNIT_COUNT, "write hits"),
+    ADD_STAT(write_misses, UNIT_COUNT, "write misses"),
+    ADD_STAT(write_accesses, UNIT_COUNT, "write accesses"),
+    ADD_STAT(hits, UNIT_COUNT, "Total TLB (read and write) hits",
+             read_hits + write_hits),
+    ADD_STAT(misses, UNIT_COUNT, "Total TLB (read and write) misses",
+             read_misses + write_misses),
+    ADD_STAT(accesses, UNIT_COUNT, "Total TLB (read and write) accesses",
+             read_accesses + write_accesses)
 {
 }

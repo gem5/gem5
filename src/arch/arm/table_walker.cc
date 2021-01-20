@@ -2317,25 +2317,31 @@ TableWalker::pageSizeNtoStatBin(uint8_t N)
 
 TableWalker::TableWalkerStats::TableWalkerStats(Stats::Group *parent)
     : Stats::Group(parent),
-    ADD_STAT(walks, "Table walker walks requested"),
-    ADD_STAT(walksShortDescriptor, "Table walker walks initiated with"
-        " short descriptors"),
-    ADD_STAT(walksLongDescriptor, "Table walker walks initiated with"
-        " long descriptors"),
-    ADD_STAT(walksShortTerminatedAtLevel, "Level at which table walker"
-        " walks with short descriptors terminate"),
-    ADD_STAT(walksLongTerminatedAtLevel, "Level at which table walker"
-        " walks with long descriptors terminate"),
-    ADD_STAT(squashedBefore, "Table walks squashed before starting"),
-    ADD_STAT(squashedAfter, "Table walks squashed after completion"),
-    ADD_STAT(walkWaitTime, "Table walker wait (enqueue to first request)"
-        " latency"),
-    ADD_STAT(walkServiceTime, "Table walker service (enqueue to completion)"
-        " latency"),
-    ADD_STAT(pendingWalks, "Table walker pending requests distribution"),
-    ADD_STAT(pageSizes, "Table walker page sizes translated"),
-    ADD_STAT(requestOrigin, "Table walker requests started/completed,"
-        " data/inst")
+    ADD_STAT(walks, UNIT_COUNT, "Table walker walks requested"),
+    ADD_STAT(walksShortDescriptor, UNIT_COUNT,
+             "Table walker walks initiated with short descriptors"),
+    ADD_STAT(walksLongDescriptor, UNIT_COUNT,
+             "Table walker walks initiated with long descriptors"),
+    ADD_STAT(walksShortTerminatedAtLevel, UNIT_COUNT,
+             "Level at which table walker walks with short descriptors "
+             "terminate"),
+    ADD_STAT(walksLongTerminatedAtLevel, UNIT_COUNT,
+             "Level at which table walker walks with long descriptors "
+             "terminate"),
+    ADD_STAT(squashedBefore, UNIT_COUNT,
+             "Table walks squashed before starting"),
+    ADD_STAT(squashedAfter, UNIT_COUNT,
+             "Table walks squashed after completion"),
+    ADD_STAT(walkWaitTime, UNIT_TICK,
+             "Table walker wait (enqueue to first request) latency"),
+    ADD_STAT(walkServiceTime, UNIT_TICK,
+             "Table walker service (enqueue to completion) latency"),
+    ADD_STAT(pendingWalks, UNIT_TICK,
+             "Table walker pending requests distribution"),
+    ADD_STAT(pageSizes, UNIT_COUNT,
+             "Table walker page sizes translated"),
+    ADD_STAT(requestOrigin, UNIT_COUNT,
+             "Table walker requests started/completed, data/inst")
 {
     walksShortDescriptor
         .flags(Stats::nozero);
