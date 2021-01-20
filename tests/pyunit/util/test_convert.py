@@ -163,21 +163,10 @@ class ConvertTestSuite(unittest.TestCase):
         self.assertEqual(conv('1kHz'), 1e-3)
 
         self.assertRaises(ValueError, conv, '42k')
-
-    @unittest.expectedFailure
-    def test_anyToLatency_ambiguous(self):
-        # This the behavior of anyToFrequency is currently ambiguous
-        # (and surprising) for unitless quantities. The following
-        # should be true to be consistent with the other conversion
-        # functions, but that isn't currently the case.
-        self.assertEqual(convert.anyToLatency('42'), 42.0)
-
+        self.assertRaises(ValueError, conv, '42')
 
     def test_anyToFrequency(self):
         conv = convert.anyToFrequency
-
-        # This is ambiguous and should probably not be allowed.
-        self.assertEqual(conv('42'), 42.0)
 
         self.assertEqual(conv('42kHz'), 42e3)
 
@@ -185,6 +174,7 @@ class ConvertTestSuite(unittest.TestCase):
         self.assertEqual(conv('1ms'), 1000.0)
 
         self.assertRaises(ValueError, conv, '42k')
+        self.assertRaises(ValueError, conv, '42')
 
     def test_toNetworkBandwidth(self):
         conv = convert.toNetworkBandwidth

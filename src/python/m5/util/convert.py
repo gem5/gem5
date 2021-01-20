@@ -199,32 +199,40 @@ def toLatency(value):
     return toMetricFloat(value, 'latency', 's')
 
 def anyToLatency(value):
-    """result is a clock period"""
-    try:
-        return 1 / toFrequency(value)
-    except (ValueError, ZeroDivisionError):
-        pass
+    """Convert a magnitude and unit to a clock period."""
 
-    try:
-        return toLatency(value)
-    except ValueError:
-        pass
-
-    raise ValueError("cannot convert '%s' to clock period" % value)
+    magnitude, unit = toNum(value,
+                            target_type='latency',
+                            units=('Hz', 's'),
+                            prefixes=metric_prefixes,
+                            converter=float)
+    if unit == 's':
+        return magnitude
+    elif unit == 'Hz':
+        try:
+            return 1.0 / magnitude
+        except ZeroDivisionError:
+            raise ValueError(f"cannot convert '{value}' to clock period")
+    else:
+        raise ValueError(f"'{value}' needs a valid unit to be unambiguous.")
 
 def anyToFrequency(value):
-    """result is a clock period"""
-    try:
-        return toFrequency(value)
-    except ValueError:
-        pass
+    """Convert a magnitude and unit to a clock frequency."""
 
-    try:
-        return 1 / toLatency(value)
-    except ValueError as ZeroDivisionError:
-        pass
-
-    raise ValueError("cannot convert '%s' to clock period" % value)
+    magnitude, unit = toNum(value,
+                            target_type='frequency',
+                            units=('Hz', 's'),
+                            prefixes=metric_prefixes,
+                            converter=float)
+    if unit == 'Hz':
+        return magnitude
+    elif unit == 's':
+        try:
+            return 1.0 / magnitude
+        except ZeroDivisionError:
+            raise ValueError(f"cannot convert '{value}' to frequency")
+    else:
+        raise ValueError(f"'{value}' needs a valid unit to be unambiguous.")
 
 def toNetworkBandwidth(value):
     return toMetricFloat(value, 'network bandwidth', 'bps')
