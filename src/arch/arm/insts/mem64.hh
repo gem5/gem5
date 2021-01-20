@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2019 ARM Limited
+ * Copyright (c) 2011-2013,2017-2019, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -257,6 +257,26 @@ class MemoryLiteral64 : public Memory64
     MemoryLiteral64(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass, IntRegIndex _dest, int64_t _imm)
         : Memory64(mnem, _machInst, __opClass, _dest, INTREG_ZERO), imm(_imm)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const override;
+};
+
+class MemoryAtomicPair64 : public Memory64
+{
+  protected:
+    IntRegIndex dest2;
+    IntRegIndex result;
+    IntRegIndex result2;
+
+    MemoryAtomicPair64(const char *mnem, ExtMachInst _machInst,
+                       OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
+                       IntRegIndex _result)
+        : Memory64(mnem, _machInst, __opClass, _dest, _base),
+          dest2((IntRegIndex)(_dest + (IntRegIndex)(1))),
+          result(_result),
+          result2((IntRegIndex)(_result + (IntRegIndex)(1)))
     {}
 
     std::string generateDisassembly(

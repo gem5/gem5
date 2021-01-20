@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2018 ARM Limited
+ * Copyright (c) 2011-2013,2018, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -200,4 +200,24 @@ MemoryLiteral64::generateDisassembly(
     ccprintf(ss, ", #%d", pc + imm);
     return ss.str();
 }
+
+std::string
+MemoryAtomicPair64::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printIntReg(ss, result);
+    ccprintf(ss, ", ");
+    printIntReg(ss, result2);
+    ccprintf(ss, ", ");
+    printIntReg(ss, dest);
+    ccprintf(ss, ", ");
+    printIntReg(ss, dest2);
+    ccprintf(ss, ", [");
+    printIntReg(ss, base);
+    ccprintf(ss, "]");
+    return ss.str();
+}
+
 }
