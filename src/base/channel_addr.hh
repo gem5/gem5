@@ -154,6 +154,7 @@ class ChannelAddr
 /**
  * The ChanneelAddrRange class describes a contiguous range of
  * addresses in a contiguous channel-local address space.
+ * The start is inclusive, the end is not.
  */
 class ChannelAddrRange
 {
@@ -173,15 +174,15 @@ class ChannelAddrRange
 
     constexpr ChannelAddrRange(const ChannelAddrRange &) = default;
 
-    constexpr ChannelAddr size() const { return _end - _start + 1; }
+    constexpr ChannelAddr size() const { return _end - _start; }
 
-    constexpr bool valid() const { return _start <= _end; }
+    constexpr bool valid() const { return _start < _end; }
 
     constexpr ChannelAddr start() const { return _start; }
     constexpr ChannelAddr end() const { return _end; }
 
     constexpr bool contains(ChannelAddr a) const {
-        return a >= _start && a <= _end;
+        return a >= _start && a < _end;
     }
 
     /** @} */ // end of api_channel_addr
