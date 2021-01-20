@@ -130,3 +130,22 @@ TEST(CircleBufTest, PointerWrapAround)
     EXPECT_EQ(buf.size(), 0);
     EXPECT_THAT(subArr(foo, 12), ElementsAreArray(data, 12));
 }
+
+// Consume after produce empties queue
+TEST(CircleBufTest, ProduceConsumeEmpty)
+{
+    CircleBuf<char> buf(8);
+    char foo[1];
+
+    // buf is empty to begin with.
+    EXPECT_TRUE(buf.empty());
+    // Produce one element.
+    buf.write(foo, 1);
+    EXPECT_FALSE(buf.empty());
+
+    // Read it back out.
+    buf.read(foo, 1);
+
+    // Now the buffer should be empty again.
+    EXPECT_TRUE(buf.empty());
+}

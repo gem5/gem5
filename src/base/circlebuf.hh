@@ -167,7 +167,9 @@ class CircleBuf
         }
 
         // How much existing data will be overwritten?
-        const size_t overflow = std::max<size_t>(0, used + len - maxSize);
+        const size_t total_bytes = used + len;
+        const size_t overflow = total_bytes > maxSize ?
+                                total_bytes - maxSize : 0;
         // The iterator of the next byte to add.
         auto next_it = buffer.begin() + (start + used) % maxSize;
         // How much there is to copy to the end of the buffer.
