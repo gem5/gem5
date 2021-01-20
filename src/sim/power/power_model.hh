@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2018 ARM Limited
+ * Copyright (c) 2016, 2018, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -39,6 +39,7 @@
 #define __SIM_POWER_POWER_MODEL_HH__
 
 #include "base/statistics.hh"
+#include "base/temperature.hh"
 #include "enums/PMType.hh"
 #include "params/PowerModel.hh"
 #include "params/PowerModelState.hh"
@@ -75,9 +76,9 @@ class PowerModelState : public SimObject
     /**
      * Temperature update.
      *
-     * @param temp Current temperature of the HW part (Celsius)
+     * @param temp Current temperature of the HW part
      */
-    virtual void setTemperature(double temp) { _temp = temp; }
+    virtual void setTemperature(Temperature temp) { _temp = temp; }
 
     void setClockedObject(ClockedObject * clkobj) {
         clocked_object = clkobj;
@@ -86,7 +87,7 @@ class PowerModelState : public SimObject
   protected:
 
     /** Current temperature */
-    double _temp;
+    Temperature _temp;
 
     /** The clocked object we belong to */
     ClockedObject * clocked_object;
@@ -125,18 +126,18 @@ class PowerModel : public SimObject
 
     virtual void regProbePoints();
 
-    void thermalUpdateCallback(const double & temp);
+    void thermalUpdateCallback(const Temperature &temp);
 
   protected:
     /** Listener class to catch thermal events */
-    class ThermalProbeListener : public ProbeListenerArgBase<double>
+    class ThermalProbeListener : public ProbeListenerArgBase<Temperature>
     {
       public:
         ThermalProbeListener(PowerModel &_pm, ProbeManager *pm,
                       const std::string &name)
             : ProbeListenerArgBase(pm, name), pm(_pm) {}
 
-        void notify(const double &temp)
+        void notify(const Temperature &temp)
         {
             pm.thermalUpdateCallback(temp);
         }

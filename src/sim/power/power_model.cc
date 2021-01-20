@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 ARM Limited
+ * Copyright (c) 2016-2018, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -66,7 +66,7 @@ PowerModel::PowerModel(const Params &p)
     // The temperature passed here will be overwritten, if there is
     // a thermal model present
     for (auto & pms: states_pm){
-        pms->setTemperature(p.ambient_temp.toCelsius());
+        pms->setTemperature(p.ambient_temp);
     }
 
     dynamicPower
@@ -86,7 +86,7 @@ PowerModel::setClockedObject(ClockedObject * clkobj)
 }
 
 void
-PowerModel::thermalUpdateCallback(const double & temp)
+PowerModel::thermalUpdateCallback(const Temperature &temp)
 {
     for (auto & pms: states_pm)
         pms->setTemperature(temp);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010,2013,2015 ARM Limited
+ * Copyright (c) 2010, 2013, 2015, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -304,7 +304,7 @@ RealViewTemperatureSensor::read() const
     // Temperature reported in uC
     ThermalModel * tm = system->getThermalModel();
     if (tm) {
-        double t = tm->getTemp();
+        double t = tm->getTemperature().toCelsius();
         if (t < 0)
             warn("Temperature below zero!\n");
         return fmax(0, t) * 1000000;

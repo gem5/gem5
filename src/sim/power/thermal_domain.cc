@@ -49,15 +49,15 @@
 #include "sim/sub_system.hh"
 
 ThermalDomain::ThermalDomain(const Params &p)
-    : SimObject(p), _initTemperature(p.initial_temperature.toCelsius()),
+    : SimObject(p), _initTemperature(p.initial_temperature),
     node(NULL), subsystem(NULL),
     ADD_STAT(currentTemp, "Temperature in centigrade degrees")
 {
     currentTemp
-        .method(this, &ThermalDomain::currentTemperature);
+        .functor([this]() { return currentTemperature().toCelsius(); });
 }
 
-double
+Temperature
 ThermalDomain::currentTemperature() const
 {
     return node->temp;
@@ -69,8 +69,8 @@ ThermalDomain::setSubSystem(SubSystem * ss)
     assert(!this->subsystem);
     this->subsystem = ss;
 
-    ppThermalUpdate = new ProbePointArg<double>(subsystem->getProbeManager(),
-                                                "thermalUpdate");
+    ppThermalUpdate = new ProbePointArg<Temperature>(
+        subsystem->getProbeManager(), "thermalUpdate");
 }
 
 void

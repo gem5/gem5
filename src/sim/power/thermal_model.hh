@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -40,6 +40,7 @@
 
 #include <vector>
 
+#include "base/temperature.hh"
 #include "sim/clocked_object.hh"
 #include "sim/power/thermal_domain.hh"
 #include "sim/power/thermal_entity.hh"
@@ -122,8 +123,8 @@ class ThermalReference : public SimObject, public ThermalEntity
     LinearEquation getEquation(ThermalNode * tn, unsigned n,
                                double step) const override;
 
-    /* Fixed temperature value in centigrate degrees */
-    const double _temperature;
+    /* Fixed temperature value */
+    const Temperature _temperature;
     /* Nodes connected to the resistor */
     ThermalNode * node;
 };
@@ -150,7 +151,7 @@ class ThermalModel : public ClockedObject
 
     void addNode(ThermalNode * n) { nodes.push_back(n); }
 
-    double getTemp() const;
+    Temperature getTemperature() const;
 
     void startup() override;
     void doStep();

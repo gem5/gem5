@@ -51,7 +51,7 @@
  * ThermalReference
  */
 ThermalReference::ThermalReference(const Params &p)
-    : SimObject(p), _temperature(p.temperature.toCelsius()), node(NULL)
+    : SimObject(p), _temperature(p.temperature), node(NULL)
 {
 }
 
@@ -81,12 +81,12 @@ ThermalResistor::getEquation(ThermalNode * n, unsigned nnodes,
         return eq;
 
     if (node1->isref)
-        eq[eq.cnt()] += -node1->temp / _resistance;
+        eq[eq.cnt()] += -node1->temp.toKelvin() / _resistance;
     else
         eq[node1->id] += -1.0f / _resistance;
 
     if (node2->isref)
-        eq[eq.cnt()] += node2->temp / _resistance;
+        eq[eq.cnt()] += node2->temp.toKelvin() / _resistance;
     else
         eq[node2->id] += 1.0f / _resistance;
 
@@ -116,15 +116,16 @@ ThermalCapacitor::getEquation(ThermalNode * n, unsigned nnodes,
     if (n != node1 && n != node2)
         return eq;
 
-    eq[eq.cnt()] += _capacitance / step * (node1->temp - node2->temp);
+    eq[eq.cnt()] += _capacitance / step *
+        (node1->temp - node2->temp).toKelvin();
 
     if (node1->isref)
-        eq[eq.cnt()] += _capacitance / step * (-node1->temp);
+        eq[eq.cnt()] += _capacitance / step * (-node1->temp.toKelvin());
     else
         eq[node1->id] += -1.0f * _capacitance / step;
 
     if (node2->isref)
-        eq[eq.cnt()] += _capacitance / step * (node2->temp);
+        eq[eq.cnt()] += _capacitance / step * (node2->temp.toKelvin());
     else
         eq[node2->id] += 1.0f * _capacitance / step;
 
@@ -162,7 +163,7 @@ ThermalModel::doStep()
     // Get temperatures for this iteration
     std::vector <double> temps = ls.solve();
     for (unsigned i = 0; i < eq_nodes.size(); i++)
-        eq_nodes[i]->temp = temps[i];
+        eq_nodes[i]->temp = Temperature::fromKelvin(temps[i]);
 
     // Schedule next computation
     schedule(stepEvent, curTick() + SimClock::Int::s * _step);
@@ -233,11 +234,11 @@ ThermalModel::addResistor(ThermalResistor * r)
     entities.push_back(r);
 }
 
-double
-ThermalModel::getTemp() const
+Temperature
+ThermalModel::getTemperature() const
 {
     // Just pick the highest temperature
-    double temp = 0;
+    Temperature temp = Temperature::fromKelvin(0.0);
     for (auto & n : eq_nodes)
         temp = std::max(temp, n->temp);
     return temp;

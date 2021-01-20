@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,6 +38,7 @@
 #ifndef __SIM_THERMAL_NODE_HH__
 #define __SIM_THERMAL_NODE_HH__
 
+#include "base/temperature.hh"
 #include "sim/sim_object.hh"
 
 struct ThermalNodeParams;
@@ -54,7 +55,7 @@ class ThermalNode : public SimObject
 
     int id;
     bool isref;
-    double temp;
+    Temperature temp;
 };
 
 #endif
