@@ -390,14 +390,17 @@ IdeDisk::doDmaDataRead()
 IdeDisk::
 IdeDiskStats::IdeDiskStats(Stats::Group *parent)
     : Stats::Group(parent, "IdeDisk"),
-      ADD_STAT(dmaReadFullPages,
+      ADD_STAT(dmaReadFullPages, UNIT_COUNT,
                "Number of full page size DMA reads (not PRD)."),
-      ADD_STAT(dmaReadBytes,
+      ADD_STAT(dmaReadBytes, UNIT_BYTE,
                "Number of bytes transfered via DMA reads (not PRD)."),
-      ADD_STAT(dmaReadTxs, "Number of DMA read transactions (not PRD)."),
-      ADD_STAT(dmaWriteFullPages, "Number of full page size DMA writes."),
-      ADD_STAT(dmaWriteBytes, "Number of bytes transfered via DMA writes."),
-      ADD_STAT(dmaWriteTxs, "Number of DMA write transactions.")
+      ADD_STAT(dmaReadTxs, UNIT_COUNT,
+               "Number of DMA read transactions (not PRD)."),
+      ADD_STAT(dmaWriteFullPages, UNIT_COUNT,
+               "Number of full page size DMA writes."),
+      ADD_STAT(dmaWriteBytes, UNIT_BYTE,
+               "Number of bytes transfered via DMA writes."),
+      ADD_STAT(dmaWriteTxs, UNIT_COUNT, "Number of DMA write transactions.")
 {
 }
 

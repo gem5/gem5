@@ -84,14 +84,21 @@ SMMUv3BaseCache::decodePolicyName(const std::string &policy_name)
 SMMUv3BaseCache::
 SMMUv3BaseCacheStats::SMMUv3BaseCacheStats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(averageLookups, "Average number lookups per second"),
-      ADD_STAT(totalLookups, "Total number of lookups"),
-      ADD_STAT(averageMisses, "Average number misses per second"),
-      ADD_STAT(totalMisses, "Total number of misses"),
-      ADD_STAT(averageUpdates, "Average number updates per second"),
-      ADD_STAT(totalUpdates, "Total number of updates"),
-      ADD_STAT(averageHitRate, "Average hit rate"),
-      ADD_STAT(insertions, "Number of insertions (not replacements)")
+      ADD_STAT(averageLookups,
+               UNIT_RATE(Stats::Units::Count, Stats::Units::Second),
+               "Average number lookups per second"),
+      ADD_STAT(totalLookups, UNIT_COUNT, "Total number of lookups"),
+      ADD_STAT(averageMisses,
+               UNIT_RATE(Stats::Units::Count, Stats::Units::Second),
+               "Average number misses per second"),
+      ADD_STAT(totalMisses, UNIT_COUNT, "Total number of misses"),
+      ADD_STAT(averageUpdates,
+               UNIT_RATE(Stats::Units::Count, Stats::Units::Second),
+               "Average number updates per second"),
+      ADD_STAT(totalUpdates, UNIT_COUNT, "Total number of updates"),
+      ADD_STAT(averageHitRate, UNIT_RATIO, "Average hit rate"),
+      ADD_STAT(insertions, UNIT_COUNT,
+               "Number of insertions (not replacements)")
 {
     using namespace Stats;
 

@@ -746,12 +746,12 @@ SMMUv3::init()
 
 SMMUv3::SMMUv3Stats::SMMUv3Stats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(steL1Fetches, "STE L1 fetches"),
-      ADD_STAT(steFetches, "STE fetches"),
-      ADD_STAT(cdL1Fetches, "CD L1 fetches"),
-      ADD_STAT(cdFetches, "CD fetches"),
-      ADD_STAT(translationTimeDist, "Time to translate address"),
-      ADD_STAT(ptwTimeDist, "Time to walk page tables")
+      ADD_STAT(steL1Fetches, UNIT_COUNT, "STE L1 fetches"),
+      ADD_STAT(steFetches, UNIT_COUNT, "STE fetches"),
+      ADD_STAT(cdL1Fetches, UNIT_COUNT, "CD L1 fetches"),
+      ADD_STAT(cdFetches, UNIT_COUNT, "CD fetches"),
+      ADD_STAT(translationTimeDist, UNIT_TICK, "Time to translate address"),
+      ADD_STAT(ptwTimeDist, UNIT_TICK, "Time to walk page tables")
 {
     using namespace Stats;
 
