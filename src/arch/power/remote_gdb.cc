@@ -143,7 +143,6 @@
 #include "mem/page_table.hh"
 #include "sim/byteswap.hh"
 
-using namespace std;
 using namespace PowerISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)

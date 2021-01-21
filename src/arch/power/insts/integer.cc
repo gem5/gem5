@@ -28,19 +28,18 @@
 
 #include "arch/power/insts/integer.hh"
 
-using namespace std;
 using namespace PowerISA;
 
-string
+std::string
 IntOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
-    stringstream ss;
+    std::stringstream ss;
     bool printDest = true;
     bool printSrcs = true;
     bool printSecondSrc = true;
 
     // Generate the correct mnemonic
-    string myMnemonic(mnemonic);
+    std::string myMnemonic(mnemonic);
 
     // Special cases
     if (!myMnemonic.compare("or") && srcRegIdx(0) == srcRegIdx(1)) {
@@ -78,13 +77,13 @@ IntOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 }
 
 
-string
+std::string
 IntImmOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
-    stringstream ss;
+    std::stringstream ss;
 
     // Generate the correct mnemonic
-    string myMnemonic(mnemonic);
+    std::string myMnemonic(mnemonic);
 
     // Special cases
     if (!myMnemonic.compare("addi") && _numSrcRegs == 0) {
@@ -114,11 +113,11 @@ IntImmOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 }
 
 
-string
+std::string
 IntShiftOp::generateDisassembly(
         Addr pc, const Loader::SymbolTable *symtab) const
 {
-    stringstream ss;
+    std::stringstream ss;
 
     ccprintf(ss, "%-10s ", mnemonic);
 
@@ -142,11 +141,11 @@ IntShiftOp::generateDisassembly(
 }
 
 
-string
+std::string
 IntRotateOp::generateDisassembly(
         Addr pc, const Loader::SymbolTable *symtab) const
 {
-    stringstream ss;
+    std::stringstream ss;
 
     ccprintf(ss, "%-10s ", mnemonic);
 

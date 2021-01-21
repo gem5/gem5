@@ -48,7 +48,6 @@
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 
-using namespace std;
 using namespace PowerISA;
 
 ///////////////////////////////////////////////////////////////////////
@@ -168,7 +167,7 @@ TLB::insertAt(PowerISA::PTE &pte, unsigned Index, int _smallPages)
         table[Index]=pte;
 
         // Update fast lookup table
-        lookupTable.insert(make_pair(table[Index].VPN, Index));
+        lookupTable.insert(std::make_pair(table[Index].VPN, Index));
     }
 }
 
@@ -209,7 +208,7 @@ TLB::unserialize(CheckpointIn &cp)
     for (int i = 0; i < size; i++) {
         ScopedCheckpointSection sec(cp, csprintf("PTE%d", i));
         if (table[i].V0 || table[i].V1) {
-            lookupTable.insert(make_pair(table[i].VPN, i));
+            lookupTable.insert(std::make_pair(table[i].VPN, i));
         }
     }
 }

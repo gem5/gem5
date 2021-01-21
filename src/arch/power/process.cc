@@ -43,7 +43,6 @@
 #include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace PowerISA;
 
 PowerProcess::PowerProcess(
@@ -67,9 +66,9 @@ PowerProcess::PowerProcess(
     // Set up region for mmaps. For now, start at bottom of kuseg space.
     Addr mmap_end = 0x70000000L;
 
-    memState = make_shared<MemState>(this, brk_point, stack_base,
-                                     max_stack_size, next_thread_stack_base,
-                                     mmap_end);
+    memState = std::make_shared<MemState>(
+            this, brk_point, stack_base, max_stack_size,
+            next_thread_stack_base, mmap_end);
 }
 
 void
@@ -85,7 +84,7 @@ PowerProcess::argsInit(int intSize, int pageSize)
 {
     std::vector<AuxVector<uint32_t>> auxv;
 
-    string filename;
+    std::string filename;
     if (argv.size() < 1)
         filename = "";
     else
@@ -146,7 +145,7 @@ PowerProcess::argsInit(int intSize, int pageSize)
     // A sentry NULL void pointer at the top of the stack.
     int sentry_size = intSize;
 
-    string platform = "v51";
+    std::string platform = "v51";
     int platform_size = platform.size() + 1;
 
     // The aux vectors are put on the stack in two groups. The first group are
