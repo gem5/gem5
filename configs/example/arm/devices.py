@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, 2019 ARM Limited
+# Copyright (c) 2016-2017, 2019, 2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -301,13 +301,31 @@ class BaseSimpleSystem(ArmSystem):
 
         self.iobus = IOXBar()
         # Device DMA -> MEM
-        mem_range = self.realview._mem_regions[0]
-        assert int(mem_range.size()) >= int(Addr(mem_size))
-        self.mem_ranges = [
-            AddrRange(start=mem_range.start, size=mem_size) ]
+        self.mem_ranges = self.getMemRanges(int(Addr(mem_size)))
 
         self._clusters = []
         self._num_cpus = 0
+
+    def getMemRanges(self, mem_size):
+        """
+        Define system memory ranges. This depends on the physical
+        memory map provided by the realview platform and by the memory
+        size provided by the user (mem_size argument).
+        The method is iterating over all platform ranges until they cover
+        the entire user's memory requirements.
+        """
+        mem_ranges = []
+        for mem_range in self.realview._mem_regions:
+            size_in_range = min(mem_size, mem_range.size())
+
+            mem_ranges.append(
+                AddrRange(start=mem_range.start, size=size_in_range))
+
+            mem_size -= size_in_range
+            if mem_size == 0:
+                return mem_ranges
+
+        raise ValueError("memory size too big for platform capabilities")
 
     def numCpuClusters(self):
         return len(self._clusters)
@@ -361,10 +379,10 @@ class SimpleSystem(BaseSimpleSystem):
 
         self._caches = caches
         if self._caches:
-            self.iocache = IOCache(addr_ranges=[self.mem_ranges[0]])
+            self.iocache = IOCache(addr_ranges=self.mem_ranges)
         else:
             self.dmabridge = Bridge(delay='50ns',
-                                    ranges=[self.mem_ranges[0]])
+                                    ranges=self.mem_ranges)
 
     def connect(self):
         self.iobridge.mem_side_port = self.iobus.cpu_side_ports
