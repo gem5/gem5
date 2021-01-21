@@ -49,8 +49,6 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 TrafficGen::TrafficGen(const TrafficGenParams &p)
     : BaseTrafficGen(p),
       configFile(p.config_file),
@@ -126,11 +124,11 @@ TrafficGen::parseConfig()
 {
     // keep track of the transitions parsed to create the matrix when
     // done
-    vector<Transition> transitions;
+    std::vector<Transition> transitions;
 
     // open input file
-    ifstream infile;
-    infile.open(configFile.c_str(), ifstream::in);
+    std::ifstream infile;
+    infile.open(configFile.c_str(), std::ifstream::in);
     if (!infile.is_open()) {
         fatal("Traffic generator %s config file not found at %s\n",
               name(), configFile);
@@ -140,14 +138,14 @@ TrafficGen::parseConfig()
 
     // read line by line and determine the action based on the first
     // keyword
-    string keyword;
-    string line;
+    std::string keyword;
+    std::string line;
 
     while (getline(infile, line).good()) {
         // see if this line is a comment line, and if so skip it
         if (line.find('#') != 1) {
             // create an input stream for the tokenization
-            istringstream is(line);
+            std::istringstream is(line);
 
             // determine the keyword
             is >> keyword;
@@ -156,12 +154,12 @@ TrafficGen::parseConfig()
                 // parse the behaviour of this state
                 uint32_t id;
                 Tick duration;
-                string mode;
+                std::string mode;
 
                 is >> id >> duration >> mode;
 
                 if (mode == "TRACE") {
-                    string traceFile;
+                    std::string traceFile;
                     Addr addrOffset;
 
                     is >> traceFile >> addrOffset;
@@ -319,7 +317,7 @@ TrafficGen::parseConfig()
         transitionMatrix[i].resize(states.size());
     }
 
-    for (vector<Transition>::iterator t = transitions.begin();
+    for (std::vector<Transition>::iterator t = transitions.begin();
          t != transitions.end(); ++t) {
         transitionMatrix[t->from][t->to] = t->p;
     }

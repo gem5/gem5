@@ -58,7 +58,6 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace TheISA;
 
 void
@@ -601,7 +600,7 @@ TimingSimpleCPU::initiateMemAMO(Addr addr, unsigned size,
     if (traceData)
         traceData->setMem(addr, size, flags);
 
-    RequestPtr req = make_shared<Request>(addr, size, flags,
+    RequestPtr req = std::make_shared<Request>(addr, size, flags,
                             dataRequestorId(), pc, thread->contextId(),
                             std::move(amo_op));
 
@@ -788,7 +787,7 @@ TimingSimpleCPU::advanceInst(const Fault &fault)
         if (_status != Idle) {
             DPRINTF(SimpleCPU, "Scheduling fetch event after the Fault\n");
 
-            Tick stall = dynamic_pointer_cast<SyscallRetryFault>(fault) ?
+            Tick stall = std::dynamic_pointer_cast<SyscallRetryFault>(fault) ?
                          clockEdge(syscallRetryLatency) : clockEdge();
             reschedule(fetchEvent, stall, true);
             _status = Faulting;

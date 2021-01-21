@@ -53,7 +53,6 @@
 #include "debug/FmtTicksOff.hh"
 #include "enums/OpClass.hh"
 
-using namespace std;
 using namespace TheISA;
 
 namespace Trace {
@@ -70,7 +69,7 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     }
 
     if (Debug::ExecAsid)
-        outs << "A" << dec << TheISA::getExecutingAsid(thread) << " ";
+        outs << "A" << std::dec << TheISA::getExecutingAsid(thread) << " ";
 
     if (Debug::ExecThread)
         outs << "T" << thread->threadId() << " : ";
@@ -100,7 +99,7 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     //  Print decoded instruction
     //
 
-    outs << setw(26) << left;
+    outs << std::setw(26) << std::left;
     outs << inst->disassemble(cur_pc, &Loader::debugSymbolTable);
 
     if (ran) {
@@ -150,13 +149,13 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
         }
 
         if (Debug::ExecEffAddr && getMemValid())
-            outs << " A=0x" << hex << addr;
+            outs << " A=0x" << std::hex << addr;
 
         if (Debug::ExecFetchSeq && fetch_seq_valid)
-            outs << "  FetchSeq=" << dec << fetch_seq;
+            outs << "  FetchSeq=" << std::dec << fetch_seq;
 
         if (Debug::ExecCPSeq && cp_seq_valid)
-            outs << "  CPSeq=" << dec << cp_seq;
+            outs << "  CPSeq=" << std::dec << cp_seq;
 
         if (Debug::ExecFlags) {
             outs << "  flags=(";
@@ -168,7 +167,7 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     //
     //  End of line...
     //
-    outs << endl;
+    outs << std::endl;
 
     Trace::getDebugLogger()->dprintf_flag(
         when, thread->getCpuPtr()->name(), "ExecEnable", "%s",

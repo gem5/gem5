@@ -46,8 +46,6 @@
 #include "cpu/reg_class.hh"
 #include "debug/Rename.hh"
 
-using namespace std;
-
 /**** SimpleRenameMap methods ****/
 
 SimpleRenameMap::SimpleRenameMap()

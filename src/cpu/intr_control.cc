@@ -37,8 +37,6 @@
 #include "debug/IntrControl.hh"
 #include "sim/sim_object.hh"
 
-using namespace std;
-
 IntrControl::IntrControl(const Params &p)
     : SimObject(p), sys(p.sys)
 {}

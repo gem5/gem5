@@ -46,8 +46,6 @@
 #include "debug/TrafficGen.hh"
 #include "enums/AddrMap.hh"
 
-using namespace std;
-
 HybridGen::HybridGen(SimObject &obj,
                RequestorID requestor_id, Tick _duration,
                Addr start_addr_dram, Addr end_addr_dram,

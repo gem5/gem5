@@ -71,8 +71,6 @@
 #include "sim/system.hh"
 #include "cpu/o3/isa_specific.hh"
 
-using namespace std;
-
 template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, const DerivO3CPUParams &params)
     : fetchPolicy(params.smtFetchPolicy),
@@ -804,8 +802,8 @@ typename DefaultFetch<Impl>::FetchStatus
 DefaultFetch<Impl>::updateFetchStatus()
 {
     //Check Running
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;
@@ -857,8 +855,8 @@ template <class Impl>
 void
 DefaultFetch<Impl>::tick()
 {
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
     bool status_change = false;
 
     wroteToTimeBuffer = false;
@@ -1423,7 +1421,7 @@ DefaultFetch<Impl>::getFetchingThread()
             return InvalidThreadID;
         }
     } else {
-        list<ThreadID>::iterator thread = activeThreads->begin();
+        std::list<ThreadID>::iterator thread = activeThreads->begin();
         if (thread == activeThreads->end()) {
             return InvalidThreadID;
         }
@@ -1445,8 +1443,8 @@ template<class Impl>
 ThreadID
 DefaultFetch<Impl>::roundRobin()
 {
-    list<ThreadID>::iterator pri_iter = priorityList.begin();
-    list<ThreadID>::iterator end      = priorityList.end();
+    std::list<ThreadID>::iterator pri_iter = priorityList.begin();
+    std::list<ThreadID>::iterator end      = priorityList.end();
 
     ThreadID high_pri;
 
@@ -1476,12 +1474,12 @@ ThreadID
 DefaultFetch<Impl>::iqCount()
 {
     //sorted from lowest->highest
-    std::priority_queue<unsigned,vector<unsigned>,
+    std::priority_queue<unsigned, std::vector<unsigned>,
                         std::greater<unsigned> > PQ;
     std::map<unsigned, ThreadID> threadMap;
 
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;
@@ -1513,12 +1511,12 @@ ThreadID
 DefaultFetch<Impl>::lsqCount()
 {
     //sorted from lowest->highest
-    std::priority_queue<unsigned,vector<unsigned>,
+    std::priority_queue<unsigned, std::vector<unsigned>,
                         std::greater<unsigned> > PQ;
     std::map<unsigned, ThreadID> threadMap;
 
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;

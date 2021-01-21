@@ -64,8 +64,6 @@
 #endif
 
 
-using namespace std;
-
 BaseTrafficGen::BaseTrafficGen(const BaseTrafficGenParams &p)
     : ClockedObject(p),
       system(p.system),
@@ -90,7 +88,7 @@ BaseTrafficGen::~BaseTrafficGen()
 }
 
 Port &
-BaseTrafficGen::getPort(const string &if_name, PortID idx)
+BaseTrafficGen::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "port") {
         return port;

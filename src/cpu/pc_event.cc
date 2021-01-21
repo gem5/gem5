@@ -38,8 +38,6 @@
 #include "sim/core.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 PCEventQueue::PCEventQueue()
 {}
 
@@ -70,7 +68,7 @@ bool
 PCEventQueue::schedule(PCEvent *event)
 {
     pcMap.push_back(event);
-    sort(pcMap.begin(), pcMap.end(), MapCompare());
+    std::sort(pcMap.begin(), pcMap.end(), MapCompare());
 
     DPRINTF(PCEvent, "PC based event scheduled for %#x: %s\n",
             event->pc(), event->descr());

@@ -28,8 +28,6 @@
 
 #include "cpu/intr_control.hh"
 
-using namespace std;
-
 IntrControl::IntrControl(const Params &p)
     : SimObject(p), sys(p.sys)
 {}

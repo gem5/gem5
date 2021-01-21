@@ -77,7 +77,6 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace TheISA;
 
 BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)

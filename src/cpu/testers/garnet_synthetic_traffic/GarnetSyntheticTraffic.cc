@@ -45,8 +45,6 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 int TESTER_NETWORK=0;
 
 bool

@@ -69,8 +69,6 @@ class NopStaticInst : public StaticInst
 StaticInstPtr StaticInst::nullStaticInstPtr;
 StaticInstPtr StaticInst::nopStaticInstPtr = new NopStaticInst;
 
-using namespace std;
-
 StaticInst::~StaticInst()
 {
     if (cachedDisassembly)
@@ -115,11 +113,11 @@ StaticInst::branchTarget(ThreadContext *tc) const
           "that is not an indirect branch.");
 }
 
-const string &
+const std::string &
 StaticInst::disassemble(Addr pc, const Loader::SymbolTable *symtab) const
 {
     if (!cachedDisassembly)
-        cachedDisassembly = new string(generateDisassembly(pc, symtab));
+        cachedDisassembly = new std::string(generateDisassembly(pc, symtab));
 
     return *cachedDisassembly;
 }

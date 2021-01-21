@@ -44,8 +44,6 @@
 
 #include "cpu/func_unit.hh"
 
-using namespace std;
-
 ////////////////////////////////////////////////////////////////////////////
 //
 //  A pool of function units
@@ -92,7 +90,7 @@ FUPool::FUPool(const Params &p)
     //
     //  Iterate through the list of FUDescData structures
     //
-    const vector<FUDesc *> &paramList =  p.FUList;
+    const std::vector<FUDesc *> &paramList =  p.FUList;
     for (FUDDiterator i = paramList.begin(); i != paramList.end(); ++i) {
 
         //
@@ -136,7 +134,7 @@ FUPool::FUPool(const Params &p)
             funcUnits.push_back(fu);
 
             for (int c = 1; c < (*i)->number; ++c) {
-                ostringstream s;
+                std::ostringstream s;
                 numFU++;
                 FuncUnit *fu2 = new FuncUnit(*fu);
 
@@ -205,34 +203,34 @@ FUPool::processFreeUnits()
 void
 FUPool::dump()
 {
-    cout << "Function Unit Pool (" << name() << ")\n";
-    cout << "======================================\n";
-    cout << "Free List:\n";
+    std::cout << "Function Unit Pool (" << name() << ")\n";
+    std::cout << "======================================\n";
+    std::cout << "Free List:\n";
 
     for (int i = 0; i < numFU; ++i) {
         if (unitBusy[i]) {
             continue;
         }
 
-        cout << "  [" << i << "] : ";
+        std::cout << "  [" << i << "] : ";
 
-        cout << funcUnits[i]->name << " ";
+        std::cout << funcUnits[i]->name << " ";
 
-        cout << "\n";
+        std::cout << "\n";
     }
 
-    cout << "======================================\n";
-    cout << "Busy List:\n";
+    std::cout << "======================================\n";
+    std::cout << "Busy List:\n";
     for (int i = 0; i < numFU; ++i) {
         if (!unitBusy[i]) {
             continue;
         }
 
-        cout << "  [" << i << "] : ";
+        std::cout << "  [" << i << "] : ";
 
-        cout << funcUnits[i]->name << " ";
+        std::cout << funcUnits[i]->name << " ";
 
-        cout << "\n";
+        std::cout << "\n";
     }
 }
 

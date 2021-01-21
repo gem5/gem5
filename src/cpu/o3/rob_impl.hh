@@ -49,8 +49,6 @@
 #include "debug/ROB.hh"
 #include "params/DerivO3CPU.hh"
 
-using namespace std;
-
 template <class Impl>
 ROB<Impl>::ROB(O3CPU *_cpu, const DerivO3CPUParams &params)
     : robPolicy(params.smtROBPolicy),
@@ -124,7 +122,7 @@ ROB<Impl>::name() const
 
 template <class Impl>
 void
-ROB<Impl>::setActiveThreads(list<ThreadID> *at_ptr)
+ROB<Impl>::setActiveThreads(std::list<ThreadID> *at_ptr)
 {
     DPRINTF(ROB, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
@@ -153,8 +151,8 @@ ROB<Impl>::resetEntries()
     if (robPolicy != SMTQueuePolicy::Dynamic || numThreads > 1) {
         auto active_threads = activeThreads->size();
 
-        list<ThreadID>::iterator threads = activeThreads->begin();
-        list<ThreadID>::iterator end = activeThreads->end();
+        std::list<ThreadID>::iterator threads = activeThreads->begin();
+        std::list<ThreadID>::iterator end = activeThreads->end();
 
         while (threads != end) {
             ThreadID tid = *threads++;
@@ -288,8 +286,8 @@ bool
 ROB<Impl>::canCommit()
 {
     //@todo: set ActiveThreads through ROB or CPU
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;
@@ -411,8 +409,8 @@ ROB<Impl>::updateHead()
     bool first_valid = true;
 
     // @todo: set ActiveThreads through ROB or CPU
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;
@@ -452,8 +450,8 @@ ROB<Impl>::updateTail()
     tail = instList[0].end();
     bool first_valid = true;
 
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;

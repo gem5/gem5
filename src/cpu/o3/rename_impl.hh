@@ -53,8 +53,6 @@
 #include "debug/O3PipeView.hh"
 #include "params/DerivO3CPU.hh"
 
-using namespace std;
-
 template <class Impl>
 DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, const DerivO3CPUParams &params)
     : cpu(_cpu),
@@ -271,7 +269,7 @@ DefaultRename<Impl>::resetStage()
 
 template<class Impl>
 void
-DefaultRename<Impl>::setActiveThreads(list<ThreadID> *at_ptr)
+DefaultRename<Impl>::setActiveThreads(std::list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 }
@@ -401,8 +399,8 @@ DefaultRename<Impl>::tick()
 
     sortInsts();
 
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     // Check stall and squash signals.
     while (threads != end) {
@@ -817,8 +815,8 @@ template<class Impl>
 bool
 DefaultRename<Impl>::skidsEmpty()
 {
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;
@@ -836,8 +834,8 @@ DefaultRename<Impl>::updateStatus()
 {
     bool any_unblocking = false;
 
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;

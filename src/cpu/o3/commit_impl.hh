@@ -66,8 +66,6 @@
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 
-using namespace std;
-
 template <class Impl>
 void
 DefaultCommit<Impl>::processTrapEvent(ThreadID tid)
@@ -292,7 +290,7 @@ DefaultCommit<Impl>::setIEWStage(IEW *iew_stage)
 
 template<class Impl>
 void
-DefaultCommit<Impl>::setActiveThreads(list<ThreadID> *at_ptr)
+DefaultCommit<Impl>::setActiveThreads(std::list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 }
@@ -428,7 +426,7 @@ template <class Impl>
 void
 DefaultCommit<Impl>::deactivateThread(ThreadID tid)
 {
-    list<ThreadID>::iterator thread_it = std::find(priority_list.begin(),
+    std::list<ThreadID>::iterator thread_it = std::find(priority_list.begin(),
             priority_list.end(), tid);
 
     if (thread_it != priority_list.end()) {
@@ -463,8 +461,8 @@ void
 DefaultCommit<Impl>::updateStatus()
 {
     // reset ROB changed variable
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;
@@ -493,8 +491,8 @@ template <class Impl>
 bool
 DefaultCommit<Impl>::changedROBEntries()
 {
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;
@@ -524,7 +522,7 @@ DefaultCommit<Impl>::generateTrapEvent(ThreadID tid, Fault inst_fault)
         [this, tid]{ processTrapEvent(tid); },
         "Trap", true, Event::CPU_Tick_Pri);
 
-    Cycles latency = dynamic_pointer_cast<SyscallRetryFault>(inst_fault) ?
+    Cycles latency = std::dynamic_pointer_cast<SyscallRetryFault>(inst_fault) ?
                      cpu->syscallRetryLatency : trapLatency;
 
     // hardware transactional memory
@@ -661,8 +659,8 @@ DefaultCommit<Impl>::tick()
     if (activeThreads->empty())
         return;
 
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     // Check if any of the threads are done squashing.  Change the
     // status if they are done.
@@ -822,8 +820,8 @@ DefaultCommit<Impl>::commit()
     ////////////////////////////////////
     // Check for any possible squashes, handle them first
     ////////////////////////////////////
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     int num_squashing_threads = 0;
 
@@ -1528,8 +1526,8 @@ template<class Impl>
 ThreadID
 DefaultCommit<Impl>::roundRobin()
 {
-    list<ThreadID>::iterator pri_iter = priority_list.begin();
-    list<ThreadID>::iterator end      = priority_list.end();
+    std::list<ThreadID>::iterator pri_iter = priority_list.begin();
+    std::list<ThreadID>::iterator end      = priority_list.end();
 
     while (pri_iter != end) {
         ThreadID tid = *pri_iter;
@@ -1559,8 +1557,8 @@ DefaultCommit<Impl>::oldestReady()
     unsigned oldest = 0;
     bool first = true;
 
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
+    std::list<ThreadID>::iterator threads = activeThreads->begin();
+    std::list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;

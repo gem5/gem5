@@ -59,7 +59,6 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
-using namespace std;
 using namespace TheISA;
 
 template <class Impl>

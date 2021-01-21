@@ -62,8 +62,6 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 // constructor
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            Process *_process, BaseMMU *_mmu,

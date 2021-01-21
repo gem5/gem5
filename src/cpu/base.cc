@@ -71,11 +71,9 @@
 // Hack
 #include "sim/stat_control.hh"
 
-using namespace std;
-
 std::unique_ptr<BaseCPU::GlobalStats> BaseCPU::globalStats;
 
-vector<BaseCPU *> BaseCPU::cpuList;
+std::vector<BaseCPU *> BaseCPU::cpuList;
 
 // This variable reflects the max number of threads in any CPU.  Be
 // careful to only use it once all the CPUs that you care about have
@@ -156,7 +154,7 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
 
     functionTracingEnabled = false;
     if (p.function_trace) {
-        const string fname = csprintf("ftrace.%s", name());
+        const std::string fname = csprintf("ftrace.%s", name());
         functionTraceStream = simout.findOrCreate(fname)->stream();
 
         currentFunctionStart = currentFunctionEnd = 0;
@@ -395,7 +393,7 @@ BaseCPU::regStats()
     int size = threadContexts.size();
     if (size > 1) {
         for (int i = 0; i < size; ++i) {
-            stringstream namestr;
+            std::stringstream namestr;
             ccprintf(namestr, "%s.ctx%d", name(), i);
             threadContexts[i]->regStats(namestr.str());
         }
@@ -404,7 +402,7 @@ BaseCPU::regStats()
 }
 
 Port &
-BaseCPU::getPort(const string &if_name, PortID idx)
+BaseCPU::getPort(const std::string &if_name, PortID idx)
 {
     // Get the right port based on name. This applies to all the
     // subclasses of the base CPU and relies on their implementation
@@ -708,7 +706,7 @@ BaseCPU::traceFunctionsInternal(Addr pc)
         auto it = Loader::debugSymbolTable.findNearest(
                 pc, currentFunctionEnd);
 
-        string sym_str;
+        std::string sym_str;
         if (it == Loader::debugSymbolTable.end()) {
             // no symbol found: use addr as label
             sym_str = csprintf("%#x", pc);

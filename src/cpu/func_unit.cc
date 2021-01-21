@@ -32,9 +32,6 @@
 
 #include "base/logging.hh"
 
-using namespace std;
-
-
 ////////////////////////////////////////////////////////////////////////////
 //
 //  The funciton unit
@@ -78,7 +75,7 @@ FuncUnit::provides(OpClass capability)
     return capabilityList[capability];
 }
 
-bitset<Num_OpClasses>
+std::bitset<Num_OpClasses>
 FuncUnit::capabilities()
 {
     return capabilityList;

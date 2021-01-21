@@ -65,7 +65,6 @@
 struct BaseCPUParams;
 
 using namespace TheISA;
-using namespace std;
 
 BaseO3CPU::BaseO3CPU(const BaseCPUParams &params)
     : BaseCPU(params)
@@ -581,7 +580,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::activateThread(ThreadID tid)
 {
-    list<ThreadID>::iterator isActive =
+    std::list<ThreadID>::iterator isActive =
         std::find(activeThreads.begin(), activeThreads.end(), tid);
 
     DPRINTF(O3CPU, "[tid:%i] Calling activate thread.\n", tid);
@@ -604,7 +603,7 @@ FullO3CPU<Impl>::deactivateThread(ThreadID tid)
     assert(!commit.executingHtmTransaction(tid));
 
     //Remove From Active List, if Active
-    list<ThreadID>::iterator thread_it =
+    std::list<ThreadID>::iterator thread_it =
         std::find(activeThreads.begin(), activeThreads.end(), tid);
 
     DPRINTF(O3CPU, "[tid:%i] Calling deactivate thread.\n", tid);
@@ -1722,7 +1721,7 @@ FullO3CPU<Impl>::updateThreadPriority()
     if (activeThreads.size() > 1) {
         //DEFAULT TO ROUND ROBIN SCHEME
         //e.g. Move highest priority to end of thread list
-        list<ThreadID>::iterator list_begin = activeThreads.begin();
+        std::list<ThreadID>::iterator list_begin = activeThreads.begin();
 
         unsigned high_thread = *list_begin;
 
