@@ -33,104 +33,119 @@
 #include <ostream>
 #include <sstream>
 
-namespace cp {
+namespace cp
+{
 
 struct Format
 {
-    bool alternate_form;
-    bool flush_left;
-    bool print_sign;
-    bool blank_space;
-    bool fill_zero;
+    bool alternateForm;
+    bool flushLeft;
+    bool printSign;
+    bool blankSpace;
+    bool fillZero;
     bool uppercase;
-    enum { dec, hex, oct } base;
-    enum { none, string, integer, character, floating } format;
-    enum { best, fixed, scientific } float_format;
+    enum
+    {
+        Dec,
+        Hex,
+        Oct
+    } base;
+    enum
+    {
+        None,
+        String,
+        Integer,
+        Character,
+        Floating
+    } format;
+    enum
+    {
+        Best,
+        Fixed,
+        Scientific
+    } floatFormat;
     int precision;
     int width;
-    bool get_precision;
-    bool get_width;
+    bool getPrecision;
+    bool getWidth;
 
     Format() { clear(); }
 
-    void clear()
+    void
+    clear()
     {
-        alternate_form = false;
-        flush_left = false;
-        print_sign = false;
-        blank_space = false;
-        fill_zero = false;
+        alternateForm = false;
+        flushLeft = false;
+        printSign = false;
+        blankSpace = false;
+        fillZero = false;
         uppercase = false;
-        base = dec;
-        format = none;
-        float_format = best;
+        base = Dec;
+        format = None;
+        floatFormat = Best;
         precision = -1;
         width = 0;
-        get_precision = false;
-        get_width = false;
+        getPrecision = false;
+        getWidth = false;
     }
 };
 
 template <typename T>
-inline void
-_format_char(std::ostream &out, const T &data, Format &fmt)
+static inline void
+_formatChar(std::ostream &out, const T &data, Format &fmt)
 {
-    using namespace std;
-
     out << data;
 }
 
 template <typename T>
-inline void
-_format_integer(std::ostream &out, const T &data, Format &fmt)
+static inline void
+_formatInteger(std::ostream &out, const T &data, Format &fmt)
 {
-    using namespace std;
-
-    ios::fmtflags flags(out.flags());
+    std::ios::fmtflags flags(out.flags());
 
     switch (fmt.base) {
-      case Format::hex:
+      case Format::Hex:
         out.setf(std::ios::hex, std::ios::basefield);
         break;
 
-      case Format::oct:
+      case Format::Oct:
         out.setf(std::ios::oct, std::ios::basefield);
         break;
 
-      case Format::dec:
+      case Format::Dec:
         out.setf(std::ios::dec, std::ios::basefield);
         break;
     }
 
-    if (fmt.alternate_form) {
-        if (!fmt.fill_zero)
+    if (fmt.alternateForm) {
+        if (!fmt.fillZero) {
             out.setf(std::ios::showbase);
-        else {
+        } else {
             switch (fmt.base) {
-              case Format::hex:
+              case Format::Hex:
                 out << "0x";
                 fmt.width -= 2;
                 break;
-              case Format::oct:
+              case Format::Oct:
                 out << "0";
                 fmt.width -= 1;
                 break;
-              case Format::dec:
+              case Format::Dec:
                 break;
             }
         }
     }
 
-    if (fmt.fill_zero)
+    if (fmt.fillZero)
         out.fill('0');
 
     if (fmt.width > 0)
         out.width(fmt.width);
 
-    if (fmt.flush_left && !fmt.fill_zero)
+    if (fmt.flushLeft && !fmt.fillZero)
         out.setf(std::ios::left);
 
-    if (fmt.print_sign)
+    if (fmt.printSign)
         out.setf(std::ios::showpos);
 
     if (fmt.uppercase)
@@ -142,18 +157,16 @@ _format_integer(std::ostream &out, const T &data, Format &fmt)
 }
 
 template <typename T>
-inline void
-_format_float(std::ostream &out, const T &data, Format &fmt)
+static inline void
+_formatFloat(std::ostream &out, const T &data, Format &fmt)
 {
-    using namespace std;
+    std::ios::fmtflags flags(out.flags());
 
-    ios::fmtflags flags(out.flags());
-
-    if (fmt.fill_zero)
+    if (fmt.fillZero)
         out.fill('0');
 
-    switch (fmt.float_format) {
-      case Format::scientific:
+    switch (fmt.floatFormat) {
+      case Format::Scientific:
         if (fmt.precision != -1) {
             if (fmt.width > 0)
                 out.width(fmt.width);
@@ -164,24 +177,24 @@ _format_float(std::ostream &out, const T &data, Format &fmt)
                 out.setf(std::ios::scientific);
 
             out.precision(fmt.precision);
-        } else
-            if (fmt.width > 0)
-                out.width(fmt.width);
+        } else if (fmt.width > 0) {
+            out.width(fmt.width);
+        }
 
         if (fmt.uppercase)
             out.setf(std::ios::uppercase);
         break;
 
-      case Format::fixed:
+      case Format::Fixed:
         if (fmt.precision != -1) {
             if (fmt.width > 0)
                 out.width(fmt.width);
 
             out.setf(std::ios::fixed);
             out.precision(fmt.precision);
-        } else
-            if (fmt.width > 0)
-                out.width(fmt.width);
+        } else if (fmt.width > 0) {
+            out.width(fmt.width);
+        }
 
         break;
 
@@ -201,8 +214,8 @@ _format_float(std::ostream &out, const T &data, Format &fmt)
 }
 
 template <typename T>
-inline void
-_format_string(std::ostream &out, const T &data, Format &fmt)
+static inline void
+_formatString(std::ostream &out, const T &data, Format &fmt)
 {
     if (fmt.width > 0) {
         std::stringstream foo;
@@ -214,7 +227,7 @@ _format_string(std::ostream &out, const T &data, Format &fmt)
             std::memset(spaces, ' ', fmt.width - flen);
             spaces[fmt.width - flen] = 0;
 
-            if (fmt.flush_left)
+            if (fmt.flushLeft)
                 out << foo.str() << spaces;
             else
                 out << spaces << foo.str();
@@ -235,100 +248,144 @@ _format_string(std::ostream &out, const T &data, Format &fmt)
 // character formats
 //
 template <typename T>
-inline void
-format_char(std::ostream &out, const T &data, Format &fmt)
-{ out << "<bad arg type for char format>"; }
+static inline void
+formatChar(std::ostream &out, const T &data, Format &fmt)
+{
+    out << "<bad arg type for char format>";
+}
 
-inline void
-format_char(std::ostream &out, char data, Format &fmt)
-{ _format_char(out, data, fmt); }
+static inline void
+formatChar(std::ostream &out, char data, Format &fmt)
+{
+    _formatChar(out, data, fmt);
+}
 
-inline void
-format_char(std::ostream &out, unsigned char data, Format &fmt)
-{ _format_char(out, data, fmt); }
+static inline void
+formatChar(std::ostream &out, unsigned char data, Format &fmt)
+{
+    _formatChar(out, data, fmt);
+}
 
-inline void
-format_char(std::ostream &out, signed char data, Format &fmt)
-{ _format_char(out, data, fmt); }
+static inline void
+formatChar(std::ostream &out, signed char data, Format &fmt)
+{
+    _formatChar(out, data, fmt);
+}
 
-inline void
-format_char(std::ostream &out, short data, Format &fmt)
-{ _format_char(out, (char)data, fmt); }
+static inline void
+formatChar(std::ostream &out, short data, Format &fmt)
+{
+    _formatChar(out, (char)data, fmt);
+}
 
-inline void
-format_char(std::ostream &out, unsigned short data, Format &fmt)
-{ _format_char(out, (char)data, fmt); }
+static inline void
+formatChar(std::ostream &out, unsigned short data, Format &fmt)
+{
+    _formatChar(out, (char)data, fmt);
+}
 
-inline void
-format_char(std::ostream &out, int data, Format &fmt)
-{ _format_char(out, (char)data, fmt); }
+static inline void
+formatChar(std::ostream &out, int data, Format &fmt)
+{
+    _formatChar(out, (char)data, fmt);
+}
 
-inline void
-format_char(std::ostream &out, unsigned int data, Format &fmt)
-{ _format_char(out, (char)data, fmt); }
+static inline void
+formatChar(std::ostream &out, unsigned int data, Format &fmt)
+{
+    _formatChar(out, (char)data, fmt);
+}
 
-inline void
-format_char(std::ostream &out, long data, Format &fmt)
-{ _format_char(out, (char)data, fmt); }
+static inline void
+formatChar(std::ostream &out, long data, Format &fmt)
+{
+    _formatChar(out, (char)data, fmt);
+}
 
-inline void
-format_char(std::ostream &out, unsigned long data, Format &fmt)
-{ _format_char(out, (char)data, fmt); }
+static inline void
+formatChar(std::ostream &out, unsigned long data, Format &fmt)
+{
+    _formatChar(out, (char)data, fmt);
+}
 
-inline void
-format_char(std::ostream &out, long long data, Format &fmt)
-{ _format_char(out, (char)data, fmt); }
+static inline void
+formatChar(std::ostream &out, long long data, Format &fmt)
+{
+    _formatChar(out, (char)data, fmt);
+}
 
-inline void
-format_char(std::ostream &out, unsigned long long data, Format &fmt)
-{ _format_char(out, (char)data, fmt); }
+static inline void
+formatChar(std::ostream &out, unsigned long long data, Format &fmt)
+{
+    _formatChar(out, (char)data, fmt);
+}
 
 //
 // integer formats
 //
 template <typename T>
-inline void
-format_integer(std::ostream &out, const T &data, Format &fmt)
-{ _format_integer(out, data, fmt); }
-inline void
-format_integer(std::ostream &out, char data, Format &fmt)
-{ _format_integer(out, (int)data, fmt); }
-inline void
-format_integer(std::ostream &out, unsigned char data, Format &fmt)
-{ _format_integer(out, (int)data, fmt); }
-inline void
-format_integer(std::ostream &out, signed char data, Format &fmt)
-{ _format_integer(out, (int)data, fmt); }
-inline void
-format_integer(std::ostream &out, const unsigned char *data, Format &fmt)
-{ _format_integer(out, (uintptr_t)data, fmt); }
-inline void
-format_integer(std::ostream &out, const signed char *data, Format &fmt)
-{ _format_integer(out, (uintptr_t)data, fmt); }
+static inline void
+formatInteger(std::ostream &out, const T &data, Format &fmt)
+{
+    _formatInteger(out, data, fmt);
+}
+static inline void
+formatInteger(std::ostream &out, char data, Format &fmt)
+{
+    _formatInteger(out, (int)data, fmt);
+}
+static inline void
+formatInteger(std::ostream &out, unsigned char data, Format &fmt)
+{
+    _formatInteger(out, (int)data, fmt);
+}
+static inline void
+formatInteger(std::ostream &out, signed char data, Format &fmt)
+{
+    _formatInteger(out, (int)data, fmt);
+}
+static inline void
+formatInteger(std::ostream &out, const unsigned char *data, Format &fmt)
+{
+    _formatInteger(out, (uintptr_t)data, fmt);
+}
+static inline void
+formatInteger(std::ostream &out, const signed char *data, Format &fmt)
+{
+    _formatInteger(out, (uintptr_t)data, fmt);
+}
 
 //
 // floating point formats
 //
 template <typename T>
-inline void
-format_float(std::ostream &out, const T &data, Format &fmt)
-{ out << "<bad arg type for float format>"; }
+static inline void
+formatFloat(std::ostream &out, const T &data, Format &fmt)
+{
+    out << "<bad arg type for float format>";
+}
 
-inline void
-format_float(std::ostream &out, float data, Format &fmt)
-{ _format_float(out, data, fmt); }
+static inline void
+formatFloat(std::ostream &out, float data, Format &fmt)
+{
+    _formatFloat(out, data, fmt);
+}
 
-inline void
-format_float(std::ostream &out, double data, Format &fmt)
-{ _format_float(out, data, fmt); }
+static inline void
+formatFloat(std::ostream &out, double data, Format &fmt)
+{
+    _formatFloat(out, data, fmt);
+}
 
 //
 // string formats
 //
 template <typename T>
-inline void
-format_string(std::ostream &out, const T &data, Format &fmt)
-{ _format_string(out, data, fmt); }
+static inline void
+formatString(std::ostream &out, const T &data, Format &fmt)
+{
+    _formatString(out, data, fmt);
+}
 
 } // namespace cp
 
