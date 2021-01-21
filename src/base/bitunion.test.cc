@@ -34,8 +34,6 @@
 #include "base/bitunion.hh"
 #include "base/cprintf.hh"
 
-using namespace std;
-
 namespace {
 
 BitUnion64(SixtyFour)

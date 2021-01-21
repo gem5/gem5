@@ -48,8 +48,6 @@
 
 #include "base/logging.hh"
 
-using namespace std;
-
 namespace
 {
 

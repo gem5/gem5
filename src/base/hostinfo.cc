@@ -49,9 +49,7 @@
 #include "base/str.hh"
 #include "base/types.hh"
 
-using namespace std;
-
-string
+std::string
 __get_hostname()
 {
     char host[256];
@@ -60,10 +58,10 @@ __get_hostname()
     return host;
 }
 
-string &
+std::string &
 hostname()
 {
-    static string hostname = __get_hostname();
+    static std::string hostname = __get_hostname();
     return hostname;
 }
 

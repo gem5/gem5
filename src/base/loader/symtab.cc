@@ -39,8 +39,6 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
-using namespace std;
-
 namespace Loader
 {
 
@@ -93,10 +91,10 @@ SymbolTable::insert(const SymbolTable &other)
 }
 
 bool
-SymbolTable::load(const string &filename)
+SymbolTable::load(const std::string &filename)
 {
-    string buffer;
-    ifstream file(filename.c_str());
+    std::string buffer;
+    std::ifstream file(filename.c_str());
 
     if (!file)
         fatal("file error: Can't open symbol table file %s\n", filename);
@@ -106,16 +104,16 @@ SymbolTable::load(const string &filename)
         if (buffer.empty())
             continue;
 
-        string::size_type idx = buffer.find(',');
-        if (idx == string::npos)
+        std::string::size_type idx = buffer.find(',');
+        if (idx == std::string::npos)
             return false;
 
-        string address = buffer.substr(0, idx);
+        std::string address = buffer.substr(0, idx);
         eat_white(address);
         if (address.empty())
             return false;
 
-        string name = buffer.substr(idx + 1);
+        std::string name = buffer.substr(idx + 1);
         eat_white(name);
         if (name.empty())
             return false;
@@ -133,7 +131,7 @@ SymbolTable::load(const string &filename)
 }
 
 void
-SymbolTable::serialize(const string &base, CheckpointOut &cp) const
+SymbolTable::serialize(const std::string &base, CheckpointOut &cp) const
 {
     paramOut(cp, base + ".size", symbols.size());
 
@@ -147,7 +145,7 @@ SymbolTable::serialize(const string &base, CheckpointOut &cp) const
 }
 
 void
-SymbolTable::unserialize(const string &base, CheckpointIn &cp,
+SymbolTable::unserialize(const std::string &base, CheckpointIn &cp,
                          Symbol::Binding default_binding)
 {
     clear();

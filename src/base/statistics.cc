@@ -56,17 +56,15 @@
 #include "base/trace.hh"
 #include "sim/root.hh"
 
-using namespace std;
-
 namespace Stats {
 
 std::string Info::separatorString = "::";
 
 // We wrap these in a function to make sure they're built in time.
-list<Info *> &
+std::list<Info *> &
 statsList()
 {
-    static list<Info *> the_list;
+    static std::list<Info *> the_list;
     return the_list;
 }
 
@@ -94,9 +92,9 @@ InfoAccess::setInfo(Group *parent, Info *info)
     statsList().push_back(info);
 
 #ifndef NDEBUG
-    pair<MapType::iterator, bool> result =
+    std::pair<MapType::iterator, bool> result =
 #endif
-        statsMap().insert(make_pair(this, info));
+        statsMap().insert(std::make_pair(this, info));
     assert(result.second && "this should never fail");
     assert(statsMap().find(this) != statsMap().end());
 }
@@ -169,19 +167,19 @@ Info::~Info()
 }
 
 bool
-validateStatName(const string &name)
+validateStatName(const std::string &name)
 {
     if (name.empty())
         return false;
 
-    vector<string> vec;
+    std::vector<std::string> vec;
     tokenize(vec, name, '.');
-    vector<string>::const_iterator item = vec.begin();
+    std::vector<std::string>::const_iterator item = vec.begin();
     while (item != vec.end()) {
         if (item->empty())
             return false;
 
-        string::const_iterator c = item->begin();
+        std::string::const_iterator c = item->begin();
 
         // The first character is different
         if (!isalpha(*c) && *c != '_')
@@ -200,13 +198,13 @@ validateStatName(const string &name)
 }
 
 void
-Info::setName(const string &name)
+Info::setName(const std::string &name)
 {
     setName(nullptr, name);
 }
 
 void
-Info::setName(const Group *parent, const string &name)
+Info::setName(const Group *parent, const std::string &name)
 {
     if (!validateStatName(name))
         panic("invalid stat name '%s'", name);
@@ -229,16 +227,16 @@ Info::setName(const Group *parent, const string &name)
 bool
 Info::less(Info *stat1, Info *stat2)
 {
-    const string &name1 = stat1->name;
-    const string &name2 = stat2->name;
+    const std::string &name1 = stat1->name;
+    const std::string &name2 = stat2->name;
 
-    vector<string> v1;
-    vector<string> v2;
+    std::vector<std::string> v1;
+    std::vector<std::string> v2;
 
     tokenize(v1, name1, '.');
     tokenize(v2, name2, '.');
 
-    size_type last = min(v1.size(), v2.size()) - 1;
+    size_type last = std::min(v1.size(), v2.size()) - 1;
     for (off_type i = 0; i < last; ++i)
         if (v1[i] != v2[i])
             return v1[i] < v2[i];
@@ -502,7 +500,7 @@ Formula::zero() const
     return true;
 }
 
-string
+std::string
 Formula::str() const
 {
     return root ? root->str() : "";

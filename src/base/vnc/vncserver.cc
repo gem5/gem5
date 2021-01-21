@@ -69,8 +69,6 @@
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
 
-using namespace std;
-
 const PixelConverter VncServer::pixelConverter(
     4,        // 4 bytes / pixel
     16, 8, 0, // R in [23, 16], G in [15, 8], B in [7, 0]
@@ -171,7 +169,7 @@ VncServer::listen(int port)
         port++;
     }
 
-    ccprintf(cerr, "%s: Listening for connections on port %d\n",
+    ccprintf(std::cerr, "%s: Listening for connections on port %d\n",
              name(), port);
 
     listenEvent = new ListenEvent(this, listener.getfd(), POLLIN);
@@ -470,7 +468,7 @@ VncServer::sendServerInit()
     memset(msg.px.padding, 0, 3);
     msg.namelen = 2;
     msg.namelen = htobe(msg.namelen);
-    memcpy(msg.name, "M5", 2);
+    std::memcpy(msg.name, "M5", 2);
 
     if (!write(&msg))
         return;

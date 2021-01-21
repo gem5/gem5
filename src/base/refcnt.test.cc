@@ -35,16 +35,15 @@
 
 #include "base/refcnt.hh"
 
-using namespace std;
-
 namespace {
 
 class TestRC;
-typedef list<TestRC *> LiveList;
+typedef std::list<TestRC *> LiveList;
 LiveList liveList;
 
 int
-liveListSize(){
+liveListSize()
+{
     return liveList.size();
 }
 

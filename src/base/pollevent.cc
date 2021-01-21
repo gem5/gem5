@@ -50,8 +50,6 @@
 #include "sim/eventq.hh"
 #include "sim/serialize.hh"
 
-using namespace std;
-
 PollQueue pollQueue;
 
 /////////////////////////////////////////////////////

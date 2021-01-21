@@ -38,8 +38,6 @@
 
 #include "base/inifile.hh"
 
-using namespace std;
-
 namespace {
 
 std::istringstream iniFile(R"ini_file(

@@ -43,8 +43,6 @@
 #include "base/types.hh"
 #include "sim/byteswap.hh"
 
-using namespace std;
-
 bool ListenSocket::listeningDisabled = false;
 bool ListenSocket::anyListening = false;
 
@@ -121,7 +119,7 @@ ListenSocket::listen(int port, bool reuse)
         htobe<in_addr_t>(bindToLoopback ? INADDR_LOOPBACK : INADDR_ANY);
     sockaddr.sin_port = htons(port);
     // finally clear sin_zero
-    memset(&sockaddr.sin_zero, 0, sizeof(sockaddr.sin_zero));
+    std::memset(&sockaddr.sin_zero, 0, sizeof(sockaddr.sin_zero));
     int ret = ::bind(fd, (struct sockaddr *)&sockaddr, sizeof (sockaddr));
     if (ret != 0) {
         if (ret == -1 && errno != EADDRINUSE)
