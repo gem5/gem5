@@ -1822,7 +1822,7 @@ getrlimitFunc(SyscallDesc *desc, ThreadContext *tc,
     const ByteOrder bo = OS::byteOrder;
     switch (resource) {
       case OS::TGT_RLIMIT_STACK:
-        // max stack size in bytes: make up a number (8MB for now)
+        // max stack size in bytes: make up a number (8MiB for now)
         rlp->rlim_cur = rlp->rlim_max = 8 * 1024 * 1024;
         rlp->rlim_cur = htog(rlp->rlim_cur, bo);
         rlp->rlim_max = htog(rlp->rlim_max, bo);
@@ -1865,7 +1865,7 @@ prlimitFunc(SyscallDesc *desc, ThreadContext *tc,
         const ByteOrder bo = OS::byteOrder;
         switch (resource) {
           case OS::TGT_RLIMIT_STACK:
-            // max stack size in bytes: make up a number (8MB for now)
+            // max stack size in bytes: make up a number (8MiB for now)
             rlp->rlim_cur = rlp->rlim_max = 8 * 1024 * 1024;
             rlp->rlim_cur = htog(rlp->rlim_cur, bo);
             rlp->rlim_max = htog(rlp->rlim_max, bo);
