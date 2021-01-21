@@ -31,11 +31,11 @@
 #include "sim/serialize.hh"
 
 using namespace X86ISA;
-using namespace std;
 
 template <>
 void
-paramOut(CheckpointOut &cp, const string &name, ExtMachInst const &machInst)
+paramOut(CheckpointOut &cp, const std::string &name,
+        ExtMachInst const &machInst)
 {
     // Prefixes
     paramOut(cp, name + ".legacy", (uint8_t)machInst.legacy);
@@ -66,7 +66,7 @@ paramOut(CheckpointOut &cp, const string &name, ExtMachInst const &machInst)
 
 template <>
 void
-paramIn(CheckpointIn &cp, const string &name, ExtMachInst &machInst)
+paramIn(CheckpointIn &cp, const std::string &name, ExtMachInst &machInst)
 {
     uint8_t temp8;
     // Prefixes

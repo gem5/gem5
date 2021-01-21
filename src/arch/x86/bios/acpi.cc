@@ -45,8 +45,6 @@
 #include "sim/byteswap.hh"
 #include "sim/sim_object.hh"
 
-using namespace std;
-
 const char X86ISA::ACPI::RSDP::signature[] = "RSD PTR ";
 
 X86ISA::ACPI::RSDP::RSDP(const Params &p) : SimObject(p), oemID(p.oem_id),

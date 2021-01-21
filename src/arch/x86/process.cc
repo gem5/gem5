@@ -65,7 +65,6 @@
 #include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace X86ISA;
 
 template class MultiLevelPageTable<LongModePTE<47, 39>,
@@ -112,9 +111,9 @@ X86_64Process::X86_64Process(const ProcessParams &params,
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x7FFFF7FFF000ULL;
 
-    memState = make_shared<MemState>(this, brk_point, stack_base,
-                                     max_stack_size, next_thread_stack_base,
-                                     mmap_end);
+    memState = std::make_shared<MemState>(
+            this, brk_point, stack_base, max_stack_size,
+            next_thread_stack_base, mmap_end);
 }
 
 
@@ -139,9 +138,9 @@ I386Process::I386Process(const ProcessParams &params,
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0xB7FFF000ULL;
 
-    memState = make_shared<MemState>(this, brk_point, stack_base,
-                                     max_stack_size, next_thread_stack_base,
-                                     mmap_end);
+    memState = std::make_shared<MemState>(
+            this, brk_point, stack_base, max_stack_size,
+            next_thread_stack_base, mmap_end);
 }
 
 void
@@ -714,7 +713,7 @@ X86Process::argsInit(int pageSize,
 
     std::vector<AuxVector<IntType>> auxv = extraAuxvs;
 
-    string filename;
+    std::string filename;
     if (argv.size() < 1)
         filename = "";
     else
@@ -850,7 +849,7 @@ X86Process::argsInit(int pageSize,
     const int numRandomBytes = 16;
     int aux_data_size = numRandomBytes;
 
-    string platform = "x86_64";
+    std::string platform = "x86_64";
     aux_data_size += platform.size() + 1;
 
     int env_data_size = 0;

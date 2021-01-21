@@ -48,8 +48,6 @@
 #include "params/X86SMBiosSMBiosTable.hh"
 #include "sim/byteswap.hh"
 
-using namespace std;
-
 const char X86ISA::SMBios::SMBiosTable::SMBiosHeader::anchorString[] = "_SM_";
 const uint8_t X86ISA::SMBios::SMBiosTable::
         SMBiosHeader::formattedArea[] = {0,0,0,0,0};
@@ -128,7 +126,7 @@ X86ISA::SMBios::SMBiosStructure::getStringLength()
 }
 
 int
-X86ISA::SMBios::SMBiosStructure::addString(const string &new_string)
+X86ISA::SMBios::SMBiosStructure::addString(const std::string &new_string)
 {
     stringFields = true;
     // If a string is empty, treat it as not existing. The index for empty
@@ -139,7 +137,7 @@ X86ISA::SMBios::SMBiosStructure::addString(const string &new_string)
     return strings.size();
 }
 
-string
+std::string
 X86ISA::SMBios::SMBiosStructure::readString(int n)
 {
     assert(n > 0 && n <= strings.size());

@@ -41,7 +41,6 @@
 #include "mem/port_proxy.hh"
 #include "sim/byteswap.hh"
 
-using namespace std;
 using namespace X86ISA;
 
 template<class T>

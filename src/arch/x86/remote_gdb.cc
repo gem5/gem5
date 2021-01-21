@@ -58,7 +58,6 @@
 #include "mem/page_table.hh"
 #include "sim/full_system.hh"
 
-using namespace std;
 using namespace X86ISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c, int _port) :

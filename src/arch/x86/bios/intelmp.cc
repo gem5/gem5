@@ -63,8 +63,6 @@
 #include "params/X86IntelMPBusHierarchy.hh"
 #include "params/X86IntelMPCompatAddrSpaceMod.hh"
 
-using namespace std;
-
 const char X86ISA::IntelMP::FloatingPointer::signature[] = "_MP_";
 
 template<class T>
@@ -83,7 +81,7 @@ writeOutField(PortProxy& proxy, Addr addr, T val)
 }
 
 uint8_t
-writeOutString(PortProxy& proxy, Addr addr, string str, int length)
+writeOutString(PortProxy& proxy, Addr addr, std::string str, int length)
 {
     char cleanedString[length + 1];
     cleanedString[length] = 0;
@@ -210,7 +208,7 @@ X86ISA::IntelMP::ConfigTable::writeOut(PortProxy& proxy, Addr addr)
     proxy.writeBlob(addr + 43, &reserved, 1);
     checkSum += reserved;
 
-    vector<BaseConfigEntry *>::iterator baseEnt;
+    std::vector<BaseConfigEntry *>::iterator baseEnt;
     uint16_t offset = 44;
     for (baseEnt = baseEntries.begin();
             baseEnt != baseEntries.end(); baseEnt++) {
@@ -220,7 +218,7 @@ X86ISA::IntelMP::ConfigTable::writeOut(PortProxy& proxy, Addr addr)
     // We've found the end of the base table this point.
     checkSum += writeOutField(proxy, addr + 4, offset);
 
-    vector<ExtConfigEntry *>::iterator extEnt;
+    std::vector<ExtConfigEntry *>::iterator extEnt;
     uint16_t extOffset = 0;
     uint8_t extCheckSum = 0;
     for (extEnt = extEntries.begin();
