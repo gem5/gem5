@@ -86,6 +86,5 @@ output exec {{
 #include "sim/sim_exit.hh"
 
 using namespace SparcISA;
-using namespace std;
 }};
 

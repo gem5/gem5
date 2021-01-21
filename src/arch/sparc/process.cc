@@ -45,7 +45,6 @@
 #include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace SparcISA;
 
 SparcProcess::SparcProcess(const ProcessParams &params,
@@ -142,7 +141,7 @@ SparcProcess::argsInit(int pageSize)
 
     std::vector<AuxVector<IntType>> auxv;
 
-    string filename;
+    std::string filename;
     if (argv.size() < 1)
         filename = "";
     else

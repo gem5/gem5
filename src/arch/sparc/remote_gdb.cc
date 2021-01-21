@@ -140,7 +140,6 @@
 #include "sim/process.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace SparcISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c, int _port)

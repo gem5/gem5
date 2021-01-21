@@ -38,7 +38,6 @@
 #include "sim/system.hh"
 
 using namespace SparcISA;
-using namespace std;
 
 
 void
@@ -66,10 +65,10 @@ ISA::checkSoftInt()
 }
 
 // These functions map register indices to names
-static inline string
+static inline std::string
 getMiscRegName(RegIndex index)
 {
-    static string miscRegName[NumMiscRegs] =
+    static std::string miscRegName[NumMiscRegs] =
         {/*"y", "ccr",*/ "asi", "tick", "fprs", "pcr", "pic",
          "gsr", "softint_set", "softint_clr", "softint", "tick_cmpr",
          "stick", "stick_cmpr",

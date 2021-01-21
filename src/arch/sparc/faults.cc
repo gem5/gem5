@@ -42,8 +42,6 @@
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 
-using namespace std;
-
 namespace SparcISA
 {
 
@@ -340,7 +338,7 @@ doREDFault(ThreadContext *tc, TrapType tt)
     tc->setMiscRegNoEffect(MISCREG_TT, tt);
 
     // Update GL
-    tc->setMiscReg(MISCREG_GL, min<int>(GL+1, MaxGL));
+    tc->setMiscReg(MISCREG_GL, std::min<int>(GL+1, MaxGL));
 
     bool priv = pstate.priv; // just save the priv bit
     pstate = 0;
@@ -424,9 +422,9 @@ doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
 
     // Update the global register level
     if (!gotoHpriv)
-        tc->setMiscReg(MISCREG_GL, min<int>(GL + 1, MaxPGL));
+        tc->setMiscReg(MISCREG_GL, std::min<int>(GL + 1, MaxPGL));
     else
-        tc->setMiscReg(MISCREG_GL, min<int>(GL + 1, MaxGL));
+        tc->setMiscReg(MISCREG_GL, std::min<int>(GL + 1, MaxGL));
 
     // pstate.mm is unchanged
     pstate.pef = 1; // PSTATE.pef = whether or not an fpu is present
