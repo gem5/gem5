@@ -39,11 +39,11 @@
 
 #include "base/logging.hh"
 
-using namespace std;
 using namespace google::protobuf;
 
-ProtoOutputStream::ProtoOutputStream(const string& filename) :
-    fileStream(filename.c_str(), ios::out | ios::binary | ios::trunc),
+ProtoOutputStream::ProtoOutputStream(const std::string& filename) :
+    fileStream(filename.c_str(),
+            std::ios::out | std::ios::binary | std::ios::trunc),
     wrappedFileStream(NULL), gzipStream(NULL), zeroCopyStream(NULL)
 {
     if (!fileStream.good())
@@ -98,9 +98,9 @@ ProtoOutputStream::write(const Message& msg)
     msg.SerializeWithCachedSizes(&codedStream);
 }
 
-ProtoInputStream::ProtoInputStream(const string& filename) :
-    fileStream(filename.c_str(), ios::in | ios::binary), fileName(filename),
-    useGzip(false),
+ProtoInputStream::ProtoInputStream(const std::string& filename) :
+    fileStream(filename.c_str(), std::ios::in | std::ios::binary),
+    fileName(filename), useGzip(false),
     wrappedFileStream(NULL), gzipStream(NULL), zeroCopyStream(NULL)
 {
     if (!fileStream.good())
@@ -113,7 +113,7 @@ ProtoInputStream::ProtoInputStream(const string& filename) :
 
     // seek to the start of the input file and clear any flags
     fileStream.clear();
-    fileStream.seekg(0, ifstream::beg);
+    fileStream.seekg(0, std::ifstream::beg);
 
     createStreams();
 }
@@ -172,7 +172,7 @@ ProtoInputStream::reset()
     destroyStreams();
     // seek to the start of the input file and clear any flags
     fileStream.clear();
-    fileStream.seekg(0, ifstream::beg);
+    fileStream.seekg(0, std::ifstream::beg);
     createStreams();
 }
 
