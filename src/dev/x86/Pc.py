@@ -41,7 +41,7 @@ def x86IOAddress(port):
 
 class PcPciHost(GenericPciHost):
     conf_base = 0xC000000000000000
-    conf_size = "16MB"
+    conf_size = "16MiB"
 
     pci_pio_base = 0x8000000000000000
 
@@ -70,7 +70,7 @@ class Pc(Platform):
     default_bus = IOXBar()
 
     # A device to handle accesses to unclaimed IO ports.
-    empty_isa = IsaFake(pio_addr=x86IOAddress(0), pio_size='64kB',
+    empty_isa = IsaFake(pio_addr=x86IOAddress(0), pio_size='64KiB',
                         ret_data8=0, ret_data16=0, ret_data32=0, ret_data64=0,
                         pio=default_bus.mem_side_ports)
 

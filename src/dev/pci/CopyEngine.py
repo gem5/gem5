@@ -48,10 +48,10 @@ class CopyEngine(PciDevice):
     InterruptLine = 0x20
     InterruptPin = 0x01
 
-    BAR0 = PciMemBar(size='1kB')
+    BAR0 = PciMemBar(size='1KiB')
 
     ChanCnt = Param.UInt8(4, "Number of DMA channels that exist on device")
-    XferCap = Param.MemorySize('4kB',
+    XferCap = Param.MemorySize('4KiB',
             "Number of bits of transfer size that are supported")
 
     latBeforeBegin = Param.Latency('20ns',

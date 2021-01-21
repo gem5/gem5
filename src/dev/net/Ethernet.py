@@ -92,10 +92,11 @@ class EtherSwitch(SimObject):
     type = 'EtherSwitch'
     cxx_header = "dev/net/etherswitch.hh"
     dump = Param.EtherDump(NULL, "dump object")
-    fabric_speed = Param.NetworkBandwidth('10Gbps', "switch fabric speed in bits "
-                                          "per second")
+    fabric_speed = Param.NetworkBandwidth('10Gbps', "switch fabric speed in "
+                                          "bits per second")
     interface = VectorEtherInt("Ethernet Interface")
-    output_buffer_size = Param.MemorySize('1MB', "size of output port buffers")
+    output_buffer_size = Param.MemorySize('1MiB',
+                                          "size of output port buffers")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
     time_to_live = Param.Latency('10ms', "time to live of MAC address maping")
@@ -139,8 +140,8 @@ class IGbE(EtherDevice):
     cxx_header = "dev/net/i8254xGBe.hh"
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
-    rx_fifo_size = Param.MemorySize('384kB', "Size of the rx FIFO")
-    tx_fifo_size = Param.MemorySize('384kB', "Size of the tx FIFO")
+    rx_fifo_size = Param.MemorySize('384KiB', "Size of the rx FIFO")
+    tx_fifo_size = Param.MemorySize('384KiB', "Size of the tx FIFO")
     rx_desc_cache_size = Param.Int(64,
         "Number of enteries in the rx descriptor cache")
     tx_desc_cache_size = Param.Int(64,
@@ -152,7 +153,7 @@ class IGbE(EtherDevice):
     SubClassCode = 0x00
     ClassCode = 0x02
     ProgIF = 0x00
-    BAR0 = PciMemBar(size='128kB')
+    BAR0 = PciMemBar(size='128KiB')
     MaximumLatency = 0x00
     MinimumGrant = 0xff
     InterruptLine = 0x1e
@@ -195,8 +196,8 @@ class EtherDevBase(EtherDevice):
 
     rx_delay = Param.Latency('1us', "Receive Delay")
     tx_delay = Param.Latency('1us', "Transmit Delay")
-    rx_fifo_size = Param.MemorySize('512kB', "max size of rx fifo")
-    tx_fifo_size = Param.MemorySize('512kB', "max size of tx fifo")
+    rx_fifo_size = Param.MemorySize('512KiB', "max size of rx fifo")
+    tx_fifo_size = Param.MemorySize('512KiB', "max size of tx fifo")
 
     rx_filter = Param.Bool(True, "Enable Receive Filter")
     intr_delay = Param.Latency('10us', "Interrupt propagation delay")
@@ -218,7 +219,7 @@ class NSGigE(EtherDevBase):
     SubClassCode = 0x00
     ClassCode = 0x02
     ProgIF = 0x00
-    BARs = (PciIoBar(size='256B'), PciMemBar(size='4kB'))
+    BARs = (PciIoBar(size='256B'), PciMemBar(size='4KiB'))
     MaximumLatency = 0x34
     MinimumGrant = 0xb0
     InterruptLine = 0x1e
@@ -232,12 +233,12 @@ class Sinic(EtherDevBase):
     cxx_header = "dev/net/sinic.hh"
 
     rx_max_copy = Param.MemorySize('1514B', "rx max copy")
-    tx_max_copy = Param.MemorySize('16kB', "tx max copy")
+    tx_max_copy = Param.MemorySize('16KiB', "tx max copy")
     rx_max_intr = Param.UInt32(10, "max rx packets per interrupt")
-    rx_fifo_threshold = Param.MemorySize('384kB', "rx fifo high threshold")
-    rx_fifo_low_mark = Param.MemorySize('128kB', "rx fifo low threshold")
-    tx_fifo_high_mark = Param.MemorySize('384kB', "tx fifo high threshold")
-    tx_fifo_threshold = Param.MemorySize('128kB', "tx fifo low threshold")
+    rx_fifo_threshold = Param.MemorySize('384KiB', "rx fifo high threshold")
+    rx_fifo_low_mark = Param.MemorySize('128KiB', "rx fifo low threshold")
+    tx_fifo_high_mark = Param.MemorySize('384KiB', "tx fifo high threshold")
+    tx_fifo_threshold = Param.MemorySize('128KiB', "tx fifo low threshold")
     virtual_count = Param.UInt32(1, "Virtualized SINIC")
     zero_copy_size = Param.UInt32(64, "Bytes to copy if below threshold")
     zero_copy_threshold = Param.UInt32(256,
@@ -252,7 +253,7 @@ class Sinic(EtherDevBase):
     SubClassCode = 0x00
     ClassCode = 0x02
     ProgIF = 0x00
-    BARs = PciMemBar(size='64kB')
+    BARs = PciMemBar(size='64KiB')
     MaximumLatency = 0x34
     MinimumGrant = 0xb0
     InterruptLine = 0x1e
