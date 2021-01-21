@@ -40,7 +40,7 @@ def template FloatExecute {{
 
         STATUS status = xc->readMiscReg(MISCREG_STATUS);
         if (status.fs == FPUStatus::OFF)
-            fault = make_shared<IllegalInstFault>("FPU is off", machInst);
+            fault = std::make_shared<IllegalInstFault>("FPU is off", machInst);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -60,7 +60,8 @@ def template FloatExecute {{
                 break;
             case 0x4:
                 // Round to nearest, ties to max magnitude not implemented
-                fault = make_shared<IllegalFrmFault>(ROUND_MODE, machInst);
+                fault = std::make_shared<IllegalFrmFault>(
+                        ROUND_MODE, machInst);
                 break;
             case 0x7: {
                 uint8_t frm = xc->readMiscReg(MISCREG_FRM);
@@ -79,7 +80,8 @@ def template FloatExecute {{
                     break;
                 case 0x4:
                     // Round to nearest, ties to max magnitude not implemented
-                    fault = make_shared<IllegalFrmFault>(ROUND_MODE, machInst);
+                    fault = std::make_shared<IllegalFrmFault>(
+                            ROUND_MODE, machInst);
                     break;
                 default:
                     fault = std::make_shared<IllegalFrmFault>(frm, machInst);

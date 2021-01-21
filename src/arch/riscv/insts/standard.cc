@@ -37,15 +37,13 @@
 #include "arch/riscv/utility.hh"
 #include "cpu/static_inst.hh"
 
-using namespace std;
-
 namespace RiscvISA
 {
 
-string
+std::string
 RegOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
-    stringstream ss;
+    std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
         registerName(srcRegIdx(0));
     if (_numSrcRegs >= 2)
@@ -55,16 +53,16 @@ RegOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     return ss.str();
 }
 
-string
+std::string
 CSROp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
-    stringstream ss;
+    std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
     auto data = CSRData.find(csr);
     if (data != CSRData.end())
         ss << data->second.name;
     else
-        ss << "?? (" << hex << "0x" << csr << dec << ")";
+        ss << "?? (" << std::hex << "0x" << csr << std::dec << ")";
     if (_numSrcRegs > 0)
         ss << ", " << registerName(srcRegIdx(0));
     else
@@ -72,11 +70,11 @@ CSROp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     return ss.str();
 }
 
-string
+std::string
 SystemOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
     if (strcmp(mnemonic, "fence_vma") == 0) {
-        stringstream ss;
+        std::stringstream ss;
         ss << mnemonic << ' ' << registerName(srcRegIdx(0)) << ", " <<
             registerName(srcRegIdx(1));
         return ss.str();

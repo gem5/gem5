@@ -326,7 +326,7 @@ def template CSRExecute {{
             if (pm == PRV_U || (pm == PRV_S && status.tvm == 1)) {
                 std::string error = csprintf(
                     "SATP access in user mode or with TVM enabled\n");
-                fault = make_shared<IllegalInstFault>(error, machInst);
+                fault = std::make_shared<IllegalInstFault>(error, machInst);
                 olddata = 0;
             } else {
                 olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
@@ -338,7 +338,7 @@ def template CSRExecute {{
             if (pm != PrivilegeMode::PRV_M) {
                 std::string error = csprintf(
                     "MSTATUS is only accessibly in machine mode\n");
-                fault = make_shared<IllegalInstFault>(error, machInst);
+                fault = std::make_shared<IllegalInstFault>(error, machInst);
                 olddata = 0;
             } else {
                 olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
@@ -350,7 +350,7 @@ def template CSRExecute {{
                 olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
             } else {
                 std::string error = csprintf("Illegal CSR index %#x\n", csr);
-                fault = make_shared<IllegalInstFault>(error, machInst);
+                fault = std::make_shared<IllegalInstFault>(error, machInst);
                 olddata = 0;
             }
             break;
@@ -371,7 +371,8 @@ def template CSRExecute {{
                     if (bits(csr, 11, 10) == 0x3) {
                         std::string error = csprintf("CSR %s is read-only\n",
                                                      CSRData.at(csr).name);
-                        fault = make_shared<IllegalInstFault>(error, machInst);
+                        fault = std::make_shared<IllegalInstFault>(
+                                error, machInst);
                     } else {
                         DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n", data,
                                 CSRData.at(csr).name);
@@ -390,8 +391,8 @@ def template CSRExecute {{
                             } else {
                                 std::string error = "Interrupt m bits are "
                                                     "read-only\n";
-                                fault = make_shared<IllegalInstFault>(error,
-                                                                     machInst);
+                                fault = std::make_shared<IllegalInstFault>(
+                                        error, machInst);
                             }
                             break;
                           default:

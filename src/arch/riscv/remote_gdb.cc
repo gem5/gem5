@@ -148,7 +148,6 @@
 #include "mem/page_table.hh"
 #include "sim/full_system.hh"
 
-using namespace std;
 using namespace RiscvISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)

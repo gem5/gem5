@@ -37,24 +37,22 @@
 #include "arch/riscv/utility.hh"
 #include "cpu/static_inst.hh"
 
-using namespace std;
-
 namespace RiscvISA
 {
 
-string
+std::string
 Load::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
-    stringstream ss;
+    std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
         offset << '(' << registerName(srcRegIdx(0)) << ')';
     return ss.str();
 }
 
-string
+std::string
 Store::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
-    stringstream ss;
+    std::stringstream ss;
     ss << mnemonic << ' ' << registerName(srcRegIdx(1)) << ", " <<
         offset << '(' << registerName(srcRegIdx(0)) << ')';
     return ss.str();

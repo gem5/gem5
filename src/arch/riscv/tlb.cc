@@ -52,7 +52,6 @@
 #include "sim/process.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace RiscvISA;
 
 ///////////////////////////////////////////////////////////////////////
@@ -359,7 +358,7 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
                 code = ExceptionCode::STORE_ACCESS;
             else
                 code = ExceptionCode::INST_ACCESS;
-            fault = make_shared<AddressFault>(req->getVaddr(), code);
+            fault = std::make_shared<AddressFault>(req->getVaddr(), code);
         }
 
         return fault;
@@ -373,7 +372,7 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
         // the start.
         assert(req->getSize() > 0);
         if (req->getVaddr() + req->getSize() - 1 < req->getVaddr())
-            return make_shared<GenericPageTableFault>(req->getVaddr());
+            return std::make_shared<GenericPageTableFault>(req->getVaddr());
 
         Process * p = tc->getProcessPtr();
 
