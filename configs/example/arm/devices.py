@@ -35,19 +35,11 @@
 
 # System components used by the bigLITTLE.py configuration script
 
-from __future__ import print_function
-from __future__ import absolute_import
-
-import six
-
 import m5
 from m5.objects import *
 m5.util.addToPath('../../')
 from common.Caches import *
 from common import ObjectList
-
-if six.PY3:
-    long = int
 
 have_kvm = "ArmV8KvmCPU" in ObjectList.cpu_list.get_names()
 have_fastmodel = "FastModelCortexA76" in ObjectList.cpu_list.get_names()
@@ -320,7 +312,7 @@ def simpleSystem(BaseSystem, caches, mem_size, platform=None, **kwargs):
             self.iobridge = Bridge(delay='50ns')
             # Device DMA -> MEM
             mem_range = self.realview._mem_regions[0]
-            assert long(mem_range.size()) >= long(Addr(mem_size))
+            assert int(mem_range.size()) >= int(Addr(mem_size))
             self.mem_ranges = [
                 AddrRange(start=mem_range.start, size=mem_size) ]
 

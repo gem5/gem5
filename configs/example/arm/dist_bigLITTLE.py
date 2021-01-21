@@ -36,9 +36,6 @@
 # This configuration file extends the example ARM big.LITTLE(tm)
 # configuration to enabe dist-gem5 siulations of big.LITTLE systems.
 
-from __future__ import print_function
-from __future__ import absolute_import
-
 import argparse
 import os
 

@@ -36,10 +36,6 @@
 # This is an example configuration script for full system simulation of
 # a generic ARM bigLITTLE system.
 
-
-from __future__ import print_function
-from __future__ import absolute_import
-
 import argparse
 import os
 import sys

@@ -39,9 +39,6 @@ Research Starter Kit on System Modeling. More information can be found
 at: http://www.arm.com/ResearchEnablement/SystemModeling
 """
 
-from __future__ import print_function
-from __future__ import absolute_import
-
 import os
 import m5
 from m5.util import addToPath
