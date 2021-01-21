@@ -51,8 +51,6 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 AbstractMemory::AbstractMemory(const Params &p) :
     ClockedObject(p), range(p.range), pmemAddr(NULL),
     backdoor(params().range, nullptr,
@@ -254,7 +252,7 @@ AbstractMemory::trackLoadLocked(PacketPtr pkt)
     // first we check if we already have a locked addr for this
     // xc.  Since each xc only gets one, we just update the
     // existing record with the new address.
-    list<LockedAddr>::iterator i;
+    std::list<LockedAddr>::iterator i;
 
     for (i = lockedAddrList.begin(); i != lockedAddrList.end(); ++i) {
         if (i->matchesContext(req)) {
@@ -294,7 +292,7 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
     // Only remove records when we succeed in finding a record for (xc, addr);
     // then, remove all records with this address.  Failed store-conditionals do
     // not blow unrelated reservations.
-    list<LockedAddr>::iterator i = lockedAddrList.begin();
+    std::list<LockedAddr>::iterator i = lockedAddrList.begin();
 
     if (isLLSC) {
         while (i != lockedAddrList.end()) {

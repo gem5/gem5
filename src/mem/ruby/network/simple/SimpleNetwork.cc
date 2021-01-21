@@ -52,8 +52,6 @@
 #include "mem/ruby/network/simple/Throttle.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 
-using namespace std;
-
 SimpleNetwork::SimpleNetwork(const Params &p)
     : Network(p), m_buffer_size(p.buffer_size),
       m_endpoint_bandwidth(p.endpoint_bandwidth),
@@ -61,7 +59,7 @@ SimpleNetwork::SimpleNetwork(const Params &p)
       networkStats(this)
 {
     // record the routers
-    for (vector<BasicRouter*>::const_iterator i = p.routers.begin();
+    for (std::vector<BasicRouter*>::const_iterator i = p.routers.begin();
          i != p.routers.end(); ++i) {
         Switch* s = safe_cast<Switch*>(*i);
         m_switches.push_back(s);
@@ -180,7 +178,7 @@ SimpleNetwork::collateStats()
 }
 
 void
-SimpleNetwork::print(ostream& out) const
+SimpleNetwork::print(std::ostream& out) const
 {
     out << "[SimpleNetwork]";
 }

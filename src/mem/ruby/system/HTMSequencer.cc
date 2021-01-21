@@ -42,8 +42,6 @@
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 HtmCacheFailure
 HTMSequencer::htmRetCodeConversion(
     const HtmFailedInCacheReason ruby_ret_code)
@@ -307,7 +305,7 @@ HTMSequencer::empty() const
 
 template <class VALUE>
 std::ostream &
-operator<<(ostream &out, const std::deque<VALUE> &queue)
+operator<<(std::ostream &out, const std::deque<VALUE> &queue)
 {
     auto i = queue.begin();
     auto end = queue.end();
@@ -321,7 +319,7 @@ operator<<(ostream &out, const std::deque<VALUE> &queue)
 }
 
 void
-HTMSequencer::print(ostream& out) const
+HTMSequencer::print(std::ostream& out) const
 {
     Sequencer::print(out);
 

@@ -45,8 +45,6 @@
 #include "FaultModel.hh"
 #include "base/logging.hh"
 
-using namespace std;
-
 #define MAX(a,b) ((a > b) ? (a) : (b))
 
 
@@ -98,7 +96,7 @@ FaultModel::FaultModel(const Params &p) : SimObject(p)
     }
 }
 
-string
+std::string
 FaultModel::fault_type_to_string(int ft)
 {
    if (ft == data_corruption__few_bits){
@@ -247,23 +245,24 @@ FaultModel::fault_prob(int routerID,
 void
 FaultModel::print(void)
 {
-    cout << "--- PRINTING configurations ---\n";
+    std::cout << "--- PRINTING configurations ---\n";
     for (int record = 0; record < configurations.size(); record++){
-        cout << "(" << record << ") ";
-        cout << "VCs=" << configurations[record].vcs << " ";
-        cout << "Buff/VC=" << configurations[record].buff_per_vc << " [";
+        std::cout << "(" << record << ") ";
+        std::cout << "VCs=" << configurations[record].vcs << " ";
+        std::cout << "Buff/VC=" << configurations[record].buff_per_vc << " [";
         for (int fault_type_num = 0;
              fault_type_num < number_of_fault_types;
              fault_type_num++){
-            cout << (100 * configurations[record].fault_type[fault_type_num]);
-            cout << "% ";
+            std::cout <<
+                (100 * configurations[record].fault_type[fault_type_num]);
+            std::cout << "% ";
         }
-        cout << "]\n";
+        std::cout << "]\n";
     }
-    cout << "--- PRINTING temperature weights ---\n";
+    std::cout << "--- PRINTING temperature weights ---\n";
     for (int record = 0; record < temperature_weights.size(); record++){
-        cout << "temperature=" << record << " => ";
-        cout << "weight=" << temperature_weights[record];
-        cout << "\n";
+        std::cout << "temperature=" << record << " => ";
+        std::cout << "weight=" << temperature_weights[record];
+        std::cout << "\n";
     }
 }

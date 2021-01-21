@@ -54,8 +54,6 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "params/RubyGPUCoalescer.hh"
 
-using namespace std;
-
 UncoalescedTable::UncoalescedTable(GPUCoalescer *gc)
     : coalescer(gc)
 {
@@ -350,7 +348,7 @@ GPUCoalescer::resetStats()
 }
 
 void
-GPUCoalescer::printProgress(ostream& out) const
+GPUCoalescer::printProgress(std::ostream& out) const
 {
 }
 
@@ -666,7 +664,7 @@ GPUCoalescer::makeRequest(PacketPtr pkt)
 
 template <class KEY, class VALUE>
 std::ostream &
-operator<<(ostream &out, const std::unordered_map<KEY, VALUE> &map)
+operator<<(std::ostream &out, const std::unordered_map<KEY, VALUE> &map)
 {
     out << "[";
     for (auto i = map.begin(); i != map.end(); ++i)
@@ -677,7 +675,7 @@ operator<<(ostream &out, const std::unordered_map<KEY, VALUE> &map)
 }
 
 void
-GPUCoalescer::print(ostream& out) const
+GPUCoalescer::print(std::ostream& out) const
 {
     out << "[GPUCoalescer: " << m_version
         << ", outstanding requests: " << m_outstanding_count

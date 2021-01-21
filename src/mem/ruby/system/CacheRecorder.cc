@@ -33,10 +33,8 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "mem/ruby/system/Sequencer.hh"
 
-using namespace std;
-
 void
-TraceRecord::print(ostream& out) const
+TraceRecord::print(std::ostream& out) const
 {
     out << "[TraceRecord: Node, " << m_cntrl_id << ", "
         << m_data_address << ", " << m_pc_address << ", "
@@ -179,7 +177,7 @@ CacheRecorder::aggregateRecords(uint8_t **buf, uint64_t total_size)
     for (int i = 0; i < size; ++i) {
         // Determine if we need to expand the buffer size
         if (current_size + record_size > total_size) {
-            uint8_t* new_buf = new (nothrow) uint8_t[total_size * 2];
+            uint8_t* new_buf = new (std::nothrow) uint8_t[total_size * 2];
             if (new_buf == NULL) {
                 fatal("Unable to allocate buffer of size %s\n",
                       total_size * 2);

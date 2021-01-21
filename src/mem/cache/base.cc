@@ -62,8 +62,6 @@
 #include "params/WriteAllocator.hh"
 #include "sim/core.hh"
 
-using namespace std;
-
 BaseCache::CacheResponsePort::CacheResponsePort(const std::string &_name,
                                           BaseCache *_cache,
                                           const std::string &_label)
@@ -908,7 +906,7 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
     bool is_data_contraction = false;
     const CompressionBlk::OverwriteType overwrite_type =
         compression_blk->checkExpansionContraction(compression_size);
-    string op_name = "";
+    std::string op_name = "";
     if (overwrite_type == CompressionBlk::DATA_EXPANSION) {
         op_name = "expansion";
         is_data_expansion = true;

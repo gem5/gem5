@@ -59,8 +59,6 @@
 #include "sim/simulate.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 bool RubySystem::m_randomization;
 uint32_t RubySystem::m_block_size_bytes;
 uint32_t RubySystem::m_block_size_bits;
@@ -172,7 +170,7 @@ RubySystem::makeCacheRecorder(uint8_t *uncompressed_trace,
                               uint64_t cache_trace_size,
                               uint64_t block_size_bytes)
 {
-    vector<Sequencer*> sequencer_map;
+    std::vector<Sequencer*> sequencer_map;
     Sequencer* sequencer_ptr = NULL;
 
     for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
@@ -219,14 +217,15 @@ RubySystem::memWriteback()
 
     // Deschedule all prior events on the event queue, but record the tick they
     // were scheduled at so they can be restored correctly later.
-    list<pair<Event*, Tick> > original_events;
+    std::list<std::pair<Event*, Tick> > original_events;
     while (!eventq->empty()) {
         Event *curr_head = eventq->getHead();
         if (curr_head->isAutoDelete()) {
             DPRINTF(RubyCacheTrace, "Event %s auto-deletes when descheduled,"
                     " not recording\n", curr_head->name());
         } else {
-            original_events.push_back(make_pair(curr_head, curr_head->when()));
+            original_events.push_back(
+                    std::make_pair(curr_head, curr_head->when()));
         }
         eventq->deschedule(curr_head);
     }
@@ -249,7 +248,7 @@ RubySystem::memWriteback()
     // done after setting curTick back to its original value so that events do
     // not seem to be scheduled in the past.
     while (!original_events.empty()) {
-        pair<Event*, Tick> event = original_events.back();
+        std::pair<Event*, Tick> event = original_events.back();
         eventq->schedule(event.first, event.second);
         original_events.pop_back();
     }
@@ -273,11 +272,11 @@ RubySystem::memWriteback()
 }
 
 void
-RubySystem::writeCompressedTrace(uint8_t *raw_data, string filename,
+RubySystem::writeCompressedTrace(uint8_t *raw_data, std::string filename,
                                  uint64_t uncompressed_trace_size)
 {
     // Create the checkpoint file for the memory
-    string thefile = CheckpointIn::dir() + "/" + filename.c_str();
+    std::string thefile = CheckpointIn::dir() + "/" + filename.c_str();
 
     int fd = creat(thefile.c_str(), 0664);
     if (fd < 0) {
@@ -321,7 +320,7 @@ RubySystem::serialize(CheckpointOut &cp) const
     uint8_t *raw_data = new uint8_t[4096];
     uint64_t cache_trace_size = m_cache_recorder->aggregateRecords(&raw_data,
                                                                  4096);
-    string cache_trace_file = name() + ".cache.gz";
+    std::string cache_trace_file = name() + ".cache.gz";
     writeCompressedTrace(raw_data, cache_trace_file, cache_trace_size);
 
     SERIALIZE_SCALAR(cache_trace_file);
@@ -340,7 +339,7 @@ RubySystem::drainResume()
 }
 
 void
-RubySystem::readCompressedTrace(string filename, uint8_t *&raw_data,
+RubySystem::readCompressedTrace(std::string filename, uint8_t *&raw_data,
                                 uint64_t &uncompressed_trace_size)
 {
     // Read the trace file
@@ -381,7 +380,7 @@ RubySystem::unserialize(CheckpointIn &cp)
     uint64_t block_size_bytes = getBlockSizeBytes();
     UNSERIALIZE_OPT_SCALAR(block_size_bytes);
 
-    string cache_trace_file;
+    std::string cache_trace_file;
     uint64_t cache_trace_size = 0;
 
     UNSERIALIZE_SCALAR(cache_trace_file);

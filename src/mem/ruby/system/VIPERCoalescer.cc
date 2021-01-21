@@ -51,8 +51,6 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "params/VIPERCoalescer.hh"
 
-using namespace std;
-
 VIPERCoalescer::VIPERCoalescer(const Params &p)
     : GPUCoalescer(p),
       m_cache_inv_pkt(nullptr),

@@ -52,13 +52,11 @@
 #include "mem/ruby/protocol/AccessPermission.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-using namespace std;
-
-ostream&
-operator<<(ostream& out, const CacheMemory& obj)
+std::ostream&
+operator<<(std::ostream& out, const CacheMemory& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 
@@ -446,28 +444,28 @@ CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
 }
 
 void
-CacheMemory::print(ostream& out) const
+CacheMemory::print(std::ostream& out) const
 {
-    out << "Cache dump: " << name() << endl;
+    out << "Cache dump: " << name() << std::endl;
     for (int i = 0; i < m_cache_num_sets; i++) {
         for (int j = 0; j < m_cache_assoc; j++) {
             if (m_cache[i][j] != NULL) {
                 out << "  Index: " << i
                     << " way: " << j
-                    << " entry: " << *m_cache[i][j] << endl;
+                    << " entry: " << *m_cache[i][j] << std::endl;
             } else {
                 out << "  Index: " << i
                     << " way: " << j
-                    << " entry: NULL" << endl;
+                    << " entry: NULL" << std::endl;
             }
         }
     }
 }
 
 void
-CacheMemory::printData(ostream& out) const
+CacheMemory::printData(std::ostream& out) const
 {
-    out << "printData() not supported" << endl;
+    out << "printData() not supported" << std::endl;
 }
 
 void

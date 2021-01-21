@@ -42,8 +42,6 @@
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
-using namespace std;
-
 NetworkInterface::NetworkInterface(const Params &p)
   : ClockedObject(p), Consumer(this), m_id(p.id),
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(0),
@@ -120,8 +118,8 @@ NetworkInterface::addOutPort(NetworkLink *out_link,
 }
 
 void
-NetworkInterface::addNode(vector<MessageBuffer *>& in,
-                            vector<MessageBuffer *>& out)
+NetworkInterface::addNode(std::vector<MessageBuffer *>& in,
+                          std::vector<MessageBuffer *>& out)
 {
     inNode_ptr = in;
     outNode_ptr = out;
@@ -365,7 +363,7 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
     NetDest net_msg_dest = net_msg_ptr->getDestination();
 
     // gets all the destinations associated with this message.
-    vector<NodeID> dest_nodes = net_msg_dest.getAllDest();
+    std::vector<NodeID> dest_nodes = net_msg_dest.getAllDest();
 
     // Number of flits is dependent on the link bandwidth available.
     // This is expressed in terms of bytes/cycle or the flit size

@@ -49,7 +49,6 @@
 #include "debug/NVM.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace Data;
 
 MemInterface::MemInterface(const MemInterfaceParams &_p)
@@ -166,10 +165,10 @@ MemInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
                    pkt_addr, size);
 }
 
-pair<MemPacketQueue::iterator, Tick>
+std::pair<MemPacketQueue::iterator, Tick>
 DRAMInterface::chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const
 {
-    vector<uint32_t> earliest_banks(ranksPerChannel, 0);
+    std::vector<uint32_t> earliest_banks(ranksPerChannel, 0);
 
     // Has minBankPrep been called to populate earliest_banks?
     bool filled_earliest_banks = false;
@@ -278,7 +277,7 @@ DRAMInterface::chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const
         DPRINTF(DRAM, "%s no available DRAM ranks found\n", __func__);
     }
 
-    return make_pair(selected_pkt_it, selected_col_at);
+    return std::make_pair(selected_pkt_it, selected_col_at);
 }
 
 void
@@ -453,7 +452,7 @@ DRAMInterface::prechargeBank(Rank& rank_ref, Bank& bank, Tick pre_tick,
     }
 }
 
-pair<Tick, Tick>
+std::pair<Tick, Tick>
 DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
                              const std::vector<MemPacketQueue>& queue)
 {
@@ -711,7 +710,7 @@ DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
 
     }
     // Update bus state to reflect when previous command was issued
-    return make_pair(cmd_at, cmd_at + burst_gap);
+    return std::make_pair(cmd_at, cmd_at + burst_gap);
 }
 
 void
@@ -1034,12 +1033,12 @@ DRAMInterface::suspend()
     }
 }
 
-pair<vector<uint32_t>, bool>
+std::pair<std::vector<uint32_t>, bool>
 DRAMInterface::minBankPrep(const MemPacketQueue& queue,
                       Tick min_col_at) const
 {
     Tick min_act_at = MaxTick;
-    vector<uint32_t> bank_mask(ranksPerChannel, 0);
+    std::vector<uint32_t> bank_mask(ranksPerChannel, 0);
 
     // latest Tick for which ACT can occur without incurring additoinal
     // delay on the data bus
@@ -1054,7 +1053,7 @@ DRAMInterface::minBankPrep(const MemPacketQueue& queue,
 
     // determine if we have queued transactions targetting the
     // bank in question
-    vector<bool> got_waiting(ranksPerChannel * banksPerRank, false);
+    std::vector<bool> got_waiting(ranksPerChannel * banksPerRank, false);
     for (const auto& p : queue) {
         if (p->isDram() && ranks[p->rank]->inRefIdleState())
             got_waiting[p->bankId] = true;
@@ -1116,7 +1115,7 @@ DRAMInterface::minBankPrep(const MemPacketQueue& queue,
         }
     }
 
-    return make_pair(bank_mask, hidden_bank_prep);
+    return std::make_pair(bank_mask, hidden_bank_prep);
 }
 
 DRAMInterface::Rank::Rank(const DRAMInterfaceParams &_p,
@@ -2058,7 +2057,7 @@ void NVMInterface::setupRank(const uint8_t rank, const bool is_read)
     }
 }
 
-pair<MemPacketQueue::iterator, Tick>
+std::pair<MemPacketQueue::iterator, Tick>
 NVMInterface::chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const
 {
     // remember if we found a hit, but one that cannit issue seamlessly
@@ -2111,7 +2110,7 @@ NVMInterface::chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const
         DPRINTF(NVM, "%s no available NVM ranks found\n", __func__);
     }
 
-    return make_pair(selected_pkt_it, selected_col_at);
+    return std::make_pair(selected_pkt_it, selected_col_at);
 }
 
 void
@@ -2263,7 +2262,7 @@ NVMInterface::burstReady(MemPacket* pkt) const {
     return (read_rdy || write_rdy);
 }
 
-pair<Tick, Tick>
+    std::pair<Tick, Tick>
 NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at)
 {
     DPRINTF(NVM, "NVM Timing access to addr %lld, rank/bank/row %d %d %d\n",
@@ -2405,7 +2404,7 @@ NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at)
         stats.perBankWrBursts[pkt->bankId]++;
     }
 
-    return make_pair(cmd_at, cmd_at + tBURST);
+    return std::make_pair(cmd_at, cmd_at + tBURST);
 }
 
 void

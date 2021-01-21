@@ -35,7 +35,6 @@
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/protocol/RubyRequest.hh"
 
-using namespace std;
 typedef AddressProfiler::AddressMap AddressMap;
 
 using m5::stl_helpers::operator<<;
@@ -50,8 +49,8 @@ lookupTraceForAddress(Addr addr, AddressMap& record_map)
     // like it could hurt.
     static const AccessTraceForAddress dflt;
 
-    pair<AddressMap::iterator, bool> r =
-        record_map.insert(make_pair(addr, dflt));
+    std::pair<AddressMap::iterator, bool> r =
+        record_map.insert(std::make_pair(addr, dflt));
     AddressMap::iterator i = r.first;
     AccessTraceForAddress &access_trace = i->second;
     if (r.second) {
@@ -64,8 +63,9 @@ lookupTraceForAddress(Addr addr, AddressMap& record_map)
 }
 
 void
-printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
-            string description, Profiler *profiler)
+printSorted(std::ostream& out, int num_of_sequencers,
+        const AddressMap &record_map, std::string description,
+        Profiler *profiler)
 {
     const int records_printed = 100;
 
@@ -82,14 +82,17 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
     sort(sorted.begin(), sorted.end(), AccessTraceForAddress::less_equal);
 
     out << "Total_entries_" << description << ": " << record_map.size()
-        << endl;
-    if (profiler->getAllInstructions())
-        out << "Total_Instructions_" << description << ": " << misses << endl;
-    else
-        out << "Total_data_misses_" << description << ": " << misses << endl;
+        << std::endl;
+    if (profiler->getAllInstructions()) {
+        out << "Total_Instructions_" << description << ": " << misses
+            << std::endl;
+    } else {
+        out << "Total_data_misses_" << description << ": " << misses
+            << std::endl;
+    }
 
     out << "total | load store atomic | user supervisor | sharing | touched-by"
-        << endl;
+        << std::endl;
 
     Histogram remaining_records(1, 100);
     Histogram all_records(1, 100);
@@ -111,7 +114,8 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
     while (counter < max && counter < records_printed) {
         const AccessTraceForAddress* record = sorted[counter];
         double percent = 100.0 * (record->getTotal() / double(misses));
-        out << description << " | " << percent << " % " << *record << endl;
+        out << description << " | " << percent << " % " << *record
+            << std::endl;
         all_records.add(record->getTotal());
         all_records_log.add(record->getTotal());
         counter++;
@@ -128,20 +132,20 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
         m_touched_vec[record->getTouchedBy()]++;
         m_touched_weighted_vec[record->getTouchedBy()] += record->getTotal();
     }
-    out << endl;
+    out << std::endl;
     out << "all_records_" << description << ": "
-        << all_records << endl
+        << all_records << std::endl
         << "all_records_log_" << description << ": "
-        << all_records_log << endl
+        << all_records_log << std::endl
         << "remaining_records_" << description << ": "
-        << remaining_records << endl
+        << remaining_records << std::endl
         << "remaining_records_log_" << description << ": "
-        << remaining_records_log << endl
+        << remaining_records_log << std::endl
         << "touched_by_" << description << ": "
-        << m_touched_vec << endl
+        << m_touched_vec << std::endl
         << "touched_by_weighted_" << description << ": "
-        << m_touched_weighted_vec << endl
-        << endl;
+        << m_touched_weighted_vec << std::endl
+        << std::endl;
 }
 
 AddressProfiler::AddressProfiler(int num_of_sequencers, Profiler *profiler)
@@ -168,64 +172,69 @@ AddressProfiler::setAllInstructions(bool all_instructions)
 }
 
 void
-AddressProfiler::printStats(ostream& out) const
+AddressProfiler::printStats(std::ostream& out) const
 {
     if (m_hot_lines) {
-        out << endl;
-        out << "AddressProfiler Stats" << endl;
-        out << "---------------------" << endl;
+        out << std::endl;
+        out << "AddressProfiler Stats" << std::endl;
+        out << "---------------------" << std::endl;
 
-        out << endl;
-        out << "sharing_misses: " << m_sharing_miss_counter << endl;
-        out << "getx_sharing_histogram: " << m_getx_sharing_histogram << endl;
-        out << "gets_sharing_histogram: " << m_gets_sharing_histogram << endl;
+        out << std::endl;
+        out << "sharing_misses: " << m_sharing_miss_counter << std::endl;
+        out << "getx_sharing_histogram: " << m_getx_sharing_histogram
+            << std::endl;
+        out << "gets_sharing_histogram: " << m_gets_sharing_histogram
+            << std::endl;
 
-        out << endl;
-        out << "Hot Data Blocks" << endl;
-        out << "---------------" << endl;
-        out << endl;
+        out << std::endl;
+        out << "Hot Data Blocks" << std::endl;
+        out << "---------------" << std::endl;
+        out << std::endl;
         printSorted(out, m_num_of_sequencers, m_dataAccessTrace,
                     "block_address", m_profiler);
 
-        out << endl;
-        out << "Hot MacroData Blocks" << endl;
-        out << "--------------------" << endl;
-        out << endl;
+        out << std::endl;
+        out << "Hot MacroData Blocks" << std::endl;
+        out << "--------------------" << std::endl;
+        out << std::endl;
         printSorted(out, m_num_of_sequencers, m_macroBlockAccessTrace,
                     "macroblock_address", m_profiler);
 
-        out << "Hot Instructions" << endl;
-        out << "----------------" << endl;
-        out << endl;
+        out << "Hot Instructions" << std::endl;
+        out << "----------------" << std::endl;
+        out << std::endl;
         printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace,
                     "pc_address", m_profiler);
     }
 
     if (m_all_instructions) {
-        out << endl;
-        out << "All Instructions Profile:" << endl;
-        out << "-------------------------" << endl;
-        out << endl;
+        out << std::endl;
+        out << "All Instructions Profile:" << std::endl;
+        out << "-------------------------" << std::endl;
+        out << std::endl;
         printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace,
                     "pc_address", m_profiler);
-        out << endl;
+        out << std::endl;
     }
 
     if (m_retryProfileHisto.size() > 0) {
-        out << "Retry Profile" << endl;
-        out << "-------------" << endl;
-        out << endl;
-        out << "retry_histogram_absolute: " << m_retryProfileHisto << endl;
-        out << "retry_histogram_write: " << m_retryProfileHistoWrite << endl;
-        out << "retry_histogram_read: " << m_retryProfileHistoRead << endl;
+        out << "Retry Profile" << std::endl;
+        out << "-------------" << std::endl;
+        out << std::endl;
+        out << "retry_histogram_absolute: " << m_retryProfileHisto
+            << std::endl;
+        out << "retry_histogram_write: " << m_retryProfileHistoWrite
+            << std::endl;
+        out << "retry_histogram_read: " << m_retryProfileHistoRead
+            << std::endl;
 
         out << "retry_histogram_percent: ";
         m_retryProfileHisto.printPercent(out);
-        out << endl;
+        out << std::endl;
 
         printSorted(out, m_num_of_sequencers, m_retryProfileMap,
                     "block_address", m_profiler);
-        out << endl;
+        out << std::endl;
     }
 }
 

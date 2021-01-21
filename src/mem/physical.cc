@@ -68,10 +68,8 @@
 #endif
 #endif
 
-using namespace std;
-
-PhysicalMemory::PhysicalMemory(const string& _name,
-                               const vector<AbstractMemory*>& _memories,
+PhysicalMemory::PhysicalMemory(const std::string& _name,
+                               const std::vector<AbstractMemory*>& _memories,
                                bool mmap_using_noreserve,
                                const std::string& shared_backstore) :
     _name(_name), size(0), mmapUsingNoReserve(mmap_using_noreserve),
@@ -111,7 +109,7 @@ PhysicalMemory::PhysicalMemory(const string& _name,
             // simply do it independently, also note that this kind of
             // memories are allowed to overlap in the logic address
             // map
-            vector<AbstractMemory*> unmapped_mems{m};
+            std::vector<AbstractMemory*> unmapped_mems{m};
             createBackingStore(m->getAddrRange(), unmapped_mems,
                                m->isConfReported(), m->isInAddrMap(),
                                m->isKvmMap());
@@ -121,8 +119,8 @@ PhysicalMemory::PhysicalMemory(const string& _name,
     // iterate over the increasing addresses and chunks of contiguous
     // space to be mapped to backing store, create it and inform the
     // memories
-    vector<AddrRange> intlv_ranges;
-    vector<AbstractMemory*> curr_memories;
+    std::vector<AddrRange> intlv_ranges;
+    std::vector<AbstractMemory*> curr_memories;
     for (const auto& r : addrMap) {
         // simply skip past all memories that are null and hence do
         // not need any backing store
@@ -154,7 +152,7 @@ PhysicalMemory::PhysicalMemory(const string& _name,
                 intlv_ranges.push_back(r.first);
                 curr_memories.push_back(r.second);
             } else {
-                vector<AbstractMemory*> single_memory{r.second};
+                std::vector<AbstractMemory*> single_memory{r.second};
                 createBackingStore(r.first, single_memory,
                                    r.second->isConfReported(),
                                    r.second->isInAddrMap(),
@@ -183,10 +181,9 @@ PhysicalMemory::PhysicalMemory(const string& _name,
 }
 
 void
-PhysicalMemory::createBackingStore(AddrRange range,
-                                   const vector<AbstractMemory*>& _memories,
-                                   bool conf_table_reported,
-                                   bool in_addr_map, bool kvm_map)
+PhysicalMemory::createBackingStore(
+        AddrRange range, const std::vector<AbstractMemory*>& _memories,
+        bool conf_table_reported, bool in_addr_map, bool kvm_map)
 {
     panic_if(range.interleaved(),
              "Cannot create backing store for interleaved range %s\n",
@@ -261,7 +258,7 @@ PhysicalMemory::getConfAddrRanges() const
     // this could be done once in the constructor, but since it is unlikely to
     // be called more than once the iteration should not be a problem
     AddrRangeList ranges;
-    vector<AddrRange> intlv_ranges;
+    std::vector<AddrRange> intlv_ranges;
     for (const auto& r : addrMap) {
         if (r.second->isConfReported()) {
             // if the range is interleaved then save it for now
@@ -313,11 +310,11 @@ void
 PhysicalMemory::serialize(CheckpointOut &cp) const
 {
     // serialize all the locked addresses and their context ids
-    vector<Addr> lal_addr;
-    vector<ContextID> lal_cid;
+    std::vector<Addr> lal_addr;
+    std::vector<ContextID> lal_cid;
 
     for (auto& m : memories) {
-        const list<LockedAddr>& locked_addrs = m->getLockedAddrList();
+        const std::list<LockedAddr>& locked_addrs = m->getLockedAddrList();
         for (const auto& l : locked_addrs) {
             lal_addr.push_back(l.addr);
             lal_cid.push_back(l.contextId);
@@ -345,7 +342,8 @@ PhysicalMemory::serializeStore(CheckpointOut &cp, unsigned int store_id,
 {
     // we cannot use the address range for the name as the
     // memories that are not part of the address map can overlap
-    string filename = name() + ".store" + to_string(store_id) + ".pmem";
+    std::string filename =
+        name() + ".store" + std::to_string(store_id) + ".pmem";
     long range_size = range.size();
 
     DPRINTF(Checkpoint, "Serializing physical memory %s with size %d\n",
@@ -356,7 +354,7 @@ PhysicalMemory::serializeStore(CheckpointOut &cp, unsigned int store_id,
     SERIALIZE_SCALAR(range_size);
 
     // write memory file
-    string filepath = CheckpointIn::dir() + "/" + filename.c_str();
+    std::string filepath = CheckpointIn::dir() + "/" + filename.c_str();
     gzFile compressed_mem = gzopen(filepath.c_str(), "wb");
     if (compressed_mem == NULL)
         fatal("Can't open physical memory checkpoint file '%s'\n",
@@ -390,8 +388,8 @@ PhysicalMemory::unserialize(CheckpointIn &cp)
 {
     // unserialize the locked addresses and map them to the
     // appropriate memory controller
-    vector<Addr> lal_addr;
-    vector<ContextID> lal_cid;
+    std::vector<Addr> lal_addr;
+    std::vector<ContextID> lal_cid;
     UNSERIALIZE_CONTAINER(lal_addr);
     UNSERIALIZE_CONTAINER(lal_cid);
     for (size_t i = 0; i < lal_addr.size(); ++i) {
@@ -418,9 +416,9 @@ PhysicalMemory::unserializeStore(CheckpointIn &cp)
     unsigned int store_id;
     UNSERIALIZE_SCALAR(store_id);
 
-    string filename;
+    std::string filename;
     UNSERIALIZE_SCALAR(filename);
-    string filepath = cp.getCptDir() + "/" + filename;
+    std::string filepath = cp.getCptDir() + "/" + filename;
 
     // mmap memoryfile
     gzFile compressed_mem = gzopen(filepath.c_str(), "rb");

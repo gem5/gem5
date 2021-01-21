@@ -44,17 +44,15 @@
 
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 
-using namespace std;
-
 void
-RubyRequest::print(ostream& out) const
+RubyRequest::print(std::ostream& out) const
 {
   out << "[RubyRequest: ";
-  out << hex << "LineAddress = 0x" << m_LineAddress << dec << " ";
-  out << hex << "PhysicalAddress = 0x" << m_PhysicalAddress << dec << " ";
-  out << "Type = " << m_Type << " ";
-  out << hex << "ProgramCounter = 0x" << m_ProgramCounter << dec << " ";
-  out << "AccessMode = " << m_AccessMode << " ";
+  out << std::hex << "LineAddress = 0x" << m_LineAddress << std::dec << " ";
+  out << std::hex << "PhysicalAddress = 0x" << m_PhysicalAddress;
+  out << std::dec << " " << "Type = " << m_Type << " ";
+  out << std::hex << "ProgramCounter = 0x" << m_ProgramCounter << std::dec;
+  out << " " << "AccessMode = " << m_AccessMode << " ";
   out << "Size = " << m_Size << " ";
   out << "Prefetch = " << m_Prefetch << " ";
 //  out << "Time = " << getTime() << " ";

@@ -49,8 +49,6 @@
 #include "mem/mem_interface.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 MemCtrl::MemCtrl(const MemCtrlParams &p) :
     QoS::MemCtrl(p),
     port(name() + ".port", *this), isTimingMode(false),
@@ -1366,7 +1364,7 @@ MemCtrl::recvFunctional(PacketPtr pkt)
 }
 
 Port &
-MemCtrl::getPort(const string &if_name, PortID idx)
+MemCtrl::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "port") {
         return QoS::MemCtrl::getPort(if_name, idx);

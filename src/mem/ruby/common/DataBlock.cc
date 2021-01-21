@@ -80,15 +80,13 @@ DataBlock::atomicPartial(const DataBlock &dblk, const WriteMask &mask)
 void
 DataBlock::print(std::ostream& out) const
 {
-    using namespace std;
-
     int size = RubySystem::getBlockSizeBytes();
     out << "[ ";
     for (int i = 0; i < size; i++) {
-        out << setw(2) << setfill('0') << hex << "0x" << (int)m_data[i] << " ";
-        out << setfill(' ');
+        out << std::setw(2) << std::setfill('0') << std::hex
+            << "0x" << (int)m_data[i] << " " << std::setfill(' ');
     }
-    out << dec << "]" << flush;
+    out << std::dec << "]" << std::flush;
 }
 
 const uint8_t*

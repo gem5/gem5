@@ -39,8 +39,6 @@
 #include "mem/ruby/network/garnet/NetworkLink.hh"
 #include "mem/ruby/network/garnet/OutputUnit.hh"
 
-using namespace std;
-
 Router::Router(const Params &p)
   : BasicRouter(p), Consumer(this), m_latency(p.latency),
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
@@ -239,20 +237,20 @@ Router::resetStats()
 }
 
 void
-Router::printFaultVector(ostream& out)
+Router::printFaultVector(std::ostream& out)
 {
     int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
     int num_fault_types = m_network_ptr->fault_model->number_of_fault_types;
     float fault_vector[num_fault_types];
     get_fault_vector(temperature_celcius, fault_vector);
-    out << "Router-" << m_id << " fault vector: " << endl;
+    out << "Router-" << m_id << " fault vector: " << std::endl;
     for (int fault_type_index = 0; fault_type_index < num_fault_types;
          fault_type_index++) {
         out << " - probability of (";
         out <<
         m_network_ptr->fault_model->fault_type_to_string(fault_type_index);
         out << ") = ";
-        out << fault_vector[fault_type_index] << endl;
+        out << fault_vector[fault_type_index] << std::endl;
     }
 }
 
@@ -264,7 +262,7 @@ Router::printAggregateFaultProbability(std::ostream& out)
     get_aggregate_fault_probability(temperature_celcius,
                                     &aggregate_fault_prob);
     out << "Router-" << m_id << " fault probability: ";
-    out << aggregate_fault_prob << endl;
+    out << aggregate_fault_prob << std::endl;
 }
 
 uint32_t

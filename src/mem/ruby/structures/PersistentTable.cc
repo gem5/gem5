@@ -28,9 +28,6 @@
 
 #include "mem/ruby/structures/PersistentTable.hh"
 
-using namespace std;
-
-
 PersistentTable::PersistentTable()
 {
 }
@@ -47,7 +44,7 @@ PersistentTable::persistentRequestLock(Addr address,
     assert(address == makeLineAddress(address));
 
     static const PersistentTableEntry dflt;
-    pair<AddressMap::iterator, bool> r =
+    std::pair<AddressMap::iterator, bool> r =
         m_map.insert(AddressMap::value_type(address, dflt));
     bool present = !r.second;
     AddressMap::iterator i = r.first;
@@ -190,7 +187,7 @@ PersistentTable::countReadStarvingForAddress(Addr address) const
 }
 
 void
-PersistentTable::print(ostream& out) const
+PersistentTable::print(std::ostream& out) const
 {
 }
 

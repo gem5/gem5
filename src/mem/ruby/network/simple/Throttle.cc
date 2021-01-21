@@ -39,8 +39,6 @@
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-using namespace std;
-
 const int MESSAGE_SIZE_MULTIPLIER = 1000;
 //const int BROADCAST_SCALING = 4; // Have a 16p system act like a 64p systems
 const int BROADCAST_SCALING = 1;
@@ -69,8 +67,8 @@ Throttle::Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
 }
 
 void
-Throttle::addLinks(const vector<MessageBuffer*>& in_vec,
-                   const vector<MessageBuffer*>& out_vec)
+Throttle::addLinks(const std::vector<MessageBuffer*>& in_vec,
+                   const std::vector<MessageBuffer*>& out_vec)
 {
     assert(in_vec.size() == out_vec.size());
 
@@ -85,8 +83,8 @@ Throttle::addLinks(const vector<MessageBuffer*>& in_vec,
 
         // Set consumer and description
         in_ptr->setConsumer(this);
-        string desc = "[Queue to Throttle " + to_string(m_switch_id) + " " +
-            to_string(m_node) + "]";
+        std::string desc = "[Queue to Throttle " +
+            std::to_string(m_switch_id) + " " + std::to_string(m_node) + "]";
     }
 }
 
@@ -131,8 +129,8 @@ Throttle::operateVnet(int vnet, int &bw_remaining, bool &schedule_wakeup,
 
         // Calculate the amount of bandwidth we spent on this message
         int diff = m_units_remaining[vnet] - bw_remaining;
-        m_units_remaining[vnet] = max(0, diff);
-        bw_remaining = max(0, -diff);
+        m_units_remaining[vnet] = std::max(0, diff);
+        bw_remaining = std::max(0, -diff);
     }
 
     if (bw_remaining > 0 && (in->isReady(current_time) ||
@@ -245,7 +243,7 @@ Throttle::collateStats()
 }
 
 void
-Throttle::print(ostream& out) const
+Throttle::print(std::ostream& out) const
 {
     ccprintf(out,  "[%i bw: %i]", m_node, getLinkBandwidth());
 }

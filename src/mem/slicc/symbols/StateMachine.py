@@ -524,11 +524,6 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         for include_path in includes:
             code('#include "${{include_path}}"')
 
-        code('''
-
-using namespace std;
-''')
-
         # include object classes
         seen_types = set()
         for var in self.objects:
@@ -544,7 +539,7 @@ std::vector<Stats::Vector *>  $c_ident::eventVec;
 std::vector<std::vector<Stats::Vector *> >  $c_ident::transVec;
 
 // for adding information to the protocol debug trace
-stringstream ${ident}_transitionComment;
+std::stringstream ${ident}_transitionComment;
 
 #ifndef NDEBUG
 #define APPEND_TRANSITION_COMMENT(str) (${ident}_transitionComment << str)
@@ -978,7 +973,7 @@ $c_ident::getMemRespQueue() const
 }
 
 void
-$c_ident::print(ostream& out) const
+$c_ident::print(std::ostream& out) const
 {
     out << "[$c_ident " << m_version << "]";
 }
@@ -1220,8 +1215,6 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt)
         port_to_buf_map, in_msg_bufs, msg_bufs = self.getBufferMaps(ident)
 
         code('''
-
-using namespace std;
 
 void
 ${ident}_Controller::wakeup()

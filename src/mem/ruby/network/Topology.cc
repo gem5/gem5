@@ -38,8 +38,6 @@
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 
-using namespace std;
-
 const int INFINITE_LATENCY = 10000; // Yes, this is a big hack
 
 // Note: In this file, we use the first 2*m_nodes SwitchIDs to
@@ -51,8 +49,8 @@ const int INFINITE_LATENCY = 10000; // Yes, this is a big hack
 
 Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
                    uint32_t num_vnets,
-                   const vector<BasicExtLink *> &ext_links,
-                   const vector<BasicIntLink *> &int_links)
+                   const std::vector<BasicExtLink *> &ext_links,
+                   const std::vector<BasicIntLink *> &int_links)
     : m_nodes(MachineType_base_number(MachineType_NUM)),
       m_number_of_switches(num_routers), m_vnets(num_vnets),
       m_ext_link_vector(ext_links), m_int_link_vector(int_links)
@@ -68,7 +66,7 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
     // one for each direction.
     //
     // External Links
-    for (vector<BasicExtLink*>::const_iterator i = ext_links.begin();
+    for (std::vector<BasicExtLink*>::const_iterator i = ext_links.begin();
          i != ext_links.end(); ++i) {
         BasicExtLink *ext_link = (*i);
         AbstractController *abs_cntrl = ext_link->params().ext_node;
@@ -87,7 +85,7 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
     }
 
     // Internal Links
-    for (vector<BasicIntLink*>::const_iterator i = int_links.begin();
+    for (std::vector<BasicIntLink*>::const_iterator i = int_links.begin();
          i != int_links.end(); ++i) {
         BasicIntLink *int_link = (*i);
         BasicRouter *router_src = int_link->params().src_node;
@@ -115,21 +113,21 @@ Topology::createLinks(Network *net)
     for (LinkMap::const_iterator i = m_link_map.begin();
          i != m_link_map.end(); ++i) {
         std::pair<SwitchID, SwitchID> src_dest = (*i).first;
-        max_switch_id = max(max_switch_id, src_dest.first);
-        max_switch_id = max(max_switch_id, src_dest.second);
+        max_switch_id = std::max(max_switch_id, src_dest.first);
+        max_switch_id = std::max(max_switch_id, src_dest.second);
     }
 
     // Initialize weight, latency, and inter switched vectors
     int num_switches = max_switch_id+1;
     Matrix topology_weights(m_vnets,
-            vector<vector<int>>(num_switches,
-            vector<int>(num_switches, INFINITE_LATENCY)));
+            std::vector<std::vector<int>>(num_switches,
+            std::vector<int>(num_switches, INFINITE_LATENCY)));
     Matrix component_latencies(num_switches,
-            vector<vector<int>>(num_switches,
-            vector<int>(m_vnets, -1)));
+            std::vector<std::vector<int>>(num_switches,
+            std::vector<int>(m_vnets, -1)));
     Matrix component_inter_switches(num_switches,
-            vector<vector<int>>(num_switches,
-            vector<int>(m_vnets, 0)));
+            std::vector<std::vector<int>>(num_switches,
+            std::vector<int>(m_vnets, 0)));
 
     // Set identity weights to zero
     for (int i = 0; i < topology_weights[0].size(); i++) {
@@ -141,7 +139,7 @@ Topology::createLinks(Network *net)
     // Fill in the topology weights and bandwidth multipliers
     for (auto link_group : m_link_map) {
         std::pair<int, int> src_dest = link_group.first;
-        vector<bool> vnet_done(m_vnets, 0);
+        std::vector<bool> vnet_done(m_vnets, 0);
         int src = src_dest.first;
         int dst = src_dest.second;
 
@@ -361,7 +359,7 @@ Topology::extend_shortest_path(Matrix &current_dist, Matrix &latencies,
                     int previous_minimum = minimum;
                     int intermediate_switch = -1;
                     for (int k = 0; k < nodes; k++) {
-                        minimum = min(minimum,
+                        minimum = std::min(minimum,
                             current_dist[v][i][k] + current_dist[v][k][j]);
                         if (previous_minimum != minimum) {
                             intermediate_switch = k;

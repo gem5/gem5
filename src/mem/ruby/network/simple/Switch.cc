@@ -48,7 +48,6 @@
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 
-using namespace std;
 using m5::stl_helpers::operator<<;
 
 Switch::Switch(const Params &p)
@@ -70,13 +69,13 @@ Switch::init()
 }
 
 void
-Switch::addInPort(const vector<MessageBuffer*>& in)
+Switch::addInPort(const std::vector<MessageBuffer*>& in)
 {
     perfectSwitch.addInPort(in);
 }
 
 void
-Switch::addOutPort(const vector<MessageBuffer*>& out,
+Switch::addOutPort(const std::vector<MessageBuffer*>& out,
                    const NetDest& routing_table_entry,
                    Cycles link_latency, int bw_multiplier)
 {
@@ -86,7 +85,7 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
         m_network_ptr->getEndpointBandwidth(), this);
 
     // Create one buffer per vnet (these are intermediaryQueues)
-    vector<MessageBuffer*> intermediateBuffers;
+    std::vector<MessageBuffer*> intermediateBuffers;
 
     for (int i = 0; i < out.size(); ++i) {
         assert(m_num_connected_buffers < m_port_buffers.size());

@@ -39,8 +39,6 @@
 #include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
-using namespace std;
-
 const int PRIORITY_SWITCH_LIMIT = 128;
 
 // Operator for helper class
@@ -69,7 +67,7 @@ PerfectSwitch::init(SimpleNetwork *network_ptr)
 }
 
 void
-PerfectSwitch::addInPort(const vector<MessageBuffer*>& in)
+PerfectSwitch::addInPort(const std::vector<MessageBuffer*>& in)
 {
     NodeID port = m_in.size();
     m_in.push_back(in);
@@ -84,7 +82,7 @@ PerfectSwitch::addInPort(const vector<MessageBuffer*>& in)
 }
 
 void
-PerfectSwitch::addOutPort(const vector<MessageBuffer*>& out,
+PerfectSwitch::addOutPort(const std::vector<MessageBuffer*>& out,
                           const NetDest& routing_table_entry)
 {
     // Setup link order
@@ -144,8 +142,8 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
     Message *net_msg_ptr = NULL;
 
     // temporary vectors to store the routing results
-    vector<LinkID> output_links;
-    vector<NetDest> output_link_destinations;
+    std::vector<LinkID> output_links;
+    std::vector<NetDest> output_link_destinations;
     Tick current_time = m_switch->clockEdge();
 
     while (buffer->isReady(current_time)) {

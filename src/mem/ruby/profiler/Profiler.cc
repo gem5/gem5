@@ -77,7 +77,6 @@
 
 #include "mem/ruby/system/Sequencer.hh"
 
-using namespace std;
 using m5::stl_helpers::operator<<;
 
 Profiler::Profiler(const RubySystemParams &p, RubySystem *rs)
@@ -367,7 +366,7 @@ Profiler::collateStats()
     }
 
     for (uint32_t i = 0; i < MachineType_NUM; i++) {
-        for (map<uint32_t, AbstractController*>::iterator it =
+        for (std::map<uint32_t, AbstractController*>::iterator it =
                   m_ruby_system->m_abstract_controls[i].begin();
              it != m_ruby_system->m_abstract_controls[i].end(); ++it) {
 
@@ -382,7 +381,7 @@ Profiler::collateStats()
     }
 
     for (uint32_t i = 0; i < MachineType_NUM; i++) {
-        for (map<uint32_t, AbstractController*>::iterator it =
+        for (std::map<uint32_t, AbstractController*>::iterator it =
                 m_ruby_system->m_abstract_controls[i].begin();
                 it != m_ruby_system->m_abstract_controls[i].end(); ++it) {
 
@@ -403,7 +402,7 @@ Profiler::collateStats()
     }
 
     for (uint32_t i = 0; i < MachineType_NUM; i++) {
-        for (map<uint32_t, AbstractController*>::iterator it =
+        for (std::map<uint32_t, AbstractController*>::iterator it =
                 m_ruby_system->m_abstract_controls[i].begin();
                 it != m_ruby_system->m_abstract_controls[i].end(); ++it) {
 

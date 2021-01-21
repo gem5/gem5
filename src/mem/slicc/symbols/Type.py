@@ -430,14 +430,12 @@ operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 
 #include "mem/ruby/protocol/${{self.c_ident}}.hh"
 #include "mem/ruby/system/RubySystem.hh"
-
-using namespace std;
 ''')
 
         code('''
 /** \\brief Print the state of this object */
 void
-${{self.c_ident}}::print(ostream& out) const
+${{self.c_ident}}::print(std::ostream& out) const
 {
     out << "[${{self.c_ident}}: ";
 ''')
@@ -584,8 +582,6 @@ std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
 #include "base/logging.hh"
 #include "mem/ruby/protocol/${{self.c_ident}}.hh"
 
-using namespace std;
-
 ''')
 
         if self.isStateDecl:
@@ -618,16 +614,16 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
 
         code('''
 // Code for output operator
-ostream&
-operator<<(ostream& out, const ${{self.c_ident}}& obj)
+std::ostream&
+operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 {
     out << ${{self.c_ident}}_to_string(obj);
-    out << flush;
+    out << std::flush;
     return out;
 }
 
 // Code to convert state to a string
-string
+std::string
 ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj)
 {
     switch(obj) {
@@ -649,7 +645,7 @@ ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj)
 
 // Code to convert from a string to the enumeration
 ${{self.c_ident}}
-string_to_${{self.c_ident}}(const string& str)
+string_to_${{self.c_ident}}(const std::string& str)
 {
 ''')
 

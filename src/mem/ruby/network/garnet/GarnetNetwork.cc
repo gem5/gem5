@@ -45,8 +45,6 @@
 #include "mem/ruby/network/garnet/Router.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-using namespace std;
-
 /*
  * GarnetNetwork sets up the routers and links and collects stats.
  * Default parameters (GarnetNetwork.py) can be overwritten from command line
@@ -77,7 +75,7 @@ GarnetNetwork::GarnetNetwork(const Params &p)
     }
 
     // record the routers
-    for (vector<BasicRouter*>::const_iterator i =  p.routers.begin();
+    for (std::vector<BasicRouter*>::const_iterator i =  p.routers.begin();
          i != p.routers.end(); ++i) {
         Router* router = safe_cast<Router*>(*i);
         m_routers.push_back(router);
@@ -87,7 +85,7 @@ GarnetNetwork::GarnetNetwork(const Params &p)
     }
 
     // record the network interfaces
-    for (vector<ClockedObject*>::const_iterator i = p.netifs.begin();
+    for (std::vector<ClockedObject*>::const_iterator i = p.netifs.begin();
          i != p.netifs.end(); ++i) {
         NetworkInterface *ni = safe_cast<NetworkInterface *>(*i);
         m_nis.push_back(ni);
@@ -127,7 +125,7 @@ GarnetNetwork::init()
 
     // FaultModel: declare each router to the fault model
     if (isFaultModelEnabled()) {
-        for (vector<Router*>::const_iterator i= m_routers.begin();
+        for (std::vector<Router*>::const_iterator i= m_routers.begin();
              i != m_routers.end(); ++i) {
             Router* router = safe_cast<Router*>(*i);
             M5_VAR_USED int router_id =
@@ -137,8 +135,8 @@ GarnetNetwork::init()
                                             getBuffersPerDataVC(),
                                             getBuffersPerCtrlVC());
             assert(router_id == router->get_id());
-            router->printAggregateFaultProbability(cout);
-            router->printFaultVector(cout);
+            router->printAggregateFaultProbability(std::cout);
+            router->printFaultVector(std::cout);
         }
     }
 }
@@ -524,7 +522,7 @@ GarnetNetwork::collateStats()
         m_average_link_utilization +=
             (double(activity) / time_delta);
 
-        vector<unsigned int> vc_load = m_networklinks[i]->getVcLoad();
+        std::vector<unsigned int> vc_load = m_networklinks[i]->getVcLoad();
         for (int j = 0; j < vc_load.size(); j++) {
             m_average_vc_load[j] += ((double)vc_load[j] / time_delta);
         }
@@ -551,7 +549,7 @@ GarnetNetwork::resetStats()
 }
 
 void
-GarnetNetwork::print(ostream& out) const
+GarnetNetwork::print(std::ostream& out) const
 {
     out << "[GarnetNetwork]";
 }
