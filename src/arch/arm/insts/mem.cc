@@ -42,8 +42,6 @@
 
 #include "base/loader/symtab.hh"
 
-using namespace std;
-
 namespace ArmISA
 {
 
@@ -75,10 +73,10 @@ MemoryReg::printOffset(std::ostream &os) const
     }
 }
 
-string
+std::string
 RfeOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
-    stringstream ss;
+    std::stringstream ss;
     switch (mode) {
       case DecrementAfter:
         printMnemonic(ss, "da");
@@ -100,10 +98,10 @@ RfeOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     return ss.str();
 }
 
-string
+std::string
 SrsOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 {
-    stringstream ss;
+    std::stringstream ss;
     switch (mode) {
       case DecrementAfter:
         printMnemonic(ss, "da");

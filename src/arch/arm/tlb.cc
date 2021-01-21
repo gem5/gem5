@@ -71,7 +71,6 @@
 #include "sim/process.hh"
 #include "sim/pseudo_inst.hh"
 
-using namespace std;
 using namespace ArmISA;
 
 TLB::TLB(const ArmTLBParams &p)

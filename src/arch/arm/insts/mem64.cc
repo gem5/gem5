@@ -41,8 +41,6 @@
 #include "base/loader/symtab.hh"
 #include "mem/request.hh"
 
-using namespace std;
-
 namespace ArmISA
 {
 

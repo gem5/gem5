@@ -42,7 +42,6 @@
 #include "base/bitfield.hh"
 
 using namespace QARMA;
-using namespace std;
 
 
 uint8_t

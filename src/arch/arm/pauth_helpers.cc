@@ -41,7 +41,6 @@
 #include "base/bitfield.hh"
 
 using namespace ArmISA;
-using namespace std;
 
 bool
 ArmISA::calculateTBI(ThreadContext* tc, ExceptionLevel el,
@@ -101,11 +100,11 @@ ArmISA::calculateBottomPACBit(ThreadContext* tc, ExceptionLevel el,
         using64k  = el == EL2 ? tcr2.tg0 == 0x1 : tcr3.tg0 == 0x1 ;
     }
     uint32_t max_limit_tsz_field = using64k ? 47 : 48;
-    tsz_field = min(tsz_field, max_limit_tsz_field);
+    tsz_field = std::min(tsz_field, max_limit_tsz_field);
     const AA64MMFR2 mm_fr2 = tc->readMiscReg(MISCREG_ID_AA64MMFR2_EL1);
 
     uint32_t tszmin = (using64k && (bool)mm_fr2.varange) ? 12 : 16;
-    tsz_field = max(tsz_field, tszmin);
+    tsz_field = std::max(tsz_field, tszmin);
 
     return (64-tsz_field);
 }

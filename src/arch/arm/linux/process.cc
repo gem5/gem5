@@ -54,7 +54,6 @@
 #include "sim/syscall_emul.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace ArmISA;
 
 const Addr ArmLinuxProcess32::commPage = 0xffff0000;

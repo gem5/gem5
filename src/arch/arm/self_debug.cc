@@ -42,7 +42,6 @@
 #include "base/bitfield.hh"
 
 using namespace ArmISA;
-using namespace std;
 
 Fault
 SelfDebug::testDebug(ThreadContext *tc, const RequestPtr &req,

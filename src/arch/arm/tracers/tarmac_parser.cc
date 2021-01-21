@@ -54,7 +54,6 @@
 #include "sim/faults.hh"
 #include "sim/sim_exit.hh"
 
-using namespace std;
 using namespace ArmISA;
 
 namespace Trace {
@@ -68,7 +67,8 @@ TarmacParserRecord::ParserRegEntry TarmacParserRecord::regRecord;
 TarmacParserRecord::ParserMemEntry TarmacParserRecord::memRecord;
 TarmacBaseRecord::TarmacRecordType TarmacParserRecord::currRecordType;
 
-list<TarmacParserRecord::ParserRegEntry> TarmacParserRecord::destRegRecords;
+std::list<TarmacParserRecord::ParserRegEntry>
+    TarmacParserRecord::destRegRecords;
 char TarmacParserRecord::buf[TarmacParserRecord::MaxLineLength];
 TarmacParserRecord::MiscRegMap TarmacParserRecord::miscRegMap = {
 
@@ -737,10 +737,10 @@ TarmacParserRecord::MiscRegMap TarmacParserRecord::miscRegMap = {
 void
 TarmacParserRecord::TarmacParserRecordEvent::process()
 {
-    ostream &outs = Trace::output();
+    std::ostream &outs = Trace::output();
 
-    list<ParserRegEntry>::iterator it = destRegRecords.begin(),
-                                   end = destRegRecords.end();
+    std::list<ParserRegEntry>::iterator it = destRegRecords.begin(),
+                                        end = destRegRecords.end();
 
     std::vector<uint64_t> values;
 
@@ -915,14 +915,14 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
                 TarmacParserRecord::printMismatchHeader(inst, pc);
                 mismatch = true;
             }
-            outs << "diff> [" << it->repr << "] gem5: 0x" << hex;
+            outs << "diff> [" << it->repr << "] gem5: 0x" << std::hex;
             for (auto v : values)
-                outs << setw(16) << setfill('0') << v;
+                outs << std::setw(16) << std::setfill('0') << v;
 
-            outs << ", TARMAC: 0x" << hex;
+            outs << ", TARMAC: 0x" << std::hex;
             for (auto v : it->values)
-                outs << setw(16) << setfill('0') << v;
-            outs << endl;
+                outs << std::setw(16) << std::setfill('0') << v;
+            outs << std::endl;
         }
     }
     destRegRecords.clear();
@@ -947,14 +947,14 @@ void
 TarmacParserRecord::printMismatchHeader(const StaticInstPtr staticInst,
                                         ArmISA::PCState pc)
 {
-    ostream &outs = Trace::output();
-    outs << "\nMismatch between gem5 and TARMAC trace @ " << dec << curTick()
-         << " ticks\n"
-         << "[seq_num: " << dec << instRecord.seq_num
-         << ", opcode: 0x" << hex << (staticInst->machInst & 0xffffffff)
+    std::ostream &outs = Trace::output();
+    outs << "\nMismatch between gem5 and TARMAC trace @ " << std::dec
+         << curTick() << " ticks\n"
+         << "[seq_num: " << std::dec << instRecord.seq_num
+         << ", opcode: 0x" << std::hex << (staticInst->machInst & 0xffffffff)
          << ", PC: 0x" << pc.pc()
          << ", disasm: " <<  staticInst->disassemble(pc.pc()) << "]"
-         << endl;
+         << std::endl;
 }
 
 TarmacParserRecord::TarmacParserRecord(Tick _when, ThreadContext *_thread,
@@ -976,7 +976,7 @@ TarmacParserRecord::TarmacParserRecord(Tick _when, ThreadContext *_thread,
 void
 TarmacParserRecord::dump()
 {
-    ostream &outs = Trace::output();
+    std::ostream &outs = Trace::output();
 
     uint64_t written_data = 0;
     unsigned mem_flags = 3 | ArmISA::TLB::AllowUnaligned;
@@ -1005,8 +1005,8 @@ TarmacParserRecord::dump()
                 if (pc.instAddr() != instRecord.addr) {
                     if (!mismatch)
                         printMismatchHeader(staticInst, pc);
-                    outs << "diff> [PC] gem5: 0x" << hex << pc.instAddr()
-                         << ", TARMAC: 0x" << instRecord.addr << endl;
+                    outs << "diff> [PC] gem5: 0x" << std::hex << pc.instAddr()
+                         << ", TARMAC: 0x" << instRecord.addr << std::endl;
                     mismatch = true;
                     mismatchOnPcOrOpcode = true;
                 }
@@ -1014,9 +1014,9 @@ TarmacParserRecord::dump()
                 if (arm_inst->encoding() != instRecord.opcode) {
                     if (!mismatch)
                         printMismatchHeader(staticInst, pc);
-                    outs << "diff> [opcode] gem5: 0x" << hex
+                    outs << "diff> [opcode] gem5: 0x" << std::hex
                          << arm_inst->encoding()
-                         << ", TARMAC: 0x" << instRecord.opcode << endl;
+                         << ", TARMAC: 0x" << instRecord.opcode << std::endl;
                     mismatch = true;
                     mismatchOnPcOrOpcode = true;
                 }
@@ -1049,10 +1049,10 @@ TarmacParserRecord::dump()
                 if (written_data != memRecord.data) {
                     if (!mismatch)
                         printMismatchHeader(staticInst, pc);
-                    outs << "diff> [mem(0x" << hex << memRecord.addr
+                    outs << "diff> [mem(0x" << std::hex << memRecord.addr
                          << ")] gem5: 0x" << written_data
                          << ", TARMAC: 0x" << memRecord.data
-                         << endl;
+                         << std::endl;
                 }
                 break;
 
@@ -1083,8 +1083,8 @@ TarmacParserRecord::dump()
 bool
 TarmacParserRecord::advanceTrace()
 {
-    ifstream& trace = parent.trace;
-    trace >> hex;  // All integer values are in hex base
+    std::ifstream& trace = parent.trace;
+    trace >> std::hex;  // All integer values are in hex base
 
     if (buf[0] != 'I') {
         trace >> buf;
@@ -1201,9 +1201,9 @@ TarmacParserRecord::advanceTrace()
             regRecord.index = miscRegMap[buf];
         } else {
             // Try match with upper case name (misc. register)
-            string reg_name = buf;
-            transform(reg_name.begin(), reg_name.end(), reg_name.begin(),
-                      ::tolower);
+            std::string reg_name = buf;
+            std::transform(reg_name.begin(), reg_name.end(), reg_name.begin(),
+                           ::tolower);
             if (miscRegMap.count(reg_name.c_str())) {
                 regRecord.type = REG_MISC;
                 regRecord.index = miscRegMap[reg_name.c_str()];
@@ -1327,7 +1327,7 @@ TarmacParser::advanceTraceToStartPc()
     Addr pc;
     int saved_offset;
 
-    trace >> hex;  // All integer values are in hex base
+    trace >> std::hex;  // All integer values are in hex base
 
     while (true) {
         saved_offset = trace.tellg();
@@ -1338,7 +1338,7 @@ TarmacParser::advanceTraceToStartPc()
             trace >> buf >> pc;
             if (pc == startPc) {
                 // Set file pointer to the beginning of this line
-                trace.seekg(saved_offset, ios::beg);
+                trace.seekg(saved_offset, std::ios::beg);
                 return;
             } else {
                 trace.ignore(TarmacParserRecord::MaxLineLength, '\n');

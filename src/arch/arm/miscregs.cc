@@ -333,8 +333,6 @@ decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
     return MISCREG_CP14_UNIMPL;
 }
 
-using namespace std;
-
 MiscRegIndex
 decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
 {
@@ -3393,7 +3391,7 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
     return MISCREG_UNKNOWN;
 }
 
-bitset<NUM_MISCREG_INFOS> miscRegInfo[NUM_MISCREGS]; // initialized below
+std::bitset<NUM_MISCREG_INFOS> miscRegInfo[NUM_MISCREGS]; // initialized below
 
 void
 ISA::initializeMiscRegMetadata()

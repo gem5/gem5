@@ -51,7 +51,6 @@
 #include "dev/arm/gic_v2.hh"
 #include "mem/physical.hh"
 
-using namespace std;
 using namespace Linux;
 using namespace ArmISA;
 

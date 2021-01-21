@@ -163,7 +163,6 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace ArmISA;
 
 static bool
