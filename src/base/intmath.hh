@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2021 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2001, 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -33,6 +45,7 @@
 #include <cstdint>
 #include <type_traits>
 
+#include "base/bitfield.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
 
@@ -152,6 +165,21 @@ roundDown(const T& val, const U& align)
     assert(isPowerOf2(align));
     T mask = (T)align - 1;
     return val & ~mask;
+}
+
+/**
+ * Calculate the log2 of a power of 2 integer
+ *
+ * @param An input value
+ * @return The base 2 log of value
+ *
+ * @ingroup api_base_utils
+ */
+inline int
+log2i(int value)
+{
+    assert(isPowerOf2(value) && value > 0);
+    return ctz32(value);
 }
 
 #endif // __BASE_INTMATH_HH__

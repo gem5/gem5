@@ -1,4 +1,15 @@
 /*
+ * Copyright (c) 2021 ARM Limited
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2019 The Regents of the University of California
  * All rights reserved
  *
@@ -122,4 +133,48 @@ TEST(IntmathTest, roundDown)
     EXPECT_EQ(4104, roundDown(4105, 8));
     EXPECT_EQ(4096, roundDown(4101, 16));
     EXPECT_EQ(7936, roundDown(7991, 256));
+}
+
+/** This is testing if log2i actually works.
+ * at every iteration value is multiplied by 2 (left shift) and expected
+ * is incremented by one. This until value reaches becomes negative (by
+ * left shifting) which is when expected points to the MSB
+ */
+TEST(IntmathTest, Log2i)
+{
+    int expected = 0;
+    for (int value = 1; value > 0; expected++, value <<= 1) {
+        EXPECT_EQ(expected, log2i(value));
+    }
+
+    // Just as a sanity check for expected to point to the MSB
+    EXPECT_EQ(expected, sizeof(int) * 8 - 1);
+}
+
+/** This is testing the assertions: what if invalid arguments are
+ * provided to log2i:
+ *
+ * 1) value = 0
+ * 2) value < 0
+ * 3) value is not a power of 2
+ */
+TEST(IntmathDeathTest, Log2iDeath)
+{
+    // 1) value = 0
+    EXPECT_DEATH({
+        const int value = 0;
+        log2i(value);
+    }, "value > 0.*failed");
+
+    // 2) value < 0
+    EXPECT_DEATH({
+        const int value = -1;
+        log2i(value);
+    }, "value > 0.*failed");
+
+    // 3) value is not a power of 2
+    EXPECT_DEATH({
+        const int value = 5;
+        log2i(value);
+    }, "isPowerOf2");
 }
