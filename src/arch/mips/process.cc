@@ -42,7 +42,6 @@
 #include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace MipsISA;
 
 MipsProcess::MipsProcess(const ProcessParams &params,
@@ -68,9 +67,9 @@ MipsProcess::MipsProcess(const ProcessParams &params,
     // Set up region for mmaps.  Start it 1GB above the top of the heap.
     Addr mmap_end = brk_point + 0x40000000L;
 
-    memState = make_shared<MemState>(this, brk_point, stack_base,
-                                     max_stack_size, next_thread_stack_base,
-                                     mmap_end);
+    memState = std::make_shared<MemState>(
+            this, brk_point, stack_base, max_stack_size,
+            next_thread_stack_base, mmap_end);
 }
 
 void
@@ -126,7 +125,7 @@ MipsProcess::argsInit(int pageSize)
     int auxv_array_size = intSize * 2 * (auxv.size() + 1);
 
     int arg_data_size = 0;
-    for (vector<string>::size_type i = 0; i < argv.size(); ++i) {
+    for (std::vector<std::string>::size_type i = 0; i < argv.size(); ++i) {
         arg_data_size += argv[i].size() + 1;
     }
 
@@ -134,7 +133,7 @@ MipsProcess::argsInit(int pageSize)
     int aux_data_size = numRandomBytes;
 
     int env_data_size = 0;
-    for (vector<string>::size_type i = 0; i < envp.size(); ++i) {
+    for (std::vector<std::string>::size_type i = 0; i < envp.size(); ++i) {
         env_data_size += envp[i].size() + 1;
     }
 

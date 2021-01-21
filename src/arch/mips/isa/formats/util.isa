@@ -80,7 +80,7 @@ output decoder {{
 
 std::string inst2string(MachInst machInst)
 {
-    string str = "";
+    std::string str = "";
     uint32_t mask = 0x80000000;
 
     for(int i=0; i < 32; i++) {

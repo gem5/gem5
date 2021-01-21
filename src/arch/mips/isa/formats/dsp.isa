@@ -32,7 +32,6 @@
 //
 output header {{
 #include <iostream>
-    using namespace std;
     /**
      * Base class for integer operations.
      */

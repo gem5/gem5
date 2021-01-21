@@ -34,7 +34,6 @@
 output header {{
 
 #include <iostream>
-    using namespace std;
 
     /**
      * Base class for instructions whose disassembly is not purely a

@@ -35,7 +35,6 @@
 #include "sim/serialize.hh"
 
 using namespace MipsISA;
-using namespace std;
 
 int32_t
 MipsISA::bitrev(int32_t value)

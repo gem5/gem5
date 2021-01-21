@@ -39,7 +39,6 @@
 #include "sim/serialize.hh"
 
 using namespace MipsISA;
-using namespace std;
 
 namespace MipsISA {
 
