@@ -151,7 +151,7 @@ def config_mem(options, system):
         system.external_memory = m5.objects.ExternalSlave(
             port_type="tlm_slave",
             port_data=opt_tlm_memory,
-            port=system.membus.master,
+            port=system.membus.mem_side_ports,
             addr_ranges=system.mem_ranges)
         system.workload.addr_check = False
         return
@@ -269,12 +269,12 @@ def config_mem(options, system):
     for i in range(len(mem_ctrls)):
         if opt_mem_type == "HMC_2500_1x32":
             # Connect the controllers to the membus
-            mem_ctrls[i].port = xbar[i/4].master
+            mem_ctrls[i].port = xbar[i/4].mem_side_ports
             # Set memory device size. There is an independent controller
             # for each vault. All vaults are same size.
             mem_ctrls[i].dram.device_size = options.hmc_dev_vault_size
         else:
             # Connect the controllers to the membus
-            mem_ctrls[i].port = xbar.master
+            mem_ctrls[i].port = xbar.mem_side_ports
 
     subsystem.mem_ctrls = mem_ctrls

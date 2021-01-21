@@ -97,7 +97,7 @@ class SimpleSeSystem(System):
 
         # Wire up the system port that gem5 uses to load the kernel
         # and to perform debug accesses.
-        self.system_port = self.membus.slave
+        self.system_port = self.membus.cpu_side_ports
 
 
         # Add CPUs to the system. A cluster of CPUs typically have

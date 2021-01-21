@@ -151,7 +151,7 @@ class CpuCluster(SubSystem):
         self.l2 = self._l2_type()
         for cpu in self.cpus:
             cpu.connectAllPorts(self.toL2Bus)
-        self.toL2Bus.master = self.l2.cpu_side
+        self.toL2Bus.mem_side_ports = self.l2.cpu_side
 
     def addPMUs(self, ints, events=[]):
         """
@@ -181,7 +181,7 @@ class CpuCluster(SubSystem):
 
     def connectMemSide(self, bus):
         try:
-            self.l2.mem_side = bus.slave
+            self.l2.mem_side = bus.cpu_side_ports
         except AttributeError:
             for cpu in self.cpus:
                 cpu.connectAllPorts(bus)
@@ -223,8 +223,9 @@ class FastmodelCluster(SubSystem):
         ])
 
         gic_a2t = AmbaToTlmBridge64(amba=gic.amba_m)
-        gic_t2g = TlmToGem5Bridge64(tlm=gic_a2t.tlm, gem5=system.iobus.slave)
-        gic_g2t = Gem5ToTlmBridge64(gem5=system.membus.master)
+        gic_t2g = TlmToGem5Bridge64(tlm=gic_a2t.tlm,
+                                    gem5=system.iobus.cpu_side_ports)
+        gic_g2t = Gem5ToTlmBridge64(gem5=system.membus.mem_side_ports)
         gic_g2t.addr_ranges = gic.get_addr_ranges()
         gic_t2a = AmbaFromTlmBridge64(tlm=gic_g2t.tlm)
         gic.amba_s = gic_t2a.amba
@@ -255,7 +256,7 @@ class FastmodelCluster(SubSystem):
         self.cpus = [ cpu ]
 
         a2t = AmbaToTlmBridge64(amba=cpu.amba)
-        t2g = TlmToGem5Bridge64(tlm=a2t.tlm, gem5=system.membus.slave)
+        t2g = TlmToGem5Bridge64(tlm=a2t.tlm, gem5=system.membus.cpu_side_ports)
         system.gic_hub.a2t = a2t
         system.gic_hub.t2g = t2g
 
@@ -330,21 +331,21 @@ def simpleSystem(BaseSystem, caches, mem_size, platform=None, **kwargs):
             self.realview.attachPciDevice(dev, self.iobus)
 
         def connect(self):
-            self.iobridge.master = self.iobus.slave
-            self.iobridge.slave = self.membus.master
+            self.iobridge.mem_side_port = self.iobus.cpu_side_ports
+            self.iobridge.cpu_side_port = self.membus.mem_side_ports
 
             if self._caches:
-                self.iocache.mem_side = self.membus.slave
-                self.iocache.cpu_side = self.iobus.master
+                self.iocache.mem_side = self.membus.cpu_side_ports
+                self.iocache.cpu_side = self.iobus.mem_side_ports
             else:
-                self.dmabridge.master = self.membus.slave
-                self.dmabridge.slave = self.iobus.master
+                self.dmabridge.mem_side_port = self.membus.cpu_side_ports
+                self.dmabridge.cpu_side_port = self.iobus.mem_side_ports
 
             if hasattr(self.realview.gic, 'cpu_addr'):
                 self.gic_cpu_addr = self.realview.gic.cpu_addr
             self.realview.attachOnChipIO(self.membus, self.iobridge)
             self.realview.attachIO(self.iobus)
-            self.system_port = self.membus.slave
+            self.system_port = self.membus.cpu_side_ports
 
         def numCpuClusters(self):
             return len(self._clusters)
@@ -377,8 +378,8 @@ def simpleSystem(BaseSystem, caches, mem_size, platform=None, **kwargs):
                                         key=lambda c: c.clk_domain.clock[0])
                 self.l3 = L3(clk_domain=max_clock_cluster.clk_domain)
                 self.toL3Bus = L2XBar(width=64)
-                self.toL3Bus.master = self.l3.cpu_side
-                self.l3.mem_side = self.membus.slave
+                self.toL3Bus.mem_side_ports = self.l3.cpu_side
+                self.l3.mem_side = self.membus.cpu_side_ports
                 cluster_mem_bus = self.toL3Bus
 
             # connect each cluster to the memory hierarchy
