@@ -138,7 +138,7 @@ class SnoopFilter(SimObject):
     system = Param.System(Parent.any, "System that the crossbar belongs to.")
 
     # Sanity check on max capacity to track, adjust if needed.
-    max_capacity = Param.MemorySize('8MB', "Maximum capacity of snoop filter")
+    max_capacity = Param.MemorySize('8MiB', "Maximum capacity of snoop filter")
 
 # We use a coherent crossbar to connect multiple requestors to the L2
 # caches. Normally this crossbar would be part of the cache itself.

@@ -259,7 +259,7 @@ class DRAMInterface(MemInterface):
 # an 8x8 configuration.
 class DDR3_1600_8x8(DRAMInterface):
     # size of device in bytes
-    device_size = '512MB'
+    device_size = '512MiB'
 
     # 8x8 configuration, 8 devices each with an 8-bit interface
     device_bus_width = 8
@@ -268,7 +268,7 @@ class DDR3_1600_8x8(DRAMInterface):
     burst_length = 8
 
     # Each device has a page (row buffer) size of 1 Kbyte (1K columns x8)
-    device_rowbuffer_size = '1kB'
+    device_rowbuffer_size = '1KiB'
 
     # 8x8 configuration, so 8 devices
     devices_per_rank = 8
@@ -338,7 +338,7 @@ class DDR3_1600_8x8(DRAMInterface):
 # [2] High performance AXI-4.0 based interconnect for extensible smart memory
 # cubes (E. Azarkhish et. al)
 # Assumed for the HMC model is a 30 nm technology node.
-# The modelled HMC consists of 4 Gbit layers which sum up to 2GB of memory (4
+# The modelled HMC consists of 4 Gbit layers which sum up to 2GiB of memory (4
 # layers).
 # Each layer has 16 vaults and each vault consists of 2 banks per layer.
 # In order to be able to use the same controller used for 2D DRAM generations
@@ -354,8 +354,8 @@ class DDR3_1600_8x8(DRAMInterface):
 # of the HMC
 class HMC_2500_1x32(DDR3_1600_8x8):
     # size of device
-    # two banks per device with each bank 4MB [2]
-    device_size = '8MB'
+    # two banks per device with each bank 4MiB [2]
+    device_size = '8MiB'
 
     # 1x32 configuration, 1 device with 32 TSVs [2]
     device_bus_width = 32
@@ -458,11 +458,11 @@ class DDR3_2133_8x8(DDR3_1600_8x8):
 # A single DDR4-2400 x64 channel (one command and address bus), with
 # timings based on a DDR4-2400 8 Gbit datasheet (Micron MT40A2G4)
 # in an 16x4 configuration.
-# Total channel capacity is 32GB
-# 16 devices/rank * 2 ranks/channel * 1GB/device = 32GB/channel
+# Total channel capacity is 32GiB
+# 16 devices/rank * 2 ranks/channel * 1GiB/device = 32GiB/channel
 class DDR4_2400_16x4(DRAMInterface):
     # size of device
-    device_size = '1GB'
+    device_size = '1GiB'
 
     # 16x4 configuration, 16 devices each with a 4-bit interface
     device_bus_width = 4
@@ -569,14 +569,14 @@ class DDR4_2400_16x4(DRAMInterface):
 # A single DDR4-2400 x64 channel (one command and address bus), with
 # timings based on a DDR4-2400 8 Gbit datasheet (Micron MT40A1G8)
 # in an 8x8 configuration.
-# Total channel capacity is 16GB
-# 8 devices/rank * 2 ranks/channel * 1GB/device = 16GB/channel
+# Total channel capacity is 16GiB
+# 8 devices/rank * 2 ranks/channel * 1GiB/device = 16GiB/channel
 class DDR4_2400_8x8(DDR4_2400_16x4):
     # 8x8 configuration, 8 devices each with an 8-bit interface
     device_bus_width = 8
 
     # Each device has a page (row buffer) size of 1 Kbyte (1K columns x8)
-    device_rowbuffer_size = '1kB'
+    device_rowbuffer_size = '1KiB'
 
     # 8x8 configuration, so 8 devices
     devices_per_rank = 8
@@ -596,14 +596,14 @@ class DDR4_2400_8x8(DDR4_2400_16x4):
 # A single DDR4-2400 x64 channel (one command and address bus), with
 # timings based on a DDR4-2400 8 Gbit datasheet (Micron MT40A512M16)
 # in an 4x16 configuration.
-# Total channel capacity is 4GB
-# 4 devices/rank * 1 ranks/channel * 1GB/device = 4GB/channel
+# Total channel capacity is 4GiB
+# 4 devices/rank * 1 ranks/channel * 1GiB/device = 4GiB/channel
 class DDR4_2400_4x16(DDR4_2400_16x4):
     # 4x16 configuration, 4 devices each with an 16-bit interface
     device_bus_width = 16
 
     # Each device has a page (row buffer) size of 2 Kbyte (1K columns x16)
-    device_rowbuffer_size = '2kB'
+    device_rowbuffer_size = '2KiB'
 
     # 4x16 configuration, so 4 devices
     devices_per_rank = 4
@@ -646,7 +646,7 @@ class LPDDR2_S4_1066_1x32(DRAMInterface):
     dll = False
 
     # size of device
-    device_size = '512MB'
+    device_size = '512MiB'
 
     # 1x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
@@ -656,7 +656,7 @@ class LPDDR2_S4_1066_1x32(DRAMInterface):
 
     # Each device has a page (row buffer) size of 1KB
     # (this depends on the memory density)
-    device_rowbuffer_size = '1kB'
+    device_rowbuffer_size = '1KiB'
 
     # 1x32 configuration, so 1 device
     devices_per_rank = 1
@@ -745,7 +745,7 @@ class WideIO_200_1x128(DRAMInterface):
     dll = False
 
     # size of device
-    device_size = '1024MB'
+    device_size = '1024MiB'
 
     # 1x128 configuration, 1 device with a 128-bit interface
     device_bus_width = 128
@@ -755,7 +755,7 @@ class WideIO_200_1x128(DRAMInterface):
 
     # Each device has a page (row buffer) size of 4KB
     # (this depends on the memory density)
-    device_rowbuffer_size = '4kB'
+    device_rowbuffer_size = '4KiB'
 
     # 1x128 configuration, so 1 device
     devices_per_rank = 1
@@ -814,7 +814,7 @@ class LPDDR3_1600_1x32(DRAMInterface):
     dll = False
 
     # size of device
-    device_size = '512MB'
+    device_size = '512MiB'
 
     # 1x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
@@ -823,7 +823,7 @@ class LPDDR3_1600_1x32(DRAMInterface):
     burst_length = 8
 
     # Each device has a page (row buffer) size of 4KB
-    device_rowbuffer_size = '4kB'
+    device_rowbuffer_size = '4KiB'
 
     # 1x32 configuration, so 1 device
     devices_per_rank = 1
@@ -911,7 +911,7 @@ class LPDDR3_1600_1x32(DRAMInterface):
 # H5GQ1H24AFR) in a 2x32 configuration.
 class GDDR5_4000_2x32(DRAMInterface):
     # size of device
-    device_size = '128MB'
+    device_size = '128MiB'
 
     # 2x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
@@ -992,7 +992,7 @@ class GDDR5_4000_2x32(DRAMInterface):
 # ("HBM: Memory Solution for High Performance Processors", MemCon, 2014),
 # IDD measurement values, and by extrapolating data from other classes.
 # Architecture values based on published HBM spec
-# A 4H stack is defined, 2Gb per die for a total of 1GB of memory.
+# A 4H stack is defined, 2Gb per die for a total of 1GiB of memory.
 class HBM_1000_4H_1x128(DRAMInterface):
     # HBM gen1 supports up to 8 128-bit physical channels
     # Configuration defines a single channel, with the capacity
@@ -1006,11 +1006,11 @@ class HBM_1000_4H_1x128(DRAMInterface):
     # HBM supports BL4 and BL2 (legacy mode only)
     burst_length = 4
 
-    # size of channel in bytes, 4H stack of 2Gb dies is 1GB per stack;
-    # with 8 channels, 128MB per channel
-    device_size = '128MB'
+    # size of channel in bytes, 4H stack of 2Gb dies is 1GiB per stack;
+    # with 8 channels, 128MiB per channel
+    device_size = '128MiB'
 
-    device_rowbuffer_size = '2kB'
+    device_rowbuffer_size = '2KiB'
 
     # 1x128 configuration
     devices_per_rank = 1
@@ -1077,7 +1077,7 @@ class HBM_1000_4H_1x128(DRAMInterface):
 
 # A single HBM x64 interface (one command and address bus), with
 # default timings based on HBM gen1 and data publically released
-# A 4H stack is defined, 8Gb per die for a total of 4GB of memory.
+# A 4H stack is defined, 8Gb per die for a total of 4GiB of memory.
 # Note: This defines a pseudo-channel with a unique controller
 # instantiated per pseudo-channel
 # Stay at same IO rate (1Gbps) to maintain timing relationship with
@@ -1095,13 +1095,13 @@ class HBM_1000_4H_1x64(HBM_1000_4H_1x128):
     # HBM pseudo-channel only supports BL4
     burst_length = 4
 
-    # size of channel in bytes, 4H stack of 8Gb dies is 4GB per stack;
-    # with 16 channels, 256MB per channel
-    device_size = '256MB'
+    # size of channel in bytes, 4H stack of 8Gb dies is 4GiB per stack;
+    # with 16 channels, 256MiB per channel
+    device_size = '256MiB'
 
     # page size is halved with pseudo-channel; maintaining the same same number
     # of rows per pseudo-channel with 2X banks across 2 channels
-    device_rowbuffer_size = '1kB'
+    device_rowbuffer_size = '1KiB'
 
     # HBM has 8 or 16 banks depending on capacity
     # Starting with 4Gb dies, 16 banks are defined
@@ -1146,10 +1146,10 @@ class LPDDR5_5500_1x16_BG_BL32(DRAMInterface):
     burst_length = 32
 
     # size of device in bytes
-    device_size = '1GB'
+    device_size = '1GiB'
 
-    # 2kB page with BG mode
-    device_rowbuffer_size = '2kB'
+    # 2KiB page with BG mode
+    device_rowbuffer_size = '2KiB'
 
     # Use a 1x16 configuration
     devices_per_rank = 1
@@ -1279,8 +1279,8 @@ class LPDDR5_5500_1x16_BG_BL16(LPDDR5_5500_1x16_BG_BL32):
 # Configuring for 8-bank mode, burst of 32
 class LPDDR5_5500_1x16_8B_BL32(LPDDR5_5500_1x16_BG_BL32):
 
-    # 4kB page with 8B mode
-    device_rowbuffer_size = '4kB'
+    # 4KiB page with 8B mode
+    device_rowbuffer_size = '4KiB'
 
     # LPDDR5 supports configurable bank options
     # 8B  : BL32, all frequencies
@@ -1384,8 +1384,8 @@ class LPDDR5_6400_1x16_BG_BL16(LPDDR5_6400_1x16_BG_BL32):
 # Configuring for 8-bank mode, burst of 32
 class LPDDR5_6400_1x16_8B_BL32(LPDDR5_6400_1x16_BG_BL32):
 
-    # 4kB page with 8B mode
-    device_rowbuffer_size = '4kB'
+    # 4KiB page with 8B mode
+    device_rowbuffer_size = '4KiB'
 
     # LPDDR5 supports configurable bank options
     # 8B  : BL32, all frequencies

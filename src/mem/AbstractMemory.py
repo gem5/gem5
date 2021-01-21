@@ -44,9 +44,10 @@ class AbstractMemory(ClockedObject):
     abstract = True
     cxx_header = "mem/abstract_mem.hh"
 
-    # A default memory size of 128 MB (starting at 0) is used to
+    # A default memory size of 128 MiB (starting at 0) is used to
     # simplify the regressions
-    range = Param.AddrRange('128MB', "Address range (potentially interleaved)")
+    range = Param.AddrRange('128MiB',
+                            "Address range (potentially interleaved)")
     null = Param.Bool(False, "Do not store data, always return zero")
 
     # All memories are passed to the global physical memory, and

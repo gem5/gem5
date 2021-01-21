@@ -76,7 +76,7 @@ class NVM_2400_1x64(NVMInterface):
     device_rowbuffer_size = '256B'
 
     # 8X capacity compared to DDR4 x4 DIMM with 8Gb devices
-    device_size = '512GB'
+    device_size = '512GiB'
     # Mimic 64-bit media agnostic DIMM interface
     device_bus_width = 64
     devices_per_rank = 1

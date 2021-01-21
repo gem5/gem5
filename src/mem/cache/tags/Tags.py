@@ -119,8 +119,8 @@ class FALRU(BaseTags):
     cxx_class = 'FALRU'
     cxx_header = "mem/cache/tags/fa_lru.hh"
 
-    min_tracked_cache_size = Param.MemorySize("128kB", "Minimum cache size for"
-                                              " which we track statistics")
+    min_tracked_cache_size = Param.MemorySize("128KiB", "Minimum cache size"
+                                              " for which we track statistics")
 
     # This tag uses its own embedded indexing
     indexing_policy = NULL

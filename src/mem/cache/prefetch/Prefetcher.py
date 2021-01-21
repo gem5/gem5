@@ -293,7 +293,7 @@ class AccessMapPatternMatching(ClockedObject):
         "Limit the strides checked up to -X/X, if 0, disable the limit")
     start_degree = Param.Unsigned(4,
         "Initial degree (Maximum number of prefetches generated")
-    hot_zone_size = Param.MemorySize("2kB", "Memory covered by a hot zone")
+    hot_zone_size = Param.MemorySize("2KiB", "Memory covered by a hot zone")
     access_map_table_entries = Param.MemorySize("256",
         "Number of entries in the access map table")
     access_map_table_assoc = Param.Unsigned(8,
@@ -456,7 +456,7 @@ class STeMSPrefetcher(QueuedPrefetcher):
     cxx_class = "Prefetcher::STeMS"
     cxx_header = "mem/cache/prefetch/spatio_temporal_memory_streaming.hh"
 
-    spatial_region_size = Param.MemorySize("2kB",
+    spatial_region_size = Param.MemorySize("2KiB",
         "Memory covered by a hot zone")
     active_generation_table_entries = Param.MemorySize("64",
         "Number of entries in the active generation table")
