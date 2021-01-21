@@ -35,9 +35,6 @@
 #include "debug/Checkpoint.hh"
 #include "sim/probe/probe.hh"
 
-using namespace std;
-
-
 ////////////////////////////////////////////////////////////////////////
 //
 // SimObject member definitions
@@ -148,7 +145,7 @@ SimObject::serializeAll(CheckpointOut &cp)
 // static function: flag which objects should have the debugger break
 //
 void
-SimObject::debugObjectBreak(const string &objs)
+SimObject::debugObjectBreak(const std::string &objs)
 {
     SimObjectList::const_iterator i = simObjectList.begin();
     SimObjectList::const_iterator end = simObjectList.end();

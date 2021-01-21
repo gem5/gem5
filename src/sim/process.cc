@@ -67,7 +67,6 @@
 #include "sim/syscall_desc.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace TheISA;
 
 namespace
@@ -127,7 +126,8 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
       _gid(params.gid), _egid(params.egid),
       _pid(params.pid), _ppid(params.ppid),
       _pgid(params.pgid), drivers(params.drivers),
-      fds(make_shared<FDArray>(params.input, params.output, params.errout)),
+      fds(std::make_shared<FDArray>(
+                  params.input, params.output, params.errout)),
       childClearTID(0),
       ADD_STAT(numSyscalls, "Number of system calls")
 {
@@ -189,7 +189,7 @@ Process::clone(ThreadContext *otc, ThreadContext *ntc,
          * Duplicate the process memory address space. The state needs to be
          * copied over (rather than using pointers to share everything).
          */
-        typedef std::vector<pair<Addr,Addr>> MapVec;
+        typedef std::vector<std::pair<Addr,Addr>> MapVec;
         MapVec mappings;
         pTable->getMappings(&mappings);
 

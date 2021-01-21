@@ -65,7 +65,6 @@
 
 #endif
 
-using namespace std;
 namespace py = pybind11;
 
 // The python library is totally messed up with respect to constness,
@@ -81,16 +80,16 @@ EmbeddedPython::EmbeddedPython(const char *filename, const char *abspath,
 {
     // if we've added the importer keep track of it because we need it
     // to bootstrap.
-    if (string(modpath) == string("importer"))
+    if (std::string(modpath) == std::string("importer"))
         importer = this;
     else
         getList().push_back(this);
 }
 
-list<EmbeddedPython *> &
+std::list<EmbeddedPython *> &
 EmbeddedPython::getList()
 {
-    static list<EmbeddedPython *> the_list;
+    static std::list<EmbeddedPython *> the_list;
     return the_list;
 }
 
@@ -142,8 +141,8 @@ EmbeddedPython::initAll()
 
     // Load the rest of the embedded python files into the embedded
     // python importer
-    list<EmbeddedPython *>::iterator i = getList().begin();
-    list<EmbeddedPython *>::iterator end = getList().end();
+    std::list<EmbeddedPython *>::iterator i = getList().begin();
+    std::list<EmbeddedPython *>::iterator end = getList().end();
     for (; i != end; ++i)
         if (!(*i)->addModule())
             return 1;

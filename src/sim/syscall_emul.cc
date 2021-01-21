@@ -53,7 +53,6 @@
 #include "sim/syscall_desc.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace TheISA;
 
 void
@@ -321,7 +320,7 @@ _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
         return -errno;
     // Assuming that the size of loff_t is 64 bits on the target platform
     BufferArg result_buf(result_ptr, sizeof(result));
-    memcpy(result_buf.bufferPtr(), &result, sizeof(result));
+    std::memcpy(result_buf.bufferPtr(), &result, sizeof(result));
     result_buf.copyOut(tc->getVirtProxy());
     return 0;
 }
@@ -368,7 +367,7 @@ getcwdFunc(SyscallDesc *desc, ThreadContext *tc,
     BufferArg buf(buf_ptr, size);
 
     // Is current working directory defined?
-    string cwd = p->tgtCwd;
+    std::string cwd = p->tgtCwd;
     if (!cwd.empty()) {
         if (cwd.length() >= size) {
             // Buffer too small
@@ -393,7 +392,7 @@ SyscallReturn
 readlinkFunc(SyscallDesc *desc, ThreadContext *tc,
              Addr pathname, Addr buf_ptr, size_t bufsiz)
 {
-    string path;
+    std::string path;
     auto p = tc->getProcessPtr();
 
     if (!tc->getVirtProxy().tryReadString(path, pathname))
@@ -450,7 +449,7 @@ readlinkFunc(SyscallDesc *desc, ThreadContext *tc,
 SyscallReturn
 unlinkFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname)
 {
-    string path;
+    std::string path;
     auto p = tc->getProcessPtr();
 
     if (!tc->getVirtProxy().tryReadString(path, pathname))
@@ -466,8 +465,8 @@ SyscallReturn
 linkFunc(SyscallDesc *desc, ThreadContext *tc,
          Addr pathname, Addr new_pathname)
 {
-    string path;
-    string new_path;
+    std::string path;
+    std::string new_path;
     auto p = tc->getProcessPtr();
 
     auto &virt_mem = tc->getVirtProxy();
@@ -487,8 +486,8 @@ SyscallReturn
 symlinkFunc(SyscallDesc *desc, ThreadContext *tc,
             Addr pathname, Addr new_pathname)
 {
-    string path;
-    string new_path;
+    std::string path;
+    std::string new_path;
     auto p = tc->getProcessPtr();
 
     auto &virt_mem = tc->getVirtProxy();
@@ -523,11 +522,11 @@ renameFunc(SyscallDesc *desc, ThreadContext *tc, Addr oldpath, Addr newpath)
 {
     auto p = tc->getProcessPtr();
 
-    string old_name;
+    std::string old_name;
     if (!tc->getVirtProxy().tryReadString(old_name, oldpath))
         return -EFAULT;
 
-    string new_name;
+    std::string new_name;
     if (!tc->getVirtProxy().tryReadString(new_name, newpath))
         return -EFAULT;
 
@@ -542,7 +541,7 @@ renameFunc(SyscallDesc *desc, ThreadContext *tc, Addr oldpath, Addr newpath)
 SyscallReturn
 truncateFunc(SyscallDesc *desc, ThreadContext *tc, Addr pathname, off_t length)
 {
-    string path;
+    std::string path;
     auto p = tc->getProcessPtr();
 
     if (!tc->getVirtProxy().tryReadString(path, pathname))
@@ -574,7 +573,7 @@ truncate64Func(SyscallDesc *desc, ThreadContext *tc,
                Addr pathname, int64_t length)
 {
     auto process = tc->getProcessPtr();
-    string path;
+    std::string path;
 
     if (!tc->getVirtProxy().tryReadString(path, pathname))
         return -EFAULT;
@@ -624,7 +623,7 @@ SyscallReturn
 chownFunc(SyscallDesc *desc, ThreadContext *tc,
           Addr pathname, uint32_t owner, uint32_t group)
 {
-    string path;
+    std::string path;
     auto p = tc->getProcessPtr();
 
     if (!tc->getVirtProxy().tryReadString(path, pathname))
@@ -998,7 +997,7 @@ SyscallReturn
 accessFunc(SyscallDesc *desc, ThreadContext *tc,
            Addr pathname, mode_t mode)
 {
-    string path;
+    std::string path;
     auto p = tc->getProcessPtr();
     if (!tc->getVirtProxy().tryReadString(path, pathname))
         return -EFAULT;

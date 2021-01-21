@@ -71,10 +71,9 @@
 #include "sim/full_system.hh"
 #include "sim/redirect_path.hh"
 
-using namespace std;
 using namespace TheISA;
 
-vector<System *> System::systemList;
+std::vector<System *> System::systemList;
 
 void
 System::Threads::Thread::resume()
@@ -484,7 +483,7 @@ System::regStats()
 
     for (uint32_t j = 0; j < numWorkIds ; j++) {
         workItemStats[j] = new Stats::Histogram(this);
-        stringstream namestr;
+        std::stringstream namestr;
         ccprintf(namestr, "work_item_type%d", j);
         workItemStats[j]->init(20)
                          .name(name() + "." + namestr.str())
@@ -513,16 +512,17 @@ System::workItemEnd(uint32_t tid, uint32_t workid)
 void
 System::printSystems()
 {
-    ios::fmtflags flags(cerr.flags());
+    std::ios::fmtflags flags(std::cerr.flags());
 
-    vector<System *>::iterator i = systemList.begin();
-    vector<System *>::iterator end = systemList.end();
+    std::vector<System *>::iterator i = systemList.begin();
+    std::vector<System *>::iterator end = systemList.end();
     for (; i != end; ++i) {
         System *sys = *i;
-        cerr << "System " << sys->name() << ": " << hex << sys << endl;
+        std::cerr << "System " << sys->name() << ": " << std::hex << sys
+                  << std::endl;
     }
 
-    cerr.flags(flags);
+    std::cerr.flags(flags);
 }
 
 void

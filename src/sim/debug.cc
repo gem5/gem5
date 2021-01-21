@@ -40,8 +40,6 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 //
 // Debug event: place a breakpoint on the process function and
 // schedule the event to break at a particular cycle

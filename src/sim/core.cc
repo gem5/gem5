@@ -39,8 +39,6 @@
 #include "base/output.hh"
 #include "sim/eventq.hh"
 
-using namespace std;
-
 namespace Gem5Internal
 {
 
@@ -125,7 +123,7 @@ setClockFrequency(Tick tps)
 Tick getClockFrequency() { return _ticksPerSecond; }
 
 void
-setOutputDir(const string &dir)
+setOutputDir(const std::string &dir)
 {
     simout.setDirectory(dir);
 }
@@ -159,6 +157,6 @@ doExitCleanup()
     exitCallbacks().process();
     exitCallbacks().clear();
 
-    cout.flush();
+    std::cout.flush();
 }
 

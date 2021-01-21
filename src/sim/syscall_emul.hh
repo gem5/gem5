@@ -372,8 +372,6 @@ SyscallReturn
 futexFunc(SyscallDesc *desc, ThreadContext *tc,
         Addr uaddr, int op, int val, int timeout, Addr uaddr2, int val3)
 {
-    using namespace std;
-
     auto process = tc->getProcessPtr();
 
     /*

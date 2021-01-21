@@ -50,8 +50,6 @@
 #include "sim/sim_exit.hh"
 #include "sim/stats.hh"
 
-using namespace std;
-
 GlobalSimLoopExitEvent::GlobalSimLoopExitEvent(Tick when,
                                                const std::string &_cause,
                                                int c, Tick r)

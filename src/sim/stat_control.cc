@@ -54,8 +54,6 @@
 #include "base/time.hh"
 #include "sim/global_event.hh"
 
-using namespace std;
-
 namespace Stats {
 
 GlobalEvent *dumpEvent;

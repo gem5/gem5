@@ -69,7 +69,6 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace Stats;
 
 namespace PseudoInst
@@ -203,13 +202,13 @@ loadsymbol(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "PseudoInst::loadsymbol()\n");
 
-    const string &filename = tc->getCpuPtr()->system->params().symbolfile;
+    const std::string &filename = tc->getCpuPtr()->system->params().symbolfile;
     if (filename.empty()) {
         return;
     }
 
     std::string buffer;
-    ifstream file(filename.c_str());
+    std::ifstream file(filename.c_str());
 
     if (!file)
         fatal("file error: Can't open symbol table file %s\n", filename);
@@ -220,17 +219,17 @@ loadsymbol(ThreadContext *tc)
         if (buffer.empty())
             continue;
 
-        string::size_type idx = buffer.find(' ');
-        if (idx == string::npos)
+        std::string::size_type idx = buffer.find(' ');
+        if (idx == std::string::npos)
             continue;
 
-        string address = "0x" + buffer.substr(0, idx);
+        std::string address = "0x" + buffer.substr(0, idx);
         eat_white(address);
         if (address.empty())
             continue;
 
         // Skip over letter and space
-        string symbol = buffer.substr(idx + 3);
+        std::string symbol = buffer.substr(idx + 3);
         eat_white(symbol);
         if (symbol.empty())
             continue;
@@ -278,11 +277,11 @@ initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
     // concatenate them in the key character buffer
     const int len = 2 * sizeof(uint64_t) + 1;
     char key[len];
-    memset(key, '\0', len);
+    std::memset(key, '\0', len);
 
     std::array<uint64_t, 2> key_regs = {{ key_str1, key_str2 }};
     key_regs = letoh(key_regs);
-    memcpy(key, key_regs.data(), sizeof(key_regs));
+    std::memcpy(key, key_regs.data(), sizeof(key_regs));
 
     // Check key parameter to figure out what to return.
     const std::string key_str(key);
@@ -359,7 +358,7 @@ readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
     DPRINTF(PseudoInst, "PseudoInst::readfile(0x%x, 0x%x, 0x%x)\n",
             vaddr, len, offset);
 
-    const string &file = tc->getSystemPtr()->params().readfile;
+    const std::string &file = tc->getSystemPtr()->params().readfile;
     if (file.empty()) {
         return ULL(0);
     }
@@ -410,10 +409,11 @@ writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
         // do not truncate file if offset is non-zero
         // (ios::in flag is required as well to keep the existing data
         //  intact, otherwise existing data will be zeroed out.)
-        out = simout.open(filename, ios::in | ios::out | ios::binary, true);
+        out = simout.open(filename,
+                std::ios::in | std::ios::out | std::ios::binary, true);
     }
 
-    ostream *os(out->stream());
+    std::ostream *os(out->stream());
     if (!os)
         panic("could not open file %s\n", filename);
 
