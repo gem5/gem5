@@ -23,8 +23,6 @@
 # Authors: Christian Menard
 #          Matthias Jung
 
-from __future__ import print_function
-
 import os
 from m5.util.terminal import get_termcap
 

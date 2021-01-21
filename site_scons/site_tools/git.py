@@ -38,13 +38,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
 import os
 import sys
 
 import gem5_scons.util
 from m5.util import readCommand
-from six.moves import input
 
 git_style_message = """
 You're missing the gem5 style or commit message hook. These hooks help

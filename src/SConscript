@@ -37,8 +37,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-
 import array
 import bisect
 import distutils.spawn
@@ -46,7 +44,6 @@ import functools
 import imp
 import os
 import re
-import six
 import sys
 import zlib
 
@@ -144,8 +141,7 @@ class SourceMeta(type):
         super(SourceMeta, cls).__init__(name, bases, dict)
         cls.all = SourceList()
 
-@six.add_metaclass(SourceMeta)
-class SourceFile(object):
+class SourceFile(object, metaclass=SourceMeta):
     '''Base object that encapsulates the notion of a source file.
     This includes, the source node, target node, various manipulations
     of those.  A source file also specifies a set of tags which
@@ -157,14 +153,14 @@ class SourceFile(object):
     def __init__(self, source, tags=None, add_tags=None, append=None):
         if tags is None:
             tags='gem5 lib'
-        if isinstance(tags, six.string_types):
+        if isinstance(tags, str):
             tags = set([tags])
         if not isinstance(tags, set):
             tags = set(tags)
         self.tags = tags
 
         if add_tags:
-            if isinstance(add_tags, six.string_types):
+            if isinstance(add_tags, str):
                 add_tags = set([add_tags])
             if not isinstance(add_tags, set):
                 add_tags = set(add_tags)
@@ -266,7 +262,7 @@ def blobToCpp(data, symbol, cpp_code, hpp_code=None, namespace=None):
     cpp_code(symbol_declaration + ' = {')
     cpp_code.indent()
     step = 16
-    for i in six.moves.range(0, len(data), step):
+    for i in range(0, len(data), step):
         x = array.array('B', data[i:i+step])
         cpp_code(''.join('%d,' % d for d in x))
     cpp_code.dedent()
@@ -487,8 +483,7 @@ class ExecutableMeta(type):
 
         cls.all = []
 
-@six.add_metaclass(ExecutableMeta)
-class Executable(object):
+class Executable(object, metaclass=ExecutableMeta):
     '''Base class for creating an executable from sources.'''
 
     abstract = True

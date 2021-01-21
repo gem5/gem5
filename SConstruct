@@ -75,8 +75,6 @@
 #
 ###################################################
 
-from __future__ import print_function
-
 # Global Python includes
 import atexit
 import itertools

@@ -28,8 +28,6 @@
 #
 # Authors: Nathan Binkert
 
-from __future__ import print_function
-
 import os, subprocess
 
 Import('main')

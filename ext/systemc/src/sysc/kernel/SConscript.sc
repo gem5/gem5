@@ -23,8 +23,6 @@
 # Authors: Christian Menard
 #          Matthias Jung
 
-from __future__ import print_function
-
 Import('systemc', 'SystemCSource')
 
 SystemCSource(
