@@ -337,23 +337,32 @@ let {{
             if (size == 8) {
                 options = 2;
                 optionBits = 1;
+            } else if (size == 1) {
+                options = 16;
+                optionBits = 8;
             } else {
                 options = 4;
                 optionBits = 2;
             }
 
             uint64_t result = 0;
-            uint8_t sel = ext;
+            // PSHUFB stores shuffle encoding in destination XMM register
+            // directly (instead of passed in by ext).
+            uint64_t sel = (size == 1) ? FpDestReg_uqw : ext;
 
             for (int i = 0; i < items; i++) {
                 uint64_t resBits;
                 uint8_t lsel = sel & mask(optionBits);
-                if (lsel * size >= sizeof(double)) {
+                if (size == 1 && bits(lsel, 7)) {
+                    // PSHUFB sets result byte to zero when highest bit of the
+                    // corresponding shuffle encoding is 1.
+                    resBits = 0;
+                } else if (lsel * size >= sizeof(double)) {
                     lsel -= options / 2;
                     resBits = bits(FpSrcReg2_uqw,
                             (lsel + 1) * sizeBits - 1,
                             (lsel + 0) * sizeBits);
-                }  else {
+                } else {
                     resBits = bits(FpSrcReg1_uqw,
                             (lsel + 1) * sizeBits - 1,
                             (lsel + 0) * sizeBits);

@@ -31,7 +31,7 @@
 'X86ISA::ThreeByte0F38Opcode': decode LEGACY_OP {
     format WarnUnimpl {
         1: decode OPCODE_OP {
-            0x00: pshufb_Vdq_Wdq();
+            0x00: Inst::PSHUFB(Vo, Wo);
             0x01: phaddw_Vdq_Wdq();
             0x02: phaddd_Vdq_Wdq();
             0x03: phaddsw_Vdq_Wdq();
