@@ -50,7 +50,6 @@ const char *m5MainCommands[] = {
     0 // sentinel is required
 };
 
-using namespace std;
 using namespace Stats;
 
 double testfunc();

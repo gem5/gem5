@@ -31,14 +31,13 @@
 #include "base/loader/symtab.hh"
 #include "base/str.hh"
 
-using namespace std;
-
 void usage(const char *progname);
 
 void
 usage(const char *progname)
 {
-    cout << "Usage: " << progname << " <symbol file> <symbol>" << endl;
+    std::cout << "Usage: " << progname << " <symbol file> <symbol>"
+        << std::endl;
 
     exit(1);
 }
@@ -52,29 +51,31 @@ main(int argc, char *argv[])
         usage(argv[0]);
 
     if (!symtab.load(argv[1])) {
-        cout << "could not load symbol file: " << argv[1] << endl;
+        std::cout << "could not load symbol file: " << argv[1] << std::endl;
         exit(1);
     }
 
-    string symbol = argv[2];
+    std::string symbol = argv[2];
     Addr address;
 
     if (!to_number(symbol, address)) {
         auto it = symtab.find(symbol);
         if (it == symtab.end()) {
-            cout << "could not find symbol: " << symbol << endl;
+            std::cout << "could not find symbol: " << symbol << std::endl;
             exit(1);
         }
 
-        cout << symbol << " -> " << "0x" << hex << it->address << endl;
+        std::cout << symbol << " -> " << "0x" << std::hex << it->address <<
+            std::endl;
     } else {
         auto it = symtab.find(address);
         if (it == symtab.end()) {
-            cout << "could not find address: " << address << endl;
+            std::cout << "could not find address: " << address << std::endl;
             exit(1);
         }
 
-        cout << "0x" << hex << address << " -> " << it->name << endl;
+        std::cout << "0x" << std::hex << address << " -> " << it->name <<
+            std::endl;
     }
 
     return 0;

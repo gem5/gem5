@@ -34,8 +34,6 @@
 #include "base/logging.hh"
 #include "base/str.hh"
 
-using namespace std;
-
 int
 main(int argc, char *argv[])
 {
@@ -50,7 +48,7 @@ main(int argc, char *argv[])
         for (const Loader::Symbol &symbol: obj->symtab())
             cprintf("%#x %s\n", symbol.address, symbol.name);
     } else {
-        string symbol = argv[2];
+        std::string symbol = argv[2];
         Addr address;
 
         if (symbol[0] == '0' && symbol[1] == 'x') {

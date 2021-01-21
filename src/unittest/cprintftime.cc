@@ -36,8 +36,6 @@
 
 #include "base/cprintf.hh"
 
-using namespace std;
-
 volatile int stop = false;
 
 void
@@ -56,14 +54,14 @@ do_test(int seconds)
 int
 main()
 {
-    stringstream result;
+    std::stringstream result;
     int iterations = 0;
 
     signal(SIGALRM, handle_alarm);
 
     do_test(10);
     while (!stop) {
-        stringstream result;
+        std::stringstream result;
         ccprintf(result,
                  "this is a %s of %d iterations %3.2f %p\n",
                  "test", iterations, 51.934, &result);
