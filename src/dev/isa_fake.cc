@@ -38,8 +38,6 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 IsaFake::IsaFake(const Params &p)
     : BasicPioDevice(p, p.ret_bad_addr ? 0 : p.pio_size)
 {

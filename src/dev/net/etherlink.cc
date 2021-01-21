@@ -63,8 +63,6 @@
 #include "sim/serialize.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 EtherLink::EtherLink(const Params &p)
     : SimObject(p)
 {
@@ -98,14 +96,14 @@ EtherLink::getPort(const std::string &if_name, PortID idx)
 }
 
 
-EtherLink::Interface::Interface(const string &name, Link *tx, Link *rx)
+EtherLink::Interface::Interface(const std::string &name, Link *tx, Link *rx)
     : EtherInt(name), txlink(tx)
 {
     tx->setTxInt(this);
     rx->setRxInt(this);
 }
 
-EtherLink::Link::Link(const string &name, EtherLink *p, int num,
+EtherLink::Link::Link(const std::string &name, EtherLink *p, int num,
                       double rate, Tick delay, Tick delay_var, EtherDump *d)
     : objName(name), parent(p), number(num), txint(NULL), rxint(NULL),
       ticksPerByte(rate), linkDelay(delay), delayVar(delay_var), dump(d),
@@ -198,7 +196,7 @@ EtherLink::Link::transmit(EthPacketPtr pkt)
 }
 
 void
-EtherLink::Link::serialize(const string &base, CheckpointOut &cp) const
+EtherLink::Link::serialize(const std::string &base, CheckpointOut &cp) const
 {
     bool packet_exists = packet != nullptr;
     paramOut(cp, base + ".packet_exists", packet_exists);
@@ -224,12 +222,12 @@ EtherLink::Link::serialize(const string &base, CheckpointOut &cp) const
 }
 
 void
-EtherLink::Link::unserialize(const string &base, CheckpointIn &cp)
+EtherLink::Link::unserialize(const std::string &base, CheckpointIn &cp)
 {
     bool packet_exists;
     paramIn(cp, base + ".packet_exists", packet_exists);
     if (packet_exists) {
-        packet = make_shared<EthPacketData>();
+        packet = std::make_shared<EthPacketData>();
         packet->unserialize(base + ".packet", cp);
     }
 
@@ -245,7 +243,7 @@ EtherLink::Link::unserialize(const string &base, CheckpointIn &cp)
     if (optParamIn(cp, base + ".tx_queue_size", tx_queue_size)) {
         for (size_t idx = 0; idx < tx_queue_size; ++idx) {
             Tick tick;
-            EthPacketPtr delayed_packet = make_shared<EthPacketData>();
+            EthPacketPtr delayed_packet = std::make_shared<EthPacketData>();
 
             paramIn(cp, csprintf("%s.txQueue[%i].tick", base, idx), tick);
             delayed_packet->unserialize(

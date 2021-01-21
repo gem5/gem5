@@ -67,8 +67,6 @@
 #include "dev/net/etherint.hh"
 #include "dev/net/etherpkt.hh"
 
-using namespace std;
-
 class TapEvent : public PollEvent
 {
   protected:
@@ -185,7 +183,7 @@ void
 EtherTapBase::sendSimulated(void *data, size_t len)
 {
     EthPacketPtr packet;
-    packet = make_shared<EthPacketData>(len);
+    packet = std::make_shared<EthPacketData>(len);
     packet->length = len;
     packet->simLength = len;
     memcpy(packet->data, data, len);
@@ -261,7 +259,7 @@ TapListener::listen()
         port++;
     }
 
-    ccprintf(cerr, "Listening for tap connection on port %d\n", port);
+    ccprintf(std::cerr, "Listening for tap connection on port %d\n", port);
     event = new Event(this, listener.getfd(), POLLIN|POLLERR);
     pollQueue.schedule(event);
 }

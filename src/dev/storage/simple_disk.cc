@@ -48,8 +48,6 @@
 #include "mem/port_proxy.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 SimpleDisk::SimpleDisk(const Params &p)
     : SimObject(p), system(p.system), image(p.disk)
 {}

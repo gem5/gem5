@@ -38,8 +38,6 @@
 #include "params/BadDevice.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 BadDevice::BadDevice(const Params &p)
     : BasicPioDevice(p, 0x10), devname(p.devicename)
 {

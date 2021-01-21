@@ -48,8 +48,6 @@
 #include "params/MaltaCChip.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 MaltaCChip::MaltaCChip(const Params &p)
     : BasicPioDevice(p, 0xfffffff), malta(p.malta)
 {

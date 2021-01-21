@@ -37,8 +37,6 @@
 #include "debug/EthernetAll.hh"
 #include "sim/core.hh"
 
-using namespace std;
-
 EtherSwitch::EtherSwitch(const Params &p)
     : SimObject(p), ttl(p.time_to_live)
 {
@@ -308,7 +306,7 @@ EtherSwitch::Interface::PortFifoEntry::serialize(CheckpointOut &cp) const
 void
 EtherSwitch::Interface::PortFifoEntry::unserialize(CheckpointIn &cp)
 {
-    packet = make_shared<EthPacketData>(16384);
+    packet = std::make_shared<EthPacketData>(16384);
     packet->unserialize("packet", cp);
     UNSERIALIZE_SCALAR(recvTick);
     UNSERIALIZE_SCALAR(srcId);

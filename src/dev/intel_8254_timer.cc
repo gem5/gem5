@@ -31,9 +31,7 @@
 #include "base/logging.hh"
 #include "debug/Intel8254Timer.hh"
 
-using namespace std;
-
-Intel8254Timer::Intel8254Timer(EventManager *em, const string &name,
+Intel8254Timer::Intel8254Timer(EventManager *em, const std::string &name,
     Counter *counter0, Counter *counter1, Counter *counter2) :
     EventManager(em), _name(name)
 {
@@ -42,7 +40,7 @@ Intel8254Timer::Intel8254Timer(EventManager *em, const string &name,
     counter[2] = counter2;
 }
 
-Intel8254Timer::Intel8254Timer(EventManager *em, const string &name) :
+Intel8254Timer::Intel8254Timer(EventManager *em, const std::string &name) :
     EventManager(em), _name(name)
 {
     counter[0] = new Counter(this, name + ".counter0", 0);
@@ -68,7 +66,7 @@ Intel8254Timer::writeControl(const CtrlReg data)
 }
 
 void
-Intel8254Timer::serialize(const string &base, CheckpointOut &cp) const
+Intel8254Timer::serialize(const std::string &base, CheckpointOut &cp) const
 {
     // serialize the counters
     counter[0]->serialize(base + ".counter0", cp);
@@ -77,7 +75,7 @@ Intel8254Timer::serialize(const string &base, CheckpointOut &cp) const
 }
 
 void
-Intel8254Timer::unserialize(const string &base, CheckpointIn &cp)
+Intel8254Timer::unserialize(const std::string &base, CheckpointIn &cp)
 {
     // unserialze the counters
     counter[0]->unserialize(base + ".counter0", cp);
@@ -94,7 +92,7 @@ Intel8254Timer::startup()
 }
 
 Intel8254Timer::Counter::Counter(Intel8254Timer *p,
-        const string &name, unsigned int _num)
+        const std::string &name, unsigned int _num)
     : _name(name), num(_num), event(this), running(false),
       initial_count(0), latched_count(0), period(0), mode(0),
       output_high(false), latch_on(false), read_byte(LSB),
@@ -225,7 +223,8 @@ Intel8254Timer::Counter::outputHigh()
 }
 
 void
-Intel8254Timer::Counter::serialize(const string &base, CheckpointOut &cp) const
+Intel8254Timer::Counter::serialize(
+        const std::string &base, CheckpointOut &cp) const
 {
     paramOut(cp, base + ".initial_count", initial_count);
     paramOut(cp, base + ".latched_count", latched_count);
@@ -243,7 +242,7 @@ Intel8254Timer::Counter::serialize(const string &base, CheckpointOut &cp) const
 }
 
 void
-Intel8254Timer::Counter::unserialize(const string &base, CheckpointIn &cp)
+Intel8254Timer::Counter::unserialize(const std::string &base, CheckpointIn &cp)
 {
     paramIn(cp, base + ".initial_count", initial_count);
     paramIn(cp, base + ".latched_count", latched_count);

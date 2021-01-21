@@ -39,8 +39,6 @@
 #include "cpu/intr_control.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 T1000::T1000(const Params &p)
     : Platform(p), system(p.system)
 {}

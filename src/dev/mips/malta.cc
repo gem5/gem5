@@ -43,8 +43,6 @@
 #include "params/Malta.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 Malta::Malta(const Params &p)
     : Platform(p), system(p.system)
 {

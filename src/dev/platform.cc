@@ -31,8 +31,6 @@
 #include "base/logging.hh"
 #include "sim/sim_exit.hh"
 
-using namespace std;
-
 Platform::Platform(const Params &p)
     : SimObject(p), intrctrl(p.intrctrl)
 {

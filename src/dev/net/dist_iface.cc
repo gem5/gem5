@@ -54,7 +54,6 @@
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
-using namespace std;
 DistIface::Sync *DistIface::sync = nullptr;
 System *DistIface::sys = nullptr;
 DistIface::SyncEvent *DistIface::syncEvent = nullptr;

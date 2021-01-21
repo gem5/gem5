@@ -73,9 +73,6 @@
 #include "dev/platform.hh"
 #include "dev/serial/uart.hh"
 
-using namespace std;
-
-
 /*
  * Poll event for the listen socket
  */
@@ -124,7 +121,7 @@ Terminal::Terminal(const Params &p)
 #endif
 {
     if (outfile)
-        outfile->stream()->setf(ios::unitbuf);
+        outfile->stream()->setf(std::ios::unitbuf);
 
     if (p.port)
         listen(p.port);
@@ -178,7 +175,7 @@ Terminal::listen(int port)
         port++;
     }
 
-    ccprintf(cerr, "%s: Listening for connections on port %d\n",
+    ccprintf(std::cerr, "%s: Listening for connections on port %d\n",
              name(), port);
 
     listenEvent = new ListenEvent(this, listener.getfd(), POLLIN);
@@ -203,7 +200,7 @@ Terminal::accept()
     dataEvent = new DataEvent(this, data_fd, POLLIN);
     pollQueue.schedule(dataEvent);
 
-    stringstream stream;
+    std::stringstream stream;
     ccprintf(stream, "==== m5 terminal: Terminal %d ====", number);
 
     // we need an actual carriage return followed by a newline for the

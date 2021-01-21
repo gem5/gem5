@@ -66,8 +66,6 @@
 #include "sim/serialize.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 DistEtherLink::DistEtherLink(const Params &p)
     : SimObject(p), linkDelay(p.delay)
 {
@@ -228,7 +226,7 @@ DistEtherLink::Link::unserialize(CheckpointIn &cp)
     bool packet_exists;
     UNSERIALIZE_SCALAR(packet_exists);
     if (packet_exists) {
-        packet = make_shared<EthPacketData>();
+        packet = std::make_shared<EthPacketData>();
         packet->unserialize("packet", cp);
     }
 

@@ -43,8 +43,6 @@
 #include "mem/packet_access.hh"
 #include "sim/serialize.hh"
 
-using namespace std;
-
 void
 Uart8250::processIntrEvent(int intrBit)
 {

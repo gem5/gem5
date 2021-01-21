@@ -46,8 +46,6 @@
 #include "params/EtherBus.hh"
 #include "sim/core.hh"
 
-using namespace std;
-
 EtherBus::EtherBus(const Params &p)
     : SimObject(p), ticksPerByte(p.speed), loopback(p.loopback),
       event([this]{ txDone(); }, "ethernet bus completion"),

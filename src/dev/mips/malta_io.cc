@@ -51,9 +51,7 @@
 #include "params/MaltaIO.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
-MaltaIO::RTC::RTC(const string &name, const MaltaIOParams &p)
+MaltaIO::RTC::RTC(const std::string &name, const MaltaIOParams &p)
     : MC146818(p.malta, name, p.time, p.year_is_bcd, p.frequency),
       malta(p.malta)
 {
