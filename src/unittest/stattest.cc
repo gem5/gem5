@@ -37,6 +37,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
+#include "sim/eventq.hh"
 #include "sim/init.hh"
 #include "sim/stat_control.hh"
 
