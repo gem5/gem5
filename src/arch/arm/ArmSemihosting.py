@@ -53,10 +53,10 @@ class ArmSemihosting(SimObject):
     files_root_dir = Param.String("",
         "Host root directory for files handled by Semihosting")
 
-    mem_reserve = Param.MemorySize("32MB",
+    mem_reserve = Param.MemorySize("32MiB",
         "Amount of memory to reserve at the start of the address map. This "
         "memory won't be used by the heap reported to an application.");
-    stack_size = Param.MemorySize("32MB", "Application stack size");
+    stack_size = Param.MemorySize("32MiB", "Application stack size");
 
     time = Param.Time('01/01/2009',
                       "System time to use ('Now' for actual time)")

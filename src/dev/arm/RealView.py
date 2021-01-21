@@ -510,7 +510,7 @@ class HDLcd(AmbaDmaDevice):
     frame_format = Param.ImageFormat("Auto",
                                      "image format of the captured frame")
 
-    pixel_buffer_size = Param.MemorySize32("2kB", "Size of address range")
+    pixel_buffer_size = Param.MemorySize32("2KiB", "Size of address range")
 
     pxl_clk = Param.ClockDomain("Pixel clock source")
     pixel_chunk = Param.Unsigned(32, "Number of pixels to handle in one batch")
@@ -645,7 +645,7 @@ class RealView(Platform):
     type = 'RealView'
     cxx_header = "dev/arm/realview.hh"
     system = Param.System(Parent.any, "system")
-    _mem_regions = [ AddrRange(0, size='256MB') ]
+    _mem_regions = [ AddrRange(0, size='256MiB') ]
     _num_pci_dev = 0
 
     def _on_chip_devices(self):
@@ -742,15 +742,15 @@ class RealView(Platform):
                         state.addrCells(system.workload.cpu_release_addr)))
 
 class VExpress_EMM(RealView):
-    _mem_regions = [ AddrRange('2GB', size='2GB') ]
+    _mem_regions = [ AddrRange('2GiB', size='2GiB') ]
 
     # Ranges based on excluding what is part of on-chip I/O (gic,
     # a9scu)
-    _off_chip_ranges = [AddrRange(0x2F000000, size='16MB'),
-                        AddrRange(0x30000000, size='256MB'),
-                        AddrRange(0x40000000, size='512MB'),
-                        AddrRange(0x18000000, size='64MB'),
-                        AddrRange(0x1C000000, size='64MB')]
+    _off_chip_ranges = [AddrRange(0x2F000000, size='16MiB'),
+                        AddrRange(0x30000000, size='256MiB'),
+                        AddrRange(0x40000000, size='512MiB'),
+                        AddrRange(0x18000000, size='64MiB'),
+                        AddrRange(0x1C000000, size='64MiB')]
 
     # Platform control device (off-chip)
     realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000,
@@ -790,7 +790,7 @@ class VExpress_EMM(RealView):
     ### Off-chip devices ###
     uart = Pl011(pio_addr=0x1c090000, interrupt=ArmSPI(num=37))
     pci_host = GenericPciHost(
-        conf_base=0x30000000, conf_size='256MB', conf_device_bits=16,
+        conf_base=0x30000000, conf_size='256MiB', conf_device_bits=16,
         pci_pio_base=0)
 
     sys_counter = SystemCounter()
@@ -814,9 +814,9 @@ class VExpress_EMM(RealView):
     cf_ctrl.BAR0 = PciLegacyIoBar(addr='0x1C1A0000', size='256B')
     cf_ctrl.BAR1 = PciLegacyIoBar(addr='0x1C1A0100', size='4096B')
 
-    bootmem        = SimpleMemory(range = AddrRange('64MB'),
+    bootmem        = SimpleMemory(range = AddrRange('64MiB'),
                                   conf_table_reported = False)
-    vram           = SimpleMemory(range = AddrRange(0x18000000, size='32MB'),
+    vram           = SimpleMemory(range = AddrRange(0x18000000, size='32MiB'),
                                   conf_table_reported = False)
     rtc            = PL031(pio_addr=0x1C170000, interrupt=ArmSPI(num=36))
 
@@ -884,12 +884,12 @@ class VExpress_EMM(RealView):
                 cur_sys, boot_loader, 0x8000000, 0x80000000)
 
 class VExpress_EMM64(VExpress_EMM):
-    # Three memory regions are specified totalling 512GB
-    _mem_regions = [ AddrRange('2GB', size='2GB'),
-                     AddrRange('34GB', size='30GB'),
-                     AddrRange('512GB', size='480GB') ]
+    # Three memory regions are specified totalling 512GiB
+    _mem_regions = [ AddrRange('2GiB', size='2GiB'),
+                     AddrRange('34GiB', size='30GiB'),
+                     AddrRange('512GiB', size='480GiB') ]
     pci_host = GenericPciHost(
-        conf_base=0x30000000, conf_size='256MB', conf_device_bits=12,
+        conf_base=0x30000000, conf_size='256MiB', conf_device_bits=12,
         pci_pio_base=0x2f000000)
 
     def setupBootLoader(self, cur_sys, loc, boot_loader=None):
@@ -1038,7 +1038,7 @@ Interrupts:
     """
 
     # Everything above 2GiB is memory
-    _mem_regions = [ AddrRange('2GB', size='510GB') ]
+    _mem_regions = [ AddrRange('2GiB', size='510GiB') ]
 
     _off_chip_ranges = [
         # CS1-CS5
@@ -1047,15 +1047,15 @@ Interrupts:
         AddrRange(0x2f000000, 0x80000000),
     ]
 
-    bootmem = SimpleMemory(range=AddrRange(0, size='64MB'),
+    bootmem = SimpleMemory(range=AddrRange(0, size='64MiB'),
                            conf_table_reported=False)
 
     # NOR flash, flash0
-    flash0 = SimpleMemory(range=AddrRange(0x08000000, size='64MB'),
+    flash0 = SimpleMemory(range=AddrRange(0x08000000, size='64MiB'),
                           conf_table_reported=False)
 
     # Trusted SRAM
-    trusted_sram = SimpleMemory(range=AddrRange(0x04000000, size='256kB'),
+    trusted_sram = SimpleMemory(range=AddrRange(0x04000000, size='256KiB'),
                                 conf_table_reported=False)
 
     # Non-Trusted SRAM
@@ -1134,7 +1134,7 @@ Interrupts:
 
     ### gem5-specific off-chip devices ###
     pci_host = GenericArmPciHost(
-        conf_base=0x30000000, conf_size='256MB', conf_device_bits=12,
+        conf_base=0x30000000, conf_size='256MiB', conf_device_bits=12,
         pci_pio_base=0x2f000000,
         pci_mem_base=0x40000000,
         int_policy="ARM_PCI_INT_DEV", int_base=100, int_count=4)
@@ -1354,7 +1354,7 @@ class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
                 its=NULL)
 
     pci_host = GenericArmPciHost(
-        conf_base=0x40000000, conf_size='256MB', conf_device_bits=12,
+        conf_base=0x40000000, conf_size='256MiB', conf_device_bits=12,
         pci_pio_base=0x50000000,
         pci_mem_base=0x400000000,
         int_policy="ARM_PCI_INT_DEV", int_base=100, int_count=4)

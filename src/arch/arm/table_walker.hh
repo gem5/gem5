@@ -132,7 +132,7 @@ class TableWalker : public ClockedObject
             return (EntryType)(data & 0x3);
         }
 
-        /** Is the page a Supersection (16MB)?*/
+        /** Is the page a Supersection (16 MiB)?*/
         bool supersection() const
         {
             return bits(data, 18);
@@ -434,8 +434,8 @@ class TableWalker : public ClockedObject
         {
             switch (bits(data, 1, 0)) {
               case 0x1:
-                // In AArch64 blocks are not allowed at L0 for the 4 KB granule
-                // and at L1 for 16/64 KB granules
+                // In AArch64 blocks are not allowed at L0 for the
+                // 4 KiB granule and at L1 for 16/64 KiB granules
                 switch (grainSize) {
                   case Grain4KB:
                     if (lookupLevel == L0 || lookupLevel == L3)
@@ -451,7 +451,7 @@ class TableWalker : public ClockedObject
 
                   case Grain64KB:
                     // With Armv8.2-LPA (52bit PA) L1 Block descriptors
-                    // are allowed for 64KB granule
+                    // are allowed for 64KiB granule
                     if ((lookupLevel == L1 && physAddrRange == 52) ||
                         lookupLevel == L2)
                         return Block;
@@ -474,13 +474,13 @@ class TableWalker : public ClockedObject
             if (type() == Block) {
                 switch (grainSize) {
                     case Grain4KB:
-                        return lookupLevel == L1 ? 30 /* 1 GB */
-                                                 : 21 /* 2 MB */;
+                        return lookupLevel == L1 ? 30 /* 1 GiB */
+                                                 : 21 /* 2 MiB */;
                     case Grain16KB:
-                        return 25  /* 32 MB */;
+                        return 25  /* 32 MiB */;
                     case Grain64KB:
-                        return lookupLevel == L1 ? 42 /* 4TB MB */
-                                                 : 29 /* 512 MB */;
+                        return lookupLevel == L1 ? 42 /* 4 TiB */
+                                                 : 29 /* 512 MiB */;
                     default:
                         panic("Invalid AArch64 VM granule size\n");
                 }
