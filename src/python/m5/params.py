@@ -678,7 +678,7 @@ class Float(ParamValue, float):
 
 class MemorySize(CheckedInt):
     cxx_type = 'uint64_t'
-    ex_str = '512MB'
+    ex_str = '512MiB'
     size = 64
     unsigned = True
     def __init__(self, value):
@@ -690,7 +690,7 @@ class MemorySize(CheckedInt):
 
 class MemorySize32(CheckedInt):
     cxx_type = 'uint32_t'
-    ex_str = '512MB'
+    ex_str = '512MiB'
     size = 32
     unsigned = True
     def __init__(self, value):
@@ -710,7 +710,7 @@ class Addr(CheckedInt):
         else:
             try:
                 # Often addresses are referred to with sizes. Ex: A device
-                # base address is at "512MB".  Use toMemorySize() to convert
+                # base address is at "512MiB".  Use toMemorySize() to convert
                 # these into addresses. If the address is not specified with a
                 # "size", an exception will occur and numeric translation will
                 # proceed below.
@@ -1734,7 +1734,7 @@ class NetworkBandwidth(float,ParamValue):
 
 class MemoryBandwidth(float,ParamValue):
     cxx_type = 'float'
-    ex_str = "1GB/s"
+    ex_str = "1GiB/s"
     cmd_line_settable = True
 
     def __new__(cls, value):
