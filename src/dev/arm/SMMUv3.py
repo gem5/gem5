@@ -187,7 +187,7 @@ class SMMUv3(ClockedObject):
     def generateDeviceTree(self, state):
         reg_addr = self.reg_map.start
         reg_size = self.reg_map.size()
-        node = FdtNode("smmuv3@%x" % long(reg_addr))
+        node = FdtNode("smmuv3@%x" % int(reg_addr))
         node.appendCompatible("arm,smmu-v3")
         node.append(FdtPropertyWords("reg",
             state.addrCells(reg_addr) +

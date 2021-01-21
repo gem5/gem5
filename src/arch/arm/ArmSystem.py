@@ -108,7 +108,7 @@ class ArmSystem(System):
         # root instead of appended.
 
         def generateMemNode(mem_range):
-            node = FdtNode("memory@%x" % long(mem_range.start))
+            node = FdtNode("memory@%x" % int(mem_range.start))
             node.append(FdtPropertyStrings("device_type", ["memory"]))
             node.append(FdtPropertyWords("reg",
                 state.addrCells(mem_range.start) +

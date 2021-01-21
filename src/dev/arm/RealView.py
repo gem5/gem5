@@ -211,7 +211,7 @@ class RealViewCtrl(BasicPioDevice):
     idreg = Param.UInt32(0x00000000, "ID Register, SYS_ID")
 
     def generateDeviceTree(self, state):
-        node = FdtNode("sysreg@%x" % long(self.pio_addr))
+        node = FdtNode("sysreg@%x" % int(self.pio_addr))
         node.appendCompatible("arm,vexpress-sysreg")
         node.append(FdtPropertyWords("reg",
             state.addrCells(self.pio_addr) +
@@ -250,7 +250,7 @@ class RealViewOsc(ClockDomain):
 
     def generateDeviceTree(self, state):
         phandle = state.phandle(self)
-        node = FdtNode("osc@" + format(long(phandle), 'x'))
+        node = FdtNode("osc@" + format(int(phandle), 'x'))
         node.appendCompatible("arm,vexpress-osc")
         node.append(FdtPropertyWords("arm,vexpress-sysreg,func",
                                      [0x1, int(self.device)]))
@@ -595,7 +595,7 @@ class MmioSRAM(ParentMem):
         super(MmioSRAM, self).__init__(**kwargs)
 
     def generateDeviceTree(self, state):
-        node = FdtNode("sram@%x" % long(self.range.start))
+        node = FdtNode("sram@%x" % int(self.range.start))
         node.appendCompatible(["mmio-sram"])
         node.append(FdtPropertyWords("reg",
             state.addrCells(self.range.start) +
