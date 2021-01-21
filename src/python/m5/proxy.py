@@ -42,14 +42,7 @@
 #
 #####################################################################
 
-from __future__ import print_function
-from __future__ import absolute_import
-import six
-if six.PY3:
-    long = int
-
 import copy
-
 
 class BaseProxy(object):
     def __init__(self, search_self, search_up):
@@ -74,7 +67,7 @@ class BaseProxy(object):
 
     def _gen_op(operation):
         def op(self, operand):
-            if not (isinstance(operand, (int, long, float)) or \
+            if not (isinstance(operand, (int, float)) or \
                 isproxy(operand)):
                 raise TypeError(
                     "Proxy operand must be a constant or a proxy to a param")

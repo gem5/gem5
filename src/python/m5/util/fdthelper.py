@@ -35,10 +35,6 @@
 #
 # Author: Glenn Bergmans
 
-import six
-if six.PY3:
-    long = int
-
 from m5.ext.pyfdt import pyfdt
 import re
 import os
@@ -56,7 +52,7 @@ class FdtPropertyWords(pyfdt.FdtPropertyWords):
             words = [words]
         # Make sure all values are ints (use automatic base detection if the
         # type is str)
-        words = [long(w, base=0) if type(w) == str else long(w) for w in words]
+        words = [int(w, base=0) if type(w) == str else int(w) for w in words]
         super(FdtPropertyWords, self).__init__(name, words)
 
 class FdtPropertyStrings(pyfdt.FdtPropertyStrings):
@@ -122,7 +118,7 @@ class FdtState(object):
     def int_to_cells(self, value, cells):
         """Helper function for: generates a list of 32 bit cells from an int,
         used to split up addresses in appropriate 32 bit chunks."""
-        value = long(value)
+        value = int(value)
 
         if (value >> (32 * cells)) != 0:
             fatal("Value %d doesn't fit in %d cells" % (value, cells))

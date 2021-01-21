@@ -24,11 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
 import decimal
-import six
-if six.PY3:
-    long = int
 
 import sys
 from m5.util import warn
@@ -42,7 +38,7 @@ def setGlobalFrequency(ticksPerSecond):
     from m5.util import convert
     import _m5.core
 
-    if isinstance(ticksPerSecond, (int, long)):
+    if isinstance(ticksPerSecond, int):
         tps = ticksPerSecond
     elif isinstance(ticksPerSecond, float):
         tps = ticksPerSecond

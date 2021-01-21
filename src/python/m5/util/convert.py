@@ -25,10 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import six
-if six.PY3:
-    long = int
-
 # metric prefixes
 atto  = 1.0e-18
 femto = 1.0e-15

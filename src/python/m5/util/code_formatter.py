@@ -24,9 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-from six import add_metaclass
-
 try:
     import builtins
 except ImportError:
@@ -112,8 +109,7 @@ class code_formatter_meta(type):
                 }
         cls.pattern = re.compile(pat, re.VERBOSE | re.DOTALL | re.MULTILINE)
 
-@add_metaclass(code_formatter_meta)
-class code_formatter(object):
+class code_formatter(object, metaclass=code_formatter_meta):
     delim = r'$'
     ident = r'[_A-z]\w*'
     pos = r'[0-9]+'

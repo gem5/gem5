@@ -33,14 +33,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-from __future__ import absolute_import
-from six import add_metaclass
-
 from abc import *
 
-@add_metaclass(ABCMeta)
-class PyBindExport(object):
+class PyBindExport(object, metaclass=ABCMeta):
     @abstractmethod
     def export(self, code, cname):
         pass

@@ -38,13 +38,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-from __future__ import absolute_import
-from six import add_metaclass
-import six
-if six.PY3:
-    long = int
-
 import sys
 from types import FunctionType, MethodType, ModuleType
 from functools import wraps
@@ -1178,8 +1171,7 @@ class SimObjectCliWrapper(object):
 # The SimObject class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
-@add_metaclass(MetaSimObject)
-class SimObject(object):
+class SimObject(object, metaclass=MetaSimObject):
     # Specify metaclass.  Any class inheriting from SimObject will
     # get this metaclass.
     type = 'SimObject'
