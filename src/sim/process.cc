@@ -307,6 +307,21 @@ Process::drain()
 void
 Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
 {
+    // Check if the page has been mapped by other cores if not to clobber.
+    // When running multithreaded programs in SE-mode with DerivO3CPU model,
+    // there are cases where two or more cores have page faults on the same
+    // page in nearby ticks. When the cores try to handle the faults at the
+    // commit stage (also in nearby ticks/cycles), the first core will ask for
+    // a physical page frame to map with the virtual page. Other cores can
+    // return if the page has been mapped and `!clobber`.
+    if (!clobber) {
+        const EmulationPageTable::Entry *pte = pTable->lookup(vaddr);
+        if (pte) {
+            warn("Process::allocateMem: addr %#x already mapped\n", vaddr);
+            return;
+        }
+    }
+
     int npages = divCeil(size, pTable->pageSize());
     Addr paddr = system->allocPhysPages(npages);
     pTable->map(vaddr, paddr, size,
