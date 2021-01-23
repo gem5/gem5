@@ -349,7 +349,7 @@ tracePacket(System *sys, const char *label, PacketPtr pkt)
         DPRINTF(MemoryAccess, "%s from %s of size %i on address %#x data "
                 "%#x %c\n", label, sys->getRequestorName(pkt->req->
                 requestorId()), size, pkt->getAddr(),
-                size, pkt->getAddr(), pkt->getUintX(byte_order),
+                pkt->getUintX(byte_order),
                 pkt->req->isUncacheable() ? 'U' : 'C');
         return;
     }
