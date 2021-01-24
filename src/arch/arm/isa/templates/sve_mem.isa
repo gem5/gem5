@@ -911,6 +911,7 @@ def template SveStructMemSIMicroopDeclare {{
             numRegs(_numRegs), regIndex(_regIndex),
             memAccessFlags(ArmISA::TLB::AllowUnaligned)
         {
+            %(set_reg_idx_arr)s;
             %(constructor)s;
             baseIsSP = isSP(_base);
         }
