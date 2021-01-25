@@ -141,7 +141,6 @@
 #include "base/intmath.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
@@ -786,7 +785,7 @@ std::map<char, BaseRemoteGDB::GdbCommand> BaseRemoteGDB::command_map = {
 bool
 BaseRemoteGDB::checkBpLen(size_t len)
 {
-    return len == sizeof(TheISA::MachInst);
+    return true;
 }
 
 bool
