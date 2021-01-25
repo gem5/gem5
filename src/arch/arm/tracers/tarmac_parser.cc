@@ -828,7 +828,7 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
           case REG_Z:
             {
                 int8_t i = maxVectorLength;
-                const TheISA::VecRegContainer& vc = thread->readVecReg(
+                const ArmISA::VecRegContainer& vc = thread->readVecReg(
                     RegId(VecRegClass, it->index));
                 auto vv = vc.as<uint64_t>();
                 while (i > 0) {
