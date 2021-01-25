@@ -67,8 +67,6 @@
 #include "sim/syscall_desc.hh"
 #include "sim/system.hh"
 
-using namespace TheISA;
-
 namespace
 {
 

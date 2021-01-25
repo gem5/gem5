@@ -151,8 +151,6 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
-using namespace TheISA;
-
 static const char GDBStart = '$';
 static const char GDBEnd = '#';
 static const char GDBGoodP = '+';
@@ -803,7 +801,7 @@ std::map<char, BaseRemoteGDB::GdbCommand> BaseRemoteGDB::command_map = {
 bool
 BaseRemoteGDB::checkBpLen(size_t len)
 {
-    return len == sizeof(MachInst);
+    return len == sizeof(TheISA::MachInst);
 }
 
 bool

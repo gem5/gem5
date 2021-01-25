@@ -77,8 +77,6 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
-using namespace TheISA;
-
 BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
     : BaseCPU(p),
       curThread(0),
@@ -298,7 +296,7 @@ BaseSimpleCPU::setupFetchRequest(const RequestPtr &req)
     // set up memory request for instruction fetch
     DPRINTF(Fetch, "Fetch: Inst PC:%08p, Fetch PC:%08p\n", instAddr, fetchPC);
 
-    req->setVirt(fetchPC, sizeof(MachInst), Request::INST_FETCH,
+    req->setVirt(fetchPC, sizeof(TheISA::MachInst), Request::INST_FETCH,
                  instRequestorId(), instAddr);
 }
 
@@ -310,7 +308,7 @@ BaseSimpleCPU::preExecute()
     SimpleThread* thread = t_info.thread;
 
     // maintain $r0 semantics
-    thread->setIntReg(ZeroReg, 0);
+    thread->setIntReg(TheISA::ZeroReg, 0);
 
     // resets predicates
     t_info.setPredicate(true);
@@ -348,7 +346,7 @@ BaseSimpleCPU::preExecute()
             thread->pcState(pcState);
         } else {
             t_info.stayAtPC = true;
-            t_info.fetchOffset += sizeof(MachInst);
+            t_info.fetchOffset += sizeof(TheISA::MachInst);
         }
 
         //If we decoded an instruction and it's microcoded, start pulling

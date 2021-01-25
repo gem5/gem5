@@ -64,8 +64,6 @@
 
 struct BaseCPUParams;
 
-using namespace TheISA;
-
 BaseO3CPU::BaseO3CPU(const BaseCPUParams &params)
     : BaseCPU(params)
 {

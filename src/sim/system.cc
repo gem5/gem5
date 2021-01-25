@@ -71,8 +71,6 @@
 #include "sim/full_system.hh"
 #include "sim/redirect_path.hh"
 
-using namespace TheISA;
-
 std::vector<System *> System::systemList;
 
 void
@@ -128,7 +126,7 @@ System::Threads::insert(ThreadContext *tc, ContextID id)
 #   if THE_ISA != NULL_ISA
     int port = getRemoteGDBPort();
     if (port) {
-        t.gdb = new RemoteGDB(sys, tc, port + id);
+        t.gdb = new TheISA::RemoteGDB(sys, tc, port + id);
         t.gdb->listen();
     }
 #   endif
@@ -378,18 +376,18 @@ System::validKvmEnvironment() const
 Addr
 System::allocPhysPages(int npages)
 {
-    Addr return_addr = pagePtr << PageShift;
+    Addr return_addr = pagePtr << TheISA::PageShift;
     pagePtr += npages;
 
-    Addr next_return_addr = pagePtr << PageShift;
+    Addr next_return_addr = pagePtr << TheISA::PageShift;
 
     if (_m5opRange.contains(next_return_addr)) {
         warn("Reached m5ops MMIO region\n");
         return_addr = 0xffffffff;
-        pagePtr = 0xffffffff >> PageShift;
+        pagePtr = 0xffffffff >> TheISA::PageShift;
     }
 
-    if ((pagePtr << PageShift) > physmem.totalSize())
+    if ((pagePtr << TheISA::PageShift) > physmem.totalSize())
         fatal("Out of memory, please increase size of physical memory.");
     return return_addr;
 }
@@ -403,7 +401,7 @@ System::memSize() const
 Addr
 System::freeMemSize() const
 {
-   return physmem.totalSize() - (pagePtr << PageShift);
+   return physmem.totalSize() - (pagePtr << TheISA::PageShift);
 }
 
 bool

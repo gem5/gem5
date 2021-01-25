@@ -52,8 +52,6 @@
 #include "params/CheckerCPU.hh"
 #include "sim/full_system.hh"
 
-using namespace TheISA;
-
 void
 CheckerCPU::init()
 {

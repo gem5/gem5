@@ -141,37 +141,36 @@ ThreadContext::quiesceTick(Tick resume)
 void
 serialize(const ThreadContext &tc, CheckpointOut &cp)
 {
-    using namespace TheISA;
-
-    RegVal floatRegs[NumFloatRegs];
-    for (int i = 0; i < NumFloatRegs; ++i)
+    RegVal floatRegs[TheISA::NumFloatRegs];
+    for (int i = 0; i < TheISA::NumFloatRegs; ++i)
         floatRegs[i] = tc.readFloatRegFlat(i);
     // This is a bit ugly, but needed to maintain backwards
     // compatibility.
-    arrayParamOut(cp, "floatRegs.i", floatRegs, NumFloatRegs);
+    arrayParamOut(cp, "floatRegs.i", floatRegs, TheISA::NumFloatRegs);
 
-    std::vector<TheISA::VecRegContainer> vecRegs(NumVecRegs);
-    for (int i = 0; i < NumVecRegs; ++i) {
+    std::vector<TheISA::VecRegContainer> vecRegs(TheISA::NumVecRegs);
+    for (int i = 0; i < TheISA::NumVecRegs; ++i) {
         vecRegs[i] = tc.readVecRegFlat(i);
     }
     SERIALIZE_CONTAINER(vecRegs);
 
-    std::vector<TheISA::VecPredRegContainer> vecPredRegs(NumVecPredRegs);
-    for (int i = 0; i < NumVecPredRegs; ++i) {
+    std::vector<TheISA::VecPredRegContainer>
+        vecPredRegs(TheISA::NumVecPredRegs);
+    for (int i = 0; i < TheISA::NumVecPredRegs; ++i) {
         vecPredRegs[i] = tc.readVecPredRegFlat(i);
     }
     SERIALIZE_CONTAINER(vecPredRegs);
 
-    RegVal intRegs[NumIntRegs];
-    for (int i = 0; i < NumIntRegs; ++i)
+    RegVal intRegs[TheISA::NumIntRegs];
+    for (int i = 0; i < TheISA::NumIntRegs; ++i)
         intRegs[i] = tc.readIntRegFlat(i);
-    SERIALIZE_ARRAY(intRegs, NumIntRegs);
+    SERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
 
-    if (NumCCRegs) {
-        RegVal ccRegs[NumCCRegs];
-        for (int i = 0; i < NumCCRegs; ++i)
+    if (TheISA::NumCCRegs) {
+        RegVal ccRegs[TheISA::NumCCRegs];
+        for (int i = 0; i < TheISA::NumCCRegs; ++i)
             ccRegs[i] = tc.readCCRegFlat(i);
-        SERIALIZE_ARRAY(ccRegs, NumCCRegs);
+        SERIALIZE_ARRAY(ccRegs, TheISA::NumCCRegs);
     }
 
     tc.pcState().serialize(cp);
@@ -182,40 +181,39 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
 void
 unserialize(ThreadContext &tc, CheckpointIn &cp)
 {
-    using namespace TheISA;
-
-    RegVal floatRegs[NumFloatRegs];
+    RegVal floatRegs[TheISA::NumFloatRegs];
     // This is a bit ugly, but needed to maintain backwards
     // compatibility.
-    arrayParamIn(cp, "floatRegs.i", floatRegs, NumFloatRegs);
-    for (int i = 0; i < NumFloatRegs; ++i)
+    arrayParamIn(cp, "floatRegs.i", floatRegs, TheISA::NumFloatRegs);
+    for (int i = 0; i < TheISA::NumFloatRegs; ++i)
         tc.setFloatRegFlat(i, floatRegs[i]);
 
-    std::vector<TheISA::VecRegContainer> vecRegs(NumVecRegs);
+    std::vector<TheISA::VecRegContainer> vecRegs(TheISA::NumVecRegs);
     UNSERIALIZE_CONTAINER(vecRegs);
-    for (int i = 0; i < NumVecRegs; ++i) {
+    for (int i = 0; i < TheISA::NumVecRegs; ++i) {
         tc.setVecRegFlat(i, vecRegs[i]);
     }
 
-    std::vector<TheISA::VecPredRegContainer> vecPredRegs(NumVecPredRegs);
+    std::vector<TheISA::VecPredRegContainer>
+        vecPredRegs(TheISA::NumVecPredRegs);
     UNSERIALIZE_CONTAINER(vecPredRegs);
-    for (int i = 0; i < NumVecPredRegs; ++i) {
+    for (int i = 0; i < TheISA::NumVecPredRegs; ++i) {
         tc.setVecPredRegFlat(i, vecPredRegs[i]);
     }
 
-    RegVal intRegs[NumIntRegs];
-    UNSERIALIZE_ARRAY(intRegs, NumIntRegs);
-    for (int i = 0; i < NumIntRegs; ++i)
+    RegVal intRegs[TheISA::NumIntRegs];
+    UNSERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
+    for (int i = 0; i < TheISA::NumIntRegs; ++i)
         tc.setIntRegFlat(i, intRegs[i]);
 
-    if (NumCCRegs) {
-        RegVal ccRegs[NumCCRegs];
-        UNSERIALIZE_ARRAY(ccRegs, NumCCRegs);
-        for (int i = 0; i < NumCCRegs; ++i)
+    if (TheISA::NumCCRegs) {
+        RegVal ccRegs[TheISA::NumCCRegs];
+        UNSERIALIZE_ARRAY(ccRegs, TheISA::NumCCRegs);
+        for (int i = 0; i < TheISA::NumCCRegs; ++i)
             tc.setCCRegFlat(i, ccRegs[i]);
     }
 
-    PCState pcState;
+    TheISA::PCState pcState;
     pcState.unserialize(cp);
     tc.pcState(pcState);
 

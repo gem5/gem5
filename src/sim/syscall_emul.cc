@@ -53,8 +53,6 @@
 #include "sim/syscall_desc.hh"
 #include "sim/system.hh"
 
-using namespace TheISA;
-
 void
 warnUnsupportedOS(std::string syscall_name)
 {

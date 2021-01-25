@@ -53,8 +53,6 @@
 #include "debug/FmtTicksOff.hh"
 #include "enums/OpClass.hh"
 
-using namespace TheISA;
-
 namespace Trace {
 
 void
@@ -77,7 +75,7 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     Addr cur_pc = pc.instAddr();
     Loader::SymbolTable::const_iterator it;
     ccprintf(outs, "%#x", cur_pc);
-    if (Debug::ExecSymbol && (!FullSystem || !inUserMode(thread)) &&
+    if (Debug::ExecSymbol && (!FullSystem || !TheISA::inUserMode(thread)) &&
             (it = Loader::debugSymbolTable.findNearest(cur_pc)) !=
                 Loader::debugSymbolTable.end()) {
         Addr delta = cur_pc - it->address;

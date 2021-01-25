@@ -610,7 +610,6 @@ template <class Impl>
 Fault
 LSQUnit<Impl>::executeLoad(const DynInstPtr &inst)
 {
-    using namespace TheISA;
     // Execute a specific load.
     Fault load_fault = NoFault;
 
@@ -678,7 +677,6 @@ template <class Impl>
 Fault
 LSQUnit<Impl>::executeStore(const DynInstPtr &store_inst)
 {
-    using namespace TheISA;
     // Make sure that a store exists.
     assert(stores != 0);
 

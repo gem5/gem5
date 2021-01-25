@@ -34,8 +34,6 @@
 #include "cpu/exetrace.hh"
 #include "cpu/static_inst.hh"
 
-using namespace TheISA;
-
 namespace Trace {
 
 void
