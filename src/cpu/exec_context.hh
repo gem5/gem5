@@ -105,36 +105,35 @@ class ExecContext
     /** Vector Register Interfaces. */
     /** @{ */
     /** Reads source vector register operand. */
-    virtual const TheISA::VecRegContainer&
-    readVecRegOperand(const StaticInst *si, int idx) const = 0;
+    virtual const TheISA::VecRegContainer& readVecRegOperand(
+            const StaticInst *si, int idx) const = 0;
 
     /** Gets destination vector register operand for modification. */
-    virtual TheISA::VecRegContainer&
-    getWritableVecRegOperand(const StaticInst *si, int idx) = 0;
+    virtual TheISA::VecRegContainer& getWritableVecRegOperand(
+            const StaticInst *si, int idx) = 0;
 
     /** Sets a destination vector register operand to a value. */
-    virtual void
-    setVecRegOperand(const StaticInst *si, int idx,
-                     const TheISA::VecRegContainer& val) = 0;
+    virtual void setVecRegOperand(const StaticInst *si, int idx,
+            const TheISA::VecRegContainer& val) = 0;
     /** @} */
 
     /** Vector Register Lane Interfaces. */
     /** @{ */
     /** Reads source vector 8bit operand. */
-    virtual ConstVecLane8
-    readVec8BitLaneOperand(const StaticInst *si, int idx) const = 0;
+    virtual ConstVecLane8 readVec8BitLaneOperand(
+            const StaticInst *si, int idx) const = 0;
 
     /** Reads source vector 16bit operand. */
-    virtual ConstVecLane16
-    readVec16BitLaneOperand(const StaticInst *si, int idx) const = 0;
+    virtual ConstVecLane16 readVec16BitLaneOperand(
+            const StaticInst *si, int idx) const = 0;
 
     /** Reads source vector 32bit operand. */
-    virtual ConstVecLane32
-    readVec32BitLaneOperand(const StaticInst *si, int idx) const = 0;
+    virtual ConstVecLane32 readVec32BitLaneOperand(
+            const StaticInst *si, int idx) const = 0;
 
     /** Reads source vector 64bit operand. */
-    virtual ConstVecLane64
-    readVec64BitLaneOperand(const StaticInst *si, int idx) const = 0;
+    virtual ConstVecLane64 readVec64BitLaneOperand(
+            const StaticInst *si, int idx) const = 0;
 
     /** Write a lane of the destination vector operand. */
     /** @{ */
@@ -225,9 +224,9 @@ class ExecContext
      * mode need not override (though in that case this function
      * should never be called).
      */
-    virtual Fault readMem(Addr addr, uint8_t *data, unsigned int size,
-            Request::Flags flags,
-            const std::vector<bool>& byte_enable)
+    virtual Fault
+    readMem(Addr addr, uint8_t *data, unsigned int size,
+            Request::Flags flags, const std::vector<bool>& byte_enable)
     {
         panic("ExecContext::readMem() should be overridden\n");
     }
@@ -239,9 +238,9 @@ class ExecContext
      * mode need not override (though in that case this function
      * should never be called).
      */
-    virtual Fault initiateMemRead(Addr addr, unsigned int size,
-            Request::Flags flags,
-            const std::vector<bool>& byte_enable)
+    virtual Fault
+    initiateMemRead(Addr addr, unsigned int size,
+            Request::Flags flags, const std::vector<bool>& byte_enable)
     {
         panic("ExecContext::initiateMemRead() should be overridden\n");
     }
@@ -263,9 +262,9 @@ class ExecContext
      * For atomic-mode contexts, perform an atomic AMO (a.k.a., Atomic
      * Read-Modify-Write Memory Operation)
      */
-    virtual Fault amoMem(Addr addr, uint8_t *data, unsigned int size,
-                         Request::Flags flags,
-                         AtomicOpFunctorPtr amo_op)
+    virtual Fault
+    amoMem(Addr addr, uint8_t *data, unsigned int size,
+            Request::Flags flags, AtomicOpFunctorPtr amo_op)
     {
         panic("ExecContext::amoMem() should be overridden\n");
     }
@@ -274,9 +273,9 @@ class ExecContext
      * For timing-mode contexts, initiate an atomic AMO (atomic
      * read-modify-write memory operation)
      */
-    virtual Fault initiateMemAMO(Addr addr, unsigned int size,
-                                 Request::Flags flags,
-                                 AtomicOpFunctorPtr amo_op)
+    virtual Fault
+    initiateMemAMO(Addr addr, unsigned int size, Request::Flags flags,
+            AtomicOpFunctorPtr amo_op)
     {
         panic("ExecContext::initiateMemAMO() should be overridden\n");
     }

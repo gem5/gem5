@@ -94,10 +94,7 @@ class ThreadContext : public PCEventScope
 
     bool getUseForClone() { return useForClone; }
 
-    void setUseForClone(bool newUseForClone)
-    {
-        useForClone = newUseForClone;
-    }
+    void setUseForClone(bool new_val) { useForClone = new_val; }
 
     enum Status
     {
@@ -288,7 +285,7 @@ class ThreadContext : public PCEventScope
 
     virtual void setMiscReg(RegIndex misc_reg, RegVal val) = 0;
 
-    virtual RegId flattenRegId(const RegId& regId) const = 0;
+    virtual RegId flattenRegId(const RegId& reg_id) const = 0;
 
     // Also not necessarily the best location for these two.  Hopefully will go
     // away once we decide upon where st cond failures goes.
@@ -332,8 +329,8 @@ class ThreadContext : public PCEventScope
             const TheISA::VecRegContainer& val) = 0;
 
     virtual const TheISA::VecElem& readVecElemFlat(RegIndex idx,
-            const ElemIndex& elemIdx) const = 0;
-    virtual void setVecElemFlat(RegIndex idx, const ElemIndex& elemIdx,
+            const ElemIndex& elem_idx) const = 0;
+    virtual void setVecElemFlat(RegIndex idx, const ElemIndex& elem_idx,
             const TheISA::VecElem& val) = 0;
 
     virtual const TheISA::VecPredRegContainer &
