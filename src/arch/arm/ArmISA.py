@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015-2020 ARM Limited
+# Copyright (c) 2012-2013, 2015-2021 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -108,8 +108,8 @@ class ArmISA(BaseISA):
     # 4K | 64K | !16K | !BigEndEL0 | !SNSMem | !BigEnd | 8b ASID | 40b PA
     id_aa64mmfr0_el1 = Param.UInt64(0x0000000000f00002,
         "AArch64 Memory Model Feature Register 0")
-    # PAN | HPDS | VHE
-    id_aa64mmfr1_el1 = Param.UInt64(0x0000000000101100,
+    # PAN | HPDS | !VHE
+    id_aa64mmfr1_el1 = Param.UInt64(0x0000000000101000,
         "AArch64 Memory Model Feature Register 1")
     id_aa64mmfr2_el1 = Param.UInt64(0x0000000000000000,
         "AArch64 Memory Model Feature Register 2")

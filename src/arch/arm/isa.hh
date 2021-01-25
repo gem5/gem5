@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2020 ARM Limited
+ * Copyright (c) 2010, 2012-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -94,6 +94,7 @@ namespace ArmISA
         uint8_t physAddrRange;
         bool haveSVE;
         bool haveLSE;
+        bool haveVHE;
         bool havePAN;
         bool haveSecEL2;
         bool haveTME;

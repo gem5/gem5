@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015-2020 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -130,6 +130,9 @@ class ArmSystem : public System
      */
     const bool _haveLSE;
 
+    /** True if FEAT_VHE (Virtualization Host Extensions) is implemented */
+    const bool _haveVHE;
+
     /** True if Priviledge Access Never is implemented */
     const unsigned _havePAN;
 
@@ -235,6 +238,9 @@ class ArmSystem : public System
 
     /** Returns true if LSE is implemented (ARMv8.1) */
     bool haveLSE() const { return _haveLSE; }
+
+    /** Returns true if Virtualization Host Extensions is implemented */
+    bool haveVHE() const { return _haveVHE; }
 
     /** Returns true if Priviledge Access Never is implemented */
     bool havePAN() const { return _havePAN; }
