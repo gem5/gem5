@@ -350,4 +350,19 @@ def macroop BSF_R_P {
 end:
     fault "NoFault"
 };
+
+def macroop POPCNT_R_R {
+    popcnt reg, regm, reg, dataSize=8
+};
+
+def macroop POPCNT_R_M {
+    ld t1, seg, sib, disp
+    popcnt reg, t1, reg, dataSize=8
+};
+
+def macroop POPCNT_R_P {
+    rdip t7
+    ld t1, seg, riprel, disp
+    popcnt reg, t1, reg, dataSize=8
+};
 '''

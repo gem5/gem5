@@ -754,8 +754,7 @@
             }
             0x17: decode OPCODE_OP_BOTTOM3 {
                 0x0: decode LEGACY_REP {
-                    0x0: WarnUnimpl::jmpe_Jz();
-                    0x1: WarnUnimpl::popcnt_Gv_Ev();
+                    0x1: POPCNT(Gv,Ev);
                 }
                 //0x1: group10_UD2();
                 0x1: UD2();

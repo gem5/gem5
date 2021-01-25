@@ -1764,4 +1764,17 @@ let {{
         code = '''
             DestReg = X86ISA::convX87TagsToXTags(FTW);
         '''
+
+    class Popcnt(RegOp):
+        code = '''
+            DestReg =
+                merge(DestReg, __builtin_popcountl(psrc1), dataSize);
+        '''
+        flag_code = '''
+            ccFlagBits = ccFlagBits & ~(SFBit | AFBit | ZFBit | PFBit);
+            if (findZero(dataSize * 8, SrcReg1)) {
+                ccFlagBits = ccFlagBits | ZFBit;
+            }
+            cfofBits = cfofBits & ~(OFBit | CFBit);
+        '''
 }};
