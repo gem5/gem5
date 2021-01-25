@@ -709,22 +709,25 @@ if main['USE_PYTHON']:
         if not conf.CheckLib(lib):
             error("Can't find library %s required by python." % lib)
 
-main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
-# Bare minimum environment that only includes python
-marshal_env = main.Clone()
-marshal_env.Append(CCFLAGS='$MARSHAL_CCFLAGS_EXTRA')
-marshal_env.Append(LINKFLAGS='$MARSHAL_LDFLAGS_EXTRA')
-py_version = conf.CheckPythonLib()
-if not py_version:
-    error("Can't find a working Python installation")
+    main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
 
-# Found a working Python installation. Check if it meets minimum
-# requirements.
-if py_version[0] < 3 or \
-   (py_version[0] == 3 and py_version[1] < 6):
-    error('Python version too old. Version 3.6 or newer is required.')
-elif py_version[0] > 3:
-    warning('Python version too new. Python 3 expected.')
+    marshal_env = main.Clone()
+
+    # Bare minimum environment that only includes python
+    marshal_env.Append(CCFLAGS='$MARSHAL_CCFLAGS_EXTRA')
+    marshal_env.Append(LINKFLAGS='$MARSHAL_LDFLAGS_EXTRA')
+
+    py_version = conf.CheckPythonLib()
+    if not py_version:
+        error("Can't find a working Python installation")
+
+    # Found a working Python installation. Check if it meets minimum
+    # requirements.
+    if py_version[0] < 3 or \
+    (py_version[0] == 3 and py_version[1] < 6):
+        error('Python version too old. Version 3.6 or newer is required.')
+    elif py_version[0] > 3:
+        warning('Python version too new. Python 3 expected.')
 
 # On Solaris you need to use libsocket for socket ops
 if not conf.CheckLibWithHeader(None, 'sys/socket.h', 'C++', 'accept(0,0,0);'):
@@ -1271,10 +1274,13 @@ Build variables for {dir}:
     env.Append(CCFLAGS='$CCFLAGS_EXTRA')
     env.Append(LINKFLAGS='$LDFLAGS_EXTRA')
 
+    exports=['env']
+    if main['USE_PYTHON']:
+        exports.append('marshal_env')
+
     # The src/SConscript file sets up the build rules in 'env' according
     # to the configured variables.  It returns a list of environments,
     # one for each variant build (debug, opt, etc.)
-    SConscript('src/SConscript', variant_dir=variant_path,
-               exports=['env', 'marshal_env'])
+    SConscript('src/SConscript', variant_dir=variant_path, exports=exports)
 
 atexit.register(summarize_warnings)
