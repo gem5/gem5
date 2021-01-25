@@ -936,6 +936,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             break;
           case MISCREG_CPTR_EL2:
             {
+                const HCR hcr = readMiscRegNoEffect(MISCREG_HCR_EL2);
                 const uint32_t ones = (uint32_t)(-1);
                 CPTR cptrMask = 0;
                 cptrMask.tcpac = ones;
@@ -943,7 +944,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 cptrMask.tfp = ones;
                 if (haveSVE) {
                     cptrMask.tz = ones;
+                    cptrMask.zen = hcr.e2h ? ones : 0;
                 }
+                cptrMask.fpen = hcr.e2h ? ones : 0;
                 newVal &= cptrMask;
                 cptrMask = 0;
                 cptrMask.res1_13_12_el2 = ones;
