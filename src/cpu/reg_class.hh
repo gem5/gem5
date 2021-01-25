@@ -72,7 +72,8 @@ const int NumRegClasses = MiscRegClass + 1;
  * between different classes of registers. For example, a integer register with
  * index 3 is represented by Regid(IntRegClass, 3).
  */
-class RegId {
+class RegId
+{
   protected:
     static const char* regClassStrings[];
     RegClass regClass;
@@ -91,7 +92,8 @@ class RegId {
 
     explicit RegId(RegClass reg_class, RegIndex reg_idx, ElemIndex elem_idx)
         : regClass(reg_class), regIdx(reg_idx), elemIdx(elem_idx),
-          numPinnedWrites(0) {
+          numPinnedWrites(0)
+    {
         if (elemIdx == ILLEGAL_ELEM_INDEX) {
             panic_if(regClass == VecElemClass,
                     "Creating vector physical index w/o element index");
@@ -101,19 +103,21 @@ class RegId {
         }
     }
 
-    bool operator==(const RegId& that) const {
-        return regClass == that.classValue() && regIdx == that.index()
-                                             && elemIdx == that.elemIndex();
+    bool
+    operator==(const RegId& that) const
+    {
+        return regClass == that.classValue() && regIdx == that.index() &&
+            elemIdx == that.elemIndex();
     }
 
-    bool operator!=(const RegId& that) const {
-        return !(*this==that);
-    }
+    bool operator!=(const RegId& that) const { return !(*this==that); }
 
     /** Order operator.
      * The order is required to implement maps with key type RegId
      */
-    bool operator<(const RegId& that) const {
+    bool
+    operator<(const RegId& that) const
+    {
         return regClass < that.classValue() ||
             (regClass == that.classValue() && (
                    regIdx < that.index() ||
@@ -123,7 +127,8 @@ class RegId {
     /**
      * Return true if this register can be renamed
      */
-    bool isRenameable() const
+    bool
+    isRenameable() const
     {
         return regClass != MiscRegClass;
     }
@@ -134,7 +139,8 @@ class RegId {
      * constant zero value throughout the execution).
      */
 
-    inline bool isZeroReg() const
+    inline bool
+    isZeroReg() const
     {
         return regClass == IntRegClass && regIdx == TheISA::ZeroReg;
     }
@@ -160,14 +166,6 @@ class RegId {
     /** @Return true if it is a  condition-code physical register. */
     bool isMiscReg() const { return regClass == MiscRegClass; }
 
-    /**
-     * Return true if this register can be renamed
-     */
-    bool isRenameable()
-    {
-        return regClass != MiscRegClass;
-    }
-
     /** Index accessors */
     /** @{ */
     const RegIndex& index() const { return regIdx; }
@@ -176,7 +174,8 @@ class RegId {
     /** Index flattening.
      * Required to be able to use a vector for the register mapping.
      */
-    inline RegIndex flatIndex() const
+    inline RegIndex
+    flatIndex() const
     {
         switch (regClass) {
           case IntRegClass:
@@ -187,7 +186,7 @@ class RegId {
           case MiscRegClass:
             return regIdx;
           case VecElemClass:
-            return Scale*regIdx + elemIdx;
+            return Scale * regIdx + elemIdx;
         }
         panic("Trying to flatten a register without class!");
         return -1;
@@ -205,7 +204,8 @@ class RegId {
     void setNumPinnedWrites(int num_writes) { numPinnedWrites = num_writes; }
 
     friend std::ostream&
-    operator<<(std::ostream& os, const RegId& rid) {
+    operator<<(std::ostream& os, const RegId& rid)
+    {
         return os << rid.className() << "{" << rid.index() << "}";
     }
 };
@@ -220,7 +220,8 @@ using PhysRegIndex = short int;
  * Like a register ID but physical. The inheritance is private because the
  * only relationship between this types is functional, and it is done to
  * prevent code replication. */
-class PhysRegId : private RegId {
+class PhysRegId : private RegId
+{
   private:
     PhysRegIndex flatIdx;
     int numPinnedWritesToComplete;
@@ -258,15 +259,21 @@ class PhysRegId : private RegId {
      * RegIds.
      */
     /** @{ */
-    bool operator<(const PhysRegId& that) const {
+    bool
+    operator<(const PhysRegId& that) const
+    {
         return RegId::operator<(that);
     }
 
-    bool operator==(const PhysRegId& that) const {
+    bool
+    operator==(const PhysRegId& that) const
+    {
         return RegId::operator==(that);
     }
 
-    bool operator!=(const PhysRegId& that) const {
+    bool
+    operator!=(const PhysRegId& that) const
+    {
         return RegId::operator!=(that);
     }
     /** @} */
@@ -296,15 +303,13 @@ class PhysRegId : private RegId {
      * Returns true if this register is always associated to the same
      * architectural register.
      */
-    bool isFixedMapping() const
-    {
-        return !isRenameable();
-    }
+    bool isFixedMapping() const { return !isRenameable(); }
 
     /** Flat index accessor */
     const PhysRegIndex& flatIndex() const { return flatIdx; }
 
-    static PhysRegId elemId(PhysRegId* vid, ElemIndex elem)
+    static PhysRegId
+    elemId(PhysRegId* vid, ElemIndex elem)
     {
         assert(vid->isVectorPhysReg());
         return PhysRegId(VecElemClass, vid->index(), elem);
@@ -312,7 +317,8 @@ class PhysRegId : private RegId {
 
     int getNumPinnedWrites() const { return numPinnedWrites; }
 
-    void setNumPinnedWrites(int numWrites)
+    void
+    setNumPinnedWrites(int numWrites)
     {
         // An instruction with a pinned destination reg can get
         // squashed. The numPinnedWrites counter may be zero when
@@ -329,12 +335,14 @@ class PhysRegId : private RegId {
 
     bool isPinned() const { return pinned; }
 
-    int getNumPinnedWritesToComplete() const
+    int
+    getNumPinnedWritesToComplete() const
     {
         return numPinnedWritesToComplete;
     }
 
-    void setNumPinnedWritesToComplete(int numWrites)
+    void
+    setNumPinnedWritesToComplete(int numWrites)
     {
         numPinnedWritesToComplete = numWrites;
     }
@@ -350,7 +358,8 @@ namespace std
 template<>
 struct hash<RegId>
 {
-    size_t operator()(const RegId& reg_id) const
+    size_t
+    operator()(const RegId& reg_id) const
     {
         // Extract unique integral values for the effective fields of a RegId.
         const size_t flat_index = static_cast<size_t>(reg_id.flatIndex());
