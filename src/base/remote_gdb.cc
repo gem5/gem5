@@ -712,21 +712,6 @@ BaseRemoteGDB::removeHardBreak(Addr addr, size_t len)
 }
 
 void
-BaseRemoteGDB::clearTempBreakpoint(Addr &bkpt)
-{
-    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", bkpt);
-    removeHardBreak(bkpt, sizeof(TheISA::MachInst));
-    bkpt = 0;
-}
-
-void
-BaseRemoteGDB::setTempBreakpoint(Addr bkpt)
-{
-    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", bkpt);
-    insertHardBreak(bkpt, sizeof(TheISA::MachInst));
-}
-
-void
 BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
 {
     // Here "ticks" aren't simulator ticks which measure time, they're

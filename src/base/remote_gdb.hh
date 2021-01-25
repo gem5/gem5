@@ -257,9 +257,6 @@ class BaseRemoteGDB
     void insertHardBreak(Addr addr, size_t len);
     void removeHardBreak(Addr addr, size_t len);
 
-    void clearTempBreakpoint(Addr &bkpt);
-    void setTempBreakpoint(Addr bkpt);
-
     /*
      * GDB commands.
      */
