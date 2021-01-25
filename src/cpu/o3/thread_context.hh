@@ -204,7 +204,7 @@ class O3ThreadContext : public ThreadContext
                                              reg_idx)).index());
     }
 
-    const VecRegContainer &
+    const TheISA::VecRegContainer &
     readVecReg(const RegId& id) const override
     {
         return readVecRegFlat(flattenRegId(id).index());
@@ -213,7 +213,7 @@ class O3ThreadContext : public ThreadContext
     /**
      * Read vector register operand for modification, hierarchical indexing.
      */
-    VecRegContainer &
+    TheISA::VecRegContainer &
     getWritableVecReg(const RegId& id) override
     {
         return getWritableVecRegFlat(flattenRegId(id).index());
@@ -280,19 +280,19 @@ class O3ThreadContext : public ThreadContext
     }
     /** @} */
 
-    const VecElem &
+    const TheISA::VecElem &
     readVecElem(const RegId& reg) const override
     {
         return readVecElemFlat(flattenRegId(reg).index(), reg.elemIndex());
     }
 
-    const VecPredRegContainer &
+    const TheISA::VecPredRegContainer &
     readVecPredReg(const RegId& id) const override
     {
         return readVecPredRegFlat(flattenRegId(id).index());
     }
 
-    VecPredRegContainer&
+    TheISA::VecPredRegContainer&
     getWritableVecPredReg(const RegId& id) override
     {
         return getWritableVecPredRegFlat(flattenRegId(id).index());
@@ -320,20 +320,20 @@ class O3ThreadContext : public ThreadContext
     }
 
     void
-    setVecReg(const RegId& reg, const VecRegContainer& val) override
+    setVecReg(const RegId& reg, const TheISA::VecRegContainer& val) override
     {
         setVecRegFlat(flattenRegId(reg).index(), val);
     }
 
     void
-    setVecElem(const RegId& reg, const VecElem& val) override
+    setVecElem(const RegId& reg, const TheISA::VecElem& val) override
     {
         setVecElemFlat(flattenRegId(reg).index(), reg.elemIndex(), val);
     }
 
     void
     setVecPredReg(const RegId& reg,
-                  const VecPredRegContainer& val) override
+                  const TheISA::VecPredRegContainer& val) override
     {
         setVecPredRegFlat(flattenRegId(reg).index(), val);
     }
@@ -437,16 +437,17 @@ class O3ThreadContext : public ThreadContext
     RegVal readFloatRegFlat(RegIndex idx) const override;
     void setFloatRegFlat(RegIndex idx, RegVal val) override;
 
-    const VecRegContainer& readVecRegFlat(RegIndex idx) const override;
+    const TheISA::VecRegContainer& readVecRegFlat(RegIndex idx) const override;
     /** Read vector register operand for modification, flat indexing. */
-    VecRegContainer& getWritableVecRegFlat(RegIndex idx) override;
-    void setVecRegFlat(RegIndex idx, const VecRegContainer& val) override;
+    TheISA::VecRegContainer& getWritableVecRegFlat(RegIndex idx) override;
+    void setVecRegFlat(RegIndex idx,
+            const TheISA::VecRegContainer& val) override;
 
-    template <typename VecElem>
-    VecLaneT<VecElem, true>
+    template <typename VE>
+    VecLaneT<VE, true>
     readVecLaneFlat(RegIndex idx, int lId) const
     {
-        return cpu->template readArchVecLane<VecElem>(idx, lId,
+        return cpu->template readArchVecLane<VE>(idx, lId,
                 thread->threadId());
     }
 
@@ -457,15 +458,17 @@ class O3ThreadContext : public ThreadContext
         cpu->template setArchVecLane(idx, lId, thread->threadId(), val);
     }
 
-    const VecElem &readVecElemFlat(RegIndex idx,
-                                   const ElemIndex& elemIndex) const override;
+    const TheISA::VecElem &readVecElemFlat(RegIndex idx,
+            const ElemIndex& elemIndex) const override;
     void setVecElemFlat(RegIndex idx, const ElemIndex& elemIdx,
-                        const VecElem& val) override;
+                        const TheISA::VecElem& val) override;
 
-    const VecPredRegContainer& readVecPredRegFlat(RegIndex idx) const override;
-    VecPredRegContainer& getWritableVecPredRegFlat(RegIndex idx) override;
+    const TheISA::VecPredRegContainer&
+        readVecPredRegFlat(RegIndex idx) const override;
+    TheISA::VecPredRegContainer&
+        getWritableVecPredRegFlat(RegIndex idx) override;
     void setVecPredRegFlat(RegIndex idx,
-                           const VecPredRegContainer& val) override;
+                           const TheISA::VecPredRegContainer& val) override;
 
     RegVal readCCRegFlat(RegIndex idx) const override;
     void setCCRegFlat(RegIndex idx, RegVal val) override;

@@ -60,17 +60,12 @@ class PhysRegFile
 {
   private:
 
-    using VecElem = TheISA::VecElem;
-    using VecRegContainer = TheISA::VecRegContainer;
     using PhysIds = std::vector<PhysRegId>;
     using VecMode = Enums::VecRegRenameMode;
-    using VecPredRegContainer = TheISA::VecPredRegContainer;
   public:
     using IdRange = std::pair<PhysIds::iterator,
                               PhysIds::iterator>;
   private:
-    static constexpr auto NumVecElemPerVecReg = TheISA::NumVecElemPerVecReg;
-
     /** Integer register file. */
     std::vector<RegVal> intRegFile;
     std::vector<PhysRegId> intRegIds;
@@ -80,12 +75,12 @@ class PhysRegFile
     std::vector<PhysRegId> floatRegIds;
 
     /** Vector register file. */
-    std::vector<VecRegContainer> vectorRegFile;
+    std::vector<TheISA::VecRegContainer> vectorRegFile;
     std::vector<PhysRegId> vecRegIds;
     std::vector<PhysRegId> vecElemIds;
 
     /** Predicate register file. */
-    std::vector<VecPredRegContainer> vecPredRegFile;
+    std::vector<TheISA::VecPredRegContainer> vecPredRegFile;
     std::vector<PhysRegId> vecPredRegIds;
 
     /** Condition-code register file. */
@@ -201,7 +196,7 @@ class PhysRegFile
     }
 
     /** Reads a vector register. */
-    const VecRegContainer &
+    const TheISA::VecRegContainer &
     readVecReg(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->isVectorPhysReg());
@@ -214,27 +209,27 @@ class PhysRegFile
     }
 
     /** Reads a vector register for modification. */
-    VecRegContainer &
+    TheISA::VecRegContainer &
     getWritableVecReg(PhysRegIdPtr phys_reg)
     {
         /* const_cast for not duplicating code above. */
-        return const_cast<VecRegContainer&>(readVecReg(phys_reg));
+        return const_cast<TheISA::VecRegContainer&>(readVecReg(phys_reg));
     }
 
     /** Reads a vector register lane. */
-    template <typename VecElem, int LaneIdx>
-    VecLaneT<VecElem, true>
+    template <typename VE, int LaneIdx>
+    VecLaneT<VE, true>
     readVecLane(PhysRegIdPtr phys_reg) const
     {
-        return readVecReg(phys_reg).laneView<VecElem, LaneIdx>();
+        return readVecReg(phys_reg).laneView<VE, LaneIdx>();
     }
 
     /** Reads a vector register lane. */
-    template <typename VecElem>
-    VecLaneT<VecElem, true>
+    template <typename VE>
+    VecLaneT<VE, true>
     readVecLane(PhysRegIdPtr phys_reg) const
     {
-        return readVecReg(phys_reg).laneView<VecElem>(phys_reg->elemIndex());
+        return readVecReg(phys_reg).laneView<VE>(phys_reg->elemIndex());
     }
 
     /** Get a vector register lane for modification. */
@@ -252,12 +247,12 @@ class PhysRegFile
     }
 
     /** Reads a vector element. */
-    const VecElem &
+    const TheISA::VecElem &
     readVecElem(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->isVectorPhysElem());
-        auto ret = vectorRegFile[phys_reg->index()].as<VecElem>();
-        const VecElem& val = ret[phys_reg->elemIndex()];
+        auto ret = vectorRegFile[phys_reg->index()].as<TheISA::VecElem>();
+        const TheISA::VecElem& val = ret[phys_reg->elemIndex()];
         DPRINTF(IEW, "RegFile: Access to element %d of vector register %i,"
                 " has data %#x\n", phys_reg->elemIndex(),
                 int(phys_reg->index()), val);
@@ -266,7 +261,8 @@ class PhysRegFile
     }
 
     /** Reads a predicate register. */
-    const VecPredRegContainer& readVecPredReg(PhysRegIdPtr phys_reg) const
+    const TheISA::VecPredRegContainer&
+    readVecPredReg(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->isVecPredPhysReg());
 
@@ -277,10 +273,12 @@ class PhysRegFile
         return vecPredRegFile[phys_reg->index()];
     }
 
-    VecPredRegContainer& getWritableVecPredReg(PhysRegIdPtr phys_reg)
+    TheISA::VecPredRegContainer&
+    getWritableVecPredReg(PhysRegIdPtr phys_reg)
     {
         /* const_cast for not duplicating code above. */
-        return const_cast<VecPredRegContainer&>(readVecPredReg(phys_reg));
+        return const_cast<TheISA::VecPredRegContainer&>(
+                readVecPredReg(phys_reg));
     }
 
     /** Reads a condition-code register. */
@@ -323,7 +321,7 @@ class PhysRegFile
 
     /** Sets a vector register to the given value. */
     void
-    setVecReg(PhysRegIdPtr phys_reg, const VecRegContainer& val)
+    setVecReg(PhysRegIdPtr phys_reg, const TheISA::VecRegContainer& val)
     {
         assert(phys_reg->isVectorPhysReg());
 
@@ -335,19 +333,21 @@ class PhysRegFile
 
     /** Sets a vector register to the given value. */
     void
-    setVecElem(PhysRegIdPtr phys_reg, const VecElem val)
+    setVecElem(PhysRegIdPtr phys_reg, const TheISA::VecElem val)
     {
         assert(phys_reg->isVectorPhysElem());
 
         DPRINTF(IEW, "RegFile: Setting element %d of vector register %i to"
                 " %#x\n", phys_reg->elemIndex(), int(phys_reg->index()), val);
 
-        vectorRegFile[phys_reg->index()].as<VecElem>()[phys_reg->elemIndex()] =
-                val;
+        vectorRegFile[phys_reg->index()].as<TheISA::VecElem>()[
+            phys_reg->elemIndex()] = val;
     }
 
     /** Sets a predicate register to the given value. */
-    void setVecPredReg(PhysRegIdPtr phys_reg, const VecPredRegContainer& val)
+    void
+    setVecPredReg(PhysRegIdPtr phys_reg,
+            const TheISA::VecPredRegContainer& val)
     {
         assert(phys_reg->isVecPredPhysReg());
 

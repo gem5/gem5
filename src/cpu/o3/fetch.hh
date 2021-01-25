@@ -81,9 +81,6 @@ class DefaultFetch
     typedef typename CPUPol::FetchStruct FetchStruct;
     typedef typename CPUPol::TimeStruct TimeStruct;
 
-    /** Typedefs from ISA. */
-    typedef TheISA::MachInst MachInst;
-
     /**
      * IcachePort class for instruction fetch.
      */

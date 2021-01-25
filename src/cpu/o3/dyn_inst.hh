@@ -60,13 +60,8 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Typedef for the CPU. */
     typedef typename Impl::O3CPU O3CPU;
 
-    /** Binary machine instruction type. */
-    typedef TheISA::MachInst MachInst;
     /** Register types. */
-    using VecRegContainer = TheISA::VecRegContainer;
-    using VecElem = TheISA::VecElem;
     static constexpr auto NumVecElemPerVecReg = TheISA::NumVecElemPerVecReg;
-    using VecPredRegContainer = TheISA::VecPredRegContainer;
 
     enum {
         MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
@@ -273,7 +268,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         return this->cpu->readFloatReg(this->_srcRegIdx[idx]);
     }
 
-    const VecRegContainer&
+    const TheISA::VecRegContainer&
     readVecRegOperand(const StaticInst *si, int idx) const override
     {
         return this->cpu->readVecReg(this->_srcRegIdx[idx]);
@@ -282,7 +277,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /**
      * Read destination vector register operand for modification.
      */
-    VecRegContainer&
+    TheISA::VecRegContainer&
     getWritableVecRegOperand(const StaticInst *si, int idx) override
     {
         return this->cpu->getWritableVecReg(this->_destRegIdx[idx]);
@@ -351,18 +346,19 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     }
     /** @} */
 
-    VecElem readVecElemOperand(const StaticInst *si, int idx) const override
+    TheISA::VecElem
+    readVecElemOperand(const StaticInst *si, int idx) const override
     {
         return this->cpu->readVecElem(this->_srcRegIdx[idx]);
     }
 
-    const VecPredRegContainer&
+    const TheISA::VecPredRegContainer&
     readVecPredRegOperand(const StaticInst *si, int idx) const override
     {
         return this->cpu->readVecPredReg(this->_srcRegIdx[idx]);
     }
 
-    VecPredRegContainer&
+    TheISA::VecPredRegContainer&
     getWritableVecPredRegOperand(const StaticInst *si, int idx) override
     {
         return this->cpu->getWritableVecPredReg(this->_destRegIdx[idx]);
@@ -393,14 +389,15 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 
     void
     setVecRegOperand(const StaticInst *si, int idx,
-                     const VecRegContainer& val) override
+                     const TheISA::VecRegContainer& val) override
     {
         this->cpu->setVecReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setVecRegOperand(si, idx, val);
     }
 
-    void setVecElemOperand(const StaticInst *si, int idx,
-                           const VecElem val) override
+    void
+    setVecElemOperand(const StaticInst *si, int idx,
+            const TheISA::VecElem val) override
     {
         int reg_idx = idx;
         this->cpu->setVecElem(this->_destRegIdx[reg_idx], val);
@@ -409,7 +406,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 
     void
     setVecPredRegOperand(const StaticInst *si, int idx,
-                         const VecPredRegContainer& val) override
+                         const TheISA::VecPredRegContainer& val) override
     {
         this->cpu->setVecPredReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setVecPredRegOperand(si, idx, val);

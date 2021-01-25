@@ -79,6 +79,8 @@ namespace X86ISA
     class X86StaticInst : public StaticInst
     {
       protected:
+        using ExtMachInst = X86ISA::ExtMachInst;
+
         // Constructor.
         X86StaticInst(const char *mnem,
              ExtMachInst _machInst, OpClass __opClass)

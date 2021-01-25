@@ -120,7 +120,7 @@ UnifiedRenameMap::init(PhysRegFile *_regFile,
 
     vecMap.init(TheISA::NumVecRegs, &(freeList->vecList), (RegIndex)-1);
 
-    vecElemMap.init(TheISA::NumVecRegs * NVecElems,
+    vecElemMap.init(TheISA::NumVecRegs * TheISA::NumVecElemPerVecReg,
             &(freeList->vecElemList), (RegIndex)-1);
 
     predMap.init(TheISA::NumVecPredRegs, &(freeList->predList), (RegIndex)-1);
@@ -200,8 +200,8 @@ UnifiedRenameMap::switchMode(VecMode newVecMode)
          */
         TheISA::VecRegContainer new_RF[TheISA::NumVecRegs];
         for (uint32_t i = 0; i < TheISA::NumVecRegs; i++) {
-            VecReg dst = new_RF[i].as<TheISA::VecElem>();
-            for (uint32_t l = 0; l < NVecElems; l++) {
+            TheISA::VecReg dst = new_RF[i].as<TheISA::VecElem>();
+            for (uint32_t l = 0; l < TheISA::NumVecElemPerVecReg; l++) {
                 RegId s_rid(VecElemClass, i, l);
                 PhysRegIdPtr s_prid = vecElemMap.lookup(s_rid);
                 dst[l] = regFile->readVecElem(s_prid);

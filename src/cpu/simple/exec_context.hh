@@ -54,11 +54,8 @@
 
 class BaseSimpleCPU;
 
-class SimpleExecContext : public ExecContext {
-  protected:
-    using VecRegContainer = TheISA::VecRegContainer;
-    using VecElem = TheISA::VecElem;
-
+class SimpleExecContext : public ExecContext
+{
   public:
     BaseSimpleCPU *cpu;
     SimpleThread* thread;
@@ -304,7 +301,7 @@ class SimpleExecContext : public ExecContext {
     }
 
     /** Reads a vector register. */
-    const VecRegContainer &
+    const TheISA::VecRegContainer &
     readVecRegOperand(const StaticInst *si, int idx) const override
     {
         execContextStats.numVecRegReads++;
@@ -314,7 +311,7 @@ class SimpleExecContext : public ExecContext {
     }
 
     /** Reads a vector register for modification. */
-    VecRegContainer &
+    TheISA::VecRegContainer &
     getWritableVecRegOperand(const StaticInst *si, int idx) override
     {
         execContextStats.numVecRegWrites++;
@@ -326,7 +323,7 @@ class SimpleExecContext : public ExecContext {
     /** Sets a vector register to a value. */
     void
     setVecRegOperand(const StaticInst *si, int idx,
-                     const VecRegContainer& val) override
+                     const TheISA::VecRegContainer& val) override
     {
         execContextStats.numVecRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
@@ -337,14 +334,14 @@ class SimpleExecContext : public ExecContext {
     /** Vector Register Lane Interfaces. */
     /** @{ */
     /** Reads source vector lane. */
-    template <typename VecElem>
-    VecLaneT<VecElem, true>
+    template <typename VE>
+    VecLaneT<VE, true>
     readVecLaneOperand(const StaticInst *si, int idx) const
     {
         execContextStats.numVecRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.isVecReg());
-        return thread->readVecLane<VecElem>(reg);
+        return thread->readVecLane<VE>(reg);
     }
     /** Reads source vector 8bit operand. */
     virtual ConstVecLane8
@@ -404,7 +401,7 @@ class SimpleExecContext : public ExecContext {
     /** @} */
 
     /** Reads an element of a vector register. */
-    VecElem
+    TheISA::VecElem
     readVecElemOperand(const StaticInst *si, int idx) const override
     {
         execContextStats.numVecRegReads++;
@@ -416,7 +413,7 @@ class SimpleExecContext : public ExecContext {
     /** Sets an element of a vector register to a value. */
     void
     setVecElemOperand(const StaticInst *si, int idx,
-                      const VecElem val) override
+                      const TheISA::VecElem val) override
     {
         execContextStats.numVecRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
@@ -424,7 +421,7 @@ class SimpleExecContext : public ExecContext {
         thread->setVecElem(reg, val);
     }
 
-    const VecPredRegContainer&
+    const TheISA::VecPredRegContainer&
     readVecPredRegOperand(const StaticInst *si, int idx) const override
     {
         execContextStats.numVecPredRegReads++;
@@ -433,7 +430,7 @@ class SimpleExecContext : public ExecContext {
         return thread->readVecPredReg(reg);
     }
 
-    VecPredRegContainer&
+    TheISA::VecPredRegContainer&
     getWritableVecPredRegOperand(const StaticInst *si, int idx) override
     {
         execContextStats.numVecPredRegWrites++;
@@ -444,7 +441,7 @@ class SimpleExecContext : public ExecContext {
 
     void
     setVecPredRegOperand(const StaticInst *si, int idx,
-                         const VecPredRegContainer& val) override
+                         const TheISA::VecPredRegContainer& val) override
     {
         execContextStats.numVecPredRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
@@ -510,14 +507,14 @@ class SimpleExecContext : public ExecContext {
         thread->setMiscReg(misc_reg, val);
     }
 
-    PCState
+    TheISA::PCState
     pcState() const override
     {
         return thread->pcState();
     }
 
     void
-    pcState(const PCState &val) override
+    pcState(const TheISA::PCState &val) override
     {
         thread->pcState(val);
     }

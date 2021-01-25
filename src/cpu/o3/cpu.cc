@@ -1182,44 +1182,40 @@ FullO3CPU<Impl>::readFloatReg(PhysRegIdPtr phys_reg)
 }
 
 template <class Impl>
-auto
+const TheISA::VecRegContainer&
 FullO3CPU<Impl>::readVecReg(PhysRegIdPtr phys_reg) const
-        -> const VecRegContainer&
 {
     cpuStats.vecRegfileReads++;
     return regFile.readVecReg(phys_reg);
 }
 
 template <class Impl>
-auto
+TheISA::VecRegContainer&
 FullO3CPU<Impl>::getWritableVecReg(PhysRegIdPtr phys_reg)
-        -> VecRegContainer&
 {
     cpuStats.vecRegfileWrites++;
     return regFile.getWritableVecReg(phys_reg);
 }
 
 template <class Impl>
-auto
-FullO3CPU<Impl>::readVecElem(PhysRegIdPtr phys_reg) const -> const VecElem&
+const TheISA::VecElem&
+FullO3CPU<Impl>::readVecElem(PhysRegIdPtr phys_reg) const
 {
     cpuStats.vecRegfileReads++;
     return regFile.readVecElem(phys_reg);
 }
 
 template <class Impl>
-auto
+const TheISA::VecPredRegContainer&
 FullO3CPU<Impl>::readVecPredReg(PhysRegIdPtr phys_reg) const
-        -> const VecPredRegContainer&
 {
     cpuStats.vecPredRegfileReads++;
     return regFile.readVecPredReg(phys_reg);
 }
 
 template <class Impl>
-auto
+TheISA::VecPredRegContainer&
 FullO3CPU<Impl>::getWritableVecPredReg(PhysRegIdPtr phys_reg)
-        -> VecPredRegContainer&
 {
     cpuStats.vecPredRegfileWrites++;
     return regFile.getWritableVecPredReg(phys_reg);
@@ -1251,7 +1247,8 @@ FullO3CPU<Impl>::setFloatReg(PhysRegIdPtr phys_reg, RegVal val)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setVecReg(PhysRegIdPtr phys_reg, const VecRegContainer& val)
+FullO3CPU<Impl>::setVecReg(PhysRegIdPtr phys_reg,
+        const TheISA::VecRegContainer& val)
 {
     cpuStats.vecRegfileWrites++;
     regFile.setVecReg(phys_reg, val);
@@ -1259,7 +1256,7 @@ FullO3CPU<Impl>::setVecReg(PhysRegIdPtr phys_reg, const VecRegContainer& val)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setVecElem(PhysRegIdPtr phys_reg, const VecElem& val)
+FullO3CPU<Impl>::setVecElem(PhysRegIdPtr phys_reg, const TheISA::VecElem& val)
 {
     cpuStats.vecRegfileWrites++;
     regFile.setVecElem(phys_reg, val);
@@ -1268,7 +1265,7 @@ FullO3CPU<Impl>::setVecElem(PhysRegIdPtr phys_reg, const VecElem& val)
 template <class Impl>
 void
 FullO3CPU<Impl>::setVecPredReg(PhysRegIdPtr phys_reg,
-                               const VecPredRegContainer& val)
+                               const TheISA::VecPredRegContainer& val)
 {
     cpuStats.vecPredRegfileWrites++;
     regFile.setVecPredReg(phys_reg, val);
@@ -1305,9 +1302,8 @@ FullO3CPU<Impl>::readArchFloatReg(int reg_idx, ThreadID tid)
 }
 
 template <class Impl>
-auto
+const TheISA::VecRegContainer&
 FullO3CPU<Impl>::readArchVecReg(int reg_idx, ThreadID tid) const
-        -> const VecRegContainer&
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecRegClass, reg_idx));
@@ -1315,9 +1311,8 @@ FullO3CPU<Impl>::readArchVecReg(int reg_idx, ThreadID tid) const
 }
 
 template <class Impl>
-auto
+TheISA::VecRegContainer&
 FullO3CPU<Impl>::getWritableArchVecReg(int reg_idx, ThreadID tid)
-        -> VecRegContainer&
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecRegClass, reg_idx));
@@ -1325,9 +1320,9 @@ FullO3CPU<Impl>::getWritableArchVecReg(int reg_idx, ThreadID tid)
 }
 
 template <class Impl>
-auto
-FullO3CPU<Impl>::readArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
-                                 ThreadID tid) const -> const VecElem&
+const TheISA::VecElem&
+FullO3CPU<Impl>::readArchVecElem(
+        const RegIndex& reg_idx, const ElemIndex& ldx, ThreadID tid) const
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                                 RegId(VecElemClass, reg_idx, ldx));
@@ -1335,9 +1330,8 @@ FullO3CPU<Impl>::readArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
 }
 
 template <class Impl>
-auto
+const TheISA::VecPredRegContainer&
 FullO3CPU<Impl>::readArchVecPredReg(int reg_idx, ThreadID tid) const
-        -> const VecPredRegContainer&
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecPredRegClass, reg_idx));
@@ -1345,9 +1339,8 @@ FullO3CPU<Impl>::readArchVecPredReg(int reg_idx, ThreadID tid) const
 }
 
 template <class Impl>
-auto
+TheISA::VecPredRegContainer&
 FullO3CPU<Impl>::getWritableArchVecPredReg(int reg_idx, ThreadID tid)
-        -> VecPredRegContainer&
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecPredRegClass, reg_idx));
@@ -1389,8 +1382,8 @@ FullO3CPU<Impl>::setArchFloatReg(int reg_idx, RegVal val, ThreadID tid)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setArchVecReg(int reg_idx, const VecRegContainer& val,
-                               ThreadID tid)
+FullO3CPU<Impl>::setArchVecReg(int reg_idx,
+        const TheISA::VecRegContainer& val, ThreadID tid)
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecRegClass, reg_idx));
@@ -1400,7 +1393,7 @@ FullO3CPU<Impl>::setArchVecReg(int reg_idx, const VecRegContainer& val,
 template <class Impl>
 void
 FullO3CPU<Impl>::setArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
-                                const VecElem& val, ThreadID tid)
+                                const TheISA::VecElem& val, ThreadID tid)
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecElemClass, reg_idx, ldx));
@@ -1409,8 +1402,8 @@ FullO3CPU<Impl>::setArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setArchVecPredReg(int reg_idx, const VecPredRegContainer& val,
-                                   ThreadID tid)
+FullO3CPU<Impl>::setArchVecPredReg(int reg_idx,
+        const TheISA::VecPredRegContainer& val, ThreadID tid)
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecPredRegClass, reg_idx));

@@ -60,13 +60,13 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
       numPhysicalFloatRegs(_numPhysicalFloatRegs),
       numPhysicalVecRegs(_numPhysicalVecRegs),
       numPhysicalVecElemRegs(_numPhysicalVecRegs *
-                             NumVecElemPerVecReg),
+                             TheISA::NumVecElemPerVecReg),
       numPhysicalVecPredRegs(_numPhysicalVecPredRegs),
       numPhysicalCCRegs(_numPhysicalCCRegs),
       totalNumRegs(_numPhysicalIntRegs
                    + _numPhysicalFloatRegs
                    + _numPhysicalVecRegs
-                   + _numPhysicalVecRegs * NumVecElemPerVecReg
+                   + _numPhysicalVecRegs * TheISA::NumVecElemPerVecReg
                    + _numPhysicalVecPredRegs
                    + _numPhysicalCCRegs),
       vecMode(vmode)
@@ -102,7 +102,7 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     // registers, just a different (and incompatible) way to access
     // them; put them onto the vector free list.
     for (phys_reg = 0; phys_reg < numPhysicalVecRegs; phys_reg++) {
-        for (ElemIndex eIdx = 0; eIdx < NumVecElemPerVecReg; eIdx++) {
+        for (ElemIndex eIdx = 0; eIdx < TheISA::NumVecElemPerVecReg; eIdx++) {
             vecElemIds.emplace_back(VecElemClass, phys_reg,
                     eIdx, flat_reg_idx++);
         }
@@ -150,10 +150,11 @@ PhysRegFile::initFreeList(UnifiedFreeList *freeList)
      * registers; put them onto the vector free list. */
     for (reg_idx = 0; reg_idx < numPhysicalVecRegs; reg_idx++) {
         assert(vecRegIds[reg_idx].index() == reg_idx);
-        for (ElemIndex elemIdx = 0; elemIdx < NumVecElemPerVecReg; elemIdx++) {
-            assert(vecElemIds[reg_idx * NumVecElemPerVecReg +
+        for (ElemIndex elemIdx = 0; elemIdx < TheISA::NumVecElemPerVecReg;
+                elemIdx++) {
+            assert(vecElemIds[reg_idx * TheISA::NumVecElemPerVecReg +
                     elemIdx].index() == reg_idx);
-            assert(vecElemIds[reg_idx * NumVecElemPerVecReg +
+            assert(vecElemIds[reg_idx * TheISA::NumVecElemPerVecReg +
                     elemIdx].elemIndex() == elemIdx);
         }
     }
@@ -187,8 +188,8 @@ PhysRegFile::getRegElemIds(PhysRegIdPtr reg)
             "Trying to get elems of a %s register", reg->className());
     auto idx = reg->index();
     return std::make_pair(
-                vecElemIds.begin() + idx * NumVecElemPerVecReg,
-                vecElemIds.begin() + (idx+1) * NumVecElemPerVecReg);
+                vecElemIds.begin() + idx * TheISA::NumVecElemPerVecReg,
+                vecElemIds.begin() + (idx+1) * TheISA::NumVecElemPerVecReg);
 }
 
 PhysRegFile::IdRange
@@ -223,7 +224,7 @@ PhysRegFile::getTrueId(PhysRegIdPtr reg)
     case VecRegClass:
         return &vecRegIds[reg->index()];
     case VecElemClass:
-        return &vecElemIds[reg->index() * NumVecElemPerVecReg +
+        return &vecElemIds[reg->index() * TheISA::NumVecElemPerVecReg +
             reg->elemIndex()];
     default:
         panic_if(!reg->isVectorPhysElem(),

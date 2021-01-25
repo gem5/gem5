@@ -85,11 +85,9 @@ class Request;
 class CheckerCPU : public BaseCPU, public ExecContext
 {
   protected:
-    typedef TheISA::MachInst MachInst;
-    using VecRegContainer = TheISA::VecRegContainer;
-
     /** id attached to all issued requests */
     RequestorID requestorId;
+
   public:
     void init() override;
 
@@ -201,7 +199,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     /**
      * Read source vector register operand.
      */
-    const VecRegContainer &
+    const TheISA::VecRegContainer &
     readVecRegOperand(const StaticInst *si, int idx) const override
     {
         const RegId& reg = si->srcRegIdx(idx);
@@ -212,7 +210,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     /**
      * Read destination vector register operand for modification.
      */
-    VecRegContainer &
+    TheISA::VecRegContainer &
     getWritableVecRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->destRegIdx(idx);
@@ -293,14 +291,14 @@ class CheckerCPU : public BaseCPU, public ExecContext
     }
     /** @} */
 
-    VecElem
+    TheISA::VecElem
     readVecElemOperand(const StaticInst *si, int idx) const override
     {
         const RegId& reg = si->srcRegIdx(idx);
         return thread->readVecElem(reg);
     }
 
-    const VecPredRegContainer&
+    const TheISA::VecPredRegContainer&
     readVecPredRegOperand(const StaticInst *si, int idx) const override
     {
         const RegId& reg = si->srcRegIdx(idx);
@@ -308,7 +306,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
         return thread->readVecPredReg(reg);
     }
 
-    VecPredRegContainer&
+    TheISA::VecPredRegContainer&
     getWritableVecPredRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->destRegIdx(idx);
@@ -385,7 +383,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     void
     setVecRegOperand(const StaticInst *si, int idx,
-                     const VecRegContainer& val) override
+                     const TheISA::VecRegContainer& val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isVecReg());
@@ -395,7 +393,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     void
     setVecElemOperand(const StaticInst *si, int idx,
-                      const VecElem val) override
+                      const TheISA::VecElem val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isVecElem());
@@ -404,7 +402,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     }
 
     void setVecPredRegOperand(const StaticInst *si, int idx,
-                              const VecPredRegContainer& val) override
+                              const TheISA::VecPredRegContainer& val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isVecPredReg());

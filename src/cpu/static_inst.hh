@@ -85,9 +85,6 @@ class InstRecord;
 class StaticInst : public RefCounted, public StaticInstFlags
 {
   public:
-    /// Binary extended machine instruction type.
-    typedef TheISA::ExtMachInst ExtMachInst;
-
     using RegIdArrayPtr = RegId (StaticInst:: *)[];
 
   private:
@@ -259,7 +256,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     static StaticInstPtr nopStaticInstPtr;
 
     /// The binary machine instruction.
-    const ExtMachInst machInst;
+    const TheISA::ExtMachInst machInst;
 
   protected:
 
@@ -301,7 +298,8 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// default, since the decoder generally only overrides
     /// the fields that are meaningful for the particular
     /// instruction.
-    StaticInst(const char *_mnemonic, ExtMachInst _machInst, OpClass __opClass)
+    StaticInst(const char *_mnemonic, TheISA::ExtMachInst _machInst,
+            OpClass __opClass)
         : _opClass(__opClass),
           _numSrcRegs(0), _numDestRegs(0), _numFPDestRegs(0),
           _numIntDestRegs(0), _numCCDestRegs(0), _numVecDestRegs(0),

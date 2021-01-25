@@ -67,14 +67,8 @@
  * implementation doesn't copy the pointer into any long-term storage
  * (which is pretty hard to imagine they would have reason to do).
  */
-class ExecContext {
-  public:
-    typedef TheISA::PCState PCState;
-
-    using VecRegContainer = TheISA::VecRegContainer;
-    using VecElem = TheISA::VecElem;
-    using VecPredRegContainer = TheISA::VecPredRegContainer;
-
+class ExecContext
+{
   public:
     /**
      * @{
@@ -111,17 +105,17 @@ class ExecContext {
     /** Vector Register Interfaces. */
     /** @{ */
     /** Reads source vector register operand. */
-    virtual const VecRegContainer&
+    virtual const TheISA::VecRegContainer&
     readVecRegOperand(const StaticInst *si, int idx) const = 0;
 
     /** Gets destination vector register operand for modification. */
-    virtual VecRegContainer&
+    virtual TheISA::VecRegContainer&
     getWritableVecRegOperand(const StaticInst *si, int idx) = 0;
 
     /** Sets a destination vector register operand to a value. */
     virtual void
     setVecRegOperand(const StaticInst *si, int idx,
-                     const VecRegContainer& val) = 0;
+                     const TheISA::VecRegContainer& val) = 0;
     /** @} */
 
     /** Vector Register Lane Interfaces. */
@@ -157,28 +151,28 @@ class ExecContext {
     /** Vector Elem Interfaces. */
     /** @{ */
     /** Reads an element of a vector register. */
-    virtual VecElem readVecElemOperand(const StaticInst *si,
-                                        int idx) const = 0;
+    virtual TheISA::VecElem readVecElemOperand(
+            const StaticInst *si, int idx) const = 0;
 
     /** Sets a vector register to a value. */
-    virtual void setVecElemOperand(const StaticInst *si, int idx,
-                                   const VecElem val) = 0;
+    virtual void setVecElemOperand(
+            const StaticInst *si, int idx, const TheISA::VecElem val) = 0;
     /** @} */
 
     /** Predicate registers interface. */
     /** @{ */
     /** Reads source predicate register operand. */
-    virtual const VecPredRegContainer&
-    readVecPredRegOperand(const StaticInst *si, int idx) const = 0;
+    virtual const TheISA::VecPredRegContainer& readVecPredRegOperand(
+            const StaticInst *si, int idx) const = 0;
 
     /** Gets destination predicate register operand for modification. */
-    virtual VecPredRegContainer&
-    getWritableVecPredRegOperand(const StaticInst *si, int idx) = 0;
+    virtual TheISA::VecPredRegContainer& getWritableVecPredRegOperand(
+            const StaticInst *si, int idx) = 0;
 
     /** Sets a destination predicate register operand to a value. */
-    virtual void
-    setVecPredRegOperand(const StaticInst *si, int idx,
-                         const VecPredRegContainer& val) = 0;
+    virtual void setVecPredRegOperand(
+            const StaticInst *si, int idx,
+            const TheISA::VecPredRegContainer& val) = 0;
     /** @} */
 
     /**
@@ -216,8 +210,8 @@ class ExecContext {
      * @{
      * @name PC Control
      */
-    virtual PCState pcState() const = 0;
-    virtual void pcState(const PCState &val) = 0;
+    virtual TheISA::PCState pcState() const = 0;
+    virtual void pcState(const TheISA::PCState &val) = 0;
     /** @} */
 
     /**

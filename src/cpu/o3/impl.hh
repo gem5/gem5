@@ -49,9 +49,6 @@ class FullO3CPU;
  */
 struct O3CPUImpl
 {
-    /** The type of MachInst. */
-    typedef TheISA::MachInst MachInst;
-
     /** The CPU policy to be used, which defines all of the CPU stages. */
     typedef SimpleCPUPolicy<O3CPUImpl> CPUPol;
 

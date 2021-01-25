@@ -228,16 +228,16 @@ Checker<Impl>::verify(const DynInstPtr &completed_inst)
             Addr fetch_PC = thread->instAddr();
             fetch_PC = (fetch_PC & PCMask) + fetchOffset;
 
-            MachInst machInst;
+            TheISA::MachInst machInst;
 
             // If not in the middle of a macro instruction
             if (!curMacroStaticInst) {
                 // set up memory request for instruction fetch
                 auto mem_req = std::make_shared<Request>(
-                    fetch_PC, sizeof(MachInst), 0, requestorId, fetch_PC,
-                    thread->contextId());
+                    fetch_PC, sizeof(TheISA::MachInst), 0, requestorId,
+                    fetch_PC, thread->contextId());
 
-                mem_req->setVirt(fetch_PC, sizeof(MachInst),
+                mem_req->setVirt(fetch_PC, sizeof(TheISA::MachInst),
                                  Request::INST_FETCH, requestorId,
                                  thread->instAddr());
 

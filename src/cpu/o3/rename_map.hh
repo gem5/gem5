@@ -169,10 +169,6 @@ class SimpleRenameMap
 class UnifiedRenameMap
 {
   private:
-    static constexpr uint32_t NVecElems = TheISA::NumVecElemPerVecReg;
-    using VecReg = TheISA::VecReg;
-    using VecPredReg = TheISA::VecPredReg;
-
     /** The integer register rename map */
     SimpleRenameMap intMap;
 

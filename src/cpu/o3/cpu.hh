@@ -96,11 +96,6 @@ class FullO3CPU : public BaseO3CPU
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
 
-    using VecElem =  TheISA::VecElem;
-    using VecRegContainer =  TheISA::VecRegContainer;
-
-    using VecPredRegContainer = TheISA::VecPredRegContainer;
-
     typedef O3ThreadState<Impl> ImplState;
     typedef O3ThreadState<Impl> Thread;
 
@@ -336,12 +331,12 @@ class FullO3CPU : public BaseO3CPU
 
     RegVal readFloatReg(PhysRegIdPtr phys_reg);
 
-    const VecRegContainer& readVecReg(PhysRegIdPtr reg_idx) const;
+    const TheISA::VecRegContainer& readVecReg(PhysRegIdPtr reg_idx) const;
 
     /**
      * Read physical vector register for modification.
      */
-    VecRegContainer& getWritableVecReg(PhysRegIdPtr reg_idx);
+    TheISA::VecRegContainer& getWritableVecReg(PhysRegIdPtr reg_idx);
 
     /** Returns current vector renaming mode */
     Enums::VecRegRenameMode vecRenameMode() const { return vecMode; }
@@ -353,23 +348,23 @@ class FullO3CPU : public BaseO3CPU
     /**
      * Read physical vector register lane
      */
-    template<typename VecElem, int LaneIdx>
-    VecLaneT<VecElem, true>
+    template<typename VE, int LaneIdx>
+    VecLaneT<VE, true>
     readVecLane(PhysRegIdPtr phys_reg) const
     {
         cpuStats.vecRegfileReads++;
-        return regFile.readVecLane<VecElem, LaneIdx>(phys_reg);
+        return regFile.readVecLane<VE, LaneIdx>(phys_reg);
     }
 
     /**
      * Read physical vector register lane
      */
-    template<typename VecElem>
-    VecLaneT<VecElem, true>
+    template<typename VE>
+    VecLaneT<VE, true>
     readVecLane(PhysRegIdPtr phys_reg) const
     {
         cpuStats.vecRegfileReads++;
-        return regFile.readVecLane<VecElem>(phys_reg);
+        return regFile.readVecLane<VE>(phys_reg);
     }
 
     /** Write a lane of the destination vector register. */
@@ -381,11 +376,12 @@ class FullO3CPU : public BaseO3CPU
         return regFile.setVecLane(phys_reg, val);
     }
 
-    const VecElem& readVecElem(PhysRegIdPtr reg_idx) const;
+    const TheISA::VecElem& readVecElem(PhysRegIdPtr reg_idx) const;
 
-    const VecPredRegContainer& readVecPredReg(PhysRegIdPtr reg_idx) const;
+    const TheISA::VecPredRegContainer&
+        readVecPredReg(PhysRegIdPtr reg_idx) const;
 
-    VecPredRegContainer& getWritableVecPredReg(PhysRegIdPtr reg_idx);
+    TheISA::VecPredRegContainer& getWritableVecPredReg(PhysRegIdPtr reg_idx);
 
     RegVal readCCReg(PhysRegIdPtr phys_reg);
 
@@ -393,11 +389,12 @@ class FullO3CPU : public BaseO3CPU
 
     void setFloatReg(PhysRegIdPtr phys_reg, RegVal val);
 
-    void setVecReg(PhysRegIdPtr reg_idx, const VecRegContainer& val);
+    void setVecReg(PhysRegIdPtr reg_idx, const TheISA::VecRegContainer& val);
 
-    void setVecElem(PhysRegIdPtr reg_idx, const VecElem& val);
+    void setVecElem(PhysRegIdPtr reg_idx, const TheISA::VecElem& val);
 
-    void setVecPredReg(PhysRegIdPtr reg_idx, const VecPredRegContainer& val);
+    void setVecPredReg(PhysRegIdPtr reg_idx,
+            const TheISA::VecPredRegContainer& val);
 
     void setCCReg(PhysRegIdPtr phys_reg, RegVal val);
 
@@ -405,18 +402,19 @@ class FullO3CPU : public BaseO3CPU
 
     RegVal readArchFloatReg(int reg_idx, ThreadID tid);
 
-    const VecRegContainer& readArchVecReg(int reg_idx, ThreadID tid) const;
+    const TheISA::VecRegContainer&
+        readArchVecReg(int reg_idx, ThreadID tid) const;
     /** Read architectural vector register for modification. */
-    VecRegContainer& getWritableArchVecReg(int reg_idx, ThreadID tid);
+    TheISA::VecRegContainer& getWritableArchVecReg(int reg_idx, ThreadID tid);
 
     /** Read architectural vector register lane. */
-    template<typename VecElem>
-    VecLaneT<VecElem, true>
+    template<typename VE>
+    VecLaneT<VE, true>
     readArchVecLane(int reg_idx, int lId, ThreadID tid) const
     {
         PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                     RegId(VecRegClass, reg_idx));
-        return readVecLane<VecElem>(phys_reg);
+        return readVecLane<VE>(phys_reg);
     }
 
 
@@ -430,13 +428,14 @@ class FullO3CPU : public BaseO3CPU
         setVecLane(phys_reg, val);
     }
 
-    const VecElem& readArchVecElem(const RegIndex& reg_idx,
-                                   const ElemIndex& ldx, ThreadID tid) const;
+    const TheISA::VecElem& readArchVecElem(const RegIndex& reg_idx,
+            const ElemIndex& ldx, ThreadID tid) const;
 
-    const VecPredRegContainer& readArchVecPredReg(int reg_idx,
-                                                  ThreadID tid) const;
+    const TheISA::VecPredRegContainer& readArchVecPredReg(
+            int reg_idx, ThreadID tid) const;
 
-    VecPredRegContainer& getWritableArchVecPredReg(int reg_idx, ThreadID tid);
+    TheISA::VecPredRegContainer&
+        getWritableArchVecPredReg(int reg_idx, ThreadID tid);
 
     RegVal readArchCCReg(int reg_idx, ThreadID tid);
 
@@ -449,13 +448,14 @@ class FullO3CPU : public BaseO3CPU
 
     void setArchFloatReg(int reg_idx, RegVal val, ThreadID tid);
 
-    void setArchVecPredReg(int reg_idx, const VecPredRegContainer& val,
+    void setArchVecPredReg(int reg_idx, const TheISA::VecPredRegContainer& val,
                            ThreadID tid);
 
-    void setArchVecReg(int reg_idx, const VecRegContainer& val, ThreadID tid);
+    void setArchVecReg(int reg_idx, const TheISA::VecRegContainer& val,
+            ThreadID tid);
 
     void setArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
-                        const VecElem& val, ThreadID tid);
+                        const TheISA::VecElem& val, ThreadID tid);
 
     void setArchCCReg(int reg_idx, RegVal val, ThreadID tid);
 

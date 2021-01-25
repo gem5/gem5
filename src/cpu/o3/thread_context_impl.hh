@@ -247,7 +247,7 @@ O3ThreadContext<Impl>::setFloatRegFlat(RegIndex reg_idx, RegVal val)
 template <class Impl>
 void
 O3ThreadContext<Impl>::setVecRegFlat(
-        RegIndex reg_idx, const VecRegContainer& val)
+        RegIndex reg_idx, const TheISA::VecRegContainer& val)
 {
     cpu->setArchVecReg(reg_idx, val, thread->threadId());
 
@@ -257,7 +257,7 @@ O3ThreadContext<Impl>::setVecRegFlat(
 template <class Impl>
 void
 O3ThreadContext<Impl>::setVecElemFlat(RegIndex idx,
-        const ElemIndex& elemIndex, const VecElem& val)
+        const ElemIndex& elemIndex, const TheISA::VecElem& val)
 {
     cpu->setArchVecElem(idx, elemIndex, val, thread->threadId());
     conditionalSquash();
@@ -266,7 +266,7 @@ O3ThreadContext<Impl>::setVecElemFlat(RegIndex idx,
 template <class Impl>
 void
 O3ThreadContext<Impl>::setVecPredRegFlat(RegIndex reg_idx,
-                                         const VecPredRegContainer& val)
+        const TheISA::VecPredRegContainer& val)
 {
     cpu->setArchVecPredReg(reg_idx, val, thread->threadId());
 

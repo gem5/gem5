@@ -79,7 +79,6 @@ class BaseDynInst : public ExecContext, public RefCounted
     // Typedef for the CPU.
     typedef typename Impl::CPUType ImplCPU;
     typedef typename ImplCPU::ImplState ImplState;
-    using VecRegContainer = TheISA::VecRegContainer;
 
     using LSQRequestPtr = typename Impl::CPUPol::LSQ::LSQRequest*;
     using LQIterator = typename Impl::CPUPol::LSQUnit::LQIterator;
@@ -756,7 +755,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Record a vector register being set to a value */
     void
     setVecRegOperand(const StaticInst *si, int idx,
-                     const VecRegContainer &val) override
+                     const TheISA::VecRegContainer &val) override
     {
         setVecResult(val);
     }
@@ -771,7 +770,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Record a vector register being set to a value */
     void
     setVecElemOperand(const StaticInst *si, int idx,
-                      const VecElem val) override
+                      const TheISA::VecElem val) override
     {
         setVecElemResult(val);
     }
@@ -779,7 +778,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Record a vector register being set to a value */
     void
     setVecPredRegOperand(const StaticInst *si, int idx,
-                         const VecPredRegContainer &val) override
+                         const TheISA::VecPredRegContainer &val) override
     {
         setVecPredResult(val);
     }
