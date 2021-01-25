@@ -44,144 +44,146 @@
 
 namespace X86ISA
 {
-    /**
-     * Class for register indices passed to instruction constructors. Using a
-     * wrapper struct for these lets take advantage of the compiler's type
-     * checking.
-     */
-    struct InstRegIndex : public RegId
-    {
-        explicit InstRegIndex(RegIndex _idx) :
-           RegId(computeRegClass(_idx), _idx) {}
 
-      private:
-        // TODO: As X86 register index definition is highly built on the
-        //       unified space concept, it is easier for the moment to rely on
-        //       an helper function to compute the RegClass. It would be nice
-        //       to fix those definition and get rid of this.
-        RegClass computeRegClass(RegIndex _idx) {
-            if (_idx < FP_Reg_Base) {
-                return IntRegClass;
-            } else if (_idx < CC_Reg_Base) {
-                return FloatRegClass;
-            } else if (_idx < Misc_Reg_Base) {
-                return CCRegClass;
-            } else {
-                return MiscRegClass;
-            }
+/**
+ * Class for register indices passed to instruction constructors. Using a
+ * wrapper struct for these lets take advantage of the compiler's type
+ * checking.
+ */
+struct InstRegIndex : public RegId
+{
+    explicit InstRegIndex(RegIndex _idx) :
+       RegId(computeRegClass(_idx), _idx) {}
+
+  private:
+    // TODO: As X86 register index definition is highly built on the
+    //       unified space concept, it is easier for the moment to rely on
+    //       an helper function to compute the RegClass. It would be nice
+    //       to fix those definition and get rid of this.
+    RegClass
+    computeRegClass(RegIndex _idx)
+    {
+        if (_idx < FP_Reg_Base) {
+            return IntRegClass;
+        } else if (_idx < CC_Reg_Base) {
+            return FloatRegClass;
+        } else if (_idx < Misc_Reg_Base) {
+            return CCRegClass;
+        } else {
+            return MiscRegClass;
         }
-    };
+    }
+};
 
-    /**
-     * Base class for all X86 static instructions.
-     */
+/**
+ * Base class for all X86 static instructions.
+ */
 
-    class X86StaticInst : public StaticInst
-    {
-      protected:
-        using ExtMachInst = X86ISA::ExtMachInst;
+class X86StaticInst : public StaticInst
+{
+  protected:
+    using ExtMachInst = X86ISA::ExtMachInst;
 
-        // Constructor.
-        X86StaticInst(const char *mnem,
-             ExtMachInst _machInst, OpClass __opClass)
-                : StaticInst(mnem, _machInst, __opClass)
-            {
-            }
-
-        std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
-
-        void printMnemonic(std::ostream &os, const char * mnemonic) const;
-        void printMnemonic(std::ostream &os, const char * instMnemonic,
-                const char * mnemonic) const;
-
-        void printSegment(std::ostream &os, int segment) const;
-
-        void printReg(std::ostream &os, RegId reg, int size) const;
-        void printSrcReg(std::ostream &os, int reg, int size) const;
-        void printDestReg(std::ostream &os, int reg, int size) const;
-        void printMem(std::ostream &os, uint8_t segment,
-                uint8_t scale, RegIndex index, RegIndex base,
-                uint64_t disp, uint8_t addressSize, bool rip) const;
-
-        inline uint64_t merge(uint64_t into, uint64_t val, int size) const
+    // Constructor.
+    X86StaticInst(const char *mnem,
+         ExtMachInst _machInst, OpClass __opClass)
+            : StaticInst(mnem, _machInst, __opClass)
         {
-            X86IntReg reg = into;
-            if (destRegIdx(0).index() & IntFoldBit)
-            {
-                reg.H = val;
-                return reg;
-            }
-            switch(size)
-            {
-              case 1:
-                reg.L = val;
-                break;
-              case 2:
-                reg.X = val;
-                break;
-              case 4:
-                //XXX Check if this should be zeroed or sign extended
-                reg = 0;
-                reg.E = val;
-                break;
-              case 8:
-                reg.R = val;
-                break;
-              default:
-                panic("Tried to merge with unrecognized size %d.\n", size);
-            }
+        }
+
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const override;
+
+    void printMnemonic(std::ostream &os, const char * mnemonic) const;
+    void printMnemonic(std::ostream &os, const char * instMnemonic,
+            const char * mnemonic) const;
+
+    void printSegment(std::ostream &os, int segment) const;
+
+    void printReg(std::ostream &os, RegId reg, int size) const;
+    void printSrcReg(std::ostream &os, int reg, int size) const;
+    void printDestReg(std::ostream &os, int reg, int size) const;
+    void printMem(std::ostream &os, uint8_t segment,
+            uint8_t scale, RegIndex index, RegIndex base,
+            uint64_t disp, uint8_t addressSize, bool rip) const;
+
+    inline uint64_t
+    merge(uint64_t into, uint64_t val, int size) const
+    {
+        X86IntReg reg = into;
+        if (destRegIdx(0).index() & IntFoldBit) {
+            reg.H = val;
             return reg;
         }
-
-        inline uint64_t pick(uint64_t from, int idx, int size) const
-        {
-            X86IntReg reg = from;
-            DPRINTF(X86, "Picking with size %d\n", size);
-            if (srcRegIdx(idx).index() & IntFoldBit)
-                return reg.H;
-            switch(size)
-            {
-              case 1:
-                return reg.L;
-              case 2:
-                return reg.X;
-              case 4:
-                return reg.E;
-              case 8:
-                return reg.R;
-              default:
-                panic("Tried to pick with unrecognized size %d.\n", size);
-            }
+        switch(size) {
+          case 1:
+            reg.L = val;
+            break;
+          case 2:
+            reg.X = val;
+            break;
+          case 4:
+            //XXX Check if this should be zeroed or sign extended
+            reg = 0;
+            reg.E = val;
+            break;
+          case 8:
+            reg.R = val;
+            break;
+          default:
+            panic("Tried to merge with unrecognized size %d.\n", size);
         }
+        return reg;
+    }
 
-        inline int64_t signedPick(uint64_t from, int idx, int size) const
-        {
-            X86IntReg reg = from;
-            DPRINTF(X86, "Picking with size %d\n", size);
-            if (srcRegIdx(idx).index() & IntFoldBit)
-                return reg.SH;
-            switch(size)
-            {
-              case 1:
-                return reg.SL;
-              case 2:
-                return reg.SX;
-              case 4:
-                return reg.SE;
-              case 8:
-                return reg.SR;
-              default:
-                panic("Tried to pick with unrecognized size %d.\n", size);
-            }
+    inline uint64_t
+    pick(uint64_t from, int idx, int size) const
+    {
+        X86IntReg reg = from;
+        DPRINTF(X86, "Picking with size %d\n", size);
+        if (srcRegIdx(idx).index() & IntFoldBit)
+            return reg.H;
+        switch(size) {
+          case 1:
+            return reg.L;
+          case 2:
+            return reg.X;
+          case 4:
+            return reg.E;
+          case 8:
+            return reg.R;
+          default:
+            panic("Tried to pick with unrecognized size %d.\n", size);
         }
+    }
 
-        void
-        advancePC(PCState &pcState) const override
-        {
-            pcState.advance();
+    inline int64_t
+    signedPick(uint64_t from, int idx, int size) const
+    {
+        X86IntReg reg = from;
+        DPRINTF(X86, "Picking with size %d\n", size);
+        if (srcRegIdx(idx).index() & IntFoldBit)
+            return reg.SH;
+        switch(size) {
+          case 1:
+            return reg.SL;
+          case 2:
+            return reg.SX;
+          case 4:
+            return reg.SE;
+          case 8:
+            return reg.SR;
+          default:
+            panic("Tried to pick with unrecognized size %d.\n", size);
         }
-    };
+    }
+
+    void
+    advancePC(PCState &pcState) const override
+    {
+        pcState.advance();
+    }
+};
 }
 
 #endif //__ARCH_X86_INSTS_STATICINST_HH__

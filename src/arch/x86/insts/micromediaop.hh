@@ -33,100 +33,103 @@
 
 namespace X86ISA
 {
-    enum MediaFlag {
-        MediaMultHiOp = 1,
-        MediaSignedOp = 64,
-        MediaScalarOp = 128
-    };
 
-    class MediaOpBase : public X86MicroopBase
+enum MediaFlag
+{
+    MediaMultHiOp = 1,
+    MediaSignedOp = 64,
+    MediaScalarOp = 128
+};
+
+class MediaOpBase : public X86MicroopBase
+{
+  protected:
+    const RegIndex src1;
+    const RegIndex dest;
+    const uint8_t srcSize;
+    const uint8_t destSize;
+    const uint8_t ext;
+    static const RegIndex foldOBit = 0;
+
+    // Constructor
+    MediaOpBase(ExtMachInst _machInst,
+            const char *mnem, const char *_instMnem, uint64_t setFlags,
+            InstRegIndex _src1, InstRegIndex _dest,
+            uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
+            OpClass __opClass) :
+        X86MicroopBase(_machInst, mnem, _instMnem, setFlags,
+                __opClass),
+        src1(_src1.index()), dest(_dest.index()),
+        srcSize(_srcSize), destSize(_destSize), ext(_ext)
+    {}
+
+    bool
+    scalarOp() const
     {
-      protected:
-        const RegIndex src1;
-        const RegIndex dest;
-        const uint8_t srcSize;
-        const uint8_t destSize;
-        const uint8_t ext;
-        static const RegIndex foldOBit = 0;
+        return ext & MediaScalarOp;
+    }
 
-        // Constructor
-        MediaOpBase(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem, uint64_t setFlags,
-                InstRegIndex _src1, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
-                OpClass __opClass) :
-            X86MicroopBase(_machInst, mnem, _instMnem, setFlags,
-                    __opClass),
-            src1(_src1.index()), dest(_dest.index()),
-            srcSize(_srcSize), destSize(_destSize), ext(_ext)
-        {}
-
-        bool
-        scalarOp() const
-        {
-            return ext & MediaScalarOp;
-        }
-
-        int
-        numItems(int size) const
-        {
-            return scalarOp() ? 1 : (sizeof(uint64_t) / size);
-        }
-
-        bool
-        multHi() const
-        {
-            return ext & MediaMultHiOp;
-        }
-
-        bool
-        signedOp() const
-        {
-            return ext & MediaSignedOp;
-        }
-    };
-
-    class MediaOpReg : public MediaOpBase
+    int
+    numItems(int size) const
     {
-      protected:
-        const RegIndex src2;
+        return scalarOp() ? 1 : (sizeof(uint64_t) / size);
+    }
 
-        // Constructor
-        MediaOpReg(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem, uint64_t setFlags,
-                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
-                OpClass __opClass) :
-            MediaOpBase(_machInst, mnem, _instMnem, setFlags,
-                    _src1, _dest, _srcSize, _destSize, _ext,
-                    __opClass),
-            src2(_src2.index())
-        {}
-
-        std::string generateDisassembly(Addr pc,
-            const Loader::SymbolTable *symtab) const override;
-    };
-
-    class MediaOpImm : public MediaOpBase
+    bool
+    multHi() const
     {
-      protected:
-        uint8_t imm8;
+        return ext & MediaMultHiOp;
+    }
 
-        // Constructor
-        MediaOpImm(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem, uint64_t setFlags,
-                InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
-                OpClass __opClass) :
-            MediaOpBase(_machInst, mnem, _instMnem, setFlags,
-                    _src1, _dest, _srcSize, _destSize, _ext,
-                    __opClass),
-            imm8(_imm8)
-        {}
+    bool
+    signedOp() const
+    {
+        return ext & MediaSignedOp;
+    }
+};
 
-        std::string generateDisassembly(Addr pc,
-            const Loader::SymbolTable *symtab) const override;
-    };
+class MediaOpReg : public MediaOpBase
+{
+  protected:
+    const RegIndex src2;
+
+    // Constructor
+    MediaOpReg(ExtMachInst _machInst,
+            const char *mnem, const char *_instMnem, uint64_t setFlags,
+            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
+            uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
+            OpClass __opClass) :
+        MediaOpBase(_machInst, mnem, _instMnem, setFlags,
+                _src1, _dest, _srcSize, _destSize, _ext,
+                __opClass),
+        src2(_src2.index())
+    {}
+
+    std::string generateDisassembly(Addr pc,
+        const Loader::SymbolTable *symtab) const override;
+};
+
+class MediaOpImm : public MediaOpBase
+{
+  protected:
+    uint8_t imm8;
+
+    // Constructor
+    MediaOpImm(ExtMachInst _machInst,
+            const char *mnem, const char *_instMnem, uint64_t setFlags,
+            InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
+            uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
+            OpClass __opClass) :
+        MediaOpBase(_machInst, mnem, _instMnem, setFlags,
+                _src1, _dest, _srcSize, _destSize, _ext,
+                __opClass),
+        imm8(_imm8)
+    {}
+
+    std::string generateDisassembly(Addr pc,
+        const Loader::SymbolTable *symtab) const override;
+};
+
 }
 
 #endif //__ARCH_X86_INSTS_MICROMEDIAOP_HH__

@@ -42,81 +42,83 @@
 
 namespace X86ISA
 {
-    /**
-     * Base classes for RegOps which provides a generateDisassembly method.
-     */
-    class RegOpBase : public X86MicroopBase
+
+/**
+ * Base classes for RegOps which provides a generateDisassembly method.
+ */
+class RegOpBase : public X86MicroopBase
+{
+  protected:
+    const RegIndex src1;
+    const RegIndex dest;
+    const uint8_t dataSize;
+    const uint16_t ext;
+    RegIndex foldOBit;
+
+    // Constructor
+    RegOpBase(ExtMachInst _machInst,
+            const char *mnem, const char *_instMnem, uint64_t setFlags,
+            InstRegIndex _src1, InstRegIndex _dest,
+            uint8_t _dataSize, uint16_t _ext,
+            OpClass __opClass) :
+        X86MicroopBase(_machInst, mnem, _instMnem, setFlags,
+                __opClass),
+        src1(_src1.index()), dest(_dest.index()),
+        dataSize(_dataSize), ext(_ext)
     {
-      protected:
-        const RegIndex src1;
-        const RegIndex dest;
-        const uint8_t dataSize;
-        const uint16_t ext;
-        RegIndex foldOBit;
+        foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
+    }
 
-        // Constructor
-        RegOpBase(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem, uint64_t setFlags,
-                InstRegIndex _src1, InstRegIndex _dest,
-                uint8_t _dataSize, uint16_t _ext,
-                OpClass __opClass) :
-            X86MicroopBase(_machInst, mnem, _instMnem, setFlags,
-                    __opClass),
-            src1(_src1.index()), dest(_dest.index()),
-            dataSize(_dataSize), ext(_ext)
-        {
-            foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
-        }
+    //Figure out what the condition code flags should be.
+    uint64_t genFlags(uint64_t oldFlags, uint64_t flagMask,
+            uint64_t _dest, uint64_t _src1, uint64_t _src2,
+            bool subtract = false) const;
+};
 
-        //Figure out what the condition code flags should be.
-        uint64_t genFlags(uint64_t oldFlags, uint64_t flagMask,
-                uint64_t _dest, uint64_t _src1, uint64_t _src2,
-                bool subtract = false) const;
-    };
+class RegOp : public RegOpBase
+{
+  protected:
+    const RegIndex src2;
 
-    class RegOp : public RegOpBase
+    // Constructor
+    RegOp(ExtMachInst _machInst,
+            const char *mnem, const char *_instMnem, uint64_t setFlags,
+            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
+            uint8_t _dataSize, uint16_t _ext,
+            OpClass __opClass) :
+        RegOpBase(_machInst, mnem, _instMnem, setFlags,
+                _src1, _dest, _dataSize, _ext,
+                __opClass),
+        src2(_src2.index())
     {
-      protected:
-        const RegIndex src2;
+    }
 
-        // Constructor
-        RegOp(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem, uint64_t setFlags,
-                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-                uint8_t _dataSize, uint16_t _ext,
-                OpClass __opClass) :
-            RegOpBase(_machInst, mnem, _instMnem, setFlags,
-                    _src1, _dest, _dataSize, _ext,
-                    __opClass),
-            src2(_src2.index())
-        {
-        }
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const override;
+};
 
-        std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
-    };
+class RegOpImm : public RegOpBase
+{
+  protected:
+    const uint8_t imm8;
 
-    class RegOpImm : public RegOpBase
+    // Constructor
+    RegOpImm(ExtMachInst _machInst,
+            const char * mnem, const char *_instMnem, uint64_t setFlags,
+            InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
+            uint8_t _dataSize, uint16_t _ext,
+            OpClass __opClass) :
+        RegOpBase(_machInst, mnem, _instMnem, setFlags,
+                _src1, _dest, _dataSize, _ext,
+                __opClass),
+        imm8(_imm8)
     {
-      protected:
-        const uint8_t imm8;
+    }
 
-        // Constructor
-        RegOpImm(ExtMachInst _machInst,
-                const char * mnem, const char *_instMnem, uint64_t setFlags,
-                InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
-                uint8_t _dataSize, uint16_t _ext,
-                OpClass __opClass) :
-            RegOpBase(_machInst, mnem, _instMnem, setFlags,
-                    _src1, _dest, _dataSize, _ext,
-                    __opClass),
-            imm8(_imm8)
-        {
-        }
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const override;
+};
 
-        std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
-    };
 }
 
 #endif //__ARCH_X86_INSTS_MICROREGOP_HH__

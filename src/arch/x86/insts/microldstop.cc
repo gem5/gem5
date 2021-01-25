@@ -42,38 +42,37 @@
 
 namespace X86ISA
 {
-    std::string
-    LdStOp::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
-    {
-        std::stringstream response;
 
-        printMnemonic(response, instMnem, mnemonic);
-        if (flags[IsLoad])
-            printDestReg(response, 0, dataSize);
-        else
-            printSrcReg(response, 2, dataSize);
-        response << ", ";
-        printMem(response, segment, scale, index, base, disp,
-                addressSize, false);
-        return response.str();
-    }
+std::string
+LdStOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream response;
 
-    std::string
-    LdStSplitOp::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
-    {
-        std::stringstream response;
+    printMnemonic(response, instMnem, mnemonic);
+    if (flags[IsLoad])
+        printDestReg(response, 0, dataSize);
+    else
+        printSrcReg(response, 2, dataSize);
+    response << ", ";
+    printMem(response, segment, scale, index, base, disp, addressSize, false);
+    return response.str();
+}
 
-        printMnemonic(response, instMnem, mnemonic);
-        int baseRegIdx = flags[IsLoad] ? 0 : 2;
-        response << "[";
-        printDestReg(response, baseRegIdx, dataSize);
-        response << ", ";
-        printDestReg(response, baseRegIdx+1, dataSize);
-        response << "], ";
-        printMem(response, segment, scale, index, base, disp,
-                addressSize, false);
-        return response.str();
-    }
+std::string
+LdStSplitOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream response;
+
+    printMnemonic(response, instMnem, mnemonic);
+    int baseRegIdx = flags[IsLoad] ? 0 : 2;
+    response << "[";
+    printDestReg(response, baseRegIdx, dataSize);
+    response << ", ";
+    printDestReg(response, baseRegIdx+1, dataSize);
+    response << "], ";
+    printMem(response, segment, scale, index, base, disp, addressSize, false);
+    return response.str();
+}
+
 }

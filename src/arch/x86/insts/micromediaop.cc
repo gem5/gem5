@@ -34,32 +34,34 @@
 
 namespace X86ISA
 {
-    std::string
-    MediaOpReg::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
-    {
-        std::stringstream response;
 
-        printMnemonic(response, instMnem, mnemonic);
-        printDestReg(response, 0, destSize);
-        response << ", ";
-        printSrcReg(response, 0, srcSize);
-        response << ", ";
-        printSrcReg(response, 1, srcSize);
-        return response.str();
-    }
+std::string
+MediaOpReg::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream response;
 
-    std::string
-    MediaOpImm::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
-    {
-        std::stringstream response;
+    printMnemonic(response, instMnem, mnemonic);
+    printDestReg(response, 0, destSize);
+    response << ", ";
+    printSrcReg(response, 0, srcSize);
+    response << ", ";
+    printSrcReg(response, 1, srcSize);
+    return response.str();
+}
 
-        printMnemonic(response, instMnem, mnemonic);
-        printDestReg(response, 0, destSize);
-        response << ", ";
-        printSrcReg(response, 0, srcSize);
-        ccprintf(response, ", %#x", imm8);
-        return response.str();
-    }
+std::string
+MediaOpImm::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream response;
+
+    printMnemonic(response, instMnem, mnemonic);
+    printDestReg(response, 0, destSize);
+    response << ", ";
+    printSrcReg(response, 0, srcSize);
+    ccprintf(response, ", %#x", imm8);
+    return response.str();
+}
+
 }
