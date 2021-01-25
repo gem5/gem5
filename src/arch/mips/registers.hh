@@ -106,17 +106,11 @@ enum MiscIntRegNums {
 
 // semantically meaningful register indices
 const int ZeroReg = 0;
-const int AssemblerReg = 1;
 const int SyscallSuccessReg = 7;
 const int FirstArgumentReg = 4;
 const int ReturnValueReg = 2;
 
-const int KernelReg0 = 26;
-const int KernelReg1 = 27;
-const int GlobalPointerReg = 28;
 const int StackPointerReg = 29;
-const int FramePointerReg = 30;
-const int ReturnAddressReg = 31;
 
 const int SyscallPseudoReturnReg = 3;
 
@@ -278,8 +272,6 @@ enum MiscRegIndex{
 };
 
 const int NumMiscRegs = MISCREG_NUMREGS;
-
-const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
 
 // Not applicable to MIPS
 using VecElem = ::DummyVecElem;
