@@ -160,7 +160,7 @@ SimObject::debugObjectBreak(const std::string &objs)
 void
 debugObjectBreak(const char *objs)
 {
-    SimObject::debugObjectBreak(string(objs));
+    SimObject::debugObjectBreak(std::string(objs));
 }
 #endif
 
