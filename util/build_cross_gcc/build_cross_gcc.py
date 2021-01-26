@@ -32,7 +32,6 @@ import os
 import os.path
 import pickle
 import shutil
-import six
 import subprocess
 import textwrap
 
@@ -145,9 +144,9 @@ def run_commands(working_dir, *cmds):
 # Settings.
 #
 
-class MetaSetting(type):
+class MetaSetting(abc.ABCMeta):
     def __new__(mcls, name, bases, d):
-        cls = super(MetaSetting, mcls).__new__(mcls, name, bases, d)
+        cls = super().__new__(mcls, name, bases, d)
         key = d.get('key', None)
         if key is not None:
             assert('default' in d)
@@ -157,9 +156,7 @@ class MetaSetting(type):
             all_settings[key] = instance
         return cls
 
-@six.add_metaclass(MetaSetting)
-@six.add_metaclass(abc.ABCMeta)
-class Setting(object):
+class Setting(object, metaclass=MetaSetting):
     key = None
 
     @abc.abstractmethod
@@ -420,17 +417,15 @@ class Parallelism(Setting):
 # Steps of the build process.
 #
 
-class MetaStep(type):
+class MetaStep(abc.ABCMeta):
     def __new__(mcls, name, bases, d):
-        cls = super(MetaStep, mcls).__new__(mcls, name, bases, d)
+        cls = super().__new__(mcls, name, bases, d)
         number = d.get('number', None)
         if number is not None:
             all_steps[number] = cls()
         return cls
 
-@six.add_metaclass(MetaStep)
-@six.add_metaclass(abc.ABCMeta)
-class Step(object):
+class Step(object, metaclass=MetaStep):
     'Steps to set up a cross compiling gcc.'
     number = None
 

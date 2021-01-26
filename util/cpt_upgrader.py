@@ -69,8 +69,7 @@
 # upgraders in private branches.
 
 
-
-from six.moves import configparser
+import configparser
 import glob, types, sys, os
 import os.path as osp
 
