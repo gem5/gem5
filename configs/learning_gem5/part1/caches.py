@@ -32,9 +32,6 @@ gem5 configuration script. It uses the SimpleOpts wrapper to set up command
 line options from each individual class.
 """
 
-from __future__ import print_function
-from __future__ import absolute_import
-
 import m5
 from m5.objects import Cache
 

@@ -31,9 +31,6 @@ World application. Adds a simple cache between the CPU and the membus.
 This config file assumes that the x86 ISA was built.
 """
 
-from __future__ import print_function
-from __future__ import absolute_import
-
 # import the m5 (gem5) library created when gem5 is built
 import m5
 # import all of the SimObjects

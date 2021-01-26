@@ -45,22 +45,15 @@
 # between system construction and run control may allow better
 # debugging.
 
-from __future__ import print_function
-from __future__ import absolute_import
-
 import argparse
-from six.moves import configparser
+import configparser
 import inspect
 import json
 import re
-import six
 import sys
 
 import m5
 import m5.ticks as ticks
-
-if six.PY3:
-    long = int
 
 sim_object_classes_by_name = {
     cls.__name__: cls for cls in list(m5.objects.__dict__.values())
@@ -92,13 +85,13 @@ def addr_range_parser(cls, flags, param):
     _param = param.split(':')
     (start, end) = _param[0:2]
     if len(_param) == 2:
-        return m5.objects.AddrRange(start=long(start), end=long(end))
+        return m5.objects.AddrRange(start=int(start), end=int(end))
     else:
         assert len(_param) > 2
         intlv_match = _param[2]
-        masks = [ long(m) for m in _param[3:] ]
-        return m5.objects.AddrRange(start=long(start), end=long(end),
-                                    masks=masks, intlvMatch=long(intlv_match))
+        masks = [ int(m) for m in _param[3:] ]
+        return m5.objects.AddrRange(start=int(start), end=int(end),
+                                    masks=masks, intlvMatch=int(intlv_match))
 
 
 def memory_bandwidth_parser(cls, flags, param):
@@ -114,7 +107,7 @@ def memory_bandwidth_parser(cls, flags, param):
 param_parsers = {
     'Bool': simple_parser(),
     'ParamValue': no_parser,
-    'NumericParamValue': simple_parser(cast=long),
+    'NumericParamValue': simple_parser(cast=int),
     'TickParamValue': tick_parser(),
     'Frequency': tick_parser(cast=m5.objects.Latency),
     'Current': simple_parser(suffix='A'),

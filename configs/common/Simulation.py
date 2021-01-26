@@ -37,10 +37,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-from __future__ import absolute_import
-
-import six
 import sys
 from os import getcwd
 from os.path import join as joinpath
@@ -52,9 +48,6 @@ import m5
 from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import *
-
-if six.PY3:
-    long = int
 
 addToPath('../common')
 
@@ -196,7 +189,7 @@ def findCptDir(options, cptdir, testsys):
             if match:
                 cpts.append(match.group(1))
 
-        cpts.sort(key = lambda a: long(a))
+        cpts.sort(key = lambda a: int(a))
 
         cpt_num = options.checkpoint_restore
         if cpt_num > len(cpts):

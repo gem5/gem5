@@ -29,7 +29,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import six
 import math
 import m5
 from m5.objects import *
@@ -43,9 +42,6 @@ addToPath('../')
 
 from topologies.Cluster import Cluster
 from topologies.Crossbar import Crossbar
-
-if six.PY3:
-    long = int
 
 class CntrlBase:
     _seqs = 0
@@ -261,8 +257,8 @@ class TCC(RubyCache):
           self.dataArrayBanks = 256 / options.num_tccs #number of data banks
           self.tagArrayBanks = 256 / options.num_tccs #number of tag banks
         self.size.value = self.size.value / options.num_tccs
-        if ((self.size.value / long(self.assoc)) < 128):
-            self.size.value = long(128 * self.assoc)
+        if ((self.size.value / int(self.assoc)) < 128):
+            self.size.value = int(128 * self.assoc)
         self.start_index_bit = math.log(options.cacheline_size, 2) + \
                                math.log(options.num_tccs, 2)
         self.replacement_policy = TreePLRURP()

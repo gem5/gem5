@@ -38,19 +38,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-from __future__ import absolute_import
-
-import six
-
 import m5
 from m5.objects import *
 from m5.util import *
 from common.Benchmarks import *
 from common import ObjectList
-
-if six.PY3:
-    long = int
 
 # Populate to reflect supported os types per target ISA
 os_types = { 'mips'  : [ 'linux' ],
@@ -228,11 +220,11 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         pci_devices.append(self.pci_ide)
 
     self.mem_ranges = []
-    size_remain = long(Addr(mdesc.mem()))
+    size_remain = int(Addr(mdesc.mem()))
     for region in self.realview._mem_regions:
-        if size_remain > long(region.size()):
+        if size_remain > int(region.size()):
             self.mem_ranges.append(region)
-            size_remain = size_remain - long(region.size())
+            size_remain = size_remain - int(region.size())
         else:
             self.mem_ranges.append(AddrRange(region.start, size=size_remain))
             size_remain = 0

@@ -119,9 +119,6 @@
 #   2 Crossbars are connected to only local vaults. From other 2 crossbar, a
 #   request can be forwarded to any other vault.
 
-from __future__ import print_function
-from __future__ import absolute_import
-
 import argparse
 
 import m5

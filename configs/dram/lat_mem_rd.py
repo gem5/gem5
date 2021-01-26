@@ -33,11 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-from __future__ import absolute_import
-
 import gzip
-import six
 import optparse
 import os
 
@@ -52,9 +48,6 @@ from common import MemConfig
 
 addToPath('../../util')
 import protolib
-
-if six.PY3:
-    long = int
 
 # this script is helpful to observe the memory latency for various
 # levels in a cache hierarchy, and various cache and memory
@@ -206,8 +199,8 @@ def create_trace(filename, max_addr, burst_size, itt):
     packet.size = int(burst_size)
 
     for addr in addrs:
-        packet.tick = long(tick)
-        packet.addr = long(addr)
+        packet.tick = int(tick)
+        packet.addr = int(addr)
         protolib.encodeMessage(proto_out, packet)
         tick = tick + itt
 
@@ -218,7 +211,7 @@ print("Generating traces, please wait...")
 
 nxt_range = 0
 nxt_state = 0
-period = long(itt * (max_range / burst_size))
+period = int(itt * (max_range / burst_size))
 
 # now we create the states for each range
 for r in ranges:
