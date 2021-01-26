@@ -40,6 +40,11 @@ output header {{
 #include <tuple>
 #include <vector>
 
+/* riscv softfloat library */
+#include <internals.h>
+#include <softfloat.h>
+#include <specialize.h>
+
 #include "arch/riscv/insts/amo.hh"
 #include "arch/riscv/insts/compressed.hh"
 #include "arch/riscv/insts/mem.hh"
@@ -80,6 +85,7 @@ output exec {{
 
 #include "arch/generic/memhelpers.hh"
 #include "arch/riscv/faults.hh"
+#include "arch/riscv/fp_inst.hh"
 #include "arch/riscv/mmu.hh"
 #include "arch/riscv/reg_abi.hh"
 #include "arch/riscv/registers.hh"

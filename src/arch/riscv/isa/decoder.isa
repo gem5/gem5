@@ -3,6 +3,7 @@
 // Copyright (c) 2015 RISC-V Foundation
 // Copyright (c) 2017 The University of Virginia
 // Copyright (c) 2020 Barkhausen Institut
+// Copyright (c) 2021 StreamComputing Corp
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -400,20 +401,21 @@ decode QUADRANT default Unknown::unknown() {
             format Load {
                 0x2: flw({{
                     STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF) {
+                    if (status.fs == FPUStatus::OFF)
                         fault = std::make_shared<IllegalInstFault>(
-                                "FPU is off", machInst);
-                    }
-
-                    Fd_bits = (uint64_t)Mem_uw;
+                                    "FPU is off", machInst);
+                    freg_t fd;
+                    fd = freg(f32(Mem_uw));
+                    Fd_bits = fd.v;
                 }}, inst_flags=FloatMemReadOp);
                 0x3: fld({{
                     STATUS status = xc->readMiscReg(MISCREG_STATUS);
                     if (status.fs == FPUStatus::OFF)
                         fault = std::make_shared<IllegalInstFault>(
-                                "FPU is off", machInst);
-
-                    Fd_bits = Mem;
+                                    "FPU is off", machInst);
+                    freg_t fd;
+                    fd = freg(f64(Mem));
+                    Fd_bits = fd.v;
                 }}, inst_flags=FloatMemReadOp);
             }
         }
@@ -885,457 +887,232 @@ decode QUADRANT default Unknown::unknown() {
         format FPROp {
             0x10: decode FUNCT2 {
                 0x0: fmadd_s({{
-                    uint32_t temp;
-                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                    float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
-                    float fd;
-
-                    if (std::isnan(fs1) || std::isnan(fs2) ||
-                            std::isnan(fs3)) {
-                        if (issignalingnan(fs1) || issignalingnan(fs2)
-                                || issignalingnan(fs3)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        fd = std::numeric_limits<float>::quiet_NaN();
-                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
-                            std::isinf(fs3)) {
-                        if (std::signbit(fs1) == std::signbit(fs2)
-                                && !std::isinf(fs3)) {
-                            fd = std::numeric_limits<float>::infinity();
-                        } else if (std::signbit(fs1) != std::signbit(fs2)
-                                && !std::isinf(fs3)) {
-                            fd = -std::numeric_limits<float>::infinity();
-                        } else { // Fs3_sf is infinity
-                            fd = fs3;
-                        }
-                    } else {
-                        fd = fs1*fs2 + fs3;
-                    }
-                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f32_mulAdd(f32(freg(Fs1_bits)),
+                                         f32(freg(Fs2_bits)),
+                                         f32(freg(Fs3_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatMultAccOp);
                 0x1: fmadd_d({{
-                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
-                            std::isnan(Fs3)) {
-                        if (issignalingnan(Fs1) || issignalingnan(Fs2)
-                                || issignalingnan(Fs3)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        Fd = std::numeric_limits<double>::quiet_NaN();
-                    } else if (std::isinf(Fs1) || std::isinf(Fs2) ||
-                            std::isinf(Fs3)) {
-                        if (std::signbit(Fs1) == std::signbit(Fs2)
-                                && !std::isinf(Fs3)) {
-                            Fd = std::numeric_limits<double>::infinity();
-                        } else if (std::signbit(Fs1) != std::signbit(Fs2)
-                                && !std::isinf(Fs3)) {
-                            Fd = -std::numeric_limits<double>::infinity();
-                        } else {
-                            Fd = Fs3;
-                        }
-                    } else {
-                        Fd = Fs1*Fs2 + Fs3;
-                    }
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f64_mulAdd(f64(freg(Fs1_bits)),
+                                         f64(freg(Fs2_bits)),
+                                         f64(freg(Fs3_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatMultAccOp);
             }
             0x11: decode FUNCT2 {
                 0x0: fmsub_s({{
-                    uint32_t temp;
-                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                    float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
-                    float fd;
-
-                    if (std::isnan(fs1) || std::isnan(fs2) ||
-                            std::isnan(fs3)) {
-                        if (issignalingnan(fs1) || issignalingnan(fs2)
-                                || issignalingnan(fs3)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        fd = std::numeric_limits<float>::quiet_NaN();
-                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
-                            std::isinf(fs3)) {
-                        if (std::signbit(fs1) == std::signbit(fs2)
-                                && !std::isinf(fs3)) {
-                            fd = std::numeric_limits<float>::infinity();
-                        } else if (std::signbit(fs1) != std::signbit(fs2)
-                                && !std::isinf(fs3)) {
-                            fd = -std::numeric_limits<float>::infinity();
-                        } else { // Fs3_sf is infinity
-                            fd = -fs3;
-                        }
-                    } else {
-                        fd = fs1*fs2 - fs3;
-                    }
-                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f32_mulAdd(f32(freg(Fs1_bits)),
+                                    f32(freg(Fs2_bits)),
+                                    f32(f32(freg(Fs3_bits)).v ^ F32_SIGN)));
+                    Fd_bits = fd.v;
                 }}, FloatMultAccOp);
                 0x1: fmsub_d({{
-                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
-                            std::isnan(Fs3)) {
-                        if (issignalingnan(Fs1) || issignalingnan(Fs2)
-                                || issignalingnan(Fs3)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        Fd = std::numeric_limits<double>::quiet_NaN();
-                    } else if (std::isinf(Fs1) || std::isinf(Fs2) ||
-                            std::isinf(Fs3)) {
-                        if (std::signbit(Fs1) == std::signbit(Fs2)
-                                && !std::isinf(Fs3)) {
-                            Fd = std::numeric_limits<double>::infinity();
-                        } else if (std::signbit(Fs1) != std::signbit(Fs2)
-                                && !std::isinf(Fs3)) {
-                            Fd = -std::numeric_limits<double>::infinity();
-                        } else {
-                            Fd = -Fs3;
-                        }
-                    } else {
-                        Fd = Fs1*Fs2 - Fs3;
-                    }
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f64_mulAdd(f64(freg(Fs1_bits)),
+                                    f64(freg(Fs2_bits)),
+                                    f64(f64(freg(Fs3_bits)).v ^ F64_SIGN)));
+                    Fd_bits = fd.v;
                 }}, FloatMultAccOp);
             }
             0x12: decode FUNCT2 {
                 0x0: fnmsub_s({{
-                    uint32_t temp;
-                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                    float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
-                    float fd;
-
-                    if (std::isnan(fs1) || std::isnan(fs2) ||
-                            std::isnan(fs3)) {
-                        if (issignalingnan(fs1) || issignalingnan(fs2)
-                                || issignalingnan(fs3)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        fd = std::numeric_limits<float>::quiet_NaN();
-                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
-                            std::isinf(fs3)) {
-                        if (std::signbit(fs1) == std::signbit(fs2)
-                                && !std::isinf(fs3)) {
-                            fd = -std::numeric_limits<float>::infinity();
-                        } else if (std::signbit(fs1) != std::signbit(fs2)
-                                && !std::isinf(fs3)) {
-                            fd = std::numeric_limits<float>::infinity();
-                        } else { // Fs3_sf is infinity
-                            fd = fs3;
-                        }
-                    } else {
-                        fd = -(fs1*fs2 - fs3);
-                    }
-                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f32_mulAdd(f32(f32(freg(Fs1_bits)).v ^ F32_SIGN),
+                                         f32(freg(Fs2_bits)),
+                                         f32(freg(Fs3_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatMultAccOp);
                 0x1: fnmsub_d({{
-                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
-                            std::isnan(Fs3)) {
-                        if (issignalingnan(Fs1) || issignalingnan(Fs2)
-                                || issignalingnan(Fs3)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        Fd = std::numeric_limits<double>::quiet_NaN();
-                    } else if (std::isinf(Fs1) || std::isinf(Fs2)
-                            || std::isinf(Fs3)) {
-                        if (std::signbit(Fs1) == std::signbit(Fs2)
-                                && !std::isinf(Fs3)) {
-                            Fd = -std::numeric_limits<double>::infinity();
-                        } else if (std::signbit(Fs1) != std::signbit(Fs2)
-                                && !std::isinf(Fs3)) {
-                            Fd = std::numeric_limits<double>::infinity();
-                        } else {
-                            Fd = Fs3;
-                        }
-                    } else {
-                        Fd = -(Fs1*Fs2 - Fs3);
-                    }
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f64_mulAdd(f64(f64(freg(Fs1_bits)).v ^ F64_SIGN),
+                                         f64(freg(Fs2_bits)),
+                                         f64(freg(Fs3_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatMultAccOp);
             }
             0x13: decode FUNCT2 {
                 0x0: fnmadd_s({{
-                    uint32_t temp;
-                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                    float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
-                    float fd;
-
-                    if (std::isnan(fs1) || std::isnan(fs2) ||
-                            std::isnan(fs3)) {
-                        if (issignalingnan(fs1) || issignalingnan(fs2)
-                                || issignalingnan(fs3)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        fd = std::numeric_limits<float>::quiet_NaN();
-                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
-                            std::isinf(fs3)) {
-                        if (std::signbit(fs1) == std::signbit(fs2)
-                                && !std::isinf(fs3)) {
-                            fd = -std::numeric_limits<float>::infinity();
-                        } else if (std::signbit(fs1) != std::signbit(fs2)
-                                && !std::isinf(fs3)) {
-                            fd = std::numeric_limits<float>::infinity();
-                        } else { // Fs3_sf is infinity
-                            fd = -fs3;
-                        }
-                    } else {
-                        fd = -(fs1*fs2 + fs3);
-                    }
-                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f32_mulAdd(f32(f32(freg(Fs1_bits)).v ^ F32_SIGN),
+                                    f32(freg(Fs2_bits)),
+                                    f32(f32(freg(Fs3_bits)).v ^ F32_SIGN)));
+                    Fd_bits = fd.v;
                 }}, FloatMultAccOp);
                 0x1: fnmadd_d({{
-                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
-                            std::isnan(Fs3)) {
-                        if (issignalingnan(Fs1) || issignalingnan(Fs2)
-                                || issignalingnan(Fs3)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        Fd = std::numeric_limits<double>::quiet_NaN();
-                    } else if (std::isinf(Fs1) || std::isinf(Fs2) ||
-                            std::isinf(Fs3)) {
-                        if (std::signbit(Fs1) == std::signbit(Fs2)
-                                && !std::isinf(Fs3)) {
-                            Fd = -std::numeric_limits<double>::infinity();
-                        } else if (std::signbit(Fs1) != std::signbit(Fs2)
-                                && !std::isinf(Fs3)) {
-                            Fd = std::numeric_limits<double>::infinity();
-                        } else {
-                            Fd = -Fs3;
-                        }
-                    } else {
-                        Fd = -(Fs1*Fs2 + Fs3);
-                    }
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f64_mulAdd(f64(f64(freg(Fs1_bits)).v ^ F64_SIGN),
+                                    f64(freg(Fs2_bits)),
+                                    f64(f64(freg(Fs3_bits)).v ^ F64_SIGN)));
+                    Fd_bits = fd.v;
                 }}, FloatMultAccOp);
             }
             0x14: decode FUNCT7 {
                 0x0: fadd_s({{
-                    uint32_t temp;
-                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                    float fd;
-
-                    if (std::isnan(fs1) || std::isnan(fs2)) {
-                        if (issignalingnan(fs1) || issignalingnan(fs2)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        fd = std::numeric_limits<float>::quiet_NaN();
-                    } else {
-                        fd = fs1 + fs2;
-                    }
-                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f32_add(f32(freg(Fs1_bits)),
+                                      f32(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatAddOp);
                 0x1: fadd_d({{
-                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
-                        if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        Fd = std::numeric_limits<double>::quiet_NaN();
-                    } else {
-                        Fd = Fs1 + Fs2;
-                    }
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f64_add(f64(freg(Fs1_bits)),
+                                      f64(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatAddOp);
                 0x4: fsub_s({{
-                    uint32_t temp;
-                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                    float fd;
-
-                    if (std::isnan(fs1) || std::isnan(fs2)) {
-                        if (issignalingnan(fs1) || issignalingnan(fs2)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        fd = std::numeric_limits<float>::quiet_NaN();
-                    } else {
-                        fd = fs1 - fs2;
-                    }
-                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f32_sub(f32(freg(Fs1_bits)),
+                                      f32(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatAddOp);
                 0x5: fsub_d({{
-                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
-                        if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        Fd = std::numeric_limits<double>::quiet_NaN();
-                    } else {
-                        Fd = Fs1 - Fs2;
-                    }
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f64_sub(f64(freg(Fs1_bits)),
+                                      f64(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatAddOp);
                 0x8: fmul_s({{
-                    uint32_t temp;
-                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                    float fd;
-
-                    if (std::isnan(fs1) || std::isnan(fs2)) {
-                        if (issignalingnan(fs1) || issignalingnan(fs2)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        fd = std::numeric_limits<float>::quiet_NaN();
-                    } else {
-                        fd = fs1*fs2;
-                    }
-                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f32_mul(f32(freg(Fs1_bits)),
+                                      f32(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatMultOp);
                 0x9: fmul_d({{
-                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
-                        if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        Fd = std::numeric_limits<double>::quiet_NaN();
-                    } else {
-                        Fd = Fs1*Fs2;
-                    }
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f64_mul(f64(freg(Fs1_bits)),
+                                      f64(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatMultOp);
                 0xc: fdiv_s({{
-                    uint32_t temp;
-                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                    float fd;
-
-                    if (std::isnan(fs1) || std::isnan(fs2)) {
-                        if (issignalingnan(fs1) || issignalingnan(fs2)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        fd = std::numeric_limits<float>::quiet_NaN();
-                    } else {
-                        fd = fs1/fs2;
-                    }
-                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f32_div(f32(freg(Fs1_bits)),
+                                      f32(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatDivOp);
                 0xd: fdiv_d({{
-                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
-                        if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        Fd = std::numeric_limits<double>::quiet_NaN();
-                    } else {
-                        Fd = Fs1/Fs2;
-                    }
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f64_div(f64(freg(Fs1_bits)),
+                                      f64(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatDivOp);
                 0x10: decode ROUND_MODE {
                     0x0: fsgnj_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                        float fd;
-
-                        if (issignalingnan(fs1)) {
-                            fd = std::numeric_limits<float>::signaling_NaN();
-                            feclearexcept(FE_INVALID);
-                        } else {
-                            fd = copysign(fs1, fs2);
-                        }
-                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
-                    }}, FloatMiscOp);
+                        freg_t fd;
+                        fd = freg(fsgnj32(freg(Fs1_bits), freg(Fs2_bits),
+                                          false, false));
+                        Fd_bits = fd.v;
+                        }}, FloatMiscOp);
                     0x1: fsgnjn_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                        float fd;
-
-                        if (issignalingnan(fs1)) {
-                            fd = std::numeric_limits<float>::signaling_NaN();
-                            feclearexcept(FE_INVALID);
-                        } else {
-                            fd = copysign(fs1, -fs2);
-                        }
-                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
-                    }}, FloatMiscOp);
+                        freg_t fd;
+                        fd = freg(fsgnj32(freg(Fs1_bits), freg(Fs2_bits),
+                                          true, false));
+                        Fd_bits = fd.v;
+                        }}, FloatMiscOp);
                     0x2: fsgnjx_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                        float fd;
-
-                        if (issignalingnan(fs1)) {
-                            fd = std::numeric_limits<float>::signaling_NaN();
-                            feclearexcept(FE_INVALID);
-                        } else {
-                            fd = fs1*(std::signbit(fs2) ? -1.0 : 1.0);
-                        }
-                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
-                    }}, FloatMiscOp);
+                        freg_t fd;
+                        fd = freg(fsgnj32(freg(Fs1_bits), freg(Fs2_bits),
+                                          false, true));
+                        Fd_bits = fd.v;
+                        }}, FloatMiscOp);
                 }
                 0x11: decode ROUND_MODE {
                     0x0: fsgnj_d({{
-                        if (issignalingnan(Fs1)) {
-                            Fd = std::numeric_limits<double>::signaling_NaN();
-                            feclearexcept(FE_INVALID);
-                        } else {
-                            Fd = copysign(Fs1, Fs2);
-                        }
+                        freg_t fd;
+                        fd = freg(fsgnj64(freg(Fs1_bits), freg(Fs2_bits),
+                                          false, false));
+                        Fd_bits = fd.v;
                     }}, FloatMiscOp);
                     0x1: fsgnjn_d({{
-                        if (issignalingnan(Fs1)) {
-                            Fd = std::numeric_limits<double>::signaling_NaN();
-                            feclearexcept(FE_INVALID);
-                        } else {
-                            Fd = copysign(Fs1, -Fs2);
-                        }
+                        freg_t fd;
+                        fd = freg(fsgnj64(freg(Fs1_bits), freg(Fs2_bits),
+                                          true, false));
+                        Fd_bits = fd.v;
                     }}, FloatMiscOp);
                     0x2: fsgnjx_d({{
-                        if (issignalingnan(Fs1)) {
-                            Fd = std::numeric_limits<double>::signaling_NaN();
-                            feclearexcept(FE_INVALID);
-                        } else {
-                            Fd = Fs1*(std::signbit(Fs2) ? -1.0 : 1.0);
-                        }
+                        freg_t fd;
+                        fd = freg(fsgnj64(freg(Fs1_bits), freg(Fs2_bits),
+                                          false, true));
+                        Fd_bits = fd.v;
                     }}, FloatMiscOp);
                 }
                 0x14: decode ROUND_MODE {
                     0x0: fmin_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                        float fd;
+                        bool less = f32_lt_quiet(f32(freg(Fs1_bits)),
+                            f32(freg(Fs2_bits))) ||
+                            (f32_eq(f32(freg(Fs1_bits)),
+                            f32(freg(Fs2_bits))) &&
+                            (f32(freg(Fs1_bits)).v & F32_SIGN));
 
-                        if (issignalingnan(fs2)) {
-                            fd = fs1;
-                            FFLAGS |= FloatInvalid;
-                        } else if (issignalingnan(fs1)) {
-                            fd = fs2;
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            fd = fmin(fs1, fs2);
-                        }
-                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
-                    }}, FloatCmpOp);
+                        Fd_bits = less ||
+                            isNaNF32UI(f32(freg(Fs2_bits)).v) ?
+                            freg(Fs1_bits).v : freg(Fs2_bits).v;
+                        if (isNaNF32UI(f32(freg(Fs1_bits)).v) &&
+                            isNaNF32UI(f32(freg(Fs2_bits)).v))
+                            Fd_bits = f32(defaultNaNF32UI).v;
+                        }}, FloatCmpOp);
                     0x1: fmax_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-                        float fd;
+                        bool greater = f32_lt_quiet(f32(freg(Fs2_bits)),
+                            f32(freg(Fs1_bits))) ||
+                            (f32_eq(f32(freg(Fs2_bits)),
+                            f32(freg(Fs1_bits))) &&
+                            (f32(freg(Fs2_bits)).v & F32_SIGN));
 
-                        if (issignalingnan(fs2)) {
-                            fd = fs1;
-                            FFLAGS |= FloatInvalid;
-                        } else if (issignalingnan(fs1)) {
-                            fd = fs2;
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            fd = fmax(fs1, fs2);
-                        }
-                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
-                    }}, FloatCmpOp);
+                        Fd_bits = greater ||
+                            isNaNF32UI(f32(freg(Fs2_bits)).v) ?
+                            freg(Fs1_bits).v : freg(Fs2_bits).v;
+                        if (isNaNF32UI(f32(freg(Fs1_bits)).v) &&
+                            isNaNF32UI(f32(freg(Fs2_bits)).v))
+                            Fd_bits = f32(defaultNaNF32UI).v;
+                        }}, FloatCmpOp);
                 }
                 0x15: decode ROUND_MODE {
                     0x0: fmin_d({{
-                        if (issignalingnan(Fs2)) {
-                            Fd = Fs1;
-                            FFLAGS |= FloatInvalid;
-                        } else if (issignalingnan(Fs1)) {
-                            Fd = Fs2;
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            Fd = fmin(Fs1, Fs2);
-                        }
+                        bool less = f64_lt_quiet(f64(freg(Fs1_bits)),
+                            f64(freg(Fs2_bits))) ||
+                            (f64_eq(f64(freg(Fs1_bits)),
+                            f64(freg(Fs2_bits))) &&
+                            (f64(freg(Fs1_bits)).v & F64_SIGN));
+
+                        Fd_bits = less ||
+                            isNaNF64UI(f64(freg(Fs2_bits)).v) ?
+                            freg(Fs1_bits).v : freg(Fs2_bits).v;
+                        if (isNaNF64UI(f64(freg(Fs1_bits)).v) &&
+                            isNaNF64UI(f64(freg(Fs2_bits)).v))
+                            Fd_bits = f64(defaultNaNF64UI).v;
                     }}, FloatCmpOp);
                     0x1: fmax_d({{
-                        if (issignalingnan(Fs2)) {
-                            Fd = Fs1;
-                            FFLAGS |= FloatInvalid;
-                        } else if (issignalingnan(Fs1)) {
-                            Fd = Fs2;
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            Fd = fmax(Fs1, Fs2);
-                        }
+                        bool greater =
+                            f64_lt_quiet(f64(freg(Fs2_bits)),
+                            f64(freg(Fs1_bits))) ||
+                            (f64_eq(f64(freg(Fs2_bits)),
+                            f64(freg(Fs1_bits))) &&
+                            (f64(freg(Fs2_bits)).v & F64_SIGN));
+
+                        Fd_bits = greater ||
+                            isNaNF64UI(f64(freg(Fs2_bits)).v) ?
+                            freg(Fs1_bits).v : freg(Fs2_bits).v;
+                        if (isNaNF64UI(f64(freg(Fs1_bits)).v) &&
+                            isNaNF64UI(f64(Fs2_bits).v))
+                            Fd_bits = f64(defaultNaNF64UI).v;
                     }}, FloatCmpOp);
                 }
                 0x20: fcvt_s_d({{
@@ -1343,281 +1120,144 @@ decode QUADRANT default Unknown::unknown() {
                         fault = std::make_shared<IllegalInstFault>(
                                 "CONV_SGN != 1", machInst);
                     }
-                    float fd;
-                    if (issignalingnan(Fs1)) {
-                        fd = std::numeric_limits<float>::quiet_NaN();
-                        FFLAGS |= FloatInvalid;
-                    } else {
-                        fd = (float)Fs1;
-                    }
-                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f64_to_f32(f64(freg(Fs1_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatCvtOp);
                 0x21: fcvt_d_s({{
                     if (CONV_SGN != 0) {
                         fault = std::make_shared<IllegalInstFault>(
                                 "CONV_SGN != 0", machInst);
                     }
-                    uint32_t temp;
-                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-
-                    if (issignalingnan(fs1)) {
-                        Fd = std::numeric_limits<double>::quiet_NaN();
-                        FFLAGS |= FloatInvalid;
-                    } else {
-                        Fd = (double)fs1;
-                    }
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f32_to_f64(f32(freg(Fs1_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatCvtOp);
                 0x2c: fsqrt_s({{
                     if (RS2 != 0) {
                         fault = std::make_shared<IllegalInstFault>(
                                 "source reg x1", machInst);
                     }
-                    uint32_t temp;
-                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                    float fd;
-
-                    if (issignalingnan(Fs1_sf)) {
-                        FFLAGS |= FloatInvalid;
-                    }
-                    fd = sqrt(fs1);
-                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+                    freg_t fd;
+                    RM_REQUIRED;
+                    fd = freg(f32_sqrt(f32(freg(Fs1_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatSqrtOp);
                 0x2d: fsqrt_d({{
                     if (RS2 != 0) {
                         fault = std::make_shared<IllegalInstFault>(
                                 "source reg x1", machInst);
                     }
-                    Fd = sqrt(Fs1);
+                    freg_t fd;
+                    RM_REQUIRED;
+                    fd = freg(f64_sqrt(f64(freg(Fs1_bits))));
+                    Fd_bits = fd.v;
                 }}, FloatSqrtOp);
                 0x50: decode ROUND_MODE {
                     0x0: fle_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-
-                        if (std::isnan(fs1) || std::isnan(fs2)) {
-                            FFLAGS |= FloatInvalid;
-                            Rd = 0;
-                        } else {
-                            Rd = fs1 <= fs2 ? 1 : 0;
-                        }
+                        Rd = f32_le(f32(freg(Fs1_bits)), f32(freg(Fs2_bits)));
                     }}, FloatCmpOp);
                     0x1: flt_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-
-                        if (std::isnan(fs1) || std::isnan(fs2)) {
-                            FFLAGS |= FloatInvalid;
-                            Rd = 0;
-                        } else {
-                            Rd = fs1 < fs2 ? 1 : 0;
-                        }
+                        Rd = f32_lt(f32(freg(Fs1_bits)), f32(freg(Fs2_bits)));
                     }}, FloatCmpOp);
                     0x2: feq_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
-
-                        if (issignalingnan(fs1) || issignalingnan(fs2)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        Rd = fs1 == fs2 ? 1 : 0;
+                        Rd = f32_eq(f32(freg(Fs1_bits)), f32(freg(Fs2_bits)));
                     }}, FloatCmpOp);
                 }
                 0x51: decode ROUND_MODE {
                     0x0: fle_d({{
-                        if (std::isnan(Fs1) || std::isnan(Fs2)) {
-                            FFLAGS |= FloatInvalid;
-                            Rd = 0;
-                        } else {
-                            Rd = Fs1 <= Fs2 ? 1 : 0;
-                        }
+                        Rd = f64_le(f64(freg(Fs1_bits)), f64(freg(Fs2_bits)));
                     }}, FloatCmpOp);
                     0x1: flt_d({{
-                        if (std::isnan(Fs1) || std::isnan(Fs2)) {
-                            FFLAGS |= FloatInvalid;
-                            Rd = 0;
-                        } else {
-                            Rd = Fs1 < Fs2 ? 1 : 0;
-                        }
+                        Rd = f64_lt(f64(freg(Fs1_bits)), f64(freg(Fs2_bits)));
                     }}, FloatCmpOp);
                     0x2: feq_d({{
-                        if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
-                            FFLAGS |= FloatInvalid;
-                        }
-                        Rd = Fs1 == Fs2 ? 1 : 0;
+                        Rd = f64_eq(f64(freg(Fs1_bits)), f64(freg(Fs2_bits)));
                     }}, FloatCmpOp);
                 }
                 0x60: decode CONV_SGN {
                     0x0: fcvt_w_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-
-                        if (std::isnan(fs1)) {
-                            Rd_sd = std::numeric_limits<int32_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (fs1 >=
-                                float(std::numeric_limits<int32_t>::max())) {
-                            Rd_sd = std::numeric_limits<int32_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (fs1 <=
-                                float(std::numeric_limits<int32_t>::min())) {
-                            Rd_sd = std::numeric_limits<int32_t>::min();
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            Rd_sd = (int32_t)fs1;
-                        }
+                        RM_REQUIRED;
+                        Rd_sd = sext32(f32_to_i32(f32(freg(Fs1_bits)), rm,
+                                                  true));
                     }}, FloatCvtOp);
                     0x1: fcvt_wu_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-
-                        if (std::isnan(fs1)) {
-                            Rd = std::numeric_limits<uint64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (fs1 < 0.0) {
-                            Rd = 0;
-                            FFLAGS |= FloatInvalid;
-                        } else if (fs1 >
-                                float(std::numeric_limits<uint32_t>::max())) {
-                            Rd = std::numeric_limits<uint64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            Rd = (uint32_t)fs1;
-                        }
+                        RM_REQUIRED;
+                        Rd = sext32(f32_to_ui32(f32(freg(Fs1_bits)), rm,
+                                                true));
                     }}, FloatCvtOp);
                     0x2: fcvt_l_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-
-                        if (std::isnan(fs1)) {
-                            Rd_sd = std::numeric_limits<int64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (fs1 >
-                                float(std::numeric_limits<int64_t>::max())) {
-                            Rd_sd = std::numeric_limits<int64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (fs1 <
-                                float(std::numeric_limits<int64_t>::min())) {
-                            Rd_sd = std::numeric_limits<int64_t>::min();
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            Rd_sd = (int64_t)fs1;
-                        }
+                        RM_REQUIRED;
+                        Rd_sd = f32_to_i64(f32(freg(Fs1_bits)), rm, true);
                     }}, FloatCvtOp);
                     0x3: fcvt_lu_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-
-                        if (std::isnan(fs1)) {
-                            Rd = std::numeric_limits<uint64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (fs1 < 0.0) {
-                            Rd = 0;
-                            FFLAGS |= FloatInvalid;
-                        } else if (fs1 >
-                                float(std::numeric_limits<uint64_t>::max())) {
-                            Rd = std::numeric_limits<uint64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            Rd = (uint64_t)fs1;
-                        }
+                        RM_REQUIRED;
+                        Rd = f32_to_ui64(f32(freg(Fs1_bits)), rm, true);
                     }}, FloatCvtOp);
                 }
                 0x61: decode CONV_SGN {
                     0x0: fcvt_w_d({{
-                        if (std::isnan(Fs1)) {
-                            Rd_sd = std::numeric_limits<int32_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (Fs1 >
-                                float(std::numeric_limits<int32_t>::max())) {
-                            Rd_sd = std::numeric_limits<int32_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (Fs1 <
-                                float(std::numeric_limits<int32_t>::min())) {
-                            Rd_sd = std::numeric_limits<int32_t>::min();
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            Rd_sd = (int32_t)Fs1;
-                        }
+                        RM_REQUIRED;
+                        Rd_sd = sext32(f64_to_i32(f64(freg(Fs1_bits)), rm,
+                                                  true));
                     }}, FloatCvtOp);
                     0x1: fcvt_wu_d({{
-                        if (std::isnan(Fs1)) {
-                            Rd = std::numeric_limits<uint64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (Fs1 < 0) {
-                            Rd = 0;
-                            FFLAGS |= FloatInvalid;
-                        } else if (Fs1 >
-                                float(std::numeric_limits<uint32_t>::max())) {
-                            Rd = std::numeric_limits<uint64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            Rd = (uint32_t)Fs1;
-                        }
+                        RM_REQUIRED;
+                        Rd = sext32(f64_to_ui32(f64(freg(Fs1_bits)), rm,
+                                                true));
                     }}, FloatCvtOp);
                     0x2: fcvt_l_d({{
-                        if (std::isnan(Fs1)) {
-                            Rd_sd = std::numeric_limits<int64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (Fs1 >
-                                float(std::numeric_limits<int64_t>::max())) {
-                            Rd_sd = std::numeric_limits<int64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (Fs1 <
-                                float(std::numeric_limits<int64_t>::min())) {
-                            Rd_sd = std::numeric_limits<int64_t>::min();
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            Rd_sd = Fs1;
-                        }
+                        RM_REQUIRED;
+                        Rd_sd = f64_to_i64(f64(freg(Fs1_bits)), rm, true);
                     }}, FloatCvtOp);
                     0x3: fcvt_lu_d({{
-                        if (std::isnan(Fs1)) {
-                            Rd = std::numeric_limits<uint64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else if (Fs1 < 0) {
-                            Rd = 0;
-                            FFLAGS |= FloatInvalid;
-                        } else if (Fs1 >
-                                float(std::numeric_limits<uint64_t>::max())) {
-                            Rd = std::numeric_limits<uint64_t>::max();
-                            FFLAGS |= FloatInvalid;
-                        } else {
-                            Rd = Fs1;
-                        }
+                        RM_REQUIRED;
+                        Rd = f64_to_ui64(f64(freg(Fs1_bits)), rm, true);
                     }}, FloatCvtOp);
                 }
                 0x68: decode CONV_SGN {
                     0x0: fcvt_s_w({{
-                        float temp = (float)Rs1_sw;
-                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(temp);
-                    }}, FloatCvtOp);
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(i32_to_f32((int32_t)Rs1_sw));
+                        Fd_bits = fd.v;
+                        }}, FloatCvtOp);
                     0x1: fcvt_s_wu({{
-                        float temp = (float)Rs1_uw;
-                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(temp);
-                    }}, FloatCvtOp);
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(ui32_to_f32((int32_t)Rs1_uw));
+                        Fd_bits = fd.v;
+                        }}, FloatCvtOp);
                     0x2: fcvt_s_l({{
-                        float temp = (float)Rs1_sd;
-                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(temp);
-                    }}, FloatCvtOp);
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(i64_to_f32(Rs1_ud));
+                        Fd_bits = fd.v;
+                        }}, FloatCvtOp);
                     0x3: fcvt_s_lu({{
-                        float temp = (float)Rs1;
-                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(temp);
-                    }}, FloatCvtOp);
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(ui64_to_f32(Rs1));
+                        Fd_bits = fd.v;
+                        }}, FloatCvtOp);
                 }
                 0x69: decode CONV_SGN {
                     0x0: fcvt_d_w({{
+                        RM_REQUIRED;
                         Fd = (double)Rs1_sw;
                     }}, FloatCvtOp);
                     0x1: fcvt_d_wu({{
+                        RM_REQUIRED;
                         Fd = (double)Rs1_uw;
                     }}, FloatCvtOp);
                     0x2: fcvt_d_l({{
+                        RM_REQUIRED;
                         Fd = (double)Rs1_sd;
                     }}, FloatCvtOp);
                     0x3: fcvt_d_lu({{
+                        RM_REQUIRED;
                         Fd = (double)Rs1;
                     }}, FloatCvtOp);
                 }
@@ -1629,102 +1269,26 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }}, FloatCvtOp);
                     0x1: fclass_s({{
-                        uint32_t temp;
-                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
-                        switch (std::fpclassify(fs1)) {
-                          case FP_INFINITE:
-                            if (std::signbit(fs1)) {
-                                Rd = 1 << 0;
-                            } else {
-                                Rd = 1 << 7;
-                            }
-                            break;
-                          case FP_NAN:
-                            if (issignalingnan(fs1)) {
-                                Rd = 1 << 8;
-                            } else {
-                                Rd = 1 << 9;
-                            }
-                            break;
-                          case FP_ZERO:
-                            if (std::signbit(fs1)) {
-                                Rd = 1 << 3;
-                            } else {
-                                Rd = 1 << 4;
-                            }
-                            break;
-                          case FP_SUBNORMAL:
-                            if (std::signbit(fs1)) {
-                                Rd = 1 << 2;
-                            } else {
-                                Rd = 1 << 5;
-                            }
-                            break;
-                          case FP_NORMAL:
-                            if (std::signbit(fs1)) {
-                                Rd = 1 << 1;
-                            } else {
-                                Rd = 1 << 6;
-                            }
-                            break;
-                          default:
-                            panic("Unknown classification for operand.");
-                            break;
-                        }
+                        Rd = f32_classify(f32(freg(Fs1_bits)));
                     }}, FloatMiscOp);
                 }
                 0x71: decode ROUND_MODE {
                     0x0: fmv_x_d({{
-                        Rd = Fs1_bits;
+                        Rd = freg(Fs1_bits).v;
                     }}, FloatCvtOp);
                     0x1: fclass_d({{
-                        switch (std::fpclassify(Fs1)) {
-                          case FP_INFINITE:
-                            if (std::signbit(Fs1)) {
-                                Rd = 1 << 0;
-                            } else {
-                                Rd = 1 << 7;
-                            }
-                            break;
-                          case FP_NAN:
-                            if (issignalingnan(Fs1)) {
-                                Rd = 1 << 8;
-                            } else {
-                                Rd = 1 << 9;
-                            }
-                            break;
-                          case FP_ZERO:
-                            if (std::signbit(Fs1)) {
-                                Rd = 1 << 3;
-                            } else {
-                                Rd = 1 << 4;
-                            }
-                            break;
-                          case FP_SUBNORMAL:
-                            if (std::signbit(Fs1)) {
-                                Rd = 1 << 2;
-                            } else {
-                                Rd = 1 << 5;
-                            }
-                            break;
-                          case FP_NORMAL:
-                            if (std::signbit(Fs1)) {
-                                Rd = 1 << 1;
-                            } else {
-                                Rd = 1 << 6;
-                            }
-                            break;
-                          default:
-                            panic("Unknown classification for operand.");
-                            break;
-                        }
+                        Rd = f64_classify(f64(freg(Fs1_bits)));
                     }}, FloatMiscOp);
                 }
                 0x78: fmv_s_x({{
-                    Fd_bits = (uint64_t)Rs1_uw;
+                    freg_t fd;
+                    fd = freg(f32(Rs1_uw));
+                    Fd_bits = fd.v;
                 }}, FloatCvtOp);
                 0x79: fmv_d_x({{
-                    Fd_bits = Rs1;
+                    freg_t fd;
+                    fd = freg(f64(Rs1));
+                    Fd_bits = fd.v;
                 }}, FloatCvtOp);
             }
         }

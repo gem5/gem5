@@ -44,83 +44,21 @@ def template FloatExecute {{
 
         %(op_decl)s;
         %(op_rd)s;
+
         if (fault == NoFault) {
-            switch (ROUND_MODE) {
-            case 0x0:
-                std::fesetround(FE_TONEAREST);
-                break;
-            case 0x1:
-                std::fesetround(FE_TOWARDZERO);
-                break;
-            case 0x2:
-                std::fesetround(FE_DOWNWARD);
-                break;
-            case 0x3:
-                std::fesetround(FE_UPWARD);
-                break;
-            case 0x4:
-                // Round to nearest, ties to max magnitude not implemented
-                fault = std::make_shared<IllegalFrmFault>(
-                        ROUND_MODE, machInst);
-                break;
-            case 0x7: {
-                uint8_t frm = xc->readMiscReg(MISCREG_FRM);
-                switch (frm) {
-                case 0x0:
-                    std::fesetround(FE_TONEAREST);
-                    break;
-                case 0x1:
-                    std::fesetround(FE_TOWARDZERO);
-                    break;
-                case 0x2:
-                    std::fesetround(FE_DOWNWARD);
-                    break;
-                case 0x3:
-                    std::fesetround(FE_UPWARD);
-                    break;
-                case 0x4:
-                    // Round to nearest, ties to max magnitude not implemented
-                    fault = std::make_shared<IllegalFrmFault>(
-                            ROUND_MODE, machInst);
-                    break;
-                default:
-                    fault = std::make_shared<IllegalFrmFault>(frm, machInst);
-                    break;
-                }
-                break;
-            }
-            default:
-                fault = std::make_shared<IllegalFrmFault>(ROUND_MODE,
-                                                          machInst);
-                break;
-            }
+            RegVal FFLAGS = xc->readMiscReg(MISCREG_FFLAGS);
+            std::feclearexcept(FE_ALL_EXCEPT);
+            %(code)s;
 
-            if (fault == NoFault) {
-                RegVal FFLAGS = xc->readMiscReg(MISCREG_FFLAGS);
-                std::feclearexcept(FE_ALL_EXCEPT);
-                %(code)s;
-                if (std::fetestexcept(FE_INEXACT)) {
-                    FFLAGS |= FloatInexact;
-                }
-                if (std::fetestexcept(FE_UNDERFLOW)) {
-                    FFLAGS |= FloatUnderflow;
-                }
-                if (std::fetestexcept(FE_OVERFLOW)) {
-                    FFLAGS |= FloatOverflow;
-                }
-                if (std::fetestexcept(FE_DIVBYZERO)) {
-                    FFLAGS |= FloatDivZero;
-                }
-                if (std::fetestexcept(FE_INVALID)) {
-                    FFLAGS |= FloatInvalid;
-                }
-                xc->setMiscReg(MISCREG_FFLAGS, FFLAGS);
-            }
-
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
+            FFLAGS |= softfloat_exceptionFlags;
+            softfloat_exceptionFlags = 0;
+            xc->setMiscReg(MISCREG_FFLAGS, FFLAGS);
         }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
         return fault;
     }
 }};
