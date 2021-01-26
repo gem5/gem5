@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -117,6 +117,26 @@ class ProbeManager;
  * If you don't have a constructor with that signature at all, then you must
  * implement the create method with that signature which will build your
  * object in some other way.
+ *
+ * A reference to the SimObjectParams will be returned via the params()
+ * API. It is quite common for a derived class (DerivSimObject) to access its
+ * derived parameters by downcasting the SimObjectParam to DerivSimObjectParams
+ *
+ * \code{.cpp}
+ *     using Params = DerivSimObjectParams;
+ *     const Params &
+ *     params() const
+ *     {
+ *         return reinterpret_cast<const Params&>(_params);
+ *     }
+ * \endcode
+ *
+ * We provide the PARAMS(..) macro as syntactic sugar to replace the code
+ * above with a much simpler:
+ *
+ * \code{.cpp}
+ *     PARAMS(DerivSimObject);
+ * \endcode
  */
 class SimObject : public EventManager, public Serializable, public Drainable,
                   public Stats::Group
@@ -313,6 +333,21 @@ class SimObject : public EventManager, public Serializable, public Drainable,
      */
     static SimObject *find(const char *name);
 };
+
+/* Add PARAMS(ClassName) to every descendant of SimObject that needs
+ * params.
+ *
+ * Strictly speaking, we need static_cast here, because the types are
+ * related by inheritance, but since the target type may be
+ * incomplete, the compiler does not know the relation.
+ */
+#define PARAMS(type)                                     \
+    using Params = type ## Params;                       \
+    const Params &                                       \
+    params() const                                       \
+    {                                                    \
+        return reinterpret_cast<const Params&>(_params); \
+    }
 
 /**
  * Base class to wrap object resolving functionality.
