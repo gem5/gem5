@@ -67,7 +67,6 @@ a :class:`TestSuite` named after the module.
 
 import os
 import re
-import six
 import sys
 import traceback
 

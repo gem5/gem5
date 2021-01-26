@@ -83,7 +83,6 @@ import copy
 import os
 import re
 
-from six import add_metaclass
 from pickle import HIGHEST_PROTOCOL as highest_pickle_protocol
 
 from testlib.helper import absdirpath, AttrDict, FrozenAttrDict
@@ -602,8 +601,7 @@ def define_common_args(config):
     # one in the list will be saved.
     common_args = AttrDict({arg.name:arg for arg in common_args})
 
-@add_metaclass(abc.ABCMeta)
-class ArgParser(object):
+class ArgParser(object, metaclass=abc.ABCMeta):
     class ExtendAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
             items = getattr(namespace, self.dest, [])

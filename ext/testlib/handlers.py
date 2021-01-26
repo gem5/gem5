@@ -31,8 +31,6 @@ Handlers for the testlib Log.
 
 
 '''
-from __future__ import print_function
-
 import multiprocessing
 import os
 import sys
@@ -46,7 +44,7 @@ import testlib.result as result
 import testlib.state as state
 import testlib.terminal as terminal
 
-from six.moves import queue as Queue
+from queue import Queue
 from testlib.configuration import constants
 
 

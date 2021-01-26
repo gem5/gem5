@@ -32,8 +32,6 @@ results and messages are reported through.
 '''
 import testlib.wrappers as wrappers
 
-from six import add_metaclass
-
 class LogLevel():
     Fatal = 0
     Error = 1
@@ -56,8 +54,7 @@ class RecordTypeCounterMetaclass(type):
         RecordTypeCounterMetaclass.counter += 1
 
 
-@add_metaclass(RecordTypeCounterMetaclass)
-class Record(object):
+class Record(object, metaclass=RecordTypeCounterMetaclass):
     '''
     A generic object that is passed to the :class:`Log` and its handlers.
 

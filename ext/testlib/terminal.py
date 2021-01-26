@@ -28,7 +28,6 @@ import sys
 import fcntl
 import termios
 import struct
-import six
 
 # Intended usage example:
 #
@@ -85,7 +84,7 @@ class ColorStrings(object):
     def __init__(self, cap_string):
         for i, c in enumerate(color_names):
             setattr(self, c, cap_string('setaf', i))
-        for name, cap in six.iteritems(capability_map):
+        for name, cap in capability_map.items():
             setattr(self, name, cap_string(cap))
 
 termcap = ColorStrings(cap_string)
