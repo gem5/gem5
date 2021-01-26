@@ -106,16 +106,12 @@ def template MicroLimmOpConstructor {{
 }};
 
 let {{
-    import six
-    if six.PY3:
-        long = int
-
     class LimmOp(X86Microop):
         def __init__(self, dest, imm, dataSize="env.dataSize"):
             self.className = "Limm"
             self.mnemonic = "limm"
             self.dest = dest
-            if isinstance(imm, (int, long)):
+            if isinstance(imm, int):
                 imm = "ULL(%d)" % imm
             self.imm = imm
             self.dataSize = dataSize
@@ -145,7 +141,7 @@ let {{
             self.className = "Lfpimm"
             self.mnemonic = "lfpimm"
             self.dest = dest
-            if isinstance(imm, (int, long)):
+            if isinstance(imm, int):
                 imm = "ULL(%d)" % imm
             elif isinstance(imm, float):
                 imm = "floatToBits64(%.16f)" % imm

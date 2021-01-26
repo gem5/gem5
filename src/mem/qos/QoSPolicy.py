@@ -33,8 +33,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from six import string_types
-
 from m5.SimObject import *
 from m5.params import *
 
@@ -78,7 +76,7 @@ class QoSFixedPriorityPolicy(QoSPolicy):
             for prio in self._requestor_priorities:
                 request_port = prio[0]
                 priority = prio[1]
-                if isinstance(request_port, string_types):
+                if isinstance(request_port, str):
                     self.getCCObject().initRequestorName(
                         request_port, int(priority))
                 else:
@@ -115,7 +113,7 @@ class QoSPropFairPolicy(QoSPolicy):
             for prio in self._requestor_scores:
                 request_port = prio[0]
                 score = prio[1]
-                if isinstance(request_port, string_types):
+                if isinstance(request_port, str):
                     self.getCCObject().initRequestorName(
                         request_port, float(score))
                 else:

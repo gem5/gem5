@@ -25,8 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-
 import argparse
 import collections
 import difflib
@@ -38,7 +36,6 @@ import multiprocessing.pool
 import os
 import re
 import subprocess
-import six
 import sys
 
 script_path = os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -110,8 +107,7 @@ class TestPhaseMeta(type):
 
         super(TestPhaseMeta, cls).__init__(name, bases, d)
 
-@six.add_metaclass(TestPhaseMeta)
-class TestPhaseBase(object):
+class TestPhaseBase(object, metaclass=TestPhaseMeta):
     abstract = True
 
     def __init__(self, main_args, *args):
