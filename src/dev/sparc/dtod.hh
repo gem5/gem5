@@ -49,14 +49,8 @@ class DumbTOD : public BasicPioDevice
     uint64_t todTime;
 
   public:
-    typedef DumbTODParams Params;
+    PARAMS(DumbTOD);
     DumbTOD(const Params &p);
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
 
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;

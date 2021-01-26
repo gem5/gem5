@@ -41,12 +41,7 @@ class System;
 
 class KernelWorkload : public Workload
 {
-  public:
-    using Params = KernelWorkloadParams;
-
   protected:
-    const Params &_params;
-
     Loader::MemoryImage image;
 
     /** Mask that should be anded for binary/symbol loading.
@@ -76,7 +71,7 @@ class KernelWorkload : public Workload
     const std::string commandLine;
 
   public:
-    const Params &params() const { return _params; }
+    PARAMS(KernelWorkload);
 
     Addr start() const { return _start; }
     Addr end() const { return _end; }

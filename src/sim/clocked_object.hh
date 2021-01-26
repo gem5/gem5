@@ -234,12 +234,7 @@ class ClockedObject : public SimObject, public Clocked
     ClockedObject(const ClockedObjectParams &p);
 
     /** Parameters of ClockedObject */
-    typedef ClockedObjectParams Params;
-    const Params &
-    params() const
-    {
-        return reinterpret_cast<const Params&>(_params);
-    }
+    PARAMS(ClockedObject);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

@@ -109,8 +109,7 @@ ArmPPIGen::get(ThreadContext* tc)
         return pin_it->second;
     } else {
         // Generate PPI Pin
-        auto &p = static_cast<const ArmPPIParams &>(_params);
-        ArmPPI *pin = new ArmPPI(p, tc);
+        ArmPPI *pin = new ArmPPI(ArmPPIGen::params(), tc);
 
         pins.insert({cid, pin});
 

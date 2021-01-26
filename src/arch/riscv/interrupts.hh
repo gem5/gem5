@@ -57,13 +57,7 @@ class Interrupts : public BaseInterrupts
     std::bitset<NumInterruptTypes> ie;
 
   public:
-    typedef RiscvInterruptsParams Params;
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(RiscvInterrupts);
 
     Interrupts(const Params &p) : BaseInterrupts(p), ip(0), ie(0) {}
 

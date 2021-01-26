@@ -56,7 +56,6 @@ class Gicv3 : public BaseGic
     friend class Gicv3CPUInterface;
     friend class Gicv3Redistributor;
 
-    typedef Gicv3Params Params;
     Gicv3Distributor * distributor;
     std::vector<Gicv3Redistributor *> redistributors;
     std::vector<Gicv3CPUInterface *> cpuInterfaces;
@@ -111,11 +110,7 @@ class Gicv3 : public BaseGic
 
     void init() override;
 
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(Gicv3);
 
     Tick read(PacketPtr pkt) override;
     void reset();

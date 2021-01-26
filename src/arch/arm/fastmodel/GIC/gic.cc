@@ -69,7 +69,7 @@ SCGIC::Terminator::sendTowardsCPU(uint8_t len, const uint8_t *data)
 
 SCGIC::SCGIC(const SCFastModelGICParams &params,
              sc_core::sc_module_name _name)
-    : scx_evs_GIC(_name), _params(params)
+    : scx_evs_GIC(_name)
 {
     signalInterrupt.bind(signal_interrupt);
 

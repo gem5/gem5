@@ -76,10 +76,9 @@ class RejectException: public std::exception
 class AbstractController : public ClockedObject, public Consumer
 {
   public:
-    typedef RubyControllerParams Params;
+    PARAMS(RubyController);
     AbstractController(const Params &p);
     void init();
-    const Params &params() const { return (const Params &)_params; }
 
     NodeID getVersion() const { return m_machineID.getNum(); }
     MachineType getType() const { return m_machineID.getType(); }

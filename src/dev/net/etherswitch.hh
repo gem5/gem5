@@ -51,16 +51,10 @@
 class EtherSwitch : public SimObject
 {
   public:
-    typedef EtherSwitchParams Params;
+    PARAMS(EtherSwitch);
 
     EtherSwitch(const Params &p);
     ~EtherSwitch();
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
 
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;

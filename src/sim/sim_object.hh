@@ -170,7 +170,7 @@ class SimObject : public EventManager, public Serializable, public Drainable,
     /**
      * @ingroup api_simobject
      */
-    SimObject(const Params &_params);
+    SimObject(const Params &p);
 
     virtual ~SimObject();
 

@@ -40,11 +40,7 @@ namespace RiscvISA
 
 class EmuLinux : public SEWorkload
 {
-  public:
-    using Params = RiscvEmuLinuxParams;
-
   protected:
-    const Params &_params;
 
     /// 64 bit syscall descriptors, indexed by call number.
     static SyscallDescTable<SEWorkload::SyscallABI> syscallDescs64;
@@ -53,9 +49,9 @@ class EmuLinux : public SEWorkload
     static SyscallDescTable<SEWorkload::SyscallABI> syscallDescs32;
 
   public:
-    const Params &params() const { return _params; }
+    PARAMS(RiscvEmuLinux);
 
-    EmuLinux(const Params &p) : SEWorkload(p), _params(p) {}
+    EmuLinux(const Params &p) : SEWorkload(p) {}
 
     void syscall(ThreadContext *tc) override;
 };

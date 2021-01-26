@@ -140,15 +140,9 @@ class EtherLink : public SimObject
     Interface *interface[2];
 
   public:
-    typedef EtherLinkParams Params;
+    PARAMS(EtherLink);
     EtherLink(const Params &p);
     virtual ~EtherLink();
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
 
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;

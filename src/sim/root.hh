@@ -132,12 +132,7 @@ class Root : public SimObject
     /// Set the threshold for time remaining to spin wait.
     void timeSyncSpinThreshold(Time newThreshold);
 
-    typedef RootParams Params;
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(Root);
 
     Root(const Params &p);
 

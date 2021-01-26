@@ -45,9 +45,8 @@ class Topology;
 class BasicLink : public SimObject
 {
   public:
-    typedef BasicLinkParams Params;
+    PARAMS(BasicLink);
     BasicLink(const Params &p);
-    const Params &params() const { return (const Params &)_params; }
 
     void init();
 
@@ -70,9 +69,8 @@ operator<<(std::ostream& out, const BasicLink& obj)
 class BasicExtLink : public BasicLink
 {
   public:
-    typedef BasicExtLinkParams Params;
+    PARAMS(BasicExtLink);
     BasicExtLink(const Params &p);
-    const Params &params() const { return (const Params &)_params; }
 
     friend class Topology;
 };
@@ -80,9 +78,8 @@ class BasicExtLink : public BasicLink
 class BasicIntLink : public BasicLink
 {
   public:
-    typedef BasicIntLinkParams Params;
+    PARAMS(BasicIntLink);
     BasicIntLink(const Params &p);
-    const Params &params() const { return (const Params &)_params; }
 
     friend class Topology;
 };

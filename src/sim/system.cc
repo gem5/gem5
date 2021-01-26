@@ -222,7 +222,6 @@ System::System(const Params &p)
       workItemsEnd(0),
       numWorkIds(p.num_work_ids),
       thermalModel(p.thermal_model),
-      _params(p),
       _m5opRange(p.m5ops_base ?
                  RangeSize(p.m5ops_base, 0x10000) :
                  AddrRange(1, 0)), // Create an empty range if disabled

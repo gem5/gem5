@@ -204,7 +204,7 @@ class AbstractMemory : public ClockedObject
 
   public:
 
-    typedef AbstractMemoryParams Params;
+    PARAMS(AbstractMemory);
 
     AbstractMemory(const Params &p);
     virtual ~AbstractMemory() {}
@@ -265,12 +265,6 @@ class AbstractMemory : public ClockedObject
      * @param sys system pointer to set
      */
     void system(System *sys) { _system = sys; }
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
 
     /**
      * Get the address range

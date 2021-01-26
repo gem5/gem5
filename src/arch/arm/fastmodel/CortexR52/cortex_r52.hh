@@ -52,18 +52,15 @@ class CortexR52Cluster;
 class CortexR52 : public Iris::CPU<CortexR52TC>
 {
   protected:
-    typedef FastModelCortexR52Params Params;
     typedef Iris::CPU<CortexR52TC> Base;
-    const Params &_params;
 
     CortexR52Cluster *cluster = nullptr;
     int num = 0;
 
-    const Params &params() { return _params; }
-
   public:
+    PARAMS(FastModelCortexR52);
     CortexR52(const Params &p) :
-        Base(p, scx::scx_get_iris_connection_interface()), _params(p)
+        Base(p, scx::scx_get_iris_connection_interface())
     {}
 
     template <class T>
@@ -78,9 +75,6 @@ class CortexR52 : public Iris::CPU<CortexR52TC>
 class CortexR52Cluster : public SimObject
 {
   private:
-    typedef FastModelCortexR52ClusterParams Params;
-    const Params &_params;
-
     std::vector<CortexR52 *> cores;
     sc_core::sc_module *evs;
 
@@ -95,8 +89,8 @@ class CortexR52Cluster : public SimObject
     CortexR52 *getCore(int num) const { return cores.at(num); }
     sc_core::sc_module *getEvs() const { return evs; }
 
+    PARAMS(FastModelCortexR52Cluster);
     CortexR52Cluster(const Params &p);
-    const Params &params() { return _params; }
 
     Port &getPort(const std::string &if_name,
             PortID idx=InvalidPortID) override;

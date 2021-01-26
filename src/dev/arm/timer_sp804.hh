@@ -135,12 +135,8 @@ class Sp804 : public AmbaPioDevice
     Timer timer1;
 
   public:
-    typedef Sp804Params Params;
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(Sp804);
+
     /**
       * The constructor for RealView just registers itself with the MMU.
       * @param p params structure

@@ -63,11 +63,7 @@ class RealView : public Platform
     BaseGic *gic;
 
   public:
-    typedef RealViewParams Params;
-    const Params &
-    params() const {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(RealView);
 
     /**
      * Constructor for the Tsunami Class.

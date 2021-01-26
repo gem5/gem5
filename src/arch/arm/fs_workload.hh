@@ -117,12 +117,7 @@ class FsWorkload : public KernelWorkload
     }
 
   public:
-    typedef ArmFsWorkloadParams Params;
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(ArmFsWorkload);
 
     Addr
     getEntry() const override

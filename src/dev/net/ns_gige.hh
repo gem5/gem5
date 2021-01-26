@@ -326,12 +326,7 @@ class NSGigE : public EtherDevBase
     NSGigEInt *interface;
 
   public:
-    typedef NSGigEParams Params;
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(NSGigE);
 
     NSGigE(const Params &params);
     ~NSGigE();

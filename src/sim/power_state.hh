@@ -65,12 +65,7 @@ class PowerState : public SimObject
     PowerState(const PowerStateParams &p);
 
     /** Parameters of PowerState object */
-    typedef PowerStateParams Params;
-    const Params &
-    params() const
-    {
-        return reinterpret_cast<const Params &>(_params);
-    }
+    PARAMS(PowerState);
 
     virtual void addFollower(PowerState* pwr_obj) {};
     void setControlledDomain(PowerDomain* pwr_dom);

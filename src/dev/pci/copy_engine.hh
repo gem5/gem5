@@ -154,12 +154,7 @@ class CopyEngine : public PciDevice
     std::vector<CopyEngineChannel*> chan;
 
   public:
-    typedef CopyEngineParams Params;
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(CopyEngine);
     CopyEngine(const Params &params);
     ~CopyEngine();
 

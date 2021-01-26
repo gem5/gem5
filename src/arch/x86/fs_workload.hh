@@ -71,7 +71,7 @@ void installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
 class FsWorkload : public KernelWorkload
 {
   public:
-    typedef X86FsWorkloadParams Params;
+    PARAMS(X86FsWorkload);
     FsWorkload(const Params &p);
 
   public:
@@ -89,8 +89,6 @@ class FsWorkload : public KernelWorkload
 
     void writeOutMPTable(Addr fp,
             Addr &fpSize, Addr &tableSize, Addr table=0);
-
-    const Params &params() const { return (const Params &)_params; }
 };
 
 } // namespace X86ISA

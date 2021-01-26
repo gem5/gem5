@@ -66,7 +66,7 @@ class I8254 : public BasicPioDevice
     void counterInterrupt(unsigned int num);
 
   public:
-    typedef I8254Params Params;
+    PARAMS(I8254);
 
     Port &
     getPort(const std::string &if_name, PortID idx=InvalidPortID) override
@@ -75,12 +75,6 @@ class I8254 : public BasicPioDevice
             return *intPin.at(idx);
         else
             return BasicPioDevice::getPort(if_name, idx);
-    }
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
     }
 
     I8254(const Params &p) : BasicPioDevice(p, 4), latency(p.pio_latency),

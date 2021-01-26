@@ -263,14 +263,9 @@ class Platform : public Scp
   public:
     using ProtocolList = std::unordered_map<uint8_t, Protocol *>;
 
-    Platform(const ScmiPlatformParams &p);
+    PARAMS(ScmiPlatform);
+    Platform(const Params &p);
     ~Platform();
-
-    const ScmiPlatformParams&
-    params() const
-    {
-        return static_cast<const ScmiPlatformParams&>(_params);
-    }
 
     void handleMessage(AgentChannel *ch, Message &msg);
 

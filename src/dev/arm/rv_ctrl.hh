@@ -153,12 +153,8 @@ class RealViewCtrl : public BasicPioDevice
     uint32_t scData;
 
   public:
-    typedef RealViewCtrlParams Params;
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(RealViewCtrl);
+
     /**
       * The constructor for RealView just registers itself with the MMU.
       * @param p params structure

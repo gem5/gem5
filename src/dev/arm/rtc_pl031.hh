@@ -97,12 +97,8 @@ class PL031 : public AmbaIntDevice
     void resyncMatch();
 
   public:
-    typedef PL031Params Params;
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(PL031);
+
     /**
       * The constructor for RealView just registers itself with the MMU.
       * @param p params structure
@@ -129,4 +125,3 @@ class PL031 : public AmbaIntDevice
 
 
 #endif // __DEV_ARM_RTC_PL031_HH__
-

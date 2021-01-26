@@ -102,13 +102,7 @@ class MaltaIO : public BasicPioDevice
      */
     Tick frequency() const;
 
-    typedef MaltaIOParams Params;
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(MaltaIO);
 
     /**
      * Initialize all the data for devices supported by Malta I/O.

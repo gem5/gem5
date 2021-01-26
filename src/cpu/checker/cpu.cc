@@ -90,7 +90,7 @@ CheckerCPU::~CheckerCPU()
 void
 CheckerCPU::setSystem(System *system)
 {
-    const Params &p = dynamic_cast<const Params &>(_params);
+    const Params &p = params();
 
     systemPtr = system;
 

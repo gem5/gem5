@@ -408,12 +408,6 @@ GenericTimer::GenericTimer(const GenericTimerParams &p)
     system.setGenericTimer(this);
 }
 
-const GenericTimerParams &
-GenericTimer::params() const
-{
-    return dynamic_cast<const GenericTimerParams &>(_params);
-}
-
 void
 GenericTimer::serialize(CheckpointOut &cp) const
 {
@@ -469,7 +463,7 @@ void
 GenericTimer::createTimers(unsigned cpus)
 {
     assert(timers.size() < cpus);
-    auto &p = static_cast<const GenericTimerParams &>(_params);
+    auto &p = params();
 
     const unsigned old_cpu_count(timers.size());
     timers.resize(cpus);

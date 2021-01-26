@@ -61,13 +61,7 @@ class Interrupts : public BaseInterrupts
 
   public:
 
-    typedef SparcInterruptsParams Params;
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(SparcInterrupts);
 
     Interrupts(const Params &p) : BaseInterrupts(p)
     {

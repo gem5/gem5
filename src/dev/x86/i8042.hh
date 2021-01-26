@@ -117,13 +117,7 @@ class I8042 : public BasicPioDevice
     uint8_t readDataOut();
 
   public:
-    typedef I8042Params Params;
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(I8042);
 
     I8042(const Params &p);
 

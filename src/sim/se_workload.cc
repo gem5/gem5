@@ -31,7 +31,7 @@
 #include "params/SEWorkload.hh"
 #include "sim/process.hh"
 
-SEWorkload::SEWorkload(const Params &p) : Workload(p), _params(p)
+SEWorkload::SEWorkload(const Params &p) : Workload(p)
 {}
 
 void

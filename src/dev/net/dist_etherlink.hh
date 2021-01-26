@@ -215,15 +215,9 @@ class DistEtherLink : public SimObject
     Tick linkDelay;
 
   public:
-    typedef DistEtherLinkParams Params;
+    PARAMS(DistEtherLink);
     DistEtherLink(const Params &p);
     ~DistEtherLink();
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
 
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;

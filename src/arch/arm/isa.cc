@@ -122,12 +122,6 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
 
 std::vector<struct ISA::MiscRegLUTEntry> ISA::lookUpMiscReg(NUM_MISCREGS);
 
-const ArmISAParams &
-ISA::params() const
-{
-    return dynamic_cast<const Params &>(_params);
-}
-
 void
 ISA::clear()
 {

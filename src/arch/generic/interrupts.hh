@@ -41,17 +41,11 @@ class BaseInterrupts : public SimObject
     ThreadContext *tc = nullptr;
 
   public:
-    typedef BaseInterruptsParams Params;
+    PARAMS(BaseInterrupts);
 
     BaseInterrupts(const Params &p) : SimObject(p) {}
 
     virtual void setThreadContext(ThreadContext *_tc) { tc = _tc; }
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
 
     /*
      * Functions for retrieving interrupts for the CPU to handle.

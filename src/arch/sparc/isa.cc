@@ -64,12 +64,6 @@ ISA::ISA(const Params &p) : BaseISA(p)
     clear();
 }
 
-const SparcISAParams &
-ISA::params() const
-{
-    return dynamic_cast<const Params &>(_params);
-}
-
 void
 ISA::reloadRegMap()
 {

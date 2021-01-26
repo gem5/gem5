@@ -76,7 +76,7 @@ class ISA : public BaseISA
     bool hpmCounterEnabled(int counter) const;
 
   public:
-    typedef RiscvISAParams Params;
+    PARAMS(RiscvISA);
 
     void clear();
 
@@ -97,8 +97,6 @@ class ISA : public BaseISA
 
     void serialize(CheckpointOut &cp) const;
     void unserialize(CheckpointIn &cp);
-
-    const Params &params() const;
 
     ISA(const Params &p);
 };

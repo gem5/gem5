@@ -45,17 +45,11 @@ class EtherInt;
 class EtherDevice : public PciDevice
 {
   public:
-    typedef EtherDeviceParams Params;
+    PARAMS(EtherDevice);
     EtherDevice(const Params &params)
         : PciDevice(params),
           etherDeviceStats(this)
     {}
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
 
   protected:
     struct EtherDeviceStats : public Stats::Group
@@ -146,16 +140,10 @@ class EtherDevice : public PciDevice
 class EtherDevBase : public EtherDevice
 {
   public:
-    EtherDevBase(const EtherDevBaseParams &params)
+    PARAMS(EtherDevBase);
+    EtherDevBase(const Params &params)
         : EtherDevice(params)
     {}
-
-    const EtherDevBaseParams &
-    params() const
-    {
-        return dynamic_cast<const EtherDevBaseParams &>(_params);
-    }
-
 };
 
 #endif // __DEV_NET_ETHERDEVICE_HH__

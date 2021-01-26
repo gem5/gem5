@@ -52,10 +52,9 @@ class AbstractController;
 class RubySystem : public ClockedObject
 {
   public:
-    typedef RubySystemParams Params;
+    PARAMS(RubySystem);
     RubySystem(const Params &p);
     ~RubySystem();
-    const Params &params() const { return (const Params &)_params; }
 
     // config accessors
     static int getRandomization() { return m_randomization; }

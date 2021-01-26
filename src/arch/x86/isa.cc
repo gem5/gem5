@@ -137,12 +137,6 @@ ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string)
     clear();
 }
 
-const X86ISAParams &
-ISA::params() const
-{
-    return dynamic_cast<const Params &>(_params);
-}
-
 RegVal
 ISA::readMiscRegNoEffect(int miscReg) const
 {

@@ -51,14 +51,8 @@ class Uart : public BasicPioDevice
     SerialDevice *device;
 
   public:
-    typedef UartParams Params;
+    PARAMS(Uart);
     Uart(const Params &p, Addr pio_size);
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
 
     /**
      * Inform the uart that there is data available.

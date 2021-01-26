@@ -76,13 +76,8 @@ class MessageBuffer;
 class Network : public ClockedObject
 {
   public:
-    typedef RubyNetworkParams Params;
+    PARAMS(RubyNetwork);
     Network(const Params &p);
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
 
     virtual ~Network();
 

@@ -39,12 +39,7 @@ namespace SparcISA
 
 class EmuLinux : public SEWorkload
 {
-  public:
-    using Params = SparcEmuLinuxParams;
-
   protected:
-    const Params &_params;
-
     /// 64 bit syscall descriptors, indexed by call number.
     static SyscallDescTable<SEWorkload::SyscallABI64> syscallDescs;
 
@@ -55,7 +50,7 @@ class EmuLinux : public SEWorkload
     void syscall32(ThreadContext *tc);
 
   public:
-    const Params &params() const { return _params; }
+    PARAMS(SparcEmuLinux);
 
     EmuLinux(const Params &p);
 

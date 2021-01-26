@@ -162,12 +162,8 @@ class CpuLocalTimer : public BasicPioDevice
     std::vector<std::unique_ptr<Timer>> localTimer;
 
   public:
-    typedef CpuLocalTimerParams Params;
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(CpuLocalTimer);
+
     /**
       * The constructor for RealView just registers itself with the MMU.
       * @param p params structure

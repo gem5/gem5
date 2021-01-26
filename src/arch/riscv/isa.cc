@@ -182,12 +182,6 @@ ISA::ISA(const Params &p) : BaseISA(p)
     clear();
 }
 
-const RiscvISAParams &
-ISA::params() const
-{
-    return dynamic_cast<const Params &>(_params);
-}
-
 void ISA::clear()
 {
     std::fill(miscRegFile.begin(), miscRegFile.end(), 0);

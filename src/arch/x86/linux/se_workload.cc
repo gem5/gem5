@@ -89,7 +89,7 @@ LinuxLoader loader;
 namespace X86ISA
 {
 
-EmuLinux::EmuLinux(const Params &p) : SEWorkload(p), _params(p)
+EmuLinux::EmuLinux(const Params &p) : SEWorkload(p)
 {}
 
 const std::vector<IntRegIndex> EmuLinux::SyscallABI64::ArgumentRegs = {

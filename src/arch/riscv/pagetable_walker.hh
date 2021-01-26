@@ -191,13 +191,7 @@ namespace RiscvISA
             tlb = _tlb;
         }
 
-        typedef RiscvPagetableWalkerParams Params;
-
-        const Params &
-        params() const
-        {
-            return static_cast<const Params &>(_params);
-        }
+        PARAMS(RiscvPagetableWalker);
 
         Walker(const Params &params) :
             ClockedObject(params), port(name() + ".port", this),

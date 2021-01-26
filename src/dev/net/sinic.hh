@@ -76,8 +76,7 @@ class Base : public EtherDevBase
  * Construction/Destruction/Parameters
  */
   public:
-    typedef SinicParams Params;
-    const Params &params() const { return (const Params &)_params; }
+    PARAMS(Sinic);
     Base(const Params &p);
 };
 

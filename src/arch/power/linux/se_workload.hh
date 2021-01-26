@@ -40,19 +40,14 @@ namespace PowerISA
 
 class EmuLinux : public SEWorkload
 {
-  public:
-    using Params = PowerEmuLinuxParams;
-
   protected:
-    const Params &_params;
-
     /// Syscall descriptors, indexed by call number.
     static SyscallDescTable<SEWorkload::SyscallABI> syscallDescs;
 
   public:
-    const Params &params() const { return _params; }
+    PARAMS(PowerEmuLinux);
 
-    EmuLinux(const Params &p) : SEWorkload(p), _params(p) {}
+    EmuLinux(const Params &p) : SEWorkload(p) {}
 
     void syscall(ThreadContext *tc) override;
 };

@@ -52,13 +52,7 @@ namespace X86ISA
 class EmuLinux : public SEWorkload
 {
   public:
-    using Params = X86EmuLinuxParams;
-
-  protected:
-    const Params &_params;
-
-  public:
-    const Params &params() const { return _params; }
+    PARAMS(X86EmuLinux);
 
     EmuLinux(const Params &p);
 

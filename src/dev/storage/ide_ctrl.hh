@@ -164,8 +164,7 @@ class IdeController : public PciDevice
     void dispatchAccess(PacketPtr pkt, bool read);
 
   public:
-    typedef IdeControllerParams Params;
-    const Params &params() const { return (const Params &)_params; }
+    PARAMS(IdeController);
     IdeController(const Params &p);
 
     /** See if a disk is selected based on its pointer */

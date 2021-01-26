@@ -38,15 +38,8 @@ namespace ArmISA
 class SEWorkload : public ::SEWorkload
 {
   public:
-    using Params = ArmSEWorkloadParams;
-
-  protected:
-    const Params &_params;
-
-  public:
-    const Params &params() const { return _params; }
-
-    SEWorkload(const Params &p) : ::SEWorkload(p), _params(p) {}
+    PARAMS(ArmSEWorkload);
+    SEWorkload(const Params &p) : ::SEWorkload(p) {}
 
     ::Loader::Arch getArch() const override { return ::Loader::Arm64; }
 

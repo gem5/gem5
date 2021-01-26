@@ -54,7 +54,7 @@ namespace MipsISA
         // The MIPS name for this file is CP0 or Coprocessor 0
         typedef ISA CP0;
 
-        typedef MipsISAParams Params;
+        PARAMS(MipsISA);
 
       protected:
         // Number of threads and vpes an individual ISA state can handle
@@ -128,8 +128,6 @@ namespace MipsISA
         static std::string miscRegNames[NumMiscRegs];
 
       public:
-        const Params &params() const;
-
         ISA(const Params &p);
 
         RegId flattenRegId(const RegId& regId) const { return regId; }

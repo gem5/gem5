@@ -309,12 +309,7 @@ class BaseCPU : public ClockedObject
     { return static_cast<ThreadID>(cid - threadContexts[0]->contextId()); }
 
   public:
-    typedef BaseCPUParams Params;
-    const Params &
-    params() const
-    {
-        return reinterpret_cast<const Params &>(_params);
-    }
+    PARAMS(BaseCPU);
     BaseCPU(const Params &params, bool is_checker = false);
     virtual ~BaseCPU();
 

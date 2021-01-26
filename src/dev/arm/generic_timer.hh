@@ -286,9 +286,9 @@ class ArchTimerKvm : public ArchTimer
 class GenericTimer : public SimObject
 {
   public:
-    const GenericTimerParams &params() const;
+    PARAMS(GenericTimer);
 
-    GenericTimer(const GenericTimerParams &p);
+    GenericTimer(const Params &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

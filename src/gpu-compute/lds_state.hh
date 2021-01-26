@@ -259,7 +259,7 @@ class LdsState: public ClockedObject
                        unsigned *numBankAccesses);
 
   public:
-    typedef LdsStateParams Params;
+    PARAMS(LdsState);
 
     LdsState(const Params &params);
 
@@ -269,12 +269,6 @@ class LdsState: public ClockedObject
     ~LdsState()
     {
         parent = nullptr;
-    }
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
     }
 
     bool

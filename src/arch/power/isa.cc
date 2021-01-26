@@ -47,10 +47,4 @@ ISA::ISA(const Params &p) : BaseISA(p)
     clear();
 }
 
-const PowerISAParams &
-ISA::params() const
-{
-    return dynamic_cast<const Params &>(_params);
-}
-
 }

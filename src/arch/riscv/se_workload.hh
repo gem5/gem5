@@ -40,15 +40,9 @@ namespace RiscvISA
 class SEWorkload : public ::SEWorkload
 {
   public:
-    using Params = RiscvSEWorkloadParams;
+    PARAMS(RiscvSEWorkload);
 
-  protected:
-    const Params &_params;
-
-  public:
-    const Params &params() const { return _params; }
-
-    SEWorkload(const Params &p) : ::SEWorkload(p), _params(p) {}
+    SEWorkload(const Params &p) : ::SEWorkload(p) {}
 
     ::Loader::Arch getArch() const override { return ::Loader::Riscv64; }
 

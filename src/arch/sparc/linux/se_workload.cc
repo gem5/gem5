@@ -73,7 +73,7 @@ LinuxLoader loader;
 namespace SparcISA
 {
 
-EmuLinux::EmuLinux(const Params &p) : SEWorkload(p), _params(p)
+EmuLinux::EmuLinux(const Params &p) : SEWorkload(p)
 {}
 
 void

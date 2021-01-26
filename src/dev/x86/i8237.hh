@@ -92,13 +92,7 @@ class I8237 : public BasicPioDevice
     void setMaskBit(Register &reg, const uint8_t &command);
 
   public:
-    typedef I8237Params Params;
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(I8237);
 
     I8237(const Params &p);
 

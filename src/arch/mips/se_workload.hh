@@ -40,15 +40,9 @@ namespace MipsISA
 class SEWorkload : public ::SEWorkload
 {
   public:
-    using Params = MipsSEWorkloadParams;
+    PARAMS(MipsSEWorkload);
 
-  protected:
-    const Params &_params;
-
-  public:
-    const Params &params() const { return _params; }
-
-    SEWorkload(const Params &p) : ::SEWorkload(p), _params(p) {}
+    SEWorkload(const Params &p) : ::SEWorkload(p) {}
 
     ::Loader::Arch getArch() const override { return ::Loader::Mips; }
 

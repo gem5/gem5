@@ -473,12 +473,7 @@ class IGbE : public EtherDevice
     TxDescCache txDescCache;
 
   public:
-    typedef IGbEParams Params;
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(IGbE);
 
     IGbE(const Params &params);
     ~IGbE();

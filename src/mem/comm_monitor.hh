@@ -63,12 +63,7 @@ class CommMonitor : public SimObject
   public: // Construction & SimObject interfaces
 
     /** Parameters of communication monitor */
-    typedef CommMonitorParams Params;
-    const Params &
-    params() const
-    {
-        return reinterpret_cast<const Params &>(_params);
-    }
+    PARAMS(CommMonitor);
 
     /**
      * Constructor based on the Python params

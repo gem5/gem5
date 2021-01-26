@@ -165,7 +165,8 @@ class ArmSPIGen : public ArmInterruptPinGen
 class ArmPPIGen : public ArmInterruptPinGen
 {
   public:
-    ArmPPIGen(const ArmPPIParams &p);
+    PARAMS(ArmPPI);
+    ArmPPIGen(const Params &p);
 
     ArmInterruptPin* get(ThreadContext* tc = nullptr) override;
   protected:

@@ -91,7 +91,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
   public:
     void init() override;
 
-    typedef CheckerCPUParams Params;
+    PARAMS(CheckerCPU);
     CheckerCPU(const Params &p);
     virtual ~CheckerCPU();
 

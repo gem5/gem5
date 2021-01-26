@@ -52,12 +52,7 @@ class MemCheckerMonitor : public SimObject
   public:
 
     /** Parameters of memchecker monitor */
-    typedef MemCheckerMonitorParams Params;
-    const Params &
-    params() const
-    {
-        return reinterpret_cast<const Params &>(_params);
-    }
+    PARAMS(MemCheckerMonitor);
 
     /**
      * Constructor based on the Python params

@@ -55,12 +55,8 @@ class IsaFake : public BasicPioDevice
     uint64_t retData64;
 
   public:
-    typedef IsaFakeParams Params;
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(IsaFake);
+
     /**
       * The constructor for Isa Fake just registers itself with the MMU.
       * @param p params structure

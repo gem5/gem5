@@ -882,9 +882,7 @@ namespace ArmISA
             return _vecRegRenameMode;
         }
 
-        typedef ArmISAParams Params;
-
-        const Params &params() const;
+        PARAMS(ArmISA);
 
         ISA(const Params &p);
 

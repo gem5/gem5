@@ -140,12 +140,6 @@ ISA::ISA(const Params &p) : BaseISA(p), numThreads(p.num_threads),
     clear();
 }
 
-const MipsISAParams &
-ISA::params() const
-{
-    return dynamic_cast<const Params &>(_params);
-}
-
 void
 ISA::clear()
 {

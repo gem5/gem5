@@ -190,15 +190,9 @@ class Interrupts : public BaseInterrupts
     /*
      * Params stuff.
      */
-    typedef X86LocalApicParams Params;
+    PARAMS(X86LocalApic);
 
     void setThreadContext(ThreadContext *_tc) override;
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
 
     /*
      * Initialize this object by registering it with the IO APIC.

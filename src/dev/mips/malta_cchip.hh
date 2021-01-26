@@ -76,13 +76,7 @@ class MaltaCChip : public BasicPioDevice
     //uint64_t itint;
 
   public:
-    typedef MaltaCChipParams Params;
-
-    const Params &
-    params() const
-    {
-        return dynamic_cast<const Params &>(_params);
-    }
+    PARAMS(MaltaCChip);
 
     /**
      * Initialize the Malta CChip by setting all of the
