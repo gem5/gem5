@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -116,6 +116,12 @@ MicroTfence64::completeAcc(PacketPtr pkt, ExecContext *xc,
 Tstart64::Tstart64(ExtMachInst machInst, IntRegIndex _dest)
     : TmeRegNone64("tstart", machInst, MemReadOp, _dest)
 {
+    setRegIdxArrays(
+        nullptr,
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+            ;
+
     _numSrcRegs = 0;
     _numDestRegs = 0;
     _numFPDestRegs = 0;
@@ -144,6 +150,12 @@ Tstart64::execute(
 Ttest64::Ttest64(ExtMachInst machInst, IntRegIndex _dest)
     : TmeRegNone64("ttest", machInst, MemReadOp, _dest)
 {
+    setRegIdxArrays(
+        nullptr,
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+            ;
+
     _numSrcRegs = 0;
     _numDestRegs = 0;
     _numFPDestRegs = 0;

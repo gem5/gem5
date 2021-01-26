@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -97,6 +97,9 @@ class TmeRegNone64 : public ArmISA::ArmStaticInst
 
 class Tstart64 : public TmeRegNone64
 {
+  private:
+    RegId destRegIdxArr[1];
+
   public:
     Tstart64(ArmISA::ExtMachInst, ArmISA::IntRegIndex);
 
@@ -107,6 +110,9 @@ class Tstart64 : public TmeRegNone64
 
 class Ttest64 : public TmeRegNone64
 {
+  private:
+    RegId destRegIdxArr[1];
+
   public:
     Ttest64(ArmISA::ExtMachInst, ArmISA::IntRegIndex);
 
