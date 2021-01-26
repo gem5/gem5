@@ -42,12 +42,10 @@ from common import FSConfig
 from common import Options
 from common.Caches import *
 from ruby import Ruby
-from six import add_metaclass
 
 _have_kvm_support = 'BaseKvmCPU' in globals()
 
-@add_metaclass(ABCMeta)
-class BaseSystem(object):
+class BaseSystem(object, metaclass=ABCMeta):
     """Base system builder.
 
     This class provides some basic functionality for creating an ARM

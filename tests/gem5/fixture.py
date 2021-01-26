@@ -44,7 +44,8 @@ import socket
 import threading
 import gzip
 
-from six.moves import urllib
+import urllib.error
+import urllib.request
 
 from testlib.fixture import Fixture
 from testlib.configuration import config, constants

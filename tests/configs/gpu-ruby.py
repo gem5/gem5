@@ -33,8 +33,6 @@
 #  Author: Brad Beckmann
 #
 
-from __future__ import print_function
-
 import m5
 from m5.objects import *
 from m5.defines import buildEnv

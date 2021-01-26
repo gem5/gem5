@@ -28,7 +28,6 @@
 Test file for simple memory test
 TODO: Add stats checking
 '''
-import six
 
 from testlib import *
 
@@ -50,7 +49,7 @@ simple_mem_params = [
 
 
 for name, params in simple_mem_params:
-    args = ['--' + key + '=' + val for key,val in six.iteritems(params)]
+    args = ['--' + key + '=' + val for key,val in params.items()]
 
     gem5_verify_config(
         name='simple_mem_' + name,
