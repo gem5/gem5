@@ -364,6 +364,8 @@ Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
     } else if (status == tlm::TLM_UPDATED) {
         // The Timing annotation must be honored:
         sc_assert(phase == tlm::END_REQ || phase == tlm::BEGIN_RESP);
+        // Accepted but is now blocking until END_REQ (exclusion rule).
+        blockingRequest = trans;
         auto cb = [this, trans, phase]() { pec(*trans, phase); };
         system->schedule(new EventFunctionWrapper(cb, "pec", true),
                          curTick() + delay.value());
