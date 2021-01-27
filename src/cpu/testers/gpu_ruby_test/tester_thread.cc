@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -31,15 +31,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/testers/gpu_ruby_test/gpu_thread.hh"
+#include "cpu/testers/gpu_ruby_test/tester_thread.hh"
 
 #include <fstream>
 
 #include "debug/ProtocolTest.hh"
 
-GpuThread::GpuThread(const Params &p)
+TesterThread::TesterThread(const Params &p)
       : ClockedObject(p),
-        threadEvent(this, "GpuThread tick"),
+        threadEvent(this, "TesterThread tick"),
         deadlockCheckEvent(this),
         threadId(p.thread_id),
         numLanes(p.num_lanes),
@@ -51,7 +51,7 @@ GpuThread::GpuThread(const Params &p)
 {
 }
 
-GpuThread::~GpuThread()
+TesterThread::~TesterThread()
 {
     for (auto ep : episodeHistory) {
         assert(ep != nullptr);
@@ -60,7 +60,7 @@ GpuThread::~GpuThread()
 }
 
 void
-GpuThread::wakeup()
+TesterThread::wakeup()
 {
     // this thread is waken up by one of the following events
     //      - hitCallback is called
@@ -108,14 +108,14 @@ GpuThread::wakeup()
 }
 
 void
-GpuThread::scheduleWakeup()
+TesterThread::scheduleWakeup()
 {
     assert(!threadEvent.scheduled());
     schedule(threadEvent, nextCycle());
 }
 
 void
-GpuThread::scheduleDeadlockCheckEvent()
+TesterThread::scheduleDeadlockCheckEvent()
 {
     // after this first schedule, the deadlock event is scheduled by itself
     assert(!deadlockCheckEvent.scheduled());
@@ -123,7 +123,7 @@ GpuThread::scheduleDeadlockCheckEvent()
 }
 
 void
-GpuThread::attachGpuThreadToPorts(ProtocolTester *_tester,
+TesterThread::attachTesterThreadToPorts(ProtocolTester *_tester,
                             ProtocolTester::SeqPort *_port,
                             ProtocolTester::GMTokenPort *_tokenPort,
                             ProtocolTester::SeqPort *_scalarPort,
@@ -141,7 +141,7 @@ GpuThread::attachGpuThreadToPorts(ProtocolTester *_tester,
 }
 
 void
-GpuThread::issueNewEpisode()
+TesterThread::issueNewEpisode()
 {
     int num_reg_loads = random() % tester->getEpisodeLength();
     int num_reg_stores = tester->getEpisodeLength() - num_reg_loads;
@@ -152,7 +152,7 @@ GpuThread::issueNewEpisode()
 }
 
 bool
-GpuThread::isNextActionReady()
+TesterThread::isNextActionReady()
 {
     if (!curEpisode->hasMoreActions()) {
         return false;
@@ -241,7 +241,7 @@ GpuThread::isNextActionReady()
 }
 
 void
-GpuThread::issueNextAction()
+TesterThread::issueNextAction()
 {
     switch(curAction->getType()) {
         case Episode::Action::Type::ATOMIC:
@@ -278,7 +278,7 @@ GpuThread::issueNextAction()
 }
 
 void
-GpuThread::addOutstandingReqs(OutstandingReqTable& req_table, Addr address,
+TesterThread::addOutstandingReqs(OutstandingReqTable& req_table, Addr address,
                            int lane, Location loc, Value stored_val)
 {
     OutstandingReqTable::iterator it = req_table.find(address);
@@ -294,8 +294,8 @@ GpuThread::addOutstandingReqs(OutstandingReqTable& req_table, Addr address,
     }
 }
 
-GpuThread::OutstandingReq
-GpuThread::popOutstandingReq(OutstandingReqTable& req_table, Addr addr)
+TesterThread::OutstandingReq
+TesterThread::popOutstandingReq(OutstandingReqTable& req_table, Addr addr)
 {
     OutstandingReqTable::iterator it = req_table.find(addr);
 
@@ -321,7 +321,7 @@ GpuThread::popOutstandingReq(OutstandingReqTable& req_table, Addr addr)
 }
 
 void
-GpuThread::validateAtomicResp(Location loc, int lane, Value ret_val)
+TesterThread::validateAtomicResp(Location loc, int lane, Value ret_val)
 {
     if (!addrManager->validateAtomicResp(loc, ret_val)) {
         std::stringstream ss;
@@ -345,7 +345,7 @@ GpuThread::validateAtomicResp(Location loc, int lane, Value ret_val)
 }
 
 void
-GpuThread::validateLoadResp(Location loc, int lane, Value ret_val)
+TesterThread::validateLoadResp(Location loc, int lane, Value ret_val)
 {
     if (ret_val != addrManager->getLoggedValue(loc)) {
         std::stringstream ss;
@@ -354,7 +354,7 @@ GpuThread::validateLoadResp(Location loc, int lane, Value ret_val)
         // basic info
         ss << threadName << ": Loaded value is not consistent with "
            << "the last stored value\n"
-           << "\tGpuThread " << threadId << "\n"
+           << "\tTesterThread " << threadId << "\n"
            << "\tEpisode " << curEpisode->getEpisodeId() << "\n"
            << "\tLane ID " << lane << "\n"
            << "\tAddress " << printAddress(addr) << "\n"
@@ -372,7 +372,7 @@ GpuThread::validateLoadResp(Location loc, int lane, Value ret_val)
 }
 
 bool
-GpuThread::checkDRF(Location atomic_loc, Location loc, bool isStore) const
+TesterThread::checkDRF(Location atomic_loc, Location loc, bool isStore) const
 {
     if (curEpisode && curEpisode->isEpsActive()) {
         // check against the current episode this thread is executing
@@ -383,7 +383,7 @@ GpuThread::checkDRF(Location atomic_loc, Location loc, bool isStore) const
 }
 
 void
-GpuThread::checkDeadlock()
+TesterThread::checkDeadlock()
 {
     if ((curCycle() - lastActiveCycle) > deadlockThreshold) {
         // deadlock detected
@@ -408,7 +408,7 @@ GpuThread::checkDeadlock()
 }
 
 void
-GpuThread::printOutstandingReqs(const OutstandingReqTable& table,
+TesterThread::printOutstandingReqs(const OutstandingReqTable& table,
                              std::stringstream& ss) const
 {
     Cycles cur_cycle = curCycle();
@@ -423,7 +423,7 @@ GpuThread::printOutstandingReqs(const OutstandingReqTable& table,
 }
 
 void
-GpuThread::printAllOutstandingReqs(std::stringstream& ss) const
+TesterThread::printAllOutstandingReqs(std::stringstream& ss) const
 {
     // dump all outstanding requests of this thread
     ss << "\t\tOutstanding Loads:\n";

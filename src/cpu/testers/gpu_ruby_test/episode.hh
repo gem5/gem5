@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -39,7 +39,7 @@
 #include "cpu/testers/gpu_ruby_test/address_manager.hh"
 
 class ProtocolTester;
-class GpuThread;
+class TesterThread;
 
 class Episode
 {
@@ -74,7 +74,7 @@ class Episode
         LocationList locations;
     };
 
-    Episode(ProtocolTester* tester, GpuThread* thread, int num_loads,
+    Episode(ProtocolTester* tester, TesterThread* thread, int num_loads,
             int num_stores);
     ~Episode();
 
@@ -97,7 +97,7 @@ class Episode
   private:
     // pointers to tester, thread and address amanger structures
     ProtocolTester *tester;
-    GpuThread *thread;
+    TesterThread *thread;
     AddressManager *addrManager;
 
     // a unique episode id

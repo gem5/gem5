@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020 Advanced Micro Devices, Inc.
+# Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # For use for simulation and test purposes only
@@ -32,8 +32,8 @@
 from m5.params import *
 from m5.proxy import *
 
-from m5.objects.GpuThread import GpuThread
+from m5.objects.TesterThread import TesterThread
 
-class CpuThread(GpuThread):
+class CpuThread(TesterThread):
     type = 'CpuThread'
     cxx_header = "cpu/testers/gpu_ruby_test/cpu_thread.hh"

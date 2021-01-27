@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -32,11 +32,11 @@
  */
 
 /*
- * GPU thread issues requests to and receives responses from Ruby memory
+ * Tester thread issues requests to and receives responses from Ruby memory
  */
 
-#ifndef CPU_TESTERS_PROTOCOL_TESTER_GPU_THREAD_HH_
-#define CPU_TESTERS_PROTOCOL_TESTER_GPU_THREAD_HH_
+#ifndef CPU_TESTERS_PROTOCOL_TESTER_TESTER_THREAD_HH_
+#define CPU_TESTERS_PROTOCOL_TESTER_TESTER_THREAD_HH_
 
 #include "cpu/testers/gpu_ruby_test/address_manager.hh"
 #include "cpu/testers/gpu_ruby_test/episode.hh"
@@ -45,12 +45,12 @@
 #include "mem/token_port.hh"
 #include "sim/clocked_object.hh"
 
-class GpuThread : public ClockedObject
+class TesterThread : public ClockedObject
 {
   public:
-    typedef GpuThreadParams Params;
-    GpuThread(const Params &p);
-    virtual ~GpuThread();
+    typedef TesterThreadParams Params;
+    TesterThread(const Params &p);
+    virtual ~TesterThread();
 
     typedef AddressManager::Location Location;
     typedef AddressManager::Value Value;
@@ -60,7 +60,7 @@ class GpuThread : public ClockedObject
     void checkDeadlock();
     void scheduleDeadlockCheckEvent();
 
-    void attachGpuThreadToPorts(ProtocolTester *_tester,
+    void attachTesterThreadToPorts(ProtocolTester *_tester,
                              ProtocolTester::SeqPort *_port,
                              ProtocolTester::GMTokenPort *_tokenPort = nullptr,
                              ProtocolTester::SeqPort *_sqcPort = nullptr,
@@ -71,7 +71,7 @@ class GpuThread : public ClockedObject
     // must be implemented by a child class
     virtual void hitCallback(PacketPtr pkt) = 0;
 
-    int getGpuThreadId() const { return threadId; }
+    int getTesterThreadId() const { return threadId; }
     int getNumLanes() const { return numLanes; }
     // check if the input location would satisfy DRF constraint
     bool checkDRF(Location atomic_loc, Location loc, bool isStore) const;
@@ -79,14 +79,14 @@ class GpuThread : public ClockedObject
     void printAllOutstandingReqs(std::stringstream& ss) const;
 
   protected:
-    class GpuThreadEvent : public Event
+    class TesterThreadEvent : public Event
     {
       private:
-        GpuThread* thread;
+        TesterThread* thread;
         std::string desc;
 
       public:
-        GpuThreadEvent(GpuThread* _thread, std::string _description)
+        TesterThreadEvent(TesterThread* _thread, std::string _description)
             : Event(CPU_Tick_Pri), thread(_thread), desc(_description)
         {}
         void setDesc(std::string _description) { desc = _description; }
@@ -94,15 +94,15 @@ class GpuThread : public ClockedObject
         const std::string name() const override { return desc; }
     };
 
-    GpuThreadEvent threadEvent;
+    TesterThreadEvent threadEvent;
 
     class DeadlockCheckEvent : public Event
     {
       private:
-        GpuThread* thread;
+        TesterThread* thread;
 
       public:
-        DeadlockCheckEvent(GpuThread* _thread)
+        DeadlockCheckEvent(TesterThread* _thread)
             : Event(CPU_Tick_Pri), thread(_thread)
         {}
         void process() override { thread->checkDeadlock(); }
@@ -204,4 +204,4 @@ class GpuThread : public ClockedObject
                               std::stringstream& ss) const;
 };
 
-#endif /* CPU_TESTERS_PROTOCOL_TESTER_GPU_THREAD_HH_ */
+#endif /* CPU_TESTERS_PROTOCOL_TESTER_TESTER_THREAD_HH_ */

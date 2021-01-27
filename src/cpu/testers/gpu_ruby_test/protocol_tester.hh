@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -37,9 +37,9 @@
 /*
  * The tester includes the main ProtocolTester that manages all ports to the
  * memory system.
- * GpuThreads are mapped to certain data port(s)
+ * TesterThreads are mapped to certain data port(s)
  *
- * GpuThreads inject memory requests through their data ports.
+ * TesterThreads inject memory requests through their data ports.
  * The tester receives and validates responses from the memory.
  *
  * Main components
@@ -61,7 +61,7 @@
 #include "mem/token_port.hh"
 #include "params/ProtocolTester.hh"
 
-class GpuThread;
+class TesterThread;
 class CpuThread;
 class GpuWavefront;
 
@@ -98,8 +98,8 @@ class ProtocolTester : public ClockedObject
 
     struct SenderState : public Packet::SenderState
     {
-        GpuThread* th;
-        SenderState(GpuThread* _th)
+        TesterThread* th;
+        SenderState(TesterThread* _th)
         {
             assert(_th);
             th = _th;

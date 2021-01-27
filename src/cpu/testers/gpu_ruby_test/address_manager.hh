@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -161,7 +161,7 @@ class AddressManager
 
         const std::string print() const
         {
-            return "(GpuThread ID " + std::to_string(threadId) +
+            return "(TesterThread ID " + std::to_string(threadId) +
                    ", CU ID " + std::to_string(cuId) +
                    ", Episode ID " + std::to_string(episodeId) +
                    ", Value " + std::to_string(value) +

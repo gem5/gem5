@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -39,8 +39,8 @@
 #include <random>
 
 #include "cpu/testers/gpu_ruby_test/cpu_thread.hh"
-#include "cpu/testers/gpu_ruby_test/gpu_thread.hh"
 #include "cpu/testers/gpu_ruby_test/gpu_wavefront.hh"
+#include "cpu/testers/gpu_ruby_test/tester_thread.hh"
 #include "debug/ProtocolTest.hh"
 #include "mem/request.hh"
 #include "sim/sim_exit.hh"
@@ -183,7 +183,7 @@ ProtocolTester::init()
 
     // connect cpu threads to cpu's ports
     for (int cpu_id = 0; cpu_id < numCpus; ++cpu_id) {
-        cpuThreads[cpu_id]->attachGpuThreadToPorts(this,
+        cpuThreads[cpu_id]->attachTesterThreadToPorts(this,
                                       static_cast<SeqPort*>(cpuPorts[cpu_id]));
         cpuThreads[cpu_id]->scheduleWakeup();
         cpuThreads[cpu_id]->scheduleDeadlockCheckEvent();
@@ -202,7 +202,7 @@ ProtocolTester::init()
 
         for (int i = 0; i < numWfsPerCu; ++i) {
             wfId = cu_id * numWfsPerCu + i;
-            wfs[wfId]->attachGpuThreadToPorts(this,
+            wfs[wfId]->attachTesterThreadToPorts(this,
                            static_cast<SeqPort*>(cuVectorPorts[vectorPortId]),
                            cuTokenPorts[vectorPortId],
                            static_cast<SeqPort*>(cuSqcPorts[sqcPortId]),
@@ -270,12 +270,12 @@ ProtocolTester::checkDRF(Location atomic_loc,
 {
     if (debugTester) {
         // go through all active episodes in all threads
-        for (const GpuThread* th : wfs) {
+        for (const TesterThread* th : wfs) {
             if (!th->checkDRF(atomic_loc, loc, isStore))
                 return false;
         }
 
-        for (const GpuThread* th : cpuThreads) {
+        for (const TesterThread* th : cpuThreads) {
             if (!th->checkDRF(atomic_loc, loc, isStore))
                 return false;
         }
@@ -314,7 +314,7 @@ ProtocolTester::SeqPort::recvTimingResp(PacketPtr pkt)
     // get the requesting thread from the original sender state
     ProtocolTester::SenderState* senderState =
                     safe_cast<ProtocolTester::SenderState*>(pkt->senderState);
-    GpuThread *th = senderState->th;
+    TesterThread *th = senderState->th;
 
     th->hitCallback(pkt);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -36,10 +36,10 @@
 #include <fstream>
 #include <unordered_set>
 
-#include "cpu/testers/gpu_ruby_test/gpu_thread.hh"
 #include "cpu/testers/gpu_ruby_test/protocol_tester.hh"
+#include "cpu/testers/gpu_ruby_test/tester_thread.hh"
 
-Episode::Episode(ProtocolTester* _tester, GpuThread* _thread, int num_loads,
+Episode::Episode(ProtocolTester* _tester, TesterThread* _thread, int num_loads,
                  int num_stores)
       : tester(_tester),
         thread(_thread),
@@ -156,8 +156,8 @@ Episode::initActions()
                                                 normal_loc, false) ||
                             !this->checkDRF(atomicLocs[lane], normal_loc,
                                             false, lane)) {
-                            panic("GpuTh %d - Data race detected. STOPPED!\n",
-                                  thread->getGpuThreadId());
+                            panic("TestTh %d - Data race detected. STOPPED!\n",
+                                  thread->getTesterThreadId());
                         }
                     }
 
@@ -175,8 +175,8 @@ Episode::initActions()
                                                 normal_loc, true) ||
                             !this->checkDRF(atomicLocs[lane], normal_loc,
                                             true, lane)) {
-                            panic("GpuTh %d - Data race detected. STOPPED!\n",
-                                  thread->getGpuThreadId());
+                            panic("TestTh %d - Data race detected. STOPPED!\n",
+                                  thread->getTesterThreadId());
                         }
                     }
 
@@ -250,13 +250,13 @@ Episode::checkDRF(Location atomic_loc, Location loc, bool isStore,
                     !action->isMemFenceAction()) {
                     if (isStore && loc == action->getLocation(lane)) {
                         warn("ST at location %d races against thread %d\n",
-                             loc, thread->getGpuThreadId());
+                             loc, thread->getTesterThreadId());
                         return false;
                     } else if (!isStore &&
                                action->getType() == Action::Type::STORE &&
                                loc == action->getLocation(lane)) {
                         warn("LD at location %d races against thread %d\n",
-                             loc, thread->getGpuThreadId());
+                             loc, thread->getTesterThreadId());
                         return false;
                     }
                 }

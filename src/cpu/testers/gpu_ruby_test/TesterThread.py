@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020 Advanced Micro Devices, Inc.
+# Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # For use for simulation and test purposes only
@@ -33,10 +33,10 @@ from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
 from m5.proxy import *
 
-class GpuThread(ClockedObject):
-    type = 'GpuThread'
+class TesterThread(ClockedObject):
+    type = 'TesterThread'
     abstract = True
-    cxx_header = "cpu/testers/gpu_ruby_test/gpu_thread.hh"
-    thread_id = Param.Int("Unique GpuThread ID")
+    cxx_header = "cpu/testers/gpu_ruby_test/tester_thread.hh"
+    thread_id = Param.Int("Unique TesterThread ID")
     num_lanes = Param.Int("Number of lanes this thread has")
     deadlock_threshold = Param.Cycles(1000000000, "Deadlock threshold")

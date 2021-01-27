@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -113,11 +113,11 @@ AddressManager.hh/cc -- This manages address space, randomly maps address to
                         location, generates locations for all episodes,
                         maintains per-location last writer and validates
                         values returned from load actions.
-GpuThread.hh/cc         -- This is abstract class for CPU threads and GPU
+TesterThread.hh/cc   -- This is abstract class for CPU threads and GPU
                         wavefronts. It generates and executes a series of
                         episodes.
 CpuThread.hh/cc      -- Thread class for CPU threads. Not fully implemented yet
-GpuWavefront.hh/cc   -- GpuThread class for GPU wavefronts.
+GpuWavefront.hh/cc   -- Thread class for GPU wavefronts.
 Episode.hh/cc        -- Class to encapsulate an episode, notably including
                         episode load/store structure and ordering.
 
