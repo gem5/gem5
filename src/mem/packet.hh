@@ -60,6 +60,7 @@
 #include "base/types.hh"
 #include "mem/htm.hh"
 #include "mem/request.hh"
+#include "sim/byteswap.hh"
 #include "sim/core.hh"
 
 class Packet;

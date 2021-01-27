@@ -43,6 +43,7 @@
 #define __ARCH_ARM_ISA_TRAITS_HH__
 
 #include "base/types.hh"
+#include "sim/byteswap.hh"
 
 namespace ArmISA
 {

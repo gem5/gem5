@@ -31,6 +31,7 @@
 #define __ARCH_MIPS_ISA_TRAITS_HH__
 
 #include "base/types.hh"
+#include "sim/byteswap.hh"
 
 namespace MipsISA
 {

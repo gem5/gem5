@@ -35,6 +35,7 @@
 
 #include "base/logging.hh"
 #include "base/types.hh"
+#include "enums/ByteOrder.hh"
 
 // This lets us figure out what the byte order of the host system is
 #if defined(__linux__)

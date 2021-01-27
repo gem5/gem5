@@ -34,6 +34,7 @@
 #define __ARCH_ARM_FREEBSD_FREEBSD_HH__
 
 #include "kern/freebsd/freebsd.hh"
+#include "sim/byteswap.hh"
 
 class ArmFreebsd : public FreeBSD
 {

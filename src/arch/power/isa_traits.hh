@@ -32,6 +32,7 @@
 #define __ARCH_POWER_ISA_TRAITS_HH__
 
 #include "base/types.hh"
+#include "sim/byteswap.hh"
 
 namespace PowerISA
 {

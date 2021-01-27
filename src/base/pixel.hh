@@ -47,6 +47,7 @@
 #include "base/cprintf.hh"
 #include "base/str.hh"
 #include "base/types.hh"
+#include "sim/byteswap.hh"
 
 /**
  * Internal gem5 representation of a Pixel.

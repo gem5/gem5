@@ -30,6 +30,7 @@
 #define __ARCH_SPARC_SOLARIS_SOLARIS_HH__
 
 #include "kern/solaris/solaris.hh"
+#include "sim/byteswap.hh"
 
 class SparcSolaris : public Solaris
 {
