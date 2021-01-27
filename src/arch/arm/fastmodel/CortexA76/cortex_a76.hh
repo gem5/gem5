@@ -66,19 +66,6 @@ class CortexA76 : public Iris::CPU<CortexA76TC>
         Base(p, scx::scx_get_iris_connection_interface()), _params(p)
     {}
 
-    void
-    clockPeriodUpdated() override
-    {
-        Base::clockPeriodUpdated();
-
-        // FIXME(b/139447397): this is a workaround since CNTFRQ_EL0 should not
-        // be modified after clock is changed in real hardwares. Remove or
-        // modify this after a more reasonable solution is found.
-        for (auto *tc : threadContexts) {
-            tc->setMiscRegNoEffect(ArmISA::MISCREG_CNTFRQ_EL0, frequency());
-        }
-    }
-
     void initState() override;
 
     template <class T>
