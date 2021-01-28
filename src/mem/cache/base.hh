@@ -1009,15 +1009,15 @@ class BaseCache : public ClockedObject
         /** The average miss latency per command and thread. */
         Stats::Formula avgMissLatency;
         /** Number of misses that hit in the MSHRs per command and thread. */
-        Stats::Vector mshr_hits;
+        Stats::Vector mshrHits;
         /** Number of misses that miss in the MSHRs, per command and thread. */
-        Stats::Vector mshr_misses;
+        Stats::Vector mshrMisses;
         /** Number of misses that miss in the MSHRs, per command and thread. */
-        Stats::Vector mshr_uncacheable;
+        Stats::Vector mshrUncacheable;
         /** Total cycle latency of each MSHR miss, per command and thread. */
-        Stats::Vector mshr_miss_latency;
+        Stats::Vector mshrMissLatency;
         /** Total cycle latency of each MSHR miss, per command and thread. */
-        Stats::Vector mshr_uncacheable_lat;
+        Stats::Vector mshrUncacheableLatency;
         /** The miss rate in the MSHRs pre command and thread. */
         Stats::Formula mshrMissRate;
         /** The average latency of an MSHR miss, per command and thread. */

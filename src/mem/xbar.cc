@@ -64,8 +64,7 @@ BaseXBar::BaseXBar(const BaseXBarParams &p)
       useDefaultRange(p.use_default_range),
 
       ADD_STAT(transDist, "Transaction distribution"),
-      ADD_STAT(pktCount,
-               "Packet count per connected requestor and responder (bytes)"),
+      ADD_STAT(pktCount, "Packet count per connected requestor and responder"),
       ADD_STAT(pktSize, "Cumulative packet size per connected requestor and "
                         "responder (bytes)")
 {

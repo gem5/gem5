@@ -280,7 +280,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                         pkt->print());
 
                 assert(pkt->req->requestorId() < system->maxRequestors());
-                stats.cmdStats(pkt).mshr_hits[pkt->req->requestorId()]++;
+                stats.cmdStats(pkt).mshrHits[pkt->req->requestorId()]++;
 
                 // We use forward_time here because it is the same
                 // considering new targets. We have multiple
@@ -304,7 +304,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
     } else {
         // no MSHR
         assert(pkt->req->requestorId() < system->maxRequestors());
-        stats.cmdStats(pkt).mshr_misses[pkt->req->requestorId()]++;
+        stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
 
         if (pkt->isEviction() || pkt->cmd == MemCmd::WriteClean) {
             // We use forward_time here because there is an
@@ -453,11 +453,11 @@ BaseCache::recvTimingResp(PacketPtr pkt)
     if (pkt->req->isUncacheable()) {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(initial_tgt->pkt)
-            .mshr_uncacheable_lat[pkt->req->requestorId()] += miss_latency;
+            .mshrUncacheableLatency[pkt->req->requestorId()] += miss_latency;
     } else {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(initial_tgt->pkt)
-            .mshr_miss_latency[pkt->req->requestorId()] += miss_latency;
+            .mshrMissLatency[pkt->req->requestorId()] += miss_latency;
     }
 
     PacketList writebacks;
@@ -824,7 +824,7 @@ BaseCache::getNextQueueEntry()
                 // Update statistic on number of prefetches issued
                 // (hwpf_mshr_misses)
                 assert(pkt->req->requestorId() < system->maxRequestors());
-                stats.cmdStats(pkt).mshr_misses[pkt->req->requestorId()]++;
+                stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
 
                 // allocate an MSHR and return it, note
                 // that we send the packet straight away, so do not
@@ -1929,50 +1929,28 @@ BaseCache::unserialize(CheckpointIn &cp)
 
 BaseCache::CacheCmdStats::CacheCmdStats(BaseCache &c,
                                         const std::string &name)
-    : Stats::Group(&c), cache(c),
-
-    hits(
-        this, (name + "_hits").c_str(),
-        ("number of " + name + " hits").c_str()),
-    misses(
-        this, (name + "_misses").c_str(),
-        ("number of " + name + " misses").c_str()),
-    missLatency(
-        this, (name + "_miss_latency").c_str(),
-        ("number of " + name + " miss cycles").c_str()),
-    accesses(
-        this, (name + "_accesses").c_str(),
-        ("number of " + name + " accesses(hits+misses)").c_str()),
-    missRate(
-        this, (name + "_miss_rate").c_str(),
-        ("miss rate for " + name + " accesses").c_str()),
-    avgMissLatency(
-        this, (name + "_avg_miss_latency").c_str(),
-        ("average " + name + " miss latency").c_str()),
-    mshr_hits(
-        this, (name + "_mshr_hits").c_str(),
-        ("number of " + name + " MSHR hits").c_str()),
-    mshr_misses(
-        this, (name + "_mshr_misses").c_str(),
-        ("number of " + name + " MSHR misses").c_str()),
-    mshr_uncacheable(
-        this, (name + "_mshr_uncacheable").c_str(),
-        ("number of " + name + " MSHR uncacheable").c_str()),
-    mshr_miss_latency(
-        this, (name + "_mshr_miss_latency").c_str(),
-        ("number of " + name + " MSHR miss cycles").c_str()),
-    mshr_uncacheable_lat(
-        this, (name + "_mshr_uncacheable_latency").c_str(),
-        ("number of " + name + " MSHR uncacheable cycles").c_str()),
-    mshrMissRate(
-        this, (name + "_mshr_miss_rate").c_str(),
-        ("mshr miss rate for " + name + " accesses").c_str()),
-    avgMshrMissLatency(
-        this, (name + "_avg_mshr_miss_latency").c_str(),
-        ("average " + name + " mshr miss latency").c_str()),
-    avgMshrUncacheableLatency(
-        this, (name + "_avg_mshr_uncacheable_latency").c_str(),
-        ("average " + name + " mshr uncacheable latency").c_str())
+    : Stats::Group(&c, name.c_str()), cache(c),
+      ADD_STAT(hits, ("number of " + name + " hits").c_str()),
+      ADD_STAT(misses, ("number of " + name + " misses").c_str()),
+      ADD_STAT(missLatency, ("number of " + name + " miss ticks").c_str()),
+      ADD_STAT(accesses,
+               ("number of " + name + " accesses(hits+misses)").c_str()),
+      ADD_STAT(missRate, ("miss rate for " + name + " accesses").c_str()),
+      ADD_STAT(avgMissLatency, ("average " + name + " miss latency").c_str()),
+      ADD_STAT(mshrHits, ("number of " + name + " MSHR hits").c_str()),
+      ADD_STAT(mshrMisses, ("number of " + name + " MSHR misses").c_str()),
+      ADD_STAT(mshrUncacheable,
+               ("number of " + name + " MSHR uncacheable").c_str()),
+      ADD_STAT(mshrMissLatency,
+               ("number of " + name + " MSHR miss ticks").c_str()),
+      ADD_STAT(mshrUncacheableLatency,
+               ("number of " + name + " MSHR uncacheable ticks").c_str()),
+      ADD_STAT(mshrMissRate,
+               ("mshr miss rate for " + name + " accesses").c_str()),
+      ADD_STAT(avgMshrMissLatency,
+               ("average " + name + " mshr miss latency").c_str()),
+      ADD_STAT(avgMshrUncacheableLatency,
+               ("average " + name + " mshr uncacheable latency").c_str())
 {
 }
 
@@ -2034,53 +2012,53 @@ BaseCache::CacheCmdStats::regStatsFromParent()
 
     // MSHR statistics
     // MSHR hit statistics
-    mshr_hits
+    mshrHits
         .init(max_requestors)
         .flags(total | nozero | nonan)
         ;
     for (int i = 0; i < max_requestors; i++) {
-        mshr_hits.subname(i, system->getRequestorName(i));
+        mshrHits.subname(i, system->getRequestorName(i));
     }
 
     // MSHR miss statistics
-    mshr_misses
+    mshrMisses
         .init(max_requestors)
         .flags(total | nozero | nonan)
         ;
     for (int i = 0; i < max_requestors; i++) {
-        mshr_misses.subname(i, system->getRequestorName(i));
+        mshrMisses.subname(i, system->getRequestorName(i));
     }
 
     // MSHR miss latency statistics
-    mshr_miss_latency
+    mshrMissLatency
         .init(max_requestors)
         .flags(total | nozero | nonan)
         ;
     for (int i = 0; i < max_requestors; i++) {
-        mshr_miss_latency.subname(i, system->getRequestorName(i));
+        mshrMissLatency.subname(i, system->getRequestorName(i));
     }
 
     // MSHR uncacheable statistics
-    mshr_uncacheable
+    mshrUncacheable
         .init(max_requestors)
         .flags(total | nozero | nonan)
         ;
     for (int i = 0; i < max_requestors; i++) {
-        mshr_uncacheable.subname(i, system->getRequestorName(i));
+        mshrUncacheable.subname(i, system->getRequestorName(i));
     }
 
     // MSHR miss latency statistics
-    mshr_uncacheable_lat
+    mshrUncacheableLatency
         .init(max_requestors)
         .flags(total | nozero | nonan)
         ;
     for (int i = 0; i < max_requestors; i++) {
-        mshr_uncacheable_lat.subname(i, system->getRequestorName(i));
+        mshrUncacheableLatency.subname(i, system->getRequestorName(i));
     }
 
     // MSHR miss rate formulas
     mshrMissRate.flags(total | nozero | nonan);
-    mshrMissRate = mshr_misses / accesses;
+    mshrMissRate = mshrMisses / accesses;
 
     for (int i = 0; i < max_requestors; i++) {
         mshrMissRate.subname(i, system->getRequestorName(i));
@@ -2088,14 +2066,14 @@ BaseCache::CacheCmdStats::regStatsFromParent()
 
     // mshrMiss latency formulas
     avgMshrMissLatency.flags(total | nozero | nonan);
-    avgMshrMissLatency = mshr_miss_latency / mshr_misses;
+    avgMshrMissLatency = mshrMissLatency / mshrMisses;
     for (int i = 0; i < max_requestors; i++) {
         avgMshrMissLatency.subname(i, system->getRequestorName(i));
     }
 
     // mshrUncacheable latency formulas
     avgMshrUncacheableLatency.flags(total | nozero | nonan);
-    avgMshrUncacheableLatency = mshr_uncacheable_lat / mshr_uncacheable;
+    avgMshrUncacheableLatency = mshrUncacheableLatency / mshrUncacheable;
     for (int i = 0; i < max_requestors; i++) {
         avgMshrUncacheableLatency.subname(i, system->getRequestorName(i));
     }
@@ -2108,8 +2086,8 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     ADD_STAT(overallHits, "number of overall hits"),
     ADD_STAT(demandMisses, "number of demand (read+write) misses"),
     ADD_STAT(overallMisses, "number of overall misses"),
-    ADD_STAT(demandMissLatency, "number of demand (read+write) miss cycles"),
-    ADD_STAT(overallMissLatency, "number of overall miss cycles"),
+    ADD_STAT(demandMissLatency, "number of demand (read+write) miss ticks"),
+    ADD_STAT(overallMissLatency, "number of overall miss ticks"),
     ADD_STAT(demandAccesses, "number of demand (read+write) accesses"),
     ADD_STAT(overallAccesses, "number of overall (read+write) accesses"),
     ADD_STAT(demandMissRate, "miss rate for demand accesses"),
@@ -2129,12 +2107,12 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     ADD_STAT(overallMshrUncacheable,
              "number of overall MSHR uncacheable misses"),
     ADD_STAT(demandMshrMissLatency,
-             "number of demand (read+write) MSHR miss cycles"),
-    ADD_STAT(overallMshrMissLatency, "number of overall MSHR miss cycles"),
+             "number of demand (read+write) MSHR miss ticks"),
+    ADD_STAT(overallMshrMissLatency, "number of overall MSHR miss ticks"),
     ADD_STAT(overallMshrUncacheableLatency,
-             "number of overall MSHR uncacheable cycles"),
-    ADD_STAT(demandMshrMissRate, "mshr miss rate for demand accesses"),
-    ADD_STAT(overallMshrMissRate, "mshr miss rate for overall accesses"),
+             "number of overall MSHR uncacheable ticks"),
+    ADD_STAT(demandMshrMissRate, "mshr miss ratio for demand accesses"),
+    ADD_STAT(overallMshrMissRate, "mshr miss ratio for overall accesses"),
     ADD_STAT(demandAvgMshrMissLatency, "average overall mshr miss latency"),
     ADD_STAT(overallAvgMshrMissLatency, "average overall mshr miss latency"),
     ADD_STAT(overallAvgMshrUncacheableLatency,
@@ -2276,45 +2254,45 @@ BaseCache::CacheStats::regStats()
     }
 
     demandMshrHits.flags(total | nozero | nonan);
-    demandMshrHits = SUM_DEMAND(mshr_hits);
+    demandMshrHits = SUM_DEMAND(mshrHits);
     for (int i = 0; i < max_requestors; i++) {
         demandMshrHits.subname(i, system->getRequestorName(i));
     }
 
     overallMshrHits.flags(total | nozero | nonan);
-    overallMshrHits = demandMshrHits + SUM_NON_DEMAND(mshr_hits);
+    overallMshrHits = demandMshrHits + SUM_NON_DEMAND(mshrHits);
     for (int i = 0; i < max_requestors; i++) {
         overallMshrHits.subname(i, system->getRequestorName(i));
     }
 
     demandMshrMisses.flags(total | nozero | nonan);
-    demandMshrMisses = SUM_DEMAND(mshr_misses);
+    demandMshrMisses = SUM_DEMAND(mshrMisses);
     for (int i = 0; i < max_requestors; i++) {
         demandMshrMisses.subname(i, system->getRequestorName(i));
     }
 
     overallMshrMisses.flags(total | nozero | nonan);
-    overallMshrMisses = demandMshrMisses + SUM_NON_DEMAND(mshr_misses);
+    overallMshrMisses = demandMshrMisses + SUM_NON_DEMAND(mshrMisses);
     for (int i = 0; i < max_requestors; i++) {
         overallMshrMisses.subname(i, system->getRequestorName(i));
     }
 
     demandMshrMissLatency.flags(total | nozero | nonan);
-    demandMshrMissLatency = SUM_DEMAND(mshr_miss_latency);
+    demandMshrMissLatency = SUM_DEMAND(mshrMissLatency);
     for (int i = 0; i < max_requestors; i++) {
         demandMshrMissLatency.subname(i, system->getRequestorName(i));
     }
 
     overallMshrMissLatency.flags(total | nozero | nonan);
     overallMshrMissLatency =
-        demandMshrMissLatency + SUM_NON_DEMAND(mshr_miss_latency);
+        demandMshrMissLatency + SUM_NON_DEMAND(mshrMissLatency);
     for (int i = 0; i < max_requestors; i++) {
         overallMshrMissLatency.subname(i, system->getRequestorName(i));
     }
 
     overallMshrUncacheable.flags(total | nozero | nonan);
     overallMshrUncacheable =
-        SUM_DEMAND(mshr_uncacheable) + SUM_NON_DEMAND(mshr_uncacheable);
+        SUM_DEMAND(mshrUncacheable) + SUM_NON_DEMAND(mshrUncacheable);
     for (int i = 0; i < max_requestors; i++) {
         overallMshrUncacheable.subname(i, system->getRequestorName(i));
     }
@@ -2322,8 +2300,8 @@ BaseCache::CacheStats::regStats()
 
     overallMshrUncacheableLatency.flags(total | nozero | nonan);
     overallMshrUncacheableLatency =
-        SUM_DEMAND(mshr_uncacheable_lat) +
-        SUM_NON_DEMAND(mshr_uncacheable_lat);
+        SUM_DEMAND(mshrUncacheableLatency) +
+        SUM_NON_DEMAND(mshrUncacheableLatency);
     for (int i = 0; i < max_requestors; i++) {
         overallMshrUncacheableLatency.subname(i, system->getRequestorName(i));
     }

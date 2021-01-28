@@ -328,7 +328,7 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
         // should have flushed and have no valid block
         assert(!blk || !blk->isValid());
 
-        stats.cmdStats(pkt).mshr_uncacheable[pkt->req->requestorId()]++;
+        stats.cmdStats(pkt).mshrUncacheable[pkt->req->requestorId()]++;
 
         if (pkt->isWrite()) {
             allocateWriteBuffer(pkt, forward_time);
