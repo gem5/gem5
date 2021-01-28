@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020 Advanced Micro Devices, Inc.
+# Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # For use for simulation and test purposes only
@@ -38,6 +38,7 @@ class ProtocolTester(ClockedObject):
     cxx_header = "cpu/testers/gpu_ruby_test/protocol_tester.hh"
 
     cpu_ports = VectorRequestPort("Ports for CPUs")
+    dma_ports = VectorRequestPort("Ports for DMAs")
     cu_vector_ports = VectorRequestPort("Vector ports for GPUs")
     cu_sqc_ports = VectorRequestPort("SQC ports for GPUs")
     cu_scalar_ports = VectorRequestPort("Scalar ports for GPUs")
@@ -55,6 +56,7 @@ class ProtocolTester(ClockedObject):
                                  " coalescer.")
 
     cpu_threads = VectorParam.CpuThread("All cpus")
+    dma_threads = VectorParam.DmaThread("All DMAs")
     wavefronts = VectorParam.GpuWavefront("All wavefronts")
 
     num_atomic_locations = Param.Int(2, "Number of atomic locations")

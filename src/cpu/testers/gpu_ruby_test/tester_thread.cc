@@ -159,6 +159,10 @@ TesterThread::isNextActionReady()
     } else {
         curAction = curEpisode->peekCurAction();
 
+        // Only GPU wavefront threads have a token port. For all other types
+        // of threads evaluate to true.
+        bool haveTokens = tokenPort ? tokenPort->haveTokens(numLanes) : true;
+
         switch(curAction->getType()) {
             case Episode::Action::Type::ATOMIC:
                 // an atomic action must wait for all previous requests
@@ -166,7 +170,7 @@ TesterThread::isNextActionReady()
                 if (pendingLdStCount == 0 &&
                     pendingFenceCount == 0 &&
                     pendingAtomicCount == 0 &&
-                    tokenPort->haveTokens(numLanes)) {
+                    haveTokens) {
                     return true;
                 }
 
@@ -201,8 +205,7 @@ TesterThread::isNextActionReady()
                 assert(pendingAtomicCount == 0);
 
                 // can't issue if there is a pending fence
-                if (pendingFenceCount > 0 ||
-                    !tokenPort->haveTokens(numLanes)) {
+                if (pendingFenceCount > 0 || !haveTokens) {
                     return false;
                 }
 
@@ -245,7 +248,9 @@ TesterThread::issueNextAction()
 {
     switch(curAction->getType()) {
         case Episode::Action::Type::ATOMIC:
-            tokenPort->acquireTokens(numLanes);
+            if (tokenPort) {
+                tokenPort->acquireTokens(numLanes);
+            }
             issueAtomicOps();
             break;
         case Episode::Action::Type::ACQUIRE:
@@ -255,11 +260,15 @@ TesterThread::issueNextAction()
             issueReleaseOp();
             break;
         case Episode::Action::Type::LOAD:
-            tokenPort->acquireTokens(numLanes);
+            if (tokenPort) {
+                tokenPort->acquireTokens(numLanes);
+            }
             issueLoadOps();
             break;
         case Episode::Action::Type::STORE:
-            tokenPort->acquireTokens(numLanes);
+            if (tokenPort) {
+                tokenPort->acquireTokens(numLanes);
+            }
             issueStoreOps();
             break;
         default:

@@ -143,6 +143,7 @@ class ProtocolTester : public ClockedObject
 
     // list of parameters taken from python scripts
     int numCpuPorts;
+    int numDmaPorts;
     int numVectorPorts;
     int numSqcPorts;
     int numScalarPorts;
@@ -164,13 +165,15 @@ class ProtocolTester : public ClockedObject
 
     // all available requestor ports connected to Ruby
     std::vector<RequestPort*> cpuPorts;      // cpu data ports
+    std::vector<RequestPort*> dmaPorts;      // DMA data ports
     std::vector<RequestPort*> cuVectorPorts; // ports to GPU vector cache
     std::vector<RequestPort*> cuSqcPorts;    // ports to GPU inst cache
     std::vector<RequestPort*> cuScalarPorts; // ports to GPU scalar cache
     std::vector<TokenManager*> cuTokenManagers;
     std::vector<GMTokenPort*> cuTokenPorts;
-    // all CPU and GPU threads
+    // all CPU, DMA, and GPU threads
     std::vector<CpuThread*> cpuThreads;
+    std::vector<DmaThread*> dmaThreads;
     std::vector<GpuWavefront*> wfs;
 
     // address manager that (1) generates DRF sequences of requests,
@@ -180,6 +183,7 @@ class ProtocolTester : public ClockedObject
 
     // number of CPUs and CUs
     int numCpus;
+    int numDmas;
     int numCus;
     // unique id of the next episode
     int nextEpisodeId;

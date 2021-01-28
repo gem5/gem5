@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+# Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # For use for simulation and test purposes only
@@ -81,6 +81,8 @@ parser.add_option("--random-seed", type="int", default=0,
                   help="Random seed number. Default value (i.e., 0) means \
                         using runtime-specific value")
 parser.add_option("--log-file", type="string", default="gpu-ruby-test.log")
+parser.add_option("--num-dmas", type="int", default=0,
+                  help="The number of DMA engines to use in tester config.")
 
 (options, args) = parser.parse_args()
 
@@ -112,6 +114,7 @@ if (options.system_size == "small"):
     options.wf_size = 1
     options.wavefronts_per_cu = 1
     options.num_cpus = 1
+    options.num_dmas = 1
     options.cu_per_sqc = 1
     options.cu_per_scalar_cache = 1
     options.num_compute_units = 1
@@ -120,6 +123,7 @@ elif (options.system_size == "medium"):
     options.wf_size = 16
     options.wavefronts_per_cu = 4
     options.num_cpus = 4
+    options.num_dmas = 2
     options.cu_per_sqc = 4
     options.cu_per_scalar_cache = 4
     options.num_compute_units = 4
@@ -128,6 +132,7 @@ elif (options.system_size == "large"):
     options.wf_size = 32
     options.wavefronts_per_cu = 4
     options.num_cpus = 4
+    options.num_dmas = 4
     options.cu_per_sqc = 4
     options.cu_per_scalar_cache = 4
     options.num_compute_units = 8
@@ -173,6 +178,9 @@ tester_deadlock_threshold = 1e9
 
 # For now we're testing only GPU protocol, so we force num_cpus to be 0
 options.num_cpus = 0
+
+# Number of DMA engines
+n_DMAs = options.num_dmas
 
 # Number of CUs
 n_CUs = options.num_compute_units
@@ -230,9 +238,19 @@ system.clk_domain = SrcClockDomain(clock = options.sys_clock,
 options.num_cp = 0
 
 #
+# Make generic DMA sequencer for Ruby to use
+#
+dma_devices = [TesterDma()] * n_DMAs
+system.piobus = IOXBar()
+for _, dma_device in enumerate(dma_devices):
+    dma_device.pio = system.piobus.mem_side_ports
+system.dma_devices = dma_devices
+
+#
 # Create the Ruby system
 #
-Ruby.create_system(options, False, system)
+Ruby.create_system(options = options, full_system = False,
+                   system = system, dma_ports = system.dma_devices)
 
 #
 # The tester is most effective when randomization is turned on and
@@ -256,6 +274,7 @@ print("Attaching ruby ports to the tester")
 for i, ruby_port in enumerate(system.ruby._cpu_ports):
     ruby_port.no_retry_on_stall = True
     ruby_port.using_ruby_tester = True
+    ruby_port.mem_request_port = system.piobus.cpu_side_ports
 
     if i < n_CUs:
         tester.cu_vector_ports = ruby_port.in_ports
@@ -269,17 +288,45 @@ for i, ruby_port in enumerate(system.ruby._cpu_ports):
     i += 1
 
 #
-# No CPU threads are needed for GPU tester
+# Attach DMA ports. Since Ruby.py doesn't return these they need to be found.
+# Connect tester's request port to each DMA sequencer's in_ports. This assumes
+# the protocol names these system.dma_cntrl<#>.
+#
+dma_ports = []
+for i in range(n_DMAs):
+    dma_cntrl = getattr(system, 'dma_cntrl' + str(i))
+    dma_ports.append(dma_cntrl.dma_sequencer.in_ports)
+tester.dma_ports = dma_ports
+
+#
+# Common variables for all types of threads
+#
+thread_clock = SrcClockDomain(clock = '1GHz',
+                              voltage_domain = system.voltage_domain)
+g_thread_idx = 0
+
+#
+# No CPU threads are used for GPU tester
 #
 tester.cpu_threads = []
 
 #
+# Create DMA threads
+#
+dma_threads = []
+print("Creating %i DMAs" % n_DMAs)
+for dma_idx in range(n_DMAs):
+    dma_threads.append(DmaThread(thread_id = g_thread_idx,
+                                 num_lanes = 1, clk_domain = thread_clock,
+                                 deadlock_threshold = \
+                                         tester_deadlock_threshold))
+    g_thread_idx += 1
+tester.dma_threads = dma_threads
+
+#
 # Create GPU wavefronts
 #
-thread_clock = SrcClockDomain(clock = '1GHz',
-                              voltage_domain = system.voltage_domain)
 wavefronts = []
-g_thread_idx = 0
 print("Creating %i WFs attached to %i CUs" % \
                 (n_CUs * tester.wavefronts_per_cu, n_CUs))
 for cu_idx in range(n_CUs):

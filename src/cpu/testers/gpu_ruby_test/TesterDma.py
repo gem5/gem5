@@ -1,5 +1,4 @@
-#
-# Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
+# Copyright (c) 2021 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # For use for simulation and test purposes only
@@ -29,29 +28,9 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-#
 
-Import('*')
+from m5.objects.Device import DmaDevice
 
-if not env['BUILD_GPU']:
-    Return()
-
-if env['PROTOCOL'] == 'None':
-    Return()
-
-SimObject('ProtocolTester.py')
-SimObject('CpuThread.py')
-SimObject('DmaThread.py')
-SimObject('GpuWavefront.py')
-SimObject('TesterThread.py')
-SimObject('TesterDma.py')
-
-Source('address_manager.cc')
-Source('episode.cc')
-Source('protocol_tester.cc')
-Source('cpu_thread.cc')
-Source('dma_thread.cc')
-Source('gpu_wavefront.cc')
-Source('tester_thread.cc')
-
-DebugFlag('ProtocolTest')
+class TesterDma(DmaDevice):
+    type = 'TesterDma'
+    cxx_header = "cpu/testers/gpu_ruby_test/tester_dma.hh"
