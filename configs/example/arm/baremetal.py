@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017,2019-2020 ARM Limited
+# Copyright (c) 2016-2017,2019-2021 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -113,24 +113,13 @@ def create(args):
             cmd_line = " ".join([ object_file ] + args.args)
         )
 
-    # Add the PCI devices we need for this system. The base system
-    # doesn't have any PCI devices by default since they are assumed
-    # to be added by the configurastion scripts needin them.
-    pci_devices = []
     if args.disk_image:
         # Create a VirtIO block device for the system's boot
         # disk. Attach the disk image using gem5's Copy-on-Write
         # functionality to avoid writing changes to the stored copy of
         # the disk image.
-        system.disk = PciVirtIO(vio=VirtIOBlock(
-            image=create_cow_image(args.disk_image)))
-        pci_devices.append(system.disk)
-
-    # Attach the PCI devices to the system. The helper method in the
-    # system assigns a unique PCI bus ID to each of the devices and
-    # connects them to the IO bus.
-    for dev in pci_devices:
-        system.attach_pci(dev)
+        system.realview.vio[0].vio = VirtIOBlock(
+            image=create_cow_image(args.disk_image))
 
     # Wire up the system's memory system
     system.connect()
