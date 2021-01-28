@@ -76,8 +76,16 @@ for status, fname in git.status(filter="MA", cached=True):
     else:
         regions = all_regions
 
-    # Show they appropriate object and dump it to a file
-    status = git.file_from_index(fname)
+    # Show the appropriate object and dump it to a file
+    try:
+        status = git.file_from_index(fname)
+    except UnicodeDecodeError:
+        print("Decoding '" + fname
+            + "' throws a UnicodeDecodeError.", file=sys.stderr)
+        print("Please check '" + fname
+            + "' exclusively uses utf-8 character encoding.", file=sys.stderr)
+        sys.exit(1)
+
     f = TemporaryFile()
     f.write(status.encode('utf-8'))
 
