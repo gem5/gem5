@@ -86,6 +86,15 @@ def _re_ignore(expr):
         return rex.match(fname)
     return match_re
 
+def _re_only(expr):
+    """Helper function to create regular expressions to only keep
+    matcher functions"""
+
+    rex = re.compile(expr)
+    def match_re(fname):
+        return not rex.match(fname)
+    return match_re
+
 # This list contains a list of functions that are called to determine
 # if a file should be excluded from the style matching rules or
 # not. The functions are called with the file name relative to the
@@ -97,11 +106,10 @@ style_ignores = [
     _re_ignore("^ext/"),
     # Ignore test data, as they are not code
     _re_ignore("^tests/(?:quick|long)/"),
-    # Ignore RISC-V assembly tests as they are maintained in an external
-    # project that does not follow the gem5 coding convention
-    _re_ignore("tests/test-progs/asmtest/src/riscv/"),
-    # Ignore RISC-V assembly dump files
-    _re_ignore("tests/test-progs/asmtest/dump/riscv/")
+    # Only include Scons files and those with extensions that suggest source
+    # code
+    _re_only("^((.*\/)?(SConscript|SConstruct)|"
+             ".*\.(c|h|cc|hh|cpp|hpp|py|isa|proto))$")
 ]
 
 def check_ignores(fname):
