@@ -81,13 +81,14 @@ Decoder::decode(ExtMachInst mach_inst, Addr addr)
 {
     DPRINTF(Decode, "Decoding instruction 0x%08x at address %#x\n",
             mach_inst, addr);
-    if (instMap.find(mach_inst) != instMap.end())
-        return instMap[mach_inst];
-    else {
-        StaticInstPtr si = decodeInst(mach_inst);
-        instMap[mach_inst] = si;
-        return si;
-    }
+
+    StaticInstPtr &si = instMap[mach_inst];
+    if (!si)
+        si = decodeInst(mach_inst);
+
+    DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
+            si->getName(), mach_inst);
+    return si;
 }
 
 StaticInstPtr

@@ -32,6 +32,7 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "debug/Decode.hh"
 #include "debug/Decoder.hh"
 
 namespace X86ISA
@@ -674,12 +675,18 @@ Decoder::InstCacheMap Decoder::instCacheMap;
 StaticInstPtr
 Decoder::decode(ExtMachInst mach_inst, Addr addr)
 {
-    auto iter = instMap->find(mach_inst);
-    if (iter != instMap->end())
-        return iter->second;
+    StaticInstPtr si;
 
-    StaticInstPtr si = decodeInst(mach_inst);
-    (*instMap)[mach_inst] = si;
+    auto iter = instMap->find(mach_inst);
+    if (iter != instMap->end()) {
+        si = iter->second;
+    } else {
+        si = decodeInst(mach_inst);
+        (*instMap)[mach_inst] = si;
+    }
+
+    DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
+            si->getName(), mach_inst);
     return si;
 }
 

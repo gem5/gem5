@@ -35,6 +35,7 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
+#include "debug/Decode.hh"
 
 namespace MipsISA
 {
@@ -98,7 +99,10 @@ class Decoder : public InstDecoder
     StaticInstPtr
     decode(ExtMachInst mach_inst, Addr addr)
     {
-        return defaultCache.decode(this, mach_inst, addr);
+        StaticInstPtr si = defaultCache.decode(this, mach_inst, addr);
+        DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
+                si->getName(), mach_inst);
+        return si;
     }
 
     StaticInstPtr

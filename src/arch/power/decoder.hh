@@ -33,6 +33,7 @@
 #include "arch/generic/decoder.hh"
 #include "arch/power/types.hh"
 #include "cpu/static_inst.hh"
+#include "debug/Decode.hh"
 
 namespace PowerISA
 {
@@ -105,7 +106,10 @@ class Decoder : public InstDecoder
     StaticInstPtr
     decode(ExtMachInst mach_inst, Addr addr)
     {
-        return defaultCache.decode(this, mach_inst, addr);
+        StaticInstPtr si = defaultCache.decode(this, mach_inst, addr);
+        DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
+                si->getName(), mach_inst);
+        return si;
     }
 
     StaticInstPtr
