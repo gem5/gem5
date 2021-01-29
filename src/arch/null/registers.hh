@@ -40,7 +40,7 @@
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/types.hh"
+#include "arch/null/types.hh"
 #include "base/types.hh"
 
 namespace NullISA {

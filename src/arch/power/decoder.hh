@@ -31,7 +31,7 @@
 
 #include "arch/generic/decode_cache.hh"
 #include "arch/generic/decoder.hh"
-#include "arch/types.hh"
+#include "arch/power/types.hh"
 #include "cpu/static_inst.hh"
 
 namespace PowerISA

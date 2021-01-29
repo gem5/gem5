@@ -32,7 +32,7 @@
 #include "arch/generic/decode_cache.hh"
 #include "arch/generic/decoder.hh"
 #include "arch/sparc/registers.hh"
-#include "arch/types.hh"
+#include "arch/sparc/types.hh"
 #include "cpu/static_inst.hh"
 
 namespace SparcISA
