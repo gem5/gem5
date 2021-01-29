@@ -241,6 +241,13 @@ class Decoder : public InstDecoder
             CacheKey, DecodeCache::InstMap<ExtMachInst> *> InstCacheMap;
     static InstCacheMap instCacheMap;
 
+    StaticInstPtr decodeInst(ExtMachInst mach_inst);
+
+    /// Decode a machine instruction.
+    /// @param mach_inst The binary instruction to decode.
+    /// @retval A pointer to the corresponding StaticInst object.
+    StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
+
   public:
     Decoder(ISA *isa=nullptr)
     {
@@ -328,12 +335,6 @@ class Decoder : public InstDecoder
     }
 
   public:
-    StaticInstPtr decodeInst(ExtMachInst mach_inst);
-
-    /// Decode a machine instruction.
-    /// @param mach_inst The binary instruction to decode.
-    /// @retval A pointer to the corresponding StaticInst object.
-    StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
     StaticInstPtr decode(X86ISA::PCState &nextPC);
 
     StaticInstPtr fetchRomMicroop(

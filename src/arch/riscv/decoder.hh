@@ -56,6 +56,13 @@ class Decoder : public InstDecoder
     ExtMachInst emi;
     bool instDone;
 
+    StaticInstPtr decodeInst(ExtMachInst mach_inst);
+
+    /// Decode a machine instruction.
+    /// @param mach_inst The binary instruction to decode.
+    /// @retval A pointer to the corresponding StaticInst object.
+    StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
+
   public:
     Decoder(ISA* isa=nullptr) { reset(); }
 
@@ -71,13 +78,6 @@ class Decoder : public InstDecoder
     bool needMoreBytes() { return more; }
     bool instReady() { return instDone; }
     void takeOverFrom(Decoder *old) {}
-
-    StaticInstPtr decodeInst(ExtMachInst mach_inst);
-
-    /// Decode a machine instruction.
-    /// @param mach_inst The binary instruction to decode.
-    /// @retval A pointer to the corresponding StaticInst object.
-    StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
 
     StaticInstPtr decode(RiscvISA::PCState &nextPC);
 };

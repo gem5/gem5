@@ -89,8 +89,8 @@ class Decoder : public InstDecoder
   protected:
     /// A cache of decoded instruction objects.
     static GenericISA::BasicDecodeCache<Decoder, ExtMachInst> defaultCache;
+    friend class GenericISA::BasicDecodeCache<Decoder, ExtMachInst>;
 
-  public:
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
 
     /// Decode a machine instruction.
@@ -105,6 +105,7 @@ class Decoder : public InstDecoder
         return si;
     }
 
+  public:
     StaticInstPtr
     decode(MipsISA::PCState &nextPC)
     {
