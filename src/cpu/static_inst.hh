@@ -255,9 +255,6 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// Pointer to a statically allocated generic "nop" instruction object.
     static StaticInstPtr nopStaticInstPtr;
 
-    /// The binary machine instruction.
-    const TheISA::ExtMachInst machInst;
-
     virtual uint64_t getEMI() const { return 0; }
 
   protected:
@@ -300,12 +297,11 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// default, since the decoder generally only overrides
     /// the fields that are meaningful for the particular
     /// instruction.
-    StaticInst(const char *_mnemonic, TheISA::ExtMachInst _machInst,
-            OpClass __opClass)
+    StaticInst(const char *_mnemonic, OpClass __opClass)
         : _opClass(__opClass),
           _numSrcRegs(0), _numDestRegs(0), _numFPDestRegs(0),
           _numIntDestRegs(0), _numCCDestRegs(0), _numVecDestRegs(0),
-          _numVecElemDestRegs(0), _numVecPredDestRegs(0), machInst(_machInst),
+          _numVecElemDestRegs(0), _numVecPredDestRegs(0),
           mnemonic(_mnemonic), cachedDisassembly(0)
     { }
 

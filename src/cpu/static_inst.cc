@@ -34,13 +34,10 @@
 
 namespace {
 
-static TheISA::ExtMachInst nopMachInst;
-
 class NopStaticInst : public StaticInst
 {
   public:
-    NopStaticInst() : StaticInst("gem5 nop", nopMachInst, No_OpClass)
-    {}
+    NopStaticInst() : StaticInst("gem5 nop", No_OpClass) {}
 
     Fault
     execute(ExecContext *xc, Trace::InstRecord *traceData) const override
@@ -60,8 +57,6 @@ class NopStaticInst : public StaticInst
     {
         return mnemonic;
     }
-
-  private:
 };
 
 }

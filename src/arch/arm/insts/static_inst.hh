@@ -143,10 +143,12 @@ class ArmStaticInst : public StaticInst
         }
     }
 
+    ExtMachInst machInst;
+
     // Constructor
     ArmStaticInst(const char *mnem, ExtMachInst _machInst,
                   OpClass __opClass)
-        : StaticInst(mnem, _machInst, __opClass)
+        : StaticInst(mnem, __opClass), machInst(_machInst)
     {
         aarch64 = machInst.aarch64;
         if (bits(machInst, 28, 24) == 0x10)

@@ -84,12 +84,14 @@ class X86StaticInst : public StaticInst
   protected:
     using ExtMachInst = X86ISA::ExtMachInst;
 
+  public:
+    ExtMachInst machInst;
+
+  protected:
     // Constructor.
-    X86StaticInst(const char *mnem,
-         ExtMachInst _machInst, OpClass __opClass)
-            : StaticInst(mnem, _machInst, __opClass)
-        {
-        }
+    X86StaticInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+        StaticInst(mnem, __opClass), machInst(_machInst)
+    {}
 
     std::string generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const override;

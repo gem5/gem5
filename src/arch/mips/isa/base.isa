@@ -42,10 +42,9 @@ output header {{
     class MipsStaticInst : public StaticInst
     {
       protected:
-
         // Constructor
         MipsStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
-            : StaticInst(mnem, _machInst, __opClass)
+            : StaticInst(mnem, __opClass), machInst(_machInst)
         {
         }
 
@@ -57,6 +56,8 @@ output header {{
                 Addr pc, const Loader::SymbolTable *symtab) const override;
 
       public:
+        ExtMachInst machInst;
+
         void
         advancePC(MipsISA::PCState &pc) const override
         {

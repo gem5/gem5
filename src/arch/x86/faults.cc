@@ -41,6 +41,7 @@
 #include "arch/x86/faults.hh"
 
 #include "arch/x86/generated/decoder.hh"
+#include "arch/x86/insts/static_inst.hh"
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/mmu.hh"
 #include "base/loader/symtab.hh"
@@ -128,8 +129,9 @@ InvalidOpcode::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     if (FullSystem) {
         X86Fault::invoke(tc, inst);
     } else {
+        auto *xsi = static_cast<X86StaticInst *>(inst.get());
         panic("Unrecognized/invalid instruction executed:\n %s",
-                inst->machInst);
+                xsi->machInst);
     }
 }
 

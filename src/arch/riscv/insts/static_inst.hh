@@ -46,9 +46,14 @@ namespace RiscvISA
 class RiscvStaticInst : public StaticInst
 {
   protected:
-    using StaticInst::StaticInst;
+    RiscvStaticInst(const char *_mnemonic, ExtMachInst _machInst,
+            OpClass __opClass) :
+        StaticInst(_mnemonic, __opClass), machInst(_machInst)
+    {}
 
   public:
+    ExtMachInst machInst;
+
     void advancePC(PCState &pc) const override { pc.advance(); }
 
     size_t

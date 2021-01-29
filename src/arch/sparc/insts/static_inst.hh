@@ -87,7 +87,12 @@ enum FpCondTest
 class SparcStaticInst : public StaticInst
 {
   protected:
-    using StaticInst::StaticInst;
+    ExtMachInst machInst;
+
+    SparcStaticInst(const char *_mnemonic, ExtMachInst _machInst,
+            OpClass __opClass) :
+        StaticInst(_mnemonic, __opClass), machInst(_machInst)
+    {}
 
     std::string generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const override;

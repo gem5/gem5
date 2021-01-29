@@ -38,10 +38,11 @@ namespace PowerISA
 class PowerStaticInst : public StaticInst
 {
   protected:
+    ExtMachInst machInst;
 
     // Constructor
-    PowerStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
-        : StaticInst(mnem, _machInst, __opClass)
+    PowerStaticInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : StaticInst(mnem, __opClass), machInst(_machInst)
     {
     }
 

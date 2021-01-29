@@ -32,6 +32,7 @@
 #include "arch/riscv/faults.hh"
 
 #include "arch/riscv/fs_workload.hh"
+#include "arch/riscv/insts/static_inst.hh"
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/registers.hh"
 #include "arch/riscv/utility.hh"
@@ -163,14 +164,16 @@ void Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 void
 UnknownInstFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    panic("Unknown instruction 0x%08x at pc 0x%016llx", inst->machInst,
+    auto *rsi = static_cast<RiscvStaticInst *>(inst.get());
+    panic("Unknown instruction 0x%08x at pc 0x%016llx", rsi->machInst,
         tc->pcState().pc());
 }
 
 void
 IllegalInstFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    panic("Illegal instruction 0x%08x at pc 0x%016llx: %s", inst->machInst,
+    auto *rsi = static_cast<RiscvStaticInst *>(inst.get());
+    panic("Illegal instruction 0x%08x at pc 0x%016llx: %s", rsi->machInst,
         tc->pcState().pc(), reason.c_str());
 }
 
