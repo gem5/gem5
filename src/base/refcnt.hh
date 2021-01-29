@@ -96,7 +96,12 @@ class RefCounted
 
     /// Decrement the reference count and destroy the object if all
     /// references are gone.
-    void decref() const { if (--count <= 0) delete this; }
+    void
+    decref() const
+    {
+        if (--count <= 0)
+            delete this;
+    }
 };
 
 /**
@@ -228,11 +233,15 @@ class RefCountingPtr
     const RefCountingPtr &operator=(T *p) { set(p); return *this; }
 
     /// Copy the pointer from another RefCountingPtr
-    const RefCountingPtr &operator=(const RefCountingPtr &r)
-    { return operator=(r.data); }
+    const RefCountingPtr &
+    operator=(const RefCountingPtr &r)
+    {
+        return operator=(r.data);
+    }
 
     /// Move-assign the pointer from another RefCountingPtr
-    const RefCountingPtr &operator=(RefCountingPtr&& r)
+    const RefCountingPtr &
+    operator=(RefCountingPtr&& r)
     {
         /* This happens regardless of whether the pointer is the same or not,
          * because of the move semantics, the rvalue needs to be 'destroyed'.
@@ -252,36 +261,54 @@ class RefCountingPtr
 
 /// Check for equality of two reference counting pointers.
 template<class T>
-inline bool operator==(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
-{ return l.get() == r.get(); }
+inline bool
+operator==(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
+{
+    return l.get() == r.get();
+}
 
 /// Check for equality of of a reference counting pointers and a
 /// regular pointer
 template<class T>
-inline bool operator==(const RefCountingPtr<T> &l, const T *r)
-{ return l.get() == r; }
+inline bool
+operator==(const RefCountingPtr<T> &l, const T *r)
+{
+    return l.get() == r;
+}
 
 /// Check for equality of of a reference counting pointers and a
 /// regular pointer
 template<class T>
-inline bool operator==(const T *l, const RefCountingPtr<T> &r)
-{ return l == r.get(); }
+inline bool
+operator==(const T *l, const RefCountingPtr<T> &r)
+{
+    return l == r.get();
+}
 
 /// Check for inequality of two reference counting pointers.
 template<class T>
-inline bool operator!=(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
-{ return l.get() != r.get(); }
+inline bool
+operator!=(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
+{
+    return l.get() != r.get();
+}
 
 /// Check for inequality of of a reference counting pointers and a
 /// regular pointer
 template<class T>
-inline bool operator!=(const RefCountingPtr<T> &l, const T *r)
-{ return l.get() != r; }
+inline bool
+operator!=(const RefCountingPtr<T> &l, const T *r)
+{
+    return l.get() != r;
+}
 
 /// Check for inequality of of a reference counting pointers and a
 /// regular pointer
 template<class T>
-inline bool operator!=(const T *l, const RefCountingPtr<T> &r)
-{ return l != r.get(); }
+inline bool
+operator!=(const T *l, const RefCountingPtr<T> &r)
+{
+    return l != r.get();
+}
 
 #endif // __BASE_REFCNT_HH__
