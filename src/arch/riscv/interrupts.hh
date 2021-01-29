@@ -66,16 +66,24 @@ class Interrupts : public BaseInterrupts
     {
         INTERRUPT mask = 0;
         STATUS status = tc->readMiscReg(MISCREG_STATUS);
+        INTERRUPT mideleg = tc->readMiscReg(MISCREG_MIDELEG);
+        INTERRUPT sideleg = tc->readMiscReg(MISCREG_SIDELEG);
         PrivilegeMode prv = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
         switch (prv) {
             case PRV_U:
-                mask.mei = mask.mti = mask.msi = 1;
-                mask.sei = mask.sti = mask.ssi = 1;
+                mask.mei = (!sideleg.mei) | (sideleg.mei & status.uie);
+                mask.mti = (!sideleg.mti) | (sideleg.mti & status.uie);
+                mask.msi = (!sideleg.msi) | (sideleg.msi & status.uie);
+                mask.sei = (!sideleg.sei) | (sideleg.sei & status.uie);
+                mask.sti = (!sideleg.sti) | (sideleg.sti & status.uie);
+                mask.ssi = (!sideleg.ssi) | (sideleg.ssi & status.uie);
                 if (status.uie)
                     mask.uei = mask.uti = mask.usi = 1;
                 break;
             case PRV_S:
-                mask.mei = mask.mti = mask.msi = 1;
+                mask.mei = (!mideleg.mei) | (mideleg.mei & status.sie);
+                mask.mti = (!mideleg.mti) | (mideleg.mti & status.sie);
+                mask.msi = (!mideleg.msi) | (mideleg.msi & status.sie);
                 if (status.sie)
                     mask.sei = mask.sti = mask.ssi = 1;
                 mask.uei = mask.uti = mask.usi = 0;
@@ -105,9 +113,14 @@ class Interrupts : public BaseInterrupts
     {
         assert(checkInterrupts());
         std::bitset<NumInterruptTypes> mask = globalMask();
-        for (int c = 0; c < NumInterruptTypes; c++)
-            if (checkInterrupt(c) && mask[c])
-                return std::make_shared<InterruptFault>(c);
+        const std::vector<int> interrupt_order {
+            INT_EXT_MACHINE, INT_TIMER_MACHINE, INT_SOFTWARE_MACHINE,
+            INT_EXT_SUPER, INT_TIMER_SUPER, INT_SOFTWARE_SUPER,
+            INT_EXT_USER, INT_TIMER_USER, INT_SOFTWARE_USER
+        };
+        for (const int &id : interrupt_order)
+            if (checkInterrupt(id) && mask[id])
+                return std::make_shared<InterruptFault>(id);
         return NoFault;
     }
 
