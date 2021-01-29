@@ -197,6 +197,8 @@ class ArmStaticInst : public StaticInst
         pcState.advance();
     }
 
+    uint64_t getEMI() const override { return machInst; }
+
     std::string generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const override;
 

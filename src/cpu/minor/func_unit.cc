@@ -171,13 +171,12 @@ FUPipeline::advance()
 MinorFUTiming *
 FUPipeline::findTiming(const StaticInstPtr &inst)
 {
-#if THE_ISA == ARM_ISA
-    /* This should work for any ISA with a POD mach_inst */
-    TheISA::ExtMachInst mach_inst = inst->machInst;
-#else
-    /* Just allow extra decode based on op classes */
-    uint64_t mach_inst = 0;
-#endif
+    /*
+     * This will only work on ISAs with an instruction format with a fixed size
+     * which can be categorized using bit masks. This is really only supported
+     * on ARM and is a bit of a hack.
+     */
+    uint64_t mach_inst = inst->getEMI();
 
     const std::vector<MinorFUTiming *> &timings =
         description.timings;

@@ -258,6 +258,8 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// The binary machine instruction.
     const TheISA::ExtMachInst machInst;
 
+    virtual uint64_t getEMI() const { return 0; }
+
   protected:
 
     /**
