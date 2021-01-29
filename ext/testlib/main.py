@@ -205,7 +205,10 @@ def load_tests():
     testloader = loader_mod.Loader()
     log.test_log.message(terminal.separator())
     log.test_log.message('Loading Tests', bold=True)
-    testloader.load_root(configuration.config.directory)
+
+    for root in configuration.config.directories:
+        testloader.load_root(root)
+
     return testloader
 
 def do_list():

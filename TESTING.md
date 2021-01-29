@@ -63,6 +63,20 @@ cd tests
 The above is the *minumum* you should run before posting a patch to
 https://gem5-review.googlesource.com
 
+## Running tests from multiple directories
+
+The command line above will walk the directory tree starting from the cwd
+(tests), and it will run every test it encounters in its path. It is possible
+to specify multiple root directories by providing several positional
+arguments:
+
+```shell
+./main.py run <directory1> <directory2> [...]
+```
+
+This will load every test in directory1 and directory2 (and their
+subdirectories).
+
 ## Specifying a subset of tests to run
 
 You can use the tag query interface to specify the exact tests you want to run.
