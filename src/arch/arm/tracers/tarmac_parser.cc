@@ -951,7 +951,7 @@ TarmacParserRecord::printMismatchHeader(const StaticInstPtr staticInst,
     outs << "\nMismatch between gem5 and TARMAC trace @ " << std::dec
          << curTick() << " ticks\n"
          << "[seq_num: " << std::dec << instRecord.seq_num
-         << ", opcode: 0x" << std::hex << (staticInst->machInst & 0xffffffff)
+         << ", opcode: 0x" << std::hex << (staticInst->getEMI() & 0xffffffff)
          << ", PC: 0x" << pc.pc()
          << ", disasm: " <<  staticInst->disassemble(pc.pc()) << "]"
          << std::endl;

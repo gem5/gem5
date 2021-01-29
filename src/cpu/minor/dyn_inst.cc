@@ -214,7 +214,7 @@ MinorDynInst::minorTraceInst(const Named &named_object) const
                     regs_str << ',';
             }
 
-            ccprintf(regs_str, " extMachInst=%160x", staticInst->machInst);
+            ccprintf(regs_str, " extMachInst=%160x", staticInst->getEMI());
         }
 
         std::ostringstream flags;

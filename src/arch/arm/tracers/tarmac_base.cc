@@ -64,7 +64,7 @@ TarmacBaseRecord::InstEntry::InstEntry(
     bool predicate)
         : taken(predicate) ,
           addr(pc.instAddr()) ,
-          opcode(staticInst->machInst & 0xffffffff),
+          opcode(staticInst->getEMI() & 0xffffffff),
           disassemble(staticInst->disassemble(addr)),
           isetstate(pcToISetState(pc)),
           mode(MODE_USER)
