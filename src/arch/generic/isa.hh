@@ -43,6 +43,7 @@
 #include <vector>
 
 #include "cpu/reg_class.hh"
+#include "enums/VecRegRenameMode.hh"
 #include "sim/sim_object.hh"
 
 class ThreadContext;
@@ -65,6 +66,18 @@ class BaseISA : public SimObject
 
     virtual uint64_t getExecutingAsid() const { return 0; }
     virtual bool inUserMode() const = 0;
+
+    virtual Enums::VecRegRenameMode
+    initVecRegRenameMode() const
+    {
+        return Enums::Full;
+    }
+
+    virtual Enums::VecRegRenameMode
+    vecRegRenameMode(ThreadContext *_tc) const
+    {
+        return initVecRegRenameMode();
+    }
 
     const RegClasses &regClasses() const { return _regClasses; }
 };

@@ -42,7 +42,6 @@
 
 #include "cpu/o3/cpu.hh"
 
-#include "arch/generic/traits.hh"
 #include "config/the_isa.hh"
 #include "cpu/activity.hh"
 #include "cpu/checker/cpu.hh"
@@ -89,7 +88,7 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
 
       /* It is mandatory that all SMT threads use the same renaming mode as
        * they are sharing registers and rename */
-      vecMode(RenameMode<TheISA::ISA>::init(params.isa[0])),
+      vecMode(params.isa[0]->initVecRegRenameMode()),
       regFile(params.numPhysIntRegs,
               params.numPhysFloatRegs,
               params.numPhysVecRegs,
@@ -223,7 +222,8 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         isa[tid] = dynamic_cast<TheISA::ISA *>(params.isa[tid]);
         assert(isa[tid]);
-        assert(RenameMode<TheISA::ISA>::equalsInit(isa[tid], isa[0]));
+        assert(isa[tid]->initVecRegRenameMode() ==
+                isa[0]->initVecRegRenameMode());
 
         // Only Alpha has an FP zero register, so for other ISAs we
         // use an invalid FP register index to avoid special treatment
@@ -897,7 +897,7 @@ FullO3CPU<Impl>::switchRenameMode(ThreadID tid, UnifiedFreeList* freelist)
     auto pc = this->pcState(tid);
 
     // new_mode is the new vector renaming mode
-    auto new_mode = RenameMode<TheISA::ISA>::mode(pc);
+    auto new_mode = isa[tid]->vecRegRenameMode(thread[tid]->getTC());
 
     // We update vecMode only if there has been a change
     if (new_mode != vecMode) {

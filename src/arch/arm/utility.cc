@@ -58,7 +58,7 @@ namespace ArmISA
 static void
 copyVecRegs(ThreadContext *src, ThreadContext *dest)
 {
-    auto src_mode = RenameMode<ArmISA::ISA>::mode(src->pcState());
+    auto src_mode = src->getIsaPtr()->vecRegRenameMode(src);
 
     // The way vector registers are copied (VecReg vs VecElem) is relevant
     // in the O3 model only.

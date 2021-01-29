@@ -50,7 +50,6 @@
 #include "arch/arm/types.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/isa.hh"
-#include "arch/generic/traits.hh"
 #include "debug/Checkpoint.hh"
 #include "enums/DecoderFlavor.hh"
 #include "enums/VecRegRenameMode.hh"
@@ -71,7 +70,6 @@ namespace ArmISA
 
         // Micro Architecture
         const Enums::DecoderFlavor _decoderFlavor;
-        const Enums::VecRegRenameMode _vecRegRenameMode;
 
         /** Dummy device for to handle non-existing ISA devices */
         DummyISADevice dummyDevice;
@@ -878,9 +876,15 @@ namespace ArmISA
         }
 
         Enums::VecRegRenameMode
-        vecRegRenameMode() const
+        initVecRegRenameMode() const override
         {
-            return _vecRegRenameMode;
+            return highestELIs64 ? Enums::Full : Enums::Elem;
+        }
+
+        Enums::VecRegRenameMode
+        vecRegRenameMode(ThreadContext *_tc) const override
+        {
+            return _tc->pcState().aarch64() ? Enums::Full : Enums::Elem;
         }
 
         PARAMS(ArmISA);
@@ -901,33 +905,5 @@ namespace ArmISA
         }
     };
 }
-
-template<>
-struct RenameMode<ArmISA::ISA>
-{
-    static Enums::VecRegRenameMode
-    init(const BaseISA* isa)
-    {
-        auto arm_isa = dynamic_cast<const ArmISA::ISA *>(isa);
-        assert(arm_isa);
-        return arm_isa->vecRegRenameMode();
-    }
-
-    static Enums::VecRegRenameMode
-    mode(const ArmISA::PCState& pc)
-    {
-        if (pc.aarch64()) {
-            return Enums::Full;
-        } else {
-            return Enums::Elem;
-        }
-    }
-
-    static bool
-    equalsInit(const BaseISA* isa1, const BaseISA* isa2)
-    {
-        return init(isa1) == init(isa2);
-    }
-};
 
 #endif

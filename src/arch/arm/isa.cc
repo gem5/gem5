@@ -62,8 +62,7 @@ namespace ArmISA
 {
 
 ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
-    _decoderFlavor(p.decoderFlavor), _vecRegRenameMode(Enums::Full),
-    pmu(p.pmu), impdefAsNop(p.impdef_nop),
+    _decoderFlavor(p.decoderFlavor), pmu(p.pmu), impdefAsNop(p.impdef_nop),
     afterStartup(false)
 {
     _regClasses.insert(_regClasses.end(), {
@@ -119,10 +118,6 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
         haveLSE = true;
         haveTME = true;
     }
-
-    // Initial rename mode depends on highestEL
-    const_cast<Enums::VecRegRenameMode&>(_vecRegRenameMode) =
-        highestELIs64 ? Enums::Full : Enums::Elem;
 
     selfDebug = new SelfDebug();
     initializeMiscRegMetadata();
