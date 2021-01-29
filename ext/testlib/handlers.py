@@ -44,7 +44,7 @@ import testlib.result as result
 import testlib.state as state
 import testlib.terminal as terminal
 
-from queue import Queue
+from queue import Queue, Empty
 from testlib.configuration import constants
 
 
@@ -383,7 +383,7 @@ class MultiprocessingHandlerWrapper(object):
                 raise
             except EOFError:
                 return
-            except Queue.Empty:
+            except Empty:
                 continue
 
     def _drain(self):
@@ -395,7 +395,7 @@ class MultiprocessingHandlerWrapper(object):
                 raise
             except EOFError:
                 return
-            except Queue.Empty:
+            except Empty:
                 return
 
     def _handle(self, record):
