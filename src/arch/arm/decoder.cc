@@ -50,7 +50,7 @@
 namespace ArmISA
 {
 
-GenericISA::BasicDecodeCache Decoder::defaultCache;
+GenericISA::BasicDecodeCache<Decoder, ExtMachInst> Decoder::defaultCache;
 
 Decoder::Decoder(ISA* isa)
     : data(0), fpscrLen(0), fpscrStride(0),

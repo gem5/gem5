@@ -87,7 +87,7 @@ class Decoder : public InstDecoder
 
   protected:
     /// A cache of decoded instruction objects.
-    static GenericISA::BasicDecodeCache defaultCache;
+    static GenericISA::BasicDecodeCache<Decoder, ExtMachInst> defaultCache;
 
   public:
     StaticInstPtr decodeInst(ExtMachInst mach_inst);

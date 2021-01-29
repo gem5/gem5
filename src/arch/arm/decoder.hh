@@ -80,7 +80,7 @@ class Decoder : public InstDecoder
     Enums::DecoderFlavor decoderFlavor;
 
     /// A cache of decoded instruction objects.
-    static GenericISA::BasicDecodeCache defaultCache;
+    static GenericISA::BasicDecodeCache<Decoder, ExtMachInst> defaultCache;
 
     /**
      * Pre-decode an instruction from the current state of the

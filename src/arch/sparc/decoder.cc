@@ -31,6 +31,6 @@
 namespace SparcISA
 {
 
-GenericISA::BasicDecodeCache Decoder::defaultCache;
+GenericISA::BasicDecodeCache<Decoder, ExtMachInst> Decoder::defaultCache;
 
 }
