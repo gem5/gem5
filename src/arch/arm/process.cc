@@ -429,7 +429,7 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
     //Copy the aux stuff
     Addr auxv_array_end = auxv_array_base;
     for (const auto &aux: auxv) {
-        initVirtMem->write(auxv_array_end, aux, GuestByteOrder);
+        initVirtMem->write(auxv_array_end, aux, ByteOrder::little);
         auxv_array_end += sizeof(aux);
     }
     //Write out the terminating zeroed auxillary vector

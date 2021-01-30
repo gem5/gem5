@@ -198,7 +198,7 @@ RiscvProcess::argsInit(int pageSize)
     Addr sp = memState->getStackMin();
     const auto pushOntoStack =
         [this, &sp](IntType data) {
-            initVirtMem->write(sp, data, GuestByteOrder);
+            initVirtMem->write(sp, data, ByteOrder::little);
             sp += sizeof(data);
         };
 

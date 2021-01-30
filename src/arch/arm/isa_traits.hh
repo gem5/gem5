@@ -43,12 +43,9 @@
 #define __ARCH_ARM_ISA_TRAITS_HH__
 
 #include "base/types.hh"
-#include "sim/byteswap.hh"
 
 namespace ArmISA
 {
-    const ByteOrder GuestByteOrder = ByteOrder::little;
-
     const Addr PageShift = 12;
     const Addr PageBytes = 1ULL << PageShift;
 } // namespace ArmISA

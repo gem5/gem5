@@ -30,12 +30,9 @@
 #define __ARCH_SPARC_ISA_TRAITS_HH__
 
 #include "base/types.hh"
-#include "sim/byteswap.hh"
 
 namespace SparcISA
 {
-
-const ByteOrder GuestByteOrder = ByteOrder::big;
 
 const Addr PageShift = 13;
 const Addr PageBytes = 1ULL << PageShift;

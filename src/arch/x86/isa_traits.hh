@@ -39,12 +39,9 @@
 #define __ARCH_X86_ISATRAITS_HH__
 
 #include "base/types.hh"
-#include "sim/byteswap.hh"
 
 namespace X86ISA
 {
-    const ByteOrder GuestByteOrder = ByteOrder::little;
-
     const Addr PageShift = 12;
     const Addr PageBytes = 1ULL << PageShift;
 }
