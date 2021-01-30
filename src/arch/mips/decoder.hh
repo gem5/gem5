@@ -46,10 +46,11 @@ class Decoder : public InstDecoder
   protected:
     //The extended machine instruction being generated
     ExtMachInst emi;
+    uint32_t machInst;
     bool instDone;
 
   public:
-    Decoder(ISA* isa = nullptr) : instDone(false)
+    Decoder(ISA* isa = nullptr) : InstDecoder(&machInst), instDone(false)
     {}
 
     void
@@ -66,9 +67,9 @@ class Decoder : public InstDecoder
     //Use this to give data to the decoder. This should be used
     //when there is control flow.
     void
-    moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
+    moreBytes(const PCState &pc, Addr fetchPC)
     {
-        emi = letoh(inst);
+        emi = letoh(machInst);
         instDone = true;
     }
 

@@ -47,9 +47,7 @@ class Decoder : public InstDecoder
     bool instDone;
 
   public:
-    Decoder(ISA* isa = nullptr) : instDone(false)
-    {
-    }
+    Decoder(ISA* isa=nullptr) : InstDecoder(&emi), instDone(false) {}
 
     void
     process()
@@ -65,18 +63,10 @@ class Decoder : public InstDecoder
     // Use this to give data to the predecoder. This should be used
     // when there is control flow.
     void
-    moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
+    moreBytes(const PCState &pc, Addr fetchPC)
     {
-        emi = betoh(inst);
+        emi = betoh(emi);
         instDone = true;
-    }
-
-    // Use this to give data to the predecoder. This should be used
-    // when instructions are executed in order.
-    void
-    moreBytes(MachInst machInst)
-    {
-        moreBytes(0, 0, machInst);
     }
 
     bool

@@ -91,20 +91,19 @@ Fetch1::Fetch1(const std::string &name_,
             maxLineWidth);
     }
 
+    size_t inst_size = cpu.threads[0]->decoder.moreBytesSize();
+
     /* These assertions should be copied to the Python config. as well */
-    if ((lineSnap % sizeof(TheISA::MachInst)) != 0) {
+    if ((lineSnap % inst_size) != 0) {
         fatal("%s: fetch1LineSnapWidth must be a multiple "
-            "of sizeof(TheISA::MachInst) (%d)\n", name_,
-            sizeof(TheISA::MachInst));
+            "of the inst width (%d)\n", name_,
+            inst_size);
     }
 
-    if (!(maxLineWidth >= lineSnap &&
-        (maxLineWidth % sizeof(TheISA::MachInst)) == 0))
-    {
+    if ((maxLineWidth >= lineSnap && (maxLineWidth % inst_size)) != 0) {
         fatal("%s: fetch1LineWidth must be a multiple of"
-            " sizeof(TheISA::MachInst)"
-            " (%d), and >= fetch1LineSnapWidth (%d)\n",
-            name_, sizeof(TheISA::MachInst), lineSnap);
+            " the inst width (%d), and >= fetch1LineSnapWidth (%d)\n",
+            name_, inst_size, lineSnap);
     }
 
     if (fetchLimit < 1) {

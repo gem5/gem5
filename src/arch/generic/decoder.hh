@@ -28,14 +28,31 @@
 #ifndef __ARCH_GENERIC_DECODER_HH__
 #define __ARCH_GENERIC_DECODER_HH__
 
+#include "base/bitfield.hh"
+#include "base/intmath.hh"
 #include "base/types.hh"
 #include "cpu/static_inst_fwd.hh"
 
 class InstDecoder
 {
+  protected:
+    void *_moreBytesPtr;
+    size_t _moreBytesSize;
+    Addr _pcMask;
+
   public:
+    template <typename MoreBytesType>
+    InstDecoder(MoreBytesType *mb_buf) :
+        _moreBytesPtr(mb_buf), _moreBytesSize(sizeof(MoreBytesType)),
+        _pcMask(~mask(floorLog2(_moreBytesSize)))
+    {}
+
     virtual StaticInstPtr fetchRomMicroop(
             MicroPC micropc, StaticInstPtr curMacroop);
+
+    void *moreBytesPtr() const { return _moreBytesPtr; }
+    size_t moreBytesSize() const { return _moreBytesSize; }
+    Addr pcMask() const { return _pcMask; }
 };
 
 #endif // __ARCH_DECODER_GENERIC_HH__

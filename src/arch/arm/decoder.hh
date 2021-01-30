@@ -61,7 +61,7 @@ class Decoder : public InstDecoder
   protected:
     //The extended machine instruction being generated
     ExtMachInst emi;
-    MachInst data;
+    uint32_t data;
     bool bigThumb;
     bool instDone;
     bool outOfBytes;
@@ -179,7 +179,7 @@ class Decoder : public InstDecoder
      * @param fetchPC The address this chunk was fetched from.
      * @param inst Raw instruction data.
      */
-    void moreBytes(const PCState &pc, Addr fetchPC, MachInst inst);
+    void moreBytes(const PCState &pc, Addr fetchPC);
 
     /**
      * Decode an instruction or fetch it from the code cache.

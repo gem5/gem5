@@ -329,7 +329,7 @@ Fetch2::evaluate()
                 /* Set the inputIndex to be the MachInst-aligned offset
                  *  from lineBaseAddr of the new PC value */
                 fetch_info.inputIndex =
-                    (line_in->pc.instAddr() & BaseCPU::PCMask) -
+                    (line_in->pc.instAddr() & decoder->pcMask()) -
                     line_in->lineBaseAddr;
                 DPRINTF(Fetch, "Setting new PC value: %s inputIndex: 0x%x"
                     " lineBaseAddr: 0x%x lineWidth: 0x%x\n",
@@ -376,15 +376,13 @@ Fetch2::evaluate()
             } else {
                 uint8_t *line = line_in->line;
 
-                /* The instruction is wholly in the line, can just
-                 *  assign */
-                auto inst_word = *reinterpret_cast<TheISA::MachInst *>
-                                  (line + fetch_info.inputIndex);
+                /* The instruction is wholly in the line, can just copy. */
+                memcpy(decoder->moreBytesPtr(), line + fetch_info.inputIndex,
+                        decoder->moreBytesSize());
 
                 if (!decoder->instReady()) {
                     decoder->moreBytes(fetch_info.pc,
-                        line_in->lineBaseAddr + fetch_info.inputIndex,
-                        inst_word);
+                        line_in->lineBaseAddr + fetch_info.inputIndex);
                     DPRINTF(Fetch, "Offering MachInst to decoder addr: 0x%x\n",
                             line_in->lineBaseAddr + fetch_info.inputIndex);
                 }
@@ -466,7 +464,7 @@ Fetch2::evaluate()
                 /* Step on the pointer into the line if there's no
                  *  complete instruction waiting */
                 if (decoder->needMoreBytes()) {
-                    fetch_info.inputIndex += sizeof(TheISA::MachInst);
+                    fetch_info.inputIndex += decoder->moreBytesSize();
 
                 DPRINTF(Fetch, "Updated inputIndex value PC: %s"
                     " inputIndex: 0x%x lineBaseAddr: 0x%x lineWidth: 0x%x\n",

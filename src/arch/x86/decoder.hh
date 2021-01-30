@@ -71,6 +71,8 @@ class Decoder : public InstDecoder
     static X86ISAInst::MicrocodeRom microcodeRom;
 
   protected:
+    using MachInst = uint64_t;
+
     struct InstBytes
     {
         StaticInstPtr si;
@@ -250,7 +252,7 @@ class Decoder : public InstDecoder
     StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
 
   public:
-    Decoder(ISA *isa=nullptr)
+    Decoder(ISA *isa=nullptr) : InstDecoder(&fetchChunk)
     {
         emi.reset();
         emi.mode.mode = mode;
@@ -308,12 +310,12 @@ class Decoder : public InstDecoder
     // Use this to give data to the decoder. This should be used
     // when there is control flow.
     void
-    moreBytes(const PCState &pc, Addr fetchPC, MachInst data)
+    moreBytes(const PCState &pc, Addr fetchPC)
     {
         DPRINTF(Decoder, "Getting more bytes.\n");
         basePC = fetchPC;
         offset = (fetchPC >= pc.instAddr()) ? 0 : pc.instAddr() - fetchPC;
-        fetchChunk = letoh(data);
+        fetchChunk = letoh(fetchChunk);
         outOfBytes = false;
         process();
     }

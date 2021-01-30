@@ -717,11 +717,13 @@ void
 TimingSimpleCPU::sendFetch(const Fault &fault, const RequestPtr &req,
                            ThreadContext *tc)
 {
+    auto &decoder = threadInfo[curThread]->thread->decoder;
+
     if (fault == NoFault) {
         DPRINTF(SimpleCPU, "Sending fetch for addr %#x(pa: %#x)\n",
                 req->getVaddr(), req->getPaddr());
         ifetch_pkt = new Packet(req, MemCmd::ReadReq);
-        ifetch_pkt->dataStatic(&inst);
+        ifetch_pkt->dataStatic(decoder.moreBytesPtr());
         DPRINTF(SimpleCPU, " -- pkt addr: %#x\n", ifetch_pkt->getAddr());
 
         if (!icachePort.sendTimingReq(ifetch_pkt)) {

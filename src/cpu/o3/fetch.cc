@@ -114,9 +114,6 @@ Fetch::Fetch(CPU *_cpu, const O3CPUParams &params)
         fatal("cache block (%u bytes) is not a multiple of the "
               "fetch buffer (%u bytes)\n", cacheBlkSize, fetchBufferSize);
 
-    // Get the size of an instruction.
-    instSize = sizeof(TheISA::MachInst);
-
     for (int i = 0; i < MaxThreads; i++) {
         fetchStatus[i] = Idle;
         decoder[i] = nullptr;
@@ -142,6 +139,9 @@ Fetch::Fetch(CPU *_cpu, const O3CPUParams &params)
         // which may not hold the entire cache line.
         fetchBuffer[tid] = new uint8_t[fetchBufferSize];
     }
+
+    // Get the size of an instruction.
+    instSize = decoder[0]->moreBytesSize();
 }
 
 std::string Fetch::name() const { return cpu->name() + ".fetch"; }
@@ -1117,7 +1117,7 @@ Fetch::fetch(bool &status_change)
     TheISA::PCState thisPC = pc[tid];
 
     Addr pcOffset = fetchOffset[tid];
-    Addr fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
+    Addr fetchAddr = (thisPC.instAddr() + pcOffset) & decoder[tid]->pcMask();
 
     bool inRom = isRomMicroPC(thisPC.microPC());
 
@@ -1190,11 +1190,11 @@ Fetch::fetch(bool &status_change)
     // Need to halt fetch if quiesce instruction detected
     bool quiesce = false;
 
-    TheISA::MachInst *cacheInsts =
-        reinterpret_cast<TheISA::MachInst *>(fetchBuffer[tid]);
-
     const unsigned numInsts = fetchBufferSize / instSize;
     unsigned blkOffset = (fetchAddr - fetchBufferPC[tid]) / instSize;
+
+    auto *dec_ptr = decoder[tid];
+    const Addr pc_mask = dec_ptr->pcMask();
 
     // Loop through instruction memory from the cache.
     // Keep issuing while fetchWidth is available and branch is not
@@ -1204,9 +1204,8 @@ Fetch::fetch(bool &status_change)
         // We need to process more memory if we aren't going to get a
         // StaticInst from the rom, the current macroop, or what's already
         // in the decoder.
-        bool needMem = !inRom && !curMacroop &&
-            !decoder[tid]->instReady();
-        fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
+        bool needMem = !inRom && !curMacroop && !dec_ptr->instReady();
+        fetchAddr = (thisPC.instAddr() + pcOffset) & pc_mask;
         Addr fetchBufferBlockPC = fetchBufferAlignPC(fetchAddr);
 
         if (needMem) {
@@ -1222,9 +1221,11 @@ Fetch::fetch(bool &status_change)
                 break;
             }
 
-            decoder[tid]->moreBytes(thisPC, fetchAddr, cacheInsts[blkOffset]);
+            memcpy(dec_ptr->moreBytesPtr(),
+                    fetchBuffer[tid] + blkOffset * instSize, instSize);
+            decoder[tid]->moreBytes(thisPC, fetchAddr);
 
-            if (decoder[tid]->needMoreBytes()) {
+            if (dec_ptr->needMoreBytes()) {
                 blkOffset++;
                 fetchAddr += instSize;
                 pcOffset += instSize;
@@ -1235,8 +1236,8 @@ Fetch::fetch(bool &status_change)
         // the memory we've processed so far.
         do {
             if (!(curMacroop || inRom)) {
-                if (decoder[tid]->instReady()) {
-                    staticInst = decoder[tid]->decode(thisPC);
+                if (dec_ptr->instReady()) {
+                    staticInst = dec_ptr->decode(thisPC);
 
                     // Increment stat of fetched instructions.
                     ++fetchStats.insts;
@@ -1258,7 +1259,7 @@ Fetch::fetch(bool &status_change)
             bool newMacro = false;
             if (curMacroop || inRom) {
                 if (inRom) {
-                    staticInst = decoder[tid]->fetchRomMicroop(
+                    staticInst = dec_ptr->fetchRomMicroop(
                             thisPC.microPC(), curMacroop);
                 } else {
                     staticInst = curMacroop->fetchMicroop(thisPC.microPC());
@@ -1296,7 +1297,7 @@ Fetch::fetch(bool &status_change)
             inRom = isRomMicroPC(thisPC.microPC());
 
             if (newMacro) {
-                fetchAddr = thisPC.instAddr() & BaseCPU::PCMask;
+                fetchAddr = thisPC.instAddr() & pc_mask;
                 blkOffset = (fetchAddr - fetchBufferPC[tid]) / instSize;
                 pcOffset = 0;
                 curMacroop = NULL;
@@ -1310,7 +1311,7 @@ Fetch::fetch(bool &status_change)
                 quiesce = true;
                 break;
             }
-        } while ((curMacroop || decoder[tid]->instReady()) &&
+        } while ((curMacroop || dec_ptr->instReady()) &&
                  numInst < fetchWidth &&
                  fetchQueue[tid].size() < fetchQueueSize);
 
@@ -1341,7 +1342,7 @@ Fetch::fetch(bool &status_change)
 
     // pipeline a fetch if we're crossing a fetch buffer boundary and not in
     // a state that would preclude fetching
-    fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
+    fetchAddr = (thisPC.instAddr() + pcOffset) & pc_mask;
     Addr fetchBufferBlockPC = fetchBufferAlignPC(fetchAddr);
     issuePipelinedIfetch[tid] = fetchBufferBlockPC != fetchBufferPC[tid] &&
         fetchStatus[tid] != IcacheWaitResponse &&
@@ -1538,7 +1539,7 @@ Fetch::pipelineIcacheAccesses(ThreadID tid)
     }
 
     Addr pcOffset = fetchOffset[tid];
-    Addr fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
+    Addr fetchAddr = (thisPC.instAddr() + pcOffset) & decoder[tid]->pcMask();
 
     // Align the fetch PC so its at the start of a fetch buffer segment.
     Addr fetchBufferBlockPC = fetchBufferAlignPC(fetchAddr);

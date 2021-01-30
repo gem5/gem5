@@ -53,6 +53,7 @@ class Decoder : public InstDecoder
   protected:
     //The extended machine instruction being generated
     ExtMachInst emi;
+    uint32_t machInst;
     bool instDone;
 
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
@@ -63,7 +64,7 @@ class Decoder : public InstDecoder
     StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
 
   public:
-    Decoder(ISA* isa=nullptr) { reset(); }
+    Decoder(ISA* isa=nullptr) : InstDecoder(&machInst) { reset(); }
 
     void process() {}
     void reset();
@@ -72,7 +73,7 @@ class Decoder : public InstDecoder
 
     //Use this to give data to the decoder. This should be used
     //when there is control flow.
-    void moreBytes(const PCState &pc, Addr fetchPC, MachInst inst);
+    void moreBytes(const PCState &pc, Addr fetchPC);
 
     bool needMoreBytes() { return more; }
     bool instReady() { return instDone; }

@@ -88,8 +88,10 @@ NonCachingSimpleCPU::fetchInstMem()
     if (bd_it == memBackdoors.end())
         return AtomicSimpleCPU::fetchInstMem();
 
+    auto &decoder = threadInfo[curThread]->thread->decoder;
+
     auto *bd = bd_it->second;
     Addr offset = ifetch_req->getPaddr() - bd->range().start();
-    memcpy(&inst, bd->ptr() + offset, ifetch_req->getSize());
+    memcpy(decoder.moreBytesPtr(), bd->ptr() + offset, ifetch_req->getSize());
     return 0;
 }

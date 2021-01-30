@@ -738,11 +738,13 @@ AtomicSimpleCPU::tick()
 Tick
 AtomicSimpleCPU::fetchInstMem()
 {
+    auto &decoder = threadInfo[curThread]->thread->decoder;
+
     Packet pkt = Packet(ifetch_req, MemCmd::ReadReq);
 
     // ifetch_req is initialized to read the instruction
     // directly into the CPU object's inst field.
-    pkt.dataStatic(&inst);
+    pkt.dataStatic(decoder.moreBytesPtr());
 
     Tick latency = sendPacket(icachePort, &pkt);
     assert(!pkt.isError());

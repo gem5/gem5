@@ -102,7 +102,6 @@ class BaseSimpleCPU : public BaseCPU
     std::list<ThreadID> activeThreads;
 
     /** Current instruction */
-    TheISA::MachInst inst;
     StaticInstPtr curStaticInst;
     StaticInstPtr curMacroStaticInst;
 

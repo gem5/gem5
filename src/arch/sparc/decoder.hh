@@ -44,11 +44,12 @@ class Decoder : public InstDecoder
   protected:
     // The extended machine instruction being generated
     ExtMachInst emi;
+    uint32_t machInst;
     bool instDone;
     RegVal asi;
 
   public:
-    Decoder(ISA* isa = nullptr) : instDone(false), asi(0)
+    Decoder(ISA* isa=nullptr) : InstDecoder(&machInst), instDone(false), asi(0)
     {}
 
     void process() {}
@@ -62,19 +63,19 @@ class Decoder : public InstDecoder
     // Use this to give data to the predecoder. This should be used
     // when there is control flow.
     void
-    moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
+    moreBytes(const PCState &pc, Addr fetchPC)
     {
-        emi = betoh(inst);
+        emi = betoh(machInst);
         // The I bit, bit 13, is used to figure out where the ASI
         // should come from. Use that in the ExtMachInst. This is
         // slightly redundant, but it removes the need to put a condition
         // into all the execute functions
         if (emi & (1 << 13)) {
             emi |= (static_cast<ExtMachInst>(
-                        asi << (sizeof(MachInst) * 8)));
+                        asi << (sizeof(machInst) * 8)));
         } else {
             emi |= (static_cast<ExtMachInst>(bits(emi, 12, 5))
-                    << (sizeof(MachInst) * 8));
+                    << (sizeof(machInst) * 8));
         }
         instDone = true;
     }
