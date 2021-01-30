@@ -45,7 +45,7 @@
 #include <vector>
 
 #include "arch/x86/fs_workload.hh"
-#include "arch/x86/isa_traits.hh"
+#include "arch/x86/page_size.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/regs/segment.hh"
 #include "arch/x86/se_workload.hh"

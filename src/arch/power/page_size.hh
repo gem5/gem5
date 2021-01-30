@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
- * Copyright (c) 2007 MIPS Technologies, Inc.
+ * Copyright (c) 2007-2008 The Florida State University
+ * Copyright (c) 2009 The University of Edinburgh
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,17 +28,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_MIPS_ISA_TRAITS_HH__
-#define __ARCH_MIPS_ISA_TRAITS_HH__
+#ifndef __ARCH_POWER_PAGE_SIZE_HH__
+#define __ARCH_POWER_PAGE_SIZE_HH__
 
 #include "base/types.hh"
 
-namespace MipsISA
+namespace PowerISA
 {
 
-const Addr PageShift = 13;
+const Addr PageShift = 12;
 const Addr PageBytes = 1ULL << PageShift;
 
-} // namespace MipsISA
+} // namespace PowerISA
 
-#endif // __ARCH_MIPS_ISA_TRAITS_HH__
+#endif // __ARCH_POWER_PAGE_SIZE_HH__

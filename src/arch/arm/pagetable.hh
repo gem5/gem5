@@ -43,7 +43,7 @@
 
 #include <cstdint>
 
-#include "arch/arm/isa_traits.hh"
+#include "arch/arm/page_size.hh"
 #include "arch/arm/utility.hh"
 #include "sim/serialize.hh"
 

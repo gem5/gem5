@@ -41,7 +41,6 @@
 #include "arch/x86/bios/intelmp.hh"
 #include "arch/x86/bios/smbios.hh"
 #include "arch/x86/faults.hh"
-#include "arch/x86/isa_traits.hh"
 #include "base/loader/object_file.hh"
 #include "cpu/thread_context.hh"
 #include "params/X86FsWorkload.hh"

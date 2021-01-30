@@ -41,7 +41,7 @@
 
 #include <cstdint>
 
-#include "arch/x86/isa_traits.hh"
+#include "arch/x86/page_size.hh"
 #include "base/bitunion.hh"
 #include "base/types.hh"
 #include "base/trie.hh"

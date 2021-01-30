@@ -35,7 +35,7 @@
 
 #include <limits>
 
-#include "arch/x86/isa_traits.hh"
+#include "arch/x86/page_size.hh"
 #include "base/output.hh"
 #include "debug/GPUDisp.hh"
 #include "debug/GPUExec.hh"

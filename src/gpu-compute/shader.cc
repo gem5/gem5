@@ -35,8 +35,8 @@
 
 #include <limits>
 
-#include "arch/x86/isa_traits.hh"
 #include "arch/x86/linux/linux.hh"
+#include "arch/x86/page_size.hh"
 #include "base/chunk_generator.hh"
 #include "debug/GPUAgentDisp.hh"
 #include "debug/GPUDisp.hh"

@@ -42,7 +42,6 @@
 #ifndef __ARCH_ARM_UTILITY_HH__
 #define __ARCH_ARM_UTILITY_HH__
 
-#include "arch/arm/isa_traits.hh"
 #include "arch/arm/regs/cc.hh"
 #include "arch/arm/regs/misc.hh"
 #include "arch/arm/types.hh"

@@ -39,8 +39,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_RISCV_ISA_TRAITS_HH__
-#define __ARCH_RISCV_ISA_TRAITS_HH__
+#ifndef __ARCH_RISCV_PAGE_SIZE_HH__
+#define __ARCH_RISCV_PAGE_SIZE_HH__
 
 #include "base/types.hh"
 
@@ -52,4 +52,4 @@ const Addr PageBytes = 1ULL << PageShift;
 
 }
 
-#endif //__ARCH_RISCV_ISA_TRAITS_HH__
+#endif //__ARCH_RISCV_PAGE_SIZE_HH__

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2010, 2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -10,6 +10,10 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007-2008 The Florida State University
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -35,15 +39,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_NULL_ISA_TRAITS_HH__
-#define __ARCH_NULL_ISA_TRAITS_HH__
+#ifndef __ARCH_ARM_PAGE_SIZE_HH__
+#define __ARCH_ARM_PAGE_SIZE_HH__
 
 #include "base/types.hh"
 
-namespace NullISA
+namespace ArmISA
 {
     const Addr PageShift = 12;
     const Addr PageBytes = 1ULL << PageShift;
-}
+} // namespace ArmISA
 
-#endif //__ARCH_NULL_ISA_TRAITS_HH__
+#endif // __ARCH_ARM_PAGE_SIZE_HH__

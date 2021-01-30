@@ -59,8 +59,8 @@ env.SwitchingHeaders(
     Split('''
         decoder.hh
         isa.hh
-        isa_traits.hh
         locked_mem.hh
+        page_size.hh
         registers.hh
         remote_gdb.hh
         types.hh

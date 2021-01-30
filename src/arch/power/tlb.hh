@@ -35,7 +35,6 @@
 #include <map>
 
 #include "arch/generic/tlb.hh"
-#include "arch/power/isa_traits.hh"
 #include "arch/power/pagetable.hh"
 #include "base/statistics.hh"
 #include "mem/request.hh"

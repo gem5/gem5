@@ -42,7 +42,6 @@
 
 #include "arch/x86/generated/decoder.hh"
 #include "arch/x86/insts/static_inst.hh"
-#include "arch/x86/isa_traits.hh"
 #include "arch/x86/mmu.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"

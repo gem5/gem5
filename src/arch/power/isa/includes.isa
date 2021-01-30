@@ -43,7 +43,6 @@ output header {{
 #include "arch/power/insts/mem.hh"
 #include "arch/power/insts/misc.hh"
 #include "arch/power/insts/static_inst.hh"
-#include "arch/power/isa_traits.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 
@@ -55,7 +54,6 @@ output decoder {{
 
 #include "arch/power/decoder.hh"
 #include "arch/power/faults.hh"
-#include "arch/power/isa_traits.hh"
 #include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
 #include "cpu/thread_context.hh"
@@ -68,7 +66,6 @@ output exec {{
 
 #include "arch/generic/memhelpers.hh"
 #include "arch/power/faults.hh"
-#include "arch/power/isa_traits.hh"
 #include "arch/power/miscregs.hh"
 #include "base/condcodes.hh"
 #include "cpu/base.hh"

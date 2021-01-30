@@ -43,8 +43,8 @@
 
 #include <sys/syscall.h>
 
-#include "arch/arm/isa_traits.hh"
 #include "arch/arm/linux/linux.hh"
+#include "arch/arm/page_size.hh"
 #include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"

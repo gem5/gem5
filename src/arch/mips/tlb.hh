@@ -33,7 +33,6 @@
 #include <map>
 
 #include "arch/generic/tlb.hh"
-#include "arch/mips/isa_traits.hh"
 #include "arch/mips/pagetable.hh"
 #include "arch/mips/utility.hh"
 #include "base/statistics.hh"

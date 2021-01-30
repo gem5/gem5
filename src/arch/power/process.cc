@@ -29,7 +29,7 @@
 
 #include "arch/power/process.hh"
 
-#include "arch/power/isa_traits.hh"
+#include "arch/power/page_size.hh"
 #include "arch/power/types.hh"
 #include "base/loader/elf_object.hh"
 #include "base/loader/object_file.hh"

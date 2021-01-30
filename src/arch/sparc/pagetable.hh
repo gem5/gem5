@@ -31,9 +31,9 @@
 
 #include <cassert>
 
-#include "arch/sparc/isa_traits.hh"
 #include "base/bitfield.hh"
 #include "base/logging.hh"
+#include "base/types.hh"
 #include "sim/serialize.hh"
 
 namespace SparcISA

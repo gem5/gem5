@@ -30,8 +30,8 @@
 
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/handlers.hh"
-#include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/miscregs.hh"
+#include "arch/sparc/page_size.hh"
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/types.hh"
 #include "base/loader/elf_object.hh"

@@ -37,7 +37,6 @@
 
 #include "arch/x86/bios/e820.hh"
 
-#include "arch/x86/isa_traits.hh"
 #include "mem/port_proxy.hh"
 #include "sim/byteswap.hh"
 

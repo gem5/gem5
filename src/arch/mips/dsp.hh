@@ -29,7 +29,6 @@
 #ifndef __ARCH_MIPS_DSP_HH__
 #define __ARCH_MIPS_DSP_HH__
 
-#include "arch/mips/isa_traits.hh"
 #include "arch/mips/types.hh"
 #include "base/logging.hh"
 #include "base/types.hh"

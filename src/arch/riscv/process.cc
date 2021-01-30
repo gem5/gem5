@@ -38,7 +38,7 @@
 #include <vector>
 
 #include "arch/riscv/isa.hh"
-#include "arch/riscv/isa_traits.hh"
+#include "arch/riscv/page_size.hh"
 #include "arch/riscv/registers.hh"
 #include "base/loader/elf_object.hh"
 #include "base/loader/object_file.hh"

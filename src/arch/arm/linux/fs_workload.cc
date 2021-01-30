@@ -40,7 +40,6 @@
 
 #include "arch/arm/linux/fs_workload.hh"
 
-#include "arch/arm/isa_traits.hh"
 #include "arch/arm/linux/atag.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"

@@ -33,7 +33,7 @@
 #include <string>
 #include <vector>
 
-#include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/page_size.hh"
 #include "base/loader/object_file.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"

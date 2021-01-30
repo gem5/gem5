@@ -1,8 +1,15 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
- * Copyright (c) 2007-2008 The Florida State University
- * Copyright (c) 2009 The University of Edinburgh
- * All rights reserved.
+ * Copyright (c) 2013 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,17 +35,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_POWER_ISA_TRAITS_HH__
-#define __ARCH_POWER_ISA_TRAITS_HH__
+#ifndef __ARCH_NULL_PAGE_SIZE_HH__
+#define __ARCH_NULL_PAGE_SIZE_HH__
 
 #include "base/types.hh"
 
-namespace PowerISA
+namespace NullISA
 {
+    const Addr PageShift = 12;
+    const Addr PageBytes = 1ULL << PageShift;
+}
 
-const Addr PageShift = 12;
-const Addr PageBytes = 1ULL << PageShift;
-
-} // namespace PowerISA
-
-#endif // __ARCH_POWER_ISA_TRAITS_HH__
+#endif //__ARCH_NULL_PAGE_SIZE_HH__

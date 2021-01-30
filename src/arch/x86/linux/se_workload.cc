@@ -40,8 +40,8 @@
 
 #include <sys/syscall.h>
 
-#include "arch/x86/isa_traits.hh"
 #include "arch/x86/linux/linux.hh"
+#include "arch/x86/page_size.hh"
 #include "arch/x86/process.hh"
 #include "arch/x86/registers.hh"
 #include "arch/x86/se_workload.hh"

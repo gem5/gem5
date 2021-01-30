@@ -36,7 +36,6 @@ output header {{
 #include <iostream>
 #include <sstream>
 
-#include "arch/mips/isa_traits.hh"
 #include "arch/mips/mt_constants.hh"
 #include "arch/mips/pra_constants.hh"
 #include "cpu/static_inst.hh"
@@ -51,7 +50,6 @@ output decoder {{
 #include "arch/mips/dsp.hh"
 #include "arch/mips/dt_constants.hh"
 #include "arch/mips/faults.hh"
-#include "arch/mips/isa_traits.hh"
 #include "arch/mips/mt_constants.hh"
 #include "arch/mips/pagetable.hh"
 #include "arch/mips/pra_constants.hh"
@@ -73,7 +71,6 @@ output exec {{
 #include "arch/mips/dsp.hh"
 #include "arch/mips/dt_constants.hh"
 #include "arch/mips/faults.hh"
-#include "arch/mips/isa_traits.hh"
 #include "arch/mips/mmu.hh"
 #include "arch/mips/mt.hh"
 #include "arch/mips/mt_constants.hh"

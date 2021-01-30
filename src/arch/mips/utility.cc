@@ -30,7 +30,6 @@
 
 #include <cmath>
 
-#include "arch/mips/isa_traits.hh"
 #include "arch/mips/registers.hh"
 #include "base/bitfield.hh"
 #include "base/logging.hh"

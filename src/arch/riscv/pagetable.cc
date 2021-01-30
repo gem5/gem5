@@ -30,7 +30,6 @@
 
 #include "arch/riscv/pagetable.hh"
 
-#include "arch/riscv/isa_traits.hh"
 #include "sim/serialize.hh"
 
 namespace RiscvISA

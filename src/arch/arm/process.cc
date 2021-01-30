@@ -40,7 +40,7 @@
 
 #include "arch/arm/process.hh"
 
-#include "arch/arm/isa_traits.hh"
+#include "arch/arm/page_size.hh"
 #include "arch/arm/regs/cc.hh"
 #include "arch/arm/regs/misc.hh"
 #include "arch/arm/types.hh"

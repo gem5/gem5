@@ -48,7 +48,7 @@
 #include <utility>
 #include <vector>
 
-#include "arch/isa_traits.hh"
+#include "arch/page_size.hh"
 #include "base/loader/memory_image.hh"
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"

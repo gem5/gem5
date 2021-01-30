@@ -39,7 +39,6 @@
 
 #include "arch/generic/debugfaults.hh"
 #include "arch/x86/generated/decoder.hh"
-#include "arch/x86/isa_traits.hh"
 
 namespace {
 

@@ -39,7 +39,7 @@
 
 #include <cmath>
 
-#include "arch/x86/isa_traits.hh"
+#include "arch/x86/page_size.hh"
 #include "sim/serialize.hh"
 
 namespace X86ISA

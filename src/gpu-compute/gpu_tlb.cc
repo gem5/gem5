@@ -40,7 +40,7 @@
 
 #include "arch/x86/faults.hh"
 #include "arch/x86/insts/microldstop.hh"
-#include "arch/x86/isa_traits.hh"
+#include "arch/x86/page_size.hh"
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/regs/misc.hh"

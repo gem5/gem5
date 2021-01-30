@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,17 +27,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_SPARC_ISA_TRAITS_HH__
-#define __ARCH_SPARC_ISA_TRAITS_HH__
+#ifndef __ARCH_MIPS_PAGE_SIZE_HH__
+#define __ARCH_MIPS_PAGE_SIZE_HH__
 
 #include "base/types.hh"
 
-namespace SparcISA
+namespace MipsISA
 {
 
 const Addr PageShift = 13;
 const Addr PageBytes = 1ULL << PageShift;
 
-}
+} // namespace MipsISA
 
-#endif // __ARCH_SPARC_ISA_TRAITS_HH__
+#endif // __ARCH_MIPS_PAGE_SIZE_HH__

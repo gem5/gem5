@@ -41,7 +41,6 @@
 #include "arch/arm/decoder.hh"
 
 #include "arch/arm/isa.hh"
-#include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
 #include "base/trace.hh"
 #include "debug/Decoder.hh"

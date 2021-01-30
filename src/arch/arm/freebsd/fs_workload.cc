@@ -32,7 +32,6 @@
 
 #include "arch/arm/freebsd/fs_workload.hh"
 
-#include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/freebsd/threadinfo.hh"
 #include "base/loader/dtb_file.hh"

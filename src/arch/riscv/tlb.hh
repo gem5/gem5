@@ -36,7 +36,6 @@
 
 #include "arch/generic/tlb.hh"
 #include "arch/riscv/isa.hh"
-#include "arch/riscv/isa_traits.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/pma_checker.hh"
 #include "arch/riscv/utility.hh"
