@@ -81,7 +81,7 @@ BitUnion32(ExtMachInst)
     Bitfield<19, 12> fxm;
 EndBitUnion(ExtMachInst)
 
-typedef GenericISA::SimplePCState<MachInst> PCState;
+typedef GenericISA::SimplePCState<4> PCState;
 
 // typedef uint64_t LargestRead;
 // // Need to use 64 bits to make sure that read requests get handled properly

@@ -287,10 +287,10 @@ operator == (const ExtMachInst &emi1, const ExtMachInst &emi2)
     return true;
 }
 
-class PCState : public GenericISA::UPCState<MachInst>
+class PCState : public GenericISA::UPCState<8>
 {
   protected:
-    typedef GenericISA::UPCState<MachInst> Base;
+    typedef GenericISA::UPCState<8> Base;
 
     uint8_t _size;
 

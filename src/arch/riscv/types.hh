@@ -50,7 +50,7 @@ namespace RiscvISA
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
 
-class PCState : public GenericISA::UPCState<MachInst>
+class PCState : public GenericISA::UPCState<4>
 {
   private:
     bool _compressed;

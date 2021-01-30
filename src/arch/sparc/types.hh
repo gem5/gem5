@@ -38,7 +38,7 @@ namespace SparcISA
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
 
-typedef GenericISA::DelaySlotUPCState<MachInst> PCState;
+typedef GenericISA::DelaySlotUPCState<4> PCState;
 
 }
 

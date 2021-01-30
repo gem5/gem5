@@ -42,14 +42,8 @@
 
 namespace NullISA
 {
-    typedef uint32_t MachInst;
 
-    class PCState : public GenericISA::UPCState<MachInst>
-    {
-      protected:
-
-        typedef GenericISA::UPCState<MachInst> Base;
-    };
+typedef GenericISA::UPCState<4> PCState;
 
 }
 

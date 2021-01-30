@@ -38,7 +38,7 @@ namespace MipsISA
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
 
-typedef GenericISA::DelaySlotPCState<MachInst> PCState;
+typedef GenericISA::DelaySlotPCState<4> PCState;
 
 //used in FP convert & round function
 enum ConvertType

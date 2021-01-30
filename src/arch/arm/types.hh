@@ -213,11 +213,11 @@ namespace ArmISA
         Bitfield<11, 8>  ltcoproc;
     EndBitUnion(ExtMachInst)
 
-    class PCState : public GenericISA::UPCState<MachInst>
+    class PCState : public GenericISA::UPCState<4>
     {
       protected:
 
-        typedef GenericISA::UPCState<MachInst> Base;
+        typedef GenericISA::UPCState<4> Base;
 
         enum FlagBits
         {
