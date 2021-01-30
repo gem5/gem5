@@ -61,7 +61,7 @@ env.SwitchingHeaders(
         isa.hh
         locked_mem.hh
         page_size.hh
-        types.hh
+        pcstate.hh
         vecregs.hh
         '''),
     env.subst('${TARGET_ISA}'))

@@ -29,7 +29,7 @@
 #ifndef __ARCH_SPARC_TYPES_HH__
 #define __ARCH_SPARC_TYPES_HH__
 
-#include "arch/generic/types.hh"
+#include "arch/sparc/pcstate.hh"
 #include "base/types.hh"
 
 namespace SparcISA
@@ -37,8 +37,6 @@ namespace SparcISA
 
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
-
-typedef GenericISA::DelaySlotUPCState<4> PCState;
 
 }
 

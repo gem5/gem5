@@ -126,6 +126,7 @@
 
 #include "arch/sparc/regs/int.hh"
 #include "arch/sparc/regs/misc.hh"
+#include "arch/sparc/types.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"

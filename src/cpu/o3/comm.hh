@@ -44,7 +44,7 @@
 
 #include <vector>
 
-#include "arch/types.hh"
+#include "arch/pcstate.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"

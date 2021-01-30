@@ -50,7 +50,7 @@
 #include <vector>
 
 #include "arch/generic/types.hh"
-#include "arch/types.hh"
+#include "arch/pcstate.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"

@@ -1,18 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
- * Copyright (c) 2014 Sven Karlsson
- * All rights reserved
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2017 The University of Virginia
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,17 +26,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_RISCV_TYPES_HH__
-#define __ARCH_RISCV_TYPES_HH__
+#ifndef __ARCH_SPARC_PCSTATE_HH__
+#define __ARCH_SPARC_PCSTATE_HH__
 
-#include "arch/riscv/pcstate.hh"
+#include "arch/generic/types.hh"
 
-namespace RiscvISA
+namespace SparcISA
 {
 
-typedef uint32_t MachInst;
-typedef uint64_t ExtMachInst;
+typedef GenericISA::DelaySlotUPCState<4> PCState;
 
 }
 
-#endif // __ARCH_RISCV_TYPES_HH__
+#endif

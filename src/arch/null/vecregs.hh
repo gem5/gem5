@@ -38,6 +38,9 @@
 #ifndef __ARCH_NULL_VECREGS_HH__
 #define __ARCH_NULL_VECREGS_HH__
 
+#include <cstdint>
+
+#include "arch/generic/types.hh"
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
 

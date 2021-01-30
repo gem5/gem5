@@ -42,7 +42,7 @@
 #ifndef __CPU_CHECKER_THREAD_CONTEXT_HH__
 #define __CPU_CHECKER_THREAD_CONTEXT_HH__
 
-#include "arch/types.hh"
+#include "arch/pcstate.hh"
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/simple_thread.hh"

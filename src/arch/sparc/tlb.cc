@@ -35,6 +35,7 @@
 #include "arch/sparc/interrupts.hh"
 #include "arch/sparc/mmu.hh"
 #include "arch/sparc/regs/misc.hh"
+#include "arch/sparc/types.hh"
 #include "base/bitfield.hh"
 #include "base/compiler.hh"
 #include "base/trace.hh"

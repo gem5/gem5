@@ -29,6 +29,7 @@
 #ifndef __ARCH_POWER_INSTS_STATICINST_HH__
 #define __ARCH_POWER_INSTS_STATICINST_HH__
 
+#include "arch/power/types.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
 

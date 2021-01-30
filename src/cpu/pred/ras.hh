@@ -31,7 +31,7 @@
 
 #include <vector>
 
-#include "arch/types.hh"
+#include "arch/pcstate.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 

@@ -38,13 +38,13 @@
 #ifndef __ARCH_X86_TYPES_HH__
 #define __ARCH_X86_TYPES_HH__
 
+#include <cstdint>
+#include <functional>
 #include <iostream>
 
-#include "arch/generic/types.hh"
+#include "arch/x86/pcstate.hh"
 #include "base/bitunion.hh"
 #include "base/cprintf.hh"
-#include "base/types.hh"
-#include "sim/serialize.hh"
 
 namespace X86ISA
 {
@@ -286,70 +286,6 @@ operator == (const ExtMachInst &emi1, const ExtMachInst &emi2)
         return false;
     return true;
 }
-
-class PCState : public GenericISA::UPCState<8>
-{
-  protected:
-    typedef GenericISA::UPCState<8> Base;
-
-    uint8_t _size;
-
-  public:
-    void
-    set(Addr val)
-    {
-        Base::set(val);
-        _size = 0;
-    }
-
-    PCState() {}
-    PCState(Addr val) { set(val); }
-
-    void
-    setNPC(Addr val)
-    {
-        Base::setNPC(val);
-        _size = 0;
-    }
-
-    uint8_t size() const { return _size; }
-    void size(uint8_t newSize) { _size = newSize; }
-
-    bool
-    branching() const
-    {
-        return (this->npc() != this->pc() + size()) ||
-               (this->nupc() != this->upc() + 1);
-    }
-
-    void
-    advance()
-    {
-        Base::advance();
-        _size = 0;
-    }
-
-    void
-    uEnd()
-    {
-        Base::uEnd();
-        _size = 0;
-    }
-
-    void
-    serialize(CheckpointOut &cp) const
-    {
-        Base::serialize(cp);
-        SERIALIZE_SCALAR(_size);
-    }
-
-    void
-    unserialize(CheckpointIn &cp)
-    {
-        Base::unserialize(cp);
-        UNSERIALIZE_SCALAR(_size);
-    }
-};
 
 }
 

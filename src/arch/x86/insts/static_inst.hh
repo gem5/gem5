@@ -38,6 +38,7 @@
 #ifndef __ARCH_X86_INSTS_STATICINST_HH__
 #define __ARCH_X86_INSTS_STATICINST_HH__
 
+#include "arch/x86/types.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
 #include "debug/X86.hh"

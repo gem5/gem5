@@ -29,16 +29,15 @@
 #ifndef __ARCH_MIPS_TYPES_HH__
 #define __ARCH_MIPS_TYPES_HH__
 
-#include "arch/generic/types.hh"
-#include "base/types.hh"
+#include <cstdint>
+
+#include "arch/mips/pcstate.hh"
 
 namespace MipsISA
 {
 
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
-
-typedef GenericISA::DelaySlotPCState<4> PCState;
 
 //used in FP convert & round function
 enum ConvertType

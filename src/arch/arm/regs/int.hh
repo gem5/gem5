@@ -44,6 +44,8 @@
 #define __ARCH_ARM_REGS_INT_HH__
 
 #include "arch/arm/types.hh"
+#include "base/logging.hh"
+#include "sim/core.hh"
 
 namespace ArmISA
 {

@@ -47,7 +47,7 @@
 #include <memory>
 #include <string>
 
-#include "arch/types.hh"
+#include "arch/pcstate.hh"
 #include "base/logging.hh"
 #include "base/refcnt.hh"
 #include "config/the_isa.hh"

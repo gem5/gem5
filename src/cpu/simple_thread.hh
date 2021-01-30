@@ -50,7 +50,7 @@
 #include "arch/generic/mmu.hh"
 #include "arch/generic/tlb.hh"
 #include "arch/isa.hh"
-#include "arch/types.hh"
+#include "arch/pcstate.hh"
 #include "arch/vecregs.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"

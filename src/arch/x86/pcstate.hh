@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2013 ARM Limited
- * Copyright (c) 2014 Sven Karlsson
- * All rights reserved
+ * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -11,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2017 The University of Virginia
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,17 +35,79 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_RISCV_TYPES_HH__
-#define __ARCH_RISCV_TYPES_HH__
+#ifndef __ARCH_X86_PCSTATE_HH__
+#define __ARCH_X86_PCSTATE_HH__
 
-#include "arch/riscv/pcstate.hh"
+#include "arch/generic/types.hh"
+#include "sim/serialize.hh"
 
-namespace RiscvISA
+namespace X86ISA
 {
 
-typedef uint32_t MachInst;
-typedef uint64_t ExtMachInst;
+class PCState : public GenericISA::UPCState<8>
+{
+  protected:
+    typedef GenericISA::UPCState<8> Base;
+
+    uint8_t _size;
+
+  public:
+    void
+    set(Addr val)
+    {
+        Base::set(val);
+        _size = 0;
+    }
+
+    PCState() {}
+    PCState(Addr val) { set(val); }
+
+    void
+    setNPC(Addr val)
+    {
+        Base::setNPC(val);
+        _size = 0;
+    }
+
+    uint8_t size() const { return _size; }
+    void size(uint8_t newSize) { _size = newSize; }
+
+    bool
+    branching() const
+    {
+        return (this->npc() != this->pc() + size()) ||
+               (this->nupc() != this->upc() + 1);
+    }
+
+    void
+    advance()
+    {
+        Base::advance();
+        _size = 0;
+    }
+
+    void
+    uEnd()
+    {
+        Base::uEnd();
+        _size = 0;
+    }
+
+    void
+    serialize(CheckpointOut &cp) const
+    {
+        Base::serialize(cp);
+        SERIALIZE_SCALAR(_size);
+    }
+
+    void
+    unserialize(CheckpointIn &cp)
+    {
+        Base::unserialize(cp);
+        UNSERIALIZE_SCALAR(_size);
+    }
+};
 
 }
 
-#endif // __ARCH_RISCV_TYPES_HH__
+#endif // __ARCH_X86_PCSTATE_HH__

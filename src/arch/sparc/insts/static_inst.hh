@@ -32,6 +32,7 @@
 
 #include <cstdint>
 
+#include "arch/sparc/types.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
