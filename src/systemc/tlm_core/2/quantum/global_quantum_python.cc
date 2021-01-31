@@ -34,7 +34,7 @@ namespace
 struct InstallTlmGlobalQuantum : public ::sc_gem5::PythonInitFunc
 {
     void
-    run(pybind11::module &systemc) override
+    run(pybind11::module_ &systemc) override
     {
         pybind11::class_<tlm::tlm_global_quantum>(
                 systemc, "tlm_global_quantum")

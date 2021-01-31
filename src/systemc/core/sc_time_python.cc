@@ -36,7 +36,7 @@ namespace
 struct InstallScTime : public ::sc_gem5::PythonInitFunc
 {
     void
-    run(pybind11::module &systemc) override
+    run(pybind11::module_ &systemc) override
     {
         pybind11::class_<sc_core::sc_time> sc_time(systemc, "sc_time");
         sc_time

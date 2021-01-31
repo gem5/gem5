@@ -8,8 +8,8 @@
     BSD-style license that can be found in the LICENSE file.
 */
 
-#if defined(_MSC_VER) && _MSC_VER < 1910
-#  pragma warning(disable: 4702) // unreachable code in system header
+#if defined(_MSC_VER) && _MSC_VER < 1910  // VS 2015's MSVC
+#  pragma warning(disable: 4702) // unreachable code in system header (xatomic.h(382))
 #endif
 
 #include "pybind11_tests.h"
@@ -27,7 +27,8 @@ namespace pybind11 { namespace detail {
     struct holder_helper<ref<T>> {
         static const T *get(const ref<T> &p) { return p.get_ptr(); }
     };
-}}
+} // namespace detail
+} // namespace pybind11
 
 // The following is not required anymore for std::shared_ptr, but it should compile without error:
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
@@ -97,9 +98,9 @@ TEST_SUBMODULE(smart_ptr, m) {
     class MyObject1 : public Object {
     public:
         MyObject1(int value) : value(value) { print_created(this, toString()); }
-        std::string toString() const { return "MyObject1[" + std::to_string(value) + "]"; }
+        std::string toString() const override { return "MyObject1[" + std::to_string(value) + "]"; }
     protected:
-        virtual ~MyObject1() { print_destroyed(this); }
+        ~MyObject1() override { print_destroyed(this); }
     private:
         int value;
     };
@@ -175,39 +176,69 @@ TEST_SUBMODULE(smart_ptr, m) {
 
     // test_unique_nodelete
     // Object with a private destructor
+    class MyObject4;
+    static std::unordered_set<MyObject4 *> myobject4_instances;
     class MyObject4 {
     public:
-        MyObject4(int value) : value{value} { print_created(this); }
+        MyObject4(int value) : value{value} {
+            print_created(this);
+            myobject4_instances.insert(this);
+        }
         int value;
+
+        static void cleanupAllInstances() {
+            auto tmp = std::move(myobject4_instances);
+            myobject4_instances.clear();
+            for (auto o : tmp)
+                delete o;
+        }
     private:
-        ~MyObject4() { print_destroyed(this); }
+        ~MyObject4() {
+            myobject4_instances.erase(this);
+            print_destroyed(this);
+        }
     };
     py::class_<MyObject4, std::unique_ptr<MyObject4, py::nodelete>>(m, "MyObject4")
         .def(py::init<int>())
-        .def_readwrite("value", &MyObject4::value);
+        .def_readwrite("value", &MyObject4::value)
+        .def_static("cleanup_all_instances", &MyObject4::cleanupAllInstances);
 
     // test_unique_deleter
     // Object with std::unique_ptr<T, D> where D is not matching the base class
     // Object with a protected destructor
+    class MyObject4a;
+    static std::unordered_set<MyObject4a *> myobject4a_instances;
     class MyObject4a {
     public:
         MyObject4a(int i) {
             value = i;
             print_created(this);
+            myobject4a_instances.insert(this);
         };
         int value;
+
+        static void cleanupAllInstances() {
+            auto tmp = std::move(myobject4a_instances);
+            myobject4a_instances.clear();
+            for (auto o : tmp)
+                delete o;
+        }
     protected:
-        virtual ~MyObject4a() { print_destroyed(this); }
+        virtual ~MyObject4a() {
+            myobject4a_instances.erase(this);
+            print_destroyed(this);
+        }
     };
     py::class_<MyObject4a, std::unique_ptr<MyObject4a, py::nodelete>>(m, "MyObject4a")
         .def(py::init<int>())
-        .def_readwrite("value", &MyObject4a::value);
+        .def_readwrite("value", &MyObject4a::value)
+        .def_static("cleanup_all_instances", &MyObject4a::cleanupAllInstances);
 
     // Object derived but with public destructor and no Deleter in default holder
     class MyObject4b : public MyObject4a {
     public:
         MyObject4b(int i) : MyObject4a(i) { print_created(this); }
-        ~MyObject4b() { print_destroyed(this); }
+        ~MyObject4b() override { print_destroyed(this); }
     };
     py::class_<MyObject4b, MyObject4a>(m, "MyObject4b")
         .def(py::init<int>());
@@ -291,7 +322,8 @@ TEST_SUBMODULE(smart_ptr, m) {
         ~C() { print_destroyed(this); }
     };
     py::class_<C, custom_unique_ptr<C>>(m, "TypeWithMoveOnlyHolder")
-        .def_static("make", []() { return custom_unique_ptr<C>(new C); });
+        .def_static("make", []() { return custom_unique_ptr<C>(new C); })
+        .def_static("make_as_object", []() { return py::cast(custom_unique_ptr<C>(new C)); });
 
     // test_holder_with_addressof_operator
     struct TypeForHolderWithAddressOf {
@@ -337,7 +369,9 @@ TEST_SUBMODULE(smart_ptr, m) {
     // test_shared_ptr_gc
     // #187: issue involving std::shared_ptr<> return value policy & garbage collection
     struct ElementBase {
-        virtual ~ElementBase() { } /* Force creation of virtual table */
+        virtual ~ElementBase() = default; /* Force creation of virtual table */
+        ElementBase() = default;
+        ElementBase(const ElementBase&) = delete;
     };
     py::class_<ElementBase, std::shared_ptr<ElementBase>>(m, "ElementBase");
 

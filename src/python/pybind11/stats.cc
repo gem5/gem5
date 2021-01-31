@@ -78,23 +78,23 @@ namespace Stats {
 void
 pythonDump()
 {
-    py::module m = py::module::import("m5.stats");
+    py::module_ m = py::module_::import("m5.stats");
     m.attr("dump")();
 }
 
 void
 pythonReset()
 {
-    py::module m = py::module::import("m5.stats");
+    py::module_ m = py::module_::import("m5.stats");
     m.attr("reset")();
 }
 
 }
 
 void
-pybind_init_stats(py::module &m_native)
+pybind_init_stats(py::module_ &m_native)
 {
-    py::module m = m_native.def_submodule("stats");
+    py::module_ m = m_native.def_submodule("stats");
 
     m
         .def("initSimStats", &Stats::initSimStats)

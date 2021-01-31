@@ -678,9 +678,9 @@ StatTest::run()
 }
 
 static void
-stattest_init_pybind(py::module &m_internal)
+stattest_init_pybind(py::module_ &m_internal)
 {
-    py::module m = m_internal.def_submodule("stattest");
+    py::module_ m = m_internal.def_submodule("stattest");
 
     m
         .def("stattest_init", []() { __stattest().init(); })

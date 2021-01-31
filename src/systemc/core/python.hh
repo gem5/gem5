@@ -48,7 +48,7 @@ struct PythonInitFunc
 
     PythonInitFunc();
     ~PythonInitFunc() {}
-    virtual void run(pybind11::module &systemc) = 0;
+    virtual void run(pybind11::module_ &systemc) = 0;
 };
 
 } // namespace sc_gem5

@@ -11,8 +11,8 @@
 
 #include "../pytypes.h"
 
-NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
-NAMESPACE_BEGIN(detail)
+PYBIND11_NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
+PYBIND11_NAMESPACE_BEGIN(detail)
 // Forward declarations
 inline PyTypeObject *make_static_property_type();
 inline PyTypeObject *make_default_metaclass();
@@ -25,6 +25,7 @@ inline PyObject *make_object_base_type(PyTypeObject *metaclass);
 #    define PYBIND11_TLS_GET_VALUE(key) PyThread_tss_get((key))
 #    define PYBIND11_TLS_REPLACE_VALUE(key, value) PyThread_tss_set((key), (value))
 #    define PYBIND11_TLS_DELETE_VALUE(key) PyThread_tss_set((key), nullptr)
+#    define PYBIND11_TLS_FREE(key) PyThread_tss_free(key)
 #else
     // Usually an int but a long on Cygwin64 with Python 3.x
 #    define PYBIND11_TLS_KEY_INIT(var) decltype(PyThread_create_key()) var = 0
@@ -43,6 +44,7 @@ inline PyObject *make_object_base_type(PyTypeObject *metaclass);
 #        define PYBIND11_TLS_REPLACE_VALUE(key, value)                       \
              PyThread_set_key_value((key), (value))
 #    endif
+#    define PYBIND11_TLS_FREE(key) (void)key
 #endif
 
 // Python loads modules by default with dlopen with the RTLD_LOCAL flag; under libc++ and possibly
@@ -80,10 +82,10 @@ struct type_equal_to {
 template <typename value_type>
 using type_map = std::unordered_map<std::type_index, value_type, type_hash, type_equal_to>;
 
-struct overload_hash {
+struct override_hash {
     inline size_t operator()(const std::pair<const PyObject *, const char *>& v) const {
         size_t value = std::hash<const void *>()(v.first);
-        value ^= std::hash<const void *>()(v.second)  + 0x9e3779b9 + (value<<6) + (value>>2);
+        value ^= std::hash<const void *>()(v.second) + 0x9e3779b9 + (value<<6) + (value>>2);
         return value;
     }
 };
@@ -95,7 +97,7 @@ struct internals {
     type_map<type_info *> registered_types_cpp; // std::type_index -> pybind11's type information
     std::unordered_map<PyTypeObject *, std::vector<type_info *>> registered_types_py; // PyTypeObject* -> base type_info(s)
     std::unordered_multimap<const void *, instance*> registered_instances; // void * -> instance*
-    std::unordered_set<std::pair<const PyObject *, const char *>, overload_hash> inactive_overload_cache;
+    std::unordered_set<std::pair<const PyObject *, const char *>, override_hash> inactive_override_cache;
     type_map<std::vector<bool (*)(PyObject *, void *&)>> direct_conversions;
     std::unordered_map<const PyObject *, std::vector<PyObject *>> patients;
     std::forward_list<void (*) (std::exception_ptr)> registered_exception_translators;
@@ -108,6 +110,16 @@ struct internals {
 #if defined(WITH_THREAD)
     PYBIND11_TLS_KEY_INIT(tstate);
     PyInterpreterState *istate = nullptr;
+    ~internals() {
+        // This destructor is called *after* Py_Finalize() in finalize_interpreter().
+        // That *SHOULD BE* fine. The following details what happens when PyThread_tss_free is called.
+        // PYBIND11_TLS_FREE is PyThread_tss_free on python 3.7+. On older python, it does nothing.
+        // PyThread_tss_free calls PyThread_tss_delete and PyMem_RawFree.
+        // PyThread_tss_delete just calls TlsFree (on Windows) or pthread_key_delete (on *NIX). Neither
+        // of those have anything to do with CPython internals.
+        // PyMem_RawFree *requires* that the `tstate` be allocated with the CPython allocator.
+        PYBIND11_TLS_FREE(tstate);
+    }
 #endif
 };
 
@@ -138,53 +150,64 @@ struct type_info {
 };
 
 /// Tracks the `internals` and `type_info` ABI version independent of the main library version
-#define PYBIND11_INTERNALS_VERSION 3
+#define PYBIND11_INTERNALS_VERSION 4
 
 /// On MSVC, debug and release builds are not ABI-compatible!
 #if defined(_MSC_VER) && defined(_DEBUG)
-#   define PYBIND11_BUILD_TYPE "_debug"
+#  define PYBIND11_BUILD_TYPE "_debug"
 #else
-#   define PYBIND11_BUILD_TYPE ""
+#  define PYBIND11_BUILD_TYPE ""
 #endif
 
 /// Let's assume that different compilers are ABI-incompatible.
-#if defined(_MSC_VER)
-#   define PYBIND11_COMPILER_TYPE "_msvc"
-#elif defined(__INTEL_COMPILER)
-#   define PYBIND11_COMPILER_TYPE "_icc"
-#elif defined(__clang__)
-#   define PYBIND11_COMPILER_TYPE "_clang"
-#elif defined(__PGI)
-#   define PYBIND11_COMPILER_TYPE "_pgi"
-#elif defined(__MINGW32__)
-#   define PYBIND11_COMPILER_TYPE "_mingw"
-#elif defined(__CYGWIN__)
-#   define PYBIND11_COMPILER_TYPE "_gcc_cygwin"
-#elif defined(__GNUC__)
-#   define PYBIND11_COMPILER_TYPE "_gcc"
-#else
-#   define PYBIND11_COMPILER_TYPE "_unknown"
+/// A user can manually set this string if they know their
+/// compiler is compatible.
+#ifndef PYBIND11_COMPILER_TYPE
+#  if defined(_MSC_VER)
+#    define PYBIND11_COMPILER_TYPE "_msvc"
+#  elif defined(__INTEL_COMPILER)
+#    define PYBIND11_COMPILER_TYPE "_icc"
+#  elif defined(__clang__)
+#    define PYBIND11_COMPILER_TYPE "_clang"
+#  elif defined(__PGI)
+#    define PYBIND11_COMPILER_TYPE "_pgi"
+#  elif defined(__MINGW32__)
+#    define PYBIND11_COMPILER_TYPE "_mingw"
+#  elif defined(__CYGWIN__)
+#    define PYBIND11_COMPILER_TYPE "_gcc_cygwin"
+#  elif defined(__GNUC__)
+#    define PYBIND11_COMPILER_TYPE "_gcc"
+#  else
+#    define PYBIND11_COMPILER_TYPE "_unknown"
+#  endif
 #endif
 
-#if defined(_LIBCPP_VERSION)
-#  define PYBIND11_STDLIB "_libcpp"
-#elif defined(__GLIBCXX__) || defined(__GLIBCPP__)
-#  define PYBIND11_STDLIB "_libstdcpp"
-#else
-#  define PYBIND11_STDLIB ""
+/// Also standard libs
+#ifndef PYBIND11_STDLIB
+#  if defined(_LIBCPP_VERSION)
+#    define PYBIND11_STDLIB "_libcpp"
+#  elif defined(__GLIBCXX__) || defined(__GLIBCPP__)
+#    define PYBIND11_STDLIB "_libstdcpp"
+#  else
+#    define PYBIND11_STDLIB ""
+#  endif
 #endif
 
 /// On Linux/OSX, changes in __GXX_ABI_VERSION__ indicate ABI incompatibility.
-#if defined(__GXX_ABI_VERSION)
-#  define PYBIND11_BUILD_ABI "_cxxabi" PYBIND11_TOSTRING(__GXX_ABI_VERSION)
-#else
-#  define PYBIND11_BUILD_ABI ""
+#ifndef PYBIND11_BUILD_ABI
+#  if defined(__GXX_ABI_VERSION)
+#    define PYBIND11_BUILD_ABI "_cxxabi" PYBIND11_TOSTRING(__GXX_ABI_VERSION)
+#  else
+#    define PYBIND11_BUILD_ABI ""
+#  endif
 #endif
 
-#if defined(WITH_THREAD)
-#  define PYBIND11_INTERNALS_KIND ""
-#else
-#  define PYBIND11_INTERNALS_KIND "_without_thread"
+#ifndef PYBIND11_INTERNALS_KIND
+#  if defined(WITH_THREAD)
+#    define PYBIND11_INTERNALS_KIND ""
+#  else
+#    define PYBIND11_INTERNALS_KIND "_without_thread"
+#  endif
 #endif
 
 #define PYBIND11_INTERNALS_ID "__pybind11_internals_v" \
@@ -211,6 +234,7 @@ inline void translate_exception(std::exception_ptr p) {
     } catch (const std::length_error &e)     { PyErr_SetString(PyExc_ValueError,    e.what()); return;
     } catch (const std::out_of_range &e)     { PyErr_SetString(PyExc_IndexError,    e.what()); return;
     } catch (const std::range_error &e)      { PyErr_SetString(PyExc_ValueError,    e.what()); return;
+    } catch (const std::overflow_error &e)   { PyErr_SetString(PyExc_OverflowError, e.what()); return;
     } catch (const std::exception &e)        { PyErr_SetString(PyExc_RuntimeError,  e.what()); return;
     } catch (...) {
         PyErr_SetString(PyExc_RuntimeError, "Caught an unknown exception!");
@@ -242,7 +266,7 @@ PYBIND11_NOINLINE inline internals &get_internals() {
         const PyGILState_STATE state;
     } gil;
 
-    constexpr auto *id = PYBIND11_INTERNALS_ID;
+    PYBIND11_STR_TYPE id(PYBIND11_INTERNALS_ID);
     auto builtins = handle(PyEval_GetBuiltins());
     if (builtins.contains(id) && isinstance<capsule>(builtins[id])) {
         internals_pp = static_cast<internals **>(capsule(builtins[id]));
@@ -260,7 +284,10 @@ PYBIND11_NOINLINE inline internals &get_internals() {
         auto *&internals_ptr = *internals_pp;
         internals_ptr = new internals();
 #if defined(WITH_THREAD)
-        PyEval_InitThreads();
+
+        #if PY_VERSION_HEX < 0x03090000
+                PyEval_InitThreads();
+        #endif
         PyThreadState *tstate = PyThreadState_Get();
         #if PY_VERSION_HEX >= 0x03070000
             internals_ptr->tstate = PyThread_tss_alloc();
@@ -301,7 +328,7 @@ const char *c_str(Args &&...args) {
     return strings.front().c_str();
 }
 
-NAMESPACE_END(detail)
+PYBIND11_NAMESPACE_END(detail)
 
 /// Returns a named pointer that is shared among all extension modules (using the same
 /// pybind11 version) running in the current interpreter. Names starting with underscores
@@ -333,4 +360,4 @@ T &get_or_create_shared_data(const std::string &name) {
     return *ptr;
 }
 
-NAMESPACE_END(PYBIND11_NAMESPACE)
+PYBIND11_NAMESPACE_END(PYBIND11_NAMESPACE)

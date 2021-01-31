@@ -151,7 +151,7 @@ EmbeddedPython::initAll()
 }
 
 EmbeddedPyBind::EmbeddedPyBind(const char *_name,
-                               void (*init_func)(py::module &),
+                               void (*init_func)(py::module_ &),
                                const char *_base)
     : initFunc(init_func), registered(false), name(_name), base(_base)
 {
@@ -159,14 +159,14 @@ EmbeddedPyBind::EmbeddedPyBind(const char *_name,
 }
 
 EmbeddedPyBind::EmbeddedPyBind(const char *_name,
-                               void (*init_func)(py::module &))
+                               void (*init_func)(py::module_ &))
     : initFunc(init_func), registered(false), name(_name), base("")
 {
     getMap()[_name] = this;
 }
 
 void
-EmbeddedPyBind::init(py::module &m)
+EmbeddedPyBind::init(py::module_ &m)
 {
     if (!registered) {
         initFunc(m);
@@ -198,7 +198,7 @@ EmbeddedPyBind::initAll()
 {
     std::list<EmbeddedPyBind *> pending;
 
-    py::module m_m5 = py::module("_m5");
+    py::module_ m_m5 = py::module_("_m5");
     m_m5.attr("__package__") = py::cast("_m5");
 
     pybind_init_core(m_m5);

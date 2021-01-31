@@ -76,9 +76,9 @@ ignore(const char *expr)
 }
 
 void
-pybind_init_debug(py::module &m_native)
+pybind_init_debug(py::module_ &m_native)
 {
-    py::module m_debug = m_native.def_submodule("debug");
+    py::module_ m_debug = m_native.def_submodule("debug");
 
     m_debug
         .def("getAllFlagsVersion", []() { return Debug::allFlagsVersion; })
@@ -116,7 +116,7 @@ pybind_init_debug(py::module &m_native)
         ;
 
 
-    py::module m_trace = m_native.def_submodule("trace");
+    py::module_ m_trace = m_native.def_submodule("trace");
     m_trace
         .def("output", &output)
         .def("ignore", &ignore)

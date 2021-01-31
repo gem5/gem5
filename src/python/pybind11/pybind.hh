@@ -40,10 +40,10 @@
 
 #include "pybind11/pybind11.h"
 
-void pybind_init_core(pybind11::module &m_native);
-void pybind_init_debug(pybind11::module &m_native);
+void pybind_init_core(pybind11::module_ &m_native);
+void pybind_init_debug(pybind11::module_ &m_native);
 
-void pybind_init_event(pybind11::module &m_native);
-void pybind_init_stats(pybind11::module &m_native);
+void pybind_init_event(pybind11::module_ &m_native);
+void pybind_init_stats(pybind11::module_ &m_native);
 
 #endif

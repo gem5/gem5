@@ -99,9 +99,9 @@ class PyEvent : public Event
 };
 
 void
-pybind_init_event(py::module &m_native)
+pybind_init_event(py::module_ &m_native)
 {
-    py::module m = m_native.def_submodule("event");
+    py::module_ m = m_native.def_submodule("event");
 
     m.def("simulate", &simulate,
           py::arg("ticks") = MaxTick);

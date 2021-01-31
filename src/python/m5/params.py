@@ -1403,9 +1403,9 @@ const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
 namespace py = pybind11;
 
 static void
-module_init(py::module &m_internal)
+module_init(py::module_ &m_internal)
 {
-    py::module m = m_internal.def_submodule("enum_${name}");
+    py::module_ m = m_internal.def_submodule("enum_${name}");
 
 ''')
         if cls.is_class:

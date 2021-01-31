@@ -73,7 +73,7 @@ SimObject *
 PybindSimObjectResolver::resolveSimObject(const std::string &name)
 {
     // TODO
-    py::module m = py::module::import("m5.SimObject");
+    py::module_ m = py::module_::import("m5.SimObject");
     auto f = m.attr("resolveSimObject");
 
     return f(name).cast<SimObject *>();
@@ -95,9 +95,9 @@ const bool flag_NDEBUG = false;
 const bool flag_TRACING_ON = TRACING_ON;
 
 static void
-init_drain(py::module &m_native)
+init_drain(py::module_ &m_native)
 {
-    py::module m = m_native.def_submodule("drain");
+    py::module_ m = m_native.def_submodule("drain");
 
     py::enum_<DrainState>(m, "DrainState")
         .value("Running", DrainState::Running)
@@ -127,9 +127,9 @@ init_drain(py::module &m_native)
 }
 
 static void
-init_serialize(py::module &m_native)
+init_serialize(py::module_ &m_native)
 {
-    py::module m = m_native.def_submodule("serialize");
+    py::module_ m = m_native.def_submodule("serialize");
 
     py::class_<Serializable, std::unique_ptr<Serializable, py::nodelete>>(
         m, "Serializable")
@@ -140,9 +140,9 @@ init_serialize(py::module &m_native)
 }
 
 static void
-init_range(py::module &m_native)
+init_range(py::module_ &m_native)
 {
-    py::module m = m_native.def_submodule("range");
+    py::module_ m = m_native.def_submodule("range");
 
     py::class_<AddrRange>(m, "AddrRange")
         .def(py::init<>())
@@ -175,9 +175,9 @@ init_range(py::module &m_native)
 }
 
 static void
-init_net(py::module &m_native)
+init_net(py::module_ &m_native)
 {
-    py::module m = m_native.def_submodule("net");
+    py::module_ m = m_native.def_submodule("net");
 
     py::class_<Net::EthAddr>(m, "EthAddr")
         .def(py::init<>())
@@ -201,17 +201,17 @@ init_net(py::module &m_native)
 }
 
 static void
-init_loader(py::module &m_native)
+init_loader(py::module_ &m_native)
 {
-    py::module m = m_native.def_submodule("loader");
+    py::module_ m = m_native.def_submodule("loader");
 
     m.def("setInterpDir", &Loader::setInterpDir);
 }
 
 void
-pybind_init_core(py::module &m_native)
+pybind_init_core(py::module_ &m_native)
 {
-    py::module m_core = m_native.def_submodule("core");
+    py::module_ m_core = m_native.def_submodule("core");
 
     py::class_<Cycles>(m_core, "Cycles")
         .def(py::init<>())

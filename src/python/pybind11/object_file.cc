@@ -35,9 +35,9 @@ namespace
 {
 
 void
-objectfile_pybind(py::module &m_internal)
+objectfile_pybind(py::module_ &m_internal)
 {
-    py::module m = m_internal.def_submodule("object_file");
+    py::module_ m = m_internal.def_submodule("object_file");
 
     py::class_<Loader::ObjectFile>(m, "ObjectFile")
         .def("get_arch", [](const Loader::ObjectFile &obj) {

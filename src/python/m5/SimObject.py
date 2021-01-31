@@ -731,9 +731,9 @@ class MetaSimObject(type):
         code('''namespace py = pybind11;
 
 static void
-module_init(py::module &m_internal)
+module_init(py::module_ &m_internal)
 {
-    py::module m = m_internal.def_submodule("param_${cls}");
+    py::module_ m = m_internal.def_submodule("param_${cls}");
 ''')
         code.indent()
         if cls._base:

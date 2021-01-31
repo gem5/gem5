@@ -21,6 +21,7 @@ public:
     ExampleMandA() { print_default_created(this); }
     ExampleMandA(int value) : value(value) { print_created(this, value); }
     ExampleMandA(const ExampleMandA &e) : value(e.value) { print_copy_created(this); }
+    ExampleMandA(std::string&&) {}
     ExampleMandA(ExampleMandA &&e) : value(e.value) { print_move_created(this); }
     ~ExampleMandA() { print_destroyed(this); }
 
@@ -42,6 +43,8 @@ public:
     void add8(const int &other) { value += other; }                 // passing by const reference
     void add9(int *other) { value += *other; }                      // passing by pointer
     void add10(const int *other) { value += *other; }               // passing by const pointer
+
+    void consume_str(std::string&&) {}
 
     ExampleMandA self1() { return *this; }                          // return by value
     ExampleMandA &self2() { return *this; }                         // return by reference
@@ -105,76 +108,6 @@ struct TestPropRVP {
 UserType TestPropRVP::sv1(1);
 UserType TestPropRVP::sv2(1);
 
-// py::arg/py::arg_v testing: these arguments just record their argument when invoked
-class ArgInspector1 { public: std::string arg = "(default arg inspector 1)"; };
-class ArgInspector2 { public: std::string arg = "(default arg inspector 2)"; };
-class ArgAlwaysConverts { };
-namespace pybind11 { namespace detail {
-template <> struct type_caster<ArgInspector1> {
-public:
-    PYBIND11_TYPE_CASTER(ArgInspector1, _("ArgInspector1"));
-
-    bool load(handle src, bool convert) {
-        value.arg = "loading ArgInspector1 argument " +
-            std::string(convert ? "WITH" : "WITHOUT") + " conversion allowed.  "
-            "Argument value = " + (std::string) str(src);
-        return true;
-    }
-
-    static handle cast(const ArgInspector1 &src, return_value_policy, handle) {
-        return str(src.arg).release();
-    }
-};
-template <> struct type_caster<ArgInspector2> {
-public:
-    PYBIND11_TYPE_CASTER(ArgInspector2, _("ArgInspector2"));
-
-    bool load(handle src, bool convert) {
-        value.arg = "loading ArgInspector2 argument " +
-            std::string(convert ? "WITH" : "WITHOUT") + " conversion allowed.  "
-            "Argument value = " + (std::string) str(src);
-        return true;
-    }
-
-    static handle cast(const ArgInspector2 &src, return_value_policy, handle) {
-        return str(src.arg).release();
-    }
-};
-template <> struct type_caster<ArgAlwaysConverts> {
-public:
-    PYBIND11_TYPE_CASTER(ArgAlwaysConverts, _("ArgAlwaysConverts"));
-
-    bool load(handle, bool convert) {
-        return convert;
-    }
-
-    static handle cast(const ArgAlwaysConverts &, return_value_policy, handle) {
-        return py::none().release();
-    }
-};
-}}
-
-// test_custom_caster_destruction
-class DestructionTester {
-public:
-    DestructionTester() { print_default_created(this); }
-    ~DestructionTester() { print_destroyed(this); }
-    DestructionTester(const DestructionTester &) { print_copy_created(this); }
-    DestructionTester(DestructionTester &&) { print_move_created(this); }
-    DestructionTester &operator=(const DestructionTester &) { print_copy_assigned(this); return *this; }
-    DestructionTester &operator=(DestructionTester &&) { print_move_assigned(this); return *this; }
-};
-namespace pybind11 { namespace detail {
-template <> struct type_caster<DestructionTester> {
-    PYBIND11_TYPE_CASTER(DestructionTester, _("DestructionTester"));
-    bool load(handle, bool) { return true; }
-
-    static handle cast(const DestructionTester &, return_value_policy, handle) {
-        return py::bool_(true).release();
-    }
-};
-}}
-
 // Test None-allowed py::arg argument policy
 class NoneTester { public: int answer = 42; };
 int none1(const NoneTester &obj) { return obj.answer; }
@@ -207,11 +140,20 @@ public:
     double sum() const { return rw_value + ro_value; }
 };
 
+// Test explicit lvalue ref-qualification
+struct RefQualified {
+    int value = 0;
+
+    void refQualified(int other) & { value += other; }
+    int constRefQualified(int other) const & { return value + other; }
+};
+
 TEST_SUBMODULE(methods_and_attributes, m) {
     // test_methods_and_attributes
     py::class_<ExampleMandA> emna(m, "ExampleMandA");
     emna.def(py::init<>())
         .def(py::init<int>())
+        .def(py::init<std::string&&>())
         .def(py::init<const ExampleMandA&>())
         .def("add1", &ExampleMandA::add1)
         .def("add2", &ExampleMandA::add2)
@@ -223,6 +165,7 @@ TEST_SUBMODULE(methods_and_attributes, m) {
         .def("add8", &ExampleMandA::add8)
         .def("add9", &ExampleMandA::add9)
         .def("add10", &ExampleMandA::add10)
+        .def("consume_str", &ExampleMandA::consume_str)
         .def("self1", &ExampleMandA::self1)
         .def("self2", &ExampleMandA::self2)
         .def("self3", &ExampleMandA::self3)
@@ -264,12 +207,12 @@ TEST_SUBMODULE(methods_and_attributes, m) {
         // test_no_mixed_overloads
         // Raise error if trying to mix static/non-static overloads on the same name:
         .def_static("add_mixed_overloads1", []() {
-            auto emna = py::reinterpret_borrow<py::class_<ExampleMandA>>(py::module::import("pybind11_tests.methods_and_attributes").attr("ExampleMandA"));
+            auto emna = py::reinterpret_borrow<py::class_<ExampleMandA>>(py::module_::import("pybind11_tests.methods_and_attributes").attr("ExampleMandA"));
             emna.def       ("overload_mixed1", static_cast<py::str (ExampleMandA::*)(int, int)>(&ExampleMandA::overloaded))
                 .def_static("overload_mixed1", static_cast<py::str (              *)(float   )>(&ExampleMandA::overloaded));
         })
         .def_static("add_mixed_overloads2", []() {
-            auto emna = py::reinterpret_borrow<py::class_<ExampleMandA>>(py::module::import("pybind11_tests.methods_and_attributes").attr("ExampleMandA"));
+            auto emna = py::reinterpret_borrow<py::class_<ExampleMandA>>(py::module_::import("pybind11_tests.methods_and_attributes").attr("ExampleMandA"));
             emna.def_static("overload_mixed2", static_cast<py::str (              *)(float   )>(&ExampleMandA::overloaded))
                 .def       ("overload_mixed2", static_cast<py::str (ExampleMandA::*)(int, int)>(&ExampleMandA::overloaded));
         })
@@ -341,11 +284,18 @@ TEST_SUBMODULE(methods_and_attributes, m) {
     py::class_<MetaclassOverride>(m, "MetaclassOverride", py::metaclass((PyObject *) &PyType_Type))
         .def_property_readonly_static("readonly", [](py::object) { return 1; });
 
+    // test_overload_ordering
+    m.def("overload_order", [](std::string) { return 1; });
+    m.def("overload_order", [](std::string) { return 2; });
+    m.def("overload_order", [](int) { return 3; });
+    m.def("overload_order", [](int) { return 4; }, py::prepend{});
+
 #if !defined(PYPY_VERSION)
     // test_dynamic_attributes
     class DynamicClass {
     public:
         DynamicClass() { print_default_created(this); }
+        DynamicClass(const DynamicClass&) = delete;
         ~DynamicClass() { print_destroyed(this); }
     };
     py::class_<DynamicClass>(m, "DynamicClass", py::dynamic_attr())
@@ -356,33 +306,6 @@ TEST_SUBMODULE(methods_and_attributes, m) {
         .def(py::init());
 #endif
 
-    // test_noconvert_args
-    //
-    // Test converting.  The ArgAlwaysConverts is just there to make the first no-conversion pass
-    // fail so that our call always ends up happening via the second dispatch (the one that allows
-    // some conversion).
-    class ArgInspector {
-    public:
-        ArgInspector1 f(ArgInspector1 a, ArgAlwaysConverts) { return a; }
-        std::string g(ArgInspector1 a, const ArgInspector1 &b, int c, ArgInspector2 *d, ArgAlwaysConverts) {
-            return a.arg + "\n" + b.arg + "\n" + std::to_string(c) + "\n" + d->arg;
-        }
-        static ArgInspector2 h(ArgInspector2 a, ArgAlwaysConverts) { return a; }
-    };
-    py::class_<ArgInspector>(m, "ArgInspector")
-        .def(py::init<>())
-        .def("f", &ArgInspector::f, py::arg(), py::arg() = ArgAlwaysConverts())
-        .def("g", &ArgInspector::g, "a"_a.noconvert(), "b"_a, "c"_a.noconvert()=13, "d"_a=ArgInspector2(), py::arg() = ArgAlwaysConverts())
-        .def_static("h", &ArgInspector::h, py::arg().noconvert(), py::arg() = ArgAlwaysConverts())
-        ;
-    m.def("arg_inspect_func", [](ArgInspector2 a, ArgInspector1 b, ArgAlwaysConverts) { return a.arg + "\n" + b.arg; },
-            py::arg().noconvert(false), py::arg_v(nullptr, ArgInspector1()).noconvert(true), py::arg() = ArgAlwaysConverts());
-
-    m.def("floats_preferred", [](double f) { return 0.5 * f; }, py::arg("f"));
-    m.def("floats_only", [](double f) { return 0.5 * f; }, py::arg("f").noconvert());
-    m.def("ints_preferred", [](int i) { return i / 2; }, py::arg("i"));
-    m.def("ints_only", [](int i) { return i / 2; }, py::arg("i").noconvert());
-
     // test_bad_arg_default
     // Issue/PR #648: bad arg default debugging output
 #if !defined(NDEBUG)
@@ -391,27 +314,32 @@ TEST_SUBMODULE(methods_and_attributes, m) {
     m.attr("debug_enabled") = false;
 #endif
     m.def("bad_arg_def_named", []{
-        auto m = py::module::import("pybind11_tests");
+        auto m = py::module_::import("pybind11_tests");
         m.def("should_fail", [](int, UnregisteredType) {}, py::arg(), py::arg("a") = UnregisteredType());
     });
     m.def("bad_arg_def_unnamed", []{
-        auto m = py::module::import("pybind11_tests");
+        auto m = py::module_::import("pybind11_tests");
         m.def("should_fail", [](int, UnregisteredType) {}, py::arg(), py::arg() = UnregisteredType());
     });
+
+    // [workaround(intel)] ICC 20/21 breaks with py::arg().stuff, using py::arg{}.stuff works.
 
     // test_accepts_none
     py::class_<NoneTester, std::shared_ptr<NoneTester>>(m, "NoneTester")
         .def(py::init<>());
-    m.def("no_none1", &none1, py::arg().none(false));
-    m.def("no_none2", &none2, py::arg().none(false));
-    m.def("no_none3", &none3, py::arg().none(false));
-    m.def("no_none4", &none4, py::arg().none(false));
-    m.def("no_none5", &none5, py::arg().none(false));
+    m.def("no_none1", &none1, py::arg{}.none(false));
+    m.def("no_none2", &none2, py::arg{}.none(false));
+    m.def("no_none3", &none3, py::arg{}.none(false));
+    m.def("no_none4", &none4, py::arg{}.none(false));
+    m.def("no_none5", &none5, py::arg{}.none(false));
     m.def("ok_none1", &none1);
-    m.def("ok_none2", &none2, py::arg().none(true));
+    m.def("ok_none2", &none2, py::arg{}.none(true));
     m.def("ok_none3", &none3);
-    m.def("ok_none4", &none4, py::arg().none(true));
+    m.def("ok_none4", &none4, py::arg{}.none(true));
     m.def("ok_none5", &none5);
+
+    m.def("no_none_kwarg", &none2, "a"_a.none(false));
+    m.def("no_none_kwarg_kw_only", &none2, py::kw_only(), "a"_a.none(false));
 
     // test_str_issue
     // Issue #283: __str__ called on uninitialized instance when constructor arguments invalid
@@ -446,15 +374,10 @@ TEST_SUBMODULE(methods_and_attributes, m) {
     using Adapted = decltype(py::method_adaptor<RegisteredDerived>(&RegisteredDerived::do_nothing));
     static_assert(std::is_same<Adapted, void (RegisteredDerived::*)() const>::value, "");
 
-    // test_custom_caster_destruction
-    // Test that `take_ownership` works on types with a custom type caster when given a pointer
-
-    // default policy: don't take ownership:
-    m.def("custom_caster_no_destroy", []() { static auto *dt = new DestructionTester(); return dt; });
-
-    m.def("custom_caster_destroy", []() { return new DestructionTester(); },
-            py::return_value_policy::take_ownership); // Takes ownership: destroy when finished
-    m.def("custom_caster_destroy_const", []() -> const DestructionTester * { return new DestructionTester(); },
-            py::return_value_policy::take_ownership); // Likewise (const doesn't inhibit destruction)
-    m.def("destruction_tester_cstats", &ConstructorStats::get<DestructionTester>, py::return_value_policy::reference);
+    // test_methods_and_attributes
+    py::class_<RefQualified>(m, "RefQualified")
+        .def(py::init<>())
+        .def_readonly("value", &RefQualified::value)
+        .def("refQualified", &RefQualified::refQualified)
+        .def("constRefQualified", &RefQualified::constRefQualified);
 }
