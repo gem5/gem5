@@ -54,12 +54,12 @@
 #include <unordered_map>
 
 #include "base/types.hh"
+#include "cpu/thread_context.hh"
 #include "sim/emul_driver.hh"
 
 struct HSADriverParams;
 class HSADevice;
 class PortProxy;
-class ThreadContext;
 
 class HSADriver : public EmulatedDriver
 {
