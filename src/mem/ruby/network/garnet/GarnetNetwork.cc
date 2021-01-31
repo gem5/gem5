@@ -500,6 +500,25 @@ GarnetNetwork::regStats()
         .name(name() + ".avg_vc_load")
         .flags(Stats::pdf | Stats::total | Stats::nozero | Stats::oneline)
         ;
+
+    // Traffic distribution
+    for (int source = 0; source < m_routers.size(); ++source) {
+        m_data_traffic_distribution.push_back(std::vector<Stats::Scalar *>());
+        m_ctrl_traffic_distribution.push_back(std::vector<Stats::Scalar *>());
+
+        for (int dest = 0; dest < m_routers.size(); ++dest) {
+            Stats::Scalar *data_packets = new Stats::Scalar();
+            Stats::Scalar *ctrl_packets = new Stats::Scalar();
+
+            data_packets->name(name() + ".data_traffic_distribution." + "n" +
+                    std::to_string(source) + "." + "n" + std::to_string(dest));
+            m_data_traffic_distribution[source].push_back(data_packets);
+
+            ctrl_packets->name(name() + ".ctrl_traffic_distribution." + "n" +
+                    std::to_string(source) + "." + "n" + std::to_string(dest));
+            m_ctrl_traffic_distribution[source].push_back(ctrl_packets);
+        }
+    }
 }
 
 void
@@ -552,6 +571,19 @@ void
 GarnetNetwork::print(std::ostream& out) const
 {
     out << "[GarnetNetwork]";
+}
+
+void
+GarnetNetwork::update_traffic_distribution(RouteInfo route)
+{
+    int src_node = route.src_router;
+    int dest_node = route.dest_router;
+    int vnet = route.vnet;
+
+    if (m_vnet_type[vnet] == DATA_VNET_)
+        (*m_data_traffic_distribution[src_node][dest_node])++;
+    else
+        (*m_ctrl_traffic_distribution[src_node][dest_node])++;
 }
 
 uint32_t

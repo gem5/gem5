@@ -142,6 +142,8 @@ class GarnetNetwork : public Network
         m_total_hops += hops;
     }
 
+    void update_traffic_distribution(RouteInfo route);
+
   protected:
     // Configuration
     int m_num_rows;
@@ -184,6 +186,9 @@ class GarnetNetwork : public Network
 
     Stats::Scalar  m_total_hops;
     Stats::Formula m_avg_hops;
+
+    std::vector<std::vector<Stats::Scalar *>> m_data_traffic_distribution;
+    std::vector<std::vector<Stats::Scalar *>> m_ctrl_traffic_distribution;
 
   private:
     GarnetNetwork(const GarnetNetwork& obj);

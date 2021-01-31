@@ -426,6 +426,7 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         route.hops_traversed = -1;
 
         m_net_ptr->increment_injected_packets(vnet);
+        m_net_ptr->update_traffic_distribution(route);
         for (int i = 0; i < num_flits; i++) {
             m_net_ptr->increment_injected_flits(vnet);
             flit *fl = new flit(i, vc, vnet, route, num_flits, new_msg_ptr,
