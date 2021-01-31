@@ -483,7 +483,7 @@
             0x0: LOOPNE(Jb);
             0x1: LOOPE(Jb);
             0x2: LOOP(Jb);
-            0x3: JRCX(Jb);
+            0x3: JRCXZ(Jb);
             0x4: IN(rAb,Ib);
             0x5: IN(rAv,Iv);
             0x6: OUT(Ib,rAb);

@@ -210,8 +210,10 @@ def macroop JNO_I
     wrip t1, t2, flags=(nCOF,)
 };
 
-def macroop JRCX_I
+def macroop JRCXZ_I
 {
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
     .control_direct
 
     rdip t1
