@@ -99,16 +99,9 @@ CortexR52Cluster::CortexR52Cluster(const Params &p) :
     for (int i = 0; i < p.cores.size(); i++)
         p.cores[i]->setCluster(this, i);
 
-    sc_core::sc_attr_base *base;
-
-    base = evs->get_attribute(Iris::Gem5CpuClusterAttributeName);
-    auto *gem5_cluster_attr =
-        dynamic_cast<sc_core::sc_attribute<CortexR52Cluster *> *>(base);
-    panic_if(base && !gem5_cluster_attr,
-             "The EVS gem5 CPU cluster attribute was not of type "
-             "sc_attribute<FastModel::CortexR52Cluster *>.");
-    if (gem5_cluster_attr)
-        gem5_cluster_attr->value = this;
+    Iris::BaseCpuEvs *e = dynamic_cast<Iris::BaseCpuEvs *>(evs);
+    panic_if(!e, "EVS should be of type Iris::BaseCpuEvs");
+    e->setCluster(this);
 
     set_evs_param("core.CLUSTER_ID", params().CLUSTER_ID);
     set_evs_param("core.DBGROMADDR", params().DBGROMADDR);

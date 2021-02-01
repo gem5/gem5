@@ -39,19 +39,23 @@ namespace FastModel
 
 template <class Types>
 void
-ScxEvsCortexA76<Types>::clockChangeHandler()
+ScxEvsCortexA76<Types>::setClkPeriod(Tick clk_period)
 {
-    clockRateControl->set_mul_div(SimClock::Int::s, clockPeriod.value);
+    clockRateControl->set_mul_div(SimClock::Int::s, clk_period);
+}
+
+template <class Types>
+void
+ScxEvsCortexA76<Types>::setCluster(SimObject *cluster)
+{
+    gem5CpuCluster = dynamic_cast<CortexA76Cluster *>(cluster);
+    panic_if(!gem5CpuCluster, "Cluster should be of type CortexA76Cluster");
 }
 
 template <class Types>
 ScxEvsCortexA76<Types>::ScxEvsCortexA76(
         const sc_core::sc_module_name &mod_name, const Params &p) :
     Base(mod_name), amba(Base::amba, p.name + ".amba", -1),
-    clockChanged(Iris::ClockEventName.c_str()),
-    clockPeriod(Iris::PeriodAttributeName.c_str()),
-    gem5CpuCluster(Iris::Gem5CpuClusterAttributeName.c_str()),
-    sendFunctional(Iris::SendFunctionalAttributeName.c_str()),
     params(p)
 {
     for (int i = 0; i < CoreCount; i++) {
@@ -82,15 +86,6 @@ ScxEvsCortexA76<Types>::ScxEvsCortexA76(
     }
 
     clockRateControl.bind(this->clock_rate_s);
-
-    this->add_attribute(gem5CpuCluster);
-    this->add_attribute(clockPeriod);
-    SC_METHOD(clockChangeHandler);
-    this->dont_initialize();
-    this->sensitive << clockChanged;
-
-    sendFunctional.value = [this](PacketPtr pkt) { sendFunc(pkt); };
-    this->add_attribute(sendFunctional);
 }
 
 template <class Types>
@@ -109,12 +104,10 @@ ScxEvsCortexA76<Types>::before_end_of_elaboration()
 {
     Base::before_end_of_elaboration();
 
-    auto *cluster = gem5CpuCluster.value;
-
-    auto set_on_change = [cluster](
+    auto set_on_change = [this](
             SignalReceiver &recv, ArmInterruptPinGen *gen, int num)
     {
-        auto *pin = gen->get(cluster->getCore(num)->getContext(0));
+        auto *pin = gen->get(gem5CpuCluster->getCore(num)->getContext(0));
         auto handler = [pin](bool status)
         {
             status ? pin->raise() : pin->clear();
@@ -123,15 +116,15 @@ ScxEvsCortexA76<Types>::before_end_of_elaboration()
     };
 
     for (int i = 0; i < CoreCount; i++) {
-        set_on_change(*cnthpirq[i], cluster->params().cnthpirq, i);
-        set_on_change(*cnthvirq[i], cluster->params().cnthvirq, i);
-        set_on_change(*cntpsirq[i], cluster->params().cntpsirq, i);
-        set_on_change(*cntvirq[i], cluster->params().cntvirq, i);
-        set_on_change(*commirq[i], cluster->params().commirq, i);
-        set_on_change(*ctidbgirq[i], cluster->params().ctidbgirq, i);
-        set_on_change(*pmuirq[i], cluster->params().pmuirq, i);
-        set_on_change(*vcpumntirq[i], cluster->params().vcpumntirq, i);
-        set_on_change(*cntpnsirq[i], cluster->params().cntpnsirq, i);
+        set_on_change(*cnthpirq[i], gem5CpuCluster->params().cnthpirq, i);
+        set_on_change(*cnthvirq[i], gem5CpuCluster->params().cnthvirq, i);
+        set_on_change(*cntpsirq[i], gem5CpuCluster->params().cntpsirq, i);
+        set_on_change(*cntvirq[i], gem5CpuCluster->params().cntvirq, i);
+        set_on_change(*commirq[i], gem5CpuCluster->params().commirq, i);
+        set_on_change(*ctidbgirq[i], gem5CpuCluster->params().ctidbgirq, i);
+        set_on_change(*pmuirq[i], gem5CpuCluster->params().pmuirq, i);
+        set_on_change(*vcpumntirq[i], gem5CpuCluster->params().vcpumntirq, i);
+        set_on_change(*cntpnsirq[i], gem5CpuCluster->params().cntpnsirq, i);
     }
 }
 

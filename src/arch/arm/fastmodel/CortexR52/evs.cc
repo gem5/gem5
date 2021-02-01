@@ -27,6 +27,7 @@
 
 #include "arch/arm/fastmodel/CortexR52/evs.hh"
 
+#include "arch/arm/fastmodel/CortexR52/cortex_r52.hh"
 #include "arch/arm/fastmodel/iris/cpu.hh"
 #include "base/logging.hh"
 #include "sim/core.hh"
@@ -37,9 +38,17 @@ namespace FastModel
 
 template <class Types>
 void
-ScxEvsCortexR52<Types>::clockChangeHandler()
+ScxEvsCortexR52<Types>::setClkPeriod(Tick clk_period)
 {
-    clockRateControl->set_mul_div(SimClock::Int::s, clockPeriod.value);
+    clockRateControl->set_mul_div(SimClock::Int::s, clk_period);
+}
+
+template <class Types>
+void
+ScxEvsCortexR52<Types>::setCluster(SimObject *cluster)
+{
+    gem5CpuCluster = dynamic_cast<CortexR52Cluster *>(cluster);
+    panic_if(!gem5CpuCluster, "Cluster should be of type CortexR52Cluster");
 }
 
 template <class Types>
@@ -61,10 +70,6 @@ template <class Types>
 ScxEvsCortexR52<Types>::ScxEvsCortexR52(
         const sc_core::sc_module_name &mod_name, const Params &p) :
     Base(mod_name),
-    clockChanged(Iris::ClockEventName.c_str()),
-    clockPeriod(Iris::PeriodAttributeName.c_str()),
-    gem5CpuCluster(Iris::Gem5CpuClusterAttributeName.c_str()),
-    sendFunctional(Iris::SendFunctionalAttributeName.c_str()),
     params(p)
 {
     for (int i = 0; i < CoreCount; i++)
@@ -77,15 +82,6 @@ ScxEvsCortexR52<Types>::ScxEvsCortexR52(
 
     clockRateControl.bind(this->clock_rate_s);
     signalInterrupt.bind(this->signal_interrupt);
-
-    this->add_attribute(gem5CpuCluster);
-    this->add_attribute(clockPeriod);
-    SC_METHOD(clockChangeHandler);
-    this->dont_initialize();
-    this->sensitive << clockChanged;
-
-    sendFunctional.value = [this](PacketPtr pkt) { sendFunc(pkt); };
-    this->add_attribute(sendFunctional);
 }
 
 template <class Types>

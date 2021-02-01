@@ -36,30 +36,9 @@ namespace Iris
 
 BaseCPU::BaseCPU(const BaseCPUParams &params, sc_core::sc_module *_evs) :
     ::BaseCPU::BaseCPU(params), evs(_evs),
-    clockEvent(nullptr), periodAttribute(nullptr)
+    evs_base_cpu(dynamic_cast<Iris::BaseCpuEvs *>(_evs))
 {
-    sc_core::sc_attr_base *base;
-
-    const auto &event_vec = evs->get_child_events();
-    auto event_it = std::find_if(event_vec.begin(), event_vec.end(),
-            [](const sc_core::sc_event *e) -> bool {
-                return e->basename() == ClockEventName; });
-    if (event_it != event_vec.end())
-        clockEvent = *event_it;
-
-    base = evs->get_attribute(PeriodAttributeName);
-    periodAttribute = dynamic_cast<sc_core::sc_attribute<Tick> *>(base);
-    panic_if(base && !periodAttribute,
-            "The EVS clock period attribute is not of type "
-            "sc_attribute<Tick>.");
-
-    base = evs->get_attribute(SendFunctionalAttributeName);
-    sendFunctional =
-        dynamic_cast<sc_core::sc_attribute<PortProxy::SendFunctionalFunc> *>(
-                base);
-    panic_if(base && !sendFunctional,
-            "The EVS send functional attribute is not of type "
-            "sc_attribute<PortProxy::SendFunctionalFunc>.");
+    panic_if(!evs_base_cpu, "EVS should be of type BaseCpuEvs");
 
     // Make sure fast model knows we're using debugging mechanisms to control
     // the simulation, and it shouldn't shut down if simulation time stops

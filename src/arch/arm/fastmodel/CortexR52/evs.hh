@@ -32,6 +32,7 @@
 
 #include "arch/arm/fastmodel/amba_ports.hh"
 #include "arch/arm/fastmodel/common/signal_receiver.hh"
+#include "arch/arm/fastmodel/iris/cpu.hh"
 #include "arch/arm/fastmodel/protocol/exported_clock_rate_control.hh"
 #include "arch/arm/fastmodel/protocol/signal_interrupt.hh"
 #include "dev/intpin.hh"
@@ -54,7 +55,7 @@ namespace FastModel
 class CortexR52Cluster;
 
 template <class Types>
-class ScxEvsCortexR52 : public Types::Base
+class ScxEvsCortexR52 : public Types::Base, public Iris::BaseCpuEvs
 {
   private:
     static const int CoreCount = Types::CoreCount;
@@ -105,14 +106,7 @@ class ScxEvsCortexR52 : public Types::Base
 
     std::vector<std::unique_ptr<ClstrInt>> spis;
 
-    sc_core::sc_event clockChanged;
-    sc_core::sc_attribute<Tick> clockPeriod;
-    sc_core::sc_attribute<CortexR52Cluster *> gem5CpuCluster;
-    sc_core::sc_attribute<PortProxy::SendFunctionalFunc> sendFunctional;
-
-    void sendFunc(PacketPtr pkt);
-
-    void clockChangeHandler();
+    CortexR52Cluster *gem5CpuCluster;
 
     const Params &params;
 
@@ -141,6 +135,12 @@ class ScxEvsCortexR52 : public Types::Base
         Base::start_of_simulation();
     }
     void start_of_simulation() override {}
+
+    void sendFunc(PacketPtr pkt) override;
+
+    void setClkPeriod(Tick clk_period) override;
+
+    void setCluster(SimObject *cluster) override;
 };
 
 struct ScxEvsCortexR52x1Types
