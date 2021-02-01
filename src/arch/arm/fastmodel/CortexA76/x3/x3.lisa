@@ -35,7 +35,7 @@ component CortexA76x3
         // Clocks.
         clock1Hz : MasterClock();
         clockDiv : ClockDivider();
-        clockDivPeriph : ClockDivider(mul=0x01800000);
+        clockDivPeriph : ClockDivider();
     }
 
     connection
@@ -75,6 +75,13 @@ component CortexA76x3
         behavior set_mul_div(uint64_t mul, uint64_t div)
         {
             clockDiv.rate.set64(mul, div);
+        }
+    }
+    slave port<ExportedClockRateControl> periph_clock_rate_s
+    {
+        behavior set_mul_div(uint64_t mul, uint64_t div)
+        {
+            clockDivPeriph.rate.set64(mul, div);
         }
     }
     slave port<GICv3Comms> redistributor[3];

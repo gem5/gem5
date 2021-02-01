@@ -63,6 +63,7 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
     SC_HAS_PROCESS(ScxEvsCortexA76);
 
     ClockRateControlInitiatorSocket clockRateControl;
+    ClockRateControlInitiatorSocket periphClockRateControl;
 
     typedef sc_gem5::TlmTargetBaseWrapper<
         64, svp_gicv3_comms::gicv3_comms_fw_if,
@@ -104,6 +105,8 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
     void sendFunc(PacketPtr pkt) override;
 
     void setClkPeriod(Tick clk_period) override;
+
+    void setSysCounterFrq(uint64_t sys_counter_frq) override;
 
     void setCluster(SimObject *cluster) override;
 };

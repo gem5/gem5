@@ -45,6 +45,13 @@ ScxEvsCortexR52<Types>::setClkPeriod(Tick clk_period)
 
 template <class Types>
 void
+ScxEvsCortexR52<Types>::setSysCounterFrq(uint64_t sys_counter_frq)
+{
+    panic("Not implemented for R52.");
+}
+
+template <class Types>
+void
 ScxEvsCortexR52<Types>::setCluster(SimObject *cluster)
 {
     gem5CpuCluster = dynamic_cast<CortexR52Cluster *>(cluster);

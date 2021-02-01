@@ -41,6 +41,8 @@ CortexA76::initState()
 {
     for (auto *tc : threadContexts)
         tc->setMiscRegNoEffect(ArmISA::MISCREG_CNTFRQ_EL0, params().cntfrq);
+
+    evs_base_cpu->setSysCounterFrq(cluster->params().cntfrq);
 }
 
 void

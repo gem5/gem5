@@ -46,6 +46,13 @@ ScxEvsCortexA76<Types>::setClkPeriod(Tick clk_period)
 
 template <class Types>
 void
+ScxEvsCortexA76<Types>::setSysCounterFrq(uint64_t sys_counter_frq)
+{
+    periphClockRateControl->set_mul_div(sys_counter_frq, 1);
+}
+
+template <class Types>
+void
 ScxEvsCortexA76<Types>::setCluster(SimObject *cluster)
 {
     gem5CpuCluster = dynamic_cast<CortexA76Cluster *>(cluster);
@@ -86,6 +93,7 @@ ScxEvsCortexA76<Types>::ScxEvsCortexA76(
     }
 
     clockRateControl.bind(this->clock_rate_s);
+    periphClockRateControl.bind(this->periph_clock_rate_s);
 }
 
 template <class Types>

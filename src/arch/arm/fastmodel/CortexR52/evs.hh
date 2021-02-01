@@ -140,6 +140,8 @@ class ScxEvsCortexR52 : public Types::Base, public Iris::BaseCpuEvs
 
     void setClkPeriod(Tick clk_period) override;
 
+    void setSysCounterFrq(uint64_t sys_counter_frq) override;
+
     void setCluster(SimObject *cluster) override;
 };
 
