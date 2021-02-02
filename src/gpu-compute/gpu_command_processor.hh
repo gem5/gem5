@@ -87,7 +87,7 @@ class GPUCommandProcessor : public HSADevice
 
     void updateHsaSignal(Addr signal_handle, uint64_t signal_value) override;
 
-    uint64_t functionalReadHsaSignal(Addr signal_handle);
+    uint64_t functionalReadHsaSignal(Addr signal_handle) override;
 
     Addr getHsaSignalValueAddr(Addr signal_handle)
     {
