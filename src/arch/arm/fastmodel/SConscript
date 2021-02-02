@@ -36,6 +36,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from itertools import cycle
+import shlex
 
 Import('*')
 
@@ -306,16 +307,18 @@ class ArmFastModelComponent(object):
         self.libs = static_lib_nodes + shared_libs
         self.libpaths = [simgen_dir]
         self.rpaths = [simgen_dir]
+        self.log = gen_dir.File('build_%s.log' % tlc)
+        self.simgen_cmd = env.subst('${SIMGEN} -p %s --configuration %s -b ' +
+            '--verbose off --num-build-cpus 100 --build-dir %s >%s') % \
+            (shlex.quote(project_file.srcnode().abspath),
+             shlex.quote(config_name),
+             shlex.quote(simgen_dir.abspath),
+             shlex.quote(self.log.abspath))
 
-        simgen_cmd = env.subst('${SIMGEN} -p %s --configuration %s -b ' +
-            '--verbose off --num-build-cpus 100 --build-dir %s') % \
-            (project_file.srcnode().abspath, config_name, simgen_dir.abspath)
-        if not GetOption('verbose'):
-            simgen_cmd += ' > /dev/null'
-        simgen_action = MakeAction(simgen_cmd, Transform('SIMGEN'))
         sources = [project_file]
         sources.extend(extra_deps)
-        env.Command(lib_nodes + self.headers, sources, simgen_action)
+        env.Command(lib_nodes + self.headers + [self.log], sources,
+                    Action(self.simgen_builder, Transform('SIMGEN')))
         # Distribute simgen actions among ARM license slots. All actions which
         # have a given license as a "side effect" will be serialized relative
         # to each other, meaning the number of licenses being used concurrently
@@ -330,6 +333,16 @@ class ArmFastModelComponent(object):
         env.AddLocalRPATH(*self.rpaths)
         env.Append(CPPPATH=self.headerpaths)
         env.Prepend(LIBS=self.libs)
+
+    def simgen_builder(self, target, source, env):
+        cmd = self.simgen_cmd
+        if not GetOption('verbose'):
+            cmd = "@" + cmd
+        res = env.Execute(cmd)
+        # Print output when execution return non-zero or in verbose mode.
+        if res or GetOption('verbose'):
+            env.Execute('@cat %s' % self.log.abspath)
+        return res
 
 
 class ArmFastModelBin(Executable):
