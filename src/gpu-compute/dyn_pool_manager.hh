@@ -46,7 +46,7 @@ class DynPoolManager : public PoolManager
 {
   public:
     DynPoolManager(const PoolManagerParams &p)
-        : PoolManager(p), _regionSize(0), _nxtFreeIdx(0)
+        : PoolManager(p), _regionSize(0)
     {
         _totRegSpaceAvailable = p.pool_size;
     }
@@ -63,8 +63,6 @@ class DynPoolManager : public PoolManager
     // actual size of a region (normalized to the minimum size that can
     // be reserved)
     uint32_t _regionSize;
-    // next index to allocate a region
-    int _nxtFreeIdx;
     // total registers available - across chunks
     uint32_t _totRegSpaceAvailable;
     // regIndex and freeSpace record
