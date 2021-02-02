@@ -49,18 +49,6 @@
 namespace X86ISA
 {
 
-// These enumerate all the registers for dependence tracking.
-enum DependenceTags
-{
-    // FP_Reg_Base must be large enough to be bigger than any integer
-    // register index which has the IntFoldBit (1 << 6) set.  To be safe
-    // we just start at (1 << 7) == 128.
-    FP_Reg_Base = 128,
-    CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
-    Misc_Reg_Base = CC_Reg_Base + NUM_CCREGS,
-    Max_Reg_Index = Misc_Reg_Base + NUM_MISCREGS
-};
-
 // Not applicable to x86
 using VecElem = ::DummyVecElem;
 using VecRegContainer = ::DummyVecRegContainer;

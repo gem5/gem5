@@ -142,16 +142,17 @@ let {{
                     regString = "INTREG_R%s" % opType.reg
                 env.addReg(regString)
                 env.addToDisassembly(
-                    "printReg(out, InstRegIndex(%s), regSize);\n" %
-                                                                     regString)
+                    "printReg(out, RegId(IntRegClass, %s), regSize);\n" %
+                    regString)
 
                 Name += "_R"
 
             elif opType.tag == "B":
-                # This refers to registers whose index is encoded as part of the opcode
+                # This refers to registers whose index is encoded as part of
+                # the opcode.
                 env.addToDisassembly(
-                        "printReg(out, InstRegIndex(%s), regSize);\n" %
-                                                                  InstRegIndex)
+                        "printReg(out, RegId(IntRegClass, %s), regSize);\n" %
+                        InstRegIndex)
 
                 Name += "_R"
 
@@ -187,36 +188,40 @@ let {{
             elif opType.tag in ("G", "P", "T", "V"):
                 # Use the "reg" field of the ModRM byte to select the register
                 env.addReg(ModRMRegIndex)
-                env.addToDisassembly(
-                        "printReg(out, InstRegIndex(%s), regSize);\n" %
-                                                                 ModRMRegIndex)
 
                 if opType.tag == "P":
-
+                    regFormat = 'ccprintf(out, "MMX%%d", %s);\n'
                     Name += "_MMX"
                 elif opType.tag == "V":
+                    regFormat = 'ccprintf(out, "XMM%%d", %s);\n'
                     Name += "_XMM"
                 else:
+                    regFormat = \
+                        "printReg(out, RegId(IntRegClass, %s), regSize);\n"
                     Name += "_R"
+                env.addToDisassembly(regFormat % ModRMRegIndex)
             elif opType.tag in ("E", "Q", "W"):
                 # This might refer to memory or to a register. We need to
                 # divide it up farther.
                 regEnv = copy.copy(env)
                 regEnv.addReg(ModRMRMIndex)
-                regEnv.addToDisassembly(
-                        "printReg(out, InstRegIndex(%s), regSize);\n" %
-                                                                  ModRMRMIndex)
 
                 # This refers to memory. The macroop constructor should set up
 
                 # modrm addressing.
                 memEnv = copy.copy(env)
                 memEnv.doModRM = True
-                regSuffix = "_R"
                 if opType.tag == "Q":
+                    regFormat = 'ccprintf(out, "MMX%%d", %s);\n'
                     regSuffix = "_MMX"
                 elif opType.tag == "W":
+                    regFormat = 'ccprintf(out, "XMM%%d", %s);\n'
                     regSuffix = "_XMM"
+                else:
+                    regFormat = \
+                        "printReg(out, RegId(IntRegClass, %s), regSize);\n"
+                    regSuffix = "_R"
+                env.addToDisassembly(regFormat % ModRMRegIndex)
                 return doSplitDecode("MODRM_MOD",
                     {"3" : (specializeInst, Name + regSuffix,
                             copy.copy(opTypes), regEnv)},
@@ -233,17 +238,18 @@ let {{
             elif opType.tag in ("PR", "R", "VR"):
                 # Non register modrm settings should cause an error
                 env.addReg(ModRMRMIndex)
-                env.addToDisassembly(
-                        "printReg(out, InstRegIndex(%s), regSize);\n" %
-                                                                  ModRMRMIndex)
 
                 if opType.tag == "PR":
-
+                    regFormat = 'ccprintf(out, "MMX%%d", %s);\n'
                     Name += "_MMX"
                 elif opType.tag == "VR":
+                    regFormat = 'ccprintf(out, "XMM%%d", %s);\n'
                     Name += "_XMM"
                 else:
+                    regFormat = \
+                        "printReg(out, RegId(IntRegClass, %s), regSize);\n"
                     Name += "_R"
+                env.addToDisassembly(regFormat % ModRMRegIndex)
             elif opType.tag in ("X", "Y"):
                 # This type of memory addressing is for string instructions.
                 # They'll use the right index and segment internally.

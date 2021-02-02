@@ -108,7 +108,7 @@ struct IntOp : public Base
 {
     template <class InstType>
     IntOp(InstType *inst, typename Base::ArgType idx) :
-        Base(idx.index(), inst->dataSize)
+        Base(idx.index, inst->dataSize)
     {}
 
     void
@@ -124,7 +124,7 @@ struct FoldedOp : public Base
 {
     template <class InstType>
     FoldedOp(InstType *inst, typename Base::ArgType idx) :
-        Base(INTREG_FOLDED(idx.index(), inst->foldOBit), inst->dataSize)
+        Base(INTREG_FOLDED(idx.index, inst->foldOBit), inst->dataSize)
     {}
 
     void
@@ -139,7 +139,7 @@ template <class Base>
 struct CrOp : public Base
 {
     template <class InstType>
-    CrOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index(), 0) {}
+    CrOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index, 0) {}
 
     void
     print(std::ostream &os) const
@@ -152,7 +152,7 @@ template <class Base>
 struct DbgOp : public Base
 {
     template <class InstType>
-    DbgOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index(), 0) {}
+    DbgOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index, 0) {}
 
     void
     print(std::ostream &os) const
@@ -166,7 +166,7 @@ template <class Base>
 struct SegOp : public Base
 {
     template <class InstType>
-    SegOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index(), 0) {}
+    SegOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index, 0) {}
 
     void
     print(std::ostream &os) const
@@ -180,7 +180,7 @@ struct MiscOp : public Base
 {
     template <class InstType>
     MiscOp(InstType *inst, typename Base::ArgType idx) :
-        Base(idx.index(), inst->dataSize)
+        Base(idx.index, inst->dataSize)
     {}
 
     void
@@ -196,7 +196,7 @@ struct FloatOp : public Base
 {
     template <class InstType>
     FloatOp(InstType *inst, typename Base::ArgType idx) :
-        Base(idx.index(), inst->dataSize)
+        Base(idx.index, inst->dataSize)
     {}
 
     void
@@ -316,9 +316,9 @@ struct AddrOp
 
     template <class InstType>
     AddrOp(InstType *inst, const ArgType &args) : scale(args.scale),
-        index(INTREG_FOLDED(args.index.index(), inst->foldABit)),
-        base(INTREG_FOLDED(args.base.index(), inst->foldABit)),
-        disp(args.disp), segment(args.segment.index()),
+        index(INTREG_FOLDED(args.index.index, inst->foldABit)),
+        base(INTREG_FOLDED(args.base.index, inst->foldABit)),
+        disp(args.disp), segment(args.segment.index),
         size(inst->addressSize)
     {
         assert(segment < NUM_SEGMENTREGS);

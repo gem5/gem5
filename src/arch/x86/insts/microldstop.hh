@@ -90,7 +90,7 @@ class LdStOp : public InstOperands<MemOp, FoldedDataOp, AddrOp>
     InstOperands<MemOp, FoldedDataOp, AddrOp>(
             mach_inst, mnem, inst_mnem, set_flags, op_class,
             _data, { _scale, _index, _base, _disp, _segment },
-            data_size, address_size, mem_flags | _segment.index())
+            data_size, address_size, mem_flags | _segment.index)
     {}
 };
 
@@ -109,7 +109,7 @@ class LdStFpOp : public InstOperands<MemOp, FloatDataOp, AddrOp>
     InstOperands<MemOp, FloatDataOp, AddrOp>(
             mach_inst, mnem, inst_mnem, set_flags, op_class,
             _data, { _scale, _index, _base, _disp, _segment },
-            data_size, address_size, mem_flags | _segment.index())
+            data_size, address_size, mem_flags | _segment.index)
     {}
 };
 
@@ -127,7 +127,7 @@ class MemNoDataOp : public InstOperands<MemOp, AddrOp>
     InstOperands<MemOp, AddrOp>(
             mach_inst, mnem, inst_mnem, set_flags, op_class,
             { _scale, _index, _base, _disp, _segment },
-            data_size, address_size, mem_flags | _segment.index())
+            data_size, address_size, mem_flags | _segment.index)
     {}
 };
 
@@ -149,7 +149,7 @@ class LdStSplitOp :
     InstOperands<MemOp, FoldedDataLowOp, FoldedDataHiOp, AddrOp>(
             mach_inst, mnem, inst_mnem, set_flags, op_class,
             data_low, data_hi, { _scale, _index, _base, _disp, _segment },
-            data_size, address_size, mem_flags | _segment.index())
+            data_size, address_size, mem_flags | _segment.index)
     {}
 };
 

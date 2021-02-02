@@ -50,29 +50,10 @@ namespace X86ISA
  * wrapper struct for these lets take advantage of the compiler's type
  * checking.
  */
-struct InstRegIndex : public RegId
+struct InstRegIndex
 {
-    explicit InstRegIndex(RegIndex _idx) :
-       RegId(computeRegClass(_idx), _idx) {}
-
-  private:
-    // TODO: As X86 register index definition is highly built on the
-    //       unified space concept, it is easier for the moment to rely on
-    //       an helper function to compute the RegClass. It would be nice
-    //       to fix those definition and get rid of this.
-    RegClass
-    computeRegClass(RegIndex _idx)
-    {
-        if (_idx < FP_Reg_Base) {
-            return IntRegClass;
-        } else if (_idx < CC_Reg_Base) {
-            return FloatRegClass;
-        } else if (_idx < Misc_Reg_Base) {
-            return CCRegClass;
-        } else {
-            return MiscRegClass;
-        }
-    }
+    RegIndex index;
+    explicit InstRegIndex(RegIndex idx) : index(idx) {}
 };
 
 /**
