@@ -147,14 +147,15 @@ class RemoteGDB : public BaseRemoteGDB
      * GDB then queries for xml blobs using qXfer:features:read:xxx.xml
      */
     std::vector<std::string>
-    availableFeatures() const
+    availableFeatures() const override
     {
         return {"qXfer:features:read+"};
     };
     /**
      * Reply to qXfer:features:read:xxx.xml qeuries
      */
-    bool getXferFeaturesRead(const std::string &annex, std::string &output);
+    bool getXferFeaturesRead(const std::string &annex,
+                             std::string &output) override;
 };
 
 } // namespace RiscvISA
