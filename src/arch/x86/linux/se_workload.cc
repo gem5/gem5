@@ -43,6 +43,7 @@
 #include "arch/x86/linux/linux.hh"
 #include "arch/x86/page_size.hh"
 #include "arch/x86/process.hh"
+#include "arch/x86/regs/int.hh"
 #include "arch/x86/se_workload.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
