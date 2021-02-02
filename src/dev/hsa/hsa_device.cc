@@ -29,11 +29,6 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
- * Authors: Sooraj Puthoor
- *          Michael LeBeane
- *          Eric van Tassell
- *          Anthony Gutierrez
  */
 
 #include "dev/hsa/hsa_device.hh"
