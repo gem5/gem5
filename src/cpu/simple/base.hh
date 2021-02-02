@@ -43,7 +43,6 @@
 #define __CPU_SIMPLE_BASE_HH__
 
 #include "base/statistics.hh"
-#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/exec_context.hh"
@@ -62,12 +61,6 @@ class Checkpoint;
 class Process;
 class Processor;
 class ThreadContext;
-
-namespace TheISA
-{
-    class DTB;
-    class ITB;
-}
 
 namespace Trace
 {

@@ -37,7 +37,6 @@
 #include <functional>
 #include <string>
 
-#include "arch/isa.hh"
 #include "base/statistics.hh"
 #include "base/stats/group.hh"
 #include "base/types.hh"
@@ -62,11 +61,6 @@
 class BaseTLB;
 class GPUCommandProcessor;
 class GPUDispatcher;
-
-namespace TheISA
-{
-    class GpuTLB;
-}
 
 static const int LDS_SIZE = 65536;
 

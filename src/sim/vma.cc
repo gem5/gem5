@@ -32,7 +32,6 @@
 #include <sys/stat.h>
 
 #include "base/types.hh"
-#include "config/the_isa.hh"
 
 void
 VMA::fillMemPages(Addr start, Addr size, PortProxy &port) const

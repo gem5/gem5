@@ -29,8 +29,6 @@
 #ifndef __CPU_THREAD_STATE_HH__
 #define __CPU_THREAD_STATE_HH__
 
-#include "arch/pcstate.hh"
-#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "sim/process.hh"

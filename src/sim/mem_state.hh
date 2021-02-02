@@ -34,7 +34,6 @@
 #include <string>
 #include <vector>
 
-#include "config/the_isa.hh"
 #include "debug/Vma.hh"
 #include "mem/page_table.hh"
 #include "mem/se_translating_port_proxy.hh"

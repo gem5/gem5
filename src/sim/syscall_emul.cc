@@ -40,7 +40,6 @@
 
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "dev/net/dist_iface.hh"
 #include "mem/page_table.hh"

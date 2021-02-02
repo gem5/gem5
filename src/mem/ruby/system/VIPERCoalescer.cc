@@ -35,7 +35,6 @@
 
 #include "base/logging.hh"
 #include "base/str.hh"
-#include "config/the_isa.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/GPUCoalescer.hh"
 #include "debug/MemoryAccess.hh"

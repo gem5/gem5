@@ -46,7 +46,6 @@
 #include <utility>
 
 #include "base/statistics.hh"
-#include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"

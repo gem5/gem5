@@ -45,7 +45,6 @@
 
 #include "arch/arm/insts/static_inst.hh"
 #include "arch/arm/mmu.hh"
-#include "config/the_isa.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"

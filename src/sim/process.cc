@@ -55,7 +55,6 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
-#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "mem/se_translating_port_proxy.hh"
