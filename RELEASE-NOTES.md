@@ -1,3 +1,8 @@
+# Version 20.1.0.3
+
+**[HOTFIX]** A patch was apply to fix an [error where booting Linux stalled when using the ARM ISA](https://gem5.atlassian.net/browse/GEM5-901).
+This fix adds the parameter `have_vhe` to enable FEAT_VHE on demand, and is disabled by default to resolve this issue.
+
 # Version 20.1.0.2
 
 **[HOTFIX]** This hotfix release fixes known two bugs:
