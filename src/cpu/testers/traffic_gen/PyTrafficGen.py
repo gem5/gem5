@@ -60,6 +60,7 @@ class PyTrafficGen(BaseTrafficGen):
         PyBindMethod("createDramRot"),
         PyBindMethod("createHybrid"),
         PyBindMethod("createNvm"),
+        PyBindMethod("createStrided")
     ]
 
     @cxxMethod(override=True)

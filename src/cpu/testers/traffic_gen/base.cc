@@ -51,6 +51,7 @@
 #include "cpu/testers/traffic_gen/nvm_gen.hh"
 #include "cpu/testers/traffic_gen/random_gen.hh"
 #include "cpu/testers/traffic_gen/stream_gen.hh"
+#include "cpu/testers/traffic_gen/strided_gen.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/TrafficGen.hh"
 #include "enums/AddrMap.hh"
@@ -517,6 +518,22 @@ BaseTrafficGen::createNvm(Tick duration,
                                                 nbr_of_banks_util,
                                                 addr_mapping,
                                                 nbr_of_ranks));
+}
+
+std::shared_ptr<BaseGen>
+BaseTrafficGen::createStrided(Tick duration,
+                             Addr start_addr, Addr end_addr, Addr blocksize,
+                             Addr stride_size, int gen_id,
+                             Tick min_period, Tick max_period,
+                             uint8_t read_percent, Addr data_limit)
+{
+    return std::shared_ptr<BaseGen>(new StridedGen(*this, requestorId,
+                                                  duration, start_addr,
+                                                  end_addr, blocksize,
+                                                  system->cacheLineSize(),
+                                                  stride_size, gen_id,
+                                                  min_period, max_period,
+                                                  read_percent, data_limit));
 }
 
 std::shared_ptr<BaseGen>

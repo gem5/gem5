@@ -49,6 +49,7 @@ Source('linear_gen.cc')
 Source('nvm_gen.cc')
 Source('random_gen.cc')
 Source('stream_gen.cc')
+Source('strided_gen.cc')
 
 DebugFlag('TrafficGen')
 SimObject('BaseTrafficGen.py')
