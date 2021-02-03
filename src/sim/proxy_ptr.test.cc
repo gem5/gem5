@@ -465,6 +465,7 @@ TEST(ProxyPtr, NonConstOperators)
 
 struct TestABI
 {
+    using UintPtr = uint64_t;
     using State = int;
 };
 

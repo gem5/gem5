@@ -133,6 +133,8 @@ class ArmSemihosting : public SimObject
 
     struct Abi64 : public AbiBase
     {
+        using UintPtr = uint64_t;
+
         class State : public StateBase<uint64_t>
         {
           public:
@@ -145,6 +147,8 @@ class ArmSemihosting : public SimObject
 
     struct Abi32 : public AbiBase
     {
+        using UintPtr = uint32_t;
+
         class State : public StateBase<uint64_t>
         {
           public:

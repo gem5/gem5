@@ -338,7 +338,8 @@ struct Argument<ABI, ProxyPtr<T, Proxy>>
     static ProxyPtr<T, Proxy>
     get(ThreadContext *tc, typename ABI::State &state)
     {
-        return ProxyPtr<T, Proxy>(Argument<ABI, Addr>::get(tc, state), tc);
+        return ProxyPtr<T, Proxy>(
+                Argument<ABI, typename ABI::UintPtr>::get(tc, state), tc);
     }
 };
 
@@ -349,7 +350,7 @@ struct Argument<ABI, ConstProxyPtr<T, Proxy>>
     get(ThreadContext *tc, typename ABI::State &state)
     {
         return ConstProxyPtr<T, Proxy>(
-                Argument<ABI, Addr>::get(tc, state), tc);
+                Argument<ABI, typename ABI::UintPtr>::get(tc, state), tc);
     }
 };
 

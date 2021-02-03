@@ -44,6 +44,8 @@ class ThreadContext;
 
 struct Aapcs64
 {
+    using UintPtr = uint64_t;
+
     struct State
     {
         int ngrn=0; // Next general purpose register number.

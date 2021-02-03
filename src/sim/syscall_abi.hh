@@ -54,10 +54,14 @@ struct GenericSyscallABI
 };
 
 struct GenericSyscallABI64 : public GenericSyscallABI
-{};
+{
+    using UintPtr = uint64_t;
+};
 
 struct GenericSyscallABI32 : public GenericSyscallABI
 {
+    using UintPtr = uint32_t;
+
     // Is this argument too big for a single register?
     template <typename T, typename Enabled=void>
     struct IsWide;
@@ -65,7 +69,7 @@ struct GenericSyscallABI32 : public GenericSyscallABI
     template <typename T>
     struct IsWide<T, typename std::enable_if_t<
         std::is_integral<T>::value &&
-        (sizeof(T) < sizeof(uint64_t) ||
+        (sizeof(T) <= sizeof(UintPtr) ||
          GuestABI::IsConforming<T>::value)>>
     {
         static const bool value = false;
@@ -74,7 +78,7 @@ struct GenericSyscallABI32 : public GenericSyscallABI
     template <typename T>
     struct IsWide<T, typename std::enable_if_t<
         std::is_integral<T>::value &&
-        sizeof(T) == sizeof(uint64_t) &&
+        (sizeof(T) > sizeof(UintPtr)) &&
         !GuestABI::IsConforming<T>::value>>
     {
         static const bool value = true;
