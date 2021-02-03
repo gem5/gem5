@@ -251,7 +251,8 @@ class ProxyPtr : public ConstProxyPtr<T, Proxy>
     explicit ProxyPtr(Args&&... args) : CPP(0, args...) {}
 
     template <typename O, typename Enabled=
-        typename std::enable_if_t<std::is_assignable<T *, O *>::value>>
+        typename std::enable_if_t<std::is_assignable<T *, O *>::value &&
+                                  !std::is_same<O, void>::value>>
     ProxyPtr(const ProxyPtr<O, Proxy> &other) : CPP(other) {}
 
     ProxyPtr(const PP &other) : CPP(other) {}
@@ -322,6 +323,30 @@ class ProxyPtr : public ConstProxyPtr<T, Proxy>
     }
 };
 
+template <typename Proxy>
+class ProxyPtr<void, Proxy>
+{
+  protected:
+    Addr _addr;
+
+  public:
+    ProxyPtr(Addr new_addr, ...) : _addr(new_addr) {}
+
+    template <typename T>
+    ProxyPtr(const ProxyPtr<T, Proxy> &other) : _addr(other.addr()) {}
+
+    ProxyPtr<void, Proxy> &
+    operator = (Addr new_addr)
+    {
+        _addr = new_addr;
+        return *this;
+    }
+
+    operator Addr() const { return _addr; }
+
+    Addr addr() const { return _addr; }
+};
+
 template <typename T, typename Proxy, typename A>
 typename std::enable_if_t<std::is_integral<A>::value, ProxyPtr<T, Proxy>>
 operator + (A a, const ProxyPtr<T, Proxy> &other)
@@ -368,7 +393,7 @@ class SETranslatingPortProxy;
 
 template <typename T>
 using ConstVPtr = ConstProxyPtr<T, SETranslatingPortProxy>;
-template <typename T>
+template <typename T=void>
 using VPtr = ProxyPtr<T, SETranslatingPortProxy>;
 
 #endif // __SIM_PROXY_PTR_HH__
