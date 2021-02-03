@@ -55,6 +55,7 @@ template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
     typename std::enable_if_t<
         std::is_base_of<ArmISA::RegABI32, ABI>::value &&
+        std::is_integral<Arg>::value &&
         ABI::template IsWide<Arg>::value>>
 {
     static Arg

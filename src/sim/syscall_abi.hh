@@ -36,18 +36,6 @@
 
 class SyscallDesc;
 
-namespace GuestABI
-{
-
-// Does this normally 64 bit data type shrink down to 32 bits for 32 bit ABIs?
-template <typename T, typename Enabled=void>
-struct IsConforming : public std::false_type {};
-
-template <>
-struct IsConforming<Addr> : public std::true_type {};
-
-} // namespace GuestABI
-
 struct GenericSyscallABI
 {
     using State = int;
@@ -64,25 +52,12 @@ struct GenericSyscallABI32 : public GenericSyscallABI
 
     // Is this argument too big for a single register?
     template <typename T, typename Enabled=void>
-    struct IsWide;
+    struct IsWide : public std::false_type {};
 
     template <typename T>
-    struct IsWide<T, typename std::enable_if_t<
-        std::is_integral<T>::value &&
-        (sizeof(T) <= sizeof(UintPtr) ||
-         GuestABI::IsConforming<T>::value)>>
-    {
-        static const bool value = false;
-    };
-
-    template <typename T>
-    struct IsWide<T, typename std::enable_if_t<
-        std::is_integral<T>::value &&
-        (sizeof(T) > sizeof(UintPtr)) &&
-        !GuestABI::IsConforming<T>::value>>
-    {
-        static const bool value = true;
-    };
+    struct IsWide<T, std::enable_if_t<(sizeof(T) > sizeof(UintPtr))>> :
+        public std::true_type
+    {};
 
     // Read two registers and merge them into one value.
     static uint64_t
@@ -117,7 +92,8 @@ struct Argument<ABI, Arg,
 // arguments aren't handled generically.
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
-    typename std::enable_if_t<!ABI::template IsWide<Arg>::value>>
+    typename std::enable_if_t<std::is_integral<Arg>::value &&
+        !ABI::template IsWide<Arg>::value>>
 {
     static Arg
     get(ThreadContext *tc, typename ABI::State &state)

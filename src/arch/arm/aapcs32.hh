@@ -160,9 +160,7 @@ struct Result<Aapcs32, Integer, typename std::enable_if_t<
     static void
     store(ThreadContext *tc, const Integer &i)
     {
-        if (std::is_same<Integer, Addr>::value) {
-            tc->setIntReg(ArmISA::INTREG_R0, (uint32_t)i);
-        } else if (ArmISA::byteOrder(tc) == ByteOrder::little) {
+        if (ArmISA::byteOrder(tc) == ByteOrder::little) {
             tc->setIntReg(ArmISA::INTREG_R0, (uint32_t)(i >> 0));
             tc->setIntReg(ArmISA::INTREG_R1, (uint32_t)(i >> 32));
         } else {
@@ -199,11 +197,6 @@ struct Argument<Aapcs32, Integer, typename std::enable_if_t<
     static Integer
     get(ThreadContext *tc, Aapcs32::State &state)
     {
-        if (std::is_same<Integer, Addr>::value &&
-                state.ncrn <= state.MAX_CRN) {
-            return tc->readIntReg(state.ncrn++);
-        }
-
         if (alignof(Integer) == 8 && (state.ncrn % 2))
             state.ncrn++;
 

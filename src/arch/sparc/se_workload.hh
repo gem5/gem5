@@ -105,6 +105,7 @@ struct Result<ABI, SyscallReturn,
 template <typename Arg>
 struct Argument<SparcISA::SEWorkload::SyscallABI32, Arg,
     typename std::enable_if_t<
+        std::is_integral<Arg>::value &&
         SparcISA::SEWorkload::SyscallABI32::IsWide<Arg>::value>>
 {
     using ABI = SparcISA::SEWorkload::SyscallABI32;
