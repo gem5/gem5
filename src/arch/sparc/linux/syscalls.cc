@@ -54,7 +54,7 @@ unameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
 
 static SyscallReturn
 getresuidFunc(SyscallDesc *desc, ThreadContext *tc,
-              Addr ruid, Addr euid, Addr suid)
+              VPtr<> ruid, VPtr<> euid, VPtr<> suid)
 {
     const uint64_t id = htobe(100);
     // Handle the EFAULT case

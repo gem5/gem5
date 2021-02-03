@@ -83,8 +83,8 @@ issetugidFunc(SyscallDesc *desc, ThreadContext *tc)
 
 #if !defined ( __GNU_LIBRARY__ )
 static SyscallReturn
-sysctlFunc(SyscallDesc *desc, ThreadContext *tc, Addr namep, size_t nameLen,
-           Addr oldp, Addr oldlenp, Addr newp, size_t newlen)
+sysctlFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> namep, size_t nameLen,
+           VPtr<> oldp, VPtr<> oldlenp, VPtr<> newp, size_t newlen)
 {
     uint64_t ret;
 

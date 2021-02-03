@@ -124,7 +124,7 @@ sys_getsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
 /// Target sys_setsysinfo() handler.
 static SyscallReturn
 sys_setsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
-                   Addr bufPtr, unsigned nbytes)
+                   VPtr<> bufPtr, unsigned nbytes)
 {
     switch (op) {
 
@@ -147,7 +147,7 @@ sys_setsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
 }
 
 static SyscallReturn
-setThreadAreaFunc(SyscallDesc *desc, ThreadContext *tc, Addr addr)
+setThreadAreaFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> addr)
 {
     tc->setMiscRegNoEffect(MISCREG_TP_VALUE, addr);
     return 0;
