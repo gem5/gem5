@@ -130,8 +130,8 @@ class BaseTags : public ClockedObject
          */
         Stats::Formula avgRefs;
 
-        /** The cycle that the warmup percentage was hit. 0 on failure. */
-        Stats::Scalar warmupCycle;
+        /** The tick that the warmup percentage was hit. 0 on failure. */
+        Stats::Scalar warmupTick;
 
         /** Average occupancy of each requestor using the cache */
         Stats::AverageVector occupancies;

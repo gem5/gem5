@@ -115,7 +115,7 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     // Check if cache warm up is done
     if (!warmedUp && stats.tagsInUse.value() >= warmupBound) {
         warmedUp = true;
-        stats.warmupCycle = ticksToCycles(curTick());
+        stats.warmupTick = curTick();
     }
 
     // We only need to write into one tag and one data block.
@@ -224,8 +224,8 @@ BaseTags::BaseTagStats::BaseTagStats(BaseTags &_tags)
              "Sample count of references to valid blocks."),
     ADD_STAT(avgRefs, UNIT_RATE(Stats::Units::Count, Stats::Units::Count),
              "Average number of references to valid blocks."),
-    ADD_STAT(warmupCycle, UNIT_CYCLE,
-             "Cycle when the warmup percentage was hit."),
+    ADD_STAT(warmupTick, UNIT_TICK,
+             "The tick when the warmup percentage was hit."),
     ADD_STAT(occupancies, UNIT_RATE(Stats::Units::Count, Stats::Units::Tick),
              "Average occupied blocks per tick, per requestor"),
     ADD_STAT(avgOccs, UNIT_RATE(Stats::Units::Ratio, Stats::Units::Tick),
