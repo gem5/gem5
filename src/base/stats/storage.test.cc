@@ -1083,7 +1083,7 @@ TEST(StatsSampleStorTest, SamplePrepare)
     Stats::Counter val;
     Stats::DistData data;
     Stats::DistData expected_data;
-    Stats::DistParams params(Stats::Deviation);
+    Stats::SampleStor::Params params;
     MockInfo info(&params);
 
     // Simple test with one value being sampled
@@ -1133,7 +1133,7 @@ TEST(StatsSampleStorTest, Size)
     Stats::Counter val = 10;
     Stats::Counter num_samples = 5;
     Stats::DistData data;
-    Stats::DistParams params(Stats::Deviation);
+    Stats::SampleStor::Params params;
     MockInfo info(&params);
 
     ASSERT_EQ(stor.size(), 1);
@@ -1177,7 +1177,7 @@ TEST(StatsAvgSampleStorTest, SamplePrepare)
     Stats::Counter val;
     Stats::DistData data;
     Stats::DistData expected_data;
-    Stats::DistParams params(Stats::Deviation);
+    Stats::AvgSampleStor::Params params;
     MockInfo info(&params);
 
     // Simple test with one value being sampled
@@ -1228,7 +1228,7 @@ TEST(StatsAvgSampleStorTest, Size)
     Stats::Counter val = 10;
     Stats::Counter num_samples = 5;
     Stats::DistData data;
-    Stats::DistParams params(Stats::Deviation);
+    Stats::AvgSampleStor::Params params;
     MockInfo info(&params);
 
     ASSERT_EQ(stor.size(), 1);
