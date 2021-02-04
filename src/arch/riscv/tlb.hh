@@ -2,6 +2,7 @@
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * Copyright (c) 2020 Barkhausen Institut
+ * Copyright (c) 2021 Huawei International
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +38,7 @@
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/isa_traits.hh"
 #include "arch/riscv/pagetable.hh"
+#include "arch/riscv/pma_checker.hh"
 #include "arch/riscv/utility.hh"
 #include "base/statistics.hh"
 #include "mem/request.hh"
@@ -80,6 +82,9 @@ class TLB : public BaseTLB
         Stats::Formula misses;
         Stats::Formula accesses;
     } stats;
+
+  public:
+    PMAChecker *pma;
 
   public:
     typedef RiscvTLBParams Params;

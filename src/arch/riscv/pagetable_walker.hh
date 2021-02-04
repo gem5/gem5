@@ -42,6 +42,7 @@
 #include <vector>
 
 #include "arch/riscv/pagetable.hh"
+#include "arch/riscv/pma_checker.hh"
 #include "arch/riscv/tlb.hh"
 #include "base/types.hh"
 #include "mem/packet.hh"
@@ -166,6 +167,7 @@ namespace RiscvISA
         // The TLB we're supposed to load.
         TLB * tlb;
         System * sys;
+        PMAChecker * pma;
         RequestorID requestorId;
 
         // The number of outstanding walks that can be squashed per cycle.
@@ -196,6 +198,7 @@ namespace RiscvISA
         Walker(const Params &params) :
             ClockedObject(params), port(name() + ".port", this),
             funcState(this, NULL, NULL, true), tlb(NULL), sys(params.system),
+            pma(params.pma_checker),
             requestorId(sys->getRequestorId(this)),
             numSquashable(params.num_squash_per_cycle),
             startWalkWrapperEvent([this]{ startWalkWrapper(); }, name())

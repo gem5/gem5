@@ -2,6 +2,7 @@
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * Copyright (c) 2020 Barkhausen Institut
+ * Copyright (c) 2021 Huawei International
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +39,7 @@
 #include "arch/riscv/mmu.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/pagetable_walker.hh"
+#include "arch/riscv/pma_checker.hh"
 #include "arch/riscv/pra_constants.hh"
 #include "arch/riscv/utility.hh"
 #include "base/inifile.hh"
@@ -65,8 +67,9 @@ buildKey(Addr vpn, uint16_t asid)
     return (static_cast<Addr>(asid) << 48) | vpn;
 }
 
-TLB::TLB(const Params &p)
-    : BaseTLB(p), size(p.size), tlb(size), lruSeq(0), stats(this)
+TLB::TLB(const Params &p) :
+    BaseTLB(p), size(p.size), tlb(size),
+    lruSeq(0), stats(this), pma(p.pma_checker)
 {
     for (size_t x = 0; x < size; x++) {
         tlb[x].trieHandle = NULL;
@@ -359,6 +362,10 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
             else
                 code = ExceptionCode::INST_ACCESS;
             fault = std::make_shared<AddressFault>(req->getVaddr(), code);
+        }
+
+        if (!delayed && fault == NoFault) {
+            pma->check(req);
         }
 
         return fault;

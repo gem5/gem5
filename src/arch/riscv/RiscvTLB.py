@@ -2,6 +2,7 @@
 
 # Copyright (c) 2007 MIPS Technologies, Inc.
 # Copyright (c) 2020 Barkhausen Institut
+# Copyright (c) 2021 Huawei International
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -41,6 +42,8 @@ class RiscvPagetableWalker(ClockedObject):
     system = Param.System(Parent.any, "system object")
     num_squash_per_cycle = Param.Unsigned(4,
             "Number of outstanding walks that can be squashed per cycle")
+    # Grab the pma_checker from the MMU
+    pma_checker = Param.PMAChecker(Parent.any, "PMA Chekcer")
 
 class RiscvTLB(BaseTLB):
     type = 'RiscvTLB'
@@ -49,3 +52,5 @@ class RiscvTLB(BaseTLB):
     size = Param.Int(64, "TLB size")
     walker = Param.RiscvPagetableWalker(\
             RiscvPagetableWalker(), "page table walker")
+    # Grab the pma_checker from the MMU
+    pma_checker = Param.PMAChecker(Parent.any, "PMA Chekcer")

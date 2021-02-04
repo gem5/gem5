@@ -489,6 +489,7 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
             vaddr &= (static_cast<Addr>(1) << VADDR_BITS) - 1;
             Addr paddr = walker->tlb->translateWithTLB(vaddr, satp.asid, mode);
             req->setPaddr(paddr);
+            walker->pma->check(req);
             // Let the CPU continue.
             translation->finish(NoFault, req, tc, mode);
         } else {

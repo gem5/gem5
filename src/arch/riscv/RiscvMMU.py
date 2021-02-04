@@ -37,6 +37,7 @@
 
 from m5.objects.BaseMMU import BaseMMU
 from m5.objects.RiscvTLB import RiscvTLB
+from m5.objects.PMAChecker import PMAChecker
 
 class RiscvMMU(BaseMMU):
     type = 'RiscvMMU'
@@ -44,6 +45,7 @@ class RiscvMMU(BaseMMU):
     cxx_header = 'arch/riscv/mmu.hh'
     itb = RiscvTLB()
     dtb = RiscvTLB()
+    pma_checker = PMAChecker()
 
     @classmethod
     def walkerPorts(cls):
