@@ -67,8 +67,7 @@ BaseXBar::BaseXBar(const BaseXBarParams &p)
       ADD_STAT(pktCount, UNIT_COUNT,
                "Packet count per connected requestor and responder"),
       ADD_STAT(pktSize, UNIT_BYTE,
-               "Cumulative packet size per connected requestor and responder "
-               "(bytes)")
+               "Cumulative packet size per connected requestor and responder")
 {
 }
 

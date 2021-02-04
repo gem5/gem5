@@ -123,13 +123,13 @@ AbstractMemory::MemStats::MemStats(AbstractMemory &_mem)
     ADD_STAT(numOther, UNIT_COUNT,
              "Number of other requests responded to by this memory"),
     ADD_STAT(bwRead, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
-             "Total read bandwidth from this memory (bytes/s)"),
+             "Total read bandwidth from this memory"),
     ADD_STAT(bwInstRead, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
-             "Instruction read bandwidth from this memory (bytes/s)"),
+             "Instruction read bandwidth from this memory"),
     ADD_STAT(bwWrite, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
-             "Write bandwidth from this memory (bytes/s)"),
+             "Write bandwidth from this memory"),
     ADD_STAT(bwTotal, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
-             "Total bandwidth to/from this memory (bytes/s)")
+             "Total bandwidth to/from this memory")
 {
 }
 

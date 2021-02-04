@@ -285,9 +285,9 @@ MemCtrl::MemCtrlStats::MemCtrlStats(MemCtrl &mc)
              "values"),
 
     ADD_STAT(priorityMinLatency, UNIT_SECOND,
-             "per QoS priority minimum request to response latency (s)"),
+             "per QoS priority minimum request to response latency"),
     ADD_STAT(priorityMaxLatency, UNIT_SECOND,
-             "per QoS priority maximum request to response latency (s)"),
+             "per QoS priority maximum request to response latency"),
     ADD_STAT(numReadWriteTurnArounds, UNIT_COUNT,
              "Number of turnarounds from READ to WRITE"),
     ADD_STAT(numWriteReadTurnArounds, UNIT_COUNT,

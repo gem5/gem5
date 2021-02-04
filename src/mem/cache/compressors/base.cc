@@ -233,11 +233,10 @@ Base::BaseStats::BaseStats(Base& _compressor)
     ADD_STAT(compressionSize, UNIT_COUNT,
              "Number of blocks that were compressed to this power of two "
              "size"),
-    ADD_STAT(compressionSizeBits, UNIT_BIT,
-             "Total compressed data size, in bits"),
+    ADD_STAT(compressionSizeBits, UNIT_BIT, "Total compressed data size"),
     ADD_STAT(avgCompressionSizeBits,
              UNIT_RATE(Stats::Units::Bit, Stats::Units::Count),
-             "Average compression size, in bits"),
+             "Average compression size"),
     ADD_STAT(decompressions, UNIT_COUNT, "Total number of decompressions")
 {
 }
