@@ -106,6 +106,7 @@ style_ignores = [
     _re_ignore("^ext/"),
     # Ignore test data, as they are not code
     _re_ignore("^tests/(?:quick|long)/"),
+    _re_ignore("^tests/test-progs/hello/bin/"),
     # Only include Scons files and those with extensions that suggest source
     # code
     _re_only("^((.*\/)?(SConscript|SConstruct)|"
