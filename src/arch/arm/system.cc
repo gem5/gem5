@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015,2017-2020 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015,2017-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -70,6 +70,7 @@ ArmSystem::ArmSystem(const Params &p)
       _haveSVE(p.have_sve),
       _sveVL(p.sve_vl),
       _haveLSE(p.have_lse),
+      _haveVHE(p.have_vhe),
       _havePAN(p.have_pan),
       _haveSecEL2(p.have_secel2),
       semihosting(p.semihosting),

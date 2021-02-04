@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2020 ARM Limited
+# Copyright (c) 2009, 2012-2013, 2015-2021 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -72,6 +72,8 @@ class ArmSystem(System):
         "SVE vector length in quadwords (128-bit)")
     have_lse = Param.Bool(True,
         "True if LSE is implemented (ARMv8.1)")
+    have_vhe = Param.Bool(False,
+        "True if FEAT_VHE (Virtualization Host Extensions) is implemented")
     have_pan = Param.Bool(True,
         "True if Priviledge Access Never is implemented (ARMv8.1)")
     have_secel2 = Param.Bool(True,
