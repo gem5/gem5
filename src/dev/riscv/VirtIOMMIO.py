@@ -1,7 +1,15 @@
-# -*- mode:python -*-
-
 # Copyright (c) 2021 Huawei International
+# Copyright (c) 2014, 2016-2018 ARM Limited
 # All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -26,24 +34,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+from m5.proxy import *
 
-if env['TARGET_ISA'] == 'riscv':
+from m5.objects.PlicDevice import PlicIntDevice
+from m5.objects.VirtIO import VirtIODummyDevice
 
-    SimObject('HiFive.py')
-    SimObject('Clint.py')
-    SimObject('PlicDevice.py')
-    SimObject('Plic.py')
-    SimObject('RTC.py')
-    SimObject('VirtIOMMIO.py')
-
-    DebugFlag('Clint')
-    DebugFlag('Plic')
-    DebugFlag('VirtIOMMIO')
-
-    Source('hifive.cc')
-    Source('clint.cc')
-    Source('plic_device.cc')
-    Source('plic.cc')
-    Source('rtc.cc')
-    Source('vio_mmio.cc')
+class MmioVirtIO(PlicIntDevice):
+    type = 'MmioVirtIO'
+    cxx_header = 'dev/riscv/vio_mmio.hh'
+    vio = Param.VirtIODeviceBase(VirtIODummyDevice(), "VirtIO device")

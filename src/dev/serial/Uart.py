@@ -60,3 +60,4 @@ class SimpleUart(Uart):
 class Uart8250(Uart):
     type = 'Uart8250'
     cxx_header = "dev/serial/uart8250.hh"
+    pio_size = Param.Addr(0x8, "Size of address range")
