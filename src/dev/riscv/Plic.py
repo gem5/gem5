@@ -1,7 +1,14 @@
-# -*- mode:python -*-
-
 # Copyright (c) 2021 Huawei International
 # All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -26,17 +33,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.Device import BasicPioDevice
+from m5.params import *
+from m5.proxy import *
 
-if env['TARGET_ISA'] == 'riscv':
-
-    SimObject('Clint.py')
-    SimObject('Plic.py')
-    SimObject('RTC.py')
-
-    DebugFlag('Clint')
-    DebugFlag('Plic')
-
-    Source('clint.cc')
-    Source('plic.cc')
-    Source('rtc.cc')
+class Plic(BasicPioDevice):
+    """
+    This implementation of PLIC is based on
+    the SiFive U54MC datasheet:
+    https://sifive.cdn.prismic.io/sifive/fab000f6-
+    0e07-48d0-9602-e437d5367806_sifive_U54MC_rtl_
+    full_20G1.03.00_manual.pdf
+    """
+    type = 'Plic'
+    cxx_header = 'dev/riscv/plic.hh'
+    intrctrl = Param.IntrControl(Parent.any, "interrupt controller")
+    pio_size = Param.Addr(0x4000000, "PIO Size")
+    n_src = Param.Int("Number of interrupt sources")
