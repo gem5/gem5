@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SYMTAB_HH__
-#define __SYMTAB_HH__
+#ifndef __BASE_LOADER_SYMTAB_HH__
+#define __BASE_LOADER_SYMTAB_HH__
 
 #include <functional>
 #include <iosfwd>
@@ -36,7 +36,6 @@
 #include <string>
 #include <vector>
 
-#include "base/trace.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
@@ -239,4 +238,4 @@ extern SymbolTable debugSymbolTable;
 
 } // namespace Loader
 
-#endif // __SYMTAB_HH__
+#endif // __BASE_LOADER_SYMTAB_HH__

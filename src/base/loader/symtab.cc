@@ -30,14 +30,9 @@
 
 #include <fstream>
 #include <iostream>
-#include <string>
-#include <vector>
 
 #include "base/logging.hh"
 #include "base/str.hh"
-#include "base/trace.hh"
-#include "base/types.hh"
-#include "sim/serialize.hh"
 
 namespace Loader
 {
