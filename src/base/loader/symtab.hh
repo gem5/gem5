@@ -129,7 +129,6 @@ class SymbolTable
     // into this one.
     bool insert(const Symbol &symbol);
     bool insert(const SymbolTable &other);
-    bool load(const std::string &file);
     bool empty() const { return symbols.empty(); }
 
     SymbolTablePtr

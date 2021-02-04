@@ -85,46 +85,6 @@ SymbolTable::insert(const SymbolTable &other)
     return true;
 }
 
-bool
-SymbolTable::load(const std::string &filename)
-{
-    std::string buffer;
-    std::ifstream file(filename.c_str());
-
-    if (!file)
-        fatal("file error: Can't open symbol table file %s\n", filename);
-
-    while (!file.eof()) {
-        getline(file, buffer);
-        if (buffer.empty())
-            continue;
-
-        std::string::size_type idx = buffer.find(',');
-        if (idx == std::string::npos)
-            return false;
-
-        std::string address = buffer.substr(0, idx);
-        eat_white(address);
-        if (address.empty())
-            return false;
-
-        std::string name = buffer.substr(idx + 1);
-        eat_white(name);
-        if (name.empty())
-            return false;
-
-        Addr addr;
-        if (!to_number(address, addr))
-            return false;
-
-        if (!insert({ Symbol::Binding::Global, name, addr }))
-            return false;
-    }
-
-    file.close();
-    return true;
-}
-
 void
 SymbolTable::serialize(const std::string &base, CheckpointOut &cp) const
 {
