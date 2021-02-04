@@ -477,16 +477,12 @@ class ExecutableMeta(type):
     all = []
 
     def __init__(cls, name, bases, d):
-        if not d.pop('abstract', False):
-            ExecutableMeta.all.append(cls)
+        ExecutableMeta.all.append(cls)
         super(ExecutableMeta, cls).__init__(name, bases, d)
-
         cls.all = []
 
 class Executable(object, metaclass=ExecutableMeta):
     '''Base class for creating an executable from sources.'''
-
-    abstract = True
 
     def __init__(self, target, *srcs_and_filts):
         '''Specify the target name and any sources. Sources that are
