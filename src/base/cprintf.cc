@@ -33,7 +33,6 @@
 #include <sstream>
 
 #include "base/compiler.hh"
-#include "base/logging.hh"
 
 namespace cp
 {
@@ -239,7 +238,7 @@ Print::processFlag()
             break;
 
           case '%':
-            panic("we shouldn't get here");
+            M5_UNREACHABLE;
             break;
 
           default:
