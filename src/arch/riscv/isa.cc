@@ -255,7 +255,7 @@ ISA::readMiscReg(int misc_reg)
         if (hpmCounterEnabled(MISCREG_TIME)) {
             DPRINTF(RiscvMisc, "Wall-clock counter at: %llu.\n",
                     std::time(nullptr));
-            return std::time(nullptr);
+            return readMiscRegNoEffect(MISCREG_TIME);
         } else {
             warn("Wall clock disabled.\n");
             return 0;
