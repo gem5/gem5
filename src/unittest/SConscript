@@ -30,7 +30,6 @@ Import('*')
 
 Source('unittest.cc')
 
-UnitTest('cprintftime', 'cprintftime.cc')
 UnitTest('nmtest', 'nmtest.cc')
 
 stattest_py = PySource('m5', 'stattestmain.py', tags='stattest')
