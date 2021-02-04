@@ -64,6 +64,7 @@ class Text : public Output
     bool noOutput(const Info &info);
 
   public:
+    bool units;
     bool descriptions;
     bool spaces;
 
