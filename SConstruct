@@ -108,6 +108,8 @@ AddOption('--default',
 AddOption('--ignore-style', action='store_true',
           help='Disable style checking hooks')
 AddOption('--gold-linker', action='store_true', help='Use the gold linker')
+AddOption('--no-compress-debug', action='store_true',
+          help="Don't compress debug info in build files")
 AddOption('--no-lto', action='store_true',
           help='Disable Link-Time Optimization for fast')
 AddOption('--force-lto', action='store_true',
@@ -383,8 +385,8 @@ if main['GCC']:
         # https://gcc.gnu.org/ml/gcc-patches/2015-11/msg03161.html
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69866
         if not GetOption('force_lto'):
-            main.Append(PSHLINKFLAGS='-flinker-output=rel')
-            main.Append(PLINKFLAGS='-flinker-output=rel')
+            main.Append(PSHLINKFLAGS=['-flinker-output=rel'])
+            main.Append(PLINKFLAGS=['-flinker-output=rel'])
 
     disable_lto = GetOption('no_lto')
     if not disable_lto and main.get('BROKEN_INCREMENTAL_LTO', False) and \
@@ -553,6 +555,24 @@ timeout_version = timeout_lines[0].split() if timeout_lines else []
 main['TIMEOUT'] =  timeout_version and \
     compareVersions(timeout_version[-1], '8.13') >= 0
 
+def CheckCxxFlag(context, flag):
+    context.Message("Checking for compiler %s support... " % flag)
+    last_cxxflags = context.env['CXXFLAGS']
+    context.env.Append(CXXFLAGS=[flag])
+    ret = context.TryCompile('', '.cc')
+    context.env['CXXFLAGS'] = last_cxxflags
+    context.Result(ret)
+    return ret
+
+def CheckLinkFlag(context, flag):
+    context.Message("Checking for linker %s support... " % flag)
+    last_linkflags = context.env['LINKFLAGS']
+    context.env.Append(LINKFLAGS=[flag])
+    ret = context.TryLink('int main(int, char *[]) { return 0; }', '.cc')
+    context.env['LINKFLAGS'] = last_linkflags
+    context.Result(ret)
+    return ret
+
 # Add a custom Check function to test for structure members.
 def CheckMember(context, include, decl, member, include_quotes="<>"):
     context.Message("Checking for member %s in %s..." %
@@ -602,6 +622,8 @@ conf = Configure(main,
                  custom_tests = {
         'CheckMember' : CheckMember,
         'CheckPythonLib' : CheckPythonLib,
+        'CheckCxxFlag' : CheckCxxFlag,
+        'CheckLinkFlag' : CheckLinkFlag,
         })
 
 # Check if we should compile a 64 bit binary on Mac OS X/Darwin
@@ -640,6 +662,16 @@ if not conf:
 if main['M5_BUILD_CACHE']:
     print('Using build cache located at', main['M5_BUILD_CACHE'])
     CacheDir(main['M5_BUILD_CACHE'])
+
+if not GetOption('no_compress_debug'):
+    if conf.CheckCxxFlag('-gz'):
+        main.Append(CXXFLAGS=['-gz'])
+    else:
+        warning("Can't enable object file debug section compression")
+    if conf.CheckLinkFlag('-gz'):
+        main.Append(LINKFLAGS=['-gz'], SHLINKFLAGS=['-gz'])
+    else:
+        warning("Can't enable executable debug section compression")
 
 main['USE_PYTHON'] = not GetOption('without_python')
 if main['USE_PYTHON']:

@@ -151,7 +151,8 @@ class SConsFixture(UniqueFixture):
         command = [
             'scons', '-C', self.directory,
             '-j', str(config.threads),
-            '--ignore-style'
+            '--ignore-style',
+            '--no-compress-debug'
         ]
 
         if not self.targets:

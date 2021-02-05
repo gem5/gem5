@@ -46,4 +46,5 @@ set -e
 # Look for tests in the gem5 subdirectory
 # Once complete, run the Google Tests
 cd tests
-./main.py run -j4 -t4 gem5 && scons -C .. build/NULL/unittests.opt
+./main.py run -j4 -t4 gem5 && scons -C .. --no-compress-debug \
+    build/NULL/unittests.opt
