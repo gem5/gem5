@@ -395,6 +395,8 @@ void clearExpectedSnpResp(TBE tbe) {
 void initializeTBE(TBE tbe, Addr addr, int storSlot) {
   assert(is_valid(tbe));
 
+  tbe.timestamp := curTick();
+
   tbe.wakeup_pending_req := false;
   tbe.wakeup_pending_snp := false;
   tbe.wakeup_pending_tgr := false;
@@ -626,7 +628,7 @@ void scheduleSendData(TBE tbe, int when) {
     tbe.snd_pendEv := true;
     // enqueue send event
     tbe.pendAction := Event:TX_Data;
-    enqueue(triggerOutPort, TriggerMsg, intToCycles(when)) {
+    enqueue(triggerOutPort, TriggerMsg, intToCycles(when), false, tbe.timestamp) {
       out_msg.addr := tbe.addr;
       out_msg.from_hazard := tbe.is_req_hazard || tbe.is_repl_hazard;
     }

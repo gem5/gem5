@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -474,7 +474,7 @@ void processNextState(Addr address, TBE tbe, CacheEntry cache_entry) {
       tbe.actions.pop();
     }
     assert(tbe.pendAction != Event:null);
-    enqueue(triggerOutPort, TriggerMsg, trigger_latency) {
+    enqueue(triggerOutPort, TriggerMsg, trigger_latency, false, tbe.timestamp) {
       out_msg.addr := tbe.addr;
       // TODO - put usesTxnId on the TBE?
       out_msg.usesTxnId := tbe.is_dvm_tbe || tbe.is_dvm_snp_tbe;
