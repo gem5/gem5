@@ -778,11 +778,11 @@ UFSHostDeviceStats::UFSHostDeviceStats(UFSHostDevice *parent)
       /** Average bandwidth for reads and writes */
       ADD_STAT(averageReadSSDBW,
                UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
-               "Average read bandwidth (bytes/s)",
+               "Average read bandwidth",
                totalReadSSD / simSeconds),
       ADD_STAT(averageWriteSSDBW,
                UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
-               "Average write bandwidth (bytes/s)",
+               "Average write bandwidth",
                totalWrittenSSD / simSeconds),
       ADD_STAT(averageSCSIQueue,
                UNIT_RATE(Stats::Units::Count, Stats::Units::Tick),
