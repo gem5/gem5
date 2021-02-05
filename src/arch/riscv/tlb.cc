@@ -108,21 +108,21 @@ TLB::lookup(Addr vpn, uint16_t asid, Mode mode, bool hidden)
             entry->lruSeq = nextSeq();
 
         if (mode == Write)
-            stats.write_accesses++;
+            stats.writeAccesses++;
         else
-            stats.read_accesses++;
+            stats.readAccesses++;
 
         if (!entry) {
             if (mode == Write)
-                stats.write_misses++;
+                stats.writeMisses++;
             else
-                stats.read_misses++;
+                stats.readMisses++;
         }
         else {
             if (mode == Write)
-                stats.write_hits++;
+                stats.writeHits++;
             else
-                stats.read_hits++;
+                stats.readHits++;
         }
 
         DPRINTF(TLBVerbose, "lookup(vpn=%#x, asid=%#x): %s ppn %#x\n",
@@ -498,17 +498,17 @@ TLB::unserialize(CheckpointIn &cp)
 
 TLB::TlbStats::TlbStats(Stats::Group *parent)
   : Stats::Group(parent),
-    ADD_STAT(read_hits, UNIT_COUNT, "read hits"),
-    ADD_STAT(read_misses, UNIT_COUNT, "read misses"),
-    ADD_STAT(read_accesses, UNIT_COUNT, "read accesses"),
-    ADD_STAT(write_hits, UNIT_COUNT, "write hits"),
-    ADD_STAT(write_misses, UNIT_COUNT, "write misses"),
-    ADD_STAT(write_accesses, UNIT_COUNT, "write accesses"),
+    ADD_STAT(readHits, UNIT_COUNT, "read hits"),
+    ADD_STAT(readMisses, UNIT_COUNT, "read misses"),
+    ADD_STAT(readAccesses, UNIT_COUNT, "read accesses"),
+    ADD_STAT(writeHits, UNIT_COUNT, "write hits"),
+    ADD_STAT(writeMisses, UNIT_COUNT, "write misses"),
+    ADD_STAT(writeAccesses, UNIT_COUNT, "write accesses"),
     ADD_STAT(hits, UNIT_COUNT, "Total TLB (read and write) hits",
-             read_hits + write_hits),
+             readHits + writeHits),
     ADD_STAT(misses, UNIT_COUNT, "Total TLB (read and write) misses",
-             read_misses + write_misses),
+             readMisses + writeMisses),
     ADD_STAT(accesses, UNIT_COUNT, "Total TLB (read and write) accesses",
-             read_accesses + write_accesses)
+             readAccesses + writeAccesses)
 {
 }

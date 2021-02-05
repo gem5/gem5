@@ -67,14 +67,14 @@ class TLB : public BaseTLB
     struct TlbStats : public Stats::Group{
         TlbStats(Stats::Group *parent);
 
-        Stats::Scalar read_hits;
-        Stats::Scalar read_misses;
+        Stats::Scalar readHits;
+        Stats::Scalar readMisses;
         Stats::Scalar read_acv;
-        Stats::Scalar read_accesses;
-        Stats::Scalar write_hits;
-        Stats::Scalar write_misses;
+        Stats::Scalar readAccesses;
+        Stats::Scalar writeHits;
+        Stats::Scalar writeMisses;
         Stats::Scalar write_acv;
-        Stats::Scalar write_accesses;
+        Stats::Scalar writeAccesses;
 
         Stats::Formula hits;
         Stats::Formula misses;
