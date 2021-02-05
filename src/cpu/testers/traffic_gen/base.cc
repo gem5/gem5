@@ -353,9 +353,9 @@ BaseTrafficGen::StatGroup::StatGroup(Stats::Group *parent)
                "Avg latency of write requests",
                totalWriteLatency / totalWrites),
       ADD_STAT(readBW, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
-               "Read bandwidth in bytes/s", bytesRead / simSeconds),
+               "Read bandwidth", bytesRead / simSeconds),
       ADD_STAT(writeBW, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
-               "Write bandwidth in bytes/s", bytesWritten / simSeconds)
+               "Write bandwidth", bytesWritten / simSeconds)
 {
 }
 
