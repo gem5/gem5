@@ -74,11 +74,17 @@ decode PO default Unknown::unknown() {
     }
 
     10: IntImmCompLogicOp::cmpli({{
-        cr = makeCRFieldUnsigned(Ra_uw, ui, xer.so);
+        if (l)
+            cr = makeCRFieldUnsigned(Ra, ui, xer.so);
+        else
+            cr = makeCRFieldUnsigned((uint32_t) Ra, ui, xer.so);
     }});
 
     11: IntImmCompOp::cmpi({{
-        cr = makeCRFieldSigned(Ra_sw, si, xer.so);
+        if (l)
+            cr = makeCRFieldSigned(Ra, si, xer.so);
+        else
+            cr = makeCRFieldSigned((int32_t) Ra, si, xer.so);
     }});
 
     format IntImmArithOp {
@@ -218,7 +224,10 @@ decode PO default Unknown::unknown() {
     31: decode X_XO {
 
         0: IntCompOp::cmp({{
-            cr = makeCRFieldSigned(Ra_sw, Rb_sw, xer.so);
+            if (l)
+                cr = makeCRFieldSigned(Ra, Rb, xer.so);
+            else
+                cr = makeCRFieldSigned((int32_t)Ra, (int32_t)Rb, xer.so);
         }});
 
         format LoadIndexOp {
@@ -245,7 +254,10 @@ decode PO default Unknown::unknown() {
         }
 
         32: IntCompOp::cmpl({{
-            cr = makeCRFieldUnsigned(Ra_uw, Rb_uw, xer.so);
+            if (l)
+                cr = makeCRFieldUnsigned(Ra, Rb, xer.so);
+            else
+                cr = makeCRFieldUnsigned((uint32_t)Ra, (uint32_t)Rb, xer.so);
         }});
 
         52: LoadIndexOp::lbarx({{
