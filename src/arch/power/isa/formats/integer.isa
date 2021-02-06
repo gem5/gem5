@@ -179,6 +179,57 @@ def format IntDispArithOp(code, inst_flags = []) {{
 }};
 
 
+// Integer compare instructions.
+def format IntCompOp(code, inst_flags = []) {{
+
+    # Add code to setup variables
+    code = 'GEM5_VAR_USED uint32_t cr = 0;\n' + code
+    code += 'CR = insertCRField(CR, bf, cr);\n'
+
+    # Add code to access XER
+    code = readXERCode + code
+
+    # Generate the class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntCompOp', code, inst_flags, BasicDecode,
+                 BasicConstructor)
+}};
+
+
+// Integer immediate compare instructions.
+def format IntImmCompOp(code, inst_flags = []) {{
+
+    # Add code to setup variables
+    code = 'GEM5_VAR_USED uint32_t cr = 0;\n' + code
+    code += 'CR = insertCRField(CR, bf, cr);\n'
+
+    # Add code to access XER
+    code = readXERCode + code
+
+    # Generate the class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntImmCompOp', code, inst_flags, BasicDecode,
+                 BasicConstructor)
+}};
+
+
+// Integer immediate compare logical instructions.
+def format IntImmCompLogicOp(code, inst_flags = []) {{
+
+    # Add code to setup variables
+    code = 'GEM5_VAR_USED uint32_t cr = 0;\n' + code
+    code += 'CR = insertCRField(CR, bf, cr);\n'
+
+    # Add code to access XER
+    code = readXERCode + code
+
+    # Generate the class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntImmCompLogicOp', code, inst_flags,
+                 BasicDecode, BasicConstructor)
+}};
+
+
 // Integer instructions that perform logic operations. The result is
 // always written into Ra. All instructions have 2 versions depending on
 // whether the Rc bit is set to compute the CR0 code. This is determined

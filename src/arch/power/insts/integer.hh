@@ -407,6 +407,62 @@ class IntDispArithOp : public IntArithOp
 
 
 /**
+ * Class for integer compare operations.
+ */
+class IntCompOp : public IntOp
+{
+  protected:
+
+    bool l;
+    uint8_t bf;
+
+    /// Constructor
+    IntCompOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : IntOp(mnem, _machInst, __opClass),
+        l(machInst.l),
+        bf(machInst.bf)
+    {
+    }
+};
+
+
+/**
+ * Class for integer immediate compare operations.
+ */
+class IntImmCompOp : public IntCompOp
+{
+  protected:
+
+    int32_t si;
+
+    /// Constructor
+    IntImmCompOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : IntCompOp(mnem, _machInst, __opClass),
+        si(sext<16>(machInst.si))
+    {
+    }
+};
+
+
+/**
+ * Class for integer immediate compare logical operations.
+ */
+class IntImmCompLogicOp : public IntCompOp
+{
+  protected:
+
+    uint32_t ui;
+
+    /// Constructor
+    IntImmCompLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : IntCompOp(mnem, _machInst, __opClass),
+        ui(machInst.ui)
+    {
+    }
+};
+
+
+/**
  * Class for integer operations with a shift.
  */
 class IntShiftOp : public IntOp
