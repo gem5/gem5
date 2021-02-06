@@ -168,6 +168,17 @@ def format IntImmLogicOp(code, computeCR0 = 0, inst_flags = []) {{
 }};
 
 
+// Integer instructions with displacement that perform arithmetic.
+// There are no control flags to set.
+def format IntDispArithOp(code, inst_flags = []) {{
+
+    # Generate the class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntDispArithOp', code, inst_flags, BasicDecode,
+                 BasicConstructor)
+}};
+
+
 // Integer instructions that perform logic operations. The result is
 // always written into Ra. All instructions have 2 versions depending on
 // whether the Rc bit is set to compute the CR0 code. This is determined

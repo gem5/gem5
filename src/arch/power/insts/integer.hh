@@ -161,6 +161,27 @@ class IntImmArithOp : public IntArithOp
 
 
 /**
+ * Class for integer arithmetic operations with displacement.
+ */
+class IntDispArithOp : public IntArithOp
+{
+  protected:
+
+    int64_t d;
+
+    /// Constructor
+    IntDispArithOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : IntArithOp(mnem, _machInst, __opClass),
+        d(sext<16>((machInst.d0 << 6) | (machInst.d1 << 1) | machInst.d2))
+    {
+    }
+
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const override;
+};
+
+
+/**
  * Class for integer operations with a shift.
  */
 class IntShiftOp : public IntOp

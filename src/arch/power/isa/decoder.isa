@@ -163,6 +163,10 @@ decode PO default Unknown::unknown() {
             528: bcctr({{ NIA = CTR & -4ULL; }});
             560: bctar({{ NIA = TAR & -4ULL; }}, true);
         }
+
+        default: decode DX_XO {
+            2: IntDispArithOp::addpcis({{ Rt = NIA + (d << 16); }});
+        }
     }
 
     format IntRotateOp {
