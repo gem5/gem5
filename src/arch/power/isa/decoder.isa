@@ -610,10 +610,32 @@ decode PO default Unknown::unknown() {
                     }
                 }}, true);
 
+                457: divdu({{
+                    uint64_t src1 = Ra;
+                    uint64_t src2 = Rb;
+                    if (src2 != 0) {
+                        Rt = src1 / src2;
+                    } else {
+                        Rt = 0;
+                        setOV = true;
+                    }
+                }}, true);
+
                 459: divwu({{
                     uint32_t src1 = Ra_uw;
                     uint32_t src2 = Rb_uw;
                     if (src2 != 0) {
+                        Rt = src1 / src2;
+                    } else {
+                        Rt = 0;
+                        setOV = true;
+                    }
+                }}, true);
+
+                489: divd({{
+                    int64_t src1 = Ra_sd;
+                    int64_t src2 = Rb_sd;
+                    if ((src1 != INT64_MIN || src2 != -1) && src2 != 0) {
                         Rt = src1 / src2;
                     } else {
                         Rt = 0;
