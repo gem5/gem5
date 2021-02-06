@@ -47,6 +47,7 @@ BitUnion32(ExtMachInst)
 
     // Shifts and masks
     Bitfield<15, 11> sh;
+    Bitfield<1>      shn;
     Bitfield<10,  6> mb;
     Bitfield< 5,  1> me;
 
