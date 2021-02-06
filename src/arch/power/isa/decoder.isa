@@ -398,6 +398,17 @@ decode PO default Unknown::unknown() {
         246: MiscOp::dcbtst({{ }});
         247: StoreIndexUpdateOp::stbux({{ Mem_ub = Rs_ub; }});
 
+        252: IntLogicOp::bpermd({{
+            uint64_t res = 0;
+            for (int i = 0; i < 8; ++i) {
+                int index = (Rs >> (i * 8)) & 0xff;
+                if ((index < 64) && bits(Rb, 63 - index)) {
+                        res |= 1 << i;
+                }
+            }
+            Ra = res;
+        }});
+
         format IntArithOp {
             265: modud({{
                 uint64_t src1 = Ra;
