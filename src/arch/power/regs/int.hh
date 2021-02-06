@@ -35,9 +35,9 @@ namespace PowerISA
 // Constants Related to the number of registers
 const int NumIntArchRegs = 32;
 
-// CR, XER, LR, CTR, FPSCR, RSV, RSV-LEN, RSV-ADDR
+// CR, XER, LR, CTR, TAR, FPSCR, RSV, RSV-LEN, RSV-ADDR
 // and zero register, which doesn't actually exist but needs a number
-const int NumIntSpecialRegs = 9;
+const int NumIntSpecialRegs = 10;
 
 const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;
 
@@ -51,6 +51,7 @@ enum MiscIntRegNums
     INTREG_XER,
     INTREG_LR,
     INTREG_CTR,
+    INTREG_TAR,
     INTREG_FPSCR,
     INTREG_RSV,
     INTREG_RSV_LEN,

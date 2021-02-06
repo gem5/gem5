@@ -64,6 +64,7 @@ def operands {{
     'CR': ('IntReg', 'uw', 'INTREG_CR', 'IsInteger', 9),
     'LR': ('IntReg', 'ud', 'INTREG_LR', 'IsInteger', 9),
     'CTR': ('IntReg', 'ud', 'INTREG_CTR', 'IsInteger', 9),
+    'TAR': ('IntReg', 'ud', 'INTREG_TAR', 'IsInteger', 9),
     'XER': ('IntReg', 'uw', 'INTREG_XER', 'IsInteger', 9),
 
     # Setting as IntReg so things are stored as an integer, not double

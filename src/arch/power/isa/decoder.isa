@@ -152,8 +152,12 @@ decode PO default Unknown::unknown() {
             }});
         }
 
-        // Conditionally branch to address in CTR based on CR.
-        528: BranchRegCondOp::bcctr({{ NIA = CTR & -4ULL; }});
+        // Conditionally branch to an address in a register based on
+        // either CR only or both CR and CTR.
+        format BranchRegCondOp {
+            528: bcctr({{ NIA = CTR & -4ULL; }});
+            560: bctar({{ NIA = TAR & -4ULL; }}, true);
+        }
     }
 
     format IntRotateOp {
@@ -480,12 +484,14 @@ decode PO default Unknown::unknown() {
                         0x20: mfxer({{ Rt = XER; }});
                         0x100: mflr({{ Rt = LR; }});
                         0x120: mfctr({{ Rt = CTR; }});
+                        0x1f9: mftar({{ Rt = TAR; }});
                     }
 
                     467: decode SPR {
                         0x20: mtxer({{ XER = Rs; }});
                         0x100: mtlr({{ LR = Rs; }});
                         0x120: mtctr({{ CTR = Rs; }});
+                        0x1f9: mttar({{ TAR = Rs; }});
                     }
 
                     512: mcrxr({{
