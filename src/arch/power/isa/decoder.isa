@@ -335,15 +335,27 @@ decode PO default Unknown::unknown() {
         246: MiscOp::dcbtst({{ }});
         247: StoreIndexUpdateOp::stbux({{ Mem_ub = Rs_ub; }});
 
-        267: IntArithOp::moduw({{
-            uint64_t src1 = Ra_uw;
-            uint64_t src2 = Rb_uw;
-            if (src2 != 0) {
-                Rt = src1 % src2;
-            } else {
-                Rt = 0;
-            }
-        }});
+        format IntArithOp {
+            265: modud({{
+                uint64_t src1 = Ra;
+                uint64_t src2 = Rb;
+                if (src2 != 0) {
+                    Rt = src1 % src2;
+                } else {
+                    Rt = 0;
+                }
+            }});
+
+            267: moduw({{
+                uint64_t src1 = Ra_uw;
+                uint64_t src2 = Rb_uw;
+                if (src2 != 0) {
+                    Rt = src1 % src2;
+                } else {
+                    Rt = 0;
+                }
+            }});
+        }
 
         278: MiscOp::dcbt({{ }});
         279: LoadIndexOp::lhzx({{ Rt = Mem_uh; }});
@@ -447,15 +459,27 @@ decode PO default Unknown::unknown() {
 
         759: StoreIndexUpdateOp::stfdux({{ Mem_df = Fs; }});
 
-        779: IntArithOp::modsw({{
-            int64_t src1 = Ra_sw;
-            int64_t src2 = Rb_sw;
-            if ((src1 != INT32_MIN || src2 != -1) && src2 != 0) {
-                Rt = src1 % src2;
-            } else {
-                Rt = 0;
-            }
-        }});
+        format IntArithOp {
+            777: modsd({{
+                int64_t src1 = Ra_sd;
+                int64_t src2 = Rb_sd;
+                if ((src1 != INT64_MIN || src2 != -1) && src2 != 0) {
+                    Rt = src1 % src2;
+                } else {
+                    Rt = 0;
+                }
+            }});
+
+            779: modsw({{
+                int64_t src1 = Ra_sw;
+                int64_t src2 = Rb_sw;
+                if ((src1 != INT32_MIN || src2 != -1) && src2 != 0) {
+                    Rt = src1 % src2;
+                } else {
+                    Rt = 0;
+                }
+            }});
+        }
 
         790: LoadIndexOp::lhbrx({{ Rt = swap_byte(Mem_uh); }});
 
