@@ -265,6 +265,100 @@ class IntArithOp : public IntOp
         return std::make_tuple(rlo, rhi);
     }
 
+    /**
+     * Compute overflow, 64-bit quotient and 64-bit remainder of
+     * 128-bit by 64-bit unsigned integer division based on
+     * https://codereview.stackexchange.com/a/71013
+     */
+    inline std::tuple<bool, uint64_t, uint64_t>
+    divide(uint64_t ralo, uint64_t rahi, uint64_t rb) const
+    {
+        bool ov;
+        uint64_t q, r;
+    #if defined(__SIZEOF_INT128__)
+        if (rb == 0) {
+            ov = true;
+        } else {
+            __uint128_t ra = ((__uint128_t)rahi << 64) | ralo;
+            __uint128_t res = ra / rb;
+            q = res;
+            r = ra % rb;
+            ov = res > UINT64_MAX;
+        }
+    #else
+        uint64_t c = 0;
+
+        if (rb == 0) {
+            ov = true;
+        } else if (rahi == 0) {
+            q  = ralo / rb;
+            r = ralo % rb;
+            ov = false;
+        } else if (rahi >= rb) {
+            ov = true;
+        } else {
+            for (int i = 0; i < 64; ++i) {
+                c = rahi >> 63;
+                rahi = (rahi << 1) | (ralo >> 63);
+                if (c || (rahi >= rb)) {
+                    rahi -= rb;
+                    c = 1;
+                } else {
+                    c = 0;
+                }
+                ralo = (ralo << 1) | c;
+            }
+            q = ralo;
+            r = rahi;
+            ov = false;
+        }
+    #endif
+        return std::make_tuple(ov, q, r);
+    }
+
+    /**
+     * Compute overflow, 64-bit quotient and 64-bit remainder of
+     * 128-bit by 64-bit signed integer division
+     */
+    inline std::tuple<bool, int64_t, int64_t>
+    divide(uint64_t ralo, int64_t rahi, int64_t rb) const
+    {
+        bool ov;
+        int64_t q, r;
+    #if defined(__SIZEOF_INT128__)
+        if (rb == 0) {
+            ov = true;
+        } else {
+            __int128_t ra = ((__int128_t)rahi << 64) | ralo;
+            __int128_t res = ra / rb;
+            q = res;
+            r = ra % rb;
+            ov = res != q;
+        }
+    #else
+        bool raneg = rahi < 0;
+        bool rbneg = rb < 0;
+
+        if (raneg) {
+            ralo = ~(ralo);
+            rahi = ~(rahi);
+            if (ralo == -1ULL) {
+                ralo = 0;
+                rahi++;
+            } else {
+                ralo++;
+            }
+        }
+
+        if (rbneg) rb = -rb;
+        std::tie(ov, q, r) = divide(ralo, (uint64_t)rahi, (uint64_t)rb);
+        if (raneg ^ rbneg) q = -q;
+        if (raneg) r = -r;
+        if (!ov) ov = ((q < 0) ^ (raneg ^ rbneg));
+    #endif
+        return std::make_tuple(ov, q, r);
+    }
+
     std::string generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const override;
 };

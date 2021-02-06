@@ -574,6 +574,18 @@ decode PO default Unknown::unknown() {
             266: IntSumOp::add({{ Ra }}, {{ Rb }});
 
             format IntArithCheckRcOp {
+                393: divdeu({{
+                    uint64_t src1 = Ra;
+                    uint64_t src2 = Rb;
+                    uint64_t res;
+                    std::tie(setOV, res, std::ignore) = divide(0, src1, src2);
+                    if (!setOV) {
+                        Rt = res;
+                    } else {
+                        Rt = 0;
+                    }
+                }}, true);
+
                 395: divweu({{
                     uint32_t src1 = Ra_ud;
                     uint32_t src2 = Rb_ud;
@@ -589,6 +601,18 @@ decode PO default Unknown::unknown() {
                     } else {
                         Rt = 0;
                         setOV = true;
+                    }
+                }}, true);
+
+                425: divde({{
+                    int64_t src1 = Ra_sd;
+                    int64_t src2 = Rb_sd;
+                    int64_t res;
+                    std::tie(setOV, res, std::ignore) = divide(0, src1, src2);
+                    if (!setOV) {
+                        Rt = res;
+                    } else {
+                        Rt = 0;
                     }
                 }}, true);
 
