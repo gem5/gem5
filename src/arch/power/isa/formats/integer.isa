@@ -31,44 +31,6 @@
 // Integer ALU instructions
 //
 
-
-// Instruction class constructor template when Rc is set.
-def template IntRcConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst) :
-        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
-    {
-        %(set_reg_idx_arr)s;
-        %(constructor)s;
-        rcSet = true;
-    }
-}};
-
-
-// Instruction class constructor template when OE is set.
-def template IntOeConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst) :
-        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
-    {
-        %(set_reg_idx_arr)s;
-        %(constructor)s;
-        oeSet = true;
-    }
-}};
-
-
-// Instruction class constructor template when both Rc and OE are set.
-def template IntRcOeConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst) :
-        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
-    {
-        %(set_reg_idx_arr)s;
-        %(constructor)s;
-        rcSet = true;
-        oeSet = true;
-    }
-}};
-
-
 let {{
 
 readXERCode = 'Xer xer = XER;'
@@ -98,17 +60,12 @@ computeOVCode = '''
     }
 '''
 
-computeDivOVCode = '''
-    if (divSetOV) {
+setOVCode = '''
+    if (setOV) {
         xer.ov = 1;
         xer.so = 1;
     } else {
-        if (findOverflow(32, %(result)s, %(inputa)s, %(inputb)s)) {
-            xer.ov = 1;
-            xer.so = 1;
-        } else {
-            xer.ov = 0;
-        }
+        xer.ov = 0;
     }
 '''
 
@@ -136,21 +93,23 @@ def format IntImmOp(code, inst_flags = []) {{
 // value in source register Ra, hence the use of src to hold the actual
 // value. The control flags include the use of code to compute the
 // carry bit or the CR0 code.
-def format IntImmArithOp(code, ctrl_flags = [], inst_flags = []) {{
+def format IntImmArithOp(code, computeCA = 0, computeCR0 = 0,
+                         inst_flags = []) {{
 
-    # Set up the dictionary and deal with control flags
-    dict = {'result':'Rt', 'inputa':'src', 'inputb':'imm'}
-    if ctrl_flags:
+    # Set up the dictionary
+    dict = {'result':'Rt', 'inputa':'src', 'inputb':'si'}
+
+    # Deal with computing CR0 and carry
+    if computeCA or computeCR0:
         code += readXERCode
-        for val in ctrl_flags:
-            if val == 'computeCA':
-                code += computeCACode % dict + setXERCode
-            elif val == 'computeCR0':
-                code += computeCR0Code % dict
+    if computeCA:
+        code += computeCACode % dict + setXERCode
+    if computeCR0:
+        code += computeCR0Code % dict
 
     # Generate the class
     (header_output, decoder_output, decode_block, exec_output) = \
-        GenAluOp(name, Name, 'IntImmOp', code, inst_flags, BasicDecode,
+        GenAluOp(name, Name, 'IntImmArithOp', code, inst_flags, BasicDecode,
                  BasicConstructor)
 }};
 
@@ -163,12 +122,12 @@ def format IntImmArithCheckRaOp(code, code_ra0, inst_flags = []) {{
 
     # First the version where Ra is non-zero
     (header_output, decoder_output, decode_block, exec_output) = \
-        GenAluOp(name, Name, 'IntImmOp', code, inst_flags,
+        GenAluOp(name, Name, 'IntImmArithOp', code, inst_flags,
                  CheckRaDecode, BasicConstructor)
 
     # Now another version where Ra == 0
     (header_output_ra0, decoder_output_ra0, _, exec_output_ra0) = \
-        GenAluOp(name, Name + 'RaZero', 'IntImmOp', code_ra0, inst_flags,
+        GenAluOp(name, Name + 'RaZero', 'IntImmArithOp', code_ra0, inst_flags,
                  CheckRaDecode, BasicConstructor)
 
     # Finally, add to the other outputs
@@ -213,7 +172,7 @@ def format IntLogicOp(code, inst_flags = []) {{
     # Generate the second class
     (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
         GenAluOp(name, Name + 'RcSet', 'IntOp', code_rc1, inst_flags,
-                 CheckRcDecode, IntRcConstructor)
+                 CheckRcDecode, BasicConstructor)
 
     # Finally, add to the other outputs
     header_output += header_output_rc1
@@ -238,7 +197,7 @@ def format IntShiftOp(code, inst_flags = []) {{
     # Generate the second class
     (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
         GenAluOp(name, Name + 'RcSet', 'IntShiftOp', code_rc1, inst_flags,
-                 CheckRcDecode, IntRcConstructor)
+                 CheckRcDecode, BasicConstructor)
 
     # Finally, add to the other outputs
     header_output += header_output_rc1
@@ -264,9 +223,9 @@ def format IntSumOp(src1, src2, ca = {{ 0 }}, computeCA = 0,
     dict = {'result':'Rt', 'inputa':'src1', 'inputb':'src2'}
 
     # Add code to set up variables and do the sum
-    code  = 'uint32_t src1 = ' + src1 + ';\n'
-    code += 'uint32_t src2 = ' + src2 + ';\n'
-    code += 'uint32_t ca = ' + ca + ';\n'
+    code  = 'uint64_t src1 = ' + src1 + ';\n'
+    code += 'uint64_t src2 = ' + src2 + ';\n'
+    code += 'uint64_t ca = ' + ca + ';\n'
     code += 'Rt = src1 + src2 + ca;\n'
 
     # Add code for calculating the carry, if needed
@@ -284,17 +243,17 @@ def format IntSumOp(src1, src2, ca = {{ 0 }}, computeCA = 0,
 
     # Generate the classes
     (header_output, decoder_output, decode_block, exec_output) = \
-        GenAluOp(name, Name, 'IntOp', code, inst_flags,
+        GenAluOp(name, Name, 'IntArithOp', code, inst_flags,
                  CheckRcOeDecode, BasicConstructor)
     (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
-        GenAluOp(name, Name + 'RcSet', 'IntOp', code_rc1, inst_flags,
-                 CheckRcOeDecode, IntRcConstructor)
+        GenAluOp(name, Name + 'RcSet', 'IntArithOp', code_rc1, inst_flags,
+                 CheckRcOeDecode, BasicConstructor)
     (header_output_oe1, decoder_output_oe1, _, exec_output_oe1) = \
-        GenAluOp(name, Name + 'OeSet', 'IntOp', code_oe1, inst_flags,
-                 CheckRcOeDecode, IntOeConstructor)
+        GenAluOp(name, Name + 'OeSet', 'IntArithOp', code_oe1, inst_flags,
+                 CheckRcOeDecode, BasicConstructor)
     (header_output_rc1_oe1, decoder_output_rc1_oe1, _, exec_output_rc1_oe1) = \
-        GenAluOp(name, Name + 'RcSetOeSet', 'IntOp', code_rc1_oe1,
-                 inst_flags, CheckRcOeDecode, IntRcOeConstructor)
+        GenAluOp(name, Name + 'RcSetOeSet', 'IntArithOp', code_rc1_oe1,
+                 inst_flags, CheckRcOeDecode, BasicConstructor)
 
     # Finally, add to the other outputs
     header_output += \
@@ -309,39 +268,69 @@ def format IntSumOp(src1, src2, ca = {{ 0 }}, computeCA = 0,
 
 // Instructions that use source registers Ra and Rb, with the result
 // placed into Rt. Basically multiply and divide instructions. The
-// carry bit is never set, but overflow can be calculated. Division
-// explicitly sets the overflow bit in certain situations and this is
-// dealt with using the 'divSetOV' boolean in decoder.isa. We generate
-// two versions of each instruction to deal with the Rc bit.
-def format IntArithOp(code, computeOV = 0, inst_flags = []) {{
+// carry bit is never set, but overflow can be calculated. In certain
+// situations, the overflow bits have to be set and this is dealt with
+// using the 'setOV' boolean in decoder.isa.
+//
+// In case overflow is to be calculated, we generate four versions of
+// each instruction to deal with different combinations of having the
+// OE bit set or unset and the Rc bit set or unset too. Otherwise, we
+// generate two versions of each instruction to deal with the Rc bit.
+def format IntArithCheckRcOp(code, computeOV = 0, inst_flags = []) {{
 
     # The result is always in Rt, but the source values vary
     dict = {'result':'Rt', 'inputa':'src1', 'inputb':'src2'}
 
     # Deal with setting the overflow flag
     if computeOV:
-        code = 'bool divSetOV = false;\n' + code
-        code += computeDivOVCode % dict + setXERCode
+        # Setup the 4 code versions and add code to access XER if necessary
+        code  = 'GEM5_VAR_USED bool setOV = false;\n' + code
+        code_rc1 = readXERCode + code + computeCR0Code % dict
+        code_oe1 = readXERCode + code + setOVCode + setXERCode
+        code_rc1_oe1 = readXERCode + code + setOVCode + setXERCode
+        code_rc1_oe1 += computeCR0Code % dict
 
-    # Setup the 2 code versions and add code to access XER if necessary
-    code_rc1 = readXERCode + code + computeCR0Code % dict
-    if computeOV:
-        code = readXERCode + code
+        # Generate the classes
+        (header_output, decoder_output, decode_block, exec_output) = \
+            GenAluOp(name, Name, 'IntArithOp', code, inst_flags,
+                     CheckRcOeDecode, BasicConstructor)
+        (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+            GenAluOp(name, Name + 'RcSet', 'IntArithOp', code_rc1, inst_flags,
+                     CheckRcOeDecode, BasicConstructor)
+        (header_output_oe1, decoder_output_oe1, _, exec_output_oe1) = \
+            GenAluOp(name, Name + 'OeSet', 'IntArithOp', code_oe1, inst_flags,
+                     CheckRcOeDecode, BasicConstructor)
+        (header_output_rc1_oe1, decoder_output_rc1_oe1, _,
+         exec_output_rc1_oe1) = \
+            GenAluOp(name, Name + 'RcSetOeSet', 'IntArithOp', code_rc1_oe1,
+                     inst_flags, CheckRcOeDecode, BasicConstructor)
 
-    # Generate the classes
-    (header_output, decoder_output, decode_block, exec_output) = \
-        GenAluOp(name, Name, 'IntOp', code, inst_flags,
-                 CheckRcDecode, BasicConstructor)
+        # Finally, add to the other outputs
+        header_output += \
+            header_output_rc1 + header_output_oe1 + header_output_rc1_oe1
+        decoder_output += \
+            decoder_output_rc1 + decoder_output_oe1 + decoder_output_rc1_oe1
+        exec_output += \
+            exec_output_rc1 + exec_output_oe1 + exec_output_rc1_oe1
 
-    # Generate the second class
-    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
-        GenAluOp(name, Name + 'RcSet', 'IntOp', code_rc1, inst_flags,
-                 CheckRcDecode, IntRcConstructor)
+    else:
+        # Setup the 2 code versions and add code to access XER if necessary
+        code_rc1 = readXERCode + code + computeCR0Code % dict
 
-    # Finally, add to the other outputs
-    header_output += header_output_rc1
-    decoder_output += decoder_output_rc1
-    exec_output += exec_output_rc1
+        # Generate the first class
+        (header_output, decoder_output, decode_block, exec_output) = \
+            GenAluOp(name, Name, 'IntArithOp', code, inst_flags,
+                     CheckRcDecode, BasicConstructor)
+
+        # Generate the second class
+        (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+            GenAluOp(name, Name + 'RcSet', 'IntArithOp', code_rc1, inst_flags,
+                     CheckRcDecode, BasicConstructor)
+
+        # Finally, add to the other outputs
+        header_output += header_output_rc1
+        decoder_output += decoder_output_rc1
+        exec_output += exec_output_rc1
 }};
 
 
@@ -364,7 +353,7 @@ def format IntRotateOp(code, inst_flags = []) {{
     # Generate the second class
     (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
         GenAluOp(name, Name + 'RcSet', 'IntRotateOp', code_rc1, inst_flags,
-                 CheckRcDecode, IntRcConstructor)
+                 CheckRcDecode, BasicConstructor)
 
     # Finally, add to the other outputs
     header_output += header_output_rc1

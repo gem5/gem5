@@ -52,6 +52,7 @@ BitUnion32(ExtMachInst)
 
     // Immediate fields
     Bitfield<15,  0> si;
+    Bitfield<15,  0> ui;
     Bitfield<15,  0> d;
     Bitfield<15,  2> ds;
 
@@ -70,7 +71,7 @@ BitUnion32(ExtMachInst)
     Bitfield<0>      lk;
 
     // Record bits
-    Bitfield<0>      rc31;
+    Bitfield<0>      rc;
     Bitfield<10>     oe;
 
     // Condition register fields

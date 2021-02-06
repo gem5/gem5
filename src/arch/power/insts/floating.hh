@@ -43,11 +43,12 @@ class FloatOp : public PowerStaticInst
 {
   protected:
 
-    bool rcSet;
+    bool rc;
 
     /// Constructor
     FloatOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : PowerStaticInst(mnem, _machInst, __opClass)
+      : PowerStaticInst(mnem, _machInst, __opClass),
+        rc(machInst.rc)
     {
     }
 

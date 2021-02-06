@@ -61,8 +61,10 @@ IntOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     }
 
     // Additional characters depending on isa bits being set
-    if (oeSet) myMnemonic = myMnemonic + "o";
-    if (rcSet) myMnemonic = myMnemonic + ".";
+    if (oe)
+        myMnemonic = myMnemonic + "o";
+    if (rc)
+        myMnemonic = myMnemonic + ".";
     ccprintf(ss, "%-10s ", myMnemonic);
 
     // Print the first destination only
@@ -116,7 +118,7 @@ IntImmOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     }
 
     // Print the immediate value last
-    ss << ", " << (int32_t)imm;
+    ss << ", " << (int32_t)si;
 
     return ss.str();
 }

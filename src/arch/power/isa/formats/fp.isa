@@ -71,7 +71,7 @@ def format FloatRCCheckOp(code, inst_flags = []) {{
     # Generate the second class
     (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
         GenAluOp(name, Name + 'RcSet', 'FloatOp', code_rc1, inst_flags,
-                 CheckRcDecode, IntRcConstructor)
+                 CheckRcDecode, BasicConstructor)
 
     # Finally, add to the other outputs
     header_output += header_output_rc1
@@ -96,7 +96,7 @@ def format FloatArithOp(code, inst_flags = []) {{
     # Generate the second class
     (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
         GenAluOp(name, Name + 'RcSet', 'FloatOp', code_rc1, inst_flags,
-                 CheckRcDecode, IntRcConstructor)
+                 CheckRcDecode, BasicConstructor)
 
     # Finally, add to the other outputs
     header_output += header_output_rc1
@@ -121,7 +121,7 @@ def format FloatConvertOp(code, inst_flags = []) {{
     # Generate the second class
     (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
         GenAluOp(name, Name + 'RcSet', 'FloatOp', code_rc1, inst_flags,
-                 CheckRcDecode, IntRcConstructor)
+                 CheckRcDecode, BasicConstructor)
 
     # Finally, add to the other outputs
     header_output += header_output_rc1
