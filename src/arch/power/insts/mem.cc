@@ -63,7 +63,7 @@ MemDispOp::generateDisassembly(
     }
 
     // Print the displacement
-    ss << ", " << (int32_t)disp;
+    ss << ", " << d;
 
     // Print the address register
     ss << "(";

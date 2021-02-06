@@ -527,9 +527,7 @@ decode PO default Unknown::unknown() {
     55: StoreDispUpdateOp::stfdu({{ Mem_df = Fs; }});
 
     58: decode DS_XO {
-        2: LoadDispOp::lwa({{ Rt = Mem_sw; }},
-                           {{ EA = Ra + (disp & 0xfffffffc); }},
-                           {{ EA = disp & 0xfffffffc; }});
+        2: LoadDispShiftOp::lwa({{ Rt = Mem_sw; }});
     }
 
     format FloatArithOp {

@@ -240,7 +240,7 @@ def format LoadIndexOp(memacc_code, ea_code = {{ EA = Ra + Rb; }},
                        mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
-                 'MemOp', 'Load', mem_flags, inst_flags)
+                 'MemIndexOp', 'Load', mem_flags, inst_flags)
 }};
 
 
@@ -249,7 +249,7 @@ def format StoreIndexOp(memacc_code, ea_code = {{ EA = Ra + Rb; }},
                         mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
-                 'MemOp', 'Store', mem_flags, inst_flags)
+                 'MemIndexOp', 'Store', mem_flags, inst_flags)
 }};
 
 
@@ -262,7 +262,7 @@ def format LoadIndexUpdateOp(memacc_code, ea_code = {{ EA = Ra + Rb; }},
     # Generate the class
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      base_class = 'MemOp',
+                      base_class = 'MemIndexOp',
                       exec_template_base = 'Load')
 }};
 
@@ -276,13 +276,13 @@ def format StoreIndexUpdateOp(memacc_code, ea_code = {{ EA = Ra + Rb; }},
     # Generate the class
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      base_class = 'MemOp',
+                      base_class = 'MemIndexOp',
                       exec_template_base = 'Store')
 }};
 
 
-def format LoadDispOp(memacc_code, ea_code = {{ EA = Ra + disp; }},
-                      ea_code_ra0 = {{ EA = disp; }},
+def format LoadDispOp(memacc_code, ea_code = {{ EA = Ra + d; }},
+                      ea_code_ra0 = {{ EA = d; }},
                       mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
@@ -290,8 +290,8 @@ def format LoadDispOp(memacc_code, ea_code = {{ EA = Ra + disp; }},
 }};
 
 
-def format StoreDispOp(memacc_code, ea_code = {{ EA = Ra + disp; }},
-                       ea_code_ra0 = {{ EA = disp; }},
+def format StoreDispOp(memacc_code, ea_code = {{ EA = Ra + d; }},
+                       ea_code_ra0 = {{ EA = d; }},
                        mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
@@ -299,7 +299,17 @@ def format StoreDispOp(memacc_code, ea_code = {{ EA = Ra + disp; }},
 }};
 
 
-def format LoadDispUpdateOp(memacc_code, ea_code = {{ EA = Ra + disp; }},
+def format LoadDispShiftOp(memacc_code,
+                           ea_code = {{ EA = Ra + (ds << 2); }},
+                           ea_code_ra0 = {{ EA = (ds << 2); }},
+                           mem_flags = [], inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
+                 'MemDispShiftOp', 'Load', mem_flags, inst_flags)
+}};
+
+
+def format LoadDispUpdateOp(memacc_code, ea_code = {{ EA = Ra + d; }},
                             mem_flags = [], inst_flags = []) {{
 
     # Add in the update code
@@ -313,7 +323,7 @@ def format LoadDispUpdateOp(memacc_code, ea_code = {{ EA = Ra + disp; }},
 }};
 
 
-def format StoreDispUpdateOp(memacc_code, ea_code = {{ EA = Ra + disp; }},
+def format StoreDispUpdateOp(memacc_code, ea_code = {{ EA = Ra + d; }},
                              mem_flags = [], inst_flags = []) {{
 
     # Add in the update code
