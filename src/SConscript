@@ -301,29 +301,7 @@ def GdbXml(xml_id, symbol):
     Blob(joinpath(gdb_xml_dir, xml_id), symbol)
 
 class Source(SourceFile):
-    ungrouped_tag = 'No link group'
-    source_groups = set()
-
-    _current_group_tag = ungrouped_tag
-
-    @staticmethod
-    def link_group_tag(group):
-        return 'link group: %s' % group
-
-    @classmethod
-    def set_group(cls, group):
-        new_tag = Source.link_group_tag(group)
-        Source._current_group_tag = new_tag
-        Source.source_groups.add(group)
-
-    def _add_link_group_tag(self):
-        self.tags.add(Source._current_group_tag)
-
-    '''Add a c/c++ source file to the build'''
-    def __init__(self, source, tags=None, add_tags=None, append=None):
-        '''specify the source file, and any tags'''
-        super(Source, self).__init__(source, tags, add_tags, append)
-        self._add_link_group_tag()
+    pass
 
 class PySource(SourceFile):
     '''Add a python source file to the named package'''
@@ -678,7 +656,6 @@ for root, dirs, files in os.walk(base_dir, topdown=True):
 
     if 'SConscript' in files:
         build_dir = joinpath(env['BUILDDIR'], root[len(base_dir) + 1:])
-        Source.set_group(build_dir)
         SConscript(joinpath(root, 'SConscript'), variant_dir=build_dir)
 
 for extra_dir in extras_dir_list:
@@ -695,7 +672,6 @@ for extra_dir in extras_dir_list:
 
         if 'SConscript' in files:
             build_dir = joinpath(env['BUILDDIR'], root[prefix_len:])
-            Source.set_group(build_dir)
             SConscript(joinpath(root, 'SConscript'), variant_dir=build_dir)
 
 for opt in export_vars:
@@ -1300,52 +1276,8 @@ def makeEnv(env, label, objsfx, strip=False, **kwargs):
     if GetOption('without_python'):
         lib_sources = lib_sources.without_tag('python')
 
-    static_objs = []
-    shared_objs = []
-
-    for s in lib_sources.with_tag(Source.ungrouped_tag):
-        static_objs.append(s.static(new_env))
-        shared_objs.append(s.shared(new_env))
-
-    for group in Source.source_groups:
-        srcs = lib_sources.with_tag(Source.link_group_tag(group))
-        if not srcs:
-            continue
-
-        group_static = [ s.static(new_env) for s in srcs ]
-        group_shared = [ s.shared(new_env) for s in srcs ]
-
-        # Disable partial linking if mixing it with LTO is broken and LTO
-        # is enabled.
-        #
-        # Also, up until Apple LLVM version 10.0.0 (clang-1000.11.45.5),
-        # partial linked objects do not expose symbols that are marked with
-        # the hidden visibility and consequently building gem5 on Mac OS
-        # fails. As a workaround, we disable partial linking, however, we
-        # may want to revisit in the future.
-        broken_inc_lto = env.get('BROKEN_INCREMENTAL_LTO', False)
-        forced_lto = GetOption('force_lto')
-        darwin = (env['PLATFORM'] == 'darwin')
-        disable_partial = (broken_inc_lto and forced_lto) or darwin
-
-        # If partial linking is disabled, add these sources to the build
-        # directly, and short circuit this loop.
-        if disable_partial:
-            static_objs.extend(group_static)
-            shared_objs.extend(group_shared)
-            continue
-
-        # Set up the static partially linked objects.
-        file_name = new_env.subst("${OBJPREFIX}lib${OBJSUFFIX}.partial")
-        target = File(joinpath(group, file_name))
-        partial = env.PartialStatic(target=target, source=group_static)
-        static_objs.extend(partial)
-
-        # Set up the shared partially linked objects.
-        file_name = new_env.subst("${SHOBJPREFIX}lib${SHOBJSUFFIX}.partial")
-        target = File(joinpath(group, file_name))
-        partial = env.PartialShared(target=target, source=group_shared)
-        shared_objs.extend(partial)
+    static_objs = list([ s.static(new_env) for s in lib_sources ])
+    shared_objs = list([ s.shared(new_env) for s in lib_sources ])
 
     static_date = date_source.static(new_env)
     new_env.Depends(static_date, static_objs)

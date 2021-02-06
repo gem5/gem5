@@ -112,9 +112,6 @@ AddOption('--no-compress-debug', action='store_true',
           help="Don't compress debug info in build files")
 AddOption('--no-lto', action='store_true',
           help='Disable Link-Time Optimization for fast')
-AddOption('--force-lto', action='store_true',
-          help='Use Link-Time Optimization instead of partial linking' +
-               ' when the compiler doesn\'t support using them together.')
 AddOption('--verbose', action='store_true',
           help='Print full tool command lines')
 AddOption('--without-python', action='store_true',
@@ -129,9 +126,6 @@ AddOption('--with-systemc-tests', action='store_true',
           help='Build systemc tests')
 
 from gem5_scons import Transform, error, warning, summarize_warnings
-
-if GetOption('no_lto') and GetOption('force_lto'):
-    error('--no-lto and --force-lto are mutually exclusive')
 
 ########################################################################
 #
@@ -328,14 +322,8 @@ if main['GCC'] or main['CLANG']:
     # option --as-needed
     if sys.platform != "darwin":
         main.Append(LINKFLAGS='-Wl,--as-needed')
-    main['FILTER_PSHLINKFLAGS'] = lambda x: str(x).replace(' -shared', '')
-    main['PSHLINKFLAGS'] = main.subst('${FILTER_PSHLINKFLAGS(SHLINKFLAGS)}')
     if GetOption('gold_linker'):
         main.Append(LINKFLAGS='-fuse-ld=gold')
-    main['PLINKFLAGS'] = main.get('LINKFLAGS')
-    shared_partial_flags = ['-r', '-nostdlib']
-    main.Append(PSHLINKFLAGS=shared_partial_flags)
-    main.Append(PLINKFLAGS=shared_partial_flags)
 
     # Treat warnings as errors but white list some warnings that we
     # want to allow (e.g., deprecation warnings).
@@ -366,41 +354,10 @@ if main['GCC']:
 
     main['GCC_VERSION'] = gcc_version
 
-    # Incremental linking with LTO is currently broken in gcc versions
-    # 4.9 and above. A version where everything works completely hasn't
-    # yet been identified.
-    #
-    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67548
-    main['BROKEN_INCREMENTAL_LTO'] = True
-
-    if compareVersions(gcc_version, '6.0') >= 0:
-        # gcc versions 6.0 and greater accept an -flinker-output flag which
-        # selects what type of output the linker should generate. This is
-        # necessary for incremental lto to work, but is also broken in
-        # current versions of gcc. It may not be necessary in future
-        # versions. We add it here since it might be, and as a reminder that
-        # it exists. It's excluded if lto is being forced.
-        #
-        # https://gcc.gnu.org/gcc-6/changes.html
-        # https://gcc.gnu.org/ml/gcc-patches/2015-11/msg03161.html
-        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69866
-        if not GetOption('force_lto'):
-            main.Append(PSHLINKFLAGS=['-flinker-output=rel'])
-            main.Append(PLINKFLAGS=['-flinker-output=rel'])
-
-    disable_lto = GetOption('no_lto')
-    if not disable_lto and main.get('BROKEN_INCREMENTAL_LTO', False) and \
-            not GetOption('force_lto'):
-        warning('Your compiler doesn\'t support incremental linking and lto '
-                'at the same time, so lto is being disabled. To force lto on '
-                'anyway, use the --force-lto option. That will disable '
-                'partial linking.')
-        disable_lto = True
-
     # Add the appropriate Link-Time Optimization (LTO) flags
     # unless LTO is explicitly turned off. Note that these flags
     # are only used by the fast target.
-    if not disable_lto:
+    if not GetOption('no_lto'):
         # Pass the LTO flag when compiling to produce GIMPLE
         # output, we merely create the flags here and only append
         # them later
@@ -1087,32 +1044,6 @@ def config_emitter(target, source, env):
 config_builder = Builder(emitter=config_emitter, action=config_action)
 
 main.Append(BUILDERS = { 'ConfigFile' : config_builder })
-
-###################################################
-#
-# Builders for static and shared partially linked object files.
-#
-###################################################
-
-partial_static_builder = Builder(action=SCons.Defaults.LinkAction,
-                                 src_suffix='$OBJSUFFIX',
-                                 src_builder=['StaticObject', 'Object'],
-                                 LINKFLAGS='$PLINKFLAGS',
-                                 LIBS='')
-
-def partial_shared_emitter(target, source, env):
-    for tgt in target:
-        tgt.attributes.shared = 1
-    return (target, source)
-partial_shared_builder = Builder(action=SCons.Defaults.ShLinkAction,
-                                 emitter=partial_shared_emitter,
-                                 src_suffix='$SHOBJSUFFIX',
-                                 src_builder='SharedObject',
-                                 SHLINKFLAGS='$PSHLINKFLAGS',
-                                 LIBS='')
-
-main.Append(BUILDERS = { 'PartialShared' : partial_shared_builder,
-                         'PartialStatic' : partial_static_builder })
 
 def add_local_rpath(env, *targets):
     '''Set up an RPATH for a library which lives in the build directory.
