@@ -52,6 +52,7 @@ BitUnion32(ExtMachInst)
     // Immediate fields
     Bitfield<15,  0> si;
     Bitfield<15,  0> d;
+    Bitfield<15,  2> ds;
 
     // Special purpose register identifier
     Bitfield<20, 11> spr;
