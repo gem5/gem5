@@ -68,13 +68,16 @@ def template LoadExecute {{
     {
         Addr EA;
         Fault fault = NoFault;
+        Msr msr = xc->tcBase()->readIntReg(INTREG_MSR);
 
         %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = readMemAtomicBE(xc, traceData, EA, Mem, memAccessFlags);
+            fault = msr.le ?
+                    readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags) :
+                    readMemAtomicBE(xc, traceData, EA, Mem, memAccessFlags);
             %(memacc_code)s;
         }
 
@@ -114,13 +117,17 @@ def template LoadCompleteAcc {{
     {
         GEM5_VAR_USED Addr EA;
         Fault fault = NoFault;
+        Msr msr = xc->tcBase()->readIntReg(INTREG_MSR);
 
         %(op_decl)s;
         %(op_rd)s;
 
         EA = pkt->req->getVaddr();
 
-        getMemBE(pkt, Mem, traceData);
+        if (msr.le)
+            getMemLE(pkt, Mem, traceData);
+        else
+            getMemBE(pkt, Mem, traceData);
 
         if (fault == NoFault) {
             %(memacc_code)s;
@@ -141,6 +148,7 @@ def template StoreExecute {{
     {
         Addr EA;
         Fault fault = NoFault;
+        Msr msr = xc->tcBase()->readIntReg(INTREG_MSR);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -151,8 +159,11 @@ def template StoreExecute {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemAtomicBE(xc, traceData, Mem, EA, memAccessFlags,
-                    NULL);
+            fault = msr.le ?
+                    writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
+                                     NULL) :
+                    writeMemAtomicBE(xc, traceData, Mem, EA, memAccessFlags,
+                                     NULL);
         }
 
         if (fault == NoFault) {
@@ -170,6 +181,7 @@ def template StoreInitiateAcc {{
     {
         Addr EA;
         Fault fault = NoFault;
+        Msr msr = xc->tcBase()->readIntReg(INTREG_MSR);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -180,8 +192,11 @@ def template StoreInitiateAcc {{
         }
 
         if (fault == NoFault) {
-            fault = writeMemTimingBE(xc, traceData, Mem, EA, memAccessFlags,
-                    NULL);
+            fault = msr.le ?
+                    writeMemTimingLE(xc, traceData, Mem, EA, memAccessFlags,
+                                     NULL) :
+                    writeMemTimingBE(xc, traceData, Mem, EA, memAccessFlags,
+                                     NULL);
         }
 
         // Need to write back any potential address register update

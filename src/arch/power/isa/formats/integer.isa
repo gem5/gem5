@@ -38,38 +38,60 @@ readXERCode = 'GEM5_VAR_USED Xer xer = XER;'
 setXERCode = 'XER = xer;'
 
 computeCR0Code = '''
-    PowerISA::Cr cr = CR;
-    cr.cr0 = makeCRFieldSigned(%(result)s, 0, xer.so);
+{
+    Cr cr = CR;
+    Msr msr = MSR;
+    cr.cr0 = msr.sf ?
+             makeCRFieldSigned((int64_t)%(result)s, 0, xer.so) :
+             makeCRFieldSigned((int32_t)%(result)s, 0, xer.so);
     CR = cr;
+}
 '''
 
 computeCACode = '''
-    if (findCarry(64, %(result)s, %(inputa)s, %(inputb)s)) {
-        xer.ca = 1;
-    } else {
-        xer.ca = 0;
-    }
-
+{
+    Msr msr = MSR;
     if (findCarry(32, %(result)s, %(inputa)s, %(inputb)s)) {
+        xer.ca = 1;
         xer.ca32 = 1;
     } else {
+        xer.ca = 0;
         xer.ca32 = 0;
     }
+
+    if (msr.sf) {
+        if (findCarry(64, %(result)s, %(inputa)s, %(inputb)s)) {
+            xer.ca = 1;
+        } else {
+            xer.ca = 0;
+        }
+    }
+}
 '''
 
 computeOVCode = '''
-    if (findOverflow(64, %(result)s, %(inputa)s, %(inputb)s)) {
-        xer.ov = 1;
-        xer.so = 1;
-    } else {
-        xer.ov = 0;
-    }
-
+{
+    Msr msr = MSR;
     if (findOverflow(32, %(result)s, %(inputa)s, %(inputb)s)) {
+        xer.ov = 1;
         xer.ov32 = 1;
     } else {
+        xer.ov = 0;
         xer.ov32 = 0;
     }
+
+    if (msr.sf) {
+        if (findOverflow(64, %(result)s, %(inputa)s, %(inputb)s)) {
+            xer.ov = 1;
+        } else {
+            xer.ov = 0;
+        }
+    }
+
+    if (xer.ov) {
+        xer.so = 1;
+    }
+}
 '''
 
 setCACode = '''
