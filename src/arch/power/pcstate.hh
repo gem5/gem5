@@ -30,6 +30,8 @@
 #define __ARCH_POWER_PCSTATE_HH__
 
 #include "arch/generic/types.hh"
+#include "arch/power/types.hh"
+#include "enums/ByteOrder.hh"
 
 namespace gem5
 {
@@ -37,7 +39,40 @@ namespace gem5
 namespace PowerISA
 {
 
-typedef GenericISA::SimplePCState<4> PCState;
+class PCState : public GenericISA::SimplePCState<4>
+{
+  private:
+    typedef GenericISA::SimplePCState<4> Base;
+    ByteOrder guestByteOrder = ByteOrder::big;
+
+  public:
+    PCState()
+    {}
+
+    void
+    set(Addr val)
+    {
+        Base::set(val);
+        npc(val + 4);
+    }
+
+    PCState(Addr val)
+    {
+        set(val);
+    }
+
+    ByteOrder
+    byteOrder() const
+    {
+        return guestByteOrder;
+    }
+
+    void
+    byteOrder(ByteOrder order)
+    {
+        guestByteOrder = order;
+    }
+};
 
 } // namespace PowerISA
 } // namespace gem5
