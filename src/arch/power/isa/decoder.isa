@@ -288,7 +288,23 @@ decode PO default Unknown::unknown() {
         }
 
         119: LoadIndexUpdateOp::lbzux({{ Rt = Mem_ub; }});
-        124: IntLogicOp::nor({{ Ra = ~(Rs | Rb); }}, true);
+
+        format IntLogicOp {
+            122: popcntb({{
+                // Based on "Counting bits set, in parallel"
+                // from https://graphics.stanford.edu/~seander/bithacks.html
+                const uint64_t m1 = 0x5555555555555555ULL;
+                const uint64_t m2 = 0x3333333333333333ULL;
+                const uint64_t m4 = 0x0f0f0f0f0f0f0f0fULL;
+                uint64_t res = Rs;
+                res = (res & m1) + ((res >> 1) & m1);
+                res = (res & m2) + ((res >> 2) & m2);
+                res = (res & m4) + ((res >> 4) & m4);
+                Ra = res;
+            }});
+
+            124: nor({{ Ra = ~(Rs | Rb); }}, true);
+        }
 
         format StoreIndexOp {
             149: stdx({{ Mem = Rs }});
@@ -403,6 +419,30 @@ decode PO default Unknown::unknown() {
             375: lhaux({{ Rt = Mem_sh; }});
         }
 
+        378: IntLogicOp::popcntw({{
+        #if defined(__GNUC__) || (defined(__clang__) && \
+                __has_builtin(__builtin_popcount))
+            uint64_t src = Rs;
+            uint64_t res = __builtin_popcount(src >> 32);
+            res = (res << 32) | __builtin_popcount(src);
+        #else
+            // Based on "Counting bits set, in parallel"
+            // from https://graphics.stanford.edu/~seander/bithacks.html
+            const uint64_t m1 = 0x5555555555555555ULL;
+            const uint64_t m2 = 0x3333333333333333ULL;
+            const uint64_t m4 = 0x0f0f0f0f0f0f0f0fULL;
+            const uint64_t m8 = 0x00ff00ff00ff00ffULL;
+            const uint64_t m16 = 0x0000ffff0000ffffULL;
+            uint64_t res = Rs;
+            res = (res & m1) + ((res >> 1) & m1);
+            res = (res & m2) + ((res >> 2) & m2);
+            res = (res & m4) + ((res >> 4) & m4);
+            res = (res & m8) + ((res >> 8) & m8);
+            res = (res & m16) + ((res >> 16) & m16);
+        #endif
+            Ra = res;
+        }});
+
         407: StoreIndexOp::sthx({{ Mem_uh = Rs_uh; }});
         412: IntLogicOp::orc({{ Ra = Rs | ~Rb; }}, true);
         439: StoreIndexUpdateOp::sthux({{ Mem_uh = Rs_uh; }});
@@ -410,6 +450,7 @@ decode PO default Unknown::unknown() {
         format IntLogicOp {
             444: or({{ Ra = Rs | Rb; }}, true);
             476: nand({{ Ra = ~(Rs & Rb); }}, true);
+            506: popcntd({{ Ra = popCount(Rs); }});
 
             508: cmpb({{
                 uint64_t mask = 0xff;
