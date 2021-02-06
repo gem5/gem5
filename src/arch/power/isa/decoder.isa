@@ -638,6 +638,14 @@ decode PO default Unknown::unknown() {
 
         567: LoadIndexUpdateOp::lfsux({{ Ft_sf = Mem_sf; }});
         570: IntLogicOp::cnttzd({{ Ra = findTrailingZeros(Rs); }}, true);
+
+        576: IntOp::mcrxrx({{
+            uint8_t res;
+            Xer xer = XER;
+            res = (xer.ov << 3) | (xer.ov32 << 2) | (xer.ca << 1) | xer.ca32;
+            CR = insertCRField(CR, BF, res);
+        }});
+
         598: MiscOp::sync({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
         599: LoadIndexOp::lfdx({{ Ft = Mem_df; }});
         631: LoadIndexUpdateOp::lfdux({{ Ft = Mem_df; }});
@@ -980,6 +988,14 @@ decode PO default Unknown::unknown() {
                     format IntOp {
                         19: decode S {
                             0: mfcr({{ Rt = CR; }});
+
+                            1: mfocrf({{
+                                int count = popCount(FXM);
+                                uint64_t mask = 0xf << (4 * findMsbSet(FXM));
+                                if (count == 1) {
+                                    Rt = CR & mask;
+                                }
+                            }});
                         }
 
                         144: decode S {
@@ -991,6 +1007,14 @@ decode PO default Unknown::unknown() {
                                     }
                                 }
                                 CR = (Rs & mask) | (CR & ~mask);
+                            }});
+
+                            1: mtocrf({{
+                                int count = popCount(FXM);
+                                uint32_t mask = 0xf << (4 * findMsbSet(FXM));
+                                if (count == 1) {
+                                    CR = (Rs & mask) | (CR & ~mask);
+                                }
                             }});
                         }
 
