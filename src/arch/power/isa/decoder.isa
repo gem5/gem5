@@ -579,6 +579,7 @@ decode PO default Unknown::unknown() {
         }
 
         983: StoreIndexOp::stfiwx({{ Mem = Fs_uw; }});
+        986: IntLogicOp::extsw({{ Ra = sext<32>(Rs); }}, true);
 
         // These instructions are of XO form with bit 21 as the OE bit.
         default: decode XO_XO {
