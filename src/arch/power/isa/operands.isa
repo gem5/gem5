@@ -41,9 +41,9 @@ def operand_types {{
 
 def operands {{
     # General Purpose Integer Reg Operands
-    'Ra': ('IntReg', 'ud', 'RA', 'IsInteger', 1),
-    'Rb': ('IntReg', 'ud', 'RB', 'IsInteger', 2),
-    'Rs': ('IntReg', 'ud', 'RS', 'IsInteger', 3),
+    'Rs': ('IntReg', 'ud', 'RS', 'IsInteger', 1),
+    'Ra': ('IntReg', 'ud', 'RA', 'IsInteger', 2),
+    'Rb': ('IntReg', 'ud', 'RB', 'IsInteger', 3),
     'Rt': ('IntReg', 'ud', 'RT', 'IsInteger', 4),
 
     # General Purpose Floating Point Reg Operands
