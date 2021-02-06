@@ -285,7 +285,11 @@ decode PO default Unknown::unknown() {
             }});
         }
 
-        535: LoadIndexOp::lfsx({{ Ft_sf = Mem_sf; }});
+        format LoadIndexOp {
+            532: ldbrx({{ Rt = swap_byte(Mem); }});
+            534: lwbrx({{ Rt = swap_byte(Mem_uw); }});
+            535: lfsx({{ Ft_sf = Mem_sf; }});
+        }
 
         536: IntLogicOp::srw({{
             if (Rb & 0x20) {
@@ -299,10 +303,17 @@ decode PO default Unknown::unknown() {
         598: MiscOp::sync({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
         599: LoadIndexOp::lfdx({{ Ft = Mem_df; }});
         631: LoadIndexUpdateOp::lfdux({{ Ft = Mem_df; }});
-        663: StoreIndexOp::stfsx({{ Mem_sf = Fs_sf; }});
+
+        format StoreIndexOp {
+            660: stdbrx({{ Mem = swap_byte(Rs); }});
+            662: stwbrx({{ Mem_uw = swap_byte(Rs_uw); }});
+            663: stfsx({{ Mem_sf = Fs_sf; }});
+        }
+
         695: StoreIndexUpdateOp::stfsux({{ Mem_sf = Fs_sf; }});
         727: StoreIndexOp::stfdx({{ Mem_df = Fs; }});
         759: StoreIndexUpdateOp::stfdux({{ Mem_df = Fs; }});
+        790: LoadIndexOp::lhbrx({{ Rt = swap_byte(Mem_uh); }});
 
         792: IntLogicOp::sraw({{
             bool shiftSetCA = false;
@@ -364,6 +375,7 @@ decode PO default Unknown::unknown() {
 
         854: MiscOp::eieio({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
         855: LoadIndexOp::lfiwax({{ Ft_uw = Mem; }});
+        918: StoreIndexOp::sthbrx({{ Mem_uh = swap_byte(Rs_uh); }});
 
         format IntLogicOp {
             922: extsh({{ Ra = sext<16>(Rs); }});
