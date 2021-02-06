@@ -46,13 +46,17 @@ IntOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
         myMnemonic == "mtxer" ||
         myMnemonic == "mtlr"  ||
         myMnemonic == "mtctr" ||
-        myMnemonic == "mttar") {
+        myMnemonic == "mttar" ||
+        myMnemonic == "mttb"  ||
+        myMnemonic == "mttbu") {
         printDest = false;
     } else if (myMnemonic == "mfcr"  ||
                myMnemonic == "mfxer" ||
                myMnemonic == "mflr"  ||
                myMnemonic == "mfctr" ||
-               myMnemonic == "mftar") {
+               myMnemonic == "mftar" ||
+               myMnemonic == "mftb"  ||
+               myMnemonic == "mftbu") {
         printSrcs = false;
     }
 
