@@ -134,6 +134,49 @@ class IntArithOp : public IntOp
     {
     }
 
+    /**
+     * Compute 128-bit product of 64-bit unsigned integer multiplication
+     * based on https://stackoverflow.com/a/28904636
+     */
+    inline std::tuple<uint64_t, uint64_t>
+    multiply(uint64_t ra, uint64_t rb) const
+    {
+        uint64_t plo, phi;
+    #if defined(__SIZEOF_INT128__)
+        __uint128_t prod = (__uint128_t)ra * rb;
+        plo = prod;
+        phi = prod >> 64;
+    #else
+        uint64_t ralo = (uint32_t)ra, rahi = ra >> 32;
+        uint64_t rblo = (uint32_t)rb, rbhi = rb >> 32;
+        uint64_t pp0 = ralo * rblo;
+        uint64_t pp1 = rahi * rblo;
+        uint64_t pp2 = ralo * rbhi;
+        uint64_t pp3 = rahi * rbhi;
+        uint64_t c = ((uint32_t)pp1) + ((uint32_t)pp2) + (pp0 >> 32);
+        phi = pp3 + (pp2 >> 32) + (pp1 >> 32) + (c >> 32);
+        plo = (c << 32) | ((uint32_t)pp0);
+    #endif
+        return std::make_tuple(plo, phi);
+    }
+
+    /* Compute 128-bit product of 64-bit signed integer multiplication */
+    inline std::tuple<uint64_t, int64_t>
+    multiply(int64_t ra, int64_t rb) const
+    {
+        uint64_t plo, phi;
+    #if defined(__SIZEOF_INT128__)
+        __int128_t prod = (__int128_t)ra * rb;
+        plo = prod;
+        phi = prod >> 64;
+    #else
+        std::tie(plo, phi) = multiply((uint64_t)ra, (uint64_t)rb);
+        if (rb < 0) phi -= (uint64_t)ra;
+        if (ra < 0) phi -= (uint64_t)rb;
+    #endif
+        return std::make_tuple(plo, (int64_t)phi);
+    }
+
     std::string generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const override;
 };

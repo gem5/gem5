@@ -483,10 +483,15 @@ decode PO default Unknown::unknown() {
 
         // These instructions are of XO form with bit 21 as the OE bit.
         default: decode XO_XO {
-            format IntSumOp {
-                8: subfc({{ ~Ra }}, {{ Rb }}, {{ 1 }}, true);
-                10: addc({{ Ra }}, {{ Rb }}, computeCA = true);
-            }
+            8: IntSumOp::subfc({{ ~Ra }}, {{ Rb }}, {{ 1 }}, true);
+
+            9: IntArithCheckRcOp::mulhdu({{
+                uint64_t res;
+                std::tie(std::ignore, res) = multiply(Ra, Rb);
+                Rt = res;
+            }});
+
+            10: IntSumOp::addc({{ Ra }}, {{ Rb }}, computeCA = true);
 
             11: IntArithCheckRcOp::mulhwu({{
                 uint64_t res = (uint64_t)Ra_uw * Rb_uw;
@@ -496,11 +501,19 @@ decode PO default Unknown::unknown() {
 
             40: IntSumOp::subf({{ ~Ra }}, {{ Rb }}, {{ 1 }});
 
-            75: IntArithCheckRcOp::mulhw({{
-                uint64_t res = (int64_t)Ra_sw * Rb_sw;
-                res = res >> 32;
-                Rt = res;
-            }});
+            format IntArithCheckRcOp {
+                73: mulhd({{
+                    int64_t res;
+                    std::tie(std::ignore, res) = multiply(Ra_sd, Rb_sd);
+                    Rt = res;
+                }});
+
+                75: mulhw({{
+                    uint64_t res = (int64_t)Ra_sw * Rb_sw;
+                    res = res >> 32;
+                    Rt = res;
+                }});
+            }
 
             format IntSumOp {
                 104: neg({{ ~Ra }}, {{ 1 }});
@@ -512,13 +525,26 @@ decode PO default Unknown::unknown() {
                 234: addme({{ Ra }}, {{ -1ULL }}, {{ xer.ca }}, true);
             }
 
-            235: IntArithCheckRcOp::mullw({{
-                int64_t res = (int64_t)Ra_sw * Rb_sw;
-                if (res != (int32_t)res) {
-                    setOV = true;
-                }
-                Rt = res;
-            }}, true);
+            format IntArithCheckRcOp {
+                233: mulld({{
+                    int64_t src1 = Ra_sd;
+                    int64_t src2 = Rb_sd;
+                    uint64_t res = src1 * src2;
+                    std::tie(res, std::ignore) = multiply(src1, src2);
+                    if (src1 != 0 && (int64_t)res / src1 != src2) {
+                        setOV = true;
+                    }
+                    Rt = res;
+                }}, true);
+
+                235: mullw({{
+                    int64_t res = (int64_t)Ra_sw * Rb_sw;
+                    if (res != (int32_t)res) {
+                        setOV = true;
+                    }
+                    Rt = res;
+                }}, true);
+            }
 
             266: IntSumOp::add({{ Ra }}, {{ Rb }});
 
