@@ -158,12 +158,14 @@ def format IntImmLogicOp(code, computeCR0 = 0, inst_flags = []) {{
 
     # Set up the dictionary and deal with computing CR0
     dict = {'result':'Ra'}
+
+    # Code when Rc is set
     if computeCR0:
         code += readXERCode + computeCR0Code % dict
 
     # Generate the class
     (header_output, decoder_output, decode_block, exec_output) = \
-        GenAluOp(name, Name, 'IntImmOp', code, inst_flags, BasicDecode,
+        GenAluOp(name, Name, 'IntImmLogicOp', code, inst_flags, BasicDecode,
                  BasicConstructor)
 }};
 
@@ -231,29 +233,37 @@ def format IntImmCompLogicOp(code, inst_flags = []) {{
 
 
 // Integer instructions that perform logic operations. The result is
-// always written into Ra. All instructions have 2 versions depending on
+// always written into Ra. Some instructions have 2 versions depending on
 // whether the Rc bit is set to compute the CR0 code. This is determined
 // at decode as before.
-def format IntLogicOp(code, inst_flags = []) {{
+def format IntLogicOp(code, computeCR0 = 0, inst_flags = []) {{
     dict = {'result':'Ra'}
 
-    # Code when Rc is set
-    code_rc1 = code + readXERCode + computeCR0Code % dict
+    # Deal with computing CR0
+    if computeCR0:
+        # Setup the 2 code versions and add code to access XER if necessary
+        code_rc1 = code + readXERCode + computeCR0Code % dict
 
-    # Generate the first class
-    (header_output, decoder_output, decode_block, exec_output) = \
-        GenAluOp(name, Name, 'IntOp', code, inst_flags,
-                 CheckRcDecode, BasicConstructor)
+        # Generate the first class
+        (header_output, decoder_output, decode_block, exec_output) = \
+            GenAluOp(name, Name, 'IntLogicOp', code, inst_flags,
+                    CheckRcDecode, BasicConstructor)
 
-    # Generate the second class
-    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
-        GenAluOp(name, Name + 'RcSet', 'IntOp', code_rc1, inst_flags,
-                 CheckRcDecode, BasicConstructor)
+        # Generate the second class
+        (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+            GenAluOp(name, Name + 'RcSet', 'IntLogicOp', code_rc1, inst_flags,
+                    CheckRcDecode, BasicConstructor)
 
-    # Finally, add to the other outputs
-    header_output += header_output_rc1
-    decoder_output += decoder_output_rc1
-    exec_output += exec_output_rc1
+        # Finally, add to the other outputs
+        header_output += header_output_rc1
+        decoder_output += decoder_output_rc1
+        exec_output += exec_output_rc1
+
+    else:
+        # Generate the class
+        (header_output, decoder_output, decode_block, exec_output) = \
+            GenAluOp(name, Name, 'IntLogicOp', code, inst_flags,
+                     BasicDecode, BasicConstructor)
 }};
 
 

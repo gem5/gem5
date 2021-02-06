@@ -472,6 +472,54 @@ class IntImmCompLogicOp : public IntCompOp
 
 
 /**
+ * Class for integer logical operations.
+ */
+class IntLogicOp : public IntOp
+{
+  protected:
+
+    /// Constructor
+    IntLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : IntOp(mnem, _machInst, __opClass)
+    {
+    }
+
+    inline int
+    findLeadingZeros(uint32_t rs) const
+    {
+        if (rs) {
+    #if defined(__GNUC__) || (defined(__clang__) && \
+                              __has_builtin(__builtin_clz))
+            return __builtin_clz(rs);
+    #else
+            return 31 - findMsbSet(rs);
+    #endif
+        } else {
+            return 32;
+        }
+    }
+};
+
+
+/**
+ * Class for integer immediate logical operations.
+ */
+class IntImmLogicOp : public IntLogicOp
+{
+  protected:
+
+    uint32_t ui;
+
+    /// Constructor
+    IntImmLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : IntLogicOp(mnem, _machInst, __opClass),
+        ui(machInst.ui)
+    {
+    }
+};
+
+
+/**
  * Class for integer operations with a shift.
  */
 class IntShiftOp : public IntOp
