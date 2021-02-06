@@ -574,6 +574,42 @@ decode PO default Unknown::unknown() {
             266: IntSumOp::add({{ Ra }}, {{ Rb }});
 
             format IntArithCheckRcOp {
+                395: divweu({{
+                    uint32_t src1 = Ra_ud;
+                    uint32_t src2 = Rb_ud;
+                    uint64_t res;
+                    if (src2 != 0) {
+                        res = ((uint64_t)src1 << 32) / src2;
+                        if (res <= UINT32_MAX) {
+                            Rt = (uint32_t)res;
+                        } else {
+                            Rt = 0;
+                            setOV = true;
+                        }
+                    } else {
+                        Rt = 0;
+                        setOV = true;
+                    }
+                }}, true);
+
+                427: divwe({{
+                    int32_t src1 = Ra_sw;
+                    int32_t src2 = Rb_sw;
+                    int64_t res;
+                    if ((src1 != INT32_MIN || src2 != -1) && src2 != 0) {
+                        res = ((int64_t)src1 << 32) / src2;
+                        if (res == (int32_t)res) {
+                            Rt = (uint32_t)res;
+                        } else {
+                            Rt = 0;
+                            setOV = true;
+                        }
+                    } else {
+                        Rt = 0;
+                        setOV = true;
+                    }
+                }}, true);
+
                 459: divwu({{
                     uint32_t src1 = Ra_uw;
                     uint32_t src2 = Rb_uw;
