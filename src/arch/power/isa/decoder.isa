@@ -249,8 +249,8 @@ decode PO default Unknown::unknown() {
                 }
             }});
 
-            26: cntlzw({{ Ra = Rs == 0 ? 32 : 31 - findMsbSet(Rs); }});
-            28: and({{ Ra = Rs & Rb; }});
+            26: cntlzw({{ Ra = findLeadingZeros(Rs_uw); }}, true);
+            28: and({{ Ra = Rs & Rb; }}, true);
         }
 
         32: IntCompOp::cmpl({{
@@ -267,7 +267,7 @@ decode PO default Unknown::unknown() {
 
         53: LoadIndexUpdateOp::ldux({{ Rt = Mem; }});
         55: LoadIndexUpdateOp::lwzux({{ Rt = Mem_uw; }});
-        60: IntLogicOp::andc({{ Ra = Rs & ~Rb; }});
+        60: IntLogicOp::andc({{ Ra = Rs & ~Rb; }}, true);
 
         format LoadIndexOp {
             84: ldarx({{
@@ -284,7 +284,7 @@ decode PO default Unknown::unknown() {
         }
 
         119: LoadIndexUpdateOp::lbzux({{ Rt = Mem_ub; }});
-        124: IntLogicOp::nor({{ Ra = ~(Rs | Rb); }});
+        124: IntLogicOp::nor({{ Ra = ~(Rs | Rb); }}, true);
 
         format StoreIndexOp {
             149: stdx({{ Mem = Rs }});
@@ -385,9 +385,9 @@ decode PO default Unknown::unknown() {
 
         278: MiscOp::dcbt({{ }});
         279: LoadIndexOp::lhzx({{ Rt = Mem_uh; }});
-        284: IntLogicOp::eqv({{ Ra = ~(Rs ^ Rb); }});
+        284: IntLogicOp::eqv({{ Ra = ~(Rs ^ Rb); }}, true);
         311: LoadIndexUpdateOp::lhzux({{ Rt = Mem_uh; }});
-        316: IntLogicOp::xor({{ Ra = Rs ^ Rb; }});
+        316: IntLogicOp::xor({{ Ra = Rs ^ Rb; }}, true);
 
         format LoadIndexOp {
             341: lwax({{ Rt = Mem_sw; }});
@@ -400,21 +400,23 @@ decode PO default Unknown::unknown() {
         }
 
         407: StoreIndexOp::sthx({{ Mem_uh = Rs_uh; }});
-        412: IntLogicOp::orc({{ Ra = Rs | ~Rb; }});
+        412: IntLogicOp::orc({{ Ra = Rs | ~Rb; }}, true);
         439: StoreIndexUpdateOp::sthux({{ Mem_uh = Rs_uh; }});
 
         format IntLogicOp {
-            444: or({{ Ra = Rs | Rb; }});
-            476: nand({{ Ra = ~(Rs & Rb); }});
+            444: or({{ Ra = Rs | Rb; }}, true);
+            476: nand({{ Ra = ~(Rs & Rb); }}, true);
 
             508: cmpb({{
-                uint32_t val = 0;
-                for (int n = 0; n < 32; n += 8) {
-                    if(bits(Rs, n+7, n) == bits(Rb, n+7, n)) {
-                        val = insertBits(val, n+7, n, 0xff);
+                uint64_t mask = 0xff;
+                uint64_t res = 0;
+                for (int i = 0; i < 8; ++i) {
+                    if ((Rs & mask) == (Rb & mask)) {
+                        res |= mask;
                     }
+                    mask <<= 8;
                 }
-                Ra = val;
+                Ra = res;
             }});
         }
 
@@ -572,8 +574,8 @@ decode PO default Unknown::unknown() {
         918: StoreIndexOp::sthbrx({{ Mem_uh = swap_byte(Rs_uh); }});
 
         format IntLogicOp {
-            922: extsh({{ Ra = sext<16>(Rs); }});
-            954: extsb({{ Ra = sext<8>(Rs); }});
+            922: extsh({{ Ra = sext<16>(Rs); }}, true);
+            954: extsb({{ Ra = sext<8>(Rs); }}, true);
         }
 
         983: StoreIndexOp::stfiwx({{ Mem = Fs_uw; }});
