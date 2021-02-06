@@ -56,6 +56,8 @@ BitUnion32(Xer)
     Bitfield<31> so;
     Bitfield<30> ov;
     Bitfield<29> ca;
+    Bitfield<19> ov32;
+    Bitfield<18> ca32;
 EndBitUnion(Xer)
 
 BitUnion32(Fpscr)

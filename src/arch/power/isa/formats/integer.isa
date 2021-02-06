@@ -44,28 +44,42 @@ computeCR0Code = '''
 '''
 
 computeCACode = '''
-    if (findCarry(32, %(result)s, %(inputa)s, %(inputb)s)) {
+    if (findCarry(64, %(result)s, %(inputa)s, %(inputb)s)) {
         xer.ca = 1;
     } else {
         xer.ca = 0;
     }
+
+    if (findCarry(32, %(result)s, %(inputa)s, %(inputb)s)) {
+        xer.ca32 = 1;
+    } else {
+        xer.ca32 = 0;
+    }
 '''
 
 computeOVCode = '''
-    if (findOverflow(32, %(result)s, %(inputa)s, %(inputb)s)) {
+    if (findOverflow(64, %(result)s, %(inputa)s, %(inputb)s)) {
         xer.ov = 1;
         xer.so = 1;
     } else {
         xer.ov = 0;
+    }
+
+    if (findOverflow(32, %(result)s, %(inputa)s, %(inputb)s)) {
+        xer.ov32 = 1;
+    } else {
+        xer.ov32 = 0;
     }
 '''
 
 setOVCode = '''
     if (setOV) {
         xer.ov = 1;
+        xer.ov32 = 1;
         xer.so = 1;
     } else {
         xer.ov = 0;
+        xer.ov32 = 0;
     }
 '''
 

@@ -38,9 +38,8 @@ decode PO default Unknown::unknown() {
 
     format IntImmArithOp {
         7: mulli({{
-            int32_t src = Ra_sw;
-            int64_t prod = src * si;
-            Rt = (uint32_t)prod;
+            int64_t res = Ra_sd * si;
+            Rt = res;
         }});
 
         8: subfic({{
@@ -486,15 +485,17 @@ decode PO default Unknown::unknown() {
             }
 
             11: IntArithCheckRcOp::mulhwu({{
-                uint64_t prod = Ra_ud * Rb_ud;
-                Rt = prod >> 32;
+                uint64_t res = (uint64_t)Ra_uw * Rb_uw;
+                res = res >> 32;
+                Rt = res;
             }});
 
             40: IntSumOp::subf({{ ~Ra }}, {{ Rb }}, {{ 1 }});
 
             75: IntArithCheckRcOp::mulhw({{
-                int64_t prod = Ra_sd * Rb_sd;
-                Rt = prod >> 32;
+                uint64_t res = (int64_t)Ra_sw * Rb_sw;
+                res = res >> 32;
+                Rt = res;
             }});
 
             format IntSumOp {
@@ -508,19 +509,19 @@ decode PO default Unknown::unknown() {
             }
 
             235: IntArithCheckRcOp::mullw({{
-                int64_t prod = Ra_sd * Rb_sd;
-                Rt = prod;
-                if (prod != (int32_t)prod) {
+                int64_t res = (int64_t)Ra_sw * Rb_sw;
+                if (res != (int32_t)res) {
                     setOV = true;
                 }
+                Rt = res;
             }}, true);
 
             266: IntSumOp::add({{ Ra }}, {{ Rb }});
 
             format IntArithCheckRcOp {
                 459: divwu({{
-                    uint32_t src1 = Ra_sw;
-                    uint32_t src2 = Rb_sw;
+                    uint32_t src1 = Ra_uw;
+                    uint32_t src2 = Rb_uw;
                     if (src2 != 0) {
                         Rt = src1 / src2;
                     } else {
@@ -532,9 +533,8 @@ decode PO default Unknown::unknown() {
                 491: divw({{
                     int32_t src1 = Ra_sw;
                     int32_t src2 = Rb_sw;
-                    if ((src1 != 0x80000000 || src2 != 0xffffffff)
-                        && src2 != 0) {
-                        Rt = src1 / src2;
+                    if ((src1 != INT32_MIN || src2 != -1) && src2 != 0) {
+                        Rt = (uint32_t)(src1 / src2);
                     } else {
                         Rt = 0;
                         setOV = true;
