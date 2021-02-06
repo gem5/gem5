@@ -631,7 +631,6 @@ class IntRotateOp : public IntShiftOp
 {
   protected:
 
-    uint32_t fullMask;
     uint8_t mb;
     uint8_t me;
 
@@ -641,18 +640,29 @@ class IntRotateOp : public IntShiftOp
         mb(machInst.mb),
         me(machInst.me)
     {
-        if (me >= mb) {
-            fullMask = mask(31 - mb, 31 - me);
-        } else {
-            fullMask = ~mask(31 - (me + 1), 31 - (mb - 1));
-        }
     }
 
-    inline uint32_t
+    inline uint64_t
     rotate(uint32_t value, uint32_t shift) const
     {
-        shift &= 31;
-        return (value << shift) | (value >> (32 - shift));
+        uint64_t res;
+        shift = shift & 0x1f;
+        res = value;
+        res = (res << 32) | res;
+        res = (res << shift) | (res >> (32 - shift));
+        return res;
+    }
+
+    inline uint64_t
+    bitmask(uint32_t begin, uint32_t end) const
+    {
+        begin = begin & 0x1f;
+        end = end & 0x1f;
+        if (begin <= end) {
+            return mask(31 - begin, 31 - end);
+        } else {
+            return ~mask(31 - (end + 1), 31 - (begin - 1));
+        }
     }
 
     std::string generateDisassembly(
