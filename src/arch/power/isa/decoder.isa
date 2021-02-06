@@ -34,7 +34,7 @@
 // Power ISA v3.0B has been used for instruction formats, opcode numbers,
 // opcode field names, register names, etc.
 //
-decode OPCODE default Unknown::unknown() {
+decode PO default Unknown::unknown() {
 
     format IntImmArithOp {
         7: mulli({{

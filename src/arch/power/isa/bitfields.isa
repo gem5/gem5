@@ -34,10 +34,14 @@
 // are reversed sometimes. Not sure of a fix to this though...
 
 // Opcode fields
-def bitfield OPCODE        <31:26>;
-def bitfield X_XO          <10:0>;
-def bitfield XO_XO         <10:1>;
+def bitfield PO            <31:26>;
 def bitfield A_XO          <5:1>;
+def bitfield DS_XO         <1:0>;
+def bitfield X_XO          <10:1>;
+def bitfield XFL_XO        <10:1>;
+def bitfield XFX_XO        <10:1>;
+def bitfield XL_XO         <10:1>;
+def bitfield XO_XO         <9:1>;
 
 // Register fields
 def bitfield RA            <20:16>;

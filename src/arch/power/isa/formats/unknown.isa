@@ -63,7 +63,7 @@ output decoder {{
             Addr pc, const Loader::SymbolTable *symtab) const
     {
         return csprintf("%-10s (inst 0x%x, opcode 0x%x, binary:%s)",
-                        "unknown", machInst, OPCODE, inst2string(machInst));
+                        "unknown", machInst, PO, inst2string(machInst));
     }
 }};
 
@@ -73,7 +73,7 @@ output exec {{
     {
         panic("attempt to execute unknown instruction at %#x"
               "(inst 0x%08x, opcode 0x%x, binary: %s)",
-              xc->pcState().pc(), machInst, OPCODE, inst2string(machInst));
+              xc->pcState().pc(), machInst, PO, inst2string(machInst));
         return std::make_shared<UnimplementedOpcodeFault>();
     }
 }};
