@@ -72,6 +72,16 @@ computeOVCode = '''
     }
 '''
 
+setCACode = '''
+    if (setCA) {
+        xer.ca = 1;
+        xer.ca32 = 1;
+    } else {
+        xer.ca = 0;
+        xer.ca32 = 0;
+    }
+'''
+
 setOVCode = '''
     if (setOV) {
         xer.ov = 1;
@@ -267,13 +277,26 @@ def format IntLogicOp(code, computeCR0 = 0, inst_flags = []) {{
 }};
 
 
-// Integer instructions with a shift amount. As above, except inheriting
-// from the IntShiftOp class.
-def format IntShiftOp(code, inst_flags = []) {{
+// Integer instructions that perform shift operations. All of these
+// instructions write to Ra and use Rs as a source register. The shift
+// value is obtained from an register or an instruction field. If it
+// from a register, Rb is also used as a source register. In certain
+// situations, the carry bits have to be set and this is dealt with
+// using the 'setCA' boolean in decoder.isa. We need two versions for
+// each instruction to deal with the Rc bit.
+def format IntShiftOp(code, computeCA = 0, inst_flags = []) {{
     dict = {'result':'Ra'}
 
+    # Add code to setup variables and access XER if necessary
+    code  = 'GEM5_VAR_USED bool setCA = false;\n' + code
+
     # Code when Rc is set
-    code_rc1 = code + readXERCode + computeCR0Code % dict
+    code_rc1 = readXERCode + code + computeCR0Code % dict
+
+    # Add code for calculating the carry, if needed
+    if computeCA:
+        code = readXERCode + code + setCACode + setXERCode
+        code_rc1 += setCACode + setXERCode
 
     # Generate the first class
     (header_output, decoder_output, decode_block, exec_output) = \

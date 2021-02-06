@@ -240,15 +240,15 @@ decode PO default Unknown::unknown() {
             23: lwzx({{ Rt = Mem_uw; }});
         }
 
-        format IntLogicOp {
-            24: slw({{
-                if (Rb & 0x20) {
-                    Ra = 0;
-                } else {
-                    Ra = Rs << (Rb & 0x1f);
-                }
-            }});
+        24: IntShiftOp::slw({{
+            if (Rb & 0x20) {
+                Ra = 0;
+            } else {
+                Ra = Rs << (Rb & 0x1f);
+            }
+        }});
 
+        format IntLogicOp {
             26: cntlzw({{ Ra = findLeadingZeros(Rs_uw); }}, true);
             28: and({{ Ra = Rs & Rb; }}, true);
         }
@@ -499,7 +499,7 @@ decode PO default Unknown::unknown() {
             535: lfsx({{ Ft_sf = Mem_sf; }});
         }
 
-        536: IntLogicOp::srw({{
+        536: IntShiftOp::srw({{
             if (Rb & 0x20) {
                 Ra = 0;
             } else  {
@@ -586,63 +586,49 @@ decode PO default Unknown::unknown() {
 
         790: LoadIndexOp::lhbrx({{ Rt = swap_byte(Mem_uh); }});
 
-        792: IntLogicOp::sraw({{
-            bool shiftSetCA = false;
-            int32_t s = Rs;
-            if (Rb == 0) {
-                Ra = Rs;
-                shiftSetCA = true;
-            } else if (Rb & 0x20) {
-                if (s < 0) {
-                    Ra = (uint32_t)-1;
-                    if (s & 0x7fffffff) {
-                        shiftSetCA = true;
+        format IntShiftOp {
+            792: sraw({{
+                int32_t s = Rs;
+                if (Rb == 0) {
+                    Ra = Rs;
+                    setCA = true;
+                } else if (Rb & 0x20) {
+                    if (s < 0) {
+                        Ra = (uint32_t)-1;
+                        if (s & 0x7fffffff) {
+                            setCA = true;
+                        } else {
+                            setCA = false;
+                        }
                     } else {
-                        shiftSetCA = false;
+                        Ra = 0;
+                        setCA = false;
                     }
                 } else {
-                    Ra = 0;
-                    shiftSetCA = false;
+                    Ra = s >> (Rb & 0x1f);
+                    if (s < 0 && (s << (32 - (Rb & 0x1f))) != 0) {
+                        setCA = true;
+                    } else {
+                        setCA = false;
+                    }
                 }
-            } else {
-                Ra = s >> (Rb & 0x1f);
-                if (s < 0 && (s << (32 - (Rb & 0x1f))) != 0) {
-                    shiftSetCA = true;
-                } else {
-                    shiftSetCA = false;
-                }
-            }
-            Xer xer1 = XER;
-            if (shiftSetCA) {
-                xer1.ca = 1;
-            } else {
-                xer1.ca = 0;
-            }
-            XER = xer1;
-        }});
+            }}, true);
 
-        824: IntShiftOp::srawi({{
-            bool shiftSetCA = false;
-            if (sh == 0) {
-                Ra = Rs;
-                shiftSetCA = false;
-            } else {
-                int32_t s = Rs;
-                Ra = s >> sh;
-                if (s < 0 && (s << (32 - sh)) != 0) {
-                    shiftSetCA = true;
+            824: srawi({{
+                if (sh == 0) {
+                    Ra = Rs;
+                    setCA = false;
                 } else {
-                    shiftSetCA = false;
+                    int32_t s = Rs;
+                    Ra = s >> sh;
+                    if (s < 0 && (s << (32 - sh)) != 0) {
+                        setCA = true;
+                    } else {
+                        setCA = false;
+                    }
                 }
-            }
-            Xer xer1 = XER;
-            if (shiftSetCA) {
-                xer1.ca = 1;
-            } else {
-                xer1.ca = 0;
-            }
-            XER = xer1;
-        }});
+            }}, true);
+        }
 
         854: MiscOp::eieio({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
         855: LoadIndexOp::lfiwax({{ Ft_uw = Mem; }});
