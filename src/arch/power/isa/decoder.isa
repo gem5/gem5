@@ -36,6 +36,31 @@
 //
 decode PO default Unknown::unknown() {
 
+    4: decode VA_XO {
+
+        // Arithmetic instructions that use source registers Ra, Rb and Rc,
+        // with destination register Rt.
+        format IntArithOp {
+            48: maddhd({{
+                int64_t res;
+                std::tie(std::ignore, res) = multiplyAdd(Ra_sd, Rb_sd, Rc_sd);
+                Rt = res;
+            }});
+
+            49: maddhdu({{
+                uint64_t res;
+                std::tie(std::ignore, res) = multiplyAdd(Ra, Rb, Rc);
+                Rt = res;
+            }});
+
+            51: maddld({{
+                uint64_t res;
+                std::tie(res, std::ignore) = multiplyAdd(Ra_sd, Rb_sd, Rc_sd);
+                Rt = res;
+            }});
+        }
+    }
+
     format IntImmArithOp {
         7: mulli({{
             int64_t res = Ra_sd * si;

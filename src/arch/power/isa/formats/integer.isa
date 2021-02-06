@@ -290,6 +290,16 @@ def format IntSumOp(src1, src2, ca = {{ 0 }}, computeCA = 0,
 
 }};
 
+// Instructions that use source registers Ra and Rb, with the result
+// placed into Rt but do not check for carry, overflow or the Rc bit.
+def format IntArithOp(code, inst_flags = []) {{
+
+    # Generate the class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntArithOp', code, inst_flags, BasicDecode,
+                 BasicConstructor)
+}};
+
 
 // Instructions that use source registers Ra and Rb, with the result
 // placed into Rt. Basically multiply and divide instructions. The

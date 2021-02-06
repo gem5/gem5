@@ -134,6 +134,52 @@ class IntArithOp : public IntOp
     {
     }
 
+    /* Compute 128-bit sum of 128-bit to 64-bit unsigned integer addition */
+    inline std::tuple<uint64_t, uint64_t>
+    add(uint64_t ralo, uint64_t rahi, uint64_t rb) const
+    {
+        uint64_t slo, shi;
+    #if defined(__SIZEOF_INT128__)
+        __uint128_t ra = ((__uint128_t)rahi << 64) | ralo;
+        __uint128_t sum = ra + rb;
+        slo = sum;
+        shi = sum >> 64;
+    #else
+        shi = rahi + ((ralo + rb) < ralo);
+        slo = ralo + rb;
+    #endif
+        return std::make_tuple(slo, shi);
+    }
+
+    /* Compute 128-bit sum of 128-bit to 64-bit signed integer addition */
+    inline std::tuple<uint64_t, int64_t>
+    add(uint64_t ralo, int64_t rahi, int64_t rb) const
+    {
+        uint64_t slo;
+        int64_t shi;
+    #if defined(__SIZEOF_INT128__)
+        __int128_t ra = ((__int128_t)rahi << 64) | ralo;
+        __int128_t sum = (__int128_t)ra + rb;
+        slo = sum;
+        shi = sum >> 64;
+    #else
+        if (rb < 0) {
+            shi = rahi - 1;
+            slo = ralo + rb;
+            if (slo < rb) {
+                shi++;
+            }
+        } else {
+            shi = rahi;
+            slo = ralo + rb;
+            if (slo < rb) {
+                shi++;
+            }
+        }
+    #endif
+        return std::make_tuple(slo, shi);
+    }
+
     /**
      * Compute 128-bit product of 64-bit unsigned integer multiplication
      * based on https://stackoverflow.com/a/28904636
@@ -175,6 +221,48 @@ class IntArithOp : public IntOp
         if (ra < 0) phi -= (uint64_t)rb;
     #endif
         return std::make_tuple(plo, (int64_t)phi);
+    }
+
+    /**
+     * Compute 128-bit result of 64-bit unsigned integer multiplication
+     * followed by addition
+     */
+    inline std::tuple<uint64_t, uint64_t>
+    multiplyAdd(uint64_t ra, uint64_t rb, uint64_t rc) const
+    {
+        uint64_t rlo, rhi;
+    #if defined(__SIZEOF_INT128__)
+        __uint128_t res = ((__uint128_t)ra * rb) + rc;
+        rlo = res;
+        rhi = res >> 64;
+    #else
+        uint64_t plo, phi;
+        std::tie(plo, phi) = multiply(ra, rb);
+        std::tie(rlo, rhi) = add(plo, phi, rc);
+    #endif
+        return std::make_tuple(rlo, rhi);
+    }
+
+    /**
+     * Compute 128-bit result of 64-bit signed integer multiplication
+     * followed by addition
+     */
+    inline std::tuple<uint64_t, int64_t>
+    multiplyAdd(int64_t ra, int64_t rb, int64_t rc) const
+    {
+        uint64_t rlo;
+        int64_t rhi;
+    #if defined(__SIZEOF_INT128__)
+        __int128_t res = (__int128_t)ra * rb + rc;
+        rlo = res;
+        rhi = res >> 64;
+    #else
+        uint64_t plo;
+        int64_t phi;
+        std::tie(plo, phi) = multiply(ra, rb);
+        std::tie(rlo, rhi) = add(plo, phi, rc);
+    #endif
+        return std::make_tuple(rlo, rhi);
     }
 
     std::string generateDisassembly(
