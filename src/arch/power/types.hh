@@ -59,6 +59,9 @@ BitUnion32(ExtMachInst)
     Bitfield<20, 16> d1;
     Bitfield< 1,  0> d2;
 
+    // Compare fields
+    Bitfield<21>     l;
+
     // Special purpose register identifier
     Bitfield<20, 11> spr;
     Bitfield<25, 23> bf;
