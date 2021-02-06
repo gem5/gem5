@@ -66,6 +66,7 @@ class ElfObject : public ObjectFile
 
     void determineArch();
     void determineOpSys();
+    void determineByteOrder();
     void handleLoadableSegment(GElf_Phdr phdr, int seg_num);
 
     // These values are provided to a linux process by the kernel, so we
