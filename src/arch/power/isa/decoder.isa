@@ -241,11 +241,13 @@ decode PO default Unknown::unknown() {
         }
 
         24: IntShiftOp::slw({{
-            if (Rb & 0x20) {
-                Ra = 0;
-            } else {
-                Ra = Rs << (Rb & 0x1f);
+            int32_t shift = Rb_sw;
+            uint32_t res = Rs_uw & ~((shift << 26) >> 31);
+            if (shift != 0) {
+                shift = bits(shift, 4, 0);
+                res = res << shift;
             }
+            Ra = res;
         }});
 
         format IntLogicOp {
@@ -500,11 +502,13 @@ decode PO default Unknown::unknown() {
         }
 
         536: IntShiftOp::srw({{
-            if (Rb & 0x20) {
-                Ra = 0;
-            } else  {
-                Ra = Rs >> (Rb & 0x1f);
+            int32_t shift = Rb_sw;
+            uint32_t res = Rs_uw & ~((shift << 26) >> 31);
+            if (shift != 0) {
+                shift = bits(shift, 4, 0);
+                res = res >> shift;
             }
+            Ra = res;
         }});
 
         538: IntLogicOp::cnttzw({{ Ra = findTrailingZeros(Rs_uw); }}, true);
@@ -588,45 +592,36 @@ decode PO default Unknown::unknown() {
 
         format IntShiftOp {
             792: sraw({{
-                int32_t s = Rs;
-                if (Rb == 0) {
-                    Ra = Rs;
-                    setCA = true;
-                } else if (Rb & 0x20) {
-                    if (s < 0) {
-                        Ra = (uint32_t)-1;
-                        if (s & 0x7fffffff) {
-                            setCA = true;
-                        } else {
-                            setCA = false;
-                        }
-                    } else {
-                        Ra = 0;
-                        setCA = false;
+                int32_t src = Rs_sw;
+                uint32_t shift = Rb_uw;
+                int64_t res;
+                if (bits(shift, 5)) {
+                    res = src >> 31;
+                    if (res != 0) {
+                        setCA = true;
                     }
                 } else {
-                    Ra = s >> (Rb & 0x1f);
-                    if (s < 0 && (s << (32 - (Rb & 0x1f))) != 0) {
-                        setCA = true;
+                    if (shift != 0) {
+                        shift = bits(shift, 4, 0);
+                        res = src >> shift;
+                        setCA = src < 0 && (src & mask(shift)) != 0;
                     } else {
-                        setCA = false;
+                        res = src;
                     }
                 }
+                Ra = res;
             }}, true);
 
             824: srawi({{
-                if (sh == 0) {
-                    Ra = Rs;
-                    setCA = false;
+                int32_t src = Rs_sw;
+                int64_t res;
+                if (sh) {
+                    res = src >> sh;
+                    setCA = src < 0 && (src & mask(sh)) != 0;
                 } else {
-                    int32_t s = Rs;
-                    Ra = s >> sh;
-                    if (s < 0 && (s << (32 - sh)) != 0) {
-                        setCA = true;
-                    } else {
-                        setCA = false;
-                    }
+                    res = src;
                 }
+                Ra = res;
             }}, true);
         }
 
