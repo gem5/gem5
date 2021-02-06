@@ -156,8 +156,10 @@ def format BranchRegCondOp(code, checkCTR = 0, inst_flags = []) {{
     # Setup the 2 code versions and add code to update LR if necessary
     if checkCTR:
         code = GetCtrCondCode(code)
+        decode_template = CheckLkDecode
     else:
         code = GetCondCode(code)
+        decode_template = CheckBoLkDecode
     code_lk1 = code + updateLrCode
     inst_flags_lk1 = inst_flags + [ 'IsCall' ]
 
@@ -168,10 +170,10 @@ def format BranchRegCondOp(code, checkCTR = 0, inst_flags = []) {{
     # Generate the classes
     (header_output, decoder_output, decode_block, exec_output) = \
         GenAluOp(name, Name, 'BranchRegCondOp', code, inst_flags,
-                 CheckLkDecode, BasicConstructor)
+                 decode_template, BasicConstructor)
     (header_output_lk1, decoder_output_lk1, _, exec_output_lk1) = \
         GenAluOp(name, Name + 'LkSet', 'BranchRegCondOp', code_lk1,
-                 inst_flags_lk1, CheckLkDecode, BasicConstructor)
+                 inst_flags_lk1, decode_template, BasicConstructor)
 
     # Finally, add to the other outputs
     header_output += header_output_lk1

@@ -111,6 +111,18 @@ def template CheckAaLkDecode {{
  }
 }};
 
+def template CheckBoLkDecode {{
+ {
+     if (!bits(BO, 2)) {
+         return new Unknown(machInst);
+     } else if (LK == 0) {
+         return new %(class_name)s(machInst);
+     } else {
+         return new %(class_name)sLkSet(machInst);
+     }
+ }
+}};
+
 let {{
 
 def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,

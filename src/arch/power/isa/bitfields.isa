@@ -69,6 +69,7 @@ def bitfield SPR           <20:11>;
 def bitfield FXM           <19:12>;
 
 // Branch fields
+def bitfield BO            <25:21>;
 def bitfield LK            <0>;
 def bitfield AA            <1>;
 
