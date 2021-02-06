@@ -978,17 +978,21 @@ decode PO default Unknown::unknown() {
 
                 default: decode XFX_XO {
                     format IntOp {
-                        19: mfcr({{ Rt = CR; }});
+                        19: decode S {
+                            0: mfcr({{ Rt = CR; }});
+                        }
 
-                        144: mtcrf({{
-                            uint32_t mask = 0;
-                            for (int i = 0; i < 8; ++i) {
-                                if (((FXM >> i) & 0x1) == 0x1) {
-                                    mask |= 0xf << (4 * i);
+                        144: decode S {
+                            0: mtcrf({{
+                                uint32_t mask = 0;
+                                for (int i = 0; i < 8; ++i) {
+                                    if (bits(FXM, i)) {
+                                        mask |= 0xf << (4 * i);
+                                    }
                                 }
-                            }
-                            CR = (Rs & mask) | (CR & ~mask);
-                        }});
+                                CR = (Rs & mask) | (CR & ~mask);
+                            }});
+                        }
 
                         339: decode SPR {
                             0x20: mfxer({{ Rt = XER; }});

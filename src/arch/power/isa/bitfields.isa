@@ -73,6 +73,7 @@ def bitfield SPR           <20:11>;
 
 // FXM field for mtcrf instruction
 def bitfield FXM           <19:12>;
+def bitfield S             <20>;
 
 // Branch fields
 def bitfield BO            <25:21>;
