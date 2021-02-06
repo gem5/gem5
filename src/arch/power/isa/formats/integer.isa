@@ -488,15 +488,17 @@ def format IntConcatShiftOp(code, computeCA = 0, inst_flags = []) {{
 }};
 
 
-// A special format for rotate instructions which use certain fields
-// from the instruction's binary encoding. We need two versions for each
-// instruction to deal with the Rc bit.
+// Integer instructions with or without immediate that perform rotate
+// operations. All instructions write to Ra and use Rs as a source
+// register. If immediate is not used, Rb is also used as a source
+// register. We need two versions for each instruction to deal with
+// the Rc bit.
 def format IntRotateOp(code, inst_flags = []) {{
 
     # The result is always in Ra
     dict = {'result':'Ra'}
 
-    # Setup the code for when Rc is set
+    # Code when Rc is set
     code_rc1 = readXERCode + code + computeCR0Code % dict
 
     # Generate the first class

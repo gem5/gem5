@@ -195,10 +195,9 @@ decode PO default Unknown::unknown() {
     }
 
     format IntRotateOp {
-        20: rlwimi({{ Ra = (rotateValue(Rs, sh) & fullMask) |
-                           (Ra & ~fullMask); }});
-        21: rlwinm({{ Ra = rotateValue(Rs, sh) & fullMask; }});
-        23: rlwnm({{ Ra = rotateValue(Rs, Rb) & fullMask; }});
+        20: rlwimi({{ Ra = (rotate(Rs, sh) & fullMask) | (Ra & ~fullMask); }});
+        21: rlwinm({{ Ra = rotate(Rs, sh) & fullMask; }});
+        23: rlwnm({{ Ra = rotate(Rs, Rb) & fullMask; }});
     }
 
     format IntImmLogicOp {
