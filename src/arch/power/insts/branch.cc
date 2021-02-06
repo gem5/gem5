@@ -67,7 +67,16 @@ BranchOp::generateDisassembly(
     std::stringstream ss;
     Addr target;
 
-    ccprintf(ss, "%-10s ", mnemonic);
+    // Generate correct mnemonic
+    std::string myMnemonic(mnemonic);
+    std::string suffix;
+
+    // Additional characters depending on isa bits being set
+    if (lk)
+        suffix += "l";
+    if (aa)
+        suffix += "a";
+    ccprintf(ss, "%-10s ", myMnemonic + suffix);
 
     if (aa)
         target = li;
@@ -102,10 +111,19 @@ BranchDispCondOp::generateDisassembly(
     std::stringstream ss;
     Addr target;
 
-    ccprintf(ss, "%-10s ", mnemonic);
+    // Generate the correct mnemonic
+    std::string myMnemonic(mnemonic);
+    std::string suffix;
+
+    // Additional characters depending on isa bits being set
+    if (lk)
+        suffix += "l";
+    if (aa)
+        suffix += "a";
+    ccprintf(ss, "%-10s ", myMnemonic + suffix);
 
     // Print BI and BO fields
-    ss << bi << ", " << bo << ", ";
+    ss << (int) bi << ", " << (int) bo << ", ";
 
     if (aa)
         target = bd;
@@ -136,10 +154,17 @@ BranchRegCondOp::generateDisassembly(
 {
     std::stringstream ss;
 
-    ccprintf(ss, "%-10s ", mnemonic);
+    // Generate the correct mnemonic
+    std::string myMnemonic(mnemonic);
+    std::string suffix;
+
+    // Additional characters depending on isa bits being set
+    if (lk)
+        suffix += "l";
+    ccprintf(ss, "%-10s ", myMnemonic + suffix);
 
     // Print the BI and BO fields
-    ss << bi << ", " << bo;
+    ss << (int) bi << ", " << (int) bo;
 
     return ss.str();
 }
