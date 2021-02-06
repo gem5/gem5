@@ -49,8 +49,7 @@ IntOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
                myMnemonic == "mtxer" ||
                myMnemonic == "mtlr"  ||
                myMnemonic == "mtctr" ||
-               myMnemonic == "mttar" ||
-               myMnemonic == "cmpi") {
+               myMnemonic == "mttar") {
         printDest = false;
     } else if (myMnemonic == "mfcr"  ||
                myMnemonic == "mfxer" ||
@@ -269,6 +268,157 @@ IntDispArithOp::generateDisassembly(
     // Print the displacement
     if (printDisp)
         ss << ", " << (negateDisp ? -d : d);
+
+    return ss.str();
+}
+
+
+std::string
+IntCompOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    bool printFieldPrefix = false;
+    bool printLength = true;
+
+    // Generate the correct mnemonic
+    std::string myMnemonic(mnemonic);
+
+    // Special cases
+    if (myMnemonic == "cmp" ||
+        myMnemonic == "cmpl") {
+        myMnemonic += l ? "d" : "w";
+        printFieldPrefix = true;
+        printLength = false;
+    }
+
+    ccprintf(ss, "%-10s ", myMnemonic);
+
+    // Print the first destination only
+    if (printFieldPrefix) {
+        if (bf > 0)
+            ss << "cr" << (int) bf;
+    } else {
+        ss << (int) bf;
+    }
+
+    // Print the length
+    if (printLength) {
+        if (!printFieldPrefix || bf > 0)
+            ss << ", ";
+        ss << (int) l;
+    }
+
+    // Print the first source register
+    if (_numSrcRegs > 0) {
+        if (!printFieldPrefix || bf > 0 || printLength)
+            ss << ", ";
+        printReg(ss, srcRegIdx(0));
+
+        // Print the second source register
+        if (_numSrcRegs > 1) {
+            ss << ", ";
+            printReg(ss, srcRegIdx(1));
+        }
+    }
+
+    return ss.str();
+}
+
+
+std::string
+IntImmCompOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    bool printFieldPrefix = false;
+    bool printLength = true;
+
+    // Generate the correct mnemonic
+    std::string myMnemonic(mnemonic);
+
+    // Special cases
+    if (myMnemonic == "cmpi") {
+        myMnemonic = l ? "cmpdi" : "cmpwi";
+        printFieldPrefix = true;
+        printLength = false;
+    }
+
+    ccprintf(ss, "%-10s ", myMnemonic);
+
+    // Print the first destination only
+    if (printFieldPrefix) {
+        if (bf > 0)
+            ss << "cr" << (int) bf;
+    } else {
+        ss << (int) bf;
+    }
+
+    // Print the length
+    if (printLength) {
+        if (!printFieldPrefix || bf > 0)
+            ss << ", ";
+        ss << (int) l;
+    }
+
+    // Print the first source register
+    if (_numSrcRegs > 0) {
+        if (!printFieldPrefix || bf > 0 || printLength)
+            ss << ", ";
+        printReg(ss, srcRegIdx(0));
+    }
+
+    // Print the immediate value
+    ss << ", " << si;
+
+    return ss.str();
+}
+
+
+std::string
+IntImmCompLogicOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    bool printFieldPrefix = false;
+    bool printLength = true;
+
+    // Generate the correct mnemonic
+    std::string myMnemonic(mnemonic);
+
+    // Special cases
+    if (myMnemonic == "cmpli") {
+        myMnemonic = l ? "cmpldi" : "cmplwi";
+        printFieldPrefix = true;
+        printLength = false;
+    }
+
+    ccprintf(ss, "%-10s ", myMnemonic);
+
+    // Print the first destination only
+    if (printFieldPrefix) {
+        if (bf > 0)
+            ss << "cr" << (int) bf;
+    } else {
+        ss << (int) bf;
+    }
+
+    // Print the length
+    if (printLength) {
+        if (!printFieldPrefix || bf > 0)
+            ss << ", ";
+        ss << (int) l;
+    }
+
+    // Print the first source register
+    if (_numSrcRegs > 0) {
+        if (!printFieldPrefix || bf > 0 || printLength)
+            ss << ", ";
+        printReg(ss, srcRegIdx(0));
+    }
+
+    // Print the immediate value
+    ss << ", " << ui;
 
     return ss.str();
 }
