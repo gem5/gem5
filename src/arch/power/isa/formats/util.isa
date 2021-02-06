@@ -145,8 +145,8 @@ def template CheckRaZeroDecode {{
 
 let {{
 
-def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                  base_class = 'MemOp',
+def LoadStoreBase(name, Name, ea_code, memacc_code, update_code,
+                  mem_flags, inst_flags, base_class = 'MemOp',
                   decode_template = BasicDecode, exec_template_base = ''):
     # Make sure flags are in lists (convert to lists if not).
     mem_flags = makeList(mem_flags)
@@ -155,7 +155,8 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     # Generate InstObjParams for the memory access.
     iop = InstObjParams(name, Name, base_class,
                         {'ea_code': ea_code,
-                         'memacc_code': memacc_code},
+                         'memacc_code': memacc_code,
+                         'update_code': update_code},
                         inst_flags)
 
     if mem_flags:

@@ -333,10 +333,8 @@ decode PO default Unknown::unknown() {
         4: IntTrapOp::tw({{ Ra_sw }}, {{ Rb_sw }});
 
         format LoadIndexOp {
-            20: lwarx({{
-                Rt = Mem_uw;
-                Rsv = 1; RsvLen = 4; RsvAddr = EA;
-            }});
+            20: lwarx({{ Rt = Mem_uw; }},
+                      {{ Rsv = 1; RsvLen = 4; RsvAddr = EA; }});
 
             21: ldx({{ Rt = Mem; }});
             23: lwzx({{ Rt = Mem_uw; }});
@@ -373,10 +371,8 @@ decode PO default Unknown::unknown() {
                 cr = makeCRFieldUnsigned((uint32_t)Ra, (uint32_t)Rb, xer.so);
         }});
 
-        52: LoadIndexOp::lbarx({{
-            Rt = Mem_ub;
-            Rsv = 1; RsvLen = 1; RsvAddr = EA;
-        }});
+        52: LoadIndexOp::lbarx({{ Rt = Mem_ub; }},
+                               {{ Rsv = 1; RsvLen = 1; RsvAddr = EA; }});
 
         53: LoadIndexUpdateOp::ldux({{ Rt = Mem; }});
         55: LoadIndexUpdateOp::lwzux({{ Rt = Mem_uw; }});
@@ -389,17 +385,13 @@ decode PO default Unknown::unknown() {
         68: IntTrapOp::td({{ Ra }}, {{ Rb }});
 
         format LoadIndexOp {
-            84: ldarx({{
-                Rt = Mem_ud;
-                Rsv = 1; RsvLen = 8; RsvAddr = EA;
-            }});
+            84: ldarx({{ Rt = Mem_ud; }},
+                      {{ Rsv = 1; RsvLen = 8; RsvAddr = EA; }});
 
             87: lbzx({{ Rt = Mem_ub; }});
 
-            116: lharx({{
-                Rt = Mem_uh;
-                Rsv = 1; RsvLen = 2; RsvAddr = EA;
-            }});
+            116: lharx({{ Rt = Mem_uh;}},
+                       {{  Rsv = 1; RsvLen = 2; RsvAddr = EA; }});
         }
 
         119: LoadIndexUpdateOp::lbzux({{ Rt = Mem_ub; }});
@@ -424,8 +416,9 @@ decode PO default Unknown::unknown() {
         format StoreIndexOp {
             149: stdx({{ Mem = Rs }});
             150: stwcx({{
-                bool store_performed = false;
                 Mem_uw = Rs_uw;
+            }}, {{
+                bool store_performed = false;
                 if (Rsv) {
                     if (RsvLen == 4) {
                         if (RsvAddr == EA) {
@@ -481,8 +474,9 @@ decode PO default Unknown::unknown() {
 
         format StoreIndexOp {
             214: stdcx({{
-                bool store_performed = false;
                 Mem = Rs;
+            }}, {{
+                bool store_performed = false;
                 if (Rsv) {
                     if (RsvLen == 8) {
                         if (RsvAddr == EA) {
@@ -656,8 +650,9 @@ decode PO default Unknown::unknown() {
             663: stfsx({{ Mem_sf = Fs_sf; }});
 
             694: stbcx({{
-                bool store_performed = false;
                 Mem_ub = Rs_ub;
+            }}, {{
+                bool store_performed = false;
                 if (Rsv) {
                     if (RsvLen == 1) {
                         if (RsvAddr == EA) {
@@ -677,8 +672,9 @@ decode PO default Unknown::unknown() {
 
         format StoreIndexOp {
             726: sthcx({{
-                bool store_performed = false;
                 Mem_uh = Rs_uh;
+            }}, {{
+                bool store_performed = false;
                 if (Rsv) {
                     if (RsvLen == 2) {
                         if (RsvAddr == EA) {

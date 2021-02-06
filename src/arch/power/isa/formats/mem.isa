@@ -82,6 +82,7 @@ def template LoadExecute {{
         }
 
         if (fault == NoFault) {
+            %(update_code)s;
             %(op_wb)s;
         }
 
@@ -120,9 +121,8 @@ def template LoadCompleteAcc {{
         Msr msr = xc->tcBase()->readIntReg(INTREG_MSR);
 
         %(op_decl)s;
-        %(op_rd)s;
-
         EA = pkt->req->getVaddr();
+        %(op_rd)s;
 
         if (msr.le)
             getMemLE(pkt, Mem, traceData);
@@ -134,7 +134,8 @@ def template LoadCompleteAcc {{
         }
 
         if (fault == NoFault) {
-          %(op_wb)s;
+            %(update_code)s;
+            %(op_wb)s;
         }
 
         return fault;
@@ -167,6 +168,7 @@ def template StoreExecute {{
         }
 
         if (fault == NoFault) {
+            %(update_code)s;
             %(op_wb)s;
         }
 
@@ -199,11 +201,6 @@ def template StoreInitiateAcc {{
                                      NULL);
         }
 
-        // Need to write back any potential address register update
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
         return fault;
     }
 }};
@@ -213,7 +210,20 @@ def template StoreCompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
-        return NoFault;
+        GEM5_VAR_USED Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        EA = pkt->req->getVaddr();
+        %(op_rd)s;
+
+        // Need to write back any potential address register update
+        if (fault == NoFault) {
+            %(update_code)s;
+            %(op_wb)s;
+        }
+
+        return fault;
     }
 }};
 
@@ -224,19 +234,22 @@ def template StoreCompleteAcc {{
 // dependence on Ra.
 let {{
 
-def GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0, base,
+def GenMemOp(name, Name, memacc_code, update_code, ea_code, ea_code_ra0, base,
              load_or_store, mem_flags = [], inst_flags = []):
 
     # First the version where Ra is non-zero
     (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+        LoadStoreBase(name, Name, ea_code,
+                      memacc_code, update_code,
+                      mem_flags, inst_flags,
                       base_class = base,
                       decode_template = CheckRaDecode,
                       exec_template_base = load_or_store)
 
     # Now another version where Ra == 0
     (header_output_ra0, decoder_output_ra0, _, exec_output_ra0) = \
-        LoadStoreBase(name, Name + 'RaZero', ea_code_ra0, memacc_code,
+        LoadStoreBase(name, Name + 'RaZero', ea_code_ra0,
+                      memacc_code, update_code,
                       mem_flags, inst_flags,
                       base_class = base,
                       exec_template_base = load_or_store)
@@ -250,20 +263,22 @@ def GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0, base,
 }};
 
 
-def format LoadIndexOp(memacc_code, ea_code = {{ EA = Ra + Rb; }},
+def format LoadIndexOp(memacc_code, update_code = {{ }},
+                       ea_code = {{ EA = Ra + Rb; }},
                        ea_code_ra0 = {{ EA = Rb; }},
                        mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
-        GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
+        GenMemOp(name, Name, memacc_code, update_code, ea_code, ea_code_ra0,
                  'MemIndexOp', 'Load', mem_flags, inst_flags)
 }};
 
 
-def format StoreIndexOp(memacc_code, ea_code = {{ EA = Ra + Rb; }},
+def format StoreIndexOp(memacc_code, update_code = {{ }},
+                        ea_code = {{ EA = Ra + Rb; }},
                         ea_code_ra0 = {{ EA = Rb; }},
                         mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
-        GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
+        GenMemOp(name, Name, memacc_code, update_code, ea_code, ea_code_ra0,
                  'MemIndexOp', 'Store', mem_flags, inst_flags)
 }};
 
@@ -272,11 +287,12 @@ def format LoadIndexUpdateOp(memacc_code, ea_code = {{ EA = Ra + Rb; }},
                              mem_flags = [], inst_flags = []) {{
 
     # Add in the update code
-    memacc_code += 'Ra = EA;'
+    update_code = 'Ra = EA;'
 
     # Generate the class
     (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+        LoadStoreBase(name, Name, ea_code, memacc_code, update_code,
+                      mem_flags, inst_flags,
                       base_class = 'MemIndexOp',
                       decode_template = CheckRaRtDecode,
                       exec_template_base = 'Load')
@@ -287,11 +303,12 @@ def format StoreIndexUpdateOp(memacc_code, ea_code = {{ EA = Ra + Rb; }},
                               mem_flags = [], inst_flags = []) {{
 
     # Add in the update code
-    memacc_code += 'Ra = EA;'
+    update_code = 'Ra = EA;'
 
     # Generate the class
     (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+        LoadStoreBase(name, Name, ea_code, memacc_code, update_code,
+                      mem_flags, inst_flags,
                       base_class = 'MemIndexOp',
                       decode_template = CheckRaZeroDecode,
                       exec_template_base = 'Store')
@@ -302,7 +319,7 @@ def format LoadDispOp(memacc_code, ea_code = {{ EA = Ra + d; }},
                       ea_code_ra0 = {{ EA = d; }},
                       mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
-        GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
+        GenMemOp(name, Name, memacc_code, '', ea_code, ea_code_ra0,
                  'MemDispOp', 'Load', mem_flags, inst_flags)
 }};
 
@@ -311,7 +328,7 @@ def format StoreDispOp(memacc_code, ea_code = {{ EA = Ra + d; }},
                        ea_code_ra0 = {{ EA = d; }},
                        mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
-        GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
+        GenMemOp(name, Name, memacc_code, '', ea_code, ea_code_ra0,
                  'MemDispOp', 'Store', mem_flags, inst_flags)
 }};
 
@@ -321,7 +338,7 @@ def format LoadDispShiftOp(memacc_code,
                            ea_code_ra0 = {{ EA = (ds << 2); }},
                            mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
-        GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
+        GenMemOp(name, Name, memacc_code, '', ea_code, ea_code_ra0,
                  'MemDispShiftOp', 'Load', mem_flags, inst_flags)
 }};
 
@@ -331,7 +348,7 @@ def format StoreDispShiftOp(memacc_code,
                             ea_code_ra0 = {{ EA = (ds << 2); }},
                             mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
-        GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
+        GenMemOp(name, Name, memacc_code, '', ea_code, ea_code_ra0,
                  'MemDispShiftOp', 'Store', mem_flags, inst_flags)
 }};
 
@@ -340,11 +357,12 @@ def format LoadDispUpdateOp(memacc_code, ea_code = {{ EA = Ra + d; }},
                             mem_flags = [], inst_flags = []) {{
 
     # Add in the update code
-    memacc_code += 'Ra = EA;'
+    update_code = 'Ra = EA;'
 
     # Generate the class
     (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+        LoadStoreBase(name, Name, ea_code, memacc_code, update_code,
+                      mem_flags, inst_flags,
                       base_class = 'MemDispOp',
                       decode_template = CheckRaRtDecode,
                       exec_template_base = 'Load')
@@ -355,11 +373,12 @@ def format StoreDispUpdateOp(memacc_code, ea_code = {{ EA = Ra + d; }},
                              mem_flags = [], inst_flags = []) {{
 
     # Add in the update code
-    memacc_code += 'Ra = EA;'
+    update_code = 'Ra = EA;'
 
     # Generate the class
     (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+        LoadStoreBase(name, Name, ea_code, memacc_code, update_code,
+                      mem_flags, inst_flags,
                       base_class = 'MemDispOp',
                       decode_template = CheckRaZeroDecode,
                       exec_template_base = 'Store')
@@ -371,11 +390,12 @@ def format LoadDispShiftUpdateOp(memacc_code,
                                  mem_flags = [], inst_flags = []) {{
 
     # Add in the update code
-    memacc_code += 'Ra = EA;'
+    update_code = 'Ra = EA;'
 
     # Generate the class
     (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+        LoadStoreBase(name, Name, ea_code, memacc_code, update_code,
+                      mem_flags, inst_flags,
                       base_class = 'MemDispShiftOp',
                       decode_template = CheckRaRtDecode,
                       exec_template_base = 'Load')
@@ -387,11 +407,12 @@ def format StoreDispShiftUpdateOp(memacc_code,
                                   mem_flags = [], inst_flags = []) {{
 
     # Add in the update code
-    memacc_code += 'Ra = EA;'
+    update_code = 'Ra = EA;'
 
     # Generate the class
     (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+        LoadStoreBase(name, Name, ea_code, memacc_code, update_code,
+                      mem_flags, inst_flags,
                       base_class = 'MemDispShiftOp',
                       decode_template = CheckRaZeroDecode,
                       exec_template_base = 'Store')
