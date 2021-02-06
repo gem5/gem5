@@ -91,6 +91,9 @@ class MemDispShiftOp : public MemOp
         ds(sext<14>(machInst.ds))
     {
     }
+
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 
@@ -106,6 +109,9 @@ class MemIndexOp : public MemOp
       : MemOp(mnem, _machInst, __opClass)
     {
     }
+
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

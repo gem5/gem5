@@ -38,6 +38,7 @@ MemOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     return csprintf("%-10s", mnemonic);
 }
 
+
 std::string
 MemDispOp::generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const
@@ -59,16 +60,162 @@ MemDispOp::generateDisassembly(
 
     // Print the data register for a store
     else {
-        printReg(ss, srcRegIdx(1));
+        if (_numSrcRegs > 0) {
+            printReg(ss, srcRegIdx(0));
+        }
     }
 
     // Print the displacement
     ss << ", " << d;
-
-    // Print the address register
     ss << "(";
-    printReg(ss, srcRegIdx(0));
+
+    // Print the address register for a load
+    if (!flags[IsStore]) {
+        if (_numSrcRegs > 0) {
+            printReg(ss, srcRegIdx(0));
+        }
+
+        // The address register is skipped if it is R0
+        else {
+            ss << "0";
+        }
+    }
+
+    // Print the address register for a store
+    else {
+        if (_numSrcRegs > 1) {
+            printReg(ss, srcRegIdx(1));
+        }
+
+        // The address register is skipped if it is R0
+        else {
+            ss << "0";
+        }
+    }
+
     ss << ")";
+
+    return ss.str();
+}
+
+
+std::string
+MemDispShiftOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+
+    ccprintf(ss, "%-10s ", mnemonic);
+
+    // Print the destination only for a load
+    if (!flags[IsStore]) {
+        if (_numDestRegs > 0) {
+
+            // If the instruction updates the source register with the
+            // EA, then this source register is placed in position 0,
+            // therefore we print the last destination register.
+            printReg(ss, destRegIdx(_numDestRegs-1));
+        }
+    }
+
+    // Print the data register for a store
+    else {
+        if (_numSrcRegs > 0) {
+            printReg(ss, srcRegIdx(0));
+        }
+    }
+
+    // Print the displacement
+    ss << ", " << (ds << 2);
+    ss << "(";
+
+    // Print the address register for a load
+    if (!flags[IsStore]) {
+        if (_numSrcRegs > 0) {
+            printReg(ss, srcRegIdx(0));
+        }
+
+        // The address register is skipped if it is R0
+        else {
+            ss << "0";
+        }
+    }
+
+    // Print the address register for a store
+    else {
+        if (_numSrcRegs > 1) {
+            printReg(ss, srcRegIdx(1));
+        }
+
+        // The address register is skipped if it is R0
+        else {
+            ss << "0";
+        }
+    }
+
+    ss << ")";
+
+    return ss.str();
+}
+
+
+std::string
+MemIndexOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+
+    ccprintf(ss, "%-10s ", mnemonic);
+
+    // Print the destination only for a load
+    if (!flags[IsStore]) {
+        if (_numDestRegs > 0) {
+
+            // If the instruction updates the source register with the
+            // EA, then this source register is placed in position 0,
+            // therefore we print the last destination register.
+            printReg(ss, destRegIdx(_numDestRegs-1));
+        }
+    }
+
+    // Print the data register for a store
+    else {
+        if (_numSrcRegs > 0) {
+            printReg(ss, srcRegIdx(0));
+        }
+    }
+
+    ss << ", ";
+
+    // Print the address registers for a load
+    if (!flags[IsStore]) {
+        if (_numSrcRegs > 1) {
+            printReg(ss, srcRegIdx(0));
+            ss << ", ";
+            printReg(ss, srcRegIdx(1));
+        }
+
+        // The first address register is skipped if it is R0
+        else if (_numSrcRegs > 0) {
+            ss << "0, ";
+            printReg(ss, srcRegIdx(0));
+        }
+    }
+
+    // Print the address registers for a store
+    else {
+        if (_numSrcRegs > 2) {
+            printReg(ss, srcRegIdx(1));
+            ss << ", ";
+            printReg(ss, srcRegIdx(2));
+        }
+
+        // The first address register is skipped if it is R0
+        else if (_numSrcRegs > 1) {
+            ss << "0, ";
+            printReg(ss, srcRegIdx(1));
+        }
+    }
 
     return ss.str();
 }
