@@ -196,8 +196,12 @@ decode PO default Unknown::unknown() {
         }});
 
         format LoadIndexOp {
-            20: lwarx({{ Rt = Mem_sw; Rsv = 1; RsvLen = 4; RsvAddr = EA; }});
-            23: lwzx({{ Rt = Mem; }});
+            20: lwarx({{
+                Rt = Mem_uw;
+                Rsv = 1; RsvLen = 4; RsvAddr = EA;
+            }});
+
+            23: lwzx({{ Rt = Mem_uw; }});
         }
 
         format IntLogicOp {
@@ -219,7 +223,7 @@ decode PO default Unknown::unknown() {
             CR = insertCRField(CR, BF, cr);
         }});
 
-        55: LoadIndexUpdateOp::lwzux({{ Rt = Mem; }});
+        55: LoadIndexUpdateOp::lwzux({{ Rt = Mem_uw; }});
         60: IntLogicOp::andc({{ Ra = Rs & ~Rb; }});
         87: LoadIndexOp::lbzx({{ Rt = Mem_ub; }});
         119: LoadIndexUpdateOp::lbzux({{ Rt = Mem_ub; }});
@@ -228,7 +232,7 @@ decode PO default Unknown::unknown() {
         format StoreIndexOp {
             150: stwcx({{
                 bool store_performed = false;
-                Mem = Rs;
+                Mem_uw = Rs_uw;
                 if (Rsv) {
                     if (RsvLen == 4) {
                         if (RsvAddr == EA) {
@@ -243,7 +247,7 @@ decode PO default Unknown::unknown() {
                 Rsv = 0;
             }});
 
-            151: stwx({{ Mem = Rs; }});
+            151: stwx({{ Mem_uw = Rs_uw; }});
         }
 
         183: StoreIndexUpdateOp::stwux({{ Mem = Rs; }});
@@ -515,12 +519,12 @@ decode PO default Unknown::unknown() {
         }
     }
 
-    32: LoadDispOp::lwz({{ Rt = Mem; }});
-    33: LoadDispUpdateOp::lwzu({{ Rt = Mem; }});
+    32: LoadDispOp::lwz({{ Rt = Mem_uw; }});
+    33: LoadDispUpdateOp::lwzu({{ Rt = Mem_uw; }});
     34: LoadDispOp::lbz({{ Rt = Mem_ub; }});
     35: LoadDispUpdateOp::lbzu({{ Rt = Mem_ub; }});
-    36: StoreDispOp::stw({{ Mem = Rs; }});
-    37: StoreDispUpdateOp::stwu({{ Mem = Rs; }});
+    36: StoreDispOp::stw({{ Mem_uw = Rs_uw; }});
+    37: StoreDispUpdateOp::stwu({{ Mem_uw = Rs_uw; }});
     38: StoreDispOp::stb({{ Mem_ub = Rs_ub; }});
     39: StoreDispUpdateOp::stbu({{ Mem_ub = Rs_ub; }});
     40: LoadDispOp::lhz({{ Rt = Mem_uh; }});

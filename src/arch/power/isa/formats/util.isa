@@ -123,6 +123,26 @@ def template CheckBoLkDecode {{
  }
 }};
 
+def template CheckRaRtDecode {{
+ {
+     if ((RA == 0) || (RA == RT)) {
+         return new Unknown(machInst);
+     } else {
+         return new %(class_name)s(machInst);
+     }
+ }
+}};
+
+def template CheckRaZeroDecode {{
+ {
+     if (RA == 0) {
+         return new Unknown(machInst);
+     } else {
+         return new %(class_name)s(machInst);
+     }
+ }
+}};
+
 let {{
 
 def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
