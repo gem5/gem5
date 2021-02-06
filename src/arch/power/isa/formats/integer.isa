@@ -33,7 +33,7 @@
 
 let {{
 
-readXERCode = 'Xer xer = XER;'
+readXERCode = 'GEM5_VAR_USED Xer xer = XER;'
 
 setXERCode = 'XER = xer;'
 

@@ -313,6 +313,20 @@ decode PO default Unknown::unknown() {
             183: stwux({{ Mem_uw = Rs_uw; }});
         }
 
+        192: IntCompOp::cmprb({{
+            uint32_t src1 = Ra_ub;
+            uint32_t src2 = Rb_uw;
+            uint8_t src2lo = src2 & 0xff;
+            uint8_t src2hi = (src2 >>= 8) & 0xff;
+            uint32_t res = (src2lo <= src1) & (src1 <= src2hi);
+            if (l) {
+                src2lo = (src2 >>= 8) & 0xff;
+                src2hi = (src2 >>= 8) & 0xff;
+                res = ((src2lo <= src1) & (src1 <= src2hi)) | res;
+            }
+            cr = res << 2;
+        }});
+
         format StoreIndexOp {
             214: stdcx({{
                 bool store_performed = false;
@@ -333,6 +347,16 @@ decode PO default Unknown::unknown() {
 
             215: stbx({{ Mem_ub = Rs_ub; }});
         }
+
+        224: IntCompOp::cmpeqb({{
+            // Based on "Determine if a word has a byte equal to n"
+            // from https://graphics.stanford.edu/~seander/bithacks.html
+            const uint64_t m1 = 0x0101010101010101;
+            const uint64_t m2 = 0x8080808080808080;
+            uint64_t res = Rb ^ (Ra_ub * m1);
+            res = (res - m1) & ~res & m2;
+            cr = (res != 0) << 2;
+        }});
 
         246: MiscOp::dcbtst({{ }});
         247: StoreIndexUpdateOp::stbux({{ Mem_ub = Rs_ub; }});
