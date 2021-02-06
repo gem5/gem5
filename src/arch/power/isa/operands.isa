@@ -41,10 +41,10 @@ def operand_types {{
 
 def operands {{
     # General Purpose Integer Reg Operands
-    'Ra': ('IntReg', 'uw', 'RA', 'IsInteger', 1),
-    'Rb': ('IntReg', 'uw', 'RB', 'IsInteger', 2),
-    'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 3),
-    'Rt': ('IntReg', 'uw', 'RT', 'IsInteger', 4),
+    'Ra': ('IntReg', 'ud', 'RA', 'IsInteger', 1),
+    'Rb': ('IntReg', 'ud', 'RB', 'IsInteger', 2),
+    'Rs': ('IntReg', 'ud', 'RS', 'IsInteger', 3),
+    'Rt': ('IntReg', 'ud', 'RT', 'IsInteger', 4),
 
     # General Purpose Floating Point Reg Operands
     'Fa': ('FloatReg', 'df', 'FRA', 'IsFloating', 1),
@@ -54,16 +54,16 @@ def operands {{
     'Ft': ('FloatReg', 'df', 'FRT', 'IsFloating', 5),
 
     # Memory Operand
-    'Mem': ('Mem', 'uw', None, (None, 'IsLoad', 'IsStore'), 8),
+    'Mem': ('Mem', 'ud', None, (None, 'IsLoad', 'IsStore'), 8),
 
     # Program counter and next
-    'CIA': ('PCState', 'uw', 'pc', (None, None, 'IsControl'), 9),
-    'NIA': ('PCState', 'uw', 'npc', (None, None, 'IsControl'), 9),
+    'CIA': ('PCState', 'ud', 'pc', (None, None, 'IsControl'), 9),
+    'NIA': ('PCState', 'ud', 'npc', (None, None, 'IsControl'), 9),
 
     # Control registers
     'CR': ('IntReg', 'uw', 'INTREG_CR', 'IsInteger', 9),
-    'LR': ('IntReg', 'uw', 'INTREG_LR', 'IsInteger', 9),
-    'CTR': ('IntReg', 'uw', 'INTREG_CTR', 'IsInteger', 9),
+    'LR': ('IntReg', 'ud', 'INTREG_LR', 'IsInteger', 9),
+    'CTR': ('IntReg', 'ud', 'INTREG_CTR', 'IsInteger', 9),
     'XER': ('IntReg', 'uw', 'INTREG_XER', 'IsInteger', 9),
 
     # Setting as IntReg so things are stored as an integer, not double
@@ -72,5 +72,5 @@ def operands {{
     # Registers for linked loads and stores
     'Rsv': ('IntReg', 'uw', 'INTREG_RSV', 'IsInteger', 9),
     'RsvLen': ('IntReg', 'uw', 'INTREG_RSV_LEN', 'IsInteger', 9),
-    'RsvAddr': ('IntReg', 'uw', 'INTREG_RSV_ADDR', 'IsInteger', 9),
+    'RsvAddr': ('IntReg', 'ud', 'INTREG_RSV_ADDR', 'IsInteger', 9),
 }};
