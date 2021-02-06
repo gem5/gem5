@@ -44,7 +44,8 @@ def operands {{
     'Rs': ('IntReg', 'ud', 'RS', 'IsInteger', 1),
     'Ra': ('IntReg', 'ud', 'RA', 'IsInteger', 2),
     'Rb': ('IntReg', 'ud', 'RB', 'IsInteger', 3),
-    'Rt': ('IntReg', 'ud', 'RT', 'IsInteger', 4),
+    'Rc': ('IntReg', 'ud', 'RC', 'IsInteger', 4),
+    'Rt': ('IntReg', 'ud', 'RT', 'IsInteger', 5),
 
     # General Purpose Floating Point Reg Operands
     'Fa': ('FloatReg', 'df', 'FRA', 'IsFloating', 1),

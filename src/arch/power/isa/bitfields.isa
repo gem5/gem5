@@ -38,6 +38,7 @@ def bitfield PO            <31:26>;
 def bitfield A_XO          <5:1>;
 def bitfield DS_XO         <1:0>;
 def bitfield DX_XO         <5:1>;
+def bitfield VA_XO         <5:0>;
 def bitfield X_XO          <10:1>;
 def bitfield XFL_XO        <10:1>;
 def bitfield XFX_XO        <10:1>;
@@ -47,6 +48,7 @@ def bitfield XO_XO         <9:1>;
 // Register fields
 def bitfield RA            <20:16>;
 def bitfield RB            <15:11>;
+def bitfield RC            <10:6>;
 def bitfield RS            <25:21>;
 def bitfield RT            <25:21>;
 def bitfield FRA           <20:16>;
