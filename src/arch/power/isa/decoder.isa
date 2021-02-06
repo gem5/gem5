@@ -328,10 +328,27 @@ decode PO default Unknown::unknown() {
             151: stwx({{ Mem_uw = Rs_uw; }});
         }
 
+        154: IntLogicOp::prtyw({{
+            uint64_t res = Rs;
+            res = res ^ (res >> 16);
+            res = res ^ (res >> 8);
+            res = res & 0x100000001;
+            Ra = res;
+        }});
+
         format StoreIndexUpdateOp {
             181: stdux({{ Mem = Rs; }});
             183: stwux({{ Mem_uw = Rs_uw; }});
         }
+
+        186: IntLogicOp::prtyd({{
+            uint64_t res = Rs;
+            res = res ^ (res >> 32);
+            res = res ^ (res >> 16);
+            res = res ^ (res >> 8);
+            res = res & 0x1;
+            Ra = res;
+        }});
 
         192: IntCompOp::cmprb({{
             uint32_t src1 = Ra_ub;
