@@ -31,22 +31,154 @@
 // The actual Power ISA decoder
 // ------------------------------
 //
-// I've used the Power ISA Book I v2.06 for instruction formats,
-// opcode numbers, register names, etc.
+// Power ISA v3.0B has been used for instruction formats, opcode numbers,
+// opcode field names, register names, etc.
 //
 decode OPCODE default Unknown::unknown() {
+
+    format IntImmArithOp {
+        7: mulli({{
+            int32_t src = Ra_sw;
+            int64_t prod = src * imm;
+            Rt = (uint32_t)prod;
+        }});
+
+        8: subfic({{ int32_t src = ~Ra; Rt = src + imm + 1; }},
+                  [computeCA]);
+    }
 
     format IntImmOp {
         10: cmpli({{
             Xer xer = XER;
             uint32_t cr = makeCRFieldUnsigned(Ra_uw, uimm, xer.so);
             CR = insertCRField(CR, BF, cr);
-            }});
+        }});
+
         11: cmpi({{
             Xer xer = XER;
             uint32_t cr = makeCRFieldSigned(Ra_sw, imm, xer.so);
             CR = insertCRField(CR, BF, cr);
+        }});
+    }
+
+    format IntImmArithOp {
+        12: addic({{ uint32_t src = Ra; Rt = src + imm; }},
+                  [computeCA]);
+
+        13: addic_({{ uint32_t src = Ra; Rt = src + imm; }},
+                   [computeCA, computeCR0]);
+    }
+
+    format IntImmArithCheckRaOp {
+        14: addi({{ Rt = Ra + imm; }},
+                 {{ Rt = imm }});
+
+        15: addis({{ Rt = Ra + (imm << 16); }},
+                  {{ Rt = imm << 16; }});
+    }
+
+    16: decode AA {
+
+        // Conditionally branch relative to PC based on CR and CTR.
+        0: BranchPCRelCondCtr::bc({{ NIA = (uint32_t)(CIA + disp); }});
+
+        // Conditionally branch to fixed address based on CR and CTR.
+        1: BranchNonPCRelCondCtr::bca({{ NIA = targetAddr; }});
+    }
+
+    17: IntOp::sc({{ return std::make_shared<SESyscallFault>(); }});
+
+    18: decode AA {
+
+        // Unconditionally branch relative to PC.
+        0: BranchPCRel::b({{ NIA = (uint32_t)(CIA + disp); }});
+
+        // Unconditionally branch to fixed address.
+        1: BranchNonPCRel::ba({{ NIA = targetAddr; }});
+    }
+
+    19: decode XO_XO {
+
+        0: CondMoveOp::mcrf({{
+            uint32_t crBfa = bits(CR, 31 - bfa*4, 28 - bfa*4);
+            CR = insertBits(CR, 31 - bf*4, 28 - bf*4, crBfa);
+        }});
+
+        // Conditionally branch to address in LR based on CR and CTR.
+        16: BranchLrCondCtr::bclr({{ NIA = LR & 0xfffffffc; }});
+
+        format CondLogicOp {
+            33: crnor({{
+                uint32_t crBa = bits(CR, 31 - ba);
+                uint32_t crBb = bits(CR, 31 - bb);
+                CR = insertBits(CR, 31 - bt, !(crBa | crBb));
             }});
+
+            129: crandc({{
+                uint32_t crBa = bits(CR, 31 - ba);
+                uint32_t crBb = bits(CR, 31 - bb);
+                CR = insertBits(CR, 31 - bt, crBa & !crBb);
+            }});
+        }
+
+        150: MiscOp::isync({{ }}, [ IsSerializeAfter ]);
+
+        format CondLogicOp {
+            193: crxor({{
+                uint32_t crBa = bits(CR, 31 - ba);
+                uint32_t crBb = bits(CR, 31 - bb);
+                CR = insertBits(CR, 31 - bt, crBa ^ crBb);
+            }});
+
+            255: crnand({{
+                uint32_t crBa = bits(CR, 31 - ba);
+                uint32_t crBb = bits(CR, 31 - bb);
+                CR = insertBits(CR, 31 - bt, !(crBa & crBb));
+            }});
+
+            257: crand({{
+                uint32_t crBa = bits(CR, 31 - ba);
+                uint32_t crBb = bits(CR, 31 - bb);
+                CR = insertBits(CR, 31 - bt, crBa & crBb);
+            }});
+
+            289: creqv({{
+                uint32_t crBa = bits(CR, 31 - ba);
+                uint32_t crBb = bits(CR, 31 - bb);
+                CR = insertBits(CR, 31 - bt, crBa == crBb);
+            }});
+
+            417: crorc({{
+                uint32_t crBa = bits(CR, 31 - ba);
+                uint32_t crBb = bits(CR, 31 - bb);
+                CR = insertBits(CR, 31 - bt, crBa | !crBb);
+            }});
+
+            449: cror({{
+                uint32_t crBa = bits(CR, 31 - ba);
+                uint32_t crBb = bits(CR, 31 - bb);
+                CR = insertBits(CR, 31 - bt, crBa | crBb);
+            }});
+        }
+
+        // Conditionally branch to address in CTR based on CR.
+        528: BranchCtrCond::bcctr({{ NIA = CTR & 0xfffffffc; }});
+    }
+
+    format IntRotateOp {
+        20: rlwimi({{ Ra = (rotateValue(Rs, sh) & fullMask) |
+                           (Ra & ~fullMask); }});
+        21: rlwinm({{ Ra = rotateValue(Rs, sh) & fullMask; }});
+        23: rlwnm({{ Ra = rotateValue(Rs, Rb) & fullMask; }});
+    }
+
+    format IntImmLogicOp {
+        24: ori({{ Ra = Rs | uimm; }});
+        25: oris({{ Ra = Rs | (uimm << 16); }});
+        26: xori({{ Ra = Rs ^ uimm; }});
+        27: xoris({{ Ra = Rs ^ (uimm << 16); }});
+        28: andi_({{ Ra = Rs & uimm; }}, true);
+        29: andis_({{ Ra = Rs & (uimm << 16); }}, true);
     }
 
     // Some instructions use bits 21 - 30, others 22 - 30. We have to use
@@ -56,118 +188,28 @@ decode OPCODE default Unknown::unknown() {
     // example see 'add' and 'addo'.
     31: decode XO_XO {
 
-        // These instructions can all be reduced to the form
-        // Rt = src1 + src2 [+ CA], therefore we just give src1 and src2
-        // (and, if necessary, CA) definitions and let the python script
-        // deal with setting things up correctly. We also give flags to
-        // say which control registers to set.
-        format IntSumOp {
-            266: add({{ Ra }}, {{ Rb }});
-            40: subf({{ ~Ra }}, {{ Rb }}, {{ 1 }});
-            10: addc({{ Ra }}, {{ Rb }},
-                     computeCA = true);
-            8: subfc({{ ~Ra }}, {{ Rb }}, {{ 1 }},
-                     true);
-            104: neg({{ ~Ra }}, {{ 1 }});
-            138: adde({{ Ra }}, {{ Rb }}, {{ xer.ca }},
-                      true);
-            234: addme({{ Ra }}, {{ (uint32_t)-1 }}, {{ xer.ca }},
-                       true);
-            136: subfe({{ ~Ra }}, {{ Rb }}, {{ xer.ca }},
-                       true);
-            232: subfme({{ ~Ra }}, {{ (uint32_t)-1 }}, {{ xer.ca }},
-                        true);
-            202: addze({{ Ra }}, {{ xer.ca }},
-                       computeCA = true);
-            200: subfze({{ ~Ra }}, {{ xer.ca }},
-                        computeCA = true);
+        0: IntOp::cmp({{
+            Xer xer = XER;
+            uint32_t cr = makeCRFieldSigned(Ra_sw, Rb_sw, xer.so);
+            CR = insertCRField(CR, BF, cr);
+        }});
+
+        8: IntSumOp::subfc({{ ~Ra }}, {{ Rb }}, {{ 1 }}, true);
+        10: IntSumOp::addc({{ Ra }}, {{ Rb }}, computeCA = true);
+
+        11: IntArithOp::mulhwu({{
+            uint64_t prod = Ra_ud * Rb_ud;
+            Rt = prod >> 32;
+        }});
+
+        19: IntOp::mfcr({{ Rt = CR; }});
+
+        format LoadIndexOp {
+            20: lwarx({{ Rt = Mem_sw; Rsv = 1; RsvLen = 4; RsvAddr = EA; }});
+            23: lwzx({{ Rt = Mem; }});
         }
 
-        // Arithmetic instructions all use source registers Ra and Rb,
-        // with destination register Rt.
-        format IntArithOp {
-            75: mulhw({{ int64_t prod = Ra_sd * Rb_sd; Rt = prod >> 32; }});
-            11: mulhwu({{ uint64_t prod = Ra_ud * Rb_ud; Rt = prod >> 32; }});
-            235: mullw({{ int64_t prod = Ra_sd * Rb_sd; Rt = prod; }});
-            747: mullwo({{
-                int64_t src1 = Ra_sd;
-                int64_t src2 = Rb;
-                int64_t prod = src1 * src2;
-                Rt = prod;
-            }},
-            true);
-
-            491: divw({{
-                int32_t src1 = Ra_sw;
-                int32_t src2 = Rb_sw;
-                if ((src1 != 0x80000000 || src2 != 0xffffffff)
-                    && src2 != 0) {
-                    Rt = src1 / src2;
-                } else {
-                    Rt = 0;
-                }
-            }});
-
-            1003: divwo({{
-                int32_t src1 = Ra_sw;
-                int32_t src2 = Rb_sw;
-                if ((src1 != 0x80000000 || src2 != 0xffffffff)
-                    && src2 != 0) {
-                    Rt = src1 / src2;
-                } else {
-                    Rt = 0;
-                    divSetOV = true;
-                }
-            }},
-            true);
-
-            459: divwu({{
-                uint32_t src1 = Ra_sw;
-                uint32_t src2 = Rb_sw;
-                if (src2 != 0) {
-                    Rt = src1 / src2;
-                } else {
-                    Rt = 0;
-                }
-            }});
-
-            971: divwuo({{
-              uint32_t src1 = Ra_sw;
-              uint32_t src2 = Rb_sw;
-              if (src2 != 0) {
-                  Rt = src1 / src2;
-              } else {
-                  Rt = 0;
-                  divSetOV = true;
-              }
-            }},
-            true);
-        }
-
-        // Integer logic instructions use source registers Rs and Rb,
-        // with destination register Ra.
         format IntLogicOp {
-            28: and({{ Ra = Rs & Rb; }});
-            316: xor({{ Ra = Rs ^ Rb; }});
-            476: nand({{ Ra = ~(Rs & Rb); }});
-            444: or({{ Ra = Rs | Rb; }});
-            124: nor({{ Ra = ~(Rs | Rb); }});
-            60: andc({{ Ra = Rs & ~Rb; }});
-            954: extsb({{ Ra = sext<8>(Rs); }});
-            284: eqv({{ Ra = ~(Rs ^ Rb); }});
-            412: orc({{ Ra = Rs | ~Rb; }});
-            922: extsh({{ Ra = sext<16>(Rs); }});
-            26: cntlzw({{ Ra = Rs == 0 ? 32 : 31 - findMsbSet(Rs); }});
-            508: cmpb({{
-                uint32_t val = 0;
-                for (int n = 0; n < 32; n += 8) {
-                    if(bits(Rs, n+7, n) == bits(Rb, n+7, n)) {
-                        val = insertBits(val, n+7, n, 0xff);
-                    }
-                }
-                Ra = val;
-            }});
-
             24: slw({{
                 if (Rb & 0x20) {
                     Ra = 0;
@@ -176,144 +218,46 @@ decode OPCODE default Unknown::unknown() {
                 }
             }});
 
-            536: srw({{
-                if (Rb & 0x20) {
-                    Ra = 0;
-                } else  {
-                    Ra = Rs >> (Rb & 0x1f);
-                }
-            }});
-
-            792: sraw({{
-                bool shiftSetCA = false;
-                int32_t s = Rs;
-                if (Rb == 0) {
-                    Ra = Rs;
-                    shiftSetCA = true;
-                } else if (Rb & 0x20) {
-                    if (s < 0) {
-                        Ra = (uint32_t)-1;
-                        if (s & 0x7fffffff) {
-                            shiftSetCA = true;
-                        } else {
-                            shiftSetCA = false;
-                        }
-                    } else {
-                        Ra = 0;
-                        shiftSetCA = false;
-                    }
-                } else {
-                    Ra = s >> (Rb & 0x1f);
-                    if (s < 0 && (s << (32 - (Rb & 0x1f))) != 0) {
-                        shiftSetCA = true;
-                    } else {
-                        shiftSetCA = false;
-                    }
-                }
-                Xer xer1 = XER;
-                if (shiftSetCA) {
-                    xer1.ca = 1;
-                } else {
-                    xer1.ca = 0;
-                }
-                XER = xer1;
-            }});
+            26: cntlzw({{ Ra = Rs == 0 ? 32 : 31 - findMsbSet(Rs); }});
+            28: and({{ Ra = Rs & Rb; }});
         }
 
-        // Integer logic instructions with a shift value.
-        format IntShiftOp {
-            824: srawi({{
-                bool shiftSetCA = false;
-                if (sh == 0) {
-                    Ra = Rs;
-                    shiftSetCA = false;
-                } else {
-                    int32_t s = Rs;
-                    Ra = s >> sh;
-                    if (s < 0 && (s << (32 - sh)) != 0) {
-                        shiftSetCA = true;
-                    } else {
-                        shiftSetCA = false;
-                    }
-                }
-                Xer xer1 = XER;
-                if (shiftSetCA) {
-                    xer1.ca = 1;
-                } else {
-                    xer1.ca = 0;
-                }
-                XER = xer1;
-            }});
+        32: IntOp::cmpl({{
+            Xer xer = XER;
+            uint32_t cr = makeCRFieldUnsigned(Ra_uw, Rb_uw, xer.so);
+            CR = insertCRField(CR, BF, cr);
+        }});
+
+        40: IntSumOp::subf({{ ~Ra }}, {{ Rb }}, {{ 1 }});
+        55: LoadIndexUpdateOp::lwzux({{ Rt = Mem; }});
+        60: IntLogicOp::andc({{ Ra = Rs & ~Rb; }});
+
+        75: IntArithOp::mulhw({{
+            int64_t prod = Ra_sd * Rb_sd;
+            Rt = prod >> 32;
+        }});
+
+        87: LoadIndexOp::lbzx({{ Rt = Mem_ub; }});
+        104: IntSumOp::neg({{ ~Ra }}, {{ 1 }});
+        119: LoadIndexUpdateOp::lbzux({{ Rt = Mem_ub; }});
+        124: IntLogicOp::nor({{ Ra = ~(Rs | Rb); }});
+
+        format IntSumOp {
+            136: subfe({{ ~Ra }}, {{ Rb }}, {{ xer.ca }}, true);
+            138: adde({{ Ra }}, {{ Rb }}, {{ xer.ca }}, true);
         }
 
-        // Generic integer format instructions.
-        format IntOp {
-            0: cmp({{
-                Xer xer = XER;
-                uint32_t cr = makeCRFieldSigned(Ra_sw, Rb_sw, xer.so);
-                CR = insertCRField(CR, BF, cr);
-                }});
-            32: cmpl({{
-                Xer xer = XER;
-                uint32_t cr = makeCRFieldUnsigned(Ra_uw, Rb_uw, xer.so);
-                CR = insertCRField(CR, BF, cr);
-                }});
-            144: mtcrf({{
-                uint32_t mask = 0;
-                for (int i = 0; i < 8; ++i) {
-                    if (((FXM >> i) & 0x1) == 0x1) {
-                        mask |= 0xf << (4 * i);
-                    }
+        144: IntOp::mtcrf({{
+            uint32_t mask = 0;
+            for (int i = 0; i < 8; ++i) {
+                if (((FXM >> i) & 0x1) == 0x1) {
+                    mask |= 0xf << (4 * i);
                 }
-                CR = (Rs & mask) | (CR & ~mask);
-                }});
-            19: mfcr({{ Rt = CR; }});
-            339: decode SPR {
-                0x20: mfxer({{ Rt = XER; }});
-                0x100: mflr({{ Rt = LR; }});
-                0x120: mfctr({{ Rt = CTR; }});
             }
-            467: decode SPR {
-                0x20: mtxer({{ XER = Rs; }});
-                0x100: mtlr({{ LR = Rs; }});
-                0x120: mtctr({{ CTR = Rs; }});
-            }
-            512: mcrxr({{
-                CR = insertCRField(CR, BF, XER<31:28>);
-                XER = XER<27:0>;
-                }});
-        }
-
-        // All loads with an index register. The non-update versions
-        // all use the value 0 if Ra == R0, not the value contained in
-        // R0. Others update Ra with the effective address. In all cases,
-        // Ra and Rb are source registers, Rt is the destintation.
-        format LoadIndexOp {
-            87: lbzx({{ Rt = Mem_ub; }});
-            279: lhzx({{ Rt = Mem_uh; }});
-            343: lhax({{ Rt = Mem_sh; }});
-            23: lwzx({{ Rt = Mem; }});
-            341: lwax({{ Rt = Mem_sw; }});
-            20: lwarx({{ Rt = Mem_sw; Rsv = 1; RsvLen = 4; RsvAddr = EA; }});
-            535: lfsx({{ Ft_sf = Mem_sf; }});
-            599: lfdx({{ Ft = Mem_df; }});
-            855: lfiwax({{ Ft_uw = Mem; }});
-        }
-
-        format LoadIndexUpdateOp {
-            119: lbzux({{ Rt = Mem_ub; }});
-            311: lhzux({{ Rt = Mem_uh; }});
-            375: lhaux({{ Rt = Mem_sh; }});
-            55: lwzux({{ Rt = Mem; }});
-            373: lwaux({{ Rt = Mem_sw; }});
-            567: lfsux({{ Ft_sf = Mem_sf; }});
-            631: lfdux({{ Ft = Mem_df; }});
-        }
+            CR = (Rs & mask) | (CR & ~mask);
+        }});
 
         format StoreIndexOp {
-            215: stbx({{ Mem_ub = Rs_ub; }});
-            407: sthx({{ Mem_uh = Rs_uh; }});
-            151: stwx({{ Mem = Rs; }});
             150: stwcx({{
                 bool store_performed = false;
                 Mem = Rs;
@@ -330,214 +274,278 @@ decode OPCODE default Unknown::unknown() {
                 CR = cr;
                 Rsv = 0;
             }});
-            663: stfsx({{ Mem_sf = Fs_sf; }});
-            727: stfdx({{ Mem_df = Fs; }});
-            983: stfiwx({{ Mem = Fs_uw; }});
+
+            151: stwx({{ Mem = Rs; }});
         }
 
-        format StoreIndexUpdateOp {
-            247: stbux({{ Mem_ub = Rs_ub; }});
-            439: sthux({{ Mem_uh = Rs_uh; }});
-            183: stwux({{ Mem = Rs; }});
-            695: stfsux({{ Mem_sf = Fs_sf; }});
-            759: stfdux({{ Mem_df = Fs; }});
+        183: StoreIndexUpdateOp::stwux({{ Mem = Rs; }});
+
+        format IntSumOp {
+            200: subfze({{ ~Ra }}, {{ xer.ca }}, computeCA = true);
+            202: addze({{ Ra }}, {{ xer.ca }}, computeCA = true);
         }
 
-        // These instructions all provide data cache hints
-        format MiscOp {
-            278: dcbt({{ }});
-            246: dcbtst({{ }});
-            598: sync({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
-            854: eieio({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
+        215: StoreIndexOp::stbx({{ Mem_ub = Rs_ub; }});
+
+        format IntSumOp {
+            232: subfme({{ ~Ra }}, {{ (uint32_t)-1 }}, {{ xer.ca }}, true);
+            234: addme({{ Ra }}, {{ (uint32_t)-1 }}, {{ xer.ca }}, true);
         }
-    }
 
-    format IntImmArithCheckRaOp {
-        14: addi({{ Rt = Ra + imm; }},
-                 {{ Rt = imm }});
-        15: addis({{ Rt = Ra + (imm << 16); }},
-                  {{ Rt = imm << 16; }});
-    }
+        format IntArithOp {
+            235: mullw({{
+                int64_t prod = Ra_sd * Rb_sd;
+                Rt = prod;
+            }});
 
-    format IntImmArithOp {
-        12: addic({{ uint32_t src = Ra; Rt = src + imm; }},
-                  [computeCA]);
-        13: addic_({{ uint32_t src = Ra; Rt = src + imm; }},
-                   [computeCA, computeCR0]);
-        8: subfic({{ int32_t src = ~Ra; Rt = src + imm + 1; }},
-                  [computeCA]);
-        7: mulli({{
-            int32_t src = Ra_sw;
-            int64_t prod = src * imm;
-            Rt = (uint32_t)prod;
+            // Another variant of mullw decoded with the OE bit set
+            747: mullwo({{
+                int64_t src1 = Ra_sd;
+                int64_t src2 = Rb;
+                int64_t prod = src1 * src2;
+                Rt = prod;
+            }}, true);
+        }
+
+        246: MiscOp::dcbtst({{ }});
+        247: StoreIndexUpdateOp::stbux({{ Mem_ub = Rs_ub; }});
+        266: IntSumOp::add({{ Ra }}, {{ Rb }});
+        278: MiscOp::dcbt({{ }});
+        279: LoadIndexOp::lhzx({{ Rt = Mem_uh; }});
+        284: IntLogicOp::eqv({{ Ra = ~(Rs ^ Rb); }});
+        311: LoadIndexUpdateOp::lhzux({{ Rt = Mem_uh; }});
+        316: IntLogicOp::xor({{ Ra = Rs ^ Rb; }});
+
+        format IntOp {
+            339: decode SPR {
+                0x20: mfxer({{ Rt = XER; }});
+                0x100: mflr({{ Rt = LR; }});
+                0x120: mfctr({{ Rt = CTR; }});
+            }
+        }
+
+        format LoadIndexOp {
+            341: lwax({{ Rt = Mem_sw; }});
+            343: lhax({{ Rt = Mem_sh; }});
+        }
+
+        format LoadIndexUpdateOp {
+            373: lwaux({{ Rt = Mem_sw; }});
+            375: lhaux({{ Rt = Mem_sh; }});
+        }
+
+        407: StoreIndexOp::sthx({{ Mem_uh = Rs_uh; }});
+        412: IntLogicOp::orc({{ Ra = Rs | ~Rb; }});
+        439: StoreIndexUpdateOp::sthux({{ Mem_uh = Rs_uh; }});
+        444: IntLogicOp::or({{ Ra = Rs | Rb; }});
+
+        format IntArithOp {
+            459: divwu({{
+                uint32_t src1 = Ra_sw;
+                uint32_t src2 = Rb_sw;
+                if (src2 != 0) {
+                    Rt = src1 / src2;
+                } else {
+                    Rt = 0;
+                }
+            }});
+
+            // Another variant of divwu decoded with the OE bit set
+            971: divwuo({{
+                uint32_t src1 = Ra_sw;
+                uint32_t src2 = Rb_sw;
+                if (src2 != 0) {
+                    Rt = src1 / src2;
+                } else {
+                    Rt = 0;
+                    divSetOV = true;
+                }
+            }}, true);
+        }
+
+        format IntOp {
+            467: decode SPR {
+                0x20: mtxer({{ XER = Rs; }});
+                0x100: mtlr({{ LR = Rs; }});
+                0x120: mtctr({{ CTR = Rs; }});
+            }
+        }
+
+        476: IntLogicOp::nand({{ Ra = ~(Rs & Rb); }});
+
+        format IntArithOp {
+            491: divw({{
+                int32_t src1 = Ra_sw;
+                int32_t src2 = Rb_sw;
+                if ((src1 != 0x80000000 || src2 != 0xffffffff)
+                    && src2 != 0) {
+                    Rt = src1 / src2;
+                } else {
+                    Rt = 0;
+                }
+            }});
+
+            // Another variant of divw decoded with the OE bit set
+            1003: divwo({{
+                int32_t src1 = Ra_sw;
+                int32_t src2 = Rb_sw;
+                if ((src1 != 0x80000000 || src2 != 0xffffffff)
+                    && src2 != 0) {
+                    Rt = src1 / src2;
+                } else {
+                    Rt = 0;
+                    divSetOV = true;
+                }
+            }}, true);
+        }
+
+        508: IntLogicOp::cmpb({{
+            uint32_t val = 0;
+            for (int n = 0; n < 32; n += 8) {
+                if(bits(Rs, n+7, n) == bits(Rb, n+7, n)) {
+                    val = insertBits(val, n+7, n, 0xff);
+                }
+            }
+            Ra = val;
         }});
-    }
 
-    format IntImmLogicOp {
-        24: ori({{ Ra = Rs | uimm; }});
-        25: oris({{ Ra = Rs | (uimm << 16); }});
-        26: xori({{ Ra = Rs ^ uimm; }});
-        27: xoris({{ Ra = Rs ^ (uimm << 16); }});
-        28: andi_({{ Ra = Rs & uimm; }},
-                  true);
-        29: andis_({{ Ra = Rs & (uimm << 16); }},
-                   true);
-    }
+        512: IntOp::mcrxr({{
+            CR = insertCRField(CR, BF, XER<31:28>);
+            XER = XER<27:0>;
+        }});
 
-    16: decode AA {
+        535: LoadIndexOp::lfsx({{ Ft_sf = Mem_sf; }});
 
-        // Conditionally branch relative to PC based on CR and CTR.
-        format BranchPCRelCondCtr {
-            0: bc({{ NIA = (uint32_t)(CIA + disp); }});
+        536: IntLogicOp::srw({{
+            if (Rb & 0x20) {
+                Ra = 0;
+            } else  {
+                Ra = Rs >> (Rb & 0x1f);
+            }
+        }});
+
+        567: LoadIndexUpdateOp::lfsux({{ Ft_sf = Mem_sf; }});
+        598: MiscOp::sync({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
+        599: LoadIndexOp::lfdx({{ Ft = Mem_df; }});
+        631: LoadIndexUpdateOp::lfdux({{ Ft = Mem_df; }});
+        663: StoreIndexOp::stfsx({{ Mem_sf = Fs_sf; }});
+        695: StoreIndexUpdateOp::stfsux({{ Mem_sf = Fs_sf; }});
+        727: StoreIndexOp::stfdx({{ Mem_df = Fs; }});
+        759: StoreIndexUpdateOp::stfdux({{ Mem_df = Fs; }});
+
+        792: IntLogicOp::sraw({{
+            bool shiftSetCA = false;
+            int32_t s = Rs;
+            if (Rb == 0) {
+                Ra = Rs;
+                shiftSetCA = true;
+            } else if (Rb & 0x20) {
+                if (s < 0) {
+                    Ra = (uint32_t)-1;
+                    if (s & 0x7fffffff) {
+                        shiftSetCA = true;
+                    } else {
+                        shiftSetCA = false;
+                    }
+                } else {
+                    Ra = 0;
+                    shiftSetCA = false;
+                }
+            } else {
+                Ra = s >> (Rb & 0x1f);
+                if (s < 0 && (s << (32 - (Rb & 0x1f))) != 0) {
+                    shiftSetCA = true;
+                } else {
+                    shiftSetCA = false;
+                }
+            }
+            Xer xer1 = XER;
+            if (shiftSetCA) {
+                xer1.ca = 1;
+            } else {
+                xer1.ca = 0;
+            }
+            XER = xer1;
+        }});
+
+        824: IntShiftOp::srawi({{
+            bool shiftSetCA = false;
+            if (sh == 0) {
+                Ra = Rs;
+                shiftSetCA = false;
+            } else {
+                int32_t s = Rs;
+                Ra = s >> sh;
+                if (s < 0 && (s << (32 - sh)) != 0) {
+                    shiftSetCA = true;
+                } else {
+                    shiftSetCA = false;
+                }
+            }
+            Xer xer1 = XER;
+            if (shiftSetCA) {
+                xer1.ca = 1;
+            } else {
+                xer1.ca = 0;
+            }
+            XER = xer1;
+        }});
+
+        854: MiscOp::eieio({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
+        855: LoadIndexOp::lfiwax({{ Ft_uw = Mem; }});
+
+        format IntLogicOp {
+            922: extsh({{ Ra = sext<16>(Rs); }});
+            954: extsb({{ Ra = sext<8>(Rs); }});
         }
 
-        // Conditionally branch to fixed address based on CR and CTR.
-        format BranchNonPCRelCondCtr {
-            1: bca({{ NIA = targetAddr; }});
-        }
+        983: StoreIndexOp::stfiwx({{ Mem = Fs_uw; }});
     }
 
-    18: decode AA {
+    32: LoadDispOp::lwz({{ Rt = Mem; }});
+    33: LoadDispUpdateOp::lwzu({{ Rt = Mem; }});
+    34: LoadDispOp::lbz({{ Rt = Mem_ub; }});
+    35: LoadDispUpdateOp::lbzu({{ Rt = Mem_ub; }});
+    36: StoreDispOp::stw({{ Mem = Rs; }});
+    37: StoreDispUpdateOp::stwu({{ Mem = Rs; }});
+    38: StoreDispOp::stb({{ Mem_ub = Rs_ub; }});
+    39: StoreDispUpdateOp::stbu({{ Mem_ub = Rs_ub; }});
+    40: LoadDispOp::lhz({{ Rt = Mem_uh; }});
+    41: LoadDispUpdateOp::lhzu({{ Rt = Mem_uh; }});
+    42: LoadDispOp::lha({{ Rt = Mem_sh; }});
+    43: LoadDispUpdateOp::lhau({{ Rt = Mem_sh; }});
+    44: StoreDispOp::sth({{ Mem_uh = Rs_uh; }});
+    45: StoreDispUpdateOp::sthu({{ Mem_uh = Rs_uh; }});
+    48: LoadDispOp::lfs({{ Ft_sf = Mem_sf; }});
+    49: LoadDispUpdateOp::lfsu({{ Ft_sf = Mem_sf; }});
+    50: LoadDispOp::lfd({{ Ft = Mem_df; }});
+    51: LoadDispUpdateOp::lfdu({{ Ft = Mem_df; }});
+    52: StoreDispOp::stfs({{ Mem_sf = Fs_sf; }});
+    53: StoreDispUpdateOp::stfsu({{ Mem_sf = Fs_sf; }});
+    54: StoreDispOp::stfd({{ Mem_df = Fs; }});
+    55: StoreDispUpdateOp::stfdu({{ Mem_df = Fs; }});
 
-        // Unconditionally branch relative to PC.
-        format BranchPCRel {
-            0: b({{ NIA = (uint32_t)(CIA + disp); }});
-        }
-
-        // Unconditionally branch to fixed address.
-        format BranchNonPCRel {
-            1: ba({{ NIA = targetAddr; }});
-        }
-    }
-
-    19: decode XO_XO {
-
-        // Conditionally branch to address in LR based on CR and CTR.
-        format BranchLrCondCtr {
-           16: bclr({{ NIA = LR & 0xfffffffc; }});
-        }
-
-        // Conditionally branch to address in CTR based on CR.
-        format BranchCtrCond {
-           528: bcctr({{ NIA = CTR & 0xfffffffc; }});
-        }
-
-        // Condition register manipulation instructions.
-        format CondLogicOp {
-            257: crand({{
-                uint32_t crBa = bits(CR, 31 - ba);
-                uint32_t crBb = bits(CR, 31 - bb);
-                CR = insertBits(CR, 31 - bt, crBa & crBb);
-            }});
-            449: cror({{
-                uint32_t crBa = bits(CR, 31 - ba);
-                uint32_t crBb = bits(CR, 31 - bb);
-                CR = insertBits(CR, 31 - bt, crBa | crBb);
-            }});
-            255: crnand({{
-                uint32_t crBa = bits(CR, 31 - ba);
-                uint32_t crBb = bits(CR, 31 - bb);
-                CR = insertBits(CR, 31 - bt, !(crBa & crBb));
-            }});
-            193: crxor({{
-                uint32_t crBa = bits(CR, 31 - ba);
-                uint32_t crBb = bits(CR, 31 - bb);
-                CR = insertBits(CR, 31 - bt, crBa ^ crBb);
-            }});
-            33: crnor({{
-                uint32_t crBa = bits(CR, 31 - ba);
-                uint32_t crBb = bits(CR, 31 - bb);
-                CR = insertBits(CR, 31 - bt, !(crBa | crBb));
-            }});
-            289: creqv({{
-                uint32_t crBa = bits(CR, 31 - ba);
-                uint32_t crBb = bits(CR, 31 - bb);
-                CR = insertBits(CR, 31 - bt, crBa == crBb);
-            }});
-            129: crandc({{
-                uint32_t crBa = bits(CR, 31 - ba);
-                uint32_t crBb = bits(CR, 31 - bb);
-                CR = insertBits(CR, 31 - bt, crBa & !crBb);
-            }});
-            417: crorc({{
-                uint32_t crBa = bits(CR, 31 - ba);
-                uint32_t crBb = bits(CR, 31 - bb);
-                CR = insertBits(CR, 31 - bt, crBa | !crBb);
-            }});
-        }
-        format CondMoveOp {
-            0: mcrf({{
-                uint32_t crBfa = bits(CR, 31 - bfa*4, 28 - bfa*4);
-                CR = insertBits(CR, 31 - bf*4, 28 - bf*4, crBfa);
-            }});
-        }
-        format MiscOp {
-            150: isync({{ }}, [ IsSerializeAfter ]);
-        }
-    }
-
-    format IntRotateOp {
-        21: rlwinm({{ Ra = rotateValue(Rs, sh) & fullMask; }});
-        23: rlwnm({{ Ra = rotateValue(Rs, Rb) & fullMask; }});
-        20: rlwimi({{ Ra = (rotateValue(Rs, sh) & fullMask) | (Ra & ~fullMask); }});
-    }
-
-    format LoadDispOp {
-        34: lbz({{ Rt = Mem_ub; }});
-        40: lhz({{ Rt = Mem_uh; }});
-        42: lha({{ Rt = Mem_sh; }});
-        32: lwz({{ Rt = Mem; }});
-        58: lwa({{ Rt = Mem_sw; }},
-                {{ EA = Ra + (disp & 0xfffffffc); }},
-                {{ EA = disp & 0xfffffffc; }});
-        48: lfs({{ Ft_sf = Mem_sf; }});
-        50: lfd({{ Ft = Mem_df; }});
-    }
-
-    format LoadDispUpdateOp {
-        35: lbzu({{ Rt = Mem_ub; }});
-        41: lhzu({{ Rt = Mem_uh; }});
-        43: lhau({{ Rt = Mem_sh; }});
-        33: lwzu({{ Rt = Mem; }});
-        49: lfsu({{ Ft_sf = Mem_sf; }});
-        51: lfdu({{ Ft = Mem_df; }});
-    }
-
-    format StoreDispOp {
-        38: stb({{ Mem_ub = Rs_ub; }});
-        44: sth({{ Mem_uh = Rs_uh; }});
-        36: stw({{ Mem = Rs; }});
-        52: stfs({{ Mem_sf = Fs_sf; }});
-        54: stfd({{ Mem_df = Fs; }});
-    }
-
-    format StoreDispUpdateOp {
-        39: stbu({{ Mem_ub = Rs_ub; }});
-        45: sthu({{ Mem_uh = Rs_uh; }});
-        37: stwu({{ Mem = Rs; }});
-        53: stfsu({{ Mem_sf = Fs_sf; }});
-        55: stfdu({{ Mem_df = Fs; }});
-    }
-
-    17: IntOp::sc({{ return std::make_shared<SESyscallFault>(); }});
+    58: LoadDispOp::lwa({{ Rt = Mem_sw; }},
+                        {{ EA = Ra + (disp & 0xfffffffc); }},
+                        {{ EA = disp & 0xfffffffc; }});
 
     format FloatArithOp {
         59: decode A_XO {
-            21: fadds({{ Ft = Fa + Fb; }});
-            20: fsubs({{ Ft = Fa - Fb; }});
-            25: fmuls({{ Ft = Fa * Fc; }});
             18: fdivs({{ Ft = Fa / Fb; }});
-            29: fmadds({{ Ft = (Fa * Fc) + Fb; }});
+            20: fsubs({{ Ft = Fa - Fb; }});
+            21: fadds({{ Ft = Fa + Fb; }});
+            25: fmuls({{ Ft = Fa * Fc; }});
             28: fmsubs({{ Ft = (Fa * Fc) - Fb; }});
-            31: fnmadds({{ Ft = -((Fa * Fc) + Fb); }});
+            29: fmadds({{ Ft = (Fa * Fc) + Fb; }});
             30: fnmsubs({{ Ft = -((Fa * Fc) - Fb); }});
+            31: fnmadds({{ Ft = -((Fa * Fc) + Fb); }});
         }
     }
 
     63: decode A_XO {
         format FloatArithOp {
-            21: fadd({{ Ft = Fa + Fb; }});
             20: fsub({{ Ft = Fa - Fb; }});
+            21: fadd({{ Ft = Fa + Fb; }});
             25: fmul({{ Ft = Fa * Fc; }});
             18: fdiv({{ Ft = Fa / Fb; }});
             29: fmadd({{ Ft = (Fa * Fc) + Fb; }});
@@ -547,39 +555,47 @@ decode OPCODE default Unknown::unknown() {
         }
 
         default: decode XO_XO {
+            0: FloatOp::fcmpu({{
+                uint32_t c = makeCRField(Fa, Fb);
+                Fpscr fpscr = FPSCR;
+                fpscr.fprf.fpcc = c;
+                FPSCR = fpscr;
+                CR = insertCRField(CR, BF, c);
+            }});
+
+            8: FloatRCCheckOp::fcpsgn({{
+                Ft_ud = Fb_ud;
+                Ft_ud = insertBits(Ft_ud, 63, Fa_ud<63:63>);
+            }});
+
             format FloatConvertOp {
                 12: frsp({{ Ft_sf = Fb; }});
                 15: fctiwz({{ Ft_sw = (int32_t)trunc(Fb); }});
             }
 
-            format FloatOp {
-              0: fcmpu({{
-                  uint32_t c = makeCRField(Fa, Fb);
-                  Fpscr fpscr = FPSCR;
-                  fpscr.fprf.fpcc = c;
-                  FPSCR = fpscr;
-                  CR = insertCRField(CR, BF, c);
-              }});
-            }
-
             format FloatRCCheckOp {
-                72: fmr({{ Ft = Fb; }});
-                264: fabs({{
-                    Ft_ud = Fb_ud;
-                    Ft_ud = insertBits(Ft_ud, 63, 0); }});
-                136: fnabs({{
-                    Ft_ud = Fb_ud;
-                    Ft_ud = insertBits(Ft_ud, 63, 1); }});
+                38: mtfsb1({{ FPSCR = insertBits(FPSCR, 31 - BT, 1); }});
                 40: fneg({{ Ft = -Fb; }});
-                8: fcpsgn({{
-                    Ft_ud = Fb_ud;
-                    Ft_ud = insertBits(Ft_ud, 63, Fa_ud<63:63>);
-                }});
-                583: mffs({{ Ft_ud = FPSCR; }});
+                70: mtfsb0({{ FPSCR = insertBits(FPSCR, 31 - BT, 0); }});
+                72: fmr({{ Ft = Fb; }});
+
                 134: mtfsfi({{
                     FPSCR = insertCRField(FPSCR, BF + (8 * (1 - W_FIELD)),
                                           U_FIELD);
                 }});
+
+                136: fnabs({{
+                    Ft_ud = Fb_ud;
+                    Ft_ud = insertBits(Ft_ud, 63, 1);
+                }});
+
+                264: fabs({{
+                    Ft_ud = Fb_ud;
+                    Ft_ud = insertBits(Ft_ud, 63, 0);
+                }});
+
+                583: mffs({{ Ft_ud = FPSCR; }});
+
                 711: mtfsf({{
                     if (L_FIELD == 1) { FPSCR = Fb_ud; }
                     else {
@@ -592,8 +608,6 @@ decode OPCODE default Unknown::unknown() {
                         }
                     }
                 }});
-                70: mtfsb0({{ FPSCR = insertBits(FPSCR, 31 - BT, 0); }});
-                38: mtfsb1({{ FPSCR = insertBits(FPSCR, 31 - BT, 1); }});
             }
         }
     }
