@@ -136,7 +136,12 @@
 
 #include <string>
 
-#include "blobs/gdb_xml_power.hh"
+#include "arch/power/regs/misc.hh"
+#include "blobs/gdb_xml_power64_core.hh"
+#include "blobs/gdb_xml_power_core.hh"
+#include "blobs/gdb_xml_power_fpu.hh"
+#include "blobs/gdb_xml_powerpc_32.hh"
+#include "blobs/gdb_xml_powerpc_64.hh"
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"
 #include "debug/GDBMisc.hh"
@@ -149,7 +154,7 @@ namespace gem5
 using namespace PowerISA;
 
 RemoteGDB::RemoteGDB(System *_system, int _port)
-    : BaseRemoteGDB(_system, _port), regCache(this)
+    : BaseRemoteGDB(_system, _port), regCache32(this), regCache64(this)
 {
 }
 
@@ -173,22 +178,26 @@ RemoteGDB::PowerGdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getRegs in remotegdb \n");
 
+    Msr msr = context->readIntReg(INTREG_MSR);
+    ByteOrder order = (msr.le ? ByteOrder::little : ByteOrder::big);
+
     // Default order on 32-bit PowerPC:
     // R0-R31 (32-bit each), F0-F31 (64-bit IEEE754 double),
-    // PC, MSR, CR, LR, CTR, XER (32-bit each)
+    // PC, MSR, CR, LR, CTR, XER, FPSCR (32-bit each)
 
     for (int i = 0; i < NumIntArchRegs; i++)
-        r.gpr[i] = htobe((uint32_t)context->readIntReg(i));
+        r.gpr[i] = htog((uint32_t)context->readIntReg(i), order);
 
     for (int i = 0; i < NumFloatArchRegs; i++)
         r.fpr[i] = context->readFloatReg(i);
 
-    r.pc = htobe((uint32_t)context->pcState().pc());
-    r.msr = 0; // Is MSR modeled?
-    r.cr = htobe((uint32_t)context->readIntReg(INTREG_CR));
-    r.lr = htobe((uint32_t)context->readIntReg(INTREG_LR));
-    r.ctr = htobe((uint32_t)context->readIntReg(INTREG_CTR));
-    r.xer = htobe((uint32_t)context->readIntReg(INTREG_XER));
+    r.pc = htog((uint32_t)context->pcState().pc(), order);
+    r.msr = 0; // MSR is privileged, hence not exposed here
+    r.cr = htog((uint32_t)context->readIntReg(INTREG_CR), order);
+    r.lr = htog((uint32_t)context->readIntReg(INTREG_LR), order);
+    r.ctr = htog((uint32_t)context->readIntReg(INTREG_CTR), order);
+    r.xer = htog((uint32_t)context->readIntReg(INTREG_XER), order);
+    r.fpscr = htog((uint32_t)context->readIntReg(INTREG_FPSCR), order);
 }
 
 void
@@ -196,24 +205,89 @@ RemoteGDB::PowerGdbRegCache::setRegs(ThreadContext *context) const
 {
     DPRINTF(GDBAcc, "setRegs in remotegdb \n");
 
+    Msr msr = context->readIntReg(INTREG_MSR);
+    ByteOrder order = (msr.le ? ByteOrder::little : ByteOrder::big);
+
     for (int i = 0; i < NumIntArchRegs; i++)
-        context->setIntReg(i, betoh(r.gpr[i]));
+        context->setIntReg(i, gtoh(r.gpr[i], order));
 
     for (int i = 0; i < NumFloatArchRegs; i++)
         context->setFloatReg(i, r.fpr[i]);
 
-    context->pcState(betoh(r.pc));
-    // Is MSR modeled?
-    context->setIntReg(INTREG_CR, betoh(r.cr));
-    context->setIntReg(INTREG_LR, betoh(r.lr));
-    context->setIntReg(INTREG_CTR, betoh(r.ctr));
-    context->setIntReg(INTREG_XER, betoh(r.xer));
+    auto pc = context->pcState();
+    pc.byteOrder(order);
+    pc.set(gtoh(r.pc, order));
+    context->pcState(pc);
+    // MSR is privileged, hence not modified here
+    context->setIntReg(INTREG_CR, gtoh(r.cr, order));
+    context->setIntReg(INTREG_LR, gtoh(r.lr, order));
+    context->setIntReg(INTREG_CTR, gtoh(r.ctr, order));
+    context->setIntReg(INTREG_XER, gtoh(r.xer, order));
+    context->setIntReg(INTREG_FPSCR, gtoh(r.fpscr, order));
+}
+
+void
+RemoteGDB::Power64GdbRegCache::getRegs(ThreadContext *context)
+{
+    DPRINTF(GDBAcc, "getRegs in remotegdb \n");
+
+    Msr msr = context->readIntReg(INTREG_MSR);
+    ByteOrder order = (msr.le ? ByteOrder::little : ByteOrder::big);
+
+    // Default order on 64-bit PowerPC:
+    // GPRR0-GPRR31 (64-bit each), FPR0-FPR31 (64-bit IEEE754 double),
+    // CIA, MSR, CR, LR, CTR, XER, FPSCR (only CR, XER, FPSCR are 32-bit
+    // each and the rest are 64-bit)
+
+    for (int i = 0; i < NumIntArchRegs; i++)
+        r.gpr[i] = htog(context->readIntReg(i), order);
+
+    for (int i = 0; i < NumFloatArchRegs; i++)
+        r.fpr[i] = context->readFloatReg(i);
+
+    r.pc = htog(context->pcState().pc(), order);
+    r.msr = 0; // MSR is privileged, hence not exposed here
+    r.cr = htog((uint32_t)context->readIntReg(INTREG_CR), order);
+    r.lr = htog(context->readIntReg(INTREG_LR), order);
+    r.ctr = htog(context->readIntReg(INTREG_CTR), order);
+    r.xer = htog((uint32_t)context->readIntReg(INTREG_XER), order);
+    r.fpscr = htog((uint32_t)context->readIntReg(INTREG_FPSCR), order);
+}
+
+void
+RemoteGDB::Power64GdbRegCache::setRegs(ThreadContext *context) const
+{
+    DPRINTF(GDBAcc, "setRegs in remotegdb \n");
+
+    Msr msr = context->readIntReg(INTREG_MSR);
+    ByteOrder order = (msr.le ? ByteOrder::little : ByteOrder::big);
+
+    for (int i = 0; i < NumIntArchRegs; i++)
+        context->setIntReg(i, gtoh(r.gpr[i], order));
+
+    for (int i = 0; i < NumFloatArchRegs; i++)
+        context->setFloatReg(i, r.fpr[i]);
+
+    auto pc = context->pcState();
+    pc.byteOrder(order);
+    pc.set(gtoh(r.pc, order));
+    context->pcState(pc);
+    // MSR is privileged, hence not modified here
+    context->setIntReg(INTREG_CR, gtoh(r.cr, order));
+    context->setIntReg(INTREG_LR, gtoh(r.lr, order));
+    context->setIntReg(INTREG_CTR, gtoh(r.ctr, order));
+    context->setIntReg(INTREG_XER, gtoh(r.xer, order));
+    context->setIntReg(INTREG_FPSCR, gtoh(r.fpscr, order));
 }
 
 BaseGdbRegCache*
 RemoteGDB::gdbRegs()
 {
-    return &regCache;
+    Msr msr = context()->readIntReg(INTREG_MSR);
+    if (msr.sf)
+        return &regCache64;
+    else
+        return &regCache32;
 }
 
 bool
@@ -222,10 +296,20 @@ RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
 #define GDB_XML(x, s) \
         { x, std::string(reinterpret_cast<const char *>(Blobs::s), \
         Blobs::s ## _len) }
-    static const std::map<std::string, std::string> annexMap {
-        GDB_XML("target.xml", gdb_xml_power),
+    static const std::map<std::string, std::string> annexMap32{
+        GDB_XML("target.xml", gdb_xml_powerpc_32),
+        GDB_XML("power-core.xml", gdb_xml_power_core),
+        GDB_XML("power-fpu.xml", gdb_xml_power_fpu)
+    };
+    static const std::map<std::string, std::string> annexMap64{
+        GDB_XML("target.xml", gdb_xml_powerpc_64),
+        GDB_XML("power64-core.xml", gdb_xml_power64_core),
+        GDB_XML("power-fpu.xml", gdb_xml_power_fpu)
     };
 #undef GDB_XML
+
+    Msr msr = context()->readIntReg(INTREG_MSR);
+    auto& annexMap = msr.sf ? annexMap64 : annexMap32;
     auto it = annexMap.find(annex);
     if (it == annexMap.end())
         return false;
