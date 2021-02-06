@@ -252,15 +252,8 @@ ElfObject::determineArch()
         arch = (eclass == ELFCLASS64) ? Riscv64 : Riscv32;
     } else if (emach == EM_PPC && eclass == ELFCLASS32) {
         arch = Power;
-        if (edata != ELFDATA2MSB) {
-            fatal("The binary you're trying to load is compiled for "
-                  "little endian Power.\ngem5 only supports big "
-                  "endian Power. Please recompile your binary.\n");
-        }
-    } else if (emach == EM_PPC64) {
-        fatal("The binary you're trying to load is compiled for 64-bit "
-              "Power. M5\n only supports 32-bit Power. Please "
-              "recompile your binary.\n");
+    } else if (emach == EM_PPC64 && eclass == ELFCLASS64) {
+        arch = Power64;
     } else {
         warn("Unknown architecture: %d\n", emach);
     }
@@ -269,6 +262,21 @@ ElfObject::determineArch()
 void
 ElfObject::determineOpSys()
 {
+    // For 64-bit Power, EI_OSABI and EI_ABIVERSION cannot be used to
+    // determine the ABI version used by the ELF object
+    if (ehdr.e_machine == EM_PPC64) {
+        switch (ehdr.e_flags & 0x3) {
+            case 0x1: opSys = LinuxPower64ABIv1; return;
+            case 0x2: opSys = LinuxPower64ABIv2; return;
+            default:
+                if (ehdr.e_ident[EI_DATA] == ELFDATA2MSB)
+                    opSys = LinuxPower64ABIv1;
+                if (ehdr.e_ident[EI_DATA] == ELFDATA2LSB)
+                    opSys = LinuxPower64ABIv2;
+                return;
+        }
+    }
+
     // Detect the operating system
     switch (ehdr.e_ident[EI_OSABI]) {
       case ELFOSABI_LINUX:

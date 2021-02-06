@@ -59,6 +59,7 @@ enum Arch
     Arm,
     Thumb,
     Power,
+    Power64,
     Riscv64,
     Riscv32
 };
@@ -72,6 +73,8 @@ enum OpSys
     Linux,
     Solaris,
     LinuxArmOABI,
+    LinuxPower64ABIv1,
+    LinuxPower64ABIv2,
     FreeBSD
 };
 

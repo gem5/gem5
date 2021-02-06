@@ -40,5 +40,5 @@ class PowerEmuLinux(PowerSEWorkload):
 
     @classmethod
     def _is_compatible_with(cls, obj):
-        return obj.get_arch() == 'power' and \
+        return obj.get_arch() in ('power', 'power64') and  \
                 obj.get_op_sys() in ('linux', 'unknown')
