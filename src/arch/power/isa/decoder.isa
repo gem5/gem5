@@ -334,6 +334,17 @@ decode PO default Unknown::unknown() {
 
         246: MiscOp::dcbtst({{ }});
         247: StoreIndexUpdateOp::stbux({{ Mem_ub = Rs_ub; }});
+
+        267: IntArithOp::moduw({{
+            uint64_t src1 = Ra_uw;
+            uint64_t src2 = Rb_uw;
+            if (src2 != 0) {
+                Rt = src1 % src2;
+            } else {
+                Rt = 0;
+            }
+        }});
+
         278: MiscOp::dcbt({{ }});
         279: LoadIndexOp::lhzx({{ Rt = Mem_uh; }});
         284: IntLogicOp::eqv({{ Ra = ~(Rs ^ Rb); }});
@@ -435,6 +446,17 @@ decode PO default Unknown::unknown() {
         }
 
         759: StoreIndexUpdateOp::stfdux({{ Mem_df = Fs; }});
+
+        779: IntArithOp::modsw({{
+            int64_t src1 = Ra_sw;
+            int64_t src2 = Rb_sw;
+            if ((src1 != INT32_MIN || src2 != -1) && src2 != 0) {
+                Rt = src1 % src2;
+            } else {
+                Rt = 0;
+            }
+        }});
+
         790: LoadIndexOp::lhbrx({{ Rt = swap_byte(Mem_uh); }});
 
         792: IntLogicOp::sraw({{
