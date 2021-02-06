@@ -311,6 +311,16 @@ def format LoadDispShiftOp(memacc_code,
 }};
 
 
+def format StoreDispShiftOp(memacc_code,
+                            ea_code = {{ EA = Ra + (ds << 2); }},
+                            ea_code_ra0 = {{ EA = (ds << 2); }},
+                            mem_flags = [], inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenMemOp(name, Name, memacc_code, ea_code, ea_code_ra0,
+                 'MemDispShiftOp', 'Store', mem_flags, inst_flags)
+}};
+
+
 def format LoadDispUpdateOp(memacc_code, ea_code = {{ EA = Ra + d; }},
                             mem_flags = [], inst_flags = []) {{
 
@@ -336,6 +346,38 @@ def format StoreDispUpdateOp(memacc_code, ea_code = {{ EA = Ra + d; }},
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                       base_class = 'MemDispOp',
+                      decode_template = CheckRaZeroDecode,
+                      exec_template_base = 'Store')
+}};
+
+
+def format LoadDispShiftUpdateOp(memacc_code,
+                                 ea_code = {{ EA = Ra + (ds << 2); }},
+                                 mem_flags = [], inst_flags = []) {{
+
+    # Add in the update code
+    memacc_code += 'Ra = EA;'
+
+    # Generate the class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      base_class = 'MemDispShiftOp',
+                      decode_template = CheckRaRtDecode,
+                      exec_template_base = 'Load')
+}};
+
+
+def format StoreDispShiftUpdateOp(memacc_code,
+                                  ea_code = {{ EA = Ra + (ds << 2); }},
+                                  mem_flags = [], inst_flags = []) {{
+
+    # Add in the update code
+    memacc_code += 'Ra = EA;'
+
+    # Generate the class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      base_class = 'MemDispShiftOp',
                       decode_template = CheckRaZeroDecode,
                       exec_template_base = 'Store')
 }};

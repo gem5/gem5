@@ -201,6 +201,7 @@ decode PO default Unknown::unknown() {
                 Rsv = 1; RsvLen = 4; RsvAddr = EA;
             }});
 
+            21: ldx({{ Rt = Mem; }});
             23: lwzx({{ Rt = Mem_uw; }});
         }
 
@@ -223,6 +224,7 @@ decode PO default Unknown::unknown() {
             CR = insertCRField(CR, BF, cr);
         }});
 
+        53: LoadIndexUpdateOp::ldux({{ Rt = Mem; }});
         55: LoadIndexUpdateOp::lwzux({{ Rt = Mem_uw; }});
         60: IntLogicOp::andc({{ Ra = Rs & ~Rb; }});
         87: LoadIndexOp::lbzx({{ Rt = Mem_ub; }});
@@ -230,6 +232,7 @@ decode PO default Unknown::unknown() {
         124: IntLogicOp::nor({{ Ra = ~(Rs | Rb); }});
 
         format StoreIndexOp {
+            149: stdx({{ Mem = Rs }});
             150: stwcx({{
                 bool store_performed = false;
                 Mem_uw = Rs_uw;
@@ -250,7 +253,11 @@ decode PO default Unknown::unknown() {
             151: stwx({{ Mem_uw = Rs_uw; }});
         }
 
-        183: StoreIndexUpdateOp::stwux({{ Mem = Rs; }});
+        format StoreIndexUpdateOp {
+            181: stdux({{ Mem = Rs; }});
+            183: stwux({{ Mem_uw = Rs_uw; }});
+        }
+
         215: StoreIndexOp::stbx({{ Mem_ub = Rs_ub; }});
         246: MiscOp::dcbtst({{ }});
         247: StoreIndexUpdateOp::stbux({{ Mem_ub = Rs_ub; }});
@@ -543,6 +550,8 @@ decode PO default Unknown::unknown() {
     55: StoreDispUpdateOp::stfdu({{ Mem_df = Fs; }});
 
     58: decode DS_XO {
+        0: LoadDispShiftOp::ld({{ Rt = Mem; }});
+        1: LoadDispShiftUpdateOp::ldu({{ Rt = Mem; }});
         2: LoadDispShiftOp::lwa({{ Rt = Mem_sw; }});
     }
 
@@ -557,6 +566,11 @@ decode PO default Unknown::unknown() {
             30: fnmsubs({{ Ft = -((Fa * Fc) - Fb); }});
             31: fnmadds({{ Ft = -((Fa * Fc) + Fb); }});
         }
+    }
+
+    62: decode DS_XO {
+        0: StoreDispShiftOp::std({{ Mem = Rs; }});
+        1: StoreDispShiftUpdateOp::stdu({{ Mem = Rs; }});
     }
 
     63: decode A_XO {
