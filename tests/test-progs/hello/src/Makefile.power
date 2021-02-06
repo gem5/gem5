@@ -1,0 +1,11 @@
+all: hello64le-static
+
+hello64le-static: hello.c dockcross-ppc64le
+	./dockcross-ppc64le bash -c '$$CC hello.c -o hello64le-static -static'
+
+dockcross-ppc64le:
+	docker run --rm dockcross/linux-ppc64le > ./dockcross-ppc64le
+	chmod +x ./dockcross-ppc64le
+
+clean:
+	rm -f dockcross* hello64le-static
