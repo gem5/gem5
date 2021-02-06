@@ -224,10 +224,29 @@ decode PO default Unknown::unknown() {
             CR = insertCRField(CR, BF, cr);
         }});
 
+        52: LoadIndexOp::lbarx({{
+            Rt = Mem_ub;
+            Rsv = 1; RsvLen = 1; RsvAddr = EA;
+        }});
+
         53: LoadIndexUpdateOp::ldux({{ Rt = Mem; }});
         55: LoadIndexUpdateOp::lwzux({{ Rt = Mem_uw; }});
         60: IntLogicOp::andc({{ Ra = Rs & ~Rb; }});
-        87: LoadIndexOp::lbzx({{ Rt = Mem_ub; }});
+
+        format LoadIndexOp {
+            84: ldarx({{
+                Rt = Mem_ud;
+                Rsv = 1; RsvLen = 8; RsvAddr = EA;
+            }});
+
+            87: lbzx({{ Rt = Mem_ub; }});
+
+            116: lharx({{
+                Rt = Mem_uh;
+                Rsv = 1; RsvLen = 2; RsvAddr = EA;
+            }});
+        }
+
         119: LoadIndexUpdateOp::lbzux({{ Rt = Mem_ub; }});
         124: IntLogicOp::nor({{ Ra = ~(Rs | Rb); }});
 
@@ -258,7 +277,27 @@ decode PO default Unknown::unknown() {
             183: stwux({{ Mem_uw = Rs_uw; }});
         }
 
-        215: StoreIndexOp::stbx({{ Mem_ub = Rs_ub; }});
+        format StoreIndexOp {
+            214: stdcx({{
+                bool store_performed = false;
+                Mem = Rs;
+                if (Rsv) {
+                    if (RsvLen == 8) {
+                        if (RsvAddr == EA) {
+                            store_performed = true;
+                        }
+                    }
+                }
+                Xer xer = XER;
+                Cr cr = CR;
+                cr.cr0 = ((store_performed ? 0x2 : 0x0) | xer.so);
+                CR = cr;
+                Rsv = 0;
+            }});
+
+            215: stbx({{ Mem_ub = Rs_ub; }});
+        }
+
         246: MiscOp::dcbtst({{ }});
         247: StoreIndexUpdateOp::stbux({{ Mem_ub = Rs_ub; }});
         278: MiscOp::dcbt({{ }});
@@ -319,10 +358,48 @@ decode PO default Unknown::unknown() {
             660: stdbrx({{ Mem = swap_byte(Rs); }});
             662: stwbrx({{ Mem_uw = swap_byte(Rs_uw); }});
             663: stfsx({{ Mem_sf = Fs_sf; }});
+
+            694: stbcx({{
+                bool store_performed = false;
+                Mem_ub = Rs_ub;
+                if (Rsv) {
+                    if (RsvLen == 1) {
+                        if (RsvAddr == EA) {
+                            store_performed = true;
+                        }
+                    }
+                }
+                Xer xer = XER;
+                Cr cr = CR;
+                cr.cr0 = ((store_performed ? 0x2 : 0x0) | xer.so);
+                CR = cr;
+                Rsv = 0;
+            }});
         }
 
         695: StoreIndexUpdateOp::stfsux({{ Mem_sf = Fs_sf; }});
-        727: StoreIndexOp::stfdx({{ Mem_df = Fs; }});
+
+        format StoreIndexOp {
+            726: sthcx({{
+                bool store_performed = false;
+                Mem_uh = Rs_uh;
+                if (Rsv) {
+                    if (RsvLen == 2) {
+                        if (RsvAddr == EA) {
+                            store_performed = true;
+                        }
+                    }
+                }
+                Xer xer = XER;
+                Cr cr = CR;
+                cr.cr0 = ((store_performed ? 0x2 : 0x0) | xer.so);
+                CR = cr;
+                Rsv = 0;
+            }});
+
+            727: stfdx({{ Mem_df = Fs; }});
+        }
+
         759: StoreIndexUpdateOp::stfdux({{ Mem_df = Fs; }});
         790: LoadIndexOp::lhbrx({{ Rt = swap_byte(Mem_uh); }});
 
