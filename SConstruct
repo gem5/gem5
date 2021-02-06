@@ -358,8 +358,7 @@ if main['GCC']:
     main['GCC_VERSION'] = gcc_version
 
     # Add the appropriate Link-Time Optimization (LTO) flags
-    # unless LTO is explicitly turned off. Note that these flags
-    # are only used by the fast target.
+    # unless LTO is explicitly turned off.
     if not GetOption('no_lto'):
         # Pass the LTO flag when compiling to produce GIMPLE
         # output, we merely create the flags here and only append
