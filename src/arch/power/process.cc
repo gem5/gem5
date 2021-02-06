@@ -338,6 +338,10 @@ PowerProcess::argsInit(int pageSize)
     //Set the stack pointer register
     tc->setIntReg(StackPointerReg, stack_min);
 
+    //Reset the special-purpose registers
+    for (int i = 0; i < NumIntSpecialRegs; i++)
+        tc->setIntReg(NumIntArchRegs + i, 0);
+
     //Set the machine status for a typical userspace
     Msr msr = 0;
     msr.sf = is64bit;
