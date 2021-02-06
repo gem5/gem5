@@ -484,6 +484,8 @@ class IntLogicOp : public IntOp
     {
     }
 
+    /* Compute the number of consecutive zero bits starting from the
+       leftmost bit and moving right in a 32-bit integer */
     inline int
     findLeadingZeros(uint32_t rs) const
     {
@@ -496,6 +498,57 @@ class IntLogicOp : public IntOp
     #endif
         } else {
             return 32;
+        }
+    }
+
+    /* Compute the number of consecutive zero bits starting from the
+       leftmost bit and moving right in a 64-bit integer */
+    inline int
+    findLeadingZeros(uint64_t rs) const
+    {
+        if (rs) {
+    #if defined(__GNUC__) || (defined(__clang__) && \
+                              __has_builtin(__builtin_clzll))
+            return __builtin_clzll(rs);
+    #else
+            return 63 - findMsbSet(rs);
+    #endif
+        } else {
+            return 64;
+        }
+    }
+
+    /* Compute the number of consecutive zero bits starting from the
+       rightmost bit and moving left in a 32-bit integer */
+    inline int
+    findTrailingZeros(uint32_t rs) const
+    {
+        if (rs) {
+    #if defined(__GNUC__) || (defined(__clang__) && \
+                              __has_builtin(__builtin_ctz))
+            return __builtin_ctz(rs);
+    #else
+            return findLsbSet(rs);
+    #endif
+        } else {
+            return 32;
+        }
+    }
+
+    /* Compute the number of consecutive zero bits starting from the
+       rightmost bit and moving left in a 64-bit integer */
+    inline int
+    findTrailingZeros(uint64_t rs) const
+    {
+        if (rs) {
+    #if defined(__GNUC__) || (defined(__clang__) && \
+                              __has_builtin(__builtin_ctzll))
+            return __builtin_ctzll(rs);
+    #else
+            return findLsbSet(rs);
+    #endif
+        } else {
+            return 64;
         }
     }
 

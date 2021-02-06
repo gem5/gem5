@@ -287,7 +287,10 @@ IntLogicOp::generateDisassembly(
     } else if (myMnemonic == "extsb" ||
                myMnemonic == "extsh" ||
                myMnemonic == "extsw" ||
-               myMnemonic == "cntlzw") {
+               myMnemonic == "cntlzw" ||
+               myMnemonic == "cntlzd" ||
+               myMnemonic == "cnttzw" ||
+               myMnemonic == "cnttzd") {
         printSecondSrc = false;
     }
 

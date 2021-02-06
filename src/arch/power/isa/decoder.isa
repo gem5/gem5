@@ -267,7 +267,11 @@ decode PO default Unknown::unknown() {
 
         53: LoadIndexUpdateOp::ldux({{ Rt = Mem; }});
         55: LoadIndexUpdateOp::lwzux({{ Rt = Mem_uw; }});
-        60: IntLogicOp::andc({{ Ra = Rs & ~Rb; }}, true);
+
+        format IntLogicOp {
+            58: cntlzd({{ Ra = findLeadingZeros(Rs); }}, true);
+            60: andc({{ Ra = Rs & ~Rb; }}, true);
+        }
 
         format LoadIndexOp {
             84: ldarx({{
@@ -434,7 +438,9 @@ decode PO default Unknown::unknown() {
             }
         }});
 
+        538: IntLogicOp::cnttzw({{ Ra = findTrailingZeros(Rs_uw); }}, true);
         567: LoadIndexUpdateOp::lfsux({{ Ft_sf = Mem_sf; }});
+        570: IntLogicOp::cnttzd({{ Ra = findTrailingZeros(Rs); }}, true);
         598: MiscOp::sync({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
         599: LoadIndexOp::lfdx({{ Ft = Mem_df; }});
         631: LoadIndexUpdateOp::lfdux({{ Ft = Mem_df; }});
