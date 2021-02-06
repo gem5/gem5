@@ -38,6 +38,8 @@ def bitfield PO            <31:26>;
 def bitfield A_XO          <5:1>;
 def bitfield DS_XO         <1:0>;
 def bitfield DX_XO         <5:1>;
+def bitfield MD_XO         <4:2>;
+def bitfield MDS_XO        <4:1>;
 def bitfield VA_XO         <5:0>;
 def bitfield X_XO          <10:1>;
 def bitfield XFL_XO        <10:1>;

@@ -49,7 +49,9 @@ BitUnion32(ExtMachInst)
     Bitfield<15, 11> sh;
     Bitfield<1>      shn;
     Bitfield<10,  6> mb;
+    Bitfield<5>      mbn;
     Bitfield< 5,  1> me;
+    Bitfield<5>      men;
 
     // Immediate fields
     Bitfield<15,  0> si;
