@@ -453,6 +453,41 @@ def format IntArithCheckRcOp(code, computeOV = 0, inst_flags = []) {{
 }};
 
 
+// Integer instructions that also perform shift operations. Everything
+// is same as above except if the shift value is not obtained from a
+// register, two immediates need to be concatenated to get the final
+// shift value.
+def format IntConcatShiftOp(code, computeCA = 0, inst_flags = []) {{
+    dict = {'result':'Ra'}
+
+    # Add code to setup variables and access XER if necessary
+    code  = 'GEM5_VAR_USED bool setCA = false;\n' + code
+
+    # Code when Rc is set
+    code_rc1 = readXERCode + code + computeCR0Code % dict
+
+    # Add code for calculating the carry, if needed
+    if computeCA:
+        code = readXERCode + code + setCACode + setXERCode
+        code_rc1 += setCACode + setXERCode
+
+    # Generate the first class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntConcatShiftOp', code, inst_flags,
+                 CheckRcDecode, BasicConstructor)
+
+    # Generate the second class
+    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+        GenAluOp(name, Name + 'RcSet', 'IntConcatShiftOp', code_rc1,
+                 inst_flags, CheckRcDecode, BasicConstructor)
+
+    # Finally, add to the other outputs
+    header_output += header_output_rc1
+    decoder_output += decoder_output_rc1
+    exec_output += exec_output_rc1
+}};
+
+
 // A special format for rotate instructions which use certain fields
 // from the instruction's binary encoding. We need two versions for each
 // instruction to deal with the Rc bit.

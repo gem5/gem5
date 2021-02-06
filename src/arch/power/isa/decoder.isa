@@ -250,10 +250,19 @@ decode PO default Unknown::unknown() {
             Ra = res;
         }});
 
-        format IntLogicOp {
-            26: cntlzw({{ Ra = findLeadingZeros(Rs_uw); }}, true);
-            28: and({{ Ra = Rs & Rb; }}, true);
-        }
+        26: IntLogicOp::cntlzw({{ Ra = findLeadingZeros(Rs_uw); }}, true);
+
+        27: IntConcatShiftOp::sld({{
+            int64_t shift = Rb_sd;
+            uint64_t res = Rs & ~((shift << 57) >> 63);
+            if (shift != 0) {
+                shift = bits(shift, 5, 0);
+                res = res << shift;
+            }
+            Ra = res;
+        }});
+
+        28: IntLogicOp::and({{ Ra = Rs & Rb; }}, true);
 
         32: IntCompOp::cmpl({{
             if (l)
@@ -512,6 +521,17 @@ decode PO default Unknown::unknown() {
         }});
 
         538: IntLogicOp::cnttzw({{ Ra = findTrailingZeros(Rs_uw); }}, true);
+
+        539: IntConcatShiftOp::srd({{
+            int64_t shift = Rb_sd;
+            uint64_t res = Rs & ~((shift << 57) >> 63);
+            if (shift != 0) {
+                shift = bits(shift, 5, 0);
+                res = res >> shift;
+            }
+            Ra = res;
+        }});
+
         567: LoadIndexUpdateOp::lfsux({{ Ft_sf = Mem_sf; }});
         570: IntLogicOp::cnttzd({{ Ra = findTrailingZeros(Rs); }}, true);
         598: MiscOp::sync({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
@@ -590,40 +610,57 @@ decode PO default Unknown::unknown() {
 
         790: LoadIndexOp::lhbrx({{ Rt = swap_byte(Mem_uh); }});
 
-        format IntShiftOp {
-            792: sraw({{
-                int32_t src = Rs_sw;
-                uint32_t shift = Rb_uw;
-                int64_t res;
-                if (bits(shift, 5)) {
-                    res = src >> 31;
-                    if (res != 0) {
-                        setCA = true;
-                    }
-                } else {
-                    if (shift != 0) {
-                        shift = bits(shift, 4, 0);
-                        res = src >> shift;
-                        setCA = src < 0 && (src & mask(shift)) != 0;
-                    } else {
-                        res = src;
-                    }
+        792: IntShiftOp::sraw({{
+            int32_t src = Rs_sw;
+            uint32_t shift = Rb_uw;
+            int64_t res;
+            if (bits(shift, 5)) {
+                res = src >> 31;
+                if (res != 0) {
+                    setCA = true;
                 }
-                Ra = res;
-            }}, true);
-
-            824: srawi({{
-                int32_t src = Rs_sw;
-                int64_t res;
-                if (sh) {
-                    res = src >> sh;
-                    setCA = src < 0 && (src & mask(sh)) != 0;
+            } else {
+                if (shift != 0) {
+                    shift = bits(shift, 4, 0);
+                    res = src >> shift;
+                    setCA = src < 0 && (src & mask(shift)) != 0;
                 } else {
                     res = src;
                 }
-                Ra = res;
-            }}, true);
-        }
+            }
+            Ra = res;
+        }}, true);
+
+        794: IntConcatShiftOp::srad({{
+            int64_t src = Rs_sd;
+            uint64_t shift = Rb;
+            int64_t res;
+            if (bits(shift, 6)) {
+                res = src >> 63;
+                setCA = res != 0;
+            } else {
+                if (shift != 0) {
+                    shift = shift & 0x3f;
+                    res = src >> shift;
+                    setCA = src < 0 && (src & mask(shift)) != 0;
+                } else {
+                    res = src;
+                }
+            }
+            Ra = res;
+        }}, true);
+
+        824: IntShiftOp::srawi({{
+            int32_t src = Rs_sw;
+            int64_t res;
+            if (sh) {
+                res = src >> sh;
+                setCA = src < 0 && (src & mask(sh)) != 0;
+            } else {
+                res = src;
+            }
+            Ra = res;
+        }}, true);
 
         854: MiscOp::eieio({{ }}, [ IsReadBarrier, IsWriteBarrier ]);
         855: LoadIndexOp::lfiwax({{ Ft_uw = Mem; }});
@@ -810,38 +847,64 @@ decode PO default Unknown::unknown() {
                 }}, true);
             }
 
-            default: decode XFX_XO {
-                format IntOp {
-                    19: mfcr({{ Rt = CR; }});
-
-                    144: mtcrf({{
-                        uint32_t mask = 0;
-                        for (int i = 0; i < 8; ++i) {
-                            if (((FXM >> i) & 0x1) == 0x1) {
-                                mask |= 0xf << (4 * i);
+            // These instructions are of XS form and use bits 21 - 29 as XO.
+            default: decode XS_XO {
+                format IntConcatShiftOp {
+                    413: sradi({{
+                        int64_t src = Rs_sd;
+                        if (sh != 0) {
+                            Ra = src >> sh;
+                            if (src < 0 && (src & mask(sh))) {
+                                setCA = true;
                             }
+                        } else {
+                            Ra = src;
                         }
-                        CR = (Rs & mask) | (CR & ~mask);
+                    }}, true);
+
+                    445: extswsli({{
+                        int64_t src = Rs_sw;
+                        if (sh != 0) {
+                            Ra = src << sh;
+                        } else {
+                            Ra = src;
+                        }
                     }});
+                }
 
-                    339: decode SPR {
-                        0x20: mfxer({{ Rt = XER; }});
-                        0x100: mflr({{ Rt = LR; }});
-                        0x120: mfctr({{ Rt = CTR; }});
-                        0x1f9: mftar({{ Rt = TAR; }});
+                default: decode XFX_XO {
+                    format IntOp {
+                        19: mfcr({{ Rt = CR; }});
+
+                        144: mtcrf({{
+                            uint32_t mask = 0;
+                            for (int i = 0; i < 8; ++i) {
+                                if (((FXM >> i) & 0x1) == 0x1) {
+                                    mask |= 0xf << (4 * i);
+                                }
+                            }
+                            CR = (Rs & mask) | (CR & ~mask);
+                        }});
+
+                        339: decode SPR {
+                            0x20: mfxer({{ Rt = XER; }});
+                            0x100: mflr({{ Rt = LR; }});
+                            0x120: mfctr({{ Rt = CTR; }});
+                            0x1f9: mftar({{ Rt = TAR; }});
+                        }
+
+                        467: decode SPR {
+                            0x20: mtxer({{ XER = Rs; }});
+                            0x100: mtlr({{ LR = Rs; }});
+                            0x120: mtctr({{ CTR = Rs; }});
+                            0x1f9: mttar({{ TAR = Rs; }});
+                        }
+
+                        512: mcrxr({{
+                            CR = insertCRField(CR, BF, XER<31:28>);
+                            XER = XER<27:0>;
+                        }});
                     }
-
-                    467: decode SPR {
-                        0x20: mtxer({{ XER = Rs; }});
-                        0x100: mtlr({{ LR = Rs; }});
-                        0x120: mtctr({{ CTR = Rs; }});
-                        0x1f9: mttar({{ TAR = Rs; }});
-                    }
-
-                    512: mcrxr({{
-                        CR = insertCRField(CR, BF, XER<31:28>);
-                        XER = XER<27:0>;
-                    }});
                 }
             }
         }
