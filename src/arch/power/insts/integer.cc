@@ -538,8 +538,22 @@ IntShiftOp::generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
+    bool printSecondSrc = true;
+    bool printShift = false;
 
-    ccprintf(ss, "%-10s ", mnemonic);
+    // Generate the correct mnemonic
+    std::string myMnemonic(mnemonic);
+
+    // Special cases
+    if (myMnemonic == "srawi") {
+        printSecondSrc = false;
+        printShift = true;
+    }
+
+    // Additional characters depending on isa bits being set
+    if (rc)
+        myMnemonic = myMnemonic + ".";
+    ccprintf(ss, "%-10s ", myMnemonic);
 
     // Print the first destination only
     if (_numDestRegs > 0)
@@ -550,10 +564,31 @@ IntShiftOp::generateDisassembly(
         if (_numDestRegs > 0)
             ss << ", ";
         printReg(ss, srcRegIdx(0));
+
+        // Print the second source register
+        if (printSecondSrc) {
+
+            // If the instruction updates the CR, the destination register
+            // Ra is read and thus, it becomes the second source register
+            // due to its higher precedence over Rb. In this case, it must
+            // be skipped.
+            if (rc) {
+                if (_numSrcRegs > 2) {
+                    ss << ", ";
+                    printReg(ss, srcRegIdx(2));
+                }
+            } else {
+                if (_numSrcRegs > 1) {
+                    ss << ", ";
+                    printReg(ss, srcRegIdx(1));
+                }
+            }
+        }
     }
 
-    // Print the shift
-    ss << ", " << sh;
+    // Print the shift value
+    if (printShift)
+        ss << ", " << (int) sh;
 
     return ss.str();
 }
@@ -579,7 +614,7 @@ IntRotateOp::generateDisassembly(
     }
 
     // Print the shift, mask begin and mask end
-    ss << ", " << sh << ", " << mb << ", " << me;
+    ss << ", " << (int) sh << ", " << mb << ", " << me;
 
     return ss.str();
 }
