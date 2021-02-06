@@ -55,13 +55,17 @@ BitUnion32(ExtMachInst)
 
     // Special purpose register identifier
     Bitfield<20, 11> spr;
-    Bitfield<25,  2> li;
-    Bitfield<1>      aa;
     Bitfield<25, 23> bf;
-    Bitfield<15,  2> bd;
-    Bitfield<25, 21> bo;
-    Bitfield<20, 16> bi;
     Bitfield<20, 18> bfa;
+
+    // Branch instruction fields
+    Bitfield<1>      aa;
+    Bitfield<15,  2> bd;
+    Bitfield<20, 16> bi;
+    Bitfield<12, 11> bh;
+    Bitfield<25, 21> bo;
+    Bitfield<25,  2> li;
+    Bitfield<0>      lk;
 
     // Record bits
     Bitfield<0>      rc31;

@@ -63,25 +63,25 @@ class PCDependentDisassembly : public PowerStaticInst
     disassemble(Addr pc, const Loader::SymbolTable *symtab) const;
 };
 
+
 /**
- * Base class for unconditional, PC-relative branches.
+ * Base class for unconditional, PC-relative or absolute address branches.
  */
-class BranchPCRel : public PCDependentDisassembly
+class BranchOp : public PCDependentDisassembly
 {
   protected:
 
-    /// Displacement
-    uint32_t disp;
+    bool aa;
+    bool lk;
+    int64_t li;
 
-    /// Constructor.
-    BranchPCRel(const char *mnem, MachInst _machInst, OpClass __opClass)
-        : PCDependentDisassembly(mnem, _machInst, __opClass),
-          disp(machInst.li << 2)
+    /// Constructor
+    BranchOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : PCDependentDisassembly(mnem, _machInst, __opClass),
+        aa(machInst.aa),
+        lk(machInst.lk),
+        li(sext<26>(machInst.li << 2))
     {
-        // If bit 26 is 1 then sign extend
-        if (disp & 0x2000000) {
-            disp |= 0xfc000000;
-        }
     }
 
     PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const override;
@@ -93,104 +93,66 @@ class BranchPCRel : public PCDependentDisassembly
             Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
-/**
- * Base class for unconditional, non PC-relative branches.
- */
-class BranchNonPCRel : public PCDependentDisassembly
-{
-  protected:
-
-    /// Target address
-    uint32_t targetAddr;
-
-    /// Constructor.
-    BranchNonPCRel(const char *mnem, MachInst _machInst, OpClass __opClass)
-        : PCDependentDisassembly(mnem, _machInst, __opClass),
-          targetAddr(machInst.li << 2)
-    {
-        // If bit 26 is 1 then sign extend
-        if (targetAddr & 0x2000000) {
-            targetAddr |= 0xfc000000;
-        }
-    }
-
-    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const override;
-
-    /// Explicitly import the otherwise hidden branchTarget
-    using StaticInst::branchTarget;
-
-    std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
-};
 
 /**
  * Base class for conditional branches.
  */
-class BranchCond : public PCDependentDisassembly
+class BranchCondOp : public PCDependentDisassembly
 {
   protected:
 
-    /// Fields needed for conditions
-    uint32_t bo;
-    uint32_t bi;
+    bool lk;
+    uint8_t bi;
+    uint8_t bo;
 
-    /// Constructor.
-    BranchCond(const char *mnem, MachInst _machInst, OpClass __opClass)
-        : PCDependentDisassembly(mnem, _machInst, __opClass),
-          bo(machInst.bo),
-          bi(machInst.bi)
+    /// Constructor
+    BranchCondOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : PCDependentDisassembly(mnem, _machInst, __opClass),
+        lk(machInst.lk),
+        bi(machInst.bi),
+        bo(machInst.bo)
     {
     }
 
     inline bool
-    ctrOk(uint32_t& ctr) const
+    ctrOk(uint64_t& ctr) const
     {
-        bool ctr_ok;
-        if (bo & 4) {
-            ctr_ok = true;
-        } else {
-            ctr--;
-            if (ctr != 0) {
-                ctr_ok = ((bo & 2) == 0);
-            } else {
-                ctr_ok = ((bo & 2) != 0);
-            }
+        if (bits(bo, 2)) {
+            return true;
         }
-        return ctr_ok;
+
+        ctr--;
+        return !((ctr != 0) ^ (bits(bo, 1) == 0));
     }
 
     inline bool
     condOk(uint32_t cr) const
     {
-        bool cond_ok;
-        if (bo & 16) {
-            cond_ok = true;
-        } else {
-            cond_ok = (((cr >> (31 - bi)) & 1) == ((bo >> 3) & 1));
+        if (bits(bo, 4)) {
+            return true;
         }
-        return cond_ok;
+
+        return bits(cr >> (31 - bi), 0) == bits(bo >> 3, 0);
     }
 };
 
+
 /**
- * Base class for conditional, PC-relative branches.
+ * Base class for conditional, PC-relative or absolute address branches.
  */
-class BranchPCRelCond : public BranchCond
+class BranchDispCondOp : public BranchCondOp
 {
   protected:
 
-    /// Displacement
-    uint32_t disp;
+    bool aa;
+    int64_t bd;
 
-    /// Constructor.
-    BranchPCRelCond(const char *mnem, MachInst _machInst, OpClass __opClass)
-        : BranchCond(mnem, _machInst, __opClass),
-          disp(machInst.bd << 2)
+    /// Constructor
+    BranchDispCondOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : BranchCondOp(mnem, _machInst, __opClass),
+        aa(machInst.aa),
+        bd(sext<16>(machInst.bd << 2))
     {
-        // If bit 16 is 1 then sign extend
-        if (disp & 0x8000) {
-            disp |= 0xffff0000;
-        }
     }
 
     PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const override;
@@ -202,46 +164,21 @@ class BranchPCRelCond : public BranchCond
             Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
+
 /**
- * Base class for conditional, non PC-relative branches.
+ * Base class for conditional, register-based branches.
  */
-class BranchNonPCRelCond : public BranchCond
+class BranchRegCondOp : public BranchCondOp
 {
   protected:
 
-    /// Target address
-    uint32_t targetAddr;
+    /// TODO: Branch hints are currently ignored
+    uint8_t bh;
 
     /// Constructor.
-    BranchNonPCRelCond(const char *mnem, MachInst _machInst, OpClass __opClass)
-        : BranchCond(mnem, _machInst, __opClass),
-          targetAddr(machInst.bd << 2)
-    {
-        // If bit 16 is 1 then sign extend
-        if (targetAddr & 0x8000) {
-            targetAddr |= 0xffff0000;
-        }
-    }
-
-    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const override;
-
-    /// Explicitly import the otherwise hidden branchTarget
-    using StaticInst::branchTarget;
-
-    std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
-};
-
-/**
- * Base class for conditional, register-based branches
- */
-class BranchRegCond : public BranchCond
-{
-  protected:
-
-    /// Constructor.
-    BranchRegCond(const char *mnem, MachInst _machInst, OpClass __opClass)
-        : BranchCond(mnem, _machInst, __opClass)
+    BranchRegCondOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : BranchCondOp(mnem, _machInst, __opClass),
+        bh(machInst.bh)
     {
     }
 

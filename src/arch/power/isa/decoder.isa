@@ -77,25 +77,16 @@ decode PO default Unknown::unknown() {
                   {{ Rt = imm << 16; }});
     }
 
-    16: decode AA {
-
-        // Conditionally branch relative to PC based on CR and CTR.
-        0: BranchPCRelCondCtr::bc({{ NIA = (uint32_t)(CIA + disp); }});
-
-        // Conditionally branch to fixed address based on CR and CTR.
-        1: BranchNonPCRelCondCtr::bca({{ NIA = targetAddr; }});
-    }
+    // Conditionally branch to a PC-relative or absoulute address based
+    // on CR and CTR.
+    16: BranchDispCondOp::bc({{ NIA = CIA + bd; }},
+                             {{ NIA = bd; }});
 
     17: IntOp::sc({{ return std::make_shared<SESyscallFault>(); }});
 
-    18: decode AA {
-
-        // Unconditionally branch relative to PC.
-        0: BranchPCRel::b({{ NIA = (uint32_t)(CIA + disp); }});
-
-        // Unconditionally branch to fixed address.
-        1: BranchNonPCRel::ba({{ NIA = targetAddr; }});
-    }
+    // Unconditionally branch to a PC-relative or absoulute address.
+    18: BranchOp::b({{ NIA = CIA + li; }},
+                    {{ NIA = li; }});
 
     19: decode XL_XO {
 
@@ -105,7 +96,7 @@ decode PO default Unknown::unknown() {
         }});
 
         // Conditionally branch to address in LR based on CR and CTR.
-        16: BranchLrCondCtr::bclr({{ NIA = LR & 0xfffffffc; }});
+        16: BranchRegCondOp::bclr({{ NIA = LR & -4ULL; }}, true, [ IsReturn ]);
 
         format CondLogicOp {
             33: crnor({{
@@ -162,7 +153,7 @@ decode PO default Unknown::unknown() {
         }
 
         // Conditionally branch to address in CTR based on CR.
-        528: BranchCtrCond::bcctr({{ NIA = CTR & 0xfffffffc; }});
+        528: BranchRegCondOp::bcctr({{ NIA = CTR & -4ULL; }});
     }
 
     format IntRotateOp {

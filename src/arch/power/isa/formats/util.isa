@@ -78,11 +78,38 @@ def template CheckLkDecode {{
      if (LK == 0) {
          return new %(class_name)s(machInst);
      } else {
-         return new %(class_name)sUpdateLr(machInst);
+         return new %(class_name)sLkSet(machInst);
      }
  }
 }};
 
+def template CheckAaDecode {{
+ {
+     if (AA == 0) {
+         return new %(class_name)s(machInst);
+     } else {
+         return new %(class_name)sAaSet(machInst);
+     }
+ }
+}};
+
+def template CheckAaLkDecode {{
+ {
+     if (AA == 0) {
+         if (LK == 0) {
+             return new %(class_name)s(machInst);
+         } else {
+             return new %(class_name)sLkSet(machInst);
+         }
+     } else {
+         if (LK == 0) {
+             return new %(class_name)sAaSet(machInst);
+         } else {
+             return new %(class_name)sAaSetLkSet(machInst);
+         }
+     }
+ }
+}};
 
 let {{
 
