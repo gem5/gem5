@@ -81,13 +81,16 @@ PowerProcess::initState()
 {
     Process::initState();
 
-    argsInit(sizeof(uint32_t), PageBytes);
+    argsInit<uint32_t>(PageBytes);
 }
 
+template <typename IntType>
 void
-PowerProcess::argsInit(int intSize, int pageSize)
+PowerProcess::argsInit(int pageSize)
 {
-    std::vector<gem5::auxv::AuxVector<uint32_t>> auxv;
+    int intSize = sizeof(IntType);
+    ByteOrder byteOrder = objFile->getByteOrder();
+    std::vector<gem5::auxv::AuxVector<IntType>> auxv;
 
     std::string filename;
     if (argv.size() < 1)
@@ -106,7 +109,7 @@ PowerProcess::argsInit(int intSize, int pageSize)
     //Auxilliary vectors are loaded only for elf formatted executables.
     auto *elfObject = dynamic_cast<loader::ElfObject *>(objFile);
     if (elfObject) {
-        uint32_t features = 0;
+        IntType features = 0;
 
         //Bits which describe the system hardware capabilities
         //XXX Figure out what these should be
@@ -209,15 +212,15 @@ PowerProcess::argsInit(int intSize, int pageSize)
                         roundUp(memState->getStackSize(), pageSize), "stack");
 
     // map out initial stack contents
-    uint32_t sentry_base = memState->getStackBase() - sentry_size;
-    uint32_t aux_data_base = sentry_base - aux_data_size;
-    uint32_t env_data_base = aux_data_base - env_data_size;
-    uint32_t arg_data_base = env_data_base - arg_data_size;
-    uint32_t platform_base = arg_data_base - platform_size;
-    uint32_t auxv_array_base = platform_base - aux_array_size - aux_padding;
-    uint32_t envp_array_base = auxv_array_base - envp_array_size;
-    uint32_t argv_array_base = envp_array_base - argv_array_size;
-    uint32_t argc_base = argv_array_base - argc_size;
+    IntType sentry_base = memState->getStackBase() - sentry_size;
+    IntType aux_data_base = sentry_base - aux_data_size;
+    IntType env_data_base = aux_data_base - env_data_size;
+    IntType arg_data_base = env_data_base - arg_data_size;
+    IntType platform_base = arg_data_base - platform_size;
+    IntType auxv_array_base = platform_base - aux_array_size - aux_padding;
+    IntType envp_array_base = auxv_array_base - envp_array_size;
+    IntType argv_array_base = envp_array_base - argv_array_size;
+    IntType argc_base = argv_array_base - argc_size;
 
     DPRINTF(Stack, "The addresses of items on the initial stack:\n");
     DPRINTF(Stack, "0x%x - aux data\n", aux_data_base);
@@ -233,11 +236,11 @@ PowerProcess::argsInit(int intSize, int pageSize)
     // write contents to stack
 
     // figure out argc
-    uint32_t argc = argv.size();
-    uint32_t guestArgc = htobe(argc);
+    IntType argc = argv.size();
+    IntType guestArgc = htog(argc, byteOrder);
 
     //Write out the sentry void *
-    uint32_t sentry_NULL = 0;
+    IntType sentry_NULL = 0;
     initVirtMem->writeBlob(sentry_base, &sentry_NULL, sentry_size);
 
     //Fix up the aux vectors which point to other data
@@ -256,7 +259,7 @@ PowerProcess::argsInit(int intSize, int pageSize)
     //Copy the aux stuff
     Addr auxv_array_end = auxv_array_base;
     for (const auto &aux: auxv) {
-        initVirtMem->write(auxv_array_end, aux, ByteOrder::big);
+        initVirtMem->write(auxv_array_end, aux, byteOrder);
         auxv_array_end += sizeof(aux);
     }
     //Write out the terminating zeroed auxilliary vector
@@ -265,9 +268,9 @@ PowerProcess::argsInit(int intSize, int pageSize)
     auxv_array_end += sizeof(zero);
 
     copyStringArray(envp, envp_array_base, env_data_base,
-                    ByteOrder::big, *initVirtMem);
+                    byteOrder, *initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base,
-                    ByteOrder::big, *initVirtMem);
+                    byteOrder, *initVirtMem);
 
     initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
