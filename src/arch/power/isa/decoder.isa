@@ -227,6 +227,84 @@ decode PO default Unknown::unknown() {
         29: andis_({{ Ra = Rs & (ui << 16); }}, true);
     }
 
+    // These instructions are of MD form and use bits 27 - 29 as XO.
+    30: decode MD_XO {
+        format IntConcatRotateOp {
+            0: rldicl({{
+                uint64_t res;
+                if (sh != 0) {
+                    res = rotate(Rs, sh);
+                } else {
+                    res = Rs;
+                }
+                res = res & bitmask(mb, 63);
+                Ra = res;
+            }});
+
+            1: rldicr({{
+                uint64_t res;
+                if (sh != 0) {
+                    res = rotate(Rs, sh);
+                } else {
+                    res = Rs;
+                }
+                res = res & bitmask(0, me);
+                Ra = res;
+            }});
+
+            2: rldic({{
+                uint64_t res;
+                if (sh != 0) {
+                    res = rotate(Rs, sh);
+                } else {
+                    res = Rs;
+                }
+                res = res & bitmask(mb, ~sh);
+                Ra = res;
+            }});
+
+            3: rldimi({{
+                uint64_t res, mask;
+                mask = bitmask(mb, ~sh);
+                if (sh != 0) {
+                    res = rotate(Rs, sh);
+                } else {
+                    res = Rs;
+                }
+                res = res & mask;
+                res = res | (Ra & ~mask);
+                Ra = res;
+            }});
+
+            // These instructions are of MDS form and use bits 27 - 30 as XO.
+            default: decode MDS_XO {
+                8: rldcl({{
+                    uint64_t res;
+                    uint32_t shift = Rb & 0x3f;
+                    if (shift != 0) {
+                        res = rotate(Rs, shift);
+                    } else {
+                        res = Rs;
+                    }
+                    res = res & bitmask(mb, 63);
+                    Ra = res;
+                }});
+
+                9: rldcr({{
+                    uint64_t res;
+                    uint32_t shift = Rb & 0x3f;
+                    if (shift != 0) {
+                        res = rotate(Rs, shift);
+                    } else {
+                        res = Rs;
+                    }
+                    res = res & bitmask(0, me);
+                    Ra = res;
+                }});
+            }
+        }
+    }
+
     // There are a large number of instructions that have the same primary
     // opcode (PO) of 31. In this case, the instructions are of different
     // forms. For every form, the XO fields may vary in position and width.

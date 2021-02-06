@@ -669,6 +669,50 @@ class IntRotateOp : public IntShiftOp
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
+
+/**
+ * Class for integer rotate operations with a shift amount obtained
+ * from a register or by concatenating immediate fields and the first
+ * and last bits of a mask obtained by concatenating immediate fields.
+ */
+class IntConcatRotateOp : public IntConcatShiftOp
+{
+  protected:
+
+    uint8_t mb;
+    uint8_t me;
+
+    /// Constructor
+    IntConcatRotateOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : IntConcatShiftOp(mnem, _machInst, __opClass),
+        mb((machInst.mbn << 5) | machInst.mb),
+        me((machInst.men << 5) | machInst.mb)
+    {
+    }
+
+    inline uint64_t
+    rotate(uint64_t value, uint32_t shift) const
+    {
+        shift = shift & 0x3f;
+        return (value << shift) | (value >> (64 - shift));
+    }
+
+    inline uint64_t
+    bitmask(uint32_t begin, uint32_t end) const
+    {
+        begin = begin & 0x3f;
+        end = end & 0x3f;
+        if (begin <= end) {
+            return mask(63 - begin, 63 - end);
+        } else {
+            return ~mask(63 - (end + 1), 63 - (begin - 1));
+        }
+    }
+
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const override;
+};
+
 } // namespace PowerISA
 
 #endif //__ARCH_POWER_INSTS_INTEGER_HH__

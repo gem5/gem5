@@ -516,3 +516,32 @@ def format IntRotateOp(code, inst_flags = []) {{
     decoder_output += decoder_output_rc1
     exec_output += exec_output_rc1
 }};
+
+
+// Everything is same as above except that the immediates may need to be
+// concatenated to get the final values for the mask bounds or the shift
+// value. We need two versions for each instruction to deal with the Rc
+// bit.
+def format IntConcatRotateOp(code, inst_flags = []) {{
+
+    # The result is always in Ra
+    dict = {'result':'Ra'}
+
+    # Code when Rc is set
+    code_rc1 = readXERCode + code + computeCR0Code % dict
+
+    # Generate the first class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntConcatRotateOp', code, inst_flags,
+                 CheckRcDecode, BasicConstructor)
+
+    # Generate the second class
+    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+        GenAluOp(name, Name + 'RcSet', 'IntConcatRotateOp', code_rc1,
+                 inst_flags, CheckRcDecode, BasicConstructor)
+
+    # Finally, add to the other outputs
+    header_output += header_output_rc1
+    decoder_output += decoder_output_rc1
+    exec_output += exec_output_rc1
+}};

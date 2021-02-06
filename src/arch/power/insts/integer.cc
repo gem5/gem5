@@ -740,3 +740,83 @@ IntRotateOp::generateDisassembly(
 
     return ss.str();
 }
+
+std::string
+IntConcatRotateOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    bool printSecondSrc = false;
+    bool printShift = true;
+    bool printMaskBeg = true;
+
+    // Generate the correct mnemonic
+    std::string myMnemonic(mnemonic);
+
+    // Special cases
+    if (myMnemonic == "rldicl") {
+        if (mb == 0) {
+            myMnemonic = "rotldi";
+            printMaskBeg = false;
+        } else if (sh == 0) {
+            myMnemonic = "clrldi";
+            printShift = false;
+        }
+    } else if (myMnemonic == "rldcl") {
+        if (mb == 0) {
+            myMnemonic = "rotld";
+            printMaskBeg = false;
+        }
+        printSecondSrc = true;
+        printShift = false;
+    } else if (myMnemonic == "rldcr") {
+        printSecondSrc = true;
+        printShift = false;
+    }
+
+    // Additional characters depending on isa bits being set
+    if (rc)
+        myMnemonic = myMnemonic + ".";
+    ccprintf(ss, "%-10s ", myMnemonic);
+
+    // Print the first destination only
+    if (_numDestRegs > 0)
+        printReg(ss, destRegIdx(0));
+
+    // Print the first source register
+    if (_numSrcRegs > 0) {
+        if (_numDestRegs > 0)
+            ss << ", ";
+        printReg(ss, srcRegIdx(0));
+
+        // Print the second source register
+        if (printSecondSrc) {
+
+            // If the instruction updates the CR, the destination register
+            // Ra is read and thus, it becomes the second source register
+            // due to its higher precedence over Rb. In this case, it must
+            // be skipped.
+            if (rc) {
+                if (_numSrcRegs > 2) {
+                    ss << ", ";
+                    printReg(ss, srcRegIdx(2));
+                }
+            } else {
+                if (_numSrcRegs > 1) {
+                    ss << ", ";
+                    printReg(ss, srcRegIdx(1));
+                }
+            }
+        }
+    }
+
+    // Print the shift amount
+    if (printShift)
+        ss << ", " << (int) sh;
+
+    // Print the mask bound
+    if (printMaskBeg)
+        ss << ", " << (int) mb;
+
+    return ss.str();
+}
