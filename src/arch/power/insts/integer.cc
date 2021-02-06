@@ -68,15 +68,13 @@ IntOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     ccprintf(ss, "%-10s ", myMnemonic);
 
     // Print the first destination only
-    if (_numDestRegs > 0 && printDest) {
+    if (_numDestRegs > 0 && printDest)
         printReg(ss, destRegIdx(0));
-    }
 
     // Print the (possibly) two source registers
     if (_numSrcRegs > 0 && printSrcs) {
-        if (_numDestRegs > 0 && printDest) {
+        if (_numDestRegs > 0 && printDest)
             ss << ", ";
-        }
         printReg(ss, srcRegIdx(0));
         if (_numSrcRegs > 1 && printSecondSrc) {
           ss << ", ";
@@ -93,32 +91,128 @@ IntImmOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
-    // Generate the correct mnemonic
-    std::string myMnemonic(mnemonic);
-
-    // Special cases
-    if (!myMnemonic.compare("addi") && _numSrcRegs == 0) {
-        myMnemonic = "li";
-    } else if (!myMnemonic.compare("addis") && _numSrcRegs == 0) {
-        myMnemonic = "lis";
-    }
-    ccprintf(ss, "%-10s ", myMnemonic);
+    ccprintf(ss, "%-10s ", mnemonic);
 
     // Print the first destination only
-    if (_numDestRegs > 0) {
+    if (_numDestRegs > 0)
         printReg(ss, destRegIdx(0));
-    }
 
     // Print the source register
     if (_numSrcRegs > 0) {
-        if (_numDestRegs > 0) {
+        if (_numDestRegs > 0)
             ss << ", ";
-        }
         printReg(ss, srcRegIdx(0));
     }
 
     // Print the immediate value last
     ss << ", " << (int32_t)si;
+
+    return ss.str();
+}
+
+
+std::string
+IntArithOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    bool printSecondSrc = true;
+
+    // Generate the correct mnemonic
+    std::string myMnemonic(mnemonic);
+
+    // Special cases
+    if (myMnemonic == "addme" ||
+        myMnemonic == "addze" ||
+        myMnemonic == "subfme" ||
+        myMnemonic == "subfze" ||
+        myMnemonic == "neg") {
+        printSecondSrc = false;
+    }
+
+    // Additional characters depending on isa bits being set
+    if (oe)
+        myMnemonic = myMnemonic + "o";
+    if (rc)
+        myMnemonic = myMnemonic + ".";
+    ccprintf(ss, "%-10s ", myMnemonic);
+
+    // Print the first destination only
+    if (_numDestRegs > 0)
+        printReg(ss, destRegIdx(0));
+
+    // Print the first source register
+    if (_numSrcRegs > 0) {
+        if (_numDestRegs > 0)
+            ss << ", ";
+        printReg(ss, srcRegIdx(0));
+
+        // Print the second source register
+        if (_numSrcRegs > 1 && printSecondSrc) {
+            ss << ", ";
+            printReg(ss, srcRegIdx(1));
+        }
+    }
+
+    return ss.str();
+}
+
+
+std::string
+IntImmArithOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    bool negateImm = false;
+
+    // Generate the correct mnemonic
+    std::string myMnemonic(mnemonic);
+
+    // Special cases
+    if (myMnemonic == "addi") {
+        if (_numSrcRegs == 0) {
+            myMnemonic = "li";
+        } else if (si < 0) {
+            myMnemonic = "subi";
+            negateImm = true;
+        }
+    } else if (myMnemonic == "addis") {
+        if (_numSrcRegs == 0) {
+            myMnemonic = "lis";
+        } else if (si < 0) {
+            myMnemonic = "subis";
+            negateImm = true;
+        }
+    } else if (myMnemonic == "addic" && si < 0) {
+        myMnemonic = "subic";
+        negateImm = true;
+    } else if (myMnemonic == "addic_") {
+        if (si < 0) {
+            myMnemonic = "subic.";
+            negateImm = true;
+        } else {
+            myMnemonic = "addic.";
+        }
+    }
+
+    ccprintf(ss, "%-10s ", myMnemonic);
+
+    // Print the first destination only
+    if (_numDestRegs > 0)
+        printReg(ss, destRegIdx(0));
+
+    // Print the source register
+    if (_numSrcRegs > 0) {
+        if (_numDestRegs > 0)
+            ss << ", ";
+        printReg(ss, srcRegIdx(0));
+    }
+
+    // Print the immediate value
+    if (negateImm)
+        ss << ", " << -si;
+    else
+        ss << ", " << si;
 
     return ss.str();
 }
@@ -133,15 +227,13 @@ IntShiftOp::generateDisassembly(
     ccprintf(ss, "%-10s ", mnemonic);
 
     // Print the first destination only
-    if (_numDestRegs > 0) {
+    if (_numDestRegs > 0)
         printReg(ss, destRegIdx(0));
-    }
 
     // Print the first source register
     if (_numSrcRegs > 0) {
-        if (_numDestRegs > 0) {
+        if (_numDestRegs > 0)
             ss << ", ";
-        }
         printReg(ss, srcRegIdx(0));
     }
 
@@ -161,15 +253,13 @@ IntRotateOp::generateDisassembly(
     ccprintf(ss, "%-10s ", mnemonic);
 
     // Print the first destination only
-    if (_numDestRegs > 0) {
+    if (_numDestRegs > 0)
         printReg(ss, destRegIdx(0));
-    }
 
     // Print the first source register
     if (_numSrcRegs > 0) {
-        if (_numDestRegs > 0) {
+        if (_numDestRegs > 0)
             ss << ", ";
-        }
         printReg(ss, srcRegIdx(0));
     }
 
