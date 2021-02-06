@@ -820,3 +820,99 @@ IntConcatRotateOp::generateDisassembly(
 
     return ss.str();
 }
+
+
+std::string
+IntTrapOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::string ext;
+    std::stringstream ss;
+    bool printSrcs = true;
+    bool printCond = false;
+
+    // Generate the correct mnemonic
+    std::string myMnemonic(mnemonic);
+
+    // Special cases
+    if (myMnemonic == "tw" &&
+        (srcRegIdx(0).index() == 0) && (srcRegIdx(1).index() == 0)) {
+        myMnemonic = "trap";
+        printSrcs = false;
+    } else {
+        ext = suffix();
+        if (!ext.empty() &&
+            (myMnemonic == "tw" || myMnemonic == "td")) {
+            myMnemonic += ext;
+        } else {
+            printCond = true;
+        }
+    }
+
+    ccprintf(ss, "%-10s ", myMnemonic);
+
+    // Print the trap condition
+    if (printCond)
+        ss << (int) to;
+
+    // Print the source registers
+    if (printSrcs) {
+        if (_numSrcRegs > 0) {
+            if (printCond)
+                ss << ", ";
+            printReg(ss, srcRegIdx(0));
+        }
+
+        if (_numSrcRegs > 1) {
+            ss << ", ";
+            printReg(ss, srcRegIdx(1));
+        }
+    }
+
+    return ss.str();
+}
+
+
+std::string
+IntImmTrapOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::string ext;
+    std::stringstream ss;
+    bool printCond = false;
+
+    // Generate the correct mnemonic
+    std::string myMnemonic(mnemonic);
+
+    // Special cases
+    ext = suffix();
+    if (!ext.empty()) {
+        if (myMnemonic == "twi") {
+            myMnemonic = "tw" + ext + "i";
+        } else if (myMnemonic == "tdi") {
+            myMnemonic = "td" + ext + "i";
+        } else {
+            printCond = true;
+        }
+    } else {
+        printCond = true;
+    }
+
+    ccprintf(ss, "%-10s ", myMnemonic);
+
+    // Print the trap condition
+    if (printCond)
+        ss << (int) to;
+
+    // Print the source registers
+    if (_numSrcRegs > 0) {
+        if (printCond)
+            ss << ", ";
+        printReg(ss, srcRegIdx(0));
+    }
+
+    // Print the immediate value
+    ss << ", " << si;
+
+    return ss.str();
+}

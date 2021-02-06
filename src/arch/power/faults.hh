@@ -82,6 +82,16 @@ class AlignmentFault : public PowerFault
     }
 };
 
+
+class TrapFault : public PowerFault
+{
+  public:
+    TrapFault()
+        : PowerFault("Trap")
+    {
+    }
+};
+
 } // namespace PowerISA
 
 #endif // __ARCH_POWER_FAULTS_HH__

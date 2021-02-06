@@ -88,6 +88,9 @@ BitUnion32(ExtMachInst)
     Bitfield<20, 16> ba;
     Bitfield<15, 11> bb;
 
+    // Trap instruction fields
+    Bitfield<25, 21> to;
+
     // FXM field for mtcrf instruction
     Bitfield<19, 12> fxm;
 EndBitUnion(ExtMachInst)

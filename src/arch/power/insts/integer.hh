@@ -713,6 +713,82 @@ class IntConcatRotateOp : public IntConcatShiftOp
             Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
+
+/**
+ * Class for integer trap operations.
+ */
+class IntTrapOp : public IntOp
+{
+  protected:
+    uint8_t to;
+
+    /// Constructor
+    IntTrapOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : IntOp(mnem, _machInst, __opClass),
+        to(machInst.to)
+    {
+    }
+
+    inline bool
+    checkTrap(int64_t a, int64_t b) const
+    {
+        if (((to & 0x10) && (a < b))  ||
+            ((to & 0x08) && (a > b))  ||
+            ((to & 0x04) && (a == b)) ||
+            ((to & 0x02) && ((uint64_t)a < (uint64_t)b)) ||
+            ((to & 0x01) && ((uint64_t)a > (uint64_t)b))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    inline std::string
+    suffix() const
+    {
+        std::string str;
+
+        switch (to) {
+            case 1:  str = "lgt"; break;
+            case 2:  str = "llt"; break;
+            case 4:  str = "eq"; break;
+            case 5:  str = "lge"; break;
+            case 6:  str = "lle"; break;
+            case 8:  str = "gt"; break;
+            case 12: str = "ge"; break;
+            case 16: str = "lt"; break;
+            case 20: str = "le"; break;
+            case 24: str = "ne"; break;
+            case 31: str = "u"; break;
+        }
+
+        return str;
+    }
+
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const override;
+};
+
+
+/**
+ * Class for integer immediate trap operations.
+ */
+class IntImmTrapOp : public IntTrapOp
+{
+  protected:
+    int32_t si;
+
+   /// Constructor
+   IntImmTrapOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : IntTrapOp(mnem, _machInst, __opClass),
+        si(sext<16>(machInst.si))
+    {
+    }
+
+    std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const override;
+};
+
 } // namespace PowerISA
 
 #endif //__ARCH_POWER_INSTS_INTEGER_HH__

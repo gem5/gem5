@@ -36,6 +36,11 @@
 //
 decode PO default Unknown::unknown() {
 
+    format IntImmTrapOp {
+        2: tdi({{ Ra }});
+        3: twi({{ Ra_sw }});
+    }
+
     4: decode VA_XO {
 
         // Arithmetic instructions that use source registers Ra, Rb and Rc,
@@ -325,6 +330,8 @@ decode PO default Unknown::unknown() {
                 cr = makeCRFieldSigned((int32_t)Ra, (int32_t)Rb, xer.so);
         }});
 
+        4: IntTrapOp::tw({{ Ra_sw }}, {{ Rb_sw }});
+
         format LoadIndexOp {
             20: lwarx({{
                 Rt = Mem_uw;
@@ -378,6 +385,8 @@ decode PO default Unknown::unknown() {
             58: cntlzd({{ Ra = findLeadingZeros(Rs); }}, true);
             60: andc({{ Ra = Rs & ~Rb; }}, true);
         }
+
+        68: IntTrapOp::td({{ Ra }}, {{ Rb }});
 
         format LoadIndexOp {
             84: ldarx({{
