@@ -674,39 +674,26 @@ have_tuntap = conf.CheckHeader('linux/if_tun.h', '<>')
 if not have_tuntap:
     print("Info: Compatible header file <linux/if_tun.h> not found.")
 
-# x86 needs support for xsave. We test for the structure here since we
-# won't be able to run new tests by the time we know which ISA we're
-# targeting.
-have_kvm_xsave = conf.CheckTypeSize('struct kvm_xsave',
-                                    '#include <linux/kvm.h>') != 0
+# Determine what ISA KVM can support on this host.
+kvm_isa = None
+host_isa = None
+try:
+    import platform
+    host_isa = platform.machine()
+except:
+    pass
 
-# Check if the requested target ISA is compatible with the host
-def is_isa_kvm_compatible(isa):
-    try:
-        import platform
-        host_isa = platform.machine()
-    except:
-        warning("Failed to determine host ISA.")
-        return False
-
-    if not have_posix_timers:
-        warning("Can not enable KVM, host seems to lack support "
-                "for POSIX timers")
-        return False
-
-    if isa == "arm":
-        return host_isa in ( "armv7l", "aarch64" )
-    elif isa == "x86":
-        if host_isa != "x86_64":
-            return False
-
-        if not have_kvm_xsave:
-            warning("KVM on x86 requires xsave support in kernel headers.")
-            return False
-
-        return True
+if not host_isa:
+    warning("Failed to determine host ISA.")
+elif not have_posix_timers:
+    warning("Cannot enable KVM, host seems to lack support for POSIX timers")
+elif host_isa in ('armv7l', 'aarch64'):
+    kvm_isa = 'arm'
+elif host_isa == 'x86_64':
+    if conf.CheckTypeSize('struct kvm_xsave', '#include <linux/kvm.h>') != 0:
+        kvm_isa = 'x86'
     else:
-        return False
+        warning("KVM on x86 requires xsave support in kernel headers.")
 
 
 # Check if the exclude_host attribute is available. We want this to
@@ -1044,9 +1031,9 @@ Build variables for {dir}:
         if not have_kvm:
             warning("Can not enable KVM, host seems to lack KVM support")
             env['USE_KVM'] = False
-        elif not is_isa_kvm_compatible(env['TARGET_ISA']):
-            print("Info: KVM support disabled due to unsupported host and "
-                  "target ISA combination")
+        elif kvm_isa != env['TARGET_ISA']:
+            print("Info: KVM for %s not supported on %s host." %
+                  (env['TARGET_ISA'], kvm_isa))
             env['USE_KVM'] = False
 
     if env['USE_TUNTAP']:
