@@ -37,11 +37,12 @@
 
 Import('*')
 
-if not (env['USE_KVM'] and env['TARGET_ISA'] == 'arm'):
-    Return()
-
 import platform
 host_isa = platform.machine()
+
+if not (env['USE_KVM'] and env['TARGET_ISA'] == 'arm' and
+        env['KVM_ISA'] == 'arm'):
+    Return()
 
 SimObject('KvmGic.py')
 Source('gic.cc')

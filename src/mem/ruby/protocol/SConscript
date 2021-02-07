@@ -57,7 +57,7 @@ for root,dirs,files in os.walk(slicc_dir.srcnode().abspath):
 #
 # Use SLICC
 #
-env["SLICC_PATH"] = protocol_dirs
+env["SLICC_PATH"] = env["PROTOCOL_DIRS"]
 slicc_scanner = Classic("SliccScanner", ['.sm', '.slicc'], "SLICC_PATH",
                         r'''include[ \t]["'](.*)["'];''')
 env.Append(SCANNERS=slicc_scanner)
@@ -68,7 +68,7 @@ def slicc_emitter(target, source, env):
 
     slicc = SLICC(filepath, protocol_base.abspath, verbose=False)
     slicc.process()
-    slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
+    slicc.writeCodeFiles(output_dir.abspath, env['SLICC_INCLUDES'])
     if env['SLICC_HTML']:
         slicc.writeHTMLFiles(html_dir.abspath)
 
@@ -81,7 +81,7 @@ def slicc_action(target, source, env):
 
     slicc = SLICC(filepath, protocol_base.abspath, verbose=True)
     slicc.process()
-    slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
+    slicc.writeCodeFiles(output_dir.abspath, env['SLICC_INCLUDES'])
     if env['SLICC_HTML']:
         slicc.writeHTMLFiles(html_dir.abspath)
 
@@ -90,13 +90,13 @@ slicc_builder = Builder(action=MakeAction(slicc_action, Transform("SLICC")),
 
 protocol = env['PROTOCOL']
 protocol_dir = None
-for path in protocol_dirs:
-    if os.path.exists(os.path.join(path, "%s.slicc" % protocol)):
+for path in env['PROTOCOL_DIRS']:
+    if os.path.exists(path.File("%s.slicc" % protocol).abspath):
         protocol_dir = Dir(path)
         break
 
 if not protocol_dir:
-    raise ValueError("Could not find {}.slicc in protocol_dirs".format(
+    raise ValueError("Could not find {}.slicc in PROTOCOL_DIRS".format(
         protocol))
 
 sources = [ protocol_dir.File("%s.slicc" % protocol) ]

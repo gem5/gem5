@@ -1,0 +1,80 @@
+# Copyright 2020 Google, Inc.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Import('*')
+
+from gem5_scons import warning
+from m5.util import readCommand, compareVersions
+
+import gem5_scons
+
+conf = gem5_scons.Configure(main)
+
+# Check for the protobuf compiler
+main['HAVE_PROTOC'] = False
+protoc_version = []
+try:
+    protoc_version = readCommand([main['PROTOC'], '--version']).split()
+except Exception as e:
+    warning('While checking protoc version:', str(e))
+
+# Based on the availability of the compress stream wrappers, require 2.1.0.
+min_protoc_version = '2.1.0'
+
+# First two words should be "libprotoc x.y.z"
+if len(protoc_version) < 2 or protoc_version[0] != 'libprotoc':
+    warning('Protocol buffer compiler (protoc) not found.\n'
+            'Please install protobuf-compiler for tracing support.')
+elif compareVersions(protoc_version[1], min_protoc_version) < 0:
+    warning('protoc version', min_protoc_version, 'or newer required.\n'
+            'Installed version:', protoc_version[1])
+else:
+    # Attempt to determine the appropriate include path and
+    # library path using pkg-config, that means we also need to
+    # check for pkg-config. Note that it is possible to use
+    # protobuf without the involvement of pkg-config. Later on we
+    # check go a library config check and at that point the test
+    # will fail if libprotobuf cannot be found.
+    if main['HAVE_PKG_CONFIG']:
+        conf.CheckPkgConfig('protobuf', '--cflags', '--libs-only-L')
+    main['HAVE_PROTOC'] = True
+
+# If we have the protobuf compiler, also make sure we have the
+# development libraries. If the check passes, libprotobuf will be
+# automatically added to the LIBS environment variable. After
+# this, we can use the HAVE_PROTOBUF flag to determine if we have
+# got both protoc and libprotobuf available.
+main['HAVE_PROTOBUF'] = main['HAVE_PROTOC'] and \
+    conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
+                            'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;')
+
+# If we have the compiler but not the library, print another warning.
+if main['HAVE_PROTOC'] and not main['HAVE_PROTOBUF']:
+    warning('Did not find protocol buffer library and/or headers.\n'
+            'Please install libprotobuf-dev for tracing support.')
+
+main = conf.Finish()
+
+export_vars.append('HAVE_PROTOBUF')

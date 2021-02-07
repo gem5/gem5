@@ -77,6 +77,7 @@
 
 # Global Python includes
 import atexit
+import collections
 import itertools
 import os
 import sys
@@ -437,36 +438,7 @@ if sys.platform == 'cygwin':
     main.Append(CCFLAGS=["-Wno-uninitialized"])
 
 
-have_pkg_config = main.Detect('pkg-config')
-
-# Check for the protobuf compiler
-main['HAVE_PROTOC'] = False
-protoc_version = []
-try:
-    protoc_version = readCommand([main['PROTOC'], '--version']).split()
-except Exception as e:
-    warning('While checking protoc version:', str(e))
-
-# Based on the availability of the compress stream wrappers, require 2.1.0.
-min_protoc_version = '2.1.0'
-
-# First two words should be "libprotoc x.y.z"
-if len(protoc_version) < 2 or protoc_version[0] != 'libprotoc':
-    warning('Protocol buffer compiler (protoc) not found.\n'
-            'Please install protobuf-compiler for tracing support.')
-elif compareVersions(protoc_version[1], min_protoc_version) < 0:
-    warning('protoc version', min_protoc_version, 'or newer required.\n'
-            'Installed version:', protoc_version[1])
-else:
-    # Attempt to determine the appropriate include path and
-    # library path using pkg-config, that means we also need to
-    # check for pkg-config. Note that it is possible to use
-    # protobuf without the involvement of pkg-config. Later on we
-    # check go a library config check and at that point the test
-    # will fail if libprotobuf cannot be found.
-    if have_pkg_config:
-        conf.CheckPkgConfig('protobuf', '--cflags', '--libs-only-L')
-    main['HAVE_PROTOC'] = True
+main['HAVE_PKG_CONFIG'] = main.Detect('pkg-config')
 
 
 
@@ -581,34 +553,6 @@ if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
           'and/or zlib.h header file.\n'
           'Please install zlib and try again.')
 
-# If we have the protobuf compiler, also make sure we have the
-# development libraries. If the check passes, libprotobuf will be
-# automatically added to the LIBS environment variable. After
-# this, we can use the HAVE_PROTOBUF flag to determine if we have
-# got both protoc and libprotobuf available.
-main['HAVE_PROTOBUF'] = main['HAVE_PROTOC'] and \
-    conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
-                            'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;')
-
-# Valgrind gets much less confused if you tell it when you're using
-# alternative stacks.
-main['HAVE_VALGRIND'] = conf.CheckCHeader('valgrind/valgrind.h')
-
-# If we have the compiler but not the library, print another warning.
-if main['HAVE_PROTOC'] and not main['HAVE_PROTOBUF']:
-    warning('Did not find protocol buffer library and/or headers.\n'
-            'Please install libprotobuf-dev for tracing support.')
-
-# Check for librt.
-have_posix_clock = \
-    conf.CheckLibWithHeader([None, 'rt'], 'time.h', 'C',
-                            'clock_nanosleep(0,0,NULL,NULL);')
-if not have_posix_clock:
-    warning("Can't find library for POSIX clocks.")
-
-have_posix_timers = \
-    conf.CheckLibWithHeader([None, 'rt'], [ 'time.h', 'signal.h' ], 'C',
-                            'timer_create(CLOCK_MONOTONIC, NULL, NULL);')
 
 if not GetOption('without_tcmalloc'):
     if conf.CheckLib('tcmalloc'):
@@ -621,88 +565,6 @@ if not GetOption('without_tcmalloc'):
                 "on Ubuntu or RedHat).")
 
 
-if conf.CheckLibWithHeader([None, 'execinfo'], 'execinfo.h', 'C',
-        'char temp; backtrace_symbols_fd((void *)&temp, 0, 0);'):
-    main['BACKTRACE_IMPL'] = 'glibc'
-else:
-    main['BACKTRACE_IMPL'] = 'none'
-    warning("No suitable back trace implementation found.")
-
-# Check for <fenv.h> (C99 FP environment control)
-have_fenv = conf.CheckHeader('fenv.h', '<>')
-if not have_fenv:
-    warning("Header file <fenv.h> not found.\n"
-            "This host has no IEEE FP rounding mode control.")
-
-# Check for <png.h> (libpng library needed if wanting to dump
-# frame buffer image in png format)
-have_png = conf.CheckHeader('png.h', '<>')
-if not have_png:
-    warning("Header file <png.h> not found.\n"
-            "This host has no libpng library.\n"
-            "Disabling support for PNG framebuffers.")
-
-# Check if we should enable KVM-based hardware virtualization. The API
-# we rely on exists since version 2.6.36 of the kernel, but somehow
-# the KVM_API_VERSION does not reflect the change. We test for one of
-# the types as a fall back.
-have_kvm = conf.CheckHeader('linux/kvm.h', '<>')
-if not have_kvm:
-    print("Info: Compatible header file <linux/kvm.h> not found, "
-          "disabling KVM support.")
-
-# Check if the TUN/TAP driver is available.
-have_tuntap = conf.CheckHeader('linux/if_tun.h', '<>')
-if not have_tuntap:
-    print("Info: Compatible header file <linux/if_tun.h> not found.")
-
-# Determine what ISA KVM can support on this host.
-kvm_isa = None
-host_isa = None
-try:
-    import platform
-    host_isa = platform.machine()
-except:
-    pass
-
-if not host_isa:
-    warning("Failed to determine host ISA.")
-elif not have_posix_timers:
-    warning("Cannot enable KVM, host seems to lack support for POSIX timers")
-elif host_isa in ('armv7l', 'aarch64'):
-    kvm_isa = 'arm'
-elif host_isa == 'x86_64':
-    if conf.CheckTypeSize('struct kvm_xsave', '#include <linux/kvm.h>') != 0:
-        kvm_isa = 'x86'
-    else:
-        warning("KVM on x86 requires xsave support in kernel headers.")
-
-
-# Check if the exclude_host attribute is available. We want this to
-# get accurate instruction counts in KVM.
-main['HAVE_PERF_ATTR_EXCLUDE_HOST'] = conf.CheckMember(
-    'linux/perf_event.h', 'struct perf_event_attr', 'exclude_host')
-
-# Check if there is a pkg-config configuration for hdf5. If we find
-# it, setup the environment to enable linking and header inclusion. We
-# don't actually try to include any headers or link with hdf5 at this
-# stage.
-if have_pkg_config:
-    conf.CheckPkgConfig(['hdf5-serial', 'hdf5'],
-            '--cflags-only-I', '--libs-only-L')
-
-# Check if the HDF5 libraries can be found. This check respects the
-# include path and library path provided by pkg-config. We perform
-# this check even if there isn't a pkg-config configuration for hdf5
-# since some installations don't use pkg-config.
-have_hdf5 = \
-        conf.CheckLibWithHeader('hdf5', 'hdf5.h', 'C',
-                                'H5Fcreate("", 0, 0, 0);') and \
-        conf.CheckLibWithHeader('hdf5_cpp', 'H5Cpp.h', 'C++',
-                                'H5::H5File("", 0);')
-if not have_hdf5:
-    warning("Couldn't find any HDF5 C++ libraries. Disabling HDF5 support.")
-
 ######################################################################
 #
 # Finish the configuration
@@ -714,32 +576,11 @@ main = conf.Finish()
 # Collect all non-global variables
 #
 
-# Define the universe of supported ISAs
-all_isa_list = [ ]
-all_gpu_isa_list = [ ]
-Export('all_isa_list')
-Export('all_gpu_isa_list')
-
-class CpuModel(object):
-    '''The CpuModel class encapsulates everything the ISA parser needs to
-    know about a particular CPU model.'''
-
-    # Dict of available CPU model objects.  Accessible as CpuModel.dict.
-    dict = {}
-
-    # Constructor.  Automatically adds models to CpuModel.dict.
-    def __init__(self, name, default=False):
-        self.name = name           # name of model
-
-        # This cpu is enabled by default
-        self.default = default
-
-        # Add self to dict
-        if name in CpuModel.dict:
-            raise AttributeError("CpuModel '%s' already registered" % name)
-        CpuModel.dict[name] = self
-
-Export('CpuModel')
+# Register a callback which is called after all SConsopts files have been read.
+after_sconsopts_callbacks = []
+def AfterSConsopts(cb):
+    after_sconsopts_callbacks.append(cb)
+Export('AfterSConsopts')
 
 # Sticky variables get saved in the variables file so they persist from
 # one invocation to the next (unless overridden, in which case the new
@@ -747,20 +588,10 @@ Export('CpuModel')
 sticky_vars = Variables(args=ARGUMENTS)
 Export('sticky_vars')
 
-# Sticky variables that should be exported
+# Sticky variables that should be exported to #defines in config/*.hh
+# (see src/SConscript).
 export_vars = []
 Export('export_vars')
-
-# For Ruby
-all_protocols = []
-Export('all_protocols')
-protocol_dirs = []
-Export('protocol_dirs')
-slicc_includes = []
-Export('slicc_includes')
-# list of protocols that require the partial functional read interface
-need_partial_func_reads = []
-Export('need_partial_func_reads')
 
 # Walk the tree and execute all SConsopts scripts that wil add to the
 # above variables
@@ -775,42 +606,16 @@ for bdir in [ base_dir ] + extras_dir_list:
                 print("Reading", joinpath(root, 'SConsopts'))
             SConscript(joinpath(root, 'SConsopts'))
 
-all_isa_list.sort()
-all_gpu_isa_list.sort()
+for cb in after_sconsopts_callbacks:
+    cb()
 
 sticky_vars.AddVariables(
-    EnumVariable('TARGET_ISA', 'Target ISA', 'null', all_isa_list),
-    EnumVariable('TARGET_GPU_ISA', 'Target GPU ISA', 'gcn3', all_gpu_isa_list),
-    ListVariable('CPU_MODELS', 'CPU models',
-                 sorted(n for n,m in CpuModel.dict.items() if m.default),
-                 sorted(CpuModel.dict.keys())),
-    BoolVariable('EFENCE', 'Link with Electric Fence malloc debugger',
+    BoolVariable('USE_EFENCE', 'Link with Electric Fence malloc debugger',
                  False),
     BoolVariable('USE_SSE2',
                  'Compile for SSE2 (-msse2) to get IEEE FP on x86 hosts',
                  False),
-    BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks', have_posix_clock),
-    BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
-    BoolVariable('USE_PNG',  'Enable support for PNG images', have_png),
-    BoolVariable('USE_KVM', 'Enable hardware virtualized (KVM) CPU models',
-                 have_kvm),
-    BoolVariable('USE_TUNTAP',
-                 'Enable using a tap device to bridge to the host network',
-                 have_tuntap),
-    BoolVariable('BUILD_GPU', 'Build the compute-GPU model', False),
-    EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'None',
-                  all_protocols),
-    ('NUMBER_BITS_PER_SET', 'Max elements in set (default 64)',
-                 64),
-    BoolVariable('USE_HDF5', 'Enable the HDF5 support', have_hdf5),
     )
-
-# These variables get exported to #defines in config/*.hh (see src/SConscript).
-export_vars += ['USE_FENV', 'TARGET_ISA', 'TARGET_GPU_ISA',
-                'USE_POSIX_CLOCK', 'USE_KVM', 'USE_TUNTAP', 'BUILD_GPU',
-                'PROTOCOL', 'HAVE_PROTOBUF', 'HAVE_VALGRIND',
-                'HAVE_PERF_ATTR_EXCLUDE_HOST', 'USE_PNG',
-                'NUMBER_BITS_PER_SET', 'USE_HDF5']
 
 ###################################################
 #
@@ -991,46 +796,11 @@ Build variables for {dir}:
          append=True)
 
     # Process variable settings.
-
-    if not have_fenv and env['USE_FENV']:
-        warning("<fenv.h> not available; forcing USE_FENV to False in",
-                variant_dir + ".")
-        env['USE_FENV'] = False
-
-    if not env['USE_FENV']:
-        warning("No IEEE FP rounding mode control in", variant_dir + ".\n"
-                "FP results may deviate slightly from other platforms.")
-
-    if not have_png and env['USE_PNG']:
-        warning("<png.h> not available; forcing USE_PNG to False in",
-                variant_dir + ".")
-        env['USE_PNG'] = False
-
-    if env['USE_PNG']:
-        env.Append(LIBS=['png'])
-
-    if env['EFENCE']:
+    if env['USE_EFENCE']:
         env.Append(LIBS=['efence'])
 
-    if env['USE_KVM']:
-        if not have_kvm:
-            warning("Can not enable KVM, host seems to lack KVM support")
-            env['USE_KVM'] = False
-        elif kvm_isa != env['TARGET_ISA']:
-            print("Info: KVM for %s not supported on %s host." %
-                  (env['TARGET_ISA'], kvm_isa))
-            env['USE_KVM'] = False
-
-    if env['USE_TUNTAP']:
-        if not have_tuntap:
-            warning("Can't connect EtherTap with a tap device.")
-            env['USE_TUNTAP'] = False
-
-    # Warn about missing optional functionality
-    if env['USE_KVM']:
-        if not main['HAVE_PERF_ATTR_EXCLUDE_HOST']:
-            warning("perf_event headers lack support for the exclude_host "
-                    "attribute. KVM instruction counts will be inaccurate.")
+    if env['KVM_ISA'] != env['TARGET_ISA']:
+        env['USE_KVM'] = False
 
     # Save sticky variable settings back to current variables file
     sticky_vars.Save(current_vars_file, env)

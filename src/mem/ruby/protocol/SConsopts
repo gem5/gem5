@@ -30,7 +30,7 @@ import os
 
 Import('*')
 
-all_protocols.extend([
+main.Append(ALL_PROTOCOLS=[
     'GPU_VIPER',
     'GPU_VIPER_Baseline',
     'GPU_VIPER_Region',
@@ -48,11 +48,11 @@ all_protocols.extend([
     ])
 
 opt = BoolVariable('SLICC_HTML', 'Create HTML files', False)
-sticky_vars.AddVariables(opt)
+sticky_vars.Add(opt)
 
-protocol_dirs.append(Dir('.').abspath)
+main.Append(PROTOCOL_DIRS=[Dir('.')])
 
 protocol_base = Dir('.')
 Export('protocol_base')
 
-slicc_includes.append('mem/ruby/slicc_interface/RubySlicc_includes.hh')
+main.Append(SLICC_INCLUDES=['mem/ruby/slicc_interface/RubySlicc_includes.hh'])

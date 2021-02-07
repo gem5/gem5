@@ -44,7 +44,11 @@ Source('debug.cc')
 GTest('debug.test', 'debug.test.cc', 'debug.cc')
 if env['USE_FENV']:
     Source('fenv.c')
+else:
+    warning("No IEEE FP rounding mode control.\n"
+            "FP results may deviate slightly from other platforms.")
 if env['USE_PNG']:
+    env.Append(LIBS=['png'])
     Source('pngwriter.cc')
 Source('fiber.cc')
 GTest('fiber.test', 'fiber.test.cc', 'fiber.cc')
