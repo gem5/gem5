@@ -296,6 +296,10 @@ main['LTO_LDFLAGS'] = []
 # compiler we're using.
 main['TCMALLOC_CCFLAGS'] = []
 
+# Platform-specific configuration.  Note again that we assume that all
+# builds under a given build root run on the same host platform.
+conf = gem5_scons.Configure(main)
+
 CXX_version = readCommand([main['CXX'],'--version'], exception=False)
 CXX_V = readCommand([main['CXX'],'-V'], exception=False)
 
@@ -499,9 +503,6 @@ except Exception as e:
     warning('While checking protoc version:', str(e))
     main['HAVE_PROTOC'] = False
 
-# Platform-specific configuration.  Note again that we assume that all
-# builds under a given build root run on the same host platform.
-conf = gem5_scons.Configure(main)
 
 # Cache build files in the supplied directory.
 if main['M5_BUILD_CACHE']:
