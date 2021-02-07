@@ -574,19 +574,6 @@ conf = Configure(main,
         'CheckLinkFlag' : CheckLinkFlag,
         })
 
-# Check if we should compile a 64 bit binary on Mac OS X/Darwin
-try:
-    import platform
-    uname = platform.uname()
-    if uname[0] == 'Darwin' and compareVersions(uname[2], '9.0.0') >= 0:
-        if int(readCommand('sysctl -n hw.cpu64bit_capable')[0]):
-            main.Append(CCFLAGS=['-arch', 'x86_64'])
-            main.Append(CFLAGS=['-arch', 'x86_64'])
-            main.Append(LINKFLAGS=['-arch', 'x86_64'])
-            main.Append(ASFLAGS=['-arch', 'x86_64'])
-except:
-    pass
-
 # Recent versions of scons substitute a "Null" object for Configure()
 # when configuration isn't necessary, e.g., if the "--help" option is
 # present.  Unfortuantely this Null object always returns false,
