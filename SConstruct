@@ -455,39 +455,37 @@ if sys.platform == 'cygwin':
     main.Append(CCFLAGS=["-Wno-uninitialized"])
 
 
-have_pkg_config = readCommand(['pkg-config', '--version'], exception='')
+have_pkg_config = main.Detect('pkg-config')
 
 # Check for the protobuf compiler
+main['HAVE_PROTOC'] = False
+protoc_version = []
 try:
-    main['HAVE_PROTOC'] = True
     protoc_version = readCommand([main['PROTOC'], '--version']).split()
-
-    # First two words should be "libprotoc x.y.z"
-    if len(protoc_version) < 2 or protoc_version[0] != 'libprotoc':
-        warning('Protocol buffer compiler (protoc) not found.\n'
-                'Please install protobuf-compiler for tracing support.')
-        main['HAVE_PROTOC'] = False
-    else:
-        # Based on the availability of the compress stream wrappers,
-        # require 2.1.0
-        min_protoc_version = '2.1.0'
-        if compareVersions(protoc_version[1], min_protoc_version) < 0:
-            warning('protoc version', min_protoc_version,
-                    'or newer required.\n'
-                    'Installed version:', protoc_version[1])
-            main['HAVE_PROTOC'] = False
-        else:
-            # Attempt to determine the appropriate include path and
-            # library path using pkg-config, that means we also need to
-            # check for pkg-config. Note that it is possible to use
-            # protobuf without the involvement of pkg-config. Later on we
-            # check go a library config check and at that point the test
-            # will fail if libprotobuf cannot be found.
-            if have_pkg_config:
-                conf.CheckPkgConfig('protobuf', '--cflags', '--libs-only-L')
 except Exception as e:
     warning('While checking protoc version:', str(e))
-    main['HAVE_PROTOC'] = False
+
+# Based on the availability of the compress stream wrappers, require 2.1.0.
+min_protoc_version = '2.1.0'
+
+# First two words should be "libprotoc x.y.z"
+if len(protoc_version) < 2 or protoc_version[0] != 'libprotoc':
+    warning('Protocol buffer compiler (protoc) not found.\n'
+            'Please install protobuf-compiler for tracing support.')
+elif compareVersions(protoc_version[1], min_protoc_version) < 0:
+    warning('protoc version', min_protoc_version, 'or newer required.\n'
+            'Installed version:', protoc_version[1])
+else:
+    # Attempt to determine the appropriate include path and
+    # library path using pkg-config, that means we also need to
+    # check for pkg-config. Note that it is possible to use
+    # protobuf without the involvement of pkg-config. Later on we
+    # check go a library config check and at that point the test
+    # will fail if libprotobuf cannot be found.
+    if have_pkg_config:
+        conf.CheckPkgConfig('protobuf', '--cflags', '--libs-only-L')
+    main['HAVE_PROTOC'] = True
+
 
 
 # Cache build files in the supplied directory.
