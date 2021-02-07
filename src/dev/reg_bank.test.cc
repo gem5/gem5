@@ -82,6 +82,8 @@ class RegisterRazTest : public testing::Test
         buf.fill(0xff);
     }
 };
+// Needed by C++14 and lower
+constexpr size_t RegisterRazTest::RazSize;
 
 TEST_F(RegisterRazTest, Name)
 {
@@ -166,6 +168,8 @@ class RegisterRaoTest : public testing::Test
         buf.fill(0x00);
     }
 };
+// Needed by C++14 and lower
+constexpr size_t RegisterRaoTest::RaoSize;
 
 TEST_F(RegisterRaoTest, Name)
 {
@@ -252,6 +256,8 @@ class RegisterBufTest : public testing::Test
                 0x70, 0x80, 0x90, 0xa0, 0xb0, 0xc0}
     {}
 };
+// Needed by C++14 and lower
+constexpr size_t RegisterBufTest::RegSize;
 
 TEST_F(RegisterBufTest, Name)
 {
@@ -456,6 +462,8 @@ class TypedRegisterTest : public testing::Test
         buf{0x1, 0x2, 0x3, 0x4, 0x5, 0x6}
     {}
 };
+// Needed by C++14 and lower
+constexpr size_t TypedRegisterTest::RegSize;
 
 TEST_F(TypedRegisterTest, DefaultConstructor)
 {
