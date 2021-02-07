@@ -52,6 +52,7 @@
 
 #include "base/stl_helpers.hh"
 #include "base/str.hh"
+#include "config/build_gpu.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/protocol/MachineType.hh"
@@ -70,7 +71,7 @@
  * here, but until then these ifdefs will
  * serve.
  */
-#ifdef BUILD_GPU
+#if BUILD_GPU
 #include "mem/ruby/system/GPUCoalescer.hh"
 
 #endif
@@ -391,7 +392,7 @@ Profiler::collateStats()
                 rubyProfilerStats.
                     m_outstandReqHistSeqr.add(seq->getOutstandReqHist());
             }
-#ifdef BUILD_GPU
+#if BUILD_GPU
             GPUCoalescer *coal = ctr->getGPUCoalescer();
             if (coal != NULL) {
                 rubyProfilerStats.
@@ -488,7 +489,7 @@ Profiler::collateStats()
                     }
                 }
             }
-#ifdef BUILD_GPU
+#if BUILD_GPU
             GPUCoalescer *coal = ctr->getGPUCoalescer();
             if (coal != NULL) {
                 // add all the latencies

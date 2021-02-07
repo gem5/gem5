@@ -809,8 +809,8 @@ sticky_vars.AddVariables(
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['USE_FENV', 'TARGET_ISA', 'TARGET_GPU_ISA',
-                'USE_POSIX_CLOCK', 'USE_KVM', 'USE_TUNTAP', 'PROTOCOL',
-                'HAVE_PROTOBUF', 'HAVE_VALGRIND',
+                'USE_POSIX_CLOCK', 'USE_KVM', 'USE_TUNTAP', 'BUILD_GPU',
+                'PROTOCOL', 'HAVE_PROTOBUF', 'HAVE_VALGRIND',
                 'HAVE_PERF_ATTR_EXCLUDE_HOST', 'USE_PNG',
                 'NUMBER_BITS_PER_SET', 'USE_HDF5']
 
@@ -1027,9 +1027,6 @@ Build variables for {dir}:
         if not have_tuntap:
             warning("Can't connect EtherTap with a tap device.")
             env['USE_TUNTAP'] = False
-
-    if env['BUILD_GPU']:
-        env.Append(CPPDEFINES=['BUILD_GPU'])
 
     # Warn about missing optional functionality
     if env['USE_KVM']:
