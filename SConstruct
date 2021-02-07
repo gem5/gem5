@@ -323,10 +323,7 @@ if main['GCC'] or main['CLANG']:
         main.Append(CCFLAGS=['-I/usr/local/include'])
         main.Append(CXXFLAGS=['-I/usr/local/include'])
 
-    # On Mac OS X/Darwin the default linker doesn't support the
-    # option --as-needed
-    if sys.platform != "darwin":
-        main.Append(LINKFLAGS='-Wl,--as-needed')
+    conf.CheckLinkFlag('-Wl,--as-needed')
     if GetOption('gold_linker'):
         main.Append(LINKFLAGS='-fuse-ld=gold')
 
@@ -397,12 +394,8 @@ elif main['CLANG']:
                          # interchangeably.
                          '-Wno-mismatched-tags',
                          ])
-    if sys.platform != "darwin" and \
-       compareVersions(clang_version, "10.0") >= 0:
-        main.Append(CCFLAGS=['-Wno-c99-designator'])
-
-    if compareVersions(clang_version, "8.0") >= 0:
-        main.Append(CCFLAGS=['-Wno-defaulted-function-deleted'])
+    conf.CheckCxxFlag('-Wno-c99-designator')
+    conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
 
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
