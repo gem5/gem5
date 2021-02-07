@@ -175,6 +175,7 @@ TEST(StatsAvgStorTest, SetValueResult)
     increaseTick();
 }
 
+#if TRACING_ON
 /**
  * Test whether getting the result in a different tick triggers an assertion.
  */
@@ -184,6 +185,7 @@ TEST(StatsAvgStorDeathTest, Result)
     increaseTick();
     ASSERT_DEATH(stor.result(), ".+");
 }
+#endif
 
 /**
  * Test whether getting the result in a different tick does not trigger an
@@ -266,6 +268,7 @@ TEST(StatsAvgStorTest, ZeroReset)
     ASSERT_FALSE(stor.zero());
 }
 
+#if TRACING_ON
 /** Test that an assertion is thrown when bucket size is 0. */
 TEST(StatsDistStorDeathTest, BucketSize0)
 {
@@ -273,6 +276,7 @@ TEST(StatsDistStorDeathTest, BucketSize0)
     EXPECT_ANY_THROW(Stats::DistStor::Params params(0, 5, 0));
     testing::internal::GetCapturedStderr();
 }
+#endif
 
 /**
  * Test whether zero is correctly set as the reset value. The test order is
@@ -492,6 +496,7 @@ TEST(StatsDistStorTest, Reset)
     checkExpectedDistData(data, expected_data, true);
 }
 
+#if TRACING_ON
 /** Test that an assertion is thrown when not enough buckets are provided. */
 TEST(StatsHistStorDeathTest, NotEnoughBuckets0)
 {
@@ -507,6 +512,7 @@ TEST(StatsHistStorDeathTest, NotEnoughBuckets1)
     EXPECT_ANY_THROW(Stats::HistStor::Params params(1));
     testing::internal::GetCapturedStderr();
 }
+#endif
 
 /**
  * Test whether zero is correctly set as the reset value. The test order is
@@ -913,6 +919,7 @@ TEST(StatsHistStorTest, Reset)
     prepareCheckHistStor(params, values, 0, expected_data);
 }
 
+#if TRACING_ON
 /** Test whether adding storages with different sizes triggers an assertion. */
 TEST(StatsHistStorDeathTest, AddDifferentSize)
 {
@@ -942,6 +949,7 @@ TEST(StatsHistStorDeathTest, AddDifferentMin)
 
     ASSERT_DEATH(stor.add(&stor2), ".+");
 }
+#endif
 
 /** Test merging two histograms. */
 TEST(StatsHistStorTest, Add)
