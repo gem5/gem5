@@ -588,10 +588,9 @@ if main['USE_PYTHON']:
         warning('Python version too new. Python 3 expected.')
 
 # On Solaris you need to use libsocket for socket ops
-if not conf.CheckLibWithHeader(None, 'sys/socket.h', 'C++', 'accept(0,0,0);'):
-   if not conf.CheckLibWithHeader('socket', 'sys/socket.h',
-                                  'C++', 'accept(0,0,0);'):
-       error("Can't find library with socket calls (e.g. accept()).")
+if not conf.CheckLibWithHeader(
+        [None, 'socket'], 'sys/socket.h', 'C++', 'accept(0,0,0);'):
+   error("Can't find library with socket calls (e.g. accept()).")
 
 # Check for zlib.  If the check passes, libz will be automatically
 # added to the LIBS environment variable.
