@@ -498,20 +498,6 @@ except Exception as e:
     warning('While checking protoc version:', str(e))
     main['HAVE_PROTOC'] = False
 
-# Check for 'timeout' from GNU coreutils. If present, regressions will
-# be run with a time limit. We require version 8.13 since we rely on
-# support for the '--foreground' option.
-if sys.platform.startswith('freebsd'):
-    timeout_lines = readCommand(['gtimeout', '--version'],
-                                exception='').splitlines()
-else:
-    timeout_lines = readCommand(['timeout', '--version'],
-                                exception='').splitlines()
-# Get the first line and tokenize it
-timeout_version = timeout_lines[0].split() if timeout_lines else []
-main['TIMEOUT'] =  timeout_version and \
-    compareVersions(timeout_version[-1], '8.13') >= 0
-
 def CheckCxxFlag(context, flag, autoadd=True):
     context.Message("Checking for compiler %s support... " % flag)
     last_cxxflags = context.env['CXXFLAGS']
