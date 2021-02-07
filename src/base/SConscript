@@ -43,7 +43,7 @@ Executable('cprintftime', 'cprintftime.cc', 'cprintf.cc')
 Source('debug.cc')
 GTest('debug.test', 'debug.test.cc', 'debug.cc')
 if env['USE_FENV']:
-    Source('fenv.c')
+    Source('fenv.cc')
 else:
     warning("No IEEE FP rounding mode control.\n"
             "FP results may deviate slightly from other platforms.")

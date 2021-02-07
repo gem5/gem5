@@ -1,4 +1,5 @@
 /*
+ * Copyright 2021 Google Inc.
  * Copyright (c) 2007 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,29 +27,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <assert.h>
+#include "base/fenv.hh"
+
 #include <fenv.h>
-#include <stdlib.h>
 
-void m5_fesetround(int rm);
-int m5_fegetround();
+#include <cstdlib>
 
-static const int m5_round_ops[] =  {FE_DOWNWARD, FE_TONEAREST, FE_TOWARDZERO, FE_UPWARD};
-
-void m5_fesetround(int rm)
+namespace gem5
 {
-    assert(rm >= 0 && rm < 4);
-    fesetround(m5_round_ops[rm]);
-}
 
-int m5_fegetround()
+static const int roundOps[] =
+    { FE_DOWNWARD, FE_TONEAREST, FE_TOWARDZERO, FE_UPWARD };
+
+void setFpRound(RoundingMode rm) { fesetround(roundOps[(int)rm]); }
+
+RoundingMode
+getFpRound()
 {
-    int x;
     int rm = fegetround();
-    for (x = 0; x < 4; x++)
-        if (m5_round_ops[x] == rm)
-            return x;
+    for (int x = 0; x < 4; x++)
+        if (roundOps[x] == rm)
+            return (RoundingMode)x;
     abort();
-    return 0;
 }
 
+} // namespace gem5

@@ -156,19 +156,27 @@ def format FpBasic(code, *flags) {{
     exec_code = """
     Fsr |= bits(Fsr, 4, 0) << 5;
     Fsr = insertBits(Fsr, 4, 0, 0);
-    int newrnd = M5_FE_TONEAREST;
+    gem5::RoundingMode newrnd = gem5::RoundingMode::ToNearest;
     switch (Fsr<31:30>) {
-      case 0: newrnd = M5_FE_TONEAREST; break;
-      case 1: newrnd = M5_FE_TOWARDZERO; break;
-      case 2: newrnd = M5_FE_UPWARD; break;
-      case 3: newrnd = M5_FE_DOWNWARD; break;
+      case 0:
+        newrnd = gem5::RoundingMode::ToNearest;
+        break;
+      case 1:
+        newrnd = gem5::RoundingMode::TowardZero;
+        break;
+      case 2:
+        newrnd = gem5::RoundingMode::Upward;
+        break;
+      case 3:
+        newrnd = gem5::RoundingMode::Downward;
+        break;
     }
-    int oldrnd = m5_fegetround();
-    m5_fesetround(newrnd);
+    gem5::RoundingMode oldrnd = gem5::getFpRound();
+    gem5::setFpRound(newrnd);
     __asm__ __volatile__("" ::: "memory");
     fault = doFpOp(xc, traceData);
     __asm__ __volatile__("" ::: "memory");
-    m5_fesetround(oldrnd);
+    gem5::setFpRound(oldrnd);
     return fault;
 """
     fp_code = filterDoubles(code)
