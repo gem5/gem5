@@ -724,42 +724,35 @@ def is_isa_kvm_compatible(isa):
 main['HAVE_PERF_ATTR_EXCLUDE_HOST'] = conf.CheckMember(
     'linux/perf_event.h', 'struct perf_event_attr', 'exclude_host')
 
-def check_hdf5():
-    return \
-        conf.CheckLibWithHeader('hdf5', 'hdf5.h', 'C',
-                                'H5Fcreate("", 0, 0, 0);') and \
-        conf.CheckLibWithHeader('hdf5_cpp', 'H5Cpp.h', 'C++',
-                                'H5::H5File("", 0);')
-
 def check_hdf5_pkg(name):
     print("Checking for %s using pkg-config..." % name, end="")
-    if not have_pkg_config:
-        print(" pkg-config not found")
-        return False
-
     try:
         main.ParseConfig('pkg-config --cflags-only-I --libs-only-L %s' % name)
-        print(" yes")
-        return True
     except:
         print(" no")
         return False
+    print(" yes")
+    return True
 
 # Check if there is a pkg-config configuration for hdf5. If we find
 # it, setup the environment to enable linking and header inclusion. We
 # don't actually try to include any headers or link with hdf5 at this
 # stage.
-if not check_hdf5_pkg('hdf5-serial'):
-    check_hdf5_pkg('hdf5')
+if have_pkg_config:
+    if not check_hdf5_pkg('hdf5-serial'):
+        check_hdf5_pkg('hdf5')
 
 # Check if the HDF5 libraries can be found. This check respects the
 # include path and library path provided by pkg-config. We perform
 # this check even if there isn't a pkg-config configuration for hdf5
 # since some installations don't use pkg-config.
-have_hdf5 = check_hdf5()
+have_hdf5 = \
+        conf.CheckLibWithHeader('hdf5', 'hdf5.h', 'C',
+                                'H5Fcreate("", 0, 0, 0);') and \
+        conf.CheckLibWithHeader('hdf5_cpp', 'H5Cpp.h', 'C++',
+                                'H5::H5File("", 0);')
 if not have_hdf5:
-    print("Warning: Couldn't find any HDF5 C++ libraries. Disabling")
-    print("         HDF5 support.")
+    warning("Couldn't find any HDF5 C++ libraries. Disabling HDF5 support.")
 
 ######################################################################
 #
