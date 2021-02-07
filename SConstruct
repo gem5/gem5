@@ -633,6 +633,8 @@ have_posix_clock = \
                             'clock_nanosleep(0,0,NULL,NULL);') or \
     conf.CheckLibWithHeader('rt', 'time.h', 'C',
                             'clock_nanosleep(0,0,NULL,NULL);')
+if not have_posix_clock:
+    warning("Can't find library for POSIX clocks.")
 
 have_posix_timers = \
     conf.CheckLibWithHeader([None, 'rt'], [ 'time.h', 'signal.h' ], 'C',
@@ -666,9 +668,6 @@ elif conf.CheckLibWithHeader('execinfo', 'execinfo.h', 'C',
 if backtrace_impls[-1] == "none":
     default_backtrace_impl = "none"
     warning("No suitable back trace implementation found.")
-
-if not have_posix_clock:
-    warning("Can't find library for POSIX clocks.")
 
 # Check for <fenv.h> (C99 FP environment control)
 have_fenv = conf.CheckHeader('fenv.h', '<>')
