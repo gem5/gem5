@@ -95,8 +95,6 @@ import SCons.Tool
 
 from m5.util import compareVersions, readCommand, readCommandWithReturn
 
-AddOption('--colors', dest='use_colors', action='store_true',
-          help="Add color to abbreviated scons output")
 AddOption('--no-colors', dest='use_colors', action='store_false',
           help="Don't add color to abbreviated scons output")
 AddOption('--with-cxx-config', action='store_true',
