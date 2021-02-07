@@ -43,6 +43,7 @@ import sys
 import textwrap
 
 from gem5_scons.util import get_termcap
+from gem5_scons.configure import Configure
 import SCons.Script
 
 termcap = get_termcap()
@@ -200,4 +201,4 @@ def error(*args, **kwargs):
     print_message('Error: ', termcap.Red, message, **kwargs)
     SCons.Script.Exit(1)
 
-__all__ = ['Transform', 'warning', 'error']
+__all__ = ['Configure', 'Transform', 'warning', 'error']

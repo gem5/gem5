@@ -126,6 +126,7 @@ AddOption('--with-systemc-tests', action='store_true',
           help='Build systemc tests')
 
 from gem5_scons import Transform, error, warning, summarize_warnings
+import gem5_scons
 
 ########################################################################
 #
@@ -498,100 +499,9 @@ except Exception as e:
     warning('While checking protoc version:', str(e))
     main['HAVE_PROTOC'] = False
 
-def CheckCxxFlag(context, flag, autoadd=True):
-    context.Message("Checking for compiler %s support... " % flag)
-    last_cxxflags = context.env['CXXFLAGS']
-    context.env.Append(CXXFLAGS=[flag])
-    ret = context.TryCompile('', '.cc')
-    if not autoadd:
-        context.env['CXXFLAGS'] = last_cxxflags
-    context.Result(ret)
-    return ret
-
-def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True):
-    context.Message("Checking for linker %s support... " % flag)
-    last_linkflags = context.env['LINKFLAGS']
-    context.env.Append(LINKFLAGS=[flag])
-    ret = context.TryLink('int main(int, char *[]) { return 0; }', '.cc')
-    if not autoadd:
-        context.env['LINKFLAGS'] = last_linkflags
-    if set_for_shared:
-        assert(autoadd)
-        context.env.Append(SHLINKFLAGS=[flag])
-    context.Result(ret)
-    return ret
-
-# Add a custom Check function to test for structure members.
-def CheckMember(context, include, decl, member, include_quotes="<>"):
-    context.Message("Checking for member %s in %s..." %
-                    (member, decl))
-    text = """
-#include %(header)s
-int main(){
-  %(decl)s test;
-  (void)test.%(member)s;
-  return 0;
-};
-""" % { "header" : include_quotes[0] + include + include_quotes[1],
-        "decl" : decl,
-        "member" : member,
-        }
-
-    ret = context.TryCompile(text, extension=".cc")
-    context.Result(ret)
-    return ret
-
-def CheckPythonLib(context):
-    context.Message('Checking Python version... ')
-    ret = context.TryRun(r"""
-#include <pybind11/embed.h>
-
-int
-main(int argc, char **argv) {
-    pybind11::scoped_interpreter guard{};
-    pybind11::exec(
-        "import sys\n"
-        "vi = sys.version_info\n"
-        "sys.stdout.write('%i.%i.%i' % (vi.major, vi.minor, vi.micro));\n");
-    return 0;
-}
-    """, extension=".cc")
-    context.Result(ret[1] if ret[0] == 1 else 0)
-    if ret[0] == 0:
-        return None
-    else:
-        return tuple(map(int, ret[1].split(".")))
-
 # Platform-specific configuration.  Note again that we assume that all
 # builds under a given build root run on the same host platform.
-conf = Configure(main,
-                 conf_dir = joinpath(build_root, '.scons_config'),
-                 log_file = joinpath(build_root, 'scons_config.log'),
-                 custom_tests = {
-        'CheckMember' : CheckMember,
-        'CheckPythonLib' : CheckPythonLib,
-        'CheckCxxFlag' : CheckCxxFlag,
-        'CheckLinkFlag' : CheckLinkFlag,
-        })
-
-# Recent versions of scons substitute a "Null" object for Configure()
-# when configuration isn't necessary, e.g., if the "--help" option is
-# present.  Unfortuantely this Null object always returns false,
-# breaking all our configuration checks.  We replace it with our own
-# more optimistic null object that returns True instead.
-if not conf:
-    def NullCheck(*args, **kwargs):
-        return True
-
-    class NullConf:
-        def __init__(self, env):
-            self.env = env
-        def Finish(self):
-            return self.env
-        def __getattr__(self, mname):
-            return NullCheck
-
-    conf = NullConf(main)
+conf = gem5_scons.Configure(main)
 
 # Cache build files in the supplied directory.
 if main['M5_BUILD_CACHE']:
