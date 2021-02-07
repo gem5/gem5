@@ -41,6 +41,7 @@
 import os
 
 import SCons.Script
+import SCons.Util
 
 def CheckCxxFlag(context, flag, autoadd=True):
     context.Message("Checking for compiler %s support... " % flag)
@@ -106,6 +107,33 @@ main(int argc, char **argv) {
     else:
         return tuple(map(int, ret[1].split(".")))
 
+def CheckPkgConfig(context, pkgs, *args):
+    if not SCons.Util.is_List(pkgs):
+        pkgs = [pkgs]
+    assert(pkgs)
+
+    for pkg in pkgs:
+        context.Message('Checking for pkg-config package %s... ' % pkg)
+        ret = context.TryAction('pkg-config %s' % pkg)[0]
+        if not ret:
+            context.Result(ret)
+            continue
+
+        if len(args) == 0:
+            break
+
+        cmd = ' '.join(['pkg-config'] + list(args) + [pkg])
+        try:
+            context.env.ParseConfig(cmd)
+            ret = 1
+            context.Result(ret)
+            break
+        except Exception as e:
+            ret = 0
+            context.Result(ret)
+
+    return ret
+
 def Configure(env, *args, **kwargs):
     kwargs.setdefault('conf_dir',
             os.path.join(env['BUILDROOT'], '.scons_config'))
@@ -113,10 +141,11 @@ def Configure(env, *args, **kwargs):
             os.path.join(env['BUILDROOT'], 'scons_config.log'))
     kwargs.setdefault('custom_tests', {})
     kwargs['custom_tests'].update({
-            'CheckMember' : CheckMember,
-            'CheckPythonLib' : CheckPythonLib,
             'CheckCxxFlag' : CheckCxxFlag,
             'CheckLinkFlag' : CheckLinkFlag,
+            'CheckMember' : CheckMember,
+            'CheckPkgConfig' : CheckPkgConfig,
+            'CheckPythonLib' : CheckPythonLib,
     })
     conf = SCons.Script.Configure(env, *args, **kwargs)
 

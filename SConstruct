@@ -484,14 +484,7 @@ try:
             # check go a library config check and at that point the test
             # will fail if libprotobuf cannot be found.
             if have_pkg_config:
-                try:
-                    # Attempt to establish what linking flags to add for
-                    # protobuf
-                    # using pkg-config
-                    main.ParseConfig(
-                            'pkg-config --cflags --libs-only-L protobuf')
-                except:
-                    warning('pkg-config could not get protobuf flags.')
+                conf.CheckPkgConfig('protobuf', '--cflags', '--libs-only-L')
 except Exception as e:
     warning('While checking protoc version:', str(e))
     main['HAVE_PROTOC'] = False
@@ -724,23 +717,13 @@ def is_isa_kvm_compatible(isa):
 main['HAVE_PERF_ATTR_EXCLUDE_HOST'] = conf.CheckMember(
     'linux/perf_event.h', 'struct perf_event_attr', 'exclude_host')
 
-def check_hdf5_pkg(name):
-    print("Checking for %s using pkg-config..." % name, end="")
-    try:
-        main.ParseConfig('pkg-config --cflags-only-I --libs-only-L %s' % name)
-    except:
-        print(" no")
-        return False
-    print(" yes")
-    return True
-
 # Check if there is a pkg-config configuration for hdf5. If we find
 # it, setup the environment to enable linking and header inclusion. We
 # don't actually try to include any headers or link with hdf5 at this
 # stage.
 if have_pkg_config:
-    if not check_hdf5_pkg('hdf5-serial'):
-        check_hdf5_pkg('hdf5')
+    conf.CheckPkgConfig(['hdf5-serial', 'hdf5'],
+            '--cflags-only-I', '--libs-only-L')
 
 # Check if the HDF5 libraries can be found. This check respects the
 # include path and library path provided by pkg-config. We perform
