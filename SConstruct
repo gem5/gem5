@@ -425,10 +425,6 @@ if sanitizers:
         warning("Don't know how to enable %s sanitizer(s) for your "
                 "compiler." % sanitizers)
 
-# Set up common yacc/bison flags (needed for Ruby)
-main['YACCFLAGS'] = '-d'
-main['YACCHXXFILESUFFIX'] = '.hh'
-
 # Do this after we save setting back, or else we'll tack on an
 # extra 'qdo' every time we run scons.
 if main['BATCH']:
