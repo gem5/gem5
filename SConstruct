@@ -512,21 +512,26 @@ timeout_version = timeout_lines[0].split() if timeout_lines else []
 main['TIMEOUT'] =  timeout_version and \
     compareVersions(timeout_version[-1], '8.13') >= 0
 
-def CheckCxxFlag(context, flag):
+def CheckCxxFlag(context, flag, autoadd=True):
     context.Message("Checking for compiler %s support... " % flag)
     last_cxxflags = context.env['CXXFLAGS']
     context.env.Append(CXXFLAGS=[flag])
     ret = context.TryCompile('', '.cc')
-    context.env['CXXFLAGS'] = last_cxxflags
+    if not autoadd:
+        context.env['CXXFLAGS'] = last_cxxflags
     context.Result(ret)
     return ret
 
-def CheckLinkFlag(context, flag):
+def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True):
     context.Message("Checking for linker %s support... " % flag)
     last_linkflags = context.env['LINKFLAGS']
     context.env.Append(LINKFLAGS=[flag])
     ret = context.TryLink('int main(int, char *[]) { return 0; }', '.cc')
-    context.env['LINKFLAGS'] = last_linkflags
+    if not autoadd:
+        context.env['LINKFLAGS'] = last_linkflags
+    if set_for_shared:
+        assert(autoadd)
+        context.env.Append(SHLINKFLAGS=[flag])
     context.Result(ret)
     return ret
 
@@ -621,13 +626,9 @@ if main['M5_BUILD_CACHE']:
     CacheDir(main['M5_BUILD_CACHE'])
 
 if not GetOption('no_compress_debug'):
-    if conf.CheckCxxFlag('-gz'):
-        main.Append(CXXFLAGS=['-gz'])
-    else:
+    if not conf.CheckCxxFlag('-gz'):
         warning("Can't enable object file debug section compression")
-    if conf.CheckLinkFlag('-gz'):
-        main.Append(LINKFLAGS=['-gz'], SHLINKFLAGS=['-gz'])
-    else:
+    if not conf.CheckLinkFlag('-gz'):
         warning("Can't enable executable debug section compression")
 
 main['USE_PYTHON'] = not GetOption('without_python')
