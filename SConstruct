@@ -629,9 +629,7 @@ if main['HAVE_PROTOC'] and not main['HAVE_PROTOBUF']:
 
 # Check for librt.
 have_posix_clock = \
-    conf.CheckLibWithHeader(None, 'time.h', 'C',
-                            'clock_nanosleep(0,0,NULL,NULL);') or \
-    conf.CheckLibWithHeader('rt', 'time.h', 'C',
+    conf.CheckLibWithHeader([None, 'rt'], 'time.h', 'C',
                             'clock_nanosleep(0,0,NULL,NULL);')
 if not have_posix_clock:
     warning("Can't find library for POSIX clocks.")
