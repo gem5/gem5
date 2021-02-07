@@ -77,15 +77,13 @@
 
 # Global Python includes
 import atexit
-import collections
-import itertools
 import os
 import sys
 
 from os import mkdir, environ
-from os.path import abspath, basename, dirname, expanduser, normpath
-from os.path import exists,  isdir, isfile
-from os.path import join as joinpath, split as splitpath
+from os.path import abspath, dirname, expanduser
+from os.path import isdir, isfile
+from os.path import join, split
 from re import match
 
 # SCons includes
@@ -165,7 +163,7 @@ def rfind(l, elt, offs = -1):
 # paths made absolute and ~-expanded.  Paths will be interpreted
 # relative to the launch directory unless a different root is provided
 def makePathListAbsolute(path_list, root=GetLaunchDir()):
-    return [abspath(joinpath(root, expanduser(str(p))))
+    return [abspath(os.path.join(root, expanduser(str(p))))
             for p in path_list]
 
 # Each target must have 'build' in the interior of the path; the
@@ -203,7 +201,7 @@ main['BUILDROOT'] = build_root
 
 Export('main')
 
-main.SConsignFile(joinpath(build_root, "sconsign"))
+main.SConsignFile(os.path.join(build_root, "sconsign"))
 
 # Default duplicate option is to use hard links, but this messes up
 # when you use emacs to edit a file in the target dir, as emacs moves
@@ -216,7 +214,7 @@ main.SetOption('duplicate', 'soft-copy')
 # tree (not specific to a particular build like X86)
 #
 
-global_vars_file = joinpath(build_root, 'variables.global')
+global_vars_file = os.path.join(build_root, 'variables.global')
 
 global_vars = Variables(global_vars_file, args=ARGUMENTS)
 
@@ -603,8 +601,8 @@ for bdir in [ base_dir ] + extras_dir_list:
     for root, dirs, files in os.walk(bdir):
         if 'SConsopts' in files:
             if GetOption('verbose'):
-                print("Reading", joinpath(root, 'SConsopts'))
-            SConscript(joinpath(root, 'SConsopts'))
+                print("Reading", os.path.join(root, 'SConsopts'))
+            SConscript(os.path.join(root, 'SConsopts'))
 
 for cb in after_sconsopts_callbacks:
     cb()
@@ -687,10 +685,10 @@ for root, dirs, files in os.walk(ext_dir):
     if 'SConscript' in files:
         build_dir = os.path.relpath(root, ext_dir)
         ext_build_dirs.append(build_dir)
-        main.SConscript(joinpath(root, 'SConscript'),
-                        variant_dir=joinpath(build_root, build_dir))
+        main.SConscript(os.path.join(root, 'SConscript'),
+                        variant_dir=os.path.join(build_root, build_dir))
 
-gdb_xml_dir = joinpath(ext_dir, 'gdb-xml')
+gdb_xml_dir = os.path.join(ext_dir, 'gdb-xml')
 Export('gdb_xml_dir')
 
 ###################################################
@@ -742,14 +740,14 @@ for variant_path in variant_paths:
 
     # variant_dir is the tail component of build path, and is used to
     # determine the build parameters (e.g., 'X86')
-    (build_root, variant_dir) = splitpath(variant_path)
+    (build_root, variant_dir) = os.path.split(variant_path)
 
     # Set env variables according to the build directory config.
     sticky_vars.files = []
     # Variables for $BUILD_ROOT/$VARIANT_DIR are stored in
     # $BUILD_ROOT/variables/$VARIANT_DIR so you can nuke
     # $BUILD_ROOT/$VARIANT_DIR without losing your variables settings.
-    current_vars_file = joinpath(build_root, 'variables', variant_dir)
+    current_vars_file = os.path.join(build_root, 'variables', variant_dir)
     if isfile(current_vars_file):
         sticky_vars.files.append(current_vars_file)
         if not GetOption('silent'):
@@ -771,10 +769,12 @@ for variant_path in variant_paths:
         default = GetOption('default')
         opts_dir = Dir('#build_opts').abspath
         if default:
-            default_vars_files = [joinpath(build_root, 'variables', default),
-                                  joinpath(opts_dir, default)]
+            default_vars_files = [
+                    os.path.join(build_root, 'variables', default),
+                    os.path.join(opts_dir, default)
+                ]
         else:
-            default_vars_files = [joinpath(opts_dir, variant_dir)]
+            default_vars_files = [os.path.join(opts_dir, variant_dir)]
         existing_files = list(filter(isfile, default_vars_files))
         if existing_files:
             default_vars_file = existing_files[0]
