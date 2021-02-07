@@ -603,13 +603,8 @@ for bdir in [ base_dir ] + extras_dir_list:
 for cb in after_sconsopts_callbacks:
     cb()
 
-sticky_vars.AddVariables(
-    BoolVariable('USE_EFENCE', 'Link with Electric Fence malloc debugger',
-                 False),
-    BoolVariable('USE_SSE2',
-                 'Compile for SSE2 (-msse2) to get IEEE FP on x86 hosts',
-                 False),
-    )
+sticky_vars.Add(BoolVariable('USE_EFENCE',
+    'Link with Electric Fence malloc debugger', False))
 
 ###################################################
 #
@@ -800,9 +795,6 @@ Build variables for {dir}:
 
     # Save sticky variable settings back to current variables file
     sticky_vars.Save(current_vars_file, env)
-
-    if env['USE_SSE2']:
-        env.Append(CCFLAGS=['-msse2'])
 
     env.Append(CCFLAGS='$CCFLAGS_EXTRA')
     env.Append(LINKFLAGS='$LDFLAGS_EXTRA')
