@@ -649,22 +649,11 @@ if not GetOption('without_tcmalloc'):
                 "on Ubuntu or RedHat).")
 
 
-# Detect back trace implementations. The last implementation in the
-# list will be used by default.
-backtrace_impls = [ "none" ]
-
-backtrace_checker = 'char temp;' + \
-    ' backtrace_symbols_fd((void*)&temp, 0, 0);'
-if conf.CheckLibWithHeader(None, 'execinfo.h', 'C', backtrace_checker):
-    backtrace_impls.append("glibc")
-elif conf.CheckLibWithHeader('execinfo', 'execinfo.h', 'C',
-                             backtrace_checker):
-    # NetBSD and FreeBSD need libexecinfo.
-    backtrace_impls.append("glibc")
-    main.Append(LIBS=['execinfo'])
-
-if backtrace_impls[-1] == "none":
-    default_backtrace_impl = "none"
+if conf.CheckLibWithHeader([None, 'execinfo'], 'execinfo.h', 'C',
+        'char temp; backtrace_symbols_fd((void *)&temp, 0, 0);'):
+    main['BACKTRACE_IMPL'] = 'glibc'
+else:
+    main['BACKTRACE_IMPL'] = 'none'
     warning("No suitable back trace implementation found.")
 
 # Check for <fenv.h> (C99 FP environment control)
@@ -866,8 +855,6 @@ sticky_vars.AddVariables(
     BoolVariable('BUILD_GPU', 'Build the compute-GPU model', False),
     EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'None',
                   all_protocols),
-    EnumVariable('BACKTRACE_IMPL', 'Post-mortem dump implementation',
-                 backtrace_impls[-1], backtrace_impls),
     ('NUMBER_BITS_PER_SET', 'Max elements in set (default 64)',
                  64),
     BoolVariable('USE_HDF5', 'Enable the HDF5 support', have_hdf5),
