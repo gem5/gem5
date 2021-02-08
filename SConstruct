@@ -124,6 +124,7 @@ from gem5_scons import Transform, error, warning, summarize_warnings
 from gem5_scons import TempFileSpawn, parse_build_path, EnvDefaults
 from gem5_scons import MakeAction, MakeActionTool
 import gem5_scons
+from gem5_scons.builders import ConfigFile, AddLocalRPATH, SwitchingHeaders
 
 Export('MakeAction')
 
@@ -134,7 +135,8 @@ Export('MakeAction')
 ########################################################################
 
 main = Environment(tools=[
-        'default', 'git', TempFileSpawn, EnvDefaults, MakeActionTool
+        'default', 'git', TempFileSpawn, EnvDefaults, MakeActionTool,
+        ConfigFile, AddLocalRPATH, SwitchingHeaders
     ])
 
 main.Tool(SCons.Tool.FindTool(['gcc', 'clang'], main))
@@ -585,69 +587,6 @@ for cb in after_sconsopts_callbacks:
 sticky_vars.Add(BoolVariable('USE_EFENCE',
     'Link with Electric Fence malloc debugger', False))
 
-###################################################
-#
-# Define a SCons builder for configuration flag headers.
-#
-###################################################
-
-# This function generates a config header file that #defines the
-# variable symbol to the current variable setting (0 or 1).  The source
-# operands are the name of the variable and a Value node containing the
-# value of the variable.
-def build_config_file(target, source, env):
-    (variable, value) = [s.get_contents().decode('utf-8') for s in source]
-    with open(str(target[0].abspath), 'w') as f:
-        print('#define', variable, value, file=f)
-    return None
-
-# Combine the two functions into a scons Action object.
-config_action = MakeAction(build_config_file, Transform("CONFIG H", 2))
-
-# The emitter munges the source & target node lists to reflect what
-# we're really doing.
-def config_emitter(target, source, env):
-    # extract variable name from Builder arg
-    variable = str(target[0])
-    # True target is config header file
-    target = Dir('config').File(variable.lower() + '.hh')
-    val = env[variable]
-    if isinstance(val, bool):
-        # Force value to 0/1
-        val = int(val)
-    elif isinstance(val, str):
-        val = '"' + val + '"'
-
-    # Sources are variable name & value (packaged in SCons Value nodes)
-    return [target], [Value(variable), Value(val)]
-
-config_builder = Builder(emitter=config_emitter, action=config_action)
-
-main.Append(BUILDERS = { 'ConfigFile' : config_builder })
-
-def add_local_rpath(env, *targets):
-    '''Set up an RPATH for a library which lives in the build directory.
-
-    The construction environment variable BIN_RPATH_PREFIX should be set to
-    the relative path of the build directory starting from the location of the
-    binary.'''
-    for target in targets:
-        target = env.Entry(target)
-        if not isinstance(target, SCons.Node.FS.Dir):
-            target = target.dir
-        relpath = os.path.relpath(target.abspath, env['BUILDDIR'])
-        components = [
-            '\\$$ORIGIN',
-            '${BIN_RPATH_PREFIX}',
-            relpath
-        ]
-        env.Append(RPATH=[env.Literal(os.path.join(*components))])
-
-if sys.platform != "darwin":
-    main.Append(LINKFLAGS=Split('-z origin'))
-
-main.AddMethod(add_local_rpath, 'AddLocalRPATH')
-
 # builds in ext are shared across all configs in the build root.
 ext_dir = Dir('#ext').abspath
 ext_build_dirs = []
@@ -660,39 +599,6 @@ for root, dirs, files in os.walk(ext_dir):
 
 gdb_xml_dir = os.path.join(ext_dir, 'gdb-xml')
 Export('gdb_xml_dir')
-
-###################################################
-#
-# This builder and wrapper method are used to set up a directory with
-# switching headers. Those are headers which are in a generic location and
-# that include more specific headers from a directory chosen at build time
-# based on the current build settings.
-#
-###################################################
-
-def build_switching_header(target, source, env):
-    path = str(target[0])
-    subdir = str(source[0])
-    dp, fp = os.path.split(path)
-    dp = os.path.relpath(os.path.realpath(dp),
-                         os.path.realpath(env['BUILDDIR']))
-    with open(path, 'w') as hdr:
-        print('#include "%s/%s/%s"' % (dp, subdir, fp), file=hdr)
-
-switching_header_action = MakeAction(build_switching_header,
-                                     Transform('GENERATE'))
-
-switching_header_builder = Builder(action=switching_header_action,
-                                   source_factory=Value,
-                                   single_source=True)
-
-main.Append(BUILDERS = { 'SwitchingHeader': switching_header_builder })
-
-def switching_headers(self, headers, source):
-    for header in headers:
-        self.SwitchingHeader(header, source)
-
-main.AddMethod(switching_headers, 'SwitchingHeaders')
 
 ###################################################
 #
