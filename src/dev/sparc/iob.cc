@@ -101,8 +101,8 @@ Iob::readIob(PacketPtr pkt)
 
         if (accessAddr >= IntCtlAddr && accessAddr < IntCtlAddr + IntCtlSize) {
             int index = (accessAddr - IntCtlAddr) >> 3;
-            uint64_t data = intCtl[index].mask  ? 1 << 2 : 0 |
-                intCtl[index].pend  ? 1 << 0 : 0;
+            uint64_t data = (intCtl[index].mask  ? (1 << 2) : 0) |
+                (intCtl[index].pend  ? (1 << 0) : 0);
             pkt->setBE(data);
             return;
         }
