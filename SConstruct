@@ -47,7 +47,7 @@
 # While in this directory ('gem5'), just type 'scons' to build the default
 # configuration (see below), or type 'scons build/<CONFIG>/<binary>'
 # to build some other configuration (e.g., 'build/X86/gem5.opt' for
-# the optimized full-system version).
+# the optimized X86 version).
 #
 # You can build gem5 in a different directory as long as there is a
 # 'build/<CONFIG>' somewhere along the target path.  The build system
@@ -75,7 +75,7 @@
 #
 ###################################################
 
-# Global Python includes
+# Global Python imports
 import atexit
 import os
 import sys
@@ -85,13 +85,20 @@ from os.path import abspath, dirname, expanduser
 from os.path import isdir, isfile
 from os.path import join, split
 
-# SCons includes
+# SCons imports
 import SCons
 import SCons.Node
 import SCons.Node.FS
 import SCons.Tool
 
 from m5.util import compareVersions, readCommand
+
+
+########################################################################
+#
+# Command line options.
+#
+########################################################################
 
 AddOption('--no-colors', dest='use_colors', action='store_false',
           help="Don't add color to abbreviated scons output")
@@ -119,9 +126,10 @@ AddOption('--with-asan', action='store_true',
 AddOption('--with-systemc-tests', action='store_true',
           help='Build systemc tests')
 
-from gem5_scons import Transform, error, warning, summarize_warnings
-from gem5_scons import TempFileSpawn, parse_build_path, EnvDefaults
-from gem5_scons import MakeAction, MakeActionTool
+# Imports of gem5_scons happen here since it depends on some options which are
+# declared above.
+from gem5_scons import error, warning, summarize_warnings, parse_build_path
+from gem5_scons import TempFileSpawn, EnvDefaults, MakeAction, MakeActionTool
 import gem5_scons
 from gem5_scons.builders import ConfigFile, AddLocalRPATH, SwitchingHeaders
 
@@ -141,6 +149,8 @@ main = Environment(tools=[
 main.Tool(SCons.Tool.FindTool(['gcc', 'clang'], main))
 main.Tool(SCons.Tool.FindTool(['g++', 'clang++'], main))
 
+Export('main')
+
 from gem5_scons.util import get_termcap
 termcap = get_termcap()
 
@@ -148,15 +158,16 @@ termcap = get_termcap()
 if not ('CC' in main and 'CXX' in main):
     error("No C++ compiler installed (package g++ on Ubuntu and RedHat)")
 
-###################################################
+# Find default configuration & binary.
+Default(environ.get('M5_DEFAULT_BINARY', 'build/ARM/gem5.debug'))
+
+
+########################################################################
 #
 # Figure out which configurations to set up based on the path(s) of
 # the target(s).
 #
-###################################################
-
-# Find default configuration & binary.
-Default(environ.get('M5_DEFAULT_BINARY', 'build/ARM/gem5.debug'))
+########################################################################
 
 # helper function: find last occurrence of element in list
 def rfind(l, elt, offs = -1):
@@ -205,14 +216,15 @@ if not isdir(build_root):
     mkdir(build_root)
 main['BUILDROOT'] = build_root
 
-Export('main')
-
 main.SConsignFile(os.path.join(build_root, "sconsign"))
 
+
+########################################################################
 #
 # Set up global sticky variables... these are common to an entire build
 # tree (not specific to a particular build like X86)
 #
+########################################################################
 
 global_vars_file = os.path.join(build_root, 'variables.global')
 
@@ -245,6 +257,13 @@ Global build variables:
 # Save sticky variable settings back to current variables file
 global_vars.Save(global_vars_file, main)
 
+
+########################################################################
+#
+# Set up various paths.
+#
+########################################################################
+
 # Parse EXTRAS variable to build list of all directories where we're
 # look for sources etc.  This list is exported as extras_dir_list.
 base_dir = Dir('#src').abspath
@@ -261,6 +280,14 @@ main.Append(CPPPATH=[Dir('ext')])
 
 # Add shared top-level headers
 main.Prepend(CPPPATH=Dir('include'))
+
+
+########################################################################
+#
+# Set command line options based on the configuration of the host and
+# build settings.
+#
+########################################################################
 
 # Initialize the Link-Time Optimization (LTO) flags
 main['LTO_CCFLAGS'] = []
@@ -414,10 +441,6 @@ if sys.platform == 'cygwin':
     main.Append(CCFLAGS=["-Wno-uninitialized"])
 
 
-main['HAVE_PKG_CONFIG'] = main.Detect('pkg-config')
-
-
-
 # Cache build files in the supplied directory.
 if main['M5_BUILD_CACHE']:
     print('Using build cache located at', main['M5_BUILD_CACHE'])
@@ -429,6 +452,13 @@ if not GetOption('no_compress_debug'):
             warning("Can't enable object file debug section compression")
         if not conf.CheckLinkFlag('-gz'):
             warning("Can't enable executable debug section compression")
+
+
+########################################################################
+#
+# Detect and configure external dependencies.
+#
+########################################################################
 
 main['USE_PYTHON'] = not GetOption('without_python')
 if main['USE_PYTHON']:
@@ -492,36 +522,37 @@ if main['USE_PYTHON']:
         warning('Embedded python library too new. '
                 'Python 3 expected, found %s.' % ver_string)
 
+main['HAVE_PKG_CONFIG'] = main.Detect('pkg-config')
+
 with gem5_scons.Configure(main) as conf:
     # On Solaris you need to use libsocket for socket ops
     if not conf.CheckLibWithHeader(
             [None, 'socket'], 'sys/socket.h', 'C++', 'accept(0,0,0);'):
        error("Can't find library with socket calls (e.g. accept()).")
 
-    # Check for zlib.  If the check passes, libz will be automatically
-    # added to the LIBS environment variable.
     if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
         error('Did not find needed zlib compression library '
               'and/or zlib.h header file.\n'
               'Please install zlib and try again.')
 
-
 if not GetOption('without_tcmalloc'):
     with gem5_scons.Configure(main) as conf:
         if conf.CheckLib('tcmalloc'):
-            conf.env.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
+            conf.env.Append(CCFLAGS=conf.env['TCMALLOC_CCFLAGS'])
         elif conf.CheckLib('tcmalloc_minimal'):
-            conf.env.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
+            conf.env.Append(CCFLAGS=conf.env['TCMALLOC_CCFLAGS'])
         else:
             warning("You can get a 12% performance improvement by "
                     "installing tcmalloc (libgoogle-perftools-dev package "
                     "on Ubuntu or RedHat).")
 
 
-######################################################################
+########################################################################
 #
-# Collect all non-global variables
+# Read and process SConsopts files. These can add new settings which
+# affect each variant directory independently.
 #
+########################################################################
 
 # Register a callback which is called after all SConsopts files have been read.
 after_sconsopts_callbacks = []
@@ -553,13 +584,22 @@ for bdir in [ base_dir ] + extras_dir_list:
                 print("Reading", os.path.join(root, 'SConsopts'))
             SConscript(os.path.join(root, 'SConsopts'))
 
+# Call any callbacks which the SConsopts files registered.
 for cb in after_sconsopts_callbacks:
     cb()
 
+# Add any generic sticky variables here.
 sticky_vars.Add(BoolVariable('USE_EFENCE',
     'Link with Electric Fence malloc debugger', False))
 
-# builds in ext are shared across all configs in the build root.
+
+########################################################################
+#
+# Find and process all the SConscript files in ext. These are shared by
+# all variants in a build root.
+#
+########################################################################
+
 ext_dir = Dir('#ext').abspath
 ext_build_dirs = []
 for root, dirs, files in os.walk(ext_dir):
@@ -572,11 +612,12 @@ for root, dirs, files in os.walk(ext_dir):
 gdb_xml_dir = os.path.join(ext_dir, 'gdb-xml')
 Export('gdb_xml_dir')
 
-###################################################
+
+########################################################################
 #
-# Define build environments for selected configurations.
+# Define build environments for required variants.
 #
-###################################################
+########################################################################
 
 for variant_path in variant_paths:
     if not GetOption('silent'):
@@ -604,9 +645,9 @@ for variant_path in variant_paths:
         # Things in ext are built without a variant directory.
         continue
     else:
-        # Build dir-specific variables file doesn't exist.
+        # Variant specific variables file doesn't exist.
 
-        # Make sure the directory is there so we can create it later
+        # Make sure the directory is there so we can create the file later.
         opt_dir = dirname(current_vars_file)
         if not isdir(opt_dir):
             mkdir(opt_dir)
