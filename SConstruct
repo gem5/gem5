@@ -374,9 +374,7 @@ elif main['CLANG']:
         error('clang version 3.9 or newer required.\n'
               'Installed version:', main['CXXVERSION'])
 
-    # clang has a few additional warnings that we disable, extraneous
-    # parantheses are allowed due to Ruby's printing of the AST.
-    main.Append(CCFLAGS=['-Wno-parentheses'])
+    # clang has a few additional warnings that we disable.
     conf.CheckCxxFlag('-Wno-c99-designator')
     conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
 

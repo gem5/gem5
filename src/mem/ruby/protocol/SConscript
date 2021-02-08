@@ -105,10 +105,13 @@ env.Append(BUILDERS={'SLICC' : slicc_builder})
 nodes = env.SLICC([], sources)
 env.Depends(nodes, slicc_depends)
 
+append = {}
+if env['CLANG']:
+    append['CCFLAGS'] = '-Wno-parentheses'
 for f in nodes:
     s = str(f)
     if s.endswith('.cc'):
-        Source(f)
+        Source(f, append=append)
     elif s.endswith('.py'):
         SimObject(f)
 
