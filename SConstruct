@@ -121,7 +121,7 @@ AddOption('--with-systemc-tests', action='store_true',
           help='Build systemc tests')
 
 from gem5_scons import Transform, error, warning, summarize_warnings
-from gem5_scons import TempFileSpawn, parse_build_path
+from gem5_scons import TempFileSpawn, parse_build_path, EnvDefaults
 import gem5_scons
 
 ########################################################################
@@ -130,7 +130,7 @@ import gem5_scons
 #
 ########################################################################
 
-main = Environment(tools=['default', 'git', TempFileSpawn])
+main = Environment(tools=['default', 'git', TempFileSpawn, EnvDefaults])
 
 main.Tool(SCons.Tool.FindTool(['gcc', 'clang'], main))
 main.Tool(SCons.Tool.FindTool(['g++', 'clang++'], main))

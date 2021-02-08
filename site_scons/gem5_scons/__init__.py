@@ -45,6 +45,7 @@ import textwrap
 
 from gem5_scons.util import get_termcap
 from gem5_scons.configure import Configure
+from gem5_scons.defaults import EnvDefaults
 import SCons.Script
 
 termcap = get_termcap()
@@ -237,4 +238,7 @@ def parse_build_path(target):
 
     return os.path.join('/', *path_dirs), variant_dir
 
-__all__ = ['Configure', 'Transform', 'warning', 'error', 'parse_build_dir']
+__all__ = [
+        'Configure', 'EnvDefaults', 'Transform', 'warning', 'error',
+        'parse_build_dir'
+]

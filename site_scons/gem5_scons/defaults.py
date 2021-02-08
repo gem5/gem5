@@ -39,14 +39,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import sys
-
-import SCons.Tool
-import SCons.Tool.default
 
 from gem5_python_paths import extra_python_paths
 
-def common_config(env):
+def EnvDefaults(env):
     # export TERM so that clang reports errors in color
     use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH',
                      'LIBRARY_PATH', 'PATH', 'PKG_CONFIG_PATH', 'PROTOC',
@@ -75,10 +71,3 @@ def common_config(env):
     # add useful python code PYTHONPATH so it can be used by subprocesses
     # as well
     env.AppendENVPath('PYTHONPATH', extra_python_paths)
-
-def generate(env):
-    common_config(env)
-    SCons.Tool.default.generate(env)
-
-def exists(env):
-    return 1
