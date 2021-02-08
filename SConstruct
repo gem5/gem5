@@ -349,8 +349,7 @@ if main['GCC']:
         error('gcc version 5 or newer required.\n'
               'Installed version:', main['CXXVERSION'])
 
-    # Add the appropriate Link-Time Optimization (LTO) flags
-    # unless LTO is explicitly turned off.
+    # If not disabled, set the Link-Time Optimization (LTO) flags.
     if not GetOption('no_lto'):
         # g++ uses "make" to parallelize LTO. The program can be overriden with
         # the environment variable "MAKE", but we currently make no attempt to
@@ -362,14 +361,9 @@ if main['GCC']:
             warning('"make" not found, link time optimization will be '
                     'single threaded.')
 
-        # Pass the LTO flag when compiling to produce GIMPLE
-        # output, we merely create the flags here and only append
-        # them later
-        main['LTO_CCFLAGS'] = ['-flto%s' % parallelism]
-
-        # Use the same amount of jobs for LTO as we are running
-        # scons with
-        main['LTO_LDFLAGS'] = ['-flto%s' % parallelism]
+        for var in 'LTO_CCFLAGS', 'LTO_LDFLAGS':
+            # Use the same amount of jobs for LTO as we are running scons with.
+            main[var] = ['-flto%s' % parallelism]
 
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin-malloc', '-fno-builtin-calloc',
                                   '-fno-builtin-realloc', '-fno-builtin-free'])
@@ -378,6 +372,11 @@ elif main['CLANG']:
     if compareVersions(main['CXXVERSION'], "3.9") < 0:
         error('clang version 3.9 or newer required.\n'
               'Installed version:', main['CXXVERSION'])
+
+    # If not disabled, set the Link-Time Optimization (LTO) flags.
+    if not GetOption('no_lto'):
+        for var in 'LTO_CCFLAGS', 'LTO_LDFLAGS':
+            main[var] = ['-flto']
 
     # clang has a few additional warnings that we disable.
     conf.CheckCxxFlag('-Wno-c99-designator')
