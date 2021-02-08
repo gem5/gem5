@@ -39,7 +39,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import print_function
-from gem5_python_paths import extra_python_paths
 
 # Check for recent-enough Python and SCons versions.
 try:
@@ -84,5 +83,7 @@ Python 3 environment,
 scons phrase in your environment. \033[0m
 """)
     raise
+
+from gem5_python_paths import extra_python_paths
 
 sys.path[1:1] = extra_python_paths
