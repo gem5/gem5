@@ -79,9 +79,6 @@
 import atexit
 import itertools
 import os
-import re
-import shutil
-import subprocess
 import sys
 
 from os import mkdir, environ
@@ -353,13 +350,10 @@ else:
           "src/SConscript to support that compiler.")))
 
 if main['GCC']:
-    gcc_version = readCommand([main['CXX'], '-dumpversion'], exception=False)
-    if compareVersions(gcc_version, "5") < 0:
+    if compareVersions(main['CXXVERSION'], "5") < 0:
         error('gcc version 5 or newer required.\n'
-              'Installed version:', gcc_version)
+              'Installed version:', main['CXXVERSION'])
         Exit(1)
-
-    main['GCC_VERSION'] = gcc_version
 
     # Add the appropriate Link-Time Optimization (LTO) flags
     # unless LTO is explicitly turned off.
@@ -387,15 +381,9 @@ if main['GCC']:
                                   '-fno-builtin-realloc', '-fno-builtin-free'])
 
 elif main['CLANG']:
-    clang_version_re = re.compile(".* version (\d+\.\d+)")
-    clang_version_match = clang_version_re.search(CXX_version)
-    if (clang_version_match):
-        clang_version = clang_version_match.groups()[0]
-        if compareVersions(clang_version, "3.9") < 0:
-            error('clang version 3.9 or newer required.\n'
-                  'Installed version:', clang_version)
-    else:
-        error('Unable to determine clang version.')
+    if compareVersions(main['CXXVERSION'], "3.9") < 0:
+        error('clang version 3.9 or newer required.\n'
+              'Installed version:', main['CXXVERSION'])
 
     # clang has a few additional warnings that we disable, extraneous
     # parantheses are allowed due to Ruby's printing of the AST,

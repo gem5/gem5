@@ -28,7 +28,7 @@ Import('*')
 from m5.util import compareVersions
 
 if env['USE_SYSTEMC']:
-    if main['GCC'] and compareVersions(main['GCC_VERSION'], '10.0') >= 0:
+    if main['GCC'] and compareVersions(main['CXXVERSION'], '10.0') >= 0:
         disable_false_positives = {
             "CCFLAGS": [ "-Wno-array-bounds",
                          "-Wno-stringop-overflow" ]
