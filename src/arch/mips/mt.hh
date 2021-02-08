@@ -273,7 +273,7 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
                     curTick(), tc->threadId());
         }
     } else if (src_reg > 0) {
-        if (src_reg && !yield_mask != 0) {
+        if ((src_reg & ~yield_mask) != 0) {
             VPEControlReg vpeControl = tc->readMiscReg(MISCREG_VPE_CONTROL);
             vpeControl.excpt = 2;
             tc->setMiscReg(MISCREG_VPE_CONTROL, vpeControl);
