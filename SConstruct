@@ -353,7 +353,6 @@ if main['GCC']:
     if compareVersions(main['CXXVERSION'], "5") < 0:
         error('gcc version 5 or newer required.\n'
               'Installed version:', main['CXXVERSION'])
-        Exit(1)
 
     # Add the appropriate Link-Time Optimization (LTO) flags
     # unless LTO is explicitly turned off.
