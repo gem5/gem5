@@ -52,7 +52,7 @@
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
-class ArmPMUParams;
+struct ArmPMUParams;
 class Platform;
 class ThreadContext;
 class ArmInterruptPin;

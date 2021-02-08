@@ -42,7 +42,7 @@
 #include "sim/vma.hh"
 
 class Process;
-class ProcessParams;
+struct ProcessParams;
 class System;
 
 /**

@@ -64,10 +64,10 @@
 ///     I2 - System Level Implementation of the Generic Timer
 
 class Checkpoint;
-class SystemCounterParams;
-class GenericTimerParams;
-class GenericTimerFrameParams;
-class GenericTimerMemParams;
+struct SystemCounterParams;
+struct GenericTimerParams;
+struct GenericTimerFrameParams;
+struct GenericTimerMemParams;
 
 /// Abstract class for elements whose events depend on the counting speed
 /// of the System Counter

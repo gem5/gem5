@@ -44,7 +44,7 @@
 #include "dev/io_device.hh"
 
 class ArmSystem;
-class FVPBasePwrCtrlParams;
+struct FVPBasePwrCtrlParams;
 class ThreadContext;
 
 /**

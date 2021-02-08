@@ -40,7 +40,7 @@
 
 #include "sim/sim_object.hh"
 
-class DisplayParams;
+struct DisplayParams;
 
 class Display : public SimObject
 {

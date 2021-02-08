@@ -41,12 +41,12 @@
 #include "dev/arm/doorbell.hh"
 #include "dev/io_device.hh"
 
-class Ap2ScpDoorbellParams;
+struct Ap2ScpDoorbellParams;
 class ArmInterruptPin;
 class MHU;
-class MHUParams;
+struct MHUParams;
 class Scp;
-class Scp2ApDoorbellParams;
+struct Scp2ApDoorbellParams;
 
 class MhuDoorbell : public Doorbell
 {

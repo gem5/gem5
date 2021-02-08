@@ -43,8 +43,8 @@
 #include "dev/io_device.hh"
 #include "libnomali/nomali.h"
 
-class NoMaliGpuParams;
-class CustomNoMaliGpuParams;
+struct NoMaliGpuParams;
+struct CustomNoMaliGpuParams;
 class RealView;
 
 class NoMaliGpu : public PioDevice

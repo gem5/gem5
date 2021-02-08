@@ -52,10 +52,10 @@
 
 class DataBlock;
 class CacheMsg;
-class MachineID;
+struct MachineID;
 class CacheMemory;
 
-class RubyGPUCoalescerParams;
+struct RubyGPUCoalescerParams;
 
 // List of packets that belongs to a specific instruction.
 typedef std::list<PacketPtr> PerInstPackets;

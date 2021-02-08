@@ -40,7 +40,7 @@
 
 #include "dev/arm/amba_device.hh"
 
-class Sp805Params;
+struct Sp805Params;
 
 /**
  * @file

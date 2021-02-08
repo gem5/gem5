@@ -42,7 +42,7 @@
 #include "dev/io_device.hh"
 
 class ArmInterruptPin;
-class GenericWatchdogParams;
+struct GenericWatchdogParams;
 
 /**
  * @file

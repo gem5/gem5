@@ -387,13 +387,7 @@ elif main['CLANG']:
     # parantheses are allowed due to Ruby's printing of the AST,
     # finally self assignments are allowed as the generated CPU code
     # is relying on this
-    main.Append(CCFLAGS=['-Wno-parentheses',
-                         '-Wno-self-assign',
-                         # Some versions of libstdc++ (4.8?) seem to
-                         # use struct hash and class hash
-                         # interchangeably.
-                         '-Wno-mismatched-tags',
-                         ])
+    main.Append(CCFLAGS=['-Wno-parentheses', '-Wno-self-assign'])
     conf.CheckCxxFlag('-Wno-c99-designator')
     conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
 

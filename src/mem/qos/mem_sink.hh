@@ -46,7 +46,7 @@
 #include "mem/qport.hh"
 #include "params/QoSMemSinkCtrl.hh"
 
-class QoSMemSinkInterfaceParams;
+struct QoSMemSinkInterfaceParams;
 class QoSMemSinkInterface;
 
 namespace QoS {

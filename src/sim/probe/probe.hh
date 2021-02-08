@@ -69,7 +69,7 @@
 /** Forward declare the ProbeManager. */
 class ProbeManager;
 class ProbeListener;
-class ProbeListenerObjectParams;
+struct ProbeListenerObjectParams;
 
 /**
  * Name space containing shared probe point declarations.

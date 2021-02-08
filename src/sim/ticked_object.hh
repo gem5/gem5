@@ -48,7 +48,7 @@
 
 #include "sim/clocked_object.hh"
 
-class TickedObjectParams;
+struct TickedObjectParams;
 
 /** Ticked attaches gem5's event queue/scheduler to evaluate
  *  calls and provides a start/stop interface to ticking.

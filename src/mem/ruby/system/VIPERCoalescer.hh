@@ -46,10 +46,10 @@
 
 class DataBlock;
 class CacheMsg;
-class MachineID;
+struct MachineID;
 class CacheMemory;
 
-class VIPERCoalescerParams;
+struct VIPERCoalescerParams;
 
 class VIPERCoalescer : public GPUCoalescer
 {

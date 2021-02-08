@@ -38,7 +38,7 @@
 
 #include "gpu-compute/scheduling_policy.hh"
 
-class ComputeUnitParams;
+struct ComputeUnitParams;
 
 class Scheduler
 {
