@@ -37,7 +37,7 @@
 
 #endif
 
-#if USE_TUNTAP && defined(__linux__)
+#if HAVE_TUNTAP && defined(__linux__)
 #if 1 // Hide from the style checker since these have to be out of order.
 #include <sys/socket.h> // Has to be included before if.h for some reason.
 
@@ -395,7 +395,7 @@ EtherTapStub::sendReal(const void *data, size_t len)
 }
 
 
-#if USE_TUNTAP
+#if HAVE_TUNTAP
 
 EtherTap::EtherTap(const Params &p) : EtherTapBase(p)
 {

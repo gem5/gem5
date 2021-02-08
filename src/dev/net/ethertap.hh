@@ -37,11 +37,11 @@
 #include <string>
 
 #include "base/pollevent.hh"
-#include "config/use_tuntap.hh"
+#include "config/have_tuntap.hh"
 #include "dev/net/etherint.hh"
 #include "dev/net/etherpkt.hh"
 
-#if USE_TUNTAP
+#if HAVE_TUNTAP
 #include "params/EtherTap.hh"
 
 #endif
@@ -155,7 +155,7 @@ class EtherTapStub : public EtherTapBase
 };
 
 
-#if USE_TUNTAP
+#if HAVE_TUNTAP
 class EtherTap : public EtherTapBase
 {
   public:

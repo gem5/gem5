@@ -26,11 +26,9 @@
 Import('*')
 
 from gem5_scons import warning
-
 import gem5_scons
 
 with gem5_scons.Configure(main) as conf:
-
     # Check if there is a pkg-config configuration for hdf5. If we find
     # it, setup the environment to enable linking and header inclusion. We
     # don't actually try to include any headers or link with hdf5 at this
@@ -43,16 +41,13 @@ with gem5_scons.Configure(main) as conf:
     # include path and library path provided by pkg-config. We perform
     # this check even if there isn't a pkg-config configuration for hdf5
     # since some installations don't use pkg-config.
-    have_hdf5 = \
+    conf.env['HAVE_HDF5'] = \
             conf.CheckLibWithHeader('hdf5', 'hdf5.h', 'C',
                                     'H5Fcreate("", 0, 0, 0);') and \
             conf.CheckLibWithHeader('hdf5_cpp', 'H5Cpp.h', 'C++',
                                     'H5::H5File("", 0);')
 
-if have_hdf5:
-    sticky_vars.Add(BoolVariable('USE_HDF5', 'Enable the HDF5 support', True))
-else:
-    warning("Couldn't find any HDF5 C++ libraries. Disabling HDF5 support.")
-    main['USE_HDF5'] = False
+    if not conf.env['HAVE_HDF5']:
+        warning("Couldn't find HDF5 C++ libraries. Disabling HDF5 support.")
 
-export_vars.append('USE_HDF5')
+export_vars.append('HAVE_HDF5')

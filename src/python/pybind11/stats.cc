@@ -38,19 +38,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config/use_hdf5.hh"
-
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
 #include "base/statistics.hh"
 #include "base/stats/text.hh"
-#if USE_HDF5
+#include "config/have_hdf5.hh"
+
+#if HAVE_HDF5
 #include "base/stats/hdf5.hh"
+
 #endif
 #include "sim/stat_control.hh"
 #include "sim/stat_register.hh"
-
 
 namespace py = pybind11;
 
@@ -106,7 +106,7 @@ pybind_init_stats(py::module_ &m_native)
     m
         .def("initSimStats", &Stats::initSimStats)
         .def("initText", &Stats::initText, py::return_value_policy::reference)
-#if USE_HDF5
+#if HAVE_HDF5
         .def("initHDF5", &Stats::initHDF5)
 #endif
         .def("registerPythonStatsHandlers",

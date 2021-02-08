@@ -39,9 +39,9 @@
 
 #include "base/bmpwriter.hh"
 #include "base/logging.hh"
-#include "config/use_png.hh"
+#include "config/have_png.hh"
 
-#if USE_PNG
+#if HAVE_PNG
 #include "base/pngwriter.hh"
 
 #endif
@@ -58,7 +58,7 @@ createImgWriter(Enums::ImageFormat type, const FrameBuffer *fb)
         // available.
 
         M5_FALLTHROUGH;
-#if USE_PNG
+#if HAVE_PNG
       case Enums::Png:
         return std::unique_ptr<PngWriter>(new PngWriter(fb));
 #endif

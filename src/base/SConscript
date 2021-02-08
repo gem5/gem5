@@ -42,12 +42,12 @@ GTest('cprintf.test', 'cprintf.test.cc')
 Executable('cprintftime', 'cprintftime.cc', 'cprintf.cc')
 Source('debug.cc')
 GTest('debug.test', 'debug.test.cc', 'debug.cc')
-if env['USE_FENV']:
+if env['HAVE_FENV']:
     Source('fenv.cc')
 else:
     warning("No IEEE FP rounding mode control.\n"
             "FP results may deviate slightly from other platforms.")
-if env['USE_PNG']:
+if env['HAVE_PNG']:
     env.Append(LIBS=['png'])
     Source('pngwriter.cc')
 Source('fiber.cc')

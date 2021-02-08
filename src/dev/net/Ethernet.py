@@ -109,7 +109,7 @@ class EtherTapBase(SimObject):
     dump = Param.EtherDump(NULL, "dump object")
     tap = EtherInt("Ethernet interface to connect to gem5's network")
 
-if buildEnv['USE_TUNTAP']:
+if buildEnv['HAVE_TUNTAP']:
     class EtherTap(EtherTapBase):
         type = 'EtherTap'
         cxx_header = "dev/net/ethertap.hh"

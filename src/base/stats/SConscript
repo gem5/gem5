@@ -34,7 +34,7 @@ Source('info.cc')
 Source('storage.cc')
 Source('text.cc')
 
-if env['USE_HDF5']:
+if env['HAVE_HDF5']:
     if main['GCC']:
         Source('hdf5.cc', append={'CXXFLAGS': '-Wno-deprecated-copy'})
     else:

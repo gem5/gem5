@@ -29,14 +29,9 @@ import gem5_scons
 
 with gem5_scons.Configure(main) as conf:
     # Check if the TUN/TAP driver is available.
-    have_tuntap = conf.CheckHeader('linux/if_tun.h', '<>')
+    conf.env['HAVE_TUNTAP'] = conf.CheckHeader('linux/if_tun.h', '<>')
 
-if have_tuntap:
-    sticky_vars.Add(BoolVariable('USE_TUNTAP',
-                'Enable using a tap device to bridge to the host network',
-                True))
-else:
+if not main['HAVE_TUNTAP']:
     print("Info: Compatible header file <linux/if_tun.h> not found.")
-    main['USE_TUNTAP'] = False
 
-export_vars.append('USE_TUNTAP')
+export_vars.append('HAVE_TUNTAP')

@@ -29,7 +29,7 @@
 #ifndef __BASE_FENV_HH__
 #define __BASE_FENV_HH__
 
-#include "config/use_fenv.hh"
+#include "config/have_fenv.hh"
 
 namespace gem5
 {
@@ -42,7 +42,7 @@ enum class RoundingMode
     Upward = 3
 };
 
-#if USE_FENV
+#if HAVE_FENV
 
 void setFpRound(RoundingMode rm);
 RoundingMode getFpRound();
@@ -57,7 +57,7 @@ RoundingMode getFpRound()
     return RoundingMode::Downward;
 }
 
-#endif // USE_FENV
+#endif // HAVE_FENV
 
 } // namespace gem5
 
