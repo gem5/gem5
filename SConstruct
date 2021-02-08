@@ -305,15 +305,20 @@ if main['GCC'] or main['CLANG']:
     # As gcc and clang share many flags, do the common parts here
     main.Append(CCFLAGS=['-pipe'])
     main.Append(CCFLAGS=['-fno-strict-aliasing'])
+
     # Enable -Wall and -Wextra and then disable the few warnings that
     # we consistently violate
     main.Append(CCFLAGS=['-Wall', '-Wundef', '-Wextra',
                          '-Wno-sign-compare', '-Wno-unused-parameter'])
+
     # We always compile using C++14
     main.Append(CXXFLAGS=['-std=c++14'])
+
     if sys.platform.startswith('freebsd'):
         main.Append(CCFLAGS=['-I/usr/local/include'])
         main.Append(CXXFLAGS=['-I/usr/local/include'])
+        # On FreeBSD we need libthr.
+        main.Append(LIBS=['thr'])
 
     conf.CheckLinkFlag('-Wl,--as-needed')
     if GetOption('gold_linker'):
@@ -385,10 +390,6 @@ elif main['CLANG']:
     if sys.platform == "darwin":
         main.Append(CXXFLAGS=['-stdlib=libc++'])
         main.Append(LIBS=['c++'])
-
-    # On FreeBSD we need libthr.
-    if sys.platform.startswith('freebsd'):
-        main.Append(LIBS=['thr'])
 
 # Add sanitizers flags
 sanitizers=[]
