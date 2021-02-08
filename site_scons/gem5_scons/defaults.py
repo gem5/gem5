@@ -71,3 +71,9 @@ def EnvDefaults(env):
     # add useful python code PYTHONPATH so it can be used by subprocesses
     # as well
     env.AppendENVPath('PYTHONPATH', extra_python_paths)
+
+    # Default duplicate option is to use hard links, but this messes up
+    # when you use emacs to edit a file in the target dir, as emacs moves
+    # file to file~ then copies to file, breaking the link.  Symbolic
+    # (soft) links work better.
+    env.SetOption('duplicate', 'soft-copy')

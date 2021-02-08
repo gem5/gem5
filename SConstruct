@@ -203,12 +203,6 @@ Export('main')
 
 main.SConsignFile(os.path.join(build_root, "sconsign"))
 
-# Default duplicate option is to use hard links, but this messes up
-# when you use emacs to edit a file in the target dir, as emacs moves
-# file to file~ then copies to file, breaking the link.  Symbolic
-# (soft) links work better.
-main.SetOption('duplicate', 'soft-copy')
-
 #
 # Set up global sticky variables... these are common to an entire build
 # tree (not specific to a particular build like X86)
