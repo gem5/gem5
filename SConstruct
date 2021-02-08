@@ -122,7 +122,10 @@ AddOption('--with-systemc-tests', action='store_true',
 
 from gem5_scons import Transform, error, warning, summarize_warnings
 from gem5_scons import TempFileSpawn, parse_build_path, EnvDefaults
+from gem5_scons import MakeAction, MakeActionTool
 import gem5_scons
+
+Export('MakeAction')
 
 ########################################################################
 #
@@ -130,7 +133,9 @@ import gem5_scons
 #
 ########################################################################
 
-main = Environment(tools=['default', 'git', TempFileSpawn, EnvDefaults])
+main = Environment(tools=[
+        'default', 'git', TempFileSpawn, EnvDefaults, MakeActionTool
+    ])
 
 main.Tool(SCons.Tool.FindTool(['gcc', 'clang'], main))
 main.Tool(SCons.Tool.FindTool(['g++', 'clang++'], main))
@@ -255,23 +260,6 @@ main.Append(CPPPATH=[Dir('ext')])
 
 # Add shared top-level headers
 main.Prepend(CPPPATH=Dir('include'))
-
-if GetOption('verbose'):
-    def MakeAction(action, string, *args, **kwargs):
-        return Action(action, *args, **kwargs)
-else:
-    MakeAction = Action
-    main['CCCOMSTR']        = Transform("CC")
-    main['CXXCOMSTR']       = Transform("CXX")
-    main['ASCOMSTR']        = Transform("AS")
-    main['ARCOMSTR']        = Transform("AR", 0)
-    main['LINKCOMSTR']      = Transform("LINK", 0)
-    main['SHLINKCOMSTR']    = Transform("SHLINK", 0)
-    main['RANLIBCOMSTR']    = Transform("RANLIB", 0)
-    main['M4COMSTR']        = Transform("M4")
-    main['SHCCCOMSTR']      = Transform("SHCC")
-    main['SHCXXCOMSTR']     = Transform("SHCXX")
-Export('MakeAction')
 
 # Initialize the Link-Time Optimization (LTO) flags
 main['LTO_CCFLAGS'] = []
