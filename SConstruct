@@ -375,10 +375,8 @@ elif main['CLANG']:
               'Installed version:', main['CXXVERSION'])
 
     # clang has a few additional warnings that we disable, extraneous
-    # parantheses are allowed due to Ruby's printing of the AST,
-    # finally self assignments are allowed as the generated CPU code
-    # is relying on this
-    main.Append(CCFLAGS=['-Wno-parentheses', '-Wno-self-assign'])
+    # parantheses are allowed due to Ruby's printing of the AST.
+    main.Append(CCFLAGS=['-Wno-parentheses'])
     conf.CheckCxxFlag('-Wno-c99-designator')
     conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
 

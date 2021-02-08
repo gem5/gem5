@@ -191,7 +191,10 @@ def ISADesc(desc, decoder_splits=1, exec_splits=1):
     # These generated files are also top level sources.
     def source_gen(name):
         add_gen(name)
-        Source(gen_file(name))
+        append = {}
+        if env['CLANG']:
+            append['CCFLAGS'] = ['-Wno-self-assign']
+        Source(gen_file(name), append=append)
 
     source_gen('decoder.cc')
 

@@ -62,4 +62,7 @@ if env['USE_SYSTEMC']:
     if env['USE_PYTHON']:
         Source('python.cc')
         Source('sc_main_python.cc')
-        Source('sc_time_python.cc')
+        append = {}
+        if env['CLANG']:
+            append['CCFLAGS'] = '-Wno-self-assign-overloaded'
+        Source('sc_time_python.cc', append=append)
