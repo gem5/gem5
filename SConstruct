@@ -84,7 +84,6 @@ from os import mkdir, environ
 from os.path import abspath, dirname, expanduser
 from os.path import isdir, isfile
 from os.path import join, split
-from re import match
 
 # SCons includes
 import SCons
@@ -92,7 +91,7 @@ import SCons.Node
 import SCons.Node.FS
 import SCons.Tool
 
-from m5.util import compareVersions, readCommand, readCommandWithReturn
+from m5.util import compareVersions, readCommand
 
 AddOption('--no-colors', dest='use_colors', action='store_false',
           help="Don't add color to abbreviated scons output")
@@ -435,73 +434,44 @@ main['USE_PYTHON'] = not GetOption('without_python')
 if main['USE_PYTHON']:
     # Find Python include and library directories for embedding the
     # interpreter. We rely on python-config to resolve the appropriate
-    # includes and linker flags. ParseConfig does not seem to understand
-    # the more exotic linker flags such as -Xlinker and -export-dynamic so
-    # we add them explicitly below. If you want to link in an alternate
-    # version of python, see above for instructions on how to invoke
-    # scons with the appropriate PATH set.
+    # includes and linker flags. If you want to link in an alternate version
+    # of python, override the PYTHON_CONFIG variable.
 
     python_config = main.Detect(main['PYTHON_CONFIG'])
     if python_config is None:
         error("Can't find a suitable python-config, tried %s" % \
               main['PYTHON_CONFIG'])
 
-    print("Info: Using Python config: %s" % (python_config, ))
+    print("Info: Using Python config: %s" % python_config)
 
-    py_includes = readCommand([python_config, '--includes'],
-                              exception='').split()
-    py_includes = list(filter(
-        lambda s: match(r'.*\/include\/.*',s), py_includes))
-    # Strip the -I from the include folders before adding them to the
-    # CPPPATH
-    py_includes = list(map(
-        lambda s: s[2:] if s.startswith('-I') else s, py_includes))
-    main.Append(CPPPATH=py_includes)
+    cmd = [python_config, '--ldflags', '--includes']
 
-    # Read the linker flags and split them into libraries and other link
-    # flags. The libraries are added later through the call the CheckLib.
-    # Note: starting in Python 3.8 the --embed flag is required to get the
-    # -lpython3.8 linker flag
-    retcode, cmd_stdout = readCommandWithReturn(
-        [python_config, '--ldflags', '--embed'], exception='')
-    if retcode != 0:
-        # If --embed isn't detected then we're running python <3.8
-        retcode, cmd_stdout = readCommandWithReturn(
-            [python_config, '--ldflags'], exception='')
+    # Starting in Python 3.8 the --embed flag is required. Use it if supported.
+    with gem5_scons.Configure(main) as conf:
+        if conf.TryAction('@%s --embed' % python_config)[0]:
+            cmd.append('--embed')
 
-    # Checking retcode again
-    if retcode != 0:
-        error("Failing on python-config --ldflags command")
+    def flag_filter(env, cmd_output):
+        flags = cmd_output.split()
+        prefixes = ('-l', '-L', '-I')
+        is_useful = lambda x: any(x.startswith(prefix) for prefix in prefixes)
+        useful_flags = list(filter(is_useful, flags))
+        env.MergeFlags(' '.join(useful_flags))
 
-    py_ld_flags = cmd_stdout.split()
-
-    py_libs = []
-    for lib in py_ld_flags:
-         if not lib.startswith('-l'):
-             main.Append(LINKFLAGS=[lib])
-         else:
-             lib = lib[2:]
-             if lib not in py_libs:
-                 py_libs.append(lib)
+    main.ParseConfig(cmd, flag_filter)
 
     main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
 
     with gem5_scons.Configure(main) as conf:
         # verify that this stuff works
         if not conf.CheckHeader('Python.h', '<>'):
-            error("Check failed for Python.h header in",
-                    ' '.join(py_includes), "\n"
+            error("Check failed for Python.h header.\n",
                   "Two possible reasons:\n"
                   "1. Python headers are not installed (You can install the "
                   "package python-dev on Ubuntu and RedHat)\n"
                   "2. SCons is using a wrong C compiler. This can happen if "
                   "CC has the wrong value.\n"
                   "CC = %s" % main['CC'])
-
-        for lib in py_libs:
-            if not conf.CheckLib(lib):
-                error("Can't find library %s required by python." % lib)
-
         py_version = conf.CheckPythonLib()
         if not py_version:
             error("Can't find a working Python installation")
@@ -514,11 +484,13 @@ if main['USE_PYTHON']:
 
     # Found a working Python installation. Check if it meets minimum
     # requirements.
-    if py_version[0] < 3 or \
-    (py_version[0] == 3 and py_version[1] < 6):
-        error('Python version too old. Version 3.6 or newer is required.')
+    ver_string = '.'.join(map(str, py_version))
+    if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 6):
+        error('Embedded python library 3.6 or newer required, found %s.' %
+              ver_string)
     elif py_version[0] > 3:
-        warning('Python version too new. Python 3 expected.')
+        warning('Embedded python library too new. '
+                'Python 3 expected, found %s.' % ver_string)
 
 with gem5_scons.Configure(main) as conf:
     # On Solaris you need to use libsocket for socket ops
