@@ -221,4 +221,20 @@ def error(*args, **kwargs):
     print_message('Error: ', termcap.Red, message, **kwargs)
     SCons.Script.Exit(1)
 
-__all__ = ['Configure', 'Transform', 'warning', 'error']
+def parse_build_path(target):
+    path_dirs = target.split('/')
+
+    # Pop off the target file.
+    path_dirs.pop()
+
+    # Search backwards for the "build" directory. Whatever was just before it
+    # was the name of the variant.
+    variant_dir = path_dirs.pop()
+    while path_dirs and path_dirs[-1] != 'build':
+        variant_dir = path_dirs.pop()
+    if not path_dirs:
+        error("No non-leaf 'build' dir found on target path.", t)
+
+    return os.path.join('/', *path_dirs), variant_dir
+
+__all__ = ['Configure', 'Transform', 'warning', 'error', 'parse_build_dir']

@@ -124,7 +124,7 @@ AddOption('--with-systemc-tests', action='store_true',
           help='Build systemc tests')
 
 from gem5_scons import Transform, error, warning, summarize_warnings
-from gem5_scons import TempFileSpawn
+from gem5_scons import TempFileSpawn, parse_build_path
 import gem5_scons
 
 ########################################################################
@@ -182,24 +182,20 @@ BUILD_TARGETS[:] = makePathListAbsolute(BUILD_TARGETS)
 
 # Generate a list of the unique build roots and configs that the
 # collected targets reference.
-variant_paths = []
+variant_paths = set()
 build_root = None
 for t in BUILD_TARGETS:
-    path_dirs = t.split('/')
-    try:
-        build_top = rfind(path_dirs, 'build', -2)
-    except:
-        error("No non-leaf 'build' dir found on target path.", t)
-    this_build_root = joinpath('/',*path_dirs[:build_top+1])
+    this_build_root, variant = parse_build_path(t)
+
+    # Make sure all targets use the same build root.
     if not build_root:
         build_root = this_build_root
-    else:
-        if this_build_root != build_root:
-            error("build targets not under same build root\n"
-                  "  %s\n  %s" % (build_root, this_build_root))
-    variant_path = joinpath('/',*path_dirs[:build_top+2])
-    if variant_path not in variant_paths:
-        variant_paths.append(variant_path)
+    elif this_build_root != build_root:
+        error("build targets not under same build root\n  %s\n  %s" %
+            (build_root, this_build_root))
+
+    # Collect all the variants into a set.
+    variant_paths.add(os.path.join('/', build_root, variant))
 
 # Make sure build_root exists (might not if this is the first build there)
 if not isdir(build_root):
