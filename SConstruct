@@ -141,10 +141,8 @@ main.Tool(SCons.Tool.FindTool(['g++', 'clang++'], main))
 from gem5_scons.util import get_termcap
 termcap = get_termcap()
 
-main_dict_keys = main.Dictionary().keys()
-
 # Check that we have a C/C++ compiler
-if not ('CC' in main_dict_keys and 'CXX' in main_dict_keys):
+if not ('CC' in main and 'CXX' in main):
     error("No C++ compiler installed (package g++ on Ubuntu and RedHat)")
 
 ###################################################
@@ -302,8 +300,7 @@ main['TCMALLOC_CCFLAGS'] = []
 # builds under a given build root run on the same host platform.
 conf = gem5_scons.Configure(main)
 
-CXX_version = readCommand([main['CXX'],'--version'], exception=False)
-CXX_V = readCommand([main['CXX'],'-V'], exception=False)
+CXX_version = readCommand([main['CXX'], '--version'], exception=False)
 
 main['GCC'] = CXX_version and CXX_version.find('g++') >= 0
 main['CLANG'] = CXX_version and CXX_version.find('clang') >= 0
