@@ -132,8 +132,8 @@ JobControl::updateJsState(uint16_t jobs)
     for (int i = 0; i < 16; ++i) {
         const JobSlot &slot(slots[i]);
         if (jobs & (1 << i)) {
-            js_state |= slot.active() ? (1 << i) : 0 |
-                slot.activeNext() ? (0x10000 << i) : 0;
+            js_state |= (slot.active() ? (1 << i) : 0) |
+                (slot.activeNext() ? (0x10000 << i) : 0);
         }
     }
     regs[RegAddr(JOB_IRQ_JS_STATE)] = js_state;
