@@ -74,8 +74,7 @@ BPredUnit::BPredUnitStats::BPredUnitStats(Stats::Group *parent)
       ADD_STAT(condIncorrect, "Number of conditional branches incorrect"),
       ADD_STAT(BTBLookups, "Number of BTB lookups"),
       ADD_STAT(BTBHits, "Number of BTB hits"),
-      ADD_STAT(BTBHitPct, "BTB Hit Percentage",
-           (BTBHits / BTBLookups) * 100),
+      ADD_STAT(BTBHitRatio, "BTB Hit Ratio", BTBHits / BTBLookups),
       ADD_STAT(RASUsed, "Number of times the RAS was used to get a target."),
       ADD_STAT(RASIncorrect, "Number of incorrect RAS predictions."),
       ADD_STAT(indirectLookups, "Number of indirect predictor lookups."),
@@ -84,7 +83,7 @@ BPredUnit::BPredUnitStats::BPredUnitStats(Stats::Group *parent)
       ADD_STAT(indirectMispredicted, "Number of mispredicted indirect"
           " branches.")
 {
-    BTBHitPct.precision(6);
+    BTBHitRatio.precision(6);
 }
 
 ProbePoints::PMUUPtr

@@ -141,7 +141,7 @@ BaseXBar::Layer<SrcType, DstType>::Layer(DstType& _port, BaseXBar& _xbar,
     port(_port), xbar(_xbar), _name(xbar.name() + "." + _name), state(IDLE),
     waitingForPeer(NULL), releaseEvent([this]{ releaseLayer(); }, name()),
     ADD_STAT(occupancy, "Layer occupancy (ticks)"),
-    ADD_STAT(utilization, "Layer utilization (%)")
+    ADD_STAT(utilization, "Layer utilization")
 {
     occupancy
         .flags(Stats::nozero);
@@ -150,7 +150,7 @@ BaseXBar::Layer<SrcType, DstType>::Layer(DstType& _port, BaseXBar& _xbar,
         .precision(1)
         .flags(Stats::nozero);
 
-    utilization = 100 * occupancy / simTicks;
+    utilization = occupancy / simTicks;
 }
 
 template <typename SrcType, typename DstType>

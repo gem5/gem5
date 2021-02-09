@@ -1224,8 +1224,8 @@ MemCtrl::CtrlStats::CtrlStats(MemCtrl &_ctrl)
     ADD_STAT(bytesWrittenSys,
              "Total written bytes from the system interface side"),
 
-    ADD_STAT(avgRdBWSys, "Average system read bandwidth in MiByte/s"),
-    ADD_STAT(avgWrBWSys, "Average system write bandwidth in MiByte/s"),
+    ADD_STAT(avgRdBWSys, "Average system read bandwidth in Byte/s"),
+    ADD_STAT(avgWrBWSys, "Average system write bandwidth in Byte/s"),
 
     ADD_STAT(totGap, "Total gap between requests"),
     ADD_STAT(avgGap, "Average gap between requests"),
@@ -1276,8 +1276,8 @@ MemCtrl::CtrlStats::regStats()
         .init(ctrl.writeBufferSize)
         .flags(nozero);
 
-    avgRdBWSys.precision(2);
-    avgWrBWSys.precision(2);
+    avgRdBWSys.precision(8);
+    avgWrBWSys.precision(8);
     avgGap.precision(2);
 
     // per-requestor bytes read and written to memory
@@ -1337,8 +1337,8 @@ MemCtrl::CtrlStats::regStats()
     }
 
     // Formula stats
-    avgRdBWSys = (bytesReadSys / 1000000) / simSeconds;
-    avgWrBWSys = (bytesWrittenSys / 1000000) / simSeconds;
+    avgRdBWSys = (bytesReadSys) / simSeconds;
+    avgWrBWSys = (bytesWrittenSys) / simSeconds;
 
     avgGap = totGap / (readReqs + writeReqs);
 
