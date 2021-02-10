@@ -2529,6 +2529,7 @@ NVMInterface::NVMStats::NVMStats(NVMInterface &_nvm)
 
     ADD_STAT(pendingReads, UNIT_COUNT,
              "Reads issued to NVM for which data has not been transferred"),
+    ADD_STAT(pendingWrites, UNIT_COUNT, "Number of outstanding writes to NVM"),
     ADD_STAT(bytesPerBank, UNIT_BYTE,
              "Bytes read within a bank before loading new bank")
 
