@@ -3900,7 +3900,7 @@ namespace Gcn3ISA
         Addr pc = wf->pc();
         ScalarRegI16 simm16 = instData.SIMM16;
 
-        pc = pc + ((ScalarRegI64)sext<16>(simm16 * 4LL)) + 4LL;
+        pc = pc + ((ScalarRegI64)sext<18>(simm16 * 4LL)) + 4LL;
 
         wf->pc(pc);
     }
@@ -3946,7 +3946,7 @@ namespace Gcn3ISA
         scc.read();
 
         if (!scc.rawData()) {
-            pc = pc + ((ScalarRegI64)sext<16>(simm16 * 4LL)) + 4LL;
+            pc = pc + ((ScalarRegI64)sext<18>(simm16 * 4LL)) + 4LL;
         }
 
         wf->pc(pc);
@@ -3975,7 +3975,7 @@ namespace Gcn3ISA
         scc.read();
 
         if (scc.rawData()) {
-            pc = pc + ((ScalarRegI64)sext<16>(simm16 * 4LL)) + 4LL;
+            pc = pc + ((ScalarRegI64)sext<18>(simm16 * 4LL)) + 4LL;
         }
 
         wf->pc(pc);
@@ -4005,7 +4005,7 @@ namespace Gcn3ISA
         vcc.read();
 
         if (!vcc.rawData()) {
-            pc = pc + ((ScalarRegI64)sext<16>(simm16 * 4LL)) + 4LL;
+            pc = pc + ((ScalarRegI64)sext<18>(simm16 * 4LL)) + 4LL;
         }
 
         wf->pc(pc);
@@ -4035,7 +4035,7 @@ namespace Gcn3ISA
         if (vcc.rawData()) {
             Addr pc = wf->pc();
             ScalarRegI16 simm16 = instData.SIMM16;
-            pc = pc + ((ScalarRegI64)sext<16>(simm16 * 4LL)) + 4LL;
+            pc = pc + ((ScalarRegI64)sext<18>(simm16 * 4LL)) + 4LL;
             wf->pc(pc);
         }
     }
@@ -4060,7 +4060,7 @@ namespace Gcn3ISA
         if (wf->execMask().none()) {
             Addr pc = wf->pc();
             ScalarRegI16 simm16 = instData.SIMM16;
-            pc = pc + ((ScalarRegI64)sext<16>(simm16 * 4LL)) + 4LL;
+            pc = pc + ((ScalarRegI64)sext<18>(simm16 * 4LL)) + 4LL;
             wf->pc(pc);
         }
     }
@@ -4085,7 +4085,7 @@ namespace Gcn3ISA
         if (wf->execMask().any()) {
             Addr pc = wf->pc();
             ScalarRegI16 simm16 = instData.SIMM16;
-            pc = pc + ((ScalarRegI64)sext<16>(simm16 * 4LL)) + 4LL;
+            pc = pc + ((ScalarRegI64)sext<18>(simm16 * 4LL)) + 4LL;
             wf->pc(pc);
         }
     }
