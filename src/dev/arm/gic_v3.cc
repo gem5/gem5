@@ -74,10 +74,10 @@ Gicv3::init()
     }
 
     distRange = RangeSize(params().dist_addr,
-        Gicv3Distributor::ADDR_RANGE_SIZE - 1);
+        Gicv3Distributor::ADDR_RANGE_SIZE);
 
     redistSize = redistributors[0]->addrRangeSize;
-    redistRange = RangeSize(params().redist_addr, redistSize * threads - 1);
+    redistRange = RangeSize(params().redist_addr, redistSize * threads);
 
     addrRanges = {distRange, redistRange};
 
