@@ -47,7 +47,7 @@ def CheckCxxFlag(context, flag, autoadd=True):
     last_cxxflags = context.env['CXXFLAGS']
     context.env.Append(CXXFLAGS=[flag])
     ret = context.TryCompile('', '.cc')
-    if not autoadd:
+    if not (ret and autoadd):
         context.env['CXXFLAGS'] = last_cxxflags
     context.Result(ret)
     return ret
@@ -57,7 +57,7 @@ def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True):
     last_linkflags = context.env['LINKFLAGS']
     context.env.Append(LINKFLAGS=[flag])
     ret = context.TryLink('int main(int, char *[]) { return 0; }', '.cc')
-    if not autoadd:
+    if not (ret and autoadd):
         context.env['LINKFLAGS'] = last_linkflags
     if set_for_shared:
         assert(autoadd)
