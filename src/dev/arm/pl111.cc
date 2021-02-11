@@ -54,7 +54,7 @@ using std::vector;
 
 // initialize clcd registers
 Pl111::Pl111(const Params &p)
-    : AmbaDmaDevice(p), lcdTiming0(0), lcdTiming1(0), lcdTiming2(0),
+    : AmbaDmaDevice(p, 0x10000), lcdTiming0(0), lcdTiming1(0), lcdTiming2(0),
       lcdTiming3(0), lcdUpbase(0), lcdLpbase(0), lcdControl(0), lcdImsc(0),
       lcdRis(0), lcdMis(0),
       clcdCrsrCtrl(0), clcdCrsrConfig(0), clcdCrsrPalette0(0),
@@ -73,8 +73,6 @@ Pl111::Pl111(const Params &p)
       intEvent([this]{ generateInterrupt(); }, name()),
       enableCapture(p.enable_capture)
 {
-    pioSize = 0xFFFF;
-
     dmaBuffer = new uint8_t[buffer_size];
 
     memset(lcdPalette, 0, sizeof(lcdPalette));
