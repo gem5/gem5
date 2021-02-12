@@ -108,17 +108,12 @@ output exec {{
 #include "arch/generic/memhelpers.hh"
 #include "base/condcodes.hh"
 #include "base/crc.hh"
+#include "base/fenv.hh"
 #include "cpu/base.hh"
-#include "sim/pseudo_inst.hh"
-
-#if defined(linux)
-#include <fenv.h>
-
-#endif
-
 #include "debug/Arm.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/sim_exit.hh"
 
 using namespace ArmISA;
