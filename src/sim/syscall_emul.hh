@@ -110,6 +110,8 @@
 
 #if defined(__APPLE__) && defined(__MACH__) && !defined(CMSG_ALIGN)
 #define CMSG_ALIGN(len) (((len) + sizeof(size_t) - 1) & ~(sizeof(size_t) - 1))
+#elif defined(__FreeBSD__) && !defined(CMSG_ALIGN)
+#define CMSG_ALIGN(n) _ALIGN(n)
 #endif
 
 //////////////////////////////////////////////////////////////////////

@@ -34,6 +34,9 @@
 #include "arch/arm/freebsd/se_workload.hh"
 
 #include <sys/syscall.h>
+#if !defined ( __GNU_LIBRARY__ ) && defined(__FreeBSD__)
+#include <sys/sysctl.h>
+#endif
 
 #include "arch/arm/process.hh"
 #include "base/loader/object_file.hh"
