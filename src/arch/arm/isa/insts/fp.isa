@@ -1106,11 +1106,13 @@ let {{
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
-        fesetround(FeRoundZero);
+        Gem5::RoundingMode old_rm = Gem5::getFpRound();
+        Gem5::setFpRound(Gem5::RoundingMode::TowardZero);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
         FpDest_uw = vfpFpToFixed<float>(
             FpOp1, false, 32, 0, true, {round_mode});
         __asm__ __volatile__("" :: "m" (FpDest_uw));
+        Gem5::setFpRound(old_rm);
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
     '''
@@ -1122,11 +1124,13 @@ let {{
         double cOp1 = dbl(FpOp1P0_uw, FpOp1P1_uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
-        fesetround(FeRoundZero);
+        Gem5::RoundingMode old_rm = Gem5::getFpRound();
+        Gem5::setFpRound(Gem5::RoundingMode::TowardZero);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
         uint64_t result = vfpFpToFixed<double>(
             cOp1, false, 32, 0, true, {round_mode});
         __asm__ __volatile__("" :: "m" (result));
+        Gem5::setFpRound(old_rm);
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = result;
         FpscrExc = fpscr;
@@ -1138,11 +1142,13 @@ let {{
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
-        fesetround(FeRoundZero);
+        Gem5::RoundingMode old_rm = Gem5::getFpRound();
+        Gem5::setFpRound(Gem5::RoundingMode::TowardZero);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
         FpDest_sw = vfpFpToFixed<float>(
             FpOp1, true, 32, 0, true, {round_mode});
         __asm__ __volatile__("" :: "m" (FpDest_sw));
+        Gem5::setFpRound(old_rm);
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
     '''
@@ -1154,11 +1160,13 @@ let {{
         double cOp1 = dbl(FpOp1P0_uw, FpOp1P1_uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
-        fesetround(FeRoundZero);
+        Gem5::RoundingMode old_rm = Gem5::getFpRound();
+        Gem5::setFpRound(Gem5::RoundingMode::TowardZero);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
         int64_t result = vfpFpToFixed<double>(
             cOp1, true, 32, 0, true, {round_mode});
         __asm__ __volatile__("" :: "m" (result));
+        Gem5::setFpRound(old_rm);
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = result;
         FpscrExc = fpscr;
