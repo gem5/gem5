@@ -47,7 +47,7 @@ def CheckCxxFlag(context, flag, autoadd=True):
     context.Message("Checking for compiler %s support... " % flag)
     last_cxxflags = context.env['CXXFLAGS']
     context.env.Append(CXXFLAGS=[flag])
-    ret = context.TryCompile('', '.cc')
+    ret = context.TryCompile('// CheckCxxFlag DO NOTHING', '.cc')
     if not (ret and autoadd):
         context.env['CXXFLAGS'] = last_cxxflags
     context.Result(ret)
