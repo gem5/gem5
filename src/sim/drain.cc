@@ -40,10 +40,10 @@
 #include <algorithm>
 
 #include "base/logging.hh"
+#include "base/named.hh"
 #include "base/trace.hh"
 #include "debug/Drain.hh"
 #include "sim/sim_exit.hh"
-#include "sim/sim_object.hh"
 
 DrainManager DrainManager::_instance;
 
@@ -71,7 +71,7 @@ DrainManager::tryDrain()
     for (auto *obj : _allDrainable) {
         DrainState status = obj->dmDrain();
         if (Debug::Drain && status != DrainState::Drained) {
-            SimObject *temp = dynamic_cast<SimObject*>(obj);
+            Named *temp = dynamic_cast<Named*>(obj);
             if (temp)
                 DPRINTF(Drain, "Failed to drain %s\n", temp->name());
         }
