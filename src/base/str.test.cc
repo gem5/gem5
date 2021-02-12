@@ -301,6 +301,30 @@ TEST(StrTest, ToNumber64BitIntInvalidString)
     EXPECT_FALSE(to_number(input, output));
 }
 
+TEST(StrTest, ToNumberEnum)
+{
+    enum Number
+    {
+        TWO=2,
+    };
+    Number output;
+    std::string input = "2";
+    EXPECT_TRUE(to_number(input, output));
+    EXPECT_EQ(TWO, output);
+}
+
+/** Test that trying to convert a number to an enum that is not valid fails. */
+TEST(StrTest, DISABLED_ToNumberEnumInvalid)
+{
+    enum Number
+    {
+        TWO=2,
+    };
+    Number output;
+    std::string input = "3";
+    EXPECT_FALSE(to_number(input, output));
+}
+
 TEST(StrTest, ToNumberFloat)
 {
     float output;
