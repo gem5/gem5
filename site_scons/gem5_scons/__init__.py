@@ -40,6 +40,7 @@
 
 import os
 import sys
+import tempfile
 import textwrap
 
 from gem5_scons.util import get_termcap
@@ -57,6 +58,25 @@ def strip_build_path(path, env):
     elif path.startswith(build_base):
         path = path[len(build_base):]
     return path
+
+def TempFileSpawn(scons_env):
+    old_pspawn = scons_env['PSPAWN']
+    old_spawn = scons_env['SPAWN']
+
+    def wrapper(old, sh, esc, cmd, sh_args, *py_args):
+        with tempfile.NamedTemporaryFile() as temp:
+            temp.write(' '.join(sh_args).encode())
+            temp.flush()
+            sh_args = [sh, esc(temp.name)]
+            return old(sh, esc, sh, sh_args, *py_args)
+
+    def new_pspawn(sh, esc, cmd, args, sh_env, stdout, stderr):
+        return wrapper(old_pspawn, sh, esc, cmd, args, sh_env, stdout, stderr)
+    def new_spawn(sh, esc, cmd, args, sh_env):
+        return wrapper(old_spawn, sh, esc, cmd, args, sh_env)
+
+    scons_env['PSPAWN'] = new_pspawn
+    scons_env['SPAWN'] = new_spawn
 
 # Generate a string of the form:
 #   common/path/prefix/src1, src2 -> tgt1, tgt2

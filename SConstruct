@@ -126,6 +126,7 @@ AddOption('--with-systemc-tests', action='store_true',
           help='Build systemc tests')
 
 from gem5_scons import Transform, error, warning, summarize_warnings
+from gem5_scons import TempFileSpawn
 import gem5_scons
 
 ########################################################################
@@ -134,7 +135,7 @@ import gem5_scons
 #
 ########################################################################
 
-main = Environment(tools=['default', 'git'])
+main = Environment(tools=['default', 'git', TempFileSpawn])
 
 from gem5_scons.util import get_termcap
 termcap = get_termcap()
