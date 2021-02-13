@@ -26,3 +26,4 @@
 Import('*')
 
 Source('logging.cc', tags=('gtest lib', 'gtest logging'))
+Source('logging_mock.cc', tags=('gtest lib', 'gtest logging'))

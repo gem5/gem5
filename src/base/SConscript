@@ -57,6 +57,8 @@ Source('inifile.cc')
 GTest('inifile.test', 'inifile.test.cc', 'inifile.cc', 'str.cc')
 GTest('intmath.test', 'intmath.test.cc')
 Source('logging.cc')
+GTest('logging.test', 'logging.test.cc', 'logging.cc', 'hostinfo.cc',
+    'cprintf.cc', 'gtest/logging.cc', skip_lib=True)
 Source('match.cc')
 GTest('match.test', 'match.test.cc', 'match.cc', 'str.cc')
 Source('output.cc')

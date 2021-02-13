@@ -27,21 +27,60 @@
 
 #include "base/gtest/logging.hh"
 
-thread_local GTestLogOutput gtestLogOutput;
+#include <string>
 
-GTestLogOutput::EventHook::EventHook(GTestLogOutput &_stream) : stream(_stream)
-{
-    ::testing::UnitTest::GetInstance()->listeners().Append(this);
-}
+#include "base/logging.hh"
 
-GTestLogOutput::EventHook::~EventHook()
-{
-    ::testing::UnitTest::GetInstance()->listeners().Release(this);
-}
+namespace {
 
-void
-GTestLogOutput::EventHook::OnTestStart(const ::testing::TestInfo &test_info)
+// This custom exception type will help prevent fatal exceptions from being
+// caught by other code in gem5 and let them escape to the gtest framework.
+// Unfortunately that results in a somewhat confusing message about an unknown
+// exception being thrown after the panic/fatal message has been printed, but
+// there will at least be some indication what went wrong.
+struct GTestException
+{};
+
+class GTestLogger : public Logger
 {
-    // Clear out the stream at the start of each test.
-    stream.str("");
-}
+  public:
+    using Logger::Logger;
+
+  protected:
+    void
+    log(const Loc &loc, std::string s) override
+    {
+        gtestLogOutput << s;
+        SUCCEED() << s;
+    }
+};
+
+class GTestExitLogger : public Logger
+{
+  public:
+    using Logger::Logger;
+
+  protected:
+    void
+    log(const Loc &loc, std::string s) override
+    {
+        gtestLogOutput << s;
+        std::cerr << loc.file << ":" << loc.line << ": " << s;
+    }
+    // Throw an exception to escape down to the gtest framework.
+    void exit() override { throw GTestException(); }
+};
+
+GTestExitLogger panicLogger("panic: ");
+GTestExitLogger fatalLogger("fatal: ");
+GTestLogger warnLogger("warn: ");
+GTestLogger infoLogger("info: ");
+GTestLogger hackLogger("hack: ");
+
+} // anonymous namespace
+
+Logger &Logger::getPanic() { return panicLogger; }
+Logger &Logger::getFatal() { return fatalLogger; }
+Logger &Logger::getWarn() { return warnLogger; }
+Logger &Logger::getInfo() { return infoLogger; }
+Logger &Logger::getHack() { return hackLogger; }
