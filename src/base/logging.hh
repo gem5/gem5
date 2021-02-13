@@ -90,24 +90,20 @@ class Logger
 
     virtual ~Logger() {};
 
-    void
-    print(const Loc &loc, const std::string &str)
-    {
-        std::stringstream ss;
-        ss << prefix << str;
-        if (str.length() && str.back() != '\n' && str.back() != '\r')
-            ss << std::endl;
-        if (!enabled)
-            return;
-        log(loc, ss.str());
-    }
-
     template<typename ...Args> void
     print(const Loc &loc, const char *format, const Args &...args)
     {
         std::stringstream ss;
         ccprintf(ss, format, args...);
-        print(loc, ss.str());
+        const std::string str = ss.str();
+
+        std::stringstream ss_formatted;
+        ss_formatted << prefix << str;
+        if (str.length() && str.back() != '\n' && str.back() != '\r')
+            ss_formatted << std::endl;
+        if (!enabled)
+            return;
+        log(loc, ss_formatted.str());
     }
 
     template<typename ...Args> void
