@@ -30,14 +30,6 @@
 #define __HOSTINFO_HH__
 
 #include <cstdint>
-#include <string>
-
-/**
- * Get the host name for the current machine.
- *
- * @return The machine's host name.
- */
-std::string &hostname();
 
 /**
  * Determine the simulator process' total virtual memory usage.

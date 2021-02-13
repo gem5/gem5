@@ -28,8 +28,6 @@
 
 #include "base/hostinfo.hh"
 
-#include <unistd.h>
-
 #ifdef __APPLE__
 #include <mach/mach_init.h>
 #include <mach/shared_region.h>
@@ -40,22 +38,6 @@
 
 #include "base/logging.hh"
 #include "base/str.hh"
-
-std::string
-__get_hostname()
-{
-    char host[256];
-    if (gethostname(host, sizeof host) == -1)
-        warn("could not get host name!");
-    return host;
-}
-
-std::string &
-hostname()
-{
-    static std::string hostname = __get_hostname();
-    return hostname;
-}
 
 #ifndef __APPLE__
 uint64_t
