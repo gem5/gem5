@@ -26,28 +26,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/hostinfo.hh"
+
 #include <unistd.h>
 
 #ifdef __APPLE__
 #include <mach/mach_init.h>
 #include <mach/shared_region.h>
 #include <mach/task.h>
-
-#endif
-
-#include "base/hostinfo.hh"
-
-#include <cctype>
-#include <cerrno>
-#include <cmath>
+#else
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <string>
+#endif
 
 #include "base/logging.hh"
 #include "base/str.hh"
-#include "base/types.hh"
 
 std::string
 __get_hostname()
@@ -65,10 +57,11 @@ hostname()
     return hostname;
 }
 
+#ifndef __APPLE__
 uint64_t
 procInfo(const char *filename, const char *target)
 {
-    int  done = 0;
+    int done = 0;
     char line[80];
     char format[80];
     long usage;
@@ -82,7 +75,7 @@ procInfo(const char *filename, const char *target)
                 sscanf(line, format, &usage);
 
                 fclose(fp);
-                return usage ;
+                return usage;
             }
         }
     }
@@ -92,6 +85,7 @@ procInfo(const char *filename, const char *target)
 
     return 0;
 }
+#endif
 
 uint64_t
 memUsage()
