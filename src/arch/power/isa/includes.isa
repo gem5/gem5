@@ -52,9 +52,6 @@ using namespace PowerISA;
 
 output decoder {{
 #include <cmath>
-#if defined(linux)
-#include <fenv.h>
-#endif
 
 #include "arch/power/decoder.hh"
 #include "arch/power/faults.hh"
@@ -69,9 +66,6 @@ using namespace PowerISA;
 
 output exec {{
 #include <cmath>
-#if defined(linux)
-#include <fenv.h>
-#endif
 
 #include "arch/generic/memhelpers.hh"
 #include "arch/power/faults.hh"

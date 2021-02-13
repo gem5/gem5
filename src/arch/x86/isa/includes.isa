@@ -53,13 +53,13 @@ output header {{
 #include <sstream>
 
 #include "arch/generic/debugfaults.hh"
+#include "arch/x86/emulenv.hh"
 #include "arch/x86/insts/macroop.hh"
 #include "arch/x86/insts/microfpop.hh"
 #include "arch/x86/insts/microldstop.hh"
 #include "arch/x86/insts/micromediaop.hh"
 #include "arch/x86/insts/microregop.hh"
 #include "arch/x86/insts/static_inst.hh"
-#include "arch/x86/emulenv.hh"
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/registers.hh"
 #include "arch/x86/types.hh"
@@ -73,46 +73,35 @@ using X86ISA::InstRegIndex;
 }};
 
 output decoder {{
+#include <algorithm>
+
 #include "arch/x86/decoder.hh"
+#include "arch/x86/faults.hh"
+#include "arch/x86/microcode_rom.hh"
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/regs/segment.hh"
-#include "arch/x86/faults.hh"
-#include "arch/x86/microcode_rom.hh"
 #include "arch/x86/tlb.hh"
-#include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
+#include "base/loader/symtab.hh"
 #include "base/logging.hh"
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
 #include "mem/packet.hh"
 #include "sim/full_system.hh"
 
-#if defined(linux) || defined(__APPLE__)
-#include <fenv.h>
-#endif
-#include <algorithm>
-
 using namespace X86ISA;
 }};
 
 output exec {{
-#if defined(linux) || defined(__APPLE__)
-#include <fenv.h>
-#endif
-
-#if defined(__sun) || defined (__OpenBSD__)
-#include <ieeefp.h>
-#endif
-
 #include <cmath>
 #include <limits>
 
 #include "arch/generic/debugfaults.hh"
-#include "arch/x86/regs/misc.hh"
 #include "arch/x86/cpuid.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/memhelpers.hh"
 #include "arch/x86/pseudo_inst_abi.hh"
+#include "arch/x86/regs/misc.hh"
 #include "arch/x86/tlb.hh"
 #include "base/compiler.hh"
 #include "base/condcodes.hh"

@@ -41,6 +41,7 @@ output header {{
 #include "arch/mips/pra_constants.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
+
 }};
 
 output decoder {{
@@ -56,14 +57,11 @@ output decoder {{
 #include "arch/mips/pra_constants.hh"
 #include "arch/mips/tlb.hh"
 #include "arch/mips/utility.hh"
-#include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
+#include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"
 #include "sim/full_system.hh"
-#if defined(linux)
-#include <fenv.h>
-#endif
 
 using namespace MipsISA;
 }};
@@ -83,10 +81,6 @@ output exec {{
 #include "arch/mips/pra_constants.hh"
 #include "arch/mips/tlb.hh"
 #include "arch/mips/utility.hh"
-#if defined(linux)
-#include <fenv.h>
-#endif
-
 #include "base/condcodes.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
