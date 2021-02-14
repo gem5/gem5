@@ -122,7 +122,8 @@ class Logger
   protected:
     bool enabled;
 
-    virtual void log(const Loc &loc, std::string s) = 0;
+    /** Generates the log message. By default it is sent to cerr. */
+    virtual void log(const Loc &loc, std::string s) { std::cerr << s; }
     virtual void exit() { /* Fall through to the abort in exit_helper. */ }
 
     const char *prefix;

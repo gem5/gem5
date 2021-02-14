@@ -46,19 +46,10 @@
 
 namespace {
 
-class NormalLogger : public Logger
+class ExitLogger : public Logger
 {
   public:
     using Logger::Logger;
-
-  protected:
-    void log(const Loc &loc, std::string s) override { std::cerr << s; }
-};
-
-class ExitLogger : public NormalLogger
-{
-  public:
-    using NormalLogger::NormalLogger;
 
   protected:
     void
@@ -66,7 +57,7 @@ class ExitLogger : public NormalLogger
     {
         std::stringstream ss;
         ccprintf(ss, "Memory Usage: %ld KBytes\n", memUsage());
-        NormalLogger::log(loc, s + ss.str());
+        Logger::log(loc, s + ss.str());
     }
 };
 
@@ -81,9 +72,9 @@ class FatalLogger : public ExitLogger
 
 ExitLogger panicLogger("panic: ");
 FatalLogger fatalLogger("fatal: ");
-NormalLogger warnLogger("warn: ");
-NormalLogger infoLogger("info: ");
-NormalLogger hackLogger("hack: ");
+Logger warnLogger("warn: ");
+Logger infoLogger("info: ");
+Logger hackLogger("hack: ");
 
 } // anonymous namespace
 
