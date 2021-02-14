@@ -97,7 +97,7 @@ decode PO default Unknown::unknown() {
         1: BranchNonPCRel::ba({{ NIA = targetAddr; }});
     }
 
-    19: decode XO_XO {
+    19: decode XL_XO {
 
         0: CondMoveOp::mcrf({{
             uint32_t crBfa = bits(CR, 31 - bfa*4, 28 - bfa*4);
@@ -181,28 +181,24 @@ decode PO default Unknown::unknown() {
         29: andis_({{ Ra = Rs & (uimm << 16); }}, true);
     }
 
-    // Some instructions use bits 21 - 30, others 22 - 30. We have to use
-    // the larger size to account for all opcodes. For those that use the
-    // smaller value, the OE bit is bit 21. Therefore, we have two versions
-    // of each instruction: 1 with OE set, the other without. For an
-    // example see 'add' and 'addo'.
-    31: decode XO_XO {
+    // There are a large number of instructions that have the same primary
+    // opcode (PO) of 31. In this case, the instructions are of different
+    // forms. For every form, the XO fields may vary in position and width.
+    // The X, XFL, XFX and XL form instructions use bits 21 - 30 and the
+    // XO form instructions use bits 22 - 30 as extended opcode (XO). To
+    // avoid conflicts, instructions of each form have to be defined under
+    // separate decode blocks. However, only a single decode block can be
+    // associated with a particular PO and it will recognize only one type
+    // of XO field. A solution for associating decode blocks for the other
+    // types of XO fields with the same PO is to have the other blocks as
+    // nested default cases.
+    31: decode X_XO {
 
         0: IntOp::cmp({{
             Xer xer = XER;
             uint32_t cr = makeCRFieldSigned(Ra_sw, Rb_sw, xer.so);
             CR = insertCRField(CR, BF, cr);
         }});
-
-        8: IntSumOp::subfc({{ ~Ra }}, {{ Rb }}, {{ 1 }}, true);
-        10: IntSumOp::addc({{ Ra }}, {{ Rb }}, computeCA = true);
-
-        11: IntArithOp::mulhwu({{
-            uint64_t prod = Ra_ud * Rb_ud;
-            Rt = prod >> 32;
-        }});
-
-        19: IntOp::mfcr({{ Rt = CR; }});
 
         format LoadIndexOp {
             20: lwarx({{ Rt = Mem_sw; Rsv = 1; RsvLen = 4; RsvAddr = EA; }});
@@ -228,34 +224,11 @@ decode PO default Unknown::unknown() {
             CR = insertCRField(CR, BF, cr);
         }});
 
-        40: IntSumOp::subf({{ ~Ra }}, {{ Rb }}, {{ 1 }});
         55: LoadIndexUpdateOp::lwzux({{ Rt = Mem; }});
         60: IntLogicOp::andc({{ Ra = Rs & ~Rb; }});
-
-        75: IntArithOp::mulhw({{
-            int64_t prod = Ra_sd * Rb_sd;
-            Rt = prod >> 32;
-        }});
-
         87: LoadIndexOp::lbzx({{ Rt = Mem_ub; }});
-        104: IntSumOp::neg({{ ~Ra }}, {{ 1 }});
         119: LoadIndexUpdateOp::lbzux({{ Rt = Mem_ub; }});
         124: IntLogicOp::nor({{ Ra = ~(Rs | Rb); }});
-
-        format IntSumOp {
-            136: subfe({{ ~Ra }}, {{ Rb }}, {{ xer.ca }}, true);
-            138: adde({{ Ra }}, {{ Rb }}, {{ xer.ca }}, true);
-        }
-
-        144: IntOp::mtcrf({{
-            uint32_t mask = 0;
-            for (int i = 0; i < 8; ++i) {
-                if (((FXM >> i) & 0x1) == 0x1) {
-                    mask |= 0xf << (4 * i);
-                }
-            }
-            CR = (Rs & mask) | (CR & ~mask);
-        }});
 
         format StoreIndexOp {
             150: stwcx({{
@@ -279,50 +252,14 @@ decode PO default Unknown::unknown() {
         }
 
         183: StoreIndexUpdateOp::stwux({{ Mem = Rs; }});
-
-        format IntSumOp {
-            200: subfze({{ ~Ra }}, {{ xer.ca }}, computeCA = true);
-            202: addze({{ Ra }}, {{ xer.ca }}, computeCA = true);
-        }
-
         215: StoreIndexOp::stbx({{ Mem_ub = Rs_ub; }});
-
-        format IntSumOp {
-            232: subfme({{ ~Ra }}, {{ (uint32_t)-1 }}, {{ xer.ca }}, true);
-            234: addme({{ Ra }}, {{ (uint32_t)-1 }}, {{ xer.ca }}, true);
-        }
-
-        format IntArithOp {
-            235: mullw({{
-                int64_t prod = Ra_sd * Rb_sd;
-                Rt = prod;
-            }});
-
-            // Another variant of mullw decoded with the OE bit set
-            747: mullwo({{
-                int64_t src1 = Ra_sd;
-                int64_t src2 = Rb;
-                int64_t prod = src1 * src2;
-                Rt = prod;
-            }}, true);
-        }
-
         246: MiscOp::dcbtst({{ }});
         247: StoreIndexUpdateOp::stbux({{ Mem_ub = Rs_ub; }});
-        266: IntSumOp::add({{ Ra }}, {{ Rb }});
         278: MiscOp::dcbt({{ }});
         279: LoadIndexOp::lhzx({{ Rt = Mem_uh; }});
         284: IntLogicOp::eqv({{ Ra = ~(Rs ^ Rb); }});
         311: LoadIndexUpdateOp::lhzux({{ Rt = Mem_uh; }});
         316: IntLogicOp::xor({{ Ra = Rs ^ Rb; }});
-
-        format IntOp {
-            339: decode SPR {
-                0x20: mfxer({{ Rt = XER; }});
-                0x100: mflr({{ Rt = LR; }});
-                0x120: mfctr({{ Rt = CTR; }});
-            }
-        }
 
         format LoadIndexOp {
             341: lwax({{ Rt = Mem_sw; }});
@@ -337,82 +274,21 @@ decode PO default Unknown::unknown() {
         407: StoreIndexOp::sthx({{ Mem_uh = Rs_uh; }});
         412: IntLogicOp::orc({{ Ra = Rs | ~Rb; }});
         439: StoreIndexUpdateOp::sthux({{ Mem_uh = Rs_uh; }});
-        444: IntLogicOp::or({{ Ra = Rs | Rb; }});
 
-        format IntArithOp {
-            459: divwu({{
-                uint32_t src1 = Ra_sw;
-                uint32_t src2 = Rb_sw;
-                if (src2 != 0) {
-                    Rt = src1 / src2;
-                } else {
-                    Rt = 0;
+        format IntLogicOp {
+            444: or({{ Ra = Rs | Rb; }});
+            476: nand({{ Ra = ~(Rs & Rb); }});
+
+            508: cmpb({{
+                uint32_t val = 0;
+                for (int n = 0; n < 32; n += 8) {
+                    if(bits(Rs, n+7, n) == bits(Rb, n+7, n)) {
+                        val = insertBits(val, n+7, n, 0xff);
+                    }
                 }
+                Ra = val;
             }});
-
-            // Another variant of divwu decoded with the OE bit set
-            971: divwuo({{
-                uint32_t src1 = Ra_sw;
-                uint32_t src2 = Rb_sw;
-                if (src2 != 0) {
-                    Rt = src1 / src2;
-                } else {
-                    Rt = 0;
-                    divSetOV = true;
-                }
-            }}, true);
         }
-
-        format IntOp {
-            467: decode SPR {
-                0x20: mtxer({{ XER = Rs; }});
-                0x100: mtlr({{ LR = Rs; }});
-                0x120: mtctr({{ CTR = Rs; }});
-            }
-        }
-
-        476: IntLogicOp::nand({{ Ra = ~(Rs & Rb); }});
-
-        format IntArithOp {
-            491: divw({{
-                int32_t src1 = Ra_sw;
-                int32_t src2 = Rb_sw;
-                if ((src1 != 0x80000000 || src2 != 0xffffffff)
-                    && src2 != 0) {
-                    Rt = src1 / src2;
-                } else {
-                    Rt = 0;
-                }
-            }});
-
-            // Another variant of divw decoded with the OE bit set
-            1003: divwo({{
-                int32_t src1 = Ra_sw;
-                int32_t src2 = Rb_sw;
-                if ((src1 != 0x80000000 || src2 != 0xffffffff)
-                    && src2 != 0) {
-                    Rt = src1 / src2;
-                } else {
-                    Rt = 0;
-                    divSetOV = true;
-                }
-            }}, true);
-        }
-
-        508: IntLogicOp::cmpb({{
-            uint32_t val = 0;
-            for (int n = 0; n < 32; n += 8) {
-                if(bits(Rs, n+7, n) == bits(Rb, n+7, n)) {
-                    val = insertBits(val, n+7, n, 0xff);
-                }
-            }
-            Ra = val;
-        }});
-
-        512: IntOp::mcrxr({{
-            CR = insertCRField(CR, BF, XER<31:28>);
-            XER = XER<27:0>;
-        }});
 
         535: LoadIndexOp::lfsx({{ Ft_sf = Mem_sf; }});
 
@@ -500,6 +376,134 @@ decode PO default Unknown::unknown() {
         }
 
         983: StoreIndexOp::stfiwx({{ Mem = Fs_uw; }});
+
+        // These instructions are of XO form with bit 21 as the OE bit.
+        default: decode XO_XO {
+            format IntSumOp {
+                8: subfc({{ ~Ra }}, {{ Rb }}, {{ 1 }}, true);
+                10: addc({{ Ra }}, {{ Rb }}, computeCA = true);
+            }
+
+            11: IntArithOp::mulhwu({{
+                uint64_t prod = Ra_ud * Rb_ud;
+                Rt = prod >> 32;
+            }});
+
+            40: IntSumOp::subf({{ ~Ra }}, {{ Rb }}, {{ 1 }});
+
+            75: IntArithOp::mulhw({{
+                int64_t prod = Ra_sd * Rb_sd;
+                Rt = prod >> 32;
+            }});
+
+            format IntSumOp {
+                104: neg({{ ~Ra }}, {{ 1 }});
+                136: subfe({{ ~Ra }}, {{ Rb }}, {{ xer.ca }}, true);
+                138: adde({{ Ra }}, {{ Rb }}, {{ xer.ca }}, true);
+                200: subfze({{ ~Ra }}, {{ xer.ca }}, computeCA = true);
+                202: addze({{ Ra }}, {{ xer.ca }}, computeCA = true);
+                232: subfme({{ ~Ra }}, {{ (uint32_t)-1 }}, {{ xer.ca }}, true);
+                234: addme({{ Ra }}, {{ (uint32_t)-1 }}, {{ xer.ca }}, true);
+            }
+
+            format IntArithOp {
+                235: mullw({{
+                    int64_t prod = Ra_sd * Rb_sd;
+                    Rt = prod;
+                }});
+
+                // Another variant of mullw decoded with the OE bit set
+                747: mullwo({{
+                    int64_t src1 = Ra_sd;
+                    int64_t src2 = Rb;
+                    int64_t prod = src1 * src2;
+                    Rt = prod;
+                }}, true);
+            }
+
+            266: IntSumOp::add({{ Ra }}, {{ Rb }});
+
+            format IntArithOp {
+                459: divwu({{
+                    uint32_t src1 = Ra_sw;
+                    uint32_t src2 = Rb_sw;
+                    if (src2 != 0) {
+                        Rt = src1 / src2;
+                    } else {
+                        Rt = 0;
+                    }
+                }});
+
+                // Another variant of divwu decoded with the OE bit set
+                971: divwuo({{
+                    uint32_t src1 = Ra_sw;
+                    uint32_t src2 = Rb_sw;
+                    if (src2 != 0) {
+                        Rt = src1 / src2;
+                    } else {
+                        Rt = 0;
+                        divSetOV = true;
+                    }
+                }}, true);
+
+                491: divw({{
+                    int32_t src1 = Ra_sw;
+                    int32_t src2 = Rb_sw;
+                    if ((src1 != 0x80000000 || src2 != 0xffffffff)
+                        && src2 != 0) {
+                        Rt = src1 / src2;
+                    } else {
+                        Rt = 0;
+                    }
+                }});
+
+                // Another variant of divw decoded with the OE bit set
+                1003: divwo({{
+                    int32_t src1 = Ra_sw;
+                    int32_t src2 = Rb_sw;
+                    if ((src1 != 0x80000000 || src2 != 0xffffffff)
+                        && src2 != 0) {
+                        Rt = src1 / src2;
+                    } else {
+                        Rt = 0;
+                        divSetOV = true;
+                    }
+                }}, true);
+            }
+
+            default: decode XFX_XO {
+                format IntOp {
+                    19: mfcr({{ Rt = CR; }});
+
+                    144: mtcrf({{
+                        uint32_t mask = 0;
+                        for (int i = 0; i < 8; ++i) {
+                            if (((FXM >> i) & 0x1) == 0x1) {
+                                mask |= 0xf << (4 * i);
+                            }
+                        }
+                        CR = (Rs & mask) | (CR & ~mask);
+                    }});
+
+                    339: decode SPR {
+                        0x20: mfxer({{ Rt = XER; }});
+                        0x100: mflr({{ Rt = LR; }});
+                        0x120: mfctr({{ Rt = CTR; }});
+                    }
+
+                    467: decode SPR {
+                        0x20: mtxer({{ XER = Rs; }});
+                        0x100: mtlr({{ LR = Rs; }});
+                        0x120: mtctr({{ CTR = Rs; }});
+                    }
+
+                    512: mcrxr({{
+                        CR = insertCRField(CR, BF, XER<31:28>);
+                        XER = XER<27:0>;
+                    }});
+                }
+            }
+        }
     }
 
     32: LoadDispOp::lwz({{ Rt = Mem; }});
@@ -525,9 +529,11 @@ decode PO default Unknown::unknown() {
     54: StoreDispOp::stfd({{ Mem_df = Fs; }});
     55: StoreDispUpdateOp::stfdu({{ Mem_df = Fs; }});
 
-    58: LoadDispOp::lwa({{ Rt = Mem_sw; }},
-                        {{ EA = Ra + (disp & 0xfffffffc); }},
-                        {{ EA = disp & 0xfffffffc; }});
+    58: decode DS_XO {
+        2: LoadDispOp::lwa({{ Rt = Mem_sw; }},
+                           {{ EA = Ra + (disp & 0xfffffffc); }},
+                           {{ EA = disp & 0xfffffffc; }});
+    }
 
     format FloatArithOp {
         59: decode A_XO {
@@ -554,7 +560,7 @@ decode PO default Unknown::unknown() {
             30: fnmsub({{ Ft = -((Fa * Fc) - Fb); }});
         }
 
-        default: decode XO_XO {
+        default: decode X_XO {
             0: FloatOp::fcmpu({{
                 uint32_t c = makeCRField(Fa, Fb);
                 Fpscr fpscr = FPSCR;
@@ -596,18 +602,20 @@ decode PO default Unknown::unknown() {
 
                 583: mffs({{ Ft_ud = FPSCR; }});
 
-                711: mtfsf({{
-                    if (L_FIELD == 1) { FPSCR = Fb_ud; }
-                    else {
-                        for (int i = 0; i < 8; ++i) {
-                            if (bits(FLM, i) == 1) {
-                                int k = 4 * (i + (8 * (1 - W_FIELD)));
-                                FPSCR = insertBits(FPSCR, k + 3, k,
-                                                   bits(Fb_ud, k + 3, k));
+                default: decode XFL_XO {
+                    711: mtfsf({{
+                        if (L_FIELD == 1) { FPSCR = Fb_ud; }
+                        else {
+                            for (int i = 0; i < 8; ++i) {
+                                if (bits(FLM, i) == 1) {
+                                    int k = 4 * (i + (8 * (1 - W_FIELD)));
+                                    FPSCR = insertBits(FPSCR, k + 3, k,
+                                                       bits(Fb_ud, k + 3, k));
+                                }
                             }
                         }
-                    }
-                }});
+                    }});
+                }
             }
         }
     }
