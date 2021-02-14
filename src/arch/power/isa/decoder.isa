@@ -39,12 +39,12 @@ decode OPCODE default Unknown::unknown() {
     format IntImmOp {
         10: cmpli({{
             Xer xer = XER;
-            uint32_t cr = makeCRField(Ra, (uint32_t)uimm, xer.so);
+            uint32_t cr = makeCRFieldUnsigned(Ra_uw, uimm, xer.so);
             CR = insertCRField(CR, BF, cr);
             }});
         11: cmpi({{
             Xer xer = XER;
-            uint32_t cr = makeCRField(Ra_sw, (int32_t)imm, xer.so);
+            uint32_t cr = makeCRFieldSigned(Ra_sw, imm, xer.so);
             CR = insertCRField(CR, BF, cr);
             }});
     }
@@ -250,12 +250,12 @@ decode OPCODE default Unknown::unknown() {
         format IntOp {
             0: cmp({{
                 Xer xer = XER;
-                uint32_t cr = makeCRField(Ra_sw, Rb_sw, xer.so);
+                uint32_t cr = makeCRFieldSigned(Ra_sw, Rb_sw, xer.so);
                 CR = insertCRField(CR, BF, cr);
                 }});
             32: cmpl({{
                 Xer xer = XER;
-                uint32_t cr = makeCRField(Ra, Rb, xer.so);
+                uint32_t cr = makeCRFieldUnsigned(Ra_uw, Rb_uw, xer.so);
                 CR = insertCRField(CR, BF, cr);
                 }});
             144: mtcrf({{
