@@ -245,7 +245,8 @@ PowerState::PowerStateStats::regStats()
     // Each sample is time in ticks
     unsigned num_bins = std::max(p.clk_gate_bins, 10U);
     ticksClkGated
-        .init(p.clk_gate_min, p.clk_gate_max, (p.clk_gate_max / num_bins))
+        .init(p.clk_gate_min, p.clk_gate_max,
+            (p.clk_gate_max - p.clk_gate_min + 1.0) / num_bins)
         .flags(pdf | nozero | nonan)
         ;
 
