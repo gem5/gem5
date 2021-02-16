@@ -87,22 +87,22 @@ TEST(BitfieldTest, MaskAllBitsGreaterThan64)
  */
 TEST(BitfieldTest, MaskOneBit)
 {
-    EXPECT_EQ(1, mask(0,0));
+    EXPECT_EQ(1, mask(0, 0));
 }
 
 TEST(BitfieldTest, MaskTwoBits)
 {
-    EXPECT_EQ((1 << 1) + 1, mask(1,0));
+    EXPECT_EQ((1 << 1) + 1, mask(1, 0));
 }
 
 TEST(BitfieldTest, MaskThreeBits)
 {
-    EXPECT_EQ((1 << 5) + (1 << 4) + (1 << 3), mask(5,3));
+    EXPECT_EQ((1 << 5) + (1 << 4) + (1 << 3), mask(5, 3));
 }
 
 TEST(BitfieldTest, MaskEntireRange)
 {
-    EXPECT_EQ(0xFFFFFFFFFFFFFFFF, mask(63,0));
+    EXPECT_EQ(0xFFFFFFFFFFFFFFFF, mask(63, 0));
 }
 
 TEST(BitfieldTest, MaskOutsideOfRange)
