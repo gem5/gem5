@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2021 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2009-2012 Mark D. Hill and David A. Wood
  * Copyright (c) 2010-2012 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -56,13 +68,17 @@ machine(MachineType:Directory, "Directory protocol")
     M_DRD, AccessPermission:Busy, desc="Blocked on an invalidation for a DMA read";
     M_DWR, AccessPermission:Busy, desc="Blocked on an invalidation for a DMA write";
 
-    M_DWRI, AccessPermission:Busy, desc="Intermediate state M_DWR-->I";
-    M_DRDI, AccessPermission:Busy, desc="Intermediate state M_DRD-->I";
+    M_DWRI, AccessPermission:Read_Write, desc="Intermediate state M_DWR-->I";
+    M_DRDI, AccessPermission:Read_Write, desc="Intermediate state M_DRD-->I";
 
-    IM, AccessPermission:Busy, desc="Intermediate state I-->M";
-    MI, AccessPermission:Busy, desc="Intermediate state M-->I";
-    ID, AccessPermission:Busy, desc="Intermediate state for DMA_READ when in I";
-    ID_W, AccessPermission:Busy, desc="Intermediate state for DMA_WRITE when in I";
+    IM, AccessPermission:Read_Write, desc="Intermediate state I-->M";
+    MI, AccessPermission:Read_Write, desc="Intermediate state M-->I";
+    ID, AccessPermission:Read_Write, desc="Intermediate state for DMA_READ when in I";
+    ID_W, AccessPermission:Read_Write, desc="Intermediate state for DMA_WRITE when in I";
+
+    // Note: busy states when we wait for memory in transitions from or to 'I'
+    // have AccessPermission:Read_Write so this controller can get the latest
+    // data from memory during a functionalRead
   }
 
   // Events
@@ -180,12 +196,9 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   void functionalRead(Addr addr, Packet *pkt) {
-    TBE tbe := TBEs[addr];
-    if(is_valid(tbe)) {
-      testAndRead(addr, tbe.DataBlk, pkt);
-    } else {
-      functionalMemoryRead(pkt);
-    }
+    // if this is called; state is always either invalid or data was just been WB
+    // to memory (and we are waiting for an ack), so go directly to memory
+    functionalMemoryRead(pkt);
   }
 
   int functionalWrite(Addr addr, Packet *pkt) {
