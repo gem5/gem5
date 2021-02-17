@@ -314,6 +314,9 @@ ScheduleStage::addToSchList(int exeType, const GPUDynInstPtr &gpu_dyn_inst)
         computeUnit.insertInPipeMap(wf);
         wavesInSch.emplace(wf->wfDynId);
         schList.at(exeType).push_back(std::make_pair(gpu_dyn_inst, RFBUSY));
+        if (wf->isOldestInstBarrier() && wf->hasBarrier()) {
+            wf->setStatus(Wavefront::S_BARRIER);
+        }
         if (wf->isOldestInstWaitcnt()) {
             wf->setStatus(Wavefront::S_WAITCNT);
         }
