@@ -304,14 +304,6 @@ findLsbSet(uint64_t val)
 }
 
 /**
- * Checks if a number is a power of two, or zero.
- *
- * @ingroup api_bitfield
- */
-template <class T>
-constexpr inline bool isPow2(T v) { return (v & (v - 1)) == (T)0; }
-
-/**
  * Returns the number of set ones in the provided value.
  * PD algorithm from
  * http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel

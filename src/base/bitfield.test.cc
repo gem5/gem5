@@ -290,24 +290,6 @@ TEST(BitfieldTest, FindLsbZero)
     EXPECT_EQ(64, findLsbSet(0));
 }
 
-/* The following tests a simple function that verifies whether a value is a
- * a power of two or not.
- */
-TEST(BitfieldTest, IsPow2)
-{
-    EXPECT_TRUE(isPow2(32));
-}
-
-TEST(BitfieldTest, IsNotPow2)
-{
-    EXPECT_FALSE(isPow2(36));
-}
-
-TEST(BitfieldTest, IsPow2Zero)
-{
-    EXPECT_TRUE(isPow2(0));
-}
-
 /*
  * The following tests "popCount(X)". popCount counts the number of bits set to
  * one.

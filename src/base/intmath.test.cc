@@ -33,10 +33,12 @@
 TEST(IntmathTest, isPowerOf2)
 {
     EXPECT_TRUE(isPowerOf2(1));
+    EXPECT_TRUE(isPowerOf2(32));
     EXPECT_TRUE(isPowerOf2(65536));
     EXPECT_TRUE(isPowerOf2(131072));
     EXPECT_TRUE(isPowerOf2(262144));
     EXPECT_FALSE(isPowerOf2(0));
+    EXPECT_FALSE(isPowerOf2(36));
     EXPECT_FALSE(isPowerOf2(2521));
     EXPECT_FALSE(isPowerOf2(1679616));
 }
