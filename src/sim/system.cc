@@ -532,7 +532,7 @@ std::string
 System::stripSystemName(const std::string& requestor_name) const
 {
     if (startswith(requestor_name, name())) {
-        return requestor_name.substr(name().size());
+        return requestor_name.substr(name().size() + 1);
     } else {
         return requestor_name;
     }
