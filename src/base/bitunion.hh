@@ -260,35 +260,126 @@ namespace BitfieldBackend
 
         BitUnionOperators() {}
 
+        //Conversion operators.
         operator const typename Base::__StorageType () const
         {
             return Base::__storage;
         }
 
-        typename Base::__StorageType
+        //Basic assignment operators.
+        BitUnionOperators &
         operator=(typename Base::__StorageType const &val)
         {
             Base::__storage = val;
-            return val;
+            return *this;
         }
 
-        typename Base::__StorageType
+        BitUnionOperators &
         operator=(BitUnionOperators const &other)
         {
-            Base::__storage = other;
-            return Base::__storage;
+            return operator=(other.__storage);
         }
 
-        bool
-        operator<(Base const &base) const
+        //Increment and decrement operators.
+        BitUnionOperators &
+        operator++()
         {
-            return Base::__storage < base.__storage;
+            Base::__storage++;
+            return *this;
         }
 
-        bool
-        operator==(Base const &base) const
+        BitUnionOperators
+        operator++(int)
         {
-            return Base::__storage == base.__storage;
+            BitUnionOperators ret = *this;
+            operator++();
+            return ret;
+        }
+
+        BitUnionOperators &
+        operator--()
+        {
+            Base::__storage--;
+            return *this;
+        }
+
+        BitUnionOperators
+        operator--(int)
+        {
+            BitUnionOperators ret = *this;
+            operator--();
+            return ret;
+        }
+
+        //Operation and assignment operators
+        BitUnionOperators &
+        operator+=(typename Base::__StorageType const &val)
+        {
+            Base::__storage += val;
+            return *this;
+        }
+
+        BitUnionOperators &
+        operator-=(typename Base::__StorageType const &val)
+        {
+            Base::__storage -= val;
+            return *this;
+        }
+
+        BitUnionOperators &
+        operator*=(typename Base::__StorageType const &val)
+        {
+            Base::__storage *= val;
+            return *this;
+        }
+
+        BitUnionOperators &
+        operator/=(typename Base::__StorageType const &val)
+        {
+            Base::__storage /= val;
+            return *this;
+        }
+
+        BitUnionOperators &
+        operator%=(typename Base::__StorageType const &val)
+        {
+            Base::__storage %= val;
+            return *this;
+        }
+
+        BitUnionOperators &
+        operator&=(typename Base::__StorageType const &val)
+        {
+            Base::__storage &= val;
+            return *this;
+        }
+
+        BitUnionOperators &
+        operator|=(typename Base::__StorageType const &val)
+        {
+            Base::__storage |= val;
+            return *this;
+        }
+
+        BitUnionOperators &
+        operator^=(typename Base::__StorageType const &val)
+        {
+            Base::__storage ^= val;
+            return *this;
+        }
+
+        BitUnionOperators &
+        operator<<=(typename Base::__StorageType const &val)
+        {
+            Base::__storage <<= val;
+            return *this;
+        }
+
+        BitUnionOperators &
+        operator>>=(typename Base::__StorageType const &val)
+        {
+            Base::__storage >>= val;
+            return *this;
         }
     };
 }
