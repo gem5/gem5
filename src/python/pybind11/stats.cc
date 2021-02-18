@@ -149,9 +149,15 @@ pybind_init_stats(py::module_ &m_native)
     py::class_<Stats::ScalarInfo, Stats::Info,
                std::unique_ptr<Stats::ScalarInfo, py::nodelete>>(
                    m, "ScalarInfo")
-        .def("value", &Stats::ScalarInfo::value)
-        .def("result", &Stats::ScalarInfo::result)
-        .def("total", &Stats::ScalarInfo::total)
+        .def_property_readonly("value", [](const Stats::ScalarInfo &info) {
+                return info.value();
+            })
+        .def_property_readonly("result", [](const Stats::ScalarInfo &info) {
+                return info.result();
+            })
+        .def_property_readonly("total", [](const Stats::ScalarInfo &info) {
+                return info.total();
+            })
         ;
 
     py::class_<Stats::VectorInfo, Stats::Info,
