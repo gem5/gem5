@@ -30,6 +30,7 @@
 
 #include <type_traits>
 
+#include "base/compiler.hh"
 #include "sim/guest_abi/definition.hh"
 
 class ThreadContext;
@@ -100,29 +101,21 @@ struct Preparer<ABI, Role, Type, decltype((void)&Role<ABI, Type>::prepare)>
 };
 
 template <typename ABI, typename Ret, typename Enabled=void>
-static void
+static inline void
 prepareForResult(ThreadContext *tc, typename ABI::State &state)
 {
     Preparer<ABI, Result, Ret>::prepare(tc, state);
 }
 
-template <typename ABI>
-static void
-prepareForArguments(ThreadContext *tc, typename ABI::State &state)
+template <typename ABI, typename ...Args>
+static inline void
+prepareForArguments(M5_VAR_USED ThreadContext *tc, typename ABI::State &state)
 {
-    return;
-}
-
-template <typename ABI, typename NextArg, typename ...Args>
-static void
-prepareForArguments(ThreadContext *tc, typename ABI::State &state)
-{
-    Preparer<ABI, Argument, NextArg>::prepare(tc, state);
-    prepareForArguments<ABI, Args...>(tc, state);
+    M5_FOR_EACH_IN_PACK(Preparer<ABI, Argument, Args>::prepare(tc, state));
 }
 
 template <typename ABI, typename Ret, typename ...Args>
-static void
+static inline void
 prepareForFunction(ThreadContext *tc, typename ABI::State &state)
 {
     prepareForResult<ABI, Ret>(tc, state);
@@ -143,12 +136,6 @@ struct ResultStorer
         Result<ABI, Ret>::store(tc, ret);
     }
 };
-
-template <typename Ret, typename State>
-std::true_type foo(void (*)(ThreadContext *, const Ret &ret, State &state));
-
-template <typename Ret>
-std::false_type foo(void (*)(ThreadContext *, const Ret &ret));
 
 template <typename ABI, typename Ret>
 struct ResultStorer<ABI, Ret, typename std::enable_if_t<

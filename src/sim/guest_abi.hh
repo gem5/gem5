@@ -51,7 +51,7 @@ invokeSimcall(ThreadContext *tc,
     // types will be zero initialized.
     auto state = GuestABI::initializeState<ABI>(tc);
     GuestABI::prepareForFunction<ABI, Ret, Args...>(tc, state);
-    return GuestABI::callFrom<ABI, store_ret, Ret, Args...>(tc, state, target);
+    return GuestABI::callFrom<ABI, Ret, store_ret, Args...>(tc, state, target);
 }
 
 template <typename ABI, typename Ret, typename ...Args>
@@ -86,7 +86,7 @@ invokeSimcall(ThreadContext *tc,
     // types will be zero initialized.
     auto state = GuestABI::initializeState<ABI>(tc);
     GuestABI::prepareForArguments<ABI, Args...>(tc, state);
-    GuestABI::callFrom<ABI, Args...>(tc, state, target);
+    GuestABI::callFrom<ABI, void, false, Args...>(tc, state, target);
 }
 
 template <typename ABI, typename ...Args>
@@ -113,7 +113,7 @@ dumpSimcall(std::string name, ThreadContext *tc,
 
     GuestABI::prepareForFunction<ABI, Ret, Args...>(tc, state);
     ss << name;
-    GuestABI::dumpArgsFrom<ABI, Ret, Args...>(0, ss, tc, state);
+    GuestABI::dumpArgsFrom<ABI, Ret, Args...>(ss, tc, state);
     return ss.str();
 }
 

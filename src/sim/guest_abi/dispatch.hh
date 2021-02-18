@@ -30,8 +30,11 @@
 
 #include <functional>
 #include <sstream>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 
+#include "base/compiler.hh"
 #include "sim/guest_abi/definition.hh"
 #include "sim/guest_abi/layout.hh"
 
@@ -50,112 +53,58 @@ namespace GuestABI
  * still possible to support by redefining these functions..
  */
 
-// With no arguments to gather, call the target function and store the
-// result.
-template <typename ABI, bool store_ret, typename Ret>
-static typename std::enable_if_t<!std::is_void<Ret>::value && store_ret, Ret>
-callFrom(ThreadContext *tc, typename ABI::State &state,
-        std::function<Ret(ThreadContext *)> target)
+template <typename ABI, typename Ret, bool store_ret, typename Target,
+         typename State, typename Args, std::size_t... I>
+static inline typename std::enable_if_t<!store_ret, Ret>
+callFromHelper(Target &target, ThreadContext *tc, State &state, Args &&args,
+        std::index_sequence<I...>)
 {
-    Ret ret = target(tc);
+    return target(tc, std::get<I>(args)...);
+}
+
+template <typename ABI, typename Ret, bool store_ret, typename Target,
+         typename State, typename Args, std::size_t... I>
+static inline typename std::enable_if_t<store_ret, Ret>
+callFromHelper(Target &target, ThreadContext *tc, State &state, Args &&args,
+        std::index_sequence<I...>)
+{
+    Ret ret = target(tc, std::get<I>(args)...);
     storeResult<ABI, Ret>(tc, ret, state);
     return ret;
 }
 
-template <typename ABI, bool store_ret, typename Ret>
-static typename std::enable_if_t<!std::is_void<Ret>::value && !store_ret, Ret>
+template <typename ABI, typename Ret, bool store_ret, typename ...Args>
+static inline Ret
 callFrom(ThreadContext *tc, typename ABI::State &state,
-        std::function<Ret(ThreadContext *)> target)
+        std::function<Ret(ThreadContext *, Args...)> target)
 {
-    return target(tc);
+    // Extract all the arguments from the thread context. Braced initializers
+    // are evaluated from left to right.
+    auto args = std::tuple<Args...>{getArgument<ABI, Args>(tc, state)...};
+
+    // Call the wrapper which will call target.
+    return callFromHelper<ABI, Ret, store_ret>(
+            target, tc, state, std::move(args),
+            std::make_index_sequence<sizeof...(Args)>{});
 }
-
-// With no arguments to gather and nothing to return, call the target function.
-template <typename ABI>
-static void
-callFrom(ThreadContext *tc, typename ABI::State &state,
-        std::function<void(ThreadContext *)> target)
-{
-    target(tc);
-}
-
-// Recursively gather arguments for target from tc until we get to the base
-// case above.
-template <typename ABI, bool store_ret, typename Ret,
-          typename NextArg, typename ...Args>
-static typename std::enable_if_t<!std::is_void<Ret>::value, Ret>
-callFrom(ThreadContext *tc, typename ABI::State &state,
-        std::function<Ret(ThreadContext *, NextArg, Args...)> target)
-{
-    // Extract the next argument from the thread context.
-    NextArg next = getArgument<ABI, NextArg>(tc, state);
-
-    // Build a partial function which adds the next argument to the call.
-    std::function<Ret(ThreadContext *, Args...)> partial =
-        [target,next](ThreadContext *_tc, Args... args) {
-            return target(_tc, next, args...);
-        };
-
-    // Recursively handle any remaining arguments.
-    return callFrom<ABI, store_ret, Ret, Args...>(tc, state, partial);
-}
-
-// Recursively gather arguments for target from tc until we get to the base
-// case above. This version is for functions that don't return anything.
-template <typename ABI, typename NextArg, typename ...Args>
-static void
-callFrom(ThreadContext *tc, typename ABI::State &state,
-        std::function<void(ThreadContext *, NextArg, Args...)> target)
-{
-    // Extract the next argument from the thread context.
-    NextArg next = getArgument<ABI, NextArg>(tc, state);
-
-    // Build a partial function which adds the next argument to the call.
-    std::function<void(ThreadContext *, Args...)> partial =
-        [target,next](ThreadContext *_tc, Args... args) {
-            target(_tc, next, args...);
-        };
-
-    // Recursively handle any remaining arguments.
-    callFrom<ABI, Args...>(tc, state, partial);
-}
-
 
 
 /*
- * These functions are like the ones above, except they print the arguments
+ * This function is like the ones above, except it prints the arguments
  * a target function would be called with instead of actually calling it.
  */
 
-// With no arguments to print, add the closing parenthesis and return.
-template <typename ABI, typename Ret>
+template <typename ABI, typename Ret, typename ...Args>
 static void
-dumpArgsFrom(int count, std::ostream &os, ThreadContext *tc,
-             typename ABI::State &state)
+dumpArgsFrom(std::ostream &os, M5_VAR_USED ThreadContext *tc,
+        typename ABI::State &state)
 {
+    int count = 0;
+    // Extract all the arguments from the thread context and print them,
+    // prefixed with either a ( or a , as appropriate.
+    M5_FOR_EACH_IN_PACK(os << (count++ ? ", " : "("),
+                        os << getArgument<ABI, Args>(tc, state));
     os << ")";
-}
-
-// Recursively gather arguments for target from tc until we get to the base
-// case above, and append those arguments to the string stream being
-// constructed.
-template <typename ABI, typename Ret, typename NextArg, typename ...Args>
-static void
-dumpArgsFrom(int count, std::ostream &os, ThreadContext *tc,
-             typename ABI::State &state)
-{
-    // Either open the parenthesis or add a comma, depending on where we are
-    // in the argument list.
-    os << (count ? ", " : "(");
-
-    // Extract the next argument from the thread context.
-    NextArg next = getArgument<ABI, NextArg>(tc, state);
-
-    // Add this argument to the list.
-    os << next;
-
-    // Recursively handle any remaining arguments.
-    dumpArgsFrom<ABI, Ret, Args...>(count + 1, os, tc, state);
 }
 
 } // namespace GuestABI
