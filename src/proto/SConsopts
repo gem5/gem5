@@ -26,7 +26,7 @@
 Import('*')
 
 from gem5_scons import warning
-from m5.util import readCommand, compareVersions
+from gem5_scons.util import readCommand, compareVersions
 
 import gem5_scons
 

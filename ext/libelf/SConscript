@@ -32,8 +32,6 @@ import os, subprocess
 
 Import('main')
 
-from m5.util import compareVersions
-
 elf_files = []
 def ElfFile(filename):
     elf_files.append(File(filename))

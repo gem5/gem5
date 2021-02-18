@@ -91,8 +91,6 @@ import SCons.Node
 import SCons.Node.FS
 import SCons.Tool
 
-from m5.util import compareVersions, readCommand
-
 
 ########################################################################
 #
@@ -132,6 +130,7 @@ from gem5_scons import error, warning, summarize_warnings, parse_build_path
 from gem5_scons import TempFileSpawn, EnvDefaults, MakeAction, MakeActionTool
 import gem5_scons
 from gem5_scons.builders import ConfigFile, AddLocalRPATH, SwitchingHeaders
+from gem5_scons.util import compareVersions, readCommand
 
 Export('MakeAction')
 

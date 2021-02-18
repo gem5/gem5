@@ -42,7 +42,6 @@ import os
 import sys
 
 import gem5_scons.util
-from m5.util import readCommand
 
 git_style_message = """
 You're missing the gem5 style or commit message hook. These hooks help
@@ -52,7 +51,7 @@ Press enter to continue, or ctrl-c to abort: """
 
 def install_style_hooks(env):
     try:
-        gitdir = env.Dir(readCommand(
+        gitdir = env.Dir(gem5_scons.util.readCommand(
             ["git", "rev-parse", "--git-dir"]).strip("\n"))
     except Exception as e:
         print("Warning: Failed to find git repo directory: %s" % e)
