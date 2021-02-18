@@ -144,10 +144,6 @@ def build_test_system(np):
     test_sys.cpu = [TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i)
                     for i in range(np)]
 
-    if ObjectList.is_kvm_cpu(TestCPUClass) or \
-        ObjectList.is_kvm_cpu(FutureClass):
-        test_sys.kvm_vm = KvmVM()
-
     if args.ruby:
         bootmem = getattr(test_sys, '_bootmem', None)
         Ruby.create_system(args, True, test_sys, test_sys.iobus,
@@ -219,6 +215,20 @@ def build_test_system(np):
         CacheConfig.config_cache(args, test_sys)
 
         MemConfig.config_mem(args, test_sys)
+
+    if ObjectList.is_kvm_cpu(TestCPUClass) or \
+        ObjectList.is_kvm_cpu(FutureClass):
+        # Assign KVM CPUs to their own event queues / threads. This
+        # has to be done after creating caches and other child objects
+        # since these mustn't inherit the CPU event queue.
+        for i,cpu in enumerate(test_sys.cpu):
+            # Child objects usually inherit the parent's event
+            # queue. Override that and use the same event queue for
+            # all devices.
+            for obj in cpu.descendants():
+                obj.eventq_index = 0
+            cpu.eventq_index = i + 1
+        test_sys.kvm_vm = KvmVM()
 
     return test_sys
 
@@ -320,6 +330,7 @@ else:
 np = args.num_cpus
 
 test_sys = build_test_system(np)
+
 if len(bm) == 2:
     drive_sys = build_drive_system(np)
     root = makeDualRoot(True, test_sys, drive_sys, args.etherdump)
@@ -340,6 +351,13 @@ elif len(bm) == 1:
 else:
     print("Error I don't know how to create more than 2 systems.")
     sys.exit(1)
+
+if ObjectList.is_kvm_cpu(TestCPUClass) or \
+    ObjectList.is_kvm_cpu(FutureClass):
+    # Required for running kvm on multiple host cores.
+    # Uses gem5's parallel event queue feature
+    # Note: The simulator is quite picky about this number!
+    root.sim_quantum = int(1e9) # 1 ms
 
 if args.timesync:
     root.time_sync_enable = True
