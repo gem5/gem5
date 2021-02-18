@@ -49,7 +49,7 @@ class DumbTOD : public BasicPioDevice
     uint64_t todTime;
 
   public:
-    PARAMS(DumbTOD);
+    using Params = DumbTODParams;
     DumbTOD(const Params &p);
 
     Tick read(PacketPtr pkt) override;

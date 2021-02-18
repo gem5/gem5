@@ -47,7 +47,7 @@ class MmDisk : public BasicPioDevice
     uint8_t diskData[SectorSize];
 
   public:
-    PARAMS(MmDisk);
+    using Params = MmDiskParams;
     MmDisk(const Params &p);
 
     Tick read(PacketPtr pkt) override;

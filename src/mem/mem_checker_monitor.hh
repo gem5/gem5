@@ -52,7 +52,7 @@ class MemCheckerMonitor : public SimObject
   public:
 
     /** Parameters of memchecker monitor */
-    PARAMS(MemCheckerMonitor);
+    using Params = MemCheckerMonitorParams;
 
     /**
      * Constructor based on the Python params

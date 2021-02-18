@@ -57,7 +57,7 @@ namespace X86ISA
       public:
         void clear();
 
-        PARAMS(X86ISA);
+        using Params = X86ISAParams;
 
         ISA(const Params &p);
 

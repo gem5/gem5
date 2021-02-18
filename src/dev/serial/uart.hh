@@ -51,7 +51,7 @@ class Uart : public BasicPioDevice
     SerialDevice *device;
 
   public:
-    PARAMS(Uart);
+    using Params = UartParams;
     Uart(const Params &p, Addr pio_size);
 
     /**

@@ -50,7 +50,7 @@ class EmuLinux : public SEWorkload
     void syscall32(ThreadContext *tc);
 
   public:
-    PARAMS(SparcEmuLinux);
+    using Params = SparcEmuLinuxParams;
 
     EmuLinux(const Params &p);
 

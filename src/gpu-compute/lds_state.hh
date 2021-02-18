@@ -259,7 +259,7 @@ class LdsState: public ClockedObject
                        unsigned *numBankAccesses);
 
   public:
-    PARAMS(LdsState);
+    using Params = LdsStateParams;
 
     LdsState(const Params &params);
 

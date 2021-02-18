@@ -85,7 +85,7 @@ class I82094AA : public BasicPioDevice
     IntRequestPort<I82094AA> intRequestPort;
 
   public:
-    PARAMS(I82094AA);
+    using Params = I82094AAParams;
 
     I82094AA(const Params &p);
 

@@ -47,7 +47,7 @@ namespace MipsISA
 class Interrupts : public BaseInterrupts
 {
   public:
-    PARAMS(MipsInterrupts);
+    using Params = MipsInterruptsParams;
 
     Interrupts(const Params &p) : BaseInterrupts(p) {}
 

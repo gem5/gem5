@@ -40,7 +40,7 @@ namespace MipsISA
 class SEWorkload : public ::SEWorkload
 {
   public:
-    PARAMS(MipsSEWorkload);
+    using Params = MipsSEWorkloadParams;
 
     SEWorkload(const Params &p) : ::SEWorkload(p) {}
 

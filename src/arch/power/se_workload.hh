@@ -40,7 +40,7 @@ namespace PowerISA
 class SEWorkload : public ::SEWorkload
 {
   public:
-    PARAMS(PowerSEWorkload);
+    using Params = PowerSEWorkloadParams;
     SEWorkload(const Params &p) : ::SEWorkload(p) {}
 
     ::Loader::Arch getArch() const override { return ::Loader::Power; }

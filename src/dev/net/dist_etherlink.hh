@@ -215,7 +215,7 @@ class DistEtherLink : public SimObject
     Tick linkDelay;
 
   public:
-    PARAMS(DistEtherLink);
+    using Params = DistEtherLinkParams;
     DistEtherLink(const Params &p);
     ~DistEtherLink();
 

@@ -193,7 +193,7 @@ namespace X86ISA
             tlb = _tlb;
         }
 
-        PARAMS(X86PagetableWalker);
+        using Params = X86PagetableWalkerParams;
 
         Walker(const Params &params) :
             ClockedObject(params), port(name() + ".port", this),

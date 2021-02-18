@@ -149,7 +149,7 @@ class A9GlobalTimer : public BasicPioDevice
     Timer global_timer;
 
   public:
-    PARAMS(A9GlobalTimer);
+    using Params = A9GlobalTimerParams;
 
     /**
       * The constructor for RealView just registers itself with the MMU.

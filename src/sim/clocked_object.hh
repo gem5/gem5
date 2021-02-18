@@ -234,7 +234,7 @@ class ClockedObject : public SimObject, public Clocked
     ClockedObject(const ClockedObjectParams &p);
 
     /** Parameters of ClockedObject */
-    PARAMS(ClockedObject);
+    using Params = ClockedObjectParams;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

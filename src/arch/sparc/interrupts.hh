@@ -61,7 +61,7 @@ class Interrupts : public BaseInterrupts
 
   public:
 
-    PARAMS(SparcInterrupts);
+    using Params = SparcInterruptsParams;
 
     Interrupts(const Params &p) : BaseInterrupts(p)
     {

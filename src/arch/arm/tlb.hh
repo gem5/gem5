@@ -204,7 +204,7 @@ class TLB : public BaseTLB
     int rangeMRU; //On lookup, only move entries ahead when outside rangeMRU
 
   public:
-    PARAMS(ArmTLB);
+    using Params = ArmTLBParams;
     TLB(const Params &p);
     TLB(const Params &p, int _size, TableWalker *_walker);
 

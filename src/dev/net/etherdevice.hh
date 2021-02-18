@@ -45,7 +45,7 @@ class EtherInt;
 class EtherDevice : public PciDevice
 {
   public:
-    PARAMS(EtherDevice);
+    using Params = EtherDeviceParams;
     EtherDevice(const Params &params)
         : PciDevice(params),
           etherDeviceStats(this)
@@ -140,7 +140,7 @@ class EtherDevice : public PciDevice
 class EtherDevBase : public EtherDevice
 {
   public:
-    PARAMS(EtherDevBase);
+    using Params = EtherDevBaseParams;
     EtherDevBase(const Params &params)
         : EtherDevice(params)
     {}

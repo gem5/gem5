@@ -55,7 +55,7 @@ class SouthBridge : public SimObject
     X86ISA::I82094AA * ioApic;
 
   public:
-    PARAMS(SouthBridge);
+    using Params = SouthBridgeParams;
     SouthBridge(const Params &p);
 };
 

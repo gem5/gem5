@@ -71,7 +71,7 @@ void installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
 class FsWorkload : public KernelWorkload
 {
   public:
-    PARAMS(X86FsWorkload);
+    using Params = X86FsWorkloadParams;
     FsWorkload(const Params &p);
 
   public:

@@ -135,7 +135,7 @@ class Sp804 : public AmbaPioDevice
     Timer timer1;
 
   public:
-    PARAMS(Sp804);
+    using Params = Sp804Params;
 
     /**
       * The constructor for RealView just registers itself with the MMU.

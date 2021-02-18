@@ -58,7 +58,7 @@ namespace QoS {
  */
 class PropFairPolicy : public Policy
 {
-    PARAMS(QoSPropFairPolicy);
+    using Params = QoSPropFairPolicyParams;
 
   public:
     PropFairPolicy(const Params &);

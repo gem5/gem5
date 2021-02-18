@@ -44,7 +44,7 @@ class EmuLinux : public SEWorkload
     static SyscallDescTable<SyscallABI> syscallDescs;
 
   public:
-    PARAMS(MipsEmuLinux);
+    using Params = MipsEmuLinuxParams;
 
     EmuLinux(const Params &p) : SEWorkload(p) {}
 

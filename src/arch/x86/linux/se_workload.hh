@@ -52,7 +52,7 @@ namespace X86ISA
 class EmuLinux : public SEWorkload
 {
   public:
-    PARAMS(X86EmuLinux);
+    using Params = X86EmuLinuxParams;
 
     EmuLinux(const Params &p);
 

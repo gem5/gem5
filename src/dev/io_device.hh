@@ -128,7 +128,7 @@ class PioDevice : public ClockedObject
     virtual Tick write(PacketPtr pkt) = 0;
 
   public:
-    PARAMS(PioDevice);
+    using Params = PioDeviceParams;
     PioDevice(const Params &p);
     virtual ~PioDevice();
 

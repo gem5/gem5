@@ -475,7 +475,7 @@ class GicV2 : public BaseGic, public BaseGicRegisters
     int pendingDelayedInterrupts;
 
   public:
-    PARAMS(GicV2);
+    using Params = GicV2Params;
     GicV2(const Params &p);
     ~GicV2();
 

@@ -97,7 +97,7 @@ class PL031 : public AmbaIntDevice
     void resyncMatch();
 
   public:
-    PARAMS(PL031);
+    using Params = PL031Params;
 
     /**
       * The constructor for RealView just registers itself with the MMU.

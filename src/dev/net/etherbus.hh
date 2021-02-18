@@ -55,7 +55,7 @@ class EtherBus : public SimObject
     EtherDump *dump;
 
   public:
-    PARAMS(EtherBus);
+    using Params = EtherBusParams;
     EtherBus(const Params &p);
     virtual ~EtherBus() {}
 

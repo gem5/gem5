@@ -140,7 +140,7 @@ class EtherLink : public SimObject
     Interface *interface[2];
 
   public:
-    PARAMS(EtherLink);
+    using Params = EtherLinkParams;
     EtherLink(const Params &p);
     virtual ~EtherLink();
 

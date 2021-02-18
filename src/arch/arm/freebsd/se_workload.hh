@@ -46,7 +46,7 @@ namespace ArmISA
 class EmuFreebsd : public SEWorkload
 {
   public:
-    PARAMS(ArmEmuFreebsd);
+    using Params = ArmEmuFreebsdParams;
 
     EmuFreebsd(const Params &p) : SEWorkload(p) {}
 

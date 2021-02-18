@@ -34,7 +34,7 @@
 class SEWorkload : public Workload
 {
   public:
-    PARAMS(SEWorkload);
+    using Params = SEWorkloadParams;
 
     SEWorkload(const Params &p);
 

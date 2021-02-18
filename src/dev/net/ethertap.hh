@@ -56,7 +56,7 @@ class EtherTapInt;
 class EtherTapBase : public SimObject
 {
   public:
-    PARAMS(EtherTapBase);
+    using Params = EtherTapBaseParams;
     EtherTapBase(const Params &p);
     virtual ~EtherTapBase();
 
@@ -130,7 +130,7 @@ class TapListener;
 class EtherTapStub : public EtherTapBase
 {
   public:
-    PARAMS(EtherTapStub);
+    using Params = EtherTapStubParams;
     EtherTapStub(const Params &p);
     ~EtherTapStub();
 
@@ -159,7 +159,7 @@ class EtherTapStub : public EtherTapBase
 class EtherTap : public EtherTapBase
 {
   public:
-    PARAMS(EtherTap);
+    using Params = EtherTapParams;
     EtherTap(const Params &p);
     ~EtherTap();
 

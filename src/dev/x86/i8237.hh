@@ -92,7 +92,7 @@ class I8237 : public BasicPioDevice
     void setMaskBit(Register &reg, const uint8_t &command);
 
   public:
-    PARAMS(I8237);
+    using Params = I8237Params;
 
     I8237(const Params &p);
 

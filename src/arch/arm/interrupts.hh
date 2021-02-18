@@ -73,8 +73,7 @@ class Interrupts : public BaseInterrupts
     uint64_t intStatus;
 
   public:
-
-    PARAMS(ArmInterrupts);
+    using Params = ArmInterruptsParams;
 
     Interrupts(const Params &p) : BaseInterrupts(p)
     {

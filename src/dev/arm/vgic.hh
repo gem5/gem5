@@ -186,7 +186,7 @@ class VGic : public PioDevice
     struct std::array<vcpuIntData, VGIC_CPU_MAX>  vcpuData;
 
   public:
-    PARAMS(VGic);
+    using Params = VGicParams;
     VGic(const Params &p);
     ~VGic();
 

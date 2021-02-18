@@ -356,7 +356,7 @@ class Pl111: public AmbaDmaDevice
     bool enableCapture;
 
   public:
-    PARAMS(Pl111);
+    using Params = Pl111Params;
     Pl111(const Params &p);
     ~Pl111();
 

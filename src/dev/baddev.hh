@@ -49,7 +49,7 @@ class BadDevice : public BasicPioDevice
     std::string devname;
 
   public:
-    PARAMS(BadDevice);
+    using Params = BadDeviceParams;
 
     /**
      * Constructor for the Baddev Class.

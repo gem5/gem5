@@ -41,7 +41,7 @@ class BaseInterrupts : public SimObject
     ThreadContext *tc = nullptr;
 
   public:
-    PARAMS(BaseInterrupts);
+    using Params = BaseInterruptsParams;
 
     BaseInterrupts(const Params &p) : SimObject(p) {}
 

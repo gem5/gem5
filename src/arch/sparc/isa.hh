@@ -221,7 +221,7 @@ class ISA : public BaseISA
         return readMiscRegNoEffect(MISCREG_MMU_P_CONTEXT);
     }
 
-    PARAMS(SparcISA);
+    using Params = SparcISAParams;
 
     ISA(const Params &p);
 };

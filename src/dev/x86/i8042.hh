@@ -117,7 +117,7 @@ class I8042 : public BasicPioDevice
     uint8_t readDataOut();
 
   public:
-    PARAMS(I8042);
+    using Params = I8042Params;
 
     I8042(const Params &p);
 

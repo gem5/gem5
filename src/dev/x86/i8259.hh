@@ -81,7 +81,7 @@ class I8259 : public BasicPioDevice
     void handleEOI(int line);
 
   public:
-    PARAMS(I8259);
+    using Params = I8259Params;
 
     I8259(const Params &p);
 

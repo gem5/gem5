@@ -66,7 +66,7 @@ class I8254 : public BasicPioDevice
     void counterInterrupt(unsigned int num);
 
   public:
-    PARAMS(I8254);
+    using Params = I8254Params;
 
     Port &
     getPort(const std::string &if_name, PortID idx=InvalidPortID) override

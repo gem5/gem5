@@ -54,7 +54,7 @@ namespace MipsISA
         // The MIPS name for this file is CP0 or Coprocessor 0
         typedef ISA CP0;
 
-        PARAMS(MipsISA);
+        using Params = MipsISAParams;
 
       protected:
         // Number of threads and vpes an individual ISA state can handle

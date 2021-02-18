@@ -190,7 +190,7 @@ class Interrupts : public BaseInterrupts
     /*
      * Params stuff.
      */
-    PARAMS(X86LocalApic);
+    using Params = X86LocalApicParams;
 
     void setThreadContext(ThreadContext *_tc) override;
 

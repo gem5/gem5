@@ -38,7 +38,7 @@ namespace Iris
 class Interrupts : public BaseInterrupts
 {
   public:
-    PARAMS(IrisInterrupts);
+    using Params = IrisInterruptsParams;
 
     Interrupts(const Params &p) : BaseInterrupts(p) {}
 

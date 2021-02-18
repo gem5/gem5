@@ -96,7 +96,7 @@ class ArmNativeTrace : public NativeTrace
     bool stopOnPCError;
 
   public:
-    PARAMS(ArmNativeTrace);
+    using Params = ArmNativeTraceParams;
 
     ArmNativeTrace(const Params &p) :
         NativeTrace(p), stopOnPCError(p.stop_on_pc_error)

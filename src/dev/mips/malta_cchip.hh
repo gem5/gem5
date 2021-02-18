@@ -76,7 +76,7 @@ class MaltaCChip : public BasicPioDevice
     //uint64_t itint;
 
   public:
-    PARAMS(MaltaCChip);
+    using Params = MaltaCChipParams;
 
     /**
      * Initialize the Malta CChip by setting all of the

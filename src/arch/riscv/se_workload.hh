@@ -40,7 +40,7 @@ namespace RiscvISA
 class SEWorkload : public ::SEWorkload
 {
   public:
-    PARAMS(RiscvSEWorkload);
+    using Params = RiscvSEWorkloadParams;
 
     SEWorkload(const Params &p) : ::SEWorkload(p) {}
 

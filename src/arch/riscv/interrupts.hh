@@ -57,7 +57,7 @@ class Interrupts : public BaseInterrupts
     std::bitset<NumInterruptTypes> ie;
 
   public:
-    PARAMS(RiscvInterrupts);
+    using Params = RiscvInterruptsParams;
 
     Interrupts(const Params &p) : BaseInterrupts(p), ip(0), ie(0) {}
 

@@ -63,7 +63,7 @@ class CommMonitor : public SimObject
   public: // Construction & SimObject interfaces
 
     /** Parameters of communication monitor */
-    PARAMS(CommMonitor);
+    using Params = CommMonitorParams;
 
     /**
      * Constructor based on the Python params

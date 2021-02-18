@@ -41,7 +41,7 @@ namespace PowerISA {
 class Interrupts : public BaseInterrupts
 {
   public:
-    PARAMS(PowerInterrupts);
+    using Params = PowerInterruptsParams;
 
     Interrupts(const Params &p) : BaseInterrupts(p) {}
 

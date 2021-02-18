@@ -76,7 +76,7 @@ class ISA : public BaseISA
     bool hpmCounterEnabled(int counter) const;
 
   public:
-    PARAMS(RiscvISA);
+    using Params = RiscvISAParams;
 
     void clear();
 

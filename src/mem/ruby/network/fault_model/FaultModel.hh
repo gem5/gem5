@@ -53,7 +53,7 @@
 class FaultModel : public SimObject
 {
   public:
-    PARAMS(FaultModel);
+    using Params = FaultModelParams;
     FaultModel(const Params &p);
 
     /************************************************************************/

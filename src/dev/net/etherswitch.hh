@@ -51,7 +51,7 @@
 class EtherSwitch : public SimObject
 {
   public:
-    PARAMS(EtherSwitch);
+    using Params = EtherSwitchParams;
 
     EtherSwitch(const Params &p);
     ~EtherSwitch();

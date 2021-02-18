@@ -40,7 +40,8 @@ namespace ArmISA
 class EmuLinux : public SEWorkload
 {
   public:
-    PARAMS(ArmEmuLinux);
+    using Params = ArmEmuLinuxParams;
+
     EmuLinux(const Params &p) : SEWorkload(p) {}
 
     struct BaseSyscallABI {};

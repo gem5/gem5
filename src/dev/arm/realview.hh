@@ -63,7 +63,7 @@ class RealView : public Platform
     BaseGic *gic;
 
   public:
-    PARAMS(RealView);
+    using Params = RealViewParams;
 
     /**
      * Constructor for the Tsunami Class.

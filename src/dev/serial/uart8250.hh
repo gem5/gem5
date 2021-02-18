@@ -209,7 +209,7 @@ class Uart8250 : public Uart
     EventFunctionWrapper rxIntrEvent;
 
   public:
-    PARAMS(Uart8250);
+    using Params = Uart8250Params;
     Uart8250(const Params &p);
 
     Tick read(PacketPtr pkt) override;
