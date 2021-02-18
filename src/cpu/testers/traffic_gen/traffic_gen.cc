@@ -39,6 +39,7 @@
 #include <libgen.h>
 #include <unistd.h>
 
+#include <cmath>
 #include <fstream>
 #include <sstream>
 
@@ -331,9 +332,10 @@ TrafficGen::parseConfig()
         }
 
         // avoid comparing floating point numbers
-        if (abs(sum - 1.0) > 0.001)
+        if (std::fabs(sum - 1.0) > 0.001) {
             fatal("%s has transition probability != 1 for state %d\n",
                   name(), i);
+        }
     }
 
     // close input file
