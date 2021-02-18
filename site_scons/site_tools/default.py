@@ -78,15 +78,9 @@ def common_config(env):
     # as well
     env.AppendENVPath('PYTHONPATH', extra_python_paths)
 
-gem5_tool_list = [
-    'git',
-]
-
 def generate(env):
     common_config(env)
     SCons.Tool.default.generate(env)
-    for tool in gem5_tool_list:
-        SCons.Tool.Tool(tool)(env)
 
 def exists(env):
     return 1
