@@ -209,7 +209,7 @@ replaceBits(T& val, unsigned bit, B bit_val)
  * @ingroup api_bitfield
  */
 template <class T>
-std::enable_if_t<std::is_integral<T>::value, T>
+std::enable_if_t<std::is_integral<T>::value && sizeof(T) != 1, T>
 reverseBits(T val, size_t size=sizeof(T))
 {
     assert(size <= sizeof(T));
@@ -221,6 +221,14 @@ reverseBits(T val, size_t size=sizeof(T))
     }
 
     return output;
+}
+
+template <class T>
+std::enable_if_t<std::is_integral<T>::value && sizeof(T) == 1, T>
+reverseBits(T val, size_t size=sizeof(T))
+{
+    assert(size == 1);
+    return reverseBitsLookUpTable[val];
 }
 
 /**
