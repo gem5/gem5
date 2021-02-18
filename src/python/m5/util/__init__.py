@@ -173,15 +173,15 @@ def printList(items, indent=4):
             line += item
             print(line)
 
-def readCommandWithReturn(cmd, **kwargs):
+def readCommand(cmd, **kwargs):
     """
     run the command cmd, read the results and return them
     this is sorta like `cmd` in shell
 
     :param cmd: command to run with Popen
     :type cmd: string, list
-    :returns: pair consisting on Popen retcode and the command stdout
-    :rtype: (int, string)
+    :returns: command stdout
+    :rtype: string
     """
     from subprocess import Popen, PIPE, STDOUT
 
@@ -203,19 +203,7 @@ def readCommandWithReturn(cmd, **kwargs):
         raise
 
     output = subp.communicate()[0].decode('utf-8')
-    return subp.returncode, output
-
-def readCommand(cmd, **kwargs):
-    """
-    run the command cmd, read the results and return them
-    this is sorta like `cmd` in shell
-
-    :param cmd: command to run with Popen
-    :type cmd: string, list
-    :returns: command stdout
-    :rtype: string
-    """
-    return readCommandWithReturn(cmd, **kwargs)[1]
+    return output
 
 def makeDir(path):
     """Make a directory if it doesn't exist.  If the path does exist,
