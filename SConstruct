@@ -94,6 +94,7 @@ from re import match
 import SCons
 import SCons.Node
 import SCons.Node.FS
+import SCons.Tool
 
 from m5.util import compareVersions, readCommand, readCommandWithReturn
 
@@ -136,6 +137,9 @@ import gem5_scons
 ########################################################################
 
 main = Environment(tools=['default', 'git', TempFileSpawn])
+
+main.Tool(SCons.Tool.FindTool(['gcc', 'clang'], main))
+main.Tool(SCons.Tool.FindTool(['g++', 'clang++'], main))
 
 from gem5_scons.util import get_termcap
 termcap = get_termcap()
