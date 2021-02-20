@@ -148,7 +148,7 @@ def __get_statistic(statistic: _m5.stats.Info) -> Optional[Statistic]:
 
 def __get_scaler(statistic: _m5.stats.ScalarInfo) -> Scalar:
     value = statistic.value
-    unit = None # TODO https://gem5.atlassian.net/browse/GEM5-850.
+    unit = statistic.unit
     description = statistic.desc
     # ScalarInfo uses the C++ `double`.
     datatype = StorageType["f64"]
@@ -161,7 +161,7 @@ def __get_scaler(statistic: _m5.stats.ScalarInfo) -> Scalar:
                  )
 
 def __get_distribution(statistic: _m5.stats.DistInfo) -> Distribution:
-    unit = None # TODO https://gem5.atlassian.net/browse/GEM5-850.
+    unit = statistic.unit
     description = statistic.desc
     value = statistic.values
     bin_size = statistic.bucket_size
@@ -198,7 +198,7 @@ def __get_vector(statistic: _m5.stats.VectorInfo) -> Vector:
     for index in range(statistic.size):
         # All the values in a Vector are Scalar values
         value = statistic.value[index]
-        unit = None # TODO https://gem5.atlassian.net/browse/GEM5-850.
+        unit = statistic.unit
         description = statistic.subdescs[index]
         # ScalarInfo uses the C++ `double`.
         datatype = StorageType["f64"]
