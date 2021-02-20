@@ -132,6 +132,9 @@ pybind_init_stats(py::module_ &m_native)
     py::class_<Stats::Info, std::unique_ptr<Stats::Info, py::nodelete>>(
         m, "Info")
         .def_readwrite("name", &Stats::Info::name)
+        .def_property_readonly("unit", [](const Stats::Info &info) {
+                return info.unit->getUnitString();
+            })
         .def_readonly("desc", &Stats::Info::desc)
         .def_readonly("id", &Stats::Info::id)
         .def_property_readonly("flags", [](const Stats::Info &info) {
