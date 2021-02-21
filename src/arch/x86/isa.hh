@@ -38,90 +38,88 @@
 #include "arch/x86/regs/misc.hh"
 #include "base/types.hh"
 #include "cpu/reg_class.hh"
-#include "sim/sim_object.hh"
 
-class Checkpoint;
-class EventManager;
 class ThreadContext;
 struct X86ISAParams;
 
 namespace X86ISA
 {
-    class ISA : public BaseISA
+
+class ISA : public BaseISA
+{
+  private:
+    RegVal regVal[NUM_MISCREGS];
+    void updateHandyM5Reg(Efer efer, CR0 cr0,
+            SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags);
+
+    std::string vendorString;
+
+  public:
+    void clear();
+
+    using Params = X86ISAParams;
+
+    ISA(const Params &p);
+
+    RegVal readMiscRegNoEffect(int miscReg) const;
+    RegVal readMiscReg(int miscReg);
+
+    void setMiscRegNoEffect(int miscReg, RegVal val);
+    void setMiscReg(int miscReg, RegVal val);
+
+    RegId
+    flattenRegId(const RegId& regId) const
     {
-      protected:
-        RegVal regVal[NUM_MISCREGS];
-        void updateHandyM5Reg(Efer efer, CR0 cr0,
-                SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags);
-
-      public:
-        void clear();
-
-        using Params = X86ISAParams;
-
-        ISA(const Params &p);
-
-        RegVal readMiscRegNoEffect(int miscReg) const;
-        RegVal readMiscReg(int miscReg);
-
-        void setMiscRegNoEffect(int miscReg, RegVal val);
-        void setMiscReg(int miscReg, RegVal val);
-
-        RegId
-        flattenRegId(const RegId& regId) const
-        {
-            switch (regId.classValue()) {
-              case IntRegClass:
-                return RegId(IntRegClass, flattenIntIndex(regId.index()));
-              case FloatRegClass:
-                return RegId(FloatRegClass, flattenFloatIndex(regId.index()));
-              case CCRegClass:
-                return RegId(CCRegClass, flattenCCIndex(regId.index()));
-              case MiscRegClass:
-                return RegId(MiscRegClass, flattenMiscIndex(regId.index()));
-              default:
-                break;
-            }
-            return regId;
+        switch (regId.classValue()) {
+          case IntRegClass:
+            return RegId(IntRegClass, flattenIntIndex(regId.index()));
+          case FloatRegClass:
+            return RegId(FloatRegClass, flattenFloatIndex(regId.index()));
+          case CCRegClass:
+            return RegId(CCRegClass, flattenCCIndex(regId.index()));
+          case MiscRegClass:
+            return RegId(MiscRegClass, flattenMiscIndex(regId.index()));
+          default:
+            break;
         }
+        return regId;
+    }
 
-        int flattenIntIndex(int reg) const { return reg & ~IntFoldBit; }
+    int flattenIntIndex(int reg) const { return reg & ~IntFoldBit; }
 
-        int
-        flattenFloatIndex(int reg) const
-        {
-            if (reg >= NUM_FLOATREGS) {
-                reg = FLOATREG_STACK(reg - NUM_FLOATREGS,
-                                     regVal[MISCREG_X87_TOP]);
-            }
-            return reg;
+    int
+    flattenFloatIndex(int reg) const
+    {
+        if (reg >= NUM_FLOATREGS) {
+            reg = FLOATREG_STACK(reg - NUM_FLOATREGS,
+                                 regVal[MISCREG_X87_TOP]);
         }
+        return reg;
+    }
 
-        int flattenVecIndex(int reg) const { return reg; }
-        int flattenVecElemIndex(int reg) const { return reg; }
-        int flattenVecPredIndex(int reg) const { return reg; }
-        int flattenCCIndex(int reg) const { return reg; }
-        int flattenMiscIndex(int reg) const { return reg; }
+    int flattenVecIndex(int reg) const { return reg; }
+    int flattenVecElemIndex(int reg) const { return reg; }
+    int flattenVecPredIndex(int reg) const { return reg; }
+    int flattenCCIndex(int reg) const { return reg; }
+    int flattenMiscIndex(int reg) const { return reg; }
 
-        bool
-        inUserMode() const override
-        {
-            HandyM5Reg m5reg = readMiscRegNoEffect(MISCREG_M5_REG);
-            return m5reg.cpl == 3;
-        }
+    bool
+    inUserMode() const override
+    {
+        HandyM5Reg m5reg = readMiscRegNoEffect(MISCREG_M5_REG);
+        return m5reg.cpl == 3;
+    }
 
-        void copyRegsFrom(ThreadContext *src) override;
+    void copyRegsFrom(ThreadContext *src) override;
 
-        void serialize(CheckpointOut &cp) const override;
-        void unserialize(CheckpointIn &cp) override;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
-        void setThreadContext(ThreadContext *_tc) override;
+    void setThreadContext(ThreadContext *_tc) override;
 
-        std::string getVendorString() const;
+    std::string getVendorString() const;
+};
 
-      private:
-        std::string vendorString;
-    };
 }
 
 #endif
