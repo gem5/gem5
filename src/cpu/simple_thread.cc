@@ -74,22 +74,19 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
       htmTransactionStarts(0), htmTransactionStops(0)
 {
     assert(isa);
+    const auto &regClasses = isa->regClasses();
+    intRegs.resize(regClasses.at(IntRegClass).size());
+    floatRegs.resize(regClasses.at(FloatRegClass).size());
+    vecRegs.resize(regClasses.at(VecRegClass).size());
+    vecPredRegs.resize(regClasses.at(VecPredRegClass).size());
+    ccRegs.resize(regClasses.at(CCRegClass).size());
     clearArchRegs();
 }
 
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            BaseMMU *_mmu, BaseISA *_isa)
-    : ThreadState(_cpu, _thread_num, NULL),
-      isa(dynamic_cast<TheISA::ISA *>(_isa)),
-      predicate(true), memAccPredicate(true),
-      comInstEventQueue("instruction-based event queue"),
-      system(_sys), mmu(_mmu), decoder(isa),
-      htmTransactionStarts(0), htmTransactionStops(0)
-{
-    assert(isa);
-
-    clearArchRegs();
-}
+    : SimpleThread(_cpu, _thread_num, _sys, nullptr, _mmu, _isa)
+{}
 
 void
 SimpleThread::takeOverFrom(ThreadContext *oldContext)

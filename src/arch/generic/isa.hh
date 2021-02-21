@@ -40,16 +40,35 @@
 #ifndef __ARCH_GENERIC_ISA_HH__
 #define __ARCH_GENERIC_ISA_HH__
 
+#include <vector>
+
+#include "arch/registers.hh"
+#include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"
 
 class ThreadContext;
 
 class BaseISA : public SimObject
 {
+  public:
+    typedef std::vector<RegClassInfo> RegClasses;
+
   protected:
     using SimObject::SimObject;
 
     ThreadContext *tc = nullptr;
+
+    RegClasses _regClasses = {
+#if THE_ISA != NULL_ISA
+        { TheISA::NumIntRegs },
+        { TheISA::NumFloatRegs },
+        { TheISA::NumVecRegs },
+        { TheISA::NumVecRegs * TheISA::NumVecElemPerVecReg },
+        { TheISA::NumVecPredRegs },
+        { TheISA::NumCCRegs },
+        { TheISA::NumMiscRegs }
+#endif // THE_ISA != NULL_ISA
+    };
 
   public:
     virtual void takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc) {}
@@ -57,6 +76,8 @@ class BaseISA : public SimObject
 
     virtual uint64_t getExecutingAsid() const { return 0; }
     virtual bool inUserMode() const = 0;
+
+    const RegClasses &regClasses() const { return _regClasses; }
 };
 
 #endif // __ARCH_GENERIC_ISA_HH__

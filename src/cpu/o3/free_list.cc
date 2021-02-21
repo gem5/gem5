@@ -29,9 +29,7 @@
 
 #include "cpu/o3/free_list.hh"
 
-#include "arch/registers.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "debug/FreeList.hh"
 
 UnifiedFreeList::UnifiedFreeList(const std::string &_my_name,

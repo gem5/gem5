@@ -61,6 +61,17 @@ enum RegClass {
     MiscRegClass        ///< Control (misc) register
 };
 
+class RegClassInfo
+{
+  private:
+    size_t _size;
+
+  public:
+    RegClassInfo(size_t new_size) : _size(new_size) {}
+
+    size_t size() const { return _size; }
+};
+
 /** Number of register classes.
  * This value is not part of the enum, because putting it there makes the
  * compiler complain about unhandled cases in some switch statements.

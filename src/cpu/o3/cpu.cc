@@ -95,6 +95,7 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
               params.numPhysVecRegs,
               params.numPhysVecPredRegs,
               params.numPhysCCRegs,
+              params.isa[0]->regClasses().at(MiscRegClass).size(),
               vecMode),
 
       freeList(name() + ".freelist", &regFile),
@@ -194,12 +195,26 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
         }
     }
 
-    //Make Sure That this a Valid Architeture
-    assert(params.numPhysIntRegs   >= numThreads * TheISA::NumIntRegs);
-    assert(params.numPhysFloatRegs >= numThreads * TheISA::NumFloatRegs);
-    assert(params.numPhysVecRegs >= numThreads * TheISA::NumVecRegs);
-    assert(params.numPhysVecPredRegs >= numThreads * TheISA::NumVecPredRegs);
-    assert(params.numPhysCCRegs >= numThreads * TheISA::NumCCRegs);
+    // Make Sure That this a Valid Architeture
+    assert(numThreads);
+    const auto &regClasses = params.isa[0]->regClasses();
+
+    assert(params.numPhysIntRegs >=
+            numThreads * regClasses.at(IntRegClass).size());
+    assert(params.numPhysFloatRegs >=
+            numThreads * regClasses.at(FloatRegClass).size());
+    assert(params.numPhysVecRegs >=
+            numThreads * regClasses.at(VecRegClass).size());
+    assert(params.numPhysVecPredRegs >=
+            numThreads * regClasses.at(VecPredRegClass).size());
+    assert(params.numPhysCCRegs >=
+            numThreads * regClasses.at(CCRegClass).size());
+
+    // Just make this a warning and go ahead anyway, to keep from having to
+    // add checks everywhere.
+    warn_if(regClasses.at(CCRegClass).size() == 0 && params.numPhysCCRegs != 0,
+            "Non-zero number of physical CC regs specified, even though\n"
+            "    ISA does not use them.");
 
     rename.setScoreboard(&scoreboard);
     iew.setScoreboard(&scoreboard);
@@ -213,19 +228,20 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
         // Only Alpha has an FP zero register, so for other ISAs we
         // use an invalid FP register index to avoid special treatment
         // of any valid FP reg.
-        RegIndex invalidFPReg = TheISA::NumFloatRegs + 1;
+        RegIndex invalidFPReg = regClasses.at(FloatRegClass).size() + 1;
 
-        commitRenameMap[tid].init(&regFile, TheISA::ZeroReg, invalidFPReg,
-                                  &freeList, vecMode);
+        commitRenameMap[tid].init(regClasses, &regFile, TheISA::ZeroReg,
+                invalidFPReg, &freeList, vecMode);
 
-        renameMap[tid].init(&regFile, TheISA::ZeroReg, invalidFPReg,
-                            &freeList, vecMode);
+        renameMap[tid].init(regClasses, &regFile, TheISA::ZeroReg,
+                invalidFPReg, &freeList, vecMode);
     }
 
     // Initialize rename map to assign physical registers to the
     // architectural registers for active threads only.
     for (ThreadID tid = 0; tid < active_threads; tid++) {
-        for (RegIndex ridx = 0; ridx < TheISA::NumIntRegs; ++ridx) {
+        for (RegIndex ridx = 0; ridx < regClasses.at(IntRegClass).size();
+                ++ridx) {
             // Note that we can't use the rename() method because we don't
             // want special treatment for the zero register at this point
             PhysRegIdPtr phys_reg = freeList.getIntReg();
@@ -233,7 +249,8 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
             commitRenameMap[tid].setEntry(RegId(IntRegClass, ridx), phys_reg);
         }
 
-        for (RegIndex ridx = 0; ridx < TheISA::NumFloatRegs; ++ridx) {
+        for (RegIndex ridx = 0; ridx < regClasses.at(FloatRegClass).size();
+                ++ridx) {
             PhysRegIdPtr phys_reg = freeList.getFloatReg();
             renameMap[tid].setEntry(RegId(FloatRegClass, ridx), phys_reg);
             commitRenameMap[tid].setEntry(
@@ -243,9 +260,10 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
         /* Here we need two 'interfaces' the 'whole register' and the
          * 'register element'. At any point only one of them will be
          * active. */
+        const size_t numVecs = regClasses.at(VecRegClass).size();
         if (vecMode == Enums::Full) {
             /* Initialize the full-vector interface */
-            for (RegIndex ridx = 0; ridx < TheISA::NumVecRegs; ++ridx) {
+            for (RegIndex ridx = 0; ridx < numVecs; ++ridx) {
                 RegId rid = RegId(VecRegClass, ridx);
                 PhysRegIdPtr phys_reg = freeList.getVecReg();
                 renameMap[tid].setEntry(rid, phys_reg);
@@ -253,9 +271,10 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
             }
         } else {
             /* Initialize the vector-element interface */
-            for (RegIndex ridx = 0; ridx < TheISA::NumVecRegs; ++ridx) {
-                for (ElemIndex ldx = 0; ldx < TheISA::NumVecElemPerVecReg;
-                        ++ldx) {
+            const size_t numElems = regClasses.at(VecElemClass).size();
+            const size_t elemsPerVec = numElems / numVecs;
+            for (RegIndex ridx = 0; ridx < numVecs; ++ridx) {
+                for (ElemIndex ldx = 0; ldx < elemsPerVec; ++ldx) {
                     RegId lrid = RegId(VecElemClass, ridx, ldx);
                     PhysRegIdPtr phys_elem = freeList.getVecElem();
                     renameMap[tid].setEntry(lrid, phys_elem);
@@ -264,14 +283,16 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
             }
         }
 
-        for (RegIndex ridx = 0; ridx < TheISA::NumVecPredRegs; ++ridx) {
+        for (RegIndex ridx = 0; ridx < regClasses.at(VecPredRegClass).size();
+                ++ridx) {
             PhysRegIdPtr phys_reg = freeList.getVecPredReg();
             renameMap[tid].setEntry(RegId(VecPredRegClass, ridx), phys_reg);
             commitRenameMap[tid].setEntry(
                     RegId(VecPredRegClass, ridx), phys_reg);
         }
 
-        for (RegIndex ridx = 0; ridx < TheISA::NumCCRegs; ++ridx) {
+        for (RegIndex ridx = 0; ridx < regClasses.at(CCRegClass).size();
+                ++ridx) {
             PhysRegIdPtr phys_reg = freeList.getCCReg();
             renameMap[tid].setEntry(RegId(CCRegClass, ridx), phys_reg);
             commitRenameMap[tid].setEntry(RegId(CCRegClass, ridx), phys_reg);
@@ -750,25 +771,29 @@ FullO3CPU<Impl>::insertThread(ThreadID tid)
         src_tc = tcBase(tid);
 
     //Bind Int Regs to Rename Map
+    const auto &regClasses = isa[tid]->regClasses();
 
-    for (RegId reg_id(IntRegClass, 0); reg_id.index() < TheISA::NumIntRegs;
-         reg_id.index()++) {
+    for (RegId reg_id(IntRegClass, 0);
+            reg_id.index() < regClasses.at(IntRegClass).size();
+            reg_id.index()++) {
         PhysRegIdPtr phys_reg = freeList.getIntReg();
         renameMap[tid].setEntry(reg_id, phys_reg);
         scoreboard.setReg(phys_reg);
     }
 
     //Bind Float Regs to Rename Map
-    for (RegId reg_id(FloatRegClass, 0); reg_id.index() < TheISA::NumFloatRegs;
-         reg_id.index()++) {
+    for (RegId reg_id(FloatRegClass, 0);
+            reg_id.index() < regClasses.at(FloatRegClass).size();
+            reg_id.index()++) {
         PhysRegIdPtr phys_reg = freeList.getFloatReg();
         renameMap[tid].setEntry(reg_id, phys_reg);
         scoreboard.setReg(phys_reg);
     }
 
     //Bind condition-code Regs to Rename Map
-    for (RegId reg_id(CCRegClass, 0); reg_id.index() < TheISA::NumCCRegs;
-         reg_id.index()++) {
+    for (RegId reg_id(CCRegClass, 0);
+            reg_id.index() < regClasses.at(CCRegClass).size();
+            reg_id.index()++) {
         PhysRegIdPtr phys_reg = freeList.getCCReg();
         renameMap[tid].setEntry(reg_id, phys_reg);
         scoreboard.setReg(phys_reg);
@@ -845,21 +870,23 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setVectorsAsReady(ThreadID tid)
 {
+    const auto &regClasses = isa[tid]->regClasses();
+
+    const size_t numVecs = regClasses.at(VecRegClass).size();
     if (vecMode == Enums::Elem) {
-        for (auto v = 0; v < TheISA::NumVecRegs; v++)
-            for (auto e = 0; e < TheISA::NumVecElemPerVecReg; e++)
-                scoreboard.setReg(
-                    commitRenameMap[tid].lookup(
-                        RegId(VecElemClass, v, e)
-                    )
-                );
+        const size_t numElems = regClasses.at(VecElemClass).size();
+        const size_t elemsPerVec = numElems / numVecs;
+        for (auto v = 0; v < numVecs; v++) {
+            for (auto e = 0; e < elemsPerVec; e++) {
+                scoreboard.setReg(commitRenameMap[tid].lookup(
+                            RegId(VecElemClass, v, e)));
+            }
+        }
     } else if (vecMode == Enums::Full) {
-        for (auto v = 0; v < TheISA::NumVecRegs; v++)
-            scoreboard.setReg(
-                commitRenameMap[tid].lookup(
-                    RegId(VecRegClass, v)
-                )
-            );
+        for (auto v = 0; v < numVecs; v++) {
+            scoreboard.setReg(commitRenameMap[tid].lookup(
+                        RegId(VecRegClass, v)));
+        }
     }
 }
 

@@ -175,8 +175,10 @@ Execute::Execute(const std::string &name_,
                 name_ + ".inputBuffer" + tid_str, "insts",
                 params.executeInputBufferSize));
 
+        const auto &regClasses = cpu.threads[tid]->getIsaPtr()->regClasses();
+
         /* Scoreboards */
-        scoreboard.push_back(Scoreboard(name_ + ".scoreboard" + tid_str));
+        scoreboard.emplace_back(name_ + ".scoreboard" + tid_str, regClasses);
 
         /* In-flight instruction records */
         executeInfo[tid].inFlightInsts =  new Queue<QueuedInst,

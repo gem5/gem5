@@ -61,27 +61,20 @@ Scoreboard::findIndex(const RegId& reg, Index &scoreboard_index)
             ret = true;
             break;
           case FloatRegClass:
-            scoreboard_index = TheISA::NumIntRegs + TheISA::NumCCRegs +
-                reg.index();
+            scoreboard_index = floatRegOffset + reg.index();
             ret = true;
             break;
           case VecRegClass:
-            scoreboard_index = TheISA::NumIntRegs + TheISA::NumCCRegs +
-                TheISA::NumFloatRegs + reg.index();
-            ret = true;
-            break;
           case VecElemClass:
-            scoreboard_index = TheISA::NumIntRegs + TheISA::NumCCRegs +
-                TheISA::NumFloatRegs + reg.flatIndex();
+            scoreboard_index = vecRegOffset + reg.index();
             ret = true;
             break;
           case VecPredRegClass:
-            scoreboard_index = TheISA::NumIntRegs + TheISA::NumCCRegs +
-                TheISA::NumFloatRegs + TheISA::NumVecRegs + reg.index();
+            scoreboard_index = vecPredRegOffset + reg.index();
             ret = true;
             break;
           case CCRegClass:
-            scoreboard_index = TheISA::NumIntRegs + reg.index();
+            scoreboard_index = ccRegOffset + reg.index();
             ret = true;
             break;
           case MiscRegClass:

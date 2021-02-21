@@ -50,6 +50,7 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
                          unsigned _numPhysicalVecRegs,
                          unsigned _numPhysicalVecPredRegs,
                          unsigned _numPhysicalCCRegs,
+                         unsigned _numPhysicalMiscRegs,
                          VecMode vmode)
     : intRegFile(_numPhysicalIntRegs),
       floatRegFile(_numPhysicalFloatRegs),
@@ -74,12 +75,6 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     PhysRegIndex phys_reg;
     PhysRegIndex flat_reg_idx = 0;
 
-    if (TheISA::NumCCRegs == 0 && _numPhysicalCCRegs != 0) {
-        // Just make this a warning and go ahead and allocate them
-        // anyway, to keep from having to add checks everywhere
-        warn("Non-zero number of physical CC regs specified, even though\n"
-             "    ISA does not use them.\n");
-    }
     // The initial batch of registers are the integer ones
     for (phys_reg = 0; phys_reg < numPhysicalIntRegs; phys_reg++) {
         intRegIds.emplace_back(IntRegClass, phys_reg, flat_reg_idx++);
@@ -121,7 +116,7 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     }
 
     // Misc regs have a fixed mapping but still need PhysRegIds.
-    for (phys_reg = 0; phys_reg < TheISA::NumMiscRegs; phys_reg++) {
+    for (phys_reg = 0; phys_reg < _numPhysicalMiscRegs; phys_reg++) {
         miscRegIds.emplace_back(MiscRegClass, phys_reg, 0);
     }
 }

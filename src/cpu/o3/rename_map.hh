@@ -90,14 +90,13 @@ class SimpleRenameMap
 
     SimpleRenameMap();
 
-    ~SimpleRenameMap() {};
-
     /**
      * Because we have an array of rename maps (one per thread) in the CPU,
      * it's awkward to initialize this object via the constructor.
      * Instead, this method is used for initialization.
      */
-    void init(unsigned size, SimpleFreeList *_freeList, RegIndex _zeroReg);
+    void init(const RegClassInfo &reg_class_info, SimpleFreeList *_freeList,
+            RegIndex _zeroReg);
 
     /**
      * Pair of a physical register and a physical register.  Used to
@@ -143,6 +142,8 @@ class SimpleRenameMap
 
     /** Return the number of free entries on the associated free list. */
     unsigned numFreeEntries() const { return freeList->numFreeRegs(); }
+
+    size_t numArchRegs() const { return map.size(); }
 
     /** Forward begin/cbegin to the map. */
     /** @{ */
@@ -207,7 +208,8 @@ class UnifiedRenameMap
     ~UnifiedRenameMap() {};
 
     /** Initializes rename map with given parameters. */
-    void init(PhysRegFile *_regFile,
+    void init(const BaseISA::RegClasses &regClasses,
+              PhysRegFile *_regFile,
               RegIndex _intZeroReg,
               RegIndex _floatZeroReg,
               UnifiedFreeList *freeList,

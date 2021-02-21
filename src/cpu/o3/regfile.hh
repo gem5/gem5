@@ -136,6 +136,7 @@ class PhysRegFile
                 unsigned _numPhysicalVecRegs,
                 unsigned _numPhysicalVecPredRegs,
                 unsigned _numPhysicalCCRegs,
+                unsigned _numPhysicalMiscRegs,
                 VecMode vmode
                 );
 

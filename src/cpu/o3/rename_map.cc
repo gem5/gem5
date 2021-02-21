@@ -43,25 +43,26 @@
 
 #include <vector>
 
+#include "arch/registers.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Rename.hh"
 
 /**** SimpleRenameMap methods ****/
 
 SimpleRenameMap::SimpleRenameMap()
-    : freeList(NULL), zeroReg(IntRegClass,0)
+    : freeList(NULL), zeroReg(IntRegClass, 0)
 {
 }
 
 
 void
-SimpleRenameMap::init(unsigned size, SimpleFreeList *_freeList,
-                      RegIndex _zeroReg)
+SimpleRenameMap::init(const RegClassInfo &reg_class_info,
+        SimpleFreeList *_freeList, RegIndex _zeroReg)
 {
     assert(freeList == NULL);
     assert(map.empty());
 
-    map.resize(size);
+    map.resize(reg_class_info.size());
     freeList = _freeList;
     zeroReg = RegId(IntRegClass, _zeroReg);
 }
@@ -105,7 +106,8 @@ SimpleRenameMap::rename(const RegId& arch_reg)
 /**** UnifiedRenameMap methods ****/
 
 void
-UnifiedRenameMap::init(PhysRegFile *_regFile,
+UnifiedRenameMap::init(const BaseISA::RegClasses &regClasses,
+                       PhysRegFile *_regFile,
                        RegIndex _intZeroReg,
                        RegIndex _floatZeroReg,
                        UnifiedFreeList *freeList,
@@ -114,18 +116,21 @@ UnifiedRenameMap::init(PhysRegFile *_regFile,
     regFile = _regFile;
     vecMode = _mode;
 
-    intMap.init(TheISA::NumIntRegs, &(freeList->intList), _intZeroReg);
+    intMap.init(regClasses.at(IntRegClass), &(freeList->intList), _intZeroReg);
 
-    floatMap.init(TheISA::NumFloatRegs, &(freeList->floatList), _floatZeroReg);
+    floatMap.init(regClasses.at(FloatRegClass), &(freeList->floatList),
+            _floatZeroReg);
 
-    vecMap.init(TheISA::NumVecRegs, &(freeList->vecList), (RegIndex)-1);
+    vecMap.init(regClasses.at(VecRegClass), &(freeList->vecList),
+            (RegIndex)-1);
 
-    vecElemMap.init(TheISA::NumVecRegs * TheISA::NumVecElemPerVecReg,
-            &(freeList->vecElemList), (RegIndex)-1);
+    vecElemMap.init(regClasses.at(VecElemClass), &(freeList->vecElemList),
+            (RegIndex)-1);
 
-    predMap.init(TheISA::NumVecPredRegs, &(freeList->predList), (RegIndex)-1);
+    predMap.init(regClasses.at(VecPredRegClass), &(freeList->predList),
+            (RegIndex)-1);
 
-    ccMap.init(TheISA::NumCCRegs, &(freeList->ccList), (RegIndex)-1);
+    ccMap.init(regClasses.at(CCRegClass), &(freeList->ccList), (RegIndex)-1);
 
 }
 
@@ -138,7 +143,7 @@ UnifiedRenameMap::switchFreeList(UnifiedFreeList* freeList)
         panic_if(freeList->hasFreeVecElems(),
                 "The free list is already tracking Vec elems");
         panic_if(freeList->numFreeVecRegs() !=
-                regFile->numVecPhysRegs() - TheISA::NumVecRegs,
+                regFile->numVecPhysRegs() - vecMap.numArchRegs(),
                 "The free list has lost vector registers");
 
         /* Split the free regs. */
@@ -154,12 +159,11 @@ UnifiedRenameMap::switchFreeList(UnifiedFreeList* freeList)
         panic_if(freeList->hasFreeVecRegs(),
                 "The free list is already tracking full Vec");
         panic_if(freeList->numFreeVecElems() !=
-                 regFile->numVecElemPhysRegs() -
-                 TheISA::NumVecRegs * TheISA::NumVecElemPerVecReg,
+                 regFile->numVecElemPhysRegs() - vecElemMap.numArchRegs(),
                  "The free list has lost vector register elements");
 
         auto range = regFile->getRegIds(VecRegClass);
-        freeList->addRegs(range.first + TheISA::NumVecRegs, range.second);
+        freeList->addRegs(range.first + vecMap.numArchRegs(), range.second);
 
         /* We remove the elems from the free list. */
         while (freeList->hasFreeVecElems())
@@ -198,23 +202,26 @@ UnifiedRenameMap::switchMode(VecMode newVecMode)
          *  2.- Replace the contents of the register file with the vectors
          *  3.- Set the remaining registers as free
          */
-        TheISA::VecRegContainer new_RF[TheISA::NumVecRegs];
-        for (uint32_t i = 0; i < TheISA::NumVecRegs; i++) {
+        TheISA::VecRegContainer new_RF[vecMap.numArchRegs()];
+        const size_t numVecs = vecMap.numArchRegs();
+        const size_t numElems = vecElemMap.numArchRegs();
+        const size_t elemsPerVec = numElems / numVecs;
+        for (uint32_t i = 0; i < numVecs; i++) {
             TheISA::VecReg dst = new_RF[i].as<TheISA::VecElem>();
-            for (uint32_t l = 0; l < TheISA::NumVecElemPerVecReg; l++) {
+            for (uint32_t l = 0; l < elemsPerVec; l++) {
                 RegId s_rid(VecElemClass, i, l);
                 PhysRegIdPtr s_prid = vecElemMap.lookup(s_rid);
                 dst[l] = regFile->readVecElem(s_prid);
             }
         }
 
-        for (uint32_t i = 0; i < TheISA::NumVecRegs; i++) {
+        for (uint32_t i = 0; i < numVecs; i++) {
             PhysRegId pregId(VecRegClass, i, 0);
             regFile->setVecReg(regFile->getTrueId(&pregId), new_RF[i]);
         }
 
         auto range = regFile->getRegIds(VecRegClass);
-        for (uint32_t i = 0; i < TheISA::NumVecRegs; i++) {
+        for (uint32_t i = 0; i < numVecs; i++) {
             setEntry(RegId(VecRegClass, i), &(*(range.first + i)));
         }
 
