@@ -50,6 +50,7 @@ external_type(Packet, primitive="yes");
 external_type(Addr, primitive="yes");
 external_type(Cycles, primitive="yes", default="Cycles(0)");
 external_type(Tick, primitive="yes", default="0");
+external_type(RequestPtr, primitive="yes", default="nullptr");
 
 structure(WriteMask, external="yes", desc="...") {
   void clear();

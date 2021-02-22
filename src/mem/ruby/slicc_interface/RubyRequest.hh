@@ -154,6 +154,7 @@ class RubyRequest : public Message
     const RubyAccessMode& getAccessMode() const { return m_AccessMode; }
     const int& getSize() const { return m_Size; }
     const PrefetchBit& getPrefetch() const { return m_Prefetch; }
+    RequestPtr getRequestPtr() const { return m_pkt->req; }
 
     void print(std::ostream& out) const;
     bool functionalRead(Packet *pkt);
