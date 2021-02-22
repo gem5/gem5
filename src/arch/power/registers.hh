@@ -33,6 +33,7 @@
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
+#include "arch/power/regs/int.hh"
 
 namespace PowerISA
 {
@@ -52,35 +53,8 @@ using VecPredRegContainer = ::DummyVecPredRegContainer;
 constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
 constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
-// Constants Related to the number of registers
-const int NumIntArchRegs = 32;
-
-// CR, XER, LR, CTR, FPSCR, RSV, RSV-LEN, RSV-ADDR
-// and zero register, which doesn't actually exist but needs a number
-const int NumIntSpecialRegs = 9;
-const int NumFloatArchRegs = 32;
-
-const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;
-const int NumFloatRegs = NumFloatArchRegs;
-
-// Semantically meaningful register indices
-const int ReturnValueReg = 3;
-const int StackPointerReg = 1;
-
 // There isn't one in Power, but we need to define one somewhere
 const int ZeroReg = NumIntRegs - 1;
-
-enum MiscIntRegNums
-{
-    INTREG_CR = NumIntArchRegs,
-    INTREG_XER,
-    INTREG_LR,
-    INTREG_CTR,
-    INTREG_FPSCR,
-    INTREG_RSV,
-    INTREG_RSV_LEN,
-    INTREG_RSV_ADDR
-};
 
 } // namespace PowerISA
 

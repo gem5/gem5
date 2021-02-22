@@ -32,7 +32,8 @@
 #ifndef __ARCH_POWER_REMOTE_GDB_HH__
 #define __ARCH_POWER_REMOTE_GDB_HH__
 
-#include "arch/power/registers.hh"
+#include "arch/power/regs/float.hh"
+#include "arch/power/regs/int.hh"
 #include "arch/power/remote_gdb.hh"
 #include "base/remote_gdb.hh"
 

@@ -1,15 +1,6 @@
 /*
- * Copyright (c) 2012 ARM Limited
- * All rights reserved
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
+ * Copyright (c) 2009 The University of Edinburgh
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -35,46 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/power/isa.hh"
-
-#include "arch/power/regs/float.hh"
-#include "arch/power/regs/int.hh"
-#include "arch/power/regs/misc.hh"
-#include "cpu/thread_context.hh"
-#include "params/PowerISA.hh"
+#ifndef __ARCH_POWER_REGS_FLOAT_HH__
+#define __ARCH_POWER_REGS_FLOAT_HH__
 
 namespace PowerISA
 {
 
-ISA::ISA(const Params &p) : BaseISA(p)
-{
-    _regClasses.insert(_regClasses.end(), {
-            { NumIntRegs },
-            { NumFloatRegs },
-            { 1 },
-            { 2 },
-            { 1 },
-            { 0 },
-            { NUM_MISCREGS }
-    });
-    clear();
-}
+const int NumFloatArchRegs = 32;
+const int NumFloatRegs = NumFloatArchRegs;
 
-void
-ISA::copyRegsFrom(ThreadContext *src)
-{
-    // First loop through the integer registers.
-    for (int i = 0; i < NumIntRegs; ++i)
-        tc->setIntReg(i, src->readIntReg(i));
+} // namespace PowerISA
 
-    // Then loop through the floating point registers.
-    for (int i = 0; i < NumFloatRegs; ++i)
-        tc->setFloatReg(i, src->readFloatReg(i));
-
-    //TODO Copy misc. registers
-
-    // Lastly copy PC/NPC
-    tc->pcState(src->pcState());
-}
-
-}
+#endif // __ARCH_POWER_REGS_FLOAT_HH__
