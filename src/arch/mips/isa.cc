@@ -33,6 +33,7 @@
 #include "arch/mips/pra_constants.hh"
 #include "base/bitfield.hh"
 #include "cpu/base.hh"
+#include "cpu/reg_class.hh"
 #include "cpu/thread_context.hh"
 #include "debug/MipsPRA.hh"
 #include "params/MipsISA.hh"
@@ -41,7 +42,7 @@ namespace MipsISA
 {
 
 std::string
-ISA::miscRegNames[NumMiscRegs] =
+ISA::miscRegNames[MISCREG_NUMREGS] =
 {
     "Index", "MVPControl", "MVPConf0", "MVPConf1", "", "", "", "",
     "Random", "VPEControl", "VPEConf0", "VPEConf1",
@@ -90,17 +91,27 @@ ISA::miscRegNames[NumMiscRegs] =
 ISA::ISA(const Params &p) : BaseISA(p), numThreads(p.num_threads),
     numVpes(p.num_vpes)
 {
-    miscRegFile.resize(NumMiscRegs);
-    bankType.resize(NumMiscRegs);
+    _regClasses.insert(_regClasses.end(), {
+            { NumIntRegs },
+            { NumFloatRegs },
+            { 1 }, // Not applicable to MIPS.
+            { 2 }, // Not applicable to MIPS.
+            { 1 }, // Not applicable to MIPS.
+            { 0 }, // Not applicable to MIPS.
+            { MISCREG_NUMREGS }
+    });
 
-    for (int i=0; i < NumMiscRegs; i++) {
+    miscRegFile.resize(MISCREG_NUMREGS);
+    bankType.resize(MISCREG_NUMREGS);
+
+    for (int i = 0; i < MISCREG_NUMREGS; i++) {
         miscRegFile[i].resize(1);
         bankType[i] = perProcessor;
     }
 
-    miscRegFile_WriteMask.resize(NumMiscRegs);
+    miscRegFile_WriteMask.resize(MISCREG_NUMREGS);
 
-    for (int i = 0; i < NumMiscRegs; i++) {
+    for (int i = 0; i < MISCREG_NUMREGS; i++) {
         miscRegFile_WriteMask[i].push_back(0);
     }
 
@@ -143,7 +154,7 @@ ISA::ISA(const Params &p) : BaseISA(p), numThreads(p.num_threads),
 void
 ISA::clear()
 {
-    for (int i = 0; i < NumMiscRegs; i++) {
+    for (int i = 0; i < MISCREG_NUMREGS; i++) {
         for (int j = 0; j < miscRegFile[i].size(); j++)
             miscRegFile[i][j] = 0;
 

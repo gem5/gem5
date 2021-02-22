@@ -454,7 +454,7 @@ namespace ArmISA
 
         void initializeMiscRegMetadata();
 
-        RegVal miscRegs[NumMiscRegs];
+        RegVal miscRegs[NUM_MISCREGS];
         const IntRegIndex *intRegMap;
 
         void

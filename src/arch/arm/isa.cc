@@ -47,6 +47,7 @@
 #include "arch/arm/tlbi_op.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
+#include "cpu/reg_class.hh"
 #include "debug/Arm.hh"
 #include "debug/MiscRegs.hh"
 #include "dev/arm/generic_timer.hh"
@@ -65,6 +66,16 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     pmu(p.pmu), impdefAsNop(p.impdef_nop),
     afterStartup(false)
 {
+    _regClasses.insert(_regClasses.end(), {
+            { NUM_INTREGS },
+            { 0 },
+            { NumVecRegs },
+            { NumVecRegs * TheISA::NumVecElemPerVecReg },
+            { NumVecPredRegs },
+            { NUM_CCREGS },
+            { NUM_MISCREGS }
+    });
+
     miscRegs[MISCREG_SCTLR_RST] = 0;
 
     // Hook up a dummy device if we haven't been configured with a
@@ -484,7 +495,7 @@ ISA::takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc)
 RegVal
 ISA::readMiscRegNoEffect(int misc_reg) const
 {
-    assert(misc_reg < NumMiscRegs);
+    assert(misc_reg < NUM_MISCREGS);
 
     const auto &reg = lookUpMiscReg[misc_reg]; // bit masks
     const auto &map = getMiscIndices(misc_reg);
@@ -810,7 +821,7 @@ ISA::readMiscReg(int misc_reg)
 void
 ISA::setMiscRegNoEffect(int misc_reg, RegVal val)
 {
-    assert(misc_reg < NumMiscRegs);
+    assert(misc_reg < NUM_MISCREGS);
 
     const auto &reg = lookUpMiscReg[misc_reg]; // bit masks
     const auto &map = getMiscIndices(misc_reg);

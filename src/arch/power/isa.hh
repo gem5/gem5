@@ -31,6 +31,7 @@
 #define __ARCH_POWER_ISA_HH__
 
 #include "arch/generic/isa.hh"
+#include "arch/power/miscregs.hh"
 #include "arch/power/registers.hh"
 #include "arch/power/types.hh"
 #include "base/logging.hh"
@@ -49,7 +50,7 @@ class ISA : public BaseISA
 {
   protected:
     RegVal dummy;
-    RegVal miscRegs[NumMiscRegs];
+    RegVal miscRegs[NUM_MISCREGS];
 
   public:
     void clear() {}

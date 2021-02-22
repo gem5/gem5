@@ -30,6 +30,10 @@
 
 #include "arch/x86/decoder.hh"
 #include "arch/x86/mmu.hh"
+#include "arch/x86/registers.hh"
+#include "arch/x86/regs/ccr.hh"
+#include "arch/x86/regs/int.hh"
+#include "arch/x86/regs/misc.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "params/X86ISA.hh"
@@ -104,7 +108,7 @@ ISA::clear()
 {
     // Blank everything. 0 might not be an appropriate value for some things,
     // but it is for most.
-    memset(regVal, 0, NumMiscRegs * sizeof(RegVal));
+    memset(regVal, 0, NUM_MISCREGS * sizeof(RegVal));
 
     // If some state should be non-zero after a reset, set those values here.
     regVal[MISCREG_CR0] = 0x0000000060000010ULL;
@@ -134,6 +138,17 @@ ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string)
 {
     fatal_if(vendorString.size() != 12,
              "CPUID vendor string must be 12 characters\n");
+
+    _regClasses.insert(_regClasses.end(), {
+            { NumIntRegs },
+            { NumFloatRegs },
+            { 1 }, // Not applicable to X86
+            { 2 }, // Not applicable to X86
+            { 1 }, // Not applicable to X86
+            { NUM_CCREGS },
+            { NUM_MISCREGS },
+    });
+
     clear();
 }
 
@@ -409,13 +424,13 @@ ISA::setMiscReg(int miscReg, RegVal val)
 void
 ISA::serialize(CheckpointOut &cp) const
 {
-    SERIALIZE_ARRAY(regVal, NumMiscRegs);
+    SERIALIZE_ARRAY(regVal, NUM_MISCREGS);
 }
 
 void
 ISA::unserialize(CheckpointIn &cp)
 {
-    UNSERIALIZE_ARRAY(regVal, NumMiscRegs);
+    UNSERIALIZE_ARRAY(regVal, NUM_MISCREGS);
     updateHandyM5Reg(regVal[MISCREG_EFER],
                      regVal[MISCREG_CR0],
                      regVal[MISCREG_CS_ATTR],

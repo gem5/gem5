@@ -47,6 +47,7 @@ output header {{
 #include "arch/sparc/insts/unimp.hh"
 #include "arch/sparc/insts/unknown.hh"
 #include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/miscregs.hh"
 #include "arch/sparc/registers.hh"
 #include "base/condcodes.hh"
 #include "base/logging.hh"

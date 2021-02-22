@@ -49,8 +49,6 @@
 namespace X86ISA
 {
 
-const int NumMiscRegs = NUM_MISCREGS;
-
 const int NumIntArchRegs = NUM_INTREGS;
 const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs + NumImplicitIntRegs;
 const int NumCCRegs = NUM_CCREGS;
@@ -68,13 +66,8 @@ enum DependenceTags {
     FP_Reg_Base = 128,
     CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
     Misc_Reg_Base = CC_Reg_Base + NumCCRegs,
-    Max_Reg_Index = Misc_Reg_Base + NumMiscRegs
+    Max_Reg_Index = Misc_Reg_Base + NUM_MISCREGS
 };
-
-const int NumVecRegs = 1;  // Not applicable to x86
-                           // (1 to prevent warnings)
-const int NumVecPredRegs = 1;  // Not applicable to x86
-                               // (1 to prevent warnings)
 
 // semantically meaningful register indices
 //There is no such register in X86

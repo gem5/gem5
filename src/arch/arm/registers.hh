@@ -41,10 +41,7 @@
 #ifndef __ARCH_ARM_REGISTERS_HH__
 #define __ARCH_ARM_REGISTERS_HH__
 
-#include "arch/arm/ccregs.hh"
 #include "arch/arm/intregs.hh"
-#include "arch/arm/miscregs.hh"
-#include "arch/arm/types.hh"
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
 
@@ -68,14 +65,6 @@ using ConstVecPredReg = ::VecPredRegT<VecElem, NumVecElemPerVecReg,
                                       VecPredRegHasPackedRepr, true>;
 using VecPredRegContainer = VecPredReg::Container;
 
-// Constants Related to the number of registers
-// Int, Float, CC, Misc
-const int NumIntArchRegs = NUM_ARCH_INTREGS;
-const int NumIntRegs = NUM_INTREGS;
-const int NumFloatRegs = 0; // Float values are stored in the VecRegs
-const int NumCCRegs = NUM_CCREGS;
-const int NumMiscRegs = NUM_MISCREGS;
-
 // Vec, PredVec
 // NumFloatV7ArchRegs: This in theory should be 32.
 // However in A32 gem5 is splitting double register accesses in two
@@ -88,9 +77,6 @@ const int NumVecSpecialRegs = 8;
 const int NumVecIntrlvRegs = 4;
 const int NumVecRegs = NumVecV8ArchRegs + NumVecSpecialRegs + NumVecIntrlvRegs;
 const int NumVecPredRegs = 18;  // P0-P15, FFR, UREG0
-
-const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumVecRegs +
-    NumVecPredRegs + NumMiscRegs;
 
 // Semantically meaningful register indices
 const int ReturnValueReg = 0;

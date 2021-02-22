@@ -111,13 +111,6 @@ const int NumMicroIntRegs = 1;
 const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs;
 const int NumFloatRegs = 32;
 
-const unsigned NumVecRegs = 1;  // Not applicable to RISC-V
-                                // (1 to prevent warnings)
-const int NumVecPredRegs = 1;  // Not applicable to RISC-V
-                               // (1 to prevent warnings)
-
-const int NumCCRegs = 0;
-
 // Semantically meaningful register indices
 const int ZeroReg = 0;
 const int ReturnAddrReg = 1;
@@ -278,7 +271,6 @@ enum MiscRegIndex {
 
     NUM_MISCREGS
 };
-const int NumMiscRegs = NUM_MISCREGS;
 
 enum CSRIndex {
     CSR_USTATUS = 0x000,

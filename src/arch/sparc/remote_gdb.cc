@@ -124,6 +124,7 @@
 #include <csignal>
 #include <string>
 
+#include "arch/sparc/miscregs.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"

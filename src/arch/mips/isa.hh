@@ -125,7 +125,7 @@ namespace MipsISA
         // and if necessary alert the CPU
         void updateCPU(BaseCPU *cpu);
 
-        static std::string miscRegNames[NumMiscRegs];
+        static std::string miscRegNames[MISCREG_NUMREGS];
 
       public:
         ISA(const Params &p);

@@ -44,6 +44,7 @@
  * ISA-specific types for hardware transactional memory.
  */
 
+#include "arch/arm/intregs.hh"
 #include "arch/arm/registers.hh"
 #include "arch/generic/htm.hh"
 #include "base/types.hh"
@@ -70,7 +71,7 @@ class HTMCheckpoint : public BaseHTMCheckpoint
   private:
     uint8_t rt; // TSTART destination register
     Addr nPc; // Fallback instruction address
-    std::array<RegVal, NumIntArchRegs> x; // General purpose registers
+    std::array<RegVal, NUM_ARCH_INTREGS> x; // General purpose registers
     std::array<VecRegContainer, NumVecRegs> z; // Vector registers
     std::array<VecPredRegContainer, NumVecRegs> p; // Predicate registers
     Addr sp; // Stack Pointer at current EL

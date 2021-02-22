@@ -31,7 +31,6 @@
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/sparc/miscregs.hh"
 #include "arch/sparc/sparc_traits.hh"
 #include "base/types.hh"
 
@@ -94,16 +93,9 @@ const int FramePointerReg = INTREG_I6;
 const int SyscallPseudoReturnReg = INTREG_O1;
 
 const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
-const int NumVecRegs = 1;  // Not applicable to SPARC
-                           // (1 to prevent warnings)
-const int NumVecPredRegs = 1;  // Not applicable to SPARC
-                               // (1 to prevent warnings)
-const int NumCCRegs = 0;
 
 const int NumFloatRegs = 64;
 const int NumFloatArchRegs = NumFloatRegs;
-
-const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
 
 } // namespace SparcISA
 

@@ -70,6 +70,7 @@ output exec {{
 #include "arch/generic/memhelpers.hh"
 #include "arch/power/faults.hh"
 #include "arch/power/isa_traits.hh"
+#include "arch/power/miscregs.hh"
 #include "arch/power/utility.hh"
 #include "base/condcodes.hh"
 #include "cpu/base.hh"

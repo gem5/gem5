@@ -33,6 +33,7 @@
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/interrupts.hh"
+#include "arch/sparc/miscregs.hh"
 #include "arch/sparc/mmu.hh"
 #include "arch/sparc/registers.hh"
 #include "base/bitfield.hh"

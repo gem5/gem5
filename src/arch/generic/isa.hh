@@ -42,7 +42,6 @@
 
 #include <vector>
 
-#include "arch/registers.hh"
 #include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"
 
@@ -58,17 +57,7 @@ class BaseISA : public SimObject
 
     ThreadContext *tc = nullptr;
 
-    RegClasses _regClasses = {
-#if THE_ISA != NULL_ISA
-        { TheISA::NumIntRegs },
-        { TheISA::NumFloatRegs },
-        { TheISA::NumVecRegs },
-        { TheISA::NumVecRegs * TheISA::NumVecElemPerVecReg },
-        { TheISA::NumVecPredRegs },
-        { TheISA::NumCCRegs },
-        { TheISA::NumMiscRegs }
-#endif // THE_ISA != NULL_ISA
-    };
+    RegClasses _regClasses;
 
   public:
     virtual void takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc) {}

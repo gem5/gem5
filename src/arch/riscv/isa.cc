@@ -49,7 +49,7 @@
 namespace RiscvISA
 {
 
-M5_VAR_USED const std::array<const char *, NumMiscRegs> MiscRegNames = {{
+M5_VAR_USED const std::array<const char *, NUM_MISCREGS> MiscRegNames = {{
     [MISCREG_PRV]           = "PRV",
     [MISCREG_ISA]           = "ISA",
     [MISCREG_VENDORID]      = "VENDORID",
@@ -178,7 +178,17 @@ M5_VAR_USED const std::array<const char *, NumMiscRegs> MiscRegNames = {{
 
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    miscRegFile.resize(NumMiscRegs);
+    _regClasses.insert(_regClasses.begin(), {
+            { NumIntRegs },
+            { NumFloatRegs },
+            { 1 }, // Not applicable to RISCV
+            { 2 }, // Not applicable to RISCV
+            { 1 }, // Not applicable to RISCV
+            { 0 }, // Not applicable to RISCV
+            { NUM_MISCREGS }
+    });
+
+    miscRegFile.resize(NUM_MISCREGS);
     clear();
 }
 
@@ -226,7 +236,7 @@ ISA::hpmCounterEnabled(int misc_reg) const
 RegVal
 ISA::readMiscRegNoEffect(int misc_reg) const
 {
-    if (misc_reg > NumMiscRegs || misc_reg < 0) {
+    if (misc_reg > NUM_MISCREGS || misc_reg < 0) {
         // Illegal CSR
         panic("Illegal CSR index %#x\n", misc_reg);
         return -1;
@@ -314,7 +324,7 @@ ISA::readMiscReg(int misc_reg)
 void
 ISA::setMiscRegNoEffect(int misc_reg, RegVal val)
 {
-    if (misc_reg > NumMiscRegs || misc_reg < 0) {
+    if (misc_reg > NUM_MISCREGS || misc_reg < 0) {
         // Illegal CSR
         panic("Illegal CSR index %#x\n", misc_reg);
     }

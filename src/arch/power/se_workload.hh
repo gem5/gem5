@@ -28,6 +28,7 @@
 #ifndef __ARCH_POWER_SE_WORKLOAD_HH__
 #define __ARCH_POWER_SE_WORKLOAD_HH__
 
+#include "arch/power/miscregs.hh"
 #include "arch/power/registers.hh"
 #include "params/PowerSEWorkload.hh"
 #include "sim/se_workload.hh"

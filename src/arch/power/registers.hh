@@ -29,10 +29,10 @@
 #ifndef __ARCH_POWER_REGISTERS_HH__
 #define __ARCH_POWER_REGISTERS_HH__
 
+#include <cstdint>
+
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/power/miscregs.hh"
-#include "base/types.hh"
 
 namespace PowerISA
 {
@@ -62,12 +62,6 @@ const int NumFloatArchRegs = 32;
 
 const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;
 const int NumFloatRegs = NumFloatArchRegs;
-const int NumVecRegs = 1;  // Not applicable to Power
-                           // (1 to prevent warnings)
-const int NumVecPredRegs = 1;  // Not applicable to Power
-                               // (1 to prevent warnings)
-const int NumCCRegs = 0;
-const int NumMiscRegs = NUM_MISCREGS;
 
 // Semantically meaningful register indices
 const int ReturnValueReg = 3;

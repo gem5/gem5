@@ -40,7 +40,7 @@
 #include <algorithm>
 #include <string>
 
-#include "config/the_isa.hh"
+#include "arch/arm/miscregs.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"

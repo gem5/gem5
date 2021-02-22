@@ -49,11 +49,6 @@ const int NumFloatSpecialRegs = 5;
 const int MaxShadowRegSets = 16; // Maximum number of shadow register sets
 const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;        //HI & LO Regs
 const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;//
-const int NumVecRegs = 1;  // Not applicable to MIPS
-                           // (1 to prevent warnings)
-const int NumVecPredRegs = 1;  // Not applicable to MIPS
-                               // (1 to prevent warnings)
-const int NumCCRegs = 0;
 
 const uint32_t MIPS32_QNAN = 0x7fbfffff;
 const uint64_t MIPS64_QNAN = 0x7ff7ffffffffffffULL;
@@ -265,8 +260,6 @@ enum MiscRegIndex{
 
     MISCREG_NUMREGS
 };
-
-const int NumMiscRegs = MISCREG_NUMREGS;
 
 // Not applicable to MIPS
 using VecElem = ::DummyVecElem;

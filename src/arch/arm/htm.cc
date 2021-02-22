@@ -36,6 +36,9 @@
  */
 
 #include "arch/arm/htm.hh"
+
+#include "arch/arm/intregs.hh"
+#include "arch/arm/miscregs.hh"
 #include "cpu/thread_context.hh"
 
 void
@@ -70,7 +73,7 @@ ArmISA::HTMCheckpoint::save(ThreadContext *tc)
     //tme_checkpoint->iccPmrEl1 = tc->readMiscReg(MISCREG_ICC_PMR_EL1);
     nzcv = tc->readMiscReg(MISCREG_NZCV);
     daif = tc->readMiscReg(MISCREG_DAIF);
-    for (auto n = 0; n < NumIntArchRegs; n++) {
+    for (auto n = 0; n < NUM_ARCH_INTREGS; n++) {
         x[n] = tc->readIntReg(n);
     }
     // TODO first detect if FP is enabled at this EL
@@ -97,7 +100,7 @@ ArmISA::HTMCheckpoint::restore(ThreadContext *tc, HtmFailureFaultCause cause)
     //tc->setMiscReg(MISCREG_ICC_PMR_EL1, tme_checkpoint->iccPmrEl1);
     tc->setMiscReg(MISCREG_NZCV, nzcv);
     tc->setMiscReg(MISCREG_DAIF, daif);
-    for (auto n = 0; n < NumIntArchRegs; n++) {
+    for (auto n = 0; n < NUM_ARCH_INTREGS; n++) {
         tc->setIntReg(n, x[n]);
     }
     // TODO first detect if FP is enabled at this EL

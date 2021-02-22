@@ -31,6 +31,7 @@
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/decoder.hh"
 #include "arch/sparc/interrupts.hh"
+#include "arch/sparc/miscregs.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
@@ -61,6 +62,15 @@ static const PSTATE PstateMask = buildPstateMask();
 
 ISA::ISA(const Params &p) : BaseISA(p)
 {
+    _regClasses.insert(_regClasses.end(), {
+            { NumIntRegs },
+            { NumFloatRegs },
+            { 1 }, // Not applicable for SPARC
+            { 2 }, // Not applicable for SPARC
+            { 1 }, // Not applicable for SPARC
+            { 0 }, // Not applicable for SPARC
+            { NumMiscRegs }
+    });
     clear();
 }
 

@@ -40,6 +40,7 @@
 
 #include "arch/arm/nativetrace.hh"
 
+#include "arch/arm/ccregs.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/miscregs.hh"
 #include "cpu/thread_context.hh"

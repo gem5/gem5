@@ -30,7 +30,7 @@
 #define __ARCH_SPARC_UTILITY_HH__
 
 #include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/registers.hh"
+#include "arch/sparc/miscregs.hh"
 #include "arch/sparc/tlb.hh"
 #include "base/bitfield.hh"
 #include "base/logging.hh"

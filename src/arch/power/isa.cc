@@ -37,6 +37,8 @@
 
 #include "arch/power/isa.hh"
 
+#include "arch/power/miscregs.hh"
+#include "arch/power/registers.hh"
 #include "params/PowerISA.hh"
 
 namespace PowerISA
@@ -44,6 +46,15 @@ namespace PowerISA
 
 ISA::ISA(const Params &p) : BaseISA(p)
 {
+    _regClasses.insert(_regClasses.end(), {
+            { NumIntRegs },
+            { NumFloatRegs },
+            { 1 },
+            { 2 },
+            { 1 },
+            { 0 },
+            { NUM_MISCREGS }
+    });
     clear();
 }
 

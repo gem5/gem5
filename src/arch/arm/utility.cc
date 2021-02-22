@@ -39,8 +39,10 @@
 
 #include <memory>
 
+#include "arch/arm/ccregs.hh"
 #include "arch/arm/faults.hh"
 #include "arch/arm/interrupts.hh"
+#include "arch/arm/intregs.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/mmu.hh"
 #include "arch/arm/system.hh"
@@ -74,16 +76,13 @@ copyVecRegs(ThreadContext *src, ThreadContext *dest)
 void
 copyRegs(ThreadContext *src, ThreadContext *dest)
 {
-    for (int i = 0; i < NumIntRegs; i++)
+    for (int i = 0; i < NUM_INTREGS; i++)
         dest->setIntRegFlat(i, src->readIntRegFlat(i));
 
-    for (int i = 0; i < NumFloatRegs; i++)
-        dest->setFloatRegFlat(i, src->readFloatRegFlat(i));
-
-    for (int i = 0; i < NumCCRegs; i++)
+    for (int i = 0; i < NUM_CCREGS; i++)
         dest->setCCReg(i, src->readCCReg(i));
 
-    for (int i = 0; i < NumMiscRegs; i++)
+    for (int i = 0; i < NUM_MISCREGS; i++)
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
 
     copyVecRegs(src, dest);

@@ -216,11 +216,8 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     for (int i = 0; i < NumFloatRegs; i++)
         dest->setFloatRegFlat(i, src->readFloatRegFlat(i));
 
-    // Would need to add condition-code regs if implemented
-    assert(NumCCRegs == 0);
-
     // Copy misc. registers
-    for (int i = 0; i < NumMiscRegs; i++)
+    for (int i = 0; i < MISCREG_NUMREGS; i++)
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
 
     // Copy over the PC State

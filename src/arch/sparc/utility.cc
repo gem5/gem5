@@ -205,9 +205,6 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
         dest->setFloatReg(i, src->readFloatReg(i));
     }
 
-    // Would need to add condition-code regs if implemented
-    assert(NumCCRegs == 0);
-
     // Copy misc. registers
     copyMiscRegs(src, dest);
 
