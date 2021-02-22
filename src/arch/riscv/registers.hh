@@ -62,34 +62,34 @@
 namespace RiscvISA
 {
 
-/* Convenience wrappers to simplify softfloat code sequences */
-#define isBoxedF32(r) ((uint32_t)((r.v >> 32) + 1) == 0)
-#define unboxF32(r) (isBoxedF32(r) ? (uint32_t)r.v : defaultNaNF32UI)
-#define unboxF64(r) (r.v)
+/* Conversion functions for working with softfloat. */
 
-typedef int64_t sreg_t;
-typedef uint64_t reg_t;
-typedef float64_t freg_t;
-inline float32_t f32(uint32_t v) { return { v }; }
-inline float64_t f64(uint64_t v) { return { v }; }
-inline float32_t f32(freg_t r) { return f32(unboxF32(r)); }
-inline float64_t f64(freg_t r) { return f64(unboxF64(r)); }
-inline freg_t freg(float32_t f) { return {((uint64_t)-1 << 32) | f.v}; }
-inline freg_t freg(float64_t f) { return {f}; }
-inline freg_t freg(uint_fast16_t f) { return {f}; }
-#define F32_SIGN ((uint32_t)1 << 31)
-#define F64_SIGN ((uint64_t)1 << 63)
-#define fsgnj32(a, b, n, x) \
-  f32((f32(a).v & ~F32_SIGN) | \
-      ((((x) ? f32(a).v : (n) ? F32_SIGN : 0) ^ f32(b).v) & F32_SIGN))
-#define fsgnj64(a, b, n, x) \
-  f64((f64(a).v & ~F64_SIGN) | \
-      ((((x) ? f64(a).v : (n) ? F64_SIGN : 0) ^ f64(b).v) & F64_SIGN))
+// Generic floating point value type.
+using freg_t = float64_t;
 
-#define sext32(x) ((sreg_t)(int32_t)(x))
-#define zext32(x) ((reg_t)(uint32_t)(x))
-#define sext_xlen(x) (((sreg_t)(x) << (64-xlen)) >> (64-xlen))
-#define zext_xlen(x) (((reg_t)(x) << (64-xlen)) >> (64-xlen))
+// Extract a 32 bit float packed into a 64 bit value.
+static constexpr uint32_t
+unboxF32(uint64_t v)
+{
+    // The upper 32 bits should all be ones.
+    if (bits(v, 63, 32) == mask(32))
+        return bits(v, 31, 0);
+    else
+        return defaultNaNF32UI;
+}
+
+static constexpr uint64_t boxF32(uint32_t v) { return {mask(63, 32) | v}; }
+
+// Create fixed size floats from raw bytes or generic floating point values.
+static constexpr float32_t f32(uint32_t v) { return {v}; }
+static constexpr float64_t f64(uint64_t v) { return {v}; }
+static constexpr float32_t f32(freg_t r) { return {unboxF32(r.v)}; }
+static constexpr float64_t f64(freg_t r) { return r; }
+
+// Create generic floating point values from fixed size floats.
+static constexpr freg_t freg(float32_t f) { return {boxF32(f.v)}; }
+static constexpr freg_t freg(float64_t f) { return f; }
+static constexpr freg_t freg(uint_fast16_t f) { return {f}; }
 
 // Not applicable to RISC-V
 using VecElem = ::DummyVecElem;

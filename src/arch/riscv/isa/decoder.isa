@@ -909,7 +909,8 @@ decode QUADRANT default Unknown::unknown() {
                     freg_t fd;
                     fd = freg(f32_mulAdd(f32(freg(Fs1_bits)),
                                     f32(freg(Fs2_bits)),
-                                    f32(f32(freg(Fs3_bits)).v ^ F32_SIGN)));
+                                    f32(f32(freg(Fs3_bits)).v ^
+                                        mask(31, 31))));
                     Fd_bits = fd.v;
                 }}, FloatMultAccOp);
                 0x1: fmsub_d({{
@@ -917,7 +918,8 @@ decode QUADRANT default Unknown::unknown() {
                     freg_t fd;
                     fd = freg(f64_mulAdd(f64(freg(Fs1_bits)),
                                     f64(freg(Fs2_bits)),
-                                    f64(f64(freg(Fs3_bits)).v ^ F64_SIGN)));
+                                    f64(f64(freg(Fs3_bits)).v ^
+                                        mask(63, 63))));
                     Fd_bits = fd.v;
                 }}, FloatMultAccOp);
             }
@@ -925,7 +927,8 @@ decode QUADRANT default Unknown::unknown() {
                 0x0: fnmsub_s({{
                     RM_REQUIRED;
                     freg_t fd;
-                    fd = freg(f32_mulAdd(f32(f32(freg(Fs1_bits)).v ^ F32_SIGN),
+                    fd = freg(f32_mulAdd(f32(f32(freg(Fs1_bits)).v ^
+                                             mask(31, 31)),
                                          f32(freg(Fs2_bits)),
                                          f32(freg(Fs3_bits))));
                     Fd_bits = fd.v;
@@ -933,7 +936,8 @@ decode QUADRANT default Unknown::unknown() {
                 0x1: fnmsub_d({{
                     RM_REQUIRED;
                     freg_t fd;
-                    fd = freg(f64_mulAdd(f64(f64(freg(Fs1_bits)).v ^ F64_SIGN),
+                    fd = freg(f64_mulAdd(f64(f64(freg(Fs1_bits)).v ^
+                                             mask(63, 63)),
                                          f64(freg(Fs2_bits)),
                                          f64(freg(Fs3_bits))));
                     Fd_bits = fd.v;
@@ -943,17 +947,21 @@ decode QUADRANT default Unknown::unknown() {
                 0x0: fnmadd_s({{
                     RM_REQUIRED;
                     freg_t fd;
-                    fd = freg(f32_mulAdd(f32(f32(freg(Fs1_bits)).v ^ F32_SIGN),
+                    fd = freg(f32_mulAdd(f32(f32(freg(Fs1_bits)).v ^
+                                             mask(31, 31)),
                                     f32(freg(Fs2_bits)),
-                                    f32(f32(freg(Fs3_bits)).v ^ F32_SIGN)));
+                                    f32(f32(freg(Fs3_bits)).v ^
+                                        mask(31, 31))));
                     Fd_bits = fd.v;
                 }}, FloatMultAccOp);
                 0x1: fnmadd_d({{
                     RM_REQUIRED;
                     freg_t fd;
-                    fd = freg(f64_mulAdd(f64(f64(freg(Fs1_bits)).v ^ F64_SIGN),
+                    fd = freg(f64_mulAdd(f64(f64(freg(Fs1_bits)).v ^
+                                             mask(63, 63)),
                                     f64(freg(Fs2_bits)),
-                                    f64(f64(freg(Fs3_bits)).v ^ F64_SIGN)));
+                                    f64(f64(freg(Fs3_bits)).v ^
+                                        mask(63, 63))));
                     Fd_bits = fd.v;
                 }}, FloatMultAccOp);
             }
@@ -1016,42 +1024,29 @@ decode QUADRANT default Unknown::unknown() {
                 }}, FloatDivOp);
                 0x10: decode ROUND_MODE {
                     0x0: fsgnj_s({{
-                        freg_t fd;
-                        fd = freg(fsgnj32(freg(Fs1_bits), freg(Fs2_bits),
-                                          false, false));
-                        Fd_bits = fd.v;
+                        Fd_bits = boxF32(insertBits(unboxF32(Fs2_bits), 30, 0,
+                                                    unboxF32(Fs1_bits)));
                         }}, FloatMiscOp);
                     0x1: fsgnjn_s({{
-                        freg_t fd;
-                        fd = freg(fsgnj32(freg(Fs1_bits), freg(Fs2_bits),
-                                          true, false));
-                        Fd_bits = fd.v;
+                        Fd_bits = boxF32(insertBits(unboxF32(~Fs2_bits), 30, 0,
+                                                    unboxF32(Fs1_bits)));
                         }}, FloatMiscOp);
                     0x2: fsgnjx_s({{
-                        freg_t fd;
-                        fd = freg(fsgnj32(freg(Fs1_bits), freg(Fs2_bits),
-                                          false, true));
-                        Fd_bits = fd.v;
+                        Fd_bits = boxF32(insertBits(
+                                    unboxF32(Fs1_bits) ^ unboxF32(Fs2_bits),
+                                    30, 0, unboxF32(Fs1_bits)));
                         }}, FloatMiscOp);
                 }
                 0x11: decode ROUND_MODE {
                     0x0: fsgnj_d({{
-                        freg_t fd;
-                        fd = freg(fsgnj64(freg(Fs1_bits), freg(Fs2_bits),
-                                          false, false));
-                        Fd_bits = fd.v;
+                        Fd_bits = insertBits(Fs2_bits, 62, 0, Fs1_bits);
                     }}, FloatMiscOp);
                     0x1: fsgnjn_d({{
-                        freg_t fd;
-                        fd = freg(fsgnj64(freg(Fs1_bits), freg(Fs2_bits),
-                                          true, false));
-                        Fd_bits = fd.v;
+                        Fd_bits = insertBits(~Fs2_bits, 62, 0, Fs1_bits);
                     }}, FloatMiscOp);
                     0x2: fsgnjx_d({{
-                        freg_t fd;
-                        fd = freg(fsgnj64(freg(Fs1_bits), freg(Fs2_bits),
-                                          false, true));
-                        Fd_bits = fd.v;
+                        Fd_bits = insertBits(
+                                Fs1_bits ^ Fs2_bits, 62, 0, Fs1_bits);
                     }}, FloatMiscOp);
                 }
                 0x14: decode ROUND_MODE {
@@ -1060,7 +1055,7 @@ decode QUADRANT default Unknown::unknown() {
                             f32(freg(Fs2_bits))) ||
                             (f32_eq(f32(freg(Fs1_bits)),
                             f32(freg(Fs2_bits))) &&
-                            (f32(freg(Fs1_bits)).v & F32_SIGN));
+                            bits(f32(freg(Fs1_bits)).v, 31));
 
                         Fd_bits = less ||
                             isNaNF32UI(f32(freg(Fs2_bits)).v) ?
@@ -1074,7 +1069,7 @@ decode QUADRANT default Unknown::unknown() {
                             f32(freg(Fs1_bits))) ||
                             (f32_eq(f32(freg(Fs2_bits)),
                             f32(freg(Fs1_bits))) &&
-                            (f32(freg(Fs2_bits)).v & F32_SIGN));
+                            bits(f32(freg(Fs2_bits)).v, 31));
 
                         Fd_bits = greater ||
                             isNaNF32UI(f32(freg(Fs2_bits)).v) ?
@@ -1090,7 +1085,7 @@ decode QUADRANT default Unknown::unknown() {
                             f64(freg(Fs2_bits))) ||
                             (f64_eq(f64(freg(Fs1_bits)),
                             f64(freg(Fs2_bits))) &&
-                            (f64(freg(Fs1_bits)).v & F64_SIGN));
+                            bits(f64(freg(Fs1_bits)).v, 63));
 
                         Fd_bits = less ||
                             isNaNF64UI(f64(freg(Fs2_bits)).v) ?
@@ -1105,7 +1100,7 @@ decode QUADRANT default Unknown::unknown() {
                             f64(freg(Fs1_bits))) ||
                             (f64_eq(f64(freg(Fs2_bits)),
                             f64(freg(Fs1_bits))) &&
-                            (f64(freg(Fs2_bits)).v & F64_SIGN));
+                            bits(f64(freg(Fs2_bits)).v, 63));
 
                         Fd_bits = greater ||
                             isNaNF64UI(f64(freg(Fs2_bits)).v) ?
@@ -1180,13 +1175,13 @@ decode QUADRANT default Unknown::unknown() {
                 0x60: decode CONV_SGN {
                     0x0: fcvt_w_s({{
                         RM_REQUIRED;
-                        Rd_sd = sext32(f32_to_i32(f32(freg(Fs1_bits)), rm,
-                                                  true));
+                        Rd_sd = sext<32>(f32_to_i32(f32(freg(Fs1_bits)), rm,
+                                                    true));
                     }}, FloatCvtOp);
                     0x1: fcvt_wu_s({{
                         RM_REQUIRED;
-                        Rd = sext32(f32_to_ui32(f32(freg(Fs1_bits)), rm,
-                                                true));
+                        Rd = sext<32>(f32_to_ui32(f32(freg(Fs1_bits)), rm,
+                                                  true));
                     }}, FloatCvtOp);
                     0x2: fcvt_l_s({{
                         RM_REQUIRED;
@@ -1200,13 +1195,13 @@ decode QUADRANT default Unknown::unknown() {
                 0x61: decode CONV_SGN {
                     0x0: fcvt_w_d({{
                         RM_REQUIRED;
-                        Rd_sd = sext32(f64_to_i32(f64(freg(Fs1_bits)), rm,
-                                                  true));
+                        Rd_sd = sext<32>(f64_to_i32(f64(freg(Fs1_bits)), rm,
+                                                    true));
                     }}, FloatCvtOp);
                     0x1: fcvt_wu_d({{
                         RM_REQUIRED;
-                        Rd = sext32(f64_to_ui32(f64(freg(Fs1_bits)), rm,
-                                                true));
+                        Rd = sext<32>(f64_to_ui32(f64(freg(Fs1_bits)), rm,
+                                                  true));
                     }}, FloatCvtOp);
                     0x2: fcvt_l_d({{
                         RM_REQUIRED;
