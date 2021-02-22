@@ -41,22 +41,13 @@
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/ccr.hh"
+#include "arch/x86/regs/float.hh"
+#include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"
-#include "arch/x86/x86_traits.hh"
 
 namespace X86ISA
 {
-
-const int NumIntArchRegs = NUM_INTREGS;
-const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs + NumImplicitIntRegs;
-const int NumCCRegs = NUM_CCREGS;
-
-// Each 128 bit xmm register is broken into two effective 64 bit registers.
-// Add 8 for the indices that are mapped over the fp stack
-const int NumFloatRegs =
-    NumMMXRegs + 2 * NumXMMRegs + NumMicroFpRegs + 8;
 
 // These enumerate all the registers for dependence tracking.
 enum DependenceTags
@@ -66,14 +57,12 @@ enum DependenceTags
     // we just start at (1 << 7) == 128.
     FP_Reg_Base = 128,
     CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
-    Misc_Reg_Base = CC_Reg_Base + NumCCRegs,
+    Misc_Reg_Base = CC_Reg_Base + NUM_CCREGS,
     Max_Reg_Index = Misc_Reg_Base + NUM_MISCREGS
 };
 
-// semantically meaningful register indices
-//There is no such register in X86
+// There is no such register in X86.
 const int ZeroReg = NUM_INTREGS;
-const int StackPointerReg = INTREG_RSP;
 
 // Not applicable to x86
 using VecElem = ::DummyVecElem;

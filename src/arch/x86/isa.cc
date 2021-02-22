@@ -182,7 +182,7 @@ ISA::copyRegsFrom(ThreadContext *src)
     for (int i = 0; i < NumFloatRegs; ++i)
          tc->setFloatRegFlat(i, src->readFloatRegFlat(i));
     //copy condition-code regs
-    for (int i = 0; i < NumCCRegs; ++i)
+    for (int i = 0; i < NUM_CCREGS; ++i)
          tc->setCCRegFlat(i, src->readCCRegFlat(i));
     copyMiscRegs(src, tc);
     tc->pcState(src->pcState());

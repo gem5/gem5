@@ -40,11 +40,13 @@
 
 #include "arch/x86/interrupts.hh"
 #include "arch/x86/mmu.hh"
-#include "arch/x86/registers.hh"
+#include "arch/x86/regs/ccr.hh"
+#include "arch/x86/regs/float.hh"
+#include "arch/x86/regs/int.hh"
+#include "arch/x86/regs/misc.hh"
 #include "arch/x86/x86_traits.hh"
 #include "cpu/base.hh"
 #include "fputils/fp80.h"
-#include "sim/full_system.hh"
 
 namespace X86ISA
 {

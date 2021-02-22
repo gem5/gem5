@@ -240,13 +240,13 @@ X86StaticInst::printMem(std::ostream &os, uint8_t segment,
         os << "rip";
         someAddr = true;
     } else {
-        if (scale != 0 && index != ZeroReg) {
+        if (scale != 0 && index != NUM_INTREGS) {
             if (scale != 1)
                 ccprintf(os, "%d*", scale);
             printReg(os, InstRegIndex(index), addressSize);
             someAddr = true;
         }
-        if (base != ZeroReg) {
+        if (base != NUM_INTREGS) {
             if (someAddr)
                 os << " + ";
             printReg(os, InstRegIndex(base), addressSize);

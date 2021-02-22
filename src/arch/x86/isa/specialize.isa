@@ -250,12 +250,12 @@ let {{
                 if opType.tag == "X":
                     env.addToDisassembly(
                             '''printMem(out, env.seg,
-                                1, X86ISA::ZeroReg, X86ISA::INTREG_RSI, 0,
+                                1, X86ISA::NUM_INTREGS, X86ISA::INTREG_RSI, 0,
                                 env.addressSize, false);''')
                 else:
                     env.addToDisassembly(
                             '''printMem(out, SEGMENT_REG_ES,
-                                1, X86ISA::ZeroReg, X86ISA::INTREG_RDI, 0,
+                                1, X86ISA::NUM_INTREGS, X86ISA::INTREG_RDI, 0,
                                 env.addressSize, false);''')
                 Name += "_M"
             else:

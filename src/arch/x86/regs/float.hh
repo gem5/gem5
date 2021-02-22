@@ -148,6 +148,11 @@ namespace X86ISA
     {
         return FLOATREG_FPR((top + index + 8) % 8);
     }
+
+    // Each 128 bit xmm register is broken into two effective 64 bit registers.
+    // Add 8 for the indices that are mapped over the fp stack
+    const int NumFloatRegs =
+        NumMMXRegs + 2 * NumXMMRegs + NumMicroFpRegs + 8;
 }
 
 #endif // __ARCH_X86_FLOATREGS_HH__

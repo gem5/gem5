@@ -62,7 +62,7 @@ class X86Linux : public Linux
         }
 
         if (stack)
-            ctc->setIntReg(X86ISA::StackPointerReg, stack);
+            ctc->setIntReg(X86ISA::INTREG_RSP, stack);
     }
 
     class SyscallABI {};
