@@ -35,7 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/arm/miscregs.hh"
+#include "arch/arm/regs/misc.hh"
 
 #include <tuple>
 

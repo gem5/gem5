@@ -43,7 +43,7 @@
 
 #include <cassert>
 
-#include "arch/arm/miscregs.hh"
+#include "arch/arm/regs/misc.hh"
 #include "arch/arm/types.hh"
 #include "arch/generic/decode_cache.hh"
 #include "arch/generic/decoder.hh"

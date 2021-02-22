@@ -42,8 +42,8 @@
 #ifndef __ARM_FAULTS_HH__
 #define __ARM_FAULTS_HH__
 
-#include "arch/arm/miscregs.hh"
 #include "arch/arm/pagetable.hh"
+#include "arch/arm/regs/misc.hh"
 #include "arch/arm/types.hh"
 #include "base/logging.hh"
 #include "sim/faults.hh"

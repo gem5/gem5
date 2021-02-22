@@ -49,7 +49,7 @@
 
 #include <stdint.h>
 
-#include "arch/arm/miscregs.hh"
+#include "arch/arm/regs/misc.hh"
 
 namespace ArmISA
 {

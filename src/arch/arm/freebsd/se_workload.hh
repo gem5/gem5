@@ -34,8 +34,8 @@
 #ifndef __ARCH_ARM_FREEBSD_SE_WORKLOAD_HH__
 #define __ARCH_ARM_FREEBSD_SE_WORKLOAD_HH__
 
-#include "arch/arm/ccregs.hh"
 #include "arch/arm/freebsd/freebsd.hh"
+#include "arch/arm/regs/cc.hh"
 #include "arch/arm/se_workload.hh"
 #include "params/ArmEmuFreebsd.hh"
 #include "sim/syscall_desc.hh"

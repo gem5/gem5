@@ -45,7 +45,7 @@
 #include <utility>
 #include <vector>
 
-#include "arch/arm/intregs.hh"
+#include "arch/arm/regs/int.hh"
 #include "arch/arm/utility.hh"
 #include "cpu/thread_context.hh"
 #include "mem/port_proxy.hh"

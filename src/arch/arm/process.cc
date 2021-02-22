@@ -40,9 +40,9 @@
 
 #include "arch/arm/process.hh"
 
-#include "arch/arm/ccregs.hh"
 #include "arch/arm/isa_traits.hh"
-#include "arch/arm/miscregs.hh"
+#include "arch/arm/regs/cc.hh"
+#include "arch/arm/regs/misc.hh"
 #include "arch/arm/types.hh"
 #include "base/loader/elf_object.hh"
 #include "base/loader/object_file.hh"

@@ -67,7 +67,7 @@ class BaseISADevice
     /**
      * Write to a system register belonging to this device.
      *
-     * @param misc_reg Register number (see miscregs.hh)
+     * @param misc_reg Register number (see regs/misc.hh)
      * @param val Value to store
      */
     virtual void setMiscReg(int misc_reg, RegVal val) = 0;
@@ -75,7 +75,7 @@ class BaseISADevice
     /**
      * Read a system register belonging to this device.
      *
-     * @param misc_reg Register number (see miscregs.hh)
+     * @param misc_reg Register number (see regs/misc.hh)
      * @return Register value.
      */
     virtual RegVal readMiscReg(int misc_reg) = 0;

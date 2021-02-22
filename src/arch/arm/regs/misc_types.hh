@@ -38,8 +38,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_ARM_MISCREGS_TYPES_HH__
-#define __ARCH_ARM_MISCREGS_TYPES_HH__
+#ifndef __ARCH_ARM_REGS_MISC_TYPES_HH__
+#define __ARCH_ARM_REGS_MISC_TYPES_HH__
 
 #include "base/bitunion.hh"
 
@@ -344,7 +344,8 @@ namespace ArmISA
                                 // (AArch64 SCTLR_EL1 only)
         Bitfield<23>   span;    // Set Priviledge Access Never on taking
                                 // an exception
-        Bitfield<23>   xp;      // Extended page table enable (dropped in ARMv7)
+        Bitfield<23>   xp;      // Extended page table enable
+                                // (dropped in ARMv7)
         Bitfield<22>   u;       // Alignment (dropped in ARMv7)
         Bitfield<21>   fi;      // Fast interrupts configuration enable
                                 // (ARMv7 only)
@@ -369,7 +370,8 @@ namespace ArmISA
         Bitfield<12>   i;       // Instruction cache enable
         Bitfield<11>   z;       // Branch prediction enable (ARMv7 only)
         Bitfield<10>   sw;      // SWP/SWPB enable (ARMv7 only)
-        Bitfield<9, 8> rs;      // Deprecated protection bits (dropped in ARMv7)
+        Bitfield<9, 8> rs;      // Deprecated protection bits
+                                // (dropped in ARMv7)
         Bitfield<9>    uma;     // User mask access (AArch64 SCTLR_EL1 only)
         Bitfield<8>    sed;     // SETEND disable
                                 // (ARMv8 AArch32 and AArch64 SCTLR_EL1 only)
@@ -785,4 +787,4 @@ namespace ArmISA
 
 }
 
-#endif // __ARCH_ARM_MISCREGS_TYPES_HH__
+#endif // __ARCH_ARM_REGS_MISC_TYPES_HH__

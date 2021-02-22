@@ -38,13 +38,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_ARM_MISCREGS_HH__
-#define __ARCH_ARM_MISCREGS_HH__
+#ifndef __ARCH_ARM_REGS_MISC_HH__
+#define __ARCH_ARM_REGS_MISC_HH__
 
 #include <bitset>
 #include <tuple>
 
-#include "arch/arm/miscregs_types.hh"
+#include "arch/arm/regs/misc_types.hh"
 #include "base/compiler.hh"
 #include "dev/arm/generic_timer_miscregs_types.hh"
 
@@ -2280,4 +2280,4 @@ namespace ArmISA
 
 }
 
-#endif // __ARCH_ARM_MISCREGS_HH__
+#endif // __ARCH_ARM_REGS_MISC_HH__

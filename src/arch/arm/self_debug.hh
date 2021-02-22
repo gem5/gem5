@@ -40,7 +40,7 @@
 
 
 #include "arch/arm/faults.hh"
-#include "arch/arm/miscregs.hh"
+#include "arch/arm/regs/misc.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/types.hh"
 #include "arch/arm/utility.hh"

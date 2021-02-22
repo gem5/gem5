@@ -43,7 +43,7 @@
 #include <cmath>
 
 #include "arch/arm/insts/misc.hh"
-#include "arch/arm/miscregs.hh"
+#include "arch/arm/regs/misc.hh"
 
 namespace ArmISA
 {

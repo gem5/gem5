@@ -81,7 +81,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('freebsd/fs_workload.cc')
     Source('freebsd/se_workload.cc')
     Source('fs_workload.cc')
-    Source('miscregs.cc')
+    Source('regs/misc.cc')
     Source('mmu.cc')
     Source('nativetrace.cc')
     Source('pauth_helpers.cc')

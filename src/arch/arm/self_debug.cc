@@ -38,7 +38,7 @@
 #include "arch/arm/self_debug.hh"
 
 #include "arch/arm/faults.hh"
-#include "arch/arm/miscregs_types.hh"
+#include "arch/arm/regs/misc_types.hh"
 #include "base/bitfield.hh"
 
 using namespace ArmISA;

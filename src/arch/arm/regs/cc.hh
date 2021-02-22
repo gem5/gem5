@@ -35,8 +35,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_ARM_CCREGS_HH__
-#define __ARCH_ARM_CCREGS_HH__
+#ifndef __ARCH_ARM_REGS_CC_HH__
+#define __ARCH_ARM_REGS_CC_HH__
 
 namespace ArmISA
 {
@@ -83,4 +83,4 @@ enum ConditionCode
 
 }
 
-#endif // __ARCH_ARM_CCREGS_HH__
+#endif // __ARCH_ARM_REGS_CC_HH__

@@ -40,8 +40,8 @@
 
 #include <cassert>
 
-#ifndef __ARCH_ARM_INTREGS_HH__
-#define __ARCH_ARM_INTREGS_HH__
+#ifndef __ARCH_ARM_REGS_INT_HH__
+#define __ARCH_ARM_REGS_INT_HH__
 
 #include "arch/arm/types.hh"
 

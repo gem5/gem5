@@ -27,7 +27,7 @@
 
 #include "arch/arm/fastmodel/iris/isa.hh"
 
-#include "arch/arm/miscregs.hh"
+#include "arch/arm/regs/misc.hh"
 #include "cpu/thread_context.hh"
 #include "params/IrisISA.hh"
 #include "sim/serialize.hh"

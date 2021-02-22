@@ -45,7 +45,7 @@
 
 #include <memory>
 
-#include "arch/arm/miscregs.hh"
+#include "arch/arm/regs/misc.hh"
 #include "arch/arm/tracers/tarmac_base.hh"
 #include "base/printable.hh"
 #include "config/the_isa.hh"

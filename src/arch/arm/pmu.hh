@@ -116,14 +116,14 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
     /**
      * Set a register within the PMU.
      *
-     * @param misc_reg Register number (see miscregs.hh)
+     * @param misc_reg Register number (see regs/misc.hh)
      * @param val Value to store
      */
     void setMiscReg(int misc_reg, RegVal val) override;
     /**
      * Read a register within the PMU.
      *
-     * @param misc_reg Register number (see miscregs.hh)
+     * @param misc_reg Register number (see regs/misc.hh)
      * @return Register value.
      */
     RegVal readMiscReg(int misc_reg) override;

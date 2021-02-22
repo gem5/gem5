@@ -43,8 +43,8 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/isa_traits.hh"
-#include "arch/arm/miscregs.hh"
 #include "arch/arm/registers.hh"
+#include "arch/arm/regs/misc.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/interrupts.hh"
 #include "cpu/thread_context.hh"

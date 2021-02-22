@@ -41,9 +41,9 @@
 #include <set>
 #include <vector>
 
-#include "arch/arm/intregs.hh"
 #include "arch/arm/kvm/base_cpu.hh"
-#include "arch/arm/miscregs.hh"
+#include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/misc.hh"
 
 struct ArmV8KvmCPUParams;
 

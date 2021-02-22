@@ -37,8 +37,8 @@
 
 #include "arch/arm/htm.hh"
 
-#include "arch/arm/intregs.hh"
-#include "arch/arm/miscregs.hh"
+#include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/misc.hh"
 #include "cpu/thread_context.hh"
 
 void
