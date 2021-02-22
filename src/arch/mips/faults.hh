@@ -31,6 +31,7 @@
 #define __MIPS_FAULTS_HH__
 
 #include "arch/mips/pra_constants.hh"
+#include "arch/mips/regs/misc.hh"
 #include "cpu/thread_context.hh"
 #include "debug/MipsPRA.hh"
 #include "sim/faults.hh"

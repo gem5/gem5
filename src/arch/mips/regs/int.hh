@@ -27,31 +27,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_MIPS_REGISTERS_HH__
-#define __ARCH_MIPS_REGISTERS_HH__
-
-#include "arch/generic/vec_pred_reg.hh"
-#include "arch/generic/vec_reg.hh"
+#ifndef __ARCH_MIPS_REGS_INT_HH__
+#define __ARCH_MIPS_REGS_INT_HH__
 
 namespace MipsISA
 {
 
-const int ZeroReg = 0;
+// Constants Related to the number of registers
+const int NumIntArchRegs = 32;
+const int NumIntSpecialRegs = 9;
 
-// Not applicable to MIPS
-using VecElem = ::DummyVecElem;
-using VecReg = ::DummyVecReg;
-using ConstVecReg = ::DummyConstVecReg;
-using VecRegContainer = ::DummyVecRegContainer;
-constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
-constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
+const int MaxShadowRegSets = 16; // Maximum number of shadow register sets
+const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs; //HI & LO Regs
 
-// Not applicable to MIPS
-using VecPredReg = ::DummyVecPredReg;
-using ConstVecPredReg = ::DummyConstVecPredReg;
-using VecPredRegContainer = ::DummyVecPredRegContainer;
-constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
-constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
+enum MiscIntRegNums
+{
+   INTREG_LO = NumIntArchRegs,
+   INTREG_DSP_LO0 = INTREG_LO,
+   INTREG_HI,
+   INTREG_DSP_HI0 = INTREG_HI,
+   INTREG_DSP_ACX0,
+   INTREG_DSP_LO1,
+   INTREG_DSP_HI1,
+   INTREG_DSP_ACX1,
+   INTREG_DSP_LO2,
+   INTREG_DSP_HI2,
+   INTREG_DSP_ACX2,
+   INTREG_DSP_LO3,
+   INTREG_DSP_HI3,
+   INTREG_DSP_ACX3,
+   INTREG_DSP_CONTROL
+};
+
+// semantically meaningful register indices
+const int SyscallSuccessReg = 7;
+const int FirstArgumentReg = 4;
+const int ReturnValueReg = 2;
+
+const int StackPointerReg = 29;
+
+const int SyscallPseudoReturnReg = 3;
 
 } // namespace MipsISA
 

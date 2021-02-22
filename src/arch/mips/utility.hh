@@ -29,7 +29,9 @@
 
 #ifndef __ARCH_MIPS_UTILITY_HH__
 #define __ARCH_MIPS_UTILITY_HH__
+
 #include "arch/mips/page_size.hh"
+#include "arch/mips/regs/misc.hh"
 #include "arch/mips/types.hh"
 #include "base/logging.hh"
 #include "base/types.hh"

@@ -34,15 +34,15 @@
 #include <vector>
 
 #include "arch/generic/isa.hh"
-#include "arch/mips/registers.hh"
+#include "arch/mips/regs/misc.hh"
 #include "arch/mips/types.hh"
+#include "base/types.hh"
 #include "cpu/reg_class.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 
 class BaseCPU;
 class Checkpoint;
-class EventManager;
 struct MipsISAParams;
 class ThreadContext;
 

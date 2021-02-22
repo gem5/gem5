@@ -28,7 +28,7 @@
 #ifndef __ARCH_MIPS_SE_WORKLOAD_HH__
 #define __ARCH_MIPS_SE_WORKLOAD_HH__
 
-#include "arch/mips/registers.hh"
+#include "arch/mips/regs/int.hh"
 #include "params/MipsSEWorkload.hh"
 #include "sim/se_workload.hh"
 #include "sim/syscall_abi.hh"

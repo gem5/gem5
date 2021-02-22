@@ -29,6 +29,7 @@
 #include "arch/mips/process.hh"
 
 #include "arch/mips/page_size.hh"
+#include "arch/mips/regs/int.hh"
 #include "base/loader/elf_object.hh"
 #include "base/loader/object_file.hh"
 #include "base/logging.hh"

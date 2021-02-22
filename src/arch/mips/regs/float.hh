@@ -27,31 +27,48 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_MIPS_REGISTERS_HH__
-#define __ARCH_MIPS_REGISTERS_HH__
+#ifndef __ARCH_MIPS_REGS_FLOAT_HH__
+#define __ARCH_MIPS_REGS_FLOAT_HH__
 
-#include "arch/generic/vec_pred_reg.hh"
-#include "arch/generic/vec_reg.hh"
+#include <cstdint>
 
 namespace MipsISA
 {
 
-const int ZeroReg = 0;
+// Constants Related to the number of registers
+const int NumFloatArchRegs = 32;
+const int NumFloatSpecialRegs = 5;
 
-// Not applicable to MIPS
-using VecElem = ::DummyVecElem;
-using VecReg = ::DummyVecReg;
-using ConstVecReg = ::DummyConstVecReg;
-using VecRegContainer = ::DummyVecRegContainer;
-constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
-constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
+const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;//
 
-// Not applicable to MIPS
-using VecPredReg = ::DummyVecPredReg;
-using ConstVecPredReg = ::DummyConstVecPredReg;
-using VecPredRegContainer = ::DummyVecPredRegContainer;
-constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
-constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
+const uint32_t MIPS32_QNAN = 0x7fbfffff;
+const uint64_t MIPS64_QNAN = 0x7ff7ffffffffffffULL;
+
+enum FPControlRegNums
+{
+   FLOATREG_FIR = NumFloatArchRegs,
+   FLOATREG_FCCR,
+   FLOATREG_FEXR,
+   FLOATREG_FENR,
+   FLOATREG_FCSR
+};
+
+enum FCSRBits
+{
+    Inexact = 1,
+    Underflow,
+    Overflow,
+    DivideByZero,
+    Invalid,
+    Unimplemented
+};
+
+enum FCSRFields
+{
+    Flag_Field = 1,
+    Enable_Field = 6,
+    Cause_Field = 11
+};
 
 } // namespace MipsISA
 

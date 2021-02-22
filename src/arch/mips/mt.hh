@@ -40,7 +40,7 @@
 #include "arch/mips/faults.hh"
 #include "arch/mips/mt_constants.hh"
 #include "arch/mips/pra_constants.hh"
-#include "arch/mips/registers.hh"
+#include "arch/mips/regs/misc.hh"
 #include "base/bitfield.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"

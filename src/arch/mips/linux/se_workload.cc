@@ -32,6 +32,7 @@
 #include <sys/syscall.h>
 
 #include "arch/mips/process.hh"
+#include "arch/mips/regs/misc.hh"
 #include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
