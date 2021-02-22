@@ -39,7 +39,8 @@
 
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/page_size.hh"
-#include "arch/riscv/registers.hh"
+#include "arch/riscv/regs/int.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "base/loader/elf_object.hh"
 #include "base/loader/object_file.hh"
 #include "base/logging.hh"

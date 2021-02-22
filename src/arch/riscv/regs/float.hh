@@ -1,8 +1,9 @@
 /*
  * Copyright (c) 2013 ARM Limited
  * Copyright (c) 2014-2015 Sven Karlsson
- * Copyright (c) 2018 TU Dresden
+ * Copyright (c) 2019 Yifei Liu
  * Copyright (c) 2020 Barkhausen Institut
+ * Copyright (c) 2021 StreamComputing Corp
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -14,7 +15,8 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2016-2017 The University of Virginia
+ * Copyright (c) 2016 RISC-V Foundation
+ * Copyright (c) 2016 The University of Virginia
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,93 +43,63 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_RISCV_UTILITY_HH__
-#define __ARCH_RISCV_UTILITY_HH__
+#ifndef __ARCH_RISCV_REGS_FLOAT_HH__
+#define __ARCH_RISCV_REGS_FLOAT_HH__
 
-#include <cmath>
+#include <softfloat.h>
+#include <specialize.h>
+
 #include <cstdint>
-#include <sstream>
 #include <string>
+#include <vector>
 
-#include "arch/riscv/regs/float.hh"
-#include "arch/riscv/regs/int.hh"
-#include "base/types.hh"
-#include "cpu/reg_class.hh"
-#include "cpu/static_inst.hh"
-#include "cpu/thread_context.hh"
+#include "base/bitfield.hh"
 
 namespace RiscvISA
 {
 
-template<typename T> inline bool
-isquietnan(T val)
+/* Conversion functions for working with softfloat. */
+
+// Generic floating point value type.
+using freg_t = float64_t;
+
+// Extract a 32 bit float packed into a 64 bit value.
+static constexpr uint32_t
+unboxF32(uint64_t v)
 {
-    return false;
+    // The upper 32 bits should all be ones.
+    if (bits(v, 63, 32) == mask(32))
+        return bits(v, 31, 0);
+    else
+        return defaultNaNF32UI;
 }
 
-template<> inline bool
-isquietnan<float>(float val)
-{
-    return std::isnan(val)
-        && (reinterpret_cast<uint32_t&>(val)&0x00400000);
+static constexpr uint64_t boxF32(uint32_t v) { return mask(63, 32) | v; }
+
+// Create fixed size floats from raw bytes or generic floating point values.
+static constexpr float32_t f32(uint32_t v) { return {v}; }
+static constexpr float64_t f64(uint64_t v) { return {v}; }
+static constexpr float32_t f32(freg_t r) { return {unboxF32(r.v)}; }
+static constexpr float64_t f64(freg_t r) { return r; }
+
+// Create generic floating point values from fixed size floats.
+static constexpr freg_t freg(float32_t f) { return {boxF32(f.v)}; }
+static constexpr freg_t freg(float64_t f) { return f; }
+static constexpr freg_t freg(uint_fast16_t f) { return {f}; }
+
+const int NumFloatRegs = 32;
+
+const std::vector<std::string> FloatRegNames = {
+    "ft0", "ft1", "ft2", "ft3",
+    "ft4", "ft5", "ft6", "ft7",
+    "fs0", "fs1", "fa0", "fa1",
+    "fa2", "fa3", "fa4", "fa5",
+    "fa6", "fa7", "fs2", "fs3",
+    "fs4", "fs5", "fs6", "fs7",
+    "fs8", "fs9", "fs10", "fs11",
+    "ft8", "ft9", "ft10", "ft11"
+};
+
 }
 
-template<> inline bool
-isquietnan<double>(double val)
-{
-    return std::isnan(val)
-        && (reinterpret_cast<uint64_t&>(val)&0x0008000000000000ULL);
-}
-
-template<typename T> inline bool
-issignalingnan(T val)
-{
-    return false;
-}
-
-template<> inline bool
-issignalingnan<float>(float val)
-{
-    return std::isnan(val)
-        && (reinterpret_cast<uint32_t&>(val)&0x00200000);
-}
-
-template<> inline bool
-issignalingnan<double>(double val)
-{
-    return std::isnan(val)
-        && (reinterpret_cast<uint64_t&>(val)&0x0004000000000000ULL);
-}
-
-inline std::string
-registerName(RegId reg)
-{
-    if (reg.isIntReg()) {
-        if (reg.index() >= NumIntArchRegs) {
-            /*
-             * This should only happen if a instruction is being speculatively
-             * executed along a not-taken branch, and if that instruction's
-             * width was incorrectly predecoded (i.e., it was predecoded as a
-             * full instruction rather than a compressed one or vice versa).
-             * It also should only happen if a debug flag is on that prints
-             * disassembly information, so rather than panic the incorrect
-             * value is printed for debugging help.
-             */
-            std::stringstream str;
-            str << "?? (x" << reg.index() << ')';
-            return str.str();
-        }
-        return IntRegNames[reg.index()];
-    } else {
-        if (reg.index() >= NumFloatRegs) {
-            std::stringstream str;
-            str << "?? (f" << reg.index() << ')';
-            return str.str();
-        }
-        return FloatRegNames[reg.index()];
-    }
-}
-
-} // namespace RiscvISA
-
-#endif // __ARCH_RISCV_UTILITY_HH__
+#endif // __ARCH_RISCV_REGS_FLOAT_HH__

@@ -43,32 +43,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_RISCV_REGISTERS_HH__
-#define __ARCH_RISCV_REGISTERS_HH__
+#ifndef __ARCH_RISCV_REGS_INT_HH__
+#define __ARCH_RISCV_REGS_INT_HH__
 
-#include <cstdint>
-
-#include "arch/generic/vec_pred_reg.hh"
-#include "arch/generic/vec_reg.hh"
+#include <string>
+#include <vector>
 
 namespace RiscvISA
 {
 
-const int ZeroReg = 0;
+const int NumIntArchRegs = 32;
+const int NumMicroIntRegs = 1;
+const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs;
 
-// Not applicable to RISC-V
-using VecElem = ::DummyVecElem;
-using VecRegContainer = ::DummyVecRegContainer;
-constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
-constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
+// Semantically meaningful register indices
+const int ReturnAddrReg = 1;
+const int StackPointerReg = 2;
+const int ThreadPointerReg = 4;
+const int ReturnValueReg = 10;
+const std::vector<int> ArgumentRegs = {10, 11, 12, 13, 14, 15, 16, 17};
+const int AMOTempReg = 32;
 
-// Not applicable to RISC-V
-using VecPredReg = ::DummyVecPredReg;
-using ConstVecPredReg = ::DummyConstVecPredReg;
-using VecPredRegContainer = ::DummyVecPredRegContainer;
-constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
-constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
+const int SyscallNumReg = 17;
+
+const std::vector<std::string> IntRegNames = {
+    "zero", "ra", "sp", "gp",
+    "tp", "t0", "t1", "t2",
+    "s0", "s1", "a0", "a1",
+    "a2", "a3", "a4", "a5",
+    "a6", "a7", "s2", "s3",
+    "s4", "s5", "s6", "s7",
+    "s8", "s9", "s10", "s11",
+    "t3", "t4", "t5", "t6"
+};
 
 }
 
-#endif // __ARCH_RISCV_REGISTERS_HH__
+#endif // __ARCH_RISCV_REGS_INT_HH__

@@ -49,7 +49,6 @@
 #include <stack>
 #include <unordered_map>
 
-#include "arch/riscv/registers.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"

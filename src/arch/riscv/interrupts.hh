@@ -34,7 +34,7 @@
 
 #include "arch/generic/interrupts.hh"
 #include "arch/riscv/faults.hh"
-#include "arch/riscv/registers.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "base/logging.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Interrupt.hh"

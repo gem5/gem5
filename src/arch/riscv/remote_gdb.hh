@@ -35,7 +35,8 @@
 
 #include <string>
 
-#include "arch/riscv/registers.hh"
+#include "arch/riscv/regs/float.hh"
+#include "arch/riscv/regs/int.hh"
 #include "base/remote_gdb.hh"
 
 class System;

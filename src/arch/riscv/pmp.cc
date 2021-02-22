@@ -31,6 +31,7 @@
 #include "arch/generic/tlb.hh"
 #include "arch/riscv/faults.hh"
 #include "arch/riscv/isa.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "base/addr_range.hh"
 #include "base/types.hh"
 #include "cpu/thread_context.hh"

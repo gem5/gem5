@@ -34,21 +34,14 @@
 #ifndef __ARCH_RISCV_ISA_HH__
 #define __ARCH_RISCV_ISA_HH__
 
-#include <map>
-#include <string>
+#include <vector>
 
 #include "arch/generic/isa.hh"
-#include "arch/riscv/registers.hh"
 #include "arch/riscv/types.hh"
-#include "base/bitfield.hh"
-#include "base/logging.hh"
-#include "cpu/reg_class.hh"
-#include "sim/sim_object.hh"
+#include "base/types.hh"
 
 struct RiscvISAParams;
-class ThreadContext;
 class Checkpoint;
-class EventManager;
 
 namespace RiscvISA
 {

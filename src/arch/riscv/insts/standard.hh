@@ -35,6 +35,7 @@
 
 #include "arch/riscv/insts/bitfields.hh"
 #include "arch/riscv/insts/static_inst.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
 

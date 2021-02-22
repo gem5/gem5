@@ -137,7 +137,9 @@
 
 #include "arch/riscv/mmu.hh"
 #include "arch/riscv/pagetable_walker.hh"
-#include "arch/riscv/registers.hh"
+#include "arch/riscv/regs/float.hh"
+#include "arch/riscv/regs/int.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "arch/riscv/tlb.hh"
 #include "blobs/gdb_xml_riscv_cpu.hh"
 #include "blobs/gdb_xml_riscv_csr.hh"

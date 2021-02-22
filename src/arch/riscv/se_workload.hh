@@ -29,7 +29,7 @@
 #define __ARCH_RISCV_SE_WORKLOAD_HH__
 
 #include "arch/riscv/reg_abi.hh"
-#include "arch/riscv/registers.hh"
+#include "arch/riscv/regs/int.hh"
 #include "params/RiscvSEWorkload.hh"
 #include "sim/se_workload.hh"
 #include "sim/syscall_abi.hh"

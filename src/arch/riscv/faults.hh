@@ -31,13 +31,14 @@
 #ifndef __ARCH_RISCV_FAULTS_HH__
 #define __ARCH_RISCV_FAULTS_HH__
 
+#include <cstdint>
 #include <string>
 
 #include "arch/riscv/isa.hh"
-#include "arch/riscv/registers.hh"
 #include "cpu/null_static_inst.hh"
-#include "cpu/thread_context.hh"
 #include "sim/faults.hh"
+
+class ThreadContext;
 
 namespace RiscvISA
 {
