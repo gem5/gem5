@@ -38,16 +38,55 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_ARM_REGISTERS_HH__
-#define __ARCH_ARM_REGISTERS_HH__
+#ifndef __ARCH_ARM_REGS_VEC_HH__
+#define __ARCH_ARM_REGS_VEC_HH__
 
-#include "arch/arm/regs/int.hh"
-#include "arch/arm/regs/vec.hh"
+#include "arch/arm/types.hh"
+#include "arch/generic/vec_pred_reg.hh"
+#include "arch/generic/vec_reg.hh"
 
 namespace ArmISA
 {
 
-const int ZeroReg = INTREG_ZERO;
+// Number of VecElem per Vector Register considering only pre-SVE
+// Advanced SIMD registers.
+constexpr unsigned NumVecElemPerNeonVecReg = 4;
+// Number of VecElem per Vector Register, computed based on the vector length
+constexpr unsigned NumVecElemPerVecReg = MaxSveVecLenInWords;
+
+using VecElem = uint32_t;
+using VecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, false>;
+using ConstVecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, true>;
+using VecRegContainer = VecReg::Container;
+
+using VecPredReg = ::VecPredRegT<VecElem, NumVecElemPerVecReg,
+                                 VecPredRegHasPackedRepr, false>;
+using ConstVecPredReg = ::VecPredRegT<VecElem, NumVecElemPerVecReg,
+                                      VecPredRegHasPackedRepr, true>;
+using VecPredRegContainer = VecPredReg::Container;
+
+// Vec, PredVec
+// NumFloatV7ArchRegs: This in theory should be 32.
+// However in A32 gem5 is splitting double register accesses in two
+// subsequent single register ones. This means we would use a index
+// bigger than 31 when accessing D16-D31.
+const int NumFloatV7ArchRegs = 64; // S0-S31, D0-D31
+const int NumVecV7ArchRegs  = 16; // Q0-Q15
+const int NumVecV8ArchRegs  = 32; // V0-V31
+const int NumVecSpecialRegs = 8;
+const int NumVecIntrlvRegs = 4;
+const int NumVecRegs = NumVecV8ArchRegs + NumVecSpecialRegs + NumVecIntrlvRegs;
+const int NumVecPredRegs = 18;  // P0-P15, FFR, UREG0
+
+// Vec, PredVec indices
+const int VecSpecialElem = NumVecV8ArchRegs * NumVecElemPerNeonVecReg;
+const int INTRLVREG0 = NumVecV8ArchRegs + NumVecSpecialRegs;
+const int INTRLVREG1 = INTRLVREG0 + 1;
+const int INTRLVREG2 = INTRLVREG0 + 2;
+const int INTRLVREG3 = INTRLVREG0 + 3;
+const int VECREG_UREG0 = 32;
+const int PREDREG_FFR = 16;
+const int PREDREG_UREG0 = 17;
 
 } // namespace ArmISA
 

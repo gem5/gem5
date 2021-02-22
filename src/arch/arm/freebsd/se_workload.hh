@@ -36,6 +36,7 @@
 
 #include "arch/arm/freebsd/freebsd.hh"
 #include "arch/arm/regs/cc.hh"
+#include "arch/arm/regs/int.hh"
 #include "arch/arm/se_workload.hh"
 #include "params/ArmEmuFreebsd.hh"
 #include "sim/syscall_desc.hh"

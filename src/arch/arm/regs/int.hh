@@ -517,6 +517,25 @@ isSP(IntRegIndex reg)
     return reg == INTREG_SPX;
 }
 
+// Semantically meaningful register indices
+const int ReturnValueReg = 0;
+const int ReturnValueReg1 = 1;
+const int ReturnValueReg2 = 2;
+const int NumArgumentRegs = 4;
+const int NumArgumentRegs64 = 8;
+const int ArgumentReg0 = 0;
+const int ArgumentReg1 = 1;
+const int ArgumentReg2 = 2;
+const int ArgumentReg3 = 3;
+const int FramePointerReg = 11;
+const int StackPointerReg = INTREG_SP;
+const int ReturnAddressReg = INTREG_LR;
+const int PCReg = INTREG_PC;
+
+const int SyscallNumReg = ReturnValueReg;
+const int SyscallPseudoReturnReg = ReturnValueReg;
+const int SyscallSuccessReg = ReturnValueReg;
+
 }
 
 #endif
