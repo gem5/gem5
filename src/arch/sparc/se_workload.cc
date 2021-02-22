@@ -28,7 +28,8 @@
 #include "arch/sparc/se_workload.hh"
 
 #include "arch/sparc/process.hh"
-#include "arch/sparc/registers.hh"
+#include "arch/sparc/regs/int.hh"
+#include "arch/sparc/regs/misc.hh"
 #include "arch/sparc/types.hh"
 #include "base/logging.hh"
 #include "cpu/thread_context.hh"

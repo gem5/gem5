@@ -33,7 +33,9 @@
 #include <string>
 
 #include "arch/generic/isa.hh"
-#include "arch/sparc/miscregs.hh"
+#include "arch/sparc/regs/int.hh"
+#include "arch/sparc/regs/misc.hh"
+#include "arch/sparc/sparc_traits.hh"
 #include "arch/sparc/types.hh"
 #include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"

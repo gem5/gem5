@@ -33,6 +33,7 @@
 #include "arch/sparc/mmu.hh"
 #include "arch/sparc/process.hh"
 #include "arch/sparc/se_workload.hh"
+#include "arch/sparc/sparc_traits.hh"
 #include "arch/sparc/types.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"

@@ -30,7 +30,8 @@
 
 #include <vector>
 
-#include "arch/sparc/miscregs.hh"
+#include "arch/sparc/regs/int.hh"
+#include "arch/sparc/regs/misc.hh"
 #include "base/loader/object_file.hh"
 #include "cpu/thread_context.hh"
 #include "sim/se_workload.hh"

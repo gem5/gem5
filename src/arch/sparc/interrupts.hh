@@ -31,8 +31,7 @@
 
 #include "arch/generic/interrupts.hh"
 #include "arch/sparc/faults.hh"
-#include "arch/sparc/miscregs.hh"
-#include "arch/sparc/registers.hh"
+#include "arch/sparc/regs/misc.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Interrupt.hh"
 #include "params/SparcInterrupts.hh"

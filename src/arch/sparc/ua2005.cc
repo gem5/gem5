@@ -28,7 +28,7 @@
 
 #include "arch/sparc/interrupts.hh"
 #include "arch/sparc/isa.hh"
-#include "arch/sparc/registers.hh"
+#include "arch/sparc/regs/misc.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"

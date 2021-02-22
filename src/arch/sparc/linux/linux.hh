@@ -30,7 +30,8 @@
 #define __ARCH_SPARC_LINUX_LINUX_HH__
 
 #include "arch/sparc/asi.hh"
-#include "arch/sparc/miscregs.hh"
+#include "arch/sparc/regs/int.hh"
+#include "arch/sparc/regs/misc.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
 

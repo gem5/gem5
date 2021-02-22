@@ -29,8 +29,8 @@
 
 #include "arch/sparc/insts/static_inst.hh"
 
-#include "arch/sparc/miscregs.hh"
-#include "arch/sparc/registers.hh"
+#include "arch/sparc/regs/int.hh"
+#include "arch/sparc/regs/misc.hh"
 #include "base/bitunion.hh"
 
 namespace SparcISA

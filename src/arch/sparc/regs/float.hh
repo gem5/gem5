@@ -26,31 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_SPARC_REGISTERS_HH__
-#define __ARCH_SPARC_REGISTERS_HH__
-
-#include "arch/generic/vec_pred_reg.hh"
-#include "arch/generic/vec_reg.hh"
+#ifndef __ARCH_SPARC_REGS_FLOAT_HH__
+#define __ARCH_SPARC_REGS_FLOAT_HH__
 
 namespace SparcISA
 {
 
-// Not applicable to SPARC
-using VecElem = ::DummyVecElem;
-using VecReg = ::DummyVecReg;
-using ConstVecReg = ::DummyConstVecReg;
-using VecRegContainer = ::DummyVecRegContainer;
-constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
-constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
-
-// Not applicable to SPARC
-using VecPredReg = ::DummyVecPredReg;
-using ConstVecPredReg = ::DummyConstVecPredReg;
-using VecPredRegContainer = ::DummyVecPredRegContainer;
-constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
-constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
-
-const int ZeroReg = 0;
+const int NumFloatRegs = 64;
+const int NumFloatArchRegs = NumFloatRegs;
 
 } // namespace SparcISA
 

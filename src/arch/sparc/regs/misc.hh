@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_SPARC_MISCREGS_HH__
-#define __ARCH_SPARC_MISCREGS_HH__
+#ifndef __ARCH_SPARC_REGS_MISC_HH__
+#define __ARCH_SPARC_REGS_MISC_HH__
 
 #include "base/bitunion.hh"
 #include "base/types.hh"
