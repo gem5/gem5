@@ -360,14 +360,24 @@ if main['GCC']:
     # Add the appropriate Link-Time Optimization (LTO) flags
     # unless LTO is explicitly turned off.
     if not GetOption('no_lto'):
+        # g++ uses "make" to parallelize LTO. The program can be overriden with
+        # the environment variable "MAKE", but we currently make no attempt to
+        # plumb that variable through.
+        parallelism = ''
+        if main.Detect('make'):
+            parallelism = '=%d' % GetOption('num_jobs')
+        else:
+            warning('"make" not found, link time optimization will be '
+                    'single threaded.')
+
         # Pass the LTO flag when compiling to produce GIMPLE
         # output, we merely create the flags here and only append
         # them later
-        main['LTO_CCFLAGS'] = ['-flto=%d' % GetOption('num_jobs')]
+        main['LTO_CCFLAGS'] = ['-flto%s' % parallelism]
 
         # Use the same amount of jobs for LTO as we are running
         # scons with
-        main['LTO_LDFLAGS'] = ['-flto=%d' % GetOption('num_jobs')]
+        main['LTO_LDFLAGS'] = ['-flto%s' % parallelism]
 
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin-malloc', '-fno-builtin-calloc',
                                   '-fno-builtin-realloc', '-fno-builtin-free'])
