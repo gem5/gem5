@@ -43,6 +43,7 @@
 
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/pma_checker.hh"
+#include "arch/riscv/pmp.hh"
 #include "arch/riscv/tlb.hh"
 #include "base/types.hh"
 #include "mem/packet.hh"
@@ -169,6 +170,7 @@ namespace RiscvISA
         TLB * tlb;
         System * sys;
         PMAChecker * pma;
+        PMP * pmp;
         RequestorID requestorId;
 
         // The number of outstanding walks that can be squashed per cycle.
@@ -200,6 +202,7 @@ namespace RiscvISA
             ClockedObject(params), port(name() + ".port", this),
             funcState(this, NULL, NULL, true), tlb(NULL), sys(params.system),
             pma(params.pma_checker),
+            pmp(params.pmp),
             requestorId(sys->getRequestorId(this)),
             numSquashable(params.num_squash_per_cycle),
             startWalkWrapperEvent([this]{ startWalkWrapper(); }, name())

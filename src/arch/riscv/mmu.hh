@@ -74,6 +74,13 @@ class MMU : public BaseMMU
       MMU *ommu = dynamic_cast<MMU*>(old_mmu);
       BaseMMU::takeOverFrom(ommu);
       pma->takeOverFrom(ommu->pma);
+
+    }
+
+    PMP *
+    getPMP()
+    {
+        return static_cast<TLB*>(dtb)->pmp;
     }
 };
 

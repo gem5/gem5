@@ -52,6 +52,7 @@ if env['TARGET_ISA'] == 'riscv':
     Source('pagetable.cc')
     Source('pagetable_walker.cc')
     Source('pma_checker.cc')
+    Source('pmp.cc')
     Source('reg_abi.cc')
     Source('remote_gdb.cc')
     Source('tlb.cc')
@@ -63,6 +64,7 @@ if env['TARGET_ISA'] == 'riscv':
     Source('bare_metal/fs_workload.cc')
 
     SimObject('PMAChecker.py')
+    SimObject('PMP.py')
     SimObject('RiscvFsWorkload.py')
     SimObject('RiscvInterrupts.py')
     SimObject('RiscvISA.py')
@@ -72,6 +74,7 @@ if env['TARGET_ISA'] == 'riscv':
 
     DebugFlag('RiscvMisc')
     DebugFlag('TLBVerbose')
+    DebugFlag('PMP')
     DebugFlag('PageTableWalker', \
               "Page table walker state machine debugging")
 

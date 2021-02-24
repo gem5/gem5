@@ -490,8 +490,14 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
             Addr paddr = walker->tlb->translateWithTLB(vaddr, satp.asid, mode);
             req->setPaddr(paddr);
             walker->pma->check(req);
+
+            // do pmp check if any checking condition is met.
+            // timingFault will be NoFault if pmp checks are
+            // passed, otherwise an address fault will be returned.
+            timingFault = walker->pmp->pmpCheck(req, mode, pmode, tc);
+
             // Let the CPU continue.
-            translation->finish(NoFault, req, tc, mode);
+            translation->finish(timingFault, req, tc, mode);
         } else {
             // There was a fault during the walk. Let the CPU know.
             translation->finish(timingFault, req, tc, mode);
