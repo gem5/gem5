@@ -274,7 +274,7 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting int register %i to %#x\n",
                 phys_reg->index(), val);
 
-        if (!phys_reg->isZeroReg())
+        if (phys_reg->index() != TheISA::ZeroReg)
             intRegFile[phys_reg->index()] = val;
     }
 
@@ -286,8 +286,7 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
                 phys_reg->index(), (uint64_t)val);
 
-        if (!phys_reg->isZeroReg())
-            floatRegFile[phys_reg->index()] = val;
+        floatRegFile[phys_reg->index()] = val;
     }
 
     /** Sets a vector register to the given value. */

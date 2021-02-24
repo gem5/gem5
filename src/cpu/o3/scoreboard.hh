@@ -72,7 +72,8 @@ class Scoreboard
     std::string name() const { return _name; };
 
     /** Checks if the register is ready. */
-    bool getReg(PhysRegIdPtr phys_reg) const
+    bool
+    getReg(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->flatIndex() < numPhysRegs);
 
@@ -83,14 +84,15 @@ class Scoreboard
 
         bool ready = regScoreBoard[phys_reg->flatIndex()];
 
-        if (phys_reg->isZeroReg())
+        if (phys_reg->isIntPhysReg() && phys_reg->index() == TheISA::ZeroReg)
             assert(ready);
 
         return ready;
     }
 
     /** Sets the register as ready. */
-    void setReg(PhysRegIdPtr phys_reg)
+    void
+    setReg(PhysRegIdPtr phys_reg)
     {
         assert(phys_reg->flatIndex() < numPhysRegs);
 
@@ -107,7 +109,8 @@ class Scoreboard
     }
 
     /** Sets the register as not ready. */
-    void unsetReg(PhysRegIdPtr phys_reg)
+    void
+    unsetReg(PhysRegIdPtr phys_reg)
     {
         assert(phys_reg->flatIndex() < numPhysRegs);
 
@@ -118,7 +121,7 @@ class Scoreboard
         }
 
         // zero reg should never be marked unready
-        if (phys_reg->isZeroReg())
+        if (phys_reg->isIntPhysReg() && phys_reg->index() == TheISA::ZeroReg)
             return;
 
         regScoreBoard[phys_reg->flatIndex()] = false;

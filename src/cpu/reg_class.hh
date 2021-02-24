@@ -145,18 +145,6 @@ class RegId
         return regClass != MiscRegClass;
     }
 
-    /**
-     * Check if this is the zero register.
-     * Returns true if this register is a zero register (needs to have a
-     * constant zero value throughout the execution).
-     */
-
-    inline bool
-    isZeroReg() const
-    {
-        return regClass == IntRegClass && regIdx == TheISA::ZeroReg;
-    }
-
     /** @return true if it is an integer physical register. */
     bool isIntReg() const { return regClass == IntRegClass; }
 
@@ -262,7 +250,6 @@ class PhysRegId : private RegId
     /** @{ */
     using RegId::index;
     using RegId::classValue;
-    using RegId::isZeroReg;
     using RegId::className;
     using RegId::elemIndex;
      /** @} */

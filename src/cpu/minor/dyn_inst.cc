@@ -164,7 +164,7 @@ printRegName(std::ostream &os, const RegId& reg)
               static_cast<unsigned int>(reg.elemIndex()) << ']';
         break;
       case IntRegClass:
-        if (reg.isZeroReg()) {
+        if (reg.index() == TheISA::ZeroReg) {
             os << 'z';
         } else {
             os << 'r' << static_cast<unsigned int>(reg.index());

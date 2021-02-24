@@ -76,7 +76,7 @@ SimpleRenameMap::rename(const RegId& arch_reg)
     PhysRegIdPtr prev_reg = map[arch_reg.flatIndex()];
 
     if (arch_reg == zeroReg) {
-        assert(prev_reg->isZeroReg());
+        assert(prev_reg->index() == TheISA::ZeroReg);
         renamed_reg = prev_reg;
     } else if (prev_reg->getNumPinnedWrites() > 0) {
         // Do not rename if the register is pinned

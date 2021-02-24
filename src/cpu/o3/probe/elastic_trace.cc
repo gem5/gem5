@@ -241,7 +241,7 @@ ElasticTrace::updateRegDep(const DynInstConstPtr& dyn_inst)
 
         const RegId& src_reg = dyn_inst->srcRegIdx(src_idx);
         if (!src_reg.isMiscReg() &&
-            !src_reg.isZeroReg()) {
+                !(src_reg.isIntReg() && src_reg.index() == TheISA::ZeroReg)) {
             // Get the physical register index of the i'th source register.
             PhysRegIdPtr phys_src_reg = dyn_inst->regs.renamedSrcIdx(src_idx);
             DPRINTFR(ElasticTrace, "[sn:%lli] Check map for src reg"
@@ -273,7 +273,8 @@ ElasticTrace::updateRegDep(const DynInstConstPtr& dyn_inst)
         // CC register and not a Misc register.
         const RegId& dest_reg = dyn_inst->destRegIdx(dest_idx);
         if (!dest_reg.isMiscReg() &&
-            !dest_reg.isZeroReg()) {
+                !(dest_reg.isIntReg() &&
+                    dest_reg.index() == TheISA::ZeroReg)) {
             // Get the physical register index of the i'th destination
             // register.
             PhysRegIdPtr phys_dest_reg =
