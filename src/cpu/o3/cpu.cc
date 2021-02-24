@@ -773,29 +773,23 @@ FullO3CPU<Impl>::insertThread(ThreadID tid)
     //Bind Int Regs to Rename Map
     const auto &regClasses = isa[tid]->regClasses();
 
-    for (RegId reg_id(IntRegClass, 0);
-            reg_id.index() < regClasses.at(IntRegClass).size();
-            reg_id.index()++) {
+    for (RegIndex idx = 0; idx < regClasses.at(IntRegClass).size(); idx++) {
         PhysRegIdPtr phys_reg = freeList.getIntReg();
-        renameMap[tid].setEntry(reg_id, phys_reg);
+        renameMap[tid].setEntry(RegId(IntRegClass, idx), phys_reg);
         scoreboard.setReg(phys_reg);
     }
 
     //Bind Float Regs to Rename Map
-    for (RegId reg_id(FloatRegClass, 0);
-            reg_id.index() < regClasses.at(FloatRegClass).size();
-            reg_id.index()++) {
+    for (RegIndex idx = 0; idx < regClasses.at(FloatRegClass).size(); idx++) {
         PhysRegIdPtr phys_reg = freeList.getFloatReg();
-        renameMap[tid].setEntry(reg_id, phys_reg);
+        renameMap[tid].setEntry(RegId(FloatRegClass, idx), phys_reg);
         scoreboard.setReg(phys_reg);
     }
 
     //Bind condition-code Regs to Rename Map
-    for (RegId reg_id(CCRegClass, 0);
-            reg_id.index() < regClasses.at(CCRegClass).size();
-            reg_id.index()++) {
+    for (RegIndex idx = 0; idx < regClasses.at(CCRegClass).size(); idx++) {
         PhysRegIdPtr phys_reg = freeList.getCCReg();
-        renameMap[tid].setEntry(reg_id, phys_reg);
+        renameMap[tid].setEntry(RegId(CCRegClass, idx), phys_reg);
         scoreboard.setReg(phys_reg);
     }
 

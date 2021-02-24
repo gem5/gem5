@@ -168,13 +168,12 @@ class RegId
 
     /** Index accessors */
     /** @{ */
-    const RegIndex& index() const { return regIdx; }
-    RegIndex& index() { return regIdx; }
+    RegIndex index() const { return regIdx; }
 
     /** Index flattening.
      * Required to be able to use a vector for the register mapping.
      */
-    inline RegIndex
+    RegIndex
     flatIndex() const
     {
         switch (regClass) {
@@ -194,9 +193,9 @@ class RegId
     /** @} */
 
     /** Elem accessor */
-    const RegIndex& elemIndex() const { return elemIdx; }
+    RegIndex elemIndex() const { return elemIdx; }
     /** Class accessor */
-    const RegClass& classValue() const { return regClass; }
+    RegClass classValue() const { return regClass; }
     /** Return a const char* with the register class name. */
     const char* className() const { return regClassStrings[regClass]; }
 
