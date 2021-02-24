@@ -44,7 +44,8 @@
 
 #include <vector>
 
-#include "arch/types.hh"
+#include "arch/generic/isa.hh"
+#include "arch/registers.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
@@ -69,6 +70,7 @@ class PhysRegFile
     /** Integer register file. */
     std::vector<RegVal> intRegFile;
     std::vector<PhysRegId> intRegIds;
+    RegId zeroReg;
 
     /** Floating point register file. */
     std::vector<RegVal> floatRegFile;
@@ -136,7 +138,7 @@ class PhysRegFile
                 unsigned _numPhysicalVecRegs,
                 unsigned _numPhysicalVecPredRegs,
                 unsigned _numPhysicalCCRegs,
-                unsigned _numPhysicalMiscRegs,
+                const BaseISA::RegClasses &regClasses,
                 VecMode vmode
                 );
 
@@ -274,7 +276,7 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting int register %i to %#x\n",
                 phys_reg->index(), val);
 
-        if (phys_reg->index() != TheISA::ZeroReg)
+        if (phys_reg->index() != zeroReg.index())
             intRegFile[phys_reg->index()] = val;
     }
 

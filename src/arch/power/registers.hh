@@ -33,7 +33,6 @@
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/power/regs/int.hh"
 
 namespace PowerISA
 {
@@ -50,9 +49,6 @@ using ConstVecPredReg = ::DummyConstVecPredReg;
 using VecPredRegContainer = ::DummyVecPredRegContainer;
 constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
 constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
-
-// There isn't one in Power, but we need to define one somewhere
-const int ZeroReg = NumIntRegs - 1;
 
 } // namespace PowerISA
 

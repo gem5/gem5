@@ -492,7 +492,8 @@ Fetch2::evaluate()
                 if (DTRACE(MinorTrace) && !dyn_inst->isFault() &&
                     dyn_inst->staticInst->isMacroop())
                 {
-                    dyn_inst->minorTraceInst(*this);
+                    dyn_inst->minorTraceInst(*this,
+                            cpu.threads[0]->getIsaPtr()->regClasses());
                 }
             }
 

@@ -50,7 +50,7 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
                          unsigned _numPhysicalVecRegs,
                          unsigned _numPhysicalVecPredRegs,
                          unsigned _numPhysicalCCRegs,
-                         unsigned _numPhysicalMiscRegs,
+                         const BaseISA::RegClasses &regClasses,
                          VecMode vmode)
     : intRegFile(_numPhysicalIntRegs),
       floatRegFile(_numPhysicalFloatRegs),
@@ -79,6 +79,8 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     for (phys_reg = 0; phys_reg < numPhysicalIntRegs; phys_reg++) {
         intRegIds.emplace_back(IntRegClass, phys_reg, flat_reg_idx++);
     }
+
+    zeroReg = RegId(IntRegClass, regClasses.at(IntRegClass).zeroReg());
 
     // The next batch of the registers are the floating-point physical
     // registers; put them onto the floating-point free list.
@@ -116,7 +118,8 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     }
 
     // Misc regs have a fixed mapping but still need PhysRegIds.
-    for (phys_reg = 0; phys_reg < _numPhysicalMiscRegs; phys_reg++) {
+    for (phys_reg = 0; phys_reg < regClasses.at(MiscRegClass).size();
+            phys_reg++) {
         miscRegIds.emplace_back(MiscRegClass, phys_reg, 0);
     }
 }

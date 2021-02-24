@@ -198,7 +198,7 @@ Checker<Impl>::verify(const DynInstPtr &completed_inst)
         Fault fault = NoFault;
 
         // maintain $r0 semantics
-        thread->setIntReg(TheISA::ZeroReg, 0);
+        thread->setIntReg(zeroReg, 0);
 
         // Check if any recent PC changes match up with anything we
         // expect to happen.  This is mostly to check if traps or

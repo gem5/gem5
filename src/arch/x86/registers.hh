@@ -61,9 +61,6 @@ enum DependenceTags
     Max_Reg_Index = Misc_Reg_Base + NUM_MISCREGS
 };
 
-// There is no such register in X86.
-const int ZeroReg = NUM_INTREGS;
-
 // Not applicable to x86
 using VecElem = ::DummyVecElem;
 using VecRegContainer = ::DummyVecRegContainer;

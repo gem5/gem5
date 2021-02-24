@@ -48,6 +48,7 @@
 
 #include <iostream>
 
+#include "arch/generic/isa.hh"
 #include "base/named.hh"
 #include "base/refcnt.hh"
 #include "base/types.hh"
@@ -273,7 +274,8 @@ class MinorDynInst : public RefCounted
 
     /** Print (possibly verbose) instruction information for
      *  MinorTrace using the given Named object's name */
-    void minorTraceInst(const Named &named_object) const;
+    void minorTraceInst(const Named &named_object,
+            const BaseISA::RegClasses &reg_classes) const;
 
     /** ReportIF interface */
     void reportData(std::ostream &os) const;

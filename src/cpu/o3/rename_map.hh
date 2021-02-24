@@ -96,8 +96,7 @@ class SimpleRenameMap
      * it's awkward to initialize this object via the constructor.
      * Instead, this method is used for initialization.
      */
-    void init(const RegClassInfo &reg_class_info, SimpleFreeList *_freeList,
-            RegIndex _zeroReg);
+    void init(const RegClassInfo &reg_class_info, SimpleFreeList *_freeList);
 
     /**
      * Pair of a physical register and a physical register.  Used to
@@ -210,11 +209,7 @@ class UnifiedRenameMap
 
     /** Initializes rename map with given parameters. */
     void init(const BaseISA::RegClasses &regClasses,
-              PhysRegFile *_regFile,
-              RegIndex _intZeroReg,
-              RegIndex _floatZeroReg,
-              UnifiedFreeList *freeList,
-              VecMode _mode);
+              PhysRegFile *_regFile, UnifiedFreeList *freeList, VecMode _mode);
 
     /**
      * Tell rename map to get a new free physical register to remap

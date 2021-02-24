@@ -64,6 +64,7 @@ namespace Minor
 class Execute : public Named
 {
   protected:
+
     /** Input port carrying instructions from Decode */
     Latch<ForwardInstData>::Output inp;
 
@@ -72,6 +73,9 @@ class Execute : public Named
 
     /** Pointer back to the containing CPU */
     MinorCPU &cpu;
+
+    /** Index of the zero integer register. */
+    const RegIndex zeroReg;
 
     /** Number of instructions that can be issued per cycle */
     unsigned int issueLimit;

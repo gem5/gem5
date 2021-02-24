@@ -48,8 +48,6 @@ using VecPredRegContainer = ::DummyVecPredRegContainer;
 constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
 constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
-const int ZeroReg = 0;
-
 } // namespace SparcISA
 
 #endif

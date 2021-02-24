@@ -36,8 +36,6 @@
 namespace MipsISA
 {
 
-const int ZeroReg = 0;
-
 // Not applicable to MIPS
 using VecElem = ::DummyVecElem;
 using VecRegContainer = ::DummyVecRegContainer;

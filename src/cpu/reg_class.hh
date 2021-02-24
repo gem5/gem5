@@ -66,11 +66,15 @@ class RegClassInfo
 {
   private:
     size_t _size;
+    const RegIndex _zeroReg;
 
   public:
-    RegClassInfo(size_t new_size) : _size(new_size) {}
+    RegClassInfo(size_t new_size, RegIndex new_zero = -1) :
+        _size(new_size), _zeroReg(new_zero)
+    {}
 
     size_t size() const { return _size; }
+    RegIndex zeroReg() const { return _zeroReg; }
 };
 
 /** Number of register classes.

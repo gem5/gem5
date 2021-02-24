@@ -50,6 +50,9 @@ class Scoreboard
      *  explicitly because Scoreboard is not a SimObject. */
     const std::string _name;
 
+    /** Index of the zero integer register. */
+    const RegIndex zeroReg;
+
     /** Scoreboard of physical integer registers, saying whether or not they
      *  are ready. */
     std::vector<bool> regScoreBoard;
@@ -62,8 +65,8 @@ class Scoreboard
      *  @param _numPhysicalRegs Number of physical registers.
      *  @param _numMiscRegs Number of miscellaneous registers.
      */
-    Scoreboard(const std::string &_my_name,
-               unsigned _numPhysicalRegs);
+    Scoreboard(const std::string &_my_name, unsigned _numPhysicalRegs,
+               RegIndex _zero_reg);
 
     /** Destructor. */
     ~Scoreboard() {}
@@ -84,7 +87,7 @@ class Scoreboard
 
         bool ready = regScoreBoard[phys_reg->flatIndex()];
 
-        if (phys_reg->isIntPhysReg() && phys_reg->index() == TheISA::ZeroReg)
+        if (phys_reg->isIntPhysReg() && phys_reg->index() == zeroReg)
             assert(ready);
 
         return ready;
@@ -121,7 +124,7 @@ class Scoreboard
         }
 
         // zero reg should never be marked unready
-        if (phys_reg->isIntPhysReg() && phys_reg->index() == TheISA::ZeroReg)
+        if (phys_reg->isIntPhysReg() && phys_reg->index() == zeroReg)
             return;
 
         regScoreBoard[phys_reg->flatIndex()] = false;

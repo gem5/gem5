@@ -40,12 +40,9 @@
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
-#include "arch/null/types.hh"
-#include "base/types.hh"
 
-namespace NullISA {
-
-const RegIndex ZeroReg = 0;
+namespace NullISA
+{
 
 // Not applicable to null
 using VecElem = ::DummyVecElem;

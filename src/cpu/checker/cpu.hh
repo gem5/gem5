@@ -84,6 +84,8 @@ class CheckerCPU : public BaseCPU, public ExecContext
     /** id attached to all issued requests */
     RequestorID requestorId;
 
+    const RegIndex zeroReg;
+
   public:
     void init() override;
 

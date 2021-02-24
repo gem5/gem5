@@ -133,13 +133,14 @@ operator <<(std::ostream &os, const MinorDynInst &inst)
     return os;
 }
 
-/** Print a register in the form r<n>, f<n>, m<n>(<name>), z for integer,
- *  float, misc and zero registers given an 'architectural register number' */
+/** Print a register in the form r<n>, f<n>, m<n>(<name>) for integer,
+ *  float, and misc given an 'architectural register number' */
 static void
-printRegName(std::ostream &os, const RegId& reg)
+printRegName(std::ostream &os, const RegId& reg,
+        const BaseISA::RegClasses &reg_classes)
 {
-    switch (reg.classValue())
-    {
+    const auto &reg_class = reg_classes.at(reg.classValue());
+    switch (reg.classValue()) {
       case MiscRegClass:
         {
             RegIndex misc_reg = reg.index();
@@ -154,24 +155,23 @@ printRegName(std::ostream &os, const RegId& reg)
         }
         break;
       case FloatRegClass:
-        os << 'f' << static_cast<unsigned int>(reg.index());
+        os << 'f' << reg.index();
         break;
       case VecRegClass:
-        os << 'v' << static_cast<unsigned int>(reg.index());
+        os << 'v' << reg.index();
         break;
       case VecElemClass:
-        os << 'v' << static_cast<unsigned int>(reg.index()) << '[' <<
-              static_cast<unsigned int>(reg.elemIndex()) << ']';
+        os << 'v' << reg.index() << '[' << reg.elemIndex() << ']';
         break;
       case IntRegClass:
-        if (reg.index() == TheISA::ZeroReg) {
+        if (reg.index() == reg_class.zeroReg()) {
             os << 'z';
         } else {
-            os << 'r' << static_cast<unsigned int>(reg.index());
+            os << 'r' << reg.index();
         }
         break;
       case CCRegClass:
-        os << 'c' << static_cast<unsigned int>(reg.index());
+        os << 'c' << reg.index();
         break;
       default:
         panic("Unknown register class: %d", (int)reg.classValue());
@@ -179,7 +179,8 @@ printRegName(std::ostream &os, const RegId& reg)
 }
 
 void
-MinorDynInst::minorTraceInst(const Named &named_object) const
+MinorDynInst::minorTraceInst(const Named &named_object,
+        const BaseISA::RegClasses &reg_classes) const
 {
     if (isFault()) {
         MINORINST(&named_object, "id=F;%s addr=0x%x fault=\"%s\"\n",
@@ -197,7 +198,8 @@ MinorDynInst::minorTraceInst(const Named &named_object) const
 
             unsigned int src_reg = 0;
             while (src_reg < num_src_regs) {
-                printRegName(regs_str, staticInst->srcRegIdx(src_reg));
+                printRegName(regs_str, staticInst->srcRegIdx(src_reg),
+                        reg_classes);
 
                 src_reg++;
                 if (src_reg != num_src_regs)
@@ -208,7 +210,8 @@ MinorDynInst::minorTraceInst(const Named &named_object) const
 
             unsigned int dest_reg = 0;
             while (dest_reg < num_dest_regs) {
-                printRegName(regs_str, staticInst->destRegIdx(dest_reg));
+                printRegName(regs_str, staticInst->destRegIdx(dest_reg),
+                        reg_classes);
 
                 dest_reg++;
                 if (dest_reg != num_dest_regs)

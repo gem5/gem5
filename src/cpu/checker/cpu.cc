@@ -59,7 +59,9 @@ CheckerCPU::init()
 }
 
 CheckerCPU::CheckerCPU(const Params &p)
-    : BaseCPU(p, true), systemPtr(NULL), icachePort(NULL), dcachePort(NULL),
+    : BaseCPU(p, true),
+      zeroReg(params().isa[0]->regClasses().at(IntRegClass).zeroReg()),
+      systemPtr(NULL), icachePort(NULL), dcachePort(NULL),
       tc(NULL), thread(NULL),
       unverifiedReq(nullptr),
       unverifiedMemData(nullptr)

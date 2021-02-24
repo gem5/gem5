@@ -29,10 +29,8 @@
 
 #include "cpu/o3/scoreboard.hh"
 
-Scoreboard::Scoreboard(const std::string &_my_name,
-                       unsigned _numPhysicalRegs)
-    : _name(_my_name),
-      regScoreBoard(_numPhysicalRegs, true),
-      numPhysRegs(_numPhysicalRegs)
-{
-}
+Scoreboard::Scoreboard(const std::string &_my_name, unsigned _numPhysicalRegs,
+        RegIndex zero_reg) :
+    _name(_my_name), zeroReg(zero_reg), regScoreBoard(_numPhysicalRegs, true),
+    numPhysRegs(_numPhysicalRegs)
+{}

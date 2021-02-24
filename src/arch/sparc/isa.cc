@@ -65,15 +65,13 @@ static const PSTATE PstateMask = buildPstateMask();
 
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.insert(_regClasses.end(), {
-            { NumIntRegs },
-            { NumFloatRegs },
-            { 1 }, // Not applicable for SPARC
-            { 2 }, // Not applicable for SPARC
-            { 1 }, // Not applicable for SPARC
-            { 0 }, // Not applicable for SPARC
-            { NumMiscRegs }
-    });
+    _regClasses.emplace_back(NumIntRegs, 0);
+    _regClasses.emplace_back(NumFloatRegs);
+    _regClasses.emplace_back(1); // Not applicable for SPARC
+    _regClasses.emplace_back(2); // Not applicable for SPARC
+    _regClasses.emplace_back(1); // Not applicable for SPARC
+    _regClasses.emplace_back(0); // Not applicable for SPARC
+    _regClasses.emplace_back(NumMiscRegs);
     clear();
 }
 

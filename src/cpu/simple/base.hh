@@ -83,6 +83,8 @@ class BaseSimpleCPU : public BaseCPU
     ThreadID curThread;
     BPredUnit *branchPred;
 
+    const RegIndex zeroReg;
+
     void checkPcEventQueue();
     void swapActiveThread();
 

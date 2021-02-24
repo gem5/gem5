@@ -95,15 +95,15 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
               params.numPhysVecRegs,
               params.numPhysVecPredRegs,
               params.numPhysCCRegs,
-              params.isa[0]->regClasses().at(MiscRegClass).size(),
+              params.isa[0]->regClasses(),
               vecMode),
 
       freeList(name() + ".freelist", &regFile),
 
       rob(this, params),
 
-      scoreboard(name() + ".scoreboard",
-                 regFile.totalNumPhysRegs()),
+      scoreboard(name() + ".scoreboard", regFile.totalNumPhysRegs(),
+              params.isa[0]->regClasses().at(IntRegClass).zeroReg()),
 
       isa(numThreads, NULL),
 
@@ -225,16 +225,8 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
         assert(isa[tid]->initVecRegRenameMode() ==
                 isa[0]->initVecRegRenameMode());
 
-        // Only Alpha has an FP zero register, so for other ISAs we
-        // use an invalid FP register index to avoid special treatment
-        // of any valid FP reg.
-        RegIndex invalidFPReg = regClasses.at(FloatRegClass).size() + 1;
-
-        commitRenameMap[tid].init(regClasses, &regFile, TheISA::ZeroReg,
-                invalidFPReg, &freeList, vecMode);
-
-        renameMap[tid].init(regClasses, &regFile, TheISA::ZeroReg,
-                invalidFPReg, &freeList, vecMode);
+        commitRenameMap[tid].init(regClasses, &regFile, &freeList, vecMode);
+        renameMap[tid].init(regClasses, &regFile, &freeList, vecMode);
     }
 
     // Initialize rename map to assign physical registers to the

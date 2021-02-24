@@ -54,8 +54,6 @@
 namespace RiscvISA
 {
 
-const int ZeroReg = 0;
-
 // Not applicable to RISC-V
 using VecElem = ::DummyVecElem;
 using VecRegContainer = ::DummyVecRegContainer;

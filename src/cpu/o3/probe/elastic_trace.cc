@@ -58,6 +58,10 @@ ElasticTrace::ElasticTrace(const ElasticTraceParams &params)
        stats(this)
 {
     cpu = dynamic_cast<FullO3CPU<O3CPUImpl>*>(params.manager);
+    const BaseISA::RegClasses &regClasses =
+        cpu->getContext(0)->getIsaPtr()->regClasses();
+    zeroReg = regClasses.at(IntRegClass).zeroReg();
+
     fatal_if(!cpu, "Manager of %s is not of type O3CPU and thus does not "\
                 "support dependency tracing.\n", name());
 
@@ -241,7 +245,7 @@ ElasticTrace::updateRegDep(const DynInstConstPtr& dyn_inst)
 
         const RegId& src_reg = dyn_inst->srcRegIdx(src_idx);
         if (!src_reg.isMiscReg() &&
-                !(src_reg.isIntReg() && src_reg.index() == TheISA::ZeroReg)) {
+                !(src_reg.isIntReg() && src_reg.index() == zeroReg)) {
             // Get the physical register index of the i'th source register.
             PhysRegIdPtr phys_src_reg = dyn_inst->regs.renamedSrcIdx(src_idx);
             DPRINTFR(ElasticTrace, "[sn:%lli] Check map for src reg"
@@ -273,8 +277,7 @@ ElasticTrace::updateRegDep(const DynInstConstPtr& dyn_inst)
         // CC register and not a Misc register.
         const RegId& dest_reg = dyn_inst->destRegIdx(dest_idx);
         if (!dest_reg.isMiscReg() &&
-                !(dest_reg.isIntReg() &&
-                    dest_reg.index() == TheISA::ZeroReg)) {
+                !(dest_reg.isIntReg() && dest_reg.index() == zeroReg)) {
             // Get the physical register index of the i'th destination
             // register.
             PhysRegIdPtr phys_dest_reg =

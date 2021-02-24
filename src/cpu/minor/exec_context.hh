@@ -83,7 +83,7 @@ class ExecContext : public ::ExecContext
     ExecContext (
         MinorCPU &cpu_,
         SimpleThread &thread_, Execute &execute_,
-        MinorDynInstPtr inst_) :
+        MinorDynInstPtr inst_, RegIndex zeroReg) :
         cpu(cpu_),
         thread(thread_),
         execute(execute_),
@@ -93,7 +93,7 @@ class ExecContext : public ::ExecContext
         pcState(inst->pc);
         setPredicate(inst->readPredicate());
         setMemAccPredicate(inst->readMemAccPredicate());
-        thread.setIntReg(TheISA::ZeroReg, 0);
+        thread.setIntReg(zeroReg, 0);
     }
 
     ~ExecContext()

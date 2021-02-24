@@ -68,6 +68,8 @@ class LSQ : public Named
     MinorCPU &cpu;
     Execute &execute;
 
+    const RegIndex zeroReg;
+
   protected:
     /** State of memory access for head access. */
     enum MemoryState
@@ -127,6 +129,8 @@ class LSQ : public Named
       public:
         /** Owning port */
         LSQ &port;
+
+        const RegIndex zeroReg;
 
         /** Instruction which made this request */
         MinorDynInstPtr inst;
@@ -200,7 +204,8 @@ class LSQ : public Named
 
       public:
         LSQRequest(LSQ &port_, MinorDynInstPtr inst_, bool isLoad_,
-            PacketDataPtr data_ = NULL, uint64_t *res_ = NULL);
+                RegIndex zero_reg, PacketDataPtr data_ = NULL,
+                uint64_t *res_ = NULL);
 
         virtual ~LSQRequest();
 
@@ -310,7 +315,7 @@ class LSQ : public Named
       public:
         SpecialDataRequest(LSQ &port_, MinorDynInstPtr inst_) :
             /* Say this is a load, not actually relevant */
-            LSQRequest(port_, inst_, true, NULL, 0)
+            LSQRequest(port_, inst_, true, port_.zeroReg, NULL, 0)
         { }
     };
 
@@ -377,7 +382,7 @@ class LSQ : public Named
       public:
         SingleDataRequest(LSQ &port_, MinorDynInstPtr inst_,
             bool isLoad_, PacketDataPtr data_ = NULL, uint64_t *res_ = NULL) :
-            LSQRequest(port_, inst_, isLoad_, data_, res_),
+            LSQRequest(port_, inst_, isLoad_, port_.zeroReg, data_, res_),
             packetInFlight(false),
             packetSent(false)
         { }
@@ -647,7 +652,8 @@ class LSQ : public Named
         unsigned int max_accesses_in_memory_system, unsigned int line_width,
         unsigned int requests_queue_size, unsigned int transfers_queue_size,
         unsigned int store_buffer_size,
-        unsigned int store_buffer_cycle_store_limit);
+        unsigned int store_buffer_cycle_store_limit,
+        RegIndex zero_reg);
 
     virtual ~LSQ();
 

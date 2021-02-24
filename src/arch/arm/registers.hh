@@ -41,14 +41,6 @@
 #ifndef __ARCH_ARM_REGISTERS_HH__
 #define __ARCH_ARM_REGISTERS_HH__
 
-#include "arch/arm/regs/int.hh"
 #include "arch/arm/regs/vec.hh"
-
-namespace ArmISA
-{
-
-const int ZeroReg = INTREG_ZERO;
-
-} // namespace ArmISA
 
 #endif
