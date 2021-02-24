@@ -42,7 +42,7 @@
 #ifndef __CPU_O3_THREAD_CONTEXT_IMPL_HH__
 #define __CPU_O3_THREAD_CONTEXT_IMPL_HH__
 
-#include "arch/registers.hh"
+#include "arch/vecregs.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/thread_context.hh"
 #include "debug/O3CPU.hh"

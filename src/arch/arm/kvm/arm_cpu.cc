@@ -44,7 +44,8 @@
 #include <memory>
 
 #include "arch/arm/interrupts.hh"
-#include "arch/arm/registers.hh"
+#include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/misc.hh"
 #include "cpu/kvm/base.hh"
 #include "debug/Kvm.hh"
 #include "debug/KvmContext.hh"

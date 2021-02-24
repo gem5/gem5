@@ -38,8 +38,8 @@
 #ifndef __ARCH_ARM_ISA_DEVICE_HH__
 #define __ARCH_ARM_ISA_DEVICE_HH__
 
-#include "arch/arm/registers.hh"
 #include "base/compiler.hh"
+#include "base/types.hh"
 
 class ThreadContext;
 

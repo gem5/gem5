@@ -30,7 +30,6 @@
 
 #include "arch/x86/decoder.hh"
 #include "arch/x86/mmu.hh"
-#include "arch/x86/registers.hh"
 #include "arch/x86/regs/ccr.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"

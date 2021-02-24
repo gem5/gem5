@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_SPARC_REGISTERS_HH__
-#define __ARCH_SPARC_REGISTERS_HH__
+#ifndef __ARCH_SPARC_VECREGS_HH__
+#define __ARCH_SPARC_VECREGS_HH__
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"

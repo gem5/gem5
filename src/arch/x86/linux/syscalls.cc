@@ -29,7 +29,6 @@
 
 #include "arch/x86/linux/linux.hh"
 #include "arch/x86/process.hh"
-#include "arch/x86/registers.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"

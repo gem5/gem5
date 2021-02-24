@@ -1,10 +1,7 @@
 /*
- * Copyright (c) 2013 ARM Limited
- * Copyright (c) 2014-2015 Sven Karlsson
- * Copyright (c) 2019 Yifei Liu
- * Copyright (c) 2020 Barkhausen Institut
- * Copyright (c) 2021 StreamComputing Corp
- * All rights reserved
+ * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -14,10 +11,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2016 RISC-V Foundation
- * Copyright (c) 2016 The University of Virginia
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -43,30 +36,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_RISCV_REGISTERS_HH__
-#define __ARCH_RISCV_REGISTERS_HH__
-
-#include <cstdint>
+#ifndef __ARCH_X86_VECREGS_HH__
+#define __ARCH_X86_VECREGS_HH__
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
+#include "arch/x86/regs/ccr.hh"
+#include "arch/x86/regs/float.hh"
+#include "arch/x86/regs/int.hh"
+#include "arch/x86/regs/misc.hh"
 
-namespace RiscvISA
+namespace X86ISA
 {
 
-// Not applicable to RISC-V
+// These enumerate all the registers for dependence tracking.
+enum DependenceTags
+{
+    // FP_Reg_Base must be large enough to be bigger than any integer
+    // register index which has the IntFoldBit (1 << 6) set.  To be safe
+    // we just start at (1 << 7) == 128.
+    FP_Reg_Base = 128,
+    CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
+    Misc_Reg_Base = CC_Reg_Base + NUM_CCREGS,
+    Max_Reg_Index = Misc_Reg_Base + NUM_MISCREGS
+};
+
+// Not applicable to x86
 using VecElem = ::DummyVecElem;
 using VecRegContainer = ::DummyVecRegContainer;
 constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
 constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
 
-// Not applicable to RISC-V
+// Not applicable to x86
 using VecPredReg = ::DummyVecPredReg;
 using ConstVecPredReg = ::DummyConstVecPredReg;
 using VecPredRegContainer = ::DummyVecPredRegContainer;
 constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
 constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
-}
+} // namespace X86ISA
 
-#endif // __ARCH_RISCV_REGISTERS_HH__
+#endif // __ARCH_X86_VECREGS_HH__

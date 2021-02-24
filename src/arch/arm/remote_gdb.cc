@@ -137,7 +137,7 @@
 
 #include "arch/arm/decoder.hh"
 #include "arch/arm/pagetable.hh"
-#include "arch/arm/registers.hh"
+#include "arch/arm/regs/vec.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/mmu.hh"

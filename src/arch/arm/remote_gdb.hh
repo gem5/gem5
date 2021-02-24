@@ -46,7 +46,7 @@
 
 #include <algorithm>
 
-#include "arch/arm/registers.hh"
+#include "arch/arm/regs/vec.hh"
 #include "arch/arm/utility.hh"
 #include "base/compiler.hh"
 #include "base/remote_gdb.hh"

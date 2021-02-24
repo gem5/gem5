@@ -33,7 +33,6 @@
 #include <string>
 
 #include "arch/generic/isa.hh"
-#include "arch/x86/registers.hh"
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/misc.hh"
 #include "base/types.hh"

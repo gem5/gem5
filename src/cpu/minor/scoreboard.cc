@@ -37,7 +37,6 @@
 
 #include "cpu/minor/scoreboard.hh"
 
-#include "arch/registers.hh"
 #include "cpu/reg_class.hh"
 #include "debug/MinorScoreboard.hh"
 #include "debug/MinorTiming.hh"

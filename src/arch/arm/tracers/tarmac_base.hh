@@ -49,7 +49,6 @@
 #ifndef __ARCH_ARM_TRACERS_TARMAC_BASE_HH__
 #define __ARCH_ARM_TRACERS_TARMAC_BASE_HH__
 
-#include "arch/arm/registers.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"

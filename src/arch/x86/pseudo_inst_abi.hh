@@ -35,7 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/x86/registers.hh"
+#include "arch/x86/regs/int.hh"
 #include "sim/guest_abi.hh"
 
 struct X86PseudoInstABI

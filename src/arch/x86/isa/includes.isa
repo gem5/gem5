@@ -60,7 +60,6 @@ output header {{
 #include "arch/x86/insts/micromediaop.hh"
 #include "arch/x86/insts/microregop.hh"
 #include "arch/x86/insts/static_inst.hh"
-#include "arch/x86/registers.hh"
 #include "arch/x86/types.hh"
 #include "arch/x86/utility.hh"
 #include "base/logging.hh"

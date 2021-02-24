@@ -47,8 +47,8 @@
 
 #include "arch/generic/htm.hh"
 #include "arch/generic/isa.hh"
-#include "arch/registers.hh"
 #include "arch/types.hh"
+#include "arch/vecregs.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/pc_event.hh"

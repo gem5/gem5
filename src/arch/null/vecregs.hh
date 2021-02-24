@@ -35,8 +35,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_NULL_REGISTERS_HH__
-#define __ARCH_NULL_REGISTERS_HH__
+#ifndef __ARCH_NULL_VECREGS_HH__
+#define __ARCH_NULL_VECREGS_HH__
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
@@ -59,4 +59,4 @@ constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
 }
 
-#endif // __ARCH_NULL_REGISTERS_HH__
+#endif // __ARCH_NULL_VECREGS_HH__

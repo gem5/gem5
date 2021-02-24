@@ -61,9 +61,9 @@ env.SwitchingHeaders(
         isa.hh
         locked_mem.hh
         page_size.hh
-        registers.hh
         remote_gdb.hh
         types.hh
+        vecregs.hh
         '''),
     env.subst('${TARGET_ISA}'))
 

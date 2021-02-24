@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
- * Copyright (c) 2013 Advanced Micro Devices, Inc.
- * All rights reserved.
+ * Copyright (c) 2010-2011, 2014, 2016-2019 ARM Limited
+ * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -11,6 +10,9 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2007-2008 The Florida State University
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -36,44 +38,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_X86_REGISTERS_HH__
-#define __ARCH_X86_REGISTERS_HH__
+#ifndef __ARCH_ARM_VECREGS_HH__
+#define __ARCH_ARM_VECREGS_HH__
 
-#include "arch/generic/vec_pred_reg.hh"
-#include "arch/generic/vec_reg.hh"
-#include "arch/x86/regs/ccr.hh"
-#include "arch/x86/regs/float.hh"
-#include "arch/x86/regs/int.hh"
-#include "arch/x86/regs/misc.hh"
+#include "arch/arm/regs/vec.hh"
 
-namespace X86ISA
-{
-
-// These enumerate all the registers for dependence tracking.
-enum DependenceTags
-{
-    // FP_Reg_Base must be large enough to be bigger than any integer
-    // register index which has the IntFoldBit (1 << 6) set.  To be safe
-    // we just start at (1 << 7) == 128.
-    FP_Reg_Base = 128,
-    CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
-    Misc_Reg_Base = CC_Reg_Base + NUM_CCREGS,
-    Max_Reg_Index = Misc_Reg_Base + NUM_MISCREGS
-};
-
-// Not applicable to x86
-using VecElem = ::DummyVecElem;
-using VecRegContainer = ::DummyVecRegContainer;
-constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
-constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
-
-// Not applicable to x86
-using VecPredReg = ::DummyVecPredReg;
-using ConstVecPredReg = ::DummyConstVecPredReg;
-using VecPredRegContainer = ::DummyVecPredRegContainer;
-constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
-constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
-
-} // namespace X86ISA
-
-#endif // __ARCH_X86_REGFILE_HH__
+#endif

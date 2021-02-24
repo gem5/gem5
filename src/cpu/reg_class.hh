@@ -44,7 +44,7 @@
 #include <cassert>
 #include <cstddef>
 
-#include "arch/registers.hh"
+#include "arch/vecregs.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 

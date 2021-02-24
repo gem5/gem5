@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_POWER_REGISTERS_HH__
-#define __ARCH_POWER_REGISTERS_HH__
+#ifndef __ARCH_POWER_VECREGS_HH__
+#define __ARCH_POWER_VECREGS_HH__
 
 #include <cstdint>
 
@@ -52,4 +52,4 @@ constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
 } // namespace PowerISA
 
-#endif // __ARCH_POWER_REGISTERS_HH__
+#endif // __ARCH_POWER_VECREGS_HH__

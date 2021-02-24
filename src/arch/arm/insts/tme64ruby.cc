@@ -39,7 +39,6 @@
 #include "arch/arm/htm.hh"
 #include "arch/arm/insts/tme64.hh"
 #include "arch/arm/locked_mem.hh"
-#include "arch/arm/registers.hh"
 #include "arch/generic/memhelpers.hh"
 #include "debug/ArmTme.hh"
 #include "mem/packet_access.hh"

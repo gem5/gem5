@@ -45,9 +45,7 @@
 #include <utility>
 #include <vector>
 
-#include "arch/registers.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
 #include "cpu/o3/limits.hh"
 #include "enums/SMTQueuePolicy.hh"
 

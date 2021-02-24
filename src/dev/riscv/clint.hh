@@ -39,7 +39,6 @@
 #define __DEV_RISCV_CLINT_HH__
 
 #include "arch/riscv/interrupts.hh"
-#include "arch/riscv/registers.hh"
 #include "dev/intpin.hh"
 #include "dev/io_device.hh"
 #include "dev/mc146818.hh"

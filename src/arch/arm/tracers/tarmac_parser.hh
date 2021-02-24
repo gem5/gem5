@@ -49,7 +49,6 @@
 #include <fstream>
 #include <unordered_map>
 
-#include "arch/arm/registers.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"

@@ -29,7 +29,7 @@
 #define __ARCH_ARM_LINUX_SE_WORKLOAD_HH__
 
 #include "arch/arm/linux/linux.hh"
-#include "arch/arm/registers.hh"
+#include "arch/arm/regs/int.hh"
 #include "arch/arm/se_workload.hh"
 #include "params/ArmEmuLinux.hh"
 #include "sim/syscall_desc.hh"

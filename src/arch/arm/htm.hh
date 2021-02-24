@@ -44,8 +44,8 @@
  * ISA-specific types for hardware transactional memory.
  */
 
-#include "arch/arm/registers.hh"
 #include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/vec.hh"
 #include "arch/generic/htm.hh"
 #include "base/types.hh"
 

@@ -40,7 +40,6 @@
 
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/segment.hh"
-#include "arch/x86/registers.hh"
 #include "arch/x86/types.hh"
 
 namespace X86ISA

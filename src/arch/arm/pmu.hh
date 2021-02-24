@@ -43,7 +43,6 @@
 #include <vector>
 
 #include "arch/arm/isa_device.hh"
-#include "arch/arm/registers.hh"
 #include "arch/arm/system.hh"
 #include "base/cprintf.hh"
 #include "cpu/base.hh"

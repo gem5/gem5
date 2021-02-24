@@ -44,7 +44,6 @@
 #include <set>
 #include <unordered_map>
 
-#include "arch/registers.hh"
 #include "base/statistics.hh"
 #include "cpu/base.hh"
 #include "debug/TraceCPUData.hh"

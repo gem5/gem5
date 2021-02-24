@@ -41,7 +41,6 @@
 #include <sstream>
 
 #include "arch/isa.hh"
-#include "arch/registers.hh"
 #include "cpu/base.hh"
 #include "cpu/minor/trace.hh"
 #include "cpu/null_static_inst.hh"

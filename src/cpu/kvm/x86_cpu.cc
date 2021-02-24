@@ -34,7 +34,6 @@
 #include <cerrno>
 #include <memory>
 
-#include "arch/registers.hh"
 #include "arch/x86/cpuid.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/interrupts.hh"

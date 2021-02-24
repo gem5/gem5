@@ -40,7 +40,6 @@
 
 #include <algorithm>
 
-#include "arch/riscv/registers.hh"
 #include "cpu/base.hh"
 #include "debug/Plic.hh"
 #include "mem/packet.hh"
