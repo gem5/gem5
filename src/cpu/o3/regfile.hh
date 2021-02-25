@@ -203,7 +203,7 @@ class PhysRegFile
 
         DPRINTF(IEW, "RegFile: Access to vector register %i, has "
                 "data %s\n", int(phys_reg->index()),
-                vectorRegFile[phys_reg->index()].print());
+                vectorRegFile[phys_reg->index()]);
 
         return vectorRegFile[phys_reg->index()];
     }
@@ -296,7 +296,7 @@ class PhysRegFile
         assert(phys_reg->isVectorPhysReg());
 
         DPRINTF(IEW, "RegFile: Setting vector register %i to %s\n",
-                int(phys_reg->index()), val.print());
+                int(phys_reg->index()), val);
 
         vectorRegFile[phys_reg->index()] = val;
     }

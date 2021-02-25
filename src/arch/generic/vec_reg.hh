@@ -97,14 +97,13 @@
 #define __ARCH_GENERIC_VEC_REG_HH__
 
 #include <array>
-#include <cassert>
 #include <iostream>
 #include <string>
 #include <type_traits>
-#include <vector>
 
 #include "base/cprintf.hh"
 #include "base/logging.hh"
+#include "sim/serialize_handlers.hh"
 
 constexpr unsigned MaxVecRegLenInBytes = 4096;
 
@@ -175,8 +174,6 @@ class VecRegT
         return os;
     }
 
-    const std::string print() const { return csprintf("%s", *this); }
-
     /**
      * Cast to VecRegContainer&
      * It is useful to get the reference to the container for ISA tricks,
@@ -211,12 +208,6 @@ class VecRegContainer
   public:
     VecRegContainer() {}
     VecRegContainer(const VecRegContainer &) = default;
-    /* This is required for de-serialisation. */
-    VecRegContainer(const std::vector<uint8_t>& that)
-    {
-        assert(that.size() >= SIZE);
-        std::memcpy(container.data(), &that[0], SIZE);
-    }
 
     /** Zero the container. */
     void zero() { memset(container.data(), 0, SIZE); }
@@ -236,17 +227,6 @@ class VecRegContainer
     MyClass&
     operator=(const Container& that)
     {
-        std::memcpy(container.data(), that.data(), SIZE);
-        return *this;
-    }
-
-    /** From vector<uint8_t>.
-     * This is required for de-serialisation.
-     * */
-    MyClass&
-    operator=(const std::vector<uint8_t>& that)
-    {
-        assert(that.size() >= SIZE);
         std::memcpy(container.data(), that.data(), SIZE);
         return *this;
     }
@@ -272,7 +252,6 @@ class VecRegContainer
         return !operator==(that);
     }
 
-    const std::string print() const { return csprintf("%s", *this); }
     /** Get pointer to bytes. */
     template <typename Ret>
     const Ret* raw_ptr() const { return (const Ret*)container.data(); }
@@ -313,19 +292,20 @@ class VecRegContainer
         return VecRegT<VecElem, NumElems, false>(*this);
     }
 
-    /** @} */
-    /**
-     * Output operator.
-     * Used for serialization.
-     */
     friend std::ostream&
     operator<<(std::ostream& os, const MyClass& v)
     {
         for (auto& b: v.container) {
-            os << csprintf("%02x", b);
+            ccprintf(os, "%02x", b);
         }
         return os;
     }
+
+    /** @} */
+    /**
+     * Used for serialization.
+     */
+    friend ShowParam<MyClass>;
 };
 
 /**
@@ -333,20 +313,34 @@ class VecRegContainer
  */
 /** @{ */
 template <size_t Sz>
-inline bool
-to_number(const std::string& value, VecRegContainer<Sz>& v)
+struct ParseParam<VecRegContainer<Sz>>
 {
-    fatal_if(value.size() > 2 * VecRegContainer<Sz>::size(),
-             "Vector register value overflow at unserialize");
+    static bool
+    parse(const std::string &str, VecRegContainer<Sz> &value)
+    {
+        fatal_if(str.size() > 2 * Sz,
+                 "Vector register value overflow at unserialize");
 
-    for (int i = 0; i < VecRegContainer<Sz>::size(); i++) {
-        uint8_t b = 0;
-        if (2 * i < value.size())
-            b = stoul(value.substr(i * 2, 2), nullptr, 16);
-        v.template raw_ptr<uint8_t>()[i] = b;
+        for (int i = 0; i < Sz; i++) {
+            uint8_t b = 0;
+            if (2 * i < value.size())
+                b = stoul(str.substr(i * 2, 2), nullptr, 16);
+            value.template raw_ptr<uint8_t>()[i] = b;
+        }
+        return true;
     }
-    return true;
-}
+};
+
+template <size_t Sz>
+struct ShowParam<VecRegContainer<Sz>>
+{
+    static void
+    show(std::ostream &os, const VecRegContainer<Sz> &value)
+    {
+        for (auto& b: value.container)
+            ccprintf(os, "%02x", b);
+    }
+};
 /** @} */
 
 /**

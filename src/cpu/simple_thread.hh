@@ -295,7 +295,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         assert(flatIndex < TheISA::NumVecRegs);
         const TheISA::VecRegContainer& regVal = readVecRegFlat(flatIndex);
         DPRINTF(VecRegs, "Reading vector reg %d (%d) as %s.\n",
-                reg.index(), flatIndex, regVal.print());
+                reg.index(), flatIndex, regVal);
         return regVal;
     }
 
@@ -306,7 +306,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         assert(flatIndex < TheISA::NumVecRegs);
         TheISA::VecRegContainer& regVal = getWritableVecRegFlat(flatIndex);
         DPRINTF(VecRegs, "Reading vector reg %d (%d) as %s for modify.\n",
-                reg.index(), flatIndex, regVal.print());
+                reg.index(), flatIndex, regVal);
         return regVal;
     }
 
@@ -389,7 +389,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         assert(flatIndex < TheISA::NumVecRegs);
         setVecRegFlat(flatIndex, val);
         DPRINTF(VecRegs, "Setting vector reg %d (%d) to %s.\n",
-                reg.index(), flatIndex, val.print());
+                reg.index(), flatIndex, val);
     }
 
     void
