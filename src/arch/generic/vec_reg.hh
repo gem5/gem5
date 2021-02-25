@@ -125,12 +125,14 @@ class VecRegContainer;
 template <typename VecElem, size_t NumElems, bool Const>
 class VecRegT
 {
+  private:
     /** Size of the register in bytes. */
     static constexpr inline size_t
     size()
     {
         return sizeof(VecElem) * NumElems;
     }
+
   public:
     /** Container type alias. */
     using Container = typename std::conditional<Const,
@@ -146,21 +148,9 @@ class VecRegT
     /** Constructor. */
     VecRegT(Container& cnt) : container(cnt) {};
 
-    /** Zero the container. */
-    template<bool Condition = !Const>
-    typename std::enable_if_t<Condition, void>
-    zero() { container.zero(); }
-
-    template<bool Condition = !Const>
-    typename std::enable_if_t<Condition, MyClass&>
-    operator=(const MyClass& that)
-    {
-        container = that.container;
-        return *this;
-    }
-
     /** Index operator. */
-    const VecElem& operator[](size_t idx) const
+    const VecElem &
+    operator[](size_t idx) const
     {
         return container.template raw_ptr<VecElem>()[idx];
     }
@@ -171,25 +161,6 @@ class VecRegT
     operator[](size_t idx)
     {
         return container.template raw_ptr<VecElem>()[idx];
-    }
-
-    /** Equality operator.
-     * Required to compare thread contexts.
-     */
-    template<typename VE2, size_t NE2, bool C2>
-    bool
-    operator==(const VecRegT<VE2, NE2, C2>& that) const
-    {
-        return container == that.container;
-    }
-    /** Inequality operator.
-     * Required to compare thread contexts.
-     */
-    template<typename VE2, size_t NE2, bool C2>
-    bool
-    operator!=(const VecRegT<VE2, NE2, C2>& that) const
-    {
-        return !operator==(that);
     }
 
     /** Output stream operator. */
@@ -205,6 +176,7 @@ class VecRegT
     }
 
     const std::string print() const { return csprintf("%s", *this); }
+
     /**
      * Cast to VecRegContainer&
      * It is useful to get the reference to the container for ISA tricks,
@@ -223,10 +195,11 @@ class VecRegT
 template <size_t SIZE>
 class VecRegContainer
 {
-  static_assert(SIZE > 0,
-          "Cannot create Vector Register Container of zero size");
-  static_assert(SIZE <= MaxVecRegLenInBytes,
-          "Vector Register size limit exceeded");
+  private:
+    static_assert(SIZE > 0,
+            "Cannot create Vector Register Container of zero size");
+    static_assert(SIZE <= MaxVecRegLenInBytes,
+            "Vector Register size limit exceeded");
   public:
     static constexpr inline size_t size() { return SIZE; };
     using Container = std::array<uint8_t, SIZE>;
@@ -251,16 +224,17 @@ class VecRegContainer
     /** Assignment operators. */
     /** @{ */
     /** From VecRegContainer */
-    MyClass& operator=(const MyClass& that)
+    MyClass&
+    operator=(const MyClass& that)
     {
         if (&that == this)
             return *this;
-        memcpy(container.data(), that.container.data(), SIZE);
-        return *this;
+        return *this = that.container;
     }
 
     /** From appropriately sized uint8_t[]. */
-    MyClass& operator=(const Container& that)
+    MyClass&
+    operator=(const Container& that)
     {
         std::memcpy(container.data(), that.data(), SIZE);
         return *this;
@@ -269,29 +243,12 @@ class VecRegContainer
     /** From vector<uint8_t>.
      * This is required for de-serialisation.
      * */
-    MyClass& operator=(const std::vector<uint8_t>& that)
+    MyClass&
+    operator=(const std::vector<uint8_t>& that)
     {
         assert(that.size() >= SIZE);
         std::memcpy(container.data(), that.data(), SIZE);
         return *this;
-    }
-    /** @} */
-
-    /** Copy the contents into the input buffer. */
-    /** @{ */
-    /** To appropriately sized uint8_t[] */
-    void copyTo(Container& dst) const
-    {
-        std::memcpy(dst.data(), container.data(), SIZE);
-    }
-
-    /** To vector<uint8_t>
-     * This is required for serialisation.
-     * */
-    void copyTo(std::vector<uint8_t>& dst) const
-    {
-        dst.resize(SIZE);
-        std::memcpy(dst.data(), container.data(), SIZE);
     }
     /** @} */
 
@@ -335,7 +292,8 @@ class VecRegContainer
      */
     /** @{ */
     template <typename VecElem, size_t NumElems=(SIZE / sizeof(VecElem))>
-    VecRegT<VecElem, NumElems, true> as() const
+    VecRegT<VecElem, NumElems, true>
+    as() const
     {
         static_assert(SIZE % sizeof(VecElem) == 0,
                 "VecElem does not evenly divide the register size");
@@ -345,7 +303,8 @@ class VecRegContainer
     }
 
     template <typename VecElem, size_t NumElems=(SIZE / sizeof(VecElem))>
-    VecRegT<VecElem, NumElems, false> as()
+    VecRegT<VecElem, NumElems, false>
+    as()
     {
         static_assert(SIZE % sizeof(VecElem) == 0,
                 "VecElem does not evenly divide the register size");
@@ -359,7 +318,8 @@ class VecRegContainer
      * Output operator.
      * Used for serialization.
      */
-    friend std::ostream& operator<<(std::ostream& os, const MyClass& v)
+    friend std::ostream&
+    operator<<(std::ostream& os, const MyClass& v)
     {
         for (auto& b: v.container) {
             os << csprintf("%02x", b);
