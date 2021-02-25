@@ -310,85 +310,6 @@ class SimpleThread : public ThreadState, public ThreadContext
         return regVal;
     }
 
-    /** Vector Register Lane Interfaces. */
-    /** @{ */
-    /** Reads source vector <T> operand. */
-    template <typename T>
-    VecLaneT<T, true>
-    readVecLane(const RegId& reg) const
-    {
-        int flatIndex = isa->flattenVecIndex(reg.index());
-        assert(flatIndex < TheISA::NumVecRegs);
-        auto regVal = readVecLaneFlat<T>(flatIndex, reg.elemIndex());
-        DPRINTF(VecRegs, "Reading vector lane %d (%d)[%d] as %lx.\n",
-                reg.index(), flatIndex, reg.elemIndex(), regVal);
-        return regVal;
-    }
-
-    /** Reads source vector 8bit operand. */
-    virtual ConstVecLane8
-    readVec8BitLaneReg(const RegId &reg) const override
-    {
-        return readVecLane<uint8_t>(reg);
-    }
-
-    /** Reads source vector 16bit operand. */
-    virtual ConstVecLane16
-    readVec16BitLaneReg(const RegId &reg) const override
-    {
-        return readVecLane<uint16_t>(reg);
-    }
-
-    /** Reads source vector 32bit operand. */
-    virtual ConstVecLane32
-    readVec32BitLaneReg(const RegId &reg) const override
-    {
-        return readVecLane<uint32_t>(reg);
-    }
-
-    /** Reads source vector 64bit operand. */
-    virtual ConstVecLane64
-    readVec64BitLaneReg(const RegId &reg) const override
-    {
-        return readVecLane<uint64_t>(reg);
-    }
-
-    /** Write a lane of the destination vector register. */
-    template <typename LD>
-    void
-    setVecLaneT(const RegId &reg, const LD &val)
-    {
-        int flatIndex = isa->flattenVecIndex(reg.index());
-        assert(flatIndex < TheISA::NumVecRegs);
-        setVecLaneFlat(flatIndex, reg.elemIndex(), val);
-        DPRINTF(VecRegs, "Reading vector lane %d (%d)[%d] to %lx.\n",
-                reg.index(), flatIndex, reg.elemIndex(), val);
-    }
-    virtual void
-    setVecLane(const RegId &reg, const LaneData<LaneSize::Byte> &val) override
-    {
-        return setVecLaneT(reg, val);
-    }
-    virtual void
-    setVecLane(const RegId &reg,
-               const LaneData<LaneSize::TwoByte> &val) override
-    {
-        return setVecLaneT(reg, val);
-    }
-    virtual void
-    setVecLane(const RegId &reg,
-               const LaneData<LaneSize::FourByte> &val) override
-    {
-        return setVecLaneT(reg, val);
-    }
-    virtual void
-    setVecLane(const RegId &reg,
-               const LaneData<LaneSize::EightByte> &val) override
-    {
-        return setVecLaneT(reg, val);
-    }
-    /** @} */
-
     const TheISA::VecElem &
     readVecElem(const RegId &reg) const override
     {
@@ -607,20 +528,6 @@ class SimpleThread : public ThreadState, public ThreadContext
     setVecRegFlat(RegIndex reg, const TheISA::VecRegContainer &val) override
     {
         vecRegs[reg] = val;
-    }
-
-    template <typename T>
-    VecLaneT<T, true>
-    readVecLaneFlat(RegIndex reg, int lId) const
-    {
-        return vecRegs[reg].laneView<T>(lId);
-    }
-
-    template <typename LD>
-    void
-    setVecLaneFlat(RegIndex reg, int lId, const LD &val)
-    {
-        vecRegs[reg].laneView<typename LD::UnderlyingType>(lId) = val;
     }
 
     const TheISA::VecElem &

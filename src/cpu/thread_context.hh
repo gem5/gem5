@@ -205,35 +205,6 @@ class ThreadContext : public PCEventScope
         readVecReg(const RegId& reg) const = 0;
     virtual TheISA::VecRegContainer& getWritableVecReg(const RegId& reg) = 0;
 
-    /** Vector Register Lane Interfaces. */
-    /** @{ */
-    /** Reads source vector 8bit operand. */
-    virtual ConstVecLane8
-    readVec8BitLaneReg(const RegId& reg) const = 0;
-
-    /** Reads source vector 16bit operand. */
-    virtual ConstVecLane16
-    readVec16BitLaneReg(const RegId& reg) const = 0;
-
-    /** Reads source vector 32bit operand. */
-    virtual ConstVecLane32
-    readVec32BitLaneReg(const RegId& reg) const = 0;
-
-    /** Reads source vector 64bit operand. */
-    virtual ConstVecLane64
-    readVec64BitLaneReg(const RegId& reg) const = 0;
-
-    /** Write a lane of the destination vector register. */
-    virtual void setVecLane(const RegId& reg,
-            const LaneData<LaneSize::Byte>& val) = 0;
-    virtual void setVecLane(const RegId& reg,
-            const LaneData<LaneSize::TwoByte>& val) = 0;
-    virtual void setVecLane(const RegId& reg,
-            const LaneData<LaneSize::FourByte>& val) = 0;
-    virtual void setVecLane(const RegId& reg,
-            const LaneData<LaneSize::EightByte>& val) = 0;
-    /** @} */
-
     virtual const TheISA::VecElem& readVecElem(const RegId& reg) const = 0;
 
     virtual const TheISA::VecPredRegContainer& readVecPredReg(

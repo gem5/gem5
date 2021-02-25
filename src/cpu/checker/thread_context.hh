@@ -249,63 +249,6 @@ class CheckerThreadContext : public ThreadContext
         return actualTC->getWritableVecReg(reg);
     }
 
-    /** Vector Register Lane Interfaces. */
-    /** @{ */
-    /** Reads source vector 8bit operand. */
-    ConstVecLane8
-    readVec8BitLaneReg(const RegId &reg) const override
-    {
-        return actualTC->readVec8BitLaneReg(reg);
-    }
-
-    /** Reads source vector 16bit operand. */
-    ConstVecLane16
-    readVec16BitLaneReg(const RegId &reg) const override
-    {
-        return actualTC->readVec16BitLaneReg(reg);
-    }
-
-    /** Reads source vector 32bit operand. */
-    ConstVecLane32
-    readVec32BitLaneReg(const RegId &reg) const override
-    {
-        return actualTC->readVec32BitLaneReg(reg);
-    }
-
-    /** Reads source vector 64bit operand. */
-    ConstVecLane64
-    readVec64BitLaneReg(const RegId &reg) const override
-    {
-        return actualTC->readVec64BitLaneReg(reg);
-    }
-
-    /** Write a lane of the destination vector register. */
-    virtual void
-    setVecLane(const RegId &reg,
-               const LaneData<LaneSize::Byte> &val) override
-    {
-        return actualTC->setVecLane(reg, val);
-    }
-    virtual void
-    setVecLane(const RegId &reg,
-               const LaneData<LaneSize::TwoByte> &val) override
-    {
-        return actualTC->setVecLane(reg, val);
-    }
-    virtual void
-    setVecLane(const RegId &reg,
-               const LaneData<LaneSize::FourByte> &val) override
-    {
-        return actualTC->setVecLane(reg, val);
-    }
-    virtual void
-    setVecLane(const RegId &reg,
-               const LaneData<LaneSize::EightByte> &val) override
-    {
-        return actualTC->setVecLane(reg, val);
-    }
-    /** @} */
-
     const TheISA::VecElem &
     readVecElem(const RegId& reg) const override
     {

@@ -345,37 +345,6 @@ class FullO3CPU : public BaseO3CPU
     void vecRenameMode(Enums::VecRegRenameMode vec_mode)
     { vecMode = vec_mode; }
 
-    /**
-     * Read physical vector register lane
-     */
-    template<typename VE, int LaneIdx>
-    VecLaneT<VE, true>
-    readVecLane(PhysRegIdPtr phys_reg) const
-    {
-        cpuStats.vecRegfileReads++;
-        return regFile.readVecLane<VE, LaneIdx>(phys_reg);
-    }
-
-    /**
-     * Read physical vector register lane
-     */
-    template<typename VE>
-    VecLaneT<VE, true>
-    readVecLane(PhysRegIdPtr phys_reg) const
-    {
-        cpuStats.vecRegfileReads++;
-        return regFile.readVecLane<VE>(phys_reg);
-    }
-
-    /** Write a lane of the destination vector register. */
-    template<typename LD>
-    void
-    setVecLane(PhysRegIdPtr phys_reg, const LD& val)
-    {
-        cpuStats.vecRegfileWrites++;
-        return regFile.setVecLane(phys_reg, val);
-    }
-
     const TheISA::VecElem& readVecElem(PhysRegIdPtr reg_idx) const;
 
     const TheISA::VecPredRegContainer&
@@ -406,27 +375,6 @@ class FullO3CPU : public BaseO3CPU
         readArchVecReg(int reg_idx, ThreadID tid) const;
     /** Read architectural vector register for modification. */
     TheISA::VecRegContainer& getWritableArchVecReg(int reg_idx, ThreadID tid);
-
-    /** Read architectural vector register lane. */
-    template<typename VE>
-    VecLaneT<VE, true>
-    readArchVecLane(int reg_idx, int lId, ThreadID tid) const
-    {
-        PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
-                    RegId(VecRegClass, reg_idx));
-        return readVecLane<VE>(phys_reg);
-    }
-
-
-    /** Write a lane of the destination vector register. */
-    template<typename LD>
-    void
-    setArchVecLane(int reg_idx, int lId, ThreadID tid, const LD& val)
-    {
-        PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
-                    RegId(VecRegClass, reg_idx));
-        setVecLane(phys_reg, val);
-    }
 
     const TheISA::VecElem& readArchVecElem(const RegIndex& reg_idx,
             const ElemIndex& ldx, ThreadID tid) const;

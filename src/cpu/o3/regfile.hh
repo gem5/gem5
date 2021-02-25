@@ -216,36 +216,6 @@ class PhysRegFile
         return const_cast<TheISA::VecRegContainer&>(readVecReg(phys_reg));
     }
 
-    /** Reads a vector register lane. */
-    template <typename VE, int LaneIdx>
-    VecLaneT<VE, true>
-    readVecLane(PhysRegIdPtr phys_reg) const
-    {
-        return readVecReg(phys_reg).laneView<VE, LaneIdx>();
-    }
-
-    /** Reads a vector register lane. */
-    template <typename VE>
-    VecLaneT<VE, true>
-    readVecLane(PhysRegIdPtr phys_reg) const
-    {
-        return readVecReg(phys_reg).laneView<VE>(phys_reg->elemIndex());
-    }
-
-    /** Get a vector register lane for modification. */
-    template <typename LD>
-    void
-    setVecLane(PhysRegIdPtr phys_reg, const LD& val)
-    {
-        assert(phys_reg->isVectorPhysReg());
-
-        DPRINTF(IEW, "RegFile: Setting vector register %i[%d] to %lx\n",
-                int(phys_reg->index()), phys_reg->elemIndex(), val);
-
-        vectorRegFile[phys_reg->index()].laneView<typename LD::UnderlyingType>(
-                phys_reg->elemIndex()) = val;
-    }
-
     /** Reads a vector element. */
     const TheISA::VecElem &
     readVecElem(PhysRegIdPtr phys_reg) const

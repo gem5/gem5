@@ -219,67 +219,6 @@ class O3ThreadContext : public ThreadContext
         return getWritableVecRegFlat(flattenRegId(id).index());
     }
 
-    /** Vector Register Lane Interfaces. */
-    /** @{ */
-    /** Reads source vector 8bit operand. */
-    ConstVecLane8
-    readVec8BitLaneReg(const RegId& id) const override
-    {
-        return readVecLaneFlat<uint8_t>(flattenRegId(id).index(),
-                    id.elemIndex());
-    }
-
-    /** Reads source vector 16bit operand. */
-    ConstVecLane16
-    readVec16BitLaneReg(const RegId& id) const override
-    {
-        return readVecLaneFlat<uint16_t>(flattenRegId(id).index(),
-                    id.elemIndex());
-    }
-
-    /** Reads source vector 32bit operand. */
-    ConstVecLane32
-    readVec32BitLaneReg(const RegId& id) const override
-    {
-        return readVecLaneFlat<uint32_t>(flattenRegId(id).index(),
-                    id.elemIndex());
-    }
-
-    /** Reads source vector 64bit operand. */
-    ConstVecLane64
-    readVec64BitLaneReg(const RegId& id) const override
-    {
-        return readVecLaneFlat<uint64_t>(flattenRegId(id).index(),
-                    id.elemIndex());
-    }
-
-    /** Write a lane of the destination vector register. */
-    void
-    setVecLane(const RegId& reg,
-               const LaneData<LaneSize::Byte>& val) override
-    {
-        return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val);
-    }
-    void
-    setVecLane(const RegId& reg,
-               const LaneData<LaneSize::TwoByte>& val) override
-    {
-        return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val);
-    }
-    void
-    setVecLane(const RegId& reg,
-               const LaneData<LaneSize::FourByte>& val) override
-    {
-        return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val);
-    }
-    void
-    setVecLane(const RegId& reg,
-               const LaneData<LaneSize::EightByte>& val) override
-    {
-        return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val);
-    }
-    /** @} */
-
     const TheISA::VecElem &
     readVecElem(const RegId& reg) const override
     {
@@ -442,21 +381,6 @@ class O3ThreadContext : public ThreadContext
     TheISA::VecRegContainer& getWritableVecRegFlat(RegIndex idx) override;
     void setVecRegFlat(RegIndex idx,
             const TheISA::VecRegContainer& val) override;
-
-    template <typename VE>
-    VecLaneT<VE, true>
-    readVecLaneFlat(RegIndex idx, int lId) const
-    {
-        return cpu->template readArchVecLane<VE>(idx, lId,
-                thread->threadId());
-    }
-
-    template <typename LD>
-    void
-    setVecLaneFlat(int idx, int lId, const LD& val)
-    {
-        cpu->template setArchVecLane(idx, lId, thread->threadId(), val);
-    }
 
     const TheISA::VecElem &readVecElemFlat(RegIndex idx,
             const ElemIndex& elemIndex) const override;
