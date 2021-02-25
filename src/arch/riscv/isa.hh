@@ -97,8 +97,8 @@ class ISA : public BaseISA
 
     bool inUserMode() const override { return true; }
 
-    void serialize(CheckpointOut &cp) const;
-    void unserialize(CheckpointIn &cp);
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     ISA(const Params &p);
 };

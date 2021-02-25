@@ -139,7 +139,8 @@ class Clint : public BasicPioDevice
      * SimObject functions
      */
     void init() override;
-    Port & getPort(const std::string &if_name, PortID idx=InvalidPortID);
+    Port & getPort(const std::string &if_name,
+                   PortID idx=InvalidPortID) override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
