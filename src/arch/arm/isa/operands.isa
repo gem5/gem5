@@ -131,8 +131,8 @@ let {{
     def vectorReg(idx, elems = None):
         return ('VecReg', 'vc', (idx, elems) , 'IsVector', srtNormal)
 
-    def vectorRegElem(elem, ext = 'sf', zeroing = False):
-        return (elem, ext, zeroing)
+    def vectorRegElem(elem, ext = 'sf'):
+        return (elem, ext)
 
     def vecPredReg(idx):
         return ('VecPredReg', 'pc', idx, None, srtNormal)
@@ -354,9 +354,9 @@ def operands {{
         'AA64FpOp1P1': vectorRegElem('1'),
         'AA64FpOp1P2': vectorRegElem('2'),
         'AA64FpOp1P3': vectorRegElem('3'),
-        'AA64FpOp1S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOp1D':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOp1Q':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOp1S':  vectorRegElem('0', 'sf'),
+        'AA64FpOp1D':  vectorRegElem('0', 'df'),
+        'AA64FpOp1Q':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpOp2':       vectorReg('op2',
@@ -365,9 +365,9 @@ def operands {{
         'AA64FpOp2P1': vectorRegElem('1'),
         'AA64FpOp2P2': vectorRegElem('2'),
         'AA64FpOp2P3': vectorRegElem('3'),
-        'AA64FpOp2S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOp2D':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOp2Q':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOp2S':  vectorRegElem('0', 'sf'),
+        'AA64FpOp2D':  vectorRegElem('0', 'df'),
+        'AA64FpOp2Q':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpOp3':       vectorReg('op3',
@@ -376,9 +376,9 @@ def operands {{
         'AA64FpOp3P1': vectorRegElem('1'),
         'AA64FpOp3P2': vectorRegElem('2'),
         'AA64FpOp3P3': vectorRegElem('3'),
-        'AA64FpOp3S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOp3D':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOp3Q':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOp3S':  vectorRegElem('0', 'sf'),
+        'AA64FpOp3D':  vectorRegElem('0', 'df'),
+        'AA64FpOp3Q':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpDest':       vectorReg('dest',
@@ -387,9 +387,9 @@ def operands {{
         'AA64FpDestP1': vectorRegElem('1'),
         'AA64FpDestP2': vectorRegElem('2'),
         'AA64FpDestP3': vectorRegElem('3'),
-        'AA64FpDestS':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpDestD':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpDestQ':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpDestS':  vectorRegElem('0', 'sf'),
+        'AA64FpDestD':  vectorRegElem('0', 'df'),
+        'AA64FpDestQ':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpDest2':       vectorReg('dest2',
@@ -398,9 +398,9 @@ def operands {{
         'AA64FpDest2P1': vectorRegElem('1'),
         'AA64FpDest2P2': vectorRegElem('2'),
         'AA64FpDest2P3': vectorRegElem('3'),
-        'AA64FpDest2S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpDest2D':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpDest2Q':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpDest2S':  vectorRegElem('0', 'sf'),
+        'AA64FpDest2D':  vectorRegElem('0', 'df'),
+        'AA64FpDest2Q':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpOp1V0':       vectorReg('op1',
@@ -409,9 +409,9 @@ def operands {{
         'AA64FpOp1P1V0': vectorRegElem('1'),
         'AA64FpOp1P2V0': vectorRegElem('2'),
         'AA64FpOp1P3V0': vectorRegElem('3'),
-        'AA64FpOp1SV0':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOp1DV0':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOp1QV0':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOp1SV0':  vectorRegElem('0', 'sf'),
+        'AA64FpOp1DV0':  vectorRegElem('0', 'df'),
+        'AA64FpOp1QV0':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpOp1V1':       vectorReg('op1+1',
@@ -420,9 +420,9 @@ def operands {{
         'AA64FpOp1P1V1': vectorRegElem('1'),
         'AA64FpOp1P2V1': vectorRegElem('2'),
         'AA64FpOp1P3V1': vectorRegElem('3'),
-        'AA64FpOp1SV1':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOp1DV1':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOp1QV1':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOp1SV1':  vectorRegElem('0', 'sf'),
+        'AA64FpOp1DV1':  vectorRegElem('0', 'df'),
+        'AA64FpOp1QV1':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpOp1V2':       vectorReg('op1+2',
@@ -431,9 +431,9 @@ def operands {{
         'AA64FpOp1P1V2': vectorRegElem('1'),
         'AA64FpOp1P2V2': vectorRegElem('2'),
         'AA64FpOp1P3V2': vectorRegElem('3'),
-        'AA64FpOp1SV2':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOp1DV2':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOp1QV2':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOp1SV2':  vectorRegElem('0', 'sf'),
+        'AA64FpOp1DV2':  vectorRegElem('0', 'df'),
+        'AA64FpOp1QV2':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpOp1V3':       vectorReg('op1+3',
@@ -442,9 +442,9 @@ def operands {{
         'AA64FpOp1P1V3': vectorRegElem('1'),
         'AA64FpOp1P2V3': vectorRegElem('2'),
         'AA64FpOp1P3V3': vectorRegElem('3'),
-        'AA64FpOp1SV3':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOp1DV3':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOp1QV3':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOp1SV3':  vectorRegElem('0', 'sf'),
+        'AA64FpOp1DV3':  vectorRegElem('0', 'df'),
+        'AA64FpOp1QV3':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpOp1V0S':       vectorReg('(op1+0)%32',
@@ -453,9 +453,9 @@ def operands {{
         'AA64FpOp1P1V0S': vectorRegElem('1'),
         'AA64FpOp1P2V0S': vectorRegElem('2'),
         'AA64FpOp1P3V0S': vectorRegElem('3'),
-        'AA64FpOp1SV0S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOp1DV0S':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOp1QV0S':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOp1SV0S':  vectorRegElem('0', 'sf'),
+        'AA64FpOp1DV0S':  vectorRegElem('0', 'df'),
+        'AA64FpOp1QV0S':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpOp1V1S':       vectorReg('(op1+1)%32',
@@ -464,9 +464,9 @@ def operands {{
         'AA64FpOp1P1V1S': vectorRegElem('1'),
         'AA64FpOp1P2V1S': vectorRegElem('2'),
         'AA64FpOp1P3V1S': vectorRegElem('3'),
-        'AA64FpOp1SV1S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOp1DV1S':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOp1QV1S':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOp1SV1S':  vectorRegElem('0', 'sf'),
+        'AA64FpOp1DV1S':  vectorRegElem('0', 'df'),
+        'AA64FpOp1QV1S':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpOp1V2S':       vectorReg('(op1+2)%32',
@@ -475,9 +475,9 @@ def operands {{
         'AA64FpOp1P1V2S': vectorRegElem('1'),
         'AA64FpOp1P2V2S': vectorRegElem('2'),
         'AA64FpOp1P3V2S': vectorRegElem('3'),
-        'AA64FpOp1SV2S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOp1DV2S':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOp1QV2S':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOp1SV2S':  vectorRegElem('0', 'sf'),
+        'AA64FpOp1DV2S':  vectorRegElem('0', 'df'),
+        'AA64FpOp1QV2S':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpOp1V3S':       vectorReg('(op1+3)%32',
@@ -486,9 +486,9 @@ def operands {{
         'AA64FpOp1P1V3S': vectorRegElem('1'),
         'AA64FpOp1P2V3S': vectorRegElem('2'),
         'AA64FpOp1P3V3S': vectorRegElem('3'),
-        'AA64FpOp1SV3S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOp1DV3S':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOp1QV3S':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOp1SV3S':  vectorRegElem('0', 'sf'),
+        'AA64FpOp1DV3S':  vectorRegElem('0', 'df'),
+        'AA64FpOp1QV3S':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpDestV0':       vectorReg('(dest+0)',
@@ -497,9 +497,9 @@ def operands {{
         'AA64FpDestP1V0': vectorRegElem('1'),
         'AA64FpDestP2V0': vectorRegElem('2'),
         'AA64FpDestP3V0': vectorRegElem('3'),
-        'AA64FpDestSV0':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpDestDV0':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpDestQV0':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpDestSV0':  vectorRegElem('0', 'sf'),
+        'AA64FpDestDV0':  vectorRegElem('0', 'df'),
+        'AA64FpDestQV0':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpDestV1':       vectorReg('(dest+1)',
@@ -508,9 +508,9 @@ def operands {{
         'AA64FpDestP1V1': vectorRegElem('1'),
         'AA64FpDestP2V1': vectorRegElem('2'),
         'AA64FpDestP3V1': vectorRegElem('3'),
-        'AA64FpDestSV1':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpDestDV1':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpDestQV1':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpDestSV1':  vectorRegElem('0', 'sf'),
+        'AA64FpDestDV1':  vectorRegElem('0', 'df'),
+        'AA64FpDestQV1':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpDestV0L':       vectorReg('(dest+0)%32',
@@ -519,9 +519,9 @@ def operands {{
         'AA64FpDestP1V0L': vectorRegElem('1'),
         'AA64FpDestP2V0L': vectorRegElem('2'),
         'AA64FpDestP3V0L': vectorRegElem('3'),
-        'AA64FpDestSV0L':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpDestDV0L':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpDestQV0L':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpDestSV0L':  vectorRegElem('0', 'sf'),
+        'AA64FpDestDV0L':  vectorRegElem('0', 'df'),
+        'AA64FpDestQV0L':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpDestV1L':       vectorReg('(dest+1)%32',
@@ -530,9 +530,9 @@ def operands {{
         'AA64FpDestP1V1L': vectorRegElem('1'),
         'AA64FpDestP2V1L': vectorRegElem('2'),
         'AA64FpDestP3V1L': vectorRegElem('3'),
-        'AA64FpDestSV1L':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpDestDV1L':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpDestQV1L':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpDestSV1L':  vectorRegElem('0', 'sf'),
+        'AA64FpDestDV1L':  vectorRegElem('0', 'df'),
+        'AA64FpDestQV1L':  vectorRegElem('0', 'tud')
     }),
 
     # Temporary registers for SVE interleaving
@@ -542,9 +542,9 @@ def operands {{
         'AA64IntrlvReg0P1': vectorRegElem('1'),
         'AA64IntrlvReg0P2': vectorRegElem('2'),
         'AA64IntrlvReg0P3': vectorRegElem('3'),
-        'AA64IntrlvReg0S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64IntrlvReg0D':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64IntrlvReg0Q':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64IntrlvReg0S':  vectorRegElem('0', 'sf'),
+        'AA64IntrlvReg0D':  vectorRegElem('0', 'df'),
+        'AA64IntrlvReg0Q':  vectorRegElem('0', 'tud')
     }),
 
     'AA64IntrlvReg1': vectorReg('INTRLVREG1',
@@ -553,9 +553,9 @@ def operands {{
         'AA64IntrlvReg1P1': vectorRegElem('1'),
         'AA64IntrlvReg1P2': vectorRegElem('2'),
         'AA64IntrlvReg1P3': vectorRegElem('3'),
-        'AA64IntrlvReg1S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64IntrlvReg1D':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64IntrlvReg1Q':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64IntrlvReg1S':  vectorRegElem('0', 'sf'),
+        'AA64IntrlvReg1D':  vectorRegElem('0', 'df'),
+        'AA64IntrlvReg1Q':  vectorRegElem('0', 'tud')
     }),
 
     'AA64IntrlvReg2': vectorReg('INTRLVREG2',
@@ -564,9 +564,9 @@ def operands {{
         'AA64IntrlvReg2P1': vectorRegElem('1'),
         'AA64IntrlvReg2P2': vectorRegElem('2'),
         'AA64IntrlvReg2P3': vectorRegElem('3'),
-        'AA64IntrlvReg2S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64IntrlvReg2D':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64IntrlvReg2Q':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64IntrlvReg2S':  vectorRegElem('0', 'sf'),
+        'AA64IntrlvReg2D':  vectorRegElem('0', 'df'),
+        'AA64IntrlvReg2Q':  vectorRegElem('0', 'tud')
     }),
 
     'AA64IntrlvReg3': vectorReg('INTRLVREG3',
@@ -575,9 +575,9 @@ def operands {{
         'AA64IntrlvReg3P1': vectorRegElem('1'),
         'AA64IntrlvReg3P2': vectorRegElem('2'),
         'AA64IntrlvReg3P3': vectorRegElem('3'),
-        'AA64IntrlvReg3S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64IntrlvReg3D':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64IntrlvReg3Q':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64IntrlvReg3S':  vectorRegElem('0', 'sf'),
+        'AA64IntrlvReg3D':  vectorRegElem('0', 'df'),
+        'AA64IntrlvReg3Q':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpDestMerge':       vectorReg('dest',
@@ -586,9 +586,9 @@ def operands {{
         'AA64FpDestMergeP1': vectorRegElem('1'),
         'AA64FpDestMergeP2': vectorRegElem('2'),
         'AA64FpDestMergeP3': vectorRegElem('3'),
-        'AA64FpDestMergeS':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpDestMergeD':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpDestMergeQ':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpDestMergeS':  vectorRegElem('0', 'sf'),
+        'AA64FpDestMergeD':  vectorRegElem('0', 'df'),
+        'AA64FpDestMergeQ':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpBase': vectorReg('base',
@@ -597,9 +597,9 @@ def operands {{
         'AA64FpBaseP1': vectorRegElem('1'),
         'AA64FpBaseP2': vectorRegElem('2'),
         'AA64FpBaseP3': vectorRegElem('3'),
-        'AA64FpBaseS':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpBaseD':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpBaseQ':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpBaseS':  vectorRegElem('0', 'sf'),
+        'AA64FpBaseD':  vectorRegElem('0', 'df'),
+        'AA64FpBaseQ':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpOffset': vectorReg('offset',
@@ -608,9 +608,9 @@ def operands {{
         'AA64FpOffsetP1': vectorRegElem('1'),
         'AA64FpOffsetP2': vectorRegElem('2'),
         'AA64FpOffsetP3': vectorRegElem('3'),
-        'AA64FpOffsetS':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpOffsetD':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpOffsetQ':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpOffsetS':  vectorRegElem('0', 'sf'),
+        'AA64FpOffsetD':  vectorRegElem('0', 'df'),
+        'AA64FpOffsetQ':  vectorRegElem('0', 'tud')
     }),
 
     'AA64FpUreg0': vectorReg('VECREG_UREG0',
@@ -619,9 +619,9 @@ def operands {{
         'AA64FpUreg0P1': vectorRegElem('1'),
         'AA64FpUreg0P2': vectorRegElem('2'),
         'AA64FpUreg0P3': vectorRegElem('3'),
-        'AA64FpUreg0S':  vectorRegElem('0', 'sf', zeroing = True),
-        'AA64FpUreg0D':  vectorRegElem('0', 'df', zeroing = True),
-        'AA64FpUreg0Q':  vectorRegElem('0', 'tud', zeroing = True)
+        'AA64FpUreg0S':  vectorRegElem('0', 'sf'),
+        'AA64FpUreg0D':  vectorRegElem('0', 'df'),
+        'AA64FpUreg0Q':  vectorRegElem('0', 'tud')
     }),
 
     # Predicate register operands

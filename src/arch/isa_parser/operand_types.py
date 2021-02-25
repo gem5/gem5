@@ -319,7 +319,7 @@ class VecRegOperand(Operand):
 
     def makeDeclElem(self, elem_op):
         (elem_name, elem_ext) = elem_op
-        (elem_spec, dflt_elem_ext, zeroing) = self.elems[elem_name]
+        (elem_spec, dflt_elem_ext) = self.elems[elem_name]
         if elem_ext:
             ext = elem_ext
         else:
@@ -356,7 +356,7 @@ class VecRegOperand(Operand):
     # Read destination register to write
     def makeReadWElem(self, elem_op):
         (elem_name, elem_ext) = elem_op
-        (elem_spec, dflt_elem_ext, zeroing) = self.elems[elem_name]
+        (elem_spec, dflt_elem_ext) = self.elems[elem_name]
         if elem_ext:
             ext = elem_ext
         else:
@@ -393,7 +393,7 @@ class VecRegOperand(Operand):
     # Normal source operand read
     def makeReadElem(self, elem_op, name):
         (elem_name, elem_ext) = elem_op
-        (elem_spec, dflt_elem_ext, zeroing) = self.elems[elem_name]
+        (elem_spec, dflt_elem_ext) = self.elems[elem_name]
 
         if elem_ext:
             ext = elem_ext
