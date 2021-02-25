@@ -186,7 +186,7 @@ struct Argument<Aapcs64, Float, typename std::enable_if_t<
     {
         if (state.nsrn <= state.MAX_SRN) {
             RegId id(VecRegClass, state.nsrn++);
-            return tc->readVecReg(id).laneView<Float, 0>();
+            return tc->readVecReg(id).as<Float>()[0];
         }
 
         return loadFromStack<Float>(tc, state);
@@ -203,7 +203,7 @@ struct Result<Aapcs64, Float, typename std::enable_if_t<
     {
         RegId id(VecRegClass, 0);
         auto reg = tc->readVecReg(id);
-        reg.laneView<Float, 0>() = f;
+        reg.as<Float>()[0] = f;
         tc->setVecReg(id, reg);
     }
 };

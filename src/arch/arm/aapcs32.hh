@@ -463,7 +463,7 @@ struct Result<Aapcs32Vfp, Float, typename std::enable_if_t<
 
         RegId id(VecRegClass, 0);
         auto reg = tc->readVecReg(id);
-        reg.laneView<Float, 0>() = f;
+        reg.as<Float>()[0] = f;
         tc->setVecReg(id, reg);
     };
 };
@@ -487,7 +487,7 @@ struct Argument<Aapcs32Vfp, Float, typename std::enable_if_t<
 
             RegId id(VecRegClass, reg);
             auto val = tc->readVecReg(id);
-            return val.laneView<Float>(lane);
+            return val.as<Float>()[lane];
         }
 
         return loadFromStack<Float>(tc, state);
@@ -558,7 +558,7 @@ struct Argument<Aapcs32Vfp, HA, typename std::enable_if_t<
 
                 RegId id(VecRegClass, reg);
                 auto val = tc->readVecReg(id);
-                ha[i] = val.laneView<Elem>(lane);
+                ha[i] = val.as<Elem>()[lane];
             }
             return ha;
         }
@@ -605,7 +605,7 @@ struct Result<Aapcs32Vfp, HA,
 
             RegId id(VecRegClass, reg);
             auto val = tc->readVecReg(id);
-            val.laneView<Elem>(lane) = ha[i];
+            val.as<Elem>()[lane] = ha[i];
             tc->setVecReg(id, val);
         }
     }
