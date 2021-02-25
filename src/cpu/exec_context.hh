@@ -117,36 +117,6 @@ class ExecContext
             const TheISA::VecRegContainer& val) = 0;
     /** @} */
 
-    /** Vector Register Lane Interfaces. */
-    /** @{ */
-    /** Reads source vector 8bit operand. */
-    virtual ConstVecLane8 readVec8BitLaneOperand(
-            const StaticInst *si, int idx) const = 0;
-
-    /** Reads source vector 16bit operand. */
-    virtual ConstVecLane16 readVec16BitLaneOperand(
-            const StaticInst *si, int idx) const = 0;
-
-    /** Reads source vector 32bit operand. */
-    virtual ConstVecLane32 readVec32BitLaneOperand(
-            const StaticInst *si, int idx) const = 0;
-
-    /** Reads source vector 64bit operand. */
-    virtual ConstVecLane64 readVec64BitLaneOperand(
-            const StaticInst *si, int idx) const = 0;
-
-    /** Write a lane of the destination vector operand. */
-    /** @{ */
-    virtual void setVecLaneOperand(const StaticInst *si, int idx,
-            const LaneData<LaneSize::Byte>& val) = 0;
-    virtual void setVecLaneOperand(const StaticInst *si, int idx,
-            const LaneData<LaneSize::TwoByte>& val) = 0;
-    virtual void setVecLaneOperand(const StaticInst *si, int idx,
-            const LaneData<LaneSize::FourByte>& val) = 0;
-    virtual void setVecLaneOperand(const StaticInst *si, int idx,
-            const LaneData<LaneSize::EightByte>& val) = 0;
-    /** @} */
-
     /** Vector Elem Interfaces. */
     /** @{ */
     /** Reads an element of a vector register. */
