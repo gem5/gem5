@@ -852,8 +852,16 @@ namespace ArmISA
 
         unsigned getCurSveVecLenInBitsAtReset() const { return sveVL * 128; }
 
-        static void zeroSveVecRegUpperPart(VecRegContainer &vc,
-                                           unsigned eCount);
+        template <typename Elem>
+        static void
+        zeroSveVecRegUpperPart(Elem *v, unsigned eCount)
+        {
+            static_assert(sizeof(Elem) <= sizeof(uint64_t));
+            eCount *= (sizeof(uint64_t) / sizeof(Elem));
+            for (int i = 16 / sizeof(Elem); i < eCount; ++i) {
+                v[i] = 0;
+            }
+        }
 
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;

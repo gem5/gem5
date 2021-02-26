@@ -93,8 +93,6 @@ static constexpr freg_t freg(uint_fast16_t f) { return {f}; }
 
 // Not applicable to RISC-V
 using VecElem = ::DummyVecElem;
-using VecReg = ::DummyVecReg;
-using ConstVecReg = ::DummyConstVecReg;
 using VecRegContainer = ::DummyVecRegContainer;
 constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
 constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;

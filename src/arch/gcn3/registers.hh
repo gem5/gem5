@@ -174,33 +174,8 @@ namespace Gcn3ISA
      */
     const int RegSizeDWORDs = sizeof(VecElemU32) / DWORDSize;
 
-    // typedefs for the various sizes/types of vector regs
-    using VecRegU8 = ::VecRegT<VecElemU8, NumVecElemPerVecReg, false>;
-    using VecRegI8 = ::VecRegT<VecElemI8, NumVecElemPerVecReg, false>;
-    using VecRegU16 = ::VecRegT<VecElemU16, NumVecElemPerVecReg, false>;
-    using VecRegI16 = ::VecRegT<VecElemI16, NumVecElemPerVecReg, false>;
-    using VecRegU32 = ::VecRegT<VecElemU32, NumVecElemPerVecReg, false>;
-    using VecRegI32 = ::VecRegT<VecElemI32, NumVecElemPerVecReg, false>;
-    using VecRegF32 = ::VecRegT<VecElemF32, NumVecElemPerVecReg, false>;
-    using VecRegU64 = ::VecRegT<VecElemU64, NumVecElemPerVecReg, false>;
-    using VecRegI64 = ::VecRegT<VecElemI64, NumVecElemPerVecReg, false>;
-    using VecRegF64 = ::VecRegT<VecElemF64, NumVecElemPerVecReg, false>;
-    // non-writeable versions of vector regs
-    using ConstVecRegU8 = ::VecRegT<VecElemU8, NumVecElemPerVecReg, true>;
-    using ConstVecRegI8 = ::VecRegT<VecElemI8, NumVecElemPerVecReg, true>;
-    using ConstVecRegU16 = ::VecRegT<VecElemU16, NumVecElemPerVecReg, true>;
-    using ConstVecRegI16 = ::VecRegT<VecElemI16, NumVecElemPerVecReg, true>;
-    using ConstVecRegU32 = ::VecRegT<VecElemU32, NumVecElemPerVecReg, true>;
-    using ConstVecRegI32 = ::VecRegT<VecElemI32, NumVecElemPerVecReg, true>;
-    using ConstVecRegF32 = ::VecRegT<VecElemF32, NumVecElemPerVecReg, true>;
-    using ConstVecRegU64 = ::VecRegT<VecElemU64, NumVecElemPerVecReg, true>;
-    using ConstVecRegI64 = ::VecRegT<VecElemI64, NumVecElemPerVecReg, true>;
-    using ConstVecRegF64 = ::VecRegT<VecElemF64, NumVecElemPerVecReg, true>;
-
-    using VecRegContainerU8 = VecRegU8::Container;
-    using VecRegContainerU16 = VecRegU16::Container;
-    using VecRegContainerU32 = VecRegU32::Container;
-    using VecRegContainerU64 = VecRegU64::Container;
+    using VecRegContainerU32 =
+        VecRegContainer<sizeof(VecElemU32) * NumVecElemPerVecReg>;
 
     struct StatusReg
     {

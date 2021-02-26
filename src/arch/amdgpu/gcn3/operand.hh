@@ -326,12 +326,8 @@ namespace Gcn3ISA
               scRegData.read();
           }
 
-          using VecRegCont = typename std::conditional<NumDwords == 2,
-              VecRegContainerU64, typename std::conditional<sizeof(DataType)
-                  == sizeof(VecElemU16), VecRegContainerU16,
-                      typename std::conditional<sizeof(DataType)
-                          == sizeof(VecElemU8), VecRegContainerU8,
-                              VecRegContainerU32>::type>::type>::type;
+          using VecRegCont =
+              VecRegContainer<sizeof(DataType) * NumVecElemPerVecReg>;
 
           /**
            * whether this operand a scalar or not.

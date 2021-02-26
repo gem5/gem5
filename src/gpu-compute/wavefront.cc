@@ -453,7 +453,7 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                 {
                     physVgprIdx = computeUnit->registerManager
                         ->mapVgpr(this, regInitIdx);
-                    TheGpuISA::VecRegU32 vgpr_x
+                    TheGpuISA::VecElemU32 *vgpr_x
                         = raw_vgpr.as<TheGpuISA::VecElemU32>();
 
                     for (int lane = 0; lane < workItemId[0].size(); ++lane) {
@@ -469,7 +469,7 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                 {
                     physVgprIdx = computeUnit->registerManager
                         ->mapVgpr(this, regInitIdx);
-                    TheGpuISA::VecRegU32 vgpr_y
+                    TheGpuISA::VecElemU32 *vgpr_y
                         = raw_vgpr.as<TheGpuISA::VecElemU32>();
 
                     for (int lane = 0; lane < workItemId[1].size(); ++lane) {
@@ -485,7 +485,7 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                 {
                     physVgprIdx = computeUnit->registerManager->
                         mapVgpr(this, regInitIdx);
-                    TheGpuISA::VecRegU32 vgpr_z
+                    TheGpuISA::VecElemU32 *vgpr_z
                         = raw_vgpr.as<TheGpuISA::VecElemU32>();
 
                     for (int lane = 0; lane < workItemId[2].size(); ++lane) {

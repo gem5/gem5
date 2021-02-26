@@ -207,7 +207,7 @@ UnifiedRenameMap::switchMode(VecMode newVecMode)
         const size_t numElems = vecElemMap.numArchRegs();
         const size_t elemsPerVec = numElems / numVecs;
         for (uint32_t i = 0; i < numVecs; i++) {
-            TheISA::VecReg dst = new_RF[i].as<TheISA::VecElem>();
+            TheISA::VecElem *dst = new_RF[i].as<TheISA::VecElem>();
             for (uint32_t l = 0; l < elemsPerVec; l++) {
                 RegId s_rid(VecElemClass, i, l);
                 PhysRegIdPtr s_prid = vecElemMap.lookup(s_rid);

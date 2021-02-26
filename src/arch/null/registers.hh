@@ -49,8 +49,6 @@ const RegIndex ZeroReg = 0;
 
 // Not applicable to null
 using VecElem = ::DummyVecElem;
-using VecReg = ::DummyVecReg;
-using ConstVecReg = ::DummyConstVecReg;
 using VecRegContainer = ::DummyVecRegContainer;
 constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
 constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;

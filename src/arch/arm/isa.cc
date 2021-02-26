@@ -2397,15 +2397,6 @@ ISA::getCurSveVecLenInBits() const
 }
 
 void
-ISA::zeroSveVecRegUpperPart(VecRegContainer &vc, unsigned eCount)
-{
-    auto vv = vc.as<uint64_t>();
-    for (int i = 2; i < eCount; ++i) {
-        vv[i] = 0;
-    }
-}
-
-void
 ISA::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");

@@ -55,9 +55,8 @@ constexpr unsigned NumVecElemPerNeonVecReg = 4;
 constexpr unsigned NumVecElemPerVecReg = MaxSveVecLenInWords;
 
 using VecElem = uint32_t;
-using VecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, false>;
-using ConstVecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, true>;
-using VecRegContainer = VecReg::Container;
+using VecRegContainer =
+    ::VecRegContainer<NumVecElemPerVecReg * sizeof(VecElem)>;
 
 using VecPredReg = ::VecPredRegT<VecElem, NumVecElemPerVecReg,
                                  VecPredRegHasPackedRepr, false>;

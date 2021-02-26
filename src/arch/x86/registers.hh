@@ -66,8 +66,6 @@ const int ZeroReg = NUM_INTREGS;
 
 // Not applicable to x86
 using VecElem = ::DummyVecElem;
-using VecReg = ::DummyVecReg;
-using ConstVecReg = ::DummyConstVecReg;
 using VecRegContainer = ::DummyVecRegContainer;
 constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
 constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;

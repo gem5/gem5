@@ -97,90 +97,15 @@
 #define __ARCH_GENERIC_VEC_REG_HH__
 
 #include <array>
+#include <cstdint>
 #include <iostream>
 #include <string>
-#include <type_traits>
 
 #include "base/cprintf.hh"
 #include "base/logging.hh"
 #include "sim/serialize_handlers.hh"
 
 constexpr unsigned MaxVecRegLenInBytes = 4096;
-
-template <size_t Sz>
-class VecRegContainer;
-
-/** Vector Register Abstraction
- * This generic class is a view in a particularization of MVC, to vector
- * registers. There is a VecRegContainer that implements the model, and
- * contains the data. To that model we can interpose different instantiations
- * of VecRegT to view the container as a vector of NumElems elems of type
- * VecElem.
- * @tparam VecElem Type of each element of the vector.
- * @tparam NumElems Amount of components of the vector.
- * @tparam Const Indicate if the underlying container can be modified through
- * the view.
- */
-template <typename VecElem, size_t NumElems, bool Const>
-class VecRegT
-{
-  private:
-    /** Size of the register in bytes. */
-    static constexpr inline size_t
-    size()
-    {
-        return sizeof(VecElem) * NumElems;
-    }
-
-  public:
-    /** Container type alias. */
-    using Container = typename std::conditional<Const,
-                                              const VecRegContainer<size()>,
-                                              VecRegContainer<size()>>::type;
-  private:
-    /** My type alias. */
-    using MyClass = VecRegT<VecElem, NumElems, Const>;
-    /** Reference to container. */
-    Container& container;
-
-  public:
-    /** Constructor. */
-    VecRegT(Container& cnt) : container(cnt) {};
-
-    /** Index operator. */
-    const VecElem &
-    operator[](size_t idx) const
-    {
-        return container.template raw_ptr<VecElem>()[idx];
-    }
-
-    /** Index operator. */
-    template<bool Condition = !Const>
-    typename std::enable_if_t<Condition, VecElem&>
-    operator[](size_t idx)
-    {
-        return container.template raw_ptr<VecElem>()[idx];
-    }
-
-    /** Output stream operator. */
-    friend std::ostream&
-    operator<<(std::ostream& os, const MyClass& vr)
-    {
-        /* 0-sized is not allowed */
-        os << "[" << std::hex << (uint32_t)vr[0];
-        for (uint32_t e = 1; e < vr.size(); e++)
-            os << " " << std::hex << (uint32_t)vr[e];
-        os << ']';
-        return os;
-    }
-
-    /**
-     * Cast to VecRegContainer&
-     * It is useful to get the reference to the container for ISA tricks,
-     * because casting to reference prevents unnecessary copies.
-     */
-    operator Container&() { return container; }
-};
 
 /**
  * Vector Register Abstraction
@@ -203,7 +128,6 @@ class VecRegContainer
   private:
     // 16-byte aligned to support 128bit element view
     alignas(16) Container container;
-    using MyClass = VecRegContainer<SIZE>;
 
   public:
     VecRegContainer() {}
@@ -215,19 +139,11 @@ class VecRegContainer
     /** Assignment operators. */
     /** @{ */
     /** From VecRegContainer */
-    MyClass&
-    operator=(const MyClass& that)
+    VecRegContainer<SIZE>&
+    operator=(const VecRegContainer<SIZE>& that)
     {
-        if (&that == this)
-            return *this;
-        return *this = that.container;
-    }
-
-    /** From appropriately sized uint8_t[]. */
-    MyClass&
-    operator=(const Container& that)
-    {
-        std::memcpy(container.data(), that.data(), SIZE);
+        if (&that != this)
+            std::memcpy(container.data(), that.container.data(), SIZE);
         return *this;
     }
     /** @} */
@@ -252,13 +168,6 @@ class VecRegContainer
         return !operator==(that);
     }
 
-    /** Get pointer to bytes. */
-    template <typename Ret>
-    const Ret* raw_ptr() const { return (const Ret*)container.data(); }
-
-    template <typename Ret>
-    Ret* raw_ptr() { return (Ret*)container.data(); }
-
     /**
      * View interposers.
      * Create a view of this container as a vector of VecElems with an
@@ -270,34 +179,37 @@ class VecRegContainer
      * @tparam NumElem Amount of elements in the view.
      */
     /** @{ */
-    template <typename VecElem, size_t NumElems=(SIZE / sizeof(VecElem))>
-    VecRegT<VecElem, NumElems, true>
-    as() const
-    {
-        static_assert(SIZE % sizeof(VecElem) == 0,
-                "VecElem does not evenly divide the register size");
-        static_assert(sizeof(VecElem) * NumElems <= SIZE,
-                "Viewing VecReg as something bigger than it is");
-        return VecRegT<VecElem, NumElems, true>(*this);
-    }
-
-    template <typename VecElem, size_t NumElems=(SIZE / sizeof(VecElem))>
-    VecRegT<VecElem, NumElems, false>
+    template <typename VecElem>
+    VecElem *
     as()
     {
         static_assert(SIZE % sizeof(VecElem) == 0,
                 "VecElem does not evenly divide the register size");
-        static_assert(sizeof(VecElem) * NumElems <= SIZE,
-                "Viewing VecReg as something bigger than it is");
-        return VecRegT<VecElem, NumElems, false>(*this);
+        return (VecElem *)container.data();
+    }
+
+    template <typename VecElem>
+    const VecElem *
+    as() const
+    {
+        static_assert(SIZE % sizeof(VecElem) == 0,
+                "VecElem does not evenly divide the register size");
+        return (VecElem *)container.data();
     }
 
     friend std::ostream&
-    operator<<(std::ostream& os, const MyClass& v)
+    operator<<(std::ostream& os, const VecRegContainer<SIZE>& v)
     {
+        // When printing for human consumption, break into 4 byte chunks.
+        ccprintf(os, "[");
+        size_t count = 0;
         for (auto& b: v.container) {
+            if (count && (count % 4) == 0)
+                os << "_";
             ccprintf(os, "%02x", b);
+            count++;
         }
+        ccprintf(os, "]");
         return os;
     }
 
@@ -305,7 +217,7 @@ class VecRegContainer
     /**
      * Used for serialization.
      */
-    friend ShowParam<MyClass>;
+    friend ShowParam<VecRegContainer<SIZE>>;
 };
 
 /**
@@ -325,7 +237,7 @@ struct ParseParam<VecRegContainer<Sz>>
             uint8_t b = 0;
             if (2 * i < value.size())
                 b = stoul(str.substr(i * 2, 2), nullptr, 16);
-            value.template raw_ptr<uint8_t>()[i] = b;
+            value.template as<uint8_t>()[i] = b;
         }
         return true;
     }
@@ -350,9 +262,8 @@ struct ShowParam<VecRegContainer<Sz>>
 /** @{ */
 using DummyVecElem = uint32_t;
 constexpr unsigned DummyNumVecElemPerVecReg = 2;
-using DummyVecReg = VecRegT<DummyVecElem, DummyNumVecElemPerVecReg, false>;
-using DummyConstVecReg = VecRegT<DummyVecElem, DummyNumVecElemPerVecReg, true>;
-using DummyVecRegContainer = DummyVecReg::Container;
+using DummyVecRegContainer =
+    VecRegContainer<DummyNumVecElemPerVecReg * sizeof(DummyVecElem)>;
 constexpr size_t DummyVecRegSizeBytes = DummyNumVecElemPerVecReg *
     sizeof(DummyVecElem);
 /** @} */

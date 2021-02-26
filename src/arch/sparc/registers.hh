@@ -37,8 +37,6 @@ namespace SparcISA
 
 // Not applicable to SPARC
 using VecElem = ::DummyVecElem;
-using VecReg = ::DummyVecReg;
-using ConstVecReg = ::DummyConstVecReg;
 using VecRegContainer = ::DummyVecRegContainer;
 constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
 constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
