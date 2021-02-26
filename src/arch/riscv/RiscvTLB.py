@@ -43,7 +43,7 @@ class RiscvPagetableWalker(ClockedObject):
     num_squash_per_cycle = Param.Unsigned(4,
             "Number of outstanding walks that can be squashed per cycle")
     # Grab the pma_checker from the MMU
-    pma_checker = Param.PMAChecker(Parent.any, "PMA Chekcer")
+    pma_checker = Param.PMAChecker(Parent.any, "PMA Checker")
 
 class RiscvTLB(BaseTLB):
     type = 'RiscvTLB'
@@ -53,4 +53,4 @@ class RiscvTLB(BaseTLB):
     walker = Param.RiscvPagetableWalker(\
             RiscvPagetableWalker(), "page table walker")
     # Grab the pma_checker from the MMU
-    pma_checker = Param.PMAChecker(Parent.any, "PMA Chekcer")
+    pma_checker = Param.PMAChecker(Parent.any, "PMA Checker")

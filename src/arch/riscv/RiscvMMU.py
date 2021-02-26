@@ -35,6 +35,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.params import *
+
 from m5.objects.BaseMMU import BaseMMU
 from m5.objects.RiscvTLB import RiscvTLB
 from m5.objects.PMAChecker import PMAChecker
@@ -45,7 +47,7 @@ class RiscvMMU(BaseMMU):
     cxx_header = 'arch/riscv/mmu.hh'
     itb = RiscvTLB()
     dtb = RiscvTLB()
-    pma_checker = PMAChecker()
+    pma_checker = Param.PMAChecker(PMAChecker(), "PMA Checker")
 
     @classmethod
     def walkerPorts(cls):

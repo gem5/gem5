@@ -40,6 +40,7 @@
 
 #include "arch/generic/mmu.hh"
 #include "arch/riscv/isa.hh"
+#include "arch/riscv/pma_checker.hh"
 #include "arch/riscv/tlb.hh"
 
 #include "params/RiscvMMU.hh"
@@ -49,8 +50,10 @@ namespace RiscvISA {
 class MMU : public BaseMMU
 {
   public:
+    PMAChecker *pma;
+
     MMU(const RiscvMMUParams &p)
-      : BaseMMU(p)
+      : BaseMMU(p), pma(p.pma_checker)
     {}
 
     PrivilegeMode
@@ -63,6 +66,14 @@ class MMU : public BaseMMU
     getDataWalker()
     {
         return static_cast<TLB*>(dtb)->getWalker();
+    }
+
+    void
+    takeOverFrom(BaseMMU *old_mmu) override
+    {
+      MMU *ommu = dynamic_cast<MMU*>(old_mmu);
+      BaseMMU::takeOverFrom(ommu);
+      pma->takeOverFrom(ommu->pma);
     }
 };
 
