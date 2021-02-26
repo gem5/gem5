@@ -42,7 +42,7 @@
 #include "sim/syscall_emul_buf.hh"
 
 GPUCommandProcessor::GPUCommandProcessor(const Params &p)
-    : HSADevice(p), dispatcher(*p.dispatcher)
+    : HSADevice(p), dispatcher(*p.dispatcher), driver(nullptr)
 {
     dispatcher.setCommandProcessor(this);
 }
