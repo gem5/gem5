@@ -264,8 +264,6 @@ using DummyVecElem = uint32_t;
 constexpr unsigned DummyNumVecElemPerVecReg = 2;
 using DummyVecRegContainer =
     VecRegContainer<DummyNumVecElemPerVecReg * sizeof(DummyVecElem)>;
-constexpr size_t DummyVecRegSizeBytes = DummyNumVecElemPerVecReg *
-    sizeof(DummyVecElem);
 /** @} */
 
 #endif /* __ARCH_GENERIC_VEC_REG_HH__ */

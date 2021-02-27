@@ -59,9 +59,9 @@ using VecRegContainer =
     ::VecRegContainer<NumVecElemPerVecReg * sizeof(VecElem)>;
 
 using VecPredReg = ::VecPredRegT<VecElem, NumVecElemPerVecReg,
-                                 VecPredRegHasPackedRepr, false>;
+                                 false, false>;
 using ConstVecPredReg = ::VecPredRegT<VecElem, NumVecElemPerVecReg,
-                                      VecPredRegHasPackedRepr, true>;
+                                      false, true>;
 using VecPredRegContainer = VecPredReg::Container;
 
 // Vec, PredVec

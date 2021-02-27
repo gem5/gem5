@@ -826,7 +826,6 @@ namespace ArmISA
 
     constexpr unsigned VecRegSizeBytes = MaxSveVecLenInBytes;
     constexpr unsigned VecPredRegSizeBits = MaxSveVecLenInBytes;
-    constexpr unsigned VecPredRegHasPackedRepr = false;
 } // namespace ArmISA
 
 #endif

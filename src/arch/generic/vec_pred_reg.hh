@@ -38,9 +38,11 @@
 
 #include <array>
 #include <cassert>
+#include <cstdint>
+#include <string>
+#include <type_traits>
 #include <vector>
 
-#include "arch/generic/vec_reg.hh"
 #include "base/cprintf.hh"
 #include "sim/serialize_handlers.hh"
 
@@ -387,14 +389,7 @@ struct ShowParam<VecPredRegContainer<NumBits, Packed>>
 /// Dummy type aliases and constants for architectures that do not implement
 /// vector predicate registers.
 /// @{
-constexpr bool DummyVecPredRegHasPackedRepr = false;
-using DummyVecPredReg = VecPredRegT<DummyVecElem, DummyNumVecElemPerVecReg,
-                                    DummyVecPredRegHasPackedRepr, false>;
-using DummyConstVecPredReg = VecPredRegT<DummyVecElem,
-                                         DummyNumVecElemPerVecReg,
-                                         DummyVecPredRegHasPackedRepr, true>;
-using DummyVecPredRegContainer = DummyVecPredReg::Container;
-constexpr size_t DummyVecPredRegSizeBits = 8;
+using DummyVecPredRegContainer = VecPredRegContainer<8, false>;
 /// @}
 
 #endif  // __ARCH_GENERIC_VEC_PRED_REG_HH__
