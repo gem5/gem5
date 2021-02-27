@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010-2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,9 +38,292 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/o3/dyn_inst_impl.hh"
-#include "cpu/o3/impl.hh"
+#include "cpu/o3/dyn_inst.hh"
 
-// Force instantiation of BaseO3DynInst for all the implementations that
-// are needed.
-template class BaseO3DynInst<O3CPUImpl>;
+#include <algorithm>
+
+#include "debug/DynInst.hh"
+#include "debug/IQ.hh"
+#include "debug/O3PipeView.hh"
+
+BaseO3DynInst::BaseO3DynInst(const StaticInstPtr &static_inst,
+                             const StaticInstPtr &_macroop,
+                             TheISA::PCState _pc, TheISA::PCState pred_pc,
+                             InstSeqNum seq_num, FullO3CPU<O3CPUImpl> *_cpu)
+    : seqNum(seq_num), staticInst(static_inst), cpu(_cpu), pc(_pc),
+      regs(staticInst->numSrcRegs(), staticInst->numDestRegs()),
+      predPC(pred_pc), macroop(_macroop)
+{
+    this->regs.init();
+
+    status.reset();
+
+    instFlags.reset();
+    instFlags[RecordResult] = true;
+    instFlags[Predicate] = true;
+    instFlags[MemAccPredicate] = true;
+
+#ifndef NDEBUG
+    ++cpu->instcount;
+
+    if (cpu->instcount > 1500) {
+#ifdef DEBUG
+        cpu->dumpInsts();
+        dumpSNList();
+#endif
+        assert(cpu->instcount <= 1500);
+    }
+
+    DPRINTF(DynInst,
+        "DynInst: [sn:%lli] Instruction created. Instcount for %s = %i\n",
+        seqNum, cpu->name(), cpu->instcount);
+#endif
+
+#ifdef DEBUG
+    cpu->snList.insert(seqNum);
+#endif
+
+}
+
+BaseO3DynInst::BaseO3DynInst(const StaticInstPtr &_staticInst,
+                             const StaticInstPtr &_macroop)
+    : BaseO3DynInst(_staticInst, _macroop, {}, {}, 0, nullptr)
+{}
+
+BaseO3DynInst::~BaseO3DynInst()
+{
+#if TRACING_ON
+    if (DTRACE(O3PipeView)) {
+        Tick fetch = this->fetchTick;
+        // fetchTick can be -1 if the instruction fetched outside the trace
+        // window.
+        if (fetch != -1) {
+            Tick val;
+            // Print info needed by the pipeline activity viewer.
+            DPRINTFR(O3PipeView, "O3PipeView:fetch:%llu:0x%08llx:%d:%llu:%s\n",
+                     fetch,
+                     this->instAddr(),
+                     this->microPC(),
+                     this->seqNum,
+                     this->staticInst->disassemble(this->instAddr()));
+
+            val = (this->decodeTick == -1) ? 0 : fetch + this->decodeTick;
+            DPRINTFR(O3PipeView, "O3PipeView:decode:%llu\n", val);
+            val = (this->renameTick == -1) ? 0 : fetch + this->renameTick;
+            DPRINTFR(O3PipeView, "O3PipeView:rename:%llu\n", val);
+            val = (this->dispatchTick == -1) ? 0 : fetch + this->dispatchTick;
+            DPRINTFR(O3PipeView, "O3PipeView:dispatch:%llu\n", val);
+            val = (this->issueTick == -1) ? 0 : fetch + this->issueTick;
+            DPRINTFR(O3PipeView, "O3PipeView:issue:%llu\n", val);
+            val = (this->completeTick == -1) ? 0 : fetch + this->completeTick;
+            DPRINTFR(O3PipeView, "O3PipeView:complete:%llu\n", val);
+            val = (this->commitTick == -1) ? 0 : fetch + this->commitTick;
+
+            Tick valS = (this->storeTick == -1) ? 0 : fetch + this->storeTick;
+            DPRINTFR(O3PipeView, "O3PipeView:retire:%llu:store:%llu\n",
+                    val, valS);
+        }
+    }
+#endif
+
+    delete [] memData;
+    delete traceData;
+    fault = NoFault;
+
+#ifndef NDEBUG
+    --cpu->instcount;
+
+    DPRINTF(DynInst,
+        "DynInst: [sn:%lli] Instruction destroyed. Instcount for %s = %i\n",
+        seqNum, cpu->name(), cpu->instcount);
+#endif
+#ifdef DEBUG
+    cpu->snList.erase(seqNum);
+#endif
+};
+
+
+#ifdef DEBUG
+void
+BaseO3DynInst::dumpSNList()
+{
+    std::set<InstSeqNum>::iterator sn_it = cpu->snList.begin();
+
+    int count = 0;
+    while (sn_it != cpu->snList.end()) {
+        cprintf("%i: [sn:%lli] not destroyed\n", count, (*sn_it));
+        count++;
+        sn_it++;
+    }
+}
+#endif
+
+void
+BaseO3DynInst::dump()
+{
+    cprintf("T%d : %#08d `", threadNumber, pc.instAddr());
+    std::cout << staticInst->disassemble(pc.instAddr());
+    cprintf("'\n");
+}
+
+void
+BaseO3DynInst::dump(std::string &outstring)
+{
+    std::ostringstream s;
+    s << "T" << threadNumber << " : 0x" << pc.instAddr() << " "
+      << staticInst->disassemble(pc.instAddr());
+
+    outstring = s.str();
+}
+
+void
+BaseO3DynInst::markSrcRegReady()
+{
+    DPRINTF(IQ, "[sn:%lli] has %d ready out of %d sources. RTI %d)\n",
+            seqNum, readyRegs+1, numSrcRegs(), readyToIssue());
+    if (++readyRegs == numSrcRegs()) {
+        setCanIssue();
+    }
+}
+
+void
+BaseO3DynInst::markSrcRegReady(RegIndex src_idx)
+{
+    regs.readySrcIdx(src_idx, true);
+    markSrcRegReady();
+}
+
+
+void
+BaseO3DynInst::setSquashed()
+{
+    status.set(Squashed);
+
+    if (!isPinnedRegsRenamed() || isPinnedRegsSquashDone())
+        return;
+
+    // This inst has been renamed already so it may go through rename
+    // again (e.g. if the squash is due to memory access order violation).
+    // Reset the write counters for all pinned destination register to ensure
+    // that they are in a consistent state for a possible re-rename. This also
+    // ensures that dest regs will be pinned to the same phys register if
+    // re-rename happens.
+    for (int idx = 0; idx < numDestRegs(); idx++) {
+        PhysRegIdPtr phys_dest_reg = regs.renamedDestIdx(idx);
+        if (phys_dest_reg->isPinned()) {
+            phys_dest_reg->incrNumPinnedWrites();
+            if (isPinnedRegsWritten())
+                phys_dest_reg->incrNumPinnedWritesToComplete();
+        }
+    }
+    setPinnedRegsSquashDone();
+}
+
+Fault
+BaseO3DynInst::execute()
+{
+    // @todo: Pretty convoluted way to avoid squashing from happening
+    // when using the TC during an instruction's execution
+    // (specifically for instructions that have side-effects that use
+    // the TC).  Fix this.
+    bool no_squash_from_TC = this->thread->noSquashFromTC;
+    this->thread->noSquashFromTC = true;
+
+    this->fault = this->staticInst->execute(this, this->traceData);
+
+    this->thread->noSquashFromTC = no_squash_from_TC;
+
+    return this->fault;
+}
+
+Fault
+BaseO3DynInst::initiateAcc()
+{
+    // @todo: Pretty convoluted way to avoid squashing from happening
+    // when using the TC during an instruction's execution
+    // (specifically for instructions that have side-effects that use
+    // the TC).  Fix this.
+    bool no_squash_from_TC = this->thread->noSquashFromTC;
+    this->thread->noSquashFromTC = true;
+
+    this->fault = this->staticInst->initiateAcc(this, this->traceData);
+
+    this->thread->noSquashFromTC = no_squash_from_TC;
+
+    return this->fault;
+}
+
+Fault
+BaseO3DynInst::completeAcc(PacketPtr pkt)
+{
+    // @todo: Pretty convoluted way to avoid squashing from happening
+    // when using the TC during an instruction's execution
+    // (specifically for instructions that have side-effects that use
+    // the TC).  Fix this.
+    bool no_squash_from_TC = this->thread->noSquashFromTC;
+    this->thread->noSquashFromTC = true;
+
+    if (this->cpu->checker) {
+        if (this->isStoreConditional()) {
+            this->reqToVerify->setExtraData(pkt->req->getExtraData());
+        }
+    }
+
+    this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
+
+    this->thread->noSquashFromTC = no_squash_from_TC;
+
+    return this->fault;
+}
+
+void
+BaseO3DynInst::trap(const Fault &fault)
+{
+    this->cpu->trap(fault, this->threadNumber, this->staticInst);
+}
+
+Fault
+BaseO3DynInst::initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
+                               const std::vector<bool> &byte_enable)
+{
+    assert(byte_enable.size() == size);
+    return cpu->pushRequest(
+        dynamic_cast<O3DynInstPtr::PtrType>(this),
+        /* ld */ true, nullptr, size, addr, flags, nullptr, nullptr,
+        byte_enable);
+}
+
+Fault
+BaseO3DynInst::initiateHtmCmd(Request::Flags flags)
+{
+    return cpu->pushRequest(
+            dynamic_cast<O3DynInstPtr::PtrType>(this),
+            /* ld */ true, nullptr, 8, 0x0ul, flags, nullptr, nullptr);
+}
+
+Fault
+BaseO3DynInst::writeMem(uint8_t *data, unsigned size, Addr addr,
+                        Request::Flags flags, uint64_t *res,
+                        const std::vector<bool> &byte_enable)
+{
+    assert(byte_enable.size() == size);
+    return cpu->pushRequest(
+        dynamic_cast<O3DynInstPtr::PtrType>(this),
+        /* st */ false, data, size, addr, flags, res, nullptr,
+        byte_enable);
+}
+
+Fault
+BaseO3DynInst::initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
+                              AtomicOpFunctorPtr amo_op)
+{
+    // atomic memory instructions do not have data to be written to memory yet
+    // since the atomic operations will be executed directly in cache/memory.
+    // Therefore, its `data` field is nullptr.
+    // Atomic memory requests need to carry their `amo_op` fields to cache/
+    // memory
+    return cpu->pushRequest(
+            dynamic_cast<O3DynInstPtr::PtrType>(this),
+            /* atomic */ false, nullptr, size, addr, flags, nullptr,
+            std::move(amo_op), std::vector<bool>(size, true));
+}

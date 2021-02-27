@@ -33,7 +33,6 @@
 #include "cpu/o3/cpu_policy.hh"
 
 // Forward declarations.
-template <class Impl>
 class BaseO3DynInst;
 
 template <class Impl>
@@ -53,7 +52,7 @@ struct O3CPUImpl
     typedef SimpleCPUPolicy<O3CPUImpl> CPUPol;
 
     /** The DynInst type to be used. */
-    typedef BaseO3DynInst<O3CPUImpl> DynInst;
+    typedef BaseO3DynInst DynInst;
 
     /** The refcounted DynInst pointer to be used.  In most cases this is
      *  what should be used, and not DynInst *.

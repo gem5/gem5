@@ -48,6 +48,7 @@
 #include <list>
 #include <string>
 
+#include "base/refcnt.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
@@ -65,17 +66,20 @@
 
 class Packet;
 
-template <class Impl>
+class BaseO3DynInst;
+
+using O3DynInstPtr = RefCountingPtr<BaseO3DynInst>;
+
 class BaseO3DynInst : public ExecContext, public RefCounted
 {
   public:
     // The list of instructions iterator type.
-    typedef typename std::list<typename Impl::DynInstPtr>::iterator ListIt;
+    typedef typename std::list<O3DynInstPtr>::iterator ListIt;
 
     /** BaseDynInst constructor given a binary instruction. */
     BaseO3DynInst(const StaticInstPtr &staticInst, const StaticInstPtr
             &macroop, TheISA::PCState pc, TheISA::PCState predPC,
-            InstSeqNum seq_num, typename Impl::O3CPU *cpu);
+            InstSeqNum seq_num, FullO3CPU<O3CPUImpl> *cpu);
 
     /** BaseDynInst constructor given a static inst pointer. */
     BaseO3DynInst(const StaticInstPtr &_staticInst,
@@ -99,12 +103,12 @@ class BaseO3DynInst : public ExecContext, public RefCounted
     const StaticInstPtr staticInst;
 
     /** Pointer to the Impl's CPU object. */
-    typename Impl::O3CPU *cpu = nullptr;
+    FullO3CPU<O3CPUImpl> *cpu = nullptr;
 
     BaseCPU *getCpuPtr() { return cpu; }
 
     /** Pointer to the thread state. */
-    typename Impl::O3CPU::ImplState *thread = nullptr;
+    O3ThreadState<O3CPUImpl> *thread = nullptr;
 
     /** The kind of fault this instruction has generated. */
     Fault fault = NoFault;
@@ -199,8 +203,6 @@ class BaseO3DynInst : public ExecContext, public RefCounted
       private:
         size_t _numSrcs;
         size_t _numDests;
-
-        size_t srcsReady = 0;
 
         using BackingStorePtr = std::unique_ptr<uint8_t[]>;
         using BufCursor = BackingStorePtr::pointer;
@@ -384,11 +386,11 @@ class BaseO3DynInst : public ExecContext, public RefCounted
 
     /** Load queue index. */
     ssize_t lqIdx = -1;
-    typename Impl::CPUPol::LSQUnit::LQIterator lqIt;
+    typename ::LSQUnit<O3CPUImpl>::LQIterator lqIt;
 
     /** Store queue index. */
     ssize_t sqIdx = -1;
-    typename Impl::CPUPol::LSQUnit::SQIterator sqIt;
+    typename ::LSQUnit<O3CPUImpl>::SQIterator sqIt;
 
 
     /////////////////////// TLB Miss //////////////////////
@@ -396,7 +398,7 @@ class BaseO3DynInst : public ExecContext, public RefCounted
      * Saved memory request (needed when the DTB address translation is
      * delayed due to a hw page table walk).
      */
-    typename Impl::CPUPol::LSQ::LSQRequest *savedReq;
+    typename ::LSQ<O3CPUImpl>::LSQ::LSQRequest *savedReq;
 
     /////////////////////// Checker //////////////////////
     // Need a copy of main request pointer to verify on writes.
@@ -1015,7 +1017,7 @@ class BaseO3DynInst : public ExecContext, public RefCounted
 
     /** Sets the pointer to the thread state. */
     void
-    setThreadState(typename Impl::O3CPU::ImplState *state)
+    setThreadState(O3ThreadState<O3CPUImpl> *state)
     {
         thread = state;
     }
@@ -1325,57 +1327,5 @@ class BaseO3DynInst : public ExecContext, public RefCounted
         setScalarResult(val);
     }
 };
-
-template<class Impl>
-Fault
-BaseO3DynInst<Impl>::initiateMemRead(Addr addr, unsigned size,
-                                     Request::Flags flags,
-                                     const std::vector<bool> &byte_enable)
-{
-    assert(byte_enable.size() == size);
-    return cpu->pushRequest(
-        dynamic_cast<typename Impl::DynInstPtr::PtrType>(this),
-        /* ld */ true, nullptr, size, addr, flags, nullptr, nullptr,
-        byte_enable);
-}
-
-template<class Impl>
-Fault
-BaseO3DynInst<Impl>::initiateHtmCmd(Request::Flags flags)
-{
-    return cpu->pushRequest(
-            dynamic_cast<typename Impl::DynInstPtr::PtrType>(this),
-            /* ld */ true, nullptr, 8, 0x0ul, flags, nullptr, nullptr);
-}
-
-template<class Impl>
-Fault
-BaseO3DynInst<Impl>::writeMem(uint8_t *data, unsigned size, Addr addr,
-                              Request::Flags flags, uint64_t *res,
-                              const std::vector<bool> &byte_enable)
-{
-    assert(byte_enable.size() == size);
-    return cpu->pushRequest(
-        dynamic_cast<typename Impl::DynInstPtr::PtrType>(this),
-        /* st */ false, data, size, addr, flags, res, nullptr,
-        byte_enable);
-}
-
-template<class Impl>
-Fault
-BaseO3DynInst<Impl>::initiateMemAMO(Addr addr, unsigned size,
-                                    Request::Flags flags,
-                                    AtomicOpFunctorPtr amo_op)
-{
-    // atomic memory instructions do not have data to be written to memory yet
-    // since the atomic operations will be executed directly in cache/memory.
-    // Therefore, its `data` field is nullptr.
-    // Atomic memory requests need to carry their `amo_op` fields to cache/
-    // memory
-    return cpu->pushRequest(
-            dynamic_cast<typename Impl::DynInstPtr::PtrType>(this),
-            /* atomic */ false, nullptr, size, addr, flags, nullptr,
-            std::move(amo_op), std::vector<bool>(size, true));
-}
 
 #endif // __CPU_O3_DYN_INST_HH__
