@@ -35,7 +35,6 @@ if 'O3CPU' in env['CPU_MODELS']:
     SimObject('FuncUnitConfig.py')
     SimObject('O3CPU.py')
 
-    Source('base_dyn_inst.cc')
     Source('commit.cc')
     Source('cpu.cc')
     Source('decode.cc')

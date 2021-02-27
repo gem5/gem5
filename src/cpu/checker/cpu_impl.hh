@@ -47,7 +47,6 @@
 
 #include "base/refcnt.hh"
 #include "config/the_isa.hh"
-#include "cpu/base_dyn_inst.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/simple_thread.hh"

@@ -44,25 +44,57 @@
 #include <algorithm>
 
 #include "cpu/o3/dyn_inst.hh"
+#include "debug/DynInst.hh"
+#include "debug/IQ.hh"
 #include "debug/O3PipeView.hh"
 
 template <class Impl>
-BaseO3DynInst<Impl>::BaseO3DynInst(const StaticInstPtr &staticInst,
-                                   const StaticInstPtr &macroop,
-                                   TheISA::PCState pc, TheISA::PCState predPC,
-                                   InstSeqNum seq_num, O3CPU *cpu)
-    : BaseDynInst<Impl>(staticInst, macroop, pc, predPC, seq_num, cpu)
+BaseO3DynInst<Impl>::BaseO3DynInst(const StaticInstPtr &static_inst,
+                                   const StaticInstPtr &_macroop,
+                                   TheISA::PCState _pc,
+                                   TheISA::PCState pred_pc,
+                                   InstSeqNum seq_num,
+                                   typename Impl::O3CPU *_cpu)
+    : seqNum(seq_num), staticInst(static_inst), cpu(_cpu), pc(_pc),
+      regs(staticInst->numSrcRegs(), staticInst->numDestRegs()),
+      predPC(pred_pc), macroop(_macroop)
 {
-    initVars();
+    this->regs.init();
+
+    status.reset();
+
+    instFlags.reset();
+    instFlags[RecordResult] = true;
+    instFlags[Predicate] = true;
+    instFlags[MemAccPredicate] = true;
+
+#ifndef NDEBUG
+    ++cpu->instcount;
+
+    if (cpu->instcount > 1500) {
+#ifdef DEBUG
+        cpu->dumpInsts();
+        dumpSNList();
+#endif
+        assert(cpu->instcount <= 1500);
+    }
+
+    DPRINTF(DynInst,
+        "DynInst: [sn:%lli] Instruction created. Instcount for %s = %i\n",
+        seqNum, cpu->name(), cpu->instcount);
+#endif
+
+#ifdef DEBUG
+    cpu->snList.insert(seqNum);
+#endif
+
 }
 
 template <class Impl>
 BaseO3DynInst<Impl>::BaseO3DynInst(const StaticInstPtr &_staticInst,
                                    const StaticInstPtr &_macroop)
-    : BaseDynInst<Impl>(_staticInst, _macroop)
-{
-    initVars();
-}
+    : BaseO3DynInst<Impl>(_staticInst, _macroop, {}, {}, 0, nullptr)
+{}
 
 template <class Impl>BaseO3DynInst<Impl>::~BaseO3DynInst()
 {
@@ -97,27 +129,121 @@ template <class Impl>BaseO3DynInst<Impl>::~BaseO3DynInst()
         }
     }
 #endif
+
+    delete [] memData;
+    delete traceData;
+    fault = NoFault;
+
+#ifndef NDEBUG
+    --cpu->instcount;
+
+    DPRINTF(DynInst,
+        "DynInst: [sn:%lli] Instruction destroyed. Instcount for %s = %i\n",
+        seqNum, cpu->name(), cpu->instcount);
+#endif
+#ifdef DEBUG
+    cpu->snList.erase(seqNum);
+#endif
 };
+
+
+#ifdef DEBUG
+template <class Impl>
+void
+BaseO3DynInst<Impl>::dumpSNList()
+{
+    std::set<InstSeqNum>::iterator sn_it = cpu->snList.begin();
+
+    int count = 0;
+    while (sn_it != cpu->snList.end()) {
+        cprintf("%i: [sn:%lli] not destroyed\n", count, (*sn_it));
+        count++;
+        sn_it++;
+    }
+}
+#endif
+
+template <class Impl>
+void
+BaseO3DynInst<Impl>::dump()
+{
+    cprintf("T%d : %#08d `", threadNumber, pc.instAddr());
+    std::cout << staticInst->disassemble(pc.instAddr());
+    cprintf("'\n");
+}
+
+template <class Impl>
+void
+BaseO3DynInst<Impl>::dump(std::string &outstring)
+{
+    std::ostringstream s;
+    s << "T" << threadNumber << " : 0x" << pc.instAddr() << " "
+      << staticInst->disassemble(pc.instAddr());
+
+    outstring = s.str();
+}
+
+template <class Impl>
+void
+BaseO3DynInst<Impl>::markSrcRegReady()
+{
+    DPRINTF(IQ, "[sn:%lli] has %d ready out of %d sources. RTI %d)\n",
+            seqNum, readyRegs+1, numSrcRegs(), readyToIssue());
+    if (++readyRegs == numSrcRegs()) {
+        setCanIssue();
+    }
+}
+
+template <class Impl>
+void
+BaseO3DynInst<Impl>::markSrcRegReady(RegIndex src_idx)
+{
+    regs.readySrcIdx(src_idx, true);
+    markSrcRegReady();
+}
+
+template <class Impl>
+bool
+BaseO3DynInst<Impl>::eaSrcsReady() const
+{
+    // For now I am assuming that src registers 1..n-1 are the ones that the
+    // EA calc depends on.  (i.e. src reg 0 is the source of the data to be
+    // stored)
+
+    for (int i = 1; i < numSrcRegs(); ++i) {
+        if (!regs.readySrcIdx(i))
+            return false;
+    }
+
+    return true;
+}
+
 
 
 template <class Impl>
 void
-BaseO3DynInst<Impl>::initVars()
+BaseO3DynInst<Impl>::setSquashed()
 {
-    this->regs.init();
+    status.set(Squashed);
 
-#if TRACING_ON
-    // Value -1 indicates that particular phase
-    // hasn't happened (yet).
-    fetchTick = -1;
-    decodeTick = -1;
-    renameTick = -1;
-    dispatchTick = -1;
-    issueTick = -1;
-    completeTick = -1;
-    commitTick = -1;
-    storeTick = -1;
-#endif
+    if (!isPinnedRegsRenamed() || isPinnedRegsSquashDone())
+        return;
+
+    // This inst has been renamed already so it may go through rename
+    // again (e.g. if the squash is due to memory access order violation).
+    // Reset the write counters for all pinned destination register to ensure
+    // that they are in a consistent state for a possible re-rename. This also
+    // ensures that dest regs will be pinned to the same phys register if
+    // re-rename happens.
+    for (int idx = 0; idx < numDestRegs(); idx++) {
+        PhysRegIdPtr phys_dest_reg = regs.renamedDestIdx(idx);
+        if (phys_dest_reg->isPinned()) {
+            phys_dest_reg->incrNumPinnedWrites();
+            if (isPinnedRegsWritten())
+                phys_dest_reg->incrNumPinnedWritesToComplete();
+        }
+    }
+    setPinnedRegsSquashDone();
 }
 
 template <class Impl>
