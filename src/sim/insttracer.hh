@@ -95,9 +95,8 @@ class InstRecord
     {
         uint64_t as_int;
         double as_double;
-        ::VecRegContainer<TheISA::VecRegSizeBytes>* as_vec;
-        ::VecPredRegContainer<TheISA::VecPredRegSizeBits,
-                              TheISA::VecPredRegHasPackedRepr>* as_pred;
+        TheISA::VecRegContainer* as_vec;
+        TheISA::VecPredRegContainer* as_pred;
     } data;
 
     /** @defgroup fetch_seq
@@ -204,18 +203,16 @@ class InstRecord
     void setData(double d) { data.as_double = d; data_status = DataDouble; }
 
     void
-    setData(::VecRegContainer<TheISA::VecRegSizeBytes>& d)
+    setData(TheISA::VecRegContainer& d)
     {
-        data.as_vec = new ::VecRegContainer<TheISA::VecRegSizeBytes>(d);
+        data.as_vec = new TheISA::VecRegContainer(d);
         data_status = DataVec;
     }
 
     void
-    setData(::VecPredRegContainer<TheISA::VecPredRegSizeBits,
-                                  TheISA::VecPredRegHasPackedRepr>& d)
+    setData(TheISA::VecPredRegContainer& d)
     {
-        data.as_pred = new ::VecPredRegContainer<
-            TheISA::VecPredRegSizeBits, TheISA::VecPredRegHasPackedRepr>(d);
+        data.as_pred = new TheISA::VecPredRegContainer(d);
         data_status = DataVecPred;
     }
 
