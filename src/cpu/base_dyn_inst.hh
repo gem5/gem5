@@ -729,8 +729,11 @@ class BaseDynInst : public ExecContext, public RefCounted
     OpClass opClass() const { return staticInst->opClass(); }
 
     /** Returns the branch target address. */
-    TheISA::PCState branchTarget() const
-    { return staticInst->branchTarget(pc); }
+    TheISA::PCState
+    branchTarget() const
+    {
+        return staticInst->branchTarget(pc);
+    }
 
     /** Returns the number of source registers. */
     size_t numSrcRegs() const { return regs.numSrcs(); }
@@ -1016,11 +1019,15 @@ class BaseDynInst : public ExecContext, public RefCounted
 
     /** Return whether dest registers' pinning status updated after squash */
     bool
-    isPinnedRegsSquashDone() const { return status[PinnedRegsSquashDone]; }
+    isPinnedRegsSquashDone() const
+    {
+        return status[PinnedRegsSquashDone];
+    }
 
     /** Sets dest registers' status updated after squash */
     void
-    setPinnedRegsSquashDone() {
+    setPinnedRegsSquashDone()
+    {
         assert(!status[PinnedRegsSquashDone]);
         status.set(PinnedRegsSquashDone);
     }

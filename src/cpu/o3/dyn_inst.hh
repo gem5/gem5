@@ -184,37 +184,37 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         this->thread->noSquashFromTC = no_squash_from_TC;
     }
 
-    void forwardOldRegs()
+    void
+    forwardOldRegs()
     {
 
         for (int idx = 0; idx < this->numDestRegs(); idx++) {
             PhysRegIdPtr prev_phys_reg = this->regs.prevDestIdx(idx);
-            const RegId& original_dest_reg =
-                this->staticInst->destRegIdx(idx);
+            const RegId& original_dest_reg = this->staticInst->destRegIdx(idx);
             switch (original_dest_reg.classValue()) {
               case IntRegClass:
                 this->setIntRegOperand(this->staticInst.get(), idx,
-                               this->cpu->readIntReg(prev_phys_reg));
+                        this->cpu->readIntReg(prev_phys_reg));
                 break;
               case FloatRegClass:
                 this->setFloatRegOperandBits(this->staticInst.get(), idx,
-                               this->cpu->readFloatReg(prev_phys_reg));
+                        this->cpu->readFloatReg(prev_phys_reg));
                 break;
               case VecRegClass:
                 this->setVecRegOperand(this->staticInst.get(), idx,
-                               this->cpu->readVecReg(prev_phys_reg));
+                        this->cpu->readVecReg(prev_phys_reg));
                 break;
               case VecElemClass:
                 this->setVecElemOperand(this->staticInst.get(), idx,
-                               this->cpu->readVecElem(prev_phys_reg));
+                        this->cpu->readVecElem(prev_phys_reg));
                 break;
               case VecPredRegClass:
                 this->setVecPredRegOperand(this->staticInst.get(), idx,
-                               this->cpu->readVecPredReg(prev_phys_reg));
+                        this->cpu->readVecPredReg(prev_phys_reg));
                 break;
               case CCRegClass:
                 this->setCCRegOperand(this->staticInst.get(), idx,
-                               this->cpu->readCCReg(prev_phys_reg));
+                        this->cpu->readCCReg(prev_phys_reg));
                 break;
               case MiscRegClass:
                 // no need to forward misc reg values
@@ -309,25 +309,25 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     {
         return cpu->template setVecLane(this->regs.renamedDestIdx(idx), val);
     }
-    virtual void
+    void
     setVecLaneOperand(const StaticInst *si, int idx,
             const LaneData<LaneSize::Byte>& val) override
     {
         return setVecLaneOperandT(si, idx, val);
     }
-    virtual void
+    void
     setVecLaneOperand(const StaticInst *si, int idx,
             const LaneData<LaneSize::TwoByte>& val) override
     {
         return setVecLaneOperandT(si, idx, val);
     }
-    virtual void
+    void
     setVecLaneOperand(const StaticInst *si, int idx,
             const LaneData<LaneSize::FourByte>& val) override
     {
         return setVecLaneOperandT(si, idx, val);
     }
-    virtual void
+    void
     setVecLaneOperand(const StaticInst *si, int idx,
             const LaneData<LaneSize::EightByte>& val) override
     {
@@ -402,12 +402,12 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         BaseDynInst<Impl>::setVecPredRegOperand(si, idx, val);
     }
 
-    void setCCRegOperand(const StaticInst *si, int idx, RegVal val) override
+    void
+    setCCRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         this->cpu->setCCReg(this->regs.renamedDestIdx(idx), val);
         BaseDynInst<Impl>::setCCRegOperand(si, idx, val);
     }
 };
 
-#endif // __CPU_O3_ALPHA_DYN_INST_HH__
-
+#endif // __CPU_O3_DYN_INST_HH__
