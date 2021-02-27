@@ -115,31 +115,10 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
         if (Debug::ExecResult && data_status != DataInvalid) {
             switch (data_status) {
               case DataVec:
-                {
-                    ccprintf(outs, " D=0x[");
-                    auto dv = data.as_vec->as<uint32_t>();
-                    for (int i = TheISA::VecRegSizeBytes / 4 - 1; i >= 0;
-                         i--) {
-                        ccprintf(outs, "%08x", dv[i]);
-                        if (i != 0) {
-                            ccprintf(outs, "_");
-                        }
-                    }
-                    ccprintf(outs, "]");
-                }
+                ccprintf(outs, " D=%s", *data.as_vec);
                 break;
               case DataVecPred:
-                {
-                    ccprintf(outs, " D=0b[");
-                    auto pv = data.as_pred->as<uint8_t>();
-                    for (int i = TheISA::VecPredRegSizeBits - 1; i >= 0; i--) {
-                        ccprintf(outs, pv[i] ? "1" : "0");
-                        if (i != 0 && i % 4 == 0) {
-                            ccprintf(outs, "_");
-                        }
-                    }
-                    ccprintf(outs, "]");
-                }
+                ccprintf(outs, " D=%s", *data.as_pred);
                 break;
               default:
                 ccprintf(outs, " D=%#018x", data.as_int);
