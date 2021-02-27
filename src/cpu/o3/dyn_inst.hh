@@ -1024,9 +1024,6 @@ class BaseO3DynInst : public ExecContext, public RefCounted
     ThreadContext *tcBase() const override { return thread->getTC(); }
 
   public:
-    /** Returns whether or not the eff. addr. source registers are ready. */
-    bool eaSrcsReady() const;
-
     /** Is this instruction's memory access strictly ordered? */
     bool strictlyOrdered() const { return instFlags[IsStrictlyOrdered]; }
     void strictlyOrdered(bool so) { instFlags[IsStrictlyOrdered] = so; }
