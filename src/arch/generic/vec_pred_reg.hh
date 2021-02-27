@@ -336,33 +336,26 @@ class VecPredRegContainer
 
     /// Create a view of this container.
     ///
-    /// If NumElems is provided, the size of the container is bounds-checked,
-    /// otherwise the size is inferred from the container size.
     /// @tparam VecElem Type of the vector elements.
-    /// @tparam NumElems Number of vector elements making up the view.
     /// @{
-    template <typename VecElem,
-              size_t NumElems = (Packed ? NumBits : NumBits / sizeof(VecElem))>
-    VecPredRegT<VecElem, NumElems, Packed, true> as() const
+    template <typename VecElem>
+    VecPredRegT<VecElem, NumBits / sizeof(VecElem), Packed, true>
+    as() const
     {
-        static_assert((Packed && NumElems <= NumBits) ||
-                      (!Packed &&
-                       NumBits % sizeof(VecElem) == 0 &&
-                       sizeof(VecElem) * NumElems <= NumBits),
-                      "Container size incompatible with view size");
-        return VecPredRegT<VecElem, NumElems, Packed, true>(*this);
+        static_assert(NumBits % sizeof(VecElem) == 0,
+                "Container size incompatible with view size.");
+        return VecPredRegT<VecElem, NumBits / sizeof(VecElem), Packed, true>(
+                *this);
     }
 
-    template <typename VecElem,
-              size_t NumElems = (Packed ? NumBits : NumBits / sizeof(VecElem))>
-    VecPredRegT<VecElem, NumElems, Packed, false> as()
+    template <typename VecElem>
+    VecPredRegT<VecElem, NumBits / sizeof(VecElem), Packed, false>
+    as()
     {
-        static_assert((Packed && NumElems <= NumBits) ||
-                      (!Packed &&
-                       NumBits % sizeof(VecElem) == 0 &&
-                       sizeof(VecElem) * NumElems <= NumBits),
-                      "Container size incompatible with view size");
-        return VecPredRegT<VecElem, NumElems, Packed, false>(*this);
+        static_assert(NumBits % sizeof(VecElem) == 0,
+                "Container size incompatible with view size.");
+        return VecPredRegT<VecElem, NumBits / sizeof(VecElem), Packed, false>(
+                *this);
     }
     /// @}
 };
