@@ -88,16 +88,14 @@ class VecPredRegT
 
     /// Reset the register to an all-false value.
     template<bool Condition = !Const>
-    typename std::enable_if_t<Condition, void>
-    reset() { container.reset(); }
+    std::enable_if_t<Condition> reset() { container.reset(); }
 
     /// Reset the register to an all-true value.
     template<bool Condition = !Const>
-    typename std::enable_if_t<Condition, void>
-    set() { container.set(); }
+    std::enable_if_t<Condition> set() { container.set(); }
 
     template<bool Condition = !Const>
-    typename std::enable_if_t<Condition, MyClass&>
+    std::enable_if_t<Condition, MyClass&>
     operator=(const MyClass& that)
     {
         container = that.container;
@@ -111,7 +109,7 @@ class VecPredRegT
     }
 
     template<bool Condition = !Const>
-    typename std::enable_if_t<Condition, bool&>
+    std::enable_if_t<Condition, bool&>
     operator[](size_t idx)
     {
         return container[idx * (Packed ? 1 : sizeof(VecElem))];
@@ -128,7 +126,7 @@ class VecPredRegT
 
     /// Write a raw value in an element of the predicate register
     template<bool Condition = !Const>
-    typename std::enable_if_t<Condition, void>
+    std::enable_if_t<Condition>
     set_raw(size_t idx, uint8_t val)
     {
         container.set_bits(idx * (Packed ? 1 : sizeof(VecElem)),
