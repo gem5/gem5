@@ -239,7 +239,7 @@ class PhysRegFile
 
         DPRINTF(IEW, "RegFile: Access to predicate register %i, has "
                 "data %s\n", int(phys_reg->index()),
-                vecPredRegFile[phys_reg->index()].print());
+                vecPredRegFile[phys_reg->index()]);
 
         return vecPredRegFile[phys_reg->index()];
     }
@@ -323,7 +323,7 @@ class PhysRegFile
         assert(phys_reg->isVecPredPhysReg());
 
         DPRINTF(IEW, "RegFile: Setting predicate register %i to %s\n",
-                int(phys_reg->index()), val.print());
+                int(phys_reg->index()), val);
 
         vecPredRegFile[phys_reg->index()] = val;
     }

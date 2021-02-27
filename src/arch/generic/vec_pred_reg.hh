@@ -42,6 +42,7 @@
 
 #include "arch/generic/vec_reg.hh"
 #include "base/cprintf.hh"
+#include "sim/serialize_handlers.hh"
 
 template <size_t NumBits, bool Packed>
 class VecPredRegContainer;
@@ -152,17 +153,12 @@ class VecPredRegT
     friend std::ostream&
     operator<<(std::ostream& os, const MyClass& p)
     {
-        // 0-sized is not allowed
-        os << '[' << p.container[0];
-        for (int i = 0; i < p.NUM_BITS; ++i) {
-            os << " " << (p.container[i] ? 1 : 0);
-        }
-        os << ']';
+        // Size must be greater than 0.
+        for (int i = 0; i < NUM_BITS; i++)
+            ccprintf(os, "%s%d", i ? " " : "[", (int)p.container[i]);
+        ccprintf(os, "]");
         return os;
     }
-
-    /// Returns a string representation of the register content.
-    const std::string print() const { return csprintf("%s", *this); }
 
     /// Returns true if the first active element of the register is true.
     /// @param mask Input mask used to filter the predicates to be tested.
@@ -326,17 +322,17 @@ class VecPredRegContainer
         }
     }
 
-    /// Returns a string representation of the register content.
-    const std::string print() const { return csprintf("%s", *this); }
-
     friend std::ostream&
-    operator<<(std::ostream& os, const MyClass& v)
+    operator<<(std::ostream& os, const MyClass& p)
     {
-        for (auto b: v.container) {
-            os << csprintf("%d", b);
-        }
+        // Size must be greater than 0.
+        for (int i = 0; i < NumBits; i++)
+            ccprintf(os, "%s%d", i ? " " : "[", (int)p.container[i]);
+        ccprintf(os, "]");
         return os;
     }
+
+    friend ShowParam<VecPredRegContainer<NumBits, Packed>>;
 
     /// Create a view of this container.
     ///
@@ -371,17 +367,29 @@ class VecPredRegContainer
     /// @}
 };
 
-/// Helper functions used for serialization/de-serialization
 template <size_t NumBits, bool Packed>
-inline bool
-to_number(const std::string& value, VecPredRegContainer<NumBits, Packed>& p)
+struct ParseParam<VecPredRegContainer<NumBits, Packed>>
 {
-    int i = 0;
-    for (const auto& c: value) {
-        p[i] = (c == '1');
+    static bool
+    parse(const std::string &s, VecPredRegContainer<NumBits, Packed> &value)
+    {
+        int i = 0;
+        for (const auto& c: s)
+            value[i++] = (c == '1');
+        return true;
     }
-    return true;
-}
+};
+
+template <size_t NumBits, bool Packed>
+struct ShowParam<VecPredRegContainer<NumBits, Packed>>
+{
+    static void
+    show(std::ostream &os, const VecPredRegContainer<NumBits, Packed> &value)
+    {
+        for (auto b: value.container)
+            ccprintf(os, "%d", b);
+    }
+};
 
 /// Dummy type aliases and constants for architectures that do not implement
 /// vector predicate registers.

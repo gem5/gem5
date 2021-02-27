@@ -330,7 +330,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         const TheISA::VecPredRegContainer& regVal =
             readVecPredRegFlat(flatIndex);
         DPRINTF(VecPredRegs, "Reading predicate reg %d (%d) as %s.\n",
-                reg.index(), flatIndex, regVal.print());
+                reg.index(), flatIndex, regVal);
         return regVal;
     }
 
@@ -343,7 +343,7 @@ class SimpleThread : public ThreadState, public ThreadContext
             getWritableVecPredRegFlat(flatIndex);
         DPRINTF(VecPredRegs,
                 "Reading predicate reg %d (%d) as %s for modify.\n",
-                reg.index(), flatIndex, regVal.print());
+                reg.index(), flatIndex, regVal);
         return regVal;
     }
 
@@ -410,7 +410,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         assert(flatIndex < vecPredRegs.size());
         setVecPredRegFlat(flatIndex, val);
         DPRINTF(VecPredRegs, "Setting predicate reg %d (%d) to %s.\n",
-                reg.index(), flatIndex, val.print());
+                reg.index(), flatIndex, val);
     }
 
     void
