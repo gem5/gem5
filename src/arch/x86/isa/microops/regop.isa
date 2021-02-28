@@ -40,64 +40,58 @@
 //////////////////////////////////////////////////////////////////////////
 
 def template MicroRegOpExecute {{
-        Fault %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
-        {
-            Fault fault = NoFault;
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+            Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
 
-            DPRINTF(X86, "The data size is %d\n", dataSize);
-            %(op_decl)s;
-            %(op_rd)s;
+        DPRINTF(X86, "The data size is %d\n", dataSize);
+        %(op_decl)s;
+        %(op_rd)s;
 
-            M5_VAR_USED RegVal result;
+        M5_VAR_USED RegVal result;
 
-            if(%(cond_check)s)
-            {
-                %(code)s;
-                %(flag_code)s;
-            }
-            else
-            {
-                %(else_code)s;
-            }
-
-            //Write the resulting state to the execution context
-            if(fault == NoFault)
-            {
-                %(op_wb)s;
-            }
-            return fault;
+        if (%(cond_check)s) {
+            %(code)s;
+            %(flag_code)s;
+        } else {
+            %(else_code)s;
         }
+
+        //Write the resulting state to the execution context
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+        return fault;
+    }
 }};
 
 def template MicroRegOpImmExecute {{
-        Fault %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
-        {
-            Fault fault = NoFault;
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+            Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
 
-            %(op_decl)s;
-            %(op_rd)s;
+        %(op_decl)s;
+        %(op_rd)s;
 
-            M5_VAR_USED RegVal result;
+        M5_VAR_USED RegVal result;
 
-            if(%(cond_check)s)
-            {
-                %(code)s;
-                %(flag_code)s;
-            }
-            else
-            {
-                %(else_code)s;
-            }
-
-            //Write the resulting state to the execution context
-            if(fault == NoFault)
-            {
-                %(op_wb)s;
-            }
-            return fault;
+        if (%(cond_check)s) {
+            %(code)s;
+            %(flag_code)s;
+        } else {
+            %(else_code)s;
         }
+
+        //Write the resulting state to the execution context
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+        return fault;
+    }
 }};
 
 def template MicroRegOpDeclare {{
@@ -114,8 +108,8 @@ def template MicroRegOpDeclare {{
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
-        X86ISA::PCState branchTarget(const X86ISA::PCState &branchPC) const
-        override;
+        X86ISA::PCState branchTarget(
+                const X86ISA::PCState &branchPC) const override;
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;
@@ -137,8 +131,8 @@ def template MicroRegOpImmDeclare {{
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
-        X86ISA::PCState branchTarget(const X86ISA::PCState &branchPC) const
-        override;
+        X86ISA::PCState branchTarget(
+                const X86ISA::PCState &branchPC) const override;
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;
@@ -147,7 +141,7 @@ def template MicroRegOpImmDeclare {{
 
 def template MicroRegOpConstructor {{
     %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
+            ExtMachInst machInst, const char *instMnem, uint64_t setFlags,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
@@ -164,8 +158,8 @@ def template MicroRegOpConstructor {{
     {
         X86ISA::PCState pcs = branchPC;
         DPRINTF(X86, "branchTarget PC info: %s, Immediate: %lx\n",
-                pcs, (int64_t) this->machInst.immediate);
-        pcs.npc(pcs.npc() + (int64_t) this->machInst.immediate);
+                pcs, (int64_t)this->machInst.immediate);
+        pcs.npc(pcs.npc() + (int64_t)this->machInst.immediate);
         pcs.uEnd();
         return pcs;
     }
@@ -173,12 +167,11 @@ def template MicroRegOpConstructor {{
 
 def template MicroRegOpImmConstructor {{
     %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
+            ExtMachInst machInst, const char *instMnem, uint64_t setFlags,
             InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
-                _src1, _imm8, _dest, _dataSize, _ext,
-                %(op_class)s)
+                _src1, _imm8, _dest, _dataSize, _ext, %(op_class)s)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -198,17 +191,27 @@ def template MicroRegOpImmConstructor {{
 }};
 
 output header {{
-    void
-    divide(uint64_t dividend, uint64_t divisor,
+    void divide(uint64_t dividend, uint64_t divisor,
             uint64_t &quotient, uint64_t &remainder);
 
-    enum SegmentSelectorCheck {
-      SegNoCheck, SegCSCheck, SegCallGateCheck, SegIntGateCheck,
-      SegSoftIntGateCheck, SegSSCheck, SegIretCheck, SegIntCSCheck,
-      SegTRCheck, SegTSSCheck, SegInGDTCheck, SegLDTCheck
+    enum SegmentSelectorCheck
+    {
+        SegNoCheck,
+        SegCSCheck,
+        SegCallGateCheck,
+        SegIntGateCheck,
+        SegSoftIntGateCheck,
+        SegSSCheck,
+        SegIretCheck,
+        SegIntCSCheck,
+        SegTRCheck,
+        SegTSSCheck,
+        SegInGDTCheck,
+        SegLDTCheck
     };
 
-    enum LongModeDescriptorType {
+    enum LongModeDescriptorType
+    {
         LDT64 = 2,
         AvailableTSS64 = 9,
         BusyTSS64 = 0xb,
@@ -285,7 +288,8 @@ let {{
 
             # If op2 is used anywhere, make register and immediate versions
             # of this code.
-            matcher = re.compile(r"(?<!\w)(?P<prefix>s?)op2(?P<typeQual>_[^\W_]+)?")
+            matcher = \
+                re.compile(r"(?<!\w)(?P<prefix>s?)op2(?P<typeQual>_[^\W_]+)?")
             match = matcher.search(allCode + allBigCode)
             if match:
                 typeQual = ""
@@ -428,7 +432,8 @@ let {{
         cond_control_flag_init = ""
         op_class = "IntAluOp"
 
-        def __init__(self, dest, src1, op2, flags = None, dataSize = "env.dataSize"):
+        def __init__(self, dest, src1, op2, flags=None,
+                dataSize="env.dataSize"):
             self.dest = dest
             self.src1 = src1
             self.op2 = op2
@@ -544,17 +549,24 @@ let {{
                     src1, src2, flags, dataSize)
 
     class Add(FlagRegOp):
-        code = 'DestReg = merge(DestReg, result = (psrc1 + op2), dataSize);'
+        code = '''
+            result = psrc1 + op2;
+            DestReg = merge(DestReg, result, dataSize);
+        '''
         big_code = 'DestReg = result = (psrc1 + op2) & mask(dataSize * 8);'
 
     class Or(LogicRegOp):
-        code = 'DestReg = merge(DestReg, result = (psrc1 | op2), dataSize);'
+        code = '''
+            result = psrc1 | op2;
+            DestReg = merge(DestReg, result, dataSize);
+        '''
         big_code = 'DestReg = result = (psrc1 | op2) & mask(dataSize * 8);'
 
     class Adc(FlagRegOp):
         code = '''
             CCFlagBits flags = cfofBits;
-            DestReg = merge(DestReg, result = (psrc1 + op2 + flags.cf), dataSize);
+            result = psrc1 + op2 + flags.cf;
+            DestReg = merge(DestReg, result, dataSize);
             '''
         big_code = '''
             CCFlagBits flags = cfofBits;
@@ -564,7 +576,8 @@ let {{
     class Sbb(SubRegOp):
         code = '''
             CCFlagBits flags = cfofBits;
-            DestReg = merge(DestReg, result = (psrc1 - op2 - flags.cf), dataSize);
+            result = psrc1 - op2 - flags.cf;
+            DestReg = merge(DestReg, result, dataSize);
             '''
         big_code = '''
             CCFlagBits flags = cfofBits;
@@ -572,15 +585,24 @@ let {{
             '''
 
     class And(LogicRegOp):
-        code = 'DestReg = merge(DestReg, result = (psrc1 & op2), dataSize)'
+        code = '''
+            result = psrc1 & op2;
+            DestReg = merge(DestReg, result, dataSize)
+        '''
         big_code = 'DestReg = result = (psrc1 & op2) & mask(dataSize * 8)'
 
     class Sub(SubRegOp):
-        code = 'DestReg = merge(DestReg, result = (psrc1 - op2), dataSize)'
+        code = '''
+            result = psrc1 - op2;
+            DestReg = merge(DestReg, result, dataSize)
+        '''
         big_code = 'DestReg = result = (psrc1 - op2) & mask(dataSize * 8)'
 
     class Xor(LogicRegOp):
-        code = 'DestReg = merge(DestReg, result = (psrc1 ^ op2), dataSize)'
+        code = '''
+            result = psrc1 ^ op2;
+            DestReg = merge(DestReg, result, dataSize)
+        '''
         big_code = 'DestReg = result = (psrc1 ^ op2) & mask(dataSize * 8)'
 
     class Mul1s(WrRegOp):
@@ -825,8 +847,10 @@ let {{
                 }
 
                 //Figure out what the OF bit should be.
-                if ((ext & OFBit) && (CFBits ^ bits(DestReg, dataSize * 8 - 1)))
+                if ((ext & OFBit) &&
+                        (CFBits ^ bits(DestReg, dataSize * 8 - 1))) {
                     PredcfofBits = PredcfofBits | OFBit;
+                }
 
                 //Use the regular mechanisms to calculate the other flags.
                 uint64_t newFlags = genFlags(PredccFlagBits | PreddfBit |
@@ -846,7 +870,8 @@ let {{
         code = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             uint64_t logicalMask = mask(dataSize * 8 - shiftAmt);
-            DestReg = merge(DestReg, (psrc1 >> shiftAmt) & logicalMask, dataSize);
+            DestReg = merge(DestReg, (psrc1 >> shiftAmt) & logicalMask,
+                    dataSize);
             '''
         big_code = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
