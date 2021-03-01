@@ -90,7 +90,7 @@ def operands {{
         'SrcReg1':       foldInt('src1', 'foldOBit', 1),
         'SSrcReg1':      intReg('src1', 1),
         'SrcReg2':       foldInt('src2', 'foldOBit', 2),
-        'SSrcReg2':      intReg('src2', 1),
+        'SSrcReg2':      intReg('src2', 2),
         'Index':         foldInt('index', 'foldABit', 3),
         'Base':          foldInt('base', 'foldABit', 4),
         'DestReg':       foldInt('dest', 'foldOBit', 5),
