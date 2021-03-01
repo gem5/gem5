@@ -77,6 +77,7 @@ output decoder {{
 #include "arch/x86/faults.hh"
 #include "arch/x86/microcode_rom.hh"
 #include "arch/x86/regs/float.hh"
+#include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/regs/segment.hh"
 #include "arch/x86/tlb.hh"

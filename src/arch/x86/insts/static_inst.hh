@@ -81,6 +81,18 @@ struct InstRegIndex : public RegId
 
 class X86StaticInst : public StaticInst
 {
+  public:
+    static void printMnemonic(std::ostream &os, const char *mnemonic);
+    static void printMnemonic(std::ostream &os, const char *instMnemonic,
+            const char *mnemonic);
+    static void printMem(std::ostream &os, uint8_t segment,
+            uint8_t scale, RegIndex index, RegIndex base,
+            uint64_t disp, uint8_t addressSize, bool rip);
+
+    static void printSegment(std::ostream &os, int segment);
+
+    static void printReg(std::ostream &os, RegId reg, int size);
+
   protected:
     using ExtMachInst = X86ISA::ExtMachInst;
 
@@ -95,19 +107,8 @@ class X86StaticInst : public StaticInst
 
     std::string generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const override;
-
-    void printMnemonic(std::ostream &os, const char * mnemonic) const;
-    void printMnemonic(std::ostream &os, const char * instMnemonic,
-            const char * mnemonic) const;
-
-    void printSegment(std::ostream &os, int segment) const;
-
-    void printReg(std::ostream &os, RegId reg, int size) const;
     void printSrcReg(std::ostream &os, int reg, int size) const;
     void printDestReg(std::ostream &os, int reg, int size) const;
-    void printMem(std::ostream &os, uint8_t segment,
-            uint8_t scale, RegIndex index, RegIndex base,
-            uint64_t disp, uint8_t addressSize, bool rip) const;
 
     inline uint64_t
     merge(uint64_t into, uint64_t val, int size) const

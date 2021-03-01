@@ -134,6 +134,11 @@ class X86MicroopBase : public X86StaticInst
         else
             pcState.uAdvance();
     }
+
+    PCState branchTarget(const PCState &branchPC) const override;
+
+    // Explicitly import the otherwise hidden branchTarget.
+    using StaticInst::branchTarget;
 };
 
 }

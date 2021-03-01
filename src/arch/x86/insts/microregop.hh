@@ -43,80 +43,279 @@
 namespace X86ISA
 {
 
-/**
- * Base classes for RegOps which provides a generateDisassembly method.
- */
+struct RegOpDest
+{
+    using ArgType = InstRegIndex;
+
+    RegIndex dest;
+    size_t size;
+
+    template <class InstType>
+    RegOpDest(InstType *inst, ArgType idx) :
+        dest(INTREG_FOLDED(idx.index(), inst->foldOBit)),
+        size(inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        X86StaticInst::printReg(os, RegId(IntRegClass, dest), size);
+    }
+};
+
+struct RegOpDbgDest
+{
+    using ArgType = InstRegIndex;
+
+    RegIndex dest;
+    size_t size;
+
+    template <class InstType>
+    RegOpDbgDest(InstType *inst, ArgType idx) : dest(idx.index()),
+        size(inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        ccprintf(os, "dr%d", dest);
+    }
+};
+
+struct RegOpCrDest
+{
+    using ArgType = InstRegIndex;
+
+    RegIndex dest;
+    size_t size;
+
+    template <class InstType>
+    RegOpCrDest(InstType *inst, ArgType idx) : dest(idx.index()),
+        size(inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        ccprintf(os, "cr%d", dest);
+    }
+};
+
+struct RegOpSegDest
+{
+    using ArgType = InstRegIndex;
+
+    RegIndex dest;
+    size_t size;
+
+    template <class InstType>
+    RegOpSegDest(InstType *inst, ArgType idx) : dest(idx.index()),
+        size(inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        X86StaticInst::printSegment(os, dest);
+    }
+};
+
+struct RegOpMiscDest
+{
+    using ArgType = InstRegIndex;
+
+    RegIndex dest;
+    size_t size;
+
+    template <class InstType>
+    RegOpMiscDest(InstType *inst, ArgType idx) : dest(idx.index()),
+        size(inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        X86StaticInst::printReg(os, RegId(MiscRegClass, dest), size);
+    }
+};
+
+struct RegOpSrc1
+{
+    using ArgType = InstRegIndex;
+
+    RegIndex src1;
+    size_t size;
+
+    template <class InstType>
+    RegOpSrc1(InstType *inst, ArgType idx) :
+        src1(INTREG_FOLDED(idx.index(), inst->foldOBit)),
+        size(inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        X86StaticInst::printReg(os, RegId(IntRegClass, src1), size);
+    }
+};
+
+struct RegOpDbgSrc1
+{
+    using ArgType = InstRegIndex;
+
+    RegIndex src1;
+    size_t size;
+
+    template <class InstType>
+    RegOpDbgSrc1(InstType *inst, ArgType idx) : src1(idx.index()),
+        size(inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        ccprintf(os, "dr%d", src1);
+    }
+};
+
+struct RegOpCrSrc1
+{
+    using ArgType = InstRegIndex;
+
+    RegIndex src1;
+    size_t size;
+
+    template <class InstType>
+    RegOpCrSrc1(InstType *inst, ArgType idx) : src1(idx.index()),
+        size(inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        ccprintf(os, "cr%d", src1);
+    }
+};
+
+struct RegOpSegSrc1
+{
+    using ArgType = InstRegIndex;
+
+    RegIndex src1;
+    size_t size;
+
+    template <class InstType>
+    RegOpSegSrc1(InstType *inst, ArgType idx) : src1(idx.index()),
+        size(inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        X86StaticInst::printSegment(os, src1);
+    }
+};
+
+struct RegOpMiscSrc1
+{
+    using ArgType = InstRegIndex;
+
+    RegIndex src1;
+    size_t size;
+
+    template <class InstType>
+    RegOpMiscSrc1(InstType *inst, ArgType idx) : src1(idx.index()),
+        size(inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        X86StaticInst::printReg(os, RegId(MiscRegClass, src1), size);
+    }
+};
+
+struct RegOpSrc2
+{
+    using ArgType = InstRegIndex;
+
+    RegIndex src2;
+    size_t size;
+
+    template <class InstType>
+    RegOpSrc2(InstType *inst, ArgType idx) :
+        src2(INTREG_FOLDED(idx.index(), inst->foldOBit)),
+        size(inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        X86StaticInst::printReg(os, RegId(IntRegClass, src2), size);
+    }
+};
+
+struct RegOpImm8
+{
+    using ArgType = uint8_t;
+
+    uint8_t imm8;
+
+    template <class InstType>
+    RegOpImm8(InstType *inst, ArgType _imm8) : imm8(_imm8) {}
+
+    void
+    print(std::ostream &os) const
+    {
+        ccprintf(os, "%#x", imm8);
+    }
+};
+
 class RegOpBase : public X86MicroopBase
 {
   protected:
-    const RegIndex src1;
-    const RegIndex dest;
-    const uint8_t dataSize;
     const uint16_t ext;
-    RegIndex foldOBit;
 
-    // Constructor
-    RegOpBase(ExtMachInst _machInst,
-            const char *mnem, const char *_instMnem, uint64_t setFlags,
-            InstRegIndex _src1, InstRegIndex _dest,
-            uint8_t _dataSize, uint16_t _ext,
-            OpClass __opClass) :
-        X86MicroopBase(_machInst, mnem, _instMnem, setFlags,
-                __opClass),
-        src1(_src1.index()), dest(_dest.index()),
-        dataSize(_dataSize), ext(_ext)
-    {
-        foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
-    }
+    RegOpBase(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
+            uint64_t set_flags, uint8_t data_size, uint16_t _ext,
+            OpClass op_class) :
+        X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, op_class),
+        ext(_ext), dataSize(data_size),
+        foldOBit((data_size == 1 && !mach_inst.rex.present) ? 1 << 6 : 0)
+    {}
 
     //Figure out what the condition code flags should be.
-    uint64_t genFlags(uint64_t oldFlags, uint64_t flagMask,
+    uint64_t genFlags(uint64_t old_flags, uint64_t flag_mask,
             uint64_t _dest, uint64_t _src1, uint64_t _src2,
-            bool subtract = false) const;
+            bool subtract=false)const ;
+
+  public:
+    const uint8_t dataSize;
+    const RegIndex foldOBit;
 };
 
-class RegOp : public RegOpBase
+template <typename ...Operands>
+class RegOpT : public RegOpBase, public Operands...
 {
   protected:
-    const RegIndex src2;
+    RegOpT(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
+            uint64_t set_flags, uint8_t data_size, uint16_t _ext,
+            OpClass op_class, typename Operands::ArgType... args) :
+        RegOpBase(mach_inst, mnem, inst_mnem, set_flags, data_size, _ext,
+                op_class), Operands(this, args)...
+    {}
 
-    // Constructor
-    RegOp(ExtMachInst _machInst,
-            const char *mnem, const char *_instMnem, uint64_t setFlags,
-            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-            uint8_t _dataSize, uint16_t _ext,
-            OpClass __opClass) :
-        RegOpBase(_machInst, mnem, _instMnem, setFlags,
-                _src1, _dest, _dataSize, _ext,
-                __opClass),
-        src2(_src2.index())
+    std::string
+    generateDisassembly(Addr pc,
+            const Loader::SymbolTable *symtab) const override
     {
+        std::stringstream response;
+        printMnemonic(response, instMnem, mnemonic);
+        int count = 0;
+        M5_FOR_EACH_IN_PACK(ccprintf(response, count++ ? ", " : ""),
+                            Operands::print(response));
+        return response.str();
     }
-
-    std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
-};
-
-class RegOpImm : public RegOpBase
-{
-  protected:
-    const uint8_t imm8;
-
-    // Constructor
-    RegOpImm(ExtMachInst _machInst,
-            const char * mnem, const char *_instMnem, uint64_t setFlags,
-            InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
-            uint8_t _dataSize, uint16_t _ext,
-            OpClass __opClass) :
-        RegOpBase(_machInst, mnem, _instMnem, setFlags,
-                _src1, _dest, _dataSize, _ext,
-                __opClass),
-        imm8(_imm8)
-    {
-    }
-
-    std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
 };
 
 }

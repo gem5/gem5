@@ -119,4 +119,15 @@ X86MicroopBase::checkCondition(uint64_t flags, int condition) const
     return true;
 }
 
+PCState
+X86MicroopBase::branchTarget(const PCState &branchPC) const
+{
+    PCState pcs = branchPC;
+        DPRINTF(X86, "branchTarget PC info: %s, Immediate: %lx\n", pcs,
+                (int64_t)machInst.immediate);
+    pcs.npc(pcs.npc() + (int64_t)machInst.immediate);
+    pcs.uEnd();
+    return pcs;
+}
+
 }

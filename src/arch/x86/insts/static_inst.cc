@@ -45,19 +45,19 @@ namespace X86ISA
 {
 
 void
-X86StaticInst::printMnemonic(std::ostream &os, const char *mnemonic) const
+X86StaticInst::printMnemonic(std::ostream &os, const char *mnemonic)
 {
     ccprintf(os, "  %s   ", mnemonic);
 }
 
 void
 X86StaticInst::printMnemonic(std::ostream &os, const char *instMnemonic,
-        const char *mnemonic) const
+        const char *mnemonic)
 {
     ccprintf(os, "  %s : %s   ", instMnemonic, mnemonic);
 }
 
-void X86StaticInst::printSegment(std::ostream &os, int segment) const
+void X86StaticInst::printSegment(std::ostream &os, int segment)
 {
     switch (segment)
     {
@@ -120,7 +120,7 @@ X86StaticInst::printDestReg(std::ostream &os, int reg, int size) const
 }
 
 void
-X86StaticInst::printReg(std::ostream &os, RegId reg, int size) const
+X86StaticInst::printReg(std::ostream &os, RegId reg, int size)
 {
     assert(size == 1 || size == 2 || size == 4 || size == 8);
     static const char * abcdFormats[9] =
@@ -231,7 +231,7 @@ X86StaticInst::printReg(std::ostream &os, RegId reg, int size) const
 void
 X86StaticInst::printMem(std::ostream &os, uint8_t segment,
         uint8_t scale, RegIndex index, RegIndex base,
-        uint64_t disp, uint8_t addressSize, bool rip) const
+        uint64_t disp, uint8_t addressSize, bool rip)
 {
     bool someAddr = false;
     printSegment(os, segment);

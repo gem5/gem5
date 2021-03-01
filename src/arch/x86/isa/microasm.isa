@@ -135,7 +135,8 @@ let {{
 
     for reg in ('ah', 'bh', 'ch', 'dh'):
         assembler.symbols[reg] = \
-            regIdx("INTREG_FOLDED(INTREG_%s, IntFoldBit)" % reg.upper())
+            regIdx("X86ISA::INTREG_FOLDED(INTREG_%s, IntFoldBit)" %
+                    reg.upper())
 
     for reg in range(16):
         assembler.symbols["cr%d" % reg] = regIdx("MISCREG_CR%d" % reg)
