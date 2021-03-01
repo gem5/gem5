@@ -24,7 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Dict, Iterator, List, Optional, Union
+import re
+from typing import Callable, Dict, Iterator, List, Optional, Union
 
 from .jsonserializable import JsonSerializable
 from .statistic import Scalar, Statistic
@@ -53,25 +54,72 @@ class Group(JsonSerializable):
         for key,value in kwargs.items():
             setattr(self, key, value)
 
+    def children(self, predicate: Optional[Callable[[str], bool]] = None
+                 ) -> Iterator[Union["Group", Statistic]]:
+        """ Iterate through all of the children, optionally with a predicate
+
+        ```
+        >>> system.children(lambda _name: 'cpu' in name)
+        [cpu0, cpu1, cpu2]
+        ```
+
+        :param: predicate(str) -> bool: Optional. Each child's name is passed
+                to this function. If it returns true, then the child is
+                yielded. Otherwise, the child is skipped.
+                If not provided then all children are returned.
+        """
+        for attr in self.__dict__:
+            # Check the provided predicate. If not a match, skip this child
+            if predicate and not predicate(attr): continue
+            obj = getattr(self, attr)
+            if isinstance(obj, Group) or isinstance(obj, Statistic):
+                yield obj
+
     def find(self, name: str) -> Iterator[Union["Group", Statistic]]:
         """ Find all stats that match the name
+
         This function searches all of the "children" in this group. It yields
         the set of attributes (children) that have the `name` as a substring.
         The order of the objects returned by the generator is arbitrary.
+
         ```
-        system.find('cpu') -> [cpu0, cpu1, cpu2, cpu3, other_cpu, ...]
+        >>> system.find('cpu')
+        [cpu0, cpu1, cpu2, cpu3, other_cpu, ...]
         ```
+
         This is useful for performing aggregates over substats. For instance:
+
         ```
-        total_instruuctions = sum([cpu.exec_context.thread_0.numInsts.value
-                                   for cpu in simstat.system.find('cpu')])
+        >>> total_instructions = sum([cpu.exec_context.thread_0.numInsts.value
+                                      for cpu in simstat.system.find('cpu')])
+        100000
         ```
+
+        :param: name: The name to search for
         """
-        for attr in self.__dict__:
-            if name in attr:
-                obj = getattr(self, attr)
-                if isinstance(obj, Group) or isinstance(obj, Statistic):
-                    yield obj
+        yield from self.children(lambda _name: _name in name)
+
+    def find_re(self, regex: Union[str, re.Pattern]
+                ) -> Iterator[Union["Group", Statistic]]:
+        """ Find all stats that match the name
+
+        This function searches all of the "children" in this group. It yields
+        the set of attributes (children) that have the `name` mathing the
+        regex provided. The order of the objects returned by the generator is
+        arbitrary.
+
+        ```
+        >>> system.find_re('cpu[0-9]')
+        [cpu0, cpu1, cpu2]
+        ```
+        Note: The above will not match `cpu_other`.
+
+        :param: regex: The regular expression used to search. Can be a
+                precompiled regex or a string in regex format
+        """
+        if isinstance(regex, str):
+            regex = re.compile(regex)
+        yield from self.children(lambda _name: regex.search(_name))
 
 class Vector(Group):
     """
