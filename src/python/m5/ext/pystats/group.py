@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Dict, List, Optional, Union
+from typing import Dict, Iterator, List, Optional, Union
 
 from .jsonserializable import JsonSerializable
 from .statistic import Scalar, Statistic
@@ -52,6 +52,26 @@ class Group(JsonSerializable):
 
         for key,value in kwargs.items():
             setattr(self, key, value)
+
+    def find(self, name: str) -> Iterator[Union["Group", Statistic]]:
+        """ Find all stats that match the name
+        This function searches all of the "children" in this group. It yields
+        the set of attributes (children) that have the `name` as a substring.
+        The order of the objects returned by the generator is arbitrary.
+        ```
+        system.find('cpu') -> [cpu0, cpu1, cpu2, cpu3, other_cpu, ...]
+        ```
+        This is useful for performing aggregates over substats. For instance:
+        ```
+        total_instruuctions = sum([cpu.exec_context.thread_0.numInsts.value
+                                   for cpu in simstat.system.find('cpu')])
+        ```
+        """
+        for attr in self.__dict__:
+            if name in attr:
+                obj = getattr(self, attr)
+                if isinstance(obj, Group) or isinstance(obj, Statistic):
+                    yield obj
 
 class Vector(Group):
     """
