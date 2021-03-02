@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2017, 2020 ARM Limited
+# Copyright (c) 2013, 2017, 2020-2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -218,24 +218,7 @@ def config_mem(options, system):
                         "latency to 1ns.")
 
                 # Create the controller that will drive the interface
-                if opt_mem_type == "HMC_2500_1x32":
-                    # The static latency of the vault controllers is estimated
-                    # to be smaller than a full DRAM channel controller
-                    mem_ctrl = m5.objects.MemCtrl(min_writes_per_switch = 8,
-                                             static_backend_latency = '4ns',
-                                             static_frontend_latency = '4ns')
-                elif opt_mem_type == "SimpleMemory":
-                    mem_ctrl = m5.objects.SimpleMemory()
-                elif opt_mem_type == "QoSMemSinkInterface":
-                    mem_ctrl = m5.objects.QoSMemSinkCtrl()
-                else:
-                    mem_ctrl = m5.objects.MemCtrl()
-
-                # Hookup the controller to the interface and add to the list
-                if opt_mem_type == "QoSMemSinkInterface":
-                    mem_ctrl.interface = dram_intf
-                elif opt_mem_type != "SimpleMemory":
-                    mem_ctrl.dram = dram_intf
+                mem_ctrl = dram_intf.controller()
 
                 mem_ctrls.append(mem_ctrl)
 

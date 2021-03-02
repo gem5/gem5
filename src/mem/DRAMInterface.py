@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2020 ARM Limited
+# Copyright (c) 2012-2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -38,6 +38,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects.MemCtrl import MemCtrl
 from m5.objects.MemInterface import *
 
 # Enum for the page policy, either open, open_adaptive, close, or
@@ -254,6 +255,15 @@ class DRAMInterface(MemInterface):
     # Second voltage range defined by some DRAMs
     VDD2 = Param.Voltage("0V", "2nd Voltage Range")
 
+    def controller(self):
+        """
+        Instantiate the memory controller and bind it to
+        the current interface.
+        """
+        controller = MemCtrl()
+        controller.dram = self
+        return controller
+
 # A single DDR3-1600 x64 channel (one command and address bus), with
 # timings based on a DDR3-1600 4 Gbit datasheet (Micron MT41J512M8) in
 # an 8x8 configuration.
@@ -423,6 +433,17 @@ class HMC_2500_1x32(DDR3_1600_8x8):
     # bandwidth similar to the cycle-accurate model in [2]
     write_buffer_size = 32
     read_buffer_size = 32
+
+    def controller(self):
+        """
+        Instantiate the memory controller and bind it to
+        the current interface.
+        """
+        controller = MemCtrl(min_writes_per_switch = 8,
+            static_backend_latency = '4ns',
+            static_frontend_latency = '4ns')
+        controller.dram = self
+        return controller
 
 # A single DDR3-2133 x64 channel refining a selected subset of the
 # options for the DDR-1600 configuration, based on the same DDR3-1600
