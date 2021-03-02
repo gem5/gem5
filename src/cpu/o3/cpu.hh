@@ -58,9 +58,11 @@
 #include "cpu/o3/cpu_policy.hh"
 #include "cpu/o3/decode.hh"
 #include "cpu/o3/fetch.hh"
+#include "cpu/o3/free_list.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/rename.hh"
+#include "cpu/o3/rob.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/thread_state.hh"
 #include "cpu/activity.hh"
@@ -513,16 +515,16 @@ class FullO3CPU : public BaseO3CPU
     PhysRegFile regFile;
 
     /** The free list. */
-    typename CPUPolicy::FreeList freeList;
+    UnifiedFreeList freeList;
 
     /** The rename map. */
-    typename CPUPolicy::RenameMap renameMap[O3MaxThreads];
+    UnifiedRenameMap renameMap[O3MaxThreads];
 
     /** The commit rename map. */
-    typename CPUPolicy::RenameMap commitRenameMap[O3MaxThreads];
+    UnifiedRenameMap commitRenameMap[O3MaxThreads];
 
     /** The re-order buffer. */
-    typename CPUPolicy::ROB rob;
+    ROB<Impl> rob;
 
     /** Active Threads List */
     std::list<ThreadID> activeThreads;

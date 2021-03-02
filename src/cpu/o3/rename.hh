@@ -48,6 +48,7 @@
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/commit.hh"
+#include "cpu/o3/free_list.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
@@ -80,8 +81,6 @@ class DefaultRename
     typedef typename CPUPol::DecodeStruct DecodeStruct;
     typedef typename CPUPol::RenameStruct RenameStruct;
     typedef typename CPUPol::TimeStruct TimeStruct;
-    typedef typename CPUPol::FreeList FreeList;
-    typedef typename CPUPol::RenameMap RenameMap;
 
     // A deque is used to queue the instructions. Barrier insts must
     // be added to the front of the queue, which is the only reason for
@@ -173,10 +172,10 @@ class DefaultRename
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to rename maps (per-thread structures). */
-    void setRenameMap(RenameMap rm_ptr[O3MaxThreads]);
+    void setRenameMap(UnifiedRenameMap rm_ptr[O3MaxThreads]);
 
     /** Sets pointer to the free list. */
-    void setFreeList(FreeList *fl_ptr);
+    void setFreeList(UnifiedFreeList *fl_ptr);
 
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *_scoreboard);
@@ -357,10 +356,10 @@ class DefaultRename
     InstQueue skidBuffer[O3MaxThreads];
 
     /** Rename map interface. */
-    RenameMap *renameMap[O3MaxThreads];
+    UnifiedRenameMap *renameMap[O3MaxThreads];
 
     /** Free list interface. */
-    FreeList *freeList;
+    UnifiedFreeList *freeList;
 
     /** Pointer to the list of active threads. */
     std::list<ThreadID> *activeThreads;

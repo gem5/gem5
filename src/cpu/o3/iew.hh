@@ -46,6 +46,7 @@
 
 #include "base/statistics.hh"
 #include "cpu/o3/comm.hh"
+#include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/o3/scoreboard.hh"
@@ -83,10 +84,6 @@ class DefaultIEW
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
-
-    typedef typename CPUPol::IQ IQ;
-    typedef typename CPUPol::RenameMap RenameMap;
-    typedef typename CPUPol::LSQ LSQ;
 
     typedef typename CPUPol::TimeStruct TimeStruct;
     typedef typename CPUPol::IEWStruct IEWStruct;
@@ -364,10 +361,10 @@ class DefaultIEW
 
   public:
     /** Instruction queue. */
-    IQ instQueue;
+    InstructionQueue<Impl> instQueue;
 
     /** Load / store queue. */
-    LSQ ldstQueue;
+    LSQ<Impl> ldstQueue;
 
     /** Pointer to the functional unit pool. */
     FUPool *fuPool;

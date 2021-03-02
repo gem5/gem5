@@ -1224,7 +1224,7 @@ LSQ<Impl>::DcachePort::recvReqRetry()
 }
 
 template<class Impl>
-LSQ<Impl>::HtmCmdRequest::HtmCmdRequest(LSQUnit* port,
+LSQ<Impl>::HtmCmdRequest::HtmCmdRequest(LSQUnit<Impl>* port,
                   const DynInstPtr& inst,
                   const Request::Flags& flags_) :
     SingleDataRequest(port, inst, true, 0x0lu, 8, flags_,

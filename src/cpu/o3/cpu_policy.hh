@@ -31,15 +31,6 @@
 #define __CPU_O3_CPU_POLICY_HH__
 
 #include "cpu/o3/comm.hh"
-#include "cpu/o3/free_list.hh"
-#include "cpu/o3/inst_queue.hh"
-#include "cpu/o3/lsq.hh"
-#include "cpu/o3/lsq_unit.hh"
-#include "cpu/o3/mem_dep_unit.hh"
-#include "cpu/o3/regfile.hh"
-#include "cpu/o3/rename_map.hh"
-#include "cpu/o3/rob.hh"
-#include "cpu/o3/store_set.hh"
 
 /**
  * Struct that defines the key classes to be used by the CPU.  All
@@ -53,21 +44,6 @@
 template<class Impl>
 struct SimpleCPUPolicy
 {
-    /** Typedef for the freelist of registers. */
-    typedef UnifiedFreeList FreeList;
-    /** Typedef for the rename map. */
-    typedef UnifiedRenameMap RenameMap;
-    /** Typedef for the ROB. */
-    typedef ::ROB<Impl> ROB;
-    /** Typedef for the instruction queue/scheduler. */
-    typedef InstructionQueue<Impl> IQ;
-    /** Typedef for the memory dependence unit. */
-    typedef ::MemDepUnit<StoreSet, Impl> MemDepUnit;
-    /** Typedef for the LSQ. */
-    typedef ::LSQ<Impl> LSQ;
-    /** Typedef for the thread-specific LSQ units. */
-    typedef ::LSQUnit<Impl> LSQUnit;
-
     /** The struct for communication between fetch and decode. */
     typedef DefaultFetchDefaultDecode<Impl> FetchStruct;
 

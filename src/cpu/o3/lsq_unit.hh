@@ -53,6 +53,7 @@
 #include "arch/locked_mem.hh"
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/lsq.hh"
 #include "cpu/timebuf.hh"
 #include "debug/HtmCpu.hh"
 #include "debug/LSQUnit.hh"
@@ -85,11 +86,10 @@ class LSQUnit
 
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::CPUPol::LSQ LSQ;
     typedef typename Impl::CPUPol::IssueStruct IssueStruct;
 
-    using LSQSenderState = typename LSQ::LSQSenderState;
-    using LSQRequest = typename Impl::CPUPol::LSQ::LSQRequest;
+    using LSQSenderState = typename LSQ<Impl>::LSQSenderState;
+    using LSQRequest = typename LSQ<Impl>::LSQRequest;
   private:
     class LSQEntry
     {
@@ -235,7 +235,7 @@ class LSQUnit
 
     /** Initializes the LSQ unit with the specified number of entries. */
     void init(O3CPU *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
-            const DerivO3CPUParams &params, LSQ *lsq_ptr, unsigned id);
+            const DerivO3CPUParams &params, LSQ<Impl> *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;
@@ -413,7 +413,7 @@ class LSQUnit
     DefaultIEW<Impl> *iewStage;
 
     /** Pointer to the LSQ. */
-    LSQ *lsq;
+    LSQ<Impl> *lsq;
 
     /** Pointer to the dcache port.  Used only for sending. */
     RequestPort *dcachePort;

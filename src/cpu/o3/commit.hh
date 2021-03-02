@@ -48,6 +48,8 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/o3/rename_map.hh"
+#include "cpu/o3/rob.hh"
 #include "cpu/timebuf.hh"
 #include "enums/CommitPolicy.hh"
 #include "sim/probe/probe.hh"
@@ -87,9 +89,6 @@ class DefaultCommit
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::CPUPol CPUPol;
-
-    typedef typename CPUPol::RenameMap RenameMap;
-    typedef typename CPUPol::ROB ROB;
 
     typedef typename CPUPol::TimeStruct TimeStruct;
     typedef typename CPUPol::FetchStruct FetchStruct;
@@ -174,10 +173,10 @@ class DefaultCommit
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to the commited state rename map. */
-    void setRenameMap(RenameMap rm_ptr[O3MaxThreads]);
+    void setRenameMap(UnifiedRenameMap rm_ptr[O3MaxThreads]);
 
     /** Sets pointer to the ROB. */
-    void setROB(ROB *rob_ptr);
+    void setROB(ROB<Impl> *rob_ptr);
 
     /** Initializes stage by sending back the number of free entries. */
     void startupStage();
@@ -356,7 +355,7 @@ class DefaultCommit
 
   public:
     /** ROB interface. */
-    ROB *rob;
+    ROB<Impl> *rob;
 
   private:
     /** Pointer to O3CPU. */
@@ -463,7 +462,7 @@ class DefaultCommit
     std::list<ThreadID> *activeThreads;
 
     /** Rename map interface. */
-    RenameMap *renameMap[O3MaxThreads];
+    UnifiedRenameMap *renameMap[O3MaxThreads];
 
     /** True if last committed microop can be followed by an interrupt */
     bool canHandleInterrupts;

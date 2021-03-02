@@ -216,7 +216,7 @@ LSQUnit<Impl>::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
 template<class Impl>
 void
 LSQUnit<Impl>::init(O3CPU *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
-        const DerivO3CPUParams &params, LSQ *lsq_ptr, unsigned id)
+        const DerivO3CPUParams &params, LSQ<Impl> *lsq_ptr, unsigned id)
 {
     lsqID = id;
 

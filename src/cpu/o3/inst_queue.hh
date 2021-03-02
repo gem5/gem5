@@ -51,8 +51,9 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dep_graph.hh"
-#include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/o3/mem_dep_unit.hh"
+#include "cpu/o3/store_set.hh"
 #include "cpu/op_class.hh"
 #include "cpu/timebuf.hh"
 #include "enums/SMTQueuePolicy.hh"
@@ -61,6 +62,9 @@
 struct DerivO3CPUParams;
 class FUPool;
 class MemInterface;
+
+template <class Impl>
+class DefaultIEW;
 
 /**
  * A standard instruction queue class.  It holds ready instructions, in
@@ -87,7 +91,6 @@ class InstructionQueue
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
 
-    typedef typename Impl::CPUPol::MemDepUnit MemDepUnit;
     typedef typename Impl::CPUPol::IssueStruct IssueStruct;
     typedef typename Impl::CPUPol::TimeStruct TimeStruct;
 
@@ -287,7 +290,7 @@ class InstructionQueue
     /** The memory dependence unit, which tracks/predicts memory dependences
      *  between instructions.
      */
-    MemDepUnit memDepUnit[O3MaxThreads];
+    MemDepUnit<StoreSet, Impl> memDepUnit[O3MaxThreads];
 
     /** The queue to the execute stage.  Issued instructions will be written
      *  into it.

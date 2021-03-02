@@ -280,7 +280,7 @@ DefaultRename<Impl>::setActiveThreads(std::list<ThreadID> *at_ptr)
 
 template <class Impl>
 void
-DefaultRename<Impl>::setRenameMap(RenameMap rm_ptr[])
+DefaultRename<Impl>::setRenameMap(UnifiedRenameMap rm_ptr[])
 {
     for (ThreadID tid = 0; tid < numThreads; tid++)
         renameMap[tid] = &rm_ptr[tid];
@@ -288,7 +288,7 @@ DefaultRename<Impl>::setRenameMap(RenameMap rm_ptr[])
 
 template <class Impl>
 void
-DefaultRename<Impl>::setFreeList(FreeList *fl_ptr)
+DefaultRename<Impl>::setFreeList(UnifiedFreeList *fl_ptr)
 {
     freeList = fl_ptr;
 }
@@ -1031,7 +1031,7 @@ inline void
 DefaultRename<Impl>::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
 {
     ThreadContext *tc = inst->tcBase();
-    RenameMap *map = renameMap[tid];
+    UnifiedRenameMap *map = renameMap[tid];
     unsigned num_src_regs = inst->numSrcRegs();
 
     // Get the architectual register numbers from the source and
@@ -1098,13 +1098,13 @@ inline void
 DefaultRename<Impl>::renameDestRegs(const DynInstPtr &inst, ThreadID tid)
 {
     ThreadContext *tc = inst->tcBase();
-    RenameMap *map = renameMap[tid];
+    UnifiedRenameMap *map = renameMap[tid];
     unsigned num_dest_regs = inst->numDestRegs();
 
     // Rename the destination registers.
     for (int dest_idx = 0; dest_idx < num_dest_regs; dest_idx++) {
         const RegId& dest_reg = inst->destRegIdx(dest_idx);
-        typename RenameMap::RenameInfo rename_result;
+        UnifiedRenameMap::RenameInfo rename_result;
 
         RegId flat_dest_regid = tc->flattenRegId(dest_reg);
         flat_dest_regid.setNumPinnedWrites(dest_reg.getNumPinnedWrites());

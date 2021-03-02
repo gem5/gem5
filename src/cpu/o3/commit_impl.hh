@@ -305,7 +305,7 @@ DefaultCommit<Impl>::setActiveThreads(std::list<ThreadID> *at_ptr)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setRenameMap(RenameMap rm_ptr[])
+DefaultCommit<Impl>::setRenameMap(UnifiedRenameMap rm_ptr[])
 {
     for (ThreadID tid = 0; tid < numThreads; tid++)
         renameMap[tid] = &rm_ptr[tid];
@@ -313,7 +313,7 @@ DefaultCommit<Impl>::setRenameMap(RenameMap rm_ptr[])
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setROB(ROB *rob_ptr)
+DefaultCommit<Impl>::setROB(ROB<Impl> *rob_ptr)
 {
     rob = rob_ptr;
 }
