@@ -46,6 +46,7 @@
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/decode.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/limits.hh"
 #include "debug/Activity.hh"
 #include "debug/Decode.hh"
@@ -293,7 +294,7 @@ DefaultDecode<Impl>::unblock(ThreadID tid)
 
 template<class Impl>
 void
-DefaultDecode<Impl>::squash(const DynInstPtr &inst, ThreadID tid)
+DefaultDecode<Impl>::squash(const O3DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(Decode, "[tid:%i] [sn:%llu] Squashing due to incorrect branch "
             "prediction detected at decode.\n", tid, inst->seqNum);
@@ -395,7 +396,7 @@ template<class Impl>
 void
 DefaultDecode<Impl>::skidInsert(ThreadID tid)
 {
-    DynInstPtr inst = NULL;
+    O3DynInstPtr inst = NULL;
 
     while (!insts[tid].empty()) {
         inst = insts[tid].front();
@@ -655,7 +656,7 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
         ++stats.runCycles;
     }
 
-    std::queue<DynInstPtr>
+    std::queue<O3DynInstPtr>
         &insts_to_decode = decodeStatus[tid] == Unblocking ?
         skidBuffer[tid] : insts[tid];
 
@@ -664,7 +665,7 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
     while (insts_available > 0 && toRenameIndex < decodeWidth) {
         assert(!insts_to_decode.empty());
 
-        DynInstPtr inst = std::move(insts_to_decode.front());
+        O3DynInstPtr inst = std::move(insts_to_decode.front());
 
         insts_to_decode.pop();
 

@@ -56,6 +56,7 @@
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/decode.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/fetch.hh"
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/iew.hh"
@@ -100,13 +101,12 @@ class FullO3CPU : public BaseO3CPU
 {
   public:
     // Typedefs from the Impl here.
-    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
 
     typedef O3ThreadState<Impl> ImplState;
     typedef O3ThreadState<Impl> Thread;
 
-    typedef typename std::list<DynInstPtr>::iterator ListIt;
+    typedef typename std::list<O3DynInstPtr>::iterator ListIt;
 
     friend class O3ThreadContext<Impl>;
 
@@ -184,7 +184,7 @@ class FullO3CPU : public BaseO3CPU
     ~FullO3CPU();
 
     ProbePointArg<PacketPtr> *ppInstAccessComplete;
-    ProbePointArg<std::pair<DynInstPtr, PacketPtr> > *ppDataAccessComplete;
+    ProbePointArg<std::pair<O3DynInstPtr, PacketPtr> > *ppDataAccessComplete;
 
     /** Register probe points. */
     void regProbePoints() override;
@@ -439,15 +439,15 @@ class FullO3CPU : public BaseO3CPU
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
      */
-    ListIt addInst(const DynInstPtr &inst);
+    ListIt addInst(const O3DynInstPtr &inst);
 
     /** Function to tell the CPU that an instruction has completed. */
-    void instDone(ThreadID tid, const DynInstPtr &inst);
+    void instDone(ThreadID tid, const O3DynInstPtr &inst);
 
     /** Remove an instruction from the front end of the list.  There's
      *  no restriction on location of the instruction.
      */
-    void removeFrontInst(const DynInstPtr &inst);
+    void removeFrontInst(const O3DynInstPtr &inst);
 
     /** Remove all instructions that are not currently in the ROB.
      *  There's also an option to not squash delay slot instructions.*/
@@ -472,7 +472,7 @@ class FullO3CPU : public BaseO3CPU
 #endif
 
     /** List of all the instructions in flight. */
-    std::list<DynInstPtr> instList;
+    std::list<O3DynInstPtr> instList;
 
     /** List of all the instructions that will be removed at the end of this
      *  cycle.
@@ -624,7 +624,7 @@ class FullO3CPU : public BaseO3CPU
      * instruction results at run time.  This can be set to NULL if it
      * is not being used.
      */
-    Checker<Impl> *checker;
+    Checker<O3DynInstPtr> *checker;
 
     /** Pointer to the system. */
     System *system;
@@ -648,7 +648,7 @@ class FullO3CPU : public BaseO3CPU
     std::vector<ThreadID> tids;
 
     /** CPU pushRequest function, forwards request to LSQ. */
-    Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
+    Fault pushRequest(const O3DynInstPtr& inst, bool isLoad, uint8_t *data,
                       unsigned int size, Addr addr, Request::Flags flags,
                       uint64_t *res, AtomicOpFunctorPtr amo_op = nullptr,
                       const std::vector<bool>& byte_enable =

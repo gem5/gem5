@@ -60,10 +60,9 @@ class ROB
   public:
     //Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::DynInstPtr DynInstPtr;
 
     typedef std::pair<RegIndex, RegIndex> UnmapInfo;
-    typedef typename std::list<DynInstPtr>::iterator InstIt;
+    typedef typename std::list<O3DynInstPtr>::iterator InstIt;
 
     /** Possible ROB statuses. */
     enum Status
@@ -105,36 +104,36 @@ class ROB
      *  ROB for the new instruction.
      *  @param inst The instruction being inserted into the ROB.
      */
-    void insertInst(const DynInstPtr &inst);
+    void insertInst(const O3DynInstPtr &inst);
 
     /** Returns pointer to the head instruction within the ROB.  There is
      *  no guarantee as to the return value if the ROB is empty.
      *  @retval Pointer to the DynInst that is at the head of the ROB.
      */
-//    DynInstPtr readHeadInst();
+//    O3DynInstPtr readHeadInst();
 
     /** Returns a pointer to the head instruction of a specific thread within
      *  the ROB.
      *  @return Pointer to the DynInst that is at the head of the ROB.
      */
-    const DynInstPtr &readHeadInst(ThreadID tid);
+    const O3DynInstPtr &readHeadInst(ThreadID tid);
 
     /** Returns a pointer to the instruction with the given sequence if it is
      *  in the ROB.
      */
-    DynInstPtr findInst(ThreadID tid, InstSeqNum squash_inst);
+    O3DynInstPtr findInst(ThreadID tid, InstSeqNum squash_inst);
 
     /** Returns pointer to the tail instruction within the ROB.  There is
      *  no guarantee as to the return value if the ROB is empty.
      *  @retval Pointer to the DynInst that is at the tail of the ROB.
      */
-//    DynInstPtr readTailInst();
+//    O3DynInstPtr readTailInst();
 
     /** Returns a pointer to the tail instruction of a specific thread within
      *  the ROB.
      *  @return Pointer to the DynInst that is at the tail of the ROB.
      */
-    DynInstPtr readTailInst(ThreadID tid);
+    O3DynInstPtr readTailInst(ThreadID tid);
 
     /** Retires the head instruction, removing it from the ROB. */
 //    void retireHead();
@@ -277,7 +276,7 @@ class ROB
     unsigned maxEntries[O3MaxThreads];
 
     /** ROB List of Instructions */
-    std::list<DynInstPtr> instList[O3MaxThreads];
+    std::list<O3DynInstPtr> instList[O3MaxThreads];
 
     /** Number of instructions that can be squashed in a single cycle. */
     unsigned squashWidth;
@@ -308,7 +307,7 @@ class ROB
     int numInstsInROB;
 
     /** Dummy instruction returned if there are no insts left. */
-    DynInstPtr dummyInst;
+    O3DynInstPtr dummyInst;
 
   private:
     /** The sequence number of the squashed instruction. */

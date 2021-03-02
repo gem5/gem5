@@ -59,9 +59,9 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
-template <class Impl>
+template <class DynInstPtr>
 void
-Checker<Impl>::advancePC(const Fault &fault)
+Checker<DynInstPtr>::advancePC(const Fault &fault)
 {
     if (fault != NoFault) {
         curMacroStaticInst = nullStaticInstPtr;
@@ -80,9 +80,9 @@ Checker<Impl>::advancePC(const Fault &fault)
 }
 //////////////////////////////////////////////////
 
-template <class Impl>
+template <class DynInstPtr>
 void
-Checker<Impl>::handlePendingInt()
+Checker<DynInstPtr>::handlePendingInt()
 {
     DPRINTF(Checker, "IRQ detected at PC: %s with %d insts in buffer\n",
                      thread->pcState(), instList.size());
@@ -114,9 +114,9 @@ Checker<Impl>::handlePendingInt()
     curMacroStaticInst = nullStaticInstPtr;
 }
 
-template <class Impl>
+template <class DynInstPtr>
 void
-Checker<Impl>::verify(const DynInstPtr &completed_inst)
+Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
 {
     DynInstPtr inst;
 
@@ -428,22 +428,19 @@ Checker<Impl>::verify(const DynInstPtr &completed_inst)
     unverifiedInst = NULL;
 }
 
-template <class Impl>
+template <class DynInstPtr>
 void
-Checker<Impl>::switchOut()
+Checker<DynInstPtr>::switchOut()
 {
     instList.clear();
 }
 
-template <class Impl>
-void
-Checker<Impl>::takeOverFrom(BaseCPU *oldCPU)
-{
-}
+template <class DynInstPtr>
+void Checker<DynInstPtr>::takeOverFrom(BaseCPU *oldCPU) {}
 
-template <class Impl>
+template <class DynInstPtr>
 void
-Checker<Impl>::validateInst(const DynInstPtr &inst)
+Checker<DynInstPtr>::validateInst(const DynInstPtr &inst)
 {
     if (inst->instAddr() != thread->instAddr()) {
         warn("%lli: PCs do not match! Inst: %s, checker: %s",
@@ -462,9 +459,9 @@ Checker<Impl>::validateInst(const DynInstPtr &inst)
     }
 }
 
-template <class Impl>
+template <class DynInstPtr>
 void
-Checker<Impl>::validateExecution(const DynInstPtr &inst)
+Checker<DynInstPtr>::validateExecution(const DynInstPtr &inst)
 {
     InstResult checker_val;
     InstResult inst_val;
@@ -555,9 +552,9 @@ Checker<Impl>::validateExecution(const DynInstPtr &inst)
 // This function is weird, if it is called it means the Checker and
 // O3 have diverged, so panic is called for now.  It may be useful
 // to resynch states and continue if the divergence is a false positive
-template <class Impl>
+template <class DynInstPtr>
 void
-Checker<Impl>::validateState()
+Checker<DynInstPtr>::validateState()
 {
     if (updateThisCycle) {
         // Change this back to warn if divergences end up being false positives
@@ -580,10 +577,10 @@ Checker<Impl>::validateState()
     }
 }
 
-template <class Impl>
+template <class DynInstPtr>
 void
-Checker<Impl>::copyResult(const DynInstPtr &inst,
-                          const InstResult& mismatch_val, int start_idx)
+Checker<DynInstPtr>::copyResult(
+        const DynInstPtr &inst, const InstResult& mismatch_val, int start_idx)
 {
     // We've already popped one dest off the queue,
     // so do the fix-up then start with the next dest reg;
@@ -657,9 +654,9 @@ Checker<Impl>::copyResult(const DynInstPtr &inst,
     }
 }
 
-template <class Impl>
+template <class DynInstPtr>
 void
-Checker<Impl>::dumpAndExit(const DynInstPtr &inst)
+Checker<DynInstPtr>::dumpAndExit(const DynInstPtr &inst)
 {
     cprintf("Error detected, instruction information:\n");
     cprintf("PC:%s, nextPC:%#x\n[sn:%lli]\n[tid:%i]\n"
@@ -673,9 +670,9 @@ Checker<Impl>::dumpAndExit(const DynInstPtr &inst)
     CheckerCPU::dumpAndExit();
 }
 
-template <class Impl>
+template <class DynInstPtr>
 void
-Checker<Impl>::dumpInsts()
+Checker<DynInstPtr>::dumpInsts()
 {
     int num = 0;
 

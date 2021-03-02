@@ -54,6 +54,7 @@
 #include "cpu/exetrace.hh"
 #include "cpu/null_static_inst.hh"
 #include "cpu/o3/commit.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/thread_state.hh"
 #include "cpu/timebuf.hh"
@@ -140,9 +141,12 @@ template <class Impl>
 void
 DefaultCommit<Impl>::regProbePoints()
 {
-    ppCommit = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Commit");
-    ppCommitStall = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "CommitStall");
-    ppSquash = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Squash");
+    ppCommit = new ProbePointArg<O3DynInstPtr>(
+            cpu->getProbeManager(), "Commit");
+    ppCommitStall = new ProbePointArg<O3DynInstPtr>(
+            cpu->getProbeManager(), "CommitStall");
+    ppSquash = new ProbePointArg<O3DynInstPtr>(
+            cpu->getProbeManager(), "Squash");
 }
 
 template <class Impl>
@@ -653,7 +657,7 @@ DefaultCommit<Impl>::squashFromSquashAfter(ThreadID tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::squashAfter(ThreadID tid, const DynInstPtr &head_inst)
+DefaultCommit<Impl>::squashAfter(ThreadID tid, const O3DynInstPtr &head_inst)
 {
     DPRINTF(Commit, "Executing squash after for [tid:%i] inst [sn:%llu]\n",
             tid, head_inst->seqNum);
@@ -713,14 +717,14 @@ DefaultCommit<Impl>::tick()
             // will be active.
             _nextStatus = Active;
 
-            GEM5_VAR_USED const DynInstPtr &inst = rob->readHeadInst(tid);
+            GEM5_VAR_USED const O3DynInstPtr &inst = rob->readHeadInst(tid);
 
             DPRINTF(Commit,"[tid:%i] Instruction [sn:%llu] PC %s is head of"
                     " ROB and ready to commit\n",
                     tid, inst->seqNum, inst->pcState());
 
         } else if (!rob->isEmpty(tid)) {
-            const DynInstPtr &inst = rob->readHeadInst(tid);
+            const O3DynInstPtr &inst = rob->readHeadInst(tid);
 
             ppCommitStall->notify(inst);
 
@@ -1001,7 +1005,7 @@ DefaultCommit<Impl>::commitInsts()
 
     unsigned num_committed = 0;
 
-    DynInstPtr head_inst;
+    O3DynInstPtr head_inst;
 
     // Commit as many instructions as possible until the commit bandwidth
     // limit is reached, or it becomes impossible to commit any more.
@@ -1192,7 +1196,8 @@ DefaultCommit<Impl>::commitInsts()
 
 template <class Impl>
 bool
-DefaultCommit<Impl>::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
+DefaultCommit<Impl>::commitHead(
+        const O3DynInstPtr &head_inst, unsigned inst_num)
 {
     assert(head_inst);
 
@@ -1391,7 +1396,7 @@ DefaultCommit<Impl>::getInsts()
     int insts_to_process = std::min((int)renameWidth, fromRename->size);
 
     for (int inst_num = 0; inst_num < insts_to_process; ++inst_num) {
-        const DynInstPtr &inst = fromRename->insts[inst_num];
+        const O3DynInstPtr &inst = fromRename->insts[inst_num];
         ThreadID tid = inst->threadNumber;
 
         if (!inst->isSquashed() &&
@@ -1438,7 +1443,7 @@ DefaultCommit<Impl>::markCompletedInsts()
 
 template <class Impl>
 void
-DefaultCommit<Impl>::updateComInstStats(const DynInstPtr &inst)
+DefaultCommit<Impl>::updateComInstStats(const O3DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -1583,7 +1588,7 @@ DefaultCommit<Impl>::oldestReady()
 
             if (rob->isHeadReady(tid)) {
 
-                const DynInstPtr &head_inst = rob->readHeadInst(tid);
+                const O3DynInstPtr &head_inst = rob->readHeadInst(tid);
 
                 if (first) {
                     oldest = tid;

@@ -51,6 +51,7 @@
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/inst_res.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
@@ -559,12 +560,9 @@ class CheckerCPU : public BaseCPU, public ExecContext
  * template instantiations of the Checker must be placed at the bottom
  * of checker/cpu.cc.
  */
-template <class Impl>
+template <class DynInstPtr>
 class Checker : public CheckerCPU
 {
-  private:
-    typedef typename Impl::DynInstPtr DynInstPtr;
-
   public:
     Checker(const Params &p)
         : CheckerCPU(p), updateThisCycle(false), unverifiedInst(NULL)

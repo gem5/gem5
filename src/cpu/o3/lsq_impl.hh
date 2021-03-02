@@ -49,6 +49,7 @@
 #include "base/compiler.hh"
 #include "base/logging.hh"
 #include "cpu/o3/cpu.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq.hh"
@@ -58,6 +59,13 @@
 #include "debug/LSQ.hh"
 #include "debug/Writeback.hh"
 #include "params/DerivO3CPU.hh"
+
+template <class Impl>
+ContextID
+LSQ<Impl>::LSQSenderState::contextId()
+{
+    return inst->contextId();
+}
 
 template <class Impl>
 LSQ<Impl>::LSQ(O3CPU *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
@@ -220,7 +228,7 @@ LSQ<Impl>::cachePortBusy(bool is_load)
 
 template<class Impl>
 void
-LSQ<Impl>::insertLoad(const DynInstPtr &load_inst)
+LSQ<Impl>::insertLoad(const O3DynInstPtr &load_inst)
 {
     ThreadID tid = load_inst->threadNumber;
 
@@ -229,7 +237,7 @@ LSQ<Impl>::insertLoad(const DynInstPtr &load_inst)
 
 template<class Impl>
 void
-LSQ<Impl>::insertStore(const DynInstPtr &store_inst)
+LSQ<Impl>::insertStore(const O3DynInstPtr &store_inst)
 {
     ThreadID tid = store_inst->threadNumber;
 
@@ -238,7 +246,7 @@ LSQ<Impl>::insertStore(const DynInstPtr &store_inst)
 
 template<class Impl>
 Fault
-LSQ<Impl>::executeLoad(const DynInstPtr &inst)
+LSQ<Impl>::executeLoad(const O3DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -247,7 +255,7 @@ LSQ<Impl>::executeLoad(const DynInstPtr &inst)
 
 template<class Impl>
 Fault
-LSQ<Impl>::executeStore(const DynInstPtr &inst)
+LSQ<Impl>::executeStore(const O3DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -676,7 +684,7 @@ LSQ<Impl>::dumpInsts() const
 
 template<class Impl>
 Fault
-LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
+LSQ<Impl>::pushRequest(const O3DynInstPtr& inst, bool isLoad, uint8_t *data,
                        unsigned int size, Addr addr, Request::Flags flags,
                        uint64_t *res, AtomicOpFunctorPtr amo_op,
                        const std::vector<bool>& byte_enable)
@@ -950,6 +958,85 @@ LSQ<Impl>::SplitDataRequest::initiateTranslation()
         _inst->setMemAccPredicate(false);
     }
 }
+
+template<class Impl>
+LSQ<Impl>::LSQRequest::LSQRequest(
+        LSQUnit<Impl> *port, const O3DynInstPtr& inst, bool isLoad) :
+    _state(State::NotIssued), _senderState(nullptr),
+    _port(*port), _inst(inst), _data(nullptr),
+    _res(nullptr), _addr(0), _size(0), _flags(0),
+    _numOutstandingPackets(0), _amo_op(nullptr)
+{
+    flags.set(Flag::IsLoad, isLoad);
+    flags.set(Flag::WbStore,
+              _inst->isStoreConditional() || _inst->isAtomic());
+    flags.set(Flag::IsAtomic, _inst->isAtomic());
+    install();
+}
+
+template<class Impl>
+LSQ<Impl>::LSQRequest::LSQRequest(
+        LSQUnit<Impl>* port, const O3DynInstPtr& inst, bool isLoad,
+        const Addr& addr, const uint32_t& size, const Request::Flags& flags_,
+           PacketDataPtr data, uint64_t* res, AtomicOpFunctorPtr amo_op)
+    : _state(State::NotIssued), _senderState(nullptr),
+    numTranslatedFragments(0),
+    numInTranslationFragments(0),
+    _port(*port), _inst(inst), _data(data),
+    _res(res), _addr(addr), _size(size),
+    _flags(flags_),
+    _numOutstandingPackets(0),
+    _amo_op(std::move(amo_op))
+{
+    flags.set(Flag::IsLoad, isLoad);
+    flags.set(Flag::WbStore,
+              _inst->isStoreConditional() || _inst->isAtomic());
+    flags.set(Flag::IsAtomic, _inst->isAtomic());
+    install();
+}
+
+template<class Impl>
+void
+LSQ<Impl>::LSQRequest::install()
+{
+    if (isLoad()) {
+        _port.loadQueue[_inst->lqIdx].setRequest(this);
+    } else {
+        // Store, StoreConditional, and Atomic requests are pushed
+        // to this storeQueue
+        _port.storeQueue[_inst->sqIdx].setRequest(this);
+    }
+}
+
+template<class Impl>
+bool LSQ<Impl>::LSQRequest::squashed() const { return _inst->isSquashed(); }
+
+template<class Impl>
+void
+LSQ<Impl>::LSQRequest::addRequest(Addr addr, unsigned size,
+           const std::vector<bool>& byte_enable)
+{
+    if (isAnyActiveElement(byte_enable.begin(), byte_enable.end())) {
+        auto request = std::make_shared<Request>(
+                addr, size, _flags, _inst->requestorId(),
+                _inst->instAddr(), _inst->contextId(),
+                std::move(_amo_op));
+        request->setByteEnable(byte_enable);
+        _requests.push_back(request);
+    }
+}
+
+template<class Impl>
+LSQ<Impl>::LSQRequest::~LSQRequest()
+{
+    assert(!isAnyOutstandingRequest());
+    _inst->savedReq = nullptr;
+    if (_senderState)
+        delete _senderState;
+
+    for (auto r: _packets)
+        delete r;
+};
 
 template<class Impl>
 void
@@ -1226,7 +1313,7 @@ LSQ<Impl>::DcachePort::recvReqRetry()
 
 template<class Impl>
 LSQ<Impl>::HtmCmdRequest::HtmCmdRequest(LSQUnit<Impl>* port,
-                  const DynInstPtr& inst,
+                  const O3DynInstPtr& inst,
                   const Request::Flags& flags_) :
     SingleDataRequest(port, inst, true, 0x0lu, 8, flags_,
         nullptr, nullptr, nullptr)

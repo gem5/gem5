@@ -46,6 +46,7 @@
 #include "base/statistics.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/rename_map.hh"
@@ -87,7 +88,6 @@ class DefaultCommit
   public:
     // Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::TimeStruct TimeStruct;
     typedef typename Impl::FetchStruct FetchStruct;
     typedef typename Impl::IEWStruct IEWStruct;
@@ -126,10 +126,10 @@ class DefaultCommit
     CommitPolicy commitPolicy;
 
     /** Probe Points. */
-    ProbePointArg<DynInstPtr> *ppCommit;
-    ProbePointArg<DynInstPtr> *ppCommitStall;
+    ProbePointArg<O3DynInstPtr> *ppCommit;
+    ProbePointArg<O3DynInstPtr> *ppCommitStall;
     /** To probe when an instruction is squashed */
-    ProbePointArg<DynInstPtr> *ppSquash;
+    ProbePointArg<O3DynInstPtr> *ppSquash;
 
     /** Mark the thread as processing a trap. */
     void processTrapEvent(ThreadID tid);
@@ -277,7 +277,7 @@ class DefaultCommit
      * @param tid ID of the thread to squash.
      * @param head_inst Instruction that requested the squash.
      */
-    void squashAfter(ThreadID tid, const DynInstPtr &head_inst);
+    void squashAfter(ThreadID tid, const O3DynInstPtr &head_inst);
 
     /** Handles processing an interrupt. */
     void handleInterrupt();
@@ -291,7 +291,7 @@ class DefaultCommit
     /** Tries to commit the head ROB instruction passed in.
      * @param head_inst The instruction to be committed.
      */
-    bool commitHead(const DynInstPtr &head_inst, unsigned inst_num);
+    bool commitHead(const O3DynInstPtr &head_inst, unsigned inst_num);
 
     /** Gets instructions from rename and inserts them into the ROB. */
     void getInsts();
@@ -385,7 +385,7 @@ class DefaultCommit
      * that caused a squash since this needs to be passed to the fetch
      * stage once squashing starts.
      */
-    DynInstPtr squashAfterInst[O3MaxThreads];
+    O3DynInstPtr squashAfterInst[O3MaxThreads];
 
     /** Priority List used for Commit Policy */
     std::list<ThreadID> priority_list;
@@ -472,7 +472,7 @@ class DefaultCommit
     bool avoidQuiesceLiveLock;
 
     /** Updates commit stats based on this instruction. */
-    void updateComInstStats(const DynInstPtr &inst);
+    void updateComInstStats(const O3DynInstPtr &inst);
 
     // HTM
     int htmStarts[O3MaxThreads];

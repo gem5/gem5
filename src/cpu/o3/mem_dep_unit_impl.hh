@@ -172,7 +172,7 @@ MemDepUnit<MemDepPred, Impl>::setIQ(InstructionQueue<Impl> *iq_ptr)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::insertBarrierSN(const DynInstPtr &barr_inst)
+MemDepUnit<MemDepPred, Impl>::insertBarrierSN(const O3DynInstPtr &barr_inst)
 {
     InstSeqNum barr_sn = barr_inst->seqNum;
 
@@ -205,7 +205,7 @@ MemDepUnit<MemDepPred, Impl>::insertBarrierSN(const DynInstPtr &barr_inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::insert(const DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::insert(const O3DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -316,7 +316,7 @@ MemDepUnit<MemDepPred, Impl>::insert(const DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::insertNonSpec(const DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::insertNonSpec(const O3DynInstPtr &inst)
 {
     insertBarrier(inst);
 
@@ -338,7 +338,7 @@ MemDepUnit<MemDepPred, Impl>::insertNonSpec(const DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::insertBarrier(const DynInstPtr &barr_inst)
+MemDepUnit<MemDepPred, Impl>::insertBarrier(const O3DynInstPtr &barr_inst)
 {
     ThreadID tid = barr_inst->threadNumber;
 
@@ -361,7 +361,7 @@ MemDepUnit<MemDepPred, Impl>::insertBarrier(const DynInstPtr &barr_inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::regsReady(const DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::regsReady(const O3DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Marking registers as ready for "
             "instruction PC %s [sn:%lli].\n",
@@ -384,7 +384,7 @@ MemDepUnit<MemDepPred, Impl>::regsReady(const DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::nonSpecInstReady(const DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::nonSpecInstReady(const O3DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Marking non speculative "
             "instruction PC %s as ready [sn:%lli].\n",
@@ -397,7 +397,7 @@ MemDepUnit<MemDepPred, Impl>::nonSpecInstReady(const DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::reschedule(const DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::reschedule(const O3DynInstPtr &inst)
 {
     instsToReplay.push_back(inst);
 }
@@ -406,7 +406,7 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::replay()
 {
-    DynInstPtr temp_inst;
+    O3DynInstPtr temp_inst;
 
     // For now this replay function replays all waiting memory ops.
     while (!instsToReplay.empty()) {
@@ -425,7 +425,7 @@ MemDepUnit<MemDepPred, Impl>::replay()
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::completed(const DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::completed(const O3DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Completed mem instruction PC %s [sn:%lli].\n",
             inst->pcState(), inst->seqNum);
@@ -449,7 +449,7 @@ MemDepUnit<MemDepPred, Impl>::completed(const DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::completeInst(const DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::completeInst(const O3DynInstPtr &inst)
 {
     wakeDependents(inst);
     completed(inst);
@@ -481,7 +481,7 @@ MemDepUnit<MemDepPred, Impl>::completeInst(const DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::wakeDependents(const DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::wakeDependents(const O3DynInstPtr &inst)
 {
     // Only stores, atomics and barriers have dependents.
     if (!inst->isStore() && !inst->isAtomic() && !inst->isReadBarrier() &&
@@ -570,8 +570,8 @@ MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num,
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::violation(const DynInstPtr &store_inst,
-                                        const DynInstPtr &violating_load)
+MemDepUnit<MemDepPred, Impl>::violation(const O3DynInstPtr &store_inst,
+                                        const O3DynInstPtr &violating_load)
 {
     DPRINTF(MemDepUnit, "Passing violating PCs to store sets,"
             " load: %#x, store: %#x\n", violating_load->instAddr(),
@@ -582,7 +582,7 @@ MemDepUnit<MemDepPred, Impl>::violation(const DynInstPtr &store_inst,
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::issue(const DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::issue(const O3DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Issuing instruction PC %#x [sn:%lli].\n",
             inst->instAddr(), inst->seqNum);
@@ -592,7 +592,7 @@ MemDepUnit<MemDepPred, Impl>::issue(const DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 inline typename MemDepUnit<MemDepPred,Impl>::MemDepEntryPtr &
-MemDepUnit<MemDepPred, Impl>::findInHash(const DynInstConstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::findInHash(const O3DynInstConstPtr &inst)
 {
     MemDepHashIt hash_it = memDepHash.find(inst->seqNum);
 

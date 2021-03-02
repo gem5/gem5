@@ -44,6 +44,7 @@
 #include <queue>
 
 #include "base/statistics.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
 
@@ -62,7 +63,6 @@ class DefaultDecode
   private:
     // Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::FetchStruct FetchStruct;
     typedef typename Impl::DecodeStruct DecodeStruct;
     typedef typename Impl::TimeStruct TimeStruct;
@@ -193,7 +193,7 @@ class DefaultDecode
     /** Squashes if there is a PC-relative branch that was predicted
      * incorrectly. Sends squash information back to fetch.
      */
-    void squash(const DynInstPtr &inst, ThreadID tid);
+    void squash(const O3DynInstPtr &inst, ThreadID tid);
 
   public:
     /** Squashes due to commit signalling a squash. Changes status to
@@ -235,10 +235,10 @@ class DefaultDecode
     typename TimeBuffer<FetchStruct>::wire fromFetch;
 
     /** Queue of all instructions coming from fetch this cycle. */
-    std::queue<DynInstPtr> insts[O3MaxThreads];
+    std::queue<O3DynInstPtr> insts[O3MaxThreads];
 
     /** Skid buffer between fetch and decode. */
-    std::queue<DynInstPtr> skidBuffer[O3MaxThreads];
+    std::queue<O3DynInstPtr> skidBuffer[O3MaxThreads];
 
     /** Variable that tracks if decode has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.
@@ -285,7 +285,7 @@ class DefaultDecode
     Addr bdelayDoneSeqNum[O3MaxThreads];
 
     /** Instruction used for squashing branch (used for MIPS)*/
-    DynInstPtr squashInst[O3MaxThreads];
+    O3DynInstPtr squashInst[O3MaxThreads];
 
     /** Tells when their is a pending delay slot inst. to send
      *  to rename. If there is, then wait squash after the next

@@ -32,8 +32,6 @@
 #include "cpu/o3/comm.hh"
 
 // Forward declarations.
-class BaseO3DynInst;
-
 template <class Impl>
 class FullO3CPU;
 
@@ -65,15 +63,6 @@ struct O3CPUImpl
     /** The struct for all backwards communication. */
     typedef TimeBufStruct<O3CPUImpl> TimeStruct;
 
-
-    /** The DynInst type to be used. */
-    typedef BaseO3DynInst DynInst;
-
-    /** The refcounted DynInst pointer to be used.  In most cases this is
-     *  what should be used, and not DynInst *.
-     */
-    typedef RefCountingPtr<DynInst> DynInstPtr;
-    typedef RefCountingPtr<const DynInst> DynInstConstPtr;
 
     /** The O3CPU type to be used. */
     typedef FullO3CPU<O3CPUImpl> O3CPU;

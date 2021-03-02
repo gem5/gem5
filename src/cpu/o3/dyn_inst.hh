@@ -57,6 +57,7 @@
 #include "cpu/inst_res.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/cpu.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "cpu/op_class.hh"
@@ -66,10 +67,6 @@
 #include "debug/HtmCpu.hh"
 
 class Packet;
-
-class BaseO3DynInst;
-
-using O3DynInstPtr = RefCountingPtr<BaseO3DynInst>;
 
 class BaseO3DynInst : public ExecContext, public RefCounted
 {

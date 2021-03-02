@@ -177,7 +177,8 @@ template <class Impl>
 void
 DefaultRename<Impl>::regProbePoints()
 {
-    ppRename = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Rename");
+    ppRename = new ProbePointArg<O3DynInstPtr>(
+            cpu->getProbeManager(), "Rename");
     ppSquashInRename = new ProbePointArg<SeqNumRegPair>(cpu->getProbeManager(),
                                                         "SquashInRename");
 }
@@ -612,11 +613,12 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
 
         assert(!insts_to_rename.empty());
 
-        DynInstPtr inst = insts_to_rename.front();
+        O3DynInstPtr inst = insts_to_rename.front();
 
-        //For all kind of instructions, check ROB and IQ first
-        //For load instruction, check LQ size and take into account the inflight loads
-        //For store instruction, check SQ size and take into account the inflight stores
+        //For all kind of instructions, check ROB and IQ first For load
+        //instruction, check LQ size and take into account the inflight loads
+        //For store instruction, check SQ size and take into account the
+        //inflight stores
 
         if (inst->isLoad()) {
             if (calcFreeLQEntries(tid) <= 0) {
@@ -774,7 +776,7 @@ template<class Impl>
 void
 DefaultRename<Impl>::skidInsert(ThreadID tid)
 {
-    DynInstPtr inst = NULL;
+    O3DynInstPtr inst = NULL;
 
     while (!insts[tid].empty()) {
         inst = insts[tid].front();
@@ -811,7 +813,7 @@ DefaultRename<Impl>::sortInsts()
 {
     int insts_from_decode = fromDecode->size;
     for (int i = 0; i < insts_from_decode; ++i) {
-        const DynInstPtr &inst = fromDecode->insts[i];
+        const O3DynInstPtr &inst = fromDecode->insts[i];
         insts[inst->threadNumber].push_back(inst);
 #if TRACING_ON
         if (Debug::O3PipeView) {
@@ -1035,7 +1037,7 @@ DefaultRename<Impl>::removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid)
 
 template <class Impl>
 inline void
-DefaultRename<Impl>::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
+DefaultRename<Impl>::renameSrcRegs(const O3DynInstPtr &inst, ThreadID tid)
 {
     ThreadContext *tc = inst->tcBase();
     UnifiedRenameMap *map = renameMap[tid];
@@ -1102,7 +1104,7 @@ DefaultRename<Impl>::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
 
 template <class Impl>
 inline void
-DefaultRename<Impl>::renameDestRegs(const DynInstPtr &inst, ThreadID tid)
+DefaultRename<Impl>::renameDestRegs(const O3DynInstPtr &inst, ThreadID tid)
 {
     ThreadContext *tc = inst->tcBase();
     UnifiedRenameMap *map = renameMap[tid];
@@ -1369,7 +1371,7 @@ DefaultRename<Impl>::checkSignalsAndUpdate(ThreadID tid)
         DPRINTF(Rename, "[tid:%i] Done with serialize stall, switching to "
                 "unblocking.\n", tid);
 
-        DynInstPtr serial_inst = serializeInst[tid];
+        O3DynInstPtr serial_inst = serializeInst[tid];
 
         renameStatus[tid] = Unblocking;
 

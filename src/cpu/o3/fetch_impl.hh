@@ -150,7 +150,7 @@ template <class Impl>
 void
 DefaultFetch<Impl>::regProbePoints()
 {
-    ppFetch = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Fetch");
+    ppFetch = new ProbePointArg<O3DynInstPtr>(cpu->getProbeManager(), "Fetch");
     ppFetchRequestSent = new ProbePointArg<RequestPtr>(cpu->getProbeManager(),
                                                        "FetchRequest");
 
@@ -526,7 +526,7 @@ DefaultFetch<Impl>::deactivateThread(ThreadID tid)
 template <class Impl>
 bool
 DefaultFetch<Impl>::lookupAndUpdateNextPC(
-        const DynInstPtr &inst, TheISA::PCState &nextPC)
+        const O3DynInstPtr &inst, TheISA::PCState &nextPC)
 {
     // Do branch prediction check here.
     // A bit of a misnomer...next_PC is actually the current PC until
@@ -706,7 +706,7 @@ DefaultFetch<Impl>::finishTranslation(const Fault &fault,
 
         DPRINTF(Fetch, "[tid:%i] Translation faulted, building noop.\n", tid);
         // We will use a nop in ordier to carry the fault.
-        DynInstPtr instruction = buildInst(tid, nopStaticInstPtr, nullptr,
+        O3DynInstPtr instruction = buildInst(tid, nopStaticInstPtr, nullptr,
                 fetchPC, fetchPC, false);
         instruction->setNotAnInst();
 
@@ -729,7 +729,7 @@ DefaultFetch<Impl>::finishTranslation(const Fault &fault,
 template <class Impl>
 inline void
 DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC,
-                             const DynInstPtr squashInst, ThreadID tid)
+                             const O3DynInstPtr squashInst, ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%i] Squashing, setting PC to: %s.\n",
             tid, newPC);
@@ -781,7 +781,7 @@ DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC,
 template<class Impl>
 void
 DefaultFetch<Impl>::squashFromDecode(const TheISA::PCState &newPC,
-                                     const DynInstPtr squashInst,
+                                     const O3DynInstPtr squashInst,
                                      const InstSeqNum seq_num, ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%i] Squashing from decode.\n", tid);
@@ -851,7 +851,7 @@ DefaultFetch<Impl>::updateFetchStatus()
 template <class Impl>
 void
 DefaultFetch<Impl>::squash(const TheISA::PCState &newPC,
-                           const InstSeqNum seq_num, DynInstPtr squashInst,
+                           const InstSeqNum seq_num, O3DynInstPtr squashInst,
                            ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%i] Squash from commit.\n", tid);
@@ -1070,7 +1070,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
 }
 
 template<class Impl>
-typename Impl::DynInstPtr
+O3DynInstPtr
 DefaultFetch<Impl>::buildInst(ThreadID tid, StaticInstPtr staticInst,
                               StaticInstPtr curMacroop, TheISA::PCState thisPC,
                               TheISA::PCState nextPC, bool trace)
@@ -1079,8 +1079,8 @@ DefaultFetch<Impl>::buildInst(ThreadID tid, StaticInstPtr staticInst,
     InstSeqNum seq = cpu->getAndIncrementInstSeq();
 
     // Create a new DynInst from the instruction fetched.
-    DynInstPtr instruction =
-        new DynInst(staticInst, curMacroop, thisPC, nextPC, seq, cpu);
+    O3DynInstPtr instruction =
+        new BaseO3DynInst(staticInst, curMacroop, thisPC, nextPC, seq, cpu);
     instruction->setTid(tid);
 
     instruction->setThreadState(cpu->thread[tid]);
@@ -1297,7 +1297,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 newMacro |= staticInst->isLastMicroop();
             }
 
-            DynInstPtr instruction =
+            O3DynInstPtr instruction =
                 buildInst(tid, staticInst, curMacroop,
                           thisPC, nextPC, true);
 

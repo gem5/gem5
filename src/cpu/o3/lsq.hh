@@ -53,6 +53,8 @@
 #include "base/flags.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
+#include "cpu/o3/impl.hh"
 #include "cpu/utils.hh"
 #include "enums/SMTQueuePolicy.hh"
 #include "mem/port.hh"
@@ -74,7 +76,6 @@ class LSQ
 {
   public:
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::DynInstPtr DynInstPtr;
 
     class LSQRequest;
     /** Derived class to hold any sender state the LSQ needs. */
@@ -93,7 +94,7 @@ class LSQ
       public:
 
         /** Instruction which initiated the access to memory. */
-        DynInstPtr inst;
+        O3DynInstPtr inst;
         /** The main packet from a split load, used during writeback. */
         PacketPtr mainPkt;
         /** A second packet from a split store that needs sending. */
@@ -113,7 +114,7 @@ class LSQ
          * case the SenderState knows.
          */
         bool deleted;
-        ContextID contextId() { return inst->contextId(); }
+        ContextID contextId();
 
         /** Completes a packet and returns whether the access is finished. */
         inline bool isComplete() { return outstanding == 0; }
@@ -293,7 +294,7 @@ class LSQ
 
       public:
         LSQUnit<Impl>& _port;
-        const DynInstPtr _inst;
+        const O3DynInstPtr _inst;
         uint32_t _taskId;
         PacketDataPtr _data;
         std::vector<PacketPtr> _packets;
@@ -308,38 +309,11 @@ class LSQ
         AtomicOpFunctorPtr _amo_op;
       protected:
         LSQUnit<Impl>* lsqUnit() { return &_port; }
-        LSQRequest(LSQUnit<Impl> *port, const DynInstPtr& inst, bool isLoad) :
-            _state(State::NotIssued), _senderState(nullptr),
-            _port(*port), _inst(inst), _data(nullptr),
-            _res(nullptr), _addr(0), _size(0), _flags(0),
-            _numOutstandingPackets(0), _amo_op(nullptr)
-        {
-            flags.set(Flag::IsLoad, isLoad);
-            flags.set(Flag::WbStore,
-                      _inst->isStoreConditional() || _inst->isAtomic());
-            flags.set(Flag::IsAtomic, _inst->isAtomic());
-            install();
-        }
-        LSQRequest(LSQUnit<Impl>* port, const DynInstPtr& inst, bool isLoad,
-                   const Addr& addr, const uint32_t& size,
-                   const Request::Flags& flags_,
-                   PacketDataPtr data = nullptr, uint64_t* res = nullptr,
-                   AtomicOpFunctorPtr amo_op = nullptr)
-            : _state(State::NotIssued), _senderState(nullptr),
-            numTranslatedFragments(0),
-            numInTranslationFragments(0),
-            _port(*port), _inst(inst), _data(data),
-            _res(res), _addr(addr), _size(size),
-            _flags(flags_),
-            _numOutstandingPackets(0),
-            _amo_op(std::move(amo_op))
-        {
-            flags.set(Flag::IsLoad, isLoad);
-            flags.set(Flag::WbStore,
-                      _inst->isStoreConditional() || _inst->isAtomic());
-            flags.set(Flag::IsAtomic, _inst->isAtomic());
-            install();
-        }
+        LSQRequest(LSQUnit<Impl>* port, const O3DynInstPtr& inst, bool isLoad);
+        LSQRequest(LSQUnit<Impl>* port, const O3DynInstPtr& inst, bool isLoad,
+                const Addr& addr, const uint32_t& size,
+                const Request::Flags& flags_, PacketDataPtr data=nullptr,
+                uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr);
 
         bool
         isLoad() const
@@ -354,21 +328,9 @@ class LSQ
         }
 
         /** Install the request in the LQ/SQ. */
-        void install()
-        {
-            if (isLoad()) {
-                _port.loadQueue[_inst->lqIdx].setRequest(this);
-            } else {
-                // Store, StoreConditional, and Atomic requests are pushed
-                // to this storeQueue
-                _port.storeQueue[_inst->sqIdx].setRequest(this);
-            }
-        }
-        virtual bool
-        squashed() const override
-        {
-            return _inst->isSquashed();
-        }
+        void install();
+
+        bool squashed() const override;
 
         /**
          * Test if the LSQRequest has been released, i.e. self-owned.
@@ -391,7 +353,8 @@ class LSQ
          * but there is any in-flight translation request to the TLB or access
          * request to the memory.
          */
-        void release(Flag reason)
+        void
+        release(Flag reason)
         {
             assert(reason == Flag::LSQEntryFreed || reason == Flag::Discarded);
             if (!isAnyOutstandingRequest()) {
@@ -410,35 +373,14 @@ class LSQ
          * The request is only added if the mask is empty or if there is at
          * least an active element in it.
          */
-        void
-        addRequest(Addr addr, unsigned size,
-                   const std::vector<bool>& byte_enable)
-        {
-            if (isAnyActiveElement(byte_enable.begin(), byte_enable.end())) {
-                auto request = std::make_shared<Request>(
-                        addr, size, _flags, _inst->requestorId(),
-                        _inst->instAddr(), _inst->contextId(),
-                        std::move(_amo_op));
-                request->setByteEnable(byte_enable);
-                _requests.push_back(request);
-            }
-        }
+        void addRequest(Addr addr, unsigned size,
+                const std::vector<bool>& byte_enable);
 
         /** Destructor.
          * The LSQRequest owns the request. If the packet has already been
          * sent, the sender state will be deleted upon receiving the reply.
          */
-        virtual ~LSQRequest()
-        {
-            assert(!isAnyOutstandingRequest());
-            _inst->savedReq = nullptr;
-            if (_senderState)
-                delete _senderState;
-
-            for (auto r: _packets)
-                delete r;
-        };
-
+        virtual ~LSQRequest();
 
       public:
         /** Convenience getters/setters. */
@@ -450,7 +392,7 @@ class LSQ
             request()->setContext(context_id);
         }
 
-        const DynInstPtr&
+        const O3DynInstPtr&
         instruction()
         {
             return _inst;
@@ -728,7 +670,7 @@ class LSQ
         using LSQRequest::_numOutstandingPackets;
         using LSQRequest::_amo_op;
       public:
-        SingleDataRequest(LSQUnit<Impl>* port, const DynInstPtr& inst,
+        SingleDataRequest(LSQUnit<Impl>* port, const O3DynInstPtr& inst,
                 bool isLoad, const Addr& addr, const uint32_t& size,
                 const Request::Flags& flags_, PacketDataPtr data=nullptr,
                 uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr) :
@@ -766,7 +708,7 @@ class LSQ
       using LSQRequest::flags;
       using LSQRequest::setState;
     public:
-      HtmCmdRequest(LSQUnit<Impl>* port, const DynInstPtr& inst,
+      HtmCmdRequest(LSQUnit<Impl>* port, const O3DynInstPtr& inst,
               const Request::Flags& flags_);
       inline virtual ~HtmCmdRequest() {}
       virtual void initiateTranslation();
@@ -813,7 +755,7 @@ class LSQ
         PacketPtr _mainPacket;
 
       public:
-        SplitDataRequest(LSQUnit<Impl>* port, const DynInstPtr& inst,
+        SplitDataRequest(LSQUnit<Impl>* port, const O3DynInstPtr& inst,
                 bool isLoad, const Addr& addr, const uint32_t& size,
                 const Request::Flags & flags_, PacketDataPtr data=nullptr,
                 uint64_t* res=nullptr) :
@@ -876,15 +818,15 @@ class LSQ
     void tick();
 
     /** Inserts a load into the LSQ. */
-    void insertLoad(const DynInstPtr &load_inst);
+    void insertLoad(const O3DynInstPtr &load_inst);
     /** Inserts a store into the LSQ. */
-    void insertStore(const DynInstPtr &store_inst);
+    void insertStore(const O3DynInstPtr &store_inst);
 
     /** Executes a load. */
-    Fault executeLoad(const DynInstPtr &inst);
+    Fault executeLoad(const O3DynInstPtr &inst);
 
     /** Executes a store. */
-    Fault executeStore(const DynInstPtr &inst);
+    Fault executeStore(const O3DynInstPtr &inst);
 
     /**
      * Commits loads up until the given sequence number for a specific thread.
@@ -924,7 +866,7 @@ class LSQ
     bool violation(ThreadID tid) { return thread.at(tid).violation(); }
 
     /** Gets the instruction that caused the memory ordering violation. */
-    DynInstPtr
+    O3DynInstPtr
     getMemDepViolator(ThreadID tid)
     {
         return thread.at(tid).getMemDepViolator();
@@ -1103,7 +1045,7 @@ class LSQ
 
     void recvTimingSnoopReq(PacketPtr pkt);
 
-    Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
+    Fault pushRequest(const O3DynInstPtr& inst, bool isLoad, uint8_t *data,
                       unsigned int size, Addr addr, Request::Flags flags,
                       uint64_t *res, AtomicOpFunctorPtr amo_op,
                       const std::vector<bool>& byte_enable);

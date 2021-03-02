@@ -47,6 +47,7 @@
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
 #include "sim/faults.hh"
 
@@ -54,11 +55,9 @@
 template<class Impl>
 struct DefaultFetchDefaultDecode
 {
-    typedef typename Impl::DynInstPtr DynInstPtr;
-
     int size;
 
-    DynInstPtr insts[O3MaxWidth];
+    O3DynInstPtr insts[O3MaxWidth];
     Fault fetchFault;
     InstSeqNum fetchFaultSN;
     bool clearFetchFault;
@@ -68,34 +67,28 @@ struct DefaultFetchDefaultDecode
 template<class Impl>
 struct DefaultDecodeDefaultRename
 {
-    typedef typename Impl::DynInstPtr DynInstPtr;
-
     int size;
 
-    DynInstPtr insts[O3MaxWidth];
+    O3DynInstPtr insts[O3MaxWidth];
 };
 
 /** Struct that defines the information passed from rename to IEW. */
 template<class Impl>
 struct DefaultRenameDefaultIEW
 {
-    typedef typename Impl::DynInstPtr DynInstPtr;
-
     int size;
 
-    DynInstPtr insts[O3MaxWidth];
+    O3DynInstPtr insts[O3MaxWidth];
 };
 
 /** Struct that defines the information passed from IEW to commit. */
 template<class Impl>
 struct DefaultIEWDefaultCommit
 {
-    typedef typename Impl::DynInstPtr DynInstPtr;
-
     int size;
 
-    DynInstPtr insts[O3MaxWidth];
-    DynInstPtr mispredictInst[O3MaxThreads];
+    O3DynInstPtr insts[O3MaxWidth];
+    O3DynInstPtr mispredictInst[O3MaxThreads];
     Addr mispredPC[O3MaxThreads];
     InstSeqNum squashedSeqNum[O3MaxThreads];
     TheISA::PCState pc[O3MaxThreads];
@@ -109,23 +102,20 @@ struct DefaultIEWDefaultCommit
 template<class Impl>
 struct IssueStruct
 {
-    typedef typename Impl::DynInstPtr DynInstPtr;
-
     int size;
 
-    DynInstPtr insts[O3MaxWidth];
+    O3DynInstPtr insts[O3MaxWidth];
 };
 
 /** Struct that defines all backwards communication. */
 template<class Impl>
 struct TimeBufStruct
 {
-    typedef typename Impl::DynInstPtr DynInstPtr;
-    struct decodeComm
+    struct DecodeComm
     {
         TheISA::PCState nextPC;
-        DynInstPtr mispredictInst;
-        DynInstPtr squashInst;
+        O3DynInstPtr mispredictInst;
+        O3DynInstPtr squashInst;
         InstSeqNum doneSeqNum;
         Addr mispredPC;
         uint64_t branchAddr;
@@ -136,15 +126,13 @@ struct TimeBufStruct
         bool branchTaken;
     };
 
-    decodeComm decodeInfo[O3MaxThreads];
+    DecodeComm decodeInfo[O3MaxThreads];
 
-    struct renameComm
-    {
-    };
+    struct RenameComm {};
 
-    renameComm renameInfo[O3MaxThreads];
+    RenameComm renameInfo[O3MaxThreads];
 
-    struct iewComm
+    struct IewComm
     {
         // Also eventually include skid buffer space.
         unsigned freeIQEntries;
@@ -161,9 +149,9 @@ struct TimeBufStruct
         bool usedLSQ;
     };
 
-    iewComm iewInfo[O3MaxThreads];
+    IewComm iewInfo[O3MaxThreads];
 
-    struct commitComm
+    struct CommitComm
     {
         /////////////////////////////////////////////////////////////////////
         // This code has been re-structured for better packing of variables
@@ -184,14 +172,14 @@ struct TimeBufStruct
 
         /// Provide fetch the instruction that mispredicted, if this
         /// pointer is not-null a misprediction occured
-        DynInstPtr mispredictInst;  // *F
+        O3DynInstPtr mispredictInst;  // *F
 
         /// Instruction that caused the a non-mispredict squash
-        DynInstPtr squashInst; // *F
+        O3DynInstPtr squashInst; // *F
 
         /// Hack for now to send back a strictly ordered access to the
         /// IEW stage.
-        DynInstPtr strictlyOrderedLoad; // *I
+        O3DynInstPtr strictlyOrderedLoad; // *I
 
         /// Communication specifically to the IQ to tell the IQ that it can
         /// schedule a non-speculative instruction.
@@ -227,7 +215,7 @@ struct TimeBufStruct
 
     };
 
-    commitComm commitInfo[O3MaxThreads];
+    CommitComm commitInfo[O3MaxThreads];
 
     bool decodeBlock[O3MaxThreads];
     bool decodeUnblock[O3MaxThreads];

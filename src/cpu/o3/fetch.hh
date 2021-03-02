@@ -44,6 +44,7 @@
 #include "arch/decoder.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/pred/bpred_unit.hh"
@@ -72,8 +73,6 @@ class DefaultFetch
 {
   public:
     /** Typedefs from Impl. */
-    typedef typename Impl::DynInst DynInst;
-    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::FetchStruct FetchStruct;
     typedef typename Impl::TimeStruct TimeStruct;
@@ -207,7 +206,7 @@ class DefaultFetch
     std::list<ThreadID> priorityList;
 
     /** Probe points. */
-    ProbePointArg<DynInstPtr> *ppFetch;
+    ProbePointArg<O3DynInstPtr> *ppFetch;
     /** To probe when a fetch request is successfully sent. */
     ProbePointArg<RequestPtr> *ppFetchRequestSent;
 
@@ -294,7 +293,7 @@ class DefaultFetch
      * @param next_NPC Used for ISAs which use delay slots.
      * @return Whether or not a branch was predicted as taken.
      */
-    bool lookupAndUpdateNextPC(const DynInstPtr &inst, TheISA::PCState &pc);
+    bool lookupAndUpdateNextPC(const O3DynInstPtr &inst, TheISA::PCState &pc);
 
     /**
      * Fetches the cache line that contains the fetch PC.  Returns any
@@ -321,14 +320,14 @@ class DefaultFetch
 
     /** Squashes a specific thread and resets the PC. */
     inline void doSquash(const TheISA::PCState &newPC,
-                         const DynInstPtr squashInst, ThreadID tid);
+                         const O3DynInstPtr squashInst, ThreadID tid);
 
     /** Squashes a specific thread and resets the PC. Also tells the CPU to
      * remove any instructions between fetch and decode
      *  that should be sqaushed.
      */
     void squashFromDecode(const TheISA::PCState &newPC,
-                          const DynInstPtr squashInst,
+                          const O3DynInstPtr squashInst,
                           const InstSeqNum seq_num, ThreadID tid);
 
     /** Checks if a thread is stalled. */
@@ -344,7 +343,7 @@ class DefaultFetch
      * squash should be the commit stage.
      */
     void squash(const TheISA::PCState &newPC, const InstSeqNum seq_num,
-                DynInstPtr squashInst, ThreadID tid);
+                O3DynInstPtr squashInst, ThreadID tid);
 
     /** Ticks the fetch stage, processing all inputs signals and fetching
      * as many instructions as possible.
@@ -375,9 +374,9 @@ class DefaultFetch
     RequestPort &getInstPort() { return icachePort; }
 
   private:
-    DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,
-                         StaticInstPtr curMacroop, TheISA::PCState thisPC,
-                         TheISA::PCState nextPC, bool trace);
+    O3DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,
+                           StaticInstPtr curMacroop, TheISA::PCState thisPC,
+                           TheISA::PCState nextPC, bool trace);
 
     /** Returns the appropriate thread to fetch, given the fetch policy. */
     ThreadID getFetchingThread();
@@ -505,7 +504,7 @@ class DefaultFetch
     unsigned fetchQueueSize;
 
     /** Queue of fetched instructions. Per-thread to prevent HoL blocking. */
-    std::deque<DynInstPtr> fetchQueue[O3MaxThreads];
+    std::deque<O3DynInstPtr> fetchQueue[O3MaxThreads];
 
     /** Whether or not the fetch buffer data is valid. */
     bool fetchBufferValid[O3MaxThreads];

@@ -46,6 +46,7 @@
 
 #include "base/statistics.hh"
 #include "cpu/o3/comm.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq.hh"
@@ -81,7 +82,6 @@ class DefaultIEW
 {
   private:
     //Typedefs from Impl
-    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::TimeStruct TimeStruct;
     typedef typename Impl::IEWStruct IEWStruct;
@@ -120,12 +120,12 @@ class DefaultIEW
     StageStatus wbStatus;
 
     /** Probe points. */
-    ProbePointArg<DynInstPtr> *ppMispredict;
-    ProbePointArg<DynInstPtr> *ppDispatch;
+    ProbePointArg<O3DynInstPtr> *ppMispredict;
+    ProbePointArg<O3DynInstPtr> *ppDispatch;
     /** To probe when instruction execution begins. */
-    ProbePointArg<DynInstPtr> *ppExecute;
+    ProbePointArg<O3DynInstPtr> *ppExecute;
     /** To probe when instruction execution is complete. */
-    ProbePointArg<DynInstPtr> *ppToCommit;
+    ProbePointArg<O3DynInstPtr> *ppToCommit;
 
   public:
     /** Constructs a DefaultIEW with the given parameters. */
@@ -171,24 +171,24 @@ class DefaultIEW
     void squash(ThreadID tid);
 
     /** Wakes all dependents of a completed instruction. */
-    void wakeDependents(const DynInstPtr &inst);
+    void wakeDependents(const O3DynInstPtr &inst);
 
     /** Tells memory dependence unit that a memory instruction needs to be
      * rescheduled. It will re-execute once replayMemInst() is called.
      */
-    void rescheduleMemInst(const DynInstPtr &inst);
+    void rescheduleMemInst(const O3DynInstPtr &inst);
 
     /** Re-executes all rescheduled memory instructions. */
-    void replayMemInst(const DynInstPtr &inst);
+    void replayMemInst(const O3DynInstPtr &inst);
 
     /** Moves memory instruction onto the list of cache blocked instructions */
-    void blockMemInst(const DynInstPtr &inst);
+    void blockMemInst(const O3DynInstPtr &inst);
 
     /** Notifies that the cache has become unblocked */
     void cacheUnblocked();
 
     /** Sends an instruction to commit through the time buffer. */
-    void instToCommit(const DynInstPtr &inst);
+    void instToCommit(const O3DynInstPtr &inst);
 
     /** Inserts unused instructions of a thread into the skid buffer. */
     void skidInsert(ThreadID tid);
@@ -226,7 +226,7 @@ class DefaultIEW
     bool hasStoresToWB(ThreadID tid) { return ldstQueue.hasStoresToWB(tid); }
 
     /** Check misprediction  */
-    void checkMisprediction(const DynInstPtr &inst);
+    void checkMisprediction(const O3DynInstPtr &inst);
 
     // hardware transactional memory
     // For debugging purposes, it is useful to keep track of the most recent
@@ -242,12 +242,12 @@ class DefaultIEW
     /** Sends commit proper information for a squash due to a branch
      * mispredict.
      */
-    void squashDueToBranch(const DynInstPtr &inst, ThreadID tid);
+    void squashDueToBranch(const O3DynInstPtr &inst, ThreadID tid);
 
     /** Sends commit proper information for a squash due to a memory order
      * violation.
      */
-    void squashDueToMemOrder(const DynInstPtr &inst, ThreadID tid);
+    void squashDueToMemOrder(const O3DynInstPtr &inst, ThreadID tid);
 
     /** Sets Dispatch to blocked, and signals back to other stages to block. */
     void block(ThreadID tid);
@@ -301,7 +301,7 @@ class DefaultIEW
 
   private:
     /** Updates execution stats based on the instruction. */
-    void updateExeInstStats(const DynInstPtr &inst);
+    void updateExeInstStats(const O3DynInstPtr &inst);
 
     /** Pointer to main time buffer used for backwards communication. */
     TimeBuffer<TimeStruct> *timeBuffer;
@@ -337,10 +337,10 @@ class DefaultIEW
     typename TimeBuffer<IEWStruct>::wire toCommit;
 
     /** Queue of all instructions coming from rename this cycle. */
-    std::queue<DynInstPtr> insts[O3MaxThreads];
+    std::queue<O3DynInstPtr> insts[O3MaxThreads];
 
     /** Skid buffer between rename and IEW. */
-    std::queue<DynInstPtr> skidBuffer[O3MaxThreads];
+    std::queue<O3DynInstPtr> skidBuffer[O3MaxThreads];
 
     /** Scoreboard pointer. */
     Scoreboard* scoreboard;

@@ -200,7 +200,7 @@ ROB<Impl>::countInsts(ThreadID tid)
 
 template <class Impl>
 void
-ROB<Impl>::insertInst(const DynInstPtr &inst)
+ROB<Impl>::insertInst(const O3DynInstPtr &inst)
 {
     assert(inst);
 
@@ -246,7 +246,7 @@ ROB<Impl>::retireHead(ThreadID tid)
     // Get the head ROB instruction by copying it and remove it from the list
     InstIt head_it = instList[tid].begin();
 
-    DynInstPtr head_inst = std::move(*head_it);
+    O3DynInstPtr head_inst = std::move(*head_it);
     instList[tid].erase(head_it);
 
     assert(head_inst->readyToCommit());
@@ -428,7 +428,7 @@ ROB<Impl>::updateHead()
 
         InstIt head_thread = instList[tid].begin();
 
-        DynInstPtr head_inst = (*head_thread);
+        O3DynInstPtr head_inst = (*head_thread);
 
         assert(head_inst != 0);
 
@@ -513,7 +513,7 @@ ROB<Impl>::squash(InstSeqNum squash_num, ThreadID tid)
 }
 
 template <class Impl>
-const typename Impl::DynInstPtr&
+const O3DynInstPtr&
 ROB<Impl>::readHeadInst(ThreadID tid)
 {
     if (threadEntries[tid] != 0) {
@@ -528,7 +528,7 @@ ROB<Impl>::readHeadInst(ThreadID tid)
 }
 
 template <class Impl>
-typename Impl::DynInstPtr
+O3DynInstPtr
 ROB<Impl>::readTailInst(ThreadID tid)
 {
     InstIt tail_thread = instList[tid].end();
@@ -546,7 +546,7 @@ ROB<Impl>::ROBStats::ROBStats(Stats::Group *parent)
 }
 
 template <class Impl>
-typename Impl::DynInstPtr
+O3DynInstPtr
 ROB<Impl>::findInst(ThreadID tid, InstSeqNum squash_inst)
 {
     for (InstIt it = instList[tid].begin(); it != instList[tid].end(); it++) {

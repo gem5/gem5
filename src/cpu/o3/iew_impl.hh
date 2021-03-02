@@ -50,6 +50,7 @@
 
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
@@ -122,20 +123,22 @@ template <class Impl>
 void
 DefaultIEW<Impl>::regProbePoints()
 {
-    ppDispatch = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Dispatch");
-    ppMispredict = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Mispredict");
+    ppDispatch = new ProbePointArg<O3DynInstPtr>(
+            cpu->getProbeManager(), "Dispatch");
+    ppMispredict = new ProbePointArg<O3DynInstPtr>(
+            cpu->getProbeManager(), "Mispredict");
     /**
      * Probe point with dynamic instruction as the argument used to probe when
      * an instruction starts to execute.
      */
-    ppExecute = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(),
-                                              "Execute");
+    ppExecute = new ProbePointArg<O3DynInstPtr>(
+            cpu->getProbeManager(), "Execute");
     /**
      * Probe point with dynamic instruction as the argument used to probe when
      * an instruction execution completes and it is marked ready to commit.
      */
-    ppToCommit = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(),
-                                               "ToCommit");
+    ppToCommit = new ProbePointArg<O3DynInstPtr>(
+            cpu->getProbeManager(), "ToCommit");
 }
 
 template <class Impl>
@@ -461,7 +464,7 @@ DefaultIEW<Impl>::squash(ThreadID tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::squashDueToBranch(const DynInstPtr& inst, ThreadID tid)
+DefaultIEW<Impl>::squashDueToBranch(const O3DynInstPtr& inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i] [sn:%llu] Squashing from a specific instruction,"
             " PC: %s "
@@ -487,7 +490,7 @@ DefaultIEW<Impl>::squashDueToBranch(const DynInstPtr& inst, ThreadID tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::squashDueToMemOrder(const DynInstPtr& inst, ThreadID tid)
+DefaultIEW<Impl>::squashDueToMemOrder(const O3DynInstPtr& inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i] Memory violation, squashing violator and younger "
             "insts, PC: %s [sn:%llu].\n", tid, inst->pcState(), inst->seqNum);
@@ -550,28 +553,28 @@ DefaultIEW<Impl>::unblock(ThreadID tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::wakeDependents(const DynInstPtr& inst)
+DefaultIEW<Impl>::wakeDependents(const O3DynInstPtr& inst)
 {
     instQueue.wakeDependents(inst);
 }
 
 template<class Impl>
 void
-DefaultIEW<Impl>::rescheduleMemInst(const DynInstPtr& inst)
+DefaultIEW<Impl>::rescheduleMemInst(const O3DynInstPtr& inst)
 {
     instQueue.rescheduleMemInst(inst);
 }
 
 template<class Impl>
 void
-DefaultIEW<Impl>::replayMemInst(const DynInstPtr& inst)
+DefaultIEW<Impl>::replayMemInst(const O3DynInstPtr& inst)
 {
     instQueue.replayMemInst(inst);
 }
 
 template<class Impl>
 void
-DefaultIEW<Impl>::blockMemInst(const DynInstPtr& inst)
+DefaultIEW<Impl>::blockMemInst(const O3DynInstPtr& inst)
 {
     instQueue.blockMemInst(inst);
 }
@@ -585,7 +588,7 @@ DefaultIEW<Impl>::cacheUnblocked()
 
 template<class Impl>
 void
-DefaultIEW<Impl>::instToCommit(const DynInstPtr& inst)
+DefaultIEW<Impl>::instToCommit(const O3DynInstPtr& inst)
 {
     // This function should not be called after writebackInsts in a
     // single cycle.  That will cause problems with an instruction
@@ -630,7 +633,7 @@ template<class Impl>
 void
 DefaultIEW<Impl>::skidInsert(ThreadID tid)
 {
-    DynInstPtr inst = NULL;
+    O3DynInstPtr inst = NULL;
 
     while (!insts[tid].empty()) {
         inst = insts[tid].front();
@@ -927,13 +930,13 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
 {
     // Obtain instructions from skid buffer if unblocking, or queue from rename
     // otherwise.
-    std::queue<DynInstPtr> &insts_to_dispatch =
+    std::queue<O3DynInstPtr> &insts_to_dispatch =
         dispatchStatus[tid] == Unblocking ?
         skidBuffer[tid] : insts[tid];
 
     int insts_to_add = insts_to_dispatch.size();
 
-    DynInstPtr inst;
+    O3DynInstPtr inst;
     bool add_to_iq = false;
     int dis_num_inst = 0;
 
@@ -1208,7 +1211,7 @@ DefaultIEW<Impl>::executeInsts()
 
         DPRINTF(IEW, "Execute: Executing instructions from IQ.\n");
 
-        DynInstPtr inst = instQueue.getInstToExecute();
+        O3DynInstPtr inst = instQueue.getInstToExecute();
 
         DPRINTF(IEW, "Execute: Processing PC %s, [tid:%i] [sn:%llu].\n",
                 inst->pcState(), inst->threadNumber,inst->seqNum);
@@ -1372,7 +1375,7 @@ DefaultIEW<Impl>::executeInsts()
                 // If there was an ordering violation, then get the
                 // DynInst that caused the violation.  Note that this
                 // clears the violation signal.
-                DynInstPtr violator;
+                O3DynInstPtr violator;
                 violator = ldstQueue.getMemDepViolator(tid);
 
                 DPRINTF(IEW, "LDSTQ detected a violation. Violator PC: %s "
@@ -1396,7 +1399,7 @@ DefaultIEW<Impl>::executeInsts()
             if (ldstQueue.violation(tid)) {
                 assert(inst->isMemRef());
 
-                DynInstPtr violator = ldstQueue.getMemDepViolator(tid);
+                O3DynInstPtr violator = ldstQueue.getMemDepViolator(tid);
 
                 DPRINTF(IEW, "LDSTQ detected a violation.  Violator PC: "
                         "%s, inst PC: %s.  Addr is: %#x.\n",
@@ -1439,7 +1442,7 @@ DefaultIEW<Impl>::writebackInsts()
     // as part of backwards communication.
     for (int inst_num = 0; inst_num < wbWidth &&
              toCommit->insts[inst_num]; inst_num++) {
-        DynInstPtr inst = toCommit->insts[inst_num];
+        O3DynInstPtr inst = toCommit->insts[inst_num];
         ThreadID tid = inst->threadNumber;
 
         DPRINTF(IEW, "Sending instructions to commit, [sn:%lli] PC %s.\n",
@@ -1610,7 +1613,7 @@ DefaultIEW<Impl>::tick()
 
 template <class Impl>
 void
-DefaultIEW<Impl>::updateExeInstStats(const DynInstPtr& inst)
+DefaultIEW<Impl>::updateExeInstStats(const O3DynInstPtr& inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -1642,7 +1645,7 @@ DefaultIEW<Impl>::updateExeInstStats(const DynInstPtr& inst)
 
 template <class Impl>
 void
-DefaultIEW<Impl>::checkMisprediction(const DynInstPtr& inst)
+DefaultIEW<Impl>::checkMisprediction(const O3DynInstPtr& inst)
 {
     ThreadID tid = inst->threadNumber;
 

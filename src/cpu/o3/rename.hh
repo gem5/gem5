@@ -48,6 +48,7 @@
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/commit.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
@@ -73,7 +74,6 @@ class DefaultRename
 {
   public:
     // Typedefs from the Impl.
-    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DecodeStruct DecodeStruct;
     typedef typename Impl::RenameStruct RenameStruct;
@@ -83,7 +83,7 @@ class DefaultRename
     // be added to the front of the queue, which is the only reason for
     // using a deque instead of a queue. (Most other stages use a
     // queue)
-    typedef std::deque<DynInstPtr> InstQueue;
+    typedef std::deque<O3DynInstPtr> InstQueue;
 
   public:
     /** Overall rename status. Used to determine if the CPU can
@@ -117,7 +117,7 @@ class DefaultRename
     /** Probe points. */
     typedef typename std::pair<InstSeqNum, PhysRegIdPtr> SeqNumRegPair;
     /** To probe when register renaming for an instruction is complete */
-    ProbePointArg<DynInstPtr> *ppRename;
+    ProbePointArg<O3DynInstPtr> *ppRename;
     /**
      * To probe when an instruction is squashed and the register mapping
      * for it needs to be undone
@@ -248,22 +248,22 @@ class DefaultRename
     void removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid);
 
     /** Renames the source registers of an instruction. */
-    inline void renameSrcRegs(const DynInstPtr &inst, ThreadID tid);
+    void renameSrcRegs(const O3DynInstPtr &inst, ThreadID tid);
 
     /** Renames the destination registers of an instruction. */
-    inline void renameDestRegs(const DynInstPtr &inst, ThreadID tid);
+    void renameDestRegs(const O3DynInstPtr &inst, ThreadID tid);
 
     /** Calculates the number of free ROB entries for a specific thread. */
-    inline int calcFreeROBEntries(ThreadID tid);
+    int calcFreeROBEntries(ThreadID tid);
 
     /** Calculates the number of free IQ entries for a specific thread. */
-    inline int calcFreeIQEntries(ThreadID tid);
+    int calcFreeIQEntries(ThreadID tid);
 
     /** Calculates the number of free LQ entries for a specific thread. */
-    inline int calcFreeLQEntries(ThreadID tid);
+    int calcFreeLQEntries(ThreadID tid);
 
     /** Calculates the number of free SQ entries for a specific thread. */
-    inline int calcFreeSQEntries(ThreadID tid);
+    int calcFreeSQEntries(ThreadID tid);
 
     /** Returns the number of valid instructions coming from decode. */
     unsigned validInsts();
@@ -417,7 +417,7 @@ class DefaultRename
     Stalls stalls[O3MaxThreads];
 
     /** The serialize instruction that rename has stalled on. */
-    DynInstPtr serializeInst[O3MaxThreads];
+    O3DynInstPtr serializeInst[O3MaxThreads];
 
     /** Records if rename needs to serialize on the next instruction for any
      * thread.

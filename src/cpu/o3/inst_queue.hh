@@ -51,6 +51,7 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dep_graph.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/mem_dep_unit.hh"
 #include "cpu/o3/store_set.hh"
@@ -89,19 +90,18 @@ class InstructionQueue
   public:
     //Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::IssueStruct IssueStruct;
     typedef typename Impl::TimeStruct TimeStruct;
 
     // Typedef of iterator through the list of instructions.
-    typedef typename std::list<DynInstPtr>::iterator ListIt;
+    typedef typename std::list<O3DynInstPtr>::iterator ListIt;
 
     /** FU completion event class. */
     class FUCompletion : public Event
     {
       private:
         /** Executing instruction. */
-        DynInstPtr inst;
+        O3DynInstPtr inst;
 
         /** Index of the FU used for executing. */
         int fuIdx;
@@ -116,7 +116,7 @@ class InstructionQueue
 
       public:
         /** Construct a FU completion event. */
-        FUCompletion(const DynInstPtr &_inst, int fu_idx,
+        FUCompletion(const O3DynInstPtr &_inst, int fu_idx,
                      InstructionQueue<Impl> *iq_ptr);
 
         virtual void process();
@@ -177,40 +177,43 @@ class InstructionQueue
     bool hasReadyInsts();
 
     /** Inserts a new instruction into the IQ. */
-    void insert(const DynInstPtr &new_inst);
+    void insert(const O3DynInstPtr &new_inst);
 
     /** Inserts a new, non-speculative instruction into the IQ. */
-    void insertNonSpec(const DynInstPtr &new_inst);
+    void insertNonSpec(const O3DynInstPtr &new_inst);
 
     /** Inserts a memory or write barrier into the IQ to make sure
      *  loads and stores are ordered properly.
      */
-    void insertBarrier(const DynInstPtr &barr_inst);
+    void insertBarrier(const O3DynInstPtr &barr_inst);
 
     /** Returns the oldest scheduled instruction, and removes it from
      * the list of instructions waiting to execute.
      */
-    DynInstPtr getInstToExecute();
+    O3DynInstPtr getInstToExecute();
 
     /** Gets a memory instruction that was referred due to a delayed DTB
      *  translation if it is now ready to execute.  NULL if none available.
      */
-    DynInstPtr getDeferredMemInstToExecute();
+    O3DynInstPtr getDeferredMemInstToExecute();
 
     /** Gets a memory instruction that was blocked on the cache. NULL if none
      *  available.
      */
-    DynInstPtr getBlockedMemInstToExecute();
+    O3DynInstPtr getBlockedMemInstToExecute();
 
     /**
      * Records the instruction as the producer of a register without
      * adding it to the rest of the IQ.
      */
-    void recordProducer(const DynInstPtr &inst)
-    { addToProducers(inst); }
+    void
+    recordProducer(const O3DynInstPtr &inst)
+    {
+        addToProducers(inst);
+    }
 
     /** Process FU completion event. */
-    void processFUCompletion(const DynInstPtr &inst, int fu_idx);
+    void processFUCompletion(const O3DynInstPtr &inst, int fu_idx);
 
     /**
      * Schedules ready instructions, adding the ready ones (oldest first) to
@@ -228,34 +231,35 @@ class InstructionQueue
     void commit(const InstSeqNum &inst, ThreadID tid = 0);
 
     /** Wakes all dependents of a completed instruction. */
-    int wakeDependents(const DynInstPtr &completed_inst);
+    int wakeDependents(const O3DynInstPtr &completed_inst);
 
     /** Adds a ready memory instruction to the ready list. */
-    void addReadyMemInst(const DynInstPtr &ready_inst);
+    void addReadyMemInst(const O3DynInstPtr &ready_inst);
 
     /**
      * Reschedules a memory instruction. It will be ready to issue once
      * replayMemInst() is called.
      */
-    void rescheduleMemInst(const DynInstPtr &resched_inst);
+    void rescheduleMemInst(const O3DynInstPtr &resched_inst);
 
     /** Replays a memory instruction. It must be rescheduled first. */
-    void replayMemInst(const DynInstPtr &replay_inst);
+    void replayMemInst(const O3DynInstPtr &replay_inst);
 
     /**
      * Defers a memory instruction when its DTB translation incurs a hw
      * page table walk.
      */
-    void deferMemInst(const DynInstPtr &deferred_inst);
+    void deferMemInst(const O3DynInstPtr &deferred_inst);
 
     /**  Defers a memory instruction when it is cache blocked. */
-    void blockMemInst(const DynInstPtr &blocked_inst);
+    void blockMemInst(const O3DynInstPtr &blocked_inst);
 
     /**  Notify instruction queue that a previous blockage has resolved */
     void cacheUnblocked();
 
     /** Indicates an ordering violation between a store and a load. */
-    void violation(const DynInstPtr &store, const DynInstPtr &faulting_load);
+    void violation(const O3DynInstPtr &store,
+            const O3DynInstPtr &faulting_load);
 
     /**
      * Squashes instructions for a thread. Squashing information is obtained
@@ -310,23 +314,23 @@ class InstructionQueue
     //////////////////////////////////////
 
     /** List of all the instructions in the IQ (some of which may be issued). */
-    std::list<DynInstPtr> instList[O3MaxThreads];
+    std::list<O3DynInstPtr> instList[O3MaxThreads];
 
     /** List of instructions that are ready to be executed. */
-    std::list<DynInstPtr> instsToExecute;
+    std::list<O3DynInstPtr> instsToExecute;
 
     /** List of instructions waiting for their DTB translation to
      *  complete (hw page table walk in progress).
      */
-    std::list<DynInstPtr> deferredMemInsts;
+    std::list<O3DynInstPtr> deferredMemInsts;
 
     /** List of instructions that have been cache blocked. */
-    std::list<DynInstPtr> blockedMemInsts;
+    std::list<O3DynInstPtr> blockedMemInsts;
 
     /** List of instructions that were cache blocked, but a retry has been seen
      * since, so they can now be retried. May fail again go on the blocked list.
      */
-    std::list<DynInstPtr> retryMemInsts;
+    std::list<O3DynInstPtr> retryMemInsts;
 
     /**
      * Struct for comparing entries to be added to the priority queue.
@@ -335,16 +339,14 @@ class InstructionQueue
      * numbers (and hence are older) will be at the top of the
      * priority queue.
      */
-    struct pqCompare
+    struct PqCompare
     {
-        bool operator() (const DynInstPtr &lhs, const DynInstPtr &rhs) const
-        {
-            return lhs->seqNum > rhs->seqNum;
-        }
+        bool operator()(const O3DynInstPtr &lhs,
+                const O3DynInstPtr &rhs) const;
     };
 
-    typedef std::priority_queue<DynInstPtr, std::vector<DynInstPtr>, pqCompare>
-    ReadyInstQueue;
+    typedef std::priority_queue<
+        O3DynInstPtr, std::vector<O3DynInstPtr>, PqCompare> ReadyInstQueue;
 
     /** List of ready instructions, per op class.  They are separated by op
      *  class to allow for easy mapping to FUs.
@@ -358,9 +360,9 @@ class InstructionQueue
      *  the sequence number will be available.  Thus it is most efficient to be
      *  able to search by the sequence number alone.
      */
-    std::map<InstSeqNum, DynInstPtr> nonSpecInsts;
+    std::map<InstSeqNum, O3DynInstPtr> nonSpecInsts;
 
-    typedef typename std::map<InstSeqNum, DynInstPtr>::iterator NonSpecMapIt;
+    typedef typename std::map<InstSeqNum, O3DynInstPtr>::iterator NonSpecMapIt;
 
     /** Entry for the list age ordering by op class. */
     struct ListOrderEntry
@@ -397,7 +399,7 @@ class InstructionQueue
      */
     void moveToYoungerInst(ListOrderIt age_order_it);
 
-    DependencyGraph<DynInstPtr> dependGraph;
+    DependencyGraph<O3DynInstPtr> dependGraph;
 
     //////////////////////////////////////
     // Various parameters
@@ -450,13 +452,13 @@ class InstructionQueue
     std::vector<bool> regScoreboard;
 
     /** Adds an instruction to the dependency graph, as a consumer. */
-    bool addToDependents(const DynInstPtr &new_inst);
+    bool addToDependents(const O3DynInstPtr &new_inst);
 
     /** Adds an instruction to the dependency graph, as a producer. */
-    void addToProducers(const DynInstPtr &new_inst);
+    void addToProducers(const O3DynInstPtr &new_inst);
 
     /** Moves an instruction to the ready queue if it is ready. */
-    void addIfReady(const DynInstPtr &inst);
+    void addIfReady(const O3DynInstPtr &inst);
 
     /** Debugging function to count how many entries are in the IQ.  It does
      *  a linear walk through the instructions, so do not call this function
