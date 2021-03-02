@@ -47,6 +47,8 @@
 
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
+#include "cpu/o3/commit.hh"
+#include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
 #include "sim/probe/probe.hh"
@@ -80,9 +82,6 @@ class DefaultRename
     typedef typename CPUPol::TimeStruct TimeStruct;
     typedef typename CPUPol::FreeList FreeList;
     typedef typename CPUPol::RenameMap RenameMap;
-    // These are used only for initialization.
-    typedef typename CPUPol::IEW IEW;
-    typedef typename CPUPol::Commit Commit;
 
     // A deque is used to queue the instructions. Barrier insts must
     // be added to the front of the queue, which is the only reason for
@@ -149,19 +148,19 @@ class DefaultRename
     void setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr);
 
     /** Sets pointer to IEW stage. Used only for initialization. */
-    void setIEWStage(IEW *iew_stage)
+    void setIEWStage(DefaultIEW<Impl> *iew_stage)
     { iew_ptr = iew_stage; }
 
     /** Sets pointer to commit stage. Used only for initialization. */
-    void setCommitStage(Commit *commit_stage)
+    void setCommitStage(DefaultCommit<Impl> *commit_stage)
     { commit_ptr = commit_stage; }
 
   private:
     /** Pointer to IEW stage. Used only for initialization. */
-    IEW *iew_ptr;
+    DefaultIEW<Impl> *iew_ptr;
 
     /** Pointer to commit stage. Used only for initialization. */
-    Commit *commit_ptr;
+    DefaultCommit<Impl> *commit_ptr;
 
   public:
     /** Initializes variables for the stage. */

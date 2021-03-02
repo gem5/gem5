@@ -62,6 +62,9 @@
 struct DerivO3CPUParams;
 #include "base/circular_queue.hh"
 
+template <class Impl>
+class DefaultIEW;
+
 /**
  * Class that implements the actual LQ and SQ for each specific
  * thread.  Both are circular queues; load entries are freed upon
@@ -82,7 +85,6 @@ class LSQUnit
 
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::CPUPol::IEW IEW;
     typedef typename Impl::CPUPol::LSQ LSQ;
     typedef typename Impl::CPUPol::IssueStruct IssueStruct;
 
@@ -232,8 +234,8 @@ class LSQUnit
     }
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(O3CPU *cpu_ptr, IEW *iew_ptr, const DerivO3CPUParams &params,
-            LSQ *lsq_ptr, unsigned id);
+    void init(O3CPU *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
+            const DerivO3CPUParams &params, LSQ *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;
@@ -408,7 +410,7 @@ class LSQUnit
     O3CPU *cpu;
 
     /** Pointer to the IEW stage. */
-    IEW *iewStage;
+    DefaultIEW<Impl> *iewStage;
 
     /** Pointer to the LSQ. */
     LSQ *lsq;

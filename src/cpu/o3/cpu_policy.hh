@@ -31,17 +31,12 @@
 #define __CPU_O3_CPU_POLICY_HH__
 
 #include "cpu/o3/comm.hh"
-#include "cpu/o3/commit.hh"
-#include "cpu/o3/decode.hh"
-#include "cpu/o3/fetch.hh"
 #include "cpu/o3/free_list.hh"
-#include "cpu/o3/iew.hh"
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "cpu/o3/mem_dep_unit.hh"
 #include "cpu/o3/regfile.hh"
-#include "cpu/o3/rename.hh"
 #include "cpu/o3/rename_map.hh"
 #include "cpu/o3/rob.hh"
 #include "cpu/o3/store_set.hh"
@@ -72,17 +67,6 @@ struct SimpleCPUPolicy
     typedef ::LSQ<Impl> LSQ;
     /** Typedef for the thread-specific LSQ units. */
     typedef ::LSQUnit<Impl> LSQUnit;
-
-    /** Typedef for fetch. */
-    typedef DefaultFetch<Impl> Fetch;
-    /** Typedef for decode. */
-    typedef DefaultDecode<Impl> Decode;
-    /** Typedef for rename. */
-    typedef DefaultRename<Impl> Rename;
-    /** Typedef for Issue/Execute/Writeback. */
-    typedef DefaultIEW<Impl> IEW;
-    /** Typedef for commit. */
-    typedef DefaultCommit<Impl> Commit;
 
     /** The struct for communication between fetch and decode. */
     typedef DefaultFetchDefaultDecode<Impl> FetchStruct;

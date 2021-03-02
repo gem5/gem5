@@ -65,13 +65,15 @@ template <class Impl>
 class FullO3CPU;
 
 template <class Impl>
+class DefaultIEW;
+
+template <class Impl>
 class LSQ
 
 {
   public:
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::CPUPol::IEW IEW;
     typedef typename Impl::CPUPol::LSQUnit LSQUnit;
 
     class LSQRequest;
@@ -853,7 +855,8 @@ class LSQ
     };
 
     /** Constructs an LSQ with the given parameters. */
-    LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, const DerivO3CPUParams &params);
+    LSQ(O3CPU *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
+            const DerivO3CPUParams &params);
     ~LSQ() { }
 
     /** Returns the name of the LSQ. */
@@ -1112,7 +1115,7 @@ class LSQ
     O3CPU *cpu;
 
     /** The IEW stage pointer. */
-    IEW *iewStage;
+    DefaultIEW<Impl> *iewStage;
 
     /** Is D-cache blocked? */
     bool cacheBlocked() const;

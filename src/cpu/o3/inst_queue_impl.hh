@@ -83,8 +83,8 @@ InstructionQueue<Impl>::FUCompletion::description() const
 }
 
 template <class Impl>
-InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
-                                         const DerivO3CPUParams &params)
+InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr,
+        DefaultIEW<Impl> *iew_ptr, const DerivO3CPUParams &params)
     : cpu(cpu_ptr),
       iewStage(iew_ptr),
       fuPool(params.fuPool),

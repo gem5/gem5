@@ -291,7 +291,7 @@ DefaultCommit<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setIEWStage(IEW *iew_stage)
+DefaultCommit<Impl>::setIEWStage(DefaultIEW<Impl> *iew_stage)
 {
     iewStage = iew_stage;
 }

@@ -46,6 +46,7 @@
 #include "base/statistics.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
 #include "enums/CommitPolicy.hh"
@@ -94,9 +95,6 @@ class DefaultCommit
     typedef typename CPUPol::FetchStruct FetchStruct;
     typedef typename CPUPol::IEWStruct IEWStruct;
     typedef typename CPUPol::RenameStruct RenameStruct;
-
-    typedef typename CPUPol::Fetch Fetch;
-    typedef typename CPUPol::IEW IEW;
 
     typedef O3ThreadState<Impl> Thread;
 
@@ -164,13 +162,13 @@ class DefaultCommit
     void setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr);
 
     /** Sets the pointer to the IEW stage. */
-    void setIEWStage(IEW *iew_stage);
+    void setIEWStage(DefaultIEW<Impl> *iew_stage);
 
     /** The pointer to the IEW stage. Used solely to ensure that
      * various events (traps, interrupts, syscalls) do not occur until
      * all stores have written back.
      */
-    IEW *iewStage;
+    DefaultIEW<Impl> *iewStage;
 
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);

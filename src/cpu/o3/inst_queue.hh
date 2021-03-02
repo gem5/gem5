@@ -51,6 +51,7 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dep_graph.hh"
+#include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/op_class.hh"
 #include "cpu/timebuf.hh"
@@ -86,7 +87,6 @@ class InstructionQueue
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
 
-    typedef typename Impl::CPUPol::IEW IEW;
     typedef typename Impl::CPUPol::MemDepUnit MemDepUnit;
     typedef typename Impl::CPUPol::IssueStruct IssueStruct;
     typedef typename Impl::CPUPol::TimeStruct TimeStruct;
@@ -123,7 +123,7 @@ class InstructionQueue
     };
 
     /** Constructs an IQ. */
-    InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
+    InstructionQueue(O3CPU *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
                      const DerivO3CPUParams &params);
 
     /** Destructs the IQ. */
@@ -282,7 +282,7 @@ class InstructionQueue
     MemInterface *dcacheInterface;
 
     /** Pointer to IEW stage. */
-    IEW *iewStage;
+    DefaultIEW<Impl> *iewStage;
 
     /** The memory dependence unit, which tracks/predicts memory dependences
      *  between instructions.

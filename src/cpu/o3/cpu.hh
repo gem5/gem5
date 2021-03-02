@@ -54,8 +54,13 @@
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
+#include "cpu/o3/commit.hh"
 #include "cpu/o3/cpu_policy.hh"
+#include "cpu/o3/decode.hh"
+#include "cpu/o3/fetch.hh"
+#include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/o3/rename.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/thread_state.hh"
 #include "cpu/activity.hh"
@@ -487,19 +492,19 @@ class FullO3CPU : public BaseO3CPU
 
   protected:
     /** The fetch stage. */
-    typename CPUPolicy::Fetch fetch;
+    DefaultFetch<Impl> fetch;
 
     /** The decode stage. */
-    typename CPUPolicy::Decode decode;
+    DefaultDecode<Impl> decode;
 
     /** The dispatch stage. */
-    typename CPUPolicy::Rename rename;
+    DefaultRename<Impl> rename;
 
     /** The issue/execute/writeback stages. */
-    typename CPUPolicy::IEW iew;
+    DefaultIEW<Impl> iew;
 
     /** The commit stage. */
-    typename CPUPolicy::Commit commit;
+    DefaultCommit<Impl> commit;
 
     /** The rename mode of the vector registers */
     Enums::VecRegRenameMode vecMode;

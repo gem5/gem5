@@ -48,6 +48,7 @@
 
 #include "base/logging.hh"
 #include "cpu/o3/cpu.hh"
+#include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq.hh"
 #include "debug/Drain.hh"
@@ -58,7 +59,8 @@
 #include "params/DerivO3CPU.hh"
 
 template <class Impl>
-LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, const DerivO3CPUParams &params)
+LSQ<Impl>::LSQ(O3CPU *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
+        const DerivO3CPUParams &params)
     : cpu(cpu_ptr), iewStage(iew_ptr),
       _cacheBlocked(false),
       cacheStorePorts(params.cacheStorePorts), usedStorePorts(0),
