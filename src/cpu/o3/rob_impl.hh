@@ -44,6 +44,7 @@
 #include <list>
 
 #include "base/logging.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/o3/rob.hh"
 #include "debug/Fetch.hh"
 #include "debug/ROB.hh"
@@ -88,7 +89,7 @@ ROB<Impl>::ROB(O3CPU *_cpu, const DerivO3CPUParams &params)
         }
     }
 
-    for (ThreadID tid = numThreads; tid < Impl::MaxThreads; tid++) {
+    for (ThreadID tid = numThreads; tid < O3MaxThreads; tid++) {
         maxEntries[tid] = 0;
     }
 
@@ -99,7 +100,7 @@ template <class Impl>
 void
 ROB<Impl>::resetState()
 {
-    for (ThreadID tid = 0; tid  < Impl::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid  < O3MaxThreads; tid++) {
         threadEntries[tid] = 0;
         squashIt[tid] = instList[tid].end();
         squashedSeqNum[tid] = 0;

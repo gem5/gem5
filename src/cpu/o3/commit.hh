@@ -46,6 +46,7 @@
 #include "base/statistics.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
 #include "enums/CommitPolicy.hh"
 #include "sim/probe/probe.hh"
@@ -125,7 +126,7 @@ class DefaultCommit
     /** Next commit status, to be set at the end of the cycle. */
     CommitStatus _nextStatus;
     /** Per-thread status. */
-    ThreadStatus commitStatus[Impl::MaxThreads];
+    ThreadStatus commitStatus[O3MaxThreads];
     /** Commit policy used in SMT mode. */
     CommitPolicy commitPolicy;
 
@@ -175,7 +176,7 @@ class DefaultCommit
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to the commited state rename map. */
-    void setRenameMap(RenameMap rm_ptr[Impl::MaxThreads]);
+    void setRenameMap(RenameMap rm_ptr[O3MaxThreads]);
 
     /** Sets pointer to the ROB. */
     void setROB(ROB *rob_ptr);
@@ -374,13 +375,13 @@ class DefaultCommit
     /** Records if the number of ROB entries has changed this cycle. If it has,
      * then the number of free entries must be re-broadcast.
      */
-    bool changedROBNumEntries[Impl::MaxThreads];
+    bool changedROBNumEntries[O3MaxThreads];
 
     /** Records if a thread has to squash this cycle due to a trap. */
-    bool trapSquash[Impl::MaxThreads];
+    bool trapSquash[O3MaxThreads];
 
     /** Records if a thread has to squash this cycle due to an XC write. */
-    bool tcSquash[Impl::MaxThreads];
+    bool tcSquash[O3MaxThreads];
 
     /**
      * Instruction passed to squashAfter().
@@ -389,7 +390,7 @@ class DefaultCommit
      * that caused a squash since this needs to be passed to the fetch
      * stage once squashing starts.
      */
-    DynInstPtr squashAfterInst[Impl::MaxThreads];
+    DynInstPtr squashAfterInst[O3MaxThreads];
 
     /** Priority List used for Commit Policy */
     std::list<ThreadID> priority_list;
@@ -442,29 +443,29 @@ class DefaultCommit
     /** The commit PC state of each thread.  Refers to the instruction that
      * is currently being processed/committed.
      */
-    TheISA::PCState pc[Impl::MaxThreads];
+    TheISA::PCState pc[O3MaxThreads];
 
     /** The sequence number of the youngest valid instruction in the ROB. */
-    InstSeqNum youngestSeqNum[Impl::MaxThreads];
+    InstSeqNum youngestSeqNum[O3MaxThreads];
 
     /** The sequence number of the last commited instruction. */
-    InstSeqNum lastCommitedSeqNum[Impl::MaxThreads];
+    InstSeqNum lastCommitedSeqNum[O3MaxThreads];
 
     /** Records if there is a trap currently in flight. */
-    bool trapInFlight[Impl::MaxThreads];
+    bool trapInFlight[O3MaxThreads];
 
     /** Records if there were any stores committed this cycle. */
-    bool committedStores[Impl::MaxThreads];
+    bool committedStores[O3MaxThreads];
 
     /** Records if commit should check if the ROB is truly empty (see
         commit_impl.hh). */
-    bool checkEmptyROB[Impl::MaxThreads];
+    bool checkEmptyROB[O3MaxThreads];
 
     /** Pointer to the list of active threads. */
     std::list<ThreadID> *activeThreads;
 
     /** Rename map interface. */
-    RenameMap *renameMap[Impl::MaxThreads];
+    RenameMap *renameMap[O3MaxThreads];
 
     /** True if last committed microop can be followed by an interrupt */
     bool canHandleInterrupts;
@@ -479,8 +480,8 @@ class DefaultCommit
     void updateComInstStats(const DynInstPtr &inst);
 
     // HTM
-    int htmStarts[Impl::MaxThreads];
-    int htmStops[Impl::MaxThreads];
+    int htmStarts[O3MaxThreads];
+    int htmStops[O3MaxThreads];
 
     struct CommitStats : public Stats::Group
     {

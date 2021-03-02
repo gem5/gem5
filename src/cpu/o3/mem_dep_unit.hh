@@ -49,6 +49,7 @@
 
 #include "base/statistics.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/limits.hh"
 #include "debug/MemDepUnit.hh"
 
 struct SNHash
@@ -247,7 +248,7 @@ class MemDepUnit
     MemDepHash memDepHash;
 
     /** A list of all instructions in the memory dependence unit. */
-    std::list<DynInstPtr> instList[Impl::MaxThreads];
+    std::list<DynInstPtr> instList[O3MaxThreads];
 
     /** A list of all instructions that are going to be replayed. */
     std::list<DynInstPtr> instsToReplay;

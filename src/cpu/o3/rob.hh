@@ -48,6 +48,7 @@
 #include "arch/registers.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
+#include "cpu/o3/limits.hh"
 #include "enums/SMTQueuePolicy.hh"
 
 struct DerivO3CPUParams;
@@ -76,7 +77,7 @@ class ROB
 
   private:
     /** Per-thread ROB status. */
-    Status robStatus[Impl::MaxThreads];
+    Status robStatus[O3MaxThreads];
 
     /** ROB resource sharing policy for SMT mode. */
     SMTQueuePolicy robPolicy;
@@ -272,13 +273,13 @@ class ROB
     unsigned numEntries;
 
     /** Entries Per Thread */
-    unsigned threadEntries[Impl::MaxThreads];
+    unsigned threadEntries[O3MaxThreads];
 
     /** Max Insts a Thread Can Have in the ROB */
-    unsigned maxEntries[Impl::MaxThreads];
+    unsigned maxEntries[O3MaxThreads];
 
     /** ROB List of Instructions */
-    std::list<DynInstPtr> instList[Impl::MaxThreads];
+    std::list<DynInstPtr> instList[O3MaxThreads];
 
     /** Number of instructions that can be squashed in a single cycle. */
     unsigned squashWidth;
@@ -302,7 +303,7 @@ class ROB
      *  and after a squash.
      *  This will always be set to cpu->instList.end() if it is invalid.
      */
-    InstIt squashIt[Impl::MaxThreads];
+    InstIt squashIt[O3MaxThreads];
 
   public:
     /** Number of instructions in the ROB. */
@@ -313,10 +314,10 @@ class ROB
 
   private:
     /** The sequence number of the squashed instruction. */
-    InstSeqNum squashedSeqNum[Impl::MaxThreads];
+    InstSeqNum squashedSeqNum[O3MaxThreads];
 
     /** Is the ROB done squashing. */
-    bool doneSquashing[Impl::MaxThreads];
+    bool doneSquashing[O3MaxThreads];
 
     /** Number of active threads. */
     ThreadID numThreads;

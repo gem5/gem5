@@ -44,6 +44,7 @@
 
 #include <list>
 
+#include "cpu/o3/limits.hh"
 #include "cpu/o3/rename.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Activity.hh"
@@ -62,14 +63,14 @@ DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, const DerivO3CPUParams &params)
       numThreads(params.numThreads),
       stats(_cpu)
 {
-    if (renameWidth > Impl::MaxWidth)
+    if (renameWidth > O3MaxWidth)
         fatal("renameWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
-             renameWidth, static_cast<int>(Impl::MaxWidth));
+             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
+             renameWidth, static_cast<int>(O3MaxWidth));
 
     // @todo: Make into a parameter.
     skidBufferMax = (decodeToRenameDelay + 1) * params.decodeWidth;
-    for (uint32_t tid = 0; tid < Impl::MaxThreads; tid++) {
+    for (uint32_t tid = 0; tid < O3MaxThreads; tid++) {
         renameStatus[tid] = Idle;
         renameMap[tid] = nullptr;
         instsInProgress[tid] = 0;

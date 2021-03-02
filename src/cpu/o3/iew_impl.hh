@@ -52,6 +52,7 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/iew.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
@@ -77,18 +78,18 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, const DerivO3CPUParams &params)
       numThreads(params.numThreads),
       iewStats(cpu)
 {
-    if (dispatchWidth > Impl::MaxWidth)
+    if (dispatchWidth > O3MaxWidth)
         fatal("dispatchWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
-             dispatchWidth, static_cast<int>(Impl::MaxWidth));
-    if (issueWidth > Impl::MaxWidth)
+             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
+             dispatchWidth, static_cast<int>(O3MaxWidth));
+    if (issueWidth > O3MaxWidth)
         fatal("issueWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
-             issueWidth, static_cast<int>(Impl::MaxWidth));
-    if (wbWidth > Impl::MaxWidth)
+             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
+             issueWidth, static_cast<int>(O3MaxWidth));
+    if (wbWidth > O3MaxWidth)
         fatal("wbWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
-             wbWidth, static_cast<int>(Impl::MaxWidth));
+             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
+             wbWidth, static_cast<int>(O3MaxWidth));
 
     _status = Active;
     exeStatus = Running;
@@ -100,7 +101,7 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, const DerivO3CPUParams &params)
     // Instruction queue needs the queue between issue and execute.
     instQueue.setIssueToExecuteQueue(&issueToExecQueue);
 
-    for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
         dispatchStatus[tid] = Running;
         fetchRedirect[tid] = false;
     }

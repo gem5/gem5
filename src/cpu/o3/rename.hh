@@ -47,6 +47,7 @@
 
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
 #include "sim/probe/probe.hh"
 
@@ -116,7 +117,7 @@ class DefaultRename
     RenameStatus _status;
 
     /** Per-thread status. */
-    ThreadStatus renameStatus[Impl::MaxThreads];
+    ThreadStatus renameStatus[O3MaxThreads];
 
     /** Probe points. */
     typedef typename std::pair<InstSeqNum, PhysRegIdPtr> SeqNumRegPair;
@@ -173,7 +174,7 @@ class DefaultRename
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to rename maps (per-thread structures). */
-    void setRenameMap(RenameMap rm_ptr[Impl::MaxThreads]);
+    void setRenameMap(RenameMap rm_ptr[O3MaxThreads]);
 
     /** Sets pointer to the free list. */
     void setFreeList(FreeList *fl_ptr);
@@ -321,7 +322,7 @@ class DefaultRename
     /** A per-thread list of all destination register renames, used to either
      * undo rename mappings or free old physical registers.
      */
-    std::list<RenameHistory> historyBuffer[Impl::MaxThreads];
+    std::list<RenameHistory> historyBuffer[O3MaxThreads];
 
     /** Pointer to CPU. */
     O3CPU *cpu;
@@ -351,13 +352,13 @@ class DefaultRename
     typename TimeBuffer<DecodeStruct>::wire fromDecode;
 
     /** Queue of all instructions coming from decode this cycle. */
-    InstQueue insts[Impl::MaxThreads];
+    InstQueue insts[O3MaxThreads];
 
     /** Skid buffer between rename and decode. */
-    InstQueue skidBuffer[Impl::MaxThreads];
+    InstQueue skidBuffer[O3MaxThreads];
 
     /** Rename map interface. */
-    RenameMap *renameMap[Impl::MaxThreads];
+    RenameMap *renameMap[O3MaxThreads];
 
     /** Free list interface. */
     FreeList *freeList;
@@ -371,17 +372,17 @@ class DefaultRename
     /** Count of instructions in progress that have been sent off to the IQ
      * and ROB, but are not yet included in their occupancy counts.
      */
-    int instsInProgress[Impl::MaxThreads];
+    int instsInProgress[O3MaxThreads];
 
     /** Count of Load instructions in progress that have been sent off to the IQ
      * and ROB, but are not yet included in their occupancy counts.
      */
-    int loadsInProgress[Impl::MaxThreads];
+    int loadsInProgress[O3MaxThreads];
 
     /** Count of Store instructions in progress that have been sent off to the IQ
      * and ROB, but are not yet included in their occupancy counts.
      */
-    int storesInProgress[Impl::MaxThreads];
+    int storesInProgress[O3MaxThreads];
 
     /** Variable that tracks if decode has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.
@@ -402,13 +403,13 @@ class DefaultRename
     /** Per-thread tracking of the number of free entries of back-end
      * structures.
      */
-    FreeEntries freeEntries[Impl::MaxThreads];
+    FreeEntries freeEntries[O3MaxThreads];
 
     /** Records if the ROB is empty. In SMT mode the ROB may be dynamically
      * partitioned between threads, so the ROB must tell rename when it is
      * empty.
      */
-    bool emptyROB[Impl::MaxThreads];
+    bool emptyROB[O3MaxThreads];
 
     /** Source of possible stalls. */
     struct Stalls
@@ -418,15 +419,15 @@ class DefaultRename
     };
 
     /** Tracks which stages are telling decode to stall. */
-    Stalls stalls[Impl::MaxThreads];
+    Stalls stalls[O3MaxThreads];
 
     /** The serialize instruction that rename has stalled on. */
-    DynInstPtr serializeInst[Impl::MaxThreads];
+    DynInstPtr serializeInst[O3MaxThreads];
 
     /** Records if rename needs to serialize on the next instruction for any
      * thread.
      */
-    bool serializeOnNextInst[Impl::MaxThreads];
+    bool serializeOnNextInst[O3MaxThreads];
 
     /** Delay between iew and rename, in ticks. */
     int iewToRenameDelay;

@@ -48,6 +48,7 @@
 
 #include "base/logging.hh"
 #include "cpu/o3/cpu.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq.hh"
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"
@@ -72,7 +73,7 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, const DerivO3CPUParams &params)
       dcachePort(this, cpu_ptr),
       numThreads(params.numThreads)
 {
-    assert(numThreads > 0 && numThreads <= Impl::MaxThreads);
+    assert(numThreads > 0 && numThreads <= O3MaxThreads);
 
     //**********************************************
     //************ Handle SMT Parameters ***********

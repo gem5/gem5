@@ -44,6 +44,7 @@
 #include "arch/decoder.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/pred/bpred_unit.hh"
 #include "cpu/timebuf.hh"
@@ -200,7 +201,7 @@ class DefaultFetch
     FetchStatus _status;
 
     /** Per-thread status. */
-    ThreadStatus fetchStatus[Impl::MaxThreads];
+    ThreadStatus fetchStatus[O3MaxThreads];
 
     /** Fetch policy. */
     SMTFetchPolicy fetchPolicy;
@@ -372,7 +373,7 @@ class DefaultFetch
     }
 
     /** The decoder. */
-    TheISA::Decoder *decoder[Impl::MaxThreads];
+    TheISA::Decoder *decoder[O3MaxThreads];
 
     RequestPort &getInstPort() { return icachePort; }
 
@@ -429,17 +430,17 @@ class DefaultFetch
     /** BPredUnit. */
     BPredUnit *branchPred;
 
-    TheISA::PCState pc[Impl::MaxThreads];
+    TheISA::PCState pc[O3MaxThreads];
 
-    Addr fetchOffset[Impl::MaxThreads];
+    Addr fetchOffset[O3MaxThreads];
 
-    StaticInstPtr macroop[Impl::MaxThreads];
+    StaticInstPtr macroop[O3MaxThreads];
 
     /** Can the fetch stage redirect from an interrupt on this instruction? */
-    bool delayedCommit[Impl::MaxThreads];
+    bool delayedCommit[O3MaxThreads];
 
     /** Memory request used to access cache. */
-    RequestPtr memReq[Impl::MaxThreads];
+    RequestPtr memReq[O3MaxThreads];
 
     /** Variable that tracks if fetch has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.
@@ -457,7 +458,7 @@ class DefaultFetch
     };
 
     /** Tracks which stages are telling fetch to stall. */
-    Stalls stalls[Impl::MaxThreads];
+    Stalls stalls[O3MaxThreads];
 
     /** Decode to fetch delay. */
     Cycles decodeToFetchDelay;
@@ -498,25 +499,25 @@ class DefaultFetch
     Addr fetchBufferMask;
 
     /** The fetch data that is being fetched and buffered. */
-    uint8_t *fetchBuffer[Impl::MaxThreads];
+    uint8_t *fetchBuffer[O3MaxThreads];
 
     /** The PC of the first instruction loaded into the fetch buffer. */
-    Addr fetchBufferPC[Impl::MaxThreads];
+    Addr fetchBufferPC[O3MaxThreads];
 
     /** The size of the fetch queue in micro-ops */
     unsigned fetchQueueSize;
 
     /** Queue of fetched instructions. Per-thread to prevent HoL blocking. */
-    std::deque<DynInstPtr> fetchQueue[Impl::MaxThreads];
+    std::deque<DynInstPtr> fetchQueue[O3MaxThreads];
 
     /** Whether or not the fetch buffer data is valid. */
-    bool fetchBufferValid[Impl::MaxThreads];
+    bool fetchBufferValid[O3MaxThreads];
 
     /** Size of instructions. */
     int instSize;
 
     /** Icache stall statistics. */
-    Counter lastIcacheStall[Impl::MaxThreads];
+    Counter lastIcacheStall[O3MaxThreads];
 
     /** List of Active Threads */
     std::list<ThreadID> *activeThreads;
@@ -539,7 +540,7 @@ class DefaultFetch
     IcachePort icachePort;
 
     /** Set to true if a pipelined I-cache request should be issued. */
-    bool issuePipelinedIfetch[Impl::MaxThreads];
+    bool issuePipelinedIfetch[O3MaxThreads];
 
     /** Event used to delay fault generation of translation faults */
     FinishTranslationEvent finishTranslationEvent;

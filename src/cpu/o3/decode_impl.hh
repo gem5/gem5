@@ -44,8 +44,9 @@
 #include "arch/types.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "cpu/o3/decode.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/decode.hh"
+#include "cpu/o3/limits.hh"
 #include "debug/Activity.hh"
 #include "debug/Decode.hh"
 #include "debug/O3PipeView.hh"
@@ -67,14 +68,14 @@ DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, const DerivO3CPUParams &params)
       numThreads(params.numThreads),
       stats(_cpu)
 {
-    if (decodeWidth > Impl::MaxWidth)
+    if (decodeWidth > O3MaxWidth)
         fatal("decodeWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
-             decodeWidth, static_cast<int>(Impl::MaxWidth));
+             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
+             decodeWidth, static_cast<int>(O3MaxWidth));
 
     // @todo: Make into a parameter
     skidBufferMax = (fetchToDecodeDelay + 1) *  params.fetchWidth;
-    for (int tid = 0; tid < Impl::MaxThreads; tid++) {
+    for (int tid = 0; tid < O3MaxThreads; tid++) {
         stalls[tid] = {false};
         decodeStatus[tid] = Idle;
         bdelayDoneSeqNum[tid] = 0;

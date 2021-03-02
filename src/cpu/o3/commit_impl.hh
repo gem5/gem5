@@ -53,6 +53,7 @@
 #include "cpu/exetrace.hh"
 #include "cpu/null_static_inst.hh"
 #include "cpu/o3/commit.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/o3/thread_state.hh"
 #include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
@@ -93,10 +94,10 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, const DerivO3CPUParams &params)
       avoidQuiesceLiveLock(false),
       stats(_cpu, this)
 {
-    if (commitWidth > Impl::MaxWidth)
+    if (commitWidth > O3MaxWidth)
         fatal("commitWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
-             commitWidth, static_cast<int>(Impl::MaxWidth));
+             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
+             commitWidth, static_cast<int>(O3MaxWidth));
 
     _status = Active;
     _nextStatus = Inactive;
@@ -108,7 +109,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, const DerivO3CPUParams &params)
         }
     }
 
-    for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
         commitStatus[tid] = Idle;
         changedROBNumEntries[tid] = false;
         trapSquash[tid] = false;

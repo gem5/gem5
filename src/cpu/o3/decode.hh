@@ -44,6 +44,7 @@
 #include <queue>
 
 #include "base/statistics.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
 
 struct DerivO3CPUParams;
@@ -95,7 +96,7 @@ class DefaultDecode
     DecodeStatus _status;
 
     /** Per-thread status. */
-    ThreadStatus decodeStatus[Impl::MaxThreads];
+    ThreadStatus decodeStatus[O3MaxThreads];
 
   public:
     /** DefaultDecode constructor. */
@@ -237,10 +238,10 @@ class DefaultDecode
     typename TimeBuffer<FetchStruct>::wire fromFetch;
 
     /** Queue of all instructions coming from fetch this cycle. */
-    std::queue<DynInstPtr> insts[Impl::MaxThreads];
+    std::queue<DynInstPtr> insts[O3MaxThreads];
 
     /** Skid buffer between fetch and decode. */
-    std::queue<DynInstPtr> skidBuffer[Impl::MaxThreads];
+    std::queue<DynInstPtr> skidBuffer[O3MaxThreads];
 
     /** Variable that tracks if decode has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.
@@ -254,7 +255,7 @@ class DefaultDecode
     };
 
     /** Tracks which stages are telling decode to stall. */
-    Stalls stalls[Impl::MaxThreads];
+    Stalls stalls[O3MaxThreads];
 
     /** Rename to decode delay. */
     Cycles renameToDecodeDelay;
@@ -284,16 +285,16 @@ class DefaultDecode
     unsigned skidBufferMax;
 
     /** SeqNum of Squashing Branch Delay Instruction (used for MIPS)*/
-    Addr bdelayDoneSeqNum[Impl::MaxThreads];
+    Addr bdelayDoneSeqNum[O3MaxThreads];
 
     /** Instruction used for squashing branch (used for MIPS)*/
-    DynInstPtr squashInst[Impl::MaxThreads];
+    DynInstPtr squashInst[O3MaxThreads];
 
     /** Tells when their is a pending delay slot inst. to send
      *  to rename. If there is, then wait squash after the next
      *  instruction (used for MIPS).
      */
-    bool squashAfterDelaySlot[Impl::MaxThreads];
+    bool squashAfterDelaySlot[O3MaxThreads];
 
     struct DecodeStats : public Stats::Group
     {

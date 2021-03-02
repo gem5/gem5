@@ -55,6 +55,7 @@
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/cpu_policy.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/thread_state.hh"
 #include "cpu/activity.hh"
@@ -510,10 +511,10 @@ class FullO3CPU : public BaseO3CPU
     typename CPUPolicy::FreeList freeList;
 
     /** The rename map. */
-    typename CPUPolicy::RenameMap renameMap[Impl::MaxThreads];
+    typename CPUPolicy::RenameMap renameMap[O3MaxThreads];
 
     /** The commit rename map. */
-    typename CPUPolicy::RenameMap commitRenameMap[Impl::MaxThreads];
+    typename CPUPolicy::RenameMap commitRenameMap[O3MaxThreads];
 
     /** The re-order buffer. */
     typename CPUPolicy::ROB rob;
@@ -611,7 +612,7 @@ class FullO3CPU : public BaseO3CPU
     }
 
     /** The global sequence number counter. */
-    InstSeqNum globalSeqNum;//[Impl::MaxThreads];
+    InstSeqNum globalSeqNum;//[O3MaxThreads];
 
     /** Pointer to the checker, which can dynamically verify
      * instruction results at run time.  This can be set to NULL if it

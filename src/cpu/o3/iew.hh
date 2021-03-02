@@ -46,6 +46,7 @@
 
 #include "base/statistics.hh"
 #include "cpu/o3/comm.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/timebuf.hh"
@@ -117,7 +118,7 @@ class DefaultIEW
     /** Overall stage status. */
     Status _status;
     /** Dispatch status. */
-    StageStatus dispatchStatus[Impl::MaxThreads];
+    StageStatus dispatchStatus[O3MaxThreads];
     /** Execute status. */
     StageStatus exeStatus;
     /** Writeback status. */
@@ -341,10 +342,10 @@ class DefaultIEW
     typename TimeBuffer<IEWStruct>::wire toCommit;
 
     /** Queue of all instructions coming from rename this cycle. */
-    std::queue<DynInstPtr> insts[Impl::MaxThreads];
+    std::queue<DynInstPtr> insts[O3MaxThreads];
 
     /** Skid buffer between rename and IEW. */
-    std::queue<DynInstPtr> skidBuffer[Impl::MaxThreads];
+    std::queue<DynInstPtr> skidBuffer[O3MaxThreads];
 
     /** Scoreboard pointer. */
     Scoreboard* scoreboard;
@@ -377,7 +378,7 @@ class DefaultIEW
 
   private:
     /** Records if there is a fetch redirect on this cycle for each thread. */
-    bool fetchRedirect[Impl::MaxThreads];
+    bool fetchRedirect[O3MaxThreads];
 
     /** Records if the queues have been changed (inserted or issued insts),
      * so that IEW knows to broadcast the updated amount of free entries.

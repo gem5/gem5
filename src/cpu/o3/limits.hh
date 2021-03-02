@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright 2021 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,48 +25,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_IMPL_HH__
-#define __CPU_O3_IMPL_HH__
+#ifndef __CPU_O3_LIMITS_HH__
+#define __CPU_O3_LIMITS_HH__
 
-#include "config/the_isa.hh"
-#include "cpu/o3/cpu_policy.hh"
+static constexpr int O3MaxWidth = 12;
+static constexpr int O3MaxThreads = 4;
 
-// Forward declarations.
-class BaseO3DynInst;
-
-template <class Impl>
-class FullO3CPU;
-
-/** Implementation specific struct that defines several key types to the
- *  CPU, the stages within the CPU, the time buffers, and the DynInst.
- *  The struct defines the ISA, the CPU policy, the specific DynInst, the
- *  specific O3CPU, and all of the structs from the time buffers to do
- *  communication.
- *  This is one of the key things that must be defined for each hardware
- *  specific CPU implementation.
- */
-struct O3CPUImpl
-{
-    /** The CPU policy to be used, which defines all of the CPU stages. */
-    typedef SimpleCPUPolicy<O3CPUImpl> CPUPol;
-
-    /** The DynInst type to be used. */
-    typedef BaseO3DynInst DynInst;
-
-    /** The refcounted DynInst pointer to be used.  In most cases this is
-     *  what should be used, and not DynInst *.
-     */
-    typedef RefCountingPtr<DynInst> DynInstPtr;
-    typedef RefCountingPtr<const DynInst> DynInstConstPtr;
-
-    /** The O3CPU type to be used. */
-    typedef FullO3CPU<O3CPUImpl> O3CPU;
-
-    /** Same typedef, but for CPUType.  BaseDynInst may not always use
-     * an O3 CPU, so it's clearer to call it CPUType instead in that
-     * case.
-     */
-    typedef O3CPU CPUType;
-};
-
-#endif // __CPU_O3_SPARC_IMPL_HH__
+#endif // __CPU_O3_LIMITS_HH__

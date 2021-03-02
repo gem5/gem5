@@ -47,6 +47,7 @@
 
 #include "base/debug.hh"
 #include "cpu/o3/inst_queue.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/o3/mem_dep_unit.hh"
 #include "debug/MemDepUnit.hh"
 #include "params/DerivO3CPU.hh"
@@ -72,7 +73,7 @@ MemDepUnit<MemDepPred, Impl>::MemDepUnit(const DerivO3CPUParams &params)
 template <class MemDepPred, class Impl>
 MemDepUnit<MemDepPred, Impl>::~MemDepUnit()
 {
-    for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
 
         ListIt inst_list_it = instList[tid].begin();
 
@@ -131,7 +132,7 @@ MemDepUnit<MemDepPred, Impl>::isDrained() const
     bool drained = instsToReplay.empty()
                  && memDepHash.empty()
                  && instsToReplay.empty();
-    for (int i = 0; i < Impl::MaxThreads; ++i)
+    for (int i = 0; i < O3MaxThreads; ++i)
         drained = drained && instList[i].empty();
 
     return drained;
@@ -143,7 +144,7 @@ MemDepUnit<MemDepPred, Impl>::drainSanityCheck() const
 {
     assert(instsToReplay.empty());
     assert(memDepHash.empty());
-    for (int i = 0; i < Impl::MaxThreads; ++i)
+    for (int i = 0; i < O3MaxThreads; ++i)
         assert(instList[i].empty());
     assert(instsToReplay.empty());
     assert(memDepHash.empty());
@@ -614,7 +615,7 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::dumpLists()
 {
-    for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
         cprintf("Instruction list %i size: %i\n",
                 tid, instList[tid].size());
 

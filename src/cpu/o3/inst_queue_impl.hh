@@ -48,6 +48,7 @@
 #include "base/logging.hh"
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/inst_queue.hh"
+#include "cpu/o3/limits.hh"
 #include "debug/IQ.hh"
 #include "enums/OpClass.hh"
 #include "params/DerivO3CPU.hh"
@@ -113,7 +114,7 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
     regScoreboard.resize(numPhysRegs);
 
     //Initialize Mem Dependence Units
-    for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
         memDepUnit[tid].init(params, tid, cpu_ptr);
         memDepUnit[tid].setIQ(this);
     }
@@ -151,7 +152,7 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
         DPRINTF(IQ, "IQ sharing policy set to Threshold:"
                 "%i entries per thread.\n",thresholdIQ);
    }
-    for (ThreadID tid = numThreads; tid < Impl::MaxThreads; tid++) {
+    for (ThreadID tid = numThreads; tid < O3MaxThreads; tid++) {
         maxEntries[tid] = 0;
     }
 }
@@ -389,7 +390,7 @@ void
 InstructionQueue<Impl>::resetState()
 {
     //Initialize thread IQ counts
-    for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
         count[tid] = 0;
         instList[tid].clear();
     }
@@ -406,7 +407,7 @@ InstructionQueue<Impl>::resetState()
         regScoreboard[i] = false;
     }
 
-    for (ThreadID tid = 0; tid < Impl::MaxThreads; ++tid) {
+    for (ThreadID tid = 0; tid < O3MaxThreads; ++tid) {
         squashedSeqNum[tid] = 0;
     }
 

@@ -58,6 +58,7 @@
 #include "cpu/o3/cpu.hh"
 #include "cpu/o3/fetch.hh"
 #include "cpu/o3/isa_specific.hh"
+#include "cpu/o3/limits.hh"
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"
@@ -93,14 +94,14 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, const DerivO3CPUParams &params)
       icachePort(this, _cpu),
       finishTranslationEvent(this), fetchStats(_cpu, this)
 {
-    if (numThreads > Impl::MaxThreads)
+    if (numThreads > O3MaxThreads)
         fatal("numThreads (%d) is larger than compiled limit (%d),\n"
-              "\tincrease MaxThreads in src/cpu/o3/impl.hh\n",
-              numThreads, static_cast<int>(Impl::MaxThreads));
-    if (fetchWidth > Impl::MaxWidth)
+              "\tincrease O3MaxThreads in src/cpu/o3/limits.hh\n",
+              numThreads, static_cast<int>(O3MaxThreads));
+    if (fetchWidth > O3MaxWidth)
         fatal("fetchWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease MaxWidth in src/cpu/o3/impl.hh\n",
-             fetchWidth, static_cast<int>(Impl::MaxWidth));
+             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
+             fetchWidth, static_cast<int>(O3MaxWidth));
     if (fetchBufferSize > cacheBlkSize)
         fatal("fetch buffer size (%u bytes) is greater than the cache "
               "block size (%u bytes)\n", fetchBufferSize, cacheBlkSize);
@@ -111,7 +112,7 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, const DerivO3CPUParams &params)
     // Get the size of an instruction.
     instSize = sizeof(TheISA::MachInst);
 
-    for (int i = 0; i < Impl::MaxThreads; i++) {
+    for (int i = 0; i < O3MaxThreads; i++) {
         fetchStatus[i] = Idle;
         decoder[i] = nullptr;
         pc[i] = 0;

@@ -47,6 +47,7 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/checker/thread_context.hh"
 #include "cpu/o3/isa_specific.hh"
+#include "cpu/o3/limits.hh"
 #include "cpu/o3/thread_context.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
@@ -187,10 +188,9 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
     } else {
         active_threads = params.workload.size();
 
-        if (active_threads > Impl::MaxThreads) {
-            panic("Workload Size too large. Increase the 'MaxThreads' "
-                  "constant in your O3CPU impl. file (e.g. o3/alpha/impl.hh) "
-                  "or edit your workload size.");
+        if (active_threads > O3MaxThreads) {
+            panic("Workload Size too large. Increase the 'O3MaxThreads' "
+                  "constant in cpu/o3/limits.hh or edit your workload size.");
         }
     }
 
@@ -450,7 +450,7 @@ FullO3CPUStats::FullO3CPUStats(FullO3CPU *cpu)
     // Number of Instructions simulated
     // --------------------------------
     // Should probably be in Base CPU but need templated
-    // MaxThreads so put in here instead
+    // O3MaxThreads so put in here instead
     committedInsts
         .init(cpu->numThreads)
         .flags(Stats::total);
