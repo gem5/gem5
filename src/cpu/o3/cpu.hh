@@ -55,11 +55,11 @@
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/commit.hh"
-#include "cpu/o3/cpu_policy.hh"
 #include "cpu/o3/decode.hh"
 #include "cpu/o3/fetch.hh"
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/iew.hh"
+#include "cpu/o3/impl.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/rename.hh"
 #include "cpu/o3/rob.hh"
@@ -100,7 +100,6 @@ class FullO3CPU : public BaseO3CPU
 {
   public:
     // Typedefs from the Impl here.
-    typedef typename Impl::CPUPol CPUPolicy;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
 
@@ -558,15 +557,15 @@ class FullO3CPU : public BaseO3CPU
     /** Typedefs from the Impl to get the structs that each of the
      *  time buffers should use.
      */
-    typedef typename CPUPolicy::TimeStruct TimeStruct;
+    typedef typename Impl::TimeStruct TimeStruct;
 
-    typedef typename CPUPolicy::FetchStruct FetchStruct;
+    typedef typename Impl::FetchStruct FetchStruct;
 
-    typedef typename CPUPolicy::DecodeStruct DecodeStruct;
+    typedef typename Impl::DecodeStruct DecodeStruct;
 
-    typedef typename CPUPolicy::RenameStruct RenameStruct;
+    typedef typename Impl::RenameStruct RenameStruct;
 
-    typedef typename CPUPolicy::IEWStruct IEWStruct;
+    typedef typename Impl::IEWStruct IEWStruct;
 
     /** The main time buffer to do backwards communication. */
     TimeBuffer<TimeStruct> timeBuffer;

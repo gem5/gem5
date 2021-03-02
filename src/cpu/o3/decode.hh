@@ -63,12 +63,9 @@ class DefaultDecode
     // Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::CPUPol CPUPol;
-
-    // Typedefs from the CPU policy.
-    typedef typename CPUPol::FetchStruct FetchStruct;
-    typedef typename CPUPol::DecodeStruct DecodeStruct;
-    typedef typename CPUPol::TimeStruct TimeStruct;
+    typedef typename Impl::FetchStruct FetchStruct;
+    typedef typename Impl::DecodeStruct DecodeStruct;
+    typedef typename Impl::TimeStruct TimeStruct;
 
   public:
     /** Overall decode stage status. Used to determine if the CPU can

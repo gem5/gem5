@@ -73,14 +73,11 @@ class DefaultRename
 {
   public:
     // Typedefs from the Impl.
-    typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
-
-    // Typedefs from the CPUPol
-    typedef typename CPUPol::DecodeStruct DecodeStruct;
-    typedef typename CPUPol::RenameStruct RenameStruct;
-    typedef typename CPUPol::TimeStruct TimeStruct;
+    typedef typename Impl::DecodeStruct DecodeStruct;
+    typedef typename Impl::RenameStruct RenameStruct;
+    typedef typename Impl::TimeStruct TimeStruct;
 
     // A deque is used to queue the instructions. Barrier insts must
     // be added to the front of the queue, which is the only reason for

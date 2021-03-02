@@ -88,12 +88,10 @@ class DefaultCommit
     // Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::CPUPol CPUPol;
-
-    typedef typename CPUPol::TimeStruct TimeStruct;
-    typedef typename CPUPol::FetchStruct FetchStruct;
-    typedef typename CPUPol::IEWStruct IEWStruct;
-    typedef typename CPUPol::RenameStruct RenameStruct;
+    typedef typename Impl::TimeStruct TimeStruct;
+    typedef typename Impl::FetchStruct FetchStruct;
+    typedef typename Impl::IEWStruct IEWStruct;
+    typedef typename Impl::RenameStruct RenameStruct;
 
     typedef O3ThreadState<Impl> Thread;
 

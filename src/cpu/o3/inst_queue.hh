@@ -90,9 +90,8 @@ class InstructionQueue
     //Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-
-    typedef typename Impl::CPUPol::IssueStruct IssueStruct;
-    typedef typename Impl::CPUPol::TimeStruct TimeStruct;
+    typedef typename Impl::IssueStruct IssueStruct;
+    typedef typename Impl::TimeStruct TimeStruct;
 
     // Typedef of iterator through the list of instructions.
     typedef typename std::list<DynInstPtr>::iterator ListIt;

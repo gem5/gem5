@@ -81,14 +81,12 @@ class DefaultIEW
 {
   private:
     //Typedefs from Impl
-    typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
-
-    typedef typename CPUPol::TimeStruct TimeStruct;
-    typedef typename CPUPol::IEWStruct IEWStruct;
-    typedef typename CPUPol::RenameStruct RenameStruct;
-    typedef typename CPUPol::IssueStruct IssueStruct;
+    typedef typename Impl::TimeStruct TimeStruct;
+    typedef typename Impl::IEWStruct IEWStruct;
+    typedef typename Impl::RenameStruct RenameStruct;
+    typedef typename Impl::IssueStruct IssueStruct;
 
   public:
     /** Overall IEW stage status. Used to determine if the CPU can

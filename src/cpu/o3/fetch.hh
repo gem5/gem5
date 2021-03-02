@@ -72,14 +72,11 @@ class DefaultFetch
 {
   public:
     /** Typedefs from Impl. */
-    typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInst DynInst;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
-
-    /** Typedefs from the CPU policy. */
-    typedef typename CPUPol::FetchStruct FetchStruct;
-    typedef typename CPUPol::TimeStruct TimeStruct;
+    typedef typename Impl::FetchStruct FetchStruct;
+    typedef typename Impl::TimeStruct TimeStruct;
 
     /**
      * IcachePort class for instruction fetch.

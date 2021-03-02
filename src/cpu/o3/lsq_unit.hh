@@ -86,7 +86,7 @@ class LSQUnit
 
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::CPUPol::IssueStruct IssueStruct;
+    typedef typename Impl::IssueStruct IssueStruct;
 
     using LSQSenderState = typename LSQ<Impl>::LSQSenderState;
     using LSQRequest = typename LSQ<Impl>::LSQRequest;
