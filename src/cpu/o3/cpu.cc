@@ -303,24 +303,19 @@ FullO3CPU::FullO3CPU(const DerivO3CPUParams &params)
         if (FullSystem) {
             // SMT is not supported in FS mode yet.
             assert(numThreads == 1);
-            thread[tid] = new O3ThreadState<O3CPUImpl>(this, 0, NULL);
+            thread[tid] = new O3ThreadState(this, 0, NULL);
         } else {
             if (tid < params.workload.size()) {
                 DPRINTF(O3CPU, "Workload[%i] process is %#x", tid,
                         thread[tid]);
-                thread[tid] = new O3ThreadState<O3CPUImpl>(this, tid,
+                thread[tid] = new O3ThreadState(this, tid,
                         params.workload[tid]);
-
-                //usedTids[tid] = true;
-                //threadMap[tid] = tid;
             } else {
                 //Allocate Empty thread so M5 can use later
                 //when scheduling threads to CPU
                 Process* dummy_proc = NULL;
 
-                thread[tid] = new O3ThreadState<O3CPUImpl>(this, tid,
-                        dummy_proc);
-                //usedTids[tid] = false;
+                thread[tid] = new O3ThreadState(this, tid, dummy_proc);
             }
         }
 

@@ -58,8 +58,7 @@
 
 struct DerivO3CPUParams;
 
-template <class>
-struct O3ThreadState;
+class O3ThreadState;
 
 /**
  * DefaultCommit handles single threaded and SMT commit. Its width is
@@ -86,8 +85,6 @@ struct O3ThreadState;
 class DefaultCommit
 {
   public:
-    typedef O3ThreadState<O3CPUImpl> Thread;
-
     /** Overall commit status. Used to determine if the CPU can deschedule
      * itself due to a lack of activity.
      */
@@ -138,7 +135,7 @@ class DefaultCommit
     void regProbePoints();
 
     /** Sets the list of threads. */
-    void setThreads(std::vector<Thread *> &threads);
+    void setThreads(std::vector<O3ThreadState *> &threads);
 
     /** Sets the main time buffer pointer, used for backwards communication. */
     void setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr);
@@ -353,7 +350,7 @@ class DefaultCommit
     FullO3CPU *cpu;
 
     /** Vector of all of the threads. */
-    std::vector<Thread *> thread;
+    std::vector<O3ThreadState *> thread;
 
     /** Records that commit has written to the time buffer this cycle. Used for
      * the CPU to determine if it can deschedule itself if there is no activity.

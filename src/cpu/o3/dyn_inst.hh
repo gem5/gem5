@@ -106,7 +106,7 @@ class BaseO3DynInst : public ExecContext, public RefCounted
     BaseCPU *getCpuPtr() { return cpu; }
 
     /** Pointer to the thread state. */
-    O3ThreadState<O3CPUImpl> *thread = nullptr;
+    O3ThreadState *thread = nullptr;
 
     /** The kind of fault this instruction has generated. */
     Fault fault = NoFault;
@@ -1014,11 +1014,7 @@ class BaseO3DynInst : public ExecContext, public RefCounted
     void setTid(ThreadID tid) { threadNumber = tid; }
 
     /** Sets the pointer to the thread state. */
-    void
-    setThreadState(O3ThreadState<O3CPUImpl> *state)
-    {
-        thread = state;
-    }
+    void setThreadState(O3ThreadState *state) { thread = state; }
 
     /** Returns the thread context. */
     ThreadContext *tcBase() const override { return thread->getTC(); }

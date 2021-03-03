@@ -599,7 +599,7 @@ class FullO3CPU : public BaseCPU
     System *system;
 
     /** Pointers to all of the threads in the CPU. */
-    std::vector<O3ThreadState<O3CPUImpl> *> thread;
+    std::vector<O3ThreadState *> thread;
 
     /** Threads Scheduled to Enter CPU */
     std::list<int> cpuWaitList;

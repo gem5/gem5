@@ -243,7 +243,7 @@ DefaultCommit::CommitStats::CommitStats(FullO3CPU *cpu, DefaultCommit *commit)
 }
 
 void
-DefaultCommit::setThreads(std::vector<Thread *> &threads)
+DefaultCommit::setThreads(std::vector<O3ThreadState *> &threads)
 {
     thread = threads;
 }

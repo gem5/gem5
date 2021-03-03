@@ -38,62 +38,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_THREAD_STATE_HH__
-#define __CPU_O3_THREAD_STATE_HH__
+#include "cpu/o3/thread_state.hh"
 
-#include <memory>
+#include "cpu/o3/cpu.hh"
 
-#include "cpu/thread_context.hh"
-#include "cpu/thread_state.hh"
+O3ThreadState::O3ThreadState(FullO3CPU *_cpu, int _thread_num,
+        Process *_process) : ThreadState(_cpu, _thread_num, _process),
+    comInstEventQueue("instruction-based event queue")
+{}
 
-class Process;
-class FullO3CPU;
-
-/**
- * Class that has various thread state, such as the status, the
- * current instruction being processed, whether or not the thread has
- * a trap pending or is being externally updated, the ThreadContext
- * pointer, etc.  It also handles anything related to a specific
- * thread's process, such as syscalls and checking valid addresses.
- */
-class O3ThreadState : public ThreadState
+void
+O3ThreadState::serialize(CheckpointOut &cp) const
 {
-  public:
-    PCEventQueue pcEventQueue;
-    /**
-     * An instruction-based event queue. Used for scheduling events based on
-     * number of instructions committed.
-     */
-    EventQueue comInstEventQueue;
+    ThreadState::serialize(cp);
+    // Use the ThreadContext serialization helper to serialize the
+    // TC.
+    ::serialize(*tc, cp);
+}
 
-    /* This variable controls if writes to a thread context should cause a all
-     * dynamic/speculative state to be thrown away. Nominally this is the
-     * desired behavior because the external thread context write has updated
-     * some state that could be used by an inflight instruction, however there
-     * are some cases like in a fault/trap handler where this behavior would
-     * lead to successive restarts and forward progress couldn't be made. This
-     * variable controls if the squashing will occur.
-     */
-    bool noSquashFromTC = false;
-
-    /** Whether or not the thread is currently waiting on a trap, and
-     * thus able to be externally updated without squashing.
-     */
-    bool trapPending = false;
-
-    /** Pointer to the hardware transactional memory checkpoint. */
-    std::unique_ptr<BaseHTMCheckpoint> htmCheckpoint;
-
-    O3ThreadState(FullO3CPU *_cpu, int _thread_num, Process *_process);
-
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
-
-    /** Pointer to the ThreadContext of this thread. */
-    ThreadContext *tc = nullptr;
-
-    /** Returns a pointer to the TC of this thread. */
-    ThreadContext *getTC() { return tc; }
-};
-
-#endif // __CPU_O3_THREAD_STATE_HH__
+void
+O3ThreadState::unserialize(CheckpointIn &cp)
+{
+    // Prevent squashing - we don't have any instructions in
+    // flight that we need to squash since we just instantiated a
+    // clean system.
+    noSquashFromTC = true;
+    ThreadState::unserialize(cp);
+    // Use the ThreadContext serialization helper to unserialize
+    // the TC.
+    ::unserialize(*tc, cp);
+    noSquashFromTC = false;
+}

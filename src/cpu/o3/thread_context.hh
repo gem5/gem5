@@ -94,7 +94,7 @@ class O3ThreadContext : public ThreadContext
     }
 
     /** Pointer to the thread state that this TC corrseponds to. */
-    O3ThreadState<O3CPUImpl> *thread;
+    O3ThreadState *thread;
 
     /** Returns a pointer to the MMU. */
     BaseMMU *getMMUPtr() override { return cpu->mmu; }
