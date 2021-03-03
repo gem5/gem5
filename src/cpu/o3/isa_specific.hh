@@ -26,6 +26,5 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/o3/dyn_inst.hh"
-#include "cpu/o3/impl.hh"
 #include "cpu/base.hh"
+#include "cpu/o3/dyn_inst.hh"

@@ -52,7 +52,6 @@
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/iew.hh"
-#include "cpu/o3/impl.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
 #include "sim/probe/probe.hh"

@@ -60,7 +60,6 @@
 #include "cpu/o3/fetch.hh"
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/iew.hh"
-#include "cpu/o3/impl.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/rename.hh"
 #include "cpu/o3/rob.hh"

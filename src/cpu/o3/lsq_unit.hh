@@ -57,7 +57,6 @@
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
-#include "cpu/o3/impl.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/timebuf.hh"
 #include "debug/HtmCpu.hh"

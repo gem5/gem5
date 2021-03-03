@@ -43,7 +43,6 @@
 
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
-#include "cpu/o3/impl.hh"
 
 /**
  * Specific non-templated derived class used for SimObject configuration.

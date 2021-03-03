@@ -43,7 +43,6 @@
 #define __CPU_O3_THREAD_CONTEXT_HH__
 
 #include "config/the_isa.hh"
-#include "cpu/o3/impl.hh"
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/thread_context.hh"
 

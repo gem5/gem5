@@ -45,7 +45,6 @@
 #define __CPU_O3_PROBE_SIMPLE_TRACE_HH__
 
 #include "cpu/o3/dyn_inst_ptr.hh"
-#include "cpu/o3/impl.hh"
 #include "params/SimpleTrace.hh"
 #include "sim/probe/probe.hh"
 
