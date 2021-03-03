@@ -119,7 +119,7 @@ class FullO3CPU : public BaseO3CPU
     };
 
     BaseMMU *mmu;
-    using LSQRequest = typename LSQ<Impl>::LSQRequest;
+    using LSQRequest = LSQ::LSQRequest;
 
     /** Overall CPU status. */
     Status _status;

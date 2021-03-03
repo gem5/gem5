@@ -354,7 +354,7 @@ class DefaultIEW
     InstructionQueue instQueue;
 
     /** Load / store queue. */
-    LSQ<Impl> ldstQueue;
+    LSQ ldstQueue;
 
     /** Pointer to the functional unit pool. */
     FUPool *fuPool;

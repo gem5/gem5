@@ -396,7 +396,7 @@ class BaseO3DynInst : public ExecContext, public RefCounted
      * Saved memory request (needed when the DTB address translation is
      * delayed due to a hw page table walk).
      */
-    typename ::LSQ<O3CPUImpl>::LSQ::LSQRequest *savedReq;
+    LSQ::LSQRequest *savedReq;
 
     /////////////////////// Checker //////////////////////
     // Need a copy of main request pointer to verify on writes.

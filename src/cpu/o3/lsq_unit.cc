@@ -205,7 +205,7 @@ LSQUnit::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
 
 void
 LSQUnit::init(FullO3CPU<O3CPUImpl> *cpu_ptr, DefaultIEW<O3CPUImpl> *iew_ptr,
-        const DerivO3CPUParams &params, LSQ<O3CPUImpl> *lsq_ptr, unsigned id)
+        const DerivO3CPUParams &params, LSQ *lsq_ptr, unsigned id)
 {
     lsqID = id;
 

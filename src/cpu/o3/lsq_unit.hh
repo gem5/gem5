@@ -88,8 +88,8 @@ class LSQUnit
   public:
     static constexpr auto MaxDataBytes = MaxVecRegLenInBytes;
 
-    using LSQSenderState = typename LSQ<O3CPUImpl>::LSQSenderState;
-    using LSQRequest = typename LSQ<O3CPUImpl>::LSQRequest;
+    using LSQSenderState = LSQ::LSQSenderState;
+    using LSQRequest = LSQ::LSQRequest;
   private:
     class LSQEntry
     {
@@ -226,8 +226,7 @@ class LSQUnit
 
     /** Initializes the LSQ unit with the specified number of entries. */
     void init(FullO3CPU<O3CPUImpl> *cpu_ptr, DefaultIEW<O3CPUImpl> *iew_ptr,
-            const DerivO3CPUParams &params, LSQ<O3CPUImpl> *lsq_ptr,
-            unsigned id);
+            const DerivO3CPUParams &params, LSQ *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;
@@ -402,7 +401,7 @@ class LSQUnit
     DefaultIEW<O3CPUImpl> *iewStage;
 
     /** Pointer to the LSQ. */
-    LSQ<O3CPUImpl> *lsq;
+    LSQ *lsq;
 
     /** Pointer to the dcache port.  Used only for sending. */
     RequestPort *dcachePort;

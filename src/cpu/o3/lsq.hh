@@ -70,7 +70,6 @@ class DefaultIEW;
 
 class LSQUnit;
 
-template <class Impl>
 class LSQ
 {
   public:
@@ -83,40 +82,36 @@ class LSQ
         LSQRequest* _request;
 
         /** Default constructor. */
-        LSQSenderState(LSQRequest* request, bool isLoad_)
-            : _request(request), mainPkt(nullptr), pendingPacket(nullptr),
-              outstanding(0), isLoad(isLoad_), needWB(isLoad_), isSplit(false),
-              pktToSend(false), deleted(false)
-          { }
-      public:
+        LSQSenderState(LSQRequest* request, bool is_load);
 
+      public:
         /** Instruction which initiated the access to memory. */
         O3DynInstPtr inst;
         /** The main packet from a split load, used during writeback. */
-        PacketPtr mainPkt;
+        PacketPtr mainPkt = nullptr;
         /** A second packet from a split store that needs sending. */
-        PacketPtr pendingPacket;
+        PacketPtr pendingPacket = nullptr;
         /** Number of outstanding packets to complete. */
-        uint8_t outstanding;
+        uint8_t outstanding = 0;
         /** Whether or not it is a load. */
-        bool isLoad;
+        bool isLoad = false;
         /** Whether or not the instruction will need to writeback. */
-        bool needWB;
+        bool needWB = false;
         /** Whether or not this access is split in two. */
-        bool isSplit;
+        bool isSplit = false;
         /** Whether or not there is a packet that needs sending. */
-        bool pktToSend;
+        bool pktToSend = false;
         /** Has the request been deleted?
          * LSQ entries can be squashed before the response comes back. in that
          * case the SenderState knows.
          */
-        bool deleted;
+        bool deleted = false;
         ContextID contextId();
 
         /** Completes a packet and returns whether the access is finished. */
-        inline bool isComplete() { return outstanding == 0; }
-        inline void deleteRequest() { deleted = true; }
-        inline bool alive() { return !deleted; }
+        bool isComplete() { return outstanding == 0; }
+        void deleteRequest() { deleted = true; }
+        bool alive() { return !deleted; }
         LSQRequest* request() { return _request; }
         virtual void complete() = 0;
         void writebackDone() { _request->writebackDone(); }
@@ -130,15 +125,12 @@ class LSQ
       protected:
 
         /** Pointer to LSQ. */
-        LSQ<Impl> *lsq;
-        FullO3CPU<Impl> *cpu;
+        LSQ *lsq;
+        FullO3CPU<O3CPUImpl> *cpu;
 
       public:
         /** Default constructor. */
-        DcachePort(LSQ<Impl> *_lsq, FullO3CPU<Impl>* _cpu)
-            : RequestPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq),
-              cpu(_cpu)
-        { }
+        DcachePort(LSQ *_lsq, FullO3CPU<O3CPUImpl> *_cpu);
 
       protected:
 
@@ -148,7 +140,8 @@ class LSQ
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void recvTimingSnoopReq(PacketPtr pkt);
 
-        virtual void recvFunctionalSnoop(PacketPtr pkt)
+        virtual void
+        recvFunctionalSnoop(PacketPtr pkt)
         {
             // @todo: Is there a need for potential invalidation here?
         }
@@ -640,8 +633,8 @@ class LSQ
       protected:
         /* Given that we are inside templates, children need explicit
          * declaration of the names in the parent class. */
-        using Flag = typename LSQRequest::Flag;
-        using State = typename LSQRequest::State;
+        using Flag = LSQRequest::Flag;
+        using State = LSQRequest::State;
         using LSQRequest::_addr;
         using LSQRequest::_fault;
         using LSQRequest::_flags;
@@ -674,7 +667,7 @@ class LSQ
             LSQRequest(port, inst, isLoad, addr, size, flags_, data, res,
                        std::move(amo_op)) {}
 
-        inline virtual ~SingleDataRequest() {}
+        virtual ~SingleDataRequest() {}
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
                 ThreadContext* tc, BaseTLB::Mode mode);
@@ -691,27 +684,27 @@ class LSQ
     // of encapsulating hardware transactional memory command requests
     class HtmCmdRequest : public SingleDataRequest
     {
-    protected:
-      /* Given that we are inside templates, children need explicit
-       * declaration of the names in the parent class. */
-      using Flag = typename LSQRequest::Flag;
-      using State = typename LSQRequest::State;
-      using LSQRequest::_addr;
-      using LSQRequest::_size;
-      using LSQRequest::_byteEnable;
-      using LSQRequest::_requests;
-      using LSQRequest::_inst;
-      using LSQRequest::_taskId;
-      using LSQRequest::flags;
-      using LSQRequest::setState;
-    public:
-      HtmCmdRequest(LSQUnit* port, const O3DynInstPtr& inst,
-              const Request::Flags& flags_);
-      inline virtual ~HtmCmdRequest() {}
-      virtual void initiateTranslation();
-      virtual void finish(const Fault &fault, const RequestPtr &req,
-              ThreadContext* tc, BaseTLB::Mode mode);
-      virtual std::string name() const { return "HtmCmdRequest"; }
+      protected:
+        /* Given that we are inside templates, children need explicit
+         * declaration of the names in the parent class. */
+        using Flag = LSQRequest::Flag;
+        using State = LSQRequest::State;
+        using LSQRequest::_addr;
+        using LSQRequest::_size;
+        using LSQRequest::_byteEnable;
+        using LSQRequest::_requests;
+        using LSQRequest::_inst;
+        using LSQRequest::_taskId;
+        using LSQRequest::flags;
+        using LSQRequest::setState;
+      public:
+        HtmCmdRequest(LSQUnit* port, const O3DynInstPtr& inst,
+                const Request::Flags& flags_);
+        virtual ~HtmCmdRequest() {}
+        virtual void initiateTranslation();
+        virtual void finish(const Fault &fault, const RequestPtr &req,
+                ThreadContext* tc, BaseTLB::Mode mode);
+        virtual std::string name() const { return "HtmCmdRequest"; }
     };
 
     class SplitDataRequest : public LSQRequest
@@ -719,8 +712,8 @@ class LSQ
       protected:
         /* Given that we are inside templates, children need explicit
          * declaration of the names in the parent class. */
-        using Flag = typename LSQRequest::Flag;
-        using State = typename LSQRequest::State;
+        using Flag = LSQRequest::Flag;
+        using State = LSQRequest::State;
         using LSQRequest::_addr;
         using LSQRequest::_data;
         using LSQRequest::_fault;
@@ -791,9 +784,8 @@ class LSQ
     };
 
     /** Constructs an LSQ with the given parameters. */
-    LSQ(FullO3CPU<Impl> *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
+    LSQ(FullO3CPU<O3CPUImpl> *cpu_ptr, DefaultIEW<O3CPUImpl> *iew_ptr,
             const DerivO3CPUParams &params);
-    ~LSQ() { }
 
     /** Returns the name of the LSQ. */
     std::string name() const;
@@ -1002,10 +994,10 @@ class LSQ
                       const std::vector<bool>& byte_enable);
 
     /** The CPU pointer. */
-    FullO3CPU<Impl> *cpu;
+    FullO3CPU<O3CPUImpl> *cpu;
 
     /** The IEW stage pointer. */
-    DefaultIEW<Impl> *iewStage;
+    DefaultIEW<O3CPUImpl> *iewStage;
 
     /** Is D-cache blocked? */
     bool cacheBlocked() const;
