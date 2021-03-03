@@ -491,7 +491,7 @@ class FullO3CPU : public BaseO3CPU
 
   protected:
     /** The fetch stage. */
-    DefaultFetch<Impl> fetch;
+    DefaultFetch fetch;
 
     /** The decode stage. */
     DefaultDecode<Impl> decode;
