@@ -1,0 +1,8 @@
+*.swp
+*~
+.venv
+__pycache__
+dist/
+*.egg-info/
+.vscode/
+.mypy_cache/
