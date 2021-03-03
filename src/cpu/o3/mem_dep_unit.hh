@@ -50,16 +50,18 @@
 #include "base/statistics.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
+#include "cpu/o3/impl.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/store_set.hh"
 #include "debug/MemDepUnit.hh"
 
 struct SNHash
 {
-    size_t operator() (const InstSeqNum &seq_num) const {
+    size_t
+    operator()(const InstSeqNum &seq_num) const
+    {
         unsigned a = (unsigned)seq_num;
         unsigned hash = (((a >> 14) ^ ((a >> 2) & 0xffff))) & 0x7FFFFFFF;
-
         return hash;
     }
 };
@@ -83,7 +85,6 @@ class FullO3CPU;
  * utilize.  Thus this class should be most likely be rewritten for other
  * dependence prediction schemes.
  */
-template <class Impl>
 class MemDepUnit
 {
   protected:
@@ -104,7 +105,7 @@ class MemDepUnit
 
     /** Initializes the unit with parameters and a thread id. */
     void init(const DerivO3CPUParams &params, ThreadID tid,
-            FullO3CPU<Impl> *cpu);
+            FullO3CPU<O3CPUImpl> *cpu);
 
     /** Determine if we are drained. */
     bool isDrained() const;
@@ -116,7 +117,7 @@ class MemDepUnit
     void takeOverFrom();
 
     /** Sets the pointer to the IQ. */
-    void setIQ(InstructionQueue<Impl> *iq_ptr);
+    void setIQ(InstructionQueue<O3CPUImpl> *iq_ptr);
 
     /** Inserts a memory instruction. */
     void insert(const O3DynInstPtr &inst);
@@ -181,31 +182,10 @@ class MemDepUnit
     {
       public:
         /** Constructs a memory dependence entry. */
-        MemDepEntry(const O3DynInstPtr &new_inst)
-            : inst(new_inst), regsReady(false), memDeps(0),
-              completed(false), squashed(false)
-        {
-#ifdef DEBUG
-            ++memdep_count;
-
-            DPRINTF(MemDepUnit, "Memory dependency entry created.  "
-                    "memdep_count=%i %s\n", memdep_count, inst->pcState());
-#endif
-        }
+        MemDepEntry(const O3DynInstPtr &new_inst);
 
         /** Frees any pointers. */
-        ~MemDepEntry()
-        {
-            for (int i = 0; i < dependInsts.size(); ++i) {
-                dependInsts[i] = NULL;
-            }
-#ifdef DEBUG
-            --memdep_count;
-
-            DPRINTF(MemDepUnit, "Memory dependency entry deleted.  "
-                    "memdep_count=%i %s\n", memdep_count, inst->pcState());
-#endif
-        }
+        ~MemDepEntry();
 
         /** Returns the name of the memory dependence entry. */
         std::string name() const { return "memdepentry"; }
@@ -220,13 +200,13 @@ class MemDepUnit
         std::vector<MemDepEntryPtr> dependInsts;
 
         /** If the registers are ready or not. */
-        bool regsReady;
+        bool regsReady = false;
         /** Number of memory dependencies that need to be satisfied. */
-        int memDeps;
+        int memDeps = 0;
         /** If the instruction is completed. */
-        bool completed;
+        bool completed = false;
         /** If the instruction is squashed. */
-        bool squashed;
+        bool squashed = false;
 
         /** For debugging. */
 #ifdef DEBUG
@@ -278,7 +258,7 @@ class MemDepUnit
     void insertBarrierSN(const O3DynInstPtr &barr_inst);
 
     /** Pointer to the IQ. */
-    InstructionQueue<Impl> *iqPtr;
+    InstructionQueue<O3CPUImpl> *iqPtr;
 
     /** The thread id of this memory dependence unit. */
     int id;
