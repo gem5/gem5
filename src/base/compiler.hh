@@ -112,6 +112,16 @@
 // we can't do that with direct substitution.
 #  define M5_LIKELY(cond) __builtin_expect(!!(cond), 1)
 #  define M5_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
+
+// Evaluate an expanded parameter pack in order. Multiple arguments can be
+// passed in which be evaluated in order relative to each other as a group.
+// The argument(s) must include a parameter pack to expand. This works because
+// the elements of a brace inclosed initializer list are evaluated in order,
+// as are the arguments to the comma operator, which evaluates to the last
+// value. This is compiler specific because it uses variadic macros.
+#define M5_FOR_EACH_IN_PACK(...) \
+do { M5_VAR_USED int i[] = { 0, ((void)(__VA_ARGS__), 0)... }; } while (false)
+
 #else
 #  error "Don't know what to do for your compiler."
 #endif
