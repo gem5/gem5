@@ -139,8 +139,7 @@ class DefaultRename
     void setDecodeQueue(TimeBuffer<O3Comm::DecodeStruct> *dq_ptr);
 
     /** Sets pointer to IEW stage. Used only for initialization. */
-    void setIEWStage(DefaultIEW<Impl> *iew_stage)
-    { iew_ptr = iew_stage; }
+    void setIEWStage(DefaultIEW *iew_stage) { iew_ptr = iew_stage; }
 
     /** Sets pointer to commit stage. Used only for initialization. */
     void setCommitStage(DefaultCommit<Impl> *commit_stage)
@@ -148,7 +147,7 @@ class DefaultRename
 
   private:
     /** Pointer to IEW stage. Used only for initialization. */
-    DefaultIEW<Impl> *iew_ptr;
+    DefaultIEW *iew_ptr;
 
     /** Pointer to commit stage. Used only for initialization. */
     DefaultCommit<Impl> *commit_ptr;

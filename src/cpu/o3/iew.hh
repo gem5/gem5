@@ -77,7 +77,6 @@ class FUPool;
  * up any dependents, and marking the register ready on the
  * scoreboard.
  */
-template<class Impl>
 class DefaultIEW
 {
   public:
@@ -121,7 +120,7 @@ class DefaultIEW
 
   public:
     /** Constructs a DefaultIEW with the given parameters. */
-    DefaultIEW(FullO3CPU<Impl> *_cpu, const DerivO3CPUParams &params);
+    DefaultIEW(FullO3CPU<O3CPUImpl> *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of the DefaultIEW stage. */
     std::string name() const;
@@ -206,10 +205,10 @@ class DefaultIEW
     void activityThisCycle();
 
     /** Tells CPU that the IEW stage is active and running. */
-    inline void activateStage();
+    void activateStage();
 
     /** Tells CPU that the IEW stage is inactive and idle. */
-    inline void deactivateStage();
+    void deactivateStage();
 
     /** Returns if the LSQ has any stores to writeback. */
     bool hasStoresToWB() { return ldstQueue.hasStoresToWB(); }
@@ -299,25 +298,25 @@ class DefaultIEW
     TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
 
     /** Wire to write information heading to previous stages. */
-    typename TimeBuffer<O3Comm::TimeStruct>::wire toFetch;
+    TimeBuffer<O3Comm::TimeStruct>::wire toFetch;
 
     /** Wire to get commit's output from backwards time buffer. */
-    typename TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
+    TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
 
     /** Wire to write information heading to previous stages. */
-    typename TimeBuffer<O3Comm::TimeStruct>::wire toRename;
+    TimeBuffer<O3Comm::TimeStruct>::wire toRename;
 
     /** Rename instruction queue interface. */
     TimeBuffer<O3Comm::RenameStruct> *renameQueue;
 
     /** Wire to get rename's output from rename queue. */
-    typename TimeBuffer<O3Comm::RenameStruct>::wire fromRename;
+    TimeBuffer<O3Comm::RenameStruct>::wire fromRename;
 
     /** Issue stage queue. */
     TimeBuffer<O3Comm::IssueStruct> issueToExecQueue;
 
     /** Wire to read information from the issue stage time queue. */
-    typename TimeBuffer<O3Comm::IssueStruct>::wire fromIssue;
+    TimeBuffer<O3Comm::IssueStruct>::wire fromIssue;
 
     /**
      * IEW stage time buffer.  Holds ROB indices of instructions that
@@ -326,7 +325,7 @@ class DefaultIEW
     TimeBuffer<O3Comm::IEWStruct> *iewQueue;
 
     /** Wire to write infromation heading to commit. */
-    typename TimeBuffer<O3Comm::IEWStruct>::wire toCommit;
+    TimeBuffer<O3Comm::IEWStruct>::wire toCommit;
 
     /** Queue of all instructions coming from rename this cycle. */
     std::queue<O3DynInstPtr> insts[O3MaxThreads];
@@ -339,7 +338,7 @@ class DefaultIEW
 
   private:
     /** CPU pointer. */
-    FullO3CPU<Impl> *cpu;
+    FullO3CPU<O3CPUImpl> *cpu;
 
     /** Records if IEW has written to the time buffer this cycle, so that the
      * CPU can deschedule itself if there is no activity.
@@ -416,7 +415,7 @@ class DefaultIEW
 
     struct IEWStats : public Stats::Group
     {
-        IEWStats(FullO3CPU<Impl> *cpu);
+        IEWStats(FullO3CPU<O3CPUImpl> *cpu);
 
         /** Stat for total number of idle cycles. */
         Stats::Scalar idleCycles;
@@ -452,7 +451,7 @@ class DefaultIEW
 
         struct ExecutedInstStats : public Stats::Group
         {
-            ExecutedInstStats(FullO3CPU<Impl> *cpu);
+            ExecutedInstStats(FullO3CPU<O3CPUImpl> *cpu);
 
             /** Stat for total number of executed instructions. */
             Stats::Scalar numInsts;

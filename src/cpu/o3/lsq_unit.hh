@@ -68,7 +68,6 @@
 struct DerivO3CPUParams;
 #include "base/circular_queue.hh"
 
-template <class Impl>
 class DefaultIEW;
 
 /**
@@ -225,7 +224,7 @@ class LSQUnit
     }
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(FullO3CPU<O3CPUImpl> *cpu_ptr, DefaultIEW<O3CPUImpl> *iew_ptr,
+    void init(FullO3CPU<O3CPUImpl> *cpu_ptr, DefaultIEW *iew_ptr,
             const DerivO3CPUParams &params, LSQ *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */
@@ -398,7 +397,7 @@ class LSQUnit
     FullO3CPU<O3CPUImpl> *cpu;
 
     /** Pointer to the IEW stage. */
-    DefaultIEW<O3CPUImpl> *iewStage;
+    DefaultIEW *iewStage;
 
     /** Pointer to the LSQ. */
     LSQ *lsq;

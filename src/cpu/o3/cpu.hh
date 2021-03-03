@@ -500,7 +500,7 @@ class FullO3CPU : public BaseO3CPU
     DefaultRename<Impl> rename;
 
     /** The issue/execute/writeback stages. */
-    DefaultIEW<Impl> iew;
+    DefaultIEW iew;
 
     /** The commit stage. */
     DefaultCommit<Impl> commit;

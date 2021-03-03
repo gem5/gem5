@@ -153,13 +153,13 @@ class DefaultCommit
     void setIEWQueue(TimeBuffer<O3Comm::IEWStruct> *iq_ptr);
 
     /** Sets the pointer to the IEW stage. */
-    void setIEWStage(DefaultIEW<Impl> *iew_stage);
+    void setIEWStage(DefaultIEW *iew_stage);
 
     /** The pointer to the IEW stage. Used solely to ensure that
      * various events (traps, interrupts, syscalls) do not occur until
      * all stores have written back.
      */
-    DefaultIEW<Impl> *iewStage;
+    DefaultIEW *iewStage;
 
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);

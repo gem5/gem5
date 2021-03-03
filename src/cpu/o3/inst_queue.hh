@@ -65,8 +65,6 @@
 struct DerivO3CPUParams;
 class FUPool;
 class MemInterface;
-
-template <class Impl>
 class DefaultIEW;
 
 template <class Impl>
@@ -124,8 +122,8 @@ class InstructionQueue
     };
 
     /** Constructs an IQ. */
-    InstructionQueue(FullO3CPU<O3CPUImpl> *cpu_ptr,
-            DefaultIEW<O3CPUImpl> *iew_ptr, const DerivO3CPUParams &params);
+    InstructionQueue(FullO3CPU<O3CPUImpl> *cpu_ptr, DefaultIEW *iew_ptr,
+            const DerivO3CPUParams &params);
 
     /** Destructs the IQ. */
     ~InstructionQueue();
@@ -287,7 +285,7 @@ class InstructionQueue
     MemInterface *dcacheInterface;
 
     /** Pointer to IEW stage. */
-    DefaultIEW<O3CPUImpl> *iewStage;
+    DefaultIEW *iewStage;
 
     /** The memory dependence unit, which tracks/predicts memory dependences
      *  between instructions.

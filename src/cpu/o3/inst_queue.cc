@@ -79,7 +79,7 @@ InstructionQueue::FUCompletion::description() const
 }
 
 InstructionQueue::InstructionQueue(FullO3CPU<O3CPUImpl> *cpu_ptr,
-        DefaultIEW<O3CPUImpl> *iew_ptr, const DerivO3CPUParams &params)
+        DefaultIEW *iew_ptr, const DerivO3CPUParams &params)
     : cpu(cpu_ptr),
       iewStage(iew_ptr),
       fuPool(params.fuPool),
