@@ -292,7 +292,7 @@ class InstructionQueue
     /** The memory dependence unit, which tracks/predicts memory dependences
      *  between instructions.
      */
-    MemDepUnit<StoreSet, Impl> memDepUnit[O3MaxThreads];
+    MemDepUnit<Impl> memDepUnit[O3MaxThreads];
 
     /** The queue to the execute stage.  Issued instructions will be written
      *  into it.

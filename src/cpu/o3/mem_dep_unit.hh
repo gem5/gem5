@@ -51,6 +51,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/o3/store_set.hh"
 #include "debug/MemDepUnit.hh"
 
 struct SNHash
@@ -82,7 +83,7 @@ class FullO3CPU;
  * utilize.  Thus this class should be most likely be rewritten for other
  * dependence prediction schemes.
  */
-template <class MemDepPred, class Impl>
+template <class Impl>
 class MemDepUnit
 {
   protected:
@@ -259,7 +260,7 @@ class MemDepUnit
      *  this unit what instruction the newly added instruction is dependent
      *  upon.
      */
-    MemDepPred depPred;
+    StoreSet depPred;
 
     /** Sequence numbers of outstanding load barriers. */
     std::unordered_set<InstSeqNum> loadBarrierSNs;

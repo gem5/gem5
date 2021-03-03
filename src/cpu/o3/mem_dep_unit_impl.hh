@@ -53,15 +53,15 @@
 #include "debug/MemDepUnit.hh"
 #include "params/DerivO3CPU.hh"
 
-template <class MemDepPred, class Impl>
-MemDepUnit<MemDepPred, Impl>::MemDepUnit()
+template <class Impl>
+MemDepUnit<Impl>::MemDepUnit()
     : iqPtr(NULL),
       stats(nullptr)
 {
 }
 
-template <class MemDepPred, class Impl>
-MemDepUnit<MemDepPred, Impl>::MemDepUnit(const DerivO3CPUParams &params)
+template <class Impl>
+MemDepUnit<Impl>::MemDepUnit(const DerivO3CPUParams &params)
     : _name(params.name + ".memdepunit"),
       depPred(params.store_set_clear_period, params.SSITSize,
               params.LFSTSize),
@@ -71,8 +71,8 @@ MemDepUnit<MemDepPred, Impl>::MemDepUnit(const DerivO3CPUParams &params)
     DPRINTF(MemDepUnit, "Creating MemDepUnit object.\n");
 }
 
-template <class MemDepPred, class Impl>
-MemDepUnit<MemDepPred, Impl>::~MemDepUnit()
+template <class Impl>
+MemDepUnit<Impl>::~MemDepUnit()
 {
     for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
 
@@ -96,9 +96,9 @@ MemDepUnit<MemDepPred, Impl>::~MemDepUnit()
 #endif
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::init(
+MemDepUnit<Impl>::init(
         const DerivO3CPUParams &params, ThreadID tid, FullO3CPU<Impl> *cpu)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
@@ -113,8 +113,8 @@ MemDepUnit<MemDepPred, Impl>::init(
     cpu->addStatGroup(stats_group_name.c_str(), &stats);
 }
 
-template <class MemDepPred, class Impl>
-MemDepUnit<MemDepPred, Impl>::
+template <class Impl>
+MemDepUnit<Impl>::
 MemDepUnitStats::MemDepUnitStats(Stats::Group *parent)
     : Stats::Group(parent),
       ADD_STAT(insertedLoads, Stats::Units::Count::get(),
@@ -128,9 +128,9 @@ MemDepUnitStats::MemDepUnitStats(Stats::Group *parent)
 {
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 bool
-MemDepUnit<MemDepPred, Impl>::isDrained() const
+MemDepUnit<Impl>::isDrained() const
 {
     bool drained = instsToReplay.empty()
                  && memDepHash.empty()
@@ -141,9 +141,9 @@ MemDepUnit<MemDepPred, Impl>::isDrained() const
     return drained;
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::drainSanityCheck() const
+MemDepUnit<Impl>::drainSanityCheck() const
 {
     assert(instsToReplay.empty());
     assert(memDepHash.empty());
@@ -153,9 +153,9 @@ MemDepUnit<MemDepPred, Impl>::drainSanityCheck() const
     assert(memDepHash.empty());
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::takeOverFrom()
+MemDepUnit<Impl>::takeOverFrom()
 {
     // Be sure to reset all state.
     loadBarrierSNs.clear();
@@ -163,16 +163,16 @@ MemDepUnit<MemDepPred, Impl>::takeOverFrom()
     depPred.clear();
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::setIQ(InstructionQueue<Impl> *iq_ptr)
+MemDepUnit<Impl>::setIQ(InstructionQueue<Impl> *iq_ptr)
 {
     iqPtr = iq_ptr;
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::insertBarrierSN(const O3DynInstPtr &barr_inst)
+MemDepUnit<Impl>::insertBarrierSN(const O3DynInstPtr &barr_inst)
 {
     InstSeqNum barr_sn = barr_inst->seqNum;
 
@@ -203,9 +203,9 @@ MemDepUnit<MemDepPred, Impl>::insertBarrierSN(const O3DynInstPtr &barr_inst)
     }
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::insert(const O3DynInstPtr &inst)
+MemDepUnit<Impl>::insert(const O3DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -314,9 +314,9 @@ MemDepUnit<MemDepPred, Impl>::insert(const O3DynInstPtr &inst)
     }
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::insertNonSpec(const O3DynInstPtr &inst)
+MemDepUnit<Impl>::insertNonSpec(const O3DynInstPtr &inst)
 {
     insertBarrier(inst);
 
@@ -336,9 +336,9 @@ MemDepUnit<MemDepPred, Impl>::insertNonSpec(const O3DynInstPtr &inst)
     }
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::insertBarrier(const O3DynInstPtr &barr_inst)
+MemDepUnit<Impl>::insertBarrier(const O3DynInstPtr &barr_inst)
 {
     ThreadID tid = barr_inst->threadNumber;
 
@@ -359,9 +359,9 @@ MemDepUnit<MemDepPred, Impl>::insertBarrier(const O3DynInstPtr &barr_inst)
     insertBarrierSN(barr_inst);
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::regsReady(const O3DynInstPtr &inst)
+MemDepUnit<Impl>::regsReady(const O3DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Marking registers as ready for "
             "instruction PC %s [sn:%lli].\n",
@@ -382,9 +382,9 @@ MemDepUnit<MemDepPred, Impl>::regsReady(const O3DynInstPtr &inst)
     }
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::nonSpecInstReady(const O3DynInstPtr &inst)
+MemDepUnit<Impl>::nonSpecInstReady(const O3DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Marking non speculative "
             "instruction PC %s as ready [sn:%lli].\n",
@@ -395,16 +395,16 @@ MemDepUnit<MemDepPred, Impl>::nonSpecInstReady(const O3DynInstPtr &inst)
     moveToReady(inst_entry);
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::reschedule(const O3DynInstPtr &inst)
+MemDepUnit<Impl>::reschedule(const O3DynInstPtr &inst)
 {
     instsToReplay.push_back(inst);
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::replay()
+MemDepUnit<Impl>::replay()
 {
     O3DynInstPtr temp_inst;
 
@@ -423,9 +423,9 @@ MemDepUnit<MemDepPred, Impl>::replay()
     }
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::completed(const O3DynInstPtr &inst)
+MemDepUnit<Impl>::completed(const O3DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Completed mem instruction PC %s [sn:%lli].\n",
             inst->pcState(), inst->seqNum);
@@ -447,9 +447,9 @@ MemDepUnit<MemDepPred, Impl>::completed(const O3DynInstPtr &inst)
 #endif
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::completeInst(const O3DynInstPtr &inst)
+MemDepUnit<Impl>::completeInst(const O3DynInstPtr &inst)
 {
     wakeDependents(inst);
     completed(inst);
@@ -479,9 +479,9 @@ MemDepUnit<MemDepPred, Impl>::completeInst(const O3DynInstPtr &inst)
     }
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::wakeDependents(const O3DynInstPtr &inst)
+MemDepUnit<Impl>::wakeDependents(const O3DynInstPtr &inst)
 {
     // Only stores, atomics and barriers have dependents.
     if (!inst->isStore() && !inst->isAtomic() && !inst->isReadBarrier() &&
@@ -516,9 +516,9 @@ MemDepUnit<MemDepPred, Impl>::wakeDependents(const O3DynInstPtr &inst)
     inst_entry->dependInsts.clear();
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num,
+MemDepUnit<Impl>::squash(const InstSeqNum &squashed_num,
                                      ThreadID tid)
 {
     if (!instsToReplay.empty()) {
@@ -568,9 +568,9 @@ MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num,
     depPred.squash(squashed_num, tid);
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::violation(const O3DynInstPtr &store_inst,
+MemDepUnit<Impl>::violation(const O3DynInstPtr &store_inst,
                                         const O3DynInstPtr &violating_load)
 {
     DPRINTF(MemDepUnit, "Passing violating PCs to store sets,"
@@ -580,9 +580,9 @@ MemDepUnit<MemDepPred, Impl>::violation(const O3DynInstPtr &store_inst,
     depPred.violation(store_inst->instAddr(), violating_load->instAddr());
 }
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::issue(const O3DynInstPtr &inst)
+MemDepUnit<Impl>::issue(const O3DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Issuing instruction PC %#x [sn:%lli].\n",
             inst->instAddr(), inst->seqNum);
@@ -590,9 +590,9 @@ MemDepUnit<MemDepPred, Impl>::issue(const O3DynInstPtr &inst)
     depPred.issued(inst->instAddr(), inst->seqNum, inst->isStore());
 }
 
-template <class MemDepPred, class Impl>
-inline typename MemDepUnit<MemDepPred,Impl>::MemDepEntryPtr &
-MemDepUnit<MemDepPred, Impl>::findInHash(const O3DynInstConstPtr &inst)
+template <class Impl>
+typename MemDepUnit<Impl>::MemDepEntryPtr &
+MemDepUnit<Impl>::findInHash(const O3DynInstConstPtr &inst)
 {
     MemDepHashIt hash_it = memDepHash.find(inst->seqNum);
 
@@ -601,9 +601,9 @@ MemDepUnit<MemDepPred, Impl>::findInHash(const O3DynInstConstPtr &inst)
     return (*hash_it).second;
 }
 
-template <class MemDepPred, class Impl>
-inline void
-MemDepUnit<MemDepPred, Impl>::moveToReady(MemDepEntryPtr &woken_inst_entry)
+template <class Impl>
+void
+MemDepUnit<Impl>::moveToReady(MemDepEntryPtr &woken_inst_entry)
 {
     DPRINTF(MemDepUnit, "Adding instruction [sn:%lli] "
             "to the ready list.\n", woken_inst_entry->inst->seqNum);
@@ -614,9 +614,9 @@ MemDepUnit<MemDepPred, Impl>::moveToReady(MemDepEntryPtr &woken_inst_entry)
 }
 
 
-template <class MemDepPred, class Impl>
+template <class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::dumpLists()
+MemDepUnit<Impl>::dumpLists()
 {
     for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
         cprintf("Instruction list %i size: %i\n",
