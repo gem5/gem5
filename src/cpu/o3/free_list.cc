@@ -32,6 +32,9 @@
 #include "base/trace.hh"
 #include "debug/FreeList.hh"
 
+namespace o3
+{
+
 UnifiedFreeList::UnifiedFreeList(const std::string &_my_name,
                                  PhysRegFile *_regFile)
     : _name(_my_name), regFile(_regFile)
@@ -42,3 +45,5 @@ UnifiedFreeList::UnifiedFreeList(const std::string &_my_name,
     // about its internal organization
     regFile->initFreeList(this);
 }
+
+} // namespace o3

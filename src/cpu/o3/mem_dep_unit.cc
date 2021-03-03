@@ -38,7 +38,10 @@
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/limits.hh"
 #include "debug/MemDepUnit.hh"
-#include "params/DerivO3CPU.hh"
+#include "params/O3CPU.hh"
+
+namespace o3
+{
 
 #ifdef DEBUG
 int MemDepUnit::MemDepEntry::memdep_count = 0;
@@ -48,7 +51,7 @@ int MemDepUnit::MemDepEntry::memdep_erase = 0;
 
 MemDepUnit::MemDepUnit() : iqPtr(NULL), stats(nullptr) {}
 
-MemDepUnit::MemDepUnit(const DerivO3CPUParams &params)
+MemDepUnit::MemDepUnit(const O3CPUParams &params)
     : _name(params.name + ".memdepunit"),
       depPred(params.store_set_clear_period, params.SSITSize,
               params.LFSTSize),
@@ -60,7 +63,7 @@ MemDepUnit::MemDepUnit(const DerivO3CPUParams &params)
 
 MemDepUnit::~MemDepUnit()
 {
-    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < MaxThreads; tid++) {
 
         ListIt inst_list_it = instList[tid].begin();
 
@@ -83,7 +86,7 @@ MemDepUnit::~MemDepUnit()
 }
 
 void
-MemDepUnit::init(const DerivO3CPUParams &params, ThreadID tid, FullO3CPU *cpu)
+MemDepUnit::init(const O3CPUParams &params, ThreadID tid, CPU *cpu)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
 
@@ -116,7 +119,7 @@ MemDepUnit::isDrained() const
     bool drained = instsToReplay.empty()
                  && memDepHash.empty()
                  && instsToReplay.empty();
-    for (int i = 0; i < O3MaxThreads; ++i)
+    for (int i = 0; i < MaxThreads; ++i)
         drained = drained && instList[i].empty();
 
     return drained;
@@ -127,7 +130,7 @@ MemDepUnit::drainSanityCheck() const
 {
     assert(instsToReplay.empty());
     assert(memDepHash.empty());
-    for (int i = 0; i < O3MaxThreads; ++i)
+    for (int i = 0; i < MaxThreads; ++i)
         assert(instList[i].empty());
     assert(instsToReplay.empty());
     assert(memDepHash.empty());
@@ -149,7 +152,7 @@ MemDepUnit::setIQ(InstructionQueue *iq_ptr)
 }
 
 void
-MemDepUnit::insertBarrierSN(const O3DynInstPtr &barr_inst)
+MemDepUnit::insertBarrierSN(const DynInstPtr &barr_inst)
 {
     InstSeqNum barr_sn = barr_inst->seqNum;
 
@@ -181,7 +184,7 @@ MemDepUnit::insertBarrierSN(const O3DynInstPtr &barr_inst)
 }
 
 void
-MemDepUnit::insert(const O3DynInstPtr &inst)
+MemDepUnit::insert(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -292,7 +295,7 @@ MemDepUnit::insert(const O3DynInstPtr &inst)
 }
 
 void
-MemDepUnit::insertNonSpec(const O3DynInstPtr &inst)
+MemDepUnit::insertNonSpec(const DynInstPtr &inst)
 {
     insertBarrier(inst);
 
@@ -314,7 +317,7 @@ MemDepUnit::insertNonSpec(const O3DynInstPtr &inst)
 }
 
 void
-MemDepUnit::insertBarrier(const O3DynInstPtr &barr_inst)
+MemDepUnit::insertBarrier(const DynInstPtr &barr_inst)
 {
     ThreadID tid = barr_inst->threadNumber;
 
@@ -336,7 +339,7 @@ MemDepUnit::insertBarrier(const O3DynInstPtr &barr_inst)
 }
 
 void
-MemDepUnit::regsReady(const O3DynInstPtr &inst)
+MemDepUnit::regsReady(const DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Marking registers as ready for "
             "instruction PC %s [sn:%lli].\n",
@@ -358,7 +361,7 @@ MemDepUnit::regsReady(const O3DynInstPtr &inst)
 }
 
 void
-MemDepUnit::nonSpecInstReady(const O3DynInstPtr &inst)
+MemDepUnit::nonSpecInstReady(const DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Marking non speculative "
             "instruction PC %s as ready [sn:%lli].\n",
@@ -370,7 +373,7 @@ MemDepUnit::nonSpecInstReady(const O3DynInstPtr &inst)
 }
 
 void
-MemDepUnit::reschedule(const O3DynInstPtr &inst)
+MemDepUnit::reschedule(const DynInstPtr &inst)
 {
     instsToReplay.push_back(inst);
 }
@@ -378,7 +381,7 @@ MemDepUnit::reschedule(const O3DynInstPtr &inst)
 void
 MemDepUnit::replay()
 {
-    O3DynInstPtr temp_inst;
+    DynInstPtr temp_inst;
 
     // For now this replay function replays all waiting memory ops.
     while (!instsToReplay.empty()) {
@@ -396,7 +399,7 @@ MemDepUnit::replay()
 }
 
 void
-MemDepUnit::completed(const O3DynInstPtr &inst)
+MemDepUnit::completed(const DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Completed mem instruction PC %s [sn:%lli].\n",
             inst->pcState(), inst->seqNum);
@@ -419,7 +422,7 @@ MemDepUnit::completed(const O3DynInstPtr &inst)
 }
 
 void
-MemDepUnit::completeInst(const O3DynInstPtr &inst)
+MemDepUnit::completeInst(const DynInstPtr &inst)
 {
     wakeDependents(inst);
     completed(inst);
@@ -450,7 +453,7 @@ MemDepUnit::completeInst(const O3DynInstPtr &inst)
 }
 
 void
-MemDepUnit::wakeDependents(const O3DynInstPtr &inst)
+MemDepUnit::wakeDependents(const DynInstPtr &inst)
 {
     // Only stores, atomics and barriers have dependents.
     if (!inst->isStore() && !inst->isAtomic() && !inst->isReadBarrier() &&
@@ -485,7 +488,7 @@ MemDepUnit::wakeDependents(const O3DynInstPtr &inst)
     inst_entry->dependInsts.clear();
 }
 
-MemDepUnit::MemDepEntry::MemDepEntry(const O3DynInstPtr &new_inst) :
+MemDepUnit::MemDepEntry::MemDepEntry(const DynInstPtr &new_inst) :
     inst(new_inst)
 {
 #ifdef DEBUG
@@ -562,8 +565,8 @@ MemDepUnit::squash(const InstSeqNum &squashed_num, ThreadID tid)
 }
 
 void
-MemDepUnit::violation(const O3DynInstPtr &store_inst,
-                                        const O3DynInstPtr &violating_load)
+MemDepUnit::violation(const DynInstPtr &store_inst,
+        const DynInstPtr &violating_load)
 {
     DPRINTF(MemDepUnit, "Passing violating PCs to store sets,"
             " load: %#x, store: %#x\n", violating_load->instAddr(),
@@ -573,7 +576,7 @@ MemDepUnit::violation(const O3DynInstPtr &store_inst,
 }
 
 void
-MemDepUnit::issue(const O3DynInstPtr &inst)
+MemDepUnit::issue(const DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Issuing instruction PC %#x [sn:%lli].\n",
             inst->instAddr(), inst->seqNum);
@@ -582,7 +585,7 @@ MemDepUnit::issue(const O3DynInstPtr &inst)
 }
 
 MemDepUnit::MemDepEntryPtr &
-MemDepUnit::findInHash(const O3DynInstConstPtr &inst)
+MemDepUnit::findInHash(const DynInstConstPtr &inst)
 {
     MemDepHashIt hash_it = memDepHash.find(inst->seqNum);
 
@@ -606,7 +609,7 @@ MemDepUnit::moveToReady(MemDepEntryPtr &woken_inst_entry)
 void
 MemDepUnit::dumpLists()
 {
-    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < MaxThreads; tid++) {
         cprintf("Instruction list %i size: %i\n",
                 tid, instList[tid].size());
 
@@ -632,3 +635,5 @@ MemDepUnit::dumpLists()
     cprintf("Memory dependence entries: %i\n", MemDepEntry::memdep_count);
 #endif
 }
+
+} // namespace o3

@@ -44,9 +44,14 @@
 
 #include "base/refcnt.hh"
 
-class BaseO3DynInst;
+namespace o3
+{
 
-using O3DynInstPtr = RefCountingPtr<BaseO3DynInst>;
-using O3DynInstConstPtr = RefCountingPtr<const BaseO3DynInst>;
+class DynInst;
+
+using DynInstPtr = RefCountingPtr<DynInst>;
+using DynInstConstPtr = RefCountingPtr<const DynInst>;
+
+} // namespace o3
 
 #endif // __CPU_O3_DYN_INST_PTR_HH__

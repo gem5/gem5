@@ -52,6 +52,9 @@
 #include "debug/IEW.hh"
 #include "enums/VecRegRenameMode.hh"
 
+namespace o3
+{
+
 class UnifiedFreeList;
 
 /**
@@ -361,5 +364,6 @@ class PhysRegFile
     PhysRegIdPtr getTrueId(PhysRegIdPtr reg);
 };
 
+} // namespace o3
 
 #endif //__CPU_O3_REGFILE_HH__

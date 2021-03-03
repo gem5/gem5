@@ -49,14 +49,17 @@
 #include "debug/Activity.hh"
 #include "debug/Decode.hh"
 #include "debug/O3PipeView.hh"
-#include "params/DerivO3CPU.hh"
+#include "params/O3CPU.hh"
 #include "sim/full_system.hh"
 
 // clang complains about std::set being overloaded with Packet::set if
 // we open up the entire namespace std
 using std::list;
 
-DefaultDecode::DefaultDecode(FullO3CPU *_cpu, const DerivO3CPUParams &params)
+namespace o3
+{
+
+Decode::Decode(CPU *_cpu, const O3CPUParams &params)
     : cpu(_cpu),
       renameToDecodeDelay(params.renameToDecodeDelay),
       iewToDecodeDelay(params.iewToDecodeDelay),
@@ -66,14 +69,14 @@ DefaultDecode::DefaultDecode(FullO3CPU *_cpu, const DerivO3CPUParams &params)
       numThreads(params.numThreads),
       stats(_cpu)
 {
-    if (decodeWidth > O3MaxWidth)
+    if (decodeWidth > MaxWidth)
         fatal("decodeWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
-             decodeWidth, static_cast<int>(O3MaxWidth));
+             "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
+             decodeWidth, static_cast<int>(MaxWidth));
 
     // @todo: Make into a parameter
     skidBufferMax = (fetchToDecodeDelay + 1) *  params.fetchWidth;
-    for (int tid = 0; tid < O3MaxThreads; tid++) {
+    for (int tid = 0; tid < MaxThreads; tid++) {
         stalls[tid] = {false};
         decodeStatus[tid] = Idle;
         bdelayDoneSeqNum[tid] = 0;
@@ -83,20 +86,20 @@ DefaultDecode::DefaultDecode(FullO3CPU *_cpu, const DerivO3CPUParams &params)
 }
 
 void
-DefaultDecode::startupStage()
+Decode::startupStage()
 {
     resetStage();
 }
 
 void
-DefaultDecode::clearStates(ThreadID tid)
+Decode::clearStates(ThreadID tid)
 {
     decodeStatus[tid] = Idle;
     stalls[tid].rename = false;
 }
 
 void
-DefaultDecode::resetStage()
+Decode::resetStage()
 {
     _status = Inactive;
 
@@ -109,12 +112,12 @@ DefaultDecode::resetStage()
 }
 
 std::string
-DefaultDecode::name() const
+Decode::name() const
 {
     return cpu->name() + ".decode";
 }
 
-DefaultDecode::DecodeStats::DecodeStats(FullO3CPU *cpu)
+Decode::DecodeStats::DecodeStats(CPU *cpu)
     : Stats::Group(cpu, "decode"),
       ADD_STAT(idleCycles, Stats::Units::Cycle::get(),
                "Number of cycles decode is idle"),
@@ -151,7 +154,7 @@ DefaultDecode::DecodeStats::DecodeStats(FullO3CPU *cpu)
 }
 
 void
-DefaultDecode::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
+Decode::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
 
@@ -165,7 +168,7 @@ DefaultDecode::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
 }
 
 void
-DefaultDecode::setDecodeQueue(TimeBuffer<O3Comm::DecodeStruct> *dq_ptr)
+Decode::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
 {
     decodeQueue = dq_ptr;
 
@@ -174,7 +177,7 @@ DefaultDecode::setDecodeQueue(TimeBuffer<O3Comm::DecodeStruct> *dq_ptr)
 }
 
 void
-DefaultDecode::setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *fq_ptr)
+Decode::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 {
     fetchQueue = fq_ptr;
 
@@ -183,13 +186,13 @@ DefaultDecode::setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *fq_ptr)
 }
 
 void
-DefaultDecode::setActiveThreads(std::list<ThreadID> *at_ptr)
+Decode::setActiveThreads(std::list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 }
 
 void
-DefaultDecode::drainSanityCheck() const
+Decode::drainSanityCheck() const
 {
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
         assert(insts[tid].empty());
@@ -198,7 +201,7 @@ DefaultDecode::drainSanityCheck() const
 }
 
 bool
-DefaultDecode::isDrained() const
+Decode::isDrained() const
 {
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
         if (!insts[tid].empty() || !skidBuffer[tid].empty() ||
@@ -209,7 +212,7 @@ DefaultDecode::isDrained() const
 }
 
 bool
-DefaultDecode::checkStall(ThreadID tid) const
+Decode::checkStall(ThreadID tid) const
 {
     bool ret_val = false;
 
@@ -222,13 +225,13 @@ DefaultDecode::checkStall(ThreadID tid) const
 }
 
 bool
-DefaultDecode::fetchInstsValid()
+Decode::fetchInstsValid()
 {
     return fromFetch->size > 0;
 }
 
 bool
-DefaultDecode::block(ThreadID tid)
+Decode::block(ThreadID tid)
 {
     DPRINTF(Decode, "[tid:%i] Blocking.\n", tid);
 
@@ -257,7 +260,7 @@ DefaultDecode::block(ThreadID tid)
 }
 
 bool
-DefaultDecode::unblock(ThreadID tid)
+Decode::unblock(ThreadID tid)
 {
     // Decode is done unblocking only if the skid buffer is empty.
     if (skidBuffer[tid].empty()) {
@@ -275,7 +278,7 @@ DefaultDecode::unblock(ThreadID tid)
 }
 
 void
-DefaultDecode::squash(const O3DynInstPtr &inst, ThreadID tid)
+Decode::squash(const DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(Decode, "[tid:%i] [sn:%llu] Squashing due to incorrect branch "
             "prediction detected at decode.\n", tid, inst->seqNum);
@@ -326,7 +329,7 @@ DefaultDecode::squash(const O3DynInstPtr &inst, ThreadID tid)
 }
 
 unsigned
-DefaultDecode::squash(ThreadID tid)
+Decode::squash(ThreadID tid)
 {
     DPRINTF(Decode, "[tid:%i] Squashing.\n",tid);
 
@@ -373,9 +376,9 @@ DefaultDecode::squash(ThreadID tid)
 }
 
 void
-DefaultDecode::skidInsert(ThreadID tid)
+Decode::skidInsert(ThreadID tid)
 {
-    O3DynInstPtr inst = NULL;
+    DynInstPtr inst = NULL;
 
     while (!insts[tid].empty()) {
         inst = insts[tid].front();
@@ -397,7 +400,7 @@ DefaultDecode::skidInsert(ThreadID tid)
 }
 
 bool
-DefaultDecode::skidsEmpty()
+Decode::skidsEmpty()
 {
     list<ThreadID>::iterator threads = activeThreads->begin();
     list<ThreadID>::iterator end = activeThreads->end();
@@ -412,7 +415,7 @@ DefaultDecode::skidsEmpty()
 }
 
 void
-DefaultDecode::updateStatus()
+Decode::updateStatus()
 {
     bool any_unblocking = false;
 
@@ -435,7 +438,7 @@ DefaultDecode::updateStatus()
 
             DPRINTF(Activity, "Activating stage.\n");
 
-            cpu->activateStage(FullO3CPU::DecodeIdx);
+            cpu->activateStage(CPU::DecodeIdx);
         }
     } else {
         // If it's not unblocking, then decode will not have any internal
@@ -444,13 +447,13 @@ DefaultDecode::updateStatus()
             _status = Inactive;
             DPRINTF(Activity, "Deactivating stage.\n");
 
-            cpu->deactivateStage(FullO3CPU::DecodeIdx);
+            cpu->deactivateStage(CPU::DecodeIdx);
         }
     }
 }
 
 void
-DefaultDecode::sortInsts()
+Decode::sortInsts()
 {
     int insts_from_fetch = fromFetch->size;
     for (int i = 0; i < insts_from_fetch; ++i) {
@@ -459,7 +462,7 @@ DefaultDecode::sortInsts()
 }
 
 void
-DefaultDecode::readStallSignals(ThreadID tid)
+Decode::readStallSignals(ThreadID tid)
 {
     if (fromRename->renameBlock[tid]) {
         stalls[tid].rename = true;
@@ -472,7 +475,7 @@ DefaultDecode::readStallSignals(ThreadID tid)
 }
 
 bool
-DefaultDecode::checkSignalsAndUpdate(ThreadID tid)
+Decode::checkSignalsAndUpdate(ThreadID tid)
 {
     // Check if there's a squash signal, squash if there is.
     // Check stall signals, block if necessary.
@@ -528,7 +531,7 @@ DefaultDecode::checkSignalsAndUpdate(ThreadID tid)
 }
 
 void
-DefaultDecode::tick()
+Decode::tick()
 {
     wroteToTimeBuffer = false;
 
@@ -563,7 +566,7 @@ DefaultDecode::tick()
 }
 
 void
-DefaultDecode::decode(bool &status_change, ThreadID tid)
+Decode::decode(bool &status_change, ThreadID tid)
 {
     // If status is Running or idle,
     //     call decodeInsts()
@@ -607,7 +610,7 @@ DefaultDecode::decode(bool &status_change, ThreadID tid)
 }
 
 void
-DefaultDecode::decodeInsts(ThreadID tid)
+Decode::decodeInsts(ThreadID tid)
 {
     // Instructions can come either from the skid buffer or the list of
     // instructions coming from fetch, depending on decode's status.
@@ -628,7 +631,7 @@ DefaultDecode::decodeInsts(ThreadID tid)
         ++stats.runCycles;
     }
 
-    std::queue<O3DynInstPtr>
+    std::queue<DynInstPtr>
         &insts_to_decode = decodeStatus[tid] == Unblocking ?
         skidBuffer[tid] : insts[tid];
 
@@ -637,7 +640,7 @@ DefaultDecode::decodeInsts(ThreadID tid)
     while (insts_available > 0 && toRenameIndex < decodeWidth) {
         assert(!insts_to_decode.empty());
 
-        O3DynInstPtr inst = std::move(insts_to_decode.front());
+        DynInstPtr inst = std::move(insts_to_decode.front());
 
         insts_to_decode.pop();
 
@@ -734,3 +737,5 @@ DefaultDecode::decodeInsts(ThreadID tid)
         wroteToTimeBuffer = true;
     }
 }
+
+} // namespace o3

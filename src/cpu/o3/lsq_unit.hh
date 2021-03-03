@@ -64,10 +64,13 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 
-struct DerivO3CPUParams;
+struct O3CPUParams;
 #include "base/circular_queue.hh"
 
-class DefaultIEW;
+namespace o3
+{
+
+class IEW;
 
 /**
  * Class that implements the actual LQ and SQ for each specific
@@ -93,7 +96,7 @@ class LSQUnit
     {
       private:
         /** The instruction. */
-        O3DynInstPtr inst;
+        DynInstPtr inst;
         /** The request. */
         LSQRequest* req = nullptr;
         /** The size of the operation. */
@@ -123,7 +126,7 @@ class LSQUnit
         }
 
         void
-        set(const O3DynInstPtr& new_inst)
+        set(const DynInstPtr& new_inst)
         {
             assert(!_valid);
             inst = new_inst;
@@ -139,7 +142,7 @@ class LSQUnit
         bool valid() const { return _valid; }
         uint32_t& size() { return _size; }
         const uint32_t& size() const { return _size; }
-        const O3DynInstPtr& instruction() const { return inst; }
+        const DynInstPtr& instruction() const { return inst; }
         /** @} */
     };
 
@@ -168,11 +171,7 @@ class LSQUnit
             std::memset(_data, 0, DataSize);
         }
 
-        void
-        set(const O3DynInstPtr& inst)
-        {
-            LSQEntry::set(inst);
-        }
+        void set(const DynInstPtr& inst) { LSQEntry::set(inst); }
 
         void
         clear()
@@ -223,8 +222,8 @@ class LSQUnit
     }
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
-            const DerivO3CPUParams &params, LSQ *lsq_ptr, unsigned id);
+    void init(CPU *cpu_ptr, IEW *iew_ptr, const O3CPUParams &params,
+            LSQ *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;
@@ -239,11 +238,11 @@ class LSQUnit
     void takeOverFrom();
 
     /** Inserts an instruction. */
-    void insert(const O3DynInstPtr &inst);
+    void insert(const DynInstPtr &inst);
     /** Inserts a load instruction. */
-    void insertLoad(const O3DynInstPtr &load_inst);
+    void insertLoad(const DynInstPtr &load_inst);
     /** Inserts a store instruction. */
-    void insertStore(const O3DynInstPtr &store_inst);
+    void insertStore(const DynInstPtr &store_inst);
 
     /** Check for ordering violations in the LSQ. For a store squash if we
      * ever find a conflicting load. For a load, only squash if we
@@ -252,7 +251,7 @@ class LSQUnit
      * @param inst the instruction to check
      */
     Fault checkViolations(typename LoadQueue::iterator& loadIt,
-            const O3DynInstPtr& inst);
+            const DynInstPtr& inst);
 
     /** Check if an incoming invalidate hits in the lsq on a load
      * that might have issued out of order wrt another load beacuse
@@ -261,11 +260,11 @@ class LSQUnit
     void checkSnoop(PacketPtr pkt);
 
     /** Executes a load instruction. */
-    Fault executeLoad(const O3DynInstPtr &inst);
+    Fault executeLoad(const DynInstPtr &inst);
 
     Fault executeLoad(int lq_idx) { panic("Not implemented"); return NoFault; }
     /** Executes a store instruction. */
-    Fault executeStore(const O3DynInstPtr &inst);
+    Fault executeStore(const DynInstPtr &inst);
 
     /** Commits the head load. */
     void commitLoad();
@@ -291,7 +290,7 @@ class LSQUnit
     bool violation() { return memDepViolator; }
 
     /** Returns the memory ordering violator. */
-    O3DynInstPtr getMemDepViolator();
+    DynInstPtr getMemDepViolator();
 
     /** Returns the number of free LQ entries. */
     unsigned numFreeLoadEntries();
@@ -364,7 +363,7 @@ class LSQUnit
     void resetState();
 
     /** Writes back the instruction, sending it to IEW. */
-    void writeback(const O3DynInstPtr &inst, PacketPtr pkt);
+    void writeback(const DynInstPtr &inst, PacketPtr pkt);
 
     /** Try to finish a previously blocked write back attempt */
     void writebackBlockedStore();
@@ -393,10 +392,10 @@ class LSQUnit
 
   private:
     /** Pointer to the CPU. */
-    FullO3CPU *cpu;
+    CPU *cpu;
 
     /** Pointer to the IEW stage. */
-    DefaultIEW *iewStage;
+    IEW *iewStage;
 
     /** Pointer to the LSQ. */
     LSQ *lsq;
@@ -446,7 +445,7 @@ class LSQUnit
     {
       public:
         /** Constructs a writeback event. */
-        WritebackEvent(const O3DynInstPtr &_inst, PacketPtr pkt,
+        WritebackEvent(const DynInstPtr &_inst, PacketPtr pkt,
                 LSQUnit *lsq_ptr);
 
         /** Processes the writeback event. */
@@ -457,7 +456,7 @@ class LSQUnit
 
       private:
         /** Instruction whose results are being written back. */
-        O3DynInstPtr inst;
+        DynInstPtr inst;
 
         /** The packet that would have been sent to memory. */
         PacketPtr pkt;
@@ -517,7 +516,7 @@ class LSQUnit
     Addr cacheBlockMask;
 
     /** Wire to read information from the issue stage time queue. */
-    typename TimeBuffer<O3Comm::IssueStruct>::wire fromIssue;
+    typename TimeBuffer<IssueStruct>::wire fromIssue;
 
     /** Whether or not the LSQ is stalled. */
     bool stalled;
@@ -538,7 +537,7 @@ class LSQUnit
     bool storeInFlight;
 
     /** The oldest load that caused a memory ordering violation. */
-    O3DynInstPtr memDepViolator;
+    DynInstPtr memDepViolator;
 
     /** Flag for memory model. */
     bool needsTSO;
@@ -600,5 +599,7 @@ class LSQUnit
     typedef CircularQueue<LQEntry> LQueue;
     typedef CircularQueue<SQEntry> SQueue;
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_LSQ_UNIT_HH__

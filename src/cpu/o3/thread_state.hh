@@ -47,7 +47,11 @@
 #include "cpu/thread_state.hh"
 
 class Process;
-class FullO3CPU;
+
+namespace o3
+{
+
+class CPU;
 
 /**
  * Class that has various thread state, such as the status, the
@@ -56,7 +60,7 @@ class FullO3CPU;
  * pointer, etc.  It also handles anything related to a specific
  * thread's process, such as syscalls and checking valid addresses.
  */
-class O3ThreadState : public ThreadState
+class ThreadState : public ::ThreadState
 {
   public:
     PCEventQueue pcEventQueue;
@@ -84,16 +88,18 @@ class O3ThreadState : public ThreadState
     /** Pointer to the hardware transactional memory checkpoint. */
     std::unique_ptr<BaseHTMCheckpoint> htmCheckpoint;
 
-    O3ThreadState(FullO3CPU *_cpu, int _thread_num, Process *_process);
+    ThreadState(CPU *_cpu, int _thread_num, Process *_process);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
     /** Pointer to the ThreadContext of this thread. */
-    ThreadContext *tc = nullptr;
+    ::ThreadContext *tc = nullptr;
 
     /** Returns a pointer to the TC of this thread. */
-    ThreadContext *getTC() { return tc; }
+    ::ThreadContext *getTC() { return tc; }
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_THREAD_STATE_HH__

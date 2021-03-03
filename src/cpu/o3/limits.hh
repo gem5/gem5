@@ -28,7 +28,12 @@
 #ifndef __CPU_O3_LIMITS_HH__
 #define __CPU_O3_LIMITS_HH__
 
-static constexpr int O3MaxWidth = 12;
-static constexpr int O3MaxThreads = 4;
+namespace o3
+{
+
+static constexpr int MaxWidth = 12;
+static constexpr int MaxThreads = 4;
+
+} // namespace o3
 
 #endif // __CPU_O3_LIMITS_HH__

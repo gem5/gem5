@@ -54,7 +54,12 @@
 #include "cpu/reg_class.hh"
 #include "enums/SMTQueuePolicy.hh"
 
-class FullO3CPU;
+struct O3CPUParams;
+
+namespace o3
+{
+
+class CPU;
 
 struct DerivO3CPUParams;
 
@@ -65,7 +70,7 @@ class ROB
 {
   public:
     typedef std::pair<RegIndex, RegIndex> UnmapInfo;
-    typedef typename std::list<O3DynInstPtr>::iterator InstIt;
+    typedef typename std::list<DynInstPtr>::iterator InstIt;
 
     /** Possible ROB statuses. */
     enum Status
@@ -77,7 +82,7 @@ class ROB
 
   private:
     /** Per-thread ROB status. */
-    Status robStatus[O3MaxThreads];
+    Status robStatus[MaxThreads];
 
     /** ROB resource sharing policy for SMT mode. */
     SMTQueuePolicy robPolicy;
@@ -87,7 +92,7 @@ class ROB
      *  @param _cpu   The cpu object pointer.
      *  @param params The cpu params including several ROB-specific parameters.
      */
-    ROB(FullO3CPU *_cpu, const DerivO3CPUParams &params);
+    ROB(CPU *_cpu, const O3CPUParams &params);
 
     std::string name() const;
 
@@ -107,36 +112,36 @@ class ROB
      *  ROB for the new instruction.
      *  @param inst The instruction being inserted into the ROB.
      */
-    void insertInst(const O3DynInstPtr &inst);
+    void insertInst(const DynInstPtr &inst);
 
     /** Returns pointer to the head instruction within the ROB.  There is
      *  no guarantee as to the return value if the ROB is empty.
      *  @retval Pointer to the DynInst that is at the head of the ROB.
      */
-//    O3DynInstPtr readHeadInst();
+//    DynInstPtr readHeadInst();
 
     /** Returns a pointer to the head instruction of a specific thread within
      *  the ROB.
      *  @return Pointer to the DynInst that is at the head of the ROB.
      */
-    const O3DynInstPtr &readHeadInst(ThreadID tid);
+    const DynInstPtr &readHeadInst(ThreadID tid);
 
     /** Returns a pointer to the instruction with the given sequence if it is
      *  in the ROB.
      */
-    O3DynInstPtr findInst(ThreadID tid, InstSeqNum squash_inst);
+    DynInstPtr findInst(ThreadID tid, InstSeqNum squash_inst);
 
     /** Returns pointer to the tail instruction within the ROB.  There is
      *  no guarantee as to the return value if the ROB is empty.
      *  @retval Pointer to the DynInst that is at the tail of the ROB.
      */
-//    O3DynInstPtr readTailInst();
+//    DynInstPtr readTailInst();
 
     /** Returns a pointer to the tail instruction of a specific thread within
      *  the ROB.
      *  @return Pointer to the DynInst that is at the tail of the ROB.
      */
-    O3DynInstPtr readTailInst(ThreadID tid);
+    DynInstPtr readTailInst(ThreadID tid);
 
     /** Retires the head instruction, removing it from the ROB. */
 //    void retireHead();
@@ -264,7 +269,7 @@ class ROB
     void resetState();
 
     /** Pointer to the CPU. */
-    FullO3CPU *cpu;
+    CPU *cpu;
 
     /** Active Threads in CPU */
     std::list<ThreadID> *activeThreads;
@@ -273,13 +278,13 @@ class ROB
     unsigned numEntries;
 
     /** Entries Per Thread */
-    unsigned threadEntries[O3MaxThreads];
+    unsigned threadEntries[MaxThreads];
 
     /** Max Insts a Thread Can Have in the ROB */
-    unsigned maxEntries[O3MaxThreads];
+    unsigned maxEntries[MaxThreads];
 
     /** ROB List of Instructions */
-    std::list<O3DynInstPtr> instList[O3MaxThreads];
+    std::list<DynInstPtr> instList[MaxThreads];
 
     /** Number of instructions that can be squashed in a single cycle. */
     unsigned squashWidth;
@@ -303,21 +308,21 @@ class ROB
      *  and after a squash.
      *  This will always be set to cpu->instList.end() if it is invalid.
      */
-    InstIt squashIt[O3MaxThreads];
+    InstIt squashIt[MaxThreads];
 
   public:
     /** Number of instructions in the ROB. */
     int numInstsInROB;
 
     /** Dummy instruction returned if there are no insts left. */
-    O3DynInstPtr dummyInst;
+    DynInstPtr dummyInst;
 
   private:
     /** The sequence number of the squashed instruction. */
-    InstSeqNum squashedSeqNum[O3MaxThreads];
+    InstSeqNum squashedSeqNum[MaxThreads];
 
     /** Is the ROB done squashing. */
-    bool doneSquashing[O3MaxThreads];
+    bool doneSquashing[MaxThreads];
 
     /** Number of active threads. */
     ThreadID numThreads;
@@ -333,5 +338,7 @@ class ROB
         Stats::Scalar writes;
     } stats;
 };
+
+} // namespace o3
 
 #endif //__CPU_O3_ROB_HH__

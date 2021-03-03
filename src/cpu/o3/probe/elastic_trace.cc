@@ -45,6 +45,9 @@
 #include "debug/ElasticTrace.hh"
 #include "mem/packet.hh"
 
+namespace o3
+{
+
 ElasticTrace::ElasticTrace(const ElasticTraceParams &params)
     :  ProbeListenerObject(params),
        regEtraceListenersEvent([this]{ regEtraceListeners(); }, name()),
@@ -58,7 +61,7 @@ ElasticTrace::ElasticTrace(const ElasticTraceParams &params)
        traceVirtAddr(params.traceVirtAddr),
        stats(this)
 {
-    cpu = dynamic_cast<FullO3CPU *>(params.manager);
+    cpu = dynamic_cast<CPU *>(params.manager);
     const BaseISA::RegClasses &regClasses =
         cpu->getContext(0)->getIsaPtr()->regClasses();
     zeroReg = regClasses.at(IntRegClass).zeroReg();
@@ -125,21 +128,21 @@ ElasticTrace::regEtraceListeners()
     listeners.push_back(new ProbeListenerArg<ElasticTrace, RequestPtr>(this,
                         "FetchRequest", &ElasticTrace::fetchReqTrace));
     listeners.push_back(new ProbeListenerArg<ElasticTrace,
-            O3DynInstConstPtr>(this, "Execute",
+            DynInstConstPtr>(this, "Execute",
                 &ElasticTrace::recordExecTick));
     listeners.push_back(new ProbeListenerArg<ElasticTrace,
-            O3DynInstConstPtr>(this, "ToCommit",
+            DynInstConstPtr>(this, "ToCommit",
                 &ElasticTrace::recordToCommTick));
     listeners.push_back(new ProbeListenerArg<ElasticTrace,
-            O3DynInstConstPtr>(this, "Rename",
+            DynInstConstPtr>(this, "Rename",
                 &ElasticTrace::updateRegDep));
     listeners.push_back(new ProbeListenerArg<ElasticTrace, SeqNumRegPair>(this,
                         "SquashInRename", &ElasticTrace::removeRegDepMapEntry));
     listeners.push_back(new ProbeListenerArg<ElasticTrace,
-            O3DynInstConstPtr>(this, "Squash",
+            DynInstConstPtr>(this, "Squash",
                 &ElasticTrace::addSquashedInst));
     listeners.push_back(new ProbeListenerArg<ElasticTrace,
-            O3DynInstConstPtr>(this, "Commit",
+            DynInstConstPtr>(this, "Commit",
                 &ElasticTrace::addCommittedInst));
     allProbesReg = true;
 }
@@ -167,7 +170,7 @@ ElasticTrace::fetchReqTrace(const RequestPtr &req)
 }
 
 void
-ElasticTrace::recordExecTick(const O3DynInstConstPtr& dyn_inst)
+ElasticTrace::recordExecTick(const DynInstConstPtr& dyn_inst)
 {
 
     // In a corner case, a retired instruction is propagated backward to the
@@ -204,7 +207,7 @@ ElasticTrace::recordExecTick(const O3DynInstConstPtr& dyn_inst)
 }
 
 void
-ElasticTrace::recordToCommTick(const O3DynInstConstPtr& dyn_inst)
+ElasticTrace::recordToCommTick(const DynInstConstPtr& dyn_inst)
 {
     // If tracing has just been enabled then the instruction at this stage of
     // execution is far enough that we cannot gather info about its past like
@@ -225,7 +228,7 @@ ElasticTrace::recordToCommTick(const O3DynInstConstPtr& dyn_inst)
 }
 
 void
-ElasticTrace::updateRegDep(const O3DynInstConstPtr& dyn_inst)
+ElasticTrace::updateRegDep(const DynInstConstPtr& dyn_inst)
 {
     // Get the sequence number of the instruction
     InstSeqNum seq_num = dyn_inst->seqNum;
@@ -304,7 +307,7 @@ ElasticTrace::removeRegDepMapEntry(const SeqNumRegPair &inst_reg_pair)
 }
 
 void
-ElasticTrace::addSquashedInst(const O3DynInstConstPtr& head_inst)
+ElasticTrace::addSquashedInst(const DynInstConstPtr& head_inst)
 {
     // If the squashed instruction was squashed before being processed by
     // execute stage then it will not be in the temporary store. In this case
@@ -332,7 +335,7 @@ ElasticTrace::addSquashedInst(const O3DynInstConstPtr& head_inst)
 }
 
 void
-ElasticTrace::addCommittedInst(const O3DynInstConstPtr& head_inst)
+ElasticTrace::addCommittedInst(const DynInstConstPtr& head_inst)
 {
     DPRINTFR(ElasticTrace, "Attempt to add committed inst [sn:%lli]\n",
                 head_inst->seqNum);
@@ -391,7 +394,7 @@ ElasticTrace::addCommittedInst(const O3DynInstConstPtr& head_inst)
 }
 
 void
-ElasticTrace::addDepTraceRecord(const O3DynInstConstPtr& head_inst,
+ElasticTrace::addDepTraceRecord(const DynInstConstPtr& head_inst,
                                 InstExecInfo* exec_info_ptr, bool commit)
 {
     // Create a record to assign dynamic intruction related fields.
@@ -653,7 +656,7 @@ ElasticTrace::hasCompCompleted(TraceInfo* past_record,
 }
 
 void
-ElasticTrace::clearTempStoreUntil(const O3DynInstConstPtr& head_inst)
+ElasticTrace::clearTempStoreUntil(const DynInstConstPtr& head_inst)
 {
     // Clear from temp store starting with the execution info object
     // corresponding the head_inst and continue clearing by decrementing the
@@ -929,3 +932,5 @@ ElasticTrace::flushTraces()
     delete dataTraceStream;
     delete instTraceStream;
 }
+
+} // namespace o3

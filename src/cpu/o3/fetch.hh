@@ -57,18 +57,22 @@
 #include "sim/eventq.hh"
 #include "sim/probe/probe.hh"
 
-struct DerivO3CPUParams;
-class FullO3CPU;
+struct O3CPUParams;
+
+namespace o3
+{
+
+class CPU;
 
 /**
- * DefaultFetch class handles both single threaded and SMT fetch. Its
+ * Fetch class handles both single threaded and SMT fetch. Its
  * width is specified by the parameters; each cycle it tries to fetch
  * that many instructions. It supports using a branch predictor to
  * predict direction and targets.
  * It supports the idling functionality of the CPU by indicating to
  * the CPU when it is active and inactive.
  */
-class DefaultFetch
+class Fetch
 {
   public:
     /**
@@ -78,11 +82,11 @@ class DefaultFetch
     {
       protected:
         /** Pointer to fetch. */
-        DefaultFetch *fetch;
+        Fetch *fetch;
 
       public:
         /** Default constructor. */
-        IcachePort(DefaultFetch *_fetch, FullO3CPU *_cpu);
+        IcachePort(Fetch *_fetch, CPU *_cpu);
 
       protected:
 
@@ -97,15 +101,15 @@ class DefaultFetch
     class FetchTranslation : public BaseTLB::Translation
     {
       protected:
-        DefaultFetch *fetch;
+        Fetch *fetch;
 
       public:
-        FetchTranslation(DefaultFetch *_fetch) : fetch(_fetch) {}
+        FetchTranslation(Fetch *_fetch) : fetch(_fetch) {}
 
         void markDelayed() {}
 
         void
-        finish(const Fault &fault, const RequestPtr &req, ThreadContext *tc,
+        finish(const Fault &fault, const RequestPtr &req, ::ThreadContext *tc,
                BaseTLB::Mode mode)
         {
             assert(mode == BaseTLB::Execute);
@@ -121,12 +125,12 @@ class DefaultFetch
     class FinishTranslationEvent : public Event
     {
       private:
-        DefaultFetch *fetch;
+        Fetch *fetch;
         Fault fault;
         RequestPtr req;
 
       public:
-        FinishTranslationEvent(DefaultFetch *_fetch)
+        FinishTranslationEvent(Fetch *_fetch)
             : fetch(_fetch), req(nullptr)
         {}
 
@@ -144,7 +148,7 @@ class DefaultFetch
         const char *
         description() const
         {
-            return "FullO3CPU FetchFinishTranslation";
+            return "CPU FetchFinishTranslation";
         }
       };
 
@@ -180,7 +184,7 @@ class DefaultFetch
     FetchStatus _status;
 
     /** Per-thread status. */
-    ThreadStatus fetchStatus[O3MaxThreads];
+    ThreadStatus fetchStatus[MaxThreads];
 
     /** Fetch policy. */
     SMTFetchPolicy fetchPolicy;
@@ -189,13 +193,13 @@ class DefaultFetch
     std::list<ThreadID> priorityList;
 
     /** Probe points. */
-    ProbePointArg<O3DynInstPtr> *ppFetch;
+    ProbePointArg<DynInstPtr> *ppFetch;
     /** To probe when a fetch request is successfully sent. */
     ProbePointArg<RequestPtr> *ppFetchRequestSent;
 
   public:
-    /** DefaultFetch constructor. */
-    DefaultFetch(FullO3CPU *_cpu, const DerivO3CPUParams &params);
+    /** Fetch constructor. */
+    Fetch(CPU *_cpu, const O3CPUParams &params);
 
     /** Returns the name of fetch. */
     std::string name() const;
@@ -205,13 +209,13 @@ class DefaultFetch
     void regProbePoints();
 
     /** Sets the main backwards communication time buffer pointer. */
-    void setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *time_buffer);
+    void setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer);
 
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to time buffer used to communicate to the next stage. */
-    void setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *fq_ptr);
+    void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
 
     /** Initialize stage. */
     void startupStage();
@@ -276,7 +280,7 @@ class DefaultFetch
      * @param next_NPC Used for ISAs which use delay slots.
      * @return Whether or not a branch was predicted as taken.
      */
-    bool lookupAndUpdateNextPC(const O3DynInstPtr &inst, TheISA::PCState &pc);
+    bool lookupAndUpdateNextPC(const DynInstPtr &inst, TheISA::PCState &pc);
 
     /**
      * Fetches the cache line that contains the fetch PC.  Returns any
@@ -299,14 +303,14 @@ class DefaultFetch
 
     /** Squashes a specific thread and resets the PC. */
     void doSquash(const TheISA::PCState &newPC,
-            const O3DynInstPtr squashInst, ThreadID tid);
+            const DynInstPtr squashInst, ThreadID tid);
 
     /** Squashes a specific thread and resets the PC. Also tells the CPU to
      * remove any instructions between fetch and decode
      *  that should be sqaushed.
      */
     void squashFromDecode(const TheISA::PCState &newPC,
-                          const O3DynInstPtr squashInst,
+                          const DynInstPtr squashInst,
                           const InstSeqNum seq_num, ThreadID tid);
 
     /** Checks if a thread is stalled. */
@@ -322,7 +326,7 @@ class DefaultFetch
      * squash should be the commit stage.
      */
     void squash(const TheISA::PCState &newPC, const InstSeqNum seq_num,
-                O3DynInstPtr squashInst, ThreadID tid);
+                DynInstPtr squashInst, ThreadID tid);
 
     /** Ticks the fetch stage, processing all inputs signals and fetching
      * as many instructions as possible.
@@ -348,14 +352,14 @@ class DefaultFetch
     }
 
     /** The decoder. */
-    TheISA::Decoder *decoder[O3MaxThreads];
+    TheISA::Decoder *decoder[MaxThreads];
 
     RequestPort &getInstPort() { return icachePort; }
 
   private:
-    O3DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,
-                           StaticInstPtr curMacroop, TheISA::PCState thisPC,
-                           TheISA::PCState nextPC, bool trace);
+    DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,
+            StaticInstPtr curMacroop, TheISA::PCState thisPC,
+            TheISA::PCState nextPC, bool trace);
 
     /** Returns the appropriate thread to fetch, given the fetch policy. */
     ThreadID getFetchingThread();
@@ -381,41 +385,41 @@ class DefaultFetch
 
   private:
     /** Pointer to the O3CPU. */
-    FullO3CPU *cpu;
+    CPU *cpu;
 
     /** Time buffer interface. */
-    TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
+    TimeBuffer<TimeStruct> *timeBuffer;
 
     /** Wire to get decode's information from backwards time buffer. */
-    TimeBuffer<O3Comm::TimeStruct>::wire fromDecode;
+    TimeBuffer<TimeStruct>::wire fromDecode;
 
     /** Wire to get rename's information from backwards time buffer. */
-    TimeBuffer<O3Comm::TimeStruct>::wire fromRename;
+    TimeBuffer<TimeStruct>::wire fromRename;
 
     /** Wire to get iew's information from backwards time buffer. */
-    TimeBuffer<O3Comm::TimeStruct>::wire fromIEW;
+    TimeBuffer<TimeStruct>::wire fromIEW;
 
     /** Wire to get commit's information from backwards time buffer. */
-    TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
+    TimeBuffer<TimeStruct>::wire fromCommit;
 
     //Might be annoying how this name is different than the queue.
     /** Wire used to write any information heading to decode. */
-    TimeBuffer<O3Comm::FetchStruct>::wire toDecode;
+    TimeBuffer<FetchStruct>::wire toDecode;
 
     /** BPredUnit. */
     BPredUnit *branchPred;
 
-    TheISA::PCState pc[O3MaxThreads];
+    TheISA::PCState pc[MaxThreads];
 
-    Addr fetchOffset[O3MaxThreads];
+    Addr fetchOffset[MaxThreads];
 
-    StaticInstPtr macroop[O3MaxThreads];
+    StaticInstPtr macroop[MaxThreads];
 
     /** Can the fetch stage redirect from an interrupt on this instruction? */
-    bool delayedCommit[O3MaxThreads];
+    bool delayedCommit[MaxThreads];
 
     /** Memory request used to access cache. */
-    RequestPtr memReq[O3MaxThreads];
+    RequestPtr memReq[MaxThreads];
 
     /** Variable that tracks if fetch has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.
@@ -433,7 +437,7 @@ class DefaultFetch
     };
 
     /** Tracks which stages are telling fetch to stall. */
-    Stalls stalls[O3MaxThreads];
+    Stalls stalls[MaxThreads];
 
     /** Decode to fetch delay. */
     Cycles decodeToFetchDelay;
@@ -474,25 +478,25 @@ class DefaultFetch
     Addr fetchBufferMask;
 
     /** The fetch data that is being fetched and buffered. */
-    uint8_t *fetchBuffer[O3MaxThreads];
+    uint8_t *fetchBuffer[MaxThreads];
 
     /** The PC of the first instruction loaded into the fetch buffer. */
-    Addr fetchBufferPC[O3MaxThreads];
+    Addr fetchBufferPC[MaxThreads];
 
     /** The size of the fetch queue in micro-ops */
     unsigned fetchQueueSize;
 
     /** Queue of fetched instructions. Per-thread to prevent HoL blocking. */
-    std::deque<O3DynInstPtr> fetchQueue[O3MaxThreads];
+    std::deque<DynInstPtr> fetchQueue[MaxThreads];
 
     /** Whether or not the fetch buffer data is valid. */
-    bool fetchBufferValid[O3MaxThreads];
+    bool fetchBufferValid[MaxThreads];
 
     /** Size of instructions. */
     int instSize;
 
     /** Icache stall statistics. */
-    Counter lastIcacheStall[O3MaxThreads];
+    Counter lastIcacheStall[MaxThreads];
 
     /** List of Active Threads */
     std::list<ThreadID> *activeThreads;
@@ -515,7 +519,7 @@ class DefaultFetch
     IcachePort icachePort;
 
     /** Set to true if a pipelined I-cache request should be issued. */
-    bool issuePipelinedIfetch[O3MaxThreads];
+    bool issuePipelinedIfetch[MaxThreads];
 
     /** Event used to delay fault generation of translation faults */
     FinishTranslationEvent finishTranslationEvent;
@@ -523,7 +527,7 @@ class DefaultFetch
   protected:
     struct FetchStatGroup : public Stats::Group
     {
-        FetchStatGroup(FullO3CPU *cpu, DefaultFetch *fetch);
+        FetchStatGroup(CPU *cpu, Fetch *fetch);
         // @todo: Consider making these
         // vectors and tracking on a per thread basis.
         /** Stat for total number of cycles stalled due to an icache miss. */
@@ -580,5 +584,7 @@ class DefaultFetch
         Stats::Formula rate;
     } fetchStats;
 };
+
+} // namespace o3
 
 #endif //__CPU_O3_FETCH_HH__

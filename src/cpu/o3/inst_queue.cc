@@ -50,14 +50,17 @@
 #include "cpu/o3/limits.hh"
 #include "debug/IQ.hh"
 #include "enums/OpClass.hh"
-#include "params/DerivO3CPU.hh"
+#include "params/O3CPU.hh"
 #include "sim/core.hh"
 
 // clang complains about std::set being overloaded with Packet::set if
 // we open up the entire namespace std
 using std::list;
 
-InstructionQueue::FUCompletion::FUCompletion(const O3DynInstPtr &_inst,
+namespace o3
+{
+
+InstructionQueue::FUCompletion::FUCompletion(const DynInstPtr &_inst,
     int fu_idx, InstructionQueue *iq_ptr)
     : Event(Stat_Event_Pri, AutoDelete),
       inst(_inst), fuIdx(fu_idx), iqPtr(iq_ptr), freeFU(false)
@@ -78,8 +81,8 @@ InstructionQueue::FUCompletion::description() const
     return "Functional unit completion";
 }
 
-InstructionQueue::InstructionQueue(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
-        const DerivO3CPUParams &params)
+InstructionQueue::InstructionQueue(CPU *cpu_ptr, IEW *iew_ptr,
+        const O3CPUParams &params)
     : cpu(cpu_ptr),
       iewStage(iew_ptr),
       fuPool(params.fuPool),
@@ -109,7 +112,7 @@ InstructionQueue::InstructionQueue(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
     regScoreboard.resize(numPhysRegs);
 
     //Initialize Mem Dependence Units
-    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < MaxThreads; tid++) {
         memDepUnit[tid].init(params, tid, cpu_ptr);
         memDepUnit[tid].setIQ(this);
     }
@@ -147,7 +150,7 @@ InstructionQueue::InstructionQueue(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
         DPRINTF(IQ, "IQ sharing policy set to Threshold:"
                 "%i entries per thread.\n",thresholdIQ);
    }
-    for (ThreadID tid = numThreads; tid < O3MaxThreads; tid++) {
+    for (ThreadID tid = numThreads; tid < MaxThreads; tid++) {
         maxEntries[tid] = 0;
     }
 }
@@ -167,7 +170,7 @@ InstructionQueue::name() const
     return cpu->name() + ".iq";
 }
 
-InstructionQueue::IQStats::IQStats(FullO3CPU *cpu, const unsigned &total_width)
+InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
     : Stats::Group(cpu),
     ADD_STAT(instsAdded, Stats::Units::Count::get(),
              "Number of instructions added to the IQ (excludes non-spec)"),
@@ -384,7 +387,7 @@ void
 InstructionQueue::resetState()
 {
     //Initialize thread IQ counts
-    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < MaxThreads; tid++) {
         count[tid] = 0;
         instList[tid].clear();
     }
@@ -401,7 +404,7 @@ InstructionQueue::resetState()
         regScoreboard[i] = false;
     }
 
-    for (ThreadID tid = 0; tid < O3MaxThreads; ++tid) {
+    for (ThreadID tid = 0; tid < MaxThreads; ++tid) {
         squashedSeqNum[tid] = 0;
     }
 
@@ -426,14 +429,13 @@ InstructionQueue::setActiveThreads(list<ThreadID> *at_ptr)
 }
 
 void
-InstructionQueue::setIssueToExecuteQueue(
-        TimeBuffer<O3Comm::IssueStruct> *i2e_ptr)
+InstructionQueue::setIssueToExecuteQueue(TimeBuffer<IssueStruct> *i2e_ptr)
 {
       issueToExecuteQueue = i2e_ptr;
 }
 
 void
-InstructionQueue::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
+InstructionQueue::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
 
@@ -551,7 +553,7 @@ InstructionQueue::hasReadyInsts()
 }
 
 void
-InstructionQueue::insert(const O3DynInstPtr &new_inst)
+InstructionQueue::insert(const DynInstPtr &new_inst)
 {
     if (new_inst->isFloating()) {
         iqIOStats.fpInstQueueWrites++;
@@ -596,7 +598,7 @@ InstructionQueue::insert(const O3DynInstPtr &new_inst)
 }
 
 void
-InstructionQueue::insertNonSpec(const O3DynInstPtr &new_inst)
+InstructionQueue::insertNonSpec(const DynInstPtr &new_inst)
 {
     // @todo: Clean up this code; can do it by setting inst as unable
     // to issue, then calling normal insert on the inst.
@@ -642,18 +644,18 @@ InstructionQueue::insertNonSpec(const O3DynInstPtr &new_inst)
 }
 
 void
-InstructionQueue::insertBarrier(const O3DynInstPtr &barr_inst)
+InstructionQueue::insertBarrier(const DynInstPtr &barr_inst)
 {
     memDepUnit[barr_inst->threadNumber].insertBarrier(barr_inst);
 
     insertNonSpec(barr_inst);
 }
 
-O3DynInstPtr
+DynInstPtr
 InstructionQueue::getInstToExecute()
 {
     assert(!instsToExecute.empty());
-    O3DynInstPtr inst = std::move(instsToExecute.front());
+    DynInstPtr inst = std::move(instsToExecute.front());
     instsToExecute.pop_front();
     if (inst->isFloating()) {
         iqIOStats.fpInstQueueReads++;
@@ -717,7 +719,7 @@ InstructionQueue::moveToYoungerInst(ListOrderIt list_order_it)
 }
 
 void
-InstructionQueue::processFUCompletion(const O3DynInstPtr &inst, int fu_idx)
+InstructionQueue::processFUCompletion(const DynInstPtr &inst, int fu_idx)
 {
     DPRINTF(IQ, "Processing FU completion [sn:%llu]\n", inst->seqNum);
     assert(!cpu->switchedOut());
@@ -745,9 +747,9 @@ InstructionQueue::scheduleReadyInsts()
     DPRINTF(IQ, "Attempting to schedule ready instructions from "
             "the IQ.\n");
 
-    O3Comm::IssueStruct *i2e_info = issueToExecuteQueue->access(0);
+    IssueStruct *i2e_info = issueToExecuteQueue->access(0);
 
-    O3DynInstPtr mem_inst;
+    DynInstPtr mem_inst;
     while ((mem_inst = getDeferredMemInstToExecute())) {
         addReadyMemInst(mem_inst);
     }
@@ -774,7 +776,7 @@ InstructionQueue::scheduleReadyInsts()
 
         assert(!readyInsts[op_class].empty());
 
-        O3DynInstPtr issuing_inst = readyInsts[op_class].top();
+        DynInstPtr issuing_inst = readyInsts[op_class].top();
 
         if (issuing_inst->isFloating()) {
             iqIOStats.fpInstQueueReads++;
@@ -951,7 +953,7 @@ InstructionQueue::commit(const InstSeqNum &inst, ThreadID tid)
 }
 
 int
-InstructionQueue::wakeDependents(const O3DynInstPtr &completed_inst)
+InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
 {
     int dependents = 0;
 
@@ -1019,7 +1021,7 @@ InstructionQueue::wakeDependents(const O3DynInstPtr &completed_inst)
 
         //Go through the dependency chain, marking the registers as
         //ready within the waiting instructions.
-        O3DynInstPtr dep_inst = dependGraph.pop(dest_reg->flatIndex());
+        DynInstPtr dep_inst = dependGraph.pop(dest_reg->flatIndex());
 
         while (dep_inst) {
             DPRINTF(IQ, "Waking up a dependent instruction, [sn:%llu] "
@@ -1050,7 +1052,7 @@ InstructionQueue::wakeDependents(const O3DynInstPtr &completed_inst)
 }
 
 void
-InstructionQueue::addReadyMemInst(const O3DynInstPtr &ready_inst)
+InstructionQueue::addReadyMemInst(const DynInstPtr &ready_inst)
 {
     OpClass op_class = ready_inst->opClass();
 
@@ -1072,7 +1074,7 @@ InstructionQueue::addReadyMemInst(const O3DynInstPtr &ready_inst)
 }
 
 void
-InstructionQueue::rescheduleMemInst(const O3DynInstPtr &resched_inst)
+InstructionQueue::rescheduleMemInst(const DynInstPtr &resched_inst)
 {
     DPRINTF(IQ, "Rescheduling mem inst [sn:%llu]\n", resched_inst->seqNum);
 
@@ -1085,19 +1087,19 @@ InstructionQueue::rescheduleMemInst(const O3DynInstPtr &resched_inst)
 }
 
 void
-InstructionQueue::replayMemInst(const O3DynInstPtr &replay_inst)
+InstructionQueue::replayMemInst(const DynInstPtr &replay_inst)
 {
     memDepUnit[replay_inst->threadNumber].replay();
 }
 
 void
-InstructionQueue::deferMemInst(const O3DynInstPtr &deferred_inst)
+InstructionQueue::deferMemInst(const DynInstPtr &deferred_inst)
 {
     deferredMemInsts.push_back(deferred_inst);
 }
 
 void
-InstructionQueue::blockMemInst(const O3DynInstPtr &blocked_inst)
+InstructionQueue::blockMemInst(const DynInstPtr &blocked_inst)
 {
     blocked_inst->clearIssued();
     blocked_inst->clearCanIssue();
@@ -1112,13 +1114,13 @@ InstructionQueue::cacheUnblocked()
     cpu->wakeCPU();
 }
 
-O3DynInstPtr
+DynInstPtr
 InstructionQueue::getDeferredMemInstToExecute()
 {
     for (ListIt it = deferredMemInsts.begin(); it != deferredMemInsts.end();
          ++it) {
         if ((*it)->translationCompleted() || (*it)->isSquashed()) {
-            O3DynInstPtr mem_inst = std::move(*it);
+            DynInstPtr mem_inst = std::move(*it);
             deferredMemInsts.erase(it);
             return mem_inst;
         }
@@ -1126,21 +1128,21 @@ InstructionQueue::getDeferredMemInstToExecute()
     return nullptr;
 }
 
-O3DynInstPtr
+DynInstPtr
 InstructionQueue::getBlockedMemInstToExecute()
 {
     if (retryMemInsts.empty()) {
         return nullptr;
     } else {
-        O3DynInstPtr mem_inst = std::move(retryMemInsts.front());
+        DynInstPtr mem_inst = std::move(retryMemInsts.front());
         retryMemInsts.pop_front();
         return mem_inst;
     }
 }
 
 void
-InstructionQueue::violation(const O3DynInstPtr &store,
-        const O3DynInstPtr &faulting_load)
+InstructionQueue::violation(const DynInstPtr &store,
+        const DynInstPtr &faulting_load)
 {
     iqIOStats.intInstQueueWrites++;
     memDepUnit[store->threadNumber].violation(store, faulting_load);
@@ -1177,7 +1179,7 @@ InstructionQueue::doSquash(ThreadID tid)
     while (squash_it != instList[tid].end() &&
            (*squash_it)->seqNum > squashedSeqNum[tid]) {
 
-        O3DynInstPtr squashed_inst = (*squash_it);
+        DynInstPtr squashed_inst = (*squash_it);
         if (squashed_inst->isFloating()) {
             iqIOStats.fpInstQueueWrites++;
         } else if (squashed_inst->isVector()) {
@@ -1283,10 +1285,10 @@ InstructionQueue::doSquash(ThreadID tid)
         // IQ clears out the heads of the dependency graph only when
         // instructions reach writeback stage. If an instruction is squashed
         // before writeback stage, its head of dependency graph would not be
-        // cleared out; it holds the instruction's O3DynInstPtr. This prevents
-        // freeing the squashed instruction's DynInst.
-        // Thus, we need to manually clear out the squashed instructions' heads
-        // of dependency graph.
+        // cleared out; it holds the instruction's DynInstPtr. This
+        // prevents freeing the squashed instruction's DynInst.
+        // Thus, we need to manually clear out the squashed instructions'
+        // heads of dependency graph.
         for (int dest_reg_idx = 0;
              dest_reg_idx < squashed_inst->numDestRegs();
              dest_reg_idx++)
@@ -1306,13 +1308,13 @@ InstructionQueue::doSquash(ThreadID tid)
 
 bool
 InstructionQueue::PqCompare::operator()(
-        const O3DynInstPtr &lhs, const O3DynInstPtr &rhs) const
+        const DynInstPtr &lhs, const DynInstPtr &rhs) const
 {
     return lhs->seqNum > rhs->seqNum;
 }
 
 bool
-InstructionQueue::addToDependents(const O3DynInstPtr &new_inst)
+InstructionQueue::addToDependents(const DynInstPtr &new_inst)
 {
     // Loop through the instruction's source registers, adding
     // them to the dependency list if they are not ready.
@@ -1359,7 +1361,7 @@ InstructionQueue::addToDependents(const O3DynInstPtr &new_inst)
 }
 
 void
-InstructionQueue::addToProducers(const O3DynInstPtr &new_inst)
+InstructionQueue::addToProducers(const DynInstPtr &new_inst)
 {
     // Nothing really needs to be marked when an instruction becomes
     // the producer of a register's value, but for convenience a ptr
@@ -1394,7 +1396,7 @@ InstructionQueue::addToProducers(const O3DynInstPtr &new_inst)
 }
 
 void
-InstructionQueue::addIfReady(const O3DynInstPtr &inst)
+InstructionQueue::addIfReady(const DynInstPtr &inst)
 {
     // If the instruction now has all of its source registers
     // available, then add it to the list of ready instructions.
@@ -1563,3 +1565,5 @@ InstructionQueue::dumpInsts()
         ++num;
     }
 }
+
+} // namespace o3

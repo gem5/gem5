@@ -51,6 +51,11 @@
 #include "cpu/o3/regfile.hh"
 #include "debug/FreeList.hh"
 
+namespace o3
+{
+
+class UnifiedRenameMap;
+
 /**
  * Free list for a single class of registers (e.g., integer
  * or floating point).  Because the register class is implicitly
@@ -335,5 +340,6 @@ UnifiedFreeList::addReg(PhysRegIdPtr freed_reg)
     // assert(freeFloatRegs.size() <= numPhysicalFloatRegs);
 }
 
+} // namespace o3
 
 #endif // __CPU_O3_FREE_LIST_HH__

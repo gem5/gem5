@@ -54,6 +54,9 @@
 class FUDesc;
 class FuncUnit;
 
+namespace o3
+{
+
 /**
  * Pool of FU's, specific to the new CPU model. The old FU pool had lists of
  * free units and busy units, and whenever a FU was needed it would iterate
@@ -175,5 +178,7 @@ class FUPool : public SimObject
     /** Takes over from another CPU's thread. */
     void takeOverFrom() {};
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_FU_POOL_HH__

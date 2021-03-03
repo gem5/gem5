@@ -44,6 +44,9 @@
 
 #include "cpu/func_unit.hh"
 
+namespace o3
+{
+
 ////////////////////////////////////////////////////////////////////////////
 //
 //  A pool of function units
@@ -243,3 +246,5 @@ FUPool::isDrained() const
 
     return is_drained;
 }
+
+} // namespace o3

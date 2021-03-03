@@ -42,30 +42,35 @@
 
 #include "cpu/o3/cpu.hh"
 
-O3ThreadState::O3ThreadState(FullO3CPU *_cpu, int _thread_num,
-        Process *_process) : ThreadState(_cpu, _thread_num, _process),
+namespace o3
+{
+
+ThreadState::ThreadState(CPU *_cpu, int _thread_num, Process *_process) :
+    ::ThreadState(_cpu, _thread_num, _process),
     comInstEventQueue("instruction-based event queue")
 {}
 
 void
-O3ThreadState::serialize(CheckpointOut &cp) const
+ThreadState::serialize(CheckpointOut &cp) const
 {
-    ThreadState::serialize(cp);
+    ::ThreadState::serialize(cp);
     // Use the ThreadContext serialization helper to serialize the
     // TC.
     ::serialize(*tc, cp);
 }
 
 void
-O3ThreadState::unserialize(CheckpointIn &cp)
+ThreadState::unserialize(CheckpointIn &cp)
 {
     // Prevent squashing - we don't have any instructions in
     // flight that we need to squash since we just instantiated a
     // clean system.
     noSquashFromTC = true;
-    ThreadState::unserialize(cp);
+    ::ThreadState::unserialize(cp);
     // Use the ThreadContext serialization helper to unserialize
     // the TC.
     ::unserialize(*tc, cp);
     noSquashFromTC = false;
 }
+
+} // namespace o3

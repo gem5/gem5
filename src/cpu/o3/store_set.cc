@@ -33,6 +33,9 @@
 #include "base/trace.hh"
 #include "debug/StoreSet.hh"
 
+namespace o3
+{
+
 StoreSet::StoreSet(uint64_t clear_period, int _SSIT_size, int _LFST_size)
     : clearPeriod(clear_period), SSITSize(_SSIT_size), LFSTSize(_LFST_size)
 {
@@ -364,3 +367,5 @@ StoreSet::dump()
         store_list_it++;
     }
 }
+
+} // namespace o3

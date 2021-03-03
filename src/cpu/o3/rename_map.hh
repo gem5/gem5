@@ -54,6 +54,9 @@
 #include "cpu/reg_class.hh"
 #include "enums/VecRegRenameMode.hh"
 
+namespace o3
+{
+
 /**
  * Register rename map for a single class of registers (e.g., integer
  * or floating point).  Because the register class is implicitly
@@ -398,5 +401,7 @@ class UnifiedRenameMap
     void switchFreeList(UnifiedFreeList* freeList);
 
 };
+
+} // namespace o3
 
 #endif //__CPU_O3_RENAME_MAP_HH__

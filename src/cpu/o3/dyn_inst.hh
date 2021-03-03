@@ -68,22 +68,24 @@
 
 class Packet;
 
-class BaseO3DynInst : public ExecContext, public RefCounted
+namespace o3
+{
+
+class DynInst : public ExecContext, public RefCounted
 {
   public:
     // The list of instructions iterator type.
-    typedef typename std::list<O3DynInstPtr>::iterator ListIt;
+    typedef typename std::list<DynInstPtr>::iterator ListIt;
 
     /** BaseDynInst constructor given a binary instruction. */
-    BaseO3DynInst(const StaticInstPtr &staticInst, const StaticInstPtr
+    DynInst(const StaticInstPtr &staticInst, const StaticInstPtr
             &macroop, TheISA::PCState pc, TheISA::PCState predPC,
-            InstSeqNum seq_num, FullO3CPU *cpu);
+            InstSeqNum seq_num, CPU *cpu);
 
     /** BaseDynInst constructor given a static inst pointer. */
-    BaseO3DynInst(const StaticInstPtr &_staticInst,
-                  const StaticInstPtr &_macroop);
+    DynInst(const StaticInstPtr &_staticInst, const StaticInstPtr &_macroop);
 
-    ~BaseO3DynInst();
+    ~DynInst();
 
     /** Executes the instruction.*/
     Fault execute();
@@ -101,12 +103,12 @@ class BaseO3DynInst : public ExecContext, public RefCounted
     const StaticInstPtr staticInst;
 
     /** Pointer to the Impl's CPU object. */
-    FullO3CPU *cpu = nullptr;
+    CPU *cpu = nullptr;
 
     BaseCPU *getCpuPtr() { return cpu; }
 
     /** Pointer to the thread state. */
-    O3ThreadState *thread = nullptr;
+    ThreadState *thread = nullptr;
 
     /** The kind of fault this instruction has generated. */
     Fault fault = NoFault;
@@ -1014,10 +1016,10 @@ class BaseO3DynInst : public ExecContext, public RefCounted
     void setTid(ThreadID tid) { threadNumber = tid; }
 
     /** Sets the pointer to the thread state. */
-    void setThreadState(O3ThreadState *state) { thread = state; }
+    void setThreadState(ThreadState *state) { thread = state; }
 
     /** Returns the thread context. */
-    ThreadContext *tcBase() const override { return thread->getTC(); }
+    ::ThreadContext *tcBase() const override { return thread->getTC(); }
 
   public:
     /** Is this instruction's memory access strictly ordered? */
@@ -1063,7 +1065,7 @@ class BaseO3DynInst : public ExecContext, public RefCounted
         return cpu->mwait(threadNumber, pkt);
     }
     void
-    mwaitAtomic(ThreadContext *tc) override
+    mwaitAtomic(::ThreadContext *tc) override
     {
         return cpu->mwaitAtomic(threadNumber, tc, cpu->mmu);
     }
@@ -1321,5 +1323,7 @@ class BaseO3DynInst : public ExecContext, public RefCounted
         setScalarResult(val);
     }
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_DYN_INST_HH__

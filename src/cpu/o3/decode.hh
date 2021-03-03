@@ -49,18 +49,21 @@
 #include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
 
-struct DerivO3CPUParams;
+struct O3CPUParams;
 
-class FullO3CPU;
+namespace o3
+{
+
+class CPU;
 
 /**
- * DefaultDecode class handles both single threaded and SMT
+ * Decode class handles both single threaded and SMT
  * decode. Its width is specified by the parameters; each cycles it
  * tries to decode that many instructions. Because instructions are
  * actually decoded when the StaticInst is created, this stage does
  * not do much other than check any PC-relative branches.
  */
-class DefaultDecode
+class Decode
 {
   public:
     /** Overall decode stage status. Used to determine if the CPU can
@@ -88,11 +91,11 @@ class DefaultDecode
     DecodeStatus _status;
 
     /** Per-thread status. */
-    ThreadStatus decodeStatus[O3MaxThreads];
+    ThreadStatus decodeStatus[MaxThreads];
 
   public:
-    /** DefaultDecode constructor. */
-    DefaultDecode(FullO3CPU *_cpu, const DerivO3CPUParams &params);
+    /** Decode constructor. */
+    Decode(CPU *_cpu, const O3CPUParams &params);
 
     void startupStage();
 
@@ -105,13 +108,13 @@ class DefaultDecode
     std::string name() const;
 
     /** Sets the main backwards communication time buffer pointer. */
-    void setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr);
+    void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
 
     /** Sets pointer to time buffer used to communicate to the next stage. */
-    void setDecodeQueue(TimeBuffer<O3Comm::DecodeStruct> *dq_ptr);
+    void setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr);
 
     /** Sets pointer to time buffer coming from fetch. */
-    void setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *fq_ptr);
+    void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
 
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
@@ -188,7 +191,7 @@ class DefaultDecode
     /** Squashes if there is a PC-relative branch that was predicted
      * incorrectly. Sends squash information back to fetch.
      */
-    void squash(const O3DynInstPtr &inst, ThreadID tid);
+    void squash(const DynInstPtr &inst, ThreadID tid);
 
   public:
     /** Squashes due to commit signalling a squash. Changes status to
@@ -199,41 +202,41 @@ class DefaultDecode
   private:
     // Interfaces to objects outside of decode.
     /** CPU interface. */
-    FullO3CPU *cpu;
+    CPU *cpu;
 
     /** Time buffer interface. */
-    TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
+    TimeBuffer<TimeStruct> *timeBuffer;
 
     /** Wire to get rename's output from backwards time buffer. */
-    TimeBuffer<O3Comm::TimeStruct>::wire fromRename;
+    TimeBuffer<TimeStruct>::wire fromRename;
 
     /** Wire to get iew's information from backwards time buffer. */
-    TimeBuffer<O3Comm::TimeStruct>::wire fromIEW;
+    TimeBuffer<TimeStruct>::wire fromIEW;
 
     /** Wire to get commit's information from backwards time buffer. */
-    TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
+    TimeBuffer<TimeStruct>::wire fromCommit;
 
     /** Wire to write information heading to previous stages. */
     // Might not be the best name as not only fetch will read it.
-    TimeBuffer<O3Comm::TimeStruct>::wire toFetch;
+    TimeBuffer<TimeStruct>::wire toFetch;
 
     /** Decode instruction queue. */
-    TimeBuffer<O3Comm::DecodeStruct> *decodeQueue;
+    TimeBuffer<DecodeStruct> *decodeQueue;
 
     /** Wire used to write any information heading to rename. */
-    TimeBuffer<O3Comm::DecodeStruct>::wire toRename;
+    TimeBuffer<DecodeStruct>::wire toRename;
 
     /** Fetch instruction queue interface. */
-    TimeBuffer<O3Comm::FetchStruct> *fetchQueue;
+    TimeBuffer<FetchStruct> *fetchQueue;
 
     /** Wire to get fetch's output from fetch queue. */
-    TimeBuffer<O3Comm::FetchStruct>::wire fromFetch;
+    TimeBuffer<FetchStruct>::wire fromFetch;
 
     /** Queue of all instructions coming from fetch this cycle. */
-    std::queue<O3DynInstPtr> insts[O3MaxThreads];
+    std::queue<DynInstPtr> insts[MaxThreads];
 
     /** Skid buffer between fetch and decode. */
-    std::queue<O3DynInstPtr> skidBuffer[O3MaxThreads];
+    std::queue<DynInstPtr> skidBuffer[MaxThreads];
 
     /** Variable that tracks if decode has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.
@@ -247,7 +250,7 @@ class DefaultDecode
     };
 
     /** Tracks which stages are telling decode to stall. */
-    Stalls stalls[O3MaxThreads];
+    Stalls stalls[MaxThreads];
 
     /** Rename to decode delay. */
     Cycles renameToDecodeDelay;
@@ -277,20 +280,20 @@ class DefaultDecode
     unsigned skidBufferMax;
 
     /** SeqNum of Squashing Branch Delay Instruction (used for MIPS)*/
-    Addr bdelayDoneSeqNum[O3MaxThreads];
+    Addr bdelayDoneSeqNum[MaxThreads];
 
     /** Instruction used for squashing branch (used for MIPS)*/
-    O3DynInstPtr squashInst[O3MaxThreads];
+    DynInstPtr squashInst[MaxThreads];
 
     /** Tells when their is a pending delay slot inst. to send
      *  to rename. If there is, then wait squash after the next
      *  instruction (used for MIPS).
      */
-    bool squashAfterDelaySlot[O3MaxThreads];
+    bool squashAfterDelaySlot[MaxThreads];
 
     struct DecodeStats : public Stats::Group
     {
-        DecodeStats(FullO3CPU *cpu);
+        DecodeStats(CPU *cpu);
 
         /** Stat for total number of idle cycles. */
         Stats::Scalar idleCycles;
@@ -316,5 +319,7 @@ class DefaultDecode
         Stats::Scalar squashedInsts;
     } stats;
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_DECODE_HH__

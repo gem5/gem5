@@ -51,7 +51,7 @@
 #include "cpu/o3/limits.hh"
 #include "sim/faults.hh"
 
-namespace O3Comm
+namespace o3
 {
 
 /** Struct that defines the information passed from fetch to decode. */
@@ -59,7 +59,7 @@ struct FetchStruct
 {
     int size;
 
-    O3DynInstPtr insts[O3MaxWidth];
+    DynInstPtr insts[MaxWidth];
     Fault fetchFault;
     InstSeqNum fetchFaultSN;
     bool clearFetchFault;
@@ -70,7 +70,7 @@ struct DecodeStruct
 {
     int size;
 
-    O3DynInstPtr insts[O3MaxWidth];
+    DynInstPtr insts[MaxWidth];
 };
 
 /** Struct that defines the information passed from rename to IEW. */
@@ -78,7 +78,7 @@ struct RenameStruct
 {
     int size;
 
-    O3DynInstPtr insts[O3MaxWidth];
+    DynInstPtr insts[MaxWidth];
 };
 
 /** Struct that defines the information passed from IEW to commit. */
@@ -86,23 +86,23 @@ struct IEWStruct
 {
     int size;
 
-    O3DynInstPtr insts[O3MaxWidth];
-    O3DynInstPtr mispredictInst[O3MaxThreads];
-    Addr mispredPC[O3MaxThreads];
-    InstSeqNum squashedSeqNum[O3MaxThreads];
-    TheISA::PCState pc[O3MaxThreads];
+    DynInstPtr insts[MaxWidth];
+    DynInstPtr mispredictInst[MaxThreads];
+    Addr mispredPC[MaxThreads];
+    InstSeqNum squashedSeqNum[MaxThreads];
+    TheISA::PCState pc[MaxThreads];
 
-    bool squash[O3MaxThreads];
-    bool branchMispredict[O3MaxThreads];
-    bool branchTaken[O3MaxThreads];
-    bool includeSquashInst[O3MaxThreads];
+    bool squash[MaxThreads];
+    bool branchMispredict[MaxThreads];
+    bool branchTaken[MaxThreads];
+    bool includeSquashInst[MaxThreads];
 };
 
 struct IssueStruct
 {
     int size;
 
-    O3DynInstPtr insts[O3MaxWidth];
+    DynInstPtr insts[MaxWidth];
 };
 
 /** Struct that defines all backwards communication. */
@@ -111,8 +111,8 @@ struct TimeStruct
     struct DecodeComm
     {
         TheISA::PCState nextPC;
-        O3DynInstPtr mispredictInst;
-        O3DynInstPtr squashInst;
+        DynInstPtr mispredictInst;
+        DynInstPtr squashInst;
         InstSeqNum doneSeqNum;
         Addr mispredPC;
         uint64_t branchAddr;
@@ -123,11 +123,11 @@ struct TimeStruct
         bool branchTaken;
     };
 
-    DecodeComm decodeInfo[O3MaxThreads];
+    DecodeComm decodeInfo[MaxThreads];
 
     struct RenameComm {};
 
-    RenameComm renameInfo[O3MaxThreads];
+    RenameComm renameInfo[MaxThreads];
 
     struct IewComm
     {
@@ -146,7 +146,7 @@ struct TimeStruct
         bool usedLSQ;
     };
 
-    IewComm iewInfo[O3MaxThreads];
+    IewComm iewInfo[MaxThreads];
 
     struct CommitComm
     {
@@ -169,14 +169,14 @@ struct TimeStruct
 
         /// Provide fetch the instruction that mispredicted, if this
         /// pointer is not-null a misprediction occured
-        O3DynInstPtr mispredictInst;  // *F
+        DynInstPtr mispredictInst;  // *F
 
         /// Instruction that caused the a non-mispredict squash
-        O3DynInstPtr squashInst; // *F
+        DynInstPtr squashInst; // *F
 
         /// Hack for now to send back a strictly ordered access to the
         /// IEW stage.
-        O3DynInstPtr strictlyOrderedLoad; // *I
+        DynInstPtr strictlyOrderedLoad; // *I
 
         /// Communication specifically to the IQ to tell the IQ that it can
         /// schedule a non-speculative instruction.
@@ -212,16 +212,16 @@ struct TimeStruct
 
     };
 
-    CommitComm commitInfo[O3MaxThreads];
+    CommitComm commitInfo[MaxThreads];
 
-    bool decodeBlock[O3MaxThreads];
-    bool decodeUnblock[O3MaxThreads];
-    bool renameBlock[O3MaxThreads];
-    bool renameUnblock[O3MaxThreads];
-    bool iewBlock[O3MaxThreads];
-    bool iewUnblock[O3MaxThreads];
+    bool decodeBlock[MaxThreads];
+    bool decodeUnblock[MaxThreads];
+    bool renameBlock[MaxThreads];
+    bool renameUnblock[MaxThreads];
+    bool iewBlock[MaxThreads];
+    bool iewUnblock[MaxThreads];
 };
 
-} // namespace O3Comm
+} // namespace o3
 
 #endif //__CPU_O3_COMM_HH__

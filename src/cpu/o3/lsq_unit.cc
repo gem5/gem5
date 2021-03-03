@@ -56,7 +56,10 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
-LSQUnit::WritebackEvent::WritebackEvent(const O3DynInstPtr &_inst,
+namespace o3
+{
+
+LSQUnit::WritebackEvent::WritebackEvent(const DynInstPtr &_inst,
         PacketPtr _pkt, LSQUnit *lsq_ptr)
     : Event(Default_Pri, AutoDelete),
       inst(_inst), pkt(_pkt), lsqPtr(lsq_ptr)
@@ -104,7 +107,7 @@ void
 LSQUnit::completeDataAccess(PacketPtr pkt)
 {
     LSQSenderState *state = dynamic_cast<LSQSenderState *>(pkt->senderState);
-    O3DynInstPtr inst = state->inst;
+    DynInstPtr inst = state->inst;
 
     // hardware transactional memory
     // sanity check
@@ -204,8 +207,8 @@ LSQUnit::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
 }
 
 void
-LSQUnit::init(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
-        const DerivO3CPUParams &params, LSQ *lsq_ptr, unsigned id)
+LSQUnit::init(CPU *cpu_ptr, IEW *iew_ptr, const O3CPUParams &params,
+        LSQ *lsq_ptr, unsigned id)
 {
     lsqID = id;
 
@@ -248,7 +251,7 @@ LSQUnit::resetState()
 std::string
 LSQUnit::name() const
 {
-    if (O3MaxThreads == 1) {
+    if (MaxThreads == 1) {
         return iewStage->name() + ".lsq";
     } else {
         return iewStage->name() + ".lsq.thread" + std::to_string(lsqID);
@@ -299,7 +302,7 @@ LSQUnit::takeOverFrom()
 }
 
 void
-LSQUnit::insert(const O3DynInstPtr &inst)
+LSQUnit::insert(const DynInstPtr &inst)
 {
     assert(inst->isMemRef());
 
@@ -315,7 +318,7 @@ LSQUnit::insert(const O3DynInstPtr &inst)
 }
 
 void
-LSQUnit::insertLoad(const O3DynInstPtr &load_inst)
+LSQUnit::insertLoad(const DynInstPtr &load_inst)
 {
     assert(!loadQueue.full());
     assert(loads < loadQueue.capacity());
@@ -377,7 +380,7 @@ LSQUnit::insertLoad(const O3DynInstPtr &load_inst)
 }
 
 void
-LSQUnit::insertStore(const O3DynInstPtr& store_inst)
+LSQUnit::insertStore(const DynInstPtr& store_inst)
 {
     // Make sure it is not full before inserting an instruction.
     assert(!storeQueue.full());
@@ -397,10 +400,10 @@ LSQUnit::insertStore(const O3DynInstPtr& store_inst)
     ++stores;
 }
 
-O3DynInstPtr
+DynInstPtr
 LSQUnit::getMemDepViolator()
 {
-    O3DynInstPtr temp = memDepViolator;
+    DynInstPtr temp = memDepViolator;
 
     memDepViolator = NULL;
 
@@ -437,7 +440,7 @@ LSQUnit::checkSnoop(PacketPtr pkt)
     DPRINTF(LSQUnit, "Got snoop for address %#x\n", pkt->getAddr());
 
     for (int x = 0; x < cpu->numContexts(); x++) {
-        ThreadContext *tc = cpu->getContext(x);
+        ::ThreadContext *tc = cpu->getContext(x);
         bool no_squash = cpu->thread[x]->noSquashFromTC;
         cpu->thread[x]->noSquashFromTC = true;
         TheISA::handleLockedSnoop(tc, pkt, cacheBlockMask);
@@ -451,7 +454,7 @@ LSQUnit::checkSnoop(PacketPtr pkt)
 
     Addr invalidate_addr = pkt->getAddr() & cacheBlockMask;
 
-    O3DynInstPtr ld_inst = iter->instruction();
+    DynInstPtr ld_inst = iter->instruction();
     assert(ld_inst);
     LSQRequest *req = iter->request();
 
@@ -510,7 +513,7 @@ LSQUnit::checkSnoop(PacketPtr pkt)
 
 Fault
 LSQUnit::checkViolations(typename LoadQueue::iterator& loadIt,
-        const O3DynInstPtr& inst)
+        const DynInstPtr& inst)
 {
     Addr inst_eff_addr1 = inst->effAddr >> depCheckShift;
     Addr inst_eff_addr2 = (inst->effAddr + inst->effSize - 1) >> depCheckShift;
@@ -521,7 +524,7 @@ LSQUnit::checkViolations(typename LoadQueue::iterator& loadIt,
      * like the implementation that came before it, we're overly conservative.
      */
     while (loadIt != loadQueue.end()) {
-        O3DynInstPtr ld_inst = loadIt->instruction();
+        DynInstPtr ld_inst = loadIt->instruction();
         if (!ld_inst->effAddrValid() || ld_inst->strictlyOrdered()) {
             ++loadIt;
             continue;
@@ -589,7 +592,7 @@ LSQUnit::checkViolations(typename LoadQueue::iterator& loadIt,
 
 
 Fault
-LSQUnit::executeLoad(const O3DynInstPtr &inst)
+LSQUnit::executeLoad(const DynInstPtr &inst)
 {
     // Execute a specific load.
     Fault load_fault = NoFault;
@@ -655,7 +658,7 @@ LSQUnit::executeLoad(const O3DynInstPtr &inst)
 }
 
 Fault
-LSQUnit::executeStore(const O3DynInstPtr &store_inst)
+LSQUnit::executeStore(const DynInstPtr &store_inst)
 {
     // Make sure that a store exists.
     assert(stores != 0);
@@ -805,7 +808,7 @@ LSQUnit::writebackStores()
         assert(storeWBIt->hasRequest());
         assert(!storeWBIt->committed());
 
-        O3DynInstPtr inst = storeWBIt->instruction();
+        DynInstPtr inst = storeWBIt->instruction();
         LSQRequest* req = storeWBIt->request();
 
         // Process store conditionals or store release after all previous
@@ -886,7 +889,7 @@ LSQUnit::writebackStores()
         if (req->request()->isLocalAccess()) {
             assert(!inst->isStoreConditional());
             assert(!inst->inHtmTransactionalState());
-            ThreadContext *thread = cpu->tcBase(lsqID);
+            ::ThreadContext *thread = cpu->tcBase(lsqID);
             PacketPtr main_pkt = new Packet(req->mainRequest(),
                                             MemCmd::WriteReq);
             main_pkt->dataStatic(inst->memData);
@@ -1067,7 +1070,7 @@ LSQUnit::storePostSend()
 }
 
 void
-LSQUnit::writeback(const O3DynInstPtr &inst, PacketPtr pkt)
+LSQUnit::writeback(const DynInstPtr &inst, PacketPtr pkt)
 {
     iewStage->wakeCPU();
 
@@ -1142,7 +1145,7 @@ LSQUnit::completeStore(typename StoreQueue::iterator store_idx)
 
     /* We 'need' a copy here because we may clear the entry from the
      * store queue. */
-    O3DynInstPtr store_inst = store_idx->instruction();
+    DynInstPtr store_inst = store_idx->instruction();
     if (store_idx == storeQueue.begin()) {
         do {
             storeQueue.front().clear();
@@ -1248,7 +1251,7 @@ LSQUnit::dumpInsts() const
     cprintf("Load queue: ");
 
     for (const auto& e: loadQueue) {
-        const O3DynInstPtr &inst(e.instruction());
+        const DynInstPtr &inst(e.instruction());
         cprintf("%s.[sn:%llu] ", inst->pcState(), inst->seqNum);
     }
     cprintf("\n");
@@ -1257,7 +1260,7 @@ LSQUnit::dumpInsts() const
     cprintf("Store queue: ");
 
     for (const auto& e: storeQueue) {
-        const O3DynInstPtr &inst(e.instruction());
+        const DynInstPtr &inst(e.instruction());
         cprintf("%s.[sn:%llu] ", inst->pcState(), inst->seqNum);
     }
 
@@ -1278,7 +1281,7 @@ Fault
 LSQUnit::read(LSQRequest *req, int load_idx)
 {
     LQEntry& load_req = loadQueue[load_idx];
-    const O3DynInstPtr& load_inst = load_req.instruction();
+    const DynInstPtr& load_inst = load_req.instruction();
 
     load_req.setRequest(req);
     assert(load_inst);
@@ -1330,7 +1333,7 @@ LSQUnit::read(LSQRequest *req, int load_idx)
         assert(!load_inst->inHtmTransactionalState());
         load_inst->memData = new uint8_t[MaxDataBytes];
 
-        ThreadContext *thread = cpu->tcBase(lsqID);
+        ::ThreadContext *thread = cpu->tcBase(lsqID);
         PacketPtr main_pkt = new Packet(req->mainRequest(), MemCmd::ReadReq);
 
         main_pkt->dataStatic(load_inst->memData);
@@ -1643,3 +1646,5 @@ LSQUnit::getStoreHeadSeqNum()
     else
         return 0;
 }
+
+} // namespace o3

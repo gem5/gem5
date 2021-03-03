@@ -56,7 +56,10 @@
 #include "debug/HtmCpu.hh"
 #include "debug/LSQ.hh"
 #include "debug/Writeback.hh"
-#include "params/DerivO3CPU.hh"
+#include "params/O3CPU.hh"
+
+namespace o3
+{
 
 LSQ::LSQSenderState::LSQSenderState(LSQRequest *request, bool is_load) :
     _request(request), isLoad(is_load), needWB(is_load)
@@ -68,12 +71,11 @@ LSQ::LSQSenderState::contextId()
     return inst->contextId();
 }
 
-LSQ::DcachePort::DcachePort(LSQ *_lsq, FullO3CPU *_cpu) :
+LSQ::DcachePort::DcachePort(LSQ *_lsq, CPU *_cpu) :
     RequestPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq), cpu(_cpu)
 {}
 
-LSQ::LSQ(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
-        const DerivO3CPUParams &params)
+LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const O3CPUParams &params)
     : cpu(cpu_ptr), iewStage(iew_ptr),
       _cacheBlocked(false),
       cacheStorePorts(params.cacheStorePorts), usedStorePorts(0),
@@ -88,7 +90,7 @@ LSQ::LSQ(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
       dcachePort(this, cpu_ptr),
       numThreads(params.numThreads)
 {
-    assert(numThreads > 0 && numThreads <= O3MaxThreads);
+    assert(numThreads > 0 && numThreads <= MaxThreads);
 
     //**********************************************
     //************ Handle SMT Parameters ***********
@@ -221,7 +223,7 @@ LSQ::cachePortBusy(bool is_load)
 }
 
 void
-LSQ::insertLoad(const O3DynInstPtr &load_inst)
+LSQ::insertLoad(const DynInstPtr &load_inst)
 {
     ThreadID tid = load_inst->threadNumber;
 
@@ -229,7 +231,7 @@ LSQ::insertLoad(const O3DynInstPtr &load_inst)
 }
 
 void
-LSQ::insertStore(const O3DynInstPtr &store_inst)
+LSQ::insertStore(const DynInstPtr &store_inst)
 {
     ThreadID tid = store_inst->threadNumber;
 
@@ -237,7 +239,7 @@ LSQ::insertStore(const O3DynInstPtr &store_inst)
 }
 
 Fault
-LSQ::executeLoad(const O3DynInstPtr &inst)
+LSQ::executeLoad(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -245,7 +247,7 @@ LSQ::executeLoad(const O3DynInstPtr &inst)
 }
 
 Fault
-LSQ::executeStore(const O3DynInstPtr &inst)
+LSQ::executeStore(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -307,7 +309,7 @@ LSQ::violation()
 
 bool LSQ::violation(ThreadID tid) { return thread.at(tid).violation(); }
 
-O3DynInstPtr
+DynInstPtr
 LSQ::getMemDepViolator(ThreadID tid)
 {
     return thread.at(tid).getMemDepViolator();
@@ -766,7 +768,7 @@ LSQ::dumpInsts(ThreadID tid) const
 }
 
 Fault
-LSQ::pushRequest(const O3DynInstPtr& inst, bool isLoad, uint8_t *data,
+LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
         unsigned int size, Addr addr, Request::Flags flags, uint64_t *res,
         AtomicOpFunctorPtr amo_op, const std::vector<bool>& byte_enable)
 {
@@ -854,7 +856,7 @@ LSQ::pushRequest(const O3DynInstPtr& inst, bool isLoad, uint8_t *data,
 
 void
 LSQ::SingleDataRequest::finish(const Fault &fault, const RequestPtr &req,
-        ThreadContext* tc, BaseTLB::Mode mode)
+        ::ThreadContext* tc, BaseTLB::Mode mode)
 {
     _fault.push_back(fault);
     numInTranslationFragments = 0;
@@ -886,7 +888,7 @@ LSQ::SingleDataRequest::finish(const Fault &fault, const RequestPtr &req,
 
 void
 LSQ::SplitDataRequest::finish(const Fault &fault, const RequestPtr &req,
-        ThreadContext* tc, BaseTLB::Mode mode)
+        ::ThreadContext* tc, BaseTLB::Mode mode)
 {
     int i;
     for (i = 0; i < _requests.size() && _requests[i] != req; i++);
@@ -1035,7 +1037,7 @@ LSQ::SplitDataRequest::initiateTranslation()
 }
 
 LSQ::LSQRequest::LSQRequest(
-        LSQUnit *port, const O3DynInstPtr& inst, bool isLoad) :
+        LSQUnit *port, const DynInstPtr& inst, bool isLoad) :
     _state(State::NotIssued), _senderState(nullptr),
     _port(*port), _inst(inst), _data(nullptr),
     _res(nullptr), _addr(0), _size(0), _flags(0),
@@ -1049,7 +1051,7 @@ LSQ::LSQRequest::LSQRequest(
 }
 
 LSQ::LSQRequest::LSQRequest(
-        LSQUnit *port, const O3DynInstPtr& inst, bool isLoad,
+        LSQUnit *port, const DynInstPtr& inst, bool isLoad,
         const Addr& addr, const uint32_t& size, const Request::Flags& flags_,
            PacketDataPtr data, uint64_t* res, AtomicOpFunctorPtr amo_op)
     : _state(State::NotIssued), _senderState(nullptr),
@@ -1272,14 +1274,15 @@ LSQ::SplitDataRequest::sendPacketToCache()
 }
 
 Cycles
-LSQ::SingleDataRequest::handleLocalAccess(ThreadContext *thread, PacketPtr pkt)
+LSQ::SingleDataRequest::handleLocalAccess(
+        ::ThreadContext *thread, PacketPtr pkt)
 {
     return pkt->req->localAccessor(thread, pkt);
 }
 
 Cycles
 LSQ::SplitDataRequest::handleLocalAccess(
-        ThreadContext *thread, PacketPtr mainPkt)
+        ::ThreadContext *thread, PacketPtr mainPkt)
 {
     Cycles delay(0);
     unsigned offset = 0;
@@ -1363,7 +1366,7 @@ LSQ::DcachePort::recvReqRetry()
     lsq->recvReqRetry();
 }
 
-LSQ::HtmCmdRequest::HtmCmdRequest(LSQUnit* port, const O3DynInstPtr& inst,
+LSQ::HtmCmdRequest::HtmCmdRequest(LSQUnit* port, const DynInstPtr& inst,
         const Request::Flags& flags_) :
     SingleDataRequest(port, inst, true, 0x0lu, 8, flags_,
         nullptr, nullptr, nullptr)
@@ -1409,7 +1412,7 @@ LSQ::HtmCmdRequest::initiateTranslation()
 
 void
 LSQ::HtmCmdRequest::finish(const Fault &fault, const RequestPtr &req,
-        ThreadContext* tc, BaseTLB::Mode mode)
+        ::ThreadContext* tc, BaseTLB::Mode mode)
 {
     panic("unexpected behaviour");
 }
@@ -1429,3 +1432,5 @@ LSQ::write(LSQRequest* req, uint8_t *data, int store_idx)
 
     return thread.at(tid).write(req, data, store_idx);
 }
+
+} // namespace o3

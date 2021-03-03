@@ -63,19 +63,22 @@
 #include "debug/O3CPU.hh"
 #include "debug/O3PipeView.hh"
 #include "mem/packet.hh"
-#include "params/DerivO3CPU.hh"
+#include "params/O3CPU.hh"
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
-DefaultFetch::IcachePort::IcachePort(DefaultFetch *_fetch, FullO3CPU *_cpu) :
+namespace o3
+{
+
+Fetch::IcachePort::IcachePort(Fetch *_fetch, CPU *_cpu) :
         RequestPort(_cpu->name() + ".icache_port", _cpu), fetch(_fetch)
 {}
 
 
-DefaultFetch::DefaultFetch(FullO3CPU *_cpu, const DerivO3CPUParams &params)
+Fetch::Fetch(CPU *_cpu, const O3CPUParams &params)
     : fetchPolicy(params.smtFetchPolicy),
       cpu(_cpu),
       branchPred(nullptr),
@@ -96,14 +99,14 @@ DefaultFetch::DefaultFetch(FullO3CPU *_cpu, const DerivO3CPUParams &params)
       icachePort(this, _cpu),
       finishTranslationEvent(this), fetchStats(_cpu, this)
 {
-    if (numThreads > O3MaxThreads)
+    if (numThreads > MaxThreads)
         fatal("numThreads (%d) is larger than compiled limit (%d),\n"
-              "\tincrease O3MaxThreads in src/cpu/o3/limits.hh\n",
-              numThreads, static_cast<int>(O3MaxThreads));
-    if (fetchWidth > O3MaxWidth)
+              "\tincrease MaxThreads in src/cpu/o3/limits.hh\n",
+              numThreads, static_cast<int>(MaxThreads));
+    if (fetchWidth > MaxWidth)
         fatal("fetchWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
-             fetchWidth, static_cast<int>(O3MaxWidth));
+             "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
+             fetchWidth, static_cast<int>(MaxWidth));
     if (fetchBufferSize > cacheBlkSize)
         fatal("fetch buffer size (%u bytes) is greater than the cache "
               "block size (%u bytes)\n", fetchBufferSize, cacheBlkSize);
@@ -114,7 +117,7 @@ DefaultFetch::DefaultFetch(FullO3CPU *_cpu, const DerivO3CPUParams &params)
     // Get the size of an instruction.
     instSize = sizeof(TheISA::MachInst);
 
-    for (int i = 0; i < O3MaxThreads; i++) {
+    for (int i = 0; i < MaxThreads; i++) {
         fetchStatus[i] = Idle;
         decoder[i] = nullptr;
         pc[i] = 0;
@@ -141,19 +144,18 @@ DefaultFetch::DefaultFetch(FullO3CPU *_cpu, const DerivO3CPUParams &params)
     }
 }
 
-std::string DefaultFetch::name() const { return cpu->name() + ".fetch"; }
+std::string Fetch::name() const { return cpu->name() + ".fetch"; }
 
 void
-DefaultFetch::regProbePoints()
+Fetch::regProbePoints()
 {
-    ppFetch = new ProbePointArg<O3DynInstPtr>(cpu->getProbeManager(), "Fetch");
+    ppFetch = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Fetch");
     ppFetchRequestSent = new ProbePointArg<RequestPtr>(cpu->getProbeManager(),
                                                        "FetchRequest");
 
 }
 
-DefaultFetch::FetchStatGroup::FetchStatGroup(
-        FullO3CPU *cpu, DefaultFetch *fetch)
+Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
     : Stats::Group(cpu, "fetch"),
     ADD_STAT(icacheStallCycles, Stats::Units::Cycle::get(),
              "Number of cycles fetch is stalled on an Icache miss"),
@@ -255,7 +257,7 @@ DefaultFetch::FetchStatGroup::FetchStatGroup(
             .flags(Stats::total);
 }
 void
-DefaultFetch::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *time_buffer)
+Fetch::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
 {
     timeBuffer = time_buffer;
 
@@ -267,20 +269,20 @@ DefaultFetch::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *time_buffer)
 }
 
 void
-DefaultFetch::setActiveThreads(std::list<ThreadID> *at_ptr)
+Fetch::setActiveThreads(std::list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 }
 
 void
-DefaultFetch::setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *ftb_ptr)
+Fetch::setFetchQueue(TimeBuffer<FetchStruct> *ftb_ptr)
 {
     // Create wire to write information to proper place in fetch time buf.
     toDecode = ftb_ptr->getWire(0);
 }
 
 void
-DefaultFetch::startupStage()
+Fetch::startupStage()
 {
     assert(priorityList.empty());
     resetStage();
@@ -291,7 +293,7 @@ DefaultFetch::startupStage()
 }
 
 void
-DefaultFetch::clearStates(ThreadID tid)
+Fetch::clearStates(ThreadID tid)
 {
     fetchStatus[tid] = Running;
     pc[tid] = cpu->pcState(tid);
@@ -310,7 +312,7 @@ DefaultFetch::clearStates(ThreadID tid)
 }
 
 void
-DefaultFetch::resetStage()
+Fetch::resetStage()
 {
     numInst = 0;
     interruptPending = false;
@@ -344,7 +346,7 @@ DefaultFetch::resetStage()
 }
 
 void
-DefaultFetch::processCacheCompletion(PacketPtr pkt)
+Fetch::processCacheCompletion(PacketPtr pkt)
 {
     ThreadID tid = cpu->contextToThread(pkt->req->contextId());
 
@@ -387,7 +389,7 @@ DefaultFetch::processCacheCompletion(PacketPtr pkt)
 }
 
 void
-DefaultFetch::drainResume()
+Fetch::drainResume()
 {
     for (ThreadID i = 0; i < numThreads; ++i) {
         stalls[i].decode = false;
@@ -396,7 +398,7 @@ DefaultFetch::drainResume()
 }
 
 void
-DefaultFetch::drainSanityCheck() const
+Fetch::drainSanityCheck() const
 {
     assert(isDrained());
     assert(retryPkt == NULL);
@@ -413,7 +415,7 @@ DefaultFetch::drainSanityCheck() const
 }
 
 bool
-DefaultFetch::isDrained() const
+Fetch::isDrained() const
 {
     /* Make sure that threads are either idle of that the commit stage
      * has signaled that draining has completed by setting the drain
@@ -443,7 +445,7 @@ DefaultFetch::isDrained() const
 }
 
 void
-DefaultFetch::takeOverFrom()
+Fetch::takeOverFrom()
 {
     assert(cpu->getInstPort().isConnected());
     resetStage();
@@ -451,7 +453,7 @@ DefaultFetch::takeOverFrom()
 }
 
 void
-DefaultFetch::drainStall(ThreadID tid)
+Fetch::drainStall(ThreadID tid)
 {
     assert(cpu->isDraining());
     assert(!stalls[tid].drain);
@@ -460,7 +462,7 @@ DefaultFetch::drainStall(ThreadID tid)
 }
 
 void
-DefaultFetch::wakeFromQuiesce()
+Fetch::wakeFromQuiesce()
 {
     DPRINTF(Fetch, "Waking up from quiesce\n");
     // Hopefully this is safe
@@ -469,31 +471,31 @@ DefaultFetch::wakeFromQuiesce()
 }
 
 void
-DefaultFetch::switchToActive()
+Fetch::switchToActive()
 {
     if (_status == Inactive) {
         DPRINTF(Activity, "Activating stage.\n");
 
-        cpu->activateStage(FullO3CPU::FetchIdx);
+        cpu->activateStage(CPU::FetchIdx);
 
         _status = Active;
     }
 }
 
 void
-DefaultFetch::switchToInactive()
+Fetch::switchToInactive()
 {
     if (_status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
 
-        cpu->deactivateStage(FullO3CPU::FetchIdx);
+        cpu->deactivateStage(CPU::FetchIdx);
 
         _status = Inactive;
     }
 }
 
 void
-DefaultFetch::deactivateThread(ThreadID tid)
+Fetch::deactivateThread(ThreadID tid)
 {
     // Update priority list
     auto thread_it = std::find(priorityList.begin(), priorityList.end(), tid);
@@ -503,8 +505,7 @@ DefaultFetch::deactivateThread(ThreadID tid)
 }
 
 bool
-DefaultFetch::lookupAndUpdateNextPC(const O3DynInstPtr &inst,
-        TheISA::PCState &nextPC)
+Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, TheISA::PCState &nextPC)
 {
     // Do branch prediction check here.
     // A bit of a misnomer...next_PC is actually the current PC until
@@ -548,7 +549,7 @@ DefaultFetch::lookupAndUpdateNextPC(const O3DynInstPtr &inst,
 }
 
 bool
-DefaultFetch::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
+Fetch::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
 {
     Fault fault = NoFault;
 
@@ -597,7 +598,7 @@ DefaultFetch::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
 }
 
 void
-DefaultFetch::finishTranslation(const Fault &fault, const RequestPtr &mem_req)
+Fetch::finishTranslation(const Fault &fault, const RequestPtr &mem_req)
 {
     ThreadID tid = cpu->contextToThread(mem_req->contextId());
     Addr fetchBufferBlockPC = mem_req->getVaddr();
@@ -683,7 +684,7 @@ DefaultFetch::finishTranslation(const Fault &fault, const RequestPtr &mem_req)
 
         DPRINTF(Fetch, "[tid:%i] Translation faulted, building noop.\n", tid);
         // We will use a nop in ordier to carry the fault.
-        O3DynInstPtr instruction = buildInst(tid, nopStaticInstPtr, nullptr,
+        DynInstPtr instruction = buildInst(tid, nopStaticInstPtr, nullptr,
                 fetchPC, fetchPC, false);
         instruction->setNotAnInst();
 
@@ -704,8 +705,8 @@ DefaultFetch::finishTranslation(const Fault &fault, const RequestPtr &mem_req)
 }
 
 void
-DefaultFetch::doSquash(const TheISA::PCState &newPC,
-        const O3DynInstPtr squashInst, ThreadID tid)
+Fetch::doSquash(const TheISA::PCState &newPC, const DynInstPtr squashInst,
+        ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%i] Squashing, setting PC to: %s.\n",
             tid, newPC);
@@ -755,8 +756,8 @@ DefaultFetch::doSquash(const TheISA::PCState &newPC,
 }
 
 void
-DefaultFetch::squashFromDecode(const TheISA::PCState &newPC,
-        const O3DynInstPtr squashInst, const InstSeqNum seq_num, ThreadID tid)
+Fetch::squashFromDecode(const TheISA::PCState &newPC,
+        const DynInstPtr squashInst, const InstSeqNum seq_num, ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%i] Squashing from decode.\n", tid);
 
@@ -768,7 +769,7 @@ DefaultFetch::squashFromDecode(const TheISA::PCState &newPC,
 }
 
 bool
-DefaultFetch::checkStall(ThreadID tid) const
+Fetch::checkStall(ThreadID tid) const
 {
     bool ret_val = false;
 
@@ -781,8 +782,8 @@ DefaultFetch::checkStall(ThreadID tid) const
     return ret_val;
 }
 
-DefaultFetch::FetchStatus
-DefaultFetch::updateFetchStatus()
+Fetch::FetchStatus
+Fetch::updateFetchStatus()
 {
     //Check Running
     std::list<ThreadID>::iterator threads = activeThreads->begin();
@@ -803,7 +804,7 @@ DefaultFetch::updateFetchStatus()
                             "completion\n",tid);
                 }
 
-                cpu->activateStage(FullO3CPU::FetchIdx);
+                cpu->activateStage(CPU::FetchIdx);
             }
 
             return Active;
@@ -814,15 +815,15 @@ DefaultFetch::updateFetchStatus()
     if (_status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
 
-        cpu->deactivateStage(FullO3CPU::FetchIdx);
+        cpu->deactivateStage(CPU::FetchIdx);
     }
 
     return Inactive;
 }
 
 void
-DefaultFetch::squash(const TheISA::PCState &newPC, const InstSeqNum seq_num,
-        O3DynInstPtr squashInst, ThreadID tid)
+Fetch::squash(const TheISA::PCState &newPC, const InstSeqNum seq_num,
+        DynInstPtr squashInst, ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%i] Squash from commit.\n", tid);
 
@@ -833,7 +834,7 @@ DefaultFetch::squash(const TheISA::PCState &newPC, const InstSeqNum seq_num,
 }
 
 void
-DefaultFetch::tick()
+Fetch::tick()
 {
     std::list<ThreadID>::iterator threads = activeThreads->begin();
     std::list<ThreadID>::iterator end = activeThreads->end();
@@ -935,7 +936,7 @@ DefaultFetch::tick()
 }
 
 bool
-DefaultFetch::checkSignalsAndUpdate(ThreadID tid)
+Fetch::checkSignalsAndUpdate(ThreadID tid)
 {
     // Update the per thread stall statuses.
     if (fromDecode->decodeBlock[tid]) {
@@ -1038,8 +1039,8 @@ DefaultFetch::checkSignalsAndUpdate(ThreadID tid)
     return false;
 }
 
-O3DynInstPtr
-DefaultFetch::buildInst(ThreadID tid, StaticInstPtr staticInst,
+DynInstPtr
+Fetch::buildInst(ThreadID tid, StaticInstPtr staticInst,
         StaticInstPtr curMacroop, TheISA::PCState thisPC,
         TheISA::PCState nextPC, bool trace)
 {
@@ -1047,8 +1048,8 @@ DefaultFetch::buildInst(ThreadID tid, StaticInstPtr staticInst,
     InstSeqNum seq = cpu->getAndIncrementInstSeq();
 
     // Create a new DynInst from the instruction fetched.
-    O3DynInstPtr instruction =
-        new BaseO3DynInst(staticInst, curMacroop, thisPC, nextPC, seq, cpu);
+    DynInstPtr instruction =
+        new DynInst(staticInst, curMacroop, thisPC, nextPC, seq, cpu);
     instruction->setTid(tid);
 
     instruction->setThreadState(cpu->thread[tid]);
@@ -1090,7 +1091,7 @@ DefaultFetch::buildInst(ThreadID tid, StaticInstPtr staticInst,
 }
 
 void
-DefaultFetch::fetch(bool &status_change)
+Fetch::fetch(bool &status_change)
 {
     //////////////////////////////////////////
     // Start actual fetch
@@ -1265,9 +1266,8 @@ DefaultFetch::fetch(bool &status_change)
                 newMacro |= staticInst->isLastMicroop();
             }
 
-            O3DynInstPtr instruction =
-                buildInst(tid, staticInst, curMacroop,
-                          thisPC, nextPC, true);
+            DynInstPtr instruction =
+                buildInst(tid, staticInst, curMacroop, thisPC, nextPC, true);
 
             ppFetch->notify(instruction);
             numInst++;
@@ -1352,7 +1352,7 @@ DefaultFetch::fetch(bool &status_change)
 }
 
 void
-DefaultFetch::recvReqRetry()
+Fetch::recvReqRetry()
 {
     if (retryPkt != NULL) {
         assert(cacheBlocked);
@@ -1382,7 +1382,7 @@ DefaultFetch::recvReqRetry()
 //                                   //
 ///////////////////////////////////////
 ThreadID
-DefaultFetch::getFetchingThread()
+Fetch::getFetchingThread()
 {
     if (numThreads > 1) {
         switch (fetchPolicy) {
@@ -1417,7 +1417,7 @@ DefaultFetch::getFetchingThread()
 
 
 ThreadID
-DefaultFetch::roundRobin()
+Fetch::roundRobin()
 {
     std::list<ThreadID>::iterator pri_iter = priorityList.begin();
     std::list<ThreadID>::iterator end      = priorityList.end();
@@ -1446,7 +1446,7 @@ DefaultFetch::roundRobin()
 }
 
 ThreadID
-DefaultFetch::iqCount()
+Fetch::iqCount()
 {
     //sorted from lowest->highest
     std::priority_queue<unsigned, std::vector<unsigned>,
@@ -1482,7 +1482,7 @@ DefaultFetch::iqCount()
 }
 
 ThreadID
-DefaultFetch::lsqCount()
+Fetch::lsqCount()
 {
     //sorted from lowest->highest
     std::priority_queue<unsigned, std::vector<unsigned>,
@@ -1517,14 +1517,14 @@ DefaultFetch::lsqCount()
 }
 
 ThreadID
-DefaultFetch::branchCount()
+Fetch::branchCount()
 {
     panic("Branch Count Fetch policy unimplemented\n");
     return InvalidThreadID;
 }
 
 void
-DefaultFetch::pipelineIcacheAccesses(ThreadID tid)
+Fetch::pipelineIcacheAccesses(ThreadID tid)
 {
     if (!issuePipelinedIfetch[tid]) {
         return;
@@ -1553,7 +1553,7 @@ DefaultFetch::pipelineIcacheAccesses(ThreadID tid)
 }
 
 void
-DefaultFetch::profileStall(ThreadID tid)
+Fetch::profileStall(ThreadID tid)
 {
     DPRINTF(Fetch,"There are no more threads available to fetch from.\n");
 
@@ -1602,7 +1602,7 @@ DefaultFetch::profileStall(ThreadID tid)
 }
 
 bool
-DefaultFetch::IcachePort::recvTimingResp(PacketPtr pkt)
+Fetch::IcachePort::recvTimingResp(PacketPtr pkt)
 {
     DPRINTF(O3CPU, "Fetch unit received timing\n");
     // We shouldn't ever get a cacheable block in Modified state
@@ -1614,7 +1614,9 @@ DefaultFetch::IcachePort::recvTimingResp(PacketPtr pkt)
 }
 
 void
-DefaultFetch::IcachePort::recvReqRetry()
+Fetch::IcachePort::recvReqRetry()
 {
     fetch->recvReqRetry();
 }
+
+} // namespace o3

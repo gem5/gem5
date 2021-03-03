@@ -57,9 +57,12 @@
 #include "debug/Drain.hh"
 #include "debug/IEW.hh"
 #include "debug/O3PipeView.hh"
-#include "params/DerivO3CPU.hh"
+#include "params/O3CPU.hh"
 
-DefaultIEW::DefaultIEW(FullO3CPU *_cpu, const DerivO3CPUParams &params)
+namespace o3
+{
+
+IEW::IEW(CPU *_cpu, const O3CPUParams &params)
     : issueToExecQueue(params.backComSize, params.forwardComSize),
       cpu(_cpu),
       instQueue(_cpu, this, params),
@@ -76,18 +79,18 @@ DefaultIEW::DefaultIEW(FullO3CPU *_cpu, const DerivO3CPUParams &params)
       numThreads(params.numThreads),
       iewStats(cpu)
 {
-    if (dispatchWidth > O3MaxWidth)
+    if (dispatchWidth > MaxWidth)
         fatal("dispatchWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
-             dispatchWidth, static_cast<int>(O3MaxWidth));
-    if (issueWidth > O3MaxWidth)
+             "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
+             dispatchWidth, static_cast<int>(MaxWidth));
+    if (issueWidth > MaxWidth)
         fatal("issueWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
-             issueWidth, static_cast<int>(O3MaxWidth));
-    if (wbWidth > O3MaxWidth)
+             "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
+             issueWidth, static_cast<int>(MaxWidth));
+    if (wbWidth > MaxWidth)
         fatal("wbWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
-             wbWidth, static_cast<int>(O3MaxWidth));
+             "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
+             wbWidth, static_cast<int>(MaxWidth));
 
     _status = Active;
     exeStatus = Running;
@@ -99,7 +102,7 @@ DefaultIEW::DefaultIEW(FullO3CPU *_cpu, const DerivO3CPUParams &params)
     // Instruction queue needs the queue between issue and execute.
     instQueue.setIssueToExecuteQueue(&issueToExecQueue);
 
-    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < MaxThreads; tid++) {
         dispatchStatus[tid] = Running;
         fetchRedirect[tid] = false;
     }
@@ -110,33 +113,33 @@ DefaultIEW::DefaultIEW(FullO3CPU *_cpu, const DerivO3CPUParams &params)
 }
 
 std::string
-DefaultIEW::name() const
+IEW::name() const
 {
     return cpu->name() + ".iew";
 }
 
 void
-DefaultIEW::regProbePoints()
+IEW::regProbePoints()
 {
-    ppDispatch = new ProbePointArg<O3DynInstPtr>(
+    ppDispatch = new ProbePointArg<DynInstPtr>(
             cpu->getProbeManager(), "Dispatch");
-    ppMispredict = new ProbePointArg<O3DynInstPtr>(
+    ppMispredict = new ProbePointArg<DynInstPtr>(
             cpu->getProbeManager(), "Mispredict");
     /**
      * Probe point with dynamic instruction as the argument used to probe when
      * an instruction starts to execute.
      */
-    ppExecute = new ProbePointArg<O3DynInstPtr>(
+    ppExecute = new ProbePointArg<DynInstPtr>(
             cpu->getProbeManager(), "Execute");
     /**
      * Probe point with dynamic instruction as the argument used to probe when
      * an instruction execution completes and it is marked ready to commit.
      */
-    ppToCommit = new ProbePointArg<O3DynInstPtr>(
+    ppToCommit = new ProbePointArg<DynInstPtr>(
             cpu->getProbeManager(), "ToCommit");
 }
 
-DefaultIEW::IEWStats::IEWStats(FullO3CPU *cpu)
+IEW::IEWStats::IEWStats(CPU *cpu)
     : Stats::Group(cpu),
     ADD_STAT(idleCycles, Stats::Units::Cycle::get(),
              "Number of cycles IEW is idle"),
@@ -210,7 +213,7 @@ DefaultIEW::IEWStats::IEWStats(FullO3CPU *cpu)
     wbFanout = producerInst / consumerInst;
 }
 
-DefaultIEW::IEWStats::ExecutedInstStats::ExecutedInstStats(FullO3CPU *cpu)
+IEW::IEWStats::ExecutedInstStats::ExecutedInstStats(CPU *cpu)
     : Stats::Group(cpu),
     ADD_STAT(numInsts, Stats::Units::Count::get(),
              "Number of executed instructions"),
@@ -261,7 +264,7 @@ DefaultIEW::IEWStats::ExecutedInstStats::ExecutedInstStats(FullO3CPU *cpu)
 }
 
 void
-DefaultIEW::startupStage()
+IEW::startupStage()
 {
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         toRename->iewInfo[tid].usedIQ = true;
@@ -280,11 +283,11 @@ DefaultIEW::startupStage()
         cpu->checker->setDcachePort(&ldstQueue.getDataPort());
     }
 
-    cpu->activateStage(FullO3CPU::IEWIdx);
+    cpu->activateStage(CPU::IEWIdx);
 }
 
 void
-DefaultIEW::clearStates(ThreadID tid)
+IEW::clearStates(ThreadID tid)
 {
     toRename->iewInfo[tid].usedIQ = true;
     toRename->iewInfo[tid].freeIQEntries =
@@ -296,7 +299,7 @@ DefaultIEW::clearStates(ThreadID tid)
 }
 
 void
-DefaultIEW::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
+IEW::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
 
@@ -313,7 +316,7 @@ DefaultIEW::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
 }
 
 void
-DefaultIEW::setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr)
+IEW::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 {
     renameQueue = rq_ptr;
 
@@ -322,7 +325,7 @@ DefaultIEW::setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr)
 }
 
 void
-DefaultIEW::setIEWQueue(TimeBuffer<O3Comm::IEWStruct> *iq_ptr)
+IEW::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 {
     iewQueue = iq_ptr;
 
@@ -331,7 +334,7 @@ DefaultIEW::setIEWQueue(TimeBuffer<O3Comm::IEWStruct> *iq_ptr)
 }
 
 void
-DefaultIEW::setActiveThreads(std::list<ThreadID> *at_ptr)
+IEW::setActiveThreads(std::list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 
@@ -340,13 +343,13 @@ DefaultIEW::setActiveThreads(std::list<ThreadID> *at_ptr)
 }
 
 void
-DefaultIEW::setScoreboard(Scoreboard *sb_ptr)
+IEW::setScoreboard(Scoreboard *sb_ptr)
 {
     scoreboard = sb_ptr;
 }
 
 bool
-DefaultIEW::isDrained() const
+IEW::isDrained() const
 {
     bool drained = ldstQueue.isDrained() && instQueue.isDrained();
 
@@ -374,7 +377,7 @@ DefaultIEW::isDrained() const
 }
 
 void
-DefaultIEW::drainSanityCheck() const
+IEW::drainSanityCheck() const
 {
     assert(isDrained());
 
@@ -383,7 +386,7 @@ DefaultIEW::drainSanityCheck() const
 }
 
 void
-DefaultIEW::takeOverFrom()
+IEW::takeOverFrom()
 {
     // Reset all state.
     _status = Active;
@@ -410,7 +413,7 @@ DefaultIEW::takeOverFrom()
 }
 
 void
-DefaultIEW::squash(ThreadID tid)
+IEW::squash(ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i] Squashing all instructions.\n", tid);
 
@@ -445,7 +448,7 @@ DefaultIEW::squash(ThreadID tid)
 }
 
 void
-DefaultIEW::squashDueToBranch(const O3DynInstPtr& inst, ThreadID tid)
+IEW::squashDueToBranch(const DynInstPtr& inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i] [sn:%llu] Squashing from a specific instruction,"
             " PC: %s "
@@ -470,7 +473,7 @@ DefaultIEW::squashDueToBranch(const O3DynInstPtr& inst, ThreadID tid)
 }
 
 void
-DefaultIEW::squashDueToMemOrder(const O3DynInstPtr& inst, ThreadID tid)
+IEW::squashDueToMemOrder(const DynInstPtr& inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i] Memory violation, squashing violator and younger "
             "insts, PC: %s [sn:%llu].\n", tid, inst->pcState(), inst->seqNum);
@@ -496,7 +499,7 @@ DefaultIEW::squashDueToMemOrder(const O3DynInstPtr& inst, ThreadID tid)
 }
 
 void
-DefaultIEW::block(ThreadID tid)
+IEW::block(ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i] Blocking.\n", tid);
 
@@ -514,7 +517,7 @@ DefaultIEW::block(ThreadID tid)
 }
 
 void
-DefaultIEW::unblock(ThreadID tid)
+IEW::unblock(ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i] Reading instructions out of the skid "
             "buffer %u.\n",tid, tid);
@@ -530,37 +533,37 @@ DefaultIEW::unblock(ThreadID tid)
 }
 
 void
-DefaultIEW::wakeDependents(const O3DynInstPtr& inst)
+IEW::wakeDependents(const DynInstPtr& inst)
 {
     instQueue.wakeDependents(inst);
 }
 
 void
-DefaultIEW::rescheduleMemInst(const O3DynInstPtr& inst)
+IEW::rescheduleMemInst(const DynInstPtr& inst)
 {
     instQueue.rescheduleMemInst(inst);
 }
 
 void
-DefaultIEW::replayMemInst(const O3DynInstPtr& inst)
+IEW::replayMemInst(const DynInstPtr& inst)
 {
     instQueue.replayMemInst(inst);
 }
 
 void
-DefaultIEW::blockMemInst(const O3DynInstPtr& inst)
+IEW::blockMemInst(const DynInstPtr& inst)
 {
     instQueue.blockMemInst(inst);
 }
 
 void
-DefaultIEW::cacheUnblocked()
+IEW::cacheUnblocked()
 {
     instQueue.cacheUnblocked();
 }
 
 void
-DefaultIEW::instToCommit(const O3DynInstPtr& inst)
+IEW::instToCommit(const DynInstPtr& inst)
 {
     // This function should not be called after writebackInsts in a
     // single cycle.  That will cause problems with an instruction
@@ -588,7 +591,7 @@ DefaultIEW::instToCommit(const O3DynInstPtr& inst)
 }
 
 unsigned
-DefaultIEW::validInstsFromRename()
+IEW::validInstsFromRename()
 {
     unsigned inst_count = 0;
 
@@ -601,9 +604,9 @@ DefaultIEW::validInstsFromRename()
 }
 
 void
-DefaultIEW::skidInsert(ThreadID tid)
+IEW::skidInsert(ThreadID tid)
 {
-    O3DynInstPtr inst = NULL;
+    DynInstPtr inst = NULL;
 
     while (!insts[tid].empty()) {
         inst = insts[tid].front();
@@ -622,7 +625,7 @@ DefaultIEW::skidInsert(ThreadID tid)
 }
 
 int
-DefaultIEW::skidCount()
+IEW::skidCount()
 {
     int max=0;
 
@@ -640,7 +643,7 @@ DefaultIEW::skidCount()
 }
 
 bool
-DefaultIEW::skidsEmpty()
+IEW::skidsEmpty()
 {
     std::list<ThreadID>::iterator threads = activeThreads->begin();
     std::list<ThreadID>::iterator end = activeThreads->end();
@@ -656,7 +659,7 @@ DefaultIEW::skidsEmpty()
 }
 
 void
-DefaultIEW::updateStatus()
+IEW::updateStatus()
 {
     bool any_unblocking = false;
 
@@ -696,7 +699,7 @@ DefaultIEW::updateStatus()
 }
 
 bool
-DefaultIEW::checkStall(ThreadID tid)
+IEW::checkStall(ThreadID tid)
 {
     bool ret_val(false);
 
@@ -712,7 +715,7 @@ DefaultIEW::checkStall(ThreadID tid)
 }
 
 void
-DefaultIEW::checkSignalsAndUpdate(ThreadID tid)
+IEW::checkSignalsAndUpdate(ThreadID tid)
 {
     // Check if there's a squash signal, squash if there is
     // Check stall signals, block if there is.
@@ -775,7 +778,7 @@ DefaultIEW::checkSignalsAndUpdate(ThreadID tid)
 }
 
 void
-DefaultIEW::sortInsts()
+IEW::sortInsts()
 {
     int insts_from_rename = fromRename->size;
 #ifdef DEBUG
@@ -788,7 +791,7 @@ DefaultIEW::sortInsts()
 }
 
 void
-DefaultIEW::emptyRenameInsts(ThreadID tid)
+IEW::emptyRenameInsts(ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i] Removing incoming rename instructions\n", tid);
 
@@ -809,34 +812,34 @@ DefaultIEW::emptyRenameInsts(ThreadID tid)
 }
 
 void
-DefaultIEW::wakeCPU()
+IEW::wakeCPU()
 {
     cpu->wakeCPU();
 }
 
 void
-DefaultIEW::activityThisCycle()
+IEW::activityThisCycle()
 {
     DPRINTF(Activity, "Activity this cycle.\n");
     cpu->activityThisCycle();
 }
 
 void
-DefaultIEW::activateStage()
+IEW::activateStage()
 {
     DPRINTF(Activity, "Activating stage.\n");
-    cpu->activateStage(FullO3CPU::IEWIdx);
+    cpu->activateStage(CPU::IEWIdx);
 }
 
 void
-DefaultIEW::deactivateStage()
+IEW::deactivateStage()
 {
     DPRINTF(Activity, "Deactivating stage.\n");
-    cpu->deactivateStage(FullO3CPU::IEWIdx);
+    cpu->deactivateStage(CPU::IEWIdx);
 }
 
 void
-DefaultIEW::dispatch(ThreadID tid)
+IEW::dispatch(ThreadID tid)
 {
     // If status is Running or idle,
     //     call dispatchInsts()
@@ -883,17 +886,17 @@ DefaultIEW::dispatch(ThreadID tid)
 }
 
 void
-DefaultIEW::dispatchInsts(ThreadID tid)
+IEW::dispatchInsts(ThreadID tid)
 {
     // Obtain instructions from skid buffer if unblocking, or queue from rename
     // otherwise.
-    std::queue<O3DynInstPtr> &insts_to_dispatch =
+    std::queue<DynInstPtr> &insts_to_dispatch =
         dispatchStatus[tid] == Unblocking ?
         skidBuffer[tid] : insts[tid];
 
     int insts_to_add = insts_to_dispatch.size();
 
-    O3DynInstPtr inst;
+    DynInstPtr inst;
     bool add_to_iq = false;
     int dis_num_inst = 0;
 
@@ -1119,7 +1122,7 @@ DefaultIEW::dispatchInsts(ThreadID tid)
 }
 
 void
-DefaultIEW::printAvailableInsts()
+IEW::printAvailableInsts()
 {
     int inst = 0;
 
@@ -1141,7 +1144,7 @@ DefaultIEW::printAvailableInsts()
 }
 
 void
-DefaultIEW::executeInsts()
+IEW::executeInsts()
 {
     wbNumInst = 0;
     wbCycle = 0;
@@ -1166,7 +1169,7 @@ DefaultIEW::executeInsts()
 
         DPRINTF(IEW, "Execute: Executing instructions from IQ.\n");
 
-        O3DynInstPtr inst = instQueue.getInstToExecute();
+        DynInstPtr inst = instQueue.getInstToExecute();
 
         DPRINTF(IEW, "Execute: Processing PC %s, [tid:%i] [sn:%llu].\n",
                 inst->pcState(), inst->threadNumber,inst->seqNum);
@@ -1330,7 +1333,7 @@ DefaultIEW::executeInsts()
                 // If there was an ordering violation, then get the
                 // DynInst that caused the violation.  Note that this
                 // clears the violation signal.
-                O3DynInstPtr violator;
+                DynInstPtr violator;
                 violator = ldstQueue.getMemDepViolator(tid);
 
                 DPRINTF(IEW, "LDSTQ detected a violation. Violator PC: %s "
@@ -1354,7 +1357,7 @@ DefaultIEW::executeInsts()
             if (ldstQueue.violation(tid)) {
                 assert(inst->isMemRef());
 
-                O3DynInstPtr violator = ldstQueue.getMemDepViolator(tid);
+                DynInstPtr violator = ldstQueue.getMemDepViolator(tid);
 
                 DPRINTF(IEW, "LDSTQ detected a violation.  Violator PC: "
                         "%s, inst PC: %s.  Addr is: %#x.\n",
@@ -1387,7 +1390,7 @@ DefaultIEW::executeInsts()
 }
 
 void
-DefaultIEW::writebackInsts()
+IEW::writebackInsts()
 {
     // Loop through the head of the time buffer and wake any
     // dependents.  These instructions are about to write back.  Also
@@ -1396,7 +1399,7 @@ DefaultIEW::writebackInsts()
     // as part of backwards communication.
     for (int inst_num = 0; inst_num < wbWidth &&
              toCommit->insts[inst_num]; inst_num++) {
-        O3DynInstPtr inst = toCommit->insts[inst_num];
+        DynInstPtr inst = toCommit->insts[inst_num];
         ThreadID tid = inst->threadNumber;
 
         DPRINTF(IEW, "Sending instructions to commit, [sn:%lli] PC %s.\n",
@@ -1437,7 +1440,7 @@ DefaultIEW::writebackInsts()
 }
 
 void
-DefaultIEW::tick()
+IEW::tick()
 {
     wbNumInst = 0;
     wbCycle = 0;
@@ -1566,7 +1569,7 @@ DefaultIEW::tick()
 }
 
 void
-DefaultIEW::updateExeInstStats(const O3DynInstPtr& inst)
+IEW::updateExeInstStats(const DynInstPtr& inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -1597,7 +1600,7 @@ DefaultIEW::updateExeInstStats(const O3DynInstPtr& inst)
 }
 
 void
-DefaultIEW::checkMisprediction(const O3DynInstPtr& inst)
+IEW::checkMisprediction(const DynInstPtr& inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -1632,3 +1635,5 @@ DefaultIEW::checkMisprediction(const O3DynInstPtr& inst)
         }
     }
 }
+
+} // namespace o3

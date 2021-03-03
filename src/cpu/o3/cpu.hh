@@ -69,28 +69,32 @@
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/timebuf.hh"
-#include "params/DerivO3CPU.hh"
+#include "params/O3CPU.hh"
 #include "sim/process.hh"
 
 template <class>
 class Checker;
 class ThreadContext;
-class O3ThreadContext;
 
 class Checkpoint;
 class Process;
 
+namespace o3
+{
+
+class ThreadContext;
+
 /**
- * FullO3CPU class, has each of the stages (fetch through commit)
+ * O3CPU class, has each of the stages (fetch through commit)
  * within it, as well as all of the time buffers between stages.  The
  * tick() function for the CPU is defined here.
  */
-class FullO3CPU : public BaseCPU
+class CPU : public BaseCPU
 {
   public:
-    typedef std::list<O3DynInstPtr>::iterator ListIt;
+    typedef std::list<DynInstPtr>::iterator ListIt;
 
-    friend class O3ThreadContext;
+    friend class ThreadContext;
 
   public:
     enum Status
@@ -161,10 +165,10 @@ class FullO3CPU : public BaseCPU
 
   public:
     /** Constructs a CPU with the given parameters. */
-    FullO3CPU(const DerivO3CPUParams &params);
+    CPU(const O3CPUParams &params);
 
     ProbePointArg<PacketPtr> *ppInstAccessComplete;
-    ProbePointArg<std::pair<O3DynInstPtr, PacketPtr> > *ppDataAccessComplete;
+    ProbePointArg<std::pair<DynInstPtr, PacketPtr> > *ppDataAccessComplete;
 
     /** Register probe points. */
     void regProbePoints() override;
@@ -419,15 +423,15 @@ class FullO3CPU : public BaseCPU
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
      */
-    ListIt addInst(const O3DynInstPtr &inst);
+    ListIt addInst(const DynInstPtr &inst);
 
     /** Function to tell the CPU that an instruction has completed. */
-    void instDone(ThreadID tid, const O3DynInstPtr &inst);
+    void instDone(ThreadID tid, const DynInstPtr &inst);
 
     /** Remove an instruction from the front end of the list.  There's
      *  no restriction on location of the instruction.
      */
-    void removeFrontInst(const O3DynInstPtr &inst);
+    void removeFrontInst(const DynInstPtr &inst);
 
     /** Remove all instructions that are not currently in the ROB.
      *  There's also an option to not squash delay slot instructions.*/
@@ -452,7 +456,7 @@ class FullO3CPU : public BaseCPU
 #endif
 
     /** List of all the instructions in flight. */
-    std::list<O3DynInstPtr> instList;
+    std::list<DynInstPtr> instList;
 
     /** List of all the instructions that will be removed at the end of this
      *  cycle.
@@ -473,19 +477,19 @@ class FullO3CPU : public BaseCPU
 
   protected:
     /** The fetch stage. */
-    DefaultFetch fetch;
+    Fetch fetch;
 
     /** The decode stage. */
-    DefaultDecode decode;
+    Decode decode;
 
     /** The dispatch stage. */
-    DefaultRename rename;
+    Rename rename;
 
     /** The issue/execute/writeback stages. */
-    DefaultIEW iew;
+    IEW iew;
 
     /** The commit stage. */
-    DefaultCommit commit;
+    Commit commit;
 
     /** The rename mode of the vector registers */
     Enums::VecRegRenameMode vecMode;
@@ -497,10 +501,10 @@ class FullO3CPU : public BaseCPU
     UnifiedFreeList freeList;
 
     /** The rename map. */
-    UnifiedRenameMap renameMap[O3MaxThreads];
+    UnifiedRenameMap renameMap[MaxThreads];
 
     /** The commit rename map. */
-    UnifiedRenameMap commitRenameMap[O3MaxThreads];
+    UnifiedRenameMap commitRenameMap[MaxThreads];
 
     /** The re-order buffer. */
     ROB rob;
@@ -536,19 +540,19 @@ class FullO3CPU : public BaseCPU
     };
 
     /** The main time buffer to do backwards communication. */
-    TimeBuffer<O3Comm::TimeStruct> timeBuffer;
+    TimeBuffer<TimeStruct> timeBuffer;
 
     /** The fetch stage's instruction queue. */
-    TimeBuffer<O3Comm::FetchStruct> fetchQueue;
+    TimeBuffer<FetchStruct> fetchQueue;
 
     /** The decode stage's instruction queue. */
-    TimeBuffer<O3Comm::DecodeStruct> decodeQueue;
+    TimeBuffer<DecodeStruct> decodeQueue;
 
     /** The rename stage's instruction queue. */
-    TimeBuffer<O3Comm::RenameStruct> renameQueue;
+    TimeBuffer<RenameStruct> renameQueue;
 
     /** The IEW stage's instruction queue. */
-    TimeBuffer<O3Comm::IEWStruct> iewQueue;
+    TimeBuffer<IEWStruct> iewQueue;
 
   private:
     /** The activity recorder; used to tell if the CPU has any
@@ -579,26 +583,26 @@ class FullO3CPU : public BaseCPU
 
   public:
     /** Returns a pointer to a thread context. */
-    ThreadContext *
+    ::ThreadContext *
     tcBase(ThreadID tid)
     {
         return thread[tid]->getTC();
     }
 
     /** The global sequence number counter. */
-    InstSeqNum globalSeqNum;//[O3MaxThreads];
+    InstSeqNum globalSeqNum;//[MaxThreads];
 
     /** Pointer to the checker, which can dynamically verify
      * instruction results at run time.  This can be set to NULL if it
      * is not being used.
      */
-    Checker<O3DynInstPtr> *checker;
+    ::Checker<DynInstPtr> *checker;
 
     /** Pointer to the system. */
     System *system;
 
     /** Pointers to all of the threads in the CPU. */
-    std::vector<O3ThreadState *> thread;
+    std::vector<ThreadState *> thread;
 
     /** Threads Scheduled to Enter CPU */
     std::list<int> cpuWaitList;
@@ -616,7 +620,7 @@ class FullO3CPU : public BaseCPU
     std::vector<ThreadID> tids;
 
     /** CPU pushRequest function, forwards request to LSQ. */
-    Fault pushRequest(const O3DynInstPtr& inst, bool isLoad, uint8_t *data,
+    Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                       unsigned int size, Addr addr, Request::Flags flags,
                       uint64_t *res, AtomicOpFunctorPtr amo_op = nullptr,
                       const std::vector<bool>& byte_enable =
@@ -653,9 +657,9 @@ class FullO3CPU : public BaseCPU
         return iew.ldstQueue.getDataPort();
     }
 
-    struct FullO3CPUStats : public Stats::Group
+    struct CPUStats : public Stats::Group
     {
-        FullO3CPUStats(FullO3CPU *cpu);
+        CPUStats(CPU *cpu);
 
         /** Stat for total number of times the CPU is descheduled. */
         Stats::Scalar timesIdled;
@@ -703,5 +707,7 @@ class FullO3CPU : public BaseCPU
     void htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
                             HtmFailureFaultCause cause);
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_CPU_HH__

@@ -37,6 +37,10 @@
 #include "base/trace.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Scoreboard.hh"
+
+namespace o3
+{
+
 /**
  * Implements a simple scoreboard to track which registers are
  * ready. This class operates on the unified physical register space,
@@ -131,5 +135,7 @@ class Scoreboard
     }
 
 };
+
+} // namespace o3
 
 #endif

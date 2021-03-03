@@ -54,9 +54,10 @@ class SMTQueuePolicy(ScopedEnum):
 class CommitPolicy(ScopedEnum):
     vals = [ 'Aggressive', 'RoundRobin', 'OldestReady' ]
 
-class DerivO3CPU(BaseCPU):
-    type = 'DerivO3CPU'
-    cxx_header = 'cpu/o3/deriv.hh'
+class O3CPU(BaseCPU):
+    type = 'O3CPU'
+    cxx_class = 'o3::CPU'
+    cxx_header = 'cpu/o3/dyn_inst.hh'
 
     @classmethod
     def memory_mode(cls):
@@ -191,3 +192,6 @@ class DerivO3CPU(BaseCPU):
         else:
             print("ERROR: Checker only supported under ARM ISA!")
             exit(1)
+
+# Deprecated
+DerivO3CPU = O3CPU

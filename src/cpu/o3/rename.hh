@@ -56,10 +56,13 @@
 #include "cpu/timebuf.hh"
 #include "sim/probe/probe.hh"
 
-struct DerivO3CPUParams;
+struct O3CPUParams;
+
+namespace o3
+{
 
 /**
- * DefaultRename handles both single threaded and SMT rename. Its
+ * Rename handles both single threaded and SMT rename. Its
  * width is specified by the parameters; each cycle it tries to rename
  * that many instructions. It holds onto the rename history of all
  * instructions with destination registers, storing the
@@ -70,14 +73,14 @@ struct DerivO3CPUParams;
  * and does so by stalling on the instruction until the ROB is empty
  * and there are no instructions in flight to the ROB.
  */
-class DefaultRename
+class Rename
 {
   public:
     // A deque is used to queue the instructions. Barrier insts must
     // be added to the front of the queue, which is the only reason for
     // using a deque instead of a queue. (Most other stages use a
     // queue)
-    typedef std::deque<O3DynInstPtr> InstQueue;
+    typedef std::deque<DynInstPtr> InstQueue;
 
   public:
     /** Overall rename status. Used to determine if the CPU can
@@ -106,12 +109,12 @@ class DefaultRename
     RenameStatus _status;
 
     /** Per-thread status. */
-    ThreadStatus renameStatus[O3MaxThreads];
+    ThreadStatus renameStatus[MaxThreads];
 
     /** Probe points. */
     typedef std::pair<InstSeqNum, PhysRegIdPtr> SeqNumRegPair;
     /** To probe when register renaming for an instruction is complete */
-    ProbePointArg<O3DynInstPtr> *ppRename;
+    ProbePointArg<DynInstPtr> *ppRename;
     /**
      * To probe when an instruction is squashed and the register mapping
      * for it needs to be undone
@@ -119,8 +122,8 @@ class DefaultRename
     ProbePointArg<SeqNumRegPair> *ppSquashInRename;
 
   public:
-    /** DefaultRename constructor. */
-    DefaultRename(FullO3CPU *_cpu, const DerivO3CPUParams &params);
+    /** Rename constructor. */
+    Rename(CPU *_cpu, const O3CPUParams &params);
 
     /** Returns the name of rename. */
     std::string name() const;
@@ -129,30 +132,30 @@ class DefaultRename
     void regProbePoints();
 
     /** Sets the main backwards communication time buffer pointer. */
-    void setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr);
+    void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
 
     /** Sets pointer to time buffer used to communicate to the next stage. */
-    void setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr);
+    void setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr);
 
     /** Sets pointer to time buffer coming from decode. */
-    void setDecodeQueue(TimeBuffer<O3Comm::DecodeStruct> *dq_ptr);
+    void setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr);
 
     /** Sets pointer to IEW stage. Used only for initialization. */
-    void setIEWStage(DefaultIEW *iew_stage) { iew_ptr = iew_stage; }
+    void setIEWStage(IEW *iew_stage) { iew_ptr = iew_stage; }
 
     /** Sets pointer to commit stage. Used only for initialization. */
     void
-    setCommitStage(DefaultCommit *commit_stage)
+    setCommitStage(Commit *commit_stage)
     {
         commit_ptr = commit_stage;
     }
 
   private:
     /** Pointer to IEW stage. Used only for initialization. */
-    DefaultIEW *iew_ptr;
+    IEW *iew_ptr;
 
     /** Pointer to commit stage. Used only for initialization. */
-    DefaultCommit *commit_ptr;
+    Commit *commit_ptr;
 
   public:
     /** Initializes variables for the stage. */
@@ -165,7 +168,7 @@ class DefaultRename
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to rename maps (per-thread structures). */
-    void setRenameMap(UnifiedRenameMap rm_ptr[O3MaxThreads]);
+    void setRenameMap(UnifiedRenameMap rm_ptr[MaxThreads]);
 
     /** Sets pointer to the free list. */
     void setFreeList(UnifiedFreeList *fl_ptr);
@@ -244,10 +247,10 @@ class DefaultRename
     void removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid);
 
     /** Renames the source registers of an instruction. */
-    void renameSrcRegs(const O3DynInstPtr &inst, ThreadID tid);
+    void renameSrcRegs(const DynInstPtr &inst, ThreadID tid);
 
     /** Renames the destination registers of an instruction. */
-    void renameDestRegs(const O3DynInstPtr &inst, ThreadID tid);
+    void renameDestRegs(const DynInstPtr &inst, ThreadID tid);
 
     /** Calculates the number of free ROB entries for a specific thread. */
     int calcFreeROBEntries(ThreadID tid);
@@ -313,43 +316,43 @@ class DefaultRename
     /** A per-thread list of all destination register renames, used to either
      * undo rename mappings or free old physical registers.
      */
-    std::list<RenameHistory> historyBuffer[O3MaxThreads];
+    std::list<RenameHistory> historyBuffer[MaxThreads];
 
     /** Pointer to CPU. */
-    FullO3CPU *cpu;
+    CPU *cpu;
 
     /** Pointer to main time buffer used for backwards communication. */
-    TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
+    TimeBuffer<TimeStruct> *timeBuffer;
 
     /** Wire to get IEW's output from backwards time buffer. */
-    TimeBuffer<O3Comm::TimeStruct>::wire fromIEW;
+    TimeBuffer<TimeStruct>::wire fromIEW;
 
     /** Wire to get commit's output from backwards time buffer. */
-    TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
+    TimeBuffer<TimeStruct>::wire fromCommit;
 
     /** Wire to write infromation heading to previous stages. */
-    TimeBuffer<O3Comm::TimeStruct>::wire toDecode;
+    TimeBuffer<TimeStruct>::wire toDecode;
 
     /** Rename instruction queue. */
-    TimeBuffer<O3Comm::RenameStruct> *renameQueue;
+    TimeBuffer<RenameStruct> *renameQueue;
 
     /** Wire to write any information heading to IEW. */
-    TimeBuffer<O3Comm::RenameStruct>::wire toIEW;
+    TimeBuffer<RenameStruct>::wire toIEW;
 
     /** Decode instruction queue interface. */
-    TimeBuffer<O3Comm::DecodeStruct> *decodeQueue;
+    TimeBuffer<DecodeStruct> *decodeQueue;
 
     /** Wire to get decode's output from decode queue. */
-    TimeBuffer<O3Comm::DecodeStruct>::wire fromDecode;
+    TimeBuffer<DecodeStruct>::wire fromDecode;
 
     /** Queue of all instructions coming from decode this cycle. */
-    InstQueue insts[O3MaxThreads];
+    InstQueue insts[MaxThreads];
 
     /** Skid buffer between rename and decode. */
-    InstQueue skidBuffer[O3MaxThreads];
+    InstQueue skidBuffer[MaxThreads];
 
     /** Rename map interface. */
-    UnifiedRenameMap *renameMap[O3MaxThreads];
+    UnifiedRenameMap *renameMap[MaxThreads];
 
     /** Free list interface. */
     UnifiedFreeList *freeList;
@@ -363,17 +366,17 @@ class DefaultRename
     /** Count of instructions in progress that have been sent off to the IQ
      * and ROB, but are not yet included in their occupancy counts.
      */
-    int instsInProgress[O3MaxThreads];
+    int instsInProgress[MaxThreads];
 
     /** Count of Load instructions in progress that have been sent off to the
      * IQ and ROB, but are not yet included in their occupancy counts.
      */
-    int loadsInProgress[O3MaxThreads];
+    int loadsInProgress[MaxThreads];
 
     /** Count of Store instructions in progress that have been sent off to the
      * IQ and ROB, but are not yet included in their occupancy counts.
      */
-    int storesInProgress[O3MaxThreads];
+    int storesInProgress[MaxThreads];
 
     /** Variable that tracks if decode has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.
@@ -394,13 +397,13 @@ class DefaultRename
     /** Per-thread tracking of the number of free entries of back-end
      * structures.
      */
-    FreeEntries freeEntries[O3MaxThreads];
+    FreeEntries freeEntries[MaxThreads];
 
     /** Records if the ROB is empty. In SMT mode the ROB may be dynamically
      * partitioned between threads, so the ROB must tell rename when it is
      * empty.
      */
-    bool emptyROB[O3MaxThreads];
+    bool emptyROB[MaxThreads];
 
     /** Source of possible stalls. */
     struct Stalls
@@ -410,15 +413,15 @@ class DefaultRename
     };
 
     /** Tracks which stages are telling decode to stall. */
-    Stalls stalls[O3MaxThreads];
+    Stalls stalls[MaxThreads];
 
     /** The serialize instruction that rename has stalled on. */
-    O3DynInstPtr serializeInst[O3MaxThreads];
+    DynInstPtr serializeInst[MaxThreads];
 
     /** Records if rename needs to serialize on the next instruction for any
      * thread.
      */
-    bool serializeOnNextInst[O3MaxThreads];
+    bool serializeOnNextInst[MaxThreads];
 
     /** Delay between iew and rename, in ticks. */
     int iewToRenameDelay;
@@ -529,5 +532,7 @@ class DefaultRename
         Stats::Scalar skidInsts;
     } stats;
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_RENAME_HH__

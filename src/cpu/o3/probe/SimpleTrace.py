@@ -37,4 +37,5 @@ from m5.objects.Probe import *
 
 class SimpleTrace(ProbeListenerObject):
     type = 'SimpleTrace'
+    cxx_class = 'o3::SimpleTrace'
     cxx_header = 'cpu/o3/probe/simple_trace.hh'

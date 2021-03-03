@@ -48,11 +48,14 @@
 #include "params/SimpleTrace.hh"
 #include "sim/probe/probe.hh"
 
+namespace o3
+{
+
 class SimpleTrace : public ProbeListenerObject
 {
 
   public:
-    SimpleTrace(const SimpleTraceParams &params):
+    SimpleTrace(const SimpleTraceParams &params) :
         ProbeListenerObject(params)
     {
     }
@@ -68,8 +71,11 @@ class SimpleTrace : public ProbeListenerObject
     }
 
   private:
-    void traceFetch(const O3DynInstConstPtr& dynInst);
-    void traceCommit(const O3DynInstConstPtr& dynInst);
+    void traceFetch(const DynInstConstPtr& dynInst);
+    void traceCommit(const DynInstConstPtr& dynInst);
 
 };
+
+} // namespace o3
+
 #endif//__CPU_O3_PROBE_SIMPLE_TRACE_HH__

@@ -59,10 +59,13 @@
 #include "mem/port.hh"
 #include "sim/sim_object.hh"
 
-struct DerivO3CPUParams;
+struct O3CPUParams;
 
-class FullO3CPU;
-class DefaultIEW;
+namespace o3
+{
+
+class CPU;
+class IEW;
 class LSQUnit;
 
 class LSQ
@@ -81,7 +84,7 @@ class LSQ
 
       public:
         /** Instruction which initiated the access to memory. */
-        O3DynInstPtr inst;
+        DynInstPtr inst;
         /** The main packet from a split load, used during writeback. */
         PacketPtr mainPkt = nullptr;
         /** A second packet from a split store that needs sending. */
@@ -121,11 +124,11 @@ class LSQ
 
         /** Pointer to LSQ. */
         LSQ *lsq;
-        FullO3CPU *cpu;
+        CPU *cpu;
 
       public:
         /** Default constructor. */
-        DcachePort(LSQ *_lsq, FullO3CPU *_cpu);
+        DcachePort(LSQ *_lsq, CPU *_cpu);
 
       protected:
 
@@ -279,7 +282,7 @@ class LSQ
 
       public:
         LSQUnit& _port;
-        const O3DynInstPtr _inst;
+        const DynInstPtr _inst;
         uint32_t _taskId;
         PacketDataPtr _data;
         std::vector<PacketPtr> _packets;
@@ -294,8 +297,8 @@ class LSQ
         AtomicOpFunctorPtr _amo_op;
       protected:
         LSQUnit* lsqUnit() { return &_port; }
-        LSQRequest(LSQUnit* port, const O3DynInstPtr& inst, bool isLoad);
-        LSQRequest(LSQUnit* port, const O3DynInstPtr& inst, bool isLoad,
+        LSQRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad);
+        LSQRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad,
                 const Addr& addr, const uint32_t& size,
                 const Request::Flags& flags_, PacketDataPtr data=nullptr,
                 uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr);
@@ -377,11 +380,7 @@ class LSQ
             request()->setContext(context_id);
         }
 
-        const O3DynInstPtr&
-        instruction()
-        {
-            return _inst;
-        }
+        const DynInstPtr& instruction() { return _inst; }
 
         /** Set up virtual request.
          * For a previously allocated Request objects.
@@ -482,7 +481,7 @@ class LSQ
          * Memory mapped IPR accesses
          */
         virtual Cycles handleLocalAccess(
-                ThreadContext *thread, PacketPtr pkt) = 0;
+                ::ThreadContext *thread, PacketPtr pkt) = 0;
 
         /**
          * Test if the request accesses a particular cache line.
@@ -655,7 +654,7 @@ class LSQ
         using LSQRequest::_numOutstandingPackets;
         using LSQRequest::_amo_op;
       public:
-        SingleDataRequest(LSQUnit* port, const O3DynInstPtr& inst,
+        SingleDataRequest(LSQUnit* port, const DynInstPtr& inst,
                 bool isLoad, const Addr& addr, const uint32_t& size,
                 const Request::Flags& flags_, PacketDataPtr data=nullptr,
                 uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr) :
@@ -665,11 +664,12 @@ class LSQ
         virtual ~SingleDataRequest() {}
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
-                ThreadContext* tc, BaseTLB::Mode mode);
+                ::ThreadContext* tc, BaseTLB::Mode mode);
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void sendPacketToCache();
         virtual void buildPackets();
-        virtual Cycles handleLocalAccess(ThreadContext *thread, PacketPtr pkt);
+        virtual Cycles handleLocalAccess(
+                ::ThreadContext *thread, PacketPtr pkt);
         virtual bool isCacheBlockHit(Addr blockAddr, Addr cacheBlockMask);
         virtual std::string name() const { return "SingleDataRequest"; }
     };
@@ -693,12 +693,12 @@ class LSQ
         using LSQRequest::flags;
         using LSQRequest::setState;
       public:
-        HtmCmdRequest(LSQUnit* port, const O3DynInstPtr& inst,
+        HtmCmdRequest(LSQUnit* port, const DynInstPtr& inst,
                 const Request::Flags& flags_);
         virtual ~HtmCmdRequest() {}
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
-                ThreadContext* tc, BaseTLB::Mode mode);
+                ::ThreadContext* tc, BaseTLB::Mode mode);
         virtual std::string name() const { return "HtmCmdRequest"; }
     };
 
@@ -740,7 +740,7 @@ class LSQ
         PacketPtr _mainPacket;
 
       public:
-        SplitDataRequest(LSQUnit* port, const O3DynInstPtr& inst,
+        SplitDataRequest(LSQUnit* port, const DynInstPtr& inst,
                 bool isLoad, const Addr& addr, const uint32_t& size,
                 const Request::Flags & flags_, PacketDataPtr data=nullptr,
                 uint64_t* res=nullptr) :
@@ -764,13 +764,14 @@ class LSQ
             }
         }
         virtual void finish(const Fault &fault, const RequestPtr &req,
-                ThreadContext* tc, BaseTLB::Mode mode);
+                ::ThreadContext* tc, BaseTLB::Mode mode);
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void initiateTranslation();
         virtual void sendPacketToCache();
         virtual void buildPackets();
 
-        virtual Cycles handleLocalAccess(ThreadContext *thread, PacketPtr pkt);
+        virtual Cycles handleLocalAccess(
+                ::ThreadContext *thread, PacketPtr pkt);
         virtual bool isCacheBlockHit(Addr blockAddr, Addr cacheBlockMask);
 
         virtual RequestPtr mainRequest();
@@ -779,8 +780,7 @@ class LSQ
     };
 
     /** Constructs an LSQ with the given parameters. */
-    LSQ(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
-            const DerivO3CPUParams &params);
+    LSQ(CPU *cpu_ptr, IEW *iew_ptr, const O3CPUParams &params);
 
     /** Returns the name of the LSQ. */
     std::string name() const;
@@ -802,15 +802,15 @@ class LSQ
     void tick();
 
     /** Inserts a load into the LSQ. */
-    void insertLoad(const O3DynInstPtr &load_inst);
+    void insertLoad(const DynInstPtr &load_inst);
     /** Inserts a store into the LSQ. */
-    void insertStore(const O3DynInstPtr &store_inst);
+    void insertStore(const DynInstPtr &store_inst);
 
     /** Executes a load. */
-    Fault executeLoad(const O3DynInstPtr &inst);
+    Fault executeLoad(const DynInstPtr &inst);
 
     /** Executes a store. */
-    Fault executeStore(const O3DynInstPtr &inst);
+    Fault executeStore(const DynInstPtr &inst);
 
     /**
      * Commits loads up until the given sequence number for a specific thread.
@@ -845,7 +845,7 @@ class LSQ
     bool violation(ThreadID tid);
 
     /** Gets the instruction that caused the memory ordering violation. */
-    O3DynInstPtr getMemDepViolator(ThreadID tid);
+    DynInstPtr getMemDepViolator(ThreadID tid);
 
     /** Returns the head index of the load queue for a specific thread. */
     int getLoadHead(ThreadID tid);
@@ -983,16 +983,16 @@ class LSQ
 
     void recvTimingSnoopReq(PacketPtr pkt);
 
-    Fault pushRequest(const O3DynInstPtr& inst, bool isLoad, uint8_t *data,
+    Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                       unsigned int size, Addr addr, Request::Flags flags,
                       uint64_t *res, AtomicOpFunctorPtr amo_op,
                       const std::vector<bool>& byte_enable);
 
     /** The CPU pointer. */
-    FullO3CPU *cpu;
+    CPU *cpu;
 
     /** The IEW stage pointer. */
-    DefaultIEW *iewStage;
+    IEW *iewStage;
 
     /** Is D-cache blocked? */
     bool cacheBlocked() const;
@@ -1067,5 +1067,7 @@ class LSQ
     /** Number of Threads. */
     ThreadID numThreads;
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_LSQ_HH__

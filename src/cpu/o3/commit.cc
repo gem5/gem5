@@ -64,19 +64,22 @@
 #include "debug/ExecFaulting.hh"
 #include "debug/HtmCpu.hh"
 #include "debug/O3PipeView.hh"
-#include "params/DerivO3CPU.hh"
+#include "params/O3CPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 
+namespace o3
+{
+
 void
-DefaultCommit::processTrapEvent(ThreadID tid)
+Commit::processTrapEvent(ThreadID tid)
 {
     // This will get reset by commit if it was switched out at the
     // time of this event processing.
     trapSquash[tid] = true;
 }
 
-DefaultCommit::DefaultCommit(FullO3CPU *_cpu, const DerivO3CPUParams &params)
+Commit::Commit(CPU *_cpu, const O3CPUParams &params)
     : commitPolicy(params.smtCommitPolicy),
       cpu(_cpu),
       iewToCommitDelay(params.iewToCommitDelay),
@@ -93,10 +96,10 @@ DefaultCommit::DefaultCommit(FullO3CPU *_cpu, const DerivO3CPUParams &params)
       avoidQuiesceLiveLock(false),
       stats(_cpu, this)
 {
-    if (commitWidth > O3MaxWidth)
+    if (commitWidth > MaxWidth)
         fatal("commitWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
-             commitWidth, static_cast<int>(O3MaxWidth));
+             "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
+             commitWidth, static_cast<int>(MaxWidth));
 
     _status = Active;
     _nextStatus = Inactive;
@@ -108,7 +111,7 @@ DefaultCommit::DefaultCommit(FullO3CPU *_cpu, const DerivO3CPUParams &params)
         }
     }
 
-    for (ThreadID tid = 0; tid < O3MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < MaxThreads; tid++) {
         commitStatus[tid] = Idle;
         changedROBNumEntries[tid] = false;
         trapSquash[tid] = false;
@@ -127,24 +130,20 @@ DefaultCommit::DefaultCommit(FullO3CPU *_cpu, const DerivO3CPUParams &params)
     interrupt = NoFault;
 }
 
-std::string
-DefaultCommit::name() const
-{
-    return cpu->name() + ".commit";
-}
+std::string Commit::name() const { return cpu->name() + ".commit"; }
 
 void
-DefaultCommit::regProbePoints()
+Commit::regProbePoints()
 {
-    ppCommit = new ProbePointArg<O3DynInstPtr>(
+    ppCommit = new ProbePointArg<DynInstPtr>(
             cpu->getProbeManager(), "Commit");
-    ppCommitStall = new ProbePointArg<O3DynInstPtr>(
+    ppCommitStall = new ProbePointArg<DynInstPtr>(
             cpu->getProbeManager(), "CommitStall");
-    ppSquash = new ProbePointArg<O3DynInstPtr>(
+    ppSquash = new ProbePointArg<DynInstPtr>(
             cpu->getProbeManager(), "Squash");
 }
 
-DefaultCommit::CommitStats::CommitStats(FullO3CPU *cpu, DefaultCommit *commit)
+Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
     : Stats::Group(cpu, "commit"),
       ADD_STAT(commitSquashedInsts, Stats::Units::Count::get(),
                "The number of squashed insts skipped by commit"),
@@ -243,13 +242,13 @@ DefaultCommit::CommitStats::CommitStats(FullO3CPU *cpu, DefaultCommit *commit)
 }
 
 void
-DefaultCommit::setThreads(std::vector<O3ThreadState *> &threads)
+Commit::setThreads(std::vector<ThreadState *> &threads)
 {
     thread = threads;
 }
 
 void
-DefaultCommit::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
+Commit::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
 
@@ -261,7 +260,7 @@ DefaultCommit::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
 }
 
 void
-DefaultCommit::setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *fq_ptr)
+Commit::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 {
     fetchQueue = fq_ptr;
 
@@ -270,7 +269,7 @@ DefaultCommit::setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *fq_ptr)
 }
 
 void
-DefaultCommit::setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr)
+Commit::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 {
     renameQueue = rq_ptr;
 
@@ -279,7 +278,7 @@ DefaultCommit::setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr)
 }
 
 void
-DefaultCommit::setIEWQueue(TimeBuffer<O3Comm::IEWStruct> *iq_ptr)
+Commit::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 {
     iewQueue = iq_ptr;
 
@@ -288,32 +287,28 @@ DefaultCommit::setIEWQueue(TimeBuffer<O3Comm::IEWStruct> *iq_ptr)
 }
 
 void
-DefaultCommit::setIEWStage(DefaultIEW *iew_stage)
+Commit::setIEWStage(IEW *iew_stage)
 {
     iewStage = iew_stage;
 }
 
 void
-DefaultCommit::setActiveThreads(std::list<ThreadID> *at_ptr)
+Commit::setActiveThreads(std::list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 }
 
 void
-DefaultCommit::setRenameMap(UnifiedRenameMap rm_ptr[])
+Commit::setRenameMap(UnifiedRenameMap rm_ptr[])
 {
     for (ThreadID tid = 0; tid < numThreads; tid++)
         renameMap[tid] = &rm_ptr[tid];
 }
 
-void
-DefaultCommit::setROB(ROB *rob_ptr)
-{
-    rob = rob_ptr;
-}
+void Commit::setROB(ROB *rob_ptr) { rob = rob_ptr; }
 
 void
-DefaultCommit::startupStage()
+Commit::startupStage()
 {
     rob->setActiveThreads(activeThreads);
     rob->resetEntries();
@@ -327,13 +322,13 @@ DefaultCommit::startupStage()
 
     // Commit must broadcast the number of free entries it has at the
     // start of the simulation, so it starts as active.
-    cpu->activateStage(FullO3CPU::CommitIdx);
+    cpu->activateStage(CPU::CommitIdx);
 
     cpu->activityThisCycle();
 }
 
 void
-DefaultCommit::clearStates(ThreadID tid)
+Commit::clearStates(ThreadID tid)
 {
     commitStatus[tid] = Idle;
     changedROBNumEntries[tid] = false;
@@ -347,21 +342,17 @@ DefaultCommit::clearStates(ThreadID tid)
     squashAfterInst[tid] = NULL;
 }
 
-void
-DefaultCommit::drain()
-{
-    drainPending = true;
-}
+void Commit::drain() { drainPending = true; }
 
 void
-DefaultCommit::drainResume()
+Commit::drainResume()
 {
     drainPending = false;
     drainImminent = false;
 }
 
 void
-DefaultCommit::drainSanityCheck() const
+Commit::drainSanityCheck() const
 {
     assert(isDrained());
     rob->drainSanityCheck();
@@ -376,7 +367,7 @@ DefaultCommit::drainSanityCheck() const
 }
 
 bool
-DefaultCommit::isDrained() const
+Commit::isDrained() const
 {
     /* Make sure no one is executing microcode. There are two reasons
      * for this:
@@ -403,7 +394,7 @@ DefaultCommit::isDrained() const
 }
 
 void
-DefaultCommit::takeOverFrom()
+Commit::takeOverFrom()
 {
     _status = Active;
     _nextStatus = Inactive;
@@ -418,7 +409,7 @@ DefaultCommit::takeOverFrom()
 }
 
 void
-DefaultCommit::deactivateThread(ThreadID tid)
+Commit::deactivateThread(ThreadID tid)
 {
     std::list<ThreadID>::iterator thread_it = std::find(priority_list.begin(),
             priority_list.end(), tid);
@@ -429,7 +420,7 @@ DefaultCommit::deactivateThread(ThreadID tid)
 }
 
 bool
-DefaultCommit::executingHtmTransaction(ThreadID tid) const
+Commit::executingHtmTransaction(ThreadID tid) const
 {
     if (tid == InvalidThreadID)
         return false;
@@ -438,7 +429,7 @@ DefaultCommit::executingHtmTransaction(ThreadID tid) const
 }
 
 void
-DefaultCommit::resetHtmStartsStops(ThreadID tid)
+Commit::resetHtmStartsStops(ThreadID tid)
 {
     if (tid != InvalidThreadID)
     {
@@ -449,7 +440,7 @@ DefaultCommit::resetHtmStartsStops(ThreadID tid)
 
 
 void
-DefaultCommit::updateStatus()
+Commit::updateStatus()
 {
     // reset ROB changed variable
     std::list<ThreadID>::iterator threads = activeThreads->begin();
@@ -469,17 +460,17 @@ DefaultCommit::updateStatus()
 
     if (_nextStatus == Inactive && _status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
-        cpu->deactivateStage(FullO3CPU::CommitIdx);
+        cpu->deactivateStage(CPU::CommitIdx);
     } else if (_nextStatus == Active && _status == Inactive) {
         DPRINTF(Activity, "Activating stage.\n");
-        cpu->activateStage(FullO3CPU::CommitIdx);
+        cpu->activateStage(CPU::CommitIdx);
     }
 
     _status = _nextStatus;
 }
 
 bool
-DefaultCommit::changedROBEntries()
+Commit::changedROBEntries()
 {
     std::list<ThreadID>::iterator threads = activeThreads->begin();
     std::list<ThreadID>::iterator end = activeThreads->end();
@@ -496,13 +487,13 @@ DefaultCommit::changedROBEntries()
 }
 
 size_t
-DefaultCommit::numROBFreeEntries(ThreadID tid)
+Commit::numROBFreeEntries(ThreadID tid)
 {
     return rob->numFreeEntries(tid);
 }
 
 void
-DefaultCommit::generateTrapEvent(ThreadID tid, Fault inst_fault)
+Commit::generateTrapEvent(ThreadID tid, Fault inst_fault)
 {
     DPRINTF(Commit, "Generating trap event for [tid:%i]\n", tid);
 
@@ -527,7 +518,7 @@ DefaultCommit::generateTrapEvent(ThreadID tid, Fault inst_fault)
 }
 
 void
-DefaultCommit::generateTCEvent(ThreadID tid)
+Commit::generateTCEvent(ThreadID tid)
 {
     assert(!trapInFlight[tid]);
     DPRINTF(Commit, "Generating TC squash event for [tid:%i]\n", tid);
@@ -536,7 +527,7 @@ DefaultCommit::generateTCEvent(ThreadID tid)
 }
 
 void
-DefaultCommit::squashAll(ThreadID tid)
+Commit::squashAll(ThreadID tid)
 {
     // If we want to include the squashing instruction in the squash,
     // then use one older sequence number.
@@ -571,7 +562,7 @@ DefaultCommit::squashAll(ThreadID tid)
 }
 
 void
-DefaultCommit::squashFromTrap(ThreadID tid)
+Commit::squashFromTrap(ThreadID tid)
 {
     squashAll(tid);
 
@@ -588,7 +579,7 @@ DefaultCommit::squashFromTrap(ThreadID tid)
 }
 
 void
-DefaultCommit::squashFromTC(ThreadID tid)
+Commit::squashFromTC(ThreadID tid)
 {
     squashAll(tid);
 
@@ -604,7 +595,7 @@ DefaultCommit::squashFromTC(ThreadID tid)
 }
 
 void
-DefaultCommit::squashFromSquashAfter(ThreadID tid)
+Commit::squashFromSquashAfter(ThreadID tid)
 {
     DPRINTF(Commit, "Squashing after squash after request, "
             "restarting at PC %s\n", pc[tid]);
@@ -621,7 +612,7 @@ DefaultCommit::squashFromSquashAfter(ThreadID tid)
 }
 
 void
-DefaultCommit::squashAfter(ThreadID tid, const O3DynInstPtr &head_inst)
+Commit::squashAfter(ThreadID tid, const DynInstPtr &head_inst)
 {
     DPRINTF(Commit, "Executing squash after for [tid:%i] inst [sn:%llu]\n",
             tid, head_inst->seqNum);
@@ -632,7 +623,7 @@ DefaultCommit::squashAfter(ThreadID tid, const O3DynInstPtr &head_inst)
 }
 
 void
-DefaultCommit::tick()
+Commit::tick()
 {
     wroteToTimeBuffer = false;
     _nextStatus = Inactive;
@@ -680,14 +671,14 @@ DefaultCommit::tick()
             // will be active.
             _nextStatus = Active;
 
-            GEM5_VAR_USED const O3DynInstPtr &inst = rob->readHeadInst(tid);
+            GEM5_VAR_USED const DynInstPtr &inst = rob->readHeadInst(tid);
 
             DPRINTF(Commit,"[tid:%i] Instruction [sn:%llu] PC %s is head of"
                     " ROB and ready to commit\n",
                     tid, inst->seqNum, inst->pcState());
 
         } else if (!rob->isEmpty(tid)) {
-            const O3DynInstPtr &inst = rob->readHeadInst(tid);
+            const DynInstPtr &inst = rob->readHeadInst(tid);
 
             ppCommitStall->notify(inst);
 
@@ -710,7 +701,7 @@ DefaultCommit::tick()
 }
 
 void
-DefaultCommit::handleInterrupt()
+Commit::handleInterrupt()
 {
     // Verify that we still have an interrupt to handle
     if (!cpu->checkInterrupts(0)) {
@@ -763,7 +754,7 @@ DefaultCommit::handleInterrupt()
 }
 
 void
-DefaultCommit::propagateInterrupt()
+Commit::propagateInterrupt()
 {
     // Don't propagate intterupts if we are currently handling a trap or
     // in draining and the last observable instruction has been committed.
@@ -787,7 +778,7 @@ DefaultCommit::propagateInterrupt()
 }
 
 void
-DefaultCommit::commit()
+Commit::commit()
 {
     if (FullSystem) {
         // Check if we have a interrupt and get read to handle it
@@ -949,7 +940,7 @@ DefaultCommit::commit()
 }
 
 void
-DefaultCommit::commitInsts()
+Commit::commitInsts()
 {
     ////////////////////////////////////
     // Handle commit
@@ -964,7 +955,7 @@ DefaultCommit::commitInsts()
 
     unsigned num_committed = 0;
 
-    O3DynInstPtr head_inst;
+    DynInstPtr head_inst;
 
     // Commit as many instructions as possible until the commit bandwidth
     // limit is reached, or it becomes impossible to commit any more.
@@ -1155,7 +1146,7 @@ DefaultCommit::commitInsts()
 }
 
 bool
-DefaultCommit::commitHead(const O3DynInstPtr &head_inst, unsigned inst_num)
+Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
 {
     assert(head_inst);
 
@@ -1345,7 +1336,7 @@ DefaultCommit::commitHead(const O3DynInstPtr &head_inst, unsigned inst_num)
 }
 
 void
-DefaultCommit::getInsts()
+Commit::getInsts()
 {
     DPRINTF(Commit, "Getting instructions from Rename stage.\n");
 
@@ -1353,7 +1344,7 @@ DefaultCommit::getInsts()
     int insts_to_process = std::min((int)renameWidth, fromRename->size);
 
     for (int inst_num = 0; inst_num < insts_to_process; ++inst_num) {
-        const O3DynInstPtr &inst = fromRename->insts[inst_num];
+        const DynInstPtr &inst = fromRename->insts[inst_num];
         ThreadID tid = inst->threadNumber;
 
         if (!inst->isSquashed() &&
@@ -1378,7 +1369,7 @@ DefaultCommit::getInsts()
 }
 
 void
-DefaultCommit::markCompletedInsts()
+Commit::markCompletedInsts()
 {
     // Grab completed insts out of the IEW instruction queue, and mark
     // instructions completed within the ROB.
@@ -1398,7 +1389,7 @@ DefaultCommit::markCompletedInsts()
 }
 
 void
-DefaultCommit::updateComInstStats(const O3DynInstPtr &inst)
+Commit::updateComInstStats(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -1460,7 +1451,7 @@ DefaultCommit::updateComInstStats(const O3DynInstPtr &inst)
 //                                    //
 ////////////////////////////////////////
 ThreadID
-DefaultCommit::getCommittingThread()
+Commit::getCommittingThread()
 {
     if (numThreads > 1) {
         switch (commitPolicy) {
@@ -1495,7 +1486,7 @@ DefaultCommit::getCommittingThread()
 }
 
 ThreadID
-DefaultCommit::roundRobin()
+Commit::roundRobin()
 {
     std::list<ThreadID>::iterator pri_iter = priority_list.begin();
     std::list<ThreadID>::iterator end      = priority_list.end();
@@ -1522,7 +1513,7 @@ DefaultCommit::roundRobin()
 }
 
 ThreadID
-DefaultCommit::oldestReady()
+Commit::oldestReady()
 {
     unsigned oldest = 0;
     bool first = true;
@@ -1540,7 +1531,7 @@ DefaultCommit::oldestReady()
 
             if (rob->isHeadReady(tid)) {
 
-                const O3DynInstPtr &head_inst = rob->readHeadInst(tid);
+                const DynInstPtr &head_inst = rob->readHeadInst(tid);
 
                 if (first) {
                     oldest = tid;
@@ -1558,3 +1549,5 @@ DefaultCommit::oldestReady()
         return InvalidThreadID;
     }
 }
+
+} // namespace o3

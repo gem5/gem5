@@ -47,7 +47,8 @@
 #include "cpu/reg_class.hh"
 #include "debug/Rename.hh"
 
-/**** SimpleRenameMap methods ****/
+namespace o3
+{
 
 SimpleRenameMap::SimpleRenameMap()
     : freeList(NULL), zeroReg(IntRegClass, 0)
@@ -214,3 +215,5 @@ UnifiedRenameMap::switchMode(VecMode newVecMode)
 
     }
 }
+
+} // namespace o3

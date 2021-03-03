@@ -47,9 +47,12 @@
 #include "cpu/o3/limits.hh"
 #include "debug/Fetch.hh"
 #include "debug/ROB.hh"
-#include "params/DerivO3CPU.hh"
+#include "params/O3CPU.hh"
 
-ROB::ROB(FullO3CPU *_cpu, const DerivO3CPUParams &params)
+namespace o3
+{
+
+ROB::ROB(CPU *_cpu, const O3CPUParams &params)
     : robPolicy(params.smtROBPolicy),
       cpu(_cpu),
       numEntries(params.numROBEntries),
@@ -87,7 +90,7 @@ ROB::ROB(FullO3CPU *_cpu, const DerivO3CPUParams &params)
         }
     }
 
-    for (ThreadID tid = numThreads; tid < O3MaxThreads; tid++) {
+    for (ThreadID tid = numThreads; tid < MaxThreads; tid++) {
         maxEntries[tid] = 0;
     }
 
@@ -97,7 +100,7 @@ ROB::ROB(FullO3CPU *_cpu, const DerivO3CPUParams &params)
 void
 ROB::resetState()
 {
-    for (ThreadID tid = 0; tid  < O3MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid  < MaxThreads; tid++) {
         threadEntries[tid] = 0;
         squashIt[tid] = instList[tid].end();
         squashedSeqNum[tid] = 0;
@@ -188,7 +191,7 @@ ROB::countInsts(ThreadID tid)
 }
 
 void
-ROB::insertInst(const O3DynInstPtr &inst)
+ROB::insertInst(const DynInstPtr &inst)
 {
     assert(inst);
 
@@ -234,7 +237,7 @@ ROB::retireHead(ThreadID tid)
     // Get the head ROB instruction by copying it and remove it from the list
     InstIt head_it = instList[tid].begin();
 
-    O3DynInstPtr head_inst = std::move(*head_it);
+    DynInstPtr head_inst = std::move(*head_it);
     instList[tid].erase(head_it);
 
     assert(head_inst->readyToCommit());
@@ -410,7 +413,7 @@ ROB::updateHead()
 
         InstIt head_thread = instList[tid].begin();
 
-        O3DynInstPtr head_inst = (*head_thread);
+        DynInstPtr head_inst = (*head_thread);
 
         assert(head_inst != 0);
 
@@ -492,7 +495,7 @@ ROB::squash(InstSeqNum squash_num, ThreadID tid)
     }
 }
 
-const O3DynInstPtr&
+const DynInstPtr&
 ROB::readHeadInst(ThreadID tid)
 {
     if (threadEntries[tid] != 0) {
@@ -506,7 +509,7 @@ ROB::readHeadInst(ThreadID tid)
     }
 }
 
-O3DynInstPtr
+DynInstPtr
 ROB::readTailInst(ThreadID tid)
 {
     InstIt tail_thread = instList[tid].end();
@@ -522,7 +525,7 @@ ROB::ROBStats::ROBStats(Stats::Group *parent)
 {
 }
 
-O3DynInstPtr
+DynInstPtr
 ROB::findInst(ThreadID tid, InstSeqNum squash_inst)
 {
     for (InstIt it = instList[tid].begin(); it != instList[tid].end(); it++) {
@@ -532,3 +535,5 @@ ROB::findInst(ThreadID tid, InstSeqNum squash_inst)
     }
     return NULL;
 }
+
+} // namespace o3

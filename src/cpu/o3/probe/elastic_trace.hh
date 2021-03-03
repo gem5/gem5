@@ -61,7 +61,10 @@
 #include "sim/eventq.hh"
 #include "sim/probe/probe.hh"
 
-class FullO3CPU;
+namespace o3
+{
+
+class CPU;
 
 /**
  * The elastic trace is a type of probe listener and listens to probe points
@@ -130,7 +133,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @param dyn_inst pointer to dynamic instruction in flight
      */
-    void recordExecTick(const O3DynInstConstPtr& dyn_inst);
+    void recordExecTick(const DynInstConstPtr& dyn_inst);
 
     /**
      * Populate the timestamp field in an InstExecInfo object for an
@@ -139,7 +142,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @param dyn_inst pointer to dynamic instruction in flight
      */
-    void recordToCommTick(const O3DynInstConstPtr& dyn_inst);
+    void recordToCommTick(const DynInstConstPtr& dyn_inst);
 
     /**
      * Record a Read After Write physical register dependency if there has
@@ -150,7 +153,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @param dyn_inst pointer to dynamic instruction in flight
      */
-    void updateRegDep(const O3DynInstConstPtr& dyn_inst);
+    void updateRegDep(const DynInstConstPtr& dyn_inst);
 
     /**
      * When an instruction gets squashed the destination register mapped to it
@@ -167,14 +170,14 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @param head_inst pointer to dynamic instruction to be squashed
      */
-    void addSquashedInst(const O3DynInstConstPtr& head_inst);
+    void addSquashedInst(const DynInstConstPtr& head_inst);
 
     /**
      * Add an instruction that is at the head of the ROB and is committed.
      *
      * @param head_inst pointer to dynamic instruction to be committed
      */
-    void addCommittedInst(const O3DynInstConstPtr& head_inst);
+    void addCommittedInst(const DynInstConstPtr& head_inst);
 
     /** Event to trigger registering this listener for all probe points. */
     EventFunctionWrapper regEtraceListenersEvent;
@@ -368,7 +371,7 @@ class ElasticTrace : public ProbeListenerObject
     const bool traceVirtAddr;
 
     /** Pointer to the O3CPU that is this listener's parent a.k.a. manager */
-    FullO3CPU *cpu;
+    CPU *cpu;
 
     /**
      * Add a record to the dependency trace depTrace which is a sequential
@@ -380,7 +383,7 @@ class ElasticTrace : public ProbeListenerObject
      * @param exec_info_ptr Pointer to InstExecInfo for that instruction
      * @param commit        True if instruction is committed, false if squashed
      */
-    void addDepTraceRecord(const O3DynInstConstPtr& head_inst,
+    void addDepTraceRecord(const DynInstConstPtr& head_inst,
                            InstExecInfo* exec_info_ptr, bool commit);
 
     /**
@@ -389,7 +392,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @param head_inst pointer to dynamic instruction
      */
-    void clearTempStoreUntil(const O3DynInstConstPtr& head_inst);
+    void clearTempStoreUntil(const DynInstConstPtr& head_inst);
 
     /**
      * Calculate the computational delay between an instruction and a
@@ -558,4 +561,7 @@ class ElasticTrace : public ProbeListenerObject
     } stats;
 
 };
+
+} // namespace o3
+
 #endif//__CPU_O3_PROBE_ELASTIC_TRACE_HH__

@@ -37,9 +37,13 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 
+namespace o3
+{
+
 struct ltseqnum
 {
-    bool operator()(const InstSeqNum &lhs, const InstSeqNum &rhs) const
+    bool
+    operator()(const InstSeqNum &lhs, const InstSeqNum &rhs) const
     {
         return lhs > rhs;
     }
@@ -155,5 +159,7 @@ class StoreSet
     /** Number of memory operations predicted since last clear of predictor */
     int memOpsPred;
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_STORE_SET_HH__

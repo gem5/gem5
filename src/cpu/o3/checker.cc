@@ -43,4 +43,4 @@
 #include "cpu/checker/cpu_impl.hh"
 
 template
-class Checker<O3DynInstPtr>;
+class Checker<o3::DynInstPtr>;

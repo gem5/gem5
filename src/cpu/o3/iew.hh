@@ -55,11 +55,15 @@
 #include "debug/IEW.hh"
 #include "sim/probe/probe.hh"
 
-struct DerivO3CPUParams;
+struct O3CPUParams;
+
+namespace o3
+{
+
 class FUPool;
 
 /**
- * DefaultIEW handles both single threaded and SMT IEW
+ * IEW handles both single threaded and SMT IEW
  * (issue/execute/writeback).  It handles the dispatching of
  * instructions to the LSQ/IQ as part of the issue stage, and has the
  * IQ try to issue instructions each cycle. The execute latency is
@@ -77,7 +81,7 @@ class FUPool;
  * up any dependents, and marking the register ready on the
  * scoreboard.
  */
-class DefaultIEW
+class IEW
 {
   public:
     /** Overall IEW stage status. Used to determine if the CPU can
@@ -104,25 +108,25 @@ class DefaultIEW
     /** Overall stage status. */
     Status _status;
     /** Dispatch status. */
-    StageStatus dispatchStatus[O3MaxThreads];
+    StageStatus dispatchStatus[MaxThreads];
     /** Execute status. */
     StageStatus exeStatus;
     /** Writeback status. */
     StageStatus wbStatus;
 
     /** Probe points. */
-    ProbePointArg<O3DynInstPtr> *ppMispredict;
-    ProbePointArg<O3DynInstPtr> *ppDispatch;
+    ProbePointArg<DynInstPtr> *ppMispredict;
+    ProbePointArg<DynInstPtr> *ppDispatch;
     /** To probe when instruction execution begins. */
-    ProbePointArg<O3DynInstPtr> *ppExecute;
+    ProbePointArg<DynInstPtr> *ppExecute;
     /** To probe when instruction execution is complete. */
-    ProbePointArg<O3DynInstPtr> *ppToCommit;
+    ProbePointArg<DynInstPtr> *ppToCommit;
 
   public:
-    /** Constructs a DefaultIEW with the given parameters. */
-    DefaultIEW(FullO3CPU *_cpu, const DerivO3CPUParams &params);
+    /** Constructs a IEW with the given parameters. */
+    IEW(CPU *_cpu, const O3CPUParams &params);
 
-    /** Returns the name of the DefaultIEW stage. */
+    /** Returns the name of the IEW stage. */
     std::string name() const;
 
     /** Registers probes. */
@@ -135,13 +139,13 @@ class DefaultIEW
     void clearStates(ThreadID tid);
 
     /** Sets main time buffer used for backwards communication. */
-    void setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr);
+    void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
 
     /** Sets time buffer for getting instructions coming from rename. */
-    void setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr);
+    void setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr);
 
     /** Sets time buffer to pass on instructions to commit. */
-    void setIEWQueue(TimeBuffer<O3Comm::IEWStruct> *iq_ptr);
+    void setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr);
 
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
@@ -162,24 +166,24 @@ class DefaultIEW
     void squash(ThreadID tid);
 
     /** Wakes all dependents of a completed instruction. */
-    void wakeDependents(const O3DynInstPtr &inst);
+    void wakeDependents(const DynInstPtr &inst);
 
     /** Tells memory dependence unit that a memory instruction needs to be
      * rescheduled. It will re-execute once replayMemInst() is called.
      */
-    void rescheduleMemInst(const O3DynInstPtr &inst);
+    void rescheduleMemInst(const DynInstPtr &inst);
 
     /** Re-executes all rescheduled memory instructions. */
-    void replayMemInst(const O3DynInstPtr &inst);
+    void replayMemInst(const DynInstPtr &inst);
 
     /** Moves memory instruction onto the list of cache blocked instructions */
-    void blockMemInst(const O3DynInstPtr &inst);
+    void blockMemInst(const DynInstPtr &inst);
 
     /** Notifies that the cache has become unblocked */
     void cacheUnblocked();
 
     /** Sends an instruction to commit through the time buffer. */
-    void instToCommit(const O3DynInstPtr &inst);
+    void instToCommit(const DynInstPtr &inst);
 
     /** Inserts unused instructions of a thread into the skid buffer. */
     void skidInsert(ThreadID tid);
@@ -217,7 +221,7 @@ class DefaultIEW
     bool hasStoresToWB(ThreadID tid) { return ldstQueue.hasStoresToWB(tid); }
 
     /** Check misprediction  */
-    void checkMisprediction(const O3DynInstPtr &inst);
+    void checkMisprediction(const DynInstPtr &inst);
 
     // hardware transactional memory
     // For debugging purposes, it is useful to keep track of the most recent
@@ -233,12 +237,12 @@ class DefaultIEW
     /** Sends commit proper information for a squash due to a branch
      * mispredict.
      */
-    void squashDueToBranch(const O3DynInstPtr &inst, ThreadID tid);
+    void squashDueToBranch(const DynInstPtr &inst, ThreadID tid);
 
     /** Sends commit proper information for a squash due to a memory order
      * violation.
      */
-    void squashDueToMemOrder(const O3DynInstPtr &inst, ThreadID tid);
+    void squashDueToMemOrder(const DynInstPtr &inst, ThreadID tid);
 
     /** Sets Dispatch to blocked, and signals back to other stages to block. */
     void block(ThreadID tid);
@@ -292,53 +296,53 @@ class DefaultIEW
 
   private:
     /** Updates execution stats based on the instruction. */
-    void updateExeInstStats(const O3DynInstPtr &inst);
+    void updateExeInstStats(const DynInstPtr &inst);
 
     /** Pointer to main time buffer used for backwards communication. */
-    TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
+    TimeBuffer<TimeStruct> *timeBuffer;
 
     /** Wire to write information heading to previous stages. */
-    TimeBuffer<O3Comm::TimeStruct>::wire toFetch;
+    TimeBuffer<TimeStruct>::wire toFetch;
 
     /** Wire to get commit's output from backwards time buffer. */
-    TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
+    TimeBuffer<TimeStruct>::wire fromCommit;
 
     /** Wire to write information heading to previous stages. */
-    TimeBuffer<O3Comm::TimeStruct>::wire toRename;
+    TimeBuffer<TimeStruct>::wire toRename;
 
     /** Rename instruction queue interface. */
-    TimeBuffer<O3Comm::RenameStruct> *renameQueue;
+    TimeBuffer<RenameStruct> *renameQueue;
 
     /** Wire to get rename's output from rename queue. */
-    TimeBuffer<O3Comm::RenameStruct>::wire fromRename;
+    TimeBuffer<RenameStruct>::wire fromRename;
 
     /** Issue stage queue. */
-    TimeBuffer<O3Comm::IssueStruct> issueToExecQueue;
+    TimeBuffer<IssueStruct> issueToExecQueue;
 
     /** Wire to read information from the issue stage time queue. */
-    TimeBuffer<O3Comm::IssueStruct>::wire fromIssue;
+    TimeBuffer<IssueStruct>::wire fromIssue;
 
     /**
      * IEW stage time buffer.  Holds ROB indices of instructions that
      * can be marked as completed.
      */
-    TimeBuffer<O3Comm::IEWStruct> *iewQueue;
+    TimeBuffer<IEWStruct> *iewQueue;
 
     /** Wire to write infromation heading to commit. */
-    TimeBuffer<O3Comm::IEWStruct>::wire toCommit;
+    TimeBuffer<IEWStruct>::wire toCommit;
 
     /** Queue of all instructions coming from rename this cycle. */
-    std::queue<O3DynInstPtr> insts[O3MaxThreads];
+    std::queue<DynInstPtr> insts[MaxThreads];
 
     /** Skid buffer between rename and IEW. */
-    std::queue<O3DynInstPtr> skidBuffer[O3MaxThreads];
+    std::queue<DynInstPtr> skidBuffer[MaxThreads];
 
     /** Scoreboard pointer. */
     Scoreboard* scoreboard;
 
   private:
     /** CPU pointer. */
-    FullO3CPU *cpu;
+    CPU *cpu;
 
     /** Records if IEW has written to the time buffer this cycle, so that the
      * CPU can deschedule itself if there is no activity.
@@ -364,7 +368,7 @@ class DefaultIEW
 
   private:
     /** Records if there is a fetch redirect on this cycle for each thread. */
-    bool fetchRedirect[O3MaxThreads];
+    bool fetchRedirect[MaxThreads];
 
     /** Records if the queues have been changed (inserted or issued insts),
      * so that IEW knows to broadcast the updated amount of free entries.
@@ -415,7 +419,7 @@ class DefaultIEW
 
     struct IEWStats : public Stats::Group
     {
-        IEWStats(FullO3CPU *cpu);
+        IEWStats(CPU *cpu);
 
         /** Stat for total number of idle cycles. */
         Stats::Scalar idleCycles;
@@ -451,7 +455,7 @@ class DefaultIEW
 
         struct ExecutedInstStats : public Stats::Group
         {
-            ExecutedInstStats(FullO3CPU *cpu);
+            ExecutedInstStats(CPU *cpu);
 
             /** Stat for total number of executed instructions. */
             Stats::Scalar numInsts;
@@ -488,5 +492,7 @@ class DefaultIEW
         Stats::Formula wbFanout;
     } iewStats;
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_IEW_HH__

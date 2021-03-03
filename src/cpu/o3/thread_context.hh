@@ -46,6 +46,9 @@
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/thread_context.hh"
 
+namespace o3
+{
+
 /**
  * Derived ThreadContext class for use with the O3CPU.  It
  * provides the interface for any external objects to access a
@@ -54,16 +57,16 @@
  * the CPU will create an event to squash all in-flight
  * instructions in order to ensure state is maintained correctly.
  * It must be defined specifically for the O3CPU because
- * not all architectural state is located within the O3ThreadState
+ * not all architectural state is located within the ThreadState
  * (such as the commit PC, and registers), and specific actions
  * must be taken when using this interface (such as squashing all
  * in-flight instructions when doing a write to this interface).
  */
-class O3ThreadContext : public ThreadContext
+class ThreadContext : public ::ThreadContext
 {
   public:
    /** Pointer to the CPU. */
-    FullO3CPU *cpu;
+    CPU *cpu;
 
     bool
     schedule(PCEvent *e) override
@@ -93,7 +96,7 @@ class O3ThreadContext : public ThreadContext
     }
 
     /** Pointer to the thread state that this TC corrseponds to. */
-    O3ThreadState *thread;
+    ThreadState *thread;
 
     /** Returns a pointer to the MMU. */
     BaseMMU *getMMUPtr() override { return cpu->mmu; }
@@ -142,7 +145,7 @@ class O3ThreadContext : public ThreadContext
     PortProxy &getVirtProxy() override;
 
     void
-    initMemProxies(ThreadContext *tc) override
+    initMemProxies(::ThreadContext *tc) override
     {
         thread->initMemProxies(tc);
     }
@@ -167,7 +170,7 @@ class O3ThreadContext : public ThreadContext
     void halt() override;
 
     /** Takes over execution of a thread from another CPU. */
-    void takeOverFrom(ThreadContext *old_context) override;
+    void takeOverFrom(::ThreadContext *old_context) override;
 
     /** Reads the last tick that this thread was activated on. */
     Tick readLastActivate() override;
@@ -175,7 +178,7 @@ class O3ThreadContext : public ThreadContext
     Tick readLastSuspend() override;
 
     /** Copies the architectural registers from another TC into this TC. */
-    void copyArchRegs(ThreadContext *tc) override;
+    void copyArchRegs(::ThreadContext *tc) override;
 
     /** Resets all architectural registers to 0. */
     void clearArchRegs() override;
@@ -400,5 +403,7 @@ class O3ThreadContext : public ThreadContext
     BaseHTMCheckpointPtr& getHtmCheckpointPtr() override;
     void setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt) override;
 };
+
+} // namespace o3
 
 #endif

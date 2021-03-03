@@ -29,4 +29,5 @@ from m5.objects.CheckerCPU import CheckerCPU
 
 class O3Checker(CheckerCPU):
     type = 'O3Checker'
+    cxx_class = 'o3::Checker'
     cxx_header = 'cpu/o3/checker.hh'

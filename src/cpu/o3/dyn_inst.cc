@@ -46,10 +46,12 @@
 #include "debug/IQ.hh"
 #include "debug/O3PipeView.hh"
 
-BaseO3DynInst::BaseO3DynInst(const StaticInstPtr &static_inst,
-                             const StaticInstPtr &_macroop,
-                             TheISA::PCState _pc, TheISA::PCState pred_pc,
-                             InstSeqNum seq_num, FullO3CPU *_cpu)
+namespace o3
+{
+
+DynInst::DynInst(const StaticInstPtr &static_inst,
+        const StaticInstPtr &_macroop, TheISA::PCState _pc,
+        TheISA::PCState pred_pc, InstSeqNum seq_num, CPU *_cpu)
     : seqNum(seq_num), staticInst(static_inst), cpu(_cpu), pc(_pc),
       regs(staticInst->numSrcRegs(), staticInst->numDestRegs()),
       predPC(pred_pc), macroop(_macroop)
@@ -85,12 +87,12 @@ BaseO3DynInst::BaseO3DynInst(const StaticInstPtr &static_inst,
 
 }
 
-BaseO3DynInst::BaseO3DynInst(const StaticInstPtr &_staticInst,
-                             const StaticInstPtr &_macroop)
-    : BaseO3DynInst(_staticInst, _macroop, {}, {}, 0, nullptr)
+DynInst::DynInst(const StaticInstPtr &_staticInst,
+        const StaticInstPtr &_macroop)
+    : DynInst(_staticInst, _macroop, {}, {}, 0, nullptr)
 {}
 
-BaseO3DynInst::~BaseO3DynInst()
+DynInst::~DynInst()
 {
 #if TRACING_ON
     if (Debug::O3PipeView) {
@@ -145,7 +147,7 @@ BaseO3DynInst::~BaseO3DynInst()
 
 #ifdef DEBUG
 void
-BaseO3DynInst::dumpSNList()
+DynInst::dumpSNList()
 {
     std::set<InstSeqNum>::iterator sn_it = cpu->snList.begin();
 
@@ -159,7 +161,7 @@ BaseO3DynInst::dumpSNList()
 #endif
 
 void
-BaseO3DynInst::dump()
+DynInst::dump()
 {
     cprintf("T%d : %#08d `", threadNumber, pc.instAddr());
     std::cout << staticInst->disassemble(pc.instAddr());
@@ -167,7 +169,7 @@ BaseO3DynInst::dump()
 }
 
 void
-BaseO3DynInst::dump(std::string &outstring)
+DynInst::dump(std::string &outstring)
 {
     std::ostringstream s;
     s << "T" << threadNumber << " : 0x" << pc.instAddr() << " "
@@ -177,7 +179,7 @@ BaseO3DynInst::dump(std::string &outstring)
 }
 
 void
-BaseO3DynInst::markSrcRegReady()
+DynInst::markSrcRegReady()
 {
     DPRINTF(IQ, "[sn:%lli] has %d ready out of %d sources. RTI %d)\n",
             seqNum, readyRegs+1, numSrcRegs(), readyToIssue());
@@ -187,7 +189,7 @@ BaseO3DynInst::markSrcRegReady()
 }
 
 void
-BaseO3DynInst::markSrcRegReady(RegIndex src_idx)
+DynInst::markSrcRegReady(RegIndex src_idx)
 {
     regs.readySrcIdx(src_idx, true);
     markSrcRegReady();
@@ -195,7 +197,7 @@ BaseO3DynInst::markSrcRegReady(RegIndex src_idx)
 
 
 void
-BaseO3DynInst::setSquashed()
+DynInst::setSquashed()
 {
     status.set(Squashed);
 
@@ -220,7 +222,7 @@ BaseO3DynInst::setSquashed()
 }
 
 Fault
-BaseO3DynInst::execute()
+DynInst::execute()
 {
     // @todo: Pretty convoluted way to avoid squashing from happening
     // when using the TC during an instruction's execution
@@ -237,7 +239,7 @@ BaseO3DynInst::execute()
 }
 
 Fault
-BaseO3DynInst::initiateAcc()
+DynInst::initiateAcc()
 {
     // @todo: Pretty convoluted way to avoid squashing from happening
     // when using the TC during an instruction's execution
@@ -254,7 +256,7 @@ BaseO3DynInst::initiateAcc()
 }
 
 Fault
-BaseO3DynInst::completeAcc(PacketPtr pkt)
+DynInst::completeAcc(PacketPtr pkt)
 {
     // @todo: Pretty convoluted way to avoid squashing from happening
     // when using the TC during an instruction's execution
@@ -277,44 +279,44 @@ BaseO3DynInst::completeAcc(PacketPtr pkt)
 }
 
 void
-BaseO3DynInst::trap(const Fault &fault)
+DynInst::trap(const Fault &fault)
 {
     this->cpu->trap(fault, this->threadNumber, this->staticInst);
 }
 
 Fault
-BaseO3DynInst::initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
+DynInst::initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
                                const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
     return cpu->pushRequest(
-        dynamic_cast<O3DynInstPtr::PtrType>(this),
+        dynamic_cast<DynInstPtr::PtrType>(this),
         /* ld */ true, nullptr, size, addr, flags, nullptr, nullptr,
         byte_enable);
 }
 
 Fault
-BaseO3DynInst::initiateHtmCmd(Request::Flags flags)
+DynInst::initiateHtmCmd(Request::Flags flags)
 {
     return cpu->pushRequest(
-            dynamic_cast<O3DynInstPtr::PtrType>(this),
+            dynamic_cast<DynInstPtr::PtrType>(this),
             /* ld */ true, nullptr, 8, 0x0ul, flags, nullptr, nullptr);
 }
 
 Fault
-BaseO3DynInst::writeMem(uint8_t *data, unsigned size, Addr addr,
+DynInst::writeMem(uint8_t *data, unsigned size, Addr addr,
                         Request::Flags flags, uint64_t *res,
                         const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
     return cpu->pushRequest(
-        dynamic_cast<O3DynInstPtr::PtrType>(this),
+        dynamic_cast<DynInstPtr::PtrType>(this),
         /* st */ false, data, size, addr, flags, res, nullptr,
         byte_enable);
 }
 
 Fault
-BaseO3DynInst::initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
+DynInst::initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
                               AtomicOpFunctorPtr amo_op)
 {
     // atomic memory instructions do not have data to be written to memory yet
@@ -323,7 +325,9 @@ BaseO3DynInst::initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
     // Atomic memory requests need to carry their `amo_op` fields to cache/
     // memory
     return cpu->pushRequest(
-            dynamic_cast<O3DynInstPtr::PtrType>(this),
+            dynamic_cast<DynInstPtr::PtrType>(this),
             /* atomic */ false, nullptr, size, addr, flags, nullptr,
             std::move(amo_op), std::vector<bool>(size, true));
 }
+
+} // namespace o3

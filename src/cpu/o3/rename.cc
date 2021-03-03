@@ -50,9 +50,12 @@
 #include "debug/Activity.hh"
 #include "debug/O3PipeView.hh"
 #include "debug/Rename.hh"
-#include "params/DerivO3CPU.hh"
+#include "params/O3CPU.hh"
 
-DefaultRename::DefaultRename(FullO3CPU *_cpu, const DerivO3CPUParams &params)
+namespace o3
+{
+
+Rename::Rename(CPU *_cpu, const O3CPUParams &params)
     : cpu(_cpu),
       iewToRenameDelay(params.iewToRenameDelay),
       decodeToRenameDelay(params.decodeToRenameDelay),
@@ -61,14 +64,14 @@ DefaultRename::DefaultRename(FullO3CPU *_cpu, const DerivO3CPUParams &params)
       numThreads(params.numThreads),
       stats(_cpu)
 {
-    if (renameWidth > O3MaxWidth)
+    if (renameWidth > MaxWidth)
         fatal("renameWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease O3MaxWidth in src/cpu/o3/limits.hh\n",
-             renameWidth, static_cast<int>(O3MaxWidth));
+             "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
+             renameWidth, static_cast<int>(MaxWidth));
 
     // @todo: Make into a parameter.
     skidBufferMax = (decodeToRenameDelay + 1) * params.decodeWidth;
-    for (uint32_t tid = 0; tid < O3MaxThreads; tid++) {
+    for (uint32_t tid = 0; tid < MaxThreads; tid++) {
         renameStatus[tid] = Idle;
         renameMap[tid] = nullptr;
         instsInProgress[tid] = 0;
@@ -83,12 +86,12 @@ DefaultRename::DefaultRename(FullO3CPU *_cpu, const DerivO3CPUParams &params)
 }
 
 std::string
-DefaultRename::name() const
+Rename::name() const
 {
     return cpu->name() + ".rename";
 }
 
-DefaultRename::RenameStats::RenameStats(Stats::Group *parent)
+Rename::RenameStats::RenameStats(Stats::Group *parent)
     : Stats::Group(parent, "rename"),
       ADD_STAT(squashCycles, Stats::Units::Cycle::get(),
                "Number of cycles rename is squashing"),
@@ -170,16 +173,16 @@ DefaultRename::RenameStats::RenameStats(Stats::Group *parent)
 }
 
 void
-DefaultRename::regProbePoints()
+Rename::regProbePoints()
 {
-    ppRename = new ProbePointArg<O3DynInstPtr>(
+    ppRename = new ProbePointArg<DynInstPtr>(
             cpu->getProbeManager(), "Rename");
     ppSquashInRename = new ProbePointArg<SeqNumRegPair>(cpu->getProbeManager(),
                                                         "SquashInRename");
 }
 
 void
-DefaultRename::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
+Rename::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
 
@@ -194,7 +197,7 @@ DefaultRename::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
 }
 
 void
-DefaultRename::setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr)
+Rename::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 {
     renameQueue = rq_ptr;
 
@@ -203,7 +206,7 @@ DefaultRename::setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr)
 }
 
 void
-DefaultRename::setDecodeQueue(TimeBuffer<O3Comm::DecodeStruct> *dq_ptr)
+Rename::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
 {
     decodeQueue = dq_ptr;
 
@@ -212,13 +215,13 @@ DefaultRename::setDecodeQueue(TimeBuffer<O3Comm::DecodeStruct> *dq_ptr)
 }
 
 void
-DefaultRename::startupStage()
+Rename::startupStage()
 {
     resetStage();
 }
 
 void
-DefaultRename::clearStates(ThreadID tid)
+Rename::clearStates(ThreadID tid)
 {
     renameStatus[tid] = Idle;
 
@@ -239,7 +242,7 @@ DefaultRename::clearStates(ThreadID tid)
 }
 
 void
-DefaultRename::resetStage()
+Rename::resetStage()
 {
     _status = Inactive;
 
@@ -270,33 +273,33 @@ DefaultRename::resetStage()
 }
 
 void
-DefaultRename::setActiveThreads(std::list<ThreadID> *at_ptr)
+Rename::setActiveThreads(std::list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 }
 
 
 void
-DefaultRename::setRenameMap(UnifiedRenameMap rm_ptr[])
+Rename::setRenameMap(UnifiedRenameMap rm_ptr[])
 {
     for (ThreadID tid = 0; tid < numThreads; tid++)
         renameMap[tid] = &rm_ptr[tid];
 }
 
 void
-DefaultRename::setFreeList(UnifiedFreeList *fl_ptr)
+Rename::setFreeList(UnifiedFreeList *fl_ptr)
 {
     freeList = fl_ptr;
 }
 
 void
-DefaultRename::setScoreboard(Scoreboard *_scoreboard)
+Rename::setScoreboard(Scoreboard *_scoreboard)
 {
     scoreboard = _scoreboard;
 }
 
 bool
-DefaultRename::isDrained() const
+Rename::isDrained() const
 {
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         if (instsInProgress[tid] != 0 ||
@@ -310,13 +313,13 @@ DefaultRename::isDrained() const
 }
 
 void
-DefaultRename::takeOverFrom()
+Rename::takeOverFrom()
 {
     resetStage();
 }
 
 void
-DefaultRename::drainSanityCheck() const
+Rename::drainSanityCheck() const
 {
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         assert(historyBuffer[tid].empty());
@@ -327,7 +330,7 @@ DefaultRename::drainSanityCheck() const
 }
 
 void
-DefaultRename::squash(const InstSeqNum &squash_seq_num, ThreadID tid)
+Rename::squash(const InstSeqNum &squash_seq_num, ThreadID tid)
 {
     DPRINTF(Rename, "[tid:%i] [squash sn:%llu] Squashing instructions.\n",
         tid,squash_seq_num);
@@ -380,7 +383,7 @@ DefaultRename::squash(const InstSeqNum &squash_seq_num, ThreadID tid)
 }
 
 void
-DefaultRename::tick()
+Rename::tick()
 {
     wroteToTimeBuffer = false;
 
@@ -443,7 +446,7 @@ DefaultRename::tick()
 }
 
 void
-DefaultRename::rename(bool &status_change, ThreadID tid)
+Rename::rename(bool &status_change, ThreadID tid)
 {
     // If status is Running or idle,
     //     call renameInsts()
@@ -498,7 +501,7 @@ DefaultRename::rename(bool &status_change, ThreadID tid)
 }
 
 void
-DefaultRename::renameInsts(ThreadID tid)
+Rename::renameInsts(ThreadID tid)
 {
     // Instructions can be either in the skid buffer or the queue of
     // instructions coming from decode, depending on the status.
@@ -593,7 +596,7 @@ DefaultRename::renameInsts(ThreadID tid)
 
         assert(!insts_to_rename.empty());
 
-        O3DynInstPtr inst = insts_to_rename.front();
+        DynInstPtr inst = insts_to_rename.front();
 
         //For all kind of instructions, check ROB and IQ first For load
         //instruction, check LQ size and take into account the inflight loads
@@ -753,9 +756,9 @@ DefaultRename::renameInsts(ThreadID tid)
 }
 
 void
-DefaultRename::skidInsert(ThreadID tid)
+Rename::skidInsert(ThreadID tid)
 {
-    O3DynInstPtr inst = NULL;
+    DynInstPtr inst = NULL;
 
     while (!insts[tid].empty()) {
         inst = insts[tid].front();
@@ -785,11 +788,11 @@ DefaultRename::skidInsert(ThreadID tid)
 }
 
 void
-DefaultRename::sortInsts()
+Rename::sortInsts()
 {
     int insts_from_decode = fromDecode->size;
     for (int i = 0; i < insts_from_decode; ++i) {
-        const O3DynInstPtr &inst = fromDecode->insts[i];
+        const DynInstPtr &inst = fromDecode->insts[i];
         insts[inst->threadNumber].push_back(inst);
 #if TRACING_ON
         if (Debug::O3PipeView) {
@@ -800,7 +803,7 @@ DefaultRename::sortInsts()
 }
 
 bool
-DefaultRename::skidsEmpty()
+Rename::skidsEmpty()
 {
     std::list<ThreadID>::iterator threads = activeThreads->begin();
     std::list<ThreadID>::iterator end = activeThreads->end();
@@ -816,7 +819,7 @@ DefaultRename::skidsEmpty()
 }
 
 void
-DefaultRename::updateStatus()
+Rename::updateStatus()
 {
     bool any_unblocking = false;
 
@@ -839,7 +842,7 @@ DefaultRename::updateStatus()
 
             DPRINTF(Activity, "Activating stage.\n");
 
-            cpu->activateStage(FullO3CPU::RenameIdx);
+            cpu->activateStage(CPU::RenameIdx);
         }
     } else {
         // If it's not unblocking, then rename will not have any internal
@@ -848,13 +851,13 @@ DefaultRename::updateStatus()
             _status = Inactive;
             DPRINTF(Activity, "Deactivating stage.\n");
 
-            cpu->deactivateStage(FullO3CPU::RenameIdx);
+            cpu->deactivateStage(CPU::RenameIdx);
         }
     }
 }
 
 bool
-DefaultRename::block(ThreadID tid)
+Rename::block(ThreadID tid)
 {
     DPRINTF(Rename, "[tid:%i] Blocking.\n", tid);
 
@@ -887,7 +890,7 @@ DefaultRename::block(ThreadID tid)
 }
 
 bool
-DefaultRename::unblock(ThreadID tid)
+Rename::unblock(ThreadID tid)
 {
     DPRINTF(Rename, "[tid:%i] Trying to unblock.\n", tid);
 
@@ -907,7 +910,7 @@ DefaultRename::unblock(ThreadID tid)
 }
 
 void
-DefaultRename::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
+Rename::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
 {
     auto hb_it = historyBuffer[tid].begin();
 
@@ -955,7 +958,7 @@ DefaultRename::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
 }
 
 void
-DefaultRename::removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid)
+Rename::removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid)
 {
     DPRINTF(Rename, "[tid:%i] Removing a committed instruction from the "
             "history buffer %u (size=%i), until [sn:%llu].\n",
@@ -1004,9 +1007,9 @@ DefaultRename::removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid)
 }
 
 void
-DefaultRename::renameSrcRegs(const O3DynInstPtr &inst, ThreadID tid)
+Rename::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
 {
-    ThreadContext *tc = inst->tcBase();
+    ::ThreadContext *tc = inst->tcBase();
     UnifiedRenameMap *map = renameMap[tid];
     unsigned num_src_regs = inst->numSrcRegs();
 
@@ -1070,9 +1073,9 @@ DefaultRename::renameSrcRegs(const O3DynInstPtr &inst, ThreadID tid)
 }
 
 void
-DefaultRename::renameDestRegs(const O3DynInstPtr &inst, ThreadID tid)
+Rename::renameDestRegs(const DynInstPtr &inst, ThreadID tid)
 {
-    ThreadContext *tc = inst->tcBase();
+    ::ThreadContext *tc = inst->tcBase();
     UnifiedRenameMap *map = renameMap[tid];
     unsigned num_dest_regs = inst->numDestRegs();
 
@@ -1123,7 +1126,7 @@ DefaultRename::renameDestRegs(const O3DynInstPtr &inst, ThreadID tid)
 }
 
 int
-DefaultRename::calcFreeROBEntries(ThreadID tid)
+Rename::calcFreeROBEntries(ThreadID tid)
 {
     int num_free = freeEntries[tid].robEntries -
                   (instsInProgress[tid] - fromIEW->iewInfo[tid].dispatched);
@@ -1134,7 +1137,7 @@ DefaultRename::calcFreeROBEntries(ThreadID tid)
 }
 
 int
-DefaultRename::calcFreeIQEntries(ThreadID tid)
+Rename::calcFreeIQEntries(ThreadID tid)
 {
     int num_free = freeEntries[tid].iqEntries -
                   (instsInProgress[tid] - fromIEW->iewInfo[tid].dispatched);
@@ -1145,7 +1148,7 @@ DefaultRename::calcFreeIQEntries(ThreadID tid)
 }
 
 int
-DefaultRename::calcFreeLQEntries(ThreadID tid)
+Rename::calcFreeLQEntries(ThreadID tid)
 {
         int num_free = freeEntries[tid].lqEntries -
             (loadsInProgress[tid] - fromIEW->iewInfo[tid].dispatchedToLQ);
@@ -1158,7 +1161,7 @@ DefaultRename::calcFreeLQEntries(ThreadID tid)
 }
 
 int
-DefaultRename::calcFreeSQEntries(ThreadID tid)
+Rename::calcFreeSQEntries(ThreadID tid)
 {
         int num_free = freeEntries[tid].sqEntries -
             (storesInProgress[tid] - fromIEW->iewInfo[tid].dispatchedToSQ);
@@ -1170,7 +1173,7 @@ DefaultRename::calcFreeSQEntries(ThreadID tid)
 }
 
 unsigned
-DefaultRename::validInsts()
+Rename::validInsts()
 {
     unsigned inst_count = 0;
 
@@ -1183,7 +1186,7 @@ DefaultRename::validInsts()
 }
 
 void
-DefaultRename::readStallSignals(ThreadID tid)
+Rename::readStallSignals(ThreadID tid)
 {
     if (fromIEW->iewBlock[tid]) {
         stalls[tid].iew = true;
@@ -1196,7 +1199,7 @@ DefaultRename::readStallSignals(ThreadID tid)
 }
 
 bool
-DefaultRename::checkStall(ThreadID tid)
+Rename::checkStall(ThreadID tid)
 {
     bool ret_val = false;
 
@@ -1227,7 +1230,7 @@ DefaultRename::checkStall(ThreadID tid)
 }
 
 void
-DefaultRename::readFreeEntries(ThreadID tid)
+Rename::readFreeEntries(ThreadID tid)
 {
     if (fromIEW->iewInfo[tid].usedIQ)
         freeEntries[tid].iqEntries = fromIEW->iewInfo[tid].freeIQEntries;
@@ -1262,7 +1265,7 @@ DefaultRename::readFreeEntries(ThreadID tid)
 }
 
 bool
-DefaultRename::checkSignalsAndUpdate(ThreadID tid)
+Rename::checkSignalsAndUpdate(ThreadID tid)
 {
     // Check if there's a squash signal, squash if there is
     // Check stall signals, block if necessary.
@@ -1329,7 +1332,7 @@ DefaultRename::checkSignalsAndUpdate(ThreadID tid)
         DPRINTF(Rename, "[tid:%i] Done with serialize stall, switching to "
                 "unblocking.\n", tid);
 
-        O3DynInstPtr serial_inst = serializeInst[tid];
+        DynInstPtr serial_inst = serializeInst[tid];
 
         renameStatus[tid] = Unblocking;
 
@@ -1361,7 +1364,7 @@ DefaultRename::checkSignalsAndUpdate(ThreadID tid)
 }
 
 void
-DefaultRename::serializeAfter(InstQueue &inst_list, ThreadID tid)
+Rename::serializeAfter(InstQueue &inst_list, ThreadID tid)
 {
     if (inst_list.empty()) {
         // Mark a bit to say that I must serialize on the next instruction.
@@ -1374,7 +1377,7 @@ DefaultRename::serializeAfter(InstQueue &inst_list, ThreadID tid)
 }
 
 void
-DefaultRename::incrFullStat(const FullSource &source)
+Rename::incrFullStat(const FullSource &source)
 {
     switch (source) {
       case ROB:
@@ -1396,7 +1399,7 @@ DefaultRename::incrFullStat(const FullSource &source)
 }
 
 void
-DefaultRename::dumpHistory()
+Rename::dumpHistory()
 {
     std::list<RenameHistory>::iterator buf_it;
 
@@ -1419,3 +1422,5 @@ DefaultRename::dumpHistory()
         }
     }
 }
+
+} // namespace o3

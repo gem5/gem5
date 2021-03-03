@@ -43,6 +43,9 @@
 
 #include "cpu/o3/comm.hh"
 
+namespace o3
+{
+
 /** Node in a linked list. */
 template <class DynInstPtr>
 class DependencyEntry
@@ -291,5 +294,7 @@ DependencyGraph<DynInstPtr>::dump()
     }
     cprintf("memAllocCounter: %i\n", memAllocCounter);
 }
+
+} // namespace o3
 
 #endif // __CPU_O3_DEP_GRAPH_HH__

@@ -44,13 +44,16 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
 
+namespace o3
+{
+
 /**
  * Specific non-templated derived class used for SimObject configuration.
  */
-class O3Checker : public Checker<O3DynInstPtr>
+class Checker : public ::Checker<DynInstPtr>
 {
   public:
-    O3Checker(const Params &p) : Checker<O3DynInstPtr>(p)
+    Checker(const Params &p) : ::Checker<DynInstPtr>(p)
     {
         // The checker should check all instructions executed by the main
         // cpu and therefore any parameters for early exit don't make much
@@ -59,5 +62,7 @@ class O3Checker : public Checker<O3DynInstPtr>
                  p.progress_interval, "Invalid checker parameters");
     }
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_CHECKER_HH__

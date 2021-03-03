@@ -65,10 +65,13 @@ struct SNHash
     }
 };
 
-struct DerivO3CPUParams;
+struct O3CPUParams;
 
+namespace o3
+{
+
+class CPU;
 class InstructionQueue;
-class FullO3CPU;
 
 /**
  * Memory dependency unit class.  This holds the memory dependence predictor.
@@ -91,7 +94,7 @@ class MemDepUnit
     MemDepUnit();
 
     /** Constructs a MemDepUnit with given parameters. */
-    MemDepUnit(const DerivO3CPUParams &params);
+    MemDepUnit(const O3CPUParams &params);
 
     /** Frees up any memory allocated. */
     ~MemDepUnit();
@@ -100,7 +103,7 @@ class MemDepUnit
     std::string name() const { return _name; }
 
     /** Initializes the unit with parameters and a thread id. */
-    void init(const DerivO3CPUParams &params, ThreadID tid, FullO3CPU *cpu);
+    void init(const O3CPUParams &params, ThreadID tid, CPU *cpu);
 
     /** Determine if we are drained. */
     bool isDrained() const;
@@ -115,22 +118,22 @@ class MemDepUnit
     void setIQ(InstructionQueue *iq_ptr);
 
     /** Inserts a memory instruction. */
-    void insert(const O3DynInstPtr &inst);
+    void insert(const DynInstPtr &inst);
 
     /** Inserts a non-speculative memory instruction. */
-    void insertNonSpec(const O3DynInstPtr &inst);
+    void insertNonSpec(const DynInstPtr &inst);
 
     /** Inserts a barrier instruction. */
-    void insertBarrier(const O3DynInstPtr &barr_inst);
+    void insertBarrier(const DynInstPtr &barr_inst);
 
     /** Indicate that an instruction has its registers ready. */
-    void regsReady(const O3DynInstPtr &inst);
+    void regsReady(const DynInstPtr &inst);
 
     /** Indicate that a non-speculative instruction is ready. */
-    void nonSpecInstReady(const O3DynInstPtr &inst);
+    void nonSpecInstReady(const DynInstPtr &inst);
 
     /** Reschedules an instruction to be re-executed. */
-    void reschedule(const O3DynInstPtr &inst);
+    void reschedule(const DynInstPtr &inst);
 
     /** Replays all instructions that have been rescheduled by moving them to
      *  the ready list.
@@ -138,7 +141,7 @@ class MemDepUnit
     void replay();
 
     /** Notifies completion of an instruction. */
-    void completeInst(const O3DynInstPtr &inst);
+    void completeInst(const DynInstPtr &inst);
 
     /** Squashes all instructions up until a given sequence number for a
      *  specific thread.
@@ -146,11 +149,11 @@ class MemDepUnit
     void squash(const InstSeqNum &squashed_num, ThreadID tid);
 
     /** Indicates an ordering violation between a store and a younger load. */
-    void violation(const O3DynInstPtr &store_inst,
-                   const O3DynInstPtr &violating_load);
+    void violation(const DynInstPtr &store_inst,
+                   const DynInstPtr &violating_load);
 
     /** Issues the given instruction */
-    void issue(const O3DynInstPtr &inst);
+    void issue(const DynInstPtr &inst);
 
     /** Debugging function to dump the lists of instructions. */
     void dumpLists();
@@ -158,12 +161,12 @@ class MemDepUnit
   private:
 
     /** Completes a memory instruction. */
-    void completed(const O3DynInstPtr &inst);
+    void completed(const DynInstPtr &inst);
 
     /** Wakes any dependents of a memory instruction. */
-    void wakeDependents(const O3DynInstPtr &inst);
+    void wakeDependents(const DynInstPtr &inst);
 
-    typedef typename std::list<O3DynInstPtr>::iterator ListIt;
+    typedef typename std::list<DynInstPtr>::iterator ListIt;
 
     class MemDepEntry;
 
@@ -177,7 +180,7 @@ class MemDepUnit
     {
       public:
         /** Constructs a memory dependence entry. */
-        MemDepEntry(const O3DynInstPtr &new_inst);
+        MemDepEntry(const DynInstPtr &new_inst);
 
         /** Frees any pointers. */
         ~MemDepEntry();
@@ -186,7 +189,7 @@ class MemDepUnit
         std::string name() const { return "memdepentry"; }
 
         /** The instruction being tracked. */
-        O3DynInstPtr inst;
+        DynInstPtr inst;
 
         /** The iterator to the instruction's location inside the list. */
         ListIt listIt;
@@ -212,7 +215,7 @@ class MemDepUnit
     };
 
     /** Finds the memory dependence entry in the hash map. */
-    MemDepEntryPtr &findInHash(const O3DynInstConstPtr& inst);
+    MemDepEntryPtr &findInHash(const DynInstConstPtr& inst);
 
     /** Moves an entry to the ready list. */
     void moveToReady(MemDepEntryPtr &ready_inst_entry);
@@ -225,10 +228,10 @@ class MemDepUnit
     MemDepHash memDepHash;
 
     /** A list of all instructions in the memory dependence unit. */
-    std::list<O3DynInstPtr> instList[O3MaxThreads];
+    std::list<DynInstPtr> instList[MaxThreads];
 
     /** A list of all instructions that are going to be replayed. */
-    std::list<O3DynInstPtr> instsToReplay;
+    std::list<DynInstPtr> instsToReplay;
 
     /** The memory dependence predictor.  It is accessed upon new
      *  instructions being added to the IQ, and responds by telling
@@ -250,7 +253,7 @@ class MemDepUnit
     bool hasStoreBarrier() const { return !storeBarrierSNs.empty(); }
 
     /** Inserts the SN of a barrier inst. to the list of tracked barriers */
-    void insertBarrierSN(const O3DynInstPtr &barr_inst);
+    void insertBarrierSN(const DynInstPtr &barr_inst);
 
     /** Pointer to the IQ. */
     InstructionQueue *iqPtr;
@@ -272,5 +275,7 @@ class MemDepUnit
         Stats::Scalar conflictingStores;
     } stats;
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_MEM_DEP_UNIT_HH__

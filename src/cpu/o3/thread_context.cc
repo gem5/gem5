@@ -45,14 +45,17 @@
 #include "config/the_isa.hh"
 #include "debug/O3CPU.hh"
 
+namespace o3
+{
+
 PortProxy&
-O3ThreadContext::getVirtProxy()
+ThreadContext::getVirtProxy()
 {
     return thread->getVirtProxy();
 }
 
 void
-O3ThreadContext::takeOverFrom(ThreadContext *old_context)
+ThreadContext::takeOverFrom(::ThreadContext *old_context)
 {
     ::takeOverFrom(*this, *old_context);
 
@@ -69,28 +72,28 @@ O3ThreadContext::takeOverFrom(ThreadContext *old_context)
 }
 
 void
-O3ThreadContext::activate()
+ThreadContext::activate()
 {
     DPRINTF(O3CPU, "Calling activate on Thread Context %d\n",
             threadId());
 
-    if (thread->status() == ThreadContext::Active)
+    if (thread->status() == ::ThreadContext::Active)
         return;
 
     thread->lastActivate = curTick();
-    thread->setStatus(ThreadContext::Active);
+    thread->setStatus(::ThreadContext::Active);
 
     // status() == Suspended
     cpu->activateContext(thread->threadId());
 }
 
 void
-O3ThreadContext::suspend()
+ThreadContext::suspend()
 {
     DPRINTF(O3CPU, "Calling suspend on Thread Context %d\n",
             threadId());
 
-    if (thread->status() == ThreadContext::Suspended)
+    if (thread->status() == ::ThreadContext::Suspended)
         return;
 
     if (cpu->isDraining()) {
@@ -101,43 +104,43 @@ O3ThreadContext::suspend()
     thread->lastActivate = curTick();
     thread->lastSuspend = curTick();
 
-    thread->setStatus(ThreadContext::Suspended);
+    thread->setStatus(::ThreadContext::Suspended);
     cpu->suspendContext(thread->threadId());
 }
 
 void
-O3ThreadContext::halt()
+ThreadContext::halt()
 {
     DPRINTF(O3CPU, "Calling halt on Thread Context %d\n", threadId());
 
-    if (thread->status() == ThreadContext::Halting ||
-        thread->status() == ThreadContext::Halted)
+    if (thread->status() == ::ThreadContext::Halting ||
+        thread->status() == ::ThreadContext::Halted)
         return;
 
     // the thread is not going to halt/terminate immediately in this cycle.
     // The thread will be removed after an exit trap is processed
     // (e.g., after trapLatency cycles). Until then, the thread's status
     // will be Halting.
-    thread->setStatus(ThreadContext::Halting);
+    thread->setStatus(::ThreadContext::Halting);
 
     // add this thread to the exiting list to mark that it is trying to exit.
     cpu->addThreadToExitingList(thread->threadId());
 }
 
 Tick
-O3ThreadContext::readLastActivate()
+ThreadContext::readLastActivate()
 {
     return thread->lastActivate;
 }
 
 Tick
-O3ThreadContext::readLastSuspend()
+ThreadContext::readLastSuspend()
 {
     return thread->lastSuspend;
 }
 
 void
-O3ThreadContext::copyArchRegs(ThreadContext *tc)
+ThreadContext::copyArchRegs(::ThreadContext *tc)
 {
     // Set vector renaming mode before copying registers
     cpu->vecRenameMode(tc->getIsaPtr()->vecRegRenameMode(tc));
@@ -152,62 +155,61 @@ O3ThreadContext::copyArchRegs(ThreadContext *tc)
 }
 
 void
-O3ThreadContext::clearArchRegs()
+ThreadContext::clearArchRegs()
 {
     cpu->isa[thread->threadId()]->clear();
 }
 
 RegVal
-O3ThreadContext::readIntRegFlat(RegIndex reg_idx) const
+ThreadContext::readIntRegFlat(RegIndex reg_idx) const
 {
     return cpu->readArchIntReg(reg_idx, thread->threadId());
 }
 
 RegVal
-O3ThreadContext::readFloatRegFlat(RegIndex reg_idx) const
+ThreadContext::readFloatRegFlat(RegIndex reg_idx) const
 {
     return cpu->readArchFloatReg(reg_idx, thread->threadId());
 }
 
 const TheISA::VecRegContainer&
-O3ThreadContext::readVecRegFlat(RegIndex reg_id) const
+ThreadContext::readVecRegFlat(RegIndex reg_id) const
 {
     return cpu->readArchVecReg(reg_id, thread->threadId());
 }
 
 TheISA::VecRegContainer&
-O3ThreadContext::getWritableVecRegFlat(RegIndex reg_id)
+ThreadContext::getWritableVecRegFlat(RegIndex reg_id)
 {
     return cpu->getWritableArchVecReg(reg_id, thread->threadId());
 }
 
 const TheISA::VecElem&
-O3ThreadContext::readVecElemFlat(RegIndex idx,
-        const ElemIndex& elemIndex) const
+ThreadContext::readVecElemFlat(RegIndex idx, const ElemIndex& elemIndex) const
 {
     return cpu->readArchVecElem(idx, elemIndex, thread->threadId());
 }
 
 const TheISA::VecPredRegContainer&
-O3ThreadContext::readVecPredRegFlat(RegIndex reg_id) const
+ThreadContext::readVecPredRegFlat(RegIndex reg_id) const
 {
     return cpu->readArchVecPredReg(reg_id, thread->threadId());
 }
 
 TheISA::VecPredRegContainer&
-O3ThreadContext::getWritableVecPredRegFlat(RegIndex reg_id)
+ThreadContext::getWritableVecPredRegFlat(RegIndex reg_id)
 {
     return cpu->getWritableArchVecPredReg(reg_id, thread->threadId());
 }
 
 RegVal
-O3ThreadContext::readCCRegFlat(RegIndex reg_idx) const
+ThreadContext::readCCRegFlat(RegIndex reg_idx) const
 {
     return cpu->readArchCCReg(reg_idx, thread->threadId());
 }
 
 void
-O3ThreadContext::setIntRegFlat(RegIndex reg_idx, RegVal val)
+ThreadContext::setIntRegFlat(RegIndex reg_idx, RegVal val)
 {
     cpu->setArchIntReg(reg_idx, val, thread->threadId());
 
@@ -215,7 +217,7 @@ O3ThreadContext::setIntRegFlat(RegIndex reg_idx, RegVal val)
 }
 
 void
-O3ThreadContext::setFloatRegFlat(RegIndex reg_idx, RegVal val)
+ThreadContext::setFloatRegFlat(RegIndex reg_idx, RegVal val)
 {
     cpu->setArchFloatReg(reg_idx, val, thread->threadId());
 
@@ -223,7 +225,7 @@ O3ThreadContext::setFloatRegFlat(RegIndex reg_idx, RegVal val)
 }
 
 void
-O3ThreadContext::setVecRegFlat(
+ThreadContext::setVecRegFlat(
         RegIndex reg_idx, const TheISA::VecRegContainer& val)
 {
     cpu->setArchVecReg(reg_idx, val, thread->threadId());
@@ -232,7 +234,7 @@ O3ThreadContext::setVecRegFlat(
 }
 
 void
-O3ThreadContext::setVecElemFlat(RegIndex idx,
+ThreadContext::setVecElemFlat(RegIndex idx,
         const ElemIndex& elemIndex, const TheISA::VecElem& val)
 {
     cpu->setArchVecElem(idx, elemIndex, val, thread->threadId());
@@ -240,7 +242,7 @@ O3ThreadContext::setVecElemFlat(RegIndex idx,
 }
 
 void
-O3ThreadContext::setVecPredRegFlat(RegIndex reg_idx,
+ThreadContext::setVecPredRegFlat(RegIndex reg_idx,
         const TheISA::VecPredRegContainer& val)
 {
     cpu->setArchVecPredReg(reg_idx, val, thread->threadId());
@@ -249,7 +251,7 @@ O3ThreadContext::setVecPredRegFlat(RegIndex reg_idx,
 }
 
 void
-O3ThreadContext::setCCRegFlat(RegIndex reg_idx, RegVal val)
+ThreadContext::setCCRegFlat(RegIndex reg_idx, RegVal val)
 {
     cpu->setArchCCReg(reg_idx, val, thread->threadId());
 
@@ -257,7 +259,7 @@ O3ThreadContext::setCCRegFlat(RegIndex reg_idx, RegVal val)
 }
 
 void
-O3ThreadContext::pcState(const TheISA::PCState &val)
+ThreadContext::pcState(const TheISA::PCState &val)
 {
     cpu->pcState(val, thread->threadId());
 
@@ -265,7 +267,7 @@ O3ThreadContext::pcState(const TheISA::PCState &val)
 }
 
 void
-O3ThreadContext::pcStateNoRecord(const TheISA::PCState &val)
+ThreadContext::pcStateNoRecord(const TheISA::PCState &val)
 {
     cpu->pcState(val, thread->threadId());
 
@@ -273,13 +275,13 @@ O3ThreadContext::pcStateNoRecord(const TheISA::PCState &val)
 }
 
 RegId
-O3ThreadContext::flattenRegId(const RegId& regId) const
+ThreadContext::flattenRegId(const RegId& regId) const
 {
     return cpu->isa[thread->threadId()]->flattenRegId(regId);
 }
 
 void
-O3ThreadContext::setMiscRegNoEffect(RegIndex misc_reg, RegVal val)
+ThreadContext::setMiscRegNoEffect(RegIndex misc_reg, RegVal val)
 {
     cpu->setMiscRegNoEffect(misc_reg, val, thread->threadId());
 
@@ -287,7 +289,7 @@ O3ThreadContext::setMiscRegNoEffect(RegIndex misc_reg, RegVal val)
 }
 
 void
-O3ThreadContext::setMiscReg(RegIndex misc_reg, RegVal val)
+ThreadContext::setMiscReg(RegIndex misc_reg, RegVal val)
 {
     cpu->setMiscReg(misc_reg, val, thread->threadId());
 
@@ -296,7 +298,7 @@ O3ThreadContext::setMiscReg(RegIndex misc_reg, RegVal val)
 
 // hardware transactional memory
 void
-O3ThreadContext::htmAbortTransaction(uint64_t htmUid,
+ThreadContext::htmAbortTransaction(uint64_t htmUid,
         HtmFailureFaultCause cause)
 {
     cpu->htmSendAbortSignal(thread->threadId(), htmUid, cause);
@@ -305,13 +307,15 @@ O3ThreadContext::htmAbortTransaction(uint64_t htmUid,
 }
 
 BaseHTMCheckpointPtr&
-O3ThreadContext::getHtmCheckpointPtr()
+ThreadContext::getHtmCheckpointPtr()
 {
     return thread->htmCheckpoint;
 }
 
 void
-O3ThreadContext::setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt)
+ThreadContext::setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt)
 {
     thread->htmCheckpoint = std::move(new_cpt);
 }
+
+} // namespace o3

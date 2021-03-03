@@ -56,12 +56,15 @@
 #include "enums/CommitPolicy.hh"
 #include "sim/probe/probe.hh"
 
-struct DerivO3CPUParams;
+struct O3CPUParams;
 
-class O3ThreadState;
+namespace o3
+{
+
+class ThreadState;
 
 /**
- * DefaultCommit handles single threaded and SMT commit. Its width is
+ * Commit handles single threaded and SMT commit. Its width is
  * specified by the parameters; each cycle it tries to commit that
  * many instructions. The SMT policy decides which thread it tries to
  * commit instructions from. Non- speculative instructions must reach
@@ -82,7 +85,7 @@ class O3ThreadState;
  * supports multiple cycle squashing, to model a ROB that can only
  * remove a certain number of instructions per cycle.
  */
-class DefaultCommit
+class Commit
 {
   public:
     /** Overall commit status. Used to determine if the CPU can deschedule
@@ -111,57 +114,57 @@ class DefaultCommit
     /** Next commit status, to be set at the end of the cycle. */
     CommitStatus _nextStatus;
     /** Per-thread status. */
-    ThreadStatus commitStatus[O3MaxThreads];
+    ThreadStatus commitStatus[MaxThreads];
     /** Commit policy used in SMT mode. */
     CommitPolicy commitPolicy;
 
     /** Probe Points. */
-    ProbePointArg<O3DynInstPtr> *ppCommit;
-    ProbePointArg<O3DynInstPtr> *ppCommitStall;
+    ProbePointArg<DynInstPtr> *ppCommit;
+    ProbePointArg<DynInstPtr> *ppCommitStall;
     /** To probe when an instruction is squashed */
-    ProbePointArg<O3DynInstPtr> *ppSquash;
+    ProbePointArg<DynInstPtr> *ppSquash;
 
     /** Mark the thread as processing a trap. */
     void processTrapEvent(ThreadID tid);
 
   public:
-    /** Construct a DefaultCommit with the given parameters. */
-    DefaultCommit(FullO3CPU *_cpu, const DerivO3CPUParams &params);
+    /** Construct a Commit with the given parameters. */
+    Commit(CPU *_cpu, const O3CPUParams &params);
 
-    /** Returns the name of the DefaultCommit. */
+    /** Returns the name of the Commit. */
     std::string name() const;
 
     /** Registers probes. */
     void regProbePoints();
 
     /** Sets the list of threads. */
-    void setThreads(std::vector<O3ThreadState *> &threads);
+    void setThreads(std::vector<ThreadState *> &threads);
 
     /** Sets the main time buffer pointer, used for backwards communication. */
-    void setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr);
+    void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
 
-    void setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *fq_ptr);
+    void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
 
     /** Sets the pointer to the queue coming from rename. */
-    void setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr);
+    void setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr);
 
     /** Sets the pointer to the queue coming from IEW. */
-    void setIEWQueue(TimeBuffer<O3Comm::IEWStruct> *iq_ptr);
+    void setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr);
 
     /** Sets the pointer to the IEW stage. */
-    void setIEWStage(DefaultIEW *iew_stage);
+    void setIEWStage(IEW *iew_stage);
 
     /** The pointer to the IEW stage. Used solely to ensure that
      * various events (traps, interrupts, syscalls) do not occur until
      * all stores have written back.
      */
-    DefaultIEW *iewStage;
+    IEW *iewStage;
 
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to the commited state rename map. */
-    void setRenameMap(UnifiedRenameMap rm_ptr[O3MaxThreads]);
+    void setRenameMap(UnifiedRenameMap rm_ptr[MaxThreads]);
 
     /** Sets pointer to the ROB. */
     void setROB(ROB *rob_ptr);
@@ -267,7 +270,7 @@ class DefaultCommit
      * @param tid ID of the thread to squash.
      * @param head_inst Instruction that requested the squash.
      */
-    void squashAfter(ThreadID tid, const O3DynInstPtr &head_inst);
+    void squashAfter(ThreadID tid, const DynInstPtr &head_inst);
 
     /** Handles processing an interrupt. */
     void handleInterrupt();
@@ -281,7 +284,7 @@ class DefaultCommit
     /** Tries to commit the head ROB instruction passed in.
      * @param head_inst The instruction to be committed.
      */
-    bool commitHead(const O3DynInstPtr &head_inst, unsigned inst_num);
+    bool commitHead(const DynInstPtr &head_inst, unsigned inst_num);
 
     /** Gets instructions from rename and inserts them into the ROB. */
     void getInsts();
@@ -317,29 +320,29 @@ class DefaultCommit
 
   private:
     /** Time buffer interface. */
-    TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
+    TimeBuffer<TimeStruct> *timeBuffer;
 
     /** Wire to write information heading to previous stages. */
-    TimeBuffer<O3Comm::TimeStruct>::wire toIEW;
+    TimeBuffer<TimeStruct>::wire toIEW;
 
     /** Wire to read information from IEW (for ROB). */
-    TimeBuffer<O3Comm::TimeStruct>::wire robInfoFromIEW;
+    TimeBuffer<TimeStruct>::wire robInfoFromIEW;
 
-    TimeBuffer<O3Comm::FetchStruct> *fetchQueue;
+    TimeBuffer<FetchStruct> *fetchQueue;
 
-    TimeBuffer<O3Comm::FetchStruct>::wire fromFetch;
+    TimeBuffer<FetchStruct>::wire fromFetch;
 
     /** IEW instruction queue interface. */
-    TimeBuffer<O3Comm::IEWStruct> *iewQueue;
+    TimeBuffer<IEWStruct> *iewQueue;
 
     /** Wire to read information from IEW queue. */
-    TimeBuffer<O3Comm::IEWStruct>::wire fromIEW;
+    TimeBuffer<IEWStruct>::wire fromIEW;
 
     /** Rename instruction queue interface, for ROB. */
-    TimeBuffer<O3Comm::RenameStruct> *renameQueue;
+    TimeBuffer<RenameStruct> *renameQueue;
 
     /** Wire to read information from rename queue. */
-    TimeBuffer<O3Comm::RenameStruct>::wire fromRename;
+    TimeBuffer<RenameStruct>::wire fromRename;
 
   public:
     /** ROB interface. */
@@ -347,10 +350,10 @@ class DefaultCommit
 
   private:
     /** Pointer to O3CPU. */
-    FullO3CPU *cpu;
+    CPU *cpu;
 
     /** Vector of all of the threads. */
-    std::vector<O3ThreadState *> thread;
+    std::vector<ThreadState *> thread;
 
     /** Records that commit has written to the time buffer this cycle. Used for
      * the CPU to determine if it can deschedule itself if there is no activity.
@@ -360,13 +363,13 @@ class DefaultCommit
     /** Records if the number of ROB entries has changed this cycle. If it has,
      * then the number of free entries must be re-broadcast.
      */
-    bool changedROBNumEntries[O3MaxThreads];
+    bool changedROBNumEntries[MaxThreads];
 
     /** Records if a thread has to squash this cycle due to a trap. */
-    bool trapSquash[O3MaxThreads];
+    bool trapSquash[MaxThreads];
 
     /** Records if a thread has to squash this cycle due to an XC write. */
-    bool tcSquash[O3MaxThreads];
+    bool tcSquash[MaxThreads];
 
     /**
      * Instruction passed to squashAfter().
@@ -375,7 +378,7 @@ class DefaultCommit
      * that caused a squash since this needs to be passed to the fetch
      * stage once squashing starts.
      */
-    O3DynInstPtr squashAfterInst[O3MaxThreads];
+    DynInstPtr squashAfterInst[MaxThreads];
 
     /** Priority List used for Commit Policy */
     std::list<ThreadID> priority_list;
@@ -425,29 +428,29 @@ class DefaultCommit
     /** The commit PC state of each thread.  Refers to the instruction that
      * is currently being processed/committed.
      */
-    TheISA::PCState pc[O3MaxThreads];
+    TheISA::PCState pc[MaxThreads];
 
     /** The sequence number of the youngest valid instruction in the ROB. */
-    InstSeqNum youngestSeqNum[O3MaxThreads];
+    InstSeqNum youngestSeqNum[MaxThreads];
 
     /** The sequence number of the last commited instruction. */
-    InstSeqNum lastCommitedSeqNum[O3MaxThreads];
+    InstSeqNum lastCommitedSeqNum[MaxThreads];
 
     /** Records if there is a trap currently in flight. */
-    bool trapInFlight[O3MaxThreads];
+    bool trapInFlight[MaxThreads];
 
     /** Records if there were any stores committed this cycle. */
-    bool committedStores[O3MaxThreads];
+    bool committedStores[MaxThreads];
 
     /** Records if commit should check if the ROB is truly empty (see
         commit_impl.hh). */
-    bool checkEmptyROB[O3MaxThreads];
+    bool checkEmptyROB[MaxThreads];
 
     /** Pointer to the list of active threads. */
     std::list<ThreadID> *activeThreads;
 
     /** Rename map interface. */
-    UnifiedRenameMap *renameMap[O3MaxThreads];
+    UnifiedRenameMap *renameMap[MaxThreads];
 
     /** True if last committed microop can be followed by an interrupt */
     bool canHandleInterrupts;
@@ -459,15 +462,15 @@ class DefaultCommit
     bool avoidQuiesceLiveLock;
 
     /** Updates commit stats based on this instruction. */
-    void updateComInstStats(const O3DynInstPtr &inst);
+    void updateComInstStats(const DynInstPtr &inst);
 
     // HTM
-    int htmStarts[O3MaxThreads];
-    int htmStops[O3MaxThreads];
+    int htmStarts[MaxThreads];
+    int htmStops[MaxThreads];
 
     struct CommitStats : public Stats::Group
     {
-        CommitStats(FullO3CPU *cpu, DefaultCommit *commit);
+        CommitStats(CPU *cpu, Commit *commit);
         /** Stat for the total number of squashed instructions discarded by
          * commit.
          */
@@ -512,5 +515,7 @@ class DefaultCommit
         Stats::Scalar commitEligibleSamples;
     } stats;
 };
+
+} // namespace o3
 
 #endif // __CPU_O3_COMMIT_HH__

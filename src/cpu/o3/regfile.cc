@@ -45,6 +45,9 @@
 #include "arch/generic/types.hh"
 #include "cpu/o3/free_list.hh"
 
+namespace o3
+{
+
 PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
                          unsigned _numPhysicalFloatRegs,
                          unsigned _numPhysicalVecRegs,
@@ -231,3 +234,4 @@ PhysRegFile::getTrueId(PhysRegIdPtr reg)
     return nullptr;
 }
 
+} // namespace o3
