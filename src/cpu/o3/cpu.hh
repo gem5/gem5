@@ -497,7 +497,7 @@ class FullO3CPU : public BaseO3CPU
     DefaultDecode decode;
 
     /** The dispatch stage. */
-    DefaultRename<Impl> rename;
+    DefaultRename rename;
 
     /** The issue/execute/writeback stages. */
     DefaultIEW iew;

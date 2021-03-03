@@ -52,6 +52,7 @@
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/iew.hh"
+#include "cpu/o3/impl.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
 #include "sim/probe/probe.hh"
@@ -70,7 +71,6 @@ struct DerivO3CPUParams;
  * and does so by stalling on the instruction until the ROB is empty
  * and there are no instructions in flight to the ROB.
  */
-template<class Impl>
 class DefaultRename
 {
   public:
@@ -110,7 +110,7 @@ class DefaultRename
     ThreadStatus renameStatus[O3MaxThreads];
 
     /** Probe points. */
-    typedef typename std::pair<InstSeqNum, PhysRegIdPtr> SeqNumRegPair;
+    typedef std::pair<InstSeqNum, PhysRegIdPtr> SeqNumRegPair;
     /** To probe when register renaming for an instruction is complete */
     ProbePointArg<O3DynInstPtr> *ppRename;
     /**
@@ -121,7 +121,7 @@ class DefaultRename
 
   public:
     /** DefaultRename constructor. */
-    DefaultRename(FullO3CPU<Impl> *_cpu, const DerivO3CPUParams &params);
+    DefaultRename(FullO3CPU<O3CPUImpl> *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of rename. */
     std::string name() const;
@@ -142,15 +142,18 @@ class DefaultRename
     void setIEWStage(DefaultIEW *iew_stage) { iew_ptr = iew_stage; }
 
     /** Sets pointer to commit stage. Used only for initialization. */
-    void setCommitStage(DefaultCommit<Impl> *commit_stage)
-    { commit_ptr = commit_stage; }
+    void
+    setCommitStage(DefaultCommit<O3CPUImpl> *commit_stage)
+    {
+        commit_ptr = commit_stage;
+    }
 
   private:
     /** Pointer to IEW stage. Used only for initialization. */
     DefaultIEW *iew_ptr;
 
     /** Pointer to commit stage. Used only for initialization. */
-    DefaultCommit<Impl> *commit_ptr;
+    DefaultCommit<O3CPUImpl> *commit_ptr;
 
   public:
     /** Initializes variables for the stage. */
@@ -314,31 +317,31 @@ class DefaultRename
     std::list<RenameHistory> historyBuffer[O3MaxThreads];
 
     /** Pointer to CPU. */
-    FullO3CPU<Impl> *cpu;
+    FullO3CPU<O3CPUImpl> *cpu;
 
     /** Pointer to main time buffer used for backwards communication. */
     TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
 
     /** Wire to get IEW's output from backwards time buffer. */
-    typename TimeBuffer<O3Comm::TimeStruct>::wire fromIEW;
+    TimeBuffer<O3Comm::TimeStruct>::wire fromIEW;
 
     /** Wire to get commit's output from backwards time buffer. */
-    typename TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
+    TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
 
     /** Wire to write infromation heading to previous stages. */
-    typename TimeBuffer<O3Comm::TimeStruct>::wire toDecode;
+    TimeBuffer<O3Comm::TimeStruct>::wire toDecode;
 
     /** Rename instruction queue. */
     TimeBuffer<O3Comm::RenameStruct> *renameQueue;
 
     /** Wire to write any information heading to IEW. */
-    typename TimeBuffer<O3Comm::RenameStruct>::wire toIEW;
+    TimeBuffer<O3Comm::RenameStruct>::wire toIEW;
 
     /** Decode instruction queue interface. */
     TimeBuffer<O3Comm::DecodeStruct> *decodeQueue;
 
     /** Wire to get decode's output from decode queue. */
-    typename TimeBuffer<O3Comm::DecodeStruct>::wire fromDecode;
+    TimeBuffer<O3Comm::DecodeStruct>::wire fromDecode;
 
     /** Queue of all instructions coming from decode this cycle. */
     InstQueue insts[O3MaxThreads];
@@ -363,13 +366,13 @@ class DefaultRename
      */
     int instsInProgress[O3MaxThreads];
 
-    /** Count of Load instructions in progress that have been sent off to the IQ
-     * and ROB, but are not yet included in their occupancy counts.
+    /** Count of Load instructions in progress that have been sent off to the
+     * IQ and ROB, but are not yet included in their occupancy counts.
      */
     int loadsInProgress[O3MaxThreads];
 
-    /** Count of Store instructions in progress that have been sent off to the IQ
-     * and ROB, but are not yet included in their occupancy counts.
+    /** Count of Store instructions in progress that have been sent off to the
+     * IQ and ROB, but are not yet included in their occupancy counts.
      */
     int storesInProgress[O3MaxThreads];
 
@@ -430,11 +433,6 @@ class DefaultRename
     /** Rename width, in instructions. */
     unsigned renameWidth;
 
-    /** Commit width, in instructions.  Used so rename knows how many
-     *  instructions might have freed registers in the previous cycle.
-     */
-    unsigned commitWidth;
-
     /** The index of the instruction in the time buffer to IEW that rename is
      * currently using.
      */
@@ -472,7 +470,7 @@ class DefaultRename
     /** Function used to increment the stat that corresponds to the source of
      * the stall.
      */
-    inline void incrFullStat(const FullSource &source);
+    void incrFullStat(const FullSource &source);
 
     struct RenameStats : public Stats::Group
     {
