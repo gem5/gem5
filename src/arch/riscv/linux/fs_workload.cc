@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2018 TU Dresden
- * Copyright (c) 2020 Barkhausen Institut
+ * Copyright (c) 2021 Huawei International
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,42 +26,45 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/riscv/bare_metal/fs_workload.hh"
+#include "arch/riscv/linux/fs_workload.hh"
 
 #include "arch/riscv/faults.hh"
+#include "base/loader/dtb_file.hh"
 #include "base/loader/object_file.hh"
+#include "base/loader/symtab.hh"
+#include "sim/kernel_workload.hh"
 #include "sim/system.hh"
-#include "sim/workload.hh"
 
 namespace RiscvISA
 {
 
-BareMetal::BareMetal(const Params &p) : Workload(p),
-    _isBareMetal(p.bare_metal), _resetVect(p.reset_vect),
-    bootloader(Loader::createObjectFile(p.bootloader))
-{
-    fatal_if(!bootloader, "Could not load bootloader file %s.", p.bootloader);
-    _resetVect = bootloader->entryPoint();
-    bootloaderSymtab = bootloader->symtab();
-}
-
-BareMetal::~BareMetal()
-{
-    delete bootloader;
-}
-
 void
-BareMetal::initState()
+FsLinux::initState()
 {
-    Workload::initState();
+    KernelWorkload::initState();
 
-    for (auto *tc: system->threads) {
-        RiscvISA::Reset().invoke(tc);
-        tc->activate();
+    if (params().dtb_filename != "") {
+        inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
+                params().dtb_addr);
+
+        auto *dtb_file = new ::Loader::DtbFile(params().dtb_filename);
+
+        if (!dtb_file->addBootCmdLine(
+                    commandLine.c_str(), commandLine.size())) {
+            warn("couldn't append bootargs to DTB file: %s\n",
+                 params().dtb_filename);
+        }
+
+        dtb_file->buildImage().offset(params().dtb_addr)
+            .write(system->physProxy);
+        delete dtb_file;
+
+        for (auto *tc: system->threads) {
+            tc->setIntReg(11, params().dtb_addr);
+        }
+    } else {
+        warn("No DTB file specified\n");
     }
-
-    warn_if(!bootloader->buildImage().write(system->physProxy),
-            "Could not load sections to memory.");
 
     for (auto *tc: system->threads) {
         RiscvISA::Reset().invoke(tc);

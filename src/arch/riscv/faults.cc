@@ -31,7 +31,6 @@
 
 #include "arch/riscv/faults.hh"
 
-#include "arch/riscv/fs_workload.hh"
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/registers.hh"
 #include "arch/riscv/utility.hh"
@@ -40,6 +39,7 @@
 #include "debug/Fault.hh"
 #include "sim/debug.hh"
 #include "sim/full_system.hh"
+#include "sim/workload.hh"
 
 namespace RiscvISA
 {
@@ -155,8 +155,8 @@ void Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     tc->setMiscReg(MISCREG_MCAUSE, 0);
 
     // Advance the PC to the implementation-defined reset vector
-    auto workload = dynamic_cast<FsWorkload *>(tc->getSystemPtr()->workload);
-    PCState pc = workload->resetVect();
+    auto workload = dynamic_cast<Workload *>(tc->getSystemPtr()->workload);
+    PCState pc = workload->getEntry();
     tc->pcState(pc);
 }
 

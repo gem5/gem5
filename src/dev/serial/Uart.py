@@ -38,6 +38,8 @@
 
 from m5.params import *
 from m5.proxy import *
+from m5.util.fdthelper import *
+from m5.defines import buildEnv
 
 from m5.objects.Device import BasicPioDevice
 from m5.objects.Serial import SerialDevice
@@ -61,3 +63,18 @@ class Uart8250(Uart):
     type = 'Uart8250'
     cxx_header = "dev/serial/uart8250.hh"
     pio_size = Param.Addr(0x8, "Size of address range")
+
+    def generateDeviceTree(self, state):
+        if buildEnv['TARGET_ISA'] == "riscv":
+            node = self.generateBasicPioDeviceNode(
+                state, "uart", self.pio_addr, self.pio_size)
+            platform = self.platform.unproxy(self)
+            plic = platform.plic
+            node.append(
+                FdtPropertyWords("interrupts", [platform.uart_int_id]))
+            node.append(
+                FdtPropertyWords("clock-frequency", [0x384000]))
+            node.append(
+                FdtPropertyWords("interrupt-parent", state.phandle(plic)))
+            node.appendCompatible(["ns8250"])
+            yield node

@@ -37,6 +37,7 @@
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
+from m5.util.fdthelper import *
 
 from m5.objects.PlicDevice import PlicIntDevice
 from m5.objects.VirtIO import VirtIODummyDevice
@@ -45,3 +46,9 @@ class MmioVirtIO(PlicIntDevice):
     type = 'MmioVirtIO'
     cxx_header = 'dev/riscv/vio_mmio.hh'
     vio = Param.VirtIODeviceBase(VirtIODummyDevice(), "VirtIO device")
+
+    def generateDeviceTree(self, state):
+        node = self.generatePlicDeviceNode(state, "virtio_mmio")
+        node.appendCompatible(["virtio,mmio"])
+
+        yield node
