@@ -494,7 +494,7 @@ class FullO3CPU : public BaseO3CPU
     DefaultFetch fetch;
 
     /** The decode stage. */
-    DefaultDecode<Impl> decode;
+    DefaultDecode decode;
 
     /** The dispatch stage. */
     DefaultRename<Impl> rename;
