@@ -123,7 +123,12 @@ class Logger
     bool enabled;
 
     /** Generates the log message. By default it is sent to cerr. */
-    virtual void log(const Loc &loc, std::string s) { std::cerr << s; }
+    virtual void
+    log(const Loc &loc, std::string s)
+    {
+        std::cerr << loc.file << ":" << loc.line << ": " << s;
+    }
+
     virtual void exit() { /* Fall through to the abort in exit_helper. */ }
 
     const char *prefix;
