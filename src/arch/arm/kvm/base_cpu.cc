@@ -38,8 +38,10 @@
 #include "arch/arm/kvm/base_cpu.hh"
 
 #include <linux/kvm.h>
+#include <mutex>
 
 #include "arch/arm/interrupts.hh"
+#include "base/uncontended_mutex.hh"
 #include "debug/KvmInt.hh"
 #include "dev/arm/generic_timer.hh"
 #include "params/BaseArmKvmCPU.hh"
@@ -58,6 +60,21 @@ using namespace ArmISA;
 #define INTERRUPT_VCPU_FIQ(vcpu)                                \
     INTERRUPT_ID(KVM_ARM_IRQ_TYPE_CPU, vcpu, KVM_ARM_IRQ_CPU_FIQ)
 
+namespace {
+
+/**
+ * When the simulator returns from KVM for simulating other models, the
+ * in-kernel timer doesn't stop. We have to save the virtual time and
+ * restore before going into KVM next time. Moreover, setting virtual time
+ * affacts all vcpus according to the kvm implementation. We maintain a global
+ * virtual time here, restore it before the first vcpu going into KVM, and save
+ * it after the last vcpu back from KVM.
+ */
+uint64_t vtime = 0;
+uint64_t vtime_counter = 0;
+UncontendedMutex vtime_mutex;
+
+}  // namespace
 
 BaseArmKvmCPU::BaseArmKvmCPU(const BaseArmKvmCPUParams &params)
     : BaseKvmCPU(params),
@@ -145,6 +162,26 @@ BaseArmKvmCPU::kvmRun(Tick ticks)
     }
 
     return kvmRunTicks;
+}
+
+void
+BaseArmKvmCPU::ioctlRun()
+{
+    // Check if it's the first vcpu going into KVM. If yes, it should restore
+    // the virtual time.
+    {
+        std::lock_guard<UncontendedMutex> l(vtime_mutex);
+        if (vtime_counter++ == 0)
+            setOneReg(KVM_REG_ARM_TIMER_CNT, vtime);
+    }
+    BaseKvmCPU::ioctlRun();
+    // Check if it's the last vcpu back from KVM. If yes, it should save the
+    // virtual time.
+    {
+        std::lock_guard<UncontendedMutex> l(vtime_mutex);
+        if (--vtime_counter == 0)
+            getOneReg(KVM_REG_ARM_TIMER_CNT, &vtime);
+    }
 }
 
 const BaseArmKvmCPU::RegIndexVector &

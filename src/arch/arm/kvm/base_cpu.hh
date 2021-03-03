@@ -56,6 +56,8 @@ class BaseArmKvmCPU : public BaseKvmCPU
   protected:
     Tick kvmRun(Tick ticks) override;
 
+    /** Override for synchronizing state in kvm_run */
+    void ioctlRun() override;
 
     /** Cached state of the IRQ line */
     bool irqAsserted;
