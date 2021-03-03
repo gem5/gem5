@@ -334,15 +334,15 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
         ThreadContext *tc;
 
         // Setup the TC that will serve as the interface to the threads/CPU.
-        O3ThreadContext<Impl> *o3_tc = new O3ThreadContext<Impl>;
+        O3ThreadContext *o3_tc = new O3ThreadContext;
 
         tc = o3_tc;
 
         // If we're using a checker, then the TC should be the
         // CheckerThreadContext.
         if (params.checker) {
-            tc = new CheckerThreadContext<O3ThreadContext<Impl> >(
-                o3_tc, this->checker);
+            tc = new CheckerThreadContext<O3ThreadContext>(
+                    o3_tc, this->checker);
         }
 
         o3_tc->cpu = this;

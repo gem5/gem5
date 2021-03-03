@@ -76,7 +76,6 @@
 template <class>
 class Checker;
 class ThreadContext;
-template <class>
 class O3ThreadContext;
 
 class Checkpoint;
@@ -106,7 +105,7 @@ class FullO3CPU : public BaseO3CPU
 
     typedef typename std::list<O3DynInstPtr>::iterator ListIt;
 
-    friend class O3ThreadContext<Impl>;
+    friend class O3ThreadContext;
 
   public:
     enum Status

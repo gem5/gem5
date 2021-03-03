@@ -43,6 +43,7 @@
 #define __CPU_O3_THREAD_CONTEXT_HH__
 
 #include "config/the_isa.hh"
+#include "cpu/o3/impl.hh"
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/thread_context.hh"
 
@@ -59,12 +60,11 @@
  * must be taken when using this interface (such as squashing all
  * in-flight instructions when doing a write to this interface).
  */
-template <class Impl>
 class O3ThreadContext : public ThreadContext
 {
   public:
    /** Pointer to the CPU. */
-    FullO3CPU<Impl> *cpu;
+    FullO3CPU<O3CPUImpl> *cpu;
 
     bool
     schedule(PCEvent *e) override
@@ -94,7 +94,7 @@ class O3ThreadContext : public ThreadContext
     }
 
     /** Pointer to the thread state that this TC corrseponds to. */
-    O3ThreadState<Impl> *thread;
+    O3ThreadState<O3CPUImpl> *thread;
 
     /** Returns a pointer to the MMU. */
     BaseMMU *getMMUPtr() override { return cpu->mmu; }
@@ -361,7 +361,7 @@ class O3ThreadContext : public ThreadContext
      * similar is currently writing to the thread context and doesn't want
      * reset all the state (see noSquashFromTC).
      */
-    inline void
+    void
     conditionalSquash()
     {
         if (!thread->trapPending && !thread->noSquashFromTC)

@@ -1,4 +1,17 @@
 /*
+ * Copyright (c) 2010-2012, 2016-2017, 2019 ARM Limited
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -28,8 +41,277 @@
 
 #include "cpu/o3/thread_context.hh"
 
-#include "cpu/o3/impl.hh"
-#include "cpu/o3/thread_context_impl.hh"
+#include "arch/vecregs.hh"
+#include "config/the_isa.hh"
+#include "debug/O3CPU.hh"
 
-template class O3ThreadContext<O3CPUImpl>;
+PortProxy&
+O3ThreadContext::getVirtProxy()
+{
+    return thread->getVirtProxy();
+}
 
+void
+O3ThreadContext::takeOverFrom(ThreadContext *old_context)
+{
+    ::takeOverFrom(*this, *old_context);
+
+    getIsaPtr()->takeOverFrom(this, old_context);
+
+    TheISA::Decoder *newDecoder = getDecoderPtr();
+    TheISA::Decoder *oldDecoder = old_context->getDecoderPtr();
+    newDecoder->takeOverFrom(oldDecoder);
+
+    thread->funcExeInst = old_context->readFuncExeInst();
+
+    thread->noSquashFromTC = false;
+    thread->trapPending = false;
+}
+
+void
+O3ThreadContext::activate()
+{
+    DPRINTF(O3CPU, "Calling activate on Thread Context %d\n",
+            threadId());
+
+    if (thread->status() == ThreadContext::Active)
+        return;
+
+    thread->lastActivate = curTick();
+    thread->setStatus(ThreadContext::Active);
+
+    // status() == Suspended
+    cpu->activateContext(thread->threadId());
+}
+
+void
+O3ThreadContext::suspend()
+{
+    DPRINTF(O3CPU, "Calling suspend on Thread Context %d\n",
+            threadId());
+
+    if (thread->status() == ThreadContext::Suspended)
+        return;
+
+    if (cpu->isDraining()) {
+        DPRINTF(O3CPU, "Ignoring suspend on TC due to pending drain\n");
+        return;
+    }
+
+    thread->lastActivate = curTick();
+    thread->lastSuspend = curTick();
+
+    thread->setStatus(ThreadContext::Suspended);
+    cpu->suspendContext(thread->threadId());
+}
+
+void
+O3ThreadContext::halt()
+{
+    DPRINTF(O3CPU, "Calling halt on Thread Context %d\n", threadId());
+
+    if (thread->status() == ThreadContext::Halting ||
+        thread->status() == ThreadContext::Halted)
+        return;
+
+    // the thread is not going to halt/terminate immediately in this cycle.
+    // The thread will be removed after an exit trap is processed
+    // (e.g., after trapLatency cycles). Until then, the thread's status
+    // will be Halting.
+    thread->setStatus(ThreadContext::Halting);
+
+    // add this thread to the exiting list to mark that it is trying to exit.
+    cpu->addThreadToExitingList(thread->threadId());
+}
+
+Tick
+O3ThreadContext::readLastActivate()
+{
+    return thread->lastActivate;
+}
+
+Tick
+O3ThreadContext::readLastSuspend()
+{
+    return thread->lastSuspend;
+}
+
+void
+O3ThreadContext::copyArchRegs(ThreadContext *tc)
+{
+    // Set vector renaming mode before copying registers
+    cpu->vecRenameMode(tc->getIsaPtr()->vecRegRenameMode(tc));
+
+    // Prevent squashing
+    thread->noSquashFromTC = true;
+    getIsaPtr()->copyRegsFrom(tc);
+    thread->noSquashFromTC = false;
+
+    if (!FullSystem)
+        thread->funcExeInst = tc->readFuncExeInst();
+}
+
+void
+O3ThreadContext::clearArchRegs()
+{
+    cpu->isa[thread->threadId()]->clear();
+}
+
+RegVal
+O3ThreadContext::readIntRegFlat(RegIndex reg_idx) const
+{
+    return cpu->readArchIntReg(reg_idx, thread->threadId());
+}
+
+RegVal
+O3ThreadContext::readFloatRegFlat(RegIndex reg_idx) const
+{
+    return cpu->readArchFloatReg(reg_idx, thread->threadId());
+}
+
+const TheISA::VecRegContainer&
+O3ThreadContext::readVecRegFlat(RegIndex reg_id) const
+{
+    return cpu->readArchVecReg(reg_id, thread->threadId());
+}
+
+TheISA::VecRegContainer&
+O3ThreadContext::getWritableVecRegFlat(RegIndex reg_id)
+{
+    return cpu->getWritableArchVecReg(reg_id, thread->threadId());
+}
+
+const TheISA::VecElem&
+O3ThreadContext::readVecElemFlat(RegIndex idx,
+        const ElemIndex& elemIndex) const
+{
+    return cpu->readArchVecElem(idx, elemIndex, thread->threadId());
+}
+
+const TheISA::VecPredRegContainer&
+O3ThreadContext::readVecPredRegFlat(RegIndex reg_id) const
+{
+    return cpu->readArchVecPredReg(reg_id, thread->threadId());
+}
+
+TheISA::VecPredRegContainer&
+O3ThreadContext::getWritableVecPredRegFlat(RegIndex reg_id)
+{
+    return cpu->getWritableArchVecPredReg(reg_id, thread->threadId());
+}
+
+RegVal
+O3ThreadContext::readCCRegFlat(RegIndex reg_idx) const
+{
+    return cpu->readArchCCReg(reg_idx, thread->threadId());
+}
+
+void
+O3ThreadContext::setIntRegFlat(RegIndex reg_idx, RegVal val)
+{
+    cpu->setArchIntReg(reg_idx, val, thread->threadId());
+
+    conditionalSquash();
+}
+
+void
+O3ThreadContext::setFloatRegFlat(RegIndex reg_idx, RegVal val)
+{
+    cpu->setArchFloatReg(reg_idx, val, thread->threadId());
+
+    conditionalSquash();
+}
+
+void
+O3ThreadContext::setVecRegFlat(
+        RegIndex reg_idx, const TheISA::VecRegContainer& val)
+{
+    cpu->setArchVecReg(reg_idx, val, thread->threadId());
+
+    conditionalSquash();
+}
+
+void
+O3ThreadContext::setVecElemFlat(RegIndex idx,
+        const ElemIndex& elemIndex, const TheISA::VecElem& val)
+{
+    cpu->setArchVecElem(idx, elemIndex, val, thread->threadId());
+    conditionalSquash();
+}
+
+void
+O3ThreadContext::setVecPredRegFlat(RegIndex reg_idx,
+        const TheISA::VecPredRegContainer& val)
+{
+    cpu->setArchVecPredReg(reg_idx, val, thread->threadId());
+
+    conditionalSquash();
+}
+
+void
+O3ThreadContext::setCCRegFlat(RegIndex reg_idx, RegVal val)
+{
+    cpu->setArchCCReg(reg_idx, val, thread->threadId());
+
+    conditionalSquash();
+}
+
+void
+O3ThreadContext::pcState(const TheISA::PCState &val)
+{
+    cpu->pcState(val, thread->threadId());
+
+    conditionalSquash();
+}
+
+void
+O3ThreadContext::pcStateNoRecord(const TheISA::PCState &val)
+{
+    cpu->pcState(val, thread->threadId());
+
+    conditionalSquash();
+}
+
+RegId
+O3ThreadContext::flattenRegId(const RegId& regId) const
+{
+    return cpu->isa[thread->threadId()]->flattenRegId(regId);
+}
+
+void
+O3ThreadContext::setMiscRegNoEffect(RegIndex misc_reg, RegVal val)
+{
+    cpu->setMiscRegNoEffect(misc_reg, val, thread->threadId());
+
+    conditionalSquash();
+}
+
+void
+O3ThreadContext::setMiscReg(RegIndex misc_reg, RegVal val)
+{
+    cpu->setMiscReg(misc_reg, val, thread->threadId());
+
+    conditionalSquash();
+}
+
+// hardware transactional memory
+void
+O3ThreadContext::htmAbortTransaction(uint64_t htmUid,
+        HtmFailureFaultCause cause)
+{
+    cpu->htmSendAbortSignal(thread->threadId(), htmUid, cause);
+
+    conditionalSquash();
+}
+
+BaseHTMCheckpointPtr&
+O3ThreadContext::getHtmCheckpointPtr()
+{
+    return thread->htmCheckpoint;
+}
+
+void
+O3ThreadContext::setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt)
+{
+    thread->htmCheckpoint = std::move(new_cpt);
+}
