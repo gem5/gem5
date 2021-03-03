@@ -68,7 +68,6 @@ class FullO3CPU;
 template <class Impl>
 class DefaultIEW;
 
-template <class Impl>
 class LSQUnit;
 
 template <class Impl>
@@ -291,7 +290,7 @@ class LSQ
         bool isDelayed() { return flags.isSet(Flag::Delayed); }
 
       public:
-        LSQUnit<Impl>& _port;
+        LSQUnit& _port;
         const O3DynInstPtr _inst;
         uint32_t _taskId;
         PacketDataPtr _data;
@@ -306,9 +305,9 @@ class LSQ
         uint32_t _numOutstandingPackets;
         AtomicOpFunctorPtr _amo_op;
       protected:
-        LSQUnit<Impl>* lsqUnit() { return &_port; }
-        LSQRequest(LSQUnit<Impl>* port, const O3DynInstPtr& inst, bool isLoad);
-        LSQRequest(LSQUnit<Impl>* port, const O3DynInstPtr& inst, bool isLoad,
+        LSQUnit* lsqUnit() { return &_port; }
+        LSQRequest(LSQUnit* port, const O3DynInstPtr& inst, bool isLoad);
+        LSQRequest(LSQUnit* port, const O3DynInstPtr& inst, bool isLoad,
                 const Addr& addr, const uint32_t& size,
                 const Request::Flags& flags_, PacketDataPtr data=nullptr,
                 uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr);
@@ -668,7 +667,7 @@ class LSQ
         using LSQRequest::_numOutstandingPackets;
         using LSQRequest::_amo_op;
       public:
-        SingleDataRequest(LSQUnit<Impl>* port, const O3DynInstPtr& inst,
+        SingleDataRequest(LSQUnit* port, const O3DynInstPtr& inst,
                 bool isLoad, const Addr& addr, const uint32_t& size,
                 const Request::Flags& flags_, PacketDataPtr data=nullptr,
                 uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr) :
@@ -706,7 +705,7 @@ class LSQ
       using LSQRequest::flags;
       using LSQRequest::setState;
     public:
-      HtmCmdRequest(LSQUnit<Impl>* port, const O3DynInstPtr& inst,
+      HtmCmdRequest(LSQUnit* port, const O3DynInstPtr& inst,
               const Request::Flags& flags_);
       inline virtual ~HtmCmdRequest() {}
       virtual void initiateTranslation();
@@ -753,7 +752,7 @@ class LSQ
         PacketPtr _mainPacket;
 
       public:
-        SplitDataRequest(LSQUnit<Impl>* port, const O3DynInstPtr& inst,
+        SplitDataRequest(LSQUnit* port, const O3DynInstPtr& inst,
                 bool isLoad, const Addr& addr, const uint32_t& size,
                 const Request::Flags & flags_, PacketDataPtr data=nullptr,
                 uint64_t* res=nullptr) :
@@ -829,14 +828,12 @@ class LSQ
     /**
      * Commits loads up until the given sequence number for a specific thread.
      */
-    void commitLoads(InstSeqNum &youngest_inst, ThreadID tid)
-    { thread.at(tid).commitLoads(youngest_inst); }
+    void commitLoads(InstSeqNum &youngest_inst, ThreadID tid);
 
     /**
      * Commits stores up until the given sequence number for a specific thread.
      */
-    void commitStores(InstSeqNum &youngest_inst, ThreadID tid)
-    { thread.at(tid).commitStores(youngest_inst); }
+    void commitStores(InstSeqNum &youngest_inst, ThreadID tid);
 
     /**
      * Attempts to write back stores until all cache ports are used or the
@@ -849,99 +846,55 @@ class LSQ
     /**
      * Squash instructions from a thread until the specified sequence number.
      */
-    void
-    squash(const InstSeqNum &squashed_num, ThreadID tid)
-    {
-        thread.at(tid).squash(squashed_num);
-    }
+    void squash(const InstSeqNum &squashed_num, ThreadID tid);
 
     /** Returns whether or not there was a memory ordering violation. */
     bool violation();
+
     /**
      * Returns whether or not there was a memory ordering violation for a
      * specific thread.
      */
-    bool violation(ThreadID tid) { return thread.at(tid).violation(); }
+    bool violation(ThreadID tid);
 
     /** Gets the instruction that caused the memory ordering violation. */
-    O3DynInstPtr
-    getMemDepViolator(ThreadID tid)
-    {
-        return thread.at(tid).getMemDepViolator();
-    }
+    O3DynInstPtr getMemDepViolator(ThreadID tid);
 
     /** Returns the head index of the load queue for a specific thread. */
-    int getLoadHead(ThreadID tid) { return thread.at(tid).getLoadHead(); }
+    int getLoadHead(ThreadID tid);
 
     /** Returns the sequence number of the head of the load queue. */
-    InstSeqNum
-    getLoadHeadSeqNum(ThreadID tid)
-    {
-        return thread.at(tid).getLoadHeadSeqNum();
-    }
+    InstSeqNum getLoadHeadSeqNum(ThreadID tid);
 
     /** Returns the head index of the store queue. */
-    int getStoreHead(ThreadID tid) { return thread.at(tid).getStoreHead(); }
+    int getStoreHead(ThreadID tid);
 
     /** Returns the sequence number of the head of the store queue. */
-    InstSeqNum
-    getStoreHeadSeqNum(ThreadID tid)
-    {
-        return thread.at(tid).getStoreHeadSeqNum();
-    }
+    InstSeqNum getStoreHeadSeqNum(ThreadID tid);
 
     /** Returns the number of instructions in all of the queues. */
     int getCount();
     /** Returns the number of instructions in the queues of one thread. */
-    int getCount(ThreadID tid) { return thread.at(tid).getCount(); }
+    int getCount(ThreadID tid);
 
     /** Returns the total number of loads in the load queue. */
     int numLoads();
     /** Returns the total number of loads for a single thread. */
-    int numLoads(ThreadID tid) { return thread.at(tid).numLoads(); }
+    int numLoads(ThreadID tid);
 
     /** Returns the total number of stores in the store queue. */
     int numStores();
     /** Returns the total number of stores for a single thread. */
-    int numStores(ThreadID tid) { return thread.at(tid).numStores(); }
+    int numStores(ThreadID tid);
 
 
     // hardware transactional memory
 
-    int numHtmStarts(ThreadID tid) const
-    {
-        if (tid == InvalidThreadID)
-            return 0;
-        else
-            return thread[tid].numHtmStarts();
-    }
-    int numHtmStops(ThreadID tid) const
-    {
-        if (tid == InvalidThreadID)
-            return 0;
-        else
-            return thread[tid].numHtmStops();
-    }
-
-    void resetHtmStartsStops(ThreadID tid)
-    {
-        if (tid != InvalidThreadID)
-            thread[tid].resetHtmStartsStops();
-    }
-
-    uint64_t getLatestHtmUid(ThreadID tid) const
-    {
-        if (tid == InvalidThreadID)
-            return 0;
-        else
-            return thread[tid].getLatestHtmUid();
-    }
-
-    void setLastRetiredHtmUid(ThreadID tid, uint64_t htmUid)
-    {
-        if (tid != InvalidThreadID)
-            thread[tid].setLastRetiredHtmUid(htmUid);
-    }
+    int numHtmStarts(ThreadID tid) const;
+    int numHtmStops(ThreadID tid) const;
+    void resetHtmStartsStops(ThreadID tid);
+    uint64_t getLatestHtmUid(ThreadID tid) const;
+    void setLastRetiredHtmUid(ThreadID tid, uint64_t htmUid);
 
     /** Returns the number of free load entries. */
     unsigned numFreeLoadEntries();
@@ -1000,22 +953,22 @@ class LSQ
     /** Returns whether or not a specific thread has any stores to write back
      * to memory.
      */
-    bool hasStoresToWB(ThreadID tid) { return thread.at(tid).hasStoresToWB(); }
+    bool hasStoresToWB(ThreadID tid);
 
     /** Returns the number of stores a specific thread has to write back. */
-    int numStoresToWB(ThreadID tid) { return thread.at(tid).numStoresToWB(); }
+    int numStoresToWB(ThreadID tid);
 
     /** Returns if the LSQ will write back to memory this cycle. */
     bool willWB();
     /** Returns if the LSQ of a specific thread will write back to memory this
      * cycle.
      */
-    bool willWB(ThreadID tid) { return thread.at(tid).willWB(); }
+    bool willWB(ThreadID tid);
 
     /** Debugging function to print out all instructions. */
     void dumpInsts() const;
     /** Debugging function to print out instructions from a specific thread. */
-    void dumpInsts(ThreadID tid) const { thread.at(tid).dumpInsts(); }
+    void dumpInsts(ThreadID tid) const;
 
     /** Executes a read operation, using the load specified at the load
      * index.
@@ -1122,28 +1075,10 @@ class LSQ
     DcachePort dcachePort;
 
     /** The LSQ units for individual threads. */
-    std::vector<LSQUnit<Impl>> thread;
+    std::vector<LSQUnit> thread;
 
     /** Number of Threads. */
     ThreadID numThreads;
 };
-
-template <class Impl>
-Fault
-LSQ<Impl>::read(LSQRequest* req, int load_idx)
-{
-    ThreadID tid = cpu->contextToThread(req->request()->contextId());
-
-    return thread.at(tid).read(req, load_idx);
-}
-
-template <class Impl>
-Fault
-LSQ<Impl>::write(LSQRequest* req, uint8_t *data, int store_idx)
-{
-    ThreadID tid = cpu->contextToThread(req->request()->contextId());
-
-    return thread.at(tid).write(req, data, store_idx);
-}
 
 #endif // __CPU_O3_LSQ_HH__

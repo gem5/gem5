@@ -52,9 +52,12 @@
 #include "arch/generic/vec_reg.hh"
 #include "arch/locked_mem.hh"
 #include "config/the_isa.hh"
+#include "cpu/base.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/comm.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
+#include "cpu/o3/impl.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/timebuf.hh"
 #include "debug/HtmCpu.hh"
@@ -80,14 +83,13 @@ class DefaultIEW;
  * the LSQ until the store writes back. At that point the load is
  * replayed.
  */
-template <class Impl>
 class LSQUnit
 {
   public:
     static constexpr auto MaxDataBytes = MaxVecRegLenInBytes;
 
-    using LSQSenderState = typename LSQ<Impl>::LSQSenderState;
-    using LSQRequest = typename LSQ<Impl>::LSQRequest;
+    using LSQSenderState = typename LSQ<O3CPUImpl>::LSQSenderState;
+    using LSQRequest = typename LSQ<O3CPUImpl>::LSQRequest;
   private:
     class LSQEntry
     {
@@ -123,10 +125,10 @@ class LSQUnit
         }
 
         void
-        set(const O3DynInstPtr& inst)
+        set(const O3DynInstPtr& new_inst)
         {
             assert(!_valid);
-            this->inst = inst;
+            inst = new_inst;
             _valid = true;
             _size = 0;
         }
@@ -223,8 +225,9 @@ class LSQUnit
     }
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(FullO3CPU<Impl> *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
-            const DerivO3CPUParams &params, LSQ<Impl> *lsq_ptr, unsigned id);
+    void init(FullO3CPU<O3CPUImpl> *cpu_ptr, DefaultIEW<O3CPUImpl> *iew_ptr,
+            const DerivO3CPUParams &params, LSQ<O3CPUImpl> *lsq_ptr,
+            unsigned id);
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;
@@ -396,13 +399,13 @@ class LSQUnit
 
   private:
     /** Pointer to the CPU. */
-    FullO3CPU<Impl> *cpu;
+    FullO3CPU<O3CPUImpl> *cpu;
 
     /** Pointer to the IEW stage. */
-    DefaultIEW<Impl> *iewStage;
+    DefaultIEW<O3CPUImpl> *iewStage;
 
     /** Pointer to the LSQ. */
-    LSQ<Impl> *lsq;
+    LSQ<O3CPUImpl> *lsq;
 
     /** Pointer to the dcache port.  Used only for sending. */
     RequestPort *dcachePort;
@@ -466,7 +469,7 @@ class LSQUnit
         PacketPtr pkt;
 
         /** The pointer to the LSQ unit that issued the store. */
-        LSQUnit<Impl> *lsqPtr;
+        LSQUnit *lsqPtr;
     };
 
   public:
@@ -543,13 +546,6 @@ class LSQUnit
     /** The oldest load that caused a memory ordering violation. */
     O3DynInstPtr memDepViolator;
 
-    /** Whether or not there is a packet that couldn't be sent because of
-     * a lack of cache ports. */
-    bool hasPendingRequest;
-
-    /** The packet that is pending free cache ports. */
-    LSQRequest* pendingRequest;
-
     /** Flag for memory model. */
     bool needsTSO;
 
@@ -595,24 +591,12 @@ class LSQUnit
     int getLoadHead() { return loadQueue.head(); }
 
     /** Returns the sequence number of the head load instruction. */
-    InstSeqNum
-    getLoadHeadSeqNum()
-    {
-        return loadQueue.front().valid()
-            ? loadQueue.front().instruction()->seqNum
-            : 0;
-    }
+    InstSeqNum getLoadHeadSeqNum();
 
     /** Returns the index of the head store instruction. */
     int getStoreHead() { return storeQueue.head(); }
     /** Returns the sequence number of the head store instruction. */
-    InstSeqNum
-    getStoreHeadSeqNum()
-    {
-        return storeQueue.front().valid()
-            ? storeQueue.front().instruction()->seqNum
-            : 0;
-    }
+    InstSeqNum getStoreHeadSeqNum();
 
     /** Returns whether or not the LSQ unit is stalled. */
     bool isStalled()  { return stalled; }

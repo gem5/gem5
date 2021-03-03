@@ -264,6 +264,20 @@ LSQ<Impl>::executeStore(const O3DynInstPtr &inst)
 
 template<class Impl>
 void
+LSQ<Impl>::commitLoads(InstSeqNum &youngest_inst, ThreadID tid)
+{
+    thread.at(tid).commitLoads(youngest_inst);
+}
+
+template<class Impl>
+void
+LSQ<Impl>::commitStores(InstSeqNum &youngest_inst, ThreadID tid)
+{
+    thread.at(tid).commitStores(youngest_inst);
+}
+
+template<class Impl>
+void
 LSQ<Impl>::writebackStores()
 {
     std::list<ThreadID>::iterator threads = activeThreads->begin();
@@ -282,6 +296,13 @@ LSQ<Impl>::writebackStores()
 }
 
 template<class Impl>
+void
+LSQ<Impl>::squash(const InstSeqNum &squashed_num, ThreadID tid)
+{
+    thread.at(tid).squash(squashed_num);
+}
+
+template<class Impl>
 bool
 LSQ<Impl>::violation()
 {
@@ -297,6 +318,98 @@ LSQ<Impl>::violation()
     }
 
     return false;
+}
+
+template<class Impl>
+bool LSQ<Impl>::violation(ThreadID tid) { return thread.at(tid).violation(); }
+
+template<class Impl>
+O3DynInstPtr
+LSQ<Impl>::getMemDepViolator(ThreadID tid)
+{
+    return thread.at(tid).getMemDepViolator();
+}
+
+template<class Impl>
+int
+LSQ<Impl>::getLoadHead(ThreadID tid)
+{
+    return thread.at(tid).getLoadHead();
+}
+
+template<class Impl>
+InstSeqNum
+LSQ<Impl>::getLoadHeadSeqNum(ThreadID tid)
+{
+    return thread.at(tid).getLoadHeadSeqNum();
+}
+
+template<class Impl>
+int
+LSQ<Impl>::getStoreHead(ThreadID tid)
+{
+    return thread.at(tid).getStoreHead();
+}
+
+template<class Impl>
+InstSeqNum
+LSQ<Impl>::getStoreHeadSeqNum(ThreadID tid)
+{
+    return thread.at(tid).getStoreHeadSeqNum();
+}
+
+template<class Impl>
+int LSQ<Impl>::getCount(ThreadID tid) { return thread.at(tid).getCount(); }
+
+template<class Impl>
+int LSQ<Impl>::numLoads(ThreadID tid) { return thread.at(tid).numLoads(); }
+
+template<class Impl>
+int LSQ<Impl>::numStores(ThreadID tid) { return thread.at(tid).numStores(); }
+
+template<class Impl>
+int
+LSQ<Impl>::numHtmStarts(ThreadID tid) const
+{
+    if (tid == InvalidThreadID)
+        return 0;
+    else
+        return thread[tid].numHtmStarts();
+}
+template<class Impl>
+int
+LSQ<Impl>::numHtmStops(ThreadID tid) const
+{
+    if (tid == InvalidThreadID)
+        return 0;
+    else
+        return thread[tid].numHtmStops();
+}
+
+template<class Impl>
+void
+LSQ<Impl>::resetHtmStartsStops(ThreadID tid)
+{
+    if (tid != InvalidThreadID)
+        thread[tid].resetHtmStartsStops();
+}
+
+template<class Impl>
+uint64_t
+LSQ<Impl>::getLatestHtmUid(ThreadID tid) const
+{
+    if (tid == InvalidThreadID)
+        return 0;
+    else
+        return thread[tid].getLatestHtmUid();
+}
+
+template<class Impl>
+void
+LSQ<Impl>::setLastRetiredHtmUid(ThreadID tid, uint64_t htmUid)
+{
+    if (tid != InvalidThreadID)
+        thread[tid].setLastRetiredHtmUid(htmUid);
 }
 
 template <class Impl>
@@ -653,6 +766,20 @@ LSQ<Impl>::hasStoresToWB()
 
 template<class Impl>
 bool
+LSQ<Impl>::hasStoresToWB(ThreadID tid)
+{
+    return thread.at(tid).hasStoresToWB();
+}
+
+template<class Impl>
+int
+LSQ<Impl>::numStoresToWB(ThreadID tid)
+{
+    return thread.at(tid).numStoresToWB();
+}
+
+template<class Impl>
+bool
 LSQ<Impl>::willWB()
 {
     std::list<ThreadID>::iterator threads = activeThreads->begin();
@@ -669,6 +796,13 @@ LSQ<Impl>::willWB()
 }
 
 template<class Impl>
+bool
+LSQ<Impl>::willWB(ThreadID tid)
+{
+    return thread.at(tid).willWB();
+}
+
+template<class Impl>
 void
 LSQ<Impl>::dumpInsts() const
 {
@@ -680,6 +814,13 @@ LSQ<Impl>::dumpInsts() const
 
         thread[tid].dumpInsts();
     }
+}
+
+template<class Impl>
+void
+LSQ<Impl>::dumpInsts(ThreadID tid) const
+{
+    thread.at(tid).dumpInsts();
 }
 
 template<class Impl>
@@ -961,7 +1102,7 @@ LSQ<Impl>::SplitDataRequest::initiateTranslation()
 
 template<class Impl>
 LSQ<Impl>::LSQRequest::LSQRequest(
-        LSQUnit<Impl> *port, const O3DynInstPtr& inst, bool isLoad) :
+        LSQUnit *port, const O3DynInstPtr& inst, bool isLoad) :
     _state(State::NotIssued), _senderState(nullptr),
     _port(*port), _inst(inst), _data(nullptr),
     _res(nullptr), _addr(0), _size(0), _flags(0),
@@ -976,7 +1117,7 @@ LSQ<Impl>::LSQRequest::LSQRequest(
 
 template<class Impl>
 LSQ<Impl>::LSQRequest::LSQRequest(
-        LSQUnit<Impl>* port, const O3DynInstPtr& inst, bool isLoad,
+        LSQUnit *port, const O3DynInstPtr& inst, bool isLoad,
         const Addr& addr, const uint32_t& size, const Request::Flags& flags_,
            PacketDataPtr data, uint64_t* res, AtomicOpFunctorPtr amo_op)
     : _state(State::NotIssued), _senderState(nullptr),
@@ -1312,7 +1453,7 @@ LSQ<Impl>::DcachePort::recvReqRetry()
 }
 
 template<class Impl>
-LSQ<Impl>::HtmCmdRequest::HtmCmdRequest(LSQUnit<Impl>* port,
+LSQ<Impl>::HtmCmdRequest::HtmCmdRequest(LSQUnit* port,
                   const O3DynInstPtr& inst,
                   const Request::Flags& flags_) :
     SingleDataRequest(port, inst, true, 0x0lu, 8, flags_,
@@ -1364,6 +1505,24 @@ LSQ<Impl>::HtmCmdRequest::finish(const Fault &fault, const RequestPtr &req,
         ThreadContext* tc, BaseTLB::Mode mode)
 {
     panic("unexpected behaviour");
+}
+
+template <class Impl>
+Fault
+LSQ<Impl>::read(LSQRequest* req, int load_idx)
+{
+    ThreadID tid = cpu->contextToThread(req->request()->contextId());
+
+    return thread.at(tid).read(req, load_idx);
+}
+
+template <class Impl>
+Fault
+LSQ<Impl>::write(LSQRequest* req, uint8_t *data, int store_idx)
+{
+    ThreadID tid = cpu->contextToThread(req->request()->contextId());
+
+    return thread.at(tid).write(req, data, store_idx);
 }
 
 #endif//__CPU_O3_LSQ_IMPL_HH__

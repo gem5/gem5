@@ -384,11 +384,11 @@ class BaseO3DynInst : public ExecContext, public RefCounted
 
     /** Load queue index. */
     ssize_t lqIdx = -1;
-    typename ::LSQUnit<O3CPUImpl>::LQIterator lqIt;
+    typename LSQUnit::LQIterator lqIt;
 
     /** Store queue index. */
     ssize_t sqIdx = -1;
-    typename ::LSQUnit<O3CPUImpl>::SQIterator sqIt;
+    typename LSQUnit::SQIterator sqIt;
 
 
     /////////////////////// TLB Miss //////////////////////
