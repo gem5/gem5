@@ -161,7 +161,7 @@ DefaultDecode<Impl>::DecodeStats::DecodeStats(FullO3CPU<Impl> *cpu)
 
 template<class Impl>
 void
-DefaultDecode<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
+DefaultDecode<Impl>::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
 
@@ -176,7 +176,7 @@ DefaultDecode<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 
 template<class Impl>
 void
-DefaultDecode<Impl>::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
+DefaultDecode<Impl>::setDecodeQueue(TimeBuffer<O3Comm::DecodeStruct> *dq_ptr)
 {
     decodeQueue = dq_ptr;
 
@@ -186,7 +186,7 @@ DefaultDecode<Impl>::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
 
 template<class Impl>
 void
-DefaultDecode<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
+DefaultDecode<Impl>::setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *fq_ptr)
 {
     fetchQueue = fq_ptr;
 

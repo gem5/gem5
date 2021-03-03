@@ -51,9 +51,11 @@
 #include "cpu/o3/limits.hh"
 #include "sim/faults.hh"
 
+namespace O3Comm
+{
+
 /** Struct that defines the information passed from fetch to decode. */
-template<class Impl>
-struct DefaultFetchDefaultDecode
+struct FetchStruct
 {
     int size;
 
@@ -64,8 +66,7 @@ struct DefaultFetchDefaultDecode
 };
 
 /** Struct that defines the information passed from decode to rename. */
-template<class Impl>
-struct DefaultDecodeDefaultRename
+struct DecodeStruct
 {
     int size;
 
@@ -73,8 +74,7 @@ struct DefaultDecodeDefaultRename
 };
 
 /** Struct that defines the information passed from rename to IEW. */
-template<class Impl>
-struct DefaultRenameDefaultIEW
+struct RenameStruct
 {
     int size;
 
@@ -82,8 +82,7 @@ struct DefaultRenameDefaultIEW
 };
 
 /** Struct that defines the information passed from IEW to commit. */
-template<class Impl>
-struct DefaultIEWDefaultCommit
+struct IEWStruct
 {
     int size;
 
@@ -99,7 +98,6 @@ struct DefaultIEWDefaultCommit
     bool includeSquashInst[O3MaxThreads];
 };
 
-template<class Impl>
 struct IssueStruct
 {
     int size;
@@ -108,8 +106,7 @@ struct IssueStruct
 };
 
 /** Struct that defines all backwards communication. */
-template<class Impl>
-struct TimeBufStruct
+struct TimeStruct
 {
     struct DecodeComm
     {
@@ -224,5 +221,7 @@ struct TimeBufStruct
     bool iewBlock[O3MaxThreads];
     bool iewUnblock[O3MaxThreads];
 };
+
+} // namespace O3Comm
 
 #endif //__CPU_O3_COMM_HH__

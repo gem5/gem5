@@ -550,35 +550,23 @@ class FullO3CPU : public BaseO3CPU
         RenameIdx,
         IEWIdx,
         CommitIdx,
-        NumStages };
-
-    /** Typedefs from the Impl to get the structs that each of the
-     *  time buffers should use.
-     */
-    typedef typename Impl::TimeStruct TimeStruct;
-
-    typedef typename Impl::FetchStruct FetchStruct;
-
-    typedef typename Impl::DecodeStruct DecodeStruct;
-
-    typedef typename Impl::RenameStruct RenameStruct;
-
-    typedef typename Impl::IEWStruct IEWStruct;
+        NumStages
+    };
 
     /** The main time buffer to do backwards communication. */
-    TimeBuffer<TimeStruct> timeBuffer;
+    TimeBuffer<O3Comm::TimeStruct> timeBuffer;
 
     /** The fetch stage's instruction queue. */
-    TimeBuffer<FetchStruct> fetchQueue;
+    TimeBuffer<O3Comm::FetchStruct> fetchQueue;
 
     /** The decode stage's instruction queue. */
-    TimeBuffer<DecodeStruct> decodeQueue;
+    TimeBuffer<O3Comm::DecodeStruct> decodeQueue;
 
     /** The rename stage's instruction queue. */
-    TimeBuffer<RenameStruct> renameQueue;
+    TimeBuffer<O3Comm::RenameStruct> renameQueue;
 
     /** The IEW stage's instruction queue. */
-    TimeBuffer<IEWStruct> iewQueue;
+    TimeBuffer<O3Comm::IEWStruct> iewQueue;
 
   private:
     /** The activity recorder; used to tell if the CPU has any

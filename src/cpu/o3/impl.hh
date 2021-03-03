@@ -29,8 +29,6 @@
 #ifndef __CPU_O3_IMPL_HH__
 #define __CPU_O3_IMPL_HH__
 
-#include "cpu/o3/comm.hh"
-
 /** Implementation specific struct that defines several key types to the
  *  CPU, the stages within the CPU, the time buffers, and the DynInst.
  *  The struct defines the ISA, the CPU policy, the specific DynInst, the
@@ -39,25 +37,6 @@
  *  This is one of the key things that must be defined for each hardware
  *  specific CPU implementation.
  */
-struct O3CPUImpl
-{
-    /** The struct for communication between fetch and decode. */
-    typedef DefaultFetchDefaultDecode<O3CPUImpl> FetchStruct;
-
-    /** The struct for communication between decode and rename. */
-    typedef DefaultDecodeDefaultRename<O3CPUImpl> DecodeStruct;
-
-    /** The struct for communication between rename and IEW. */
-    typedef DefaultRenameDefaultIEW<O3CPUImpl> RenameStruct;
-
-    /** The struct for communication between IEW and commit. */
-    typedef DefaultIEWDefaultCommit<O3CPUImpl> IEWStruct;
-
-    /** The struct for communication within the IEW stage. */
-    typedef ::IssueStruct<O3CPUImpl> IssueStruct;
-
-    /** The struct for all backwards communication. */
-    typedef TimeBufStruct<O3CPUImpl> TimeStruct;
-};
+struct O3CPUImpl {};
 
 #endif // __CPU_O3_SPARC_IMPL_HH__

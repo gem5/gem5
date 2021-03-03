@@ -50,6 +50,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/comm.hh"
 #include "cpu/o3/dep_graph.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
@@ -91,10 +92,6 @@ template <class Impl>
 class InstructionQueue
 {
   public:
-    //Typedefs from the Impl.
-    typedef typename Impl::IssueStruct IssueStruct;
-    typedef typename Impl::TimeStruct TimeStruct;
-
     // Typedef of iterator through the list of instructions.
     typedef typename std::list<O3DynInstPtr>::iterator ListIt;
 
@@ -143,10 +140,10 @@ class InstructionQueue
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets the timer buffer between issue and execute. */
-    void setIssueToExecuteQueue(TimeBuffer<IssueStruct> *i2eQueue);
+    void setIssueToExecuteQueue(TimeBuffer<O3Comm::IssueStruct> *i2eQueue);
 
     /** Sets the global time buffer. */
-    void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
+    void setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr);
 
     /** Determine if we are drained. */
     bool isDrained() const;
@@ -300,13 +297,13 @@ class InstructionQueue
     /** The queue to the execute stage.  Issued instructions will be written
      *  into it.
      */
-    TimeBuffer<IssueStruct> *issueToExecuteQueue;
+    TimeBuffer<O3Comm::IssueStruct> *issueToExecuteQueue;
 
     /** The backwards time buffer. */
-    TimeBuffer<TimeStruct> *timeBuffer;
+    TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
 
     /** Wire to read information from timebuffer. */
-    typename TimeBuffer<TimeStruct>::wire fromCommit;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
 
     /** Function unit pool. */
     FUPool *fuPool;

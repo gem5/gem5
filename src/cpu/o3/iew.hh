@@ -80,13 +80,6 @@ class FUPool;
 template<class Impl>
 class DefaultIEW
 {
-  private:
-    //Typedefs from Impl
-    typedef typename Impl::TimeStruct TimeStruct;
-    typedef typename Impl::IEWStruct IEWStruct;
-    typedef typename Impl::RenameStruct RenameStruct;
-    typedef typename Impl::IssueStruct IssueStruct;
-
   public:
     /** Overall IEW stage status. Used to determine if the CPU can
      * deschedule itself due to a lack of activity.
@@ -143,13 +136,13 @@ class DefaultIEW
     void clearStates(ThreadID tid);
 
     /** Sets main time buffer used for backwards communication. */
-    void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
+    void setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr);
 
     /** Sets time buffer for getting instructions coming from rename. */
-    void setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr);
+    void setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr);
 
     /** Sets time buffer to pass on instructions to commit. */
-    void setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr);
+    void setIEWQueue(TimeBuffer<O3Comm::IEWStruct> *iq_ptr);
 
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
@@ -303,37 +296,37 @@ class DefaultIEW
     void updateExeInstStats(const O3DynInstPtr &inst);
 
     /** Pointer to main time buffer used for backwards communication. */
-    TimeBuffer<TimeStruct> *timeBuffer;
+    TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
 
     /** Wire to write information heading to previous stages. */
-    typename TimeBuffer<TimeStruct>::wire toFetch;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire toFetch;
 
     /** Wire to get commit's output from backwards time buffer. */
-    typename TimeBuffer<TimeStruct>::wire fromCommit;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
 
     /** Wire to write information heading to previous stages. */
-    typename TimeBuffer<TimeStruct>::wire toRename;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire toRename;
 
     /** Rename instruction queue interface. */
-    TimeBuffer<RenameStruct> *renameQueue;
+    TimeBuffer<O3Comm::RenameStruct> *renameQueue;
 
     /** Wire to get rename's output from rename queue. */
-    typename TimeBuffer<RenameStruct>::wire fromRename;
+    typename TimeBuffer<O3Comm::RenameStruct>::wire fromRename;
 
     /** Issue stage queue. */
-    TimeBuffer<IssueStruct> issueToExecQueue;
+    TimeBuffer<O3Comm::IssueStruct> issueToExecQueue;
 
     /** Wire to read information from the issue stage time queue. */
-    typename TimeBuffer<IssueStruct>::wire fromIssue;
+    typename TimeBuffer<O3Comm::IssueStruct>::wire fromIssue;
 
     /**
      * IEW stage time buffer.  Holds ROB indices of instructions that
      * can be marked as completed.
      */
-    TimeBuffer<IEWStruct> *iewQueue;
+    TimeBuffer<O3Comm::IEWStruct> *iewQueue;
 
     /** Wire to write infromation heading to commit. */
-    typename TimeBuffer<IEWStruct>::wire toCommit;
+    typename TimeBuffer<O3Comm::IEWStruct>::wire toCommit;
 
     /** Queue of all instructions coming from rename this cycle. */
     std::queue<O3DynInstPtr> insts[O3MaxThreads];

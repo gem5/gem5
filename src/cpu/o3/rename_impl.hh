@@ -186,7 +186,7 @@ DefaultRename<Impl>::regProbePoints()
 
 template <class Impl>
 void
-DefaultRename<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
+DefaultRename<Impl>::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
 
@@ -202,7 +202,7 @@ DefaultRename<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 
 template <class Impl>
 void
-DefaultRename<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
+DefaultRename<Impl>::setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr)
 {
     renameQueue = rq_ptr;
 
@@ -212,7 +212,7 @@ DefaultRename<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 
 template <class Impl>
 void
-DefaultRename<Impl>::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
+DefaultRename<Impl>::setDecodeQueue(TimeBuffer<O3Comm::DecodeStruct> *dq_ptr)
 {
     decodeQueue = dq_ptr;
 

@@ -306,7 +306,7 @@ DefaultIEW<Impl>::clearStates(ThreadID tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
+DefaultIEW<Impl>::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
 
@@ -324,7 +324,7 @@ DefaultIEW<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
+DefaultIEW<Impl>::setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr)
 {
     renameQueue = rq_ptr;
 
@@ -334,7 +334,7 @@ DefaultIEW<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
+DefaultIEW<Impl>::setIEWQueue(TimeBuffer<O3Comm::IEWStruct> *iq_ptr)
 {
     iewQueue = iq_ptr;
 

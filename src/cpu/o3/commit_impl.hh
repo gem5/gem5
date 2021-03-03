@@ -259,7 +259,7 @@ DefaultCommit<Impl>::setThreads(std::vector<Thread *> &threads)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
+DefaultCommit<Impl>::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
 
@@ -272,7 +272,7 @@ DefaultCommit<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
+DefaultCommit<Impl>::setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *fq_ptr)
 {
     fetchQueue = fq_ptr;
 
@@ -282,7 +282,7 @@ DefaultCommit<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
+DefaultCommit<Impl>::setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr)
 {
     renameQueue = rq_ptr;
 
@@ -292,7 +292,7 @@ DefaultCommit<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
+DefaultCommit<Impl>::setIEWQueue(TimeBuffer<O3Comm::IEWStruct> *iq_ptr)
 {
     iewQueue = iq_ptr;
 

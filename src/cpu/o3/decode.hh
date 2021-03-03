@@ -44,6 +44,7 @@
 #include <queue>
 
 #include "base/statistics.hh"
+#include "cpu/o3/comm.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
@@ -63,12 +64,6 @@ class FullO3CPU;
 template<class Impl>
 class DefaultDecode
 {
-  private:
-    // Typedefs from the Impl.
-    typedef typename Impl::FetchStruct FetchStruct;
-    typedef typename Impl::DecodeStruct DecodeStruct;
-    typedef typename Impl::TimeStruct TimeStruct;
-
   public:
     /** Overall decode stage status. Used to determine if the CPU can
      * deschedule itself due to a lack of activity.
@@ -112,13 +107,13 @@ class DefaultDecode
     std::string name() const;
 
     /** Sets the main backwards communication time buffer pointer. */
-    void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
+    void setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr);
 
     /** Sets pointer to time buffer used to communicate to the next stage. */
-    void setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr);
+    void setDecodeQueue(TimeBuffer<O3Comm::DecodeStruct> *dq_ptr);
 
     /** Sets pointer to time buffer coming from fetch. */
-    void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
+    void setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *fq_ptr);
 
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
@@ -209,32 +204,32 @@ class DefaultDecode
     FullO3CPU<Impl> *cpu;
 
     /** Time buffer interface. */
-    TimeBuffer<TimeStruct> *timeBuffer;
+    TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
 
     /** Wire to get rename's output from backwards time buffer. */
-    typename TimeBuffer<TimeStruct>::wire fromRename;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire fromRename;
 
     /** Wire to get iew's information from backwards time buffer. */
-    typename TimeBuffer<TimeStruct>::wire fromIEW;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire fromIEW;
 
     /** Wire to get commit's information from backwards time buffer. */
-    typename TimeBuffer<TimeStruct>::wire fromCommit;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
 
     /** Wire to write information heading to previous stages. */
     // Might not be the best name as not only fetch will read it.
-    typename TimeBuffer<TimeStruct>::wire toFetch;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire toFetch;
 
     /** Decode instruction queue. */
-    TimeBuffer<DecodeStruct> *decodeQueue;
+    TimeBuffer<O3Comm::DecodeStruct> *decodeQueue;
 
     /** Wire used to write any information heading to rename. */
-    typename TimeBuffer<DecodeStruct>::wire toRename;
+    typename TimeBuffer<O3Comm::DecodeStruct>::wire toRename;
 
     /** Fetch instruction queue interface. */
-    TimeBuffer<FetchStruct> *fetchQueue;
+    TimeBuffer<O3Comm::FetchStruct> *fetchQueue;
 
     /** Wire to get fetch's output from fetch queue. */
-    typename TimeBuffer<FetchStruct>::wire fromFetch;
+    typename TimeBuffer<O3Comm::FetchStruct>::wire fromFetch;
 
     /** Queue of all instructions coming from fetch this cycle. */
     std::queue<O3DynInstPtr> insts[O3MaxThreads];

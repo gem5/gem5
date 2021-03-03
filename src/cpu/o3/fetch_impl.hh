@@ -262,7 +262,7 @@ FetchStatGroup::FetchStatGroup(FullO3CPU<Impl> *cpu, DefaultFetch *fetch)
 }
 template<class Impl>
 void
-DefaultFetch<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
+DefaultFetch<Impl>::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *time_buffer)
 {
     timeBuffer = time_buffer;
 
@@ -282,7 +282,7 @@ DefaultFetch<Impl>::setActiveThreads(std::list<ThreadID> *at_ptr)
 
 template<class Impl>
 void
-DefaultFetch<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *ftb_ptr)
+DefaultFetch<Impl>::setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *ftb_ptr)
 {
     // Create wire to write information to proper place in fetch time buf.
     toDecode = ftb_ptr->getWire(0);

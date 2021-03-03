@@ -50,8 +50,10 @@
 #include <unordered_map>
 #include <utility>
 
+#include "base/statistics.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/impl.hh"
+#include "cpu/reg_class.hh"
 #include "mem/request.hh"
 #include "params/ElasticTrace.hh"
 #include "proto/inst_dep_record.pb.h"

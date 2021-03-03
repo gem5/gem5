@@ -47,6 +47,7 @@
 
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
+#include "cpu/o3/comm.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/free_list.hh"
@@ -73,11 +74,6 @@ template<class Impl>
 class DefaultRename
 {
   public:
-    // Typedefs from the Impl.
-    typedef typename Impl::DecodeStruct DecodeStruct;
-    typedef typename Impl::RenameStruct RenameStruct;
-    typedef typename Impl::TimeStruct TimeStruct;
-
     // A deque is used to queue the instructions. Barrier insts must
     // be added to the front of the queue, which is the only reason for
     // using a deque instead of a queue. (Most other stages use a
@@ -134,13 +130,13 @@ class DefaultRename
     void regProbePoints();
 
     /** Sets the main backwards communication time buffer pointer. */
-    void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
+    void setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr);
 
     /** Sets pointer to time buffer used to communicate to the next stage. */
-    void setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr);
+    void setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr);
 
     /** Sets pointer to time buffer coming from decode. */
-    void setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr);
+    void setDecodeQueue(TimeBuffer<O3Comm::DecodeStruct> *dq_ptr);
 
     /** Sets pointer to IEW stage. Used only for initialization. */
     void setIEWStage(DefaultIEW<Impl> *iew_stage)
@@ -322,28 +318,28 @@ class DefaultRename
     FullO3CPU<Impl> *cpu;
 
     /** Pointer to main time buffer used for backwards communication. */
-    TimeBuffer<TimeStruct> *timeBuffer;
+    TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
 
     /** Wire to get IEW's output from backwards time buffer. */
-    typename TimeBuffer<TimeStruct>::wire fromIEW;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire fromIEW;
 
     /** Wire to get commit's output from backwards time buffer. */
-    typename TimeBuffer<TimeStruct>::wire fromCommit;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire fromCommit;
 
     /** Wire to write infromation heading to previous stages. */
-    typename TimeBuffer<TimeStruct>::wire toDecode;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire toDecode;
 
     /** Rename instruction queue. */
-    TimeBuffer<RenameStruct> *renameQueue;
+    TimeBuffer<O3Comm::RenameStruct> *renameQueue;
 
     /** Wire to write any information heading to IEW. */
-    typename TimeBuffer<RenameStruct>::wire toIEW;
+    typename TimeBuffer<O3Comm::RenameStruct>::wire toIEW;
 
     /** Decode instruction queue interface. */
-    TimeBuffer<DecodeStruct> *decodeQueue;
+    TimeBuffer<O3Comm::DecodeStruct> *decodeQueue;
 
     /** Wire to get decode's output from decode queue. */
-    typename TimeBuffer<DecodeStruct>::wire fromDecode;
+    typename TimeBuffer<O3Comm::DecodeStruct>::wire fromDecode;
 
     /** Queue of all instructions coming from decode this cycle. */
     InstQueue insts[O3MaxThreads];

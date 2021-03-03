@@ -53,6 +53,7 @@
 #include "arch/locked_mem.hh"
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/comm.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/timebuf.hh"
@@ -84,8 +85,6 @@ class LSQUnit
 {
   public:
     static constexpr auto MaxDataBytes = MaxVecRegLenInBytes;
-
-    typedef typename Impl::IssueStruct IssueStruct;
 
     using LSQSenderState = typename LSQ<Impl>::LSQSenderState;
     using LSQRequest = typename LSQ<Impl>::LSQRequest;
@@ -521,7 +520,7 @@ class LSQUnit
     Addr cacheBlockMask;
 
     /** Wire to read information from the issue stage time queue. */
-    typename TimeBuffer<IssueStruct>::wire fromIssue;
+    typename TimeBuffer<O3Comm::IssueStruct>::wire fromIssue;
 
     /** Whether or not the LSQ is stalled. */
     bool stalled;

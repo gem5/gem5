@@ -441,14 +441,15 @@ InstructionQueue<Impl>::setActiveThreads(list<ThreadID> *at_ptr)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::setIssueToExecuteQueue(TimeBuffer<IssueStruct> *i2e_ptr)
+InstructionQueue<Impl>::setIssueToExecuteQueue(
+        TimeBuffer<O3Comm::IssueStruct> *i2e_ptr)
 {
       issueToExecuteQueue = i2e_ptr;
 }
 
 template <class Impl>
 void
-InstructionQueue<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
+InstructionQueue<Impl>::setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
 
@@ -779,7 +780,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     DPRINTF(IQ, "Attempting to schedule ready instructions from "
             "the IQ.\n");
 
-    IssueStruct *i2e_info = issueToExecuteQueue->access(0);
+    O3Comm::IssueStruct *i2e_info = issueToExecuteQueue->access(0);
 
     O3DynInstPtr mem_inst;
     while ((mem_inst = std::move(getDeferredMemInstToExecute()))) {

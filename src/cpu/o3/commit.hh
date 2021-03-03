@@ -46,6 +46,7 @@
 #include "base/statistics.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/comm.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
@@ -86,12 +87,6 @@ template<class Impl>
 class DefaultCommit
 {
   public:
-    // Typedefs from the Impl.
-    typedef typename Impl::TimeStruct TimeStruct;
-    typedef typename Impl::FetchStruct FetchStruct;
-    typedef typename Impl::IEWStruct IEWStruct;
-    typedef typename Impl::RenameStruct RenameStruct;
-
     typedef O3ThreadState<Impl> Thread;
 
     /** Overall commit status. Used to determine if the CPU can deschedule
@@ -147,15 +142,15 @@ class DefaultCommit
     void setThreads(std::vector<Thread *> &threads);
 
     /** Sets the main time buffer pointer, used for backwards communication. */
-    void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
+    void setTimeBuffer(TimeBuffer<O3Comm::TimeStruct> *tb_ptr);
 
-    void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
+    void setFetchQueue(TimeBuffer<O3Comm::FetchStruct> *fq_ptr);
 
     /** Sets the pointer to the queue coming from rename. */
-    void setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr);
+    void setRenameQueue(TimeBuffer<O3Comm::RenameStruct> *rq_ptr);
 
     /** Sets the pointer to the queue coming from IEW. */
-    void setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr);
+    void setIEWQueue(TimeBuffer<O3Comm::IEWStruct> *iq_ptr);
 
     /** Sets the pointer to the IEW stage. */
     void setIEWStage(DefaultIEW<Impl> *iew_stage);
@@ -326,29 +321,29 @@ class DefaultCommit
 
   private:
     /** Time buffer interface. */
-    TimeBuffer<TimeStruct> *timeBuffer;
+    TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
 
     /** Wire to write information heading to previous stages. */
-    typename TimeBuffer<TimeStruct>::wire toIEW;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire toIEW;
 
     /** Wire to read information from IEW (for ROB). */
-    typename TimeBuffer<TimeStruct>::wire robInfoFromIEW;
+    typename TimeBuffer<O3Comm::TimeStruct>::wire robInfoFromIEW;
 
-    TimeBuffer<FetchStruct> *fetchQueue;
+    TimeBuffer<O3Comm::FetchStruct> *fetchQueue;
 
-    typename TimeBuffer<FetchStruct>::wire fromFetch;
+    typename TimeBuffer<O3Comm::FetchStruct>::wire fromFetch;
 
     /** IEW instruction queue interface. */
-    TimeBuffer<IEWStruct> *iewQueue;
+    TimeBuffer<O3Comm::IEWStruct> *iewQueue;
 
     /** Wire to read information from IEW queue. */
-    typename TimeBuffer<IEWStruct>::wire fromIEW;
+    typename TimeBuffer<O3Comm::IEWStruct>::wire fromIEW;
 
     /** Rename instruction queue interface, for ROB. */
-    TimeBuffer<RenameStruct> *renameQueue;
+    TimeBuffer<O3Comm::RenameStruct> *renameQueue;
 
     /** Wire to read information from rename queue. */
-    typename TimeBuffer<RenameStruct>::wire fromRename;
+    typename TimeBuffer<O3Comm::RenameStruct>::wire fromRename;
 
   public:
     /** ROB interface. */
