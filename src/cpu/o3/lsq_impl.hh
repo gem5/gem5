@@ -68,7 +68,7 @@ LSQ<Impl>::LSQSenderState::contextId()
 }
 
 template <class Impl>
-LSQ<Impl>::LSQ(O3CPU *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
+LSQ<Impl>::LSQ(FullO3CPU<Impl> *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
         const DerivO3CPUParams &params)
     : cpu(cpu_ptr), iewStage(iew_ptr),
       _cacheBlocked(false),

@@ -64,11 +64,10 @@ template <class Impl>
 struct O3ThreadState : public ThreadState
 {
     typedef ThreadContext::Status Status;
-    typedef typename Impl::O3CPU O3CPU;
 
   private:
     /** Pointer to the CPU. */
-    O3CPU *cpu;
+    FullO3CPU<Impl> *cpu;
 
   public:
     PCEventQueue pcEventQueue;
@@ -96,7 +95,7 @@ struct O3ThreadState : public ThreadState
     /** Pointer to the hardware transactional memory checkpoint. */
     std::unique_ptr<BaseHTMCheckpoint> htmCheckpoint;
 
-    O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process)
+    O3ThreadState(FullO3CPU<Impl> *_cpu, int _thread_num, Process *_process)
         : ThreadState(_cpu, _thread_num, _process), cpu(_cpu),
           comInstEventQueue("instruction-based event queue"),
           noSquashFromTC(false), trapPending(false), tc(nullptr)

@@ -58,9 +58,6 @@ template <class Impl>
 class ROB
 {
   public:
-    //Typedefs from the Impl.
-    typedef typename Impl::O3CPU O3CPU;
-
     typedef std::pair<RegIndex, RegIndex> UnmapInfo;
     typedef typename std::list<O3DynInstPtr>::iterator InstIt;
 
@@ -84,7 +81,7 @@ class ROB
      *  @param _cpu   The cpu object pointer.
      *  @param params The cpu params including several ROB-specific parameters.
      */
-    ROB(O3CPU *_cpu, const DerivO3CPUParams &params);
+    ROB(FullO3CPU<Impl> *_cpu, const DerivO3CPUParams &params);
 
     std::string name() const;
 
@@ -261,7 +258,7 @@ class ROB
     void resetState();
 
     /** Pointer to the CPU. */
-    O3CPU *cpu;
+    FullO3CPU<Impl> *cpu;
 
     /** Active Threads in CPU */
     std::list<ThreadID> *activeThreads;

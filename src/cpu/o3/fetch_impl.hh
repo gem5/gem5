@@ -73,7 +73,8 @@
 #include "sim/system.hh"
 
 template<class Impl>
-DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, const DerivO3CPUParams &params)
+DefaultFetch<Impl>::DefaultFetch(FullO3CPU<Impl> *_cpu,
+        const DerivO3CPUParams &params)
     : fetchPolicy(params.smtFetchPolicy),
       cpu(_cpu),
       branchPred(nullptr),
@@ -158,7 +159,7 @@ DefaultFetch<Impl>::regProbePoints()
 
 template <class Impl>
 DefaultFetch<Impl>::
-FetchStatGroup::FetchStatGroup(O3CPU *cpu, DefaultFetch *fetch)
+FetchStatGroup::FetchStatGroup(FullO3CPU<Impl> *cpu, DefaultFetch *fetch)
     : Stats::Group(cpu, "fetch"),
     ADD_STAT(icacheStallCycles, Stats::Units::Cycle::get(),
              "Number of cycles fetch is stalled on an Icache miss"),
@@ -493,7 +494,7 @@ DefaultFetch<Impl>::switchToActive()
     if (_status == Inactive) {
         DPRINTF(Activity, "Activating stage.\n");
 
-        cpu->activateStage(O3CPU::FetchIdx);
+        cpu->activateStage(FullO3CPU<Impl>::FetchIdx);
 
         _status = Active;
     }
@@ -506,7 +507,7 @@ DefaultFetch<Impl>::switchToInactive()
     if (_status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
 
-        cpu->deactivateStage(O3CPU::FetchIdx);
+        cpu->deactivateStage(FullO3CPU<Impl>::FetchIdx);
 
         _status = Inactive;
     }
@@ -831,7 +832,7 @@ DefaultFetch<Impl>::updateFetchStatus()
                             "completion\n",tid);
                 }
 
-                cpu->activateStage(O3CPU::FetchIdx);
+                cpu->activateStage(FullO3CPU<Impl>::FetchIdx);
             }
 
             return Active;
@@ -842,7 +843,7 @@ DefaultFetch<Impl>::updateFetchStatus()
     if (_status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
 
-        cpu->deactivateStage(O3CPU::FetchIdx);
+        cpu->deactivateStage(FullO3CPU<Impl>::FetchIdx);
     }
 
     return Inactive;

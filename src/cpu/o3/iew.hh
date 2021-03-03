@@ -82,7 +82,6 @@ class DefaultIEW
 {
   private:
     //Typedefs from Impl
-    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::TimeStruct TimeStruct;
     typedef typename Impl::IEWStruct IEWStruct;
     typedef typename Impl::RenameStruct RenameStruct;
@@ -129,7 +128,7 @@ class DefaultIEW
 
   public:
     /** Constructs a DefaultIEW with the given parameters. */
-    DefaultIEW(O3CPU *_cpu, const DerivO3CPUParams &params);
+    DefaultIEW(FullO3CPU<Impl> *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of the DefaultIEW stage. */
     std::string name() const;
@@ -347,7 +346,7 @@ class DefaultIEW
 
   private:
     /** CPU pointer. */
-    O3CPU *cpu;
+    FullO3CPU<Impl> *cpu;
 
     /** Records if IEW has written to the time buffer this cycle, so that the
      * CPU can deschedule itself if there is no activity.
@@ -424,7 +423,7 @@ class DefaultIEW
 
     struct IEWStats : public Stats::Group
     {
-        IEWStats(O3CPU *cpu);
+        IEWStats(FullO3CPU<Impl> *cpu);
 
         /** Stat for total number of idle cycles. */
         Stats::Scalar idleCycles;
@@ -460,7 +459,7 @@ class DefaultIEW
 
         struct ExecutedInstStats : public Stats::Group
         {
-            ExecutedInstStats(O3CPU* cpu);
+            ExecutedInstStats(FullO3CPU<Impl> *cpu);
 
             /** Stat for total number of executed instructions. */
             Stats::Scalar numInsts;

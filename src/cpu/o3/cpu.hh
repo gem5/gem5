@@ -101,8 +101,6 @@ class FullO3CPU : public BaseO3CPU
 {
   public:
     // Typedefs from the Impl here.
-    typedef typename Impl::O3CPU O3CPU;
-
     typedef O3ThreadState<Impl> ImplState;
     typedef O3ThreadState<Impl> Thread;
 

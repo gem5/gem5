@@ -60,6 +60,9 @@
 #include "sim/eventq.hh"
 #include "sim/probe/probe.hh"
 
+template <class Impl>
+class FullO3CPU;
+
 /**
  * The elastic trace is a type of probe listener and listens to probe points
  * in multiple stages of the O3CPU. The notify method is called on a probe

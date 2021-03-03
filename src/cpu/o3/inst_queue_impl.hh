@@ -84,7 +84,7 @@ InstructionQueue<Impl>::FUCompletion::description() const
 }
 
 template <class Impl>
-InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr,
+InstructionQueue<Impl>::InstructionQueue(FullO3CPU<Impl> *cpu_ptr,
         DefaultIEW<Impl> *iew_ptr, const DerivO3CPUParams &params)
     : cpu(cpu_ptr),
       iewStage(iew_ptr),
@@ -177,7 +177,7 @@ InstructionQueue<Impl>::name() const
 
 template <class Impl>
 InstructionQueue<Impl>::
-IQStats::IQStats(O3CPU *cpu, const unsigned &total_width)
+IQStats::IQStats(FullO3CPU<Impl> *cpu, const unsigned &total_width)
     : Stats::Group(cpu),
     ADD_STAT(instsAdded, Stats::Units::Count::get(),
              "Number of instructions added to the IQ (excludes non-spec)"),

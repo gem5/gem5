@@ -63,10 +63,8 @@ template <class Impl>
 class O3ThreadContext : public ThreadContext
 {
   public:
-    typedef typename Impl::O3CPU O3CPU;
-
    /** Pointer to the CPU. */
-    O3CPU *cpu;
+    FullO3CPU<Impl> *cpu;
 
     bool
     schedule(PCEvent *e) override

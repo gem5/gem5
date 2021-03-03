@@ -75,8 +75,6 @@ template <class Impl>
 class LSQ
 {
   public:
-    typedef typename Impl::O3CPU O3CPU;
-
     class LSQRequest;
     /** Derived class to hold any sender state the LSQ needs. */
     class LSQSenderState : public Packet::SenderState
@@ -794,7 +792,7 @@ class LSQ
     };
 
     /** Constructs an LSQ with the given parameters. */
-    LSQ(O3CPU *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
+    LSQ(FullO3CPU<Impl> *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
             const DerivO3CPUParams &params);
     ~LSQ() { }
 
@@ -1051,7 +1049,7 @@ class LSQ
                       const std::vector<bool>& byte_enable);
 
     /** The CPU pointer. */
-    O3CPU *cpu;
+    FullO3CPU<Impl> *cpu;
 
     /** The IEW stage pointer. */
     DefaultIEW<Impl> *iewStage;

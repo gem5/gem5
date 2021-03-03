@@ -87,7 +87,6 @@ class DefaultCommit
 {
   public:
     // Typedefs from the Impl.
-    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::TimeStruct TimeStruct;
     typedef typename Impl::FetchStruct FetchStruct;
     typedef typename Impl::IEWStruct IEWStruct;
@@ -136,7 +135,7 @@ class DefaultCommit
 
   public:
     /** Construct a DefaultCommit with the given parameters. */
-    DefaultCommit(O3CPU *_cpu, const DerivO3CPUParams &params);
+    DefaultCommit(FullO3CPU<Impl> *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of the DefaultCommit. */
     std::string name() const;
@@ -357,7 +356,7 @@ class DefaultCommit
 
   private:
     /** Pointer to O3CPU. */
-    O3CPU *cpu;
+    FullO3CPU<Impl> *cpu;
 
     /** Vector of all of the threads. */
     std::vector<Thread *> thread;
@@ -480,7 +479,7 @@ class DefaultCommit
 
     struct CommitStats : public Stats::Group
     {
-        CommitStats(O3CPU *cpu, DefaultCommit *commit);
+        CommitStats(FullO3CPU<Impl> *cpu, DefaultCommit *commit);
         /** Stat for the total number of squashed instructions discarded by
          * commit.
          */

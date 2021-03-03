@@ -50,6 +50,9 @@
 
 struct DerivO3CPUParams;
 
+template <class Impl>
+class FullO3CPU;
+
 /**
  * DefaultDecode class handles both single threaded and SMT
  * decode. Its width is specified by the parameters; each cycles it
@@ -62,7 +65,6 @@ class DefaultDecode
 {
   private:
     // Typedefs from the Impl.
-    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::FetchStruct FetchStruct;
     typedef typename Impl::DecodeStruct DecodeStruct;
     typedef typename Impl::TimeStruct TimeStruct;
@@ -97,7 +99,7 @@ class DefaultDecode
 
   public:
     /** DefaultDecode constructor. */
-    DefaultDecode(O3CPU *_cpu, const DerivO3CPUParams &params);
+    DefaultDecode(FullO3CPU<Impl> *_cpu, const DerivO3CPUParams &params);
 
     void startupStage();
 
@@ -204,7 +206,7 @@ class DefaultDecode
   private:
     // Interfaces to objects outside of decode.
     /** CPU interface. */
-    O3CPU *cpu;
+    FullO3CPU<Impl> *cpu;
 
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;
@@ -295,7 +297,7 @@ class DefaultDecode
 
     struct DecodeStats : public Stats::Group
     {
-        DecodeStats(O3CPU *cpu);
+        DecodeStats(FullO3CPU<Impl> *cpu);
 
         /** Stat for total number of idle cycles. */
         Stats::Scalar idleCycles;

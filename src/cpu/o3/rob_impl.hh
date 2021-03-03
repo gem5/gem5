@@ -51,7 +51,7 @@
 #include "params/DerivO3CPU.hh"
 
 template <class Impl>
-ROB<Impl>::ROB(O3CPU *_cpu, const DerivO3CPUParams &params)
+ROB<Impl>::ROB(FullO3CPU<Impl> *_cpu, const DerivO3CPUParams &params)
     : robPolicy(params.smtROBPolicy),
       cpu(_cpu),
       numEntries(params.numROBEntries),

@@ -62,7 +62,8 @@
 #include "params/DerivO3CPU.hh"
 
 template<class Impl>
-DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, const DerivO3CPUParams &params)
+DefaultIEW<Impl>::DefaultIEW(FullO3CPU<Impl> *_cpu,
+        const DerivO3CPUParams &params)
     : issueToExecQueue(params.backComSize, params.forwardComSize),
       cpu(_cpu),
       instQueue(_cpu, this, params),
@@ -142,8 +143,7 @@ DefaultIEW<Impl>::regProbePoints()
 }
 
 template <class Impl>
-DefaultIEW<Impl>::
-IEWStats::IEWStats(O3CPU *cpu)
+DefaultIEW<Impl>::IEWStats::IEWStats(FullO3CPU<Impl> *cpu)
     : Stats::Group(cpu),
     ADD_STAT(idleCycles, Stats::Units::Cycle::get(),
              "Number of cycles IEW is idle"),
@@ -218,8 +218,8 @@ IEWStats::IEWStats(O3CPU *cpu)
 }
 
 template <class Impl>
-DefaultIEW<Impl>::IEWStats::
-ExecutedInstStats::ExecutedInstStats(O3CPU *cpu)
+DefaultIEW<Impl>::IEWStats::ExecutedInstStats::ExecutedInstStats(
+        FullO3CPU<Impl> *cpu)
     : Stats::Group(cpu),
     ADD_STAT(numInsts, Stats::Units::Count::get(),
              "Number of executed instructions"),
@@ -288,7 +288,7 @@ DefaultIEW<Impl>::startupStage()
         cpu->checker->setDcachePort(&ldstQueue.getDataPort());
     }
 
-    cpu->activateStage(O3CPU::IEWIdx);
+    cpu->activateStage(FullO3CPU<Impl>::IEWIdx);
 }
 
 template<class Impl>
@@ -865,7 +865,7 @@ inline void
 DefaultIEW<Impl>::activateStage()
 {
     DPRINTF(Activity, "Activating stage.\n");
-    cpu->activateStage(O3CPU::IEWIdx);
+    cpu->activateStage(FullO3CPU<Impl>::IEWIdx);
 }
 
 template <class Impl>
@@ -873,7 +873,7 @@ inline void
 DefaultIEW<Impl>::deactivateStage()
 {
     DPRINTF(Activity, "Deactivating stage.\n");
-    cpu->deactivateStage(O3CPU::IEWIdx);
+    cpu->deactivateStage(FullO3CPU<Impl>::IEWIdx);
 }
 
 template<class Impl>

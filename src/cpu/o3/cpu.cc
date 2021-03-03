@@ -315,7 +315,7 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
                 DPRINTF(O3CPU, "Workload[%i] process is %#x",
                         tid, this->thread[tid]);
                 this->thread[tid] = new typename FullO3CPU<Impl>::Thread(
-                        (typename Impl::O3CPU *)(this),
+                        (FullO3CPU *)(this),
                         tid, params.workload[tid]);
 
                 //usedTids[tid] = true;
@@ -326,8 +326,7 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
                 Process* dummy_proc = NULL;
 
                 this->thread[tid] = new typename FullO3CPU<Impl>::Thread(
-                        (typename Impl::O3CPU *)(this),
-                        tid, dummy_proc);
+                        this, tid, dummy_proc);
                 //usedTids[tid] = false;
             }
         }
@@ -346,8 +345,7 @@ FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
                 o3_tc, this->checker);
         }
 
-        o3_tc->cpu = (typename Impl::O3CPU *)(this);
-        assert(o3_tc->cpu);
+        o3_tc->cpu = this;
         o3_tc->thread = this->thread[tid];
 
         // Give the thread the TC.
@@ -391,8 +389,7 @@ FullO3CPU<Impl>::regProbePoints()
 }
 
 template <class Impl>
-FullO3CPU<Impl>::
-FullO3CPUStats::FullO3CPUStats(FullO3CPU *cpu)
+FullO3CPU<Impl>::FullO3CPUStats::FullO3CPUStats(FullO3CPU *cpu)
     : Stats::Group(cpu),
       ADD_STAT(timesIdled, Stats::Units::Count::get(),
                "Number of times that the entire CPU went into an idle state "

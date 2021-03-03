@@ -74,7 +74,6 @@ class DefaultRename
 {
   public:
     // Typedefs from the Impl.
-    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DecodeStruct DecodeStruct;
     typedef typename Impl::RenameStruct RenameStruct;
     typedef typename Impl::TimeStruct TimeStruct;
@@ -126,7 +125,7 @@ class DefaultRename
 
   public:
     /** DefaultRename constructor. */
-    DefaultRename(O3CPU *_cpu, const DerivO3CPUParams &params);
+    DefaultRename(FullO3CPU<Impl> *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of rename. */
     std::string name() const;
@@ -320,7 +319,7 @@ class DefaultRename
     std::list<RenameHistory> historyBuffer[O3MaxThreads];
 
     /** Pointer to CPU. */
-    O3CPU *cpu;
+    FullO3CPU<Impl> *cpu;
 
     /** Pointer to main time buffer used for backwards communication. */
     TimeBuffer<TimeStruct> *timeBuffer;

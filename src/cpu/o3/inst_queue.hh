@@ -67,6 +67,9 @@ class MemInterface;
 template <class Impl>
 class DefaultIEW;
 
+template <class Impl>
+class FullO3CPU;
+
 /**
  * A standard instruction queue class.  It holds ready instructions, in
  * order, in seperate priority queues to facilitate the scheduling of
@@ -89,7 +92,6 @@ class InstructionQueue
 {
   public:
     //Typedefs from the Impl.
-    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::IssueStruct IssueStruct;
     typedef typename Impl::TimeStruct TimeStruct;
 
@@ -125,7 +127,7 @@ class InstructionQueue
     };
 
     /** Constructs an IQ. */
-    InstructionQueue(O3CPU *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
+    InstructionQueue(FullO3CPU<Impl> *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
                      const DerivO3CPUParams &params);
 
     /** Destructs the IQ. */
@@ -282,7 +284,7 @@ class InstructionQueue
     /////////////////////////
 
     /** Pointer to the CPU. */
-    O3CPU *cpu;
+    FullO3CPU<Impl> *cpu;
 
     /** Cache interface. */
     MemInterface *dcacheInterface;
@@ -479,7 +481,7 @@ class InstructionQueue
 
     struct IQStats : public Stats::Group
     {
-        IQStats(O3CPU *cpu, const unsigned &total_width);
+        IQStats(FullO3CPU<Impl> *cpu, const unsigned &total_width);
         /** Stat for number of instructions added. */
         Stats::Scalar instsAdded;
         /** Stat for number of non-speculative instructions added. */

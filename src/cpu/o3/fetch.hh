@@ -73,7 +73,6 @@ class DefaultFetch
 {
   public:
     /** Typedefs from Impl. */
-    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::FetchStruct FetchStruct;
     typedef typename Impl::TimeStruct TimeStruct;
 
@@ -212,7 +211,7 @@ class DefaultFetch
 
   public:
     /** DefaultFetch constructor. */
-    DefaultFetch(O3CPU *_cpu, const DerivO3CPUParams &params);
+    DefaultFetch(FullO3CPU<Impl> *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of fetch. */
     std::string name() const;
@@ -402,7 +401,7 @@ class DefaultFetch
 
   private:
     /** Pointer to the O3CPU. */
-    O3CPU *cpu;
+    FullO3CPU<Impl> *cpu;
 
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;
@@ -544,7 +543,7 @@ class DefaultFetch
   protected:
     struct FetchStatGroup : public Stats::Group
     {
-        FetchStatGroup(O3CPU *cpu, DefaultFetch *fetch);
+        FetchStatGroup(FullO3CPU<Impl> *cpu, DefaultFetch *fetch);
         // @todo: Consider making these
         // vectors and tracking on a per thread basis.
         /** Stat for total number of cycles stalled due to an icache miss. */

@@ -68,6 +68,9 @@ struct DerivO3CPUParams;
 template <class Impl>
 class InstructionQueue;
 
+template <class Impl>
+class FullO3CPU;
+
 /**
  * Memory dependency unit class.  This holds the memory dependence predictor.
  * As memory operations are issued to the IQ, they are also issued to this
@@ -86,8 +89,6 @@ class MemDepUnit
     std::string _name;
 
   public:
-    typedef typename Impl::O3CPU O3CPU;
-
     /** Empty constructor. Must call init() prior to using in this case. */
     MemDepUnit();
 
@@ -101,7 +102,8 @@ class MemDepUnit
     std::string name() const { return _name; }
 
     /** Initializes the unit with parameters and a thread id. */
-    void init(const DerivO3CPUParams &params, ThreadID tid, O3CPU *cpu);
+    void init(const DerivO3CPUParams &params, ThreadID tid,
+            FullO3CPU<Impl> *cpu);
 
     /** Determine if we are drained. */
     bool isDrained() const;

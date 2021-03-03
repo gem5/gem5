@@ -31,10 +31,6 @@
 
 #include "cpu/o3/comm.hh"
 
-// Forward declarations.
-template <class Impl>
-class FullO3CPU;
-
 /** Implementation specific struct that defines several key types to the
  *  CPU, the stages within the CPU, the time buffers, and the DynInst.
  *  The struct defines the ISA, the CPU policy, the specific DynInst, the
@@ -62,16 +58,6 @@ struct O3CPUImpl
 
     /** The struct for all backwards communication. */
     typedef TimeBufStruct<O3CPUImpl> TimeStruct;
-
-
-    /** The O3CPU type to be used. */
-    typedef FullO3CPU<O3CPUImpl> O3CPU;
-
-    /** Same typedef, but for CPUType.  BaseDynInst may not always use
-     * an O3 CPU, so it's clearer to call it CPUType instead in that
-     * case.
-     */
-    typedef O3CPU CPUType;
 };
 
 #endif // __CPU_O3_SPARC_IMPL_HH__

@@ -99,7 +99,7 @@ MemDepUnit<MemDepPred, Impl>::~MemDepUnit()
 template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::init(
-        const DerivO3CPUParams &params, ThreadID tid, O3CPU *cpu)
+        const DerivO3CPUParams &params, ThreadID tid, FullO3CPU<Impl> *cpu)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
 

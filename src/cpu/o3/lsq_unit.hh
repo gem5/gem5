@@ -85,7 +85,6 @@ class LSQUnit
   public:
     static constexpr auto MaxDataBytes = MaxVecRegLenInBytes;
 
-    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::IssueStruct IssueStruct;
 
     using LSQSenderState = typename LSQ<Impl>::LSQSenderState;
@@ -225,7 +224,7 @@ class LSQUnit
     }
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(O3CPU *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
+    void init(FullO3CPU<Impl> *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
             const DerivO3CPUParams &params, LSQ<Impl> *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */
@@ -398,7 +397,7 @@ class LSQUnit
 
   private:
     /** Pointer to the CPU. */
-    O3CPU *cpu;
+    FullO3CPU<Impl> *cpu;
 
     /** Pointer to the IEW stage. */
     DefaultIEW<Impl> *iewStage;

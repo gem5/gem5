@@ -79,7 +79,8 @@ DefaultCommit<Impl>::processTrapEvent(ThreadID tid)
 }
 
 template <class Impl>
-DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, const DerivO3CPUParams &params)
+DefaultCommit<Impl>::DefaultCommit(FullO3CPU<Impl> *_cpu,
+        const DerivO3CPUParams &params)
     : commitPolicy(params.smtCommitPolicy),
       cpu(_cpu),
       iewToCommitDelay(params.iewToCommitDelay),
@@ -150,7 +151,7 @@ DefaultCommit<Impl>::regProbePoints()
 }
 
 template <class Impl>
-DefaultCommit<Impl>::CommitStats::CommitStats(O3CPU *cpu,
+DefaultCommit<Impl>::CommitStats::CommitStats(FullO3CPU<Impl> *cpu,
                                               DefaultCommit *commit)
     : Stats::Group(cpu, "commit"),
       ADD_STAT(commitSquashedInsts, Stats::Units::Count::get(),
@@ -344,7 +345,7 @@ DefaultCommit<Impl>::startupStage()
 
     // Commit must broadcast the number of free entries it has at the
     // start of the simulation, so it starts as active.
-    cpu->activateStage(O3CPU::CommitIdx);
+    cpu->activateStage(FullO3CPU<Impl>::CommitIdx);
 
     cpu->activityThisCycle();
 }
@@ -496,10 +497,10 @@ DefaultCommit<Impl>::updateStatus()
 
     if (_nextStatus == Inactive && _status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
-        cpu->deactivateStage(O3CPU::CommitIdx);
+        cpu->deactivateStage(FullO3CPU<Impl>::CommitIdx);
     } else if (_nextStatus == Active && _status == Inactive) {
         DPRINTF(Activity, "Activating stage.\n");
-        cpu->activateStage(O3CPU::CommitIdx);
+        cpu->activateStage(FullO3CPU<Impl>::CommitIdx);
     }
 
     _status = _nextStatus;

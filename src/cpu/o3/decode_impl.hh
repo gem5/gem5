@@ -59,7 +59,8 @@
 using std::list;
 
 template<class Impl>
-DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, const DerivO3CPUParams &params)
+DefaultDecode<Impl>::DefaultDecode(FullO3CPU<Impl> *_cpu,
+        const DerivO3CPUParams &params)
     : cpu(_cpu),
       renameToDecodeDelay(params.renameToDecodeDelay),
       iewToDecodeDelay(params.iewToDecodeDelay),
@@ -122,7 +123,7 @@ DefaultDecode<Impl>::name() const
 }
 
 template <class Impl>
-DefaultDecode<Impl>::DecodeStats::DecodeStats(O3CPU *cpu)
+DefaultDecode<Impl>::DecodeStats::DecodeStats(FullO3CPU<Impl> *cpu)
     : Stats::Group(cpu, "decode"),
       ADD_STAT(idleCycles, Stats::Units::Cycle::get(),
                "Number of cycles decode is idle"),
@@ -457,7 +458,7 @@ DefaultDecode<Impl>::updateStatus()
 
             DPRINTF(Activity, "Activating stage.\n");
 
-            cpu->activateStage(O3CPU::DecodeIdx);
+            cpu->activateStage(FullO3CPU<Impl>::DecodeIdx);
         }
     } else {
         // If it's not unblocking, then decode will not have any internal
@@ -466,7 +467,7 @@ DefaultDecode<Impl>::updateStatus()
             _status = Inactive;
             DPRINTF(Activity, "Deactivating stage.\n");
 
-            cpu->deactivateStage(O3CPU::DecodeIdx);
+            cpu->deactivateStage(FullO3CPU<Impl>::DecodeIdx);
         }
     }
 }
