@@ -503,7 +503,7 @@ class FullO3CPU : public BaseO3CPU
     DefaultIEW iew;
 
     /** The commit stage. */
-    DefaultCommit<Impl> commit;
+    DefaultCommit commit;
 
     /** The rename mode of the vector registers */
     Enums::VecRegRenameMode vecMode;

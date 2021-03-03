@@ -83,11 +83,10 @@ struct O3ThreadState;
  * supports multiple cycle squashing, to model a ROB that can only
  * remove a certain number of instructions per cycle.
  */
-template<class Impl>
 class DefaultCommit
 {
   public:
-    typedef O3ThreadState<Impl> Thread;
+    typedef O3ThreadState<O3CPUImpl> Thread;
 
     /** Overall commit status. Used to determine if the CPU can deschedule
      * itself due to a lack of activity.
@@ -130,7 +129,7 @@ class DefaultCommit
 
   public:
     /** Construct a DefaultCommit with the given parameters. */
-    DefaultCommit(FullO3CPU<Impl> *_cpu, const DerivO3CPUParams &params);
+    DefaultCommit(FullO3CPU<O3CPUImpl> *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of the DefaultCommit. */
     std::string name() const;
@@ -324,26 +323,26 @@ class DefaultCommit
     TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
 
     /** Wire to write information heading to previous stages. */
-    typename TimeBuffer<O3Comm::TimeStruct>::wire toIEW;
+    TimeBuffer<O3Comm::TimeStruct>::wire toIEW;
 
     /** Wire to read information from IEW (for ROB). */
-    typename TimeBuffer<O3Comm::TimeStruct>::wire robInfoFromIEW;
+    TimeBuffer<O3Comm::TimeStruct>::wire robInfoFromIEW;
 
     TimeBuffer<O3Comm::FetchStruct> *fetchQueue;
 
-    typename TimeBuffer<O3Comm::FetchStruct>::wire fromFetch;
+    TimeBuffer<O3Comm::FetchStruct>::wire fromFetch;
 
     /** IEW instruction queue interface. */
     TimeBuffer<O3Comm::IEWStruct> *iewQueue;
 
     /** Wire to read information from IEW queue. */
-    typename TimeBuffer<O3Comm::IEWStruct>::wire fromIEW;
+    TimeBuffer<O3Comm::IEWStruct>::wire fromIEW;
 
     /** Rename instruction queue interface, for ROB. */
     TimeBuffer<O3Comm::RenameStruct> *renameQueue;
 
     /** Wire to read information from rename queue. */
-    typename TimeBuffer<O3Comm::RenameStruct>::wire fromRename;
+    TimeBuffer<O3Comm::RenameStruct>::wire fromRename;
 
   public:
     /** ROB interface. */
@@ -351,7 +350,7 @@ class DefaultCommit
 
   private:
     /** Pointer to O3CPU. */
-    FullO3CPU<Impl> *cpu;
+    FullO3CPU<O3CPUImpl> *cpu;
 
     /** Vector of all of the threads. */
     std::vector<Thread *> thread;
@@ -402,9 +401,6 @@ class DefaultCommit
 
     /** Commit width, in instructions. */
     const unsigned commitWidth;
-
-    /** Number of Reorder Buffers */
-    unsigned numRobs;
 
     /** Number of Active Threads */
     const ThreadID numThreads;
@@ -474,7 +470,7 @@ class DefaultCommit
 
     struct CommitStats : public Stats::Group
     {
-        CommitStats(FullO3CPU<Impl> *cpu, DefaultCommit *commit);
+        CommitStats(FullO3CPU<O3CPUImpl> *cpu, DefaultCommit *commit);
         /** Stat for the total number of squashed instructions discarded by
          * commit.
          */

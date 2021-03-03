@@ -143,7 +143,7 @@ class DefaultRename
 
     /** Sets pointer to commit stage. Used only for initialization. */
     void
-    setCommitStage(DefaultCommit<O3CPUImpl> *commit_stage)
+    setCommitStage(DefaultCommit *commit_stage)
     {
         commit_ptr = commit_stage;
     }
@@ -153,7 +153,7 @@ class DefaultRename
     DefaultIEW *iew_ptr;
 
     /** Pointer to commit stage. Used only for initialization. */
-    DefaultCommit<O3CPUImpl> *commit_ptr;
+    DefaultCommit *commit_ptr;
 
   public:
     /** Initializes variables for the stage. */
