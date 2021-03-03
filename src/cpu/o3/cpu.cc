@@ -64,14 +64,9 @@
 
 struct BaseCPUParams;
 
-BaseO3CPU::BaseO3CPU(const BaseCPUParams &params)
-    : BaseCPU(params)
-{
-}
-
 template <class Impl>
 FullO3CPU<Impl>::FullO3CPU(const DerivO3CPUParams &params)
-    : BaseO3CPU(params),
+    : BaseCPU(params),
       mmu(params.mmu),
       tickEvent([this]{ tick(); }, "FullO3CPU tick",
                 false, Event::CPU_Tick_Pri),

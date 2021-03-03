@@ -81,22 +81,13 @@ class O3ThreadContext;
 class Checkpoint;
 class Process;
 
-struct BaseCPUParams;
-
-class BaseO3CPU : public BaseCPU
-{
-    //Stuff that's pretty ISA independent will go here.
-  public:
-    BaseO3CPU(const BaseCPUParams &params);
-};
-
 /**
  * FullO3CPU class, has each of the stages (fetch through commit)
  * within it, as well as all of the time buffers between stages.  The
  * tick() function for the CPU is defined here.
  */
 template <class Impl>
-class FullO3CPU : public BaseO3CPU
+class FullO3CPU : public BaseCPU
 {
   public:
     // Typedefs from the Impl here.
