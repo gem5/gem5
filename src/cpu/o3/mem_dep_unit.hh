@@ -68,7 +68,6 @@ struct SNHash
 
 struct DerivO3CPUParams;
 
-template <class Impl>
 class InstructionQueue;
 
 template <class Impl>
@@ -117,7 +116,7 @@ class MemDepUnit
     void takeOverFrom();
 
     /** Sets the pointer to the IQ. */
-    void setIQ(InstructionQueue<O3CPUImpl> *iq_ptr);
+    void setIQ(InstructionQueue *iq_ptr);
 
     /** Inserts a memory instruction. */
     void insert(const O3DynInstPtr &inst);
@@ -258,7 +257,7 @@ class MemDepUnit
     void insertBarrierSN(const O3DynInstPtr &barr_inst);
 
     /** Pointer to the IQ. */
-    InstructionQueue<O3CPUImpl> *iqPtr;
+    InstructionQueue *iqPtr;
 
     /** The thread id of this memory dependence unit. */
     int id;

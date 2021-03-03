@@ -144,7 +144,7 @@ MemDepUnit::takeOverFrom()
 }
 
 void
-MemDepUnit::setIQ(InstructionQueue<O3CPUImpl> *iq_ptr)
+MemDepUnit::setIQ(InstructionQueue *iq_ptr)
 {
     iqPtr = iq_ptr;
 }

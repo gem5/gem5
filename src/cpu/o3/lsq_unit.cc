@@ -1028,6 +1028,13 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
     }
 }
 
+uint64_t
+LSQUnit::getLatestHtmUid() const
+{
+    const auto& htm_cpt = cpu->tcBase(lsqID)->getHtmCheckpointPtr();
+    return htm_cpt->getHtmUid();
+}
+
 void
 LSQUnit::storePostSend()
 {
@@ -1256,6 +1263,10 @@ LSQUnit::dumpInsts() const
 
     cprintf("\n");
 }
+
+void LSQUnit::schedule(Event& ev, Tick when) { cpu->schedule(ev, when); }
+
+BaseMMU *LSQUnit::getMMUPtr() { return cpu->mmu; }
 
 unsigned int
 LSQUnit::cacheLineSize()

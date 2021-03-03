@@ -53,6 +53,7 @@
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/dep_graph.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
+#include "cpu/o3/impl.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/mem_dep_unit.hh"
 #include "cpu/o3/store_set.hh"
@@ -88,7 +89,6 @@ class FullO3CPU;
  * have the execute() function called on it.
  * @todo: Make IQ able to handle multiple FU pools.
  */
-template <class Impl>
 class InstructionQueue
 {
   public:
@@ -106,7 +106,7 @@ class InstructionQueue
         int fuIdx;
 
         /** Pointer back to the instruction queue. */
-        InstructionQueue<Impl> *iqPtr;
+        InstructionQueue *iqPtr;
 
         /** Should the FU be added to the list to be freed upon
          * completing this event.
@@ -116,7 +116,7 @@ class InstructionQueue
       public:
         /** Construct a FU completion event. */
         FUCompletion(const O3DynInstPtr &_inst, int fu_idx,
-                     InstructionQueue<Impl> *iq_ptr);
+                     InstructionQueue *iq_ptr);
 
         virtual void process();
         virtual const char *description() const;
@@ -124,8 +124,8 @@ class InstructionQueue
     };
 
     /** Constructs an IQ. */
-    InstructionQueue(FullO3CPU<Impl> *cpu_ptr, DefaultIEW<Impl> *iew_ptr,
-                     const DerivO3CPUParams &params);
+    InstructionQueue(FullO3CPU<O3CPUImpl> *cpu_ptr,
+            DefaultIEW<O3CPUImpl> *iew_ptr, const DerivO3CPUParams &params);
 
     /** Destructs the IQ. */
     ~InstructionQueue();
@@ -281,13 +281,13 @@ class InstructionQueue
     /////////////////////////
 
     /** Pointer to the CPU. */
-    FullO3CPU<Impl> *cpu;
+    FullO3CPU<O3CPUImpl> *cpu;
 
     /** Cache interface. */
     MemInterface *dcacheInterface;
 
     /** Pointer to IEW stage. */
-    DefaultIEW<Impl> *iewStage;
+    DefaultIEW<O3CPUImpl> *iewStage;
 
     /** The memory dependence unit, which tracks/predicts memory dependences
      *  between instructions.
@@ -478,7 +478,7 @@ class InstructionQueue
 
     struct IQStats : public Stats::Group
     {
-        IQStats(FullO3CPU<Impl> *cpu, const unsigned &total_width);
+        IQStats(FullO3CPU<O3CPUImpl> *cpu, const unsigned &total_width);
         /** Stat for number of instructions added. */
         Stats::Scalar instsAdded;
         /** Stat for number of non-speculative instructions added. */

@@ -351,7 +351,7 @@ class DefaultIEW
 
   public:
     /** Instruction queue. */
-    InstructionQueue<Impl> instQueue;
+    InstructionQueue instQueue;
 
     /** Load / store queue. */
     LSQ<Impl> ldstQueue;

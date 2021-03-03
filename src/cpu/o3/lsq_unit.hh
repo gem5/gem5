@@ -312,12 +312,9 @@ class LSQUnit
     int numHtmStarts() const { return htmStarts; }
     int numHtmStops() const { return htmStops; }
     void resetHtmStartsStops() { htmStarts = htmStops = 0; }
-    uint64_t getLatestHtmUid() const
-    {
-        const auto& htm_cpt = cpu->tcBase(lsqID)->getHtmCheckpointPtr();
-        return htm_cpt->getHtmUid();
-    }
-    void setLastRetiredHtmUid(uint64_t htm_uid)
+    uint64_t getLatestHtmUid() const;
+    void
+    setLastRetiredHtmUid(uint64_t htm_uid)
     {
         assert(htm_uid >= lastRetiredHtmUid);
         lastRetiredHtmUid = htm_uid;
@@ -393,9 +390,9 @@ class LSQUnit
     void dumpInsts() const;
 
     /** Schedule event for the cpu. */
-    void schedule(Event& ev, Tick when) { cpu->schedule(ev, when); }
+    void schedule(Event& ev, Tick when);
 
-    BaseMMU* getMMUPtr() { return cpu->mmu; }
+    BaseMMU *getMMUPtr();
 
   private:
     /** Pointer to the CPU. */
