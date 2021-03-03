@@ -168,7 +168,7 @@ class DefaultCommit
     void setRenameMap(UnifiedRenameMap rm_ptr[O3MaxThreads]);
 
     /** Sets pointer to the ROB. */
-    void setROB(ROB<Impl> *rob_ptr);
+    void setROB(ROB *rob_ptr);
 
     /** Initializes stage by sending back the number of free entries. */
     void startupStage();
@@ -347,7 +347,7 @@ class DefaultCommit
 
   public:
     /** ROB interface. */
-    ROB<Impl> *rob;
+    ROB *rob;
 
   private:
     /** Pointer to O3CPU. */

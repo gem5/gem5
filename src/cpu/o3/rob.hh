@@ -45,16 +45,24 @@
 #include <utility>
 #include <vector>
 
+#include "base/statistics.hh"
 #include "base/types.hh"
+#include "config/the_isa.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
+#include "cpu/o3/impl.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/reg_class.hh"
 #include "enums/SMTQueuePolicy.hh"
+
+template <class Impl>
+class FullO3CPU;
 
 struct DerivO3CPUParams;
 
 /**
  * ROB class.  The ROB is largely what drives squashing.
  */
-template <class Impl>
 class ROB
 {
   public:
@@ -81,7 +89,7 @@ class ROB
      *  @param _cpu   The cpu object pointer.
      *  @param params The cpu params including several ROB-specific parameters.
      */
-    ROB(FullO3CPU<Impl> *_cpu, const DerivO3CPUParams &params);
+    ROB(FullO3CPU<O3CPUImpl> *_cpu, const DerivO3CPUParams &params);
 
     std::string name() const;
 
@@ -258,7 +266,7 @@ class ROB
     void resetState();
 
     /** Pointer to the CPU. */
-    FullO3CPU<Impl> *cpu;
+    FullO3CPU<O3CPUImpl> *cpu;
 
     /** Active Threads in CPU */
     std::list<ThreadID> *activeThreads;

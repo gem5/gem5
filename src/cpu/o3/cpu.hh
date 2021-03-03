@@ -521,7 +521,7 @@ class FullO3CPU : public BaseO3CPU
     UnifiedRenameMap commitRenameMap[O3MaxThreads];
 
     /** The re-order buffer. */
-    ROB<Impl> rob;
+    ROB rob;
 
     /** Active Threads List */
     std::list<ThreadID> activeThreads;

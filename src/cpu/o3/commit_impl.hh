@@ -324,7 +324,7 @@ DefaultCommit<Impl>::setRenameMap(UnifiedRenameMap rm_ptr[])
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setROB(ROB<Impl> *rob_ptr)
+DefaultCommit<Impl>::setROB(ROB *rob_ptr)
 {
     rob = rob_ptr;
 }
