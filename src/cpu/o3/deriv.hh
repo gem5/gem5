@@ -30,13 +30,13 @@
 #define __CPU_O3_DERIV_HH__
 
 #include "cpu/o3/cpu.hh"
-#include "cpu/o3/impl.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "params/DerivO3CPU.hh"
 
-class DerivO3CPU : public FullO3CPU<O3CPUImpl>
+class DerivO3CPU : public FullO3CPU
 {
   public:
-    DerivO3CPU(const DerivO3CPUParams &p) : FullO3CPU<O3CPUImpl>(p) {}
+    DerivO3CPU(const DerivO3CPUParams &p) : FullO3CPU(p) {}
 };
 
 #endif // __CPU_O3_DERIV_HH__

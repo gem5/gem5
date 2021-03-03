@@ -224,7 +224,7 @@ class LSQUnit
     }
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(FullO3CPU<O3CPUImpl> *cpu_ptr, DefaultIEW *iew_ptr,
+    void init(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
             const DerivO3CPUParams &params, LSQ *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */
@@ -394,7 +394,7 @@ class LSQUnit
 
   private:
     /** Pointer to the CPU. */
-    FullO3CPU<O3CPUImpl> *cpu;
+    FullO3CPU *cpu;
 
     /** Pointer to the IEW stage. */
     DefaultIEW *iewStage;

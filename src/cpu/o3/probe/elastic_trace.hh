@@ -62,7 +62,6 @@
 #include "sim/eventq.hh"
 #include "sim/probe/probe.hh"
 
-template <class Impl>
 class FullO3CPU;
 
 /**
@@ -370,7 +369,7 @@ class ElasticTrace : public ProbeListenerObject
     const bool traceVirtAddr;
 
     /** Pointer to the O3CPU that is this listener's parent a.k.a. manager */
-    FullO3CPU<O3CPUImpl>* cpu;
+    FullO3CPU *cpu;
 
     /**
      * Add a record to the dependency trace depTrace which is a sequential

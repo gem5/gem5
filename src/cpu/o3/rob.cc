@@ -49,7 +49,7 @@
 #include "debug/ROB.hh"
 #include "params/DerivO3CPU.hh"
 
-ROB::ROB(FullO3CPU<O3CPUImpl> *_cpu, const DerivO3CPUParams &params)
+ROB::ROB(FullO3CPU *_cpu, const DerivO3CPUParams &params)
     : robPolicy(params.smtROBPolicy),
       cpu(_cpu),
       numEntries(params.numROBEntries),

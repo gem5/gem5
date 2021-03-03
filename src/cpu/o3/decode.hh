@@ -52,7 +52,6 @@
 
 struct DerivO3CPUParams;
 
-template <class Impl>
 class FullO3CPU;
 
 /**
@@ -94,7 +93,7 @@ class DefaultDecode
 
   public:
     /** DefaultDecode constructor. */
-    DefaultDecode(FullO3CPU<O3CPUImpl> *_cpu, const DerivO3CPUParams &params);
+    DefaultDecode(FullO3CPU *_cpu, const DerivO3CPUParams &params);
 
     void startupStage();
 
@@ -201,7 +200,7 @@ class DefaultDecode
   private:
     // Interfaces to objects outside of decode.
     /** CPU interface. */
-    FullO3CPU<O3CPUImpl> *cpu;
+    FullO3CPU *cpu;
 
     /** Time buffer interface. */
     TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
@@ -292,7 +291,7 @@ class DefaultDecode
 
     struct DecodeStats : public Stats::Group
     {
-        DecodeStats(FullO3CPU<O3CPUImpl> *cpu);
+        DecodeStats(FullO3CPU *cpu);
 
         /** Stat for total number of idle cycles. */
         Stats::Scalar idleCycles;

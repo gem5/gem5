@@ -59,7 +59,6 @@
 #include "sim/probe/probe.hh"
 
 struct DerivO3CPUParams;
-template <class Impl>
 class FullO3CPU;
 
 /**
@@ -84,7 +83,7 @@ class DefaultFetch
 
       public:
         /** Default constructor. */
-        IcachePort(DefaultFetch *_fetch, FullO3CPU<O3CPUImpl>* _cpu);
+        IcachePort(DefaultFetch *_fetch, FullO3CPU *_cpu);
 
       protected:
 
@@ -197,7 +196,7 @@ class DefaultFetch
 
   public:
     /** DefaultFetch constructor. */
-    DefaultFetch(FullO3CPU<O3CPUImpl> *_cpu, const DerivO3CPUParams &params);
+    DefaultFetch(FullO3CPU *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of fetch. */
     std::string name() const;
@@ -383,7 +382,7 @@ class DefaultFetch
 
   private:
     /** Pointer to the O3CPU. */
-    FullO3CPU<O3CPUImpl> *cpu;
+    FullO3CPU *cpu;
 
     /** Time buffer interface. */
     TimeBuffer<O3Comm::TimeStruct> *timeBuffer;
@@ -525,7 +524,7 @@ class DefaultFetch
   protected:
     struct FetchStatGroup : public Stats::Group
     {
-        FetchStatGroup(FullO3CPU<O3CPUImpl> *cpu, DefaultFetch *fetch);
+        FetchStatGroup(FullO3CPU *cpu, DefaultFetch *fetch);
         // @todo: Consider making these
         // vectors and tracking on a per thread basis.
         /** Stat for total number of cycles stalled due to an icache miss. */

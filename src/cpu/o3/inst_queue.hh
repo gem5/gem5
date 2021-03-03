@@ -66,8 +66,6 @@ struct DerivO3CPUParams;
 class FUPool;
 class MemInterface;
 class DefaultIEW;
-
-template <class Impl>
 class FullO3CPU;
 
 /**
@@ -122,7 +120,7 @@ class InstructionQueue
     };
 
     /** Constructs an IQ. */
-    InstructionQueue(FullO3CPU<O3CPUImpl> *cpu_ptr, DefaultIEW *iew_ptr,
+    InstructionQueue(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
             const DerivO3CPUParams &params);
 
     /** Destructs the IQ. */
@@ -279,7 +277,7 @@ class InstructionQueue
     /////////////////////////
 
     /** Pointer to the CPU. */
-    FullO3CPU<O3CPUImpl> *cpu;
+    FullO3CPU *cpu;
 
     /** Cache interface. */
     MemInterface *dcacheInterface;
@@ -476,7 +474,7 @@ class InstructionQueue
 
     struct IQStats : public Stats::Group
     {
-        IQStats(FullO3CPU<O3CPUImpl> *cpu, const unsigned &total_width);
+        IQStats(FullO3CPU *cpu, const unsigned &total_width);
         /** Stat for number of instructions added. */
         Stats::Scalar instsAdded;
         /** Stat for number of non-speculative instructions added. */

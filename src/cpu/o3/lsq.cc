@@ -68,11 +68,11 @@ LSQ::LSQSenderState::contextId()
     return inst->contextId();
 }
 
-LSQ::DcachePort::DcachePort(LSQ *_lsq, FullO3CPU<O3CPUImpl> *_cpu) :
+LSQ::DcachePort::DcachePort(LSQ *_lsq, FullO3CPU *_cpu) :
     RequestPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq), cpu(_cpu)
 {}
 
-LSQ::LSQ(FullO3CPU<O3CPUImpl> *cpu_ptr, DefaultIEW *iew_ptr,
+LSQ::LSQ(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
         const DerivO3CPUParams &params)
     : cpu(cpu_ptr), iewStage(iew_ptr),
       _cacheBlocked(false),

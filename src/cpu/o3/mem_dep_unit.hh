@@ -69,8 +69,6 @@ struct SNHash
 struct DerivO3CPUParams;
 
 class InstructionQueue;
-
-template <class Impl>
 class FullO3CPU;
 
 /**
@@ -103,8 +101,7 @@ class MemDepUnit
     std::string name() const { return _name; }
 
     /** Initializes the unit with parameters and a thread id. */
-    void init(const DerivO3CPUParams &params, ThreadID tid,
-            FullO3CPU<O3CPUImpl> *cpu);
+    void init(const DerivO3CPUParams &params, ThreadID tid, FullO3CPU *cpu);
 
     /** Determine if we are drained. */
     bool isDrained() const;

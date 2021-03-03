@@ -86,15 +86,10 @@ class Process;
  * within it, as well as all of the time buffers between stages.  The
  * tick() function for the CPU is defined here.
  */
-template <class Impl>
 class FullO3CPU : public BaseCPU
 {
   public:
-    // Typedefs from the Impl here.
-    typedef O3ThreadState<Impl> ImplState;
-    typedef O3ThreadState<Impl> Thread;
-
-    typedef typename std::list<O3DynInstPtr>::iterator ListIt;
+    typedef std::list<O3DynInstPtr>::iterator ListIt;
 
     friend class O3ThreadContext;
 
@@ -168,8 +163,6 @@ class FullO3CPU : public BaseCPU
   public:
     /** Constructs a CPU with the given parameters. */
     FullO3CPU(const DerivO3CPUParams &params);
-    /** Destructor. */
-    ~FullO3CPU();
 
     ProbePointArg<PacketPtr> *ppInstAccessComplete;
     ProbePointArg<std::pair<O3DynInstPtr, PacketPtr> > *ppDataAccessComplete;
@@ -445,7 +438,7 @@ class FullO3CPU : public BaseCPU
     void removeInstsUntil(const InstSeqNum &seq_num, ThreadID tid);
 
     /** Removes the instruction pointed to by the iterator. */
-    inline void squashInstIt(const ListIt &instIt, ThreadID tid);
+    void squashInstIt(const ListIt &instIt, ThreadID tid);
 
     /** Cleans up all instructions on the remove list. */
     void cleanUpRemovedInsts();
@@ -606,7 +599,7 @@ class FullO3CPU : public BaseCPU
     System *system;
 
     /** Pointers to all of the threads in the CPU. */
-    std::vector<Thread *> thread;
+    std::vector<O3ThreadState<O3CPUImpl> *> thread;
 
     /** Threads Scheduled to Enter CPU */
     std::list<int> cpuWaitList;
@@ -638,27 +631,27 @@ class FullO3CPU : public BaseCPU
     /** CPU read function, forwards read to LSQ. */
     Fault read(LSQRequest* req, int load_idx)
     {
-        return this->iew.ldstQueue.read(req, load_idx);
+        return iew.ldstQueue.read(req, load_idx);
     }
 
     /** CPU write function, forwards write to LSQ. */
     Fault write(LSQRequest* req, uint8_t *data, int store_idx)
     {
-        return this->iew.ldstQueue.write(req, data, store_idx);
+        return iew.ldstQueue.write(req, data, store_idx);
     }
 
     /** Used by the fetch unit to get a hold of the instruction port. */
     Port &
     getInstPort() override
     {
-        return this->fetch.getInstPort();
+        return fetch.getInstPort();
     }
 
     /** Get the dcache port (used to find block size for translations). */
     Port &
     getDataPort() override
     {
-        return this->iew.ldstQueue.getDataPort();
+        return iew.ldstQueue.getDataPort();
     }
 
     struct FullO3CPUStats : public Stats::Group

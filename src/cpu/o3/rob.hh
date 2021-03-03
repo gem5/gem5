@@ -55,7 +55,6 @@
 #include "cpu/reg_class.hh"
 #include "enums/SMTQueuePolicy.hh"
 
-template <class Impl>
 class FullO3CPU;
 
 struct DerivO3CPUParams;
@@ -89,7 +88,7 @@ class ROB
      *  @param _cpu   The cpu object pointer.
      *  @param params The cpu params including several ROB-specific parameters.
      */
-    ROB(FullO3CPU<O3CPUImpl> *_cpu, const DerivO3CPUParams &params);
+    ROB(FullO3CPU *_cpu, const DerivO3CPUParams &params);
 
     std::string name() const;
 
@@ -266,7 +265,7 @@ class ROB
     void resetState();
 
     /** Pointer to the CPU. */
-    FullO3CPU<O3CPUImpl> *cpu;
+    FullO3CPU *cpu;
 
     /** Active Threads in CPU */
     std::list<ThreadID> *activeThreads;

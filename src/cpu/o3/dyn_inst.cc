@@ -49,7 +49,7 @@
 BaseO3DynInst::BaseO3DynInst(const StaticInstPtr &static_inst,
                              const StaticInstPtr &_macroop,
                              TheISA::PCState _pc, TheISA::PCState pred_pc,
-                             InstSeqNum seq_num, FullO3CPU<O3CPUImpl> *_cpu)
+                             InstSeqNum seq_num, FullO3CPU *_cpu)
     : seqNum(seq_num), staticInst(static_inst), cpu(_cpu), pc(_pc),
       regs(staticInst->numSrcRegs(), staticInst->numDestRegs()),
       predPC(pred_pc), macroop(_macroop)

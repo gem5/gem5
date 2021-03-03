@@ -58,7 +58,7 @@ ElasticTrace::ElasticTrace(const ElasticTraceParams &params)
        traceVirtAddr(params.traceVirtAddr),
        stats(this)
 {
-    cpu = dynamic_cast<FullO3CPU<O3CPUImpl>*>(params.manager);
+    cpu = dynamic_cast<FullO3CPU *>(params.manager);
     const BaseISA::RegClasses &regClasses =
         cpu->getContext(0)->getIsaPtr()->regClasses();
     zeroReg = regClasses.at(IntRegClass).zeroReg();

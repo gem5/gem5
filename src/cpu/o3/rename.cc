@@ -52,8 +52,7 @@
 #include "debug/Rename.hh"
 #include "params/DerivO3CPU.hh"
 
-DefaultRename::DefaultRename(FullO3CPU<O3CPUImpl> *_cpu,
-        const DerivO3CPUParams &params)
+DefaultRename::DefaultRename(FullO3CPU *_cpu, const DerivO3CPUParams &params)
     : cpu(_cpu),
       iewToRenameDelay(params.iewToRenameDelay),
       decodeToRenameDelay(params.decodeToRenameDelay),
@@ -840,7 +839,7 @@ DefaultRename::updateStatus()
 
             DPRINTF(Activity, "Activating stage.\n");
 
-            cpu->activateStage(FullO3CPU<O3CPUImpl>::RenameIdx);
+            cpu->activateStage(FullO3CPU::RenameIdx);
         }
     } else {
         // If it's not unblocking, then rename will not have any internal
@@ -849,7 +848,7 @@ DefaultRename::updateStatus()
             _status = Inactive;
             DPRINTF(Activity, "Deactivating stage.\n");
 
-            cpu->deactivateStage(FullO3CPU<O3CPUImpl>::RenameIdx);
+            cpu->deactivateStage(FullO3CPU::RenameIdx);
         }
     }
 }

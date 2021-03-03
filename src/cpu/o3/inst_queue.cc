@@ -78,8 +78,8 @@ InstructionQueue::FUCompletion::description() const
     return "Functional unit completion";
 }
 
-InstructionQueue::InstructionQueue(FullO3CPU<O3CPUImpl> *cpu_ptr,
-        DefaultIEW *iew_ptr, const DerivO3CPUParams &params)
+InstructionQueue::InstructionQueue(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
+        const DerivO3CPUParams &params)
     : cpu(cpu_ptr),
       iewStage(iew_ptr),
       fuPool(params.fuPool),
@@ -167,8 +167,7 @@ InstructionQueue::name() const
     return cpu->name() + ".iq";
 }
 
-InstructionQueue::IQStats::IQStats(FullO3CPU<O3CPUImpl> *cpu,
-        const unsigned &total_width)
+InstructionQueue::IQStats::IQStats(FullO3CPU *cpu, const unsigned &total_width)
     : Stats::Group(cpu),
     ADD_STAT(instsAdded, Stats::Units::Count::get(),
              "Number of instructions added to the IQ (excludes non-spec)"),

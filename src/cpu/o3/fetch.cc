@@ -70,14 +70,12 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
-DefaultFetch::IcachePort::IcachePort(DefaultFetch *_fetch,
-            FullO3CPU<O3CPUImpl>* _cpu) :
+DefaultFetch::IcachePort::IcachePort(DefaultFetch *_fetch, FullO3CPU *_cpu) :
         RequestPort(_cpu->name() + ".icache_port", _cpu), fetch(_fetch)
 {}
 
 
-DefaultFetch::DefaultFetch(FullO3CPU<O3CPUImpl> *_cpu,
-        const DerivO3CPUParams &params)
+DefaultFetch::DefaultFetch(FullO3CPU *_cpu, const DerivO3CPUParams &params)
     : fetchPolicy(params.smtFetchPolicy),
       cpu(_cpu),
       branchPred(nullptr),
@@ -155,7 +153,7 @@ DefaultFetch::regProbePoints()
 }
 
 DefaultFetch::FetchStatGroup::FetchStatGroup(
-        FullO3CPU<O3CPUImpl> *cpu, DefaultFetch *fetch)
+        FullO3CPU *cpu, DefaultFetch *fetch)
     : Stats::Group(cpu, "fetch"),
     ADD_STAT(icacheStallCycles, Stats::Units::Cycle::get(),
              "Number of cycles fetch is stalled on an Icache miss"),
@@ -476,7 +474,7 @@ DefaultFetch::switchToActive()
     if (_status == Inactive) {
         DPRINTF(Activity, "Activating stage.\n");
 
-        cpu->activateStage(FullO3CPU<O3CPUImpl>::FetchIdx);
+        cpu->activateStage(FullO3CPU::FetchIdx);
 
         _status = Active;
     }
@@ -488,7 +486,7 @@ DefaultFetch::switchToInactive()
     if (_status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
 
-        cpu->deactivateStage(FullO3CPU<O3CPUImpl>::FetchIdx);
+        cpu->deactivateStage(FullO3CPU::FetchIdx);
 
         _status = Inactive;
     }
@@ -805,7 +803,7 @@ DefaultFetch::updateFetchStatus()
                             "completion\n",tid);
                 }
 
-                cpu->activateStage(FullO3CPU<O3CPUImpl>::FetchIdx);
+                cpu->activateStage(FullO3CPU::FetchIdx);
             }
 
             return Active;
@@ -816,7 +814,7 @@ DefaultFetch::updateFetchStatus()
     if (_status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
 
-        cpu->deactivateStage(FullO3CPU<O3CPUImpl>::FetchIdx);
+        cpu->deactivateStage(FullO3CPU::FetchIdx);
     }
 
     return Inactive;

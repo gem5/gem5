@@ -83,8 +83,7 @@ MemDepUnit::~MemDepUnit()
 }
 
 void
-MemDepUnit::init(const DerivO3CPUParams &params, ThreadID tid,
-        FullO3CPU<O3CPUImpl> *cpu)
+MemDepUnit::init(const DerivO3CPUParams &params, ThreadID tid, FullO3CPU *cpu)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
 

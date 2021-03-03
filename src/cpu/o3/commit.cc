@@ -52,6 +52,7 @@
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/thread_state.hh"
@@ -75,8 +76,7 @@ DefaultCommit::processTrapEvent(ThreadID tid)
     trapSquash[tid] = true;
 }
 
-DefaultCommit::DefaultCommit(FullO3CPU<O3CPUImpl> *_cpu,
-        const DerivO3CPUParams &params)
+DefaultCommit::DefaultCommit(FullO3CPU *_cpu, const DerivO3CPUParams &params)
     : commitPolicy(params.smtCommitPolicy),
       cpu(_cpu),
       iewToCommitDelay(params.iewToCommitDelay),
@@ -144,8 +144,7 @@ DefaultCommit::regProbePoints()
             cpu->getProbeManager(), "Squash");
 }
 
-DefaultCommit::CommitStats::CommitStats(FullO3CPU<O3CPUImpl> *cpu,
-        DefaultCommit *commit)
+DefaultCommit::CommitStats::CommitStats(FullO3CPU *cpu, DefaultCommit *commit)
     : Stats::Group(cpu, "commit"),
       ADD_STAT(commitSquashedInsts, Stats::Units::Count::get(),
                "The number of squashed insts skipped by commit"),
@@ -328,7 +327,7 @@ DefaultCommit::startupStage()
 
     // Commit must broadcast the number of free entries it has at the
     // start of the simulation, so it starts as active.
-    cpu->activateStage(FullO3CPU<O3CPUImpl>::CommitIdx);
+    cpu->activateStage(FullO3CPU::CommitIdx);
 
     cpu->activityThisCycle();
 }
@@ -470,10 +469,10 @@ DefaultCommit::updateStatus()
 
     if (_nextStatus == Inactive && _status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
-        cpu->deactivateStage(FullO3CPU<O3CPUImpl>::CommitIdx);
+        cpu->deactivateStage(FullO3CPU::CommitIdx);
     } else if (_nextStatus == Active && _status == Inactive) {
         DPRINTF(Activity, "Activating stage.\n");
-        cpu->activateStage(FullO3CPU<O3CPUImpl>::CommitIdx);
+        cpu->activateStage(FullO3CPU::CommitIdx);
     }
 
     _status = _nextStatus;

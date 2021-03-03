@@ -64,7 +64,7 @@ class O3ThreadContext : public ThreadContext
 {
   public:
    /** Pointer to the CPU. */
-    FullO3CPU<O3CPUImpl> *cpu;
+    FullO3CPU *cpu;
 
     bool
     schedule(PCEvent *e) override

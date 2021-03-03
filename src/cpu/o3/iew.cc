@@ -59,8 +59,7 @@
 #include "debug/O3PipeView.hh"
 #include "params/DerivO3CPU.hh"
 
-DefaultIEW::DefaultIEW(FullO3CPU<O3CPUImpl> *_cpu,
-        const DerivO3CPUParams &params)
+DefaultIEW::DefaultIEW(FullO3CPU *_cpu, const DerivO3CPUParams &params)
     : issueToExecQueue(params.backComSize, params.forwardComSize),
       cpu(_cpu),
       instQueue(_cpu, this, params),
@@ -137,7 +136,7 @@ DefaultIEW::regProbePoints()
             cpu->getProbeManager(), "ToCommit");
 }
 
-DefaultIEW::IEWStats::IEWStats(FullO3CPU<O3CPUImpl> *cpu)
+DefaultIEW::IEWStats::IEWStats(FullO3CPU *cpu)
     : Stats::Group(cpu),
     ADD_STAT(idleCycles, Stats::Units::Cycle::get(),
              "Number of cycles IEW is idle"),
@@ -211,8 +210,7 @@ DefaultIEW::IEWStats::IEWStats(FullO3CPU<O3CPUImpl> *cpu)
     wbFanout = producerInst / consumerInst;
 }
 
-DefaultIEW::IEWStats::ExecutedInstStats::ExecutedInstStats(
-        FullO3CPU<O3CPUImpl> *cpu)
+DefaultIEW::IEWStats::ExecutedInstStats::ExecutedInstStats(FullO3CPU *cpu)
     : Stats::Group(cpu),
     ADD_STAT(numInsts, Stats::Units::Count::get(),
              "Number of executed instructions"),
@@ -282,7 +280,7 @@ DefaultIEW::startupStage()
         cpu->checker->setDcachePort(&ldstQueue.getDataPort());
     }
 
-    cpu->activateStage(FullO3CPU<O3CPUImpl>::IEWIdx);
+    cpu->activateStage(FullO3CPU::IEWIdx);
 }
 
 void
@@ -827,14 +825,14 @@ void
 DefaultIEW::activateStage()
 {
     DPRINTF(Activity, "Activating stage.\n");
-    cpu->activateStage(FullO3CPU<O3CPUImpl>::IEWIdx);
+    cpu->activateStage(FullO3CPU::IEWIdx);
 }
 
 void
 DefaultIEW::deactivateStage()
 {
     DPRINTF(Activity, "Deactivating stage.\n");
-    cpu->deactivateStage(FullO3CPU<O3CPUImpl>::IEWIdx);
+    cpu->deactivateStage(FullO3CPU::IEWIdx);
 }
 
 void

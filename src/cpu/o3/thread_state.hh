@@ -67,7 +67,7 @@ struct O3ThreadState : public ThreadState
 
   private:
     /** Pointer to the CPU. */
-    FullO3CPU<Impl> *cpu;
+    FullO3CPU *cpu;
 
   public:
     PCEventQueue pcEventQueue;
@@ -95,8 +95,8 @@ struct O3ThreadState : public ThreadState
     /** Pointer to the hardware transactional memory checkpoint. */
     std::unique_ptr<BaseHTMCheckpoint> htmCheckpoint;
 
-    O3ThreadState(FullO3CPU<Impl> *_cpu, int _thread_num, Process *_process)
-        : ThreadState(_cpu, _thread_num, _process), cpu(_cpu),
+    O3ThreadState(FullO3CPU *_cpu, int _thread_num, Process *_process)
+        : ThreadState((BaseCPU *)_cpu, _thread_num, _process), cpu(_cpu),
           comInstEventQueue("instruction-based event queue"),
           noSquashFromTC(false), trapPending(false), tc(nullptr)
     {

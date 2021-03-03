@@ -62,9 +62,7 @@
 
 struct DerivO3CPUParams;
 
-template <class Impl>
 class FullO3CPU;
-
 class DefaultIEW;
 class LSQUnit;
 
@@ -124,11 +122,11 @@ class LSQ
 
         /** Pointer to LSQ. */
         LSQ *lsq;
-        FullO3CPU<O3CPUImpl> *cpu;
+        FullO3CPU *cpu;
 
       public:
         /** Default constructor. */
-        DcachePort(LSQ *_lsq, FullO3CPU<O3CPUImpl> *_cpu);
+        DcachePort(LSQ *_lsq, FullO3CPU *_cpu);
 
       protected:
 
@@ -782,7 +780,7 @@ class LSQ
     };
 
     /** Constructs an LSQ with the given parameters. */
-    LSQ(FullO3CPU<O3CPUImpl> *cpu_ptr, DefaultIEW *iew_ptr,
+    LSQ(FullO3CPU *cpu_ptr, DefaultIEW *iew_ptr,
             const DerivO3CPUParams &params);
 
     /** Returns the name of the LSQ. */
@@ -992,7 +990,7 @@ class LSQ
                       const std::vector<bool>& byte_enable);
 
     /** The CPU pointer. */
-    FullO3CPU<O3CPUImpl> *cpu;
+    FullO3CPU *cpu;
 
     /** The IEW stage pointer. */
     DefaultIEW *iewStage;

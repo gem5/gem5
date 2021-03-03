@@ -121,7 +121,7 @@ class DefaultRename
 
   public:
     /** DefaultRename constructor. */
-    DefaultRename(FullO3CPU<O3CPUImpl> *_cpu, const DerivO3CPUParams &params);
+    DefaultRename(FullO3CPU *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of rename. */
     std::string name() const;
@@ -317,7 +317,7 @@ class DefaultRename
     std::list<RenameHistory> historyBuffer[O3MaxThreads];
 
     /** Pointer to CPU. */
-    FullO3CPU<O3CPUImpl> *cpu;
+    FullO3CPU *cpu;
 
     /** Pointer to main time buffer used for backwards communication. */
     TimeBuffer<O3Comm::TimeStruct> *timeBuffer;

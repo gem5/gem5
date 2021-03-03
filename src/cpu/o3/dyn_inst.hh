@@ -77,7 +77,7 @@ class BaseO3DynInst : public ExecContext, public RefCounted
     /** BaseDynInst constructor given a binary instruction. */
     BaseO3DynInst(const StaticInstPtr &staticInst, const StaticInstPtr
             &macroop, TheISA::PCState pc, TheISA::PCState predPC,
-            InstSeqNum seq_num, FullO3CPU<O3CPUImpl> *cpu);
+            InstSeqNum seq_num, FullO3CPU *cpu);
 
     /** BaseDynInst constructor given a static inst pointer. */
     BaseO3DynInst(const StaticInstPtr &_staticInst,
@@ -101,7 +101,7 @@ class BaseO3DynInst : public ExecContext, public RefCounted
     const StaticInstPtr staticInst;
 
     /** Pointer to the Impl's CPU object. */
-    FullO3CPU<O3CPUImpl> *cpu = nullptr;
+    FullO3CPU *cpu = nullptr;
 
     BaseCPU *getCpuPtr() { return cpu; }
 

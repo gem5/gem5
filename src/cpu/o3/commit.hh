@@ -129,7 +129,7 @@ class DefaultCommit
 
   public:
     /** Construct a DefaultCommit with the given parameters. */
-    DefaultCommit(FullO3CPU<O3CPUImpl> *_cpu, const DerivO3CPUParams &params);
+    DefaultCommit(FullO3CPU *_cpu, const DerivO3CPUParams &params);
 
     /** Returns the name of the DefaultCommit. */
     std::string name() const;
@@ -350,7 +350,7 @@ class DefaultCommit
 
   private:
     /** Pointer to O3CPU. */
-    FullO3CPU<O3CPUImpl> *cpu;
+    FullO3CPU *cpu;
 
     /** Vector of all of the threads. */
     std::vector<Thread *> thread;
@@ -470,7 +470,7 @@ class DefaultCommit
 
     struct CommitStats : public Stats::Group
     {
-        CommitStats(FullO3CPU<O3CPUImpl> *cpu, DefaultCommit *commit);
+        CommitStats(FullO3CPU *cpu, DefaultCommit *commit);
         /** Stat for the total number of squashed instructions discarded by
          * commit.
          */
