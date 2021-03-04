@@ -27,84 +27,45 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 def template MediaOpExecute {{
-        Fault %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
-        {
-            Fault fault = NoFault;
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+            Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
 
-            %(op_decl)s;
-            %(op_rd)s;
+        %(op_decl)s;
+        %(op_rd)s;
 
-            %(code)s;
+        %(code)s;
 
-            //Write the resulting state to the execution context
-            if(fault == NoFault)
-            {
-                %(op_wb)s;
-            }
-            return fault;
+        //Write the resulting state to the execution context
+        if(fault == NoFault) {
+            %(op_wb)s;
         }
+        return fault;
+    }
 }};
 
-def template MediaOpRegDeclare {{
+def template MediaOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
       private:
         %(reg_idx_arr_decl)s;
 
       public:
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem, uint64_t setFlags,
-                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint16_t _ext);
+        template <typename ...Args>
+        %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
+                uint64_t set_flags, uint8_t src_size, uint8_t dest_size,
+                uint16_t _ext, Args... args) :
+            %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
+                    %(op_class)s, args..., src_size, dest_size, _ext)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
-}};
-
-def template MediaOpImmDeclare {{
-
-    class %(class_name)s : public %(base_class)s
-    {
-      private:
-        %(reg_idx_arr_decl)s;
-
-      public:
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem, uint64_t setFlags,
-                InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint16_t _ext);
-
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-    };
-}};
-
-def template MediaOpRegConstructor {{
-    %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
-            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-            uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
-                _src1, _src2, _dest, _srcSize, _destSize, _ext,
-                %(op_class)s)
-    {
-        %(set_reg_idx_arr)s;
-        %(constructor)s;
-    }
-}};
-
-def template MediaOpImmConstructor {{
-    %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
-            InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
-            uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
-                _src1, _imm8, _dest, _srcSize, _destSize, _ext,
-                %(op_class)s)
-    {
-        %(set_reg_idx_arr)s;
-        %(constructor)s;
-    }
 }};
 
 let {{
@@ -114,27 +75,33 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    immTemplates = (
-            MediaOpImmDeclare,
-            MediaOpImmConstructor,
-            MediaOpExecute)
+    int_dest_op = "X86ISA::IntDestOp"
+    fp_dest_op = "X86ISA::FloatDestOp"
 
-    regTemplates = (
-            MediaOpRegDeclare,
-            MediaOpRegConstructor,
-            MediaOpExecute)
+    int_src1_op = "X86ISA::IntSrc1Op"
+    fp_src1_op = "X86ISA::FloatSrc1Op"
+
+    int_src2_op = "X86ISA::IntSrc2Op"
+    fp_src2_op = "X86ISA::FloatSrc2Op"
+
+    imm_op = "X86ISA::Imm8Op"
 
     class MediaOpMeta(type):
-        def buildCppClasses(self, name, Name, suffix, code):
+        def buildCppClasses(self, name, Name, suffix, code, operands):
 
             # Globals to stick the output in
             global header_output
-            global decoder_output
             global exec_output
+
+            imm_operands = list([op if op != 'op2' else imm_op for
+                                 op in operands])
+            operands = list([op if op != 'op2' else fp_src2_op for
+                             op in operands])
 
             # If op2 is used anywhere, make register and immediate versions
             # of this code.
-            matcher = re.compile(r"(?<!\w)(?P<prefix>s?)op2(?P<typeQual>_[^\W_]+)?")
+            matcher = \
+                re.compile(r"(?<!\w)(?P<prefix>s?)op2(?P<typeQual>_[^\W_]+)?")
             match = matcher.search(code)
             if match:
                 typeQual = ""
@@ -142,22 +109,13 @@ let {{
                     typeQual = match.group("typeQual")
                 src2_name = "%sFpSrcReg2%s" % (match.group("prefix"), typeQual)
                 self.buildCppClasses(name, Name, suffix,
-                        matcher.sub(src2_name, code))
+                        matcher.sub(src2_name, code), operands)
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
-                        matcher.sub("imm8", code))
+                        matcher.sub("imm8", code), imm_operands)
                 return
 
-            base = "X86ISA::MediaOp"
-
-            # If imm8 shows up in the code, use the immediate templates, if
-            # not, hopefully the register ones will be correct.
-            matcher = re.compile("(?<!\w)imm8(?!\w)")
-            if matcher.search(code):
-                base += "Imm"
-                templates = immTemplates
-            else:
-                base += "Reg"
-                templates = regTemplates
+            base = "X86ISA::InstOperands<" + \
+                    ", ".join(["X86ISA::MediaOpBase"] + operands) + ">"
 
             # Get everything ready for the substitution
             opt_args = []
@@ -167,9 +125,8 @@ let {{
                                 opt_args)
 
             # Generate the actual code (finally!)
-            header_output += templates[0].subst(iop)
-            decoder_output += templates[1].subst(iop)
-            exec_output += templates[2].subst(iop)
+            header_output += MediaOpDeclare.subst(iop)
+            exec_output += MediaOpExecute.subst(iop)
 
 
         def __new__(mcls, Name, bases, dict):
@@ -186,9 +143,10 @@ let {{
                 cls.className = Name
                 cls.base_mnemonic = name
                 code = cls.code
+                operands = cls.operands
 
                 # Set up the C++ classes
-                mcls.buildCppClasses(cls, name, Name, "", code)
+                mcls.buildCppClasses(cls, name, Name, "", code, operands)
 
                 # Hook into the microassembler dict
                 global microopClasses
@@ -206,11 +164,11 @@ let {{
         # This class itself doesn't act as a microop
         abstract = True
 
-        def __init__(self, dest, src1, op2,
-                size = None, destSize = None, srcSize = None, ext = None):
-            self.dest = dest
-            self.src1 = src1
-            self.op2 = op2
+        def __init__(self, *args, size=None, destSize=None, srcSize=None,
+                ext=None):
+            self.args = list(map(str, args))
+            self.srcSize = None
+            self.destSize = None
             if size is not None:
                 self.srcSize = size
                 self.destSize = size
@@ -231,23 +189,40 @@ let {{
             className = self.className
             if self.mnemonic == self.base_mnemonic + 'i':
                 className += "Imm"
+            ext_args = [str(self.ext)] + self.args
             allocator = '''new %(class_name)s(machInst, macrocodeBlock,
-                    %(flags)s, %(src1)s, %(op2)s, %(dest)s,
-                    %(srcSize)s, %(destSize)s, %(ext)s)''' % {
+                    %(flags)s, %(srcSize)s, %(destSize)s, %(ext_args)s)
+            ''' % {
                 "class_name" : className,
                 "flags" : self.microFlagsText(microFlags),
-                "src1" : self.src1, "op2" : self.op2,
-                "dest" : self.dest,
                 "srcSize" : self.srcSize,
                 "destSize" : self.destSize,
-                "ext" : self.ext}
+                "ext_args" : ", ".join(ext_args)
+            }
             return allocator
 
-    class Mov2int(MediaOp):
-        def __init__(self, dest, src1, src2 = 0, \
-                size = None, destSize = None, srcSize = None, ext = None):
-            super(Mov2int, self).__init__(dest, src1,\
-                    src2, size, destSize, srcSize, ext)
+    class Media0Op(MediaOp):
+        abstract = True
+        operands = ()
+        def __init__(self, **kwargs):
+            super(Media0Op, self).__init__(**kwargs)
+
+    class Media2Op(MediaOp):
+        abstract = True
+        operands = (fp_dest_op, fp_src1_op)
+        def __init__(self, op1, op2, **kwargs):
+            super(Media2Op, self).__init__(op1, op2, **kwargs)
+
+    class Media3Op(MediaOp):
+        abstract = True
+        operands = (fp_dest_op, fp_src1_op, fp_src2_op)
+        def __init__(self, op1, op2, op3, **kwargs):
+            super(Media3Op, self).__init__(op1, op2, op3, **kwargs)
+
+    class Mov2int(Media3Op):
+        def __init__(self, dest, src1, src2=0, **kwargs):
+            super(Mov2int, self).__init__(dest, src1, src2, **kwargs)
+        operands = (int_dest_op, fp_src1_op, imm_op)
         op_class = 'SimdMiscOp'
         code = '''
             int items = sizeof(double) / srcSize;
@@ -265,11 +240,10 @@ let {{
             }
         '''
 
-    class Mov2fp(MediaOp):
-        def __init__(self, dest, src1, src2 = 0, \
-                size = None, destSize = None, srcSize = None, ext = None):
-            super(Mov2fp, self).__init__(dest, src1,\
-                    src2, size, destSize, srcSize, ext)
+    class Mov2fp(Media3Op):
+        def __init__(self, dest, src1, src2=0, **kwargs):
+            super(Mov2fp, self).__init__(dest, src1, src2, **kwargs)
+        operands = (fp_dest_op, int_src1_op, imm_op)
         op_class = 'SimdMiscOp'
         code = '''
             int items = sizeof(double) / destSize;
@@ -287,11 +261,8 @@ let {{
             }
         '''
 
-    class Movsign(MediaOp):
-        def __init__(self, dest, src, \
-                size = None, destSize = None, srcSize = None, ext = None):
-            super(Movsign, self).__init__(dest, src,\
-                    "InstRegIndex(0)", size, destSize, srcSize, ext)
+    class Movsign(Media2Op):
+        operands = (int_dest_op, fp_src1_op)
         op_class = 'SimdMiscOp'
         code = '''
             int items = sizeof(double) / srcSize;
@@ -305,7 +276,7 @@ let {{
             DestReg = DestReg | result;
         '''
 
-    class Maskmov(MediaOp):
+    class Maskmov(Media3Op):
         op_class = 'SimdMiscOp'
         code = '''
             assert(srcSize == destSize);
@@ -324,7 +295,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class shuffle(MediaOp):
+    class shuffle(Media3Op):
         op_class = 'SimdMiscOp'
         code = '''
             assert(srcSize == destSize);
@@ -376,7 +347,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Unpack(MediaOp):
+    class Unpack(Media3Op):
         op_class = 'SimdMiscOp'
         code = '''
             assert(srcSize == destSize);
@@ -403,7 +374,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Pack(MediaOp):
+    class Pack(Media3Op):
         op_class = 'SimdMiscOp'
         code = '''
             assert(srcSize == destSize * 2);
@@ -471,39 +442,39 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Mxor(MediaOp):
+    class Mxor(Media3Op):
         def __init__(self, dest, src1, src2):
-            super(Mxor, self).__init__(dest, src1, src2, 1)
+            super(Mxor, self).__init__(dest, src1, src2, size=1)
         op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = FpSrcReg1_uqw ^ FpSrcReg2_uqw;
         '''
 
-    class Mor(MediaOp):
+    class Mor(Media3Op):
         def __init__(self, dest, src1, src2):
-            super(Mor, self).__init__(dest, src1, src2, 1)
+            super(Mor, self).__init__(dest, src1, src2, size=1)
         op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = FpSrcReg1_uqw | FpSrcReg2_uqw;
         '''
 
-    class Mand(MediaOp):
+    class Mand(Media3Op):
         def __init__(self, dest, src1, src2):
-            super(Mand, self).__init__(dest, src1, src2, 1)
+            super(Mand, self).__init__(dest, src1, src2, size=1)
         op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = FpSrcReg1_uqw & FpSrcReg2_uqw;
         '''
 
-    class Mandn(MediaOp):
+    class Mandn(Media3Op):
         def __init__(self, dest, src1, src2):
-            super(Mandn, self).__init__(dest, src1, src2, 1)
+            super(Mandn, self).__init__(dest, src1, src2, size=1)
         op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = ~FpSrcReg1_uqw & FpSrcReg2_uqw;
         '''
 
-    class Mminf(MediaOp):
+    class Mminf(Media3Op):
         op_class = 'SimdFloatCmpOp'
         code = '''
             union floatInt
@@ -554,7 +525,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Mmaxf(MediaOp):
+    class Mmaxf(Media3Op):
         op_class = 'SimdFloatCmpOp'
         code = '''
             union floatInt
@@ -605,7 +576,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Mmini(MediaOp):
+    class Mmini(Media3Op):
         op_class = 'SimdCmpOp'
         code = '''
 
@@ -644,7 +615,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Mmaxi(MediaOp):
+    class Mmaxi(Media3Op):
         op_class = 'SimdCmpOp'
         code = '''
 
@@ -683,12 +654,8 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Msqrt(MediaOp):
+    class Msqrt(Media2Op):
         op_class = 'SimdFloatSqrtOp'
-        def __init__(self, dest, src, \
-                size = None, destSize = None, srcSize = None, ext = None):
-            super(Msqrt, self).__init__(dest, src,\
-                    "InstRegIndex(0)", size, destSize, srcSize, ext)
         code = '''
             union floatInt
             {
@@ -730,11 +697,7 @@ let {{
         '''
 
     # compute approximate reciprocal --- single-precision only
-    class Mrcp(MediaOp):
-        def __init__(self, dest, src, \
-                size = None, destSize = None, srcSize = None, ext = None):
-            super(Mrcp, self).__init__(dest, src,\
-                    "InstRegIndex(0)", size, destSize, srcSize, ext)
+    class Mrcp(Media2Op):
         op_class = 'SimdFloatAluOp'
         code = '''
             union floatInt
@@ -765,7 +728,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Maddf(MediaOp):
+    class Maddf(Media3Op):
         op_class = 'SimdFloatAddOp'
         code = '''
             union floatInt
@@ -812,7 +775,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Msubf(MediaOp):
+    class Msubf(Media3Op):
         op_class = 'SimdFloatAddOp'
         code = '''
             union floatInt
@@ -859,7 +822,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Mmulf(MediaOp):
+    class Mmulf(Media3Op):
         op_class = 'SimdFloatMultOp'
         code = '''
             union floatInt
@@ -906,7 +869,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Mdivf(MediaOp):
+    class Mdivf(Media3Op):
         op_class = 'SimdFloatDivOp'
         code = '''
             union floatInt
@@ -953,7 +916,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Maddi(MediaOp):
+    class Maddi(Media3Op):
         op_class = 'SimdAddOp'
         code = '''
             assert(srcSize == destSize);
@@ -991,7 +954,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Msubi(MediaOp):
+    class Msubi(Media3Op):
         op_class = 'SimdAddOp'
         code = '''
             assert(srcSize == destSize);
@@ -1033,7 +996,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Mmuli(MediaOp):
+    class Mmuli(Media3Op):
         op_class = 'SimdMultOp'
         code = '''
             int srcBits = srcSize * 8;
@@ -1080,7 +1043,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Mavg(MediaOp):
+    class Mavg(Media3Op):
         op_class = 'SimdAddOp'
         code = '''
             assert(srcSize == destSize);
@@ -1101,7 +1064,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Msad(MediaOp):
+    class Msad(Media3Op):
         op_class = 'SimdAddOp'
         code = '''
             int srcBits = srcSize * 8;
@@ -1121,7 +1084,8 @@ let {{
             FpDestReg_uqw = sum & mask(destSize * 8);
         '''
 
-    class Msrl(MediaOp):
+    class Msrl(Media3Op):
+        operands = (fp_dest_op, fp_src1_op, 'op2')
         op_class = 'SimdShiftOp'
         code = '''
 
@@ -1149,7 +1113,8 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Msra(MediaOp):
+    class Msra(Media3Op):
+        operands = (fp_dest_op, fp_src1_op, 'op2')
         op_class = 'SimdShiftOp'
         code = '''
 
@@ -1181,7 +1146,8 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Msll(MediaOp):
+    class Msll(Media3Op):
+        operands = (fp_dest_op, fp_src1_op, 'op2')
         op_class = 'SimdShiftOp'
         code = '''
 
@@ -1208,11 +1174,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Cvtf2i(MediaOp):
-        def __init__(self, dest, src, \
-                size = None, destSize = None, srcSize = None, ext = None):
-            super(Cvtf2i, self).__init__(dest, src,\
-                    "InstRegIndex(0)", size, destSize, srcSize, ext)
+    class Cvtf2i(Media2Op):
         op_class = 'SimdFloatCvtOp'
         code = '''
             union floatInt
@@ -1283,11 +1245,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Cvti2f(MediaOp):
-        def __init__(self, dest, src, \
-                size = None, destSize = None, srcSize = None, ext = None):
-            super(Cvti2f, self).__init__(dest, src,\
-                    "InstRegIndex(0)", size, destSize, srcSize, ext)
+    class Cvti2f(Media2Op):
         op_class = 'SimdFloatCvtOp'
         code = '''
             union floatInt
@@ -1346,11 +1304,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Cvtf2f(MediaOp):
-        def __init__(self, dest, src, \
-                size = None, destSize = None, srcSize = None, ext = None):
-            super(Cvtf2f, self).__init__(dest, src,\
-                    "InstRegIndex(0)", size, destSize, srcSize, ext)
+    class Cvtf2f(Media2Op):
         op_class = 'SimdFloatCvtOp'
         code = '''
             union floatInt
@@ -1415,7 +1369,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Mcmpi2r(MediaOp):
+    class Mcmpi2r(Media3Op):
         op_class = 'SimdCvtOp'
         code = '''
             union floatInt
@@ -1455,7 +1409,7 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Mcmpf2r(MediaOp):
+    class Mcmpf2r(Media3Op):
         op_class = 'SimdFloatCvtOp'
         code = '''
             union floatInt
@@ -1538,11 +1492,8 @@ let {{
             FpDestReg_uqw = result;
         '''
 
-    class Mcmpf2rf(MediaOp):
-        def __init__(self, src1, src2,\
-                size = None, destSize = None, srcSize = None, ext = None):
-            super(Mcmpf2rf, self).__init__("InstRegIndex(0)", src1,\
-                    src2, size, destSize, srcSize, ext)
+    class Mcmpf2rf(Media2Op):
+        operands = (fp_src1_op, fp_src2_op)
         op_class = 'SimdFloatCvtOp'
         code = '''
             union floatInt
@@ -1597,10 +1548,9 @@ let {{
                 ccFlagBits = ccFlagBits | ZFBit;
         '''
 
-    class Emms(MediaOp):
-        op_class = 'FloatMiscOp'
+    class Emms(Media0Op):
         def __init__(self):
-            super(Emms, self).__init__('InstRegIndex(MISCREG_FTW)',
-                    'InstRegIndex(0)', 'InstRegIndex(0)', 2)
+            super(Emms, self).__init__(size=2)
+        op_class = 'FloatMiscOp'
         code = 'FTW = 0xFFFF;'
 }};

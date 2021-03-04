@@ -54,10 +54,6 @@ def operand_types {{
 }};
 
 let {{
-    def foldInt(idx, foldBit, id):
-        return ('IntReg', 'uqw',
-                'X86ISA::INTREG_FOLDED(%s, %s)' % (idx, foldBit), 'IsInteger',
-                id)
     def intReg(idx, id):
         return ('IntReg', 'uqw', idx, 'IsInteger', id)
     def impIntReg(idx, id):
@@ -89,14 +85,11 @@ let {{
 }};
 
 def operands {{
-        'SrcReg1':       foldInt('src1', 'foldOBit', 1),
-        'SSrcReg1':      intReg('src1', 1),
-        'SrcReg2':       foldInt('src2', 'foldOBit', 2),
-        'SSrcReg2':      intReg('src2', 2),
+        'SrcReg1':       intReg('src1', 1),
+        'SrcReg2':       intReg('src2', 2),
         'Index':         intReg('index', 3),
         'Base':          intReg('base', 4),
-        'DestReg':       foldInt('dest', 'foldOBit', 5),
-        'SDestReg':      intReg('dest', 5),
+        'DestReg':       intReg('dest', 5),
         'Data':          intReg('data', 6),
         'DataLow':       intReg('dataLow', 6),
         'DataHi':        intReg('dataHi', 6),
