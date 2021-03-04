@@ -46,7 +46,7 @@ struct DestOp
     using ArgType = InstRegIndex;
     const RegIndex dest;
     const size_t size;
-    RegIndex index() const { return dest; }
+    RegIndex opIndex() const { return dest; }
 
     DestOp(RegIndex _dest, size_t _size) : dest(_dest), size(_size) {}
 };
@@ -56,7 +56,7 @@ struct Src1Op
     using ArgType = InstRegIndex;
     const RegIndex src1;
     const size_t size;
-    RegIndex index() const { return src1; }
+    RegIndex opIndex() const { return src1; }
 
     Src1Op(RegIndex _src1, size_t _size) : src1(_src1), size(_size) {}
 };
@@ -66,9 +66,40 @@ struct Src2Op
     using ArgType = InstRegIndex;
     const RegIndex src2;
     const size_t size;
-    RegIndex index() const { return src2; }
+    RegIndex opIndex() const { return src2; }
 
     Src2Op(RegIndex _src2, size_t _size) : src2(_src2), size(_size) {}
+};
+
+struct DataOp
+{
+    using ArgType = InstRegIndex;
+    const RegIndex data;
+    const size_t size;
+    RegIndex opIndex() const { return data; }
+
+    DataOp(RegIndex _data, size_t _size) : data(_data), size(_size) {}
+};
+
+struct DataHiOp
+{
+    using ArgType = InstRegIndex;
+    const RegIndex dataHi;
+    const size_t size;
+    RegIndex opIndex() const { return dataHi; }
+
+    DataHiOp(RegIndex data_hi, size_t _size) : dataHi(data_hi), size(_size) {}
+};
+
+struct DataLowOp
+{
+    using ArgType = InstRegIndex;
+    const RegIndex dataLow;
+    const size_t size;
+    RegIndex opIndex() const { return dataLow; }
+
+    DataLowOp(RegIndex data_low, size_t _size) : dataLow(data_low), size(_size)
+    {}
 };
 
 template <class Base>
@@ -82,7 +113,7 @@ struct FoldedOp : public Base
     void
     print(std::ostream &os) const
     {
-        X86StaticInst::printReg(os, RegId(IntRegClass, this->index()),
+        X86StaticInst::printReg(os, RegId(IntRegClass, this->opIndex()),
                 this->size);
     }
 };
@@ -96,7 +127,7 @@ struct CrOp : public Base
     void
     print(std::ostream &os) const
     {
-        ccprintf(os, "cr%d", this->index());
+        ccprintf(os, "cr%d", this->opIndex());
     }
 };
 
@@ -109,7 +140,7 @@ struct DbgOp : public Base
     void
     print(std::ostream &os) const
     {
-        ccprintf(os, "dr%d", this->index());
+        ccprintf(os, "dr%d", this->opIndex());
     }
 
 };
@@ -123,7 +154,7 @@ struct SegOp : public Base
     void
     print(std::ostream &os) const
     {
-        X86StaticInst::printSegment(os, this->index());
+        X86StaticInst::printSegment(os, this->opIndex());
     }
 };
 
@@ -138,7 +169,23 @@ struct MiscOp : public Base
     void
     print(std::ostream &os) const
     {
-        X86StaticInst::printReg(os, RegId(MiscRegClass, this->index()),
+        X86StaticInst::printReg(os, RegId(MiscRegClass, this->opIndex()),
+                this->size);
+    }
+};
+
+template <class Base>
+struct FloatOp : public Base
+{
+    template <class InstType>
+    FloatOp(InstType *inst, typename Base::ArgType idx) :
+        Base(idx.index(), inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        X86StaticInst::printReg(os, RegId(FloatRegClass, this->opIndex()),
                 this->size);
     }
 };
@@ -157,6 +204,11 @@ using MiscSrc1Op = MiscOp<Src1Op>;
 
 using FoldedSrc2Op = FoldedOp<Src2Op>;
 
+using FoldedDataOp = FoldedOp<DataOp>;
+using FloatDataOp = FloatOp<DataOp>;
+using FoldedDataHiOp = FoldedOp<DataHiOp>;
+using FoldedDataLowOp = FoldedOp<DataLowOp>;
+
 struct Imm8Op
 {
     using ArgType = uint8_t;
@@ -170,6 +222,42 @@ struct Imm8Op
     print(std::ostream &os) const
     {
         ccprintf(os, "%#x", imm8);
+    }
+};
+
+struct AddrOp
+{
+    struct ArgType
+    {
+        uint8_t scale;
+        InstRegIndex index;
+        InstRegIndex base;
+        uint64_t disp;
+        InstRegIndex segment;
+    };
+
+    const uint8_t scale;
+    const RegIndex index;
+    const RegIndex base;
+    const uint64_t disp;
+    const uint8_t segment;
+    const size_t size;
+
+    template <class InstType>
+    AddrOp(InstType *inst, const ArgType &args) : scale(args.scale),
+        index(INTREG_FOLDED(args.index.index(), inst->foldABit)),
+        base(INTREG_FOLDED(args.base.index(), inst->foldABit)),
+        disp(args.disp), segment(args.segment.index()),
+        size(inst->addressSize)
+    {
+        assert(segment < NUM_SEGMENTREGS);
+    }
+
+    void
+    print(std::ostream &os) const
+    {
+        X86StaticInst::printMem(
+                os, segment, scale, index, base, disp, size, false);
     }
 };
 

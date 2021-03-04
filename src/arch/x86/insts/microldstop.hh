@@ -40,6 +40,7 @@
 #define __ARCH_X86_INSTS_MICROLDSTOP_HH__
 
 #include "arch/x86/insts/microop.hh"
+#include "arch/x86/insts/microop_args.hh"
 #include "arch/x86/ldstflags.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
@@ -54,65 +55,80 @@ namespace X86ISA
 class MemOp : public X86MicroopBase
 {
   protected:
-    const uint8_t scale;
-    const RegIndex index;
-    const RegIndex base;
-    const uint64_t disp;
-    const uint8_t segment;
-    const uint8_t dataSize;
-    const uint8_t addressSize;
     const Request::FlagsType memFlags;
-    RegIndex foldOBit, foldABit;
 
     //Constructor
-    MemOp(ExtMachInst _machInst,
-            const char * mnem, const char * _instMnem,
-            uint64_t setFlags,
-            uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
-            uint64_t _disp, InstRegIndex _segment,
-            uint8_t _dataSize, uint8_t _addressSize,
-            Request::FlagsType _memFlags,
-            OpClass __opClass) :
-    X86MicroopBase(_machInst, mnem, _instMnem, setFlags, __opClass),
-            scale(_scale), index(_index.index()), base(_base.index()),
-            disp(_disp), segment(_segment.index()),
-            dataSize(_dataSize), addressSize(_addressSize),
-            memFlags(_memFlags | _segment.index())
-    {
-        assert(_segment.index() < NUM_SEGMENTREGS);
-        foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
-        foldABit = (addressSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
-    }
+    MemOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
+            uint64_t set_flags, OpClass op_class,
+            uint8_t data_size, uint8_t address_size,
+            Request::FlagsType mem_flags) :
+    X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, op_class),
+            memFlags(mem_flags),
+            dataSize(data_size), addressSize(address_size),
+            foldOBit((dataSize == 1 && !mach_inst.rex.present) ? 1 << 6 : 0),
+            foldABit((addressSize == 1 && !mach_inst.rex.present) ? 1 << 6 : 0)
+    {}
+
+  public:
+    const uint8_t dataSize;
+    const uint8_t addressSize;
+    const RegIndex foldOBit, foldABit;
 };
 
 /**
- * Base class for load and store ops using one register
+ * Base class for load ops using one integer register.
  */
-class LdStOp : public MemOp
+class LdStOp : public InstOperands<MemOp, FoldedDataOp, AddrOp>
 {
   protected:
-    const RegIndex data;
-
-    //Constructor
-    LdStOp(ExtMachInst _machInst,
-            const char * mnem, const char * _instMnem,
-            uint64_t setFlags,
+    LdStOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
+            uint64_t set_flags, InstRegIndex _data,
             uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
             uint64_t _disp, InstRegIndex _segment,
-            InstRegIndex _data,
-            uint8_t _dataSize, uint8_t _addressSize,
-            Request::FlagsType _memFlags,
-            OpClass __opClass) :
-    MemOp(_machInst, mnem, _instMnem, setFlags,
-            _scale, _index, _base, _disp, _segment,
-            _dataSize, _addressSize, _memFlags,
-            __opClass),
-            data(_data.index())
-    {
-    }
+            uint8_t data_size, uint8_t address_size,
+            Request::FlagsType mem_flags, OpClass op_class) :
+    InstOperands<MemOp, FoldedDataOp, AddrOp>(
+            mach_inst, mnem, inst_mnem, set_flags, op_class,
+            _data, { _scale, _index, _base, _disp, _segment },
+            data_size, address_size, mem_flags | _segment.index())
+    {}
+};
 
-    std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+/**
+ * Base class for load ops using one FP register.
+ */
+class LdStFpOp : public InstOperands<MemOp, FloatDataOp, AddrOp>
+{
+  protected:
+    LdStFpOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
+            uint64_t set_flags, InstRegIndex _data,
+            uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
+            uint64_t _disp, InstRegIndex _segment,
+            uint8_t data_size, uint8_t address_size,
+            Request::FlagsType mem_flags, OpClass op_class) :
+    InstOperands<MemOp, FloatDataOp, AddrOp>(
+            mach_inst, mnem, inst_mnem, set_flags, op_class,
+            _data, { _scale, _index, _base, _disp, _segment },
+            data_size, address_size, mem_flags | _segment.index())
+    {}
+};
+
+/**
+ * Base class for the tia microop which has no destination register.
+ */
+class MemNoDataOp : public InstOperands<MemOp, AddrOp>
+{
+  protected:
+    MemNoDataOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
+            uint64_t set_flags, uint8_t _scale, InstRegIndex _index,
+            InstRegIndex _base, uint64_t _disp, InstRegIndex _segment,
+            uint8_t data_size, uint8_t address_size,
+            Request::FlagsType mem_flags, OpClass op_class) :
+    InstOperands<MemOp, AddrOp>(
+            mach_inst, mnem, inst_mnem, set_flags, op_class,
+            { _scale, _index, _base, _disp, _segment },
+            data_size, address_size, mem_flags | _segment.index())
+    {}
 };
 
 /**
@@ -120,33 +136,21 @@ class LdStOp : public MemOp
  * call them split ops for this reason. These are mainly  used to
  * implement cmpxchg8b and cmpxchg16b.
  */
-class LdStSplitOp : public MemOp
+class LdStSplitOp :
+    public InstOperands<MemOp, FoldedDataLowOp, FoldedDataHiOp, AddrOp>
 {
   protected:
-    const RegIndex dataLow;
-    const RegIndex dataHi;
-
-    //Constructor
-    LdStSplitOp(ExtMachInst _machInst,
-            const char * mnem, const char * _instMnem,
-            uint64_t setFlags,
+    LdStSplitOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
+            uint64_t set_flags, InstRegIndex data_low, InstRegIndex data_hi,
             uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
             uint64_t _disp, InstRegIndex _segment,
-            InstRegIndex _dataLow, InstRegIndex _dataHi,
-            uint8_t _dataSize, uint8_t _addressSize,
-            Request::FlagsType _memFlags,
-            OpClass __opClass) :
-    MemOp(_machInst, mnem, _instMnem, setFlags,
-            _scale, _index, _base, _disp, _segment,
-            _dataSize, _addressSize, _memFlags,
-            __opClass),
-            dataLow(_dataLow.index()),
-            dataHi(_dataHi.index())
-    {
-    }
-
-    std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            uint8_t data_size, uint8_t address_size,
+            Request::FlagsType mem_flags, OpClass op_class) :
+    InstOperands<MemOp, FoldedDataLowOp, FoldedDataHiOp, AddrOp>(
+            mach_inst, mnem, inst_mnem, set_flags, op_class,
+            data_low, data_hi, { _scale, _index, _base, _disp, _segment },
+            data_size, address_size, mem_flags | _segment.index())
+    {}
 };
 
 }

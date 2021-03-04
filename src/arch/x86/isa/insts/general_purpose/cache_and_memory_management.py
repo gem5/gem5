@@ -58,37 +58,37 @@ def macroop PREFETCH_T0_P
 
 def macroop CLFLUSH_M
 {
-    clflushopt t0, seg, sib, disp, dataSize=1
+    clflushopt seg, sib, disp, dataSize=1
     mfence
 };
 
 def macroop CLFLUSH_P
 {
     rdip t7
-    clflushopt t0, seg, riprel, disp, dataSize=1
+    clflushopt seg, riprel, disp, dataSize=1
     mfence
 };
 
 def macroop CLFLUSHOPT_M
 {
-    clflushopt t0, seg, sib, disp, dataSize=1
+    clflushopt seg, sib, disp, dataSize=1
 };
 
 def macroop CLFLUSHOPT_P
 {
     rdip t7
-    clflushopt t0, seg, riprel, disp, dataSize=1
+    clflushopt seg, riprel, disp, dataSize=1
 };
 
 def macroop CLWB_M
 {
-    clwb t1, seg, sib, disp, dataSize=1
+    clwb seg, sib, disp, dataSize=1
 };
 
 def macroop CLWB_P
 {
     rdip t7
-    clwb t1, seg, riprel, disp, dataSize=1
+    clwb seg, riprel, disp, dataSize=1
 };
 
 '''
