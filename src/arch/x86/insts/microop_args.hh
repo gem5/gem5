@@ -247,6 +247,22 @@ struct Imm8Op
     }
 };
 
+struct Imm64Op
+{
+    using ArgType = uint64_t;
+
+    uint64_t imm64;
+
+    template <class InstType>
+    Imm64Op(InstType *inst, ArgType _imm64) : imm64(_imm64) {}
+
+    void
+    print(std::ostream &os) const
+    {
+        ccprintf(os, "%#x", imm64);
+    }
+};
+
 struct AddrOp
 {
     struct ArgType

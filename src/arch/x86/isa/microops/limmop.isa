@@ -40,69 +40,38 @@
 //////////////////////////////////////////////////////////////////////////
 
 def template MicroLimmOpExecute {{
-        Fault %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
-        {
-            %(op_decl)s;
-            %(op_rd)s;
-            %(code)s;
-            %(op_wb)s;
-            return NoFault;
-        }
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+            Trace::InstRecord *traceData) const
+    {
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+        %(op_wb)s;
+        return NoFault;
+    }
 }};
 
 def template MicroLimmOpDeclare {{
-    class %(class_name)s : public X86ISA::X86MicroopBase
+    class %(class_name)s : public %(base_class)s
     {
       private:
         %(reg_idx_arr_decl)s;
 
-      protected:
-        const RegIndex dest;
-        const uint64_t imm;
-        const uint8_t dataSize;
-        RegIndex foldOBit;
-
-        std::string generateDisassembly(Addr pc,
-            const Loader::SymbolTable *symtab) const override;
-
       public:
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                uint64_t setFlags, InstRegIndex _dest,
-                uint64_t _imm, uint8_t _dataSize);
+        template <typename Dest>
+        %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
+                uint64_t set_flags, Dest _dest,
+                uint64_t _imm, uint8_t data_size) :
+        %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
+                %(op_class)s, _dest, _imm, data_size, 0)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
-}};
-
-def template MicroLimmOpDisassembly {{
-    std::string
-    %(class_name)s::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
-    {
-        std::stringstream response;
-
-        printMnemonic(response, instMnem, mnemonic);
-        printDestReg(response, 0, dataSize);
-        response << ", ";
-        ccprintf(response, "%#x", imm);
-        return response.str();
-    }
-}};
-
-def template MicroLimmOpConstructor {{
-    %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
-            InstRegIndex _dest, uint64_t _imm, uint8_t _dataSize) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                setFlags, %(op_class)s),
-                dest(_dest.index()), imm(_imm), dataSize(_dataSize)
-    {
-        %(set_reg_idx_arr)s;
-        foldOBit = (dataSize == 1 && !machInst.rex.present) ? 1 << 6 : 0;
-        %(constructor)s;
-    }
 }};
 
 let {{
@@ -162,21 +131,19 @@ let {{
 }};
 
 let {{
+    base = 'X86ISA::RegOpT<X86ISA::FoldedDestOp, X86ISA::Imm64Op>'
     # Build up the all register version of this micro op
-    iops = [InstObjParams("limm", "Limm", 'X86MicroopBase',
-            {"code" : "DestReg = merge(DestReg, imm, dataSize);"}),
-            InstObjParams("limm", "LimmBig", 'X86MicroopBase',
-            {"code" : "DestReg = imm & mask(dataSize * 8);"})]
+    iops = [InstObjParams("limm", "Limm", base,
+            {"code" : "DestReg = merge(DestReg, imm64, dataSize);"}),
+            InstObjParams("limm", "LimmBig", base,
+            {"code" : "DestReg = imm64 & mask(dataSize * 8);"})]
     for iop in iops:
         header_output += MicroLimmOpDeclare.subst(iop)
-        decoder_output += MicroLimmOpConstructor.subst(iop)
-        decoder_output += MicroLimmOpDisassembly.subst(iop)
         exec_output += MicroLimmOpExecute.subst(iop)
 
-    iop = InstObjParams("lfpimm", "Lfpimm", 'X86MicroopBase',
-            {"code" : "FpDestReg_uqw = imm"})
+    base = 'X86ISA::RegOpT<X86ISA::FloatDestOp, X86ISA::Imm64Op>'
+    iop = InstObjParams("lfpimm", "Lfpimm", base,
+            {"code" : "FpDestReg_uqw = imm64"})
     header_output += MicroLimmOpDeclare.subst(iop)
-    decoder_output += MicroLimmOpConstructor.subst(iop)
-    decoder_output += MicroLimmOpDisassembly.subst(iop)
     exec_output += MicroLimmOpExecute.subst(iop)
 }};
