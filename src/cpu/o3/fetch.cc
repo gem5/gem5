@@ -55,7 +55,7 @@
 #include "cpu/exetrace.hh"
 #include "cpu/nop_static_inst.hh"
 #include "cpu/o3/cpu.hh"
-#include "cpu/o3/isa_specific.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/limits.hh"
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
