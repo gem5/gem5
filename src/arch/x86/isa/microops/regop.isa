@@ -79,7 +79,7 @@ def template MicroRegOpDeclare {{
                 uint64_t set_flags, uint8_t data_size, uint16_t _ext,
                 Args... args) :
             %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
-                    data_size, _ext, %(op_class)s, args...)
+                    %(op_class)s, args..., data_size, _ext)
         {
             %(set_reg_idx_arr)s;
             %(constructor)s;
@@ -102,7 +102,7 @@ def template MicroRegOpBranchDeclare {{
                 uint64_t set_flags, uint8_t data_size, uint16_t _ext,
                 Args... args) :
             %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
-                    data_size, _ext, %(op_class)s, args...)
+                    %(op_class)s, args..., data_size, _ext)
         {
             %(set_reg_idx_arr)s;
             %(constructor)s;
@@ -213,20 +213,20 @@ let {{
             MicroRegOpExecute)
 
 
-    dest_op = 'X86ISA::RegOpDest'
-    dbg_dest_op = 'X86ISA::RegOpDbgDest'
-    cr_dest_op = 'X86ISA::RegOpCrDest'
-    seg_dest_op = 'X86ISA::RegOpSegDest'
-    misc_dest_op = 'X86ISA::RegOpMiscDest'
+    dest_op = 'X86ISA::FoldedDestOp'
+    dbg_dest_op = 'X86ISA::DbgDestOp'
+    cr_dest_op = 'X86ISA::CrDestOp'
+    seg_dest_op = 'X86ISA::SegDestOp'
+    misc_dest_op = 'X86ISA::MiscDestOp'
 
-    src1_op = 'X86ISA::RegOpSrc1'
-    dbg_src1_op = 'X86ISA::RegOpDbgSrc1'
-    cr_src1_op = 'X86ISA::RegOpCrSrc1'
-    seg_src1_op = 'X86ISA::RegOpSegSrc1'
-    misc_src1_op = 'X86ISA::RegOpMiscSrc1'
+    src1_op = 'X86ISA::FoldedSrc1Op'
+    dbg_src1_op = 'X86ISA::DbgSrc1Op'
+    cr_src1_op = 'X86ISA::CrSrc1Op'
+    seg_src1_op = 'X86ISA::SegSrc1Op'
+    misc_src1_op = 'X86ISA::MiscSrc1Op'
 
-    src2_op = 'X86ISA::RegOpSrc2'
-    imm_op = 'X86ISA::RegOpImm8'
+    src2_op = 'X86ISA::FoldedSrc2Op'
+    imm_op = 'X86ISA::Imm8Op'
 
     class RegOpMeta(type):
         def buildCppClasses(self, name, Name, suffix, code, big_code, \
@@ -1489,7 +1489,7 @@ let {{
             super(SegOp, self).__init__(dest, src1, flags=flags,
                     dataSize=dataSize)
 
-    class WrSegOp(CondRegOp):
+    class WrSegOp(SegOp):
         abstract = True
         operands = (seg_dest_op, src1_op)
 
@@ -1513,7 +1513,7 @@ let {{
             SegAttrDest = psrc1;
         '''
 
-    class RdSegOp(CondRegOp):
+    class RdSegOp(SegOp):
         abstract = True
         operands = (dest_op, seg_src1_op)
 
