@@ -43,217 +43,121 @@
 namespace X86ISA
 {
 
-struct RegOpDest
+struct DestOp
 {
     using ArgType = InstRegIndex;
+    const RegIndex dest;
+    const size_t size;
+    RegIndex index() const { return dest; }
 
-    RegIndex dest;
-    size_t size;
+    DestOp(RegIndex _dest, size_t _size) : dest(_dest), size(_size) {}
+};
 
+struct Src1Op
+{
+    using ArgType = InstRegIndex;
+    const RegIndex src1;
+    const size_t size;
+    RegIndex index() const { return src1; }
+
+    Src1Op(RegIndex _src1, size_t _size) : src1(_src1), size(_size) {}
+};
+
+struct Src2Op
+{
+    using ArgType = InstRegIndex;
+    const RegIndex src2;
+    const size_t size;
+    RegIndex index() const { return src2; }
+
+    Src2Op(RegIndex _src2, size_t _size) : src2(_src2), size(_size) {}
+};
+
+template <class Base>
+struct FoldedOp : public Base
+{
     template <class InstType>
-    RegOpDest(InstType *inst, ArgType idx) :
-        dest(INTREG_FOLDED(idx.index(), inst->foldOBit)),
-        size(inst->dataSize)
+    FoldedOp(InstType *inst, typename Base::ArgType idx) :
+        Base(INTREG_FOLDED(idx.index(), inst->foldOBit), inst->dataSize)
     {}
 
     void
     print(std::ostream &os) const
     {
-        X86StaticInst::printReg(os, RegId(IntRegClass, dest), size);
+        X86StaticInst::printReg(os, RegId(IntRegClass, this->index()),
+                this->size);
     }
 };
 
-struct RegOpDbgDest
+template <class Base>
+struct CrOp : public Base
 {
-    using ArgType = InstRegIndex;
-
-    RegIndex dest;
-    size_t size;
-
     template <class InstType>
-    RegOpDbgDest(InstType *inst, ArgType idx) : dest(idx.index()),
-        size(inst->dataSize)
+    CrOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index(), 0) {}
+
+    void
+    print(std::ostream &os) const
+    {
+        ccprintf(os, "cr%d", this->index());
+    }
+};
+
+template <class Base>
+struct DbgOp : public Base
+{
+    template <class InstType>
+    DbgOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index(), 0) {}
+
+    void
+    print(std::ostream &os) const
+    {
+        ccprintf(os, "dr%d", this->index());
+    }
+
+};
+
+template <class Base>
+struct SegOp : public Base
+{
+    template <class InstType>
+    SegOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index(), 0) {}
+
+    void
+    print(std::ostream &os) const
+    {
+        X86StaticInst::printSegment(os, this->index());
+    }
+};
+
+template <class Base>
+struct MiscOp : public Base
+{
+    template <class InstType>
+    MiscOp(InstType *inst, typename Base::ArgType idx) :
+        Base(idx.index(), inst->dataSize)
     {}
 
     void
     print(std::ostream &os) const
     {
-        ccprintf(os, "dr%d", dest);
+        X86StaticInst::printReg(os, RegId(MiscRegClass, this->index()),
+                this->size);
     }
 };
 
-struct RegOpCrDest
-{
-    using ArgType = InstRegIndex;
+using RegOpDest = FoldedOp<DestOp>;
+using RegOpDbgDest = DbgOp<DestOp>;
+using RegOpCrDest = CrOp<DestOp>;
+using RegOpSegDest = SegOp<DestOp>;
+using RegOpMiscDest = MiscOp<DestOp>;
 
-    RegIndex dest;
-    size_t size;
+using RegOpSrc1 = FoldedOp<Src1Op>;
+using RegOpDbgSrc1 = DbgOp<Src1Op>;
+using RegOpCrSrc1 = CrOp<Src1Op>;
+using RegOpSegSrc1 = SegOp<Src1Op>;
+using RegOpMiscSrc1 = MiscOp<Src1Op>;
 
-    template <class InstType>
-    RegOpCrDest(InstType *inst, ArgType idx) : dest(idx.index()),
-        size(inst->dataSize)
-    {}
-
-    void
-    print(std::ostream &os) const
-    {
-        ccprintf(os, "cr%d", dest);
-    }
-};
-
-struct RegOpSegDest
-{
-    using ArgType = InstRegIndex;
-
-    RegIndex dest;
-    size_t size;
-
-    template <class InstType>
-    RegOpSegDest(InstType *inst, ArgType idx) : dest(idx.index()),
-        size(inst->dataSize)
-    {}
-
-    void
-    print(std::ostream &os) const
-    {
-        X86StaticInst::printSegment(os, dest);
-    }
-};
-
-struct RegOpMiscDest
-{
-    using ArgType = InstRegIndex;
-
-    RegIndex dest;
-    size_t size;
-
-    template <class InstType>
-    RegOpMiscDest(InstType *inst, ArgType idx) : dest(idx.index()),
-        size(inst->dataSize)
-    {}
-
-    void
-    print(std::ostream &os) const
-    {
-        X86StaticInst::printReg(os, RegId(MiscRegClass, dest), size);
-    }
-};
-
-struct RegOpSrc1
-{
-    using ArgType = InstRegIndex;
-
-    RegIndex src1;
-    size_t size;
-
-    template <class InstType>
-    RegOpSrc1(InstType *inst, ArgType idx) :
-        src1(INTREG_FOLDED(idx.index(), inst->foldOBit)),
-        size(inst->dataSize)
-    {}
-
-    void
-    print(std::ostream &os) const
-    {
-        X86StaticInst::printReg(os, RegId(IntRegClass, src1), size);
-    }
-};
-
-struct RegOpDbgSrc1
-{
-    using ArgType = InstRegIndex;
-
-    RegIndex src1;
-    size_t size;
-
-    template <class InstType>
-    RegOpDbgSrc1(InstType *inst, ArgType idx) : src1(idx.index()),
-        size(inst->dataSize)
-    {}
-
-    void
-    print(std::ostream &os) const
-    {
-        ccprintf(os, "dr%d", src1);
-    }
-};
-
-struct RegOpCrSrc1
-{
-    using ArgType = InstRegIndex;
-
-    RegIndex src1;
-    size_t size;
-
-    template <class InstType>
-    RegOpCrSrc1(InstType *inst, ArgType idx) : src1(idx.index()),
-        size(inst->dataSize)
-    {}
-
-    void
-    print(std::ostream &os) const
-    {
-        ccprintf(os, "cr%d", src1);
-    }
-};
-
-struct RegOpSegSrc1
-{
-    using ArgType = InstRegIndex;
-
-    RegIndex src1;
-    size_t size;
-
-    template <class InstType>
-    RegOpSegSrc1(InstType *inst, ArgType idx) : src1(idx.index()),
-        size(inst->dataSize)
-    {}
-
-    void
-    print(std::ostream &os) const
-    {
-        X86StaticInst::printSegment(os, src1);
-    }
-};
-
-struct RegOpMiscSrc1
-{
-    using ArgType = InstRegIndex;
-
-    RegIndex src1;
-    size_t size;
-
-    template <class InstType>
-    RegOpMiscSrc1(InstType *inst, ArgType idx) : src1(idx.index()),
-        size(inst->dataSize)
-    {}
-
-    void
-    print(std::ostream &os) const
-    {
-        X86StaticInst::printReg(os, RegId(MiscRegClass, src1), size);
-    }
-};
-
-struct RegOpSrc2
-{
-    using ArgType = InstRegIndex;
-
-    RegIndex src2;
-    size_t size;
-
-    template <class InstType>
-    RegOpSrc2(InstType *inst, ArgType idx) :
-        src2(INTREG_FOLDED(idx.index(), inst->foldOBit)),
-        size(inst->dataSize)
-    {}
-
-    void
-    print(std::ostream &os) const
-    {
-        X86StaticInst::printReg(os, RegId(IntRegClass, src2), size);
-    }
-};
+using RegOpSrc2 = FoldedOp<Src2Op>;
 
 struct RegOpImm8
 {
