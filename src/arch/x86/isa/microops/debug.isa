@@ -39,47 +39,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-output header {{
-    class MicroDebug : public X86ISA::X86MicroopBase
-    {
-      protected:
-        std::shared_ptr<GenericISA::M5DebugFault> fault;
-
-      public:
-        MicroDebug(ExtMachInst _machInst, const char *mnem,
-                const char *instMnem, uint64_t setFlags,
-                GenericISA::M5DebugFault *_fault);
-
-        Fault
-        execute(ExecContext *xc, Trace::InstRecord *traceData) const override
-        {
-            return fault;
-        }
-
-        std::string
-        generateDisassembly(Addr pc,
-                            const Loader::SymbolTable *symtab) const override
-        {
-            std::stringstream response;
-
-            printMnemonic(response, instMnem, mnemonic);
-            response << "\"" << fault->message() << "\"";
-
-            return response.str();
-        }
-    };
-}};
-
-output decoder {{
-    MicroDebug::MicroDebug(ExtMachInst _machInst, const char *mnem,
-            const char *instMnem, uint64_t setFlags,
-            GenericISA::M5DebugFault *_fault) :
-        X86ISA::X86MicroopBase(_machInst, mnem, instMnem,
-                               setFlags, No_OpClass),
-        fault(_fault)
-    {}
-}};
-
 def template MicroDebugFlagsDeclare {{
     class %(class_name)s : public %(base_class)s
     {
@@ -90,36 +49,35 @@ def template MicroDebugFlagsDeclare {{
         uint8_t cc;
 
       public:
-        %(class_name)s(ExtMachInst _machInst, const char *mnem,
-                       const char *instMnem, uint64_t setFlags,
-                       GenericISA::M5DebugFault *_fault, uint8_t _cc);
+        %(class_name)s(ExtMachInst mach_inst, const char *mnem,
+                const char *inst_mnem, uint64_t set_flags,
+                GenericISA::M5DebugFault *_fault, uint8_t _cc);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
 def template MicroDebugFlagsExecute {{
-        Fault
-        %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
-        {
-            %(op_decl)s
-            %(op_rd)s
-            if (%(cond_test)s) {
-                return %(base_class)s::execute(xc, traceData);
-            } else {
-                return NoFault;
-            }
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+            Trace::InstRecord *trace_data) const
+    {
+        %(op_decl)s
+        %(op_rd)s
+        if (%(cond_test)s) {
+            return %(base_class)s::execute(xc, trace_data);
+        } else {
+            return NoFault;
         }
+    }
 }};
 
 def template MicroDebugFlagsConstructor {{
     %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char *mnem,
-            const char *instMnem, uint64_t setFlags,
-            GenericISA::M5DebugFault *_fault, uint8_t _cc) :
-        %(base_class)s(machInst, mnem, instMnem, setFlags, _fault),
-        cc(_cc)
+            ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
+            uint64_t set_flags, GenericISA::M5DebugFault *_fault,
+            uint8_t _cc) :
+        %(base_class)s(mach_inst, mnem, inst_mnem, set_flags, _fault), cc(_cc)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -127,7 +85,7 @@ def template MicroDebugFlagsConstructor {{
 }};
 
 let {{
-    iop = InstObjParams("", "MicroDebugFlags", "MicroDebug",
+    iop = InstObjParams("", "MicroDebugFlags", "X86ISA::MicroDebug",
             {"code": "",
              "cond_test": "checkCondition(ccFlagBits | cfofBits | \
                                               dfBit | ecfBit | ezfBit, cc)"})

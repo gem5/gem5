@@ -1,15 +1,5 @@
 /*
- * Copyright (c) 2011 Advanced Micro Devices, Inc.
- * All rights reserved.
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
+ * Copyright 2021 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -35,27 +25,45 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/x86/insts/badmicroop.hh"
+#ifndef __ARCH_X86_INSTS_MICRODEBUG_HH__
+#define __ARCH_X86_INSTS_MICRODEBUG_HH__
 
-#include "arch/generic/debugfaults.hh"
-#include "arch/x86/generated/decoder.hh"
-
-namespace {
-
-static X86ISA::ExtMachInst dummyMachInst;
-
-}
+#include "arch/x86/insts/microop.hh"
 
 namespace X86ISA
 {
 
-// This microop needs to be allocated on the heap even though it could
-// theoretically be statically allocated. The reference counted pointer would
-// try to delete the static memory when it was destructed.
+class MicroDebug : public X86ISA::X86MicroopBase
+{
+  protected:
+    std::shared_ptr<GenericISA::M5DebugFault> fault;
 
-const StaticInstPtr badMicroop =
-    new MicroDebug(dummyMachInst, "panic", "BAD",
-        StaticInst::IsMicroop | StaticInst::IsLastMicroop,
-        new GenericISA::M5PanicFault("Invalid microop!"));
+  public:
+    MicroDebug(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
+            uint64_t set_flags, GenericISA::M5DebugFault *_fault) :
+        X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, No_OpClass),
+        fault(_fault)
+    {}
+
+    Fault
+    execute(ExecContext *xc, Trace::InstRecord *traceData) const override
+    {
+        return fault;
+    }
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const Loader::SymbolTable *symtab) const override
+    {
+        std::stringstream response;
+
+        printMnemonic(response, instMnem, mnemonic);
+        response << "\"" << fault->message() << "\"";
+
+        return response.str();
+    }
+};
 
 } // namespace X86ISA
+
+#endif //__ARCH_X86_INSTS_MICRODEBUG_HH__
