@@ -136,7 +136,7 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
         for r in system.mem_ranges:
             mem_type = ObjectList.mem_list.get(options.mem_type)
             dram_intf = MemConfig.create_mem_intf(mem_type, r, index,
-                options.num_dirs, int(math.log(options.num_dirs, 2)),
+                int(math.log(options.num_dirs, 2)),
                 intlv_size, options.xor_low_bit)
             if issubclass(mem_type, DRAMInterface):
                 mem_ctrl = m5.objects.MemCtrl(dram = dram_intf)
