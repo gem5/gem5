@@ -25,6 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/gtest/logging.hh"
+
 #include <gtest/gtest.h>
 
 #include <array>
@@ -49,7 +51,12 @@ class GTestLogger : public Logger
     using Logger::Logger;
 
   protected:
-    void log(const Loc &loc, std::string s) override { SUCCEED() << s; }
+    void
+    log(const Loc &loc, std::string s) override
+    {
+        gtestLogOutput << s;
+        SUCCEED() << s;
+    }
 };
 
 class GTestExitLogger : public Logger
@@ -61,6 +68,7 @@ class GTestExitLogger : public Logger
     void
     log(const Loc &loc, std::string s) override
     {
+        gtestLogOutput << s;
         std::cerr << loc.file << ":" << loc.line << ": " << s;
     }
     // Throw an exception to escape down to the gtest framework.
@@ -74,6 +82,25 @@ GTestLogger infoLogger("info: ");
 GTestLogger hackLogger("hack: ");
 
 } // anonymous namespace
+
+thread_local GTestLogOutput gtestLogOutput;
+
+GTestLogOutput::EventHook::EventHook(GTestLogOutput &_stream) : stream(_stream)
+{
+    ::testing::UnitTest::GetInstance()->listeners().Append(this);
+}
+
+GTestLogOutput::EventHook::~EventHook()
+{
+    ::testing::UnitTest::GetInstance()->listeners().Release(this);
+}
+
+void
+GTestLogOutput::EventHook::OnTestStart(const ::testing::TestInfo &test_info)
+{
+    // Clear out the stream at the start of each test.
+    stream.str("");
+}
 
 Logger &Logger::getPanic() { return panicLogger; }
 Logger &Logger::getFatal() { return fatalLogger; }
