@@ -43,34 +43,31 @@
 //////////////////////////////////////////////////////////////////////////
 
 def template MicroFpOpExecute {{
-        Fault %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
-        {
-            Fault fault = NoFault;
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+            Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
 
-            DPRINTF(X86, "The data size is %d\n", dataSize);
-            %(op_decl)s;
-            %(op_rd)s;
+        DPRINTF(X86, "The data size is %d\n", dataSize);
+        %(op_decl)s;
+        %(op_rd)s;
 
-            if(%(cond_check)s)
-            {
-                %(code)s;
-                %(flag_code)s;
-                %(tag_code)s;
-                %(top_code)s;
-            }
-            else
-            {
-                %(else_code)s;
-            }
-
-            //Write the resulting state to the execution context
-            if(fault == NoFault)
-            {
-                %(op_wb)s;
-            }
-            return fault;
+        if (%(cond_check)s) {
+            %(code)s;
+            %(flag_code)s;
+            %(tag_code)s;
+            %(top_code)s;
+        } else {
+            %(else_code)s;
         }
+
+        //Write the resulting state to the execution context
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+        return fault;
+    }
 }};
 
 def template MicroFpOpDeclare {{
@@ -80,23 +77,22 @@ def template MicroFpOpDeclare {{
         %(reg_idx_arr_decl)s;
 
       public:
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem, uint64_t setFlags,
-                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-                uint8_t _dataSize, int8_t _spm);
+        template <typename ...Args>
+        %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
+                uint64_t set_flags, uint8_t data_size, int8_t _spm,
+                Args... args);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
 def template MicroFpOpConstructor {{
-    %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
-            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-            uint8_t _dataSize, int8_t _spm) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
-                _src1, _src2, _dest, _dataSize, _spm,
-                %(op_class)s)
+    template <typename ...Args>
+    %(class_name)s::%(class_name)s(ExtMachInst mach_inst,
+            const char *inst_mnem, uint64_t set_flags,
+            uint8_t data_size, int8_t _spm, Args... args) :
+        %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
+                %(op_class)s, args..., data_size, _spm)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -111,9 +107,18 @@ let {{
     decoder_output = ""
     exec_output = ""
 
+    int_dest_op = 'X86ISA::IntDestOp'
+    fp_dest_op = 'X86ISA::FloatDestOp'
+
+    int_src1_op = 'X86ISA::IntSrc1Op'
+    fp_src1_op = 'X86ISA::FloatSrc1Op'
+
+    int_src2_op = 'X86ISA::IntSrc2Op'
+    fp_src2_op = 'X86ISA::FloatSrc2Op'
+
     class FpOpMeta(type):
         def buildCppClasses(self, name, Name, suffix, \
-                code, flag_code, cond_check, else_code, op_class):
+                code, flag_code, cond_check, else_code, op_class, operands):
 
             # Globals to stick the output in
             global header_output
@@ -127,10 +132,11 @@ let {{
             # a version without it and fix up this version to use it.
             if flag_code != "" or cond_check != "true":
                 self.buildCppClasses(name, Name, suffix,
-                        code, "", "true", else_code, op_class)
+                        code, "", "true", else_code, op_class, operands)
                 suffix = "Flags" + suffix
 
-            base = "X86ISA::FpOp"
+            base = "X86ISA::InstOperands<" + \
+                ", ".join(("X86ISA::FpOp",) + operands) + ">"
 
             # Get everything ready for the substitution
             iop_tag = InstObjParams(name, Name + suffix + "TopTag", base,
@@ -186,10 +192,12 @@ let {{
                 cond_check = cls.cond_check
                 else_code = cls.else_code
                 op_class = cls.op_class
+                operands = cls.operands
 
                 # Set up the C++ classes
                 mcls.buildCppClasses(cls, name, Name, "",
-                        code, flag_code, cond_check, else_code, op_class)
+                        code, flag_code, cond_check, else_code, op_class,
+                        operands)
 
                 # Hook into the microassembler dict
                 global microopClasses
@@ -197,7 +205,7 @@ let {{
 
             return cls
 
-    class FpUnaryOp(X86Microop, metaclass=FpOpMeta):
+    class FpOp(X86Microop, metaclass=FpOpMeta):
         # This class itself doesn't act as a microop
         abstract = True
 
@@ -207,11 +215,9 @@ let {{
         else_code = ";"
         op_class = "FloatAddOp"
 
-        def __init__(self, dest, src1, spm=0, \
+        def __init__(self, *ops, spm=0,
                 SetStatus=False, UpdateFTW=True, dataSize="env.dataSize"):
-            self.dest = dest
-            self.src1 = src1
-            self.src2 = "InstRegIndex(0)"
+            self.ops = list(map(str, ops))
             self.spm = spm
             self.dataSize = dataSize
             if SetStatus:
@@ -222,92 +228,77 @@ let {{
                 self.className += "Tag"
 
         def getAllocator(self, microFlags):
+            # Ensure there's at least one element to join with ","s.
+            spm_ops = [str(self.spm)] + self.ops
             return '''new %(class_name)s(machInst, macrocodeBlock,
-                    %(flags)s, %(src1)s, %(src2)s, %(dest)s,
-                    %(dataSize)s, %(spm)d)''' % {
+                    %(flags)s, %(dataSize)s, %(spm_ops)s)''' % {
                 "class_name" : self.className,
                 "flags" : self.microFlagsText(microFlags),
-                "src1" : self.src1, "src2" : self.src2,
-                "dest" : self.dest,
                 "dataSize" : self.dataSize,
-                "spm" : self.spm}
+                "spm_ops" : ", ".join(spm_ops)}
 
-    class FpBinaryOp(X86Microop, metaclass=FpOpMeta):
-        # This class itself doesn't act as a microop
+    class Fp0Op(FpOp):
         abstract = True
+        operands = ()
+        def __init__(self, **kwargs):
+            super(Fp0Op, self).__init__(**kwargs)
 
-        # Default template parameter values
-        flag_code = ""
-        cond_check = "true"
-        else_code = ";"
-        op_class = "FloatAddOp"
+    class Fp1Op(FpOp):
+        abstract = True
+        operands = (fp_dest_op)
+        def __init__(self, reg1, **kwargs):
+            super(Fp1Op, self).__init__(reg1, **kwargs)
 
-        def __init__(self, dest, src1, src2, spm=0, \
-                SetStatus=False, UpdateFTW=True, dataSize="env.dataSize"):
-            self.dest = dest
-            self.src1 = src1
-            self.src2 = src2
-            self.spm = spm
-            self.dataSize = dataSize
-            if SetStatus:
-                self.className += "Flags"
-            if spm:
-                self.className += "Top"
-            if spm and UpdateFTW:
-                self.className += "Tag"
+    class Fp2Op(FpOp):
+        abstract = True
+        operands = (fp_dest_op, fp_src1_op)
+        def __init__(self, reg1, reg2, **kwargs):
+            super(Fp2Op, self).__init__(reg1, reg2, **kwargs)
 
-        def getAllocator(self, microFlags):
-            return '''new %(class_name)s(machInst, macrocodeBlock,
-                    %(flags)s, %(src1)s, %(src2)s, %(dest)s,
-                    %(dataSize)s, %(spm)d)''' % {
-                "class_name" : self.className,
-                "flags" : self.microFlagsText(microFlags),
-                "src1" : self.src1, "src2" : self.src2,
-                "dest" : self.dest,
-                "dataSize" : self.dataSize,
-                "spm" : self.spm}
+    class Fp3Op(FpOp):
+        abstract = True
+        operands = (fp_dest_op, fp_src1_op, fp_src2_op)
+        def __init__(self, reg1, reg2, reg3, **kwargs):
+            super(Fp3Op, self).__init__(reg1, reg2, reg3, **kwargs)
 
-    class Movfp(FpUnaryOp):
+    class Movfp(Fp2Op):
         code = 'FpDestReg_uqw = FpSrcReg1_uqw;'
         else_code = 'FpDestReg_uqw = FpDestReg_uqw;'
         cond_check = "checkCondition(ccFlagBits | cfofBits | dfBit | \
-                                     ecfBit | ezfBit, src2)"
+                                     ecfBit | ezfBit, src1)"
         op_class = 'IntAluOp'
 
-    class Xorfp(FpBinaryOp):
+    class Xorfp(Fp3Op):
         code = 'FpDestReg_uqw = FpSrcReg1_uqw ^ FpSrcReg2_uqw;'
 
-    class Sqrtfp(FpBinaryOp):
-        code = 'FpDestReg = sqrt(FpSrcReg2);'
+    class Sqrtfp(Fp2Op):
+        code = 'FpDestReg = sqrt(FpSrcReg1);'
         op_class = 'FloatSqrtOp'
 
-    class Cosfp(FpUnaryOp):
+    class Cosfp(Fp2Op):
         code = 'FpDestReg = cos(FpSrcReg1);'
         op_class = 'FloatSqrtOp'
 
-    class Sinfp(FpUnaryOp):
+    class Sinfp(Fp2Op):
         code = 'FpDestReg = sin(FpSrcReg1);'
         op_class = 'FloatSqrtOp'
 
-    class Tanfp(FpUnaryOp):
+    class Tanfp(Fp2Op):
         code = 'FpDestReg = tan(FpSrcReg1);'
         op_class = 'FloatSqrtOp'
 
 
     # Conversion microops
-    class ConvOp(FpBinaryOp):
+    class ConvOp(Fp2Op):
         abstract = True
         op_class = 'FloatCvtOp'
-        def __init__(self, dest, src1, **kwargs):
-            super(ConvOp, self).__init__(dest, src1, \
-                    "InstRegIndex(FLOATREG_MICROFP0)", \
-                    **kwargs)
 
     # These probably shouldn't look at the ExtMachInst directly to figure
     # out what size to use and should instead delegate that to the macroop's
     # constructor. That would be more efficient, and it would make the
     # microops a little more modular.
-    class cvtf_i2d(ConvOp):
+    class Cvtf_i2d(ConvOp):
+        operands = (fp_dest_op, int_src1_op)
         code = '''
             X86IntReg intReg = SSrcReg1;
             if (REX_W)
@@ -316,10 +307,12 @@ let {{
                 FpDestReg = intReg.SE;
             '''
 
-    class cvtf_i2d_hi(ConvOp):
+    class Cvtf_i2d_hi(ConvOp):
+        operands = (fp_dest_op, int_src1_op)
         code = 'FpDestReg = bits(SSrcReg1, 63, 32);'
 
-    class cvtf_d2i(ConvOp):
+    class Cvtf_d2i(ConvOp):
+        operands = (int_dest_op, fp_src1_op)
         code = '''
             int64_t intSrcReg1 = static_cast<int64_t>(FpSrcReg1);
             DestReg = merge(DestReg, intSrcReg1, dataSize);
@@ -327,7 +320,8 @@ let {{
 
     # Convert two integers registers representing an 80-bit floating
     # point number to an x87 register.
-    class cvtint_fp80(FpBinaryOp):
+    class Cvtint_fp80(Fp3Op):
+        operands = (fp_dest_op, int_src1_op, int_src2_op)
         code = '''
             uint8_t bits[10];
             *(uint64_t *)(bits + 0) = SSrcReg1;
@@ -337,7 +331,8 @@ let {{
 
     # Convert an x87 register (double) into extended precision and
     # extract the highest 64 bits.
-    class cvtfp80h_int(ConvOp):
+    class Cvtfp80h_int(ConvOp):
+        operands = (int_dest_op, fp_src1_op)
         code = '''
             char bits[10];
             storeFloat80(bits, FpSrcReg1);
@@ -346,7 +341,8 @@ let {{
 
     # Convert an x87 register (double) into extended precision and
     # extract the lowest 16 bits.
-    class cvtfp80l_int(ConvOp):
+    class Cvtfp80l_int(ConvOp):
+        operands = (int_dest_op, fp_src1_op)
         code = '''
             char bits[10];
             storeFloat80(bits, FpSrcReg1);
@@ -355,27 +351,27 @@ let {{
 
     # These need to consider size at some point. They'll always use doubles
     # for the moment.
-    class addfp(FpBinaryOp):
+    class Addfp(Fp3Op):
         code = 'FpDestReg = FpSrcReg1 + FpSrcReg2;'
 
-    class mulfp(FpBinaryOp):
+    class Mulfp(Fp3Op):
         code = 'FpDestReg = FpSrcReg1 * FpSrcReg2;'
         op_class = 'FloatMultOp'
 
-    class divfp(FpBinaryOp):
+    class Divfp(Fp3Op):
         code = 'FpDestReg = FpSrcReg1 / FpSrcReg2;'
         op_class = 'FloatDivOp'
 
-    class subfp(FpBinaryOp):
+    class Subfp(Fp3Op):
         code = 'FpDestReg = FpSrcReg1 - FpSrcReg2;'
 
-    class Yl2xFp(FpBinaryOp):
+    class Yl2xFp(Fp3Op):
         code = '''
             FpDestReg = FpSrcReg2 * (log(FpSrcReg1) / log(2));
         '''
         op_class = 'FloatSqrtOp'
 
-    class PremFp(FpBinaryOp):
+    class PremFp(Fp3Op):
         code = '''
             RegVal new_fsw = FSW;
             int src1_exp;
@@ -403,11 +399,8 @@ let {{
 
         flag_code = 'FSW = new_fsw;'
 
-    class Compfp(FpBinaryOp):
-        def __init__(self, src1, src2, spm=0, setStatus=False, updateFTW=True, \
-                dataSize="env.dataSize"):
-            super(Compfp, self).__init__("InstRegIndex(FLOATREG_MICROFP0)", \
-                    src1, src2, spm, setStatus, updateFTW, dataSize)
+    class Compfp(Fp2Op):
+        operands = (fp_src1_op, fp_src2_op)
         # This class sets the condition codes in rflags according to the
         # rules for comparing floating point.
         code = '''
@@ -431,21 +424,15 @@ let {{
         '''
         op_class = 'FloatCmpOp'
 
-    class absfp(FpUnaryOp):
+    class absfp(Fp2Op):
         code = 'FpDestReg = fabs(FpSrcReg1);'
         flag_code = 'FSW = FSW & (~CC1Bit);'
 
-    class chsfp(FpUnaryOp):
+    class chsfp(Fp2Op):
         code = 'FpDestReg = (-1) * (FpSrcReg1);'
         flag_code = 'FSW = FSW & (~CC1Bit);'
 
-    class Pop87(FpUnaryOp):
-        def __init__(self, spm=1, UpdateFTW=True):
-            super(Pop87, self).__init__(               \
-                    "InstRegIndex(FLOATREG_MICROFP0)", \
-                    "InstRegIndex(FLOATREG_MICROFP0)", \
-                    spm=spm, SetStatus=False, UpdateFTW=UpdateFTW)
-
+    class Pop87(Fp0Op):
         code = ''
         op_class = 'IntAluOp'
 }};

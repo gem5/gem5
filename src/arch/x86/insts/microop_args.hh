@@ -103,6 +103,22 @@ struct DataLowOp
 };
 
 template <class Base>
+struct IntOp : public Base
+{
+    template <class InstType>
+    IntOp(InstType *inst, typename Base::ArgType idx) :
+        Base(idx.index(), inst->dataSize)
+    {}
+
+    void
+    print(std::ostream &os) const
+    {
+        X86StaticInst::printReg(os, RegId(IntRegClass, this->opIndex()),
+                this->size);
+    }
+};
+
+template <class Base>
 struct FoldedOp : public Base
 {
     template <class InstType>
@@ -195,14 +211,20 @@ using DbgDestOp = DbgOp<DestOp>;
 using CrDestOp = CrOp<DestOp>;
 using SegDestOp = SegOp<DestOp>;
 using MiscDestOp = MiscOp<DestOp>;
+using FloatDestOp = FloatOp<DestOp>;
+using IntDestOp = IntOp<DestOp>;
 
 using FoldedSrc1Op = FoldedOp<Src1Op>;
 using DbgSrc1Op = DbgOp<Src1Op>;
 using CrSrc1Op = CrOp<Src1Op>;
 using SegSrc1Op = SegOp<Src1Op>;
 using MiscSrc1Op = MiscOp<Src1Op>;
+using FloatSrc1Op = FloatOp<Src1Op>;
+using IntSrc1Op = IntOp<Src1Op>;
 
 using FoldedSrc2Op = FoldedOp<Src2Op>;
+using FloatSrc2Op = FloatOp<Src2Op>;
+using IntSrc2Op = IntOp<Src2Op>;
 
 using FoldedDataOp = FoldedOp<DataOp>;
 using FloatDataOp = FloatOp<DataOp>;
