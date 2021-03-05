@@ -40,40 +40,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-output header {{
-    class MicroFaultBase : public X86ISA::X86MicroopBase
-    {
-      protected:
-        Fault fault;
-        uint8_t cc;
-
-      public:
-        MicroFaultBase(ExtMachInst _machInst, const char * instMnem,
-                uint64_t setFlags, Fault _fault, uint8_t _cc);
-
-        std::string generateDisassembly(Addr pc,
-                const Loader::SymbolTable *symtab) const override;
-    };
-
-    class MicroHalt : public X86ISA::X86MicroopBase
-    {
-      public:
-        MicroHalt(ExtMachInst _machInst, const char * instMnem,
-                uint64_t setFlags) :
-            X86MicroopBase(_machInst, "halt", instMnem,
-                           setFlags | (1ULL << StaticInst::IsNonSpeculative) |
-                           (1ULL << StaticInst::IsQuiesce),
-                           No_OpClass)
-        {
-        }
-
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-
-        std::string generateDisassembly(Addr pc,
-                const Loader::SymbolTable *symtab) const override;
-    };
-}};
-
 def template MicroFaultDeclare {{
     class %(class_name)s : public %(base_class)s
     {
@@ -81,83 +47,38 @@ def template MicroFaultDeclare {{
         %(reg_idx_arr_decl)s;
 
       public:
-        %(class_name)s(ExtMachInst _machInst, const char * instMnem,
-                uint64_t setFlags, Fault _fault, uint8_t _cc);
+        %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
+                uint64_t set_flags, Fault _fault, uint8_t _cc);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
 def template MicroFaultExecute {{
-        Fault %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
-        {
-            %(op_decl)s;
-            %(op_rd)s;
-            if (%(cond_test)s) {
-                //Return the fault we were constructed with
-                return fault;
-            } else {
-                return NoFault;
-            }
-        }
-}};
-
-output exec {{
     Fault
-    MicroHalt::execute(ExecContext *xc, Trace::InstRecord * traceData) const
+    %(class_name)s::execute(ExecContext *xc,
+            Trace::InstRecord *traceData) const
     {
-        xc->tcBase()->suspend();
-        return NoFault;
-    }
-}};
-
-output decoder {{
-    MicroFaultBase::MicroFaultBase(
-            ExtMachInst machInst, const char * instMnem,
-            uint64_t setFlags, Fault _fault, uint8_t _cc) :
-        X86MicroopBase(machInst, "fault", instMnem, setFlags, No_OpClass),
-                fault(_fault), cc(_cc)
-    {
+        %(op_decl)s;
+        %(op_rd)s;
+        if (%(cond_test)s) {
+            // Return the fault we were constructed with.
+            return fault;
+        } else {
+            return NoFault;
+        }
     }
 }};
 
 def template MicroFaultConstructor {{
     %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
+            ExtMachInst mach_inst, const char *inst_mnem, uint64_t set_flags,
             Fault _fault, uint8_t _cc) :
-        %(base_class)s(machInst, instMnem, setFlags, _fault, _cc)
+        %(base_class)s(mach_inst, "fault", inst_mnem, set_flags, No_OpClass,
+                _fault, _cc)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
-    }
-}};
-
-output decoder {{
-    std::string
-    MicroFaultBase::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
-    {
-        std::stringstream response;
-
-        printMnemonic(response, instMnem, mnemonic);
-        if(fault)
-            response << fault->name();
-        else
-            response << "No Fault";
-
-        return response.str();
-    }
-
-    std::string
-    MicroHalt::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
-    {
-        std::stringstream response;
-
-        printMnemonic(response, instMnem, mnemonic);
-
-        return response.str();
     }
 }};
 
@@ -183,14 +104,16 @@ let {{
                 "cc" : self.cond}
             return allocator
 
-    iop = InstObjParams("fault", "MicroFaultFlags", "MicroFaultBase",
+    iop = InstObjParams("fault", "MicroFaultFlags",
+            "X86ISA::InstOperands<X86ISA::MicroCondBase, X86ISA::FaultOp>",
             {"code": "",
              "cond_test": "checkCondition(ccFlagBits | cfofBits | dfBit | \
                                           ecfBit | ezfBit, cc)"})
     exec_output = MicroFaultExecute.subst(iop)
     header_output = MicroFaultDeclare.subst(iop)
     decoder_output = MicroFaultConstructor.subst(iop)
-    iop = InstObjParams("fault", "MicroFault", "MicroFaultBase",
+    iop = InstObjParams("fault", "MicroFault",
+            "X86ISA::InstOperands<X86ISA::MicroCondBase, X86ISA::FaultOp>",
             {"code": "",
              "cond_test": "true"})
     exec_output += MicroFaultExecute.subst(iop)
@@ -204,7 +127,7 @@ let {{
             pass
 
         def getAllocator(self, microFlags):
-            return "new MicroHalt(machInst, macrocodeBlock, %s)" % \
+            return "new X86ISA::MicroHalt(machInst, macrocodeBlock, %s)" % \
                     self.microFlagsText(microFlags)
 
     microopClasses["halt"] = Halt
@@ -217,19 +140,22 @@ def template MicroFenceOpDeclare {{
         %(reg_idx_arr_decl)s;
 
       public:
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                uint64_t setFlags);
+        %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
+                uint64_t set_flags);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault
+        execute(ExecContext *, Trace::InstRecord *) const override
+        {
+            return NoFault;
+        }
     };
 }};
 
 def template MicroFenceOpConstructor {{
     %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem, uint64_t setFlags) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                setFlags, %(op_class)s)
+            ExtMachInst mach_inst, const char *inst_mnem, uint64_t set_flags) :
+        %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem,
+                set_flags, %(op_class)s)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -264,5 +190,4 @@ let {{
             {"code" : ""})
     header_output += MicroFenceOpDeclare.subst(iop)
     decoder_output += MicroFenceOpConstructor.subst(iop)
-    exec_output += BasicExecute.subst(iop)
 }};

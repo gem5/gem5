@@ -141,6 +141,20 @@ class X86MicroopBase : public X86StaticInst
     using StaticInst::branchTarget;
 };
 
+class MicroCondBase : public X86MicroopBase
+{
+  protected:
+    uint8_t cc;
+
+  public:
+    MicroCondBase(ExtMachInst mach_inst, const char *mnem,
+            const char *inst_mnem, uint64_t set_flags, OpClass op_class,
+            uint8_t _cc) :
+        X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, op_class),
+        cc(_cc)
+    {}
+};
+
 }
 
 #endif //__ARCH_X86_INSTS_MICROOP_HH__

@@ -37,6 +37,7 @@
 #include "arch/x86/types.hh"
 #include "base/cprintf.hh"
 #include "cpu/reg_class.hh"
+#include "sim/faults.hh"
 
 namespace X86ISA
 {
@@ -260,6 +261,22 @@ struct Imm64Op
     print(std::ostream &os) const
     {
         ccprintf(os, "%#x", imm64);
+    }
+};
+
+struct FaultOp
+{
+    using ArgType = Fault;
+
+    Fault fault;
+
+    template <class InstType>
+    FaultOp(InstType *inst, ArgType _fault) : fault(_fault) {}
+
+    void
+    print(std::ostream &os) const
+    {
+        ccprintf(os, fault ? fault->name() : "NoFault");
     }
 };
 
