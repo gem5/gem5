@@ -78,9 +78,6 @@ class X86KvmCPU : public BaseKvmCPU
      */
     Tick kvmRunDrain() override;
 
-    /** Wrapper that synchronizes state in kvm_run */
-    Tick kvmRunWrapper(Tick ticks);
-
     uint64_t getHostCycles() const override;
 
     /**
@@ -157,6 +154,9 @@ class X86KvmCPU : public BaseKvmCPU
      * otherwise.
      */
     bool archIsDrained() const override;
+
+    /** Override for synchronizing state in kvm_run */
+    void ioctlRun() override;
 
   private:
     /**

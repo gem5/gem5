@@ -1225,7 +1225,7 @@ X86KvmCPU::kvmRun(Tick ticks)
     if (_status == Idle)
         return 0;
     else
-        return kvmRunWrapper(ticks);
+        return BaseKvmCPU::kvmRun(ticks);
 }
 
 Tick
@@ -1245,31 +1245,12 @@ X86KvmCPU::kvmRunDrain()
         // Limit the run to 1 millisecond. That is hopefully enough to
         // reach an interrupt window. Otherwise, we'll just try again
         // later.
-        return kvmRunWrapper(1 * SimClock::Float::ms);
+        return BaseKvmCPU::kvmRun(1 * SimClock::Float::ms);
     } else {
         DPRINTF(Drain, "kvmRunDrain: Delivering pending IO\n");
 
-        return kvmRunWrapper(0);
+        return BaseKvmCPU::kvmRun(0);
     }
-}
-
-Tick
-X86KvmCPU::kvmRunWrapper(Tick ticks)
-{
-    struct kvm_run &kvm_run(*getKvmRunState());
-
-    // Synchronize the APIC base and CR8 here since they are present
-    // in the kvm_run struct, which makes the synchronization really
-    // cheap.
-    kvm_run.apic_base = tc->readMiscReg(MISCREG_APIC_BASE);
-    kvm_run.cr8 = tc->readMiscReg(MISCREG_CR8);
-
-    const Tick run_ticks(BaseKvmCPU::kvmRun(ticks));
-
-    tc->setMiscReg(MISCREG_APIC_BASE, kvm_run.apic_base);
-    kvm_run.cr8 = tc->readMiscReg(MISCREG_CR8);
-
-    return run_ticks;
 }
 
 uint64_t
@@ -1402,6 +1383,23 @@ X86KvmCPU::archIsDrained() const
     }
 
     return !pending_events;
+}
+
+void
+X86KvmCPU::ioctlRun()
+{
+    struct kvm_run &kvm_run(*getKvmRunState());
+
+    // Synchronize the APIC base and CR8 here since they are present
+    // in the kvm_run struct, which makes the synchronization really
+    // cheap.
+    kvm_run.apic_base = tc->readMiscReg(MISCREG_APIC_BASE);
+    kvm_run.cr8 = tc->readMiscReg(MISCREG_CR8);
+
+    BaseKvmCPU::ioctlRun();
+
+    tc->setMiscReg(MISCREG_APIC_BASE, kvm_run.apic_base);
+    kvm_run.cr8 = tc->readMiscReg(MISCREG_CR8);
 }
 
 static struct kvm_cpuid_entry2

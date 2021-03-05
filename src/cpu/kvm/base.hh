@@ -569,6 +569,8 @@ class BaseKvmCPU : public BaseCPU
     }
     /** @} */
 
+    /** Execute the KVM_RUN ioctl */
+    virtual void ioctlRun();
 
     /**
      * KVM memory port.  Uses default RequestPort behavior and provides an
@@ -677,9 +679,6 @@ class BaseKvmCPU : public BaseCPU
 
     /** Try to drain the CPU if a drain is pending */
     bool tryDrain();
-
-    /** Execute the KVM_RUN ioctl */
-    void ioctlRun();
 
     /** KVM vCPU file descriptor */
     int vcpuFD;
