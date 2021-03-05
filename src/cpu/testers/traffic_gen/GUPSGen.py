@@ -1,16 +1,5 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2012, 2017-2020 ARM Limited
+# Copyright (c) 2021 The Regents of the University of California.
 # All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -34,38 +23,38 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from m5.objects.ClockedObject import ClockedObject
 
+class GUPSGen(ClockedObject):
+    """
+    This ClockedObject implements the RandomAccess benchmark specified by HPCC
+    benchmarks in https://icl.utk.edu/projectsfiles/hpcc/RandomAccess.
+    """
+    type = 'GUPSGen'
+    cxx_header = "cpu/testers/traffic_gen/gups_gen.hh"
+    cxx_class = "gem5::GUPSGen"
 
-Source('base.cc')
-Source('base_gen.cc')
-Source('dram_gen.cc')
-Source('dram_rot_gen.cc')
-Source('exit_gen.cc')
-Source('gups_gen.cc')
-Source('hybrid_gen.cc')
-Source('idle_gen.cc')
-Source('linear_gen.cc')
-Source('nvm_gen.cc')
-Source('random_gen.cc')
-Source('stream_gen.cc')
-Source('strided_gen.cc')
+    system = Param.System(Parent.any, 'System this generator is a part of')
 
-DebugFlag('TrafficGen')
-SimObject('BaseTrafficGen.py')
+    port = RequestPort('Port that should be connected to other components')
 
-DebugFlag('GUPSGen')
-SimObject('GUPSGen.py')
+    start_addr = Param.Addr(0, 'Start address for allocating update table,'
+                            ' should be a multiple of block_size')
 
-if env['USE_PYTHON']:
-    Source('pygen.cc', add_tags='python')
-    SimObject('PyTrafficGen.py')
+    mem_size = Param.MemorySize('Size for allocating update table, based on'
+                            ' randomAccess benchmark specification, this'
+                            ' should be equal to half of total system memory'
+                            ' ,also should be a power of 2')
 
-# Only build the traffic generator if we have support for protobuf as the
-# tracing relies on it
-if env['HAVE_PROTOBUF']:
-    SimObject('TrafficGen.py')
-    Source('trace_gen.cc')
-    Source('traffic_gen.cc')
+    update_limit = Param.Int(0, 'The number of updates to issue before the'
+                            ' simulation is over')
 
+    request_queue_size = Param.Int(1024, 'Maximum number of parallel'
+                            ' outstanding requests')
+
+    init_memory = Param.Bool(False, 'Whether or not to initialize the memory,'
+                            ' it does not effect the performance')
