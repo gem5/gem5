@@ -200,7 +200,7 @@ def config_mem(options, system):
             if opt_mem_type and (not opt_nvm_type or range_iter % 2 != 0):
                 # Create the DRAM interface
                 dram_intf = create_mem_intf(intf, r, i, nbr_mem_ctrls,
-                                    intlv_bits, intlv_size, opt_xor_low_bit)
+                    intlv_bits, intlv_size, opt_xor_low_bit)
 
                 # Set the number of ranks based on the command-line
                 # options if it was explicitly set
@@ -241,7 +241,7 @@ def config_mem(options, system):
 
             elif opt_nvm_type and (not opt_mem_type or range_iter % 2 == 0):
                 nvm_intf = create_mem_intf(n_intf, r, i, nbr_mem_ctrls,
-                                           intlv_bits, intlv_size)
+                    intlv_bits, intlv_size, opt_xor_low_bit)
                 # Set the number of ranks based on the command-line
                 # options if it was explicitly set
                 if issubclass(n_intf, m5.objects.NVMInterface) and \
