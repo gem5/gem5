@@ -71,6 +71,6 @@ def macroop RDTSCP
     rdtsc t1
     mov rax, rax, t1, dataSize=4
     srli rdx, t1, 32, dataSize=8
-    rdval rcx, "InstRegIndex(MISCREG_TSC_AUX)", dataSize=4
+    rdval rcx, regIdx("MISCREG_TSC_AUX"), dataSize=4
 };
 '''
