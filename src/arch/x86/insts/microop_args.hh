@@ -264,6 +264,22 @@ struct Imm64Op
     }
 };
 
+struct UpcOp
+{
+    using ArgType = MicroPC;
+
+    MicroPC target;
+
+    template <class InstType>
+    UpcOp(InstType *inst, ArgType _target) : target(_target) {}
+
+    void
+    print(std::ostream &os) const
+    {
+        ccprintf(os, "%#x", target);
+    }
+};
+
 struct FaultOp
 {
     using ArgType = Fault;

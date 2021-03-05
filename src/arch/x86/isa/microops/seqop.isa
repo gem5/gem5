@@ -33,114 +33,81 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-output header {{
-    class SeqOpBase : public X86ISA::X86MicroopBase
-    {
-      protected:
-        uint16_t target;
-        uint8_t cc;
-
-      public:
-        SeqOpBase(ExtMachInst _machInst, const char * instMnem,
-                const char * mnemonic, uint64_t setFlags,
-                uint16_t _target, uint8_t _cc);
-
-        SeqOpBase(ExtMachInst _machInst, const char * instMnem,
-                const char * mnemonic,
-                uint16_t _target, uint8_t _cc);
-
-        std::string generateDisassembly(Addr pc,
-                const Loader::SymbolTable *symtab) const override;
-    };
-}};
-
-def template SeqOpDeclare {{
+def template BrDeclare {{
     class %(class_name)s : public %(base_class)s
     {
       private:
         %(reg_idx_arr_decl)s;
 
       public:
-        %(class_name)s(ExtMachInst _machInst, const char * instMnem,
-                uint64_t setFlags, uint16_t _target, uint8_t _cc);
+        %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
+                uint64_t set_flags, uint16_t _target, uint8_t _cc) :
+            %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
+                    %(op_class)s, _target, _cc)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
-        X86ISA::PCState branchTarget(const X86ISA::PCState &branchPC) const
-        override;
+        X86ISA::PCState
+        branchTarget(const X86ISA::PCState &branchPC) const override
+        {
+            X86ISA::PCState pcs = branchPC;
+            DPRINTF(X86, "Br branchTarget PC info: %s, Target: %d\n",
+                    pcs, (int16_t)target);
+            pcs.nupc(target);
+            pcs.uAdvance();
+            return pcs;
+        }
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;
     };
 }};
 
-def template SeqOpExecute {{
-        Fault %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
+def template EretDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
+                uint64_t set_flags, uint8_t _cc) :
+            %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
+                    %(op_class)s, _cc)
         {
-            %(op_decl)s;
-            %(op_rd)s;
-            if (%(cond_test)s) {
-                %(code)s;
-            } else {
-                %(else_code)s;
-            }
-            %(op_wb)s;
-            return NoFault;
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
         }
+
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    };
 }};
 
-output decoder {{
-    SeqOpBase::SeqOpBase(
-            ExtMachInst machInst, const char * mnemonic, const char * instMnem,
-            uint64_t setFlags, uint16_t _target, uint8_t _cc) :
-        X86MicroopBase(machInst, mnemonic, instMnem, setFlags, No_OpClass),
-                target(_target), cc(_cc)
+def template SeqOpExecute {{
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+            Trace::InstRecord *traceData) const
     {
-    }
-}};
-
-def template SeqOpConstructor {{
-    %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            uint64_t setFlags, uint16_t _target, uint8_t _cc) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                setFlags, _target, _cc)
-    {
-        %(set_reg_idx_arr)s;
-        %(constructor)s;
-        %(cond_control_flag_init)s;
-    }
-
-    X86ISA::PCState
-    %(class_name)s::branchTarget(const X86ISA::PCState &branchPC) const
-    {
-        X86ISA::PCState pcs = branchPC;
-        DPRINTF(X86, "Br branchTarget PC info: %s, Target: %d\n",
-                pcs, (int16_t)target);
-        pcs.nupc(target);
-        pcs.uAdvance();
-        return pcs;
-    }
-}};
-
-output decoder {{
-    std::string
-    SeqOpBase::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
-    {
-        std::stringstream response;
-
-        printMnemonic(response, instMnem, mnemonic);
-        ccprintf(response, "%#x", target);
-
-        return response.str();
+        %(op_decl)s;
+        %(op_rd)s;
+        if (%(cond_test)s) {
+            %(code)s;
+        } else {
+            %(else_code)s;
+        }
+        %(op_wb)s;
+        return NoFault;
     }
 }};
 
 let {{
-    class SeqOp(X86Microop):
+    class Br(X86Microop):
         def __init__(self, target, flags=None):
+            self.className = "Br"
             self.target = target
             if flags:
                 if not isinstance(flags, (list, tuple)):
@@ -151,79 +118,59 @@ let {{
                 self.cond = "0"
 
         def getAllocator(self, microFlags):
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
+            if "IsLastMicroop" in microFlags:
+                microFlags.remove("IsLastMicroop")
+            if not "IsDelayedCommit" in microFlags:
+                microFlags.append("IsDelayedCommit")
+
+            return '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(target)s, %(cc)s)''' % {
                 "class_name" : self.className,
                 "flags" : self.microFlagsText(microFlags),
                 "target" : self.target,
                 "cc" : self.cond}
-            return allocator
+    microopClasses["br"] = Br
 
-    class Br(SeqOp):
-        className = "MicroBranch"
-
-        def getAllocator(self, microFlags):
-            if "IsLastMicroop" in microFlags:
-                microFlags.remove("IsLastMicroop")
-            if not "IsDelayedCommit" in microFlags:
-                microFlags.append("IsDelayedCommit")
-            return super(Br, self).getAllocator(microFlags)
-
-    class Eret(SeqOp):
-        target = "normalMicroPC(0)"
-        className = "Eret"
-
+    class Eret(X86Microop):
         def __init__(self, flags=None):
+            self.className = "Eret"
             if flags:
                 if not isinstance(flags, (list, tuple)):
                     raise Exception("flags must be a list or tuple of flags")
                 self.cond = " | ".join(flags)
                 self.className += "Flags"
             else:
-                self.cond = "0"
+                self.cond = "X86ISA::ConditionTests::True"
 
         def getAllocator(self, microFlags):
             if not "IsLastMicroop" in microFlags:
                 microFlags.append("IsLastMicroop")
             if "IsDelayedCommit" in microFlags:
                 microFlags.remove("IsDelayedCommit")
-            return super(Eret, self).getAllocator(microFlags)
 
-    iop = InstObjParams("br", "MicroBranchFlags", "SeqOpBase",
-            {"code": "nuIP = target;",
-             "else_code": "nuIP = nuIP;",
-             "cond_test": "checkCondition(ccFlagBits | cfofBits | dfBit | \
-                                          ecfBit | ezfBit, cc)",
-             "cond_control_flag_init": "flags[IsCondControl] = true; \
-             flags[IsDirectControl] = true;"})
-    exec_output += SeqOpExecute.subst(iop)
-    header_output += SeqOpDeclare.subst(iop)
-    decoder_output += SeqOpConstructor.subst(iop)
-    iop = InstObjParams("br", "MicroBranch", "SeqOpBase",
-            {"code": "nuIP = target;",
-             "else_code": "nuIP = nuIP;",
-             "cond_test": "true",
-             "cond_control_flag_init": ""})
-    exec_output += SeqOpExecute.subst(iop)
-    header_output += SeqOpDeclare.subst(iop)
-    decoder_output += SeqOpConstructor.subst(iop)
-    microopClasses["br"] = Br
-
-    iop = InstObjParams("eret", "EretFlags", "SeqOpBase",
-            {"code": "", "else_code": "",
-             "cond_test": "checkCondition(ccFlagBits | cfofBits | dfBit | \
-                                          ecfBit | ezfBit, cc)",
-             "cond_control_flag_init": "flags[IsUncondControl] = true;\
-             flags[IsDirectControl] = true;"})
-    exec_output += SeqOpExecute.subst(iop)
-    header_output += SeqOpDeclare.subst(iop)
-    decoder_output += SeqOpConstructor.subst(iop)
-    iop = InstObjParams("eret", "Eret", "SeqOpBase",
-            {"code": "", "else_code": "",
-             "cond_test": "true",
-             "cond_control_flag_init": ""})
-    exec_output += SeqOpExecute.subst(iop)
-    header_output += SeqOpDeclare.subst(iop)
-    decoder_output += SeqOpConstructor.subst(iop)
+            return '''new %(class_name)s(machInst, macrocodeBlock,
+                    %(flags)s, %(cc)s)''' % {
+                "class_name" : self.className,
+                "flags" : self.microFlagsText(microFlags),
+                "cc" : self.cond}
     microopClasses["eret"] = Eret
+
+    cond_code = "checkCondition(ccFlagBits | cfofBits | dfBit |" \
+                 "ecfBit | ezfBit, cc)"
+    for suffix, cond, flags in \
+            ("Flags", cond_code, ["IsDirectControl", "IsCondControl"]), \
+            ("", "true", []):
+        iop = InstObjParams("br", "Br" + suffix,
+                "X86ISA::InstOperands<X86ISA::MicroCondBase, X86ISA::UpcOp>",
+                {"code": "nuIP = target;", "else_code": "nuIP = nuIP;",
+                 "cond_test": cond},
+                 flags)
+        exec_output += SeqOpExecute.subst(iop)
+        header_output += BrDeclare.subst(iop)
+
+        iop = InstObjParams("eret", "Eret" + suffix,
+                "X86ISA::InstOperands<X86ISA::MicroCondBase>",
+                {"code": "", "else_code": "", "cond_test": cond}, flags)
+        exec_output += SeqOpExecute.subst(iop)
+        header_output += EretDeclare.subst(iop)
 }};
