@@ -70,6 +70,8 @@ output header {{
 #include "sim/faults.hh"
 
 using X86ISA::InstRegIndex;
+using X86ISA::FpRegIndex;
+
 }};
 
 output decoder {{

@@ -194,10 +194,10 @@ struct MiscOp : public Base
 template <class Base>
 struct FloatOp : public Base
 {
+    using ArgType = FpRegIndex;
+
     template <class InstType>
-    FloatOp(InstType *inst, typename Base::ArgType idx) :
-        Base(idx.index, inst->dataSize)
-    {}
+    FloatOp(InstType *inst, ArgType idx) : Base(idx.index, inst->dataSize) {}
 
     void
     print(std::ostream &os) const

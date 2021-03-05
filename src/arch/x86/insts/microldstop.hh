@@ -101,7 +101,7 @@ class LdStFpOp : public InstOperands<MemOp, FloatDataOp, AddrOp>
 {
   protected:
     LdStFpOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, InstRegIndex _data,
+            uint64_t set_flags, FpRegIndex _data,
             uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
             uint64_t _disp, InstRegIndex _segment,
             uint8_t data_size, uint8_t address_size,

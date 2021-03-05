@@ -43,16 +43,16 @@ storeX87RegTemplate = '''
 '''
 
 loadXMMRegTemplate =  '''
-    ldfp regIdx("FLOATREG_XMM_LOW(%(idx)i)"), seg, %(mode)s, \
+    ldfp fpRegIdx("FLOATREG_XMM_LOW(%(idx)i)"), seg, %(mode)s, \
          "DISPLACEMENT + 160 + 16 * %(idx)i", dataSize=8
-    ldfp regIdx("FLOATREG_XMM_HIGH(%(idx)i)"), seg, %(mode)s, \
+    ldfp fpRegIdx("FLOATREG_XMM_HIGH(%(idx)i)"), seg, %(mode)s, \
          "DISPLACEMENT + 160 + 16 * %(idx)i + 8", dataSize=8
 '''
 
 storeXMMRegTemplate =  '''
-    stfp regIdx("FLOATREG_XMM_LOW(%(idx)i)"), seg, %(mode)s, \
+    stfp fpRegIdx("FLOATREG_XMM_LOW(%(idx)i)"), seg, %(mode)s, \
          "DISPLACEMENT + 160 + 16 * %(idx)i", dataSize=8
-    stfp regIdx("FLOATREG_XMM_HIGH(%(idx)i)"), seg, %(mode)s, \
+    stfp fpRegIdx("FLOATREG_XMM_HIGH(%(idx)i)"), seg, %(mode)s, \
          "DISPLACEMENT + 160 + 16 * %(idx)i + 8", dataSize=8
 '''
 

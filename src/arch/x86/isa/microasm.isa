@@ -57,16 +57,19 @@ let {{
     assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, Rom_Macroop)
 
     def regIdx(idx):
-        return "InstRegIndex(%s)" % idx
+        return "X86ISA::InstRegIndex(%s)" % idx
+    def fpRegIdx(idx):
+        return "X86ISA::FpRegIndex(%s)" % idx
 
     assembler.symbols["regIdx"] = regIdx
+    assembler.symbols["fpRegIdx"] = fpRegIdx
 
     # Add in symbols for the microcode registers
     for num in range(16):
         assembler.symbols["t%d" % num] = regIdx("NUM_INTREGS+%d" % num)
     for num in range(8):
         assembler.symbols["ufp%d" % num] = \
-            regIdx("FLOATREG_MICROFP(%d)" % num)
+            fpRegIdx("FLOATREG_MICROFP(%d)" % num)
     # Add in symbols for the segment descriptor registers
     for letter in ("C", "D", "E", "F", "G", "H", "S"):
         assembler.symbols["%ss" % letter.lower()] = \
@@ -87,13 +90,13 @@ let {{
     # Miscellaneous symbols
     symbols = {
         "reg" : regIdx("env.reg"),
-        "xmml" : regIdx("FLOATREG_XMM_LOW(env.reg)"),
-        "xmmh" : regIdx("FLOATREG_XMM_HIGH(env.reg)"),
+        "xmml" : fpRegIdx("FLOATREG_XMM_LOW(env.reg)"),
+        "xmmh" : fpRegIdx("FLOATREG_XMM_HIGH(env.reg)"),
         "regm" : regIdx("env.regm"),
-        "xmmlm" : regIdx("FLOATREG_XMM_LOW(env.regm)"),
-        "xmmhm" : regIdx("FLOATREG_XMM_HIGH(env.regm)"),
-        "mmx" : regIdx("FLOATREG_MMX(env.reg)"),
-        "mmxm" : regIdx("FLOATREG_MMX(env.regm)"),
+        "xmmlm" : fpRegIdx("FLOATREG_XMM_LOW(env.regm)"),
+        "xmmhm" : fpRegIdx("FLOATREG_XMM_HIGH(env.regm)"),
+        "mmx" : fpRegIdx("FLOATREG_MMX(env.reg)"),
+        "mmxm" : fpRegIdx("FLOATREG_MMX(env.regm)"),
         "imm" : "adjustedImm",
         "disp" : "adjustedDisp",
         "seg" : regIdx("env.seg"),
@@ -205,7 +208,7 @@ let {{
     assembler.symbols["rom_local_label"] = rom_local_labeler
 
     def stack_index(index):
-        return regIdx("NUM_FLOATREGS + (((%s) + 8) %% 8)" % index)
+        return fpRegIdx("NUM_FLOATREGS + (((%s) + 8) %% 8)" % index)
 
     assembler.symbols["st"] = stack_index
     assembler.symbols["sti"] = stack_index("env.reg")
