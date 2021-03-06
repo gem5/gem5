@@ -39,7 +39,7 @@
 /**
  * @ingroup api_base_utils
  */
-inline uint64_t
+static constexpr uint64_t
 power(uint32_t n, uint32_t e)
 {
     uint64_t result = 1;
@@ -59,7 +59,7 @@ power(uint32_t n, uint32_t e)
  * @ingroup api_base_utils
  */
 template <class T>
-inline typename std::enable_if_t<std::is_integral<T>::value, int>
+static constexpr std::enable_if_t<std::is_integral<T>::value, int>
 floorLog2(T x)
 {
     assert(x > 0);
@@ -84,7 +84,7 @@ floorLog2(T x)
  * @ingroup api_base_utils
  */
 template <class T>
-inline int
+static constexpr int
 ceilLog2(const T& n)
 {
     assert(n > 0);
@@ -98,7 +98,7 @@ ceilLog2(const T& n)
  * @ingroup api_base_utils
  */
 template <class T>
-inline bool
+static constexpr bool
 isPowerOf2(const T& n)
 {
     // If n is non-zero, and subtracting one borrows all the way to the MSB
@@ -110,7 +110,7 @@ isPowerOf2(const T& n)
  * @ingroup api_base_utils
  */
 template <class T, class U>
-inline T
+static constexpr T
 divCeil(const T& a, const U& b)
 {
     return (a + b - 1) / b;
@@ -127,7 +127,7 @@ divCeil(const T& a, const U& b)
  * @ingroup api_base_utils
  */
 template <class T, class U>
-inline T
+static constexpr T
 roundUp(const T& val, const U& align)
 {
     assert(isPowerOf2(align));
@@ -146,7 +146,7 @@ roundUp(const T& val, const U& align)
  * @ingroup api_base_utils
  */
 template <class T, class U>
-inline T
+static constexpr T
 roundDown(const T& val, const U& align)
 {
     assert(isPowerOf2(align));
