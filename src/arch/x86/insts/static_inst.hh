@@ -121,11 +121,11 @@ class X86StaticInst : public StaticInst
     void printSrcReg(std::ostream &os, int reg, int size) const;
     void printDestReg(std::ostream &os, int reg, int size) const;
 
-    inline uint64_t
-    merge(uint64_t into, uint64_t val, int size) const
+    static inline uint64_t
+    merge(uint64_t into, RegIndex index, uint64_t val, int size)
     {
         X86IntReg reg = into;
-        if (destRegIdx(0).index() & IntFoldBit) {
+        if (index & IntFoldBit) {
             reg.H = val;
             return reg;
         }
@@ -150,12 +150,12 @@ class X86StaticInst : public StaticInst
         return reg;
     }
 
-    inline uint64_t
-    pick(uint64_t from, int idx, int size) const
+    static inline uint64_t
+    pick(uint64_t from, RegIndex index, int size)
     {
         X86IntReg reg = from;
         DPRINTF(X86, "Picking with size %d\n", size);
-        if (srcRegIdx(idx).index() & IntFoldBit)
+        if (index & IntFoldBit)
             return reg.H;
         switch(size) {
           case 1:
@@ -171,12 +171,12 @@ class X86StaticInst : public StaticInst
         }
     }
 
-    inline int64_t
-    signedPick(uint64_t from, int idx, int size) const
+    static inline int64_t
+    signedPick(uint64_t from, RegIndex index, int size)
     {
         X86IntReg reg = from;
         DPRINTF(X86, "Picking with size %d\n", size);
-        if (srcRegIdx(idx).index() & IntFoldBit)
+        if (index & IntFoldBit)
             return reg.SH;
         switch(size) {
           case 1:

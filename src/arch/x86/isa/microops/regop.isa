@@ -294,15 +294,15 @@ let {{
                 prefix = ""
                 for (rex, decl) in (
                         ("(?<!\w)psrc1(?!\w)",
-                         "uint64_t psrc1 = pick(SrcReg1, 0, dataSize);"),
+                         "uint64_t psrc1 = pick(SrcReg1, src1, dataSize);"),
                         ("(?<!\w)psrc2(?!\w)",
-                         "uint64_t psrc2 = pick(SrcReg2, 1, dataSize);"),
+                         "uint64_t psrc2 = pick(SrcReg2, src2, dataSize);"),
                         ("(?<!\w)spsrc1(?!\w)",
                          "int64_t spsrc1 = "
-                         "signedPick(SrcReg1, 0, dataSize);"),
+                         "signedPick(SrcReg1, src1, dataSize);"),
                         ("(?<!\w)spsrc2(?!\w)",
                          "int64_t spsrc2 = "
-                         "signedPick(SrcReg2, 1, dataSize);"),
+                         "signedPick(SrcReg2, src2, dataSize);"),
                         ("(?<!\w)simm8(?!\w)",
                          "int8_t simm8 = imm8;")):
                     matcher = re.compile(rex)
@@ -528,14 +528,14 @@ let {{
     class Add(FlagRegOp):
         code = '''
             result = psrc1 + op2;
-            DestReg = merge(DestReg, result, dataSize);
+            DestReg = merge(DestReg, dest, result, dataSize);
         '''
         big_code = 'DestReg = result = (psrc1 + op2) & mask(dataSize * 8);'
 
     class Or(LogicRegOp):
         code = '''
             result = psrc1 | op2;
-            DestReg = merge(DestReg, result, dataSize);
+            DestReg = merge(DestReg, dest, result, dataSize);
         '''
         big_code = 'DestReg = result = (psrc1 | op2) & mask(dataSize * 8);'
 
@@ -543,7 +543,7 @@ let {{
         code = '''
             CCFlagBits flags = cfofBits;
             result = psrc1 + op2 + flags.cf;
-            DestReg = merge(DestReg, result, dataSize);
+            DestReg = merge(DestReg, dest, result, dataSize);
             '''
         big_code = '''
             CCFlagBits flags = cfofBits;
@@ -554,7 +554,7 @@ let {{
         code = '''
             CCFlagBits flags = cfofBits;
             result = psrc1 - op2 - flags.cf;
-            DestReg = merge(DestReg, result, dataSize);
+            DestReg = merge(DestReg, dest, result, dataSize);
             '''
         big_code = '''
             CCFlagBits flags = cfofBits;
@@ -564,21 +564,21 @@ let {{
     class And(LogicRegOp):
         code = '''
             result = psrc1 & op2;
-            DestReg = merge(DestReg, result, dataSize)
+            DestReg = merge(DestReg, dest, result, dataSize)
         '''
         big_code = 'DestReg = result = (psrc1 & op2) & mask(dataSize * 8)'
 
     class Sub(SubRegOp):
         code = '''
             result = psrc1 - op2;
-            DestReg = merge(DestReg, result, dataSize)
+            DestReg = merge(DestReg, dest, result, dataSize)
         '''
         big_code = 'DestReg = result = (psrc1 - op2) & mask(dataSize * 8)'
 
     class Xor(LogicRegOp):
         code = '''
             result = psrc1 ^ op2;
-            DestReg = merge(DestReg, result, dataSize)
+            DestReg = merge(DestReg, dest, result, dataSize)
         '''
         big_code = 'DestReg = result = (psrc1 ^ op2) & mask(dataSize * 8)'
 
@@ -676,7 +676,7 @@ let {{
         '''
 
     class Mulel(RdRegOp):
-        code = 'DestReg = merge(SrcReg1, ProdLow, dataSize);'
+        code = 'DestReg = merge(SrcReg1, dest, ProdLow, dataSize);'
         big_code = 'DestReg = ProdLow & mask(dataSize * 8);'
 
     class Muleh(RdRegOp):
@@ -685,7 +685,7 @@ let {{
             if not src1:
                 src1 = dest
             super(RdRegOp, self).__init__(dest, src1, dataSize=dataSize)
-        code = 'DestReg = merge(SrcReg1, ProdHi, dataSize);'
+        code = 'DestReg = merge(SrcReg1, dest, ProdHi, dataSize);'
         big_code = 'DestReg = ProdHi & mask(dataSize * 8);'
 
     # One or two bit divide
@@ -770,7 +770,7 @@ let {{
             Remainder = remainder;
             Quotient = quotient;
         '''
-        code = divCode % "DestReg = merge(DestReg, remaining, dataSize);"
+        code = divCode % "DestReg = merge(DestReg, dest, remaining, dataSize);"
         big_code = divCode % "DestReg = remaining & mask(dataSize * 8);"
         flag_code = '''
             if (remaining == 0)
@@ -780,15 +780,15 @@ let {{
         '''
 
     class Divq(RdRegOp):
-        code = 'DestReg = merge(SrcReg1, Quotient, dataSize);'
+        code = 'DestReg = merge(SrcReg1, dest, Quotient, dataSize);'
         big_code = 'DestReg = Quotient & mask(dataSize * 8);'
 
     class Divr(RdRegOp):
-        code = 'DestReg = merge(SrcReg1, Remainder, dataSize);'
+        code = 'DestReg = merge(SrcReg1, dest, Remainder, dataSize);'
         big_code = 'DestReg = Remainder & mask(dataSize * 8);'
 
     class Mov(BasicRegOp, CondRegOp):
-        code = 'DestReg = merge(SrcReg1, op2, dataSize)'
+        code = 'DestReg = merge(SrcReg1, dest, op2, dataSize)'
         else_code = 'DestReg = DestReg;'
 
     # Shift instructions
@@ -796,7 +796,7 @@ let {{
     class Sll(BasicRegOp):
         code = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
-            DestReg = merge(DestReg, psrc1 << shiftAmt, dataSize);
+            DestReg = merge(DestReg, dest, psrc1 << shiftAmt, dataSize);
             '''
         big_code = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
@@ -847,7 +847,7 @@ let {{
         code = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             uint64_t logicalMask = mask(dataSize * 8 - shiftAmt);
-            DestReg = merge(DestReg, (psrc1 >> shiftAmt) & logicalMask,
+            DestReg = merge(DestReg, dest, (psrc1 >> shiftAmt) & logicalMask,
                     dataSize);
             '''
         big_code = '''
@@ -894,7 +894,7 @@ let {{
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             uint64_t arithMask = (shiftAmt == 0) ? 0 :
                 -bits(psrc1, dataSize * 8 - 1) << (dataSize * 8 - shiftAmt);
-            DestReg = merge(DestReg,
+            DestReg = merge(DestReg, dest,
                     (psrc1 >> shiftAmt) | arithMask, dataSize);
             '''
         big_code = '''
@@ -939,9 +939,9 @@ let {{
             if (realShiftAmt) {
                 uint64_t top = psrc1 << (dataSize * 8 - realShiftAmt);
                 uint64_t bottom = bits(psrc1, dataSize * 8, realShiftAmt);
-                DestReg = merge(DestReg, top | bottom, dataSize);
+                DestReg = merge(DestReg, dest, top | bottom, dataSize);
             } else
-                DestReg = merge(DestReg, DestReg, dataSize);
+                DestReg = merge(DestReg, dest, DestReg, dataSize);
             '''
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -986,9 +986,9 @@ let {{
                 if (realShiftAmt > 1)
                     top |= psrc1 << (dataSize * 8 - realShiftAmt + 1);
                 uint64_t bottom = bits(psrc1, dataSize * 8 - 1, realShiftAmt);
-                DestReg = merge(DestReg, top | bottom, dataSize);
+                DestReg = merge(DestReg, dest, top | bottom, dataSize);
             } else
-                DestReg = merge(DestReg, DestReg, dataSize);
+                DestReg = merge(DestReg, dest, DestReg, dataSize);
             '''
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -1032,9 +1032,9 @@ let {{
                 uint64_t top = psrc1 << realShiftAmt;
                 uint64_t bottom =
                     bits(psrc1, dataSize * 8 - 1, dataSize * 8 - realShiftAmt);
-                DestReg = merge(DestReg, top | bottom, dataSize);
+                DestReg = merge(DestReg, dest, top | bottom, dataSize);
             } else
-                DestReg = merge(DestReg, DestReg, dataSize);
+                DestReg = merge(DestReg, dest, DestReg, dataSize);
             '''
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -1081,9 +1081,9 @@ let {{
                     bottom |=
                         bits(psrc1, dataSize * 8 - 1,
                                    dataSize * 8 - realShiftAmt + 1);
-                DestReg = merge(DestReg, top | bottom, dataSize);
+                DestReg = merge(DestReg, dest, top | bottom, dataSize);
             } else
-                DestReg = merge(DestReg, DestReg, dataSize);
+                DestReg = merge(DestReg, dest, DestReg, dataSize);
             '''
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -1135,7 +1135,7 @@ let {{
             }
             %s
             '''
-        code = sldCode % "DestReg = merge(DestReg, result, dataSize);"
+        code = sldCode % "DestReg = merge(DestReg, dest, result, dataSize);"
         big_code = sldCode % "DestReg = result & mask(dataSize * 8);"
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -1201,7 +1201,7 @@ let {{
             }
             %s
             '''
-        code = srdCode % "DestReg = merge(DestReg, result, dataSize);"
+        code = srdCode % "DestReg = merge(DestReg, dest, result, dataSize);"
         big_code = srdCode % "DestReg = result & mask(dataSize * 8);"
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -1293,7 +1293,7 @@ let {{
         code = '''
             int flag = bits(ccFlagBits | cfofBits | dfBit |
                             ecfBit | ezfBit, imm8);
-            DestReg = merge(DestReg, flag, dataSize);
+            DestReg = merge(DestReg, dest, flag, dataSize);
             ezfBit = (flag == 0) ? EZFBit : 0;
             '''
 
@@ -1317,7 +1317,7 @@ let {{
                              ecfBit | ezfBit) & flagMask;
 
             int flag = bits(flags, imm8);
-            DestReg = merge(DestReg, flag, dataSize);
+            DestReg = merge(DestReg, dest, flag, dataSize);
             ezfBit = (flag == 0) ? EZFBit : 0;
             '''
 
@@ -1344,7 +1344,7 @@ let {{
             int sign_bit = bits(val, bitPos, bitPos);
             uint64_t maskVal = mask(bitPos+1);
             val = sign_bit ? (val | ~maskVal) : (val & maskVal);
-            DestReg = merge(DestReg, val, dataSize);
+            DestReg = merge(DestReg, dest, val, dataSize);
             '''
 
         big_code = '''
@@ -1372,7 +1372,7 @@ let {{
             '''
 
     class Zext(BasicRegOp):
-        code = 'DestReg = merge(DestReg, bits(psrc1, op2, 0), dataSize);'
+        code = 'DestReg = merge(DestReg, dest, bits(psrc1, op2, 0), dataSize);'
         big_code = 'DestReg = bits(psrc1, op2, 0) & mask(dataSize * 8);'
 
     class Rddr(RegOp):
@@ -1391,7 +1391,7 @@ let {{
                 %s
             }
         '''
-        code = rdrCode % "DestReg = merge(DestReg, DebugSrc1, dataSize);"
+        code = rdrCode % "DestReg = merge(DestReg, dest, DebugSrc1, dataSize);"
         big_code = rdrCode % "DestReg = DebugSrc1 & mask(dataSize * 8);"
 
     class Wrdr(RegOp):
@@ -1426,7 +1426,8 @@ let {{
                 %s
             }
         '''
-        code = rdcrCode % "DestReg = merge(DestReg, ControlSrc1, dataSize);"
+        code = rdcrCode % \
+                "DestReg = merge(DestReg, dest, ControlSrc1, dataSize);"
         big_code = rdcrCode % "DestReg = ControlSrc1 & mask(dataSize * 8);"
 
     class Wrcr(RegOp):
@@ -1518,19 +1519,19 @@ let {{
         operands = (dest_op, seg_src1_op)
 
     class Rdbase(RdSegOp):
-        code = 'DestReg = merge(DestReg, SegBaseSrc1, dataSize);'
+        code = 'DestReg = merge(DestReg, dest, SegBaseSrc1, dataSize);'
         big_code = 'DestReg = SegBaseSrc1 & mask(dataSize * 8);'
 
     class Rdlimit(RdSegOp):
-        code = 'DestReg = merge(DestReg, SegLimitSrc1, dataSize);'
+        code = 'DestReg = merge(DestReg, dest, SegLimitSrc1, dataSize);'
         big_code = 'DestReg = SegLimitSrc1 & mask(dataSize * 8);'
 
     class RdAttr(RdSegOp):
-        code = 'DestReg = merge(DestReg, SegAttrSrc1, dataSize);'
+        code = 'DestReg = merge(DestReg, dest, SegAttrSrc1, dataSize);'
         big_code = 'DestReg = SegAttrSrc1 & mask(dataSize * 8);'
 
     class Rdsel(RdSegOp):
-        code = 'DestReg = merge(DestReg, SegSelSrc1, dataSize);'
+        code = 'DestReg = merge(DestReg, dest, SegSelSrc1, dataSize);'
         big_code = 'DestReg = SegSelSrc1 & mask(dataSize * 8);'
 
     class Rdval(RegOp):
@@ -1787,7 +1788,7 @@ let {{
         '''
 
     class Popcnt(BasicRegOp):
-        code = 'DestReg = merge(DestReg, popCount(psrc1), dataSize);'
+        code = 'DestReg = merge(DestReg, dest, popCount(psrc1), dataSize);'
         flag_code = '''
             ccFlagBits = ccFlagBits & ~(X86ISA::SFBit | X86ISA::AFBit |
                     X86ISA::ZFBit | X86ISA::PFBit);

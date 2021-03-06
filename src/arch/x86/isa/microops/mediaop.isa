@@ -234,7 +234,7 @@ let {{
                     bits(FpSrcReg1_uqw,
                             (offset + 1) * srcSize * 8 - 1,
                             (offset + 0) * srcSize * 8);
-                DestReg = merge(0, fpSrcReg1, destSize);
+                DestReg = merge(0, dest, fpSrcReg1, destSize);
             } else {
                 DestReg = DestReg;
             }
@@ -251,7 +251,7 @@ let {{
             if (bits(dest, 0) && (ext & 0x1))
                 offset -= items;
             if (offset >= 0 && offset < items) {
-                uint64_t srcReg1 = pick(SrcReg1, 0, srcSize);
+                uint64_t srcReg1 = pick(SrcReg1, src1, srcSize);
                 FpDestReg_uqw =
                     insertBits(FpDestReg_uqw,
                             (offset + 1) * destSize * 8 - 1,

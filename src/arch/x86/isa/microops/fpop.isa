@@ -315,7 +315,7 @@ let {{
         operands = (int_dest_op, fp_src1_op)
         code = '''
             int64_t intSrcReg1 = static_cast<int64_t>(FpSrcReg1);
-            DestReg = merge(DestReg, intSrcReg1, dataSize);
+            DestReg = merge(DestReg, dest, intSrcReg1, dataSize);
             '''
 
     # Convert two integers registers representing an 80-bit floating

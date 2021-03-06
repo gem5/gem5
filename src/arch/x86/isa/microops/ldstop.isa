@@ -511,15 +511,15 @@ let {{
 
         microopClasses[name] = LoadOp
 
-    defineMicroLoadOp('Ld', 'Data = merge(Data, Mem, dataSize);',
+    defineMicroLoadOp('Ld', 'Data = merge(Data, data, Mem, dataSize);',
                             'Data = Mem & mask(dataSize * 8);')
-    defineMicroLoadOp('Ldis', 'Data = merge(Data, Mem, dataSize);',
+    defineMicroLoadOp('Ldis', 'Data = merge(Data, data, Mem, dataSize);',
                               'Data = Mem & mask(dataSize * 8);',
                                implicitStack=True)
-    defineMicroLoadOp('Ldst', 'Data = merge(Data, Mem, dataSize);',
+    defineMicroLoadOp('Ldst', 'Data = merge(Data, data, Mem, dataSize);',
                               'Data = Mem & mask(dataSize * 8);',
                       '(StoreCheck << FlagShift)')
-    defineMicroLoadOp('Ldstl', 'Data = merge(Data, Mem, dataSize);',
+    defineMicroLoadOp('Ldstl', 'Data = merge(Data, data, Mem, dataSize);',
                                'Data = Mem & mask(dataSize * 8);',
                       '(StoreCheck << FlagShift) | Request::LOCKED_RMW',
                       nonSpec=True)
@@ -662,10 +662,10 @@ let {{
 
         microopClasses[name] = StoreOp
 
-    defineMicroStoreOp('St', 'Mem = pick(Data, 2, dataSize);')
-    defineMicroStoreOp('Stis', 'Mem = pick(Data, 2, dataSize);',
+    defineMicroStoreOp('St', 'Mem = pick(Data, data, dataSize);')
+    defineMicroStoreOp('Stis', 'Mem = pick(Data, data, dataSize);',
                        implicitStack=True)
-    defineMicroStoreOp('Stul', 'Mem = pick(Data, 2, dataSize);',
+    defineMicroStoreOp('Stul', 'Mem = pick(Data, data, dataSize);',
             mem_flags="Request::LOCKED_RMW")
 
     defineMicroStoreOp('Stfp', code='Mem = FpData_uqw;', is_float=True)
@@ -739,7 +739,7 @@ let {{
                             mem_flags='Request::LOCKED_RMW')
 
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
-                        { "code": "Data = merge(Data, EA, dataSize);",
+                        { "code": "Data = merge(Data, data, EA, dataSize);",
                           "ea_code": "EA = " + segmentEAExpr,
                           "memDataSize": "dataSize" })
     header_output += MicroLeaDeclare.subst(iop)

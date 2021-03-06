@@ -134,7 +134,7 @@ let {{
     base = 'X86ISA::RegOpT<X86ISA::FoldedDestOp, X86ISA::Imm64Op>'
     # Build up the all register version of this micro op
     iops = [InstObjParams("limm", "Limm", base,
-            {"code" : "DestReg = merge(DestReg, imm64, dataSize);"}),
+            {"code" : "DestReg = merge(DestReg, dest, imm64, dataSize);"}),
             InstObjParams("limm", "LimmBig", base,
             {"code" : "DestReg = imm64 & mask(dataSize * 8);"})]
     for iop in iops:
