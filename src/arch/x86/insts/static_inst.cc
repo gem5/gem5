@@ -120,6 +120,36 @@ X86StaticInst::printDestReg(std::ostream &os, int reg, int size) const
 }
 
 void
+X86StaticInst::divideStep(uint64_t dividend, uint64_t divisor,
+        uint64_t &quotient, uint64_t &remainder)
+{
+    // Check for divide by zero.
+    assert(divisor != 0);
+    // If the divisor is bigger than the dividend, don't do anything.
+    if (divisor <= dividend) {
+        // Shift the divisor so it's msb lines up with the dividend.
+        int dividendMsb = findMsbSet(dividend);
+        int divisorMsb = findMsbSet(divisor);
+        int shift = dividendMsb - divisorMsb;
+        divisor <<= shift;
+        // Compute what we'll add to the quotient if the divisor isn't
+        // now larger than the dividend.
+        uint64_t quotientBit = 1;
+        quotientBit <<= shift;
+        // If we need to step back a bit (no pun intended) because the
+        // divisor got too to large, do that here. This is the "or two"
+        // part of one or two bit division.
+        if (divisor > dividend) {
+            quotientBit >>= 1;
+            divisor >>= 1;
+        }
+        // Decrement the remainder and increment the quotient.
+        quotient += quotientBit;
+        remainder -= divisor;
+    }
+}
+
+void
 X86StaticInst::printReg(std::ostream &os, RegId reg, int size)
 {
     assert(size == 1 || size == 2 || size == 4 || size == 8);
