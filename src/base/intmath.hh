@@ -135,7 +135,6 @@ mulSigned(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
 };
 
 /**
- * @ingroup api_base_utils
  * Multiply two values with place value p.
  *
  *  (A * p + a) * (B * p + b) =
@@ -150,8 +149,8 @@ mulSigned(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
  */
 template <typename T>
 static constexpr std::enable_if_t<sizeof(T) == sizeof(uint64_t)>
-mulUnsigned(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
-            std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
+mulUnsignedManual(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
+                  std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
 {
     low = val_a * val_b;
 
@@ -178,8 +177,22 @@ mulUnsigned(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
  */
 template <typename T>
 static constexpr std::enable_if_t<sizeof(T) == sizeof(uint64_t)>
-mulSigned(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
-          std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
+mulUnsigned(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
+            std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
+{
+#ifdef __SIZEOF_INT128__
+    __uint128_t val = (__uint128_t)val_a * (__uint128_t)val_b;
+    low = val;
+    high = (val >> 64);
+#else
+    mulUnsignedManual<T>(high, low, val_a, val_b);
+#endif
+}
+
+template <typename T>
+static constexpr std::enable_if_t<sizeof(T) == sizeof(uint64_t)>
+mulSignedManual(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
+                std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
 {
     uint64_t u_high = 0, u_low = 0;
     mulUnsigned<T>(u_high, u_low, val_a, val_b);
@@ -191,6 +204,23 @@ mulSigned(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
 
     high = u_high;
     low = u_low;
+}
+
+/**
+ * @ingroup api_base_utils
+ */
+template <typename T>
+static constexpr std::enable_if_t<sizeof(T) == sizeof(uint64_t)>
+mulSigned(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
+          std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
+{
+#ifdef __SIZEOF_INT128__
+    __int128_t val = (__int128_t)val_a * (__int128_t)val_b;
+    low = val;
+    high = (val >> 64);
+#else
+    mulSignedManual<T>(high, low, val_a, val_b);
+#endif
 }
 
 /**

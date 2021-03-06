@@ -214,6 +214,12 @@ TEST(IntmathTest, mulUnsignedWide)
     EXPECT_EQ(hi, 0x1);
     EXPECT_EQ(low, 0xfffffffffffffffe);
 
+    hi = 0;
+    low = 0;
+    mulUnsignedManual<uint64_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0x1);
+    EXPECT_EQ(low, 0xfffffffffffffffe);
+
     a = 0;
     b = 0x5555555555555555;
     mulUnsigned<uint64_t>(hi, low, a, b);
@@ -228,6 +234,12 @@ TEST(IntmathTest, mulSignedWide)
     int64_t hi;
     int64_t low;
     mulSigned<int64_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0x3fffffffffffffff);
+    EXPECT_EQ(low, -0x8000000000000000);
+
+    hi = 0;
+    low = 0;
+    mulSignedManual<int64_t>(hi, low, a, b);
     EXPECT_EQ(hi, 0x3fffffffffffffff);
     EXPECT_EQ(low, -0x8000000000000000);
 
