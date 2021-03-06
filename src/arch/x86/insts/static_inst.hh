@@ -118,8 +118,6 @@ class X86StaticInst : public StaticInst
 
     std::string generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const override;
-    void printSrcReg(std::ostream &os, int reg, int size) const;
-    void printDestReg(std::ostream &os, int reg, int size) const;
 
     static void divideStep(uint64_t divident, uint64_t divisor,
             uint64_t &quotient, uint64_t &remainder);

@@ -106,20 +106,6 @@ void X86StaticInst::printSegment(std::ostream &os, int segment)
 }
 
 void
-X86StaticInst::printSrcReg(std::ostream &os, int reg, int size) const
-{
-    if (_numSrcRegs > reg)
-        printReg(os, srcRegIdx(reg), size);
-}
-
-void
-X86StaticInst::printDestReg(std::ostream &os, int reg, int size) const
-{
-    if (_numDestRegs > reg)
-        printReg(os, destRegIdx(reg), size);
-}
-
-void
 X86StaticInst::divideStep(uint64_t dividend, uint64_t divisor,
         uint64_t &quotient, uint64_t &remainder)
 {
