@@ -80,10 +80,10 @@ fxsaveCommonTemplate = """
     rdxftw t1
     st t1, seg, %(mode)s, "DISPLACEMENT + 4", dataSize=1
 
-    rdval t1, regIdx("MISCREG_FOP")
+    rdval t1, ctrlRegIdx("MISCREG_FOP")
     st t1, seg, %(mode)s, "DISPLACEMENT + 6", dataSize=2
 
-    rdval t1, regIdx("MISCREG_MXCSR")
+    rdval t1, ctrlRegIdx("MISCREG_MXCSR")
     st t1, seg, %(mode)s, "DISPLACEMENT + 16 + 8", dataSize=4
 
     # MXCSR_MASK, software assumes the default (0xFFBF) if 0.
@@ -92,24 +92,24 @@ fxsaveCommonTemplate = """
 """ + storeAllDataRegs
 
 fxsave32Template = """
-    rdval t1, regIdx("MISCREG_FIOFF")
+    rdval t1, ctrlRegIdx("MISCREG_FIOFF")
     st t1, seg, %(mode)s, "DISPLACEMENT + 8", dataSize=4
 
-    rdval t1, regIdx("MISCREG_FISEG")
+    rdval t1, ctrlRegIdx("MISCREG_FISEG")
     st t1, seg, %(mode)s, "DISPLACEMENT + 12", dataSize=2
 
-    rdval t1, regIdx("MISCREG_FOOFF")
+    rdval t1, ctrlRegIdx("MISCREG_FOOFF")
     st t1, seg, %(mode)s, "DISPLACEMENT + 16 + 0", dataSize=4
 
-    rdval t1, regIdx("MISCREG_FOSEG")
+    rdval t1, ctrlRegIdx("MISCREG_FOSEG")
     st t1, seg, %(mode)s, "DISPLACEMENT + 16 + 4", dataSize=2
 """ + fxsaveCommonTemplate
 
 fxsave64Template = """
-    rdval t1, regIdx("MISCREG_FIOFF")
+    rdval t1, ctrlRegIdx("MISCREG_FIOFF")
     st t1, seg, %(mode)s, "DISPLACEMENT + 8", dataSize=8
 
-    rdval t1, regIdx("MISCREG_FOOFF")
+    rdval t1, ctrlRegIdx("MISCREG_FOOFF")
     st t1, seg, %(mode)s, "DISPLACEMENT + 16 + 0", dataSize=8
 """ + fxsaveCommonTemplate
 
@@ -126,36 +126,36 @@ fxrstorCommonTemplate = """
     wrxftw t1
 
     ld t1, seg, %(mode)s, "DISPLACEMENT + 6", dataSize=2
-    wrval regIdx("MISCREG_FOP"), t1
+    wrval ctrlRegIdx("MISCREG_FOP"), t1
 
     ld t1, seg, %(mode)s, "DISPLACEMENT + 16 + 8", dataSize=4
-    wrval regIdx("MISCREG_MXCSR"), t1
+    wrval ctrlRegIdx("MISCREG_MXCSR"), t1
 """ + loadAllDataRegs
 
 fxrstor32Template = """
     ld t1, seg, %(mode)s, "DISPLACEMENT + 8", dataSize=4
-    wrval regIdx("MISCREG_FIOFF"), t1
+    wrval ctrlRegIdx("MISCREG_FIOFF"), t1
 
     ld t1, seg, %(mode)s, "DISPLACEMENT + 12", dataSize=2
-    wrval regIdx("MISCREG_FISEG"), t1
+    wrval ctrlRegIdx("MISCREG_FISEG"), t1
 
     ld t1, seg, %(mode)s, "DISPLACEMENT + 16 + 0", dataSize=4
-    wrval regIdx("MISCREG_FOOFF"), t1
+    wrval ctrlRegIdx("MISCREG_FOOFF"), t1
 
     ld t1, seg, %(mode)s, "DISPLACEMENT + 16 + 4", dataSize=2
-    wrval regIdx("MISCREG_FOSEG"), t1
+    wrval ctrlRegIdx("MISCREG_FOSEG"), t1
 """ + fxrstorCommonTemplate
 
 fxrstor64Template = """
     limm t2, 0, dataSize=8
 
     ld t1, seg, %(mode)s, "DISPLACEMENT + 8", dataSize=8
-    wrval regIdx("MISCREG_FIOFF"), t1
-    wrval regIdx("MISCREG_FISEG"), t2
+    wrval ctrlRegIdx("MISCREG_FIOFF"), t1
+    wrval ctrlRegIdx("MISCREG_FISEG"), t2
 
     ld t1, seg, %(mode)s, "DISPLACEMENT + 16 + 0", dataSize=8
-    wrval regIdx("MISCREG_FOOFF"), t1
-    wrval regIdx("MISCREG_FOSEG"), t2
+    wrval ctrlRegIdx("MISCREG_FOOFF"), t1
+    wrval ctrlRegIdx("MISCREG_FOSEG"), t2
 """ + fxrstorCommonTemplate
 
 microcode = '''

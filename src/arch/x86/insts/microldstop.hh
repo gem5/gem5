@@ -82,9 +82,9 @@ class LdStOp : public InstOperands<MemOp, FoldedDataOp, AddrOp>
 {
   protected:
     LdStOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, InstRegIndex _data,
-            uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
-            uint64_t _disp, InstRegIndex _segment,
+            uint64_t set_flags, GpRegIndex _data,
+            uint8_t _scale, GpRegIndex _index, GpRegIndex _base,
+            uint64_t _disp, SegRegIndex _segment,
             uint8_t data_size, uint8_t address_size,
             Request::FlagsType mem_flags, OpClass op_class) :
     InstOperands<MemOp, FoldedDataOp, AddrOp>(
@@ -102,8 +102,8 @@ class LdStFpOp : public InstOperands<MemOp, FloatDataOp, AddrOp>
   protected:
     LdStFpOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
             uint64_t set_flags, FpRegIndex _data,
-            uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
-            uint64_t _disp, InstRegIndex _segment,
+            uint8_t _scale, GpRegIndex _index, GpRegIndex _base,
+            uint64_t _disp, SegRegIndex _segment,
             uint8_t data_size, uint8_t address_size,
             Request::FlagsType mem_flags, OpClass op_class) :
     InstOperands<MemOp, FloatDataOp, AddrOp>(
@@ -120,8 +120,8 @@ class MemNoDataOp : public InstOperands<MemOp, AddrOp>
 {
   protected:
     MemNoDataOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, uint8_t _scale, InstRegIndex _index,
-            InstRegIndex _base, uint64_t _disp, InstRegIndex _segment,
+            uint64_t set_flags, uint8_t _scale, GpRegIndex _index,
+            GpRegIndex _base, uint64_t _disp, SegRegIndex _segment,
             uint8_t data_size, uint8_t address_size,
             Request::FlagsType mem_flags, OpClass op_class) :
     InstOperands<MemOp, AddrOp>(
@@ -141,9 +141,9 @@ class LdStSplitOp :
 {
   protected:
     LdStSplitOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, InstRegIndex data_low, InstRegIndex data_hi,
-            uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
-            uint64_t _disp, InstRegIndex _segment,
+            uint64_t set_flags, GpRegIndex data_low, GpRegIndex data_hi,
+            uint8_t _scale, GpRegIndex _index, GpRegIndex _base,
+            uint64_t _disp, SegRegIndex _segment,
             uint8_t data_size, uint8_t address_size,
             Request::FlagsType mem_flags, OpClass op_class) :
     InstOperands<MemOp, FoldedDataLowOp, FoldedDataHiOp, AddrOp>(

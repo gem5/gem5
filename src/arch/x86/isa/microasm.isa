@@ -56,24 +56,36 @@ let {{
     mainRom = X86MicrocodeRom('main ROM')
     assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, Rom_Macroop)
 
-    def regIdx(idx):
-        return "X86ISA::InstRegIndex(%s)" % idx
+    def gpRegIdx(idx):
+        return "X86ISA::GpRegIndex(%s)" % idx
     def fpRegIdx(idx):
         return "X86ISA::FpRegIndex(%s)" % idx
+    def ctrlRegIdx(idx):
+        return "X86ISA::CtrlRegIndex(%s)" % idx
+    def crRegIdx(idx):
+        return "X86ISA::CrRegIndex(%s)" % idx
+    def drRegIdx(idx):
+        return "X86ISA::DbgRegIndex(%s)" % idx
+    def segRegIdx(idx):
+        return "X86ISA::SegRegIndex(%s)" % idx
 
-    assembler.symbols["regIdx"] = regIdx
+    assembler.symbols["gpRegIdx"] = gpRegIdx
     assembler.symbols["fpRegIdx"] = fpRegIdx
+    assembler.symbols["ctrlRegIdx"] = ctrlRegIdx
+    assembler.symbols["crRegIdx"] = crRegIdx
+    assembler.symbols["drRegIdx"] = drRegIdx
+    assembler.symbols["segRegIdx"] = segRegIdx
 
     # Add in symbols for the microcode registers
     for num in range(16):
-        assembler.symbols["t%d" % num] = regIdx("NUM_INTREGS+%d" % num)
+        assembler.symbols["t%d" % num] = gpRegIdx("NUM_INTREGS+%d" % num)
     for num in range(8):
         assembler.symbols["ufp%d" % num] = \
             fpRegIdx("FLOATREG_MICROFP(%d)" % num)
     # Add in symbols for the segment descriptor registers
     for letter in ("C", "D", "E", "F", "G", "H", "S"):
         assembler.symbols["%ss" % letter.lower()] = \
-            regIdx("SEGMENT_REG_%sS" % letter)
+            segRegIdx("SEGMENT_REG_%sS" % letter)
 
     # Add in symbols for the various checks of segment selectors.
     for check in ("NoCheck", "CSCheck", "CallGateCheck", "IntGateCheck",
@@ -82,27 +94,33 @@ let {{
         assembler.symbols[check] = "Seg%s" % check
 
     for reg in ("TR", "IDTR"):
-        assembler.symbols[reg.lower()] = regIdx("SYS_SEGMENT_REG_%s" % reg)
+        assembler.symbols[reg.lower()] = segRegIdx("SYS_SEGMENT_REG_%s" % reg)
 
     for reg in ("TSL", "TSG"):
-        assembler.symbols[reg.lower()] = regIdx("SEGMENT_REG_%s" % reg)
+        assembler.symbols[reg.lower()] = segRegIdx("SEGMENT_REG_%s" % reg)
 
     # Miscellaneous symbols
     symbols = {
-        "reg" : regIdx("env.reg"),
+        "reg" : gpRegIdx("env.reg"),
+        "cr" : crRegIdx("env.reg"),
+        "dr" : drRegIdx("env.reg"),
+        "sr" : segRegIdx("env.reg"),
         "xmml" : fpRegIdx("FLOATREG_XMM_LOW(env.reg)"),
         "xmmh" : fpRegIdx("FLOATREG_XMM_HIGH(env.reg)"),
-        "regm" : regIdx("env.regm"),
+        "regm" : gpRegIdx("env.regm"),
+        "crm" : crRegIdx("env.regm"),
+        "drm" : drRegIdx("env.regm"),
+        "srm" : segRegIdx("env.regm"),
         "xmmlm" : fpRegIdx("FLOATREG_XMM_LOW(env.regm)"),
         "xmmhm" : fpRegIdx("FLOATREG_XMM_HIGH(env.regm)"),
         "mmx" : fpRegIdx("FLOATREG_MMX(env.reg)"),
         "mmxm" : fpRegIdx("FLOATREG_MMX(env.regm)"),
         "imm" : "adjustedImm",
         "disp" : "adjustedDisp",
-        "seg" : regIdx("env.seg"),
+        "seg" : segRegIdx("env.seg"),
         "scale" : "env.scale",
-        "index" : regIdx("env.index"),
-        "base" : regIdx("env.base"),
+        "index" : gpRegIdx("env.index"),
+        "base" : gpRegIdx("env.base"),
         "dsz" : "env.dataSize",
         "asz" : "env.addressSize",
         "ssz" : "env.stackSize"
@@ -126,23 +144,23 @@ let {{
 
     # This segment selects an internal address space mapped to MSRs,
     # CPUID info, etc.
-    assembler.symbols["intseg"] = regIdx("SEGMENT_REG_MS")
+    assembler.symbols["intseg"] = segRegIdx("SEGMENT_REG_MS")
     # This segment always has base 0, and doesn't imply any special handling
     # like the internal segment above
-    assembler.symbols["flatseg"] = regIdx("SEGMENT_REG_LS")
+    assembler.symbols["flatseg"] = segRegIdx("SEGMENT_REG_LS")
 
     for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di', \
                 '8',  '9',  '10', '11', '12', '13', '14', '15'):
         assembler.symbols["r%s" % reg] = \
-            regIdx("INTREG_R%s" % reg.upper())
+            gpRegIdx("INTREG_R%s" % reg.upper())
 
     for reg in ('ah', 'bh', 'ch', 'dh'):
         assembler.symbols[reg] = \
-            regIdx("X86ISA::INTREG_FOLDED(INTREG_%s, IntFoldBit)" %
+            gpRegIdx("X86ISA::INTREG_FOLDED(INTREG_%s, IntFoldBit)" %
                     reg.upper())
 
     for reg in range(16):
-        assembler.symbols["cr%d" % reg] = regIdx("MISCREG_CR%d" % reg)
+        assembler.symbols["cr%d" % reg] = crRegIdx("%d" % reg)
 
     for flag in ('CF', 'PF', 'ECF', 'AF', 'EZF', 'ZF', 'SF', 'OF', \
                  'TF', 'IF', 'NT', 'RF', 'VM', 'AC', 'VIF', 'VIP', 'ID'):
@@ -163,7 +181,7 @@ let {{
     for reg in ('sysenter_cs', 'sysenter_esp', 'sysenter_eip',
                 'star', 'lstar', 'cstar', 'sf_mask',
                 'kernel_gs_base'):
-        assembler.symbols[reg] = regIdx("MISCREG_%s" % reg.upper())
+        assembler.symbols[reg] = ctrlRegIdx("MISCREG_%s" % reg.upper())
 
     for flag in ('Scalar', 'MultHi', 'Signed'):
         assembler.symbols[flag] = 'Media%sOp' % flag
@@ -214,12 +232,9 @@ let {{
     assembler.symbols["sti"] = stack_index("env.reg")
     assembler.symbols["stim"] = stack_index("env.regm")
 
-    def readFpReg(reg_name):
-        return regIdx("MISCREG_%s" % reg_name)
-
-    assembler.symbols["fsw"] = readFpReg("FSW")
-    assembler.symbols["fcw"] = readFpReg("FCW")
-    assembler.symbols["ftw"] = readFpReg("FTW")
+    assembler.symbols["fsw"] = ctrlRegIdx("MISCREG_FSW")
+    assembler.symbols["fcw"] = ctrlRegIdx("MISCREG_FCW")
+    assembler.symbols["ftw"] = ctrlRegIdx("MISCREG_FTW")
 
     macroopDict = assembler.assemble(microcode)
 

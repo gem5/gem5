@@ -262,9 +262,9 @@ def template MicroLdStSplitOpDeclare {{
       public:
         %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
                 uint64_t set_flags,
-                InstRegIndex data_low, InstRegIndex data_hi,
-                uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
-                uint64_t _disp, InstRegIndex _segment,
+                GpRegIndex data_low, GpRegIndex data_hi,
+                uint8_t _scale, GpRegIndex _index, GpRegIndex _base,
+                uint64_t _disp, SegRegIndex _segment,
                 uint8_t data_size, uint8_t address_size,
                 Request::FlagsType mem_flags);
 
@@ -278,9 +278,9 @@ def template MicroLdStSplitOpDeclare {{
 def template MicroLdStSplitOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst mach_inst,
             const char *inst_mnem, uint64_t set_flags,
-            InstRegIndex data_low, InstRegIndex data_hi,
-            uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
-            uint64_t _disp, InstRegIndex _segment,
+            GpRegIndex data_low, GpRegIndex data_hi,
+            uint8_t _scale, GpRegIndex _index, GpRegIndex _base,
+            uint64_t _disp, SegRegIndex _segment,
             uint8_t data_size, uint8_t address_size,
             Request::FlagsType mem_flags) :
         %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,

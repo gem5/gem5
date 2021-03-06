@@ -50,16 +50,40 @@ namespace X86ISA
  * wrapper struct for these lets take advantage of the compiler's type
  * checking.
  */
-struct InstRegIndex
+struct GpRegIndex
 {
     RegIndex index;
-    explicit InstRegIndex(RegIndex idx) : index(idx) {}
+    explicit GpRegIndex(RegIndex idx) : index(idx) {}
 };
 
 struct FpRegIndex
 {
     RegIndex index;
     explicit FpRegIndex(RegIndex idx) : index(idx) {}
+};
+
+struct CtrlRegIndex
+{
+    RegIndex index;
+    explicit CtrlRegIndex(RegIndex idx) : index(idx) {}
+};
+
+struct CrRegIndex
+{
+    RegIndex index;
+    explicit CrRegIndex(RegIndex idx) : index(idx) {}
+};
+
+struct DbgRegIndex
+{
+    RegIndex index;
+    explicit DbgRegIndex(RegIndex idx) : index(idx) {}
+};
+
+struct SegRegIndex
+{
+    RegIndex index;
+    explicit SegRegIndex(RegIndex idx) : index(idx) {}
 };
 
 /**

@@ -44,7 +44,6 @@ namespace X86ISA
 
 struct DestOp
 {
-    using ArgType = InstRegIndex;
     const RegIndex dest;
     const size_t size;
     RegIndex opIndex() const { return dest; }
@@ -54,7 +53,6 @@ struct DestOp
 
 struct Src1Op
 {
-    using ArgType = InstRegIndex;
     const RegIndex src1;
     const size_t size;
     RegIndex opIndex() const { return src1; }
@@ -64,7 +62,6 @@ struct Src1Op
 
 struct Src2Op
 {
-    using ArgType = InstRegIndex;
     const RegIndex src2;
     const size_t size;
     RegIndex opIndex() const { return src2; }
@@ -74,7 +71,6 @@ struct Src2Op
 
 struct DataOp
 {
-    using ArgType = InstRegIndex;
     const RegIndex data;
     const size_t size;
     RegIndex opIndex() const { return data; }
@@ -84,7 +80,6 @@ struct DataOp
 
 struct DataHiOp
 {
-    using ArgType = InstRegIndex;
     const RegIndex dataHi;
     const size_t size;
     RegIndex opIndex() const { return dataHi; }
@@ -94,7 +89,6 @@ struct DataHiOp
 
 struct DataLowOp
 {
-    using ArgType = InstRegIndex;
     const RegIndex dataLow;
     const size_t size;
     RegIndex opIndex() const { return dataLow; }
@@ -106,10 +100,10 @@ struct DataLowOp
 template <class Base>
 struct IntOp : public Base
 {
+    using ArgType = GpRegIndex;
+
     template <class InstType>
-    IntOp(InstType *inst, typename Base::ArgType idx) :
-        Base(idx.index, inst->dataSize)
-    {}
+    IntOp(InstType *inst, ArgType idx) : Base(idx.index, inst->dataSize) {}
 
     void
     print(std::ostream &os) const
@@ -122,8 +116,10 @@ struct IntOp : public Base
 template <class Base>
 struct FoldedOp : public Base
 {
+    using ArgType = GpRegIndex;
+
     template <class InstType>
-    FoldedOp(InstType *inst, typename Base::ArgType idx) :
+    FoldedOp(InstType *inst, ArgType idx) :
         Base(INTREG_FOLDED(idx.index, inst->foldOBit), inst->dataSize)
     {}
 
@@ -138,8 +134,10 @@ struct FoldedOp : public Base
 template <class Base>
 struct CrOp : public Base
 {
+    using ArgType = CrRegIndex;
+
     template <class InstType>
-    CrOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index, 0) {}
+    CrOp(InstType *inst, ArgType idx) : Base(idx.index, 0) {}
 
     void
     print(std::ostream &os) const
@@ -151,8 +149,10 @@ struct CrOp : public Base
 template <class Base>
 struct DbgOp : public Base
 {
+    using ArgType = DbgRegIndex;
+
     template <class InstType>
-    DbgOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index, 0) {}
+    DbgOp(InstType *inst, ArgType idx) : Base(idx.index, 0) {}
 
     void
     print(std::ostream &os) const
@@ -165,8 +165,10 @@ struct DbgOp : public Base
 template <class Base>
 struct SegOp : public Base
 {
+    using ArgType = SegRegIndex;
+
     template <class InstType>
-    SegOp(InstType *inst, typename Base::ArgType idx) : Base(idx.index, 0) {}
+    SegOp(InstType *inst, ArgType idx) : Base(idx.index, 0) {}
 
     void
     print(std::ostream &os) const
@@ -178,10 +180,10 @@ struct SegOp : public Base
 template <class Base>
 struct MiscOp : public Base
 {
+    using ArgType = CtrlRegIndex;
+
     template <class InstType>
-    MiscOp(InstType *inst, typename Base::ArgType idx) :
-        Base(idx.index, inst->dataSize)
-    {}
+    MiscOp(InstType *inst, ArgType idx) : Base(idx.index, inst->dataSize) {}
 
     void
     print(std::ostream &os) const
@@ -301,10 +303,10 @@ struct AddrOp
     struct ArgType
     {
         uint8_t scale;
-        InstRegIndex index;
-        InstRegIndex base;
+        GpRegIndex index;
+        GpRegIndex base;
         uint64_t disp;
-        InstRegIndex segment;
+        SegRegIndex segment;
     };
 
     const uint8_t scale;

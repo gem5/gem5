@@ -174,54 +174,54 @@ def macroop MOVZX_W_R_P {
 def macroop MOV_C_R {
     .serialize_after
     .adjust_env maxOsz
-    wrcr reg, regm
+    wrcr cr, regm
 };
 
 def macroop MOV_R_C {
     .serialize_after
     .adjust_env maxOsz
-    rdcr reg, regm
+    rdcr reg, crm
 };
 
 def macroop MOV_D_R {
     .serialize_after
     .adjust_env maxOsz
-    wrdr reg, regm
+    wrdr dr, regm
 };
 
 def macroop MOV_R_D {
     .adjust_env maxOsz
-    rddr reg, regm
+    rddr reg, drm
 };
 
 def macroop MOV_R_S {
-    rdsel reg, regm
+    rdsel reg, srm
 };
 
 def macroop MOV_M_S {
-    rdsel t1, reg
+    rdsel t1, sr
     st t1, seg, sib, disp, dataSize=2
 };
 
 def macroop MOV_P_S {
     rdip t7
-    rdsel t1, reg
+    rdsel t1, sr
     st t1, seg, riprel, disp, dataSize=2
 };
 
 def macroop MOV_REAL_S_R {
     zexti t2, regm, 15, dataSize=8
     slli t3, t2, 4, dataSize=8
-    wrsel reg, regm
-    wrbase reg, t3, dataSize=8
+    wrsel sr, regm
+    wrbase sr, t3, dataSize=8
 };
 
 def macroop MOV_REAL_S_M {
     ld t1, seg, sib, disp, dataSize=2
     zexti t2, t1, 15, dataSize=8
     slli t3, t2, 4, dataSize=8
-    wrsel reg, t1
-    wrbase reg, t3, dataSize=8
+    wrsel sr, t1
+    wrbase sr, t3, dataSize=8
 };
 
 def macroop MOV_REAL_S_P {
@@ -240,8 +240,8 @@ globalDescriptor:
     ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks regm, t3, dataSize=8
-    wrdl reg, t3, regm
-    wrsel reg, regm
+    wrdl sr, t3, regm
+    wrsel sr, regm
 };
 
 def macroop MOV_S_M {
@@ -257,8 +257,8 @@ globalDescriptor:
     ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks t1, t3, dataSize=8
-    wrdl reg, t3, t1
-    wrsel reg, t1
+    wrdl sr, t3, t1
+    wrsel sr, t1
 };
 
 def macroop MOV_S_P {
@@ -275,8 +275,8 @@ globalDescriptor:
     ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks t1, t3, dataSize=8
-    wrdl reg, t3, t1
-    wrsel reg, t1
+    wrdl sr, t3, t1
+    wrsel sr, t1
 };
 
 def macroop MOVSS_S_R {
@@ -291,8 +291,8 @@ globalDescriptor:
     ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks regm, t3, SSCheck, dataSize=8
-    wrdl reg, t3, regm
-    wrsel reg, regm
+    wrdl sr, t3, regm
+    wrsel sr, regm
 };
 
 def macroop MOVSS_S_M {
@@ -308,8 +308,8 @@ globalDescriptor:
     ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks t1, t3, SSCheck, dataSize=8
-    wrdl reg, t3, t1
-    wrsel reg, t1
+    wrdl sr, t3, t1
+    wrsel sr, t1
 };
 
 def macroop MOVSS_S_P {
@@ -326,8 +326,8 @@ globalDescriptor:
     ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks t1, t3, SSCheck, dataSize=8
-    wrdl reg, t3, t1
-    wrsel reg, t1
+    wrdl sr, t3, t1
+    wrsel sr, t1
 };
 
 def macroop MOVNTI_M_R {

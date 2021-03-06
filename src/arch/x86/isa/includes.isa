@@ -69,8 +69,12 @@ output header {{
 #include "mem/packet.hh"
 #include "sim/faults.hh"
 
-using X86ISA::InstRegIndex;
+using X86ISA::GpRegIndex;
 using X86ISA::FpRegIndex;
+using X86ISA::CtrlRegIndex;
+using X86ISA::CrRegIndex;
+using X86ISA::DbgRegIndex;
+using X86ISA::SegRegIndex;
 
 }};
 

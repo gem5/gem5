@@ -63,11 +63,8 @@ let {{
                 Macroop * macroop = dynamic_cast<Macroop *>(curMacroop.get());
                 const ExtMachInst &machInst =
                     macroop ? macroop->getExtMachInst() : dummyExtMachInst;
-                const EmulEnv &env =
+                M5_VAR_USED const EmulEnv &env =
                     macroop ? macroop->getEmulEnv() : dummyEmulEnv;
-                // env may not be used in the microop's constructor.
-                InstRegIndex reg(env.reg);
-                reg = reg;
                 using namespace RomLabels;
                 return %s;
             }
