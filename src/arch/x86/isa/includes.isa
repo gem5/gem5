@@ -102,6 +102,7 @@ using namespace X86ISA;
 output exec {{
 #include <cmath>
 #include <limits>
+#include <tuple>
 
 #include "arch/generic/debugfaults.hh"
 #include "arch/x86/cpuid.hh"
@@ -112,6 +113,7 @@ output exec {{
 #include "arch/x86/tlb.hh"
 #include "base/compiler.hh"
 #include "base/condcodes.hh"
+#include "base/logging.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "debug/X86.hh"

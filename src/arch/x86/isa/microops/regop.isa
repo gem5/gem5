@@ -584,43 +584,26 @@ let {{
 
     class Mul1s(WrRegOp):
         op_class = 'IntMultOp'
-
-        # Multiply two values Aa and Bb where Aa = A << p + a, then correct for
-        # negative operands.
-        #   Aa * Bb
-        # = (A << p + a) * (B << p + b)
-        # = (A * B) << 2p + (A * b + a * B) << p + a * b
         code = '''
-            ProdLow = psrc1 * op2;
-
-            int p = (dataSize * 8) / 2;
-            uint64_t A = bits(psrc1, 2 * p - 1, p);
-            uint64_t a = bits(psrc1, p - 1, 0);
-            uint64_t B = bits<uint64_t>(op2, 2 * p - 1, p);
-            uint64_t b = bits<uint64_t>(op2, p - 1, 0);
-
-            uint64_t c1, c2; // Carry between place values.
-            uint64_t ab = a * b, Ab = A * b, aB = a * B, AB = A * B;
-
-            c1 = ab >> p;
-
-            // Be careful to avoid overflow if p is large.
-            if (p == 32) {
-                c2 = (c1 >> 1) + (Ab >> 1) + (aB >> 1);
-                c2 += ((c1 & 0x1) + (Ab & 0x1) + (aB & 0x1)) >> 1;
-                c2 >>= (p - 1);
-            } else {
-                c2 = (c1 + Ab + aB) >> p;
+            int64_t hi, low;
+            switch (dataSize) {
+              case 8:
+                std::tie(hi, low) = mulSigned<int64_t>(psrc1, op2);
+                break;
+              case 4:
+                std::tie(hi, low) = mulSigned<int32_t>(psrc1, op2);
+                break;
+              case 2:
+                std::tie(hi, low) = mulSigned<int16_t>(psrc1, op2);
+                break;
+              case 1:
+                std::tie(hi, low) = mulSigned<int8_t>(psrc1, op2);
+                break;
+              default:
+                panic("Unrecognized data size %d.", dataSize);
             }
-
-            uint64_t hi = AB + c2;
-
-            if (bits(psrc1, dataSize * 8 - 1))
-                hi -= op2;
-            if (bits(op2, dataSize * 8 - 1))
-                hi -= psrc1;
-
             ProdHi = hi;
+            ProdLow = low;
             '''
         flag_code = '''
             if ((-ProdHi & mask(dataSize * 8)) !=
@@ -636,34 +619,26 @@ let {{
     class Mul1u(WrRegOp):
         op_class = 'IntMultOp'
 
-        # Multiply two values Aa and Bb where Aa = A << p + a.
-        #   Aa * Bb
-        # = (A << p + a) * (B << p + b)
-        # = (A * B) << 2p + (A * b + a * B) << p + a * b
         code = '''
-            ProdLow = psrc1 * op2;
-
-            int p = (dataSize * 8) / 2;
-            uint64_t A = bits(psrc1, 2 * p - 1, p);
-            uint64_t a = bits(psrc1, p - 1, 0);
-            uint64_t B = bits<uint64_t>(op2, 2 * p - 1, p);
-            uint64_t b = bits<uint64_t>(op2, p - 1, 0);
-
-            uint64_t c1, c2; // Carry between place values.
-            uint64_t ab = a * b, Ab = A * b, aB = a * B, AB = A * B;
-
-            c1 = ab >> p;
-
-            // Be careful to avoid overflow if p is large.
-            if (p == 32) {
-                c2 = (c1 >> 1) + (Ab >> 1) + (aB >> 1);
-                c2 += ((c1 & 0x1) + (Ab & 0x1) + (aB & 0x1)) >> 1;
-                c2 >>= (p - 1);
-            } else {
-                c2 = (c1 + Ab + aB) >> p;
+            uint64_t hi, low;
+            switch (dataSize) {
+              case 8:
+                std::tie(hi, low) = mulUnsigned<uint64_t>(psrc1, op2);
+                break;
+              case 4:
+                std::tie(hi, low) = mulUnsigned<uint32_t>(psrc1, op2);
+                break;
+              case 2:
+                std::tie(hi, low) = mulUnsigned<uint16_t>(psrc1, op2);
+                break;
+              case 1:
+                std::tie(hi, low) = mulUnsigned<uint8_t>(psrc1, op2);
+                break;
+              default:
+                panic("Unrecognized data size %d.", dataSize);
             }
-
-            ProdHi = AB + c2;
+            ProdHi = hi;
+            ProdLow = low;
             '''
         flag_code = '''
             if (ProdHi) {
