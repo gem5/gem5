@@ -112,6 +112,132 @@ TEST(IntmathTest, divCeil)
     EXPECT_EQ(46, divCeil(451, 10));
 }
 
+TEST(IntmathTest, mulUnsignedNarrow)
+{
+    uint8_t a = 0xff;
+    uint8_t b = 0x02;
+    uint8_t hi;
+    uint8_t low;
+    mulUnsigned<uint8_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0x1);
+    EXPECT_EQ(low, 0xfe);
+
+    a = 14;
+    b = 9;
+    mulUnsigned<uint8_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0);
+    EXPECT_EQ(low, 0x7e);
+
+    a = 0;
+    b = 0x55;
+    mulUnsigned<uint8_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0);
+    EXPECT_EQ(low, 0);
+}
+
+TEST(IntmathTest, mulSignedNarrow)
+{
+    int8_t a = -0x80;
+    int8_t b = -0x7f;
+    int8_t hi;
+    int8_t low;
+    mulSigned<int8_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0x3f);
+    EXPECT_EQ(low, -0x80);
+
+    a = 14;
+    b = -9;
+    mulSigned<int8_t>(hi, low, a, b);
+    EXPECT_EQ(hi, -0x01);
+    EXPECT_EQ(low, -0x7e);
+
+    a = 0;
+    b = -0x55;
+    mulSigned<int8_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0);
+    EXPECT_EQ(low, 0);
+}
+
+TEST(IntmathTest, mulUnsignedMid)
+{
+    uint32_t a = 0xffffffffULL;
+    uint32_t b = 0x00000002ULL;
+    uint32_t hi;
+    uint32_t low;
+    mulUnsigned<uint32_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0x1);
+    EXPECT_EQ(low, 0xfffffffe);
+
+    a = 68026386;
+    b = 5152;
+    mulUnsigned<uint32_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0x51);
+    EXPECT_EQ(low, 0x99c16a40);
+
+    a = 0;
+    b = 0x55555555;
+    mulUnsigned<uint32_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0);
+    EXPECT_EQ(low, 0);
+}
+
+TEST(IntmathTest, mulSignedMid)
+{
+    int32_t a = -0x80000000;
+    int32_t b = -0x7fffffff;
+    int32_t hi;
+    int32_t low;
+    mulSigned<int32_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0x3fffffff);
+    EXPECT_EQ(low, -0x80000000);
+
+    a = -68026386;
+    b = 5152;
+    mulSigned<int32_t>(hi, low, a, b);
+    EXPECT_EQ(hi, -0x52);
+    EXPECT_EQ(low, -0x99c16a40);
+
+    a = 0;
+    b = -0x55555555;
+    mulSigned<int32_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0);
+    EXPECT_EQ(low, 0);
+}
+
+TEST(IntmathTest, mulUnsignedWide)
+{
+    uint64_t a = 0xffffffffffffffffULL;
+    uint64_t b = 0x0000000000000002ULL;
+    uint64_t hi;
+    uint64_t low;
+    mulUnsigned<uint64_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0x1);
+    EXPECT_EQ(low, 0xfffffffffffffffe);
+
+    a = 0;
+    b = 0x5555555555555555;
+    mulUnsigned<uint64_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0);
+    EXPECT_EQ(low, 0);
+}
+
+TEST(IntmathTest, mulSignedWide)
+{
+    int64_t a = -0x8000000000000000;
+    int64_t b = -0x7fffffffffffffff;
+    int64_t hi;
+    int64_t low;
+    mulSigned<int64_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0x3fffffffffffffff);
+    EXPECT_EQ(low, -0x8000000000000000);
+
+    a = 0;
+    b = -0x5555555555555555;
+    mulSigned<int64_t>(hi, low, a, b);
+    EXPECT_EQ(hi, 0);
+    EXPECT_EQ(low, 0);
+}
+
 TEST(IntmathTest, roundUp)
 {
     EXPECT_EQ(4104, roundUp(4101, 4));

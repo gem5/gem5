@@ -109,6 +109,91 @@ divCeil(const T& a, const U& b)
 }
 
 /**
+ * @ingroup api_base_utils
+ */
+template <typename T>
+static constexpr std::enable_if_t<sizeof(T) <= sizeof(uint32_t)>
+mulUnsigned(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
+            std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
+{
+    uint64_t product = (uint64_t)val_a * (uint64_t)val_b;
+    low = product;
+    high = (product >> (sizeof(low) * 8));
+};
+
+/**
+ * @ingroup api_base_utils
+ */
+template <typename T>
+static constexpr std::enable_if_t<sizeof(T) <= sizeof(uint32_t)>
+mulSigned(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
+          std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
+{
+    uint64_t product = (int64_t)val_a * (int64_t)val_b;
+    low = product;
+    high = (product >> (sizeof(low) * 8));
+};
+
+/**
+ * @ingroup api_base_utils
+ * Multiply two values with place value p.
+ *
+ *  (A * p + a) * (B * p + b) =
+ *  (A * B) * p^2 + (a * B + A * b) * p + (a * b)
+ *
+ *  low result = (a * B + A * b) * p + (a * b)
+ *  high result = (A * B) + carry out from low result.
+ *
+ * As long as p is at most half the capacity of the underlying type, no
+ * individual multiplication will overflow. We just have to carefully manage
+ * carries to avoid losing any during the addition steps.
+ */
+template <typename T>
+static constexpr std::enable_if_t<sizeof(T) == sizeof(uint64_t)>
+mulUnsigned(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
+            std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
+{
+    low = val_a * val_b;
+
+    uint64_t A = (uint32_t)(val_a >> 32);
+    uint64_t a = (uint32_t)val_a;
+    uint64_t B = (uint32_t)(val_b >> 32);
+    uint64_t b = (uint32_t)val_b;
+
+    uint64_t c1 = 0, c2 = 0; // Carry between place values.
+    uint64_t ab = a * b, Ab = A * b, aB = a * B, AB = A * B;
+
+    c1 = (uint32_t)(ab >> 32);
+
+    // Be careful to avoid overflow.
+    c2 = (c1 >> 1) + (Ab >> 1) + (aB >> 1);
+    c2 += ((c1 & 0x1) + (Ab & 0x1) + (aB & 0x1)) >> 1;
+    c2 >>= 31;
+
+    high = AB + c2;
+}
+
+/**
+ * @ingroup api_base_utils
+ */
+template <typename T>
+static constexpr std::enable_if_t<sizeof(T) == sizeof(uint64_t)>
+mulSigned(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
+          std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
+{
+    uint64_t u_high = 0, u_low = 0;
+    mulUnsigned<T>(u_high, u_low, val_a, val_b);
+
+    if (val_a < 0)
+        u_high -= val_b;
+    if (val_b < 0)
+        u_high -= val_a;
+
+    high = u_high;
+    low = u_low;
+}
+
+/**
  * This function is used to align addresses in memory.
  *
  * @param val is the address to be aligned.
