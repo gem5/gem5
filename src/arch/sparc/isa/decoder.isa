@@ -1001,30 +1001,12 @@ decode OP default Unknown::unknown()
                 0x81: FailUnimpl::siam();
             }
             // M5 special opcodes use the reserved IMPDEP2A opcode space
-            0x37: decode M5FUNC {
-                format BasicOperate {
-                    // we have 7 bits of space here to play with...
-                    0x21: m5exit({{
-                        PseudoInst::m5exit(xc->tcBase(), O0);
-                    }}, No_OpClass, IsNonSpeculative);
-                    0x23: m5sum({{
-                        O0 = PseudoInst::m5sum(xc->tcBase(),
-                                O0, O1, O2, O3, O4, O5);
-                    }}, IsNonSpeculative);
-                    0x50: m5readfile({{
-                        O0 = PseudoInst::readfile(xc->tcBase(), O0, O1, O2);
-                    }}, IsNonSpeculative);
-                    0x51: m5break({{
-                        PseudoInst::debugbreak(xc->tcBase());
-                    }}, IsNonSpeculative);
-                    0x54: m5panic({{
-                        panic("M5 panic instruction called at pc = %#x.", PC);
-                    }}, No_OpClass, IsNonSpeculative);
-                }
-                default: Trap::impdep2({{
+            0x37: BasicOperate::pseudo_inst({{
+                if (!PseudoInst::pseudoInst<SparcPseudoInstABI>(
+                            xc->tcBase(), M5FUNC)) {
                     fault = std::make_shared<IllegalInstruction>();
-                }});
-            }
+                }
+            }}, No_OpClass, IsNonSpeculative);
             0x38: Branch::jmpl({{
                 Addr target = Rs1 + Rs2_or_imm13;
                 if (target & 0x3) {
