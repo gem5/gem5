@@ -46,6 +46,7 @@ def operand_types {{
     'uw' : 'uint32_t',
     'sd' : 'int64_t',
     'ud' : 'uint64_t',
+    'pint' : 'ArmISA::PackedIntReg',
     'sq' : '__int128_t',
     'uq' : '__uint128_t',
     'tud' : 'std::array<uint64_t, 2>',
@@ -147,6 +148,10 @@ let {{
         return ('IntReg', 'uw', idx, 'IsInteger', srtNormal,
                 maybePCRead, maybePCWrite)
 
+    def pIntReg(idx):
+        return ('IntReg', 'pint', idx, 'IsInteger', srtNormal,
+                maybePCRead, maybePCWrite)
+
     def intReg64(idx):
         return ('IntReg', 'ud', idx, 'IsInteger', srtNormal,
                 aarch64Read, aarch64Write)
@@ -228,6 +233,10 @@ def operands {{
     'Reg1': intReg('reg1'),
     'Reg2': intReg('reg2'),
     'Reg3': intReg('reg3'),
+    'PInt0': pIntReg('reg0'),
+    'PInt1': pIntReg('reg1'),
+    'PInt2': pIntReg('reg2'),
+    'PInt3': pIntReg('reg3'),
 
     #Fixed index integer reg operands
     'SpMode': intRegNPC('intRegInMode((OperatingMode)regMode, INTREG_SP)'),

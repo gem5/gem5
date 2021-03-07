@@ -48,6 +48,15 @@
 namespace ArmISA
 {
 
+BitUnion32(PackedIntReg)
+    Bitfield<31, 16> uh1;
+    Bitfield<15, 0> uh0;
+    SignedBitfield<31, 16> sh1;
+    SignedBitfield<15, 0> sh0;
+    Bitfield<31, 0> uw;
+    SignedBitfield<31, 0> sw;
+EndBitUnion(PackedIntReg)
+
 enum IntRegIndex
 {
     /* All the unique register indices. */
