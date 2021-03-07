@@ -1119,7 +1119,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   // The exit state is always going to be U, so wakeUpDependents logic should be covered in all the
   // transitions which are flowing into U.
-  transition({BL, BS_M, BM_M, B_M, BP, BDW_P, BS_PM, BM_PM, B_PM, BS_Pm, BM_Pm, B_Pm, B}, {DmaRead,DmaWrite}){
+  transition({BL, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B}, {DmaRead,DmaWrite}){
     sd_stallAndWaitRequest;
   }
 
@@ -1280,6 +1280,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   transition(BDR_M, MemData, U) {
     mt_writeMemDataToTBE;
     dd_sendResponseDmaData;
+    wa_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pm_popMemQueue;
   }
@@ -1373,7 +1374,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     dd_sendResponseDmaData;
     // Check for pending requests from the core we put to sleep while waiting
     // for a response
-    wa_wakeUpDependents;
+    wa_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pt_popTriggerQueue;
   }
