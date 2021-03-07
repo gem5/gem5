@@ -2445,12 +2445,11 @@ decode OPCODE_HI default Unknown::unknown() {
                                 }
                             }});
                             0x3: shilov({{
-                                        if ((int64_t)sext<6>(Rs_sw<5:0>) < 0) {
+                                if ((int64_t)szext<6>(Rs_sw) < 0) {
                                     dspac = (uint64_t)dspac <<
-                                                -sext<6>(Rs_sw<5:0>);
+                                                -sext<6>(Rs_sw);
                                 } else {
-                                    dspac = (uint64_t)dspac >>
-                                                sext<6>(Rs_sw<5:0>);
+                                    dspac = (uint64_t)dspac >> szext<6>(Rs_sw);
                                 }
                             }});
                             0x7: mthlip({{

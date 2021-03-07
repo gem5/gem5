@@ -60,7 +60,7 @@ class MemImm : public Mem
 
     // Constructor
     MemImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        Mem(mnem, _machInst, __opClass), imm(sext<13>(bits(_machInst, 12, 0)))
+        Mem(mnem, _machInst, __opClass), imm(szext<13>(_machInst))
     {}
 
     std::string generateDisassembly(

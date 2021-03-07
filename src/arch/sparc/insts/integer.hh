@@ -83,7 +83,7 @@ class IntOpImm10 : public IntOpImm
   protected:
     // Constructor
     IntOpImm10(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        IntOpImm(mnem, _machInst, __opClass, sext<10>(bits(_machInst, 9, 0)))
+        IntOpImm(mnem, _machInst, __opClass, szext<10>(_machInst))
     {}
 };
 
@@ -94,7 +94,7 @@ class IntOpImm11 : public IntOpImm
 {
   protected:
     IntOpImm11(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        IntOpImm(mnem, _machInst, __opClass, sext<11>(bits(_machInst, 10, 0)))
+        IntOpImm(mnem, _machInst, __opClass, szext<11>(_machInst))
     {}
 };
 
@@ -105,7 +105,7 @@ class IntOpImm13 : public IntOpImm
 {
   protected:
     IntOpImm13(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        IntOpImm(mnem, _machInst, __opClass, sext<13>(bits(_machInst, 12, 0)))
+        IntOpImm(mnem, _machInst, __opClass, szext<13>(_machInst))
     {}
 };
 

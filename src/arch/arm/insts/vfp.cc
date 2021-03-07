@@ -692,9 +692,9 @@ vfpSFixedToFpS(bool flush, bool defaultNan,
 {
     fesetround(FeRoundNearest);
     if (width == 16)
-        val = sext<16>(val & mask(16));
+        val = szext<16>(val);
     else if (width == 32)
-        val = sext<32>(val & mask(32));
+        val = szext<32>(val);
     else if (width != 64)
         panic("Unsupported width %d", width);
 
@@ -731,9 +731,9 @@ vfpSFixedToFpD(bool flush, bool defaultNan,
 {
     fesetround(FeRoundNearest);
     if (width == 16)
-        val = sext<16>(val & mask(16));
+        val = szext<16>(val);
     else if (width == 32)
-        val = sext<32>(val & mask(32));
+        val = szext<32>(val);
     else if (width != 64)
         panic("Unsupported width %d", width);
 

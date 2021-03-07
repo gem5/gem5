@@ -155,7 +155,7 @@ decode OP default Unknown::unknown()
                 Y = Rd<63:32>;
             }});
             0x0B: smul({{
-                Rd_sdw = sext<32>(Rs1_sdw<31:0>) * sext<32>(Rs2_or_imm13<31:0>);
+                Rd_sdw = szext<32>(Rs1_sdw) * szext<32>(Rs2_or_imm13);
                 Y = Rd_sdw<63:32>;
             }});
             0x0C: subc({{Rd_sdw = Rs1_sdw + (~Rs2_or_imm13) + 1 - Ccr<0:0>}});
@@ -215,8 +215,7 @@ decode OP default Unknown::unknown()
                 Y = resTemp<63:32>;}});
             0x1B: IntOpCcRes::smulcc({{
                 int64_t resTemp;
-                Rd = resTemp = sext<32>(Rs1_sdw<31:0>) *
-                               sext<32>(Rs2_or_imm13<31:0>);
+                Rd = resTemp = szext<32>(Rs1_sdw) * szext<32>(Rs2_or_imm13);
                 Y = resTemp<63:32>;}});
             0x1C: subccc({{
                     int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;

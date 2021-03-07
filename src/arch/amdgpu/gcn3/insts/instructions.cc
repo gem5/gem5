@@ -5728,8 +5728,7 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                vdst[lane] = sext<24>(bits(src0[lane], 23, 0))
-                    * sext<24>(bits(src1[lane], 23, 0));
+                vdst[lane] = szext<24>(src0[lane]) * szext<24>(src1[lane]);
             }
         }
 
@@ -5760,10 +5759,8 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                VecElemI64 tmp_src0
-                    = (VecElemI64)sext<24>(bits(src0[lane], 23, 0));
-                VecElemI64 tmp_src1
-                    = (VecElemI64)sext<24>(bits(src1[lane], 23, 0));
+                VecElemI64 tmp_src0 = (VecElemI64)szext<24>(src0[lane]);
+                VecElemI64 tmp_src1 = (VecElemI64)szext<24>(src1[lane]);
 
                 vdst[lane] = (VecElemI32)((tmp_src0 * tmp_src1) >> 32);
             }
@@ -23563,8 +23560,7 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                vdst[lane] = sext<24>(bits(src0[lane], 23, 0))
-                    * sext<24>(bits(src1[lane], 23, 0));
+                vdst[lane] = szext<24>(src0[lane]) * szext<24>(src1[lane]);
             }
         }
 
@@ -23605,10 +23601,8 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                VecElemI64 tmp_src0
-                    = (VecElemI64)sext<24>(bits(src0[lane], 23, 0));
-                VecElemI64 tmp_src1
-                    = (VecElemI64)sext<24>(bits(src1[lane], 23, 0));
+                VecElemI64 tmp_src0 = (VecElemI64)szext<24>(src0[lane]);
+                VecElemI64 tmp_src1 = (VecElemI64)szext<24>(src1[lane]);
 
                 vdst[lane] = (VecElemI32)((tmp_src0 * tmp_src1) >> 32);
             }
@@ -27785,8 +27779,8 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                vdst[lane] = sext<24>(bits(src0[lane], 23, 0))
-                    * sext<24>(bits(src1[lane], 23, 0)) + src2[lane];
+                vdst[lane] = szext<24>(src0[lane])
+                    * szext<24>(src1[lane]) + src2[lane];
             }
         }
 

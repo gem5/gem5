@@ -776,7 +776,7 @@ class DictionaryCompressor<T>::SignExtendedPattern
         const DictionaryEntry& dict_bytes, const int match_location)
     {
         const T data = DictionaryCompressor<T>::fromDictionaryEntry(bytes);
-        return data == sext<N>(data & mask(N));
+        return data == (T)szext<N>(data);
     }
 
     DictionaryEntry

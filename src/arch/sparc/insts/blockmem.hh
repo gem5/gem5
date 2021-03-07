@@ -75,7 +75,7 @@ class BlockMemImmMicro : public BlockMemMicro
     BlockMemImmMicro(const char *mnem, ExtMachInst _machInst,
                      OpClass __opClass, int8_t _offset) :
         BlockMemMicro(mnem, _machInst, __opClass, _offset),
-        imm(sext<13>(bits(_machInst, 12, 0)))
+        imm(szext<13>(_machInst))
     {}
 
     std::string generateDisassembly(
