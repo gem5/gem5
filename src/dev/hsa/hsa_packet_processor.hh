@@ -85,7 +85,7 @@ class HSAQueueDescriptor
                            uint64_t hri_ptr, uint32_t size)
           : basePointer(base_ptr), doorbellPointer(db_ptr),
             writeIndex(0), readIndex(0),
-            numElts(size), hostReadIndexPtr(hri_ptr),
+            numElts(size / AQL_PACKET_SIZE), hostReadIndexPtr(hri_ptr),
             stalledOnDmaBufAvailability(false),
             dmaInProgress(false)
         {  }
@@ -98,6 +98,13 @@ class HSAQueueDescriptor
 
         uint64_t ptr(uint64_t ix)
         {
+            /**
+             * Sometimes queues report that their size is 512k, which would
+             * indicate numElts of 0x2000. However, they only have 256k
+             * mapped which means any index over 0x1000 will fail an
+             * address translation.
+             */
+            assert(ix % numElts < 0x1000);
             return basePointer +
                 ((ix % numElts) * objSize());
         }
