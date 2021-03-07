@@ -56,7 +56,7 @@ extern const uint8_t reverseBitsLookUpTable[];
  *
  * @ingroup api_bitfield
  */
-constexpr inline uint64_t
+constexpr uint64_t
 mask(unsigned nbits)
 {
     return (nbits >= 64) ? (uint64_t)-1LL : (1ULL << nbits) - 1;
@@ -69,7 +69,7 @@ mask(unsigned nbits)
  * @ingroup api_bitfield
  */
 template <class T>
-constexpr inline T
+constexpr T
 bits(T val, unsigned first, unsigned last)
 {
     assert(first >= last);
@@ -83,7 +83,7 @@ bits(T val, unsigned first, unsigned last)
  * @ingroup api_bitfield
  */
 template <class T>
-constexpr inline T
+constexpr T
 bits(T val, unsigned bit)
 {
     return bits(val, bit, bit);
@@ -96,7 +96,7 @@ bits(T val, unsigned bit)
  * @ingroup api_bitfield
  */
 template <class T>
-constexpr inline T
+constexpr T
 mbits(T val, unsigned first, unsigned last)
 {
     return val & (mask(first + 1) & ~mask(last));
@@ -105,7 +105,7 @@ mbits(T val, unsigned first, unsigned last)
 /**
  * @ingroup api_bitfield
  */
-constexpr inline uint64_t
+constexpr uint64_t
 mask(unsigned first, unsigned last)
 {
     return mbits((uint64_t)-1LL, first, last);
@@ -119,7 +119,7 @@ mask(unsigned first, unsigned last)
  * @ingroup api_bitfield
  */
 template <int N>
-constexpr inline uint64_t
+constexpr uint64_t
 sext(uint64_t val)
 {
     bool sign_bit = bits(val, N - 1);
@@ -135,7 +135,7 @@ sext(uint64_t val)
  * @ingroup api_bitfield
  */
 template <int N>
-constexpr inline uint64_t
+constexpr uint64_t
 szext(uint64_t val)
 {
     bool sign_bit = bits(val, N - 1);
@@ -159,7 +159,7 @@ szext(uint64_t val)
  * @ingroup api_bitfield
  */
 template <class T, class B>
-constexpr inline T
+constexpr T
 insertBits(T val, unsigned first, unsigned last, B bit_val)
 {
     assert(first >= last);
@@ -175,7 +175,7 @@ insertBits(T val, unsigned first, unsigned last, B bit_val)
  * @ingroup api_bitfield
  */
 template <class T, class B>
-constexpr inline T
+constexpr T
 insertBits(T val, unsigned bit, B bit_val)
 {
     return insertBits(val, bit, bit, bit_val);
@@ -190,7 +190,7 @@ insertBits(T val, unsigned bit, B bit_val)
  * @ingroup api_bitfield
  */
 template <class T, class B>
-constexpr inline void
+constexpr void
 replaceBits(T& val, unsigned first, unsigned last, B bit_val)
 {
     val = insertBits(val, first, last, bit_val);
@@ -202,7 +202,7 @@ replaceBits(T& val, unsigned first, unsigned last, B bit_val)
  * @ingroup api_bitfield
  */
 template <class T, class B>
-constexpr inline void
+constexpr void
 replaceBits(T& val, unsigned bit, B bit_val)
 {
     val = insertBits(val, bit, bit, bit_val);
@@ -256,7 +256,7 @@ reverseBits(T val, size_t size=sizeof(T))
  *
  * @ingroup api_bitfield
  */
-constexpr inline int
+constexpr int
 findMsbSet(uint64_t val)
 {
     int msb = 0;
@@ -292,7 +292,7 @@ findMsbSet(uint64_t val)
  *
  * @ingroup api_bitfield
  */
-constexpr inline int
+constexpr int
 findLsbSet(uint64_t val)
 {
     int lsb = 0;
@@ -330,7 +330,7 @@ findLsbSet(uint64_t val)
  *
  * @ingroup api_bitfield
  */
-constexpr inline int
+constexpr int
 popCount(uint64_t val)
 {
 #ifndef __has_builtin
@@ -365,7 +365,7 @@ popCount(uint64_t val)
  *
  * @ingroup api_bitfield
  */
-constexpr inline uint64_t
+constexpr uint64_t
 alignToPowerOfTwo(uint64_t val)
 {
     val--;
@@ -388,7 +388,7 @@ alignToPowerOfTwo(uint64_t val)
  *
  * @ingroup api_bitfield
  */
-constexpr inline int
+constexpr int
 ctz32(uint32_t value)
 {
     return value ? __builtin_ctzl(value) : 32;
@@ -402,7 +402,7 @@ ctz32(uint32_t value)
  *
  * @ingroup api_bitfield
  */
-constexpr inline int
+constexpr int
 ctz64(uint64_t value)
 {
     return value ? __builtin_ctzll(value) : 64;
