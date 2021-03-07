@@ -322,10 +322,7 @@ let {{
     class cvtf_d2i(ConvOp):
         code = '''
             int64_t intSrcReg1 = static_cast<int64_t>(FpSrcReg1);
-            if (REX_W)
-                SDestReg = intSrcReg1;
-            else
-                SDestReg = merge(SDestReg, intSrcReg1, 4);
+            DestReg = merge(DestReg, intSrcReg1, dataSize);
             '''
 
     # Convert two integers registers representing an 80-bit floating

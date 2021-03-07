@@ -91,8 +91,12 @@ def macroop FSUBP_P
    fault "std::make_shared<UnimpInstFault>()"
 };
 
+def macroop FSUBRP_R
+{
+    subfp sti, st(0), sti, spm=1
+};
+
 # FISUB
 # FSUBR
-# FSUBRP
 # FISUBR
 '''

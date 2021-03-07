@@ -185,7 +185,7 @@ format WarnUnimpl {
             }
             0x3: decode MODRM_MOD {
                 0x3: fcmovnu();
-                default: fistp();
+                default: Inst::FISTP(Md);
             }
             0x4: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
@@ -203,7 +203,7 @@ format WarnUnimpl {
                 default: Inst::FLD80(M);
             }
             0x6: decode MODRM_MOD {
-                0x3: fcomi();
+                0x3: Inst::FCOMI(Rq);
                 default: Inst::UD2();
             }
             0x7: decode MODRM_MOD {
@@ -307,7 +307,7 @@ format WarnUnimpl {
                 default: ficomp();
             }
             0x4: decode MODRM_MOD {
-                0x3: fsubrp();
+                0x3: Inst::FSUBRP(Rq);
                 default: fisub();
             }
             0x5: decode MODRM_MOD {
@@ -344,7 +344,7 @@ format WarnUnimpl {
             }
             0x3: decode MODRM_MOD {
                 0x3: Inst::UD2();
-                default: fistp();
+                default: Inst::FISTP(Mw);
             }
             0x4: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
@@ -365,7 +365,7 @@ format WarnUnimpl {
             }
             0x7: decode MODRM_MOD {
                 0x3: Inst::UD2();
-                default: fistp();
+                default: Inst::FISTP(Mq);
             }
         }
     }

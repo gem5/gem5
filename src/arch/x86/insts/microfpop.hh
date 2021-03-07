@@ -54,6 +54,7 @@ class FpOp : public X86MicroopBase
     const RegIndex dest;
     const uint8_t dataSize;
     const int8_t spm;
+    RegIndex foldOBit;
 
     // Constructor
     FpOp(ExtMachInst _machInst,
@@ -66,7 +67,9 @@ class FpOp : public X86MicroopBase
                 __opClass),
         src1(_src1.index()), src2(_src2.index()), dest(_dest.index()),
         dataSize(_dataSize), spm(_spm)
-    {}
+    {
+        foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
+    }
 
     std::string generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const override;

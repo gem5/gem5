@@ -37,6 +37,11 @@ microcode = '''
 # FCOM
 # FCOMP
 # FCOMPP
-# FCOMI
 # FCOMIP
+
+def macroop FCOMI_R
+{
+    compfp st(0), sti
+};
+
 '''
