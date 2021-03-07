@@ -164,7 +164,8 @@ TEST(BitfieldTest, MbitsEntireRange)
 
 /*
  * The following tests the "sext<N>(X)" function. sext carries out a sign
- * extention from N bits to 64 bits on value X.
+ * extention from N bits to 64 bits on value X. It does not zero bits past the
+ * sign bit if it was zero.
  */
 TEST(BitfieldTest, SignExtendPositiveInput)
 {
@@ -190,6 +191,36 @@ TEST(BitfieldTest, SignExtendNegativeInputOutsideRange)
     uint64_t val = 0x4800000010000008;
     uint64_t output = 0xF800000010000008;
     EXPECT_EQ(output, sext<60>(val));
+}
+/*
+ * The following tests the "szext<N>(X)" function. szext carries out a sign
+ * extention from N bits to 64 bits on value X. Will zero bits past the sign
+ * bit if it was zero.
+ */
+TEST(BitfieldTest, SignZeroExtendPositiveInput)
+{
+    int8_t val = 14;
+    int64_t output = 14;
+    EXPECT_EQ(output, szext<8>(val));
+}
+
+TEST(BitfieldTest, SignZeroExtendNegativeInput)
+{
+    int8_t val = -14;
+    uint64_t output = -14;
+    EXPECT_EQ(output, szext<8>(val));
+}
+
+TEST(BitfieldTest, SignZeroExtendPositiveInputOutsideRange)
+{
+    EXPECT_EQ(0, szext<8>(1 << 10));
+}
+
+TEST(BitfieldTest, SignZeroExtendNegativeInputOutsideRange)
+{
+    uint64_t val = 0x4800000010000008;
+    uint64_t output = 0xF800000010000008;
+    EXPECT_EQ(output, szext<60>(val));
 }
 
 /* The following tests "insertBits(A, B, C, D)". insertBits returns A

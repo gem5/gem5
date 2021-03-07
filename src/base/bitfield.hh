@@ -112,7 +112,9 @@ mask(unsigned first, unsigned last)
 }
 
 /**
- * Sign-extend an N-bit value to 64 bits.
+ * Sign-extend an N-bit value to 64 bits. Assumes all bits past the sign are
+ * currently zero. For true sign extension regardless of the value of the sign
+ * bit, see szext.
  *
  * @ingroup api_bitfield
  */
@@ -123,6 +125,24 @@ sext(uint64_t val)
     bool sign_bit = bits(val, N - 1);
     if (sign_bit)
         val |= ~mask(N);
+    return val;
+}
+
+/**
+ * Sign-extend an N-bit value to 64 bits. Zero any bits past the sign if
+ * necessary.
+ *
+ * @ingroup api_bitfield
+ */
+template <int N>
+constexpr inline uint64_t
+szext(uint64_t val)
+{
+    bool sign_bit = bits(val, N - 1);
+    if (sign_bit)
+        val |= ~mask(N);
+    else
+        val &= mask(N);
     return val;
 }
 
