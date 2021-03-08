@@ -583,7 +583,7 @@ IdeDisk::startDma(const uint32_t &prdTableBase)
         panic("Inconsistent device state for DMA start!\n");
 
     // PRD base address is given by bits 31:2
-    curPrdAddr = pciToDma((Addr)(prdTableBase & ~ULL(0x3)));
+    curPrdAddr = pciToDma((Addr)(prdTableBase & ~0x3ULL));
 
     dmaState = Dma_Transfer;
 

@@ -242,7 +242,7 @@ inline bool isData(TxDesc *d) { return !isLegacy(d) && isTypes(d, TXD_DATA, TXD_
 
 inline Addr getBuf(TxDesc *d) { assert(isLegacy(d) || isData(d)); return d->d1; }
 inline Addr getLen(TxDesc *d) { if (isLegacy(d)) return bits(d->d2,15,0); else return bits(d->d2, 19,0); }
-inline void setDd(TxDesc *d) { replaceBits(d->d2, 35, 32, ULL(1)); }
+inline void setDd(TxDesc *d) { replaceBits(d->d2, 35, 32, 1ULL); }
 
 inline bool ide(TxDesc *d)  { return bits(d->d2, 31,31) && (getType(d) == TXD_DATA || isLegacy(d)); }
 inline bool vle(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 30,30); }

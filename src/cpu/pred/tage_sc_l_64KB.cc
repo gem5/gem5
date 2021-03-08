@@ -203,7 +203,7 @@ TAGE_SC_L_TAGE_64KB::gtag(ThreadID tid, Addr pc, int bank) const
     int tag = pc ^ threadHistory[tid].computeTags[0][bank].comp ^
               (threadHistory[tid].computeTags[1][bank].comp << 1);
 
-    return (tag & ((ULL(1) << tagTableTagWidths[bank]) - 1));
+    return (tag & ((1ULL << tagTableTagWidths[bank]) - 1));
 }
 
 void

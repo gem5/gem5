@@ -104,7 +104,7 @@ FsFreebsd::initState()
 
     Addr ra = dtb_file->findReleaseAddr();
     if (ra)
-        bootReleaseAddr = ra & ~ULL(0x7F);
+        bootReleaseAddr = ra & ~0x7FULL;
 
     dtb_file->buildImage().
         offset(params().dtb_addr).

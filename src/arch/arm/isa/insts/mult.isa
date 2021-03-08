@@ -290,7 +290,7 @@ let {{
                                         ((int64_t)(Reg3_ud << 32) +
                                          (int64_t)Reg1_sw *
                                          (int64_t)Reg2_sw +
-                                         ULL(0x80000000)) >> 32;
+                                         0x80000000ULL) >> 32;
                                  ''')
     buildMult4InstUnCc("smmls", '''Reg0 = resTemp =
                                        ((int64_t)(Reg3_ud << 32) -
@@ -301,7 +301,7 @@ let {{
                                         ((int64_t)(Reg3_ud << 32) -
                                          (int64_t)Reg1_sw *
                                          (int64_t)Reg2_sw +
-                                         ULL(0x80000000)) >> 32;
+                                         0x80000000ULL) >> 32;
                                  ''')
     buildMult3InstUnCc("smmul", '''Reg0 = resTemp =
                                        ((int64_t)Reg1_sw *
@@ -310,7 +310,7 @@ let {{
     buildMult3InstUnCc("smmulr", '''Reg0 = resTemp =
                                         ((int64_t)Reg1_sw *
                                          (int64_t)Reg2_sw +
-                                         ULL(0x80000000)) >> 32;
+                                         0x80000000ULL) >> 32;
                                  ''')
     buildMult3InstCc  ("smuad", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 15, 0)) *

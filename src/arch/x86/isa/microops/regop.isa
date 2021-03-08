@@ -752,14 +752,14 @@ let {{
             if (divisor == 0) {
                 fault = std::make_shared<DivideError>();
             } else if (remaining) {
-                if (divisor & (ULL(1) << 63)) {
-                    while (remaining && !(dividend & (ULL(1) << 63))) {
+                if (divisor & (1ULL << 63)) {
+                    while (remaining && !(dividend & (1ULL << 63))) {
                         dividend = (dividend << 1) |
                             bits(SrcReg1, remaining - 1);
                         quotient <<= 1;
                         remaining--;
                     }
-                    if (dividend & (ULL(1) << 63)) {
+                    if (dividend & (1ULL << 63)) {
                         bool highBit = false;
                         if (dividend < divisor && remaining) {
                             highBit = true;

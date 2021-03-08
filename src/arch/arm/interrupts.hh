@@ -93,7 +93,7 @@ class Interrupts : public BaseInterrupts
             panic("No support for other interrupt indexes\n");
 
         interrupts[int_num] = true;
-        intStatus |= ULL(1) << int_num;
+        intStatus |= 1ULL << int_num;
     }
 
     void
@@ -108,7 +108,7 @@ class Interrupts : public BaseInterrupts
             panic("No support for other interrupt indexes\n");
 
         interrupts[int_num] = false;
-        intStatus &= ~(ULL(1) << int_num);
+        intStatus &= ~(1ULL << int_num);
     }
 
     void

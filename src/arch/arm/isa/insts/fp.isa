@@ -1326,7 +1326,7 @@ let {{
         } else if (cDest > cOp1) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
-            const uint64_t qnan = ULL(0x7ff8000000000000);
+            const uint64_t qnan = 0x7ff8000000000000ULL;
             const bool nan1 = std::isnan(cDest);
             const bool signal1 = nan1 && ((fpToBits(cDest) & qnan) != qnan);
             const bool nan2 = std::isnan(cOp1);
@@ -1389,7 +1389,7 @@ let {{
         } else if (cDest > imm) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
-            const uint64_t qnan = ULL(0x7ff8000000000000);
+            const uint64_t qnan = 0x7ff8000000000000ULL;
             const bool nan = std::isnan(cDest);
             const bool signal = nan && ((fpToBits(cDest) & qnan) != qnan);
             if (signal)

@@ -112,7 +112,7 @@ let {{
             self.mnemonic = "limm"
             self.dest = dest
             if isinstance(imm, int):
-                imm = "ULL(%d)" % imm
+                imm = "%dULL" % imm
             self.imm = imm
             self.dataSize = dataSize
 
@@ -142,7 +142,7 @@ let {{
             self.mnemonic = "lfpimm"
             self.dest = dest
             if isinstance(imm, int):
-                imm = "ULL(%d)" % imm
+                imm = "%dULL" % imm
             elif isinstance(imm, float):
                 imm = "floatToBits64(%.16f)" % imm
             self.imm = imm

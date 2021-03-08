@@ -376,7 +376,7 @@ X86ISA::Interrupts::readReg(ApicRegIndex reg)
         panic("Local APIC Processor Priority register unimplemented.\n");
         break;
       case APIC_ERROR_STATUS:
-        regs[APIC_INTERNAL_STATE] &= ~ULL(0x1);
+        regs[APIC_INTERNAL_STATE] &= ~0x1ULL;
         break;
       case APIC_CURRENT_COUNT:
         {
@@ -444,7 +444,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
         newVal = val | 0x0FFFFFFF;
         break;
       case APIC_SPURIOUS_INTERRUPT_VECTOR:
-        regs[APIC_INTERNAL_STATE] &= ~ULL(1 << 1);
+        regs[APIC_INTERNAL_STATE] &= ~(1ULL << 1);
         regs[APIC_INTERNAL_STATE] |= val & (1 << 8);
         if (val & (1 << 9))
             warn("Focus processor checking not implemented.\n");
@@ -452,10 +452,10 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
       case APIC_ERROR_STATUS:
         {
             if (regs[APIC_INTERNAL_STATE] & 0x1) {
-                regs[APIC_INTERNAL_STATE] &= ~ULL(0x1);
+                regs[APIC_INTERNAL_STATE] &= ~0x1ULL;
                 newVal = 0;
             } else {
-                regs[APIC_INTERNAL_STATE] |= ULL(0x1);
+                regs[APIC_INTERNAL_STATE] |= 0x1ULL;
                 return;
             }
 

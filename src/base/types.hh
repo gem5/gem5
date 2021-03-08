@@ -42,11 +42,6 @@
 #include <ostream>
 #include <stdexcept>
 
-/** uint64_t constant */
-#define ULL(N)          ((uint64_t)N##ULL)
-/** int64_t constant */
-#define LL(N)           ((int64_t)N##LL)
-
 /** Statistics counter type.  Not much excuse for not using a 64-bit
  * integer here, but if you're desperate and only run short
  * simulations you could make this 32 bits.
@@ -58,7 +53,7 @@ typedef int64_t Counter;
  */
 typedef uint64_t Tick;
 
-const Tick MaxTick = ULL(0xffffffffffffffff);
+const Tick MaxTick = 0xffffffffffffffffULL;
 
 /**
  * Cycles is a wrapper class for representing cycle counts, i.e. a

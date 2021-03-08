@@ -54,10 +54,10 @@
 Iob::Iob(const Params &p)
     : PioDevice(p), ic(p.platform->intrctrl)
 {
-    iobManAddr = ULL(0x9800000000);
-    iobManSize = ULL(0x0100000000);
-    iobJBusAddr = ULL(0x9F00000000);
-    iobJBusSize = ULL(0x0100000000);
+    iobManAddr = 0x9800000000ULL;
+    iobManSize = 0x0100000000ULL;
+    iobJBusAddr = 0x9F00000000ULL;
+    iobJBusSize = 0x0100000000ULL;
     assert(params().system->threads.size() <= MaxNiagaraProcs);
 
     pioDelay = p.pio_latency;

@@ -135,10 +135,10 @@ MPP_TAGE::handleUReset()
         tCounter = 0;
     }
 
-    if (tCounter >= ((ULL(1) << logUResetPeriod))) {
+    if (tCounter >= ((1ULL << logUResetPeriod))) {
         // Update the u bits for the short tags table
         for (int i = 1; i <= nHistoryTables; i++) {
-            for (int j = 0; j < (ULL(1) << logTagTableSizes[i]); j++) {
+            for (int j = 0; j < (1ULL << logTagTableSizes[i]); j++) {
                 resetUctr(gtable[i][j].u);
             }
         }
@@ -161,8 +161,7 @@ int
 MPP_TAGE::bindex(Addr pc_in) const
 {
     uint32_t pc = (uint32_t) pc_in;
-    return ((pc ^ (pc >> 4)) &
-            ((ULL(1) << (logTagTableSizes[0])) - 1));
+    return ((pc ^ (pc >> 4)) & ((1ULL << (logTagTableSizes[0])) - 1));
 }
 
 unsigned

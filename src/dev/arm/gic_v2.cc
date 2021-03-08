@@ -331,11 +331,11 @@ GicV2::readCpu(ContextID ctx, Addr daddr)
                             break;
                         }
                     }
-                    uint64_t sgi_num = ULL(1) << (ctx + 8 * iar.cpu_id);
+                    uint64_t sgi_num = 1ULL << (ctx + 8 * iar.cpu_id);
                     cpuSgiActive[iar.ack_id] |= sgi_num;
                     cpuSgiPending[iar.ack_id] &= ~sgi_num;
                 } else {
-                    uint64_t sgi_num = ULL(1) << iar.ack_id;
+                    uint64_t sgi_num = 1ULL << iar.ack_id;
                     cpuSgiActiveExt[ctx] |= sgi_num;
                     cpuSgiPendingExt[ctx] &= ~sgi_num;
                 }
@@ -590,7 +590,7 @@ GicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
         const IAR iar = data;
         if (iar.ack_id < SGI_MAX) {
             // Clear out the bit that corresponds to the cleared int
-            uint64_t clr_int = ULL(1) << (ctx + 8 * iar.cpu_id);
+            uint64_t clr_int = 1ULL << (ctx + 8 * iar.cpu_id);
             if (!(cpuSgiActive[iar.ack_id] & clr_int) &&
                 !(cpuSgiActiveExt[ctx] & (1 << iar.ack_id)))
                 panic("Done handling a SGI that isn't active?\n");
@@ -716,7 +716,7 @@ uint64_t
 GicV2::genSwiMask(int cpu)
 {
     panic_if(cpu > sys->threads.size(), "Invalid CPU ID.");
-    return ULL(0x0101010101010101) << cpu;
+    return 0x0101010101010101ULL << cpu;
 }
 
 uint8_t

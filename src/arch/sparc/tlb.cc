@@ -358,7 +358,7 @@ TLB::TagRead(int entry)
     tag = tlb[entry].range.contextId;
     tag |= tlb[entry].range.va;
     tag |= (uint64_t)tlb[entry].range.partitionId << 61;
-    tag |= tlb[entry].range.real ? ULL(1) << 60 : 0;
+    tag |= tlb[entry].range.real ? 1ULL << 60 : 0;
     tag |= (uint64_t)~tlb[entry].pte._size() << 56;
     return tag;
 }
@@ -1433,7 +1433,7 @@ TLB::MakeTsbPtr(TsbPageSize ps, uint64_t tag_access, uint64_t c0_tsb,
     int page_size = (ps == Ps0) ? bits(config, 2,0) : bits(config,10,8);
 
     if (ps == Ps1  && split)
-        ptr |= ULL(1) << (13 + tsb_size);
+        ptr |= 1ULL << (13 + tsb_size);
     ptr |= (tag_access >> (9 + page_size * 3)) & mask(12+tsb_size, 4);
 
     return ptr;

@@ -58,7 +58,7 @@ class VncInput;
 class Pl111: public AmbaDmaDevice
 {
   protected:
-    static const uint64_t AMBA_ID       = ULL(0xb105f00d00141111);
+    static const uint64_t AMBA_ID       = 0xb105f00d00141111ULL;
     /** ARM PL111 register map*/
     static const int LcdTiming0       = 0x000;
     static const int LcdTiming1       = 0x004;

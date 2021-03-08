@@ -124,7 +124,7 @@ simd_modified_imm(bool op, uint8_t cmode, uint8_t data, bool &immValid,
             bigData = 0;
             for (int i = 7; i >= 0; i--) {
                 if (bits(data, i)) {
-                    bigData |= (ULL(0xFF) << (i * 8));
+                    bigData |= (0xFFULL << (i * 8));
                 }
             }
         } else {

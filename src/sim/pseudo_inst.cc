@@ -360,7 +360,7 @@ readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
 
     const std::string &file = tc->getSystemPtr()->params().readfile;
     if (file.empty()) {
-        return ULL(0);
+        return 0;
     }
 
     uint64_t result = 0;

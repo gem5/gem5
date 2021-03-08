@@ -117,7 +117,7 @@ flushToZero(fpType &op)
 {
     fpType junk = 0.0;
     if (std::fpclassify(op) == FP_SUBNORMAL) {
-        uint64_t bitMask = ULL(0x1) << (sizeof(fpType) * 8 - 1);
+        uint64_t bitMask = 0x1ULL << (sizeof(fpType) * 8 - 1);
         op = bitsToFp(fpToBits(op) & bitMask, junk);
         return true;
     }
@@ -204,7 +204,7 @@ isSnan(fpType val)
 {
     const bool single = (sizeof(fpType) == sizeof(float));
     const uint64_t qnan =
-        single ? 0x7fc00000 : ULL(0x7ff8000000000000);
+        single ? 0x7fc00000 : 0x7ff8000000000000ULL;
     return std::isnan(val) && ((fpToBits(val) & qnan) != qnan);
 }
 
@@ -597,7 +597,7 @@ fpMulAdd(T op1, T op2, T addend)
     if (std::isnan(result) && !std::isnan(op1) &&
         !std::isnan(op2) && !std::isnan(addend))
     {
-        uint64_t bitMask = ULL(0x1) << ((sizeof(T) * 8) - 1);
+        uint64_t bitMask = 0x1ULL << ((sizeof(T) * 8) - 1);
         result = bitsToFp(fpToBits(result) & ~bitMask, op1);
     }
     return result;
@@ -620,7 +620,7 @@ static inline T
 fpMaxNum(T a, T b)
 {
     const bool     single = (sizeof(T) == sizeof(float));
-    const uint64_t qnan   = single ? 0x7fc00000 : ULL(0x7ff8000000000000);
+    const uint64_t qnan   = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
 
     if (std::isnan(a))
         return ((fpToBits(a) & qnan) == qnan) ? b : a;
@@ -648,7 +648,7 @@ static inline T
 fpMinNum(T a, T b)
 {
     const bool     single = (sizeof(T) == sizeof(float));
-    const uint64_t qnan   = single ? 0x7fc00000 : ULL(0x7ff8000000000000);
+    const uint64_t qnan   = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
 
     if (std::isnan(a))
         return ((fpToBits(a) & qnan) == qnan) ? b : a;

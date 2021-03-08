@@ -51,7 +51,7 @@ namespace RiscvISA
 const ByteOrder GuestByteOrder = ByteOrder::little;
 
 const Addr PageShift = 12;
-const Addr PageBytes = ULL(1) << PageShift;
+const Addr PageBytes = 1ULL << PageShift;
 
 }
 

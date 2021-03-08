@@ -46,7 +46,6 @@
 #include <type_traits>
 
 #include "base/bitfield.hh"
-#include "base/types.hh"
 
 /**
  * @ingroup api_base_utils
@@ -63,12 +62,12 @@ floorLog2(T x)
     int y = 0;
     constexpr auto ts = sizeof(T);
 
-    if (ts >= 8 && (ux & ULL(0xffffffff00000000))) { y += 32; ux >>= 32; }
-    if (ts >= 4 && (ux & ULL(0x00000000ffff0000))) { y += 16; ux >>= 16; }
-    if (ts >= 2 && (ux & ULL(0x000000000000ff00))) { y +=  8; ux >>=  8; }
-    if (ux & ULL(0x00000000000000f0)) { y +=  4; ux >>=  4; }
-    if (ux & ULL(0x000000000000000c)) { y +=  2; ux >>=  2; }
-    if (ux & ULL(0x0000000000000002)) { y +=  1; }
+    if (ts >= 8 && (ux & 0xffffffff00000000ULL)) { y += 32; ux >>= 32; }
+    if (ts >= 4 && (ux & 0x00000000ffff0000ULL)) { y += 16; ux >>= 16; }
+    if (ts >= 2 && (ux & 0x000000000000ff00ULL)) { y +=  8; ux >>=  8; }
+    if (ux & 0x00000000000000f0ULL) { y +=  4; ux >>=  4; }
+    if (ux & 0x000000000000000cULL) { y +=  2; ux >>=  2; }
+    if (ux & 0x0000000000000002ULL) { y +=  1; }
 
     return y;
 }

@@ -42,10 +42,10 @@ class Packet;
 namespace SparcISA
 {
 
-const Addr StartVAddrHole = ULL(0x0000800000000000);
-const Addr EndVAddrHole = ULL(0xFFFF7FFFFFFFFFFF);
-const Addr VAddrAMask = ULL(0xFFFFFFFF);
-const Addr PAddrImplMask = ULL(0x000000FFFFFFFFFF);
+const Addr StartVAddrHole = 0x0000800000000000ULL;
+const Addr EndVAddrHole = 0xFFFF7FFFFFFFFFFFULL;
+const Addr VAddrAMask = 0xFFFFFFFFULL;
+const Addr PAddrImplMask = 0x000000FFFFFFFFFFULL;
 
 class TLB : public BaseTLB
 {

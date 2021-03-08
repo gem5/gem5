@@ -1280,7 +1280,7 @@ StaticInstPtr
 
     def prep_int_lit_case_label(self, lit):
         if lit >= 2**32:
-            return 'case ULL(%#x): ' % lit
+            return 'case %#xULL: ' % lit
         else:
             return 'case %#x: ' % lit
 

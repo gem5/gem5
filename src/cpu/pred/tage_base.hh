@@ -101,7 +101,7 @@ class TAGEBase : public SimObject
             comp = (comp << 1) | h[0];
             comp ^= h[origLength] << outpoint;
             comp ^= (comp >> compLength);
-            comp &= (ULL(1) << compLength) - 1;
+            comp &= (1ULL << compLength) - 1;
         }
     };
 

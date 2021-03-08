@@ -45,8 +45,8 @@
 #define __SINIC_VAL64(NAME, OFFSET, WIDTH) \
         static const uint64_t NAME##_width = WIDTH; \
         static const uint64_t NAME##_offset = OFFSET; \
-        static const uint64_t NAME##_mask = (ULL(1) << WIDTH) - 1; \
-        static const uint64_t NAME = ((ULL(1) << WIDTH) - 1) << OFFSET; \
+        static const uint64_t NAME##_mask = (1ULL << WIDTH) - 1; \
+        static const uint64_t NAME = ((1ULL << WIDTH) - 1) << OFFSET; \
         static inline uint64_t get_##NAME(uint64_t reg) \
         { return (reg & NAME) >> OFFSET; } \
         static inline uint64_t set_##NAME(uint64_t reg, uint64_t val) \

@@ -125,7 +125,7 @@ MipsISA::signExtend(uint64_t value, int32_t fmt)
 uint64_t
 MipsISA::addHalfLsb(uint64_t value, int32_t lsbpos)
 {
-    return value += ULL(1) << (lsbpos - 1);
+    return value += 1ULL << (lsbpos - 1);
 }
 
 int32_t

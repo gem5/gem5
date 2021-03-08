@@ -46,7 +46,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-const uint64_t AmbaVendor = ULL(0xb105f00d00000000);
+const uint64_t AmbaVendor = 0xb105f00d00000000ULL;
 
 AmbaPioDevice::AmbaPioDevice(const Params &p, Addr pio_size)
     : BasicPioDevice(p, pio_size), ambaId(AmbaVendor | p.amba_id)

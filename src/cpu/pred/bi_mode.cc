@@ -56,9 +56,9 @@ BiModeBP::BiModeBP(const BiModeBPParams &params)
     choiceHistoryMask = choicePredictorSize - 1;
     globalHistoryMask = globalPredictorSize - 1;
 
-    choiceThreshold = (ULL(1) << (choiceCtrBits - 1)) - 1;
-    takenThreshold = (ULL(1) << (globalCtrBits - 1)) - 1;
-    notTakenThreshold = (ULL(1) << (globalCtrBits - 1)) - 1;
+    choiceThreshold = (1ULL << (choiceCtrBits - 1)) - 1;
+    takenThreshold = (1ULL << (globalCtrBits - 1)) - 1;
+    notTakenThreshold = (1ULL << (globalCtrBits - 1)) - 1;
 }
 
 /*
@@ -139,7 +139,7 @@ BiModeBP::lookup(ThreadID tid, Addr branchAddr, void * &bpHistory)
 void
 BiModeBP::btbUpdate(ThreadID tid, Addr branchAddr, void * &bpHistory)
 {
-    globalHistoryReg[tid] &= (historyRegisterMask & ~ULL(1));
+    globalHistoryReg[tid] &= (historyRegisterMask & ~1ULL);
 }
 
 /* Only the selected direction predictor will be updated with the final

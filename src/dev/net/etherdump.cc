@@ -93,7 +93,7 @@ EtherDump::dumpPacket(EthPacketPtr &packet)
 {
     pcap_pkthdr pkthdr;
     pkthdr.seconds = curTick() / SimClock::Int::s;
-    pkthdr.microseconds = (curTick() / SimClock::Int::us) % ULL(1000000);
+    pkthdr.microseconds = (curTick() / SimClock::Int::us) % 1000000ULL;
     pkthdr.caplen = std::min(packet->length, maxlen);
     pkthdr.len = packet->length;
     stream->write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));

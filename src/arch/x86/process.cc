@@ -124,7 +124,7 @@ I386Process::I386Process(const ProcessParams &params,
     if (kvmInSE)
         panic("KVM CPU model does not support 32 bit processes");
 
-    _gdtStart = ULL(0xffffd000);
+    _gdtStart = 0xffffd000ULL;
     _gdtSize = PageBytes;
 
     vsyscallPage.base = 0xffffe000ULL;

@@ -64,15 +64,15 @@ namespace X86ISA
     const int NumSegments = 6;
     const int NumSysSegments = 4;
 
-    const Addr IntAddrPrefixMask = ULL(0xffffffff00000000);
-    const Addr IntAddrPrefixCPUID = ULL(0x100000000);
-    const Addr IntAddrPrefixMSR = ULL(0x200000000);
-    const Addr IntAddrPrefixIO = ULL(0x300000000);
+    const Addr IntAddrPrefixMask = 0xffffffff00000000ULL;
+    const Addr IntAddrPrefixCPUID = 0x100000000ULL;
+    const Addr IntAddrPrefixMSR = 0x200000000ULL;
+    const Addr IntAddrPrefixIO = 0x300000000ULL;
 
-    const Addr PhysAddrPrefixIO = ULL(0x8000000000000000);
-    const Addr PhysAddrPrefixPciConfig = ULL(0xC000000000000000);
-    const Addr PhysAddrPrefixLocalAPIC = ULL(0x2000000000000000);
-    const Addr PhysAddrPrefixInterrupts = ULL(0xA000000000000000);
+    const Addr PhysAddrPrefixIO = 0x8000000000000000ULL;
+    const Addr PhysAddrPrefixPciConfig = 0xC000000000000000ULL;
+    const Addr PhysAddrPrefixLocalAPIC = 0x2000000000000000ULL;
+    const Addr PhysAddrPrefixInterrupts = 0xA000000000000000ULL;
     // Each APIC gets two pages. One page is used for local apics to field
     // accesses from the CPU, and the other is for all APICs to communicate.
     const Addr PhysAddrAPICRangeSize = 1 << 12;

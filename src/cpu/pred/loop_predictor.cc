@@ -73,7 +73,7 @@ LoopPredictor::init()
 
     assert(logSizeLoopPred >= logLoopTableAssoc);
 
-    ltable = new LoopEntry[ULL(1) << logSizeLoopPred];
+    ltable = new LoopEntry[1ULL << logSizeLoopPred];
 }
 
 LoopPredictor::BranchInfo*

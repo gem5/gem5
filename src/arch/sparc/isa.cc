@@ -108,7 +108,7 @@ ISA::clear()
     // y = 0;
     // ccr = 0;
     asi = 0;
-    tick = ULL(1) << 63;
+    tick = 1ULL << 63;
     fprs = 0;
     gsr = 0;
     softint = 0;
@@ -426,7 +426,7 @@ ISA::setMiscRegNoEffect(int miscReg, RegVal val)
         panic("Priviliged access to tick regesiters not implemented\n");
       case MISCREG_TBA:
         // clear lower 7 bits on writes.
-        tba = val & ULL(~0x7FFF);
+        tba = val & ~0x7FFFULL;
         break;
       case MISCREG_PSTATE:
         pstate = (val & PstateMask);

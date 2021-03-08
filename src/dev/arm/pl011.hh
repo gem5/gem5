@@ -113,7 +113,7 @@ class Pl011 : public Uart, public AmbaDevice
     EventFunctionWrapper intEvent;
 
   protected: // Registers
-    static const uint64_t AMBA_ID = ULL(0xb105f00d00341011);
+    static const uint64_t AMBA_ID = 0xb105f00d00341011ULL;
     static const int UART_DR = 0x000;
     static const int UART_RSR = 0x004;
     static const int UART_ECR = 0x004;

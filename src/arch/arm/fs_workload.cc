@@ -58,7 +58,7 @@ SkipFunc::returnFromFuncIn(ThreadContext *tc)
     if (inAArch64(tc)) {
         newPC.set(tc->readIntReg(INTREG_X30));
     } else {
-        newPC.set(tc->readIntReg(ReturnAddressReg) & ~ULL(1));
+        newPC.set(tc->readIntReg(ReturnAddressReg) & ~1ULL);
     }
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();

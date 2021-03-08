@@ -186,7 +186,7 @@ TAGE_SC_L_TAGE::gindex(ThreadID tid, Addr pc, int bank) const
 
     index = gindex_ext(index, bank);
 
-    return (index & ((ULL(1) << (logTagTableSizes[bank])) - 1));
+    return (index & ((1ULL << (logTagTableSizes[bank])) - 1));
 }
 
 int
@@ -194,19 +194,19 @@ TAGE_SC_L_TAGE::F(int a, int size, int bank) const
 {
     int a1, a2;
 
-    a = a & ((ULL(1) << size) - 1);
-    a1 = (a & ((ULL(1) << logTagTableSizes[bank]) - 1));
+    a = a & ((1ULL << size) - 1);
+    a1 = (a & ((1ULL << logTagTableSizes[bank]) - 1));
     a2 = (a >> logTagTableSizes[bank]);
 
     if (bank < logTagTableSizes[bank]) {
-        a2 = ((a2 << bank) & ((ULL(1) << logTagTableSizes[bank]) - 1))
+        a2 = ((a2 << bank) & ((1ULL << logTagTableSizes[bank]) - 1))
              + (a2 >> (logTagTableSizes[bank] - bank));
     }
 
     a = a1 ^ a2;
 
     if (bank < logTagTableSizes[bank]) {
-        a = ((a << bank) & ((ULL(1) << logTagTableSizes[bank]) - 1))
+        a = ((a << bank) & ((1ULL << logTagTableSizes[bank]) - 1))
             + (a >> (logTagTableSizes[bank] - bank));
     }
 
@@ -217,7 +217,7 @@ int
 TAGE_SC_L_TAGE::bindex(Addr pc) const
 {
     return ((pc ^ (pc >> instShiftAmt)) &
-            ((ULL(1) << (logTagTableSizes[0])) - 1));
+            ((1ULL << (logTagTableSizes[0])) - 1));
 }
 
 void
@@ -245,7 +245,7 @@ TAGE_SC_L_TAGE::updatePathAndGlobalHistory(
         tHist.pathHist = (tHist.pathHist << 1) ^ pathbit;
         if (truncatePathHist) {
             // The 8KB implementation does not do this truncation
-            tHist.pathHist = (tHist.pathHist & ((ULL(1) << pathHistBits) - 1));
+            tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
         }
         for (int i = 1; i <= nHistoryTables; i++) {
             tHist.computeIndices[i].update(tHist.gHist);
@@ -315,7 +315,7 @@ TAGE_SC_L_TAGE::handleUReset()
         tCounter = 0;
     }
 
-    if (tCounter >= ((ULL(1) << logUResetPeriod))) {
+    if (tCounter >= ((1ULL << logUResetPeriod))) {
         // Update the u bits for the short tags table
         for (int j = 0; j < (shortTagsTageFactor*(1<<logTagTableSize)); j++) {
             resetUctr(gtable[1][j].u);

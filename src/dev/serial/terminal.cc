@@ -283,10 +283,10 @@ Terminal::write(const uint8_t *buf, size_t len)
     return ret;
 }
 
-#define MORE_PENDING (ULL(1) << 61)
-#define RECEIVE_SUCCESS (ULL(0) << 62)
-#define RECEIVE_NONE (ULL(2) << 62)
-#define RECEIVE_ERROR (ULL(3) << 62)
+#define MORE_PENDING (1ULL << 61)
+#define RECEIVE_SUCCESS (0ULL << 62)
+#define RECEIVE_NONE (2ULL << 62)
+#define RECEIVE_ERROR (3ULL << 62)
 
 uint8_t
 Terminal::readData()

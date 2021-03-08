@@ -166,7 +166,7 @@ class Trie
     extendMask(Key orig)
     {
         // Just in case orig was 0.
-        const Key msb = ULL(1) << (MaxBits - 1);
+        const Key msb = 1ULL << (MaxBits - 1);
         return orig | (orig >> 1) | msb;
     }
 

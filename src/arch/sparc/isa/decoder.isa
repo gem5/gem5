@@ -185,7 +185,7 @@ decode OP default Unknown::unknown()
                         Rd_udw = 0x7FFFFFFF;
                     } else if ((int64_t)Rd_udw <=
                         std::numeric_limits<int32_t>::min()) {
-                        Rd_udw = ULL(0xFFFFFFFF80000000);
+                        Rd_udw = 0xFFFFFFFF80000000ULL;
                     }
                 }
             }});
@@ -253,7 +253,7 @@ decode OP default Unknown::unknown()
                         if (overflow)
                             Rd = 0x7FFFFFFF;
                         else if (underflow)
-                            Rd = ULL(0xFFFFFFFF80000000);
+                            Rd = 0xFFFFFFFF80000000ULL;
                     }
                 }}, iv={{overflow || underflow}});
             0x20: taddcc({{

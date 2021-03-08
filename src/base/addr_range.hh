@@ -131,7 +131,7 @@ class AddrRange
           intlvMatch(_intlv_match)
     {
         // sanity checks
-        fatal_if(!masks.empty() && _intlv_match >= ULL(1) << masks.size(),
+        fatal_if(!masks.empty() && _intlv_match >= 1ULL << masks.size(),
                  "Match value %d does not fit in %d interleaving bits\n",
                  _intlv_match, masks.size());
     }
@@ -169,7 +169,7 @@ class AddrRange
           intlvMatch(_intlv_match)
     {
         // sanity checks
-        fatal_if(_intlv_bits && _intlv_match >= ULL(1) << _intlv_bits,
+        fatal_if(_intlv_bits && _intlv_match >= 1ULL << _intlv_bits,
                  "Match value %d does not fit in %d interleaving bits\n",
                  _intlv_match, _intlv_bits);
 
@@ -226,7 +226,7 @@ class AddrRange
         // interleaved range
         if (ranges.size() > 1) {
 
-            if (ranges.size() != (ULL(1) << masks.size()))
+            if (ranges.size() != (1ULL << masks.size()))
                 fatal("Got %d ranges spanning %d interleaving bits\n",
                       ranges.size(), masks.size());
 
@@ -271,7 +271,7 @@ class AddrRange
                 combined_mask |= mask;
             }
             const uint8_t lowest_bit = ctz64(combined_mask);
-            return ULL(1) << lowest_bit;
+            return 1ULL << lowest_bit;
         } else {
             return size();
         }
@@ -285,7 +285,7 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    uint32_t stripes() const { return ULL(1) << masks.size(); }
+    uint32_t stripes() const { return 1ULL << masks.size(); }
 
     /**
      * Get the size of the address range. For a case where

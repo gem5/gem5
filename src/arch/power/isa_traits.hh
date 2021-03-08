@@ -40,7 +40,7 @@ namespace PowerISA
 const ByteOrder GuestByteOrder = ByteOrder::big;
 
 const Addr PageShift = 12;
-const Addr PageBytes = ULL(1) << PageShift;
+const Addr PageBytes = 1ULL << PageShift;
 
 } // namespace PowerISA
 

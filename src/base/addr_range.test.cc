@@ -78,9 +78,9 @@ TEST(AddrRangeTest, EmptyRange)
     EXPECT_FALSE(r.interleaved());
 
     /*
-     * With no masks, "stripes()" returns ULL(1).
+     * With no masks, "stripes()" returns 1ULL.
      */
-    EXPECT_EQ(ULL(1), r.stripes());
+    EXPECT_EQ(1ULL, r.stripes());
     EXPECT_EQ("[0:0]", r.to_string());
 }
 
@@ -93,7 +93,7 @@ TEST(AddrRangeTest, RangeSizeOfOne)
     EXPECT_EQ(1, r.size());
     EXPECT_EQ(1, r.granularity());
     EXPECT_FALSE(r.interleaved());
-    EXPECT_EQ(ULL(1), r.stripes());
+    EXPECT_EQ(1ULL, r.stripes());
     EXPECT_EQ("[0:0x1]", r.to_string());
 }
 
@@ -106,7 +106,7 @@ TEST(AddrRangeTest, Range16Bit)
     EXPECT_EQ(0x0FFF, r.size());
     EXPECT_EQ(0x0FFF, r.granularity());
     EXPECT_FALSE(r.interleaved());
-    EXPECT_EQ(ULL(1), r.stripes());
+    EXPECT_EQ(1ULL, r.stripes());
     EXPECT_EQ("[0xf000:0xffff]", r.to_string());
 }
 
@@ -380,7 +380,7 @@ TEST(AddrRangeTest, LsbInterleavingMask)
      */
     EXPECT_EQ(1, r.granularity());
     EXPECT_TRUE(r.interleaved());
-    EXPECT_EQ(ULL(2), r.stripes());
+    EXPECT_EQ(2ULL, r.stripes());
     EXPECT_EQ("[0:0xff] a[0]^\b=1", r.to_string());
 }
 
@@ -403,7 +403,7 @@ TEST(AddrRangeTest, TwoInterleavingMasks)
 
     EXPECT_EQ(0x3FFF, r.size());
     EXPECT_TRUE(r.interleaved());
-    EXPECT_EQ(ULL(4), r.stripes());
+    EXPECT_EQ(4ULL, r.stripes());
     EXPECT_EQ("[0:0xffff] a[0]^\b=1 a[1]^\b=1", r.to_string());
 }
 
@@ -413,7 +413,7 @@ TEST(AddrRangeTest, ComplexInterleavingMasks)
     Addr end   = 0xFFFF;
     std::vector<Addr> masks;
     masks.push_back((1 << 1) | 1);
-    masks.push_back((ULL(1) << 63) | (ULL(1) << 62));
+    masks.push_back((1ULL << 63) | (1ULL << 62));
     uint8_t intlv_match = 0;
 
     AddrRange r(start, end, masks, intlv_match);
@@ -423,7 +423,7 @@ TEST(AddrRangeTest, ComplexInterleavingMasks)
 
     EXPECT_EQ(0x3FFF, r.size());
     EXPECT_TRUE(r.interleaved());
-    EXPECT_EQ(ULL(4), r.stripes());
+    EXPECT_EQ(4ULL, r.stripes());
     EXPECT_EQ("[0:0xffff] a[0]^a[1]^\b=0 a[62]^a[63]^\b=0", r.to_string());
 }
 

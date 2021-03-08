@@ -89,8 +89,8 @@ class Interrupts : public BaseInterrupts
         assert(int_num >= 0 && int_num < NumInterruptTypes);
         assert(index >= 0 && index < 64);
 
-        interrupts[int_num] |= ULL(1) << index;
-        intStatus |= ULL(1) << int_num;
+        interrupts[int_num] |= 1ULL << index;
+        intStatus |= 1ULL << int_num;
     }
 
     void
@@ -100,9 +100,9 @@ class Interrupts : public BaseInterrupts
         assert(int_num >= 0 && int_num < NumInterruptTypes);
         assert(index >= 0 && index < 64);
 
-        interrupts[int_num] &= ~(ULL(1) << index);
+        interrupts[int_num] &= ~(1ULL << index);
         if (!interrupts[int_num])
-            intStatus &= ~(ULL(1) << int_num);
+            intStatus &= ~(1ULL << int_num);
     }
 
     void

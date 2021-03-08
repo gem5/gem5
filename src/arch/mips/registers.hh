@@ -56,7 +56,7 @@ const int NumVecPredRegs = 1;  // Not applicable to MIPS
 const int NumCCRegs = 0;
 
 const uint32_t MIPS32_QNAN = 0x7fbfffff;
-const uint64_t MIPS64_QNAN = ULL(0x7ff7ffffffffffff);
+const uint64_t MIPS64_QNAN = 0x7ff7ffffffffffffULL;
 
 enum FPControlRegNums {
    FLOATREG_FIR = NumFloatArchRegs,

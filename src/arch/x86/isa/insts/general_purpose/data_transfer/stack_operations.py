@@ -168,7 +168,7 @@ def macroop ENTER_I_I {
     subi t0, t1, 1, flags=(EZF,)
     br label("bottomOfLoop"), flags=(CEZF,)
 
-    limm t4, "ULL(-1)", dataSize=8
+    limm t4, "-1ULL", dataSize=8
 topOfLoop:
     ldis t5, ss, [dsz, t4, rbp]
     stis t5, ss, [1, t0, rsp], "-env.dataSize"
