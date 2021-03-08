@@ -155,7 +155,7 @@ roundDown(const T& val, const U& align)
  *
  * @ingroup api_base_utils
  */
-inline int
+static constexpr int
 log2i(int value)
 {
     assert(isPowerOf2(value) && value > 0);
