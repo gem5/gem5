@@ -144,7 +144,26 @@ namespace X86ISA
         INTREG_R15W = INTREG_R15,
         INTREG_R15B = INTREG_R15,
 
-        NUM_INTREGS
+        NUM_ARCH_INTREGS,
+
+        INTREG_MICRO_BEGIN = NUM_ARCH_INTREGS,
+        INTREG_T0 = INTREG_MICRO_BEGIN,
+        INTREG_MICRO_END = INTREG_MICRO_BEGIN + NumMicroIntRegs,
+
+        // The lower part of the result of multiplication.
+        INTREG_PRODLOW,
+        // The upper part of the result of multiplication.
+        INTREG_PRODHI,
+        // The quotient from division.
+        INTREG_QUOTIENT,
+        // The remainder from division.
+        INTREG_REMAINDER,
+        // The divisor for division.
+        INTREG_DIVISOR,
+        // The register to use for shift doubles.
+        INTREG_DOUBLEBITS,
+
+        NUM_INTREGS,
     };
 
     // This needs to be large enough to miss all the other bits of an index.
@@ -153,13 +172,7 @@ namespace X86ISA
     inline static IntRegIndex
     INTREG_MICRO(int index)
     {
-        return (IntRegIndex)(NUM_INTREGS + index);
-    }
-
-    inline static IntRegIndex
-    INTREG_IMPLICIT(int index)
-    {
-        return (IntRegIndex)(NUM_INTREGS + NumMicroIntRegs + index);
+        return (IntRegIndex)(INTREG_MICRO_BEGIN + index);
     }
 
     inline static IntRegIndex
@@ -170,9 +183,7 @@ namespace X86ISA
         return (IntRegIndex)index;
     }
 
-    const int NumIntArchRegs = NUM_INTREGS;
-    const int NumIntRegs =
-        NumIntArchRegs + NumMicroIntRegs + NumImplicitIntRegs;
+    const int NumIntRegs = NUM_INTREGS;
 }
 
 #endif // __ARCH_X86_INTREGS_HH__

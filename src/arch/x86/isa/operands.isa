@@ -56,9 +56,6 @@ def operand_types {{
 let {{
     def intReg(idx, id):
         return ('IntReg', 'uqw', idx, 'IsInteger', id)
-    def impIntReg(idx, id):
-        return ('IntReg', 'uqw', 'X86ISA::INTREG_IMPLICIT(%s)' % idx,
-                'IsInteger', id)
     def floatReg(idx, id):
         return ('FloatReg', 'df', idx, 'IsFloating', id)
     def ccReg(idx, id):
@@ -93,12 +90,12 @@ def operands {{
         'Data':          intReg('data', 6),
         'DataLow':       intReg('dataLow', 6),
         'DataHi':        intReg('dataHi', 6),
-        'ProdLow':       impIntReg(0, 7),
-        'ProdHi':        impIntReg(1, 8),
-        'Quotient':      impIntReg(2, 9),
-        'Remainder':     impIntReg(3, 10),
-        'Divisor':       impIntReg(4, 11),
-        'DoubleBits':    impIntReg(5, 11),
+        'ProdLow':       intReg('X86ISA::INTREG_PRODLOW', 7),
+        'ProdHi':        intReg('X86ISA::INTREG_PRODHI', 8),
+        'Quotient':      intReg('X86ISA::INTREG_QUOTIENT', 9),
+        'Remainder':     intReg('X86ISA::INTREG_REMAINDER', 10),
+        'Divisor':       intReg('X86ISA::INTREG_DIVISOR', 11),
+        'DoubleBits':    intReg('X86ISA::INTREG_DOUBLEBITS', 11),
         'Rax':           intReg('X86ISA::INTREG_RAX', 12),
         'Rbx':           intReg('X86ISA::INTREG_RBX', 13),
         'Rcx':           intReg('X86ISA::INTREG_RCX', 14),

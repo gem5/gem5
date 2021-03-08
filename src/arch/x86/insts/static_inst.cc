@@ -212,7 +212,7 @@ X86StaticInst::printReg(std::ostream &os, RegId reg, int size)
                 ccprintf(os, longFormats[size], "15");
                 break;
               default:
-                ccprintf(os, microFormats[size], reg_idx - NUM_INTREGS);
+                ccprintf(os, microFormats[size], reg_idx - INTREG_MICRO_BEGIN);
             }
             ccprintf(os, suffix);
         }

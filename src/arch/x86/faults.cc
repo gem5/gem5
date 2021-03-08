@@ -185,7 +185,7 @@ InitInterrupt::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     DPRINTF(Faults, "Init interrupt.\n");
     // The otherwise unmodified integer registers should be set to 0.
-    for (int index = 0; index < NUM_INTREGS; index++) {
+    for (int index = 0; index < NUM_ARCH_INTREGS; index++) {
         tc->setIntReg(index, 0);
     }
 

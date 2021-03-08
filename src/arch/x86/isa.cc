@@ -138,7 +138,7 @@ ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string)
     fatal_if(vendorString.size() != 12,
              "CPUID vendor string must be 12 characters\n");
 
-    _regClasses.emplace_back(NumIntRegs, NUM_INTREGS);
+    _regClasses.emplace_back(NumIntRegs, INTREG_T0);
     _regClasses.emplace_back(NumFloatRegs);
     _regClasses.emplace_back(1); // Not applicable to X86
     _regClasses.emplace_back(2); // Not applicable to X86

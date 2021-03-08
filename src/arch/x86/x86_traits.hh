@@ -46,14 +46,6 @@ namespace X86ISA
 {
     const int NumMicroIntRegs = 16;
 
-    const int NumImplicitIntRegs = 6;
-    //1. The lower part of the result of multiplication.
-    //2. The upper part of the result of multiplication.
-    //3. The quotient from division
-    //4. The remainder from division
-    //5. The divisor for division
-    //6. The register to use for shift doubles
-
     const int NumMMXRegs = 8;
     const int NumXMMRegs = 16;
     const int NumMicroFpRegs = 8;

@@ -78,7 +78,7 @@ let {{
 
     # Add in symbols for the microcode registers
     for num in range(16):
-        assembler.symbols["t%d" % num] = gpRegIdx("NUM_INTREGS+%d" % num)
+        assembler.symbols["t%d" % num] = gpRegIdx("INTREG_MICRO(%d)" % num)
     for num in range(8):
         assembler.symbols["ufp%d" % num] = \
             fpRegIdx("FLOATREG_MICROFP(%d)" % num)
