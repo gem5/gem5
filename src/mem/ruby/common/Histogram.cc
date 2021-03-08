@@ -32,6 +32,7 @@
 #include <iomanip>
 
 #include "base/intmath.hh"
+#include "base/logging.hh"
 
 Histogram::Histogram(int binsize, uint32_t bins)
 {

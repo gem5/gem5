@@ -39,6 +39,7 @@
 
 #include "base/chunk_generator.hh"
 #include "base/intmath.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/StackDist.hh"
 
