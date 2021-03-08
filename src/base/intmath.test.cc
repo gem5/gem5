@@ -54,13 +54,6 @@ TEST(IntmathTest, isPowerOf2)
     EXPECT_FALSE(isPowerOf2(1679616));
 }
 
-TEST(IntmathTest, power)
-{
-    EXPECT_EQ(65536, power(2, 16));
-    EXPECT_EQ(9765625, power(5, 10));
-    EXPECT_EQ(43046721, power(power(3, 4), 4));
-}
-
 TEST(IntmathTest, floorLog2)
 {
     EXPECT_EQ(0, floorLog2(1));

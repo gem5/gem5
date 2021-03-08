@@ -382,7 +382,7 @@ let {{
            Request::Flags memAccessFlags = Request::CACHE_BLOCK_ZERO;
            EA = XBase;
            assert(!(Dczid & 0x10));
-           uint64_t op_size = power(2, Dczid + 2);
+           uint64_t op_size = 1ULL << (Dczid + 2);
            EA &= ~(op_size - 1);
 
    '''

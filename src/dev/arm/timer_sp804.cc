@@ -96,7 +96,7 @@ Sp804::Timer::read(PacketPtr pkt, Addr daddr)
                 zeroEvent.when(), clock, control.timerPrescale);
         Tick time;
         time = zeroEvent.when() - curTick();
-        time = time / clock / power(16, control.timerPrescale);
+        time = (time / clock) >> (4 * control.timerPrescale);
         DPRINTF(Timer, "-- returning counter at %d\n", time);
         pkt->setLE<uint32_t>(time);
         break;
@@ -182,7 +182,7 @@ Sp804::Timer::restartCounter(uint32_t val)
     if (!control.timerEnable)
         return;
 
-    Tick time = clock * power(16, control.timerPrescale);
+    Tick time = clock << (4 * control.timerPrescale);
     if (control.timerSize)
         time *= val;
     else

@@ -46,27 +46,7 @@
 #include <type_traits>
 
 #include "base/bitfield.hh"
-#include "base/logging.hh"
 #include "base/types.hh"
-
-/**
- * @ingroup api_base_utils
- */
-static constexpr uint64_t
-power(uint32_t n, uint32_t e)
-{
-    uint64_t result = 1;
-    uint64_t component = n;
-    while (e) {
-        uint64_t last = result;
-        if (e & 0x1)
-            result *= component;
-        warn_if(result < last, "power() overflowed!");
-        e >>= 1;
-        component *= component;
-    }
-    return result;
-}
 
 /**
  * @ingroup api_base_utils
