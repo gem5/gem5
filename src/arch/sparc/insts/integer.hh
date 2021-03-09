@@ -94,7 +94,7 @@ class IntOpImm11 : public IntOpImm
 {
   protected:
     IntOpImm11(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        IntOpImm(mnem, _machInst, __opClass, sext<10>(bits(_machInst, 10, 0)))
+        IntOpImm(mnem, _machInst, __opClass, sext<11>(bits(_machInst, 10, 0)))
     {}
 };
 

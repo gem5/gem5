@@ -1238,8 +1238,7 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
             itb->sfsr = data;
             break;
           case 0x30:
-            sext<59>(bits(data, 59,0));
-            itb->tag_access = data;
+            itb->tag_access = sext<60>(bits(data, 59,0));
             break;
           default:
             goto doMmuWriteError;
@@ -1315,8 +1314,7 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
             sfsr = data;
             break;
           case 0x30:
-            sext<59>(bits(data, 59,0));
-            tag_access = data;
+            tag_access = sext<60>(bits(data, 59,0));
             break;
           case 0x80:
             tc->setMiscReg(MISCREG_MMU_PART_ID, data);
