@@ -25,7 +25,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import re
-from typing import Callable, Dict, Iterator, List, Optional, Pattern, Union
+from typing import Callable, Dict, Iterator, List, Mapping, Optional, Pattern,\
+                   Union
 
 from .jsonserializable import JsonSerializable
 from .statistic import Scalar, Statistic
@@ -118,8 +119,10 @@ class Group(JsonSerializable):
                 precompiled regex or a string in regex format
         """
         if isinstance(regex, str):
-            regex = re.compile(regex)
-        yield from self.children(lambda _name: regex.search(_name))
+            pattern = re.compile(regex)
+        else:
+            pattern = regex
+        yield from self.children(lambda _name: bool(pattern.search(_name)))
 
 class Vector(Group):
     """
@@ -129,7 +132,7 @@ class Vector(Group):
     accordance to decisions made in relation to
     https://gem5.atlassian.net/browse/GEM5-867.
     """
-    def __init__(self, scalar_map: Dict[str,Scalar]):
+    def __init__(self, scalar_map: Mapping[str,Scalar]):
         super(Vector, self).__init__(
                                      type="Vector",
                                      time_conversion=None,

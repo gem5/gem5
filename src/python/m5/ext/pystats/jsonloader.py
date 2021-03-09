@@ -24,11 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from json.decoder import JSONDecodeError
 from .simstat import SimStat
-from .statistic import Scalar, Distribution, Accumulator
+from .statistic import Scalar, Distribution, Accumulator, Statistic
 from .group import Group, Vector
 import json
-from typing import IO
+from typing import IO, Union
 
 class JsonLoader(json.JSONDecoder):
     """
@@ -46,9 +47,11 @@ class JsonLoader(json.JSONDecoder):
     """
 
     def __init__(self):
-        json.JSONDecoder.__init__(self, object_hook=self.__json_to_simstat)
+        super(JsonLoader, self).__init__(self,
+            object_hook=self.__json_to_simstat
+        )
 
-    def __json_to_simstat(self, d: dict) -> SimStat:
+    def __json_to_simstat(self, d: dict) -> Union[SimStat,Statistic,Group]:
         if 'type' in d:
             if d['type'] == 'Scalar':
                 d.pop('type', None)
@@ -69,6 +72,11 @@ class JsonLoader(json.JSONDecoder):
                 d.pop('type', None)
                 d.pop('time_conversion', None)
                 return Vector(d)
+
+            else:
+                raise ValueError(
+                    f"SimStat object has invalid type {d['type']}"
+                )
         else:
             return SimStat(**d)
 
