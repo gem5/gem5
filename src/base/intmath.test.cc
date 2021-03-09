@@ -153,6 +153,12 @@ TEST(IntmathTest, Log2i)
  */
 TEST(IntmathDeathTest, Log2iDeath)
 {
+
+#ifdef NDEBUG
+    GTEST_SKIP() << "Skipping as assertions are "
+        "stripped out of fast builds";
+#endif
+
     // 1) value = 0
     EXPECT_DEATH({
         const int value = 0;
