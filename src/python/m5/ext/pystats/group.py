@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import re
-from typing import Callable, Dict, Iterator, List, Optional, Union
+from typing import Callable, Dict, Iterator, List, Optional, Pattern, Union
 
 from .jsonserializable import JsonSerializable
 from .statistic import Scalar, Statistic
@@ -99,7 +99,7 @@ class Group(JsonSerializable):
         """
         yield from self.children(lambda _name: _name in name)
 
-    def find_re(self, regex: Union[str, re.Pattern]
+    def find_re(self, regex: Union[str, Pattern]
                 ) -> Iterator[Union["Group", Statistic]]:
         """ Find all stats that match the name
 
