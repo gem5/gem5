@@ -55,7 +55,7 @@ env.Append(CPPPATH=[gem5_root + '/build/' + gem5_arch,
                     '#examples/common',
                     ])
 
-env.Append(CXXFLAGS=['-std=c++11',
+env.Append(CXXFLAGS=['-std=c++14',
                      '-DSC_INCLUDE_DYNAMIC_PROCESSES',
                      '-DTRACING_ON',
                      ])
