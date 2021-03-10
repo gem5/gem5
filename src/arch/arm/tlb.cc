@@ -872,8 +872,7 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
             // sctlr.wxn overrides the xn bit
             grant = !wxn && !xn;
         } else if (is_atomic) {
-            grant = r && w;
-            grant_read = r;
+            grant = hap;
         } else if (is_write) {
             grant = hap & 0x2;
         } else { // is_read

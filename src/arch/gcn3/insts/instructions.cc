@@ -4114,8 +4114,6 @@ namespace Gcn3ISA
 
         if (wf->hasBarrier()) {
             int bar_id = wf->barrierId();
-            assert(wf->getStatus() != Wavefront::S_BARRIER);
-            wf->setStatus(Wavefront::S_BARRIER);
             cu->incNumAtBarrier(bar_id);
             DPRINTF(GPUSync, "CU[%d] WF[%d][%d] Wave[%d] - Stalling at "
                     "barrier Id%d. %d waves now at barrier, %d waves "
