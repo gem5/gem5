@@ -78,7 +78,7 @@ class GenericSatCounter
         fatal_if(bits > 8*sizeof(T),
                  "Number of bits exceeds counter size");
         fatal_if(initial_val > maxVal,
-                 "Saturating counter's Initial value exceeds max value.");
+                 "Saturating counter's initial value exceeds max value.");
     }
 
     /**

@@ -31,7 +31,42 @@
 
 #include <utility>
 
+#include "base/gtest/logging.hh"
 #include "base/sat_counter.hh"
+
+/**
+ * Test that an error is triggered when the number of bits exceeds the
+ * counter's capacity.
+ */
+TEST(SatCounterDeathTest, BitCountExceeds)
+{
+#ifdef NDEBUG
+    GTEST_SKIP() << "Skipping as assertions are "
+        "stripped out of fast builds";
+#endif
+
+    gtestLogOutput.str("");
+    EXPECT_ANY_THROW(SatCounter8 counter(9));
+    ASSERT_NE(gtestLogOutput.str().find("Number of bits exceeds counter size"),
+        std::string::npos);
+}
+
+/**
+ * Test that an error is triggered when the initial value is higher than the
+ * maximum possible value.
+ */
+TEST(SatCounterDeathTest, InitialValueExceeds)
+{
+#ifdef NDEBUG
+    GTEST_SKIP() << "Skipping as assertions are "
+        "stripped out of fast builds";
+#endif
+
+    gtestLogOutput.str("");
+    EXPECT_ANY_THROW(SatCounter8 counter(7, 128));
+    ASSERT_NE(gtestLogOutput.str().find("initial value exceeds max value"),
+        std::string::npos);
+}
 
 /**
  * Test if the maximum value is indeed the maximum value reachable.
@@ -183,15 +218,36 @@ TEST(SatCounterTest, Shift)
     ASSERT_EQ(counter, value);
     counter >>= saturated_counter;
     ASSERT_EQ(counter, 0);
+}
 
-    // Make sure the counters cannot be shifted by negative numbers, since
-    // that is undefined behaviour. As these tests depend on asserts failing,
-    // these tests are only functional if `TRACING_ON == 1`, when gem5 is
-    // compiled as `debug` or `opt`.
-    #if TRACING_ON
+/**
+ * Make sure the counters cannot be right-shifted by negative numbers, since
+ * that is undefined behaviour
+ */
+TEST(SatCounterDeathTest, RightShiftNegative)
+{
+#ifdef NDEBUG
+    GTEST_SKIP() << "Skipping as assertions are "
+        "stripped out of fast builds";
+#endif
+
+    SatCounter8 counter(8);
     ASSERT_DEATH(counter >>= -1, "");
+}
+
+/**
+ * Make sure the counters cannot be left-shifted by negative numbers, since
+ * that is undefined behaviour
+ */
+TEST(SatCounterDeathTest, LeftShiftNegative)
+{
+#ifdef NDEBUG
+    GTEST_SKIP() << "Skipping as assertions are "
+        "stripped out of fast builds";
+#endif
+
+    SatCounter8 counter(8);
     ASSERT_DEATH(counter <<= -1, "");
-    #endif
 }
 
 /**
