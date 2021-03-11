@@ -195,6 +195,119 @@ XSDT::XSDT(const Params& p) : RXSDT(p, "XSDT", 1)
     entries = p.entries;
 }
 
+
+//// MADT
+MADT::MADT::MADT(const Params& p) :
+    SysDescTable(p, "APIC", 4),
+    records(p.records)
+{}
+
+Addr
+MADT::MADT::writeBuf(PortProxy& phys_proxy, Allocator& alloc,
+        std::vector<uint8_t>& mem) const
+{
+    // Since this table ends with a variably sized array, it can't be extended
+    // by another table type.
+    assert(mem.empty());
+    mem.resize(sizeof(Mem));
+
+    Mem* header = reinterpret_cast<Mem*>(mem.data());
+    header->localAPICAddress = params().local_apic_address;
+    header->flags = params().flags;
+
+    for (const auto& record : records) {
+        auto entry = record->prepare();
+        mem.insert(mem.end(), entry.begin(), entry.end());
+    }
+
+    DPRINTF(ACPI, "MADT: writing %d records (size: %d)\n",
+            records.size(), mem.size());
+
+    return SysDescTable::writeBuf(phys_proxy, alloc, mem);
+}
+
+void
+MADT::Record::prepareBuf(std::vector<uint8_t>& mem) const
+{
+    assert(mem.size() >= sizeof(Mem));
+    DPRINTF(ACPI, "MADT: writing record type %d (size: %d)\n",
+            type, mem.size());
+
+    Mem* header = reinterpret_cast<Mem*>(mem.data());
+    header->type = type;
+    header->length = mem.size();
+}
+
+void
+MADT::LAPIC::prepareBuf(std::vector<uint8_t>& mem) const
+{
+    assert(mem.empty());
+    mem.resize(sizeof(Mem));
+
+    Mem* data = reinterpret_cast<Mem*>(mem.data());
+    data->acpiProcessorId = params().acpi_processor_id;
+    data->apicId = params().apic_id;
+    data->flags = params().flags;
+
+    Record::prepareBuf(mem);
+}
+
+void
+MADT::IOAPIC::prepareBuf(std::vector<uint8_t>& mem) const
+{
+    assert(mem.empty());
+    mem.resize(sizeof(Mem));
+
+    Mem* data = reinterpret_cast<Mem*>(mem.data());
+    data->ioApicId = params().id;
+    data->ioApicAddress = params().address;
+    data->intBase = params().int_base;
+
+    Record::prepareBuf(mem);
+}
+
+void
+MADT::IntSourceOverride::prepareBuf(std::vector<uint8_t>& mem) const
+{
+    assert(mem.empty());
+    mem.resize(sizeof(Mem));
+
+    Mem* data = reinterpret_cast<Mem*>(mem.data());
+    data->busSource = params().bus_source;
+    data->irqSource = params().irq_source;
+    data->globalSystemInterrupt = params().sys_int;
+    data->flags = params().flags;
+
+    Record::prepareBuf(mem);
+}
+
+void
+MADT::NMI::prepareBuf(std::vector<uint8_t>& mem) const
+{
+    assert(mem.empty());
+    mem.resize(sizeof(Mem));
+
+    Mem* data = reinterpret_cast<Mem*>(mem.data());
+    data->acpiProcessorId = params().acpi_processor_id;
+    // The "flags" field is not properly aligned.
+    memcpy(&data->flags, &params().flags, sizeof(data->flags));
+    data->lintNo = params().lint_no;
+
+    Record::prepareBuf(mem);
+}
+
+void
+MADT::LAPICOverride::prepareBuf(std::vector<uint8_t>& mem) const
+{
+    assert(mem.empty());
+    mem.resize(sizeof(Mem));
+
+    Mem* data = reinterpret_cast<Mem*>(mem.data());
+    data->localAPICAddress = params().address;
+
+    Record::prepareBuf(mem);
+}
+
 } // namespace ACPI
 
 } // namespace X86ISA

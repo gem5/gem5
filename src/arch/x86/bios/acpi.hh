@@ -46,6 +46,13 @@
 #include "base/compiler.hh"
 #include "base/types.hh"
 #include "debug/ACPI.hh"
+#include "params/X86ACPIMadt.hh"
+#include "params/X86ACPIMadtIOAPIC.hh"
+#include "params/X86ACPIMadtIntSourceOverride.hh"
+#include "params/X86ACPIMadtLAPIC.hh"
+#include "params/X86ACPIMadtLAPICOverride.hh"
+#include "params/X86ACPIMadtNMI.hh"
+#include "params/X86ACPIMadtRecord.hh"
 #include "params/X86ACPIRSDP.hh"
 #include "params/X86ACPIRSDT.hh"
 #include "params/X86ACPISysDescTable.hh"
@@ -192,6 +199,162 @@ class XSDT : public RXSDT<uint64_t>
   public:
     XSDT(const Params &p);
 };
+
+namespace MADT
+{
+class Record : public SimObject
+{
+  protected:
+    PARAMS(X86ACPIMadtRecord);
+
+    struct M5_ATTR_PACKED Mem
+    {
+        uint8_t type = 0;
+        uint8_t length = 0;
+    };
+    static_assert(std::is_trivially_copyable<Mem>::value,
+            "Type not suitable for memcpy.");
+
+    uint8_t type;
+
+    virtual void prepareBuf(std::vector<uint8_t>& mem) const = 0;
+
+  public:
+    Record(const Params& p, uint8_t _type) : SimObject(p), type(_type) {}
+
+    std::vector<uint8_t>
+    prepare() const
+    {
+        std::vector<uint8_t> mem;
+        prepareBuf(mem);
+        return mem;
+    }
+};
+
+class LAPIC : public Record
+{
+  protected:
+    PARAMS(X86ACPIMadtLAPIC);
+
+    struct M5_ATTR_PACKED Mem : public Record::Mem
+    {
+        uint8_t acpiProcessorId = 0;
+        uint8_t apicId = 0;
+        uint32_t flags = 0;
+    };
+    static_assert(std::is_trivially_copyable<Mem>::value,
+            "Type not suitable for memcpy.");
+
+    void prepareBuf(std::vector<uint8_t>& mem) const override;
+
+  public:
+    LAPIC(const Params& p) : Record(p, 0) {}
+};
+
+class IOAPIC : public Record
+{
+  protected:
+    PARAMS(X86ACPIMadtIOAPIC);
+
+    struct M5_ATTR_PACKED Mem : public Record::Mem
+    {
+        uint8_t ioApicId = 0;
+        uint8_t _reserved = 0;
+        uint32_t ioApicAddress = 0;
+        uint32_t intBase = 0;
+    };
+    static_assert(std::is_trivially_copyable<Mem>::value,
+            "Type not suitable for memcpy.");
+
+    void prepareBuf(std::vector<uint8_t>& mem) const override;
+
+  public:
+    IOAPIC(const Params& p) : Record(p, 1) {}
+};
+
+class IntSourceOverride : public Record
+{
+  protected:
+    PARAMS(X86ACPIMadtIntSourceOverride);
+
+    struct M5_ATTR_PACKED Mem : public Record::Mem
+    {
+        uint8_t busSource = 0;
+        uint8_t irqSource = 0;
+        uint32_t globalSystemInterrupt = 0;
+        uint16_t flags = 0;
+    };
+    static_assert(std::is_trivially_copyable<Mem>::value,
+            "Type not suitable for memcpy.");
+
+    void prepareBuf(std::vector<uint8_t>& mem) const override;
+
+  public:
+    IntSourceOverride(const Params& p) : Record(p, 2) {}
+};
+
+class NMI : public Record
+{
+  protected:
+    PARAMS(X86ACPIMadtNMI);
+
+    struct M5_ATTR_PACKED Mem : public Record::Mem
+    {
+        uint8_t acpiProcessorId = 0;
+        uint16_t flags = 0;
+        uint8_t lintNo = 0;
+    };
+    static_assert(std::is_trivially_copyable<Mem>::value,
+            "Type not suitable for memcpy.");
+
+    void prepareBuf(std::vector<uint8_t>& mem) const override;
+
+  public:
+    NMI(const Params& p) : Record(p, 3) {}
+};
+
+class LAPICOverride : public Record
+{
+  protected:
+    PARAMS(X86ACPIMadtLAPICOverride);
+
+    struct M5_ATTR_PACKED Mem : public Record::Mem
+    {
+        uint16_t _reserved = 0;
+        uint64_t localAPICAddress = 0;
+    };
+    static_assert(std::is_trivially_copyable<Mem>::value,
+            "Type not suitable for memcpy.");
+
+    void prepareBuf(std::vector<uint8_t>& mem) const override;
+
+  public:
+    LAPICOverride(const Params& p) : Record(p, 5) {}
+};
+
+class MADT : public SysDescTable
+{
+  protected:
+    PARAMS(X86ACPIMadt);
+
+    struct M5_ATTR_PACKED Mem : public SysDescTable::Mem
+    {
+        uint32_t localAPICAddress = 0;
+        uint32_t flags = 0;
+    };
+    static_assert(std::is_trivially_copyable<Mem>::value,
+            "Type not suitable for memcpy.");
+
+    std::vector<Record *> records;
+
+    Addr writeBuf(PortProxy& phys_proxy, Allocator& alloc,
+            std::vector<uint8_t>& mem) const override;
+
+  public:
+    MADT(const Params &p);
+};
+
+} // namespace MADT
 
 } // namespace ACPI
 

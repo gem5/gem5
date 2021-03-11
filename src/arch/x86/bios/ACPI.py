@@ -67,6 +67,66 @@ class X86ACPIXSDT(X86ACPISysDescTable):
 
     entries = VectorParam.X86ACPISysDescTable([], 'system description tables')
 
+
+class X86ACPIMadtRecord(SimObject):
+    type = 'X86ACPIMadtRecord'
+    cxx_class = 'X86ISA::ACPI::MADT::Record'
+    cxx_header = 'arch/x86/bios/acpi.hh'
+    abstract = True
+
+class X86ACPIMadt(X86ACPISysDescTable):
+    type = 'X86ACPIMadt'
+    cxx_class = 'X86ISA::ACPI::MADT::MADT'
+    cxx_header = 'arch/x86/bios/acpi.hh'
+
+    local_apic_address = Param.UInt32(0, 'Address of the local apic')
+    flags = Param.UInt32(0, 'Flags')
+    records = VectorParam.X86ACPIMadtRecord([], 'Records in this MADT')
+
+class X86ACPIMadtLAPIC(X86ACPIMadtRecord):
+    type = 'X86ACPIMadtLAPIC'
+    cxx_header = 'arch/x86/bios/acpi.hh'
+    cxx_class = 'X86ISA::ACPI::MADT::LAPIC'
+
+    acpi_processor_id = Param.UInt8(0, 'ACPI Processor ID')
+    apic_id = Param.UInt8(0, 'APIC ID')
+    flags = Param.UInt32(0, 'Flags')
+
+class X86ACPIMadtIOAPIC(X86ACPIMadtRecord):
+    type = 'X86ACPIMadtIOAPIC'
+    cxx_header = 'arch/x86/bios/acpi.hh'
+    cxx_class = 'X86ISA::ACPI::MADT::IOAPIC'
+
+    id = Param.UInt8(0, 'I/O APIC ID')
+    address = Param.Addr(0, 'I/O APIC Address')
+    int_base = Param.UInt32(0, 'Global Interrupt Base')
+
+class X86ACPIMadtIntSourceOverride(X86ACPIMadtRecord):
+    type = 'X86ACPIMadtIntSourceOverride'
+    cxx_header = 'arch/x86/bios/acpi.hh'
+    cxx_class = 'X86ISA::ACPI::MADT::IntSourceOverride'
+
+    bus_source = Param.UInt8(0, 'Bus Source')
+    irq_source = Param.UInt8(0, 'IRQ Source')
+    sys_int = Param.UInt32(0, 'Global System Interrupt')
+    flags = Param.UInt16(0, 'Flags')
+
+class X86ACPIMadtNMI(X86ACPIMadtRecord):
+    type = 'X86ACPIMadtNMI'
+    cxx_header = 'arch/x86/bios/acpi.hh'
+    cxx_class = 'X86ISA::ACPI::MADT::NMI'
+
+    acpi_processor_id = Param.UInt8(0, 'ACPI Processor ID')
+    flags = Param.UInt16(0, 'Flags')
+    lint_no = Param.UInt8(0, 'LINT# (0 or 1)')
+
+class X86ACPIMadtLAPICOverride(X86ACPIMadtRecord):
+    type = 'X86ACPIMadtLAPICOverride'
+    cxx_header = 'arch/x86/bios/acpi.hh'
+    cxx_class = 'X86ISA::ACPI::MADT::LAPICOverride'
+
+    address = Param.Addr(0, '64-bit Physical Address of Local APIC')
+
 # Root System Description Pointer Structure
 class X86ACPIRSDP(SimObject):
     type = 'X86ACPIRSDP'
