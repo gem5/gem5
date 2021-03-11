@@ -181,7 +181,7 @@ clearDebugFlag(const char *string)
 }
 
 void
-dumpDebugFlags()
+dumpDebugFlags(std::ostream &os)
 {
     using namespace Debug;
     FlagsMap::iterator i = allFlags().begin();
@@ -189,6 +189,6 @@ dumpDebugFlags()
     for (; i != end; ++i) {
         SimpleFlag *f = dynamic_cast<SimpleFlag *>(i->second);
         if (f && f->enabled())
-            cprintf("%s\n", f->name());
+            ccprintf(os, "%s\n", f->name());
     }
 }

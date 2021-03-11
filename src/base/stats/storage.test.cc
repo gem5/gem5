@@ -32,6 +32,7 @@
 #include <cmath>
 
 #include "base/gtest/cur_tick_fake.hh"
+#include "base/gtest/logging.hh"
 #include "base/stats/storage.hh"
 
 // Instantiate the fake class to have a valid curTick of 0
@@ -272,9 +273,7 @@ TEST(StatsAvgStorTest, ZeroReset)
 /** Test that an assertion is thrown when bucket size is 0. */
 TEST(StatsDistStorDeathTest, BucketSize0)
 {
-    testing::internal::CaptureStderr();
     EXPECT_ANY_THROW(Stats::DistStor::Params params(0, 5, 0));
-    testing::internal::GetCapturedStderr();
 }
 #endif
 
@@ -500,17 +499,13 @@ TEST(StatsDistStorTest, Reset)
 /** Test that an assertion is thrown when not enough buckets are provided. */
 TEST(StatsHistStorDeathTest, NotEnoughBuckets0)
 {
-    testing::internal::CaptureStderr();
     EXPECT_ANY_THROW(Stats::HistStor::Params params(0));
-    testing::internal::GetCapturedStderr();
 }
 
 /** Test that an assertion is thrown when not enough buckets are provided. */
 TEST(StatsHistStorDeathTest, NotEnoughBuckets1)
 {
-    testing::internal::CaptureStderr();
     EXPECT_ANY_THROW(Stats::HistStor::Params params(1));
-    testing::internal::GetCapturedStderr();
 }
 #endif
 

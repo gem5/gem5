@@ -43,6 +43,7 @@
 #define __BASE_DEBUG_HH__
 
 #include <initializer_list>
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
@@ -142,7 +143,7 @@ void setDebugFlag(const char *string);
 
 void clearDebugFlag(const char *string);
 
-void dumpDebugFlags();
+void dumpDebugFlags(std::ostream &os=std::cout);
 
 /**
  * \def DTRACE(x)

@@ -28,6 +28,7 @@
 
 #include <gtest/gtest.h>
 
+#include "base/gtest/logging.hh"
 #include "base/socket.hh"
 
 #define TEST_PORT_1 7893
@@ -103,20 +104,10 @@ TEST(SocketTest, RelistenWithSameInstanceSamePort)
     /*
      * You cannot listen to another port if you are already listening to one.
      */
-    testing::internal::CaptureStderr();
+    gtestLogOutput.str("");
     EXPECT_ANY_THROW(listen_socket.listen(TEST_PORT_1));
     std::string expected = "panic: Socket already listening!\n";
-    std::string actual = testing::internal::GetCapturedStderr().substr();
-
-    /*
-     * The GoogleExitLogger will output using the following:
-     * `std::cerr << loc.file << ":" << loc.line << ": " << s;`
-     * As we do not care about the file and line where the error originated
-     * (this may change, and it shouldn't break the test when this happens),
-     * we strip out the leading `<file>:<line>: ` (we simply remove everything
-     * prior to two characters after the second colon in the string).
-     */
-    actual = actual.substr(actual.find(":", actual.find(":") + 1) + 2);
+    std::string actual = gtestLogOutput.str();
     EXPECT_EQ(expected, actual);
 }
 
@@ -128,12 +119,11 @@ TEST(SocketTest, RelistenWithSameInstanceDifferentPort)
     /*
      * You cannot listen to another port if you are already listening to one.
      */
-    testing::internal::CaptureStderr();
+    gtestLogOutput.str("");
     EXPECT_ANY_THROW(listen_socket.listen(TEST_PORT_2));
 
     std::string expected = "panic: Socket already listening!\n";
-    std::string actual = testing::internal::GetCapturedStderr().substr();
-    actual = actual.substr(actual.find(":", actual.find(":") + 1) + 2);
+    std::string actual = gtestLogOutput.str();
     EXPECT_EQ(expected, actual);
 }
 

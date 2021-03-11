@@ -29,6 +29,7 @@
 #include <gtest/gtest.h>
 
 #include "base/debug.hh"
+#include "base/gtest/logging.hh"
 
 /** Test assignment of names and descriptions. */
 TEST(DebugFlagTest, NameDesc)
@@ -51,12 +52,11 @@ TEST(DebugFlagTest, NameDesc)
 TEST(DebugFlagDeathTest, UniqueNames)
 {
     Debug::SimpleFlag flag("FlagUniqueNamesTest", "A");
-    testing::internal::CaptureStderr();
+    gtestLogOutput.str("");
     EXPECT_ANY_THROW(Debug::SimpleFlag("FlagUniqueNamesTest", "B"));
     const std::string expected = "panic: panic condition !result.second "
         "occurred: Flag FlagUniqueNamesTest already defined!\n";
-    std::string actual = testing::internal::GetCapturedStderr().substr();
-    actual = actual.substr(actual.find(":", actual.find(":") + 1) + 2);
+    std::string actual = gtestLogOutput.str();
     EXPECT_EQ(expected, actual);
 }
 
@@ -266,9 +266,9 @@ TEST(DebugFlagTest, NoDumpDebugFlags)
     Debug::SimpleFlag flag("FlagDumpDebugFlagTest", "");
 
     // Verify that the names of the enabled flags are printed
-    testing::internal::CaptureStdout();
+    gtestLogOutput.str("");
     dumpDebugFlags();
-    std::string output = testing::internal::GetCapturedStdout();
+    std::string output = gtestLogOutput.str();
     EXPECT_EQ(output, "");
     ASSERT_FALSE(flag.enabled());
 }
@@ -298,9 +298,9 @@ TEST(DebugFlagTest, DumpDebugFlags)
     compound_flag_b.enable();
 
     // Verify that the names of the enabled flags are printed
-    testing::internal::CaptureStdout();
-    dumpDebugFlags();
-    std::string output = testing::internal::GetCapturedStdout();
+    std::ostringstream os;
+    dumpDebugFlags(os);
+    std::string output = os.str();
     EXPECT_EQ(output, "FlagDumpDebugFlagTestA\nFlagDumpDebugFlagTestC\n" \
         "FlagDumpDebugFlagTestE\n");
 }
