@@ -89,6 +89,8 @@ class FsWorkload : public KernelWorkload
 
     void writeOutMPTable(Addr fp,
             Addr &fpSize, Addr &tableSize, Addr table=0);
+
+    void writeOutACPITables(Addr begin, Addr &size);
 };
 
 } // namespace X86ISA

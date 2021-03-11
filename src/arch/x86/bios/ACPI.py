@@ -48,8 +48,8 @@ class X86ACPISysDescTable(SimObject):
     oem_table_id = Param.String('', 'oem table ID')
     oem_revision = Param.UInt32(0, 'oem revision number for the table')
 
-    creator_id = Param.String('',
-            'string identifying the generator of the table')
+    creator_id = Param.UInt32(0,
+            'ID identifying the generator of the table')
     creator_revision = Param.UInt32(0,
             'revision number for the creator of the table')
 
@@ -78,6 +78,7 @@ class X86ACPIRSDP(SimObject):
     # here.
     revision = Param.UInt8(2, 'revision of ACPI being used, zero indexed')
 
-    rsdt = Param.X86ACPIRSDT(NULL, 'root system description table')
+    rsdt = Param.X86ACPIRSDT(X86ACPIRSDT(),
+            'root system description table')
     xsdt = Param.X86ACPIXSDT(X86ACPIXSDT(),
             'extended system description table')

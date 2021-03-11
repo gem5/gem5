@@ -37,16 +37,34 @@
 
 #include "arch/x86/bios/acpi.hh"
 
+#include <cassert>
+#include <cstring>
+
+#include "base/trace.hh"
 #include "mem/port.hh"
-#include "params/X86ACPIRSDP.hh"
-#include "params/X86ACPIRSDT.hh"
-#include "params/X86ACPISysDescTable.hh"
-#include "params/X86ACPIXSDT.hh"
+#include "mem/port_proxy.hh"
 #include "sim/byteswap.hh"
 #include "sim/sim_object.hh"
 
+namespace X86ISA
+{
+
+namespace ACPI
+{
+
+const char RSDP::signature[] = "RSD PTR ";
+
+static uint8_t
+apic_checksum(uint8_t* ptr, std::size_t size)
+{
+    uint8_t sum = 0;
+    for (unsigned i = 0; i < size; ++i)
+        sum += ptr[i];
+    return 0x100 - sum;
+}
+
 Addr
-X86ISA::ACPI::LinearAllocator::alloc(std::size_t size, unsigned align)
+LinearAllocator::alloc(std::size_t size, unsigned align)
 {
     if (align) {
         unsigned offset = next % align;
@@ -59,24 +77,124 @@ X86ISA::ACPI::LinearAllocator::alloc(std::size_t size, unsigned align)
     return chunk;
 }
 
-const char X86ISA::ACPI::RSDP::signature[] = "RSD PTR ";
-
-X86ISA::ACPI::RSDP::RSDP(const Params &p) : SimObject(p), oemID(p.oem_id),
-    revision(p.revision), rsdt(p.rsdt), xsdt(p.xsdt)
+RSDP::RSDP(const Params &p) :
+    SimObject(p),
+    rsdt(p.rsdt),
+    xsdt(p.xsdt)
 {}
 
-X86ISA::ACPI::SysDescTable::SysDescTable(const Params &p,
-        const char * _signature, uint8_t _revision) : SimObject(p),
-    signature(_signature), revision(_revision),
-    oemID(p.oem_id), oemTableID(p.oem_table_id),
-    oemRevision(p.oem_revision),
-    creatorID(p.creator_id), creatorRevision(p.creator_revision)
+Addr
+RSDP::write(PortProxy& phys_proxy, Allocator& alloc) const
+{
+    std::vector<uint8_t> mem(sizeof(Mem));
+    Addr addr = alloc.alloc(mem.size(), 16);
+
+    Mem* data = (Mem*)mem.data();
+    static_assert(sizeof(signature) - 1 == sizeof(data->signature),
+            "signature length mismatch");
+    std::memcpy(data->signature, signature, sizeof(data->signature));
+    std::strncpy(data->oemID, params().oem_id.c_str(), sizeof(data->oemID));
+    data->revision = params().revision;
+    data->length = mem.size();
+
+    if (rsdt) {
+        data->rsdtAddress = rsdt->write(phys_proxy, alloc);
+        DPRINTF(ACPI, "Allocated RSDT @ %llx\n", data->rsdtAddress);
+    }
+    if (xsdt) {
+        data->xsdtAddress = xsdt->write(phys_proxy, alloc);
+        DPRINTF(ACPI, "Allocated XSDT @ %llx\n", data->xsdtAddress);
+    }
+
+    // checksum calculation
+    data->checksum = apic_checksum(mem.data(), sizeof(MemR0));
+    data->extendedChecksum = apic_checksum(mem.data(), mem.size());
+
+    // write the whole thing
+    phys_proxy.writeBlob(addr, mem.data(), mem.size());
+
+    return addr;
+}
+
+Addr
+SysDescTable::writeBuf(PortProxy& phys_proxy, Allocator& alloc,
+        std::vector<uint8_t> &mem) const
+{
+    // An empty SysDescTable doesn't make any sense, so assert that somebody
+    // else allocated a large enough blob.
+    assert(mem.size() >= sizeof(Mem));
+
+    // Allocate a place to write this blob.
+    Addr addr = alloc.alloc(mem.size());
+
+    DPRINTF(ACPI, "Writing system description table [%llx - %llx]\n", addr,
+            addr + mem.size());
+
+    // Fill in the header.
+    auto& p = params();
+    Mem* header = (Mem*)mem.data();
+    std::strncpy(header->signature, signature, sizeof(header->signature));
+    header->length = mem.size();
+    header->revision = revision;
+    std::strncpy(header->oemID, p.oem_id.c_str(), sizeof(header->oemID));
+    std::strncpy(header->oemTableID, p.oem_table_id.c_str(),
+            sizeof(header->oemTableID));
+    header->oemRevision = p.oem_revision;
+    header->creatorID = p.creator_id;
+    header->creatorRevision = p.creator_revision;
+
+    // Update checksum.
+    header->checksum = apic_checksum(mem.data(), mem.size());
+
+    // Write to memory.
+    phys_proxy.writeBlob(addr, mem.data(), mem.size());
+
+    return addr;
+}
+
+//// RSDT, XSDT
+template<class T>
+RXSDT<T>::RXSDT(const Params& p, const char *_signature, uint8_t _revision) :
+    SysDescTable(p, _signature, _revision)
 {}
 
-X86ISA::ACPI::RSDT::RSDT(const Params &p) :
-    SysDescTable(p, "RSDT", 1), entries(p.entries)
-{}
+template<class T>
+Addr
+RXSDT<T>::writeBuf(PortProxy& phys_proxy, Allocator& alloc,
+        std::vector<uint8_t>& mem) const
+{
+    // Since this table ends with a variably sized array, it can't be extended
+    // by another table type.
+    assert(mem.empty());
+    mem.resize(sizeof(Mem));
 
-X86ISA::ACPI::XSDT::XSDT(const Params &p) :
-    SysDescTable(p, "XSDT", 1), entries(p.entries)
-{}
+    auto base_size = mem.size();
+    mem.resize(base_size + sizeof(Ptr) * entries.size());
+
+    Ptr* ptr_array = reinterpret_cast<Ptr*>(mem.data() + base_size);
+    DPRINTF(ACPI, "RXSDT: Writing %d entries (ptr size: %d)\n", entries.size(),
+            sizeof(Ptr));
+    for (const auto *entry : entries) {
+        Addr entry_addr = entry->write(phys_proxy, alloc);
+        fatal_if((entry_addr & mask(sizeof(Ptr) * 8)) != entry_addr,
+                "RXSDT: Entry address doesn't fit in pointer type.");
+        DPRINTF(ACPI, "RXSDT: wrote entry @ %llx\n", entry_addr);
+        *ptr_array++ = entry_addr;
+    }
+
+    return SysDescTable::writeBuf(phys_proxy, alloc, mem);
+}
+
+RSDT::RSDT(const Params& p) : RXSDT(p, "RSDT", 1)
+{
+    entries = p.entries;
+}
+
+XSDT::XSDT(const Params& p) : RXSDT(p, "XSDT", 1)
+{
+    entries = p.entries;
+}
+
+} // namespace ACPI
+
+} // namespace X86ISA

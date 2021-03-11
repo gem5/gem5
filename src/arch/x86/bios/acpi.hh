@@ -39,18 +39,20 @@
 #define __ARCH_X86_BIOS_ACPI_HH__
 
 #include <string>
+#include <tuple>
+#include <type_traits>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/types.hh"
+#include "debug/ACPI.hh"
+#include "params/X86ACPIRSDP.hh"
+#include "params/X86ACPIRSDT.hh"
+#include "params/X86ACPISysDescTable.hh"
+#include "params/X86ACPIXSDT.hh"
 #include "sim/sim_object.hh"
 
-class Port;
-
-struct X86ACPIRSDPParams;
-
-struct X86ACPISysDescTableParams;
-struct X86ACPIRSDTParams;
-struct X86ACPIXSDTParams;
+class PortProxy;
 
 namespace X86ISA
 {
@@ -60,7 +62,6 @@ namespace ACPI
 
 class RSDT;
 class XSDT;
-class SysDescTable;
 
 struct Allocator
 {
@@ -83,56 +84,110 @@ struct LinearAllocator : public Allocator
 class RSDP : public SimObject
 {
   protected:
-    typedef X86ACPIRSDPParams Params;
+    PARAMS(X86ACPIRSDP);
 
     static const char signature[];
 
-    std::string oemID;
-    uint8_t revision;
+    struct M5_ATTR_PACKED MemR0
+    {
+        // src: https://wiki.osdev.org/RSDP
+        char signature[8] = {};
+        uint8_t checksum = 0;
+        char oemID[6] = {};
+        uint8_t revision = 0;
+        uint32_t rsdtAddress = 0;
+    };
+    static_assert(std::is_trivially_copyable<MemR0>::value,
+            "Type not suitable for memcpy.");
 
-    RSDT * rsdt;
-    XSDT * xsdt;
+    struct M5_ATTR_PACKED Mem : public MemR0
+    {
+        // since version 2
+        uint32_t length = 0;
+        uint64_t xsdtAddress = 0;
+        uint8_t extendedChecksum = 0;
+        uint8_t _reserved[3] = {};
+    };
+    static_assert(std::is_trivially_copyable<Mem>::value,
+            "Type not suitable for memcpy,");
+
+    RSDT* rsdt;
+    XSDT* xsdt;
 
   public:
     RSDP(const Params &p);
+
+    Addr write(PortProxy& phys_proxy, Allocator& alloc) const;
 };
 
 class SysDescTable : public SimObject
 {
   protected:
-    typedef X86ACPISysDescTableParams Params;
+    PARAMS(X86ACPISysDescTable);
 
-    const char * signature;
+    struct M5_ATTR_PACKED Mem
+    {
+        // src: https://wiki.osdev.org/RSDT
+        char signature[4] = {};
+        uint32_t length = 0;
+        uint8_t revision = 0;
+        uint8_t checksum = 0;
+        char oemID[6] = {};
+        char oemTableID[8] = {};
+        uint32_t oemRevision = 0;
+        uint32_t creatorID = 0;
+        uint32_t creatorRevision = 0;
+    };
+    static_assert(std::is_trivially_copyable<Mem>::value,
+            "Type not suitable for memcpy.");
+
+    virtual Addr writeBuf(PortProxy& phys_proxy, Allocator& alloc,
+            std::vector<uint8_t>& mem) const = 0;
+
+    const char* signature;
     uint8_t revision;
 
-    std::string oemID;
-    std::string oemTableID;
-    uint32_t oemRevision;
-
-    std::string creatorID;
-    uint32_t creatorRevision;
+    SysDescTable(const Params& p, const char* _signature, uint8_t _revision) :
+        SimObject(p), signature(_signature), revision(_revision)
+    {}
 
   public:
-    SysDescTable(const Params &p, const char * _signature, uint8_t _revision);
+    Addr
+    write(PortProxy& phys_proxy, Allocator& alloc) const
+    {
+        std::vector<uint8_t> mem;
+        return writeBuf(phys_proxy, alloc, mem);
+    }
 };
 
-class RSDT : public SysDescTable
+template<class T>
+class RXSDT : public SysDescTable
 {
   protected:
-    typedef X86ACPIRSDTParams Params;
+    using Ptr = T;
 
     std::vector<SysDescTable *> entries;
+
+    Addr writeBuf(PortProxy& phys_proxy, Allocator& alloc,
+            std::vector<uint8_t>& mem) const override;
+
+  protected:
+    RXSDT(const Params& p, const char* _signature, uint8_t _revision);
+};
+
+class RSDT : public RXSDT<uint32_t>
+{
+  protected:
+    PARAMS(X86ACPIRSDT);
 
   public:
     RSDT(const Params &p);
 };
 
-class XSDT : public SysDescTable
+class XSDT : public RXSDT<uint64_t>
 {
   protected:
-    typedef X86ACPIXSDTParams Params;
-
-    std::vector<SysDescTable *> entries;
+    PARAMS(X86ACPIXSDT);
 
   public:
     XSDT(const Params &p);

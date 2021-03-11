@@ -79,6 +79,7 @@ DebugFlag('Faults', "Trace all faults/exceptions/traps")
 DebugFlag('LocalApic', "Local APIC debugging")
 DebugFlag('Decoder', "Decoder debug output")
 DebugFlag('X86', "Generic X86 ISA debugging")
+DebugFlag('ACPI', "ACPI debugging")
 
 python_files = (
     '__init__.py',

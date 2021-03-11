@@ -38,11 +38,13 @@
 
 #include "arch/x86/fs_workload.hh"
 
+#include "arch/x86/bios/acpi.hh"
 #include "arch/x86/bios/intelmp.hh"
 #include "arch/x86/bios/smbios.hh"
 #include "arch/x86/faults.hh"
 #include "base/loader/object_file.hh"
 #include "cpu/thread_context.hh"
+#include "debug/ACPI.hh"
 #include "params/X86FsWorkload.hh"
 #include "sim/system.hh"
 
@@ -330,6 +332,10 @@ FsWorkload::initState()
     // Write out the Intel MP Specification configuration table.
     writeOutMPTable(ebdaPos, fixed, table);
     ebdaPos += (fixed + table);
+
+    // Write out ACPI tables
+    writeOutACPITables(ebdaPos, table);
+    ebdaPos += table;
 }
 
 void
@@ -373,6 +379,19 @@ FsWorkload::writeOutMPTable(Addr fp, Addr &fpSize, Addr &tableSize, Addr table)
     assert(fp > table || fp + fpSize <= table);
     assert(table > fp || table + tableSize <= fp);
     assert(fpSize == 0x10);
+}
+
+void
+FsWorkload::writeOutACPITables(Addr fp, Addr &fpSize)
+{
+    fpSize = 0;
+    if (rsdp) {
+        ACPI::LinearAllocator alloc(fp, 0x000FFFFF);
+        rsdp->write(system->physProxy, alloc);
+        fpSize = alloc.alloc(0, 0) - fp;
+        DPRINTF(ACPI, "Wrote ACPI tables to memory at %llx with size %llx.\n",
+                fp, fpSize);
+    }
 }
 
 } // namespace X86ISA
