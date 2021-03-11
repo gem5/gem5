@@ -357,9 +357,3 @@ ProtocolTester::SeqPort::recvTimingResp(PacketPtr pkt)
 
     return true;
 }
-
-ProtocolTester*
-ProtocolTesterParams::create() const
-{
-    return new ProtocolTester(*this);
-}
