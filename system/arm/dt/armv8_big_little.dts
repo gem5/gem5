@@ -46,7 +46,7 @@
 		compatible = "gem5,armv8", "arm,armv8"; \
 		reg = < ## id >; \
 		enable-method = "spin-table"; \
-		cpu-release-addr = <0 0x8000fff8>; \
+		cpu-release-addr = <0 0x87fffff8>; \
 	};
 
 
