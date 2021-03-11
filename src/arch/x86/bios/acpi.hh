@@ -62,6 +62,24 @@ class RSDT;
 class XSDT;
 class SysDescTable;
 
+struct Allocator
+{
+    virtual Addr alloc(std::size_t size, unsigned align=1) = 0;
+};
+struct LinearAllocator : public Allocator
+{
+    LinearAllocator(Addr begin, Addr end=0) :
+        next(begin),
+        end(end)
+    {}
+
+    Addr alloc(std::size_t size, unsigned align) override;
+
+  protected:
+    Addr next;
+    Addr const end;
+};
+
 class RSDP : public SimObject
 {
   protected:

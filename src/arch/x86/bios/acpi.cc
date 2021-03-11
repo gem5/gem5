@@ -45,6 +45,20 @@
 #include "sim/byteswap.hh"
 #include "sim/sim_object.hh"
 
+Addr
+X86ISA::ACPI::LinearAllocator::alloc(std::size_t size, unsigned align)
+{
+    if (align) {
+        unsigned offset = next % align;
+        if (offset)
+            next += (align - offset);
+    }
+    Addr chunk = next;
+    next += size;
+    assert(0 == end || next <= end);
+    return chunk;
+}
+
 const char X86ISA::ACPI::RSDP::signature[] = "RSD PTR ";
 
 X86ISA::ACPI::RSDP::RSDP(const Params &p) : SimObject(p), oemID(p.oem_id),
