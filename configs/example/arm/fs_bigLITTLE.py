@@ -113,8 +113,7 @@ def createSystem(caches, kernel, bootscript, machine_type="VExpress_GEM5",
     platform = ObjectList.platform_list.get(machine_type)
     m5.util.inform("Simulated platform: %s", platform.__name__)
 
-    sys = devices.simpleSystem(ArmSystem,
-                               caches, mem_size, platform(),
+    sys = devices.SimpleSystem(caches, mem_size, platform(),
                                workload=ArmFsLinux(
                                    object_file=SysPaths.binary(kernel)),
                                readfile=bootscript)

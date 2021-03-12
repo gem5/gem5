@@ -277,113 +277,105 @@ class FastmodelCluster(SubSystem):
     def connectMemSide(self, bus):
         pass
 
-def simpleSystem(BaseSystem, caches, mem_size, platform=None, **kwargs):
-    """
-    Create a simple system example.  The base class in configurable so
-    that it is possible (e.g) to link the platform (hardware configuration)
-    with a baremetal ArmSystem or with a LinuxArmSystem.
-    """
-    class SimpleSystem(BaseSystem):
-        cache_line_size = 64
+class SimpleSystem(ArmSystem):
+    cache_line_size = 64
 
-        def __init__(self, caches, mem_size, platform=None, **kwargs):
-            super(SimpleSystem, self).__init__(**kwargs)
+    def __init__(self, caches, mem_size, platform=None, **kwargs):
+        super(SimpleSystem, self).__init__(**kwargs)
 
-            self.voltage_domain = VoltageDomain(voltage="1.0V")
-            self.clk_domain = SrcClockDomain(
-                clock="1GHz",
-                voltage_domain=Parent.voltage_domain)
+        self.voltage_domain = VoltageDomain(voltage="1.0V")
+        self.clk_domain = SrcClockDomain(
+            clock="1GHz",
+            voltage_domain=Parent.voltage_domain)
 
-            if platform is None:
-                self.realview = VExpress_GEM5_V1()
-            else:
-                self.realview = platform
+        if platform is None:
+            self.realview = VExpress_GEM5_V1()
+        else:
+            self.realview = platform
 
-            if hasattr(self.realview.gic, 'cpu_addr'):
-                self.gic_cpu_addr = self.realview.gic.cpu_addr
+        if hasattr(self.realview.gic, 'cpu_addr'):
+            self.gic_cpu_addr = self.realview.gic.cpu_addr
 
-            self.membus = MemBus()
+        self.membus = MemBus()
 
-            self.intrctrl = IntrControl()
-            self.terminal = Terminal()
-            self.vncserver = VncServer()
+        self.intrctrl = IntrControl()
+        self.terminal = Terminal()
+        self.vncserver = VncServer()
 
-            self.iobus = IOXBar()
-            # CPUs->PIO
-            self.iobridge = Bridge(delay='50ns')
-            # Device DMA -> MEM
-            mem_range = self.realview._mem_regions[0]
-            assert int(mem_range.size()) >= int(Addr(mem_size))
-            self.mem_ranges = [
-                AddrRange(start=mem_range.start, size=mem_size) ]
+        self.iobus = IOXBar()
+        # CPUs->PIO
+        self.iobridge = Bridge(delay='50ns')
+        # Device DMA -> MEM
+        mem_range = self.realview._mem_regions[0]
+        assert int(mem_range.size()) >= int(Addr(mem_size))
+        self.mem_ranges = [
+            AddrRange(start=mem_range.start, size=mem_size) ]
 
-            self._caches = caches
-            if self._caches:
-                self.iocache = IOCache(addr_ranges=[self.mem_ranges[0]])
-            else:
-                self.dmabridge = Bridge(delay='50ns',
-                                        ranges=[self.mem_ranges[0]])
+        self._caches = caches
+        if self._caches:
+            self.iocache = IOCache(addr_ranges=[self.mem_ranges[0]])
+        else:
+            self.dmabridge = Bridge(delay='50ns',
+                                    ranges=[self.mem_ranges[0]])
 
-            self._clusters = []
-            self._num_cpus = 0
+        self._clusters = []
+        self._num_cpus = 0
 
-        def attach_pci(self, dev):
-            self.realview.attachPciDevice(dev, self.iobus)
+    def attach_pci(self, dev):
+        self.realview.attachPciDevice(dev, self.iobus)
 
-        def connect(self):
-            self.iobridge.mem_side_port = self.iobus.cpu_side_ports
-            self.iobridge.cpu_side_port = self.membus.mem_side_ports
+    def connect(self):
+        self.iobridge.mem_side_port = self.iobus.cpu_side_ports
+        self.iobridge.cpu_side_port = self.membus.mem_side_ports
 
-            if self._caches:
-                self.iocache.mem_side = self.membus.cpu_side_ports
-                self.iocache.cpu_side = self.iobus.mem_side_ports
-            else:
-                self.dmabridge.mem_side_port = self.membus.cpu_side_ports
-                self.dmabridge.cpu_side_port = self.iobus.mem_side_ports
+        if self._caches:
+            self.iocache.mem_side = self.membus.cpu_side_ports
+            self.iocache.cpu_side = self.iobus.mem_side_ports
+        else:
+            self.dmabridge.mem_side_port = self.membus.cpu_side_ports
+            self.dmabridge.cpu_side_port = self.iobus.mem_side_ports
 
-            if hasattr(self.realview.gic, 'cpu_addr'):
-                self.gic_cpu_addr = self.realview.gic.cpu_addr
-            self.realview.attachOnChipIO(self.membus, self.iobridge)
-            self.realview.attachIO(self.iobus)
-            self.system_port = self.membus.cpu_side_ports
+        if hasattr(self.realview.gic, 'cpu_addr'):
+            self.gic_cpu_addr = self.realview.gic.cpu_addr
+        self.realview.attachOnChipIO(self.membus, self.iobridge)
+        self.realview.attachIO(self.iobus)
+        self.system_port = self.membus.cpu_side_ports
 
-        def numCpuClusters(self):
-            return len(self._clusters)
+    def numCpuClusters(self):
+        return len(self._clusters)
 
-        def addCpuCluster(self, cpu_cluster, num_cpus):
-            assert cpu_cluster not in self._clusters
-            assert num_cpus > 0
-            self._clusters.append(cpu_cluster)
-            self._num_cpus += num_cpus
+    def addCpuCluster(self, cpu_cluster, num_cpus):
+        assert cpu_cluster not in self._clusters
+        assert num_cpus > 0
+        self._clusters.append(cpu_cluster)
+        self._num_cpus += num_cpus
 
-        def numCpus(self):
-            return self._num_cpus
+    def numCpus(self):
+        return self._num_cpus
 
-        def addCaches(self, need_caches, last_cache_level):
-            if not need_caches:
-                # connect each cluster to the memory hierarchy
-                for cluster in self._clusters:
-                    cluster.connectMemSide(self.membus)
-                return
-
-            cluster_mem_bus = self.membus
-            assert last_cache_level >= 1 and last_cache_level <= 3
-            for cluster in self._clusters:
-                cluster.addL1()
-            if last_cache_level > 1:
-                for cluster in self._clusters:
-                    cluster.addL2(cluster.clk_domain)
-            if last_cache_level > 2:
-                max_clock_cluster = max(self._clusters,
-                                        key=lambda c: c.clk_domain.clock[0])
-                self.l3 = L3(clk_domain=max_clock_cluster.clk_domain)
-                self.toL3Bus = L2XBar(width=64)
-                self.toL3Bus.mem_side_ports = self.l3.cpu_side
-                self.l3.mem_side = self.membus.cpu_side_ports
-                cluster_mem_bus = self.toL3Bus
-
+    def addCaches(self, need_caches, last_cache_level):
+        if not need_caches:
             # connect each cluster to the memory hierarchy
             for cluster in self._clusters:
-                cluster.connectMemSide(cluster_mem_bus)
+                cluster.connectMemSide(self.membus)
+            return
 
-    return SimpleSystem(caches, mem_size, platform, **kwargs)
+        cluster_mem_bus = self.membus
+        assert last_cache_level >= 1 and last_cache_level <= 3
+        for cluster in self._clusters:
+            cluster.addL1()
+        if last_cache_level > 1:
+            for cluster in self._clusters:
+                cluster.addL2(cluster.clk_domain)
+        if last_cache_level > 2:
+            max_clock_cluster = max(self._clusters,
+                                    key=lambda c: c.clk_domain.clock[0])
+            self.l3 = L3(clk_domain=max_clock_cluster.clk_domain)
+            self.toL3Bus = L2XBar(width=64)
+            self.toL3Bus.mem_side_ports = self.l3.cpu_side
+            self.l3.mem_side = self.membus.cpu_side_ports
+            cluster_mem_bus = self.toL3Bus
+
+        # connect each cluster to the memory hierarchy
+        for cluster in self._clusters:
+            cluster.connectMemSide(cluster_mem_bus)

@@ -95,8 +95,7 @@ def create(args):
 
     platform = ObjectList.platform_list.get(args.machine_type)
 
-    system = devices.simpleSystem(ArmSystem,
-                                  want_caches,
+    system = devices.SimpleSystem(want_caches,
                                   args.mem_size,
                                   platform=platform(),
                                   mem_mode=mem_mode,
