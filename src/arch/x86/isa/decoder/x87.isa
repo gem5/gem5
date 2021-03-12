@@ -37,58 +37,35 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 format WarnUnimpl {
-    0x1B: decode OPCODE_OP_BOTTOM3 {
+    0x1B: decode OPCODE_OP_BOTTOM3 default Inst::UD2() {
         0x0: decode MODRM_REG {
-            0x0: decode MODRM_MOD {
-                0x3: Inst::FADD1(Eq);
-                // 32-bit memory operand
-                default: Inst::FADD1(Md);
-            }
-            0x1: decode MODRM_MOD {
-                0x3: Inst::FMUL1(Eq);
-                default: Inst::FMUL1(Md);
-            }
+            0x0: Inst::FADD1(Ed);
+            0x1: Inst::FMUL1(Ed);
             0x2: fcom();
             0x3: fcomp();
-            0x4: decode MODRM_MOD {
-                0x3: Inst::FSUB1(Eq);
-                default: Inst::FSUB1(Md);
-            }
+            0x4: Inst::FSUB1(Ed);
             0x5: fsubr();
-            0x6: decode MODRM_MOD {
-                0x3: Inst::FDIV1(Eq);
-                default: Inst::FDIV1(Md);
-            }
+            0x6: Inst::FDIV1(Ed);
             0x7: fdivr();
         }
         0x1: decode MODRM_REG {
-            0x0: decode MODRM_MOD {
-                0x3: Inst::FLD(Eq);
-                // 32-bit load
-                default: Inst::FLD(Md);
-            }
+            0x0: Inst::FLD(Ed);
             0x1: decode MODRM_MOD {
-                0x3: Inst::FXCH(Eq);
-                default: Inst::UD2();
+                0x3: Inst::FXCH(Rq);
             }
             0x2: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
                     0x0: fnop();
-                    default: Inst::UD2();
                 }
-                default: Inst::FST(Ed);
+                default: Inst::FST(Md);
             }
-            0x3: decode MODRM_MOD {
-                0x3: Inst::UD2();
-                default: Inst::FSTP(Ed);
-            }
+            0x3: Inst::FSTP(Md);
             0x4: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
                     0x0: Inst::FCHS();
                     0x1: Inst::FABS();
                     0x4: ftst();
                     0x5: fxam();
-                    default: Inst::UD2();
                 }
                 default: Inst::FLDENV(M);
             }
@@ -156,7 +133,6 @@ format WarnUnimpl {
             0x5: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
                     0x1: fucompp();
-                    default: Inst::UD2();
                 }
                 default: fisubr();
             }
@@ -191,9 +167,7 @@ format WarnUnimpl {
                 0x3: decode MODRM_RM {
                     0x2: fnclex();
                     0x3: fninit();
-                    default: Inst::UD2();
                 }
-                default: Inst::UD2();
             }
             0x5: decode MODRM_MOD {
                 // 'R' insists on having a size qualifier, so I picked 'q',
@@ -204,23 +178,13 @@ format WarnUnimpl {
             }
             0x6: decode MODRM_MOD {
                 0x3: Inst::FCOMI(Rq);
-                default: Inst::UD2();
             }
-            0x7: decode MODRM_MOD {
-                0x3: Inst::UD2();
-                default: Inst::FST80P(M);
-            }
+            0x7: Inst::FST80P(M);
         }
         //0x4: esc4();
         0x4: decode MODRM_REG {
-            0x0: decode MODRM_MOD {
-                0x3: Inst::FADD2(Eq);
-                default: Inst::FADD2(Mq);
-            }
-            0x1: decode MODRM_MOD {
-                0x3: Inst::FMUL2(Eq);
-                default: Inst::FMUL2(Mq);
-            }
+            0x0: Inst::FADD2(Eq);
+            0x1: Inst::FMUL2(Eq);
             0x2: decode MODRM_MOD {
                 0x3: Inst::UD2();
                 default: fcom();
@@ -271,7 +235,6 @@ format WarnUnimpl {
             }
             0x5: decode MODRM_MOD {
                 0x3: fucomp();
-                default: Inst::UD2();
             }
             0x6: decode MODRM_MOD {
                 0x3: Inst::UD2();
@@ -285,10 +248,7 @@ format WarnUnimpl {
         //0x6: esc6();
         0x6: decode MODRM_REG {
             0x0: decode MODRM_MOD {
-                0x3: decode MODRM_RM {
-                    0x1: Inst::FADDP();
-                    default: Inst::FADDP(Eq);
-                }
+                0x3: Inst::FADDP(Eq);
                 default: fiadd();
             }
             0x1: decode MODRM_MOD {
@@ -302,7 +262,6 @@ format WarnUnimpl {
             0x3: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
                     0x1: fcompp();
-                    default: Inst::UD2();
                 }
                 default: ficomp();
             }
@@ -311,10 +270,7 @@ format WarnUnimpl {
                 default: fisub();
             }
             0x5: decode MODRM_MOD {
-                0x3: decode MODRM_RM {
-                    0x1: Inst::FSUBP();
-                    default: Inst::FSUBP(Eq);
-                }
+                0x3: Inst::FSUBP(Eq);
                 default: fisubr();
             }
             0x6: decode MODRM_MOD {
@@ -332,7 +288,7 @@ format WarnUnimpl {
                 // The ffreep instruction isn't entirely real. It should work
                 // the same as ffree but then also pop the register stack.
                 0x3: ffreep();
-                default: Inst::FILD(Mw); // 16-bit int
+                default: Inst::FILD(Mw);
             }
             0x1: decode MODRM_MOD {
                 0x3: Inst::UD2();
@@ -349,15 +305,12 @@ format WarnUnimpl {
             0x4: decode MODRM_MOD {
                 0x3: decode MODRM_RM {
                     0x0: Inst::FNSTSW(rAw);
-                    default: Inst::UD2();
                 }
                 default: fbld();
             }
             0x5: decode MODRM_MOD {
-                // 'R' insists on having a size qualifier, so I picked 'q',
-                // but I don't think it has any effect
                 0x3: Inst::FUCOMIP(Rq);
-                default: Inst::FILD(Mq); // 64-bit int
+                default: Inst::FILD(Mq);
             }
             0x6: decode MODRM_MOD {
                 0x3: fcomip();
