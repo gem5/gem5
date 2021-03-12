@@ -138,8 +138,7 @@ def create(args):
     # Create a cache hierarchy for the cluster. We are assuming that
     # clusters have core-private L1 caches and an L2 that's shared
     # within the cluster.
-    for cluster in system.cpu_cluster:
-        system.addCaches(want_caches, last_cache_level=2)
+    system.addCaches(want_caches, last_cache_level=2)
 
     # Setup gem5's minimal Linux boot loader.
     system.realview.setupBootLoader(system, SysPaths.binary)
