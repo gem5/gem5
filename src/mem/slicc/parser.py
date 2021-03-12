@@ -1,4 +1,4 @@
-# Copyright (c) 2020,2021 ARM Limited
+# Copyright (c) 2020,2021,2026 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -152,6 +152,7 @@ class SLICC(Grammar):
         "out_port": "OUT_PORT",
         "action": "ACTION",
         "transition": "TRANS",
+        "transition_no_stall": "TRANS_NO_STALL",
         "structure": "STRUCT",
         "external_type": "EXTERN_TYPE",
         "enumeration": "ENUM",
@@ -368,20 +369,32 @@ class SLICC(Grammar):
         p[0] = ast.OutPortDeclAST(self, p[3], p[5], p[7], p[8])
 
     def p_decl__trans0(self, p):
-        "decl : TRANS '(' idents ',' idents ',' ident_or_star ')' idents"
-        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], p[7], p[9])
+        """
+        decl : TRANS '(' idents ',' idents ',' ident_or_star ')' idents
+            | TRANS_NO_STALL '(' idents ',' idents ',' ident_or_star ')' idents
+        """
+        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], p[7], p[9], p[1])
 
     def p_decl__trans1(self, p):
-        "decl : TRANS '(' idents ',' idents ')' idents"
-        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], None, p[7])
+        """
+        decl : TRANS '(' idents ',' idents ')' idents
+            | TRANS_NO_STALL '(' idents ',' idents ')' idents
+        """
+        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], None, p[7], p[1])
 
     def p_decl__trans2(self, p):
-        "decl : TRANS '(' idents ',' idents ',' ident_or_star ')' idents idents"
-        p[0] = ast.TransitionDeclAST(self, p[9], p[3], p[5], p[7], p[10])
+        """
+            decl : TRANS '(' idents ',' idents ',' ident_or_star ')' idents idents
+        | TRANS_NO_STALL '(' idents ',' idents ',' ident_or_star ')' idents idents
+        """
+        p[0] = ast.TransitionDeclAST(self, p[9], p[3], p[5], p[7], p[10], p[1])
 
     def p_decl__trans3(self, p):
-        "decl : TRANS '(' idents ',' idents ')' idents idents"
-        p[0] = ast.TransitionDeclAST(self, p[7], p[3], p[5], None, p[8])
+        """
+        decl : TRANS '(' idents ',' idents ')' idents idents
+            | TRANS_NO_STALL '(' idents ',' idents ')' idents idents
+        """
+        p[0] = ast.TransitionDeclAST(self, p[7], p[3], p[5], None, p[8], p[1])
 
     def p_decl__extern0(self, p):
         "decl : EXTERN_TYPE '(' type pairs ')' SEMI"
