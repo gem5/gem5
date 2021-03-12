@@ -386,3 +386,26 @@ class SimpleSystem(BaseSimpleSystem):
 
     def attach_pci(self, dev):
         self.realview.attachPciDevice(dev, self.iobus)
+
+class ArmRubySystem(BaseSimpleSystem):
+    """
+    Meant to be used with ruby
+    """
+    def __init__(self, mem_size, platform=None, **kwargs):
+        super(ArmRubySystem, self).__init__(mem_size, platform, **kwargs)
+        self._dma_ports = []
+        self._mem_ports = []
+
+    def connect(self):
+        self.realview.attachOnChipIO(self.iobus,
+            dma_ports=self._dma_ports, mem_ports=self._mem_ports)
+
+        self.realview.attachIO(self.iobus, dma_ports=self._dma_ports)
+
+        for cluster in self._clusters:
+            for i, cpu in enumerate(cluster.cpus):
+                self.ruby._cpu_ports[i].connectCpuPorts(cpu)
+
+    def attach_pci(self, dev):
+        self.realview.attachPciDevice(dev, self.iobus,
+            dma_ports=self._dma_ports)
