@@ -107,18 +107,9 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    int_dest_op = 'X86ISA::IntDestOp'
-    fp_dest_op = 'X86ISA::FloatDestOp'
-
-    int_src1_op = 'X86ISA::IntSrc1Op'
-    fp_src1_op = 'X86ISA::FloatSrc1Op'
-
-    int_src2_op = 'X86ISA::IntSrc2Op'
-    fp_src2_op = 'X86ISA::FloatSrc2Op'
-
     class FpOpMeta(type):
-        def buildCppClasses(self, name, Name, suffix, \
-                code, flag_code, cond_check, else_code, op_class, operands):
+        def buildCppClasses(self, name, Name, suffix, code, flag_code,
+                cond_check, else_code, op_class, operand_types):
 
             # Globals to stick the output in
             global header_output
@@ -132,11 +123,12 @@ let {{
             # a version without it and fix up this version to use it.
             if flag_code != "" or cond_check != "true":
                 self.buildCppClasses(name, Name, suffix,
-                        code, "", "true", else_code, op_class, operands)
+                        code, "", "true", else_code, op_class, operand_types)
                 suffix = "Flags" + suffix
 
             base = "X86ISA::InstOperands<" + \
-                ", ".join(("X86ISA::FpOp",) + operands) + ">"
+                ", ".join(["X86ISA::FpOp"] +
+                          [op.cxx_class() for op in operand_types]) + ">"
 
             # Get everything ready for the substitution
             iop_tag = InstObjParams(name, Name + suffix + "TopTag", base,
@@ -192,12 +184,12 @@ let {{
                 cond_check = cls.cond_check
                 else_code = cls.else_code
                 op_class = cls.op_class
-                operands = cls.operands
+                operand_types = cls.operand_types
 
                 # Set up the C++ classes
                 mcls.buildCppClasses(cls, name, Name, "",
                         code, flag_code, cond_check, else_code, op_class,
-                        operands)
+                        operand_types)
 
                 # Hook into the microassembler dict
                 global microopClasses
@@ -229,7 +221,10 @@ let {{
 
         def getAllocator(self, microFlags):
             # Ensure there's at least one element to join with ","s.
-            spm_ops = [str(self.spm)] + self.ops
+            op_iter = iter(self.ops)
+            ops = list([Type(op_iter).ctor_args() for
+                    Type in self.operand_types])
+            spm_ops = [str(self.spm)] + ops
             return '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(dataSize)s, %(spm_ops)s)''' % {
                 "class_name" : self.className,
@@ -239,25 +234,25 @@ let {{
 
     class Fp0Op(FpOp):
         abstract = True
-        operands = ()
+        operand_types = ()
         def __init__(self, **kwargs):
             super(Fp0Op, self).__init__(**kwargs)
 
     class Fp1Op(FpOp):
         abstract = True
-        operands = (fp_dest_op)
+        operand_types = (FloatDestOp)
         def __init__(self, reg1, **kwargs):
             super(Fp1Op, self).__init__(reg1, **kwargs)
 
     class Fp2Op(FpOp):
         abstract = True
-        operands = (fp_dest_op, fp_src1_op)
+        operand_types = (FloatDestOp, FloatSrc1Op)
         def __init__(self, reg1, reg2, **kwargs):
             super(Fp2Op, self).__init__(reg1, reg2, **kwargs)
 
     class Fp3Op(FpOp):
         abstract = True
-        operands = (fp_dest_op, fp_src1_op, fp_src2_op)
+        operand_types = (FloatDestOp, FloatSrc1Op, FloatSrc2Op)
         def __init__(self, reg1, reg2, reg3, **kwargs):
             super(Fp3Op, self).__init__(reg1, reg2, reg3, **kwargs)
 
@@ -298,7 +293,7 @@ let {{
     # constructor. That would be more efficient, and it would make the
     # microops a little more modular.
     class Cvtf_i2d(ConvOp):
-        operands = (fp_dest_op, int_src1_op)
+        operand_types = (FloatDestOp, IntSrc1Op)
         code = '''
             X86IntReg intReg = SrcReg1;
             if (REX_W)
@@ -308,11 +303,11 @@ let {{
             '''
 
     class Cvtf_i2d_hi(ConvOp):
-        operands = (fp_dest_op, int_src1_op)
+        operand_types = (FloatDestOp, IntSrc1Op)
         code = 'FpDestReg = bits(SrcReg1, 63, 32);'
 
     class Cvtf_d2i(ConvOp):
-        operands = (int_dest_op, fp_src1_op)
+        operand_types = (FoldedDestOp, FloatSrc1Op)
         code = '''
             int64_t intSrcReg1 = static_cast<int64_t>(FpSrcReg1);
             DestReg = merge(DestReg, dest, intSrcReg1, dataSize);
@@ -321,7 +316,7 @@ let {{
     # Convert two integers registers representing an 80-bit floating
     # point number to an x87 register.
     class Cvtint_fp80(Fp3Op):
-        operands = (fp_dest_op, int_src1_op, int_src2_op)
+        operand_types = (FloatDestOp, IntSrc1Op, IntSrc2Op)
         code = '''
             uint8_t bits[10];
             *(uint64_t *)(bits + 0) = SrcReg1;
@@ -332,7 +327,7 @@ let {{
     # Convert an x87 register (double) into extended precision and
     # extract the highest 64 bits.
     class Cvtfp80h_int(ConvOp):
-        operands = (int_dest_op, fp_src1_op)
+        operand_types = (IntDestOp, FloatSrc1Op)
         code = '''
             char bits[10];
             storeFloat80(bits, FpSrcReg1);
@@ -342,7 +337,7 @@ let {{
     # Convert an x87 register (double) into extended precision and
     # extract the lowest 16 bits.
     class Cvtfp80l_int(ConvOp):
-        operands = (int_dest_op, fp_src1_op)
+        operand_types = (IntDestOp, FloatSrc1Op)
         code = '''
             char bits[10];
             storeFloat80(bits, FpSrcReg1);
@@ -400,7 +395,7 @@ let {{
         flag_code = 'FSW = new_fsw;'
 
     class Compfp(Fp2Op):
-        operands = (fp_src1_op, fp_src2_op)
+        operand_types = (FloatSrc1Op, FloatSrc2Op)
         # This class sets the condition codes in rflags according to the
         # rules for comparing floating point.
         code = '''

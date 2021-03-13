@@ -48,6 +48,156 @@ let {{
 //////////////////////////////////////////////////////////////////////////
 
 let {{
+    class Operand(object):
+        @classmethod
+        def isDual(cls):
+            return False
+
+        @classmethod
+        def cxx_class(cls):
+            return 'X86ISA::' + cls.flavor + cls.idx_name + 'Op'
+
+    class FlavorlessOperand(Operand):
+        @classmethod
+        def cxx_class(cls):
+            return 'X86ISA::' + cls.op_type
+
+        def __init__(self, it):
+            self.value = next(it)
+
+        def ctor_args(self):
+            return str(self.value)
+
+    class UpcOp(FlavorlessOperand):
+        op_type = 'Upc'
+    class FaultOp(FlavorlessOperand):
+        op_type = 'Fault'
+    class AddrOp(FlavorlessOperand):
+        op_type = 'Addr'
+
+        def __init__(self, it):
+            self.segment = next(it)
+            [self.scale, self.index, self.base] = next(it)
+            self.disp = next(it)
+
+        def ctor_args(self):
+            args = [self.scale, self.index, self.base, self.disp, self.segment]
+            return ', '.join(map(str, args))
+
+    class ImmOp(object):
+        idx_name = ''
+
+        def __init__(self, it):
+            self.value = next(it)
+            super(ImmOp, self).__init__()
+
+        def ctor_args(self):
+            return str(self.value)
+
+    class Imm8Op(ImmOp, Operand):
+        flavor = 'Imm8'
+    class Imm64Op(ImmOp, Operand):
+        flavor = 'Imm64'
+
+    class DestOp(object):
+        idx_name = 'Dest'
+    class Src1Op(object):
+        idx_name = 'Src1'
+    class Src2Op(object):
+        idx_name = 'Src2'
+
+    class RegisterOp(object):
+        def __init__(self, it):
+            self.idx = next(it)
+            super(RegisterOp, self).__init__()
+
+        def ctor_args(self):
+            return str(self.idx)
+
+    class FoldedOp(RegisterOp):
+        flavor = 'Folded'
+    class DbgOp(RegisterOp):
+        flavor = 'Dbg'
+    class CrOp(RegisterOp):
+        flavor = 'Cr'
+    class SegOp(RegisterOp):
+        flavor = 'Seg'
+    class MiscOp(RegisterOp):
+        flavor = 'Misc'
+    class FloatOp(RegisterOp):
+        flavor = 'Float'
+    class IntOp(RegisterOp):
+        flavor = 'Int'
+    class DataOp(RegisterOp):
+        idx_name = 'Data'
+    class DataHiOp(RegisterOp):
+        idx_name = 'DataHi'
+    class DataLowOp(RegisterOp):
+        idx_name = 'DataLow'
+
+    class FoldedDataOp(FoldedOp, DataOp, Operand):
+        pass
+    class FloatDataOp(FloatOp, DataOp, Operand):
+        pass
+    class FoldedDataHiOp(FoldedOp, DataHiOp, Operand):
+        pass
+    class FoldedDataLowOp(FoldedOp, DataLowOp, Operand):
+        pass
+
+    class FoldedDestOp(FoldedOp, DestOp, Operand):
+        pass
+    class DbgDestOp(DbgOp, DestOp, Operand):
+        pass
+    class CrDestOp(CrOp, DestOp, Operand):
+        pass
+    class SegDestOp(SegOp, DestOp, Operand):
+        pass
+    class MiscDestOp(MiscOp, DestOp, Operand):
+        pass
+    class FloatDestOp(FloatOp, DestOp, Operand):
+        pass
+    class IntDestOp(IntOp, DestOp, Operand):
+        pass
+
+    class FoldedSrc1Op(FoldedOp, Src1Op, Operand):
+        pass
+    class DbgSrc1Op(DbgOp, Src1Op, Operand):
+        pass
+    class CrSrc1Op(CrOp, Src1Op, Operand):
+        pass
+    class SegSrc1Op(SegOp, Src1Op, Operand):
+        pass
+    class MiscSrc1Op(MiscOp, Src1Op, Operand):
+        pass
+    class FloatSrc1Op(FloatOp, Src1Op, Operand):
+        pass
+    class IntSrc1Op(IntOp, Src1Op, Operand):
+        pass
+
+    class FoldedSrc2Op(FoldedOp, Src2Op, Operand):
+        pass
+    class DbgSrc2Op(DbgOp, Src2Op, Operand):
+        pass
+    class CrSrc2Op(CrOp, Src2Op, Operand):
+        pass
+    class SegSrc2Op(SegOp, Src2Op, Operand):
+        pass
+    class MiscSrc2Op(MiscOp, Src2Op, Operand):
+        pass
+    class FloatSrc2Op(FloatOp, Src2Op, Operand):
+        pass
+    class IntSrc2Op(IntOp, Src2Op, Operand):
+        pass
+
+    class Op2(object):
+        @classmethod
+        def isDual(cls):
+            return True
+
+        RegType = FoldedSrc2Op
+        FloatType = FloatSrc2Op
+        ImmType = Imm8Op
+
     class X86Microop(object):
 
         generatorNameTemplate = "generate_%s_%d"

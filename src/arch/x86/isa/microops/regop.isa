@@ -178,25 +178,10 @@ let {{
             MicroRegOpExecute)
 
 
-    dest_op = 'X86ISA::FoldedDestOp'
-    dbg_dest_op = 'X86ISA::DbgDestOp'
-    cr_dest_op = 'X86ISA::CrDestOp'
-    seg_dest_op = 'X86ISA::SegDestOp'
-    misc_dest_op = 'X86ISA::MiscDestOp'
-
-    src1_op = 'X86ISA::FoldedSrc1Op'
-    dbg_src1_op = 'X86ISA::DbgSrc1Op'
-    cr_src1_op = 'X86ISA::CrSrc1Op'
-    seg_src1_op = 'X86ISA::SegSrc1Op'
-    misc_src1_op = 'X86ISA::MiscSrc1Op'
-
-    src2_op = 'X86ISA::FoldedSrc2Op'
-    imm_op = 'X86ISA::Imm8Op'
-
     class RegOpMeta(type):
         def buildCppClasses(self, name, Name, suffix, code, big_code, \
                 flag_code, cond_check, else_code, cond_control_flag_init,
-                op_class, operands):
+                op_class, operand_types):
 
             # Globals to stick the output in
             global header_output
@@ -215,10 +200,10 @@ let {{
                     r"(?<!\w)(?P<prefix>s?)op2(?P<typeQual>_[^\W_]+)?")
             match = matcher.search(allCode + allBigCode)
 
-            imm_operands = list([op if op != 'op2' else imm_op for
-                                 op in operands])
-            operands = list([op if op != 'op2' else src2_op for
-                             op in operands])
+            imm_operand_types = list([op if not op.isDual() else op.ImmType for
+                                      op in operand_types])
+            operand_types = list([op if not op.isDual() else op.RegType for
+                                  op in operand_types])
 
             if match:
                 typeQual = ""
@@ -232,7 +217,7 @@ let {{
                         matcher.sub(src2_name, cond_check),
                         matcher.sub(src2_name, else_code),
                         matcher.sub(src2_name, cond_control_flag_init),
-                        op_class, operands)
+                        op_class, operand_types)
                 imm_name = "%simm8" % match.group("prefix")
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
                         matcher.sub(imm_name, code),
@@ -241,7 +226,7 @@ let {{
                         matcher.sub(imm_name, cond_check),
                         matcher.sub(imm_name, else_code),
                         matcher.sub(imm_name, cond_control_flag_init),
-                        op_class, imm_operands)
+                        op_class, imm_operand_types)
                 return
 
             # If there's something optional to do with flags, generate
@@ -250,7 +235,7 @@ let {{
                 self.buildCppClasses(name, Name, suffix,
                         code, big_code, "", "true", else_code,
                         "flags[IsUncondControl] = flags[IsControl];", op_class,
-                        operands)
+                        operand_types)
                 suffix = "Flags" + suffix
 
             # If psrc1 or psrc2 is used, we need to actually insert code to
@@ -279,7 +264,8 @@ let {{
                 else:
                     code = prefix + code
 
-            base = "X86ISA::RegOpT<" + ', '.join(operands) + '>'
+            cxx_classes = list([op.cxx_class() for op in operand_types])
+            base = "X86ISA::RegOpT<" + ', '.join(cxx_classes) + '>'
 
             # If imm8 shows up in the code, use the immediate templates, if
             # not, hopefully the register ones will be correct.
@@ -333,12 +319,12 @@ let {{
             else_code = cls.else_code
             cond_control_flag_init = cls.cond_control_flag_init
             op_class = cls.op_class
-            operands = cls.operands
+            operand_types = cls.operand_types
 
             # Set up the C++ classes
             mcls.buildCppClasses(cls, name, Name, "", code, big_code,
                     flag_code, cond_check, else_code,
-                    cond_control_flag_init, op_class, operands)
+                    cond_control_flag_init, op_class, operand_types)
 
             # Hook into the microassembler dict
             global microopClasses
@@ -381,10 +367,22 @@ let {{
                 self.className += "Flags"
 
         def getAllocator(self, microFlags):
-            op_args = ', '.join(self.ops)
+            is_imm = (self.mnemonic == self.base_mnemonic + 'i')
+            def resolve_dual(t):
+                if t.isDual():
+                    if is_imm:
+                        return t.ImmType
+                    else:
+                        return t.RegType
+                else:
+                    return t
+            operand_types = map(resolve_dual, self.operand_types)
+            op_iter = iter(self.ops)
+            ops = list([Type(op_iter).ctor_args() for Type in operand_types])
+            op_args = ', '.join(ops)
             if self.big_code != "":
                 className = self.className
-                if self.mnemonic == self.base_mnemonic + 'i':
+                if is_imm:
                     className += "Imm"
                 allocString = '''
                     (%(dataSize)s >= 4) ?
@@ -404,7 +402,7 @@ let {{
                 return allocator
             else:
                 className = self.className
-                if self.mnemonic == self.base_mnemonic + 'i':
+                if is_imm:
                     className += "Imm"
                 allocator = '''new %(class_name)s(machInst, macrocodeBlock,
                         %(flags)s, %(dataSize)s, %(ext)s, %(op_args)s)''' % {
@@ -416,7 +414,7 @@ let {{
                 return allocator
 
     class BasicRegOp(RegOp):
-        operands = (dest_op, src1_op, 'op2')
+        operand_types = (FoldedDestOp, FoldedSrc1Op, Op2)
         abstract = True
 
         def __init__(self, dest, src1, src2, flags=None,
@@ -475,7 +473,7 @@ let {{
         cond_control_flag_init = "flags[IsCondControl] = flags[IsControl];"
 
     class RdRegOp(RegOp):
-        operands = (dest_op, src1_op)
+        operand_types = (FoldedDestOp, FoldedSrc1Op)
         abstract = True
         def __init__(self, dest, src1=None, dataSize="env.dataSize"):
             if not src1:
@@ -483,7 +481,7 @@ let {{
             super(RdRegOp, self).__init__(dest, src1, dataSize=dataSize)
 
     class WrRegOp(RegOp):
-        operands = (src1_op, 'op2')
+        operand_types = (FoldedSrc1Op, Op2)
 
         abstract = True
         def __init__(self, src1, src2, flags=None, dataSize="env.dataSize"):
@@ -1244,7 +1242,7 @@ let {{
             ezfBit = (flag == 0) ? EZFBit : 0;
             '''
 
-        operands = (dest_op, imm_op)
+        operand_types = (FoldedDestOp, Imm8Op)
 
         def __init__(self, dest, imm, flags=None, dataSize="env.dataSize"):
             super(Ruflag, self).__init__(dest, imm, flags=flags,
@@ -1271,7 +1269,7 @@ let {{
             ezfBit = (flag == 0) ? EZFBit : 0;
             '''
 
-        operands = (dest_op, imm_op)
+        operand_types = (FoldedDestOp, Imm8Op)
         def __init__(self, dest, imm, flags=None, dataSize="env.dataSize"):
             super(Rflag, self).__init__(dest, imm, flags=flags,
                     dataSize=dataSize)
@@ -1316,7 +1314,7 @@ let {{
         big_code = 'DestReg = bits(psrc1, op2, 0) & mask(dataSize * 8);'
 
     class Rddr(RegOp):
-        operands = (dest_op, dbg_src1_op)
+        operand_types = (FoldedDestOp, DbgSrc1Op)
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Rddr, self).__init__(dest, src1, flags=flags,
                     dataSize=dataSize)
@@ -1335,7 +1333,7 @@ let {{
         big_code = rdrCode % "DestReg = DebugSrc1 & mask(dataSize * 8);"
 
     class Wrdr(RegOp):
-        operands = (dbg_dest_op, src1_op)
+        operand_types = (DbgDestOp, FoldedSrc1Op)
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Wrdr, self).__init__(dest, src1, flags=flags,
                     dataSize=dataSize)
@@ -1355,7 +1353,7 @@ let {{
         '''
 
     class Rdcr(RegOp):
-        operands = (dest_op, cr_src1_op)
+        operand_types = (FoldedDestOp, CrSrc1Op)
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Rdcr, self).__init__(dest, src1, flags=flags,
                     dataSize=dataSize)
@@ -1371,7 +1369,7 @@ let {{
         big_code = rdcrCode % "DestReg = ControlSrc1 & mask(dataSize * 8);"
 
     class Wrcr(RegOp):
-        operands = (cr_dest_op, src1_op)
+        operand_types = (CrDestOp, FoldedSrc1Op)
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Wrcr, self).__init__(dest, src1, flags=flags,
                     dataSize=dataSize)
@@ -1425,14 +1423,14 @@ let {{
     # Microops for manipulating segmentation registers
     class SegOp(CondRegOp):
         abstract = True
-        operands = (seg_dest_op, src1_op)
+        operand_types = (SegDestOp, FoldedSrc1Op)
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(SegOp, self).__init__(dest, src1, flags=flags,
                     dataSize=dataSize)
 
     class WrSegOp(SegOp):
         abstract = True
-        operands = (seg_dest_op, src1_op)
+        operand_types = (SegDestOp, FoldedSrc1Op)
 
     class Wrbase(WrSegOp):
         code = '''
@@ -1456,7 +1454,7 @@ let {{
 
     class RdSegOp(SegOp):
         abstract = True
-        operands = (dest_op, seg_src1_op)
+        operand_types = (FoldedDestOp, SegSrc1Op)
 
     class Rdbase(RdSegOp):
         code = 'DestReg = merge(DestReg, dest, SegBaseSrc1, dataSize);'
@@ -1475,7 +1473,7 @@ let {{
         big_code = 'DestReg = SegSelSrc1 & mask(dataSize * 8);'
 
     class Rdval(RegOp):
-        operands = (dest_op, misc_src1_op)
+        operand_types = (FoldedDestOp, MiscSrc1Op)
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Rdval, self).__init__(dest, src1, flags=flags,
                     dataSize=dataSize)
@@ -1484,7 +1482,7 @@ let {{
         '''
 
     class Wrval(RegOp):
-        operands = (misc_dest_op, src1_op)
+        operand_types = (MiscDestOp, FoldedSrc1Op)
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Wrval, self).__init__(dest, src1, flags=flags,
                     dataSize=dataSize)
@@ -1493,7 +1491,7 @@ let {{
         '''
 
     class Chks(RegOp):
-        operands = (src1_op, src2_op, imm_op)
+        operand_types = (FoldedSrc1Op, FoldedSrc2Op, Imm8Op)
         def __init__(self, src1, src2, imm=0, flags=None,
                 dataSize="env.dataSize"):
             super(Chks, self).__init__(src1, src2, imm, flags=flags,
@@ -1656,7 +1654,7 @@ let {{
         '''
 
     class Wrdl(BasicRegOp):
-        operands = (seg_dest_op, src1_op, 'op2')
+        operand_types = (SegDestOp, FoldedSrc1Op, Op2)
         code = '''
             SegDescriptor desc = SrcReg1;
             SegSelector selector = SrcReg2;
@@ -1714,7 +1712,7 @@ let {{
         '''
 
     class Wrxftw(RegOp):
-        operands = (src1_op,)
+        operand_types = (FoldedSrc1Op,)
         def __init__(self, src1, flags=None, dataSize="env.dataSize"):
             super(Wrxftw, self).__init__(src1, flags=None, dataSize=dataSize)
 

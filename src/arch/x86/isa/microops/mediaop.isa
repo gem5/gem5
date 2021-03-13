@@ -75,28 +75,17 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    int_dest_op = "X86ISA::IntDestOp"
-    fp_dest_op = "X86ISA::FloatDestOp"
-
-    int_src1_op = "X86ISA::IntSrc1Op"
-    fp_src1_op = "X86ISA::FloatSrc1Op"
-
-    int_src2_op = "X86ISA::IntSrc2Op"
-    fp_src2_op = "X86ISA::FloatSrc2Op"
-
-    imm_op = "X86ISA::Imm8Op"
-
     class MediaOpMeta(type):
-        def buildCppClasses(self, name, Name, suffix, code, operands):
+        def buildCppClasses(self, name, Name, suffix, code, operand_types):
 
             # Globals to stick the output in
             global header_output
             global exec_output
 
-            imm_operands = list([op if op != 'op2' else imm_op for
-                                 op in operands])
-            operands = list([op if op != 'op2' else fp_src2_op for
-                             op in operands])
+            imm_operand_types = list([op if not op.isDual() else op.ImmType for
+                                      op in operand_types])
+            operand_types = list([op if not op.isDual() else op.FloatType for
+                                  op in operand_types])
 
             # If op2 is used anywhere, make register and immediate versions
             # of this code.
@@ -109,13 +98,14 @@ let {{
                     typeQual = match.group("typeQual")
                 src2_name = "%sFpSrcReg2%s" % (match.group("prefix"), typeQual)
                 self.buildCppClasses(name, Name, suffix,
-                        matcher.sub(src2_name, code), operands)
+                        matcher.sub(src2_name, code), operand_types)
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
-                        matcher.sub("imm8", code), imm_operands)
+                        matcher.sub("imm8", code), imm_operand_types)
                 return
 
             base = "X86ISA::InstOperands<" + \
-                    ", ".join(["X86ISA::MediaOpBase"] + operands) + ">"
+                    ", ".join(["X86ISA::MediaOpBase"] +
+                              [op.cxx_class() for op in operand_types]) + ">"
 
             # Get everything ready for the substitution
             opt_args = []
@@ -143,10 +133,10 @@ let {{
                 cls.className = Name
                 cls.base_mnemonic = name
                 code = cls.code
-                operands = cls.operands
+                operand_types = cls.operand_types
 
                 # Set up the C++ classes
-                mcls.buildCppClasses(cls, name, Name, "", code, operands)
+                mcls.buildCppClasses(cls, name, Name, "", code, operand_types)
 
                 # Hook into the microassembler dict
                 global microopClasses
@@ -187,9 +177,21 @@ let {{
 
         def getAllocator(self, microFlags):
             className = self.className
-            if self.mnemonic == self.base_mnemonic + 'i':
+            is_imm = (self.mnemonic == self.base_mnemonic + 'i')
+            def resolve_dual(t):
+                if t.isDual():
+                    if is_imm:
+                        return t.ImmType
+                    else:
+                        return t.FloatType
+                else:
+                    return t
+            operand_types = map(resolve_dual, self.operand_types)
+            if is_imm:
                 className += "Imm"
-            ext_args = [str(self.ext)] + self.args
+            arg_iter = iter(self.args)
+            args = list([Type(arg_iter).ctor_args() for Type in operand_types])
+            ext_args = [str(self.ext)] + args
             allocator = '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(srcSize)s, %(destSize)s, %(ext_args)s)
             ''' % {
@@ -203,26 +205,26 @@ let {{
 
     class Media0Op(MediaOp):
         abstract = True
-        operands = ()
+        operand_types = ()
         def __init__(self, **kwargs):
             super(Media0Op, self).__init__(**kwargs)
 
     class Media2Op(MediaOp):
         abstract = True
-        operands = (fp_dest_op, fp_src1_op)
+        operand_types = (FloatDestOp, FloatSrc1Op)
         def __init__(self, op1, op2, **kwargs):
             super(Media2Op, self).__init__(op1, op2, **kwargs)
 
     class Media3Op(MediaOp):
         abstract = True
-        operands = (fp_dest_op, fp_src1_op, fp_src2_op)
+        operand_types = (FloatDestOp, FloatSrc1Op, FloatSrc2Op)
         def __init__(self, op1, op2, op3, **kwargs):
             super(Media3Op, self).__init__(op1, op2, op3, **kwargs)
 
     class Mov2int(Media3Op):
         def __init__(self, dest, src1, src2=0, **kwargs):
             super(Mov2int, self).__init__(dest, src1, src2, **kwargs)
-        operands = (int_dest_op, fp_src1_op, imm_op)
+        operand_types = (IntDestOp, FloatSrc1Op, Imm8Op)
         op_class = 'SimdMiscOp'
         code = '''
             int items = sizeof(double) / srcSize;
@@ -243,7 +245,7 @@ let {{
     class Mov2fp(Media3Op):
         def __init__(self, dest, src1, src2=0, **kwargs):
             super(Mov2fp, self).__init__(dest, src1, src2, **kwargs)
-        operands = (fp_dest_op, int_src1_op, imm_op)
+        operand_types = (FloatDestOp, IntSrc1Op, Imm8Op)
         op_class = 'SimdMiscOp'
         code = '''
             int items = sizeof(double) / destSize;
@@ -262,7 +264,7 @@ let {{
         '''
 
     class Movsign(Media2Op):
-        operands = (int_dest_op, fp_src1_op)
+        operand_types = (IntDestOp, FloatSrc1Op)
         op_class = 'SimdMiscOp'
         code = '''
             int items = sizeof(double) / srcSize;
@@ -1085,7 +1087,7 @@ let {{
         '''
 
     class Msrl(Media3Op):
-        operands = (fp_dest_op, fp_src1_op, 'op2')
+        operand_types = (FloatDestOp, FloatSrc1Op, Op2)
         op_class = 'SimdShiftOp'
         code = '''
 
@@ -1114,7 +1116,7 @@ let {{
         '''
 
     class Msra(Media3Op):
-        operands = (fp_dest_op, fp_src1_op, 'op2')
+        operand_types = (FloatDestOp, FloatSrc1Op, Op2)
         op_class = 'SimdShiftOp'
         code = '''
 
@@ -1147,7 +1149,7 @@ let {{
         '''
 
     class Msll(Media3Op):
-        operands = (fp_dest_op, fp_src1_op, 'op2')
+        operand_types = (FloatDestOp, FloatSrc1Op, Op2)
         op_class = 'SimdShiftOp'
         code = '''
 
@@ -1493,7 +1495,7 @@ let {{
         '''
 
     class Mcmpf2rf(Media2Op):
-        operands = (fp_src1_op, fp_src2_op)
+        operand_types = (FloatSrc1Op, FloatSrc2Op)
         op_class = 'SimdFloatCvtOp'
         code = '''
             union floatInt
