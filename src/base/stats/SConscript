@@ -40,6 +40,8 @@ if env['HAVE_HDF5']:
     else:
         Source('hdf5.cc')
 
+GTest('group.test', 'group.test.cc', 'group.cc', 'info.cc',
+    with_tag('gem5 trace'))
 GTest('info.test', 'info.test.cc', 'info.cc', '../debug.cc', '../str.cc')
 GTest('storage.test', 'storage.test.cc', '../debug.cc', '../str.cc', 'info.cc',
     'storage.cc', '../../sim/cur_tick.cc')
