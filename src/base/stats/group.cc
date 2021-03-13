@@ -39,10 +39,10 @@
 
 #include "base/compiler.hh"
 #include "base/logging.hh"
+#include "base/named.hh"
 #include "base/stats/info.hh"
 #include "base/trace.hh"
 #include "debug/Stats.hh"
-#include "sim/sim_object.hh"
 
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
@@ -70,10 +70,9 @@ Group::regStats()
 
     for (auto &g : statGroups) {
         if (Debug::Stats) {
-            GEM5_VAR_USED const SimObject *so =
-                dynamic_cast<const SimObject *>(this);
+            M5_VAR_USED const Named *named = dynamic_cast<const Named *>(this);
             DPRINTF(Stats, "%s: regStats in group %s\n",
-                    so ? so->name() : "?",
+                    named ? named->name() : "?",
                     g.first);
         }
         g.second->regStats();
