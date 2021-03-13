@@ -29,6 +29,11 @@
 #ifndef __BASE_STATS_INFO_HH__
 #define __BASE_STATS_INFO_HH__
 
+#include <cstdint>
+#include <map>
+#include <string>
+#include <vector>
+
 #include "base/compiler.hh"
 #include "base/flags.hh"
 #include "base/stats/types.hh"

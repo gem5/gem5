@@ -42,8 +42,6 @@
 #include "base/stats/info.hh"
 
 #include <cctype>
-#include <map>
-#include <string>
 
 #include "base/cprintf.hh"
 #include "base/debug.hh"
