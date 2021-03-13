@@ -272,38 +272,6 @@ class Count : public Base
     std::string getUnitString() const override { return Count::toString(); }
 };
 
-template <typename T1, typename T2>
-class Rate : public Base
-{
-  static_assert(std::is_base_of<Base, T1>::value,
-                "Rate(T1,T2) must have T1 and T2 derived from"
-                "Stats::Units::Base");
-  static_assert(std::is_base_of<Base, T2>::value,
-                "Rate(T1,T2) must have T1 and T2 derived from"
-                "Stats::Units::Base");
-  private:
-    Rate<T1,T2>() {}
-  public:
-    Rate<T1,T2>(Rate<T1,T2> const&) = delete;
-    void operator=(Rate<T1,T2> const&) = delete;
-    static Rate<T1,T2>*
-    get()
-    {
-        static Rate<T1,T2> instance;
-        return &instance;
-    }
-    static std::string
-    toString()
-    {
-        return csprintf("(%s/%s)", T1::toString(), T2::toString());
-    }
-    std::string
-    getUnitString() const override
-    {
-        return Rate<T1,T2>::toString();
-    }
-};
-
 class Ratio : public Base
 {
   private:
@@ -339,6 +307,41 @@ class Unspecified : public Base
     getUnitString() const override
     {
         return Unspecified::toString();
+    }
+};
+
+template <typename T1, typename T2>
+class Rate : public Base
+{
+    static_assert(std::is_base_of<Base, T1>::value,
+        "Rate(T1,T2) must have T1 and T2 derived from Stats::Units::Base");
+    static_assert(std::is_base_of<Base, T2>::value,
+        "Rate(T1,T2) must have T1 and T2 derived from Stats::Units::Base");
+    static_assert(!std::is_same<T1, T2>::value ||
+        std::is_same<T1, Count>::value || std::is_same<T1, Unspecified>::value,
+        "Rate(T1,T2) must have T1 and T2 of different types; "
+        "otherwise, it would be a Ratio");
+
+  private:
+    Rate<T1,T2>() {}
+  public:
+    Rate<T1,T2>(Rate<T1,T2> const&) = delete;
+    void operator=(Rate<T1,T2> const&) = delete;
+    static Rate<T1,T2>*
+    get()
+    {
+        static Rate<T1,T2> instance;
+        return &instance;
+    }
+    static std::string
+    toString()
+    {
+        return csprintf("(%s/%s)", T1::toString(), T2::toString());
+    }
+    std::string
+    getUnitString() const override
+    {
+        return Rate<T1,T2>::toString();
     }
 };
 
