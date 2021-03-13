@@ -42,3 +42,4 @@ if env['USE_HDF5']:
 
 GTest('storage.test', 'storage.test.cc', '../debug.cc', '../str.cc', 'info.cc',
     'storage.cc', '../../sim/cur_tick.cc')
+GTest('units.test', 'units.test.cc')
