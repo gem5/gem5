@@ -89,6 +89,7 @@ Source('mem_pool.cc')
 
 GTest('byteswap.test', 'byteswap.test.cc', '../base/types.cc')
 GTest('guest_abi.test', 'guest_abi.test.cc')
+GTest('port.test', 'port.test.cc', 'port.cc')
 GTest('proxy_ptr.test', 'proxy_ptr.test.cc')
 
 if env['TARGET_ISA'] != 'null':

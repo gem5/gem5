@@ -46,6 +46,8 @@
 #ifndef __SIM_PORT_HH__
 #define __SIM_PORT_HH__
 
+#include <cassert>
+#include <ostream>
 #include <string>
 
 #include "base/types.hh"
