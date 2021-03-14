@@ -1043,10 +1043,8 @@ WalkCache::lookup(Addr va, Addr vaMask,
         if (result == NULL)
             baseCacheStats.totalMisses++;
 
-        walkCacheStats.lookupsByStageLevel[stage-1][level]++;
         walkCacheStats.totalLookupsByStageLevel[stage-1][level]++;
         if (result == NULL) {
-            walkCacheStats.missesByStageLevel[stage-1][level]++;
             walkCacheStats.totalMissesByStageLevel[stage-1][level]++;
         }
     }
@@ -1079,7 +1077,6 @@ WalkCache::store(const Entry &incoming)
     }
 
     baseCacheStats.totalUpdates++;
-    walkCacheStats.updatesByStageLevel[incoming.stage-1][incoming.level]++;
     walkCacheStats
              .totalUpdatesByStageLevel[incoming.stage-1][incoming.level]++;
 }

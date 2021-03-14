@@ -327,15 +327,12 @@ class WalkCache : public SMMUv3BaseCache
         WalkCacheStats(Stats::Group *parent);
         ~WalkCacheStats();
 
-        unsigned int lookupsByStageLevel[2][WALK_CACHE_LEVELS];
         std::vector<Stats::Formula*> averageLookupsByStageLevel;
         Stats::Vector2d totalLookupsByStageLevel;
 
-        unsigned int missesByStageLevel[2][WALK_CACHE_LEVELS];
         std::vector<Stats::Formula*> averageMissesByStageLevel;
         Stats::Vector2d totalMissesByStageLevel;
 
-        unsigned int updatesByStageLevel[2][WALK_CACHE_LEVELS];
         std::vector<Stats::Formula*> averageUpdatesByStageLevel;
         Stats::Vector2d totalUpdatesByStageLevel;
 
