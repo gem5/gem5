@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2018-2019 ARM Limited
+ * Copyright (c) 2014, 2018-2019, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -59,12 +59,12 @@
  */
 
 SMMUv3BaseCache::SMMUv3BaseCache(const std::string &policy_name, uint32_t seed,
-                                 Stats::Group *parent) :
-    replacementPolicy(decodePolicyName(policy_name)),
+                                 Stats::Group *parent, const std::string &name)
+  : replacementPolicy(decodePolicyName(policy_name)),
     nextToReplace(0),
     random(seed),
     useStamp(0),
-    baseCacheStats(parent)
+    baseCacheStats(parent, name)
 {}
 
 int
@@ -82,8 +82,9 @@ SMMUv3BaseCache::decodePolicyName(const std::string &policy_name)
 }
 
 SMMUv3BaseCache::
-SMMUv3BaseCacheStats::SMMUv3BaseCacheStats(Stats::Group *parent)
-    : Stats::Group(parent),
+SMMUv3BaseCacheStats::SMMUv3BaseCacheStats(
+    Stats::Group *parent, const std::string &name)
+    : Stats::Group(parent, name.c_str()),
       ADD_STAT(averageLookups,
                UNIT_RATE(Stats::Units::Count, Stats::Units::Second),
                "Average number lookups per second"),
@@ -144,9 +145,10 @@ SMMUv3BaseCacheStats::SMMUv3BaseCacheStats(Stats::Group *parent)
  */
 
 SMMUTLB::SMMUTLB(unsigned numEntries, unsigned _associativity,
-                 const std::string &policy, Stats::Group *parent)
+                 const std::string &policy, Stats::Group *parent,
+                 const std::string &name)
 :
-    SMMUv3BaseCache(policy, SMMUTLB_SEED, parent),
+    SMMUv3BaseCache(policy, SMMUTLB_SEED, parent, name),
     associativity(_associativity)
 {
     if (associativity == 0)
@@ -426,7 +428,7 @@ SMMUTLB::pickEntryIdxToReplace(const Set &set, AllocPolicy alloc)
 ARMArchTLB::ARMArchTLB(unsigned numEntries, unsigned _associativity,
                        const std::string &policy, Stats::Group *parent)
 :
-    SMMUv3BaseCache(policy, ARMARCHTLB_SEED, parent),
+    SMMUv3BaseCache(policy, ARMARCHTLB_SEED, parent, "tlb"),
     associativity(_associativity)
 {
     if (associativity == 0)
@@ -625,7 +627,7 @@ ARMArchTLB::pickEntryIdxToReplace(const Set &set)
 IPACache::IPACache(unsigned numEntries, unsigned _associativity,
                    const std::string &policy, Stats::Group *parent)
 :
-    SMMUv3BaseCache(policy, IPACACHE_SEED, parent),
+    SMMUv3BaseCache(policy, IPACACHE_SEED, parent, "ipa"),
     associativity(_associativity)
 {
     if (associativity == 0)
@@ -805,7 +807,7 @@ IPACache::pickEntryIdxToReplace(const Set &set)
 ConfigCache::ConfigCache(unsigned numEntries, unsigned _associativity,
                          const std::string &policy, Stats::Group *parent)
 :
-    SMMUv3BaseCache(policy, CONFIGCACHE_SEED, parent),
+    SMMUv3BaseCache(policy, CONFIGCACHE_SEED, parent, "cfg"),
     associativity(_associativity)
 {
     if (associativity == 0)
@@ -969,7 +971,7 @@ ConfigCache::pickEntryIdxToReplace(const Set &set)
 WalkCache::WalkCache(const std::array<unsigned, 2*WALK_CACHE_LEVELS> &_sizes,
                      unsigned _associativity, const std::string &policy,
                      Stats::Group *parent) :
-    SMMUv3BaseCache(policy, WALKCACHE_SEED, parent),
+    SMMUv3BaseCache(policy, WALKCACHE_SEED, parent, "walk"),
     walkCacheStats(&(SMMUv3BaseCache::baseCacheStats)),
     associativity(_associativity),
     sizes()
@@ -1226,7 +1228,7 @@ WalkCache::pickEntryIdxToReplace(const Set &set,
 
 WalkCache::
 WalkCacheStats::WalkCacheStats(Stats::Group *parent)
-    : Stats::Group(parent, "WalkCache")
+    : Stats::Group(parent)
 {
     using namespace Stats;
 
