@@ -253,11 +253,10 @@ let {{
             if (bits(dest, 0) && (ext & 0x1))
                 offset -= items;
             if (offset >= 0 && offset < items) {
-                uint64_t srcReg1 = pick(SrcReg1, src1, srcSize);
                 FpDestReg_uqw =
                     insertBits(FpDestReg_uqw,
                             (offset + 1) * destSize * 8 - 1,
-                            (offset + 0) * destSize * 8, srcReg1);
+                            (offset + 0) * destSize * 8, PMSrcReg1);
             } else {
                 FpDestReg_uqw = FpDestReg_uqw;
             }

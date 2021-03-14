@@ -56,6 +56,14 @@ def operand_types {{
 let {{
     def intReg(idx, id):
         return ('IntReg', 'uqw', idx, 'IsInteger', id)
+    def pickedReg(idx, id, size='dataSize'):
+        return ('IntReg', 'uqw', idx, 'IsInteger', id,
+                'pick(xc->readIntRegOperand(this, %(op_idx)s), '
+                '%(reg_idx)s, ' + size + ')')
+    def signedPickedReg(idx, id, size='dataSize'):
+        return ('IntReg', 'uqw', idx, 'IsInteger', id,
+                'signedPick(xc->readIntRegOperand(this, %(op_idx)s), '
+                '%(reg_idx)s, ' + size + ')')
     def floatReg(idx, id):
         return ('FloatReg', 'df', idx, 'IsFloating', id)
     def ccReg(idx, id):
@@ -83,11 +91,17 @@ let {{
 
 def operands {{
         'SrcReg1':       intReg('src1', 1),
+        'PSrcReg1':      pickedReg('src1', 1),
+        'PMSrcReg1':     pickedReg('src1', 1, 'srcSize'),
+        'SPSrcReg1':     signedPickedReg('src1', 1),
         'SrcReg2':       intReg('src2', 2),
+        'PSrcReg2':      pickedReg('src2', 2),
+        'SPSrcReg2':     signedPickedReg('src2', 2),
         'Index':         intReg('index', 3),
         'Base':          intReg('base', 4),
         'DestReg':       intReg('dest', 5),
         'Data':          intReg('data', 6),
+        'PData':         pickedReg('data', 6),
         'DataLow':       intReg('dataLow', 6),
         'DataHi':        intReg('dataHi', 6),
         'ProdLow':       intReg('X86ISA::INTREG_PRODLOW', 7),

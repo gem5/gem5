@@ -662,10 +662,10 @@ let {{
 
         microopClasses[name] = StoreOp
 
-    defineMicroStoreOp('St', 'Mem = pick(Data, data, dataSize);')
-    defineMicroStoreOp('Stis', 'Mem = pick(Data, data, dataSize);',
+    defineMicroStoreOp('St', 'Mem = PData;')
+    defineMicroStoreOp('Stis', 'Mem = PData;',
                        implicitStack=True)
-    defineMicroStoreOp('Stul', 'Mem = pick(Data, data, dataSize);',
+    defineMicroStoreOp('Stul', 'Mem = PData;',
             mem_flags="Request::LOCKED_RMW")
 
     defineMicroStoreOp('Stfp', code='Mem = FpData_uqw;', is_float=True)
