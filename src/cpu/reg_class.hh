@@ -44,8 +44,8 @@
 #include <cassert>
 #include <cstddef>
 
-#include "arch/generic/types.hh"
 #include "arch/registers.hh"
+#include "base/types.hh"
 #include "config/the_isa.hh"
 
 /** Enumerate the classes of registers. */
@@ -100,13 +100,13 @@ class RegId
     RegId() : RegId(IntRegClass, 0) {}
 
     RegId(RegClass reg_class, RegIndex reg_idx)
-        : RegId(reg_class, reg_idx, ILLEGAL_ELEM_INDEX) {}
+        : RegId(reg_class, reg_idx, IllegalElemIndex) {}
 
     explicit RegId(RegClass reg_class, RegIndex reg_idx, ElemIndex elem_idx)
         : regClass(reg_class), regIdx(reg_idx), elemIdx(elem_idx),
           numPinnedWrites(0)
     {
-        if (elemIdx == ILLEGAL_ELEM_INDEX) {
+        if (elemIdx == IllegalElemIndex) {
             panic_if(regClass == VecElemClass,
                     "Creating vector physical index w/o element index");
         } else {
