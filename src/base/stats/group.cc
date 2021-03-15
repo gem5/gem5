@@ -113,6 +113,7 @@ Group::addStat(statistics::Info *info)
 void
 Group::addStatGroup(const char *name, Group *block)
 {
+    panic_if(block == this, "Stat group can't be added to itself");
     panic_if(statGroups.find(name) != statGroups.end(),
              "Stats of the same group share the same name `%s`.\n", name);
 
