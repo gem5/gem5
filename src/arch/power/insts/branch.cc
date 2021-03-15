@@ -37,14 +37,11 @@ const std::string &
 PCDependentDisassembly::disassemble(
         Addr pc, const Loader::SymbolTable *symtab) const
 {
-    if (!cachedDisassembly ||
-        pc != cachedPC || symtab != cachedSymtab)
-    {
-        if (cachedDisassembly)
-            delete cachedDisassembly;
+    if (!cachedDisassembly || pc != cachedPC || symtab != cachedSymtab) {
+        if (!cachedDisassembly)
+            cachedDisassembly.reset(new std::string);
 
-        cachedDisassembly =
-            new std::string(generateDisassembly(pc, symtab));
+        *cachedDisassembly = generateDisassembly(pc, symtab);
         cachedPC = pc;
         cachedSymtab = symtab;
     }

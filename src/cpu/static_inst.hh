@@ -283,7 +283,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
      * String representation of disassembly (lazily evaluated via
      * disassemble()).
      */
-    mutable std::string *cachedDisassembly = nullptr;
+    mutable std::unique_ptr<std::string> cachedDisassembly;
 
     /**
      * Internal function to generate disassembly string.
@@ -301,7 +301,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     {}
 
   public:
-    virtual ~StaticInst();
+    virtual ~StaticInst() {};
 
     virtual Fault execute(ExecContext *xc,
             Trace::InstRecord *traceData) const = 0;
