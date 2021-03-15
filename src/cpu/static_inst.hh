@@ -103,24 +103,24 @@ class StaticInst : public RefCounted, public StaticInstFlags
     OpClass _opClass;
 
     /// See numSrcRegs().
-    int8_t _numSrcRegs;
+    int8_t _numSrcRegs = 0;
 
     /// See numDestRegs().
-    int8_t _numDestRegs;
+    int8_t _numDestRegs = 0;
 
     /// The following are used to track physical register usage
     /// for machines with separate int & FP reg files.
     //@{
-    int8_t _numFPDestRegs;
-    int8_t _numIntDestRegs;
-    int8_t _numCCDestRegs;
+    int8_t _numFPDestRegs = 0;
+    int8_t _numIntDestRegs = 0;
+    int8_t _numCCDestRegs = 0;
     //@}
 
     /** To use in architectures with vector register file. */
     /** @{ */
-    int8_t _numVecDestRegs;
-    int8_t _numVecElemDestRegs;
-    int8_t _numVecPredDestRegs;
+    int8_t _numVecDestRegs = 0;
+    int8_t _numVecElemDestRegs = 0;
+    int8_t _numVecPredDestRegs = 0;
     /** @} */
 
   public:
@@ -226,7 +226,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     void setFlag(Flags f) { flags[f] = true; }
 
     /// Operation class.  Used to select appropriate function unit in issue.
-    OpClass opClass()     const { return _opClass; }
+    OpClass opClass() const { return _opClass; }
 
 
     /// Return logical index (architectural reg num) of i'th destination reg.
@@ -284,50 +284,47 @@ class StaticInst : public RefCounted, public StaticInstFlags
      * String representation of disassembly (lazily evaluated via
      * disassemble()).
      */
-    mutable std::string *cachedDisassembly;
+    mutable std::string *cachedDisassembly = nullptr;
 
     /**
      * Internal function to generate disassembly string.
      */
-    virtual std::string
-    generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const = 0;
+    virtual std::string generateDisassembly(
+            Addr pc, const Loader::SymbolTable *symtab) const = 0;
 
     /// Constructor.
     /// It's important to initialize everything here to a sane
     /// default, since the decoder generally only overrides
     /// the fields that are meaningful for the particular
     /// instruction.
-    StaticInst(const char *_mnemonic, OpClass __opClass)
-        : _opClass(__opClass),
-          _numSrcRegs(0), _numDestRegs(0), _numFPDestRegs(0),
-          _numIntDestRegs(0), _numCCDestRegs(0), _numVecDestRegs(0),
-          _numVecElemDestRegs(0), _numVecPredDestRegs(0),
-          mnemonic(_mnemonic), cachedDisassembly(0)
-    { }
+    StaticInst(const char *_mnemonic, OpClass op_class)
+        : _opClass(op_class), mnemonic(_mnemonic)
+    {}
 
   public:
     virtual ~StaticInst();
 
     virtual Fault execute(ExecContext *xc,
-                          Trace::InstRecord *traceData) const = 0;
+            Trace::InstRecord *traceData) const = 0;
 
-    virtual Fault initiateAcc(ExecContext *xc,
-                              Trace::InstRecord *traceData) const
+    virtual Fault
+    initiateAcc(ExecContext *xc, Trace::InstRecord *traceData) const
     {
         panic("initiateAcc not defined!");
     }
 
-    virtual Fault completeAcc(Packet *pkt, ExecContext *xc,
-                              Trace::InstRecord *traceData) const
+    virtual Fault
+    completeAcc(Packet *pkt, ExecContext *xc,
+            Trace::InstRecord *trace_data) const
     {
         panic("completeAcc not defined!");
     }
 
-    virtual void advancePC(TheISA::PCState &pcState) const = 0;
+    virtual void advancePC(TheISA::PCState &pc_state) const = 0;
 
     virtual TheISA::PCState
-    buildRetPC(const TheISA::PCState &curPC,
-            const TheISA::PCState &callPC) const
+    buildRetPC(const TheISA::PCState &cur_pc,
+            const TheISA::PCState &call_pc) const
     {
         panic("buildRetPC not defined!");
     }
@@ -359,7 +356,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
      * return the target address as well.
      */
     bool hasBranchTarget(const TheISA::PCState &pc, ThreadContext *tc,
-                         TheISA::PCState &tgt) const;
+            TheISA::PCState &tgt) const;
 
     /**
      * Return string representation of disassembled instruction.
