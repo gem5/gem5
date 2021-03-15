@@ -41,6 +41,7 @@
 #include <string>
 
 #include "base/logging.hh"
+#include "cpu/thread_context.hh"
 #include "sim/faults.hh"
 
 namespace GenericISA
