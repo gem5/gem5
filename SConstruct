@@ -764,6 +764,9 @@ protocol_dirs = []
 Export('protocol_dirs')
 slicc_includes = []
 Export('slicc_includes')
+# list of protocols that require the partial functional read interface
+need_partial_func_reads = []
+Export('need_partial_func_reads')
 
 # Walk the tree and execute all SConsopts scripts that wil add to the
 # above variables
