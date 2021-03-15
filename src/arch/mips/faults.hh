@@ -32,6 +32,7 @@
 
 #include "arch/mips/pra_constants.hh"
 #include "arch/mips/regs/misc.hh"
+#include "cpu/null_static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "debug/MipsPRA.hh"
 #include "sim/faults.hh"
@@ -99,7 +100,7 @@ class MipsFaultBase : public FaultBase
     }
 
     void invoke(ThreadContext * tc, const StaticInstPtr &inst =
-                StaticInst::nullStaticInstPtr);
+                nullStaticInstPtr);
 };
 
 template <typename T>
@@ -131,7 +132,7 @@ class ResetFault : public MipsFault<ResetFault>
 {
   public:
     void invoke(ThreadContext * tc, const StaticInstPtr &inst =
-                StaticInst::nullStaticInstPtr);
+                nullStaticInstPtr);
 
 };
 
@@ -139,14 +140,14 @@ class SoftResetFault : public MipsFault<SoftResetFault>
 {
   public:
     void invoke(ThreadContext * tc, const StaticInstPtr &inst =
-                StaticInst::nullStaticInstPtr);
+                nullStaticInstPtr);
 };
 
 class NonMaskableInterrupt : public MipsFault<NonMaskableInterrupt>
 {
   public:
     void invoke(ThreadContext * tc, const StaticInstPtr &inst =
-                StaticInst::nullStaticInstPtr);
+                nullStaticInstPtr);
 };
 
 class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
@@ -159,7 +160,7 @@ class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
 
     void
     invoke(ThreadContext * tc, const StaticInstPtr &inst =
-           StaticInst::nullStaticInstPtr)
+           nullStaticInstPtr)
     {
         MipsFault<CoprocessorUnusableFault>::invoke(tc, inst);
         if (FullSystem) {
@@ -194,7 +195,7 @@ class AddressFault : public MipsFault<T>
 
     void
     invoke(ThreadContext * tc, const StaticInstPtr &inst =
-           StaticInst::nullStaticInstPtr)
+           nullStaticInstPtr)
     {
         MipsFault<T>::invoke(tc, inst);
         if (FullSystem)
@@ -247,7 +248,7 @@ class TlbFault : public AddressFault<T>
 
     void
     invoke(ThreadContext * tc, const StaticInstPtr &inst =
-           StaticInst::nullStaticInstPtr)
+           nullStaticInstPtr)
     {
         if (FullSystem) {
             DPRINTF(MipsPRA, "Fault %s encountered.\n", this->name());

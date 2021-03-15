@@ -43,6 +43,7 @@
 #include "arch/x86/tlb.hh"
 #include "base/bitunion.hh"
 #include "base/logging.hh"
+#include "cpu/null_static_inst.hh"
 #include "sim/faults.hh"
 
 namespace X86ISA
@@ -69,7 +70,7 @@ class X86FaultBase : public FaultBase
     virtual bool isSoft() { return false; }
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                StaticInst::nullStaticInstPtr) override;
+                nullStaticInstPtr) override;
 
     virtual std::string describe() const;
 
@@ -98,7 +99,7 @@ class X86Trap : public X86FaultBase
     using X86FaultBase::X86FaultBase;
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                StaticInst::nullStaticInstPtr) override;
+                nullStaticInstPtr) override;
 };
 
 // Base class for x86 aborts which seem to be catastrophic failures.
@@ -108,7 +109,7 @@ class X86Abort : public X86FaultBase
     using X86FaultBase::X86FaultBase;
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                StaticInst::nullStaticInstPtr) override;
+                nullStaticInstPtr) override;
 };
 
 // Base class for x86 interrupts.
@@ -129,7 +130,7 @@ class UnimpInstFault : public FaultBase
 
     void
     invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                StaticInst::nullStaticInstPtr) override
+            nullStaticInstPtr) override
     {
         panic("Unimplemented instruction!");
     }
@@ -211,7 +212,7 @@ class InvalidOpcode : public X86Fault
     InvalidOpcode() : X86Fault("Invalid-Opcode", "#UD", 6) {}
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                StaticInst::nullStaticInstPtr) override;
+                nullStaticInstPtr) override;
 };
 
 class DeviceNotAvailable : public X86Fault
@@ -290,7 +291,7 @@ class PageFault : public X86Fault
 
     void
     invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                StaticInst::nullStaticInstPtr);
+                nullStaticInstPtr);
 
     virtual std::string describe() const;
 };
@@ -351,7 +352,7 @@ class InitInterrupt : public X86Interrupt
     {}
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                StaticInst::nullStaticInstPtr) override;
+                nullStaticInstPtr) override;
 };
 
 class StartupInterrupt : public X86Interrupt
@@ -362,7 +363,7 @@ class StartupInterrupt : public X86Interrupt
     {}
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                StaticInst::nullStaticInstPtr) override;
+                nullStaticInstPtr) override;
 };
 
 class SoftwareInterrupt : public X86Interrupt

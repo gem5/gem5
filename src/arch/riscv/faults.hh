@@ -35,6 +35,7 @@
 
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/registers.hh"
+#include "cpu/null_static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "sim/faults.hh"
 
@@ -121,7 +122,7 @@ class Reset : public FaultBase
     FaultName name() const override { return _name; }
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-        StaticInst::nullStaticInstPtr) override;
+        nullStaticInstPtr) override;
 };
 
 class InterruptFault : public RiscvFault

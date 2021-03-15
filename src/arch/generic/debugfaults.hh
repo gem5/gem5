@@ -41,6 +41,7 @@
 #include <string>
 
 #include "base/logging.hh"
+#include "cpu/null_static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "sim/faults.hh"
 
@@ -74,7 +75,7 @@ class M5DebugFault : public FaultBase
 
     void
     invoke(ThreadContext *tc, const StaticInstPtr &inst =
-           StaticInst::nullStaticInstPtr) override
+           nullStaticInstPtr) override
     {
         debugFunc();
         advancePC(tc, inst);
@@ -106,7 +107,7 @@ class M5DebugOnceFault : public M5DebugFault
 
     void
     invoke(ThreadContext *tc, const StaticInstPtr &inst =
-           StaticInst::nullStaticInstPtr) override
+           nullStaticInstPtr) override
     {
         if (!once) {
             once = true;

@@ -251,9 +251,6 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// Pointer to a statically allocated "null" instruction object.
     static StaticInstPtr nullStaticInstPtr;
 
-    /// Pointer to a statically allocated generic "nop" instruction object.
-    static StaticInstPtr nopStaticInstPtr;
-
     virtual uint64_t getEMI() const { return 0; }
 
   protected:

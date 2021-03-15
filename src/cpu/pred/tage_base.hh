@@ -51,6 +51,7 @@
 #include <vector>
 
 #include "base/statistics.hh"
+#include "cpu/null_static_inst.hh"
 #include "cpu/static_inst.hh"
 #include "params/TAGEBase.hh"
 #include "sim/sim_object.hh"
@@ -287,7 +288,7 @@ class TAGEBase : public SimObject
     virtual void updateHistories(
         ThreadID tid, Addr branch_pc, bool taken, BranchInfo* b,
         bool speculative,
-        const StaticInstPtr & inst = StaticInst::nullStaticInstPtr,
+        const StaticInstPtr & inst = nullStaticInstPtr,
         Addr target = MaxAddr);
 
     /**

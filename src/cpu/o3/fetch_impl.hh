@@ -53,9 +53,11 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
+#include "cpu/exetrace.hh"
+#include "cpu/nop_static_inst.hh"
 #include "cpu/o3/cpu.hh"
 #include "cpu/o3/fetch.hh"
-#include "cpu/exetrace.hh"
+#include "cpu/o3/isa_specific.hh"
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"
@@ -68,7 +70,6 @@
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
-#include "cpu/o3/isa_specific.hh"
 
 template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, const DerivO3CPUParams &params)
@@ -698,8 +699,8 @@ DefaultFetch<Impl>::finishTranslation(const Fault &fault,
 
         DPRINTF(Fetch, "[tid:%i] Translation faulted, building noop.\n", tid);
         // We will use a nop in ordier to carry the fault.
-        DynInstPtr instruction = buildInst(tid, StaticInst::nopStaticInstPtr,
-                                           NULL, fetchPC, fetchPC, false);
+        DynInstPtr instruction = buildInst(tid, nopStaticInstPtr, nullptr,
+                fetchPC, fetchPC, false);
         instruction->setNotAnInst();
 
         instruction->setPredTarg(fetchPC);

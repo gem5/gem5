@@ -26,72 +26,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "cpu/nop_static_inst.hh"
+
 #include "cpu/static_inst.hh"
 
-#include <iostream>
-
-bool
-StaticInst::hasBranchTarget(const TheISA::PCState &pc, ThreadContext *tc,
-                            TheISA::PCState &tgt) const
+namespace
 {
-    if (isDirectCtrl()) {
-        tgt = branchTarget(pc);
-        return true;
+
+class NopStaticInst : public StaticInst
+{
+  public:
+    NopStaticInst() : StaticInst("gem5 nop", No_OpClass) {}
+
+    Fault
+    execute(ExecContext *xc, Trace::InstRecord *traceData) const override
+    {
+        return NoFault;
     }
 
-    if (isIndirectCtrl()) {
-        tgt = branchTarget(tc);
-        return true;
+    void
+    advancePC(TheISA::PCState &pcState) const override
+    {
+        pcState.advance();
     }
 
-    return false;
-}
-
-StaticInstPtr
-StaticInst::fetchMicroop(MicroPC upc) const
-{
-    panic("StaticInst::fetchMicroop() called on instruction "
-          "that is not microcoded.");
-}
-
-TheISA::PCState
-StaticInst::branchTarget(const TheISA::PCState &pc) const
-{
-    panic("StaticInst::branchTarget() called on instruction "
-          "that is not a PC-relative branch.");
-}
-
-TheISA::PCState
-StaticInst::branchTarget(ThreadContext *tc) const
-{
-    panic("StaticInst::branchTarget() called on instruction "
-          "that is not an indirect branch.");
-}
-
-const std::string &
-StaticInst::disassemble(Addr pc, const Loader::SymbolTable *symtab) const
-{
-    if (!cachedDisassembly) {
-        cachedDisassembly =
-            std::make_unique<std::string>(generateDisassembly(pc, symtab));
+    std::string
+    generateDisassembly(Addr pc,
+            const Loader::SymbolTable *symtab) const override
+    {
+        return mnemonic;
     }
+};
 
-    return *cachedDisassembly;
 }
 
-void
-StaticInst::printFlags(std::ostream &outs,
-    const std::string &separator) const
-{
-    bool printed_a_flag = false;
-
-    for (unsigned int flag = IsNop; flag < Num_Flags; flag++) {
-        if (flags[flag]) {
-            if (printed_a_flag)
-                outs << separator;
-
-            outs << FlagsStrings[flag];
-            printed_a_flag = true;
-        }
-    }
-}
+StaticInstPtr nopStaticInstPtr = new NopStaticInst;

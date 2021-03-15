@@ -44,6 +44,7 @@
 #include "arch/registers.hh"
 #include "cpu/base.hh"
 #include "cpu/minor/trace.hh"
+#include "cpu/null_static_inst.hh"
 #include "cpu/reg_class.hh"
 #include "debug/MinorExecute.hh"
 #include "enums/OpClass.hh"
@@ -79,7 +80,7 @@ void
 MinorDynInst::init()
 {
     if (!bubbleInst) {
-        bubbleInst = new MinorDynInst(StaticInst::nullStaticInstPtr);
+        bubbleInst = new MinorDynInst(nullStaticInstPtr);
         assert(bubbleInst->isBubble());
         /* Make bubbleInst immortal */
         bubbleInst->incref();

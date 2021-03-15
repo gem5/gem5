@@ -53,6 +53,7 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/checker/thread_context.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/null_static_inst.hh"
 #include "cpu/pred/bpred_unit.hh"
 #include "cpu/simple/exec_context.hh"
 #include "cpu/simple_thread.hh"
@@ -472,13 +473,13 @@ BaseSimpleCPU::advancePC(const Fault &fault)
     //Since we're moving to a new pc, zero out the offset
     t_info.fetchOffset = 0;
     if (fault != NoFault) {
-        curMacroStaticInst = StaticInst::nullStaticInstPtr;
+        curMacroStaticInst = nullStaticInstPtr;
         fault->invoke(threadContexts[curThread], curStaticInst);
         thread->decoder.reset();
     } else {
         if (curStaticInst) {
             if (curStaticInst->isLastMicroop())
-                curMacroStaticInst = StaticInst::nullStaticInstPtr;
+                curMacroStaticInst = nullStaticInstPtr;
             TheISA::PCState pcState = thread->pcState();
             curStaticInst->advancePC(pcState);
             thread->pcState(pcState);

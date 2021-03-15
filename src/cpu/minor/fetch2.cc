@@ -43,6 +43,7 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/minor/pipeline.hh"
+#include "cpu/null_static_inst.hh"
 #include "cpu/pred/bpred_unit.hh"
 #include "debug/Branch.hh"
 #include "debug/Fetch.hh"
@@ -355,8 +356,7 @@ Fetch2::evaluate()
 
                 /* Make a new instruction and pick up the line, stream,
                  *  prediction, thread ids from the incoming line */
-                dyn_inst = new MinorDynInst(
-                        StaticInst::nullStaticInstPtr, line_in->id);
+                dyn_inst = new MinorDynInst(nullStaticInstPtr, line_in->id);
 
                 /* Fetch and prediction sequence numbers originate here */
                 dyn_inst->id.fetchSeqNum = fetch_info.fetchSeqNum;
