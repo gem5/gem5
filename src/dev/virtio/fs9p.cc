@@ -47,6 +47,7 @@
 #include <unistd.h>
 
 #include <csignal>
+#include <cstring>
 #include <fstream>
 
 #include "base/callback.hh"
@@ -336,80 +337,71 @@ VirtIO9PDiod::startDiod()
     const Params &p = dynamic_cast<const Params &>(params());
     int pipe_rfd[2];
     int pipe_wfd[2];
-    const int DIOD_RFD = 3;
-    const int DIOD_WFD = 4;
 
-    const char *diod(p.diod.c_str());
+    DPRINTF(VIO9P, "Using diod at %s.\n", p.diod);
 
-    DPRINTF(VIO9P, "Using diod at %s \n", p.diod.c_str());
-
-    if (pipe(pipe_rfd) == -1 || pipe(pipe_wfd) == -1)
-        panic("Failed to create DIOD pipes: %i\n", errno);
+    panic_if(pipe(pipe_rfd) == -1, "Failed to create DIOD read pipe: %s",
+            strerror(errno));
+    panic_if(pipe(pipe_wfd) == -1, "Failed to create DIOD write pipe: %s",
+            strerror(errno));
 
     fd_to_diod = pipe_rfd[1];
     fd_from_diod = pipe_wfd[0];
 
     // Create Unix domain socket
     int socket_id = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (socket_id == -1) {
-        panic("Socket creation failed %i \n", errno);
-    }
+    panic_if(socket_id == -1, "Socket creation failed %i", errno);
+
     // Bind the socket to a path which will not be read
     struct sockaddr_un socket_address;
-    memset(&socket_address, 0, sizeof(struct sockaddr_un));
+    memset(&socket_address, 0, sizeof(socket_address));
     socket_address.sun_family = AF_UNIX;
 
     const std::string socket_path = simout.resolve(p.socketPath);
-    fatal_if(!OutputDirectory::isAbsolute(socket_path), "Please make the" \
-             " output directory an absolute path, else diod will fail!\n");
+    fatal_if(!OutputDirectory::isAbsolute(socket_path), "Please make the"
+             " output directory an absolute path, else diod will fail!");
 
     // Prevent overflow in strcpy
     fatal_if(sizeof(socket_address.sun_path) <= socket_path.length(),
              "Incorrect length of socket path");
     strncpy(socket_address.sun_path, socket_path.c_str(),
             sizeof(socket_address.sun_path) - 1);
-    if (bind(socket_id, (struct sockaddr*) &socket_address,
-             sizeof(struct sockaddr_un)) == -1){
-        perror("Socket binding");
-        panic("Socket binding to %i failed - most likely the output dir" \
-              " and hence unused socket already exists \n", socket_id);
-    }
+    panic_if(bind(socket_id, (struct sockaddr*)&socket_address,
+                sizeof(socket_address)) == -1,
+            "Socket binding to %i failed - most likely the output dir "
+            "and hence unused socket already exists.", socket_id);
 
     diod_pid = fork();
-    if (diod_pid == -1) {
-        panic("Fork failed: %i\n", errno);
-    } else if (diod_pid == 0) {
+    panic_if(diod_pid == -1, "Fork failed: %s", strerror(errno));
+
+    if (diod_pid == 0) {
         // Create the socket which will later by used by the diod process
         close(STDIN_FILENO);
-        if (dup2(pipe_rfd[0], DIOD_RFD) == -1 ||
-            dup2(pipe_wfd[1], DIOD_WFD) == -1) {
+        close(pipe_rfd[1]);
+        close(pipe_wfd[0]);
 
-            panic("Failed to setup read/write pipes: %i\n",
-                  errno);
-        }
+        auto diod_rfd_s = std::to_string(pipe_rfd[0]);
+        auto diod_wfd_s = std::to_string(pipe_wfd[1]);
 
         // Start diod
-        execlp(diod, diod,
+        execlp(p.diod.c_str(), p.diod.c_str(),
                "-d", DTRACE(VIO9P) ? "1" : "0", // show debug output
                "-f", // start in foreground
-               "-r", "3", // setup read FD
-               "-w", "4", // setup write FD
+               "-r", diod_rfd_s.c_str(), // setup read FD
+               "-w", diod_wfd_s.c_str(), // setup write FD
                "-e", p.root.c_str(), // path to export
                "-n", // disable security
                "-S", // squash all users
                "-l", socket_path.c_str(), // pass the socket
-               (char *)NULL);
-        perror("Starting DIOD");
-        panic("Failed to execute diod to %s: %i\n",socket_path, errno);
+               nullptr);
+        panic("Failed to execute diod to %s: %s", socket_path,
+                strerror(errno));
     } else {
         close(pipe_rfd[0]);
         close(pipe_wfd[1]);
-        inform("Started diod with PID %u, you might need to manually kill " \
-                " diod if gem5 crashes \n", diod_pid);
+        inform("Started diod with PID %u, you might need to manually kill "
+                "diod if gem5 crashes", diod_pid);
     }
-
-#undef DIOD_RFD
-#undef DIOD_WFD
 }
 
 ssize_t
