@@ -153,6 +153,21 @@ class SymbolTable
         return operate(op);
     }
 
+    /// Modify symbol name with a given transform function.
+    /// @param func            The transform function accepting the reference of
+    ///                        symbol name.
+    /// @retval SymbolTablePtr A pointer to the modified SymbolTable copy.
+    SymbolTablePtr
+    rename(std::function<void(std::string&)> func) const
+    {
+        SymTabOp op = [func](SymbolTable &symtab, const Symbol &symbol) {
+            Symbol sym = symbol;
+            func(sym.name);
+            symtab.insert(sym);
+        };
+        return operate(op);
+    }
+
     SymbolTablePtr
     globals() const
     {
