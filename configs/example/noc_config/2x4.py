@@ -33,38 +33,45 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# 2x4 mesh definition
+from ruby import CHI_config
+
+# CustomMesh parameters for a 2x4 mesh. Routers will have the following layout:
 #
 # 0 --- 1 --- 2 --- 3
 # |     |     |     |
 # 4 --- 5 --- 6 --- 7
 #
-mesh:
-    num_rows : 2
-    num_cols : 4
-    router_latency : 1
-    link_latency : 1
+# Default parameter are configs/ruby/CHI_config.py
+#
+class NoC_Params(CHI_config.NoC_Params):
+    num_rows = 2
+    num_cols = 4
 
-# Bindings for each CHI node type.
+# Specialization of nodes to define bindings for each CHI node type
+# needed by CustomMesh.
+# The default types are defined in CHI_Node and their derivatives in
+# configs/ruby/CHI_config.py
 
-CHI_RNF:
-    # Uncomment to map num_nodes_per_router RNFs in each provided router,
-    # assuming num. created CHI_RNFs == len(router_list)*num_nodes_per_router
-    # num_nodes_per_router: 1
-    router_list: [1, 2, 5, 6]
+class CHI_RNF(CHI_config.CHI_RNF):
+    class NoC_Params(CHI_config.CHI_RNF.NoC_Params):
+        router_list = [1, 2, 5, 6]
 
-CHI_HNF:
-    # num_nodes_per_router: 1
-    router_list: [1, 2, 5, 6]
+class CHI_HNF(CHI_config.CHI_HNF):
+    class NoC_Params(CHI_config.CHI_HNF.NoC_Params):
+        router_list = [1, 2, 5, 6]
 
-CHI_SNF_MainMem:
-    # num_nodes_per_router: 1
-    router_list: [0, 4]
+class CHI_SNF_MainMem(CHI_config.CHI_SNF_MainMem):
+    class NoC_Params(CHI_config.CHI_SNF_MainMem.NoC_Params):
+        router_list = [0, 4]
 
-# Applies to CHI_SNF_BootMem and possibly other non-main memories
-CHI_SNF_IO:
-    router_list: [3]
+class CHI_SNF_BootMem(CHI_config.CHI_SNF_BootMem):
+    class NoC_Params(CHI_config.CHI_SNF_BootMem.NoC_Params):
+        router_list = [3]
 
-# Applies to CHI_RNI_DMA and CHI_RNI_IO
-CHI_RNI_IO:
-    router_list: [7]
+class CHI_RNI_DMA(CHI_config.CHI_RNI_DMA):
+    class NoC_Params(CHI_config.CHI_RNI_DMA.NoC_Params):
+        router_list = [7]
+
+class CHI_RNI_IO(CHI_config.CHI_RNI_IO):
+    class NoC_Params(CHI_config.CHI_RNI_IO.NoC_Params):
+        router_list = [7]
