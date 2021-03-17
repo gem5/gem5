@@ -35,3 +35,5 @@ GTest('image_file_data.test', 'image_file_data.test.cc', 'image_file_data.cc')
 Source('memory_image.cc')
 Source('object_file.cc')
 Source('symtab.cc')
+GTest('symtab.test', 'symtab.test.cc', 'symtab.cc',
+    with_any_tags('gem5 serialize', 'gem5 trace'))
