@@ -30,6 +30,7 @@ from .simstat import SimStat
 from .statistic import Statistic
 from .storagetype import StorageType
 from .timeconversion import TimeConversion
+from .jsonloader import JsonLoader
 
 __all__ = [
            "Group",
@@ -38,4 +39,5 @@ __all__ = [
            "TimeConversion",
            "StorageType",
            "JsonSerializable",
+           "JsonLoader",
           ]

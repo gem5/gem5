@@ -71,6 +71,7 @@ PySource('m5.ext.pystats', 'm5/ext/pystats/simstat.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/statistic.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/storagetype.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/timeconversion.py')
+PySource('m5.ext.pystats', 'm5/ext/pystats/jsonloader.py')
 PySource('m5.stats', 'm5/stats/gem5stats.py')
 
 Source('pybind11/core.cc', add_tags='python')
