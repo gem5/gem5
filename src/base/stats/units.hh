@@ -47,9 +47,8 @@
 #define UNIT_RATE(T1, T2) Stats::Units::Rate<T1, T2>::get()
 #define UNIT_RATIO Stats::Units::Ratio::get()
 #define UNIT_COUNT Stats::Units::Count::get()
+#define UNIT_WATT Stats::Units::Watt::get()
 #define UNIT_UNSPECIFIED Stats::Units::Unspecified::get()
-
-#define UNIT_WATT UNIT_RATE(Stats::Units::Joule, Stats::Units::Second)
 
 namespace Stats {
 

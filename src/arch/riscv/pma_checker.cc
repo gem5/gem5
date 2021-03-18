@@ -81,3 +81,9 @@ PMAChecker::isUncacheable(PacketPtr pkt)
 {
     return isUncacheable(pkt->getAddrRange());
 }
+
+void
+PMAChecker::takeOverFrom(PMAChecker *old)
+{
+    uncacheable = old->uncacheable;
+}

@@ -93,8 +93,7 @@ SCMasterPort::SCMasterPort(const std::string& name_,
     transactor(nullptr),
     simControl(simControl)
 {
-    system =
-        dynamic_cast<const ExternalMasterParams*>(owner_.params())->system;
+    system = dynamic_cast<const ExternalMasterParams&>(owner_.params()).system;
 }
 
 void

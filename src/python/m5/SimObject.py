@@ -368,7 +368,7 @@ def createCxxConfigDirectoryEntryFile(code, name, simobj, is_header):
 
     if not is_header:
         code('{')
-        if hasattr(simobj, 'abstract') and simobj.abstract:
+        if getattr(simobj, 'abstract', False):
             code('    return NULL;')
         else:
             code('    return this->create();')
@@ -700,6 +700,80 @@ class MetaSimObject(type):
     def pybind_predecls(cls, code):
         code('#include "${{cls.cxx_header}}"')
 
+    def cxx_param_def(cls, code):
+        code('''
+#include <type_traits>
+
+#include "base/compiler.hh"
+
+#include "${{cls.cxx_header}}"
+#include "params/${cls}.hh"
+
+''')
+        code()
+        code('namespace')
+        code('{')
+        code()
+        # If we can't define a default create() method for this params struct
+        # because the SimObject doesn't have the right constructor, use
+        # template magic to make it so we're actually defining a create method
+        # for this class instead.
+        code('class Dummy${cls}ParamsClass')
+        code('{')
+        code('  public:')
+        code('    ${{cls.cxx_class}} *create() const;')
+        code('};')
+        code()
+        code('template <class CxxClass, class Enable=void>')
+        code('class Dummy${cls}Shunt;')
+        code()
+        # This version directs to the real Params struct and the default
+        # behavior of create if there's an appropriate constructor.
+        code('template <class CxxClass>')
+        code('class Dummy${cls}Shunt<CxxClass, std::enable_if_t<')
+        code('    std::is_constructible<CxxClass,')
+        code('        const ${cls}Params &>::value>>')
+        code('{')
+        code('  public:')
+        code('    using Params = ${cls}Params;')
+        code('    static ${{cls.cxx_class}} *')
+        code('    create(const Params &p)')
+        code('    {')
+        code('        return new CxxClass(p);')
+        code('    }')
+        code('};')
+        code()
+        # This version diverts to the DummyParamsClass and a dummy
+        # implementation of create if the appropriate constructor does not
+        # exist.
+        code('template <class CxxClass>')
+        code('class Dummy${cls}Shunt<CxxClass, std::enable_if_t<')
+        code('    !std::is_constructible<CxxClass,')
+        code('        const ${cls}Params &>::value>>')
+        code('{')
+        code('  public:')
+        code('    using Params = Dummy${cls}ParamsClass;')
+        code('    static ${{cls.cxx_class}} *')
+        code('    create(const Params &p)')
+        code('    {')
+        code('        return nullptr;')
+        code('    }')
+        code('};')
+        code()
+        code('} // anonymous namespace')
+        code()
+        # An implementation of either the real Params struct's create
+        # method, or the Dummy one. Either an implementation is
+        # mandantory since this was shunted off to the dummy class, or
+        # one is optional which will override this weak version.
+        code('M5_VAR_USED ${{cls.cxx_class}} *')
+        code('Dummy${cls}Shunt<${{cls.cxx_class}}>::Params::create() const')
+        code('{')
+        code('    return Dummy${cls}Shunt<${{cls.cxx_class}}>::')
+        code('        create(*this);')
+        code('}')
+
+
     def pybind_decl(cls, code):
         py_class_name = cls.pybind_class
 
@@ -713,9 +787,6 @@ class MetaSimObject(type):
         code('''#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include <type_traits>
-
-#include "base/compiler.hh"
 #include "params/$cls.hh"
 #include "python/pybind11/core.hh"
 #include "sim/init.hh"
@@ -797,76 +868,6 @@ module_init(py::module_ &m_internal)
         code()
         code('static EmbeddedPyBind embed_obj("${0}", module_init, "${1}");',
              cls, cls._base.type if cls._base else "")
-        if not hasattr(cls, 'abstract') or not cls.abstract:
-            if 'type' in cls.__dict__:
-                code()
-                # This namespace can't *actually* be anonymous, or the compiler
-                # gets upset about having a weak symbol init.
-                code('namespace anonymous_params')
-                code('{')
-                code()
-                # If we can't define a default create() method for this params
-                # struct because the SimObject doesn't have the right
-                # constructor, use template magic to make it so we're actually
-                # defining a create method for this class instead.
-                code('class Dummy${cls}ParamsClass')
-                code('{')
-                code('  public:')
-                code('    ${{cls.cxx_class}} *create() const;')
-                code('};')
-                code()
-                code('template <class CxxClass, class Enable=void>')
-                code('class DummyShunt;')
-                code()
-                # This version directs to the real Params struct and the
-                # default behavior of create if there's an appropriate
-                # constructor.
-                code('template <class CxxClass>')
-                code('class DummyShunt<CxxClass, std::enable_if_t<')
-                code('    std::is_constructible<CxxClass,')
-                code('        const ${cls}Params &>::value>>')
-                code('{')
-                code('  public:')
-                code('    using Params = ${cls}Params;')
-                code('    static ${{cls.cxx_class}} *')
-                code('    create(const Params &p)')
-                code('    {')
-                code('        return new CxxClass(p);')
-                code('    }')
-                code('};')
-                code()
-                # This version diverts to the DummyParamsClass and a dummy
-                # implementation of create if the appropriate constructor does
-                # not exist.
-                code('template <class CxxClass>')
-                code('class DummyShunt<CxxClass, std::enable_if_t<')
-                code('    !std::is_constructible<CxxClass,')
-                code('        const ${cls}Params &>::value>>')
-                code('{')
-                code('  public:')
-                code('    using Params = Dummy${cls}ParamsClass;')
-                code('    static ${{cls.cxx_class}} *')
-                code('    create(const Params &p)')
-                code('    {')
-                code('        return nullptr;')
-                code('    }')
-                code('};')
-                code()
-                code('} // namespace anonymous_params')
-                code()
-                code('using namespace anonymous_params;')
-                code()
-                # A weak implementation of either the real Params struct's
-                # create method, or the Dummy one if we don't want to have
-                # any default implementation. Either an implementation is
-                # mandantory since this was shunted off to the dummy class, or
-                # one is optional which will override this weak version.
-                code('M5_WEAK ${{cls.cxx_class}} *')
-                code('DummyShunt<${{cls.cxx_class}}>::Params::create() const')
-                code('{')
-                code('    return DummyShunt<${{cls.cxx_class}}>::')
-                code('        create(*this);')
-                code('}')
 
     _warned_about_nested_templates = False
 

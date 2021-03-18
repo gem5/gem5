@@ -43,12 +43,6 @@ CpuThread::CpuThread(const Params &p)
     assert(numLanes == 1);
 }
 
-CpuThread*
-CpuThreadParams::create() const
-{
-    return new CpuThread(*this);
-}
-
 void
 CpuThread::issueLoadOps()
 {

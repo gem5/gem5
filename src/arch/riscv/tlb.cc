@@ -519,3 +519,9 @@ TLB::TlbStats::TlbStats(Stats::Group *parent)
              readAccesses + writeAccesses)
 {
 }
+
+Port *
+TLB::getTableWalkerPort()
+{
+    return &walker->getPort("port");
+}

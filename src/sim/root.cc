@@ -166,7 +166,7 @@ Root::timeSyncSpinThreshold(Time newThreshold)
     timeSyncEnable(en);
 }
 
-Root::Root(const RootParams &p)
+Root::Root(const RootParams &p, int)
     : SimObject(p), _enabled(false), _periodTick(p.time_sync_period),
       syncEvent([this]{ timeSync(); }, name())
 {
@@ -216,5 +216,5 @@ RootParams::create() const
     FullSystem = full_system;
     FullSystemInt = full_system ? 1 : 0;
 
-    return new Root(*this);
+    return new Root(*this, 0);
 }

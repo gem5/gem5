@@ -354,17 +354,18 @@ Plic::readClaim(Register32& reg, const int context_id)
                 context_id, max_int_id);
             clear(max_int_id);
             reg.update(max_int_id);
+            return reg.get();
         } else {
             DPRINTF(Plic,
                 "Claim already cleared - context: %d, interrupt ID: %d\n",
                 context_id, max_int_id);
-            reg.update(0);
+            return 0;
         }
     } else {
-        warn("PLIC claim failed (not completed) - context: %d", context_id);
-        reg.update(0);
+        warn("PLIC claim repeated (not completed) - context: %d, last: %d",
+            context_id, lastID[context_id]);
+        return lastID[context_id];
     }
-    return reg.get();
 }
 
 void
@@ -381,6 +382,7 @@ Plic::writeClaim(Register32& reg, const uint32_t& data, const int context_id)
     DPRINTF(Plic,
         "Complete - context: %d, interrupt ID: %d\n",
         context_id, reg.get());
+    updateInt();
 }
 
 void
@@ -445,11 +447,11 @@ Plic::updateInt()
         uint32_t max_id = output.maxID[i];
         uint32_t priority = output.maxPriority[i];
         uint32_t threshold = registers.threshold[i].get();
-        if (priority > threshold && max_id > 0) {
+        if (priority > threshold && max_id > 0 && lastID[i] == 0) {
             DPRINTF(Plic,
                 "Int posted - thread: %d, int id: %d, ",
                 thread_id, int_id);
-            DPRINTF(Plic,
+            DPRINTFR(Plic,
                 "pri: %d, thres: %d\n", priority, threshold);
             intrctrl->post(thread_id, int_id, 0);
         } else {
@@ -457,7 +459,7 @@ Plic::updateInt()
                 DPRINTF(Plic,
                     "Int filtered - thread: %d, int id: %d, ",
                     thread_id, int_id);
-                DPRINTF(Plic,
+                DPRINTFR(Plic,
                     "pri: %d, thres: %d\n", priority, threshold);
             }
             intrctrl->clear(thread_id, int_id, 0);
@@ -499,6 +501,12 @@ Plic::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(n_outputs);
     SERIALIZE_CONTAINER(output.maxID);
     SERIALIZE_CONTAINER(output.maxPriority);
+    SERIALIZE_CONTAINER(pendingPriority);
+    for (int i=0; i < effPriority.size(); i++) {
+        arrayParamOut(cp, std::string("effPriority") +
+            std::to_string(i), effPriority[i]);
+    }
+    SERIALIZE_CONTAINER(lastID);
 }
 
 void
@@ -541,4 +549,11 @@ Plic::unserialize(CheckpointIn &cp)
     }
     UNSERIALIZE_CONTAINER(output.maxID);
     UNSERIALIZE_CONTAINER(output.maxPriority);
+    UNSERIALIZE_CONTAINER(pendingPriority);
+    for (int i=0; i < effPriority.size(); i++) {
+        arrayParamIn(cp, std::string("effPriority") +
+            std::to_string(i), effPriority[i]);
+    }
+    UNSERIALIZE_CONTAINER(lastID);
+    updateInt();
 }

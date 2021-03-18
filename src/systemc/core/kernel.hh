@@ -46,7 +46,7 @@ class Kernel : public SimObject
 {
   public:
     typedef SystemC_KernelParams Params;
-    Kernel(const Params &params);
+    Kernel(const Params &params, int);
 
     void init() override;
     void regStats() override;

@@ -1,9 +1,16 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2007 MIPS Technologies, Inc.
-# Copyright (c) 2020 Barkhausen Institut
-# Copyright (c) 2021 Huawei International
+# Copyright (c) 2021 ARM Limited
 # All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -28,29 +35,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.proxy import *
+Import('*')
 
-from m5.objects.BaseTLB import BaseTLB
-from m5.objects.ClockedObject import ClockedObject
+# Register this protocol with gem5/SCons
 
-class RiscvPagetableWalker(ClockedObject):
-    type = 'RiscvPagetableWalker'
-    cxx_class = 'RiscvISA::Walker'
-    cxx_header = 'arch/riscv/pagetable_walker.hh'
-    port = RequestPort("Port for the hardware table walker")
-    system = Param.System(Parent.any, "system object")
-    num_squash_per_cycle = Param.Unsigned(4,
-            "Number of outstanding walks that can be squashed per cycle")
-    # Grab the pma_checker from the MMU
-    pma_checker = Param.PMAChecker(Parent.any, "PMA Checker")
+all_protocols.append('CHI')
 
-class RiscvTLB(BaseTLB):
-    type = 'RiscvTLB'
-    cxx_class = 'RiscvISA::TLB'
-    cxx_header = 'arch/riscv/tlb.hh'
-    size = Param.Int(64, "TLB size")
-    walker = Param.RiscvPagetableWalker(\
-            RiscvPagetableWalker(), "page table walker")
-    # Grab the pma_checker from the MMU
-    pma_checker = Param.PMAChecker(Parent.any, "PMA Checker")
+# CHI requires Ruby's inerface to support partial functional reads
+need_partial_func_reads.append('CHI')
+
+protocol_dirs.append(Dir('.').abspath)

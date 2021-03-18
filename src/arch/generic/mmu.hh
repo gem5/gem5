@@ -103,7 +103,7 @@ class BaseMMU : public SimObject
         return getTlb(mode)->finalizePhysical(req, tc, mode);
     }
 
-    void takeOverFrom(BaseMMU *old_mmu);
+    virtual void takeOverFrom(BaseMMU *old_mmu);
 
   public:
     BaseTLB* dtb;

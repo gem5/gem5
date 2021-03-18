@@ -54,7 +54,7 @@ bool Kernel::endOfSimulationComplete() { return endComplete; }
 sc_core::sc_status Kernel::status() { return _status; }
 void Kernel::status(sc_core::sc_status s) { _status = s; }
 
-Kernel::Kernel(const Params &params) :
+Kernel::Kernel(const Params &params, int) :
     SimObject(params), t0Event(this, false, EventBase::Default_Pri - 1)
 {
     // Install ourselves as the scheduler's event manager.
@@ -187,6 +187,6 @@ SystemC_KernelParams::create() const
 {
     panic_if(sc_gem5::kernel,
             "Only one systemc kernel object may be defined.\n");
-    sc_gem5::kernel = new sc_gem5::Kernel(*this);
+    sc_gem5::kernel = new sc_gem5::Kernel(*this, 0);
     return sc_gem5::kernel;
 }

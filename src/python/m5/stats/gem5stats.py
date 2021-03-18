@@ -230,7 +230,7 @@ def _prepare_stats(group: _m5.stats.Group):
     for stat in group.getStats():
         stat.prepare()
 
-    for child in getStatGroups().values():
+    for child in group.getStatGroups().values():
         _prepare_stats(child)
 
 

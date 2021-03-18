@@ -211,7 +211,7 @@ RemoteGDB::RiscvGdbRegCache::getRegs(ThreadContext *context)
     // U mode CSR
     r.ustatus = context->readMiscRegNoEffect(
         CSRData.at(CSR_USTATUS).physIndex) & CSRMasks.at(CSR_USTATUS);
-    r.uie = context->readMiscRegNoEffect(
+    r.uie = context->readMiscReg(
         CSRData.at(CSR_UIE).physIndex) & CSRMasks.at(CSR_UIE);
     r.utvec = context->readMiscRegNoEffect(
         CSRData.at(CSR_UTVEC).physIndex);
@@ -223,7 +223,7 @@ RemoteGDB::RiscvGdbRegCache::getRegs(ThreadContext *context)
         CSRData.at(CSR_UCAUSE).physIndex);
     r.utval = context->readMiscRegNoEffect(
         CSRData.at(CSR_UTVAL).physIndex);
-    r.uip = context->readMiscRegNoEffect(
+    r.uip = context->readMiscReg(
         CSRData.at(CSR_UIP).physIndex) & CSRMasks.at(CSR_UIP);
 
     // S mode CSR
@@ -233,7 +233,7 @@ RemoteGDB::RiscvGdbRegCache::getRegs(ThreadContext *context)
         CSRData.at(CSR_SEDELEG).physIndex);
     r.sideleg = context->readMiscRegNoEffect(
         CSRData.at(CSR_SIDELEG).physIndex);
-    r.sie = context->readMiscRegNoEffect(
+    r.sie = context->readMiscReg(
         CSRData.at(CSR_SIE).physIndex) & CSRMasks.at(CSR_SIE);
     r.stvec = context->readMiscRegNoEffect(
         CSRData.at(CSR_STVEC).physIndex);
@@ -247,7 +247,7 @@ RemoteGDB::RiscvGdbRegCache::getRegs(ThreadContext *context)
         CSRData.at(CSR_SCAUSE).physIndex);
     r.stval = context->readMiscRegNoEffect(
         CSRData.at(CSR_STVAL).physIndex);
-    r.sip = context->readMiscRegNoEffect(
+    r.sip = context->readMiscReg(
         CSRData.at(CSR_SIP).physIndex) & CSRMasks.at(CSR_SIP);
     r.satp = context->readMiscRegNoEffect(
         CSRData.at(CSR_SATP).physIndex);
@@ -269,7 +269,7 @@ RemoteGDB::RiscvGdbRegCache::getRegs(ThreadContext *context)
         CSRData.at(CSR_MEDELEG).physIndex);
     r.mideleg = context->readMiscRegNoEffect(
         CSRData.at(CSR_MIDELEG).physIndex);
-    r.mie = context->readMiscRegNoEffect(
+    r.mie = context->readMiscReg(
         CSRData.at(CSR_MIE).physIndex) & CSRMasks.at(CSR_MIE);
     r.mtvec = context->readMiscRegNoEffect(
         CSRData.at(CSR_MTVEC).physIndex);
@@ -283,7 +283,7 @@ RemoteGDB::RiscvGdbRegCache::getRegs(ThreadContext *context)
         CSRData.at(CSR_MCAUSE).physIndex);
     r.mtval = context->readMiscRegNoEffect(
         CSRData.at(CSR_MTVAL).physIndex);
-    r.mip = context->readMiscRegNoEffect(
+    r.mip = context->readMiscReg(
         CSRData.at(CSR_MIP).physIndex) & CSRMasks.at(CSR_MIP);
 
     // H mode CSR (to be implemented)
@@ -340,11 +340,11 @@ RemoteGDB::RiscvGdbRegCache::setRegs(ThreadContext *context) const
     newVal = (oldVal & ~mask) | (r.ustatus & mask);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_USTATUS).physIndex, newVal);
-    oldVal = context->readMiscRegNoEffect(
+    oldVal = context->readMiscReg(
         CSRData.at(CSR_UIE).physIndex);
     mask = CSRMasks.at(CSR_UIE);
     newVal = (oldVal & ~mask) | (r.uie & mask);
-    context->setMiscRegNoEffect(
+    context->setMiscReg(
         CSRData.at(CSR_UIE).physIndex, newVal);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_UTVEC).physIndex, r.utvec);
@@ -356,11 +356,11 @@ RemoteGDB::RiscvGdbRegCache::setRegs(ThreadContext *context) const
         CSRData.at(CSR_UCAUSE).physIndex, r.ucause);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_UTVAL).physIndex, r.utval);
-    oldVal = context->readMiscRegNoEffect(
+    oldVal = context->readMiscReg(
         CSRData.at(CSR_UIP).physIndex);
     mask = CSRMasks.at(CSR_UIP);
     newVal = (oldVal & ~mask) | (r.uip & mask);
-    context->setMiscRegNoEffect(
+    context->setMiscReg(
         CSRData.at(CSR_UIP).physIndex, newVal);
 
     // S mode CSR
@@ -374,11 +374,11 @@ RemoteGDB::RiscvGdbRegCache::setRegs(ThreadContext *context) const
         CSRData.at(CSR_SEDELEG).physIndex, r.sedeleg);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_SIDELEG).physIndex, r.sideleg);
-    oldVal = context->readMiscRegNoEffect(
+    oldVal = context->readMiscReg(
         CSRData.at(CSR_SIE).physIndex);
     mask = CSRMasks.at(CSR_SIE);
     newVal = (oldVal & ~mask) | (r.sie & mask);
-    context->setMiscRegNoEffect(
+    context->setMiscReg(
         CSRData.at(CSR_SIE).physIndex, newVal);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_STVEC).physIndex, r.stvec);
@@ -392,11 +392,11 @@ RemoteGDB::RiscvGdbRegCache::setRegs(ThreadContext *context) const
         CSRData.at(CSR_SCAUSE).physIndex, r.scause);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_STVAL).physIndex, r.stval);
-    oldVal = context->readMiscRegNoEffect(
+    oldVal = context->readMiscReg(
         CSRData.at(CSR_SIP).physIndex);
     mask = CSRMasks.at(CSR_SIP);
     newVal = (oldVal & ~mask) | (r.sip & mask);
-    context->setMiscRegNoEffect(
+    context->setMiscReg(
         CSRData.at(CSR_SIP).physIndex, newVal);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_SATP).physIndex, r.satp);
@@ -426,11 +426,11 @@ RemoteGDB::RiscvGdbRegCache::setRegs(ThreadContext *context) const
         CSRData.at(CSR_MEDELEG).physIndex, r.medeleg);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_MIDELEG).physIndex, r.mideleg);
-    oldVal = context->readMiscRegNoEffect(
+    oldVal = context->readMiscReg(
         CSRData.at(CSR_MIE).physIndex);
     mask = CSRMasks.at(CSR_MIE);
     newVal = (oldVal & ~mask) | (r.mie & mask);
-    context->setMiscRegNoEffect(
+    context->setMiscReg(
         CSRData.at(CSR_MIE).physIndex, newVal);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_MTVEC).physIndex, r.mtvec);
@@ -444,11 +444,11 @@ RemoteGDB::RiscvGdbRegCache::setRegs(ThreadContext *context) const
         CSRData.at(CSR_MCAUSE).physIndex, r.mcause);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_MTVAL).physIndex, r.mtval);
-    oldVal = context->readMiscRegNoEffect(
+    oldVal = context->readMiscReg(
         CSRData.at(CSR_MIP).physIndex);
     mask = CSRMasks.at(CSR_MIP);
     newVal = (oldVal & ~mask) | (r.mip & mask);
-    context->setMiscRegNoEffect(
+    context->setMiscReg(
         CSRData.at(CSR_MIP).physIndex, newVal);
 
     // H mode CSR (to be implemented)

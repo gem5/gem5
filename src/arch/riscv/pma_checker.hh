@@ -74,6 +74,8 @@ class PMAChecker : public SimObject
     bool isUncacheable(const AddrRange &range);
     bool isUncacheable(const Addr &addr, const unsigned size);
     bool isUncacheable(PacketPtr pkt);
+
+    void takeOverFrom(PMAChecker *old);
 };
 
 #endif // __ARCH_RISCV_PMA_CHECKER_HH__

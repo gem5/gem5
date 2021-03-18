@@ -262,7 +262,9 @@ enumeration(MachineType, desc="...", default="MachineType_NULL") {
     TCCdir,      desc="Directory at the GPU L2 Cache (TCC)";
     SQC,         desc="GPU L1 Instr Cache (Sequencer Cache)";
     RegionDir,   desc="Region-granular directory";
-    RegionBuffer,desc="Region buffer for CPU and GPU";
+    RegionBuffer, desc="Region buffer for CPU and GPU";
+    Cache,       desc="Generic coherent cache controller";
+    Memory,      desc="Memory controller interface";
     NULL,        desc="null mach type";
 }
 

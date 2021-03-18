@@ -134,7 +134,9 @@ class Root : public SimObject
 
     PARAMS(Root);
 
-    Root(const Params &p);
+    // The int parameter is ignored, it's just so we can define a custom
+    // create() method.
+    Root(const Params &p, int);
 
     /** Schedule the timesync event at startup().
      */

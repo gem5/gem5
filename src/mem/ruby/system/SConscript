@@ -45,9 +45,6 @@ if env['PROTOCOL'] == 'None':
 
 env.Append(CPPDEFINES=['PROTOCOL_' + env['PROTOCOL']])
 
-# list of protocols that require the partial functional read interface
-need_partial_func_reads = []
-
 if env['PROTOCOL'] in need_partial_func_reads:
     env.Append(CPPDEFINES=['PARTIAL_FUNC_READS'])
 

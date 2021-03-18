@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2018-2019 ARM Limited
+ * Copyright (c) 2014, 2018-2019, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -67,7 +67,7 @@ class SMMUv3BaseCache
 
     struct SMMUv3BaseCacheStats : public Stats::Group
     {
-        SMMUv3BaseCacheStats(Stats::Group *parent);
+        SMMUv3BaseCacheStats(Stats::Group *parent, const std::string &name);
 
         Stats::Formula averageLookups;
         Stats::Scalar totalLookups;
@@ -87,7 +87,7 @@ class SMMUv3BaseCache
 
   public:
     SMMUv3BaseCache(const std::string &policy_name, uint32_t seed,
-                    Stats::Group *parent);
+                    Stats::Group *parent, const std::string &name);
     virtual ~SMMUv3BaseCache() {}
 };
 
@@ -122,7 +122,8 @@ class SMMUTLB : public SMMUv3BaseCache
     };
 
     SMMUTLB(unsigned numEntries, unsigned _associativity,
-            const std::string &policy, Stats::Group *parent);
+            const std::string &policy, Stats::Group *parent,
+            const std::string &name);
     SMMUTLB(const SMMUTLB& tlb) = delete;
     virtual ~SMMUTLB() {}
 
@@ -324,22 +325,20 @@ class WalkCache : public SMMUv3BaseCache
     struct WalkCacheStats : public Stats::Group
     {
         WalkCacheStats(Stats::Group *parent);
+        ~WalkCacheStats();
 
-        unsigned int lookupsByStageLevel[2][WALK_CACHE_LEVELS];
-        Stats::Formula averageLookupsByStageLevel[2][WALK_CACHE_LEVELS];
-        Stats::Scalar totalLookupsByStageLevel[2][WALK_CACHE_LEVELS];
+        std::vector<Stats::Formula*> averageLookupsByStageLevel;
+        Stats::Vector2d totalLookupsByStageLevel;
 
-        unsigned int missesByStageLevel[2][WALK_CACHE_LEVELS];
-        Stats::Formula averageMissesByStageLevel[2][WALK_CACHE_LEVELS];
-        Stats::Scalar totalMissesByStageLevel[2][WALK_CACHE_LEVELS];
+        std::vector<Stats::Formula*> averageMissesByStageLevel;
+        Stats::Vector2d totalMissesByStageLevel;
 
-        unsigned int updatesByStageLevel[2][WALK_CACHE_LEVELS];
-        Stats::Formula averageUpdatesByStageLevel[2][WALK_CACHE_LEVELS];
-        Stats::Scalar totalUpdatesByStageLevel[2][WALK_CACHE_LEVELS];
+        std::vector<Stats::Formula*> averageUpdatesByStageLevel;
+        Stats::Vector2d totalUpdatesByStageLevel;
 
-        Stats::Formula averageHitRateByStageLevel[2][WALK_CACHE_LEVELS];
+        std::vector<Stats::Formula*> averageHitRateByStageLevel;
 
-        Stats::Scalar insertionsByStageLevel[2][WALK_CACHE_LEVELS];
+        Stats::Vector2d insertionsByStageLevel;
     } walkCacheStats;
   private:
     typedef std::vector<Entry> Set;
