@@ -917,12 +917,6 @@ ElasticTrace::TraceInfo::typeToStr() const
     return Record::RecordType_Name(type);
 }
 
-const std::string
-ElasticTrace::name() const
-{
-    return ProbeListenerObject::name();
-}
-
 void
 ElasticTrace::flushTraces()
 {

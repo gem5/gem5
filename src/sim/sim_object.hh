@@ -49,6 +49,7 @@
 #include <string>
 #include <vector>
 
+#include "base/named.hh"
 #include "base/stats/group.hh"
 #include "params/SimObject.hh"
 #include "sim/drain.hh"
@@ -140,7 +141,7 @@ class SimObjectResolver;
  * \endcode
  */
 class SimObject : public EventManager, public Serializable, public Drainable,
-                  public statistics::Group
+                  public statistics::Group, public Named
 {
   private:
     typedef std::vector<SimObject *> SimObjectList;
@@ -179,12 +180,6 @@ class SimObject : public EventManager, public Serializable, public Drainable,
     virtual ~SimObject();
 
   public:
-
-    /**
-     * @ingroup api_simobject
-     */
-    virtual const std::string name() const { return params().name; }
-
     /**
      * init() is called after all C++ SimObjects have been created and
      * all ports are connected.  Initializations that are independent

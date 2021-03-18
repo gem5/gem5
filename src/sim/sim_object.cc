@@ -54,7 +54,7 @@ SimObjectResolver *SimObject::_objNameResolver = NULL;
 //
 SimObject::SimObject(const Params &p)
     : EventManager(getEventQueue(p.eventq_index)),
-      statistics::Group(nullptr),
+      statistics::Group(nullptr), Named(p.name),
       _params(p)
 {
 #ifdef DEBUG

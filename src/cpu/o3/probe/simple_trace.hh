@@ -63,8 +63,7 @@ class SimpleTrace : public ProbeListenerObject
     /** Register the probe listeners. */
     void regProbeListeners() override;
 
-    /** Returns the name of the trace. */
-    const std::string
+    std::string
     name() const override
     {
         return ProbeListenerObject::name() + ".trace";

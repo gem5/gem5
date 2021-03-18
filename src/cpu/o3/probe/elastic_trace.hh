@@ -109,9 +109,6 @@ class ElasticTrace : public ProbeListenerObject
     /** Register all listeners. */
     void regEtraceListeners();
 
-    /** Returns the name of the trace probe listener. */
-    const std::string name() const;
-
     /**
      * Process any outstanding trace records, flush them out to the protobuf
      * output streams and delete the streams at simulation exit.
