@@ -42,10 +42,10 @@ class SimStat(JsonSerializable):
     simulated_begin_time: Optional[Union[int, float]]
     simulated_end_time: Optional[Union[int, float]]
 
-    def __init__(self, creation_time: Optional[datetime],
-                 time_conversion: Optional[TimeConversion],
-                 simulated_begin_time: Optional[Union[int, float]],
-                 simulated_end_time: Optional[Union[int, float]],
+    def __init__(self, creation_time: Optional[datetime] = None,
+                 time_conversion: Optional[TimeConversion] = None,
+                 simulated_begin_time: Optional[Union[int, float]] = None,
+                 simulated_end_time: Optional[Union[int, float]] = None,
                  **kwargs: Dict[str, Union[Group,Statistic,List[Group]]]):
         self.creation_time = creation_time
         self.time_conversion = time_conversion
