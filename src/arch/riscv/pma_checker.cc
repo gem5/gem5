@@ -54,7 +54,7 @@ void
 PMAChecker::check(const RequestPtr &req)
 {
     if (isUncacheable(req->getPaddr(), req->getSize())) {
-        req->setFlags(Request::UNCACHEABLE);
+        req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
     }
 }
 
