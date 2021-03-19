@@ -78,10 +78,10 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     dma_cntrl_nodes = []
 
     assert (options.num_cpus % options.num_clusters == 0)
-    num_cpus_per_cluster = options.num_cpus / options.num_clusters
+    num_cpus_per_cluster = options.num_cpus // options.num_clusters
 
     assert (options.num_l2caches % options.num_clusters == 0)
-    num_l2caches_per_cluster = options.num_l2caches / options.num_clusters
+    num_l2caches_per_cluster = options.num_l2caches // options.num_clusters
 
     l2_bits = int(math.log(num_l2caches_per_cluster, 2))
     block_size_bits = int(math.log(options.cacheline_size, 2))
@@ -141,7 +141,6 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                    ruby_system = ruby_system)
 
             cpu_seq = RubyHTMSequencer(version = i * num_cpus_per_cluster + j,
-                                       icache = l0i_cache,
                                        clk_domain = clk_domain,
                                        dcache = l0d_cache,
                                        ruby_system = ruby_system)

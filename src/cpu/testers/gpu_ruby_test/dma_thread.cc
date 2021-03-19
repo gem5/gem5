@@ -48,12 +48,6 @@ DmaThread::~DmaThread()
 
 }
 
-DmaThread*
-DmaThreadParams::create() const
-{
-    return new DmaThread(*this);
-}
-
 void
 DmaThread::issueLoadOps()
 {

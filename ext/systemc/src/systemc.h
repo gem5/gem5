@@ -117,7 +117,7 @@
     using std::fputs;
     using std::getc;
     using std::getchar;
-    using std::gets;
+    //using std::gets;
     using std::putc;
     using std::putchar;
     using std::puts;

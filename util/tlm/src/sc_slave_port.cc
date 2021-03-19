@@ -301,7 +301,7 @@ SCSlavePort::pec(
             packet->makeResponse();
         }
         if (packet->isResponse()) {
-            need_retry = !bridgeResponsePort.sendTimingResp(packet);
+            need_retry = !sendTimingResp(packet);
         }
 
         if (need_retry) {

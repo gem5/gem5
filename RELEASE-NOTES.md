@@ -1,3 +1,16 @@
+# Version 20.1.0.5
+
+**[HOTFIX]** This hotfix release fixes three known bugs:
+
+* `src/python/m5/util/convert.py` incorrectly stated kibibytes as 'kiB' instead of 'KiB'. This has been fixed.
+* Atomic accesses were not checking the access permission bits in the page table descriptors. They were incorrectly using the nature of the request itself. This is now fixed.
+* `num_l2chaches_per_cluster` and `num_cpus_per_cluster` were cast to floats in `configs/ruby/MESI_Three_Level_HTM.py`, which caused errors. This has been fixed so they are correctly cast to integers.
+
+# Version 20.1.0.4
+
+**[HOTFIX]** [gem5 was failing to build with SCons 4.0.1 and 4.1.0](https://gem5.atlassian.net/browse/GEM5-916).
+This hotfix makes the necessary changes to `site_scons/site_tools/default.py` for gem5 to compile successfully on these versions of SCons.
+
 # Version 20.1.0.3
 
 **[HOTFIX]** A patch was apply to fix an [error where booting Linux stalled when using the ARM ISA](https://gem5.atlassian.net/browse/GEM5-901).

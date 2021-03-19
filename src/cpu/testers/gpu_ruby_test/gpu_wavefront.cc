@@ -48,12 +48,6 @@ GpuWavefront::~GpuWavefront()
 
 }
 
-GpuWavefront*
-GpuWavefrontParams::create() const
-{
-    return new GpuWavefront(*this);
-}
-
 void
 GpuWavefront::issueLoadOps()
 {
