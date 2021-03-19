@@ -1516,7 +1516,8 @@ getsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
                VPtr<> lenPtr)
 {
     // union of all possible return value types from getsockopt
-    union val {
+    union val
+    {
         int i_val;
         long l_val;
         struct linger linger_val;

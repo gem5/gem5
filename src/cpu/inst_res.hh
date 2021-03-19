@@ -46,7 +46,8 @@
 class InstResult
 {
   public:
-    union MultiResult {
+    union MultiResult
+    {
         uint64_t integer;
         double dbl;
         TheISA::VecRegContainer vector;

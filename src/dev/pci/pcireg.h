@@ -64,7 +64,8 @@ BitUnion16(PciCommandRegister)
     Bitfield<0> ioSpace;
 EndBitUnion(PciCommandRegister)
 
-union PCIConfig {
+union PCIConfig
+{
     uint8_t data[64];
 
     struct {
@@ -216,7 +217,8 @@ union PCIConfig {
  *  Defines the Power Management capability register and all its associated
  *  bitfields for a PCIe device.
  */
-union PMCAP {
+union PMCAP
+{
     uint8_t data[6];
     struct {
         uint16_t pid;  /* 0:7  cid
@@ -249,7 +251,8 @@ union PMCAP {
  *  can be filled in if a device model supports both, but only 1 of
  *  MSI/MSIX/INTx interrupt mode can be selected at a given time.
  */
-union MSICAP {
+union MSICAP
+{
     uint8_t data[24];
     struct {
         uint16_t mid;  /* 0:7  cid
@@ -276,7 +279,8 @@ union MSICAP {
  *  Defines the MSI-X Capability register and its associated bitfields for
  *  a PCIe device.
  */
-union MSIXCAP {
+union MSIXCAP
+{
     uint8_t data[12];
     struct {
         uint16_t mxid; /* 0:7  cid
@@ -296,7 +300,8 @@ union MSIXCAP {
     };
 };
 
-union MSIXTable {
+union MSIXTable
+{
     struct {
         uint32_t addr_lo;
         uint32_t addr_hi;

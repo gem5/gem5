@@ -194,7 +194,8 @@ let {{
         regs = (size + 3) // 4
         subst = { "size" : size, "regs" : regs }
         memDecl = '''
-        union MemUnion {
+        union MemUnion
+        {
             uint8_t bytes[%(size)d];
             Element elements[%(size)d / sizeof(Element)];
             uint32_t floatRegBits[%(regs)d];
@@ -312,7 +313,8 @@ let {{
             const unsigned regs = 2 * dRegs;
             const unsigned perDReg =
                 (2 * sizeof(uint32_t)) / sizeof(Element);
-            union convStruct {
+            union convStruct
+            {
                 uint32_t cRegs[regs];
                 Element elements[dRegs * perDReg];
             } conv1, conv2;
@@ -358,7 +360,8 @@ let {{
             const unsigned regs = 2 * dRegs;
             const unsigned perDReg =
                 (2 * sizeof(uint32_t)) / sizeof(Element);
-            union convStruct {
+            union convStruct
+            {
                 uint32_t cRegs[regs];
                 Element elements[dRegs * perDReg];
             } conv1, conv2;
@@ -431,12 +434,14 @@ let {{
             microUnpackNeonCode = '''
             const unsigned perDReg = (2 * sizeof(uint32_t)) / sizeof(Element);
 
-            union SourceRegs {
+            union SourceRegs
+            {
                 uint32_t fRegs[2 * %(sRegs)d];
                 Element elements[%(sRegs)d * perDReg];
             } sourceRegs;
 
-            union DestReg {
+            union DestReg
+            {
                 uint32_t fRegs[2];
                 Element elements[perDReg];
             } destRegs[%(dRegs)d];
@@ -479,12 +484,14 @@ let {{
             microUnpackAllNeonCode = '''
             const unsigned perDReg = (2 * sizeof(uint32_t)) / sizeof(Element);
 
-            union SourceRegs {
+            union SourceRegs
+            {
                 uint32_t fRegs[2 * %(sRegs)d];
                 Element elements[%(sRegs)d * perDReg];
             } sourceRegs;
 
-            union DestReg {
+            union DestReg
+            {
                 uint32_t fRegs[2];
                 Element elements[perDReg];
             } destRegs[%(dRegs)d];
@@ -529,12 +536,14 @@ let {{
             const unsigned perDReg =
                 (2 * sizeof(uint32_t)) / sizeof(Element);
 
-            union SourceReg {
+            union SourceReg
+            {
                 uint32_t fRegs[2];
                 Element elements[perDReg];
             } sourceRegs[%(sRegs)d];
 
-            union DestRegs {
+            union DestRegs
+            {
                 uint32_t fRegs[2 * %(dRegs)d];
                 Element elements[%(dRegs)d * perDReg];
             } destRegs;

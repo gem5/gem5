@@ -59,7 +59,8 @@ let {{
         '''
         memDecl = '''
             const int MaxNumBytes = 16;
-            union MemUnion {
+            union MemUnion
+            {
                 uint8_t bytes[MaxNumBytes];
                 uint32_t floatRegBits[MaxNumBytes / 4];
             };

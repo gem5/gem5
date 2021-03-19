@@ -1635,7 +1635,8 @@ namespace Gcn3ISA
         unsigned int   SRC1_ABS : 1;
     };
 
-    union InstFormat {
+    union InstFormat
+    {
         InFmt_DS            iFmt_DS;
         InFmt_DS_1          iFmt_DS_1;
         InFmt_EXP           iFmt_EXP;

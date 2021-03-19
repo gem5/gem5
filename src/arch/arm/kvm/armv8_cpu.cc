@@ -81,7 +81,8 @@ kvmFPReg(const int num)
         (SIMD_REG(fp_regs.vregs[1]) - SIMD_REG(fp_regs.vregs[0])) * num;
 }
 
-union KvmFPReg {
+union KvmFPReg
+{
     union {
         uint32_t i;
         float f;
