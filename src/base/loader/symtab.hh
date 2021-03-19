@@ -348,8 +348,9 @@ class SymbolTable
     }
 
     /**
-     * Find the nearest symbol equal to or less than the supplied
-     * address (e.g., the label for the enclosing function).
+     * Find the nearest symbol equal to or less than the supplied address
+     * (e.g., the label for the enclosing function). If there is no valid
+     * next address, next_addr is assigned 0.
      *
      * @param addr      The address to look up.
      * @param next_addr Address of following symbol (to determine the valid
@@ -363,7 +364,13 @@ class SymbolTable
         if (!upperBound(addr, i))
             return end();
 
-        next_addr = i->first;
+        // If there is no next address, make it 0 since 0 is not larger than
+        // any other address, so it is clear that next is not valid
+        if (i == addrMap.end()) {
+            next_addr = 0;
+        } else {
+            next_addr = i->first;
+        }
         --i;
         return symbols.begin() + i->second;
     }
