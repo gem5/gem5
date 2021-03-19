@@ -470,7 +470,7 @@ class ClassBraces(LineVerifier):
     test_name = 'class opening brace position'
     opt_name = 'classbrace'
 
-    regex = re.compile(r'\A(\s*)((class|struct)\s+[A-Z].*\S)\s*\{')
+    regex = re.compile(r'\A(\s*)((class|struct|enum)\s+[A-Z].*\S)\s*\{')
 
     def check_line(self, line, **kwargs):
         return self.regex.search(line) == None
