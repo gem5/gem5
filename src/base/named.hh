@@ -41,7 +41,7 @@ class Named
     Named(const std::string &name_) : _name(name_) { }
     virtual ~Named() = default;
 
-    virtual const std::string &name() const { return _name; }
+    virtual std::string name() const { return _name; }
 };
 
 #endif // __BASE_NAMED_HH__
