@@ -48,7 +48,8 @@ namespace X86ISA
 {
     M5_VAR_USED const Request::FlagsType SegmentFlagMask = mask(4);
     const int FlagShift = 4;
-    enum FlagBit {
+    enum FlagBit
+    {
         CPL0FlagBit = 1,
         AddrSizeFlagBit = 2,
         StoreCheck = 4

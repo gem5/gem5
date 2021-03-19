@@ -68,7 +68,8 @@ class FlashDevice : public AbstractNVM
 
   private:
     /** Defines the possible actions to the flash*/
-    enum Actions {
+    enum Actions
+    {
         ActionRead,
         ActionWrite,
         ActionErase,

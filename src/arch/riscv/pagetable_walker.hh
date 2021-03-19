@@ -81,7 +81,8 @@ namespace RiscvISA
         {
           friend class Walker;
           private:
-            enum State {
+            enum State
+            {
                 Ready,
                 Waiting,
                 Translate,

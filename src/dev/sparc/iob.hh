@@ -78,7 +78,8 @@ class Iob : public PioDevice
     Addr iobJBusSize;
     Tick pioDelay;
 
-    enum DeviceId {
+    enum DeviceId
+    {
         Interal = 0,
         Error = 1,
         SSI = 2,
@@ -104,7 +105,8 @@ class Iob : public PioDevice
         int source;
     };
 
-    enum Type {
+    enum Type
+    {
         Interrupt,
         Reset,
         Idle,

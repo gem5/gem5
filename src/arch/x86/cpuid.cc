@@ -33,7 +33,8 @@
 #include "cpu/thread_context.hh"
 
 namespace X86ISA {
-    enum StandardCpuidFunction {
+    enum StandardCpuidFunction
+    {
         VendorAndLargestStdFunc,
         FamilyModelStepping,
         CacheAndTLB,
@@ -45,7 +46,8 @@ namespace X86ISA {
         NumStandardCpuidFuncs
     };
 
-    enum ExtendedCpuidFunctions {
+    enum ExtendedCpuidFunctions
+    {
         VendorAndLargestExtFunc,
         FamilyModelSteppingBrandFeatures,
         NameString1,

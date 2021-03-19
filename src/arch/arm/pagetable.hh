@@ -69,7 +69,8 @@ struct PTE
 };
 
 // Lookup level
-enum LookupLevel {
+enum LookupLevel
+{
     L0 = 0,  // AArch64 only
     L1,
     L2,
@@ -81,13 +82,15 @@ enum LookupLevel {
 struct TlbEntry : public Serializable
 {
   public:
-    enum class MemoryType : std::uint8_t {
+    enum class MemoryType : std::uint8_t
+    {
         StronglyOrdered,
         Device,
         Normal
     };
 
-    enum class DomainType : std::uint8_t {
+    enum class DomainType : std::uint8_t
+    {
         NoAccess = 0,
         Client,
         Reserved,

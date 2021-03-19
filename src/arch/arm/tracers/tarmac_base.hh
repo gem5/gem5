@@ -63,7 +63,8 @@ class TarmacBaseRecord : public InstRecord
 {
   public:
     /** TARMAC trace record type. */
-    enum TarmacRecordType {
+    enum TarmacRecordType
+    {
         TARMAC_INST,
         TARMAC_REG,
         TARMAC_MEM,
@@ -97,7 +98,8 @@ class TarmacBaseRecord : public InstRecord
     /** TARMAC register trace record. */
     struct RegEntry
     {
-        enum RegElement {
+        enum RegElement
+        {
             Lo = 0,
             Hi = 1,
             // Max = (max SVE vector length) 2048b / 64 = 32

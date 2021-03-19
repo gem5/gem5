@@ -54,7 +54,8 @@ swap_byte(AuxVector<IntType> av)
     return av;
 }
 
-enum AuxiliaryVectorType {
+enum AuxiliaryVectorType
+{
     M5_AT_NULL = 0,        // End of vector.
     M5_AT_IGNORE = 1,      // Ignored.
     M5_AT_EXECFD = 2,      // File descriptor of program if interpreter used.

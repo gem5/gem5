@@ -50,21 +50,24 @@ class Intel8254Timer : public EventManager
         Bitfield<0> bcd;
     EndBitUnion(CtrlReg)
 
-    enum SelectVal {
+    enum SelectVal
+    {
         SelectCounter0,
         SelectCounter1,
         SelectCounter2,
         ReadBackCommand
     };
 
-    enum ReadWriteVal {
+    enum ReadWriteVal
+    {
         LatchCommand,
         LsbOnly,
         MsbOnly,
         TwoPhase
     };
 
-    enum ModeVal {
+    enum ModeVal
+    {
         InitTc,
         OneShot,
         RateGen,

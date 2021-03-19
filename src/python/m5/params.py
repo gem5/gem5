@@ -1328,7 +1328,8 @@ class MetaEnum(MetaParamValue):
 ''')
         if cls.is_class:
             code('''\
-enum class $name {
+enum class $name
+{
 ''')
         else:
             code('''\

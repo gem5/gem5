@@ -56,7 +56,8 @@
 using std::string;
 
 // Bus master IDE registers
-enum BMIRegOffset {
+enum BMIRegOffset
+{
     BMICommand = 0x0,
     BMIStatus = 0x2,
     BMIDescTablePtr = 0x4

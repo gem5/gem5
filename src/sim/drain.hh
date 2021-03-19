@@ -68,7 +68,8 @@ class Drainable;
  *
  * @ingroup api_drain
  */
-enum class DrainState {
+enum class DrainState
+{
     Running,  /**< Running normally */
     Draining, /**< Draining buffers pending serialization/handover */
     Drained,  /**< Buffers drained, ready for serialization/handover */

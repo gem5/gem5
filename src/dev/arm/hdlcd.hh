@@ -115,7 +115,8 @@ class HDLcd: public AmbaDmaDevice
 
   protected: // Register handling
     /** ARM HDLcd register offsets */
-    enum RegisterOffset {
+    enum RegisterOffset
+    {
         Version          = 0x0000,
         Int_RawStat      = 0x0010,
         Int_Clear        = 0x0014,

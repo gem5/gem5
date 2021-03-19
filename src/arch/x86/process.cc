@@ -723,7 +723,8 @@ X86Process::argsInit(int pageSize,
     // We want 16 byte alignment
     uint64_t align = 16;
 
-    enum X86CpuFeature {
+    enum X86CpuFeature
+    {
         X86_OnboardFPU = 1 << 0,
         X86_VirtualModeExtensions = 1 << 1,
         X86_DebuggingExtensions = 1 << 2,

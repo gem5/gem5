@@ -35,7 +35,8 @@
 #define __DEV_NS_GIGE_REG_H__
 
 /* Device Register Address Map */
-enum DeviceRegisterAddress {
+enum DeviceRegisterAddress
+{
     CR =                0x00,
     CFGR =              0x04,
     MEAR =              0x08,
@@ -78,7 +79,8 @@ enum DeviceRegisterAddress {
 };
 
 /* Chip Command Register */
-enum ChipCommandRegister {
+enum ChipCommandRegister
+{
      CR_TXE =           0x00000001,
      CR_TXD =           0x00000002,
      CR_RXE =           0x00000004,
@@ -90,7 +92,8 @@ enum ChipCommandRegister {
 };
 
 /* configuration register */
-enum ConfigurationRegisters {
+enum ConfigurationRegisters
+{
      CFGR_ZERO =        0x00000000,
      CFGR_LNKSTS =      0x80000000,
      CFGR_SPDSTS =      0x60000000,
@@ -126,7 +129,8 @@ enum ConfigurationRegisters {
 };
 
 /* EEPROM access register */
-enum EEPROMAccessRegister {
+enum EEPROMAccessRegister
+{
      MEAR_EEDI =        0x00000001,
      MEAR_EEDO =        0x00000002,
      MEAR_EECLK =       0x00000004,
@@ -137,7 +141,8 @@ enum EEPROMAccessRegister {
 };
 
 /* PCI test control register */
-enum PCITestControlRegister {
+enum PCITestControlRegister
+{
      PTSCR_EEBIST_FAIL =        0x00000001,
      PTSCR_EEBIST_EN =          0x00000002,
      PTSCR_EELOAD_EN =          0x00000004,
@@ -149,7 +154,8 @@ enum PCITestControlRegister {
 };
 
 /* interrupt status register */
-enum InterruptStatusRegister {
+enum InterruptStatusRegister
+{
      ISR_RESERVE =      0x80000000,
      ISR_TXDESC3 =      0x40000000,
      ISR_TXDESC2 =      0x20000000,
@@ -192,7 +198,8 @@ enum InterruptStatusRegister {
 };
 
 /* transmit configuration register */
-enum TransmitConfigurationRegister {
+enum TransmitConfigurationRegister
+{
      TX_CFG_CSI =       0x80000000,
      TX_CFG_HBI =       0x40000000,
      TX_CFG_MLB =       0x20000000,
@@ -214,7 +221,8 @@ enum TransmitConfigurationRegister {
 };
 
 /*general purpose I/O control register */
-enum GeneralPurposeIOControlRegister {
+enum GeneralPurposeIOControlRegister
+{
      GPIOR_UNUSED =     0xffff8000,
      GPIOR_GP5_IN =     0x00004000,
      GPIOR_GP4_IN =     0x00002000,
@@ -234,7 +242,8 @@ enum GeneralPurposeIOControlRegister {
 };
 
 /* receive configuration register */
-enum ReceiveConfigurationRegister {
+enum ReceiveConfigurationRegister
+{
      RX_CFG_AEP =       0x80000000,
      RX_CFG_ARP =       0x40000000,
      RX_CFG_STRIPCRC =  0x20000000,
@@ -248,7 +257,8 @@ enum ReceiveConfigurationRegister {
 };
 
 /* pause control status register */
-enum PauseControlStatusRegister {
+enum PauseControlStatusRegister
+{
      PCR_PSEN =         (1 << 31),
      PCR_PS_MCAST =     (1 << 30),
      PCR_PS_DA =        (1 << 29),
@@ -260,7 +270,8 @@ enum PauseControlStatusRegister {
 };
 
 /*receive filter/match control register */
-enum ReceiveFilterMatchControlRegister {
+enum ReceiveFilterMatchControlRegister
+{
      RFCR_RFEN =        0x80000000,
      RFCR_AAB =         0x40000000,
      RFCR_AAM =         0x20000000,
@@ -279,14 +290,16 @@ enum ReceiveFilterMatchControlRegister {
 };
 
 /* receive filter/match data register */
-enum ReceiveFilterMatchDataRegister {
+enum ReceiveFilterMatchDataRegister
+{
      RFDR_BMASK =       0x00030000,
      RFDR_RFDATA0 =     0x000000ff,
      RFDR_RFDATA1 =     0x0000ff00
 };
 
 /* management information base control register */
-enum ManagementInformationBaseControlRegister {
+enum ManagementInformationBaseControlRegister
+{
      MIBC_MIBS =        0x00000008,
      MIBC_ACLR =        0x00000004,
      MIBC_FRZ =         0x00000002,
@@ -294,7 +307,8 @@ enum ManagementInformationBaseControlRegister {
 };
 
 /* VLAN/IP receive control register */
-enum VLANIPReceiveControlRegister {
+enum VLANIPReceiveControlRegister
+{
      VRCR_RUDPE =       0x00000080,
      VRCR_RTCPE =       0x00000040,
      VRCR_RIPE =        0x00000020,
@@ -306,7 +320,8 @@ enum VLANIPReceiveControlRegister {
 };
 
 /* VLAN/IP transmit control register */
-enum VLANIPTransmitControlRegister {
+enum VLANIPTransmitControlRegister
+{
      VTCR_PPCHK =       0x00000008,
      VTCR_GCHK =        0x00000004,
      VTCR_VPPTI =       0x00000002,
@@ -314,25 +329,29 @@ enum VLANIPTransmitControlRegister {
 };
 
 /* Clockrun Control/Status Register */
-enum ClockrunControlStatusRegister {
+enum ClockrunControlStatusRegister
+{
      CCSR_CLKRUN_EN =   0x00000001
 };
 
 /* TBI control register */
-enum TBIControlRegister {
+enum TBIControlRegister
+{
      TBICR_MR_LOOPBACK =        0x00004000,
      TBICR_MR_AN_ENABLE =       0x00001000,
      TBICR_MR_RESTART_AN =      0x00000200
 };
 
 /* TBI status register */
-enum TBIStatusRegister {
+enum TBIStatusRegister
+{
      TBISR_MR_LINK_STATUS =     0x00000020,
      TBISR_MR_AN_COMPLETE =     0x00000004
 };
 
 /* TBI auto-negotiation advertisement register */
-enum TBIAutoNegotiationAdvertisementRegister {
+enum TBIAutoNegotiationAdvertisementRegister
+{
      TANAR_NP =         0x00008000,
      TANAR_RF2 =        0x00002000,
      TANAR_RF1 =        0x00001000,
@@ -344,7 +363,8 @@ enum TBIAutoNegotiationAdvertisementRegister {
 };
 
 /* M5 control register */
-enum M5ControlRegister {
+enum M5ControlRegister
+{
      M5REG_RESERVED =   0xfffffffc,
      M5REG_RSS =        0x00000004,
      M5REG_RX_THREAD =  0x00000002,
@@ -368,7 +388,8 @@ struct ns_desc64
 };
 
 /* cmdsts flags for descriptors */
-enum CMDSTSFlatsForDescriptors {
+enum CMDSTSFlatsForDescriptors
+{
      CMDSTS_OWN =       0x80000000,
      CMDSTS_MORE =      0x40000000,
      CMDSTS_INTR =      0x20000000,
@@ -382,7 +403,8 @@ enum CMDSTSFlatsForDescriptors {
 };
 
 /* extended flags for descriptors */
-enum ExtendedFlagsForDescriptors {
+enum ExtendedFlagsForDescriptors
+{
      EXTSTS_UDPERR =    0x00400000,
      EXTSTS_UDPPKT =    0x00200000,
      EXTSTS_TCPERR =    0x00100000,

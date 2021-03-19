@@ -94,7 +94,8 @@ class TableWalker : public ClockedObject
     {
       public:
         /** Type of page table entry ARM DDI 0406B: B3-8*/
-        enum EntryType {
+        enum EntryType
+        {
             Ignore,
             PageTable,
             Section,
@@ -367,7 +368,8 @@ class TableWalker : public ClockedObject
     };
 
     // Granule sizes for AArch64 long descriptors
-    enum GrainSize {
+    enum GrainSize
+    {
         Grain4KB  = 12,
         Grain16KB = 14,
         Grain64KB = 16,
@@ -379,7 +381,8 @@ class TableWalker : public ClockedObject
     {
       public:
         /** Descriptor type */
-        enum EntryType {
+        enum EntryType
+        {
             Invalid,
             Table,
             Block,

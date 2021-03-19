@@ -143,7 +143,8 @@ const std::vector<std::string> FloatRegNames = {
     "ft8", "ft9", "ft10", "ft11"
 };
 
-enum MiscRegIndex {
+enum MiscRegIndex
+{
     MISCREG_PRV = 0,
     MISCREG_ISA,
     MISCREG_VENDORID,
@@ -272,7 +273,8 @@ enum MiscRegIndex {
     NUM_MISCREGS
 };
 
-enum CSRIndex {
+enum CSRIndex
+{
     CSR_USTATUS = 0x000,
     CSR_UIE = 0x004,
     CSR_UTVEC = 0x005,

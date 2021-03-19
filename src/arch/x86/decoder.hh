@@ -181,7 +181,8 @@ class Decoder : public InstDecoder
     // for both the actual immediate and the displacement.
     int immediateCollected;
 
-    enum State {
+    enum State
+    {
         ResetState,
         FromCacheState,
         PrefixState,

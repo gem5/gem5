@@ -34,7 +34,8 @@
 namespace PowerISA
 {
 
-enum MiscRegIndex {
+enum MiscRegIndex
+{
     NUM_MISCREGS = 0
 };
 

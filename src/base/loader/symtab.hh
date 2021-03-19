@@ -44,7 +44,8 @@ namespace Loader
 
 struct Symbol
 {
-    enum class Binding {
+    enum class Binding
+    {
         Global,
         Local,
         Weak

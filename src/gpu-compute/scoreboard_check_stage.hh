@@ -60,7 +60,8 @@ struct ComputeUnitParams;
 class ScoreboardCheckStage
 {
   public:
-    enum nonrdytype_e {
+    enum nonrdytype_e
+    {
         NRDY_ILLEGAL,
         NRDY_WF_STOP,
         NRDY_IB_EMPTY,

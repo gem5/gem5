@@ -70,7 +70,8 @@ class MightBeMicro : public PredOp
 class RfeOp : public MightBeMicro
 {
   public:
-    enum AddrMode {
+    enum AddrMode
+    {
         DecrementAfter,
         DecrementBefore,
         IncrementAfter,
@@ -115,7 +116,8 @@ class RfeOp : public MightBeMicro
 class SrsOp : public MightBeMicro
 {
   public:
-    enum AddrMode {
+    enum AddrMode
+    {
         DecrementAfter,
         DecrementBefore,
         IncrementAfter,
@@ -155,7 +157,8 @@ class SrsOp : public MightBeMicro
 class Memory : public MightBeMicro
 {
   public:
-    enum AddrMode {
+    enum AddrMode
+    {
         AddrMd_Offset,
         AddrMd_PreIndex,
         AddrMd_PostIndex

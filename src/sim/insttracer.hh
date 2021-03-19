@@ -114,7 +114,8 @@ class InstRecord
     /** @ingroup data
      * What size of data was written?
      */
-    enum DataStatus {
+    enum DataStatus
+    {
         DataInvalid = 0,
         DataInt8 = 1,   // set to equal number of bytes
         DataInt16 = 2,

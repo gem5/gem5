@@ -59,7 +59,8 @@ const int NumFloatRegs =
     NumMMXRegs + 2 * NumXMMRegs + NumMicroFpRegs + 8;
 
 // These enumerate all the registers for dependence tracking.
-enum DependenceTags {
+enum DependenceTags
+{
     // FP_Reg_Base must be large enough to be bigger than any integer
     // register index which has the IntFoldBit (1 << 6) set.  To be safe
     // we just start at (1 << 7) == 128.

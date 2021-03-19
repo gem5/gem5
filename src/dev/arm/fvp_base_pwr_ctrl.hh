@@ -106,7 +106,8 @@ class FVPBasePwrCtrl : public BasicPioDevice
         Bitfield<0> pwk;
     EndBitUnion(PwrStatus)
 
-    enum Offset : Addr {
+    enum Offset : Addr
+    {
         PPOFFR = 0x00,
         PPONR  = 0x04,
         PCOFFR = 0x08,

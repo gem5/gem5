@@ -61,7 +61,8 @@ namespace MipsISA
         uint8_t numThreads;
         uint8_t numVpes;
 
-        enum BankType {
+        enum BankType
+        {
             perProcessor,
             perThreadContext,
             perVirtProcessor
@@ -111,7 +112,8 @@ namespace MipsISA
         bool cp0Updated;
 
         // Enumerated List of CP0 Event Types
-        enum CP0EventType {
+        enum CP0EventType
+        {
             UpdateCP0
         };
 

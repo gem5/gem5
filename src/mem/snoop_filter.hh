@@ -308,7 +308,8 @@ class SnoopFilter : public SimObject
     /**
      * Use the lower bits of the address to keep track of the line status
      */
-    enum LineStatus {
+    enum LineStatus
+    {
         /** block holds data from the secure memory space */
         LineSecure = 0x01,
     };

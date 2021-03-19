@@ -61,7 +61,8 @@ class Logger
     static Logger &getInfo();
     static Logger &getHack();
 
-    enum LogLevel {
+    enum LogLevel
+    {
         PANIC, FATAL, WARN, INFO, HACK,
         NUM_LOG_LEVELS,
     };

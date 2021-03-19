@@ -125,7 +125,8 @@ class MSHR : public QueueEntry, public Printable
     {
       public:
 
-        enum Source {
+        enum Source
+        {
             FromCPU,
             FromSnoop,
             FromPrefetcher

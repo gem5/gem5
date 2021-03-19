@@ -92,7 +92,8 @@ class BaseDynInst : public ExecContext, public RefCounted
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
   protected:
-    enum Status {
+    enum Status
+    {
         IqEntry,                 /// Instruction is in the IQ
         RobEntry,                /// Instruction is in the ROB
         LsqEntry,                /// Instruction is in the LSQ
@@ -121,7 +122,8 @@ class BaseDynInst : public ExecContext, public RefCounted
         NumStatus
     };
 
-    enum Flags {
+    enum Flags
+    {
         NotAnInst,
         TranslationStarted,
         TranslationCompleted,

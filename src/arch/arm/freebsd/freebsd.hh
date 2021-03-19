@@ -255,7 +255,8 @@ class ArmFreebsd64 : public ArmFreebsd
     //@}
 
     /// Resource enumeration for getrlimit().
-    enum rlimit_resources {
+    enum rlimit_resources
+    {
         TGT_RLIMIT_CPU = 0,
         TGT_RLIMIT_FSIZE = 1,
         TGT_RLIMIT_DATA = 2,

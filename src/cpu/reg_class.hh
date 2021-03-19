@@ -49,7 +49,8 @@
 #include "config/the_isa.hh"
 
 /** Enumerate the classes of registers. */
-enum RegClass {
+enum RegClass
+{
     IntRegClass,        ///< Integer register
     FloatRegClass,      ///< Floating-point register
     /** Vector Register. */

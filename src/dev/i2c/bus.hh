@@ -54,7 +54,8 @@ class I2CBus : public BasicPioDevice
 {
   protected:
 
-    enum I2CState {
+    enum I2CState
+    {
         IDLE,
         RECEIVING_ADDR,
         RECEIVING_DATA,

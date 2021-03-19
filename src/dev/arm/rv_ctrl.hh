@@ -51,7 +51,8 @@
 class RealViewCtrl : public BasicPioDevice
 {
   public:
-    enum DeviceFunc {
+    enum DeviceFunc
+    {
         FUNC_OSC      = 1,
         FUNC_VOLT     = 2,
         FUNC_AMP      = 3,

@@ -96,13 +96,15 @@ class DefaultIEW
     /** Overall IEW stage status. Used to determine if the CPU can
      * deschedule itself due to a lack of activity.
      */
-    enum Status {
+    enum Status
+    {
         Active,
         Inactive
     };
 
     /** Status for Issue, Execute, and Writeback stages. */
-    enum StageStatus {
+    enum StageStatus
+    {
         Running,
         Blocked,
         Idle,

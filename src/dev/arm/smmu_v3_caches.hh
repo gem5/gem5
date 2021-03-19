@@ -94,7 +94,8 @@ class SMMUv3BaseCache
 class SMMUTLB : public SMMUv3BaseCache
 {
   public:
-    enum AllocPolicy {
+    enum AllocPolicy
+    {
         ALLOC_ANY_WAY,
         ALLOC_ANY_BUT_LAST_WAY,
         ALLOC_LAST_WAY,

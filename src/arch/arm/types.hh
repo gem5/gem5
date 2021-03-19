@@ -217,7 +217,8 @@ namespace ArmISA
 
         typedef GenericISA::UPCState<MachInst> Base;
 
-        enum FlagBits {
+        enum FlagBits
+        {
             ThumbBit = (1 << 0),
             JazelleBit = (1 << 1),
             AArch64Bit = (1 << 2)
@@ -564,7 +565,8 @@ namespace ArmISA
     };
 
     // Shift types for ARM instructions
-    enum ArmShiftType {
+    enum ArmShiftType
+    {
         LSL = 0,
         LSR,
         ASR,
@@ -572,7 +574,8 @@ namespace ArmISA
     };
 
     // Extension types for ARM instructions
-    enum ArmExtendType {
+    enum ArmExtendType
+    {
         UXTB = 0,
         UXTH = 1,
         UXTW = 2,
@@ -618,14 +621,16 @@ namespace ArmISA
         RND_NEAREST
     };
 
-    enum ExceptionLevel {
+    enum ExceptionLevel
+    {
         EL0 = 0,
         EL1,
         EL2,
         EL3
     };
 
-    enum OperatingMode {
+    enum OperatingMode
+    {
         MODE_EL0T = 0x0,
         MODE_EL1T = 0x4,
         MODE_EL1H = 0x5,
@@ -645,7 +650,8 @@ namespace ArmISA
         MODE_MAXMODE = MODE_SYSTEM
     };
 
-    enum ExceptionClass {
+    enum ExceptionClass
+    {
         EC_INVALID                 = -1,
         EC_UNKNOWN                 = 0x0,
         EC_TRAPPED_WFI_WFE         = 0x1,
@@ -700,7 +706,8 @@ namespace ArmISA
     /**
      * Instruction decoder fault codes in ExtMachInst.
      */
-    enum DecoderFault : std::uint8_t {
+    enum DecoderFault : std::uint8_t
+    {
         OK = 0x0, ///< No fault
         UNALIGNED = 0x1, ///< Unaligned instruction fault
 

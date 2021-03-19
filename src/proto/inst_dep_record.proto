@@ -61,7 +61,8 @@ message InstDepRecordHeader {
 // occupancy during replay. An optional field is provided for the instruction
 // PC.
 message InstDepRecord {
-  enum RecordType {
+  enum RecordType
+  {
     INVALID = 0;
     LOAD = 1;
     STORE = 2;

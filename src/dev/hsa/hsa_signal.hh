@@ -35,7 +35,8 @@
 
 // AMD Signal Kind Enumeration Values.
 typedef int64_t amd_signal_kind64_t;
-enum amd_signal_kind_t {
+enum amd_signal_kind_t
+{
   AMD_SIGNAL_KIND_INVALID = 0,
   AMD_SIGNAL_KIND_USER = 1,
   AMD_SIGNAL_KIND_DOORBELL = -1,

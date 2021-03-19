@@ -896,7 +896,8 @@ class RegisterBankTest : public testing::Test
         {}
     };
 
-    enum AccessType {
+    enum AccessType
+    {
         Read,
         Write,
         PartialRead,

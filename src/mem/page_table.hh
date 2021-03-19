@@ -89,7 +89,8 @@ class EmulationPageTable : public Serializable
      * bit 2 - cacheable  | uncacheable
      * bit 3 - read-write | read-only
      */
-    enum MappingFlags : uint32_t {
+    enum MappingFlags : uint32_t
+    {
         Clobber     = 1,
         Uncacheable = 4,
         ReadOnly    = 8,

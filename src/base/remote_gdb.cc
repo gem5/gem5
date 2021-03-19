@@ -283,7 +283,8 @@ hex2i(const char **srcp)
     return r;
 }
 
-enum GdbBreakpointType {
+enum GdbBreakpointType
+{
     GdbSoftBp = '0',
     GdbHardBp = '1',
     GdbWriteWp = '2',

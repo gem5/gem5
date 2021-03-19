@@ -146,7 +146,8 @@ ArmProcess64::initState()
 uint32_t
 ArmProcess32::armHwcapImpl() const
 {
-    enum ArmCpuFeature {
+    enum ArmCpuFeature
+    {
         Arm_Swp = 1 << 0,
         Arm_Half = 1 << 1,
         Arm_Thumb = 1 << 2,
@@ -174,7 +175,8 @@ ArmProcess64::armHwcapImpl() const
 {
     // In order to know what these flags mean, please refer to Linux
     // /Documentation/arm64/elf_hwcaps.txt text file.
-    enum ArmCpuFeature {
+    enum ArmCpuFeature
+    {
         Arm_Fp = 1 << 0,
         Arm_Asimd = 1 << 1,
         Arm_Evtstrm = 1 << 2,

@@ -78,7 +78,8 @@ class CopyEngine : public PciDevice
 
         uint64_t completionDataReg;
 
-        enum ChannelState {
+        enum ChannelState
+        {
             Idle,
             AddressFetch,
             DescriptorFetch,

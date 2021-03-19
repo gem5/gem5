@@ -119,7 +119,8 @@ class Interrupts : public BaseInterrupts
         memset(interrupts, 0, sizeof(interrupts));
     }
 
-    enum InterruptMask {
+    enum InterruptMask
+    {
         INT_MASK_M, // masked (subject to PSTATE.{A,I,F} mask bit
         INT_MASK_T, // taken regardless of mask
         INT_MASK_P  // pending

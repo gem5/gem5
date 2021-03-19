@@ -93,13 +93,15 @@ class DefaultRename
     /** Overall rename status. Used to determine if the CPU can
      * deschedule itself due to a lack of activity.
      */
-    enum RenameStatus {
+    enum RenameStatus
+    {
         Active,
         Inactive
     };
 
     /** Individual thread status. */
-    enum ThreadStatus {
+    enum ThreadStatus
+    {
         Running,
         Idle,
         StartSquash,
@@ -468,7 +470,8 @@ class DefaultRename
     /** Enum to record the source of a structure full stall.  Can come from
      * either ROB, IQ, LSQ, and it is priortized in that order.
      */
-    enum FullSource {
+    enum FullSource
+    {
         ROB,
         IQ,
         LQ,

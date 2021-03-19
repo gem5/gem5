@@ -50,7 +50,8 @@ namespace X86ISA
 
     namespace DeliveryMode
     {
-        enum IntDeliveryMode {
+        enum IntDeliveryMode
+        {
             Fixed = 0,
             LowestPriority = 1,
             SMI = 2,

@@ -65,7 +65,8 @@ class GPUCommandProcessor : public HSADevice
     void setShader(Shader *shader);
     Shader* shader();
 
-    enum AgentCmd {
+    enum AgentCmd
+    {
       Nop = 0,
       Steal = 1
     };

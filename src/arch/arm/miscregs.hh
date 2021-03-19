@@ -53,7 +53,8 @@ class ThreadContext;
 
 namespace ArmISA
 {
-    enum MiscRegIndex {
+    enum MiscRegIndex
+    {
         MISCREG_CPSR = 0,
         MISCREG_SPSR,
         MISCREG_SPSR_FIQ,
@@ -1092,7 +1093,8 @@ namespace ArmISA
         NUM_MISCREGS
     };
 
-    enum MiscRegInfo {
+    enum MiscRegInfo
+    {
         MISCREG_IMPLEMENTED,
         MISCREG_UNVERIFIABLE,   // Does the value change on every read (e.g. a
                                 // arch generic counter)

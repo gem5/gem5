@@ -62,7 +62,8 @@ class Sp805 : public AmbaIntDevice
     Tick write(PacketPtr pkt) override;
 
   private:
-    enum Offset : Addr {
+    enum Offset : Addr
+    {
         WDOGLOAD      = 0x000,
         WDOGVALUE     = 0x004,
         WDOGCONTROL   = 0x008,

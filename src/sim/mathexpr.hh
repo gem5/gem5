@@ -85,7 +85,8 @@ class MathExpr
     }
 
   private:
-    enum Operator {
+    enum Operator
+    {
         bAdd, bSub, bMul, bDiv, bPow, uNeg, sValue, sVariable, nInvalid
     };
 

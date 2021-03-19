@@ -32,7 +32,8 @@
 namespace SparcISA
 {
 
-enum ASI {
+enum ASI
+{
     ASI_IMPLICIT = 0x00,
     /* Priveleged ASIs */
     // 0x00-0x03 implementation dependent

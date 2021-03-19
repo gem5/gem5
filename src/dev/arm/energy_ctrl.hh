@@ -97,7 +97,8 @@ class EnergyCtrl : public BasicPioDevice
      *       while (!read(PERF_LEVEL_ACK));
      */
 
-    enum Registers {
+    enum Registers
+    {
         DVFS_HANDLER_STATUS = 0,
         DVFS_NUM_DOMAINS,
         DVFS_DOMAINID_AT_INDEX,

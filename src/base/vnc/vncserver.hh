@@ -71,7 +71,8 @@ class VncServer : public VncInput
     const static uint32_t VncOK   = 0;
 
     /** Server -> Client message IDs */
-    enum ServerMessages {
+    enum ServerMessages
+    {
         ServerFrameBufferUpdate     = 0,
         ServerSetColorMapEntries    = 1,
         ServerBell                  = 2,
@@ -79,7 +80,8 @@ class VncServer : public VncInput
     };
 
     /** Encoding types */
-    enum EncodingTypes {
+    enum EncodingTypes
+    {
         EncodingRaw         = 0,
         EncodingCopyRect    = 1,
         EncodingHextile     = 5,
@@ -87,7 +89,8 @@ class VncServer : public VncInput
     };
 
     /** keyboard/mouse support */
-    enum MouseEvents {
+    enum MouseEvents
+    {
         MouseLeftButton     = 0x1,
         MouseRightButton    = 0x2,
         MouseMiddleButton   = 0x4
@@ -98,7 +101,8 @@ class VncServer : public VncInput
         return "RFB 003.008\n";
     }
 
-    enum ConnectionState {
+    enum ConnectionState
+    {
         WaitForProtocolVersion,
         WaitForSecurityResponse,
         WaitForClientInit,

@@ -79,7 +79,8 @@ namespace X86ISA
         {
           friend class Walker;
           private:
-            enum State {
+            enum State
+            {
                 Ready,
                 Waiting,
                 // Long mode

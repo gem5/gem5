@@ -41,7 +41,8 @@
 namespace RiscvISA
 {
 
-enum FloatException : uint64_t {
+enum FloatException : uint64_t
+{
     FloatInexact = 0x1,
     FloatUnderflow = 0x2,
     FloatOverflow = 0x4,
@@ -58,7 +59,8 @@ enum FloatException : uint64_t {
  * For more details on exception causes, see Chapter 3.1.20 of the RISC-V
  * privileged specification v 1.10. Codes are enumerated in Table 3.6.
  */
-enum ExceptionCode : uint64_t {
+enum ExceptionCode : uint64_t
+{
     INST_ADDR_MISALIGNED = 0,
     INST_ACCESS = 1,
     INST_ILLEGAL = 2,

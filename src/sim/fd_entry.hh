@@ -148,7 +148,8 @@ class FileFDEntry: public HBFDEntry
 class PipeFDEntry: public HBFDEntry
 {
   public:
-    enum EndType {
+    enum EndType
+    {
         read = 0,
         write = 1
     };

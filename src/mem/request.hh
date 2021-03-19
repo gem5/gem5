@@ -72,7 +72,8 @@
  */
 
 namespace ContextSwitchTaskId {
-    enum TaskId {
+    enum TaskId
+    {
         MaxNormalTaskId = 1021, /* Maximum number of normal tasks */
         Prefetcher = 1022, /* For cache lines brought in by prefetcher */
         DMA = 1023, /* Mostly Table Walker */

@@ -104,7 +104,8 @@ class FullO3CPU : public BaseO3CPU
     friend class O3ThreadContext<Impl>;
 
   public:
-    enum Status {
+    enum Status
+    {
         Running,
         Idle,
         Halted,
@@ -537,7 +538,8 @@ class FullO3CPU : public BaseO3CPU
      *  activateStage() or deactivateStage(), they can specify which stage
      *  is being activated/deactivated.
      */
-    enum StageIdx {
+    enum StageIdx
+    {
         FetchIdx,
         DecodeIdx,
         RenameIdx,

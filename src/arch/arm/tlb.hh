@@ -109,7 +109,8 @@ class TlbTestInterface
 class TLB : public BaseTLB
 {
   public:
-    enum ArmFlags {
+    enum ArmFlags
+    {
         AlignmentMask = 0x7,
 
         AlignByte = 0x0,
@@ -124,7 +125,8 @@ class TLB : public BaseTLB
         UserMode = 0x10
     };
 
-    enum ArmTranslationType {
+    enum ArmTranslationType
+    {
         NormalTran = 0,
         S1CTran = 0x1,
         HypMode = 0x2,

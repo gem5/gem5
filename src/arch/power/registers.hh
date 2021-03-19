@@ -70,7 +70,8 @@ const int StackPointerReg = 1;
 // There isn't one in Power, but we need to define one somewhere
 const int ZeroReg = NumIntRegs - 1;
 
-enum MiscIntRegNums {
+enum MiscIntRegNums
+{
     INTREG_CR = NumIntArchRegs,
     INTREG_XER,
     INTREG_LR,

@@ -70,7 +70,8 @@ class ScheduleStage
 
     // Stats related variables and methods
     const std::string& name() const { return _name; }
-    enum SchNonRdyType {
+    enum SchNonRdyType
+    {
         SCH_SCALAR_ALU_NRDY,
         SCH_VECTOR_ALU_NRDY,
         SCH_VECTOR_MEM_ISSUE_NRDY,
@@ -92,13 +93,15 @@ class ScheduleStage
         SCH_RDY,
         SCH_NRDY_CONDITIONS
     };
-    enum schopdnonrdytype_e {
+    enum schopdnonrdytype_e
+    {
         SCH_VRF_OPD_NRDY,
         SCH_SRF_OPD_NRDY,
         SCH_RF_OPD_NRDY,
         SCH_RF_OPD_NRDY_CONDITIONS
     };
-    enum schrfaccessnonrdytype_e {
+    enum schrfaccessnonrdytype_e
+    {
         SCH_VRF_RD_ACCESS_NRDY,
         SCH_VRF_WR_ACCESS_NRDY,
         SCH_SRF_RD_ACCESS_NRDY,

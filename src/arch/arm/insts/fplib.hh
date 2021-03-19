@@ -54,7 +54,8 @@
 namespace ArmISA
 {
 
-enum FPRounding {
+enum FPRounding
+{
     FPRounding_TIEEVEN = 0,
     FPRounding_POSINF = 1,
     FPRounding_NEGINF = 2,

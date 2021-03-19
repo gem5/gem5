@@ -65,7 +65,8 @@ class TteTag
 class PageTableEntry
 {
   public:
-    enum EntryType {
+    enum EntryType
+    {
       sun4v,
       sun4u,
       invalid

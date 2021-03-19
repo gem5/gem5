@@ -61,7 +61,8 @@ message Inst {
   optional uint32 cpuid = 4;
   optional fixed64 tick = 5;
 
-  enum InstType {
+  enum InstType
+  {
     None = 0;
     IntAlu = 1;
     IntMul = 2;

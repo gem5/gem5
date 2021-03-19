@@ -318,7 +318,8 @@ enum {
     CR0_VMW_MASK = 0x1C0,
 };
 
-enum SMMUCommandType {
+enum SMMUCommandType
+{
     CMD_PRF_CONFIG     = 0x01,
     CMD_PRF_ADDR       = 0x02,
     CMD_CFGI_STE       = 0x03,
@@ -373,11 +374,13 @@ struct SMMUCommand
     }
 };
 
-enum SMMUEventTypes {
+enum SMMUEventTypes
+{
     EVT_FAULT = 0x0001,
 };
 
-enum SMMUEventFlags {
+enum SMMUEventFlags
+{
     EVF_WRITE = 0x0001,
 };
 

@@ -84,7 +84,8 @@ class Device : public Base
 {
   protected:
     /** Receive State Machine States */
-    enum RxState {
+    enum RxState
+    {
         rxIdle,
         rxFifoBlock,
         rxBeginCopy,
@@ -93,7 +94,8 @@ class Device : public Base
     };
 
     /** Transmit State Machine states */
-    enum TxState {
+    enum TxState
+    {
         txIdle,
         txFifoBlock,
         txBeginCopy,

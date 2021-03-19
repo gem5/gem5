@@ -52,7 +52,8 @@ class SMMUv3DeviceInterface;
  * The meaning of these becomes apparent when you
  * look at runProcessAtomic()/runProcessTiming().
  */
-enum SMMUActionType {
+enum SMMUActionType
+{
     ACTION_INITIAL_NOP,
     ACTION_SEND_REQ,
     ACTION_SEND_REQ_FINAL,

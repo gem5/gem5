@@ -52,7 +52,8 @@ namespace X86ISA
 //This really determines how many bytes are passed to the decoder.
 typedef uint64_t MachInst;
 
-enum Prefixes {
+enum Prefixes
+{
     NoOverride,
     ESOverride,
     CSOverride,
@@ -145,7 +146,8 @@ BitUnion8(VexInfo)
     Bitfield<0> present;
 EndBitUnion(VexInfo)
 
-enum OpcodeType {
+enum OpcodeType
+{
     BadOpcode,
     OneByteOpcode,
     TwoByteOpcode,
@@ -182,12 +184,14 @@ BitUnion8(OperatingMode)
     Bitfield<2,0> submode;
 EndBitUnion(OperatingMode)
 
-enum X86Mode {
+enum X86Mode
+{
     LongMode,
     LegacyMode
 };
 
-enum X86SubMode {
+enum X86SubMode
+{
     SixtyFourBitMode,
     CompatabilityMode,
     ProtectedMode,

@@ -41,7 +41,8 @@
 namespace Loader
 {
 
-enum Arch {
+enum Arch
+{
     UnknownArch,
     SPARC64,
     SPARC32,
@@ -58,7 +59,8 @@ enum Arch {
 
 const char *archToString(Arch arch);
 
-enum OpSys {
+enum OpSys
+{
     UnknownOpSys,
     Tru64,
     Linux,

@@ -59,7 +59,8 @@
 class Wavefront : public SimObject
 {
   public:
-    enum status_e {
+    enum status_e
+    {
         // wavefront is stalled
         S_STOPPED,
         // wavefront is returning from a kernel

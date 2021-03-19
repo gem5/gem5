@@ -53,7 +53,8 @@ const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;//
 const uint32_t MIPS32_QNAN = 0x7fbfffff;
 const uint64_t MIPS64_QNAN = 0x7ff7ffffffffffffULL;
 
-enum FPControlRegNums {
+enum FPControlRegNums
+{
    FLOATREG_FIR = NumFloatArchRegs,
    FLOATREG_FCCR,
    FLOATREG_FEXR,
@@ -61,7 +62,8 @@ enum FPControlRegNums {
    FLOATREG_FCSR
 };
 
-enum FCSRBits {
+enum FCSRBits
+{
     Inexact = 1,
     Underflow,
     Overflow,
@@ -70,13 +72,15 @@ enum FCSRBits {
     Unimplemented
 };
 
-enum FCSRFields {
+enum FCSRFields
+{
     Flag_Field = 1,
     Enable_Field = 6,
     Cause_Field = 11
 };
 
-enum MiscIntRegNums {
+enum MiscIntRegNums
+{
    INTREG_LO = NumIntArchRegs,
    INTREG_DSP_LO0 = INTREG_LO,
    INTREG_HI,

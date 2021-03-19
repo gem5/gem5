@@ -50,7 +50,8 @@ class Episode
     class Action
     {
       public:
-        enum class Type {
+        enum class Type
+        {
             ACQUIRE,
             RELEASE,
             ATOMIC,

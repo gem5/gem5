@@ -92,7 +92,8 @@ class BaseCache : public ClockedObject
     /**
      * Indexes to enumerate the MSHR queues.
      */
-    enum MSHRQueueIndex {
+    enum MSHRQueueIndex
+    {
         MSHRQueue_MSHRs,
         MSHRQueue_WriteBuffer
     };
@@ -101,7 +102,8 @@ class BaseCache : public ClockedObject
     /**
      * Reasons for caches to be blocked.
      */
-    enum BlockedCause {
+    enum BlockedCause
+    {
         Blocked_NoMSHRs = MSHRQueue_MSHRs,
         Blocked_NoWBBuffers = MSHRQueue_WriteBuffer,
         Blocked_NoTargets,
@@ -1447,7 +1449,8 @@ class WriteAllocator : public SimObject
      * normal operation (ALLOCATE), write coalescing (COALESCE), or
      * write coalescing without allocation (NO_ALLOCATE).
      */
-    enum class WriteMode : char {
+    enum class WriteMode : char
+    {
         ALLOCATE,
         COALESCE,
         NO_ALLOCATE,

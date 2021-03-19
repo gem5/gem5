@@ -73,13 +73,15 @@ class DefaultDecode
     /** Overall decode stage status. Used to determine if the CPU can
      * deschedule itself due to a lack of activity.
      */
-    enum DecodeStatus {
+    enum DecodeStatus
+    {
         Active,
         Inactive
     };
 
     /** Individual thread status. */
-    enum ThreadStatus {
+    enum ThreadStatus
+    {
         Running,
         Idle,
         StartSquash,

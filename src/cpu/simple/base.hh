@@ -104,7 +104,8 @@ class BaseSimpleCPU : public BaseCPU
     StaticInstPtr curMacroStaticInst;
 
   protected:
-    enum Status {
+    enum Status
+    {
         Idle,
         Running,
         Faulting,

@@ -67,7 +67,8 @@ class ROB
     typedef typename std::list<DynInstPtr>::iterator InstIt;
 
     /** Possible ROB statuses. */
-    enum Status {
+    enum Status
+    {
         Running,
         Idle,
         ROBSquashing

@@ -41,7 +41,8 @@
 namespace ArmISA
 {
 
-enum ccRegIndex {
+enum ccRegIndex
+{
     CCREG_NZ,
     CCREG_C,
     CCREG_V,
@@ -60,7 +61,8 @@ const char * const ccRegName[NUM_CCREGS] = {
     "zero"
 };
 
-enum ConditionCode {
+enum ConditionCode
+{
     COND_EQ  =   0,
     COND_NE, //  1
     COND_CS, //  2

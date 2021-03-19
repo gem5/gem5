@@ -41,7 +41,8 @@ namespace MipsISA
 
 typedef Addr FaultVect;
 
-enum ExcCode {
+enum ExcCode
+{
     // A dummy value to use when the code isn't defined or doesn't matter.
     ExcCodeDummy = 0,
 

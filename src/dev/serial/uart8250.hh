@@ -80,7 +80,8 @@ class Uart8250 : public Uart
         Bitfield<7> unused;
     EndBitUnion(Lsr)
 
-    enum class InterruptIds {
+    enum class InterruptIds
+    {
         Modem = 0, // Modem Status (lowest priority).
         Tx = 1,    // Tx Data.
         Rx = 2,    // Rx Data.

@@ -49,7 +49,8 @@ class BOP : public Queued
 {
     private:
 
-        enum RRWay {
+        enum RRWay
+        {
             Left,
             Right
         };

@@ -108,7 +108,8 @@ class DefaultCommit
     };
 
     /** Individual thread status. */
-    enum ThreadStatus {
+    enum ThreadStatus
+    {
         Running,
         Idle,
         ROBSquashing,

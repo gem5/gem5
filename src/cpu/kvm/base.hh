@@ -175,7 +175,8 @@ class BaseKvmCPU : public BaseCPU
      *   }
      * @enddot
      */
-    enum Status {
+    enum Status
+    {
         /** Context not scheduled in KVM.
          *
          * The CPU generally enters this state when the guest execute

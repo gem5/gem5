@@ -47,7 +47,8 @@ class SETranslatingPortProxy : public TranslatingPortProxy
 {
 
   public:
-    enum AllocType {
+    enum AllocType
+    {
         Always,
         Never,
         NextPage

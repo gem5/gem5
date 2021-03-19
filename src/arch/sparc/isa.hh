@@ -143,7 +143,8 @@ class ISA : public BaseISA
     static const int RegsPerWindow = NumWindowedRegs - WindowOverlap;
     static const int TotalWindowed = NWindows * RegsPerWindow;
 
-    enum InstIntRegOffsets {
+    enum InstIntRegOffsets
+    {
         CurrentGlobalsOffset = 0,
         CurrentWindowOffset = CurrentGlobalsOffset + NumGlobalRegs,
         MicroIntOffset = CurrentWindowOffset + NumWindowedRegs,

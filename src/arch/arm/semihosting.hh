@@ -197,7 +197,8 @@ class ArmSemihosting : public SimObject
         }
     };
 
-    enum Operation {
+    enum Operation
+    {
         SYS_OPEN = 0x01,
         SYS_CLOSE = 0x02,
         SYS_WRITEC = 0x03,

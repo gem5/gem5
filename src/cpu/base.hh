@@ -520,7 +520,8 @@ class BaseCPU : public ClockedObject
     ProbePointArg<bool> *ppSleeping;
     /** @} */
 
-    enum CPUState {
+    enum CPUState
+    {
         CPU_STATE_ON,
         CPU_STATE_SLEEP,
         CPU_STATE_WAKEUP

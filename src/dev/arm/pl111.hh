@@ -97,7 +97,8 @@ class Pl111: public AmbaDmaDevice
 
     static const int buffer_size = LcdMaxWidth * LcdMaxHeight * sizeof(uint32_t);
 
-    enum LcdMode {
+    enum LcdMode
+    {
         bpp1 = 0,
         bpp2,
         bpp4,

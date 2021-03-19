@@ -38,7 +38,8 @@ namespace Trace {
 class ArmNativeTrace : public NativeTrace
 {
   public:
-    enum StateID {
+    enum StateID
+    {
         STATE_R0,
         STATE_R1,
         STATE_R2,

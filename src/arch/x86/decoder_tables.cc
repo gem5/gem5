@@ -164,7 +164,8 @@ namespace X86ISA
 /*  F */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0
     };
 
-    enum SizeType {
+    enum SizeType
+    {
         NoImm,
         NI = NoImm,
         ByteImm,

@@ -79,7 +79,8 @@ class TLB : public BaseTLB
 
     std::list<TlbEntry*> freeList;
 
-    enum FaultTypes {
+    enum FaultTypes
+    {
         OtherFault = 0,
         PrivViolation = 0x1,
         SideEffect = 0x2,
@@ -90,13 +91,15 @@ class TLB : public BaseTLB
         VaOutOfRangeJmp = 0x40
     };
 
-    enum ContextType {
+    enum ContextType
+    {
         Primary = 0,
         Secondary = 1,
         Nucleus = 2
     };
 
-    enum TsbPageSize {
+    enum TsbPageSize
+    {
         Ps0,
         Ps1
     };

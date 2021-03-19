@@ -87,7 +87,8 @@ class MightBeMicro64 : public ArmStaticInst
 class Memory64 : public MightBeMicro64
 {
   public:
-    enum AddrMode {
+    enum AddrMode
+    {
         AddrMd_Offset,
         AddrMd_PreIndex,
         AddrMd_PostIndex

@@ -48,7 +48,8 @@
 namespace ArmISA
 {
 
-enum VfpMicroMode {
+enum VfpMicroMode
+{
     VfpNotAMicroop,
     VfpMicroop,
     VfpFirstMicroop,

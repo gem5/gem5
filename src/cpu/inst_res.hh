@@ -55,7 +55,8 @@ class InstResult
         MultiResult() {}
     };
 
-    enum class ResultType {
+    enum class ResultType
+    {
         Scalar,
         VecElem,
         VecReg,

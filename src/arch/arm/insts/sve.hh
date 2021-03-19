@@ -42,7 +42,8 @@
 
 namespace ArmISA {
 
-enum class SvePredType {
+enum class SvePredType
+{
     NONE,
     MERGE,
     ZERO,
@@ -581,11 +582,12 @@ class SveIntCmpImmOp : public ArmStaticInst
 class SveAdrOp : public ArmStaticInst
 {
   public:
-   enum SveAdrOffsetFormat {
-       SveAdrOffsetPacked,
-       SveAdrOffsetUnpackedSigned,
-       SveAdrOffsetUnpackedUnsigned
-   };
+    enum SveAdrOffsetFormat
+    {
+        SveAdrOffsetPacked,
+        SveAdrOffsetUnpackedSigned,
+        SveAdrOffsetUnpackedUnsigned
+    };
 
   protected:
     IntRegIndex dest, op1, op2;

@@ -87,7 +87,8 @@ class VncInput : public SimObject
   public:
 
     /** Client -> Server message IDs */
-    enum ClientMessages {
+    enum ClientMessages
+    {
         ClientSetPixelFormat    = 0,
         ClientSetEncodings      = 2,
         ClientFrameBufferUpdate = 3,

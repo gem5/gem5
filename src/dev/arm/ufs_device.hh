@@ -776,7 +776,8 @@ class UFSHostDevice : public DmaDevice
          * SCSI command set; defined in
          * http://www.jedec.org/standards-documents/results/jesd220
          */
-        enum SCSICommandSet {
+        enum SCSICommandSet
+        {
             SCSIInquiry = 0x12,
             SCSIRead6 = 0x08,
             SCSIRead10 = 0x28,
@@ -809,7 +810,8 @@ class UFSHostDevice : public DmaDevice
          * SCSI status codes; defined in
          * http://www.jedec.org/standards-documents/results/jesd220
          */
-        enum SCSIStatusCodes {
+        enum SCSIStatusCodes
+        {
             SCSIGood = 0x00,
             SCSICheckCondition = 0x02,
             SCSIConditionGood = 0x04,
@@ -827,7 +829,8 @@ class UFSHostDevice : public DmaDevice
          * SCSI sense codes; defined in
          * http://www.jedec.org/standards-documents/results/jesd220
          */
-        enum SCSISenseCodes {
+        enum SCSISenseCodes
+        {
             SCSINoSense = 0x00,
             SCSIRecoverdError = 0x01,
             SCSINotReady = 0x02,
@@ -1197,7 +1200,8 @@ class UFSHostDevice : public DmaDevice
      * http://www.jedec.org/standards-documents/results/jesd223
      * for their definition.
      */
-    enum UFSHCIRegisters {
+    enum UFSHCIRegisters
+    {
         regControllerCapabilities = 0x00,
         regUFSVersion = 0x08,
         regControllerDEVID = 0x10,

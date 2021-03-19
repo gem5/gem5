@@ -172,13 +172,15 @@ class DefaultFetch
     /** Overall fetch status. Used to determine if the CPU can
      * deschedule itsef due to a lack of activity.
      */
-    enum FetchStatus {
+    enum FetchStatus
+    {
         Active,
         Inactive
     };
 
     /** Individual thread status. */
-    enum ThreadStatus {
+    enum ThreadStatus
+    {
         Running,
         Idle,
         Squashing,

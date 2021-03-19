@@ -51,7 +51,8 @@
 
 namespace X86ISA
 {
-    enum CondFlagBit {
+    enum CondFlagBit
+    {
         CFBit = 1 << 0,
         PFBit = 1 << 2,
         ECFBit = 1 << 3,
@@ -66,7 +67,8 @@ namespace X86ISA
     const uint32_t cfofMask = CFBit | OFBit;
     const uint32_t ccFlagMask = PFBit | AFBit | ZFBit | SFBit;
 
-    enum RFLAGBit {
+    enum RFLAGBit
+    {
         TFBit = 1 << 8,
         IFBit = 1 << 9,
         NTBit = 1 << 14,
@@ -78,7 +80,8 @@ namespace X86ISA
         IDBit = 1 << 21
     };
 
-    enum X87StatusBit {
+    enum X87StatusBit
+    {
         // Exception Flags
         IEBit = 1 << 0,
         DEBit = 1 << 1,

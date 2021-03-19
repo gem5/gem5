@@ -438,7 +438,8 @@ class MacroMemOp : public PredMacroOp
 class PairMemOp : public PredMacroOp
 {
   public:
-    enum AddrMode {
+    enum AddrMode
+    {
         AddrMd_Offset,
         AddrMd_PreIndex,
         AddrMd_PostIndex
