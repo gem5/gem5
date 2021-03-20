@@ -226,7 +226,7 @@ class AddrMapper : public SimObject
 
     void recvRespRetry();
 
-    void recvRangeChange();
+    virtual void recvRangeChange();
 };
 
 /**
@@ -244,6 +244,13 @@ class RangeAddrMapper : public AddrMapper
 
     AddrRangeList getAddrRanges() const override;
 
+    void
+    init() override
+    {
+        AddrMapper::init();
+        cpuSidePort.sendRangeChange();
+    }
+
   protected:
     /**
      * This contains a list of ranges the should be remapped. It must
@@ -259,6 +266,12 @@ class RangeAddrMapper : public AddrMapper
     std::vector<AddrRange> remappedRanges;
 
     Addr remapAddr(Addr addr) const override;
+    void
+    recvRangeChange() override
+    {
+        // TODO Check that our peer is actually expecting to receive accesses
+        // in our output range(s).
+    }
 };
 
 #endif //__MEM_ADDR_MAPPER_HH__
