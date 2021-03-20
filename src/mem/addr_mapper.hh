@@ -54,12 +54,10 @@
 
 class AddrMapper : public SimObject
 {
-
   public:
-
     AddrMapper(const AddrMapperParams &params);
 
-    virtual ~AddrMapper() { }
+    virtual ~AddrMapper() = default;
 
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
@@ -67,7 +65,6 @@ class AddrMapper : public SimObject
     void init() override;
 
   protected:
-
     /**
      * This function does the actual remapping of one address to another.
      * It is pure virtual in this case to to allow any implementation
@@ -88,66 +85,67 @@ class AddrMapper : public SimObject
          * @param _origAddr Address before remapping
          */
         AddrMapperSenderState(Addr _origAddr) : origAddr(_origAddr)
-        { }
+        {}
 
         /** Destructor */
-        ~AddrMapperSenderState() { }
+        ~AddrMapperSenderState() {}
 
         /** The original address the packet was destined for */
         Addr origAddr;
-
     };
 
     class MapperRequestPort : public RequestPort
     {
-
       public:
-
         MapperRequestPort(const std::string& _name, AddrMapper& _mapper)
             : RequestPort(_name, &_mapper), mapper(_mapper)
         { }
 
       protected:
-
-        void recvFunctionalSnoop(PacketPtr pkt)
+        void
+        recvFunctionalSnoop(PacketPtr pkt) override
         {
             mapper.recvFunctionalSnoop(pkt);
         }
 
-        Tick recvAtomicSnoop(PacketPtr pkt)
+        Tick
+        recvAtomicSnoop(PacketPtr pkt) override
         {
             return mapper.recvAtomicSnoop(pkt);
         }
 
-        bool recvTimingResp(PacketPtr pkt)
+        bool
+        recvTimingResp(PacketPtr pkt) override
         {
             return mapper.recvTimingResp(pkt);
         }
 
-        void recvTimingSnoopReq(PacketPtr pkt)
+        void
+        recvTimingSnoopReq(PacketPtr pkt) override
         {
             mapper.recvTimingSnoopReq(pkt);
         }
 
-        void recvRangeChange()
+        void
+        recvRangeChange() override
         {
             mapper.recvRangeChange();
         }
 
-        bool isSnooping() const
+        bool
+        isSnooping() const override
         {
             return mapper.isSnooping();
         }
 
-        void recvReqRetry()
+        void
+        recvReqRetry() override
         {
             mapper.recvReqRetry();
         }
 
       private:
-
         AddrMapper& mapper;
-
     };
 
     /** Instance of request port, facing the memory side */
@@ -155,49 +153,50 @@ class AddrMapper : public SimObject
 
     class MapperResponsePort : public ResponsePort
     {
-
       public:
-
         MapperResponsePort(const std::string& _name, AddrMapper& _mapper)
             : ResponsePort(_name, &_mapper), mapper(_mapper)
-        { }
+        {}
 
       protected:
-
-        void recvFunctional(PacketPtr pkt)
+        void
+        recvFunctional(PacketPtr pkt) override
         {
             mapper.recvFunctional(pkt);
         }
 
-        Tick recvAtomic(PacketPtr pkt)
+        Tick
+        recvAtomic(PacketPtr pkt) override
         {
             return mapper.recvAtomic(pkt);
         }
 
-        bool recvTimingReq(PacketPtr pkt)
+        bool
+        recvTimingReq(PacketPtr pkt) override
         {
             return mapper.recvTimingReq(pkt);
         }
 
-        bool recvTimingSnoopResp(PacketPtr pkt)
+        bool
+        recvTimingSnoopResp(PacketPtr pkt) override
         {
             return mapper.recvTimingSnoopResp(pkt);
         }
 
-        AddrRangeList getAddrRanges() const
+        AddrRangeList
+        getAddrRanges() const override
         {
             return mapper.getAddrRanges();
         }
 
-        void recvRespRetry()
+        void
+        recvRespRetry() override
         {
             mapper.recvRespRetry();
         }
 
       private:
-
         AddrMapper& mapper;
-
     };
 
     /** Instance of response port, i.e. on the CPU side */
@@ -238,17 +237,14 @@ class AddrMapper : public SimObject
  */
 class RangeAddrMapper : public AddrMapper
 {
-
   public:
-
     RangeAddrMapper(const RangeAddrMapperParams &p);
 
-    ~RangeAddrMapper() { }
+    ~RangeAddrMapper() = default;
 
-    AddrRangeList getAddrRanges() const;
+    AddrRangeList getAddrRanges() const override;
 
   protected:
-
     /**
      * This contains a list of ranges the should be remapped. It must
      * be the exact same length as remappedRanges which describes what
@@ -262,8 +258,7 @@ class RangeAddrMapper : public AddrMapper
      */
     std::vector<AddrRange> remappedRanges;
 
-    Addr remapAddr(Addr addr) const;
-
+    Addr remapAddr(Addr addr) const override;
 };
 
 #endif //__MEM_ADDR_MAPPER_HH__
