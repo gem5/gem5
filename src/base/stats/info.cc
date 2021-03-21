@@ -111,13 +111,7 @@ validateStatName(const std::string &name)
 }
 
 void
-Info::setName(const std::string &name)
-{
-    setName(nullptr, name);
-}
-
-void
-Info::setName(const Group *parent, const std::string &name)
+Info::setName(const std::string &name, bool old_style)
 {
     if (!validateStatName(name))
         panic("invalid stat name '%s'", name);
@@ -126,12 +120,10 @@ Info::setName(const Group *parent, const std::string &name)
     // old-style stats without a parent group. New-style stats should
     // be unique since their names should correspond to a member
     // variable.
-    if (!parent) {
+    if (old_style) {
         auto p = nameMap().insert(make_pair(name, this));
 
-        if (!p.second)
-            panic("same statistic name used twice! name=%s\n",
-                  name);
+        panic_if(!p.second, "same statistic name used twice! name=%s\n", name);
     }
 
     this->name = name;

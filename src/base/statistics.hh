@@ -255,7 +255,7 @@ class DataWrap : public InfoAccess
             parent->addStat(info);
 
         if (name) {
-            info->setName(parent, name);
+            info->setName(name, parent == nullptr);
             info->flags.set(display);
         }
 

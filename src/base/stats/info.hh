@@ -38,8 +38,6 @@ GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
 
-class Group;
-
 typedef uint16_t FlagsType;
 typedef ::Flags<FlagsType> Flags;
 
@@ -101,9 +99,15 @@ class Info
     Info();
     virtual ~Info();
 
-    /** Set the name of this statistic */
-    void setName(const std::string &name);
-    void setName(const Group *parent, const std::string &name);
+    /**
+     * Set the name of this statistic. Special handling must be done when
+     * creating an old-style statistic (i.e., stats without a parent group).
+     *
+     * @param name The new name.
+     * @param old_style Whether we are using the old style.
+     */
+    void setName(const std::string &name, bool old_style=true);
+
     void setSeparator(std::string _sep) { separatorString = _sep;}
 
     /**
