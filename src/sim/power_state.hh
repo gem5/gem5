@@ -50,7 +50,6 @@
 #include "base/statistics.hh"
 #include "enums/PwrState.hh"
 #include "params/PowerState.hh"
-#include "sim/core.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5

@@ -52,7 +52,7 @@
 #include <string>
 
 // gem5 Headers
-#include <sim/core.hh>
+#include <sim/cur_tick.hh>
 #include <sim/init.hh>
 #include <sim/init_signals.hh>
 #include <sim/system.hh>

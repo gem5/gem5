@@ -51,6 +51,8 @@
 #include "params/GenericTimerFrame.hh"
 #include "params/GenericTimerMem.hh"
 #include "params/SystemCounter.hh"
+#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

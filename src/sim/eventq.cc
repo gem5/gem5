@@ -41,7 +41,6 @@
 #include "base/trace.hh"
 #include "cpu/smt.hh"
 #include "debug/Checkpoint.hh"
-#include "sim/core.hh"
 
 namespace gem5
 {

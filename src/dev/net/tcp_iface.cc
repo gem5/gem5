@@ -57,7 +57,6 @@
 #include "base/types.hh"
 #include "debug/DistEthernet.hh"
 #include "debug/DistEthernetCmd.hh"
-#include "sim/core.hh"
 #include "sim/sim_exit.hh"
 
 #if defined(__FreeBSD__)

@@ -56,7 +56,7 @@
 #include "debug/Drain.hh"
 #include "mem/cache/queue_entry.hh"
 #include "mem/packet.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 #include "sim/drain.hh"
 
 namespace gem5

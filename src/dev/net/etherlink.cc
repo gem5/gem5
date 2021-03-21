@@ -59,7 +59,7 @@
 #include "dev/net/etherint.hh"
 #include "dev/net/etherpkt.hh"
 #include "params/EtherLink.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 #include "sim/serialize.hh"
 #include "sim/system.hh"
 

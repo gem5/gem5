@@ -38,6 +38,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/DebugPrintf.hh"
 #include "kern/system_events.hh"
+#include "sim/core.hh"
 #include "sim/system.hh"
 
 namespace gem5

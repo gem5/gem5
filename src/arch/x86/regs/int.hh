@@ -41,7 +41,6 @@
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 #include "base/logging.hh"
-#include "sim/core.hh"
 
 namespace gem5
 {

@@ -46,7 +46,6 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 #include "sim/async.hh"
-#include "sim/core.hh"
 #include "sim/eventq.hh"
 #include "sim/serialize.hh"
 

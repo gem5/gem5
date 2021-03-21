@@ -38,6 +38,7 @@
 #include "mem/mem_checker.hh"
 
 #include "base/logging.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

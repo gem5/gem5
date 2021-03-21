@@ -62,7 +62,7 @@
 #include "dev/net/etherpkt.hh"
 #include "dev/net/tcp_iface.hh"
 #include "params/EtherLink.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 #include "sim/serialize.hh"
 #include "sim/system.hh"
 

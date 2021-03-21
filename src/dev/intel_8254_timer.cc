@@ -30,6 +30,8 @@
 
 #include "base/logging.hh"
 #include "debug/Intel8254Timer.hh"
+#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

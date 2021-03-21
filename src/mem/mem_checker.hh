@@ -52,7 +52,6 @@
 #include "base/types.hh"
 #include "debug/MemChecker.hh"
 #include "params/MemChecker.hh"
-#include "sim/core.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5

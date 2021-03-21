@@ -27,7 +27,6 @@
 
 #include "base/logging.hh"
 #include "base/types.hh"
-#include "sim/core.hh"
 #include "sim/eventq.hh"
 #include "systemc/core/kernel.hh"
 #include "systemc/core/process_types.hh"

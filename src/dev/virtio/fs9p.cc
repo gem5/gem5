@@ -58,6 +58,7 @@
 #include "params/VirtIO9PDiod.hh"
 #include "params/VirtIO9PProxy.hh"
 #include "params/VirtIO9PSocket.hh"
+#include "sim/core.hh"
 #include "sim/system.hh"
 
 namespace gem5

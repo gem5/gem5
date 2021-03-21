@@ -43,6 +43,8 @@
 #include "base/trace.hh"
 #include "debug/TrafficGen.hh"
 #include "proto/packet.pb.h"
+#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

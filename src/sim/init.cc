@@ -58,7 +58,6 @@
 #include "config/have_protobuf.hh"
 #include "python/pybind11/pybind.hh"
 #include "sim/async.hh"
-#include "sim/core.hh"
 
 #if HAVE_PROTOBUF
 #include <google/protobuf/stubs/common.h>

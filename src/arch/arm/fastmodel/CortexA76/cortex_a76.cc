@@ -31,7 +31,6 @@
 #include "arch/arm/regs/misc.hh"
 #include "base/logging.hh"
 #include "dev/arm/base_gic.hh"
-#include "sim/core.hh"
 #include "systemc/tlm_bridge/gem5_to_tlm.hh"
 
 namespace gem5

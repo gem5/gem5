@@ -42,6 +42,7 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/PowerDomain.hh"
+#include "sim/cur_tick.hh"
 #include "sim/power_domain.hh"
 #include "sim/serialize.hh"
 

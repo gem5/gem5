@@ -36,6 +36,7 @@
 #include "base/trace.hh"
 #include "debug/EthernetAll.hh"
 #include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

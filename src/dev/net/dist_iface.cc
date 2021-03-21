@@ -50,6 +50,7 @@
 #include "debug/DistEthernet.hh"
 #include "debug/DistEthernetPkt.hh"
 #include "dev/net/etherpkt.hh"
+#include "sim/cur_tick.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"

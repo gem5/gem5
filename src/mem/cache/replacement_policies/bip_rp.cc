@@ -32,7 +32,7 @@
 
 #include "base/random.hh"
 #include "params/BIPRP.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

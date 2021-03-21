@@ -48,7 +48,6 @@
 #include "base/types.hh"
 #include "dev/arm/base_gic.hh"
 #include "dev/arm/generic_timer_miscregs_types.hh"
-#include "sim/core.hh"
 #include "sim/drain.hh"
 #include "sim/eventq.hh"
 #include "sim/serialize.hh"

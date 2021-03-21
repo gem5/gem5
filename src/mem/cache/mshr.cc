@@ -55,7 +55,6 @@
 #include "debug/MSHR.hh"
 #include "mem/cache/base.hh"
 #include "mem/request.hh"
-#include "sim/core.hh"
 
 namespace gem5
 {

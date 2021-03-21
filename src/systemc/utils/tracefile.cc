@@ -30,7 +30,6 @@
 #include <ctime>
 #include <iomanip>
 
-#include "sim/core.hh"
 #include "systemc/core/time.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_time.hh"

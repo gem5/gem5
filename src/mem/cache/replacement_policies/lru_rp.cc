@@ -32,7 +32,7 @@
 #include <memory>
 
 #include "params/LRURP.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

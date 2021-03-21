@@ -55,6 +55,7 @@
 #include "base/temperature.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
+#include "sim/cur_tick.hh"
 #include "sim/drain.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"

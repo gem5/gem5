@@ -32,6 +32,7 @@
 
 #include "base/bitfield.hh"
 #include "base/cprintf.hh"
+#include "sim/core.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_main.hh"

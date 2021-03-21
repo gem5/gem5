@@ -33,7 +33,6 @@
 
 #include <vector>
 
-#include "sim/core.hh"
 #include "sim/serialize.hh"
 
 namespace gem5

@@ -66,6 +66,8 @@
 #include "dev/net/etherdump.hh"
 #include "dev/net/etherint.hh"
 #include "dev/net/etherpkt.hh"
+#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

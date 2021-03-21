@@ -41,6 +41,8 @@
 #include "base/output.hh"
 #include "params/MemTraceProbe.hh"
 #include "proto/packet.pb.h"
+#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 #include "sim/system.hh"
 
 namespace gem5

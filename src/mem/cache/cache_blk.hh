@@ -57,7 +57,7 @@
 #include "mem/cache/tags/tagged_entry.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

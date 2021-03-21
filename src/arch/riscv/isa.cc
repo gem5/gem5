@@ -47,7 +47,6 @@
 #include "debug/Checkpoint.hh"
 #include "debug/RiscvMisc.hh"
 #include "params/RiscvISA.hh"
-#include "sim/core.hh"
 #include "sim/pseudo_inst.hh"
 
 namespace gem5

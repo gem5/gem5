@@ -46,6 +46,7 @@
 #include "params/InstPBTrace.hh"
 #include "proto/inst.pb.h"
 #include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

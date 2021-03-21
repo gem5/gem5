@@ -49,7 +49,7 @@
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"
 #include "mem/port_proxy.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 #include "sim/faults.hh"
 #include "sim/sim_exit.hh"
 

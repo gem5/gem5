@@ -37,7 +37,6 @@
 #include <vector>
 
 #include "base/logging.hh"
-#include "sim/core.hh"
 #include "sim/eventq.hh"
 #include "systemc/core/channel.hh"
 #include "systemc/core/list.hh"

@@ -39,6 +39,7 @@
 #include "base/logging.hh"
 #include "base/output.hh"
 #include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 using std::string;
 

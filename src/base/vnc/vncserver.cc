@@ -67,7 +67,6 @@
 #include "base/trace.hh"
 #include "debug/VNC.hh"
 #include "sim/byteswap.hh"
-#include "sim/core.hh"
 
 namespace gem5
 {

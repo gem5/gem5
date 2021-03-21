@@ -57,7 +57,6 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/byteswap.hh"
-#include "sim/core.hh"
 
 namespace gem5
 {

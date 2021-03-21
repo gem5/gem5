@@ -33,6 +33,7 @@
 
 #include "base/intmath.hh"
 #include "mem/ruby/system/RubySystem.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

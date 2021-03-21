@@ -60,7 +60,7 @@
 #include "mem/cache/tags/super_blk.hh"
 #include "params/BaseCache.hh"
 #include "params/WriteAllocator.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

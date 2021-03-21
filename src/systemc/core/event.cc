@@ -31,7 +31,6 @@
 #include <cstring>
 #include <utility>
 
-#include "sim/core.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/messages.hh"

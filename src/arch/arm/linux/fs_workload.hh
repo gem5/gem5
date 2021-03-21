@@ -52,7 +52,6 @@
 #include "base/output.hh"
 #include "kern/linux/events.hh"
 #include "params/ArmFsLinux.hh"
-#include "sim/core.hh"
 
 namespace gem5
 {

@@ -29,7 +29,7 @@
 
 #include "sim/global_event.hh"
 
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

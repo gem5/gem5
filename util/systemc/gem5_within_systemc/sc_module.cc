@@ -61,6 +61,7 @@
 #include "sc_module.hh"
 #include "sim/async.hh"
 #include "sim/core.hh"
+#include "sim/cur_tick.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 #include "sim/stat_control.hh"

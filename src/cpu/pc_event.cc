@@ -35,7 +35,7 @@
 #include "base/debug.hh"
 #include "base/trace.hh"
 #include "debug/PCEvent.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 #include "sim/system.hh"
 
 namespace gem5

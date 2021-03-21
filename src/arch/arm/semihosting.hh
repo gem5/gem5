@@ -49,6 +49,7 @@
 #include "arch/arm/utility.hh"
 #include "cpu/thread_context.hh"
 #include "mem/port_proxy.hh"
+#include "sim/core.hh"
 #include "sim/guest_abi.hh"
 #include "sim/sim_object.hh"
 

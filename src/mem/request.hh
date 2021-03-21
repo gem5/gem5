@@ -62,7 +62,7 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "mem/htm.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

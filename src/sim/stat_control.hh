@@ -43,7 +43,7 @@
 
 #include "base/compiler.hh"
 #include "base/types.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

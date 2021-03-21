@@ -62,7 +62,6 @@
 #include "mem/htm.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
-#include "sim/core.hh"
 
 namespace gem5
 {

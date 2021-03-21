@@ -41,6 +41,8 @@
 
 #include "base/trace.hh"
 #include "debug/CommMonitor.hh"
+#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 #include "sim/stats.hh"
 
 namespace gem5

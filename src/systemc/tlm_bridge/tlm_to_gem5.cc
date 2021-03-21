@@ -64,6 +64,7 @@
 #include "params/TlmToGem5Bridge128.hh"
 #include "params/TlmToGem5Bridge256.hh"
 #include "params/TlmToGem5Bridge512.hh"
+#include "sim/core.hh"
 #include "sim/system.hh"
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/ext/core/sc_time.hh"

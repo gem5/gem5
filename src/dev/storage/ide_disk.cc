@@ -56,7 +56,7 @@
 #include "debug/IdeDisk.hh"
 #include "dev/storage/disk_image.hh"
 #include "dev/storage/ide_ctrl.hh"
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5

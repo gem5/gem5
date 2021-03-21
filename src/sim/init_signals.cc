@@ -58,7 +58,6 @@
 #include "base/logging.hh"
 #include "sim/async.hh"
 #include "sim/backtrace.hh"
-#include "sim/core.hh"
 #include "sim/eventq.hh"
 
 namespace gem5

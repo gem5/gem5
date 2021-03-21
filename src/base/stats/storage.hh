@@ -38,8 +38,7 @@
 #include "base/logging.hh"
 #include "base/stats/info.hh"
 #include "base/stats/types.hh"
-// For curTick().
-#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 
 namespace gem5
 {

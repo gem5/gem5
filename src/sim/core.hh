@@ -40,9 +40,6 @@
 
 #include "base/compiler.hh"
 #include "base/types.hh"
-// @todo The next include is not needed in this file, but must be kept
-// until the transitive includes are fixed
-#include "sim/cur_tick.hh"
 
 namespace gem5
 {
