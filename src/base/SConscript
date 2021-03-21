@@ -40,7 +40,7 @@ Source('channel_addr.cc')
 Source('cprintf.cc', add_tags='gtest lib')
 GTest('cprintf.test', 'cprintf.test.cc')
 Executable('cprintftime', 'cprintftime.cc', 'cprintf.cc')
-Source('debug.cc', add_tags='gem5 trace')
+Source('debug.cc', add_tags=['gem5 trace', 'gem5 events'])
 GTest('debug.test', 'debug.test.cc', 'debug.cc')
 if env['HAVE_FENV']:
     Source('fenv.cc')
