@@ -92,6 +92,8 @@ Source('mem_pool.cc')
 env.TagImplies('gem5 serialize', 'gem5 trace')
 
 GTest('byteswap.test', 'byteswap.test.cc', '../base/types.cc')
+GTest('globals.test', 'globals.test.cc', 'globals.cc',
+    with_tag('gem5 serialize'))
 GTest('guest_abi.test', 'guest_abi.test.cc')
 GTest('port.test', 'port.test.cc', 'port.cc')
 GTest('proxy_ptr.test', 'proxy_ptr.test.cc')
