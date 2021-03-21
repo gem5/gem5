@@ -86,7 +86,7 @@ validateStatName(const std::string &name)
         return false;
 
     std::vector<std::string> vec;
-    tokenize(vec, name, '.');
+    tokenize(vec, name, '.', false);
     std::vector<std::string>::const_iterator item = vec.begin();
     while (item != vec.end()) {
         if (item->empty())

@@ -870,7 +870,7 @@ $c_ident::regStats()
 
     for (${ident}_Event event = ${ident}_Event_FIRST;
                  event < ${ident}_Event_NUM; ++event) {
-        std::string stat_name = ".inTransLatHist." +
+        std::string stat_name = "inTransLatHist." +
                                 ${ident}_Event_to_string(event);
         statistics::Scalar* r = new statistics::Scalar(&stats,
                                              (stat_name + ".total").c_str());
