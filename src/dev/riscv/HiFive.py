@@ -97,7 +97,6 @@ class HiFive(Platform):
     """
     type = 'HiFive'
     cxx_header = "dev/riscv/hifive.hh"
-    system = Param.System(Parent.any, "system")
 
     # CLINT
     clint = Param.Clint(Clint(pio_addr=0x2000000), "CLINT")

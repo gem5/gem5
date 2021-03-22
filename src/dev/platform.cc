@@ -29,16 +29,8 @@
 #include "dev/platform.hh"
 
 #include "base/logging.hh"
-#include "sim/sim_exit.hh"
 
-Platform::Platform(const Params &p)
-    : SimObject(p), intrctrl(p.intrctrl)
-{
-}
-
-Platform::~Platform()
-{
-}
+Platform::Platform(const Params &p) : SimObject(p), system(p.system) {}
 
 void
 Platform::postPciInt(int line)

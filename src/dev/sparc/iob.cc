@@ -42,7 +42,7 @@
 #include "arch/sparc/isa_traits.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
-#include "cpu/intr_control.hh"
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Iob.hh"
 #include "dev/platform.hh"
@@ -51,8 +51,7 @@
 #include "sim/faults.hh"
 #include "sim/system.hh"
 
-Iob::Iob(const Params &p)
-    : PioDevice(p), ic(p.platform->intrctrl)
+Iob::Iob(const Params &p) : PioDevice(p)
 {
     iobManAddr = 0x9800000000ULL;
     iobManSize = 0x0100000000ULL;
@@ -268,37 +267,44 @@ Iob::receiveDeviceInterrupt(DeviceId devid)
     intCtl[devid].pend = true;
     DPRINTF(Iob, "Receiving Device interrupt: %d for cpu %d vec %d\n",
             devid, intMan[devid].cpu, intMan[devid].vector);
-    ic->post(intMan[devid].cpu, SparcISA::IT_INT_VEC, intMan[devid].vector);
+    auto tc = sys->threads[intMan[devid].cpu];
+    tc->getCpuPtr()->postInterrupt(tc->threadId(), SparcISA::IT_INT_VEC,
+            intMan[devid].vector);
 }
 
 
 void
 Iob::generateIpi(Type type, int cpu_id, int vector)
 {
-    SparcISA::SparcFault<SparcISA::PowerOnReset> *por = new SparcISA::PowerOnReset();
+    SparcISA::SparcFault<SparcISA::PowerOnReset> *por =
+        new SparcISA::PowerOnReset();
     if (cpu_id >= sys->threads.size())
         return;
 
+    auto tc = sys->threads[cpu_id];
     switch (type) {
       case 0: // interrupt
-        DPRINTF(Iob, "Generating interrupt because of I/O write to cpu: %d vec %d\n",
+        DPRINTF(Iob,
+                "Generating interrupt because of I/O write to cpu: "
+                "%d vec %d\n",
                 cpu_id, vector);
-        ic->post(cpu_id, SparcISA::IT_INT_VEC, vector);
+        tc->getCpuPtr()->postInterrupt(
+                tc->threadId(), SparcISA::IT_INT_VEC, vector);
         break;
       case 1: // reset
         warn("Sending reset to CPU: %d\n", cpu_id);
         if (vector != por->trapType())
             panic("Don't know how to set non-POR reset to cpu\n");
-        por->invoke(sys->threads[cpu_id]);
-        sys->threads[cpu_id]->activate();
+        por->invoke(tc);
+        tc->activate();
         break;
       case 2: // idle -- this means stop executing and don't wake on interrupts
         DPRINTF(Iob, "Idling CPU because of I/O write cpu: %d\n", cpu_id);
-        sys->threads[cpu_id]->halt();
+        tc->halt();
         break;
       case 3: // resume
         DPRINTF(Iob, "Resuming CPU because of I/O write cpu: %d\n", cpu_id);
-        sys->threads[cpu_id]->activate();
+        tc->activate();
         break;
       default:
         panic("Invalid type to generate ipi\n");
@@ -321,7 +327,9 @@ Iob::receiveJBusInterrupt(int cpu_id, int source, uint64_t d0, uint64_t d1)
     jBusData0[cpu_id] = d0;
     jBusData1[cpu_id] = d1;
 
-    ic->post(cpu_id, SparcISA::IT_INT_VEC, jIntVec);
+    auto tc = sys->threads[cpu_id];
+    tc->getCpuPtr()->postInterrupt(
+            tc->threadId(), SparcISA::IT_INT_VEC, jIntVec);
     return true;
 }
 

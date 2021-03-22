@@ -51,7 +51,6 @@
 #include "arch/arm/interrupts.hh"
 #include "base/addr_range.hh"
 #include "base/bitunion.hh"
-#include "cpu/intr_control.hh"
 #include "dev/arm/base_gic.hh"
 #include "dev/io_device.hh"
 #include "dev/platform.hh"

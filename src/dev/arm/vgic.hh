@@ -55,7 +55,6 @@
 
 #include "base/addr_range.hh"
 #include "base/bitunion.hh"
-#include "cpu/intr_control.hh"
 #include "dev/io_device.hh"
 #include "dev/platform.hh"
 #include "params/VGic.hh"

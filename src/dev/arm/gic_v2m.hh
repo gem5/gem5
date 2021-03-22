@@ -45,7 +45,6 @@
 #define __DEV_ARM_GIC_V2M_H__
 
 #include "base/bitunion.hh"
-#include "cpu/intr_control.hh"
 #include "dev/arm/base_gic.hh"
 #include "dev/io_device.hh"
 #include "dev/platform.hh"

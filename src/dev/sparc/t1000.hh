@@ -39,14 +39,9 @@
 #include "params/T1000.hh"
 
 class IdeController;
-class System;
 
 class T1000 : public Platform
 {
-  public:
-    /** Pointer to the system */
-    System *system;
-
   public:
     typedef T1000Params Params;
     /**

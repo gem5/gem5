@@ -41,6 +41,7 @@
 #include "dev/arm/gic_v2.hh"
 
 #include "base/trace.hh"
+#include "cpu/base.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/GIC.hh"
 #include "debug/IPI.hh"
@@ -917,10 +918,11 @@ GicV2::clearPPInt(uint32_t num, uint32_t cpu)
 void
 GicV2::clearInt(ContextID ctx, uint32_t int_num)
 {
+    auto tc = sys->threads[ctx];
     if (isFiq(ctx, int_num)) {
-        platform->intrctrl->clear(ctx, ArmISA::INT_FIQ, 0);
+        tc->getCpuPtr()->clearInterrupt(tc->threadId(), ArmISA::INT_FIQ, 0);
     } else {
-        platform->intrctrl->clear(ctx, ArmISA::INT_IRQ, 0);
+        tc->getCpuPtr()->clearInterrupt(tc->threadId(), ArmISA::INT_IRQ, 0);
     }
 }
 
@@ -936,7 +938,8 @@ GicV2::postInt(uint32_t cpu, Tick when)
 void
 GicV2::postDelayedInt(uint32_t cpu)
 {
-    platform->intrctrl->post(cpu, ArmISA::INT_IRQ, 0);
+    auto tc = sys->threads[cpu];
+    tc->getCpuPtr()->postInterrupt(tc->threadId(), ArmISA::INT_IRQ, 0);
     --pendingDelayedInterrupts;
     assert(pendingDelayedInterrupts >= 0);
     if (pendingDelayedInterrupts == 0)
@@ -961,7 +964,8 @@ GicV2::supportsVersion(GicVersion version)
 void
 GicV2::postDelayedFiq(uint32_t cpu)
 {
-    platform->intrctrl->post(cpu, ArmISA::INT_FIQ, 0);
+    auto tc = sys->threads[cpu];
+    tc->getCpuPtr()->postInterrupt(tc->threadId(), ArmISA::INT_FIQ, 0);
     --pendingDelayedInterrupts;
     assert(pendingDelayedInterrupts >= 0);
     if (pendingDelayedInterrupts == 0)

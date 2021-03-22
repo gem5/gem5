@@ -56,9 +56,6 @@ class Malta : public Platform
     /** Max number of CPUs in a Malta */
     static const int Max_CPUs = 64;
 
-    /** Pointer to the system */
-    System *system;
-
     /** Pointer to the MaltaIO device which has the RTC */
     MaltaIO *io;
 
@@ -72,12 +69,6 @@ class Malta : public Platform
     int ipi_pending[Malta::Max_CPUs];
 
   public:
-    /**
-     * Constructor for the Malta Class.
-     * @param name name of the object
-     * @param s system the object belongs to
-     * @param intctrl pointer to the interrupt controller
-     */
     typedef MaltaParams Params;
     Malta(const Params &p);
 

@@ -39,6 +39,7 @@
 
 #include "arch/arm/interrupts.hh"
 #include "base/trace.hh"
+#include "cpu/base.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/VGIC.hh"
 #include "dev/arm/base_gic.hh"
@@ -371,13 +372,15 @@ void
 VGic::unPostVInt(uint32_t cpu)
 {
     DPRINTF(VGIC, "Unposting VIRQ to %d\n", cpu);
-    platform->intrctrl->clear(cpu, ArmISA::INT_VIRT_IRQ, 0);
+    auto tc = platform->system->threads[cpu];
+    tc->getCpuPtr()->clearInterrupt(tc->threadId(), ArmISA::INT_VIRT_IRQ, 0);
 }
 
 void
 VGic::processPostVIntEvent(uint32_t cpu)
 {
-     platform->intrctrl->post(cpu, ArmISA::INT_VIRT_IRQ, 0);
+    auto tc = platform->system->threads[cpu];
+    tc->getCpuPtr()->postInterrupt(tc->threadId(), ArmISA::INT_VIRT_IRQ, 0);
 }
 
 

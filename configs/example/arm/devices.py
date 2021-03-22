@@ -296,7 +296,6 @@ class BaseSimpleSystem(ArmSystem):
         if hasattr(self.realview.gic, 'cpu_addr'):
             self.gic_cpu_addr = self.realview.gic.cpu_addr
 
-        self.intrctrl = IntrControl()
         self.terminal = Terminal()
         self.vncserver = VncServer()
 

@@ -37,8 +37,6 @@
 #include "dev/io_device.hh"
 #include "params/Iob.hh"
 
-class IntrControl;
-
 const int  MaxNiagaraProcs = 32;
 // IOB Managment Addresses
 const Addr IntManAddr       = 0x0000;
@@ -71,7 +69,6 @@ const uint64_t JIntBusyMask = 0x0003F;
 class Iob : public PioDevice
 {
   private:
-    IntrControl *ic;
     Addr iobManAddr;
     Addr iobManSize;
     Addr iobJBusAddr;

@@ -48,7 +48,6 @@ class Plic(BasicPioDevice):
     """
     type = 'Plic'
     cxx_header = 'dev/riscv/plic.hh'
-    intrctrl = Param.IntrControl(Parent.any, "interrupt controller")
     pio_size = Param.Addr(0x4000000, "PIO Size")
     n_src = Param.Int("Number of interrupt sources")
 

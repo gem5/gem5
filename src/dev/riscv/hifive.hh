@@ -48,7 +48,6 @@ using namespace RiscvISA;
 class HiFive : public Platform
 {
   public:
-    System *system;
     Clint *clint;
     Plic *plic;
     int uartIntID;

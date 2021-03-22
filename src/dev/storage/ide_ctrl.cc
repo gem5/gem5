@@ -43,7 +43,6 @@
 #include <string>
 
 #include "base/cprintf.hh"
-#include "cpu/intr_control.hh"
 #include "debug/IdeCtrl.hh"
 #include "dev/storage/ide_disk.hh"
 #include "mem/packet.hh"

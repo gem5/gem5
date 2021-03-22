@@ -40,22 +40,18 @@
 #include "params/Platform.hh"
 #include "sim/sim_object.hh"
 
-class IntrControl;
 class Terminal;
 class Uart;
 class System;
 
-
 class Platform : public SimObject
 {
   public:
-    /** Pointer to the interrupt controller */
-    IntrControl *intrctrl;
+    System *system;
 
-  public:
     typedef PlatformParams Params;
     Platform(const Params &p);
-    virtual ~Platform();
+    virtual ~Platform() = default;
 
     /**
      * Cause the cpu to post a serial interrupt to the CPU.

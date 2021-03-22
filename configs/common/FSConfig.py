@@ -122,7 +122,6 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
                        AddrRange(Addr('2GB'), size ='256MB')]
     self.bridge.master = self.iobus.slave
     self.bridge.slave = self.membus.master
-    self.intrctrl = IntrControl()
     self.disk0 = CowMmDisk()
     self.disk0.childImage(mdesc.disks()[0])
     self.disk0.pio = self.iobus.master
@@ -332,7 +331,6 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
             dev, self.iobus,
             dma_ports=self._dma_ports if ruby else None)
 
-    self.intrctrl = IntrControl()
     self.terminal = Terminal()
     self.vncserver = VncServer()
 
@@ -379,7 +377,6 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     self.malta.ethernet.dma = self.iobus.slave
     self.simple_disk = SimpleDisk(disk=RawDiskImage(
         image_file = mdesc.disks()[0], read_only = True))
-    self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
     self.terminal = Terminal()
     self.console = binary('mips/console')
@@ -487,8 +484,6 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
         connectX86RubySystem(self)
     else:
         connectX86ClassicSystem(self, numCPUs)
-
-    self.intrctrl = IntrControl()
 
     # Disks
     disks = makeCowDisks(mdesc.disks())

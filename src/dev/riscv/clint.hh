@@ -40,7 +40,6 @@
 
 #include "arch/riscv/interrupts.hh"
 #include "arch/riscv/registers.hh"
-#include "cpu/intr_control.hh"
 #include "dev/intpin.hh"
 #include "dev/io_device.hh"
 #include "dev/mc146818.hh"
@@ -71,7 +70,6 @@ class Clint : public BasicPioDevice
   // Params
   protected:
     System *system;
-    IntrControl *intrctrl;
     int nThread;
     IntSinkPin<Clint> signal;
 

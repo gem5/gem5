@@ -232,8 +232,6 @@ class MySystem(System):
         self.iocache.cpu_side = self.iobus.master
         self.iocache.mem_side = self.membus.slave
 
-        self.intrctrl = IntrControl()
-
         ###############################################
 
         # Add in a Bios information structure.

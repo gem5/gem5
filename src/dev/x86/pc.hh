@@ -45,9 +45,7 @@ class SouthBridge;
 class Pc : public Platform
 {
   public:
-    /** Pointer to the system */
-    System *system;
-    SouthBridge *southBridge;
+    SouthBridge *southBridge = nullptr;
 
   public:
     typedef PcParams Params;

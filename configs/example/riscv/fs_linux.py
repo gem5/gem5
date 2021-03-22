@@ -137,8 +137,6 @@ system.membus = MemBus()
 
 system.system_port = system.membus.cpu_side_ports
 
-system.intrctrl = IntrControl()
-
 # HiFive platform
 system.platform = HiFive()
 

@@ -50,7 +50,6 @@ class MaltaIO(BasicPioDevice):
 class Malta(Platform):
     type = 'Malta'
     cxx_header = "dev/mips/malta.hh"
-    system = Param.System(Parent.any, "system")
     cchip = MaltaCChip(pio_addr=0x801a0000000)
     io = MaltaIO(pio_addr=0x801fc000000)
     uart = Uart8250(pio_addr=0xBFD003F8)

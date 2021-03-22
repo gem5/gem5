@@ -41,6 +41,7 @@
 #include <algorithm>
 
 #include "arch/riscv/registers.hh"
+#include "cpu/base.hh"
 #include "debug/Plic.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -52,7 +53,6 @@ using namespace RiscvISA;
 Plic::Plic(const Params &params) :
     BasicPioDevice(params, params.pio_size),
     system(params.system),
-    intrctrl(params.intrctrl),
     nSrc(params.n_src),
     registers(params.name, pioAddr, this),
     update([this]{updateOutput();}, name() + ".update")
@@ -444,25 +444,22 @@ Plic::updateInt()
         int int_id = (i & 1) ?
             ExceptionCode::INT_EXT_SUPER : ExceptionCode::INT_EXT_MACHINE;
 
+        auto tc = system->threads[thread_id];
         uint32_t max_id = output.maxID[i];
         uint32_t priority = output.maxPriority[i];
         uint32_t threshold = registers.threshold[i].get();
         if (priority > threshold && max_id > 0 && lastID[i] == 0) {
-            DPRINTF(Plic,
-                "Int posted - thread: %d, int id: %d, ",
-                thread_id, int_id);
-            DPRINTFR(Plic,
-                "pri: %d, thres: %d\n", priority, threshold);
-            intrctrl->post(thread_id, int_id, 0);
+            DPRINTF(Plic, "Int posted - thread: %d, int id: %d, ",
+                    thread_id, int_id);
+            DPRINTFR(Plic, "pri: %d, thres: %d\n", priority, threshold);
+            tc->getCpuPtr()->postInterrupt(tc->threadId(), int_id, 0);
         } else {
             if (priority > 0) {
-                DPRINTF(Plic,
-                    "Int filtered - thread: %d, int id: %d, ",
-                    thread_id, int_id);
-                DPRINTFR(Plic,
-                    "pri: %d, thres: %d\n", priority, threshold);
+                DPRINTF(Plic, "Int filtered - thread: %d, int id: %d, ",
+                        thread_id, int_id);
+                DPRINTFR(Plic, "pri: %d, thres: %d\n", priority, threshold);
             }
-            intrctrl->clear(thread_id, int_id, 0);
+            tc->getCpuPtr()->clearInterrupt(tc->threadId(), int_id, 0);
         }
     }
 }

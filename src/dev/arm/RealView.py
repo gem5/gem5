@@ -649,7 +649,6 @@ class GenericMHU(MHU):
 class RealView(Platform):
     type = 'RealView'
     cxx_header = "dev/arm/realview.hh"
-    system = Param.System(Parent.any, "system")
     _mem_regions = [ AddrRange(0, size='256MiB') ]
     _num_pci_dev = 0
 

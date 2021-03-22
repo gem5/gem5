@@ -37,6 +37,7 @@
 
 #include "dev/riscv/clint.hh"
 
+#include "cpu/base.hh"
 #include "debug/Clint.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -48,7 +49,6 @@ using namespace RiscvISA;
 Clint::Clint(const Params &params) :
     BasicPioDevice(params, params.pio_size),
     system(params.system),
-    intrctrl(params.intrctrl),
     signal(params.name + ".signal", 0, this),
     registers(params.name + ".registers", params.pio_addr, this)
 {
@@ -63,22 +63,25 @@ Clint::raiseInterruptPin(int id)
 
     for (int context_id = 0; context_id < nThread; context_id++) {
 
+        auto tc = system->threads[context_id];
+
         // Update misc reg file
-        ISA* isa = dynamic_cast<ISA*>(
-            system->threads[context_id]->getIsaPtr());
+        ISA* isa = dynamic_cast<ISA*>(tc->getIsaPtr());
         isa->setMiscRegNoEffect(MISCREG_TIME, mtime);
 
         // Post timer interrupt
         uint64_t mtimecmp = registers.mtimecmp[context_id].get();
         if (mtime >= mtimecmp) {
-                if (mtime == mtimecmp) {
-                    DPRINTF(Clint,
-                        "MTIP posted - thread: %d, mtime: %d, mtimecmp: %d\n",
-                        context_id, mtime, mtimecmp);
-                }
-            intrctrl->post(context_id, ExceptionCode::INT_TIMER_MACHINE, 0);
+            if (mtime == mtimecmp) {
+                DPRINTF(Clint,
+                    "MTIP posted - thread: %d, mtime: %d, mtimecmp: %d\n",
+                    context_id, mtime, mtimecmp);
+            }
+            tc->getCpuPtr()->postInterrupt(tc->threadId(),
+                    ExceptionCode::INT_TIMER_MACHINE, 0);
         } else {
-            intrctrl->clear(context_id, ExceptionCode::INT_TIMER_MACHINE, 0);
+            tc->getCpuPtr()->clearInterrupt(tc->threadId(),
+                    ExceptionCode::INT_TIMER_MACHINE, 0);
         }
     }
 }
@@ -137,15 +140,14 @@ Clint::writeMSIP(Register32& reg, const uint32_t& data, const int thread_id)
 {
     reg.update(data);
     assert(data <= 1);
+    auto tc = system->threads[thread_id];
     if (data > 0) {
-        DPRINTF(Clint,
-            "MSIP posted - thread: %d\n", thread_id);
-        intrctrl->post(thread_id,
+        DPRINTF(Clint, "MSIP posted - thread: %d\n", thread_id);
+        tc->getCpuPtr()->postInterrupt(tc->threadId(),
             ExceptionCode::INT_SOFTWARE_MACHINE, 0);
     } else {
-        DPRINTF(Clint,
-            "MSIP cleared - thread: %d\n", thread_id);
-        intrctrl->clear(thread_id,
+        DPRINTF(Clint, "MSIP cleared - thread: %d\n", thread_id);
+        tc->getCpuPtr()->clearInterrupt(tc->threadId(),
             ExceptionCode::INT_SOFTWARE_MACHINE, 0);
     }
 };

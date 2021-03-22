@@ -40,7 +40,7 @@
 
 #include "dev/arm/gic_v3.hh"
 
-#include "cpu/intr_control.hh"
+#include "cpu/base.hh"
 #include "debug/GIC.hh"
 #include "debug/Interrupt.hh"
 #include "dev/arm/gic_v3_cpu_interface.hh"
@@ -204,8 +204,9 @@ Gicv3::clearPPInt(uint32_t int_id, uint32_t cpu)
 void
 Gicv3::postInt(uint32_t cpu, ArmISA::InterruptTypes int_type)
 {
-    platform->intrctrl->post(cpu, int_type, 0);
-    ArmSystem::callClearStandByWfi(sys->threads[cpu]);
+    auto tc = sys->threads[cpu];
+    tc->getCpuPtr()->postInterrupt(tc->threadId(), int_type, 0);
+    ArmSystem::callClearStandByWfi(tc);
 }
 
 bool
@@ -218,19 +219,22 @@ Gicv3::supportsVersion(GicVersion version)
 void
 Gicv3::deassertInt(uint32_t cpu, ArmISA::InterruptTypes int_type)
 {
-    platform->intrctrl->clear(cpu, int_type, 0);
+    auto tc = sys->threads[cpu];
+    tc->getCpuPtr()->clearInterrupt(tc->threadId(), int_type, 0);
 }
 
 void
 Gicv3::deassertAll(uint32_t cpu)
 {
-    platform->intrctrl->clearAll(cpu);
+    auto tc = sys->threads[cpu];
+    tc->getCpuPtr()->clearInterrupts(tc->threadId());
 }
 
 bool
 Gicv3::haveAsserted(uint32_t cpu) const
 {
-    return platform->intrctrl->havePosted(cpu);
+    auto tc = sys->threads[cpu];
+    return tc->getCpuPtr()->checkInterrupts(tc->threadId());
 }
 
 Gicv3Redistributor *

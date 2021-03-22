@@ -49,7 +49,6 @@ class Clint(BasicPioDevice):
     """
     type = 'Clint'
     cxx_header = 'dev/riscv/clint.hh'
-    intrctrl = Param.IntrControl(Parent.any, "interrupt controller")
     int_pin = IntSinkPin('Pin to receive RTC signal')
     pio_size = Param.Addr(0xC000, "PIO Size")
 

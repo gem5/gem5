@@ -42,7 +42,6 @@
 #include <map>
 
 #include "arch/riscv/interrupts.hh"
-#include "cpu/intr_control.hh"
 #include "dev/io_device.hh"
 #include "dev/reg_bank.hh"
 #include "mem/packet.hh"
@@ -97,7 +96,6 @@ class Plic : public BasicPioDevice
   // Params
   protected:
     System *system;
-    IntrControl *intrctrl;
 
     // Number of interrupt sources
     int nSrc;

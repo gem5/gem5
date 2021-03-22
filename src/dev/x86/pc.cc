@@ -38,18 +38,14 @@
 
 #include "arch/x86/intmessage.hh"
 #include "arch/x86/x86_traits.hh"
-#include "cpu/intr_control.hh"
 #include "dev/x86/i82094aa.hh"
 #include "dev/x86/i8254.hh"
 #include "dev/x86/i8259.hh"
 #include "dev/x86/south_bridge.hh"
 #include "sim/system.hh"
 
-Pc::Pc(const Params &p)
-    : Platform(p), system(p.system)
-{
-    southBridge = NULL;
-}
+Pc::Pc(const Params &p) : Platform(p)
+{}
 
 void
 Pc::init()

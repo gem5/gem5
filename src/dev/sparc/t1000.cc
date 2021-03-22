@@ -36,12 +36,9 @@
 #include <string>
 #include <vector>
 
-#include "cpu/intr_control.hh"
-#include "sim/system.hh"
+#include "base/logging.hh"
 
-T1000::T1000(const Params &p)
-    : Platform(p), system(p.system)
-{}
+T1000::T1000(const Params &p) : Platform(p) {}
 
 void
 T1000::postConsoleInt()

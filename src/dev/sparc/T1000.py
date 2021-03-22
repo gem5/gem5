@@ -55,7 +55,6 @@ class Iob(PioDevice):
 class T1000(Platform):
     type = 'T1000'
     cxx_header = "dev/sparc/t1000.hh"
-    system = Param.System(Parent.any, "system")
 
     fake_clk = IsaFake(pio_addr=0x9600000000, pio_size=0x100000000)
             #warn_access="Accessing Clock Unit -- Unimplemented!")
