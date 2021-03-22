@@ -62,7 +62,8 @@ Source('types.cc', tags='x86 isa')
 Source('utility.cc', tags='x86 isa')
 
 SimObject('X86SeWorkload.py', sim_objects=['X86EmuLinux'], tags='x86 isa')
-SimObject('X86FsWorkload.py', sim_objects=['X86FsWorkload', 'X86FsLinux'],
+SimObject('X86FsWorkload.py',
+    sim_objects=['X86BareMetalWorkload', 'X86FsWorkload', 'X86FsLinux'],
     tags='x86 isa')
 SimObject('X86Decoder.py', sim_objects=['X86Decoder'], tags='x86 isa')
 SimObject('X86ISA.py', sim_objects=['X86ISA'], tags='x86 isa')
