@@ -100,7 +100,13 @@ system.clk_domain = SrcClockDomain(clock = '1GHz',
 
 system.mem_ranges = AddrRange('256MB')
 
-Ruby.create_system(options, False, system)
+# the ruby tester reuses num_cpus to specify the
+# number of cpu ports connected to the tester object, which
+# is stored in system.cpu. because there is only ever one
+# tester object, num_cpus is not necessarily equal to the
+# size of system.cpu
+cpu_list = [ system.cpu ] * options.num_cpus
+Ruby.create_system(options, False, system, cpus=cpu_list)
 
 # Create a separate clock domain for Ruby
 system.ruby.clk_domain = SrcClockDomain(clock = '1GHz',

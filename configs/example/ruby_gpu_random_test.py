@@ -249,8 +249,15 @@ system.dma_devices = dma_devices
 #
 # Create the Ruby system
 #
+# the ruby tester reuses num_cpus to specify the
+# number of cpu ports connected to the tester object, which
+# is stored in system.cpu. because there is only ever one
+# tester object, num_cpus is not necessarily equal to the
+# size of system.cpu
+cpu_list = [ system.cpu ] * options.num_cpus
 Ruby.create_system(options = options, full_system = False,
-                   system = system, dma_ports = system.dma_devices)
+                   system = system, dma_ports = system.dma_devices,
+                   cpus = cpu_list)
 
 #
 # The tester is most effective when randomization is turned on and

@@ -172,7 +172,7 @@ def create_topology(controllers, options):
     return topology
 
 def create_system(options, full_system, system, piobus = None, dma_ports = [],
-                  bootmem=None):
+                  bootmem=None, cpus=None):
 
     system.ruby = RubySystem()
     ruby = system.ruby
@@ -185,12 +185,15 @@ def create_system(options, full_system, system, piobus = None, dma_ports = [],
         Network.create_network(options, ruby)
     ruby.network = network
 
+    if cpus is None:
+        cpus = system.cpu
+
     protocol = buildEnv['PROTOCOL']
     exec("from . import %s" % protocol)
     try:
         (cpu_sequencers, dir_cntrls, topology) = \
              eval("%s.create_system(options, full_system, system, dma_ports,\
-                                    bootmem, ruby)"
+                                    bootmem, ruby, cpus)"
                   % protocol)
     except:
         print("Error: could not create sytem for ruby protocol %s" % protocol)

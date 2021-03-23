@@ -58,7 +58,7 @@ def define_options(parser):
     return
 
 def create_system(options, full_system, system, dma_ports, bootmem,
-                  ruby_system):
+                  ruby_system, cpus):
 
     if buildEnv['PROTOCOL'] != 'MESI_Three_Level':
         fatal("This script requires the MESI_Three_Level protocol to be\
@@ -108,17 +108,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                 start_index_bit = block_size_bits,
                 replacement_policy = LRURP())
 
-            # the ruby random tester reuses num_cpus to specify the
-            # number of cpu ports connected to the tester object, which
-            # is stored in system.cpu. because there is only ever one
-            # tester object, num_cpus is not necessarily equal to the
-            # size of system.cpu; therefore if len(system.cpu) == 1
-            # we use system.cpu[0] to set the clk_domain, thereby ensuring
-            # we don't index off the end of the cpu list.
-            if len(system.cpu) == 1:
-                clk_domain = system.cpu[0].clk_domain
-            else:
-                clk_domain = system.cpu[i].clk_domain
+            clk_domain = cpus[i].clk_domain
 
             # Ruby prefetcher
             prefetcher = RubyPrefetcher(
