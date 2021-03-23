@@ -2377,13 +2377,19 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc, int nfds,
      */
     for (int i = 0; i < nfds_h; i++) {
         if (readfds && FD_ISSET(i, &readfds_h))
-            FD_SET(trans_map[i], readfds);
+            FD_SET(trans_map[i],
+                   reinterpret_cast<fd_set *>(
+                       (typename OS::fd_set *)readfds));
 
         if (writefds && FD_ISSET(i, &writefds_h))
-            FD_SET(trans_map[i], writefds);
+            FD_SET(trans_map[i],
+                   reinterpret_cast<fd_set *>(
+                       (typename OS::fd_set *)writefds));
 
         if (errorfds && FD_ISSET(i, &errorfds_h))
-            FD_SET(trans_map[i], errorfds);
+            FD_SET(trans_map[i],
+                   reinterpret_cast<fd_set *>(
+                       (typename OS::fd_set *)errorfds));
     }
 
     return retval;
