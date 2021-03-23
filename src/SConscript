@@ -71,17 +71,91 @@ from m5.util import code_formatter, compareVersions, readCommand
 # When specifying a source file of some type, a set of tags can be
 # specified for that file.
 
+def tag_implies(env, tag, tag_list):
+    '''
+    Associates a tag X to a list of tags which are implied by X.
+
+    For example, assume:
+    - Each file <X>.cc is tagged with the tag "Tag <X>".
+    - B.cc refers to symbols from A.cc
+    - C.cc refers to symbols from B.cc
+    - D.cc refers to symbols from A.cc and C.cc
+
+    Then:
+    - "Tag A" is implied by "Tag B"
+    - "Tag B" is implied by "Tag C"
+    - "Tag A" is transitively implied by "Tag C" (from "Tag B")
+    - "Tag A" and "Tag C" are implied by "Tag D"
+    - "Tag B" is transitively implied by "Tag D" (from "Tag C")
+    - "Tag A" is transitively implied by "Tag D" (from transitive "Tag B")
+
+    All of these implications are simply declared as:
+        env.TagImplies("Tag B", "Tag A")
+        env.TagImplies("Tag C", "Tag B")
+        env.TagImplies("Tag D", ["Tag A", "Tag C"])
+
+    So that any use of a tag will automatically include its transitive tags
+    after being resolved.
+    '''
+
+    env.SetDefault(_tag_implies={})
+    implications = env['_tag_implies']
+
+    if isinstance(tag_list, str):
+        tag_list = frozenset([tag_list])
+    if not isinstance(tag_list, frozenset):
+        tag_list = frozenset(tag_list)
+    if tag in implications:
+        implications[tag] |= tag_list
+    else:
+        implications[tag] = tag_list
+
+    # Check if any of the tags on which the new tag depends on already
+    # has a list of implications. If so, add the list to the new tag's
+    # implications
+    for t in tag_list:
+        if t in implications:
+            implications[tag] |= implications[t]
+
+    # Check if another tag depends on this tag. If so, add this tag's
+    # implications to that tag.
+    for t,implied in implications.items():
+        if tag in implied:
+            implications[t] |= implications[tag]
+
+env.AddMethod(tag_implies, 'TagImplies')
+
+def resolve_tags(env, tags):
+    '''
+    Returns the complete set of tags implied (dependencies) by the
+    supplied tags.
+    '''
+
+    implications = env.SetDefault(_tag_implies={})
+    implications = env['_tag_implies']
+
+    if isinstance(tags, str):
+        tags = frozenset([tags])
+    if not isinstance(tags, frozenset):
+        tags = frozenset(tags)
+
+    tags = tags.copy()
+    for tag in tags:
+        if tag in implications:
+            tags |= implications[tag]
+    return tags
+
 class SourceFilter(object):
     def __init__(self, predicate):
         self.predicate = predicate
 
     def __or__(self, other):
-        return SourceFilter(lambda tags: self.predicate(tags) or
-                                         other.predicate(tags))
+        return SourceFilter(lambda env, tags: self.predicate(env, tags) or
+                                              other.predicate(env, tags))
 
     def __and__(self, other):
-        return SourceFilter(lambda tags: self.predicate(tags) and
-                                         other.predicate(tags))
+        return SourceFilter(lambda env, tags: self.predicate(env, tags) and
+                                              other.predicate(env, tags))
 
 def with_tags_that(predicate):
     '''Return a list of sources with tags that satisfy a predicate.'''
@@ -89,23 +163,25 @@ def with_tags_that(predicate):
 
 def with_any_tags(*tags):
     '''Return a list of sources with any of the supplied tags.'''
-    return SourceFilter(lambda stags: len(set(tags) & stags) > 0)
+    return SourceFilter(lambda env, stags: \
+        len(resolve_tags(env, tags) & stags) > 0)
 
 def with_all_tags(*tags):
     '''Return a list of sources with all of the supplied tags.'''
-    return SourceFilter(lambda stags: set(tags) <= stags)
+    return SourceFilter(lambda env, stags: resolve_tags(env, tags) <= stags)
 
 def with_tag(tag):
     '''Return a list of sources with the supplied tag.'''
-    return SourceFilter(lambda stags: tag in stags)
+    return with_any_tags(*[tag])
 
 def without_tags(*tags):
     '''Return a list of sources without any of the supplied tags.'''
-    return SourceFilter(lambda stags: len(set(tags) & stags) == 0)
+    return SourceFilter(lambda env, stags: \
+        len(resolve_tags(env, tags) & stags) == 0)
 
 def without_tag(tag):
-    '''Return a list of sources with the supplied tag.'''
-    return SourceFilter(lambda stags: tag not in stags)
+    '''Return a list of sources without the supplied tag.'''
+    return without_tags(*[tag])
 
 source_filter_factories = {
     'with_tags_that': with_tags_that,
@@ -119,9 +195,9 @@ source_filter_factories = {
 Export(source_filter_factories)
 
 class SourceList(list):
-    def apply_filter(self, f):
+    def apply_filter(self, env, f):
         def match(source):
-            return f.predicate(source.tags)
+            return f.predicate(env, source.tags)
         return SourceList(filter(match, self))
 
     def __getattr__(self, name):
@@ -130,8 +206,8 @@ class SourceList(list):
             raise AttributeError
 
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            return self.apply_filter(func(*args, **kwargs))
+        def wrapper(env, *args, **kwargs):
+            return self.apply_filter(env, func(*args, **kwargs))
         return wrapper
 
 class SourceMeta(type):
@@ -523,7 +599,7 @@ class UnitTest(Executable):
     def declare(self, env):
         sources = list(self.sources)
         for f in self.filters:
-            sources += Source.all.apply_filter(f)
+            sources += Source.all.apply_filter(env, f)
         objs = self.srcs_to_objs(env, sources) + env['STATIC_OBJS']
         if self.main:
             objs += env['MAIN_OBJS']
@@ -542,7 +618,7 @@ class GTest(Executable):
         env = env.Clone()
         env.Append(LIBS=env['GTEST_LIBS'])
         env.Append(CPPFLAGS=env['GTEST_CPPFLAGS'])
-        env['GTEST_LIB_SOURCES'] = Source.all.with_tag('gtest lib')
+        env['GTEST_LIB_SOURCES'] = Source.all.with_tag(env, 'gtest lib')
         env['GTEST_OUT_DIR'] = \
             Dir(env['BUILDDIR']).Dir('unittests.' + env['EXE_SUFFIX'])
         return super(GTest, cls).declare_all(env)
@@ -552,7 +628,7 @@ class GTest(Executable):
         if not self.skip_lib:
             sources += env['GTEST_LIB_SOURCES']
         for f in self.filters:
-            sources += Source.all.apply_filter(f)
+            sources += Source.all.apply_filter(env, f)
         objs = self.srcs_to_objs(env, sources)
 
         binary = super(GTest, self).declare(env, objs)
@@ -1286,12 +1362,12 @@ def makeEnv(env, label, objsfx, strip=False, **kwargs):
     new_env.Label = label
     new_env.Append(**kwargs)
 
-    lib_sources = Source.all.with_tag('gem5 lib')
+    lib_sources = Source.all.with_tag(new_env, 'gem5 lib')
 
     # Without Python, leave out all Python content from the library
     # builds.  The option doesn't affect gem5 built as a program
     if GetOption('without_python'):
-        lib_sources = lib_sources.without_tag('python')
+        lib_sources = lib_sources.without_tag(new_env, 'python')
 
     static_objs = list([ s.static(new_env) for s in lib_sources ])
     shared_objs = list([ s.shared(new_env) for s in lib_sources ])
@@ -1304,7 +1380,8 @@ def makeEnv(env, label, objsfx, strip=False, **kwargs):
     new_env.Depends(shared_date, shared_objs)
     shared_objs.extend(shared_date)
 
-    main_objs = [ s.static(new_env) for s in Source.all.with_tag('main') ]
+    main_objs = [ s.static(new_env) for s in
+            Source.all.with_tag(new_env, 'main') ]
 
     # First make a library of everything but main() so other programs can
     # link against m5.
