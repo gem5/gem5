@@ -64,7 +64,8 @@ class Solaris : public OperatingSystem
 
     /// Stat buffer.  Note that we can't call it 'stat' since that
     /// gets #defined to something else on some systems.
-    typedef struct {
+    typedef struct
+    {
         uint64_t        st_dev;         //!< device
         uint64_t        st_ino;         //!< inode
         uint32_t        st_mode;        //!< mode
@@ -83,7 +84,8 @@ class Solaris : public OperatingSystem
     } tgt_stat;
 
     // same for stat64
-    typedef struct {
+    typedef struct
+    {
         uint64_t        st_dev;         //!< device
         uint64_t        st_ino;         //!< inode
         uint32_t        st_mode;        //!< mode
@@ -105,7 +107,8 @@ class Solaris : public OperatingSystem
     static const int _SYS_NMLN = 257;
 
     /// Interface struct for uname().
-    typedef struct utsname {
+    typedef struct utsname
+    {
         char sysname[_SYS_NMLN];        //!< System name.
         char nodename[_SYS_NMLN];       //!< Node name.
         char release[_SYS_NMLN];        //!< OS release.

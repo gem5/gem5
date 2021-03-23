@@ -63,7 +63,8 @@ class CpuLocalTimer : public BasicPioDevice
     {
 
       public:
-        enum {
+        enum
+        {
             TimerLoadReg    	   = 0x00,
             TimerCounterReg 	   = 0x04,
             TimerControlReg 	   = 0x08,

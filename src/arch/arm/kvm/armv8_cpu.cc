@@ -83,12 +83,14 @@ kvmFPReg(const int num)
 
 union KvmFPReg
 {
-    union {
+    union
+    {
         uint32_t i;
         float f;
     } s[4];
 
-    union {
+    union
+    {
         uint64_t i;
         double f;
     } d[2];

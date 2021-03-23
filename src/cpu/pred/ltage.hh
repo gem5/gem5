@@ -75,7 +75,8 @@ class LTAGE : public TAGE
     LoopPredictor *loopPredictor;
 
     // more provider types
-    enum {
+    enum
+    {
         LOOP = TAGEBase::LAST_TAGE_PROVIDER_TYPE + 1,
         LAST_LTAGE_PROVIDER_TYPE = LOOP
     };

@@ -78,7 +78,8 @@ float __nan();
 float
 __nan()
 {
-    union {
+    union
+    {
         uint32_t ui;
         float f;
     } nan;

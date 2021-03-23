@@ -576,7 +576,8 @@ struct M5_ATTR_PACKED ip6_opt_hdr
 {
     uint8_t ext_nxt;
     uint8_t ext_len;
-    union {
+    union
+    {
         struct ip6_opt_fragment fragment;
         struct ip6_opt_routing_type2 rtType2;
         struct ip6_opt_dstopts dstOpts;

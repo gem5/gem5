@@ -72,7 +72,8 @@ class Gicv3Redistributor : public Serializable
     static const uint32_t RD_base  = 0x0;
     static const uint32_t SGI_base = 0x10000;
 
-    enum {
+    enum
+    {
         // Control Register
         GICR_CTLR  = RD_base + 0x0000,
         // Implementer Identification Register
@@ -104,7 +105,8 @@ class Gicv3Redistributor : public Serializable
 
     bool peInLowPowerState;
 
-    enum {
+    enum
+    {
         // Interrupt Group Register 0
         GICR_IGROUPR0   = SGI_base + 0x0080,
         // Interrupt Set-Enable Register 0
@@ -133,7 +135,8 @@ class Gicv3Redistributor : public Serializable
     static const AddrRange GICR_IPRIORITYR;
 
     // GIC physical LPI Redistributor register
-    enum {
+    enum
+    {
         // Set LPI Pending Register
         GICR_SETLPIR = RD_base + 0x0040,
         // Clear LPI Pending Register

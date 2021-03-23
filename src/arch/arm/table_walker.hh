@@ -769,7 +769,8 @@ class TableWalker : public ClockedObject
         CPSR cpsr;
 
         /** Cached copy of ttbcr/tcr as it existed when translation began */
-        union {
+        union
+        {
             TTBCR ttbcr; // AArch32 translations
             TCR tcr;     // AArch64 translations
         };

@@ -193,7 +193,8 @@ class ArmLinux32 : public ArmLinux
     };
 
 
-    typedef struct {
+    typedef struct
+    {
         uint32_t st_dev;
         uint32_t st_ino;
         uint16_t st_mode;
@@ -214,7 +215,8 @@ class ArmLinux32 : public ArmLinux
         uint32_t st_ctime_nsec;
     } tgt_stat;
 
-    typedef struct {
+    typedef struct
+    {
         uint64_t  st_dev;
         uint8_t   __pad0[4];
         uint32_t  __st_ino;
@@ -236,7 +238,8 @@ class ArmLinux32 : public ArmLinux
         uint64_t  st_ino;
     } tgt_stat64;
 
-    typedef struct {
+    typedef struct
+    {
         int32_t  uptime;    /* Seconds since boot */
         uint32_t loads[3];  /* 1, 5, and 15 minute load averages */
         uint32_t totalram;  /* Total usable main memory size */
@@ -459,7 +462,8 @@ class ArmLinux64 : public ArmLinux
         uint64_t iov_len;
     };
 
-    typedef struct {
+    typedef struct
+    {
         uint64_t st_dev;
         uint64_t st_ino;
         uint64_t st_nlink;
@@ -479,7 +483,8 @@ class ArmLinux64 : public ArmLinux
         uint64_t st_ctime_nsec;
     } tgt_stat;
 
-    typedef struct {
+    typedef struct
+    {
         uint64_t st_dev;
         uint64_t st_ino;
         uint32_t st_mode;
@@ -499,7 +504,8 @@ class ArmLinux64 : public ArmLinux
         uint64_t st_ctime_nsec;
     } tgt_stat64;
 
-    typedef struct {
+    typedef struct
+    {
         int64_t  uptime;    /* Seconds since boot */
         uint64_t loads[3];  /* 1, 5, and 15 minute load averages */
         uint64_t totalram;  /* Total usable main memory size */

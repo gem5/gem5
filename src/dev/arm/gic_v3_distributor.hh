@@ -58,7 +58,8 @@ class Gicv3Distributor : public Serializable
     Gicv3 * gic;
     const uint32_t itLines;
 
-    enum {
+    enum
+    {
         // Control Register
         GICD_CTLR  = 0x0000,
         // Interrupt Controller Type Register

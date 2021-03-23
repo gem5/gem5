@@ -60,7 +60,8 @@ class Sp804 : public AmbaPioDevice
     {
 
       public:
-        enum {
+        enum
+        {
             LoadReg    = 0x00,
             CurrentReg = 0x04,
             ControlReg = 0x08,

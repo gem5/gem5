@@ -67,7 +67,8 @@ class OperatingSystem
     static const int _SYS_NMLN = 65;
 
     /// Interface struct for uname().
-    typedef struct {
+    typedef struct
+    {
         char sysname[_SYS_NMLN];        //!< System name.
         char nodename[_SYS_NMLN];       //!< Node name.
         char release[_SYS_NMLN];        //!< OS release.
@@ -76,26 +77,30 @@ class OperatingSystem
     } utsname;
 
     /// Limit struct for getrlimit/setrlimit.
-    typedef struct {
+    typedef struct
+    {
         uint64_t  rlim_cur;     //!< soft limit
         uint64_t  rlim_max;     //!< hard limit
     } rlimit;
 
     /// For gettimeofday().
-    typedef struct {
+    typedef struct
+    {
         int64_t tv_sec;         //!< seconds
         int64_t tv_usec;        //!< microseconds
     } timeval;
 
     // For writev/readv
-    typedef struct {
+    typedef struct
+    {
         uint64_t iov_base; // void *
         uint64_t iov_len;
     } tgt_iovec;
 
 
     /// For getrusage().
-    typedef struct {
+    typedef struct
+    {
         timeval ru_utime;       //!< user time used
         timeval ru_stime;       //!< system time used
         int64_t ru_maxrss;              //!< max rss

@@ -102,7 +102,8 @@ class DefaultCommit
     /** Overall commit status. Used to determine if the CPU can deschedule
      * itself due to a lack of activity.
      */
-    enum CommitStatus{
+    enum CommitStatus
+    {
         Active,
         Inactive
     };

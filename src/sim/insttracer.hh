@@ -91,7 +91,8 @@ class InstRecord
      * @TODO fix this and record all destintations that an instruction writes
      * @see data_status
      */
-    union {
+    union
+    {
         uint64_t as_int;
         double as_double;
         ::VecRegContainer<TheISA::VecRegSizeBytes>* as_vec;

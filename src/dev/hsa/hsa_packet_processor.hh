@@ -55,7 +55,8 @@
 // Ideally, each queue should store this status and
 // the processPkt() should make decisions based on that
 // status variable.
-typedef enum {
+typedef enum
+{
     UNBLOCKED = 0, // Unblocked queue, can submit packets.
     BLOCKED_BBIT,  // Queue blocked by barrier bit.
                    // Can submit packet packets after
@@ -205,7 +206,8 @@ class AQLRingBuffer
      uint64_t compltnPending() { return (_dispIdx - _rdIdx); }
 };
 
-typedef struct QueueContext {
+typedef struct QueueContext
+{
     HSAQueueDescriptor* qDesc;
     AQLRingBuffer* aqlBuf;
     // used for HSA packets that enforce synchronization with barrier bit

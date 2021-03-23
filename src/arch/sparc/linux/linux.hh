@@ -168,7 +168,8 @@ class SparcLinux : public Linux
 
     static const unsigned NUM_MMAP_FLAGS;
 
-    typedef struct {
+    typedef struct
+    {
         int64_t  uptime;    /* Seconds since boot */
         uint64_t loads[3];  /* 1, 5, and 15 minute load averages */
         uint64_t totalram;  /* Total usable main memory size */
@@ -245,7 +246,8 @@ class Sparc32Linux : public SparcLinux
 {
   public:
 
-    typedef struct {
+    typedef struct
+    {
         uint64_t st_dev;
         uint64_t st_ino;
         uint32_t st_mode;
@@ -268,7 +270,8 @@ class Sparc32Linux : public SparcLinux
         uint32_t __unused5;
     } tgt_stat64;
 
-    typedef struct {
+    typedef struct
+    {
         int32_t  uptime;    /* Seconds since boot */
         uint32_t loads[3];  /* 1, 5, and 15 minute load averages */
         uint32_t totalram;  /* Total usable main memory size */

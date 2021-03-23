@@ -43,7 +43,8 @@ class MemBackdoor
     typedef std::function<void(const MemBackdoor &backdoor)> CbFunction;
 
   public:
-    enum Flags{
+    enum Flags
+    {
         // How data is allowed to be accessed through this backdoor.
         NoAccess = 0x0,
         Readable = 0x1,

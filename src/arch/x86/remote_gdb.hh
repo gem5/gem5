@@ -59,7 +59,8 @@ class RemoteGDB : public BaseRemoteGDB
     {
       using BaseGdbRegCache::BaseGdbRegCache;
       private:
-        struct {
+        struct
+        {
           uint32_t eax;
           uint32_t ecx;
           uint32_t edx;

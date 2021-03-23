@@ -89,17 +89,20 @@ class DistHeaderPkt
          * (from EthPacketData::simLength).
          */
         unsigned simLength;
-        union {
+        union
+        {
             Tick sendDelay;
             Tick syncRepeat;
         };
-        union {
+        union
+        {
             /**
              * Actual length of the simulated Ethernet packet.
              * (from EthPacketData::length).
              */
             unsigned dataPacketLength;
-            struct {
+            struct
+            {
                 ReqType needCkpt;
                 ReqType needStopSync;
                 ReqType needExit;

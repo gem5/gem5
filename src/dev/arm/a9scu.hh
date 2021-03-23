@@ -48,7 +48,8 @@
 class A9SCU : public BasicPioDevice
 {
   protected:
-    enum {
+    enum
+    {
         Control     = 0x00,
         Config      = 0x04,
     };

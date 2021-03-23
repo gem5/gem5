@@ -68,7 +68,8 @@ union PCIConfig
 {
     uint8_t data[64];
 
-    struct {
+    struct
+    {
         uint16_t vendor;
         uint16_t device;
         uint16_t command;
@@ -220,7 +221,8 @@ union PCIConfig
 union PMCAP
 {
     uint8_t data[6];
-    struct {
+    struct
+    {
         uint16_t pid;  /* 0:7  cid
                         * 8:15 next
                         */
@@ -254,7 +256,8 @@ union PMCAP
 union MSICAP
 {
     uint8_t data[24];
-    struct {
+    struct
+    {
         uint16_t mid;  /* 0:7  cid
                         *  8:15 next
                         */
@@ -282,7 +285,8 @@ union MSICAP
 union MSIXCAP
 {
     uint8_t data[12];
-    struct {
+    struct
+    {
         uint16_t mxid; /* 0:7  cid
                         *  8:15 next
                         */
@@ -302,7 +306,8 @@ union MSIXCAP
 
 union MSIXTable
 {
-    struct {
+    struct
+    {
         uint32_t addr_lo;
         uint32_t addr_hi;
         uint32_t msg_data;
@@ -324,7 +329,8 @@ struct MSIXPbaEntry
 struct PXCAP
 {
     uint8_t data[48];
-    struct {
+    struct
+    {
         uint16_t pxid; /* 0:7  cid
                         *  8:15 next
                         */

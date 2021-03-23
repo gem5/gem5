@@ -75,7 +75,8 @@ class FPC : public DictionaryCompressor<uint32_t>
      * The possible patterns. If a new pattern is added, it must be done
      * before NUM_PATTERNS.
      */
-    typedef enum {
+    typedef enum
+    {
         ZERO_RUN, SIGN_EXTENDED_4_BITS, SIGN_EXTENDED_1_BYTE,
         SIGN_EXTENDED_HALFWORD, ZERO_PADDED_HALFWORD,
         SIGN_EXTENDED_TWO_HALFWORDS, REP_BYTES, UNCOMPRESSED,

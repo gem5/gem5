@@ -49,7 +49,8 @@ class RemoteGDB : public BaseRemoteGDB
     {
       using BaseGdbRegCache::BaseGdbRegCache;
       private:
-        struct {
+        struct
+        {
             uint32_t gpr[32];
             uint32_t hole[32];
             uint32_t y;
@@ -77,7 +78,8 @@ class RemoteGDB : public BaseRemoteGDB
     {
       using BaseGdbRegCache::BaseGdbRegCache;
       private:
-        struct {
+        struct
+        {
             uint64_t gpr[32];
             uint64_t fpr[32];
             uint64_t pc;

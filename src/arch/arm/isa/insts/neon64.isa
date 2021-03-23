@@ -3568,8 +3568,9 @@ let {{
 
     for decoderFlavor, type_dict in decoders.items():
         header_output += '''
-        class %(decoder_flavor)sDecoder {
-        public:
+        class %(decoder_flavor)sDecoder
+        {
+          public:
         ''' % { "decoder_flavor" : decoderFlavor }
         for type,name in type_dict.items():
             header_output += '''

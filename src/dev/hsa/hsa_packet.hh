@@ -38,7 +38,8 @@
 
 #include <cstdint>
 
-typedef struct hsa_packet_header_s {
+typedef struct hsa_packet_header_s
+{
         // TODO: replace with more portable impl based on offset, length
         uint16_t type:8;
         uint16_t barrier:1;
@@ -48,7 +49,8 @@ typedef struct hsa_packet_header_s {
 } hsa_packet_header_bitfield_t;
 
 //TODO: put an _ in front of these guys to avoud prob with hsa.h for now
-typedef struct _hsa_dispatch_packet_s {
+typedef struct _hsa_dispatch_packet_s
+{
     uint16_t header;
     uint16_t setup;
     uint16_t workgroup_size_x;
@@ -66,7 +68,8 @@ typedef struct _hsa_dispatch_packet_s {
     uint64_t completion_signal;
 } _hsa_dispatch_packet_t;
 
-typedef struct _hsa_agent_dispatch_packet_s {
+typedef struct _hsa_agent_dispatch_packet_s
+{
     uint16_t header;
     uint16_t type;
     uint32_t reserved0;
@@ -76,7 +79,8 @@ typedef struct _hsa_agent_dispatch_packet_s {
     uint64_t completion_signal;
 } _hsa_agent_dispatch_packet_t;
 
-typedef struct _hsa_barrier_and_packet_s {
+typedef struct _hsa_barrier_and_packet_s
+{
     uint16_t header;
     uint16_t reserved0;
     uint32_t reserved1;
@@ -85,7 +89,8 @@ typedef struct _hsa_barrier_and_packet_s {
     uint64_t completion_signal;
 } _hsa_barrier_and_packet_t;
 
-typedef struct _hsa_barrier_or_packet_s {
+typedef struct _hsa_barrier_or_packet_s
+{
     uint16_t header;
     uint16_t reserved0;
     uint32_t reserved1;

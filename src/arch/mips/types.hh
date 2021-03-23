@@ -41,7 +41,8 @@ typedef uint64_t ExtMachInst;
 typedef GenericISA::DelaySlotPCState<MachInst> PCState;
 
 //used in FP convert & round function
-enum ConvertType{
+enum ConvertType
+{
     SINGLE_TO_DOUBLE,
     SINGLE_TO_WORD,
     SINGLE_TO_LONG,
@@ -65,7 +66,8 @@ enum ConvertType{
 };
 
 //used in FP convert & round function
-enum RoundMode{
+enum RoundMode
+{
     RND_ZERO,
     RND_DOWN,
     RND_UP,

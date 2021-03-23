@@ -1334,7 +1334,8 @@ enum class $name
         else:
             code('''\
 $wrapper $wrapper_name {
-    enum $name {
+    enum $name
+    {
 ''')
             code.indent(1)
         code.indent(1)

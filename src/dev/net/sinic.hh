@@ -104,7 +104,8 @@ class Device : public Base
     };
 
     /** device register file */
-    struct {
+    struct
+    {
         uint32_t Config;       // 0x00
         uint32_t Command;      // 0x04
         uint32_t IntrStatus;   // 0x08

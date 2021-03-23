@@ -66,7 +66,8 @@ class ChunkGenerator;
 #define PRD_COUNT_MASK 0xfffe
 #define PRD_EOT_MASK   0x8000
 
-typedef struct PrdEntry {
+typedef struct PrdEntry
+{
     uint32_t baseAddr;
     uint16_t byteCount;
     uint16_t endOfTable;
@@ -122,21 +123,24 @@ class PrdTableEntry
 #define DEV0 (0)
 #define DEV1 (1)
 
-typedef struct CommandReg {
+typedef struct CommandReg
+{
     uint16_t data;
     uint8_t error;
     uint8_t sec_count;
     uint8_t sec_num;
     uint8_t cyl_low;
     uint8_t cyl_high;
-    union {
+    union
+    {
         uint8_t drive;
         uint8_t head;
     };
     uint8_t command;
 } CommandReg_t;
 
-typedef enum Events {
+typedef enum Events
+{
     None = 0,
     Transfer,
     ReadWait,
@@ -146,7 +150,8 @@ typedef enum Events {
     DmaWrite
 } Events_t;
 
-typedef enum DevAction {
+typedef enum DevAction
+{
     ACT_NONE = 0,
     ACT_CMD_WRITE,
     ACT_CMD_COMPLETE,
@@ -164,7 +169,8 @@ typedef enum DevAction {
     ACT_SRST_CLEAR
 } DevAction_t;
 
-typedef enum DevState {
+typedef enum DevState
+{
     // Device idle
     Device_Idle_S = 0,
     Device_Idle_SI,
@@ -192,7 +198,8 @@ typedef enum DevState {
     Device_Dma_Abort
 } DevState_t;
 
-typedef enum DmaState {
+typedef enum DmaState
+{
     Dma_Idle = 0,
     Dma_Start,
     Dma_Transfer

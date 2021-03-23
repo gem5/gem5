@@ -83,7 +83,8 @@ class RealViewCtrl : public BasicPioDevice
     };
 
   protected:
-    enum {
+    enum
+    {
         IdReg      = 0x00,
         SwReg      = 0x04,
         Led        = 0x08,

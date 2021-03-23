@@ -1112,7 +1112,8 @@ SyscallReturn
 getdentsFunc(SyscallDesc *desc, ThreadContext *tc,
              int tgt_fd, VPtr<> buf_ptr, unsigned count)
 {
-    typedef struct linux_dirent {
+    typedef struct linux_dirent
+    {
         unsigned long d_ino;
         unsigned long d_off;
         unsigned short d_reclen;
@@ -1129,7 +1130,8 @@ SyscallReturn
 getdents64Func(SyscallDesc *desc, ThreadContext *tc,
                int tgt_fd, VPtr<> buf_ptr, unsigned count)
 {
-    typedef struct linux_dirent64 {
+    typedef struct linux_dirent64
+    {
         ino64_t d_ino;
         off64_t d_off;
         unsigned short d_reclen;

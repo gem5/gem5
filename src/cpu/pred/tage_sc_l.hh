@@ -178,7 +178,8 @@ class TAGE_SC_L: public LTAGE
     };
 
     // more provider types
-    enum {
+    enum
+    {
         SC = LAST_LTAGE_PROVIDER_TYPE + 1
     };
 

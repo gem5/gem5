@@ -44,7 +44,8 @@ class PowerLinux : public Linux
 
     typedef int32_t time_t;
 
-    typedef struct {
+    typedef struct
+    {
         uint64_t st_dev;
         uint32_t __pad1;
         uint32_t st_ino;
@@ -67,7 +68,8 @@ class PowerLinux : public Linux
         uint32_t __unused5;
     } tgt_stat;
 
-    typedef struct {
+    typedef struct
+    {
         uint64_t st_dev;
         uint64_t st_ino;
         uint32_t st_mode;

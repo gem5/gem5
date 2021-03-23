@@ -92,7 +92,8 @@ class FPCD : public DictionaryCompressor<uint32_t>
      * These are used as indexes to reference the pattern data. If a new
      * pattern is added, it must be done before NUM_PATTERNS.
      */
-    typedef enum {
+    typedef enum
+    {
         ZZZZ, FFFF, MMMMPenultimate, MMMMPrevious, ZZZX, XZZZ, RRRR,
         MMMXPenultimate, MMMXPrevious, ZZXX, ZXZX, FFXX, XXZZ,
         MMXXPenultimate, MMXXPrevious, XXXX, NUM_PATTERNS

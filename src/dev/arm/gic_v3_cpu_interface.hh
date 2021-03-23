@@ -151,7 +151,8 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
 
     static const uint8_t GIC_MIN_VBPR = 7 - VIRTUAL_PREEMPTION_BITS;
 
-    typedef struct {
+    typedef struct
+    {
         uint32_t intid;
         uint8_t prio;
         Gicv3::GroupId group;
@@ -160,7 +161,8 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     hppi_t hppi;
 
     // GIC CPU interface memory mapped control registers (legacy)
-    enum {
+    enum
+    {
         GICC_CTLR    = 0x0000,
         GICC_PMR     = 0x0004,
         GICC_BPR     = 0x0008,
@@ -180,7 +182,8 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     static const AddrRange GICC_NSAPR;
 
     // GIC CPU virtual interface memory mapped control registers (legacy)
-    enum {
+    enum
+    {
         GICH_HCR   = 0x0000,
         GICH_VTR   = 0x0004,
         GICH_VMCR  = 0x0008,

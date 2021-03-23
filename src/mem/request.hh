@@ -96,7 +96,8 @@ class Request
     typedef uint8_t ArchFlagsType;
     typedef ::Flags<FlagsType> Flags;
 
-    enum : FlagsType {
+    enum : FlagsType
+    {
         /**
          * Architecture specific flags.
          *
@@ -243,7 +244,8 @@ class Request
 
     /** Requestor Ids that are statically allocated
      * @{*/
-    enum : RequestorID {
+    enum : RequestorID
+    {
         /** This requestor id is used for writeback requests by the caches */
         wbRequestorId = 0,
         /**
@@ -291,7 +293,8 @@ class Request
      * For atomics, the GLC bit is used to distinguish between between atomic
      * return/no-return operations. These flags are used by GPUDynInst.
      */
-    enum : CacheCoherenceFlagsType {
+    enum : CacheCoherenceFlagsType
+    {
         /** mem_sync_op flags */
         INV_L1                  = 0x00000001,
         FLUSH_L2                = 0x00000020,
@@ -307,7 +310,8 @@ class Request
     typedef uint16_t PrivateFlagsType;
     typedef ::Flags<PrivateFlagsType> PrivateFlags;
 
-    enum : PrivateFlagsType {
+    enum : PrivateFlagsType
+    {
         /** Whether or not the size is valid. */
         VALID_SIZE           = 0x00000001,
         /** Whether or not paddr is valid (has been written yet). */

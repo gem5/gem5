@@ -566,7 +566,8 @@ class LSQUnit
     // Will also need how many read/write ports the Dcache has.  Or keep track
     // of that in stage that is one level up, and only call executeLoad/Store
     // the appropriate number of times.
-    struct LSQUnitStats : public Stats::Group{
+    struct LSQUnitStats : public Stats::Group
+    {
         LSQUnitStats(Stats::Group *parent);
 
         /** Total number of loads forwaded from LSQ stores. */

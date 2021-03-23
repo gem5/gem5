@@ -590,7 +590,8 @@ namespace ArmISA
     typedef int RegContextVal;
 
     //used in FP convert & round function
-    enum ConvertType{
+    enum ConvertType
+    {
         SINGLE_TO_DOUBLE,
         SINGLE_TO_WORD,
         SINGLE_TO_LONG,
@@ -614,7 +615,8 @@ namespace ArmISA
     };
 
     //used in FP convert & round function
-    enum RoundMode{
+    enum RoundMode
+    {
         RND_ZERO,
         RND_DOWN,
         RND_UP,

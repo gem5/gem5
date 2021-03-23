@@ -64,7 +64,8 @@ class CPack : public DictionaryCompressor<uint32_t>
      * These are used as indexes to reference the pattern data. If a new
      * pattern is added, it must be done before NUM_PATTERNS.
      */
-    typedef enum {
+    typedef enum
+    {
         ZZZZ, XXXX, MMMM, MMXX, ZZZX, MMMX, NUM_PATTERNS
     } PatternNumber;
 

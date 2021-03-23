@@ -345,7 +345,8 @@ class StackDistCalc
     /**
      * Node which takes form of Leaf, INode or Root
      */
-    struct Node{
+    struct Node
+    {
         // Sum of the left children
         uint64_t sumLeft;
 

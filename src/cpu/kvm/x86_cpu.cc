@@ -75,8 +75,10 @@ struct M5_ATTR_PACKED FXSave
     uint8_t ftwx;
     uint8_t pad0;
     uint16_t last_opcode;
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             uint32_t fpu_ip;
             uint16_t fpu_cs;
             uint16_t pad1;
@@ -85,7 +87,8 @@ struct M5_ATTR_PACKED FXSave
             uint16_t pad2;
         } ctrl32;
 
-        struct {
+        struct
+        {
             uint64_t fpu_ip;
             uint64_t fpu_dp;
         } ctrl64;

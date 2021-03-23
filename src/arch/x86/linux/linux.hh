@@ -92,7 +92,8 @@ class X86Linux64 : public X86Linux
 {
   public:
 
-    typedef struct {
+    typedef struct
+    {
         uint64_t st_dev;
         uint64_t st_ino;
         uint64_t st_nlink;
@@ -113,11 +114,13 @@ class X86Linux64 : public X86Linux
         int64_t unused0[3];
     } tgt_stat64;
 
-    typedef struct {
+    typedef struct
+    {
         long val[2];
     } tgt_fsid;
 
-    typedef struct {
+    typedef struct
+    {
         long f_type;
         long f_bsize;
         long f_blocks;
@@ -217,12 +220,14 @@ class X86Linux64 : public X86Linux
 
     static const unsigned NUM_MMAP_FLAGS;
 
-    typedef struct {
+    typedef struct
+    {
         uint64_t iov_base; // void *
         uint64_t iov_len;  // size_t
     } tgt_iovec;
 
-    typedef struct {
+    typedef struct
+    {
         int64_t  uptime;    /* Seconds since boot */
         uint64_t loads[3];  /* 1, 5, and 15 minute load averages */
         uint64_t totalram;  /* Total usable main memory size */
@@ -242,8 +247,8 @@ class X86Linux64 : public X86Linux
 class X86Linux32 : public X86Linux
 {
   public:
-
-    typedef struct M5_ATTR_PACKED {
+    typedef struct M5_ATTR_PACKED
+    {
         uint64_t st_dev;
         uint8_t __pad0[4];
         uint32_t __st_ino;
@@ -353,7 +358,8 @@ class X86Linux32 : public X86Linux
 
     static const unsigned NUM_MMAP_FLAGS;
 
-    typedef struct {
+    typedef struct
+    {
        int32_t  uptime;    /* Seconds since boot */
        uint32_t loads[3];  /* 1, 5, and 15 minute load averages */
        uint32_t totalram;  /* Total usable main memory size */

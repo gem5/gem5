@@ -412,7 +412,8 @@ X86_64Process::initState()
 
         /* Set up the content of the TSS and write it to physical memory. */
 
-        struct {
+        struct
+        {
             uint32_t reserved0;        // +00h
             uint32_t RSP0_low;         // +04h
             uint32_t RSP0_high;        // +08h
@@ -467,7 +468,8 @@ X86_64Process::initState()
         GateDescriptorHigh PFGateHigh = 0;
         PFGateHigh.offset = bits(PFHandlerVirtAddr, 63, 32);
 
-        struct {
+        struct
+        {
             uint64_t low;
             uint64_t high;
         } PFGate = {PFGateLow, PFGateHigh};

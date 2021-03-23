@@ -53,7 +53,7 @@ namespace RiscvISA {
 class Walker;
 
 class TLB : public BaseTLB
-  {
+{
     typedef std::list<TlbEntry *> EntryList;
 
   protected:
@@ -65,7 +65,8 @@ class TLB : public BaseTLB
 
     Walker *walker;
 
-    struct TlbStats : public Stats::Group{
+    struct TlbStats : public Stats::Group
+    {
         TlbStats(Stats::Group *parent);
 
         Stats::Scalar readHits;

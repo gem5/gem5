@@ -51,7 +51,8 @@
 
 namespace Ps2 {
 
-enum {
+enum
+{
     SelfTestPass       = 0xAA,
     ReadID             = 0xF2,
     Enable             = 0xF4,
@@ -65,7 +66,8 @@ enum {
 
 namespace Keyboard {
 
-enum {
+enum
+{
     LEDWrite = 0xED,
     DiagnosticEcho = 0xEE,
     AlternateScanCodes = 0xF0,
@@ -85,7 +87,8 @@ extern const std::vector<uint8_t> ID;
 
 namespace Mouse {
 
-enum {
+enum
+{
     Scale1to1 = 0xE6,
     Scale2to1 = 0xE7,
     SetResolution = 0xE8,

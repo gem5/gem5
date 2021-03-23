@@ -138,7 +138,8 @@ class RiscvLinux64 : public RiscvLinux
         int64_t tv_nsec;
     };
 
-    typedef struct {
+    typedef struct
+    {
         dev_t st_dev;
         ino_t st_ino;
         mode_t st_mode;
@@ -159,11 +160,13 @@ class RiscvLinux64 : public RiscvLinux
         int32_t ___glibc_reserved[2];
     } tgt_stat64;
 
-    typedef struct {
+    typedef struct
+    {
         int32_t val[2];
     } tgt_fsid_t;
 
-    typedef struct {
+    typedef struct
+    {
         uint64_t f_type;
         uint64_t f_bsize;
         uint64_t f_blocks;
@@ -178,7 +181,8 @@ class RiscvLinux64 : public RiscvLinux
         uint64_t f_spare[4];
     } tgt_statfs;
 
-    typedef struct {
+    typedef struct
+    {
         int64_t uptime;
         uint64_t loads[3];
         uint64_t totalram;
@@ -310,11 +314,13 @@ class RiscvLinux32 : public RiscvLinux
         int32_t tv_nsec;
     };
 
-    typedef struct {
+    typedef struct
+    {
         int32_t val[2];
     } tgt_fsid_t;
 
-    typedef struct {
+    typedef struct
+    {
         uint64_t st_dev;
         uint64_t st_ino;
         uint32_t st_mode;
@@ -337,7 +343,8 @@ class RiscvLinux32 : public RiscvLinux
         int32_t __unused5;
     } tgt_stat;
 
-    typedef struct {
+    typedef struct
+    {
         uint32_t f_type;
         uint32_t f_bsize;
         uint32_t f_blocks;
@@ -352,7 +359,8 @@ class RiscvLinux32 : public RiscvLinux
         uint32_t f_spare[4];
     } tgt_statfs;
 
-    typedef struct {
+    typedef struct
+    {
         int32_t uptime;
         uint32_t loads[3];
         uint32_t totalram;

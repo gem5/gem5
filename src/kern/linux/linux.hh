@@ -61,7 +61,8 @@ class Linux : public OperatingSystem
     /// Stat buffer.  Note that we can't call it 'stat' since that
     /// gets #defined to something else on some systems. This type
     /// can be specialized by architecture specific "Linux" classes
-    typedef struct {
+    typedef struct
+    {
         uint32_t        st_dev;         //!< device
         uint32_t        st_ino;         //!< inode
         uint32_t        st_mode;        //!< mode
@@ -81,7 +82,8 @@ class Linux : public OperatingSystem
     } tgt_stat;
 
     // same for stat64
-    typedef struct {
+    typedef struct
+    {
         uint64_t        st_dev;
         uint64_t        st_ino;
         uint64_t        st_rdev;
@@ -159,7 +161,8 @@ class Linux : public OperatingSystem
 
     // For select().
     // linux-3.14-src/include/uapi/linux/posix_types.h
-    struct fd_set{
+    struct fd_set
+    {
 #ifndef LINUX__FD_SETSIZE
 #define LINUX__FD_SETSIZE 1024
         unsigned long fds_bits[LINUX__FD_SETSIZE / (8 * sizeof(long))];

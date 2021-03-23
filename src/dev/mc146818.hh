@@ -91,10 +91,12 @@ class MC146818 : public EventManager
     RTCTickEvent tickEvent;
 
     /** Data for real-time clock function */
-    union {
+    union
+    {
         uint8_t clock_data[10];
 
-        struct {
+        struct
+        {
             uint8_t sec;
             uint8_t sec_alrm;
             uint8_t min;

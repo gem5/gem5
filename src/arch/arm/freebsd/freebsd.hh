@@ -124,7 +124,8 @@ class ArmFreebsd32 : public ArmFreebsd
      * sizeof st_lspare 4
      */
 
-    typedef struct {
+    typedef struct
+    {
         uint32_t   st_dev;
         uint32_t   st_ino;
         uint16_t   st_mode;
@@ -148,7 +149,8 @@ class ArmFreebsd32 : public ArmFreebsd
         uint64_t   st_birthtim;
     } tgt_stat;
 
-    typedef struct {
+    typedef struct
+    {
         uint32_t   st_dev;
         uint32_t   st_ino;
         uint16_t   st_mode;
@@ -295,7 +297,8 @@ class ArmFreebsd64 : public ArmFreebsd
         uint64_t iov_len;
     };
 
-    typedef struct {
+    typedef struct
+    {
         uint32_t   st_dev;
         uint32_t   st_ino;
         uint16_t   st_mode;
@@ -319,7 +322,8 @@ class ArmFreebsd64 : public ArmFreebsd
         uint64_t   st_birthtim;
     } tgt_stat;
 
-    typedef struct {
+    typedef struct
+    {
         uint32_t   st_dev;
         uint32_t   st_ino;
         uint16_t   st_mode;

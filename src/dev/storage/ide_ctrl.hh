@@ -78,7 +78,8 @@ class IdeController : public PciDevice
                           udmaControl, raz1, udmaTiming, raz2});
         }
 
-        enum {
+        enum
+        {
             TimeRegWithDecodeEnabled = 0x8000
         };
 

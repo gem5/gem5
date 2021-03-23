@@ -179,7 +179,8 @@ class MipsLinux : public Linux
     /// the root users.
     static const int NUM_ROOT_PROCS = 2;
 
-    typedef struct {
+    typedef struct
+    {
        int32_t  uptime;    /* Seconds since boot */
        uint32_t loads[3];  /* 1, 5, and 15 minute load averages */
        uint32_t totalram;  /* Total usable main memory size */

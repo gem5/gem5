@@ -48,7 +48,8 @@
 class PL031 : public AmbaIntDevice
 {
   protected:
-    enum {
+    enum
+    {
         DataReg    = 0x00,
         MatchReg   = 0x04,
         LoadReg    = 0x08,

@@ -116,7 +116,9 @@ struct Regs : public Serializable
     uint8_t chanCount;
     uint8_t xferCap;
 
-    struct INTRCTRL : public Reg<uint8_t> { // 0x03
+    struct INTRCTRL : public Reg<uint8_t>
+    {
+        // 0x03
         using Reg<uint8_t>::operator =;
         ADD_FIELD8(master_int_enable,0,1);
         ADD_FIELD8(interrupt_status,1,1);
@@ -146,7 +148,9 @@ struct Regs : public Serializable
 
 struct ChanRegs : public Serializable
 {
-    struct CHANCTRL : public Reg<uint16_t> { // channelX + 0x00
+    struct CHANCTRL : public Reg<uint16_t>
+    {
+        // channelX + 0x00
         using Reg<uint16_t>::operator =;
         ADD_FIELD16(interrupt_disable,0,1);
         ADD_FIELD16(error_completion_enable, 2,1);
@@ -157,7 +161,9 @@ struct ChanRegs : public Serializable
     };
     CHANCTRL ctrl;
 
-    struct CHANSTS : public Reg<uint64_t> { // channelX + 0x04
+    struct CHANSTS : public Reg<uint64_t>
+    {
+        // channelX + 0x04
         ADD_FIELD64(dma_transfer_status, 0, 3);
         ADD_FIELD64(unaffiliated_error, 3, 1);
         ADD_FIELD64(soft_error, 4, 1);
@@ -167,7 +173,9 @@ struct ChanRegs : public Serializable
 
     uint64_t descChainAddr;
 
-    struct CHANCMD : public Reg<uint8_t> { // channelX + 0x14
+    struct CHANCMD : public Reg<uint8_t>
+    {
+        // channelX + 0x14
         ADD_FIELD8(start_dma,0,1);
         ADD_FIELD8(append_dma,1,1);
         ADD_FIELD8(suspend_dma,2,1);
@@ -179,7 +187,9 @@ struct ChanRegs : public Serializable
 
     uint64_t completionAddr;
 
-    struct CHANERR : public Reg<uint32_t> { // channel X + 0x28
+    struct CHANERR : public Reg<uint32_t>
+    {
+        // channel X + 0x28
         ADD_FIELD32(source_addr_error,0,1);
         ADD_FIELD32(dest_addr_error,1,1);
         ADD_FIELD32(ndesc_addr_error,2,1);

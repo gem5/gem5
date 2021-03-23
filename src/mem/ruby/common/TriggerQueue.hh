@@ -53,7 +53,8 @@ template<typename T>
 class TriggerQueue
 {
   private:
-    struct ValType {
+    struct ValType
+    {
       T val;
       bool non_blocking;
     };

@@ -262,8 +262,8 @@ class Packet : public Printable
     typedef ::Flags<FlagsType> Flags;
 
   private:
-
-    enum : FlagsType {
+    enum : FlagsType
+    {
         // Flags to transfer across when copying a packet
         COPY_FLAGS             = 0x000000FF,
 

@@ -72,8 +72,8 @@ class SerialDevice;
 class ArmSemihosting : public SimObject
 {
   public:
-
-    enum {
+    enum
+    {
         // Standard ARM immediate values which trigger semihosting.
         T32Imm = 0xAB,
         A32Imm = 0x123456,

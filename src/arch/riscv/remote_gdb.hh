@@ -66,7 +66,8 @@ class RemoteGDB : public BaseRemoteGDB
          * 2. Add register to struct below
          * 3. Modify RiscvGdbRegCache::getRegs and setRegs
          */
-        struct {
+        struct
+        {
             uint64_t gpr[NumIntArchRegs];
             uint64_t pc;
             uint64_t fpu[NumFloatRegs];

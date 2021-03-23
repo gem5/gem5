@@ -115,7 +115,8 @@ extern "C" {
 /**
  * @brief Status codes.
  */
-typedef enum {
+typedef enum
+{
     /**
      * The function has been executed successfully.
      */
@@ -289,7 +290,8 @@ hsa_status_t HSA_API hsa_status_string(
 /**
  * @brief Three-dimensional coordinate.
  */
-typedef struct hsa_dim3_s {
+typedef struct hsa_dim3_s
+{
   /**
    * X dimension.
    */
@@ -309,7 +311,8 @@ typedef struct hsa_dim3_s {
 /**
  * @brief Access permissions.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Read-only access.
    */
@@ -387,7 +390,8 @@ hsa_status_t HSA_API hsa_shut_down();
  * @brief Endianness. A convention used to interpret the bytes making up a data
  * word.
  */
-typedef enum {
+typedef enum
+{
     /**
      * The least significant byte is stored in the smallest address.
      */
@@ -402,7 +406,8 @@ typedef enum {
  * @brief Machine model. A machine model determines the size of certain data
  * types in HSA runtime and an agent.
  */
-typedef enum {
+typedef enum
+{
     /**
      * Small machine model. Addresses use 32 bits.
      */
@@ -419,7 +424,8 @@ typedef enum {
  * runtime allocator to reserve shared virtual memory, while in the full profile
  * any host pointer can be shared across all the agents.
  */
-typedef enum {
+typedef enum
+{
     /**
      * Base profile.
      */
@@ -433,7 +439,8 @@ typedef enum {
 /**
  * @brief System attributes.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Major version of the HSA runtime specification supported by the
    * implementation. The type of this attribute is uint16_t.
@@ -500,7 +507,8 @@ hsa_status_t HSA_API hsa_system_get_info(
 /**
  * @brief HSA extensions.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Finalizer extension.
    */
@@ -708,7 +716,8 @@ hsa_status_t HSA_API hsa_system_get_major_extension_table(
  * may also accept AQL packets for execution (agent dispatch packets or kernel
  * dispatch packets launching HSAIL-derived binaries).
  */
-typedef struct hsa_agent_s {
+typedef struct hsa_agent_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -719,7 +728,8 @@ typedef struct hsa_agent_s {
 /**
  * @brief Agent features.
  */
-typedef enum {
+typedef enum
+{
     /**
      * The agent supports AQL packets of kernel dispatch type. If this
      * feature is enabled, the agent is also a kernel agent.
@@ -734,7 +744,8 @@ typedef enum {
 /**
  * @brief Hardware device type.
  */
-typedef enum {
+typedef enum
+{
     /**
      * CPU device.
      */
@@ -752,7 +763,8 @@ typedef enum {
 /**
  * @brief Default floating-point rounding mode.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Use a default floating-point rounding mode specified elsewhere.
    */
@@ -773,7 +785,8 @@ typedef enum {
 /**
  * @brief Agent attributes.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Agent name. The type of this attribute is a NUL-terminated char[64]. The
    * name must be at most 63 characters long (not including the NUL terminator)
@@ -1062,7 +1075,8 @@ hsa_status_t HSA_API hsa_agent_set_info(
 /**
  * @brief Exception policies applied in the presence of hardware exceptions.
  */
-typedef enum {
+typedef enum
+{
     /**
      * If a hardware exception is detected, a work-item signals an exception.
      */
@@ -1108,7 +1122,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_agent_get_exception_policies(
 /**
  * @brief Cache handle.
  */
-typedef struct hsa_cache_s {
+typedef struct hsa_cache_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -1119,7 +1134,8 @@ typedef struct hsa_cache_s {
 /**
  * @brief Cache attributes.
  */
-typedef enum {
+typedef enum
+{
   /**
    * The length of the cache name in bytes, not including the NUL terminator.
    * The type of this attribute is uint32_t.
@@ -1284,7 +1300,8 @@ hsa_status_t HSA_API hsa_agent_major_extension_supported(
 /**
  * @brief Signal handle.
  */
-typedef struct hsa_signal_s {
+typedef struct hsa_signal_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal. The value 0 is reserved.
@@ -1907,7 +1924,8 @@ void HSA_API HSA_DEPRECATED hsa_signal_xor_release(
 /**
  * @brief Wait condition operator.
  */
-typedef enum {
+typedef enum
+{
     /**
      * The two operands are equal.
      */
@@ -1929,7 +1947,8 @@ typedef enum {
 /**
  * @brief State of the application thread during a signal wait.
  */
-typedef enum {
+typedef enum
+{
     /**
      * The application thread may be rescheduled while waiting on the signal.
      */
@@ -2012,7 +2031,8 @@ hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_wait_acquire(
 /**
  * @brief Group of signals.
  */
-typedef struct hsa_signal_group_s {
+typedef struct hsa_signal_group_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -2152,7 +2172,8 @@ hsa_status_t HSA_API hsa_signal_group_wait_any_relaxed(
  * the global segment using a region. A region might be associated with more
  * than one agent.
  */
-typedef struct hsa_region_s {
+typedef struct hsa_region_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -2171,7 +2192,8 @@ typedef struct hsa_region_s {
  * @brief Queue type. Intended to be used for dynamic queue protocol
  * determination.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Queue supports multiple producers.
    */
@@ -2193,7 +2215,8 @@ typedef uint32_t hsa_queue_type32_t;
 /**
  * @brief Queue features.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Queue supports kernel dispatch packets.
    */
@@ -2213,7 +2236,8 @@ typedef enum {
  * base_address, or use HSA runtime APIs to access the doorbell signal.
  *
  */
-typedef struct hsa_queue_s {
+typedef struct hsa_queue_s
+{
   /**
    * Queue type.
    */
@@ -2715,7 +2739,8 @@ void HSA_API hsa_queue_store_read_index_screlease(
 /**
  * @brief Packet type.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Vendor-specific packet.
    */
@@ -2753,7 +2778,8 @@ typedef enum {
 /**
  * @brief Scope of the memory fence operation associated with a packet.
  */
-typedef enum {
+typedef enum
+{
   /**
    * No scope (no fence is applied). The packet relies on external fences to
    * ensure visibility of memory updates.
@@ -2777,7 +2803,8 @@ typedef enum {
  * determined by the corresponding value in ::hsa_packet_header_width_t. The
  * offset and the width are expressed in bits.
  */
- typedef enum {
+typedef enum
+{
   /**
    * Packet type. The value of this sub-field must be one of
    * ::hsa_packet_type_t. If the type is ::HSA_PACKET_TYPE_VENDOR_SPECIFIC, the
@@ -2818,12 +2845,13 @@ typedef enum {
     * @deprecated Renamed as ::HSA_PACKET_HEADER_SCRELEASE_FENCE_SCOPE.
     */
    HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE = 11
- } hsa_packet_header_t;
+} hsa_packet_header_t;
 
 /**
  * @brief Width (in bits) of the sub-fields in ::hsa_packet_header_t.
  */
- typedef enum {
+typedef enum
+{
    HSA_PACKET_HEADER_WIDTH_TYPE = 8,
    HSA_PACKET_HEADER_WIDTH_BARRIER = 1,
    HSA_PACKET_HEADER_WIDTH_SCACQUIRE_FENCE_SCOPE = 2,
@@ -2836,7 +2864,7 @@ typedef enum {
     * @deprecated Use HSA_PACKET_HEADER_WIDTH_SCRELEASE_FENCE_SCOPE.
     */
    HSA_PACKET_HEADER_WIDTH_RELEASE_FENCE_SCOPE = 2
- } hsa_packet_header_width_t;
+} hsa_packet_header_width_t;
 
 /**
  * @brief Sub-fields of the kernel dispatch packet @a setup field. The offset
@@ -2845,26 +2873,29 @@ typedef enum {
  * corresponding value in ::hsa_kernel_dispatch_packet_setup_width_t. The
  * offset and the width are expressed in bits.
  */
- typedef enum {
+typedef enum
+{
   /**
    * Number of dimensions of the grid. Valid values are 1, 2, or 3.
    *
    */
    HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS = 0
- } hsa_kernel_dispatch_packet_setup_t;
+} hsa_kernel_dispatch_packet_setup_t;
 
 /**
  * @brief Width (in bits) of the sub-fields in
  * ::hsa_kernel_dispatch_packet_setup_t.
  */
- typedef enum {
+typedef enum
+{
    HSA_KERNEL_DISPATCH_PACKET_SETUP_WIDTH_DIMENSIONS = 2
- } hsa_kernel_dispatch_packet_setup_width_t;
+} hsa_kernel_dispatch_packet_setup_width_t;
 
 /**
  * @brief AQL kernel dispatch packet
  */
-typedef struct hsa_kernel_dispatch_packet_s {
+typedef struct hsa_kernel_dispatch_packet_s
+{
   /**
    * Packet header. Used to configure multiple packet parameters such as the
    * packet type. The parameters are described by ::hsa_packet_header_t.
@@ -2975,7 +3006,8 @@ typedef struct hsa_kernel_dispatch_packet_s {
 /**
  * @brief Agent dispatch packet.
  */
-typedef struct hsa_agent_dispatch_packet_s {
+typedef struct hsa_agent_dispatch_packet_s
+{
   /**
    * Packet header. Used to configure multiple packet parameters such as the
    * packet type. The parameters are described by ::hsa_packet_header_t.
@@ -3029,7 +3061,8 @@ typedef struct hsa_agent_dispatch_packet_s {
 /**
  * @brief Barrier-AND packet.
  */
-typedef struct hsa_barrier_and_packet_s {
+typedef struct hsa_barrier_and_packet_s
+{
   /**
    * Packet header. Used to configure multiple packet parameters such as the
    * packet type. The parameters are described by ::hsa_packet_header_t.
@@ -3069,7 +3102,8 @@ typedef struct hsa_barrier_and_packet_s {
 /**
  * @brief Barrier-OR packet.
  */
-typedef struct hsa_barrier_or_packet_s {
+typedef struct hsa_barrier_or_packet_s
+{
   /**
    * Packet header. Used to configure multiple packet parameters such as the
    * packet type. The parameters are described by ::hsa_packet_header_t.
@@ -3115,7 +3149,8 @@ typedef struct hsa_barrier_or_packet_s {
 /**
  * @brief Memory segments associated with a region.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Global segment. Used to hold data that is shared by all agents.
    */
@@ -3143,7 +3178,8 @@ typedef enum {
 /**
  * @brief Global region flags.
  */
-typedef enum {
+typedef enum
+{
   /**
    * The application can use memory in the region to store kernel arguments, and
    * provide the values for the kernarg segment of a kernel dispatch. If this
@@ -3168,7 +3204,8 @@ typedef enum {
 /**
  * @brief Attributes of a memory region.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Segment where memory in the region can be used. The type of this
    * attribute is ::hsa_region_segment_t.
@@ -3485,7 +3522,8 @@ hsa_status_t HSA_API hsa_memory_deregister(
 /**
  * @brief Instruction set architecture.
  */
-typedef struct hsa_isa_s {
+typedef struct hsa_isa_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -3557,7 +3595,8 @@ hsa_status_t HSA_API hsa_agent_iterate_isas(
 /**
  * @brief Instruction set architecture attributes.
  */
-typedef enum {
+typedef enum
+{
   /**
    * The length of the ISA name in bytes, not including the NUL terminator. The
    * type of this attribute is uint32_t.
@@ -3767,7 +3806,8 @@ hsa_status_t HSA_API hsa_isa_get_exception_policies(
 /**
  * @brief Floating-point types.
  */
-typedef enum {
+typedef enum
+{
   /**
    * 16-bit floating-point type.
    */
@@ -3785,7 +3825,8 @@ typedef enum {
 /**
  * @brief Flush to zero modes.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Flush to zero.
    */
@@ -3799,7 +3840,8 @@ typedef enum {
 /**
  * @brief Round methods.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Single round method.
    */
@@ -3846,7 +3888,8 @@ hsa_status_t HSA_API hsa_isa_get_round_method(
 /**
  * @brief Wavefront handle
  */
-typedef struct hsa_wavefront_s {
+typedef struct hsa_wavefront_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -3857,7 +3900,8 @@ typedef struct hsa_wavefront_s {
 /**
  * @brief Wavefront attributes.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Number of work-items in the wavefront. Must be a power of 2 in the range
    * [1,256]. The type of this attribute is uint32_t.
@@ -3965,7 +4009,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_isa_compatible(
  * ::hsa_code_object_reader_create_from_file), or from memory (if created using
  * ::hsa_code_object_reader_create_from_memory).
  */
-typedef struct hsa_code_object_reader_s {
+typedef struct hsa_code_object_reader_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -4056,7 +4101,8 @@ hsa_status_t HSA_API hsa_code_object_reader_destroy(
  * ISA for finalized kernels and indirect functions together with the allocated
  * global or readonly segment variables they reference.
  */
-typedef struct hsa_executable_s {
+typedef struct hsa_executable_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -4067,7 +4113,8 @@ typedef struct hsa_executable_s {
 /**
  * @brief Executable state.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Executable state, which allows the user to load code objects and define
    * external variables. Variable addresses, kernel code handles, and
@@ -4186,7 +4233,8 @@ hsa_status_t HSA_API hsa_executable_destroy(
 /**
  * @brief Loaded code object handle.
  */
-typedef struct hsa_loaded_code_object_s {
+typedef struct hsa_loaded_code_object_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -4347,7 +4395,8 @@ hsa_status_t HSA_API hsa_executable_freeze(
 /**
  * @brief Executable attributes.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Profile this executable is created for. The type of this attribute is
    * ::hsa_profile_t.
@@ -4598,7 +4647,8 @@ hsa_status_t HSA_API hsa_executable_validate_alt(
  * associated with it. An operation on a symbol whose associated executable has
  * been destroyed results in undefined behavior.
  */
-typedef struct hsa_executable_symbol_s {
+typedef struct hsa_executable_symbol_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -4687,7 +4737,8 @@ hsa_status_t HSA_API hsa_executable_get_symbol_by_name(
 /**
  * @brief Symbol type.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Variable.
    */
@@ -4705,7 +4756,8 @@ typedef enum {
 /**
  * @brief Linkage type of a symbol.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Module linkage.
    */
@@ -4719,7 +4771,8 @@ typedef enum {
 /**
  * @brief Allocation type of a variable.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Agent allocation.
    */
@@ -4733,7 +4786,8 @@ typedef enum {
 /**
  * @brief Memory segment associated with a variable.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Global memory segment.
    */
@@ -4747,7 +4801,8 @@ typedef enum {
 /**
  * @brief Executable symbol attributes.
  */
-typedef enum {
+typedef enum
+{
   /**
    * The kind of the symbol. The type of this attribute is ::hsa_symbol_kind_t.
    */
@@ -5075,7 +5130,8 @@ hsa_status_t HSA_API hsa_executable_iterate_program_symbols(
  * ISA for finalized kernels and indirect functions together with information
  * about the global or readonly segment variables they reference.
  */
-typedef struct hsa_code_object_s {
+typedef struct hsa_code_object_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -5089,7 +5145,8 @@ typedef struct hsa_code_object_s {
  * @brief Application data handle that is passed to the serialization
  * and deserialization functions.
  */
-typedef struct hsa_callback_data_s {
+typedef struct hsa_callback_data_s
+{
   /**
    * Opaque handle.
    */
@@ -5215,7 +5272,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_destroy(
  *
  * @brief Code object type.
  */
-typedef enum {
+typedef enum
+{
   /**
    * Produces code object that contains ISA for all kernels and indirect
    * functions in HSA source.
@@ -5228,7 +5286,8 @@ typedef enum {
  *
  * @brief Code object attributes.
  */
-typedef enum {
+typedef enum
+{
   /**
    * The version of the code object. The type of this attribute is a
    * NUL-terminated char[64]. The name must be at most 63 characters long (not
@@ -5358,7 +5417,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_executable_load_code_object(
  * associated with it. An operation on a symbol whose associated code object has
  * been destroyed results in undefined behavior.
  */
-typedef struct hsa_code_symbol_s {
+typedef struct hsa_code_symbol_s
+{
   /**
    * Opaque handle. Two handles reference the same object of the enclosing type
    * if and only if they are equal.
@@ -5435,7 +5495,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_get_symbol_from_name(
  *
  * @brief Code object symbol attributes.
  */
-typedef enum {
+typedef enum
+{
   /**
    * The type of the symbol. The type of this attribute is ::hsa_symbol_kind_t.
    */

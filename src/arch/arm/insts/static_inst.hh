@@ -347,7 +347,8 @@ class ArmStaticInst : public StaticInst
     cSwap(T val, bool big)
     {
         const unsigned count = sizeof(T) / sizeof(E);
-        union {
+        union
+        {
             T tVal;
             E eVals[count];
         } conv;

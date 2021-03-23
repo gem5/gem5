@@ -108,7 +108,8 @@ class TAGEBase : public SimObject
   public:
 
     // provider type
-    enum {
+    enum
+    {
         BIMODAL_ONLY = 0,
         TAGE_LONGEST_MATCH,
         BIMODAL_ALT_MATCH,

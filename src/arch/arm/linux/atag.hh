@@ -43,7 +43,8 @@
 
 #include "base/types.hh"
 
-enum {
+enum
+{
     CoreTag   = 0x54410001,
     MemTag    = 0x54410002,
     RevTag    = 0x54410007,
@@ -277,7 +278,8 @@ struct atag_cmdline
 struct atag
 {
         struct atag_header hdr;
-        union {
+        union
+        {
                 struct atag_core         core;
                 struct atag_mem          mem;
                 struct atag_videotext    videotext;
