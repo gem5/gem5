@@ -57,9 +57,6 @@
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
-#include "sim/eventq.hh"
-#include "sim/sim_events.hh"
-#include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
 
 // For stat reset hack
@@ -71,92 +68,6 @@ int ckptPrevCount = -1;
 std::stack<std::string> Serializable::path;
 
 /////////////////////////////
-
-/// Container for serializing global variables (not associated with
-/// any serialized object).
-class Globals : public Serializable
-{
-  public:
-    Globals()
-        : unserializedCurTick(0) {}
-
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
-
-    Tick unserializedCurTick;
-};
-
-/// The one and only instance of the Globals class.
-Globals globals;
-
-/// The version tags for this build of the simulator, to be stored in the
-/// Globals section during serialization and compared upon unserialization.
-extern std::set<std::string> version_tags;
-
-void
-Globals::serialize(CheckpointOut &cp) const
-{
-    paramOut(cp, "curTick", curTick());
-    SERIALIZE_CONTAINER(version_tags);
-}
-
-void
-Globals::unserialize(CheckpointIn &cp)
-{
-    paramIn(cp, "curTick", unserializedCurTick);
-
-    const std::string &section(Serializable::currentSection());
-    std::string str;
-    if (!cp.find(section, "version_tags", str)) {
-        warn("**********************************************************\n");
-        warn("!!!! Checkpoint uses an old versioning scheme.        !!!!\n");
-        warn("Run the checkpoint upgrader (util/cpt_upgrader.py) on your "
-             "checkpoint\n");
-        warn("**********************************************************\n");
-        return;
-    }
-
-    std::set<std::string> cpt_tags;
-    arrayParamIn(cp, "version_tags", cpt_tags); // UNSERIALIZE_CONTAINER
-
-    bool err = false;
-    for (const auto& t : version_tags) {
-        if (cpt_tags.find(t) == cpt_tags.end()) {
-            // checkpoint is missing tag that this binary has
-            if (!err) {
-                warn("*****************************************************\n");
-                warn("!!!! Checkpoint is missing the following version tags:\n");
-                err = true;
-            }
-            warn("  %s\n", t);
-        }
-    }
-    if (err) {
-        warn("You might experience some issues when restoring and should run "
-             "the checkpoint upgrader (util/cpt_upgrader.py) on your "
-             "checkpoint\n");
-        warn("**********************************************************\n");
-    }
-
-    err = false;
-    for (const auto& t : cpt_tags) {
-        if (version_tags.find(t) == version_tags.end()) {
-            // gem5 binary is missing tag that this checkpoint has
-            if (!err) {
-                warn("*****************************************************\n");
-                warn("!!!! gem5 is missing the following version tags:\n");
-                err = true;
-            }
-            warn("  %s\n", t);
-        }
-    }
-    if (err) {
-        warn("Running a checkpoint with incompatible version tags is not "
-             "supported. While it might work, you may experience incorrect "
-             "behavior or crashes.\n");
-        warn("**********************************************************\n");
-     }
-}
 
 Serializable::Serializable()
 {
@@ -194,18 +105,7 @@ Serializable::serializeAll(const std::string &cpt_dir)
         fatal("Unable to open file %s for writing\n", cpt_file.c_str());
     outstream << "## checkpoint generated: " << ctime(&t);
 
-    globals.serializeSection(outstream, "Globals");
-
     SimObject::serializeAll(outstream);
-}
-
-void
-Serializable::unserializeGlobals(CheckpointIn &cp)
-{
-    globals.unserializeSection(cp, "Globals");
-
-    for (uint32_t i = 0; i < numMainEventQueues; ++i)
-        mainEventQueue[i]->setCurTick(globals.unserializedCurTick);
 }
 
 Serializable::ScopedCheckpointSection::~ScopedCheckpointSection()

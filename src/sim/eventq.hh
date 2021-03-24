@@ -1152,4 +1152,22 @@ class EventFunctionWrapper : public Event
     const char *description() const { return "EventFunctionWrapped"; }
 };
 
+/**
+ * \def SERIALIZE_EVENT(event)
+ *
+ * @ingroup api_serialize
+ */
+#define SERIALIZE_EVENT(event) event.serializeSection(cp, #event);
+
+/**
+ * \def UNSERIALIZE_EVENT(event)
+ *
+ * @ingroup api_serialize
+ */
+#define UNSERIALIZE_EVENT(event)                        \
+    do {                                                \
+        event.unserializeSection(cp, #event);           \
+        eventQueue()->checkpointReschedule(&event);     \
+    } while (0)
+
 #endif // __SIM_EVENTQ_HH__

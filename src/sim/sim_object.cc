@@ -142,7 +142,6 @@ SimObject::serializeAll(CheckpointOut &cp)
    }
 }
 
-
 #ifdef DEBUG
 //
 // static function: flag which objects should have the debugger break

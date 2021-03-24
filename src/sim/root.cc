@@ -203,8 +203,17 @@ Root::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(FullSystem);
     std::string isa = THE_ISA_STR;
     SERIALIZE_SCALAR(isa);
+
+    globals.serializeSection(cp, "globals");
 }
 
+void
+Root::unserialize(CheckpointIn &cp)
+{
+    globals.unserializeSection(cp, "globals");
+    for (uint32_t i = 0; i < numMainEventQueues; ++i)
+        mainEventQueue[i]->setCurTick(globals.unserializedCurTick);
+}
 
 bool FullSystem;
 unsigned int FullSystemInt;

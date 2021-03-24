@@ -56,6 +56,7 @@
 #include "base/types.hh"
 #include "params/Root.hh"
 #include "sim/eventq.hh"
+#include "sim/globals.hh"
 #include "sim/sim_object.hh"
 
 class Root : public SimObject
@@ -70,6 +71,8 @@ class Root : public SimObject
     Time _spinThreshold;
 
     Time lastTime;
+
+    Globals globals;
 
     void timeSync();
     EventFunctionWrapper syncEvent;
@@ -143,6 +146,7 @@ class Root : public SimObject
     void startup() override;
 
     void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 /**

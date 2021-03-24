@@ -307,11 +307,6 @@ class Serializable
      */
     static void serializeAll(const std::string &cpt_dir);
 
-    /**
-     * @ingroup api_serialize
-     */
-    static void unserializeGlobals(CheckpointIn &cp);
-
   private:
     static std::stack<std::string> path;
 };
@@ -644,24 +639,6 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
  */
 #define UNSERIALIZE_CONTAINER(member)           \
         arrayParamIn(cp, #member, member)
-
-/**
- * \def SERIALIZE_EVENT(event)
- *
- * @ingroup api_serialize
- */
-#define SERIALIZE_EVENT(event) event.serializeSection(cp, #event);
-
-/**
- * \def UNSERIALIZE_EVENT(event)
- *
- * @ingroup api_serialize
- */
-#define UNSERIALIZE_EVENT(event)                        \
-    do {                                                \
-        event.unserializeSection(cp, #event);           \
-        eventQueue()->checkpointReschedule(&event);     \
-    } while (0)
 
 /**
  * \def SERIALIZE_OBJ(obj)
