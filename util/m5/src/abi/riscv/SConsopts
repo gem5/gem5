@@ -26,7 +26,7 @@
 Import('*')
 
 env['ABI'] = 'riscv'
-get_abi_opt('CROSS_COMPILE', 'riscv64-linux-gnu-')
+get_abi_opt('CROSS_COMPILE', 'riscv64-unknown-linux-gnu-')
 get_abi_opt('QEMU_ARCH', 'riscv64')
 
 env['CALL_TYPE']['inst'].impl('m5op.S', 'verify_inst.cc', default=True)
