@@ -33,6 +33,8 @@
 #ifndef DEV_HSA_HSA_SIGNAL_H
 #define DEV_HSA_HSA_SIGNAL_H
 
+#include <cstdint>
+
 // AMD Signal Kind Enumeration Values.
 typedef int64_t amd_signal_kind64_t;
 enum amd_signal_kind_t

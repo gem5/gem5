@@ -34,7 +34,12 @@
 #ifndef __DEV_HSA_HW_SCHEDULER_HH__
 #define __DEV_HSA_HW_SCHEDULER_HH__
 
+#include <cstdint>
+#include <map>
+
+#include "base/types.hh"
 #include "dev/hsa/hsa_packet_processor.hh"
+#include "sim/eventq.hh"
 
 // We allocate one PIO page for doorbells and each
 // address is 8 bytes

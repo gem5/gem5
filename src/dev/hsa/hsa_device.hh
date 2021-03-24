@@ -34,6 +34,11 @@
 #ifndef __DEV_HSA_HSA_DEVICE_HH__
 #define __DEV_HSA_HSA_DEVICE_HH__
 
+#include <cassert>
+#include <cstdint>
+
+#include "base/logging.hh"
+#include "base/types.hh"
 #include "dev/dma_device.hh"
 #include "dev/hsa/hsa_packet_processor.hh"
 #include "params/HSADevice.hh"

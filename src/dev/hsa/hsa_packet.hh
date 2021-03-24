@@ -36,7 +36,7 @@
 
 #define _HSA_PACKET_TYPE_VENDOR_SPECIFIC 0
 
-#include <stdint.h>
+#include <cstdint>
 
 typedef struct hsa_packet_header_s {
         // TODO: replace with more portable impl based on offset, length

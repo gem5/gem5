@@ -33,8 +33,10 @@
 
 #include "dev/hsa/hw_scheduler.hh"
 
+#include "base/compiler.hh"
+#include "base/trace.hh"
 #include "debug/HSAPacketProcessor.hh"
-#include "mem/packet_access.hh"
+#include "sim/cur_tick.hh"
 
 #define HWSCHDLR_EVENT_DESCRIPTION_GENERATOR(XEVENT) \
   const char*                                    \

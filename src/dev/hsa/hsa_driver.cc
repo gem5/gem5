@@ -33,7 +33,7 @@
 
 #include "dev/hsa/hsa_driver.hh"
 
-#include "cpu/thread_context.hh"
+#include "base/trace.hh"
 #include "debug/HSADriver.hh"
 #include "dev/hsa/hsa_device.hh"
 #include "dev/hsa/hsa_packet_processor.hh"

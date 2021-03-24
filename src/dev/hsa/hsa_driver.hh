@@ -48,15 +48,18 @@
 #ifndef __DEV_HSA_HSA_DRIVER_HH__
 #define __DEV_HSA_HSA_DRIVER_HH__
 
+#include <cassert>
+#include <cstdint>
+#include <set>
 #include <unordered_map>
 
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "cpu/thread_context.hh"
 #include "sim/emul_driver.hh"
 
 struct HSADriverParams;
 class HSADevice;
-class PortProxy;
 
 class HSADriver : public EmulatedDriver
 {

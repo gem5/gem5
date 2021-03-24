@@ -23,8 +23,10 @@
 #ifndef KFD_IOCTL_H_INCLUDED
 #define KFD_IOCTL_H_INCLUDED
 
-#include <linux/types.h>
 #include <linux/ioctl.h>
+#include <linux/types.h>
+
+#include <cstdint>
 
 #define KFD_IOCTL_MAJOR_VERSION 1
 #define KFD_IOCTL_MINOR_VERSION 2
