@@ -44,26 +44,22 @@ def x86IOAddress(port):
 class SouthBridge(SimObject):
     type = 'SouthBridge'
     cxx_header = "dev/x86/south_bridge.hh"
-    platform = Param.Platform(Parent.any, "Platform this device is part of")
 
-    _pic1 = I8259(pio_addr=x86IOAddress(0x20), mode='I8259Master')
-    _pic2 = I8259(pio_addr=x86IOAddress(0xA0), mode='I8259Slave')
-    _cmos = Cmos(pio_addr=x86IOAddress(0x70))
-    _dma1 = I8237(pio_addr=x86IOAddress(0x0))
-    _keyboard = I8042(data_port=x86IOAddress(0x60), \
-            command_port=x86IOAddress(0x64))
-    _pit = I8254(pio_addr=x86IOAddress(0x40))
-    _speaker = PcSpeaker(pio_addr=x86IOAddress(0x61))
-    _io_apic = I82094AA(pio_addr=0xFEC00000)
-
-    pic1 = Param.I8259(_pic1, "Master PIC")
-    pic2 = Param.I8259(_pic2, "Slave PIC")
-    cmos = Param.Cmos(_cmos, "CMOS memory and real time clock device")
-    dma1 = Param.I8237(_dma1, "The first dma controller")
-    keyboard = Param.I8042(_keyboard, "The keyboard controller")
-    pit = Param.I8254(_pit, "Programmable interval timer")
-    speaker = Param.PcSpeaker(_speaker, "PC speaker")
-    io_apic = Param.I82094AA(_io_apic, "I/O APIC")
+    pic1 = Param.I8259(I8259(pio_addr=x86IOAddress(0x20), mode='I8259Master'),
+            "Master PIC")
+    pic2 = Param.I8259(I8259(pio_addr=x86IOAddress(0xA0), mode='I8259Slave'),
+            "Slave PIC")
+    cmos = Param.Cmos(Cmos(pio_addr=x86IOAddress(0x70)),
+            "CMOS memory and real time clock device")
+    dma1 = Param.I8237(I8237(pio_addr=x86IOAddress(0x0)),
+            "The first dma controller")
+    keyboard = Param.I8042(I8042(data_port=x86IOAddress(0x60), \
+            command_port=x86IOAddress(0x64)), "The keyboard controller")
+    pit = Param.I8254(I8254(pio_addr=x86IOAddress(0x40)),
+            "Programmable interval timer")
+    speaker = Param.PcSpeaker(PcSpeaker(pio_addr=x86IOAddress(0x61)),
+            "PC speaker")
+    io_apic = Param.I82094AA(I82094AA(pio_addr=0xFEC00000), "I/O APIC")
 
     # IDE controller
     ide = IdeController(disks=[], pci_func=0, pci_dev=4, pci_bus=0)

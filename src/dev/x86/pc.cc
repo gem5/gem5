@@ -40,7 +40,7 @@
 #include "dev/x86/south_bridge.hh"
 #include "sim/system.hh"
 
-Pc::Pc(const Params &p) : Platform(p)
+Pc::Pc(const Params &p) : Platform(p), southBridge(p.south_bridge)
 {}
 
 void

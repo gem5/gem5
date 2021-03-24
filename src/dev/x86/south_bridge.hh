@@ -45,9 +45,6 @@ class I82094AA;
 
 class SouthBridge : public SimObject
 {
-  protected:
-    Platform *platform;
-
   public:
     X86ISA::I8254 *pit;
     X86ISA::I8259 *pic1;

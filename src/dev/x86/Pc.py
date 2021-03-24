@@ -50,7 +50,7 @@ class Pc(Platform):
     cxx_header = "dev/x86/pc.hh"
     system = Param.System(Parent.any, "system")
 
-    south_bridge = SouthBridge()
+    south_bridge = Param.SouthBridge(SouthBridge(), "Southbridge")
     pci_host = PcPciHost()
 
     # Serial port and terminal
