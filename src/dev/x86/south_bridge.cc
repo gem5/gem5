@@ -39,7 +39,7 @@ SouthBridge::SouthBridge(const Params &p) : SimObject(p),
     cmos(p.cmos), speaker(p.speaker), ioApic(p.io_apic)
 {
     // Let the platform know where we are
-    Pc * pc = dynamic_cast<Pc *>(platform);
+    Pc *pc = dynamic_cast<Pc *>(platform);
     assert(pc);
     pc->southBridge = this;
 }

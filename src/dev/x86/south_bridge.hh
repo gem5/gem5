@@ -34,25 +34,27 @@
 
 namespace X86ISA
 {
-    class I8254;
-    class I8259;
-    class Cmos;
-    class Speaker;
-    class I82094AA;
-}
+
+class I8254;
+class I8259;
+class Cmos;
+class Speaker;
+class I82094AA;
+
+} // namespace X86ISA
 
 class SouthBridge : public SimObject
 {
   protected:
-    Platform * platform;
+    Platform *platform;
 
   public:
-    X86ISA::I8254 * pit;
-    X86ISA::I8259 * pic1;
-    X86ISA::I8259 * pic2;
-    X86ISA::Cmos * cmos;
-    X86ISA::Speaker * speaker;
-    X86ISA::I82094AA * ioApic;
+    X86ISA::I8254 *pit;
+    X86ISA::I8259 *pic1;
+    X86ISA::I8259 *pic2;
+    X86ISA::Cmos *cmos;
+    X86ISA::Speaker *speaker;
+    X86ISA::I82094AA *ioApic;
 
   public:
     using Params = SouthBridgeParams;
