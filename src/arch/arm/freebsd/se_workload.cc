@@ -34,7 +34,7 @@
 #include "arch/arm/freebsd/se_workload.hh"
 
 #include <sys/syscall.h>
-#if !defined ( __GNU_LIBRARY__ ) && defined(__FreeBSD__)
+#if !defined( __GNU_LIBRARY__ ) && (defined(__FreeBSD__) || defined(__APPLE__))
 #include <sys/sysctl.h>
 #endif
 
