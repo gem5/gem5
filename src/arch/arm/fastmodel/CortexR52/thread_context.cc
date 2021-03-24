@@ -82,6 +82,8 @@ CortexR52TC::translateAddress(Addr &paddr, Addr vaddr)
 void
 CortexR52TC::initFromIrisInstance(const ResourceMap &resources)
 {
+    ThreadContext::initFromIrisInstance(resources);
+
     pcRscId = extractResourceId(resources, "R15");
 
     extractResourceMap(intReg32Ids, resources, intReg32IdxNameMap);
