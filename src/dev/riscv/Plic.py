@@ -36,6 +36,7 @@
 from m5.objects.Device import BasicPioDevice
 from m5.params import *
 from m5.proxy import *
+from m5.util.fdthelper import *
 
 class Plic(BasicPioDevice):
     """
@@ -50,3 +51,30 @@ class Plic(BasicPioDevice):
     intrctrl = Param.IntrControl(Parent.any, "interrupt controller")
     pio_size = Param.Addr(0x4000000, "PIO Size")
     n_src = Param.Int("Number of interrupt sources")
+
+    def generateDeviceTree(self, state):
+        node = self.generateBasicPioDeviceNode(state, "plic", self.pio_addr,
+                                               self.pio_size)
+
+        int_state = FdtState(addr_cells=0, interrupt_cells=1)
+        node.append(int_state.addrCellsProperty())
+        node.append(int_state.interruptCellsProperty())
+
+        phandle = int_state.phandle(self)
+        node.append(FdtPropertyWords("phandle", [phandle]))
+        node.append(FdtPropertyWords("riscv,ndev", [self.n_src - 1]))
+
+        cpus = self.system.unproxy(self).cpu
+        int_extended = list()
+        for cpu in cpus:
+            phandle = int_state.phandle(cpu)
+            int_extended.append(phandle)
+            int_extended.append(0xb)
+            int_extended.append(phandle)
+            int_extended.append(0x9)
+
+        node.append(FdtPropertyWords("interrupts-extended", int_extended))
+        node.append(FdtProperty("interrupt-controller"))
+        node.appendCompatible(["riscv,plic0"])
+
+        yield node

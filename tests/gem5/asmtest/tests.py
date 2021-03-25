@@ -90,11 +90,8 @@ def asm_test(test, #The full path of the test
 cpu_types = ('AtomicSimpleCPU', 'TimingSimpleCPU', 'MinorCPU', 'DerivO3CPU')
 
 # The following lists the RISCV binaries. Those commented out presently result
-# in a test failure. They are outlined in the following Jira Issues:
-#
-# https://gem5.atlassian.net/browse/GEM5-494
+# in a test failure. This is outlined in the following Jira issue:
 # https://gem5.atlassian.net/browse/GEM5-496
-# https://gem5.atlassian.net/browse/GEM5-497
 binaries = (
     'rv64samt-ps-sysclone_d',
     'rv64samt-ps-sysfutex1_d',

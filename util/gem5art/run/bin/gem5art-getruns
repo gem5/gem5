@@ -1,0 +1,88 @@
+#! /usr/bin/env python3
+# Copyright (c) 2019, 2021 The Regents of the University of California
+# All Rights Reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""This is a simple script to dump gem5 runs into a json file.
+
+This file simply wraps the getRuns function from gem5art.run.
+"""
+
+from argparse import ArgumentParser
+from json import dump
+
+import gem5art.artifact
+from gem5art.artifact import getDBConnection
+from gem5art.run import getRunsByNameLike, getRuns
+
+
+def parseArgs():
+    parser = ArgumentParser(
+        description="Dump all runs from the database into a json file"
+    )
+
+    default_db_uri = gem5art.artifact._artifactdb._default_uri
+
+    parser.add_argument("filename", help="Output file name")
+    parser.add_argument(
+        "--fs-only",
+        action="store_true",
+        default=False,
+        help="Only output FS runs",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="Limit of the number of runs to return. Default: all",
+    )
+    parser.add_argument(
+        "--db-uri",
+        default=default_db_uri,
+        help=f"The database to connect to. Default {default_db_uri}",
+    )
+    parser.add_argument(
+        "-s", "--search_name", help="Query for the name field", default=""
+    )
+
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+
+    args = parseArgs()
+
+    db = getDBConnection(args.db_uri)
+
+    with open(args.filename, "w") as f:
+        if args.search_name:
+            runs = getRunsByNameLike(
+                db, args.search_name, args.fs_only, args.limit
+            )
+        else:
+            runs = getRuns(db, args.fs_only, args.limit)
+
+        to_dump = [run._convertForJson(run._getSerializable()) for run in runs]
+        dump(to_dump, f, indent=2)

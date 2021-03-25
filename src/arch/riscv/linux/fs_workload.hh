@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
- * Copyright (c) 2007 MIPS Technologies, Inc.
- * All rights reserved.
+ * Copyright (c) 2021 Huawei International
+ * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,38 +26,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_RISCV_FS_WORKLOAD_HH__
-#define __ARCH_RISCV_FS_WORKLOAD_HH__
+#ifndef __ARCH_RISCV_LINUX_SYSTEM_HH__
+#define __ARCH_RISCV_LINUX_SYSTEM_HH__
 
-#include "params/RiscvFsWorkload.hh"
-#include "sim/sim_object.hh"
-#include "sim/workload.hh"
+#include "params/RiscvLinux.hh"
+#include "sim/kernel_workload.hh"
 
 namespace RiscvISA
 {
 
-class FsWorkload : public Workload
+class FsLinux : public KernelWorkload
 {
-  protected:
-    // checker for bare metal application
-    bool _isBareMetal;
-    // entry point for simulation
-    Addr _resetVect;
-
   public:
-    FsWorkload(const RiscvFsWorkloadParams &p) : Workload(p),
-        _isBareMetal(p.bare_metal), _resetVect(p.reset_vect)
-    {}
+    PARAMS(RiscvLinux);
+    FsLinux(const Params &p) : KernelWorkload(p) {}
 
-    // return reset vector
-    Addr resetVect() const { return _resetVect; }
-
-    // return bare metal checker
-    bool isBareMetal() const { return _isBareMetal; }
-
-    Addr getEntry() const override { return _resetVect; }
+    void initState() override;
 };
 
 } // namespace RiscvISA
 
-#endif // __ARCH_RISCV_FS_WORKLOAD_HH__
+#endif // __ARCH_RISCV_LINUX_FS_WORKLOAD_HH__

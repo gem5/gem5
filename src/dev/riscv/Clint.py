@@ -37,6 +37,7 @@ from m5.objects.Device import BasicPioDevice
 from m5.objects.IntPin import IntSinkPin
 from m5.params import *
 from m5.proxy import *
+from m5.util.fdthelper import *
 
 class Clint(BasicPioDevice):
     """
@@ -51,3 +52,21 @@ class Clint(BasicPioDevice):
     intrctrl = Param.IntrControl(Parent.any, "interrupt controller")
     int_pin = IntSinkPin('Pin to receive RTC signal')
     pio_size = Param.Addr(0xC000, "PIO Size")
+
+    def generateDeviceTree(self, state):
+        node = self.generateBasicPioDeviceNode(state, "clint", self.pio_addr,
+                                               self.pio_size)
+
+        cpus = self.system.unproxy(self).cpu
+        int_extended = list()
+        for cpu in cpus:
+            phandle = state.phandle(cpu)
+            int_extended.append(phandle)
+            int_extended.append(0x3)
+            int_extended.append(phandle)
+            int_extended.append(0x7)
+
+        node.append(FdtPropertyWords("interrupts-extended", int_extended))
+        node.appendCompatible(["riscv,clint0"])
+
+        yield node

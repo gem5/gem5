@@ -303,6 +303,12 @@ util-m5:
   maintainers:
     - Gabe Black <gabe.black@gmail.com>
 
+util-gem5art:
+  status: maintained
+  maintainers:
+    - Bobby Bruce <bbruce@ucdavis.edu>
+    - Jason Lowe-Power <jason@lowepower.com>
+
 website:
   desc: >-
     The gem5-website repo which contains the gem5.org site
