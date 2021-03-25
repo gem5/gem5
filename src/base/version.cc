@@ -29,4 +29,4 @@
 /**
  * @ingroup api_base_utils
  */
-const char *gem5Version = "21.0.0.0";
+const char *gem5Version = "[DEVELOP-FOR-V21.1]";
