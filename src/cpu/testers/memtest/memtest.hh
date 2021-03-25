@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,8 +41,8 @@
 #ifndef __CPU_MEMTEST_MEMTEST_HH__
 #define __CPU_MEMTEST_MEMTEST_HH__
 
-#include <set>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "base/statistics.hh"
 #include "mem/port.hh"
@@ -130,7 +130,7 @@ class MemTest : public ClockedObject
 
     unsigned int id;
 
-    std::set<Addr> outstandingAddrs;
+    std::unordered_set<Addr> outstandingAddrs;
 
     // store the expected value for the addresses we have touched
     std::unordered_map<Addr, uint8_t> referenceData;
@@ -150,9 +150,9 @@ class MemTest : public ClockedObject
         return (addr & ~blockAddrMask);
     }
 
-    Addr baseAddr1;
-    Addr baseAddr2;
-    Addr uncacheAddr;
+    const Addr baseAddr1;
+    const Addr baseAddr2;
+    const Addr uncacheAddr;
 
     const unsigned progressInterval;  // frequency of progress reports
     const Cycles progressCheck;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2019 ARM Limited
+ * Copyright (c) 2015, 2019, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,7 +48,7 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
-unsigned int TESTER_ALLOCATOR = 0;
+static unsigned int TESTER_ALLOCATOR = 0;
 
 bool
 MemTest::CpuPort::recvTimingResp(PacketPtr pkt)
@@ -92,6 +92,9 @@ MemTest::MemTest(const Params &p)
       requestorId(p.system->getRequestorId(this)),
       blockSize(p.system->cacheLineSize()),
       blockAddrMask(blockSize - 1),
+      baseAddr1(p.base_addr_1),
+      baseAddr2(p.base_addr_2),
+      uncacheAddr(p.uncacheable_base_addr),
       progressInterval(p.progress_interval),
       progressCheck(p.progress_check),
       nextProgressMessage(p.progress_interval),
@@ -102,10 +105,6 @@ MemTest::MemTest(const Params &p)
     id = TESTER_ALLOCATOR++;
     fatal_if(id >= blockSize, "Too many testers, only %d allowed\n",
              blockSize - 1);
-
-    baseAddr1 = 0x100000;
-    baseAddr2 = 0x400000;
-    uncacheAddr = 0x800000;
 
     // set up counters
     numReads = 0;
