@@ -38,8 +38,6 @@
 #include "dev/platform.hh"
 #include "params/Pc.hh"
 
-class IdeController;
-class System;
 class SouthBridge;
 
 class Pc : public Platform

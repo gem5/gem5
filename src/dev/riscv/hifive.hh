@@ -64,8 +64,6 @@ class HiFive : public Platform
 
     void clearPciInt(int line) override;
 
-    virtual Addr pciToDma(Addr pciAddr) const;
-
     void serialize(CheckpointOut &cp) const override;
 
     void unserialize(CheckpointIn &cp) override;

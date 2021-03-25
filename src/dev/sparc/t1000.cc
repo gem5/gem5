@@ -32,10 +32,6 @@
 
 #include "dev/sparc/t1000.hh"
 
-#include <deque>
-#include <string>
-#include <vector>
-
 #include "base/logging.hh"
 
 T1000::T1000(const Params &p) : Platform(p) {}
@@ -62,31 +58,6 @@ T1000::postPciInt(int line)
 
 void
 T1000::clearPciInt(int line)
-{
-    panic("Need implementation\n");
-}
-
-Addr
-T1000::pciToDma(Addr pciAddr) const
-{
-    panic("Need implementation\n");
-}
-
-
-Addr
-T1000::calcPciConfigAddr(int bus, int dev, int func)
-{
-    panic("Need implementation\n");
-}
-
-Addr
-T1000::calcPciIOAddr(Addr addr)
-{
-    panic("Need implementation\n");
-}
-
-Addr
-T1000::calcPciMemAddr(Addr addr)
 {
     panic("Need implementation\n");
 }

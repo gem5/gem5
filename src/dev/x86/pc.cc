@@ -32,10 +32,6 @@
 
 #include "dev/x86/pc.hh"
 
-#include <deque>
-#include <string>
-#include <vector>
-
 #include "arch/x86/intmessage.hh"
 #include "arch/x86/x86_traits.hh"
 #include "dev/x86/i82094aa.hh"

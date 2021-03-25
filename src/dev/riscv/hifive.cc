@@ -75,12 +75,6 @@ HiFive::clearPciInt(int line)
     plic->clear(line);
 }
 
-Addr
-HiFive::pciToDma(Addr pciAddr) const
-{
-    panic("HiFive::pciToDma() has not been implemented.");
-}
-
 void
 HiFive::serialize(CheckpointOut &cp) const
 {

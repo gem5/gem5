@@ -38,10 +38,8 @@
 #include "dev/platform.hh"
 #include "params/Malta.hh"
 
-class IdeController;
 class MaltaCChip;
 class MaltaIO;
-class System;
 
 /**
   * Top level class for Malta Chipset emulation.
@@ -91,27 +89,6 @@ class Malta : public Platform
      * Clear a posted PCI->CPU interrupt
      */
     void clearPciInt(int line) override;
-
-
-    virtual Addr pciToDma(Addr pciAddr) const;
-
-    Addr
-    calcPciConfigAddr(int bus, int dev, int func)
-    {
-        panic("Need implementation\n");
-    }
-
-    Addr
-    calcPciIOAddr(Addr addr)
-    {
-        panic("Need implementation\n");
-    }
-
-    Addr
-    calcPciMemAddr(Addr addr)
-    {
-        panic("Need implementation\n");
-    }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
