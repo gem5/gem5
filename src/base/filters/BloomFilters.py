@@ -98,3 +98,8 @@ class BloomFilterPerfect(BloomFilterBase):
 
     # The base filter is not needed. Use a dummy value.
     size = 1
+
+    # This filter does not use saturating counters - as long as the entry is
+    # set, it is present; thus, it only needs one bit.
+    num_bits = 1
+    threshold = 1

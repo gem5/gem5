@@ -28,6 +28,7 @@
 
 #include "base/filters/perfect_bloom_filter.hh"
 
+#include "base/logging.hh"
 #include "params/BloomFilterPerfect.hh"
 
 namespace gem5
@@ -40,6 +41,12 @@ namespace bloom_filter
 Perfect::Perfect(const BloomFilterPerfectParams &p)
     : Base(p)
 {
+    fatal_if(p.size != 1, "The perfect Bloom filter cannot be limited to a "
+        "specific size.");
+    fatal_if(p.num_bits != 1, "The perfect Bloom filter tracks entries "
+        "perfectly using an unlimited amount of 1-bit entries.");
+    fatal_if(p.threshold != 1, "The perfect Bloom filter uses 1-bit entries; "
+        "thus, their thresholds must be 1.");
 }
 
 Perfect::~Perfect()
