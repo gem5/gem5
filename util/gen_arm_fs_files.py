@@ -128,66 +128,6 @@ def linux():
     linux64()
     linux32()
 
-def linux_legacy():
-    """
-    Checkout and build linux kernel and DTB for VExpress_EMM64/EMM
-    """
-    kernel_vexpress_emm64_dir = os.path.join(options.dest_dir,
-        "linux-kernel-vexpress_emm64")
-    run_cmd("clone linux kernel for VExpress_EMM64 platform",
-        options.dest_dir,
-        ["git", "clone", "https://gem5.googlesource.com/arm/linux-arm64-legacy",
-         kernel_vexpress_emm64_dir])
-    with open(revisions_dir + "/linux-arm64-legacy", "w+") as rev_file:
-        run_cmd("write revision of linux-kernel-vexpress_emm64 repo",
-            kernel_vexpress_emm64_dir,
-            ["git", "rev-parse", "--short", "HEAD"],
-            rev_file)
-    run_cmd("configure kernel",
-        kernel_vexpress_emm64_dir,
-        ["make", "ARCH=arm64", "CROSS_COMPILE=aarch64-linux-gnu-",
-         "CC=aarch64-linux-gnu-gcc-4.8", "gem5_defconfig"])
-    run_cmd("compile kernel",
-        kernel_vexpress_emm64_dir,
-        ["make", "ARCH=arm64", "CROSS_COMPILE=aarch64-linux-gnu-",
-         "CC=aarch64-linux-gnu-gcc-4.8", make_jobs_str])
-    run_cmd("copy vmlinux",
-        kernel_vexpress_emm64_dir,
-        ["cp", "vmlinux", binaries_dir + "/vmlinux.vexpress_emm64"])
-    run_cmd("copy DTB",
-        kernel_vexpress_emm64_dir,
-        ["cp", "arch/arm64/boot/dts/aarch64_gem5_server.dtb", binaries_dir])
-
-    kernel_vexpress_emm_dir = options.dest_dir + "/linux-kernel-vexpress_emm"
-    run_cmd("clone linux kernel for VExpress_EMM platform",
-        options.dest_dir,
-        ["git", "clone", "https://gem5.googlesource.com/arm/linux-arm-legacy",
-         kernel_vexpress_emm_dir])
-    with open(revisions_dir + "/linux-arm-legacy", "w+") as rev_file:
-        run_cmd("write revision of linux-kernel-vexpress_emm64 repo",
-            kernel_vexpress_emm_dir,
-            ["git", "rev-parse", "--short", "HEAD"],
-            rev_file)
-    run_cmd("configure kernel",
-        kernel_vexpress_emm_dir,
-        ["make", "ARCH=arm", "CROSS_COMPILE=arm-linux-gnueabihf-",
-         "CC=arm-linux-gnueabihf-gcc-4.8", "vexpress_gem5_server_defconfig"])
-    run_cmd("compile kernel",
-        kernel_vexpress_emm_dir,
-        ["make", "ARCH=arm", "CROSS_COMPILE=arm-linux-gnueabihf-",
-         "CC=arm-linux-gnueabihf-gcc-4.8", make_jobs_str])
-    run_cmd("copy vmlinux",
-        kernel_vexpress_emm_dir,
-        ["cp", "vmlinux", binaries_dir + "/vmlinux.vexpress_emm"])
-    run_cmd("rename DTB for 1 CPU",
-        kernel_vexpress_emm_dir,
-        ["cp", "arch/arm/boot/dts/vexpress-v2p-ca15-tc1-gem5.dtb",
-         binaries_dir + "/vexpress-v2p-ca15-tc1-gem5_1cpus.dtb"])
-    run_cmd("copy DTBs",
-        kernel_vexpress_emm_dir,
-        ["cp"] + glob(kernel_vexpress_emm_dir + "/arch/arm/boot/dts/*gem5_*dtb") +
-        [binaries_dir])
-
 def dtbs():
     """
     Build DTBs for VExpress_GEM5_V1
@@ -314,7 +254,6 @@ gem5_dir = os.path.dirname(script_dir)
 
 all_binaries = {
     "linux" : linux,
-    "linux-legacy" : linux_legacy,
     "dtbs" : dtbs,
     "bootloaders" : bootloaders,
     "m5" : m5,
