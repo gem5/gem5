@@ -395,7 +395,7 @@ def define_options(parser):
                       "cache controller")
 
 def create_system(options, full_system, system, dma_devices, bootmem,
-                  ruby_system):
+                  ruby_system, cpus):
     if buildEnv['PROTOCOL'] != 'GPU_VIPER':
         panic("This script requires the GPU_VIPER protocol to be built.")
 
