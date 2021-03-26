@@ -42,7 +42,7 @@ from m5.objects import *
 
 from m5.defines import buildEnv
 if buildEnv['PROTOCOL'] == 'CHI':
-    import ruby.CHI as CHI
+    import ruby.CHI_config as CHI
 
 from topologies.BaseTopology import SimpleTopology
 
@@ -163,8 +163,12 @@ class CustomMesh(SimpleTopology):
 
         return node_router
 
-    def distributeNodes(self, num_nodes_per_router, router_idx_list,
-                        node_list):
+    def distributeNodes(self, node_placement_config, node_list):
+        if len(node_list) == 0:
+            return
+
+        num_nodes_per_router = node_placement_config.num_nodes_per_router
+        router_idx_list = node_placement_config.router_list
 
         if num_nodes_per_router:
             # evenly distribute nodes to all listed routers
@@ -233,25 +237,45 @@ class CustomMesh(SimpleTopology):
             self._node_link_latency = options.link_latency
 
         # classify nodes into different types
-        rnf_list = []
-        hnf_list = []
-        mem_ctrls = []
-        io_mem_ctrls = []
-        io_rni_ctrls = []
+        rnf_nodes = []
+        hnf_nodes = []
+        mem_nodes = []
+        io_mem_nodes = []
+        rni_dma_nodes = []
+        rni_io_nodes = []
+
+        # Notice below that all the type must be the same for all nodes with
+        # the same base type.
+        rnf_params = None
+        hnf_params = None
+        mem_params = None
+        io_mem_params = None
+        rni_dma_params = None
+        rni_io_params = None
+
+        def check_same(val, curr):
+            assert(curr == None or curr == val)
+            return val
 
         for n in self.nodes:
             if isinstance(n, CHI.CHI_RNF):
-                rnf_list.append(n)
+                rnf_nodes.append(n)
+                rnf_params = check_same(type(n).NoC_Params, rnf_params)
             elif isinstance(n, CHI.CHI_HNF):
-                hnf_list.append(n)
+                hnf_nodes.append(n)
+                hnf_params = check_same(type(n).NoC_Params, hnf_params)
             elif isinstance(n, CHI.CHI_SNF_MainMem):
-                mem_ctrls.append(n)
+                mem_nodes.append(n)
+                mem_params = check_same(type(n).NoC_Params, mem_params)
             elif isinstance(n, CHI.CHI_SNF_BootMem):
-                io_mem_ctrls.append(n)
+                io_mem_nodes.append(n)
+                io_mem_params = check_same(type(n).NoC_Params, io_mem_params)
             elif isinstance(n, CHI.CHI_RNI_DMA):
-                io_rni_ctrls.append(n)
+                rni_dma_nodes.append(n)
+                rni_dma_params = check_same(type(n).NoC_Params, rni_dma_params)
             elif isinstance(n, CHI.CHI_RNI_IO):
-                io_rni_ctrls.append(n)
+                rni_io_nodes.append(n)
+                rni_io_params = check_same(type(n).NoC_Params, rni_io_params)
             else:
                 fatal('topologies.CustomMesh: {} not supported'
                             .format(n.__class__.__name__))
@@ -269,39 +293,20 @@ class CustomMesh(SimpleTopology):
                        options.cross_links, options.cross_link_latency)
 
         # Place CHI_RNF on the mesh
-        num_nodes_per_router = options.CHI_RNF['num_nodes_per_router'] \
-                if 'num_nodes_per_router' in options.CHI_RNF else None
-        self.distributeNodes(num_nodes_per_router,
-                             options.CHI_RNF['router_list'],
-                             rnf_list)
+        self.distributeNodes(rnf_params, rnf_nodes)
 
         # Place CHI_HNF on the mesh
-        num_nodes_per_router = options.CHI_HNF['num_nodes_per_router'] \
-                if 'num_nodes_per_router' in options.CHI_HNF else None
-        self.distributeNodes(num_nodes_per_router,
-                             options.CHI_HNF['router_list'],
-                             hnf_list)
+        self.distributeNodes(hnf_params, hnf_nodes)
 
         # Place CHI_SNF_MainMem on the mesh
-        num_nodes_per_router = options.CHI_SNF_MainMem['num_nodes_per_router']\
-                if 'num_nodes_per_router' in options.CHI_SNF_MainMem else None
-        self.distributeNodes(num_nodes_per_router,
-                             options.CHI_SNF_MainMem['router_list'],
-                             mem_ctrls)
+        self.distributeNodes(mem_params, mem_nodes)
 
         # Place all IO mem nodes on the mesh
-        num_nodes_per_router = options.CHI_SNF_IO['num_nodes_per_router'] \
-                if 'num_nodes_per_router' in options.CHI_SNF_IO else None
-        self.distributeNodes(num_nodes_per_router,
-                             options.CHI_SNF_IO['router_list'],
-                             io_mem_ctrls)
+        self.distributeNodes(io_mem_params, io_mem_nodes)
 
         # Place all IO request nodes on the mesh
-        num_nodes_per_router = options.CHI_RNI_IO['num_nodes_per_router'] \
-                if 'num_nodes_per_router' in options.CHI_RNI_IO else None
-        self.distributeNodes(num_nodes_per_router,
-                             options.CHI_RNI_IO['router_list'],
-                             io_rni_ctrls)
+        self.distributeNodes(rni_dma_params, rni_dma_nodes)
+        self.distributeNodes(rni_io_params, rni_io_nodes)
 
         # Set up
         network.int_links = self._int_links

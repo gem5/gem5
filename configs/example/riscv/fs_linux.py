@@ -40,6 +40,7 @@
 
 import optparse
 import sys
+from os import path
 
 import m5
 from m5.defines import buildEnv
@@ -61,6 +62,43 @@ from common import MemConfig
 from common import ObjectList
 from common.Caches import *
 from common import Options
+
+
+def generateMemNode(state, mem_range):
+    node = FdtNode("memory@%x" % int(mem_range.start))
+    node.append(FdtPropertyStrings("device_type", ["memory"]))
+    node.append(FdtPropertyWords("reg",
+        state.addrCells(mem_range.start) +
+        state.sizeCells(mem_range.size()) ))
+    return node
+
+def generateDtb(system):
+    """
+    Autogenerate DTB. Arguments are the folder where the DTB
+    will be stored, and the name of the DTB file.
+    """
+    state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
+    root = FdtNode('/')
+    root.append(state.addrCellsProperty())
+    root.append(state.sizeCellsProperty())
+    root.appendCompatible(["riscv-virtio"])
+
+    for mem_range in system.mem_ranges:
+        root.append(generateMemNode(state, mem_range))
+
+    sections = [*system.cpu, system.platform]
+
+    for section in sections:
+        for node in section.generateDeviceTree(state):
+            if node.get_name() == root.get_name():
+                root.merge(node)
+            else:
+                root.append(node)
+
+    fdt = Fdt()
+    fdt.add_rootnode(root)
+    fdt.writeDtsFile(path.join(m5.options.outdir, 'device.dts'))
+    fdt.writeDtbFile(path.join(m5.options.outdir, 'device.dtb'))
 
 # ----------------------------- Add Options ---------------------------- #
 parser = optparse.OptionParser()
@@ -92,12 +130,12 @@ mdesc = SysConfig(disks=options.disk_image, rootdev=options.root_device,
 system.mem_mode = mem_mode
 system.mem_ranges = [AddrRange(start=0x80000000, size=mdesc.mem())]
 
-system.workload = RiscvBareMetal()
+system.workload = RiscvLinux()
 
 system.iobus = IOXBar()
 system.membus = MemBus()
 
-system.system_port = system.membus.slave
+system.system_port = system.membus.cpu_side_ports
 
 system.intrctrl = IntrControl()
 
@@ -147,7 +185,7 @@ system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
                                             voltage_domain =
                                             system.cpu_voltage_domain)
 
-system.workload.bootloader = options.kernel
+system.workload.object_file = options.kernel
 
 # NOTE: Not yet tested
 if options.script is not None:
@@ -161,12 +199,12 @@ system.cpu = [CPUClass(clk_domain=system.cpu_clk_domain, cpu_id=i)
 if options.caches or options.l2cache:
     # By default the IOCache runs at the system clock
     system.iocache = IOCache(addr_ranges = system.mem_ranges)
-    system.iocache.cpu_side = system.iobus.master
-    system.iocache.mem_side = system.membus.slave
+    system.iocache.cpu_side = system.iobus.mem_side_ports
+    system.iocache.mem_side = system.membus.cpu_side_ports
 elif not options.external_memory_system:
     system.iobridge = Bridge(delay='50ns', ranges = system.mem_ranges)
-    system.iobridge.slave = system.iobus.master
-    system.iobridge.master = system.membus.slave
+    system.iobridge.cpu_side_ports = system.iobus.mem_side_ports
+    system.iobridge.mem_side_ports = system.membus.cpu_side_ports
 
 # Sanity check
 if options.simpoint_profile:
@@ -197,13 +235,27 @@ uncacheable_range = [
     *system.platform._on_chip_ranges(),
     *system.platform._off_chip_ranges()
 ]
-pma_checker =  PMAChecker(uncacheable=uncacheable_range)
 
 # PMA checker can be defined at system-level (system.pma_checker)
 # or MMU-level (system.cpu[0].mmu.pma_checker). It will be resolved
 # by RiscvTLB's Parent.any proxy
 for cpu in system.cpu:
-    cpu.mmu.pma_checker = pma_checker
+    cpu.mmu.pma_checker = PMAChecker(uncacheable=uncacheable_range)
+
+# --------------------------- DTB Generation --------------------------- #
+
+generateDtb(system)
+system.workload.dtb_filename = path.join(m5.options.outdir, 'device.dtb')
+# Default DTB address if bbl is bulit with --with-dts option
+system.workload.dtb_addr = 0x87e00000
+
+# Linux boot command flags
+kernel_cmd = [
+    "console=ttyS0",
+    "root=/dev/vda",
+    "ro"
+]
+system.workload.command_line = " ".join(kernel_cmd)
 
 # ---------------------------- Default Setup --------------------------- #
 

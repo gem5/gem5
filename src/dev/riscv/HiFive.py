@@ -42,6 +42,7 @@ from m5.objects.Uart import Uart8250
 from m5.objects.Terminal import Terminal
 from m5.params import *
 from m5.proxy import *
+from m5.util.fdthelper import *
 
 class HiFive(Platform):
     """HiFive Platform
@@ -111,6 +112,9 @@ class HiFive(Platform):
     uart_int_id = Param.Int(0xa, "PLIC Uart interrupt ID")
     terminal = Terminal()
 
+    # Dummy param for generating devicetree
+    cpu_count = Param.Int(0, "dummy")
+
     def _on_chip_devices(self):
         """Returns a list of on-chip peripherals
         """
@@ -167,3 +171,39 @@ class HiFive(Platform):
         """
         for device in self._off_chip_devices():
             device.pio = bus.mem_side_ports
+
+    def generateDeviceTree(self, state):
+        cpus_node = FdtNode("cpus")
+        cpus_node.append(FdtPropertyWords("timebase-frequency", [10000000]))
+        yield cpus_node
+
+        node = FdtNode("soc")
+        local_state = FdtState(addr_cells=2, size_cells=2)
+        node.append(local_state.addrCellsProperty())
+        node.append(local_state.sizeCellsProperty())
+        node.append(FdtProperty("ranges"))
+        node.appendCompatible(["simple-bus"])
+
+        for subnode in self.recurseDeviceTree(local_state):
+            node.append(subnode)
+
+        yield node
+
+    def annotateCpuDeviceNode(self, cpu, state):
+        cpu.append(FdtPropertyStrings('mmu-type', 'riscv,sv48'))
+        cpu.append(FdtPropertyStrings('status', 'okay'))
+        cpu.append(FdtPropertyStrings('riscv,isa', 'rv64imafdcsu'))
+        cpu.appendCompatible(["riscv"])
+
+        int_node = FdtNode("interrupt-controller")
+        int_state = FdtState(interrupt_cells=1)
+        int_node.append(int_state.interruptCellsProperty())
+        int_node.append(FdtProperty("interrupt-controller"))
+        int_node.appendCompatible("riscv,cpu-intc")
+
+        cpus = self.system.unproxy(self).cpu
+        phandle = int_state.phandle(cpus[self.cpu_count])
+        self.cpu_count += 1
+        int_node.append(FdtPropertyWords("phandle", [phandle]))
+
+        cpu.append(int_node)

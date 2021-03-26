@@ -1,14 +1,5 @@
-# Copyright (c) 2021 ARM Limited
-# All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
+# Copyright (c) 2019, 2021 The Regents of the University of California
+# All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -33,38 +24,4 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# 2x4 mesh definition
-#
-# 0 --- 1 --- 2 --- 3
-# |     |     |     |
-# 4 --- 5 --- 6 --- 7
-#
-mesh:
-    num_rows : 2
-    num_cols : 4
-    router_latency : 1
-    link_latency : 1
-
-# Bindings for each CHI node type.
-
-CHI_RNF:
-    # Uncomment to map num_nodes_per_router RNFs in each provided router,
-    # assuming num. created CHI_RNFs == len(router_list)*num_nodes_per_router
-    # num_nodes_per_router: 1
-    router_list: [1, 2, 5, 6]
-
-CHI_HNF:
-    # num_nodes_per_router: 1
-    router_list: [1, 2, 5, 6]
-
-CHI_SNF_MainMem:
-    # num_nodes_per_router: 1
-    router_list: [0, 4]
-
-# Applies to CHI_SNF_BootMem and possibly other non-main memories
-CHI_SNF_IO:
-    router_list: [3]
-
-# Applies to CHI_RNI_DMA and CHI_RNI_IO
-CHI_RNI_IO:
-    router_list: [7]
+"""This is a set of utilities for using celery to run gem5 experiments"""

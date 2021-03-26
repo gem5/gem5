@@ -92,7 +92,11 @@ class CSROp : public RiscvStaticInst
     CSROp(const char *mnem, MachInst _machInst, OpClass __opClass)
         : RiscvStaticInst(mnem, _machInst, __opClass),
             csr(FUNCT12), uimm(CSRIMM)
-    {}
+    {
+        if (csr == CSR_SATP) {
+            flags[IsSquashAfter] = true;
+        }
+    }
 
     std::string generateDisassembly(
         Addr pc, const Loader::SymbolTable *symtab) const override;

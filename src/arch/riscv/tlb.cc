@@ -35,7 +35,6 @@
 #include <vector>
 
 #include "arch/riscv/faults.hh"
-#include "arch/riscv/fs_workload.hh"
 #include "arch/riscv/mmu.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/pagetable_walker.hh"

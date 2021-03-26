@@ -1,3 +1,66 @@
+# Version 21.0.0.0
+
+Version 21.0 marks *one full year* of gem5 releases, and on this anniversary, I think we have some of the biggest new features yet!
+This has been a very productive release with [100 issues](https://gem5.atlassian.net/), over 813  commits, and 49 unique contributors.
+
+## 21.0 New features
+
+### AMBA CHI protocol implemented in SLICC: Contributed by *Tiago Mück*
+
+This new protocol provides a single cache controller that can be reused at multiple levels of the cache hierarchy and configured to model multiple instances of MESI and MOESI cache coherency protocols.
+This implementation is based of Arm’s [AMBA 5 CHI specification](https://static.docs.arm.com/ihi0050/d/IHI0050D_amba_5_chi_architecture_spec.pdf) and provides a scalable framework for the design space exploration of large SoC designs.
+
+See [the gem5 documentation](http://www.gem5.org/documentation/general_docs/ruby/CHI/) for more details.
+There is also a [gem5 blog post](http://www.gem5.org/2020/05/29/flexible-cache.html) on this new protocol as well.
+
+### Full support for AMD's GCN3 GPU model
+
+In previous releases, this model was only partially supported.
+As of gem5 21.0, this model has been fully integrated and is tested nightly.
+This model currently only works in syscall emulation mode and requires using the gcn docker container to get the correct version of the ROCm stack.
+More information can be found in [this blog post](http://www.gem5.org/2020/05/27/modern-gpu-applications.html).
+
+With this full support, we are also providing many applications as well.
+See [gem5-resources](http://resources.gem5.org/) for more information.
+
+### RISC-V Full system Linux boot support: Contributed by *Peter Yuen*
+
+The RISC-V model in gem5 can now boot unmodified Linux!
+Additionally, we have implemented DTB generation and support the Berkeley Boot Loader as the stage 1 boot loader.
+We have also released a set of resources for you to get started: <https://gem5.googlesource.com/public/gem5-resources/+/refs/heads/develop/src/riscv-fs/>
+
+### New/Changed APIs
+
+There are multiple places where the developers have reduced boilerplate.
+
+* **[API CHANGE]**: No more `create()` functions! Previously, every `SimObject` required a `<SimObjectParams>::create()` function to be manually defined. Forgetting to do this resulted in confusing errors. Now, this function is created for you automatically. You can still override it if you need to handle any special cases.
+* **[API CHANGE]**: `params()`: Rather than defining a typedef and the `params()` function for every `SimObject`, you can now use the `PARAMS` macro.
+
+See <http://doxygen.gem5.org/release/current/classSimObject.html#details> for more details on these two API changes.
+
+* **[API CHANGE]**: All stats are now using *new style* groups instead of the older manual stat interface.
+  * The previous API (creating stats that are not part of a `Group`) is still supported, but it is now deprecated.
+  * If a stat is not created with the new `Group` API, it may not be automatically dumped using new stat APIs (e.g., the Python API).
+  * Next release, there will be a warning for all old-style stats.
+
+### Platforms no longer support
+
+* **[USER-FACING CHANGE]**: Python 2.7 is *no longer supported*. You must use Python 3.6+.
+* CLANG minimum version is now 3.9
+* Bump minimum C++ to C++14
+
+### Other improvements and new features
+
+* Extra options to build m5ops
+* m5term improvements
+* There is a new python-based library for handling statistics. This library *works*, but hasn't been thoroughly tested yet. Stay tuned for more on this next release.
+* Many improvements and additions to unit tests
+* Cleaning up the `StaticInst` type
+* Workload API changes
+* Many updates and changes to the m5 guest utility
+* [Support for running arm64 Linux kernel v5.8](https://gem5.atlassian.net/browse/GEM5-787)
+* [Arm SCMI implemented](https://gem5.atlassian.net/browse/GEM5-768)
+
 # Version 20.1.0.5
 
 **[HOTFIX]** This hotfix release fixes three known bugs:
