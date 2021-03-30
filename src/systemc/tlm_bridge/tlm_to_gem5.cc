@@ -96,24 +96,42 @@ PacketPtr
 payload2packet(RequestorID _id, tlm::tlm_generic_payload &trans)
 {
     MemCmd cmd;
+    RequestPtr req;
 
-    switch (trans.get_command()) {
-        case tlm::TLM_READ_COMMAND:
+    Gem5SystemC::AtomicExtension *atomic_ex = nullptr;
+    trans.get_extension(atomic_ex);
+    if (atomic_ex) {
+        cmd = MemCmd::SwapReq;
+        Request::Flags flags = (atomic_ex->needReturn() ?
+                                Request::ATOMIC_RETURN_OP :
+                                Request::ATOMIC_NO_RETURN_OP);
+        AtomicOpFunctorPtr amo_op = AtomicOpFunctorPtr(
+            atomic_ex->getAtomicOpFunctor()->clone());
+        // FIXME: correct the context_id and pc state.
+        req = std::make_shared<Request>(
+            trans.get_address(), trans.get_data_length(), flags, _id,
+            0, 0, std::move(amo_op));
+        req->setPaddr(trans.get_address());
+    } else {
+        switch (trans.get_command()) {
+          case tlm::TLM_READ_COMMAND:
             cmd = MemCmd::ReadReq;
             break;
-        case tlm::TLM_WRITE_COMMAND:
+          case tlm::TLM_WRITE_COMMAND:
             cmd = MemCmd::WriteReq;
             break;
-        case tlm::TLM_IGNORE_COMMAND:
+          case tlm::TLM_IGNORE_COMMAND:
             return nullptr;
-        default:
+          default:
             SC_REPORT_FATAL("TlmToGem5Bridge",
-                            "received transaction with unsupported command");
+                            "received transaction with unsupported "
+                            "command");
+        }
+        Request::Flags flags;
+        req = std::make_shared<Request>(
+            trans.get_address(), trans.get_data_length(), flags, _id);
     }
 
-    Request::Flags flags;
-    auto req = std::make_shared<Request>(
-        trans.get_address(), trans.get_data_length(), flags, _id);
 
     /*
      * Allocate a new Packet. The packet will be deleted when it returns from

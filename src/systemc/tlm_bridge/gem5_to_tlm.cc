@@ -155,6 +155,14 @@ packet2payload(PacketPtr packet)
     auto *extension = new Gem5SystemC::Gem5Extension(packet);
     trans->set_auto_extension(extension);
 
+    if (packet->isAtomicOp()) {
+        auto *atomic_ex = new Gem5SystemC::AtomicExtension(
+            std::shared_ptr<AtomicOpFunctor>(
+                packet->req->getAtomicOpFunctor()->clone()),
+            packet->req->isAtomicReturn());
+        trans->set_auto_extension(atomic_ex);
+    }
+
     // Apply all conversion steps necessary in this specific setup.
     for (auto &step : extraPacketToPayloadSteps) {
         step(packet, *trans);
