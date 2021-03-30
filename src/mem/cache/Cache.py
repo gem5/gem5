@@ -99,6 +99,8 @@ class BaseCache(ClockedObject):
     prefetcher = Param.BasePrefetcher(NULL,"Prefetcher attached to cache")
     prefetch_on_access = Param.Bool(False,
          "Notify the hardware prefetcher on every access (not just misses)")
+    prefetch_on_pf_hit = Param.Bool(False,
+        "Notify the hardware prefetcher on hit on prefetched lines")
 
     tags = Param.BaseTags(BaseSetAssoc(), "Tag store")
     replacement_policy = Param.BaseReplacementPolicy(LRURP(),

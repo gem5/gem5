@@ -295,6 +295,9 @@ class Base : public ClockedObject
     /** Prefetch on every access, not just misses */
     const bool prefetchOnAccess;
 
+    /** Prefetch on hit on prefetched lines */
+    const bool prefetchOnPfHit;
+
     /** Use Virtual Addresses for prefetching */
     const bool useVirtualAddresses;
 

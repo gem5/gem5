@@ -100,6 +100,7 @@ Base::Base(const BasePrefetcherParams &p)
       requestorId(p.sys->getRequestorId(this)),
       pageBytes(p.sys->getPageBytes()),
       prefetchOnAccess(p.prefetch_on_access),
+      prefetchOnPfHit(p.prefetch_on_pf_hit),
       useVirtualAddresses(p.use_virtual_addresses),
       prefetchStats(this), issuedPrefetches(0),
       usefulPrefetches(0), tlb(nullptr)
@@ -153,7 +154,12 @@ Base::observeAccess(const PacketPtr &pkt, bool miss) const
     bool read = pkt->isRead();
     bool inv = pkt->isInvalidate();
 
-    if (!miss && !prefetchOnAccess) return false;
+    if (!miss) {
+        if (prefetchOnPfHit)
+            return hasBeenPrefetched(pkt->getAddr(), pkt->isSecure());
+        if (!prefetchOnAccess)
+            return false;
+    }
     if (pkt->req->isUncacheable()) return false;
     if (fetch && !onInst) return false;
     if (!fetch && !onData) return false;
