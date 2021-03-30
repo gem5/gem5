@@ -32,11 +32,21 @@
 namespace FastModel
 {
 
-AmbaToTlmBridge64::AmbaToTlmBridge64(const char *name) :
+AmbaToTlmBridge64::AmbaToTlmBridge64(const sc_core::sc_module_name& name) :
     amba_pv::amba_pv_to_tlm_bridge<64>(name),
-    tlmWrapper(tlm_m, std::string(name) + ".tlm", -1),
+    targetProxy("target_proxy"),
+    initiatorProxy("initiator_proxy"),
+    tlmWrapper(initiatorProxy, std::string(name) + ".tlm", -1),
     ambaWrapper(amba_pv_s, std::string(name) + ".amba", -1)
-{}
+{
+    targetProxy.register_b_transport(this, &AmbaToTlmBridge64::bTransport);
+    targetProxy.register_get_direct_mem_ptr(
+        this, &AmbaToTlmBridge64::getDirectMemPtr);
+    targetProxy.register_transport_dbg(this, &AmbaToTlmBridge64::transportDbg);
+    initiatorProxy.register_invalidate_direct_mem_ptr(
+        this, &AmbaToTlmBridge64::invalidateDirectMemPtr);
+    tlm_m(targetProxy);
+}
 
 Port &
 AmbaToTlmBridge64::gem5_getPort(const std::string &if_name, int idx)
@@ -47,6 +57,33 @@ AmbaToTlmBridge64::gem5_getPort(const std::string &if_name, int idx)
         return ambaWrapper;
     else
         return amba_pv::amba_pv_to_tlm_bridge<64>::gem5_getPort(if_name, idx);
+}
+
+void
+AmbaToTlmBridge64::bTransport(amba_pv::amba_pv_transaction &trans,
+                              sc_core::sc_time &t)
+{
+    return initiatorProxy->b_transport(trans, t);
+}
+
+bool
+AmbaToTlmBridge64::getDirectMemPtr(amba_pv::amba_pv_transaction &trans,
+                                   tlm::tlm_dmi &dmi_data)
+{
+    return initiatorProxy->get_direct_mem_ptr(trans, dmi_data);
+}
+
+unsigned int
+AmbaToTlmBridge64::transportDbg(amba_pv::amba_pv_transaction &trans)
+{
+    return initiatorProxy->transport_dbg(trans);
+}
+
+void
+AmbaToTlmBridge64::invalidateDirectMemPtr(sc_dt::uint64 start_range,
+                                          sc_dt::uint64 end_range)
+{
+    targetProxy->invalidate_direct_mem_ptr(start_range, end_range);
 }
 
 } // namespace FastModel
