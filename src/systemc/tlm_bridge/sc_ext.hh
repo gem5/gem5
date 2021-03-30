@@ -34,6 +34,9 @@
 #ifndef __SYSTEMC_TLM_BRIDGE_SC_EXT_HH__
 #define __SYSTEMC_TLM_BRIDGE_SC_EXT_HH__
 
+#include <memory>
+
+#include "base/amo.hh"
 #include "mem/packet.hh"
 #include "systemc/ext/tlm_core/2/generic_payload/gp.hh"
 
@@ -56,6 +59,28 @@ class Gem5Extension: public tlm::tlm_extension<Gem5Extension>
 
   private:
     PacketPtr packet;
+};
+
+class AtomicExtension: public tlm::tlm_extension<AtomicExtension>
+{
+  public:
+    AtomicExtension(
+        std::shared_ptr<AtomicOpFunctor> amo_op, bool need_return);
+
+    virtual tlm_extension_base *clone() const;
+    virtual void copy_from(const tlm_extension_base &ext);
+
+    static AtomicExtension &getExtension(
+            const tlm::tlm_generic_payload *payload);
+    static AtomicExtension &getExtension(
+            const tlm::tlm_generic_payload &payload);
+
+    bool needReturn() const;
+    AtomicOpFunctor* getAtomicOpFunctor() const;
+
+  private:
+    std::shared_ptr<AtomicOpFunctor> _op;
+    bool _needReturn;
 };
 
 } // namespace Gem5SystemC
