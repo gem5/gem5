@@ -43,6 +43,7 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/HWPrefetch.hh"
+#include "debug/HWPrefetchQueue.hh"
 #include "mem/cache/base.hh"
 #include "mem/request.hh"
 #include "params/QueuedPrefetcher.hh"
@@ -113,6 +114,25 @@ Queued::~Queued()
     // Delete the queued prefetch packets
     for (DeferredPacket &p : pfq) {
         delete p.pkt;
+    }
+}
+
+void
+Queued::printQueue(const std::list<DeferredPacket> &queue) const
+{
+    int pos = 0;
+    std::string queue_name = "";
+    if (&queue == &pfq) {
+        queue_name = "PFQ";
+    } else {
+        assert(&queue == &pfqMissingTranslation);
+        queue_name = "PFTransQ";
+    }
+
+    for (const_iterator it = queue.cbegin(); it != queue.cend();
+                                                            it++, pos++) {
+        DPRINTF(HWPrefetchQueue, "%s[%d]: Prefetch Req Addr: %#x prio: %3d\n",
+                queue_name, pos, it->pkt->getAddr(), it->priority);
     }
 }
 
@@ -488,6 +508,9 @@ Queued::addToQueue(std::list<DeferredPacket> &queue,
             it++;
         queue.insert(it, dpp);
     }
+
+    if (Debug::HWPrefetchQueue)
+        printQueue(queue);
 }
 
 } // namespace prefetch

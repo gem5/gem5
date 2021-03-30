@@ -204,6 +204,8 @@ class Queued : public Base
         return pfq.empty() ? MaxTick : pfq.front().tick;
     }
 
+    void printQueue(const std::list<DeferredPacket> &queue) const;
+
   private:
 
     /**
