@@ -1478,8 +1478,9 @@ class SimObject(object, metaclass=MetaSimObject):
         child = coerceSimObjectOrVector(child)
         if child.has_parent():
             warn(f"{self}.{name} already has parent (Previously declared as "
-                 f"{child._parent}.{name}).\n"
+                 f"{child._parent}.{name}), not resetting parent.\n"
                  f"\tNote: {name} is not a parameter of {type(self).__name__}")
+            return
         if name in self._children:
             # This code path had an undiscovered bug that would make it fail
             # at runtime. It had been here for a long time and was only
