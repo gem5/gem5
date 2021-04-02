@@ -52,11 +52,12 @@ ScalarRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 {
     for (const auto& srcScalarOp : ii->srcScalarRegOperands()) {
         for (const auto& physIdx : srcScalarOp.physIndices()) {
-            if (regBusy(physIdx))
+            if (regBusy(physIdx)) {
                 DPRINTF(GPUSRF, "RAW stall: WV[%d]: %s: physReg[%d]\n",
                         w->wfDynId, ii->disassemble(), physIdx);
                 w->stats.numTimesBlockedDueRAWDependencies++;
                 return false;
+            }
         }
     }
 
