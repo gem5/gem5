@@ -249,7 +249,7 @@ def config_mem(options, system):
     for i in range(len(mem_ctrls)):
         if opt_mem_type == "HMC_2500_1x32":
             # Connect the controllers to the membus
-            mem_ctrls[i].port = xbar[i/4].mem_side_ports
+            mem_ctrls[i].port = xbar[i//4].mem_side_ports
             # Set memory device size. There is an independent controller
             # for each vault. All vaults are same size.
             mem_ctrls[i].dram.device_size = options.hmc_dev_vault_size
