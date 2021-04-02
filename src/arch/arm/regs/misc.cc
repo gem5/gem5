@@ -41,11 +41,12 @@
 
 #include "arch/arm/insts/misc64.hh"
 #include "arch/arm/isa.hh"
+#include "base/bitfield.hh"
 #include "base/logging.hh"
 #include "cpu/thread_context.hh"
 #include "dev/arm/gic_v3_cpu_interface.hh"
-#include "sim/full_system.hh"
 #include "params/ArmISA.hh"
+#include "sim/full_system.hh"
 
 namespace gem5
 {
@@ -735,7 +736,6 @@ checkFaultAccessAArch64SysReg(MiscRegIndex reg, CPSR cpsr,
 std::vector<struct MiscRegLUTEntry> lookUpMiscReg(NUM_MISCREGS);
 
 namespace {
-
 // The map is translating a MiscRegIndex into AArch64 system register
 // numbers (op0, op1, crn, crm, op2)
 std::unordered_map<MiscRegIndex, MiscRegNum64> idxToMiscRegNum;
@@ -1032,6 +1032,9 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 9, 14, 2), MISCREG_PMINTENCLR_EL1 },
     { MiscRegNum64(3, 0, 10, 2, 0), MISCREG_MAIR_EL1 },
     { MiscRegNum64(3, 0, 10, 3, 0), MISCREG_AMAIR_EL1 },
+    { MiscRegNum64(3, 0, 10, 4, 4), MISCREG_MPAMIDR_EL1 },
+    { MiscRegNum64(3, 0, 10, 5, 0), MISCREG_MPAM1_EL1 },
+    { MiscRegNum64(3, 0, 10, 5, 1), MISCREG_MPAM0_EL1 },
     { MiscRegNum64(3, 0, 10, 5, 3), MISCREG_MPAMSM_EL1 },
     { MiscRegNum64(3, 0, 12, 0, 0), MISCREG_VBAR_EL1 },
     { MiscRegNum64(3, 0, 12, 0, 1), MISCREG_RVBAR_EL1 },
@@ -1181,6 +1184,17 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 6, 0, 4), MISCREG_HPFAR_EL2 },
     { MiscRegNum64(3, 4, 10, 2, 0), MISCREG_MAIR_EL2 },
     { MiscRegNum64(3, 4, 10, 3, 0), MISCREG_AMAIR_EL2 },
+    { MiscRegNum64(3, 4, 10, 4, 0), MISCREG_MPAMHCR_EL2 },
+    { MiscRegNum64(3, 4, 10, 4, 1), MISCREG_MPAMVPMV_EL2 },
+    { MiscRegNum64(3, 4, 10, 5, 0), MISCREG_MPAM2_EL2 },
+    { MiscRegNum64(3, 4, 10, 6, 0), MISCREG_MPAMVPM0_EL2 },
+    { MiscRegNum64(3, 4, 10, 6, 1), MISCREG_MPAMVPM1_EL2 },
+    { MiscRegNum64(3, 4, 10, 6, 2), MISCREG_MPAMVPM2_EL2 },
+    { MiscRegNum64(3, 4, 10, 6, 3), MISCREG_MPAMVPM3_EL2 },
+    { MiscRegNum64(3, 4, 10, 6, 4), MISCREG_MPAMVPM4_EL2 },
+    { MiscRegNum64(3, 4, 10, 6, 5), MISCREG_MPAMVPM5_EL2 },
+    { MiscRegNum64(3, 4, 10, 6, 6), MISCREG_MPAMVPM6_EL2 },
+    { MiscRegNum64(3, 4, 10, 6, 7), MISCREG_MPAMVPM7_EL2 },
     { MiscRegNum64(3, 4, 12, 0, 0), MISCREG_VBAR_EL2 },
     { MiscRegNum64(3, 4, 12, 0, 1), MISCREG_RVBAR_EL2 },
     { MiscRegNum64(3, 4, 12, 1, 1), MISCREG_VDISR_EL2 },
@@ -1248,6 +1262,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 5, 6, 0, 0), MISCREG_FAR_EL12 },
     { MiscRegNum64(3, 5, 10, 2, 0), MISCREG_MAIR_EL12 },
     { MiscRegNum64(3, 5, 10, 3, 0), MISCREG_AMAIR_EL12 },
+    { MiscRegNum64(3, 5, 10, 5, 0), MISCREG_MPAM1_EL12 },
     { MiscRegNum64(3, 5, 12, 0, 0), MISCREG_VBAR_EL12 },
     { MiscRegNum64(3, 5, 13, 0, 1), MISCREG_CONTEXTIDR_EL12 },
     { MiscRegNum64(3, 5, 14, 1, 0), MISCREG_CNTKCTL_EL12 },
@@ -1277,6 +1292,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 6, 6, 0, 0), MISCREG_FAR_EL3 },
     { MiscRegNum64(3, 6, 10, 2, 0), MISCREG_MAIR_EL3 },
     { MiscRegNum64(3, 6, 10, 3, 0), MISCREG_AMAIR_EL3 },
+    { MiscRegNum64(3, 6, 10, 5, 0), MISCREG_MPAM3_EL3 },
     { MiscRegNum64(3, 6, 12, 0, 0), MISCREG_VBAR_EL3 },
     { MiscRegNum64(3, 6, 12, 0, 1), MISCREG_RVBAR_EL3 },
     { MiscRegNum64(3, 6, 12, 0, 2), MISCREG_RMR_EL3 },
@@ -2614,6 +2630,113 @@ faultIdst(const MiscRegLUTEntry &entry,
             return inst.generateTrap(EL2);
         } else {
             return inst.generateTrap(EL1);
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultMpamIdrEL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_MPAM)) {
+        MPAM mpam2 = tc->readMiscReg(MISCREG_MPAM2_EL2);
+        MPAM mpam3 = tc->readMiscReg(MISCREG_MPAM3_EL3);
+        MPAMIDR mpamidr = tc->readMiscReg(MISCREG_MPAMIDR_EL1);
+        MPAMHCR mpamhcr = tc->readMiscReg(MISCREG_MPAMHCR_EL2);
+        if (ArmSystem::haveEL(tc, EL3) && mpam3.el3.trapLower) {
+            return inst.generateTrap(EL3);
+        } else if (EL2Enabled(tc) && mpamidr.hasHcr && mpamhcr.trapMpamIdrEL1) {
+            return inst.generateTrap(EL2);
+        } else if (EL2Enabled(tc) && mpamidr.hasTidr && mpam2.el2.tidr) {
+            return inst.generateTrap(EL2);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultMpam0EL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_MPAM)) {
+        MPAM mpam2 = tc->readMiscReg(MISCREG_MPAM2_EL2);
+        MPAM mpam3 = tc->readMiscReg(MISCREG_MPAM3_EL3);
+        if (ArmSystem::haveEL(tc, EL3) && mpam3.el3.trapLower) {
+            return inst.generateTrap(EL3);
+        } else if (EL2Enabled(tc) && mpam2.el2.trapMpam0EL1) {
+            return inst.generateTrap(EL2);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultMpam1EL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_MPAM)) {
+        MPAM mpam2 = tc->readMiscReg(MISCREG_MPAM2_EL2);
+        MPAM mpam3 = tc->readMiscReg(MISCREG_MPAM3_EL3);
+        if (ArmSystem::haveEL(tc, EL3) && mpam3.el3.trapLower) {
+            return inst.generateTrap(EL3);
+        } else if (EL2Enabled(tc) && mpam2.el2.trapMpam1EL1) {
+            return inst.generateTrap(EL2);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultMpamEL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_MPAM)) {
+        MPAM mpam3 = tc->readMiscReg(MISCREG_MPAM3_EL3);
+        if (ArmSystem::haveEL(tc, EL3) && mpam3.el3.trapLower) {
+            return inst.generateTrap(EL3);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultMpam12EL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (ELIsInHost(tc, EL2)) {
+        return faultMpamEL2(entry, tc, inst);
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultMpamsmEL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_MPAM)) {
+        MPAM mpam2 = tc->readMiscReg(MISCREG_MPAM2_EL2);
+        MPAM mpam3 = tc->readMiscReg(MISCREG_MPAM3_EL3);
+        if (ArmSystem::haveEL(tc, EL3) && mpam3.el3.trapLower) {
+            return inst.generateTrap(EL3);
+        } else if (EL2Enabled(tc) && mpam2.el2.enMpamSm) {
+            return inst.generateTrap(EL2);
+        } else {
+            return NoFault;
         }
     } else {
         return inst.undefined();
@@ -4567,10 +4690,14 @@ ISA::initializeMiscRegMetadata()
           AA64PFR0 pfr0_el1 = 0;
           pfr0_el1.el0 = 0x2;
           pfr0_el1.el1 = 0x2;
-          pfr0_el1.el2 = release->has(ArmExtension::VIRTUALIZATION) ? 0x2 : 0x0;
+          pfr0_el1.el2 = release->has(ArmExtension::VIRTUALIZATION)
+                                  ? 0x2 : 0x0;
           pfr0_el1.el3 = release->has(ArmExtension::SECURITY) ? 0x2 : 0x0;
           pfr0_el1.sve = release->has(ArmExtension::FEAT_SVE) ? 0x1 : 0x0;
           pfr0_el1.sel2 = release->has(ArmExtension::FEAT_SEL2) ? 0x1 : 0x0;
+          // See MPAM frac in MISCREG_ID_AA64PFR1_EL1. Currently supporting
+          // MPAMv0p1
+          pfr0_el1.mpam = 0x0;
           pfr0_el1.gic = FullSystem && getGICv3CPUInterface(tc) ? 0x1 : 0;
           return pfr0_el1;
       }())
@@ -4579,8 +4706,13 @@ ISA::initializeMiscRegMetadata()
       .faultRead(EL1, faultHcrEL1<&HCR::tid3>)
       .allPrivileges().writes(0);
     InitReg(MISCREG_ID_AA64PFR1_EL1)
-      .reset(release->has(ArmExtension::FEAT_SME) ?
-          0x1 << 24 : 0)
+      .reset([release=release](){
+          AA64PFR1 pfr1_el1 = 0;
+          pfr1_el1.sme = release->has(ArmExtension::FEAT_SME) ? 0x1 : 0x0;
+          pfr1_el1.mpamFrac = release->has(ArmExtension::FEAT_MPAM) ?
+              0x1 : 0x0;
+          return pfr1_el1;
+      }())
       .unserialize(0)
       .faultRead(EL0, faultIdst)
       .faultRead(EL1, faultHcrEL1<&HCR::tid3>)
@@ -6314,8 +6446,6 @@ ISA::initializeMiscRegMetadata()
         .allPrivileges().exceptUserMode();
     InitReg(MISCREG_TPIDR2_EL0)
         .allPrivileges();
-    InitReg(MISCREG_MPAMSM_EL1)
-        .allPrivileges().exceptUserMode();
 
     InitReg(MISCREG_RNDR)
         .faultRead(EL0, faultRng)
@@ -6395,6 +6525,73 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_VDISR_EL2)
       .warnNotFail()
       .fault(faultUnimplemented);
+
+    // MPAM extension
+    InitReg(MISCREG_MPAMIDR_EL1)
+        .reset(p.mpamidr_el1)
+        .res0(mask(63, 62) | mask(56, 40) | mask(31, 21) | mask(16, 16))
+        .faultRead(EL1, faultMpamIdrEL1)
+        .faultRead(EL2, faultMpamEL2)
+        .allPrivileges().exceptUserMode().writes(0);
+    InitReg(MISCREG_MPAM0_EL1)
+        .res0(mask(63, 48))
+        .fault(EL1, faultMpam0EL1)
+        .fault(EL2, faultMpamEL2)
+        .priv().hyp().mon();
+    InitReg(MISCREG_MPAM1_EL1)
+        .res0(mask(62, 61) | mask(59, 48))
+        .fault(EL1, faultMpam1EL1)
+        .fault(EL2, faultMpamEL2)
+        .priv().hyp().mon();
+    InitReg(MISCREG_MPAM1_EL12)
+        .res0(mask(59, 48))
+        .fault(EL2, faultMpam12EL2)
+        .fault(EL3, defaultFaultE2H_EL3)
+        .hyp().mon();
+    InitReg(MISCREG_MPAM2_EL2)
+        .res0(mask(62, 59) | mask(57, 50))
+        .fault(EL2, faultMpamEL2)
+        .hyp().mon();
+    InitReg(MISCREG_MPAMHCR_EL2)
+        .res0(mask(63, 32) | mask(30, 9) | mask(7, 2))
+        .fault(EL2, faultMpamEL2)
+        .hyp().mon();
+    InitReg(MISCREG_MPAMVPM0_EL2)
+        .fault(EL2, faultMpamEL2)
+        .hyp().mon();
+    InitReg(MISCREG_MPAMVPM1_EL2)
+        .fault(EL2, faultMpamEL2)
+        .hyp().mon();
+    InitReg(MISCREG_MPAMVPM2_EL2)
+        .fault(EL2, faultMpamEL2)
+        .hyp().mon();
+    InitReg(MISCREG_MPAMVPM3_EL2)
+        .fault(EL2, faultMpamEL2)
+        .hyp().mon();
+    InitReg(MISCREG_MPAMVPM4_EL2)
+        .fault(EL2, faultMpamEL2)
+        .hyp().mon();
+    InitReg(MISCREG_MPAMVPM5_EL2)
+        .fault(EL2, faultMpamEL2)
+        .hyp().mon();
+    InitReg(MISCREG_MPAMVPM6_EL2)
+        .fault(EL2, faultMpamEL2)
+        .hyp().mon();
+    InitReg(MISCREG_MPAMVPM7_EL2)
+        .fault(EL2, faultMpamEL2)
+        .hyp().mon();
+    InitReg(MISCREG_MPAMVPMV_EL2)
+        .res0(mask(63, 32))
+        .fault(EL2, faultMpamEL2)
+        .hyp().mon();
+    InitReg(MISCREG_MPAM3_EL3)
+        .res0(mask(59, 48))
+        .mon();
+    InitReg(MISCREG_MPAMSM_EL1)
+        .res0(mask(63, 48) | mask(39, 32) | mask(15, 0))
+        .fault(EL1, faultMpamsmEL1)
+        .fault(EL2, faultMpamEL2)
+        .allPrivileges().exceptUserMode();
 
     // Register mappings for some unimplemented registers:
     // ESR_EL1 -> DFSR
