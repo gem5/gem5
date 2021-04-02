@@ -101,7 +101,8 @@ class HSADevice : public DmaDevice
         fatal("%s does not need HSA driver\n", name());
     }
     virtual void
-    updateHsaSignal(Addr signal_handle, uint64_t signal_value)
+    updateHsaSignal(Addr signal_handle, uint64_t signal_value,
+        HsaSignalCallbackFunction function = [] (const uint64_t &) { })
     {
         fatal("%s does not have HSA signal update functionality.\n", name());
     }

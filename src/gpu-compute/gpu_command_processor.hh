@@ -90,7 +90,7 @@ class GPUCommandProcessor : public HSADevice
 
     void updateHsaSignal(Addr signal_handle, uint64_t signal_value,
                          HsaSignalCallbackFunction function =
-                            [] (const uint64_t &) { });
+                            [] (const uint64_t &) { }) override;
 
     uint64_t functionalReadHsaSignal(Addr signal_handle) override;
 
