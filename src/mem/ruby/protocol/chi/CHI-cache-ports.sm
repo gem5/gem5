@@ -96,8 +96,8 @@ in_port(datInPort, CHIDataMsg, datIn, rank=9,
   if (datInPort.isReady(clockEdge())) {
     printResources();
     peek(datInPort, CHIDataMsg) {
-      int received := in_msg.bitMask.count();
-      assert((received <= data_channel_size) && (received > 0));
+      assert((in_msg.bitMask.count() <= data_channel_size)
+              && (in_msg.bitMask.count() > 0));
       trigger(dataToEvent(in_msg.type), in_msg.addr,
               getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
     }

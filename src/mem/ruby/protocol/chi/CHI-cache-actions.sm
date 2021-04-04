@@ -1844,10 +1844,10 @@ action(UpdateDataState_FromReqDataResp, desc="") {
 
 action(UpdateDataState_FromWUDataResp, desc="") {
   assert(is_valid(tbe));
-  int offset := addressOffset(tbe.accAddr, tbe.addr);
   if (tbe.expected_req_resp.hasReceivedData()) {
-    assert(tbe.dataBlkValid.test(offset));
-    assert(tbe.dataBlkValid.test(offset + tbe.accSize - 1));
+    assert(tbe.dataBlkValid.test(addressOffset(tbe.accAddr, tbe.addr)));
+    assert(tbe.dataBlkValid.test(addressOffset(tbe.accAddr, tbe.addr)
+                                  + tbe.accSize - 1));
     peek(datInPort, CHIDataMsg) {
       assert(in_msg.type == CHIDataType:NCBWrData);
       tbe.dataDirty := true;
@@ -2682,7 +2682,9 @@ action(CheckCacheFill, desc="") {
     assert(is_valid(victim_entry));
     TBE victim_tbe := getCurrentActiveTBE(victim_addr);
 
-    if (is_invalid(victim_tbe)) {
+    // The `is_valid(victim_entry)` condition here is to avoid an unused
+    // variable error when compiling to gem5.fast.
+    if (is_invalid(victim_tbe) && is_valid(victim_entry)) {
       DPRINTF(RubySlicc, "Eviction for %#x victim: %#x state=%s\n",
                           address, victim_addr, victim_entry.state);
       enqueue(replTriggerOutPort, ReplacementMsg, 0) {
