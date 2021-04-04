@@ -193,14 +193,14 @@ def process_file(path, **kwargs):
         import shutil
         shutil.copyfile(path, path + '.bak')
 
-    cpt = configparser.SafeConfigParser()
+    cpt = configparser.ConfigParser()
 
     # gem5 is case sensitive with paramaters
     cpt.optionxform = str
 
     # Read the current data
-    cpt_file = file(path, 'r')
-    cpt.readfp(cpt_file)
+    cpt_file = open(path, 'r')
+    cpt.read_file(cpt_file)
     cpt_file.close()
 
     change = False
@@ -257,7 +257,7 @@ def process_file(path, **kwargs):
 
     # Write the old data back
     verboseprint("...completed")
-    cpt.write(file(path, 'w'))
+    cpt.write(open(path, 'w'))
 
 if __name__ == '__main__':
     from optparse import OptionParser, SUPPRESS_HELP
