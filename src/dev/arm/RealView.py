@@ -1374,12 +1374,19 @@ class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
     Reference for memory and interrupt map:
         Armv8-A Foundation Platform - User Guide - Version 11.8
         Document ID: 100961_1180_00_en
+
+    We are adding PCI capabilities to the Armv8-A FVP Foundation
+    Platform. We are enabling it by using the PCI memory map
+    of the Armv8-A FVP Base Platform:
+        Fast Models - Reference Manual - Version 11.8
+        Document ID: 100964_1108_00_en
     """
     _off_chip_ranges = [
         # CS1-CS5
         AddrRange(0x0c000000, 0x20000000),
         # External AXI interface (PCI)
         AddrRange(0x40000000, 0x80000000),
+        AddrRange(0x4000000000, 0x800000000),
     ]
 
     sp810_fake = AmbaFake(pio_addr=0x1C020000, ignore_access=True)
@@ -1393,7 +1400,7 @@ class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
     pci_host = GenericArmPciHost(
         conf_base=0x40000000, conf_size='256MiB', conf_device_bits=12,
         pci_pio_base=0x50000000,
-        pci_mem_base=0x400000000,
+        pci_mem_base=0x4000000000,
         int_policy="ARM_PCI_INT_DEV", int_base=100, int_count=4)
 
     def _on_chip_devices(self):
