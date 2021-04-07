@@ -125,6 +125,26 @@ class BaseSystem(object, metaclass=ABCMeta):
             cpu.connectAllPorts(sha_bus if sha_bus != None else system.membus,
                                 system.membus)
 
+    def init_kvm_cpus(self, cpus):
+        """
+        Assign KVM CPUs to their own event queues / threads. This
+        has to be done after creating caches and other child objects
+        since these mustn't inherit the CPU event queue.
+
+        Arguments:
+          cpus -- List of cpus
+        """
+        if len(cpus) > 1:
+            device_eq = 0
+            first_cpu_eq = 1
+            for idx, cpu in enumerate(cpus):
+                # Child objects usually inherit the parent's event
+                # queue. Override that and use the same event queue for
+                # all devices.
+                for obj in cpu.descendants():
+                    obj.eventq_index = device_eq
+                cpu.eventq_index = first_cpu_eq + idx
+
     def init_kvm(self, system):
         """Do KVM-specific system initialization.
 
@@ -141,10 +161,6 @@ class BaseSystem(object, metaclass=ABCMeta):
         """
         self.create_clk_src(system)
         system.cpu = self.create_cpus(system.cpu_clk_domain)
-
-        if _have_kvm_support and \
-                any([isinstance(c, BaseKvmCPU) for c in system.cpu]):
-            self.init_kvm(system)
 
         if self.use_ruby:
             # Add the ruby specific and protocol specific options
@@ -181,6 +197,10 @@ class BaseSystem(object, metaclass=ABCMeta):
             for cpu in system.cpu:
                 self.init_cpu(system, cpu, sha_bus)
 
+        if _have_kvm_support and \
+                any([isinstance(c, BaseKvmCPU) for c in system.cpu]):
+            self.init_kvm(system)
+            self.init_kvm_cpus(system.cpu)
 
     def create_clk_src(self,system):
         # Create system clock domain. This provides clock value to every
