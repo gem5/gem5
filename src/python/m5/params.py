@@ -1707,12 +1707,15 @@ class Temperature(ParamValue):
         self.__init__(value)
         return value
 
+    def __str__(self):
+        return str(self.value)
+
     def getValue(self):
         from _m5.core import Temperature
-        return Temperature.fromKelvin(self.value)
+        return Temperature.from_kelvin(self.value)
 
     def config_value(self):
-        return self
+        return self.value
 
     @classmethod
     def cxx_predecls(cls, code):
