@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2020 ARM Limited
+# Copyright (c) 2019-2021 Arm Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -43,6 +43,7 @@ from testlib import *
 
 arm_fs_kvm_tests = [
     'realview64-kvm',
+    'realview64-kvm-dual',
 ]
 
 arm_fs_quick_tests = [
