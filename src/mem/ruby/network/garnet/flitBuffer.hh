@@ -55,8 +55,7 @@ class flitBuffer
     getTopFlit()
     {
         flit *f = m_buffer.front();
-        std::pop_heap(m_buffer.begin(), m_buffer.end(), flit::greater);
-        m_buffer.pop_back();
+        m_buffer.pop_front();
         return f;
     }
 
@@ -70,13 +69,12 @@ class flitBuffer
     insert(flit *flt)
     {
         m_buffer.push_back(flt);
-        std::push_heap(m_buffer.begin(), m_buffer.end(), flit::greater);
     }
 
     uint32_t functionalWrite(Packet *pkt);
 
   private:
-    std::vector<flit *> m_buffer;
+    std::deque<flit *> m_buffer;
     int max_size;
 };
 
