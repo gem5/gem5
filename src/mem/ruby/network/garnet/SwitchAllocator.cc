@@ -55,22 +55,17 @@ SwitchAllocator::init()
     m_num_outports = m_router->get_num_outports();
     m_round_robin_inport.resize(m_num_outports);
     m_round_robin_invc.resize(m_num_inports);
-    m_port_requests.resize(m_num_outports);
-    m_vc_winners.resize(m_num_outports);
+    m_port_requests.resize(m_num_inports);
+    m_vc_winners.resize(m_num_inports);
 
     for (int i = 0; i < m_num_inports; i++) {
         m_round_robin_invc[i] = 0;
+        m_port_requests[i] = -1;
+        m_vc_winners[i] = -1;
     }
 
     for (int i = 0; i < m_num_outports; i++) {
-        m_port_requests[i].resize(m_num_inports);
-        m_vc_winners[i].resize(m_num_inports);
-
         m_round_robin_inport[i] = 0;
-
-        for (int j = 0; j < m_num_inports; j++) {
-            m_port_requests[i][j] = false; // [outport][inport]
-        }
     }
 }
 
@@ -127,8 +122,8 @@ SwitchAllocator::arbitrate_inports()
 
                 if (make_request) {
                     m_input_arbiter_activity++;
-                    m_port_requests[outport][inport] = true;
-                    m_vc_winners[outport][inport]= invc;
+                    m_port_requests[inport] = outport;
+                    m_vc_winners[inport] = invc;
 
                     break; // got one vc winner for this port
                 }
@@ -168,12 +163,12 @@ SwitchAllocator::arbitrate_outports()
                  inport_iter++) {
 
             // inport has a request this cycle for outport
-            if (m_port_requests[outport][inport]) {
+            if (m_port_requests[inport] == outport) {
                 auto output_unit = m_router->getOutputUnit(outport);
                 auto input_unit = m_router->getInputUnit(inport);
 
                 // grant this outport to this inport
-                int invc = m_vc_winners[outport][inport];
+                int invc = m_vc_winners[inport];
 
                 int outvc = input_unit->get_outvc(invc);
                 if (outvc == -1) {
@@ -236,7 +231,7 @@ SwitchAllocator::arbitrate_outports()
                 }
 
                 // remove this request
-                m_port_requests[outport][inport] = false;
+                m_port_requests[inport] = -1;
 
                 // Update Round Robin pointer
                 m_round_robin_inport[outport] = inport + 1;
@@ -382,11 +377,7 @@ SwitchAllocator::get_vnet(int invc)
 void
 SwitchAllocator::clear_request_vector()
 {
-    for (int i = 0; i < m_num_outports; i++) {
-        for (int j = 0; j < m_num_inports; j++) {
-            m_port_requests[i][j] = false;
-        }
-    }
+    std::fill(m_port_requests.begin(), m_port_requests.end(), -1);
 }
 
 void
