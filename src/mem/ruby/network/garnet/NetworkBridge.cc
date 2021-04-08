@@ -257,7 +257,10 @@ NetworkBridge::wakeup()
         t_flit = link_srcQueue->getTopFlit();
         DPRINTF(RubyNetwork, "Recieved flit %s\n", *t_flit);
         flitisizeAndSend(t_flit);
-        return;
     }
-    assert(!link_srcQueue->getSize());
+
+    // Reschedule in case there is a waiting flit.
+    if (!link_srcQueue->isEmpty()) {
+        scheduleEvent(Cycles(1));
+    }
 }
