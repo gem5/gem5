@@ -93,7 +93,7 @@ arm_fs_long_tests = [
     #'realview64-o3-checker',
 ]
 
-tarball = 'aarch-system-20200611.tar.bz2'
+tarball = 'aarch-system-20210904.tar.bz2'
 url = config.resource_url + "/arm/" + tarball
 filepath = os.path.dirname(os.path.abspath(__file__))
 path = joinpath(config.bin_path, 'arm')
