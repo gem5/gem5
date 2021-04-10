@@ -78,7 +78,7 @@ unboxF32(uint64_t v)
         return defaultNaNF32UI;
 }
 
-static constexpr uint64_t boxF32(uint32_t v) { return {mask(63, 32) | v}; }
+static constexpr uint64_t boxF32(uint32_t v) { return mask(63, 32) | v; }
 
 // Create fixed size floats from raw bytes or generic floating point values.
 static constexpr float32_t f32(uint32_t v) { return {v}; }
