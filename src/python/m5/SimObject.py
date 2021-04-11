@@ -1487,8 +1487,8 @@ class SimObject(object, metaclass=MetaSimObject):
             # exposed by a buggy script. Changes here will probably not be
             # exercised without specialized testing.
             self.clear_child(name)
-        child.set_parent(self, name)
         if not isNullPointer(child):
+            child.set_parent(self, name)
             self._children[name] = child
 
     # Take SimObject-valued parameters that haven't been explicitly
