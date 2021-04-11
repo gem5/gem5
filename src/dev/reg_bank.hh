@@ -30,6 +30,8 @@
 
 #include <algorithm>
 #include <bitset>
+#include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <functional>
 #include <initializer_list>
@@ -432,6 +434,21 @@ class RegisterBank : public RegisterBankBase
         // The buffer's owner is responsible for serializing it.
         void serialize(std::ostream &os) const override {}
         bool unserialize(const std::string &s) override { return true; }
+
+      protected:
+        /**
+         * This method exists so that derived classes that need to initialize
+         * their buffers before they can be set can do so.
+         *
+         * @param buf The pointer to the backing buffer.
+         */
+        void
+        setBuffer(void *buf)
+        {
+            assert(_ptr == nullptr);
+            assert(buf != nullptr);
+            _ptr = buf;
+        }
     };
 
     // Same as above, but which keeps its storage locally.
@@ -442,8 +459,10 @@ class RegisterBank : public RegisterBankBase
         std::array<uint8_t, BufBytes> buffer;
 
         RegisterLBuf(const std::string &new_name) :
-            RegisterBuf(new_name, buffer.data(), BufBytes)
-        {}
+            RegisterBuf(new_name, nullptr, BufBytes)
+        {
+            this->setBuffer(buffer.data());
+        }
 
         void
         serialize(std::ostream &os) const override
