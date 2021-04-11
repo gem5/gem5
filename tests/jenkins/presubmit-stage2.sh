@@ -47,4 +47,4 @@ set -e
 # Once complete, run the Google Tests
 cd tests
 ./main.py run -j4 -t4 gem5 && scons -C .. --no-compress-debug \
-    build/NULL/unittests.opt
+    build/ARM/unittests.opt
