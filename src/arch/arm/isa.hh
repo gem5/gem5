@@ -856,7 +856,8 @@ namespace ArmISA
         static void
         zeroSveVecRegUpperPart(Elem *v, unsigned eCount)
         {
-            static_assert(sizeof(Elem) <= sizeof(uint64_t));
+            static_assert(sizeof(Elem) <= sizeof(uint64_t),
+                    "Elem type is too large.");
             eCount *= (sizeof(uint64_t) / sizeof(Elem));
             for (int i = 16 / sizeof(Elem); i < eCount; ++i) {
                 v[i] = 0;
