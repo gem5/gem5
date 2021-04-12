@@ -129,7 +129,8 @@ def process_trace(trace, outfile, cycle_time, width, color, timestamps,
             if fields[1] == 'fetch':
                 if ((stop_tick > 0 and int(fields[2]) > stop_tick+insts['tick_drift']) or
                     (stop_sn > 0 and int(fields[5]) > (stop_sn+insts['max_threshold']))):
-                    print_insts(outfile, cycle_time, width, color, timestamps, 0)
+                    print_insts(outfile, cycle_time, width, color, timestamps,
+                                store_completions, 0)
                     return
                 (curr_inst['pc'], curr_inst['upc']) = fields[3:5]
                 curr_inst['sn'] = int(fields[5])
