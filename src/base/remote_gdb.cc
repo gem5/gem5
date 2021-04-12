@@ -790,9 +790,16 @@ BaseRemoteGDB::removeHardBreak(Addr addr, size_t len)
 void
 BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
 {
-    // Here "ticks" aren't simulator ticks which measure time, they're
-    // instructions committed by the CPU.
-    tc->scheduleInstCountEvent(ev, tc->getCurrentInstCount() + delta);
+    if (delta == 0 && tc->status() != ThreadContext::Active) {
+        // If delta is zero, we're just trying to wait for an instruction
+        // boundary. If the CPU is not active, assume we're already at a
+        // boundary without waiting for the CPU to eventually wake up.
+        ev->process();
+    } else {
+        // Here "ticks" aren't simulator ticks which measure time, they're
+        // instructions committed by the CPU.
+        tc->scheduleInstCountEvent(ev, tc->getCurrentInstCount() + delta);
+    }
 }
 
 void
