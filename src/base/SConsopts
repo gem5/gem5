@@ -29,26 +29,24 @@ from gem5_scons import warning
 
 import gem5_scons
 
-conf = gem5_scons.Configure(main)
+with gem5_scons.Configure(main) as conf:
 
-# Check for <fenv.h> (C99 FP environment control)
-have_fenv = conf.CheckHeader('fenv.h', '<>')
+    # Check for <fenv.h> (C99 FP environment control)
+    have_fenv = conf.CheckHeader('fenv.h', '<>')
 
-# Check for <png.h> (libpng library needed if wanting to dump
-# frame buffer image in png format)
-have_png = conf.CheckHeader('png.h', '<>')
+    # Check for <png.h> (libpng library needed if wanting to dump
+    # frame buffer image in png format)
+    have_png = conf.CheckHeader('png.h', '<>')
 
-have_posix_clock = \
-    conf.CheckLibWithHeader([None, 'rt'], 'time.h', 'C',
-                            'clock_nanosleep(0,0,NULL,NULL);')
-if not have_posix_clock:
-    warning("Can't find library for POSIX clocks.")
+    have_posix_clock = \
+        conf.CheckLibWithHeader([None, 'rt'], 'time.h', 'C',
+                                'clock_nanosleep(0,0,NULL,NULL);')
+    if not have_posix_clock:
+        warning("Can't find library for POSIX clocks.")
 
-# Valgrind gets much less confused if you tell it when you're using
-# alternative stacks.
-main['HAVE_VALGRIND'] = conf.CheckCHeader('valgrind/valgrind.h')
-
-main = conf.Finish()
+    # Valgrind gets much less confused if you tell it when you're using
+    # alternative stacks.
+    conf.env['HAVE_VALGRIND'] = conf.CheckCHeader('valgrind/valgrind.h')
 
 
 if have_fenv:

@@ -41,6 +41,7 @@ systemc.Prepend(CFLAGS=['-DSC_INCLUDE_FX'])
 conf = Configure(systemc,
                  conf_dir = os.path.join(build_root, '.scons_config'),
                  log_file = os.path.join(build_root, 'scons_config.log'))
+systemc = conf.env
 
 if systemc['PLATFORM'] == 'darwin':
     systemc.Append(LINKFLAGS=['-undefined', 'dynamic_lookup'])
@@ -60,7 +61,7 @@ else:
     print(termcap.Yellow + termcap.Bold +
           "Warning: Unrecognized architecture for systemc." + termcap.Normal)
 
-conf.Finish()
+systemc = conf.Finish()
 
 if systemc['COROUTINE_LIB'] == 'pthreads':
     systemc.Prepend(CXXFLAGS=['-DSC_USE_PTHREADS'])

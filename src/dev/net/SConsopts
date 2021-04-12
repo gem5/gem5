@@ -27,12 +27,9 @@ Import('*')
 
 import gem5_scons
 
-conf = gem5_scons.Configure(main)
-
-# Check if the TUN/TAP driver is available.
-have_tuntap = conf.CheckHeader('linux/if_tun.h', '<>')
-
-main = conf.Finish()
+with gem5_scons.Configure(main) as conf:
+    # Check if the TUN/TAP driver is available.
+    have_tuntap = conf.CheckHeader('linux/if_tun.h', '<>')
 
 if have_tuntap:
     sticky_vars.Add(BoolVariable('USE_TUNTAP',

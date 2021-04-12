@@ -29,13 +29,10 @@ from gem5_scons import warning
 
 import gem5_scons
 
-conf = gem5_scons.Configure(main)
-
-if conf.CheckLibWithHeader([None, 'execinfo'], 'execinfo.h', 'C',
-        'char temp; backtrace_symbols_fd((void *)&temp, 0, 0);'):
-    main['BACKTRACE_IMPL'] = 'glibc'
-else:
-    main['BACKTRACE_IMPL'] = 'none'
-    warning("No suitable back trace implementation found.")
-
-main = conf.Finish()
+with gem5_scons.Configure(main) as conf:
+    if conf.CheckLibWithHeader([None, 'execinfo'], 'execinfo.h', 'C',
+            'char temp; backtrace_symbols_fd((void *)&temp, 0, 0);'):
+        conf.env['BACKTRACE_IMPL'] = 'glibc'
+    else:
+        conf.env['BACKTRACE_IMPL'] = 'none'
+        warning("No suitable back trace implementation found.")

@@ -289,10 +289,6 @@ main['LTO_LDFLAGS'] = []
 # compiler we're using.
 main['TCMALLOC_CCFLAGS'] = []
 
-# Platform-specific configuration.  Note again that we assume that all
-# builds under a given build root run on the same host platform.
-conf = gem5_scons.Configure(main)
-
 CXX_version = readCommand([main['CXX'], '--version'], exception=False)
 
 main['GCC'] = CXX_version and CXX_version.find('g++') >= 0
@@ -320,7 +316,8 @@ if main['GCC'] or main['CLANG']:
         # On FreeBSD we need libthr.
         main.Append(LIBS=['thr'])
 
-    conf.CheckLinkFlag('-Wl,--as-needed')
+    with gem5_scons.Configure(main) as conf:
+        conf.CheckLinkFlag('-Wl,--as-needed')
     if GetOption('gold_linker'):
         main.Append(LINKFLAGS='-fuse-ld=gold')
 
@@ -379,8 +376,9 @@ elif main['CLANG']:
             main[var] = ['-flto']
 
     # clang has a few additional warnings that we disable.
-    conf.CheckCxxFlag('-Wno-c99-designator')
-    conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
+    with gem5_scons.Configure(main) as conf:
+        conf.CheckCxxFlag('-Wno-c99-designator')
+        conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
 
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
@@ -442,10 +440,11 @@ if main['M5_BUILD_CACHE']:
     CacheDir(main['M5_BUILD_CACHE'])
 
 if not GetOption('no_compress_debug'):
-    if not conf.CheckCxxFlag('-gz'):
-        warning("Can't enable object file debug section compression")
-    if not conf.CheckLinkFlag('-gz'):
-        warning("Can't enable executable debug section compression")
+    with gem5_scons.Configure(main) as conf:
+        if not conf.CheckCxxFlag('-gz'):
+            warning("Can't enable object file debug section compression")
+        if not conf.CheckLinkFlag('-gz'):
+            warning("Can't enable executable debug section compression")
 
 main['USE_PYTHON'] = not GetOption('without_python')
 if main['USE_PYTHON']:
@@ -500,32 +499,33 @@ if main['USE_PYTHON']:
              if lib not in py_libs:
                  py_libs.append(lib)
 
-    # verify that this stuff works
-    if not conf.CheckHeader('Python.h', '<>'):
-        error("Check failed for Python.h header in",
-                ' '.join(py_includes), "\n"
-              "Two possible reasons:\n"
-              "1. Python headers are not installed (You can install the "
-              "package python-dev on Ubuntu and RedHat)\n"
-              "2. SCons is using a wrong C compiler. This can happen if "
-              "CC has the wrong value.\n"
-              "CC = %s" % main['CC'])
-
-    for lib in py_libs:
-        if not conf.CheckLib(lib):
-            error("Can't find library %s required by python." % lib)
-
     main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
+
+    with gem5_scons.Configure(main) as conf:
+        # verify that this stuff works
+        if not conf.CheckHeader('Python.h', '<>'):
+            error("Check failed for Python.h header in",
+                    ' '.join(py_includes), "\n"
+                  "Two possible reasons:\n"
+                  "1. Python headers are not installed (You can install the "
+                  "package python-dev on Ubuntu and RedHat)\n"
+                  "2. SCons is using a wrong C compiler. This can happen if "
+                  "CC has the wrong value.\n"
+                  "CC = %s" % main['CC'])
+
+        for lib in py_libs:
+            if not conf.CheckLib(lib):
+                error("Can't find library %s required by python." % lib)
+
+        py_version = conf.CheckPythonLib()
+        if not py_version:
+            error("Can't find a working Python installation")
 
     marshal_env = main.Clone()
 
     # Bare minimum environment that only includes python
     marshal_env.Append(CCFLAGS='$MARSHAL_CCFLAGS_EXTRA')
     marshal_env.Append(LINKFLAGS='$MARSHAL_LDFLAGS_EXTRA')
-
-    py_version = conf.CheckPythonLib()
-    if not py_version:
-        error("Can't find a working Python installation")
 
     # Found a working Python installation. Check if it meets minimum
     # requirements.
@@ -535,35 +535,31 @@ if main['USE_PYTHON']:
     elif py_version[0] > 3:
         warning('Python version too new. Python 3 expected.')
 
-# On Solaris you need to use libsocket for socket ops
-if not conf.CheckLibWithHeader(
-        [None, 'socket'], 'sys/socket.h', 'C++', 'accept(0,0,0);'):
-   error("Can't find library with socket calls (e.g. accept()).")
+with gem5_scons.Configure(main) as conf:
+    # On Solaris you need to use libsocket for socket ops
+    if not conf.CheckLibWithHeader(
+            [None, 'socket'], 'sys/socket.h', 'C++', 'accept(0,0,0);'):
+       error("Can't find library with socket calls (e.g. accept()).")
 
-# Check for zlib.  If the check passes, libz will be automatically
-# added to the LIBS environment variable.
-if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
-    error('Did not find needed zlib compression library '
-          'and/or zlib.h header file.\n'
-          'Please install zlib and try again.')
+    # Check for zlib.  If the check passes, libz will be automatically
+    # added to the LIBS environment variable.
+    if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
+        error('Did not find needed zlib compression library '
+              'and/or zlib.h header file.\n'
+              'Please install zlib and try again.')
 
 
 if not GetOption('without_tcmalloc'):
-    if conf.CheckLib('tcmalloc'):
-        main.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
-    elif conf.CheckLib('tcmalloc_minimal'):
-        main.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
-    else:
-        warning("You can get a 12% performance improvement by "
-                "installing tcmalloc (libgoogle-perftools-dev package "
-                "on Ubuntu or RedHat).")
+    with gem5_scons.Configure(main) as conf:
+        if conf.CheckLib('tcmalloc'):
+            conf.env.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
+        elif conf.CheckLib('tcmalloc_minimal'):
+            conf.env.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
+        else:
+            warning("You can get a 12% performance improvement by "
+                    "installing tcmalloc (libgoogle-perftools-dev package "
+                    "on Ubuntu or RedHat).")
 
-
-######################################################################
-#
-# Finish the configuration
-#
-main = conf.Finish()
 
 ######################################################################
 #

@@ -29,27 +29,25 @@ from gem5_scons import warning
 
 import gem5_scons
 
-conf = gem5_scons.Configure(main)
+with gem5_scons.Configure(main) as conf:
 
-# Check if there is a pkg-config configuration for hdf5. If we find
-# it, setup the environment to enable linking and header inclusion. We
-# don't actually try to include any headers or link with hdf5 at this
-# stage.
-if main['HAVE_PKG_CONFIG']:
-    conf.CheckPkgConfig(['hdf5-serial', 'hdf5'],
-            '--cflags-only-I', '--libs-only-L')
+    # Check if there is a pkg-config configuration for hdf5. If we find
+    # it, setup the environment to enable linking and header inclusion. We
+    # don't actually try to include any headers or link with hdf5 at this
+    # stage.
+    if conf.env['HAVE_PKG_CONFIG']:
+        conf.CheckPkgConfig(['hdf5-serial', 'hdf5'],
+                '--cflags-only-I', '--libs-only-L')
 
-# Check if the HDF5 libraries can be found. This check respects the
-# include path and library path provided by pkg-config. We perform
-# this check even if there isn't a pkg-config configuration for hdf5
-# since some installations don't use pkg-config.
-have_hdf5 = \
-        conf.CheckLibWithHeader('hdf5', 'hdf5.h', 'C',
-                                'H5Fcreate("", 0, 0, 0);') and \
-        conf.CheckLibWithHeader('hdf5_cpp', 'H5Cpp.h', 'C++',
-                                'H5::H5File("", 0);')
-
-main = conf.Finish()
+    # Check if the HDF5 libraries can be found. This check respects the
+    # include path and library path provided by pkg-config. We perform
+    # this check even if there isn't a pkg-config configuration for hdf5
+    # since some installations don't use pkg-config.
+    have_hdf5 = \
+            conf.CheckLibWithHeader('hdf5', 'hdf5.h', 'C',
+                                    'H5Fcreate("", 0, 0, 0);') and \
+            conf.CheckLibWithHeader('hdf5_cpp', 'H5Cpp.h', 'C++',
+                                    'H5::H5File("", 0);')
 
 if have_hdf5:
     sticky_vars.Add(BoolVariable('USE_HDF5', 'Enable the HDF5 support', True))

@@ -38,6 +38,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import contextlib
 import os
 
 import SCons.Script
@@ -134,6 +135,7 @@ def CheckPkgConfig(context, pkgs, *args):
 
     return ret
 
+@contextlib.contextmanager
 def Configure(env, *args, **kwargs):
     kwargs.setdefault('conf_dir',
             os.path.join(env['BUILDROOT'], '.scons_config'))
@@ -168,4 +170,7 @@ def Configure(env, *args, **kwargs):
 
         conf = NullConf(main)
 
-    return conf
+    try:
+        yield conf
+    finally:
+        env.Replace(**conf.Finish().Dictionary())
