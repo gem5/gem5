@@ -141,6 +141,7 @@
 
 #include "base/cprintf.hh"
 #include "base/intmath.hh"
+#include "base/logging.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
@@ -434,6 +435,14 @@ BaseRemoteGDB::detach()
 
     pollQueue.remove(dataEvent);
     DPRINTFN("remote gdb detached\n");
+}
+
+void
+BaseRemoteGDB::replaceThreadContext(ThreadContext *_tc)
+{
+    ContextID id = _tc->contextId();
+    panic_if(id != tc->contextId(), "No context with ID %d found.", id);
+    tc = _tc;
 }
 
 // This function does all command processing for interfacing to a

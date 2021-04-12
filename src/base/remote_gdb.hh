@@ -163,7 +163,7 @@ class BaseRemoteGDB
     void detach();
     bool isAttached() { return attached; }
 
-    void replaceThreadContext(ThreadContext *_tc) { tc = _tc; }
+    void replaceThreadContext(ThreadContext *_tc);
 
     bool trap(int type);
 
