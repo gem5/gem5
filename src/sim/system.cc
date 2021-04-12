@@ -204,21 +204,16 @@ int System::numSystemsRunning = 0;
 System::System(const Params &p)
     : SimObject(p), _systemPort("system_port", this),
       multiThread(p.multi_thread),
-      pagePtr(0),
       init_param(p.init_param),
       physProxy(_systemPort, p.cache_line_size),
       workload(p.workload),
 #if USE_KVM
       kvmVM(p.kvm_vm),
-#else
-      kvmVM(nullptr),
 #endif
       physmem(name() + ".physmem", p.memories, p.mmap_using_noreserve,
               p.shared_backstore),
       memoryMode(p.mem_mode),
       _cacheLineSize(p.cache_line_size),
-      workItemsBegin(0),
-      workItemsEnd(0),
       numWorkIds(p.num_work_ids),
       thermalModel(p.thermal_model),
       _m5opRange(p.m5ops_base ?
@@ -239,9 +234,10 @@ System::System(const Params &p)
 #endif
 
     // check if the cache line size is a value known to work
-    if (!(_cacheLineSize == 16 || _cacheLineSize == 32 ||
-          _cacheLineSize == 64 || _cacheLineSize == 128))
+    if (_cacheLineSize != 16 && _cacheLineSize != 32 &&
+        _cacheLineSize != 64 && _cacheLineSize != 128) {
         warn_once("Cache line size is neither 16, 32, 64 nor 128 bytes.\n");
+    }
 
     // Get the generic system requestor IDs
     M5_VAR_USED RequestorID tmp_id;

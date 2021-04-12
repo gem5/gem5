@@ -89,10 +89,18 @@ class System : public SimObject, public PCEventScope
         SystemPort(const std::string &_name, SimObject *_owner)
             : RequestPort(_name, _owner)
         { }
-        bool recvTimingResp(PacketPtr pkt) override
-        { panic("SystemPort does not receive timing!\n"); return false; }
-        void recvReqRetry() override
-        { panic("SystemPort does not expect retry!\n"); }
+
+        bool
+        recvTimingResp(PacketPtr pkt) override
+        {
+            panic("SystemPort does not receive timing!");
+        }
+
+        void
+        recvReqRetry() override
+        {
+            panic("SystemPort does not expect retry!");
+        }
     };
 
     std::list<PCEvent *> liveEvents;
@@ -250,7 +258,9 @@ class System : public SimObject, public PCEventScope
      * CPUs. SimObjects are expected to use Port::sendAtomic() and
      * Port::recvAtomic() when accessing memory in this mode.
      */
-    bool isAtomicMode() const {
+    bool
+    isAtomicMode() const
+    {
         return memoryMode == Enums::atomic ||
             memoryMode == Enums::atomic_noncaching;
     }
@@ -261,9 +271,7 @@ class System : public SimObject, public PCEventScope
      * SimObjects are expected to use Port::sendTiming() and
      * Port::recvTiming() when accessing memory in this mode.
      */
-    bool isTimingMode() const {
-        return memoryMode == Enums::timing;
-    }
+    bool isTimingMode() const { return memoryMode == Enums::timing; }
 
     /**
      * Should caches be bypassed?
@@ -271,7 +279,9 @@ class System : public SimObject, public PCEventScope
      * Some CPUs need to bypass caches to allow direct memory
      * accesses, which is required for hardware virtualization.
      */
-    bool bypassCaches() const {
+    bool
+    bypassCaches() const
+    {
         return memoryMode == Enums::atomic_noncaching;
     }
     /** @} */
@@ -310,7 +320,7 @@ class System : public SimObject, public PCEventScope
     bool schedule(PCEvent *event) override;
     bool remove(PCEvent *event) override;
 
-    Addr pagePtr;
+    Addr pagePtr = 0;
 
     uint64_t init_param;
 
@@ -326,9 +336,7 @@ class System : public SimObject, public PCEventScope
      * Get a pointer to the Kernel Virtual Machine (KVM) SimObject,
      * if present.
      */
-    KvmVM* getKvmVM() {
-        return kvmVM;
-    }
+    KvmVM *getKvmVM() { return kvmVM; }
 
     /** Verify gem5 configuration will support KVM emulation */
     bool validKvmEnvironment() const;
@@ -402,7 +410,7 @@ class System : public SimObject, public PCEventScope
 
   protected:
 
-    KvmVM *const kvmVM;
+    KvmVM *const kvmVM = nullptr;
 
     PhysicalMemory physmem;
 
@@ -410,8 +418,8 @@ class System : public SimObject, public PCEventScope
 
     const unsigned int _cacheLineSize;
 
-    uint64_t workItemsBegin;
-    uint64_t workItemsEnd;
+    uint64_t workItemsBegin = 0;
+    uint64_t workItemsEnd = 0;
     uint32_t numWorkIds;
 
     /** This array is a per-system list of all devices capable of issuing a
@@ -465,7 +473,7 @@ class System : public SimObject, public PCEventScope
      * @return the requestor's ID.
      */
     RequestorID getRequestorId(const SimObject* requestor,
-                         std::string subrequestor = std::string());
+                         std::string subrequestor={});
 
     /**
      * Registers a GLOBAL RequestorID, which is a RequestorID not related
@@ -544,9 +552,10 @@ class System : public SimObject, public PCEventScope
         return threads.numActive();
     }
 
-    inline void workItemBegin(uint32_t tid, uint32_t workid)
+    void
+    workItemBegin(uint32_t tid, uint32_t workid)
     {
-        std::pair<uint32_t,uint32_t> p(tid, workid);
+        std::pair<uint32_t, uint32_t> p(tid, workid);
         lastWorkItemStarted[p] = curTick();
     }
 
@@ -585,7 +594,7 @@ class System : public SimObject, public PCEventScope
     void unserialize(CheckpointIn &cp) override;
 
   public:
-    std::map<std::pair<uint32_t,uint32_t>, Tick>  lastWorkItemStarted;
+    std::map<std::pair<uint32_t, uint32_t>, Tick>  lastWorkItemStarted;
     std::map<uint32_t, Stats::Histogram*> workItemStats;
 
     ////////////////////////////////////////////
