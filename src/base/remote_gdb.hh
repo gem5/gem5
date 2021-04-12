@@ -163,9 +163,11 @@ class BaseRemoteGDB
     void detach();
     bool isAttached() { return attached; }
 
+    void addThreadContext(ThreadContext *_tc);
     void replaceThreadContext(ThreadContext *_tc);
+    bool selectThreadContext(ContextID id);
 
-    bool trap(int type);
+    bool trap(ContextID id, int type);
 
     /** @} */ // end of api_remote_gdb
 
@@ -227,14 +229,17 @@ class BaseRemoteGDB
     bool attached;
 
     System *sys;
-    ThreadContext *tc;
 
-    BaseGdbRegCache *regCachePtr;
+    std::map<ContextID, ThreadContext *> threads;
+    ThreadContext *tc = nullptr;
+
+    BaseGdbRegCache *regCachePtr = nullptr;
 
     class TrapEvent : public Event
     {
       protected:
         int _type;
+        ContextID _id;
         BaseRemoteGDB *gdb;
 
       public:
@@ -242,7 +247,8 @@ class BaseRemoteGDB
         {}
 
         void type(int t) { _type = t; }
-        void process() { gdb->trap(_type); }
+        void id(ContextID id) { _id = id; }
+        void process() { gdb->trap(_id, _type); }
     } trapEvent;
 
     /*
@@ -340,6 +346,8 @@ class BaseRemoteGDB
     void queryC(QuerySetCommand::Context &ctx);
     void querySupported(QuerySetCommand::Context &ctx);
     void queryXfer(QuerySetCommand::Context &ctx);
+
+    size_t threadInfoIdx = 0;
     void queryFThreadInfo(QuerySetCommand::Context &ctx);
     void querySThreadInfo(QuerySetCommand::Context &ctx);
 

@@ -132,9 +132,11 @@
 #include <sys/signal.h>
 #include <unistd.h>
 
+#include <cassert>
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
+#include <iterator>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -182,7 +184,7 @@ class HardBreakpoint : public PCEvent
         DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
 
         if (tc == gdb->tc)
-            gdb->trap(SIGTRAP);
+            gdb->trap(tc->contextId(), SIGTRAP);
     }
 };
 
@@ -351,9 +353,10 @@ std::map<Addr, HardBreakpoint *> hardBreakMap;
 
 BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, int _port) :
         connectEvent(nullptr), dataEvent(nullptr), _port(_port), fd(-1),
-        active(false), attached(false), sys(_system), tc(c),
+        active(false), attached(false), sys(_system),
         trapEvent(this), singleStepEvent(*this)
 {
+    addThreadContext(c);
 }
 
 BaseRemoteGDB::~BaseRemoteGDB()
@@ -438,11 +441,36 @@ BaseRemoteGDB::detach()
 }
 
 void
+BaseRemoteGDB::addThreadContext(ThreadContext *_tc)
+{
+    M5_VAR_USED auto it_success = threads.insert({_tc->contextId(), _tc});
+    assert(it_success.second);
+    // If no ThreadContext is current selected, select this one.
+    if (!tc)
+        assert(selectThreadContext(_tc->contextId()));
+}
+
+void
 BaseRemoteGDB::replaceThreadContext(ThreadContext *_tc)
 {
-    ContextID id = _tc->contextId();
-    panic_if(id != tc->contextId(), "No context with ID %d found.", id);
-    tc = _tc;
+    auto it = threads.find(_tc->contextId());
+    panic_if(it == threads.end(), "No context with ID %d found.",
+            _tc->contextId());
+    it->second = _tc;
+}
+
+bool
+BaseRemoteGDB::selectThreadContext(ContextID id)
+{
+    auto it = threads.find(id);
+    if (it == threads.end())
+        return false;
+
+    tc = it->second;
+    // Update the register cache for the new thread context, if there is one.
+    if (regCachePtr)
+        regCachePtr->getRegs(tc);
+    return true;
 }
 
 // This function does all command processing for interfacing to a
@@ -451,11 +479,15 @@ BaseRemoteGDB::replaceThreadContext(ThreadContext *_tc)
 // makes sense to use POSIX errno values, because that is what the
 // gdb/remote.c functions want to return.
 bool
-BaseRemoteGDB::trap(int type)
+BaseRemoteGDB::trap(ContextID id, int type)
 {
-
     if (!attached)
         return false;
+
+    if (tc->contextId() != id) {
+        if (!selectThreadContext(id))
+            return false;
+    }
 
     DPRINTF(GDBMisc, "trap: PC=%s\n", tc->pcState());
 
@@ -534,6 +566,7 @@ BaseRemoteGDB::incomingData(int revent)
 
     if (revent & POLLIN) {
         trapEvent.type(SIGILL);
+        trapEvent.id(tc->contextId());
         scheduleInstCommitEvent(&trapEvent, 0);
     } else if (revent & POLLNVAL) {
         descheduleInstCommitEvent(&trapEvent);
@@ -688,7 +721,7 @@ BaseRemoteGDB::singleStep()
 {
     if (!singleStepEvent.scheduled())
         scheduleInstCommitEvent(&singleStepEvent, 1);
-    trap(SIGTRAP);
+    trap(tc->contextId(), SIGTRAP);
 }
 
 void
@@ -927,11 +960,13 @@ BaseRemoteGDB::cmdSetThread(GdbCommand::Context &ctx)
         // should complain.
         if (all)
             throw CmdError("E03");
-        // If GDB cares which thread we're using and wants a different one, we
-        // don't support that right now.
-        if (!any && tid != tc->contextId())
-            throw CmdError("E04");
-        // Since we weren't asked to do anything, we succeeded.
+
+        // If GDB doesn't care which thread we're using, keep using the
+        // current one, otherwise switch.
+        if (!any && tid != tc->contextId()) {
+            if (!selectThreadContext(tid))
+                throw CmdError("E04");
+        }
     } else {
         throw CmdError("E05");
     }
@@ -1075,13 +1110,21 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
 void
 BaseRemoteGDB::queryFThreadInfo(QuerySetCommand::Context &ctx)
 {
-    send("m%x", encodeThreadId(tc->contextId()));
+    threadInfoIdx = 0;
+    querySThreadInfo(ctx);
 }
 
 void
 BaseRemoteGDB::querySThreadInfo(QuerySetCommand::Context &ctx)
 {
-    send("l");
+    if (threadInfoIdx >= threads.size()) {
+        threadInfoIdx = 0;
+        send("l");
+    } else {
+        auto it = threads.begin();
+        std::advance(it, threadInfoIdx++);
+        send("m%x", encodeThreadId(it->second->contextId()));
+    }
 }
 
 bool

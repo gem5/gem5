@@ -523,7 +523,7 @@ System::trapToGdb(int signal, ContextID ctx_id) const
     auto *gdb = threads.thread(ctx_id).gdb;
     if (!gdb)
         return false;
-    gdb->trap(signal);
+    gdb->trap(ctx_id, signal);
     return true;
 }
 
