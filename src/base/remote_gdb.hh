@@ -58,6 +58,13 @@
 #include "cpu/pc_event.hh"
 #include "sim/eventq.hh"
 
+/*
+ * This file implements a client for the GDB remote serial protocol as
+ * described in this official documentation:
+ *
+ * https://sourceware.org/gdb/current/onlinedocs/gdb/Remote-Protocol.html
+ */
+
 class System;
 class ThreadContext;
 
