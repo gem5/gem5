@@ -59,10 +59,14 @@ class SimpleTrace : public ProbeListenerObject
     }
 
     /** Register the probe listeners. */
-    void regProbeListeners();
+    void regProbeListeners() override;
 
     /** Returns the name of the trace. */
-    const std::string name() const { return ProbeListenerObject::name() + ".trace"; }
+    const std::string
+    name() const override
+    {
+        return ProbeListenerObject::name() + ".trace";
+    }
 
   private:
     void traceFetch(const O3CPUImpl::DynInstConstPtr& dynInst);
