@@ -283,6 +283,43 @@ hex2i(const char **srcp)
     return r;
 }
 
+bool
+parseThreadId(const char **srcp, bool &all, bool &any, ContextID &tid)
+{
+    all = any = false;
+    tid = 0;
+    const char *src = *srcp;
+    if (*src == '-') {
+        // This could be the start of -1, which means all threads.
+        src++;
+        if (*src++ != '1')
+            return false;
+        *srcp += 2;
+        all = true;
+        return true;
+    }
+    tid = hex2i(srcp);
+    // If *srcp still points to src, no characters were consumed and no thread
+    // id was found. Without this check, we can't tell the difference between
+    // zero and a parsing error.
+    if (*srcp == src)
+        return false;
+
+    if (tid == 0)
+        any = true;
+
+    tid--;
+
+    return true;
+}
+
+int
+encodeThreadId(ContextID id)
+{
+    // Thread ID 0 is reserved and means "pick any thread".
+    return id + 1;
+}
+
 enum GdbBreakpointType
 {
     GdbSoftBp = '0',
@@ -864,8 +901,12 @@ bool
 BaseRemoteGDB::cmdSetThread(GdbCommand::Context &ctx)
 {
     const char *p = ctx.data + 1; // Ignore the subcommand byte.
-    if (hex2i(&p) != tc->contextId())
+    ContextID tid = 0;
+    bool all, any;
+    if (!parseThreadId(&p, all, any, tid))
         throw CmdError("E01");
+    if (any || all || tid != tc->contextId())
+        throw CmdError("E02");
     send("OK");
     return true;
 }
@@ -945,7 +986,7 @@ std::map<std::string, BaseRemoteGDB::QuerySetCommand>
 void
 BaseRemoteGDB::queryC(QuerySetCommand::Context &ctx)
 {
-    send(csprintf("QC%x", tc->contextId()).c_str());
+    send(csprintf("QC%x", encodeThreadId(tc->contextId())).c_str());
 }
 
 void
@@ -1005,7 +1046,7 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
 void
 BaseRemoteGDB::queryFThreadInfo(QuerySetCommand::Context &ctx)
 {
-    send(csprintf("m%x", tc->contextId()).c_str());
+    send(csprintf("m%x", encodeThreadId(tc->contextId())).c_str());
 }
 
 void
