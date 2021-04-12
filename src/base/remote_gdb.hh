@@ -51,6 +51,7 @@
 #include <vector>
 
 #include "arch/types.hh"
+#include "base/cprintf.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"
 #include "base/types.hh"
@@ -203,6 +204,14 @@ class BaseRemoteGDB
 
     void recv(std::vector<char> &bp);
     void send(const char *data);
+    void send(const std::string &data) { send(data.c_str()); }
+
+    template <typename ...Args>
+    void
+    send(const char *format, const Args &...args)
+    {
+        send(csprintf(format, args...));
+    }
 
     /*
      * Simulator side debugger state.

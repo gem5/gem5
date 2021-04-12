@@ -466,7 +466,7 @@ BaseRemoteGDB::trap(int type)
         active = true;
     } else {
         // Tell remote host that an exception has occurred.
-        send(csprintf("S%02x", type).c_str());
+        send("S%02x", type);
     }
 
     // Stick frame regs into our reg cache.
@@ -506,7 +506,7 @@ BaseRemoteGDB::trap(int type)
         } catch (Unsupported &e) {
             send("");
         } catch (CmdError &e) {
-            send(e.error.c_str());
+            send(e.error);
         } catch (...) {
             panic("Unrecognzied GDB exception.");
         }
@@ -837,7 +837,7 @@ BaseRemoteGDB::cmdUnsupported(GdbCommand::Context &ctx)
 bool
 BaseRemoteGDB::cmdSignal(GdbCommand::Context &ctx)
 {
-    send(csprintf("S%02x", ctx.type).c_str());
+    send("S%02x", ctx.type);
     return true;
 }
 
@@ -986,7 +986,7 @@ std::map<std::string, BaseRemoteGDB::QuerySetCommand>
 void
 BaseRemoteGDB::queryC(QuerySetCommand::Context &ctx)
 {
-    send(csprintf("QC%x", encodeThreadId(tc->contextId())).c_str());
+    send("QC%x", encodeThreadId(tc->contextId()));
 }
 
 void
@@ -999,7 +999,7 @@ BaseRemoteGDB::querySupported(QuerySetCommand::Context &ctx)
     oss << "PacketSize=1024";
     for (const auto& feature : availableFeatures())
         oss << ';' << feature;
-    send(oss.str().c_str());
+    send(oss.str());
 }
 
 void
@@ -1040,13 +1040,13 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
 
     std::string encoded;
     encodeXferResponse(content, encoded, offset, length);
-    send(encoded.c_str());
+    send(encoded);
 }
 
 void
 BaseRemoteGDB::queryFThreadInfo(QuerySetCommand::Context &ctx)
 {
-    send(csprintf("m%x", encodeThreadId(tc->contextId())).c_str());
+    send("m%x", encodeThreadId(tc->contextId()));
 }
 
 void
