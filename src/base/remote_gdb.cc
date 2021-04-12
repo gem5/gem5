@@ -909,13 +909,33 @@ BaseRemoteGDB::cmdRegW(GdbCommand::Context &ctx)
 bool
 BaseRemoteGDB::cmdSetThread(GdbCommand::Context &ctx)
 {
-    const char *p = ctx.data + 1; // Ignore the subcommand byte.
-    ContextID tid = 0;
+    const char *p = ctx.data;
+    char subcommand = *p++;
+    int tid = 0;
     bool all, any;
     if (!parseThreadId(&p, all, any, tid))
         throw CmdError("E01");
-    if (any || all || tid != tc->contextId())
-        throw CmdError("E02");
+
+    if (subcommand == 'c') {
+        // We can only single step or continue all threads at once, since we
+        // stop time itself and not individual threads.
+        if (!all)
+            throw CmdError("E02");
+    } else if (subcommand == 'g') {
+        // We don't currently support reading registers, memory, etc, from all
+        // threads at once. GDB may never ask for this, but if it does we
+        // should complain.
+        if (all)
+            throw CmdError("E03");
+        // If GDB cares which thread we're using and wants a different one, we
+        // don't support that right now.
+        if (!any && tid != tc->contextId())
+            throw CmdError("E04");
+        // Since we weren't asked to do anything, we succeeded.
+    } else {
+        throw CmdError("E05");
+    }
+
     send("OK");
     return true;
 }
