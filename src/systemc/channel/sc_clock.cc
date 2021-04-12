@@ -54,7 +54,7 @@ class ClockTick : public ScEvent
     ClockTick(::sc_core::sc_clock *clock, bool to,
             ::sc_core::sc_time _period) :
         ScEvent([this]() { tick(); }),
-        _period(_period), name(clock->basename()), p(nullptr),
+        _period(_period), name(clock->name()), p(nullptr),
         funcWrapper(clock, to ? &::sc_core::sc_clock::tickUp :
                                 &::sc_core::sc_clock::tickDown)
     {
