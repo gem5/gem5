@@ -148,10 +148,6 @@ def process_trace(trace, outfile, cycle_time, width, color, timestamps,
         fields = line.split(':')
 
 
-#Sorts out instructions according to sequence number
-def compare_by_sn(a, b):
-    return cmp(a['sn'], b['sn'])
-
 # Puts new instruction into the print queue.
 # Sorts out and prints instructions when their number reaches threshold value
 def queue_inst(outfile, inst, cycle_time, width, color, timestamps, store_completions):
@@ -164,7 +160,8 @@ def queue_inst(outfile, inst, cycle_time, width, color, timestamps, store_comple
 # Sorts out and prints instructions in print queue
 def print_insts(outfile, cycle_time, width, color, timestamps, store_completions, lower_threshold):
     global insts
-    insts['queue'].sort(compare_by_sn)
+    # sort the list of insts by sequence numbers
+    insts['queue'].sort(key=lambda inst: inst['sn'])
     while len(insts['queue']) > lower_threshold:
         print_item=insts['queue'].pop(0)
         # As the instructions are processed out of order the main loop starts
@@ -223,7 +220,7 @@ def print_inst(outfile, inst, cycle_time, width, color, timestamps, store_comple
     # Print
 
     time_width = width * cycle_time
-    base_tick = (inst['fetch'] / time_width) * time_width
+    base_tick = (inst['fetch'] // time_width) * time_width
 
     # Find out the time of the last event - it may not
     # be 'retire' if the instruction is not comlpeted.
@@ -237,7 +234,7 @@ def print_inst(outfile, inst, cycle_time, width, color, timestamps, store_comple
     if ((last_event_time - inst['fetch']) < time_width):
         num_lines = 1 # compact form
     else:
-        num_lines = ((last_event_time - base_tick) / time_width) + 1
+        num_lines = ((last_event_time - base_tick) // time_width) + 1
 
     curr_color = termcap.Normal
 
@@ -267,7 +264,7 @@ def print_inst(outfile, inst, cycle_time, width, color, timestamps, store_comple
             if (stages[event[2]]['name'] == 'dispatch' and
                 inst['dispatch'] == inst['issue']):
                 continue
-            outfile.write(curr_color + dot * ((event[0] / cycle_time) - pos))
+            outfile.write(curr_color + dot * ((event[0] // cycle_time) - pos))
             outfile.write(stages[event[2]]['color'] +
                           stages[event[2]]['shorthand'])
 
@@ -276,7 +273,7 @@ def print_inst(outfile, inst, cycle_time, width, color, timestamps, store_comple
             else:
                 curr_color = termcap.Normal
 
-            pos = (event[0] / cycle_time) + 1
+            pos = (event[0] // cycle_time) + 1
         outfile.write(curr_color + dot * (width - pos) + termcap.Normal +
                       ']-(' + str(base_tick + i * time_width).rjust(15) + ') ')
         if i == 0:
