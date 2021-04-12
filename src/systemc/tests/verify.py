@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 #
 # Copyright 2018 Google, Inc.
 #
@@ -58,14 +58,14 @@ def scons(*args):
 
 
 
-class Test(object):
+class Test():
     def __init__(self, target, suffix, build_dir, props):
         self.target = target
         self.suffix = suffix
         self.build_dir = build_dir
         self.props = {}
 
-        for key, val in props.iteritems():
+        for key, val in props.items():
             self.set_prop(key, val)
 
     def set_prop(self, key, val):
@@ -107,7 +107,7 @@ class TestPhaseMeta(type):
 
         super(TestPhaseMeta, cls).__init__(name, bases, d)
 
-class TestPhaseBase(object, metaclass=TestPhaseMeta):
+class TestPhaseBase(metaclass=TestPhaseMeta):
     abstract = True
 
     def __init__(self, main_args, *args):
@@ -169,7 +169,7 @@ class RunPhase(TestPhaseBase):
                 os.makedirs(test.m5out_dir())
             try:
                 subprocess.check_call(cmd, cwd=os.path.dirname(test.dir()))
-            except subprocess.CalledProcessError, error:
+            except subprocess.CalledProcessError as error:
                 returncode = error.returncode
             else:
                 returncode = 0
@@ -180,14 +180,14 @@ class RunPhase(TestPhaseBase):
 
         runnable = filter(lambda t: not t.compile_only, tests)
         if j == 1:
-            map(run_test, runnable)
+            list(map(run_test, runnable))
         else:
             tp = multiprocessing.pool.ThreadPool(j)
-            map(lambda t: tp.apply_async(run_test, (t,)), runnable)
+            list(map(lambda t: tp.apply_async(run_test, (t,)), runnable))
             tp.close()
             tp.join()
 
-class Checker(object):
+class Checker():
     def __init__(self, ref, test, tag):
         self.ref = ref
         self.test = test
@@ -215,6 +215,13 @@ class DiffingChecker(Checker):
         super(DiffingChecker, self).__init__(ref, test, tag)
         self.out_dir = out_dir
 
+    def is_bytes_mode(self):
+        return False
+
+    def do_diff(self, ref_lines, test_lines, ref_file, test_file):
+        return difflib.unified_diff(ref_lines, test_lines,
+                                    fromfile=ref_file, tofile=test_file)
+
     def diffing_check(self, ref_lines, test_lines):
         test_file = os.path.basename(self.test)
         ref_file = os.path.basename(self.ref)
@@ -222,11 +229,10 @@ class DiffingChecker(Checker):
         diff_file = '.'.join([ref_file, 'diff'])
         diff_path = os.path.join(self.out_dir, diff_file)
         if test_lines != ref_lines:
-            with open(diff_path, 'w') as diff_f:
-                for line in difflib.unified_diff(
-                        ref_lines, test_lines,
-                        fromfile=ref_file,
-                        tofile=test_file):
+            flag = 'wb' if self.is_bytes_mode() else 'w'
+            with open(diff_file, flag) as diff_f:
+                for line in self.do_diff(ref_lines, test_lines,
+                                         ref_file, test_file):
                     diff_f.write(line)
             return False
         else:
@@ -238,7 +244,17 @@ class LogChecker(DiffingChecker):
     def merge_filts(*filts):
         filts = map(lambda f: '(' + f + ')', filts)
         filts = '|'.join(filts)
-        return re.compile(filts, flags=re.MULTILINE)
+        return re.compile(filts.encode('utf-8'), flags=re.MULTILINE)
+
+    def is_bytes_mode(self):
+        return True
+
+    def do_diff(self, ref_lines, test_lines, ref_file, test_file):
+        return difflib.diff_bytes(
+            difflib.unified_diff,
+            ref_lines, test_lines,
+            fromfile=ref_file.encode('utf-8'),
+            tofile=test_file.encode('utf-8'))
 
     # The reporting mechanism will print the actual filename when running in
     # gem5, and the "golden" output will say "<removed by verify.py>". We want
@@ -259,8 +275,9 @@ class LogChecker(DiffingChecker):
         in_file_filt,
     )
     test_filt = merge_filts(
+        r'^/.*:\d+: ',
         r'^Global frequency set at \d* ticks per second\n',
-        r'^info: Entering event queue @ \d*\.  Starting simulation\.\.\.\n',
+        r'info: Entering event queue @ \d*\.  Starting simulation\.\.\.\n',
         r'warn: Ignoring request to set stack size\.\n',
         r'^warn: No dot file generated. Please install pydot ' +
         r'to generate the dot file and pdf.\n',
@@ -269,12 +286,12 @@ class LogChecker(DiffingChecker):
     )
 
     def apply_filters(self, data, filts):
-        re.sub(filt, '', data)
+        re.sub(filt, b'', data)
 
     def check(self):
-        with open(self.test) as test_f, open(self.ref) as ref_f:
-            test = re.sub(self.test_filt, '', test_f.read())
-            ref = re.sub(self.ref_filt, '', ref_f.read())
+        with open(self.test, 'rb') as test_f, open(self.ref, 'rb') as ref_f:
+            test = re.sub(self.test_filt, b'', test_f.read())
+            ref = re.sub(self.ref_filt, b'', ref_f.read())
             return self.diffing_check(ref.splitlines(True),
                                       test.splitlines(True))
 
@@ -289,7 +306,7 @@ class VcdChecker(DiffingChecker):
 
             return self.diffing_check(ref, test)
 
-class GoldenDir(object):
+class GoldenDir():
     def __init__(self, path, platform):
         self.path = path
         self.platform = platform
@@ -301,7 +318,7 @@ class GoldenDir(object):
         common = filter(lambda t: not t.startswith(tuple(bases)), contents)
 
         self.entries = {}
-        class Entry(object):
+        class Entry():
             def __init__(self, e_path):
                 self.used = False
                 self.path = os.path.join(path, e_path)
@@ -330,7 +347,7 @@ class GoldenDir(object):
 
     def unused(self):
         items = self.entries.items()
-        items = filter(lambda i: not i[1].used, items)
+        items = list(filter(lambda i: not i[1].used, items))
 
         items.sort()
         sources = []
@@ -367,10 +384,10 @@ class VerifyPhase(TestPhaseBase):
 
     def write_result_file(self, path):
         results = {
-            'passed': map(lambda t: t.props, self._passed),
+            'passed': list(map(lambda t: t.props, self._passed)),
             'failed': {
-                cause: map(lambda t: t.props, tests) for
-                       cause, tests in self._failed.iteritems()
+                cause: list(map(lambda t: t.props, tests))
+                for cause, tests in self._failed.items()
             }
         }
         with open(path, 'w') as rf:
@@ -472,7 +489,7 @@ class VerifyPhase(TestPhaseBase):
                 self.failed(test, 'missing output', ' '.join(missing))
                 continue
 
-            failed_diffs = filter(lambda d: not d.check(), diffs)
+            failed_diffs = list(filter(lambda d: not d.check(), diffs))
             if failed_diffs:
                 tags = map(lambda d: d.tag, failed_diffs)
                 self.failed(test, 'failed diffs', ' '.join(tags))
@@ -568,7 +585,7 @@ with open(json_path) as f:
 
     filtered_tests = {
         target: props for (target, props) in
-                    test_data.iteritems() if eval(filt, dict(props))
+                    test_data.items() if eval(filt, dict(props))
     }
 
     if len(filtered_tests) == 0:
@@ -576,15 +593,15 @@ with open(json_path) as f:
         exit()
 
     if main_args.list:
-        for target, props in sorted(filtered_tests.iteritems()):
+        for target, props in sorted(filtered_tests.items()):
             print('%s.%s' % (target, main_args.flavor))
-            for key, val in props.iteritems():
+            for key, val in props.items():
                 print('    %s: %s' % (key, val))
         print('Total tests: %d' % len(filtered_tests))
     else:
         tests_to_run = list([
             Test(target, main_args.flavor, main_args.build_dir, props) for
-                target, props in sorted(filtered_tests.iteritems())
+                target, props in sorted(filtered_tests.items())
         ])
 
         for phase in phases:
