@@ -351,8 +351,7 @@ std::map<Addr, HardBreakpoint *> hardBreakMap;
 
 BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, int _port) :
         connectEvent(nullptr), dataEvent(nullptr), _port(_port), fd(-1),
-        active(false), attached(false), sys(_system),
-        trapEvent(this), singleStepEvent(*this)
+        sys(_system), trapEvent(this), singleStepEvent(*this)
 {
     addThreadContext(c);
 }
@@ -503,6 +502,10 @@ BaseRemoteGDB::trap(ContextID id, int type)
      */
     if (!active) {
         active = true;
+    } else if (threadSwitching) {
+        threadSwitching = false;
+        // Tell GDB the thread switch has completed.
+        send("OK");
     } else {
         // Tell remote host that an exception has occurred.
         send("S%02x", type);
@@ -971,6 +974,11 @@ BaseRemoteGDB::cmdSetThread(GdbCommand::Context &ctx)
         if (!any && tid != tc->contextId()) {
             if (!selectThreadContext(tid))
                 throw CmdError("E04");
+            // Line up on an instruction boundary in the new thread.
+            threadSwitching = true;
+            trapEvent.id(tid);
+            scheduleInstCommitEvent(&trapEvent, 0);
+            return false;
         }
     } else {
         throw CmdError("E05");

@@ -225,8 +225,9 @@ class BaseRemoteGDB
     /*
      * Simulator side debugger state.
      */
-    bool active;
-    bool attached;
+    bool active = false;
+    bool attached = false;
+    bool threadSwitching = false;
 
     System *sys;
 
