@@ -66,11 +66,11 @@ class Coroutine : public Fiber
     // in case the channel should be void (Coroutine template parameters
     // are void. (See following ArgChannel, RetChannel typedef)
     struct Empty {};
-    using ArgChannel = typename std::conditional<
-        std::is_same<Arg, void>::value, Empty, std::stack<Arg>>::type;
+    using ArgChannel = typename std::conditional_t<
+        std::is_same<Arg, void>::value, Empty, std::stack<Arg>>;
 
-    using RetChannel = typename std::conditional<
-        std::is_same<Ret, void>::value, Empty, std::stack<Ret>>::type;
+    using RetChannel = typename std::conditional_t<
+        std::is_same<Ret, void>::value, Empty, std::stack<Ret>>;
 
   public:
     /**

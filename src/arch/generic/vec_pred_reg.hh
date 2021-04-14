@@ -72,10 +72,10 @@ class VecPredRegT
 
   public:
     /// Container type alias.
-    using Container = typename std::conditional<
+    using Container = typename std::conditional_t<
         Const,
         const VecPredRegContainer<NUM_BITS, Packed>,
-        VecPredRegContainer<NUM_BITS, Packed>>::type;
+        VecPredRegContainer<NUM_BITS, Packed>>;
 
   protected:
     // Alias for this type
