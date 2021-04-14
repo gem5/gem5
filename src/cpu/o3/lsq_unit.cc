@@ -1247,6 +1247,10 @@ LSQUnit::trySendPacket(bool isLoad, PacketPtr data_pkt)
         }
         state->request()->packetNotSent();
     }
+    DPRINTF(LSQUnit, "Memory request (pkt: %s) from inst [sn:%llu] was"
+            " %ssent (cache is blocked: %d, cache_got_blocked: %d)\n",
+            data_pkt->print(), state->inst->seqNum,
+            ret ? "": "not ", lsq->cacheBlocked(), cache_got_blocked);
     return ret;
 }
 

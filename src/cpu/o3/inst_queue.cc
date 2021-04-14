@@ -1109,11 +1109,16 @@ InstructionQueue::blockMemInst(const DynInstPtr &blocked_inst)
     blocked_inst->clearIssued();
     blocked_inst->clearCanIssue();
     blockedMemInsts.push_back(blocked_inst);
+    DPRINTF(IQ, "Memory inst [sn:%llu] PC %s is blocked, will be "
+            "reissued later\n", blocked_inst->seqNum,
+            blocked_inst->pcState());
 }
 
 void
 InstructionQueue::cacheUnblocked()
 {
+    DPRINTF(IQ, "Cache is unblocked, rescheduling blocked memory "
+            "instructions\n");
     retryMemInsts.splice(retryMemInsts.end(), blockedMemInsts);
     // Get the CPU ticking again
     cpu->wakeCPU();
