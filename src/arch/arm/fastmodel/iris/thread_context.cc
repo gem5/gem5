@@ -693,13 +693,13 @@ ThreadContext::readVecPredReg(const RegId &reg_id) const
     size_t num_bits = reg.NUM_BITS;
     uint8_t *bytes = (uint8_t *)result.data.data();
     while (num_bits > 8) {
-        reg.set_bits(offset, 8, *bytes);
+        reg.setBits(offset, 8, *bytes);
         offset += 8;
         num_bits -= 8;
         bytes++;
     }
     if (num_bits)
-        reg.set_bits(offset, num_bits, *bytes);
+        reg.setBits(offset, num_bits, *bytes);
 
     return reg;
 }

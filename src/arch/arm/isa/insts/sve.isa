@@ -2623,7 +2623,7 @@ let {{
                 code +='''
             const SElement& srcElem1 = auxPOp1[i];'''
             code += '''
-            destPred.set_raw(i, 0);
+            destPred.setRaw(i, 0);
             PDest_xd[i] = srcElem1;'''
         else:
             if unpackHalf == Unpack.High:
@@ -2836,8 +2836,8 @@ let {{
         ArmISA::VecPredRegContainer tmpPredC;
         auto auxPOp1 = tmpPredC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i) {
-            uint8_t v = POp1_x.get_raw(i);
-            auxPOp1.set_raw(i, v);
+            uint8_t v = POp1_x.getRaw(i);
+            auxPOp1.setRaw(i, v);
         }
         PDest_x[0] = 0;'''
         else:
@@ -2854,7 +2854,7 @@ let {{
             AA64FpDest_x[i] = auxOp1[eCount - i - 1];'''
         else:
             code += '''
-            destPred.set_raw(i, auxPOp1.get_raw(eCount - i - 1));'''
+            destPred.setRaw(i, auxPOp1.getRaw(eCount - i - 1));'''
         code += '''
         }'''
         iop = ArmInstObjParams(name, 'Sve' + Name, 'SveUnaryUnpredOp',

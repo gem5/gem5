@@ -118,18 +118,18 @@ class VecPredRegT
     /// Return an element of the predicate register as it appears
     /// in the raw (untyped) internal representation
     uint8_t
-    get_raw(size_t idx) const
+    getRaw(size_t idx) const
     {
-        return container.get_bits(idx * (Packed ? 1 : sizeof(VecElem)),
+        return container.getBits(idx * (Packed ? 1 : sizeof(VecElem)),
                 (Packed ? 1 : sizeof(VecElem)));
     }
 
     /// Write a raw value in an element of the predicate register
     template<bool Condition = !Const>
     std::enable_if_t<Condition>
-    set_raw(size_t idx, uint8_t val)
+    setRaw(size_t idx, uint8_t val)
     {
-        container.set_bits(idx * (Packed ? 1 : sizeof(VecElem)),
+        container.setBits(idx * (Packed ? 1 : sizeof(VecElem)),
                 (Packed ? 1 : sizeof(VecElem)), val);
     }
 
@@ -302,7 +302,7 @@ class VecPredRegContainer
     /// Returns a subset of bits starting from a specific element in the
     /// container.
     uint8_t
-    get_bits(size_t idx, uint8_t nbits) const
+    getBits(size_t idx, uint8_t nbits) const
     {
         assert(nbits > 0 && nbits <= 8 && (idx + nbits - 1) < NumBits);
         uint8_t v = 0;
@@ -317,7 +317,7 @@ class VecPredRegContainer
     /// Set a subset of bits starting from a specific element in the
     /// container.
     void
-    set_bits(size_t idx, uint8_t nbits, uint8_t bval)
+    setBits(size_t idx, uint8_t nbits, uint8_t bval)
     {
         assert(nbits > 0 && nbits <= 8 && (idx + nbits - 1) < NumBits);
         for (int i = 0; i < nbits; ++i, ++idx) {
