@@ -1,4 +1,4 @@
-# Copyright (c) 2021 ARM Limited
+# Copyright (c) 2021,2022 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -206,7 +206,7 @@ class CHI_Cache_Controller(Cache_Controller):
         # triggers. To limit the controller performance, tweak other
         # params such as: input port buffer size, cache banks, and output
         # port latency
-        self.transitions_per_cycle = 128
+        self.transitions_per_cycle = 1024
         # This should be set to true in the data cache controller to enable
         # timeouts on unique lines when a store conditional fails
         self.sc_lock_enabled = False
@@ -670,6 +670,7 @@ class CHI_SNF_Base(CHI_Node):
             responseFromMemory=MessageBuffer(),
             requestToMemory=MessageBuffer(ordered=True),
             reqRdy=TriggerMessageBuffer(),
+            transitions_per_cycle=1024,
         )
 
         self.connectController(self._cntrl)

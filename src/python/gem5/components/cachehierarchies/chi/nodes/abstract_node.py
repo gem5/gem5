@@ -77,7 +77,7 @@ class AbstractNode(Cache_Controller):
         # triggers. To limit the controller performance, tweak other
         # params such as: input port buffer size, cache banks, and output
         # port latency
-        self.transitions_per_cycle = 128
+        self.transitions_per_cycle = 1024
         # This should be set to true in the data cache controller to enable
         # timeouts on unique lines when a store conditional fails
         self.sc_lock_enabled = False
