@@ -42,7 +42,7 @@
 # Script for managing a gem5 disk image.
 #
 
-from optparse import OptionParser
+from argparse import ArgumentParser
 import os
 from os import environ as env
 import string
@@ -221,8 +221,8 @@ commands = {}
 commandOrder = []
 
 class Command(object):
-    def addOption(self, *args, **kargs):
-        self.parser.add_option(*args, **kargs)
+    def addArgument(self, *args, **kargs):
+        self.parser.add_argument(*args, **kargs)
 
     def __init__(self, name, description, posArgs):
         self.name = name
@@ -231,19 +231,21 @@ class Command(object):
         self.posArgs = posArgs
         commands[self.name] = self
         commandOrder.append(self.name)
-        usage = 'usage: %prog [options]'
+        usage = '%(prog)s [options]'
         posUsage = ''
         for posArg in posArgs:
             (argName, argDesc) = posArg
             usage += ' %s' % argName
             posUsage += '\n  %s: %s' % posArg
         usage += posUsage
-        self.parser = OptionParser(usage=usage, description=description)
-        self.addOption('-d', '--debug', dest='debug', action='store_true',
-                       help='Verbose output.')
+        self.parser = ArgumentParser(usage=usage, description=description)
+        self.addArgument('-d', '--debug', dest='debug', action='store_true',
+                         help='Verbose output.')
+        self.addArgument('pos', nargs='*')
 
     def parseArgs(self, argv):
-        (self.options, self.args) = self.parser.parse_args(argv[2:])
+        self.options = self.parser.parse_args(argv[2:])
+        self.args = self.options.pos
         if len(self.args) != len(self.posArgs):
             self.parser.error('Incorrect number of arguments')
         global debug
@@ -261,9 +263,9 @@ class Command(object):
 initCom = Command('init', 'Create an image with an empty file system.',
                   [('file', 'Name of the image file.'),
                    ('mb', 'Size of the file in MB.')])
-initCom.addOption('-t', '--type', dest='fstype', action='store',
-                  default='ext2',
-                  help='Type of file system to use. Appended to mkfs.')
+initCom.addArgument('-t', '--type', dest='fstype', action='store',
+                    default='ext2',
+                    help='Type of file system to use. Appended to mkfs.')
 
 # A command to mount the first partition in the image.
 mountCom = Command('mount', 'Mount the first partition in the disk image.',
@@ -365,9 +367,9 @@ partitionCom.func = partitionComFunc
 # A command to format the first partition in the image.
 formatCom = Command('format', 'Formatting part of "init".',
                     [('file', 'Name of the image file.')])
-formatCom.addOption('-t', '--type', dest='fstype', action='store',
-                    default='ext2',
-                    help='Type of file system to use. Appended to mkfs.')
+formatCom.addArgument('-t', '--type', dest='fstype', action='store',
+                      default='ext2',
+                      help='Type of file system to use. Appended to mkfs.')
 
 def formatImage(dev, fsType):
     return runPriv([findProg('mkfs.%s' % fsType, dev), str(dev)])

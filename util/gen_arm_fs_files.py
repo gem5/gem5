@@ -38,7 +38,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from optparse import OptionParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from subprocess import call
 from platform import machine
 from distutils import spawn
@@ -66,16 +66,16 @@ def run_cmd(explanation, working_dir, cmd, stdout = None):
 
 def linux_clone():
     kernel_vexpress_gem5_dir = os.path.join(
-        options.dest_dir, "linux-kernel-vexpress_gem5")
+        args.dest_dir, "linux-kernel-vexpress_gem5")
 
     run_cmd("clone linux kernel for VExpress_GEM5_V1 platform",
-        options.dest_dir,
+        args.dest_dir,
         ["git", "clone", "https://gem5.googlesource.com/arm/linux",
          kernel_vexpress_gem5_dir])
 
 def linux64():
     kernel_vexpress_gem5_dir = os.path.join(
-        options.dest_dir, "linux-kernel-vexpress_gem5")
+        args.dest_dir, "linux-kernel-vexpress_gem5")
 
     linux_bin = os.path.join(
         binaries_dir, "vmlinux.vexpress_gem5_v1_64")
@@ -103,7 +103,7 @@ def linux64():
 
 def linux32():
     kernel_vexpress_gem5_dir = os.path.join(
-        options.dest_dir, "linux-kernel-vexpress_gem5")
+        args.dest_dir, "linux-kernel-vexpress_gem5")
 
     linux_bin = os.path.join(
         binaries_dir, "vmlinux.vexpress_gem5_v1")
@@ -186,25 +186,25 @@ def xen():
     """
     Build Xen for aarch64
     """
-    xen_dir = os.path.join(options.dest_dir, "xen")
-    bootwrapper_dir = os.path.join(options.dest_dir, "bootwrapper")
+    xen_dir = os.path.join(args.dest_dir, "xen")
+    bootwrapper_dir = os.path.join(args.dest_dir, "bootwrapper")
     linux_cmdline = "console=hvc0 root=/dev/vda rw mem=1G"
     xen_cmdline = "dtuart=/uart@1c090000 console=dtuart no-bootscrub " + \
                   "dom0_mem=1G loglvl=all guest_loglvl=all"
 
     run_cmd("clone Xen",
-        options.dest_dir,
+        args.dest_dir,
         ["git", "clone", "git://xenbits.xen.org/xen.git",
          xen_dir])
 
     run_cmd("clone boot-wrapper-aarch64",
-        options.dest_dir,
+        args.dest_dir,
         ["git", "clone", "git://git.kernel.org/pub/" +
             "scm/linux/kernel/git/mark/boot-wrapper-aarch64.git",
          bootwrapper_dir])
 
     # Need to compile arm64 Linux
-    linux_dir = os.path.join(options.dest_dir, "linux-kernel-vexpress_gem5")
+    linux_dir = os.path.join(args.dest_dir, "linux-kernel-vexpress_gem5")
     linux_bin = os.path.join(linux_dir,
         "arch", "arm64", "boot", "Image")
     if not os.path.exists(linux_bin):
@@ -260,52 +260,46 @@ all_binaries = {
     "xen" : xen,
 }
 
-parser = OptionParser()
+parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 
-parser.add_option("--gem5-dir", default = gem5_dir,
+parser.add_argument("--gem5-dir", default = gem5_dir,
     metavar = "GEM5_DIR",
     help = "gem5 root directory to be used for bootloader and "
            "VExpress_GEM5_V1 DTB sources. The default value is the gem5 root "
-           "directory of the executed script (%default)")
-parser.add_option("--dest-dir", default = "/tmp",
+           "directory of the executed script")
+parser.add_argument("--dest-dir", default = "/tmp",
     metavar = "DEST_DIR",
     help = "Directory to use for checking out the different kernel "
            "repositories. Generated files will be copied to "
-           "DEST_DIR/binaries (which must not exist). The default "
-           "value is %default")
-parser.add_option("-j", "--make-jobs", type = "int", default = 1,
+           "DEST_DIR/binaries (which must not exist)")
+parser.add_argument("-j", "--make-jobs", type = int, default = 1,
     metavar = "MAKE_JOBS",
-    help = "Number of jobs to use with the 'make' commands. Default value: "
-           "%default")
-parser.add_option("-b", "--fs-binaries", action="append",
+    help = "Number of jobs to use with the 'make' commands.")
+parser.add_argument("-b", "--fs-binaries", action="append",
     choices=list(all_binaries.keys()), default=[],
     help = "List of FS files to be generated. Defaulting to all")
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
-if args:
-    print("Unrecognized argument(s) %s." % args)
+if not os.path.isdir(args.dest_dir):
+    print("Error: %s is not a directory." % args.dest_dir)
     sys.exit(1)
 
-if not os.path.isdir(options.dest_dir):
-    print("Error: %s is not a directory." % options.dest_dir)
-    sys.exit(1)
-
-if not os.path.isdir(options.gem5_dir):
-    print("Error: %s is not a directory." % options.gem5_dir)
+if not os.path.isdir(args.gem5_dir):
+    print("Error: %s is not a directory." % args.gem5_dir)
     sys.exit(1)
 
 if machine() != "x86_64":
     print("Error: This script should run in a x86_64 machine")
     sys.exit(1)
 
-binaries_dir = options.dest_dir + "/binaries"
+binaries_dir = args.dest_dir + "/binaries"
 
 if os.path.exists(binaries_dir):
     print("Error: %s already exists." % binaries_dir)
     sys.exit(1)
 
-revisions_dir = options.dest_dir + "/revisions"
+revisions_dir = args.dest_dir + "/revisions"
 
 if os.path.exists(revisions_dir):
     print("Error: %s already exists." %revisions_dir)
@@ -314,7 +308,7 @@ if os.path.exists(revisions_dir):
 os.mkdir(binaries_dir);
 os.mkdir(revisions_dir);
 
-make_jobs_str = "-j" + str(options.make_jobs)
+make_jobs_str = "-j" + str(args.make_jobs)
 
 rev_file = open(revisions_dir + "/gem5", "w+")
 run_cmd("write revision of gem5 repo",
@@ -323,7 +317,7 @@ run_cmd("write revision of gem5 repo",
     rev_file)
 rev_file.close()
 
-binaries = options.fs_binaries if options.fs_binaries else list(all_binaries.keys())
+binaries = args.fs_binaries if args.fs_binaries else list(all_binaries.keys())
 for fs_binary in binaries:
     all_binaries[fs_binary]()
 

@@ -143,7 +143,7 @@ def aggregate(output_dir, cpts, no_compress, memory_size):
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
-    parser = ArgumentParser("usage: %prog [options] <directory names which "\
+    parser = ArgumentParser(usage="%(prog)s [options] <directory names which "\
                             "hold the checkpoints to be combined>")
     parser.add_argument("-o", "--output-dir", action="store",
                         help="Output directory")

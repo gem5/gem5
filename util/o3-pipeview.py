@@ -37,7 +37,7 @@
 
 # Pipeline activity viewer for the O3 CPU model.
 
-import optparse
+import argparse
 import os
 import sys
 import copy
@@ -300,68 +300,70 @@ def validate_range(my_range):
 
 
 def main():
-    # Parse options
-    usage = ('%prog [OPTION]... TRACE_FILE')
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option(
+    # Parse args
+    usage = ('%(prog)s [OPTION]... TRACE_FILE')
+    parser = argparse.ArgumentParser(
+        usage=usage,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
         '-o',
         dest='outfile',
         default=os.path.join(os.getcwd(), 'o3-pipeview.out'),
-        help="output file (default: '%default')")
-    parser.add_option(
+        help="output file")
+    parser.add_argument(
         '-t',
         dest='tick_range',
         default='0:-1',
-        help="tick range (default: '%default'; -1 == inf.)")
-    parser.add_option(
+        help="tick range (-1 == inf.)")
+    parser.add_argument(
         '-i',
         dest='inst_range',
         default='0:-1',
-        help="instruction range (default: '%default'; -1 == inf.)")
-    parser.add_option(
+        help="instruction range (-1 == inf.)")
+    parser.add_argument(
         '-w',
         dest='width',
-        type='int', default=80,
-        help="timeline width (default: '%default')")
-    parser.add_option(
+        type=int, default=80,
+        help="timeline width")
+    parser.add_argument(
         '--color',
         action='store_true', default=False,
-        help="enable colored output (default: '%default')")
-    parser.add_option(
+        help="enable colored output")
+    parser.add_argument(
         '-c', '--cycle-time',
-        type='int', default=1000,
-        help="CPU cycle time in ticks (default: '%default')")
-    parser.add_option(
+        type=int, default=1000,
+        help="CPU cycle time in ticks")
+    parser.add_argument(
         '--timestamps',
         action='store_true', default=False,
-        help="print fetch and retire timestamps (default: '%default')")
-    parser.add_option(
+        help="print fetch and retire timestamps")
+    parser.add_argument(
         '--only_committed',
         action='store_true', default=False,
-        help="display only committed (completed) instructions (default: '%default')")
-    parser.add_option(
+        help="display only committed (completed) instructions")
+    parser.add_argument(
         '--store_completions',
         action='store_true', default=False,
-        help="additionally display store completion ticks (default: '%default')")
-    (options, args) = parser.parse_args()
-    if len(args) != 1:
-        parser.error('incorrect number of arguments')
-        sys.exit(1)
-    tick_range = validate_range(options.tick_range)
+        help="additionally display store completion ticks")
+    parser.add_argument(
+        'tracefile')
+
+    args = parser.parse_args()
+    tick_range = validate_range(args.tick_range)
     if not tick_range:
         parser.error('invalid range')
         sys.exit(1)
-    inst_range = validate_range(options.inst_range)
+    inst_range = validate_range(args.inst_range)
     if not inst_range:
         parser.error('invalid range')
         sys.exit(1)
     # Process trace
     print('Processing trace... ', end=' ')
-    with open(args[0], 'r') as trace:
-        with open(options.outfile, 'w') as out:
-            process_trace(trace, out, options.cycle_time, options.width,
-                          options.color, options.timestamps,
-                          options.only_committed, options.store_completions,
+    with open(args.tracefile, 'r') as trace:
+        with open(args.outfile, 'w') as out:
+            process_trace(trace, out, args.cycle_time, args.width,
+                          args.color, args.timestamps,
+                          args.only_committed, args.store_completions,
                           *(tick_range + inst_range))
     print('done!')
 

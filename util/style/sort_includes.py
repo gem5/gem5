@@ -280,40 +280,44 @@ class SortIncludes(object):
 default_languages = frozenset(('C', 'C++', 'isa', 'python', 'scons', 'swig'))
 
 def options():
-    import optparse
-    options = optparse.OptionParser()
-    add_option = options.add_option
-    add_option('-d', '--dir_ignore', metavar="DIR[,DIR]", type='string',
-               default=','.join(default_dir_ignore),
-               help="ignore directories")
-    add_option('-f', '--file_ignore', metavar="FILE[,FILE]", type='string',
-               default=','.join(default_file_ignore),
-               help="ignore files")
-    add_option('-l', '--languages', metavar="LANG[,LANG]", type='string',
-               default=','.join(default_languages),
-               help="languages")
-    add_option('-n', '--dry-run', action='store_true',
-               help="don't overwrite files")
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-d', '--dir_ignore', metavar="DIR[,DIR]", type=str,
+        default=','.join(default_dir_ignore),
+        help="ignore directories")
+    parser.add_argument(
+        '-f', '--file_ignore', metavar="FILE[,FILE]", type=str,
+        default=','.join(default_file_ignore),
+        help="ignore files")
+    parser.add_argument(
+        '-l', '--languages', metavar="LANG[,LANG]", type=str,
+        default=','.join(default_languages),
+        help="languages")
+    parser.add_argument(
+        '-n', '--dry-run', action='store_true',
+        help="don't overwrite files")
+    parser.add_argument('bases', nargs='*')
 
-    return options
+    return parser
 
 def parse_args(parser):
-    opts,args = parser.parse_args()
+    args = parser.parse_args()
 
-    opts.dir_ignore = frozenset(opts.dir_ignore.split(','))
-    opts.file_ignore = frozenset(opts.file_ignore.split(','))
-    opts.languages = frozenset(opts.languages.split(','))
+    args.dir_ignore = frozenset(args.dir_ignore.split(','))
+    args.file_ignore = frozenset(args.file_ignore.split(','))
+    args.languages = frozenset(args.languages.split(','))
 
-    return opts,args
+    return args
 
 if __name__ == '__main__':
     parser = options()
-    opts, args = parse_args(parser)
+    args = parse_args(parser)
 
-    for base in args:
-        for filename,language in find_files(base, languages=opts.languages,
-                file_ignore=opts.file_ignore, dir_ignore=opts.dir_ignore):
-            if opts.dry_run:
+    for base in args.bases:
+        for filename,language in find_files(base, languages=args.languages,
+                file_ignore=args.file_ignore, dir_ignore=args.dir_ignore):
+            if args.dry_run:
                 print("{}: {}".format(filename, language))
             else:
                 update_file(filename, filename, language, SortIncludes())

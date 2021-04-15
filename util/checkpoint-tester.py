@@ -39,7 +39,7 @@
 #    c. Dump a checkpoint and end the simulation
 #    d. Diff the new checkpoint with the original checkpoint N+1
 #
-# Note that '--' must be used to separate the script options from the
+# Note that '--' must be used to separate the script args from the
 # M5 command line.
 #
 # Caveats:
@@ -66,39 +66,40 @@
 
 import os, sys, re
 import subprocess
-import optparse
+import argparse
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 
-parser.add_option('-i', '--interval', type='int')
-parser.add_option('-d', '--directory', default='checkpoint-test')
+parser.add_argument('-i', '--interval', type=int)
+parser.add_argument('-d', '--directory', default='checkpoint-test')
+parser.add_argument('cmdline', nargs='+', help='gem5 command line')
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
-interval = options.interval
+interval = args.interval
 
-if os.path.exists(options.directory):
-    print('Error: test directory', options.directory, 'exists')
+if os.path.exists(args.directory):
+    print('Error: test directory', args.directory, 'exists')
     print('       Tester needs to create directory from scratch')
     sys.exit(1)
 
-top_dir = options.directory
+top_dir = args.directory
 os.mkdir(top_dir)
 
 cmd_echo = open(os.path.join(top_dir, 'command'), 'w')
 print(' '.join(sys.argv), file=cmd_echo)
 cmd_echo.close()
 
-m5_binary = args[0]
+m5_binary = args.cmdline[0]
 
-options = args[1:]
+args = args.cmdline[1:]
 
 initial_args = ['--take-checkpoints', '%d,%d' % (interval, interval)]
 
 cptdir = os.path.join(top_dir, 'm5out')
 
 print('===> Running initial simulation.')
-subprocess.call([m5_binary] + ['-red', cptdir] + options + initial_args)
+subprocess.call([m5_binary] + ['-red', cptdir] + args + initial_args)
 
 dirs = os.listdir(cptdir)
 expr = re.compile('cpt\.([0-9]*)')
@@ -117,7 +118,7 @@ cpts.sort()
 for i in range(1, len(cpts)):
     print('===> Running test %d of %d.' % (i, len(cpts)-1))
     mydir = os.path.join(top_dir, 'test.%d' % i)
-    subprocess.call([m5_binary] + ['-red', mydir] + options + initial_args +
+    subprocess.call([m5_binary] + ['-red', mydir] + args + initial_args +
                     ['--max-checkpoints' , '1', '--checkpoint-dir', cptdir,
                      '--checkpoint-restore', str(i)])
     cpt_name = 'cpt.%d' % cpts[i]
