@@ -530,7 +530,7 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
         { ArmISA::MISCREG_CNTV_CVAL, "CNTV_CVAL" },
         { ArmISA::MISCREG_CNTVOFF, "CNTVOFF" },
         { ArmISA::MISCREG_CNTHP_CVAL, "CNTHP_CVAL" },
-        { ArmISA::MISCREG_CPUMERRSR, "CPUMERRSR" },
+        // ArmISA::MISCREG_CPUMERRSR?
         { ArmISA::MISCREG_L2MERRSR, "L2MERRSR" },
 
         // AArch64 registers (Op0=2)
@@ -814,7 +814,7 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
         // ArmISA::MISCREG_L2ACTLR_EL1?
         { ArmISA::MISCREG_CPUACTLR_EL1, "CPUACTLR_EL1" },
         { ArmISA::MISCREG_CPUECTLR_EL1, "CPUECTLR_EL1" },
-        { ArmISA::MISCREG_CPUMERRSR_EL1, "CPUMERRSR_EL1" },
+        // ArmISA::MISCREG_CPUMERRSR_EL1?
         { ArmISA::MISCREG_L2MERRSR_EL1, "L2MERRSR_EL1" },
         // ArmISA::MISCREG_CBAR_EL1?
         { ArmISA::MISCREG_CONTEXTIDR_EL2, "CONTEXTIDR_EL2" },
