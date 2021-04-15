@@ -126,7 +126,7 @@ class Upgrader:
                 sys.exit(1)
             Upgrader.untag_set.add(self.tag)
         else:
-            print("Error: no upgrader or downgrader method for".format(
+            print("Error: no upgrader or downgrader method for {}".format(
                 self.tag))
             sys.exit(1)
 
