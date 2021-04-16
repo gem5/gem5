@@ -61,6 +61,9 @@
 
 #include "params/TlmToGem5Bridge32.hh"
 #include "params/TlmToGem5Bridge64.hh"
+#include "params/TlmToGem5Bridge128.hh"
+#include "params/TlmToGem5Bridge256.hh"
+#include "params/TlmToGem5Bridge512.hh"
 #include "sim/system.hh"
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/ext/core/sc_time.hh"
@@ -556,5 +559,26 @@ sc_gem5::TlmToGem5Bridge<64> *
 TlmToGem5Bridge64Params::create() const
 {
     return new sc_gem5::TlmToGem5Bridge<64>(
+            *this, sc_core::sc_module_name(name.c_str()));
+}
+
+sc_gem5::TlmToGem5Bridge<128> *
+TlmToGem5Bridge128Params::create() const
+{
+    return new sc_gem5::TlmToGem5Bridge<128>(
+            *this, sc_core::sc_module_name(name.c_str()));
+}
+
+sc_gem5::TlmToGem5Bridge<256> *
+TlmToGem5Bridge256Params::create() const
+{
+    return new sc_gem5::TlmToGem5Bridge<256>(
+            *this, sc_core::sc_module_name(name.c_str()));
+}
+
+sc_gem5::TlmToGem5Bridge<512> *
+TlmToGem5Bridge512Params::create() const
+{
+    return new sc_gem5::TlmToGem5Bridge<512>(
             *this, sc_core::sc_module_name(name.c_str()));
 }
