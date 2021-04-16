@@ -345,8 +345,6 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
             fatal("The MI_example protocol cannot implement Load/Store "
                   "Exclusive operations. Multicore ARM systems configured "
                   "with the MI_example protocol will not work properly.")
-        warn("You are trying to use Ruby on ARM, which is not working "
-             "properly yet.")
 
     return self
 
