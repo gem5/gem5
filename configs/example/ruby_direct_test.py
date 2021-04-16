@@ -29,7 +29,7 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
-import os, optparse, sys
+import os, argparse, sys
 
 addToPath('../')
 
@@ -41,60 +41,56 @@ config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 m5_root = os.path.dirname(config_root)
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 Options.addNoISAOptions(parser)
 
-parser.add_option("--requests", metavar="N", default=100,
-                  help="Stop after N requests")
-parser.add_option("-f", "--wakeup_freq", metavar="N", default=10,
-                  help="Wakeup every N cycles")
-parser.add_option("--test-type", type="choice", default="SeriesGetx",
-                  choices = ["SeriesGetx", "SeriesGets", "SeriesGetMixed",
-                             "Invalidate"],
-                  help = "Type of test")
-parser.add_option("--percent-writes", type="int", default=100,
-                  help="percentage of accesses that should be writes")
+parser.add_argument("--requests", metavar="N", default=100,
+                    help="Stop after N requests")
+parser.add_argument("-f", "--wakeup_freq", metavar="N", default=10,
+                    help="Wakeup every N cycles")
+parser.add_argument("--test-type", default="SeriesGetx",
+                    choices = ["SeriesGetx", "SeriesGets", "SeriesGetMixed",
+                               "Invalidate"],
+                    help = "Type of test")
+parser.add_argument("--percent-writes", type=int, default=100,
+                    help="percentage of accesses that should be writes")
 
 #
-# Add the ruby specific and protocol specific options
+# Add the ruby specific and protocol specific args
 #
 Ruby.define_options(parser)
-(options, args) = parser.parse_args()
-
-if args:
-     print("Error: script doesn't take any positional arguments")
-     sys.exit(1)
+args = parser.parse_args()
 
 #
 # Select the direct test generator
 #
-if options.test_type == "SeriesGetx":
-    generator = SeriesRequestGenerator(num_cpus = options.num_cpus,
+if args.test_type == "SeriesGetx":
+    generator = SeriesRequestGenerator(num_cpus = args.num_cpus,
                                        percent_writes = 100)
-elif options.test_type == "SeriesGets":
-    generator = SeriesRequestGenerator(num_cpus = options.num_cpus,
+elif args.test_type == "SeriesGets":
+    generator = SeriesRequestGenerator(num_cpus = args.num_cpus,
                                        percent_writes = 0)
-elif options.test_type == "SeriesGetMixed":
-    generator = SeriesRequestGenerator(num_cpus = options.num_cpus,
-                                       percent_writes = options.percent_writes)
-elif options.test_type == "Invalidate":
-    generator = InvalidateGenerator(num_cpus = options.num_cpus)
+elif args.test_type == "SeriesGetMixed":
+    generator = SeriesRequestGenerator(num_cpus = args.num_cpus,
+                                       percent_writes = args.percent_writes)
+elif args.test_type == "Invalidate":
+    generator = InvalidateGenerator(num_cpus = args.num_cpus)
 else:
     print("Error: unknown direct test generator")
     sys.exit(1)
 
 # Create the M5 system.
-system = System(mem_ranges = [AddrRange(options.mem_size)])
+system = System(mem_ranges = [AddrRange(args.mem_size)])
 
 
 # Create a top-level voltage domain and clock domain
-system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
 
-system.clk_domain = SrcClockDomain(clock = options.sys_clock,
+system.clk_domain = SrcClockDomain(clock = args.sys_clock,
                                    voltage_domain = system.voltage_domain)
 
 # Create the ruby random tester
-system.cpu = RubyDirectedTester(requests_to_complete = options.requests,
+system.cpu = RubyDirectedTester(requests_to_complete = args.requests,
                                 generator = generator)
 
 # the ruby tester reuses num_cpus to specify the
@@ -102,14 +98,14 @@ system.cpu = RubyDirectedTester(requests_to_complete = options.requests,
 # is stored in system.cpu. because there is only ever one
 # tester object, num_cpus is not necessarily equal to the
 # size of system.cpu
-cpu_list = [ system.cpu ] * options.num_cpus
-Ruby.create_system(options, False, system, cpus=cpu_list)
+cpu_list = [ system.cpu ] * args.num_cpus
+Ruby.create_system(args, False, system, cpus=cpu_list)
 
 # Since Ruby runs at an independent frequency, create a seperate clock
-system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
+system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
                                         voltage_domain = system.voltage_domain)
 
-assert(options.num_cpus == len(system.ruby._cpu_ports))
+assert(args.num_cpus == len(system.ruby._cpu_ports))
 
 for ruby_port in system.ruby._cpu_ports:
     #
@@ -131,6 +127,6 @@ m5.ticks.setGlobalFrequency('1ns')
 m5.instantiate()
 
 # simulate until program terminates
-exit_event = m5.simulate(options.abs_max_tick)
+exit_event = m5.simulate(args.abs_max_tick)
 
 print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())

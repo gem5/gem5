@@ -44,11 +44,11 @@ class L2Cache(RubyCache): pass
 class ProbeFilter(RubyCache): pass
 
 def define_options(parser):
-    parser.add_option("--allow-atomic-migration", action="store_true",
+    parser.add_argument("--allow-atomic-migration", action="store_true",
           help="allow migratory sharing for atomic only accessed blocks")
-    parser.add_option("--pf-on", action="store_true",
+    parser.add_argument("--pf-on", action="store_true",
           help="Hammer: enable Probe Filter")
-    parser.add_option("--dir-on", action="store_true",
+    parser.add_argument("--dir-on", action="store_true",
           help="Hammer: enable Full-bit Directory")
 
 def create_system(options, full_system, system, dma_ports, bootmem,

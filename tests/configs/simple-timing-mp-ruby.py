@@ -28,39 +28,39 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
-import os, optparse, sys
+import os, argparse, sys
 
 m5.util.addToPath('../configs/')
 
 from common import Options
 from ruby import Ruby
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 
 # Add the ruby specific and protocol specific options
 Ruby.define_options(parser)
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
 #
 # Set the default cache size and associativity to be very small to encourage
 # races between requests and writebacks.
 #
-options.l1d_size="256B"
-options.l1i_size="256B"
-options.l2_size="512B"
-options.l3_size="1kB"
-options.l1d_assoc=2
-options.l1i_assoc=2
-options.l2_assoc=2
-options.l3_assoc=2
+args.l1d_size="256B"
+args.l1i_size="256B"
+args.l2_size="512B"
+args.l3_size="1kB"
+args.l1d_assoc=2
+args.l1i_assoc=2
+args.l2_assoc=2
+args.l3_assoc=2
 
 nb_cores = 4
 cpus = [ TimingSimpleCPU(cpu_id=i) for i in range(nb_cores) ]
 
 # overwrite the num_cpus to equal nb_cores
-options.num_cpus = nb_cores
+args.num_cpus = nb_cores
 
 # system simulated
 system = System(cpu = cpus, clk_domain = SrcClockDomain(clock = '1GHz'))
@@ -69,12 +69,12 @@ system = System(cpu = cpus, clk_domain = SrcClockDomain(clock = '1GHz'))
 # CPUs frequency
 system.cpu.clk_domain = SrcClockDomain(clock = '2GHz')
 
-Ruby.create_system(options, False, system)
+Ruby.create_system(args, False, system)
 
 # Create a separate clock domain for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock)
+system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock)
 
-assert(options.num_cpus == len(system.ruby._cpu_ports))
+assert(args.num_cpus == len(system.ruby._cpu_ports))
 
 for (i, cpu) in enumerate(system.cpu):
     # create the interrupt controller

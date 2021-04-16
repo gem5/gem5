@@ -43,7 +43,6 @@ parser.add_argument('--cpu-type', choices=['atomic', 'kvm', 'o3', 'simple',])
 parser.add_argument('--num-cpus', type=int)
 parser.add_argument('--boot-type', choices=['init', 'systemd',])
 
-#(options, args) = parser.parse_args()
 args = parser.parse_args()
 
 # create the system we are going to simulate

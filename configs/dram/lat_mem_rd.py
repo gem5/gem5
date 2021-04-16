@@ -34,7 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import gzip
-import optparse
+import argparse
 import os
 
 import m5
@@ -77,22 +77,18 @@ except:
         print("Failed to import packet proto definitions")
         exit(-1)
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 
-parser.add_option("--mem-type", type="choice", default="DDR3_1600_8x8",
-                  choices=ObjectList.mem_list.get_names(),
-                  help = "type of memory to use")
-parser.add_option("--mem-size", action="store", type="string",
-                  default="16MB",
-                  help="Specify the memory size")
-parser.add_option("--reuse-trace", action="store_true",
-                  help="Prevent generation of traces and reuse existing")
+parser.add_argument("--mem-type", default="DDR3_1600_8x8",
+                    choices=ObjectList.mem_list.get_names(),
+                    help = "type of memory to use")
+parser.add_argument("--mem-size", action="store", type=str,
+                    default="16MB",
+                    help="Specify the memory size")
+parser.add_argument("--reuse-trace", action="store_true",
+                    help="Prevent generation of traces and reuse existing")
 
-(options, args) = parser.parse_args()
-
-if args:
-    print("Error: script doesn't take any positional arguments")
-    sys.exit(1)
+args = parser.parse_args()
 
 # start by creating the system itself, using a multi-layer 2.0 GHz
 # crossbar, delivering 64 bytes / 3 cycles (one header cycle) which
@@ -102,20 +98,20 @@ system.clk_domain = SrcClockDomain(clock = '2.0GHz',
                                    voltage_domain =
                                    VoltageDomain(voltage = '1V'))
 
-mem_range = AddrRange(options.mem_size)
+mem_range = AddrRange(args.mem_size)
 system.mem_ranges = [mem_range]
 
 # do not worry about reserving space for the backing store
 system.mmap_using_noreserve = True
 
-# currently not exposed as command-line options, set here for now
-options.mem_channels = 1
-options.mem_ranks = 1
-options.external_memory_system = 0
-options.tlm_memory = 0
-options.elastic_trace_en = 0
+# currently not exposed as command-line args, set here for now
+args.mem_channels = 1
+args.mem_ranks = 1
+args.external_memory_system = 0
+args.tlm_memory = 0
+args.elastic_trace_en = 0
 
-MemConfig.config_mem(options, system)
+MemConfig.config_mem(args, system)
 
 # there is no point slowing things down by saving any data
 for ctrl in system.mem_ctrls:
@@ -218,7 +214,7 @@ for r in ranges:
     filename = os.path.join(m5.options.outdir,
                             'lat_mem_rd%d.trc.gz' % nxt_range)
 
-    if not options.reuse_trace:
+    if not args.reuse_trace:
         # create the actual random trace for this range
         create_trace(filename, r, burst_size, itt)
 

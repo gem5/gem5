@@ -29,34 +29,34 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
-import os, optparse, sys
+import os, argparse, sys
 
 m5.util.addToPath('../configs/')
 
 from ruby import Ruby
 from common import Options
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 Options.addNoISAOptions(parser)
 
 # Add the ruby specific and protocol specific options
 Ruby.define_options(parser)
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
 #
 # Set the default cache size and associativity to be very small to encourage
 # races between requests and writebacks.
 #
-options.l1d_size="256B"
-options.l1i_size="256B"
-options.l2_size="512B"
-options.l3_size="1kB"
-options.l1d_assoc=2
-options.l1i_assoc=2
-options.l2_assoc=2
-options.l3_assoc=2
-options.ports=32
+args.l1d_size="256B"
+args.l1i_size="256B"
+args.l2_size="512B"
+args.l3_size="1kB"
+args.l1d_assoc=2
+args.l1i_assoc=2
+args.l2_assoc=2
+args.l3_assoc=2
+args.ports=32
 
 # Turn on flush check for the hammer protocol
 check_flush = False
@@ -67,14 +67,14 @@ if buildEnv['PROTOCOL'] == 'MOESI_hammer':
 # create the tester and system, including ruby
 #
 tester = RubyTester(check_flush = check_flush, checks_to_complete = 100,
-                    wakeup_frequency = 10, num_cpus = options.num_cpus)
+                    wakeup_frequency = 10, num_cpus = args.num_cpus)
 
 # We set the testers as cpu for ruby to find the correct clock domains
 # for the L1 Objects.
 system = System(cpu = tester)
 
 # Dummy voltage domain for all our clock domains
-system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
 system.clk_domain = SrcClockDomain(clock = '1GHz',
                                    voltage_domain = system.voltage_domain)
 
@@ -85,14 +85,14 @@ system.mem_ranges = AddrRange('256MB')
 # is stored in system.cpu. because there is only ever one
 # tester object, num_cpus is not necessarily equal to the
 # size of system.cpu
-cpu_list = [ system.cpu ] * options.num_cpus
-Ruby.create_system(options, False, system, cpus=cpu_list)
+cpu_list = [ system.cpu ] * args.num_cpus
+Ruby.create_system(args, False, system, cpus=cpu_list)
 
 # Create a separate clock domain for Ruby
 system.ruby.clk_domain = SrcClockDomain(clock = '1GHz',
                                         voltage_domain = system.voltage_domain)
 
-assert(options.num_cpus == len(system.ruby._cpu_ports))
+assert(args.num_cpus == len(system.ruby._cpu_ports))
 
 tester.num_cpus = len(system.ruby._cpu_ports)
 

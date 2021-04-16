@@ -36,7 +36,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import optparse
+import argparse
 import random
 import sys
 
@@ -51,17 +51,18 @@ from m5.objects import *
 # arbitrarily deep cache hierarchies, sharing or no sharing of caches,
 # and testers not only at the L1s, but also at the L2s, L3s etc.
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_option("-a", "--atomic", action="store_true",
-                  help="Use atomic (non-timing) mode")
-parser.add_option("-b", "--blocking", action="store_true",
-                  help="Use blocking caches")
-parser.add_option("-l", "--maxloads", metavar="N", default=0,
-                  help="Stop after N loads")
-parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
-                  metavar="T",
-                  help="Stop after T ticks")
+parser.add_argument("-a", "--atomic", action="store_true",
+                    help="Use atomic (non-timing) mode")
+parser.add_argument("-b", "--blocking", action="store_true",
+                    help="Use blocking caches")
+parser.add_argument("-l", "--maxloads", metavar="N", default=0,
+                    help="Stop after N loads")
+parser.add_argument("-m", "--maxtick", type=int, default=m5.MaxTick,
+                    metavar="T",
+                    help="Stop after T ticks")
 
 # The tree specification consists of two colon-separated lists of one
 # or more integers, one for the caches, and one for the testers. The
@@ -74,40 +75,31 @@ parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
 # cache string as there should always be testers attached to the
 # uppermost caches.
 
-parser.add_option("-c", "--caches", type="string", default="2:2:1",
-                  help="Colon-separated cache hierarchy specification, "
-                  "see script comments for details "
-                  "[default: %default]")
-parser.add_option("--noncoherent-cache", action="store_true",
-                  help="Adds a non-coherent, last-level cache")
-parser.add_option("-t", "--testers", type="string", default="1:1:0:2",
-                  help="Colon-separated tester hierarchy specification, "
-                  "see script comments for details "
-                  "[default: %default]")
-parser.add_option("-f", "--functional", type="int", default=10,
-                  metavar="PCT",
-                  help="Target percentage of functional accesses "
-                  "[default: %default]")
-parser.add_option("-u", "--uncacheable", type="int", default=10,
-                  metavar="PCT",
-                  help="Target percentage of uncacheable accesses "
-                  "[default: %default]")
-parser.add_option("-r", "--random", action="store_true",
-                  help="Generate a random tree topology")
-parser.add_option("--progress", type="int", default=100000,
-                  metavar="NLOADS",
-                  help="Progress message interval "
-                  "[default: %default]")
-parser.add_option("--sys-clock", action="store", type="string",
-                  default='1GHz',
-                  help = """Top-level clock for blocks running at system
+parser.add_argument("-c", "--caches", type=str, default="2:2:1",
+                    help="Colon-separated cache hierarchy specification, "
+                    "see script comments for details ")
+parser.add_argument("--noncoherent-cache", action="store_true",
+                    help="Adds a non-coherent, last-level cache")
+parser.add_argument("-t", "--testers", type=str, default="1:1:0:2",
+                    help="Colon-separated tester hierarchy specification, "
+                    "see script comments for details ")
+parser.add_argument("-f", "--functional", type=int, default=10,
+                    metavar="PCT",
+                    help="Target percentage of functional accesses ")
+parser.add_argument("-u", "--uncacheable", type=int, default=10,
+                    metavar="PCT",
+                    help="Target percentage of uncacheable accesses ")
+parser.add_argument("-r", "--random", action="store_true",
+                    help="Generate a random tree topology")
+parser.add_argument("--progress", type=int, default=100000,
+                    metavar="NLOADS",
+                    help="Progress message interval ")
+parser.add_argument("--sys-clock", action="store", type=str,
+                    default='1GHz',
+                    help="""Top-level clock for blocks running at system
                   speed""")
 
-(options, args) = parser.parse_args()
-
-if args:
-     print("Error: script doesn't take any positional arguments")
-     sys.exit(1)
+args = parser.parse_args()
 
 # Get the total number of testers
 def numtesters(cachespec, testerspec):
@@ -125,9 +117,9 @@ def numtesters(cachespec, testerspec):
 
 block_size = 64
 
-# Start by parsing the command line options and do some basic sanity
+# Start by parsing the command line args and do some basic sanity
 # checking
-if options.random:
+if args.random:
      # Generate a tree with a valid number of testers
      while True:
           tree_depth = random.randint(1, 4)
@@ -140,8 +132,8 @@ if options.random:
          "-t", ':'.join(map(str, testerspec)))
 else:
      try:
-          cachespec = [int(x) for x in options.caches.split(':')]
-          testerspec = [int(x) for x in options.testers.split(':')]
+          cachespec = [int(x) for x in args.caches.split(':')]
+          testerspec = [int(x) for x in args.testers.split(':')]
      except:
           print("Error: Unable to parse caches or testers option")
           sys.exit(1)
@@ -179,7 +171,7 @@ proto_l1 = Cache(size = '32kB', assoc = 4,
                  tgts_per_mshr = 8, clusivity = 'mostly_incl',
                  writeback_clean = True)
 
-if options.blocking:
+if args.blocking:
      proto_l1.mshrs = 1
 else:
      proto_l1.mshrs = 4
@@ -211,10 +203,10 @@ for scale in cachespec[:-1]:
      cache_proto.insert(0, next)
 
 # Make a prototype for the tester to be used throughout
-proto_tester = MemTest(max_loads = options.maxloads,
-                       percent_functional = options.functional,
-                       percent_uncacheable = options.uncacheable,
-                       progress_interval = options.progress)
+proto_tester = MemTest(max_loads = args.maxloads,
+                       percent_functional = args.functional,
+                       percent_uncacheable = args.uncacheable,
+                       progress_interval = args.progress)
 
 # Set up the system along with a simple memory and reference memory
 system = System(physmem = SimpleMemory(),
@@ -222,7 +214,7 @@ system = System(physmem = SimpleMemory(),
 
 system.voltage_domain = VoltageDomain(voltage = '1V')
 
-system.clk_domain = SrcClockDomain(clock =  options.sys_clock,
+system.clk_domain = SrcClockDomain(clock =  args.sys_clock,
                         voltage_domain = system.voltage_domain)
 
 # For each level, track the next subsys index to use
@@ -300,7 +292,7 @@ make_cache_level(cachespec, cache_proto, len(cachespec), None)
 # controller
 last_subsys = getattr(system, 'l%dsubsys0' % len(cachespec))
 last_subsys.xbar.point_of_coherency = True
-if options.noncoherent_cache:
+if args.noncoherent_cache:
      system.llc = NoncoherentCache(size = '16MB', assoc = 16, tag_latency = 10,
                                    data_latency = 10, sequential_access = True,
                                    response_latency = 20, tgts_per_mshr = 8,
@@ -311,7 +303,7 @@ else:
      last_subsys.xbar.master = system.physmem.port
 
 root = Root(full_system = False, system = system)
-if options.atomic:
+if args.atomic:
     root.system.mem_mode = 'atomic'
 else:
     root.system.mem_mode = 'timing'
@@ -324,6 +316,6 @@ root.system.system_port = last_subsys.xbar.slave
 m5.instantiate()
 
 # Simulate until program terminates
-exit_event = m5.simulate(options.maxtick)
+exit_event = m5.simulate(args.maxtick)
 
 print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())

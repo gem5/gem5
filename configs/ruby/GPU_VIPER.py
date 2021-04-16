@@ -345,54 +345,56 @@ class DirCntrl(Directory_Controller, CntrlBase):
         self.probeToL3 = probe_to_l3
         self.respToL3 = resp_to_l3
 
+
 def define_options(parser):
-    parser.add_option("--num-subcaches", type = "int", default = 4)
-    parser.add_option("--l3-data-latency", type = "int", default = 20)
-    parser.add_option("--l3-tag-latency", type = "int", default = 15)
-    parser.add_option("--cpu-to-dir-latency", type = "int", default = 120)
-    parser.add_option("--gpu-to-dir-latency", type = "int", default = 120)
-    parser.add_option("--no-resource-stalls", action = "store_false",
-                      default = True)
-    parser.add_option("--no-tcc-resource-stalls", action = "store_false",
-                      default = True)
-    parser.add_option("--use-L3-on-WT", action = "store_true", default = False)
-    parser.add_option("--num-tbes", type = "int", default = 256)
-    parser.add_option("--l2-latency", type = "int", default = 50)  # load to use
-    parser.add_option("--num-tccs", type = "int", default = 1,
-                      help = "number of TCC banks in the GPU")
-    parser.add_option("--sqc-size", type = 'string', default = '32kB',
-                      help = "SQC cache size")
-    parser.add_option("--sqc-assoc", type = 'int', default = 8,
-                      help = "SQC cache assoc")
-    parser.add_option("--sqc-deadlock-threshold", type='int',
-                      help="Set the SQC deadlock threshold to some value")
+    parser.add_argument("--num-subcaches", type=int, default=4)
+    parser.add_argument("--l3-data-latency", type=int, default=20)
+    parser.add_argument("--l3-tag-latency", type=int, default=15)
+    parser.add_argument("--cpu-to-dir-latency", type=int, default=120)
+    parser.add_argument("--gpu-to-dir-latency", type=int, default=120)
+    parser.add_argument("--no-resource-stalls", action="store_false",
+                        default=True)
+    parser.add_argument("--no-tcc-resource-stalls", action="store_false",
+                        default=True)
+    parser.add_argument("--use-L3-on-WT", action="store_true", default=False)
+    parser.add_argument("--num-tbes", type=int, default=256)
+    parser.add_argument("--l2-latency", type=int, default=50)  # load to use
+    parser.add_argument("--num-tccs", type=int, default=1,
+                        help="number of TCC banks in the GPU")
+    parser.add_argument("--sqc-size", type=str, default='32kB',
+                        help="SQC cache size")
+    parser.add_argument("--sqc-assoc", type=int, default=8,
+                        help="SQC cache assoc")
+    parser.add_argument("--sqc-deadlock-threshold", type=int,
+                        help="Set the SQC deadlock threshold to some value")
 
-    parser.add_option("--WB_L1", action = "store_true", default = False,
-                      help = "writeback L1")
-    parser.add_option("--WB_L2", action = "store_true", default = False,
-                      help = "writeback L2")
-    parser.add_option("--TCP_latency", type = "int", default = 4,
-                      help = "TCP latency")
-    parser.add_option("--TCC_latency", type = "int", default = 16,
-                      help = "TCC latency")
-    parser.add_option("--tcc-size", type = 'string', default = '256kB',
-                      help = "agregate tcc size")
-    parser.add_option("--tcc-assoc", type = 'int', default = 16,
-                      help = "tcc assoc")
-    parser.add_option("--tcp-size", type = 'string', default = '16kB',
-                      help = "tcp size")
-    parser.add_option("--tcp-assoc", type = 'int', default = 16,
-                      help = "tcp assoc")
-    parser.add_option("--tcp-deadlock-threshold", type='int',
-                      help="Set the TCP deadlock threshold to some value")
-    parser.add_option("--max-coalesces-per-cycle", type="int", default=1,
-                      help="Maximum insts that may coalesce in a cycle");
+    parser.add_argument("--WB_L1", action="store_true", default=False,
+                        help="writeback L1")
+    parser.add_argument("--WB_L2", action="store_true", default=False,
+                        help="writeback L2")
+    parser.add_argument("--TCP_latency", type=int, default=4,
+                        help="TCP latency")
+    parser.add_argument("--TCC_latency", type=int, default=16,
+                        help="TCC latency")
+    parser.add_argument("--tcc-size", type=str, default='256kB',
+                        help="agregate tcc size")
+    parser.add_argument("--tcc-assoc", type=int, default=16,
+                        help="tcc assoc")
+    parser.add_argument("--tcp-size", type=str, default='16kB',
+                        help="tcp size")
+    parser.add_argument("--tcp-assoc", type=int, default=16,
+                        help="tcp assoc")
+    parser.add_argument("--tcp-deadlock-threshold", type=int,
+                        help="Set the TCP deadlock threshold to some value")
+    parser.add_argument("--max-coalesces-per-cycle", type=int, default=1,
+                        help="Maximum insts that may coalesce in a cycle")
 
-    parser.add_option("--noL1", action = "store_true", default = False,
-                      help = "bypassL1")
-    parser.add_option("--scalar-buffer-size", type = 'int', default = 128,
-                      help="Size of the mandatory queue in the GPU scalar "
-                      "cache controller")
+    parser.add_argument("--noL1", action="store_true", default=False,
+                        help="bypassL1")
+    parser.add_argument("--scalar-buffer-size", type=int, default=128,
+                        help="Size of the mandatory queue in the GPU scalar "
+                        "cache controller")
+
 
 def create_system(options, full_system, system, dma_devices, bootmem,
                   ruby_system, cpus):

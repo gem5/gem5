@@ -27,7 +27,7 @@
 # This is an example of an n port network switch to work in dist-gem5.
 # Users can extend this to have different different topologies
 
-import optparse
+import argparse
 import sys
 
 import m5
@@ -40,22 +40,22 @@ addToPath('../')
 from common import Simulation
 from common import Options
 
-def build_switch(options):
+def build_switch(args):
     # instantiate an EtherSwitch
     switch = EtherSwitch()
     # instantiate distEtherLinks to connect switch ports
     # to other gem5 instances
-    switch.portlink = [DistEtherLink(speed = options.ethernet_linkspeed,
-                                      delay = options.ethernet_linkdelay,
-                                      dist_rank = options.dist_rank,
-                                      dist_size = options.dist_size,
-                                      server_name = options.dist_server_name,
-                                      server_port = options.dist_server_port,
-                                      sync_start = options.dist_sync_start,
-                                      sync_repeat = options.dist_sync_repeat,
+    switch.portlink = [DistEtherLink(speed = args.ethernet_linkspeed,
+                                      delay = args.ethernet_linkdelay,
+                                      dist_rank = args.dist_rank,
+                                      dist_size = args.dist_size,
+                                      server_name = args.dist_server_name,
+                                      server_port = args.dist_server_port,
+                                      sync_start = args.dist_sync_start,
+                                      sync_repeat = args.dist_sync_repeat,
                                       is_switch = True,
-                                      num_nodes = options.dist_size)
-                       for i in range(options.dist_size)]
+                                      num_nodes = args.dist_size)
+                       for i in range(args.dist_size)]
 
     for (i, link) in enumerate(switch.portlink):
         link.int0 = switch.interface[i]
@@ -64,14 +64,14 @@ def build_switch(options):
 
 def main():
     # Add options
-    parser = optparse.OptionParser()
+    parser = argparse.ArgumentParser()
     Options.addCommonOptions(parser)
     Options.addFSOptions(parser)
-    (options, args) = parser.parse_args()
+    args = parser.parse_args()
 
-    system = build_switch(options)
+    system = build_switch(args)
     root = Root(full_system = True, system = system)
-    Simulation.run(options, root, None, None)
+    Simulation.run(args, root, None, None)
 
 if __name__ == "__m5_main__":
     main()

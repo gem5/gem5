@@ -34,44 +34,52 @@ def define_options(parser):
     # By default, ruby uses the simple timing cpu
     parser.set_defaults(cpu_type="TimingSimpleCPU")
 
-    parser.add_option("--topology", type="string", default="Crossbar",
-                      help="check configs/topologies for complete set")
-    parser.add_option("--mesh-rows", type="int", default=0,
-                      help="the number of rows in the mesh topology")
-    parser.add_option("--network", type="choice", default="simple",
-                      choices=['simple', 'garnet'],
-                      help="""'simple'|'garnet' (garnet2.0 will be
-                      deprecated.)""")
-    parser.add_option("--router-latency", action="store", type="int",
-                      default=1,
-                      help="""number of pipeline stages in the garnet router.
-                            Has to be >= 1.
-                            Can be over-ridden on a per router basis
-                            in the topology file.""")
-    parser.add_option("--link-latency", action="store", type="int", default=1,
-                      help="""latency of each link the simple/garnet networks.
-                            Has to be >= 1.
-                            Can be over-ridden on a per link basis
-                            in the topology file.""")
-    parser.add_option("--link-width-bits", action="store", type="int",
-                      default=128,
-                      help="width in bits for all links inside garnet.")
-    parser.add_option("--vcs-per-vnet", action="store", type="int", default=4,
-                      help="""number of virtual channels per virtual network
-                            inside garnet network.""")
-    parser.add_option("--routing-algorithm", action="store", type="int",
-                      default=0,
-                      help="""routing algorithm in network.
-                            0: weight-based table
-                            1: XY (for Mesh. see garnet/RoutingUnit.cc)
-                            2: Custom (see garnet/RoutingUnit.cc""")
-    parser.add_option("--network-fault-model", action="store_true",
-                      default=False,
-                      help="""enable network fault model:
-                            see src/mem/ruby/network/fault_model/""")
-    parser.add_option("--garnet-deadlock-threshold", action="store",
-                      type="int", default=50000,
-                      help="network-level deadlock threshold.")
+    parser.add_argument(
+        "--topology", type=str, default="Crossbar",
+        help="check configs/topologies for complete set")
+    parser.add_argument(
+        "--mesh-rows", type=int, default=0,
+        help="the number of rows in the mesh topology")
+    parser.add_argument(
+        "--network", default="simple",
+        choices=['simple', 'garnet'],
+        help="""'simple'|'garnet' (garnet2.0 will be deprecated.)""")
+    parser.add_argument(
+        "--router-latency", action="store", type=int,
+        default=1,
+        help="""number of pipeline stages in the garnet router.
+            Has to be >= 1.
+            Can be over-ridden on a per router basis
+            in the topology file.""")
+    parser.add_argument(
+        "--link-latency", action="store", type=int, default=1,
+        help="""latency of each link the simple/garnet networks.
+        Has to be >= 1. Can be over-ridden on a per link basis
+        in the topology file.""")
+    parser.add_argument(
+        "--link-width-bits", action="store", type=int,
+        default=128,
+        help="width in bits for all links inside garnet.")
+    parser.add_argument(
+        "--vcs-per-vnet", action="store", type=int, default=4,
+        help="""number of virtual channels per virtual network
+            inside garnet network.""")
+    parser.add_argument(
+        "--routing-algorithm", action="store", type=int,
+        default=0,
+        help="""routing algorithm in network.
+            0: weight-based table
+            1: XY (for Mesh. see garnet/RoutingUnit.cc)
+            2: Custom (see garnet/RoutingUnit.cc""")
+    parser.add_argument(
+        "--network-fault-model", action="store_true",
+        default=False,
+        help="""enable network fault model:
+            see src/mem/ruby/network/fault_model/""")
+    parser.add_argument(
+        "--garnet-deadlock-threshold", action="store",
+        type=int, default=50000,
+        help="network-level deadlock threshold.")
 
 def create_network(options, ruby):
 

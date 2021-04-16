@@ -197,14 +197,14 @@ class DirCntrl(Directory_Controller, CntrlBase):
         self.respToL3 = resp_to_l3
 
 def define_options(parser):
-    parser.add_option("--num-subcaches", type="int", default=4)
-    parser.add_option("--l3-data-latency", type="int", default=20)
-    parser.add_option("--l3-tag-latency", type="int", default=15)
-    parser.add_option("--cpu-to-dir-latency", type="int", default=15)
-    parser.add_option("--no-resource-stalls", action="store_false",
-                      default=True)
-    parser.add_option("--num-tbes", type="int", default=256)
-    parser.add_option("--l2-latency", type="int", default=50) # load to use
+    parser.add_argument("--num-subcaches", type=int, default=4)
+    parser.add_argument("--l3-data-latency", type=int, default=20)
+    parser.add_argument("--l3-tag-latency", type=int, default=15)
+    parser.add_argument("--cpu-to-dir-latency", type=int, default=15)
+    parser.add_argument("--no-resource-stalls", action="store_false",
+                        default=True)
+    parser.add_argument("--num-tbes", type=int, default=256)
+    parser.add_argument("--l2-latency", type=int, default=50) # load to use
 
 def create_system(options, full_system, system, dma_devices, bootmem,
                   ruby_system):

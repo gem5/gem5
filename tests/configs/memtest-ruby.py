@@ -29,34 +29,34 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
-import os, optparse, sys
+import os, argparse, sys
 
 m5.util.addToPath('../configs/')
 
 from ruby import Ruby
 from common import Options
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 
 # Add the ruby specific and protocol specific options
 Ruby.define_options(parser)
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
 #
 # Set the default cache size and associativity to be very small to encourage
 # races between requests and writebacks.
 #
-options.l1d_size="256B"
-options.l1i_size="256B"
-options.l2_size="512B"
-options.l3_size="1kB"
-options.l1d_assoc=2
-options.l1i_assoc=2
-options.l2_assoc=2
-options.l3_assoc=2
-options.ports=32
+args.l1d_size="256B"
+args.l1i_size="256B"
+args.l2_size="512B"
+args.l3_size="1kB"
+args.l1d_assoc=2
+args.l1i_assoc=2
+args.l2_assoc=2
+args.l3_assoc=2
+args.ports=32
 
 #MAX CORES IS 8 with the fals sharing method
 nb_cores = 8
@@ -66,8 +66,8 @@ cpus = [ MemTest(percent_functional=50,
                  percent_uncacheable=0, suppress_func_errors=True) \
          for i in range(nb_cores) ]
 
-# overwrite options.num_cpus with the nb_cores value
-options.num_cpus = nb_cores
+# overwrite args.num_cpus with the nb_cores value
+args.num_cpus = nb_cores
 
 # system simulated
 system = System(cpu = cpus)
@@ -87,10 +87,10 @@ for cpu in cpus:
 
 system.mem_ranges = AddrRange('256MB')
 
-Ruby.create_system(options, False, system)
+Ruby.create_system(args, False, system)
 
 # Create a separate clock domain for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
+system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
                                         voltage_domain = system.voltage_domain)
 
 assert(len(cpus) == len(system.ruby._cpu_ports))

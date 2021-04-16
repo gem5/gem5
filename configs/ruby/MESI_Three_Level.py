@@ -43,18 +43,20 @@ class L1Cache(RubyCache): pass
 class L2Cache(RubyCache): pass
 
 def define_options(parser):
-    parser.add_option("--num-clusters", type = "int", default = 1,
-            help = "number of clusters in a design in which there are shared\
+    parser.add_argument(
+        "--num-clusters", type=int, default=1,
+        help="number of clusters in a design in which there are shared\
             caches private to clusters")
-    parser.add_option("--l0i_size", type="string", default="4096B")
-    parser.add_option("--l0d_size", type="string", default="4096B")
-    parser.add_option("--l0i_assoc", type="int", default=1)
-    parser.add_option("--l0d_assoc", type="int", default=1)
-    parser.add_option("--l0_transitions_per_cycle", type="int", default=32)
-    parser.add_option("--l1_transitions_per_cycle", type="int", default=32)
-    parser.add_option("--l2_transitions_per_cycle", type="int", default=4)
-    parser.add_option("--enable-prefetch", action="store_true", default=False,\
-                        help="Enable Ruby hardware prefetcher")
+    parser.add_argument("--l0i_size", type=str, default="4096B")
+    parser.add_argument("--l0d_size", type=str, default="4096B")
+    parser.add_argument("--l0i_assoc", type=int, default=1)
+    parser.add_argument("--l0d_assoc", type=int, default=1)
+    parser.add_argument("--l0_transitions_per_cycle", type=int, default=32)
+    parser.add_argument("--l1_transitions_per_cycle", type=int, default=32)
+    parser.add_argument("--l2_transitions_per_cycle", type=int, default=4)
+    parser.add_argument(
+        "--enable-prefetch", action="store_true", default=False,
+        help="Enable Ruby hardware prefetcher")
     return
 
 def create_system(options, full_system, system, dma_ports, bootmem,

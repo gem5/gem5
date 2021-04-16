@@ -33,7 +33,7 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
-import os, optparse, sys
+import os, argparse, sys
 
 addToPath('../')
 
@@ -43,99 +43,95 @@ from ruby import Ruby
 #
 # Add the ruby specific and protocol specific options
 #
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 Options.addNoISAOptions(parser)
 Ruby.define_options(parser)
 
 # GPU Ruby tester options
-parser.add_option("--cache-size", type="choice", default="small",
-                  choices=["small", "large"],
-                  help="Cache sizes to use. Small encourages races between \
+parser.add_argument("--cache-size", default="small",
+                    choices=["small", "large"],
+                    help="Cache sizes to use. Small encourages races between \
                         requests and writebacks. Large stresses write-through \
                         and/or write-back GPU caches.")
-parser.add_option("--system-size", type="choice", default="small",
-                  choices=["small", "medium", "large"],
-                  help="This option defines how many CUs, CPUs and cache \
+parser.add_argument("--system-size", default="small",
+                    choices=["small", "medium", "large"],
+                    help="This option defines how many CUs, CPUs and cache \
                         components in the test system.")
-parser.add_option("--address-range", type="choice", default="small",
-                  choices=["small", "large"],
-                  help="This option defines the number of atomic \
+parser.add_argument("--address-range", default="small",
+                    choices=["small", "large"],
+                    help="This option defines the number of atomic \
                         locations that affects the working set's size. \
                         A small number of atomic locations encourage more \
                         races among threads. The large option stresses cache \
                         resources.")
-parser.add_option("--episode-length", type="choice", default="short",
-                  choices=["short", "medium", "long"],
-                  help="This option defines the number of LDs and \
+parser.add_argument("--episode-length", default="short",
+                    choices=["short", "medium", "long"],
+                    help="This option defines the number of LDs and \
                         STs in an episode. The small option encourages races \
                         between the start and end of an episode. The long \
                         option encourages races between LDs and STs in the \
                         same episode.")
-parser.add_option("--test-length", type="int", default=1,
-                  help="The number of episodes to be executed by each \
+parser.add_argument("--test-length", type=int, default=1,
+                    help="The number of episodes to be executed by each \
                         wavefront. This determines the maximum number, i.e., \
                         val X #WFs, of episodes to be executed in the test.")
-parser.add_option("--debug-tester", action='store_true',
-                  help="This option will turn on DRF checker")
-parser.add_option("--random-seed", type="int", default=0,
-                  help="Random seed number. Default value (i.e., 0) means \
+parser.add_argument("--debug-tester", action='store_true',
+                    help="This option will turn on DRF checker")
+parser.add_argument("--random-seed", type=int, default=0,
+                    help="Random seed number. Default value (i.e., 0) means \
                         using runtime-specific value")
-parser.add_option("--log-file", type="string", default="gpu-ruby-test.log")
-parser.add_option("--num-dmas", type="int", default=0,
-                  help="The number of DMA engines to use in tester config.")
+parser.add_argument("--log-file", type=str, default="gpu-ruby-test.log")
+parser.add_argument("--num-dmas", type=int, default=0,
+                    help="The number of DMA engines to use in tester config.")
 
-(options, args) = parser.parse_args()
-
-if args:
-     print("Error: script doesn't take any positional arguments")
-     sys.exit(1)
+args = parser.parse_args()
 
 #
 # Set up cache size - 2 options
 #   0: small cache
 #   1: large cache
 #
-if (options.cache_size == "small"):
-    options.tcp_size="256B"
-    options.tcp_assoc=2
-    options.tcc_size="1kB"
-    options.tcc_assoc=2
-elif (options.cache_size == "large"):
-    options.tcp_size="256kB"
-    options.tcp_assoc=16
-    options.tcc_size="1024kB"
-    options.tcc_assoc=16
+if (args.cache_size == "small"):
+    args.tcp_size="256B"
+    args.tcp_assoc=2
+    args.tcc_size="1kB"
+    args.tcc_assoc=2
+elif (args.cache_size == "large"):
+    args.tcp_size="256kB"
+    args.tcp_assoc=16
+    args.tcc_size="1024kB"
+    args.tcc_assoc=16
 
 #
 # Set up system size - 3 options
 #
-if (options.system_size == "small"):
+if (args.system_size == "small"):
     # 1 CU, 1 CPU, 1 SQC, 1 Scalar
-    options.wf_size = 1
-    options.wavefronts_per_cu = 1
-    options.num_cpus = 1
-    options.num_dmas = 1
-    options.cu_per_sqc = 1
-    options.cu_per_scalar_cache = 1
-    options.num_compute_units = 1
-elif (options.system_size == "medium"):
+    args.wf_size = 1
+    args.wavefronts_per_cu = 1
+    args.num_cpus = 1
+    args.num_dmas = 1
+    args.cu_per_sqc = 1
+    args.cu_per_scalar_cache = 1
+    args.num_compute_units = 1
+elif (args.system_size == "medium"):
     # 4 CUs, 4 CPUs, 1 SQCs, 1 Scalars
-    options.wf_size = 16
-    options.wavefronts_per_cu = 4
-    options.num_cpus = 4
-    options.num_dmas = 2
-    options.cu_per_sqc = 4
-    options.cu_per_scalar_cache = 4
-    options.num_compute_units = 4
-elif (options.system_size == "large"):
+    args.wf_size = 16
+    args.wavefronts_per_cu = 4
+    args.num_cpus = 4
+    args.num_dmas = 2
+    args.cu_per_sqc = 4
+    args.cu_per_scalar_cache = 4
+    args.num_compute_units = 4
+elif (args.system_size == "large"):
     # 8 CUs, 4 CPUs, 1 SQCs, 1 Scalars
-    options.wf_size = 32
-    options.wavefronts_per_cu = 4
-    options.num_cpus = 4
-    options.num_dmas = 4
-    options.cu_per_sqc = 4
-    options.cu_per_scalar_cache = 4
-    options.num_compute_units = 8
+    args.wf_size = 32
+    args.wavefronts_per_cu = 4
+    args.num_cpus = 4
+    args.num_dmas = 4
+    args.cu_per_sqc = 4
+    args.cu_per_scalar_cache = 4
+    args.num_compute_units = 8
 
 #
 # Set address range - 2 options
@@ -143,11 +139,11 @@ elif (options.system_size == "large"):
 #   level 1: large
 # Each location corresponds to a 4-byte piece of data
 #
-options.mem_size = '1024MB'
-if (options.address_range == "small"):
+args.mem_size = '1024MB'
+if (args.address_range == "small"):
     num_atomic_locs = 10
     num_regular_locs_per_atomic_loc = 10000
-elif (options.address_range == "large"):
+elif (args.address_range == "large"):
     num_atomic_locs = 100
     num_regular_locs_per_atomic_loc = 100000
 
@@ -157,11 +153,11 @@ elif (options.address_range == "large"):
 #   1: 100 actions
 #   2: 500 actions
 #
-if (options.episode_length == "short"):
+if (args.episode_length == "short"):
     eps_length = 10
-elif (options.episode_length == "medium"):
+elif (args.episode_length == "medium"):
     eps_length = 100
-elif (options.episode_length == "long"):
+elif (args.episode_length == "long"):
     eps_length = 500
 
 #
@@ -173,47 +169,47 @@ elif (options.episode_length == "long"):
 # to detect deadlock caused by Ruby protocol first before one caused by the
 # coalescer. Both units are in Ticks
 #
-options.cache_deadlock_threshold = 1e8
+args.cache_deadlock_threshold = 1e8
 tester_deadlock_threshold = 1e9
 
 # For now we're testing only GPU protocol, so we force num_cpus to be 0
-options.num_cpus = 0
+args.num_cpus = 0
 
 # Number of DMA engines
-n_DMAs = options.num_dmas
+n_DMAs = args.num_dmas
 
 # Number of CUs
-n_CUs = options.num_compute_units
+n_CUs = args.num_compute_units
 
 # Set test length, i.e., number of episodes per wavefront * #WFs.
 # Test length can be 1x#WFs, 10x#WFs, 100x#WFs, ...
-n_WFs = n_CUs * options.wavefronts_per_cu
-max_episodes = options.test_length * n_WFs
+n_WFs = n_CUs * args.wavefronts_per_cu
+max_episodes = args.test_length * n_WFs
 
 # Number of SQC and Scalar caches
-assert(n_CUs % options.cu_per_sqc == 0)
-n_SQCs = n_CUs // options.cu_per_sqc
-options.num_sqc = n_SQCs
+assert(n_CUs % args.cu_per_sqc == 0)
+n_SQCs = n_CUs // args.cu_per_sqc
+args.num_sqc = n_SQCs
 
-assert(options.cu_per_scalar_cache != 0)
-n_Scalars = n_CUs // options.cu_per_scalar_cache
-options.num_scalar_cache = n_Scalars
+assert(args.cu_per_scalar_cache != 0)
+n_Scalars = n_CUs // args.cu_per_scalar_cache
+args.num_scalar_cache = n_Scalars
 
 #
 # Create GPU Ruby random tester
 #
-tester = ProtocolTester(cus_per_sqc = options.cu_per_sqc,
-                        cus_per_scalar = options.cu_per_scalar_cache,
-                        wavefronts_per_cu = options.wavefronts_per_cu,
-                        workitems_per_wavefront = options.wf_size,
+tester = ProtocolTester(cus_per_sqc = args.cu_per_sqc,
+                        cus_per_scalar = args.cu_per_scalar_cache,
+                        wavefronts_per_cu = args.wavefronts_per_cu,
+                        workitems_per_wavefront = args.wf_size,
                         num_atomic_locations = num_atomic_locs,
                         num_normal_locs_per_atomic = \
                                           num_regular_locs_per_atomic_loc,
                         max_num_episodes = max_episodes,
                         episode_length = eps_length,
-                        debug_tester = options.debug_tester,
-                        random_seed = options.random_seed,
-                        log_file = options.log_file)
+                        debug_tester = args.debug_tester,
+                        random_seed = args.random_seed,
+                        log_file = args.log_file)
 
 #
 # Create a gem5 system. Note that the memory object isn't actually used by the
@@ -222,12 +218,12 @@ tester = ProtocolTester(cus_per_sqc = options.cu_per_sqc,
 # has physical ports to be connected to Ruby
 #
 system = System(cpu = tester,
-                mem_ranges = [AddrRange(options.mem_size)],
-                cache_line_size = options.cacheline_size,
+                mem_ranges = [AddrRange(args.mem_size)],
+                cache_line_size = args.cacheline_size,
                 mem_mode = 'timing')
 
-system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
-system.clk_domain = SrcClockDomain(clock = options.sys_clock,
+system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
+system.clk_domain = SrcClockDomain(clock = args.sys_clock,
                                    voltage_domain = system.voltage_domain)
 
 #
@@ -235,7 +231,7 @@ system.clk_domain = SrcClockDomain(clock = options.sys_clock,
 # kernels. Setting it to zero disables the VIPER protocol from creating
 # a command processor and its caches.
 #
-options.num_cp = 0
+args.num_cp = 0
 
 #
 # Make generic DMA sequencer for Ruby to use
@@ -254,8 +250,8 @@ system.dma_devices = dma_devices
 # is stored in system.cpu. because there is only ever one
 # tester object, num_cpus is not necessarily equal to the
 # size of system.cpu
-cpu_list = [ system.cpu ] * options.num_cpus
-Ruby.create_system(options = options, full_system = False,
+cpu_list = [ system.cpu ] * args.num_cpus
+Ruby.create_system(args, full_system = False,
                    system = system, dma_ports = system.dma_devices,
                    cpus = cpu_list)
 
@@ -340,7 +336,7 @@ for cu_idx in range(n_CUs):
     for wf_idx in range(tester.wavefronts_per_cu):
         wavefronts.append(GpuWavefront(thread_id = g_thread_idx,
                                          cu_id = cu_idx,
-                                         num_lanes = options.wf_size,
+                                         num_lanes = args.wf_size,
                                          clk_domain = thread_clock,
                                          deadlock_threshold = \
                                                 tester_deadlock_threshold))

@@ -39,14 +39,18 @@ class L1Cache(RubyCache): pass
 class L2Cache(RubyCache): pass
 
 def define_options(parser):
-    parser.add_option("--l1-retries", type="int", default=1,
-                      help="Token_CMP: # of l1 retries before going persistent")
-    parser.add_option("--timeout-latency", type="int", default=300,
-                      help="Token_CMP: cycles until issuing again");
-    parser.add_option("--disable-dyn-timeouts", action="store_true",
-          help="Token_CMP: disable dyanimc timeouts, use fixed latency instead")
-    parser.add_option("--allow-atomic-migration", action="store_true",
-          help="allow migratory sharing for atomic only accessed blocks")
+    parser.add_argument(
+        "--l1-retries", type=int, default=1,
+        help="Token_CMP: # of l1 retries before going persistent")
+    parser.add_argument(
+        "--timeout-latency", type=int, default=300,
+        help="Token_CMP: cycles until issuing again");
+    parser.add_argument(
+        "--disable-dyn-timeouts", action="store_true",
+        help="Token_CMP: disable dyanimc timeouts, use fixed latency instead")
+    parser.add_argument(
+        "--allow-atomic-migration", action="store_true",
+        help="allow migratory sharing for atomic only accessed blocks")
 
 def create_system(options, full_system, system, dma_ports, bootmem,
                   ruby_system, cpus):

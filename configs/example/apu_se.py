@@ -29,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import optparse, os, re, getpass
+import argparse, os, re, getpass
 import math
 import glob
 import inspect
@@ -69,118 +69,122 @@ def getOption(parser, opt_str):
     exec("return_value = parser.values.%s" % opt.dest)
     return return_value
 
+
 # Adding script options
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
 
-parser.add_option("--cpu-only-mode", action="store_true", default=False,
-                  help="APU mode. Used to take care of problems in "\
-                       "Ruby.py while running APU protocols")
-parser.add_option("-u", "--num-compute-units", type="int", default=4,
-                  help="number of GPU compute units"),
-parser.add_option("--num-cp", type="int", default=0,
-                  help="Number of GPU Command Processors (CP)")
-parser.add_option("--benchmark-root", help="Root of benchmark directory tree")
+parser.add_argument("--cpu-only-mode", action="store_true", default=False,
+                    help="APU mode. Used to take care of problems in "
+                    "Ruby.py while running APU protocols")
+parser.add_argument("-u", "--num-compute-units", type=int, default=4,
+                    help="number of GPU compute units"),
+parser.add_argument("--num-cp", type=int, default=0,
+                    help="Number of GPU Command Processors (CP)")
+parser.add_argument("--benchmark-root",
+                    help="Root of benchmark directory tree")
 
 # not super important now, but to avoid putting the number 4 everywhere, make
 # it an option/knob
-parser.add_option("--cu-per-sqc", type="int", default=4, help="number of CUs" \
-                  "sharing an SQC (icache, and thus icache TLB)")
-parser.add_option('--cu-per-scalar-cache', type='int', default=4,
-                  help='Number of CUs sharing a scalar cache')
-parser.add_option("--simds-per-cu", type="int", default=4, help="SIMD units" \
-                  "per CU")
-parser.add_option('--cu-per-sa', type='int', default=4,
-                  help='Number of CUs per shader array. This must be a '
-                  'multiple of options.cu-per-sqc and options.cu-per-scalar')
-parser.add_option('--sa-per-complex', type='int', default=1,
-                  help='Number of shader arrays per complex')
-parser.add_option('--num-gpu-complexes', type='int', default=1,
-                  help='Number of GPU complexes')
-parser.add_option("--wf-size", type="int", default=64,
-                  help="Wavefront size(in workitems)")
-parser.add_option("--sp-bypass-path-length", type="int", default=4, \
-                  help="Number of stages of bypass path in vector ALU for "
-                  "Single Precision ops")
-parser.add_option("--dp-bypass-path-length", type="int", default=4, \
-                  help="Number of stages of bypass path in vector ALU for "
-                  "Double Precision ops")
+parser.add_argument("--cu-per-sqc", type=int, default=4, help="number of CUs"
+                    "sharing an SQC (icache, and thus icache TLB)")
+parser.add_argument('--cu-per-scalar-cache', type=int, default=4,
+                    help='Number of CUs sharing a scalar cache')
+parser.add_argument("--simds-per-cu", type=int, default=4, help="SIMD units"
+                    "per CU")
+parser.add_argument('--cu-per-sa', type=int, default=4,
+                    help='Number of CUs per shader array. This must be a '
+                    'multiple of options.cu-per-sqc and options.cu-per-scalar')
+parser.add_argument('--sa-per-complex', type=int, default=1,
+                    help='Number of shader arrays per complex')
+parser.add_argument('--num-gpu-complexes', type=int, default=1,
+                    help='Number of GPU complexes')
+parser.add_argument("--wf-size", type=int, default=64,
+                    help="Wavefront size(in workitems)")
+parser.add_argument("--sp-bypass-path-length", type=int, default=4,
+                    help="Number of stages of bypass path in vector ALU for "
+                    "Single Precision ops")
+parser.add_argument("--dp-bypass-path-length", type=int, default=4,
+                    help="Number of stages of bypass path in vector ALU for "
+                    "Double Precision ops")
 # issue period per SIMD unit: number of cycles before issuing another vector
-parser.add_option("--issue-period", type="int", default=4, \
-                  help="Number of cycles per vector instruction issue period")
-parser.add_option("--glbmem-wr-bus-width", type="int", default=32, \
-                  help="VGPR to Coalescer (Global Memory) data bus width "
-                  "in bytes")
-parser.add_option("--glbmem-rd-bus-width", type="int", default=32, \
-                  help="Coalescer to VGPR (Global Memory) data bus width in "
-                  "bytes")
+parser.add_argument(
+    "--issue-period", type=int, default=4,
+    help="Number of cycles per vector instruction issue period")
+parser.add_argument("--glbmem-wr-bus-width", type=int, default=32,
+                    help="VGPR to Coalescer (Global Memory) data bus width "
+                    "in bytes")
+parser.add_argument("--glbmem-rd-bus-width", type=int, default=32,
+                    help="Coalescer to VGPR (Global Memory) data bus width in "
+                    "bytes")
 # Currently we only support 1 local memory pipe
-parser.add_option("--shr-mem-pipes-per-cu", type="int", default=1, \
-                  help="Number of Shared Memory pipelines per CU")
+parser.add_argument("--shr-mem-pipes-per-cu", type=int, default=1,
+                    help="Number of Shared Memory pipelines per CU")
 # Currently we only support 1 global memory pipe
-parser.add_option("--glb-mem-pipes-per-cu", type="int", default=1, \
-                  help="Number of Global Memory pipelines per CU")
-parser.add_option("--wfs-per-simd", type="int", default=10, help="Number of " \
-                  "WF slots per SIMD")
+parser.add_argument("--glb-mem-pipes-per-cu", type=int, default=1,
+                    help="Number of Global Memory pipelines per CU")
+parser.add_argument("--wfs-per-simd", type=int, default=10, help="Number of "
+                    "WF slots per SIMD")
 
-parser.add_option("--registerManagerPolicy", type="string", default="static",
-                  help="Register manager policy")
-parser.add_option("--vreg-file-size", type="int", default=2048,
-                  help="number of physical vector registers per SIMD")
-parser.add_option("--vreg-min-alloc", type="int", default=4,
-                  help="Minimum number of registers that can be allocated "
-                  "from the VRF. The total number of registers will be "
-                  "aligned to this value.")
+parser.add_argument("--registerManagerPolicy", type=str, default="static",
+                    help="Register manager policy")
+parser.add_argument("--vreg-file-size", type=int, default=2048,
+                    help="number of physical vector registers per SIMD")
+parser.add_argument("--vreg-min-alloc", type=int, default=4,
+                    help="Minimum number of registers that can be allocated "
+                    "from the VRF. The total number of registers will be "
+                    "aligned to this value.")
 
-parser.add_option("--sreg-file-size", type="int", default=2048,
-                  help="number of physical vector registers per SIMD")
-parser.add_option("--sreg-min-alloc", type="int", default=4,
-                  help="Minimum number of registers that can be allocated "
-                  "from the SRF. The total number of registers will be "
-                  "aligned to this value.")
+parser.add_argument("--sreg-file-size", type=int, default=2048,
+                    help="number of physical vector registers per SIMD")
+parser.add_argument("--sreg-min-alloc", type=int, default=4,
+                    help="Minimum number of registers that can be allocated "
+                    "from the SRF. The total number of registers will be "
+                    "aligned to this value.")
 
-parser.add_option("--bw-scalor", type="int", default=0,
-                  help="bandwidth scalor for scalability analysis")
-parser.add_option("--CPUClock", type="string", default="2GHz",
-                  help="CPU clock")
-parser.add_option("--gpu-clock", type="string", default="1GHz",
-                  help="GPU clock")
-parser.add_option("--cpu-voltage", action="store", type="string",
-                  default='1.0V',
-                  help = """CPU  voltage domain""")
-parser.add_option("--gpu-voltage", action="store", type="string",
-                  default='1.0V',
-                  help = """CPU  voltage domain""")
-parser.add_option("--CUExecPolicy", type="string", default="OLDEST-FIRST",
-                  help="WF exec policy (OLDEST-FIRST, ROUND-ROBIN)")
-parser.add_option("--SegFaultDebug",action="store_true",
-                 help="checks for GPU seg fault before TLB access")
-parser.add_option("--FunctionalTLB",action="store_true",
-                 help="Assumes TLB has no latency")
-parser.add_option("--LocalMemBarrier",action="store_true",
-                 help="Barrier does not wait for writethroughs to complete")
-parser.add_option("--countPages", action="store_true",
-                 help="Count Page Accesses and output in per-CU output files")
-parser.add_option("--TLB-prefetch", type="int", help = "prefetch depth for"\
-                  "TLBs")
-parser.add_option("--pf-type", type="string", help="type of prefetch: "\
-                  "PF_CU, PF_WF, PF_PHASE, PF_STRIDE")
-parser.add_option("--pf-stride", type="int", help="set prefetch stride")
-parser.add_option("--numLdsBanks", type="int", default=32,
-                  help="number of physical banks per LDS module")
-parser.add_option("--ldsBankConflictPenalty", type="int", default=1,
-                  help="number of cycles per LDS bank conflict")
-parser.add_option("--lds-size", type="int", default=65536,
-                   help="Size of the LDS in bytes")
-parser.add_option('--fast-forward-pseudo-op', action='store_true',
-                  help = 'fast forward using kvm until the m5_switchcpu'
-                  ' pseudo-op is encountered, then switch cpus. subsequent'
-                  ' m5_switchcpu pseudo-ops will toggle back and forth')
-parser.add_option("--num-hw-queues", type="int", default=10,
-                  help="number of hw queues in packet processor")
-parser.add_option("--reg-alloc-policy",type="string", default="simple",
-                  help="register allocation policy (simple/dynamic)")
+parser.add_argument("--bw-scalor", type=int, default=0,
+                    help="bandwidth scalor for scalability analysis")
+parser.add_argument("--CPUClock", type=str, default="2GHz",
+                    help="CPU clock")
+parser.add_argument("--gpu-clock", type=str, default="1GHz",
+                    help="GPU clock")
+parser.add_argument("--cpu-voltage", action="store", type=str,
+                    default='1.0V',
+                    help="""CPU  voltage domain""")
+parser.add_argument("--gpu-voltage", action="store", type=str,
+                    default='1.0V',
+                    help="""CPU  voltage domain""")
+parser.add_argument("--CUExecPolicy", type=str, default="OLDEST-FIRST",
+                    help="WF exec policy (OLDEST-FIRST, ROUND-ROBIN)")
+parser.add_argument("--SegFaultDebug", action="store_true",
+                    help="checks for GPU seg fault before TLB access")
+parser.add_argument("--FunctionalTLB", action="store_true",
+                    help="Assumes TLB has no latency")
+parser.add_argument("--LocalMemBarrier", action="store_true",
+                    help="Barrier does not wait for writethroughs to complete")
+parser.add_argument(
+    "--countPages", action="store_true",
+    help="Count Page Accesses and output in per-CU output files")
+parser.add_argument("--TLB-prefetch", type=int, help="prefetch depth for"
+                    "TLBs")
+parser.add_argument("--pf-type", type=str, help="type of prefetch: "
+                    "PF_CU, PF_WF, PF_PHASE, PF_STRIDE")
+parser.add_argument("--pf-stride", type=int, help="set prefetch stride")
+parser.add_argument("--numLdsBanks", type=int, default=32,
+                    help="number of physical banks per LDS module")
+parser.add_argument("--ldsBankConflictPenalty", type=int, default=1,
+                    help="number of cycles per LDS bank conflict")
+parser.add_argument("--lds-size", type=int, default=65536,
+                    help="Size of the LDS in bytes")
+parser.add_argument('--fast-forward-pseudo-op', action='store_true',
+                    help='fast forward using kvm until the m5_switchcpu'
+                    ' pseudo-op is encountered, then switch cpus. subsequent'
+                    ' m5_switchcpu pseudo-ops will toggle back and forth')
+parser.add_argument("--num-hw-queues", type=int, default=10,
+                    help="number of hw queues in packet processor")
+parser.add_argument("--reg-alloc-policy", type=str, default="simple",
+                    help="register allocation policy (simple/dynamic)")
 
 parser.add_option("--dgpu", action="store_true", default=False,
                   help="Configure the system as a dGPU instead of an APU. "
@@ -191,17 +195,17 @@ parser.add_option("--dgpu", action="store_true", default=False,
 
 Ruby.define_options(parser)
 
-#add TLB options to the parser
+# add TLB options to the parser
 GPUTLBOptions.tlb_options(parser)
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
 # The GPU cache coherence protocols only work with the backing store
 setOption(parser, "--access-backing-store")
 
 # if benchmark root is specified explicitly, that overrides the search path
-if options.benchmark_root:
-    benchmark_path = [options.benchmark_root]
+if args.benchmark_root:
+    benchmark_path = [args.benchmark_root]
 else:
     # Set default benchmark search path to current dir
     benchmark_path = ['.']
@@ -213,34 +217,34 @@ if buildEnv['PROTOCOL'] == 'None':
     fatal("GPU model requires ruby")
 
 # Currently the gpu model requires only timing or detailed CPU
-if not (options.cpu_type == "TimingSimpleCPU" or
-   options.cpu_type == "DerivO3CPU"):
+if not (args.cpu_type == "TimingSimpleCPU" or
+   args.cpu_type == "DerivO3CPU"):
     fatal("GPU model requires TimingSimpleCPU or DerivO3CPU")
 
 # This file can support multiple compute units
-assert(options.num_compute_units >= 1)
+assert(args.num_compute_units >= 1)
 
 # Currently, the sqc (I-Cache of GPU) is shared by
 # multiple compute units(CUs). The protocol works just fine
 # even if sqc is not shared. Overriding this option here
 # so that the user need not explicitly set this (assuming
 # sharing sqc is the common usage)
-n_cu = options.num_compute_units
-num_sqc = int(math.ceil(float(n_cu) / options.cu_per_sqc))
-options.num_sqc = num_sqc # pass this to Ruby
-num_scalar_cache = int(math.ceil(float(n_cu) / options.cu_per_scalar_cache))
-options.num_scalar_cache = num_scalar_cache
+n_cu = args.num_compute_units
+num_sqc = int(math.ceil(float(n_cu) / args.cu_per_sqc))
+args.num_sqc = num_sqc # pass this to Ruby
+num_scalar_cache = int(math.ceil(float(n_cu) / args.cu_per_scalar_cache))
+args.num_scalar_cache = num_scalar_cache
 
 print('Num SQC = ', num_sqc, 'Num scalar caches = ', num_scalar_cache,
       'Num CU = ', n_cu)
 
 ########################## Creating the GPU system ########################
 # shader is the GPU
-shader = Shader(n_wf = options.wfs_per_simd,
+shader = Shader(n_wf = args.wfs_per_simd,
                 clk_domain = SrcClockDomain(
-                    clock = options.gpu_clock,
+                    clock = args.gpu_clock,
                     voltage_domain = VoltageDomain(
-                        voltage = options.gpu_voltage)))
+                        voltage = args.gpu_voltage)))
 
 # VIPER GPU protocol implements release consistency at GPU side. So,
 # we make their writes visible to the global memory and should read
@@ -259,83 +263,83 @@ else:
 
 # Switching off per-lane TLB by default
 per_lane = False
-if options.TLB_config == "perLane":
+if args.TLB_config == "perLane":
     per_lane = True
 
 # List of compute units; one GPU can have multiple compute units
 compute_units = []
 for i in range(n_cu):
     compute_units.append(ComputeUnit(cu_id = i, perLaneTLB = per_lane,
-                                     num_SIMDs = options.simds_per_cu,
-                                     wf_size = options.wf_size,
+                                     num_SIMDs = args.simds_per_cu,
+                                     wf_size = args.wf_size,
                                      spbypass_pipe_length = \
-                                     options.sp_bypass_path_length,
+                                     args.sp_bypass_path_length,
                                      dpbypass_pipe_length = \
-                                     options.dp_bypass_path_length,
-                                     issue_period = options.issue_period,
+                                     args.dp_bypass_path_length,
+                                     issue_period = args.issue_period,
                                      coalescer_to_vrf_bus_width = \
-                                     options.glbmem_rd_bus_width,
+                                     args.glbmem_rd_bus_width,
                                      vrf_to_coalescer_bus_width = \
-                                     options.glbmem_wr_bus_width,
+                                     args.glbmem_wr_bus_width,
                                      num_global_mem_pipes = \
-                                     options.glb_mem_pipes_per_cu,
+                                     args.glb_mem_pipes_per_cu,
                                      num_shared_mem_pipes = \
-                                     options.shr_mem_pipes_per_cu,
-                                     n_wf = options.wfs_per_simd,
-                                     execPolicy = options.CUExecPolicy,
-                                     debugSegFault = options.SegFaultDebug,
-                                     functionalTLB = options.FunctionalTLB,
-                                     localMemBarrier = options.LocalMemBarrier,
-                                     countPages = options.countPages,
+                                     args.shr_mem_pipes_per_cu,
+                                     n_wf = args.wfs_per_simd,
+                                     execPolicy = args.CUExecPolicy,
+                                     debugSegFault = args.SegFaultDebug,
+                                     functionalTLB = args.FunctionalTLB,
+                                     localMemBarrier = args.LocalMemBarrier,
+                                     countPages = args.countPages,
                                      localDataStore = \
-                                     LdsState(banks = options.numLdsBanks,
+                                     LdsState(banks = args.numLdsBanks,
                                               bankConflictPenalty = \
-                                              options.ldsBankConflictPenalty,
-                                              size = options.lds_size)))
+                                              args.ldsBankConflictPenalty,
+                                              size = args.lds_size)))
     wavefronts = []
     vrfs = []
     vrf_pool_mgrs = []
     srfs = []
     srf_pool_mgrs = []
-    for j in range(options.simds_per_cu):
+    for j in range(args.simds_per_cu):
         for k in range(shader.n_wf):
             wavefronts.append(Wavefront(simdId = j, wf_slot_id = k,
-                                        wf_size = options.wf_size))
+                                        wf_size = args.wf_size))
 
-        if options.reg_alloc_policy == "simple":
+        if args.reg_alloc_policy == "simple":
             vrf_pool_mgrs.append(SimplePoolManager(pool_size = \
-                                               options.vreg_file_size,
+                                               args.vreg_file_size,
                                                min_alloc = \
-                                               options.vreg_min_alloc))
+                                               args.vreg_min_alloc))
             srf_pool_mgrs.append(SimplePoolManager(pool_size = \
-                                               options.sreg_file_size,
+                                               args.sreg_file_size,
                                                min_alloc = \
-                                               options.vreg_min_alloc))
-        elif options.reg_alloc_policy == "dynamic":
+                                               args.vreg_min_alloc))
+        elif args.reg_alloc_policy == "dynamic":
             vrf_pool_mgrs.append(DynPoolManager(pool_size = \
-                                               options.vreg_file_size,
+                                               args.vreg_file_size,
                                                min_alloc = \
-                                               options.vreg_min_alloc))
+                                               args.vreg_min_alloc))
             srf_pool_mgrs.append(DynPoolManager(pool_size = \
-                                               options.sreg_file_size,
+                                               args.sreg_file_size,
                                                min_alloc = \
-                                               options.vreg_min_alloc))
+                                               args.vreg_min_alloc))
 
-        vrfs.append(VectorRegisterFile(simd_id=j, wf_size=options.wf_size,
-                                       num_regs=options.vreg_file_size))
-        srfs.append(ScalarRegisterFile(simd_id=j, wf_size=options.wf_size,
-                                       num_regs=options.sreg_file_size))
+        vrfs.append(VectorRegisterFile(simd_id=j, wf_size=args.wf_size,
+                                       num_regs=args.vreg_file_size))
+        srfs.append(ScalarRegisterFile(simd_id=j, wf_size=args.wf_size,
+                                       num_regs=args.sreg_file_size))
 
     compute_units[-1].wavefronts = wavefronts
     compute_units[-1].vector_register_file = vrfs
     compute_units[-1].scalar_register_file = srfs
     compute_units[-1].register_manager = \
-        RegisterManager(policy=options.registerManagerPolicy,
+        RegisterManager(policy=args.registerManagerPolicy,
                         vrf_pool_managers=vrf_pool_mgrs,
                         srf_pool_managers=srf_pool_mgrs)
-    if options.TLB_prefetch:
-        compute_units[-1].prefetch_depth = options.TLB_prefetch
-        compute_units[-1].prefetch_prev_type = options.pf_type
+    if args.TLB_prefetch:
+        compute_units[-1].prefetch_depth = args.TLB_prefetch
+        compute_units[-1].prefetch_prev_type = args.pf_type
 
     # attach the LDS and the CU to the bus (actually a Bridge)
     compute_units[-1].ldsPort = compute_units[-1].ldsBus.slave
@@ -346,7 +350,7 @@ shader.CUs = compute_units
 
 ########################## Creating the CPU system ########################
 # The shader core will be whatever is after the CPU cores are accounted for
-shader_idx = options.num_cpus
+shader_idx = args.num_cpus
 
 # The command processor will be whatever is after the shader is accounted for
 cp_idx = shader_idx + 1
@@ -355,17 +359,17 @@ cp_list = []
 # List of CPUs
 cpu_list = []
 
-CpuClass, mem_mode = Simulation.getCPUClass(options.cpu_type)
+CpuClass, mem_mode = Simulation.getCPUClass(args.cpu_type)
 if CpuClass == AtomicSimpleCPU:
     fatal("AtomicSimpleCPU is not supported")
 if mem_mode != 'timing':
     fatal("Only the timing memory mode is supported")
 shader.timing = True
 
-if options.fast_forward and options.fast_forward_pseudo_op:
+if args.fast_forward and args.fast_forward_pseudo_op:
     fatal("Cannot fast-forward based both on the number of instructions and"
           " on pseudo-ops")
-fast_forward = options.fast_forward or options.fast_forward_pseudo_op
+fast_forward = args.fast_forward or args.fast_forward_pseudo_op
 
 if fast_forward:
     FutureCpuClass, future_mem_mode = CpuClass, mem_mode
@@ -379,16 +383,16 @@ if fast_forward:
     future_cpu_list = []
 
     # Initial CPUs to be used during fast-forwarding.
-    for i in range(options.num_cpus):
+    for i in range(args.num_cpus):
         cpu = CpuClass(cpu_id = i,
                        clk_domain = SrcClockDomain(
-                           clock = options.CPUClock,
+                           clock = args.CPUClock,
                            voltage_domain = VoltageDomain(
-                               voltage = options.cpu_voltage)))
+                               voltage = args.cpu_voltage)))
         cpu_list.append(cpu)
 
-        if options.fast_forward:
-            cpu.max_insts_any_thread = int(options.fast_forward)
+        if args.fast_forward:
+            cpu.max_insts_any_thread = int(args.fast_forward)
 
 if fast_forward:
     MainCpuClass = FutureCpuClass
@@ -396,21 +400,21 @@ else:
     MainCpuClass = CpuClass
 
 # CPs to be used throughout the simulation.
-for i in range(options.num_cp):
-    cp = MainCpuClass(cpu_id = options.num_cpus + i,
+for i in range(args.num_cp):
+    cp = MainCpuClass(cpu_id = args.num_cpus + i,
                       clk_domain = SrcClockDomain(
-                          clock = options.CPUClock,
+                          clock = args.CPUClock,
                           voltage_domain = VoltageDomain(
-                              voltage = options.cpu_voltage)))
+                              voltage = args.cpu_voltage)))
     cp_list.append(cp)
 
 # Main CPUs (to be used after fast-forwarding if fast-forwarding is specified).
-for i in range(options.num_cpus):
+for i in range(args.num_cpus):
     cpu = MainCpuClass(cpu_id = i,
                        clk_domain = SrcClockDomain(
-                           clock = options.CPUClock,
+                           clock = args.CPUClock,
                            voltage_domain = VoltageDomain(
-                               voltage = options.cpu_voltage)))
+                               voltage = args.cpu_voltage)))
     if fast_forward:
         cpu.switched_out = True
         future_cpu_list.append(cpu)
@@ -421,16 +425,16 @@ host_cpu = cpu_list[0]
 
 hsapp_gpu_map_vaddr = 0x200000000
 hsapp_gpu_map_size = 0x1000
-hsapp_gpu_map_paddr = int(Addr(options.mem_size))
+hsapp_gpu_map_paddr = int(Addr(args.mem_size))
 
 # HSA kernel mode driver
-gpu_driver = GPUComputeDriver(filename = "kfd", isdGPU = options.dgpu)
+gpu_driver = GPUComputeDriver(filename = "kfd", isdGPU = args.dgpu)
 
 # Creating the GPU kernel launching components: that is the HSA
 # packet processor (HSAPP), GPU command processor (CP), and the
 # dispatcher.
 gpu_hsapp = HSAPacketProcessor(pioAddr=hsapp_gpu_map_paddr,
-                               numHWQueues=options.num_hw_queues)
+                               numHWQueues=args.num_hw_queues)
 dispatcher = GPUDispatcher()
 gpu_cmd_proc = GPUCommandProcessor(hsapp=gpu_hsapp,
                                    dispatcher=dispatcher)
@@ -453,15 +457,15 @@ def find_path(base_list, rel_path, test):
 def find_file(base_list, rel_path):
     return find_path(base_list, rel_path, os.path.isfile)
 
-executable = find_path(benchmark_path, options.cmd, os.path.exists)
+executable = find_path(benchmark_path, args.cmd, os.path.exists)
 # It's common for a benchmark to be in a directory with the same
 # name as the executable, so we handle that automatically
 if os.path.isdir(executable):
     benchmark_path = [executable]
-    executable = find_file(benchmark_path, options.cmd)
+    executable = find_file(benchmark_path, args.cmd)
 
-if options.env:
-    with open(options.env, 'r') as f:
+if args.env:
+    with open(args.env, 'r') as f:
         env = [line.rstrip() for line in f]
 else:
     env = ['LD_LIBRARY_PATH=%s' % ':'.join([
@@ -487,8 +491,8 @@ else:
            # vector copy kernels for dGPU memcopies to/from host and device.
            "HSA_ENABLE_SDMA=0"]
 
-process = Process(executable = executable, cmd = [options.cmd]
-                  + options.options.split(), drivers = [gpu_driver], env = env)
+process = Process(executable = executable, cmd = [args.cmd]
+                  + args.options.split(), drivers = [gpu_driver], env = env)
 
 for cpu in cpu_list:
     cpu.createThreads()
@@ -506,7 +510,7 @@ if fast_forward:
 # List of CPUs that must be switched when moving between KVM and simulation
 if fast_forward:
     switch_cpu_list = \
-        [(cpu_list[i], future_cpu_list[i]) for i in range(options.num_cpus)]
+        [(cpu_list[i], future_cpu_list[i]) for i in range(args.num_cpus)]
 
 # Full list of processing cores in the system.
 cpu_list = cpu_list + [shader] + cp_list
@@ -514,14 +518,14 @@ cpu_list = cpu_list + [shader] + cp_list
 # creating the overall system
 # notice the cpu list is explicitly added as a parameter to System
 system = System(cpu = cpu_list,
-                mem_ranges = [AddrRange(options.mem_size)],
-                cache_line_size = options.cacheline_size,
+                mem_ranges = [AddrRange(args.mem_size)],
+                cache_line_size = args.cacheline_size,
                 mem_mode = mem_mode,
                 workload = SEWorkload.init_compatible(executable))
 if fast_forward:
     system.future_cpu = future_cpu_list
-system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
-system.clk_domain = SrcClockDomain(clock =  options.sys_clock,
+system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
+system.clk_domain = SrcClockDomain(clock =  args.sys_clock,
                                    voltage_domain = system.voltage_domain)
 
 if fast_forward:
@@ -535,14 +539,14 @@ if fast_forward:
         fatal("KvmCPU can only be used in SE mode with x86")
 
 # configure the TLB hierarchy
-GPUTLBConfig.config_tlb_hierarchy(options, system, shader_idx)
+GPUTLBConfig.config_tlb_hierarchy(args, system, shader_idx)
 
 # create Ruby system
 system.piobus = IOXBar(width=32, response_latency=0,
                        frontend_latency=0, forward_latency=0)
 dma_list = [gpu_hsapp, gpu_cmd_proc]
-Ruby.create_system(options, None, system, None, dma_list, None)
-system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
+Ruby.create_system(args, None, system, None, dma_list, None)
+system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
                                     voltage_domain = system.voltage_domain)
 gpu_cmd_proc.pio = system.piobus.master
 gpu_hsapp.pio = system.piobus.master
@@ -551,7 +555,7 @@ for i, dma_device in enumerate(dma_list):
     exec('system.dma_cntrl%d.clk_domain = system.ruby.clk_domain' % i)
 
 # attach the CPU ports to Ruby
-for i in range(options.num_cpus):
+for i in range(args.num_cpus):
     ruby_port = system.ruby._cpu_ports[i]
 
     # Create interrupt controller
@@ -578,9 +582,9 @@ for i in range(options.num_cpus):
 # per compute unit and one sequencer per SQC for the math to work out
 # correctly.
 gpu_port_idx = len(system.ruby._cpu_ports) \
-               - options.num_compute_units - options.num_sqc \
-               - options.num_scalar_cache
-gpu_port_idx = gpu_port_idx - options.num_cp * 2
+               - args.num_compute_units - args.num_sqc \
+               - args.num_scalar_cache
+gpu_port_idx = gpu_port_idx - args.num_cp * 2
 
 # Connect token ports. For this we need to search through the list of all
 # sequencers, since the TCP coalescers will not necessarily be first. Only
@@ -592,7 +596,7 @@ for i in range(len(system.ruby._cpu_ports)):
             system.ruby._cpu_ports[i].gmTokenPort
         token_port_idx += 1
 
-wavefront_size = options.wf_size
+wavefront_size = args.wf_size
 for i in range(n_cu):
     # The pipeline issues wavefront_size number of uncoalesced requests
     # in one GPU issue cycle. Hence wavefront_size mem ports.
@@ -602,7 +606,7 @@ for i in range(n_cu):
     gpu_port_idx += 1
 
 for i in range(n_cu):
-    if i > 0 and not i % options.cu_per_sqc:
+    if i > 0 and not i % args.cu_per_sqc:
         print("incrementing idx on ", i)
         gpu_port_idx += 1
     system.cpu[shader_idx].CUs[i].sqc_port = \
@@ -610,7 +614,7 @@ for i in range(n_cu):
 gpu_port_idx = gpu_port_idx + 1
 
 for i in range(n_cu):
-    if i > 0 and not i % options.cu_per_scalar_cache:
+    if i > 0 and not i % args.cu_per_scalar_cache:
         print("incrementing idx on ", i)
         gpu_port_idx += 1
     system.cpu[shader_idx].CUs[i].scalar_port = \
@@ -618,7 +622,7 @@ for i in range(n_cu):
 gpu_port_idx = gpu_port_idx + 1
 
 # attach CP ports to Ruby
-for i in range(options.num_cp):
+for i in range(args.num_cp):
     system.cpu[cp_idx].createInterruptController()
     system.cpu[cp_idx].dcache_port = \
                 system.ruby._cpu_ports[gpu_port_idx + i * 2].slave
@@ -660,23 +664,23 @@ root = Root(system=system, full_system=False)
 
 # Create the /sys/devices filesystem for the simulator so that the HSA Runtime
 # knows what type of GPU hardware we are simulating
-if options.dgpu:
-    hsaTopology.createFijiTopology(options)
+if args.dgpu:
+    hsaTopology.createFijiTopology(args)
 else:
-    hsaTopology.createCarrizoTopology(options)
+    hsaTopology.createCarrizoTopology(args)
 
 m5.ticks.setGlobalFrequency('1THz')
-if options.abs_max_tick:
-    maxtick = options.abs_max_tick
+if args.abs_max_tick:
+    maxtick = args.abs_max_tick
 else:
     maxtick = m5.MaxTick
 
 # Benchmarks support work item annotations
-Simulation.setWorkCountOptions(system, options)
+Simulation.setWorkCountOptions(system, args)
 
 # Checkpointing is not supported by APU model
-if (options.checkpoint_dir != None or
-    options.checkpoint_restore != None):
+if (args.checkpoint_dir != None or
+    args.checkpoint_restore != None):
     fatal("Checkpointing not supported by apu model")
 
 checkpoint_dir = None
@@ -685,18 +689,18 @@ m5.instantiate(checkpoint_dir)
 # Map workload to this address space
 host_cpu.workload[0].map(0x10000000, 0x200000000, 4096)
 
-if options.fast_forward:
+if args.fast_forward:
     print("Switch at instruction count: %d" % cpu_list[0].max_insts_any_thread)
 
 exit_event = m5.simulate(maxtick)
 
-if options.fast_forward:
+if args.fast_forward:
     if exit_event.getCause() == "a thread reached the max instruction count":
         m5.switchCpus(system, switch_cpu_list)
         print("Switched CPUS @ tick %s" % (m5.curTick()))
         m5.stats.reset()
         exit_event = m5.simulate(maxtick - m5.curTick())
-elif options.fast_forward_pseudo_op:
+elif args.fast_forward_pseudo_op:
     while exit_event.getCause() == "switchcpu":
         # If we are switching *to* kvm, then the current stats are meaningful
         # Note that we don't do any warmup by default

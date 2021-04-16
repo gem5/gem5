@@ -99,7 +99,7 @@ class CPCntrl(AMD_Base_Controller, CntrlBase):
             self.recycle_latency = options.recycle_latency
 
 def define_options(parser):
-    parser.add_option("--cpu-to-dir-latency", type="int", default=15)
+    parser.add_argument("--cpu-to-dir-latency", type=int, default=15)
 
 def construct(options, system, ruby_system):
     if (buildEnv['PROTOCOL'] != 'GPU_VIPER' or

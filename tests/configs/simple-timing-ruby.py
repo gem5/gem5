@@ -28,41 +28,41 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
-import os, optparse, sys
+import os, argparse, sys
 
 m5.util.addToPath('../configs/')
 
 from ruby import Ruby
 from common import Options
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 
 # Add the ruby specific and protocol specific options
 Ruby.define_options(parser)
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
 #
 # Set the default cache size and associativity to be very small to encourage
 # races between requests and writebacks.
 #
-options.l1d_size="256B"
-options.l1i_size="256B"
-options.l2_size="512B"
-options.l3_size="1kB"
-options.l1d_assoc=2
-options.l1i_assoc=2
-options.l2_assoc=2
-options.l3_assoc=2
+args.l1d_size="256B"
+args.l1i_size="256B"
+args.l2_size="512B"
+args.l3_size="1kB"
+args.l1d_assoc=2
+args.l1i_assoc=2
+args.l2_assoc=2
+args.l3_assoc=2
 
 # this is a uniprocessor only test
-options.num_cpus = 1
+args.num_cpus = 1
 cpu = TimingSimpleCPU(cpu_id=0)
 system = System(cpu = cpu)
 
 # Dummy voltage domain for all our clock domains
-system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
 system.clk_domain = SrcClockDomain(clock = '1GHz',
                                    voltage_domain = system.voltage_domain)
 
@@ -72,10 +72,10 @@ system.cpu.clk_domain = SrcClockDomain(clock = '2GHz',
                                        voltage_domain = system.voltage_domain)
 
 system.mem_ranges = AddrRange('256MB')
-Ruby.create_system(options, False, system)
+Ruby.create_system(args, False, system)
 
 # Create a separate clock for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
+system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
                                         voltage_domain = system.voltage_domain)
 
 assert(len(system.ruby._cpu_ports) == 1)

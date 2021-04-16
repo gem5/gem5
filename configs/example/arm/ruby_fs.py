@@ -38,7 +38,7 @@ import m5
 from m5.util import addToPath
 from m5.objects import *
 from m5.options import *
-import optparse
+import argparse
 
 m5.util.addToPath('../..')
 
@@ -80,19 +80,19 @@ def create_cow_image(name):
 
     return image
 
-def config_ruby(system, options):
+def config_ruby(system, args):
     cpus = []
     for cluster in system.cpu_cluster:
         for cpu in cluster.cpus:
             cpus.append(cpu)
 
-    Ruby.create_system(options, True, system, system.iobus,
+    Ruby.create_system(args, True, system, system.iobus,
                        system._dma_ports, system.realview.bootmem,
                        cpus)
 
     # Create a seperate clock domain for Ruby
     system.ruby.clk_domain = SrcClockDomain(
-        clock = options.ruby_clock,
+        clock = args.ruby_clock,
         voltage_domain = system.voltage_domain)
 
 def create(args):
@@ -195,69 +195,69 @@ def run(args):
 
 
 def main():
-    parser = optparse.OptionParser()
+    parser = argparse.ArgumentParser()
 
-    parser.add_option("--dtb", type=str, default=None,
-                      help="DTB file to load")
-    parser.add_option("--kernel", type=str, default=default_kernel,
-                      help="Linux kernel")
-    parser.add_option("--disk-image", type=str,
-                      default=default_disk,
-                      help="Disk to instantiate")
-    parser.add_option("--root-device", type=str,
-                      default=default_root_device,
-                      help="OS device name for root partition (default: {})"
+    parser.add_argument("--dtb", type=str, default=None,
+                        help="DTB file to load")
+    parser.add_argument("--kernel", type=str, default=default_kernel,
+                        help="Linux kernel")
+    parser.add_argument("--disk-image", type=str,
+                        default=default_disk,
+                        help="Disk to instantiate")
+    parser.add_argument("--root-device", type=str,
+                        default=default_root_device,
+                        help="OS device name for root partition (default: {})"
                              .format(default_root_device))
-    parser.add_option("--script", type=str, default="",
-                      help = "Linux bootscript")
-    parser.add_option("--cpu", type="choice", choices=list(cpu_types.keys()),
-                      default="minor",
-                      help="CPU model to use")
-    parser.add_option("--cpu-freq", type=str, default="4GHz")
-    parser.add_option("-n", "--num-cpus", type="int", default=1)
-    parser.add_option("--checkpoint", action="store_true")
-    parser.add_option("--restore", type=str, default=None)
+    parser.add_argument("--script", type=str, default="",
+                        help = "Linux bootscript")
+    parser.add_argument("--cpu", choices=list(cpu_types.keys()),
+                        default="minor",
+                        help="CPU model to use")
+    parser.add_argument("--cpu-freq", type=str, default="4GHz")
+    parser.add_argument("-n", "--num-cpus", type=int, default=1)
+    parser.add_argument("--checkpoint", action="store_true")
+    parser.add_argument("--restore", type=str, default=None)
 
-    parser.add_option("--mem-type", type="choice", default="DDR3_1600_8x8",
-                      choices=ObjectList.mem_list.get_names(),
-                      help = "type of memory to use")
-    parser.add_option("--mem-channels", type="int", default=1,
-                      help = "number of memory channels")
-    parser.add_option("--mem-ranks", type="int", default=None,
-                      help = "number of memory ranks per channel")
-    parser.add_option("--mem-size", action="store", type="string",
-                      default="2GiB",
-                      help="Specify the physical memory size (single memory)")
-    parser.add_option("--enable-dram-powerdown", action="store_true",
-                       help="Enable low-power states in DRAMInterface")
-    parser.add_option("--mem-channels-intlv", type="int", default=0,
-                      help="Memory channels interleave")
+    parser.add_argument("--mem-type", default="DDR3_1600_8x8",
+                        choices=ObjectList.mem_list.get_names(),
+                        help = "type of memory to use")
+    parser.add_argument("--mem-channels", type=int, default=1,
+                        help = "number of memory channels")
+    parser.add_argument("--mem-ranks", type=int, default=None,
+                        help = "number of memory ranks per channel")
+    parser.add_argument(
+        "--mem-size", action="store", type=str, default="2GiB",
+        help="Specify the physical memory size (single memory)")
+    parser.add_argument("--enable-dram-powerdown", action="store_true",
+                        help="Enable low-power states in DRAMInterface")
+    parser.add_argument("--mem-channels-intlv", type=int, default=0,
+                        help="Memory channels interleave")
 
-    parser.add_option("--num-dirs", type="int", default=1)
-    parser.add_option("--num-l2caches", type="int", default=1)
-    parser.add_option("--num-l3caches", type="int", default=1)
-    parser.add_option("--l1d_size", type="string", default="64kB")
-    parser.add_option("--l1i_size", type="string", default="32kB")
-    parser.add_option("--l2_size", type="string", default="2MB")
-    parser.add_option("--l3_size", type="string", default="16MB")
-    parser.add_option("--l1d_assoc", type="int", default=2)
-    parser.add_option("--l1i_assoc", type="int", default=2)
-    parser.add_option("--l2_assoc", type="int", default=8)
-    parser.add_option("--l3_assoc", type="int", default=16)
-    parser.add_option("--cacheline_size", type="int", default=64)
+    parser.add_argument("--num-dirs", type=int, default=1)
+    parser.add_argument("--num-l2caches", type=int, default=1)
+    parser.add_argument("--num-l3caches", type=int, default=1)
+    parser.add_argument("--l1d_size", type=str, default="64kB")
+    parser.add_argument("--l1i_size", type=str, default="32kB")
+    parser.add_argument("--l2_size", type=str, default="2MB")
+    parser.add_argument("--l3_size", type=str, default="16MB")
+    parser.add_argument("--l1d_assoc", type=int, default=2)
+    parser.add_argument("--l1i_assoc", type=int, default=2)
+    parser.add_argument("--l2_assoc", type=int, default=8)
+    parser.add_argument("--l3_assoc", type=int, default=16)
+    parser.add_argument("--cacheline_size", type=int, default=64)
 
     Ruby.define_options(parser)
-    (options, args) = parser.parse_args()
+    args = parser.parse_args()
 
     root = Root(full_system=True)
-    root.system = create(options)
+    root.system = create(args)
 
-    if options.restore is not None:
-        m5.instantiate(options.restore)
+    if args.restore is not None:
+        m5.instantiate(args.restore)
     else:
         m5.instantiate()
 
-    run(options)
+    run(args)
 
 
 if __name__ == "__m5_main__":

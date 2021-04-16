@@ -36,26 +36,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import optparse
+import argparse
 import random
 import sys
 
 import m5
 from m5.objects import *
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_option("-a", "--atomic", action="store_true",
-                  help="Use atomic (non-timing) mode")
-parser.add_option("-b", "--blocking", action="store_true",
-                  help="Use blocking caches")
-parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
-                  metavar="T",
-                  help="Stop after T ticks")
-parser.add_option("-p", "--prefetchers", action="store_true",
-                  help="Use prefetchers")
-parser.add_option("-s", "--stridepref", action="store_true",
-                  help="Use strided prefetchers")
+
+parser.add_argument("-a", "--atomic", action="store_true",
+                    help="Use atomic (non-timing) mode")
+parser.add_argument("-b", "--blocking", action="store_true",
+                    help="Use blocking caches")
+parser.add_argument("-m", "--maxtick", type=int, default=m5.MaxTick,
+                    metavar="T",
+                    help="Stop after T ticks")
+parser.add_argument("-p", "--prefetchers", action="store_true",
+                    help="Use prefetchers")
+parser.add_argument("-s", "--stridepref", action="store_true",
+                    help="Use strided prefetchers")
 
 # This example script has a lot in common with the memtest.py in that
 # it is designed to stress tests the memory system. However, this
@@ -87,30 +89,24 @@ parser.add_option("-s", "--stridepref", action="store_true",
 # and linear address streams to ensure that the prefetchers will
 # trigger. By default prefetchers are off.
 
-parser.add_option("-c", "--caches", type="string", default="3:2",
-                  help="Colon-separated cache hierarchy specification, "
-                  "see script comments for details "
-                  "[default: %default]")
-parser.add_option("-t", "--testers", type="string", default="1:0:2",
-                  help="Colon-separated tester hierarchy specification, "
-                  "see script comments for details "
-                  "[default: %default]")
-parser.add_option("-r", "--random", action="store_true",
-                  help="Generate a random tree topology")
-parser.add_option("--sys-clock", action="store", type="string",
-                  default='1GHz',
-                  help = """Top-level clock for blocks running at system
+parser.add_argument("-c", "--caches", type=str, default="3:2",
+                    help="Colon-separated cache hierarchy specification, "
+                    "see script comments for details ")
+parser.add_argument("-t", "--testers", type=str, default="1:0:2",
+                    help="Colon-separated tester hierarchy specification, "
+                    "see script comments for details ")
+parser.add_argument("-r", "--random", action="store_true",
+                    help="Generate a random tree topology")
+parser.add_argument("--sys-clock", action="store", type=str,
+                    default='1GHz',
+                    help = """Top-level clock for blocks running at system
                   speed""")
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
-if args:
-     print("Error: script doesn't take any positional arguments")
-     sys.exit(1)
-
-# Start by parsing the command line options and do some basic sanity
+# Start by parsing the command line args and do some basic sanity
 # checking
-if options.random:
+if args.random:
      # Generate a tree with a valid number of testers
      tree_depth = random.randint(1, 4)
      cachespec = [random.randint(1, 3) for i in range(tree_depth)]
@@ -119,8 +115,8 @@ if options.random:
          "-t", ':'.join(map(str, testerspec)))
 else:
      try:
-          cachespec = [int(x) for x in options.caches.split(':')]
-          testerspec = [int(x) for x in options.testers.split(':')]
+          cachespec = [int(x) for x in args.caches.split(':')]
+          testerspec = [int(x) for x in args.testers.split(':')]
      except:
           print("Error: Unable to parse caches or testers option")
           sys.exit(1)
@@ -164,14 +160,14 @@ proto_l1 = Cache(size = '32kB', assoc = 4,
                  tag_latency = 1, data_latency = 1, response_latency = 1,
                  tgts_per_mshr = 8)
 
-if options.blocking:
+if args.blocking:
      proto_l1.mshrs = 1
 else:
      proto_l1.mshrs = 4
 
-if options.prefetchers:
+if args.prefetchers:
      proto_l1.prefetcher = TaggedPrefetcher()
-elif options.stridepref:
+elif args.stridepref:
      proto_l1.prefetcher = StridePrefetcher()
 
 cache_proto = [proto_l1]
@@ -218,7 +214,7 @@ system = System(physmem = MemCtrl(dram = DDR3_1600_8x8()))
 
 system.voltage_domain = VoltageDomain(voltage = '1V')
 
-system.clk_domain = SrcClockDomain(clock =  options.sys_clock,
+system.clk_domain = SrcClockDomain(clock =  args.sys_clock,
                         voltage_domain = system.voltage_domain)
 
 system.memchecker = MemChecker()
@@ -298,7 +294,7 @@ last_subsys.xbar.master = system.physmem.port
 last_subsys.xbar.point_of_coherency = True
 
 root = Root(full_system = False, system = system)
-if options.atomic:
+if args.atomic:
     root.system.mem_mode = 'atomic'
 else:
     root.system.mem_mode = 'timing'
@@ -311,6 +307,6 @@ root.system.system_port = last_subsys.xbar.slave
 m5.instantiate()
 
 # Simulate until program terminates
-exit_event = m5.simulate(options.maxtick)
+exit_event = m5.simulate(args.maxtick)
 
 print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())

@@ -34,7 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABCMeta, abstractmethod
-import optparse
+import argparse
 import m5
 from m5.objects import *
 from m5.proxy import *
@@ -164,29 +164,29 @@ class BaseSystem(object, metaclass=ABCMeta):
 
         if self.use_ruby:
             # Add the ruby specific and protocol specific options
-            parser = optparse.OptionParser()
+            parser = argparse.ArgumentParser()
             Options.addCommonOptions(parser)
             Ruby.define_options(parser)
-            (options, args) = parser.parse_args()
+            args, extra = parser.parse_known_args()
 
             # Set the default cache size and associativity to be very
             # small to encourage races between requests and writebacks.
-            options.l1d_size="32kB"
-            options.l1i_size="32kB"
-            options.l2_size="4MB"
-            options.l1d_assoc=4
-            options.l1i_assoc=2
-            options.l2_assoc=8
-            options.num_cpus = self.num_cpus
-            options.num_dirs = 2
+            args.l1d_size="32kB"
+            args.l1i_size="32kB"
+            args.l2_size="4MB"
+            args.l1d_assoc=4
+            args.l1i_assoc=2
+            args.l2_assoc=8
+            args.num_cpus = self.num_cpus
+            args.num_dirs = 2
 
             bootmem = getattr(system, '_bootmem', None)
-            Ruby.create_system(options, True, system, system.iobus,
+            Ruby.create_system(args, True, system, system.iobus,
                                system._dma_ports, bootmem)
 
             # Create a seperate clock domain for Ruby
             system.ruby.clk_domain = SrcClockDomain(
-                clock = options.ruby_clock,
+                clock = args.ruby_clock,
                 voltage_domain = system.voltage_domain)
             for i, cpu in enumerate(system.cpu):
                 if not cpu.switched_out:

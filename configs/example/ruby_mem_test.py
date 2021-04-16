@@ -29,7 +29,7 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
-import os, optparse, sys
+import os, argparse, sys
 
 addToPath('../')
 
@@ -40,74 +40,70 @@ from ruby import Ruby
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 Options.addNoISAOptions(parser)
 
-parser.add_option("--maxloads", metavar="N", default=0,
-                  help="Stop after N loads")
-parser.add_option("--progress", type="int", default=1000,
-                  metavar="NLOADS",
-                  help="Progress message interval "
-                  "[default: %default]")
-parser.add_option("--num-dmas", type="int", default=0, help="# of dma testers")
-parser.add_option("--functional", type="int", default=0,
-                  help="percentage of accesses that should be functional")
-parser.add_option("--suppress-func-errors", action="store_true",
-                  help="suppress panic when functional accesses fail")
+parser.add_argument("--maxloads", metavar="N", default=0,
+                    help="Stop after N loads")
+parser.add_argument("--progress", type=int, default=1000,
+                    metavar="NLOADS",
+                    help="Progress message interval ")
+parser.add_argument("--num-dmas", type=int, default=0, help="# of dma testers")
+parser.add_argument("--functional", type=int, default=0,
+                    help="percentage of accesses that should be functional")
+parser.add_argument("--suppress-func-errors", action="store_true",
+                    help="suppress panic when functional accesses fail")
 
 #
 # Add the ruby specific and protocol specific options
 #
 Ruby.define_options(parser)
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
 #
 # Set the default cache size and associativity to be very small to encourage
 # races between requests and writebacks.
 #
-options.l1d_size="256B"
-options.l1i_size="256B"
-options.l2_size="512B"
-options.l3_size="1kB"
-options.l1d_assoc=2
-options.l1i_assoc=2
-options.l2_assoc=2
-options.l3_assoc=2
-
-if args:
-     print("Error: script doesn't take any positional arguments")
-     sys.exit(1)
+args.l1d_size="256B"
+args.l1i_size="256B"
+args.l2_size="512B"
+args.l3_size="1kB"
+args.l1d_assoc=2
+args.l1i_assoc=2
+args.l2_assoc=2
+args.l3_assoc=2
 
 block_size = 64
 
-if options.num_cpus > block_size:
+if args.num_cpus > block_size:
      print("Error: Number of testers %d limited to %d because of false sharing"
-           % (options.num_cpus, block_size))
+           % (args.num_cpus, block_size))
      sys.exit(1)
 
 #
 # Currently ruby does not support atomic or uncacheable accesses
 #
-cpus = [ MemTest(max_loads = options.maxloads,
-                 percent_functional = options.functional,
+cpus = [ MemTest(max_loads = args.maxloads,
+                 percent_functional = args.functional,
                  percent_uncacheable = 0,
-                 progress_interval = options.progress,
-                 suppress_func_errors = options.suppress_func_errors) \
-         for i in range(options.num_cpus) ]
+                 progress_interval = args.progress,
+                 suppress_func_errors = args.suppress_func_errors) \
+         for i in range(args.num_cpus) ]
 
 system = System(cpu = cpus,
-                clk_domain = SrcClockDomain(clock = options.sys_clock),
-                mem_ranges = [AddrRange(options.mem_size)])
+                clk_domain = SrcClockDomain(clock = args.sys_clock),
+                mem_ranges = [AddrRange(args.mem_size)])
 
-if options.num_dmas > 0:
-    dmas = [ MemTest(max_loads = options.maxloads,
+if args.num_dmas > 0:
+    dmas = [ MemTest(max_loads = args.maxloads,
                      percent_functional = 0,
                      percent_uncacheable = 0,
-                     progress_interval = options.progress,
+                     progress_interval = args.progress,
                      suppress_func_errors =
-                                        not options.suppress_func_errors) \
-             for i in range(options.num_dmas) ]
+                                        not args.suppress_func_errors) \
+             for i in range(args.num_dmas) ]
     system.dma_devices = dmas
 else:
     dmas = []
@@ -115,14 +111,14 @@ else:
 dma_ports = []
 for (i, dma) in enumerate(dmas):
     dma_ports.append(dma.test)
-Ruby.create_system(options, False, system, dma_ports = dma_ports)
+Ruby.create_system(args, False, system, dma_ports = dma_ports)
 
 # Create a top-level voltage domain and clock domain
-system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
-system.clk_domain = SrcClockDomain(clock = options.sys_clock,
+system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
+system.clk_domain = SrcClockDomain(clock = args.sys_clock,
                                    voltage_domain = system.voltage_domain)
 # Create a seperate clock domain for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
+system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
                                         voltage_domain = system.voltage_domain)
 
 #
@@ -159,6 +155,6 @@ m5.ticks.setGlobalFrequency('1ns')
 m5.instantiate()
 
 # simulate until program terminates
-exit_event = m5.simulate(options.abs_max_tick)
+exit_event = m5.simulate(args.abs_max_tick)
 
 print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())

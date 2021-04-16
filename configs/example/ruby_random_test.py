@@ -29,7 +29,7 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
-import os, optparse, sys
+import os, argparse, sys
 
 addToPath('../')
 
@@ -41,13 +41,13 @@ config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 m5_root = os.path.dirname(config_root)
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 Options.addNoISAOptions(parser)
 
-parser.add_option("--maxloads", metavar="N", default=100,
-                  help="Stop after N loads")
-parser.add_option("-f", "--wakeup_freq", metavar="N", default=10,
-                  help="Wakeup every N cycles")
+parser.add_argument("--maxloads", metavar="N", default=100,
+                    help="Stop after N loads")
+parser.add_argument("-f", "--wakeup_freq", metavar="N", default=10,
+                    help="Wakeup every N cycles")
 
 #
 # Add the ruby specific and protocol specific options
@@ -58,24 +58,20 @@ exec(compile( \
     open(os.path.join(config_root, "common", "Options.py")).read(), \
     os.path.join(config_root, "common", "Options.py"), 'exec'))
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
 #
 # Set the default cache size and associativity to be very small to encourage
 # races between requests and writebacks.
 #
-options.l1d_size="256B"
-options.l1i_size="256B"
-options.l2_size="512B"
-options.l3_size="1kB"
-options.l1d_assoc=2
-options.l1i_assoc=2
-options.l2_assoc=2
-options.l3_assoc=2
-
-if args:
-     print("Error: script doesn't take any positional arguments")
-     sys.exit(1)
+args.l1d_size="256B"
+args.l1i_size="256B"
+args.l2_size="512B"
+args.l3_size="1kB"
+args.l1d_assoc=2
+args.l1i_assoc=2
+args.l2_assoc=2
+args.l3_assoc=2
 
 #
 # Create the ruby random tester
@@ -87,20 +83,20 @@ if buildEnv['PROTOCOL'] == 'MOESI_hammer':
     check_flush = True
 
 tester = RubyTester(check_flush = check_flush,
-                    checks_to_complete = options.maxloads,
-                    wakeup_frequency = options.wakeup_freq)
+                    checks_to_complete = args.maxloads,
+                    wakeup_frequency = args.wakeup_freq)
 
 #
 # Create the M5 system.  Note that the Memory Object isn't
 # actually used by the rubytester, but is included to support the
 # M5 memory size == Ruby memory size checks
 #
-system = System(cpu = tester, mem_ranges = [AddrRange(options.mem_size)])
+system = System(cpu = tester, mem_ranges = [AddrRange(args.mem_size)])
 
 # Create a top-level voltage domain and clock domain
-system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
 
-system.clk_domain = SrcClockDomain(clock = options.sys_clock,
+system.clk_domain = SrcClockDomain(clock = args.sys_clock,
                                    voltage_domain = system.voltage_domain)
 
 # the ruby tester reuses num_cpus to specify the
@@ -108,14 +104,14 @@ system.clk_domain = SrcClockDomain(clock = options.sys_clock,
 # is stored in system.cpu. because there is only ever one
 # tester object, num_cpus is not necessarily equal to the
 # size of system.cpu
-cpu_list = [ system.cpu ] * options.num_cpus
-Ruby.create_system(options, False, system, cpus=cpu_list)
+cpu_list = [ system.cpu ] * args.num_cpus
+Ruby.create_system(args, False, system, cpus=cpu_list)
 
 # Create a seperate clock domain for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
+system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
                                         voltage_domain = system.voltage_domain)
 
-assert(options.num_cpus == len(system.ruby._cpu_ports))
+assert(args.num_cpus == len(system.ruby._cpu_ports))
 
 tester.num_cpus = len(system.ruby._cpu_ports)
 
@@ -159,6 +155,6 @@ m5.ticks.setGlobalFrequency('1ns')
 m5.instantiate()
 
 # simulate until program terminates
-exit_event = m5.simulate(options.abs_max_tick)
+exit_event = m5.simulate(args.abs_max_tick)
 
 print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())

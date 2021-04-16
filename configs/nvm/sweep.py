@@ -34,7 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import math
-import optparse
+import argparse
 
 import m5
 from m5.objects import *
@@ -51,36 +51,32 @@ from common import MemConfig
 # and the sequential stride size (how many bytes per activate), and
 # observe what bus utilisation (bandwidth) is achieved
 
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 
 nvm_generators = {
     "NVM" : lambda x: x.createNvm,
 }
 
 # Use a single-channel DDR3-1600 x64 (8x8 topology) by default
-parser.add_option("--nvm-type", type="choice", default="NVM_2400_1x64",
-                  choices=ObjectList.mem_list.get_names(),
-                  help = "type of memory to use")
+parser.add_argument("--nvm-type", default="NVM_2400_1x64",
+                    choices=ObjectList.mem_list.get_names(),
+                    help = "type of memory to use")
 
-parser.add_option("--nvm-ranks", "-r", type="int", default=1,
-                  help = "Number of ranks to iterate across")
+parser.add_argument("--nvm-ranks", "-r", type=int, default=1,
+                    help = "Number of ranks to iterate across")
 
-parser.add_option("--rd_perc", type="int", default=100,
-                  help = "Percentage of read commands")
+parser.add_argument("--rd_perc", type=int, default=100,
+                    help = "Percentage of read commands")
 
-parser.add_option("--mode", type="choice", default="NVM",
-                  choices=nvm_generators.keys(),
-                  help = "NVM: Random traffic")
+parser.add_argument("--mode", default="NVM",
+                    choices=nvm_generators.keys(),
+                    help = "NVM: Random traffic")
 
-parser.add_option("--addr-map", type="choice",
-                  choices=ObjectList.dram_addr_map_list.get_names(),
-                  default="RoRaBaCoCh", help = "NVM address map policy")
+parser.add_argument("--addr-map",
+                    choices=ObjectList.dram_addr_map_list.get_names(),
+                    default="RoRaBaCoCh", help = "NVM address map policy")
 
-(options, args) = parser.parse_args()
-
-if args:
-    print("Error: script doesn't take any positional arguments")
-    sys.exit(1)
+args = parser.parse_args()
 
 # at the moment we stay with the default open-adaptive page policy,
 # and address mapping
@@ -102,9 +98,9 @@ system.mmap_using_noreserve = True
 
 # force a single channel to match the assumptions in the DRAM traffic
 # generator
-options.mem_channels = 1
-options.external_memory_system = 0
-MemConfig.config_mem(options, system)
+args.mem_channels = 1
+args.external_memory_system = 0
+MemConfig.config_mem(args, system)
 
 # the following assumes that we are using the native memory
 # controller with an NVM interface, check to be sure
@@ -117,7 +113,7 @@ if not isinstance(system.mem_ctrls[0].nvm, m5.objects.NVMInterface):
 system.mem_ctrls[0].nvm.null = True
 
 # Set the address mapping based on input argument
-system.mem_ctrls[0].nvm.addr_mapping = options.addr_map
+system.mem_ctrls[0].nvm.addr_mapping = args.addr_map
 
 # stay in each state for 0.25 ms, long enough to warm things up, and
 # short enough to avoid hitting a refresh
@@ -174,16 +170,16 @@ root.system.mem_mode = 'timing'
 m5.instantiate()
 
 def trace():
-    addr_map = ObjectList.dram_addr_map_list.get(options.addr_map)
-    generator = nvm_generators[options.mode](system.tgen)
+    addr_map = ObjectList.dram_addr_map_list.get(args.addr_map)
+    generator = nvm_generators[args.mode](system.tgen)
     for stride_size in range(burst_size, max_stride + 1, burst_size):
         for bank in range(1, nbr_banks + 1):
             num_seq_pkts = int(math.ceil(float(stride_size) / burst_size))
             yield generator(period,
                             0, max_addr, burst_size, int(itt), int(itt),
-                            options.rd_perc, 0,
+                            args.rd_perc, 0,
                             num_seq_pkts, buffer_size, nbr_banks, bank,
-                            addr_map, options.nvm_ranks)
+                            addr_map, args.nvm_ranks)
     yield system.tgen.createExit(0)
 
 system.tgen.start(trace())

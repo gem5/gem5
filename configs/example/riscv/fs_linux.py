@@ -38,7 +38,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import optparse
+import argparse
 import sys
 from os import path
 
@@ -101,7 +101,7 @@ def generateDtb(system):
     fdt.writeDtbFile(path.join(m5.options.outdir, 'device.dtb'))
 
 # ----------------------------- Add Options ---------------------------- #
-parser = optparse.OptionParser()
+parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 Options.addFSOptions(parser)
 
@@ -110,23 +110,19 @@ if '--ruby' in sys.argv:
     Ruby.define_options(parser)
 
 # ---------------------------- Parse Options --------------------------- #
-(options, args) = parser.parse_args()
-
-if args:
-    print("Error: script doesn't take any positional arguments")
-    sys.exit(1)
+args = parser.parse_args()
 
 # CPU and Memory
-(CPUClass, mem_mode, FutureClass) = Simulation.setCPUClass(options)
-MemClass = Simulation.setMemClass(options)
+(CPUClass, mem_mode, FutureClass) = Simulation.setCPUClass(args)
+MemClass = Simulation.setMemClass(args)
 
-np = options.num_cpus
+np = args.num_cpus
 
 # ---------------------------- Setup System ---------------------------- #
 # Edit this section to customize peripherals and system settings
 system = System()
-mdesc = SysConfig(disks=options.disk_image, rootdev=options.root_device,
-                        mem=options.mem_size, os_type=options.os_type)
+mdesc = SysConfig(disks=args.disk_image, rootdev=args.root_device,
+                        mem=args.mem_size, os_type=args.os_type)
 system.mem_mode = mem_mode
 system.mem_ranges = [AddrRange(start=0x80000000, size=mdesc.mem())]
 
@@ -166,63 +162,63 @@ system.platform.attachPlic()
 # ---------------------------- Default Setup --------------------------- #
 
 # Set the cache line size for the entire system
-system.cache_line_size = options.cacheline_size
+system.cache_line_size = args.cacheline_size
 
 # Create a top-level voltage domain
-system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
+system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
 
 # Create a source clock for the system and set the clock period
-system.clk_domain = SrcClockDomain(clock =  options.sys_clock,
+system.clk_domain = SrcClockDomain(clock =  args.sys_clock,
         voltage_domain = system.voltage_domain)
 
 # Create a CPU voltage domain
 system.cpu_voltage_domain = VoltageDomain()
 
 # Create a source clock for the CPUs and set the clock period
-system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
+system.cpu_clk_domain = SrcClockDomain(clock = args.cpu_clock,
                                             voltage_domain =
                                             system.cpu_voltage_domain)
 
-system.workload.object_file = options.kernel
+system.workload.object_file = args.kernel
 
 # NOTE: Not yet tested
-if options.script is not None:
-    system.readfile = options.script
+if args.script is not None:
+    system.readfile = args.script
 
-system.init_param = options.init_param
+system.init_param = args.init_param
 
 system.cpu = [CPUClass(clk_domain=system.cpu_clk_domain, cpu_id=i)
                 for i in range(np)]
 
-if options.caches or options.l2cache:
+if args.caches or args.l2cache:
     # By default the IOCache runs at the system clock
     system.iocache = IOCache(addr_ranges = system.mem_ranges)
     system.iocache.cpu_side = system.iobus.mem_side_ports
     system.iocache.mem_side = system.membus.cpu_side_ports
-elif not options.external_memory_system:
+elif not args.external_memory_system:
     system.iobridge = Bridge(delay='50ns', ranges = system.mem_ranges)
     system.iobridge.cpu_side_ports = system.iobus.mem_side_ports
     system.iobridge.mem_side_ports = system.membus.cpu_side_ports
 
 # Sanity check
-if options.simpoint_profile:
+if args.simpoint_profile:
     if not ObjectList.is_noncaching_cpu(CPUClass):
         fatal("SimPoint generation should be done with atomic cpu")
     if np > 1:
         fatal("SimPoint generation not supported with more than one CPUs")
 
 for i in range(np):
-    if options.simpoint_profile:
-        system.cpu[i].addSimPointProbe(options.simpoint_interval)
-    if options.checker:
+    if args.simpoint_profile:
+        system.cpu[i].addSimPointProbe(args.simpoint_interval)
+    if args.checker:
         system.cpu[i].addCheckerCpu()
     if not ObjectList.is_kvm_cpu(CPUClass):
-        if options.bp_type:
-            bpClass = ObjectList.bp_list.get(options.bp_type)
+        if args.bp_type:
+            bpClass = ObjectList.bp_list.get(args.bp_type)
             system.cpu[i].branchPred = bpClass()
-        if options.indirect_bp_type:
+        if args.indirect_bp_type:
             IndirectBPClass = ObjectList.indirect_bp_list.get(
-                options.indirect_bp_type)
+                args.indirect_bp_type)
             system.cpu[i].branchPred.indirectBranchPred = \
                 IndirectBPClass()
     system.cpu[i].createThreads()
@@ -257,15 +253,15 @@ system.workload.command_line = " ".join(kernel_cmd)
 
 # ---------------------------- Default Setup --------------------------- #
 
-if options.elastic_trace_en and options.checkpoint_restore == None and \
-    not options.fast_forward:
-    CpuConfig.config_etrace(CPUClass, system.cpu, options)
+if args.elastic_trace_en and args.checkpoint_restore == None and \
+    not args.fast_forward:
+    CpuConfig.config_etrace(CPUClass, system.cpu, args)
 
-CacheConfig.config_cache(options, system)
+CacheConfig.config_cache(args, system)
 
-MemConfig.config_mem(options, system)
+MemConfig.config_mem(args, system)
 
 root = Root(full_system=True, system=system)
 
-Simulation.setWorkCountOptions(system, options)
-Simulation.run(options, root, system, FutureClass)
+Simulation.setWorkCountOptions(system, args)
+Simulation.run(args, root, system, FutureClass)

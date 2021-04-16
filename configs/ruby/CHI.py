@@ -39,9 +39,9 @@ from m5.defines import buildEnv
 from .Ruby import create_topology
 
 def define_options(parser):
-    parser.add_option("--chi-config", action="store", type="string",
-                      default=None,
-                      help="NoC config. parameters and bindings. "
+    parser.add_argument("--chi-config", action="store", type=str,
+                        default=None,
+                        help="NoC config. parameters and bindings. "
                            "Required for CustomMesh topology")
 
 def read_config_file(file):
