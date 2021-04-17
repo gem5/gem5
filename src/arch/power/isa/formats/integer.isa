@@ -76,7 +76,7 @@ readXERCode = 'Xer xer = XER;'
 setXERCode = 'XER = xer;'
 
 computeCR0Code = '''
-    Cr cr = CR;
+    PowerISA::Cr cr = CR;
     cr.cr0 = makeCRFieldSigned(%(result)s, 0, xer.so);
     CR = cr;
 '''

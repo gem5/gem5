@@ -30,6 +30,7 @@
 #define __ARCH_POWER_INSTS_INTEGER_HH__
 
 #include "arch/power/insts/static_inst.hh"
+#include "arch/power/regs/misc.hh"
 #include "base/bitfield.hh"
 #include "base/cprintf.hh"
 

@@ -325,7 +325,7 @@ decode OPCODE default Unknown::unknown() {
                     }
                 }
                 Xer xer = XER;
-                Cr cr = CR;
+                PowerISA::Cr cr = CR;
                 cr.cr0 = ((store_performed ? 0x2 : 0x0) | xer.so);
                 CR = cr;
                 Rsv = 0;

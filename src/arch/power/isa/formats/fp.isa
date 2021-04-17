@@ -37,7 +37,7 @@ let {{
     readFPSCRCode = 'Fpscr fpscr = FPSCR;'
 
     computeCR1Code = '''
-        Cr cr = CR;
+        PowerISA::Cr cr = CR;
         cr.cr1 = (fpscr.fx << 3) | (fpscr.fex << 2) |
                  (fpscr.vx << 1) | fpscr.ox;
         CR = cr;
