@@ -43,7 +43,6 @@
 
 #include <algorithm>
 
-#include "arch/remote_gdb.hh"
 #include "base/compiler.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
@@ -124,13 +123,6 @@ System::Threads::insert(ThreadContext *tc, ContextID id)
     // been reallocated.
     t.resumeEvent = new EventFunctionWrapper(
             [this, id](){ thread(id).resume(); }, sys->name());
-#   if THE_ISA != NULL_ISA
-    int port = getRemoteGDBPort();
-    if (port) {
-        t.gdb = new TheISA::RemoteGDB(sys, tc, port + id);
-        t.gdb->listen();
-    }
-#   endif
 }
 
 void
@@ -138,8 +130,6 @@ System::Threads::replace(ThreadContext *tc, ContextID id)
 {
     auto &t = thread(id);
     panic_if(!t.context, "Can't replace a context which doesn't exist.");
-    if (t.gdb)
-        t.gdb->replaceThreadContext(tc);
 #   if THE_ISA != NULL_ISA
     if (t.resumeEvent->scheduled()) {
         Tick when = t.resumeEvent->when();
@@ -275,26 +265,6 @@ System::~System()
 {
     for (uint32_t j = 0; j < numWorkIds; j++)
         delete workItemStats[j];
-}
-
-void
-System::startup()
-{
-    SimObject::startup();
-
-    // Now that we're about to start simulation, wait for GDB connections if
-    // requested.
-#if THE_ISA != NULL_ISA
-    for (int i = 0; i < threads.size(); i++) {
-        auto *gdb = threads.thread(i).gdb;
-        auto *cpu = threads[i]->getCpuPtr();
-        if (gdb && cpu->waitForRemoteGDB()) {
-            inform("%s: Waiting for a remote GDB connection on port %d.",
-                   cpu->name(), gdb->port());
-            gdb->connect();
-        }
-    }
-#endif
 }
 
 Port &
@@ -520,11 +490,7 @@ System::workItemEnd(uint32_t tid, uint32_t workid)
 bool
 System::trapToGdb(int signal, ContextID ctx_id) const
 {
-    auto *gdb = threads.thread(ctx_id).gdb;
-    if (!gdb)
-        return false;
-    gdb->trap(ctx_id, signal);
-    return true;
+    return workload && workload->trapToGdb(signal, ctx_id);
 }
 
 void

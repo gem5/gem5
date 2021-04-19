@@ -146,9 +146,6 @@ class BaseCPU(ClockedObject):
     do_statistics_insts = Param.Bool(True,
         "enable statistics pseudo instructions")
 
-    wait_for_remote_gdb = Param.Bool(False,
-        "Wait for a remote GDB connection");
-
     workload = VectorParam.Process([], "processes to run")
 
     mmu = Param.BaseMMU(ArchMMU(), "CPU memory management unit")

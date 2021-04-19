@@ -119,7 +119,6 @@ class System : public SimObject, public PCEventScope
         {
             ThreadContext *context = nullptr;
             bool active = false;
-            BaseRemoteGDB *gdb = nullptr;
             Event *resumeEvent = nullptr;
 
             void resume();
@@ -230,8 +229,6 @@ class System : public SimObject, public PCEventScope
         const_iterator begin() const { return const_iterator(*this, 0); }
         const_iterator end() const { return const_iterator(*this, size()); }
     };
-
-    void startup() override;
 
     /**
      * Get a reference to the system port that can be used by

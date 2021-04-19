@@ -725,12 +725,6 @@ BaseCPU::traceFunctionsInternal(Addr pc)
     }
 }
 
-bool
-BaseCPU::waitForRemoteGDB() const
-{
-    return params().wait_for_remote_gdb;
-}
-
 
 BaseCPU::GlobalStats::GlobalStats(::Stats::Group *parent)
     : ::Stats::Group(parent),

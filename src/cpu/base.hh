@@ -609,8 +609,6 @@ class BaseCPU : public ClockedObject
         return &addressMonitor[tid];
     }
 
-    bool waitForRemoteGDB() const;
-
     Cycles syscallRetryLatency;
 
   // Enables CPU to enter power gating on a configurable cycle count

@@ -37,6 +37,7 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
+class BaseRemoteGDB;
 class System;
 class ThreadContext;
 
@@ -66,19 +67,28 @@ class Workload : public SimObject
         {}
     } stats;
 
+    BaseRemoteGDB *gdb = nullptr;
+    bool waitForRemoteGDB = false;
     std::set<ThreadContext *> threads;
 
   public:
-    Workload(const WorkloadParams &params) : SimObject(params), stats(this)
+    Workload(const WorkloadParams &params) : SimObject(params), stats(this),
+            waitForRemoteGDB(params.wait_for_remote_gdb)
     {}
 
     void recordQuiesce() { stats.instStats.quiesce++; }
     void recordArm() { stats.instStats.arm++; }
 
+    // Once trapping into GDB is no longer a special case routed through the
+    // system object, this helper can be removed.
+    bool trapToGdb(int signal, ContextID ctx_id);
+
     System *system = nullptr;
 
     virtual void registerThreadContext(ThreadContext *tc);
     virtual void replaceThreadContext(ThreadContext *tc);
+
+    void startup() override;
 
     virtual Addr getEntry() const = 0;
     virtual Loader::Arch getArch() const = 0;

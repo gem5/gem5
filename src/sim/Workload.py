@@ -33,6 +33,9 @@ class Workload(SimObject):
     cxx_header = "sim/workload.hh"
     abstract = True
 
+    wait_for_remote_gdb = Param.Bool(False,
+        "Wait for a remote GDB connection");
+
 class KernelWorkload(Workload):
     type = 'KernelWorkload'
     cxx_header = "sim/kernel_workload.hh"
