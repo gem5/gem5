@@ -1,16 +1,5 @@
-#!/usr/bin/env python3
-#
-# Copyright (c) 2021 ARM Limited
-# All rights reserved
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
+# Copyright (c) 2021 The Regents of the University of California
+# All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -35,17 +24,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if __name__ == "__main__":
-    import sys
-    print("ERROR: This file must be run from gem5.", file=sys.stderr)
-    sys.exit(1)
+import os
 
-if __name__ == "__m5_main__":
-    import unittest
+from testlib.configuration import constants
+from gem5.suite import *
 
-    loader = unittest.TestLoader()
-    tests = loader.discover("pyunit", pattern='pyunit*.py')
+'''
+As the filename begins with `test_`, it will be added to the TestLib testsuite
+when `../main.py` is run.
 
-    runner = unittest.runner.TextTestRunner(verbosity=2)
-    runner.run(tests)
+The purpose of this file is to ensure the pyunit tests are executed as part
+of a typical TestLib execution. These have been added as part of the "quick"
+tests and will run with NULL/gem5.*
+'''
 
+gem5_verify_config(
+        name="pyunit-tests",
+        config=os.path.join(os.getcwd(), os.pardir, 'run_pyunit.py'),
+        verifiers=(),
+        config_args=[],
+        valid_isas=(constants.null_tag,),
+        length = constants.quick_tag,
+)
