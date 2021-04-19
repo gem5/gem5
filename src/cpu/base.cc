@@ -431,9 +431,9 @@ BaseCPU::registerThreadContexts()
         ThreadContext *tc = threadContexts[tid];
 
         if (system->multiThread) {
-            tc->setContextId(system->registerThreadContext(tc));
+            system->registerThreadContext(tc);
         } else {
-            tc->setContextId(system->registerThreadContext(tc, _cpuId));
+            system->registerThreadContext(tc, _cpuId);
         }
 
         if (!FullSystem)

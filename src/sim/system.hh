@@ -142,7 +142,7 @@ class System : public SimObject, public PCEventScope
             return threads[id];
         }
 
-        ContextID insert(ThreadContext *tc, ContextID id=InvalidContextID);
+        void insert(ThreadContext *tc, ContextID id=InvalidContextID);
         void replace(ThreadContext *tc, ContextID id);
 
         friend class System;
@@ -586,7 +586,7 @@ class System : public SimObject, public PCEventScope
     /// @return Starting address of first page
     Addr allocPhysPages(int npages);
 
-    ContextID registerThreadContext(
+    void registerThreadContext(
             ThreadContext *tc, ContextID assigned=InvalidContextID);
     void replaceThreadContext(ThreadContext *tc, ContextID context_id);
 

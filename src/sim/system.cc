@@ -98,7 +98,7 @@ System::Threads::Thread::quiesce() const
         workload->recordQuiesce();
 }
 
-ContextID
+void
 System::Threads::insert(ThreadContext *tc, ContextID id)
 {
     if (id == InvalidContextID) {
@@ -107,6 +107,8 @@ System::Threads::insert(ThreadContext *tc, ContextID id)
                 break;
         }
     }
+
+    tc->setContextId(id);
 
     if (id >= size())
         threads.resize(id + 1);
@@ -129,8 +131,6 @@ System::Threads::insert(ThreadContext *tc, ContextID id)
         t.gdb->listen();
     }
 #   endif
-
-    return id;
 }
 
 void
@@ -296,15 +296,13 @@ System::setMemoryMode(Enums::MemoryMode mode)
     memoryMode = mode;
 }
 
-ContextID
+void
 System::registerThreadContext(ThreadContext *tc, ContextID assigned)
 {
-    ContextID id = threads.insert(tc, assigned);
+    threads.insert(tc, assigned);
 
     for (auto *e: liveEvents)
         tc->schedule(e);
-
-    return id;
 }
 
 bool
