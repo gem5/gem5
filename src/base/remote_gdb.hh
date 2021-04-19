@@ -149,7 +149,7 @@ class BaseRemoteGDB
     /**
      * Interface to other parts of the simulator.
      */
-    BaseRemoteGDB(System *system, ThreadContext *context, int _port);
+    BaseRemoteGDB(System *system, int _port);
     virtual ~BaseRemoteGDB();
 
     std::string name();

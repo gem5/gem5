@@ -142,7 +142,7 @@ class RemoteGDB : public BaseRemoteGDB
     RiscvGdbRegCache regCache;
 
   public:
-    RemoteGDB(System *_system, ThreadContext *tc, int _port);
+    RemoteGDB(System *_system, int _port);
     BaseGdbRegCache *gdbRegs() override;
     /**
      * Informs GDB remote serial protocol that XML features are supported

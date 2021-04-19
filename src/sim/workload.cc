@@ -33,6 +33,18 @@
 #include "sim/debug.hh"
 
 void
+Workload::setSystem(System *sys)
+{
+    system = sys;
+
+#   if THE_ISA != NULL_ISA
+    int port = getRemoteGDBPort();
+    if (port)
+        gdb = new TheISA::RemoteGDB(system, port);
+#   endif
+}
+
+void
 Workload::registerThreadContext(ThreadContext *tc)
 {
     std::set<ThreadContext *>::iterator it;
@@ -42,13 +54,8 @@ Workload::registerThreadContext(ThreadContext *tc)
             tc->contextId());
 
 #   if THE_ISA != NULL_ISA
-    int port = getRemoteGDBPort();
-    if (port && !gdb) {
-        gdb = new TheISA::RemoteGDB(system, tc, port);
-        gdb->listen();
-    } else if (gdb) {
+    if (gdb)
         gdb->addThreadContext(tc);
-    }
 #   endif
 }
 

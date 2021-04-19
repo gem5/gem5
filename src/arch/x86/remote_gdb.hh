@@ -143,7 +143,7 @@ class RemoteGDB : public BaseRemoteGDB
     AMD64GdbRegCache regCache64;
 
   public:
-    RemoteGDB(System *system, ThreadContext *context, int _port);
+    RemoteGDB(System *system, int _port);
     BaseGdbRegCache *gdbRegs();
 };
 } // namespace X86ISA

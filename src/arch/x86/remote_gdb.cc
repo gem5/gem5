@@ -63,8 +63,8 @@
 
 using namespace X86ISA;
 
-RemoteGDB::RemoteGDB(System *_system, ThreadContext *c, int _port) :
-    BaseRemoteGDB(_system, c, _port), regCache32(this), regCache64(this)
+RemoteGDB::RemoteGDB(System *_system, int _port) :
+    BaseRemoteGDB(_system, _port), regCache32(this), regCache64(this)
 {}
 
 bool

@@ -349,12 +349,10 @@ std::map<Addr, HardBreakpoint *> hardBreakMap;
 
 }
 
-BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, int _port) :
+BaseRemoteGDB::BaseRemoteGDB(System *_system, int _port) :
         connectEvent(nullptr), dataEvent(nullptr), _port(_port), fd(-1),
         sys(_system), trapEvent(this), singleStepEvent(*this)
-{
-    addThreadContext(c);
-}
+{}
 
 BaseRemoteGDB::~BaseRemoteGDB()
 {
@@ -392,7 +390,7 @@ void
 BaseRemoteGDB::connect()
 {
     panic_if(!listener.islistening(),
-             "Cannot accept GDB connections if we're not listening!");
+             "Can't accept GDB connections without any threads!");
 
     int sfd = listener.accept(true);
 
@@ -445,6 +443,10 @@ BaseRemoteGDB::addThreadContext(ThreadContext *_tc)
     // If no ThreadContext is current selected, select this one.
     if (!tc)
         assert(selectThreadContext(_tc->contextId()));
+
+    // Now that we have a thread, we can start listening.
+    if (!listener.islistening())
+        listen();
 }
 
 void

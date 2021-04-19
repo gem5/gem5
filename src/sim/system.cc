@@ -212,7 +212,7 @@ System::System(const Params &p)
       redirectPaths(p.redirect_paths)
 {
     if (workload)
-        workload->system = this;
+        workload->setSystem(this);
 
     // add self to global system list
     systemList.push_back(this);

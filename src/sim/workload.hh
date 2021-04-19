@@ -71,10 +71,14 @@ class Workload : public SimObject
     bool waitForRemoteGDB = false;
     std::set<ThreadContext *> threads;
 
+    System *system = nullptr;
+
   public:
     Workload(const WorkloadParams &params) : SimObject(params), stats(this),
             waitForRemoteGDB(params.wait_for_remote_gdb)
     {}
+
+    void setSystem(System *sys);
 
     void recordQuiesce() { stats.instStats.quiesce++; }
     void recordArm() { stats.instStats.arm++; }
@@ -82,8 +86,6 @@ class Workload : public SimObject
     // Once trapping into GDB is no longer a special case routed through the
     // system object, this helper can be removed.
     bool trapToGdb(int signal, ContextID ctx_id);
-
-    System *system = nullptr;
 
     virtual void registerThreadContext(ThreadContext *tc);
     virtual void replaceThreadContext(ThreadContext *tc);
