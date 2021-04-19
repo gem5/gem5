@@ -28,6 +28,9 @@
 #ifndef __SIM_WORKLOAD_HH__
 #define __SIM_WORKLOAD_HH__
 
+#include <set>
+#include <tuple>
+
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "params/Workload.hh"
@@ -63,6 +66,8 @@ class Workload : public SimObject
         {}
     } stats;
 
+    std::set<ThreadContext *> threads;
+
   public:
     Workload(const WorkloadParams &params) : SimObject(params), stats(this)
     {}
@@ -71,6 +76,9 @@ class Workload : public SimObject
     void recordArm() { stats.instStats.arm++; }
 
     System *system = nullptr;
+
+    virtual void registerThreadContext(ThreadContext *tc);
+    virtual void replaceThreadContext(ThreadContext *tc);
 
     virtual Addr getEntry() const = 0;
     virtual Loader::Arch getArch() const = 0;

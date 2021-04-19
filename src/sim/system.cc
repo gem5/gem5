@@ -301,6 +301,9 @@ System::registerThreadContext(ThreadContext *tc, ContextID assigned)
 {
     threads.insert(tc, assigned);
 
+    if (workload)
+        workload->registerThreadContext(tc);
+
     for (auto *e: liveEvents)
         tc->schedule(e);
 }
@@ -330,6 +333,9 @@ System::replaceThreadContext(ThreadContext *tc, ContextID context_id)
 {
     auto *otc = threads[context_id];
     threads.replace(tc, context_id);
+
+    if (workload)
+        workload->replaceThreadContext(tc);
 
     for (auto *e: liveEvents) {
         otc->remove(e);
