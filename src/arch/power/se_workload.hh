@@ -30,6 +30,7 @@
 
 #include "arch/power/regs/int.hh"
 #include "arch/power/regs/misc.hh"
+#include "arch/power/remote_gdb.hh"
 #include "params/PowerSEWorkload.hh"
 #include "sim/se_workload.hh"
 #include "sim/syscall_abi.hh"
@@ -43,6 +44,13 @@ class SEWorkload : public ::SEWorkload
   public:
     using Params = PowerSEWorkloadParams;
     SEWorkload(const Params &p) : ::SEWorkload(p) {}
+
+    void
+    setSystem(System *sys) override
+    {
+        ::SEWorkload::setSystem(sys);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+    }
 
     ::Loader::Arch getArch() const override { return ::Loader::Power; }
 

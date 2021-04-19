@@ -46,6 +46,7 @@
 
 #include "arch/arm/aapcs32.hh"
 #include "arch/arm/aapcs64.hh"
+#include "arch/arm/remote_gdb.hh"
 #include "kern/linux/events.hh"
 #include "params/ArmFsWorkload.hh"
 #include "sim/kernel_workload.hh"
@@ -142,6 +143,13 @@ class FsWorkload : public KernelWorkload
     FsWorkload(const Params &p);
 
     void initState() override;
+
+    void
+    setSystem(System *sys) override
+    {
+        KernelWorkload::setSystem(sys);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+    }
 
     Addr
     fixFuncEventAddr(Addr addr) const override

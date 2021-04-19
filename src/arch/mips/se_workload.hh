@@ -29,6 +29,7 @@
 #define __ARCH_MIPS_SE_WORKLOAD_HH__
 
 #include "arch/mips/regs/int.hh"
+#include "arch/mips/remote_gdb.hh"
 #include "params/MipsSEWorkload.hh"
 #include "sim/se_workload.hh"
 #include "sim/syscall_abi.hh"
@@ -43,6 +44,13 @@ class SEWorkload : public ::SEWorkload
     using Params = MipsSEWorkloadParams;
 
     SEWorkload(const Params &p) : ::SEWorkload(p) {}
+
+    void
+    setSystem(System *sys) override
+    {
+        ::SEWorkload::setSystem(sys);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+    }
 
     ::Loader::Arch getArch() const override { return ::Loader::Mips; }
 

@@ -29,6 +29,7 @@
 #ifndef __ARCH_RISCV_BARE_METAL_SYSTEM_HH__
 #define __ARCH_RISCV_BARE_METAL_SYSTEM_HH__
 
+#include "arch/riscv/remote_gdb.hh"
 #include "params/RiscvBareMetal.hh"
 #include "sim/workload.hh"
 
@@ -51,6 +52,13 @@ class BareMetal : public Workload
     ~BareMetal();
 
     void initState() override;
+
+    void
+    setSystem(System *sys) override
+    {
+        Workload::setSystem(sys);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+    }
 
     Loader::Arch getArch() const override { return bootloader->getArch(); }
     const Loader::SymbolTable &

@@ -30,6 +30,7 @@
 #define __ARCH_SPARC_FS_WORKLOAD_HH__
 
 #include "arch/sparc/faults.hh"
+#include "arch/sparc/remote_gdb.hh"
 #include "params/SparcFsWorkload.hh"
 #include "sim/workload.hh"
 
@@ -44,6 +45,13 @@ class FsWorkload : public Workload
   public:
     FsWorkload(const SparcFsWorkloadParams &params) : Workload(params) {}
     void initState() override;
+
+    void
+    setSystem(System *sys) override
+    {
+        Workload::setSystem(sys);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+    }
 
     Addr
     getEntry() const override

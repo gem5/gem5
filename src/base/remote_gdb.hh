@@ -56,6 +56,7 @@
 #include "base/socket.hh"
 #include "base/types.hh"
 #include "cpu/pc_event.hh"
+#include "sim/debug.hh"
 #include "sim/eventq.hh"
 
 /*
@@ -170,6 +171,17 @@ class BaseRemoteGDB
     bool trap(ContextID id, int type);
 
     /** @} */ // end of api_remote_gdb
+
+    template <class GDBStub, class ...Args>
+    static BaseRemoteGDB *
+    build(Args... args)
+    {
+        int port = getRemoteGDBPort();
+        if (port)
+            return new GDBStub(args..., port);
+        else
+            return nullptr;
+    }
 
   private:
     /*

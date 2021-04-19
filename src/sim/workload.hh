@@ -78,7 +78,7 @@ class Workload : public SimObject
             waitForRemoteGDB(params.wait_for_remote_gdb)
     {}
 
-    void setSystem(System *sys);
+    virtual void setSystem(System *sys) { system = sys; }
 
     void recordQuiesce() { stats.instStats.quiesce++; }
     void recordArm() { stats.instStats.arm++; }

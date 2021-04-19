@@ -32,6 +32,7 @@
 
 #include "arch/sparc/regs/int.hh"
 #include "arch/sparc/regs/misc.hh"
+#include "arch/sparc/remote_gdb.hh"
 #include "base/loader/object_file.hh"
 #include "cpu/thread_context.hh"
 #include "sim/se_workload.hh"
@@ -44,6 +45,13 @@ class SEWorkload : public ::SEWorkload
 {
   public:
     using ::SEWorkload::SEWorkload;
+
+    void
+    setSystem(System *sys) override
+    {
+        ::SEWorkload::setSystem(sys);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+    }
 
     virtual void handleTrap(ThreadContext *tc, int trapNum);
     virtual void flushWindows(ThreadContext *tc);

@@ -40,6 +40,7 @@
 #define __ARCH_X86_LINUX_SE_WORKLOAD_HH__
 
 #include "arch/x86/linux/linux.hh"
+#include "arch/x86/remote_gdb.hh"
 #include "params/X86EmuLinux.hh"
 #include "sim/process.hh"
 #include "sim/se_workload.hh"
@@ -55,6 +56,13 @@ class EmuLinux : public SEWorkload
     using Params = X86EmuLinuxParams;
 
     EmuLinux(const Params &p);
+
+    void
+    setSystem(System *sys) override
+    {
+        SEWorkload::setSystem(sys);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+    }
 
     ::Loader::Arch getArch() const override { return ::Loader::X86_64; }
 

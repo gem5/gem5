@@ -30,6 +30,7 @@
 
 #include "arch/riscv/reg_abi.hh"
 #include "arch/riscv/regs/int.hh"
+#include "arch/riscv/remote_gdb.hh"
 #include "params/RiscvSEWorkload.hh"
 #include "sim/se_workload.hh"
 #include "sim/syscall_abi.hh"
@@ -43,6 +44,13 @@ class SEWorkload : public ::SEWorkload
     using Params = RiscvSEWorkloadParams;
 
     SEWorkload(const Params &p) : ::SEWorkload(p) {}
+
+    void
+    setSystem(System *sys) override
+    {
+        ::SEWorkload::setSystem(sys);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+    }
 
     ::Loader::Arch getArch() const override { return ::Loader::Riscv64; }
 

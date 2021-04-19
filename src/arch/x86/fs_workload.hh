@@ -43,6 +43,7 @@
 
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/regs/segment.hh"
+#include "arch/x86/remote_gdb.hh"
 #include "base/types.hh"
 #include "cpu/thread_context.hh"
 #include "params/X86FsWorkload.hh"
@@ -79,6 +80,13 @@ class FsWorkload : public KernelWorkload
 
   public:
     void initState() override;
+
+    void
+    setSystem(System *sys) override
+    {
+        KernelWorkload::setSystem(sys);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+    }
 
   protected:
 

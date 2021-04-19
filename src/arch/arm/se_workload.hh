@@ -29,6 +29,7 @@
 #define __ARCH_ARM_SE_WORKLOAD_HH__
 
 #include "arch/arm/reg_abi.hh"
+#include "arch/arm/remote_gdb.hh"
 #include "params/ArmSEWorkload.hh"
 #include "sim/se_workload.hh"
 
@@ -41,6 +42,13 @@ class SEWorkload : public ::SEWorkload
     using Params = ArmSEWorkloadParams;
 
     SEWorkload(const Params &p) : ::SEWorkload(p) {}
+
+    void
+    setSystem(System *sys) override
+    {
+        ::SEWorkload::setSystem(sys);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+    }
 
     ::Loader::Arch getArch() const override { return ::Loader::Arm64; }
 

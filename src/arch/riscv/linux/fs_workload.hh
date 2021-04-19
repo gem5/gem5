@@ -29,6 +29,7 @@
 #ifndef __ARCH_RISCV_LINUX_SYSTEM_HH__
 #define __ARCH_RISCV_LINUX_SYSTEM_HH__
 
+#include "arch/riscv/remote_gdb.hh"
 #include "params/RiscvLinux.hh"
 #include "sim/kernel_workload.hh"
 
@@ -42,6 +43,13 @@ class FsLinux : public KernelWorkload
     FsLinux(const Params &p) : KernelWorkload(p) {}
 
     void initState() override;
+
+    void
+    setSystem(System *sys) override
+    {
+        KernelWorkload::setSystem(sys);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+    }
 };
 
 } // namespace RiscvISA

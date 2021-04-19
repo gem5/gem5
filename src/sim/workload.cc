@@ -27,22 +27,10 @@
 
 #include "sim/workload.hh"
 
-#include "arch/remote_gdb.hh"
+#include "base/remote_gdb.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "sim/debug.hh"
-
-void
-Workload::setSystem(System *sys)
-{
-    system = sys;
-
-#   if THE_ISA != NULL_ISA
-    int port = getRemoteGDBPort();
-    if (port)
-        gdb = new TheISA::RemoteGDB(system, port);
-#   endif
-}
 
 void
 Workload::registerThreadContext(ThreadContext *tc)
@@ -75,8 +63,10 @@ Workload::replaceThreadContext(ThreadContext *tc)
         panic_if(!success,
                 "Failed to insert replacement thread context %d.", id);
 
+#       if THE_ISA != NULL_ISA
         if (gdb)
             gdb->replaceThreadContext(tc);
+#       endif
 
         return;
     }
