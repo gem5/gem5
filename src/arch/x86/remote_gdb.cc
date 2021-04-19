@@ -49,6 +49,8 @@
 #include "arch/x86/process.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"
+#include "base/loader/object_file.hh"
+#include "base/logging.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
@@ -57,6 +59,7 @@
 #include "debug/GDBAcc.hh"
 #include "mem/page_table.hh"
 #include "sim/full_system.hh"
+#include "sim/workload.hh"
 
 using namespace X86ISA;
 
@@ -91,6 +94,21 @@ RemoteGDB::acc(Addr va, size_t len)
 BaseGdbRegCache*
 RemoteGDB::gdbRegs()
 {
+    // First, try to figure out which type of register cache to return based
+    // on the architecture reported by the workload.
+    if (system()->workload) {
+        auto arch = system()->workload->getArch();
+        if (arch == Loader::X86_64) {
+            return &regCache64;
+        } else if (arch == Loader::I386) {
+            return &regCache32;
+        } else if (arch != Loader::UnknownArch) {
+            panic("Unrecognized workload arch %s.",
+                    Loader::archToString(arch));
+        }
+    }
+
+    // If that didn't work, decide based on the current mode of the context.
     HandyM5Reg m5reg = context()->readMiscRegNoEffect(MISCREG_M5_REG);
     if (m5reg.submode == SixtyFourBitMode)
         return &regCache64;
