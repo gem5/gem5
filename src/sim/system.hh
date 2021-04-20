@@ -561,6 +561,9 @@ class System : public SimObject, public PCEventScope
 
     void workItemEnd(uint32_t tid, uint32_t workid);
 
+    /* Returns whether we successfully trapped into GDB. */
+    bool trapToGdb(int signal, ContextID ctx_id) const;
+
   protected:
     /**
      * Range for memory-mapped m5 pseudo ops. The range will be

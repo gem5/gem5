@@ -495,6 +495,16 @@ System::workItemEnd(uint32_t tid, uint32_t workid)
     lastWorkItemStarted.erase(p);
 }
 
+bool
+System::trapToGdb(int signal, ContextID ctx_id) const
+{
+    auto *gdb = threads.thread(ctx_id).gdb;
+    if (!gdb)
+        return false;
+    gdb->trap(signal);
+    return true;
+}
+
 void
 System::printSystems()
 {

@@ -40,6 +40,8 @@
 
 #include "sim/faults.hh"
 
+#include <csignal>
+
 #include "arch/decoder.hh"
 #include "arch/locked_mem.hh"
 #include "base/logging.hh"
@@ -94,15 +96,16 @@ GenericPageTableFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         Process *p = tc->getProcessPtr();
         handled = p->fixupFault(vaddr);
     }
-    panic_if(!handled, "Page table fault when accessing virtual address %#x",
-             vaddr);
-
+    panic_if(!handled &&
+                 !tc->getSystemPtr()->trapToGdb(SIGSEGV, tc->contextId()),
+             "Page table fault when accessing virtual address %#x\n", vaddr);
 }
 
 void
 GenericAlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    panic("Alignment fault when accessing virtual address %#x\n", vaddr);
+    panic_if(!tc->getSystemPtr()->trapToGdb(SIGSEGV, tc->contextId()),
+             "Alignment fault when accessing virtual address %#x\n", vaddr);
 }
 
 void GenericHtmFailureFault::invoke(ThreadContext *tc,

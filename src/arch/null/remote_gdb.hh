@@ -47,6 +47,7 @@ class BaseRemoteGDB
 
     bool breakpoint() { return false; }
     void replaceThreadContext(ThreadContext *tc) {}
+    bool trap(int type) { return true; }
 
     virtual ~BaseRemoteGDB() {}
 };
