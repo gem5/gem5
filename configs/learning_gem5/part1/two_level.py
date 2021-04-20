@@ -70,6 +70,8 @@ thispath = os.path.dirname(os.path.realpath(__file__))
 binary = os.path.join(thispath, '../../../',
                       'tests/test-progs/hello/bin/', isa, 'linux/hello')
 
+binary = 'cpu_tests/benchmarks/bin/arm/Bubblesort'
+
 # Check if there was a binary passed in via the command line and error if
 # there are too many arguments
 if len(args) == 1:
@@ -88,10 +90,10 @@ system.clk_domain.voltage_domain = VoltageDomain()
 
 # Set up the system
 system.mem_mode = 'timing'               # Use timing accesses
-system.mem_ranges = [AddrRange('512MB')] # Create an address range
+system.mem_ranges = [AddrRange('8192MB')] # Create an address range
 
 # Create a simple CPU
-system.cpu = TimingSimpleCPU()
+system.cpu = DerivO3CPU()
 
 # Create an L1 instruction and data cache
 system.cpu.icache = L1ICache(opts)
@@ -110,6 +112,7 @@ system.cpu.dcache.connectBus(system.l2bus)
 
 # Create an L2 cache and connect it to the l2bus
 system.l2cache = L2Cache(opts)
+system.l2cache.tags.indexing_policy = PrimeDisplacement()
 system.l2cache.connectCPUSideBus(system.l2bus)
 
 # Create a memory bus

@@ -51,3 +51,17 @@ class SkewedAssociative(BaseIndexingPolicy):
     type = 'SkewedAssociative'
     cxx_class = 'SkewedAssociative'
     cxx_header = "mem/cache/tags/indexing_policies/skewed_associative.hh"
+
+class PrimeModulo(BaseIndexingPolicy):
+    type = 'PrimeModulo'
+    cxx_class = 'PrimeModulo'
+    cxx_header = "mem/cache/tags/indexing_policies/prime_modulo.hh"
+
+    modulo = Param.Int(7, "prime to use for modulo")
+
+class PrimeDisplacement(BaseIndexingPolicy):
+    type = 'PrimeDisplacement'
+    cxx_class = 'PrimeDisplacement'
+    cxx_header = "mem/cache/tags/indexing_policies/prime_displacement.hh"
+
+    modulo = Param.Int(7, "prime to use for multiplier")
