@@ -51,8 +51,8 @@ class CpuPowerOn(MathExprPowerModel):
         # 2A per IPC, 3pA per cache miss
         # and then convert to Watt
         self.dyn =  "voltage * (2 * {}.ipc + 3 * 0.000000001 * " \
-                    "{}.dcache.overall_misses / sim_seconds)".format(cpu_path,
-                                                                     cpu_path)
+                    "{}.dcache.overallMisses / simSeconds)".format(cpu_path,
+                                                                   cpu_path)
         self.st = "4 * temp"
 
 class CpuPowerOff(MathExprPowerModel):
@@ -72,10 +72,10 @@ class CpuPowerModel(PowerModel):
 class L2PowerOn(MathExprPowerModel):
     def __init__(self, l2_path, **kwargs):
         super(L2PowerOn, self).__init__(**kwargs)
-        # Example to report l2 Cache overall_accesses
+        # Example to report l2 Cache overallAccesses
         # The estimated power is converted to Watt and will vary based
         # on the size of the cache
-        self.dyn = "{}.overall_accesses * 0.000018000".format(l2_path)
+        self.dyn = "{}.overallAccesses * 0.000018000".format(l2_path)
         self.st = "(voltage * 3)/10"
 
 class L2PowerOff(MathExprPowerModel):
