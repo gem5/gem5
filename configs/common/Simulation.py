@@ -710,7 +710,7 @@ def run(options, root, testsys, cpu_class):
         takeSimpointCheckpoints(simpoints, interval_length, cptdir)
 
     # Restore from SimPoint checkpoints
-    elif options.restore_simpoint_checkpoint != None:
+    elif options.restore_simpoint_checkpoint:
         restoreSimpointCheckpoint()
 
     else:
