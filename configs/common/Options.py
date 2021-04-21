@@ -305,6 +305,7 @@ def addCommonOptions(parser):
     parser.add_option("--take-simpoint-checkpoints", action="store", type="string",
         help="<simpoint file,weight file,interval-length,warmup-length>")
     parser.add_option("--restore-simpoint-checkpoint", action="store_true",
+        default=False,
         help="restore from a simpoint checkpoint taken with " +
              "--take-simpoint-checkpoints")
 
