@@ -75,6 +75,7 @@
 #include "base/cast.hh"
 #include "base/cprintf.hh"
 #include "base/intmath.hh"
+#include "base/logging.hh"
 #include "base/stats/group.hh"
 #include "base/stats/info.hh"
 #include "base/stats/output.hh"
@@ -259,6 +260,14 @@ class DataWrap : public InfoAccess
 
         if (desc)
             info->desc = desc;
+
+        // Stat that does not belong to any Stats::Group is a legacy stat
+        std::string common_message = "Legacy stat is a stat that does not "
+            "belong to any Stats::Group. Legacy stat is deprecated.";
+        if (parent == nullptr && name != nullptr)
+            warn(csprintf("`%s` is a legacy stat. %s", name, common_message));
+        else if (parent == nullptr)
+            warn_once("One of the stats is a legacy stat. " + common_message);
     }
 
     /**
