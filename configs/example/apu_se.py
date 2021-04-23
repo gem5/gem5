@@ -49,26 +49,6 @@ from common import GPUTLBOptions, GPUTLBConfig
 import hsaTopology
 from common import FileSystemConfig
 
-########################## Script Options ########################
-def setOption(parser, opt_str, value = 1):
-    # check to make sure the option actually exists
-    if not parser.has_option(opt_str):
-        raise Exception("cannot find %s in list of possible options" % opt_str)
-
-    opt = parser.get_option(opt_str)
-    # set the value
-    exec("parser.values.%s = %s" % (opt.dest, value))
-
-def getOption(parser, opt_str):
-    # check to make sure the option actually exists
-    if not parser.has_option(opt_str):
-        raise Exception("cannot find %s in list of possible options" % opt_str)
-
-    opt = parser.get_option(opt_str)
-    # get the value
-    exec("return_value = parser.values.%s" % opt.dest)
-    return return_value
-
 
 # Adding script options
 parser = argparse.ArgumentParser()
@@ -186,12 +166,12 @@ parser.add_argument("--num-hw-queues", type=int, default=10,
 parser.add_argument("--reg-alloc-policy", type=str, default="simple",
                     help="register allocation policy (simple/dynamic)")
 
-parser.add_option("--dgpu", action="store_true", default=False,
-                  help="Configure the system as a dGPU instead of an APU. "
-                  "The dGPU config has its own local memory pool and is not "
-                  "coherent with the host through hardware.  Data is "
-                  "transfered from host to device memory using runtime calls "
-                  "that copy data over a PCIe-like IO bus.")
+parser.add_argument("--dgpu", action="store_true", default=False,
+                    help="Configure the system as a dGPU instead of an APU. "
+                    "The dGPU config has its own local memory pool and is not "
+                    "coherent with the host through hardware.  Data is "
+                    "transfered from host to device memory using runtime calls "
+                    "that copy data over a PCIe-like IO bus.")
 
 Ruby.define_options(parser)
 
@@ -201,7 +181,7 @@ GPUTLBOptions.tlb_options(parser)
 args = parser.parse_args()
 
 # The GPU cache coherence protocols only work with the backing store
-setOption(parser, "--access-backing-store")
+args.access_backing_store = True
 
 # if benchmark root is specified explicitly, that overrides the search path
 if args.benchmark_root:
