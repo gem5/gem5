@@ -776,11 +776,16 @@ def create_system(options, full_system, system, dma_devices, bootmem,
         dma_cntrl = DMA_Controller(version=i, dma_sequencer=dma_seq,
                                    ruby_system=ruby_system)
         exec('system.dma_cntrl%d = dma_cntrl' % i)
-        if dma_device.type == 'MemTest':
+
+        # IDE doesn't have a .type but seems like everything else does.
+        if not hasattr(dma_device, 'type'):
+            exec('system.dma_cntrl%d.dma_sequencer.slave = dma_device' % i)
+        elif dma_device.type == 'MemTest':
             exec('system.dma_cntrl%d.dma_sequencer.slave = dma_devices.test'
                  % i)
         else:
             exec('system.dma_cntrl%d.dma_sequencer.slave = dma_device.dma' % i)
+
         dma_cntrl.requestToDir = MessageBuffer(buffer_size=0)
         dma_cntrl.requestToDir.master = ruby_system.network.slave
         dma_cntrl.responseFromDir = MessageBuffer(buffer_size=0)
