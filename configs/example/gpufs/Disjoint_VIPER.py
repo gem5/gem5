@@ -182,8 +182,11 @@ class Disjoint_VIPER(RubySystem):
             cp_sequencers[i].pio_request_port = piobus.cpu_side_ports
             cp_sequencers[i].mem_request_port = piobus.cpu_side_ports
 
-            # Note: only used in X86
-            cp_sequencers[i].pio_response_port = piobus.mem_side_ports
+            # The CorePairs in MOESI_AMD_Base round up when constructing
+            # sequencers, but if the CPU does not exit there would be no
+            # sequencer to send a range change, leading to assert.
+            if i < options.num_cpus:
+                cp_sequencers[i].pio_response_port = piobus.mem_side_ports
 
 
         # Setup ruby port. Both CPU and GPU are actually connected here.
