@@ -181,14 +181,14 @@ parser.add_argument("--dgpu", action="store_true", default=False,
 #--     0   1   x   UC_L2   (Uncached_GL2)
 #--     0   0   x   UC_All  (Uncached_All_Load)
 # default value: 5/C_RO_S (only allow caching in GL2 for read. Shared)
-parser.add_argument("--m-type", type='int', default=5,
+parser.add_argument("--m-type", type=int, default=5,
                     help="Default Mtype for GPU memory accesses.  This is the "
                     "value used for all memory accesses on an APU and is the "
                     "default mode for dGPU unless explicitly overwritten by "
                     "the driver on a per-page basis.  Valid values are "
                     "between 0-7")
 
-parser.add_argument("--gfx-version", type="string", default='gfx801',
+parser.add_argument("--gfx-version", type=str, default='gfx801',
                     help="Gfx version for gpu: gfx801, gfx803, gfx900")
 
 Ruby.define_options(parser)
