@@ -49,6 +49,7 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
+#include "cpu/regfile.hh"
 #include "debug/IEW.hh"
 
 namespace gem5
@@ -72,28 +73,28 @@ class PhysRegFile
                               PhysIds::iterator>;
   private:
     /** Integer register file. */
-    std::vector<RegVal> intRegFile;
+    RegFile intRegFile;
     std::vector<PhysRegId> intRegIds;
     RegId zeroReg;
 
     /** Floating point register file. */
-    std::vector<RegVal> floatRegFile;
+    RegFile floatRegFile;
     std::vector<PhysRegId> floatRegIds;
 
     /** Vector register file. */
-    std::vector<TheISA::VecRegContainer> vectorRegFile;
+    RegFile vectorRegFile;
     std::vector<PhysRegId> vecRegIds;
 
     /** Vector element register file. */
-    std::vector<RegVal> vectorElemRegFile;
+    RegFile vectorElemRegFile;
     std::vector<PhysRegId> vecElemIds;
 
     /** Predicate register file. */
-    std::vector<TheISA::VecPredRegContainer> vecPredRegFile;
+    RegFile vecPredRegFile;
     std::vector<PhysRegId> vecPredRegIds;
 
     /** Condition-code register file. */
-    std::vector<RegVal> ccRegFile;
+    RegFile ccRegFile;
     std::vector<PhysRegId> ccRegIds;
 
     /** Misc Reg Ids */
@@ -131,8 +132,6 @@ class PhysRegFile
 
     /** Total number of physical registers. */
     unsigned totalNumRegs;
-
-    const BaseISA::RegClasses &regClasses;
 
   public:
     /**
@@ -185,8 +184,8 @@ class PhysRegFile
         assert(phys_reg->is(IntRegClass));
 
         DPRINTF(IEW, "RegFile: Access to int register %i, has data "
-                "%#x\n", phys_reg->index(), intRegFile[phys_reg->index()]);
-        return intRegFile[phys_reg->index()];
+                "%#x\n", phys_reg->index(), intRegFile.reg(phys_reg->index()));
+        return intRegFile.reg(phys_reg->index());
     }
 
     RegVal
@@ -194,7 +193,7 @@ class PhysRegFile
     {
         assert(phys_reg->is(FloatRegClass));
 
-        RegVal floatRegBits = floatRegFile[phys_reg->index()];
+        RegVal floatRegBits = floatRegFile.reg(phys_reg->index());
 
         DPRINTF(IEW, "RegFile: Access to float register %i as int, "
                 "has data %#x\n", phys_reg->index(), floatRegBits);
@@ -210,9 +209,9 @@ class PhysRegFile
 
         DPRINTF(IEW, "RegFile: Access to vector register %i, has "
                 "data %s\n", int(phys_reg->index()),
-                vectorRegFile[phys_reg->index()]);
+                vectorRegFile.reg<TheISA::VecRegContainer>(phys_reg->index()));
 
-        return vectorRegFile[phys_reg->index()];
+        return vectorRegFile.reg<TheISA::VecRegContainer>(phys_reg->index());
     }
 
     /** Reads a vector register for modification. */
@@ -228,10 +227,9 @@ class PhysRegFile
     readVecElem(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->is(VecElemClass));
-        RegVal val = vectorElemRegFile[phys_reg->index()];
+        RegVal val = vectorElemRegFile.reg(phys_reg->index());
         DPRINTF(IEW, "RegFile: Access to vector register element %d,"
                 " has data %#x\n", phys_reg->index(), val);
-
         return val;
     }
 
@@ -243,9 +241,11 @@ class PhysRegFile
 
         DPRINTF(IEW, "RegFile: Access to predicate register %i, has "
                 "data %s\n", int(phys_reg->index()),
-                vecPredRegFile[phys_reg->index()]);
+                vecPredRegFile.reg<TheISA::VecPredRegContainer>(
+                    phys_reg->index()));
 
-        return vecPredRegFile[phys_reg->index()];
+        return vecPredRegFile.reg<TheISA::VecPredRegContainer>(
+                phys_reg->index());
     }
 
     TheISA::VecPredRegContainer&
@@ -264,9 +264,9 @@ class PhysRegFile
 
         DPRINTF(IEW, "RegFile: Access to cc register %i, has "
                 "data %#x\n", phys_reg->index(),
-                ccRegFile[phys_reg->index()]);
+                ccRegFile.reg(phys_reg->index()));
 
-        return ccRegFile[phys_reg->index()];
+        return ccRegFile.reg(phys_reg->index());
     }
 
     /** Sets an integer register to the given value. */
@@ -279,7 +279,7 @@ class PhysRegFile
                 phys_reg->index(), val);
 
         if (phys_reg->index() != zeroReg.index())
-            intRegFile[phys_reg->index()] = val;
+            intRegFile.reg(phys_reg->index()) = val;
     }
 
     void
@@ -290,7 +290,7 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
                 phys_reg->index(), (uint64_t)val);
 
-        floatRegFile[phys_reg->index()] = val;
+        floatRegFile.reg(phys_reg->index()) = val;
     }
 
     /** Sets a vector register to the given value. */
@@ -302,7 +302,7 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting vector register %i to %s\n",
                 int(phys_reg->index()), val);
 
-        vectorRegFile[phys_reg->index()] = val;
+        vectorRegFile.reg<TheISA::VecRegContainer>(phys_reg->index()) = val;
     }
 
     /** Sets a vector register to the given value. */
@@ -314,7 +314,7 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting vector register element %d to %#x\n",
                 phys_reg->index(), val);
 
-        vectorElemRegFile[phys_reg->index()] = val;
+        vectorElemRegFile.reg(phys_reg->index()) = val;
     }
 
     /** Sets a predicate register to the given value. */
@@ -327,7 +327,8 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting predicate register %i to %s\n",
                 int(phys_reg->index()), val);
 
-        vecPredRegFile[phys_reg->index()] = val;
+        vecPredRegFile.reg<TheISA::VecPredRegContainer>(
+                phys_reg->index()) = val;
     }
 
     /** Sets a condition-code register to the given value. */
@@ -339,7 +340,7 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting cc register %i to %#x\n",
                 phys_reg->index(), (uint64_t)val);
 
-        ccRegFile[phys_reg->index()] = val;
+        ccRegFile.reg(phys_reg->index()) = val;
     }
 
     /**

@@ -53,6 +53,7 @@
 #include "arch/vecregs.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
+#include "cpu/regfile.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
 #include "debug/CCRegs.hh"
@@ -96,12 +97,12 @@ class SimpleThread : public ThreadState, public ThreadContext
     typedef ThreadContext::Status Status;
 
   protected:
-    std::vector<RegVal> floatRegs;
-    std::vector<RegVal> intRegs;
-    std::vector<TheISA::VecRegContainer> vecRegs;
-    std::vector<RegVal> vecElemRegs;
-    std::vector<TheISA::VecPredRegContainer> vecPredRegs;
-    std::vector<RegVal> ccRegs;
+    RegFile floatRegs;
+    RegFile intRegs;
+    RegFile vecRegs;
+    RegFile vecElemRegs;
+    RegFile vecPredRegs;
+    RegFile ccRegs;
     TheISA::ISA *const isa;    // one "instance" of the current ISA.
 
     std::unique_ptr<PCStateBase> _pcState;
@@ -249,14 +250,12 @@ class SimpleThread : public ThreadState, public ThreadContext
     clearArchRegs() override
     {
         set(_pcState, isa->newPCState());
-        std::fill(intRegs.begin(), intRegs.end(), 0);
-        std::fill(floatRegs.begin(), floatRegs.end(), 0);
-        for (auto &vec_reg: vecRegs)
-            vec_reg.zero();
-        std::fill(vecElemRegs.begin(), vecElemRegs.end(), 0);
-        for (auto &pred_reg: vecPredRegs)
-            pred_reg.reset();
-        std::fill(ccRegs.begin(), ccRegs.end(), 0);
+        intRegs.clear();
+        floatRegs.clear();
+        vecRegs.clear();
+        vecElemRegs.clear();
+        vecPredRegs.clear();
+        ccRegs.clear();
         isa->clear();
     }
 
@@ -483,75 +482,87 @@ class SimpleThread : public ThreadState, public ThreadContext
         storeCondFailures = sc_failures;
     }
 
-    RegVal readIntRegFlat(RegIndex idx) const override { return intRegs[idx]; }
+    RegVal
+    readIntRegFlat(RegIndex idx) const override
+    {
+        return intRegs.reg(idx);
+    }
     void
     setIntRegFlat(RegIndex idx, RegVal val) override
     {
-        intRegs[idx] = val;
+        intRegs.reg(idx) = val;
     }
 
     RegVal
     readFloatRegFlat(RegIndex idx) const override
     {
-        return floatRegs[idx];
+        return floatRegs.reg(idx);
     }
     void
     setFloatRegFlat(RegIndex idx, RegVal val) override
     {
-        floatRegs[idx] = val;
+        floatRegs.reg(idx) = val;
     }
 
     const TheISA::VecRegContainer &
     readVecRegFlat(RegIndex reg) const override
     {
-        return vecRegs[reg];
+        return vecRegs.reg<TheISA::VecRegContainer>(reg);
     }
 
     TheISA::VecRegContainer &
     getWritableVecRegFlat(RegIndex reg) override
     {
-        return vecRegs[reg];
+        return vecRegs.reg<TheISA::VecRegContainer>(reg);
     }
 
     void
     setVecRegFlat(RegIndex reg, const TheISA::VecRegContainer &val) override
     {
-        vecRegs[reg] = val;
+        vecRegs.reg<TheISA::VecRegContainer>(reg) = val;
     }
 
     RegVal
     readVecElemFlat(RegIndex reg) const override
     {
-        return vecElemRegs[reg];
+        return vecElemRegs.reg(reg);
     }
 
     void
     setVecElemFlat(RegIndex reg, RegVal val) override
     {
-        vecElemRegs[reg] = val;
+        vecElemRegs.reg(reg) = val;
     }
 
     const TheISA::VecPredRegContainer &
     readVecPredRegFlat(RegIndex reg) const override
     {
-        return vecPredRegs[reg];
+        return vecPredRegs.reg<TheISA::VecPredRegContainer>(reg);
     }
 
     TheISA::VecPredRegContainer &
     getWritableVecPredRegFlat(RegIndex reg) override
     {
-        return vecPredRegs[reg];
+        return vecPredRegs.reg<TheISA::VecPredRegContainer>(reg);
     }
 
     void
     setVecPredRegFlat(RegIndex reg,
             const TheISA::VecPredRegContainer &val) override
     {
-        vecPredRegs[reg] = val;
+        vecPredRegs.reg<TheISA::VecPredRegContainer>(reg) = val;
     }
 
-    RegVal readCCRegFlat(RegIndex idx) const override { return ccRegs[idx]; }
-    void setCCRegFlat(RegIndex idx, RegVal val) override { ccRegs[idx] = val; }
+    RegVal
+    readCCRegFlat(RegIndex idx) const override
+    {
+        return ccRegs.reg(idx);
+    }
+    void
+    setCCRegFlat(RegIndex idx, RegVal val) override
+    {
+        ccRegs.reg(idx) = val;
+    }
 
     // hardware transactional memory
     void htmAbortTransaction(uint64_t htm_uid,

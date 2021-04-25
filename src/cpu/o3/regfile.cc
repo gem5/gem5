@@ -54,21 +54,21 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
                          unsigned _numPhysicalVecRegs,
                          unsigned _numPhysicalVecPredRegs,
                          unsigned _numPhysicalCCRegs,
-                         const BaseISA::RegClasses &classes)
-    : intRegFile(_numPhysicalIntRegs),
-      floatRegFile(_numPhysicalFloatRegs),
-      vectorRegFile(_numPhysicalVecRegs),
-      vectorElemRegFile(_numPhysicalVecRegs * (
-                  classes.at(VecElemClass).numRegs() /
-                  classes.at(VecRegClass).numRegs())),
-      vecPredRegFile(_numPhysicalVecPredRegs),
-      ccRegFile(_numPhysicalCCRegs),
+                         const BaseISA::RegClasses &reg_classes)
+    : intRegFile(reg_classes.at(IntRegClass), _numPhysicalIntRegs),
+      floatRegFile(reg_classes.at(FloatRegClass), _numPhysicalFloatRegs),
+      vectorRegFile(reg_classes.at(VecRegClass), _numPhysicalVecRegs),
+      vectorElemRegFile(reg_classes.at(VecElemClass), _numPhysicalVecRegs * (
+                  reg_classes.at(VecElemClass).numRegs() /
+                  reg_classes.at(VecRegClass).numRegs())),
+      vecPredRegFile(reg_classes.at(VecPredRegClass), _numPhysicalVecPredRegs),
+      ccRegFile(reg_classes.at(CCRegClass), _numPhysicalCCRegs),
       numPhysicalIntRegs(_numPhysicalIntRegs),
       numPhysicalFloatRegs(_numPhysicalFloatRegs),
       numPhysicalVecRegs(_numPhysicalVecRegs),
       numPhysicalVecElemRegs(_numPhysicalVecRegs * (
-                  classes.at(VecElemClass).numRegs() /
-                  classes.at(VecRegClass).numRegs())),
+                  reg_classes.at(VecElemClass).numRegs() /
+                  reg_classes.at(VecRegClass).numRegs())),
       numPhysicalVecPredRegs(_numPhysicalVecPredRegs),
       numPhysicalCCRegs(_numPhysicalCCRegs),
       totalNumRegs(_numPhysicalIntRegs
@@ -76,8 +76,7 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
                    + _numPhysicalVecRegs
                    + numPhysicalVecElemRegs
                    + _numPhysicalVecPredRegs
-                   + _numPhysicalCCRegs),
-      regClasses(classes)
+                   + _numPhysicalCCRegs)
 {
     RegIndex phys_reg;
     RegIndex flat_reg_idx = 0;
@@ -87,7 +86,7 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
         intRegIds.emplace_back(IntRegClass, phys_reg, flat_reg_idx++);
     }
 
-    zeroReg = RegId(IntRegClass, regClasses.at(IntRegClass).zeroReg());
+    zeroReg = RegId(IntRegClass, reg_classes.at(IntRegClass).zeroReg());
 
     // The next batch of the registers are the floating-point physical
     // registers; put them onto the floating-point free list.
@@ -98,7 +97,6 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     // The next batch of the registers are the vector physical
     // registers; put them onto the vector free list.
     for (phys_reg = 0; phys_reg < numPhysicalVecRegs; phys_reg++) {
-        vectorRegFile[phys_reg].zero();
         vecRegIds.emplace_back(VecRegClass, phys_reg, flat_reg_idx++);
     }
     // The next batch of the registers are the vector element physical
@@ -120,7 +118,7 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     }
 
     // Misc regs have a fixed mapping but still need PhysRegIds.
-    for (phys_reg = 0; phys_reg < regClasses.at(MiscRegClass).numRegs();
+    for (phys_reg = 0; phys_reg < reg_classes.at(MiscRegClass).numRegs();
             phys_reg++) {
         miscRegIds.emplace_back(MiscRegClass, phys_reg, 0);
     }
