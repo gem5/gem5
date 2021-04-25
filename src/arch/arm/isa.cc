@@ -88,10 +88,10 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
 {
     _regClasses.emplace_back(NUM_INTREGS, INTREG_ZERO);
     _regClasses.emplace_back(0);
-    _regClasses.emplace_back(NumVecRegs);
+    _regClasses.emplace_back(NumVecRegs, -1, sizeof(VecRegContainer));
     _regClasses.emplace_back(NumVecRegs * NumVecElemPerVecReg,
             vecRegElemClassOps);
-    _regClasses.emplace_back(NumVecPredRegs);
+    _regClasses.emplace_back(NumVecPredRegs, -1, sizeof(VecPredRegContainer));
     _regClasses.emplace_back(NUM_CCREGS);
     _regClasses.emplace_back(NUM_MISCREGS, miscRegClassOps);
 
