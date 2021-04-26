@@ -233,18 +233,20 @@ System::System(const Params &p)
     }
 #endif
 
-    AddrRangeList memories = physmem.getConfAddrRanges();
-    assert(!memories.empty());
-    for (const auto &memory : memories) {
-        assert(!memory.interleaved());
-        memPools.emplace_back(this, memory.start(), memory.end());
-    }
+    if (!FullSystem) {
+        AddrRangeList memories = physmem.getConfAddrRanges();
+        assert(!memories.empty());
+        for (const auto &memory : memories) {
+            assert(!memory.interleaved());
+            memPools.emplace_back(this, memory.start(), memory.end());
+        }
 
-    /*
-     * Set freePage to what it was before Gabe Black's page table changes
-     * so allocations don't trample the page table entries.
-     */
-    memPools[0].setFreePage(memPools[0].freePage() + 70);
+        /*
+         * Set freePage to what it was before Gabe Black's page table changes
+         * so allocations don't trample the page table entries.
+         */
+        memPools[0].setFreePage(memPools[0].freePage() + 70);
+    }
 
     // check if the cache line size is a value known to work
     if (_cacheLineSize != 16 && _cacheLineSize != 32 &&
@@ -377,18 +379,21 @@ System::validKvmEnvironment() const
 Addr
 System::allocPhysPages(int npages, int poolID)
 {
+    assert(!FullSystem);
     return memPools[poolID].allocate(npages);
 }
 
 Addr
 System::memSize(int poolID) const
 {
+    assert(!FullSystem);
     return memPools[poolID].totalBytes();
 }
 
 Addr
 System::freeMemSize(int poolID) const
 {
+    assert(!FullSystem);
     return memPools[poolID].freeBytes();
 }
 
