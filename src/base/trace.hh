@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2019 ARM Limited
+ * Copyright (c) 2014, 2019, 2021 Arm Limited
  * All rights reserved
  *
  * Copyright (c) 2001-2006 The Regents of The University of Michigan
@@ -154,10 +154,17 @@ const std::string &name();
  * If you desire that the automatic printing not occur, use DPRINTFR
  * (R for raw)
  *
+ * With DPRINTFV it is possible to pass a Debug::SimpleFlag variable
+ * as first argument. Example:
+ *
+ * Debug::Flag some_flag = Debug::DMA;
+ * DPRINTFV(some_flag, ...);
+ *
  * \def DDUMP(x, data, count)
  * \def DPRINTF(x, ...)
  * \def DPRINTFS(x, s, ...)
  * \def DPRINTFR(x, ...)
+ * \def DPRINTFV(x, ...)
  * \def DPRINTFN(...)
  * \def DPRINTFNR(...)
  * \def DPRINTF_UNCONDITIONAL(x, ...)
@@ -195,6 +202,13 @@ const std::string &name();
     }                                                  \
 } while (0)
 
+#define DPRINTFV(x, ...) do {                          \
+    if (M5_UNLIKELY(x)) {                              \
+        Trace::getDebugLogger()->dprintf_flag(         \
+            curTick(), name(), x.name(), __VA_ARGS__); \
+    }                                                  \
+} while (0)
+
 #define DPRINTFN(...) do {                                             \
     Trace::getDebugLogger()->dprintf(curTick(), name(), __VA_ARGS__);  \
 } while (0)
@@ -214,6 +228,7 @@ const std::string &name();
 #define DPRINTF(x, ...) do {} while (0)
 #define DPRINTFS(x, ...) do {} while (0)
 #define DPRINTFR(...) do {} while (0)
+#define DPRINTFV(...) do {} while (0)
 #define DPRINTFN(...) do {} while (0)
 #define DPRINTFNR(...) do {} while (0)
 #define DPRINTF_UNCONDITIONAL(x, ...) do {} while (0)
