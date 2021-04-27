@@ -133,8 +133,7 @@ HSAPacketProcessor::write(Packet *pkt)
           "%s: write of size %d to reg-offset %d (0x%x)\n",
           __FUNCTION__, pkt->getSize(), daddr, daddr);
 
-    int doorbellSize = gpu_device->driver()->doorbellSize();
-    assert(doorbellSize == pkt->getSize());
+    assert(gpu_device->driver()->doorbellSize() == pkt->getSize());
 
     uint64_t doorbell_reg(0);
     if (pkt->getSize() == 8)
