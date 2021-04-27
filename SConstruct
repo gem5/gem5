@@ -108,8 +108,8 @@ AddOption('--ignore-style', action='store_true',
 AddOption('--gold-linker', action='store_true', help='Use the gold linker')
 AddOption('--no-compress-debug', action='store_true',
           help="Don't compress debug info in build files")
-AddOption('--no-lto', action='store_true',
-          help='Disable Link-Time Optimization for fast')
+AddOption('--with-lto', action='store_true',
+          help='Enable Link-Time Optimization')
 AddOption('--verbose', action='store_true',
           help='Print full tool command lines')
 AddOption('--without-python', action='store_true',
@@ -341,9 +341,9 @@ if main['GCC']:
         error('gcc version 5 or newer required.\n'
               'Installed version:', main['CXXVERSION'])
 
-    # Add the appropriate Link-Time Optimization (LTO) flags
-    # unless LTO is explicitly turned off.
-    if not GetOption('no_lto'):
+    # Add the appropriate Link-Time Optimization (LTO) flags if `--with-lto` is
+    # set.
+    if GetOption('with_lto'):
         # g++ uses "make" to parallelize LTO. The program can be overriden with
         # the environment variable "MAKE", but we currently make no attempt to
         # plumb that variable through.
@@ -370,6 +370,11 @@ elif main['CLANG']:
     if compareVersions(main['CXXVERSION'], "3.9") < 0:
         error('clang version 3.9 or newer required.\n'
               'Installed version:', main['CXXVERSION'])
+
+    # Set the Link-Time Optimization (LTO) flags if enabled.
+    if GetOption('with_lto'):
+        for var in 'LTO_CCFLAGS', 'LTO_LDFLAGS':
+            main[var] = ['-flto']
 
     # clang has a few additional warnings that we disable, extraneous
     # parantheses are allowed due to Ruby's printing of the AST,
