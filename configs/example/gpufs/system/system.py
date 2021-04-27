@@ -1,0 +1,169 @@
+# Copyright (c) 2021 Advanced Micro Devices, Inc.
+# All rights reserved.
+#
+# For use for simulation and test purposes only
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+from system.amdgpu import *
+
+from m5.util import panic
+
+from common.Benchmarks import *
+from common.FSConfig import *
+from common import Simulation
+from ruby import Ruby
+
+def makeGpuFSSystem(args):
+    # Boot options are standard gem5 options plus:
+    # - Framebuffer device emulation 0 to reduce driver code paths.
+    # - Blacklist amdgpu as it cannot (currently) load in KVM CPU.
+    # - Blacklist psmouse as amdgpu driver adds proprietary commands that
+    #   cause gem5 to panic.
+    boot_options = ['earlyprintk=ttyS0', 'console=ttyS0,9600',
+                    'lpj=7999923', 'root=/dev/sda1',
+                    'drm_kms_helper.fbdev_emulation=0',
+                    'modprobe.blacklist=amdgpu',
+                    'modprobe.blacklist=psmouse']
+    cmdline = ' '.join(boot_options)
+
+    if MemorySize(args.mem_size) < MemorySize('2GB'):
+        panic("Need at least 2GB of system memory to load amdgpu module")
+
+    # Use the common FSConfig to setup a Linux X86 System
+    (TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
+    bm = SysConfig(disks=[args.disk_image], mem=args.mem_size)
+    system = makeLinuxX86System(test_mem_mode, args.num_cpus, bm, True,
+                                  cmdline=cmdline)
+    system.workload.object_file = binary(args.kernel)
+
+    # Set the cache line size for the entire system.
+    system.cache_line_size = args.cacheline_size
+
+    # Create a top-level voltage and clock domain.
+    system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
+    system.clk_domain = SrcClockDomain(clock =  args.sys_clock,
+            voltage_domain = system.voltage_domain)
+
+    # Create a CPU voltage and clock domain.
+    system.cpu_voltage_domain = VoltageDomain()
+    system.cpu_clk_domain = SrcClockDomain(clock = args.cpu_clock,
+                                             voltage_domain =
+                                             system.cpu_voltage_domain)
+
+    # Create specified number of CPUs. GPUFS really only needs one.
+    system.cpu = [TestCPUClass(clk_domain=system.cpu_clk_domain, cpu_id=i)
+                    for i in range(args.num_cpus)]
+
+    if ObjectList.is_kvm_cpu(TestCPUClass) or \
+        ObjectList.is_kvm_cpu(FutureClass):
+        system.kvm_vm = KvmVM()
+
+    # Create AMDGPU and attach to southbridge
+    shader = createGPU(system, args)
+    connectGPU(system, args)
+
+    # This arbitrary address is something in the X86 I/O hole
+    hsapp_gpu_map_paddr = 0xe00000000
+    gpu_hsapp = HSAPacketProcessor(pioAddr=hsapp_gpu_map_paddr,
+                                   numHWQueues=args.num_hw_queues)
+    dispatcher = GPUDispatcher()
+    gpu_cmd_proc = GPUCommandProcessor(hsapp=gpu_hsapp,
+                                       dispatcher=dispatcher)
+    shader.dispatcher = dispatcher
+    shader.gpu_cmd_proc = gpu_cmd_proc
+
+    # GPU, HSAPP, and GPUCommandProc are DMA devices
+    system._dma_ports.append(gpu_hsapp)
+    system._dma_ports.append(gpu_cmd_proc)
+    system._dma_ports.append(system.pc.south_bridge.gpu)
+
+    gpu_hsapp.pio = system.iobus.mem_side_ports
+    gpu_cmd_proc.pio = system.iobus.mem_side_ports
+    system.pc.south_bridge.gpu.pio = system.iobus.mem_side_ports
+
+    # Create Ruby system using Ruby.py for now
+    Ruby.create_system(args, True, system, system.iobus,
+                      system._dma_ports)
+
+    # Create a seperate clock domain for Ruby
+    system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
+                                   voltage_domain = system.voltage_domain)
+
+    for (i, cpu) in enumerate(system.cpu):
+        #
+        # Tie the cpu ports to the correct ruby system ports
+        #
+        cpu.clk_domain = system.cpu_clk_domain
+        cpu.createThreads()
+        cpu.createInterruptController()
+
+        system.ruby._cpu_ports[i].connectCpuPorts(cpu)
+
+    # The shader core will be whatever is after the CPU cores are accounted for
+    shader_idx = args.num_cpus
+    system.cpu.append(shader)
+
+    gpu_port_idx = len(system.ruby._cpu_ports) \
+                   - args.num_compute_units - args.num_sqc \
+                   - args.num_scalar_cache
+    gpu_port_idx = gpu_port_idx - args.num_cp * 2
+
+    # Connect token ports. For this we need to search through the list of all
+    # sequencers, since the TCP coalescers will not necessarily be first. Only
+    # TCP coalescers use a token port for back pressure.
+    token_port_idx = 0
+    for i in range(len(system.ruby._cpu_ports)):
+        if isinstance(system.ruby._cpu_ports[i], VIPERCoalescer):
+            system.cpu[shader_idx].CUs[token_port_idx].gmTokenPort = \
+                system.ruby._cpu_ports[i].gmTokenPort
+            token_port_idx += 1
+
+    wavefront_size = args.wf_size
+    for i in range(args.num_compute_units):
+        # The pipeline issues wavefront_size number of uncoalesced requests
+        # in one GPU issue cycle. Hence wavefront_size mem ports.
+        for j in range(wavefront_size):
+            system.cpu[shader_idx].CUs[i].memory_port[j] = \
+                      system.ruby._cpu_ports[gpu_port_idx].in_ports[j]
+        gpu_port_idx += 1
+
+    for i in range(args.num_compute_units):
+        if i > 0 and not i % args.cu_per_sqc:
+            gpu_port_idx += 1
+        system.cpu[shader_idx].CUs[i].sqc_port = \
+                system.ruby._cpu_ports[gpu_port_idx].in_ports
+    gpu_port_idx = gpu_port_idx + 1
+
+    for i in range(args.num_compute_units):
+        if i > 0 and not i % args.cu_per_scalar_cache:
+            gpu_port_idx += 1
+        system.cpu[shader_idx].CUs[i].scalar_port = \
+            system.ruby._cpu_ports[gpu_port_idx].in_ports
+    gpu_port_idx = gpu_port_idx + 1
+
+    return system
