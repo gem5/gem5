@@ -237,8 +237,7 @@ def create_system(options, full_system, system, piobus = None, dma_ports = [],
     # Connect the cpu sequencers and the piobus
     if piobus != None:
         for cpu_seq in cpu_sequencers:
-            if cpu_seq.is_cpu_sequencer:
-                cpu_seq.connectIOPorts(piobus)
+            cpu_seq.connectIOPorts(piobus)
 
     ruby.number_of_virtual_networks = ruby.network.number_of_virtual_networks
     ruby._cpu_ports = cpu_sequencers
