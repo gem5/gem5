@@ -1435,8 +1435,11 @@ if env['GCC']:
     # the optimization to the ldflags as LTO defers the optimization
     # to link time
     for target in ['opt', 'fast', 'prof', 'perf']:
-        ccflags[target] += ['-O3'] + env['LTO_CCFLAGS']
-        ldflags[target] += ['-O3'] + env['LTO_LDFLAGS']
+        ccflags[target] += ['-O3']
+        ldflags[target] += ['-O3']
+
+    ccflags['fast'] += env['LTO_CCFLAGS']
+    ldflags['fast'] += env['LTO_LDFLAGS']
 elif env['CLANG']:
     ccflags['debug'] += ['-g', '-O0']
     # opt, fast, prof and perf all share the same cc flags

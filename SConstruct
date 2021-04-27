@@ -328,7 +328,9 @@ if main['GCC']:
         error('gcc version 5 or newer required.\n'
               'Installed version:', main['CXXVERSION'])
 
-    # If not disabled, set the Link-Time Optimization (LTO) flags.
+    # Add the appropriate Link-Time Optimization (LTO) flags
+    # unless LTO is explicitly turned off. Note that these flags
+    # are only used by the fast target.
     if not GetOption('no_lto'):
         # g++ uses "make" to parallelize LTO. The program can be overriden with
         # the environment variable "MAKE", but we currently make no attempt to
