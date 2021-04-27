@@ -146,6 +146,11 @@ dev-hsa:
   maintainers:
     - Matt Poremba <matthew.poremba@amd.com>
 
+dev-amdgpu:
+  status: maintained
+  maintainers:
+    - Matt Poremba <matthew.poremba@amd.com>
+
 dev-virtio:
   status: maintained
   maintainers:
