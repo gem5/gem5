@@ -46,6 +46,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/Drain.hh"
+#include "debug/PageTableWalker.hh"
 #include "debug/TLB.hh"
 #include "debug/TLBVerbose.hh"
 #include "dev/dma_device.hh"
@@ -201,7 +202,7 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
         // For atomic mode, a new WalkerState instance should be only created
         // once per TLB. For timing mode, a new instance is generated for every
         // TLB miss.
-        DPRINTF(TLBVerbose, "creating new instance of WalkerState\n");
+        DPRINTF(PageTableWalker, "creating new instance of WalkerState\n");
 
         currState = new WalkerState();
         currState->tableWalker = this;
@@ -209,7 +210,8 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
         // If we are mixing functional mode with timing (or even
         // atomic), we need to to be careful and clean up after
         // ourselves to not risk getting into an inconsistent state.
-        DPRINTF(TLBVerbose, "creating functional instance of WalkerState\n");
+        DPRINTF(PageTableWalker,
+                "creating functional instance of WalkerState\n");
         savedCurrState = currState;
         currState = new WalkerState();
         currState->tableWalker = this;
@@ -1720,7 +1722,7 @@ TableWalker::doLongDescriptor()
 
     if ((currState->longDesc.type() == LongDescriptor::Block) ||
         (currState->longDesc.type() == LongDescriptor::Page)) {
-        DPRINTF(TLBVerbose, "Analyzing L%d descriptor: %#llx, pxn: %d, "
+        DPRINTF(PageTableWalker, "Analyzing L%d descriptor: %#llx, pxn: %d, "
                 "xn: %d, ap: %d, af: %d, type: %d\n",
                 currState->longDesc.lookupLevel,
                 currState->longDesc.data,
@@ -1730,7 +1732,7 @@ TableWalker::doLongDescriptor()
                 currState->longDesc.af(),
                 currState->longDesc.type());
     } else {
-        DPRINTF(TLBVerbose, "Analyzing L%d descriptor: %#llx, type: %d\n",
+        DPRINTF(PageTableWalker, "Analyzing L%d descriptor: %#llx, type: %d\n",
                 currState->longDesc.lookupLevel,
                 currState->longDesc.data,
                 currState->longDesc.type());
@@ -1931,10 +1933,13 @@ TableWalker::doL1DescriptorWrapper()
     }
 
 
-    DPRINTF(TLBVerbose, "L1 Desc object host addr: %p\n",&currState->l1Desc.data);
-    DPRINTF(TLBVerbose, "L1 Desc object      data: %08x\n",currState->l1Desc.data);
+    DPRINTF(PageTableWalker, "L1 Desc object host addr: %p\n",
+            &currState->l1Desc.data);
+    DPRINTF(PageTableWalker, "L1 Desc object      data: %08x\n",
+            currState->l1Desc.data);
 
-    DPRINTF(TLBVerbose, "calling doL1Descriptor for vaddr:%#x\n", currState->vaddr_tainted);
+    DPRINTF(PageTableWalker, "calling doL1Descriptor for vaddr:%#x\n",
+            currState->vaddr_tainted);
     doL1Descriptor();
 
     stateQueues[L1].pop_front();
@@ -1956,7 +1961,7 @@ TableWalker::doL1DescriptorWrapper()
         // delay is not set so there is no L2 to do
         // Don't finish the translation if a stage 2 look up is underway
         stats.walkServiceTime.sample(curTick() - currState->startTime);
-        DPRINTF(TLBVerbose, "calling translateTiming again\n");
+        DPRINTF(PageTableWalker, "calling translateTiming again\n");
         tlb->translateTiming(currState->req, currState->tc,
                              currState->transState, currState->mode);
         stats.walksShortTerminatedAtLevel[0]++;
@@ -1986,7 +1991,7 @@ TableWalker::doL2DescriptorWrapper()
         currState->stage2Tran = NULL;
     }
 
-    DPRINTF(TLBVerbose, "calling doL2Descriptor for vaddr:%#x\n",
+    DPRINTF(PageTableWalker, "calling doL2Descriptor for vaddr:%#x\n",
             currState->vaddr_tainted);
     doL2Descriptor();
 
@@ -1997,7 +2002,7 @@ TableWalker::doL2DescriptorWrapper()
         stats.walksShortTerminatedAtLevel[1]++;
     } else {
         stats.walkServiceTime.sample(curTick() - currState->startTime);
-        DPRINTF(TLBVerbose, "calling translateTiming again\n");
+        DPRINTF(PageTableWalker, "calling translateTiming again\n");
         tlb->translateTiming(currState->req, currState->tc,
                              currState->transState, currState->mode);
         stats.walksShortTerminatedAtLevel[1]++;
@@ -2053,7 +2058,7 @@ TableWalker::doLongDescriptorWrapper(LookupLevel curr_lookup_level)
         currState->stage2Tran = NULL;
     }
 
-    DPRINTF(TLBVerbose, "calling doLongDescriptor for vaddr:%#x\n",
+    DPRINTF(PageTableWalker, "calling doLongDescriptor for vaddr:%#x\n",
             currState->vaddr_tainted);
     doLongDescriptor();
 
@@ -2073,7 +2078,7 @@ TableWalker::doLongDescriptorWrapper(LookupLevel curr_lookup_level)
         delete currState;
     } else if (!currState->delayed) {
         // No additional lookups required
-        DPRINTF(TLBVerbose, "calling translateTiming again\n");
+        DPRINTF(PageTableWalker, "calling translateTiming again\n");
         stats.walkServiceTime.sample(curTick() - currState->startTime);
         tlb->translateTiming(currState->req, currState->tc,
                              currState->transState, currState->mode);
@@ -2112,7 +2117,8 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
 {
     bool isTiming = currState->timing;
 
-    DPRINTF(TLBVerbose, "Fetching descriptor at address: 0x%x stage2Req: %d\n",
+    DPRINTF(PageTableWalker,
+            "Fetching descriptor at address: 0x%x stage2Req: %d\n",
             descAddr, currState->stage2Req);
 
     // If this translation has a stage 2 then we know descAddr is an IPA and
@@ -2140,7 +2146,8 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
         }
         if (isTiming) {
             if (queueIndex >= 0) {
-                DPRINTF(TLBVerbose, "Adding to walker fifo: queue size before adding: %d\n",
+                DPRINTF(PageTableWalker, "Adding to walker fifo: "
+                        "queue size before adding: %d\n",
                         stateQueues[queueIndex].size());
                 stateQueues[queueIndex].push_back(currState);
                 currState = NULL;
@@ -2153,7 +2160,8 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
             port->dmaAction(MemCmd::ReadReq, descAddr, numBytes, event, data,
                            currState->tc->getCpuPtr()->clockPeriod(),flags);
             if (queueIndex >= 0) {
-                DPRINTF(TLBVerbose, "Adding to walker fifo: queue size before adding: %d\n",
+                DPRINTF(PageTableWalker, "Adding to walker fifo: "
+                        "queue size before adding: %d\n",
                         stateQueues[queueIndex].size());
                 stateQueues[queueIndex].push_back(currState);
                 currState = NULL;
