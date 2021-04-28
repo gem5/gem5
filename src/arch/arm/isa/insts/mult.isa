@@ -158,43 +158,43 @@ let {{
         ''', "overflow")
     buildMult4Inst("smlal", '''
             resTemp = PInt2.sw * PInt3.sw +
-                      (int64_t)((PInt1.uw << 32) | PInt0.uw);
+                      (int64_t)(((uint64_t)PInt1.uw << 32) | PInt0.uw);
             PInt0 = (uint32_t)resTemp;
             PInt1 = (uint32_t)(resTemp >> 32);
         ''', "llbit")
     buildMult4InstUnCc("smlalbb", '''
             resTemp = PInt2.sh0 * PInt3.sh0 +
-                      (int64_t)((PInt1.uw << 32) | PInt0.uw);
+                      (int64_t)(((uint64_t)PInt1.uw << 32) | PInt0.uw);
             PInt0 = (uint32_t)resTemp;
             PInt1 = (uint32_t)(resTemp >> 32);
         ''')
     buildMult4InstUnCc("smlalbt", '''
             resTemp = PInt2.sh0 * PInt3.sh1 +
-                      (int64_t)((PInt1.uw << 32) | PInt0.uw);
+                      (int64_t)(((uint64_t)PInt1.uw << 32) | PInt0.uw);
             PInt0 = (uint32_t)resTemp;
             PInt1 = (uint32_t)(resTemp >> 32);
         ''')
     buildMult4InstUnCc("smlaltb", '''
             resTemp = PInt2.sh1 * PInt3.sh0 +
-                      (int64_t)((PInt1.uw << 32) | PInt0.uw);
+                      (int64_t)(((uint64_t)PInt1.uw << 32) | PInt0.uw);
             PInt0 = (uint32_t)resTemp;
             PInt1 = (uint32_t)(resTemp >> 32);
         ''')
     buildMult4InstUnCc("smlaltt", '''
             resTemp = PInt2.sh1 * PInt3.sh1 +
-                      (int64_t)((PInt1.uw << 32) | PInt0.uw);
+                      (int64_t)(((uint64_t)PInt1.uw << 32) | PInt0.uw);
             PInt0 = (uint32_t)resTemp;
             PInt1 = (uint32_t)(resTemp >> 32);
         ''')
     buildMult4InstUnCc("smlald", '''
             resTemp = PInt2.sh1 * PInt3.sh1 + PInt2.sh0 * PInt3.sh0 +
-                      (int64_t)((PInt1.uw << 32) | PInt0.uw);
+                      (int64_t)(((uint64_t)PInt1.uw << 32) | PInt0.uw);
             PInt0 = (uint32_t)resTemp;
             PInt1 = (uint32_t)(resTemp >> 32);
         ''')
     buildMult4InstUnCc("smlaldx", '''
             resTemp = PInt2.sh1 * PInt3.sh0 + PInt2.sh0 * PInt3.sh1 +
-                      (int64_t)((PInt1.uw << 32) | PInt0.uw);
+                      (int64_t)(((uint64_t)PInt1.uw << 32) | PInt0.uw);
             PInt0 = (uint32_t)resTemp;
             PInt1 = (uint32_t)(resTemp >> 32);
         ''')
@@ -220,33 +220,37 @@ let {{
         ''', "overflow")
     buildMult4InstUnCc("smlsld", '''
             resTemp = PInt2.sh0 * PInt3.sh0 - PInt2.sh1 * PInt3.sh1 +
-                      (int64_t)((PInt1.uw << 32) | PInt0.uw);
+                      (int64_t)(((uint64_t)PInt1.uw << 32) | PInt0.uw);
             PInt0 = (uint32_t)resTemp;
             PInt1 = (uint32_t)(resTemp >> 32);
         ''')
     buildMult4InstUnCc("smlsldx", '''
             resTemp = PInt2.sh0 * PInt3.sh1 - PInt2.sh1 * PInt3.sh0 +
-                      (int64_t)((PInt1.uw << 32) | PInt0.uw);
+                      (int64_t)(((uint64_t)PInt1.uw << 32) | PInt0.uw);
             PInt0 = (uint32_t)resTemp;
             PInt1 = (uint32_t)(resTemp >> 32);
         ''')
     buildMult4InstUnCc("smmla", '''
-            PInt0 = PInt3.sw + ((PInt1.sw * PInt2.sw) >> 32);
+            PInt0 = (((int64_t)PInt3.sw << 32) + (PInt1.sw * PInt2.sw)) >> 32;
         ''')
     buildMult4InstUnCc("smmlar", '''
-            PInt0 = PInt3.sw + ((PInt1.sw * PInt2.sw + (0x1ULL << 31)) >> 32);
+            PInt0 = (((int64_t)PInt3.sw << 32) +
+                     (PInt1.sw * PInt2.sw) +
+                     (0x1ULL << 31)) >> 32;
         ''')
     buildMult4InstUnCc("smmls", '''
-            PInt0 = PInt3.sw - ((PInt1.sw * PInt2.sw) >> 32);
+            PInt0 = (((int64_t)PInt3.sw << 32) - (PInt1.sw * PInt2.sw)) >> 32;
         ''')
     buildMult4InstUnCc("smmlsr", '''
-            PInt0 = PInt3.sw - ((PInt1.sw * PInt2.sw + (0x1ULL << 31)) >> 32);
+            PInt0 = (((int64_t)PInt3.sw << 32) -
+                     (PInt1.sw * PInt2.sw) +
+                     (0x1ULL << 31)) >> 32;
         ''')
     buildMult3InstUnCc("smmul", '''
-            PInt0 = (PInt1.sw * PInt2.sw) >> 32;
+            PInt0 = ((int64_t)PInt1.sw * PInt2.sw) >> 32;
         ''')
     buildMult3InstUnCc("smmulr", '''
-            PInt0 = (PInt1.sw * PInt2.sw + (0x1ULL << 31)) >> 32;
+            PInt0 = (((int64_t)PInt1.sw * PInt2.sw) + (0x1ULL << 31)) >> 32;
         ''')
     buildMult3InstCc("smuad", '''
             PInt0 = resTemp = PInt1.sh0 * PInt2.sh0 + PInt1.sh1 * PInt2.sh1;
