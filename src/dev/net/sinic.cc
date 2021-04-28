@@ -206,19 +206,23 @@ Device::read(PacketPtr pkt)
     Addr index = daddr >> registers::VirtualShift;
     Addr raddr = daddr & registers::VirtualMask;
 
-    if (!regValid(raddr))
+    if (!regValid(raddr)) {
         panic("invalid register: cpu=%d vnic=%d da=%#x pa=%#x size=%d",
               cpu, index, daddr, pkt->getAddr(), pkt->getSize());
+    }
 
     const registers::Info &info = regInfo(raddr);
-    if (!info.read)
+    if (!info.read) {
         panic("read %s (write only): "
               "cpu=%d vnic=%d da=%#x pa=%#x size=%d",
               info.name, cpu, index, daddr, pkt->getAddr(), pkt->getSize());
+    }
 
+    if (info.size != pkt->getSize()) {
         panic("read %s (invalid size): "
               "cpu=%d vnic=%d da=%#x pa=%#x size=%d",
               info.name, cpu, index, daddr, pkt->getAddr(), pkt->getSize());
+    }
 
     prepareRead(cpu, index);
 
