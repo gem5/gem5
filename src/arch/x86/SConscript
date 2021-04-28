@@ -77,8 +77,6 @@ SimObject('X86TLB.py')
 
 DebugFlag('Faults', "Trace all faults/exceptions/traps")
 DebugFlag('LocalApic', "Local APIC debugging")
-DebugFlag('PageTableWalker', \
-          "Page table walker state machine debugging")
 DebugFlag('Decoder', "Decoder debug output")
 DebugFlag('X86', "Generic X86 ISA debugging")
 

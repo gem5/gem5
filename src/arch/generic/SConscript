@@ -47,6 +47,8 @@ SimObject('BaseMMU.py')
 SimObject('BaseTLB.py')
 SimObject('ISACommon.py')
 
+DebugFlag('PageTableWalker',
+          "Page table walker state machine debugging")
 DebugFlag('TLB')
 
 if env['TARGET_ISA'] == 'null':
