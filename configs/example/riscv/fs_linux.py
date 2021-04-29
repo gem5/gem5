@@ -1,4 +1,3 @@
-# Copyright (c) 2021 Huawei International
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -10,6 +9,7 @@
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
 #
+# Copyright (c) 2021 Huawei International
 # Copyright (c) 2012-2014 Mark D. Hill and David A. Wood
 # Copyright (c) 2009-2011 Advanced Micro Devices, Inc.
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
@@ -63,6 +63,30 @@ from common import ObjectList
 from common.Caches import *
 from common import Options
 
+# ------------------------- Usage Instructions ------------------------- #
+# Common system confirguration options (cpu types, num cpus, checkpointing
+# etc.) should be supported
+#
+# Ruby not supported in this config file. Not tested on RISC-V FS Linux (as
+# of 25 March 2021).
+#
+# Options (Full System):
+# --kernel (required):          Bootloader + kernel binary (e.g. bbl with
+#                               linux kernel payload)
+# --disk-image (optional):      Path to disk image file. Not needed if using
+#                               ramfs (might run into issues though).
+# --command-line (optional):    Specify to override default.
+# --dtb-filename (optional):    Path to DTB file. Auto-generated if empty.
+# --bare-metal (boolean):       Use baremetal Riscv (default False). Use this
+#                               if bbl is built with "--with-dts" option.
+#                               (do not forget to include bootargs in dts file)
+#
+# Not Used:
+# --command-line-file, --script, --frame-capture, --os-type, --timesync,
+# --dual, -b, --etherdump, --root-device, --ruby
+
+
+# ----------------------- DTB Generation Function ---------------------- #
 
 def generateMemNode(state, mem_range):
     node = FdtNode("memory@%x" % int(mem_range.start))
@@ -73,10 +97,6 @@ def generateMemNode(state, mem_range):
     return node
 
 def generateDtb(system):
-    """
-    Autogenerate DTB. Arguments are the folder where the DTB
-    will be stored, and the name of the DTB file.
-    """
     state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
     root = FdtNode('/')
     root.append(state.addrCellsProperty())
@@ -104,10 +124,11 @@ def generateDtb(system):
 parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 Options.addFSOptions(parser)
-
-# NOTE: Ruby in FS Linux has not been tested yet
-if '--ruby' in sys.argv:
-    Ruby.define_options(parser)
+parser.add_argument("--bare-metal", action="store_true",
+    help="Provide the raw system without the linux specific bits")
+parser.add_argument("--dtb-filename", action="store", type=str,
+    help="Specifies device tree blob file to use with device-tree-"\
+        "enabled kernels")
 
 # ---------------------------- Parse Options --------------------------- #
 args = parser.parse_args()
@@ -119,21 +140,26 @@ MemClass = Simulation.setMemClass(args)
 np = args.num_cpus
 
 # ---------------------------- Setup System ---------------------------- #
-# Edit this section to customize peripherals and system settings
+# Default Setup
 system = System()
 mdesc = SysConfig(disks=args.disk_image, rootdev=args.root_device,
                         mem=args.mem_size, os_type=args.os_type)
 system.mem_mode = mem_mode
 system.mem_ranges = [AddrRange(start=0x80000000, size=mdesc.mem())]
 
-system.workload = RiscvLinux()
+if args.bare_metal:
+    system.workload = RiscvBareMetal()
+    system.workload.bootloader = args.kernel
+else:
+    system.workload = RiscvLinux()
+    system.workload.object_file = args.kernel
 
 system.iobus = IOXBar()
 system.membus = MemBus()
 
 system.system_port = system.membus.cpu_side_ports
 
-# HiFive platform
+# HiFive Platform
 system.platform = HiFive()
 
 # RTCCLK (Set to 100MHz for faster simulation)
@@ -141,14 +167,15 @@ system.platform.rtc = RiscvRTC(frequency=Frequency("100MHz"))
 system.platform.clint.int_pin = system.platform.rtc.int_pin
 
 # VirtIOMMIO
-image = CowDiskImage(child=RawDiskImage(read_only=True), read_only=False)
-image.child.image_file = mdesc.disks()[0]
-system.platform.disk = MmioVirtIO(
-    vio=VirtIOBlock(image=image),
-    interrupt_id=0x8,
-    pio_size=4096,
-    pio_addr=0x10008000
-)
+if args.disk_image:
+    image = CowDiskImage(child=RawDiskImage(read_only=True), read_only=False)
+    image.child.image_file = mdesc.disks()[0]
+    system.platform.disk = MmioVirtIO(
+        vio=VirtIOBlock(image=image),
+        interrupt_id=0x8,
+        pio_size=4096,
+        pio_addr=0x10008000
+    )
 
 system.bridge = Bridge(delay='50ns')
 system.bridge.mem_side_port = system.iobus.cpu_side_ports
@@ -197,8 +224,8 @@ if args.caches or args.l2cache:
     system.iocache.mem_side = system.membus.cpu_side_ports
 elif not args.external_memory_system:
     system.iobridge = Bridge(delay='50ns', ranges = system.mem_ranges)
-    system.iobridge.cpu_side_ports = system.iobus.mem_side_ports
-    system.iobridge.mem_side_ports = system.membus.cpu_side_ports
+    system.iobridge.cpu_side_port = system.iobus.mem_side_ports
+    system.iobridge.mem_side_port = system.membus.cpu_side_ports
 
 # Sanity check
 if args.simpoint_profile:
@@ -238,18 +265,27 @@ for cpu in system.cpu:
 
 # --------------------------- DTB Generation --------------------------- #
 
-generateDtb(system)
-system.workload.dtb_filename = path.join(m5.options.outdir, 'device.dtb')
-# Default DTB address if bbl is bulit with --with-dts option
-system.workload.dtb_addr = 0x87e00000
+if not args.bare_metal:
+    if args.dtb_filename:
+        system.workload.dtb_filename = args.dtb_filename
+    else:
+        generateDtb(system)
+        system.workload.dtb_filename = path.join(
+            m5.options.outdir, 'device.dtb')
+
+    # Default DTB address if bbl is bulit with --with-dts option
+    system.workload.dtb_addr = 0x87e00000
 
 # Linux boot command flags
-kernel_cmd = [
-    "console=ttyS0",
-    "root=/dev/vda",
-    "ro"
-]
-system.workload.command_line = " ".join(kernel_cmd)
+    if args.command_line:
+        system.workload.command_line = args.command_line
+    else:
+        kernel_cmd = [
+            "console=ttyS0",
+            "root=/dev/vda",
+            "ro"
+        ]
+        system.workload.command_line = " ".join(kernel_cmd)
 
 # ---------------------------- Default Setup --------------------------- #
 
