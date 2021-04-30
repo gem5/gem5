@@ -286,9 +286,7 @@ SparcProcess::argsInit(int pageSize)
     IntType envp_array_base = auxv_array_base - envp_array_size;
     IntType argv_array_base = envp_array_base - argv_array_size;
     IntType argc_base = argv_array_base - argc_size;
-#if TRACING_ON
     IntType window_save_base = argc_base - window_save_size;
-#endif
 
     DPRINTF(Stack, "The addresses of items on the initial stack:\n");
     DPRINTF(Stack, "%#x - sentry NULL\n", sentry_base);

@@ -992,9 +992,7 @@ IGbE::DescCache<T>::fetchComplete()
     }
 
 
-#ifndef NDEBUG
     int oldCp = cachePnt;
-#endif
 
     cachePnt += curFetching;
     assert(cachePnt <= descLen());
@@ -1015,10 +1013,8 @@ void
 IGbE::DescCache<T>::wbComplete()
 {
 
-    long  curHead = descHead();
-#ifndef NDEBUG
+    long curHead = descHead();
     long oldHead = curHead;
-#endif
 
     for (int x = 0; x < wbOut; x++) {
         assert(usedCache.size());

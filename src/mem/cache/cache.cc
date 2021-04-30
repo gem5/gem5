@@ -591,9 +591,7 @@ Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
     DPRINTF(Cache, "%s: Sending an atomic %s\n", __func__,
             bus_pkt->print());
 
-#if TRACING_ON
     const std::string old_state = blk ? blk->print() : "";
-#endif
 
     Cycles latency = ticksToCycles(memSidePort.sendAtomic(bus_pkt));
 

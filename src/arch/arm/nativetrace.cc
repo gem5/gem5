@@ -51,7 +51,6 @@ using namespace ArmISA;
 
 namespace Trace {
 
-#if TRACING_ON
 static const char *regNames[] = {
     "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
     "r8", "r9", "r10", "fp", "r12", "sp", "lr", "pc",
@@ -61,7 +60,6 @@ static const char *regNames[] = {
     "f23", "f24", "f25", "f26", "f27", "f28", "f29", "f30",
     "f31", "fpscr"
 };
-#endif
 
 void
 Trace::ArmNativeTrace::ThreadState::update(NativeTrace *parent)

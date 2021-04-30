@@ -173,71 +173,61 @@ const std::string &name();
  * @{
  */
 
-#if TRACING_ON
-
 #define DDUMP(x, data, count) do {               \
-    if (M5_UNLIKELY(DTRACE(x)))                  \
+    if (M5_UNLIKELY(TRACING_ON && DTRACE(x)))    \
         Trace::getDebugLogger()->dump(           \
             curTick(), name(), data, count, #x); \
 } while (0)
 
 #define DPRINTF(x, ...) do {                     \
-    if (M5_UNLIKELY(DTRACE(x))) {                \
+    if (M5_UNLIKELY(TRACING_ON && DTRACE(x))) {  \
         Trace::getDebugLogger()->dprintf_flag(   \
             curTick(), name(), #x, __VA_ARGS__); \
     }                                            \
 } while (0)
 
 #define DPRINTFS(x, s, ...) do {                        \
-    if (M5_UNLIKELY(DTRACE(x))) {                       \
+    if (M5_UNLIKELY(TRACING_ON && DTRACE(x))) {         \
         Trace::getDebugLogger()->dprintf_flag(          \
                 curTick(), s->name(), #x, __VA_ARGS__); \
     }                                                   \
 } while (0)
 
 #define DPRINTFR(x, ...) do {                          \
-    if (M5_UNLIKELY(DTRACE(x))) {                      \
+    if (M5_UNLIKELY(TRACING_ON && DTRACE(x))) {        \
         Trace::getDebugLogger()->dprintf_flag(         \
             (Tick)-1, std::string(), #x, __VA_ARGS__); \
     }                                                  \
 } while (0)
 
 #define DPRINTFV(x, ...) do {                          \
-    if (M5_UNLIKELY(x)) {                              \
+    if (M5_UNLIKELY(TRACING_ON && (x))) {              \
         Trace::getDebugLogger()->dprintf_flag(         \
             curTick(), name(), x.name(), __VA_ARGS__); \
     }                                                  \
 } while (0)
 
-#define DPRINTFN(...) do {                                             \
-    Trace::getDebugLogger()->dprintf(curTick(), name(), __VA_ARGS__);  \
+#define DPRINTFN(...) do {                                                \
+    if (TRACING_ON) {                                                     \
+        Trace::getDebugLogger()->dprintf(curTick(), name(), __VA_ARGS__); \
+    }                                                                     \
 } while (0)
 
-#define DPRINTFNR(...) do {                                                 \
-    Trace::getDebugLogger()->dprintf((Tick)-1, std::string(), __VA_ARGS__); \
+#define DPRINTFNR(...) do {                                          \
+    if (TRACING_ON) {                                                \
+        Trace::getDebugLogger()->dprintf((Tick)-1, "", __VA_ARGS__); \
+    }                                                                \
 } while (0)
 
-#define DPRINTF_UNCONDITIONAL(x, ...) \
-    GEM5_DEPRECATED_MACRO_STMT(DPRINTF_UNCONDITIONAL, \
-    do { Trace::getDebugLogger()->dprintf_flag(    \
-        curTick(), name(), #x, __VA_ARGS__);  \
-    } while (0), \
+#define DPRINTF_UNCONDITIONAL(x, ...)                      \
+    GEM5_DEPRECATED_MACRO_STMT(DPRINTF_UNCONDITIONAL,      \
+    do {                                                   \
+        if (TRACING_ON) {                                  \
+            Trace::getDebugLogger()->dprintf_flag(         \
+                curTick(), name(), #x, __VA_ARGS__);       \
+        }                                                  \
+    } while (0),                                           \
     "Use DPRINTFN or DPRINTF with a debug flag instead.")
-
-#else // !TRACING_ON
-
-#define DDUMP(x, data, count) do {} while (0)
-#define DPRINTF(x, ...) do {} while (0)
-#define DPRINTFS(x, ...) do {} while (0)
-#define DPRINTFR(...) do {} while (0)
-#define DPRINTFV(...) do {} while (0)
-#define DPRINTFN(...) do {} while (0)
-#define DPRINTFNR(...) do {} while (0)
-#define DPRINTF_UNCONDITIONAL(x, ...) \
-    GEM5_DEPRECATED_MACRO_STMT(DPRINTF_UNCONDITIONAL, do {} while (0), \
-    "Use DPRINTFN or DPRINTF with a debug flag instead.")
-
-#endif  // TRACING_ON
 
 /** @} */ // end of api_trace
 
