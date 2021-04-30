@@ -94,9 +94,9 @@ pybind_init_debug(py::module_ &m_native)
         .def_property_readonly("desc", &Debug::Flag::desc)
         .def("enable", &Debug::Flag::enable)
         .def("disable", &Debug::Flag::disable)
-        .def_property("enabled",
+        .def_property("tracing",
                       [](const Debug::Flag *flag) {
-                          return flag->enabled();
+                          return flag->tracing();
                       },
                       [](Debug::Flag *flag, bool state) {
                           if (state) {
@@ -106,7 +106,7 @@ pybind_init_debug(py::module_ &m_native)
                           }
                       })
         .def("__bool__", [](const Debug::Flag *flag) {
-                return flag->enabled();
+                return (bool)*flag;
             })
         ;
 

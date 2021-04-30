@@ -137,20 +137,6 @@ CompoundFlag::disable()
 }
 
 bool
-CompoundFlag::enabled() const
-{
-    if (_kids.empty())
-        return false;
-
-    for (auto& k : _kids) {
-        if (!k->enabled())
-            return false;
-    }
-
-    return true;
-}
-
-bool
 changeFlag(const char *s, bool value)
 {
     Flag *f = findFlag(s);
@@ -188,7 +174,7 @@ dumpDebugFlags(std::ostream &os)
     FlagsMap::iterator end = allFlags().end();
     for (; i != end; ++i) {
         SimpleFlag *f = dynamic_cast<SimpleFlag *>(i->second);
-        if (f && f->enabled())
+        if (f && f->tracing())
             ccprintf(os, "%s\n", f->name());
     }
 }

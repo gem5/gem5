@@ -57,6 +57,8 @@ class Flag
   protected:
     static bool _globalEnable; // whether debug tracings are enabled
 
+    bool _tracing = false; // tracing is enabled and flag is on
+
     const char *_name;
     const char *_desc;
 
@@ -69,11 +71,12 @@ class Flag
     std::string name() const { return _name; }
     std::string desc() const { return _desc; }
 
+    bool tracing() const { return _tracing; }
+
     virtual void enable() = 0;
     virtual void disable() = 0;
-    virtual bool enabled() const = 0;
 
-    operator bool() const { return enabled(); }
+    operator bool() const { return tracing(); }
 
     static void globalEnable();
     static void globalDisable();
@@ -85,7 +88,6 @@ class SimpleFlag : public Flag
     /** Whether this flag changes debug formatting. */
     const bool _isFormat = false;
 
-    bool _tracing = false; // tracing is enabled and flag is on
     bool _enabled = false; // flag enablement status
 
     void sync() override { _tracing = _globalEnable && _enabled; }
@@ -94,8 +96,6 @@ class SimpleFlag : public Flag
     SimpleFlag(const char *name, const char *desc, bool is_format=false)
       : Flag(name, desc), _isFormat(is_format)
     {}
-
-    bool enabled() const override { return _tracing; }
 
     void enable() override  { _enabled = true;  sync(); }
     void disable() override { _enabled = false; sync(); }
@@ -127,7 +127,6 @@ class CompoundFlag : public Flag
 
     void enable() override;
     void disable() override;
-    bool enabled() const override;
 };
 
 typedef std::map<std::string, Flag *> FlagsMap;
