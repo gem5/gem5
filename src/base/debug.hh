@@ -48,6 +48,8 @@
 #include <string>
 #include <vector>
 
+#include "base/compiler.hh"
+
 namespace Debug {
 
 void breakpoint();
@@ -71,7 +73,7 @@ class Flag
     std::string name() const { return _name; }
     std::string desc() const { return _desc; }
 
-    bool tracing() const { return _tracing; }
+    bool tracing() const { return TRACING_ON && _tracing; }
 
     virtual void enable() = 0;
     virtual void disable() = 0;
@@ -150,7 +152,7 @@ void dumpDebugFlags(std::ostream &os=std::cout);
  * @ingroup api_trace
  * @{
  */
-#define DTRACE(x) (TRACING_ON && Debug::x)
+#define DTRACE(x) (Debug::x)
 /** @} */ // end of api_trace
 
 #endif // __BASE_DEBUG_HH__
