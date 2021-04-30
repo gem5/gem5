@@ -309,6 +309,24 @@ class Logger
     } while (0)
 /** @} */ // end of api_logger
 
-} // namespace gem5
+/**
+ * The assert macro will function like a normal assert, but will use panic
+ * instead of straight abort(). This allows to perform some cleaning up in
+ * ExitLogger::exit() before calling abort(). This macro will not check its
+ * condition in fast builds, but it must still be valid code.
+ *
+ * @param cond Condition that is checked; if false -> panic
+ *
+ * \def gem5_assert(cond)
+ *
+ * @ingroup api_logger
+ */
+#define gem5_assert(cond) \
+    do { \
+        if (GEM5_UNLIKELY(!NDEBUG_DEFINED && !static_cast<bool>(cond))) \
+            panic("assert(" # cond ") failed"); \
+    } while (0)
+/** @} */ // end of api_logger
 
+} // namespace gem5
 #endif // __BASE_LOGGING_HH__
