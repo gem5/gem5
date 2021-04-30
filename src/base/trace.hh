@@ -167,7 +167,7 @@ const std::string &name();
  * \def DPRINTFV(x, ...)
  * \def DPRINTFN(...)
  * \def DPRINTFNR(...)
- * \def DPRINTF_UNCONDITIONAL(x, ...)
+ * \def DPRINTF_UNCONDITIONAL(x, ...) (deprecated)
  *
  * @ingroup api_trace
  * @{
@@ -217,10 +217,12 @@ const std::string &name();
     Trace::getDebugLogger()->dprintf((Tick)-1, std::string(), __VA_ARGS__); \
 } while (0)
 
-#define DPRINTF_UNCONDITIONAL(x, ...) do {    \
-    Trace::getDebugLogger()->dprintf_flag(    \
+#define DPRINTF_UNCONDITIONAL(x, ...) \
+    GEM5_DEPRECATED_MACRO_STMT(DPRINTF_UNCONDITIONAL, \
+    do { Trace::getDebugLogger()->dprintf_flag(    \
         curTick(), name(), #x, __VA_ARGS__);  \
-} while (0)
+    } while (0), \
+    "Use DPRINTFN or DPRINTF with a debug flag instead.")
 
 #else // !TRACING_ON
 
@@ -231,7 +233,9 @@ const std::string &name();
 #define DPRINTFV(...) do {} while (0)
 #define DPRINTFN(...) do {} while (0)
 #define DPRINTFNR(...) do {} while (0)
-#define DPRINTF_UNCONDITIONAL(x, ...) do {} while (0)
+#define DPRINTF_UNCONDITIONAL(x, ...) \
+    GEM5_DEPRECATED_MACRO_STMT(DPRINTF_UNCONDITIONAL, do {} while (0), \
+    "Use DPRINTFN or DPRINTF with a debug flag instead.")
 
 #endif  // TRACING_ON
 
