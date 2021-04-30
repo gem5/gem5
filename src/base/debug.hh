@@ -151,11 +151,7 @@ void dumpDebugFlags(std::ostream &os=std::cout);
  * @ingroup api_trace
  * @{
  */
-#if TRACING_ON
-#   define DTRACE(x) (Debug::x)
-#else // !TRACING_ON
-#   define DTRACE(x) (false)
-#endif  // TRACING_ON
+#define DTRACE(x) (TRACING_ON && Debug::x)
 /** @} */ // end of api_trace
 
 #endif // __BASE_DEBUG_HH__
