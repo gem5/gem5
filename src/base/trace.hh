@@ -169,14 +169,12 @@ const std::string &name();
 #if TRACING_ON
 
 #define DDUMP(x, data, count) do {               \
-    using namespace Debug;                       \
     if (M5_UNLIKELY(DTRACE(x)))                  \
         Trace::getDebugLogger()->dump(           \
             curTick(), name(), data, count, #x); \
 } while (0)
 
 #define DPRINTF(x, ...) do {                     \
-    using namespace Debug;                       \
     if (M5_UNLIKELY(DTRACE(x))) {                \
         Trace::getDebugLogger()->dprintf_flag(   \
             curTick(), name(), #x, __VA_ARGS__); \
@@ -184,7 +182,6 @@ const std::string &name();
 } while (0)
 
 #define DPRINTFS(x, s, ...) do {                        \
-    using namespace Debug;                              \
     if (M5_UNLIKELY(DTRACE(x))) {                       \
         Trace::getDebugLogger()->dprintf_flag(          \
                 curTick(), s->name(), #x, __VA_ARGS__); \
@@ -192,7 +189,6 @@ const std::string &name();
 } while (0)
 
 #define DPRINTFR(x, ...) do {                          \
-    using namespace Debug;                             \
     if (M5_UNLIKELY(DTRACE(x))) {                      \
         Trace::getDebugLogger()->dprintf_flag(         \
             (Tick)-1, std::string(), #x, __VA_ARGS__); \
