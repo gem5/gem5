@@ -66,7 +66,7 @@ Group::regStats()
         g->regStats();
 
     for (auto &g : statGroups) {
-        if (DTRACE(Stats)) {
+        if (Debug::Stats) {
             M5_VAR_USED const SimObject *so =
                 dynamic_cast<const SimObject *>(this);
             DPRINTF(Stats, "%s: regStats in group %s\n",

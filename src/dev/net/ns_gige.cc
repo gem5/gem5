@@ -1163,7 +1163,7 @@ NSGigE::rxKick()
             rxPacketBufPtr = rxPacket->data;
 
 #if TRACING_ON
-            if (DTRACE(Ethernet)) {
+            if (Debug::Ethernet) {
                 IpPtr ip(rxPacket);
                 if (ip) {
                     DPRINTF(Ethernet, "ID is %d\n", ip->id());
@@ -1360,7 +1360,7 @@ NSGigE::transmit()
             txFifo.size());
     if (interface->sendPacket(txFifo.front())) {
 #if TRACING_ON
-        if (DTRACE(Ethernet)) {
+        if (Debug::Ethernet) {
             IpPtr ip(txFifo.front());
             if (ip) {
                 DPRINTF(Ethernet, "ID is %d\n", ip->id());

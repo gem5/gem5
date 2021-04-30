@@ -64,7 +64,7 @@ class DebugPrintk : public Base
     void
     process(ThreadContext *tc) override
     {
-        if (DTRACE(DebugPrintf)) {
+        if (Debug::DebugPrintf) {
             std::string str;
             std::function<int(ThreadContext *, Addr, PrintkVarArgs)> func =
                 [&str](ThreadContext *tc, Addr format_ptr,

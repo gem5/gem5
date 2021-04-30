@@ -132,7 +132,7 @@ Pipeline::evaluate()
     fetch2.evaluate();
     fetch1.evaluate();
 
-    if (DTRACE(MinorTrace))
+    if (Debug::MinorTrace)
         minorTrace();
 
     /* Update the time buffers after the stages */

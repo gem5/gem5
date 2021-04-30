@@ -70,7 +70,7 @@ DrainManager::tryDrain()
     _state = DrainState::Draining;
     for (auto *obj : _allDrainable) {
         DrainState status = obj->dmDrain();
-        if (DTRACE(Drain) && status != DrainState::Drained) {
+        if (Debug::Drain && status != DrainState::Drained) {
             SimObject *temp = dynamic_cast<SimObject*>(obj);
             if (temp)
                 DPRINTF(Drain, "Failed to drain %s\n", temp->name());

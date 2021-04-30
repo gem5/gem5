@@ -86,7 +86,7 @@ class BaseStackTrace
 
     const std::vector<Addr> &getstack() const { return stack; }
 
-    void dprintf() { if (DTRACE(Stack)) dump(); }
+    void dprintf() { if (Debug::Stack) dump(); }
 
     // This function can be overridden so that special addresses which don't
     // actually refer to PCs can be translated into special names. For

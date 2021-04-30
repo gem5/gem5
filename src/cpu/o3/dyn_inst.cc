@@ -93,7 +93,7 @@ BaseO3DynInst::BaseO3DynInst(const StaticInstPtr &_staticInst,
 BaseO3DynInst::~BaseO3DynInst()
 {
 #if TRACING_ON
-    if (DTRACE(O3PipeView)) {
+    if (Debug::O3PipeView) {
         Tick fetch = this->fetchTick;
         // fetchTick can be -1 if the instruction fetched outside the trace
         // window.

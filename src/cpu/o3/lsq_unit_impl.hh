@@ -1186,7 +1186,7 @@ LSQUnit<Impl>::completeStore(typename StoreQueue::iterator store_idx)
             store_inst->seqNum, store_idx.idx() - 1, storeQueue.head() - 1);
 
 #if TRACING_ON
-    if (DTRACE(O3PipeView)) {
+    if (Debug::O3PipeView) {
         store_inst->storeTick =
             curTick() - store_inst->fetchTick;
     }

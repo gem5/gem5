@@ -152,7 +152,8 @@ void dumpDebugFlags(std::ostream &os=std::cout);
  * @ingroup api_trace
  * @{
  */
-#define DTRACE(x) (Debug::x)
+#define DTRACE(x) GEM5_DEPRECATED_MACRO(DTRACE, Debug::x, \
+        "Replace DTRACE(x) with Debug::x.")
 /** @} */ // end of api_trace
 
 #endif // __BASE_DEBUG_HH__

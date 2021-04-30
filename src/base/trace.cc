@@ -148,10 +148,10 @@ OstreamLogger::logMessage(Tick when, const std::string &name,
     if (!name.empty() && ignore.match(name))
         return;
 
-    if (!DTRACE(FmtTicksOff) && (when != MaxTick))
+    if (!Debug::FmtTicksOff && (when != MaxTick))
         ccprintf(stream, "%7d: ", when);
 
-    if (DTRACE(FmtFlag) && !flag.empty())
+    if (Debug::FmtFlag && !flag.empty())
         stream << flag << ": ";
 
     if (!name.empty())
@@ -160,7 +160,7 @@ OstreamLogger::logMessage(Tick when, const std::string &name,
     stream << message;
     stream.flush();
 
-    if (DTRACE(FmtStackTrace)) {
+    if (Debug::FmtStackTrace) {
         print_backtrace();
         STATIC_ERR("\n");
     }

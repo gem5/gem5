@@ -1299,7 +1299,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             numInst++;
 
 #if TRACING_ON
-            if (DTRACE(O3PipeView)) {
+            if (Debug::O3PipeView) {
                 instruction->fetchTick = curTick();
             }
 #endif

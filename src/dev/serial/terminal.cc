@@ -324,7 +324,7 @@ void
 Terminal::writeData(uint8_t c)
 {
 #if TRACING_ON == 1
-    if (DTRACE(Terminal)) {
+    if (Debug::Terminal) {
         static char last = '\0';
 
         if ((c != '\n' && c != '\r') || (last != '\n' && last != '\r')) {

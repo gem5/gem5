@@ -1603,7 +1603,7 @@ DefaultIEW<Impl>::updateExeInstStats(const DynInstPtr& inst)
     iewStats.executedInstStats.numInsts++;
 
 #if TRACING_ON
-    if (DTRACE(O3PipeView)) {
+    if (Debug::O3PipeView) {
         inst->completeTick = curTick() - inst->fetchTick;
     }
 #endif

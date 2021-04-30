@@ -711,7 +711,7 @@ Device::rxKick()
 
     switch (rxState) {
       case rxFifoBlock:
-        if (DTRACE(EthernetSM)) {
+        if (Debug::EthernetSM) {
             PacketFifo::iterator end = rxFifo.end();
             int size = virtualRegs.size();
             for (int i = 0; i < size; ++i) {
@@ -965,7 +965,7 @@ Device::transmit()
 
     txFifo.pop();
 #if TRACING_ON
-    if (DTRACE(Ethernet)) {
+    if (Debug::Ethernet) {
         IpPtr ip(packet);
         if (ip) {
             DPRINTF(Ethernet, "ID is %d\n", ip->id());

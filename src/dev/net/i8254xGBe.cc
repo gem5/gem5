@@ -1798,7 +1798,7 @@ IGbE::TxDescCache::pktComplete()
         tsoPrevSeq = tsoUsedLen;
     }
 
-    if (DTRACE(EthernetDesc)) {
+    if (Debug::EthernetDesc) {
         IpPtr ip(pktPtr);
         if (ip)
             DPRINTF(EthernetDesc, "Proccesing Ip packet with Id=%d\n",
@@ -2291,7 +2291,7 @@ IGbE::txWire()
 
 
     if (etherInt->sendPacket(txFifo.front())) {
-        if (DTRACE(EthernetSM)) {
+        if (Debug::EthernetSM) {
             IpPtr ip(txFifo.front());
             if (ip)
                 DPRINTF(EthernetSM, "Transmitting Ip packet with Id=%d\n",
