@@ -376,16 +376,12 @@ Event::description() const
 void
 Event::trace(const char *action)
 {
-    // This DPRINTF is unconditional because calls to this function
-    // are protected by an 'if (DTRACE(Event))' in the inlined Event
-    // methods.
-    //
     // This is just a default implementation for derived classes where
     // it's not worth doing anything special.  If you want to put a
     // more informative message in the trace, override this method on
     // the particular subclass where you have the information that
     // needs to be printed.
-    DPRINTF_UNCONDITIONAL(Event, "%s %s %s @ %d\n",
+    DPRINTF(Event, "%s %s %s @ %d\n",
             description(), instanceString(), action, when());
 }
 
