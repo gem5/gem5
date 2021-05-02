@@ -188,12 +188,6 @@ class RegId
     }
 };
 
-/** Physical register index type.
- * Although the Impl might be a better for this, but there are a few classes
- * that need this typedef yet are not templated on the Impl.
- */
-using PhysRegIndex = short int;
-
 /** Physical register ID.
  * Like a register ID but physical. The inheritance is private because the
  * only relationship between this types is functional, and it is done to
@@ -201,7 +195,7 @@ using PhysRegIndex = short int;
 class PhysRegId : private RegId
 {
   private:
-    PhysRegIndex flatIdx;
+    RegIndex flatIdx;
     int numPinnedWritesToComplete;
     bool pinned;
 
@@ -211,15 +205,15 @@ class PhysRegId : private RegId
     {}
 
     /** Scalar PhysRegId constructor. */
-    explicit PhysRegId(RegClass _regClass, PhysRegIndex _regIdx,
-              PhysRegIndex _flatIdx)
+    explicit PhysRegId(RegClass _regClass, RegIndex _regIdx,
+              RegIndex _flatIdx)
         : RegId(_regClass, _regIdx), flatIdx(_flatIdx),
           numPinnedWritesToComplete(0), pinned(false)
     {}
 
     /** Vector PhysRegId constructor (w/ elemIndex). */
-    explicit PhysRegId(RegClass _regClass, PhysRegIndex _regIdx,
-              ElemIndex elem_idx, PhysRegIndex flat_idx)
+    explicit PhysRegId(RegClass _regClass, RegIndex _regIdx,
+              ElemIndex elem_idx, RegIndex flat_idx)
         : RegId(_regClass, _regIdx, elem_idx), flatIdx(flat_idx),
           numPinnedWritesToComplete(0), pinned(false)
     {}
@@ -263,7 +257,7 @@ class PhysRegId : private RegId
     bool isFixedMapping() const { return !isRenameable(); }
 
     /** Flat index accessor */
-    const PhysRegIndex& flatIndex() const { return flatIdx; }
+    const RegIndex& flatIndex() const { return flatIdx; }
 
     static PhysRegId
     elemId(PhysRegId* vid, ElemIndex elem)

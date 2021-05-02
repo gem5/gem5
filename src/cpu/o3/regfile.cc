@@ -72,8 +72,8 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
                    + _numPhysicalCCRegs),
       vecMode(vmode)
 {
-    PhysRegIndex phys_reg;
-    PhysRegIndex flat_reg_idx = 0;
+    RegIndex phys_reg;
+    RegIndex flat_reg_idx = 0;
 
     // The initial batch of registers are the integer ones
     for (phys_reg = 0; phys_reg < numPhysicalIntRegs; phys_reg++) {

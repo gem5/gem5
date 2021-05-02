@@ -87,7 +87,7 @@ class ElasticTrace : public ProbeListenerObject
   public:
     typedef typename O3CPUImpl::DynInstPtr DynInstPtr;
     typedef typename O3CPUImpl::DynInstConstPtr DynInstConstPtr;
-    typedef typename std::pair<InstSeqNum, PhysRegIndex> SeqNumRegPair;
+    typedef typename std::pair<InstSeqNum, RegIndex> SeqNumRegPair;
 
     /** Trace record types corresponding to instruction node types */
     typedef ProtoMessage::InstDepRecord::RecordType RecordType;
@@ -239,7 +239,7 @@ class ElasticTrace : public ProbeListenerObject
      * After Write dependencies. The key is the renamed physical register and
      * the value is the instruction sequence number of its last producer.
      */
-    std::unordered_map<PhysRegIndex, InstSeqNum> physRegDepMap;
+    std::unordered_map<RegIndex, InstSeqNum> physRegDepMap;
 
     /**
      * @defgroup TraceInfo Struct for a record in the instruction dependency

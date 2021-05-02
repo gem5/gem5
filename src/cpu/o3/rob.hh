@@ -62,7 +62,7 @@ class ROB
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
 
-    typedef std::pair<RegIndex, PhysRegIndex> UnmapInfo;
+    typedef std::pair<RegIndex, RegIndex> UnmapInfo;
     typedef typename std::list<DynInstPtr>::iterator InstIt;
 
     /** Possible ROB statuses. */
