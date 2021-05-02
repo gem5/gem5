@@ -192,7 +192,6 @@ class RegId
             return Scale * regIdx + elemIdx;
         }
         panic("Trying to flatten a register without class!");
-        return -1;
     }
     /** @} */
 
