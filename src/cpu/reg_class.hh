@@ -149,26 +149,8 @@ class RegId
         return regClass != MiscRegClass;
     }
 
-    /** @return true if it is an integer physical register. */
-    bool isIntReg() const { return regClass == IntRegClass; }
-
-    /** @return true if it is a floating-point physical register. */
-    bool isFloatReg() const { return regClass == FloatRegClass; }
-
-    /** @Return true if it is a  condition-code physical register. */
-    bool isVecReg() const { return regClass == VecRegClass; }
-
-    /** @Return true if it is a  condition-code physical register. */
-    bool isVecElem() const { return regClass == VecElemClass; }
-
-    /** @Return true if it is a predicate physical register. */
-    bool isVecPredReg() const { return regClass == VecPredRegClass; }
-
-    /** @Return true if it is a  condition-code physical register. */
-    bool isCCReg() const { return regClass == CCRegClass; }
-
-    /** @Return true if it is a  condition-code physical register. */
-    bool isMiscReg() const { return regClass == MiscRegClass; }
+    /** @return true if it is of the specified class. */
+    bool is(RegClass reg_class) const { return regClass == reg_class; }
 
     /** Index accessors */
     /** @{ */
@@ -254,6 +236,7 @@ class PhysRegId : private RegId
     using RegId::classValue;
     using RegId::className;
     using RegId::elemIndex;
+    using RegId::is;
      /** @} */
     /**
      * Explicit forward methods, to prevent comparisons of PhysRegId with
@@ -279,27 +262,6 @@ class PhysRegId : private RegId
     }
     /** @} */
 
-    /** @return true if it is an integer physical register. */
-    bool isIntPhysReg() const { return isIntReg(); }
-
-    /** @return true if it is a floating-point physical register. */
-    bool isFloatPhysReg() const { return isFloatReg(); }
-
-    /** @Return true if it is a  condition-code physical register. */
-    bool isCCPhysReg() const { return isCCReg(); }
-
-    /** @Return true if it is a vector physical register. */
-    bool isVectorPhysReg() const { return isVecReg(); }
-
-    /** @Return true if it is a vector element physical register. */
-    bool isVectorPhysElem() const { return isVecElem(); }
-
-    /** @return true if it is a vector predicate physical register. */
-    bool isVecPredPhysReg() const { return isVecPredReg(); }
-
-    /** @Return true if it is a  condition-code physical register. */
-    bool isMiscPhysReg() const { return isMiscReg(); }
-
     /**
      * Returns true if this register is always associated to the same
      * architectural register.
@@ -312,7 +274,7 @@ class PhysRegId : private RegId
     static PhysRegId
     elemId(PhysRegId* vid, ElemIndex elem)
     {
-        assert(vid->isVectorPhysReg());
+        assert(vid->is(VecRegClass));
         return PhysRegId(VecElemClass, vid->index(), elem);
     }
 

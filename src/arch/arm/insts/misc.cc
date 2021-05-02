@@ -52,7 +52,7 @@ MrsOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
     bool foundPsr = false;
     for (unsigned i = 0; i < numSrcRegs(); i++) {
         const RegId& reg = srcRegIdx(i);
-        if (!reg.isMiscReg()) {
+        if (!reg.is(MiscRegClass)) {
             continue;
         }
         if (reg.index() == MISCREG_CPSR) {
@@ -80,7 +80,7 @@ MsrBase::printMsrBase(std::ostream &os) const
     bool foundPsr = false;
     for (unsigned i = 0; i < numDestRegs(); i++) {
         const RegId& reg = destRegIdx(i);
-        if (!reg.isMiscReg()) {
+        if (!reg.is(MiscRegClass)) {
             continue;
         }
         if (reg.index() == MISCREG_CPSR) {

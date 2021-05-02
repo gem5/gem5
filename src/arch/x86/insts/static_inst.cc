@@ -150,71 +150,74 @@ X86StaticInst::printReg(std::ostream &os, RegId reg, int size)
 
     RegIndex reg_idx = reg.index();
 
-    if (reg.isIntReg()) {
-        const char * suffix = "";
-        bool fold = reg_idx & IntFoldBit;
-        reg_idx &= ~IntFoldBit;
+    switch (reg.classValue()) {
+      case IntRegClass:
+        {
+            const char * suffix = "";
+            bool fold = reg_idx & IntFoldBit;
+            reg_idx &= ~IntFoldBit;
 
-        if (fold)
-            suffix = "h";
-        else if (reg_idx < 8 && size == 1)
-            suffix = "l";
+            if (fold)
+                suffix = "h";
+            else if (reg_idx < 8 && size == 1)
+                suffix = "l";
 
-        switch (reg_idx) {
-          case INTREG_RAX:
-            ccprintf(os, abcdFormats[size], "a");
-            break;
-          case INTREG_RBX:
-            ccprintf(os, abcdFormats[size], "b");
-            break;
-          case INTREG_RCX:
-            ccprintf(os, abcdFormats[size], "c");
-            break;
-          case INTREG_RDX:
-            ccprintf(os, abcdFormats[size], "d");
-            break;
-          case INTREG_RSP:
-            ccprintf(os, piFormats[size], "sp");
-            break;
-          case INTREG_RBP:
-            ccprintf(os, piFormats[size], "bp");
-            break;
-          case INTREG_RSI:
-            ccprintf(os, piFormats[size], "si");
-            break;
-          case INTREG_RDI:
-            ccprintf(os, piFormats[size], "di");
-            break;
-          case INTREG_R8W:
-            ccprintf(os, longFormats[size], "8");
-            break;
-          case INTREG_R9W:
-            ccprintf(os, longFormats[size], "9");
-            break;
-          case INTREG_R10W:
-            ccprintf(os, longFormats[size], "10");
-            break;
-          case INTREG_R11W:
-            ccprintf(os, longFormats[size], "11");
-            break;
-          case INTREG_R12W:
-            ccprintf(os, longFormats[size], "12");
-            break;
-          case INTREG_R13W:
-            ccprintf(os, longFormats[size], "13");
-            break;
-          case INTREG_R14W:
-            ccprintf(os, longFormats[size], "14");
-            break;
-          case INTREG_R15W:
-            ccprintf(os, longFormats[size], "15");
-            break;
-          default:
-            ccprintf(os, microFormats[size], reg_idx - NUM_INTREGS);
+            switch (reg_idx) {
+              case INTREG_RAX:
+                ccprintf(os, abcdFormats[size], "a");
+                break;
+              case INTREG_RBX:
+                ccprintf(os, abcdFormats[size], "b");
+                break;
+              case INTREG_RCX:
+                ccprintf(os, abcdFormats[size], "c");
+                break;
+              case INTREG_RDX:
+                ccprintf(os, abcdFormats[size], "d");
+                break;
+              case INTREG_RSP:
+                ccprintf(os, piFormats[size], "sp");
+                break;
+              case INTREG_RBP:
+                ccprintf(os, piFormats[size], "bp");
+                break;
+              case INTREG_RSI:
+                ccprintf(os, piFormats[size], "si");
+                break;
+              case INTREG_RDI:
+                ccprintf(os, piFormats[size], "di");
+                break;
+              case INTREG_R8W:
+                ccprintf(os, longFormats[size], "8");
+                break;
+              case INTREG_R9W:
+                ccprintf(os, longFormats[size], "9");
+                break;
+              case INTREG_R10W:
+                ccprintf(os, longFormats[size], "10");
+                break;
+              case INTREG_R11W:
+                ccprintf(os, longFormats[size], "11");
+                break;
+              case INTREG_R12W:
+                ccprintf(os, longFormats[size], "12");
+                break;
+              case INTREG_R13W:
+                ccprintf(os, longFormats[size], "13");
+                break;
+              case INTREG_R14W:
+                ccprintf(os, longFormats[size], "14");
+                break;
+              case INTREG_R15W:
+                ccprintf(os, longFormats[size], "15");
+                break;
+              default:
+                ccprintf(os, microFormats[size], reg_idx - NUM_INTREGS);
+            }
+            ccprintf(os, suffix);
         }
-        ccprintf(os, suffix);
-
-    } else if (reg.isFloatReg()) {
+        break;
+      case FloatRegClass:
         if (reg_idx < NumMMXRegs) {
             ccprintf(os, "%%mmx%d", reg_idx);
             return;
@@ -232,15 +235,18 @@ X86StaticInst::printReg(std::ostream &os, RegId reg, int size)
         }
         reg_idx -= NumMicroFpRegs;
         ccprintf(os, "%%st(%d)", reg_idx);
-
-    } else if (reg.isCCReg()) {
+        break;
+      case CCRegClass:
         ccprintf(os, "%%cc%d", reg_idx);
-
-    } else if (reg.isMiscReg()) {
+        break;
+      case MiscRegClass:
         switch (reg_idx) {
           default:
             ccprintf(os, "%%ctrl%d", reg_idx);
         }
+        break;
+      default:
+        panic("Unrecognized register class.");
     }
 }
 

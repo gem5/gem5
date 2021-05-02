@@ -182,7 +182,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     readIntRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isIntReg());
+        assert(reg.is(IntRegClass));
         return thread->readIntReg(reg.index());
     }
 
@@ -190,7 +190,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     readFloatRegOperandBits(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isFloatReg());
+        assert(reg.is(FloatRegClass));
         return thread->readFloatReg(reg.index());
     }
 
@@ -201,7 +201,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     readVecRegOperand(const StaticInst *si, int idx) const override
     {
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isVecReg());
+        assert(reg.is(VecRegClass));
         return thread->readVecReg(reg);
     }
 
@@ -212,7 +212,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     getWritableVecRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isVecReg());
+        assert(reg.is(VecRegClass));
         return thread->getWritableVecReg(reg);
     }
 
@@ -227,7 +227,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     readVecPredRegOperand(const StaticInst *si, int idx) const override
     {
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isVecPredReg());
+        assert(reg.is(VecPredRegClass));
         return thread->readVecPredReg(reg);
     }
 
@@ -235,7 +235,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     getWritableVecPredRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isVecPredReg());
+        assert(reg.is(VecPredRegClass));
         return thread->getWritableVecPredReg(reg);
     }
 
@@ -243,7 +243,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     readCCRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isCCReg());
+        assert(reg.is(CCRegClass));
         return thread->readCCReg(reg.index());
     }
 
@@ -283,7 +283,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     setIntRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isIntReg());
+        assert(reg.is(IntRegClass));
         thread->setIntReg(reg.index(), val);
         setScalarResult(val);
     }
@@ -292,7 +292,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     setFloatRegOperandBits(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isFloatReg());
+        assert(reg.is(FloatRegClass));
         thread->setFloatReg(reg.index(), val);
         setScalarResult(val);
     }
@@ -301,7 +301,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     setCCRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isCCReg());
+        assert(reg.is(CCRegClass));
         thread->setCCReg(reg.index(), val);
         setScalarResult((uint64_t)val);
     }
@@ -311,7 +311,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
                      const TheISA::VecRegContainer& val) override
     {
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isVecReg());
+        assert(reg.is(VecRegClass));
         thread->setVecReg(reg, val);
         setVecResult(val);
     }
@@ -321,7 +321,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
                       const TheISA::VecElem val) override
     {
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isVecElem());
+        assert(reg.is(VecElemClass));
         thread->setVecElem(reg, val);
         setVecElemResult(val);
     }
@@ -330,7 +330,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
                               const TheISA::VecPredRegContainer& val) override
     {
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isVecPredReg());
+        assert(reg.is(VecPredRegClass));
         thread->setVecPredReg(reg, val);
         setVecPredResult(val);
     }
@@ -437,7 +437,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     readMiscRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isMiscReg());
+        assert(reg.is(MiscRegClass));
         return thread->readMiscReg(reg.index());
     }
 
@@ -445,7 +445,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     setMiscRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isMiscReg());
+        assert(reg.is(MiscRegClass));
         return this->setMiscReg(reg.index(), val);
     }
 

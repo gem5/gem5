@@ -304,31 +304,26 @@ class UnifiedRenameMap
     void
     setEntry(const RegId& arch_reg, PhysRegIdPtr phys_reg)
     {
+        assert(phys_reg->is(arch_reg.classValue()));
         switch (arch_reg.classValue()) {
           case IntRegClass:
-            assert(phys_reg->isIntPhysReg());
             return intMap.setEntry(arch_reg, phys_reg);
 
           case FloatRegClass:
-            assert(phys_reg->isFloatPhysReg());
             return floatMap.setEntry(arch_reg, phys_reg);
 
           case VecRegClass:
-            assert(phys_reg->isVectorPhysReg());
             assert(vecMode == Enums::Full);
             return vecMap.setEntry(arch_reg, phys_reg);
 
           case VecElemClass:
-            assert(phys_reg->isVectorPhysElem());
             assert(vecMode == Enums::Elem);
             return vecElemMap.setEntry(arch_reg, phys_reg);
 
           case VecPredRegClass:
-            assert(phys_reg->isVecPredPhysReg());
             return predMap.setEntry(arch_reg, phys_reg);
 
           case CCRegClass:
-            assert(phys_reg->isCCPhysReg());
             return ccMap.setEntry(arch_reg, phys_reg);
 
           case MiscRegClass:

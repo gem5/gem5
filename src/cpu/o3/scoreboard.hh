@@ -87,7 +87,7 @@ class Scoreboard
 
         bool ready = regScoreBoard[phys_reg->flatIndex()];
 
-        if (phys_reg->isIntPhysReg() && phys_reg->index() == zeroReg)
+        if (phys_reg->is(IntRegClass) && phys_reg->index() == zeroReg)
             assert(ready);
 
         return ready;
@@ -124,7 +124,7 @@ class Scoreboard
         }
 
         // zero reg should never be marked unready
-        if (phys_reg->isIntPhysReg() && phys_reg->index() == zeroReg)
+        if (phys_reg->is(IntRegClass) && phys_reg->index() == zeroReg)
             return;
 
         regScoreBoard[phys_reg->flatIndex()] = false;

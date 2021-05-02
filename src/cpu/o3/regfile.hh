@@ -178,7 +178,7 @@ class PhysRegFile
     RegVal
     readIntReg(PhysRegIdPtr phys_reg) const
     {
-        assert(phys_reg->isIntPhysReg());
+        assert(phys_reg->is(IntRegClass));
 
         DPRINTF(IEW, "RegFile: Access to int register %i, has data "
                 "%#x\n", phys_reg->index(), intRegFile[phys_reg->index()]);
@@ -188,7 +188,7 @@ class PhysRegFile
     RegVal
     readFloatReg(PhysRegIdPtr phys_reg) const
     {
-        assert(phys_reg->isFloatPhysReg());
+        assert(phys_reg->is(FloatRegClass));
 
         RegVal floatRegBits = floatRegFile[phys_reg->index()];
 
@@ -202,7 +202,7 @@ class PhysRegFile
     const TheISA::VecRegContainer &
     readVecReg(PhysRegIdPtr phys_reg) const
     {
-        assert(phys_reg->isVectorPhysReg());
+        assert(phys_reg->is(VecRegClass));
 
         DPRINTF(IEW, "RegFile: Access to vector register %i, has "
                 "data %s\n", int(phys_reg->index()),
@@ -223,7 +223,7 @@ class PhysRegFile
     const TheISA::VecElem &
     readVecElem(PhysRegIdPtr phys_reg) const
     {
-        assert(phys_reg->isVectorPhysElem());
+        assert(phys_reg->is(VecElemClass));
         auto ret = vectorRegFile[phys_reg->index()].as<TheISA::VecElem>();
         const TheISA::VecElem& val = ret[phys_reg->elemIndex()];
         DPRINTF(IEW, "RegFile: Access to element %d of vector register %i,"
@@ -237,7 +237,7 @@ class PhysRegFile
     const TheISA::VecPredRegContainer&
     readVecPredReg(PhysRegIdPtr phys_reg) const
     {
-        assert(phys_reg->isVecPredPhysReg());
+        assert(phys_reg->is(VecPredRegClass));
 
         DPRINTF(IEW, "RegFile: Access to predicate register %i, has "
                 "data %s\n", int(phys_reg->index()),
@@ -258,7 +258,7 @@ class PhysRegFile
     RegVal
     readCCReg(PhysRegIdPtr phys_reg)
     {
-        assert(phys_reg->isCCPhysReg());
+        assert(phys_reg->is(CCRegClass));
 
         DPRINTF(IEW, "RegFile: Access to cc register %i, has "
                 "data %#x\n", phys_reg->index(),
@@ -271,7 +271,7 @@ class PhysRegFile
     void
     setIntReg(PhysRegIdPtr phys_reg, RegVal val)
     {
-        assert(phys_reg->isIntPhysReg());
+        assert(phys_reg->is(IntRegClass));
 
         DPRINTF(IEW, "RegFile: Setting int register %i to %#x\n",
                 phys_reg->index(), val);
@@ -283,7 +283,7 @@ class PhysRegFile
     void
     setFloatReg(PhysRegIdPtr phys_reg, RegVal val)
     {
-        assert(phys_reg->isFloatPhysReg());
+        assert(phys_reg->is(FloatRegClass));
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
                 phys_reg->index(), (uint64_t)val);
@@ -295,7 +295,7 @@ class PhysRegFile
     void
     setVecReg(PhysRegIdPtr phys_reg, const TheISA::VecRegContainer& val)
     {
-        assert(phys_reg->isVectorPhysReg());
+        assert(phys_reg->is(VecRegClass));
 
         DPRINTF(IEW, "RegFile: Setting vector register %i to %s\n",
                 int(phys_reg->index()), val);
@@ -307,7 +307,7 @@ class PhysRegFile
     void
     setVecElem(PhysRegIdPtr phys_reg, const TheISA::VecElem val)
     {
-        assert(phys_reg->isVectorPhysElem());
+        assert(phys_reg->is(VecElemClass));
 
         DPRINTF(IEW, "RegFile: Setting element %d of vector register %i to"
                 " %#x\n", phys_reg->elemIndex(), int(phys_reg->index()), val);
@@ -321,7 +321,7 @@ class PhysRegFile
     setVecPredReg(PhysRegIdPtr phys_reg,
             const TheISA::VecPredRegContainer& val)
     {
-        assert(phys_reg->isVecPredPhysReg());
+        assert(phys_reg->is(VecPredRegClass));
 
         DPRINTF(IEW, "RegFile: Setting predicate register %i to %s\n",
                 int(phys_reg->index()), val);
@@ -333,7 +333,7 @@ class PhysRegFile
     void
     setCCReg(PhysRegIdPtr phys_reg, RegVal val)
     {
-        assert(phys_reg->isCCPhysReg());
+        assert(phys_reg->is(CCRegClass));
 
         DPRINTF(IEW, "RegFile: Setting cc register %i to %#x\n",
                 phys_reg->index(), (uint64_t)val);

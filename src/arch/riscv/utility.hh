@@ -102,7 +102,7 @@ issignalingnan<double>(double val)
 inline std::string
 registerName(RegId reg)
 {
-    if (reg.isIntReg()) {
+    if (reg.is(IntRegClass)) {
         if (reg.index() >= NumIntArchRegs) {
             /*
              * This should only happen if a instruction is being speculatively

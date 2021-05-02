@@ -277,7 +277,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numIntRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isIntReg());
+        assert(reg.is(IntRegClass));
         return thread->readIntReg(reg.index());
     }
 
@@ -287,7 +287,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numIntRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isIntReg());
+        assert(reg.is(IntRegClass));
         thread->setIntReg(reg.index(), val);
     }
 
@@ -298,7 +298,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numFpRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isFloatReg());
+        assert(reg.is(FloatRegClass));
         return thread->readFloatReg(reg.index());
     }
 
@@ -309,7 +309,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numFpRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isFloatReg());
+        assert(reg.is(FloatRegClass));
         thread->setFloatReg(reg.index(), val);
     }
 
@@ -319,7 +319,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numVecRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isVecReg());
+        assert(reg.is(VecRegClass));
         return thread->readVecReg(reg);
     }
 
@@ -329,7 +329,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numVecRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isVecReg());
+        assert(reg.is(VecRegClass));
         return thread->getWritableVecReg(reg);
     }
 
@@ -340,7 +340,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numVecRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isVecReg());
+        assert(reg.is(VecRegClass));
         thread->setVecReg(reg, val);
     }
 
@@ -350,7 +350,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numVecRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isVecElem());
+        assert(reg.is(VecElemClass));
         return thread->readVecElem(reg);
     }
 
@@ -361,7 +361,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numVecRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isVecElem());
+        assert(reg.is(VecElemClass));
         thread->setVecElem(reg, val);
     }
 
@@ -370,7 +370,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numVecPredRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isVecPredReg());
+        assert(reg.is(VecPredRegClass));
         return thread->readVecPredReg(reg);
     }
 
@@ -379,7 +379,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numVecPredRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isVecPredReg());
+        assert(reg.is(VecPredRegClass));
         return thread->getWritableVecPredReg(reg);
     }
 
@@ -389,7 +389,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numVecPredRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isVecPredReg());
+        assert(reg.is(VecPredRegClass));
         thread->setVecPredReg(reg, val);
     }
 
@@ -398,7 +398,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numCCRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isCCReg());
+        assert(reg.is(CCRegClass));
         return thread->readCCReg(reg.index());
     }
 
@@ -407,7 +407,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numCCRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isCCReg());
+        assert(reg.is(CCRegClass));
         thread->setCCReg(reg.index(), val);
     }
 
@@ -416,7 +416,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numIntRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isMiscReg());
+        assert(reg.is(MiscRegClass));
         return thread->readMiscReg(reg.index());
     }
 
@@ -425,7 +425,7 @@ class SimpleExecContext : public ExecContext
     {
         execContextStats.numIntRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isMiscReg());
+        assert(reg.is(MiscRegClass));
         thread->setMiscReg(reg.index(), val);
     }
 

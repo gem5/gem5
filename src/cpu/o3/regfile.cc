@@ -182,7 +182,7 @@ PhysRegFile::initFreeList(UnifiedFreeList *freeList)
 PhysRegFile::IdRange
 PhysRegFile::getRegElemIds(PhysRegIdPtr reg)
 {
-    panic_if(!reg->isVectorPhysReg(),
+    panic_if(!reg->is(VecRegClass),
             "Trying to get elems of a %s register", reg->className());
     auto idx = reg->index();
     return std::make_pair(
@@ -225,7 +225,7 @@ PhysRegFile::getTrueId(PhysRegIdPtr reg)
         return &vecElemIds[reg->index() * TheISA::NumVecElemPerVecReg +
             reg->elemIndex()];
     default:
-        panic_if(!reg->isVectorPhysElem(),
+        panic_if(!reg->is(VecElemClass),
             "Trying to get the register of a %s register", reg->className());
     }
     return nullptr;

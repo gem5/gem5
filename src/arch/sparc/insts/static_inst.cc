@@ -104,7 +104,7 @@ SparcStaticInst::printReg(std::ostream &os, RegId reg)
     const int MaxInput = 32;
     const int MaxMicroReg = 40;
     RegIndex reg_idx = reg.index();
-    if (reg.isIntReg()) {
+    if (reg.is(IntRegClass)) {
         // If we used a register from the next or previous window,
         // take out the offset.
         while (reg_idx >= MaxMicroReg)
@@ -149,7 +149,7 @@ SparcStaticInst::printReg(std::ostream &os, RegId reg)
                 break;
             }
         }
-    } else if (reg.isFloatReg()) {
+    } else if (reg.is(FloatRegClass)) {
         ccprintf(os, "%%f%d", reg_idx);
     } else {
         switch (reg_idx) {

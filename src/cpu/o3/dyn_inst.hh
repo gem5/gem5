@@ -1137,7 +1137,7 @@ class BaseO3DynInst : public ExecContext, public RefCounted
     readMiscRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isMiscReg());
+        assert(reg.is(MiscRegClass));
         return this->cpu->readMiscReg(reg.index(), this->threadNumber);
     }
 
@@ -1148,7 +1148,7 @@ class BaseO3DynInst : public ExecContext, public RefCounted
     setMiscRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isMiscReg());
+        assert(reg.is(MiscRegClass));
         setMiscReg(reg.index(), val);
     }
 
