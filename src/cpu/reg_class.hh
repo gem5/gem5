@@ -77,12 +77,6 @@ class RegClassInfo
     RegIndex zeroReg() const { return _zeroReg; }
 };
 
-/** Number of register classes.
- * This value is not part of the enum, because putting it there makes the
- * compiler complain about unhandled cases in some switch statements.
- */
-const int NumRegClasses = MiscRegClass + 1;
-
 /** Register ID: describe an architectural register with its class and index.
  * This structure is used instead of just the register index to disambiguate
  * between different classes of registers. For example, a integer register with
