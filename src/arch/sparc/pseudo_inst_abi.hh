@@ -28,7 +28,8 @@
 #ifndef __ARCH_SPARC_PSEUDO_INST_ABI_HH__
 #define __ARCH_SPARC_PSEUDO_INST_ABI_HH__
 
-#include "arch/sparc/registers.hh"
+#include "arch/sparc/regs/int.hh"
+#include "cpu/thread_context.hh"
 #include "sim/guest_abi.hh"
 
 struct SparcPseudoInstABI
