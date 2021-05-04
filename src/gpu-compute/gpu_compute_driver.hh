@@ -65,9 +65,9 @@ class GPUComputeDriver final : public EmulatedDriver
     GPUComputeDriver(const Params &p);
     int ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf) override;
 
-    int open(ThreadContext *tc, int mode, int flags);
+    int open(ThreadContext *tc, int mode, int flags) override;
     Addr mmap(ThreadContext *tc, Addr start, uint64_t length,
-              int prot, int tgt_flags, int tgt_fd, off_t offset);
+              int prot, int tgt_flags, int tgt_fd, off_t offset) override;
     virtual void signalWakeupEvent(uint32_t event_id);
     void sleepCPU(ThreadContext *tc, uint32_t milliSecTimeout);
     /**
