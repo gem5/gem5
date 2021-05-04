@@ -53,7 +53,7 @@ namespace gem5
 {
 
 /** Enumerate the classes of registers. */
-enum RegClass
+enum RegClassType
 {
     IntRegClass,        ///< Integer register
     FloatRegClass,      ///< Floating-point register
@@ -114,7 +114,7 @@ class RegId
 {
   protected:
     static const char* regClassStrings[];
-    RegClass regClass;
+    RegClassType regClass;
     RegIndex regIdx;
     ElemIndex elemIdx;
     static constexpr size_t Scale = TheISA::NumVecElemPerVecReg;
@@ -125,10 +125,11 @@ class RegId
   public:
     RegId() : RegId(IntRegClass, 0) {}
 
-    RegId(RegClass reg_class, RegIndex reg_idx)
+    RegId(RegClassType reg_class, RegIndex reg_idx)
         : RegId(reg_class, reg_idx, IllegalElemIndex) {}
 
-    explicit RegId(RegClass reg_class, RegIndex reg_idx, ElemIndex elem_idx)
+    explicit RegId(RegClassType reg_class, RegIndex reg_idx,
+            ElemIndex elem_idx)
         : regClass(reg_class), regIdx(reg_idx), elemIdx(elem_idx),
           numPinnedWrites(0)
     {
@@ -172,7 +173,7 @@ class RegId
     }
 
     /** @return true if it is of the specified class. */
-    bool is(RegClass reg_class) const { return regClass == reg_class; }
+    bool is(RegClassType reg_class) const { return regClass == reg_class; }
 
     /** Index accessors */
     /** @{ */
@@ -202,7 +203,7 @@ class RegId
     /** Elem accessor */
     RegIndex elemIndex() const { return elemIdx; }
     /** Class accessor */
-    RegClass classValue() const { return regClass; }
+    RegClassType classValue() const { return regClass; }
     /** Return a const char* with the register class name. */
     const char* className() const { return regClassStrings[regClass]; }
 
@@ -233,14 +234,14 @@ class PhysRegId : private RegId
     {}
 
     /** Scalar PhysRegId constructor. */
-    explicit PhysRegId(RegClass _regClass, RegIndex _regIdx,
+    explicit PhysRegId(RegClassType _regClass, RegIndex _regIdx,
               RegIndex _flatIdx)
         : RegId(_regClass, _regIdx), flatIdx(_flatIdx),
           numPinnedWritesToComplete(0), pinned(false)
     {}
 
     /** Vector PhysRegId constructor (w/ elemIndex). */
-    explicit PhysRegId(RegClass _regClass, RegIndex _regIdx,
+    explicit PhysRegId(RegClassType _regClass, RegIndex _regIdx,
               ElemIndex elem_idx, RegIndex flat_idx)
         : RegId(_regClass, _regIdx, elem_idx), flatIdx(flat_idx),
           numPinnedWritesToComplete(0), pinned(false)

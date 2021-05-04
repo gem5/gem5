@@ -357,7 +357,7 @@ class PhysRegFile
      * Auxiliary function to transition from Full vector mode to Elem mode
      * and to initialise the rename map.
      */
-    IdRange getRegIds(RegClass cls);
+    IdRange getRegIds(RegClassType cls);
 
     /**
      * Get the true physical register id.

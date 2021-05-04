@@ -196,7 +196,7 @@ PhysRegFile::getRegElemIds(PhysRegIdPtr reg)
 }
 
 PhysRegFile::IdRange
-PhysRegFile::getRegIds(RegClass cls)
+PhysRegFile::getRegIds(RegClassType cls)
 {
     switch (cls)
     {
