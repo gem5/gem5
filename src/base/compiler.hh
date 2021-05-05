@@ -113,6 +113,21 @@
 #  define M5_LIKELY(cond) __builtin_expect(!!(cond), 1)
 #  define M5_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
 
+// Mark a c++ declaration as deprecated, with a message explaining what to do
+// to update to a non-deprecated alternative.
+#  define GEM5_DEPRECATED(message) [[gnu::deprecated(message)]]
+// Mark an expression-like macro as deprecated by wrapping it in some code
+// which declares and uses a deprecated variable with the same name as the
+// macro. The wrapping macro evaluates to the same thing as the original macro.
+// The definition must be an c++ expression and not a statement because of how
+// the original macro is wrapped.
+#  define GEM5_DEPRECATED_MACRO(name, definition, message) \
+     ([](){GEM5_DEPRECATED(message) int name{}; return name;}, (definition))
+// This version is for macros which are statement-like, which frequently use
+// "do {} while (0)" to make their syntax look more like normal c++ statements.
+#  define GEM5_DEPRECATED_MACRO_STMT(name, definition, message) \
+     do {{definition;} GEM5_DEPRECATED_MACRO(name, {}, message);} while (0)
+
 // Evaluate an expanded parameter pack in order. Multiple arguments can be
 // passed in which be evaluated in order relative to each other as a group.
 // The argument(s) must include a parameter pack to expand. This works because
