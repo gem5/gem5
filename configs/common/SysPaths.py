@@ -70,7 +70,7 @@ class PathSearchFunc(object):
                 return next(p for p in paths if os.path.exists(p))
             except StopIteration:
                 raise IOError("Can't find file '{}' on {}."
-                        .format(filename, self.environment_variable))
+                        .format(filepath, self.environment_variable))
 
 disk = PathSearchFunc('disks')
 binary = PathSearchFunc('binaries')
