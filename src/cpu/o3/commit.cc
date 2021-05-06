@@ -235,10 +235,10 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
         .flags(total);
 
     committedInstType
-        .init(commit->numThreads,Enums::Num_OpClass)
+        .init(commit->numThreads,enums::Num_OpClass)
         .flags(total | pdf | dist);
 
-    committedInstType.ysubnames(Enums::OpClassStrings);
+    committedInstType.ysubnames(enums::OpClassStrings);
 }
 
 void

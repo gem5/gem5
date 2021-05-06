@@ -59,7 +59,7 @@ HybridGen::HybridGen(SimObject &obj,
                unsigned int num_seq_pkts_nvm, unsigned int buffer_size_nvm,
                unsigned int nbr_of_banks_nvm,
                unsigned int nbr_of_banks_util_nvm,
-               Enums::AddrMap addr_mapping,
+               enums::AddrMap addr_mapping,
                unsigned int nbr_of_ranks_dram,
                unsigned int nbr_of_ranks_nvm,
                uint8_t nvm_percent)
@@ -197,13 +197,13 @@ HybridGen::getNextPacket()
 
     } else {
         // increment the column by one
-        if (addrMapping == Enums::RoRaBaCoCh ||
-            addrMapping == Enums::RoRaBaChCo)
+        if (addrMapping == enums::RoRaBaCoCh ||
+            addrMapping == enums::RoRaBaChCo)
             // Simply increment addr by blocksize to increment
             // the column by one
             addr += blocksize;
 
-        else if (addrMapping == Enums::RoCoRaBaCh) {
+        else if (addrMapping == enums::RoCoRaBaCh) {
             // Explicity increment the column bits
             unsigned int new_col = ((addr / blocksize /
                                        nbrOfBanks / nbrOfRanks) %
@@ -258,8 +258,8 @@ HybridGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
     unsigned int new_col =
         random_mt.random<unsigned int>(0, burst_per_page - numSeqPkts);
 
-    if (addrMapping == Enums::RoRaBaCoCh ||
-        addrMapping == Enums::RoRaBaChCo) {
+    if (addrMapping == enums::RoRaBaCoCh ||
+        addrMapping == enums::RoRaBaChCo) {
         // Block bits, then page bits, then bank bits, then rank bits
         replaceBits(addr, blockBits + pageBits + bankBits - 1,
                     blockBits + pageBits, new_bank);
@@ -268,7 +268,7 @@ HybridGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
             replaceBits(addr, blockBits + pageBits + bankBits +rankBits - 1,
                         blockBits + pageBits + bankBits, new_rank);
         }
-    } else if (addrMapping == Enums::RoCoRaBaCh) {
+    } else if (addrMapping == enums::RoCoRaBaCh) {
         // Block bits, then bank bits, then rank bits, then page bits
         replaceBits(addr, blockBits + bankBits - 1, blockBits, new_bank);
         replaceBits(addr, blockBits + bankBits + rankBits + pageBits - 1,

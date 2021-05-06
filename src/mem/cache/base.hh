@@ -437,7 +437,7 @@ class BaseCache : public ClockedObject
      */
     inline bool allocOnFill(MemCmd cmd) const
     {
-        return clusivity == Enums::mostly_incl ||
+        return clusivity == enums::mostly_incl ||
             cmd == MemCmd::WriteLineReq ||
             cmd == MemCmd::ReadReq ||
             cmd == MemCmd::WriteReq ||
@@ -929,7 +929,7 @@ class BaseCache : public ClockedObject
      * fill into both this cache and the cache above on a miss. Note
      * that we currently do not support strict clusivity policies.
      */
-    const Enums::Clusivity clusivity;
+    const enums::Clusivity clusivity;
 
     /**
      * Is this cache read only, for example the instruction cache, or

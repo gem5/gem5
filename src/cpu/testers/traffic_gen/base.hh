@@ -276,7 +276,7 @@ class BaseTrafficGen : public ClockedObject
         uint8_t read_percent, Addr data_limit,
         unsigned int num_seq_pkts, unsigned int page_size,
         unsigned int nbr_of_banks, unsigned int nbr_of_banks_util,
-        Enums::AddrMap addr_mapping,
+        enums::AddrMap addr_mapping,
         unsigned int nbr_of_ranks);
 
     std::shared_ptr<BaseGen> createDramRot(
@@ -286,7 +286,7 @@ class BaseTrafficGen : public ClockedObject
         uint8_t read_percent, Addr data_limit,
         unsigned int num_seq_pkts, unsigned int page_size,
         unsigned int nbr_of_banks, unsigned int nbr_of_banks_util,
-        Enums::AddrMap addr_mapping,
+        enums::AddrMap addr_mapping,
         unsigned int nbr_of_ranks,
         unsigned int max_seq_count_per_rank);
 
@@ -300,7 +300,7 @@ class BaseTrafficGen : public ClockedObject
         unsigned int nbr_of_banks_dram, unsigned int nbr_of_banks_util_dram,
         unsigned int num_seq_pkts_nvm, unsigned int buffer_size_nvm,
         unsigned int nbr_of_banks_nvm, unsigned int nbr_of_banks_util_nvm,
-        Enums::AddrMap addr_mapping,
+        enums::AddrMap addr_mapping,
         unsigned int nbr_of_ranks_dram,
         unsigned int nbr_of_ranks_nvm,
         uint8_t nvm_percent);
@@ -312,7 +312,7 @@ class BaseTrafficGen : public ClockedObject
         uint8_t read_percent, Addr data_limit,
         unsigned int num_seq_pkts, unsigned int buffer_size,
         unsigned int nbr_of_banks, unsigned int nbr_of_banks_util,
-        Enums::AddrMap addr_mapping,
+        enums::AddrMap addr_mapping,
         unsigned int nbr_of_ranks);
 
     std::shared_ptr<BaseGen> createStrided(

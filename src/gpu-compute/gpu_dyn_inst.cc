@@ -281,7 +281,7 @@ GPUDynInst::seqNum() const
     return _seqNum;
 }
 
-Enums::StorageClassType
+enums::StorageClassType
 GPUDynInst::executedAs()
 {
     return _staticInst->executed_as;
@@ -741,11 +741,11 @@ GPUDynInst::doApertureCheck(const VectorMask &mask)
         if (mask[lane]) {
             if (computeUnit()->shader->isLdsApe(addr[lane])) {
                 // group segment
-                staticInstruction()->executed_as = Enums::SC_GROUP;
+                staticInstruction()->executed_as = enums::SC_GROUP;
                 break;
             } else if (computeUnit()->shader->isScratchApe(addr[lane])) {
                 // private segment
-                staticInstruction()->executed_as = Enums::SC_PRIVATE;
+                staticInstruction()->executed_as = enums::SC_PRIVATE;
                 break;
             } else if (computeUnit()->shader->isGpuVmApe(addr[lane])) {
                 // we won't support GPUVM
@@ -757,18 +757,18 @@ GPUDynInst::doApertureCheck(const VectorMask &mask)
                       addr[lane]);
             } else {
                 // global memory segment
-                staticInstruction()->executed_as = Enums::SC_GLOBAL;
+                staticInstruction()->executed_as = enums::SC_GLOBAL;
                 break;
             }
         }
     }
 
     // we should have found the segment
-    assert(executedAs() != Enums::SC_NONE);
+    assert(executedAs() != enums::SC_NONE);
 
     // flat accesses should not straddle multiple APEs so we
     // must check that all addresses fall within the same APE
-    if (executedAs() == Enums::SC_GROUP) {
+    if (executedAs() == enums::SC_GROUP) {
         for (int lane = 0; lane < computeUnit()->wfSize(); ++lane) {
             if (mask[lane]) {
                 // if the first valid addr we found above was LDS,
@@ -776,7 +776,7 @@ GPUDynInst::doApertureCheck(const VectorMask &mask)
                 assert(computeUnit()->shader->isLdsApe(addr[lane]));
             }
         }
-    } else if (executedAs() == Enums::SC_PRIVATE) {
+    } else if (executedAs() == enums::SC_PRIVATE) {
         for (int lane = 0; lane < computeUnit()->wfSize(); ++lane) {
             if (mask[lane]) {
                 // if the first valid addr we found above was private,
@@ -813,7 +813,7 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
     // 2. Set the execUnitId based an the aperture check.
     // 3. Decrement any extra resources that were reserved. Other
     //    resources are released as normal, below.
-    if (executedAs() == Enums::SC_GLOBAL) {
+    if (executedAs() == enums::SC_GLOBAL) {
         // no transormation for global segment
         wavefront()->execUnitId =  wavefront()->flatGmUnitId;
         if (isLoad()) {
@@ -826,7 +826,7 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         } else {
             panic("Invalid memory operation!\n");
         }
-    } else if (executedAs() == Enums::SC_GROUP) {
+    } else if (executedAs() == enums::SC_GROUP) {
         for (int lane = 0; lane < wavefront()->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 // flat address calculation goes here.
@@ -846,7 +846,7 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         } else {
             panic("Invalid memory operation!\n");
         }
-    } else if (executedAs() == Enums::SC_PRIVATE) {
+    } else if (executedAs() == enums::SC_PRIVATE) {
         /**
          * Flat instructions may resolve to the private segment (scratch),
          * which is backed by main memory and provides per-lane scratch

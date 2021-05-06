@@ -492,7 +492,7 @@ copyVecRegs(ThreadContext *src, ThreadContext *dest)
 
     // The way vector registers are copied (VecReg vs VecElem) is relevant
     // in the O3 model only.
-    if (src_mode == Enums::Full) {
+    if (src_mode == enums::Full) {
         for (auto idx = 0; idx < NumVecRegs; idx++)
             dest->setVecRegFlat(idx, src->readVecRegFlat(idx));
     } else {

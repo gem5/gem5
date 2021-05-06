@@ -527,7 +527,7 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
         // * this cache is mostly exclusive and will not fill (since
         //   it does not fill it will have to writeback the dirty data
         //   immediately which generates uneccesary writebacks).
-        bool force_clean_rsp = isReadOnly || clusivity == Enums::mostly_excl;
+        bool force_clean_rsp = isReadOnly || clusivity == enums::mostly_excl;
         cmd = needsWritable ? MemCmd::ReadExReq :
             (force_clean_rsp ? MemCmd::ReadCleanReq : MemCmd::ReadSharedReq);
     }

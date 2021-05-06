@@ -101,7 +101,7 @@ MemInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
 
     // we have removed the lowest order address bits that denote the
     // position within the column
-    if (addrMapping == Enums::RoRaBaChCo || addrMapping == Enums::RoRaBaCoCh) {
+    if (addrMapping == enums::RoRaBaChCo || addrMapping == enums::RoRaBaCoCh) {
         // the lowest order bits denote the column to ensure that
         // sequential cache lines occupy the same row
         addr = addr / burstsPerRowBuffer;
@@ -118,7 +118,7 @@ MemInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
 
         // lastly, get the row bits, no need to remove them from addr
         row = addr % rowsPerBank;
-    } else if (addrMapping == Enums::RoCoRaBaCh) {
+    } else if (addrMapping == enums::RoCoRaBaCh) {
         // with emerging technologies, could have small page size with
         // interleaving granularity greater than row buffer
         if (burstsPerStripe > burstsPerRowBuffer) {
@@ -592,14 +592,14 @@ DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
     ++bank_ref.rowAccesses;
 
     // if we reached the max, then issue with an auto-precharge
-    bool auto_precharge = pageMgmt == Enums::close ||
+    bool auto_precharge = pageMgmt == enums::close ||
         bank_ref.rowAccesses == maxAccessesPerRow;
 
     // if we did not hit the limit, we might still want to
     // auto-precharge
     if (!auto_precharge &&
-        (pageMgmt == Enums::open_adaptive ||
-         pageMgmt == Enums::close_adaptive)) {
+        (pageMgmt == enums::open_adaptive ||
+         pageMgmt == enums::close_adaptive)) {
         // a twist on the open and close page policies:
         // 1) open_adaptive page policy does not blindly keep the
         // page open, but close it if there are no row hits, and there
@@ -642,7 +642,7 @@ DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
         //    have a bank conflict
         // 2) close_adaptive policy and we have not got any more hits
         auto_precharge = !got_more_hits &&
-            (got_bank_conflict || pageMgmt == Enums::close_adaptive);
+            (got_bank_conflict || pageMgmt == enums::close_adaptive);
     }
 
     // DRAMPower trace command to be written
@@ -841,13 +841,13 @@ DRAMInterface::init()
     // a bit of sanity checks on the interleaving, save it for here to
     // ensure that the system pointer is initialised
     if (range.interleaved()) {
-        if (addrMapping == Enums::RoRaBaChCo) {
+        if (addrMapping == enums::RoRaBaChCo) {
             if (rowBufferSize != range.granularity()) {
                 fatal("Channel interleaving of %s doesn't match RoRaBaChCo "
                       "address map\n", name());
             }
-        } else if (addrMapping == Enums::RoRaBaCoCh ||
-                   addrMapping == Enums::RoCoRaBaCh) {
+        } else if (addrMapping == enums::RoRaBaCoCh ||
+                   addrMapping == enums::RoCoRaBaCh) {
             // for the interleavings with channel bits in the bottom,
             // if the system uses a channel striping granularity that
             // is larger than the DRAM burst size, then map the

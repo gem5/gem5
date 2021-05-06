@@ -230,9 +230,9 @@ class IntAssignment : public BaseConfigEntry
     Addr writeOut(PortProxy& proxy, Addr addr, uint8_t &checkSum);
 
     IntAssignment(const X86IntelMPBaseConfigEntryParams &p,
-            Enums::X86IntelMPInterruptType _interruptType,
-            Enums::X86IntelMPPolarity polarity,
-            Enums::X86IntelMPTriggerMode trigger,
+            enums::X86IntelMPInterruptType _interruptType,
+            enums::X86IntelMPPolarity polarity,
+            enums::X86IntelMPTriggerMode trigger,
             uint8_t _type,
             uint8_t _sourceBusID, uint8_t _sourceBusIRQ,
             uint8_t _destApicID, uint8_t _destApicIntIn) :

@@ -316,11 +316,11 @@ BaseCPU::startup()
     }
 
     if (_switchedOut)
-        powerState->set(Enums::PwrState::OFF);
+        powerState->set(enums::PwrState::OFF);
 
     // Assumption CPU start to operate instantaneously without any latency
-    if (powerState->get() == Enums::PwrState::UNDEFINED)
-        powerState->set(Enums::PwrState::ON);
+    if (powerState->get() == enums::PwrState::UNDEFINED)
+        powerState->set(enums::PwrState::ON);
 
 }
 
@@ -461,7 +461,7 @@ BaseCPU::schedulePowerGatingEvent()
             return;
     }
 
-    if (powerState->get() == Enums::PwrState::CLK_GATED &&
+    if (powerState->get() == enums::PwrState::CLK_GATED &&
         powerGatingOnIdle) {
         assert(!enterPwrGatingEvent.scheduled());
         // Schedule a power gating event when clock gated for the specified
@@ -490,7 +490,7 @@ BaseCPU::activateContext(ThreadID thread_num)
     if (enterPwrGatingEvent.scheduled())
         deschedule(enterPwrGatingEvent);
     // For any active thread running, update CPU power state to active (ON)
-    powerState->set(Enums::PwrState::ON);
+    powerState->set(enums::PwrState::ON);
 
     updateCycleCounters(CPU_STATE_WAKEUP);
 }
@@ -511,7 +511,7 @@ BaseCPU::suspendContext(ThreadID thread_num)
     updateCycleCounters(CPU_STATE_SLEEP);
 
     // All CPU threads suspended, enter lower power state for the CPU
-    powerState->set(Enums::PwrState::CLK_GATED);
+    powerState->set(enums::PwrState::CLK_GATED);
 
     // If pwrGatingLatency is set to 0 then this mechanism is disabled
     if (powerGatingOnIdle) {
@@ -530,7 +530,7 @@ BaseCPU::haltContext(ThreadID thread_num)
 void
 BaseCPU::enterPwrGating(void)
 {
-    powerState->set(Enums::PwrState::OFF);
+    powerState->set(enums::PwrState::OFF);
 }
 
 void
@@ -544,7 +544,7 @@ BaseCPU::switchOut()
     flushTLBs();
 
     // Go to the power gating state
-    powerState->set(Enums::PwrState::OFF);
+    powerState->set(enums::PwrState::OFF);
 }
 
 void

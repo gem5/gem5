@@ -46,10 +46,10 @@
 #include "params/CustomNoMaliGpu.hh"
 #include "params/NoMaliGpu.hh"
 
-static const std::map<Enums::NoMaliGpuType, nomali_gpu_type_t> gpuTypeMap{
-    { Enums::T60x, NOMALI_GPU_T60X },
-    { Enums::T62x, NOMALI_GPU_T62X },
-    { Enums::T760, NOMALI_GPU_T760 },
+static const std::map<enums::NoMaliGpuType, nomali_gpu_type_t> gpuTypeMap{
+    { enums::T60x, NOMALI_GPU_T60X },
+    { enums::T62x, NOMALI_GPU_T62X },
+    { enums::T760, NOMALI_GPU_T760 },
 };
 
 NoMaliGpu::NoMaliGpu(const NoMaliGpuParams &p)
@@ -72,7 +72,7 @@ NoMaliGpu::NoMaliGpu(const NoMaliGpuParams &p)
     const auto it_gpu(gpuTypeMap.find(p.gpu_type));
     if (it_gpu == gpuTypeMap.end()) {
         fatal("Unrecognized GPU type: %s (%i)\n",
-              Enums::NoMaliGpuTypeStrings[p.gpu_type], p.gpu_type);
+              enums::NoMaliGpuTypeStrings[p.gpu_type], p.gpu_type);
     }
     cfg.type = it_gpu->second;
 

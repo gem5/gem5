@@ -65,7 +65,7 @@ class PhysRegFile
   private:
 
     using PhysIds = std::vector<PhysRegId>;
-    using VecMode = Enums::VecRegRenameMode;
+    using VecMode = enums::VecRegRenameMode;
   public:
     using IdRange = std::pair<PhysIds::iterator,
                               PhysIds::iterator>;

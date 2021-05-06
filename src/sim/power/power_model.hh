@@ -159,7 +159,7 @@ class PowerModel : public SimObject
     ClockedObject * clocked_object;
 
     /** The type of power model - collects all power, static or dynamic only */
-    Enums::PMType power_model_type;
+    enums::PMType power_model_type;
 
     Stats::Value dynamicPower, staticPower;
 };

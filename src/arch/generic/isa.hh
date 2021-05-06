@@ -68,13 +68,13 @@ class BaseISA : public SimObject
     virtual bool inUserMode() const = 0;
     virtual void copyRegsFrom(ThreadContext *src) = 0;
 
-    virtual Enums::VecRegRenameMode
+    virtual enums::VecRegRenameMode
     initVecRegRenameMode() const
     {
-        return Enums::Full;
+        return enums::Full;
     }
 
-    virtual Enums::VecRegRenameMode
+    virtual enums::VecRegRenameMode
     vecRegRenameMode(ThreadContext *_tc) const
     {
         return initVecRegRenameMode();

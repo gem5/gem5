@@ -334,7 +334,7 @@ class ComputeUnit : public ClockedObject
     std::vector<Addr> lastVaddrCU;
     std::vector<std::vector<Addr>> lastVaddrSimd;
     std::vector<std::vector<std::vector<Addr>>> lastVaddrWF;
-    Enums::PrefetchType prefetchType;
+    enums::PrefetchType prefetchType;
     EXEC_POLICY exec_policy;
 
     bool debugSegFault;

@@ -69,7 +69,7 @@ namespace ArmISA
         ArmSystem *system;
 
         // Micro Architecture
-        const Enums::DecoderFlavor _decoderFlavor;
+        const enums::DecoderFlavor _decoderFlavor;
 
         /** Dummy device for to handle non-existing ISA devices */
         DummyISADevice dummyDevice;
@@ -874,7 +874,7 @@ namespace ArmISA
         void takeOverFrom(ThreadContext *new_tc,
                           ThreadContext *old_tc) override;
 
-        Enums::DecoderFlavor decoderFlavor() const { return _decoderFlavor; }
+        enums::DecoderFlavor decoderFlavor() const { return _decoderFlavor; }
 
         /** Returns true if the ISA has a GICv3 cpu interface */
         bool haveGICv3CpuIfc() const
@@ -886,16 +886,16 @@ namespace ArmISA
             return gicv3CpuInterface != nullptr;
         }
 
-        Enums::VecRegRenameMode
+        enums::VecRegRenameMode
         initVecRegRenameMode() const override
         {
-            return highestELIs64 ? Enums::Full : Enums::Elem;
+            return highestELIs64 ? enums::Full : enums::Elem;
         }
 
-        Enums::VecRegRenameMode
+        enums::VecRegRenameMode
         vecRegRenameMode(ThreadContext *_tc) const override
         {
-            return _tc->pcState().aarch64() ? Enums::Full : Enums::Elem;
+            return _tc->pcState().aarch64() ? enums::Full : enums::Elem;
         }
 
         PARAMS(ArmISA);

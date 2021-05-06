@@ -414,7 +414,7 @@ BaseTrafficGen::createDram(Tick duration,
                            unsigned int num_seq_pkts, unsigned int page_size,
                            unsigned int nbr_of_banks,
                            unsigned int nbr_of_banks_util,
-                           Enums::AddrMap addr_mapping,
+                           enums::AddrMap addr_mapping,
                            unsigned int nbr_of_ranks)
 {
     return std::shared_ptr<BaseGen>(new DramGen(*this, requestorId,
@@ -439,7 +439,7 @@ BaseTrafficGen::createDramRot(Tick duration,
                               unsigned int page_size,
                               unsigned int nbr_of_banks,
                               unsigned int nbr_of_banks_util,
-                              Enums::AddrMap addr_mapping,
+                              enums::AddrMap addr_mapping,
                               unsigned int nbr_of_ranks,
                               unsigned int max_seq_count_per_rank)
 {
@@ -473,7 +473,7 @@ BaseTrafficGen::createHybrid(Tick duration,
                            unsigned int buffer_size_nvm,
                            unsigned int nbr_of_banks_nvm,
                            unsigned int nbr_of_banks_util_nvm,
-                           Enums::AddrMap addr_mapping,
+                           enums::AddrMap addr_mapping,
                            unsigned int nbr_of_ranks_dram,
                            unsigned int nbr_of_ranks_nvm,
                            uint8_t nvm_percent)
@@ -508,7 +508,7 @@ BaseTrafficGen::createNvm(Tick duration,
                            unsigned int num_seq_pkts, unsigned int buffer_size,
                            unsigned int nbr_of_banks,
                            unsigned int nbr_of_banks_util,
-                           Enums::AddrMap addr_mapping,
+                           enums::AddrMap addr_mapping,
                            unsigned int nbr_of_ranks)
 {
     return std::shared_ptr<BaseGen>(new NvmGen(*this, requestorId,

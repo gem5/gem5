@@ -36,7 +36,7 @@
 #include "debug/GPUInst.hh"
 
 GPUStaticInst::GPUStaticInst(const std::string &opcode)
-    : executed_as(Enums::SC_NONE), _opcode(opcode),
+    : executed_as(enums::SC_NONE), _opcode(opcode),
       _instNum(0), _instAddr(0), srcVecDWords(-1), dstVecDWords(-1),
       srcScalarDWords(-1), dstScalarDWords(-1), maxOpSize(-1)
 {

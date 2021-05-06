@@ -1401,7 +1401,7 @@ void
 BaseCache::maintainClusivity(bool from_cache, CacheBlk *blk)
 {
     if (from_cache && blk && blk->isValid() &&
-        !blk->isSet(CacheBlk::DirtyBit) && clusivity == Enums::mostly_excl) {
+        !blk->isSet(CacheBlk::DirtyBit) && clusivity == enums::mostly_excl) {
         // if we have responded to a cache, and our block is still
         // valid, but not dirty, and this cache is mostly exclusive
         // with respect to the cache above, drop the block

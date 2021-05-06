@@ -1230,7 +1230,7 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
                                   RequestPtr req)
 {
     assert(gpuDynInst->isGlobalSeg() ||
-           gpuDynInst->executedAs() == Enums::SC_GLOBAL);
+           gpuDynInst->executedAs() == enums::SC_GLOBAL);
 
     if (!req) {
         req = std::make_shared<Request>(
@@ -1452,13 +1452,13 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
         Addr last = 0;
 
         switch(computeUnit->prefetchType) {
-        case Enums::PF_CU:
+        case enums::PF_CU:
             last = computeUnit->lastVaddrCU[mp_index];
             break;
-        case Enums::PF_PHASE:
+        case enums::PF_PHASE:
             last = computeUnit->lastVaddrSimd[simdId][mp_index];
             break;
-        case Enums::PF_WF:
+        case enums::PF_WF:
             last = computeUnit->lastVaddrWF[simdId][wfSlotId][mp_index];
         default:
             break;
@@ -1477,7 +1477,7 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
         computeUnit->lastVaddrSimd[simdId][mp_index] = vaddr;
         computeUnit->lastVaddrWF[simdId][wfSlotId][mp_index] = vaddr;
 
-        stride = (computeUnit->prefetchType == Enums::PF_STRIDE) ?
+        stride = (computeUnit->prefetchType == enums::PF_STRIDE) ?
             computeUnit->prefetchStride: stride;
 
         DPRINTF(GPUPrefetch, "%#x to: CU[%d][%d][%d][%d]\n", vaddr,
@@ -1836,28 +1836,28 @@ ComputeUnit::updateInstStats(GPUDynInstPtr gpuDynInst)
 
         if (gpuDynInst->isLoad()) {
             switch (gpuDynInst->executedAs()) {
-              case Enums::SC_SPILL:
+              case enums::SC_SPILL:
                 stats.spillReads++;
                 break;
-              case Enums::SC_GLOBAL:
+              case enums::SC_GLOBAL:
                 stats.globalReads++;
                 break;
-              case Enums::SC_GROUP:
+              case enums::SC_GROUP:
                 stats.groupReads++;
                 break;
-              case Enums::SC_PRIVATE:
+              case enums::SC_PRIVATE:
                 stats.privReads++;
                 break;
-              case Enums::SC_READONLY:
+              case enums::SC_READONLY:
                 stats.readonlyReads++;
                 break;
-              case Enums::SC_KERNARG:
+              case enums::SC_KERNARG:
                 stats.kernargReads++;
                 break;
-              case Enums::SC_ARG:
+              case enums::SC_ARG:
                 stats.argReads++;
                 break;
-              case Enums::SC_NONE:
+              case enums::SC_NONE:
                 /**
                  * this case can occur for flat mem insts
                  * who execute with EXEC = 0
@@ -1869,28 +1869,28 @@ ComputeUnit::updateInstStats(GPUDynInstPtr gpuDynInst)
             }
         } else if (gpuDynInst->isStore()) {
             switch (gpuDynInst->executedAs()) {
-              case Enums::SC_SPILL:
+              case enums::SC_SPILL:
                 stats.spillWrites++;
                 break;
-              case Enums::SC_GLOBAL:
+              case enums::SC_GLOBAL:
                 stats.globalWrites++;
                 break;
-              case Enums::SC_GROUP:
+              case enums::SC_GROUP:
                 stats.groupWrites++;
                 break;
-              case Enums::SC_PRIVATE:
+              case enums::SC_PRIVATE:
                 stats.privWrites++;
                 break;
-              case Enums::SC_READONLY:
+              case enums::SC_READONLY:
                 stats.readonlyWrites++;
                 break;
-              case Enums::SC_KERNARG:
+              case enums::SC_KERNARG:
                 stats.kernargWrites++;
                 break;
-              case Enums::SC_ARG:
+              case enums::SC_ARG:
                 stats.argWrites++;
                 break;
-              case Enums::SC_NONE:
+              case enums::SC_NONE:
                 /**
                  * this case can occur for flat mem insts
                  * who execute with EXEC = 0

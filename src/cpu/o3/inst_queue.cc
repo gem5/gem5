@@ -274,10 +274,10 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
     }
 */
     statIssuedInstType
-        .init(cpu->numThreads,Enums::Num_OpClass)
+        .init(cpu->numThreads,enums::Num_OpClass)
         .flags(Stats::total | Stats::pdf | Stats::dist)
         ;
-    statIssuedInstType.ysubnames(Enums::OpClassStrings);
+    statIssuedInstType.ysubnames(enums::OpClassStrings);
 
     //
     //  How long did instructions for a particular FU type wait prior to issue
@@ -304,7 +304,7 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
         .flags(Stats::pdf | Stats::dist)
         ;
     for (int i=0; i < Num_OpClasses; ++i) {
-        statFuBusy.subname(i, Enums::OpClassStrings[i]);
+        statFuBusy.subname(i, enums::OpClassStrings[i]);
     }
 
     fuBusy

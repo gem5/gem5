@@ -236,7 +236,7 @@ class VncInput : public SimObject
     std::unique_ptr<ImgWriter> captureImage;
 
     /** image format */
-    Enums::ImageFormat imgFormat;
+    enums::ImageFormat imgFormat;
 
     /** Captures the current frame buffer to a file */
     void captureFrameBuffer();

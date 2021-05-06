@@ -565,7 +565,7 @@ bool
 Wavefront::isGmInstruction(GPUDynInstPtr ii)
 {
     if (ii->isGlobalMem() ||
-        (ii->isFlat() && ii->executedAs() == Enums::SC_GLOBAL)) {
+        (ii->isFlat() && ii->executedAs() == enums::SC_GLOBAL)) {
         return true;
     }
 
@@ -576,7 +576,7 @@ bool
 Wavefront::isLmInstruction(GPUDynInstPtr ii)
 {
     if (ii->isLocalMem() ||
-        (ii->isFlat() && ii->executedAs() == Enums::SC_GROUP)) {
+        (ii->isFlat() && ii->executedAs() == enums::SC_GROUP)) {
         return true;
     }
 
@@ -1058,9 +1058,9 @@ Wavefront::exec()
     bool flat_as_gm = false;
     bool flat_as_lm = false;
     if (ii->isFlat()) {
-        flat_as_gm = (ii->executedAs() == Enums::SC_GLOBAL) ||
-                     (ii->executedAs() == Enums::SC_PRIVATE);
-        flat_as_lm = (ii->executedAs() == Enums::SC_GROUP);
+        flat_as_gm = (ii->executedAs() == enums::SC_GLOBAL) ||
+                     (ii->executedAs() == enums::SC_PRIVATE);
+        flat_as_lm = (ii->executedAs() == enums::SC_GROUP);
     }
 
     // Single precision ALU or Branch or Return or Special instruction

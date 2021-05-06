@@ -99,7 +99,7 @@ MinorCPU::init()
     BaseCPU::init();
 
     if (!params().switched_out &&
-        system->getMemoryMode() != Enums::timing)
+        system->getMemoryMode() != enums::timing)
     {
         fatal("The Minor CPU requires the memory system to be in "
             "'timing' mode.\n");

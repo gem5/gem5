@@ -90,23 +90,23 @@ uint64_t TimingExprUn::eval(TimingExprEvalContext &context)
     uint64_t ret = 0;
 
     switch (op) {
-      case Enums::timingExprSizeInBits:
+      case enums::timingExprSizeInBits:
         if (arg_value == 0)
             ret = 0;
         else
             ret = ceilLog2(arg_value);
         break;
-      case Enums::timingExprNot:
+      case enums::timingExprNot:
         ret = arg_value != 0;
         break;
-      case Enums::timingExprInvert:
+      case enums::timingExprInvert:
         ret = ~arg_value;
         break;
-      case Enums::timingExprSignExtend32To64:
+      case enums::timingExprSignExtend32To64:
         ret = static_cast<int64_t>(
             static_cast<int32_t>(arg_value));
         break;
-      case Enums::timingExprAbs:
+      case enums::timingExprAbs:
         if (static_cast<int64_t>(arg_value) < 0)
             ret = -arg_value;
         else
@@ -126,59 +126,59 @@ uint64_t TimingExprBin::eval(TimingExprEvalContext &context)
     uint64_t ret = 0;
 
     switch (op) {
-      case Enums::timingExprAdd:
+      case enums::timingExprAdd:
           ret = left_value + right_value;
           break;
-      case Enums::timingExprSub:
+      case enums::timingExprSub:
           ret = left_value - right_value;
           break;
-      case Enums::timingExprUMul:
+      case enums::timingExprUMul:
           ret = left_value * right_value;
           break;
-      case Enums::timingExprUDiv:
+      case enums::timingExprUDiv:
           if (right_value != 0) {
               ret = left_value / right_value;
           }
           break;
-      case Enums::timingExprUCeilDiv:
+      case enums::timingExprUCeilDiv:
           if (right_value != 0) {
               ret = (left_value + (right_value - 1)) / right_value;
           }
           break;
-      case Enums::timingExprSMul:
+      case enums::timingExprSMul:
           ret = static_cast<int64_t>(left_value) *
               static_cast<int64_t>(right_value);
           break;
-      case Enums::timingExprSDiv:
+      case enums::timingExprSDiv:
           if (right_value != 0) {
               ret = static_cast<int64_t>(left_value) /
                   static_cast<int64_t>(right_value);
           }
           break;
-      case Enums::timingExprEqual:
+      case enums::timingExprEqual:
           ret = left_value == right_value;
           break;
-      case Enums::timingExprNotEqual:
+      case enums::timingExprNotEqual:
           ret = left_value != right_value;
           break;
-      case Enums::timingExprULessThan:
+      case enums::timingExprULessThan:
           ret = left_value < right_value;
           break;
-      case Enums::timingExprUGreaterThan:
+      case enums::timingExprUGreaterThan:
           ret = left_value > right_value;
           break;
-      case Enums::timingExprSLessThan:
+      case enums::timingExprSLessThan:
           ret = static_cast<int64_t>(left_value) <
               static_cast<int64_t>(right_value);
           break;
-      case Enums::timingExprSGreaterThan:
+      case enums::timingExprSGreaterThan:
           ret = static_cast<int64_t>(left_value) >
               static_cast<int64_t>(right_value);
           break;
-      case Enums::timingExprAnd:
+      case enums::timingExprAnd:
           ret = (left_value != 0) && (right_value != 0);
           break;
-      case Enums::timingExprOr:
+      case enums::timingExprOr:
           ret = (left_value != 0) || (right_value != 0);
           break;
       default:

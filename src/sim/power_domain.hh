@@ -73,7 +73,7 @@ class PowerDomain : public PowerState
      * domain will change its own power state if required and if there is a
      * power state, it will schedule an event to update its followers
      */
-    void pwrStateChangeCallback(Enums::PwrState new_pwr_state,
+    void pwrStateChangeCallback(enums::PwrState new_pwr_state,
                                 PowerState* leader);
 
     /**
@@ -92,14 +92,14 @@ class PowerDomain : public PowerState
      * which the followers returned when asked to match a certain power
      * state (called from setFollowerPowerStates)
      */
-    Enums::PwrState calculatePowerDomainState(
-          const std::vector<Enums::PwrState> &f_states={});
+    enums::PwrState calculatePowerDomainState(
+          const std::vector<enums::PwrState> &f_states={});
 
     /**
      * Check if a given p_state is available across all leaders and
      * followers in this domain.
      */
-    bool isPossiblePwrState(Enums::PwrState p_state);
+    bool isPossiblePwrState(enums::PwrState p_state);
 
     /**
      * Calculate the possible power states of the domain based upon the
@@ -130,7 +130,7 @@ class PowerDomain : public PowerState
      * power state of the domain as whole (as that one depends on the
      * matched power states of the followers
      */
-    Enums::PwrState leaderTargetState;
+    enums::PwrState leaderTargetState;
 
     /**
      * List of all followers in the PowerDomain. The power state of the

@@ -488,7 +488,7 @@ class MemCtrl : public qos::MemCtrl
      * Memory controller configuration initialized based on parameter
      * values.
      */
-    Enums::MemSched memSchedPolicy;
+    enums::MemSched memSchedPolicy;
 
     /**
      * Pipeline latency of the controller frontend. The frontend

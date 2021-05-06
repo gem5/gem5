@@ -259,8 +259,8 @@ class System : public SimObject, public PCEventScope
     bool
     isAtomicMode() const
     {
-        return memoryMode == Enums::atomic ||
-            memoryMode == Enums::atomic_noncaching;
+        return memoryMode == enums::atomic ||
+            memoryMode == enums::atomic_noncaching;
     }
 
     /**
@@ -269,7 +269,7 @@ class System : public SimObject, public PCEventScope
      * SimObjects are expected to use Port::sendTiming() and
      * Port::recvTiming() when accessing memory in this mode.
      */
-    bool isTimingMode() const { return memoryMode == Enums::timing; }
+    bool isTimingMode() const { return memoryMode == enums::timing; }
 
     /**
      * Should caches be bypassed?
@@ -280,7 +280,7 @@ class System : public SimObject, public PCEventScope
     bool
     bypassCaches() const
     {
-        return memoryMode == Enums::atomic_noncaching;
+        return memoryMode == enums::atomic_noncaching;
     }
     /** @} */
 
@@ -292,7 +292,7 @@ class System : public SimObject, public PCEventScope
      * world should use one of the query functions above
      * (isAtomicMode(), isTimingMode(), bypassCaches()).
      */
-    Enums::MemoryMode getMemoryMode() const { return memoryMode; }
+    enums::MemoryMode getMemoryMode() const { return memoryMode; }
 
     /**
      * Change the memory mode of the system.
@@ -301,7 +301,7 @@ class System : public SimObject, public PCEventScope
      *
      * @param mode Mode to change to (atomic/timing/...)
      */
-    void setMemoryMode(Enums::MemoryMode mode);
+    void setMemoryMode(enums::MemoryMode mode);
     /** @} */
 
     /**
@@ -413,7 +413,7 @@ class System : public SimObject, public PCEventScope
 
     PhysicalMemory physmem;
 
-    Enums::MemoryMode memoryMode;
+    enums::MemoryMode memoryMode;
 
     const unsigned int _cacheLineSize;
 

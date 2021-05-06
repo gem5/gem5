@@ -85,16 +85,16 @@ PowerState::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(currState);
     UNSERIALIZE_SCALAR(prvEvalTick);
 
-    _currState = Enums::PwrState(currState);
+    _currState = enums::PwrState(currState);
 }
 
 void
-PowerState::set(Enums::PwrState p)
+PowerState::set(enums::PwrState p)
 {
     // Check if this power state is actually allowed by checking whether it is
     // present in pwrStateToIndex-dictionary
     panic_if(possibleStates.find(p) == possibleStates.end(),
-             "Cannot go to %s in %s \n", Enums::PwrStateStrings[p], name());
+             "Cannot go to %s in %s \n", enums::PwrStateStrings[p], name());
 
     // Function should ideally be called only when there is a state change
     if (_currState == p) {
@@ -131,8 +131,8 @@ PowerState::set(Enums::PwrState p)
 
 }
 
-Enums::PwrState
-PowerState::matchPwrState(Enums::PwrState p)
+enums::PwrState
+PowerState::matchPwrState(enums::PwrState p)
 {
     // If the object is asked to match a power state, it has to be a follower
     // and hence should not have a pointer to a powerDomain
@@ -141,11 +141,11 @@ PowerState::matchPwrState(Enums::PwrState p)
     // If we are already in this power state, ignore request
     if (_currState == p) {
         DPRINTF(PowerDomain, "Already in p-state %s requested to match \n",
-                Enums::PwrStateStrings[p]);
+                enums::PwrStateStrings[p]);
         return _currState;
     }
 
-    Enums::PwrState old_state = _currState;
+    enums::PwrState old_state = _currState;
     if (possibleStates.find(p) != possibleStates.end()) {
         // If this power state is allowed in this object, just go there
         set(p);
@@ -159,8 +159,8 @@ PowerState::matchPwrState(Enums::PwrState p)
                 // This power state is the least performant power state that is
                 // still more performant than the requested one
                 DPRINTF(PowerDomain, "Best match for %s is %s \n",
-                        Enums::PwrStateStrings[p],
-                        Enums::PwrStateStrings[*(rev_it)]);
+                        enums::PwrStateStrings[p],
+                        enums::PwrStateStrings[*(rev_it)]);
                 set(*(rev_it));
                 break;
             }
@@ -173,7 +173,7 @@ PowerState::matchPwrState(Enums::PwrState p)
             possibleStates.find(_currState) != possibleStates.begin(),
             "Transition to power state %s was not possible, SimObject already"
             " in the most performance state %s",
-            Enums::PwrStateStrings[p], Enums::PwrStateStrings[_currState]);
+            enums::PwrStateStrings[p], enums::PwrStateStrings[_currState]);
 
     stats.numPwrMatchStateTransitions++;
     return _currState;
@@ -190,7 +190,7 @@ PowerState::computeStats()
     // Time spent in CLK_GATED state, this might change depending on
     // transition to other low power states in respective simulation
     // objects.
-    if (_currState == Enums::PwrState::CLK_GATED) {
+    if (_currState == enums::PwrState::CLK_GATED) {
         stats.ticksClkGated.sample(elapsed_time);
     }
 
@@ -209,8 +209,8 @@ PowerState::getWeights() const
     Tick elapsed_time = curTick() - prvEvalTick;
     residencies[_currState] += elapsed_time;
 
-    ret.resize(Enums::PwrState::Num_PwrState);
-    for (unsigned i = 0; i < Enums::PwrState::Num_PwrState; i++)
+    ret.resize(enums::PwrState::Num_PwrState);
+    for (unsigned i = 0; i < enums::PwrState::Num_PwrState; i++)
         ret[i] = residencies[i] / \
                      (stats.pwrStateResidencyTicks.total() + elapsed_time);
 
@@ -252,11 +252,11 @@ PowerState::PowerStateStats::regStats()
         ;
 
     pwrStateResidencyTicks
-        .init(Enums::PwrState::Num_PwrState)
+        .init(enums::PwrState::Num_PwrState)
         .flags(nozero)
         ;
-    for (int i = 0; i < Enums::PwrState::Num_PwrState; i++) {
-        pwrStateResidencyTicks.subname(i, Enums::PwrStateStrings[i]);
+    for (int i = 0; i < enums::PwrState::Num_PwrState; i++) {
+        pwrStateResidencyTicks.subname(i, enums::PwrStateStrings[i]);
     }
 
     numTransitions = 0;

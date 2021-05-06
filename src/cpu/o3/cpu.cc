@@ -249,7 +249,7 @@ CPU::CPU(const O3CPUParams &params)
          * 'register element'. At any point only one of them will be
          * active. */
         const size_t numVecs = regClasses.at(VecRegClass).size();
-        if (vecMode == Enums::Full) {
+        if (vecMode == enums::Full) {
             /* Initialize the full-vector interface */
             for (RegIndex ridx = 0; ridx < numVecs; ++ridx) {
                 RegId rid = RegId(VecRegClass, ridx);
@@ -835,7 +835,7 @@ CPU::setVectorsAsReady(ThreadID tid)
     const auto &regClasses = isa[tid]->regClasses();
 
     const size_t numVecs = regClasses.at(VecRegClass).size();
-    if (vecMode == Enums::Elem) {
+    if (vecMode == enums::Elem) {
         const size_t numElems = regClasses.at(VecElemClass).size();
         const size_t elemsPerVec = numElems / numVecs;
         for (auto v = 0; v < numVecs; v++) {
@@ -844,7 +844,7 @@ CPU::setVectorsAsReady(ThreadID tid)
                             RegId(VecElemClass, v, e)));
             }
         }
-    } else if (vecMode == Enums::Full) {
+    } else if (vecMode == enums::Full) {
         for (auto v = 0; v < numVecs; v++) {
             scoreboard.setReg(commitRenameMap[tid].lookup(
                         RegId(VecRegClass, v)));

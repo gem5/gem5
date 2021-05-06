@@ -1308,7 +1308,7 @@ class MetaEnum(MetaParamValue):
         if cls.is_class:
             cls.cxx_type = '%s' % name
         else:
-            cls.cxx_type = 'Enums::%s' % name
+            cls.cxx_type = 'enums::%s' % name
 
         super(MetaEnum, cls).__init__(name, bases, init_dict)
 
@@ -1366,6 +1366,7 @@ extern const char *${name}Strings[static_cast<int>(${name}::Num_${name})];
         file_name = cls.__name__
         name = cls.__name__ if cls.enum_name is None else cls.enum_name
 
+        code('#include "base/compiler.hh"')
         code('#include "enums/$file_name.hh"')
         if cls.wrapper_is_struct:
             code('const char *${wrapper_name}::${name}Strings'
@@ -1376,7 +1377,9 @@ extern const char *${name}Strings[static_cast<int>(${name}::Num_${name})];
 const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
 ''')
             else:
-                code('namespace Enums {')
+                code('''GEM5_DEPRECATED_NAMESPACE(Enums, enums);
+namespace enums
+{''')
                 code.indent(1)
                 code('const char *${name}Strings[Num_${name}] =')
 
@@ -1437,7 +1440,7 @@ class Enum(ParamValue, metaclass=MetaEnum):
     cmd_line_settable = True
 
     # The name of the wrapping namespace or struct
-    wrapper_name = 'Enums'
+    wrapper_name = 'enums'
 
     # If true, the enum is wrapped in a struct rather than a namespace
     wrapper_is_struct = False
@@ -1468,7 +1471,7 @@ class Enum(ParamValue, metaclass=MetaEnum):
             code('} else if (%s == "%s") {' % (src, elem_name))
             code.indent()
             name = cls.__name__ if cls.enum_name is None else cls.enum_name
-            code('%s = %s::%s;' % (dest, name if cls.is_class else 'Enums',
+            code('%s = %s::%s;' % (dest, name if cls.is_class else 'enums',
                                    elem_name))
             code('%s true;' % ret)
             code.dedent()

@@ -54,11 +54,11 @@ QueuePolicy*
 QueuePolicy::create(const QoSMemCtrlParams &p)
 {
     switch (p.qos_q_policy) {
-      case Enums::QoSQPolicy::fifo:
+      case enums::QoSQPolicy::fifo:
         return new FifoQueuePolicy(p);
-      case Enums::QoSQPolicy::lrg:
+      case enums::QoSQPolicy::lrg:
         return new LrgQueuePolicy(p);
-      case Enums::QoSQPolicy::lifo:
+      case enums::QoSQPolicy::lifo:
       default:
         return new LifoQueuePolicy(p);
     }

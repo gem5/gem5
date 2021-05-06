@@ -128,7 +128,7 @@ FlashDevice::initializeFlash(uint64_t disk_size, uint32_t sector_size)
     for (uint32_t count = 0; count < pagesPerDisk; count++) {
         //setup lookup table + physical aspects
 
-        if (dataDistribution == Enums::stripe) {
+        if (dataDistribution == enums::stripe) {
             locationTable[count].page = count / blocksPerDisk;
             locationTable[count].block = count % blocksPerDisk;
 

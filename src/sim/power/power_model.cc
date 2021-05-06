@@ -109,7 +109,7 @@ PowerModel::getDynamicPower() const
 {
     assert(clocked_object);
 
-    if (power_model_type == Enums::PMType::Static) {
+    if (power_model_type == enums::PMType::Static) {
         // This power model only collects static data
         return 0;
     }
@@ -119,7 +119,7 @@ PowerModel::getDynamicPower() const
     assert(w.size() - 1 == states_pm.size());
 
     // Make sure we have no UNDEFINED state
-    warn_if(w[Enums::PwrState::UNDEFINED] > 0,
+    warn_if(w[enums::PwrState::UNDEFINED] > 0,
         "SimObject in UNDEFINED power state! Power figures might be wrong!\n");
 
     double power = 0;
@@ -137,7 +137,7 @@ PowerModel::getStaticPower() const
 
     std::vector<double> w = clocked_object->powerState->getWeights();
 
-    if (power_model_type == Enums::PMType::Dynamic) {
+    if (power_model_type == enums::PMType::Dynamic) {
         // This power model only collects dynamic data
         return 0;
     }

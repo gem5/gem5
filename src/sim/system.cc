@@ -275,7 +275,7 @@ System::getPort(const std::string &if_name, PortID idx)
 }
 
 void
-System::setMemoryMode(Enums::MemoryMode mode)
+System::setMemoryMode(enums::MemoryMode mode)
 {
     assert(drainState() == DrainState::Drained);
     memoryMode = mode;

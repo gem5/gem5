@@ -125,7 +125,7 @@ UnifiedRenameMap::init(const BaseISA::RegClasses &regClasses,
 void
 UnifiedRenameMap::switchFreeList(UnifiedFreeList* freeList)
 {
-    if (vecMode == Enums::Elem) {
+    if (vecMode == enums::Elem) {
 
         /* The free list should currently be tracking full registers. */
         panic_if(freeList->hasFreeVecElems(),
@@ -141,7 +141,7 @@ UnifiedRenameMap::switchFreeList(UnifiedFreeList* freeList)
             freeList->addRegs(range.first, range.second);
         }
 
-    } else if (vecMode == Enums::Full) {
+    } else if (vecMode == enums::Full) {
 
         /* The free list should currently be tracking register elems. */
         panic_if(freeList->hasFreeVecRegs(),
@@ -162,10 +162,10 @@ UnifiedRenameMap::switchFreeList(UnifiedFreeList* freeList)
 void
 UnifiedRenameMap::switchMode(VecMode newVecMode)
 {
-    if (newVecMode == Enums::Elem && vecMode == Enums::Full) {
+    if (newVecMode == enums::Elem && vecMode == enums::Full) {
 
         /* Switch to vector element rename mode. */
-        vecMode = Enums::Elem;
+        vecMode = enums::Elem;
 
         /* Split the mapping of each arch reg. */
         int vec_idx = 0;
@@ -180,10 +180,10 @@ UnifiedRenameMap::switchMode(VecMode newVecMode)
             vec_idx++;
         }
 
-    } else if (newVecMode == Enums::Full && vecMode == Enums::Elem) {
+    } else if (newVecMode == enums::Full && vecMode == enums::Elem) {
 
         /* Switch to full vector register rename mode. */
-        vecMode = Enums::Full;
+        vecMode = enums::Full;
 
         /* To rebuild the arch regs we take the easy road:
          *  1.- Stitch the elems together into vectors.

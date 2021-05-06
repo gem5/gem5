@@ -58,8 +58,8 @@ PowerDomain::PowerDomain(const PowerDomainParams &p) :
 
     // We will assume a power domain to start in the most performant p-state
     // This will be corrected during startup()
-    leaderTargetState = Enums::PwrState::ON;
-    _currState = Enums::PwrState::ON;
+    leaderTargetState = enums::PwrState::ON;
+    _currState = enums::PwrState::ON;
 }
 
 void
@@ -78,7 +78,7 @@ PowerDomain::startup()
     for (const auto &objs : { leaders, followers }) {
         for (const auto &obj : objs) {
             const auto & states = obj->getPossibleStates();
-            auto it = states.find(Enums::PwrState::ON);
+            auto it = states.find(enums::PwrState::ON);
             fatal_if(it == states.end(),
                      "%s in %s does not have the required power states to be "
                      "part of a PowerDomain i.e. the ON state!", obj->name(),
@@ -104,8 +104,8 @@ PowerDomain::startup()
     // Record the power states of the leaders and followers
     DPRINTF(PowerDomain, "Recording the current power states in domain\n");
     for (auto leader : leaders) {
-        Enums::PwrState pws = leader->get();
-        fatal_if(pws == Enums::PwrState::UNDEFINED,
+        enums::PwrState pws = leader->get();
+        fatal_if(pws == enums::PwrState::UNDEFINED,
                  "%s is in the UNDEFINED power state, not acceptable as "
                  "leader!", leader->name());
     }
@@ -117,7 +117,7 @@ PowerDomain::startup()
 }
 
 bool
-PowerDomain::isPossiblePwrState(Enums::PwrState p_state)
+PowerDomain::isPossiblePwrState(enums::PwrState p_state)
 {
     for (const auto &objs : { leaders, followers }) {
         for (const auto &obj : objs) {
@@ -138,36 +138,36 @@ PowerDomain::calculatePossiblePwrStates()
         if (isPossiblePwrState(p_state)) {
             possibleStates.emplace(p_state);
             DPRINTF(PowerDomain, "%u/%s is a p-state\n", p_state,
-                    Enums::PwrStateStrings[p_state]);
+                    enums::PwrStateStrings[p_state]);
         }
     }
 }
 
-Enums::PwrState
+enums::PwrState
 PowerDomain::calculatePowerDomainState(
-    const std::vector<Enums::PwrState> &f_states)
+    const std::vector<enums::PwrState> &f_states)
 {
     DPRINTF(PowerDomain, "Calculating the power state\n");
-    Enums::PwrState most_perf_state = Enums::PwrState::Num_PwrState;
+    enums::PwrState most_perf_state = enums::PwrState::Num_PwrState;
     std::string most_perf_leader;
     for (auto leader : leaders) {
-        Enums::PwrState pw = leader->get();
+        enums::PwrState pw = leader->get();
         if (pw < most_perf_state) {
             most_perf_state = pw;
             most_perf_leader = leader->name();
         }
     }
-    assert(most_perf_state != Enums::PwrState::Num_PwrState);
+    assert(most_perf_state != enums::PwrState::Num_PwrState);
     DPRINTF(PowerDomain, "Most performant leader is %s, at %u\n",
                           most_perf_leader, most_perf_state);
 
     // If asked to check the power states of the followers (f_states contains
     // the power states of the followers)
     if (!f_states.empty()) {
-        for (Enums::PwrState f_pw : f_states ) {
+        for (enums::PwrState f_pw : f_states ) {
             // Ignore UNDEFINED state of follower, at startup the followers
             // might be in the UNDEFINED state, PowerDomain will pull them up
-            if ((f_pw != Enums::PwrState::UNDEFINED) &&
+            if ((f_pw != enums::PwrState::UNDEFINED) &&
                 (f_pw  < most_perf_state)) {
                 most_perf_state = f_pw;
             }
@@ -183,9 +183,9 @@ PowerDomain::setFollowerPowerStates()
 {
     // Loop over all followers and tell them to change their power state so
     // they match that of the power domain (or a more performant power state)
-    std::vector<Enums::PwrState> matched_states;
+    std::vector<enums::PwrState> matched_states;
     for (auto follower : followers) {
-        Enums::PwrState actual_pws =
+        enums::PwrState actual_pws =
             follower->matchPwrState(leaderTargetState);
         matched_states.push_back(actual_pws);
         assert(actual_pws <= leaderTargetState);
@@ -195,7 +195,7 @@ PowerDomain::setFollowerPowerStates()
     }
     // Now the power states of the follower have been changed recalculate the
     // power state of the domain as a whole, including followers
-    Enums::PwrState new_power_state =
+    enums::PwrState new_power_state =
         calculatePowerDomainState(matched_states);
     if (new_power_state != _currState) {
         // Change in power state of the domain, so update. Updates in power
@@ -208,13 +208,13 @@ PowerDomain::setFollowerPowerStates()
 }
 
 void
-PowerDomain::pwrStateChangeCallback(Enums::PwrState new_pwr_state,
+PowerDomain::pwrStateChangeCallback(enums::PwrState new_pwr_state,
                                     PowerState* leader)
 {
     DPRINTF(PowerDomain, "PwrState update to %u by %s\n", new_pwr_state,
             leader->name());
 
-    Enums::PwrState old_target_state = leaderTargetState;
+    enums::PwrState old_target_state = leaderTargetState;
     // Calculate the power state of the domain, based on the leaders
     if (new_pwr_state < _currState) {
         // The power state of the power domain always needs to match that of

@@ -237,25 +237,25 @@ class GPUStaticInst : public GPUStaticInstFlags
     static uint64_t dynamic_id_count;
 
     // For flat memory accesses
-    Enums::StorageClassType executed_as;
+    enums::StorageClassType executed_as;
 
     void setFlag(Flags flag) {
         _flags[flag] = true;
 
         if (isGroupSeg()) {
-            executed_as = Enums::SC_GROUP;
+            executed_as = enums::SC_GROUP;
         } else if (isGlobalSeg()) {
-            executed_as = Enums::SC_GLOBAL;
+            executed_as = enums::SC_GLOBAL;
         } else if (isPrivateSeg()) {
-            executed_as = Enums::SC_PRIVATE;
+            executed_as = enums::SC_PRIVATE;
         } else if (isSpillSeg()) {
-            executed_as = Enums::SC_SPILL;
+            executed_as = enums::SC_SPILL;
         } else if (isReadOnlySeg()) {
-            executed_as = Enums::SC_READONLY;
+            executed_as = enums::SC_READONLY;
         } else if (isKernArgSeg()) {
-            executed_as = Enums::SC_KERNARG;
+            executed_as = enums::SC_KERNARG;
         } else if (isArgSeg()) {
-            executed_as = Enums::SC_ARG;
+            executed_as = enums::SC_ARG;
         }
     }
     const std::string& opcode() const { return _opcode; }

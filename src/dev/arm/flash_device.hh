@@ -167,7 +167,7 @@ class FlashDevice : public AbstractNVM
     const Tick eraseLatency;
 
     /** Flash organization */
-    const Enums::DataDistribution dataDistribution;
+    const enums::DataDistribution dataDistribution;
     const uint32_t numPlanes;
 
     /** RequestHandler stats */

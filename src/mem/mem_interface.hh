@@ -120,7 +120,7 @@ class MemInterface : public AbstractMemory
      * Memory controller configuration initialized based on parameter
      * values.
      */
-    Enums::AddrMap addrMapping;
+    enums::AddrMap addrMapping;
 
     /**
      * General device and channel characteristics
@@ -752,7 +752,7 @@ class DRAMInterface : public MemInterface
     const Tick rdToWrDlySameBG;
 
 
-    Enums::PageManage pageMgmt;
+    enums::PageManage pageMgmt;
     /**
      * Max column accesses (read and write) per row, before forefully
      * closing it.

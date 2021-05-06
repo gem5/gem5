@@ -78,7 +78,7 @@ class Decoder : public InstDecoder
      */
     int sveLen;
 
-    Enums::DecoderFlavor decoderFlavor;
+    enums::DecoderFlavor decoderFlavor;
 
     /// A cache of decoded instruction objects.
     static GenericISA::BasicDecodeCache<Decoder, ExtMachInst> defaultCache;

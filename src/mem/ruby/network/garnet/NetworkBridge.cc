@@ -51,10 +51,10 @@ NetworkBridge::NetworkBridge(const Params &p)
     lastScheduledAt = 0;
 
     nLink = p.link;
-    if (mType == Enums::LINK_OBJECT) {
+    if (mType == enums::LINK_OBJECT) {
         nLink->setLinkConsumer(this);
         setSourceQueue(nLink->getBuffer(), nLink);
-    } else if (mType == Enums::OBJECT_LINK) {
+    } else if (mType == enums::OBJECT_LINK) {
         nLink->setSourceQueue(&linkBuffer, this);
         setLinkConsumer(nLink);
     } else {
@@ -122,7 +122,7 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
         // Calculate the target-width
         int target_width = bitWidth;
         int cur_width = nLink->bitWidth;
-        if (mType == Enums::OBJECT_LINK) {
+        if (mType == enums::OBJECT_LINK) {
             target_width = nLink->bitWidth;
             cur_width = bitWidth;
         }

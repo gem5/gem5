@@ -163,7 +163,7 @@ Execute::Execute(const std::string &name_,
 
         if (!found_fu) {
             warn("No functional unit for OpClass %s\n",
-                Enums::OpClassStrings[op_class]);
+                enums::OpClassStrings[op_class]);
         }
     }
 
@@ -1693,12 +1693,12 @@ Execute::getCommittingThread()
     std::vector<ThreadID> priority_list;
 
     switch (cpu.threadPolicy) {
-      case Enums::SingleThreaded:
+      case enums::SingleThreaded:
           return 0;
-      case Enums::RoundRobin:
+      case enums::RoundRobin:
           priority_list = cpu.roundRobinPriority(commitPriority);
           break;
-      case Enums::Random:
+      case enums::Random:
           priority_list = cpu.randomPriority();
           break;
       default:
@@ -1760,12 +1760,12 @@ Execute::getIssuingThread()
     std::vector<ThreadID> priority_list;
 
     switch (cpu.threadPolicy) {
-      case Enums::SingleThreaded:
+      case enums::SingleThreaded:
           return 0;
-      case Enums::RoundRobin:
+      case enums::RoundRobin:
           priority_list = cpu.roundRobinPriority(issuePriority);
           break;
-      case Enums::Random:
+      case enums::Random:
           priority_list = cpu.randomPriority();
           break;
       default:

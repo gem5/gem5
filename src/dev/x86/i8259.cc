@@ -190,7 +190,7 @@ X86ISA::I8259::write(PacketPtr pkt)
             break;
           case 0x2:
             DPRINTF(I8259, "Received initialization command word 3.\n");
-            if (mode == Enums::I8259Master) {
+            if (mode == enums::I8259Master) {
                 DPRINTF(I8259, "Responders attached to "
                         "IRQs:%s%s%s%s%s%s%s%s\n",
                         bits(val, 0) ? " 0" : "",

@@ -85,6 +85,6 @@ class ImgWriter
  * @return smart pointer to the allocated Image Writer
  */
 std::unique_ptr<ImgWriter>
-createImgWriter(Enums::ImageFormat type, const FrameBuffer *fb);
+createImgWriter(enums::ImageFormat type, const FrameBuffer *fb);
 
 #endif //__BASE_IMGWRITER_HH__

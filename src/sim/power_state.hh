@@ -76,17 +76,17 @@ class PowerState : public SimObject
     /**
      * Change the power state of this object to the power state p
      */
-    void set(Enums::PwrState p);
+    void set(enums::PwrState p);
 
 
-    inline Enums::PwrState get() const
+    inline enums::PwrState get() const
     {
         return _currState;
     }
 
     inline std::string getName() const
     {
-        return Enums::PwrStateStrings[_currState];
+        return enums::PwrStateStrings[_currState];
     }
 
     /** Returns the percentage residency for each power state */
@@ -104,12 +104,12 @@ class PowerState : public SimObject
      * Change the power state of this object to a power state equal to OR more
      * performant than p. Returns the power state the object actually went to.
      */
-    Enums::PwrState matchPwrState(Enums::PwrState p);
+    enums::PwrState matchPwrState(enums::PwrState p);
 
     /**
      * Return the power states this object can be in
      */
-    std::set<Enums::PwrState> getPossibleStates() const
+    std::set<enums::PwrState> getPossibleStates() const
     {
         return possibleStates;
     }
@@ -117,10 +117,10 @@ class PowerState : public SimObject
   protected:
 
     /** To keep track of the current power state */
-    Enums::PwrState _currState;
+    enums::PwrState _currState;
 
     /** The possible power states this object can be in */
-    std::set<Enums::PwrState> possibleStates;
+    std::set<enums::PwrState> possibleStates;
 
     /** Last tick the power stats were calculated */
     Tick prvEvalTick = 0;

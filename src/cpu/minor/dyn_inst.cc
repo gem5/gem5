@@ -228,7 +228,7 @@ MinorDynInst::minorTraceInst(const Named &named_object,
             id, pc.instAddr(),
             (staticInst->opClass() == No_OpClass ?
                 "(invalid)" : staticInst->disassemble(0,NULL)),
-            Enums::OpClassStrings[staticInst->opClass()],
+            enums::OpClassStrings[staticInst->opClass()],
             flags.str(),
             regs_str.str(),
             (predictedTaken ? " predictedTaken" : ""));

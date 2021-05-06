@@ -331,10 +331,10 @@ class CPU : public BaseCPU
     TheISA::VecRegContainer& getWritableVecReg(PhysRegIdPtr reg_idx);
 
     /** Returns current vector renaming mode */
-    Enums::VecRegRenameMode vecRenameMode() const { return vecMode; }
+    enums::VecRegRenameMode vecRenameMode() const { return vecMode; }
 
     /** Sets the current vector renaming mode */
-    void vecRenameMode(Enums::VecRegRenameMode vec_mode)
+    void vecRenameMode(enums::VecRegRenameMode vec_mode)
     { vecMode = vec_mode; }
 
     const TheISA::VecElem& readVecElem(PhysRegIdPtr reg_idx) const;
@@ -492,7 +492,7 @@ class CPU : public BaseCPU
     Commit commit;
 
     /** The rename mode of the vector registers */
-    Enums::VecRegRenameMode vecMode;
+    enums::VecRegRenameMode vecMode;
 
     /** The register file. */
     PhysRegFile regFile;

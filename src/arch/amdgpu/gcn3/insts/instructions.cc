@@ -36352,7 +36352,7 @@ namespace Gcn3ISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -36410,7 +36410,7 @@ namespace Gcn3ISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -39444,7 +39444,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->rdGmReqsInPipe--;
@@ -39517,7 +39517,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->rdGmReqsInPipe--;
@@ -39589,7 +39589,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->rdGmReqsInPipe--;
@@ -39690,7 +39690,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->rdGmReqsInPipe--;
@@ -39763,7 +39763,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->rdGmReqsInPipe--;
@@ -39836,7 +39836,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->rdGmReqsInPipe--;
@@ -39918,7 +39918,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->rdGmReqsInPipe--;
@@ -40000,7 +40000,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -40070,7 +40070,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -40141,7 +40141,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -40212,7 +40212,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -40283,7 +40283,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -40363,7 +40363,7 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -40460,10 +40460,10 @@ namespace Gcn3ISA
 
         calcAddr(gpuDynInst, addr);
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL ||
-            gpuDynInst->executedAs() == Enums::SC_PRIVATE) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
+            gpuDynInst->executedAs() == enums::SC_PRIVATE) {
             // TODO: additional address computation required for scratch
-            panic_if(gpuDynInst->executedAs() == Enums::SC_PRIVATE,
+            panic_if(gpuDynInst->executedAs() == enums::SC_PRIVATE,
                      "Flats to private aperture not tested yet\n");
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
@@ -40582,15 +40582,15 @@ namespace Gcn3ISA
             }
         }
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL ||
-            gpuDynInst->executedAs() == Enums::SC_PRIVATE) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
+            gpuDynInst->executedAs() == enums::SC_PRIVATE) {
             /**
              * TODO: If you encounter this panic, just remove this panic
              * and restart the simulation. It should just work fine but
              * this is to warn user that this path is never tested although
              * all the necessary logic is implemented
              */
-            panic_if(gpuDynInst->executedAs() == Enums::SC_PRIVATE,
+            panic_if(gpuDynInst->executedAs() == enums::SC_PRIVATE,
                      "Flats to private aperture not tested yet\n");
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
@@ -40688,7 +40688,7 @@ namespace Gcn3ISA
             }
         }
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -40785,7 +40785,7 @@ namespace Gcn3ISA
             }
         }
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -41056,7 +41056,7 @@ namespace Gcn3ISA
             }
         }
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -41153,7 +41153,7 @@ namespace Gcn3ISA
             }
         }
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -41283,15 +41283,15 @@ namespace Gcn3ISA
             }
         }
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL ||
-            gpuDynInst->executedAs() == Enums::SC_PRIVATE) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
+            gpuDynInst->executedAs() == enums::SC_PRIVATE) {
             /**
              * TODO: If you encounter this panic, just remove this panic
              * and restart the simulation. It should just work fine but
              * this is to warn user that this path is never tested although
              * all the necessary logic is implemented
              */
-            panic_if(gpuDynInst->executedAs() == Enums::SC_PRIVATE,
+            panic_if(gpuDynInst->executedAs() == enums::SC_PRIVATE,
                      "Flats to private aperture not tested yet\n");
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
@@ -41390,7 +41390,7 @@ namespace Gcn3ISA
             }
         }
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -41489,7 +41489,7 @@ namespace Gcn3ISA
             }
         }
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -41770,7 +41770,7 @@ namespace Gcn3ISA
             }
         }
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;
@@ -41870,7 +41870,7 @@ namespace Gcn3ISA
             }
         }
 
-        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
             wf->wrGmReqsInPipe--;

@@ -189,7 +189,7 @@ class UnifiedRenameMap
     /** The predicate register rename map */
     SimpleRenameMap predMap;
 
-    using VecMode = Enums::VecRegRenameMode;
+    using VecMode = enums::VecRegRenameMode;
     VecMode vecMode;
 
     /**
@@ -228,10 +228,10 @@ class UnifiedRenameMap
           case FloatRegClass:
             return floatMap.rename(arch_reg);
           case VecRegClass:
-            assert(vecMode == Enums::Full);
+            assert(vecMode == enums::Full);
             return vecMap.rename(arch_reg);
           case VecElemClass:
-            assert(vecMode == Enums::Elem);
+            assert(vecMode == enums::Elem);
             return vecElemMap.rename(arch_reg);
           case VecPredRegClass:
             return predMap.rename(arch_reg);
@@ -270,11 +270,11 @@ class UnifiedRenameMap
             return  floatMap.lookup(arch_reg);
 
           case VecRegClass:
-            assert(vecMode == Enums::Full);
+            assert(vecMode == enums::Full);
             return  vecMap.lookup(arch_reg);
 
           case VecElemClass:
-            assert(vecMode == Enums::Elem);
+            assert(vecMode == enums::Elem);
             return  vecElemMap.lookup(arch_reg);
 
           case VecPredRegClass:
@@ -314,11 +314,11 @@ class UnifiedRenameMap
             return floatMap.setEntry(arch_reg, phys_reg);
 
           case VecRegClass:
-            assert(vecMode == Enums::Full);
+            assert(vecMode == enums::Full);
             return vecMap.setEntry(arch_reg, phys_reg);
 
           case VecElemClass:
-            assert(vecMode == Enums::Elem);
+            assert(vecMode == enums::Elem);
             return vecElemMap.setEntry(arch_reg, phys_reg);
 
           case VecPredRegClass:
@@ -352,7 +352,7 @@ class UnifiedRenameMap
     {
         return std::min({intMap.numFreeEntries(),
                          floatMap.numFreeEntries(),
-                         vecMode == Enums::Full ? vecMap.numFreeEntries() :
+                         vecMode == enums::Full ? vecMap.numFreeEntries() :
                                                   vecElemMap.numFreeEntries(),
                          predMap.numFreeEntries()});
     }
@@ -362,7 +362,7 @@ class UnifiedRenameMap
     unsigned
     numFreeVecEntries() const
     {
-        return vecMode == Enums::Full
+        return vecMode == enums::Full
                 ? vecMap.numFreeEntries()
                 : vecElemMap.numFreeEntries();
     }

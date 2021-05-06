@@ -72,9 +72,9 @@ MinorStats::MinorStats(BaseCPU *base_cpu)
     ipc = numInsts / base_cpu->baseStats.numCycles;
 
     committedInstType
-        .init(base_cpu->numThreads, Enums::Num_OpClass)
+        .init(base_cpu->numThreads, enums::Num_OpClass)
         .flags(Stats::total | Stats::pdf | Stats::dist);
-    committedInstType.ysubnames(Enums::OpClassStrings);
+    committedInstType.ysubnames(enums::OpClassStrings);
 }
 
 };

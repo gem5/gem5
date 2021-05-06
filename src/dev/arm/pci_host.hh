@@ -56,7 +56,7 @@ class GenericArmPciHost
                              PciIntPin pin) const override;
 
   protected:
-    const Enums::ArmPciIntRouting intPolicy;
+    const enums::ArmPciIntRouting intPolicy;
     const uint32_t intBase;
     const uint32_t intCount;
 };

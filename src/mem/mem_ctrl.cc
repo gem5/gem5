@@ -568,7 +568,7 @@ MemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay)
             } else {
                 DPRINTF(MemCtrl, "Single request, going to a busy rank\n");
             }
-        } else if (memSchedPolicy == Enums::fcfs) {
+        } else if (memSchedPolicy == enums::fcfs) {
             // check if there is a packet going to a free rank
             for (auto i = queue.begin(); i != queue.end(); ++i) {
                 MemPacket* mem_pkt = *i;
@@ -577,7 +577,7 @@ MemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay)
                     break;
                 }
             }
-        } else if (memSchedPolicy == Enums::frfcfs) {
+        } else if (memSchedPolicy == enums::frfcfs) {
             ret = chooseNextFRFCFS(queue, extra_col_delay);
         } else {
             panic("No scheduling policy chosen\n");

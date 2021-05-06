@@ -165,7 +165,7 @@ class TimingExprRef : public TimingExpr
 class TimingExprUn : public TimingExpr
 {
   public:
-    Enums::TimingExprOp op;
+    enums::TimingExprOp op;
     TimingExpr *arg;
 
     TimingExprUn(const TimingExprUnParams &params) :
@@ -180,7 +180,7 @@ class TimingExprUn : public TimingExpr
 class TimingExprBin : public TimingExpr
 {
   public:
-    Enums::TimingExprOp op;
+    enums::TimingExprOp op;
     TimingExpr *left;
     TimingExpr *right;
 

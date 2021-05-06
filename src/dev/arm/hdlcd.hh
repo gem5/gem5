@@ -370,7 +370,7 @@ class HDLcd: public AmbaDmaDevice
     std::unique_ptr<ImgWriter> imgWriter;
 
     /** Image Format */
-    Enums::ImageFormat imgFormat;
+    enums::ImageFormat imgFormat;
 
     /** Picture of what the current frame buffer looks like */
     OutputStream *pic = nullptr;

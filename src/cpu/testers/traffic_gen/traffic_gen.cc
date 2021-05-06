@@ -220,8 +220,8 @@ TrafficGen::parseConfig()
                         is >> stride_size >> page_size >> nbr_of_banks >>
                             nbr_of_banks_util >> _addr_mapping >>
                             nbr_of_ranks;
-                        Enums::AddrMap addr_mapping =
-                            static_cast<Enums::AddrMap>(_addr_mapping);
+                        enums::AddrMap addr_mapping =
+                            static_cast<enums::AddrMap>(_addr_mapping);
 
                         if (stride_size > page_size)
                             warn("Memory generator stride size (%d) is greater"

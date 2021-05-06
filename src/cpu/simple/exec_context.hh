@@ -165,11 +165,11 @@ class SimpleExecContext : public ExecContext
                 .prereq(dcacheStallCycles);
 
             statExecutedInstType
-                .init(Enums::Num_OpClass)
+                .init(enums::Num_OpClass)
                 .flags(Stats::total | Stats::pdf | Stats::dist);
 
             for (unsigned i = 0; i < Num_OpClasses; ++i) {
-                statExecutedInstType.subname(i, Enums::OpClassStrings[i]);
+                statExecutedInstType.subname(i, enums::OpClassStrings[i]);
             }
 
             idleFraction = Stats::constant(1.0) - notIdleFraction;

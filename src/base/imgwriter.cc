@@ -47,10 +47,10 @@
 #endif
 
 std::unique_ptr<ImgWriter>
-createImgWriter(Enums::ImageFormat type, const FrameBuffer *fb)
+createImgWriter(enums::ImageFormat type, const FrameBuffer *fb)
 {
     switch (type) {
-      case Enums::Auto:
+      case enums::Auto:
         // The Auto option allows gem5 to choose automatically the
         // writer type, and it will choose for the best fit in
         // performance.
@@ -59,10 +59,10 @@ createImgWriter(Enums::ImageFormat type, const FrameBuffer *fb)
 
         GEM5_FALLTHROUGH;
 #if HAVE_PNG
-      case Enums::Png:
+      case enums::Png:
         return std::unique_ptr<PngWriter>(new PngWriter(fb));
 #endif
-      case Enums::Bitmap:
+      case enums::Bitmap:
         return std::unique_ptr<BmpWriter>(new BmpWriter(fb));
       default:
         warn("Invalid Image Type specified, defaulting to Bitmap\n");

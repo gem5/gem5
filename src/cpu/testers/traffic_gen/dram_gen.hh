@@ -90,7 +90,7 @@ class DramGen : public RandomGen
             uint8_t read_percent, Addr data_limit,
             unsigned int num_seq_pkts, unsigned int page_size,
             unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
-            Enums::AddrMap addr_mapping,
+            enums::AddrMap addr_mapping,
             unsigned int nbr_of_ranks);
 
     PacketPtr getNextPacket();
@@ -136,7 +136,7 @@ class DramGen : public RandomGen
     const unsigned int nbrOfBanksUtil;
 
     /** Address mapping to be used */
-    Enums::AddrMap addrMapping;
+    enums::AddrMap addrMapping;
 
     /** Number of rank bits in DRAM address*/
     const unsigned int rankBits;

@@ -755,7 +755,7 @@ class GenOne(object):
                     self.cg.cg_code('wf->scalarWrGmReqsInPipe--;')
                     self.cg.cg_code('wf->scalarOutstandingReqsWrGm++;')
             elif is_flat_mem:
-                self.cg.cg_if('gpuDynInst->executedAs() == Enums::SC_GLOBAL')
+                self.cg.cg_if('gpuDynInst->executedAs() == enums::SC_GLOBAL')
                 self.cg.cg_code('gpuDynInst->computeUnit()->globalMemoryPipe.')
                 self.cg.inc_indent()
                 self.cg.cg_code('getGMReqFIFO().push(gpuDynInst);')
