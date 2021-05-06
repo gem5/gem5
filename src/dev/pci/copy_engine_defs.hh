@@ -30,10 +30,12 @@
  * Register and structure descriptions for Intel's I/O AT DMA Engine
  */
 #include "base/bitfield.hh"
+#include "base/compiler.hh"
 #include "sim/serialize.hh"
 
-namespace CopyEngineReg {
-
+GEM5_DEPRECATED_NAMESPACE(CopyEngineReg, copy_engine_reg);
+namespace copy_engine_reg
+{
 
 // General Channel independant registers, 128 bytes starting at 0x00
 const uint32_t GEN_CHANCOUNT    = 0x00;
@@ -232,6 +234,6 @@ struct ChanRegs : public Serializable
 
 };
 
-} // namespace CopyEngineReg
+} // namespace copy_engine_reg
 
 

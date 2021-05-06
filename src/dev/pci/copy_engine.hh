@@ -62,9 +62,9 @@ class CopyEngine : public PciDevice
       private:
         DmaPort cePort;
         CopyEngine *ce;
-        CopyEngineReg::ChanRegs  cr;
+        copy_engine_reg::ChanRegs  cr;
         int channelId;
-        CopyEngineReg::DmaDesc *curDmaDesc;
+        copy_engine_reg::DmaDesc *curDmaDesc;
         uint8_t *copyBuffer;
 
         bool busy;
@@ -149,7 +149,7 @@ class CopyEngine : public PciDevice
     } copyEngineStats;
 
     // device registers
-    CopyEngineReg::Regs regs;
+    copy_engine_reg::Regs regs;
 
     // Array of channels each one with regs/dma port/etc
     std::vector<CopyEngineChannel*> chan;

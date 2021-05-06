@@ -56,7 +56,7 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
-using namespace CopyEngineReg;
+using namespace copy_engine_reg;
 
 CopyEngine::CopyEngine(const Params &p)
     : PciDevice(p),
