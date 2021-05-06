@@ -82,7 +82,7 @@ class FrequentValues : public Base
     const bool useHuffmanEncoding;
 
     /** The encoder applied to the VFT indices. */
-    Encoder::Huffman indexEncoder;
+    encoder::Huffman indexEncoder;
 
     /** Number of bits in the saturating counters. */
     const int counterBits;
@@ -199,7 +199,7 @@ class FrequentValues::CompData : public CompressionData
     struct CompressedValue
     {
         /** The codeword.*/
-        Encoder::Code code;
+        encoder::Code code;
 
         /**
          * Original value, stored both for when the codeword marks an
@@ -207,7 +207,7 @@ class FrequentValues::CompData : public CompressionData
          */
         uint64_t value;
 
-        CompressedValue(Encoder::Code _code, uint64_t _value)
+        CompressedValue(encoder::Code _code, uint64_t _value)
           : code(_code), value(_value)
         {
         }

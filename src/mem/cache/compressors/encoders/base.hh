@@ -36,7 +36,9 @@
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
-namespace Encoder {
+GEM5_DEPRECATED_NAMESPACE(Encoder, encoder);
+namespace encoder
+{
 
 struct Code
 {
@@ -77,7 +79,7 @@ class Base
     virtual uint64_t decode(const uint64_t code) const = 0;
 };
 
-} // namespace Encoder
+} // namespace encoder
 } // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_ENCODERS_BASE_HH__

@@ -36,12 +36,15 @@
 #include <queue>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "mem/cache/compressors/encoders/base.hh"
 
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
-namespace Encoder {
+GEM5_DEPRECATED_NAMESPACE(Encoder, encoder);
+namespace encoder
+{
 
 /**
  * This encoder builds a Huffman tree using the frequency of each value to
@@ -176,7 +179,7 @@ class Huffman : public Base
     void generateCodes(const Node* node, const Code& current_code);
 };
 
-} // namespace Encoder
+} // namespace encoder
 } // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_ENCODERS_HUFFMAN_HH__

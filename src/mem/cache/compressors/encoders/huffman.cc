@@ -35,7 +35,9 @@
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
-namespace Encoder {
+GEM5_DEPRECATED_NAMESPACE(Encoder, encoder);
+namespace encoder
+{
 
 Huffman::Huffman(uint64_t max_code_length)
   : Base(), maxCodeLength(max_code_length)
@@ -132,5 +134,5 @@ Huffman::decode(const uint64_t code) const
     return it->second;
 }
 
-} // namespace Encoder
+} // namespace encoder
 } // namespace compression

@@ -70,7 +70,7 @@ FrequentValues::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
     // Compress every value sequentially. The compressed values are then
     // added to the final compressed data.
     for (const auto& chunk : chunks) {
-        Encoder::Code code;
+        encoder::Code code;
         int length = 0;
         if (phase == COMPRESSING) {
             VFTEntry* entry = VFT.findEntry(chunk, false);
@@ -144,7 +144,7 @@ FrequentValues::decompress(const CompressionData* comp_data, uint64_t* data)
                 // its corresponding value, in order to make life easier we
                 // search for the value and verify that the stored code
                 // matches the table's
-                GEM5_VAR_USED const Encoder::Code code =
+                GEM5_VAR_USED const encoder::Code code =
                     indexEncoder.encode(comp_chunk.value);
 
                 // Either the value will be found and the codes match, or the
