@@ -81,8 +81,8 @@ class EtherSwitch : public SimObject
         void sendDone() {}
         Tick switchingDelay();
 
-        Interface* lookupDestPort(Net::EthAddr destAddr);
-        void learnSenderAddr(Net::EthAddr srcMacAddr, Interface *sender);
+        Interface* lookupDestPort(networking::EthAddr destAddr);
+        void learnSenderAddr(networking::EthAddr srcMacAddr, Interface *sender);
 
         void serialize(CheckpointOut &cp) const;
         void unserialize(CheckpointIn &cp);

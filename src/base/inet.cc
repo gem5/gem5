@@ -50,7 +50,9 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 
-namespace Net {
+GEM5_DEPRECATED_NAMESPACE(Net, networking);
+namespace networking
+{
 
 EthAddr::EthAddr()
 {
@@ -407,5 +409,4 @@ hsplit(const EthPacketPtr &ptr)
     return split_point;
 }
 
-
-} // namespace Net
+} // namespace networking

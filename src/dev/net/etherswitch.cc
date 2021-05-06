@@ -133,8 +133,8 @@ EtherSwitch::Interface::Interface(const std::string &name,
 bool
 EtherSwitch::Interface::recvPacket(EthPacketPtr packet)
 {
-    Net::EthAddr destMacAddr(packet->data);
-    Net::EthAddr srcMacAddr(&packet->data[6]);
+    networking::EthAddr destMacAddr(packet->data);
+    networking::EthAddr srcMacAddr(&packet->data[6]);
 
     learnSenderAddr(srcMacAddr, this);
     Interface *receiver = lookupDestPort(destMacAddr);
@@ -206,7 +206,7 @@ EtherSwitch::Interface::switchingDelay()
 }
 
 EtherSwitch::Interface*
-EtherSwitch::Interface::lookupDestPort(Net::EthAddr destMacAddr)
+EtherSwitch::Interface::lookupDestPort(networking::EthAddr destMacAddr)
 {
     auto it = parent->forwardingTable.find(uint64_t(destMacAddr));
 
@@ -230,7 +230,7 @@ EtherSwitch::Interface::lookupDestPort(Net::EthAddr destMacAddr)
 }
 
 void
-EtherSwitch::Interface::learnSenderAddr(Net::EthAddr srcMacAddr,
+EtherSwitch::Interface::learnSenderAddr(networking::EthAddr srcMacAddr,
                                           Interface *sender)
 {
     // learn the port for the sending MAC address

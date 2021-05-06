@@ -179,22 +179,22 @@ init_net(py::module_ &m_native)
 {
     py::module_ m = m_native.def_submodule("net");
 
-    py::class_<Net::EthAddr>(m, "EthAddr")
+    py::class_<networking::EthAddr>(m, "EthAddr")
         .def(py::init<>())
         .def(py::init<const std::string &>())
         ;
 
-    py::class_<Net::IpAddress>(m, "IpAddress")
+    py::class_<networking::IpAddress>(m, "IpAddress")
         .def(py::init<>())
         .def(py::init<uint32_t>())
         ;
 
-    py::class_<Net::IpNetmask, Net::IpAddress>(m, "IpNetmask")
+    py::class_<networking::IpNetmask, networking::IpAddress>(m, "IpNetmask")
         .def(py::init<>())
         .def(py::init<uint32_t, uint8_t>())
         ;
 
-    py::class_<Net::IpWithPort, Net::IpAddress>(m, "IpWithPort")
+    py::class_<networking::IpWithPort, networking::IpAddress>(m, "IpWithPort")
         .def(py::init<>())
         .def(py::init<uint32_t, uint16_t>())
         ;

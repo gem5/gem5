@@ -43,7 +43,7 @@
 #include "sim/eventq.hh"
 #include "sim/stats.hh"
 
-using namespace Net;
+using namespace networking;
 
 GEM5_DEPRECATED_NAMESPACE(Sinic, sinic);
 namespace sinic

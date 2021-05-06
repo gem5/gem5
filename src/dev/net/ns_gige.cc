@@ -85,7 +85,7 @@ const char *NsDmaState[] =
     "dmaWriteWaiting"
 };
 
-using namespace Net;
+using namespace networking;
 
 ///////////////////////////////////////////////////////////////////////
 //

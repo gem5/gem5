@@ -934,7 +934,7 @@ def NextEthernetAddr():
     return value
 
 class EthernetAddr(ParamValue):
-    cxx_type = 'Net::EthAddr'
+    cxx_type = 'networking::EthAddr'
     ex_str = "00:90:00:00:00:01"
     cmd_line_settable = True
 
@@ -981,13 +981,13 @@ class EthernetAddr(ParamValue):
 
     @classmethod
     def cxx_ini_parse(self, code, src, dest, ret):
-        code('%s = Net::EthAddr(%s);' % (dest, src))
+        code('%s = networking::EthAddr(%s);' % (dest, src))
         code('%s true;' % ret)
 
 # When initializing an IpAddress, pass in an existing IpAddress, a string of
 # the form "a.b.c.d", or an integer representing an IP.
 class IpAddress(ParamValue):
-    cxx_type = 'Net::IpAddress'
+    cxx_type = 'networking::IpAddress'
     ex_str = "127.0.0.1"
     cmd_line_settable = True
 
@@ -1039,7 +1039,7 @@ class IpAddress(ParamValue):
 # the form "a.b.c.d/n" or "a.b.c.d/e.f.g.h", or an ip and netmask as
 # positional or keyword arguments.
 class IpNetmask(IpAddress):
-    cxx_type = 'Net::IpNetmask'
+    cxx_type = 'networking::IpNetmask'
     ex_str = "127.0.0.0/24"
     cmd_line_settable = True
 
@@ -1113,7 +1113,7 @@ class IpNetmask(IpAddress):
 # When initializing an IpWithPort, pass in an existing IpWithPort, a string of
 # the form "a.b.c.d:p", or an ip and port as positional or keyword arguments.
 class IpWithPort(IpAddress):
-    cxx_type = 'Net::IpWithPort'
+    cxx_type = 'networking::IpWithPort'
     ex_str = "127.0.0.1:80"
     cmd_line_settable = True
 

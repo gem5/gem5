@@ -53,7 +53,7 @@
 #include "sim/system.hh"
 
 using namespace igbreg;
-using namespace Net;
+using namespace networking;
 
 IGbE::IGbE(const Params &p)
     : EtherDevice(p), etherInt(NULL),
