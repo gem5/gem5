@@ -46,7 +46,9 @@
 #include "enums/QoSQPolicy.hh"
 #include "mem/request.hh"
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 QueuePolicy*
 QueuePolicy::create(const QoSMemCtrlParams &p)
@@ -144,4 +146,4 @@ LrgQueuePolicy::enqueuePacket(PacketPtr pkt)
     }
 };
 
-} // namespace QoS
+} // namespace qos

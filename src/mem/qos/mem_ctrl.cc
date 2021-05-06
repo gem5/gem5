@@ -42,7 +42,9 @@
 #include "mem/qos/turnaround_policy.hh"
 #include "sim/core.hh"
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 MemCtrl::MemCtrl(const QoSMemCtrlParams &p)
   : ClockedObject(p),
@@ -89,7 +91,7 @@ MemCtrl::logRequest(BusState dir, RequestorID id, uint8_t _qos,
     addRequestor(id);
 
     DPRINTF(QOS,
-            "QoSMemCtrl::logRequest REQUESTOR %s [id %d] address %d"
+            "qos::MemCtrl::logRequest REQUESTOR %s [id %d] address %d"
             " prio %d this requestor q packets %d"
             " - queue size %d - requested entries %d\n",
             requestors[id], id, addr, _qos, packetPriorities[id][_qos],
@@ -121,7 +123,7 @@ MemCtrl::logRequest(BusState dir, RequestorID id, uint8_t _qos,
         if (distance > 0) {
             stats.avgPriorityDistance[id].sample(distance);
             DPRINTF(QOS,
-                    "QoSMemCtrl::logRequest REQUESTOR %s [id %d]"
+                    "qos::MemCtrl::logRequest REQUESTOR %s [id %d]"
                     " registering priority distance %d for priority %d"
                     " (packets %d)\n",
                     requestors[id], id, distance, i,
@@ -130,7 +132,7 @@ MemCtrl::logRequest(BusState dir, RequestorID id, uint8_t _qos,
     }
 
     DPRINTF(QOS,
-            "QoSMemCtrl::logRequest REQUESTOR %s [id %d] prio %d "
+            "qos::MemCtrl::logRequest REQUESTOR %s [id %d] prio %d "
             "this requestor q packets %d - new queue size %d\n",
             requestors[id], id, _qos, packetPriorities[id][_qos],
             (dir == READ) ? readQueueSizes[_qos]: writeQueueSizes[_qos]);
@@ -145,7 +147,7 @@ MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t _qos,
         "Logging response with invalid requestor\n");
 
     DPRINTF(QOS,
-            "QoSMemCtrl::logResponse REQUESTOR %s [id %d] address %d prio"
+            "qos::MemCtrl::logResponse REQUESTOR %s [id %d] address %d prio"
             " %d this requestor q packets %d"
             " - queue size %d - requested entries %d\n",
             requestors[id], id, addr, _qos, packetPriorities[id][_qos],
@@ -161,7 +163,7 @@ MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t _qos,
     }
 
     panic_if(packetPriorities[id][_qos] == 0,
-             "QoSMemCtrl::logResponse requestor %s negative packets "
+             "qos::MemCtrl::logResponse requestor %s negative packets "
              "for priority %d", requestors[id], _qos);
 
     packetPriorities[id][_qos] -= entries;
@@ -169,8 +171,8 @@ MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t _qos,
     for (auto j = 0; j < entries; ++j) {
         auto it = requestTimes[id].find(addr);
         panic_if(it == requestTimes[id].end(),
-                 "QoSMemCtrl::logResponse requestor %s unmatched response for"
-                 " address %d received", requestors[id], addr);
+                 "qos::MemCtrl::logResponse requestor %s unmatched response "
+                 "for address %d received", requestors[id], addr);
 
         // Load request time
         uint64_t requestTime = it->second.front();
@@ -200,7 +202,7 @@ MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t _qos,
     }
 
     DPRINTF(QOS,
-            "QoSMemCtrl::logResponse REQUESTOR %s [id %d] prio %d "
+            "qos::MemCtrl::logResponse REQUESTOR %s [id %d] prio %d "
             "this requestor q packets %d - new queue size %d\n",
             requestors[id], id, _qos, packetPriorities[id][_qos],
             (dir == READ) ? readQueueSizes[_qos]: writeQueueSizes[_qos]);
@@ -213,7 +215,7 @@ MemCtrl::schedule(RequestorID id, uint64_t data)
         return policy->schedule(id, data);
     } else {
         DPRINTF(QOS,
-                "QoSScheduler::schedule requestor id [%d] "
+                "qos::MemCtrl::schedule requestor id [%d] "
                 "data received [%d], but QoS scheduler not initialized\n",
                 id,data);
         return 0;
@@ -228,7 +230,7 @@ MemCtrl::schedule(const PacketPtr pkt)
     if (policy) {
         return schedule(pkt->req->requestorId(), pkt->getSize());
     } else {
-        DPRINTF(QOS, "QoSScheduler::schedule Packet received [Qv %d], "
+        DPRINTF(QOS, "qos::MemCtrl::schedule Packet received [Qv %d], "
                 "but QoS scheduler not initialized\n",
                 pkt->qosValue());
         return pkt->qosValue();
@@ -242,13 +244,13 @@ MemCtrl::selectNextBusState()
 
     if (turnPolicy) {
         DPRINTF(QOS,
-                "QoSMemoryTurnaround::selectBusState running policy %s\n",
+                "qos::MemCtrl::selectNextBusState running policy %s\n",
                 turnPolicy->name());
 
         bus_state = turnPolicy->selectBusState();
     } else {
         DPRINTF(QOS,
-                "QoSMemoryTurnaround::selectBusState running "
+                "qos::MemCtrl::selectNextBusState running "
                 "default bus direction selection policy\n");
 
         if ((!getTotalReadQueueSize() && bus_state == MemCtrl::READ) ||
@@ -271,7 +273,7 @@ MemCtrl::addRequestor(RequestorID id)
         packetPriorities[id].resize(numPriorities(), 0);
 
         DPRINTF(QOS,
-                "QoSMemCtrl::addRequestor registering"
+                "qos::MemCtrl::addRequestor registering"
                 " Requestor %s [id %d]\n",
                 requestors[id], id);
     }
@@ -365,4 +367,4 @@ MemCtrl::recordTurnaroundStats()
     }
 }
 
-} // namespace QoS
+} // namespace qos

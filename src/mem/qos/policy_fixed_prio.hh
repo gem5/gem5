@@ -41,11 +41,14 @@
 #include <cstdint>
 #include <map>
 
+#include "base/compiler.hh"
 #include "mem/qos/policy.hh"
 
 struct QoSFixedPriorityPolicyParams;
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 /**
  * Fixed Priority QoS Policy
@@ -102,6 +105,6 @@ class FixedPriorityPolicy : public Policy
     std::map<RequestorID, uint8_t> priorityMap;
 };
 
-} // namespace QoS
+} // namespace qos
 
 #endif // __MEM_QOS_POLICY_FIXED_PRIO_HH__

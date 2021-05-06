@@ -42,7 +42,9 @@
 #include "base/logging.hh"
 #include "params/QoSPropFairPolicy.hh"
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 PropFairPolicy::PropFairPolicy(const Params &p)
   : Policy(p), weight(p.weight)
@@ -122,4 +124,4 @@ PropFairPolicy::schedule(const RequestorID pkt_id, const uint64_t pkt_size)
     return pkt_priority;
 }
 
-} // namespace QoS
+} // namespace qos

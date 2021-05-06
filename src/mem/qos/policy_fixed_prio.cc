@@ -45,7 +45,9 @@
 #include "mem/request.hh"
 #include "params/QoSFixedPriorityPolicy.hh"
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 FixedPriorityPolicy::FixedPriorityPolicy(const Params &p)
   : Policy(p), defaultPriority(p.qos_fixed_prio_default_prio)
@@ -94,4 +96,4 @@ FixedPriorityPolicy::schedule(const RequestorID id, const uint64_t data)
     }
 }
 
-} // namespace QoS
+} // namespace qos

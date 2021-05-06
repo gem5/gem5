@@ -38,11 +38,14 @@
 #ifndef __MEM_QOS_TURNAROUND_POLICY_HH__
 #define __MEM_QOS_TURNAROUND_POLICY_HH__
 
+#include "base/compiler.hh"
 #include "mem/qos/mem_ctrl.hh"
 #include "params/QoSTurnaroundPolicy.hh"
 #include "sim/sim_object.hh"
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 /**
  * Base class for QoS Bus Turnaround policies
@@ -75,6 +78,6 @@ class TurnaroundPolicy : public SimObject
     MemCtrl* memCtrl;
 };
 
-} // namespace QoS
+} // namespace qos
 
 #endif /* __MEM_QOS_TURNAROUND_POLICY_HH__ */

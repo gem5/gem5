@@ -233,7 +233,7 @@ typedef std::deque<MemPacket*> MemPacketQueue;
  * please cite the paper.
  *
  */
-class MemCtrl : public QoS::MemCtrl
+class MemCtrl : public qos::MemCtrl
 {
   private:
 

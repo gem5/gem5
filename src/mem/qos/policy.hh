@@ -41,6 +41,7 @@
 #include <cstdint>
 #include <utility>
 
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/QOS.hh"
@@ -50,7 +51,9 @@
 
 struct QoSPolicyParams;
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 /**
  * QoS Policy base class
@@ -131,6 +134,6 @@ Policy::pair(Requestor requestor, T value)
     return std::pair<RequestorID, T>(id, value);
 }
 
-} // namespace QoS
+} // namespace qos
 
 #endif /* __MEM_QOS_POLICY_HH__ */

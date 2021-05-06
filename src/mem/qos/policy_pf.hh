@@ -40,12 +40,15 @@
 
 #include <vector>
 
+#include "base/compiler.hh"
 #include "mem/qos/policy.hh"
 #include "mem/request.hh"
 
 struct QoSPropFairPolicyParams;
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 /**
  * Proportional Fair QoS Policy
@@ -112,6 +115,6 @@ class PropFairPolicy : public Policy
     std::vector<RequestorHistory> history;
 };
 
-} // namespace QoS
+} // namespace qos
 
 #endif // __MEM_QOS_POLICY_PF_HH__

@@ -42,7 +42,9 @@
 #include "base/trace.hh"
 #include "params/QoSTurnaroundPolicyIdeal.hh"
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 TurnaroundPolicyIdeal::TurnaroundPolicyIdeal(const Params &p)
   : TurnaroundPolicy(p)
@@ -98,4 +100,4 @@ TurnaroundPolicyIdeal::selectBusState()
     return bus_state;
 }
 
-} // namespace QoS
+} // namespace qos

@@ -44,7 +44,9 @@
 #include "mem/qos/q_policy.hh"
 #include "params/QoSMemSinkInterface.hh"
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 MemSinkCtrl::MemSinkCtrl(const QoSMemSinkCtrlParams &p)
   : MemCtrl(p), requestLatency(p.request_latency),
@@ -384,7 +386,7 @@ MemSinkCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
     return memory.recvTimingReq(pkt);
 }
 
-} // namespace QoS
+} // namespace qos
 
 QoSMemSinkInterface::QoSMemSinkInterface(const QoSMemSinkInterfaceParams &_p)
     : AbstractMemory(_p)

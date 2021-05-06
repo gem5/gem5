@@ -43,6 +43,7 @@
 #include <deque>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/types.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/qos/mem_ctrl.hh"
@@ -53,7 +54,9 @@
 struct QoSMemSinkInterfaceParams;
 class QoSMemSinkInterface;
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 /**
  * QoS Memory Sink
@@ -259,16 +262,16 @@ class MemSinkCtrl : public MemCtrl
     MemSinkCtrlStats stats;
 };
 
-} // namespace QoS
+} // namespace qos
 
 class QoSMemSinkInterface : public AbstractMemory
 {
   public:
     /** Setting a pointer to the interface */
-    void setMemCtrl(QoS::MemSinkCtrl* _ctrl) { ctrl = _ctrl; };
+    void setMemCtrl(qos::MemSinkCtrl* _ctrl) { ctrl = _ctrl; };
 
     /** Pointer to the controller */
-    QoS::MemSinkCtrl* ctrl;
+    qos::MemSinkCtrl* ctrl;
 
     QoSMemSinkInterface(const QoSMemSinkInterfaceParams &_p);
 };

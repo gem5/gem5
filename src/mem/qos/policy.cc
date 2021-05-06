@@ -39,7 +39,9 @@
 
 #include "params/QoSPolicy.hh"
 
-namespace QoS {
+GEM5_DEPRECATED_NAMESPACE(QoS, qos);
+namespace qos
+{
 
 Policy::Policy(const Params &p)
   : SimObject(p)
@@ -54,4 +56,4 @@ Policy::schedule(const PacketPtr pkt)
     return schedule(pkt->req->requestorId(), pkt->getSize());
 }
 
-} // namespace QoS
+} // namespace qos
