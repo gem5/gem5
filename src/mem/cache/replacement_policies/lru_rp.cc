@@ -34,7 +34,9 @@
 #include "params/LRURP.hh"
 #include "sim/core.hh"
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 LRU::LRU(const Params &p)
   : Base(p)
@@ -93,4 +95,4 @@ LRU::instantiateEntry()
     return std::shared_ptr<ReplacementData>(new LRUReplData());
 }
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy

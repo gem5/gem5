@@ -57,7 +57,9 @@
 
 struct BRRIPRPParams;
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 class BRRIP : public Base
 {
@@ -155,6 +157,6 @@ class BRRIP : public Base
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BRRIP_RP_HH__

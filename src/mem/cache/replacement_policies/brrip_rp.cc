@@ -35,7 +35,9 @@
 #include "base/random.hh"
 #include "params/BRRIPRP.hh"
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 BRRIP::BRRIP(const Params &p)
   : Base(p), numRRPVBits(p.num_bits), hitPriority(p.hit_priority),
@@ -144,4 +146,4 @@ BRRIP::instantiateEntry()
     return std::shared_ptr<ReplacementData>(new BRRIPReplData(numRRPVBits));
 }
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy

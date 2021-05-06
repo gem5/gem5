@@ -31,32 +31,32 @@ from m5.SimObject import SimObject
 class BaseReplacementPolicy(SimObject):
     type = 'BaseReplacementPolicy'
     abstract = True
-    cxx_class = 'ReplacementPolicy::Base'
+    cxx_class = 'replacement_policy::Base'
     cxx_header = "mem/cache/replacement_policies/base.hh"
 
 class FIFORP(BaseReplacementPolicy):
     type = 'FIFORP'
-    cxx_class = 'ReplacementPolicy::FIFO'
+    cxx_class = 'replacement_policy::FIFO'
     cxx_header = "mem/cache/replacement_policies/fifo_rp.hh"
 
 class SecondChanceRP(FIFORP):
     type = 'SecondChanceRP'
-    cxx_class = 'ReplacementPolicy::SecondChance'
+    cxx_class = 'replacement_policy::SecondChance'
     cxx_header = "mem/cache/replacement_policies/second_chance_rp.hh"
 
 class LFURP(BaseReplacementPolicy):
     type = 'LFURP'
-    cxx_class = 'ReplacementPolicy::LFU'
+    cxx_class = 'replacement_policy::LFU'
     cxx_header = "mem/cache/replacement_policies/lfu_rp.hh"
 
 class LRURP(BaseReplacementPolicy):
     type = 'LRURP'
-    cxx_class = 'ReplacementPolicy::LRU'
+    cxx_class = 'replacement_policy::LRU'
     cxx_header = "mem/cache/replacement_policies/lru_rp.hh"
 
 class BIPRP(LRURP):
     type = 'BIPRP'
-    cxx_class = 'ReplacementPolicy::BIP'
+    cxx_class = 'replacement_policy::BIP'
     cxx_header = "mem/cache/replacement_policies/bip_rp.hh"
     btp = Param.Percent(3, "Percentage of blocks to be inserted as MRU")
 
@@ -65,17 +65,17 @@ class LIPRP(BIPRP):
 
 class MRURP(BaseReplacementPolicy):
     type = 'MRURP'
-    cxx_class = 'ReplacementPolicy::MRU'
+    cxx_class = 'replacement_policy::MRU'
     cxx_header = "mem/cache/replacement_policies/mru_rp.hh"
 
 class RandomRP(BaseReplacementPolicy):
     type = 'RandomRP'
-    cxx_class = 'ReplacementPolicy::Random'
+    cxx_class = 'replacement_policy::Random'
     cxx_header = "mem/cache/replacement_policies/random_rp.hh"
 
 class BRRIPRP(BaseReplacementPolicy):
     type = 'BRRIPRP'
-    cxx_class = 'ReplacementPolicy::BRRIP'
+    cxx_class = 'replacement_policy::BRRIP'
     cxx_header = "mem/cache/replacement_policies/brrip_rp.hh"
     num_bits = Param.Int(2, "Number of bits per RRPV")
     hit_priority = Param.Bool(False,
@@ -92,11 +92,11 @@ class NRURP(BRRIPRP):
 
 class TreePLRURP(BaseReplacementPolicy):
     type = 'TreePLRURP'
-    cxx_class = 'ReplacementPolicy::TreePLRU'
+    cxx_class = 'replacement_policy::TreePLRU'
     cxx_header = "mem/cache/replacement_policies/tree_plru_rp.hh"
     num_leaves = Param.Int(Parent.assoc, "Number of leaves in each tree")
 
 class WeightedLRURP(BaseReplacementPolicy):
     type = "WeightedLRURP"
-    cxx_class = "ReplacementPolicy::WeightedLRU"
+    cxx_class = "replacement_policy::WeightedLRU"
     cxx_header = "mem/cache/replacement_policies/weighted_lru_rp.hh"

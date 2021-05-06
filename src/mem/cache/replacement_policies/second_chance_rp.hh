@@ -43,7 +43,9 @@
 
 struct SecondChanceRPParams;
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 class SecondChance : public FIFO
 {
@@ -123,6 +125,6 @@ class SecondChance : public FIFO
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_SECOND_CHANCE_RP_HH__

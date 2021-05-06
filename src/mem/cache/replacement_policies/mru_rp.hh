@@ -41,7 +41,9 @@
 
 struct MRURPParams;
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 class MRU : public Base
 {
@@ -107,6 +109,6 @@ class MRU : public Base
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_MRU_RP_HH__

@@ -32,9 +32,12 @@
 #include <cstdint>
 #include <memory>
 
+#include "base/compiler.hh"
 #include "base/cprintf.hh"
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 /**
  * The replacement data needed by replacement policies. Each replacement policy
@@ -42,7 +45,7 @@ namespace ReplacementPolicy {
  */
 struct ReplacementData {};
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy
 
 /**
  * A replaceable entry is a basic entry in a 2d table-like structure that needs
@@ -75,7 +78,7 @@ class ReplaceableEntry
      * Replacement data associated to this entry.
      * It must be instantiated by the replacement policy before being used.
      */
-    std::shared_ptr<ReplacementPolicy::ReplacementData> replacementData;
+    std::shared_ptr<replacement_policy::ReplacementData> replacementData;
 
     /**
      * Set both the set and way. Should be called only once.

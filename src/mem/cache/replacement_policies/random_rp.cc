@@ -34,7 +34,9 @@
 #include "base/random.hh"
 #include "params/RandomRP.hh"
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 Random::Random(const Params &p)
   : Base(p)
@@ -92,4 +94,4 @@ Random::instantiateEntry()
     return std::shared_ptr<ReplacementData>(new RandomReplData());
 }
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy

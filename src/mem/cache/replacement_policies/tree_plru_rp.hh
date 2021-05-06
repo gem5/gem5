@@ -77,7 +77,9 @@
 
 struct TreePLRURPParams;
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 class TreePLRU : public Base
 {
@@ -205,6 +207,6 @@ class TreePLRU : public Base
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_TREE_PLRU_RP_HH__

@@ -41,7 +41,9 @@
 
 struct FIFORPParams;
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 class FIFO : public Base
 {
@@ -107,6 +109,6 @@ class FIFO : public Base
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_FIFO_RP_HH__

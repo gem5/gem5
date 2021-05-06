@@ -34,7 +34,9 @@
 #include "params/FIFORP.hh"
 #include "sim/core.hh"
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 FIFO::FIFO(const Params &p)
   : Base(p)
@@ -91,4 +93,4 @@ FIFO::instantiateEntry()
     return std::shared_ptr<ReplacementData>(new FIFOReplData());
 }
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy

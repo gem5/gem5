@@ -34,7 +34,9 @@
 #include "params/MRURP.hh"
 #include "sim/core.hh"
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 MRU::MRU(const Params &p)
   : Base(p)
@@ -98,4 +100,4 @@ MRU::instantiateEntry()
     return std::shared_ptr<ReplacementData>(new MRUReplData());
 }
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy

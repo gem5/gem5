@@ -38,7 +38,9 @@
 #include "params/WeightedLRURP.hh"
 #include "sim/core.hh"
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 WeightedLRU::WeightedLRU(const Params &p)
   : Base(p)
@@ -121,4 +123,4 @@ WeightedLRU::invalidate(const std::shared_ptr<ReplacementData>&
         replacement_data)->last_touch_tick = Tick(0);
 }
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy

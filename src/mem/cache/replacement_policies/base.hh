@@ -31,6 +31,7 @@
 
 #include <memory>
 
+#include "base/compiler.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "params/BaseReplacementPolicy.hh"
 #include "sim/sim_object.hh"
@@ -40,7 +41,9 @@
  */
 typedef std::vector<ReplaceableEntry*> ReplacementCandidates;
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 /**
  * A common base class of cache replacement policy objects.
@@ -93,6 +96,6 @@ class Base : public SimObject
     virtual std::shared_ptr<ReplacementData> instantiateEntry() = 0;
 };
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BASE_HH__

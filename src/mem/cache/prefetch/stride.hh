@@ -61,7 +61,9 @@
 #include "params/StridePrefetcherHashedSetAssociative.hh"
 
 class BaseIndexingPolicy;
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
     class Base;
 }
 struct StridePrefetcherParams;
@@ -109,14 +111,13 @@ class Stride : public Queued
         const int numEntries;
 
         BaseIndexingPolicy* const indexingPolicy;
-        ReplacementPolicy::Base* const replacementPolicy;
+        replacement_policy::Base* const replacementPolicy;
 
         PCTableInfo(int assoc, int num_entries,
             BaseIndexingPolicy* indexing_policy,
-            ReplacementPolicy::Base* replacement_policy)
+            replacement_policy::Base* repl_policy)
           : assoc(assoc), numEntries(num_entries),
-            indexingPolicy(indexing_policy),
-            replacementPolicy(replacement_policy)
+            indexingPolicy(indexing_policy), replacementPolicy(repl_policy)
         {
         }
     } pcTableInfo;

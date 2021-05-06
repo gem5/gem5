@@ -41,7 +41,9 @@
 
 struct WeightedLRURPParams;
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 class WeightedLRU : public Base
 {
@@ -111,6 +113,6 @@ class WeightedLRU : public Base
                                               candidates) const override;
 };
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_WEIGHTED_LRU_RP_HH__

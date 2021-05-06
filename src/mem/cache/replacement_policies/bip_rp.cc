@@ -34,7 +34,9 @@
 #include "params/BIPRP.hh"
 #include "sim/core.hh"
 
-namespace ReplacementPolicy {
+GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
+namespace replacement_policy
+{
 
 BIP::BIP(const Params &p)
   : LRU(p), btp(p.btp)
@@ -56,4 +58,4 @@ BIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
     }
 }
 
-} // namespace ReplacementPolicy
+} // namespace replacement_policy
