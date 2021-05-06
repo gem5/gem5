@@ -36,7 +36,9 @@
 
 struct BloomFilterMultiParams;
 
-namespace BloomFilter {
+GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
+namespace bloom_filter
+{
 
 /**
  * This BloomFilter has multiple sub-filters, each with its own hashing
@@ -63,6 +65,6 @@ class Multi : public Base
     std::vector<Base*> filters;
 };
 
-} // namespace BloomFilter
+} // namespace bloom_filter
 
 #endif // __BASE_FILTERS_MULTI_BLOOM_FILTER_HH__

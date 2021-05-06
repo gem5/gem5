@@ -33,7 +33,9 @@
 #include "base/logging.hh"
 #include "params/BloomFilterBlock.hh"
 
-namespace BloomFilter {
+GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
+namespace bloom_filter
+{
 
 Block::Block(const BloomFilterBlockParams &p)
     : Base(p), masksLSBs(p.masks_lsbs),
@@ -89,4 +91,4 @@ Block::hash(Addr addr) const
     return hashed_addr;
 }
 
-} // namespace BloomFilter
+} // namespace bloom_filter

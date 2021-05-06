@@ -32,13 +32,16 @@
 
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/intmath.hh"
 #include "base/sat_counter.hh"
 #include "base/types.hh"
 #include "params/BloomFilterBase.hh"
 #include "sim/sim_object.hh"
 
-namespace BloomFilter {
+GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
+namespace bloom_filter
+{
 
 class Base : public SimObject
 {
@@ -146,6 +149,6 @@ class Base : public SimObject
     }
 };
 
-} // namespace BloomFilter
+} // namespace bloom_filter
 
 #endif // __BASE_FILTERS_BASE_HH__

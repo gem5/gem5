@@ -34,7 +34,9 @@
 
 struct BloomFilterBulkParams;
 
-namespace BloomFilter {
+GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
+namespace bloom_filter
+{
 
 /**
  * Implementation of the bloom filter, as described in "Bulk Disambiguation of
@@ -63,6 +65,6 @@ class Bulk : public MultiBitSel
     const int sectorBits;
 };
 
-} // namespace BloomFilter
+} // namespace bloom_filter
 
 #endif // __BASE_FILTERS_BULK_BLOOM_FILTER_HH__

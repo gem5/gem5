@@ -30,7 +30,9 @@
 
 #include "params/BloomFilterPerfect.hh"
 
-namespace BloomFilter {
+GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
+namespace bloom_filter
+{
 
 Perfect::Perfect(const BloomFilterPerfectParams &p)
     : Base(p)
@@ -78,4 +80,4 @@ Perfect::getTotalCount() const
     return entries.size();
 }
 
-} // namespace BloomFilter
+} // namespace bloom_filter

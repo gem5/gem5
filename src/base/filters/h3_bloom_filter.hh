@@ -34,7 +34,9 @@
 
 struct BloomFilterH3Params;
 
-namespace BloomFilter {
+GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
+namespace bloom_filter
+{
 
 /**
  * Implementation of the bloom filter as described in "Implementing Signatures
@@ -50,6 +52,6 @@ class H3 : public MultiBitSel
     int hash(Addr addr, int hash_number) const override;
 };
 
-} // namespace BloomFilter
+} // namespace bloom_filter
 
 #endif // __BASE_FILTERS_H3_BLOOM_FILTER_HH__
