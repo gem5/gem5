@@ -229,7 +229,7 @@ class NSGigE(EtherDevBase):
 
 class Sinic(EtherDevBase):
     type = 'Sinic'
-    cxx_class = 'Sinic::Device'
+    cxx_class = 'sinic::Device'
     cxx_header = "dev/net/sinic.hh"
 
     rx_max_copy = Param.MemorySize('1514B', "rx max copy")

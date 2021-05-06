@@ -45,7 +45,9 @@
 
 using namespace Net;
 
-namespace Sinic {
+GEM5_DEPRECATED_NAMESPACE(Sinic, sinic);
+namespace sinic
+{
 
 const char *RxStateStrings[] =
 {
@@ -1486,4 +1488,4 @@ Device::unserialize(CheckpointIn &cp)
 
 }
 
-} // namespace Sinic
+} // namespace sinic

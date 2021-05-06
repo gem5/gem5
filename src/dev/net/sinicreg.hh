@@ -52,7 +52,9 @@
         static inline uint64_t set_##NAME(uint64_t reg, uint64_t val) \
         { return (reg & ~NAME) | ((val << OFFSET) & NAME); }
 
-namespace Sinic {
+GEM5_DEPRECATED_NAMESPACE(Sinic, sinic);
+namespace sinic
+{
 namespace Regs {
 
 static const int VirtualShift = 8;
@@ -232,6 +234,6 @@ regValid(Addr daddr)
     return true;
 }
 
-} // namespace Sinic
+} // namespace sinic
 
 #endif // __DEV_NET_SINICREG_HH__

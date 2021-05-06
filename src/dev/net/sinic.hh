@@ -29,6 +29,7 @@
 #ifndef __DEV_NET_SINIC_HH__
 #define __DEV_NET_SINIC_HH__
 
+#include "base/compiler.hh"
 #include "base/inet.hh"
 #include "base/statistics.hh"
 #include "dev/io_device.hh"
@@ -41,7 +42,9 @@
 #include "params/Sinic.hh"
 #include "sim/eventq.hh"
 
-namespace Sinic {
+GEM5_DEPRECATED_NAMESPACE(Sinic, sinic);
+namespace sinic
+{
 
 class Interface;
 class Base : public EtherDevBase
@@ -319,6 +322,6 @@ class Interface : public EtherInt
     virtual void sendDone() { dev->transferDone(); }
 };
 
-} // namespace Sinic
+} // namespace sinic
 
 #endif // __DEV_NET_SINIC_HH__
