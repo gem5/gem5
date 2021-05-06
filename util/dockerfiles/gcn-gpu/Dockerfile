@@ -52,7 +52,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py -qO get-pip.py
 RUN python3 get-pip.py
 RUN pip install -U setuptools scons==3.1.2 six
 
-ARG gem5_dist=http://dist.gem5.org/dist/develop
+ARG gem5_dist=http://dist.gem5.org/dist/v21-0
 
 # Install ROCm 1.6 binaries
 RUN wget -qO- ${gem5_dist}/apt_1.6.4.tar.bz2 \
