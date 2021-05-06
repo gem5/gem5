@@ -188,7 +188,7 @@ Multi::decompress(const CompressionData* comp_data,
 
 Multi::MultiStats::MultiStats(BaseStats& base_group, Multi& _compressor)
   : Stats::Group(&base_group), compressor(_compressor),
-    ADD_STAT(ranks, Stats::Units::Count::get(),
+    ADD_STAT(ranks, Stats::units::Count::get(),
              "Number of times each compressor had the nth best compression")
 {
 }

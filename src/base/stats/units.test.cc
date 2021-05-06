@@ -33,103 +33,103 @@
 
 TEST(StatsUnitsTest, Cycle)
 {
-    Stats::Units::Cycle *unit = Stats::Units::Cycle::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::Cycle::toString());
+    Stats::units::Cycle *unit = Stats::units::Cycle::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::Cycle::toString());
 }
 
 TEST(StatsUnitsTest, Tick)
 {
-    Stats::Units::Tick *unit = Stats::Units::Tick::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::Tick::toString());
+    Stats::units::Tick *unit = Stats::units::Tick::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::Tick::toString());
 }
 
 TEST(StatsUnitsTest, Second)
 {
-    Stats::Units::Second *unit = Stats::Units::Second::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::Second::toString());
+    Stats::units::Second *unit = Stats::units::Second::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::Second::toString());
 }
 
 TEST(StatsUnitsTest, Bit)
 {
-    Stats::Units::Bit *unit = Stats::Units::Bit::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::Bit::toString());
+    Stats::units::Bit *unit = Stats::units::Bit::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::Bit::toString());
 }
 
 TEST(StatsUnitsTest, Byte)
 {
-    Stats::Units::Byte *unit = Stats::Units::Byte::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::Byte::toString());
+    Stats::units::Byte *unit = Stats::units::Byte::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::Byte::toString());
 }
 
 TEST(StatsUnitsTest, Watt)
 {
-    Stats::Units::Watt *unit = Stats::Units::Watt::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::Watt::toString());
+    Stats::units::Watt *unit = Stats::units::Watt::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::Watt::toString());
 }
 
 TEST(StatsUnitsTest, Joule)
 {
-    Stats::Units::Joule *unit = Stats::Units::Joule::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::Joule::toString());
+    Stats::units::Joule *unit = Stats::units::Joule::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::Joule::toString());
 }
 
 TEST(StatsUnitsTest, Volt)
 {
-    Stats::Units::Volt *unit = Stats::Units::Volt::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::Volt::toString());
+    Stats::units::Volt *unit = Stats::units::Volt::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::Volt::toString());
 }
 
 TEST(StatsUnitsTest, DegreeCelsius)
 {
-    Stats::Units::DegreeCelsius *unit = Stats::Units::DegreeCelsius::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::DegreeCelsius::toString());
+    Stats::units::DegreeCelsius *unit = Stats::units::DegreeCelsius::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::DegreeCelsius::toString());
 }
 
 TEST(StatsUnitsTest, Count)
 {
-    Stats::Units::Count *unit = Stats::Units::Count::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::Count::toString());
+    Stats::units::Count *unit = Stats::units::Count::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::Count::toString());
 }
 
 TEST(StatsUnitsTest, Rate1)
 {
-    Stats::Units::Rate<Stats::Units::Count, Stats::Units::Count> *unit =
-        Stats::Units::Rate<Stats::Units::Count, Stats::Units::Count>::get();
+    Stats::units::Rate<Stats::units::Count, Stats::units::Count> *unit =
+        Stats::units::Rate<Stats::units::Count, Stats::units::Count>::get();
     ASSERT_EQ(unit->getUnitString(), "(Count/Count)");
-    ASSERT_EQ(unit->getUnitString(), (Stats::Units::Rate<Stats::Units::Count,
-        Stats::Units::Count>::toString()));
+    ASSERT_EQ(unit->getUnitString(), (Stats::units::Rate<Stats::units::Count,
+        Stats::units::Count>::toString()));
 }
 
 TEST(StatsUnitsTest, Rate2)
 {
-    Stats::Units::Rate<Stats::Units::Tick, Stats::Units::Second> *unit =
-        Stats::Units::Rate<Stats::Units::Tick, Stats::Units::Second>::get();
+    Stats::units::Rate<Stats::units::Tick, Stats::units::Second> *unit =
+        Stats::units::Rate<Stats::units::Tick, Stats::units::Second>::get();
     ASSERT_EQ(unit->getUnitString(), "(Tick/Second)");
-    ASSERT_EQ(unit->getUnitString(), (Stats::Units::Rate<Stats::Units::Tick,
-        Stats::Units::Second>::toString()));
+    ASSERT_EQ(unit->getUnitString(), (Stats::units::Rate<Stats::units::Tick,
+        Stats::units::Second>::toString()));
 }
 
 TEST(StatsUnitsTest, RateOfRates)
 {
-    typedef Stats::Units::Rate<Stats::Units::Bit, Stats::Units::Second>
+    typedef Stats::units::Rate<Stats::units::Bit, Stats::units::Second>
         BitPerSecond;
-    typedef Stats::Units::Rate<Stats::Units::Count, Stats::Units::Cycle>
+    typedef Stats::units::Rate<Stats::units::Count, Stats::units::Cycle>
         CountPerCycle;
-    Stats::Units::Rate<BitPerSecond, CountPerCycle> *unit =
-        Stats::Units::Rate<BitPerSecond, CountPerCycle>::get();
+    Stats::units::Rate<BitPerSecond, CountPerCycle> *unit =
+        Stats::units::Rate<BitPerSecond, CountPerCycle>::get();
     ASSERT_EQ(unit->getUnitString(), "((Bit/Second)/(Count/Cycle))");
     ASSERT_EQ(unit->getUnitString(),
-        (Stats::Units::Rate<BitPerSecond, CountPerCycle>::toString()));
+        (Stats::units::Rate<BitPerSecond, CountPerCycle>::toString()));
 }
 
 TEST(StatsUnitsTest, Ratio)
 {
-    Stats::Units::Ratio *unit = Stats::Units::Ratio::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::Ratio::toString());
+    Stats::units::Ratio *unit = Stats::units::Ratio::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::Ratio::toString());
 }
 
 TEST(StatsUnitsTest, Unspecified)
 {
-    Stats::Units::Unspecified *unit = Stats::Units::Unspecified::get();
-    ASSERT_EQ(unit->getUnitString(), Stats::Units::Unspecified::toString());
+    Stats::units::Unspecified *unit = Stats::units::Unspecified::get();
+    ASSERT_EQ(unit->getUnitString(), Stats::units::Unspecified::toString());
 }

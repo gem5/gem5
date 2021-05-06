@@ -113,7 +113,7 @@ Base::setCache(BaseCache *_cache)
 }
 Base::StatGroup::StatGroup(Stats::Group *parent)
     : Stats::Group(parent),
-    ADD_STAT(pfIssued, Stats::Units::Count::get(), "number of hwpf issued")
+    ADD_STAT(pfIssued, Stats::units::Count::get(), "number of hwpf issued")
 {
 }
 

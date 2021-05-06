@@ -389,20 +389,20 @@ SnoopFilter::updateResponse(const Packet* cpkt, const ResponsePort&
 
 SnoopFilter::SnoopFilterStats::SnoopFilterStats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(totRequests, Stats::Units::Count::get(),
+      ADD_STAT(totRequests, Stats::units::Count::get(),
                "Total number of requests made to the snoop filter."),
-      ADD_STAT(hitSingleRequests, Stats::Units::Count::get(),
+      ADD_STAT(hitSingleRequests, Stats::units::Count::get(),
                "Number of requests hitting in the snoop filter with a single "
                "holder of the requested data."),
-      ADD_STAT(hitMultiRequests, Stats::Units::Count::get(),
+      ADD_STAT(hitMultiRequests, Stats::units::Count::get(),
                "Number of requests hitting in the snoop filter with multiple "
                "(>1) holders of the requested data."),
-      ADD_STAT(totSnoops, Stats::Units::Count::get(),
+      ADD_STAT(totSnoops, Stats::units::Count::get(),
                "Total number of snoops made to the snoop filter."),
-      ADD_STAT(hitSingleSnoops, Stats::Units::Count::get(),
+      ADD_STAT(hitSingleSnoops, Stats::units::Count::get(),
                "Number of snoops hitting in the snoop filter with a single "
                "holder of the requested data."),
-      ADD_STAT(hitMultiSnoops, Stats::Units::Count::get(),
+      ADD_STAT(hitMultiSnoops, Stats::units::Count::get(),
                "Number of snoops hitting in the snoop filter with multiple "
                "(>1) holders of the requested data.")
 {}

@@ -2423,31 +2423,31 @@ TableWalker::pageSizeNtoStatBin(uint8_t N)
 
 TableWalker::TableWalkerStats::TableWalkerStats(Stats::Group *parent)
     : Stats::Group(parent),
-    ADD_STAT(walks, Stats::Units::Count::get(),
+    ADD_STAT(walks, Stats::units::Count::get(),
              "Table walker walks requested"),
-    ADD_STAT(walksShortDescriptor, Stats::Units::Count::get(),
+    ADD_STAT(walksShortDescriptor, Stats::units::Count::get(),
              "Table walker walks initiated with short descriptors"),
-    ADD_STAT(walksLongDescriptor, Stats::Units::Count::get(),
+    ADD_STAT(walksLongDescriptor, Stats::units::Count::get(),
              "Table walker walks initiated with long descriptors"),
-    ADD_STAT(walksShortTerminatedAtLevel, Stats::Units::Count::get(),
+    ADD_STAT(walksShortTerminatedAtLevel, Stats::units::Count::get(),
              "Level at which table walker walks with short descriptors "
              "terminate"),
-    ADD_STAT(walksLongTerminatedAtLevel, Stats::Units::Count::get(),
+    ADD_STAT(walksLongTerminatedAtLevel, Stats::units::Count::get(),
              "Level at which table walker walks with long descriptors "
              "terminate"),
-    ADD_STAT(squashedBefore, Stats::Units::Count::get(),
+    ADD_STAT(squashedBefore, Stats::units::Count::get(),
              "Table walks squashed before starting"),
-    ADD_STAT(squashedAfter, Stats::Units::Count::get(),
+    ADD_STAT(squashedAfter, Stats::units::Count::get(),
              "Table walks squashed after completion"),
-    ADD_STAT(walkWaitTime, Stats::Units::Tick::get(),
+    ADD_STAT(walkWaitTime, Stats::units::Tick::get(),
              "Table walker wait (enqueue to first request) latency"),
-    ADD_STAT(walkServiceTime, Stats::Units::Tick::get(),
+    ADD_STAT(walkServiceTime, Stats::units::Tick::get(),
              "Table walker service (enqueue to completion) latency"),
-    ADD_STAT(pendingWalks, Stats::Units::Tick::get(),
+    ADD_STAT(pendingWalks, Stats::units::Tick::get(),
              "Table walker pending requests distribution"),
-    ADD_STAT(pageSizes, Stats::Units::Count::get(),
+    ADD_STAT(pageSizes, Stats::units::Count::get(),
              "Table walker page sizes translated"),
-    ADD_STAT(requestOrigin, Stats::Units::Count::get(),
+    ADD_STAT(requestOrigin, Stats::units::Count::get(),
              "Table walker requests started/completed, data/inst")
 {
     walksShortDescriptor

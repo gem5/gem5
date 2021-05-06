@@ -54,22 +54,22 @@ Root::RootStats &rootStats = Root::RootStats::instance;
 
 Root::RootStats::RootStats()
     : Stats::Group(nullptr),
-    ADD_STAT(simSeconds, Stats::Units::Second::get(),
+    ADD_STAT(simSeconds, Stats::units::Second::get(),
              "Number of seconds simulated"),
-    ADD_STAT(simTicks, Stats::Units::Tick::get(),
+    ADD_STAT(simTicks, Stats::units::Tick::get(),
              "Number of ticks simulated"),
-    ADD_STAT(finalTick, Stats::Units::Tick::get(),
+    ADD_STAT(finalTick, Stats::units::Tick::get(),
              "Number of ticks from beginning of simulation "
              "(restored from checkpoints and never reset)"),
-    ADD_STAT(simFreq, Stats::Units::Rate<
-                Stats::Units::Tick, Stats::Units::Second>::get(),
+    ADD_STAT(simFreq, Stats::units::Rate<
+                Stats::units::Tick, Stats::units::Second>::get(),
              "The number of ticks per simulated second"),
-    ADD_STAT(hostSeconds, Stats::Units::Second::get(),
+    ADD_STAT(hostSeconds, Stats::units::Second::get(),
              "Real time elapsed on the host"),
-    ADD_STAT(hostTickRate, Stats::Units::Rate<
-                Stats::Units::Tick, Stats::Units::Second>::get(),
+    ADD_STAT(hostTickRate, Stats::units::Rate<
+                Stats::units::Tick, Stats::units::Second>::get(),
              "The number of ticks simulated per host second (ticks/s)"),
-    ADD_STAT(hostMemory, Stats::Units::Byte::get(),
+    ADD_STAT(hostMemory, Stats::units::Byte::get(),
              "Number of bytes of host memory used"),
 
     statTime(true),

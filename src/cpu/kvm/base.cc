@@ -260,25 +260,25 @@ BaseKvmCPU::startupThread()
 
 BaseKvmCPU::StatGroup::StatGroup(Stats::Group *parent)
     : Stats::Group(parent),
-    ADD_STAT(committedInsts, Stats::Units::Count::get(),
+    ADD_STAT(committedInsts, Stats::units::Count::get(),
              "Number of instructions committed"),
-    ADD_STAT(numVMExits, Stats::Units::Count::get(),
+    ADD_STAT(numVMExits, Stats::units::Count::get(),
              "total number of KVM exits"),
-    ADD_STAT(numVMHalfEntries, Stats::Units::Count::get(),
+    ADD_STAT(numVMHalfEntries, Stats::units::Count::get(),
              "number of KVM entries to finalize pending operations"),
-    ADD_STAT(numExitSignal, Stats::Units::Count::get(),
+    ADD_STAT(numExitSignal, Stats::units::Count::get(),
              "exits due to signal delivery"),
-    ADD_STAT(numMMIO, Stats::Units::Count::get(),
+    ADD_STAT(numMMIO, Stats::units::Count::get(),
              "number of VM exits due to memory mapped IO"),
-    ADD_STAT(numCoalescedMMIO, Stats::Units::Count::get(),
+    ADD_STAT(numCoalescedMMIO, Stats::units::Count::get(),
              "number of coalesced memory mapped IO requests"),
-    ADD_STAT(numIO, Stats::Units::Count::get(),
+    ADD_STAT(numIO, Stats::units::Count::get(),
              "number of VM exits due to legacy IO"),
-    ADD_STAT(numHalt, Stats::Units::Count::get(),
+    ADD_STAT(numHalt, Stats::units::Count::get(),
              "number of VM exits due to wait for interrupt instructions"),
-    ADD_STAT(numInterrupts, Stats::Units::Count::get(),
+    ADD_STAT(numInterrupts, Stats::units::Count::get(),
              "number of interrupts delivered"),
-    ADD_STAT(numHypercalls, Stats::Units::Count::get(), "number of hypercalls")
+    ADD_STAT(numHypercalls, Stats::units::Count::get(), "number of hypercalls")
 {
 }
 

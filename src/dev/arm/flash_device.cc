@@ -458,17 +458,17 @@ FlashDevice::getUnknownPages(uint32_t index)
 FlashDevice::
 FlashDeviceStats::FlashDeviceStats(Stats::Group *parent)
     : Stats::Group(parent, "FlashDevice"),
-    ADD_STAT(totalGCActivations, Stats::Units::Count::get(),
+    ADD_STAT(totalGCActivations, Stats::units::Count::get(),
              "Number of Garbage collector activations"),
-    ADD_STAT(writeAccess, Stats::Units::Count::get(),
+    ADD_STAT(writeAccess, Stats::units::Count::get(),
              "Histogram of write addresses"),
-    ADD_STAT(readAccess, Stats::Units::Count::get(),
+    ADD_STAT(readAccess, Stats::units::Count::get(),
              "Histogram of read addresses"),
-    ADD_STAT(fileSystemAccess, Stats::Units::Count::get(),
+    ADD_STAT(fileSystemAccess, Stats::units::Count::get(),
              "Histogram of file system accesses"),
-    ADD_STAT(writeLatency, Stats::Units::Tick::get(),
+    ADD_STAT(writeLatency, Stats::units::Tick::get(),
              "Histogram of write latency"),
-    ADD_STAT(readLatency, Stats::Units::Tick::get(),
+    ADD_STAT(readLatency, Stats::units::Tick::get(),
              "Histogram of read latency")
 {
     using namespace Stats;

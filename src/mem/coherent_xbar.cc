@@ -60,9 +60,9 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams &p)
       pointOfCoherency(p.point_of_coherency),
       pointOfUnification(p.point_of_unification),
 
-      ADD_STAT(snoops, Stats::Units::Count::get(), "Total snoops"),
-      ADD_STAT(snoopTraffic, Stats::Units::Byte::get(), "Total snoop traffic"),
-      ADD_STAT(snoopFanout, Stats::Units::Count::get(),
+      ADD_STAT(snoops, Stats::units::Count::get(), "Total snoops"),
+      ADD_STAT(snoopTraffic, Stats::units::Byte::get(), "Total snoop traffic"),
+      ADD_STAT(snoopFanout, Stats::units::Count::get(),
                "Request fanout histogram")
 {
     // create the ports based on the size of the memory-side port and

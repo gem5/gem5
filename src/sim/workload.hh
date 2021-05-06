@@ -53,9 +53,9 @@ class Workload : public SimObject
             Stats::Scalar quiesce;
 
             InstStats(Stats::Group *parent) : Stats::Group(parent, "inst"),
-                ADD_STAT(arm, Stats::Units::Count::get(),
+                ADD_STAT(arm, Stats::units::Count::get(),
                          "number of arm instructions executed"),
-                ADD_STAT(quiesce, Stats::Units::Count::get(),
+                ADD_STAT(quiesce, Stats::units::Count::get(),
                          "number of quiesce instructions executed")
             {}
 

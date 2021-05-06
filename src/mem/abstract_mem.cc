@@ -111,30 +111,30 @@ AbstractMemory::setBackingStore(uint8_t* pmem_addr)
 
 AbstractMemory::MemStats::MemStats(AbstractMemory &_mem)
     : Stats::Group(&_mem), mem(_mem),
-    ADD_STAT(bytesRead, Stats::Units::Byte::get(),
+    ADD_STAT(bytesRead, Stats::units::Byte::get(),
              "Number of bytes read from this memory"),
-    ADD_STAT(bytesInstRead, Stats::Units::Byte::get(),
+    ADD_STAT(bytesInstRead, Stats::units::Byte::get(),
              "Number of instructions bytes read from this memory"),
-    ADD_STAT(bytesWritten, Stats::Units::Byte::get(),
+    ADD_STAT(bytesWritten, Stats::units::Byte::get(),
              "Number of bytes written to this memory"),
-    ADD_STAT(numReads, Stats::Units::Count::get(),
+    ADD_STAT(numReads, Stats::units::Count::get(),
              "Number of read requests responded to by this memory"),
-    ADD_STAT(numWrites, Stats::Units::Count::get(),
+    ADD_STAT(numWrites, Stats::units::Count::get(),
              "Number of write requests responded to by this memory"),
-    ADD_STAT(numOther, Stats::Units::Count::get(),
+    ADD_STAT(numOther, Stats::units::Count::get(),
              "Number of other requests responded to by this memory"),
-    ADD_STAT(bwRead, Stats::Units::Rate<
-                Stats::Units::Byte, Stats::Units::Second>::get(),
+    ADD_STAT(bwRead, Stats::units::Rate<
+                Stats::units::Byte, Stats::units::Second>::get(),
              "Total read bandwidth from this memory"),
     ADD_STAT(bwInstRead,
-             Stats::Units::Rate<
-                Stats::Units::Byte, Stats::Units::Second>::get(),
+             Stats::units::Rate<
+                Stats::units::Byte, Stats::units::Second>::get(),
              "Instruction read bandwidth from this memory"),
-    ADD_STAT(bwWrite, Stats::Units::Rate<
-                Stats::Units::Byte, Stats::Units::Second>::get(),
+    ADD_STAT(bwWrite, Stats::units::Rate<
+                Stats::units::Byte, Stats::units::Second>::get(),
              "Write bandwidth from this memory"),
-    ADD_STAT(bwTotal, Stats::Units::Rate<
-                Stats::Units::Byte, Stats::Units::Second>::get(),
+    ADD_STAT(bwTotal, Stats::units::Rate<
+                Stats::units::Byte, Stats::units::Second>::get(),
              "Total bandwidth to/from this memory")
 {
 }

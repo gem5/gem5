@@ -119,26 +119,26 @@ Decode::name() const
 
 Decode::DecodeStats::DecodeStats(CPU *cpu)
     : Stats::Group(cpu, "decode"),
-      ADD_STAT(idleCycles, Stats::Units::Cycle::get(),
+      ADD_STAT(idleCycles, Stats::units::Cycle::get(),
                "Number of cycles decode is idle"),
-      ADD_STAT(blockedCycles, Stats::Units::Cycle::get(),
+      ADD_STAT(blockedCycles, Stats::units::Cycle::get(),
                "Number of cycles decode is blocked"),
-      ADD_STAT(runCycles, Stats::Units::Cycle::get(),
+      ADD_STAT(runCycles, Stats::units::Cycle::get(),
                "Number of cycles decode is running"),
-      ADD_STAT(unblockCycles, Stats::Units::Cycle::get(),
+      ADD_STAT(unblockCycles, Stats::units::Cycle::get(),
                "Number of cycles decode is unblocking"),
-      ADD_STAT(squashCycles, Stats::Units::Cycle::get(),
+      ADD_STAT(squashCycles, Stats::units::Cycle::get(),
                "Number of cycles decode is squashing"),
-      ADD_STAT(branchResolved, Stats::Units::Count::get(),
+      ADD_STAT(branchResolved, Stats::units::Count::get(),
                "Number of times decode resolved a branch"),
-      ADD_STAT(branchMispred, Stats::Units::Count::get(),
+      ADD_STAT(branchMispred, Stats::units::Count::get(),
                "Number of times decode detected a branch misprediction"),
-      ADD_STAT(controlMispred, Stats::Units::Count::get(),
+      ADD_STAT(controlMispred, Stats::units::Count::get(),
                "Number of times decode detected an instruction incorrectly "
                "predicted as a control"),
-      ADD_STAT(decodedInsts, Stats::Units::Count::get(),
+      ADD_STAT(decodedInsts, Stats::units::Count::get(),
                "Number of instructions handled by decode"),
-      ADD_STAT(squashedInsts, Stats::Units::Count::get(),
+      ADD_STAT(squashedInsts, Stats::units::Count::get(),
                "Number of squashed instructions handled by decode")
 {
     idleCycles.prereq(idleCycles);

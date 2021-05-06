@@ -719,39 +719,39 @@ TAGEBase::getGHR(ThreadID tid, BranchInfo *bi) const
 TAGEBase::TAGEBaseStats::TAGEBaseStats(
     Stats::Group *parent, unsigned nHistoryTables)
     : Stats::Group(parent),
-      ADD_STAT(longestMatchProviderCorrect, Stats::Units::Count::get(),
+      ADD_STAT(longestMatchProviderCorrect, Stats::units::Count::get(),
                "Number of times TAGE Longest Match is the provider and the "
                "prediction is correct"),
-      ADD_STAT(altMatchProviderCorrect, Stats::Units::Count::get(),
+      ADD_STAT(altMatchProviderCorrect, Stats::units::Count::get(),
                "Number of times TAGE Alt Match is the provider and the "
                "prediction is correct"),
-      ADD_STAT(bimodalAltMatchProviderCorrect, Stats::Units::Count::get(),
+      ADD_STAT(bimodalAltMatchProviderCorrect, Stats::units::Count::get(),
                "Number of times TAGE Alt Match is the bimodal and it is the "
                "provider and the prediction is correct"),
-      ADD_STAT(bimodalProviderCorrect, Stats::Units::Count::get(),
+      ADD_STAT(bimodalProviderCorrect, Stats::units::Count::get(),
                "Number of times there are no hits on the TAGE tables and the "
                "bimodal prediction is correct"),
-      ADD_STAT(longestMatchProviderWrong, Stats::Units::Count::get(),
+      ADD_STAT(longestMatchProviderWrong, Stats::units::Count::get(),
                "Number of times TAGE Longest Match is the provider and the "
                "prediction is wrong"),
-      ADD_STAT(altMatchProviderWrong, Stats::Units::Count::get(),
+      ADD_STAT(altMatchProviderWrong, Stats::units::Count::get(),
                "Number of times TAGE Alt Match is the provider and the "
                "prediction is wrong"),
-      ADD_STAT(bimodalAltMatchProviderWrong, Stats::Units::Count::get(),
+      ADD_STAT(bimodalAltMatchProviderWrong, Stats::units::Count::get(),
                "Number of times TAGE Alt Match is the bimodal and it is the "
                "provider and the prediction is wrong"),
-      ADD_STAT(bimodalProviderWrong, Stats::Units::Count::get(),
+      ADD_STAT(bimodalProviderWrong, Stats::units::Count::get(),
                "Number of times there are no hits on the TAGE tables and the "
                "bimodal prediction is wrong"),
-      ADD_STAT(altMatchProviderWouldHaveHit, Stats::Units::Count::get(),
+      ADD_STAT(altMatchProviderWouldHaveHit, Stats::units::Count::get(),
                "Number of times TAGE Longest Match is the provider, the "
                "prediction is wrong and Alt Match prediction was correct"),
-      ADD_STAT(longestMatchProviderWouldHaveHit, Stats::Units::Count::get(),
+      ADD_STAT(longestMatchProviderWouldHaveHit, Stats::units::Count::get(),
                "Number of times TAGE Alt Match is the provider, the "
                "prediction is wrong and Longest Match prediction was correct"),
-      ADD_STAT(longestMatchProvider, Stats::Units::Count::get(),
+      ADD_STAT(longestMatchProvider, Stats::units::Count::get(),
                "TAGE provider for longest match"),
-      ADD_STAT(altMatchProvider, Stats::Units::Count::get(),
+      ADD_STAT(altMatchProvider, Stats::units::Count::get(),
                "TAGE provider for alt match")
 {
     longestMatchProvider.init(nHistoryTables + 1);

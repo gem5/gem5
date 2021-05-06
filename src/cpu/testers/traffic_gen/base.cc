@@ -332,34 +332,34 @@ BaseTrafficGen::noProgress()
 
 BaseTrafficGen::StatGroup::StatGroup(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(numSuppressed, Stats::Units::Count::get(),
+      ADD_STAT(numSuppressed, Stats::units::Count::get(),
                "Number of suppressed packets to non-memory space"),
-      ADD_STAT(numPackets, Stats::Units::Count::get(),
+      ADD_STAT(numPackets, Stats::units::Count::get(),
                "Number of packets generated"),
-      ADD_STAT(numRetries, Stats::Units::Count::get(), "Number of retries"),
-      ADD_STAT(retryTicks, Stats::Units::Tick::get(),
+      ADD_STAT(numRetries, Stats::units::Count::get(), "Number of retries"),
+      ADD_STAT(retryTicks, Stats::units::Tick::get(),
                "Time spent waiting due to back-pressure"),
-      ADD_STAT(bytesRead, Stats::Units::Byte::get(), "Number of bytes read"),
-      ADD_STAT(bytesWritten, Stats::Units::Byte::get(),
+      ADD_STAT(bytesRead, Stats::units::Byte::get(), "Number of bytes read"),
+      ADD_STAT(bytesWritten, Stats::units::Byte::get(),
                "Number of bytes written"),
-      ADD_STAT(totalReadLatency, Stats::Units::Tick::get(),
+      ADD_STAT(totalReadLatency, Stats::units::Tick::get(),
                "Total latency of read requests"),
-      ADD_STAT(totalWriteLatency, Stats::Units::Tick::get(),
+      ADD_STAT(totalWriteLatency, Stats::units::Tick::get(),
                "Total latency of write requests"),
-      ADD_STAT(totalReads, Stats::Units::Count::get(), "Total num of reads"),
-      ADD_STAT(totalWrites, Stats::Units::Count::get(), "Total num of writes"),
-      ADD_STAT(avgReadLatency, Stats::Units::Rate<
-                    Stats::Units::Tick, Stats::Units::Count>::get(),
+      ADD_STAT(totalReads, Stats::units::Count::get(), "Total num of reads"),
+      ADD_STAT(totalWrites, Stats::units::Count::get(), "Total num of writes"),
+      ADD_STAT(avgReadLatency, Stats::units::Rate<
+                    Stats::units::Tick, Stats::units::Count>::get(),
                "Avg latency of read requests", totalReadLatency / totalReads),
-      ADD_STAT(avgWriteLatency, Stats::Units::Rate<
-                    Stats::Units::Tick, Stats::Units::Count>::get(),
+      ADD_STAT(avgWriteLatency, Stats::units::Rate<
+                    Stats::units::Tick, Stats::units::Count>::get(),
                "Avg latency of write requests",
                totalWriteLatency / totalWrites),
-      ADD_STAT(readBW, Stats::Units::Rate<
-                    Stats::Units::Byte, Stats::Units::Second>::get(),
+      ADD_STAT(readBW, Stats::units::Rate<
+                    Stats::units::Byte, Stats::units::Second>::get(),
                "Read bandwidth", bytesRead / simSeconds),
-      ADD_STAT(writeBW, Stats::Units::Rate<
-                    Stats::Units::Byte, Stats::Units::Second>::get(),
+      ADD_STAT(writeBW, Stats::units::Rate<
+                    Stats::units::Byte, Stats::units::Second>::get(),
                "Write bandwidth", bytesWritten / simSeconds)
 {
 }

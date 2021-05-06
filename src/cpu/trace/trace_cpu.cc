@@ -203,15 +203,15 @@ TraceCPU::checkAndSchedExitEvent()
 }
  TraceCPU::TraceStats::TraceStats(TraceCPU *trace) :
     Stats::Group(trace),
-    ADD_STAT(numSchedDcacheEvent, Stats::Units::Count::get(),
+    ADD_STAT(numSchedDcacheEvent, Stats::units::Count::get(),
              "Number of events scheduled to trigger data request generator"),
-    ADD_STAT(numSchedIcacheEvent, Stats::Units::Count::get(),
+    ADD_STAT(numSchedIcacheEvent, Stats::units::Count::get(),
              "Number of events scheduled to trigger instruction request "
              "generator"),
-    ADD_STAT(numOps, Stats::Units::Count::get(),
+    ADD_STAT(numOps, Stats::units::Count::get(),
              "Number of micro-ops simulated by the Trace CPU"),
-    ADD_STAT(cpi, Stats::Units::Rate<
-                    Stats::Units::Cycle, Stats::Units::Count>::get(),
+    ADD_STAT(cpi, Stats::units::Rate<
+                    Stats::units::Cycle, Stats::units::Count>::get(),
              "Cycles per micro-op used as a proxy for CPI",
              trace->baseStats.numCycles / numOps)
 {
@@ -222,25 +222,25 @@ TraceCPU::ElasticDataGen::
 ElasticDataGenStatGroup::ElasticDataGenStatGroup(Stats::Group *parent,
                                                  const std::string& _name) :
     Stats::Group(parent, _name.c_str()),
-    ADD_STAT(maxDependents, Stats::Units::Count::get(),
+    ADD_STAT(maxDependents, Stats::units::Count::get(),
              "Max number of dependents observed on a node"),
-    ADD_STAT(maxReadyListSize, Stats::Units::Count::get(),
+    ADD_STAT(maxReadyListSize, Stats::units::Count::get(),
              "Max size of the ready list observed"),
-    ADD_STAT(numSendAttempted, Stats::Units::Count::get(),
+    ADD_STAT(numSendAttempted, Stats::units::Count::get(),
              "Number of first attempts to send a request"),
-    ADD_STAT(numSendSucceeded, Stats::Units::Count::get(),
+    ADD_STAT(numSendSucceeded, Stats::units::Count::get(),
              "Number of successful first attempts"),
-    ADD_STAT(numSendFailed, Stats::Units::Count::get(),
+    ADD_STAT(numSendFailed, Stats::units::Count::get(),
              "Number of failed first attempts"),
-    ADD_STAT(numRetrySucceeded, Stats::Units::Count::get(),
+    ADD_STAT(numRetrySucceeded, Stats::units::Count::get(),
              "Number of successful retries"),
-    ADD_STAT(numSplitReqs, Stats::Units::Count::get(),
+    ADD_STAT(numSplitReqs, Stats::units::Count::get(),
              "Number of split requests"),
-    ADD_STAT(numSOLoads, Stats::Units::Count::get(),
+    ADD_STAT(numSOLoads, Stats::units::Count::get(),
              "Number of strictly ordered loads"),
-    ADD_STAT(numSOStores, Stats::Units::Count::get(),
+    ADD_STAT(numSOStores, Stats::units::Count::get(),
              "Number of strictly ordered stores"),
-    ADD_STAT(dataLastTick, Stats::Units::Tick::get(),
+    ADD_STAT(dataLastTick, Stats::units::Tick::get(),
              "Last tick simulated from the elastic data trace")
 {
 }
@@ -968,15 +968,15 @@ TraceCPU::ElasticDataGen::HardwareResource::printOccupancy()
 TraceCPU::FixedRetryGen::FixedRetryGenStatGroup::FixedRetryGenStatGroup(
         Stats::Group *parent, const std::string& _name) :
     Stats::Group(parent, _name.c_str()),
-    ADD_STAT(numSendAttempted, Stats::Units::Count::get(),
+    ADD_STAT(numSendAttempted, Stats::units::Count::get(),
              "Number of first attempts to send a request"),
-    ADD_STAT(numSendSucceeded, Stats::Units::Count::get(),
+    ADD_STAT(numSendSucceeded, Stats::units::Count::get(),
              "Number of successful first attempts"),
-    ADD_STAT(numSendFailed, Stats::Units::Count::get(),
+    ADD_STAT(numSendFailed, Stats::units::Count::get(),
              "Number of failed first attempts"),
-    ADD_STAT(numRetrySucceeded, Stats::Units::Count::get(),
+    ADD_STAT(numRetrySucceeded, Stats::units::Count::get(),
              "Number of successful retries"),
-    ADD_STAT(instLastTick, Stats::Units::Tick::get(),
+    ADD_STAT(instLastTick, Stats::units::Tick::get(),
              "Last tick simulated from the fixed inst trace")
 {
 

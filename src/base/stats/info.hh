@@ -75,7 +75,7 @@ class Info
     /** The separator string used for vectors, dist, etc. */
     static std::string separatorString;
     /** The unit of the stat. */
-    const Units::Base* unit = Units::Unspecified::get();
+    const units::Base* unit = units::Unspecified::get();
     /** The description of the stat. */
     std::string desc;
     /** The formatting flags. */

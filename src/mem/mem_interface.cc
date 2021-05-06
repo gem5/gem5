@@ -1849,66 +1849,66 @@ DRAMInterface::DRAMStats::DRAMStats(DRAMInterface &_dram)
     : Stats::Group(&_dram),
     dram(_dram),
 
-    ADD_STAT(readBursts, Stats::Units::Count::get(),
+    ADD_STAT(readBursts, Stats::units::Count::get(),
              "Number of DRAM read bursts"),
-    ADD_STAT(writeBursts, Stats::Units::Count::get(),
+    ADD_STAT(writeBursts, Stats::units::Count::get(),
              "Number of DRAM write bursts"),
 
-    ADD_STAT(perBankRdBursts, Stats::Units::Count::get(),
+    ADD_STAT(perBankRdBursts, Stats::units::Count::get(),
              "Per bank write bursts"),
-    ADD_STAT(perBankWrBursts, Stats::Units::Count::get(),
+    ADD_STAT(perBankWrBursts, Stats::units::Count::get(),
              "Per bank write bursts"),
 
-    ADD_STAT(totQLat, Stats::Units::Tick::get(), "Total ticks spent queuing"),
-    ADD_STAT(totBusLat, Stats::Units::Tick::get(),
+    ADD_STAT(totQLat, Stats::units::Tick::get(), "Total ticks spent queuing"),
+    ADD_STAT(totBusLat, Stats::units::Tick::get(),
              "Total ticks spent in databus transfers"),
-    ADD_STAT(totMemAccLat, Stats::Units::Tick::get(),
+    ADD_STAT(totMemAccLat, Stats::units::Tick::get(),
              "Total ticks spent from burst creation until serviced "
              "by the DRAM"),
 
-    ADD_STAT(avgQLat, Stats::Units::Rate<
-                Stats::Units::Tick, Stats::Units::Count>::get(),
+    ADD_STAT(avgQLat, Stats::units::Rate<
+                Stats::units::Tick, Stats::units::Count>::get(),
              "Average queueing delay per DRAM burst"),
-    ADD_STAT(avgBusLat, Stats::Units::Rate<
-                Stats::Units::Tick, Stats::Units::Count>::get(),
+    ADD_STAT(avgBusLat, Stats::units::Rate<
+                Stats::units::Tick, Stats::units::Count>::get(),
              "Average bus latency per DRAM burst"),
-    ADD_STAT(avgMemAccLat, Stats::Units::Rate<
-                Stats::Units::Tick, Stats::Units::Count>::get(),
+    ADD_STAT(avgMemAccLat, Stats::units::Rate<
+                Stats::units::Tick, Stats::units::Count>::get(),
              "Average memory access latency per DRAM burst"),
 
-    ADD_STAT(readRowHits, Stats::Units::Count::get(),
+    ADD_STAT(readRowHits, Stats::units::Count::get(),
              "Number of row buffer hits during reads"),
-    ADD_STAT(writeRowHits, Stats::Units::Count::get(),
+    ADD_STAT(writeRowHits, Stats::units::Count::get(),
              "Number of row buffer hits during writes"),
-    ADD_STAT(readRowHitRate, Stats::Units::Ratio::get(),
+    ADD_STAT(readRowHitRate, Stats::units::Ratio::get(),
              "Row buffer hit rate for reads"),
-    ADD_STAT(writeRowHitRate, Stats::Units::Ratio::get(),
+    ADD_STAT(writeRowHitRate, Stats::units::Ratio::get(),
              "Row buffer hit rate for writes"),
 
-    ADD_STAT(bytesPerActivate, Stats::Units::Byte::get(),
+    ADD_STAT(bytesPerActivate, Stats::units::Byte::get(),
              "Bytes accessed per row activation"),
-    ADD_STAT(bytesRead, Stats::Units::Byte::get(),
+    ADD_STAT(bytesRead, Stats::units::Byte::get(),
              "Total number of bytes read from DRAM"),
-    ADD_STAT(bytesWritten, Stats::Units::Byte::get(),
+    ADD_STAT(bytesWritten, Stats::units::Byte::get(),
             "Total number of bytes written to DRAM"),
-    ADD_STAT(avgRdBW, Stats::Units::Rate<
-                Stats::Units::Byte, Stats::Units::Second>::get(),
+    ADD_STAT(avgRdBW, Stats::units::Rate<
+                Stats::units::Byte, Stats::units::Second>::get(),
              "Average DRAM read bandwidth in MiBytes/s"),
-    ADD_STAT(avgWrBW, Stats::Units::Rate<
-                Stats::Units::Byte, Stats::Units::Second>::get(),
+    ADD_STAT(avgWrBW, Stats::units::Rate<
+                Stats::units::Byte, Stats::units::Second>::get(),
              "Average DRAM write bandwidth in MiBytes/s"),
-    ADD_STAT(peakBW,  Stats::Units::Rate<
-                Stats::Units::Byte, Stats::Units::Second>::get(),
+    ADD_STAT(peakBW,  Stats::units::Rate<
+                Stats::units::Byte, Stats::units::Second>::get(),
              "Theoretical peak bandwidth in MiByte/s"),
 
-    ADD_STAT(busUtil, Stats::Units::Ratio::get(),
+    ADD_STAT(busUtil, Stats::units::Ratio::get(),
              "Data bus utilization in percentage"),
-    ADD_STAT(busUtilRead, Stats::Units::Ratio::get(),
+    ADD_STAT(busUtilRead, Stats::units::Ratio::get(),
              "Data bus utilization in percentage for reads"),
-    ADD_STAT(busUtilWrite, Stats::Units::Ratio::get(),
+    ADD_STAT(busUtilWrite, Stats::units::Ratio::get(),
              "Data bus utilization in percentage for writes"),
 
-    ADD_STAT(pageHitRate, Stats::Units::Ratio::get(),
+    ADD_STAT(pageHitRate, Stats::units::Ratio::get(),
              "Row buffer hit rate, read and write combined")
 
 {
@@ -1966,35 +1966,35 @@ DRAMInterface::RankStats::RankStats(DRAMInterface &_dram, Rank &_rank)
     : Stats::Group(&_dram, csprintf("rank%d", _rank.rank).c_str()),
     rank(_rank),
 
-    ADD_STAT(actEnergy, Stats::Units::Joule::get(),
+    ADD_STAT(actEnergy, Stats::units::Joule::get(),
              "Energy for activate commands per rank (pJ)"),
-    ADD_STAT(preEnergy, Stats::Units::Joule::get(),
+    ADD_STAT(preEnergy, Stats::units::Joule::get(),
              "Energy for precharge commands per rank (pJ)"),
-    ADD_STAT(readEnergy, Stats::Units::Joule::get(),
+    ADD_STAT(readEnergy, Stats::units::Joule::get(),
              "Energy for read commands per rank (pJ)"),
-    ADD_STAT(writeEnergy, Stats::Units::Joule::get(),
+    ADD_STAT(writeEnergy, Stats::units::Joule::get(),
              "Energy for write commands per rank (pJ)"),
-    ADD_STAT(refreshEnergy, Stats::Units::Joule::get(),
+    ADD_STAT(refreshEnergy, Stats::units::Joule::get(),
              "Energy for refresh commands per rank (pJ)"),
-    ADD_STAT(actBackEnergy, Stats::Units::Joule::get(),
+    ADD_STAT(actBackEnergy, Stats::units::Joule::get(),
              "Energy for active background per rank (pJ)"),
-    ADD_STAT(preBackEnergy, Stats::Units::Joule::get(),
+    ADD_STAT(preBackEnergy, Stats::units::Joule::get(),
              "Energy for precharge background per rank (pJ)"),
-    ADD_STAT(actPowerDownEnergy, Stats::Units::Joule::get(),
+    ADD_STAT(actPowerDownEnergy, Stats::units::Joule::get(),
              "Energy for active power-down per rank (pJ)"),
-    ADD_STAT(prePowerDownEnergy, Stats::Units::Joule::get(),
+    ADD_STAT(prePowerDownEnergy, Stats::units::Joule::get(),
              "Energy for precharge power-down per rank (pJ)"),
-    ADD_STAT(selfRefreshEnergy, Stats::Units::Joule::get(),
+    ADD_STAT(selfRefreshEnergy, Stats::units::Joule::get(),
              "Energy for self refresh per rank (pJ)"),
 
-    ADD_STAT(totalEnergy, Stats::Units::Joule::get(),
+    ADD_STAT(totalEnergy, Stats::units::Joule::get(),
              "Total energy per rank (pJ)"),
-    ADD_STAT(averagePower, Stats::Units::Watt::get(),
+    ADD_STAT(averagePower, Stats::units::Watt::get(),
              "Core power per rank (mW)"),
 
-    ADD_STAT(totalIdleTime, Stats::Units::Tick::get(),
+    ADD_STAT(totalIdleTime, Stats::units::Tick::get(),
              "Total Idle time Per DRAM Rank"),
-    ADD_STAT(pwrStateTime, Stats::Units::Tick::get(),
+    ADD_STAT(pwrStateTime, Stats::units::Tick::get(),
              "Time in different power states")
 {
 }
@@ -2516,57 +2516,57 @@ NVMInterface::NVMStats::NVMStats(NVMInterface &_nvm)
     : Stats::Group(&_nvm),
     nvm(_nvm),
 
-    ADD_STAT(readBursts, Stats::Units::Count::get(),
+    ADD_STAT(readBursts, Stats::units::Count::get(),
              "Number of NVM read bursts"),
-    ADD_STAT(writeBursts, Stats::Units::Count::get(),
+    ADD_STAT(writeBursts, Stats::units::Count::get(),
              "Number of NVM write bursts"),
 
-    ADD_STAT(perBankRdBursts, Stats::Units::Count::get(),
+    ADD_STAT(perBankRdBursts, Stats::units::Count::get(),
              "Per bank write bursts"),
-    ADD_STAT(perBankWrBursts, Stats::Units::Count::get(),
+    ADD_STAT(perBankWrBursts, Stats::units::Count::get(),
              "Per bank write bursts"),
 
-    ADD_STAT(totQLat, Stats::Units::Tick::get(), "Total ticks spent queuing"),
-    ADD_STAT(totBusLat, Stats::Units::Tick::get(),
+    ADD_STAT(totQLat, Stats::units::Tick::get(), "Total ticks spent queuing"),
+    ADD_STAT(totBusLat, Stats::units::Tick::get(),
              "Total ticks spent in databus transfers"),
-    ADD_STAT(totMemAccLat, Stats::Units::Tick::get(),
+    ADD_STAT(totMemAccLat, Stats::units::Tick::get(),
              "Total ticks spent from burst creation until serviced "
              "by the NVM"),
-    ADD_STAT(avgQLat, Stats::Units::Rate<
-                Stats::Units::Tick, Stats::Units::Count>::get(),
+    ADD_STAT(avgQLat, Stats::units::Rate<
+                Stats::units::Tick, Stats::units::Count>::get(),
              "Average queueing delay per NVM burst"),
-    ADD_STAT(avgBusLat, Stats::Units::Rate<
-                Stats::Units::Tick, Stats::Units::Count>::get(),
+    ADD_STAT(avgBusLat, Stats::units::Rate<
+                Stats::units::Tick, Stats::units::Count>::get(),
              "Average bus latency per NVM burst"),
-    ADD_STAT(avgMemAccLat, Stats::Units::Rate<
-                Stats::Units::Tick, Stats::Units::Count>::get(),
+    ADD_STAT(avgMemAccLat, Stats::units::Rate<
+                Stats::units::Tick, Stats::units::Count>::get(),
              "Average memory access latency per NVM burst"),
 
-    ADD_STAT(bytesRead, Stats::Units::Byte::get(),
+    ADD_STAT(bytesRead, Stats::units::Byte::get(),
              "Total number of bytes read from DRAM"),
-    ADD_STAT(bytesWritten, Stats::Units::Byte::get(),
+    ADD_STAT(bytesWritten, Stats::units::Byte::get(),
              "Total number of bytes written to DRAM"),
-    ADD_STAT(avgRdBW, Stats::Units::Rate<
-                Stats::Units::Byte, Stats::Units::Second>::get(),
+    ADD_STAT(avgRdBW, Stats::units::Rate<
+                Stats::units::Byte, Stats::units::Second>::get(),
              "Average DRAM read bandwidth in MiBytes/s"),
-    ADD_STAT(avgWrBW, Stats::Units::Rate<
-                Stats::Units::Byte, Stats::Units::Second>::get(),
+    ADD_STAT(avgWrBW, Stats::units::Rate<
+                Stats::units::Byte, Stats::units::Second>::get(),
              "Average DRAM write bandwidth in MiBytes/s"),
-    ADD_STAT(peakBW, Stats::Units::Rate<
-                Stats::Units::Byte, Stats::Units::Second>::get(),
+    ADD_STAT(peakBW, Stats::units::Rate<
+                Stats::units::Byte, Stats::units::Second>::get(),
              "Theoretical peak bandwidth in MiByte/s"),
-    ADD_STAT(busUtil, Stats::Units::Ratio::get(),
+    ADD_STAT(busUtil, Stats::units::Ratio::get(),
              "NVM Data bus utilization in percentage"),
-    ADD_STAT(busUtilRead, Stats::Units::Ratio::get(),
+    ADD_STAT(busUtilRead, Stats::units::Ratio::get(),
              "NVM Data bus read utilization in percentage"),
-    ADD_STAT(busUtilWrite, Stats::Units::Ratio::get(),
+    ADD_STAT(busUtilWrite, Stats::units::Ratio::get(),
              "NVM Data bus write utilization in percentage"),
 
-    ADD_STAT(pendingReads, Stats::Units::Count::get(),
+    ADD_STAT(pendingReads, Stats::units::Count::get(),
              "Reads issued to NVM for which data has not been transferred"),
-    ADD_STAT(pendingWrites, Stats::Units::Count::get(),
+    ADD_STAT(pendingWrites, Stats::units::Count::get(),
              "Number of outstanding writes to NVM"),
-    ADD_STAT(bytesPerBank, Stats::Units::Byte::get(),
+    ADD_STAT(bytesPerBank, Stats::units::Byte::get(),
              "Bytes read within a bank before loading new bank")
 
 {

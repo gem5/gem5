@@ -886,27 +886,27 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
 
 ElasticTrace::ElasticTraceStats::ElasticTraceStats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(numRegDep, Stats::Units::Count::get(),
+      ADD_STAT(numRegDep, Stats::units::Count::get(),
                "Number of register dependencies recorded during tracing"),
-      ADD_STAT(numOrderDepStores, Stats::Units::Count::get(),
+      ADD_STAT(numOrderDepStores, Stats::units::Count::get(),
                "Number of commit order (rob) dependencies for a store "
                "recorded on a past load/store during tracing"),
-      ADD_STAT(numIssueOrderDepLoads, Stats::Units::Count::get(),
+      ADD_STAT(numIssueOrderDepLoads, Stats::units::Count::get(),
                "Number of loads that got assigned issue order dependency "
                "because they were dependency-free"),
-      ADD_STAT(numIssueOrderDepStores, Stats::Units::Count::get(),
+      ADD_STAT(numIssueOrderDepStores, Stats::units::Count::get(),
                "Number of stores that got assigned issue order dependency "
                "because they were dependency-free"),
-      ADD_STAT(numIssueOrderDepOther, Stats::Units::Count::get(),
+      ADD_STAT(numIssueOrderDepOther, Stats::units::Count::get(),
                "Number of non load/store insts that got assigned issue order "
                "dependency because they were dependency-free"),
-      ADD_STAT(numFilteredNodes, Stats::Units::Count::get(),
+      ADD_STAT(numFilteredNodes, Stats::units::Count::get(),
                "No. of nodes filtered out before writing the output trace"),
-      ADD_STAT(maxNumDependents, Stats::Units::Count::get(),
+      ADD_STAT(maxNumDependents, Stats::units::Count::get(),
                "Maximum number or dependents on any instruction"),
-      ADD_STAT(maxTempStoreSize, Stats::Units::Count::get(),
+      ADD_STAT(maxTempStoreSize, Stats::units::Count::get(),
                "Maximum size of the temporary store during the run"),
-      ADD_STAT(maxPhysRegDepMapSize, Stats::Units::Count::get(),
+      ADD_STAT(maxPhysRegDepMapSize, Stats::units::Count::get(),
                "Maximum size of register dependency map")
 {
 }

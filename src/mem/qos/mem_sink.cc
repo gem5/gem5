@@ -336,9 +336,9 @@ MemSinkCtrl::drain()
 
 MemSinkCtrl::MemSinkCtrlStats::MemSinkCtrlStats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(numReadRetries, Stats::Units::Count::get(),
+      ADD_STAT(numReadRetries, Stats::units::Count::get(),
                "Number of read retries"),
-      ADD_STAT(numWriteRetries, Stats::Units::Count::get(),
+      ADD_STAT(numWriteRetries, Stats::units::Count::get(),
                "Number of write retries")
 {
 }

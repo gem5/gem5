@@ -370,11 +370,11 @@ BaseCPU::probeInstCommit(const StaticInstPtr &inst, Addr pc)
 BaseCPU::
 BaseCPUStats::BaseCPUStats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(numCycles, Stats::Units::Cycle::get(),
+      ADD_STAT(numCycles, Stats::units::Cycle::get(),
                "Number of cpu cycles simulated"),
-      ADD_STAT(numWorkItemsStarted, Stats::Units::Count::get(),
+      ADD_STAT(numWorkItemsStarted, Stats::units::Count::get(),
                "Number of work items this cpu started"),
-      ADD_STAT(numWorkItemsCompleted, Stats::Units::Count::get(),
+      ADD_STAT(numWorkItemsCompleted, Stats::units::Count::get(),
                "Number of work items this cpu completed")
 {
 }
@@ -734,15 +734,15 @@ BaseCPU::waitForRemoteGDB() const
 
 BaseCPU::GlobalStats::GlobalStats(::Stats::Group *parent)
     : ::Stats::Group(parent),
-    ADD_STAT(simInsts, Stats::Units::Count::get(),
+    ADD_STAT(simInsts, Stats::units::Count::get(),
              "Number of instructions simulated"),
-    ADD_STAT(simOps, Stats::Units::Count::get(),
+    ADD_STAT(simOps, Stats::units::Count::get(),
              "Number of ops (including micro ops) simulated"),
-    ADD_STAT(hostInstRate, Stats::Units::Rate<
-                Stats::Units::Count, Stats::Units::Second>::get(),
+    ADD_STAT(hostInstRate, Stats::units::Rate<
+                Stats::units::Count, Stats::units::Second>::get(),
              "Simulator instruction rate (inst/s)"),
-    ADD_STAT(hostOpRate, Stats::Units::Rate<
-                Stats::Units::Count, Stats::Units::Second>::get(),
+    ADD_STAT(hostOpRate, Stats::units::Rate<
+                Stats::units::Count, Stats::units::Second>::get(),
              "Simulator op (including micro ops) rate (op/s)")
 {
     simInsts

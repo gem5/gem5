@@ -101,72 +101,72 @@ CommMonitor::MonitorStats::MonitorStats(Stats::Group *parent,
     : Stats::Group(parent),
 
       disableBurstLengthHists(params.disable_burst_length_hists),
-      ADD_STAT(readBurstLengthHist, Stats::Units::Byte::get(),
+      ADD_STAT(readBurstLengthHist, Stats::units::Byte::get(),
                "Histogram of burst lengths of transmitted packets"),
-      ADD_STAT(writeBurstLengthHist, Stats::Units::Byte::get(),
+      ADD_STAT(writeBurstLengthHist, Stats::units::Byte::get(),
                "Histogram of burst lengths of transmitted packets"),
 
       disableBandwidthHists(params.disable_bandwidth_hists),
       readBytes(0),
-      ADD_STAT(readBandwidthHist, Stats::Units::Rate<
-                    Stats::Units::Byte, Stats::Units::Second>::get(),
+      ADD_STAT(readBandwidthHist, Stats::units::Rate<
+                    Stats::units::Byte, Stats::units::Second>::get(),
                "Histogram of read bandwidth per sample period"),
-      ADD_STAT(totalReadBytes, Stats::Units::Byte::get(),
+      ADD_STAT(totalReadBytes, Stats::units::Byte::get(),
                "Number of bytes read"),
-      ADD_STAT(averageReadBandwidth, Stats::Units::Rate<
-                    Stats::Units::Byte, Stats::Units::Second>::get(),
+      ADD_STAT(averageReadBandwidth, Stats::units::Rate<
+                    Stats::units::Byte, Stats::units::Second>::get(),
                "Average read bandwidth",
                totalReadBytes / simSeconds),
 
       writtenBytes(0),
-      ADD_STAT(writeBandwidthHist, Stats::Units::Rate<
-                    Stats::Units::Byte, Stats::Units::Second>::get(),
+      ADD_STAT(writeBandwidthHist, Stats::units::Rate<
+                    Stats::units::Byte, Stats::units::Second>::get(),
                "Histogram of write bandwidth"),
-      ADD_STAT(totalWrittenBytes, Stats::Units::Rate<
-                    Stats::Units::Byte, Stats::Units::Second>::get(),
+      ADD_STAT(totalWrittenBytes, Stats::units::Rate<
+                    Stats::units::Byte, Stats::units::Second>::get(),
                "Number of bytes written"),
-      ADD_STAT(averageWriteBandwidth, Stats::Units::Rate<
-                    Stats::Units::Byte, Stats::Units::Second>::get(),
+      ADD_STAT(averageWriteBandwidth, Stats::units::Rate<
+                    Stats::units::Byte, Stats::units::Second>::get(),
                "Average write bandwidth",
                totalWrittenBytes / simSeconds),
 
       disableLatencyHists(params.disable_latency_hists),
-      ADD_STAT(readLatencyHist, Stats::Units::Tick::get(),
+      ADD_STAT(readLatencyHist, Stats::units::Tick::get(),
                "Read request-response latency"),
-      ADD_STAT(writeLatencyHist, Stats::Units::Tick::get(),
+      ADD_STAT(writeLatencyHist, Stats::units::Tick::get(),
                "Write request-response latency"),
 
       disableITTDists(params.disable_itt_dists),
-      ADD_STAT(ittReadRead, Stats::Units::Tick::get(),
+      ADD_STAT(ittReadRead, Stats::units::Tick::get(),
                "Read-to-read inter transaction time"),
-      ADD_STAT(ittWriteWrite, Stats::Units::Tick::get(),
+      ADD_STAT(ittWriteWrite, Stats::units::Tick::get(),
                "Write-to-write inter transaction time"),
-      ADD_STAT(ittReqReq, Stats::Units::Tick::get(),
+      ADD_STAT(ittReqReq, Stats::units::Tick::get(),
                "Request-to-request inter transaction time"),
       timeOfLastRead(0), timeOfLastWrite(0), timeOfLastReq(0),
 
       disableOutstandingHists(params.disable_outstanding_hists),
-      ADD_STAT(outstandingReadsHist, Stats::Units::Count::get(),
+      ADD_STAT(outstandingReadsHist, Stats::units::Count::get(),
                "Outstanding read transactions"),
       outstandingReadReqs(0),
-      ADD_STAT(outstandingWritesHist, Stats::Units::Count::get(),
+      ADD_STAT(outstandingWritesHist, Stats::units::Count::get(),
                "Outstanding write transactions"),
       outstandingWriteReqs(0),
 
       disableTransactionHists(params.disable_transaction_hists),
-      ADD_STAT(readTransHist, Stats::Units::Count::get(),
+      ADD_STAT(readTransHist, Stats::units::Count::get(),
                "Histogram of read transactions per sample period"),
       readTrans(0),
-      ADD_STAT(writeTransHist, Stats::Units::Count::get(),
+      ADD_STAT(writeTransHist, Stats::units::Count::get(),
                "Histogram of write transactions per sample period"),
       writeTrans(0),
 
       disableAddrDists(params.disable_addr_dists),
       readAddrMask(params.read_addr_mask),
       writeAddrMask(params.write_addr_mask),
-      ADD_STAT(readAddrDist, Stats::Units::Count::get(),
+      ADD_STAT(readAddrDist, Stats::units::Count::get(),
                "Read address distribution"),
-      ADD_STAT(writeAddrDist, Stats::Units::Count::get(),
+      ADD_STAT(writeAddrDist, Stats::units::Count::get(),
                "Write address distribution")
 {
     using namespace Stats;

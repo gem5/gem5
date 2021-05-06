@@ -127,7 +127,7 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
       fds(std::make_shared<FDArray>(
                   params.input, params.output, params.errout)),
       childClearTID(0),
-      ADD_STAT(numSyscalls, Stats::Units::Count::get(),
+      ADD_STAT(numSyscalls, Stats::units::Count::get(),
                "Number of system calls")
 {
     if (_pid >= System::maxPID)

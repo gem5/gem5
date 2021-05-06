@@ -520,13 +520,13 @@ TLB::getWalker()
 
 TLB::TlbStats::TlbStats(Stats::Group *parent)
   : Stats::Group(parent),
-    ADD_STAT(rdAccesses, Stats::Units::Count::get(),
+    ADD_STAT(rdAccesses, Stats::units::Count::get(),
              "TLB accesses on read requests"),
-    ADD_STAT(wrAccesses, Stats::Units::Count::get(),
+    ADD_STAT(wrAccesses, Stats::units::Count::get(),
              "TLB accesses on write requests"),
-    ADD_STAT(rdMisses, Stats::Units::Count::get(),
+    ADD_STAT(rdMisses, Stats::units::Count::get(),
              "TLB misses on read requests"),
-    ADD_STAT(wrMisses, Stats::Units::Count::get(),
+    ADD_STAT(wrMisses, Stats::units::Count::get(),
              "TLB misses on write requests")
 {
 }

@@ -511,17 +511,17 @@ TLB::unserialize(CheckpointIn &cp)
 
 TLB::TlbStats::TlbStats(Stats::Group *parent)
   : Stats::Group(parent),
-    ADD_STAT(readHits, Stats::Units::Count::get(), "read hits"),
-    ADD_STAT(readMisses, Stats::Units::Count::get(), "read misses"),
-    ADD_STAT(readAccesses, Stats::Units::Count::get(), "read accesses"),
-    ADD_STAT(writeHits, Stats::Units::Count::get(), "write hits"),
-    ADD_STAT(writeMisses, Stats::Units::Count::get(), "write misses"),
-    ADD_STAT(writeAccesses, Stats::Units::Count::get(), "write accesses"),
-    ADD_STAT(hits, Stats::Units::Count::get(),
+    ADD_STAT(readHits, Stats::units::Count::get(), "read hits"),
+    ADD_STAT(readMisses, Stats::units::Count::get(), "read misses"),
+    ADD_STAT(readAccesses, Stats::units::Count::get(), "read accesses"),
+    ADD_STAT(writeHits, Stats::units::Count::get(), "write hits"),
+    ADD_STAT(writeMisses, Stats::units::Count::get(), "write misses"),
+    ADD_STAT(writeAccesses, Stats::units::Count::get(), "write accesses"),
+    ADD_STAT(hits, Stats::units::Count::get(),
              "Total TLB (read and write) hits", readHits + writeHits),
-    ADD_STAT(misses, Stats::Units::Count::get(),
+    ADD_STAT(misses, Stats::units::Count::get(),
              "Total TLB (read and write) misses", readMisses + writeMisses),
-    ADD_STAT(accesses, Stats::Units::Count::get(),
+    ADD_STAT(accesses, Stats::units::Count::get(),
              "Total TLB (read and write) accesses",
              readAccesses + writeAccesses)
 {

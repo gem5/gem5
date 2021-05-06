@@ -38,39 +38,39 @@
  * Convenience macros to declare the unit of a stat.
  */
 #define UNIT_CYCLE GEM5_DEPRECATED_MACRO( \
-        UNIT_CYCLE, Stats::Units::Cycle::get(), \
-        "Use Stats::Units::Cycle::get()")
+        UNIT_CYCLE, Stats::units::Cycle::get(), \
+        "Use Stats::units::Cycle::get()")
 #define UNIT_TICK GEM5_DEPRECATED_MACRO( \
-        UNIT_TICK, Stats::Units::Tick::get(), "Use Stats::Units::Tick::get()")
+        UNIT_TICK, Stats::units::Tick::get(), "Use Stats::units::Tick::get()")
 #define UNIT_SECOND GEM5_DEPRECATED_MACRO( \
-        UNIT_SECOND, Stats::Units::Second::get(), \
-        "Use Stats::Units::Second::get()")
+        UNIT_SECOND, Stats::units::Second::get(), \
+        "Use Stats::units::Second::get()")
 #define UNIT_BIT GEM5_DEPRECATED_MACRO( \
-        UNIT_BIT, Stats::Units::Bit::get(), "Use Stats::Units::Bit::get()")
+        UNIT_BIT, Stats::units::Bit::get(), "Use Stats::units::Bit::get()")
 #define UNIT_BYTE GEM5_DEPRECATED_MACRO( \
-        UNIT_BYTE, Stats::Units::Byte::get(), "Use Stats::Units::Byte::get()")
+        UNIT_BYTE, Stats::units::Byte::get(), "Use Stats::units::Byte::get()")
 #define UNIT_JOULE GEM5_DEPRECATED_MACRO( \
-        UNIT_JOULE, Stats::Units::Joule::get(), \
-        "Use Stats::Units::Joule::get()")
+        UNIT_JOULE, Stats::units::Joule::get(), \
+        "Use Stats::units::Joule::get()")
 #define UNIT_VOLT GEM5_DEPRECATED_MACRO( \
-        UNIT_VOLD, Stats::Units::Volt::get(), "Use Stats::Units::Volt::get()")
+        UNIT_VOLD, Stats::units::Volt::get(), "Use Stats::units::Volt::get()")
 #define UNIT_CELSIUS GEM5_DEPRECATED_MACRO( \
-        UNIT_CELSIUS, Stats::Units::DegreeCelsius::get(), \
-        "Use Stats::Units::DegreeCelsius::get()")
+        UNIT_CELSIUS, Stats::units::DegreeCelsius::get(), \
+        "Use Stats::units::DegreeCelsius::get()")
 #define UNIT_RATE(T1, T2) GEM5_DEPRECATED_MACRO( \
-        UNIT_RATE, (Stats::Units::Rate<T1, T2>::get()), \
-        "Use Stats::Units::Rate<T1, T2>::get()")
+        UNIT_RATE, (Stats::units::Rate<T1, T2>::get()), \
+        "Use Stats::units::Rate<T1, T2>::get()")
 #define UNIT_RATIO GEM5_DEPRECATED_MACRO( \
-        UNIT_RATIO, Stats::Units::Ratio::get(), \
-        "Use Stats::Units::Ratio::get()")
+        UNIT_RATIO, Stats::units::Ratio::get(), \
+        "Use Stats::units::Ratio::get()")
 #define UNIT_COUNT GEM5_DEPRECATED_MACRO( \
-        UNIT_COUNT, Stats::Units::Count::get(), \
-        "Use Stats::Units::Count::get()")
+        UNIT_COUNT, Stats::units::Count::get(), \
+        "Use Stats::units::Count::get()")
 #define UNIT_WATT GEM5_DEPRECATED_MACRO( \
-        UNIT_WATT, Stats::Units::Watt::get(), "Use Stats::Units::Watt::get()")
+        UNIT_WATT, Stats::units::Watt::get(), "Use Stats::units::Watt::get()")
 #define UNIT_UNSPECIFIED GEM5_DEPRECATED_MACRO( \
-        UNIT_UNSPECIFIED, Stats::Units::Unspecified::get(), \
-        "Use Stats::Units::Unspecified::get()")
+        UNIT_UNSPECIFIED, Stats::units::Unspecified::get(), \
+        "Use Stats::units::Unspecified::get()")
 
 namespace Stats {
 
@@ -105,7 +105,9 @@ namespace Stats {
  *   - The new unit is significant enough to be not included in Count unit.
  *     (e.g. Cycle unit, Tick unit)
  */
-namespace Units {
+GEM5_DEPRECATED_NAMESPACE(Units, units);
+namespace units
+{
 
 /**
  * The Base class is the parent class of all unit classes.
@@ -336,9 +338,9 @@ template <typename T1, typename T2>
 class Rate : public Base
 {
     static_assert(std::is_base_of<Base, T1>::value,
-        "Rate(T1,T2) must have T1 and T2 derived from Stats::Units::Base");
+        "Rate(T1,T2) must have T1 and T2 derived from Stats::units::Base");
     static_assert(std::is_base_of<Base, T2>::value,
-        "Rate(T1,T2) must have T1 and T2 derived from Stats::Units::Base");
+        "Rate(T1,T2) must have T1 and T2 derived from Stats::units::Base");
     static_assert(!std::is_same<T1, T2>::value ||
         std::is_same<T1, Count>::value || std::is_same<T1, Unspecified>::value,
         "Rate(T1,T2) must have T1 and T2 of different types; "
@@ -367,7 +369,7 @@ class Rate : public Base
     }
 };
 
-} // namespace Units
+} // namespace units
 
 } // namespace Stats
 

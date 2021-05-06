@@ -220,13 +220,13 @@ PowerState::getWeights() const
 PowerState::PowerStateStats::PowerStateStats(PowerState &co)
     : Stats::Group(&co),
     powerState(co),
-    ADD_STAT(numTransitions, Stats::Units::Count::get(),
+    ADD_STAT(numTransitions, Stats::units::Count::get(),
              "Number of power state transitions"),
-    ADD_STAT(numPwrMatchStateTransitions, Stats::Units::Count::get(),
+    ADD_STAT(numPwrMatchStateTransitions, Stats::units::Count::get(),
              "Number of power state transitions due match request"),
-    ADD_STAT(ticksClkGated, Stats::Units::Tick::get(),
+    ADD_STAT(ticksClkGated, Stats::units::Tick::get(),
              "Distribution of time spent in the clock gated state"),
-    ADD_STAT(pwrStateResidencyTicks, Stats::Units::Tick::get(),
+    ADD_STAT(pwrStateResidencyTicks, Stats::units::Tick::get(),
              "Cumulative time (in ticks) in various power states")
 {
 }

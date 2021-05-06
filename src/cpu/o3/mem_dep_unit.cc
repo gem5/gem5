@@ -102,13 +102,13 @@ MemDepUnit::init(const O3CPUParams &params, ThreadID tid, CPU *cpu)
 
 MemDepUnit::MemDepUnitStats::MemDepUnitStats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(insertedLoads, Stats::Units::Count::get(),
+      ADD_STAT(insertedLoads, Stats::units::Count::get(),
                "Number of loads inserted to the mem dependence unit."),
-      ADD_STAT(insertedStores, Stats::Units::Count::get(),
+      ADD_STAT(insertedStores, Stats::units::Count::get(),
                "Number of stores inserted to the mem dependence unit."),
-      ADD_STAT(conflictingLoads, Stats::Units::Count::get(),
+      ADD_STAT(conflictingLoads, Stats::units::Count::get(),
                "Number of conflicting loads."),
-      ADD_STAT(conflictingStores, Stats::Units::Count::get(),
+      ADD_STAT(conflictingStores, Stats::units::Count::get(),
                "Number of conflicting stores.")
 {
 }

@@ -81,7 +81,7 @@ HDLcd::HDLcd(const HDLcdParams &p)
 HDLcd::
 HDLcdStats::HDLcdStats(Stats::Group *parent)
     : Stats::Group(parent, "HDLcd"),
-      ADD_STAT(underruns, Stats::Units::Count::get(),
+      ADD_STAT(underruns, Stats::units::Count::get(),
                "Number of buffer underruns")
 {
     using namespace Stats;
