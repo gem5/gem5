@@ -216,12 +216,12 @@ let {{
     assembler.symbols["label"] = labeler
 
     def rom_labeler(labelStr):
-        return "romMicroPC(RomLabels::extern_label_%s)" % labelStr
+        return "romMicroPC(rom_labels::extern_label_%s)" % labelStr
 
     assembler.symbols["rom_label"] = rom_labeler
 
     def rom_local_labeler(labelStr):
-        return "romMicroPC(RomLabels::label_%s)" % labelStr
+        return "romMicroPC(rom_labels::label_%s)" % labelStr
 
     assembler.symbols["rom_local_label"] = rom_local_labeler
 

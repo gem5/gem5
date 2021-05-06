@@ -215,7 +215,7 @@ let {{
                     macroop ? macroop->getExtMachInst() : dummyExtMachInst;
                 GEM5_VAR_USED const EmulEnv &env =
                     macroop ? macroop->getEmulEnv() : dummyEmulEnv;
-                using namespace RomLabels;
+                using namespace rom_labels;
                 return %s;
             }
         '''

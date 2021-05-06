@@ -64,7 +64,7 @@ X86FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     PCState pcState = tc->pcState();
     Addr pc = pcState.pc();
     DPRINTF(Faults, "RIP %#x: vector %d: %s\n", pc, vector, describe());
-    using namespace X86ISAInst::RomLabels;
+    using namespace X86ISAInst::rom_labels;
     HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
     MicroPC entry;
     if (m5reg.mode == LongMode) {
@@ -292,7 +292,7 @@ InitInterrupt::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     // Update the handy M5 Reg.
     tc->setMiscReg(MISCREG_M5_REG, 0);
-    MicroPC entry = X86ISAInst::RomLabels::extern_label_initIntHalt;
+    MicroPC entry = X86ISAInst::rom_labels::extern_label_initIntHalt;
     pc.upc(romMicroPC(entry));
     pc.nupc(romMicroPC(entry) + 1);
     tc->pcState(pc);
