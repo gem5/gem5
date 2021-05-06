@@ -234,14 +234,14 @@ class Decoder : public InstDecoder
 
     typedef RegVal CacheKey;
 
-    typedef DecodeCache::AddrMap<Decoder::InstBytes> DecodePages;
+    typedef decode_cache::AddrMap<Decoder::InstBytes> DecodePages;
     DecodePages *decodePages = nullptr;
     typedef std::unordered_map<CacheKey, DecodePages *> AddrCacheMap;
     AddrCacheMap addrCacheMap;
 
-    DecodeCache::InstMap<ExtMachInst> *instMap = nullptr;
+    decode_cache::InstMap<ExtMachInst> *instMap = nullptr;
     typedef std::unordered_map<
-            CacheKey, DecodeCache::InstMap<ExtMachInst> *> InstCacheMap;
+            CacheKey, decode_cache::InstMap<ExtMachInst> *> InstCacheMap;
     static InstCacheMap instCacheMap;
 
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
@@ -284,7 +284,7 @@ class Decoder : public InstDecoder
         if (imIter != instCacheMap.end()) {
             instMap = imIter->second;
         } else {
-            instMap = new DecodeCache::InstMap<ExtMachInst>;
+            instMap = new decode_cache::InstMap<ExtMachInst>;
             instCacheMap[m5Reg] = instMap;
         }
     }

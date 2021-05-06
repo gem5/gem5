@@ -40,13 +40,13 @@ template <typename Decoder, typename EMI>
 class BasicDecodeCache
 {
   private:
-    DecodeCache::InstMap<EMI> instMap;
+    decode_cache::InstMap<EMI> instMap;
     struct AddrMapEntry
     {
         StaticInstPtr inst;
         EMI machInst;
     };
-    DecodeCache::AddrMap<AddrMapEntry> decodePages;
+    decode_cache::AddrMap<AddrMapEntry> decodePages;
 
   public:
     /// Decode a machine instruction.
