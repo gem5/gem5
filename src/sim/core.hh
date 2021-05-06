@@ -38,6 +38,7 @@
 #include <functional>
 #include <string>
 
+#include "base/compiler.hh"
 #include "base/types.hh"
 // @todo The next include is not needed in this file, but must be kept
 // until the transitive includes are fixed
@@ -45,7 +46,9 @@
 
 /// These are variables that are set based on the simulator frequency
 ///@{
-namespace SimClock {
+GEM5_DEPRECATED_NAMESPACE(SimClock, sim_clock);
+namespace sim_clock
+{
 extern Tick Frequency; ///< The number of ticks that equal one second
 
 namespace Float {
@@ -84,7 +87,7 @@ extern Tick ns; ///< nanosecond
 extern Tick ps; ///< picosecond
 /** @} */
 } // namespace Int
-} // namespace SimClock
+} // namespace sim_clock
 /** @} */
 
 void fixClockFrequency();

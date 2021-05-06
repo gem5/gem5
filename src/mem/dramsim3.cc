@@ -146,7 +146,8 @@ DRAMsim3::tick()
         }
     }
 
-    schedule(tickEvent, curTick() + wrapper.clockPeriod() * SimClock::Int::ns);
+    schedule(tickEvent,
+        curTick() + wrapper.clockPeriod() * sim_clock::Int::ns);
 }
 
 Tick

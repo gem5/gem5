@@ -49,7 +49,7 @@ CommMonitor::CommMonitor(const Params &params)
       cpuSidePort(name() + "-cpu_side_port", *this),
       samplePeriodicEvent([this]{ samplePeriodic(); }, name()),
       samplePeriodTicks(params.sample_period),
-      samplePeriod(params.sample_period / SimClock::Float::s),
+      samplePeriod(params.sample_period / sim_clock::Float::s),
       stats(this, params)
 {
     DPRINTF(CommMonitor,

@@ -117,7 +117,7 @@ BaseXBar::calcPacketTiming(PacketPtr pkt, Tick header_delay)
     // do a quick sanity check to ensure the timings are not being
     // ignored, note that this specific value may cause problems for
     // slower interconnects
-    panic_if(pkt->headerDelay > SimClock::Int::us,
+    panic_if(pkt->headerDelay > sim_clock::Int::us,
              "Encountered header delay exceeding 1 us\n");
 
     if (pkt->hasData()) {

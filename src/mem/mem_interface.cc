@@ -1800,14 +1800,14 @@ DRAMInterface::Rank::updatePowerStats()
     // Accumulate window energy into the total energy.
     stats.totalEnergy += energy.window_energy * dram.devicesPerRank;
     // Average power must not be accumulated but calculated over the time
-    // since last stats reset. SimClock::Frequency is tick period not tick
+    // since last stats reset. sim_clock::Frequency is tick period not tick
     // frequency.
     //              energy (pJ)     1e-9
     // power (mW) = ----------- * ----------
     //              time (tick)   tick_frequency
     stats.averagePower = (stats.totalEnergy.value() /
                     (curTick() - dram.lastStatsResetTick)) *
-                    (SimClock::Frequency / 1000000000.0);
+                    (sim_clock::Frequency / 1000000000.0);
 }
 
 void
@@ -1951,7 +1951,7 @@ DRAMInterface::DRAMStats::regStats()
 
     avgRdBW = (bytesRead / 1000000) / simSeconds;
     avgWrBW = (bytesWritten / 1000000) / simSeconds;
-    peakBW = (SimClock::Frequency / dram.burstDelay()) *
+    peakBW = (sim_clock::Frequency / dram.burstDelay()) *
               dram.bytesPerBurst() / 1000000;
 
     busUtil = (avgRdBW + avgWrBW) / peakBW * 100;
@@ -2613,7 +2613,7 @@ NVMInterface::NVMStats::regStats()
 
     avgRdBW = (bytesRead / 1000000) / simSeconds;
     avgWrBW = (bytesWritten / 1000000) / simSeconds;
-    peakBW = (SimClock::Frequency / nvm.tBURST) *
+    peakBW = (sim_clock::Frequency / nvm.tBURST) *
               nvm.burstSize / 1000000;
 
     busUtil = (avgRdBW + avgWrBW) / peakBW * 100;

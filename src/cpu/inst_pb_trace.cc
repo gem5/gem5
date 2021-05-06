@@ -86,7 +86,7 @@ InstPBTrace::createTraceFile(std::string filename)
     ProtoMessage::InstHeader header_msg;
     header_msg.set_obj_id("gem5 generated instruction trace");
     header_msg.set_ver(0);
-    header_msg.set_tick_freq(SimClock::Frequency);
+    header_msg.set_tick_freq(sim_clock::Frequency);
     header_msg.set_has_mem(true);
     traceStream->write(header_msg);
 

@@ -182,7 +182,7 @@ EtherSwitch::Interface::transmit()
     if (!sendPacket(outputFifo.front())) {
         DPRINTF(Ethernet, "output port busy...retry later\n");
         if (!txEvent.scheduled())
-            parent->schedule(txEvent, curTick() + SimClock::Int::ns);
+            parent->schedule(txEvent, curTick() + sim_clock::Int::ns);
     } else {
         DPRINTF(Ethernet, "packet sent: len=%d\n", outputFifo.front()->length);
         outputFifo.pop();

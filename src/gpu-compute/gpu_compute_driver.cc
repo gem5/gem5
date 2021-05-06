@@ -284,7 +284,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
              * Derive all clock counters based on the tick. All
              * device clocks are identical and perfectly in sync.
              */
-            uint64_t elapsed_nsec = curTick() / SimClock::Int::ns;
+            uint64_t elapsed_nsec = curTick() / sim_clock::Int::ns;
             args->gpu_clock_counter = elapsed_nsec;
             args->cpu_clock_counter = elapsed_nsec;
             args->system_clock_counter = elapsed_nsec;

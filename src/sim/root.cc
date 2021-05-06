@@ -75,7 +75,7 @@ Root::RootStats::RootStats()
     statTime(true),
     startTick(0)
 {
-    simFreq.scalar(SimClock::Frequency);
+    simFreq.scalar(sim_clock::Frequency);
     simTicks.functor([this]() { return curTick() - startTick; });
     finalTick.functor(curTick);
 

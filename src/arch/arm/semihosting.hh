@@ -414,7 +414,7 @@ class ArmSemihosting : public SimObject
     unsigned
     calcTickShift() const
     {
-        int msb = findMsbSet(SimClock::Frequency);
+        int msb = findMsbSet(sim_clock::Frequency);
         return msb > 31 ? msb - 31 : 0;
     }
     uint64_t

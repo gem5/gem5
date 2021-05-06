@@ -93,7 +93,7 @@ DRAMPower::getTimingParams(const DRAMInterfaceParams &p)
     timingSpec.XSDLL = divCeil(p.tXSDLL, p.tCK);
 
     // Clock period in ns
-    timingSpec.clkPeriod = (p.tCK / (double)(SimClock::Int::ns));
+    timingSpec.clkPeriod = (p.tCK / (double)(sim_clock::Int::ns));
     assert(timingSpec.clkPeriod != 0);
     timingSpec.clkMhz = (1 / timingSpec.clkPeriod) * 1000;
     return timingSpec;

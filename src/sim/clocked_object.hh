@@ -209,7 +209,7 @@ class Clocked
      */
     Tick nextCycle() const { return clockEdge(Cycles(1)); }
 
-    uint64_t frequency() const { return SimClock::Frequency / clockPeriod(); }
+    uint64_t frequency() const { return sim_clock::Frequency / clockPeriod(); }
 
     Tick clockPeriod() const { return clockDomain.clockPeriod(); }
 

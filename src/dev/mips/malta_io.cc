@@ -72,7 +72,7 @@ MaltaIO::MaltaIO(const Params &p)
 Tick
 MaltaIO::frequency() const
 {
-    return SimClock::Frequency / params().frequency;
+    return sim_clock::Frequency / params().frequency;
 }
 
 Tick

@@ -50,7 +50,7 @@ set(::sc_core::sc_time *time, double d, ::sc_core::sc_time_unit tu)
     if (d != 0)
         fixClockFrequency();
 
-    double scale = sc_gem5::TimeUnitScale[tu] * SimClock::Float::s;
+    double scale = sc_gem5::TimeUnitScale[tu] * sim_clock::Float::s;
     // Accellera claims there is a linux bug, and that these next two
     // lines work around them.
     volatile double tmp = d * scale + 0.5;
@@ -94,13 +94,13 @@ sc_time::sc_time(double d, const char *unit)
 
 sc_time::sc_time(double d, bool scale)
 {
-    double scaler = scale ? defaultUnit : SimClock::Float::Hz;
+    double scaler = scale ? defaultUnit : sim_clock::Float::Hz;
     set(this, d * scaler, SC_SEC);
 }
 
 sc_time::sc_time(sc_dt::uint64 v, bool scale)
 {
-    double scaler = scale ? defaultUnit : SimClock::Float::Hz;
+    double scaler = scale ? defaultUnit : sim_clock::Float::Hz;
     set(this, static_cast<double>(v) * scaler, SC_SEC);
 }
 
@@ -125,7 +125,7 @@ sc_time::to_double() const
 double
 sc_time::to_seconds() const
 {
-    return to_double() * SimClock::Float::Hz;
+    return to_double() * sim_clock::Float::Hz;
 }
 
 const std::string
@@ -377,7 +377,7 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
     defaultUnit = d * sc_gem5::TimeUnitScale[tu];
     specified = true;
 
-    double resolution = SimClock::Float::Hz;
+    double resolution = sim_clock::Float::Hz;
     if (resolution == 0.0)
         resolution = sc_gem5::TimeUnitScale[SC_PS];
     if (defaultUnit < resolution) {
@@ -398,7 +398,7 @@ sc_time_tuple::sc_time_tuple(const sc_time &t) :
     if (!t.value())
         return;
 
-    Tick frequency = SimClock::Frequency;
+    Tick frequency = sim_clock::Frequency;
 
     // Shrink the frequency by scaling down the time period, ie converting
     // it from cycles per second to cycles per millisecond, etc.

@@ -87,13 +87,13 @@ ElasticTrace::ElasticTrace(const ElasticTraceParams &params)
     // Create a protobuf message for the header and write it to the stream
     ProtoMessage::PacketHeader inst_pkt_header;
     inst_pkt_header.set_obj_id(name());
-    inst_pkt_header.set_tick_freq(SimClock::Frequency);
+    inst_pkt_header.set_tick_freq(sim_clock::Frequency);
     instTraceStream->write(inst_pkt_header);
     // Create a protobuf message for the header and write it to
     // the stream
     ProtoMessage::InstDepRecordHeader data_rec_header;
     data_rec_header.set_obj_id(name());
-    data_rec_header.set_tick_freq(SimClock::Frequency);
+    data_rec_header.set_tick_freq(sim_clock::Frequency);
     data_rec_header.set_window_size(depWindowSize);
     dataTraceStream->write(data_rec_header);
     // Register a callback to flush trace records and close the output streams.

@@ -699,7 +699,7 @@ IGbE::postInterrupt(IntTypes t, bool now)
 
     regs.icr = regs.icr() | t;
 
-    Tick itr_interval = SimClock::Int::ns * 256 * regs.itr.interval();
+    Tick itr_interval = sim_clock::Int::ns * 256 * regs.itr.interval();
     DPRINTF(EthernetIntr,
             "EINT: postInterrupt() curTick(): %d itr: %d interval: %d\n",
             curTick(), regs.itr.interval(), itr_interval);
@@ -807,7 +807,8 @@ IGbE::chkInterrupt()
             DPRINTF(Ethernet,
                     "Possibly scheduling interrupt because of imr write\n");
             if (!interEvent.scheduled()) {
-                Tick t = curTick() + SimClock::Int::ns * 256 * regs.itr.interval();
+                Tick t = curTick() +
+                    sim_clock::Int::ns * 256 * regs.itr.interval();
                 DPRINTF(Ethernet, "Scheduling for %d\n", t);
                 schedule(interEvent, t);
             }

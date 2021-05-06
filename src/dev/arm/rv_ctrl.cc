@@ -66,12 +66,12 @@ RealViewCtrl::read(PacketPtr pkt)
         break;
       case Clock24:
         Tick clk;
-        clk = SimClock::Float::MHz * curTick() * 24;
+        clk = sim_clock::Float::MHz * curTick() * 24;
         pkt->setLE((uint32_t)(clk));
         break;
       case Clock100:
         Tick clk100;
-        clk100 = SimClock::Float::MHz * curTick() * 100;
+        clk100 = sim_clock::Float::MHz * curTick() * 100;
         pkt->setLE((uint32_t)(clk100));
         break;
       case Flash:
@@ -239,9 +239,9 @@ RealViewOsc::RealViewOsc(const RealViewOscParams &p)
       RealViewCtrl::Device(*p.parent, RealViewCtrl::FUNC_OSC,
                            p.site, p.position, p.dcc, p.device)
 {
-    if (SimClock::Float::s  / p.freq > UINT32_MAX) {
+    if (sim_clock::Float::s  / p.freq > UINT32_MAX) {
         fatal("Oscillator frequency out of range: %f\n",
-            SimClock::Float::s  / p.freq / 1E6);
+            sim_clock::Float::s  / p.freq / 1E6);
     }
 
     _clockPeriod = p.freq;
@@ -286,7 +286,7 @@ RealViewOsc::clockPeriod(Tick clock_period)
 uint32_t
 RealViewOsc::read() const
 {
-    const uint32_t freq(SimClock::Float::s / _clockPeriod);
+    const uint32_t freq(sim_clock::Float::s / _clockPeriod);
     DPRINTF(RVCTRL, "Reading OSC frequency: %f MHz\n", freq / 1E6);
     return freq;
 }
@@ -295,7 +295,7 @@ void
 RealViewOsc::write(uint32_t freq)
 {
     DPRINTF(RVCTRL, "Setting new OSC frequency: %f MHz\n", freq / 1E6);
-    clockPeriod(SimClock::Float::s / freq);
+    clockPeriod(sim_clock::Float::s / freq);
 }
 
 uint32_t

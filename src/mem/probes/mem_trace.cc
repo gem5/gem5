@@ -84,7 +84,7 @@ MemTraceProbe::startup()
     // the stream
     ProtoMessage::PacketHeader header_msg;
     header_msg.set_obj_id(name());
-    header_msg.set_tick_freq(SimClock::Frequency);
+    header_msg.set_tick_freq(sim_clock::Frequency);
 
     for (int i = 0; i < system->maxRequestors(); i++) {
         auto id_string = header_msg.add_id_strings();

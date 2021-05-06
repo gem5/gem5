@@ -500,13 +500,13 @@ ArmSemihosting::callRename(ThreadContext *tc, Addr from_addr, size_t from_size,
 ArmSemihosting::RetErrno
 ArmSemihosting::callClock(ThreadContext *tc)
 {
-    return retOK(curTick() / (SimClock::Int::s / 100));
+    return retOK(curTick() / (sim_clock::Int::s / 100));
 }
 
 ArmSemihosting::RetErrno
 ArmSemihosting::callTime(ThreadContext *tc)
 {
-    return retOK(timeBase + round(curTick() / SimClock::Float::s));
+    return retOK(timeBase + round(curTick() / sim_clock::Float::s));
 }
 
 ArmSemihosting::RetErrno
@@ -672,7 +672,7 @@ ArmSemihosting::callElapsed64(ThreadContext *tc, InPlaceArg ticks)
 ArmSemihosting::RetErrno
 ArmSemihosting::callTickFreq(ThreadContext *tc)
 {
-    return retOK(semiTick(SimClock::Frequency));
+    return retOK(semiTick(sim_clock::Frequency));
 }
 
 

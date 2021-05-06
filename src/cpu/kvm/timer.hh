@@ -129,7 +129,7 @@ class BaseKvmTimer
      * @return Nanoseconds executed in VM converted to simulation ticks
      */
     Tick ticksFromHostNs(uint64_t ns) {
-        return ns * hostFactor * SimClock::Float::ns;
+        return ns * hostFactor * sim_clock::Float::ns;
     }
 
   protected:
@@ -147,7 +147,7 @@ class BaseKvmTimer
      * @return Simulation ticks converted into nanoseconds on the host
      */
     uint64_t hostNs(Tick ticks) {
-        return ticks / (SimClock::Float::ns * hostFactor);
+        return ticks / (sim_clock::Float::ns * hostFactor);
     }
 
     /**

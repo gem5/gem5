@@ -1202,7 +1202,7 @@ TraceCPU::ElasticDataGen::InputStream::InputStream(
     if (!trace.read(header_msg)) {
         panic("Failed to read packet header from %s\n", filename);
 
-        if (header_msg.tick_freq() != SimClock::Frequency) {
+        if (header_msg.tick_freq() != sim_clock::Frequency) {
             panic("Trace %s was recorded with a different tick frequency %d\n",
                   header_msg.tick_freq());
         }
@@ -1383,7 +1383,7 @@ TraceCPU::FixedRetryGen::InputStream::InputStream(const std::string& filename)
     if (!trace.read(header_msg)) {
         panic("Failed to read packet header from %s\n", filename);
 
-        if (header_msg.tick_freq() != SimClock::Frequency) {
+        if (header_msg.tick_freq() != sim_clock::Frequency) {
             panic("Trace %s was recorded with a different tick frequency %d\n",
                   header_msg.tick_freq());
         }

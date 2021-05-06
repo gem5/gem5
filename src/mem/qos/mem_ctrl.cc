@@ -184,7 +184,7 @@ MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t qos,
         }
         // Compute latency
         double latency = (double) (curTick() + delay - requestTime)
-                / SimClock::Float::s;
+                / sim_clock::Float::s;
 
         if (latency > 0) {
             // Record per-priority latency stats

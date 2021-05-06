@@ -144,7 +144,8 @@ DRAMSim2::tick()
         port.sendRetryReq();
     }
 
-    schedule(tickEvent, curTick() + wrapper.clockPeriod() * SimClock::Int::ns);
+    schedule(tickEvent,
+        curTick() + wrapper.clockPeriod() * sim_clock::Int::ns);
 }
 
 Tick
@@ -283,7 +284,7 @@ DRAMSim2::accessAndRespond(PacketPtr pkt)
 void DRAMSim2::readComplete(unsigned id, uint64_t addr, uint64_t cycle)
 {
     assert(cycle == divCeil(curTick() - startTick,
-                            wrapper.clockPeriod() * SimClock::Int::ns));
+                            wrapper.clockPeriod() * sim_clock::Int::ns));
 
     DPRINTF(DRAMSim2, "Read to address %lld complete\n", addr);
 
@@ -311,7 +312,7 @@ void DRAMSim2::readComplete(unsigned id, uint64_t addr, uint64_t cycle)
 void DRAMSim2::writeComplete(unsigned id, uint64_t addr, uint64_t cycle)
 {
     assert(cycle == divCeil(curTick() - startTick,
-                            wrapper.clockPeriod() * SimClock::Int::ns));
+                            wrapper.clockPeriod() * sim_clock::Int::ns));
 
     DPRINTF(DRAMSim2, "Write to address %lld complete\n", addr);
 

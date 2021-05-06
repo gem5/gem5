@@ -519,7 +519,7 @@ getElapsedTimeMicro(T1 &sec, T2 &usec)
 {
     static const int OneMillion = 1000 * 1000;
 
-    uint64_t elapsed_usecs = curTick() / SimClock::Int::us;
+    uint64_t elapsed_usecs = curTick() / sim_clock::Int::us;
     sec = elapsed_usecs / OneMillion;
     usec = elapsed_usecs % OneMillion;
 }
@@ -532,7 +532,7 @@ getElapsedTimeNano(T1 &sec, T2 &nsec)
 {
     static const int OneBillion = 1000 * 1000 * 1000;
 
-    uint64_t elapsed_nsecs = curTick() / SimClock::Int::ns;
+    uint64_t elapsed_nsecs = curTick() / sim_clock::Int::ns;
     sec = elapsed_nsecs / OneBillion;
     nsec = elapsed_nsecs % OneBillion;
 }
@@ -2102,7 +2102,7 @@ SyscallReturn
 timesFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<typename OS::tms> bufp)
 {
     // Fill in the time structure (in clocks)
-    int64_t clocks = curTick() * OS::M5_SC_CLK_TCK / SimClock::Int::s;
+    int64_t clocks = curTick() * OS::M5_SC_CLK_TCK / sim_clock::Int::s;
     bufp->tms_utime = clocks;
     bufp->tms_stime = 0;
     bufp->tms_cutime = 0;

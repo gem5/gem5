@@ -72,7 +72,7 @@ Uart8250::processIntrEvent(int intrBit)
 void
 Uart8250::scheduleIntr(Event *event)
 {
-    static const Tick interval = 225 * SimClock::Int::ns;
+    static const Tick interval = 225 * sim_clock::Int::ns;
     DPRINTF(Uart, "Scheduling IER interrupt for %s, at cycle %lld\n",
             event->name(), curTick() + interval);
     if (!event->scheduled())
@@ -179,7 +179,7 @@ Uart8250::writeIer(Register<Ier> &reg, const Ier &ier)
 
     if (ier.thri) {
         DPRINTF(Uart, "IER: IER_THRI set, scheduling TX intrrupt\n");
-        if (curTick() - lastTxInt > 225 * SimClock::Int::ns) {
+        if (curTick() - lastTxInt > 225 * sim_clock::Int::ns) {
             DPRINTF(Uart, "-- Interrupting Immediately... %d,%d\n",
                     curTick(), lastTxInt);
             txIntrEvent.process();

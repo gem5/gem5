@@ -99,7 +99,7 @@ EnergyCtrl::read(PacketPtr pkt)
         break;
       case DVFS_HANDLER_TRANS_LATENCY:
         // Return transition latency in nanoseconds
-        result = dvfsHandler->transLatency() / SimClock::Int::ns;
+        result = dvfsHandler->transLatency() / sim_clock::Int::ns;
         DPRINTF(EnergyCtrl, "reading dvfs handler trans latency %d ns\n",
                 result);
         break;

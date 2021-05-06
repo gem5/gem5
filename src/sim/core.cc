@@ -38,7 +38,9 @@
 #include "base/logging.hh"
 #include "base/output.hh"
 
-namespace SimClock {
+GEM5_DEPRECATED_NAMESPACE(SimClock, sim_clock);
+namespace sim_clock
+{
 /// The simulated frequency of curTick(). (In ticks per second)
 Tick Frequency;
 
@@ -63,7 +65,7 @@ Tick ns;
 Tick ps;
 } // namespace Float
 
-} // namespace SimClock
+} // namespace sim_clock
 
 namespace {
 
@@ -80,7 +82,7 @@ fixClockFrequency()
     if (_clockFrequencyFixed)
         return;
 
-    using namespace SimClock;
+    using namespace sim_clock;
     Frequency = _ticksPerSecond;
     Float::s = static_cast<double>(Frequency);
     Float::ms = Float::s / 1.0e3;
