@@ -1696,14 +1696,14 @@ mmapFunc(SyscallDesc *desc, ThreadContext *tc,
         if (p->interpImage.contains(tc->pcState().instAddr())) {
             std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
             auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
-            auto *lib = Loader::createObjectFile(p->checkPathRedirect(
+            auto *lib = loader::createObjectFile(p->checkPathRedirect(
                     ffdp->getFileName()));
             DPRINTF_SYSCALL(Verbose, "Loading symbols from %s\n",
                 ffdp->getFileName());
 
             if (lib) {
                 Addr offset = lib->buildImage().minAddr() + start;
-                Loader::debugSymbolTable.insert(*lib->symtab().offset(offset));
+                loader::debugSymbolTable.insert(*lib->symtab().offset(offset));
             }
         }
     }

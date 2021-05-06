@@ -47,7 +47,7 @@ class SparcProcess : public Process
     // The locations of the fill and spill handlers
     Addr fillStart, spillStart;
 
-    SparcProcess(const ProcessParams &params, ::Loader::ObjectFile *objFile,
+    SparcProcess(const ProcessParams &params, loader::ObjectFile *objFile,
                  Addr _StackBias);
 
     void initState() override;
@@ -69,7 +69,7 @@ class Sparc32Process : public SparcProcess
 
   public:
 
-    Sparc32Process(const ProcessParams &params, ::Loader::ObjectFile *objFile)
+    Sparc32Process(const ProcessParams &params, loader::ObjectFile *objFile)
         : SparcProcess(params, objFile, 0)
     {
         Addr brk_point = image.maxAddr();
@@ -104,7 +104,7 @@ class Sparc64Process : public SparcProcess
 
   public:
 
-    Sparc64Process(const ProcessParams &params, ::Loader::ObjectFile *objFile)
+    Sparc64Process(const ProcessParams &params, loader::ObjectFile *objFile)
         : SparcProcess(params, objFile, 2047)
     {
         Addr brk_point = image.maxAddr();

@@ -43,7 +43,7 @@ namespace ArmISA {
 
 std::string
 BranchReg::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -53,7 +53,7 @@ BranchReg::generateDisassembly(
 
 std::string
 BranchImm::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -63,7 +63,7 @@ BranchImm::generateDisassembly(
 
 std::string
 BranchRegReg::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);

@@ -122,7 +122,7 @@ FsWorkload::initState()
 
     fatal_if(!kernelObj, "No kernel to load.");
 
-    fatal_if(kernelObj->getArch() == Loader::I386,
+    fatal_if(kernelObj->getArch() == loader::I386,
              "Loading a 32 bit x86 kernel is not supported.");
 
     ThreadContext *tc = system->threads[0];

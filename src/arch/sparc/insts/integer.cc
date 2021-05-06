@@ -38,7 +38,7 @@ namespace SparcISA
 
 bool
 IntOp::printPseudoOps(std::ostream &os, Addr pc,
-                      const Loader::SymbolTable *symbab) const
+                      const loader::SymbolTable *symbab) const
 {
     if (!std::strcmp(mnemonic, "or") && srcRegIdx(0).index() == 0) {
         printMnemonic(os, "mov");
@@ -52,7 +52,7 @@ IntOp::printPseudoOps(std::ostream &os, Addr pc,
 
 bool
 IntOpImm::printPseudoOps(std::ostream &os, Addr pc,
-                         const Loader::SymbolTable *symbab) const
+                         const loader::SymbolTable *symbab) const
 {
     if (!std::strcmp(mnemonic, "or")) {
         if (_numSrcRegs > 0 && srcRegIdx(0).index() == 0) {
@@ -76,7 +76,7 @@ IntOpImm::printPseudoOps(std::ostream &os, Addr pc,
 }
 
 std::string
-IntOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+IntOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 
@@ -91,7 +91,7 @@ IntOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 }
 
 std::string
-IntOpImm::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+IntOpImm::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 
@@ -109,7 +109,7 @@ IntOpImm::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 }
 
 std::string
-SetHi::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+SetHi::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 

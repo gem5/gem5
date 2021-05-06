@@ -50,7 +50,7 @@
 using namespace SparcISA;
 
 SparcProcess::SparcProcess(const ProcessParams &params,
-                           ::Loader::ObjectFile *objFile, Addr _StackBias)
+                           loader::ObjectFile *objFile, Addr _StackBias)
     : Process(params,
               new EmulationPageTable(params.name, params.pid, PageBytes),
               objFile),
@@ -176,7 +176,7 @@ SparcProcess::argsInit(int pageSize)
 
     // Setup the auxilliary vectors. These will already have endian conversion.
     // Auxilliary vectors are loaded only for elf formatted executables.
-    auto *elfObject = dynamic_cast<::Loader::ElfObject *>(objFile);
+    auto *elfObject = dynamic_cast<loader::ElfObject *>(objFile);
     if (elfObject) {
         // Bits which describe the system hardware capabilities
         auxv.emplace_back(gem5::auxv::Hwcap, hwcap);

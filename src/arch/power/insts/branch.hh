@@ -49,7 +49,7 @@ class PCDependentDisassembly : public PowerStaticInst
     /// Cached program counter from last disassembly
     mutable Addr cachedPC;
     /// Cached symbol table pointer from last disassembly
-    mutable const Loader::SymbolTable *cachedSymtab;
+    mutable const loader::SymbolTable *cachedSymtab;
 
     /// Constructor
     PCDependentDisassembly(const char *mnem, ExtMachInst _machInst,
@@ -60,7 +60,7 @@ class PCDependentDisassembly : public PowerStaticInst
     }
 
     const std::string &
-    disassemble(Addr pc, const Loader::SymbolTable *symtab) const;
+    disassemble(Addr pc, const loader::SymbolTable *symtab) const;
 };
 
 
@@ -90,7 +90,7 @@ class BranchOp : public PCDependentDisassembly
     using StaticInst::branchTarget;
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -161,7 +161,7 @@ class BranchDispCondOp : public BranchCondOp
     using StaticInst::branchTarget;
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -188,7 +188,7 @@ class BranchRegCondOp : public BranchCondOp
     using StaticInst::branchTarget;
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

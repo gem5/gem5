@@ -51,7 +51,7 @@ output header {{
         mutable Addr cachedPC;
 
         /// Cached symbol table pointer from last disassembly
-        mutable const Loader::SymbolTable *cachedSymtab;
+        mutable const loader::SymbolTable *cachedSymtab;
 
         /// Constructor
         PCDependentDisassembly(const char *mnem, MachInst _machInst,
@@ -62,7 +62,7 @@ output header {{
         }
 
         const std::string &
-        disassemble(Addr pc, const Loader::SymbolTable *symtab) const;
+        disassemble(Addr pc, const loader::SymbolTable *symtab) const;
     };
 
     /**
@@ -93,7 +93,7 @@ output header {{
         using StaticInst::branchTarget;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
     };
 
     /**
@@ -123,7 +123,7 @@ output header {{
         using StaticInst::branchTarget;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
     };
 }};
 
@@ -151,7 +151,7 @@ output decoder {{
 
     const std::string &
     PCDependentDisassembly::disassemble(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         if (!cachedDisassembly || pc != cachedPC || symtab != cachedSymtab) {
             if (!cachedDisassembly)
@@ -167,7 +167,7 @@ output decoder {{
 
     std::string
     Branch::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 
@@ -189,7 +189,7 @@ output decoder {{
 
         Addr target = pc + 4 + disp;
 
-        Loader::SymbolTable::const_iterator it;
+        loader::SymbolTable::const_iterator it;
         if (symtab && (it = symtab->find(target)) != symtab->end())
             ss << it->name;
         else
@@ -199,7 +199,7 @@ output decoder {{
     }
 
     std::string
-    Jump::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+    Jump::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 
@@ -209,7 +209,7 @@ output decoder {{
             Addr npc = pc + 4;
             ccprintf(ss,"0x%x",(npc & 0xF0000000) | disp);
         } else if (_numSrcRegs == 0) {
-            Loader::SymbolTable::const_iterator it;
+            loader::SymbolTable::const_iterator it;
             if (symtab && (it = symtab->find(disp)) != symtab->end())
                 ss << it->name;
             else

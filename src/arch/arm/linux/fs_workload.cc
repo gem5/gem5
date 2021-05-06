@@ -77,7 +77,7 @@ FsLinux::initState()
     if (params().early_kernel_symbols) {
         auto phys_globals = kernelObj->symtab().globals()->mask(_loadAddrMask);
         kernelSymtab.insert(*phys_globals);
-        Loader::debugSymbolTable.insert(*phys_globals);
+        loader::debugSymbolTable.insert(*phys_globals);
     }
 
     // Setup boot data structure
@@ -93,7 +93,7 @@ FsLinux::initState()
         inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
                 params().dtb_addr);
 
-        auto *dtb_file = new ::Loader::DtbFile(params().dtb_filename);
+        auto *dtb_file = new loader::DtbFile(params().dtb_filename);
 
         if (!dtb_file->addBootCmdLine(
                     commandLine.c_str(), commandLine.size())) {
@@ -156,7 +156,7 @@ FsLinux::initState()
         delete[] boot_data;
     }
 
-    if (getArch() == Loader::Arm64) {
+    if (getArch() == loader::Arm64) {
         // We inform the bootloader of the kernel entry point. This was added
         // originally done because the entry offset changed in kernel v5.8.
         // Previously the bootloader just used a hardcoded address.
@@ -191,7 +191,7 @@ FsLinux::startup()
     FsWorkload::startup();
 
     if (enableContextSwitchStatsDump) {
-        if (getArch() == Loader::Arm64)
+        if (getArch() == loader::Arm64)
             dumpStats = addKernelFuncEvent<DumpStats64>("__switch_to");
         else
             dumpStats = addKernelFuncEvent<DumpStats>("__switch_to");

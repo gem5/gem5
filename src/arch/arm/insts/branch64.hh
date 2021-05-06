@@ -61,7 +61,7 @@ class BranchImm64 : public ArmStaticInst
     using StaticInst::branchTarget;
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Conditionally Branch to a target computed with an immediate
@@ -77,7 +77,7 @@ class BranchImmCond64 : public BranchImm64
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Branch to a target computed with two registers
@@ -94,7 +94,7 @@ class BranchRegReg64 : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Branch to a target computed with a register
@@ -110,7 +110,7 @@ class BranchReg64 : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Ret instruction
@@ -123,7 +123,7 @@ class BranchRet64 : public BranchReg64
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // RetAA/RetAB instruction
@@ -136,7 +136,7 @@ class BranchRetA64 : public BranchRegReg64
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Eret instruction
@@ -148,7 +148,7 @@ class BranchEret64 : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // EretA/B instruction
@@ -163,7 +163,7 @@ class BranchEretA64 : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 // Branch to a target computed with an immediate and a register
 class BranchImmReg64 : public ArmStaticInst
@@ -185,7 +185,7 @@ class BranchImmReg64 : public ArmStaticInst
     using StaticInst::branchTarget;
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Branch to a target computed with two immediates
@@ -211,7 +211,7 @@ class BranchImmImmReg64 : public ArmStaticInst
     using StaticInst::branchTarget;
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 }

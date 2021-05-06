@@ -47,7 +47,7 @@ FsLinux::initState()
         inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
                 params().dtb_addr);
 
-        auto *dtb_file = new ::Loader::DtbFile(params().dtb_filename);
+        auto *dtb_file = new loader::DtbFile(params().dtb_filename);
 
         if (!dtb_file->addBootCmdLine(
                     commandLine.c_str(), commandLine.size())) {

@@ -62,7 +62,7 @@ class Unknown : public RiscvStaticInst
 
     std::string
     generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override
+            Addr pc, const loader::SymbolTable *symtab) const override
     {
         return csprintf("unknown opcode %#02x", OPCODE);
     }

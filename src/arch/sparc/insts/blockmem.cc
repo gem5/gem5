@@ -33,7 +33,7 @@ namespace SparcISA
 
 std::string
 BlockMemMicro::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
     bool load = flags[IsLoad];
@@ -59,7 +59,7 @@ BlockMemMicro::generateDisassembly(
 
 std::string
 BlockMemImmMicro::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
     bool load = flags[IsLoad];

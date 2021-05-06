@@ -46,10 +46,11 @@
 #include "sim/mem_state.hh"
 #include "sim/sim_object.hh"
 
-namespace Loader
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 class ObjectFile;
-} // namespace Loader
+} // namespace loader
 
 struct ProcessParams;
 
@@ -64,7 +65,7 @@ class Process : public SimObject
 {
   public:
     Process(const ProcessParams &params, EmulationPageTable *pTable,
-            ::Loader::ObjectFile *obj_file);
+            loader::ObjectFile *obj_file);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -101,7 +102,7 @@ class Process : public SimObject
     void updateBias();
     Addr getBias();
     Addr getStartPC();
-    ::Loader::ObjectFile *getInterpreter();
+    loader::ObjectFile *getInterpreter();
 
     void allocateMem(Addr vaddr, int64_t size, bool clobber = false);
 
@@ -195,17 +196,17 @@ class Process : public SimObject
          * with a panic or fail as normal.
          */
         virtual Process *load(const ProcessParams &params,
-                              ::Loader::ObjectFile *obj_file) = 0;
+                              loader::ObjectFile *obj_file) = 0;
     };
 
     // Try all the Loader instance's "load" methods one by one until one is
     // successful. If none are, complain and fail.
     static Process *tryLoaders(const ProcessParams &params,
-                               ::Loader::ObjectFile *obj_file);
+                               loader::ObjectFile *obj_file);
 
-    ::Loader::ObjectFile *objFile;
-    ::Loader::MemoryImage image;
-    ::Loader::MemoryImage interpImage;
+    loader::ObjectFile *objFile;
+    loader::MemoryImage image;
+    loader::MemoryImage interpImage;
     std::vector<std::string> argv;
     std::vector<std::string> envp;
     std::string executable;

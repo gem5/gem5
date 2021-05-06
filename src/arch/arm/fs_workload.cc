@@ -78,8 +78,8 @@ FsWorkload::FsWorkload(const Params &p) : KernelWorkload(p)
 
     bootLoaders.reserve(p.boot_loader.size());
     for (const auto &bl : p.boot_loader) {
-        std::unique_ptr<Loader::ObjectFile> bl_obj;
-        bl_obj.reset(Loader::createObjectFile(bl));
+        std::unique_ptr<loader::ObjectFile> bl_obj;
+        bl_obj.reset(loader::createObjectFile(bl));
 
         fatal_if(!bl_obj, "Could not read bootloader: %s", bl);
         bootLoaders.emplace_back(std::move(bl_obj));
@@ -91,7 +91,7 @@ FsWorkload::FsWorkload(const Params &p) : KernelWorkload(p)
              "Can't find a matching boot loader / kernel combination!");
 
     if (bootldr)
-        Loader::debugSymbolTable.insert(*bootldr->symtab().globals());
+        loader::debugSymbolTable.insert(*bootldr->symtab().globals());
 }
 
 void
@@ -130,7 +130,7 @@ FsWorkload::initState()
             tc->setIntReg(3, kernelEntry);
             if (is_gic_v2)
                 tc->setIntReg(4, arm_sys->params().gic_cpu_addr);
-            if (getArch() == Loader::Arm)
+            if (getArch() == loader::Arm)
                 tc->setIntReg(5, params().cpu_release_addr);
         }
         inform("Using kernel entry physical address at %#x\n", kernelEntry);
@@ -141,8 +141,8 @@ FsWorkload::initState()
     }
 }
 
-    Loader::ObjectFile *
-FsWorkload::getBootLoader(Loader::ObjectFile *const obj)
+    loader::ObjectFile *
+FsWorkload::getBootLoader(loader::ObjectFile *const obj)
 {
     if (obj) {
         for (auto &bl : bootLoaders) {

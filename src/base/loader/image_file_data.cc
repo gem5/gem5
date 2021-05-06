@@ -39,7 +39,8 @@
 
 #include "base/logging.hh"
 
-namespace Loader
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 
 static bool
@@ -129,4 +130,4 @@ ImageFileData::~ImageFileData()
     munmap((void *)_data, _len);
 }
 
-} // namespace Loader
+} // namespace loader

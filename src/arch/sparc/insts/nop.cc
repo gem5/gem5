@@ -54,14 +54,14 @@ output header {{
             }
 
             std::string generateDisassembly(Addr pc,
-                    const Loader::SymbolTable *symtab) const override;
+                    const loader::SymbolTable *symtab) const override;
         };
 }};
 
 output decoder {{
         std::string
         Nop::generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const
+                Addr pc, const loader::SymbolTable *symtab) const
         {
             std::stringstream response;
             printMnemonic(response, mnemonic);

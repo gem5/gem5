@@ -41,7 +41,7 @@ output header {{
         using MipsStaticInst::MipsStaticInst;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
 
         bool user_mode = false;
     };
@@ -59,7 +59,7 @@ output header {{
 
 output decoder {{
     std::string
-    MTOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+    MTOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 

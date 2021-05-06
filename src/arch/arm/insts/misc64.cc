@@ -41,7 +41,7 @@
 using namespace ArmISA;
 
 std::string
-ImmOp64::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+ImmOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -51,7 +51,7 @@ ImmOp64::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 
 std::string
 RegRegImmImmOp64::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -64,7 +64,7 @@ RegRegImmImmOp64::generateDisassembly(
 
 std::string
 RegRegRegImmOp64::generateDisassembly(
-    Addr pc, const Loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -79,7 +79,7 @@ RegRegRegImmOp64::generateDisassembly(
 
 std::string
 UnknownOp64::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (inst %#08x)", "unknown", encoding());
 }
@@ -808,7 +808,7 @@ MiscRegImmOp64::miscRegImm() const
 
 std::string
 MiscRegImmOp64::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -820,7 +820,7 @@ MiscRegImmOp64::generateDisassembly(
 
 std::string
 MiscRegRegImmOp64::generateDisassembly(
-    Addr pc, const Loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -832,7 +832,7 @@ MiscRegRegImmOp64::generateDisassembly(
 
 std::string
 RegMiscRegImmOp64::generateDisassembly(
-    Addr pc, const Loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -867,14 +867,14 @@ MiscRegImplDefined64::execute(ExecContext *xc,
 
 std::string
 MiscRegImplDefined64::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (implementation defined)", fullMnemonic.c_str());
 }
 
 std::string
 RegNone::generateDisassembly(
-    Addr pc, const Loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);

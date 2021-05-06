@@ -288,7 +288,7 @@ X86StaticInst::printMem(std::ostream &os, uint8_t segment,
 
 std::string
 X86StaticInst::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

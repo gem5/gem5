@@ -50,7 +50,7 @@ class ArmLinuxProcess32 : public ArmProcess32
 {
   public:
     ArmLinuxProcess32(const ProcessParams &params,
-                      ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
+                      loader::ObjectFile *objFile, loader::Arch _arch) :
         ArmProcess32(params, objFile, _arch)
     {}
 
@@ -65,7 +65,7 @@ class ArmLinuxProcess64 : public ArmProcess64
 {
   public:
     ArmLinuxProcess64(const ProcessParams &params,
-                      ::Loader::ObjectFile *objFile, ::Loader::Arch _arch) :
+                      loader::ObjectFile *objFile, loader::Arch _arch) :
         ArmProcess64(params, objFile, _arch)
     {}
 

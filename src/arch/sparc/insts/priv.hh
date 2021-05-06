@@ -43,7 +43,7 @@ class Priv : public SparcStaticInst
   protected:
     using SparcStaticInst::SparcStaticInst;
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class PrivReg : public Priv
@@ -64,7 +64,7 @@ class RdPriv : public PrivReg
   protected:
     using PrivReg::PrivReg;
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // This class is for instructions that explicitly write control
@@ -74,7 +74,7 @@ class WrPriv : public PrivReg
   protected:
     using PrivReg::PrivReg;
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -103,7 +103,7 @@ class WrPrivImm : public PrivImm
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 
     char const *regName;
 };

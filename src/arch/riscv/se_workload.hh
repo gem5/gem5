@@ -52,7 +52,7 @@ class SEWorkload : public ::SEWorkload
         gdb = BaseRemoteGDB::build<RemoteGDB>(system);
     }
 
-    ::Loader::Arch getArch() const override { return ::Loader::Riscv64; }
+    ::loader::Arch getArch() const override { return ::loader::Riscv64; }
 
     //FIXME RISCV needs to handle 64 bit arguments in its 32 bit ISA.
     using SyscallABI = RegABI64;

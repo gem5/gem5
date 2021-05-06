@@ -91,7 +91,7 @@ def template MacroDeclare {{
             %(class_name)s(ExtMachInst machInst, X86ISA::EmulEnv _env);
 
             std::string generateDisassembly(
-                    Addr pc, const Loader::SymbolTable *symtab) const override;
+                    Addr pc, const loader::SymbolTable *symtab) const override;
         };
     }
 }};
@@ -99,7 +99,7 @@ def template MacroDeclare {{
 def template MacroDisassembly {{
     std::string
     x86_macroop::%(class_name)s::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream out;
         out << mnemonic << "\t";

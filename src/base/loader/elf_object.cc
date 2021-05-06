@@ -58,7 +58,8 @@
 #include "gelf.h"
 #include "sim/byteswap.hh"
 
-namespace Loader
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 
 ObjectFile *
@@ -174,19 +175,19 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
                 if (!sym_name || sym_name[0] == '$')
                     continue;
 
-                Loader::Symbol symbol;
+                loader::Symbol symbol;
                 symbol.address = sym.st_value;
                 symbol.name = sym_name;
 
                 switch (GELF_ST_BIND(sym.st_info)) {
                   case STB_GLOBAL:
-                    symbol.binding = Loader::Symbol::Binding::Global;
+                    symbol.binding = loader::Symbol::Binding::Global;
                     break;
                   case STB_LOCAL:
-                    symbol.binding = Loader::Symbol::Binding::Local;
+                    symbol.binding = loader::Symbol::Binding::Local;
                     break;
                   case STB_WEAK:
-                    symbol.binding = Loader::Symbol::Binding::Weak;
+                    symbol.binding = loader::Symbol::Binding::Weak;
                     break;
                   default:
                     continue;
@@ -421,4 +422,4 @@ ElfObject::updateBias(Addr bias_addr)
     image.offset(bias_addr);
 }
 
-} // namespace Loader
+} // namespace loader

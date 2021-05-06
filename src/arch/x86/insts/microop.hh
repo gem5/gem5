@@ -117,7 +117,7 @@ class X86MicroopBase : public X86StaticInst
 
     std::string
     generateDisassembly(Addr pc,
-                       const Loader::SymbolTable *symtab) const override
+                       const loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
 

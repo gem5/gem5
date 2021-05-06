@@ -32,10 +32,11 @@
 
 #include "sim/process.hh"
 
-namespace Loader
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 class ObjectFile;
-} // namespace Loader;
+} // namespace loader
 
 class PowerProcess : public Process
 {
@@ -43,7 +44,7 @@ class PowerProcess : public Process
     void initState() override;
 
   public:
-    PowerProcess(const ProcessParams &params, ::Loader::ObjectFile *objFile);
+    PowerProcess(const ProcessParams &params, loader::ObjectFile *objFile);
 
     void argsInit(int intSize, int pageSize);
 };

@@ -78,7 +78,7 @@ typedef MultiLevelPageTable<LongModePTE<47, 39>,
                             LongModePTE<20, 12> > ArchPageTable;
 
 X86Process::X86Process(const ProcessParams &params,
-                       ::Loader::ObjectFile *objFile) :
+                       loader::ObjectFile *objFile) :
     Process(params, params.useArchPT ?
                     static_cast<EmulationPageTable *>(
                             new ArchPageTable(params.name, params.pid,
@@ -98,7 +98,7 @@ void X86Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
 }
 
 X86_64Process::X86_64Process(const ProcessParams &params,
-                             ::Loader::ObjectFile *objFile) :
+                             loader::ObjectFile *objFile) :
     X86Process(params, objFile)
 {
     vsyscallPage.base = 0xffffffffff600000ULL;
@@ -119,7 +119,7 @@ X86_64Process::X86_64Process(const ProcessParams &params,
 
 
 I386Process::I386Process(const ProcessParams &params,
-                         ::Loader::ObjectFile *objFile) :
+                         loader::ObjectFile *objFile) :
     X86Process(params, objFile)
 {
     if (kvmInSE)
@@ -770,7 +770,7 @@ X86Process::argsInit(int pageSize,
     // conversion. Auxiliary vectors are loaded only for elf formatted
     // executables; the auxv is responsible for passing information from
     // the OS to the interpreter.
-    auto *elfObject = dynamic_cast<::Loader::ElfObject *>(objFile);
+    auto *elfObject = dynamic_cast<loader::ElfObject *>(objFile);
     if (elfObject) {
         uint64_t features =
             X86_OnboardFPU |

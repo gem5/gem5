@@ -15,14 +15,14 @@ output header {{
         { }
 
         std::string generateDisassembly(Addr pc,
-                const Loader::SymbolTable *symtab) const override;
+                const loader::SymbolTable *symtab) const override;
     };
 }};
 
 output decoder {{
     std::string
     MonitorInst::generateDisassembly(
-            Addr PC, const Loader::SymbolTable *symtab) const
+            Addr PC, const loader::SymbolTable *symtab) const
     {
         std::stringstream response;
 
@@ -97,14 +97,14 @@ output header {{
         }
 
         std::string generateDisassembly(Addr pc,
-                const Loader::SymbolTable *symtab) const override;
+                const loader::SymbolTable *symtab) const override;
     };
 }};
 
 output decoder {{
     std::string
     MwaitInst::generateDisassembly(
-            Addr PC, const Loader::SymbolTable *symtab) const
+            Addr PC, const loader::SymbolTable *symtab) const
     {
         std::stringstream response;
 

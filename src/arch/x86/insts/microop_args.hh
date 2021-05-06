@@ -364,7 +364,7 @@ class InstOperands : public Base, public Operands...
 
     std::string
     generateDisassembly(Addr pc,
-            const Loader::SymbolTable *symtab) const override
+            const loader::SymbolTable *symtab) const override
     {
         std::stringstream response;
         Base::printMnemonic(response, this->instMnem, this->mnemonic);

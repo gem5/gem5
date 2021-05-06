@@ -68,7 +68,7 @@ class FailUnimplemented : public SparcStaticInst
 
     std::string
     generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override
+            Addr pc, const loader::SymbolTable *symtab) const override
     {
         return csprintf("%-10s (unimplemented)", mnemonic);
     }
@@ -108,7 +108,7 @@ class WarnUnimplemented : public SparcStaticInst
 
     std::string
     generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override
+            Addr pc, const loader::SymbolTable *symtab) const override
     {
         return csprintf("%-10s (unimplemented)", mnemonic);
     }

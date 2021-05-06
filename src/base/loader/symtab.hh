@@ -36,10 +36,12 @@
 #include <string>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
-namespace Loader
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 
 struct Symbol
@@ -251,6 +253,6 @@ class SymbolTable
 /// global one has worked well enough.
 extern SymbolTable debugSymbolTable;
 
-} // namespace Loader
+} // namespace loader
 
 #endif // __BASE_LOADER_SYMTAB_HH__

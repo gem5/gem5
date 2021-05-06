@@ -43,8 +43,8 @@ class BareMetal : public Workload
     bool _isBareMetal;
     // entry point for simulation
     Addr _resetVect;
-    Loader::ObjectFile *bootloader;
-    Loader::SymbolTable bootloaderSymtab;
+    loader::ObjectFile *bootloader;
+    loader::SymbolTable bootloaderSymtab;
 
   public:
     PARAMS(RiscvBareMetal);
@@ -60,15 +60,16 @@ class BareMetal : public Workload
         gdb = BaseRemoteGDB::build<RemoteGDB>(system);
     }
 
-    Loader::Arch getArch() const override { return bootloader->getArch(); }
-    const Loader::SymbolTable &
+    loader::Arch getArch() const override { return bootloader->getArch(); }
+
+    const loader::SymbolTable &
     symtab(ThreadContext *tc) override
     {
         return bootloaderSymtab;
     }
 
     bool
-    insertSymbol(const Loader::Symbol &symbol) override
+    insertSymbol(const loader::Symbol &symbol) override
     {
         return bootloaderSymtab.insert(symbol);
     }

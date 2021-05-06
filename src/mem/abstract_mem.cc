@@ -74,11 +74,11 @@ AbstractMemory::initState()
     if (file == "")
         return;
 
-    auto *object = Loader::createObjectFile(file, true);
+    auto *object = loader::createObjectFile(file, true);
     fatal_if(!object, "%s: Could not load %s.", name(), file);
 
-    Loader::debugSymbolTable.insert(*object->symtab().globals());
-    Loader::MemoryImage image = object->buildImage();
+    loader::debugSymbolTable.insert(*object->symtab().globals());
+    loader::MemoryImage image = object->buildImage();
 
     AddrRange image_range(image.minAddr(), image.maxAddr());
     if (!range.contains(image_range.start())) {

@@ -35,7 +35,7 @@ using namespace PowerISA;
 
 const std::string &
 PCDependentDisassembly::disassemble(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     if (!cachedDisassembly || pc != cachedPC || symtab != cachedSymtab) {
         if (!cachedDisassembly)
@@ -62,7 +62,7 @@ BranchOp::branchTarget(const PowerISA::PCState &pc) const
 
 std::string
 BranchOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     Addr target;
@@ -83,7 +83,7 @@ BranchOp::generateDisassembly(
     else
         target = pc + li;
 
-    Loader::SymbolTable::const_iterator it;
+    loader::SymbolTable::const_iterator it;
     if (symtab && (it = symtab->find(target)) != symtab->end())
         ss << it->name;
     else
@@ -106,7 +106,7 @@ BranchDispCondOp::branchTarget(const PowerISA::PCState &pc) const
 
 std::string
 BranchDispCondOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     Addr target;
@@ -130,7 +130,7 @@ BranchDispCondOp::generateDisassembly(
     else
         target = pc + bd;
 
-    Loader::SymbolTable::const_iterator it;
+    loader::SymbolTable::const_iterator it;
     if (symtab && (it = symtab->find(target)) != symtab->end())
         ss << it->name;
     else
@@ -150,7 +150,7 @@ BranchRegCondOp::branchTarget(ThreadContext *tc) const
 
 std::string
 BranchRegCondOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

@@ -37,7 +37,8 @@
 #include "libfdt.h"
 #include "sim/byteswap.hh"
 
-namespace Loader
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 
 DtbFile::DtbFile(const std::string &filename) :
@@ -156,4 +157,4 @@ DtbFile::buildImage() const
         return {{ "data", 0, fileData, length }};
 }
 
-} // namespace Loader
+} // namespace loader

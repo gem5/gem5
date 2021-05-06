@@ -31,7 +31,7 @@
 using namespace PowerISA;
 
 std::string
-MiscOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+MiscOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

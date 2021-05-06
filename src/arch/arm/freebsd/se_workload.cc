@@ -51,20 +51,20 @@ class FreebsdLoader : public Process::Loader
 {
   public:
     Process *
-    load(const ProcessParams &params, ::Loader::ObjectFile *obj) override
+    load(const ProcessParams &params, loader::ObjectFile *obj) override
     {
         auto arch = obj->getArch();
         auto opsys = obj->getOpSys();
 
-        if (arch != ::Loader::Arm && arch != ::Loader::Thumb &&
-                arch != ::Loader::Arm64) {
+        if (arch != loader::Arm && arch != loader::Thumb &&
+                arch != loader::Arm64) {
             return nullptr;
         }
 
-        if (opsys != ::Loader::FreeBSD)
+        if (opsys != loader::FreeBSD)
             return nullptr;
 
-        if (arch == ::Loader::Arm64)
+        if (arch == loader::Arm64)
             return new ArmProcess64(params, obj, arch);
         else
             return new ArmProcess32(params, obj, arch);

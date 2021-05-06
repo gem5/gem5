@@ -33,7 +33,10 @@
 #include <memory>
 #include <string>
 
-namespace Loader
+#include "base/compiler.hh"
+
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 
 class ImageFileData
@@ -54,6 +57,6 @@ class ImageFileData
 
 typedef std::shared_ptr<ImageFileData> ImageFileDataPtr;
 
-} // namespace Loader
+} // namespace loader
 
 #endif // __BASE_LOADER_IMAGE_FILE_DATA_HH__

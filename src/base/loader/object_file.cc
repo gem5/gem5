@@ -33,7 +33,8 @@
 
 #include "base/loader/raw_image.hh"
 
-namespace Loader
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 
 ObjectFile::ObjectFile(ImageFileDataPtr ifd) : ImageFile(ifd) {}
@@ -128,4 +129,4 @@ createObjectFile(const std::string &fname, bool raw)
     return nullptr;
 }
 
-} // namespace Loader
+} // namespace loader

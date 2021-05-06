@@ -29,9 +29,11 @@
 #ifndef __BASE_LOADER_DTB_FILE_HH__
 #define __BASE_LOADER_DTB_FILE_HH__
 
+#include "base/compiler.hh"
 #include "base/loader/image_file.hh"
 
-namespace Loader
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 
 /** @file
@@ -70,6 +72,6 @@ class DtbFile : public ImageFile
     MemoryImage buildImage() const override;
 };
 
-} // namespace Loader
+} // namespace loader
 
 #endif //__BASE_LOADER_DTB_FILE_HH__

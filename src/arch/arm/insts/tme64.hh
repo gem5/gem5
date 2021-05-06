@@ -62,7 +62,7 @@ class MicroTmeBasic64 : public MicroTmeOp
     {}
 
     std::string generateDisassembly(Addr pc,
-                                    const Loader::SymbolTable *symtab) const;
+                                    const loader::SymbolTable *symtab) const;
 };
 
 class TmeImmOp64 : public ArmISA::ArmStaticInst
@@ -77,7 +77,7 @@ class TmeImmOp64 : public ArmISA::ArmStaticInst
     {}
 
     std::string generateDisassembly(Addr pc,
-                                    const Loader::SymbolTable *symtab) const;
+                                    const loader::SymbolTable *symtab) const;
 };
 
 class TmeRegNone64 : public ArmISA::ArmStaticInst
@@ -92,7 +92,7 @@ class TmeRegNone64 : public ArmISA::ArmStaticInst
     {}
 
     std::string generateDisassembly(Addr pc,
-                                    const Loader::SymbolTable *symtab) const;
+                                    const loader::SymbolTable *symtab) const;
 };
 
 class Tstart64 : public TmeRegNone64

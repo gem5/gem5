@@ -1512,7 +1512,7 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
 
 std::string
 MicroIntImmOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1526,7 +1526,7 @@ MicroIntImmOp::generateDisassembly(
 
 std::string
 MicroIntImmXOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1540,7 +1540,7 @@ MicroIntImmXOp::generateDisassembly(
 
 std::string
 MicroSetPCCPSR::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1550,7 +1550,7 @@ MicroSetPCCPSR::generateDisassembly(
 
 std::string
 MicroIntRegXOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1563,7 +1563,7 @@ MicroIntRegXOp::generateDisassembly(
 
 std::string
 MicroIntMov::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1575,7 +1575,7 @@ MicroIntMov::generateDisassembly(
 
 std::string
 MicroIntOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1589,7 +1589,7 @@ MicroIntOp::generateDisassembly(
 
 std::string
 MicroMemOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -1607,7 +1607,7 @@ MicroMemOp::generateDisassembly(
 
 std::string
 MicroMemPairOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);

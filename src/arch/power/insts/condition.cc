@@ -32,7 +32,7 @@ using namespace PowerISA;
 
 std::string
 CondLogicOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -46,7 +46,7 @@ CondLogicOp::generateDisassembly(
 
 std::string
 CondMoveOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

@@ -51,7 +51,7 @@ class ImmOp64 : public ArmISA::ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegRegImmImmOp64 : public ArmISA::ArmStaticInst
@@ -71,7 +71,7 @@ class RegRegImmImmOp64 : public ArmISA::ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegRegRegImmOp64 : public ArmISA::ArmStaticInst
@@ -91,7 +91,7 @@ class RegRegRegImmOp64 : public ArmISA::ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class UnknownOp64 : public ArmISA::ArmStaticInst
@@ -104,7 +104,7 @@ class UnknownOp64 : public ArmISA::ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -167,7 +167,7 @@ class MiscRegImmOp64 : public MiscRegOp64
     RegVal miscRegImm() const;
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class MiscRegRegImmOp64 : public MiscRegOp64
@@ -185,7 +185,7 @@ class MiscRegRegImmOp64 : public MiscRegOp64
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegMiscRegImmOp64 : public MiscRegOp64
@@ -203,7 +203,7 @@ class RegMiscRegImmOp64 : public MiscRegOp64
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class MiscRegImplDefined64 : public MiscRegOp64
@@ -231,7 +231,7 @@ class MiscRegImplDefined64 : public MiscRegOp64
                   Trace::InstRecord *traceData) const override;
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegNone : public ArmISA::ArmStaticInst
@@ -246,7 +246,7 @@ class RegNone : public ArmISA::ArmStaticInst
     {}
 
     std::string generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const;
+        Addr pc, const loader::SymbolTable *symtab) const;
 };
 
 #endif

@@ -39,7 +39,7 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(p),
         inform("No kernel set for full system simulation. "
                "Assuming you know what you're doing.");
     } else {
-        kernelObj = Loader::createObjectFile(params().object_file);
+        kernelObj = loader::createObjectFile(params().object_file);
         inform("kernel located at: %s", params().object_file);
 
         fatal_if(!kernelObj,
@@ -67,8 +67,8 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(p),
                 name = "kernel_init." + name;
             });
 
-        Loader::debugSymbolTable.insert(*initKernelSymtab);
-        Loader::debugSymbolTable.insert(kernelSymtab);
+        loader::debugSymbolTable.insert(*initKernelSymtab);
+        loader::debugSymbolTable.insert(kernelSymtab);
     }
 
     // Loading only needs to happen once and after memory system is
@@ -82,7 +82,7 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(p),
     for (int ker_idx = 0; ker_idx < p.extras.size(); ker_idx++) {
         const std::string &obj_name = p.extras[ker_idx];
         const bool raw = extras_addrs[ker_idx] != MaxAddr;
-        auto *obj = Loader::createObjectFile(obj_name, raw);
+        auto *obj = loader::createObjectFile(obj_name, raw);
         fatal_if(!obj, "Failed to build additional kernel object '%s'.\n",
                  obj_name);
         extras.push_back(obj);

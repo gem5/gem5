@@ -40,7 +40,7 @@ namespace SparcISA
 class FsWorkload : public Workload
 {
   protected:
-    Loader::SymbolTable defaultSymtab;
+    loader::SymbolTable defaultSymtab;
 
   public:
     FsWorkload(const SparcFsWorkloadParams &params) : Workload(params) {}
@@ -60,16 +60,16 @@ class FsWorkload : public Workload
         getREDVector(0x001, pc, npc);
         return pc;
     }
-    Loader::Arch getArch() const override { return Loader::SPARC64; }
+    loader::Arch getArch() const override { return loader::SPARC64; }
 
-    const Loader::SymbolTable &
+    const loader::SymbolTable &
     symtab(ThreadContext *tc) override
     {
         return defaultSymtab;
     }
 
     bool
-    insertSymbol(const Loader::Symbol &symbol) override
+    insertSymbol(const loader::Symbol &symbol) override
     {
         return defaultSymtab.insert(symbol);
     }

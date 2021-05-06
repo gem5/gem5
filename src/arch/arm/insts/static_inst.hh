@@ -173,10 +173,10 @@ class ArmStaticInst : public StaticInst
                        bool withCond64 = false,
                        ConditionCode cond64 = COND_UC) const;
     void printTarget(std::ostream &os, Addr target,
-                     const Loader::SymbolTable *symtab) const;
+                     const loader::SymbolTable *symtab) const;
     void printCondition(std::ostream &os, unsigned code,
                         bool noImplicit=false) const;
-    void printMemSymbol(std::ostream &os, const Loader::SymbolTable *symtab,
+    void printMemSymbol(std::ostream &os, const loader::SymbolTable *symtab,
                         const std::string &prefix, const Addr addr,
                         const std::string &suffix) const;
     void printShiftOperand(std::ostream &os, IntRegIndex rm,
@@ -210,7 +210,7 @@ class ArmStaticInst : public StaticInst
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 
     static void
     activateBreakpoint(ThreadContext *tc)

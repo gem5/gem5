@@ -59,23 +59,23 @@ class LinuxLoader : public Process::Loader
 {
   public:
     Process *
-    load(const ProcessParams &params, ::Loader::ObjectFile *obj_file)
+    load(const ProcessParams &params, loader::ObjectFile *obj_file)
     {
         auto arch = obj_file->getArch();
         auto opsys = obj_file->getOpSys();
 
-        if (arch != ::Loader::X86_64 && arch != ::Loader::I386)
+        if (arch != loader::X86_64 && arch != loader::I386)
             return nullptr;
 
-        if (opsys == ::Loader::UnknownOpSys) {
+        if (opsys == loader::UnknownOpSys) {
             warn("Unknown operating system; assuming Linux.");
-            opsys = ::Loader::Linux;
+            opsys = loader::Linux;
         }
 
-        if (opsys != ::Loader::Linux)
+        if (opsys != loader::Linux)
             return nullptr;
 
-        if (arch == ::Loader::X86_64)
+        if (arch == loader::X86_64)
             return new X86ISA::X86_64Process(params, obj_file);
         else
             return new X86ISA::I386Process(params, obj_file);

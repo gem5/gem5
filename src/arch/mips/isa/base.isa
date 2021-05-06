@@ -53,7 +53,7 @@ output header {{
         void printReg(std::ostream &os, RegId reg) const;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
 
       public:
         ExtMachInst machInst;
@@ -97,7 +97,7 @@ output decoder {{
 
     std::string
     MipsStaticInst::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 

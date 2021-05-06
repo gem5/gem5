@@ -74,11 +74,11 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
         outs << "T" << thread->threadId() << " : ";
 
     Addr cur_pc = pc.instAddr();
-    Loader::SymbolTable::const_iterator it;
+    loader::SymbolTable::const_iterator it;
     ccprintf(outs, "%#x", cur_pc);
     if (Debug::ExecSymbol && (!FullSystem || !in_user_mode) &&
-            (it = Loader::debugSymbolTable.findNearest(cur_pc)) !=
-                Loader::debugSymbolTable.end()) {
+            (it = loader::debugSymbolTable.findNearest(cur_pc)) !=
+                loader::debugSymbolTable.end()) {
         Addr delta = cur_pc - it->address;
         if (delta)
             ccprintf(outs, " @%s+%d", it->name, delta);
@@ -99,7 +99,7 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     //
 
     outs << std::setw(26) << std::left;
-    outs << inst->disassemble(cur_pc, &Loader::debugSymbolTable);
+    outs << inst->disassemble(cur_pc, &loader::debugSymbolTable);
 
     if (ran) {
         outs << " : ";

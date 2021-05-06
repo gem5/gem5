@@ -44,7 +44,7 @@ namespace ArmISA
 {
 std::string
 PredIntOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     unsigned rotate = machInst.rotate * 2;
@@ -62,7 +62,7 @@ PredIntOp::generateDisassembly(
 
 std::string
 PredImmOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printDataInst(ss, true, machInst.opcode4 == 0, machInst.sField,
@@ -77,7 +77,7 @@ PredImmOp::generateDisassembly(
 
 std::string
 DataImmOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printDataInst(ss, true, false, /*XXX not really s*/ false, dest, op1,
@@ -87,7 +87,7 @@ DataImmOp::generateDisassembly(
 
 std::string
 DataRegOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printDataInst(ss, false, true, /*XXX not really s*/ false, dest, op1,
@@ -97,7 +97,7 @@ DataRegOp::generateDisassembly(
 
 std::string
 DataRegRegOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printDataInst(ss, false, false, /*XXX not really s*/ false, dest, op1,
@@ -107,7 +107,7 @@ DataRegRegOp::generateDisassembly(
 
 std::string
 PredMacroOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

@@ -35,7 +35,7 @@
 #include "base/loader/image_file_data.hh"
 #include "base/loader/small_image_file.test.hh"
 
-using namespace Loader;
+using namespace loader;
 
 TEST(ImageFileDataTest, SimpleImage)
 {

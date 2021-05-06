@@ -699,17 +699,17 @@ bool AddressMonitor::doMonitor(PacketPtr pkt) {
 void
 BaseCPU::traceFunctionsInternal(Addr pc)
 {
-    if (Loader::debugSymbolTable.empty())
+    if (loader::debugSymbolTable.empty())
         return;
 
     // if pc enters different function, print new function symbol and
     // update saved range.  Otherwise do nothing.
     if (pc < currentFunctionStart || pc >= currentFunctionEnd) {
-        auto it = Loader::debugSymbolTable.findNearest(
+        auto it = loader::debugSymbolTable.findNearest(
                 pc, currentFunctionEnd);
 
         std::string sym_str;
-        if (it == Loader::debugSymbolTable.end()) {
+        if (it == loader::debugSymbolTable.end()) {
             // no symbol found: use addr as label
             sym_str = csprintf("%#x", pc);
             currentFunctionStart = pc;

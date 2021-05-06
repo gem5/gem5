@@ -31,7 +31,7 @@
 using namespace PowerISA;
 
 std::string
-IntOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+IntOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printDest = true;
@@ -87,7 +87,7 @@ IntOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 
 
 std::string
-IntImmOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+IntImmOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -124,7 +124,7 @@ IntImmOp::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
 
 std::string
 IntShiftOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -152,7 +152,7 @@ IntShiftOp::generateDisassembly(
 
 std::string
 IntRotateOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

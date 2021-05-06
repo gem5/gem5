@@ -53,7 +53,7 @@ class MicroDebug : public X86ISA::X86MicroopBase
 
     std::string
     generateDisassembly(Addr pc,
-                        const Loader::SymbolTable *symtab) const override
+                        const loader::SymbolTable *symtab) const override
     {
         std::stringstream response;
 

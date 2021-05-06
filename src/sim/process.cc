@@ -87,10 +87,10 @@ Process::Loader::Loader()
 
 Process *
 Process::tryLoaders(const ProcessParams &params,
-                    ::Loader::ObjectFile *obj_file)
+                    loader::ObjectFile *obj_file)
 {
-    for (auto &loader: process_loaders()) {
-        Process *p = loader->load(params, obj_file);
+    for (auto &loader_it : process_loaders()) {
+        Process *p = loader_it->load(params, obj_file);
         if (p)
             return p;
     }
@@ -107,7 +107,7 @@ normalize(const std::string& directory)
 }
 
 Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
-                 ::Loader::ObjectFile *obj_file)
+                 loader::ObjectFile *obj_file)
     : SimObject(params), system(params.system),
       useArchPT(params.useArchPT),
       kvmInSE(params.kvmInSE),
@@ -155,8 +155,8 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
 
     image = objFile->buildImage();
 
-    if (::Loader::debugSymbolTable.empty())
-        ::Loader::debugSymbolTable = objFile->symtab();
+    if (loader::debugSymbolTable.empty())
+        loader::debugSymbolTable = objFile->symtab();
 }
 
 void
@@ -459,7 +459,7 @@ Process::updateBias()
     interp->updateBias(ld_bias);
 }
 
-Loader::ObjectFile *
+loader::ObjectFile *
 Process::getInterpreter()
 {
     return objFile->getInterpreter();
@@ -515,7 +515,7 @@ ProcessParams::create() const
     // simulated system's zeroth command line parameter
     const std::string &exec = (executable == "") ? cmd[0] : executable;
 
-    auto *obj_file = Loader::createObjectFile(exec);
+    auto *obj_file = loader::createObjectFile(exec);
     fatal_if(!obj_file, "Cannot load object file %s.", exec);
 
     Process *process = Process::tryLoaders(*this, obj_file);

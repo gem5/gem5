@@ -46,7 +46,7 @@ class SEWorkload : public Workload
         panic("No workload entry point for syscall emulation mode.");
     }
 
-    Loader::Arch
+    loader::Arch
     getArch() const override
     {
         // ISA specific subclasses should implement this method.
@@ -55,7 +55,7 @@ class SEWorkload : public Workload
         panic("SEWorkload::getArch() not implemented.");
     }
 
-    const Loader::SymbolTable &
+    const loader::SymbolTable &
     symtab(ThreadContext *) override
     {
         // This object represents the OS, not the individual processes running
@@ -64,7 +64,7 @@ class SEWorkload : public Workload
     }
 
     bool
-    insertSymbol(const Loader::Symbol &symbol) override
+    insertSymbol(const loader::Symbol &symbol) override
     {
         // This object represents the OS, not the individual processes running
         // within it.

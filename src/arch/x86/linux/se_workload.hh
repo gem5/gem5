@@ -64,7 +64,7 @@ class EmuLinux : public SEWorkload
         gdb = BaseRemoteGDB::build<RemoteGDB>(system);
     }
 
-    ::Loader::Arch getArch() const override { return ::Loader::X86_64; }
+    ::loader::Arch getArch() const override { return ::loader::X86_64; }
 
     void syscall(ThreadContext *tc) override;
     void event(ThreadContext *tc) override;

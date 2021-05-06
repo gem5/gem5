@@ -47,7 +47,7 @@ def template ImmDeclare {{
         %(class_name)s(MachInst machInst);
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
         std::string generateDisassembly(Addr pc,
-            const Loader::SymbolTable *symtab) const override;
+            const loader::SymbolTable *symtab) const override;
     };
 }};
 
@@ -75,7 +75,7 @@ def template ImmExecute {{
 
     std::string
     %(class_name)s::generateDisassembly(Addr pc,
-            const Loader::SymbolTable *symtab) const
+            const loader::SymbolTable *symtab) const
     {
         std::vector<RegId> indices = {%(regs)s};
         std::stringstream ss;
@@ -101,7 +101,7 @@ def template CILuiExecute {{
 
     std::string
     %(class_name)s::generateDisassembly(Addr pc,
-            const Loader::SymbolTable *symtab) const
+            const loader::SymbolTable *symtab) const
     {
         std::vector<RegId> indices = {%(regs)s};
         std::stringstream ss;
@@ -129,7 +129,7 @@ def template FenceExecute {{
 
     std::string
     %(class_name)s::generateDisassembly(Addr pc,
-            const Loader::SymbolTable *symtab) const
+            const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         ss << mnemonic;
@@ -173,7 +173,7 @@ def template BranchDeclare {{
 
         std::string
         generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
 
         RiscvISA::PCState
         branchTarget(const RiscvISA::PCState &branchPC) const override;
@@ -202,7 +202,7 @@ def template BranchExecute {{
 
     std::string
     %(class_name)s::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::vector<RegId> indices = {%(regs)s};
         std::stringstream ss;
@@ -230,7 +230,7 @@ def template JumpDeclare {{
 
         std::string
         generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
 
         RiscvISA::PCState
         branchTarget(ThreadContext *tc) const override;
@@ -261,7 +261,7 @@ def template JumpExecute {{
 
     std::string
     %(class_name)s::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         ss << mnemonic << ' ';

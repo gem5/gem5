@@ -39,7 +39,7 @@ output header {{
         using MipsStaticInst::MipsStaticInst;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
     };
     class CP0TLB : public MipsStaticInst
     {
@@ -47,7 +47,7 @@ output header {{
         using MipsStaticInst::MipsStaticInst;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
     };
 
 
@@ -57,7 +57,7 @@ output header {{
         using MipsStaticInst::MipsStaticInst;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
     };
 }};
 
@@ -139,7 +139,7 @@ def template ControlTLBExecute {{
 output decoder {{
     std::string
     CP0Control::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         ccprintf(ss, "%-10s r%d, %d, %d", mnemonic, RT, RD, SEL);
@@ -147,7 +147,7 @@ output decoder {{
     }
     std::string
     CP0TLB::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         ccprintf(ss, "%-10s r%d, %d, %d", mnemonic, RT, RD, SEL);
@@ -155,7 +155,7 @@ output decoder {{
     }
     std::string
     CP1Control::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
         ccprintf(ss, "%-10s r%d, f%d", mnemonic, RT, FS);

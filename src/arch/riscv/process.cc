@@ -58,7 +58,7 @@
 using namespace RiscvISA;
 
 RiscvProcess::RiscvProcess(const ProcessParams &params,
-        ::Loader::ObjectFile *objFile) :
+        loader::ObjectFile *objFile) :
         Process(params,
                 new EmulationPageTable(params.name, params.pid, PageBytes),
                 objFile)
@@ -67,7 +67,7 @@ RiscvProcess::RiscvProcess(const ProcessParams &params,
 }
 
 RiscvProcess64::RiscvProcess64(const ProcessParams &params,
-        ::Loader::ObjectFile *objFile) :
+        loader::ObjectFile *objFile) :
         RiscvProcess(params, objFile)
 {
     const Addr stack_base = 0x7FFFFFFFFFFFFFFFL;
@@ -80,7 +80,7 @@ RiscvProcess64::RiscvProcess64(const ProcessParams &params,
 }
 
 RiscvProcess32::RiscvProcess32(const ProcessParams &params,
-        ::Loader::ObjectFile *objFile) :
+        loader::ObjectFile *objFile) :
         RiscvProcess(params, objFile)
 {
     const Addr stack_base = 0x7FFFFFFF;
@@ -123,7 +123,7 @@ RiscvProcess::argsInit(int pageSize)
     const int RandomBytes = 16;
     const int addrSize = sizeof(IntType);
 
-    auto *elfObject = dynamic_cast<::Loader::ElfObject*>(objFile);
+    auto *elfObject = dynamic_cast<loader::ElfObject*>(objFile);
     memState->setStackMin(memState->getStackBase());
 
     // Determine stack size and populate auxv

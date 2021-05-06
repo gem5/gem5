@@ -69,7 +69,7 @@ StaticInst::branchTarget(ThreadContext *tc) const
 }
 
 const std::string &
-StaticInst::disassemble(Addr pc, const Loader::SymbolTable *symtab) const
+StaticInst::disassemble(Addr pc, const loader::SymbolTable *symtab) const
 {
     if (!cachedDisassembly) {
         cachedDisassembly =

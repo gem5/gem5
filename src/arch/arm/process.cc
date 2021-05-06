@@ -60,7 +60,7 @@
 using namespace ArmISA;
 
 ArmProcess::ArmProcess(const ProcessParams &params,
-                       ::Loader::ObjectFile *objFile, ::Loader::Arch _arch)
+                       loader::ObjectFile *objFile, loader::Arch _arch)
     : Process(params,
               new EmulationPageTable(params.name, params.pid, PageBytes),
               objFile),
@@ -70,7 +70,7 @@ ArmProcess::ArmProcess(const ProcessParams &params,
 }
 
 ArmProcess32::ArmProcess32(const ProcessParams &params,
-        ::Loader::ObjectFile *objFile, ::Loader::Arch _arch)
+        loader::ObjectFile *objFile, loader::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
@@ -85,8 +85,8 @@ ArmProcess32::ArmProcess32(const ProcessParams &params,
 }
 
 ArmProcess64::ArmProcess64(
-        const ProcessParams &params, ::Loader::ObjectFile *objFile,
-        ::Loader::Arch _arch)
+        const ProcessParams &params, loader::ObjectFile *objFile,
+        loader::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
@@ -271,10 +271,10 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 
     //Setup the auxilliary vectors. These will already have endian conversion.
     //Auxilliary vectors are loaded only for elf formatted executables.
-    auto *elfObject = dynamic_cast<::Loader::ElfObject *>(objFile);
+    auto *elfObject = dynamic_cast<loader::ElfObject *>(objFile);
     if (elfObject) {
 
-        if (objFile->getOpSys() == ::Loader::Linux) {
+        if (objFile->getOpSys() == loader::Linux) {
             IntType features = armHwcap<IntType>();
 
             //Bits which describe the system hardware capabilities
@@ -465,9 +465,9 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
     }
 
     PCState pc;
-    pc.thumb(arch == ::Loader::Thumb);
+    pc.thumb(arch == loader::Thumb);
     pc.nextThumb(pc.thumb());
-    pc.aarch64(arch == ::Loader::Arm64);
+    pc.aarch64(arch == loader::Arm64);
     pc.nextAArch64(pc.aarch64());
     pc.set(getStartPC() & ~mask(1));
     tc->pcState(pc);

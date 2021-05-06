@@ -98,13 +98,13 @@ RemoteGDB::gdbRegs()
     // on the architecture reported by the workload.
     if (system()->workload) {
         auto arch = system()->workload->getArch();
-        if (arch == Loader::X86_64) {
+        if (arch == loader::X86_64) {
             return &regCache64;
-        } else if (arch == Loader::I386) {
+        } else if (arch == loader::I386) {
             return &regCache32;
-        } else if (arch != Loader::UnknownArch) {
+        } else if (arch != loader::UnknownArch) {
             panic("Unrecognized workload arch %s.",
-                    Loader::archToString(arch));
+                    loader::archToString(arch));
         }
     }
 

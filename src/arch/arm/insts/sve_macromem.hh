@@ -94,7 +94,7 @@ class SveLdStructSS : public PredMacroOp
 
     std::string
     generateDisassembly(Addr pc,
-                        const Loader::SymbolTable *symtab) const override
+                        const loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -167,7 +167,7 @@ class SveStStructSS : public PredMacroOp
 
     std::string
     generateDisassembly(Addr pc,
-                        const Loader::SymbolTable *symtab) const override
+                        const loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -240,7 +240,7 @@ class SveLdStructSI : public PredMacroOp
 
     std::string
     generateDisassembly(Addr pc,
-                        const Loader::SymbolTable *symtab) const override
+                        const loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -314,7 +314,7 @@ class SveStStructSI : public PredMacroOp
 
     std::string
     generateDisassembly(Addr pc,
-                        const Loader::SymbolTable *symtab) const override
+                        const loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -414,7 +414,7 @@ class SveIndexedMemVI : public PredMacroOp
 
     std::string
     generateDisassembly(Addr pc,
-                        const Loader::SymbolTable *symtab) const override
+                        const loader::SymbolTable *symtab) const override
     {
         // TODO: add suffix to transfer and base registers
         std::stringstream ss;
@@ -519,7 +519,7 @@ class SveIndexedMemSV : public PredMacroOp
 
     std::string
     generateDisassembly(Addr pc,
-                        const Loader::SymbolTable *symtab) const override
+                        const loader::SymbolTable *symtab) const override
     {
         // TODO: add suffix to transfer and base registers
         std::stringstream ss;

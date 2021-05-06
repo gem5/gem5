@@ -41,7 +41,7 @@ output header {{
         using MipsStaticInst::MipsStaticInst;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
     };
 
 
@@ -51,7 +51,7 @@ output header {{
         using IntOp::IntOp;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
     };
 
     class HiLoRsSelOp: public HiLoOp
@@ -60,7 +60,7 @@ output header {{
         using HiLoOp::HiLoOp;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
     };
 
     class HiLoRdSelOp: public HiLoOp
@@ -69,7 +69,7 @@ output header {{
         using HiLoOp::HiLoOp;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
     };
 
     class HiLoRdSelValOp: public HiLoOp
@@ -78,7 +78,7 @@ output header {{
         using HiLoOp::HiLoOp;
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
     };
 
     class IntImmOp : public MipsStaticInst
@@ -100,7 +100,7 @@ output header {{
         }
 
         std::string generateDisassembly(
-                Addr pc, const Loader::SymbolTable *symtab) const override;
+                Addr pc, const loader::SymbolTable *symtab) const override;
     };
 
 }};
@@ -177,7 +177,7 @@ def template HiLoRdSelExecute {{
 output decoder {{
     std::string
     IntOp::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 
@@ -207,7 +207,7 @@ output decoder {{
 
     std::string
     HiLoOp::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 
@@ -228,7 +228,7 @@ output decoder {{
 
     std::string
     HiLoRsSelOp::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 
@@ -245,7 +245,7 @@ output decoder {{
 
     std::string
     HiLoRdSelOp::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 
@@ -262,7 +262,7 @@ output decoder {{
 
     std::string
     HiLoRdSelValOp::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 
@@ -279,7 +279,7 @@ output decoder {{
 
     std::string
     IntImmOp::generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const
+            Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
 

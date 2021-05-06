@@ -63,10 +63,11 @@ class Packet;
 class ExecContext;
 class ThreadContext;
 
-namespace Loader
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 class SymbolTable;
-} // namespace Loader
+} // namespace loader
 
 namespace Trace
 {
@@ -286,7 +287,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
      * Internal function to generate disassembly string.
      */
     virtual std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const = 0;
+            Addr pc, const loader::SymbolTable *symtab) const = 0;
 
     /// Constructor.
     /// It's important to initialize everything here to a sane
@@ -362,7 +363,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
      * should not be cached, this function should be overridden directly.
      */
     virtual const std::string &disassemble(Addr pc,
-        const Loader::SymbolTable *symtab=nullptr) const;
+        const loader::SymbolTable *symtab=nullptr) const;
 
     /**
      * Print a separator separated list of this instruction's set flag

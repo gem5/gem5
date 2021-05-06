@@ -47,7 +47,7 @@
 using namespace MipsISA;
 
 MipsProcess::MipsProcess(const ProcessParams &params,
-                         ::Loader::ObjectFile *objFile)
+                         loader::ObjectFile *objFile)
     : Process(params,
               new EmulationPageTable(params.name, params.pid, PageBytes),
               objFile)
@@ -90,7 +90,7 @@ MipsProcess::argsInit(int pageSize)
 
     std::vector<gem5::auxv::AuxVector<IntType>> auxv;
 
-    auto *elfObject = dynamic_cast<::Loader::ElfObject *>(objFile);
+    auto *elfObject = dynamic_cast<loader::ElfObject *>(objFile);
     if (elfObject)
     {
         // Set the system page size

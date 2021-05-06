@@ -48,7 +48,7 @@ class Mem : public SparcStaticInst
     using SparcStaticInst::SparcStaticInst;
 
     std::string generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -64,7 +64,7 @@ class MemImm : public Mem
     {}
 
     std::string generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
     const int32_t imm;
 };

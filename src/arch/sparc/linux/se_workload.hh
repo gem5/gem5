@@ -54,7 +54,7 @@ class EmuLinux : public SEWorkload
 
     EmuLinux(const Params &p);
 
-    ::Loader::Arch getArch() const override { return ::Loader::SPARC64; }
+    loader::Arch getArch() const override { return loader::SPARC64; }
 
     void handleTrap(ThreadContext *tc, int trapNum) override;
     void syscall(ThreadContext *tc) override;

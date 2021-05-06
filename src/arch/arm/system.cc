@@ -85,7 +85,7 @@ ArmSystem::ArmSystem(const Params &p)
                 workload->getEntry(), _resetAddr);
     }
 
-    bool wl_is_64 = (workload->getArch() == Loader::Arm64);
+    bool wl_is_64 = (workload->getArch() == loader::Arm64);
     if (wl_is_64 != _highestELIs64) {
         warn("Highest ARM exception-level set to AArch%d but the workload "
               "is for AArch%d. Assuming you wanted these to match.",

@@ -31,6 +31,7 @@
 
 #include <string>
 
+#include "base/compiler.hh"
 #include "base/loader/image_file.hh"
 #include "base/loader/image_file_data.hh"
 #include "base/loader/memory_image.hh"
@@ -38,7 +39,8 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 
-namespace Loader
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 
 enum Arch
@@ -128,6 +130,6 @@ class ObjectFileFormat
 
 ObjectFile *createObjectFile(const std::string &fname, bool raw=false);
 
-} // namespace Loader
+} // namespace loader
 
 #endif // __BASE_LOADER_OBJECT_FILE_HH__

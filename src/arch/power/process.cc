@@ -48,7 +48,7 @@
 using namespace PowerISA;
 
 PowerProcess::PowerProcess(
-       const ProcessParams &params, ::Loader::ObjectFile *objFile)
+       const ProcessParams &params, loader::ObjectFile *objFile)
     : Process(params,
               new EmulationPageTable(params.name, params.pid, PageBytes),
               objFile)
@@ -101,7 +101,7 @@ PowerProcess::argsInit(int intSize, int pageSize)
 
     //Setup the auxilliary vectors. These will already have endian conversion.
     //Auxilliary vectors are loaded only for elf formatted executables.
-    auto *elfObject = dynamic_cast<::Loader::ElfObject *>(objFile);
+    auto *elfObject = dynamic_cast<loader::ElfObject *>(objFile);
     if (elfObject) {
         uint32_t features = 0;
 

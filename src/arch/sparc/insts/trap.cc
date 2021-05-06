@@ -32,7 +32,7 @@ namespace SparcISA
 {
 
 std::string
-Trap::generateDisassembly(Addr pc, const Loader::SymbolTable *symtab) const
+Trap::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 

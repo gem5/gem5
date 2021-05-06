@@ -467,7 +467,7 @@ def template SveIndexedMemVIMicroopDeclare {{
 
         std::string
         generateDisassembly(Addr pc,
-                            const Loader::SymbolTable *symtab) const override
+                            const loader::SymbolTable *symtab) const override
         {
             // TODO: add suffix to transfer register
             std::stringstream ss;
@@ -555,7 +555,7 @@ def template SveIndexedMemSVMicroopDeclare {{
 
         std::string
         generateDisassembly(Addr pc,
-                            const Loader::SymbolTable *symtab) const override
+                            const loader::SymbolTable *symtab) const override
         {
             // TODO: add suffix to transfer and base registers
             std::stringstream ss;
@@ -790,7 +790,7 @@ def template SveFirstFaultWritebackMicroopDeclare {{
 
         std::string
         generateDisassembly(Addr pc,
-                            const Loader::SymbolTable *symtab) const override
+                            const loader::SymbolTable *symtab) const override
         {
             std::stringstream ss;
             ccprintf(ss, "%s", macroOp->disassemble(pc, symtab));
@@ -851,7 +851,7 @@ def template SveGatherLoadCpySrcVecMicroopDeclare {{
 
         std::string
         generateDisassembly(Addr pc,
-                            const Loader::SymbolTable *symtab) const override
+                            const loader::SymbolTable *symtab) const override
         {
             std::stringstream ss;
             ccprintf(ss, "%s", macroOp->disassemble(pc, symtab));
@@ -929,7 +929,7 @@ def template SveStructMemSIMicroopDeclare {{
 
         std::string
         generateDisassembly(Addr pc,
-                            const Loader::SymbolTable *symtab) const override
+                            const loader::SymbolTable *symtab) const override
         {
             std::stringstream ss;
             printMnemonic(ss, "", false);
@@ -1206,7 +1206,7 @@ def template SveStructMemSSMicroopDeclare {{
 
         std::string
         generateDisassembly(Addr pc,
-                            const Loader::SymbolTable *symtab) const override
+                            const loader::SymbolTable *symtab) const override
         {
             std::stringstream ss;
             printMnemonic(ss, "", false);
@@ -1275,7 +1275,7 @@ def template SveIntrlvMicroopDeclare {{
 
         std::string
         generateDisassembly(Addr pc,
-                            const Loader::SymbolTable *symtab) const override
+                            const loader::SymbolTable *symtab) const override
         {
             std::stringstream ss;
             ccprintf(ss, "%s", macroOp->disassemble(pc, symtab));
@@ -1316,7 +1316,7 @@ def template SveDeIntrlvMicroopDeclare {{
 
         std::string
         generateDisassembly(Addr pc,
-                            const Loader::SymbolTable *symtab) const override
+                            const loader::SymbolTable *symtab) const override
         {
             std::stringstream ss;
             ccprintf(ss, "%s", macroOp->disassemble(pc, symtab));

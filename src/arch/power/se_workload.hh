@@ -52,7 +52,7 @@ class SEWorkload : public ::SEWorkload
         gdb = BaseRemoteGDB::build<RemoteGDB>(system);
     }
 
-    ::Loader::Arch getArch() const override { return ::Loader::Power; }
+    ::loader::Arch getArch() const override { return ::loader::Power; }
 
     struct SyscallABI : public GenericSyscallABI64
     {

@@ -54,7 +54,7 @@ class Trap : public SparcStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 
     int trapNum;
 };
@@ -66,7 +66,7 @@ class FpUnimpl : public SparcStaticInst
 
     std::string
     generateDisassembly(
-            Addr pc,  const Loader::SymbolTable *symtab) const override
+            Addr pc,  const loader::SymbolTable *symtab) const override
     {
         return mnemonic;
     }

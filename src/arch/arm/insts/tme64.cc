@@ -46,7 +46,7 @@ namespace ArmISAInst {
 
 std::string
 TmeImmOp64::generateDisassembly(
-    Addr pc, const Loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -56,7 +56,7 @@ TmeImmOp64::generateDisassembly(
 
 std::string
 TmeRegNone64::generateDisassembly(
-    Addr pc, const Loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -66,7 +66,7 @@ TmeRegNone64::generateDisassembly(
 
 std::string
 MicroTmeBasic64::generateDisassembly(
-    Addr pc, const Loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);

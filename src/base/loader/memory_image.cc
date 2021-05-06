@@ -29,7 +29,8 @@
 #include "base/loader/memory_image.hh"
 #include "mem/port_proxy.hh"
 
-namespace Loader
+GEM5_DEPRECATED_NAMESPACE(Loader, loader);
+namespace loader
 {
 
 bool
@@ -63,4 +64,4 @@ MemoryImage::move(std::function<Addr(Addr)> mapper)
     return *this;
 }
 
-} // namespace Loader
+} // namespace loader
