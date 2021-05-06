@@ -162,7 +162,7 @@ BaseTags::computeStatsVisitor(CacheBlk &blk)
 {
     if (blk.isValid()) {
         const uint32_t task_id = blk.getTaskId();
-        assert(task_id < ContextSwitchTaskId::NumTaskId);
+        assert(task_id < context_switch_task_id::NumTaskId);
         stats.occupanciesTaskId[task_id]++;
         Tick age = blk.getAge();
 
@@ -185,7 +185,7 @@ BaseTags::computeStatsVisitor(CacheBlk &blk)
 void
 BaseTags::computeStats()
 {
-    for (unsigned i = 0; i < ContextSwitchTaskId::NumTaskId; ++i) {
+    for (unsigned i = 0; i < context_switch_task_id::NumTaskId; ++i) {
         stats.occupanciesTaskId[i] = 0;
         for (unsigned j = 0; j < 5; ++j) {
             stats.ageTaskId[i][j] = 0;
@@ -274,12 +274,12 @@ BaseTags::BaseTagStats::regStats()
     avgOccs = occupancies / Stats::constant(tags.numBlocks);
 
     occupanciesTaskId
-        .init(ContextSwitchTaskId::NumTaskId)
+        .init(context_switch_task_id::NumTaskId)
         .flags(nozero | nonan)
         ;
 
     ageTaskId
-        .init(ContextSwitchTaskId::NumTaskId, 5)
+        .init(context_switch_task_id::NumTaskId, 5)
         .flags(nozero | nonan)
         ;
 

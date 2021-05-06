@@ -159,7 +159,7 @@ TableWalker::Port::createPacket(
 {
     RequestPtr req = std::make_shared<Request>(
         desc_addr, size, flags, requestorId);
-    req->taskId(ContextSwitchTaskId::DMA);
+    req->taskId(context_switch_task_id::DMA);
 
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
     pkt->dataStatic(data);

@@ -114,7 +114,7 @@ DmaPort::DmaReqState::createPacket()
             gen.addr(), gen.size(), flags, id);
     req->setStreamId(sid);
     req->setSubstreamId(ssid);
-    req->taskId(ContextSwitchTaskId::DMA);
+    req->taskId(context_switch_task_id::DMA);
 
     PacketPtr pkt = new Packet(req, cmd);
 

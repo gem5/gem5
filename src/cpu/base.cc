@@ -125,7 +125,7 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
     : ClockedObject(p), instCnt(0), _cpuId(p.cpu_id), _socketId(p.socket_id),
       _instRequestorId(p.system->getRequestorId(this, "inst")),
       _dataRequestorId(p.system->getRequestorId(this, "data")),
-      _taskId(ContextSwitchTaskId::Unknown), _pid(invldPid),
+      _taskId(context_switch_task_id::Unknown), _pid(invldPid),
       _switchedOut(p.switched_out), _cacheLineSize(p.system->cacheLineSize()),
       interrupts(p.interrupts), numThreads(p.numThreads), system(p.system),
       previousCycle(0), previousState(CPU_STATE_SLEEP),

@@ -255,9 +255,9 @@ FsLinux::mapPid(ThreadContext *tc, uint32_t pid)
     std::map<uint32_t, uint32_t>::iterator itr = taskMap.find(pid);
     if (itr == taskMap.end()) {
         uint32_t map_size = taskMap.size();
-        if (map_size > ContextSwitchTaskId::MaxNormalTaskId + 1) {
+        if (map_size > context_switch_task_id::MaxNormalTaskId + 1) {
             warn_once("Error out of identifiers for cache occupancy stats");
-            taskMap[pid] = ContextSwitchTaskId::Unknown;
+            taskMap[pid] = context_switch_task_id::Unknown;
         } else {
             taskMap[pid] = map_size;
         }

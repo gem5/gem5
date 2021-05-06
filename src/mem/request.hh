@@ -57,6 +57,7 @@
 #include <vector>
 
 #include "base/amo.hh"
+#include "base/compiler.hh"
 #include "base/flags.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
@@ -70,8 +71,9 @@
  * doesn't cause a problem with stats and is large enough to realistic
  * benchmarks (Linux/Android boot, BBench, etc.)
  */
-
-namespace ContextSwitchTaskId {
+GEM5_DEPRECATED_NAMESPACE(ContextSwitchTaskId, context_switch_task_id);
+namespace context_switch_task_id
+{
     enum TaskId
     {
         MaxNormalTaskId = 1021, /* Maximum number of normal tasks */
@@ -395,7 +397,7 @@ class Request
     /**
      * The task id associated with this request
      */
-    uint32_t _taskId = ContextSwitchTaskId::Unknown;
+    uint32_t _taskId = context_switch_task_id::Unknown;
 
     /**
      * The stream ID uniquely identifies a device behind the

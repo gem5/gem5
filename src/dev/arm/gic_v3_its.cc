@@ -96,7 +96,7 @@ ItsProcess::doRead(Yield &yield, Addr addr, void *ptr, size_t size)
     RequestPtr req = std::make_shared<Request>(
         addr, size, 0, its.requestorId);
 
-    req->taskId(ContextSwitchTaskId::DMA);
+    req->taskId(context_switch_task_id::DMA);
 
     a.pkt = new Packet(req, MemCmd::ReadReq);
     a.pkt->dataStatic(ptr);
@@ -120,7 +120,7 @@ ItsProcess::doWrite(Yield &yield, Addr addr, void *ptr, size_t size)
     RequestPtr req = std::make_shared<Request>(
         addr, size, 0, its.requestorId);
 
-    req->taskId(ContextSwitchTaskId::DMA);
+    req->taskId(context_switch_task_id::DMA);
 
     a.pkt = new Packet(req, MemCmd::WriteReq);
     a.pkt->dataStatic(ptr);

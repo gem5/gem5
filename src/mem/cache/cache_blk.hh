@@ -201,7 +201,7 @@ class CacheBlk : public TaggedEntry
         clearPrefetched();
         clearCoherenceBits(AllBits);
 
-        setTaskId(ContextSwitchTaskId::Unknown);
+        setTaskId(context_switch_task_id::Unknown);
         setWhenReady(MaxTick);
         setRefCount(0);
         setSrcRequestorId(Request::invldRequestorId);

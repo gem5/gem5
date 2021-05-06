@@ -63,7 +63,7 @@ Queued::DeferredPacket::createPkt(Addr paddr, unsigned blk_size,
     if (pfInfo.isSecure()) {
         req->setFlags(Request::SECURE);
     }
-    req->taskId(ContextSwitchTaskId::Prefetcher);
+    req->taskId(context_switch_task_id::Prefetcher);
     pkt = new Packet(req, MemCmd::HardPFReq);
     pkt->allocate();
     if (tag_prefetch && pfInfo.hasPC()) {
