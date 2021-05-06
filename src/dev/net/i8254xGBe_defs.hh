@@ -30,6 +30,7 @@
  * Register and structure descriptions for Intel's 8254x line of gigabit ethernet controllers.
  */
 #include "base/bitfield.hh"
+#include "base/compiler.hh"
 
 namespace iGbReg {
 
@@ -234,7 +235,10 @@ struct TxDesc
     uint64_t d2;
 };
 
-namespace TxdOp {
+GEM5_DEPRECATED_NAMESPACE(TxdOp, txd_op);
+namespace txd_op
+{
+
 const uint8_t TXD_CNXT = 0x0;
 const uint8_t TXD_DATA = 0x1;
 const uint8_t TXD_ADVCNXT = 0x2;
@@ -291,7 +295,7 @@ inline int hdrlen(TxDesc *d) {
 
 inline int getTsoLen(TxDesc *d) { assert(isType(d, TXD_ADVDATA)); return bits(d->d2, 63,46); }
 inline int utcmd(TxDesc *d) { assert(isContext(d)); return bits(d->d2,24,31); }
-} // namespace TxdOp
+} // namespace txd_op
 
 
 #define ADD_FIELD32(NAME, OFFSET, BITS) \
