@@ -34,7 +34,7 @@ from m5.objects.ReplacementPolicies import *
 class BaseCacheCompressor(SimObject):
     type = 'BaseCacheCompressor'
     abstract = True
-    cxx_class = 'Compressor::Base'
+    cxx_class = 'compression::Base'
     cxx_header = "mem/cache/compressors/base.hh"
 
     block_size = Param.Int(Parent.cache_line_size, "Block size in bytes")
@@ -56,7 +56,7 @@ class BaseCacheCompressor(SimObject):
 class BaseDictionaryCompressor(BaseCacheCompressor):
     type = 'BaseDictionaryCompressor'
     abstract = True
-    cxx_class = 'Compressor::BaseDictionaryCompressor'
+    cxx_class = 'compression::BaseDictionaryCompressor'
     cxx_header = "mem/cache/compressors/dictionary_compressor.hh"
 
     dictionary_size = Param.Int(Parent.cache_line_size,
@@ -64,7 +64,7 @@ class BaseDictionaryCompressor(BaseCacheCompressor):
 
 class Base64Delta8(BaseDictionaryCompressor):
     type = 'Base64Delta8'
-    cxx_class = 'Compressor::Base64Delta8'
+    cxx_class = 'compression::Base64Delta8'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 64
@@ -77,7 +77,7 @@ class Base64Delta8(BaseDictionaryCompressor):
 
 class Base64Delta16(BaseDictionaryCompressor):
     type = 'Base64Delta16'
-    cxx_class = 'Compressor::Base64Delta16'
+    cxx_class = 'compression::Base64Delta16'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 64
@@ -90,7 +90,7 @@ class Base64Delta16(BaseDictionaryCompressor):
 
 class Base64Delta32(BaseDictionaryCompressor):
     type = 'Base64Delta32'
-    cxx_class = 'Compressor::Base64Delta32'
+    cxx_class = 'compression::Base64Delta32'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 64
@@ -103,7 +103,7 @@ class Base64Delta32(BaseDictionaryCompressor):
 
 class Base32Delta8(BaseDictionaryCompressor):
     type = 'Base32Delta8'
-    cxx_class = 'Compressor::Base32Delta8'
+    cxx_class = 'compression::Base32Delta8'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 32
@@ -116,7 +116,7 @@ class Base32Delta8(BaseDictionaryCompressor):
 
 class Base32Delta16(BaseDictionaryCompressor):
     type = 'Base32Delta16'
-    cxx_class = 'Compressor::Base32Delta16'
+    cxx_class = 'compression::Base32Delta16'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 32
@@ -129,7 +129,7 @@ class Base32Delta16(BaseDictionaryCompressor):
 
 class Base16Delta8(BaseDictionaryCompressor):
     type = 'Base16Delta8'
-    cxx_class = 'Compressor::Base16Delta8'
+    cxx_class = 'compression::Base16Delta8'
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 16
@@ -142,7 +142,7 @@ class Base16Delta8(BaseDictionaryCompressor):
 
 class CPack(BaseDictionaryCompressor):
     type = 'CPack'
-    cxx_class = 'Compressor::CPack'
+    cxx_class = 'compression::CPack'
     cxx_header = "mem/cache/compressors/cpack.hh"
 
     comp_chunks_per_cycle = 2
@@ -153,7 +153,7 @@ class CPack(BaseDictionaryCompressor):
 
 class FPC(BaseDictionaryCompressor):
     type = 'FPC'
-    cxx_class = 'Compressor::FPC'
+    cxx_class = 'compression::FPC'
     cxx_header = "mem/cache/compressors/fpc.hh"
 
     comp_chunks_per_cycle = 8
@@ -168,7 +168,7 @@ class FPC(BaseDictionaryCompressor):
 
 class FPCD(BaseDictionaryCompressor):
     type = 'FPCD'
-    cxx_class = 'Compressor::FPCD'
+    cxx_class = 'compression::FPCD'
     cxx_header = "mem/cache/compressors/fpcd.hh"
 
     # Accounts for checking all patterns, selecting patterns, and shifting
@@ -183,7 +183,7 @@ class FPCD(BaseDictionaryCompressor):
 
 class FrequentValuesCompressor(BaseCacheCompressor):
     type = 'FrequentValuesCompressor'
-    cxx_class = 'Compressor::FrequentValues'
+    cxx_class = 'compression::FrequentValues'
     cxx_header = "mem/cache/compressors/frequent_values.hh"
 
     chunk_size_bits = 32
@@ -215,7 +215,7 @@ class FrequentValuesCompressor(BaseCacheCompressor):
 
 class MultiCompressor(BaseCacheCompressor):
     type = 'MultiCompressor'
-    cxx_class = 'Compressor::Multi'
+    cxx_class = 'compression::Multi'
     cxx_header = "mem/cache/compressors/multi.hh"
 
     # Dummy default compressor list. This might not be an optimal choice,
@@ -239,7 +239,7 @@ class MultiCompressor(BaseCacheCompressor):
 
 class PerfectCompressor(BaseCacheCompressor):
     type = 'PerfectCompressor'
-    cxx_class = 'Compressor::Perfect'
+    cxx_class = 'compression::Perfect'
     cxx_header = "mem/cache/compressors/perfect.hh"
 
     chunk_size_bits = 64
@@ -254,7 +254,7 @@ class PerfectCompressor(BaseCacheCompressor):
 
 class RepeatedQwordsCompressor(BaseDictionaryCompressor):
     type = 'RepeatedQwordsCompressor'
-    cxx_class = 'Compressor::RepeatedQwords'
+    cxx_class = 'compression::RepeatedQwords'
     cxx_header = "mem/cache/compressors/repeated_qwords.hh"
 
     chunk_size_bits = 64
@@ -267,7 +267,7 @@ class RepeatedQwordsCompressor(BaseDictionaryCompressor):
 
 class ZeroCompressor(BaseDictionaryCompressor):
     type = 'ZeroCompressor'
-    cxx_class = 'Compressor::Zero'
+    cxx_class = 'compression::Zero'
     cxx_header = "mem/cache/compressors/zero.hh"
 
     chunk_size_bits = 64

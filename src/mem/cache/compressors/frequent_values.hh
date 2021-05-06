@@ -45,7 +45,9 @@
 
 struct FrequentValuesCompressorParams;
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 /**
  * This compressor samples the cache for a while, trying to define the
@@ -218,6 +220,6 @@ class FrequentValues::CompData : public CompressionData
     std::vector<CompressedValue> compressedValues;
 };
 
-} // namespace Compressor
+} // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_FREQUENT_VALUES_HH__

@@ -32,7 +32,9 @@
 
 #include "base/logging.hh"
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 namespace Encoder {
 
 Huffman::Huffman(uint64_t max_code_length)
@@ -131,4 +133,4 @@ Huffman::decode(const uint64_t code) const
 }
 
 } // namespace Encoder
-} // namespace Compressor
+} // namespace compression

@@ -345,7 +345,7 @@ class BaseCache : public ClockedObject
     BaseTags *tags;
 
     /** Compression method being used. */
-    Compressor::Base* compressor;
+    compression::Base* compressor;
 
     /** Prefetcher */
     Prefetcher::Base *prefetcher;

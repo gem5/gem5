@@ -43,7 +43,9 @@
 
 struct RepeatedQwordsCompressorParams;
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 class RepeatedQwords : public DictionaryCompressor<uint64_t>
 {
@@ -123,6 +125,6 @@ class RepeatedQwords::PatternM
     }
 };
 
-} // namespace Compressor
+} // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_REPEATED_QWORDS_HH__

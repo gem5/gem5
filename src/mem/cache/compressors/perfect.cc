@@ -38,7 +38,9 @@
 #include "debug/CacheComp.hh"
 #include "params/PerfectCompressor.hh"
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 Perfect::Perfect(const Params &p)
   : Base(p), compressedSize(8 * blkSize / p.max_compression_ratio)
@@ -72,4 +74,4 @@ Perfect::decompress(const CompressionData* comp_data,
     fromChunks(static_cast<const CompData*>(comp_data)->chunks, data);
 }
 
-} // namespace Compressor
+} // namespace compression

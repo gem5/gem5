@@ -34,7 +34,9 @@
 #include "mem/cache/compressors/dictionary_compressor.hh"
 #include "params/BaseDictionaryCompressor.hh"
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 BaseDictionaryCompressor::BaseDictionaryCompressor(const Params &p)
   : Base(p), dictionarySize(p.dictionary_size),
@@ -65,4 +67,4 @@ BaseDictionaryCompressor::DictionaryStats::regStats()
     }
 }
 
-} // namespace Compressor
+} // namespace compression

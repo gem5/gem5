@@ -38,13 +38,16 @@
 #include <cstdint>
 #include <string>
 
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/CacheComp.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/tags/super_blk.hh"
 #include "params/BaseCacheCompressor.hh"
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 // Uncomment this line if debugging compression
 //#define DEBUG_COMPRESSION
@@ -265,4 +268,4 @@ Base::BaseStats::regStats()
     avgCompressionSizeBits = compressionSizeBits / compressions;
 }
 
-} // namespace Compressor
+} // namespace compression

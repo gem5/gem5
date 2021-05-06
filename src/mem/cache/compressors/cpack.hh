@@ -43,7 +43,9 @@
 
 struct CPackParams;
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 class CPack : public DictionaryCompressor<uint32_t>
 {
@@ -170,6 +172,6 @@ class CPack::PatternMMMX : public MaskedPattern<0xFFFFFF00>
     }
 };
 
-} // namespace Compressor
+} // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_CPACK_HH__

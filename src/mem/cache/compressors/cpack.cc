@@ -35,7 +35,9 @@
 #include "mem/cache/compressors/dictionary_compressor_impl.hh"
 #include "params/CPack.hh"
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 CPack::CPack(const Params &p)
     : DictionaryCompressor<uint32_t>(p)
@@ -49,4 +51,4 @@ CPack::addToDictionary(DictionaryEntry data)
     dictionary[numEntries++] = data;
 }
 
-} // namespace Compressor
+} // namespace compression

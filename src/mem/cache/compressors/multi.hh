@@ -43,7 +43,9 @@
 
 struct MultiCompressorParams;
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 class Multi : public Base
 {
@@ -136,6 +138,6 @@ class Multi::MultiCompData : public CompressionData
     uint8_t getIndex() const;
 };
 
-} // namespace Compressor
+} // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_MULTI_HH__

@@ -43,7 +43,9 @@
 
 struct ZeroCompressorParams;
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 class Zero : public DictionaryCompressor<uint64_t>
 {
@@ -124,6 +126,6 @@ class Zero::PatternZ
     }
 };
 
-} // namespace Compressor
+} // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_ZERO_HH__

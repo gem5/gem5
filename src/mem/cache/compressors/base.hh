@@ -38,6 +38,7 @@
 
 #include <cstdint>
 
+#include "base/compiler.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "sim/sim_object.hh"
@@ -46,7 +47,9 @@ class BaseCache;
 class CacheBlk;
 struct BaseCacheCompressorParams;
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 /**
  * Base cache compressor interface. Every cache compressor must implement a
@@ -278,6 +281,6 @@ class Base::CompressionData
     std::size_t getSize() const;
 };
 
-} // namespace Compressor
+} // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_BASE_HH__

@@ -38,7 +38,9 @@
 #include "mem/cache/compressors/dictionary_compressor_impl.hh"
 #include "params/ZeroCompressor.hh"
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 Zero::Zero(const Params &p)
     : DictionaryCompressor<uint64_t>(p)
@@ -75,4 +77,4 @@ Zero::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
     return comp_data;
 }
 
-} // namespace Compressor
+} // namespace compression

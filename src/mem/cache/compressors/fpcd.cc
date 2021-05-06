@@ -35,7 +35,9 @@
 #include "mem/cache/compressors/dictionary_compressor_impl.hh"
 #include "params/FPCD.hh"
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 FPCD::FPCD(const Params &p)
     : DictionaryCompressor<uint32_t>(p)
@@ -54,4 +56,4 @@ FPCD::addToDictionary(DictionaryEntry data)
     }
 }
 
-} // namespace Compressor
+} // namespace compression

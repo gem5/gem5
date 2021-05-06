@@ -43,7 +43,9 @@
 
 struct PerfectCompressorParams;
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 class Perfect : public Base
 {
@@ -89,6 +91,6 @@ class Perfect::CompData : public CompressionData
     ~CompData() = default;
 };
 
-} // namespace Compressor
+} // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_PERFECT_COMPRESSOR_HH__

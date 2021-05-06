@@ -49,7 +49,9 @@
 
 struct FPCDParams;
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 class FPCD : public DictionaryCompressor<uint32_t>
 {
@@ -318,6 +320,6 @@ class FPCD::PatternXXXX : public UncompressedPattern
     }
 };
 
-} // namespace Compressor
+} // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_FPCD_HH__

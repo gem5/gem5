@@ -40,7 +40,9 @@
 #include "mem/cache/compressors/dictionary_compressor.hh"
 #include "params/BaseDictionaryCompressor.hh"
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 template <class T>
 DictionaryCompressor<T>::CompData::CompData()
@@ -232,6 +234,6 @@ DictionaryCompressor<T>::fromDictionaryEntry(const DictionaryEntry& entry)
     return value;
 }
 
-} // namespace Compressor
+} // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_DICTIONARY_COMPRESSOR_IMPL_HH__

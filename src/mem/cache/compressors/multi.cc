@@ -42,7 +42,9 @@
 #include "debug/CacheComp.hh"
 #include "params/MultiCompressor.hh"
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 Multi::MultiCompData::MultiCompData(unsigned index,
     std::unique_ptr<Base::CompressionData> comp_data)
@@ -210,4 +212,4 @@ Multi::MultiStats::regStats()
     }
 }
 
-} // namespace Compressor
+} // namespace compression

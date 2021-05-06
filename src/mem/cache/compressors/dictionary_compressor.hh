@@ -58,7 +58,9 @@
 
 struct BaseDictionaryCompressorParams;
 
-namespace Compressor {
+GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
+namespace compression
+{
 
 class BaseDictionaryCompressor : public Base
 {
@@ -786,6 +788,6 @@ class DictionaryCompressor<T>::SignExtendedPattern
     }
 };
 
-} // namespace Compressor
+} // namespace compression
 
 #endif //__MEM_CACHE_COMPRESSORS_DICTIONARY_COMPRESSOR_HH__
