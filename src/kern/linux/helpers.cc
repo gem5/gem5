@@ -90,7 +90,7 @@ dumpDmesgEntry(const uint8_t *base, const uint8_t *end, const ByteOrder bo,
 }
 
 void
-Linux::dumpDmesg(ThreadContext *tc, std::ostream &os)
+linux::dumpDmesg(ThreadContext *tc, std::ostream &os)
 {
     System *system = tc->getSystemPtr();
     const ByteOrder bo = system->getGuestByteOrder();

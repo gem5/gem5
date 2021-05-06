@@ -57,7 +57,7 @@
 #include "mem/physical.hh"
 #include "sim/stat_control.hh"
 
-using namespace Linux;
+using namespace linux;
 
 namespace ArmISA
 {
@@ -212,18 +212,18 @@ FsLinux::startup()
 
     const std::string dmesg_output = name() + ".dmesg";
     if (params().panic_on_panic) {
-        kernelPanic = addKernelFuncEventOrPanic<Linux::KernelPanic>(
+        kernelPanic = addKernelFuncEventOrPanic<linux::KernelPanic>(
             "panic", "Kernel panic in simulated kernel", dmesg_output);
     } else {
-        kernelPanic = addKernelFuncEventOrPanic<Linux::DmesgDump>(
+        kernelPanic = addKernelFuncEventOrPanic<linux::DmesgDump>(
             "panic", "Kernel panic in simulated kernel", dmesg_output);
     }
 
     if (params().panic_on_oops) {
-        kernelOops = addKernelFuncEventOrPanic<Linux::KernelPanic>(
+        kernelOops = addKernelFuncEventOrPanic<linux::KernelPanic>(
             "oops_exit", "Kernel oops in guest", dmesg_output);
     } else {
-        kernelOops = addKernelFuncEventOrPanic<Linux::DmesgDump>(
+        kernelOops = addKernelFuncEventOrPanic<linux::DmesgDump>(
             "oops_exit", "Kernel oops in guest", dmesg_output);
     }
 
@@ -267,7 +267,7 @@ FsLinux::mapPid(ThreadContext *tc, uint32_t pid)
 void
 FsLinux::dumpDmesg()
 {
-    Linux::dumpDmesg(system->threads[0], std::cout);
+    linux::dumpDmesg(system->threads[0], std::cout);
 }
 
 /**
@@ -282,7 +282,7 @@ void
 DumpStats::getTaskDetails(ThreadContext *tc, uint32_t &pid,
     uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
 
-    Linux::ThreadInfo ti(tc);
+    linux::ThreadInfo ti(tc);
     Addr task_descriptor = tc->readIntReg(2);
     pid = ti.curTaskPID(task_descriptor);
     tgid = ti.curTaskTGID(task_descriptor);
@@ -304,7 +304,7 @@ void
 DumpStats64::getTaskDetails(ThreadContext *tc, uint32_t &pid,
     uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
 
-    Linux::ThreadInfo ti(tc);
+    linux::ThreadInfo ti(tc);
     Addr task_struct = tc->readIntReg(1);
     pid = ti.curTaskPIDFromTaskStruct(task_struct);
     tgid = ti.curTaskTGIDFromTaskStruct(task_struct);

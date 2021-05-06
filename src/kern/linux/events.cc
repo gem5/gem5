@@ -51,7 +51,8 @@
 #include "sim/core.hh"
 #include "sim/system.hh"
 
-namespace Linux
+GEM5_DEPRECATED_NAMESPACE(Linux, linux);
+namespace linux
 {
 
 void

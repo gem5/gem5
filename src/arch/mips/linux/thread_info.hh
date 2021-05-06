@@ -31,7 +31,9 @@
 
 #include "arch/mips/linux/hwrpb.hh"
 
-namespace Linux {
+GEM5_DEPRECATED_NAMESPACE(Linux, linux);
+namespace linux
+{
     struct thread_info
     {
         struct pcb_struct       pcb;

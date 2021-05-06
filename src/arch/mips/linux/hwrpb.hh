@@ -27,7 +27,9 @@
 
 #include "arch/mips/linux/aligned.hh"
 
-namespace Linux {
+GEM5_DEPRECATED_NAMESPACE(Linux, linux);
+namespace linux
+{
     struct pcb_struct
     {
         uint64_ta rpb_ksp;

@@ -31,10 +31,12 @@
 
 #include <string>
 
+#include "base/compiler.hh"
 #include "base/types.hh"
 #include "sim/guest_abi.hh"
 
-namespace Linux
+GEM5_DEPRECATED_NAMESPACE(Linux, linux);
+namespace linux
 {
 
 using PrintkVarArgs =
@@ -42,6 +44,6 @@ using PrintkVarArgs =
 int printk(std::string &out, ThreadContext *tc, Addr format_ptr,
            PrintkVarArgs args);
 
-} // namespace Linux
+} // namespace linux
 
 #endif // __KERN_LINUX_PRINTK_HH__

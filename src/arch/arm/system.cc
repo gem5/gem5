@@ -51,7 +51,7 @@
 #include "dev/arm/gic_v2.hh"
 #include "mem/physical.hh"
 
-using namespace Linux;
+using namespace linux;
 using namespace ArmISA;
 
 ArmSystem::ArmSystem(const Params &p)

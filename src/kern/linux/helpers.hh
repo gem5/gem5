@@ -40,9 +40,13 @@
 
 #include <ostream>
 
+#include "base/compiler.hh"
+
 class ThreadContext;
 
-namespace Linux {
+GEM5_DEPRECATED_NAMESPACE(Linux, linux);
+namespace linux
+{
 
 /**
  * Dump Linux's dmesg log buffer to the an output stream.
@@ -52,6 +56,6 @@ namespace Linux {
  */
 void dumpDmesg(ThreadContext *tc, std::ostream &os);
 
-} // namespace Linux
+} // namespace linux
 
 #endif // __KERN_LINUX_HELPERS_HH__
