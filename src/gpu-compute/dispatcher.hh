@@ -93,12 +93,12 @@ class GPUDispatcher : public SimObject
     bool dispatchActive;
 
   protected:
-    struct GPUDispatcherStats : public Stats::Group
+    struct GPUDispatcherStats : public statistics::Group
     {
-        GPUDispatcherStats(Stats::Group *parent);
+        GPUDispatcherStats(statistics::Group *parent);
 
-        Stats::Scalar numKernelLaunched;
-        Stats::Scalar cyclesWaitingForDispatch;
+        statistics::Scalar numKernelLaunched;
+        statistics::Scalar cyclesWaitingForDispatch;
     } stats;
 };
 

@@ -411,10 +411,10 @@ class HDLcd: public AmbaDmaDevice
     std::unique_ptr<DmaEngine> dmaEngine;
 
   protected: // Statistics
-    struct HDLcdStats: public Stats::Group
+    struct HDLcdStats: public statistics::Group
     {
-        HDLcdStats(Stats::Group *parent);
-        Stats::Scalar underruns;
+        HDLcdStats(statistics::Group *parent);
+        statistics::Scalar underruns;
     } stats;
 };
 

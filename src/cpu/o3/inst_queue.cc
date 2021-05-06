@@ -171,45 +171,45 @@ InstructionQueue::name() const
 }
 
 InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
-    : Stats::Group(cpu),
-    ADD_STAT(instsAdded, Stats::units::Count::get(),
+    : statistics::Group(cpu),
+    ADD_STAT(instsAdded, statistics::units::Count::get(),
              "Number of instructions added to the IQ (excludes non-spec)"),
-    ADD_STAT(nonSpecInstsAdded, Stats::units::Count::get(),
+    ADD_STAT(nonSpecInstsAdded, statistics::units::Count::get(),
              "Number of non-speculative instructions added to the IQ"),
-    ADD_STAT(instsIssued, Stats::units::Count::get(),
+    ADD_STAT(instsIssued, statistics::units::Count::get(),
              "Number of instructions issued"),
-    ADD_STAT(intInstsIssued, Stats::units::Count::get(),
+    ADD_STAT(intInstsIssued, statistics::units::Count::get(),
              "Number of integer instructions issued"),
-    ADD_STAT(floatInstsIssued, Stats::units::Count::get(),
+    ADD_STAT(floatInstsIssued, statistics::units::Count::get(),
              "Number of float instructions issued"),
-    ADD_STAT(branchInstsIssued, Stats::units::Count::get(),
+    ADD_STAT(branchInstsIssued, statistics::units::Count::get(),
              "Number of branch instructions issued"),
-    ADD_STAT(memInstsIssued, Stats::units::Count::get(),
+    ADD_STAT(memInstsIssued, statistics::units::Count::get(),
              "Number of memory instructions issued"),
-    ADD_STAT(miscInstsIssued, Stats::units::Count::get(),
+    ADD_STAT(miscInstsIssued, statistics::units::Count::get(),
              "Number of miscellaneous instructions issued"),
-    ADD_STAT(squashedInstsIssued, Stats::units::Count::get(),
+    ADD_STAT(squashedInstsIssued, statistics::units::Count::get(),
              "Number of squashed instructions issued"),
-    ADD_STAT(squashedInstsExamined, Stats::units::Count::get(),
+    ADD_STAT(squashedInstsExamined, statistics::units::Count::get(),
              "Number of squashed instructions iterated over during squash; "
              "mainly for profiling"),
-    ADD_STAT(squashedOperandsExamined, Stats::units::Count::get(),
+    ADD_STAT(squashedOperandsExamined, statistics::units::Count::get(),
              "Number of squashed operands that are examined and possibly "
              "removed from graph"),
-    ADD_STAT(squashedNonSpecRemoved, Stats::units::Count::get(),
+    ADD_STAT(squashedNonSpecRemoved, statistics::units::Count::get(),
              "Number of squashed non-spec instructions that were removed"),
-    ADD_STAT(numIssuedDist, Stats::units::Count::get(),
+    ADD_STAT(numIssuedDist, statistics::units::Count::get(),
              "Number of insts issued each cycle"),
-    ADD_STAT(statFuBusy, Stats::units::Count::get(),
+    ADD_STAT(statFuBusy, statistics::units::Count::get(),
              "attempts to use FU when none available"),
-    ADD_STAT(statIssuedInstType, Stats::units::Count::get(),
+    ADD_STAT(statIssuedInstType, statistics::units::Count::get(),
              "Number of instructions issued per FU type, per thread"),
-    ADD_STAT(issueRate, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Cycle>::get(),
+    ADD_STAT(issueRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Cycle>::get(),
              "Inst issue rate", instsIssued / cpu->baseStats.numCycles),
-    ADD_STAT(fuBusy, Stats::units::Count::get(), "FU busy when requested"),
-    ADD_STAT(fuBusyRate, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Count>::get(),
+    ADD_STAT(fuBusy, statistics::units::Count::get(), "FU busy when requested"),
+    ADD_STAT(fuBusyRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Count>::get(),
              "FU busy rate (busy events/executed inst)")
 {
     instsAdded
@@ -260,7 +260,7 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
 */
     numIssuedDist
         .init(0,total_width,1)
-        .flags(Stats::pdf)
+        .flags(statistics::pdf)
         ;
 /*
     dist_unissued
@@ -275,7 +275,7 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
 */
     statIssuedInstType
         .init(cpu->numThreads,enums::Num_OpClass)
-        .flags(Stats::total | Stats::pdf | Stats::dist)
+        .flags(statistics::total | statistics::pdf | statistics::dist)
         ;
     statIssuedInstType.ysubnames(enums::OpClassStrings);
 
@@ -296,12 +296,12 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
     }
 */
     issueRate
-        .flags(Stats::total)
+        .flags(statistics::total)
         ;
 
     statFuBusy
         .init(Num_OpClasses)
-        .flags(Stats::pdf | Stats::dist)
+        .flags(statistics::pdf | statistics::dist)
         ;
     for (int i=0; i < Num_OpClasses; ++i) {
         statFuBusy.subname(i, enums::OpClassStrings[i]);
@@ -309,43 +309,43 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
 
     fuBusy
         .init(cpu->numThreads)
-        .flags(Stats::total)
+        .flags(statistics::total)
         ;
 
     fuBusyRate
-        .flags(Stats::total)
+        .flags(statistics::total)
         ;
     fuBusyRate = fuBusy / instsIssued;
 }
 
-InstructionQueue::IQIOStats::IQIOStats(Stats::Group *parent)
-    : Stats::Group(parent),
-    ADD_STAT(intInstQueueReads, Stats::units::Count::get(),
+InstructionQueue::IQIOStats::IQIOStats(statistics::Group *parent)
+    : statistics::Group(parent),
+    ADD_STAT(intInstQueueReads, statistics::units::Count::get(),
              "Number of integer instruction queue reads"),
-    ADD_STAT(intInstQueueWrites, Stats::units::Count::get(),
+    ADD_STAT(intInstQueueWrites, statistics::units::Count::get(),
              "Number of integer instruction queue writes"),
-    ADD_STAT(intInstQueueWakeupAccesses, Stats::units::Count::get(),
+    ADD_STAT(intInstQueueWakeupAccesses, statistics::units::Count::get(),
              "Number of integer instruction queue wakeup accesses"),
-    ADD_STAT(fpInstQueueReads, Stats::units::Count::get(),
+    ADD_STAT(fpInstQueueReads, statistics::units::Count::get(),
              "Number of floating instruction queue reads"),
-    ADD_STAT(fpInstQueueWrites, Stats::units::Count::get(),
+    ADD_STAT(fpInstQueueWrites, statistics::units::Count::get(),
              "Number of floating instruction queue writes"),
-    ADD_STAT(fpInstQueueWakeupAccesses, Stats::units::Count::get(),
+    ADD_STAT(fpInstQueueWakeupAccesses, statistics::units::Count::get(),
              "Number of floating instruction queue wakeup accesses"),
-    ADD_STAT(vecInstQueueReads, Stats::units::Count::get(),
+    ADD_STAT(vecInstQueueReads, statistics::units::Count::get(),
              "Number of vector instruction queue reads"),
-    ADD_STAT(vecInstQueueWrites, Stats::units::Count::get(),
+    ADD_STAT(vecInstQueueWrites, statistics::units::Count::get(),
              "Number of vector instruction queue writes"),
-    ADD_STAT(vecInstQueueWakeupAccesses, Stats::units::Count::get(),
+    ADD_STAT(vecInstQueueWakeupAccesses, statistics::units::Count::get(),
              "Number of vector instruction queue wakeup accesses"),
-    ADD_STAT(intAluAccesses, Stats::units::Count::get(),
+    ADD_STAT(intAluAccesses, statistics::units::Count::get(),
              "Number of integer alu accesses"),
-    ADD_STAT(fpAluAccesses, Stats::units::Count::get(),
+    ADD_STAT(fpAluAccesses, statistics::units::Count::get(),
              "Number of floating point alu accesses"),
-    ADD_STAT(vecAluAccesses, Stats::units::Count::get(),
+    ADD_STAT(vecAluAccesses, statistics::units::Count::get(),
              "Number of vector alu accesses")
 {
-    using namespace Stats;
+    using namespace statistics;
     intInstQueueReads
         .flags(total);
 

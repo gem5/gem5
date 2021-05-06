@@ -130,7 +130,7 @@ Network::Network(const Params &p)
     }
 
     // Register a callback function for combining the statistics
-    Stats::registerDumpCallback([this]() { collateStats(); });
+    statistics::registerDumpCallback([this]() { collateStats(); });
 
     for (auto &it : dynamic_cast<Network *>(this)->params().ext_links) {
         it->params().ext_node->initNetQueues();

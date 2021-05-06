@@ -74,11 +74,11 @@ class FetchStage
     const std::string _name;
 
   protected:
-    struct FetchStageStats : public Stats::Group
+    struct FetchStageStats : public statistics::Group
     {
-        FetchStageStats(Stats::Group *parent);
+        FetchStageStats(statistics::Group *parent);
 
-        Stats::Distribution instFetchInstReturned;
+        statistics::Distribution instFetchInstReturned;
     } stats;
 };
 

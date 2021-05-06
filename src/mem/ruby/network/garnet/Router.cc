@@ -185,27 +185,27 @@ Router::regStats()
 
     m_buffer_reads
         .name(name() + ".buffer_reads")
-        .flags(Stats::nozero)
+        .flags(statistics::nozero)
     ;
 
     m_buffer_writes
         .name(name() + ".buffer_writes")
-        .flags(Stats::nozero)
+        .flags(statistics::nozero)
     ;
 
     m_crossbar_activity
         .name(name() + ".crossbar_activity")
-        .flags(Stats::nozero)
+        .flags(statistics::nozero)
     ;
 
     m_sw_input_arbiter_activity
         .name(name() + ".sw_input_arbiter_activity")
-        .flags(Stats::nozero)
+        .flags(statistics::nozero)
     ;
 
     m_sw_output_arbiter_activity
         .name(name() + ".sw_output_arbiter_activity")
-        .flags(Stats::nozero)
+        .flags(statistics::nozero)
     ;
 }
 

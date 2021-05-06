@@ -521,8 +521,8 @@ TLBCoalescer::processCleanupEvent()
     }
 }
 
-TLBCoalescer::TLBCoalescerStats::TLBCoalescerStats(Stats::Group *parent)
-    : Stats::Group(parent),
+TLBCoalescer::TLBCoalescerStats::TLBCoalescerStats(statistics::Group *parent)
+    : statistics::Group(parent),
       ADD_STAT(uncoalescedAccesses, "Number of uncoalesced TLB accesses"),
       ADD_STAT(coalescedAccesses, "Number of coalesced TLB accesses"),
       ADD_STAT(queuingCycles, "Number of cycles spent in queue"),

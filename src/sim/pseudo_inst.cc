@@ -68,7 +68,7 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
-using namespace Stats;
+using namespace statistics;
 
 GEM5_DEPRECATED_NAMESPACE(PseudoInst, pseudo_inst);
 namespace pseudo_inst
@@ -307,7 +307,7 @@ resetstats(ThreadContext *tc, Tick delay, Tick period)
     Tick when = curTick() + delay * sim_clock::as_int::ns;
     Tick repeat = period * sim_clock::as_int::ns;
 
-    Stats::schedStatEvent(false, true, when, repeat);
+    statistics::schedStatEvent(false, true, when, repeat);
 }
 
 void
@@ -321,7 +321,7 @@ dumpstats(ThreadContext *tc, Tick delay, Tick period)
     Tick when = curTick() + delay * sim_clock::as_int::ns;
     Tick repeat = period * sim_clock::as_int::ns;
 
-    Stats::schedStatEvent(true, false, when, repeat);
+    statistics::schedStatEvent(true, false, when, repeat);
 }
 
 void
@@ -336,7 +336,7 @@ dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
     Tick when = curTick() + delay * sim_clock::as_int::ns;
     Tick repeat = period * sim_clock::as_int::ns;
 
-    Stats::schedStatEvent(true, true, when, repeat);
+    statistics::schedStatEvent(true, true, when, repeat);
 }
 
 void

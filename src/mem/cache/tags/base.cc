@@ -213,36 +213,36 @@ BaseTags::print()
 }
 
 BaseTags::BaseTagStats::BaseTagStats(BaseTags &_tags)
-    : Stats::Group(&_tags),
+    : statistics::Group(&_tags),
     tags(_tags),
 
-    ADD_STAT(tagsInUse, Stats::units::Rate<
-                Stats::units::Tick, Stats::units::Count>::get(),
+    ADD_STAT(tagsInUse, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
              "Average ticks per tags in use"),
-    ADD_STAT(totalRefs, Stats::units::Count::get(),
+    ADD_STAT(totalRefs, statistics::units::Count::get(),
              "Total number of references to valid blocks."),
-    ADD_STAT(sampledRefs, Stats::units::Count::get(),
+    ADD_STAT(sampledRefs, statistics::units::Count::get(),
              "Sample count of references to valid blocks."),
-    ADD_STAT(avgRefs, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Count>::get(),
+    ADD_STAT(avgRefs, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Count>::get(),
              "Average number of references to valid blocks."),
-    ADD_STAT(warmupTick, Stats::units::Tick::get(),
+    ADD_STAT(warmupTick, statistics::units::Tick::get(),
              "The tick when the warmup percentage was hit."),
-    ADD_STAT(occupancies, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Tick>::get(),
+    ADD_STAT(occupancies, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Tick>::get(),
              "Average occupied blocks per tick, per requestor"),
-    ADD_STAT(avgOccs, Stats::units::Rate<
-                Stats::units::Ratio, Stats::units::Tick>::get(),
+    ADD_STAT(avgOccs, statistics::units::Rate<
+                statistics::units::Ratio, statistics::units::Tick>::get(),
              "Average percentage of cache occupancy"),
-    ADD_STAT(occupanciesTaskId, Stats::units::Count::get(),
+    ADD_STAT(occupanciesTaskId, statistics::units::Count::get(),
              "Occupied blocks per task id"),
-    ADD_STAT(ageTaskId, Stats::units::Count::get(),
+    ADD_STAT(ageTaskId, statistics::units::Count::get(),
              "Occupied blocks per task id, per block age"),
-    ADD_STAT(ratioOccsTaskId, Stats::units::Ratio::get(),
+    ADD_STAT(ratioOccsTaskId, statistics::units::Ratio::get(),
              "Ratio of occupied blocks and all blocks, per task id"),
-    ADD_STAT(tagAccesses, Stats::units::Count::get(),
+    ADD_STAT(tagAccesses, statistics::units::Count::get(),
              "Number of tag accesses"),
-    ADD_STAT(dataAccesses, Stats::units::Count::get(),
+    ADD_STAT(dataAccesses, statistics::units::Count::get(),
              "Number of data accesses")
 {
 }
@@ -250,9 +250,9 @@ BaseTags::BaseTagStats::BaseTagStats(BaseTags &_tags)
 void
 BaseTags::BaseTagStats::regStats()
 {
-    using namespace Stats;
+    using namespace statistics;
 
-    Stats::Group::regStats();
+    statistics::Group::regStats();
 
     System *system = tags.system;
 
@@ -271,7 +271,7 @@ BaseTags::BaseTagStats::regStats()
         avgOccs.subname(i, system->getRequestorName(i));
     }
 
-    avgOccs = occupancies / Stats::constant(tags.numBlocks);
+    avgOccs = occupancies / statistics::constant(tags.numBlocks);
 
     occupanciesTaskId
         .init(context_switch_task_id::NumTaskId)
@@ -285,13 +285,13 @@ BaseTags::BaseTagStats::regStats()
 
     ratioOccsTaskId.flags(nozero);
 
-    ratioOccsTaskId = occupanciesTaskId / Stats::constant(tags.numBlocks);
+    ratioOccsTaskId = occupanciesTaskId / statistics::constant(tags.numBlocks);
 }
 
 void
 BaseTags::BaseTagStats::preDumpStats()
 {
-    Stats::Group::preDumpStats();
+    statistics::Group::preDumpStats();
 
     tags.computeStats();
 }

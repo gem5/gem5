@@ -64,8 +64,8 @@ RubyPrefetcher::RubyPrefetcher(const Params &p)
 }
 
 RubyPrefetcher::
-RubyPrefetcherStats::RubyPrefetcherStats(Stats::Group *parent)
-    : Stats::Group(parent, "RubyPrefetcher"),
+RubyPrefetcherStats::RubyPrefetcherStats(statistics::Group *parent)
+    : statistics::Group(parent, "RubyPrefetcher"),
       ADD_STAT(numMissObserved, "Number of misses observed"),
       ADD_STAT(numAllocatedStreams, "Number of streams allocated for "
                                     "prefetching"),

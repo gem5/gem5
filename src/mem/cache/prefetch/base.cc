@@ -113,9 +113,11 @@ Base::setCache(BaseCache *_cache)
     blkSize = cache->getBlockSize();
     lBlkSize = floorLog2(blkSize);
 }
-Base::StatGroup::StatGroup(Stats::Group *parent)
-    : Stats::Group(parent),
-    ADD_STAT(pfIssued, Stats::units::Count::get(), "number of hwpf issued")
+
+Base::StatGroup::StatGroup(statistics::Group *parent)
+  : statistics::Group(parent),
+    ADD_STAT(pfIssued, statistics::units::Count::get(),
+        "number of hwpf issued")
 {
 }
 

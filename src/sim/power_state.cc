@@ -202,7 +202,7 @@ PowerState::getWeights() const
 {
     // Get residency stats
     std::vector<double> ret;
-    Stats::VCounter residencies;
+    statistics::VCounter residencies;
     stats.pwrStateResidencyTicks.value(residencies);
 
     // Account for current state too!
@@ -218,15 +218,15 @@ PowerState::getWeights() const
 }
 
 PowerState::PowerStateStats::PowerStateStats(PowerState &co)
-    : Stats::Group(&co),
+    : statistics::Group(&co),
     powerState(co),
-    ADD_STAT(numTransitions, Stats::units::Count::get(),
+    ADD_STAT(numTransitions, statistics::units::Count::get(),
              "Number of power state transitions"),
-    ADD_STAT(numPwrMatchStateTransitions, Stats::units::Count::get(),
+    ADD_STAT(numPwrMatchStateTransitions, statistics::units::Count::get(),
              "Number of power state transitions due match request"),
-    ADD_STAT(ticksClkGated, Stats::units::Tick::get(),
+    ADD_STAT(ticksClkGated, statistics::units::Tick::get(),
              "Distribution of time spent in the clock gated state"),
-    ADD_STAT(pwrStateResidencyTicks, Stats::units::Tick::get(),
+    ADD_STAT(pwrStateResidencyTicks, statistics::units::Tick::get(),
              "Cumulative time (in ticks) in various power states")
 {
 }
@@ -234,9 +234,9 @@ PowerState::PowerStateStats::PowerStateStats(PowerState &co)
 void
 PowerState::PowerStateStats::regStats()
 {
-    Stats::Group::regStats();
+    statistics::Group::regStats();
 
-    using namespace Stats;
+    using namespace statistics;
 
     const PowerStateParams &p = powerState.params();
 
@@ -265,7 +265,7 @@ PowerState::PowerStateStats::regStats()
 void
 PowerState::PowerStateStats::preDumpStats()
 {
-    Stats::Group::preDumpStats();
+    statistics::Group::preDumpStats();
 
     /**
      * For every stats dump, the power state residency and other distribution

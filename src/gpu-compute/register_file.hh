@@ -151,21 +151,21 @@ class RegisterFile : public SimObject
     // numer of registers in this register file
     int _numRegs;
 
-    struct RegisterFileStats : public Stats::Group
+    struct RegisterFileStats : public statistics::Group
     {
-        RegisterFileStats(Stats::Group *parent);
+        RegisterFileStats(statistics::Group *parent);
 
         // Total number of register reads per DWORD per thread
-        Stats::Scalar registerReads;
+        statistics::Scalar registerReads;
         // Total number of register writes per DWORD per thread
-        Stats::Scalar registerWrites;
+        statistics::Scalar registerWrites;
 
         // Number of register file SRAM activations for reads.
         // The register file may be implemented with multiple SRAMs. This stat
         // tracks how many times the SRAMs are accessed for reads.
-        Stats::Scalar sramReads;
+        statistics::Scalar sramReads;
         // Number of register file SRAM activations for writes
-        Stats::Scalar sramWrites;
+        statistics::Scalar sramWrites;
     } stats;
 };
 

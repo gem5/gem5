@@ -156,55 +156,55 @@ Fetch::regProbePoints()
 }
 
 Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
-    : Stats::Group(cpu, "fetch"),
-    ADD_STAT(icacheStallCycles, Stats::units::Cycle::get(),
+    : statistics::Group(cpu, "fetch"),
+    ADD_STAT(icacheStallCycles, statistics::units::Cycle::get(),
              "Number of cycles fetch is stalled on an Icache miss"),
-    ADD_STAT(insts, Stats::units::Count::get(),
+    ADD_STAT(insts, statistics::units::Count::get(),
              "Number of instructions fetch has processed"),
-    ADD_STAT(branches, Stats::units::Count::get(),
+    ADD_STAT(branches, statistics::units::Count::get(),
              "Number of branches that fetch encountered"),
-    ADD_STAT(predictedBranches, Stats::units::Count::get(),
+    ADD_STAT(predictedBranches, statistics::units::Count::get(),
              "Number of branches that fetch has predicted taken"),
-    ADD_STAT(cycles, Stats::units::Cycle::get(),
+    ADD_STAT(cycles, statistics::units::Cycle::get(),
              "Number of cycles fetch has run and was not squashing or "
              "blocked"),
-    ADD_STAT(squashCycles, Stats::units::Cycle::get(),
+    ADD_STAT(squashCycles, statistics::units::Cycle::get(),
              "Number of cycles fetch has spent squashing"),
-    ADD_STAT(tlbCycles, Stats::units::Cycle::get(),
+    ADD_STAT(tlbCycles, statistics::units::Cycle::get(),
              "Number of cycles fetch has spent waiting for tlb"),
-    ADD_STAT(idleCycles, Stats::units::Cycle::get(),
+    ADD_STAT(idleCycles, statistics::units::Cycle::get(),
              "Number of cycles fetch was idle"),
-    ADD_STAT(blockedCycles, Stats::units::Cycle::get(),
+    ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
              "Number of cycles fetch has spent blocked"),
-    ADD_STAT(miscStallCycles, Stats::units::Cycle::get(),
+    ADD_STAT(miscStallCycles, statistics::units::Cycle::get(),
              "Number of cycles fetch has spent waiting on interrupts, or bad "
              "addresses, or out of MSHRs"),
-    ADD_STAT(pendingDrainCycles, Stats::units::Cycle::get(),
+    ADD_STAT(pendingDrainCycles, statistics::units::Cycle::get(),
              "Number of cycles fetch has spent waiting on pipes to drain"),
-    ADD_STAT(noActiveThreadStallCycles, Stats::units::Cycle::get(),
+    ADD_STAT(noActiveThreadStallCycles, statistics::units::Cycle::get(),
              "Number of stall cycles due to no active thread to fetch from"),
-    ADD_STAT(pendingTrapStallCycles, Stats::units::Cycle::get(),
+    ADD_STAT(pendingTrapStallCycles, statistics::units::Cycle::get(),
              "Number of stall cycles due to pending traps"),
-    ADD_STAT(pendingQuiesceStallCycles, Stats::units::Cycle::get(),
+    ADD_STAT(pendingQuiesceStallCycles, statistics::units::Cycle::get(),
              "Number of stall cycles due to pending quiesce instructions"),
-    ADD_STAT(icacheWaitRetryStallCycles, Stats::units::Cycle::get(),
+    ADD_STAT(icacheWaitRetryStallCycles, statistics::units::Cycle::get(),
              "Number of stall cycles due to full MSHR"),
-    ADD_STAT(cacheLines, Stats::units::Count::get(),
+    ADD_STAT(cacheLines, statistics::units::Count::get(),
              "Number of cache lines fetched"),
-    ADD_STAT(icacheSquashes, Stats::units::Count::get(),
+    ADD_STAT(icacheSquashes, statistics::units::Count::get(),
              "Number of outstanding Icache misses that were squashed"),
-    ADD_STAT(tlbSquashes, Stats::units::Count::get(),
+    ADD_STAT(tlbSquashes, statistics::units::Count::get(),
              "Number of outstanding ITLB misses that were squashed"),
-    ADD_STAT(nisnDist, Stats::units::Count::get(),
+    ADD_STAT(nisnDist, statistics::units::Count::get(),
              "Number of instructions fetched each cycle (Total)"),
-    ADD_STAT(idleRate, Stats::units::Ratio::get(),
+    ADD_STAT(idleRate, statistics::units::Ratio::get(),
              "Ratio of cycles fetch was idle",
              idleCycles / cpu->baseStats.numCycles),
-    ADD_STAT(branchRate, Stats::units::Ratio::get(),
+    ADD_STAT(branchRate, statistics::units::Ratio::get(),
              "Number of branch fetches per cycle",
              branches / cpu->baseStats.numCycles),
-    ADD_STAT(rate, Stats::units::Rate<
-                    Stats::units::Count, Stats::units::Cycle>::get(),
+    ADD_STAT(rate, statistics::units::Rate<
+                    statistics::units::Count, statistics::units::Cycle>::get(),
              "Number of inst fetches per cycle",
              insts / cpu->baseStats.numCycles)
 {
@@ -248,13 +248,13 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
             .init(/* base value */ 0,
               /* last value */ fetch->fetchWidth,
               /* bucket size */ 1)
-            .flags(Stats::pdf);
+            .flags(statistics::pdf);
         idleRate
             .prereq(idleRate);
         branchRate
-            .flags(Stats::total);
+            .flags(statistics::total);
         rate
-            .flags(Stats::total);
+            .flags(statistics::total);
 }
 void
 Fetch::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)

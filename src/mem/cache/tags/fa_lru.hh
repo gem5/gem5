@@ -273,11 +273,11 @@ class FALRU : public BaseTags
      * caches from a set minimum size of interest up to the actual
      * cache size.
      */
-    class CacheTracking : public Stats::Group
+    class CacheTracking : public statistics::Group
     {
       public:
         CacheTracking(unsigned min_size, unsigned max_size,
-                      unsigned block_size, Stats::Group *parent);
+                      unsigned block_size, statistics::Group *parent);
 
         /**
          * Initialiaze cache blocks and the tracking mechanism
@@ -356,11 +356,11 @@ class FALRU : public BaseTags
          */
 
         /** Hits in each cache */
-        Stats::Vector hits;
+        statistics::Vector hits;
         /** Misses in each cache */
-        Stats::Vector misses;
+        statistics::Vector misses;
         /** Total number of accesses */
-        Stats::Scalar accesses;
+        statistics::Scalar accesses;
 
         /**
          * @}

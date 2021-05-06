@@ -50,7 +50,7 @@
 class ThreadContext;
 
 typedef const char *FaultName;
-typedef Stats::Scalar FaultStat;
+typedef statistics::Scalar FaultStat;
 
 class FaultBase
 {

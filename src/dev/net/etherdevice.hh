@@ -52,78 +52,78 @@ class EtherDevice : public PciDevice
     {}
 
   protected:
-    struct EtherDeviceStats : public Stats::Group
+    struct EtherDeviceStats : public statistics::Group
     {
-        EtherDeviceStats(Stats::Group *parent);
+        EtherDeviceStats(statistics::Group *parent);
 
-        Stats::Scalar postedInterrupts;
+        statistics::Scalar postedInterrupts;
 
-        Stats::Scalar txBytes;
-        Stats::Scalar rxBytes;
+        statistics::Scalar txBytes;
+        statistics::Scalar rxBytes;
 
-        Stats::Scalar txPackets;
-        Stats::Scalar rxPackets;
+        statistics::Scalar txPackets;
+        statistics::Scalar rxPackets;
 
-        Stats::Formula txBandwidth;
-        Stats::Formula rxBandwidth;
+        statistics::Formula txBandwidth;
+        statistics::Formula rxBandwidth;
 
-        Stats::Scalar txIpChecksums;
-        Stats::Scalar rxIpChecksums;
+        statistics::Scalar txIpChecksums;
+        statistics::Scalar rxIpChecksums;
 
-        Stats::Scalar txTcpChecksums;
-        Stats::Scalar rxTcpChecksums;
+        statistics::Scalar txTcpChecksums;
+        statistics::Scalar rxTcpChecksums;
 
-        Stats::Scalar txUdpChecksums;
-        Stats::Scalar rxUdpChecksums;
+        statistics::Scalar txUdpChecksums;
+        statistics::Scalar rxUdpChecksums;
 
-        Stats::Scalar descDmaReads;
-        Stats::Scalar descDmaWrites;
+        statistics::Scalar descDmaReads;
+        statistics::Scalar descDmaWrites;
 
-        Stats::Scalar descDmaRdBytes;
-        Stats::Scalar descDmaWrBytes;
+        statistics::Scalar descDmaRdBytes;
+        statistics::Scalar descDmaWrBytes;
 
-        Stats::Formula totBandwidth;
-        Stats::Formula totPackets;
-        Stats::Formula totBytes;
-        Stats::Formula totPacketRate;
+        statistics::Formula totBandwidth;
+        statistics::Formula totPackets;
+        statistics::Formula totBytes;
+        statistics::Formula totPacketRate;
 
-        Stats::Formula txPacketRate;
-        Stats::Formula rxPacketRate;
+        statistics::Formula txPacketRate;
+        statistics::Formula rxPacketRate;
 
-        Stats::Scalar postedSwi;
-        Stats::Scalar totalSwi;
-        Stats::Formula coalescedSwi;
+        statistics::Scalar postedSwi;
+        statistics::Scalar totalSwi;
+        statistics::Formula coalescedSwi;
 
-        Stats::Scalar postedRxIdle;
-        Stats::Scalar totalRxIdle;
-        Stats::Formula coalescedRxIdle;
+        statistics::Scalar postedRxIdle;
+        statistics::Scalar totalRxIdle;
+        statistics::Formula coalescedRxIdle;
 
-        Stats::Scalar postedRxOk;
-        Stats::Scalar totalRxOk;
-        Stats::Formula coalescedRxOk;
+        statistics::Scalar postedRxOk;
+        statistics::Scalar totalRxOk;
+        statistics::Formula coalescedRxOk;
 
-        Stats::Scalar postedRxDesc;
-        Stats::Scalar totalRxDesc;
-        Stats::Formula coalescedRxDesc;
+        statistics::Scalar postedRxDesc;
+        statistics::Scalar totalRxDesc;
+        statistics::Formula coalescedRxDesc;
 
-        Stats::Scalar postedTxOk;
-        Stats::Scalar totalTxOk;
-        Stats::Formula coalescedTxOk;
+        statistics::Scalar postedTxOk;
+        statistics::Scalar totalTxOk;
+        statistics::Formula coalescedTxOk;
 
-        Stats::Scalar postedTxIdle;
-        Stats::Scalar totalTxIdle;
-        Stats::Formula coalescedTxIdle;
+        statistics::Scalar postedTxIdle;
+        statistics::Scalar totalTxIdle;
+        statistics::Formula coalescedTxIdle;
 
-        Stats::Scalar postedTxDesc;
-        Stats::Scalar totalTxDesc;
-        Stats::Formula coalescedTxDesc;
+        statistics::Scalar postedTxDesc;
+        statistics::Scalar totalTxDesc;
+        statistics::Formula coalescedTxDesc;
 
-        Stats::Scalar postedRxOrn;
-        Stats::Scalar totalRxOrn;
-        Stats::Formula coalescedRxOrn;
+        statistics::Scalar postedRxOrn;
+        statistics::Scalar totalRxOrn;
+        statistics::Formula coalescedRxOrn;
 
-        Stats::Formula coalescedTotal;
-        Stats::Scalar droppedPackets;
+        statistics::Formula coalescedTotal;
+        statistics::Scalar droppedPackets;
     } etherDeviceStats;
 };
 

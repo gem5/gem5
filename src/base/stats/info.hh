@@ -29,11 +29,14 @@
 #ifndef __BASE_STATS_INFO_HH__
 #define __BASE_STATS_INFO_HH__
 
+#include "base/compiler.hh"
 #include "base/flags.hh"
 #include "base/stats/types.hh"
 #include "base/stats/units.hh"
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 class Group;
 
@@ -261,6 +264,6 @@ class SparseHistInfo : public Info
 typedef std::map<std::string, Info *> NameMapType;
 NameMapType &nameMap();
 
-} // namespace Stats
+} // namespace statistics
 
 #endif // __BASE_STATS_INFO_HH__

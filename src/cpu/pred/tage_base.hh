@@ -485,23 +485,23 @@ class TAGEBase : public SimObject
 
     bool initialized;
 
-    struct TAGEBaseStats : public Stats::Group
+    struct TAGEBaseStats : public statistics::Group
     {
-        TAGEBaseStats(Stats::Group *parent, unsigned nHistoryTables);
+        TAGEBaseStats(statistics::Group *parent, unsigned nHistoryTables);
         // stats
-        Stats::Scalar longestMatchProviderCorrect;
-        Stats::Scalar altMatchProviderCorrect;
-        Stats::Scalar bimodalAltMatchProviderCorrect;
-        Stats::Scalar bimodalProviderCorrect;
-        Stats::Scalar longestMatchProviderWrong;
-        Stats::Scalar altMatchProviderWrong;
-        Stats::Scalar bimodalAltMatchProviderWrong;
-        Stats::Scalar bimodalProviderWrong;
-        Stats::Scalar altMatchProviderWouldHaveHit;
-        Stats::Scalar longestMatchProviderWouldHaveHit;
+        statistics::Scalar longestMatchProviderCorrect;
+        statistics::Scalar altMatchProviderCorrect;
+        statistics::Scalar bimodalAltMatchProviderCorrect;
+        statistics::Scalar bimodalProviderCorrect;
+        statistics::Scalar longestMatchProviderWrong;
+        statistics::Scalar altMatchProviderWrong;
+        statistics::Scalar bimodalAltMatchProviderWrong;
+        statistics::Scalar bimodalProviderWrong;
+        statistics::Scalar altMatchProviderWouldHaveHit;
+        statistics::Scalar longestMatchProviderWouldHaveHit;
 
-        Stats::Vector longestMatchProvider;
-        Stats::Vector altMatchProvider;
+        statistics::Vector longestMatchProvider;
+        statistics::Vector altMatchProvider;
     } stats;
 };
 

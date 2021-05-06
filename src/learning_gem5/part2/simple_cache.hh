@@ -293,13 +293,13 @@ class SimpleCache : public ClockedObject
 
     /// Cache statistics
   protected:
-    struct SimpleCacheStats : public Stats::Group
+    struct SimpleCacheStats : public statistics::Group
     {
-        SimpleCacheStats(Stats::Group *parent);
-        Stats::Scalar hits;
-        Stats::Scalar misses;
-        Stats::Histogram missLatency;
-        Stats::Formula hitRatio;
+        SimpleCacheStats(statistics::Group *parent);
+        statistics::Scalar hits;
+        statistics::Scalar misses;
+        statistics::Histogram missLatency;
+        statistics::Formula hitRatio;
     } stats;
 
   public:

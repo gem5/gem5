@@ -510,54 +510,54 @@ class ElasticTrace : public ProbeListenerObject
      */
     bool hasCompCompleted(TraceInfo* past_record, Tick execute_tick) const;
 
-    struct ElasticTraceStats : public Stats::Group
+    struct ElasticTraceStats : public statistics::Group
     {
-        ElasticTraceStats(Stats::Group *parent);
+        ElasticTraceStats(statistics::Group *parent);
 
         /** Number of register dependencies recorded during tracing */
-        Stats::Scalar numRegDep;
+        statistics::Scalar numRegDep;
 
         /**
          * Number of stores that got assigned a commit order dependency
          * on a past load/store.
          */
-        Stats::Scalar numOrderDepStores;
+        statistics::Scalar numOrderDepStores;
 
         /**
          * Number of load insts that got assigned an issue order dependency
          * because they were dependency-free.
          */
-        Stats::Scalar numIssueOrderDepLoads;
+        statistics::Scalar numIssueOrderDepLoads;
 
         /**
          * Number of store insts that got assigned an issue order dependency
          * because they were dependency-free.
          */
-        Stats::Scalar numIssueOrderDepStores;
+        statistics::Scalar numIssueOrderDepStores;
 
         /**
          * Number of non load/store insts that got assigned an issue order
          * dependency because they were dependency-free.
          */
-        Stats::Scalar numIssueOrderDepOther;
+        statistics::Scalar numIssueOrderDepOther;
 
         /** Number of filtered nodes */
-        Stats::Scalar numFilteredNodes;
+        statistics::Scalar numFilteredNodes;
 
         /** Maximum number of dependents on any instruction */
-        Stats::Scalar maxNumDependents;
+        statistics::Scalar maxNumDependents;
 
         /**
          * Maximum size of the temporary store mostly useful as a check that
          * it is not growing
          */
-        Stats::Scalar maxTempStoreSize;
+        statistics::Scalar maxTempStoreSize;
 
         /**
          * Maximum size of the map that holds the last writer to a physical
          * register.
          */
-        Stats::Scalar maxPhysRegDepMapSize;
+        statistics::Scalar maxPhysRegDepMapSize;
     } stats;
 
 };

@@ -472,86 +472,86 @@ class InstructionQueue
      */
     void dumpInsts();
 
-    struct IQStats : public Stats::Group
+    struct IQStats : public statistics::Group
     {
         IQStats(CPU *cpu, const unsigned &total_width);
         /** Stat for number of instructions added. */
-        Stats::Scalar instsAdded;
+        statistics::Scalar instsAdded;
         /** Stat for number of non-speculative instructions added. */
-        Stats::Scalar nonSpecInstsAdded;
+        statistics::Scalar nonSpecInstsAdded;
 
-        Stats::Scalar instsIssued;
+        statistics::Scalar instsIssued;
         /** Stat for number of integer instructions issued. */
-        Stats::Scalar intInstsIssued;
+        statistics::Scalar intInstsIssued;
         /** Stat for number of floating point instructions issued. */
-        Stats::Scalar floatInstsIssued;
+        statistics::Scalar floatInstsIssued;
         /** Stat for number of branch instructions issued. */
-        Stats::Scalar branchInstsIssued;
+        statistics::Scalar branchInstsIssued;
         /** Stat for number of memory instructions issued. */
-        Stats::Scalar memInstsIssued;
+        statistics::Scalar memInstsIssued;
         /** Stat for number of miscellaneous instructions issued. */
-        Stats::Scalar miscInstsIssued;
+        statistics::Scalar miscInstsIssued;
         /** Stat for number of squashed instructions that were ready to
          *  issue. */
-        Stats::Scalar squashedInstsIssued;
+        statistics::Scalar squashedInstsIssued;
         /** Stat for number of squashed instructions examined when
          *  squashing. */
-        Stats::Scalar squashedInstsExamined;
+        statistics::Scalar squashedInstsExamined;
         /** Stat for number of squashed instruction operands examined when
          * squashing.
          */
-        Stats::Scalar squashedOperandsExamined;
+        statistics::Scalar squashedOperandsExamined;
         /** Stat for number of non-speculative instructions removed due to
          *  a squash.
          */
-        Stats::Scalar squashedNonSpecRemoved;
+        statistics::Scalar squashedNonSpecRemoved;
         // Also include number of instructions rescheduled and replayed.
 
         /** Distribution of number of instructions in the queue.
          * @todo: Need to create struct to track the entry time for each
          * instruction. */
-        // Stats::VectorDistribution queueResDist;
+        // statistics::VectorDistribution queueResDist;
         /** Distribution of the number of instructions issued. */
-        Stats::Distribution numIssuedDist;
+        statistics::Distribution numIssuedDist;
         /** Distribution of the cycles it takes to issue an instruction.
          * @todo: Need to create struct to track the ready time for each
          * instruction. */
-        // Stats::VectorDistribution issueDelayDist;
+        // statistics::VectorDistribution issueDelayDist;
 
         /** Number of times an instruction could not be issued because a
          * FU was busy.
          */
-        Stats::Vector statFuBusy;
-        // Stats::Vector dist_unissued;
+        statistics::Vector statFuBusy;
+        // statistics::Vector dist_unissued;
         /** Stat for total number issued for each instruction type. */
-        Stats::Vector2d statIssuedInstType;
+        statistics::Vector2d statIssuedInstType;
 
         /** Number of instructions issued per cycle. */
-        Stats::Formula issueRate;
+        statistics::Formula issueRate;
 
         /** Number of times the FU was busy. */
-        Stats::Vector fuBusy;
+        statistics::Vector fuBusy;
         /** Number of times the FU was busy per instruction issued. */
-        Stats::Formula fuBusyRate;
+        statistics::Formula fuBusyRate;
     } iqStats;
 
    public:
-    struct IQIOStats : public Stats::Group
+    struct IQIOStats : public statistics::Group
     {
-        IQIOStats(Stats::Group *parent);
-        Stats::Scalar intInstQueueReads;
-        Stats::Scalar intInstQueueWrites;
-        Stats::Scalar intInstQueueWakeupAccesses;
-        Stats::Scalar fpInstQueueReads;
-        Stats::Scalar fpInstQueueWrites;
-        Stats::Scalar fpInstQueueWakeupAccesses;
-        Stats::Scalar vecInstQueueReads;
-        Stats::Scalar vecInstQueueWrites;
-        Stats::Scalar vecInstQueueWakeupAccesses;
+        IQIOStats(statistics::Group *parent);
+        statistics::Scalar intInstQueueReads;
+        statistics::Scalar intInstQueueWrites;
+        statistics::Scalar intInstQueueWakeupAccesses;
+        statistics::Scalar fpInstQueueReads;
+        statistics::Scalar fpInstQueueWrites;
+        statistics::Scalar fpInstQueueWakeupAccesses;
+        statistics::Scalar vecInstQueueReads;
+        statistics::Scalar vecInstQueueWrites;
+        statistics::Scalar vecInstQueueWakeupAccesses;
 
-        Stats::Scalar intAluAccesses;
-        Stats::Scalar fpAluAccesses;
-        Stats::Scalar vecAluAccesses;
+        statistics::Scalar intAluAccesses;
+        statistics::Scalar fpAluAccesses;
+        statistics::Scalar vecAluAccesses;
     } iqIOStats;
 };
 

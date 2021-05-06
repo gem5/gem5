@@ -184,49 +184,49 @@ class ScheduleStage
     std::vector<std::deque<std::pair<GPUDynInstPtr, SCH_STATUS>>> schList;
 
   protected:
-    struct ScheduleStageStats : public Stats::Group
+    struct ScheduleStageStats : public statistics::Group
     {
-        ScheduleStageStats(Stats::Group *parent, int num_exec_units);
+        ScheduleStageStats(statistics::Group *parent, int num_exec_units);
 
         // Number of cycles with empty (or not empty) readyList, per execution
         // resource, when the CU is active (not sleeping)
-        Stats::Vector rdyListEmpty;
-        Stats::Vector rdyListNotEmpty;
+        statistics::Vector rdyListEmpty;
+        statistics::Vector rdyListNotEmpty;
 
         // Number of cycles, per execution resource, when at least one wave
         // was on the readyList and picked by scheduler, but was unable to be
         // added to the schList, when the CU is active (not sleeping)
-        Stats::Vector addToSchListStalls;
+        statistics::Vector addToSchListStalls;
 
         // Number of cycles, per execution resource, when a wave is selected
         // as candidate for dispatchList from schList
         // Note: may be arbitrated off dispatchList (e.g., LDS arbitration)
-        Stats::Vector schListToDispList;
+        statistics::Vector schListToDispList;
 
         // Per execution resource stat, incremented once per cycle if no wave
         // was selected as candidate for dispatch and moved to dispatchList
-        Stats::Vector schListToDispListStalls;
+        statistics::Vector schListToDispListStalls;
 
         // Number of times a wave is selected by the scheduler but cannot
         // be added to the schList due to register files not being able to
         // support reads or writes of operands. RF_ACCESS_NRDY condition is
         // always incremented if at least one read/write not supported, other
         // conditions are incremented independently from each other.
-        Stats::Vector rfAccessStalls;
+        statistics::Vector rfAccessStalls;
 
         // Number of times a wave is executing FLAT instruction and
         // forces another wave occupying its required local memory resource
         // to be deselected for execution, and placed back on schList
-        Stats::Scalar ldsBusArbStalls;
+        statistics::Scalar ldsBusArbStalls;
 
         // Count of times VRF and/or SRF blocks waves on schList from
         // performing RFBUSY->RFREADY transition
-        Stats::Vector opdNrdyStalls;
+        statistics::Vector opdNrdyStalls;
 
         // Count of times resource required for dispatch is not ready and
         // blocks wave in RFREADY state on schList from potentially moving
         // to dispatchList
-        Stats::Vector dispNrdyStalls;
+        statistics::Vector dispNrdyStalls;
     } stats;
 };
 

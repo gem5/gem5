@@ -146,15 +146,15 @@ class BaseCPU : public ClockedObject
     const unsigned int _cacheLineSize;
 
     /** Global CPU statistics that are merged into the Root object. */
-    struct GlobalStats : public Stats::Group
+    struct GlobalStats : public statistics::Group
     {
-        GlobalStats(::Stats::Group *parent);
+        GlobalStats(::statistics::Group *parent);
 
-        ::Stats::Value simInsts;
-        ::Stats::Value simOps;
+        ::statistics::Value simInsts;
+        ::statistics::Value simOps;
 
-        ::Stats::Formula hostInstRate;
-        ::Stats::Formula hostOpRate;
+        ::statistics::Formula hostInstRate;
+        ::statistics::Formula hostOpRate;
     };
 
     /**
@@ -587,13 +587,13 @@ class BaseCPU : public ClockedObject
     }
 
   public:
-    struct BaseCPUStats : public Stats::Group
+    struct BaseCPUStats : public statistics::Group
     {
-        BaseCPUStats(Stats::Group *parent);
+        BaseCPUStats(statistics::Group *parent);
         // Number of CPU cycles simulated
-        Stats::Scalar numCycles;
-        Stats::Scalar numWorkItemsStarted;
-        Stats::Scalar numWorkItemsCompleted;
+        statistics::Scalar numCycles;
+        statistics::Scalar numWorkItemsStarted;
+        statistics::Scalar numWorkItemsCompleted;
     } baseStats;
 
   private:

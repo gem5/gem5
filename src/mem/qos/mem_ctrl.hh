@@ -136,7 +136,7 @@ class MemCtrl : public ClockedObject
     /** bus state for next request event triggered */
     BusState busStateNext;
 
-    struct MemCtrlStats : public Stats::Group
+    struct MemCtrlStats : public statistics::Group
     {
         MemCtrlStats(MemCtrl &mc);
 
@@ -145,25 +145,25 @@ class MemCtrl : public ClockedObject
         const MemCtrl &memCtrl;
 
         /** per-requestor average QoS priority */
-        Stats::VectorStandardDeviation avgPriority;
+        statistics::VectorStandardDeviation avgPriority;
         /**
          * per-requestor average QoS distance between assigned and
          * queued values
          */
-        Stats::VectorStandardDeviation avgPriorityDistance;
+        statistics::VectorStandardDeviation avgPriorityDistance;
 
         /** per-priority minimum latency */
-        Stats::Vector priorityMinLatency;
+        statistics::Vector priorityMinLatency;
         /** per-priority maximum latency */
-        Stats::Vector priorityMaxLatency;
+        statistics::Vector priorityMaxLatency;
         /** Count the number of turnarounds READ to WRITE */
-        Stats::Scalar numReadWriteTurnArounds;
+        statistics::Scalar numReadWriteTurnArounds;
         /** Count the number of turnarounds WRITE to READ */
-        Stats::Scalar numWriteReadTurnArounds;
+        statistics::Scalar numWriteReadTurnArounds;
         /** Count the number of times bus staying in READ state */
-        Stats::Scalar numStayReadState;
+        statistics::Scalar numStayReadState;
         /** Count the number of times bus staying in WRITE state */
-        Stats::Scalar numStayWriteState;
+        statistics::Scalar numStayWriteState;
     } stats;
 
     /** Pointer to the System object */

@@ -256,12 +256,12 @@ class MessageBuffer : public SimObject
     int m_input_link_id;
     int m_vnet_id;
 
-    Stats::Scalar m_not_avail_count;  // count the # of times I didn't have N
-                                      // slots available
-    Stats::Average m_buf_msgs;
-    Stats::Average m_stall_time;
-    Stats::Scalar m_stall_count;
-    Stats::Formula m_occupancy;
+    // Count the # of times I didn't have N slots available
+    statistics::Scalar m_not_avail_count;
+    statistics::Average m_buf_msgs;
+    statistics::Average m_stall_time;
+    statistics::Scalar m_stall_count;
+    statistics::Formula m_occupancy;
 };
 
 Tick random_time();

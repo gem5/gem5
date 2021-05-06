@@ -33,9 +33,12 @@
 #include <map>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/types.hh"
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 /** All counters are of 64-bit values. */
 typedef double Counter;
@@ -54,6 +57,6 @@ typedef std::vector<Result> VResult;
 typedef unsigned int size_type;
 typedef unsigned int off_type;
 
-} // namespace Stats
+} // namespace statistics
 
 #endif // __BASE_STATS_TYPES_HH__

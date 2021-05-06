@@ -333,36 +333,36 @@ class GPUCoalescer : public RubyPort
 
     GMTokenPort& getGMTokenPort() { return gmTokenPort; }
 
-    Stats::Histogram& getOutstandReqHist() { return m_outstandReqHist; }
+    statistics::Histogram& getOutstandReqHist() { return m_outstandReqHist; }
 
-    Stats::Histogram& getLatencyHist() { return m_latencyHist; }
-    Stats::Histogram& getTypeLatencyHist(uint32_t t)
+    statistics::Histogram& getLatencyHist() { return m_latencyHist; }
+    statistics::Histogram& getTypeLatencyHist(uint32_t t)
     { return *m_typeLatencyHist[t]; }
 
-    Stats::Histogram& getMissLatencyHist()
+    statistics::Histogram& getMissLatencyHist()
     { return m_missLatencyHist; }
-    Stats::Histogram& getMissTypeLatencyHist(uint32_t t)
+    statistics::Histogram& getMissTypeLatencyHist(uint32_t t)
     { return *m_missTypeLatencyHist[t]; }
 
-    Stats::Histogram& getMissMachLatencyHist(uint32_t t) const
+    statistics::Histogram& getMissMachLatencyHist(uint32_t t) const
     { return *m_missMachLatencyHist[t]; }
 
-    Stats::Histogram&
+    statistics::Histogram&
     getMissTypeMachLatencyHist(uint32_t r, uint32_t t) const
     { return *m_missTypeMachLatencyHist[r][t]; }
 
-    Stats::Histogram& getIssueToInitialDelayHist(uint32_t t) const
+    statistics::Histogram& getIssueToInitialDelayHist(uint32_t t) const
     { return *m_IssueToInitialDelayHist[t]; }
 
-    Stats::Histogram&
+    statistics::Histogram&
     getInitialToForwardDelayHist(const MachineType t) const
     { return *m_InitialToForwardDelayHist[t]; }
 
-    Stats::Histogram&
+    statistics::Histogram&
     getForwardRequestToFirstResponseHist(const MachineType t) const
     { return *m_ForwardToFirstResponseDelayHist[t]; }
 
-    Stats::Histogram&
+    statistics::Histogram&
     getFirstResponseToCompletionDelayHist(const MachineType t) const
     { return *m_FirstResponseToCompletionDelayHist[t]; }
 
@@ -458,63 +458,64 @@ class GPUCoalescer : public RubyPort
 // TODO - Need to update the following stats once the VIPER protocol
 //        is re-integrated.
 //    // m5 style stats for TCP hit/miss counts
-//    Stats::Scalar GPU_TCPLdHits;
-//    Stats::Scalar GPU_TCPLdTransfers;
-//    Stats::Scalar GPU_TCCLdHits;
-//    Stats::Scalar GPU_LdMiss;
+//    statistics::Scalar GPU_TCPLdHits;
+//    statistics::Scalar GPU_TCPLdTransfers;
+//    statistics::Scalar GPU_TCCLdHits;
+//    statistics::Scalar GPU_LdMiss;
 //
-//    Stats::Scalar GPU_TCPStHits;
-//    Stats::Scalar GPU_TCPStTransfers;
-//    Stats::Scalar GPU_TCCStHits;
-//    Stats::Scalar GPU_StMiss;
+//    statistics::Scalar GPU_TCPStHits;
+//    statistics::Scalar GPU_TCPStTransfers;
+//    statistics::Scalar GPU_TCCStHits;
+//    statistics::Scalar GPU_StMiss;
 //
-//    Stats::Scalar CP_TCPLdHits;
-//    Stats::Scalar CP_TCPLdTransfers;
-//    Stats::Scalar CP_TCCLdHits;
-//    Stats::Scalar CP_LdMiss;
+//    statistics::Scalar CP_TCPLdHits;
+//    statistics::Scalar CP_TCPLdTransfers;
+//    statistics::Scalar CP_TCCLdHits;
+//    statistics::Scalar CP_LdMiss;
 //
-//    Stats::Scalar CP_TCPStHits;
-//    Stats::Scalar CP_TCPStTransfers;
-//    Stats::Scalar CP_TCCStHits;
-//    Stats::Scalar CP_StMiss;
+//    statistics::Scalar CP_TCPStHits;
+//    statistics::Scalar CP_TCPStTransfers;
+//    statistics::Scalar CP_TCCStHits;
+//    statistics::Scalar CP_StMiss;
 
     //! Histogram for number of outstanding requests per cycle.
-    Stats::Histogram m_outstandReqHist;
+    statistics::Histogram m_outstandReqHist;
 
     //! Histogram for holding latency profile of all requests.
-    Stats::Histogram m_latencyHist;
-    std::vector<Stats::Histogram *> m_typeLatencyHist;
+    statistics::Histogram m_latencyHist;
+    std::vector<statistics::Histogram *> m_typeLatencyHist;
 
     //! Histogram for holding latency profile of all requests that
     //! miss in the controller connected to this sequencer.
-    Stats::Histogram m_missLatencyHist;
-    std::vector<Stats::Histogram *> m_missTypeLatencyHist;
+    statistics::Histogram m_missLatencyHist;
+    std::vector<statistics::Histogram *> m_missTypeLatencyHist;
 
     //! Histograms for profiling the latencies for requests that
     //! required external messages.
-    std::vector<Stats::Histogram *> m_missMachLatencyHist;
-    std::vector< std::vector<Stats::Histogram *> > m_missTypeMachLatencyHist;
+    std::vector<statistics::Histogram *> m_missMachLatencyHist;
+    std::vector<std::vector<statistics::Histogram *>>
+        m_missTypeMachLatencyHist;
 
     //! Histograms for recording the breakdown of miss latency
-    std::vector<Stats::Histogram *> m_IssueToInitialDelayHist;
-    std::vector<Stats::Histogram *> m_InitialToForwardDelayHist;
-    std::vector<Stats::Histogram *> m_ForwardToFirstResponseDelayHist;
-    std::vector<Stats::Histogram *> m_FirstResponseToCompletionDelayHist;
+    std::vector<statistics::Histogram *> m_IssueToInitialDelayHist;
+    std::vector<statistics::Histogram *> m_InitialToForwardDelayHist;
+    std::vector<statistics::Histogram *> m_ForwardToFirstResponseDelayHist;
+    std::vector<statistics::Histogram *> m_FirstResponseToCompletionDelayHist;
 
 // TODO - Need to update the following stats once the VIPER protocol
 //        is re-integrated.
-//    Stats::Distribution numHopDelays;
-//    Stats::Distribution tcpToTccDelay;
-//    Stats::Distribution tccToSdDelay;
-//    Stats::Distribution sdToSdDelay;
-//    Stats::Distribution sdToTccDelay;
-//    Stats::Distribution tccToTcpDelay;
+//    statistics::Distribution numHopDelays;
+//    statistics::Distribution tcpToTccDelay;
+//    statistics::Distribution tccToSdDelay;
+//    statistics::Distribution sdToSdDelay;
+//    statistics::Distribution sdToTccDelay;
+//    statistics::Distribution tccToTcpDelay;
 //
-//    Stats::Average avgTcpToTcc;
-//    Stats::Average avgTccToSd;
-//    Stats::Average avgSdToSd;
-//    Stats::Average avgSdToTcc;
-//    Stats::Average avgTccToTcp;
+//    statistics::Average avgTcpToTcc;
+//    statistics::Average avgTccToSd;
+//    statistics::Average avgSdToSd;
+//    statistics::Average avgSdToTcc;
+//    statistics::Average avgTccToTcp;
 
   private:
     // Token port is used to send/receive tokens to/from GPU's global memory

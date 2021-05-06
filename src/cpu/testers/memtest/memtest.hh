@@ -166,11 +166,11 @@ class MemTest : public ClockedObject
 
     const bool suppressFuncErrors;
   protected:
-    struct MemTestStats : public Stats::Group
+    struct MemTestStats : public statistics::Group
     {
-        MemTestStats(Stats::Group *parent);
-        Stats::Scalar numReads;
-        Stats::Scalar numWrites;
+        MemTestStats(statistics::Group *parent);
+        statistics::Scalar numReads;
+        statistics::Scalar numWrites;
     } stats;
 
     /**

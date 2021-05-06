@@ -369,25 +369,27 @@ GarnetNetwork::regStats()
     m_packets_received
         .init(m_virtual_networks)
         .name(name() + ".packets_received")
-        .flags(Stats::pdf | Stats::total | Stats::nozero | Stats::oneline)
+        .flags(statistics::pdf | statistics::total | statistics::nozero |
+            statistics::oneline)
         ;
 
     m_packets_injected
         .init(m_virtual_networks)
         .name(name() + ".packets_injected")
-        .flags(Stats::pdf | Stats::total | Stats::nozero | Stats::oneline)
+        .flags(statistics::pdf | statistics::total | statistics::nozero |
+            statistics::oneline)
         ;
 
     m_packet_network_latency
         .init(m_virtual_networks)
         .name(name() + ".packet_network_latency")
-        .flags(Stats::oneline)
+        .flags(statistics::oneline)
         ;
 
     m_packet_queueing_latency
         .init(m_virtual_networks)
         .name(name() + ".packet_queueing_latency")
-        .flags(Stats::oneline)
+        .flags(statistics::oneline)
         ;
 
     for (int i = 0; i < m_virtual_networks; i++) {
@@ -399,13 +401,13 @@ GarnetNetwork::regStats()
 
     m_avg_packet_vnet_latency
         .name(name() + ".average_packet_vnet_latency")
-        .flags(Stats::oneline);
+        .flags(statistics::oneline);
     m_avg_packet_vnet_latency =
         m_packet_network_latency / m_packets_received;
 
     m_avg_packet_vqueue_latency
         .name(name() + ".average_packet_vqueue_latency")
-        .flags(Stats::oneline);
+        .flags(statistics::oneline);
     m_avg_packet_vqueue_latency =
         m_packet_queueing_latency / m_packets_received;
 
@@ -428,25 +430,27 @@ GarnetNetwork::regStats()
     m_flits_received
         .init(m_virtual_networks)
         .name(name() + ".flits_received")
-        .flags(Stats::pdf | Stats::total | Stats::nozero | Stats::oneline)
+        .flags(statistics::pdf | statistics::total | statistics::nozero |
+            statistics::oneline)
         ;
 
     m_flits_injected
         .init(m_virtual_networks)
         .name(name() + ".flits_injected")
-        .flags(Stats::pdf | Stats::total | Stats::nozero | Stats::oneline)
+        .flags(statistics::pdf | statistics::total | statistics::nozero |
+            statistics::oneline)
         ;
 
     m_flit_network_latency
         .init(m_virtual_networks)
         .name(name() + ".flit_network_latency")
-        .flags(Stats::oneline)
+        .flags(statistics::oneline)
         ;
 
     m_flit_queueing_latency
         .init(m_virtual_networks)
         .name(name() + ".flit_queueing_latency")
-        .flags(Stats::oneline)
+        .flags(statistics::oneline)
         ;
 
     for (int i = 0; i < m_virtual_networks; i++) {
@@ -458,12 +462,12 @@ GarnetNetwork::regStats()
 
     m_avg_flit_vnet_latency
         .name(name() + ".average_flit_vnet_latency")
-        .flags(Stats::oneline);
+        .flags(statistics::oneline);
     m_avg_flit_vnet_latency = m_flit_network_latency / m_flits_received;
 
     m_avg_flit_vqueue_latency
         .name(name() + ".average_flit_vqueue_latency")
-        .flags(Stats::oneline);
+        .flags(statistics::oneline);
     m_avg_flit_vqueue_latency =
         m_flit_queueing_latency / m_flits_received;
 
@@ -499,17 +503,20 @@ GarnetNetwork::regStats()
     m_average_vc_load
         .init(m_virtual_networks * m_max_vcs_per_vnet)
         .name(name() + ".avg_vc_load")
-        .flags(Stats::pdf | Stats::total | Stats::nozero | Stats::oneline)
+        .flags(statistics::pdf | statistics::total | statistics::nozero |
+            statistics::oneline)
         ;
 
     // Traffic distribution
     for (int source = 0; source < m_routers.size(); ++source) {
-        m_data_traffic_distribution.push_back(std::vector<Stats::Scalar *>());
-        m_ctrl_traffic_distribution.push_back(std::vector<Stats::Scalar *>());
+        m_data_traffic_distribution.push_back(
+            std::vector<statistics::Scalar *>());
+        m_ctrl_traffic_distribution.push_back(
+            std::vector<statistics::Scalar *>());
 
         for (int dest = 0; dest < m_routers.size(); ++dest) {
-            Stats::Scalar *data_packets = new Stats::Scalar();
-            Stats::Scalar *ctrl_packets = new Stats::Scalar();
+            statistics::Scalar *data_packets = new statistics::Scalar();
+            statistics::Scalar *ctrl_packets = new statistics::Scalar();
 
             data_packets->name(name() + ".data_traffic_distribution." + "n" +
                     std::to_string(source) + "." + "n" + std::to_string(dest));

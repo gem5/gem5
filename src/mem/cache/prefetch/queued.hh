@@ -171,15 +171,15 @@ class Queued : public Base
     /** Percentage of requests that can be throttled */
     const unsigned int throttleControlPct;
 
-    struct QueuedStats : public Stats::Group
+    struct QueuedStats : public statistics::Group
     {
-        QueuedStats(Stats::Group *parent);
+        QueuedStats(statistics::Group *parent);
         // STATS
-        Stats::Scalar pfIdentified;
-        Stats::Scalar pfBufferHit;
-        Stats::Scalar pfInCache;
-        Stats::Scalar pfRemovedFull;
-        Stats::Scalar pfSpanPage;
+        statistics::Scalar pfIdentified;
+        statistics::Scalar pfBufferHit;
+        statistics::Scalar pfInCache;
+        statistics::Scalar pfRemovedFull;
+        statistics::Scalar pfSpanPage;
     } statsQueued;
   public:
     using AddrPriority = std::pair<Addr, int32_t>;

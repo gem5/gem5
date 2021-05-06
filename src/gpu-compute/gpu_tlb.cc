@@ -1430,8 +1430,8 @@ namespace X86ISA
         TLBFootprint.clear();
     }
 
-    GpuTLB::GpuTLBStats::GpuTLBStats(Stats::Group *parent)
-        : Stats::Group(parent),
+    GpuTLB::GpuTLBStats::GpuTLBStats(statistics::Group *parent)
+        : statistics::Group(parent),
           ADD_STAT(localNumTLBAccesses, "Number of TLB accesses"),
           ADD_STAT(localNumTLBHits, "Number of TLB hits"),
           ADD_STAT(localNumTLBMisses, "Number of TLB misses"),

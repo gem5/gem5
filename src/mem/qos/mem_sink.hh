@@ -188,15 +188,15 @@ class MemSinkCtrl : public MemCtrl
     /** Next request service time */
     Tick nextRequest;
 
-    struct MemSinkCtrlStats : public Stats::Group
+    struct MemSinkCtrlStats : public statistics::Group
     {
-        MemSinkCtrlStats(Stats::Group *parent);
+        MemSinkCtrlStats(statistics::Group *parent);
 
         /** Count the number of read retries */
-        Stats::Scalar numReadRetries;
+        statistics::Scalar numReadRetries;
 
         /** Count the number of write retries */
-        Stats::Scalar numWriteRetries;
+        statistics::Scalar numWriteRetries;
     };
 
     /**

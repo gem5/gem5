@@ -143,14 +143,14 @@ class GlobalMemPipeline
     std::queue<GPUDynInstPtr> gmIssuedRequests;
 
   protected:
-    struct GlobalMemPipelineStats : public Stats::Group
+    struct GlobalMemPipelineStats : public statistics::Group
     {
-        GlobalMemPipelineStats(Stats::Group *parent);
+        GlobalMemPipelineStats(statistics::Group *parent);
 
         // number of cycles of delaying the update of a VGPR that is the
         // target of a load instruction (or the load component of an atomic)
         // The delay is due to VRF bank conflicts
-        Stats::Scalar loadVrfBankConflictCycles;
+        statistics::Scalar loadVrfBankConflictCycles;
     } stats;
 };
 

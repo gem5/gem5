@@ -2420,78 +2420,79 @@ TableWalker::pageSizeNtoStatBin(uint8_t N)
     }
 }
 
-
-TableWalker::TableWalkerStats::TableWalkerStats(Stats::Group *parent)
-    : Stats::Group(parent),
-    ADD_STAT(walks, Stats::units::Count::get(),
+TableWalker::TableWalkerStats::TableWalkerStats(statistics::Group *parent)
+    : statistics::Group(parent),
+    ADD_STAT(walks, statistics::units::Count::get(),
              "Table walker walks requested"),
-    ADD_STAT(walksShortDescriptor, Stats::units::Count::get(),
+    ADD_STAT(walksShortDescriptor, statistics::units::Count::get(),
              "Table walker walks initiated with short descriptors"),
-    ADD_STAT(walksLongDescriptor, Stats::units::Count::get(),
+    ADD_STAT(walksLongDescriptor, statistics::units::Count::get(),
              "Table walker walks initiated with long descriptors"),
-    ADD_STAT(walksShortTerminatedAtLevel, Stats::units::Count::get(),
+    ADD_STAT(walksShortTerminatedAtLevel, statistics::units::Count::get(),
              "Level at which table walker walks with short descriptors "
              "terminate"),
-    ADD_STAT(walksLongTerminatedAtLevel, Stats::units::Count::get(),
+    ADD_STAT(walksLongTerminatedAtLevel, statistics::units::Count::get(),
              "Level at which table walker walks with long descriptors "
              "terminate"),
-    ADD_STAT(squashedBefore, Stats::units::Count::get(),
+    ADD_STAT(squashedBefore, statistics::units::Count::get(),
              "Table walks squashed before starting"),
-    ADD_STAT(squashedAfter, Stats::units::Count::get(),
+    ADD_STAT(squashedAfter, statistics::units::Count::get(),
              "Table walks squashed after completion"),
-    ADD_STAT(walkWaitTime, Stats::units::Tick::get(),
+    ADD_STAT(walkWaitTime, statistics::units::Tick::get(),
              "Table walker wait (enqueue to first request) latency"),
-    ADD_STAT(walkServiceTime, Stats::units::Tick::get(),
+    ADD_STAT(walkServiceTime, statistics::units::Tick::get(),
              "Table walker service (enqueue to completion) latency"),
-    ADD_STAT(pendingWalks, Stats::units::Tick::get(),
+    ADD_STAT(pendingWalks, statistics::units::Tick::get(),
              "Table walker pending requests distribution"),
-    ADD_STAT(pageSizes, Stats::units::Count::get(),
+    ADD_STAT(pageSizes, statistics::units::Count::get(),
              "Table walker page sizes translated"),
-    ADD_STAT(requestOrigin, Stats::units::Count::get(),
+    ADD_STAT(requestOrigin, statistics::units::Count::get(),
              "Table walker requests started/completed, data/inst")
 {
     walksShortDescriptor
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     walksLongDescriptor
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     walksShortTerminatedAtLevel
         .init(2)
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     walksShortTerminatedAtLevel.subname(0, "Level1");
     walksShortTerminatedAtLevel.subname(1, "Level2");
 
     walksLongTerminatedAtLevel
         .init(4)
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
     walksLongTerminatedAtLevel.subname(0, "Level0");
     walksLongTerminatedAtLevel.subname(1, "Level1");
     walksLongTerminatedAtLevel.subname(2, "Level2");
     walksLongTerminatedAtLevel.subname(3, "Level3");
 
     squashedBefore
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     squashedAfter
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     walkWaitTime
         .init(16)
-        .flags(Stats::pdf | Stats::nozero | Stats::nonan);
+        .flags(statistics::pdf | statistics::nozero | statistics::nonan);
 
     walkServiceTime
         .init(16)
-        .flags(Stats::pdf | Stats::nozero | Stats::nonan);
+        .flags(statistics::pdf | statistics::nozero | statistics::nonan);
 
     pendingWalks
         .init(16)
-        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan);
+        .flags(statistics::pdf | statistics::dist | statistics::nozero |
+            statistics::nonan);
 
     pageSizes // see DDI 0487A D4-1661
         .init(10)
-        .flags(Stats::total | Stats::pdf | Stats::dist | Stats::nozero);
+        .flags(statistics::total | statistics::pdf | statistics::dist |
+            statistics::nozero);
     pageSizes.subname(0, "4KiB");
     pageSizes.subname(1, "16KiB");
     pageSizes.subname(2, "64KiB");
@@ -2505,7 +2506,7 @@ TableWalker::TableWalkerStats::TableWalkerStats(Stats::Group *parent)
 
     requestOrigin
         .init(2,2) // Instruction/Data, requests/completed
-        .flags(Stats::total);
+        .flags(statistics::total);
     requestOrigin.subname(0,"Requested");
     requestOrigin.subname(1,"Completed");
     requestOrigin.ysubname(0,"Data");

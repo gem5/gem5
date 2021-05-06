@@ -54,7 +54,9 @@ bool emptyStrings(const T &labels)
 }
 
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 Hdf5::Hdf5(const std::string &file, unsigned chunking,
            bool desc, bool formulas)
@@ -320,4 +322,4 @@ initHDF5(const std::string &filename, unsigned chunking,
         new Hdf5(simout.resolve(filename), chunking, desc, formulas));
 }
 
-}; // namespace Stats
+}; // namespace statistics

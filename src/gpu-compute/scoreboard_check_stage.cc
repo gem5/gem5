@@ -277,8 +277,8 @@ ScoreboardCheckStage::exec()
 }
 
 ScoreboardCheckStage::
-ScoreboardCheckStageStats::ScoreboardCheckStageStats(Stats::Group *parent)
-    : Stats::Group(parent, "ScoreboardCheckStage"),
+ScoreboardCheckStageStats::ScoreboardCheckStageStats(statistics::Group *parent)
+    : statistics::Group(parent, "ScoreboardCheckStage"),
       ADD_STAT(stallCycles, "number of cycles wave stalled in SCB")
 {
     stallCycles.init(NRDY_CONDITIONS);

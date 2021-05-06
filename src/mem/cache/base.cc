@@ -1927,37 +1927,37 @@ BaseCache::unserialize(CheckpointIn &cp)
 
 BaseCache::CacheCmdStats::CacheCmdStats(BaseCache &c,
                                         const std::string &name)
-    : Stats::Group(&c, name.c_str()), cache(c),
-      ADD_STAT(hits, Stats::units::Count::get(),
+    : statistics::Group(&c, name.c_str()), cache(c),
+      ADD_STAT(hits, statistics::units::Count::get(),
                ("number of " + name + " hits").c_str()),
-      ADD_STAT(misses, Stats::units::Count::get(),
+      ADD_STAT(misses, statistics::units::Count::get(),
                ("number of " + name + " misses").c_str()),
-      ADD_STAT(missLatency, Stats::units::Tick::get(),
+      ADD_STAT(missLatency, statistics::units::Tick::get(),
                ("number of " + name + " miss ticks").c_str()),
-      ADD_STAT(accesses, Stats::units::Count::get(),
+      ADD_STAT(accesses, statistics::units::Count::get(),
                ("number of " + name + " accesses(hits+misses)").c_str()),
-      ADD_STAT(missRate, Stats::units::Ratio::get(),
+      ADD_STAT(missRate, statistics::units::Ratio::get(),
                ("miss rate for " + name + " accesses").c_str()),
-      ADD_STAT(avgMissLatency, Stats::units::Rate<
-                    Stats::units::Tick, Stats::units::Count>::get(),
+      ADD_STAT(avgMissLatency, statistics::units::Rate<
+                    statistics::units::Tick, statistics::units::Count>::get(),
                ("average " + name + " miss latency").c_str()),
-      ADD_STAT(mshrHits, Stats::units::Count::get(),
+      ADD_STAT(mshrHits, statistics::units::Count::get(),
                ("number of " + name + " MSHR hits").c_str()),
-      ADD_STAT(mshrMisses, Stats::units::Count::get(),
+      ADD_STAT(mshrMisses, statistics::units::Count::get(),
                ("number of " + name + " MSHR misses").c_str()),
-      ADD_STAT(mshrUncacheable, Stats::units::Count::get(),
+      ADD_STAT(mshrUncacheable, statistics::units::Count::get(),
                ("number of " + name + " MSHR uncacheable").c_str()),
-      ADD_STAT(mshrMissLatency, Stats::units::Tick::get(),
+      ADD_STAT(mshrMissLatency, statistics::units::Tick::get(),
                ("number of " + name + " MSHR miss ticks").c_str()),
-      ADD_STAT(mshrUncacheableLatency, Stats::units::Tick::get(),
+      ADD_STAT(mshrUncacheableLatency, statistics::units::Tick::get(),
                ("number of " + name + " MSHR uncacheable ticks").c_str()),
-      ADD_STAT(mshrMissRate, Stats::units::Ratio::get(),
+      ADD_STAT(mshrMissRate, statistics::units::Ratio::get(),
                ("mshr miss rate for " + name + " accesses").c_str()),
-      ADD_STAT(avgMshrMissLatency, Stats::units::Rate<
-                    Stats::units::Tick, Stats::units::Count>::get(),
+      ADD_STAT(avgMshrMissLatency, statistics::units::Rate<
+                    statistics::units::Tick, statistics::units::Count>::get(),
                ("average " + name + " mshr miss latency").c_str()),
-      ADD_STAT(avgMshrUncacheableLatency, Stats::units::Rate<
-                    Stats::units::Tick, Stats::units::Count>::get(),
+      ADD_STAT(avgMshrUncacheableLatency, statistics::units::Rate<
+                    statistics::units::Tick, statistics::units::Count>::get(),
                ("average " + name + " mshr uncacheable latency").c_str())
 {
 }
@@ -1965,9 +1965,9 @@ BaseCache::CacheCmdStats::CacheCmdStats(BaseCache &c,
 void
 BaseCache::CacheCmdStats::regStatsFromParent()
 {
-    using namespace Stats;
+    using namespace statistics;
 
-    Stats::Group::regStats();
+    statistics::Group::regStats();
     System *system = cache.system;
     const auto max_requestors = system->maxRequestors();
 
@@ -2088,78 +2088,78 @@ BaseCache::CacheCmdStats::regStatsFromParent()
 }
 
 BaseCache::CacheStats::CacheStats(BaseCache &c)
-    : Stats::Group(&c), cache(c),
+    : statistics::Group(&c), cache(c),
 
-    ADD_STAT(demandHits, Stats::units::Count::get(),
+    ADD_STAT(demandHits, statistics::units::Count::get(),
              "number of demand (read+write) hits"),
-    ADD_STAT(overallHits, Stats::units::Count::get(),
+    ADD_STAT(overallHits, statistics::units::Count::get(),
              "number of overall hits"),
-    ADD_STAT(demandMisses, Stats::units::Count::get(),
+    ADD_STAT(demandMisses, statistics::units::Count::get(),
              "number of demand (read+write) misses"),
-    ADD_STAT(overallMisses, Stats::units::Count::get(),
+    ADD_STAT(overallMisses, statistics::units::Count::get(),
              "number of overall misses"),
-    ADD_STAT(demandMissLatency, Stats::units::Tick::get(),
+    ADD_STAT(demandMissLatency, statistics::units::Tick::get(),
              "number of demand (read+write) miss ticks"),
-    ADD_STAT(overallMissLatency, Stats::units::Tick::get(),
+    ADD_STAT(overallMissLatency, statistics::units::Tick::get(),
              "number of overall miss ticks"),
-    ADD_STAT(demandAccesses, Stats::units::Count::get(),
+    ADD_STAT(demandAccesses, statistics::units::Count::get(),
              "number of demand (read+write) accesses"),
-    ADD_STAT(overallAccesses, Stats::units::Count::get(),
+    ADD_STAT(overallAccesses, statistics::units::Count::get(),
              "number of overall (read+write) accesses"),
-    ADD_STAT(demandMissRate, Stats::units::Ratio::get(),
+    ADD_STAT(demandMissRate, statistics::units::Ratio::get(),
              "miss rate for demand accesses"),
-    ADD_STAT(overallMissRate, Stats::units::Ratio::get(),
+    ADD_STAT(overallMissRate, statistics::units::Ratio::get(),
              "miss rate for overall accesses"),
-    ADD_STAT(demandAvgMissLatency, Stats::units::Rate<
-                Stats::units::Cycle, Stats::units::Count>::get(),
+    ADD_STAT(demandAvgMissLatency, statistics::units::Rate<
+                statistics::units::Cycle, statistics::units::Count>::get(),
              "average overall miss latency"),
-    ADD_STAT(overallAvgMissLatency, Stats::units::Rate<
-                Stats::units::Cycle, Stats::units::Count>::get(),
+    ADD_STAT(overallAvgMissLatency, statistics::units::Rate<
+                statistics::units::Cycle, statistics::units::Count>::get(),
              "average overall miss latency"),
-    ADD_STAT(blockedCycles, Stats::units::Cycle::get(),
+    ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
             "number of cycles access was blocked"),
-    ADD_STAT(blockedCauses, Stats::units::Count::get(),
+    ADD_STAT(blockedCauses, statistics::units::Count::get(),
             "number of times access was blocked"),
-    ADD_STAT(avgBlocked, Stats::units::Rate<
-                Stats::units::Cycle, Stats::units::Count>::get(),
+    ADD_STAT(avgBlocked, statistics::units::Rate<
+                statistics::units::Cycle, statistics::units::Count>::get(),
              "average number of cycles each access was blocked"),
-    ADD_STAT(unusedPrefetches, Stats::units::Count::get(),
+    ADD_STAT(unusedPrefetches, statistics::units::Count::get(),
              "number of HardPF blocks evicted w/o reference"),
-    ADD_STAT(writebacks, Stats::units::Count::get(), "number of writebacks"),
-    ADD_STAT(demandMshrHits, Stats::units::Count::get(),
+    ADD_STAT(writebacks, statistics::units::Count::get(), "number of writebacks"),
+    ADD_STAT(demandMshrHits, statistics::units::Count::get(),
              "number of demand (read+write) MSHR hits"),
-    ADD_STAT(overallMshrHits, Stats::units::Count::get(),
+    ADD_STAT(overallMshrHits, statistics::units::Count::get(),
              "number of overall MSHR hits"),
-    ADD_STAT(demandMshrMisses, Stats::units::Count::get(),
+    ADD_STAT(demandMshrMisses, statistics::units::Count::get(),
              "number of demand (read+write) MSHR misses"),
-    ADD_STAT(overallMshrMisses, Stats::units::Count::get(),
+    ADD_STAT(overallMshrMisses, statistics::units::Count::get(),
             "number of overall MSHR misses"),
-    ADD_STAT(overallMshrUncacheable, Stats::units::Count::get(),
+    ADD_STAT(overallMshrUncacheable, statistics::units::Count::get(),
              "number of overall MSHR uncacheable misses"),
-    ADD_STAT(demandMshrMissLatency, Stats::units::Tick::get(),
+    ADD_STAT(demandMshrMissLatency, statistics::units::Tick::get(),
              "number of demand (read+write) MSHR miss ticks"),
-    ADD_STAT(overallMshrMissLatency, Stats::units::Tick::get(),
+    ADD_STAT(overallMshrMissLatency, statistics::units::Tick::get(),
              "number of overall MSHR miss ticks"),
-    ADD_STAT(overallMshrUncacheableLatency, Stats::units::Tick::get(),
+    ADD_STAT(overallMshrUncacheableLatency, statistics::units::Tick::get(),
              "number of overall MSHR uncacheable ticks"),
-    ADD_STAT(demandMshrMissRate, Stats::units::Ratio::get(),
+    ADD_STAT(demandMshrMissRate, statistics::units::Ratio::get(),
              "mshr miss ratio for demand accesses"),
-    ADD_STAT(overallMshrMissRate, Stats::units::Ratio::get(),
+    ADD_STAT(overallMshrMissRate, statistics::units::Ratio::get(),
              "mshr miss ratio for overall accesses"),
-    ADD_STAT(demandAvgMshrMissLatency, Stats::units::Rate<
-                Stats::units::Cycle, Stats::units::Count>::get(),
+    ADD_STAT(demandAvgMshrMissLatency, statistics::units::Rate<
+                statistics::units::Cycle, statistics::units::Count>::get(),
              "average overall mshr miss latency"),
-    ADD_STAT(overallAvgMshrMissLatency, Stats::units::Rate<
-                Stats::units::Cycle, Stats::units::Count>::get(),
+    ADD_STAT(overallAvgMshrMissLatency, statistics::units::Rate<
+                statistics::units::Cycle, statistics::units::Count>::get(),
              "average overall mshr miss latency"),
-    ADD_STAT(overallAvgMshrUncacheableLatency, Stats::units::Rate<
-                Stats::units::Cycle, Stats::units::Count>::get(),
+    ADD_STAT(overallAvgMshrUncacheableLatency, statistics::units::Rate<
+                statistics::units::Cycle, statistics::units::Count>::get(),
              "average overall mshr uncacheable latency"),
-    ADD_STAT(replacements, Stats::units::Count::get(),
+    ADD_STAT(replacements, statistics::units::Count::get(),
              "number of replacements"),
-    ADD_STAT(dataExpansions, Stats::units::Count::get(),
+    ADD_STAT(dataExpansions, statistics::units::Count::get(),
              "number of data expansions"),
-    ADD_STAT(dataContractions, Stats::units::Count::get(),
+    ADD_STAT(dataContractions, statistics::units::Count::get(),
              "number of data contractions"),
     cmd(MemCmd::NUM_MEM_CMDS)
 {
@@ -2170,9 +2170,9 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
 void
 BaseCache::CacheStats::regStats()
 {
-    using namespace Stats;
+    using namespace statistics;
 
-    Stats::Group::regStats();
+    statistics::Group::regStats();
 
     System *system = cache.system;
     const auto max_requestors = system->maxRequestors();

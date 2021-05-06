@@ -104,13 +104,13 @@ class SimpleNetwork : public Network
     const bool m_adaptive_routing;
 
 
-    struct NetworkStats : public Stats::Group
+    struct NetworkStats : public statistics::Group
     {
-        NetworkStats(Stats::Group *parent);
+        NetworkStats(statistics::Group *parent);
 
         //Statistical variables
-        Stats::Formula* m_msg_counts[MessageSizeType_NUM];
-        Stats::Formula* m_msg_bytes[MessageSizeType_NUM];
+        statistics::Formula* m_msg_counts[MessageSizeType_NUM];
+        statistics::Formula* m_msg_bytes[MessageSizeType_NUM];
     } networkStats;
 };
 

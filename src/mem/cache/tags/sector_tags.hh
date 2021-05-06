@@ -91,7 +91,7 @@ class SectorTags : public BaseTags
     /** Mask out all bits that aren't part of the sector tag. */
     const unsigned sectorMask;
 
-    struct SectorTagsStats : public Stats::Group
+    struct SectorTagsStats : public statistics::Group
     {
         const SectorTags& tags;
 
@@ -100,7 +100,7 @@ class SectorTags : public BaseTags
         void regStats() override;
 
         /** Number of sub-blocks evicted due to a replacement. */
-        Stats::Vector evictionsReplacement;
+        statistics::Vector evictionsReplacement;
     } sectorStats;
 
   public:

@@ -597,7 +597,7 @@ class System : public SimObject, public PCEventScope
 
   public:
     std::map<std::pair<uint32_t, uint32_t>, Tick>  lastWorkItemStarted;
-    std::map<uint32_t, Stats::Histogram*> workItemStats;
+    std::map<uint32_t, statistics::Histogram*> workItemStats;
 
     ////////////////////////////////////////////
     //

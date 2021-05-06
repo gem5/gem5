@@ -92,7 +92,7 @@ class PowerModelState : public SimObject
     /** The clocked object we belong to */
     ClockedObject * clocked_object;
 
-    Stats::Value dynamicPower, staticPower;
+    statistics::Value dynamicPower, staticPower;
 };
 
 /**
@@ -161,7 +161,7 @@ class PowerModel : public SimObject
     /** The type of power model - collects all power, static or dynamic only */
     enums::PMType power_model_type;
 
-    Stats::Value dynamicPower, staticPower;
+    statistics::Value dynamicPower, staticPower;
 };
 
 #endif

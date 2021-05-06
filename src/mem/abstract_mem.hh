@@ -165,7 +165,7 @@ class AbstractMemory : public ClockedObject
      */
     System *_system;
 
-    struct MemStats : public Stats::Group
+    struct MemStats : public statistics::Group
     {
         MemStats(AbstractMemory &mem);
 
@@ -174,25 +174,25 @@ class AbstractMemory : public ClockedObject
         const AbstractMemory &mem;
 
         /** Number of total bytes read from this memory */
-        Stats::Vector bytesRead;
+        statistics::Vector bytesRead;
         /** Number of instruction bytes read from this memory */
-        Stats::Vector bytesInstRead;
+        statistics::Vector bytesInstRead;
         /** Number of bytes written to this memory */
-        Stats::Vector bytesWritten;
+        statistics::Vector bytesWritten;
         /** Number of read requests */
-        Stats::Vector numReads;
+        statistics::Vector numReads;
         /** Number of write requests */
-        Stats::Vector numWrites;
+        statistics::Vector numWrites;
         /** Number of other requests */
-        Stats::Vector numOther;
+        statistics::Vector numOther;
         /** Read bandwidth from this memory */
-        Stats::Formula bwRead;
+        statistics::Formula bwRead;
         /** Read bandwidth from this memory */
-        Stats::Formula bwInstRead;
+        statistics::Formula bwInstRead;
         /** Write bandwidth from this memory */
-        Stats::Formula bwWrite;
+        statistics::Formula bwWrite;
         /** Total bandwidth from this memory */
-        Stats::Formula bwTotal;
+        statistics::Formula bwTotal;
     } stats;
 
 

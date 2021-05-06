@@ -391,8 +391,8 @@ int m_counters[${ident}_State_NUM][${ident}_Event_NUM];
 int m_event_counters[${ident}_Event_NUM];
 bool m_possible[${ident}_State_NUM][${ident}_Event_NUM];
 
-static std::vector<Stats::Vector *> eventVec;
-static std::vector<std::vector<Stats::Vector *> > transVec;
+static std::vector<statistics::Vector *> eventVec;
+static std::vector<std::vector<statistics::Vector *> > transVec;
 static int m_num_controllers;
 
 // Internal functions
@@ -536,8 +536,8 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 
         code('''
 int $c_ident::m_num_controllers = 0;
-std::vector<Stats::Vector *>  $c_ident::eventVec;
-std::vector<std::vector<Stats::Vector *> >  $c_ident::transVec;
+std::vector<statistics::Vector *>  $c_ident::eventVec;
+std::vector<std::vector<statistics::Vector *> >  $c_ident::transVec;
 
 // for adding information to the protocol debug trace
 std::stringstream ${ident}_transitionComment;
@@ -816,17 +816,17 @@ $c_ident::regStats()
     if (m_version == 0) {
 
         Profiler *profiler = params().ruby_system->getProfiler();
-        Stats::Group *profilerStatsPtr = &profiler->rubyProfilerStats;
+        statistics::Group *profilerStatsPtr = &profiler->rubyProfilerStats;
 
         for (${ident}_Event event = ${ident}_Event_FIRST;
              event < ${ident}_Event_NUM; ++event) {
             std::string stat_name =
                 "${c_ident}." + ${ident}_Event_to_string(event);
-            Stats::Vector *t =
-                new Stats::Vector(profilerStatsPtr, stat_name.c_str());
+            statistics::Vector *t =
+                new statistics::Vector(profilerStatsPtr, stat_name.c_str());
             t->init(m_num_controllers);
-            t->flags(Stats::pdf | Stats::total | Stats::oneline |
-                     Stats::nozero);
+            t->flags(statistics::pdf | statistics::total |
+                statistics::oneline | statistics::nozero);
 
             eventVec.push_back(t);
         }
@@ -834,18 +834,18 @@ $c_ident::regStats()
         for (${ident}_State state = ${ident}_State_FIRST;
              state < ${ident}_State_NUM; ++state) {
 
-            transVec.push_back(std::vector<Stats::Vector *>());
+            transVec.push_back(std::vector<statistics::Vector *>());
 
             for (${ident}_Event event = ${ident}_Event_FIRST;
                  event < ${ident}_Event_NUM; ++event) {
                 std::string stat_name = "${c_ident}." +
                     ${ident}_State_to_string(state) +
                     "." + ${ident}_Event_to_string(event);
-                Stats::Vector *t =
-                    new Stats::Vector(profilerStatsPtr, stat_name.c_str());
+                statistics::Vector *t = new statistics::Vector(
+                    profilerStatsPtr, stat_name.c_str());
                 t->init(m_num_controllers);
-                t->flags(Stats::pdf | Stats::total | Stats::oneline |
-                         Stats::nozero);
+                t->flags(statistics::pdf | statistics::total |
+                    statistics::oneline | statistics::nozero);
                 transVec[state].push_back(t);
             }
         }
@@ -855,31 +855,32 @@ $c_ident::regStats()
                  event < ${ident}_Event_NUM; ++event) {
         std::string stat_name =
             "outTransLatHist." + ${ident}_Event_to_string(event);
-        Stats::Histogram* t = new Stats::Histogram(&stats, stat_name.c_str());
+        statistics::Histogram* t =
+            new statistics::Histogram(&stats, stat_name.c_str());
         stats.outTransLatHist.push_back(t);
         t->init(5);
-        t->flags(Stats::pdf | Stats::total |
-                 Stats::oneline | Stats::nozero);
+        t->flags(statistics::pdf | statistics::total |
+                 statistics::oneline | statistics::nozero);
 
-        Stats::Scalar* r = new Stats::Scalar(&stats,
+        statistics::Scalar* r = new statistics::Scalar(&stats,
                                              (stat_name + ".retries").c_str());
         stats.outTransLatHistRetries.push_back(r);
-        r->flags(Stats::nozero);
+        r->flags(statistics::nozero);
     }
 
     for (${ident}_Event event = ${ident}_Event_FIRST;
                  event < ${ident}_Event_NUM; ++event) {
         std::string stat_name = ".inTransLatHist." +
                                 ${ident}_Event_to_string(event);
-        Stats::Scalar* r = new Stats::Scalar(&stats,
+        statistics::Scalar* r = new statistics::Scalar(&stats,
                                              (stat_name + ".total").c_str());
         stats.inTransLatTotal.push_back(r);
-        r->flags(Stats::nozero);
+        r->flags(statistics::nozero);
 
-        r = new Stats::Scalar(&stats,
+        r = new statistics::Scalar(&stats,
                               (stat_name + ".retries").c_str());
         stats.inTransLatRetries.push_back(r);
-        r->flags(Stats::nozero);
+        r->flags(statistics::nozero);
 
         stats.inTransLatHist.emplace_back();
         for (${ident}_State initial_state = ${ident}_State_FIRST;
@@ -891,12 +892,12 @@ $c_ident::regStats()
                     ${ident}_Event_to_string(event) + "." +
                     ${ident}_State_to_string(initial_state) + "." +
                     ${ident}_State_to_string(final_state);
-                Stats::Histogram* t =
-                    new Stats::Histogram(&stats, stat_name.c_str());
+                statistics::Histogram* t =
+                    new statistics::Histogram(&stats, stat_name.c_str());
                 stats.inTransLatHist.back().back().push_back(t);
                 t->init(5);
-                t->flags(Stats::pdf | Stats::total |
-                         Stats::oneline | Stats::nozero);
+                t->flags(statistics::pdf | statistics::total |
+                         statistics::oneline | statistics::nozero);
             }
         }
     }

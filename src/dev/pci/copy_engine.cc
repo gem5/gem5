@@ -428,21 +428,21 @@ CopyEngine::CopyEngineChannel::channelWrite(Packet *pkt, Addr daddr, int size)
 }
 
 CopyEngine::
-CopyEngineStats::CopyEngineStats(Stats::Group *parent,
+CopyEngineStats::CopyEngineStats(statistics::Group *parent,
                                  const uint8_t &channel_count)
-    : Stats::Group(parent, "CopyEngine"),
-      ADD_STAT(bytesCopied, Stats::units::Byte::get(),
+    : statistics::Group(parent, "CopyEngine"),
+      ADD_STAT(bytesCopied, statistics::units::Byte::get(),
                "Number of bytes copied by each engine"),
-      ADD_STAT(copiesProcessed, Stats::units::Count::get(),
+      ADD_STAT(copiesProcessed, statistics::units::Count::get(),
                "Number of copies processed by each engine")
 {
     bytesCopied
         .init(channel_count)
-        .flags(Stats::total)
+        .flags(statistics::total)
         ;
     copiesProcessed
         .init(channel_count)
-        .flags(Stats::total)
+        .flags(statistics::total)
         ;
 }
 

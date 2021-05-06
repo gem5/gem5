@@ -97,11 +97,11 @@ class LocalMemPipeline
     std::queue<GPUDynInstPtr> lmReturnedRequests;
 
   protected:
-    struct LocalMemPipelineStats : public Stats::Group
+    struct LocalMemPipelineStats : public statistics::Group
     {
-        LocalMemPipelineStats(Stats::Group *parent);
+        LocalMemPipelineStats(statistics::Group *parent);
 
-        Stats::Scalar loadVrfBankConflictCycles;
+        statistics::Scalar loadVrfBankConflictCycles;
     } stats;
 };
 

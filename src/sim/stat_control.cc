@@ -54,7 +54,9 @@
 #include "base/time.hh"
 #include "sim/global_event.hh"
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 GlobalEvent *dumpEvent;
 
@@ -84,13 +86,14 @@ class StatEvent : public GlobalEvent
     process()
     {
         if (dump)
-            Stats::dump();
+            statistics::dump();
 
         if (reset)
-            Stats::reset();
+            statistics::reset();
 
         if (repeat) {
-            Stats::schedStatEvent(dump, reset, curTick() + repeat, repeat);
+            statistics::schedStatEvent(dump, reset, curTick() + repeat,
+                repeat);
         }
     }
 
@@ -112,10 +115,10 @@ periodicStatDump(Tick period)
 {
     /*
      * If the period is set to 0, then we do not want to dump periodically,
-     * thus we deschedule the event. Else, if the period is not 0, but the event
-     * has already been scheduled, we need to get rid of the old event before we
-     * create a new one, as the old event will no longer be moved forward in the
-     * event that we resume from a checkpoint.
+     * thus we deschedule the event. Else, if the period is not 0, but the
+     * event has already been scheduled, we need to get rid of the old event
+     * before we create a new one, as the old event will no longer be moved
+     * forward in the event that we resume from a checkpoint.
      */
     if (dumpEvent != NULL && (period == 0 || dumpEvent->scheduled())) {
         // Event should AutoDelete, so we do not need to free it.
@@ -153,4 +156,4 @@ updateEvents()
     }
 }
 
-} // namespace Stats
+} // namespace statistics

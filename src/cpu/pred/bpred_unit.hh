@@ -278,35 +278,35 @@ class BPredUnit : public SimObject
     /** The indirect target predictor. */
     IndirectPredictor * iPred;
 
-    struct BPredUnitStats : public Stats::Group
+    struct BPredUnitStats : public statistics::Group
     {
-        BPredUnitStats(Stats::Group *parent);
+        BPredUnitStats(statistics::Group *parent);
 
         /** Stat for number of BP lookups. */
-        Stats::Scalar lookups;
+        statistics::Scalar lookups;
         /** Stat for number of conditional branches predicted. */
-        Stats::Scalar condPredicted;
+        statistics::Scalar condPredicted;
         /** Stat for number of conditional branches predicted incorrectly. */
-        Stats::Scalar condIncorrect;
+        statistics::Scalar condIncorrect;
         /** Stat for number of BTB lookups. */
-        Stats::Scalar BTBLookups;
+        statistics::Scalar BTBLookups;
         /** Stat for number of BTB hits. */
-        Stats::Scalar BTBHits;
+        statistics::Scalar BTBHits;
         /** Stat for the ratio between BTB hits and BTB lookups. */
-        Stats::Formula BTBHitRatio;
+        statistics::Formula BTBHitRatio;
         /** Stat for number of times the RAS is used to get a target. */
-        Stats::Scalar RASUsed;
+        statistics::Scalar RASUsed;
         /** Stat for number of times the RAS is incorrect. */
-        Stats::Scalar RASIncorrect;
+        statistics::Scalar RASIncorrect;
 
         /** Stat for the number of indirect target lookups.*/
-        Stats::Scalar indirectLookups;
+        statistics::Scalar indirectLookups;
         /** Stat for the number of indirect target hits.*/
-        Stats::Scalar indirectHits;
+        statistics::Scalar indirectHits;
         /** Stat for the number of indirect target misses.*/
-        Stats::Scalar indirectMisses;
+        statistics::Scalar indirectMisses;
         /** Stat for the number of indirect target mispredictions.*/
-        Stats::Scalar indirectMispredicted;
+        statistics::Scalar indirectMispredicted;
     } stats;
 
   protected:

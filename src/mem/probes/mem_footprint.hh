@@ -71,18 +71,18 @@ class MemFootprintProbe : public BaseMemProbe
     void insertAddr(Addr addr, AddrSet *set, uint64_t limit);
     void handleRequest(const probing::PacketInfo &pkt_info) override;
 
-    struct MemFootprintProbeStats : public Stats::Group
+    struct MemFootprintProbeStats : public statistics::Group
     {
         MemFootprintProbeStats(MemFootprintProbe *parent);
 
         /// Footprint at cache line size granularity
-        Stats::Scalar cacheLine;
+        statistics::Scalar cacheLine;
         /// Footprint at cache line size granularity, since simulation begin
-        Stats::Scalar cacheLineTotal;
+        statistics::Scalar cacheLineTotal;
         /// Footprint at page granularity
-        Stats::Scalar page;
+        statistics::Scalar page;
         /// Footprint at page granularity, since simulation begin
-        Stats::Scalar pageTotal;
+        statistics::Scalar pageTotal;
     };
 
     // Addr set to track unique cache lines accessed

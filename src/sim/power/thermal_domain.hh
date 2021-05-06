@@ -100,7 +100,7 @@ class ThermalDomain : public SimObject, public ThermalEntity
     SubSystem * subsystem;
 
     /** Stat for reporting voltage of the domain */
-    Stats::Value currentTemp;
+    statistics::Value currentTemp;
 
     /** Probe to signal for temperature changes in this domain */
     ProbePointArg<Temperature> *ppThermalUpdate;

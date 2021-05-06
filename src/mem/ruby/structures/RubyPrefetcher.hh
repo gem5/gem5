@@ -234,24 +234,24 @@ class RubyPrefetcher : public SimObject
 
         const Addr m_page_shift;
 
-        struct RubyPrefetcherStats : public Stats::Group
+        struct RubyPrefetcherStats : public statistics::Group
         {
-            RubyPrefetcherStats(Stats::Group *parent);
+            RubyPrefetcherStats(statistics::Group *parent);
 
             //! Count of accesses to the prefetcher
-            Stats::Scalar numMissObserved;
+            statistics::Scalar numMissObserved;
             //! Count of prefetch streams allocated
-            Stats::Scalar numAllocatedStreams;
+            statistics::Scalar numAllocatedStreams;
             //! Count of prefetch requests made
-            Stats::Scalar numPrefetchRequested;
+            statistics::Scalar numPrefetchRequested;
             //! Count of successful prefetches
-            Stats::Scalar numHits;
+            statistics::Scalar numHits;
             //! Count of partial successful prefetches
-            Stats::Scalar numPartialHits;
+            statistics::Scalar numPartialHits;
             //! Count of pages crossed
-            Stats::Scalar numPagesCrossed;
+            statistics::Scalar numPagesCrossed;
             //! Count of misses incurred for blocks that were prefetched
-            Stats::Scalar numMissedPrefetchedBlocks;
+            statistics::Scalar numMissedPrefetchedBlocks;
         } rubyPrefetcherStats;
 };
 

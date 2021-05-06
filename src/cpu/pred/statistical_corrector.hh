@@ -183,11 +183,11 @@ class StatisticalCorrector : public SimObject
     int8_t firstH;
     int8_t secondH;
 
-    struct StatisticalCorrectorStats : public Stats::Group
+    struct StatisticalCorrectorStats : public statistics::Group
     {
-        StatisticalCorrectorStats(Stats::Group *parent);
-        Stats::Scalar correct;
-        Stats::Scalar wrong;
+        StatisticalCorrectorStats(statistics::Group *parent);
+        statistics::Scalar correct;
+        statistics::Scalar wrong;
     } stats;
 
   public:

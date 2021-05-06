@@ -156,8 +156,8 @@ DVFSHandler::UpdateEvent::updatePerfLevel()
 {
     // Perform explicit stats dump for power estimation before performance
     // level migration
-    Stats::dump();
-    Stats::reset();
+    statistics::dump();
+    statistics::reset();
 
     // Update the performance level in the clock domain
     auto d = dvfsHandler->findDomain(domainIDToSet);

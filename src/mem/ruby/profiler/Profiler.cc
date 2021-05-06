@@ -102,8 +102,8 @@ Profiler::~Profiler()
 }
 
 Profiler::
-ProfilerStats::ProfilerStats(Stats::Group *parent, Profiler *profiler)
-    : Stats::Group(parent),
+ProfilerStats::ProfilerStats(statistics::Group *parent, Profiler *profiler)
+    : statistics::Group(parent),
       perRequestTypeStats(parent),
       perMachineTypeStats(parent),
       perRequestTypeMachineTypeStats(parent),
@@ -118,152 +118,155 @@ ProfilerStats::ProfilerStats(Stats::Group *parent, Profiler *profiler)
 {
     delayHistogram
         .init(10)
-        .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+        .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
     for (int i = 0; i < profiler->m_num_vnets; i++) {
-        delayVCHistogram.push_back(new Stats::Histogram(this));
+        delayVCHistogram.push_back(new statistics::Histogram(this));
         delayVCHistogram[i]
             ->init(10)
             .name(csprintf("delayVCHist.vnet_%i", i))
             .desc(csprintf("delay histogram for vnet_%i", i))
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
     }
 
     m_outstandReqHistSeqr
         .init(10)
-        .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+        .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
     m_outstandReqHistCoalsr
         .init(10)
-        .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+        .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
     m_latencyHistSeqr
         .init(10)
-        .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+        .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
     m_latencyHistCoalsr
         .init(10)
-        .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+        .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
     m_hitLatencyHistSeqr
         .init(10)
-        .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+        .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
     m_missLatencyHistSeqr
         .init(10)
-        .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+        .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
     m_missLatencyHistCoalsr
         .init(10)
-        .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+        .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 }
 
 Profiler::ProfilerStats::
-PerRequestTypeStats::PerRequestTypeStats(Stats::Group *parent)
-    : Stats::Group(parent, "RequestType")
+PerRequestTypeStats::PerRequestTypeStats(statistics::Group *parent)
+    : statistics::Group(parent, "RequestType")
 {
     for (int i = 0; i < RubyRequestType_NUM; i++) {
-        m_typeLatencyHistSeqr.push_back(new Stats::Histogram(this));
+        m_typeLatencyHistSeqr.push_back(new statistics::Histogram(this));
         m_typeLatencyHistSeqr[i]
             ->init(10)
             .name(csprintf("%s.latency_hist_seqr", RubyRequestType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
-        m_typeLatencyHistCoalsr.push_back(new Stats::Histogram(this));
+        m_typeLatencyHistCoalsr.push_back(new statistics::Histogram(this));
         m_typeLatencyHistCoalsr[i]
             ->init(10)
             .name(csprintf("%s.latency_hist_coalsr", RubyRequestType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
-        m_hitTypeLatencyHistSeqr.push_back(new Stats::Histogram(this));
+        m_hitTypeLatencyHistSeqr.push_back(new statistics::Histogram(this));
         m_hitTypeLatencyHistSeqr[i]
             ->init(10)
             .name(csprintf("%s.hit_latency_hist_seqr", RubyRequestType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
-        m_missTypeLatencyHistSeqr.push_back(new Stats::Histogram(this));
+        m_missTypeLatencyHistSeqr.push_back(new statistics::Histogram(this));
         m_missTypeLatencyHistSeqr[i]
             ->init(10)
             .name(csprintf("%s.miss_latency_hist_seqr", RubyRequestType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
-        m_missTypeLatencyHistCoalsr.push_back(new Stats::Histogram(this));
+        m_missTypeLatencyHistCoalsr.push_back(new statistics::Histogram(this));
         m_missTypeLatencyHistCoalsr[i]
             ->init(10)
             .name(csprintf("%s.miss_latency_hist_coalsr", RubyRequestType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
     }
 }
 
 Profiler::ProfilerStats::
-PerMachineTypeStats::PerMachineTypeStats(Stats::Group *parent)
-    : Stats::Group(parent, "MachineType")
+PerMachineTypeStats::PerMachineTypeStats(statistics::Group *parent)
+    : statistics::Group(parent, "MachineType")
 {
     for (int i = 0; i < MachineType_NUM; i++) {
-        m_hitMachLatencyHistSeqr.push_back(new Stats::Histogram(this));
+        m_hitMachLatencyHistSeqr.push_back(new statistics::Histogram(this));
         m_hitMachLatencyHistSeqr[i]
             ->init(10)
             .name(csprintf("%s.hit_mach_latency_hist_seqr", MachineType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
-        m_missMachLatencyHistSeqr.push_back(new Stats::Histogram(this));
+        m_missMachLatencyHistSeqr.push_back(new statistics::Histogram(this));
         m_missMachLatencyHistSeqr[i]
             ->init(10)
             .name(csprintf("%s.miss_mach_latency_hist_seqr", MachineType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
-        m_missMachLatencyHistCoalsr.push_back(new Stats::Histogram(this));
+        m_missMachLatencyHistCoalsr.push_back(new statistics::Histogram(this));
         m_missMachLatencyHistCoalsr[i]
             ->init(10)
             .name(csprintf("%s.miss_mach_latency_hist_coalsr",
                            MachineType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
-        m_IssueToInitialDelayHistSeqr.push_back(new Stats::Histogram(this));
+        m_IssueToInitialDelayHistSeqr.push_back(
+            new statistics::Histogram(this));
         m_IssueToInitialDelayHistSeqr[i]
             ->init(10)
             .name(csprintf(
                 "%s.miss_latency_hist_seqr.issue_to_initial_request",
                 MachineType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
-        m_IssueToInitialDelayHistCoalsr.push_back(new Stats::Histogram(this));
+        m_IssueToInitialDelayHistCoalsr.push_back(
+            new statistics::Histogram(this));
         m_IssueToInitialDelayHistCoalsr[i]
             ->init(10)
             .name(csprintf(
                 "%s.miss_latency_hist_coalsr.issue_to_initial_request",
                 MachineType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
-        m_InitialToForwardDelayHistSeqr.push_back(new Stats::Histogram(this));
+        m_InitialToForwardDelayHistSeqr.push_back(
+            new statistics::Histogram(this));
         m_InitialToForwardDelayHistSeqr[i]
             ->init(10)
             .name(csprintf("%s.miss_latency_hist_seqr.initial_to_forward",
                            MachineType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
         m_InitialToForwardDelayHistCoalsr
-            .push_back(new Stats::Histogram(this));
+            .push_back(new statistics::Histogram(this));
         m_InitialToForwardDelayHistCoalsr[i]
             ->init(10)
             .name(csprintf("%s.miss_latency_hist_coalsr.initial_to_forward",
                            MachineType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
         m_ForwardToFirstResponseDelayHistSeqr
-            .push_back(new Stats::Histogram(this));
+            .push_back(new statistics::Histogram(this));
 
         m_ForwardToFirstResponseDelayHistSeqr[i]
             ->init(10)
@@ -271,86 +274,89 @@ PerMachineTypeStats::PerMachineTypeStats(Stats::Group *parent)
                 "%s.miss_latency_hist_seqr.forward_to_first_response",
                 MachineType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
         m_ForwardToFirstResponseDelayHistCoalsr
-            .push_back(new Stats::Histogram(this));
+            .push_back(new statistics::Histogram(this));
         m_ForwardToFirstResponseDelayHistCoalsr[i]
             ->init(10)
             .name(csprintf(
                 "%s.miss_latency_hist_coalsr.forward_to_first_response",
                 MachineType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
         m_FirstResponseToCompletionDelayHistSeqr
-            .push_back(new Stats::Histogram(this));
+            .push_back(new statistics::Histogram(this));
         m_FirstResponseToCompletionDelayHistSeqr[i]
             ->init(10)
             .name(csprintf(
                 "%s.miss_latency_hist_seqr.first_response_to_completion",
                 MachineType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
         m_FirstResponseToCompletionDelayHistCoalsr
-            .push_back(new Stats::Histogram(this));
+            .push_back(new statistics::Histogram(this));
         m_FirstResponseToCompletionDelayHistCoalsr[i]
             ->init(10)
             .name(csprintf(
                 "%s.miss_latency_hist_coalsr.first_response_to_completion",
                 MachineType(i)))
             .desc("")
-            .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+            .flags(statistics::nozero | statistics::pdf | statistics::oneline);
 
-        m_IncompleteTimesSeqr.push_back(new Stats::Scalar(this));
+        m_IncompleteTimesSeqr.push_back(new statistics::Scalar(this));
         m_IncompleteTimesSeqr[i]
             ->name(csprintf("%s.incomplete_times_seqr", MachineType(i)))
             .desc("")
-            .flags(Stats::nozero);
+            .flags(statistics::nozero);
     }
 }
 
 Profiler::ProfilerStats::
 PerRequestTypeMachineTypeStats::
-PerRequestTypeMachineTypeStats(Stats::Group *parent)
-    : Stats::Group(parent, "RequestTypeMachineType")
+PerRequestTypeMachineTypeStats(statistics::Group *parent)
+    : statistics::Group(parent, "RequestTypeMachineType")
 {
     for (int i = 0; i < RubyRequestType_NUM; i++) {
         m_hitTypeMachLatencyHistSeqr
-            .push_back(std::vector<Stats::Histogram *>());
+            .push_back(std::vector<statistics::Histogram *>());
         m_missTypeMachLatencyHistSeqr
-            .push_back(std::vector<Stats::Histogram *>());
+            .push_back(std::vector<statistics::Histogram *>());
         m_missTypeMachLatencyHistCoalsr
-            .push_back(std::vector<Stats::Histogram *>());
+            .push_back(std::vector<statistics::Histogram *>());
 
         for (int j = 0; j < MachineType_NUM; j++) {
             m_hitTypeMachLatencyHistSeqr[i]
-                .push_back(new Stats::Histogram(this));
+                .push_back(new statistics::Histogram(this));
             m_hitTypeMachLatencyHistSeqr[i][j]
                 ->init(10)
                 .name(csprintf("%s.%s.hit_type_mach_latency_hist_seqr",
                                RubyRequestType(i), MachineType(j)))
                 .desc("")
-                .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+                .flags(statistics::nozero | statistics::pdf |
+                    statistics::oneline);
 
             m_missTypeMachLatencyHistSeqr[i]
-                .push_back(new Stats::Histogram(this));
+                .push_back(new statistics::Histogram(this));
             m_missTypeMachLatencyHistSeqr[i][j]
                 ->init(10)
                 .name(csprintf("%s.%s.miss_type_mach_latency_hist_seqr",
                                RubyRequestType(i), MachineType(j)))
                 .desc("")
-                .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+                .flags(statistics::nozero | statistics::pdf |
+                    statistics::oneline);
 
             m_missTypeMachLatencyHistCoalsr[i]
-                .push_back(new Stats::Histogram(this));
+                .push_back(new statistics::Histogram(this));
             m_missTypeMachLatencyHistCoalsr[i][j]
                 ->init(10)
                 .name(csprintf("%s.%s.miss_type_mach_latency_hist_coalsr",
                                RubyRequestType(i), MachineType(j)))
                 .desc("")
-                .flags(Stats::nozero | Stats::pdf | Stats::oneline);
+                .flags(statistics::nozero | statistics::pdf |
+                    statistics::oneline);
         }
     }
 }

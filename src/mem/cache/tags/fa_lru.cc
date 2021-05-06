@@ -292,19 +292,19 @@ printSize(std::ostream &stream, size_t size)
 }
 
 FALRU::CacheTracking::CacheTracking(unsigned min_size, unsigned max_size,
-                                    unsigned block_size, Stats::Group *parent)
-    : Stats::Group(parent),
+    unsigned block_size, statistics::Group *parent)
+    : statistics::Group(parent),
       blkSize(block_size),
       minTrackedSize(min_size),
       numTrackedCaches(max_size > min_size ?
                        floorLog2(max_size) - floorLog2(min_size) : 0),
       inAllCachesMask(mask(numTrackedCaches)),
       boundaries(numTrackedCaches),
-      ADD_STAT(hits, Stats::units::Count::get(),
+      ADD_STAT(hits, statistics::units::Count::get(),
                "The number of hits in each cache size."),
-      ADD_STAT(misses, Stats::units::Count::get(),
+      ADD_STAT(misses, statistics::units::Count::get(),
                "The number of misses in each cache size."),
-      ADD_STAT(accesses, Stats::units::Count::get(),
+      ADD_STAT(accesses, statistics::units::Count::get(),
                "The number of accesses to the FA LRU cache.")
 {
     fatal_if(numTrackedCaches > sizeof(CachesMask) * 8,

@@ -168,16 +168,16 @@ class Fetch2 : public Named
     std::vector<Fetch2ThreadInfo> fetchInfo;
     ThreadID threadPriority;
 
-    struct Fetch2Stats : public Stats::Group
+    struct Fetch2Stats : public statistics::Group
     {
         Fetch2Stats(MinorCPU *cpu);
         /** Stats */
-        Stats::Scalar intInstructions;
-        Stats::Scalar fpInstructions;
-        Stats::Scalar vecInstructions;
-        Stats::Scalar loadInstructions;
-        Stats::Scalar storeInstructions;
-        Stats::Scalar amoInstructions;
+        statistics::Scalar intInstructions;
+        statistics::Scalar fpInstructions;
+        statistics::Scalar vecInstructions;
+        statistics::Scalar loadInstructions;
+        statistics::Scalar storeInstructions;
+        statistics::Scalar amoInstructions;
     } stats;
 
   protected:

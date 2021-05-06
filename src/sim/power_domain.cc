@@ -242,10 +242,10 @@ PowerDomain::pwrStateChangeCallback(enums::PwrState new_pwr_state,
 }
 
 PowerDomain::PowerDomainStats::PowerDomainStats(PowerDomain &pd)
-    : Stats::Group(&pd),
-    ADD_STAT(numLeaderCalls, Stats::units::Count::get(),
+    : statistics::Group(&pd),
+    ADD_STAT(numLeaderCalls, statistics::units::Count::get(),
              "Number of calls by leaders to change power domain state"),
-    ADD_STAT(numLeaderCallsChangingState, Stats::units::Count::get(),
+    ADD_STAT(numLeaderCallsChangingState, statistics::units::Count::get(),
              "Number of calls by leader to change power domain state actually "
              "resulting in a power state change")
 {
@@ -254,12 +254,12 @@ PowerDomain::PowerDomainStats::PowerDomainStats(PowerDomain &pd)
 void
 PowerDomain::PowerDomainStats::regStats()
 {
-    Stats::Group::regStats();
+    statistics::Group::regStats();
 
     numLeaderCalls
-        .flags(Stats::nozero)
+        .flags(statistics::nozero)
         ;
     numLeaderCallsChangingState
-        .flags(Stats::nozero)
+        .flags(statistics::nozero)
         ;
 }

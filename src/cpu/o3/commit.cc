@@ -144,43 +144,43 @@ Commit::regProbePoints()
 }
 
 Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
-    : Stats::Group(cpu, "commit"),
-      ADD_STAT(commitSquashedInsts, Stats::units::Count::get(),
+    : statistics::Group(cpu, "commit"),
+      ADD_STAT(commitSquashedInsts, statistics::units::Count::get(),
                "The number of squashed insts skipped by commit"),
-      ADD_STAT(commitNonSpecStalls, Stats::units::Count::get(),
+      ADD_STAT(commitNonSpecStalls, statistics::units::Count::get(),
                "The number of times commit has been forced to stall to "
                "communicate backwards"),
-      ADD_STAT(branchMispredicts, Stats::units::Count::get(),
+      ADD_STAT(branchMispredicts, statistics::units::Count::get(),
                "The number of times a branch was mispredicted"),
-      ADD_STAT(numCommittedDist, Stats::units::Count::get(),
+      ADD_STAT(numCommittedDist, statistics::units::Count::get(),
                "Number of insts commited each cycle"),
-      ADD_STAT(instsCommitted, Stats::units::Count::get(),
+      ADD_STAT(instsCommitted, statistics::units::Count::get(),
                "Number of instructions committed"),
-      ADD_STAT(opsCommitted, Stats::units::Count::get(),
+      ADD_STAT(opsCommitted, statistics::units::Count::get(),
                "Number of ops (including micro ops) committed"),
-      ADD_STAT(memRefs, Stats::units::Count::get(),
+      ADD_STAT(memRefs, statistics::units::Count::get(),
                "Number of memory references committed"),
-      ADD_STAT(loads, Stats::units::Count::get(), "Number of loads committed"),
-      ADD_STAT(amos, Stats::units::Count::get(),
+      ADD_STAT(loads, statistics::units::Count::get(), "Number of loads committed"),
+      ADD_STAT(amos, statistics::units::Count::get(),
                "Number of atomic instructions committed"),
-      ADD_STAT(membars, Stats::units::Count::get(),
+      ADD_STAT(membars, statistics::units::Count::get(),
                "Number of memory barriers committed"),
-      ADD_STAT(branches, Stats::units::Count::get(),
+      ADD_STAT(branches, statistics::units::Count::get(),
                "Number of branches committed"),
-      ADD_STAT(vectorInstructions, Stats::units::Count::get(),
+      ADD_STAT(vectorInstructions, statistics::units::Count::get(),
                "Number of committed Vector instructions."),
-      ADD_STAT(floating, Stats::units::Count::get(),
+      ADD_STAT(floating, statistics::units::Count::get(),
                "Number of committed floating point instructions."),
-      ADD_STAT(integer, Stats::units::Count::get(),
+      ADD_STAT(integer, statistics::units::Count::get(),
                "Number of committed integer instructions."),
-      ADD_STAT(functionCalls, Stats::units::Count::get(),
+      ADD_STAT(functionCalls, statistics::units::Count::get(),
                "Number of function calls committed."),
-      ADD_STAT(committedInstType, Stats::units::Count::get(),
+      ADD_STAT(committedInstType, statistics::units::Count::get(),
                "Class of committed instruction"),
-      ADD_STAT(commitEligibleSamples, Stats::units::Cycle::get(),
+      ADD_STAT(commitEligibleSamples, statistics::units::Cycle::get(),
                "number cycles where commit BW limit reached")
 {
-    using namespace Stats;
+    using namespace statistics;
 
     commitSquashedInsts.prereq(commitSquashedInsts);
     commitNonSpecStalls.prereq(commitNonSpecStalls);
@@ -188,7 +188,7 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
 
     numCommittedDist
         .init(0,commit->commitWidth,1)
-        .flags(Stats::pdf);
+        .flags(statistics::pdf);
 
     instsCommitted
         .init(cpu->numThreads)

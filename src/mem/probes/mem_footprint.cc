@@ -60,21 +60,21 @@ MemFootprintProbe::MemFootprintProbe(const MemFootprintProbeParams &p)
              "MemFootprintProbe expects page size parameter is power of 2");
 }
 
-MemFootprintProbe::
-MemFootprintProbeStats::MemFootprintProbeStats(MemFootprintProbe *parent)
-    : Stats::Group(parent),
-      ADD_STAT(cacheLine, Stats::units::Count::get(),
+MemFootprintProbe::MemFootprintProbeStats::MemFootprintProbeStats(
+    MemFootprintProbe *parent)
+    : statistics::Group(parent),
+      ADD_STAT(cacheLine, statistics::units::Count::get(),
                "Memory footprint at cache line granularity"),
-      ADD_STAT(cacheLineTotal, Stats::units::Count::get(),
+      ADD_STAT(cacheLineTotal, statistics::units::Count::get(),
                "Total memory footprint at cache line granularity since "
                "simulation begin"),
-      ADD_STAT(page, Stats::units::Count::get(),
+      ADD_STAT(page, statistics::units::Count::get(),
                "Memory footprint at page granularity"),
-      ADD_STAT(pageTotal, Stats::units::Count::get(),
+      ADD_STAT(pageTotal, statistics::units::Count::get(),
                "Total memory footprint at page granularity since simulation "
                "begin")
 {
-    using namespace Stats;
+    using namespace statistics;
     // clang-format off
     cacheLine.flags(nozero | nonan);
     cacheLineTotal.flags(nozero | nonan);

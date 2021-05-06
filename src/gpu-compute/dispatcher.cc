@@ -344,8 +344,9 @@ GPUDispatcher::scheduleDispatch()
     }
 }
 
-GPUDispatcher::GPUDispatcherStats::GPUDispatcherStats(Stats::Group *parent)
-    : Stats::Group(parent),
+GPUDispatcher::GPUDispatcherStats::GPUDispatcherStats(
+    statistics::Group *parent)
+    : statistics::Group(parent),
       ADD_STAT(numKernelLaunched, "number of kernel launched"),
       ADD_STAT(cyclesWaitingForDispatch, "number of cycles with outstanding "
                "wavefronts that are waiting to be dispatched")

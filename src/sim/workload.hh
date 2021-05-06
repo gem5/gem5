@@ -46,23 +46,24 @@ class Workload : public SimObject
   protected:
     virtual Addr fixFuncEventAddr(Addr addr) const { return addr; }
 
-    struct WorkloadStats : public Stats::Group
+    struct WorkloadStats : public statistics::Group
     {
-        struct InstStats: public Stats::Group
+        struct InstStats: public statistics::Group
         {
-            Stats::Scalar arm;
-            Stats::Scalar quiesce;
+            statistics::Scalar arm;
+            statistics::Scalar quiesce;
 
-            InstStats(Stats::Group *parent) : Stats::Group(parent, "inst"),
-                ADD_STAT(arm, Stats::units::Count::get(),
+            InstStats(statistics::Group *parent)
+              : statistics::Group(parent, "inst"),
+                ADD_STAT(arm, statistics::units::Count::get(),
                          "number of arm instructions executed"),
-                ADD_STAT(quiesce, Stats::units::Count::get(),
+                ADD_STAT(quiesce, statistics::units::Count::get(),
                          "number of quiesce instructions executed")
             {}
 
         } instStats;
 
-        WorkloadStats(Workload *workload) : Stats::Group(workload),
+        WorkloadStats(Workload *workload) : statistics::Group(workload),
             instStats(workload)
         {}
     } stats;

@@ -397,7 +397,7 @@ class DRAMInterface : public MemInterface
     };
 
     class Rank;
-    struct RankStats : public Stats::Group
+    struct RankStats : public statistics::Group
     {
         RankStats(DRAMInterface &dram, Rank &rank);
 
@@ -410,50 +410,50 @@ class DRAMInterface : public MemInterface
         /*
          * Command energies
          */
-        Stats::Scalar actEnergy;
-        Stats::Scalar preEnergy;
-        Stats::Scalar readEnergy;
-        Stats::Scalar writeEnergy;
-        Stats::Scalar refreshEnergy;
+        statistics::Scalar actEnergy;
+        statistics::Scalar preEnergy;
+        statistics::Scalar readEnergy;
+        statistics::Scalar writeEnergy;
+        statistics::Scalar refreshEnergy;
 
         /*
          * Active Background Energy
          */
-        Stats::Scalar actBackEnergy;
+        statistics::Scalar actBackEnergy;
 
         /*
          * Precharge Background Energy
          */
-        Stats::Scalar preBackEnergy;
+        statistics::Scalar preBackEnergy;
 
         /*
          * Active Power-Down Energy
          */
-        Stats::Scalar actPowerDownEnergy;
+        statistics::Scalar actPowerDownEnergy;
 
         /*
          * Precharge Power-Down Energy
          */
-        Stats::Scalar prePowerDownEnergy;
+        statistics::Scalar prePowerDownEnergy;
 
         /*
          * self Refresh Energy
          */
-        Stats::Scalar selfRefreshEnergy;
+        statistics::Scalar selfRefreshEnergy;
 
-        Stats::Scalar totalEnergy;
-        Stats::Scalar averagePower;
+        statistics::Scalar totalEnergy;
+        statistics::Scalar averagePower;
 
         /**
          * Stat to track total DRAM idle time
          *
          */
-        Stats::Scalar totalIdleTime;
+        statistics::Scalar totalIdleTime;
 
         /**
          * Track time spent in each power state.
          */
-        Stats::Vector pwrStateTime;
+        statistics::Vector pwrStateTime;
     };
 
     /**
@@ -800,7 +800,7 @@ class DRAMInterface : public MemInterface
                        Tick pre_tick, bool auto_or_preall = false,
                        bool trace = true);
 
-    struct DRAMStats : public Stats::Group
+    struct DRAMStats : public statistics::Group
     {
         DRAMStats(DRAMInterface &dram);
 
@@ -810,42 +810,42 @@ class DRAMInterface : public MemInterface
         DRAMInterface &dram;
 
         /** total number of DRAM bursts serviced */
-        Stats::Scalar readBursts;
-        Stats::Scalar writeBursts;
+        statistics::Scalar readBursts;
+        statistics::Scalar writeBursts;
 
         /** DRAM per bank stats */
-        Stats::Vector perBankRdBursts;
-        Stats::Vector perBankWrBursts;
+        statistics::Vector perBankRdBursts;
+        statistics::Vector perBankWrBursts;
 
         // Latencies summed over all requests
-        Stats::Scalar totQLat;
-        Stats::Scalar totBusLat;
-        Stats::Scalar totMemAccLat;
+        statistics::Scalar totQLat;
+        statistics::Scalar totBusLat;
+        statistics::Scalar totMemAccLat;
 
         // Average latencies per request
-        Stats::Formula avgQLat;
-        Stats::Formula avgBusLat;
-        Stats::Formula avgMemAccLat;
+        statistics::Formula avgQLat;
+        statistics::Formula avgBusLat;
+        statistics::Formula avgMemAccLat;
 
         // Row hit count and rate
-        Stats::Scalar readRowHits;
-        Stats::Scalar writeRowHits;
-        Stats::Formula readRowHitRate;
-        Stats::Formula writeRowHitRate;
-        Stats::Histogram bytesPerActivate;
+        statistics::Scalar readRowHits;
+        statistics::Scalar writeRowHits;
+        statistics::Formula readRowHitRate;
+        statistics::Formula writeRowHitRate;
+        statistics::Histogram bytesPerActivate;
         // Number of bytes transferred to/from DRAM
-        Stats::Scalar bytesRead;
-        Stats::Scalar bytesWritten;
+        statistics::Scalar bytesRead;
+        statistics::Scalar bytesWritten;
 
         // Average bandwidth
-        Stats::Formula avgRdBW;
-        Stats::Formula avgWrBW;
-        Stats::Formula peakBW;
+        statistics::Formula avgRdBW;
+        statistics::Formula avgWrBW;
+        statistics::Formula peakBW;
         // bus utilization
-        Stats::Formula busUtil;
-        Stats::Formula busUtilRead;
-        Stats::Formula busUtilWrite;
-        Stats::Formula pageHitRate;
+        statistics::Formula busUtil;
+        statistics::Formula busUtilRead;
+        statistics::Formula busUtilWrite;
+        statistics::Formula pageHitRate;
     };
 
     DRAMStats stats;
@@ -1058,7 +1058,7 @@ class NVMInterface : public MemInterface
     const Tick tWRITE;
     const Tick tSEND;
 
-    struct NVMStats : public Stats::Group
+    struct NVMStats : public statistics::Group
     {
         NVMStats(NVMInterface &nvm);
 
@@ -1067,37 +1067,37 @@ class NVMInterface : public MemInterface
         NVMInterface &nvm;
 
         /** NVM stats */
-        Stats::Scalar readBursts;
-        Stats::Scalar writeBursts;
+        statistics::Scalar readBursts;
+        statistics::Scalar writeBursts;
 
-        Stats::Vector perBankRdBursts;
-        Stats::Vector perBankWrBursts;
+        statistics::Vector perBankRdBursts;
+        statistics::Vector perBankWrBursts;
 
         // Latencies summed over all requests
-        Stats::Scalar totQLat;
-        Stats::Scalar totBusLat;
-        Stats::Scalar totMemAccLat;
+        statistics::Scalar totQLat;
+        statistics::Scalar totBusLat;
+        statistics::Scalar totMemAccLat;
 
         // Average latencies per request
-        Stats::Formula avgQLat;
-        Stats::Formula avgBusLat;
-        Stats::Formula avgMemAccLat;
+        statistics::Formula avgQLat;
+        statistics::Formula avgBusLat;
+        statistics::Formula avgMemAccLat;
 
-        Stats::Scalar bytesRead;
-        Stats::Scalar bytesWritten;
+        statistics::Scalar bytesRead;
+        statistics::Scalar bytesWritten;
 
         // Average bandwidth
-        Stats::Formula avgRdBW;
-        Stats::Formula avgWrBW;
-        Stats::Formula peakBW;
-        Stats::Formula busUtil;
-        Stats::Formula busUtilRead;
-        Stats::Formula busUtilWrite;
+        statistics::Formula avgRdBW;
+        statistics::Formula avgWrBW;
+        statistics::Formula peakBW;
+        statistics::Formula busUtil;
+        statistics::Formula busUtilRead;
+        statistics::Formula busUtilWrite;
 
         /** NVM stats */
-        Stats::Histogram pendingReads;
-        Stats::Histogram pendingWrites;
-        Stats::Histogram bytesPerBank;
+        statistics::Histogram pendingReads;
+        statistics::Histogram pendingWrites;
+        statistics::Histogram bytesPerBank;
     };
     NVMStats stats;
 

@@ -512,40 +512,40 @@ class UFSHostDevice : public DmaDevice
     /**
      * Statistics
      */
-    struct UFSHostDeviceStats : public Stats::Group
+    struct UFSHostDeviceStats : public statistics::Group
     {
         UFSHostDeviceStats(UFSHostDevice *parent);
 
         /** Queue lengths */
-        Stats::Scalar currentSCSIQueue;
-        Stats::Scalar currentReadSSDQueue;
-        Stats::Scalar currentWriteSSDQueue;
+        statistics::Scalar currentSCSIQueue;
+        statistics::Scalar currentReadSSDQueue;
+        statistics::Scalar currentWriteSSDQueue;
 
         /** Amount of data read/written */
-        Stats::Scalar totalReadSSD;
-        Stats::Scalar totalWrittenSSD;
-        Stats::Scalar totalReadDiskTransactions;
-        Stats::Scalar totalWriteDiskTransactions;
-        Stats::Scalar totalReadUFSTransactions;
-        Stats::Scalar totalWriteUFSTransactions;
+        statistics::Scalar totalReadSSD;
+        statistics::Scalar totalWrittenSSD;
+        statistics::Scalar totalReadDiskTransactions;
+        statistics::Scalar totalWriteDiskTransactions;
+        statistics::Scalar totalReadUFSTransactions;
+        statistics::Scalar totalWriteUFSTransactions;
 
         /** Average bandwidth for reads and writes */
-        Stats::Formula averageReadSSDBW;
-        Stats::Formula averageWriteSSDBW;
+        statistics::Formula averageReadSSDBW;
+        statistics::Formula averageWriteSSDBW;
 
         /** Average Queue lengths*/
-        Stats::Average averageSCSIQueue;
-        Stats::Average averageReadSSDQueue;
-        Stats::Average averageWriteSSDQueue;
+        statistics::Average averageSCSIQueue;
+        statistics::Average averageReadSSDQueue;
+        statistics::Average averageWriteSSDQueue;
 
         /** Number of doorbells rung*/
-        Stats::Formula curDoorbell;
-        Stats::Scalar maxDoorbell;
-        Stats::Average averageDoorbell;
+        statistics::Formula curDoorbell;
+        statistics::Scalar maxDoorbell;
+        statistics::Average averageDoorbell;
 
         /** Histogram of latencies*/
-        Stats::Histogram transactionLatency;
-        Stats::Histogram idleTimes;
+        statistics::Histogram transactionLatency;
+        statistics::Histogram idleTimes;
     };
 
     /**

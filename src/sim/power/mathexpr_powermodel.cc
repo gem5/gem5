@@ -62,7 +62,7 @@ MathExprPowerModel::startup()
                 continue;
             }
 
-            auto *info = Stats::resolve(var);
+            auto *info = statistics::resolve(var);
             fatal_if(!info, "Failed to evaluate %s in expression:\n%s\n",
                      var, expr.toStr());
             statsMap[var] = info;
@@ -82,7 +82,7 @@ MathExprPowerModel::eval(const MathExpr &expr) const
 double
 MathExprPowerModel::getStatValue(const std::string &name) const
 {
-    using namespace Stats;
+    using namespace statistics;
 
     // Automatic variables:
     if (name == "temp") {

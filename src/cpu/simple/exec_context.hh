@@ -79,84 +79,84 @@ class SimpleExecContext : public ExecContext
     // Number of cycles stalled for D-cache responses
     Counter lastDcacheStall;
 
-    struct ExecContextStats : public Stats::Group
+    struct ExecContextStats : public statistics::Group
     {
         ExecContextStats(BaseSimpleCPU *cpu, SimpleThread *thread)
-            : Stats::Group(cpu,
+            : statistics::Group(cpu,
                            csprintf("exec_context.thread_%i",
                                     thread->threadId()).c_str()),
-              ADD_STAT(numInsts, Stats::units::Count::get(),
+              ADD_STAT(numInsts, statistics::units::Count::get(),
                        "Number of instructions committed"),
-              ADD_STAT(numOps, Stats::units::Count::get(),
+              ADD_STAT(numOps, statistics::units::Count::get(),
                        "Number of ops (including micro ops) committed"),
-              ADD_STAT(numIntAluAccesses, Stats::units::Count::get(),
+              ADD_STAT(numIntAluAccesses, statistics::units::Count::get(),
                        "Number of integer alu accesses"),
-              ADD_STAT(numFpAluAccesses, Stats::units::Count::get(),
+              ADD_STAT(numFpAluAccesses, statistics::units::Count::get(),
                        "Number of float alu accesses"),
-              ADD_STAT(numVecAluAccesses, Stats::units::Count::get(),
+              ADD_STAT(numVecAluAccesses, statistics::units::Count::get(),
                        "Number of vector alu accesses"),
-              ADD_STAT(numCallsReturns, Stats::units::Count::get(),
+              ADD_STAT(numCallsReturns, statistics::units::Count::get(),
                        "Number of times a function call or return occured"),
-              ADD_STAT(numCondCtrlInsts, Stats::units::Count::get(),
+              ADD_STAT(numCondCtrlInsts, statistics::units::Count::get(),
                        "Number of instructions that are conditional controls"),
-              ADD_STAT(numIntInsts, Stats::units::Count::get(),
+              ADD_STAT(numIntInsts, statistics::units::Count::get(),
                        "Number of integer instructions"),
-              ADD_STAT(numFpInsts, Stats::units::Count::get(),
+              ADD_STAT(numFpInsts, statistics::units::Count::get(),
                        "Number of float instructions"),
-              ADD_STAT(numVecInsts, Stats::units::Count::get(),
+              ADD_STAT(numVecInsts, statistics::units::Count::get(),
                        "Number of vector instructions"),
-              ADD_STAT(numIntRegReads, Stats::units::Count::get(),
+              ADD_STAT(numIntRegReads, statistics::units::Count::get(),
                        "Number of times the integer registers were read"),
-              ADD_STAT(numIntRegWrites, Stats::units::Count::get(),
+              ADD_STAT(numIntRegWrites, statistics::units::Count::get(),
                        "Number of times the integer registers were written"),
-              ADD_STAT(numFpRegReads, Stats::units::Count::get(),
+              ADD_STAT(numFpRegReads, statistics::units::Count::get(),
                        "Number of times the floating registers were read"),
-              ADD_STAT(numFpRegWrites, Stats::units::Count::get(),
+              ADD_STAT(numFpRegWrites, statistics::units::Count::get(),
                        "Number of times the floating registers were written"),
-              ADD_STAT(numVecRegReads, Stats::units::Count::get(),
+              ADD_STAT(numVecRegReads, statistics::units::Count::get(),
                        "Number of times the vector registers were read"),
-              ADD_STAT(numVecRegWrites, Stats::units::Count::get(),
+              ADD_STAT(numVecRegWrites, statistics::units::Count::get(),
                        "Number of times the vector registers were written"),
-              ADD_STAT(numVecPredRegReads, Stats::units::Count::get(),
+              ADD_STAT(numVecPredRegReads, statistics::units::Count::get(),
                        "Number of times the predicate registers were read"),
-              ADD_STAT(numVecPredRegWrites, Stats::units::Count::get(),
+              ADD_STAT(numVecPredRegWrites, statistics::units::Count::get(),
                        "Number of times the predicate registers were written"),
-              ADD_STAT(numCCRegReads, Stats::units::Count::get(),
+              ADD_STAT(numCCRegReads, statistics::units::Count::get(),
                        "Number of times the CC registers were read"),
-              ADD_STAT(numCCRegWrites, Stats::units::Count::get(),
+              ADD_STAT(numCCRegWrites, statistics::units::Count::get(),
                        "Number of times the CC registers were written"),
-              ADD_STAT(numMemRefs, Stats::units::Count::get(),
+              ADD_STAT(numMemRefs, statistics::units::Count::get(),
                        "Number of memory refs"),
-              ADD_STAT(numLoadInsts, Stats::units::Count::get(),
+              ADD_STAT(numLoadInsts, statistics::units::Count::get(),
                        "Number of load instructions"),
-              ADD_STAT(numStoreInsts, Stats::units::Count::get(),
+              ADD_STAT(numStoreInsts, statistics::units::Count::get(),
                        "Number of store instructions"),
-              ADD_STAT(numIdleCycles, Stats::units::Cycle::get(),
+              ADD_STAT(numIdleCycles, statistics::units::Cycle::get(),
                        "Number of idle cycles"),
-              ADD_STAT(numBusyCycles, Stats::units::Cycle::get(),
+              ADD_STAT(numBusyCycles, statistics::units::Cycle::get(),
                        "Number of busy cycles"),
-              ADD_STAT(notIdleFraction, Stats::units::Ratio::get(),
+              ADD_STAT(notIdleFraction, statistics::units::Ratio::get(),
                        "Percentage of non-idle cycles"),
-              ADD_STAT(idleFraction, Stats::units::Ratio::get(),
+              ADD_STAT(idleFraction, statistics::units::Ratio::get(),
                        "Percentage of idle cycles"),
-              ADD_STAT(icacheStallCycles, Stats::units::Cycle::get(),
+              ADD_STAT(icacheStallCycles, statistics::units::Cycle::get(),
                        "ICache total stall cycles"),
-              ADD_STAT(dcacheStallCycles, Stats::units::Cycle::get(),
+              ADD_STAT(dcacheStallCycles, statistics::units::Cycle::get(),
                        "DCache total stall cycles"),
-              ADD_STAT(numBranches, Stats::units::Count::get(),
+              ADD_STAT(numBranches, statistics::units::Count::get(),
                        "Number of branches fetched"),
-              ADD_STAT(numPredictedBranches, Stats::units::Count::get(),
+              ADD_STAT(numPredictedBranches, statistics::units::Count::get(),
                        "Number of branches predicted as taken"),
-              ADD_STAT(numBranchMispred, Stats::units::Count::get(),
+              ADD_STAT(numBranchMispred, statistics::units::Count::get(),
                        "Number of branch mispredictions"),
-              ADD_STAT(statExecutedInstType, Stats::units::Count::get(),
+              ADD_STAT(statExecutedInstType, statistics::units::Count::get(),
                        "Class of executed instruction.")
         {
             numCCRegReads
-                .flags(Stats::nozero);
+                .flags(statistics::nozero);
 
             numCCRegWrites
-                .flags(Stats::nozero);
+                .flags(statistics::nozero);
 
             icacheStallCycles
                 .prereq(icacheStallCycles);
@@ -166,13 +166,13 @@ class SimpleExecContext : public ExecContext
 
             statExecutedInstType
                 .init(enums::Num_OpClass)
-                .flags(Stats::total | Stats::pdf | Stats::dist);
+                .flags(statistics::total | statistics::pdf | statistics::dist);
 
             for (unsigned i = 0; i < Num_OpClasses; ++i) {
                 statExecutedInstType.subname(i, enums::OpClassStrings[i]);
             }
 
-            idleFraction = Stats::constant(1.0) - notIdleFraction;
+            idleFraction = statistics::constant(1.0) - notIdleFraction;
             numIdleCycles = idleFraction * cpu->baseStats.numCycles;
             numBusyCycles = notIdleFraction * cpu->baseStats.numCycles;
 
@@ -187,85 +187,85 @@ class SimpleExecContext : public ExecContext
         }
 
         // Number of simulated instructions
-        Stats::Scalar numInsts;
-        Stats::Scalar numOps;
+        statistics::Scalar numInsts;
+        statistics::Scalar numOps;
 
         // Number of integer alu accesses
-        Stats::Scalar numIntAluAccesses;
+        statistics::Scalar numIntAluAccesses;
 
         // Number of float alu accesses
-        Stats::Scalar numFpAluAccesses;
+        statistics::Scalar numFpAluAccesses;
 
         // Number of vector alu accesses
-        Stats::Scalar numVecAluAccesses;
+        statistics::Scalar numVecAluAccesses;
 
         // Number of function calls/returns
-        Stats::Scalar numCallsReturns;
+        statistics::Scalar numCallsReturns;
 
         // Conditional control instructions;
-        Stats::Scalar numCondCtrlInsts;
+        statistics::Scalar numCondCtrlInsts;
 
         // Number of int instructions
-        Stats::Scalar numIntInsts;
+        statistics::Scalar numIntInsts;
 
         // Number of float instructions
-        Stats::Scalar numFpInsts;
+        statistics::Scalar numFpInsts;
 
         // Number of vector instructions
-        Stats::Scalar numVecInsts;
+        statistics::Scalar numVecInsts;
 
         // Number of integer register file accesses
-        Stats::Scalar numIntRegReads;
-        Stats::Scalar numIntRegWrites;
+        statistics::Scalar numIntRegReads;
+        statistics::Scalar numIntRegWrites;
 
         // Number of float register file accesses
-        Stats::Scalar numFpRegReads;
-        Stats::Scalar numFpRegWrites;
+        statistics::Scalar numFpRegReads;
+        statistics::Scalar numFpRegWrites;
 
         // Number of vector register file accesses
-        mutable Stats::Scalar numVecRegReads;
-        Stats::Scalar numVecRegWrites;
+        mutable statistics::Scalar numVecRegReads;
+        statistics::Scalar numVecRegWrites;
 
         // Number of predicate register file accesses
-        mutable Stats::Scalar numVecPredRegReads;
-        Stats::Scalar numVecPredRegWrites;
+        mutable statistics::Scalar numVecPredRegReads;
+        statistics::Scalar numVecPredRegWrites;
 
         // Number of condition code register file accesses
-        Stats::Scalar numCCRegReads;
-        Stats::Scalar numCCRegWrites;
+        statistics::Scalar numCCRegReads;
+        statistics::Scalar numCCRegWrites;
 
         // Number of simulated memory references
-        Stats::Scalar numMemRefs;
-        Stats::Scalar numLoadInsts;
-        Stats::Scalar numStoreInsts;
+        statistics::Scalar numMemRefs;
+        statistics::Scalar numLoadInsts;
+        statistics::Scalar numStoreInsts;
 
         // Number of idle cycles
-        Stats::Formula numIdleCycles;
+        statistics::Formula numIdleCycles;
 
         // Number of busy cycles
-        Stats::Formula numBusyCycles;
+        statistics::Formula numBusyCycles;
 
         // Number of idle cycles
-        Stats::Average notIdleFraction;
-        Stats::Formula idleFraction;
+        statistics::Average notIdleFraction;
+        statistics::Formula idleFraction;
 
         // Number of cycles stalled for I-cache responses
-        Stats::Scalar icacheStallCycles;
+        statistics::Scalar icacheStallCycles;
 
         // Number of cycles stalled for D-cache responses
-        Stats::Scalar dcacheStallCycles;
+        statistics::Scalar dcacheStallCycles;
 
         /// @{
         /// Total number of branches fetched
-        Stats::Scalar numBranches;
+        statistics::Scalar numBranches;
         /// Number of branches predicted as taken
-        Stats::Scalar numPredictedBranches;
+        statistics::Scalar numPredictedBranches;
         /// Number of misprediced branches
-        Stats::Scalar numBranchMispred;
+        statistics::Scalar numBranchMispred;
         /// @}
 
         // Instruction mix histogram by OpClass
-        Stats::Vector statExecutedInstType;
+        statistics::Vector statExecutedInstType;
 
     } execContextStats;
 

@@ -93,21 +93,21 @@ class FlashDevice : public AbstractNVM
         std::function<void()> function;
     };
 
-    struct FlashDeviceStats : public Stats::Group
+    struct FlashDeviceStats : public statistics::Group
     {
-        FlashDeviceStats(Stats::Group *parent);
+        FlashDeviceStats(statistics::Group *parent);
 
         /** Amount of GC activations*/
-        Stats::Scalar totalGCActivations;
+        statistics::Scalar totalGCActivations;
 
         /** Histogram of address accesses*/
-        Stats::Histogram writeAccess;
-        Stats::Histogram readAccess;
-        Stats::Histogram fileSystemAccess;
+        statistics::Histogram writeAccess;
+        statistics::Histogram readAccess;
+        statistics::Histogram fileSystemAccess;
 
         /** Histogram of access latencies*/
-        Stats::Histogram writeLatency;
-        Stats::Histogram readLatency;
+        statistics::Histogram writeLatency;
+        statistics::Histogram readLatency;
     };
 
     /** Device access functions Inherrited from AbstractNVM*/

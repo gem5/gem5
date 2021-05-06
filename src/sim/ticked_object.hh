@@ -75,21 +75,21 @@ class Ticked : public Serializable
 
   private:
     /** Locally allocated stats */
-    Stats::Scalar *numCyclesLocal;
+    statistics::Scalar *numCyclesLocal;
 
   protected:
     /** Total number of cycles either ticked or spend stopped */
-    Stats::Scalar &numCycles;
+    statistics::Scalar &numCycles;
 
     /** Number of cycles ticked */
-    Stats::Scalar tickCycles;
+    statistics::Scalar tickCycles;
 
     /** Number of cycles stopped */
-    Stats::Formula idleCycles;
+    statistics::Formula idleCycles;
 
   public:
     Ticked(ClockedObject &object_,
-        Stats::Scalar *imported_num_cycles = NULL,
+        statistics::Scalar *imported_num_cycles = NULL,
         Event::Priority priority = Event::CPU_Tick_Pri);
 
     virtual ~Ticked() { }

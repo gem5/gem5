@@ -101,14 +101,14 @@ namespace X86ISA
 
         AddrRange m5opRange;
 
-        struct TlbStats : public Stats::Group
+        struct TlbStats : public statistics::Group
         {
-            TlbStats(Stats::Group *parent);
+            TlbStats(statistics::Group *parent);
 
-            Stats::Scalar rdAccesses;
-            Stats::Scalar wrAccesses;
-            Stats::Scalar rdMisses;
-            Stats::Scalar wrMisses;
+            statistics::Scalar rdAccesses;
+            statistics::Scalar wrAccesses;
+            statistics::Scalar rdMisses;
+            statistics::Scalar wrMisses;
         } stats;
 
         Fault translateInt(bool read, RequestPtr req, ThreadContext *tc);

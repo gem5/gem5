@@ -34,13 +34,16 @@
 #include <cmath>
 
 #include "base/cast.hh"
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/stats/info.hh"
 #include "base/stats/types.hh"
 // For curTick().
 #include "sim/core.hh"
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 struct StorageParams
 {
@@ -778,6 +781,6 @@ class SparseHistStor
     }
 };
 
-} // namespace Stats
+} // namespace statistics
 
 #endif // __BASE_STATS_STORAGE_HH__

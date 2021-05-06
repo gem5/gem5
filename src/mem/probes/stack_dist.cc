@@ -53,21 +53,21 @@ StackDistProbe::StackDistProbe(const StackDistProbeParams &p)
              "larger or equal to the system's cahce line size.");
 }
 
-StackDistProbe::
-StackDistProbeStats::StackDistProbeStats(StackDistProbe *parent)
-    : Stats::Group(parent),
-      ADD_STAT(readLinearHist, Stats::units::Count::get(),
+StackDistProbe::StackDistProbeStats::StackDistProbeStats(
+    StackDistProbe *parent)
+    : statistics::Group(parent),
+      ADD_STAT(readLinearHist, statistics::units::Count::get(),
                "Reads linear distribution"),
-      ADD_STAT(readLogHist, Stats::units::Ratio::get(),
+      ADD_STAT(readLogHist, statistics::units::Ratio::get(),
                "Reads logarithmic distribution"),
-      ADD_STAT(writeLinearHist, Stats::units::Count::get(),
+      ADD_STAT(writeLinearHist, statistics::units::Count::get(),
                "Writes linear distribution"),
-      ADD_STAT(writeLogHist, Stats::units::Ratio::get(),
+      ADD_STAT(writeLogHist, statistics::units::Ratio::get(),
                "Writes logarithmic distribution"),
-      ADD_STAT(infiniteSD, Stats::units::Count::get(),
+      ADD_STAT(infiniteSD, statistics::units::Count::get(),
                "Number of requests with infinite stack distance")
 {
-    using namespace Stats;
+    using namespace statistics;
 
     const StackDistProbeParams &p =
         dynamic_cast<const StackDistProbeParams &>(parent->params());

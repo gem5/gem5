@@ -90,8 +90,8 @@ FetchStage::fetch(PacketPtr pkt, Wavefront *wavefront)
     _fetchUnit[wavefront->simdId].fetch(pkt, wavefront);
 }
 
-FetchStage::FetchStageStats::FetchStageStats(Stats::Group *parent)
-    : Stats::Group(parent, "FetchStage"),
+FetchStage::FetchStageStats::FetchStageStats(statistics::Group *parent)
+    : statistics::Group(parent, "FetchStage"),
       ADD_STAT(instFetchInstReturned, "For each instruction fetch request "
                "received record how many instructions you got from it")
 {

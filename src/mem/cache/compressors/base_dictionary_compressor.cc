@@ -46,8 +46,8 @@ BaseDictionaryCompressor::BaseDictionaryCompressor(const Params &p)
 
 BaseDictionaryCompressor::DictionaryStats::DictionaryStats(
     BaseStats& base_group, BaseDictionaryCompressor& _compressor)
-  : Stats::Group(&base_group), compressor(_compressor),
-    ADD_STAT(patterns, Stats::units::Count::get(),
+  : statistics::Group(&base_group), compressor(_compressor),
+    ADD_STAT(patterns, statistics::units::Count::get(),
              "Number of data entries that were compressed to this pattern")
 {
 }
@@ -55,7 +55,7 @@ BaseDictionaryCompressor::DictionaryStats::DictionaryStats(
 void
 BaseDictionaryCompressor::DictionaryStats::regStats()
 {
-    Stats::Group::regStats();
+    statistics::Group::regStats();
 
     // We store the frequency of each pattern
     patterns.init(compressor.getNumPatterns());

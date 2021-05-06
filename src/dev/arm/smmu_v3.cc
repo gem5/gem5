@@ -745,18 +745,18 @@ SMMUv3::init()
         controlPort.sendRangeChange();
 }
 
-SMMUv3::SMMUv3Stats::SMMUv3Stats(Stats::Group *parent)
-    : Stats::Group(parent),
-      ADD_STAT(steL1Fetches, Stats::units::Count::get(), "STE L1 fetches"),
-      ADD_STAT(steFetches, Stats::units::Count::get(), "STE fetches"),
-      ADD_STAT(cdL1Fetches, Stats::units::Count::get(), "CD L1 fetches"),
-      ADD_STAT(cdFetches, Stats::units::Count::get(), "CD fetches"),
-      ADD_STAT(translationTimeDist, Stats::units::Tick::get(),
-               "Time to translate address"),
-      ADD_STAT(ptwTimeDist, Stats::units::Tick::get(),
-               "Time to walk page tables")
+SMMUv3::SMMUv3Stats::SMMUv3Stats(statistics::Group *parent)
+  : statistics::Group(parent),
+    ADD_STAT(steL1Fetches, statistics::units::Count::get(), "STE L1 fetches"),
+    ADD_STAT(steFetches, statistics::units::Count::get(), "STE fetches"),
+    ADD_STAT(cdL1Fetches, statistics::units::Count::get(), "CD L1 fetches"),
+    ADD_STAT(cdFetches, statistics::units::Count::get(), "CD fetches"),
+    ADD_STAT(translationTimeDist, statistics::units::Tick::get(),
+        "Time to translate address"),
+    ADD_STAT(ptwTimeDist, statistics::units::Tick::get(),
+        "Time to walk page tables")
 {
-    using namespace Stats;
+    using namespace statistics;
 
     steL1Fetches
         .flags(pdf);

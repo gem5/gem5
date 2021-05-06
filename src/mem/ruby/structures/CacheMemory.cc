@@ -515,8 +515,8 @@ CacheMemory::isLocked(Addr address, int context)
 }
 
 CacheMemory::
-CacheMemoryStats::CacheMemoryStats(Stats::Group *parent)
-    : Stats::Group(parent),
+CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
+    : statistics::Group(parent),
       ADD_STAT(numDataArrayReads, "Number of data array reads"),
       ADD_STAT(numDataArrayWrites, "Number of data array writes"),
       ADD_STAT(numTagArrayReads, "Number of tag array reads"),
@@ -541,56 +541,60 @@ CacheMemoryStats::CacheMemoryStats(Stats::Group *parent)
       ADD_STAT(m_accessModeType, "")
 {
     numDataArrayReads
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     numDataArrayWrites
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     numTagArrayReads
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     numTagArrayWrites
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     numTagArrayStalls
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     numDataArrayStalls
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     htmTransCommitReadSet
         .init(8)
-        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan);
+        .flags(statistics::pdf | statistics::dist | statistics::nozero |
+            statistics::nonan);
 
     htmTransCommitWriteSet
         .init(8)
-        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan);
+        .flags(statistics::pdf | statistics::dist | statistics::nozero |
+            statistics::nonan);
 
     htmTransAbortReadSet
         .init(8)
-        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan);
+        .flags(statistics::pdf | statistics::dist | statistics::nozero |
+            statistics::nonan);
 
     htmTransAbortWriteSet
         .init(8)
-        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan);
+        .flags(statistics::pdf | statistics::dist | statistics::nozero |
+            statistics::nonan);
 
     m_prefetch_hits
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     m_prefetch_misses
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     m_prefetch_accesses
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     m_accessModeType
         .init(RubyRequestType_NUM)
-        .flags(Stats::pdf | Stats::total);
+        .flags(statistics::pdf | statistics::total);
 
     for (int i = 0; i < RubyAccessMode_NUM; i++) {
         m_accessModeType
             .subname(i, RubyAccessMode_to_string(RubyAccessMode(i)))
-            .flags(Stats::nozero)
+            .flags(statistics::nozero)
             ;
     }
 }

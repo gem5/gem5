@@ -65,9 +65,9 @@ class Throttle : public Consumer
     void wakeup();
 
     // The average utilization (a fraction) since last clearStats()
-    const Stats::Scalar & getUtilization() const
+    const statistics::Scalar & getUtilization() const
     { return throttleStats.m_link_utilization; }
-    const Stats::Vector & getMsgCount(unsigned int type) const
+    const statistics::Vector & getMsgCount(unsigned int type) const
     { return *(throttleStats.m_msg_counts[type]); }
 
     int getLinkBandwidth() const
@@ -108,14 +108,14 @@ class Throttle : public Consumer
     double m_link_utilization_proxy;
 
 
-    struct ThrottleStats : public Stats::Group
+    struct ThrottleStats : public statistics::Group
     {
-        ThrottleStats(Stats::Group *parent, const NodeID &nodeID);
+        ThrottleStats(statistics::Group *parent, const NodeID &nodeID);
 
         // Statistical variables
-        Stats::Scalar m_link_utilization;
-        Stats::Vector* m_msg_counts[MessageSizeType_NUM];
-        Stats::Formula* m_msg_bytes[MessageSizeType_NUM];
+        statistics::Scalar m_link_utilization;
+        statistics::Vector* m_msg_counts[MessageSizeType_NUM];
+        statistics::Formula* m_msg_bytes[MessageSizeType_NUM];
     } throttleStats;
 };
 

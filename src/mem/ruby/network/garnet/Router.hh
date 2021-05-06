@@ -145,13 +145,13 @@ class Router : public BasicRouter, public Consumer
     std::vector<std::shared_ptr<OutputUnit>> m_output_unit;
 
     // Statistical variables required for power computations
-    Stats::Scalar m_buffer_reads;
-    Stats::Scalar m_buffer_writes;
+    statistics::Scalar m_buffer_reads;
+    statistics::Scalar m_buffer_writes;
 
-    Stats::Scalar m_sw_input_arbiter_activity;
-    Stats::Scalar m_sw_output_arbiter_activity;
+    statistics::Scalar m_sw_input_arbiter_activity;
+    statistics::Scalar m_sw_output_arbiter_activity;
 
-    Stats::Scalar m_crossbar_activity;
+    statistics::Scalar m_crossbar_activity;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_ROUTER_HH__

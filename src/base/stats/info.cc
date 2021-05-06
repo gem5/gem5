@@ -50,7 +50,9 @@
 #include "base/logging.hh"
 #include "base/str.hh"
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 std::string Info::separatorString = "::";
 
@@ -164,7 +166,7 @@ Info::less(Info *stat1, Info *stat2)
 bool
 Info::baseCheck() const
 {
-    if (!(flags & Stats::init)) {
+    if (!(flags & statistics::init)) {
 #ifdef DEBUG
         cprintf("this is stat number %d\n", id);
 #endif
@@ -219,4 +221,4 @@ Vector2dInfo::enable()
         y_subnames.resize(y);
 }
 
-} // namespace Stats
+} // namespace statistics

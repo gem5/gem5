@@ -95,11 +95,11 @@ class HTMSequencer : public Sequencer
     Counter m_htmstart_instruction;
 
     //! Histogram of cycle latencies of HTM transactions
-    Stats::Histogram m_htm_transaction_cycles;
+    statistics::Histogram m_htm_transaction_cycles;
     //! Histogram of instruction lengths of HTM transactions
-    Stats::Histogram m_htm_transaction_instructions;
+    statistics::Histogram m_htm_transaction_instructions;
     //! Causes for HTM transaction aborts
-    Stats::Vector m_htm_transaction_abort_cause;
+    statistics::Vector m_htm_transaction_abort_cause;
 };
 
 inline std::ostream&

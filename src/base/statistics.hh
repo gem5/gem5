@@ -87,7 +87,9 @@
 #include "base/types.hh"
 
 /* A namespace for all of the Statistics */
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 template <class Stat, class Base>
 class InfoProxy : public Base
@@ -262,9 +264,9 @@ class DataWrap : public InfoAccess
         if (desc)
             info->desc = desc;
 
-        // Stat that does not belong to any Stats::Group is a legacy stat
+        // Stat that does not belong to any statistics::Group is a legacy stat
         std::string common_message = "Legacy stat is a stat that does not "
-            "belong to any Stats::Group. Legacy stat is deprecated.";
+            "belong to any statistics::Group. Legacy stat is deprecated.";
         if (parent == nullptr && name != nullptr)
             warn(csprintf("`%s` is a legacy stat. %s", name, common_message));
         else if (parent == nullptr)
@@ -2936,7 +2938,7 @@ std::list<Info *> &statsList();
 typedef std::map<const void *, Info *> MapType;
 MapType &statsMap();
 
-} // namespace Stats
+} // namespace statistics
 
 void debugDumpStats();
 

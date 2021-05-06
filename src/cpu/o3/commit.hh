@@ -468,51 +468,51 @@ class Commit
     int htmStarts[MaxThreads];
     int htmStops[MaxThreads];
 
-    struct CommitStats : public Stats::Group
+    struct CommitStats : public statistics::Group
     {
         CommitStats(CPU *cpu, Commit *commit);
         /** Stat for the total number of squashed instructions discarded by
          * commit.
          */
-        Stats::Scalar commitSquashedInsts;
+        statistics::Scalar commitSquashedInsts;
         /** Stat for the total number of times commit has had to stall due
          * to a non-speculative instruction reaching the head of the ROB.
          */
-        Stats::Scalar commitNonSpecStalls;
+        statistics::Scalar commitNonSpecStalls;
         /** Stat for the total number of branch mispredicts that caused a
          * squash.
          */
-        Stats::Scalar branchMispredicts;
+        statistics::Scalar branchMispredicts;
         /** Distribution of the number of committed instructions each cycle. */
-        Stats::Distribution numCommittedDist;
+        statistics::Distribution numCommittedDist;
 
         /** Total number of instructions committed. */
-        Stats::Vector instsCommitted;
+        statistics::Vector instsCommitted;
         /** Total number of ops (including micro ops) committed. */
-        Stats::Vector opsCommitted;
+        statistics::Vector opsCommitted;
         /** Stat for the total number of committed memory references. */
-        Stats::Vector memRefs;
+        statistics::Vector memRefs;
         /** Stat for the total number of committed loads. */
-        Stats::Vector loads;
+        statistics::Vector loads;
         /** Stat for the total number of committed atomics. */
-        Stats::Vector amos;
+        statistics::Vector amos;
         /** Total number of committed memory barriers. */
-        Stats::Vector membars;
+        statistics::Vector membars;
         /** Total number of committed branches. */
-        Stats::Vector branches;
+        statistics::Vector branches;
         /** Total number of vector instructions */
-        Stats::Vector vectorInstructions;
+        statistics::Vector vectorInstructions;
         /** Total number of floating point instructions */
-        Stats::Vector floating;
+        statistics::Vector floating;
         /** Total number of integer instructions */
-        Stats::Vector integer;
+        statistics::Vector integer;
         /** Total number of function calls */
-        Stats::Vector functionCalls;
+        statistics::Vector functionCalls;
         /** Committed instructions by instruction type (OpClass) */
-        Stats::Vector2d committedInstType;
+        statistics::Vector2d committedInstType;
 
         /** Number of cycles where the commit bandwidth limit is reached. */
-        Stats::Scalar commitEligibleSamples;
+        statistics::Scalar commitEligibleSamples;
     } stats;
 };
 

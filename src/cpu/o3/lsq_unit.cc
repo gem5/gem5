@@ -258,22 +258,22 @@ LSQUnit::name() const
     }
 }
 
-LSQUnit::LSQUnitStats::LSQUnitStats(Stats::Group *parent)
-    : Stats::Group(parent),
-      ADD_STAT(forwLoads, Stats::units::Count::get(),
+LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(forwLoads, statistics::units::Count::get(),
                "Number of loads that had data forwarded from stores"),
-      ADD_STAT(squashedLoads, Stats::units::Count::get(),
+      ADD_STAT(squashedLoads, statistics::units::Count::get(),
                "Number of loads squashed"),
-      ADD_STAT(ignoredResponses, Stats::units::Count::get(),
+      ADD_STAT(ignoredResponses, statistics::units::Count::get(),
                "Number of memory responses ignored because the instruction is "
                "squashed"),
-      ADD_STAT(memOrderViolation, Stats::units::Count::get(),
+      ADD_STAT(memOrderViolation, statistics::units::Count::get(),
                "Number of memory ordering violations"),
-      ADD_STAT(squashedStores, Stats::units::Count::get(),
+      ADD_STAT(squashedStores, statistics::units::Count::get(),
                "Number of stores squashed"),
-      ADD_STAT(rescheduledLoads, Stats::units::Count::get(),
+      ADD_STAT(rescheduledLoads, statistics::units::Count::get(),
                "Number of loads that were rescheduled"),
-      ADD_STAT(blockedByCache, Stats::units::Count::get(),
+      ADD_STAT(blockedByCache, statistics::units::Count::get(),
                "Number of times an access to memory failed due to the cache "
                "being blocked")
 {

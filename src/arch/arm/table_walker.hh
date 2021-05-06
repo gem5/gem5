@@ -941,21 +941,22 @@ class TableWalker : public ClockedObject
     bool _haveLargeAsid64;
 
     /** Statistics */
-    struct TableWalkerStats : public Stats::Group
+    struct TableWalkerStats : public statistics::Group
     {
-        TableWalkerStats(Stats::Group *parent);
-        Stats::Scalar walks;
-        Stats::Scalar walksShortDescriptor;
-        Stats::Scalar walksLongDescriptor;
-        Stats::Vector walksShortTerminatedAtLevel;
-        Stats::Vector walksLongTerminatedAtLevel;
-        Stats::Scalar squashedBefore;
-        Stats::Scalar squashedAfter;
-        Stats::Histogram walkWaitTime;
-        Stats::Histogram walkServiceTime;
-        Stats::Histogram pendingWalks; // essentially "L" of queueing theory
-        Stats::Vector pageSizes;
-        Stats::Vector2d requestOrigin;
+        TableWalkerStats(statistics::Group *parent);
+        statistics::Scalar walks;
+        statistics::Scalar walksShortDescriptor;
+        statistics::Scalar walksLongDescriptor;
+        statistics::Vector walksShortTerminatedAtLevel;
+        statistics::Vector walksLongTerminatedAtLevel;
+        statistics::Scalar squashedBefore;
+        statistics::Scalar squashedAfter;
+        statistics::Histogram walkWaitTime;
+        statistics::Histogram walkServiceTime;
+        // Essentially "L" of queueing theory
+        statistics::Histogram pendingWalks;
+        statistics::Vector pageSizes;
+        statistics::Vector2d requestOrigin;
     } stats;
 
     mutable unsigned pendingReqs;

@@ -336,11 +336,11 @@ MemSinkCtrl::drain()
     }
 }
 
-MemSinkCtrl::MemSinkCtrlStats::MemSinkCtrlStats(Stats::Group *parent)
-    : Stats::Group(parent),
-      ADD_STAT(numReadRetries, Stats::units::Count::get(),
+MemSinkCtrl::MemSinkCtrlStats::MemSinkCtrlStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(numReadRetries, statistics::units::Count::get(),
                "Number of read retries"),
-      ADD_STAT(numWriteRetries, Stats::units::Count::get(),
+      ADD_STAT(numWriteRetries, statistics::units::Count::get(),
                "Number of write retries")
 {
 }

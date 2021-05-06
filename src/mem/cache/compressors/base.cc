@@ -229,20 +229,20 @@ Base::setSizeBits(CacheBlk* blk, const std::size_t size_bits)
 }
 
 Base::BaseStats::BaseStats(Base& _compressor)
-  : Stats::Group(&_compressor), compressor(_compressor),
-    ADD_STAT(compressions, Stats::units::Count::get(),
+  : statistics::Group(&_compressor), compressor(_compressor),
+    ADD_STAT(compressions, statistics::units::Count::get(),
              "Total number of compressions"),
-    ADD_STAT(failedCompressions, Stats::units::Count::get(),
+    ADD_STAT(failedCompressions, statistics::units::Count::get(),
              "Total number of failed compressions"),
-    ADD_STAT(compressionSize, Stats::units::Count::get(),
+    ADD_STAT(compressionSize, statistics::units::Count::get(),
              "Number of blocks that were compressed to this power of two "
              "size"),
-    ADD_STAT(compressionSizeBits, Stats::units::Bit::get(),
+    ADD_STAT(compressionSizeBits, statistics::units::Bit::get(),
              "Total compressed data size"),
-    ADD_STAT(avgCompressionSizeBits, Stats::units::Rate<
-                Stats::units::Bit, Stats::units::Count>::get(),
+    ADD_STAT(avgCompressionSizeBits, statistics::units::Rate<
+                statistics::units::Bit, statistics::units::Count>::get(),
              "Average compression size"),
-    ADD_STAT(decompressions, Stats::units::Count::get(),
+    ADD_STAT(decompressions, statistics::units::Count::get(),
              "Total number of decompressions")
 {
 }
@@ -250,7 +250,7 @@ Base::BaseStats::BaseStats(Base& _compressor)
 void
 Base::BaseStats::regStats()
 {
-    Stats::Group::regStats();
+    statistics::Group::regStats();
 
     // Values comprised are {0, 1, 2, 4, ..., blkSize}
     compressionSize.init(std::log2(compressor.blkSize*8) + 2);
@@ -264,7 +264,8 @@ Base::BaseStats::regStats()
             "Number of blocks that compressed to fit in " + str_i + " bits");
     }
 
-    avgCompressionSizeBits.flags(Stats::total | Stats::nozero | Stats::nonan);
+    avgCompressionSizeBits.flags(statistics::total | statistics::nozero |
+        statistics::nonan);
     avgCompressionSizeBits = compressionSizeBits / compressions;
 }
 

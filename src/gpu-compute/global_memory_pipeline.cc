@@ -290,8 +290,8 @@ GlobalMemPipeline::handleResponse(GPUDynInstPtr gpuDynInst)
 }
 
 GlobalMemPipeline::
-GlobalMemPipelineStats::GlobalMemPipelineStats(Stats::Group *parent)
-    : Stats::Group(parent, "GlobalMemPipeline"),
+GlobalMemPipelineStats::GlobalMemPipelineStats(statistics::Group *parent)
+    : statistics::Group(parent, "GlobalMemPipeline"),
       ADD_STAT(loadVrfBankConflictCycles, "total number of cycles GM data "
                "are delayed before updating the VRF")
 {

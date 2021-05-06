@@ -455,23 +455,22 @@ FlashDevice::getUnknownPages(uint32_t index)
     return unknownPages[index >> 5] & (0x01 << (index % 32));
 }
 
-FlashDevice::
-FlashDeviceStats::FlashDeviceStats(Stats::Group *parent)
-    : Stats::Group(parent, "FlashDevice"),
-    ADD_STAT(totalGCActivations, Stats::units::Count::get(),
+FlashDevice::FlashDeviceStats::FlashDeviceStats(statistics::Group *parent)
+    : statistics::Group(parent, "FlashDevice"),
+    ADD_STAT(totalGCActivations, statistics::units::Count::get(),
              "Number of Garbage collector activations"),
-    ADD_STAT(writeAccess, Stats::units::Count::get(),
+    ADD_STAT(writeAccess, statistics::units::Count::get(),
              "Histogram of write addresses"),
-    ADD_STAT(readAccess, Stats::units::Count::get(),
+    ADD_STAT(readAccess, statistics::units::Count::get(),
              "Histogram of read addresses"),
-    ADD_STAT(fileSystemAccess, Stats::units::Count::get(),
+    ADD_STAT(fileSystemAccess, statistics::units::Count::get(),
              "Histogram of file system accesses"),
-    ADD_STAT(writeLatency, Stats::units::Tick::get(),
+    ADD_STAT(writeLatency, statistics::units::Tick::get(),
              "Histogram of write latency"),
-    ADD_STAT(readLatency, Stats::units::Tick::get(),
+    ADD_STAT(readLatency, statistics::units::Tick::get(),
              "Histogram of read latency")
 {
-    using namespace Stats;
+    using namespace statistics;
 
     /** Amount of GC activations*/
     totalGCActivations

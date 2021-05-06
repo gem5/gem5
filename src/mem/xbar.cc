@@ -63,11 +63,11 @@ BaseXBar::BaseXBar(const BaseXBarParams &p)
       gotAllAddrRanges(false), defaultPortID(InvalidPortID),
       useDefaultRange(p.use_default_range),
 
-      ADD_STAT(transDist, Stats::units::Count::get(),
+      ADD_STAT(transDist, statistics::units::Count::get(),
                "Transaction distribution"),
-      ADD_STAT(pktCount, Stats::units::Count::get(),
+      ADD_STAT(pktCount, statistics::units::Count::get(),
                "Packet count per connected requestor and responder"),
-      ADD_STAT(pktSize, Stats::units::Byte::get(),
+      ADD_STAT(pktSize, statistics::units::Byte::get(),
                "Cumulative packet size per connected requestor and responder")
 {
 }
@@ -139,18 +139,18 @@ BaseXBar::calcPacketTiming(PacketPtr pkt, Tick header_delay)
 template <typename SrcType, typename DstType>
 BaseXBar::Layer<SrcType, DstType>::Layer(DstType& _port, BaseXBar& _xbar,
                                        const std::string& _name) :
-    Stats::Group(&_xbar, _name.c_str()),
+    statistics::Group(&_xbar, _name.c_str()),
     port(_port), xbar(_xbar), _name(xbar.name() + "." + _name), state(IDLE),
     waitingForPeer(NULL), releaseEvent([this]{ releaseLayer(); }, name()),
-    ADD_STAT(occupancy, Stats::units::Tick::get(), "Layer occupancy (ticks)"),
-    ADD_STAT(utilization, Stats::units::Ratio::get(), "Layer utilization")
+    ADD_STAT(occupancy, statistics::units::Tick::get(), "Layer occupancy (ticks)"),
+    ADD_STAT(utilization, statistics::units::Ratio::get(), "Layer utilization")
 {
     occupancy
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     utilization
         .precision(1)
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     utilization = occupancy / simTicks;
 }
@@ -542,7 +542,7 @@ BaseXBar::regStats()
 {
     ClockedObject::regStats();
 
-    using namespace Stats;
+    using namespace statistics;
 
     transDist
         .init(MemCmd::NUM_MEM_CMDS)

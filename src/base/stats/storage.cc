@@ -43,7 +43,9 @@
 
 #include <cmath>
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 void
 DistStor::sample(Counter val, int number)
@@ -222,4 +224,4 @@ HistStor::add(HistStor *hs)
         cvec[i] += hs->cvec[i];
 }
 
-} // namespace Stats
+} // namespace statistics

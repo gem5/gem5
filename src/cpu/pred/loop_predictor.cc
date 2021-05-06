@@ -345,12 +345,13 @@ LoopPredictor::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
     loopUpdate(branch_pc, taken, bi, tage_pred);
 }
 
-LoopPredictor::LoopPredictorStats::LoopPredictorStats(Stats::Group *parent)
-    : Stats::Group(parent),
-      ADD_STAT(correct, Stats::units::Count::get(),
+LoopPredictor::LoopPredictorStats::LoopPredictorStats(
+    statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(correct, statistics::units::Count::get(),
                "Number of times the loop predictor is the provider and the "
                "prediction is correct"),
-      ADD_STAT(wrong, Stats::units::Count::get(),
+      ADD_STAT(wrong, statistics::units::Count::get(),
                "Number of times the loop predictor is the provider and the "
                "prediction is wrong")
 {

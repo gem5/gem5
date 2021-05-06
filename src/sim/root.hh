@@ -91,18 +91,18 @@ class Root : public SimObject
     }
 
   public: // Global statistics
-    struct RootStats : public Stats::Group
+    struct RootStats : public statistics::Group
     {
         void resetStats() override;
 
-        Stats::Formula simSeconds;
-        Stats::Value simTicks;
-        Stats::Value finalTick;
-        Stats::Value simFreq;
-        Stats::Value hostSeconds;
+        statistics::Formula simSeconds;
+        statistics::Value simTicks;
+        statistics::Value finalTick;
+        statistics::Value simFreq;
+        statistics::Value hostSeconds;
 
-        Stats::Formula hostTickRate;
-        Stats::Value hostMemory;
+        statistics::Formula hostTickRate;
+        statistics::Value hostMemory;
 
         static RootStats instance;
 

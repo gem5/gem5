@@ -368,13 +368,13 @@ BaseCPU::probeInstCommit(const StaticInstPtr &inst, Addr pc)
 }
 
 BaseCPU::
-BaseCPUStats::BaseCPUStats(Stats::Group *parent)
-    : Stats::Group(parent),
-      ADD_STAT(numCycles, Stats::units::Cycle::get(),
+BaseCPUStats::BaseCPUStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(numCycles, statistics::units::Cycle::get(),
                "Number of cpu cycles simulated"),
-      ADD_STAT(numWorkItemsStarted, Stats::units::Count::get(),
+      ADD_STAT(numWorkItemsStarted, statistics::units::Count::get(),
                "Number of work items this cpu started"),
-      ADD_STAT(numWorkItemsCompleted, Stats::units::Count::get(),
+      ADD_STAT(numWorkItemsCompleted, statistics::units::Count::get(),
                "Number of work items this cpu completed")
 {
 }
@@ -390,7 +390,7 @@ BaseCPU::regStats()
         globalStats.reset(new GlobalStats(Root::root()));
     }
 
-    using namespace Stats;
+    using namespace statistics;
 
     int size = threadContexts.size();
     if (size > 1) {
@@ -726,17 +726,17 @@ BaseCPU::traceFunctionsInternal(Addr pc)
 }
 
 
-BaseCPU::GlobalStats::GlobalStats(::Stats::Group *parent)
-    : ::Stats::Group(parent),
-    ADD_STAT(simInsts, Stats::units::Count::get(),
+BaseCPU::GlobalStats::GlobalStats(::statistics::Group *parent)
+    : ::statistics::Group(parent),
+    ADD_STAT(simInsts, statistics::units::Count::get(),
              "Number of instructions simulated"),
-    ADD_STAT(simOps, Stats::units::Count::get(),
+    ADD_STAT(simOps, statistics::units::Count::get(),
              "Number of ops (including micro ops) simulated"),
-    ADD_STAT(hostInstRate, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Second>::get(),
+    ADD_STAT(hostInstRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Second>::get(),
              "Simulator instruction rate (inst/s)"),
-    ADD_STAT(hostOpRate, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Second>::get(),
+    ADD_STAT(hostOpRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Second>::get(),
              "Simulator op (including micro ops) rate (op/s)")
 {
     simInsts

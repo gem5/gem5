@@ -189,11 +189,11 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
     else if (noResponseEvent.scheduled())
         deschedule(noResponseEvent);
 }
-MemTest::MemTestStats::MemTestStats(Stats::Group *parent)
-      : Stats::Group(parent),
-      ADD_STAT(numReads, Stats::units::Count::get(),
+MemTest::MemTestStats::MemTestStats(statistics::Group *parent)
+      : statistics::Group(parent),
+      ADD_STAT(numReads, statistics::units::Count::get(),
                "number of read accesses completed"),
-      ADD_STAT(numWrites, Stats::units::Count::get(),
+      ADD_STAT(numWrites, statistics::units::Count::get(),
                "number of write accesses completed")
 {
 

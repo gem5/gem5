@@ -260,16 +260,16 @@ class IdeDisk : public SimObject
     /** DMA Aborted */
     bool dmaAborted;
 
-    struct IdeDiskStats : public Stats::Group
+    struct IdeDiskStats : public statistics::Group
     {
-        IdeDiskStats(Stats::Group *parent);
+        IdeDiskStats(statistics::Group *parent);
 
-        Stats::Scalar dmaReadFullPages;
-        Stats::Scalar dmaReadBytes;
-        Stats::Scalar dmaReadTxs;
-        Stats::Scalar dmaWriteFullPages;
-        Stats::Scalar dmaWriteBytes;
-        Stats::Scalar dmaWriteTxs;
+        statistics::Scalar dmaReadFullPages;
+        statistics::Scalar dmaReadBytes;
+        statistics::Scalar dmaReadTxs;
+        statistics::Scalar dmaWriteFullPages;
+        statistics::Scalar dmaWriteBytes;
+        statistics::Scalar dmaWriteTxs;
     } ideDiskStats;
 
   public:

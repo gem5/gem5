@@ -140,127 +140,127 @@ IEW::regProbePoints()
 }
 
 IEW::IEWStats::IEWStats(CPU *cpu)
-    : Stats::Group(cpu),
-    ADD_STAT(idleCycles, Stats::units::Cycle::get(),
+    : statistics::Group(cpu),
+    ADD_STAT(idleCycles, statistics::units::Cycle::get(),
              "Number of cycles IEW is idle"),
-    ADD_STAT(squashCycles, Stats::units::Cycle::get(),
+    ADD_STAT(squashCycles, statistics::units::Cycle::get(),
              "Number of cycles IEW is squashing"),
-    ADD_STAT(blockCycles, Stats::units::Cycle::get(),
+    ADD_STAT(blockCycles, statistics::units::Cycle::get(),
              "Number of cycles IEW is blocking"),
-    ADD_STAT(unblockCycles, Stats::units::Cycle::get(),
+    ADD_STAT(unblockCycles, statistics::units::Cycle::get(),
              "Number of cycles IEW is unblocking"),
-    ADD_STAT(dispatchedInsts, Stats::units::Count::get(),
+    ADD_STAT(dispatchedInsts, statistics::units::Count::get(),
              "Number of instructions dispatched to IQ"),
-    ADD_STAT(dispSquashedInsts, Stats::units::Count::get(),
+    ADD_STAT(dispSquashedInsts, statistics::units::Count::get(),
              "Number of squashed instructions skipped by dispatch"),
-    ADD_STAT(dispLoadInsts, Stats::units::Count::get(),
+    ADD_STAT(dispLoadInsts, statistics::units::Count::get(),
              "Number of dispatched load instructions"),
-    ADD_STAT(dispStoreInsts, Stats::units::Count::get(),
+    ADD_STAT(dispStoreInsts, statistics::units::Count::get(),
              "Number of dispatched store instructions"),
-    ADD_STAT(dispNonSpecInsts, Stats::units::Count::get(),
+    ADD_STAT(dispNonSpecInsts, statistics::units::Count::get(),
              "Number of dispatched non-speculative instructions"),
-    ADD_STAT(iqFullEvents, Stats::units::Count::get(),
+    ADD_STAT(iqFullEvents, statistics::units::Count::get(),
              "Number of times the IQ has become full, causing a stall"),
-    ADD_STAT(lsqFullEvents, Stats::units::Count::get(),
+    ADD_STAT(lsqFullEvents, statistics::units::Count::get(),
              "Number of times the LSQ has become full, causing a stall"),
-    ADD_STAT(memOrderViolationEvents, Stats::units::Count::get(),
+    ADD_STAT(memOrderViolationEvents, statistics::units::Count::get(),
              "Number of memory order violations"),
-    ADD_STAT(predictedTakenIncorrect, Stats::units::Count::get(),
+    ADD_STAT(predictedTakenIncorrect, statistics::units::Count::get(),
              "Number of branches that were predicted taken incorrectly"),
-    ADD_STAT(predictedNotTakenIncorrect, Stats::units::Count::get(),
+    ADD_STAT(predictedNotTakenIncorrect, statistics::units::Count::get(),
              "Number of branches that were predicted not taken incorrectly"),
-    ADD_STAT(branchMispredicts, Stats::units::Count::get(),
+    ADD_STAT(branchMispredicts, statistics::units::Count::get(),
              "Number of branch mispredicts detected at execute",
              predictedTakenIncorrect + predictedNotTakenIncorrect),
     executedInstStats(cpu),
-    ADD_STAT(instsToCommit, Stats::units::Count::get(),
+    ADD_STAT(instsToCommit, statistics::units::Count::get(),
              "Cumulative count of insts sent to commit"),
-    ADD_STAT(writebackCount, Stats::units::Count::get(),
+    ADD_STAT(writebackCount, statistics::units::Count::get(),
              "Cumulative count of insts written-back"),
-    ADD_STAT(producerInst, Stats::units::Count::get(),
+    ADD_STAT(producerInst, statistics::units::Count::get(),
              "Number of instructions producing a value"),
-    ADD_STAT(consumerInst, Stats::units::Count::get(),
+    ADD_STAT(consumerInst, statistics::units::Count::get(),
              "Number of instructions consuming a value"),
-    ADD_STAT(wbRate, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Cycle>::get(),
+    ADD_STAT(wbRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Cycle>::get(),
              "Insts written-back per cycle"),
-    ADD_STAT(wbFanout, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Count>::get(),
+    ADD_STAT(wbFanout, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Count>::get(),
              "Average fanout of values written-back")
 {
     instsToCommit
         .init(cpu->numThreads)
-        .flags(Stats::total);
+        .flags(statistics::total);
 
     writebackCount
         .init(cpu->numThreads)
-        .flags(Stats::total);
+        .flags(statistics::total);
 
     producerInst
         .init(cpu->numThreads)
-        .flags(Stats::total);
+        .flags(statistics::total);
 
     consumerInst
         .init(cpu->numThreads)
-        .flags(Stats::total);
+        .flags(statistics::total);
 
     wbRate
-        .flags(Stats::total);
+        .flags(statistics::total);
     wbRate = writebackCount / cpu->baseStats.numCycles;
 
     wbFanout
-        .flags(Stats::total);
+        .flags(statistics::total);
     wbFanout = producerInst / consumerInst;
 }
 
 IEW::IEWStats::ExecutedInstStats::ExecutedInstStats(CPU *cpu)
-    : Stats::Group(cpu),
-    ADD_STAT(numInsts, Stats::units::Count::get(),
+    : statistics::Group(cpu),
+    ADD_STAT(numInsts, statistics::units::Count::get(),
              "Number of executed instructions"),
-    ADD_STAT(numLoadInsts, Stats::units::Count::get(),
+    ADD_STAT(numLoadInsts, statistics::units::Count::get(),
              "Number of load instructions executed"),
-    ADD_STAT(numSquashedInsts, Stats::units::Count::get(),
+    ADD_STAT(numSquashedInsts, statistics::units::Count::get(),
              "Number of squashed instructions skipped in execute"),
-    ADD_STAT(numSwp, Stats::units::Count::get(),
+    ADD_STAT(numSwp, statistics::units::Count::get(),
              "Number of swp insts executed"),
-    ADD_STAT(numNop, Stats::units::Count::get(),
+    ADD_STAT(numNop, statistics::units::Count::get(),
              "Number of nop insts executed"),
-    ADD_STAT(numRefs, Stats::units::Count::get(),
+    ADD_STAT(numRefs, statistics::units::Count::get(),
              "Number of memory reference insts executed"),
-    ADD_STAT(numBranches, Stats::units::Count::get(),
+    ADD_STAT(numBranches, statistics::units::Count::get(),
              "Number of branches executed"),
-    ADD_STAT(numStoreInsts, Stats::units::Count::get(),
+    ADD_STAT(numStoreInsts, statistics::units::Count::get(),
              "Number of stores executed"),
-    ADD_STAT(numRate, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Cycle>::get(),
+    ADD_STAT(numRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Cycle>::get(),
              "Inst execution rate", numInsts / cpu->baseStats.numCycles)
 {
     numLoadInsts
         .init(cpu->numThreads)
-        .flags(Stats::total);
+        .flags(statistics::total);
 
     numSwp
         .init(cpu->numThreads)
-        .flags(Stats::total);
+        .flags(statistics::total);
 
     numNop
         .init(cpu->numThreads)
-        .flags(Stats::total);
+        .flags(statistics::total);
 
     numRefs
         .init(cpu->numThreads)
-        .flags(Stats::total);
+        .flags(statistics::total);
 
     numBranches
         .init(cpu->numThreads)
-        .flags(Stats::total);
+        .flags(statistics::total);
 
     numStoreInsts
-        .flags(Stats::total);
+        .flags(statistics::total);
     numStoreInsts = numRefs - numLoadInsts;
 
     numRate
-        .flags(Stats::total);
+        .flags(statistics::total);
 }
 
 void

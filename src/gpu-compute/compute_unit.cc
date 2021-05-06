@@ -2104,8 +2104,9 @@ ComputeUnit::LDSPort::recvReqRetry()
     }
 }
 
-ComputeUnit::ComputeUnitStats::ComputeUnitStats(Stats::Group *parent, int n_wf)
-    : Stats::Group(parent),
+ComputeUnit::ComputeUnitStats::ComputeUnitStats(statistics::Group *parent,
+    int n_wf)
+    : statistics::Group(parent),
       ADD_STAT(vALUInsts, "Number of vector ALU insts issued."),
       ADD_STAT(vALUInstsPerWF, "The avg. number of vector ALU insts issued "
                "per-wavefront."),
@@ -2290,7 +2291,8 @@ ComputeUnit::ComputeUnitStats::ComputeUnitStats(Stats::Group *parent, int n_wf)
     activeLanesPerGMemInstrDist.init(1, cu->wfSize(), 4);
     activeLanesPerLMemInstrDist.init(1, cu->wfSize(), 4);
 
-    headTailLatency.init(0, 1000000, 10000).flags(Stats::pdf | Stats::oneline);
+    headTailLatency.init(0, 1000000, 10000).flags(statistics::pdf |
+        statistics::oneline);
     waveLevelParallelism.init(0, n_wf * cu->numVectorALUs, 1);
     instInterleave.init(cu->numVectorALUs, 0, 20, 1);
 

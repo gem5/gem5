@@ -291,32 +291,32 @@ class Decode
      */
     bool squashAfterDelaySlot[MaxThreads];
 
-    struct DecodeStats : public Stats::Group
+    struct DecodeStats : public statistics::Group
     {
         DecodeStats(CPU *cpu);
 
         /** Stat for total number of idle cycles. */
-        Stats::Scalar idleCycles;
+        statistics::Scalar idleCycles;
         /** Stat for total number of blocked cycles. */
-        Stats::Scalar blockedCycles;
+        statistics::Scalar blockedCycles;
         /** Stat for total number of normal running cycles. */
-        Stats::Scalar runCycles;
+        statistics::Scalar runCycles;
         /** Stat for total number of unblocking cycles. */
-        Stats::Scalar unblockCycles;
+        statistics::Scalar unblockCycles;
         /** Stat for total number of squashing cycles. */
-        Stats::Scalar squashCycles;
+        statistics::Scalar squashCycles;
         /** Stat for number of times a branch is resolved at decode. */
-        Stats::Scalar branchResolved;
+        statistics::Scalar branchResolved;
         /** Stat for number of times a branch mispredict is detected. */
-        Stats::Scalar branchMispred;
+        statistics::Scalar branchMispred;
         /** Stat for number of times decode detected a non-control instruction
          * incorrectly predicted as a branch.
          */
-        Stats::Scalar controlMispred;
+        statistics::Scalar controlMispred;
         /** Stat for total number of decoded instructions. */
-        Stats::Scalar decodedInsts;
+        statistics::Scalar decodedInsts;
         /** Stat for total number of squashed instructions. */
-        Stats::Scalar squashedInsts;
+        statistics::Scalar squashedInsts;
     } stats;
 };
 

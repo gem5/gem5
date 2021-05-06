@@ -42,26 +42,26 @@ namespace minor
 {
 
 MinorStats::MinorStats(BaseCPU *base_cpu)
-    : Stats::Group(base_cpu),
-    ADD_STAT(numInsts, Stats::units::Count::get(),
+    : statistics::Group(base_cpu),
+    ADD_STAT(numInsts, statistics::units::Count::get(),
              "Number of instructions committed"),
-    ADD_STAT(numOps, Stats::units::Count::get(),
+    ADD_STAT(numOps, statistics::units::Count::get(),
              "Number of ops (including micro ops) committed"),
-    ADD_STAT(numDiscardedOps, Stats::units::Count::get(),
+    ADD_STAT(numDiscardedOps, statistics::units::Count::get(),
              "Number of ops (including micro ops) which were discarded before "
              "commit"),
-    ADD_STAT(numFetchSuspends, Stats::units::Count::get(),
+    ADD_STAT(numFetchSuspends, statistics::units::Count::get(),
              "Number of times Execute suspended instruction fetching"),
-    ADD_STAT(quiesceCycles, Stats::units::Cycle::get(),
+    ADD_STAT(quiesceCycles, statistics::units::Cycle::get(),
              "Total number of cycles that CPU has spent quiesced or waiting "
              "for an interrupt"),
-    ADD_STAT(cpi, Stats::units::Rate<
-                Stats::units::Cycle, Stats::units::Count>::get(),
+    ADD_STAT(cpi, statistics::units::Rate<
+                statistics::units::Cycle, statistics::units::Count>::get(),
              "CPI: cycles per instruction"),
-    ADD_STAT(ipc, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Cycle>::get(),
+    ADD_STAT(ipc, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Cycle>::get(),
              "IPC: instructions per cycle"),
-    ADD_STAT(committedInstType, Stats::units::Count::get(),
+    ADD_STAT(committedInstType, statistics::units::Count::get(),
              "Class of committed instruction")
 {
     quiesceCycles.prereq(quiesceCycles);
@@ -74,7 +74,7 @@ MinorStats::MinorStats(BaseCPU *base_cpu)
 
     committedInstType
         .init(base_cpu->numThreads, enums::Num_OpClass)
-        .flags(Stats::total | Stats::pdf | Stats::dist);
+        .flags(statistics::total | statistics::pdf | statistics::dist);
     committedInstType.ysubnames(enums::OpClassStrings);
 }
 

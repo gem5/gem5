@@ -114,29 +114,29 @@ Switch::regStats()
     for (const auto& throttle : throttles) {
         switchStats.m_avg_utilization += throttle.getUtilization();
     }
-    switchStats.m_avg_utilization /= Stats::constant(throttles.size());
+    switchStats.m_avg_utilization /= statistics::constant(throttles.size());
 
     for (unsigned int type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
-        switchStats.m_msg_counts[type] = new Stats::Formula(&switchStats,
+        switchStats.m_msg_counts[type] = new statistics::Formula(&switchStats,
             csprintf("msg_count.%s",
                 MessageSizeType_to_string(MessageSizeType(type))).c_str());
         switchStats.m_msg_counts[type]
-            ->flags(Stats::nozero)
+            ->flags(statistics::nozero)
             ;
 
-        switchStats.m_msg_bytes[type] = new Stats::Formula(&switchStats,
+        switchStats.m_msg_bytes[type] = new statistics::Formula(&switchStats,
             csprintf("msg_bytes.%s",
                 MessageSizeType_to_string(MessageSizeType(type))).c_str());
         switchStats.m_msg_bytes[type]
-            ->flags(Stats::nozero)
+            ->flags(statistics::nozero)
             ;
 
         for (const auto& throttle : throttles) {
             *(switchStats.m_msg_counts[type]) += throttle.getMsgCount(type);
         }
         *(switchStats.m_msg_bytes[type]) =
-            *(switchStats.m_msg_counts[type]) * Stats::constant(
+            *(switchStats.m_msg_counts[type]) * statistics::constant(
                 Network::MessageSizeType_to_int(MessageSizeType(type)));
     }
 }
@@ -199,8 +199,8 @@ Switch::functionalWrite(Packet *pkt)
 }
 
 Switch::
-SwitchStats::SwitchStats(Stats::Group *parent)
-    : Stats::Group(parent),
+SwitchStats::SwitchStats(statistics::Group *parent)
+    : statistics::Group(parent),
       m_avg_utilization(this, "percent_links_utilized")
 {
 

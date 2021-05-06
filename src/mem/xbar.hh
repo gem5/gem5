@@ -85,7 +85,7 @@ class BaseXBar : public ClockedObject
      * CPU-side ports, whereas a response layer holds memory-side ports.
      */
     template <typename SrcType, typename DstType>
-    class Layer : public Drainable, public Stats::Group
+    class Layer : public Drainable, public statistics::Group
     {
 
       public:
@@ -226,8 +226,8 @@ class BaseXBar : public ClockedObject
          * the time the layer spends in the busy state and are thus only
          * relevant when the memory system is in timing mode.
          */
-        Stats::Scalar occupancy;
-        Stats::Formula utilization;
+        statistics::Scalar occupancy;
+        statistics::Formula utilization;
 
     };
 
@@ -396,9 +396,9 @@ class BaseXBar : public ClockedObject
      * ports and neighbouring CPU-side ports), summing up both directions
      * (request and response).
      */
-    Stats::Vector transDist;
-    Stats::Vector2d pktCount;
-    Stats::Vector2d pktSize;
+    statistics::Vector transDist;
+    statistics::Vector2d pktCount;
+    statistics::Vector2d pktSize;
 
   public:
 

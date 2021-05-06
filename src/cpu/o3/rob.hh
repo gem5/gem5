@@ -328,14 +328,14 @@ class ROB
     ThreadID numThreads;
 
 
-    struct ROBStats : public Stats::Group
+    struct ROBStats : public statistics::Group
     {
-        ROBStats(Stats::Group *parent);
+        ROBStats(statistics::Group *parent);
 
         // The number of rob_reads
-        Stats::Scalar reads;
+        statistics::Scalar reads;
         // The number of rob_writes
-        Stats::Scalar writes;
+        statistics::Scalar writes;
     } stats;
 };
 

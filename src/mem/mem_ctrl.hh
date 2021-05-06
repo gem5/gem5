@@ -525,7 +525,7 @@ class MemCtrl : public qos::MemCtrl
      */
     Tick nextReqTime;
 
-    struct CtrlStats : public Stats::Group
+    struct CtrlStats : public statistics::Group
     {
         CtrlStats(MemCtrl &ctrl);
 
@@ -534,55 +534,55 @@ class MemCtrl : public qos::MemCtrl
         MemCtrl &ctrl;
 
         // All statistics that the model needs to capture
-        Stats::Scalar readReqs;
-        Stats::Scalar writeReqs;
-        Stats::Scalar readBursts;
-        Stats::Scalar writeBursts;
-        Stats::Scalar servicedByWrQ;
-        Stats::Scalar mergedWrBursts;
-        Stats::Scalar neitherReadNorWriteReqs;
+        statistics::Scalar readReqs;
+        statistics::Scalar writeReqs;
+        statistics::Scalar readBursts;
+        statistics::Scalar writeBursts;
+        statistics::Scalar servicedByWrQ;
+        statistics::Scalar mergedWrBursts;
+        statistics::Scalar neitherReadNorWriteReqs;
         // Average queue lengths
-        Stats::Average avgRdQLen;
-        Stats::Average avgWrQLen;
+        statistics::Average avgRdQLen;
+        statistics::Average avgWrQLen;
 
-        Stats::Scalar numRdRetry;
-        Stats::Scalar numWrRetry;
-        Stats::Vector readPktSize;
-        Stats::Vector writePktSize;
-        Stats::Vector rdQLenPdf;
-        Stats::Vector wrQLenPdf;
-        Stats::Histogram rdPerTurnAround;
-        Stats::Histogram wrPerTurnAround;
+        statistics::Scalar numRdRetry;
+        statistics::Scalar numWrRetry;
+        statistics::Vector readPktSize;
+        statistics::Vector writePktSize;
+        statistics::Vector rdQLenPdf;
+        statistics::Vector wrQLenPdf;
+        statistics::Histogram rdPerTurnAround;
+        statistics::Histogram wrPerTurnAround;
 
-        Stats::Scalar bytesReadWrQ;
-        Stats::Scalar bytesReadSys;
-        Stats::Scalar bytesWrittenSys;
+        statistics::Scalar bytesReadWrQ;
+        statistics::Scalar bytesReadSys;
+        statistics::Scalar bytesWrittenSys;
         // Average bandwidth
-        Stats::Formula avgRdBWSys;
-        Stats::Formula avgWrBWSys;
+        statistics::Formula avgRdBWSys;
+        statistics::Formula avgWrBWSys;
 
-        Stats::Scalar totGap;
-        Stats::Formula avgGap;
+        statistics::Scalar totGap;
+        statistics::Formula avgGap;
 
         // per-requestor bytes read and written to memory
-        Stats::Vector requestorReadBytes;
-        Stats::Vector requestorWriteBytes;
+        statistics::Vector requestorReadBytes;
+        statistics::Vector requestorWriteBytes;
 
         // per-requestor bytes read and written to memory rate
-        Stats::Formula requestorReadRate;
-        Stats::Formula requestorWriteRate;
+        statistics::Formula requestorReadRate;
+        statistics::Formula requestorWriteRate;
 
         // per-requestor read and write serviced memory accesses
-        Stats::Vector requestorReadAccesses;
-        Stats::Vector requestorWriteAccesses;
+        statistics::Vector requestorReadAccesses;
+        statistics::Vector requestorWriteAccesses;
 
         // per-requestor read and write total memory access latency
-        Stats::Vector requestorReadTotalLat;
-        Stats::Vector requestorWriteTotalLat;
+        statistics::Vector requestorReadTotalLat;
+        statistics::Vector requestorWriteTotalLat;
 
         // per-requestor raed and write average memory access latency
-        Stats::Formula requestorReadAvgLat;
-        Stats::Formula requestorWriteAvgLat;
+        statistics::Formula requestorReadAvgLat;
+        statistics::Formula requestorWriteAvgLat;
     };
 
     CtrlStats stats;

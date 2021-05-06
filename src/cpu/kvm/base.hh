@@ -781,19 +781,19 @@ class BaseKvmCPU : public BaseCPU
 
   public:
     /* @{ */
-    struct StatGroup : public Stats::Group
+    struct StatGroup : public statistics::Group
     {
-        StatGroup(Stats::Group *parent);
-        Stats::Scalar committedInsts;
-        Stats::Scalar numVMExits;
-        Stats::Scalar numVMHalfEntries;
-        Stats::Scalar numExitSignal;
-        Stats::Scalar numMMIO;
-        Stats::Scalar numCoalescedMMIO;
-        Stats::Scalar numIO;
-        Stats::Scalar numHalt;
-        Stats::Scalar numInterrupts;
-        Stats::Scalar numHypercalls;
+        StatGroup(statistics::Group *parent);
+        statistics::Scalar committedInsts;
+        statistics::Scalar numVMExits;
+        statistics::Scalar numVMHalfEntries;
+        statistics::Scalar numExitSignal;
+        statistics::Scalar numMMIO;
+        statistics::Scalar numCoalescedMMIO;
+        statistics::Scalar numIO;
+        statistics::Scalar numHalt;
+        statistics::Scalar numInterrupts;
+        statistics::Scalar numHypercalls;
     } stats;
     /* @} */
 

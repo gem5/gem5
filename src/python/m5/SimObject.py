@@ -1179,7 +1179,7 @@ class SimObject(object, metaclass=MetaSimObject):
     abstract = True
 
     cxx_header = "sim/sim_object.hh"
-    cxx_extra_bases = [ "Drainable", "Serializable", "Stats::Group" ]
+    cxx_extra_bases = [ "Drainable", "Serializable", "statistics::Group" ]
     eventq_index = Param.UInt32(Parent.eventq_index, "Event Queue Index")
 
     cxx_exports = [

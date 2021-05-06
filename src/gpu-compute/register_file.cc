@@ -189,8 +189,8 @@ RegisterFile::dispatchInstruction(GPUDynInstPtr ii)
 {
 }
 
-RegisterFile::RegisterFileStats::RegisterFileStats(Stats::Group *parent)
-    : Stats::Group(parent),
+RegisterFile::RegisterFileStats::RegisterFileStats(statistics::Group *parent)
+    : statistics::Group(parent),
       ADD_STAT(registerReads,
               "Total number of DWORDs read from register file"),
       ADD_STAT(registerWrites,

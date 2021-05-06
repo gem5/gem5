@@ -280,26 +280,26 @@ MemCtrl::addRequestor(RequestorID id)
 }
 
 MemCtrl::MemCtrlStats::MemCtrlStats(MemCtrl &mc)
-    : Stats::Group(&mc),
+    : statistics::Group(&mc),
     memCtrl(mc),
 
-    ADD_STAT(avgPriority, Stats::units::Count::get(),
+    ADD_STAT(avgPriority, statistics::units::Count::get(),
              "Average QoS priority value for accepted requests"),
-    ADD_STAT(avgPriorityDistance, Stats::units::Count::get(),
+    ADD_STAT(avgPriorityDistance, statistics::units::Count::get(),
              "Average QoS priority distance between assigned and queued "
              "values"),
 
-    ADD_STAT(priorityMinLatency, Stats::units::Second::get(),
+    ADD_STAT(priorityMinLatency, statistics::units::Second::get(),
              "per QoS priority minimum request to response latency"),
-    ADD_STAT(priorityMaxLatency, Stats::units::Second::get(),
+    ADD_STAT(priorityMaxLatency, statistics::units::Second::get(),
              "per QoS priority maximum request to response latency"),
-    ADD_STAT(numReadWriteTurnArounds, Stats::units::Count::get(),
+    ADD_STAT(numReadWriteTurnArounds, statistics::units::Count::get(),
              "Number of turnarounds from READ to WRITE"),
-    ADD_STAT(numWriteReadTurnArounds, Stats::units::Count::get(),
+    ADD_STAT(numWriteReadTurnArounds, statistics::units::Count::get(),
              "Number of turnarounds from WRITE to READ"),
-    ADD_STAT(numStayReadState, Stats::units::Count::get(),
+    ADD_STAT(numStayReadState, statistics::units::Count::get(),
              "Number of times bus staying in READ state"),
-    ADD_STAT(numStayWriteState, Stats::units::Count::get(),
+    ADD_STAT(numStayWriteState, statistics::units::Count::get(),
              "Number of times bus staying in WRITE state")
 {
 }
@@ -307,9 +307,9 @@ MemCtrl::MemCtrlStats::MemCtrlStats(MemCtrl &mc)
 void
 MemCtrl::MemCtrlStats::regStats()
 {
-    Stats::Group::regStats();
+    statistics::Group::regStats();
 
-    using namespace Stats;
+    using namespace statistics;
 
     System *system = memCtrl._system;
     const auto max_requestors = system->maxRequestors();

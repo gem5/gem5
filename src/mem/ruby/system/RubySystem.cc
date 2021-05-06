@@ -85,7 +85,7 @@ RubySystem::RubySystem(const Params &p)
     m_abstract_controls.resize(MachineType_NUM);
 
     // Collate the statistics before they are printed.
-    Stats::registerDumpCallback([this]() { collateStats(); });
+    statistics::registerDumpCallback([this]() { collateStats(); });
     // Create the profiler
     m_profiler = new Profiler(p, this);
     m_phys_mem = p.phys_mem;

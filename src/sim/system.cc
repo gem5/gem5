@@ -460,7 +460,7 @@ System::regStats()
     SimObject::regStats();
 
     for (uint32_t j = 0; j < numWorkIds ; j++) {
-        workItemStats[j] = new Stats::Histogram(this);
+        workItemStats[j] = new statistics::Histogram(this);
         std::stringstream namestr;
         ccprintf(namestr, "work_item_type%d", j);
         workItemStats[j]->init(20)
@@ -592,7 +592,7 @@ System::_getRequestorId(const SimObject* requestor,
     // Otherwise objects will have sized their stat buckets and
     // they will be too small
 
-    if (Stats::enabled()) {
+    if (statistics::enabled()) {
         fatal("Can't request a requestorId after regStats(). "
                 "You must do so in init().\n");
     }

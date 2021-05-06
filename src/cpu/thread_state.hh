@@ -96,15 +96,15 @@ struct ThreadState : public Serializable
      /** Number of ops (including micro ops) committed. */
     Counter numOp;
     // Defining the stat group
-    struct ThreadStateStats : public Stats::Group
+    struct ThreadStateStats : public statistics::Group
     {
         ThreadStateStats(BaseCPU *cpu, const ThreadID& thread);
         /** Stat for number instructions committed. */
-        Stats::Scalar numInsts;
+        statistics::Scalar numInsts;
         /** Stat for number ops (including micro ops) committed. */
-        Stats::Scalar numOps;
+        statistics::Scalar numOps;
         /** Stat for number of memory references. */
-        Stats::Scalar numMemRefs;
+        statistics::Scalar numMemRefs;
     } threadStats;
 
     /** Number of simulated loads, used for tracking events based on

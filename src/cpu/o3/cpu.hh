@@ -657,49 +657,49 @@ class CPU : public BaseCPU
         return iew.ldstQueue.getDataPort();
     }
 
-    struct CPUStats : public Stats::Group
+    struct CPUStats : public statistics::Group
     {
         CPUStats(CPU *cpu);
 
         /** Stat for total number of times the CPU is descheduled. */
-        Stats::Scalar timesIdled;
+        statistics::Scalar timesIdled;
         /** Stat for total number of cycles the CPU spends descheduled. */
-        Stats::Scalar idleCycles;
+        statistics::Scalar idleCycles;
         /** Stat for total number of cycles the CPU spends descheduled due to a
          * quiesce operation or waiting for an interrupt. */
-        Stats::Scalar quiesceCycles;
+        statistics::Scalar quiesceCycles;
         /** Stat for the number of committed instructions per thread. */
-        Stats::Vector committedInsts;
+        statistics::Vector committedInsts;
         /** Stat for the number of committed ops (including micro ops) per
          *  thread. */
-        Stats::Vector committedOps;
+        statistics::Vector committedOps;
         /** Stat for the CPI per thread. */
-        Stats::Formula cpi;
+        statistics::Formula cpi;
         /** Stat for the total CPI. */
-        Stats::Formula totalCpi;
+        statistics::Formula totalCpi;
         /** Stat for the IPC per thread. */
-        Stats::Formula ipc;
+        statistics::Formula ipc;
         /** Stat for the total IPC. */
-        Stats::Formula totalIpc;
+        statistics::Formula totalIpc;
 
         //number of integer register file accesses
-        Stats::Scalar intRegfileReads;
-        Stats::Scalar intRegfileWrites;
+        statistics::Scalar intRegfileReads;
+        statistics::Scalar intRegfileWrites;
         //number of float register file accesses
-        Stats::Scalar fpRegfileReads;
-        Stats::Scalar fpRegfileWrites;
+        statistics::Scalar fpRegfileReads;
+        statistics::Scalar fpRegfileWrites;
         //number of vector register file accesses
-        mutable Stats::Scalar vecRegfileReads;
-        Stats::Scalar vecRegfileWrites;
+        mutable statistics::Scalar vecRegfileReads;
+        statistics::Scalar vecRegfileWrites;
         //number of predicate register file accesses
-        mutable Stats::Scalar vecPredRegfileReads;
-        Stats::Scalar vecPredRegfileWrites;
+        mutable statistics::Scalar vecPredRegfileReads;
+        statistics::Scalar vecPredRegfileWrites;
         //number of CC register file accesses
-        Stats::Scalar ccRegfileReads;
-        Stats::Scalar ccRegfileWrites;
+        statistics::Scalar ccRegfileReads;
+        statistics::Scalar ccRegfileWrites;
         //number of misc
-        Stats::Scalar miscRegfileReads;
-        Stats::Scalar miscRegfileWrites;
+        statistics::Scalar miscRegfileReads;
+        statistics::Scalar miscRegfileWrites;
     } cpuStats;
 
   public:

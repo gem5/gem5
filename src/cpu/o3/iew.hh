@@ -417,79 +417,79 @@ class IEW
     unsigned skidBufferMax;
 
 
-    struct IEWStats : public Stats::Group
+    struct IEWStats : public statistics::Group
     {
         IEWStats(CPU *cpu);
 
         /** Stat for total number of idle cycles. */
-        Stats::Scalar idleCycles;
+        statistics::Scalar idleCycles;
         /** Stat for total number of squashing cycles. */
-        Stats::Scalar squashCycles;
+        statistics::Scalar squashCycles;
         /** Stat for total number of blocking cycles. */
-        Stats::Scalar blockCycles;
+        statistics::Scalar blockCycles;
         /** Stat for total number of unblocking cycles. */
-        Stats::Scalar unblockCycles;
+        statistics::Scalar unblockCycles;
         /** Stat for total number of instructions dispatched. */
-        Stats::Scalar dispatchedInsts;
+        statistics::Scalar dispatchedInsts;
         /** Stat for total number of squashed instructions dispatch skips. */
-        Stats::Scalar dispSquashedInsts;
+        statistics::Scalar dispSquashedInsts;
         /** Stat for total number of dispatched load instructions. */
-        Stats::Scalar dispLoadInsts;
+        statistics::Scalar dispLoadInsts;
         /** Stat for total number of dispatched store instructions. */
-        Stats::Scalar dispStoreInsts;
-        /** Stat for total number of dispatched non speculative instructions. */
-        Stats::Scalar dispNonSpecInsts;
+        statistics::Scalar dispStoreInsts;
+        /** Stat for total number of dispatched non speculative insts. */
+        statistics::Scalar dispNonSpecInsts;
         /** Stat for number of times the IQ becomes full. */
-        Stats::Scalar iqFullEvents;
+        statistics::Scalar iqFullEvents;
         /** Stat for number of times the LSQ becomes full. */
-        Stats::Scalar lsqFullEvents;
+        statistics::Scalar lsqFullEvents;
         /** Stat for total number of memory ordering violation events. */
-        Stats::Scalar memOrderViolationEvents;
+        statistics::Scalar memOrderViolationEvents;
         /** Stat for total number of incorrect predicted taken branches. */
-        Stats::Scalar predictedTakenIncorrect;
+        statistics::Scalar predictedTakenIncorrect;
         /** Stat for total number of incorrect predicted not taken branches. */
-        Stats::Scalar predictedNotTakenIncorrect;
+        statistics::Scalar predictedNotTakenIncorrect;
         /** Stat for total number of mispredicted branches detected at
          *  execute. */
-        Stats::Formula branchMispredicts;
+        statistics::Formula branchMispredicts;
 
-        struct ExecutedInstStats : public Stats::Group
+        struct ExecutedInstStats : public statistics::Group
         {
             ExecutedInstStats(CPU *cpu);
 
             /** Stat for total number of executed instructions. */
-            Stats::Scalar numInsts;
+            statistics::Scalar numInsts;
             /** Stat for total number of executed load instructions. */
-            Stats::Vector numLoadInsts;
+            statistics::Vector numLoadInsts;
             /** Stat for total number of squashed instructions skipped at
              *  execute. */
-            Stats::Scalar numSquashedInsts;
+            statistics::Scalar numSquashedInsts;
             /** Number of executed software prefetches. */
-            Stats::Vector numSwp;
+            statistics::Vector numSwp;
             /** Number of executed nops. */
-            Stats::Vector numNop;
+            statistics::Vector numNop;
             /** Number of executed meomory references. */
-            Stats::Vector numRefs;
+            statistics::Vector numRefs;
             /** Number of executed branches. */
-            Stats::Vector numBranches;
+            statistics::Vector numBranches;
             /** Number of executed store instructions. */
-            Stats::Formula numStoreInsts;
+            statistics::Formula numStoreInsts;
             /** Number of instructions executed per cycle. */
-            Stats::Formula numRate;
+            statistics::Formula numRate;
         } executedInstStats;
 
         /** Number of instructions sent to commit. */
-        Stats::Vector instsToCommit;
+        statistics::Vector instsToCommit;
         /** Number of instructions that writeback. */
-        Stats::Vector writebackCount;
+        statistics::Vector writebackCount;
         /** Number of instructions that wake consumers. */
-        Stats::Vector producerInst;
+        statistics::Vector producerInst;
         /** Number of instructions that wake up from producers. */
-        Stats::Vector consumerInst;
+        statistics::Vector consumerInst;
         /** Number of instructions per cycle written back. */
-        Stats::Formula wbRate;
+        statistics::Formula wbRate;
         /** Average number of woken instructions per writeback. */
-        Stats::Formula wbFanout;
+        statistics::Formula wbFanout;
     } iewStats;
 };
 

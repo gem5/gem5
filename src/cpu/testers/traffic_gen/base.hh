@@ -191,51 +191,51 @@ class BaseTrafficGen : public ClockedObject
     /** Reqs waiting for response **/
     std::unordered_map<RequestPtr,Tick> waitingResp;
 
-    struct StatGroup : public Stats::Group
+    struct StatGroup : public statistics::Group
     {
-        StatGroup(Stats::Group *parent);
+        StatGroup(statistics::Group *parent);
 
         /** Count the number of dropped requests. */
-        Stats::Scalar numSuppressed;
+        statistics::Scalar numSuppressed;
 
         /** Count the number of generated packets. */
-        Stats::Scalar numPackets;
+        statistics::Scalar numPackets;
 
         /** Count the number of retries. */
-        Stats::Scalar numRetries;
+        statistics::Scalar numRetries;
 
         /** Count the time incurred from back-pressure. */
-        Stats::Scalar retryTicks;
+        statistics::Scalar retryTicks;
 
         /** Count the number of bytes read. */
-        Stats::Scalar bytesRead;
+        statistics::Scalar bytesRead;
 
         /** Count the number of bytes written. */
-        Stats::Scalar bytesWritten;
+        statistics::Scalar bytesWritten;
 
         /** Total num of ticks read reqs took to complete  */
-        Stats::Scalar totalReadLatency;
+        statistics::Scalar totalReadLatency;
 
         /** Total num of ticks write reqs took to complete  */
-        Stats::Scalar totalWriteLatency;
+        statistics::Scalar totalWriteLatency;
 
         /** Count the number reads. */
-        Stats::Scalar totalReads;
+        statistics::Scalar totalReads;
 
         /** Count the number writes. */
-        Stats::Scalar totalWrites;
+        statistics::Scalar totalWrites;
 
         /** Avg num of ticks each read req took to complete  */
-        Stats::Formula avgReadLatency;
+        statistics::Formula avgReadLatency;
 
         /** Avg num of ticks each write reqs took to complete  */
-        Stats::Formula avgWriteLatency;
+        statistics::Formula avgWriteLatency;
 
         /** Read bandwidth in bytes/s  */
-        Stats::Formula readBW;
+        statistics::Formula readBW;
 
         /** Write bandwidth in bytes/s  */
-        Stats::Formula writeBW;
+        statistics::Formula writeBW;
     } stats;
 
   public:

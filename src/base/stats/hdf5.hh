@@ -45,11 +45,14 @@
 #include <string>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/output.hh"
 #include "base/stats/output.hh"
 #include "base/stats/types.hh"
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 class Hdf5 : public Output
 {
@@ -152,6 +155,6 @@ std::unique_ptr<Output> initHDF5(
     const std::string &filename,unsigned chunking = 10,
     bool desc = true, bool formulas = true);
 
-} // namespace Stats
+} // namespace statistics
 
 #endif // __BASE_STATS_HDF5_HH__

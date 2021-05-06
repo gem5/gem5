@@ -1435,8 +1435,8 @@ Wavefront::releaseBarrier()
     barId = WFBarrier::InvalidID;
 }
 
-Wavefront::WavefrontStats::WavefrontStats(Stats::Group *parent)
-    : Stats::Group(parent),
+Wavefront::WavefrontStats::WavefrontStats(statistics::Group *parent)
+    : statistics::Group(parent),
       ADD_STAT(numInstrExecuted,
                "number of instructions executed by this WF slot"),
       ADD_STAT(schCycles, "number of cycles spent in schedule stage"),

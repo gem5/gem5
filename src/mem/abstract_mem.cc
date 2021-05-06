@@ -110,31 +110,31 @@ AbstractMemory::setBackingStore(uint8_t* pmem_addr)
 }
 
 AbstractMemory::MemStats::MemStats(AbstractMemory &_mem)
-    : Stats::Group(&_mem), mem(_mem),
-    ADD_STAT(bytesRead, Stats::units::Byte::get(),
+    : statistics::Group(&_mem), mem(_mem),
+    ADD_STAT(bytesRead, statistics::units::Byte::get(),
              "Number of bytes read from this memory"),
-    ADD_STAT(bytesInstRead, Stats::units::Byte::get(),
+    ADD_STAT(bytesInstRead, statistics::units::Byte::get(),
              "Number of instructions bytes read from this memory"),
-    ADD_STAT(bytesWritten, Stats::units::Byte::get(),
+    ADD_STAT(bytesWritten, statistics::units::Byte::get(),
              "Number of bytes written to this memory"),
-    ADD_STAT(numReads, Stats::units::Count::get(),
+    ADD_STAT(numReads, statistics::units::Count::get(),
              "Number of read requests responded to by this memory"),
-    ADD_STAT(numWrites, Stats::units::Count::get(),
+    ADD_STAT(numWrites, statistics::units::Count::get(),
              "Number of write requests responded to by this memory"),
-    ADD_STAT(numOther, Stats::units::Count::get(),
+    ADD_STAT(numOther, statistics::units::Count::get(),
              "Number of other requests responded to by this memory"),
-    ADD_STAT(bwRead, Stats::units::Rate<
-                Stats::units::Byte, Stats::units::Second>::get(),
+    ADD_STAT(bwRead, statistics::units::Rate<
+                statistics::units::Byte, statistics::units::Second>::get(),
              "Total read bandwidth from this memory"),
     ADD_STAT(bwInstRead,
-             Stats::units::Rate<
-                Stats::units::Byte, Stats::units::Second>::get(),
+             statistics::units::Rate<
+                statistics::units::Byte, statistics::units::Second>::get(),
              "Instruction read bandwidth from this memory"),
-    ADD_STAT(bwWrite, Stats::units::Rate<
-                Stats::units::Byte, Stats::units::Second>::get(),
+    ADD_STAT(bwWrite, statistics::units::Rate<
+                statistics::units::Byte, statistics::units::Second>::get(),
              "Write bandwidth from this memory"),
-    ADD_STAT(bwTotal, Stats::units::Rate<
-                Stats::units::Byte, Stats::units::Second>::get(),
+    ADD_STAT(bwTotal, statistics::units::Rate<
+                statistics::units::Byte, statistics::units::Second>::get(),
              "Total bandwidth to/from this memory")
 {
 }
@@ -142,9 +142,9 @@ AbstractMemory::MemStats::MemStats(AbstractMemory &_mem)
 void
 AbstractMemory::MemStats::regStats()
 {
-    using namespace Stats;
+    using namespace statistics;
 
-    Stats::Group::regStats();
+    statistics::Group::regStats();
 
     System *sys = mem.system();
     assert(sys);

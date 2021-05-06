@@ -400,37 +400,37 @@ namespace X86ISA
         EventFunctionWrapper exitEvent;
 
       protected:
-        struct GpuTLBStats : public Stats::Group
+        struct GpuTLBStats : public statistics::Group
         {
-            GpuTLBStats(Stats::Group *parent);
+            GpuTLBStats(statistics::Group *parent);
 
             // local_stats are as seen from the TLB
             // without taking into account coalescing
-            Stats::Scalar localNumTLBAccesses;
-            Stats::Scalar localNumTLBHits;
-            Stats::Scalar localNumTLBMisses;
-            Stats::Formula localTLBMissRate;
+            statistics::Scalar localNumTLBAccesses;
+            statistics::Scalar localNumTLBHits;
+            statistics::Scalar localNumTLBMisses;
+            statistics::Formula localTLBMissRate;
 
             // global_stats are as seen from the
             // CU's perspective taking into account
             // all coalesced requests.
-            Stats::Scalar globalNumTLBAccesses;
-            Stats::Scalar globalNumTLBHits;
-            Stats::Scalar globalNumTLBMisses;
-            Stats::Formula globalTLBMissRate;
+            statistics::Scalar globalNumTLBAccesses;
+            statistics::Scalar globalNumTLBHits;
+            statistics::Scalar globalNumTLBMisses;
+            statistics::Formula globalTLBMissRate;
 
             // from the CU perspective (global)
-            Stats::Scalar accessCycles;
+            statistics::Scalar accessCycles;
             // from the CU perspective (global)
-            Stats::Scalar pageTableCycles;
-            Stats::Scalar numUniquePages;
+            statistics::Scalar pageTableCycles;
+            statistics::Scalar numUniquePages;
             // from the perspective of this TLB
-            Stats::Scalar localCycles;
+            statistics::Scalar localCycles;
             // from the perspective of this TLB
-            Stats::Formula localLatency;
+            statistics::Formula localLatency;
             // I take the avg. per page and then
             // the avg. over all pages.
-            Stats::Scalar avgReuseDistance;
+            statistics::Scalar avgReuseDistance;
         } stats;
     };
 }

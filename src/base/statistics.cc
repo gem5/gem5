@@ -50,7 +50,9 @@
 #include "base/logging.hh"
 #include "sim/root.hh"
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 // We wrap these in a function to make sure they're built in time.
 std::list<Info *> &
@@ -292,7 +294,7 @@ dump()
     if (dumpHandler)
         dumpHandler();
     else
-        fatal("No registered Stats::dump handler");
+        fatal("No registered statistics::dump handler");
 }
 
 void
@@ -301,7 +303,7 @@ reset()
     if (resetHandler)
         resetHandler();
     else
-        fatal("No registered Stats::reset handler");
+        fatal("No registered statistics::reset handler");
 }
 
 const Info *
@@ -321,10 +323,10 @@ registerDumpCallback(const std::function<void()> &callback)
     dumpQueue.push_back(callback);
 }
 
-} // namespace Stats
+} // namespace statistics
 
 void
 debugDumpStats()
 {
-    Stats::dump();
+    statistics::dump();
 }

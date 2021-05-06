@@ -131,7 +131,7 @@ class PowerState : public SimObject
      */
     PowerDomain* controlledDomain = nullptr;
 
-    struct PowerStateStats : public Stats::Group
+    struct PowerStateStats : public statistics::Group
     {
         PowerStateStats(PowerState &ps);
 
@@ -140,11 +140,11 @@ class PowerState : public SimObject
 
         PowerState &powerState;
 
-        Stats::Scalar numTransitions;
-        Stats::Scalar numPwrMatchStateTransitions;
-        Stats::Distribution ticksClkGated;
+        statistics::Scalar numTransitions;
+        statistics::Scalar numPwrMatchStateTransitions;
+        statistics::Distribution ticksClkGated;
         /** Tracks the time spent in each of the power states */
-        Stats::Vector pwrStateResidencyTicks;
+        statistics::Vector pwrStateResidencyTicks;
     } stats;
 };
 

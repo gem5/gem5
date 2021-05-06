@@ -387,22 +387,22 @@ SnoopFilter::updateResponse(const Packet* cpkt, const ResponsePort&
             __func__, sf_item.requested, sf_item.holder);
 }
 
-SnoopFilter::SnoopFilterStats::SnoopFilterStats(Stats::Group *parent)
-    : Stats::Group(parent),
-      ADD_STAT(totRequests, Stats::units::Count::get(),
+SnoopFilter::SnoopFilterStats::SnoopFilterStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(totRequests, statistics::units::Count::get(),
                "Total number of requests made to the snoop filter."),
-      ADD_STAT(hitSingleRequests, Stats::units::Count::get(),
+      ADD_STAT(hitSingleRequests, statistics::units::Count::get(),
                "Number of requests hitting in the snoop filter with a single "
                "holder of the requested data."),
-      ADD_STAT(hitMultiRequests, Stats::units::Count::get(),
+      ADD_STAT(hitMultiRequests, statistics::units::Count::get(),
                "Number of requests hitting in the snoop filter with multiple "
                "(>1) holders of the requested data."),
-      ADD_STAT(totSnoops, Stats::units::Count::get(),
+      ADD_STAT(totSnoops, statistics::units::Count::get(),
                "Total number of snoops made to the snoop filter."),
-      ADD_STAT(hitSingleSnoops, Stats::units::Count::get(),
+      ADD_STAT(hitSingleSnoops, statistics::units::Count::get(),
                "Number of snoops hitting in the snoop filter with a single "
                "holder of the requested data."),
-      ADD_STAT(hitMultiSnoops, Stats::units::Count::get(),
+      ADD_STAT(hitMultiSnoops, statistics::units::Count::get(),
                "Number of snoops hitting in the snoop filter with multiple "
                "(>1) holders of the requested data.")
 {}

@@ -357,7 +357,7 @@ DumpStats::process(ThreadContext *tc)
     taskFile->stream()->flush();
 
     // Dump and reset statistics
-    Stats::schedStatEvent(true, true, curTick(), 0);
+    statistics::schedStatEvent(true, true, curTick(), 0);
 }
 
 } // namespace ArmISA

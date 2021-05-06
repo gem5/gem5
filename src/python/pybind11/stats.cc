@@ -55,7 +55,7 @@
 namespace py = pybind11;
 
 static const py::object
-cast_stat_info(const Stats::Info *info)
+cast_stat_info(const statistics::Info *info)
 {
     /* PyBind11 gets confused by the InfoProxy magic, so we need to
      * explicitly cast to the right wrapper type. */
@@ -66,21 +66,23 @@ cast_stat_info(const Stats::Info *info)
             return py::cast(_stat);                     \
     } while (0)
 
-    TRY_CAST(Stats::ScalarInfo);
+    TRY_CAST(statistics::ScalarInfo);
     /* FormulaInfo is a subclass of VectorInfo. Therefore, a cast to
      * FormulaInfo must be attempted before a cast to VectorInfo. Otherwise
      * instances of ForumlaInfo will be cast to VectorInfo.
      */
-    TRY_CAST(Stats::FormulaInfo);
-    TRY_CAST(Stats::VectorInfo);
-    TRY_CAST(Stats::DistInfo);
+    TRY_CAST(statistics::FormulaInfo);
+    TRY_CAST(statistics::VectorInfo);
+    TRY_CAST(statistics::DistInfo);
 
     return py::cast(info);
 
 #undef TRY_CAST
 }
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 void
 pythonDump()
@@ -104,130 +106,120 @@ pybind_init_stats(py::module_ &m_native)
     py::module_ m = m_native.def_submodule("stats");
 
     m
-        .def("initSimStats", &Stats::initSimStats)
-        .def("initText", &Stats::initText, py::return_value_policy::reference)
+        .def("initSimStats", &statistics::initSimStats)
+        .def("initText", &statistics::initText,
+            py::return_value_policy::reference)
 #if HAVE_HDF5
-        .def("initHDF5", &Stats::initHDF5)
+        .def("initHDF5", &statistics::initHDF5)
 #endif
         .def("registerPythonStatsHandlers",
-             &Stats::registerPythonStatsHandlers)
-        .def("schedStatEvent", &Stats::schedStatEvent)
-        .def("periodicStatDump", &Stats::periodicStatDump)
-        .def("updateEvents", &Stats::updateEvents)
-        .def("processResetQueue", &Stats::processResetQueue)
-        .def("processDumpQueue", &Stats::processDumpQueue)
-        .def("enable", &Stats::enable)
-        .def("enabled", &Stats::enabled)
-        .def("statsList", &Stats::statsList)
+             &statistics::registerPythonStatsHandlers)
+        .def("schedStatEvent", &statistics::schedStatEvent)
+        .def("periodicStatDump", &statistics::periodicStatDump)
+        .def("updateEvents", &statistics::updateEvents)
+        .def("processResetQueue", &statistics::processResetQueue)
+        .def("processDumpQueue", &statistics::processDumpQueue)
+        .def("enable", &statistics::enable)
+        .def("enabled", &statistics::enabled)
+        .def("statsList", &statistics::statsList)
         ;
 
-    py::class_<Stats::Output>(m, "Output")
-        .def("begin", &Stats::Output::begin)
-        .def("end", &Stats::Output::end)
-        .def("valid", &Stats::Output::valid)
-        .def("beginGroup", &Stats::Output::beginGroup)
-        .def("endGroup", &Stats::Output::endGroup)
+    py::class_<statistics::Output>(m, "Output")
+        .def("begin", &statistics::Output::begin)
+        .def("end", &statistics::Output::end)
+        .def("valid", &statistics::Output::valid)
+        .def("beginGroup", &statistics::Output::beginGroup)
+        .def("endGroup", &statistics::Output::endGroup)
         ;
 
-    py::class_<Stats::Info, std::unique_ptr<Stats::Info, py::nodelete>>(
-        m, "Info")
-        .def_readwrite("name", &Stats::Info::name)
-        .def_property_readonly("unit", [](const Stats::Info &info) {
+    py::class_<statistics::Info,
+        std::unique_ptr<statistics::Info, py::nodelete>>(m, "Info")
+        .def_readwrite("name", &statistics::Info::name)
+        .def_property_readonly("unit", [](const statistics::Info &info) {
                 return info.unit->getUnitString();
             })
-        .def_readonly("desc", &Stats::Info::desc)
-        .def_readonly("id", &Stats::Info::id)
-        .def_property_readonly("flags", [](const Stats::Info &info) {
-                return (Stats::FlagsType)info.flags;
+        .def_readonly("desc", &statistics::Info::desc)
+        .def_readonly("id", &statistics::Info::id)
+        .def_property_readonly("flags", [](const statistics::Info &info) {
+                return (statistics::FlagsType)info.flags;
             })
-        .def("check", &Stats::Info::check)
-        .def("baseCheck", &Stats::Info::baseCheck)
-        .def("enable", &Stats::Info::enable)
-        .def("prepare", &Stats::Info::prepare)
-        .def("reset", &Stats::Info::reset)
-        .def("zero", &Stats::Info::zero)
-        .def("visit", &Stats::Info::visit)
+        .def("check", &statistics::Info::check)
+        .def("baseCheck", &statistics::Info::baseCheck)
+        .def("enable", &statistics::Info::enable)
+        .def("prepare", &statistics::Info::prepare)
+        .def("reset", &statistics::Info::reset)
+        .def("zero", &statistics::Info::zero)
+        .def("visit", &statistics::Info::visit)
         ;
 
-    py::class_<Stats::ScalarInfo, Stats::Info,
-               std::unique_ptr<Stats::ScalarInfo, py::nodelete>>(
+    py::class_<statistics::ScalarInfo, statistics::Info,
+               std::unique_ptr<statistics::ScalarInfo, py::nodelete>>(
                    m, "ScalarInfo")
-        .def_property_readonly("value", [](const Stats::ScalarInfo &info) {
-                return info.value();
-            })
-        .def_property_readonly("result", [](const Stats::ScalarInfo &info) {
-                return info.result();
-            })
-        .def_property_readonly("total", [](const Stats::ScalarInfo &info) {
-                return info.total();
-            })
+        .def_property_readonly("value",
+            [](const statistics::ScalarInfo &info) { return info.value(); })
+        .def_property_readonly("result",
+            [](const statistics::ScalarInfo &info) { return info.result(); })
+        .def_property_readonly("total",
+            [](const statistics::ScalarInfo &info) { return info.total(); })
         ;
 
-    py::class_<Stats::VectorInfo, Stats::Info,
-               std::unique_ptr<Stats::VectorInfo, py::nodelete>>(
+    py::class_<statistics::VectorInfo, statistics::Info,
+               std::unique_ptr<statistics::VectorInfo, py::nodelete>>(
                     m, "VectorInfo")
-        .def_readwrite("subnames", &Stats::VectorInfo::subnames)
-        .def_readwrite("subdescs", &Stats::VectorInfo::subdescs)
-        .def_property_readonly("size", [](const Stats::VectorInfo &info) {
-                return info.size();
-            })
-        .def_property_readonly("value", [](const Stats::VectorInfo &info) {
-                return info.value();
-            })
-        .def_property_readonly("result", [](const Stats::VectorInfo &info) {
-                return info.result();
-            })
-        .def_property_readonly("total", [](const Stats::VectorInfo &info) {
-                return info.total();
-            })
+        .def_readwrite("subnames", &statistics::VectorInfo::subnames)
+        .def_readwrite("subdescs", &statistics::VectorInfo::subdescs)
+        .def_property_readonly("size",
+            [](const statistics::VectorInfo &info) { return info.size(); })
+        .def_property_readonly("value",
+            [](const statistics::VectorInfo &info) { return info.value(); })
+        .def_property_readonly("result",
+            [](const statistics::VectorInfo &info) { return info.result(); })
+        .def_property_readonly("total",
+            [](const statistics::VectorInfo &info) { return info.total(); })
         ;
 
-    py::class_<Stats::FormulaInfo, Stats::VectorInfo,
-               std::unique_ptr<Stats::FormulaInfo, py::nodelete>>(
+    py::class_<statistics::FormulaInfo, statistics::VectorInfo,
+               std::unique_ptr<statistics::FormulaInfo, py::nodelete>>(
                       m, "FormulaInfo")
-        .def_property_readonly("str", [](const Stats::FormulaInfo &info) {
-                return info.str();
-            })
+        .def_property_readonly("str",
+            [](const statistics::FormulaInfo &info) { return info.str(); })
         ;
 
-    py::class_<Stats::DistInfo, Stats::Info,
-                std::unique_ptr<Stats::DistInfo, py::nodelete>>(
+    py::class_<statistics::DistInfo, statistics::Info,
+                std::unique_ptr<statistics::DistInfo, py::nodelete>>(
                     m, "DistInfo")
-        .def_property_readonly("min_val", [](const Stats::DistInfo &info) {
-                return info.data.min_val;
-            })
-        .def_property_readonly("max_val", [](const Stats::DistInfo &info) {
-                return info.data.max_val;
-            })
-        .def_property_readonly("bucket_size", [](const Stats::DistInfo &info) {
+        .def_property_readonly("min_val",
+            [](const statistics::DistInfo &info) { return info.data.min_val; })
+        .def_property_readonly("max_val",
+            [](const statistics::DistInfo &info) { return info.data.max_val; })
+        .def_property_readonly("bucket_size",
+            [](const statistics::DistInfo &info) {
                 return info.data.bucket_size;
             })
-        .def_property_readonly("values", [](const Stats::DistInfo &info) {
-                return info.data.cvec;
-            })
-        .def_property_readonly("overflow", [](const Stats::DistInfo &info) {
+        .def_property_readonly("values",
+            [](const statistics::DistInfo &info) { return info.data.cvec; })
+        .def_property_readonly("overflow",
+            [](const statistics::DistInfo &info) {
                 return info.data.overflow;
             })
-        .def_property_readonly("underflow", [](const Stats::DistInfo &info) {
+        .def_property_readonly("underflow",
+            [](const statistics::DistInfo &info) {
                 return info.data.underflow;
             })
-        .def_property_readonly("sum", [](const Stats::DistInfo &info) {
-                return info.data.sum;
-            })
-        .def_property_readonly("logs", [](const Stats::DistInfo &info) {
-                return info.data.logs;
-            })
-        .def_property_readonly("squares", [](const Stats::DistInfo &info) {
-                return info.data.squares;
-            })
+        .def_property_readonly("sum",
+            [](const statistics::DistInfo &info) { return info.data.sum; })
+        .def_property_readonly("logs",
+            [](const statistics::DistInfo &info) { return info.data.logs; })
+        .def_property_readonly("squares",
+            [](const statistics::DistInfo &info) { return info.data.squares; })
         ;
 
-    py::class_<Stats::Group, std::unique_ptr<Stats::Group, py::nodelete>>(
-        m, "Group")
-        .def("regStats", &Stats::Group::regStats)
-        .def("resetStats", &Stats::Group::resetStats)
-        .def("preDumpStats", &Stats::Group::preDumpStats)
-        .def("getStats", [](const Stats::Group &self)
+    py::class_<statistics::Group,
+        std::unique_ptr<statistics::Group, py::nodelete>>(m, "Group")
+        .def("regStats", &statistics::Group::regStats)
+        .def("resetStats", &statistics::Group::resetStats)
+        .def("preDumpStats", &statistics::Group::preDumpStats)
+        .def("getStats", [](const statistics::Group &self)
              -> std::vector<py::object> {
 
                  auto stats = self.getStats();
@@ -238,11 +230,11 @@ pybind_init_stats(py::module_ &m_native)
                                cast_stat_info);
                 return py_stats;
             })
-        .def("getStatGroups", &Stats::Group::getStatGroups)
-        .def("addStatGroup", &Stats::Group::addStatGroup)
-        .def("resolveStat", [](const Stats::Group &self,
+        .def("getStatGroups", &statistics::Group::getStatGroups)
+        .def("addStatGroup", &statistics::Group::addStatGroup)
+        .def("resolveStat", [](const statistics::Group &self,
                                const std::string &name) -> py::object {
-                 const Stats::Info *stat = self.resolveStat(name);
+                 const statistics::Info *stat = self.resolveStat(name);
                  if (!stat)
                      throw pybind11::key_error("Unknown stat name");
 

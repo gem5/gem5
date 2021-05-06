@@ -66,22 +66,22 @@ class TLB : public BaseTLB
 
     Walker *walker;
 
-    struct TlbStats : public Stats::Group
+    struct TlbStats : public statistics::Group
     {
-        TlbStats(Stats::Group *parent);
+        TlbStats(statistics::Group *parent);
 
-        Stats::Scalar readHits;
-        Stats::Scalar readMisses;
-        Stats::Scalar read_acv;
-        Stats::Scalar readAccesses;
-        Stats::Scalar writeHits;
-        Stats::Scalar writeMisses;
-        Stats::Scalar write_acv;
-        Stats::Scalar writeAccesses;
+        statistics::Scalar readHits;
+        statistics::Scalar readMisses;
+        statistics::Scalar read_acv;
+        statistics::Scalar readAccesses;
+        statistics::Scalar writeHits;
+        statistics::Scalar writeMisses;
+        statistics::Scalar write_acv;
+        statistics::Scalar writeAccesses;
 
-        Stats::Formula hits;
-        Stats::Formula misses;
-        Stats::Formula accesses;
+        statistics::Formula hits;
+        statistics::Formula misses;
+        statistics::Formula accesses;
     } stats;
 
   public:

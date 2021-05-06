@@ -67,29 +67,29 @@ BPredUnit::BPredUnit(const Params &params)
         r.init(params.RASSize);
 }
 
-BPredUnit::BPredUnitStats::BPredUnitStats(Stats::Group *parent)
-    : Stats::Group(parent),
-      ADD_STAT(lookups, Stats::units::Count::get(), "Number of BP lookups"),
-      ADD_STAT(condPredicted, Stats::units::Count::get(),
+BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(lookups, statistics::units::Count::get(), "Number of BP lookups"),
+      ADD_STAT(condPredicted, statistics::units::Count::get(),
                "Number of conditional branches predicted"),
-      ADD_STAT(condIncorrect, Stats::units::Count::get(),
+      ADD_STAT(condIncorrect, statistics::units::Count::get(),
                "Number of conditional branches incorrect"),
-      ADD_STAT(BTBLookups, Stats::units::Count::get(),
+      ADD_STAT(BTBLookups, statistics::units::Count::get(),
                "Number of BTB lookups"),
-      ADD_STAT(BTBHits, Stats::units::Count::get(), "Number of BTB hits"),
-      ADD_STAT(BTBHitRatio, Stats::units::Ratio::get(), "BTB Hit Ratio",
+      ADD_STAT(BTBHits, statistics::units::Count::get(), "Number of BTB hits"),
+      ADD_STAT(BTBHitRatio, statistics::units::Ratio::get(), "BTB Hit Ratio",
                BTBHits / BTBLookups),
-      ADD_STAT(RASUsed, Stats::units::Count::get(),
+      ADD_STAT(RASUsed, statistics::units::Count::get(),
                "Number of times the RAS was used to get a target."),
-      ADD_STAT(RASIncorrect, Stats::units::Count::get(),
+      ADD_STAT(RASIncorrect, statistics::units::Count::get(),
                "Number of incorrect RAS predictions."),
-      ADD_STAT(indirectLookups, Stats::units::Count::get(),
+      ADD_STAT(indirectLookups, statistics::units::Count::get(),
                "Number of indirect predictor lookups."),
-      ADD_STAT(indirectHits, Stats::units::Count::get(),
+      ADD_STAT(indirectHits, statistics::units::Count::get(),
                "Number of indirect target hits."),
-      ADD_STAT(indirectMisses, Stats::units::Count::get(),
+      ADD_STAT(indirectMisses, statistics::units::Count::get(),
                "Number of indirect misses."),
-      ADD_STAT(indirectMispredicted, Stats::units::Count::get(),
+      ADD_STAT(indirectMispredicted, statistics::units::Count::get(),
                "Number of mispredicted indirect branches.")
 {
     BTBHitRatio.precision(6);

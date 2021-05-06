@@ -156,39 +156,39 @@ class GarnetNetwork : public Network
     bool m_enable_fault_model;
 
     // Statistical variables
-    Stats::Vector m_packets_received;
-    Stats::Vector m_packets_injected;
-    Stats::Vector m_packet_network_latency;
-    Stats::Vector m_packet_queueing_latency;
+    statistics::Vector m_packets_received;
+    statistics::Vector m_packets_injected;
+    statistics::Vector m_packet_network_latency;
+    statistics::Vector m_packet_queueing_latency;
 
-    Stats::Formula m_avg_packet_vnet_latency;
-    Stats::Formula m_avg_packet_vqueue_latency;
-    Stats::Formula m_avg_packet_network_latency;
-    Stats::Formula m_avg_packet_queueing_latency;
-    Stats::Formula m_avg_packet_latency;
+    statistics::Formula m_avg_packet_vnet_latency;
+    statistics::Formula m_avg_packet_vqueue_latency;
+    statistics::Formula m_avg_packet_network_latency;
+    statistics::Formula m_avg_packet_queueing_latency;
+    statistics::Formula m_avg_packet_latency;
 
-    Stats::Vector m_flits_received;
-    Stats::Vector m_flits_injected;
-    Stats::Vector m_flit_network_latency;
-    Stats::Vector m_flit_queueing_latency;
+    statistics::Vector m_flits_received;
+    statistics::Vector m_flits_injected;
+    statistics::Vector m_flit_network_latency;
+    statistics::Vector m_flit_queueing_latency;
 
-    Stats::Formula m_avg_flit_vnet_latency;
-    Stats::Formula m_avg_flit_vqueue_latency;
-    Stats::Formula m_avg_flit_network_latency;
-    Stats::Formula m_avg_flit_queueing_latency;
-    Stats::Formula m_avg_flit_latency;
+    statistics::Formula m_avg_flit_vnet_latency;
+    statistics::Formula m_avg_flit_vqueue_latency;
+    statistics::Formula m_avg_flit_network_latency;
+    statistics::Formula m_avg_flit_queueing_latency;
+    statistics::Formula m_avg_flit_latency;
 
-    Stats::Scalar m_total_ext_in_link_utilization;
-    Stats::Scalar m_total_ext_out_link_utilization;
-    Stats::Scalar m_total_int_link_utilization;
-    Stats::Scalar m_average_link_utilization;
-    Stats::Vector m_average_vc_load;
+    statistics::Scalar m_total_ext_in_link_utilization;
+    statistics::Scalar m_total_ext_out_link_utilization;
+    statistics::Scalar m_total_int_link_utilization;
+    statistics::Scalar m_average_link_utilization;
+    statistics::Vector m_average_vc_load;
 
-    Stats::Scalar  m_total_hops;
-    Stats::Formula m_avg_hops;
+    statistics::Scalar  m_total_hops;
+    statistics::Formula m_avg_hops;
 
-    std::vector<std::vector<Stats::Scalar *>> m_data_traffic_distribution;
-    std::vector<std::vector<Stats::Scalar *>> m_ctrl_traffic_distribution;
+    std::vector<std::vector<statistics::Scalar *>> m_data_traffic_distribution;
+    std::vector<std::vector<statistics::Scalar *>> m_ctrl_traffic_distribution;
 
   private:
     GarnetNetwork(const GarnetNetwork& obj);

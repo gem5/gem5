@@ -605,32 +605,32 @@ Fetch2::isDrained()
 }
 
 Fetch2::Fetch2Stats::Fetch2Stats(MinorCPU *cpu)
-      : Stats::Group(cpu, "fetch2"),
-      ADD_STAT(intInstructions, Stats::units::Count::get(),
+      : statistics::Group(cpu, "fetch2"),
+      ADD_STAT(intInstructions, statistics::units::Count::get(),
                "Number of integer instructions successfully decoded"),
-      ADD_STAT(fpInstructions, Stats::units::Count::get(),
+      ADD_STAT(fpInstructions, statistics::units::Count::get(),
                "Number of floating point instructions successfully decoded"),
-      ADD_STAT(vecInstructions, Stats::units::Count::get(),
+      ADD_STAT(vecInstructions, statistics::units::Count::get(),
                "Number of SIMD instructions successfully decoded"),
-      ADD_STAT(loadInstructions, Stats::units::Count::get(),
+      ADD_STAT(loadInstructions, statistics::units::Count::get(),
                "Number of memory load instructions successfully decoded"),
-      ADD_STAT(storeInstructions, Stats::units::Count::get(),
+      ADD_STAT(storeInstructions, statistics::units::Count::get(),
                "Number of memory store instructions successfully decoded"),
-      ADD_STAT(amoInstructions, Stats::units::Count::get(),
+      ADD_STAT(amoInstructions, statistics::units::Count::get(),
                "Number of memory atomic instructions successfully decoded")
 {
         intInstructions
-            .flags(Stats::total);
+            .flags(statistics::total);
         fpInstructions
-            .flags(Stats::total);
+            .flags(statistics::total);
         vecInstructions
-            .flags(Stats::total);
+            .flags(statistics::total);
         loadInstructions
-            .flags(Stats::total);
+            .flags(statistics::total);
         storeInstructions
-            .flags(Stats::total);
+            .flags(statistics::total);
         amoInstructions
-            .flags(Stats::total);
+            .flags(statistics::total);
 }
 
 void

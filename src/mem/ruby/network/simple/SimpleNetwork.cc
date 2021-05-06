@@ -144,17 +144,17 @@ SimpleNetwork::regStats()
     for (MessageSizeType type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
         networkStats.m_msg_counts[(unsigned int) type] =
-            new Stats::Formula(&networkStats,
+            new statistics::Formula(&networkStats,
             csprintf("msg_count.%s", MessageSizeType_to_string(type)).c_str());
         networkStats.m_msg_counts[(unsigned int) type]
-            ->flags(Stats::nozero)
+            ->flags(statistics::nozero)
             ;
 
         networkStats.m_msg_bytes[(unsigned int) type] =
-            new Stats::Formula(&networkStats,
+            new statistics::Formula(&networkStats,
             csprintf("msg_byte.%s", MessageSizeType_to_string(type)).c_str());
         networkStats.m_msg_bytes[(unsigned int) type]
-            ->flags(Stats::nozero)
+            ->flags(statistics::nozero)
             ;
 
         // Now state what the formula is.
@@ -165,7 +165,7 @@ SimpleNetwork::regStats()
 
         *(networkStats.m_msg_bytes[(unsigned int) type]) =
             *(networkStats.m_msg_counts[(unsigned int) type]) *
-                Stats::constant(Network::MessageSizeType_to_int(type));
+                statistics::constant(Network::MessageSizeType_to_int(type));
     }
 }
 
@@ -234,8 +234,8 @@ SimpleNetwork::functionalWrite(Packet *pkt)
 }
 
 SimpleNetwork::
-NetworkStats::NetworkStats(Stats::Group *parent)
-    : Stats::Group(parent)
+NetworkStats::NetworkStats(statistics::Group *parent)
+    : statistics::Group(parent)
 {
 
 }

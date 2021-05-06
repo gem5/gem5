@@ -64,7 +64,9 @@ constexpr auto Nan = std::numeric_limits<float>::quiet_NaN();
 
 } // anonymous namespace
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 std::list<Info *> &statsList();
 
@@ -390,7 +392,7 @@ VectorPrint::operator()(std::ostream &stream) const
         }
     }
 
-    if (flags.isSet(::Stats::total)) {
+    if (flags.isSet(::statistics::total)) {
         print.pdf = Nan;
         print.cdf = Nan;
         print.name = base + "total";
@@ -688,7 +690,7 @@ Text::visit(const Vector2dInfo &info)
     std::vector<std::string> total_subname;
     total_subname.push_back("total");
 
-    if (info.flags.isSet(::Stats::total) && (info.x > 1)) {
+    if (info.flags.isSet(::statistics::total) && (info.x > 1)) {
         print.name = statName(info.name);
         print.subnames = total_subname;
         print.desc = info.desc;
@@ -812,4 +814,4 @@ initText(const std::string &filename, bool desc, bool spaces)
     return &text;
 }
 
-} // namespace Stats
+} // namespace statistics

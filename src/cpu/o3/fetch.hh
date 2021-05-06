@@ -525,63 +525,63 @@ class Fetch
     FinishTranslationEvent finishTranslationEvent;
 
   protected:
-    struct FetchStatGroup : public Stats::Group
+    struct FetchStatGroup : public statistics::Group
     {
         FetchStatGroup(CPU *cpu, Fetch *fetch);
         // @todo: Consider making these
         // vectors and tracking on a per thread basis.
         /** Stat for total number of cycles stalled due to an icache miss. */
-        Stats::Scalar icacheStallCycles;
+        statistics::Scalar icacheStallCycles;
         /** Stat for total number of fetched instructions. */
-        Stats::Scalar insts;
+        statistics::Scalar insts;
         /** Total number of fetched branches. */
-        Stats::Scalar branches;
+        statistics::Scalar branches;
         /** Stat for total number of predicted branches. */
-        Stats::Scalar predictedBranches;
+        statistics::Scalar predictedBranches;
         /** Stat for total number of cycles spent fetching. */
-        Stats::Scalar cycles;
+        statistics::Scalar cycles;
         /** Stat for total number of cycles spent squashing. */
-        Stats::Scalar squashCycles;
+        statistics::Scalar squashCycles;
         /** Stat for total number of cycles spent waiting for translation */
-        Stats::Scalar tlbCycles;
+        statistics::Scalar tlbCycles;
         /** Stat for total number of cycles
          *  spent blocked due to other stages in
          * the pipeline.
          */
-        Stats::Scalar idleCycles;
+        statistics::Scalar idleCycles;
         /** Total number of cycles spent blocked. */
-        Stats::Scalar blockedCycles;
+        statistics::Scalar blockedCycles;
         /** Total number of cycles spent in any other state. */
-        Stats::Scalar miscStallCycles;
+        statistics::Scalar miscStallCycles;
         /** Total number of cycles spent in waiting for drains. */
-        Stats::Scalar pendingDrainCycles;
+        statistics::Scalar pendingDrainCycles;
         /** Total number of stall cycles caused by no active threads to run. */
-        Stats::Scalar noActiveThreadStallCycles;
+        statistics::Scalar noActiveThreadStallCycles;
         /** Total number of stall cycles caused by pending traps. */
-        Stats::Scalar pendingTrapStallCycles;
+        statistics::Scalar pendingTrapStallCycles;
         /** Total number of stall cycles
          *  caused by pending quiesce instructions. */
-        Stats::Scalar pendingQuiesceStallCycles;
+        statistics::Scalar pendingQuiesceStallCycles;
         /** Total number of stall cycles caused by I-cache wait retrys. */
-        Stats::Scalar icacheWaitRetryStallCycles;
+        statistics::Scalar icacheWaitRetryStallCycles;
         /** Stat for total number of fetched cache lines. */
-        Stats::Scalar cacheLines;
+        statistics::Scalar cacheLines;
         /** Total number of outstanding icache accesses that were dropped
          * due to a squash.
          */
-        Stats::Scalar icacheSquashes;
+        statistics::Scalar icacheSquashes;
         /** Total number of outstanding tlb accesses that were dropped
          * due to a squash.
          */
-        Stats::Scalar tlbSquashes;
+        statistics::Scalar tlbSquashes;
         /** Distribution of number of instructions fetched each cycle. */
-        Stats::Distribution nisnDist;
+        statistics::Distribution nisnDist;
         /** Rate of how often fetch was idle. */
-        Stats::Formula idleRate;
+        statistics::Formula idleRate;
         /** Number of branch fetches per cycle. */
-        Stats::Formula branchRate;
+        statistics::Formula branchRate;
         /** Number of instruction fetched per cycle. */
-        Stats::Formula rate;
+        statistics::Formula rate;
     } fetchStats;
 };
 

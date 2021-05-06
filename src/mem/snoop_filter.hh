@@ -315,17 +315,17 @@ class SnoopFilter : public SimObject
     };
 
     /** Statistics */
-    struct SnoopFilterStats : public Stats::Group
+    struct SnoopFilterStats : public statistics::Group
     {
-        SnoopFilterStats(Stats::Group *parent);
+        SnoopFilterStats(statistics::Group *parent);
 
-        Stats::Scalar totRequests;
-        Stats::Scalar hitSingleRequests;
-        Stats::Scalar hitMultiRequests;
+        statistics::Scalar totRequests;
+        statistics::Scalar hitSingleRequests;
+        statistics::Scalar hitMultiRequests;
 
-        Stats::Scalar totSnoops;
-        Stats::Scalar hitSingleSnoops;
-        Stats::Scalar hitMultiSnoops;
+        statistics::Scalar totSnoops;
+        statistics::Scalar hitSingleSnoops;
+        statistics::Scalar hitMultiSnoops;
     } stats;
 };
 

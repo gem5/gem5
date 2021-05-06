@@ -140,7 +140,7 @@ class SimObjectResolver;
  * \endcode
  */
 class SimObject : public EventManager, public Serializable, public Drainable,
-                  public Stats::Group
+                  public statistics::Group
 {
   private:
     typedef std::vector<SimObject *> SimObjectList;

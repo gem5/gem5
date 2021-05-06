@@ -206,33 +206,33 @@ class CacheMemory : public SimObject
     bool m_use_occupancy;
 
     private:
-      struct CacheMemoryStats : public Stats::Group
+      struct CacheMemoryStats : public statistics::Group
       {
-          CacheMemoryStats(Stats::Group *parent);
+          CacheMemoryStats(statistics::Group *parent);
 
-          Stats::Scalar numDataArrayReads;
-          Stats::Scalar numDataArrayWrites;
-          Stats::Scalar numTagArrayReads;
-          Stats::Scalar numTagArrayWrites;
+          statistics::Scalar numDataArrayReads;
+          statistics::Scalar numDataArrayWrites;
+          statistics::Scalar numTagArrayReads;
+          statistics::Scalar numTagArrayWrites;
 
-          Stats::Scalar numTagArrayStalls;
-          Stats::Scalar numDataArrayStalls;
+          statistics::Scalar numTagArrayStalls;
+          statistics::Scalar numDataArrayStalls;
 
           // hardware transactional memory
-          Stats::Histogram htmTransCommitReadSet;
-          Stats::Histogram htmTransCommitWriteSet;
-          Stats::Histogram htmTransAbortReadSet;
-          Stats::Histogram htmTransAbortWriteSet;
+          statistics::Histogram htmTransCommitReadSet;
+          statistics::Histogram htmTransCommitWriteSet;
+          statistics::Histogram htmTransAbortReadSet;
+          statistics::Histogram htmTransAbortWriteSet;
 
-          Stats::Scalar m_demand_hits;
-          Stats::Scalar m_demand_misses;
-          Stats::Formula m_demand_accesses;
+          statistics::Scalar m_demand_hits;
+          statistics::Scalar m_demand_misses;
+          statistics::Formula m_demand_accesses;
 
-          Stats::Scalar m_prefetch_hits;
-          Stats::Scalar m_prefetch_misses;
-          Stats::Formula m_prefetch_accesses;
+          statistics::Scalar m_prefetch_hits;
+          statistics::Scalar m_prefetch_misses;
+          statistics::Formula m_prefetch_accesses;
 
-          Stats::Vector m_accessModeType;
+          statistics::Vector m_accessModeType;
       } cacheMemoryStats;
 
     public:

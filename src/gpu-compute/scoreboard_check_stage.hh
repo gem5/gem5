@@ -99,11 +99,11 @@ class ScoreboardCheckStage
     const std::string _name;
 
   protected:
-    struct ScoreboardCheckStageStats : public Stats::Group
+    struct ScoreboardCheckStageStats : public statistics::Group
     {
-        ScoreboardCheckStageStats(Stats::Group *parent);
+        ScoreboardCheckStageStats(statistics::Group *parent);
 
-        Stats::Vector stallCycles;
+        statistics::Vector stallCycles;
     } stats;
 };
 

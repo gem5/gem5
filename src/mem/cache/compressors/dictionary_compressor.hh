@@ -71,7 +71,7 @@ class BaseDictionaryCompressor : public Base
     /** Number of valid entries in the dictionary. */
     std::size_t numEntries;
 
-    struct DictionaryStats : public Stats::Group
+    struct DictionaryStats : public statistics::Group
     {
         const BaseDictionaryCompressor& compressor;
 
@@ -81,7 +81,7 @@ class BaseDictionaryCompressor : public Base
         void regStats() override;
 
         /** Number of data entries that were compressed to each pattern. */
-        Stats::Vector patterns;
+        statistics::Vector patterns;
     } dictionaryStats;
 
     /**

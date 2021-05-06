@@ -546,31 +546,31 @@ class LSQUnit
     // Will also need how many read/write ports the Dcache has.  Or keep track
     // of that in stage that is one level up, and only call executeLoad/Store
     // the appropriate number of times.
-    struct LSQUnitStats : public Stats::Group
+    struct LSQUnitStats : public statistics::Group
     {
-        LSQUnitStats(Stats::Group *parent);
+        LSQUnitStats(statistics::Group *parent);
 
         /** Total number of loads forwaded from LSQ stores. */
-        Stats::Scalar forwLoads;
+        statistics::Scalar forwLoads;
 
         /** Total number of squashed loads. */
-        Stats::Scalar squashedLoads;
+        statistics::Scalar squashedLoads;
 
         /** Total number of responses from the memory system that are
          * ignored due to the instruction already being squashed. */
-        Stats::Scalar ignoredResponses;
+        statistics::Scalar ignoredResponses;
 
         /** Tota number of memory ordering violations. */
-        Stats::Scalar memOrderViolation;
+        statistics::Scalar memOrderViolation;
 
         /** Total number of squashed stores. */
-        Stats::Scalar squashedStores;
+        statistics::Scalar squashedStores;
 
         /** Number of loads that were rescheduled. */
-        Stats::Scalar rescheduledLoads;
+        statistics::Scalar rescheduledLoads;
 
         /** Number of times the LSQ is blocked due to the cache. */
-        Stats::Scalar blockedByCache;
+        statistics::Scalar blockedByCache;
     } stats;
 
   public:

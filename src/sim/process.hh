@@ -281,7 +281,8 @@ class Process : public SimObject
     // Process was forked with SIGCHLD set.
     bool *sigchld;
 
-    Stats::Scalar numSyscalls;  // track how many system calls are executed
+    // Track how many system calls are executed
+    statistics::Scalar numSyscalls;
 };
 
 #endif // __PROCESS_HH__

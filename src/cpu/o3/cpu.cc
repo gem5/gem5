@@ -368,55 +368,55 @@ CPU::regProbePoints()
 }
 
 CPU::CPUStats::CPUStats(CPU *cpu)
-    : Stats::Group(cpu),
-      ADD_STAT(timesIdled, Stats::units::Count::get(),
+    : statistics::Group(cpu),
+      ADD_STAT(timesIdled, statistics::units::Count::get(),
                "Number of times that the entire CPU went into an idle state "
                "and unscheduled itself"),
-      ADD_STAT(idleCycles, Stats::units::Cycle::get(),
+      ADD_STAT(idleCycles, statistics::units::Cycle::get(),
                "Total number of cycles that the CPU has spent unscheduled due "
                "to idling"),
-      ADD_STAT(quiesceCycles, Stats::units::Cycle::get(),
+      ADD_STAT(quiesceCycles, statistics::units::Cycle::get(),
                "Total number of cycles that CPU has spent quiesced or waiting "
                "for an interrupt"),
-      ADD_STAT(committedInsts, Stats::units::Count::get(),
+      ADD_STAT(committedInsts, statistics::units::Count::get(),
                "Number of Instructions Simulated"),
-      ADD_STAT(committedOps, Stats::units::Count::get(),
+      ADD_STAT(committedOps, statistics::units::Count::get(),
                "Number of Ops (including micro ops) Simulated"),
-      ADD_STAT(cpi, Stats::units::Rate<
-                    Stats::units::Cycle, Stats::units::Count>::get(),
+      ADD_STAT(cpi, statistics::units::Rate<
+                    statistics::units::Cycle, statistics::units::Count>::get(),
                "CPI: Cycles Per Instruction"),
-      ADD_STAT(totalCpi, Stats::units::Rate<
-                    Stats::units::Cycle, Stats::units::Count>::get(),
+      ADD_STAT(totalCpi, statistics::units::Rate<
+                    statistics::units::Cycle, statistics::units::Count>::get(),
                "CPI: Total CPI of All Threads"),
-      ADD_STAT(ipc, Stats::units::Rate<
-                    Stats::units::Count, Stats::units::Cycle>::get(),
+      ADD_STAT(ipc, statistics::units::Rate<
+                    statistics::units::Count, statistics::units::Cycle>::get(),
                "IPC: Instructions Per Cycle"),
-      ADD_STAT(totalIpc, Stats::units::Rate<
-                    Stats::units::Count, Stats::units::Cycle>::get(),
+      ADD_STAT(totalIpc, statistics::units::Rate<
+                    statistics::units::Count, statistics::units::Cycle>::get(),
                "IPC: Total IPC of All Threads"),
-      ADD_STAT(intRegfileReads, Stats::units::Count::get(),
+      ADD_STAT(intRegfileReads, statistics::units::Count::get(),
                "Number of integer regfile reads"),
-      ADD_STAT(intRegfileWrites, Stats::units::Count::get(),
+      ADD_STAT(intRegfileWrites, statistics::units::Count::get(),
                "Number of integer regfile writes"),
-      ADD_STAT(fpRegfileReads, Stats::units::Count::get(),
+      ADD_STAT(fpRegfileReads, statistics::units::Count::get(),
                "Number of floating regfile reads"),
-      ADD_STAT(fpRegfileWrites, Stats::units::Count::get(),
+      ADD_STAT(fpRegfileWrites, statistics::units::Count::get(),
                "Number of floating regfile writes"),
-      ADD_STAT(vecRegfileReads, Stats::units::Count::get(),
+      ADD_STAT(vecRegfileReads, statistics::units::Count::get(),
                "number of vector regfile reads"),
-      ADD_STAT(vecRegfileWrites, Stats::units::Count::get(),
+      ADD_STAT(vecRegfileWrites, statistics::units::Count::get(),
                "number of vector regfile writes"),
-      ADD_STAT(vecPredRegfileReads, Stats::units::Count::get(),
+      ADD_STAT(vecPredRegfileReads, statistics::units::Count::get(),
                "number of predicate regfile reads"),
-      ADD_STAT(vecPredRegfileWrites, Stats::units::Count::get(),
+      ADD_STAT(vecPredRegfileWrites, statistics::units::Count::get(),
                "number of predicate regfile writes"),
-      ADD_STAT(ccRegfileReads, Stats::units::Count::get(),
+      ADD_STAT(ccRegfileReads, statistics::units::Count::get(),
                "number of cc regfile reads"),
-      ADD_STAT(ccRegfileWrites, Stats::units::Count::get(),
+      ADD_STAT(ccRegfileWrites, statistics::units::Count::get(),
                "number of cc regfile writes"),
-      ADD_STAT(miscRegfileReads, Stats::units::Count::get(),
+      ADD_STAT(miscRegfileReads, statistics::units::Count::get(),
                "number of misc regfile reads"),
-      ADD_STAT(miscRegfileWrites, Stats::units::Count::get(),
+      ADD_STAT(miscRegfileWrites, statistics::units::Count::get(),
                "number of misc regfile writes")
 {
     // Register any of the O3CPU's stats here.
@@ -435,11 +435,11 @@ CPU::CPUStats::CPUStats(CPU *cpu)
     // MaxThreads so put in here instead
     committedInsts
         .init(cpu->numThreads)
-        .flags(Stats::total);
+        .flags(statistics::total);
 
     committedOps
         .init(cpu->numThreads)
-        .flags(Stats::total);
+        .flags(statistics::total);
 
     cpi
         .precision(6);

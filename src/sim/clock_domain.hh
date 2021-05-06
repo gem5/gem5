@@ -140,14 +140,14 @@ class ClockDomain : public SimObject
     { children.push_back(clock_domain); }
 
   private:
-    struct ClockDomainStats : public Stats::Group
+    struct ClockDomainStats : public statistics::Group
     {
         ClockDomainStats(ClockDomain &cd);
 
         /**
          * Stat to report clock period of clock domain
          */
-        Stats::Value clock;
+        statistics::Value clock;
     } stats;
 };
 

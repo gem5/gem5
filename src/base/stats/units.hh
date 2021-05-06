@@ -38,41 +38,43 @@
  * Convenience macros to declare the unit of a stat.
  */
 #define UNIT_CYCLE GEM5_DEPRECATED_MACRO( \
-        UNIT_CYCLE, Stats::units::Cycle::get(), \
-        "Use Stats::units::Cycle::get()")
+        UNIT_CYCLE, statistics::units::Cycle::get(), \
+        "Use statistics::units::Cycle::get()")
 #define UNIT_TICK GEM5_DEPRECATED_MACRO( \
-        UNIT_TICK, Stats::units::Tick::get(), "Use Stats::units::Tick::get()")
+        UNIT_TICK, statistics::units::Tick::get(), "Use statistics::units::Tick::get()")
 #define UNIT_SECOND GEM5_DEPRECATED_MACRO( \
-        UNIT_SECOND, Stats::units::Second::get(), \
-        "Use Stats::units::Second::get()")
+        UNIT_SECOND, statistics::units::Second::get(), \
+        "Use statistics::units::Second::get()")
 #define UNIT_BIT GEM5_DEPRECATED_MACRO( \
-        UNIT_BIT, Stats::units::Bit::get(), "Use Stats::units::Bit::get()")
+        UNIT_BIT, statistics::units::Bit::get(), "Use statistics::units::Bit::get()")
 #define UNIT_BYTE GEM5_DEPRECATED_MACRO( \
-        UNIT_BYTE, Stats::units::Byte::get(), "Use Stats::units::Byte::get()")
+        UNIT_BYTE, statistics::units::Byte::get(), "Use statistics::units::Byte::get()")
 #define UNIT_JOULE GEM5_DEPRECATED_MACRO( \
-        UNIT_JOULE, Stats::units::Joule::get(), \
-        "Use Stats::units::Joule::get()")
+        UNIT_JOULE, statistics::units::Joule::get(), \
+        "Use statistics::units::Joule::get()")
 #define UNIT_VOLT GEM5_DEPRECATED_MACRO( \
-        UNIT_VOLD, Stats::units::Volt::get(), "Use Stats::units::Volt::get()")
+        UNIT_VOLD, statistics::units::Volt::get(), "Use statistics::units::Volt::get()")
 #define UNIT_CELSIUS GEM5_DEPRECATED_MACRO( \
-        UNIT_CELSIUS, Stats::units::DegreeCelsius::get(), \
-        "Use Stats::units::DegreeCelsius::get()")
+        UNIT_CELSIUS, statistics::units::DegreeCelsius::get(), \
+        "Use statistics::units::DegreeCelsius::get()")
 #define UNIT_RATE(T1, T2) GEM5_DEPRECATED_MACRO( \
-        UNIT_RATE, (Stats::units::Rate<T1, T2>::get()), \
-        "Use Stats::units::Rate<T1, T2>::get()")
+        UNIT_RATE, (statistics::units::Rate<T1, T2>::get()), \
+        "Use statistics::units::Rate<T1, T2>::get()")
 #define UNIT_RATIO GEM5_DEPRECATED_MACRO( \
-        UNIT_RATIO, Stats::units::Ratio::get(), \
-        "Use Stats::units::Ratio::get()")
+        UNIT_RATIO, statistics::units::Ratio::get(), \
+        "Use statistics::units::Ratio::get()")
 #define UNIT_COUNT GEM5_DEPRECATED_MACRO( \
-        UNIT_COUNT, Stats::units::Count::get(), \
-        "Use Stats::units::Count::get()")
+        UNIT_COUNT, statistics::units::Count::get(), \
+        "Use statistics::units::Count::get()")
 #define UNIT_WATT GEM5_DEPRECATED_MACRO( \
-        UNIT_WATT, Stats::units::Watt::get(), "Use Stats::units::Watt::get()")
+        UNIT_WATT, statistics::units::Watt::get(), "Use statistics::units::Watt::get()")
 #define UNIT_UNSPECIFIED GEM5_DEPRECATED_MACRO( \
-        UNIT_UNSPECIFIED, Stats::units::Unspecified::get(), \
-        "Use Stats::units::Unspecified::get()")
+        UNIT_UNSPECIFIED, statistics::units::Unspecified::get(), \
+        "Use statistics::units::Unspecified::get()")
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 /**
  * Units for Stats.
@@ -337,10 +339,10 @@ class Unspecified : public Base
 template <typename T1, typename T2>
 class Rate : public Base
 {
-    static_assert(std::is_base_of<Base, T1>::value,
-        "Rate(T1,T2) must have T1 and T2 derived from Stats::units::Base");
-    static_assert(std::is_base_of<Base, T2>::value,
-        "Rate(T1,T2) must have T1 and T2 derived from Stats::units::Base");
+    static_assert(std::is_base_of<Base, T1>::value, "Rate(T1,T2) must have "
+        "T1 and T2 derived from statistics::units::Base");
+    static_assert(std::is_base_of<Base, T2>::value, "Rate(T1,T2) must have "
+        "T1 and T2 derived from statistics::units::Base");
     static_assert(!std::is_same<T1, T2>::value ||
         std::is_same<T1, Count>::value || std::is_same<T1, Unspecified>::value,
         "Rate(T1,T2) must have T1 and T2 of different types; "
@@ -371,6 +373,6 @@ class Rate : public Base
 
 } // namespace units
 
-} // namespace Stats
+} // namespace statistics
 
 #endif // __BASE_STATS_UNITS_HH__

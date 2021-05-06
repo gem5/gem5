@@ -422,13 +422,13 @@ SimpleCache::sendRangeChange() const
     }
 }
 
-SimpleCache::SimpleCacheStats::SimpleCacheStats(Stats::Group *parent)
-      : Stats::Group(parent),
-      ADD_STAT(hits, Stats::units::Count::get(), "Number of hits"),
-      ADD_STAT(misses, Stats::units::Count::get(), "Number of misses"),
-      ADD_STAT(missLatency, Stats::units::Tick::get(),
+SimpleCache::SimpleCacheStats::SimpleCacheStats(statistics::Group *parent)
+      : statistics::Group(parent),
+      ADD_STAT(hits, statistics::units::Count::get(), "Number of hits"),
+      ADD_STAT(misses, statistics::units::Count::get(), "Number of misses"),
+      ADD_STAT(missLatency, statistics::units::Tick::get(),
                "Ticks for misses to the cache"),
-      ADD_STAT(hitRatio, Stats::units::Ratio::get(),
+      ADD_STAT(hitRatio, statistics::units::Ratio::get(),
                "The ratio of hits to the total accesses to the cache",
                hits / (hits + misses))
 {

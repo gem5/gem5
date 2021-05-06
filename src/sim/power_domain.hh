@@ -152,14 +152,14 @@ class PowerDomain : public PowerState
                 pwrStateUpdateEvent;
 
   protected:
-    struct PowerDomainStats : public Stats::Group
+    struct PowerDomainStats : public statistics::Group
     {
         PowerDomainStats(PowerDomain &pd);
 
         void regStats() override;
 
-        Stats::Scalar numLeaderCalls;
-        Stats::Scalar numLeaderCallsChangingState;
+        statistics::Scalar numLeaderCalls;
+        statistics::Scalar numLeaderCallsChangingState;
     } stats;
 };
 

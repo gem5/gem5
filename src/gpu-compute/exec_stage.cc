@@ -197,8 +197,8 @@ ExecStage::exec()
     collectStatistics(PostExec, 0);
 }
 
-ExecStage::ExecStageStats::ExecStageStats(Stats::Group *parent)
-    : Stats::Group(parent, "ExecStage"),
+ExecStage::ExecStageStats::ExecStageStats(statistics::Group *parent)
+    : statistics::Group(parent, "ExecStage"),
       ADD_STAT(numTransActiveIdle,
                "number of CU transitions from active to idle"),
       ADD_STAT(numCyclesWithNoIssue, "number of cycles the CU issues nothing"),

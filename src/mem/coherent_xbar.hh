@@ -415,9 +415,9 @@ class CoherentXBar : public BaseXBar
             (pkt->req->isToPOU() && pointOfUnification);
     }
 
-    Stats::Scalar snoops;
-    Stats::Scalar snoopTraffic;
-    Stats::Distribution snoopFanout;
+    statistics::Scalar snoops;
+    statistics::Scalar snoopTraffic;
+    statistics::Distribution snoopFanout;
 
   public:
 

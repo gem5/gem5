@@ -84,7 +84,7 @@ class Multi : public Base
      */
     const Cycles extraDecompressionLatency;
 
-    struct MultiStats : public Stats::Group
+    struct MultiStats : public statistics::Group
     {
         const Multi& compressor;
 
@@ -95,7 +95,7 @@ class Multi : public Base
         /**
          * Number of times each compressor provided the nth best compression.
          */
-        Stats::Vector2d ranks;
+        statistics::Vector2d ranks;
     } multiStats;
 
   public:

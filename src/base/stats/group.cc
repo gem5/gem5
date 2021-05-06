@@ -44,7 +44,9 @@
 #include "debug/Stats.hh"
 #include "sim/sim_object.hh"
 
-namespace Stats {
+GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
+namespace statistics
+{
 
 Group::Group(Group *parent, const char *name)
     : mergedParent(nullptr)
@@ -102,7 +104,7 @@ Group::preDumpStats()
 }
 
 void
-Group::addStat(Stats::Info *info)
+Group::addStat(statistics::Info *info)
 {
     stats.push_back(info);
     if (mergedParent)
@@ -183,4 +185,4 @@ Group::getStats() const
     return stats;
 }
 
-} // namespace Stats
+} // namespace statistics

@@ -170,33 +170,33 @@ class TLB : public BaseTLB
 
     TlbTestInterface *test;
 
-    struct TlbStats : public Stats::Group
+    struct TlbStats : public statistics::Group
     {
-        TlbStats(Stats::Group *parent);
+        TlbStats(statistics::Group *parent);
         // Access Stats
-        mutable Stats::Scalar instHits;
-        mutable Stats::Scalar instMisses;
-        mutable Stats::Scalar readHits;
-        mutable Stats::Scalar readMisses;
-        mutable Stats::Scalar writeHits;
-        mutable Stats::Scalar writeMisses;
-        mutable Stats::Scalar inserts;
-        mutable Stats::Scalar flushTlb;
-        mutable Stats::Scalar flushTlbMva;
-        mutable Stats::Scalar flushTlbMvaAsid;
-        mutable Stats::Scalar flushTlbAsid;
-        mutable Stats::Scalar flushedEntries;
-        mutable Stats::Scalar alignFaults;
-        mutable Stats::Scalar prefetchFaults;
-        mutable Stats::Scalar domainFaults;
-        mutable Stats::Scalar permsFaults;
+        mutable statistics::Scalar instHits;
+        mutable statistics::Scalar instMisses;
+        mutable statistics::Scalar readHits;
+        mutable statistics::Scalar readMisses;
+        mutable statistics::Scalar writeHits;
+        mutable statistics::Scalar writeMisses;
+        mutable statistics::Scalar inserts;
+        mutable statistics::Scalar flushTlb;
+        mutable statistics::Scalar flushTlbMva;
+        mutable statistics::Scalar flushTlbMvaAsid;
+        mutable statistics::Scalar flushTlbAsid;
+        mutable statistics::Scalar flushedEntries;
+        mutable statistics::Scalar alignFaults;
+        mutable statistics::Scalar prefetchFaults;
+        mutable statistics::Scalar domainFaults;
+        mutable statistics::Scalar permsFaults;
 
-        Stats::Formula readAccesses;
-        Stats::Formula writeAccesses;
-        Stats::Formula instAccesses;
-        Stats::Formula hits;
-        Stats::Formula misses;
-        Stats::Formula accesses;
+        statistics::Formula readAccesses;
+        statistics::Formula writeAccesses;
+        statistics::Formula instAccesses;
+        statistics::Formula hits;
+        statistics::Formula misses;
+        statistics::Formula accesses;
     } stats;
 
     /** PMU probe for TLB refills */

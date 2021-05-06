@@ -78,13 +78,12 @@ HDLcd::HDLcd(const HDLcdParams &p)
     imgWriter = createImgWriter(imgFormat, &pixelPump.fb);
 }
 
-HDLcd::
-HDLcdStats::HDLcdStats(Stats::Group *parent)
-    : Stats::Group(parent, "HDLcd"),
-      ADD_STAT(underruns, Stats::units::Count::get(),
+HDLcd::HDLcdStats::HDLcdStats(statistics::Group *parent)
+    : statistics::Group(parent, "HDLcd"),
+      ADD_STAT(underruns, statistics::units::Count::get(),
                "Number of buffer underruns")
 {
-    using namespace Stats;
+    using namespace statistics;
 
     underruns.flags(nozero);
 }

@@ -53,31 +53,31 @@ namespace minor
 {
 
 /** Currently unused stats class. */
-struct MinorStats : public Stats::Group
+struct MinorStats : public statistics::Group
 {
     MinorStats(BaseCPU *parent);
 
     /** Number of simulated instructions */
-    Stats::Scalar numInsts;
+    statistics::Scalar numInsts;
 
     /** Number of simulated insts and microops */
-    Stats::Scalar numOps;
+    statistics::Scalar numOps;
 
     /** Number of ops discarded before committing */
-    Stats::Scalar numDiscardedOps;
+    statistics::Scalar numDiscardedOps;
 
     /** Number of times fetch was asked to suspend by Execute */
-    Stats::Scalar numFetchSuspends;
+    statistics::Scalar numFetchSuspends;
 
     /** Number of cycles in quiescent state */
-    Stats::Scalar quiesceCycles;
+    statistics::Scalar quiesceCycles;
 
     /** CPI/IPC for total cycle counts and macro insts */
-    Stats::Formula cpi;
-    Stats::Formula ipc;
+    statistics::Formula cpi;
+    statistics::Formula ipc;
 
     /** Number of instructions by type (OpClass) */
-    Stats::Vector2d committedInstType;
+    statistics::Vector2d committedInstType;
 
 };
 

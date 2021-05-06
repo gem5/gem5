@@ -95,7 +95,13 @@ class CopyEngine : public PciDevice
         virtual ~CopyEngineChannel();
         Port &getPort();
 
-        std::string name() { assert(ce); return ce->name() + csprintf("-chan%d", channelId); }
+        std::string
+        name()
+        {
+            assert(ce);
+            return ce->name() + csprintf("-chan%d", channelId);
+        }
+
         virtual Tick read(PacketPtr pkt)
                         { panic("CopyEngineChannel has no I/O access\n");}
         virtual Tick write(PacketPtr pkt)
@@ -140,12 +146,13 @@ class CopyEngine : public PciDevice
 
   private:
 
-    struct CopyEngineStats : public Stats::Group
+    struct CopyEngineStats : public statistics::Group
     {
-        CopyEngineStats(Stats::Group *parent, const uint8_t& channel_count);
+        CopyEngineStats(statistics::Group *parent,
+            const uint8_t& channel_count);
 
-        Stats::Vector bytesCopied;
-        Stats::Vector copiesProcessed;
+        statistics::Vector bytesCopied;
+        statistics::Vector copiesProcessed;
     } copyEngineStats;
 
     // device registers

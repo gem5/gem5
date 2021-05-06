@@ -126,8 +126,8 @@ LocalMemPipeline::issueRequest(GPUDynInstPtr gpuDynInst)
 
 
 LocalMemPipeline::
-LocalMemPipelineStats::LocalMemPipelineStats(Stats::Group *parent)
-    : Stats::Group(parent, "LocalMemPipeline"),
+LocalMemPipelineStats::LocalMemPipelineStats(statistics::Group *parent)
+    : statistics::Group(parent, "LocalMemPipeline"),
       ADD_STAT(loadVrfBankConflictCycles, "total number of cycles LDS data "
                "are delayed before updating the VRF")
 {

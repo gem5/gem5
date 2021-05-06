@@ -62,7 +62,7 @@ AbstractController::AbstractController(const Params &p)
     if (m_version == 0) {
         // Combine the statistics from all controllers
         // of this particular type.
-        Stats::registerDumpCallback([this]() { collateStats(); });
+        statistics::registerDumpCallback([this]() { collateStats(); });
     }
 }
 
@@ -72,7 +72,7 @@ AbstractController::init()
     stats.delayHistogram.init(10);
     uint32_t size = Network::getNumberOfVirtualNetworks();
     for (uint32_t i = 0; i < size; i++) {
-        stats.delayVCHistogram.push_back(new Stats::Histogram(this));
+        stats.delayVCHistogram.push_back(new statistics::Histogram(this));
         stats.delayVCHistogram[i]->init(10);
     }
 
@@ -446,14 +446,14 @@ AbstractController::MemoryPort::MemoryPort(const std::string &_name,
 }
 
 AbstractController::
-ControllerStats::ControllerStats(Stats::Group *parent)
-    : Stats::Group(parent),
+ControllerStats::ControllerStats(statistics::Group *parent)
+    : statistics::Group(parent),
       ADD_STAT(fullyBusyCycles,
                "cycles for which number of transistions == max transitions"),
       ADD_STAT(delayHistogram, "delay_histogram")
 {
     fullyBusyCycles
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
     delayHistogram
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 }

@@ -138,14 +138,14 @@ class VoltageDomain : public SimObject
     const Voltages voltageOpPoints;
     PerfLevel _perfLevel;
 
-    struct VoltageDomainStats : public Stats::Group
+    struct VoltageDomainStats : public statistics::Group
     {
         VoltageDomainStats(VoltageDomain &vd);
 
         /**
          * Stat for reporting voltage of the domain
          */
-        Stats::Value voltage;
+        statistics::Value voltage;
     } stats;
 
     /**

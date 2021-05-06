@@ -784,9 +784,9 @@ ScheduleStage::deleteFromSch(Wavefront *w)
     wavesInSch.erase(w->wfDynId);
 }
 
-ScheduleStage::ScheduleStageStats::ScheduleStageStats(Stats::Group *parent,
-                                                      int num_exec_units)
-    : Stats::Group(parent, "ScheduleStage"),
+ScheduleStage::ScheduleStageStats::ScheduleStageStats(
+    statistics::Group *parent, int num_exec_units)
+    : statistics::Group(parent, "ScheduleStage"),
       ADD_STAT(rdyListEmpty ,"number of cycles no wave on ready list per "
                "execution resource"),
       ADD_STAT(rdyListNotEmpty, "number of cycles one or more wave on ready "

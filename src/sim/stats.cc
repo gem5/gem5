@@ -39,7 +39,7 @@
 
 #include "sim/root.hh"
 
-Stats::Formula &simSeconds = rootStats.simSeconds;
-Stats::Value &simTicks = rootStats.simTicks;
-Stats::Value &simFreq = rootStats.simFreq;
-Stats::Value &hostSeconds = rootStats.hostSeconds;
+statistics::Formula &simSeconds = rootStats.simSeconds;
+statistics::Value &simTicks = rootStats.simTicks;
+statistics::Value &simFreq = rootStats.simFreq;
+statistics::Value &hostSeconds = rootStats.hostSeconds;

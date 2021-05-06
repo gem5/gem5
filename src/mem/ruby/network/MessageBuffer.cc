@@ -85,19 +85,19 @@ MessageBuffer::MessageBuffer(const Params &p)
 
     // stats
     m_not_avail_count
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     m_buf_msgs
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     m_stall_count
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     m_occupancy
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     m_stall_time
-        .flags(Stats::nozero);
+        .flags(statistics::nozero);
 
     if (m_max_size > 0) {
         m_occupancy = m_buf_msgs / m_max_size;

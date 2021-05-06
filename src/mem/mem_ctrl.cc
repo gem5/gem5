@@ -1182,106 +1182,105 @@ MemCtrl::burstAlign(Addr addr, bool is_dram) const
 }
 
 MemCtrl::CtrlStats::CtrlStats(MemCtrl &_ctrl)
-    : Stats::Group(&_ctrl),
+    : statistics::Group(&_ctrl),
     ctrl(_ctrl),
 
-    ADD_STAT(readReqs, Stats::units::Count::get(),
+    ADD_STAT(readReqs, statistics::units::Count::get(),
              "Number of read requests accepted"),
-    ADD_STAT(writeReqs, Stats::units::Count::get(),
+    ADD_STAT(writeReqs, statistics::units::Count::get(),
              "Number of write requests accepted"),
 
-    ADD_STAT(readBursts, Stats::units::Count::get(),
+    ADD_STAT(readBursts, statistics::units::Count::get(),
              "Number of controller read bursts, including those serviced by "
              "the write queue"),
-    ADD_STAT(writeBursts, Stats::units::Count::get(),
+    ADD_STAT(writeBursts, statistics::units::Count::get(),
              "Number of controller write bursts, including those merged in "
              "the write queue"),
-    ADD_STAT(servicedByWrQ, Stats::units::Count::get(),
+    ADD_STAT(servicedByWrQ, statistics::units::Count::get(),
              "Number of controller read bursts serviced by the write queue"),
-    ADD_STAT(mergedWrBursts, Stats::units::Count::get(),
+    ADD_STAT(mergedWrBursts, statistics::units::Count::get(),
              "Number of controller write bursts merged with an existing one"),
 
-    ADD_STAT(neitherReadNorWriteReqs, Stats::units::Count::get(),
+    ADD_STAT(neitherReadNorWriteReqs, statistics::units::Count::get(),
              "Number of requests that are neither read nor write"),
 
-    ADD_STAT(avgRdQLen, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Tick>::get(),
+    ADD_STAT(avgRdQLen, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Tick>::get(),
              "Average read queue length when enqueuing"),
-    ADD_STAT(avgWrQLen, Stats::units::Rate<
-                Stats::units::Count, Stats::units::Tick>::get(),
+    ADD_STAT(avgWrQLen, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Tick>::get(),
              "Average write queue length when enqueuing"),
 
-    ADD_STAT(numRdRetry, Stats::units::Count::get(),
+    ADD_STAT(numRdRetry, statistics::units::Count::get(),
              "Number of times read queue was full causing retry"),
-    ADD_STAT(numWrRetry, Stats::units::Count::get(),
+    ADD_STAT(numWrRetry, statistics::units::Count::get(),
              "Number of times write queue was full causing retry"),
 
-    ADD_STAT(readPktSize, Stats::units::Count::get(),
+    ADD_STAT(readPktSize, statistics::units::Count::get(),
              "Read request sizes (log2)"),
-    ADD_STAT(writePktSize, Stats::units::Count::get(),
+    ADD_STAT(writePktSize, statistics::units::Count::get(),
              "Write request sizes (log2)"),
 
-    ADD_STAT(rdQLenPdf, Stats::units::Count::get(),
+    ADD_STAT(rdQLenPdf, statistics::units::Count::get(),
              "What read queue length does an incoming req see"),
-    ADD_STAT(wrQLenPdf, Stats::units::Count::get(),
+    ADD_STAT(wrQLenPdf, statistics::units::Count::get(),
              "What write queue length does an incoming req see"),
 
-    ADD_STAT(rdPerTurnAround, Stats::units::Count::get(),
+    ADD_STAT(rdPerTurnAround, statistics::units::Count::get(),
              "Reads before turning the bus around for writes"),
-    ADD_STAT(wrPerTurnAround, Stats::units::Count::get(),
+    ADD_STAT(wrPerTurnAround, statistics::units::Count::get(),
              "Writes before turning the bus around for reads"),
 
-    ADD_STAT(bytesReadWrQ, Stats::units::Byte::get(),
+    ADD_STAT(bytesReadWrQ, statistics::units::Byte::get(),
              "Total number of bytes read from write queue"),
-    ADD_STAT(bytesReadSys, Stats::units::Byte::get(),
+    ADD_STAT(bytesReadSys, statistics::units::Byte::get(),
              "Total read bytes from the system interface side"),
-    ADD_STAT(bytesWrittenSys, Stats::units::Byte::get(),
+    ADD_STAT(bytesWrittenSys, statistics::units::Byte::get(),
              "Total written bytes from the system interface side"),
 
-    ADD_STAT(avgRdBWSys, Stats::units::Rate<
-                Stats::units::Byte, Stats::units::Second>::get(),
+    ADD_STAT(avgRdBWSys, statistics::units::Rate<
+                statistics::units::Byte, statistics::units::Second>::get(),
              "Average system read bandwidth in Byte/s"),
-    ADD_STAT(avgWrBWSys, Stats::units::Rate<
-                Stats::units::Byte, Stats::units::Second>::get(),
+    ADD_STAT(avgWrBWSys, statistics::units::Rate<
+                statistics::units::Byte, statistics::units::Second>::get(),
              "Average system write bandwidth in Byte/s"),
 
-    ADD_STAT(totGap, Stats::units::Tick::get(), "Total gap between requests"),
-    ADD_STAT(avgGap, Stats::units::Rate<
-                Stats::units::Tick, Stats::units::Count>::get(),
+    ADD_STAT(totGap, statistics::units::Tick::get(), "Total gap between requests"),
+    ADD_STAT(avgGap, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
              "Average gap between requests"),
 
-    ADD_STAT(requestorReadBytes, Stats::units::Byte::get(),
+    ADD_STAT(requestorReadBytes, statistics::units::Byte::get(),
              "Per-requestor bytes read from memory"),
-    ADD_STAT(requestorWriteBytes, Stats::units::Byte::get(),
+    ADD_STAT(requestorWriteBytes, statistics::units::Byte::get(),
              "Per-requestor bytes write to memory"),
-    ADD_STAT(requestorReadRate, Stats::units::Rate<
-                Stats::units::Byte, Stats::units::Second>::get(),
+    ADD_STAT(requestorReadRate, statistics::units::Rate<
+                statistics::units::Byte, statistics::units::Second>::get(),
              "Per-requestor bytes read from memory rate"),
-    ADD_STAT(requestorWriteRate, Stats::units::Rate<
-                Stats::units::Byte, Stats::units::Second>::get(),
+    ADD_STAT(requestorWriteRate, statistics::units::Rate<
+                statistics::units::Byte, statistics::units::Second>::get(),
              "Per-requestor bytes write to memory rate"),
-    ADD_STAT(requestorReadAccesses, Stats::units::Count::get(),
+    ADD_STAT(requestorReadAccesses, statistics::units::Count::get(),
              "Per-requestor read serviced memory accesses"),
-    ADD_STAT(requestorWriteAccesses, Stats::units::Count::get(),
+    ADD_STAT(requestorWriteAccesses, statistics::units::Count::get(),
              "Per-requestor write serviced memory accesses"),
-    ADD_STAT(requestorReadTotalLat, Stats::units::Tick::get(),
+    ADD_STAT(requestorReadTotalLat, statistics::units::Tick::get(),
              "Per-requestor read total memory access latency"),
-    ADD_STAT(requestorWriteTotalLat, Stats::units::Tick::get(),
+    ADD_STAT(requestorWriteTotalLat, statistics::units::Tick::get(),
              "Per-requestor write total memory access latency"),
-    ADD_STAT(requestorReadAvgLat, Stats::units::Rate<
-                Stats::units::Tick, Stats::units::Count>::get(),
+    ADD_STAT(requestorReadAvgLat, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
              "Per-requestor read average memory access latency"),
-    ADD_STAT(requestorWriteAvgLat, Stats::units::Rate<
-                Stats::units::Tick, Stats::units::Count>::get(),
+    ADD_STAT(requestorWriteAvgLat, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
              "Per-requestor write average memory access latency")
-
 {
 }
 
 void
 MemCtrl::CtrlStats::regStats()
 {
-    using namespace Stats;
+    using namespace statistics;
 
     assert(ctrl.system());
     const auto max_requestors = ctrl.system()->maxRequestors();

@@ -260,19 +260,19 @@ class MemDepUnit
 
     /** The thread id of this memory dependence unit. */
     int id;
-    struct MemDepUnitStats : public Stats::Group
+    struct MemDepUnitStats : public statistics::Group
     {
-        MemDepUnitStats(Stats::Group *parent);
+        MemDepUnitStats(statistics::Group *parent);
         /** Stat for number of inserted loads. */
-        Stats::Scalar insertedLoads;
+        statistics::Scalar insertedLoads;
         /** Stat for number of inserted stores. */
-        Stats::Scalar insertedStores;
+        statistics::Scalar insertedStores;
         /** Stat for number of conflicting loads that had to wait for a
          *  store. */
-        Stats::Scalar conflictingLoads;
+        statistics::Scalar conflictingLoads;
         /** Stat for number of conflicting stores that had to wait for a
          *  store. */
-        Stats::Scalar conflictingStores;
+        statistics::Scalar conflictingStores;
     } stats;
 };
 

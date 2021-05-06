@@ -66,24 +66,24 @@ class StackDistProbe : public BaseMemProbe
   protected:
     StackDistCalc calc;
 
-    struct StackDistProbeStats : public Stats::Group
+    struct StackDistProbeStats : public statistics::Group
     {
         StackDistProbeStats(StackDistProbe* parent);
 
         // Reads linear histogram
-        Stats::Histogram readLinearHist;
+        statistics::Histogram readLinearHist;
 
         // Reads logarithmic histogram
-        Stats::SparseHistogram readLogHist;
+        statistics::SparseHistogram readLogHist;
 
         // Writes linear histogram
-        Stats::Histogram writeLinearHist;
+        statistics::Histogram writeLinearHist;
 
         // Writes logarithmic histogram
-        Stats::SparseHistogram writeLogHist;
+        statistics::SparseHistogram writeLogHist;
 
         // Writes logarithmic histogram
-        Stats::Scalar infiniteSD;
+        statistics::Scalar infiniteSD;
     } stats;
 };
 

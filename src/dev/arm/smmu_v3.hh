@@ -133,15 +133,15 @@ class SMMUv3 : public ClockedObject
     const Cycles walkLat;
 
     // Stats
-    struct SMMUv3Stats : public Stats::Group
+    struct SMMUv3Stats : public statistics::Group
     {
-        SMMUv3Stats(Stats::Group *parent);
-        Stats::Scalar steL1Fetches;
-        Stats::Scalar steFetches;
-        Stats::Scalar cdL1Fetches;
-        Stats::Scalar cdFetches;
-        Stats::Distribution translationTimeDist;
-        Stats::Distribution ptwTimeDist;
+        SMMUv3Stats(statistics::Group *parent);
+        statistics::Scalar steL1Fetches;
+        statistics::Scalar steFetches;
+        statistics::Scalar cdL1Fetches;
+        statistics::Scalar cdFetches;
+        statistics::Distribution translationTimeDist;
+        statistics::Distribution ptwTimeDist;
     } stats;
 
     std::vector<SMMUv3DeviceInterface *> deviceInterfaces;

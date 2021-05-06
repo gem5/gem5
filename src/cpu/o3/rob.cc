@@ -518,10 +518,12 @@ ROB::readTailInst(ThreadID tid)
     return *tail_thread;
 }
 
-ROB::ROBStats::ROBStats(Stats::Group *parent)
-    : Stats::Group(parent, "rob"),
-      ADD_STAT(reads, Stats::units::Count::get(), "The number of ROB reads"),
-      ADD_STAT(writes, Stats::units::Count::get(), "The number of ROB writes")
+ROB::ROBStats::ROBStats(statistics::Group *parent)
+  : statistics::Group(parent, "rob"),
+    ADD_STAT(reads, statistics::units::Count::get(),
+        "The number of ROB reads"),
+    ADD_STAT(writes, statistics::units::Count::get(),
+        "The number of ROB writes")
 {
 }
 

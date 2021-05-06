@@ -91,61 +91,61 @@ Rename::name() const
     return cpu->name() + ".rename";
 }
 
-Rename::RenameStats::RenameStats(Stats::Group *parent)
-    : Stats::Group(parent, "rename"),
-      ADD_STAT(squashCycles, Stats::units::Cycle::get(),
+Rename::RenameStats::RenameStats(statistics::Group *parent)
+    : statistics::Group(parent, "rename"),
+      ADD_STAT(squashCycles, statistics::units::Cycle::get(),
                "Number of cycles rename is squashing"),
-      ADD_STAT(idleCycles, Stats::units::Cycle::get(),
+      ADD_STAT(idleCycles, statistics::units::Cycle::get(),
                "Number of cycles rename is idle"),
-      ADD_STAT(blockCycles, Stats::units::Cycle::get(),
+      ADD_STAT(blockCycles, statistics::units::Cycle::get(),
                "Number of cycles rename is blocking"),
-      ADD_STAT(serializeStallCycles, Stats::units::Cycle::get(),
+      ADD_STAT(serializeStallCycles, statistics::units::Cycle::get(),
                "count of cycles rename stalled for serializing inst"),
-      ADD_STAT(runCycles, Stats::units::Cycle::get(),
+      ADD_STAT(runCycles, statistics::units::Cycle::get(),
                "Number of cycles rename is running"),
-      ADD_STAT(unblockCycles, Stats::units::Cycle::get(),
+      ADD_STAT(unblockCycles, statistics::units::Cycle::get(),
                "Number of cycles rename is unblocking"),
-      ADD_STAT(renamedInsts, Stats::units::Count::get(),
+      ADD_STAT(renamedInsts, statistics::units::Count::get(),
                "Number of instructions processed by rename"),
-      ADD_STAT(squashedInsts, Stats::units::Count::get(),
+      ADD_STAT(squashedInsts, statistics::units::Count::get(),
                "Number of squashed instructions processed by rename"),
-      ADD_STAT(ROBFullEvents, Stats::units::Count::get(),
+      ADD_STAT(ROBFullEvents, statistics::units::Count::get(),
                "Number of times rename has blocked due to ROB full"),
-      ADD_STAT(IQFullEvents, Stats::units::Count::get(),
+      ADD_STAT(IQFullEvents, statistics::units::Count::get(),
                "Number of times rename has blocked due to IQ full"),
-      ADD_STAT(LQFullEvents, Stats::units::Count::get(),
+      ADD_STAT(LQFullEvents, statistics::units::Count::get(),
                "Number of times rename has blocked due to LQ full" ),
-      ADD_STAT(SQFullEvents, Stats::units::Count::get(),
+      ADD_STAT(SQFullEvents, statistics::units::Count::get(),
                "Number of times rename has blocked due to SQ full"),
-      ADD_STAT(fullRegistersEvents, Stats::units::Count::get(),
+      ADD_STAT(fullRegistersEvents, statistics::units::Count::get(),
                "Number of times there has been no free registers"),
-      ADD_STAT(renamedOperands, Stats::units::Count::get(),
+      ADD_STAT(renamedOperands, statistics::units::Count::get(),
                "Number of destination operands rename has renamed"),
-      ADD_STAT(lookups, Stats::units::Count::get(),
+      ADD_STAT(lookups, statistics::units::Count::get(),
                "Number of register rename lookups that rename has made"),
-      ADD_STAT(intLookups, Stats::units::Count::get(),
+      ADD_STAT(intLookups, statistics::units::Count::get(),
                "Number of integer rename lookups"),
-      ADD_STAT(fpLookups, Stats::units::Count::get(),
+      ADD_STAT(fpLookups, statistics::units::Count::get(),
                "Number of floating rename lookups"),
-      ADD_STAT(vecLookups, Stats::units::Count::get(),
+      ADD_STAT(vecLookups, statistics::units::Count::get(),
                "Number of vector rename lookups"),
-      ADD_STAT(vecPredLookups, Stats::units::Count::get(),
+      ADD_STAT(vecPredLookups, statistics::units::Count::get(),
                "Number of vector predicate rename lookups"),
-      ADD_STAT(committedMaps, Stats::units::Count::get(),
+      ADD_STAT(committedMaps, statistics::units::Count::get(),
                "Number of HB maps that are committed"),
-      ADD_STAT(undoneMaps, Stats::units::Count::get(),
+      ADD_STAT(undoneMaps, statistics::units::Count::get(),
                "Number of HB maps that are undone due to squashing"),
-      ADD_STAT(serializing, Stats::units::Count::get(),
+      ADD_STAT(serializing, statistics::units::Count::get(),
                "count of serializing insts renamed"),
-      ADD_STAT(tempSerializing, Stats::units::Count::get(),
+      ADD_STAT(tempSerializing, statistics::units::Count::get(),
                "count of temporary serializing insts renamed"),
-      ADD_STAT(skidInsts, Stats::units::Count::get(),
+      ADD_STAT(skidInsts, statistics::units::Count::get(),
                "count of insts added to the skid buffer")
 {
     squashCycles.prereq(squashCycles);
     idleCycles.prereq(idleCycles);
     blockCycles.prereq(blockCycles);
-    serializeStallCycles.flags(Stats::total);
+    serializeStallCycles.flags(statistics::total);
     runCycles.prereq(idleCycles);
     unblockCycles.prereq(unblockCycles);
 
@@ -167,9 +167,9 @@ Rename::RenameStats::RenameStats(Stats::Group *parent)
 
     committedMaps.prereq(committedMaps);
     undoneMaps.prereq(undoneMaps);
-    serializing.flags(Stats::total);
-    tempSerializing.flags(Stats::total);
-    skidInsts.flags(Stats::total);
+    serializing.flags(statistics::total);
+    tempSerializing.flags(statistics::total);
+    skidInsts.flags(statistics::total);
 }
 
 void
