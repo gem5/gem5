@@ -119,5 +119,5 @@ PS2Device::send(const uint8_t *data, size_t size)
 void
 PS2Device::sendAck()
 {
-    send(Ps2::Ack);
+    send(ps2::Ack);
 }

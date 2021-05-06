@@ -77,48 +77,48 @@ bool
 PS2TouchKit::recv(const std::vector<uint8_t> &data)
 {
     switch (data[0]) {
-      case Ps2::Reset:
+      case ps2::Reset:
         DPRINTF(PS2, "Resetting device.\n");
         enabled = false;
         touchKitEnabled = false;
         sendAck();
-        send(Ps2::SelfTestPass);
+        send(ps2::SelfTestPass);
         return true;
 
-      case Ps2::ReadID:
+      case ps2::ReadID:
         sendAck();
-        send(Ps2::Mouse::ID);
+        send(ps2::Mouse::ID);
         return true;
 
-      case Ps2::Disable:
+      case ps2::Disable:
         DPRINTF(PS2, "Disabling device.\n");
         enabled = false;
         sendAck();
         return true;
 
-      case Ps2::Enable:
+      case ps2::Enable:
         DPRINTF(PS2, "Enabling device.\n");
         enabled = true;
         sendAck();
         return true;
 
-      case Ps2::DefaultsAndDisable:
+      case ps2::DefaultsAndDisable:
         DPRINTF(PS2, "Setting defaults and disabling device.\n");
         enabled = false;
         sendAck();
         return true;
 
-      case Ps2::Mouse::Scale1to1:
-      case Ps2::Mouse::Scale2to1:
+      case ps2::Mouse::Scale1to1:
+      case ps2::Mouse::Scale2to1:
         sendAck();
         return true;
 
-      case Ps2::Mouse::SetResolution:
-      case Ps2::Mouse::SampleRate:
+      case ps2::Mouse::SetResolution:
+      case ps2::Mouse::SampleRate:
         sendAck();
         return data.size() == 2;
 
-      case Ps2::Mouse::GetStatus:
+      case ps2::Mouse::GetStatus:
         sendAck();
         send(0);
         send(2); // default resolution

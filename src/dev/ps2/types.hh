@@ -44,12 +44,15 @@
 #include <vector>
 
 #include "base/bitunion.hh"
+#include "base/compiler.hh"
 
 /** @file misc functions and constants required to interface with or
  * emulate ps2 devices
  */
 
-namespace Ps2 {
+GEM5_DEPRECATED_NAMESPACE(Ps2, ps2);
+namespace ps2
+{
 
 enum
 {
@@ -126,5 +129,5 @@ EndBitUnion(Ps2MouseMovement)
 void keySymToPs2(uint32_t key, bool down, bool &cur_shift,
         std::list<uint8_t> &keys);
 
-} /* namespace Ps2 */
+} /* namespace ps2 */
 #endif // __DEV_PS2_HH__
