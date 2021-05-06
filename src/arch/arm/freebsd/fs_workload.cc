@@ -45,7 +45,7 @@
 #include "mem/physical.hh"
 #include "sim/stat_control.hh"
 
-using namespace FreeBSD;
+using namespace free_bsd;
 
 namespace ArmISA
 {

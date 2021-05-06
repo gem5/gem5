@@ -40,7 +40,8 @@
 #include "kern/system_events.hh"
 #include "sim/system.hh"
 
-namespace FreeBSD
+GEM5_DEPRECATED_NAMESPACE(FreeBSD, free_bsd);
+namespace free_bsd
 {
 
 void
@@ -60,4 +61,4 @@ onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul, uint64_t time)
         tc->quiesceTick(curTick() + sim_clock::Int::ns * time);
 }
 
-} // namespace FreeBSD
+} // namespace free_bsd

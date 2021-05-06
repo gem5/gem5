@@ -33,10 +33,12 @@
 #ifndef __KERN_FREEBSD_EVENTS_HH__
 #define __KERN_FREEBSD_EVENTS_HH__
 
+#include "base/compiler.hh"
 #include "kern/system_events.hh"
 #include "sim/guest_abi.hh"
 
-namespace FreeBSD
+GEM5_DEPRECATED_NAMESPACE(FreeBSD, free_bsd);
+namespace free_bsd
 {
 
 void onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul, uint64_t time);
