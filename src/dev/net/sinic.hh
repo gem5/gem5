@@ -257,7 +257,7 @@ class Device : public Base
  */
   protected:
     void devIntrPost(uint32_t interrupts);
-    void devIntrClear(uint32_t interrupts = Regs::Intr_All);
+    void devIntrClear(uint32_t interrupts = registers::Intr_All);
     void devIntrChangeMask(uint32_t newmask);
 
 /**

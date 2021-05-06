@@ -29,6 +29,10 @@
 #ifndef __DEV_NET_SINICREG_HH__
 #define __DEV_NET_SINICREG_HH__
 
+#include <cstdint>
+
+#include "base/compiler.hh"
+
 #define __SINIC_REG32(NAME, VAL) static const uint32_t NAME = (VAL);
 #define __SINIC_REG64(NAME, VAL) static const uint64_t NAME = (VAL);
 
@@ -55,7 +59,10 @@
 GEM5_DEPRECATED_NAMESPACE(Sinic, sinic);
 namespace sinic
 {
-namespace Regs {
+
+GEM5_DEPRECATED_NAMESPACE(Regs, registers);
+namespace registers
+{
 
 static const int VirtualShift = 8;
 static const int VirtualMask = 0xff;
@@ -178,13 +185,13 @@ struct Info
     const char *name;
 };
 
-} // namespace Regs
+} // namespace registers
 
-inline const Regs::Info&
+inline const registers::Info&
 regInfo(Addr daddr)
 {
-    static Regs::Info invalid = { 0, false, false, "invalid" };
-    static Regs::Info info [] = {
+    static registers::Info invalid = { 0, false, false, "invalid" };
+    static registers::Info info [] = {
         { 4, true,  true,  "Config"       },
         { 4, false, true,  "Command"      },
         { 4, true,  true,  "IntrStatus"   },
@@ -225,7 +232,7 @@ regInfo(Addr daddr)
 inline bool
 regValid(Addr daddr)
 {
-    if (daddr > Regs::Size)
+    if (daddr > registers::Size)
         return false;
 
     if (regInfo(daddr).size == 0)
