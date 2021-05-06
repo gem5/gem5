@@ -42,7 +42,9 @@
 
 #include "sim/probe/probe.hh"
 
-namespace ProbePoints {
+GEM5_DEPRECATED_NAMESPACE(ProbePoints, probing);
+namespace probing
+{
 
 /**
  * PMU probe point

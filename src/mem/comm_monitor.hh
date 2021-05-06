@@ -382,9 +382,9 @@ class CommMonitor : public SimObject
          */
         MonitorStats(Stats::Group *parent, const CommMonitorParams &params);
 
-        void updateReqStats(const ProbePoints::PacketInfo& pkt, bool is_atomic,
+        void updateReqStats(const probing::PacketInfo& pkt, bool is_atomic,
                             bool expects_response);
-        void updateRespStats(const ProbePoints::PacketInfo& pkt, Tick latency,
+        void updateRespStats(const probing::PacketInfo& pkt, Tick latency,
                              bool is_atomic);
     };
 
@@ -416,10 +416,10 @@ class CommMonitor : public SimObject
      */
 
     /** Successfully forwarded request packet */
-    ProbePoints::PacketUPtr ppPktReq;
+    probing::PacketUPtr ppPktReq;
 
     /** Successfully forwarded response packet */
-    ProbePoints::PacketUPtr ppPktResp;
+    probing::PacketUPtr ppPktResp;
 
     /** @} */
 };

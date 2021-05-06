@@ -93,7 +93,7 @@ StackDistProbeStats::StackDistProbeStats(StackDistProbe *parent)
 }
 
 void
-StackDistProbe::handleRequest(const ProbePoints::PacketInfo &pkt_info)
+StackDistProbe::handleRequest(const probing::PacketInfo &pkt_info)
 {
     // only capturing read and write requests (which allocate in the
     // cache)

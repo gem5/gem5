@@ -68,8 +68,8 @@ CommMonitor::init()
 void
 CommMonitor::regProbePoints()
 {
-    ppPktReq.reset(new ProbePoints::Packet(getProbeManager(), "PktRequest"));
-    ppPktResp.reset(new ProbePoints::Packet(getProbeManager(), "PktResponse"));
+    ppPktReq.reset(new probing::Packet(getProbeManager(), "PktRequest"));
+    ppPktResp.reset(new probing::Packet(getProbeManager(), "PktResponse"));
 }
 
 Port &
@@ -252,7 +252,7 @@ CommMonitor::MonitorStats::MonitorStats(Stats::Group *parent,
 
 void
 CommMonitor::MonitorStats::updateReqStats(
-    const ProbePoints::PacketInfo& pkt_info, bool is_atomic,
+    const probing::PacketInfo& pkt_info, bool is_atomic,
     bool expects_response)
 {
     if (pkt_info.cmd.isRead()) {
@@ -319,7 +319,7 @@ CommMonitor::MonitorStats::updateReqStats(
 
 void
 CommMonitor::MonitorStats::updateRespStats(
-    const ProbePoints::PacketInfo& pkt_info, Tick latency, bool is_atomic)
+    const probing::PacketInfo& pkt_info, Tick latency, bool is_atomic)
 {
     if (pkt_info.cmd.isRead()) {
         // Decrement number of outstanding read requests
@@ -354,7 +354,7 @@ CommMonitor::recvAtomic(PacketPtr pkt)
 {
     const bool expects_response(pkt->needsResponse() &&
                                 !pkt->cacheResponding());
-    ProbePoints::PacketInfo req_pkt_info(pkt);
+    probing::PacketInfo req_pkt_info(pkt);
     ppPktReq->notify(req_pkt_info);
 
     const Tick delay(memSidePort.sendAtomic(pkt));
@@ -365,7 +365,7 @@ CommMonitor::recvAtomic(PacketPtr pkt)
 
     // Some packets, such as WritebackDirty, don't need response.
     assert(pkt->isResponse() || !expects_response);
-    ProbePoints::PacketInfo resp_pkt_info(pkt);
+    probing::PacketInfo resp_pkt_info(pkt);
     ppPktResp->notify(resp_pkt_info);
     return delay;
 }
@@ -384,7 +384,7 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
 
     // Store relevant fields of packet, because packet may be modified
     // or even deleted when sendTiming() is called.
-    const ProbePoints::PacketInfo pkt_info(pkt);
+    const probing::PacketInfo pkt_info(pkt);
 
     const bool expects_response(pkt->needsResponse() &&
                                 !pkt->cacheResponding());
@@ -425,7 +425,7 @@ CommMonitor::recvTimingResp(PacketPtr pkt)
 
     // Store relevant fields of packet, because packet may be modified
     // or even deleted when sendTiming() is called.
-    const ProbePoints::PacketInfo pkt_info(pkt);
+    const probing::PacketInfo pkt_info(pkt);
 
     Tick latency = 0;
     CommMonitorSenderState* received_state =

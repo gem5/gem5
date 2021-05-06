@@ -95,11 +95,11 @@ BPredUnit::BPredUnitStats::BPredUnitStats(Stats::Group *parent)
     BTBHitRatio.precision(6);
 }
 
-ProbePoints::PMUUPtr
+probing::PMUUPtr
 BPredUnit::pmuProbePoint(const char *name)
 {
-    ProbePoints::PMUUPtr ptr;
-    ptr.reset(new ProbePoints::PMU(getProbeManager(), name));
+    probing::PMUUPtr ptr;
+    ptr.reset(new probing::PMU(getProbeManager(), name));
 
     return ptr;
 }

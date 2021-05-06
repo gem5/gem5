@@ -43,7 +43,9 @@
 #include "mem/packet.hh"
 #include "sim/probe/probe.hh"
 
-namespace ProbePoints {
+GEM5_DEPRECATED_NAMESPACE(ProbePoints, probing);
+namespace probing
+{
 
 /**
  * A struct to hold on to the essential fields from a packet, so that

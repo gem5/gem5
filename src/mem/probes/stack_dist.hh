@@ -51,7 +51,7 @@ class StackDistProbe : public BaseMemProbe
     StackDistProbe(const StackDistProbeParams &params);
 
   protected:
-    void handleRequest(const ProbePoints::PacketInfo &pkt_info) override;
+    void handleRequest(const probing::PacketInfo &pkt_info) override;
 
   protected:
     // Cache line size to simulate

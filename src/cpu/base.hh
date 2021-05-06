@@ -468,7 +468,7 @@ class BaseCPU : public ClockedObject
      * @param name Name of the probe point.
      * @return A unique_ptr to the new probe point.
      */
-    ProbePoints::PMUUPtr pmuProbePoint(const char *name);
+    probing::PMUUPtr pmuProbePoint(const char *name);
 
     /**
      * Instruction commit probe point.
@@ -478,22 +478,22 @@ class BaseCPU : public ClockedObject
      * instruction. However, CPU models committing bundles of
      * instructions may call notify once for the entire bundle.
      */
-    ProbePoints::PMUUPtr ppRetiredInsts;
-    ProbePoints::PMUUPtr ppRetiredInstsPC;
+    probing::PMUUPtr ppRetiredInsts;
+    probing::PMUUPtr ppRetiredInstsPC;
 
     /** Retired load instructions */
-    ProbePoints::PMUUPtr ppRetiredLoads;
+    probing::PMUUPtr ppRetiredLoads;
     /** Retired store instructions */
-    ProbePoints::PMUUPtr ppRetiredStores;
+    probing::PMUUPtr ppRetiredStores;
 
     /** Retired branches (any type) */
-    ProbePoints::PMUUPtr ppRetiredBranches;
+    probing::PMUUPtr ppRetiredBranches;
 
     /** CPU cycle counter even if any thread Context is suspended*/
-    ProbePoints::PMUUPtr ppAllCycles;
+    probing::PMUUPtr ppAllCycles;
 
     /** CPU cycle counter, only counts if any thread contexts is active **/
-    ProbePoints::PMUUPtr ppActiveCycles;
+    probing::PMUUPtr ppActiveCycles;
 
     /**
      * ProbePoint that signals transitions of threadContexts sets.

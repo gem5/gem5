@@ -103,7 +103,7 @@ MemTraceProbe::closeStreams()
 }
 
 void
-MemTraceProbe::handleRequest(const ProbePoints::PacketInfo &pkt_info)
+MemTraceProbe::handleRequest(const probing::PacketInfo &pkt_info)
 {
     ProtoMessage::Packet pkt_msg;
 

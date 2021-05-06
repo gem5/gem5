@@ -92,7 +92,7 @@ MemFootprintProbe::insertAddr(Addr addr, AddrSet *set, uint64_t limit)
 }
 
 void
-MemFootprintProbe::handleRequest(const ProbePoints::PacketInfo &pi)
+MemFootprintProbe::handleRequest(const probing::PacketInfo &pi)
 {
     if (!pi.cmd.isRequest() || !system->isMemAddr(pi.addr))
         return;

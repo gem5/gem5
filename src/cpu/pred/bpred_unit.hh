@@ -325,7 +325,7 @@ class BPredUnit : public SimObject
      * @param name Name of the probe point.
      * @return A unique_ptr to the new probe point.
      */
-    ProbePoints::PMUUPtr pmuProbePoint(const char *name);
+    probing::PMUUPtr pmuProbePoint(const char *name);
 
 
     /**
@@ -333,10 +333,10 @@ class BPredUnit : public SimObject
      *
      * @note This counter includes speculative branches.
      */
-    ProbePoints::PMUUPtr ppBranches;
+    probing::PMUUPtr ppBranches;
 
     /** Miss-predicted branches */
-    ProbePoints::PMUUPtr ppMisses;
+    probing::PMUUPtr ppMisses;
 
     /** @} */
 };

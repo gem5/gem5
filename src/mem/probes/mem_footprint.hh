@@ -69,7 +69,7 @@ class MemFootprintProbe : public BaseMemProbe
     const uint64_t totalPagesInMem;
 
     void insertAddr(Addr addr, AddrSet *set, uint64_t limit);
-    void handleRequest(const ProbePoints::PacketInfo &pkt_info) override;
+    void handleRequest(const probing::PacketInfo &pkt_info) override;
 
     struct MemFootprintProbeStats : public Stats::Group
     {

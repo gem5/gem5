@@ -574,7 +574,7 @@ TLB::TlbStats::TlbStats(Stats::Group *parent)
 void
 TLB::regProbePoints()
 {
-    ppRefills.reset(new ProbePoints::PMU(getProbeManager(), "Refills"));
+    ppRefills.reset(new probing::PMU(getProbeManager(), "Refills"));
 }
 
 Fault

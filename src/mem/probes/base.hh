@@ -69,10 +69,10 @@ class BaseMemProbe : public SimObject
     /**
      * Callback to analyse intercepted Packets.
      */
-    virtual void handleRequest(const ProbePoints::PacketInfo &pkt_info) = 0;
+    virtual void handleRequest(const probing::PacketInfo &pkt_info) = 0;
 
   private:
-    class PacketListener : public ProbeListenerArgBase<ProbePoints::PacketInfo>
+    class PacketListener : public ProbeListenerArgBase<probing::PacketInfo>
     {
       public:
         PacketListener(BaseMemProbe &_parent,
@@ -80,7 +80,7 @@ class BaseMemProbe : public SimObject
             : ProbeListenerArgBase(pm, name),
               parent(_parent) {}
 
-        void notify(const ProbePoints::PacketInfo &pkt_info) override {
+        void notify(const probing::PacketInfo &pkt_info) override {
             parent.handleRequest(pkt_info);
         }
 

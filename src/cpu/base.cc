@@ -324,11 +324,11 @@ BaseCPU::startup()
 
 }
 
-ProbePoints::PMUUPtr
+probing::PMUUPtr
 BaseCPU::pmuProbePoint(const char *name)
 {
-    ProbePoints::PMUUPtr ptr;
-    ptr.reset(new ProbePoints::PMU(getProbeManager(), name));
+    probing::PMUUPtr ptr;
+    ptr.reset(new probing::PMU(getProbeManager(), name));
 
     return ptr;
 }
