@@ -41,7 +41,8 @@
 
 #include "cpu/minor/trace.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 void
@@ -59,8 +60,8 @@ MinorActivityRecorder::minorTrace() const
             stages << ',';
     }
 
-    Minor::minorTrace("activity=%d stages=%s\n", getActivityCount(),
+    minor::minorTrace("activity=%d stages=%s\n", getActivityCount(),
             stages.str());
 }
 
-}
+} // namespace minor

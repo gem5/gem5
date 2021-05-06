@@ -53,7 +53,8 @@
 #include "cpu/minor/trace.hh"
 #include "cpu/reg_class.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 /** A scoreboard of register dependencies including, for each register:
@@ -157,6 +158,6 @@ class Scoreboard : public Named
     void minorTrace() const;
 };
 
-}
+} // namespace minor
 
 #endif /* __CPU_MINOR_SCOREBOARD_HH__ */

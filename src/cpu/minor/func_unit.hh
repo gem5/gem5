@@ -195,7 +195,8 @@ class MinorFUPool : public SimObject
     { }
 };
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 /** Container class to box instructions in the FUs to make those
@@ -268,6 +269,6 @@ class FUPipeline : public FUPipelineBase, public FuncUnit
     void advance();
 };
 
-}
+} // namespace minor
 
 #endif /* __CPU_MINOR_FUNC_UNIT_HH__ */

@@ -53,7 +53,8 @@
 #include "cpu/minor/dyn_inst.hh"
 #include "cpu/minor/pipe_data.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 /* Decode takes instructions from Fetch2 and decomposes them into micro-ops
@@ -160,6 +161,6 @@ class Decode : public Named
     bool isDrained();
 };
 
-}
+} // namespace minor
 
 #endif /* __CPU_MINOR_DECODE_HH__ */

@@ -41,7 +41,8 @@
 #include "debug/MinorScoreboard.hh"
 #include "debug/MinorTiming.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 bool
@@ -302,7 +303,7 @@ Scoreboard::minorTrace() const
         i++;
     }
 
-    Minor::minorTrace("busy=%s\n", result_stream.str());
+    minor::minorTrace("busy=%s\n", result_stream.str());
 }
 
-}
+} // namespace minor

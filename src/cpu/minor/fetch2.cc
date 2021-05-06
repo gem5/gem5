@@ -49,7 +49,8 @@
 #include "debug/Fetch.hh"
 #include "debug/MinorTrace.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 Fetch2::Fetch2(const std::string &name,
@@ -642,10 +643,10 @@ Fetch2::minorTrace() const
     else
         (*out.inputWire).reportData(data);
 
-    Minor::minorTrace("inputIndex=%d havePC=%d predictionSeqNum=%d insts=%s\n",
+    minor::minorTrace("inputIndex=%d havePC=%d predictionSeqNum=%d insts=%s\n",
         fetchInfo[0].inputIndex, fetchInfo[0].havePC,
         fetchInfo[0].predictionSeqNum, data.str());
     inputBuffer[0].minorTrace();
 }
 
-}
+} // namespace minor

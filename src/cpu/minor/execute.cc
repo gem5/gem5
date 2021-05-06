@@ -53,7 +53,8 @@
 #include "debug/MinorTrace.hh"
 #include "debug/PCEvent.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 Execute::Execute(const std::string &name_,
@@ -1675,7 +1676,7 @@ Execute::minorTrace() const
             stalled << ',';
     }
 
-    Minor::minorTrace("insts=%s inputIndex=%d streamSeqNum=%d"
+    minor::minorTrace("insts=%s inputIndex=%d streamSeqNum=%d"
         " stalled=%s drainState=%d isInbetweenInsts=%d\n",
         insts.str(), executeInfo[0].inputIndex, executeInfo[0].streamSeqNum,
         stalled.str(), executeInfo[0].drainState, isInbetweenInsts(0));
@@ -1896,4 +1897,4 @@ Execute::getDcachePort()
     return lsq.getDcachePort();
 }
 
-}
+} // namespace minor

@@ -54,11 +54,12 @@
 #include "params/MinorCPU.hh"
 #include "sim/ticked_object.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 /**
- * @namespace Minor
+ * @namespace minor
  *
  * Minor contains all the definitions within the MinorCPU apart from the CPU
  * class itself
@@ -138,6 +139,6 @@ class Pipeline : public Ticked
     MinorActivityRecorder *getActivityRecorder() { return &activityRecorder; }
 };
 
-}
+} // namespace minor
 
 #endif /* __CPU_MINOR_PIPELINE_HH__ */

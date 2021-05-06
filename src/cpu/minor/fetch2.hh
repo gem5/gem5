@@ -54,7 +54,8 @@
 #include "cpu/pred/bpred_unit.hh"
 #include "params/MinorCPU.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 /** This stage receives lines of data from Fetch1, separates them into
@@ -227,6 +228,6 @@ class Fetch2 : public Named
     bool isDrained();
 };
 
-}
+} // namespace minor
 
 #endif /* __CPU_MINOR_FETCH2_HH__ */

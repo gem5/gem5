@@ -56,7 +56,8 @@
 #include "mem/request.hh"
 #include "debug/MinorExecute.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 /* Forward declaration of Execute */
@@ -403,6 +404,6 @@ class ExecContext : public ::ExecContext
     }
 };
 
-}
+} // namespace minor
 
 #endif /* __CPU_MINOR_EXEC_CONTEXT_HH__ */

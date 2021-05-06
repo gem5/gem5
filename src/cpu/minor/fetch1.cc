@@ -50,7 +50,8 @@
 #include "debug/Fetch.hh"
 #include "debug/MinorTrace.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 Fetch1::Fetch1(const std::string &name_,
@@ -764,7 +765,7 @@ Fetch1::minorTrace() const
     else
         (*out.inputWire).reportData(data);
 
-    Minor::minorTrace("state=%s icacheState=%s in_tlb_mem=%s/%s"
+    minor::minorTrace("state=%s icacheState=%s in_tlb_mem=%s/%s"
         " streamSeqNum=%d lines=%s\n", thread.state, icacheState,
         numFetchesInITLB, numFetchesInMemorySystem,
         thread.streamSeqNum, data.str());
@@ -772,4 +773,4 @@ Fetch1::minorTrace() const
     transfers.minorTrace();
 }
 
-}
+} // namespace minor

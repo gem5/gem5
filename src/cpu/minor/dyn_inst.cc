@@ -48,7 +48,8 @@
 #include "debug/MinorExecute.hh"
 #include "enums/OpClass.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 const InstSeqNum InstId::firstStreamSeqNum;
@@ -241,4 +242,4 @@ MinorDynInst::~MinorDynInst()
         delete traceData;
 }
 
-}
+} // namespace minor

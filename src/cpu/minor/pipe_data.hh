@@ -54,7 +54,8 @@
 #include "cpu/minor/dyn_inst.hh"
 #include "cpu/base.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 /** Forward data betwen Execute and Fetch1 carrying change-of-address/stream
@@ -288,6 +289,6 @@ class ForwardInstData /* : public ReportIF, public BubbleIF */
     void reportData(std::ostream &os) const;
 };
 
-}
+} // namespace minor
 
 #endif /* __CPU_MINOR_PIPE_DATA_HH__ */

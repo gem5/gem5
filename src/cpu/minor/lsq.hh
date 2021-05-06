@@ -55,7 +55,8 @@
 #include "cpu/minor/trace.hh"
 #include "mem/packet.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 /* Forward declaration */
@@ -741,6 +742,7 @@ class LSQ : public Named
  *  pushed into the packet as senderState */
 PacketPtr makePacketForRequest(const RequestPtr &request, bool isLoad,
     Packet::SenderState *sender_state = NULL, PacketDataPtr data = NULL);
-}
+
+} // namespace minor
 
 #endif /* __CPU_MINOR_NEW_LSQ_HH__ */

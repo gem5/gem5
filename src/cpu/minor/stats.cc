@@ -37,7 +37,8 @@
 
 #include "cpu/minor/stats.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 MinorStats::MinorStats(BaseCPU *base_cpu)
@@ -77,4 +78,4 @@ MinorStats::MinorStats(BaseCPU *base_cpu)
     committedInstType.ysubnames(enums::OpClassStrings);
 }
 
-};
+} // namespace minor

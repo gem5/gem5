@@ -48,7 +48,8 @@
 #include "debug/MinorTrace.hh"
 #include "debug/Quiesce.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 Pipeline::Pipeline(MinorCPU &cpu_, const MinorCPUParams &params) :
@@ -254,4 +255,4 @@ Pipeline::isDrained()
     return ret;
 }
 
-}
+} // namespace minor

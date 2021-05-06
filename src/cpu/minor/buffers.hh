@@ -56,7 +56,8 @@
 #include "cpu/minor/trace.hh"
 #include "cpu/timebuf.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 /** Interface class for data with reporting/tracing facilities.  This
@@ -208,7 +209,7 @@ class MinorBuffer : public Named, public TimeBuffer<ElemType>
                 data << ',';
         }
 
-        Minor::minorTrace("%s=%s\n", dataName, data.str());
+        minor::minorTrace("%s=%s\n", dataName, data.str());
     }
 };
 
@@ -547,7 +548,7 @@ class Queue : public Named, public Reservable
                 data << ',';
         }
 
-        Minor::minorTrace("%s=%s\n", dataName, data.str());
+        minor::minorTrace("%s=%s\n", dataName, data.str());
     }
 };
 
@@ -654,6 +655,6 @@ class InputBuffer : public Reservable
     }
 };
 
-}
+} // namespace minor
 
 #endif /* __CPU_MINOR_BUFFERS_HH__ */

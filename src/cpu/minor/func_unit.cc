@@ -71,7 +71,8 @@ MinorFUTiming::MinorFUTiming(
     opClasses(params.opClasses)
 { }
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 void
@@ -209,4 +210,4 @@ FUPipeline::findTiming(const StaticInstPtr &inst)
     return NULL;
 }
 
-}
+} // namespace minor

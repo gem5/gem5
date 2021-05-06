@@ -59,7 +59,8 @@
 #include "sim/faults.hh"
 #include "sim/insttracer.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 class MinorDynInst;
@@ -294,6 +295,6 @@ class MinorDynInst : public RefCounted
 /** Print a summary of the instruction */
 std::ostream &operator <<(std::ostream &os, const MinorDynInst &inst);
 
-}
+} // namespace minor
 
 #endif /* __CPU_MINOR_DYN_INST_HH__ */

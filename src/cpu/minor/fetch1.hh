@@ -54,7 +54,8 @@
 #include "cpu/minor/pipe_data.hh"
 #include "mem/packet.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 /** A stage responsible for fetching "lines" from memory and passing
@@ -409,6 +410,6 @@ class Fetch1 : public Named
     bool isDrained();
 };
 
-}
+} // namespace minor
 
 #endif /* __CPU_MINOR_FETCH1_HH__ */

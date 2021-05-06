@@ -56,7 +56,8 @@
 #include "cpu/minor/pipe_data.hh"
 #include "cpu/minor/scoreboard.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 /** Execute stage.  Everything apart from fetching and decoding instructions.
@@ -359,6 +360,6 @@ class Execute : public Named
     void drainResume();
 };
 
-}
+} // namespace minor
 
 #endif /* __CPU_MINOR_EXECUTE_HH__ */

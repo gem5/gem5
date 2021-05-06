@@ -51,7 +51,8 @@
 #include "debug/Activity.hh"
 #include "debug/MinorMem.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 LSQ::LSQRequest::LSQRequest(LSQ &port_, MinorDynInstPtr inst_, bool isLoad_,
@@ -950,7 +951,7 @@ LSQ::StoreBuffer::minorTrace() const
             os << ',';
     }
 
-    Minor::minorTrace("addr=%s num_unissued_stores=%d\n", os.str(),
+    minor::minorTrace("addr=%s num_unissued_stores=%d\n", os.str(),
         numUnissuedAccesses);
 }
 
@@ -1665,7 +1666,7 @@ LSQ::pushFailedRequest(MinorDynInstPtr inst)
 void
 LSQ::minorTrace() const
 {
-    Minor::minorTrace("state=%s in_tlb_mem=%d/%d stores_in_transfers=%d"
+    minor::minorTrace("state=%s in_tlb_mem=%d/%d stores_in_transfers=%d"
         " lastMemBarrier=%d\n",
         state, numAccessesInDTLB, numAccessesInMemorySystem,
         numStoresInTransfers, lastMemBarrier[0]);
@@ -1794,4 +1795,4 @@ LSQ::threadSnoop(LSQRequestPtr request)
     }
 }
 
-}
+} // namespace minor

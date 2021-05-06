@@ -42,7 +42,8 @@
 #include "cpu/minor/pipeline.hh"
 #include "debug/Decode.hh"
 
-namespace Minor
+GEM5_DEPRECATED_NAMESPACE(Minor, minor);
+namespace minor
 {
 
 Decode::Decode(const std::string &name,
@@ -344,8 +345,8 @@ Decode::minorTrace() const
     else
         (*out.inputWire).reportData(data);
 
-    Minor::minorTrace("insts=%s\n", data.str());
+    minor::minorTrace("insts=%s\n", data.str());
     inputBuffer[0].minorTrace();
 }
 
-}
+} // namespace minor
