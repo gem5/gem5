@@ -40,7 +40,8 @@
 
 class ThreadContext;
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 /*
@@ -107,6 +108,6 @@ dumpArgsFrom(std::ostream &os, GEM5_VAR_USED ThreadContext *tc,
     os << ")";
 }
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __SIM_GUEST_ABI_DISPATCH_HH__

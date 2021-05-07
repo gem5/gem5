@@ -66,7 +66,8 @@ class SEWorkload : public ::SEWorkload
 
 } // namespace SparcISA
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 template <typename ABI>
@@ -122,6 +123,6 @@ struct Argument<SparcISA::SEWorkload::SyscallABI32, Arg,
     }
 };
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __ARCH_SPARC_SE_WORKLOAD_HH__

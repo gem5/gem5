@@ -595,7 +595,8 @@ class ArmSemihosting : public SimObject
 std::ostream &operator << (
         std::ostream &os, const ArmSemihosting::InPlaceArg &ipa);
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 template <typename Arg>
@@ -655,6 +656,6 @@ struct Result<ArmSemihosting::Abi64, ArmSemihosting::RetErrno>
     }
 };
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __ARCH_ARM_SEMIHOSTING_HH__

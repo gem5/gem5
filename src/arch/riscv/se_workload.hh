@@ -52,7 +52,8 @@ class SEWorkload : public ::SEWorkload
 
 } // namespace RiscvISA
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 template <>
@@ -74,6 +75,6 @@ struct Result<RiscvISA::SEWorkload::SyscallABI, SyscallReturn>
     }
 };
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __ARCH_RISCV_SE_WORKLOAD_HH__

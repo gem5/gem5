@@ -54,7 +54,8 @@ class SEWorkload : public ::SEWorkload
 
 } // namespace MipsISA
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 template <>
@@ -80,6 +81,6 @@ struct Result<MipsISA::SEWorkload::SyscallABI, SyscallReturn>
     }
 };
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __ARCH_MIPS_SE_WORKLOAD_HH__

@@ -40,7 +40,7 @@ namespace linux
 {
 
 using PrintkVarArgs =
-    GuestABI::VarArgs<Addr, int32_t, uint32_t, int64_t, uint64_t>;
+    guest_abi::VarArgs<Addr, int32_t, uint32_t, int64_t, uint64_t>;
 int printk(std::string &out, ThreadContext *tc, Addr format_ptr,
            PrintkVarArgs args);
 

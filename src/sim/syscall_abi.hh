@@ -69,7 +69,8 @@ struct GenericSyscallABI32 : public GenericSyscallABI
     }
 };
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 // For 64 bit systems, return syscall args directly.
@@ -104,6 +105,6 @@ struct Argument<ABI, Arg,
     }
 };
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __SIM_SYSCALL_ABI_HH__

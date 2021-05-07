@@ -105,7 +105,7 @@ class SyscallDesc
 /*
  * This SyscallDesc subclass template adapts a given syscall implementation so
  * that some arguments can come from the simulator (desc, num and tc) while the
- * rest can come from the guest using the GuestABI mechanism.
+ * rest can come from the guest using the guest_abi mechanism.
  */
 template <typename ABI>
 class SyscallDescABI : public SyscallDesc
@@ -173,7 +173,7 @@ class SyscallDescABI : public SyscallDesc
     void
     returnInto(ThreadContext *tc, const SyscallReturn &ret) override
     {
-        GuestABI::Result<ABI, SyscallReturn>::store(tc, ret);
+        guest_abi::Result<ABI, SyscallReturn>::store(tc, ret);
     }
 };
 

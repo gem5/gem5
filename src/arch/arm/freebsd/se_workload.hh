@@ -64,7 +64,8 @@ class EmuFreebsd : public SEWorkload
 
 } // namespace ArmISA
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 template <typename ABI>
@@ -92,6 +93,6 @@ struct Result<ABI, SyscallReturn,
     }
 };
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __ARCH_ARM_FREEBSD_SE_WORKLOAD_HH__

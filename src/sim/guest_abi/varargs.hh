@@ -36,7 +36,8 @@
 
 class ThreadContext;
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 /*
@@ -180,7 +181,7 @@ operator << (std::ostream &os, const VarArgs<Types...> &va)
     return os;
 }
 
-// The ABI independent hook which tells the GuestABI mechanism what to do with
+// The ABI independent hook which tells the guest_abi mechanism what to do with
 // a VarArgs argument. It constructs the underlying implementation which knows
 // about the ABI, and installs it in the VarArgs wrapper to give to the
 // function.
@@ -196,6 +197,6 @@ struct Argument<ABI, VarArgs<Types...>>
     }
 };
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __SIM_GUEST_ABI_VARARGS_HH__

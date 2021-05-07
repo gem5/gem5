@@ -163,7 +163,7 @@ class TestProxy
     BackingStore &store;
 
     TestProxy(BackingStore &_store) : store(_store) {}
-    // Sneaky constructor for testing GuestABI integration.
+    // Sneaky constructor for testing guest_abi integration.
     TestProxy(ThreadContext *tc) : store(*(BackingStore *)tc) {}
 
     void
@@ -469,7 +469,8 @@ struct TestABI
     using State = int;
 };
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 template <>
@@ -482,7 +483,7 @@ struct Argument<TestABI, Addr>
     }
 };
 
-}
+} // namespace guest_abi
 
 bool abiCalled = false;
 bool abiCalledConst = false;
@@ -501,7 +502,7 @@ abiTestFuncConst(ThreadContext *tc, ConstTestPtr<uint8_t> ptr)
     EXPECT_EQ(ptr.addr(), 0x1000);
 }
 
-TEST(ProxyPtr, GuestABI)
+TEST(ProxyPtr, guest_abi)
 {
     BackingStore store(0x1000, 0x1000);
 

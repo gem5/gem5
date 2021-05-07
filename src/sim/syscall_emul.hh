@@ -267,7 +267,7 @@ SyscallReturn dup2Func(SyscallDesc *desc, ThreadContext *tc,
 
 /// Target fcntl() handler.
 SyscallReturn fcntlFunc(SyscallDesc *desc, ThreadContext *tc,
-                        int tgt_fd, int cmd, GuestABI::VarArgs<int> varargs);
+                        int tgt_fd, int cmd, guest_abi::VarArgs<int> varargs);
 
 /// Target fcntl64() handler.
 SyscallReturn fcntl64Func(SyscallDesc *desc, ThreadContext *tc,
@@ -1092,7 +1092,7 @@ template <class OS>
 SyscallReturn
 mremapFunc(SyscallDesc *desc, ThreadContext *tc,
         VPtr<> start, uint64_t old_length, uint64_t new_length, uint64_t flags,
-        GuestABI::VarArgs<uint64_t> varargs)
+        guest_abi::VarArgs<uint64_t> varargs)
 {
     auto p = tc->getProcessPtr();
     Addr page_bytes = p->pTable->pageSize();

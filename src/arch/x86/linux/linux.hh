@@ -69,7 +69,8 @@ class X86Linux : public Linux
     class SyscallABI {};
 };
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 template <typename ABI>
@@ -87,7 +88,7 @@ struct Result<ABI, SyscallReturn,
     }
 };
 
-};
+} // namespace guest_abi
 
 class X86Linux64 : public X86Linux
 {

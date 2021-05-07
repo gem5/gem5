@@ -702,7 +702,8 @@ struct SemiPseudoAbi64 : public ArmSemihosting::Abi64
     };
 };
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 // Handle arguments the same as for semihosting operations. Skipping the first
@@ -716,7 +717,7 @@ struct Argument<SemiPseudoAbi64, T> :
     public Argument<ArmSemihosting::Abi64, T>
 {};
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 ArmSemihosting::RetErrno
 ArmSemihosting::callGem5PseudoOp32(ThreadContext *tc, uint32_t encoded_func)

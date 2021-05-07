@@ -37,7 +37,8 @@ struct SparcPseudoInstABI
     using State = int;
 };
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 template <typename T>
@@ -64,6 +65,6 @@ struct Argument<SparcPseudoInstABI, uint64_t>
     }
 };
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __ARCH_SPARC_PSEUDO_INST_ABI_HH__

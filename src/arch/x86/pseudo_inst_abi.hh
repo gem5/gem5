@@ -43,7 +43,8 @@ struct X86PseudoInstABI
     using State = int;
 };
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 template <typename T>
@@ -81,4 +82,4 @@ struct Argument<X86PseudoInstABI, uint64_t>
     }
 };
 
-} // namespace GuestABI
+} // namespace guest_abi

@@ -28,9 +28,12 @@
 #ifndef __SIM_GUEST_ABI_DEFINITION_HH__
 #define __SIM_GUEST_ABI_DEFINITION_HH__
 
+#include "base/compiler.hh"
+
 class ThreadContext;
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 /*
@@ -113,6 +116,6 @@ struct Argument
      */
 };
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __SIM_GUEST_ABI_DEFINITION_HH__

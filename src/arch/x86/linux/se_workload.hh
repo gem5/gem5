@@ -82,7 +82,8 @@ class EmuLinux : public SEWorkload
 
 } // namespace X86ISA
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 template <typename Arg>
@@ -103,6 +104,6 @@ struct Argument<X86ISA::EmuLinux::SyscallABI32, Arg,
     }
 };
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __ARCH_X86_LINUX_SE_WORKLOAD_HH__

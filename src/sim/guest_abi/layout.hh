@@ -35,7 +35,8 @@
 
 class ThreadContext;
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 /*
@@ -168,6 +169,6 @@ getArgument(ThreadContext *tc, typename ABI::State &state)
     return Argument<ABI, Arg>::get(tc, state);
 }
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __SIM_GUEST_ABI_LAYOUT_HH__

@@ -714,7 +714,7 @@ dup2Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd, int new_tgt_fd)
 
 SyscallReturn
 fcntlFunc(SyscallDesc *desc, ThreadContext *tc,
-          int tgt_fd, int cmd, GuestABI::VarArgs<int> varargs)
+          int tgt_fd, int cmd, guest_abi::VarArgs<int> varargs)
 {
     auto p = tc->getProcessPtr();
 

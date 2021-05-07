@@ -63,7 +63,8 @@ struct Aapcs64
     };
 };
 
-namespace GuestABI
+GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
+namespace guest_abi
 {
 
 /*
@@ -420,6 +421,6 @@ struct Result<Aapcs64, Composite, typename std::enable_if_t<
     }
 };
 
-} // namespace GuestABI
+} // namespace guest_abi
 
 #endif // __ARCH_ARM_AAPCS64_HH__
