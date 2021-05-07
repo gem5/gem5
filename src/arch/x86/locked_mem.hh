@@ -40,7 +40,7 @@
 namespace X86ISA
 {
 
-using namespace GenericISA::LockedMem;
+using namespace GenericISA::locked_mem;
 
 } // namespace X86ISA
 

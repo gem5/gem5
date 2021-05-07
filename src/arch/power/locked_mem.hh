@@ -42,7 +42,7 @@
 namespace PowerISA
 {
 
-using namespace GenericISA::LockedMem;
+using namespace GenericISA::locked_mem;
 
 } // namespace PowerISA
 
