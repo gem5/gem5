@@ -42,6 +42,7 @@
 #include <vector>
 
 #include "base/bitfield.hh"
+#include "base/compiler.hh"
 #include "enums/X86IntelMPAddressType.hh"
 #include "enums/X86IntelMPInterruptType.hh"
 #include "enums/X86IntelMPPolarity.hh"
@@ -80,7 +81,8 @@ uint8_t writeOutString(PortProxy& proxy, Addr addr, std::string str,
 namespace X86ISA
 {
 
-namespace IntelMP
+GEM5_DEPRECATED_NAMESPACE(IntelMP, intelmp);
+namespace intelmp
 {
 
 class FloatingPointer : public SimObject

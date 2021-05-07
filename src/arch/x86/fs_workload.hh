@@ -58,13 +58,15 @@ namespace smbios
 class SMBiosTable;
 
 } // namespace smbios
-namespace IntelMP
+
+GEM5_DEPRECATED_NAMESPACE(IntelMP, intelmp);
+namespace intelmp
 {
 
 class FloatingPointer;
 class ConfigTable;
 
-} // namespace IntelMP
+} // namespace intelmp
 
 void installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
                     SegDescriptor desc, bool longmode);
@@ -81,8 +83,8 @@ class FsWorkload : public KernelWorkload
   protected:
 
     smbios::SMBiosTable *smbiosTable;
-    IntelMP::FloatingPointer *mpFloatingPointer;
-    IntelMP::ConfigTable *mpConfigTable;
+    intelmp::FloatingPointer *mpFloatingPointer;
+    intelmp::ConfigTable *mpConfigTable;
     ACPI::RSDP *rsdp;
 
     void writeOutSMBiosTable(Addr header,

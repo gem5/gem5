@@ -38,7 +38,7 @@ from m5.SimObject import SimObject
 
 class X86IntelMPFloatingPointer(SimObject):
     type = 'X86IntelMPFloatingPointer'
-    cxx_class = 'X86ISA::IntelMP::FloatingPointer'
+    cxx_class = 'X86ISA::intelmp::FloatingPointer'
     cxx_header = 'arch/x86/bios/intelmp.hh'
 
     # The minor revision of the spec to support. The major version is assumed
@@ -51,7 +51,7 @@ class X86IntelMPFloatingPointer(SimObject):
 
 class X86IntelMPConfigTable(SimObject):
     type = 'X86IntelMPConfigTable'
-    cxx_class = 'X86ISA::IntelMP::ConfigTable'
+    cxx_class = 'X86ISA::intelmp::ConfigTable'
     cxx_header = 'arch/x86/bios/intelmp.hh'
 
     spec_rev = Param.UInt8(4, 'minor revision of the MP spec supported')
@@ -79,19 +79,19 @@ class X86IntelMPConfigTable(SimObject):
 
 class X86IntelMPBaseConfigEntry(SimObject):
     type = 'X86IntelMPBaseConfigEntry'
-    cxx_class = 'X86ISA::IntelMP::BaseConfigEntry'
+    cxx_class = 'X86ISA::intelmp::BaseConfigEntry'
     cxx_header = 'arch/x86/bios/intelmp.hh'
     abstract = True
 
 class X86IntelMPExtConfigEntry(SimObject):
     type = 'X86IntelMPExtConfigEntry'
-    cxx_class = 'X86ISA::IntelMP::ExtConfigEntry'
+    cxx_class = 'X86ISA::intelmp::ExtConfigEntry'
     cxx_header = 'arch/x86/bios/intelmp.hh'
     abstract = True
 
 class X86IntelMPProcessor(X86IntelMPBaseConfigEntry):
     type = 'X86IntelMPProcessor'
-    cxx_class = 'X86ISA::IntelMP::Processor'
+    cxx_class = 'X86ISA::intelmp::Processor'
     cxx_header = 'arch/x86/bios/intelmp.hh'
 
     local_apic_id = Param.UInt8(0, 'local APIC id')
@@ -108,7 +108,7 @@ class X86IntelMPProcessor(X86IntelMPBaseConfigEntry):
 
 class X86IntelMPBus(X86IntelMPBaseConfigEntry):
     type = 'X86IntelMPBus'
-    cxx_class = 'X86ISA::IntelMP::Bus'
+    cxx_class = 'X86ISA::intelmp::Bus'
     cxx_header = 'arch/x86/bios/intelmp.hh'
 
     bus_id = Param.UInt8(0, 'bus id assigned by the bios')
@@ -121,7 +121,7 @@ class X86IntelMPBus(X86IntelMPBaseConfigEntry):
 
 class X86IntelMPIOAPIC(X86IntelMPBaseConfigEntry):
     type = 'X86IntelMPIOAPIC'
-    cxx_class = 'X86ISA::IntelMP::IOAPIC'
+    cxx_class = 'X86ISA::intelmp::IOAPIC'
     cxx_header = 'arch/x86/bios/intelmp.hh'
 
     id = Param.UInt8(0, 'id of this APIC')
@@ -152,7 +152,7 @@ class X86IntelMPTriggerMode(Enum):
 
 class X86IntelMPIOIntAssignment(X86IntelMPBaseConfigEntry):
     type = 'X86IntelMPIOIntAssignment'
-    cxx_class = 'X86ISA::IntelMP::IOIntAssignment'
+    cxx_class = 'X86ISA::intelmp::IOIntAssignment'
     cxx_header = 'arch/x86/bios/intelmp.hh'
 
     interrupt_type = Param.X86IntelMPInterruptType('INT', 'type of interrupt')
@@ -172,7 +172,7 @@ class X86IntelMPIOIntAssignment(X86IntelMPBaseConfigEntry):
 
 class X86IntelMPLocalIntAssignment(X86IntelMPBaseConfigEntry):
     type = 'X86IntelMPLocalIntAssignment'
-    cxx_class = 'X86ISA::IntelMP::LocalIntAssignment'
+    cxx_class = 'X86ISA::intelmp::LocalIntAssignment'
     cxx_header = 'arch/x86/bios/intelmp.hh'
 
     interrupt_type = Param.X86IntelMPInterruptType('INT', 'type of interrupt')
@@ -198,7 +198,7 @@ class X86IntelMPAddressType(Enum):
 
 class X86IntelMPAddrSpaceMapping(X86IntelMPExtConfigEntry):
     type = 'X86IntelMPAddrSpaceMapping'
-    cxx_class = 'X86ISA::IntelMP::AddrSpaceMapping'
+    cxx_class = 'X86ISA::intelmp::AddrSpaceMapping'
     cxx_header = 'arch/x86/bios/intelmp.hh'
 
     bus_id = Param.UInt8(0, 'id of the bus the address space is mapped to')
@@ -209,7 +209,7 @@ class X86IntelMPAddrSpaceMapping(X86IntelMPExtConfigEntry):
 
 class X86IntelMPBusHierarchy(X86IntelMPExtConfigEntry):
     type = 'X86IntelMPBusHierarchy'
-    cxx_class = 'X86ISA::IntelMP::BusHierarchy'
+    cxx_class = 'X86ISA::intelmp::BusHierarchy'
     cxx_header = 'arch/x86/bios/intelmp.hh'
 
     bus_id = Param.UInt8(0, 'id of the bus being described')
@@ -224,7 +224,7 @@ class X86IntelMPRangeList(Enum):
 
 class X86IntelMPCompatAddrSpaceMod(X86IntelMPExtConfigEntry):
     type = 'X86IntelMPCompatAddrSpaceMod'
-    cxx_class = 'X86ISA::IntelMP::CompatAddrSpaceMod'
+    cxx_class = 'X86ISA::intelmp::CompatAddrSpaceMod'
     cxx_header = 'arch/x86/bios/intelmp.hh'
 
     bus_id = Param.UInt8(0, 'id of the bus being described')
