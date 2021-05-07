@@ -170,13 +170,13 @@ let {{
                  'MSTRZ', 'STRZ', 'MSTRC',
                  'OF', 'CF', 'ZF', 'CvZF',
                  'SF', 'PF', 'SxOF', 'SxOvZF'):
-        assembler.symbols["C%s" % cond] = "ConditionTests::%s" % cond
-        assembler.symbols["nC%s" % cond] = "ConditionTests::Not%s" % cond
-    assembler.symbols["CSTRZnEZF"] = "ConditionTests::STRZnEZF"
-    assembler.symbols["CSTRnZnEZF"] = "ConditionTests::STRnZnEZF"
+        assembler.symbols["C%s" % cond] = "condition_tests::%s" % cond
+        assembler.symbols["nC%s" % cond] = "condition_tests::Not%s" % cond
+    assembler.symbols["CSTRZnEZF"] = "condition_tests::STRZnEZF"
+    assembler.symbols["CSTRnZnEZF"] = "condition_tests::STRnZnEZF"
 
-    assembler.symbols["CTrue"] = "ConditionTests::True"
-    assembler.symbols["CFalse"] = "ConditionTests::False"
+    assembler.symbols["CTrue"] = "condition_tests::True"
+    assembler.symbols["CFalse"] = "condition_tests::False"
 
     for reg in ('sysenter_cs', 'sysenter_esp', 'sysenter_eip',
                 'star', 'lstar', 'cstar', 'sf_mask',

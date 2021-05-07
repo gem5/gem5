@@ -39,11 +39,13 @@
 #define __ARCH_X86_INSTS_MICROOP_HH__
 
 #include "arch/x86/insts/static_inst.hh"
+#include "base/compiler.hh"
 
 namespace X86ISA
 {
 
-namespace ConditionTests
+GEM5_DEPRECATED_NAMESPACE(ConditionTests, condition_tests);
+namespace condition_tests
 {
 
 enum CondTest

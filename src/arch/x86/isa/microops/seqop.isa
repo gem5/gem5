@@ -140,7 +140,7 @@ let {{
                 self.cond = " | ".join(flags)
                 self.className += "Flags"
             else:
-                self.cond = "X86ISA::ConditionTests::True"
+                self.cond = "X86ISA::condition_tests::True"
 
         def getAllocator(self, microFlags):
             if not "IsLastMicroop" in microFlags:

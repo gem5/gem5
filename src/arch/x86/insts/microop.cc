@@ -48,71 +48,71 @@ X86MicroopBase::checkCondition(uint64_t flags, int condition) const
     CCFlagBits ccflags = flags;
     switch(condition)
     {
-      case ConditionTests::True:
+      case condition_tests::True:
         return true;
-      case ConditionTests::ECF:
+      case condition_tests::ECF:
         return ccflags.ecf;
-      case ConditionTests::EZF:
+      case condition_tests::EZF:
         return ccflags.ezf;
-      case ConditionTests::SZnZF:
+      case condition_tests::SZnZF:
         return !(!ccflags.ezf && ccflags.zf);
-      case ConditionTests::MSTRZ:
+      case condition_tests::MSTRZ:
         panic("This condition is not implemented!");
-      case ConditionTests::STRZ:
+      case condition_tests::STRZ:
         panic("This condition is not implemented!");
-      case ConditionTests::MSTRC:
+      case condition_tests::MSTRC:
         panic("This condition is not implemented!");
-      case ConditionTests::STRZnEZF:
+      case condition_tests::STRZnEZF:
         return !ccflags.ezf && ccflags.zf;
             //And no interrupts or debug traps are waiting
-      case ConditionTests::OF:
+      case condition_tests::OF:
         return ccflags.of;
-      case ConditionTests::CF:
+      case condition_tests::CF:
         return ccflags.cf;
-      case ConditionTests::ZF:
+      case condition_tests::ZF:
         return ccflags.zf;
-      case ConditionTests::CvZF:
+      case condition_tests::CvZF:
         return ccflags.cf | ccflags.zf;
-      case ConditionTests::SF:
+      case condition_tests::SF:
         return ccflags.sf;
-      case ConditionTests::PF:
+      case condition_tests::PF:
         return ccflags.pf;
-      case ConditionTests::SxOF:
+      case condition_tests::SxOF:
         return ccflags.sf ^ ccflags.of;
-      case ConditionTests::SxOvZF:
+      case condition_tests::SxOvZF:
         return (ccflags.sf ^ ccflags.of) | ccflags.zf;
-      case ConditionTests::False:
+      case condition_tests::False:
         return false;
-      case ConditionTests::NotECF:
+      case condition_tests::NotECF:
         return !ccflags.ecf;
-      case ConditionTests::NotEZF:
+      case condition_tests::NotEZF:
         return !ccflags.ezf;
-      case ConditionTests::NotSZnZF:
+      case condition_tests::NotSZnZF:
         return !ccflags.ezf && ccflags.zf;
-      case ConditionTests::NotMSTRZ:
+      case condition_tests::NotMSTRZ:
         panic("This condition is not implemented!");
-      case ConditionTests::NotSTRZ:
+      case condition_tests::NotSTRZ:
         panic("This condition is not implemented!");
-      case ConditionTests::NotMSTRC:
+      case condition_tests::NotMSTRC:
         panic("This condition is not implemented!");
-      case ConditionTests::STRnZnEZF:
+      case condition_tests::STRnZnEZF:
         return !ccflags.ezf && !ccflags.zf;
             //And no interrupts or debug traps are waiting
-      case ConditionTests::NotOF:
+      case condition_tests::NotOF:
         return !ccflags.of;
-      case ConditionTests::NotCF:
+      case condition_tests::NotCF:
         return !ccflags.cf;
-      case ConditionTests::NotZF:
+      case condition_tests::NotZF:
         return !ccflags.zf;
-      case ConditionTests::NotCvZF:
+      case condition_tests::NotCvZF:
         return !(ccflags.cf | ccflags.zf);
-      case ConditionTests::NotSF:
+      case condition_tests::NotSF:
         return !ccflags.sf;
-      case ConditionTests::NotPF:
+      case condition_tests::NotPF:
         return !ccflags.pf;
-      case ConditionTests::NotSxOF:
+      case condition_tests::NotSxOF:
         return !(ccflags.sf ^ ccflags.of);
-      case ConditionTests::NotSxOvZF:
+      case condition_tests::NotSxOvZF:
         return !((ccflags.sf ^ ccflags.of) | ccflags.zf);
     }
     panic("Unknown condition: %d\n", condition);
