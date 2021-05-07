@@ -589,22 +589,6 @@ class Executable(object, metaclass=ExecutableMeta):
         else:
             return env.Program(self.path(env), objs)
 
-class UnitTest(Executable):
-    '''Create a UnitTest'''
-    def __init__(self, target, *srcs_and_filts, **kwargs):
-        super(UnitTest, self).__init__(target, *srcs_and_filts)
-
-        self.main = kwargs.get('main', False)
-
-    def declare(self, env):
-        sources = list(self.sources)
-        for f in self.filters:
-            sources += Source.all.apply_filter(env, f)
-        objs = self.srcs_to_objs(env, sources) + env['STATIC_OBJS']
-        if self.main:
-            objs += env['MAIN_OBJS']
-        return super(UnitTest, self).declare(env, objs)
-
 class GTest(Executable):
     '''Create a unit test based on the google test framework.'''
     all = []
@@ -660,7 +644,6 @@ Export('SimObject')
 Export('ProtoBuf')
 Export('GrpcProtoBuf')
 Export('Executable')
-Export('UnitTest')
 Export('GTest')
 
 ########################################################################
