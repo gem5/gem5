@@ -182,6 +182,7 @@ class Queued : public Base
         statistics::Scalar pfIdentified;
         statistics::Scalar pfBufferHit;
         statistics::Scalar pfInCache;
+        statistics::Scalar pfRemovedDemand;
         statistics::Scalar pfRemovedFull;
         statistics::Scalar pfSpanPage;
     } statsQueued;

@@ -178,8 +178,13 @@ Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
         while (itr != pfq.end()) {
             if (itr->pfInfo.getAddr() == blk_addr &&
                 itr->pfInfo.isSecure() == is_secure) {
+                DPRINTF(HWPrefetch, "Removing pf candidate addr: %#x "
+                        "(cl: %#x), demand request going to the same addr\n",
+                        itr->pfInfo.getAddr(),
+                        blockAddress(itr->pfInfo.getAddr()));
                 delete itr->pkt;
                 itr = pfq.erase(itr);
+                statsQueued.pfRemovedDemand++;
             } else {
                 ++itr;
             }
@@ -258,6 +263,9 @@ Queued::QueuedStats::QueuedStats(statistics::Group *parent)
              "number of redundant prefetches already in prefetch queue"),
     ADD_STAT(pfInCache, statistics::units::Count::get(),
              "number of redundant prefetches already in cache/mshr dropped"),
+    ADD_STAT(pfRemovedDemand, statistics::units::Count::get(),
+             "number of prefetches dropped due to a demand for the same "
+             "address"),
     ADD_STAT(pfRemovedFull, statistics::units::Count::get(),
              "number of prefetches dropped due to prefetch queue size"),
     ADD_STAT(pfSpanPage, statistics::units::Count::get(),
