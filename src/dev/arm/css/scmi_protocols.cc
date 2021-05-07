@@ -40,7 +40,7 @@
 #include "debug/SCMI.hh"
 #include "dev/arm/css/scmi_platform.hh"
 
-using namespace SCMI;
+using namespace scmi;
 
 const std::string
 Protocol::name() const

@@ -46,7 +46,8 @@
 
 class Doorbell;
 
-namespace SCMI
+GEM5_DEPRECATED_NAMESPACE(SCMI, scmi);
+namespace scmi
 {
 
 class Platform;
@@ -326,6 +327,6 @@ class Platform : public Scp
     DmaPort dmaPort;
 };
 
-} // namespace SCMI
+} // namespace scmi
 
 #endif // __DEV_ARM_CSS_SCMI_PLATFORM_H__

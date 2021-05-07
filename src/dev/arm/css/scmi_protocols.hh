@@ -41,7 +41,10 @@
 #include <cstdint>
 #include <string>
 
-namespace SCMI
+#include "base/compiler.hh"
+
+GEM5_DEPRECATED_NAMESPACE(SCMI, scmi);
+namespace scmi
 {
 
 class Platform;
@@ -148,6 +151,6 @@ class BaseProtocol : public Protocol
 
 };
 
-}; // namespace SCMI
+}; // namespace scmi
 
 #endif

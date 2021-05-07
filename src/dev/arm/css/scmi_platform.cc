@@ -43,7 +43,7 @@
 #include "dev/arm/doorbell.hh"
 #include "mem/packet_access.hh"
 
-using namespace SCMI;
+using namespace scmi;
 
 AgentChannel::AgentChannel(const ScmiChannelParams &p)
   : VirtualChannel(p),
