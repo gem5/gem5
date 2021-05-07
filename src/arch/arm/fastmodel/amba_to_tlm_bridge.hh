@@ -35,7 +35,8 @@
 #include "arch/arm/fastmodel/amba_ports.hh"
 #include "systemc/tlm_port_wrapper.hh"
 
-namespace FastModel
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 // A wrapper around the fast model TLM -> AMBA bridge which provides
@@ -64,6 +65,6 @@ class AmbaToTlmBridge64 : public amba_pv::amba_pv_to_tlm_bridge<64>
     AmbaTarget ambaWrapper;
 };
 
-} // namespace FastModel
+} // namespace fastmodel
 
 #endif // __ARCH_ARM_FASTMODEL_AMBA_TO_TLM_BRIDGE_HH__

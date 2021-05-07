@@ -39,7 +39,8 @@
 
 class BaseCPU;
 
-namespace FastModel
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 // The fast model exports a class called scx_evs_CortexA76x1 which represents
@@ -106,6 +107,6 @@ CortexA76::set_evs_param(const std::string &n, T val)
         cluster->set_evs_param(path + "." + n, val);
 }
 
-} // namespace FastModel
+} // namespace fastmodel
 
 #endif // __ARCH_ARM_FASTMODEL_CORTEXA76_CORETEX_A76_HH__

@@ -65,7 +65,8 @@ struct FarAtomicOpFunctor : public AtomicOpFunctor
 
 }
 
-namespace FastModel
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 AmbaToTlmBridge64::AmbaToTlmBridge64(const sc_core::sc_module_name& name) :
@@ -165,10 +166,10 @@ AmbaToTlmBridge64::maybeSetupAtomicExtension(
         trans.set_extension(atomic_ex);
 }
 
-} // namespace FastModel
+} // namespace fastmodel
 
-FastModel::AmbaToTlmBridge64 *
+fastmodel::AmbaToTlmBridge64 *
 AmbaToTlmBridge64Params::create() const
 {
-    return new FastModel::AmbaToTlmBridge64(name.c_str());
+    return new fastmodel::AmbaToTlmBridge64(name.c_str());
 }

@@ -66,7 +66,7 @@ class VectorGicv3CommsInitiatorSocket(VectorPort):
 
 class SCFastModelGIC(SystemC_ScModule):
     type = 'SCFastModelGIC'
-    cxx_class = 'FastModel::SCGIC'
+    cxx_class = 'fastmodel::SCGIC'
     cxx_header = 'arch/arm/fastmodel/GIC/gic.hh'
 
     enabled = Param.Bool(True, "Enable GICv3 functionality; when false the "
@@ -464,7 +464,7 @@ class SCFastModelGIC(SystemC_ScModule):
 
 class FastModelGIC(BaseGic):
     type = 'FastModelGIC'
-    cxx_class = 'FastModel::GIC'
+    cxx_class = 'fastmodel::GIC'
     cxx_header = 'arch/arm/fastmodel/GIC/gic.hh'
 
     sc_gic = Param.SCFastModelGIC(SCFastModelGIC(),

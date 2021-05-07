@@ -36,7 +36,7 @@ from m5.objects.SystemC import SystemC_ScModule
 
 class FastModelCortexR52(IrisBaseCPU):
     type = 'FastModelCortexR52'
-    cxx_class = 'FastModel::CortexR52'
+    cxx_class = 'fastmodel::CortexR52'
     cxx_header = 'arch/arm/fastmodel/CortexR52/cortex_r52.hh'
 
     evs = Parent.evs
@@ -96,7 +96,7 @@ class FastModelCortexR52(IrisBaseCPU):
 
 class FastModelCortexR52Cluster(SimObject):
     type = 'FastModelCortexR52Cluster'
-    cxx_class = 'FastModel::CortexR52Cluster'
+    cxx_class = 'fastmodel::CortexR52Cluster'
     cxx_header = 'arch/arm/fastmodel/CortexR52/cortex_r52.hh'
 
     cores = VectorParam.FastModelCortexR52(
@@ -171,7 +171,7 @@ class FastModelCortexR52Cluster(SimObject):
 
 class FastModelScxEvsCortexR52x1(SystemC_ScModule):
     type = 'FastModelScxEvsCortexR52x1'
-    cxx_class = 'FastModel::ScxEvsCortexR52<FastModel::ScxEvsCortexR52x1Types>'
+    cxx_class = 'fastmodel::ScxEvsCortexR52<fastmodel::ScxEvsCortexR52x1Types>'
     cxx_template_params = [ 'class Types' ]
     cxx_header = 'arch/arm/fastmodel/CortexR52/evs.hh'
 
@@ -182,7 +182,7 @@ class FastModelCortexR52x1(FastModelCortexR52Cluster):
 
 class FastModelScxEvsCortexR52x2(SystemC_ScModule):
     type = 'FastModelScxEvsCortexR52x2'
-    cxx_class = 'FastModel::ScxEvsCortexR52<FastModel::ScxEvsCortexR52x2Types>'
+    cxx_class = 'fastmodel::ScxEvsCortexR52<fastmodel::ScxEvsCortexR52x2Types>'
     cxx_template_params = [ 'class Types' ]
     cxx_header = 'arch/arm/fastmodel/CortexR52/evs.hh'
 
@@ -194,7 +194,7 @@ class FastModelCortexR52x2(FastModelCortexR52Cluster):
 
 class FastModelScxEvsCortexR52x3(SystemC_ScModule):
     type = 'FastModelScxEvsCortexR52x3'
-    cxx_class = 'FastModel::ScxEvsCortexR52<FastModel::ScxEvsCortexR52x3Types>'
+    cxx_class = 'fastmodel::ScxEvsCortexR52<fastmodel::ScxEvsCortexR52x3Types>'
     cxx_template_params = [ 'class Types' ]
     cxx_header = 'arch/arm/fastmodel/CortexR52/evs.hh'
 
@@ -207,7 +207,7 @@ class FastModelCortexR52x3(FastModelCortexR52Cluster):
 
 class FastModelScxEvsCortexR52x4(SystemC_ScModule):
     type = 'FastModelScxEvsCortexR52x4'
-    cxx_class = 'FastModel::ScxEvsCortexR52<FastModel::ScxEvsCortexR52x4Types>'
+    cxx_class = 'fastmodel::ScxEvsCortexR52<fastmodel::ScxEvsCortexR52x4Types>'
     cxx_template_params = [ 'class Types' ]
     cxx_header = 'arch/arm/fastmodel/CortexR52/evs.hh'
 

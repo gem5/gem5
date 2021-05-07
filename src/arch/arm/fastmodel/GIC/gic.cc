@@ -31,7 +31,8 @@
 #include "params/FastModelGIC.hh"
 #include "params/SCFastModelGIC.hh"
 
-namespace FastModel
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 int
@@ -357,4 +358,4 @@ GIC::supportsVersion(GicVersion version)
            (version == GicVersion::GIC_V4 && scGIC->params().has_gicv4_1);
 }
 
-} // namespace FastModel
+} // namespace fastmodel

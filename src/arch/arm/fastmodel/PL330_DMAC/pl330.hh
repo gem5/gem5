@@ -46,7 +46,8 @@
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/sc_port_wrapper.hh"
 
-namespace FastModel
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 class PL330 : public scx_evs_PL330
@@ -86,6 +87,6 @@ class PL330 : public scx_evs_PL330
     void start_of_simulation() override;
 };
 
-} // namespace FastModel
+} // namespace fastmodel
 
 #endif // __ARCH_ARM_FASTMODEL_PL330_PL330_HH__

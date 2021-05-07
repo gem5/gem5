@@ -35,7 +35,8 @@
 
 #include "systemc/tlm_port_wrapper.hh"
 
-namespace FastModel
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 typedef sc_gem5::TlmInitiatorWrapper<
@@ -43,6 +44,6 @@ typedef sc_gem5::TlmInitiatorWrapper<
 typedef sc_gem5::TlmTargetWrapper<
     64, amba_pv::amba_pv_protocol_types> AmbaTarget;
 
-} // namespace FastModel
+} // namespace fastmodel
 
 #endif // __ARCH_ARM_FASTMODEL_AMBA_PORTS_HH__

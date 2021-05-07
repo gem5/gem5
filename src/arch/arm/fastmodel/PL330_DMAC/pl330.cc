@@ -32,7 +32,8 @@
 #include "params/FastModelPL330.hh"
 #include "sim/core.hh"
 
-namespace FastModel
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 PL330::PL330(const FastModelPL330Params &params,
@@ -258,4 +259,4 @@ PL330::start_of_simulation()
     clockRateControl->set_mul_div(sim_clock::Int::s, clockPeriod);
 }
 
-} // namespace FastModel
+} // namespace fastmodel

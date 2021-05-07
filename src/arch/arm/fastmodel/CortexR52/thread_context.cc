@@ -32,7 +32,8 @@
 #include "iris/detail/IrisCppAdapter.h"
 #include "iris/detail/IrisObjects.h"
 
-namespace FastModel
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 CortexR52TC::CortexR52TC(
@@ -193,4 +194,4 @@ Iris::ThreadContext::IdxNameMap CortexR52TC::ccRegIdxNameMap({
 
 std::vector<iris::MemorySpaceId> CortexR52TC::bpSpaceIds;
 
-} // namespace FastModel
+} // namespace fastmodel

@@ -93,7 +93,7 @@ class ScResponsePort(Port):
 
 class AmbaToTlmBridge64(SystemC_ScModule):
     type = 'AmbaToTlmBridge64'
-    cxx_class = 'FastModel::AmbaToTlmBridge64'
+    cxx_class = 'fastmodel::AmbaToTlmBridge64'
     cxx_header = 'arch/arm/fastmodel/amba_to_tlm_bridge.hh'
 
     amba = AmbaTargetSocket(64, 'AMBA PV target socket')
@@ -101,7 +101,7 @@ class AmbaToTlmBridge64(SystemC_ScModule):
 
 class AmbaFromTlmBridge64(SystemC_ScModule):
     type = 'AmbaFromTlmBridge64'
-    cxx_class = 'FastModel::AmbaFromTlmBridge64'
+    cxx_class = 'fastmodel::AmbaFromTlmBridge64'
     cxx_header = 'arch/arm/fastmodel/amba_from_tlm_bridge.hh'
 
     tlm = TlmTargetSocket(64, 'TLM target socket')

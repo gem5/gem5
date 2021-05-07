@@ -30,7 +30,8 @@
 
 #include "arch/arm/fastmodel/iris/thread_context.hh"
 
-namespace FastModel
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 // This ThreadContext class translates accesses to state using gem5's native
@@ -65,6 +66,6 @@ class CortexA76TC : public Iris::ThreadContext
     const std::vector<iris::MemorySpaceId> &getBpSpaceIds() const override;
 };
 
-} // namespace FastModel
+} // namespace fastmodel
 
 #endif // __ARCH_ARM_FASTMODEL_CORTEXA76_THREAD_CONTEXT_HH__

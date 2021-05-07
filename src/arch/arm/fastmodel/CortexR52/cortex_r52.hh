@@ -39,7 +39,8 @@
 
 class BaseCPU;
 
-namespace FastModel
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 // The fast model exports a class called scx_evs_CortexR52x1 which represents
@@ -104,6 +105,6 @@ CortexR52::set_evs_param(const std::string &n, T val)
         cluster->set_evs_param(path + "." + n, val);
 }
 
-} // namespace FastModel
+} // namespace fastmodel
 
 #endif // __ARCH_ARM_FASTMODEL_CORTEXR52_CORETEX_R52_HH__

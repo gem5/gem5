@@ -34,7 +34,8 @@
 #include "sim/core.hh"
 #include "systemc/tlm_bridge/gem5_to_tlm.hh"
 
-namespace FastModel
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 template <class Types>
@@ -153,4 +154,4 @@ template class ScxEvsCortexA76<ScxEvsCortexA76x2Types>;
 template class ScxEvsCortexA76<ScxEvsCortexA76x3Types>;
 template class ScxEvsCortexA76<ScxEvsCortexA76x4Types>;
 
-} // namespace FastModel
+} // namespace fastmodel
