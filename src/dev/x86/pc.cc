@@ -65,11 +65,11 @@ Pc::init()
      */
     X86ISA::I82094AA &ioApic = *southBridge->ioApic;
     X86ISA::I82094AA::RedirTableEntry entry = 0;
-    entry.deliveryMode = X86ISA::DeliveryMode::ExtInt;
+    entry.deliveryMode = X86ISA::delivery_mode::ExtInt;
     entry.vector = 0x20;
     ioApic.writeReg(0x10, entry.bottomDW);
     ioApic.writeReg(0x11, entry.topDW);
-    entry.deliveryMode = X86ISA::DeliveryMode::Fixed;
+    entry.deliveryMode = X86ISA::delivery_mode::Fixed;
     entry.vector = 0x24;
     ioApic.writeReg(0x18, entry.bottomDW);
     ioApic.writeReg(0x19, entry.topDW);

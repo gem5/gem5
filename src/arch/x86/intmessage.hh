@@ -31,6 +31,7 @@
 
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
+#include "base/compiler.hh"
 #include "base/types.hh"
 #include "dev/x86/intdev.hh"
 #include "mem/packet.hh"
@@ -48,7 +49,8 @@ namespace X86ISA
         Bitfield<21> trigger;
     EndBitUnion(TriggerIntMessage)
 
-    namespace DeliveryMode
+    GEM5_DEPRECATED_NAMESPACE(DeliveryMode, delivery_mode);
+    namespace delivery_mode
     {
         enum IntDeliveryMode
         {
@@ -72,7 +74,7 @@ namespace X86ISA
         {
             return mode == 3;
         }
-    }
+    } // namespace delivery_mode
 
     static const Addr TriggerIntOffset = 0;
 

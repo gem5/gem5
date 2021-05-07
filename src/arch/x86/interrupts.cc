@@ -229,10 +229,10 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
      * using the IRR/ISR registers, checking against the TPR, etc.
      * The SMI, NMI, ExtInt, INIT, etc interrupts go straight through.
      */
-    if (deliveryMode == DeliveryMode::Fixed ||
-            deliveryMode == DeliveryMode::LowestPriority) {
+    if (deliveryMode == delivery_mode::Fixed ||
+            deliveryMode == delivery_mode::LowestPriority) {
         DPRINTF(LocalApic, "Interrupt is an %s.\n",
-                DeliveryMode::names[deliveryMode]);
+                delivery_mode::names[deliveryMode]);
         // Queue up the interrupt in the IRR.
         if (vector > IRRV)
             IRRV = vector;
@@ -244,22 +244,22 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
                 clearRegArrayBit(APIC_TRIGGER_MODE_BASE, vector);
             }
         }
-    } else if (!DeliveryMode::isReserved(deliveryMode)) {
+    } else if (!delivery_mode::isReserved(deliveryMode)) {
         DPRINTF(LocalApic, "Interrupt is an %s.\n",
-                DeliveryMode::names[deliveryMode]);
-        if (deliveryMode == DeliveryMode::SMI && !pendingSmi) {
+                delivery_mode::names[deliveryMode]);
+        if (deliveryMode == delivery_mode::SMI && !pendingSmi) {
             pendingUnmaskableInt = pendingSmi = true;
             smiVector = vector;
-        } else if (deliveryMode == DeliveryMode::NMI && !pendingNmi) {
+        } else if (deliveryMode == delivery_mode::NMI && !pendingNmi) {
             pendingUnmaskableInt = pendingNmi = true;
             nmiVector = vector;
-        } else if (deliveryMode == DeliveryMode::ExtInt && !pendingExtInt) {
+        } else if (deliveryMode == delivery_mode::ExtInt && !pendingExtInt) {
             pendingExtInt = true;
             extIntVector = vector;
-        } else if (deliveryMode == DeliveryMode::INIT && !pendingInit) {
+        } else if (deliveryMode == delivery_mode::INIT && !pendingInit) {
             pendingUnmaskableInt = pendingInit = true;
             initVector = vector;
-        } else if (deliveryMode == DeliveryMode::SIPI &&
+        } else if (deliveryMode == delivery_mode::SIPI &&
                 !pendingStartup && !startedUp) {
             pendingUnmaskableInt = pendingStartup = true;
             startupVector = vector;
@@ -482,7 +482,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             int numContexts = sys->threads.size();
             switch (low.destShorthand) {
               case 0:
-                if (message.deliveryMode == DeliveryMode::LowestPriority) {
+                if (message.deliveryMode == delivery_mode::LowestPriority) {
                     panic("Lowest priority delivery mode "
                             "IPIs aren't implemented.\n");
                 }
