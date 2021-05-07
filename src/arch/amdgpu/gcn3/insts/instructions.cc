@@ -5068,8 +5068,13 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
         ScalarRegU32 offset(0);
         ConstScalarOperandU64 addr(gpuDynInst, instData.SBASE << 1);
+        ConstScalarOperandU32 sdata(gpuDynInst, instData.SDATA);
 
         addr.read();
+        sdata.read();
+
+        std::memcpy((void*)gpuDynInst->scalar_data, sdata.rawDataPtr(),
+            sizeof(ScalarRegU32));
 
         if (instData.IMM) {
             offset = extData.OFFSET;
@@ -5093,10 +5098,6 @@ namespace Gcn3ISA
     void
     Inst_SMEM__S_STORE_DWORD::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstScalarOperandU32 sdata(gpuDynInst, instData.SDATA);
-        sdata.read();
-        std::memcpy((void*)gpuDynInst->scalar_data, sdata.rawDataPtr(),
-            sizeof(ScalarRegU32));
         initMemWrite<1>(gpuDynInst);
     } // initiateAcc
 
@@ -5127,8 +5128,13 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
         ScalarRegU32 offset(0);
         ConstScalarOperandU64 addr(gpuDynInst, instData.SBASE << 1);
+        ConstScalarOperandU64 sdata(gpuDynInst, instData.SDATA);
 
         addr.read();
+        sdata.read();
+
+        std::memcpy((void*)gpuDynInst->scalar_data, sdata.rawDataPtr(),
+            sizeof(ScalarRegU64));
 
         if (instData.IMM) {
             offset = extData.OFFSET;
@@ -5152,10 +5158,6 @@ namespace Gcn3ISA
     void
     Inst_SMEM__S_STORE_DWORDX2::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstScalarOperandU64 sdata(gpuDynInst, instData.SDATA);
-        sdata.read();
-        std::memcpy((void*)gpuDynInst->scalar_data, sdata.rawDataPtr(),
-            sizeof(ScalarRegU64));
         initMemWrite<2>(gpuDynInst);
     } // initiateAcc
 
@@ -5186,8 +5188,13 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
         ScalarRegU32 offset(0);
         ConstScalarOperandU64 addr(gpuDynInst, instData.SBASE << 1);
+        ConstScalarOperandU128 sdata(gpuDynInst, instData.SDATA);
 
         addr.read();
+        sdata.read();
+
+        std::memcpy((void*)gpuDynInst->scalar_data, sdata.rawDataPtr(),
+            4 * sizeof(ScalarRegU32));
 
         if (instData.IMM) {
             offset = extData.OFFSET;
@@ -5211,10 +5218,6 @@ namespace Gcn3ISA
     void
     Inst_SMEM__S_STORE_DWORDX4::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstScalarOperandU128 sdata(gpuDynInst, instData.SDATA);
-        sdata.read();
-        std::memcpy((void*)gpuDynInst->scalar_data, sdata.rawDataPtr(),
-            4 * sizeof(ScalarRegU32));
         initMemWrite<4>(gpuDynInst);
     } // initiateAcc
 
@@ -35746,9 +35749,18 @@ namespace Gcn3ISA
         ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
         ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
         ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+        ConstVecOperandI8 data(gpuDynInst, extData.VDATA);
 
         rsrcDesc.read();
         offset.read();
+        data.read();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemI8*>(gpuDynInst->d_data))[lane]
+                    = data[lane];
+            }
+        }
 
         int inst_offset = instData.OFFSET;
 
@@ -35793,16 +35805,6 @@ namespace Gcn3ISA
     void
     Inst_MUBUF__BUFFER_STORE_BYTE::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandI8 data(gpuDynInst, extData.VDATA);
-        data.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemI8*>(gpuDynInst->d_data))[lane]
-                    = data[lane];
-            }
-        }
-
         initMemWrite<VecElemI8>(gpuDynInst);
     } // initiateAcc
 
@@ -35842,9 +35844,18 @@ namespace Gcn3ISA
         ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
         ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
         ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+        ConstVecOperandI16 data(gpuDynInst, extData.VDATA);
 
         rsrcDesc.read();
         offset.read();
+        data.read();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemI16*>(gpuDynInst->d_data))[lane]
+                    = data[lane];
+            }
+        }
 
         int inst_offset = instData.OFFSET;
 
@@ -35889,16 +35900,6 @@ namespace Gcn3ISA
     void
     Inst_MUBUF__BUFFER_STORE_SHORT::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandI16 data(gpuDynInst, extData.VDATA);
-        data.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemI16*>(gpuDynInst->d_data))[lane]
-                    = data[lane];
-            }
-        }
-
         initMemWrite<VecElemI16>(gpuDynInst);
     } // initiateAcc
 
@@ -35938,11 +35939,20 @@ namespace Gcn3ISA
         ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
         ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
         ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+        ConstVecOperandU32 data(gpuDynInst, extData.VDATA);
 
         rsrcDesc.read();
         offset.read();
+        data.read();
 
         int inst_offset = instData.OFFSET;
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane]
+                    = data[lane];
+            }
+        }
 
         if (!instData.IDXEN && !instData.OFFEN) {
             calcAddr<ConstVecOperandU32, ConstVecOperandU32,
@@ -35985,16 +35995,6 @@ namespace Gcn3ISA
     void
     Inst_MUBUF__BUFFER_STORE_DWORD::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandU32 data(gpuDynInst, extData.VDATA);
-        data.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane]
-                    = data[lane];
-            }
-        }
-
         initMemWrite<VecElemU32>(gpuDynInst);
     } // initiateAcc
 
@@ -39998,10 +39998,19 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
         ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU8 data(gpuDynInst, extData.DATA);
 
         addr.read();
+        data.read();
 
         calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU8*>(gpuDynInst->d_data))[lane]
+                    = data[lane];
+            }
+        }
 
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -40019,16 +40028,6 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_STORE_BYTE::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandU8 data(gpuDynInst, extData.DATA);
-        data.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU8*>(gpuDynInst->d_data))[lane]
-                    = data[lane];
-            }
-        }
-
         initMemWrite<VecElemU8>(gpuDynInst);
     } // initiateAcc
 
@@ -40068,10 +40067,19 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
         ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU16 data(gpuDynInst, extData.DATA);
 
         addr.read();
+        data.read();
 
         calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU16*>(gpuDynInst->d_data))[lane]
+                    = data[lane];
+            }
+        }
 
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -40089,17 +40097,6 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_STORE_SHORT::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandU16 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU16*>(gpuDynInst->d_data))[lane]
-                    = data[lane];
-            }
-        }
-
         initMemWrite<VecElemU16>(gpuDynInst);
     } // initiateAcc
 
@@ -40139,10 +40136,19 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
         ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
 
         addr.read();
+        data.read();
 
         calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane]
+                    = data[lane];
+            }
+        }
 
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -40160,16 +40166,6 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_STORE_DWORD::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-        data.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane]
-                    = data[lane];
-            }
-        }
-
         initMemWrite<VecElemU32>(gpuDynInst);
     } // initiateAcc
 
@@ -40210,10 +40206,19 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
         ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
 
         addr.read();
+        data.read();
 
         calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU64*>(gpuDynInst->d_data))[lane]
+                    = data[lane];
+            }
+        }
 
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -40231,16 +40236,6 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_STORE_DWORDX2::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
-        data.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU64*>(gpuDynInst->d_data))[lane]
-                    = data[lane];
-            }
-        }
-
         initMemWrite<VecElemU64>(gpuDynInst);
     } // initiateAcc
 
@@ -40281,10 +40276,27 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
         ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data0(gpuDynInst, extData.DATA);
+        ConstVecOperandU32 data1(gpuDynInst, extData.DATA + 1);
+        ConstVecOperandU32 data2(gpuDynInst, extData.DATA + 2);
 
         addr.read();
+        data0.read();
+        data1.read();
+        data2.read();
 
         calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(
+                    gpuDynInst->d_data))[lane * 3] = data0[lane];
+                (reinterpret_cast<VecElemU32*>(
+                    gpuDynInst->d_data))[lane * 3 + 1] = data1[lane];
+                (reinterpret_cast<VecElemU32*>(
+                    gpuDynInst->d_data))[lane * 3 + 2] = data2[lane];
+            }
+        }
 
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -40302,25 +40314,6 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_STORE_DWORDX3::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandU32 data0(gpuDynInst, extData.DATA);
-        ConstVecOperandU32 data1(gpuDynInst, extData.DATA + 1);
-        ConstVecOperandU32 data2(gpuDynInst, extData.DATA + 2);
-
-        data0.read();
-        data1.read();
-        data2.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 3] = data0[lane];
-                (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 3 + 1] = data1[lane];
-                (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 3 + 2] = data2[lane];
-            }
-        }
-
         initMemWrite<3>(gpuDynInst);
     } // initiateAcc
 
@@ -40361,10 +40354,31 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
         ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data0(gpuDynInst, extData.DATA);
+        ConstVecOperandU32 data1(gpuDynInst, extData.DATA + 1);
+        ConstVecOperandU32 data2(gpuDynInst, extData.DATA + 2);
+        ConstVecOperandU32 data3(gpuDynInst, extData.DATA + 3);
 
         addr.read();
+        data0.read();
+        data1.read();
+        data2.read();
+        data3.read();
 
         calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(
+                    gpuDynInst->d_data))[lane * 4] = data0[lane];
+                (reinterpret_cast<VecElemU32*>(
+                    gpuDynInst->d_data))[lane * 4 + 1] = data1[lane];
+                (reinterpret_cast<VecElemU32*>(
+                    gpuDynInst->d_data))[lane * 4 + 2] = data2[lane];
+                (reinterpret_cast<VecElemU32*>(
+                    gpuDynInst->d_data))[lane * 4 + 3] = data3[lane];
+            }
+        }
 
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
@@ -40382,29 +40396,6 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_STORE_DWORDX4::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandU32 data0(gpuDynInst, extData.DATA);
-        ConstVecOperandU32 data1(gpuDynInst, extData.DATA + 1);
-        ConstVecOperandU32 data2(gpuDynInst, extData.DATA + 2);
-        ConstVecOperandU32 data3(gpuDynInst, extData.DATA + 3);
-
-        data0.read();
-        data1.read();
-        data2.read();
-        data3.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 4] = data0[lane];
-                (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 4 + 1] = data1[lane];
-                (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 4 + 2] = data2[lane];
-                (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 4 + 3] = data3[lane];
-            }
-        }
-
         initMemWrite<4>(gpuDynInst);
     } // initiateAcc
 
