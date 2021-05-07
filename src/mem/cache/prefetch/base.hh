@@ -343,6 +343,20 @@ class Base : public ClockedObject
         statistics::Scalar pfUsefulButMiss;
         statistics::Formula accuracy;
         statistics::Formula coverage;
+
+        /** The number of times a HW-prefetch hits in cache. */
+        statistics::Scalar pfHitInCache;
+
+        /** The number of times a HW-prefetch hits in a MSHR. */
+        statistics::Scalar pfHitInMSHR;
+
+        /** The number of times a HW-prefetch hits
+         * in the Write Buffer (WB). */
+        statistics::Scalar pfHitInWB;
+
+        /** The number of times a HW-prefetch is late
+         * (hit in cache, MSHR, WB). */
+        statistics::Formula pfLate;
     } prefetchStats;
 
     /** Total prefetches issued */
@@ -383,6 +397,24 @@ class Base : public ClockedObject
     incrDemandMhsrMisses()
     {
         prefetchStats.demandMshrMisses++;
+    }
+
+    void
+    pfHitInCache()
+    {
+        prefetchStats.pfHitInCache++;
+    }
+
+    void
+    pfHitInMSHR()
+    {
+        prefetchStats.pfHitInMSHR++;
+    }
+
+    void
+    pfHitInWB()
+    {
+        prefetchStats.pfHitInWB++;
     }
 
     /**

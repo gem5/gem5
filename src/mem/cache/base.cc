@@ -52,6 +52,7 @@
 #include "debug/CachePort.hh"
 #include "debug/CacheRepl.hh"
 #include "debug/CacheVerbose.hh"
+#include "debug/HWPrefetch.hh"
 #include "mem/cache/compressors/base.hh"
 #include "mem/cache/mshr.hh"
 #include "mem/cache/prefetch/base.hh"
@@ -825,9 +826,25 @@ BaseCache::getNextQueueEntry()
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
             Addr pf_addr = pkt->getBlockAddr(blkSize);
-            if (!tags->findBlock(pf_addr, pkt->isSecure()) &&
-                !mshrQueue.findMatch(pf_addr, pkt->isSecure()) &&
-                !writeBuffer.findMatch(pf_addr, pkt->isSecure())) {
+            if (tags->findBlock(pf_addr, pkt->isSecure())) {
+                DPRINTF(HWPrefetch, "Prefetch %#x has hit in cache, "
+                        "dropped.\n", pf_addr);
+                prefetcher->pfHitInCache();
+                // free the request and packet
+                delete pkt;
+            } else if (mshrQueue.findMatch(pf_addr, pkt->isSecure())) {
+                DPRINTF(HWPrefetch, "Prefetch %#x has hit in a MSHR, "
+                        "dropped.\n", pf_addr);
+                prefetcher->pfHitInMSHR();
+                // free the request and packet
+                delete pkt;
+            } else if (writeBuffer.findMatch(pf_addr, pkt->isSecure())) {
+                DPRINTF(HWPrefetch, "Prefetch %#x has hit in the "
+                        "Write Buffer, dropped.\n", pf_addr);
+                prefetcher->pfHitInWB();
+                // free the request and packet
+                delete pkt;
+            } else {
                 // Update statistic on number of prefetches issued
                 // (hwpf_mshr_misses)
                 assert(pkt->req->requestorId() < system->maxRequestors());
@@ -837,9 +854,6 @@ BaseCache::getNextQueueEntry()
                 // that we send the packet straight away, so do not
                 // schedule the send
                 return allocateMissBuffer(pkt, curTick(), false);
-            } else {
-                // free the request and packet
-                delete pkt;
             }
         }
     }

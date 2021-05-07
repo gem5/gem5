@@ -134,7 +134,15 @@ Base::StatGroup::StatGroup(statistics::Group *parent)
     ADD_STAT(accuracy, statistics::units::Count::get(),
         "accuracy of the prefetcher"),
     ADD_STAT(coverage, statistics::units::Count::get(),
-    "coverage brought by this prefetcher")
+    "coverage brought by this prefetcher"),
+    ADD_STAT(pfHitInCache, statistics::units::Count::get(),
+        "number of prefetches hitting in cache"),
+    ADD_STAT(pfHitInMSHR, statistics::units::Count::get(),
+        "number of prefetches hitting in a MSHR"),
+    ADD_STAT(pfHitInWB, statistics::units::Count::get(),
+        "number of prefetches hit in the Write Buffer"),
+    ADD_STAT(pfLate, statistics::units::Count::get(),
+        "number of late prefetches (hitting in cache, MSHR or WB)")
 {
     using namespace statistics;
 
@@ -145,6 +153,8 @@ Base::StatGroup::StatGroup(statistics::Group *parent)
 
     coverage.flags(total);
     coverage = pfUseful / (pfUseful + demandMshrMisses);
+
+    pfLate = pfHitInCache + pfHitInMSHR + pfHitInWB;
 }
 
 bool
