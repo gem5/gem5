@@ -271,7 +271,7 @@ Intel8254Timer::Counter::startup()
 
 Intel8254Timer::Counter::CounterEvent::CounterEvent(Counter* c_ptr)
 {
-    interval = (Tick)(sim_clock::Float::s / 1193180.0);
+    interval = (Tick)(sim_clock::as_float::s / 1193180.0);
     counter = c_ptr;
 }
 

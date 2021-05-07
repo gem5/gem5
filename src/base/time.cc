@@ -55,7 +55,7 @@ Time::setTick(Tick ticks)
 {
     uint64_t secs = ticks / sim_clock::Frequency;
     ticks -= secs * sim_clock::Frequency;
-    uint64_t nsecs = static_cast<uint64_t>(ticks * sim_clock::Float::GHz);
+    uint64_t nsecs = static_cast<uint64_t>(ticks * sim_clock::as_float::GHz);
     set(secs, nsecs);
 }
 
@@ -63,7 +63,7 @@ Tick
 Time::getTick() const
 {
     return sec() * sim_clock::Frequency +
-        static_cast<uint64_t>(nsec() * sim_clock::Float::ns);
+        static_cast<uint64_t>(nsec() * sim_clock::as_float::ns);
 }
 
 std::string

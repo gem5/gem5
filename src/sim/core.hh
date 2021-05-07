@@ -51,7 +51,9 @@ namespace sim_clock
 {
 extern Tick Frequency; ///< The number of ticks that equal one second
 
-namespace Float {
+GEM5_DEPRECATED_NAMESPACE(Float, as_float);
+namespace as_float
+{
 
 /** These variables equal the number of ticks in the unit of time they're
  * named after in a double.
@@ -72,7 +74,7 @@ extern double kHz; ///< kHz
 extern double MHz; ///< MHz
 extern double GHz; ///< GHz
 /** @}*/
-} // namespace Float
+} // namespace as_float
 
 /** These variables equal the number of ticks in the unit of time they're
  *  named after in a 64 bit integer.

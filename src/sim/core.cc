@@ -44,7 +44,9 @@ namespace sim_clock
 /// The simulated frequency of curTick(). (In ticks per second)
 Tick Frequency;
 
-namespace Float {
+GEM5_DEPRECATED_NAMESPACE(Float, as_float);
+namespace as_float
+{
 double s;
 double ms;
 double us;
@@ -55,7 +57,7 @@ double Hz;
 double kHz;
 double MHz;
 double GHz;
-} // namespace Float
+} // namespace as_float
 
 namespace Int {
 Tick s;
@@ -63,7 +65,7 @@ Tick ms;
 Tick us;
 Tick ns;
 Tick ps;
-} // namespace Float
+} // namespace as_float
 
 } // namespace sim_clock
 
@@ -84,16 +86,16 @@ fixClockFrequency()
 
     using namespace sim_clock;
     Frequency = _ticksPerSecond;
-    Float::s = static_cast<double>(Frequency);
-    Float::ms = Float::s / 1.0e3;
-    Float::us = Float::s / 1.0e6;
-    Float::ns = Float::s / 1.0e9;
-    Float::ps = Float::s / 1.0e12;
+    as_float::s = static_cast<double>(Frequency);
+    as_float::ms = as_float::s / 1.0e3;
+    as_float::us = as_float::s / 1.0e6;
+    as_float::ns = as_float::s / 1.0e9;
+    as_float::ps = as_float::s / 1.0e12;
 
-    Float::Hz  = 1.0 / Float::s;
-    Float::kHz = 1.0 / Float::ms;
-    Float::MHz = 1.0 / Float::us;
-    Float::GHz = 1.0 / Float::ns;
+    as_float::Hz  = 1.0 / as_float::s;
+    as_float::kHz = 1.0 / as_float::ms;
+    as_float::MHz = 1.0 / as_float::us;
+    as_float::GHz = 1.0 / as_float::ns;
 
     Int::s  = Frequency;
     Int::ms = Int::s / 1000;

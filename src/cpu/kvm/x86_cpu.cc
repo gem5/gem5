@@ -1248,7 +1248,7 @@ X86KvmCPU::kvmRunDrain()
         // Limit the run to 1 millisecond. That is hopefully enough to
         // reach an interrupt window. Otherwise, we'll just try again
         // later.
-        return BaseKvmCPU::kvmRun(1 * sim_clock::Float::ms);
+        return BaseKvmCPU::kvmRun(1 * sim_clock::as_float::ms);
     } else {
         DPRINTF(Drain, "kvmRunDrain: Delivering pending IO\n");
 

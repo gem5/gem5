@@ -506,7 +506,7 @@ ArmSemihosting::callClock(ThreadContext *tc)
 ArmSemihosting::RetErrno
 ArmSemihosting::callTime(ThreadContext *tc)
 {
-    return retOK(timeBase + round(curTick() / sim_clock::Float::s));
+    return retOK(timeBase + round(curTick() / sim_clock::as_float::s));
 }
 
 ArmSemihosting::RetErrno

@@ -254,7 +254,7 @@ VcdTraceFile::initialize()
     std::string timedump_comment =
         csprintf("All initial values are dumped below at time "
                  "%g sec = %g timescale units.",
-                 static_cast<double>(now) / sim_clock::Float::s,
+                 static_cast<double>(now) / sim_clock::as_float::s,
                  static_cast<double>(now / timeUnitTicks));
     writeComment(timedump_comment);
 
