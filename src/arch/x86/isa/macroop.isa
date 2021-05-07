@@ -76,7 +76,8 @@ output header {{
 
 // Basic instruction class declaration template.
 def template MacroDeclare {{
-    namespace X86Macroop
+    GEM5_DEPRECATED_NAMESPACE(X86Macroop, x86_macroop);
+    namespace x86_macroop
     {
         /**
          * Static instruction class for "%(mnemonic)s".
@@ -97,7 +98,7 @@ def template MacroDeclare {{
 
 def template MacroDisassembly {{
     std::string
-    X86Macroop::%(class_name)s::generateDisassembly(
+    x86_macroop::%(class_name)s::generateDisassembly(
             Addr pc, const Loader::SymbolTable *symtab) const
     {
         std::stringstream out;
@@ -113,7 +114,7 @@ def template MacroDisassembly {{
 
 // Basic instruction class constructor template.
 def template MacroConstructor {{
-        X86Macroop::%(class_name)s::%(class_name)s(
+        x86_macroop::%(class_name)s::%(class_name)s(
                 ExtMachInst machInst, EmulEnv _env)
             : %(base_class)s("%(mnemonic)s", machInst, %(num_microops)s, _env)
         {
@@ -190,7 +191,7 @@ let {{
             self.control_indirect = False
 
         def getAllocator(self, env):
-            return "new X86Macroop::%s(machInst, %s)" % \
+            return "new x86_macroop::%s(machInst, %s)" % \
                     (self.name, env.getAllocator())
         def getMnemonic(self):
             mnemonic = self.name.lower()
