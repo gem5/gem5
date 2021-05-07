@@ -44,6 +44,7 @@
 #include <string>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/types.hh"
 #include "enums/Characteristic.hh"
 #include "enums/ExtCharacteristic.hh"
@@ -57,7 +58,8 @@ struct X86SMBiosSMBiosTableParams;
 namespace X86ISA
 {
 
-namespace SMBios
+GEM5_DEPRECATED_NAMESPACE(SMBios, smbios);
+namespace smbios
 {
 
 class SMBiosStructure : public SimObject

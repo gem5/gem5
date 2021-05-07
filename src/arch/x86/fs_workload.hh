@@ -51,12 +51,13 @@
 namespace X86ISA
 {
 
-namespace SMBios
+GEM5_DEPRECATED_NAMESPACE(SMBios, smbios);
+namespace smbios
 {
 
 class SMBiosTable;
 
-} // namespace SMBios
+} // namespace smbios
 namespace IntelMP
 {
 
@@ -79,7 +80,7 @@ class FsWorkload : public KernelWorkload
 
   protected:
 
-    SMBios::SMBiosTable *smbiosTable;
+    smbios::SMBiosTable *smbiosTable;
     IntelMP::FloatingPointer *mpFloatingPointer;
     IntelMP::ConfigTable *mpConfigTable;
     ACPI::RSDP *rsdp;
