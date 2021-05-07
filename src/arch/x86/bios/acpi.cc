@@ -37,6 +37,7 @@
 
 #include "arch/x86/bios/acpi.hh"
 
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 
@@ -51,6 +52,26 @@ namespace X86ISA
 
 namespace ACPI
 {
+
+static void
+fillCopy(void *dest, size_t dest_size, const void *src, size_t src_size)
+{
+    src_size = std::min(src_size, dest_size);
+    const size_t zero_size = dest_size - src_size;
+
+    uint8_t *pos = (uint8_t *)dest;
+
+    std::memcpy(pos, src, src_size);
+    pos += src_size;
+
+    std::memset(pos, 0, zero_size);
+}
+
+static void
+fillCopy(void *dest, size_t dest_size, const std::string &src)
+{
+    fillCopy(dest, dest_size, src.c_str(), src.length());
+}
 
 const char RSDP::signature[] = "RSD PTR ";
 
@@ -93,7 +114,7 @@ RSDP::write(PortProxy& phys_proxy, Allocator& alloc) const
     static_assert(sizeof(signature) - 1 == sizeof(data->signature),
             "signature length mismatch");
     std::memcpy(data->signature, signature, sizeof(data->signature));
-    std::strncpy(data->oemID, params().oem_id.c_str(), sizeof(data->oemID));
+    fillCopy(data->oemID, sizeof(data->oemID), params().oem_id);
     data->revision = params().revision;
     data->length = mem.size();
 
@@ -133,12 +154,11 @@ SysDescTable::writeBuf(PortProxy& phys_proxy, Allocator& alloc,
     // Fill in the header.
     auto& p = params();
     Mem* header = (Mem*)mem.data();
-    std::strncpy(header->signature, signature, sizeof(header->signature));
+    fillCopy(header->signature, sizeof(header->signature), signature);
     header->length = mem.size();
     header->revision = revision;
-    std::strncpy(header->oemID, p.oem_id.c_str(), sizeof(header->oemID));
-    std::strncpy(header->oemTableID, p.oem_table_id.c_str(),
-            sizeof(header->oemTableID));
+    fillCopy(header->oemID, sizeof(header->oemID), p.oem_id);
+    fillCopy(header->oemTableID, sizeof(header->oemTableID), p.oem_table_id);
     header->oemRevision = p.oem_revision;
     header->creatorID = p.creator_id;
     header->creatorRevision = p.creator_revision;
