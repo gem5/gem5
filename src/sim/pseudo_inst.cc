@@ -81,7 +81,7 @@ namespace pseudo_inst
  * @note Each key may be at most 16 characters (because we use
  * two 64-bit registers to pass in the key to the initparam function).
  */
-namespace InitParamKey
+namespace
 {
 
 /**
@@ -97,7 +97,7 @@ const std::string DIST_RANK = "dist-rank";
  */
 const std::string DIST_SIZE = "dist-size";
 
-} // namespace InitParamKey
+} // anonymous namespace
 
 void
 arm(ThreadContext *tc)
@@ -286,11 +286,11 @@ initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
 
     // Check key parameter to figure out what to return.
     const std::string key_str(key);
-    if (key == InitParamKey::DEFAULT)
+    if (key == DEFAULT)
         return tc->getCpuPtr()->system->init_param;
-    else if (key == InitParamKey::DIST_RANK)
+    else if (key == DIST_RANK)
         return DistIface::rankParam();
-    else if (key == InitParamKey::DIST_SIZE)
+    else if (key == DIST_SIZE)
         return DistIface::sizeParam();
     else
         panic("Unknown key for initparam pseudo instruction:\"%s\"", key_str);
