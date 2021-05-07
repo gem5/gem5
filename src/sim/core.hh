@@ -81,14 +81,16 @@ extern double GHz; ///< GHz
  *
  * @{
  */
-namespace Int {
+GEM5_DEPRECATED_NAMESPACE(Int, as_int);
+namespace as_int
+{
 extern Tick s;  ///< second
 extern Tick ms; ///< millisecond
 extern Tick us; ///< microsecond
 extern Tick ns; ///< nanosecond
 extern Tick ps; ///< picosecond
 /** @} */
-} // namespace Int
+} // namespace as_int
 } // namespace sim_clock
 /** @} */
 

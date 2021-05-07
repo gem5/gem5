@@ -256,7 +256,7 @@ void
 PL330::start_of_simulation()
 {
     // Set the clock rate using the divider inside the EVS.
-    clockRateControl->set_mul_div(sim_clock::Int::s, clockPeriod);
+    clockRateControl->set_mul_div(sim_clock::as_int::s, clockPeriod);
 }
 
 } // namespace fastmodel

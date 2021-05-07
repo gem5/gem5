@@ -166,7 +166,7 @@ ThermalModel::doStep()
         eq_nodes[i]->temp = Temperature::fromKelvin(temps[i]);
 
     // Schedule next computation
-    schedule(stepEvent, curTick() + sim_clock::Int::s * _step);
+    schedule(stepEvent, curTick() + sim_clock::as_int::s * _step);
 
     // Notify everybody
     for (auto dom : domains)
@@ -203,7 +203,7 @@ ThermalModel::startup()
         eq_nodes[i]->id = i;
 
     // Schedule first thermal update
-    schedule(stepEvent, curTick() + sim_clock::Int::s * _step);
+    schedule(stepEvent, curTick() + sim_clock::as_int::s * _step);
 }
 
 void

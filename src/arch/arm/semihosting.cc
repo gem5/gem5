@@ -500,7 +500,7 @@ ArmSemihosting::callRename(ThreadContext *tc, Addr from_addr, size_t from_size,
 ArmSemihosting::RetErrno
 ArmSemihosting::callClock(ThreadContext *tc)
 {
-    return retOK(curTick() / (sim_clock::Int::s / 100));
+    return retOK(curTick() / (sim_clock::as_int::s / 100));
 }
 
 ArmSemihosting::RetErrno

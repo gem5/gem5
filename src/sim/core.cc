@@ -59,7 +59,9 @@ double MHz;
 double GHz;
 } // namespace as_float
 
-namespace Int {
+GEM5_DEPRECATED_NAMESPACE(Int, as_int);
+namespace as_int
+{
 Tick s;
 Tick ms;
 Tick us;
@@ -97,11 +99,11 @@ fixClockFrequency()
     as_float::MHz = 1.0 / as_float::us;
     as_float::GHz = 1.0 / as_float::ns;
 
-    Int::s  = Frequency;
-    Int::ms = Int::s / 1000;
-    Int::us = Int::ms / 1000;
-    Int::ns = Int::us / 1000;
-    Int::ps = Int::ns / 1000;
+    as_int::s  = Frequency;
+    as_int::ms = as_int::s / 1000;
+    as_int::us = as_int::ms / 1000;
+    as_int::ns = as_int::us / 1000;
+    as_int::ps = as_int::ns / 1000;
 
     cprintf("Global frequency set at %d ticks per second\n", _ticksPerSecond);
 

@@ -163,7 +163,7 @@ class IGbE : public EtherDevice
      */
     void cpuClearInt();
 
-    Tick intClock() { return sim_clock::Int::ns * 1024; }
+    Tick intClock() { return sim_clock::as_int::ns * 1024; }
 
     /** This function is used to restart the clock so it can handle things like
      * draining and resume in one place. */

@@ -42,7 +42,7 @@ template <class Types>
 void
 ScxEvsCortexA76<Types>::setClkPeriod(Tick clk_period)
 {
-    clockRateControl->set_mul_div(sim_clock::Int::s, clk_period);
+    clockRateControl->set_mul_div(sim_clock::as_int::s, clk_period);
 }
 
 template <class Types>

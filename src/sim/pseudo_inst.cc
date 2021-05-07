@@ -127,7 +127,7 @@ void
 quiesceNs(ThreadContext *tc, uint64_t ns)
 {
     DPRINTF(PseudoInst, "pseudo_inst::quiesceNs(%i)\n", ns);
-    tc->quiesceTick(curTick() + sim_clock::Int::ns * ns);
+    tc->quiesceTick(curTick() + sim_clock::as_int::ns * ns);
 }
 
 void
@@ -143,14 +143,14 @@ quiesceTime(ThreadContext *tc)
     DPRINTF(PseudoInst, "pseudo_inst::quiesceTime()\n");
 
     return (tc->readLastActivate() - tc->readLastSuspend()) /
-        sim_clock::Int::ns;
+        sim_clock::as_int::ns;
 }
 
 uint64_t
 rpns(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "pseudo_inst::rpns()\n");
-    return curTick() / sim_clock::Int::ns;
+    return curTick() / sim_clock::as_int::ns;
 }
 
 void
@@ -175,7 +175,7 @@ m5exit(ThreadContext *tc, Tick delay)
 {
     DPRINTF(PseudoInst, "pseudo_inst::m5exit(%i)\n", delay);
     if (DistIface::readyToExit(delay)) {
-        Tick when = curTick() + delay * sim_clock::Int::ns;
+        Tick when = curTick() + delay * sim_clock::as_int::ns;
         exitSimLoop("m5_exit instruction encountered", 0, when, 0, true);
     }
 }
@@ -194,7 +194,7 @@ void
 m5fail(ThreadContext *tc, Tick delay, uint64_t code)
 {
     DPRINTF(PseudoInst, "pseudo_inst::m5fail(%i, %i)\n", delay, code);
-    Tick when = curTick() + delay * sim_clock::Int::ns;
+    Tick when = curTick() + delay * sim_clock::as_int::ns;
     exitSimLoop("m5_fail instruction encountered", code, when, 0, true);
 }
 
@@ -305,8 +305,8 @@ resetstats(ThreadContext *tc, Tick delay, Tick period)
         return;
 
 
-    Tick when = curTick() + delay * sim_clock::Int::ns;
-    Tick repeat = period * sim_clock::Int::ns;
+    Tick when = curTick() + delay * sim_clock::as_int::ns;
+    Tick repeat = period * sim_clock::as_int::ns;
 
     Stats::schedStatEvent(false, true, when, repeat);
 }
@@ -319,8 +319,8 @@ dumpstats(ThreadContext *tc, Tick delay, Tick period)
         return;
 
 
-    Tick when = curTick() + delay * sim_clock::Int::ns;
-    Tick repeat = period * sim_clock::Int::ns;
+    Tick when = curTick() + delay * sim_clock::as_int::ns;
+    Tick repeat = period * sim_clock::as_int::ns;
 
     Stats::schedStatEvent(true, false, when, repeat);
 }
@@ -334,8 +334,8 @@ dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
         return;
 
 
-    Tick when = curTick() + delay * sim_clock::Int::ns;
-    Tick repeat = period * sim_clock::Int::ns;
+    Tick when = curTick() + delay * sim_clock::as_int::ns;
+    Tick repeat = period * sim_clock::as_int::ns;
 
     Stats::schedStatEvent(true, true, when, repeat);
 }
@@ -348,8 +348,8 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
         return;
 
     if (DistIface::readyToCkpt(delay, period)) {
-        Tick when = curTick() + delay * sim_clock::Int::ns;
-        Tick repeat = period * sim_clock::Int::ns;
+        Tick when = curTick() + delay * sim_clock::as_int::ns;
+        Tick repeat = period * sim_clock::as_int::ns;
         exitSimLoop("checkpoint", 0, when, repeat);
     }
 }

@@ -175,7 +175,7 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
                   // from reset to active. So, we simply schedule the
                   // tick after 0.5s.
                   assert(!tickEvent.scheduled());
-                  schedule(tickEvent, curTick() + sim_clock::Int::s / 2);
+                  schedule(tickEvent, curTick() + sim_clock::as_int::s / 2);
               }
           } break;
           case RTC_STAT_REGB:
@@ -333,7 +333,7 @@ void
 MC146818::RTCTickEvent::process()
 {
     DPRINTF(MC146818, "RTC clock tick\n");
-    parent->schedule(this, curTick() + sim_clock::Int::s);
+    parent->schedule(this, curTick() + sim_clock::as_int::s);
     parent->tickClock();
 }
 

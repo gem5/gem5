@@ -70,7 +70,7 @@ class MC146818 : public EventManager
         Tick offset;
 
         RTCTickEvent(MC146818 * _parent) :
-            parent(_parent), offset(sim_clock::Int::s)
+            parent(_parent), offset(sim_clock::as_int::s)
         {}
 
         /** Event process to occur at interrupt*/

@@ -69,7 +69,8 @@ PL031::read(PacketPtr pkt)
 
     switch (daddr) {
       case DataReg:
-        data = timeVal + ((curTick() - lastWrittenTick) / sim_clock::Int::s);
+        data = timeVal +
+            ((curTick() - lastWrittenTick) / sim_clock::as_int::s);
         break;
       case MatchReg:
         data = matchVal;
@@ -154,7 +155,7 @@ PL031::resyncMatch()
             timeVal);
 
     uint32_t seconds_until = matchVal - timeVal;
-    Tick ticks_until = sim_clock::Int::s * seconds_until;
+    Tick ticks_until = sim_clock::as_int::s * seconds_until;
 
     if (matchEvent.scheduled()) {
         DPRINTF(Timer, "-- Event was already schedule, de-scheduling\n");

@@ -167,13 +167,13 @@ BaseTags::computeStatsVisitor(CacheBlk &blk)
         Tick age = blk.getAge();
 
         int age_index;
-        if (age / sim_clock::Int::us < 10) { // <10us
+        if (age / sim_clock::as_int::us < 10) { // <10us
             age_index = 0;
-        } else if (age / sim_clock::Int::us < 100) { // <100us
+        } else if (age / sim_clock::as_int::us < 100) { // <100us
             age_index = 1;
-        } else if (age / sim_clock::Int::ms < 1) { // <1ms
+        } else if (age / sim_clock::as_int::ms < 1) { // <1ms
             age_index = 2;
-        } else if (age / sim_clock::Int::ms < 10) { // <10ms
+        } else if (age / sim_clock::as_int::ms < 10) { // <10ms
             age_index = 3;
         } else
             age_index = 4; // >10ms

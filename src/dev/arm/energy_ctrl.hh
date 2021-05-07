@@ -164,7 +164,7 @@ class EnergyCtrl : public BasicPioDevice
     uint32_t perfLevelToRead;
 
     static uint32_t ticksTokHz(Tick period) {
-        return (uint32_t)(sim_clock::Int::ms / period);
+        return (uint32_t)(sim_clock::as_int::ms / period);
     }
 
     static uint32_t toMicroVolt(double voltage) {

@@ -58,7 +58,7 @@ onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul, uint64_t time)
     // time to 0 with the assumption that quiesce will not happen. To avoid
     // the quiesce handling in this case, only execute the quiesce if time > 0.
     if (time > 0)
-        tc->quiesceTick(curTick() + sim_clock::Int::ns * time);
+        tc->quiesceTick(curTick() + sim_clock::as_int::ns * time);
 }
 
 } // namespace free_bsd
