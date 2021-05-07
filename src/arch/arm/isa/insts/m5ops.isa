@@ -40,7 +40,7 @@ let {{
     uint64_t ret;
     int func = bits(machInst, 23, 16);
     auto *tc = xc->tcBase();
-    if (!PseudoInst::pseudoInst<%s>(tc, func, ret))
+    if (!pseudo_inst::pseudoInst<%s>(tc, func, ret))
         fault = std::make_shared<UndefinedInstruction>(machInst, true);
     '''
     gem5OpIop = ArmInstObjParams("gem5op", "Gem5Op64", "PredOp",

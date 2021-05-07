@@ -722,10 +722,10 @@ ArmSemihosting::RetErrno
 ArmSemihosting::callGem5PseudoOp32(ThreadContext *tc, uint32_t encoded_func)
 {
     uint8_t func;
-    PseudoInst::decodeAddrOffset(encoded_func, func);
+    pseudo_inst::decodeAddrOffset(encoded_func, func);
 
     uint64_t ret;
-    if (PseudoInst::pseudoInst<SemiPseudoAbi32>(tc, func, ret))
+    if (pseudo_inst::pseudoInst<SemiPseudoAbi32>(tc, func, ret))
         return retOK(ret);
     else
         return retError(EINVAL);
@@ -735,10 +735,10 @@ ArmSemihosting::RetErrno
 ArmSemihosting::callGem5PseudoOp64(ThreadContext *tc, uint64_t encoded_func)
 {
     uint8_t func;
-    PseudoInst::decodeAddrOffset(encoded_func, func);
+    pseudo_inst::decodeAddrOffset(encoded_func, func);
 
     uint64_t ret;
-    if (PseudoInst::pseudoInst<SemiPseudoAbi64>(tc, func, ret))
+    if (pseudo_inst::pseudoInst<SemiPseudoAbi64>(tc, func, ret))
         return retOK(ret);
     else
         return retError(EINVAL);

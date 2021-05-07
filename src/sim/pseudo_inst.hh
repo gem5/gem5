@@ -46,6 +46,7 @@
 class ThreadContext;
 
 #include "base/bitfield.hh"
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "base/types.hh" // For Tick and Addr data types.
@@ -53,7 +54,8 @@ class ThreadContext;
 #include "debug/PseudoInst.hh"
 #include "sim/guest_abi.hh"
 
-namespace PseudoInst
+GEM5_DEPRECATED_NAMESPACE(PseudoInst, pseudo_inst);
+namespace pseudo_inst
 {
 
 static inline void
@@ -110,7 +112,7 @@ template <typename ABI, bool store_ret>
 bool
 pseudoInstWork(ThreadContext *tc, uint8_t func, uint64_t &result)
 {
-    DPRINTF(PseudoInst, "PseudoInst::pseudoInst(%i)\n", func);
+    DPRINTF(PseudoInst, "pseudo_inst::pseudoInst(%i)\n", func);
 
     result = 0;
 
@@ -249,6 +251,6 @@ pseudoInst(ThreadContext *tc, uint8_t func)
     return pseudoInstWork<ABI, store_ret>(tc, func, result);
 }
 
-} // namespace PseudoInst
+} // namespace pseudo_inst
 
 #endif // __SIM_PSEUDO_INST_HH__

@@ -142,15 +142,15 @@ TLB::finalizePhysical(const RequestPtr &req,
 
     if (m5opRange.contains(paddr)) {
         uint8_t func;
-        PseudoInst::decodeAddrOffset(paddr - m5opRange.start(), func);
+        pseudo_inst::decodeAddrOffset(paddr - m5opRange.start(), func);
         req->setLocalAccessor(
             [func, mode](ThreadContext *tc, PacketPtr pkt) -> Cycles
             {
                 uint64_t ret;
                 if (inAArch64(tc))
-                    PseudoInst::pseudoInst<RegABI64>(tc, func, ret);
+                    pseudo_inst::pseudoInst<RegABI64>(tc, func, ret);
                 else
-                    PseudoInst::pseudoInst<RegABI32>(tc, func, ret);
+                    pseudo_inst::pseudoInst<RegABI32>(tc, func, ret);
 
                 if (mode == Read)
                     pkt->setLE(ret);

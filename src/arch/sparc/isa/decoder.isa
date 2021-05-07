@@ -1002,7 +1002,7 @@ decode OP default Unknown::unknown()
             }
             // M5 special opcodes use the reserved IMPDEP2A opcode space
             0x37: BasicOperate::pseudo_inst({{
-                if (!PseudoInst::pseudoInst<SparcPseudoInstABI>(
+                if (!pseudo_inst::pseudoInst<SparcPseudoInstABI>(
                             xc->tcBase(), M5FUNC)) {
                     fault = std::make_shared<IllegalInstruction>();
                 }

@@ -71,7 +71,8 @@
 
 using namespace Stats;
 
-namespace PseudoInst
+GEM5_DEPRECATED_NAMESPACE(PseudoInst, pseudo_inst);
+namespace pseudo_inst
 {
 
 /**
@@ -101,7 +102,7 @@ const std::string DIST_SIZE = "dist-size";
 void
 arm(ThreadContext *tc)
 {
-    DPRINTF(PseudoInst, "PseudoInst::arm()\n");
+    DPRINTF(PseudoInst, "pseudo_inst::arm()\n");
 
     auto *workload = tc->getSystemPtr()->workload;
     if (workload)
@@ -111,35 +112,35 @@ arm(ThreadContext *tc)
 void
 quiesce(ThreadContext *tc)
 {
-    DPRINTF(PseudoInst, "PseudoInst::quiesce()\n");
+    DPRINTF(PseudoInst, "pseudo_inst::quiesce()\n");
     tc->quiesce();
 }
 
 void
 quiesceSkip(ThreadContext *tc)
 {
-    DPRINTF(PseudoInst, "PseudoInst::quiesceSkip()\n");
+    DPRINTF(PseudoInst, "pseudo_inst::quiesceSkip()\n");
     tc->quiesceTick(tc->getCpuPtr()->nextCycle() + 1);
 }
 
 void
 quiesceNs(ThreadContext *tc, uint64_t ns)
 {
-    DPRINTF(PseudoInst, "PseudoInst::quiesceNs(%i)\n", ns);
+    DPRINTF(PseudoInst, "pseudo_inst::quiesceNs(%i)\n", ns);
     tc->quiesceTick(curTick() + sim_clock::Int::ns * ns);
 }
 
 void
 quiesceCycles(ThreadContext *tc, uint64_t cycles)
 {
-    DPRINTF(PseudoInst, "PseudoInst::quiesceCycles(%i)\n", cycles);
+    DPRINTF(PseudoInst, "pseudo_inst::quiesceCycles(%i)\n", cycles);
     tc->quiesceTick(tc->getCpuPtr()->clockEdge(Cycles(cycles)));
 }
 
 uint64_t
 quiesceTime(ThreadContext *tc)
 {
-    DPRINTF(PseudoInst, "PseudoInst::quiesceTime()\n");
+    DPRINTF(PseudoInst, "pseudo_inst::quiesceTime()\n");
 
     return (tc->readLastActivate() - tc->readLastSuspend()) /
         sim_clock::Int::ns;
@@ -148,18 +149,18 @@ quiesceTime(ThreadContext *tc)
 uint64_t
 rpns(ThreadContext *tc)
 {
-    DPRINTF(PseudoInst, "PseudoInst::rpns()\n");
+    DPRINTF(PseudoInst, "pseudo_inst::rpns()\n");
     return curTick() / sim_clock::Int::ns;
 }
 
 void
 wakeCPU(ThreadContext *tc, uint64_t cpuid)
 {
-    DPRINTF(PseudoInst, "PseudoInst::wakeCPU(%i)\n", cpuid);
+    DPRINTF(PseudoInst, "pseudo_inst::wakeCPU(%i)\n", cpuid);
     System *sys = tc->getSystemPtr();
 
     if (sys->threads.size() <= cpuid) {
-        warn("PseudoInst::wakeCPU(%i), cpuid greater than number of contexts"
+        warn("pseudo_inst::wakeCPU(%i), cpuid greater than number of contexts"
              "(%i)\n", cpuid, sys->threads.size());
         return;
     }
@@ -172,7 +173,7 @@ wakeCPU(ThreadContext *tc, uint64_t cpuid)
 void
 m5exit(ThreadContext *tc, Tick delay)
 {
-    DPRINTF(PseudoInst, "PseudoInst::m5exit(%i)\n", delay);
+    DPRINTF(PseudoInst, "pseudo_inst::m5exit(%i)\n", delay);
     if (DistIface::readyToExit(delay)) {
         Tick when = curTick() + delay * sim_clock::Int::ns;
         exitSimLoop("m5_exit instruction encountered", 0, when, 0, true);
@@ -184,7 +185,7 @@ uint64_t
 m5sum(ThreadContext *tc, uint64_t a, uint64_t b, uint64_t c,
                          uint64_t d, uint64_t e, uint64_t f)
 {
-    DPRINTF(PseudoInst, "PseudoInst::m5sum(%#x, %#x, %#x, %#x, %#x, %#x)\n",
+    DPRINTF(PseudoInst, "pseudo_inst::m5sum(%#x, %#x, %#x, %#x, %#x, %#x)\n",
             a, b, c, d, e, f);
     return a + b + c + d + e + f;
 }
@@ -192,7 +193,7 @@ m5sum(ThreadContext *tc, uint64_t a, uint64_t b, uint64_t c,
 void
 m5fail(ThreadContext *tc, Tick delay, uint64_t code)
 {
-    DPRINTF(PseudoInst, "PseudoInst::m5fail(%i, %i)\n", delay, code);
+    DPRINTF(PseudoInst, "pseudo_inst::m5fail(%i, %i)\n", delay, code);
     Tick when = curTick() + delay * sim_clock::Int::ns;
     exitSimLoop("m5_fail instruction encountered", code, when, 0, true);
 }
@@ -200,7 +201,7 @@ m5fail(ThreadContext *tc, Tick delay, uint64_t code)
 void
 loadsymbol(ThreadContext *tc)
 {
-    DPRINTF(PseudoInst, "PseudoInst::loadsymbol()\n");
+    DPRINTF(PseudoInst, "pseudo_inst::loadsymbol()\n");
 
     const std::string &filename = tc->getCpuPtr()->system->params().symbolfile;
     if (filename.empty()) {
@@ -252,7 +253,7 @@ loadsymbol(ThreadContext *tc)
 void
 addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 {
-    DPRINTF(PseudoInst, "PseudoInst::addsymbol(0x%x, 0x%x)\n",
+    DPRINTF(PseudoInst, "pseudo_inst::addsymbol(0x%x, 0x%x)\n",
             addr, symbolAddr);
 
     std::string symbol;
@@ -269,8 +270,8 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 uint64_t
 initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
 {
-    DPRINTF(PseudoInst, "PseudoInst::initParam() key:%s%s\n", (char *)&key_str1,
-            (char *)&key_str2);
+    DPRINTF(PseudoInst, "pseudo_inst::initParam() key:%s%s\n",
+        (char *)&key_str1, (char *)&key_str2);
 
     // The key parameter string is passed in via two 64-bit registers. We copy
     // out the characters from the 64-bit integer variables here, and
@@ -299,7 +300,7 @@ initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
 void
 resetstats(ThreadContext *tc, Tick delay, Tick period)
 {
-    DPRINTF(PseudoInst, "PseudoInst::resetstats(%i, %i)\n", delay, period);
+    DPRINTF(PseudoInst, "pseudo_inst::resetstats(%i, %i)\n", delay, period);
     if (!tc->getCpuPtr()->params().do_statistics_insts)
         return;
 
@@ -313,7 +314,7 @@ resetstats(ThreadContext *tc, Tick delay, Tick period)
 void
 dumpstats(ThreadContext *tc, Tick delay, Tick period)
 {
-    DPRINTF(PseudoInst, "PseudoInst::dumpstats(%i, %i)\n", delay, period);
+    DPRINTF(PseudoInst, "pseudo_inst::dumpstats(%i, %i)\n", delay, period);
     if (!tc->getCpuPtr()->params().do_statistics_insts)
         return;
 
@@ -327,7 +328,8 @@ dumpstats(ThreadContext *tc, Tick delay, Tick period)
 void
 dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
 {
-    DPRINTF(PseudoInst, "PseudoInst::dumpresetstats(%i, %i)\n", delay, period);
+    DPRINTF(PseudoInst, "pseudo_inst::dumpresetstats(%i, %i)\n", delay,
+        period);
     if (!tc->getCpuPtr()->params().do_statistics_insts)
         return;
 
@@ -341,7 +343,7 @@ dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
 void
 m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
 {
-    DPRINTF(PseudoInst, "PseudoInst::m5checkpoint(%i, %i)\n", delay, period);
+    DPRINTF(PseudoInst, "pseudo_inst::m5checkpoint(%i, %i)\n", delay, period);
     if (!tc->getCpuPtr()->params().do_checkpoint_insts)
         return;
 
@@ -355,7 +357,7 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
 uint64_t
 readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
 {
-    DPRINTF(PseudoInst, "PseudoInst::readfile(0x%x, 0x%x, 0x%x)\n",
+    DPRINTF(PseudoInst, "pseudo_inst::readfile(0x%x, 0x%x, 0x%x)\n",
             vaddr, len, offset);
 
     const std::string &file = tc->getSystemPtr()->params().readfile;
@@ -394,7 +396,7 @@ uint64_t
 writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
             Addr filename_addr)
 {
-    DPRINTF(PseudoInst, "PseudoInst::writefile(0x%x, 0x%x, 0x%x, 0x%x)\n",
+    DPRINTF(PseudoInst, "pseudo_inst::writefile(0x%x, 0x%x, 0x%x, 0x%x)\n",
             vaddr, len, offset, filename_addr);
 
     // copy out target filename
@@ -439,28 +441,28 @@ writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
 void
 debugbreak(ThreadContext *tc)
 {
-    DPRINTF(PseudoInst, "PseudoInst::debugbreak()\n");
+    DPRINTF(PseudoInst, "pseudo_inst::debugbreak()\n");
     Debug::breakpoint();
 }
 
 void
 switchcpu(ThreadContext *tc)
 {
-    DPRINTF(PseudoInst, "PseudoInst::switchcpu()\n");
+    DPRINTF(PseudoInst, "pseudo_inst::switchcpu()\n");
     exitSimLoop("switchcpu");
 }
 
 void
 togglesync(ThreadContext *tc)
 {
-    DPRINTF(PseudoInst, "PseudoInst::togglesync()\n");
+    DPRINTF(PseudoInst, "pseudo_inst::togglesync()\n");
     DistIface::toggleSync(tc);
 }
 
 void
 triggerWorkloadEvent(ThreadContext *tc)
 {
-    DPRINTF(PseudoInst, "PseudoInst::triggerWorkloadEvent()\n");
+    DPRINTF(PseudoInst, "pseudo_inst::triggerWorkloadEvent()\n");
     tc->getSystemPtr()->workload->event(tc);
 }
 
@@ -472,7 +474,7 @@ triggerWorkloadEvent(ThreadContext *tc)
 void
 workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid)
 {
-    DPRINTF(PseudoInst, "PseudoInst::workbegin(%i, %i)\n", workid, threadid);
+    DPRINTF(PseudoInst, "pseudo_inst::workbegin(%i, %i)\n", workid, threadid);
     System *sys = tc->getSystemPtr();
     const System::Params &params = sys->params();
 
@@ -535,7 +537,7 @@ workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid)
 void
 workend(ThreadContext *tc, uint64_t workid, uint64_t threadid)
 {
-    DPRINTF(PseudoInst, "PseudoInst::workend(%i, %i)\n", workid, threadid);
+    DPRINTF(PseudoInst, "pseudo_inst::workend(%i, %i)\n", workid, threadid);
     System *sys = tc->getSystemPtr();
     const System::Params &params = sys->params();
 
@@ -584,4 +586,4 @@ workend(ThreadContext *tc, uint64_t workid, uint64_t threadid)
     }
 }
 
-} // namespace PseudoInst
+} // namespace pseudo_inst

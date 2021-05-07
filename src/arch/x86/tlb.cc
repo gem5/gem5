@@ -263,12 +263,12 @@ TLB::finalizePhysical(const RequestPtr &req,
     if (m5opRange.contains(paddr)) {
         req->setFlags(Request::STRICT_ORDER);
         uint8_t func;
-        PseudoInst::decodeAddrOffset(paddr - m5opRange.start(), func);
+        pseudo_inst::decodeAddrOffset(paddr - m5opRange.start(), func);
         req->setLocalAccessor(
             [func, mode](ThreadContext *tc, PacketPtr pkt) -> Cycles
             {
                 uint64_t ret;
-                PseudoInst::pseudoInst<X86PseudoInstABI, true>(tc, func, ret);
+                pseudo_inst::pseudoInst<X86PseudoInstABI, true>(tc, func, ret);
                 if (mode == Read)
                     pkt->setLE(ret);
                 return Cycles(1);
