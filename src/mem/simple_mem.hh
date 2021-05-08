@@ -82,7 +82,7 @@ class SimpleMemory : public AbstractMemory
     class MemoryPort : public ResponsePort
     {
       private:
-        SimpleMemory& memory;
+        SimpleMemory& mem;
 
       public:
         MemoryPort(const std::string& _name, SimpleMemory& _memory);

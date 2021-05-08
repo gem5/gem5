@@ -258,44 +258,44 @@ SimpleMemory::drain()
 
 SimpleMemory::MemoryPort::MemoryPort(const std::string& _name,
                                      SimpleMemory& _memory)
-    : ResponsePort(_name, &_memory), memory(_memory)
+    : ResponsePort(_name, &_memory), mem(_memory)
 { }
 
 AddrRangeList
 SimpleMemory::MemoryPort::getAddrRanges() const
 {
     AddrRangeList ranges;
-    ranges.push_back(memory.getAddrRange());
+    ranges.push_back(mem.getAddrRange());
     return ranges;
 }
 
 Tick
 SimpleMemory::MemoryPort::recvAtomic(PacketPtr pkt)
 {
-    return memory.recvAtomic(pkt);
+    return mem.recvAtomic(pkt);
 }
 
 Tick
 SimpleMemory::MemoryPort::recvAtomicBackdoor(
         PacketPtr pkt, MemBackdoorPtr &_backdoor)
 {
-    return memory.recvAtomicBackdoor(pkt, _backdoor);
+    return mem.recvAtomicBackdoor(pkt, _backdoor);
 }
 
 void
 SimpleMemory::MemoryPort::recvFunctional(PacketPtr pkt)
 {
-    memory.recvFunctional(pkt);
+    mem.recvFunctional(pkt);
 }
 
 bool
 SimpleMemory::MemoryPort::recvTimingReq(PacketPtr pkt)
 {
-    return memory.recvTimingReq(pkt);
+    return mem.recvTimingReq(pkt);
 }
 
 void
 SimpleMemory::MemoryPort::recvRespRetry()
 {
-    memory.recvRespRetry();
+    mem.recvRespRetry();
 }

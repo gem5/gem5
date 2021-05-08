@@ -353,38 +353,38 @@ DRAMSim2::drain()
 
 DRAMSim2::MemoryPort::MemoryPort(const std::string& _name,
                                  DRAMSim2& _memory)
-    : ResponsePort(_name, &_memory), memory(_memory)
+    : ResponsePort(_name, &_memory), mem(_memory)
 { }
 
 AddrRangeList
 DRAMSim2::MemoryPort::getAddrRanges() const
 {
     AddrRangeList ranges;
-    ranges.push_back(memory.getAddrRange());
+    ranges.push_back(mem.getAddrRange());
     return ranges;
 }
 
 Tick
 DRAMSim2::MemoryPort::recvAtomic(PacketPtr pkt)
 {
-    return memory.recvAtomic(pkt);
+    return mem.recvAtomic(pkt);
 }
 
 void
 DRAMSim2::MemoryPort::recvFunctional(PacketPtr pkt)
 {
-    memory.recvFunctional(pkt);
+    mem.recvFunctional(pkt);
 }
 
 bool
 DRAMSim2::MemoryPort::recvTimingReq(PacketPtr pkt)
 {
     // pass it to the memory controller
-    return memory.recvTimingReq(pkt);
+    return mem.recvTimingReq(pkt);
 }
 
 void
 DRAMSim2::MemoryPort::recvRespRetry()
 {
-    memory.recvRespRetry();
+    mem.recvRespRetry();
 }

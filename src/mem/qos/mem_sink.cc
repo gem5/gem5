@@ -348,33 +348,33 @@ MemSinkCtrl::MemSinkCtrlStats::MemSinkCtrlStats(statistics::Group *parent)
 MemSinkCtrl::MemoryPort::MemoryPort(const std::string& n,
                                     MemSinkCtrl& m)
   : QueuedResponsePort(n, &m, queue, true),
-   memory(m), queue(memory, *this, true)
+   mem(m), queue(mem, *this, true)
 {}
 
 AddrRangeList
 MemSinkCtrl::MemoryPort::getAddrRanges() const
 {
     AddrRangeList ranges;
-    ranges.push_back(memory.interface->getAddrRange());
+    ranges.push_back(mem.interface->getAddrRange());
     return ranges;
 }
 
 Tick
 MemSinkCtrl::MemoryPort::recvAtomic(PacketPtr pkt)
 {
-    return memory.recvAtomic(pkt);
+    return mem.recvAtomic(pkt);
 }
 
 void
 MemSinkCtrl::MemoryPort::recvFunctional(PacketPtr pkt)
 {
-    pkt->pushLabel(memory.name());
+    pkt->pushLabel(mem.name());
 
     if (!queue.trySatisfyFunctional(pkt)) {
         // Default implementation of SimpleTimingPort::recvFunctional()
         // calls recvAtomic() and throws away the latency; we can save a
         // little here by just not calculating the latency.
-        memory.recvFunctional(pkt);
+        mem.recvFunctional(pkt);
     }
 
     pkt->popLabel();
@@ -383,7 +383,7 @@ MemSinkCtrl::MemoryPort::recvFunctional(PacketPtr pkt)
 bool
 MemSinkCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
 {
-    return memory.recvTimingReq(pkt);
+    return mem.recvTimingReq(pkt);
 }
 
 } // namespace qos

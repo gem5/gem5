@@ -66,7 +66,7 @@ class DRAMsim3 : public AbstractMemory
 
       private:
 
-        DRAMsim3& memory;
+        DRAMsim3& mem;
 
       public:
 

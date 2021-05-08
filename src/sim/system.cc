@@ -226,9 +226,9 @@ System::System(const Params &p)
     if (!FullSystem) {
         AddrRangeList memories = physmem.getConfAddrRanges();
         assert(!memories.empty());
-        for (const auto &memory : memories) {
-            assert(!memory.interleaved());
-            memPools.emplace_back(this, memory.start(), memory.end());
+        for (const auto &mem : memories) {
+            assert(!mem.interleaved());
+            memPools.emplace_back(this, mem.start(), mem.end());
         }
 
         /*

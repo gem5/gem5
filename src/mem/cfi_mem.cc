@@ -447,46 +447,46 @@ CfiMemory::unserialize(CheckpointIn &cp)
 
 CfiMemory::MemoryPort::MemoryPort(const std::string& _name,
                                      CfiMemory& _memory)
-    : ResponsePort(_name, &_memory), memory(_memory)
+    : ResponsePort(_name, &_memory), mem(_memory)
 { }
 
 AddrRangeList
 CfiMemory::MemoryPort::getAddrRanges() const
 {
     AddrRangeList ranges;
-    ranges.push_back(memory.getAddrRange());
+    ranges.push_back(mem.getAddrRange());
     return ranges;
 }
 
 Tick
 CfiMemory::MemoryPort::recvAtomic(PacketPtr pkt)
 {
-    return memory.recvAtomic(pkt);
+    return mem.recvAtomic(pkt);
 }
 
 Tick
 CfiMemory::MemoryPort::recvAtomicBackdoor(
         PacketPtr pkt, MemBackdoorPtr &_backdoor)
 {
-    return memory.recvAtomicBackdoor(pkt, _backdoor);
+    return mem.recvAtomicBackdoor(pkt, _backdoor);
 }
 
 void
 CfiMemory::MemoryPort::recvFunctional(PacketPtr pkt)
 {
-    memory.recvFunctional(pkt);
+    mem.recvFunctional(pkt);
 }
 
 bool
 CfiMemory::MemoryPort::recvTimingReq(PacketPtr pkt)
 {
-    return memory.recvTimingReq(pkt);
+    return mem.recvTimingReq(pkt);
 }
 
 void
 CfiMemory::MemoryPort::recvRespRetry()
 {
-    memory.recvRespRetry();
+    mem.recvRespRetry();
 }
 
 void

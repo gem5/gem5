@@ -79,7 +79,7 @@ class MemSinkCtrl : public MemCtrl
     {
       private:
         /** reference to parent memory object */
-        MemSinkCtrl& memory;
+        MemSinkCtrl& mem;
 
         /** Outgoing packet responses queue */
         RespPacketQueue queue;

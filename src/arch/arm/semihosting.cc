@@ -553,9 +553,9 @@ ArmSemihosting::gatherHeapInfo(ThreadContext *tc, bool aarch64,
     fatal_if(memories.size() < 1, "No memories reported from System");
     warn_if(memories.size() > 1, "Multiple physical memory ranges available. "
             "Using first range heap/stack.");
-    const AddrRange memory = *memories.begin();
-    const Addr mem_start = memory.start() + memReserve;
-    Addr mem_end = memory.end();
+    const AddrRange mem = *memories.begin();
+    const Addr mem_start = mem.start() + memReserve;
+    Addr mem_end = mem.end();
 
     // Make sure that 32-bit guests can access their memory.
     if (!aarch64) {

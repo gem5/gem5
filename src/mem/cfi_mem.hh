@@ -232,7 +232,7 @@ class CfiMemory : public AbstractMemory
     class MemoryPort : public ResponsePort
     {
       private:
-        CfiMemory& memory;
+        CfiMemory& mem;
 
       public:
         MemoryPort(const std::string& _name, CfiMemory& _memory);
