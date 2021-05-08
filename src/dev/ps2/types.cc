@@ -42,12 +42,12 @@
 #include "base/logging.hh"
 #include "x11keysym/keysym.h"
 
-const std::vector<uint8_t> ps2::Keyboard::ID{0xAB, 0x83};
-const std::vector<uint8_t> ps2::Mouse::ID{0x00};
-
 GEM5_DEPRECATED_NAMESPACE(Ps2, ps2);
 namespace ps2
 {
+
+const std::vector<uint8_t> Keyboard::ID{0xAB, 0x83};
+const std::vector<uint8_t> Mouse::ID{0x00};
 
 /** Table to convert simple key symbols (0x00XX) into ps2 bytes. Lower byte
  * is the scan code to send and upper byte is if a modifier is required to

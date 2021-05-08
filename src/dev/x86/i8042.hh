@@ -110,8 +110,8 @@ class I8042 : public BasicPioDevice
     std::vector<IntSourcePin<I8042> *> mouseIntPin;
     std::vector<IntSourcePin<I8042> *> keyboardIntPin;
 
-    PS2Device *mouse;
-    PS2Device *keyboard;
+    ps2::Device *mouse;
+    ps2::Device *keyboard;
 
     void writeData(uint8_t newData, bool mouse = false);
     uint8_t readDataOut();

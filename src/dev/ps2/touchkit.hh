@@ -38,12 +38,16 @@
 #ifndef __DEV_PS2_TOUCHKIT_HH__
 #define __DEV_PS2_TOUCHKIT_HH__
 
+#include "base/compiler.hh"
 #include "base/vnc/vncinput.hh"
 #include "dev/ps2/device.hh"
 
 struct PS2TouchKitParams;
 
-class PS2TouchKit : public PS2Device, public VncMouse
+namespace ps2
+{
+
+class TouchKit : public Device, public VncMouse
 {
   protected:
     enum PS2Commands
@@ -60,12 +64,12 @@ class PS2TouchKit : public PS2Device, public VncMouse
     };
 
   public:
-    PS2TouchKit(const PS2TouchKitParams &p);
+    TouchKit(const PS2TouchKitParams &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-  protected: // PS2Device
+  protected: // from Device
     bool recv(const std::vector<uint8_t> &data) override;
 
   public: // VncMouse
@@ -89,5 +93,8 @@ class PS2TouchKit : public PS2Device, public VncMouse
     bool touchKitEnabled;
 };
 
-#endif // __DEV_PS2_TOUCHKIT_HH__
+} // namespace ps2
 
+GEM5_DEPRECATED_CLASS(PS2TouchKit, ps2::TouchKit);
+
+#endif // __DEV_PS2_TOUCHKIT_HH__

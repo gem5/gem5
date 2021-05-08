@@ -41,17 +41,23 @@
 #ifndef __DEV_PS2_DEVICE_HH__
 #define __DEV_PS2_DEVICE_HH__
 
+#include <cstdint>
 #include <deque>
+#include <functional>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "sim/sim_object.hh"
 
 struct PS2DeviceParams;
 
-class PS2Device : public SimObject
+namespace ps2
+{
+
+class Device : public SimObject
 {
   public:
-    PS2Device(const PS2DeviceParams &p);
+    Device(const PS2DeviceParams &p);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -141,5 +147,9 @@ class PS2Device : public SimObject
 
     std::function<void()> dataAvailableCallback;
 };
+
+} // namespace ps2
+
+GEM5_DEPRECATED_CLASS(PS2Device, ps2::Device);
 
 #endif // __DEV_PS2_HOUSE_HH__

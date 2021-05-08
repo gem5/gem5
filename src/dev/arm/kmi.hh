@@ -52,7 +52,9 @@
 #include "dev/arm/amba_device.hh"
 #include "params/Pl050.hh"
 
-class PS2Device;
+namespace ps2 {
+class Device;
+} // namespace ps2
 
 class Pl050 : public AmbaIntDevice
 {
@@ -123,7 +125,7 @@ class Pl050 : public AmbaIntDevice
     InterruptReg getInterrupt() const;
 
     /** PS2 device connected to this KMI interface */
-    PS2Device *ps2Device;
+    ps2::Device *ps2Device;
 
   public:
     Pl050(const Pl050Params &p);
