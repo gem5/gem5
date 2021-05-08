@@ -44,7 +44,9 @@
 
 struct SBOOEPrefetcherParams;
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 class SBOOE : public Queued
 {
@@ -158,6 +160,6 @@ class SBOOE : public Queued
                                std::vector<AddrPriority> &addresses) override;
 };
 
-} // namespace Prefetcher
+} // namespace prefetch
 
 #endif // __MEM_CACHE_PREFETCH_SBOOE_HH__

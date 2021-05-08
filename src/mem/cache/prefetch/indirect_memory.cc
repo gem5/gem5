@@ -32,7 +32,9 @@
  #include "mem/cache/prefetch/associative_set_impl.hh"
  #include "params/IndirectMemoryPrefetcher.hh"
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 IndirectMemory::IndirectMemory(const IndirectMemoryPrefetcherParams &p)
   : Queued(p),
@@ -254,4 +256,4 @@ IndirectMemory::checkAccessMatchOnActiveEntries(Addr addr)
     }
 }
 
-} // namespace Prefetcher
+} // namespace prefetch

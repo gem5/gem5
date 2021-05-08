@@ -46,7 +46,9 @@
 struct AccessMapPatternMatchingParams;
 struct AMPMPrefetcherParams;
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 class AccessMapPatternMatching : public ClockedObject
 {
@@ -200,6 +202,6 @@ class AMPM : public Queued
                            std::vector<AddrPriority> &addresses) override;
 };
 
-} // namespace Prefetcher
+} // namespace prefetch
 
 #endif//__MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__

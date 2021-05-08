@@ -33,7 +33,9 @@
 #include "params/AMPMPrefetcher.hh"
 #include "params/AccessMapPatternMatching.hh"
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 AccessMapPatternMatching::AccessMapPatternMatching(
     const AccessMapPatternMatchingParams &p)
@@ -263,4 +265,4 @@ AMPM::calculatePrefetch(const PrefetchInfo &pfi,
     ampm.calculatePrefetch(pfi, addresses);
 }
 
-} // namespace Prefetcher
+} // namespace prefetch

@@ -49,6 +49,7 @@
 #include <cstdint>
 
 #include "arch/generic/tlb.hh"
+#include "base/compiler.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/packet.hh"
@@ -60,7 +61,9 @@
 class BaseCache;
 struct BasePrefetcherParams;
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 class Base : public ClockedObject
 {
@@ -381,6 +384,6 @@ class Base : public ClockedObject
     void addTLB(BaseTLB *tlb);
 };
 
-} // namespace Prefetcher
+} // namespace prefetch
 
 #endif //__MEM_CACHE_PREFETCH_BASE_HH__

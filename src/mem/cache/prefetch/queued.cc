@@ -47,7 +47,9 @@
 #include "mem/request.hh"
 #include "params/QueuedPrefetcher.hh"
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 void
 Queued::DeferredPacket::createPkt(Addr paddr, unsigned blk_size,
@@ -484,4 +486,4 @@ Queued::addToQueue(std::list<DeferredPacket> &queue,
     }
 }
 
-} // namespace Prefetcher
+} // namespace prefetch

@@ -39,7 +39,9 @@
 
 #include "params/MultiPrefetcher.hh"
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 Multi::Multi(const MultiPrefetcherParams &p)
   : Base(p),
@@ -79,4 +81,4 @@ Multi::getPacket()
     return nullptr;
 }
 
-} // namespace Prefetcher
+} // namespace prefetch

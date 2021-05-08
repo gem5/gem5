@@ -45,7 +45,9 @@
 
 struct IrregularStreamBufferPrefetcherParams;
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 class IrregularStreamBuffer : public Queued
 {
@@ -136,6 +138,6 @@ class IrregularStreamBuffer : public Queued
                            std::vector<AddrPriority> &addresses) override;
 };
 
-} // namespace Prefetcher
+} // namespace prefetch
 
 #endif//__MEM_CACHE_PREFETCH_IRREGULAR_STREAM_BUFFER_HH__

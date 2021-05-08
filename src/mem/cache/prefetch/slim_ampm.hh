@@ -45,7 +45,9 @@
 
 struct SlimAMPMPrefetcherParams;
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 class SlimAMPM : public Queued
 {
@@ -61,6 +63,6 @@ class SlimAMPM : public Queued
                           std::vector<AddrPriority> &addresses) override;
 };
 
-} // namespace Prefetcher
+} // namespace prefetch
 
 #endif//__MEM_CACHE_PREFETCH_SLIM_AMPM_HH__

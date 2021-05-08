@@ -33,7 +33,9 @@
 #include "params/DCPTPrefetcher.hh"
 #include "params/DeltaCorrelatingPredictionTables.hh"
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 DeltaCorrelatingPredictionTables::DeltaCorrelatingPredictionTables(
    const DeltaCorrelatingPredictionTablesParams &p) : SimObject(p),
@@ -157,4 +159,4 @@ DCPT::calculatePrefetch(const PrefetchInfo &pfi,
     dcpt.calculatePrefetch(pfi, addresses);
 }
 
-} // namespace Prefetcher
+} // namespace prefetch

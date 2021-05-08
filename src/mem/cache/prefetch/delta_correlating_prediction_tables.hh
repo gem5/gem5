@@ -36,7 +36,9 @@
 struct DeltaCorrelatingPredictionTablesParams;
 struct DCPTPrefetcherParams;
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 /**
  * Delta Correlating Prediction Tables Prefetcher
@@ -129,6 +131,6 @@ class DCPT : public Queued
         std::vector<AddrPriority> &addresses) override;
 };
 
-} // namespace Prefetcher
+} // namespace prefetch
 
 #endif//__MEM_CACHE_PREFETCH_DELTA_CORRELATING_PREDICTION_TABLES_HH_

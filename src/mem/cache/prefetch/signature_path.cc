@@ -35,7 +35,9 @@
 #include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/SignaturePathPrefetcher.hh"
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 SignaturePath::SignaturePath(const SignaturePathPrefetcherParams &p)
     : Queued(p),
@@ -316,4 +318,4 @@ SignaturePath::auxiliaryPrefetcher(Addr ppn, stride_t current_block,
     }
 }
 
-} // namespace Prefetcher
+} // namespace prefetch

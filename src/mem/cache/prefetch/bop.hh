@@ -43,7 +43,9 @@
 
 struct BOPPrefetcherParams;
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 class BOP : public Queued
 {
@@ -155,6 +157,6 @@ class BOP : public Queued
                                std::vector<AddrPriority> &addresses) override;
 };
 
-} // namespace Prefetcher
+} // namespace prefetch
 
 #endif /* __MEM_CACHE_PREFETCH_BOP_HH__ */

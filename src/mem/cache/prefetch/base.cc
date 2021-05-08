@@ -52,7 +52,9 @@
 #include "params/BasePrefetcher.hh"
 #include "sim/system.hh"
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 Base::PrefetchInfo::PrefetchInfo(PacketPtr pkt, Addr addr, bool miss)
   : address(addr), pc(pkt->req->hasPC() ? pkt->req->getPC() : 0),
@@ -256,4 +258,4 @@ Base::addTLB(BaseTLB *t)
     tlb = t;
 }
 
-} // namespace Prefetcher
+} // namespace prefetch

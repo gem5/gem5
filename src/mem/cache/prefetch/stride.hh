@@ -68,7 +68,9 @@ namespace replacement_policy
 }
 struct StridePrefetcherParams;
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 /**
  * Override the default set associative to apply a specific hash function
@@ -160,6 +162,6 @@ class Stride : public Queued
                            std::vector<AddrPriority> &addresses) override;
 };
 
-} // namespace Prefetcher
+} // namespace prefetch
 
 #endif // __MEM_CACHE_PREFETCH_STRIDE_HH__

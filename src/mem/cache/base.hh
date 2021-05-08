@@ -76,7 +76,9 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
     class Base;
 }
 class MSHR;
@@ -348,7 +350,7 @@ class BaseCache : public ClockedObject
     compression::Base* compressor;
 
     /** Prefetcher */
-    Prefetcher::Base *prefetcher;
+    prefetch::Base *prefetcher;
 
     /** To probe when a cache hit occurs */
     ProbePointArg<PacketPtr> *ppHit;

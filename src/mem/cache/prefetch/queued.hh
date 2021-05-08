@@ -49,7 +49,9 @@
 
 struct QueuedPrefetcherParams;
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 class Queued : public Base
 {
@@ -250,7 +252,7 @@ class Queued : public Base
                                         PacketPtr pkt);
 };
 
-} // namespace Prefetcher
+} // namespace prefetch
 
 #endif //__MEM_CACHE_PREFETCH_QUEUED_HH__
 

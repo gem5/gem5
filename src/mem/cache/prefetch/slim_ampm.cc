@@ -30,7 +30,9 @@
 
 #include "params/SlimAMPMPrefetcher.hh"
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 SlimAMPM::SlimAMPM(const SlimAMPMPrefetcherParams &p)
   : Queued(p), ampm(*p.ampm), dcpt(*p.dcpt)
@@ -47,4 +49,4 @@ SlimAMPM::calculatePrefetch(const PrefetchInfo &pfi,
     }
 }
 
-} // namespace Prefetcher
+} // namespace prefetch

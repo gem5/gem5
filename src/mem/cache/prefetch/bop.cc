@@ -31,7 +31,9 @@
 #include "debug/HWPrefetch.hh"
 #include "params/BOPPrefetcher.hh"
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 BOP::BOP(const BOPPrefetcherParams &p)
     : Queued(p),
@@ -260,4 +262,4 @@ BOP::notifyFill(const PacketPtr& pkt)
     }
 }
 
-} // namespace Prefetcher
+} // namespace prefetch

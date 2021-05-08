@@ -42,7 +42,9 @@
 
 struct MultiPrefetcherParams;
 
-namespace Prefetcher {
+GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
+namespace prefetch
+{
 
 class Multi : public Base
 {
@@ -68,6 +70,6 @@ class Multi : public Base
     std::list<Base*> prefetchers;
 };
 
-} // namespace Prefetcher
+} // namespace prefetch
 
 #endif //__MEM_CACHE_PREFETCH_MULTI_HH__
