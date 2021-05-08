@@ -56,10 +56,20 @@ with gem5_scons.Configure(main) as conf:
     # alternative stacks.
     conf.env['HAVE_VALGRIND'] = conf.CheckCHeader('valgrind/valgrind.h')
 
+    conf.env['HAVE_DEPRECATED_NAMESPACE'] = conf.TryCompile('''
+        int main() {return 0;}
+        namespace [[gnu::deprecated("Test namespace deprecation")]]
+        test_deprecated_namespace {}
+    ''', '.cc')
+    if not conf.env['HAVE_DEPRECATED_NAMESPACE']:
+        warning("Deprecated namespaces are not supported by this compiler.\n"
+                "Please make sure to check the mailing list for deprecation "
+                "announcements.")
 
 sticky_vars.Add(BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks',
                              have_posix_clock))
 
 
 export_vars.extend([
-        'HAVE_FENV', 'HAVE_PNG', 'USE_POSIX_CLOCK', 'HAVE_VALGRIND'])
+        'HAVE_FENV', 'HAVE_PNG', 'USE_POSIX_CLOCK', 'HAVE_VALGRIND',
+        'HAVE_DEPRECATED_NAMESPACE'])

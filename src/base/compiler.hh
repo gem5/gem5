@@ -43,6 +43,8 @@
 
 #include <memory>
 
+#include "config/have_deprecated_namespace.hh"
+
 // http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
 
 
@@ -137,6 +139,32 @@
 // "do {} while (0)" to make their syntax look more like normal c++ statements.
 #  define GEM5_DEPRECATED_MACRO_STMT(name, definition, message) \
      do {{definition;} GEM5_DEPRECATED_MACRO(name, {}, message);} while (0)
+
+// To mark a class as deprecated in favor of a new name, add a respective
+// instance of this macro to the file that used to declare the old name.
+// This macro should be used *after* the new class has been defined.
+#  define GEM5_DEPRECATED_CLASS(old_class, new_class) \
+    using old_class \
+        GEM5_DEPRECATED("Please use the new class name: '" #new_class "'") = \
+        new_class
+
+// These macros should be used when namespaces are deprecated in favor of
+// a new name. They should be used wherever the namespace is declared.
+// Namespace deprecation is broken for GNU < 10 [1], so there is no
+// deprecation warning in that case. Clang only supports it from C++17 on.
+// [1] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=79817
+#  if HAVE_DEPRECATED_NAMESPACE
+#    define GEM5_DEPRECATED_NAMESPACE(old_namespace, new_namespace) \
+       namespace new_namespace {} \
+       namespace GEM5_DEPRECATED("Please use the new namespace: '" \
+         #new_namespace "'") old_namespace { \
+         using namespace new_namespace; \
+       }
+#  else
+#    define GEM5_DEPRECATED_NAMESPACE(old_namespace, new_namespace) \
+       namespace new_namespace {} \
+       namespace old_namespace = new_namespace
+#  endif
 
 // Evaluate an expanded parameter pack in order. Multiple arguments can be
 // passed in which be evaluated in order relative to each other as a group.
