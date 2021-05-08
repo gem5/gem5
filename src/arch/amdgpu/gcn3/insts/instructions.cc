@@ -4497,12 +4497,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarRdGmReqsInPipe--;
-        wf->scalarOutstandingReqsRdGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            .issueRequest(gpuDynInst);
     }
 
     void
@@ -4556,12 +4551,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarRdGmReqsInPipe--;
-        wf->scalarOutstandingReqsRdGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            issueRequest(gpuDynInst);
     }
 
     void
@@ -4613,12 +4603,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarRdGmReqsInPipe--;
-        wf->scalarOutstandingReqsRdGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            issueRequest(gpuDynInst);
     }
 
     void
@@ -4670,12 +4655,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarRdGmReqsInPipe--;
-        wf->scalarOutstandingReqsRdGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            issueRequest(gpuDynInst);
     }
 
     void
@@ -4727,12 +4707,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarRdGmReqsInPipe--;
-        wf->scalarOutstandingReqsRdGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            issueRequest(gpuDynInst);
     }
 
     void
@@ -4785,12 +4760,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, rsrcDesc, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarRdGmReqsInPipe--;
-        wf->scalarOutstandingReqsRdGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            .issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -4844,12 +4814,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, rsrcDesc, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarRdGmReqsInPipe--;
-        wf->scalarOutstandingReqsRdGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            .issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -4903,12 +4868,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, rsrcDesc, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarRdGmReqsInPipe--;
-        wf->scalarOutstandingReqsRdGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            .issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -4962,12 +4922,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, rsrcDesc, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarRdGmReqsInPipe--;
-        wf->scalarOutstandingReqsRdGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            .issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5021,12 +4976,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, rsrcDesc, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarRdGmReqsInPipe--;
-        wf->scalarOutstandingReqsRdGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            .issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5087,12 +5037,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarWrGmReqsInPipe--;
-        wf->scalarOutstandingReqsWrGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            issueRequest(gpuDynInst);
     }
 
     void
@@ -5147,12 +5092,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarWrGmReqsInPipe--;
-        wf->scalarOutstandingReqsWrGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            issueRequest(gpuDynInst);
     }
 
     void
@@ -5207,12 +5147,7 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
-
-        wf->scalarWrGmReqsInPipe--;
-        wf->scalarOutstandingReqsWrGm++;
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
+            issueRequest(gpuDynInst);
     }
 
     void
@@ -31262,11 +31197,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->wrLmReqsInPipe--;
-        wf->outstandingReqsWrLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -31326,11 +31256,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->wrLmReqsInPipe--;
-        wf->outstandingReqsWrLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -31389,11 +31314,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->wrLmReqsInPipe--;
-        wf->outstandingReqsWrLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
 
     void
@@ -31564,11 +31484,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->wrLmReqsInPipe--;
-        wf->outstandingReqsWrLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
 
     void
@@ -31623,11 +31538,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->wrLmReqsInPipe--;
-        wf->outstandingReqsWrLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
 
     void
@@ -32078,11 +31988,6 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr);
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->rdLmReqsInPipe--;
-        wf->outstandingReqsRdLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -32139,11 +32044,6 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr);
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->rdLmReqsInPipe--;
-        wf->outstandingReqsRdLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -32203,11 +32103,6 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr);
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->rdLmReqsInPipe--;
-        wf->outstandingReqsRdLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
 
     void
@@ -32286,11 +32181,6 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr);
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->rdLmReqsInPipe--;
-        wf->outstandingReqsRdLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
 
     void
@@ -32366,11 +32256,6 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr);
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->rdLmReqsInPipe--;
-        wf->outstandingReqsRdLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
     void
     Inst_DS__DS_READ_U16::initiateAcc(GPUDynInstPtr gpuDynInst)
@@ -32931,11 +32816,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->wrLmReqsInPipe--;
-        wf->outstandingReqsWrLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -32995,11 +32875,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->wrLmReqsInPipe--;
-        wf->outstandingReqsWrLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -33517,11 +33392,6 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr);
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->rdLmReqsInPipe--;
-        wf->outstandingReqsRdLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -33578,11 +33448,6 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr);
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->rdLmReqsInPipe--;
-        wf->outstandingReqsRdLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -33642,11 +33507,6 @@ namespace Gcn3ISA
         calcAddr(gpuDynInst, addr);
 
         gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
-
-        wf->rdLmReqsInPipe--;
-        wf->outstandingReqsRdLm++;
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -35070,17 +34930,10 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->rdLmReqsInPipe--;
-            wf->outstandingReqsRdLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -35200,17 +35053,10 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdLmReqsInPipe--;
-            wf->outstandingReqsRdLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -35330,17 +35176,10 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdLmReqsInPipe--;
-            wf->outstandingReqsRdLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -35429,17 +35268,10 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdLmReqsInPipe--;
-            wf->outstandingReqsRdLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
 
     void
@@ -35533,17 +35365,10 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdLmReqsInPipe--;
-            wf->outstandingReqsRdLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
 
     void
@@ -35642,17 +35467,10 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdLmReqsInPipe--;
-            wf->outstandingReqsRdLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
 
     void
@@ -35765,17 +35583,10 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrLmReqsInPipe--;
-            wf->outstandingReqsWrLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -35859,17 +35670,10 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrLmReqsInPipe--;
-            wf->outstandingReqsWrLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -35953,17 +35757,10 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrLmReqsInPipe--;
-            wf->outstandingReqsWrLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -36042,13 +35839,9 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrLmReqsInPipe--;
-            wf->outstandingReqsWrLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         }
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -36059,9 +35852,6 @@ namespace Gcn3ISA
                     = data1[lane];
             }
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
 
     void
@@ -36142,13 +35932,9 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrLmReqsInPipe--;
-            wf->outstandingReqsWrLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         }
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -36161,9 +35947,6 @@ namespace Gcn3ISA
                     = data2[lane];
             }
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
 
     void
@@ -36246,13 +36029,9 @@ namespace Gcn3ISA
         if (isLocalMem()) {
             gpuDynInst->computeUnit()->localMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrLmReqsInPipe--;
-            wf->outstandingReqsWrLm++;
         } else {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         }
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -36267,9 +36046,6 @@ namespace Gcn3ISA
                     = data3[lane];
             }
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     } // execute
 
     void
@@ -36328,17 +36104,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->rdGmReqsInPipe--;
-
-            wf->outstandingReqsWrGm++;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -36385,17 +36153,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->rdGmReqsInPipe--;
-
-            wf->outstandingReqsWrGm++;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
     void
     Inst_MUBUF__BUFFER_WBINVL1_VOL::initiateAcc(GPUDynInstPtr gpuDynInst)
@@ -39415,14 +39175,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     } // execute
 
     void
@@ -39484,14 +39239,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -39552,14 +39302,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -39649,14 +39394,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -39718,14 +39458,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -39787,14 +39522,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -39865,14 +39595,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -39955,14 +39680,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     } // execute
 
     void
@@ -40023,14 +39743,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -40091,14 +39806,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -40160,14 +39870,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        wf->outstandingReqs++;
-        wf->validateRequestCounters();
     }
 
     void
@@ -40237,14 +39942,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -40318,14 +40018,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe
                 .issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -40390,16 +40085,9 @@ namespace Gcn3ISA
                      "Flats to private aperture not tested yet\n");
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
 
         ConstVecOperandU32 data(gpuDynInst, extData.DATA);
 
@@ -40511,16 +40199,9 @@ namespace Gcn3ISA
                      "Flats to private aperture not tested yet\n");
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -40602,16 +40283,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -40693,16 +40367,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
     void
     Inst_FLAT__FLAT_ATOMIC_SUB::initiateAcc(GPUDynInstPtr gpuDynInst)
@@ -40958,16 +40625,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -41049,16 +40709,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -41182,16 +40835,9 @@ namespace Gcn3ISA
                      "Flats to private aperture not tested yet\n");
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -41274,16 +40920,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -41367,16 +41006,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -41642,16 +41274,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void
@@ -41736,16 +41361,9 @@ namespace Gcn3ISA
         if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
-            wf->wrGmReqsInPipe--;
-            wf->outstandingReqsWrGm++;
-            wf->rdGmReqsInPipe--;
-            wf->outstandingReqsRdGm++;
         } else {
             fatal("Non global flat instructions not implemented yet.\n");
         }
-
-        gpuDynInst->wavefront()->outstandingReqs++;
-        gpuDynInst->wavefront()->validateRequestCounters();
     }
 
     void

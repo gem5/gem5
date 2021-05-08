@@ -144,4 +144,22 @@ ScalarMemPipeline::exec()
     }
 }
 
+void
+ScalarMemPipeline::issueRequest(GPUDynInstPtr gpuDynInst)
+{
+    Wavefront *wf = gpuDynInst->wavefront();
+    if (gpuDynInst->isLoad()) {
+        wf->scalarRdGmReqsInPipe--;
+        wf->scalarOutstandingReqsRdGm++;
+    } else if (gpuDynInst->isStore()) {
+        wf->scalarWrGmReqsInPipe--;
+        wf->scalarOutstandingReqsWrGm++;
+    }
+
+    wf->outstandingReqs++;
+    wf->validateRequestCounters();
+
+    issuedRequests.push(gpuDynInst);
+}
+
 } // namespace gem5

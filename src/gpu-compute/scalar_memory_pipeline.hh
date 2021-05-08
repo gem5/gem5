@@ -67,6 +67,8 @@ class ScalarMemPipeline
     std::queue<GPUDynInstPtr> &getGMStRespFIFO() { return returnedStores; }
     std::queue<GPUDynInstPtr> &getGMLdRespFIFO() { return returnedLoads; }
 
+    void issueRequest(GPUDynInstPtr gpuDynInst);
+
     bool
     isGMLdRespFIFOWrRdy() const
     {

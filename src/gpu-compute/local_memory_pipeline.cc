@@ -123,6 +123,24 @@ LocalMemPipeline::exec()
 void
 LocalMemPipeline::issueRequest(GPUDynInstPtr gpuDynInst)
 {
+    Wavefront *wf = gpuDynInst->wavefront();
+    if (gpuDynInst->isLoad()) {
+        wf->rdLmReqsInPipe--;
+        wf->outstandingReqsRdLm++;
+    } else if (gpuDynInst->isStore()) {
+        wf->wrLmReqsInPipe--;
+        wf->outstandingReqsWrLm++;
+    } else {
+        // Atomic, both read and write
+        wf->rdLmReqsInPipe--;
+        wf->outstandingReqsRdLm++;
+        wf->wrLmReqsInPipe--;
+        wf->outstandingReqsWrLm++;
+    }
+
+    wf->outstandingReqs++;
+    wf->validateRequestCounters();
+
     gpuDynInst->setAccessTime(curTick());
     lmIssuedRequests.push(gpuDynInst);
 }

@@ -4972,7 +4972,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
+            .issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5026,7 +5026,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
+            issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5079,7 +5079,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
+            issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5132,7 +5132,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
+            issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5185,7 +5185,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
+            issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5239,7 +5239,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, rsrcDesc, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
+            .issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5294,7 +5294,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, rsrcDesc, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
+            .issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5349,7 +5349,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, rsrcDesc, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
+            .issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5404,7 +5404,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, rsrcDesc, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
+            .issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5459,7 +5459,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, rsrcDesc, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe
-            .getGMReqFIFO().push(gpuDynInst);
+            .issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5521,7 +5521,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
+            issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5577,7 +5577,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
+            issueRequest(gpuDynInst);
     } // execute
 
     void
@@ -5633,7 +5633,7 @@ namespace VegaISA
         calcAddr(gpuDynInst, addr, offset);
 
         gpuDynInst->computeUnit()->scalarMemoryPipe.
-            getGMReqFIFO().push(gpuDynInst);
+            issueRequest(gpuDynInst);
     } // execute
 
     void

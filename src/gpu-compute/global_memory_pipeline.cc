@@ -276,6 +276,24 @@ GlobalMemPipeline::completeRequest(GPUDynInstPtr gpuDynInst)
 void
 GlobalMemPipeline::issueRequest(GPUDynInstPtr gpuDynInst)
 {
+    Wavefront *wf = gpuDynInst->wavefront();
+    if (gpuDynInst->isLoad()) {
+        wf->rdGmReqsInPipe--;
+        wf->outstandingReqsRdGm++;
+    } else if (gpuDynInst->isStore()) {
+        wf->wrGmReqsInPipe--;
+        wf->outstandingReqsWrGm++;
+    } else {
+        // Atomic, both read and write
+        wf->rdGmReqsInPipe--;
+        wf->outstandingReqsRdGm++;
+        wf->wrGmReqsInPipe--;
+        wf->outstandingReqsWrGm++;
+    }
+
+    wf->outstandingReqs++;
+    wf->validateRequestCounters();
+
     gpuDynInst->setAccessTime(curTick());
     gpuDynInst->profileRoundTripTime(curTick(), InstMemoryHop::Initiate);
     gmIssuedRequests.push(gpuDynInst);
