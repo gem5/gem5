@@ -201,7 +201,7 @@ struct BasePrint
     int precision;
     bool descriptions;
     std::string desc;
-    bool units;
+    bool enableUnits;
     std::string unitStr;
     bool spaces;
 
@@ -218,7 +218,7 @@ struct BasePrint
         precision = _precision;
         descriptions = enable_descriptions;
         desc = _desc;
-        units = enable_units;
+        enableUnits = enable_units;
         unitStr = unit_str;
         spaces = enable_spaces;
     }
@@ -226,7 +226,7 @@ struct BasePrint
     void
     printUnits(std::ostream &stream) const
     {
-        if (units && !unitStr.empty()) {
+        if (enableUnits && !unitStr.empty()) {
             ccprintf(stream, " (%s)", unitStr);
         }
     }
@@ -344,8 +344,8 @@ VectorPrint::operator()(std::ostream &stream) const
     std::string base = name + separatorString;
 
     ScalarPrint print(spaces);
-    print.setup(name, flags, precision, descriptions, desc, units, unitStr,
-        spaces);
+    print.setup(name, flags, precision, descriptions, desc, enableUnits,
+        unitStr, spaces);
     print.pdf = _total ? 0.0 : Nan;
     print.cdf = _total ? 0.0 : Nan;
 
@@ -439,8 +439,8 @@ void
 DistPrint::init(const Text *text, const Info &info)
 {
     setup(text->statName(info.name), info.flags, info.precision,
-        text->descriptions, info.desc, text->units, info.unit->getUnitString(),
-        text->spaces);
+        text->descriptions, info.desc, text->enableUnits,
+        info.unit->getUnitString(), text->spaces);
     separatorString = info.separatorString;
     if (spaces) {
         nameSpaces = 40;
@@ -586,7 +586,7 @@ Text::visit(const ScalarInfo &info)
 
     ScalarPrint print(spaces);
     print.setup(statName(info.name), info.flags, info.precision, descriptions,
-        info.desc, units, info.unit->getUnitString(), spaces);
+        info.desc, enableUnits, info.unit->getUnitString(), spaces);
     print.value = info.result();
     print.pdf = Nan;
     print.cdf = Nan;
@@ -603,7 +603,7 @@ Text::visit(const VectorInfo &info)
     size_type size = info.size();
     VectorPrint print(spaces);
     print.setup(statName(info.name), info.flags, info.precision, descriptions,
-        info.desc, units, info.unit->getUnitString(), spaces);
+        info.desc, enableUnits, info.unit->getUnitString(), spaces);
     print.separatorString = info.separatorString;
     print.vec = info.result();
     print.total = info.total();
@@ -649,7 +649,7 @@ Text::visit(const Vector2dInfo &info)
     print.flags = info.flags;
     print.separatorString = info.separatorString;
     print.descriptions = descriptions;
-    print.units = units;
+    print.enableUnits = enableUnits;
     print.precision = info.precision;
     print.forceSubnames = true;
 
@@ -754,7 +754,7 @@ void
 SparseHistPrint::init(const Text *text, const Info &info)
 {
     setup(text->statName(info.name), info.flags, info.precision,
-        text->descriptions, info.desc, text->units,
+        text->descriptions, info.desc, text->enableUnits,
         info.unit->getUnitString(), text->spaces);
     separatorString = info.separatorString;
 }
@@ -766,8 +766,8 @@ SparseHistPrint::operator()(std::ostream &stream) const
     std::string base = name + separatorString;
 
     ScalarPrint print(spaces);
-    print.setup(base + "samples", flags, precision, descriptions, desc, units,
-        unitStr, spaces);
+    print.setup(base + "samples", flags, precision, descriptions, desc,
+        enableUnits, unitStr, spaces);
     print.pdf = Nan;
     print.cdf = Nan;
     print.value = data.samples;
@@ -804,7 +804,7 @@ initText(const std::string &filename, bool desc, bool spaces)
     if (!connected) {
         text.open(*simout.findOrCreate(filename)->stream());
         text.descriptions = desc;
-        text.units = desc; // the units are printed if descs are
+        text.enableUnits = desc; // the units are printed if descs are
         text.spaces = spaces;
         connected = true;
     }
