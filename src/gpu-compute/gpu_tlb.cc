@@ -676,7 +676,7 @@ namespace X86ISA
         TranslationState *sender_state =
                 safe_cast<TranslationState*>(pkt->senderState);
 
-        bool update_stats = !sender_state->prefetch;
+        bool update_stats = !sender_state->isPrefetch;
         ThreadContext * tmp_tc = sender_state->tc;
 
         DPRINTF(GPUTLB, "Translation req. for virt. page addr %#x\n",
@@ -891,7 +891,7 @@ namespace X86ISA
             safe_cast<TranslationState*>(pkt->senderState);
 
         int req_cnt = tmp_sender_state->reqCnt.back();
-        bool update_stats = !tmp_sender_state->prefetch;
+        bool update_stats = !tmp_sender_state->isPrefetch;
 
 
         if (outcome == TLB_HIT) {
@@ -1102,7 +1102,7 @@ namespace X86ISA
          * This feature could be used to explore security issues around
          * speculative memory accesses.
          */
-        if (!sender_state->prefetch && sender_state->tlbEntry)
+        if (!sender_state->isPrefetch && sender_state->tlbEntry)
             pagingProtectionChecks(tc, pkt, local_entry, mode);
 
         int page_size = local_entry->size();
@@ -1124,7 +1124,7 @@ namespace X86ISA
             safe_cast<TranslationState*>(pkt->senderState);
 
         ThreadContext *tc = sender_state->tc;
-        bool update_stats = !sender_state->prefetch;
+        bool update_stats = !sender_state->isPrefetch;
 
         Addr virt_page_addr = roundDown(pkt->req->getVaddr(),
                                         X86ISA::PageBytes);
@@ -1154,7 +1154,7 @@ namespace X86ISA
                 // there is a TLB below -> propagate down the TLB hierarchy
                 tlb->memSidePort[0]->sendFunctional(pkt);
                 // If no valid translation from a prefetch, then just return
-                if (sender_state->prefetch && !pkt->req->hasPaddr())
+                if (sender_state->isPrefetch && !pkt->req->hasPaddr())
                     return;
             } else {
                 // Need to access the page table and update the TLB
@@ -1175,7 +1175,7 @@ namespace X86ISA
                     pte = p->pTable->lookup(vaddr);
                 }
 
-                if (!sender_state->prefetch) {
+                if (!sender_state->isPrefetch) {
                     // no PageFaults are permitted after
                     // the second page table lookup
                     assert(pte);

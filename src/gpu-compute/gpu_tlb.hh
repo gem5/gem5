@@ -293,7 +293,7 @@ namespace X86ISA
             */
             TlbEntry *tlbEntry;
             // Is this a TLB prefetch request?
-            bool prefetch;
+            bool isPrefetch;
             // When was the req for this translation issued
             uint64_t issueTime;
             // Remember where this came from
@@ -307,10 +307,10 @@ namespace X86ISA
             Packet::SenderState *saved;
 
             TranslationState(Mode tlb_mode, ThreadContext *_tc,
-                             bool _prefetch=false,
+                             bool is_prefetch=false,
                              Packet::SenderState *_saved=nullptr)
                 : tlbMode(tlb_mode), tc(_tc), tlbEntry(nullptr),
-                  prefetch(_prefetch), issueTime(0),
+                  isPrefetch(is_prefetch), issueTime(0),
                   hitLevel(0),saved(_saved) { }
         };
 
