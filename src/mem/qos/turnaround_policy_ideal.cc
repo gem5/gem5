@@ -37,6 +37,9 @@
 
 #include "turnaround_policy_ideal.hh"
 
+#include <cstdint>
+
+#include "base/trace.hh"
 #include "params/QoSTurnaroundPolicyIdeal.hh"
 
 namespace QoS {

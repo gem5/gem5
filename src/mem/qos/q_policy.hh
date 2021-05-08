@@ -33,22 +33,20 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Author: Matteo Andreozzi
  */
 
 #ifndef __MEM_QOS_Q_POLICY_HH__
 #define __MEM_QOS_Q_POLICY_HH__
 
 #include <deque>
+#include <list>
 #include <unordered_set>
 
 #include "mem/packet.hh"
+#include "mem/qos/mem_ctrl.hh"
 #include "params/QoSMemCtrl.hh"
 
 namespace QoS {
-
-class MemCtrl;
 
 /**
  * QoS Queue Policy

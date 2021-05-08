@@ -38,7 +38,9 @@
 #ifndef __MEM_QOS_TURNAROUND_POLICY_HH__
 #define __MEM_QOS_TURNAROUND_POLICY_HH__
 
-#include "mem_ctrl.hh"
+#include "mem/qos/mem_ctrl.hh"
+#include "params/QoSTurnaroundPolicy.hh"
+#include "sim/sim_object.hh"
 
 namespace QoS {
 

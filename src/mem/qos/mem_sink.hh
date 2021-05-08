@@ -33,18 +33,22 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Author: Matteo Andreozzi
  */
 
 
 #ifndef __MEM_QOS_MEM_SINK_HH__
 #define __MEM_QOS_MEM_SINK_HH__
 
+#include <cstdint>
+#include <deque>
+#include <vector>
+
+#include "base/types.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/qos/mem_ctrl.hh"
 #include "mem/qport.hh"
 #include "params/QoSMemSinkCtrl.hh"
+#include "sim/eventq.hh"
 
 struct QoSMemSinkInterfaceParams;
 class QoSMemSinkInterface;

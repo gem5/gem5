@@ -35,9 +35,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem_ctrl.hh"
+#include "mem/qos/mem_ctrl.hh"
 
-#include "turnaround_policy.hh"
+#include "mem/qos/policy.hh"
+#include "mem/qos/q_policy.hh"
+#include "mem/qos/turnaround_policy.hh"
+#include "sim/core.hh"
 
 namespace QoS {
 

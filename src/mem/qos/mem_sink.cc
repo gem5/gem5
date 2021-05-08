@@ -33,15 +33,16 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Author: Matteo Andreozzi
  */
 
+#include "mem/qos/mem_sink.hh"
+
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "debug/Drain.hh"
 #include "debug/QOS.hh"
-#include "mem_sink.hh"
+#include "mem/qos/q_policy.hh"
 #include "params/QoSMemSinkInterface.hh"
-#include "sim/system.hh"
 
 namespace QoS {
 

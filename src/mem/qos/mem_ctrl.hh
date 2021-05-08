@@ -35,21 +35,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "debug/QOS.hh"
-#include "mem/qos/policy.hh"
-#include "mem/qos/q_policy.hh"
-#include "params/QoSMemCtrl.hh"
-#include "sim/clocked_object.hh"
-#include "sim/system.hh"
-
-#include <unordered_map>
-#include <vector>
-#include <deque>
-
 #ifndef __MEM_QOS_MEM_CTRL_HH__
 #define __MEM_QOS_MEM_CTRL_HH__
 
+#include <cstdint>
+#include <deque>
+#include <memory>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include "base/logging.hh"
+#include "base/statistics.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
+#include "debug/QOS.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
+#include "params/QoSMemCtrl.hh"
+#include "sim/clocked_object.hh"
+#include "sim/cur_tick.hh"
+#include "sim/system.hh"
+
 namespace QoS {
+
+class Policy;
+class QueuePolicy;
+class TurnaroundPolicy;
 
 /**
  * The QoS::MemCtrl is a base class for Memory objects

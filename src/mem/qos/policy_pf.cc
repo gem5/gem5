@@ -33,13 +33,14 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Author: Giacomo Travaglini
  */
 
 #include "mem/qos/policy_pf.hh"
 
-#include "mem/request.hh"
+#include <algorithm>
+
+#include "base/logging.hh"
+#include "params/QoSPropFairPolicy.hh"
 
 namespace QoS {
 

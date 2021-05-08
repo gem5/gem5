@@ -33,8 +33,6 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Author: Matteo Andreozzi
  */
 
 #include "mem/qos/q_policy.hh"
@@ -42,9 +40,11 @@
 #include <unordered_map>
 #include <utility>
 
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "debug/QOS.hh"
 #include "enums/QoSQPolicy.hh"
-#include "mem/qos/mem_ctrl.hh"
+#include "mem/request.hh"
 
 namespace QoS {
 
