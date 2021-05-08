@@ -82,7 +82,7 @@ class FrequentValues : public Base
     const bool useHuffmanEncoding;
 
     /** The encoder applied to the VFT indices. */
-    Encoder::Huffman encoder;
+    Encoder::Huffman indexEncoder;
 
     /** Number of bits in the saturating counters. */
     const int counterBits;

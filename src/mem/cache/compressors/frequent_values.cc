@@ -45,7 +45,7 @@ namespace compression
 
 FrequentValues::FrequentValues(const Params &p)
   : Base(p), useHuffmanEncoding(p.max_code_length != 0),
-    encoder(p.max_code_length), counterBits(p.counter_bits),
+    indexEncoder(p.max_code_length), counterBits(p.counter_bits),
     codeGenerationTicks(p.code_generation_ticks),
     checkSaturation(p.check_saturation), numVFTEntries(p.vft_entries),
     numSamples(p.num_samples), takenSamples(0), phase(SAMPLING),
@@ -83,14 +83,14 @@ FrequentValues::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
 
             // If using an index encoder, apply it
             if (useHuffmanEncoding) {
-                code = encoder.encode(index);
+                code = indexEncoder.encode(index);
 
                 if (index == uncompressed_index) {
                     code.length += chunkSizeBits;
                 } else if (code.length > 64) {
                     // If, for some reason, we could not generate an encoding
                     // for the value, generate the uncompressed encoding
-                    code = encoder.encode(uncompressed_index);
+                    code = indexEncoder.encode(uncompressed_index);
                     assert(code.length <= 64);
                     code.length += chunkSizeBits;
                 }
@@ -145,14 +145,14 @@ FrequentValues::decompress(const CompressionData* comp_data, uint64_t* data)
                 // search for the value and verify that the stored code
                 // matches the table's
                 GEM5_VAR_USED const Encoder::Code code =
-                    encoder.encode(comp_chunk.value);
+                    indexEncoder.encode(comp_chunk.value);
 
                 // Either the value will be found and the codes match, or the
                 // value will not be found because it is an uncompressed entry
                 assert(((code.length <= 64) &&
                         (code.code == comp_chunk.code.code)) ||
                     (comp_chunk.code.code ==
-                        encoder.encode(uncompressedValue).code));
+                        indexEncoder.encode(uncompressedValue).code));
             } else {
                 // The value at the given VFT entry must match the one stored,
                 // if it is not the uncompressed value
@@ -239,15 +239,15 @@ FrequentValues::generateCodes()
         // They are sorted such that the value with highest frequency is
         // the queue's top
         for (const auto& entry : VFT) {
-            encoder.sample(entry.value, entry.counter);
+            indexEncoder.sample(entry.value, entry.counter);
         }
 
         // Insert the uncompressed value in the tree assuming it has the
         // highest frequency, since it is in fact a group of all the values
         // not present in the VFT
-        encoder.sample(uncompressedValue, ULLONG_MAX);
+        indexEncoder.sample(uncompressedValue, ULLONG_MAX);
 
-        encoder.generateCodeMaps();
+        indexEncoder.generateCodeMaps();
     }
 
     // Generate the code map and mark the current phase as code generation
