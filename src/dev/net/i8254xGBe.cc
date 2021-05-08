@@ -52,7 +52,7 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
-using namespace iGbReg;
+using namespace igbreg;
 using namespace Net;
 
 IGbE::IGbE(const Params &p)
@@ -1898,7 +1898,7 @@ IGbE::TxDescCache::actionAfterWb()
 {
     DPRINTF(EthernetDesc, "actionAfterWb() completionEnabled: %d\n",
             completionEnabled);
-    igbe->postInterrupt(iGbReg::IT_TXDW);
+    igbe->postInterrupt(igbreg::IT_TXDW);
     if (completionEnabled) {
         descEnd = igbe->regs.tdh();
         DPRINTF(EthernetDesc,
@@ -2365,7 +2365,7 @@ IGbE::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(eeOpcode);
     SERIALIZE_SCALAR(eeAddr);
     SERIALIZE_SCALAR(lastInterrupt);
-    SERIALIZE_ARRAY(flash,iGbReg::EEPROM_SIZE);
+    SERIALIZE_ARRAY(flash,igbreg::EEPROM_SIZE);
 
     rxFifo.serialize("rxfifo", cp);
     txFifo.serialize("txfifo", cp);
@@ -2416,7 +2416,7 @@ IGbE::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(eeOpcode);
     UNSERIALIZE_SCALAR(eeAddr);
     UNSERIALIZE_SCALAR(lastInterrupt);
-    UNSERIALIZE_ARRAY(flash,iGbReg::EEPROM_SIZE);
+    UNSERIALIZE_ARRAY(flash,igbreg::EEPROM_SIZE);
 
     rxFifo.unserialize("rxfifo", cp);
     txFifo.unserialize("txfifo", cp);

@@ -32,8 +32,9 @@
 #include "base/bitfield.hh"
 #include "base/compiler.hh"
 
-namespace iGbReg {
-
+GEM5_DEPRECATED_NAMESPACE(iGbReg, igbreg);
+namespace igbreg
+{
 
 // Registers used by the Intel GbE NIC
 const uint32_t REG_CTRL     = 0x00000;
@@ -939,4 +940,4 @@ struct Regs : public Serializable
         UNSERIALIZE_SCALAR(sw_fw_sync);
     }
 };
-} // namespace iGbReg
+} // namespace igbreg

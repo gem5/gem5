@@ -60,12 +60,12 @@ class IGbE : public EtherDevice
     IGbEInt *etherInt;
 
     // device registers
-    iGbReg::Regs regs;
+    igbreg::Regs regs;
 
     // eeprom data, status and control bits
     int eeOpBits, eeAddrBits, eeDataBits;
     uint8_t eeOpcode, eeAddr;
-    uint16_t flash[iGbReg::EEPROM_SIZE];
+    uint16_t flash[igbreg::EEPROM_SIZE];
 
     // packet fifos
     PacketFifo rxFifo;
@@ -95,7 +95,7 @@ class IGbE : public EtherDevice
         rxDescCache.writeback(0);
         DPRINTF(EthernetIntr,
                 "Posting RXT interrupt because RDTR timer expired\n");
-        postInterrupt(iGbReg::IT_RXT);
+        postInterrupt(igbreg::IT_RXT);
     }
 
     EventFunctionWrapper rdtrEvent;
@@ -105,7 +105,7 @@ class IGbE : public EtherDevice
         rxDescCache.writeback(0);
         DPRINTF(EthernetIntr,
                 "Posting RXT interrupt because RADV timer expired\n");
-        postInterrupt(iGbReg::IT_RXT);
+        postInterrupt(igbreg::IT_RXT);
     }
 
     EventFunctionWrapper radvEvent;
@@ -115,7 +115,7 @@ class IGbE : public EtherDevice
         txDescCache.writeback(0);
         DPRINTF(EthernetIntr,
                 "Posting TXDW interrupt because TADV timer expired\n");
-        postInterrupt(iGbReg::IT_TXDW);
+        postInterrupt(igbreg::IT_TXDW);
     }
 
     EventFunctionWrapper tadvEvent;
@@ -125,7 +125,7 @@ class IGbE : public EtherDevice
         txDescCache.writeback(0);
         DPRINTF(EthernetIntr,
                 "Posting TXDW interrupt because TIDV timer expired\n");
-        postInterrupt(iGbReg::IT_TXDW);
+        postInterrupt(igbreg::IT_TXDW);
     }
     EventFunctionWrapper tidvEvent;
 
@@ -145,7 +145,7 @@ class IGbE : public EtherDevice
      * @param t the type of interrupt we are posting
      * @param now should we ignore the interrupt limiting timer
      */
-    void postInterrupt(iGbReg::IntTypes t, bool now = false);
+    void postInterrupt(igbreg::IntTypes t, bool now = false);
 
     /** Check and see if changes to the mask register have caused an interrupt
      * to need to be sent or perhaps removed an interrupt cause.
@@ -299,7 +299,7 @@ class IGbE : public EtherDevice
     };
 
 
-    class RxDescCache : public DescCache<iGbReg::RxDesc>
+    class RxDescCache : public DescCache<igbreg::RxDesc>
     {
       protected:
         Addr descBase() const override { return igbe->regs.rdba(); }
@@ -360,7 +360,7 @@ class IGbE : public EtherDevice
 
     RxDescCache rxDescCache;
 
-    class TxDescCache  : public DescCache<iGbReg::TxDesc>
+    class TxDescCache  : public DescCache<igbreg::TxDesc>
     {
       protected:
         Addr descBase() const override { return igbe->regs.tdba(); }
@@ -418,7 +418,7 @@ class IGbE : public EtherDevice
         unsigned
         descInBlock(unsigned num_desc)
         {
-            return num_desc / igbe->cacheBlockSize() / sizeof(iGbReg::TxDesc);
+            return num_desc / igbe->cacheBlockSize() / sizeof(igbreg::TxDesc);
         }
 
         /** Ask if the packet has been transfered so the state machine can give
