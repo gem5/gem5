@@ -51,9 +51,9 @@
 Pl050::Pl050(const Pl050Params &p)
     : AmbaIntDevice(p, 0x1000), control(0), status(0x43), clkdiv(0),
       rawInterrupts(0),
-      ps2(p.ps2)
+      ps2Device(p.ps2)
 {
-    ps2->hostRegDataAvailable([this]() { this->updateRxInt(); });
+    ps2Device->hostRegDataAvailable([this]() { this->updateRxInt(); });
 }
 
 Tick
@@ -72,13 +72,13 @@ Pl050::read(PacketPtr pkt)
         break;
 
       case kmiStat:
-        status.rxfull = ps2->hostDataAvailable() ? 1 : 0;
+        status.rxfull = ps2Device->hostDataAvailable() ? 1 : 0;
         DPRINTF(Pl050, "Read Status: %#x\n", (uint32_t)status);
         data = status;
         break;
 
       case kmiData:
-        data = ps2->hostDataAvailable() ? ps2->hostRead() : 0;
+        data = ps2Device->hostDataAvailable() ? ps2Device->hostRead() : 0;
         updateRxInt();
         DPRINTF(Pl050, "Read Data: %#x\n", (uint32_t)data);
         break;
@@ -134,7 +134,7 @@ Pl050::write(PacketPtr pkt)
         DPRINTF(Pl050, "Write Data: %#x\n", data);
         // Clear the TX interrupt before writing new data.
         setTxInt(false);
-        ps2->hostWrite((uint8_t)data);
+        ps2Device->hostWrite((uint8_t)data);
         // Data is written in 0 time, so raise the TX interrupt again.
         setTxInt(true);
         break;
@@ -167,7 +167,7 @@ Pl050::updateRxInt()
 {
     InterruptReg ints = rawInterrupts;
 
-    ints.rx = ps2->hostDataAvailable() ? 1 : 0;
+    ints.rx = ps2Device->hostDataAvailable() ? 1 : 0;
 
     setInterrupts(ints);
 }

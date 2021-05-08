@@ -123,7 +123,7 @@ class Pl050 : public AmbaIntDevice
     InterruptReg getInterrupt() const;
 
     /** PS2 device connected to this KMI interface */
-    PS2Device *ps2;
+    PS2Device *ps2Device;
 
   public:
     Pl050(const Pl050Params &p);
