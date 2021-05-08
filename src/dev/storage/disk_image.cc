@@ -248,13 +248,13 @@ CowDiskImage::open(const std::string &file)
     if (memcmp(&magic, "COWDISK!", sizeof(magic)) != 0)
         panic("Could not open %s: Invalid magic", file);
 
-    uint32_t major, minor;
-    SafeReadSwap(stream, major);
-    SafeReadSwap(stream, minor);
+    uint32_t major_version, minor_version;
+    SafeReadSwap(stream, major_version);
+    SafeReadSwap(stream, minor_version);
 
-    if (major != VersionMajor && minor != VersionMinor)
+    if (major_version != VersionMajor && minor_version != VersionMinor)
         panic("Could not open %s: invalid version %d.%d != %d.%d",
-              file, major, minor, VersionMajor, VersionMinor);
+              file, major_version, minor_version, VersionMajor, VersionMinor);
 
     uint64_t sector_count;
     SafeReadSwap(stream, sector_count);

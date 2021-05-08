@@ -387,20 +387,22 @@ VncServer::checkProtocolVersion()
         return;
     }
 
-    uint32_t major, minor;
+    uint32_t major_version, minor_version;
 
     // Figure out the major/minor numbers
-    if (sscanf(version_string, "RFB %03d.%03d\n", &major, &minor) != 2) {
+    if (sscanf(version_string, "RFB %03d.%03d\n", &major_version,
+            &minor_version) != 2) {
         warn(" Malformed protocol version %s\n", version_string);
         sendError("Malformed protocol version\n");
         detach();
         return;
     }
 
-    DPRINTF(VNC, "Client request protocol version %d.%d\n", major, minor);
+    DPRINTF(VNC, "Client request protocol version %d.%d\n", major_version,
+        minor_version);
 
     // If it's not 3.X we don't support it
-    if (major != 3 || minor < 2) {
+    if (major_version != 3 || minor_version < 2) {
         warn("Unsupported VNC client version... disconnecting\n");
         uint8_t err = AuthInvalid;
         write(&err);
@@ -408,7 +410,7 @@ VncServer::checkProtocolVersion()
         return;
     }
     // Auth is different based on version number
-    if (minor < 7) {
+    if (minor_version < 7) {
         uint32_t sec_type = htobe((uint32_t)AuthNone);
         if (!write(&sec_type))
             return;
