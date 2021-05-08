@@ -81,7 +81,7 @@ MemCtrl::~MemCtrl()
 {}
 
 void
-MemCtrl::logRequest(BusState dir, RequestorID id, uint8_t qos,
+MemCtrl::logRequest(BusState dir, RequestorID id, uint8_t _qos,
                     Addr addr, uint64_t entries)
 {
     // If needed, initialize all counters and statistics
@@ -92,31 +92,31 @@ MemCtrl::logRequest(BusState dir, RequestorID id, uint8_t qos,
             "QoSMemCtrl::logRequest REQUESTOR %s [id %d] address %d"
             " prio %d this requestor q packets %d"
             " - queue size %d - requested entries %d\n",
-            requestors[id], id, addr, qos, packetPriorities[id][qos],
-            (dir == READ) ? readQueueSizes[qos]: writeQueueSizes[qos],
+            requestors[id], id, addr, _qos, packetPriorities[id][_qos],
+            (dir == READ) ? readQueueSizes[_qos]: writeQueueSizes[_qos],
             entries);
 
     if (dir == READ) {
-        readQueueSizes[qos] += entries;
+        readQueueSizes[_qos] += entries;
         totalReadQueueSize += entries;
     } else if (dir == WRITE) {
-        writeQueueSizes[qos] += entries;
+        writeQueueSizes[_qos] += entries;
         totalWriteQueueSize += entries;
     }
 
-    packetPriorities[id][qos] += entries;
+    packetPriorities[id][_qos] += entries;
     for (auto j = 0; j < entries; ++j) {
         requestTimes[id][addr].push_back(curTick());
     }
 
     // Record statistics
-    stats.avgPriority[id].sample(qos);
+    stats.avgPriority[id].sample(_qos);
 
     // Compute avg priority distance
 
     for (uint8_t i = 0; i < packetPriorities[id].size(); ++i) {
         uint8_t distance =
-            (abs(int(qos) - int(i))) * packetPriorities[id][i];
+            (abs(int(_qos) - int(i))) * packetPriorities[id][i];
 
         if (distance > 0) {
             stats.avgPriorityDistance[id].sample(distance);
@@ -132,13 +132,13 @@ MemCtrl::logRequest(BusState dir, RequestorID id, uint8_t qos,
     DPRINTF(QOS,
             "QoSMemCtrl::logRequest REQUESTOR %s [id %d] prio %d "
             "this requestor q packets %d - new queue size %d\n",
-            requestors[id], id, qos, packetPriorities[id][qos],
-            (dir == READ) ? readQueueSizes[qos]: writeQueueSizes[qos]);
+            requestors[id], id, _qos, packetPriorities[id][_qos],
+            (dir == READ) ? readQueueSizes[_qos]: writeQueueSizes[_qos]);
 
 }
 
 void
-MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t qos,
+MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t _qos,
                      Addr addr, uint64_t entries, double delay)
 {
     panic_if(!hasRequestor(id),
@@ -148,23 +148,23 @@ MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t qos,
             "QoSMemCtrl::logResponse REQUESTOR %s [id %d] address %d prio"
             " %d this requestor q packets %d"
             " - queue size %d - requested entries %d\n",
-            requestors[id], id, addr, qos, packetPriorities[id][qos],
-            (dir == READ) ? readQueueSizes[qos]: writeQueueSizes[qos],
+            requestors[id], id, addr, _qos, packetPriorities[id][_qos],
+            (dir == READ) ? readQueueSizes[_qos]: writeQueueSizes[_qos],
             entries);
 
     if (dir == READ) {
-        readQueueSizes[qos] -= entries;
+        readQueueSizes[_qos] -= entries;
         totalReadQueueSize -= entries;
     } else if (dir == WRITE) {
-        writeQueueSizes[qos] -= entries;
+        writeQueueSizes[_qos] -= entries;
         totalWriteQueueSize -= entries;
     }
 
-    panic_if(packetPriorities[id][qos] == 0,
+    panic_if(packetPriorities[id][_qos] == 0,
              "QoSMemCtrl::logResponse requestor %s negative packets "
-             "for priority %d", requestors[id], qos);
+             "for priority %d", requestors[id], _qos);
 
-    packetPriorities[id][qos] -= entries;
+    packetPriorities[id][_qos] -= entries;
 
     for (auto j = 0; j < entries; ++j) {
         auto it = requestTimes[id].find(addr);
@@ -188,13 +188,13 @@ MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t qos,
 
         if (latency > 0) {
             // Record per-priority latency stats
-            if (stats.priorityMaxLatency[qos].value() < latency) {
-                stats.priorityMaxLatency[qos] = latency;
+            if (stats.priorityMaxLatency[_qos].value() < latency) {
+                stats.priorityMaxLatency[_qos] = latency;
             }
 
-            if (stats.priorityMinLatency[qos].value() > latency
-                    || stats.priorityMinLatency[qos].value() == 0) {
-                stats.priorityMinLatency[qos] = latency;
+            if (stats.priorityMinLatency[_qos].value() > latency
+                    || stats.priorityMinLatency[_qos].value() == 0) {
+                stats.priorityMinLatency[_qos] = latency;
             }
         }
     }
@@ -202,8 +202,8 @@ MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t qos,
     DPRINTF(QOS,
             "QoSMemCtrl::logResponse REQUESTOR %s [id %d] prio %d "
             "this requestor q packets %d - new queue size %d\n",
-            requestors[id], id, qos, packetPriorities[id][qos],
-            (dir == READ) ? readQueueSizes[qos]: writeQueueSizes[qos]);
+            requestors[id], id, _qos, packetPriorities[id][_qos],
+            (dir == READ) ? readQueueSizes[_qos]: writeQueueSizes[_qos]);
 }
 
 uint8_t
