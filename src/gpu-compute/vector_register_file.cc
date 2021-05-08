@@ -90,7 +90,7 @@ VectorRegisterFile::scheduleWriteOperands(Wavefront *w, GPUDynInstPtr ii)
                  * send/recv any packets, and therefore it will never free its
                  * dst reg(s)
                  */
-                if (!ii->isLoad() || (ii->isLoad() && ii->exec_mask.any())) {
+                if (ii->exec_mask.any()) {
                     markReg(physIdx, true);
                 }
             }

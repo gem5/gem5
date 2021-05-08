@@ -31243,7 +31243,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -31304,7 +31303,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -31368,7 +31366,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -31548,7 +31545,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -31608,7 +31604,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -32073,7 +32068,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -32135,7 +32129,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -32200,7 +32193,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -32284,7 +32276,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -32365,7 +32356,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -32547,7 +32537,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()
                                 ->cyclesToTicks(Cycles(24)));
@@ -32619,7 +32608,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()
                                 ->cyclesToTicks(Cycles(24)));
@@ -32924,7 +32912,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -32985,7 +32972,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -33521,7 +33507,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -33583,7 +33568,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -33648,7 +33632,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(
                 gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
@@ -35049,7 +35032,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -35180,7 +35162,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -35311,7 +35292,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -35411,7 +35391,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -35516,7 +35495,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -35626,7 +35604,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -35741,7 +35718,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -35836,7 +35812,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -35931,7 +35906,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -36026,7 +36000,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -36125,7 +36098,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -36228,7 +36200,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -36351,7 +36322,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -36409,7 +36379,6 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -39425,19 +39394,15 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            gpuDynInst->exec_mask = wf->execMask();
-            wf->computeUnit->vrf[wf->simdId]->
-                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = gpuDynInst->wavefront()->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -39498,19 +39463,15 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            gpuDynInst->exec_mask = wf->execMask();
-            wf->computeUnit->vrf[wf->simdId]->
-                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = gpuDynInst->wavefront()->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -39570,19 +39531,15 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            gpuDynInst->exec_mask = wf->execMask();
-            wf->computeUnit->vrf[wf->simdId]->
-                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = gpuDynInst->wavefront()->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -39671,19 +39628,15 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            gpuDynInst->exec_mask = wf->execMask();
-            wf->computeUnit->vrf[wf->simdId]->
-                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = gpuDynInst->wavefront()->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -39744,19 +39697,15 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            gpuDynInst->exec_mask = wf->execMask();
-            wf->computeUnit->vrf[wf->simdId]->
-                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = gpuDynInst->wavefront()->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -39817,19 +39766,15 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            gpuDynInst->exec_mask = wf->execMask();
-            wf->computeUnit->vrf[wf->simdId]->
-                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -39899,19 +39844,15 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            gpuDynInst->exec_mask = wf->execMask();
-            wf->computeUnit->vrf[wf->simdId]->
-                scheduleWriteOperandsFromLoad(wf, gpuDynInst);
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -39984,7 +39925,7 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
@@ -39993,7 +39934,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -40053,7 +39993,7 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
@@ -40062,7 +40002,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -40122,7 +40061,7 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
@@ -40131,7 +40070,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -40192,7 +40130,7 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
@@ -40201,7 +40139,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -40262,7 +40199,7 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
@@ -40271,7 +40208,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -40340,7 +40276,7 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
@@ -40349,7 +40285,6 @@ namespace Gcn3ISA
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -40428,23 +40363,17 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            if (instData.GLC) {
-                gpuDynInst->exec_mask = wf->execMask();
-                wf->computeUnit->vrf[wf->simdId]->
-                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
-            }
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -40537,23 +40466,17 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            if (instData.GLC) {
-                gpuDynInst->exec_mask = wf->execMask();
-                wf->computeUnit->vrf[wf->simdId]->
-                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
-            }
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -40647,23 +40570,17 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            if (instData.GLC) {
-                gpuDynInst->exec_mask = wf->execMask();
-                wf->computeUnit->vrf[wf->simdId]->
-                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
-            }
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -40744,23 +40661,17 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            if (instData.GLC) {
-                gpuDynInst->exec_mask = wf->execMask();
-                wf->computeUnit->vrf[wf->simdId]->
-                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
-            }
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -41015,23 +40926,17 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            if (instData.GLC) {
-                gpuDynInst->exec_mask = wf->execMask();
-                wf->computeUnit->vrf[wf->simdId]->
-                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
-            }
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -41112,23 +41017,17 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            if (instData.GLC) {
-                gpuDynInst->exec_mask = wf->execMask();
-                wf->computeUnit->vrf[wf->simdId]->
-                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
-            }
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -41238,23 +41137,17 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            if (instData.GLC) {
-                gpuDynInst->exec_mask = wf->execMask();
-                wf->computeUnit->vrf[wf->simdId]->
-                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
-            }
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -41349,23 +41242,17 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            if (instData.GLC) {
-                gpuDynInst->exec_mask = wf->execMask();
-                wf->computeUnit->vrf[wf->simdId]->
-                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
-            }
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -41448,23 +41335,17 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            if (instData.GLC) {
-                gpuDynInst->exec_mask = wf->execMask();
-                wf->computeUnit->vrf[wf->simdId]->
-                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
-            }
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -41729,23 +41610,17 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            if (instData.GLC) {
-                gpuDynInst->exec_mask = wf->execMask();
-                wf->computeUnit->vrf[wf->simdId]->
-                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
-            }
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
@@ -41829,23 +41704,17 @@ namespace Gcn3ISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (wf->execMask().none()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             wf->rdLmReqsInPipe--;
-            if (instData.GLC) {
-                gpuDynInst->exec_mask = wf->execMask();
-                wf->computeUnit->vrf[wf->simdId]->
-                    scheduleWriteOperandsFromLoad(wf, gpuDynInst);
-            }
             return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->exec_mask = wf->execMask();
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 

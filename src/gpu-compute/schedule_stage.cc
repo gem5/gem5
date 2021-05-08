@@ -585,6 +585,11 @@ ScheduleStage::fillDispatchList()
                         computeUnit.globalMemoryPipe.acqCoalescerToken(mp);
                     }
 
+                    // Set instruction's exec_mask if it's a mem operation
+                    if (mp->isMemRef()) {
+                        mp->exec_mask = mp->wavefront()->execMask();
+                    }
+
                     doDispatchListTransition(j, EXREADY, schIter->first);
                     DPRINTF(GPUSched, "dispatchList[%d]: fillDispatchList: "
                             "EMPTY->EXREADY\n", j);
