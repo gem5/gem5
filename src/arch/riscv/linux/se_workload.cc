@@ -68,7 +68,7 @@ class LinuxLoader : public Process::Loader
     }
 };
 
-LinuxLoader loader;
+LinuxLoader linuxLoader;
 
 } // anonymous namespace
 
