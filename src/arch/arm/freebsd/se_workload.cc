@@ -71,7 +71,7 @@ class FreebsdLoader : public Process::Loader
     }
 };
 
-FreebsdLoader loader;
+FreebsdLoader freebsdLoader;
 
 } // anonymous namespace
 
