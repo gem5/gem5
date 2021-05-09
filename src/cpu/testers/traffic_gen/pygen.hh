@@ -45,7 +45,7 @@
 
 struct PyTrafficGenParams;
 
-class M5_LOCAL PyTrafficGen : public BaseTrafficGen
+class GEM5_LOCAL PyTrafficGen : public BaseTrafficGen
 {
   public:
     PyTrafficGen(const PyTrafficGenParams &p);

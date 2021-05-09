@@ -245,7 +245,7 @@ registerNativeModules()
  * Make the commands array weak so that they can be overridden (used
  * by unit tests to specify a different python main function.
  */
-M5_WEAK const char *m5MainCommands[] = {
+GEM5_WEAK const char *m5MainCommands[] = {
     "import m5",
     "m5.main()",
     0 // sentinel is required
