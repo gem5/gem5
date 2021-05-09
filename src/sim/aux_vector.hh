@@ -34,6 +34,14 @@
 #ifndef __AUX_VECTOR_HH__
 #define __AUX_VECTOR_HH__
 
+#include "base/compiler.hh"
+
+namespace gem5
+{
+
+namespace auxv
+{
+
 template<class IntType>
 class AuxVector
 {
@@ -45,41 +53,89 @@ class AuxVector
     IntType val = 0;
 };
 
-template<class IntType>
+// Ensure the global versions of swap_byte are visible.
+using ::swap_byte;
+
+// Define swap_byte in this namespace, so argument dependent resolution can
+// find it.
+template <class IntType>
 inline AuxVector<IntType>
-swap_byte(AuxVector<IntType> av)
+swap_byte(const AuxVector<IntType> &av)
 {
-    av.type = swap_byte(av.type);
-    av.val = swap_byte(av.val);
-    return av;
+    return AuxVector<IntType>(swap_byte(av.type), swap_byte(av.val));
 }
+
+enum Type
+{
+    Null = 0,          // End of vector.
+    Ignore = 1,        // Ignored.
+    Execfd = 2,        // File descriptor of program if interpreter used.
+    Phdr = 3,          // Address of program header tables in memory.
+    Phent = 4,         // Size in bytes of one program header entry.
+    Phnum = 5,         // Number of entries in program header table.
+    Pagesz = 6,        // System page size.
+    Base = 7,          // Base address of interpreter program in memory.
+    Flags = 8,         // Unused.
+    Entry = 9,         // Entry point of program after interpreter setup.
+    Notelf = 10,       // Non-zero if format is different than ELF.
+    Uid = 11,          // Address of real user ID of thread.
+    Euid = 12,         // Address of effective user ID of thread.
+    Gid = 13,          // Address of real group ID of thread.
+    Egid = 14,         // Address of effective group ID of thread.
+    Platform = 15,     // Platform string for the architecture.
+    Hwcap = 16,        // Bits which describe the hardware capabilities.
+    Clktck = 17,       // Frequency at which times() syscall increments.
+    Secure = 23,       // Whether to enable "secure mode" in executable.
+    BasePlatform = 24, // Platform string (differs on PowerPC only).
+    Random = 25,       // Pointer to 16 bytes of random data.
+    Hwcap2 = 26,       // Extension of AT_HWCAP.
+    Execfn = 31,       // Filename of the program.
+    VectorSize = 44
+};
+
+} // namespace auxv
+
+} // namespace gem5
+
+#define GEM5_DEPRECATE_AT(NAME, name) M5_AT_##NAME \
+    GEM5_DEPRECATED("Replace M5_AT_" #NAME " with gem5::auxv::" #name) = \
+    gem5::auxv::name
 
 enum AuxiliaryVectorType
 {
-    M5_AT_NULL = 0,        // End of vector.
-    M5_AT_IGNORE = 1,      // Ignored.
-    M5_AT_EXECFD = 2,      // File descriptor of program if interpreter used.
-    M5_AT_PHDR = 3,        // Address of program header tables in memory.
-    M5_AT_PHENT = 4,       // Size in bytes of one program header entry.
-    M5_AT_PHNUM = 5,       // Number of entries in program header table.
-    M5_AT_PAGESZ = 6,      // System page size.
-    M5_AT_BASE = 7,        // Base address of interpreter program in memory.
-    M5_AT_FLAGS = 8,       // Unused.
-    M5_AT_ENTRY = 9,       // Entry point of program after interpreter setup.
-    M5_AT_NOTELF = 10,     // Non-zero if format is different than ELF.
-    M5_AT_UID = 11,        // Address of real user ID of thread.
-    M5_AT_EUID = 12,       // Address of effective user ID of thread.
-    M5_AT_GID = 13,        // Address of real group ID of thread.
-    M5_AT_EGID = 14,       // Address of effective group ID of thread.
-    M5_AT_PLATFORM = 15,   // Platform string for the architecture.
-    M5_AT_HWCAP = 16,      // Bits which describe the hardware capabilities.
-    M5_AT_CLKTCK = 17,     // Frequency at which times() syscall increments.
-    M5_AT_SECURE = 23,     // Whether to enable "secure mode" in executable.
-    M5_BASE_PLATFORM = 24, // Platform string (differs on PowerPC only).
-    M5_AT_RANDOM = 25,     // Pointer to 16 bytes of random data.
-    M5_AT_HWCAP2 = 26,     // Extension of AT_HWCAP.
-    M5_AT_EXECFN = 31,     // Filename of the program.
-    M5_AT_VECTOR_SIZE = 44
+    GEM5_DEPRECATE_AT(NULL, Null),
+    GEM5_DEPRECATE_AT(IGNORE, Ignore),
+    GEM5_DEPRECATE_AT(EXECFD, Execfd),
+    GEM5_DEPRECATE_AT(PHDR, Phdr),
+    GEM5_DEPRECATE_AT(PHENT, Phent),
+    GEM5_DEPRECATE_AT(PHNUM, Phnum),
+    GEM5_DEPRECATE_AT(PAGESZ, Pagesz),
+    GEM5_DEPRECATE_AT(BASE, Base),
+    GEM5_DEPRECATE_AT(FLAGS, Flags),
+    GEM5_DEPRECATE_AT(ENTRY, Entry),
+    GEM5_DEPRECATE_AT(NOTELF, Notelf),
+    GEM5_DEPRECATE_AT(UID, Uid),
+    GEM5_DEPRECATE_AT(EUID, Euid),
+    GEM5_DEPRECATE_AT(GID, Gid),
+    GEM5_DEPRECATE_AT(EGID, Egid),
+    GEM5_DEPRECATE_AT(PLATFORM, Platform),
+    GEM5_DEPRECATE_AT(HWCAP, Hwcap),
+    GEM5_DEPRECATE_AT(CLKTCK, Clktck),
+    GEM5_DEPRECATE_AT(SECURE, Secure),
+    M5_BASE_PLATFORM GEM5_DEPRECATED(
+            "Replace M5_BASE_PLATFORM with gem5::auxv::BasePlatform") =
+        gem5::auxv::BasePlatform,
+    GEM5_DEPRECATE_AT(RANDOM, Random),
+    GEM5_DEPRECATE_AT(HWCAP2, Hwcap2),
+    GEM5_DEPRECATE_AT(EXECFN, Execfn),
+    GEM5_DEPRECATE_AT(VECTOR_SIZE, VectorSize)
 };
+
+#undef GEM5_DEPRECATE_AT
+
+template <class IntType>
+using AuxVector GEM5_DEPRECATED(
+        "The AuxVector template is now in the gem5::auxv namespace.") =
+        gem5::auxv::AuxVector<IntType>;
 
 #endif // __AUX_VECTOR_HH__
