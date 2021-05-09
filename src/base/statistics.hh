@@ -515,7 +515,7 @@ class ScalarBase : public DataWrap<Derived, ScalarInfoProxy>
 
   protected:
     /** The storage of this stat. */
-    M5_ALIGNED(8) char storage[sizeof(Storage)];
+    GEM5_ALIGNED(8) char storage[sizeof(Storage)];
 
   protected:
     /**
@@ -1284,7 +1284,7 @@ class DistBase : public DataWrap<Derived, DistInfoProxy>
 
   protected:
     /** The storage for this stat. */
-    M5_ALIGNED(8) char storage[sizeof(Storage)];
+    GEM5_ALIGNED(8) char storage[sizeof(Storage)];
 
   protected:
     /**

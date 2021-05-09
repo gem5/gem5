@@ -226,9 +226,9 @@ class ArmLinux32 : public ArmLinux
         uint32_t  st_gid;
         uint64_t  st_rdev;
         uint8_t   __pad3[4];
-        M5_ALIGNED(8) int64_t st_size;
+        GEM5_ALIGNED(8) int64_t st_size;
         uint32_t  st_blksize;
-        M5_ALIGNED(8) uint64_t st_blocks;
+        GEM5_ALIGNED(8) uint64_t st_blocks;
         uint32_t  st_atimeX;
         uint32_t  st_atime_nsec;
         uint32_t  st_mtimeX;

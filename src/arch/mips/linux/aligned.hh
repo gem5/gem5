@@ -30,8 +30,8 @@
 #define __ARCH_MIPS_LINUX_ALIGNED_HH__
 
 
-typedef M5_ALIGNED(8) uint64_t uint64_ta;
-typedef M5_ALIGNED(8) int64_t int64_ta;
-typedef M5_ALIGNED(8) Addr Addr_a;
+typedef GEM5_ALIGNED(8) uint64_t uint64_ta;
+typedef GEM5_ALIGNED(8) int64_t int64_ta;
+typedef GEM5_ALIGNED(8) Addr Addr_a;
 
 #endif /* __ARCH_MIPS_LINUX_ALIGNED_HH__ */
