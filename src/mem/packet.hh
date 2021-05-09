@@ -64,6 +64,9 @@
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 class Packet;
 typedef Packet *PacketPtr;
 typedef uint8_t* PacketDataPtr;
@@ -274,7 +277,7 @@ class Packet : public Printable
 {
   public:
     typedef uint32_t FlagsType;
-    typedef ::Flags<FlagsType> Flags;
+    typedef gem5::Flags<FlagsType> Flags;
 
   private:
     enum : FlagsType
@@ -1485,5 +1488,7 @@ class Packet : public Printable
      */
     HtmCacheFailure getHtmTransactionFailedInCacheRC() const;
 };
+
+} // namespace gem5
 
 #endif //__MEM_PACKET_HH

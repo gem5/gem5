@@ -48,6 +48,9 @@
 #include "params/SubSystem.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class PowerModel;
 
 /**
@@ -71,5 +74,7 @@ class SubSystem : public SimObject
   protected:
     std::vector<PowerModel*> powerProducers;
 };
+
+} // namespace gem5
 
 #endif

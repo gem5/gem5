@@ -50,6 +50,9 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 /**
  * The AddrRange class encapsulates an address range, and supports a
  * number of tests to check if two ranges intersect, if a range
@@ -657,5 +660,7 @@ RangeIn(Addr start, Addr end)
 inline AddrRange
 RangeSize(Addr start, Addr size)
 { return AddrRange(start, start + size); }
+
+} // namespace gem5
 
 #endif // __BASE_ADDR_RANGE_HH__

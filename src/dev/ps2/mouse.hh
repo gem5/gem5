@@ -44,6 +44,9 @@
 #include "base/bitunion.hh"
 #include "dev/ps2/device.hh"
 
+namespace gem5
+{
+
 struct PS2MouseParams;
 
 namespace ps2
@@ -75,6 +78,7 @@ class PS2Mouse : public Device
 };
 
 } // namespace ps2
+} // namespace gem5
 
 #endif // __DEV_PS2_MOUSE_hH__
 

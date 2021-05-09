@@ -35,6 +35,9 @@
 #include "cpu/static_inst.hh"
 #include "debug/Decode.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -131,5 +134,6 @@ class Decoder : public InstDecoder
 };
 
 } // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_DECODER_HH__

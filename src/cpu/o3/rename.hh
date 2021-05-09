@@ -55,6 +55,9 @@
 #include "cpu/timebuf.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 struct O3CPUParams;
 
 namespace o3
@@ -533,5 +536,6 @@ class Rename
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_RENAME_HH__

@@ -28,6 +28,9 @@
 
 #include "arch/power/insts/integer.hh"
 
+namespace gem5
+{
+
 using namespace PowerISA;
 
 std::string
@@ -920,3 +923,5 @@ IntImmTrapOp::generateDisassembly(
 
     return ss.str();
 }
+
+} // namespace gem5

@@ -38,6 +38,9 @@
 #include "base/cprintf.hh"
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 void
 SectorSubBlk::setSectorBlock(SectorBlk* sector_blk)
 {
@@ -163,3 +166,5 @@ SectorBlk::print() const
     return csprintf("%s valid sub-blks (%d):\n%s",
         TaggedEntry::print(), getNumValid(), sub_blk_print);
 }
+
+} // namespace gem5

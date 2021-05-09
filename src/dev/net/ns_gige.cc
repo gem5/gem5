@@ -54,6 +54,9 @@ using std::min;
 using std::ostream;
 using std::string;
 
+namespace gem5
+{
+
 const char *NsRxStateStrings[] =
 {
     "rxIdle",
@@ -2365,3 +2368,5 @@ NSGigE::unserialize(CheckpointIn &cp)
         schedule(intrEvent, intrEventTick);
     }
 }
+
+} // namespace gem5

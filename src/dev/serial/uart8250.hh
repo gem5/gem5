@@ -40,6 +40,9 @@
 #include "dev/serial/uart.hh"
 #include "params/Uart8250.hh"
 
+namespace gem5
+{
+
 const uint8_t UART_MCR_LOOP = 0x10;
 
 class Terminal;
@@ -232,5 +235,7 @@ class Uart8250 : public Uart
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };
+
+} // namespace gem5
 
 #endif // __TSUNAMI_UART_HH__

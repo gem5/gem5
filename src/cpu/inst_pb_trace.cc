@@ -47,6 +47,9 @@
 #include "proto/inst.pb.h"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 ProtoOutputStream *InstPBTrace::traceStream;
@@ -174,3 +177,4 @@ InstPBTrace::traceMem(StaticInstPtr si, Addr a, Addr s, unsigned f)
 }
 
 } // namespace Trace
+} // namespace gem5

@@ -29,6 +29,9 @@
 #ifndef __ARCH_SPARC_ASI_HH__
 #define __ARCH_SPARC_ASI_HH__
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -271,5 +274,7 @@ bool asiIsReg(ASI);
 bool asiIsInterrupt(ASI);
 bool asiIsSparcError(ASI);
 };
+
+} // namespace gem5
 
 #endif // __ARCH_SPARC_ASI_HH__

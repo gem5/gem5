@@ -47,6 +47,9 @@
 #include "base/logging.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -547,6 +550,7 @@ const int SyscallNumReg = ReturnValueReg;
 const int SyscallPseudoReturnReg = ReturnValueReg;
 const int SyscallSuccessReg = ReturnValueReg;
 
-}
+} // namespace ArmISA
+} // namespace gem5
 
 #endif

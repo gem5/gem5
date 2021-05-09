@@ -48,6 +48,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 Pl050::Pl050(const Pl050Params &p)
     : AmbaIntDevice(p, 0x1000), control(0), status(0x43), clkdiv(0),
       rawInterrupts(0),
@@ -219,3 +222,5 @@ Pl050::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(clkdiv);
     paramIn(cp, "raw_ints", rawInterrupts);
 }
+
+} // namespace gem5

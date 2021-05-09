@@ -46,6 +46,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 /// Container for serializing global variables (not associated with
 /// any serialized object).
 class Globals : public Serializable
@@ -59,5 +62,7 @@ class Globals : public Serializable
 
     Tick unserializedCurTick;
 };
+
+} // namespace gem5
 
 #endif // __SIM_GLOBALS_HH__

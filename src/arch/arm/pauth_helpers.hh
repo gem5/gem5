@@ -46,6 +46,9 @@
 #include "base/bitunion.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -121,5 +124,7 @@ namespace ArmISA
   Fault
   stripPAC(ThreadContext* tc, uint64_t A, bool data, uint64_t* out);
 
-};
+} // namespace ArmISA
+} // namespace gem5
+
 #endif //__ARCH_ARM_PAUTH_HELPERS_HH__

@@ -52,6 +52,9 @@
 #include "cpu/translation.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 class BaseSimpleCPU;
 
 class SimpleExecContext : public ExecContext
@@ -625,5 +628,7 @@ class SimpleExecContext : public ExecContext
         return cpu->getCpuAddrMonitor(thread->threadId());
     }
 };
+
+} // namespace gem5
 
 #endif // __CPU_EXEC_CONTEXT_HH__

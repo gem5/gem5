@@ -43,6 +43,9 @@
 #include "dev/dma_device.hh"
 #include "params/TesterDma.hh"
 
+namespace gem5
+{
+
 class TesterDma : public DmaDevice
 {
   public:
@@ -64,5 +67,7 @@ class TesterDma : public DmaDevice
     Tick read(PacketPtr) override { return 10; }
     Tick write(PacketPtr) override { return 10; }
 };
+
+} // namespace gem5
 
 #endif /* __CPU_TESTERS_GPU_RUBY_TEST_TESTER_DMA_HH__ */

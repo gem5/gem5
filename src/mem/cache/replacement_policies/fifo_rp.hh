@@ -39,6 +39,9 @@
 #include "base/types.hh"
 #include "mem/cache/replacement_policies/base.hh"
 
+namespace gem5
+{
+
 struct FIFORPParams;
 
 GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
@@ -110,5 +113,6 @@ class FIFO : public Base
 };
 
 } // namespace replacement_policy
+} // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_FIFO_RP_HH__

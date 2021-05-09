@@ -49,6 +49,9 @@
 #include "dev/arm/gic_v3_cpu_interface.hh"
 #include "dev/arm/gic_v3_redistributor.hh"
 
+namespace gem5
+{
+
 const AddrRange Gicv3Distributor::GICD_IGROUPR   (0x0080, 0x0100);
 const AddrRange Gicv3Distributor::GICD_ISENABLER (0x0100, 0x0180);
 const AddrRange Gicv3Distributor::GICD_ICENABLER (0x0180, 0x0200);
@@ -1213,3 +1216,5 @@ Gicv3Distributor::unserialize(CheckpointIn & cp)
     UNSERIALIZE_CONTAINER(irqNsacr);
     UNSERIALIZE_CONTAINER(irqAffinityRouting);
 }
+
+} // namespace gem5

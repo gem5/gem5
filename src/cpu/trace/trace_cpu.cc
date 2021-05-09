@@ -40,6 +40,9 @@
 #include "base/compiler.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 // Declare and initialize the static counter for number of trace CPUs.
 int TraceCPU::numTraceCPUs = 0;
 
@@ -1413,3 +1416,5 @@ TraceCPU::FixedRetryGen::InputStream::read(TraceElement* element)
     // We have reached the end of the file
     return false;
 }
+
+} // namespace gem5

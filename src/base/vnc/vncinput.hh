@@ -50,6 +50,9 @@
 #include "params/VncInput.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class OutputDirectory;
 
 /**
@@ -241,4 +244,7 @@ class VncInput : public SimObject
     /** Captures the current frame buffer to a file */
     void captureFrameBuffer();
 };
+
+} // namespace gem5
+
 #endif

@@ -27,6 +27,9 @@
 
 #include "base/gtest/logging.hh"
 
+namespace gem5
+{
+
 thread_local GTestLogOutput gtestLogOutput;
 
 GTestLogOutput::EventHook::EventHook(GTestLogOutput &_stream) : stream(_stream)
@@ -45,3 +48,5 @@ GTestLogOutput::EventHook::OnTestStart(const ::testing::TestInfo &test_info)
     // Clear out the stream at the start of each test.
     stream.str("");
 }
+
+} // namespace gem5

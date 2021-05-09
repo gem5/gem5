@@ -37,6 +37,9 @@
 #include "gpu-compute/rr_scheduling_policy.hh"
 #include "params/ComputeUnit.hh"
 
+namespace gem5
+{
+
 Scheduler::Scheduler(const ComputeUnitParams &p)
 {
     if (p.execPolicy == "OLDEST-FIRST") {
@@ -59,3 +62,5 @@ Scheduler::bindList(std::vector<Wavefront*> *sched_list)
 {
     scheduleList = sched_list;
 }
+
+} // namespace gem5

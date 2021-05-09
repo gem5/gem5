@@ -45,6 +45,9 @@
 #include "cpu/static_inst.hh"
 #include "debug/Decoder.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -345,5 +348,6 @@ class Decoder : public InstDecoder
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_DECODER_HH__

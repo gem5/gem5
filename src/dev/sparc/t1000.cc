@@ -34,6 +34,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 T1000::T1000(const Params &p) : Platform(p) {}
 
 void
@@ -61,3 +64,5 @@ T1000::clearPciInt(int line)
 {
     panic("Need implementation\n");
 }
+
+} // namespace gem5

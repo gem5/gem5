@@ -69,6 +69,9 @@
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 const PixelConverter VncServer::pixelConverter(
     4,        // 4 bytes / pixel
     16, 8, 0, // R in [23, 16], G in [15, 8], B in [7, 0]
@@ -729,3 +732,5 @@ VncServer::frameBufferResized()
             detach();
     }
 }
+
+} // namespace gem5

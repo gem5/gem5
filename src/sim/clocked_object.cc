@@ -40,6 +40,9 @@
 #include "base/logging.hh"
 #include "sim/power/power_model.hh"
 
+namespace gem5
+{
+
 ClockedObject::ClockedObject(const ClockedObjectParams &p) :
     SimObject(p), Clocked(*p.clk_domain), powerState(p.power_state)
 {
@@ -62,3 +65,5 @@ ClockedObject::unserialize(CheckpointIn &cp)
 {
     powerState->unserialize(cp);
 }
+
+} // namespace gem5

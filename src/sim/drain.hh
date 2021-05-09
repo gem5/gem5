@@ -42,6 +42,9 @@
 #include <mutex>
 #include <vector>
 
+namespace gem5
+{
+
 class Drainable;
 
 /**
@@ -356,5 +359,7 @@ class Drainable
      */
     mutable DrainState _drainState;
 };
+
+} // namespace gem5
 
 #endif

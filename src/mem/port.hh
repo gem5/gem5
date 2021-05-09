@@ -53,6 +53,9 @@
 #include "mem/protocol/timing.hh"
 #include "sim/port.hh"
 
+namespace gem5
+{
+
 class SimObject;
 
 /** Forward declaration */
@@ -527,5 +530,7 @@ RequestPort::sendRetryResp()
         reportUnbound();
     }
 }
+
+} // namespace gem5
 
 #endif //__MEM_PORT_HH__

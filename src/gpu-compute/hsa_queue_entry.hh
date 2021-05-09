@@ -55,6 +55,9 @@
 #include "dev/hsa/hsa_queue.hh"
 #include "gpu-compute/kernel_code.hh"
 
+namespace gem5
+{
+
 class HSAQueueEntry
 {
   public:
@@ -474,5 +477,7 @@ class HSAQueueEntry
     std::bitset<NumVectorInitFields> initialVgprState;
     std::bitset<NumScalarInitFields> initialSgprState;
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_HSA_QUEUE_ENTRY__

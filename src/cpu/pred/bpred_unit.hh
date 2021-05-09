@@ -55,6 +55,9 @@
 #include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * Basically a wrapper class to hold both the branch predictor
  * and the BTB.
@@ -340,5 +343,7 @@ class BPredUnit : public SimObject
 
     /** @} */
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_BPRED_UNIT_HH__

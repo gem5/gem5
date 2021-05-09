@@ -40,6 +40,9 @@
 #include "sim/guest_abi.hh"
 #include "sim/proxy_ptr.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 struct Aapcs64
@@ -422,5 +425,6 @@ struct Result<Aapcs64, Composite, typename std::enable_if_t<
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __ARCH_ARM_AAPCS64_HH__

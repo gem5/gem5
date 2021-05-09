@@ -46,6 +46,9 @@
 #include "params/MipsTLB.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 using namespace MipsISA;
 
 ///////////////////////////////////////////////////////////////////////
@@ -255,3 +258,5 @@ TLB::index(bool advance)
 
     return *pte;
 }
+
+} // namespace gem5

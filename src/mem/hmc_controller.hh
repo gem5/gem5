@@ -51,6 +51,9 @@
 #include "mem/port.hh"
 #include "params/HMCController.hh"
 
+namespace gem5
+{
+
 /**
  * HMC Controller, in general, is responsible for translating the host
  * protocol (AXI for example) to serial links protocol. Plus, it should have
@@ -97,5 +100,7 @@ private:
      */
     int rotate_counter();
 };
+
+} // namespace gem5
 
 #endif //__MEM_HMC_CONTROLLER_HH__

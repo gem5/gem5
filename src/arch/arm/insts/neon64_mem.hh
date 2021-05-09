@@ -41,6 +41,12 @@
 #ifndef __ARCH_ARM_INSTS_NEON64_MEM_HH__
 #define __ARCH_ARM_INSTS_NEON64_MEM_HH__
 
+#include <cassert>
+#include <cstdint>
+
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -121,6 +127,7 @@ readVecElem(VReg src, int index, int eSize)
     return data;
 }
 
-}  // namespace ArmISA
+} // namespace ArmISA
+} // namespace gem5
 
 #endif  // __ARCH_ARM_INSTS_NEON64_MEM_HH__

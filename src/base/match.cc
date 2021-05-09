@@ -31,6 +31,9 @@
 
 #include "base/str.hh"
 
+namespace gem5
+{
+
 ObjectMatch::ObjectMatch()
 {
 }
@@ -113,3 +116,4 @@ ObjectMatch::getExpressions()
     return to_return;
 }
 
+} // namespace gem5

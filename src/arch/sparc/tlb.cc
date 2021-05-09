@@ -50,6 +50,9 @@
 #include "sim/process.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 /* @todo remove some of the magic constants.  -- ali
  * */
 namespace SparcISA {
@@ -1506,3 +1509,4 @@ TLB::unserialize(CheckpointIn &cp)
 }
 
 } // namespace SparcISA
+} // namespace gem5

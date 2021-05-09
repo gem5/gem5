@@ -35,6 +35,9 @@
 #include "base/compiler.hh"
 #include "base/cprintf.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
@@ -118,5 +121,7 @@ class ReplaceableEntry
         return csprintf("set: %#x way: %#x", getSet(), getWay());
     }
 };
+
+} // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_REPLACEABLE_ENTRY_HH_

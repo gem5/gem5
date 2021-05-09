@@ -51,6 +51,9 @@
 #include "params/ArmTLB.hh"
 #include "sim/probe/pmu.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace ArmISA {
@@ -461,5 +464,6 @@ private:
 };
 
 } // namespace ArmISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_TLB_HH__

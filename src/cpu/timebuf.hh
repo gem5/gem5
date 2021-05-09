@@ -33,6 +33,9 @@
 #include <cstring>
 #include <vector>
 
+namespace gem5
+{
+
 template <class T>
 class TimeBuffer
 {
@@ -244,5 +247,6 @@ class TimeBuffer
     }
 };
 
-#endif // __BASE_TIMEBUF_HH__
+} // namespace gem5
 
+#endif // __BASE_TIMEBUF_HH__

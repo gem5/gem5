@@ -52,6 +52,9 @@
 
 #include "enums/ArmInterruptType.hh"
 
+namespace gem5
+{
+
 class Platform;
 class RealView;
 class ThreadContext;
@@ -288,4 +291,6 @@ class ArmSigInterruptPin : public ArmInterruptPin
     void clear() override;
 };
 
-#endif
+} // namespace gem5
+
+#endif // __DEV_ARM_BASE_GIC_H__

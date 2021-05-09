@@ -51,6 +51,9 @@
 #include "sim/process.hh"
 #include "sim/syscall_emul_buf.hh"
 
+namespace gem5
+{
+
 GPUComputeDriver::GPUComputeDriver(const Params &p)
     : EmulatedDriver(p), device(p.device), queueId(0),
       isdGPU(p.isdGPU), gfxVersion(p.gfxVersion), dGPUPoolID(p.dGPUPoolID),
@@ -951,3 +954,5 @@ GPUComputeDriver::setMtype(RequestPtr req)
         req->setCacheCoherenceFlags(defaultMtype);
     }
 }
+
+} // namespace gem5

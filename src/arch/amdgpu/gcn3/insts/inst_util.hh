@@ -38,6 +38,9 @@
 
 #include "arch/amdgpu/gcn3/gpu_registers.hh"
 
+namespace gem5
+{
+
 // values for SDWA select operations
 enum SDWASelVals : int
 {
@@ -890,5 +893,6 @@ namespace Gcn3ISA
         sdwaInstDstImpl(dst, origDst, clamp, dst_sel, dst_unusedBits_format);
     }
 } // namespace Gcn3ISA
+} // namespace gem5
 
 #endif // __ARCH_GCN3_INSTS_INST_UTIL_HH__

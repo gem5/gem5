@@ -45,6 +45,9 @@
 #include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace PowerISA;
 
 PowerProcess::PowerProcess(
@@ -278,3 +281,5 @@ PowerProcess::argsInit(int intSize, int pageSize)
     //Align the "stack_min" to a page boundary.
     memState->setStackMin(roundDown(stack_min, pageSize));
 }
+
+} // namespace gem5

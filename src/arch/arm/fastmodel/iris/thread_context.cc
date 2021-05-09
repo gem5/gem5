@@ -50,6 +50,9 @@
 #include "mem/translating_port_proxy.hh"
 #include "sim/pseudo_inst.hh"
 
+namespace gem5
+{
+
 namespace Iris
 {
 
@@ -305,7 +308,7 @@ ThreadContext::semihostingEvent(
 }
 
 ThreadContext::ThreadContext(
-        ::BaseCPU *cpu, int id, System *system, ::BaseMMU *mmu,
+        gem5::BaseCPU *cpu, int id, System *system, gem5::BaseMMU *mmu,
         BaseISA *isa, iris::IrisConnectionInterface *iris_if,
         const std::string &iris_path) :
     _cpu(cpu), _threadId(id), _system(system), _mmu(mmu), _isa(isa),
@@ -475,7 +478,7 @@ ThreadContext::getCurrentInstCount()
 }
 
 void
-ThreadContext::initMemProxies(::ThreadContext *tc)
+ThreadContext::initMemProxies(gem5::ThreadContext *tc)
 {
     assert(!virtProxy);
     if (FullSystem) {
@@ -717,3 +720,4 @@ ThreadContext::readVecPredRegFlat(RegIndex idx) const
 }
 
 } // namespace Iris
+} // namespace gem5

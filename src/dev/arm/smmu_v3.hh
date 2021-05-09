@@ -76,6 +76,10 @@
  * - Checkpointing is not supported
  * - Stall/resume for faulting transactions is not supported
  */
+
+namespace gem5
+{
+
 class SMMUTranslationProcess;
 
 class SMMUv3 : public ClockedObject
@@ -194,5 +198,7 @@ class SMMUv3 : public ClockedObject
     virtual Port &getPort(const std::string &name,
                           PortID id = InvalidPortID) override;
 };
+
+} // namespace gem5
 
 #endif /* __DEV_ARM_SMMU_V3_HH__ */

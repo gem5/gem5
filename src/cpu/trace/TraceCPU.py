@@ -42,6 +42,7 @@ class TraceCPU(BaseCPU):
     """
     type = 'TraceCPU'
     cxx_header = "cpu/trace/trace_cpu.hh"
+    cxx_class = 'gem5::TraceCPU'
 
     @classmethod
     def memory_mode(cls):

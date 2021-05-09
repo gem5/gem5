@@ -42,6 +42,9 @@
 
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct SerialDeviceParams;
 struct SerialNullDeviceParams;
 
@@ -153,5 +156,7 @@ class SerialNullDevice : public SerialDevice
     void writeData(uint8_t c) override {};
     uint8_t readData() override;
 };
+
+} // namespace gem5
 
 #endif // __DEV_SERIAL_HH__

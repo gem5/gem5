@@ -44,6 +44,9 @@
 #include "sim/probe/mem.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct BaseMemProbeParams;
 
 /**
@@ -90,5 +93,7 @@ class BaseMemProbe : public SimObject
 
     std::vector<std::unique_ptr<PacketListener>> listeners;
 };
+
+} // namespace gem5
 
 #endif //  __MEM_PROBES_BASE_HH__

@@ -31,6 +31,9 @@
 #include "base/trace.hh"
 #include "debug/SimpleMemobj.hh"
 
+namespace gem5
+{
+
 SimpleMemobj::SimpleMemobj(const SimpleMemobjParams &params) :
     SimObject(params),
     instPort(params.name + ".inst_port", this),
@@ -228,3 +231,5 @@ SimpleMemobj::sendRangeChange()
     instPort.sendRangeChange();
     dataPort.sendRangeChange();
 }
+
+} // namespace gem5

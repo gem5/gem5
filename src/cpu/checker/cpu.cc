@@ -52,6 +52,9 @@
 #include "params/CheckerCPU.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 void
 CheckerCPU::init()
 {
@@ -373,3 +376,5 @@ CheckerCPU::dumpAndExit()
          curTick(), thread->pcState());
     panic("Checker found an error!");
 }
+
+} // namespace gem5

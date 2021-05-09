@@ -39,6 +39,9 @@
 #include "arch/riscv/regs/int.hh"
 #include "base/remote_gdb.hh"
 
+namespace gem5
+{
+
 class System;
 class ThreadContext;
 
@@ -161,5 +164,6 @@ class RemoteGDB : public BaseRemoteGDB
 };
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif /* __ARCH_RISCV_REMOTE_GDB_H__ */

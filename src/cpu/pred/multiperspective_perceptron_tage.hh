@@ -48,6 +48,9 @@
 #include "params/MPP_TAGE.hh"
 #include "params/MultiperspectivePerceptronTAGE.hh"
 
+namespace gem5
+{
+
 class MPP_TAGE : public TAGEBase
 {
     std::vector<unsigned int> tunedHistoryLengths;
@@ -238,4 +241,7 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
     void squash(ThreadID tid, void *bp_history) override;
 
 };
+
+} // namespace gem5
+
 #endif//__CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_TAGE_HH__

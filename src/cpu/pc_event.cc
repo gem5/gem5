@@ -38,6 +38,9 @@
 #include "sim/core.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 PCEventQueue::PCEventQueue()
 {}
 
@@ -138,3 +141,5 @@ PanicPCEvent::process(ThreadContext *tc)
     StringWrap name("panic_event");
     panic(descr());
 }
+
+} // namespace gem5

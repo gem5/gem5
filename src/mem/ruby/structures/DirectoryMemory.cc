@@ -49,6 +49,9 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 DirectoryMemory::DirectoryMemory(const Params &p)
     : SimObject(p), addrRanges(p.addr_ranges.begin(), p.addr_ranges.end())
 {
@@ -156,3 +159,5 @@ DirectoryMemory::recordRequestType(DirectoryRequestType requestType) {
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
             DirectoryRequestType_to_string(requestType));
 }
+
+} // namespace gem5

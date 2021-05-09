@@ -56,6 +56,8 @@ else:
 class System(SimObject):
     type = 'System'
     cxx_header = "sim/system.hh"
+    cxx_class = 'gem5::System'
+
     system_port = RequestPort("System port")
 
     cxx_exports = [

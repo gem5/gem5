@@ -42,6 +42,9 @@
  * PMP header file.
  */
 
+namespace gem5
+{
+
 /**
  * This class helps to implement RISCV's physical memory
  * protection (pmp) primitive.
@@ -187,5 +190,7 @@ class PMP : public SimObject
     inline AddrRange pmpDecodeNapot(Addr pmpaddr);
 
 };
+
+} // namespace gem5
 
 #endif // __ARCH_RISCV_PMP_HH__

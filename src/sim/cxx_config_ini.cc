@@ -39,6 +39,9 @@
 
 #include "base/str.hh"
 
+namespace gem5
+{
+
 bool
 CxxIniFile::getParam(const std::string &object_name,
     const std::string &param_name,
@@ -102,3 +105,5 @@ CxxIniFile::load(const std::string &filename)
 {
     return iniFile.load(filename);
 }
+
+} // namespace gem5

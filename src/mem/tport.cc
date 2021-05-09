@@ -41,6 +41,9 @@
 #include "mem/tport.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 SimpleTimingPort::SimpleTimingPort(const std::string& _name,
                                    SimObject* _owner) :
     QueuedResponsePort(_name, _owner, queueImpl), queueImpl(*_owner, *this)
@@ -81,3 +84,5 @@ SimpleTimingPort::recvTimingReq(PacketPtr pkt)
 
     return true;
 }
+
+} // namespace gem5

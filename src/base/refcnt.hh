@@ -49,6 +49,9 @@
  * Classes for managing reference counted objects.
  */
 
+namespace gem5
+{
+
 /**
  * Derive from RefCounted if you want to enable reference counting of
  * this class.  If you want to use automatic reference counting, you
@@ -310,5 +313,7 @@ operator!=(const T *l, const RefCountingPtr<T> &r)
 {
     return l != r.get();
 }
+
+} // namespace gem5
 
 #endif // __BASE_REFCNT_HH__

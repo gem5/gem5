@@ -36,6 +36,7 @@ class RedirectPath(SimObject):
     """
     type = 'RedirectPath'
     cxx_header = "sim/redirect_path.hh"
+    cxx_class = 'gem5::RedirectPath'
 
     app_path = Param.String("/", "filesystem path from an app's perspective")
     host_paths = VectorParam.String(["/"], "file path on host filesystem")

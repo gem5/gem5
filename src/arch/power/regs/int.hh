@@ -29,6 +29,9 @@
 #ifndef __ARCH_POWER_REGS_INT_HH__
 #define __ARCH_POWER_REGS_INT_HH__
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -65,5 +68,6 @@ enum MiscIntRegNums
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_REGS_INT_HH__

@@ -34,11 +34,16 @@
 #include "mem/ruby/network/garnet/NetworkLink.hh"
 #include "params/CreditLink.hh"
 
+namespace gem5
+{
+
 class CreditLink : public NetworkLink
 {
   public:
     typedef CreditLinkParams Params;
     CreditLink(const Params &p) : NetworkLink(p) {}
 };
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_CREDITLINK_HH__

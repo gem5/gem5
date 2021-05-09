@@ -43,6 +43,9 @@
 #include "sim/process.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 SETranslatingPortProxy::SETranslatingPortProxy(
         ThreadContext *tc, AllocType alloc, Request::Flags _flags) :
     TranslatingPortProxy(tc, _flags), allocating(alloc)
@@ -64,3 +67,5 @@ SETranslatingPortProxy::fixupAddr(Addr addr, BaseTLB::Mode mode) const
     }
     return false;
 }
+
+} // namespace gem5

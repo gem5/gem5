@@ -39,6 +39,9 @@
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 const int MESSAGE_SIZE_MULTIPLIER = 1000;
 //const int BROADCAST_SCALING = 4; // Have a 16p system act like a 64p systems
 const int BROADCAST_SCALING = 1;
@@ -270,3 +273,5 @@ ThrottleStats::ThrottleStats(statistics::Group *parent, const NodeID &nodeID)
 {
 
 }
+
+} // namespace gem5

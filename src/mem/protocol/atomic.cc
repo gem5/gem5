@@ -42,6 +42,9 @@
 
 #include "base/trace.hh"
 
+namespace gem5
+{
+
 /* The request protocol. */
 
 Tick
@@ -67,3 +70,5 @@ AtomicResponseProtocol::sendSnoop(AtomicRequestProtocol *peer, PacketPtr pkt)
     assert(pkt->isRequest());
     return peer->recvAtomicSnoop(pkt);
 }
+
+} // namespace gem5

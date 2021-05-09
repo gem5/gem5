@@ -53,6 +53,9 @@
 #include "debug/KvmInt.hh"
 #include "sim/pseudo_inst.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 namespace
@@ -933,3 +936,5 @@ ArmKvmCPU::updateTCStateVFP(uint64_t id, bool show_warnings)
             warn("Unhandled VFP register: 0x%x\n", id);
     }
 }
+
+} // namespace gem5

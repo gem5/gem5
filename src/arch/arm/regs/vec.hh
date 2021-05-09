@@ -45,6 +45,9 @@
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -56,12 +59,12 @@ constexpr unsigned NumVecElemPerVecReg = MaxSveVecLenInWords;
 
 using VecElem = uint32_t;
 using VecRegContainer =
-    ::VecRegContainer<NumVecElemPerVecReg * sizeof(VecElem)>;
+    gem5::VecRegContainer<NumVecElemPerVecReg * sizeof(VecElem)>;
 
-using VecPredReg = ::VecPredRegT<VecElem, NumVecElemPerVecReg,
-                                 false, false>;
-using ConstVecPredReg = ::VecPredRegT<VecElem, NumVecElemPerVecReg,
-                                      false, true>;
+using VecPredReg =
+    gem5::VecPredRegT<VecElem, NumVecElemPerVecReg, false, false>;
+using ConstVecPredReg =
+    gem5::VecPredRegT<VecElem, NumVecElemPerVecReg, false, true>;
 using VecPredRegContainer = VecPredReg::Container;
 
 // Vec, PredVec
@@ -88,5 +91,6 @@ const int PREDREG_FFR = 16;
 const int PREDREG_UREG0 = 17;
 
 } // namespace ArmISA
+} // namespace gem5
 
 #endif

@@ -45,6 +45,9 @@
 #include "mem/token_port.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class TesterThread : public ClockedObject
 {
   public:
@@ -203,5 +206,7 @@ class TesterThread : public ClockedObject
     void printOutstandingReqs(const OutstandingReqTable& table,
                               std::stringstream& ss) const;
 };
+
+} // namespace gem5
 
 #endif /* CPU_TESTERS_PROTOCOL_TESTER_TESTER_THREAD_HH_ */

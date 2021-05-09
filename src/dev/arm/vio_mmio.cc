@@ -42,6 +42,9 @@
 #include "mem/packet_access.hh"
 #include "params/MmioVirtIO.hh"
 
+namespace gem5
+{
+
 MmioVirtIO::MmioVirtIO(const MmioVirtIOParams &params)
     : BasicPioDevice(params, params.pio_size),
       hostFeaturesSelect(0), guestFeaturesSelect(0), pageSize(0),
@@ -273,3 +276,5 @@ MmioVirtIO::setInterrupts(uint32_t value)
         interrupt->clear();
     }
 }
+
+} // namespace gem5

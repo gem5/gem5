@@ -30,6 +30,9 @@
 
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 using namespace X86ISA;
 
 template <>
@@ -105,3 +108,5 @@ paramIn(CheckpointIn &cp, const std::string &name, ExtMachInst &machInst)
     paramIn(cp, name + ".mode", temp8);
     machInst.mode = temp8;
 }
+
+} // namespace gem5

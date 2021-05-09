@@ -52,6 +52,9 @@
 #include "params/GenericTimerMem.hh"
 #include "params/SystemCounter.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 SystemCounter::SystemCounter(const SystemCounterParams &p)
@@ -1580,3 +1583,5 @@ GenericTimerMem::timerCtrlWrite(Addr addr, size_t size, uint64_t data,
              "(0x%x:%i), assuming WI\n", addr, size);
     }
 }
+
+} // namespace gem5

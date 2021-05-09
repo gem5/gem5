@@ -52,6 +52,9 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 RubyPort::RubyPort(const Params &p)
     : ClockedObject(p), m_ruby_system(p.ruby_system), m_version(p.version),
       m_controller(NULL), m_mandatory_q_ptr(NULL),
@@ -675,3 +678,5 @@ RubyPort::functionalWrite(Packet *func_pkt)
     }
     return num_written;
 }
+
+} // namespace gem5

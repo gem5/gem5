@@ -44,6 +44,9 @@
 #include "params/PMAChecker.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 PMAChecker::PMAChecker(const Params &params) :
 SimObject(params),
 uncacheable(params.uncacheable.begin(), params.uncacheable.end())
@@ -87,3 +90,5 @@ PMAChecker::takeOverFrom(PMAChecker *old)
 {
     uncacheable = old->uncacheable;
 }
+
+} // namespace gem5

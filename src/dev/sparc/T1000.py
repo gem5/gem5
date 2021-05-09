@@ -36,18 +36,21 @@ from m5.objects.Uart import Uart8250
 class MmDisk(BasicPioDevice):
     type = 'MmDisk'
     cxx_header = "dev/sparc/mm_disk.hh"
+    cxx_class = 'gem5::MmDisk'
     image = Param.DiskImage("Disk Image")
     pio_addr = 0x1F40000000
 
 class DumbTOD(BasicPioDevice):
     type = 'DumbTOD'
     cxx_header = "dev/sparc/dtod.hh"
+    cxx_class = 'gem5::DumbTOD'
     time = Param.Time('01/01/2009', "System time to use ('Now' for real time)")
     pio_addr = 0xfff0c1fff8
 
 class Iob(PioDevice):
     type = 'Iob'
     cxx_header = "dev/sparc/iob.hh"
+    cxx_class = 'gem5::Iob'
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     pio_latency = Param.Latency('1ns', "Programed IO latency")
 
@@ -55,6 +58,7 @@ class Iob(PioDevice):
 class T1000(Platform):
     type = 'T1000'
     cxx_header = "dev/sparc/t1000.hh"
+    cxx_class = 'gem5::T1000'
 
     fake_clk = IsaFake(pio_addr=0x9600000000, pio_size=0x100000000)
             #warn_access="Accessing Clock Unit -- Unimplemented!")

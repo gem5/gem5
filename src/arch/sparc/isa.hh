@@ -40,6 +40,9 @@
 #include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class Checkpoint;
 class EventManager;
 struct SparcISAParams;
@@ -238,6 +241,8 @@ class ISA : public BaseISA
 
     ISA(const Params &p);
 };
-}
+
+} // namespace SparcISA
+} // namespace gem5
 
 #endif

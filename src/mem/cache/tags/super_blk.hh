@@ -37,6 +37,9 @@
 
 #include "mem/cache/tags/sector_blk.hh"
 
+namespace gem5
+{
+
 class SuperBlk;
 
 /**
@@ -239,5 +242,7 @@ class SuperBlk : public SectorBlk
 
     std::string print() const override;
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_TAGS_SUPER_BLK_HH__

@@ -72,6 +72,9 @@
 #endif
 #endif
 
+namespace gem5
+{
+
 std::vector<std::pair<TCPIface::NodeInfo, int> > TCPIface::nodes;
 std::vector<int> TCPIface::sockRegistry;
 int TCPIface::fdStatic = -1;
@@ -340,3 +343,5 @@ TCPIface::initTransport()
     // phase. That information is necessary for global connection ordering.
     establishConnection();
 }
+
+} // namespace gem5

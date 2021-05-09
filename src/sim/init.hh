@@ -54,6 +54,9 @@ struct _object;
 typedef _object PyObject;
 #endif
 
+namespace gem5
+{
+
 /*
  * Data structure describing an embedded python file.
  */
@@ -110,5 +113,7 @@ class EmbeddedPyBind
 void registerNativeModules();
 
 int m5Main(int argc, char **argv);
+
+} // namespace gem5
 
 #endif // __SIM_INIT_HH__

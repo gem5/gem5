@@ -35,6 +35,9 @@
 
 #include "debug/ProtocolTest.hh"
 
+namespace gem5
+{
+
 GpuWavefront::GpuWavefront(const Params &p)
       : TesterThread(p), cuId(p.cu_id)
 {
@@ -369,3 +372,5 @@ GpuWavefront::setExtraRequestFlags(RequestPtr req)
 {
     // No extra request flag is set
 }
+
+} // namespace gem5

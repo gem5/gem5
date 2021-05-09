@@ -45,6 +45,9 @@
 // address is 8 bytes
 #define MAX_ACTIVE_QUEUES (PAGE_SIZE/8)
 
+namespace gem5
+{
+
 class HWScheduler
 {
   public:
@@ -105,5 +108,7 @@ class HWScheduler
     const Tick wakeupDelay;
     SchedulerWakeupEvent schedWakeupEvent;
 };
+
+} // namespace gem5
 
 #endif // __DEV_HSA_HW_SCHEDULER_HH__

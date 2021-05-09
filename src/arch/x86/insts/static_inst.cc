@@ -41,6 +41,9 @@
 #include "arch/x86/regs/segment.hh"
 #include "cpu/reg_class.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -297,4 +300,5 @@ X86StaticInst::generateDisassembly(
     return ss.str();
 }
 
-}
+} // namespace X86ISA
+} // namespace gem5

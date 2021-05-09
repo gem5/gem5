@@ -43,6 +43,9 @@
 #include "base/types.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 bool ListenSocket::listeningDisabled = false;
 bool ListenSocket::anyListening = false;
 
@@ -157,3 +160,5 @@ ListenSocket::accept(bool nodelay)
 
     return sfd;
 }
+
+} // namespace gem5

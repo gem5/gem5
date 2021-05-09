@@ -42,6 +42,7 @@ from m5.objects.VirtIO import VirtIODeviceBase
 class VirtIOBlock(VirtIODeviceBase):
     type = 'VirtIOBlock'
     cxx_header = 'dev/virtio/block.hh'
+    cxx_class = 'gem5::VirtIOBlock'
 
     queueSize = Param.Unsigned(128, "Output queue size (pages)")
 

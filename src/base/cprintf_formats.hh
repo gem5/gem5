@@ -33,6 +33,9 @@
 #include <ostream>
 #include <sstream>
 
+namespace gem5
+{
+
 namespace cp
 {
 
@@ -388,5 +391,6 @@ formatString(std::ostream &out, const T &data, Format &fmt)
 }
 
 } // namespace cp
+} // namespace gem5
 
 #endif // __CPRINTF_FORMATS_HH__

@@ -47,6 +47,9 @@
 #include "mem/cache/prefetch/base.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 struct QueuedPrefetcherParams;
 
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
@@ -253,6 +256,6 @@ class Queued : public Base
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif //__MEM_CACHE_PREFETCH_QUEUED_HH__
-

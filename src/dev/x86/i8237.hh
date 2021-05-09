@@ -35,6 +35,9 @@
 #include "dev/reg_bank.hh"
 #include "params/I8237.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -104,5 +107,6 @@ class I8237 : public BasicPioDevice
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif //__DEV_X86_I8237_HH__

@@ -43,6 +43,9 @@
 
 #include "arch/arm/insts/pred_inst.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -485,6 +488,8 @@ class MemoryPostIndex : public Base
         return ss.str();
     }
 };
-}
+
+} // namespace ArmISA
+} // namespace gem5
 
 #endif //__ARCH_ARM_INSTS_MEM_HH__

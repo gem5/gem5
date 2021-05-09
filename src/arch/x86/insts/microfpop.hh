@@ -40,6 +40,9 @@
 
 #include "arch/x86/insts/microop.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -62,6 +65,7 @@ class FpOp : public X86MicroopBase
     const RegIndex foldOBit;
 };
 
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_INSTS_MICROFPOP_HH__

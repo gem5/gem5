@@ -50,6 +50,9 @@
 #include "enums/ExtCharacteristic.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class PortProxy;
 struct X86SMBiosBiosInformationParams;
 struct X86SMBiosSMBiosStructureParams;
@@ -227,7 +230,8 @@ class SMBiosTable : public SimObject
             Addr &headerSize, Addr &structSize);
 };
 
-} //SMBios
-} //X86ISA
+} // namespace smbios
+} // namespace X86ISA
+} // namespace gem5
 
 #endif

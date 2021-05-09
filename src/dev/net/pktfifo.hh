@@ -37,6 +37,9 @@
 #include "dev/net/etherpkt.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class Checkpoint;
 
 struct PacketFifoEntry
@@ -206,5 +209,7 @@ class PacketFifo
     void serialize(const std::string &base, CheckpointOut &cp) const;
     void unserialize(const std::string &base, CheckpointIn &cp);
 };
+
+} // namespace gem5
 
 #endif // __DEV_NET_PKTFIFO_HH__

@@ -41,6 +41,9 @@
 #include "arch/x86/insts/static_inst.hh"
 #include "base/compiler.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -157,6 +160,7 @@ class MicroCondBase : public X86MicroopBase
     {}
 };
 
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_INSTS_MICROOP_HH__

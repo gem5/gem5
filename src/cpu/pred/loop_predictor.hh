@@ -38,6 +38,9 @@
 #include "base/types.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct LoopPredictorParams;
 
 class LoopPredictor : public SimObject
@@ -257,4 +260,7 @@ class LoopPredictor : public SimObject
 
     size_t getSizeInBits() const;
 };
+
+} // namespace gem5
+
 #endif//__CPU_PRED_LOOP_PREDICTOR_HH__

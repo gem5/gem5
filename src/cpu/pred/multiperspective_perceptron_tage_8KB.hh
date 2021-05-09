@@ -46,6 +46,9 @@
 #include "params/MPP_TAGE_8KB.hh"
 #include "params/MultiperspectivePerceptronTAGE8KB.hh"
 
+namespace gem5
+{
+
 class MPP_TAGE_8KB : public MPP_TAGE
 {
   public:
@@ -84,5 +87,7 @@ class MultiperspectivePerceptronTAGE8KB :
     MultiperspectivePerceptronTAGE8KB(
             const MultiperspectivePerceptronTAGE8KBParams &p);
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_TAGE_8KB_HH__

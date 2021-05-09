@@ -42,6 +42,9 @@
 #include "arch/x86/regs/segment.hh"
 #include "arch/x86/types.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
     struct EmulEnv
@@ -68,6 +71,8 @@ namespace X86ISA
         void doModRM(const ExtMachInst & machInst);
         void setSeg(const ExtMachInst & machInst);
     };
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_TYPES_HH__

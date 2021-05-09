@@ -54,6 +54,9 @@
 #include "proto/protoio.hh"
 #include "sim/sim_events.hh"
 
+namespace gem5
+{
+
 /**
  * The trace cpu replays traces generated using the elastic trace probe
  * attached to the O3 CPU model. The elastic trace is an execution trace with
@@ -1123,4 +1126,7 @@ class TraceCPU : public BaseCPU
     Port &getDataPort() { return dcachePort; }
 
 };
+
+} // namespace gem5
+
 #endif // __CPU_TRACE_TRACE_CPU_HH__

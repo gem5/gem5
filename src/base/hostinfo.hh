@@ -31,11 +31,16 @@
 
 #include <cstdint>
 
+namespace gem5
+{
+
 /**
  * Determine the simulator process' total virtual memory usage.
  *
  * @return Virtual memory usage in kilobytes
  */
 uint64_t memUsage();
+
+} // namespace gem5
 
 #endif // __HOSTINFO_HH__

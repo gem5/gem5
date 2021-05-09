@@ -31,7 +31,12 @@
 
 #include "base/refcnt.hh"
 
+namespace gem5
+{
+
 class StaticInst;
 typedef RefCountingPtr<StaticInst> StaticInstPtr;
+
+} // namespace gem5
 
 #endif // __CPU_STATIC_INST_FWD_HH__

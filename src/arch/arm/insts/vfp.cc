@@ -37,6 +37,9 @@
 
 #include "arch/arm/insts/vfp.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 /*
@@ -1204,4 +1207,5 @@ VfpMacroOp::nextIdxs(IntRegIndex &dest)
     dest = addStride(dest, stride);
 }
 
-}
+} // namespace ArmISA
+} // namespace gem5

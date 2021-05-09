@@ -43,6 +43,9 @@
 #include "params/PlicIntDevice.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace RiscvISA;
 
 class PlicIntDevice : public BasicPioDevice
@@ -71,5 +74,6 @@ class PlicIntDevice : public BasicPioDevice
 
 };
 
+} // namespace gem5
 
 #endif // __DEV_RISCV_PLIC_DEVICE_HH__

@@ -45,6 +45,9 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 class ComputeUnit;
 class Wavefront;
 
@@ -85,5 +88,7 @@ class RegisterManager : public SimObject
 
     std::string _name;
 };
+
+} // namespace gem5
 
 #endif // __REGISTER_MANAGER_HH__

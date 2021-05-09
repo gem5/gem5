@@ -52,6 +52,9 @@
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 
+namespace gem5
+{
+
 int ckptMaxCount = 0;
 int ckptCount = 0;
 int ckptPrevCount = -1;
@@ -205,3 +208,5 @@ CheckpointIn::visitSection(const std::string &section,
 {
     db.visitSection(section, cb);
 }
+
+} // namespace gem5

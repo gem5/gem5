@@ -47,6 +47,7 @@ class NonCachingSimpleCPU(AtomicSimpleCPU):
 
     type = 'NonCachingSimpleCPU'
     cxx_header = "cpu/simple/noncaching.hh"
+    cxx_class = 'gem5::NonCachingSimpleCPU'
 
     numThreads = 1
 

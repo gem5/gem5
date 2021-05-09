@@ -43,6 +43,9 @@
 
 #include "arch/arm/insts/static_inst.hh"
 
+namespace gem5
+{
+
 class DecoderFaultInst : public ArmISA::ArmStaticInst
 {
   protected:
@@ -140,5 +143,7 @@ class DebugStep : public ArmISA::ArmStaticInst
     Fault execute(ExecContext *xc,
                   Trace::InstRecord *traceData) const override;
 };
+
+} // namespace gem5
 
 #endif

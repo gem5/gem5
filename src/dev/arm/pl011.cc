@@ -50,6 +50,9 @@
 #include "params/Pl011.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 Pl011::Pl011(const Pl011Params &p)
     : Uart(p, 0x1000),
       intEvent([this]{ generateInterrupt(); }, name()),
@@ -296,3 +299,5 @@ Pl011::unserialize(CheckpointIn &cp)
     paramIn(cp, "imsc_serial", imsc);
     paramIn(cp, "rawInt_serial", rawInt);
 }
+
+} // namespace gem5

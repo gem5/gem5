@@ -38,6 +38,9 @@
 #include "base/types.hh"
 #include "cpu/reg_class.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 struct X86ISAParams;
 
@@ -119,6 +122,7 @@ class ISA : public BaseISA
     std::string getVendorString() const;
 };
 
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif

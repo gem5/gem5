@@ -39,6 +39,9 @@
 
 #include "cpu/pred/multiperspective_perceptron_tage_8KB.hh"
 
+namespace gem5
+{
+
 MPP_StatisticalCorrector_8KB::MPP_StatisticalCorrector_8KB(
         const MPP_StatisticalCorrector_8KBParams &p)
   : MPP_StatisticalCorrector(p)
@@ -170,3 +173,5 @@ MultiperspectivePerceptronTAGE8KB::createSpecs()
     addSpec(new IMLI(1, 2.23, 0, 6, *this));
     addSpec(new IMLI(4, 1.98, 0, 6, *this));
 }
+
+} // namespace gem5

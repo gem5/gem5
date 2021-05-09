@@ -41,6 +41,9 @@
 #include "gpu-compute/pool_manager.hh"
 #include "params/DynPoolManager.hh"
 
+namespace gem5
+{
+
 // Dynamic Pool Manager: allows multiple WGs on the same pool
 class DynPoolManager : public PoolManager
 {
@@ -71,5 +74,7 @@ class DynPoolManager : public PoolManager
     // total registers to be allocated -- treat as a const
     int totalRegSpace;
 };
+
+} // namespace gem5
 
 #endif // __DYN_POOL_MANAGER_HH__

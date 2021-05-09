@@ -40,7 +40,7 @@ from m5.objects.MipsTLB import MipsTLB
 
 class MipsMMU(BaseMMU):
     type = 'MipsMMU'
-    cxx_class = 'MipsISA::MMU'
+    cxx_class = 'gem5::MipsISA::MMU'
     cxx_header = 'arch/mips/mmu.hh'
     itb = MipsTLB()
     dtb = MipsTLB()

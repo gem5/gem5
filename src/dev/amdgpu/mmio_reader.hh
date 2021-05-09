@@ -44,6 +44,9 @@
 #include "base/logging.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 /**
  * Helper class to read Linux kernel MMIO trace from amdgpu modprobes. This
  * class is used rather than implementing MMIOs in code as it is easier to
@@ -246,4 +249,6 @@ class AMDMMIOReader
     void writeFromTrace(PacketPtr pkt, int barnum, Addr offset);
 };
 
-#endif /* __DEV_AMDGPU_MMIO_READER_HH__ */
+} // namespace gem5
+
+#endif // __DEV_AMDGPU_MMIO_READER_HH__

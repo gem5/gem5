@@ -44,6 +44,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -6033,3 +6036,4 @@ ISA::initializeMiscRegMetadata()
 }
 
 } // namespace ArmISA
+} // namespace gem5

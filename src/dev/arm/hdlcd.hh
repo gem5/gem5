@@ -84,6 +84,9 @@
 #include "dev/pixelpump.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class VncInput;
 struct HDLcdParams;
 class HDLcdPixelPump;
@@ -417,5 +420,7 @@ class HDLcd: public AmbaDmaDevice
         statistics::Scalar underruns;
     } stats;
 };
+
+} // namespace gem5
 
 #endif

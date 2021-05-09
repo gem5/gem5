@@ -38,7 +38,7 @@ using namespace tlm;
 namespace Gem5SystemC
 {
 
-Gem5Extension::Gem5Extension(PacketPtr packet)
+Gem5Extension::Gem5Extension(gem5::PacketPtr packet)
 {
     Packet = packet;
 }
@@ -56,7 +56,7 @@ Gem5Extension& Gem5Extension::getExtension(const tlm_generic_payload &payload)
     return Gem5Extension::getExtension(&payload);
 }
 
-PacketPtr Gem5Extension::getPacket()
+gem5::PacketPtr Gem5Extension::getPacket()
 {
     return Packet;
 }

@@ -41,6 +41,9 @@
 #include "debug/MipsPRA.hh"
 #include "params/MipsISA.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -592,4 +595,5 @@ ISA::processCP0Event(BaseCPU *cpu, CP0EventType cp0EventType)
     }
 }
 
-}
+} // namespace MipsISA
+} // namespace gem5

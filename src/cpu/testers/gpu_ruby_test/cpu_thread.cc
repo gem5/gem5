@@ -35,6 +35,9 @@
 
 #include "debug/ProtocolTest.hh"
 
+namespace gem5
+{
+
 CpuThread::CpuThread(const Params &p)
     : TesterThread(p)
 {
@@ -115,3 +118,5 @@ CpuThread::hitCallback(PacketPtr pkt)
 {
     fatal("CpuThread::hitCallback - not yet implemented");
 }
+
+} // namespace gem5

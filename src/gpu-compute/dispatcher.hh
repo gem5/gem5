@@ -53,6 +53,9 @@
 #include "params/GPUDispatcher.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class GPUCommandProcessor;
 class HSAQueueEntry;
 class Shader;
@@ -101,5 +104,7 @@ class GPUDispatcher : public SimObject
         statistics::Scalar cyclesWaitingForDispatch;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_DISPATCHER_HH__

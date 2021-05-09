@@ -61,6 +61,9 @@
 #include "sim/full_system.hh"
 #include "sim/workload.hh"
 
+namespace gem5
+{
+
 using namespace X86ISA;
 
 RemoteGDB::RemoteGDB(System *_system, int _port) :
@@ -233,3 +236,5 @@ RemoteGDB::X86GdbRegCache::setRegs(ThreadContext *context) const
     if (r.gs != context->readMiscRegNoEffect(MISCREG_GS))
         warn("Remote gdb: Ignoring update to GS.\n");
 }
+
+} // namespace gem5

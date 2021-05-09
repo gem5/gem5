@@ -37,6 +37,9 @@
 #include "arch/riscv/utility.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -58,4 +61,5 @@ Store::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     return ss.str();
 }
 
-}
+} // namespace RiscvISA
+} // namespace gem5

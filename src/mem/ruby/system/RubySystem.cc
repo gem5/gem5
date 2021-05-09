@@ -60,6 +60,9 @@
 #include "sim/simulate.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 bool RubySystem::m_randomization;
 uint32_t RubySystem::m_block_size_bytes;
 uint32_t RubySystem::m_block_size_bits;
@@ -736,3 +739,5 @@ RubySystem::functionalWrite(PacketPtr pkt)
 
     return true;
 }
+
+} // namespace gem5

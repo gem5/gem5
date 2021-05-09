@@ -29,6 +29,9 @@
 #include "sim/init.hh"
 #include "sim/port.hh"
 
+namespace gem5
+{
+
 namespace
 {
 
@@ -44,3 +47,4 @@ sim_pybind(pybind11::module_ &m_internal)
 EmbeddedPyBind embed_("sim", &sim_pybind);
 
 } // anonymous namespace
+} // namespace gem5

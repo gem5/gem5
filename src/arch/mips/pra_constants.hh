@@ -32,6 +32,9 @@
 #include "arch/mips/types.hh"
 #include "base/bitunion.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -324,5 +327,6 @@ BitUnion32(TagLoReg)
 EndBitUnion(TagLoReg)
 
 } // namespace MipsISA
+} // namespace gem5
 
 #endif

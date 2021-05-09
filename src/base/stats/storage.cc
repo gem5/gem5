@@ -43,6 +43,9 @@
 
 #include <cmath>
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -225,3 +228,4 @@ HistStor::add(HistStor *hs)
 }
 
 } // namespace statistics
+} // namespace gem5

@@ -49,6 +49,9 @@
 #include "params/TAGE_SC_L_LoopPredictor.hh"
 #include "params/TAGE_SC_L_TAGE.hh"
 
+namespace gem5
+{
+
 class TAGE_SC_L_TAGE : public TAGEBase
 {
     const unsigned firstLongTagTable;
@@ -184,5 +187,7 @@ class TAGE_SC_L: public LTAGE
     };
 
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_TAGE_SC_L_HH__

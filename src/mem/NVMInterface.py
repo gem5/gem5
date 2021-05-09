@@ -44,6 +44,7 @@ from m5.objects.DRAMInterface import AddrMap
 class NVMInterface(MemInterface):
     type = 'NVMInterface'
     cxx_header = "mem/mem_interface.hh"
+    cxx_class = 'gem5::NVMInterface'
 
     # NVM DIMM could have write buffer to offload writes
     # define buffer depth, which will limit the number of pending writes

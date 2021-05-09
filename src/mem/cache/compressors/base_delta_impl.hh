@@ -37,6 +37,9 @@
 #include "mem/cache/compressors/base_delta.hh"
 #include "mem/cache/compressors/dictionary_compressor_impl.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -96,5 +99,6 @@ BaseDelta<BaseType, DeltaSizeBits>::compress(
 }
 
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_BASE_DELTA_IMPL_HH__

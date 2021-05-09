@@ -42,6 +42,9 @@
 #include "arch/x86/fs_workload.hh"
 #include "params/X86FsLinux.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -58,5 +61,6 @@ class FsLinux : public X86ISA::FsWorkload
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_LINUX_FS_WORKLOAD_HH__

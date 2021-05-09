@@ -30,3 +30,4 @@ class BaseISA(SimObject):
     type = 'BaseISA'
     abstract = True
     cxx_header = "arch/generic/isa.hh"
+    cxx_class = 'gem5::BaseISA'

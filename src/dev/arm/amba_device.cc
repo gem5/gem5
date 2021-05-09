@@ -46,6 +46,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 const uint64_t AmbaVendor = 0xb105f00d00000000ULL;
 
 AmbaPioDevice::AmbaPioDevice(const Params &p, Addr pio_size)
@@ -84,3 +87,5 @@ AmbaDevice::readId(PacketPtr pkt, uint64_t amba_id, Addr pio_addr)
     pkt->setUintX((amba_id >> byte) & 0xFF, ByteOrder::little);
     return true;
 }
+
+} // namespace gem5

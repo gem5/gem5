@@ -40,6 +40,9 @@
 #include "kern/system_events.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(FreeBSD, free_bsd);
 namespace free_bsd
 {
@@ -62,3 +65,4 @@ onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul, uint64_t time)
 }
 
 } // namespace free_bsd
+} // namespace gem5

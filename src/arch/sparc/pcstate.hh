@@ -31,11 +31,15 @@
 
 #include "arch/generic/types.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
 typedef GenericISA::DelaySlotUPCState<4> PCState;
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
-#endif
+#endif // __ARCH_SPARC_PCSTATE_HH__

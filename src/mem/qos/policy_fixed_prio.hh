@@ -44,6 +44,9 @@
 #include "base/compiler.hh"
 #include "mem/qos/policy.hh"
 
+namespace gem5
+{
+
 struct QoSFixedPriorityPolicyParams;
 
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
@@ -106,5 +109,6 @@ class FixedPriorityPolicy : public Policy
 };
 
 } // namespace qos
+} // namespace gem5
 
 #endif // __MEM_QOS_POLICY_FIXED_PRIO_HH__

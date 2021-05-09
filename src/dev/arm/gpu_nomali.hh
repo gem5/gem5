@@ -43,6 +43,9 @@
 #include "dev/io_device.hh"
 #include "libnomali/nomali.h"
 
+namespace gem5
+{
+
 struct NoMaliGpuParams;
 struct CustomNoMaliGpuParams;
 class RealView;
@@ -198,5 +201,7 @@ class CustomNoMaliGpu : public NoMaliGpu
     /** Map between GPU registers and their custom reset values */
     std::map<nomali_addr_t, uint32_t> idRegs;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_NOMALI_GPU_HH__

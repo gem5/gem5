@@ -28,6 +28,9 @@
 
 #include "arch/sparc/asi.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -312,4 +315,5 @@ asiIsSparcError(ASI asi)
            asi == ASI_SPARC_ERROR_STATUS_REG;
 }
 
-}
+} // namespace SparcISA
+} // namespace gem5

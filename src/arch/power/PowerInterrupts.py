@@ -28,5 +28,5 @@ from m5.objects.BaseInterrupts import BaseInterrupts
 
 class PowerInterrupts(BaseInterrupts):
     type = 'PowerInterrupts'
-    cxx_class = 'PowerISA::Interrupts'
+    cxx_class = 'gem5::PowerISA::Interrupts'
     cxx_header = 'arch/power/interrupts.hh'

@@ -58,6 +58,9 @@
 #include "debug/Writeback.hh"
 #include "params/O3CPU.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -856,7 +859,7 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
 
 void
 LSQ::SingleDataRequest::finish(const Fault &fault, const RequestPtr &req,
-        ::ThreadContext* tc, BaseTLB::Mode mode)
+        gem5::ThreadContext* tc, BaseTLB::Mode mode)
 {
     _fault.push_back(fault);
     numInTranslationFragments = 0;
@@ -888,7 +891,7 @@ LSQ::SingleDataRequest::finish(const Fault &fault, const RequestPtr &req,
 
 void
 LSQ::SplitDataRequest::finish(const Fault &fault, const RequestPtr &req,
-        ::ThreadContext* tc, BaseTLB::Mode mode)
+        gem5::ThreadContext* tc, BaseTLB::Mode mode)
 {
     int i;
     for (i = 0; i < _requests.size() && _requests[i] != req; i++);
@@ -1275,14 +1278,14 @@ LSQ::SplitDataRequest::sendPacketToCache()
 
 Cycles
 LSQ::SingleDataRequest::handleLocalAccess(
-        ::ThreadContext *thread, PacketPtr pkt)
+        gem5::ThreadContext *thread, PacketPtr pkt)
 {
     return pkt->req->localAccessor(thread, pkt);
 }
 
 Cycles
 LSQ::SplitDataRequest::handleLocalAccess(
-        ::ThreadContext *thread, PacketPtr mainPkt)
+        gem5::ThreadContext *thread, PacketPtr mainPkt)
 {
     Cycles delay(0);
     unsigned offset = 0;
@@ -1412,7 +1415,7 @@ LSQ::HtmCmdRequest::initiateTranslation()
 
 void
 LSQ::HtmCmdRequest::finish(const Fault &fault, const RequestPtr &req,
-        ::ThreadContext* tc, BaseTLB::Mode mode)
+        gem5::ThreadContext* tc, BaseTLB::Mode mode)
 {
     panic("unexpected behaviour");
 }
@@ -1434,3 +1437,4 @@ LSQ::write(LSQRequest* req, uint8_t *data, int store_idx)
 }
 
 } // namespace o3
+} // namespace gem5

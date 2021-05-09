@@ -41,6 +41,9 @@
 #include "cpu/thread_context.hh"
 #include "mem/port.hh"
 
+namespace gem5
+{
+
 PortProxy::PortProxy(ThreadContext *tc, unsigned int cache_line_size) :
     PortProxy([tc](PacketPtr pkt)->void { tc->sendFunctional(pkt); },
         cache_line_size)
@@ -135,3 +138,5 @@ PortProxy::tryReadString(char *str, Addr addr, size_t maxlen) const
     *--str = '\0';
     return true;
 }
+
+} // namespace gem5

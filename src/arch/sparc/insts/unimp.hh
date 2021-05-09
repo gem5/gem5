@@ -35,6 +35,9 @@
 #include "arch/sparc/insts/static_inst.hh"
 #include "base/cprintf.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -114,6 +117,7 @@ class WarnUnimplemented : public SparcStaticInst
     }
 };
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_INSTS_UNIMP_HH__

@@ -50,6 +50,9 @@
 #include "mem/cache/write_queue_entry.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 /**
  * A write queue for all eviction packets, i.e. writebacks and clean
  * evictions, as well as uncacheable writes.
@@ -94,5 +97,7 @@ class WriteQueue : public Queue<WriteQueueEntry>
      */
     void markInService(WriteQueueEntry *entry);
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_WRITE_QUEUE_HH__

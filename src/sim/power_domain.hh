@@ -47,6 +47,9 @@
 #include "sim/clocked_object.hh"
 #include "sim/power_state.hh"
 
+namespace gem5
+{
+
 /**
  * The PowerDomain groups PowerState objects together to regulate their
  * power states. As the PowerDomain itself is a PowerState object, you can
@@ -162,5 +165,7 @@ class PowerDomain : public PowerState
         statistics::Scalar numLeaderCallsChangingState;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __SIM_POWER_DOMAIN_HH__

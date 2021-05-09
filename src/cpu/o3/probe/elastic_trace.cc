@@ -45,6 +45,9 @@
 #include "debug/ElasticTrace.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -928,3 +931,4 @@ ElasticTrace::flushTraces()
 }
 
 } // namespace o3
+} // namespace gem5

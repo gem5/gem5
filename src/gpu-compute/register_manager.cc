@@ -44,6 +44,9 @@
 #include "gpu-compute/wavefront.hh"
 #include "params/RegisterManager.hh"
 
+namespace gem5
+{
+
 RegisterManager::RegisterManager(const RegisterManagerParams &p)
     : SimObject(p), srfPoolMgrs(p.srf_pool_managers),
       vrfPoolMgrs(p.vrf_pool_managers)
@@ -129,3 +132,5 @@ RegisterManager::freeRegisters(Wavefront* w)
 {
     policy->freeRegisters(w);
 }
+
+} // namespace gem5

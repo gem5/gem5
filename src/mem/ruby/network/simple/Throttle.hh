@@ -46,6 +46,9 @@
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 class MessageBuffer;
 class Switch;
 
@@ -126,5 +129,7 @@ operator<<(std::ostream& out, const Throttle& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_SIMPLE_THROTTLE_HH__

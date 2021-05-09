@@ -49,11 +49,15 @@
 
 #include "arch/generic/locked_mem.hh"
 
+namespace gem5
+{
+
 namespace NullISA
 {
 
 using namespace GenericISA::locked_mem;
 
 } // namespace NullISA
+} // namespace gem5
 
 #endif

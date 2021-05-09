@@ -46,7 +46,7 @@ namespace Gem5SystemC {
  * transactors to schedule events in gem5.
  */
 template <typename OWNER>
-class PayloadEvent : public Event
+class PayloadEvent : public gem5::Event
 {
   public:
     OWNER& port;
@@ -88,7 +88,8 @@ class PayloadEvent : public Event
          * Get time from SystemC as this will always be more up to date
          * than gem5's
          */
-        Tick nextEventTick = sc_core::sc_time_stamp().value() + delay.value();
+        gem5::Tick nextEventTick =
+            sc_core::sc_time_stamp().value() + delay.value();
 
         port.owner.wakeupEventQueue(nextEventTick);
         port.owner.schedule(this, nextEventTick);

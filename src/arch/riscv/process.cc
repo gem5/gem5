@@ -55,6 +55,9 @@
 #include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace RiscvISA;
 
 RiscvProcess::RiscvProcess(const ProcessParams &params,
@@ -246,3 +249,5 @@ RiscvProcess::argsInit(int pageSize)
 
     memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
 }
+
+} // namespace gem5

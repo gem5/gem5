@@ -44,6 +44,9 @@
 
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 
+namespace gem5
+{
+
 void
 RubyRequest::print(std::ostream& out) const
 {
@@ -116,3 +119,5 @@ RubyRequest::functionalWrite(Packet *pkt)
 
     return cBase < cTail;
 }
+
+} // namespace gem5

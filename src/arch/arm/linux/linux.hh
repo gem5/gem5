@@ -48,6 +48,9 @@
 #include "base/compiler.hh"
 #include "kern/linux/linux.hh"
 
+namespace gem5
+{
+
 class ArmLinux : public Linux
 {
   public:
@@ -554,5 +557,7 @@ class ArmLinux64 : public ArmLinux
             ctc->setIntReg(ArmISA::INTREG_SP0, stack);
     }
 };
+
+} // namespace gem5
 
 #endif

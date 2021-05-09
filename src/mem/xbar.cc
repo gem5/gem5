@@ -51,6 +51,9 @@
 #include "debug/Drain.hh"
 #include "debug/XBar.hh"
 
+namespace gem5
+{
+
 BaseXBar::BaseXBar(const BaseXBarParams &p)
     : ClockedObject(p),
       frontendLatency(p.frontend_latency),
@@ -602,3 +605,5 @@ BaseXBar::Layer<SrcType, DstType>::drain()
  */
 template class BaseXBar::Layer<ResponsePort, RequestPort>;
 template class BaseXBar::Layer<RequestPort, ResponsePort>;
+
+} // namespace gem5

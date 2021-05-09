@@ -42,6 +42,9 @@
 #include "sim/sim_exit.hh"
 #include "sim/stat_control.hh"
 
+namespace gem5
+{
+
 //! Mutex for handling async events.
 std::mutex asyncEventMutex;
 
@@ -221,3 +224,5 @@ doSimLoop(EventQueue *eventq)
 
     // not reached... only exit is return on SimLoopExitEvent
 }
+
+} // namespace gem5

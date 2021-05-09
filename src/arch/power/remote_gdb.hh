@@ -37,6 +37,9 @@
 #include "arch/power/remote_gdb.hh"
 #include "base/remote_gdb.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -87,5 +90,6 @@ class RemoteGDB : public BaseRemoteGDB
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif /* __ARCH_POWER_REMOTE_GDB_H__ */

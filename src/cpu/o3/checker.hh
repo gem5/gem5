@@ -44,16 +44,19 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
 /**
  * Specific non-templated derived class used for SimObject configuration.
  */
-class Checker : public ::Checker<DynInstPtr>
+class Checker : public gem5::Checker<DynInstPtr>
 {
   public:
-    Checker(const Params &p) : ::Checker<DynInstPtr>(p)
+    Checker(const Params &p) : gem5::Checker<DynInstPtr>(p)
     {
         // The checker should check all instructions executed by the main
         // cpu and therefore any parameters for early exit don't make much
@@ -64,5 +67,6 @@ class Checker : public ::Checker<DynInstPtr>
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_CHECKER_HH__

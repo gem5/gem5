@@ -54,6 +54,9 @@
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 /**
  * This snoop filter keeps track of which connected port has a
  * particular line of data. It can be queried (through lookup*) on
@@ -347,5 +350,7 @@ SnoopFilter::maskToPortList(SnoopMask port_mask) const
             res.push_back(p);
     return res;
 }
+
+} // namespace gem5
 
 #endif // __MEM_SNOOP_FILTER_HH__

@@ -42,6 +42,9 @@
 #include "gpu-compute/register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 struct ScalarRegisterFileParams;
 
 // Scalar Register File
@@ -97,5 +100,7 @@ class ScalarRegisterFile : public RegisterFile
   private:
     std::vector<ScalarRegU32> regFile;
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_SCALAR_REGISTER_FILE_HH__

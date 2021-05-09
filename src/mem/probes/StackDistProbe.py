@@ -40,6 +40,7 @@ from m5.objects.BaseMemProbe import BaseMemProbe
 class StackDistProbe(BaseMemProbe):
     type = 'StackDistProbe'
     cxx_header = "mem/probes/stack_dist.hh"
+    cxx_class = 'gem5::StackDistProbe'
 
     system = Param.System(Parent.any,
                           "System to use when determining system cache "

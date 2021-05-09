@@ -33,6 +33,11 @@
  * embedded Python content in a debugger such as gdb.
  */
 
+namespace gem5
+{
+
 void py_interact();
+
+} // namespace gem5
 
 #endif // __SIM_PY_INTERACT_HH__

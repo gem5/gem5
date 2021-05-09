@@ -48,6 +48,9 @@
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 RubyPrefetcher::RubyPrefetcher(const Params &p)
     : SimObject(p), m_num_streams(p.num_streams),
     m_array(p.num_streams), m_train_misses(p.train_misses),
@@ -374,3 +377,5 @@ RubyPrefetcher::pageAddress(Addr addr) const
 {
     return mbits<Addr>(addr, 63, m_page_shift);
 }
+
+} // namespace gem5

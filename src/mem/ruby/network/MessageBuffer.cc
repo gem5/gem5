@@ -49,7 +49,10 @@
 #include "debug/RubyQueue.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-using gem5::stl_helpers::operator<<;
+namespace gem5
+{
+
+using stl_helpers::operator<<;
 
 MessageBuffer::MessageBuffer(const Params &p)
     : SimObject(p), m_stall_map_size(0),
@@ -526,3 +529,5 @@ MessageBuffer::functionalAccess(Packet *pkt, bool is_read, WriteMask *mask)
 
     return num_functional_accesses;
 }
+
+} // namespace gem5

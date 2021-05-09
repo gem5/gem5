@@ -43,8 +43,6 @@
 
 #include <gem5/asm/generic/m5ops.h>
 
-class ThreadContext;
-
 #include "base/bitfield.hh"
 #include "base/compiler.hh"
 #include "base/logging.hh"
@@ -53,6 +51,9 @@ class ThreadContext;
 #include "cpu/thread_context.hh"
 #include "debug/PseudoInst.hh"
 #include "sim/guest_abi.hh"
+
+namespace gem5
+{
 
 GEM5_DEPRECATED_NAMESPACE(PseudoInst, pseudo_inst);
 namespace pseudo_inst
@@ -252,5 +253,6 @@ pseudoInst(ThreadContext *tc, uint8_t func)
 }
 
 } // namespace pseudo_inst
+} // namespace gem5
 
 #endif // __SIM_PSEUDO_INST_HH__

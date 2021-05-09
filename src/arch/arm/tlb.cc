@@ -71,6 +71,9 @@
 #include "sim/process.hh"
 #include "sim/pseudo_inst.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 TLB::TLB(const ArmTLBParams &p)
@@ -1731,3 +1734,5 @@ TLB::testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
                                domain, lookup_level);
     }
 }
+
+} // namespace gem5

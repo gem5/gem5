@@ -45,6 +45,9 @@
  * This defines the snoop control unit register on an A9
  */
 
+namespace gem5
+{
+
 class A9SCU : public BasicPioDevice
 {
   protected:
@@ -78,6 +81,7 @@ class A9SCU : public BasicPioDevice
     virtual Tick write(PacketPtr pkt);
 };
 
+} // namespace gem5
 
 #endif // __DEV_ARM_A9SCU_HH__
 

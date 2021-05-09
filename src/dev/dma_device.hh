@@ -53,6 +53,9 @@
 #include "sim/drain.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 class ClockedObject;
 
 class DmaPort : public RequestPort, public Drainable
@@ -564,5 +567,7 @@ class DmaReadFifo : public Drainable, public Serializable
     std::deque<DmaDoneEventUPtr> pendingRequests;
     std::deque<DmaDoneEventUPtr> freeRequests;
 };
+
+} // namespace gem5
 
 #endif // __DEV_DMA_DEVICE_HH__

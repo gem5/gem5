@@ -46,6 +46,9 @@
 #include "enums/VecRegRenameMode.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 class BaseISA : public SimObject
@@ -82,5 +85,7 @@ class BaseISA : public SimObject
 
     const RegClasses &regClasses() const { return _regClasses; }
 };
+
+} // namespace gem5
 
 #endif // __ARCH_GENERIC_ISA_HH__

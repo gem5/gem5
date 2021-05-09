@@ -34,6 +34,9 @@
 #include "base/logging.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -136,3 +139,4 @@ SEWorkload::flushWindows(ThreadContext *tc)
 }
 
 } // namespace SparcISA
+} // namespace gem5

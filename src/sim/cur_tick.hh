@@ -31,6 +31,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace Gem5Internal
 {
 
@@ -41,5 +44,7 @@ extern __thread Tick *_curTickPtr;
 
 /// The universal simulation clock.
 inline Tick curTick() { return *Gem5Internal::_curTickPtr; }
+
+} // namespace gem5
 
 #endif /* __SIM_CUR_TICK_HH__ */

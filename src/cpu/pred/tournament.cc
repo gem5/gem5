@@ -43,6 +43,9 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 
+namespace gem5
+{
+
 TournamentBP::TournamentBP(const TournamentBPParams &params)
     : BPredUnit(params),
       localPredictorSize(params.localPredictorSize),
@@ -347,3 +350,5 @@ TournamentBP::squash(ThreadID tid, void *bp_history)
 int
 TournamentBP::BPHistory::newCount = 0;
 #endif
+
+} // namespace gem5

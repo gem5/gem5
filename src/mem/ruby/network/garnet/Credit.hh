@@ -38,6 +38,9 @@
 #include "mem/ruby/network/garnet/CommonTypes.hh"
 #include "mem/ruby/network/garnet/flit.hh"
 
+namespace gem5
+{
+
 // Credit Signal for buffers inside VC
 // Carries m_vc (inherits from flit.hh)
 // and m_is_free_signal (whether VC is free or not)
@@ -60,5 +63,7 @@ class Credit : public flit
   private:
     bool m_is_free_signal;
 };
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_CREDIT_HH__

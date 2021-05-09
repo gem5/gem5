@@ -35,24 +35,27 @@
 #include "sim/syscall_abi.hh"
 #include "sim/syscall_desc.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
-class SEWorkload : public ::SEWorkload
+class SEWorkload : public gem5::SEWorkload
 {
   public:
     using Params = MipsSEWorkloadParams;
 
-    SEWorkload(const Params &p) : ::SEWorkload(p) {}
+    SEWorkload(const Params &p) : gem5::SEWorkload(p) {}
 
     void
     setSystem(System *sys) override
     {
-        ::SEWorkload::setSystem(sys);
+        gem5::SEWorkload::setSystem(sys);
         gdb = BaseRemoteGDB::build<RemoteGDB>(system);
     }
 
-    ::loader::Arch getArch() const override { return ::loader::Mips; }
+    loader::Arch getArch() const override { return loader::Mips; }
 
     struct SyscallABI : public GenericSyscallABI64
     {
@@ -90,5 +93,6 @@ struct Result<MipsISA::SEWorkload::SyscallABI, SyscallReturn>
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __ARCH_MIPS_SE_WORKLOAD_HH__

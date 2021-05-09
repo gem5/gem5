@@ -42,6 +42,9 @@
 
 #include "base/bitunion.hh"
 
+namespace gem5
+{
+
 enum
 {
     SMMU_SECURE_SZ = 0x184, // Secure regs are within page0
@@ -406,5 +409,7 @@ enum
 {
     SMMU_MAX_TRANS_ID = 64
 };
+
+} // namespace gem5
 
 #endif /* __DEV_ARM_SMMU_V3_DEFS_HH__ */

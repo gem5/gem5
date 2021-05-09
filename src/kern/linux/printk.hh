@@ -35,6 +35,9 @@
 #include "base/types.hh"
 #include "sim/guest_abi.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Linux, linux);
 namespace linux
 {
@@ -45,5 +48,6 @@ int printk(std::string &out, ThreadContext *tc, Addr format_ptr,
            PrintkVarArgs args);
 
 } // namespace linux
+} // namespace gem5
 
 #endif // __KERN_LINUX_PRINTK_HH__

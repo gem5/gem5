@@ -46,6 +46,9 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 static inline uint32_t
@@ -396,6 +399,8 @@ class PredMicroop : public PredOp
             pcState.uAdvance();
     }
 };
-}
+
+} // namespace ArmISA
+} // namespace gem5
 
 #endif //__ARCH_ARM_INSTS_PREDINST_HH__

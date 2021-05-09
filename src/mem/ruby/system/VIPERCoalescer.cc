@@ -50,6 +50,9 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "params/VIPERCoalescer.hh"
 
+namespace gem5
+{
+
 VIPERCoalescer::VIPERCoalescer(const Params &p)
     : GPUCoalescer(p),
       m_cache_inv_pkt(nullptr),
@@ -299,3 +302,5 @@ VIPERCoalescer::invTCP()
             "There are %d Invalidatons outstanding after Cache Walk\n",
             m_num_pending_invs);
 }
+
+} // namespace gem5

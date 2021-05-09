@@ -41,6 +41,9 @@
 #include "params/PMP.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 PMP::PMP(const Params &params) :
     SimObject(params),
     pmpEntries(params.pmp_entries),
@@ -264,3 +267,5 @@ PMP::pmpDecodeNapot(Addr pmpaddr)
         return this_range;
     }
 }
+
+} // namespace gem5

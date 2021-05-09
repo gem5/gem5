@@ -74,6 +74,7 @@ output decoder {{
 #include "mem/request.hh"
 #include "sim/full_system.hh"
 
+using namespace gem5;
 using namespace RiscvISA;
 }};
 
@@ -105,5 +106,6 @@ output exec {{
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
+using namespace gem5;
 using namespace RiscvISA;
 }};

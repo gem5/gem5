@@ -40,11 +40,15 @@
 
 #include "cpu/static_inst_fwd.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
 extern const StaticInstPtr badMicroop;
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_INSTS_BADMICROOP_HH__

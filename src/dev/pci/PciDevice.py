@@ -44,25 +44,25 @@ from m5.objects.PciHost import PciHost
 
 class PciBar(SimObject):
     type = 'PciBar'
-    cxx_class = 'PciBar'
+    cxx_class = 'gem5::PciBar'
     cxx_header = "dev/pci/device.hh"
     abstract = True
 
 class PciBarNone(PciBar):
     type = 'PciBarNone'
-    cxx_class = 'PciBarNone'
+    cxx_class = 'gem5::PciBarNone'
     cxx_header = "dev/pci/device.hh"
 
 class PciIoBar(PciBar):
     type = 'PciIoBar'
-    cxx_class = 'PciIoBar'
+    cxx_class = 'gem5::PciIoBar'
     cxx_header = "dev/pci/device.hh"
 
     size = Param.MemorySize32("IO region size")
 
 class PciLegacyIoBar(PciIoBar):
     type = 'PciLegacyIoBar'
-    cxx_class = 'PciLegacyIoBar'
+    cxx_class = 'gem5::PciLegacyIoBar'
     cxx_header = "dev/pci/device.hh"
 
     addr = Param.UInt32("Legacy IO address")
@@ -73,19 +73,19 @@ class PciLegacyIoBar(PciIoBar):
 # consumed.
 class PciMemBar(PciBar):
     type = 'PciMemBar'
-    cxx_class = 'PciMemBar'
+    cxx_class = 'gem5::PciMemBar'
     cxx_header = "dev/pci/device.hh"
 
     size = Param.MemorySize("Memory region size")
 
 class PciMemUpperBar(PciBar):
     type = 'PciMemUpperBar'
-    cxx_class = 'PciMemUpperBar'
+    cxx_class = 'gem5::PciMemUpperBar'
     cxx_header = "dev/pci/device.hh"
 
 class PciDevice(DmaDevice):
     type = 'PciDevice'
-    cxx_class = 'PciDevice'
+    cxx_class = 'gem5::PciDevice'
     cxx_header = "dev/pci/device.hh"
     abstract = True
 

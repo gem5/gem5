@@ -28,7 +28,12 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 class GlobalSimLoopExitEvent;
 
 GlobalSimLoopExitEvent *simulate(Tick num_cycles = MaxTick);
 extern GlobalSimLoopExitEvent *simulate_limit_event;
+
+} // namespace gem5

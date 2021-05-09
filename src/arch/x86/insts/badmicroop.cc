@@ -40,6 +40,9 @@
 #include "arch/generic/debugfaults.hh"
 #include "arch/x86/generated/decoder.hh"
 
+namespace gem5
+{
+
 namespace {
 
 static X86ISA::ExtMachInst dummyMachInst;
@@ -59,3 +62,4 @@ const StaticInstPtr badMicroop =
         new GenericISA::M5PanicFault("Invalid microop!"));
 
 } // namespace X86ISA
+} // namespace gem5

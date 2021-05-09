@@ -38,6 +38,9 @@
 #include "base/compiler.hh"
 #include "sim/serialize_handlers.hh"
 
+namespace gem5
+{
+
 //      The following implements the BitUnion system of defining bitfields
 //on top of an underlying class. This is done through the pervasive use of
 //both named and unnamed unions which all contain the same actual storage.
@@ -402,14 +405,14 @@ namespace bitfield_backend
 //overhead.
 #define __BitUnion(type, name) \
     class BitfieldUnderlyingClasses##name : \
-        public bitfield_backend::BitfieldTypes<type> \
+        public gem5::bitfield_backend::BitfieldTypes<type> \
     { \
       protected: \
         typedef type __StorageType; \
-        friend bitfield_backend::BitUnionBaseType< \
-            bitfield_backend::BitUnionOperators< \
+        friend gem5::bitfield_backend::BitUnionBaseType< \
+            gem5::bitfield_backend::BitUnionOperators< \
                 BitfieldUnderlyingClasses##name> >; \
-        friend bitfield_backend::BitUnionBaseType< \
+        friend gem5::bitfield_backend::BitUnionBaseType< \
                 BitfieldUnderlyingClasses##name>; \
       public: \
         union { \
@@ -426,7 +429,7 @@ namespace bitfield_backend
 #define EndBitUnion(name) \
         }; \
     }; \
-    typedef bitfield_backend::BitUnionOperators< \
+    typedef gem5::bitfield_backend::BitUnionOperators< \
         BitfieldUnderlyingClasses##name> name;
 
 //This sets up a bitfield which has other bitfields nested inside of it. The
@@ -537,21 +540,6 @@ namespace bitfield_backend
 template <typename T>
 using BitUnionBaseType = typename bitfield_backend::BitUnionBaseType<T>::Type;
 
-
-//An STL style hash structure for hashing BitUnions based on their base type.
-namespace std
-{
-    template <typename T>
-    struct hash<BitUnionType<T> > : public hash<BitUnionBaseType<T> >
-    {
-        size_t
-        operator() (const BitUnionType<T> &val) const
-        {
-            return hash<BitUnionBaseType<T> >::operator()(val);
-        }
-    };
-} // namespace std
-
 namespace bitfield_backend
 {
     template<typename T>
@@ -621,5 +609,21 @@ struct ShowParam<BitUnionType<T>>
                 os, static_cast<const BitUnionBaseType<T> &>(value));
     }
 };
+
+} // namespace gem5
+
+//An STL style hash structure for hashing BitUnions based on their base type.
+namespace std
+{
+    template <typename T>
+    struct hash<gem5::BitUnionType<T>> : public hash<gem5::BitUnionBaseType<T>>
+    {
+        size_t
+        operator() (const gem5::BitUnionType<T> &val) const
+        {
+            return hash<gem5::BitUnionBaseType<T> >::operator()(val);
+        }
+    };
+} // namespace std
 
 #endif // __BASE_BITUNION_HH__

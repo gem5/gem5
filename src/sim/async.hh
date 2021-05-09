@@ -29,6 +29,9 @@
 #ifndef __ASYNC_HH__
 #define __ASYNC_HH__
 
+namespace gem5
+{
+
 ///
 /// @file sim/async.hh
 /// This file defines flags used to handle asynchronous simulator events.
@@ -45,5 +48,7 @@ extern volatile bool async_exit;        ///< Async request to exit simulator.
 extern volatile bool async_io;          ///< Async I/O request (SIGIO).
 extern volatile bool async_exception;   ///< Python exception.
 //@}
+
+} // namespace gem5
 
 #endif // __ASYNC_HH__

@@ -42,6 +42,9 @@ struct kvm_vcpu_events;
 struct kvm_xcrs;
 struct kvm_xsave;
 
+namespace gem5
+{
+
 /**
  * x86 implementation of a KVM-based hardware virtualized CPU.
  */
@@ -258,5 +261,7 @@ class X86KvmCPU : public BaseKvmCPU
     bool haveXCRs;
     /** @} */
 };
+
+} // namespace gem5
 
 #endif

@@ -49,6 +49,9 @@
 #include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
 
+namespace gem5
+{
+
 struct O3CPUParams;
 
 namespace o3
@@ -321,5 +324,6 @@ class Decode
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_DECODE_HH__

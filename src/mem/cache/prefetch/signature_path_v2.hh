@@ -45,6 +45,9 @@
 #include "mem/cache/prefetch/signature_path.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 struct SignaturePathPrefetcherV2Params;
 
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
@@ -97,5 +100,6 @@ class SignaturePathV2 : public SignaturePath
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif//__MEM_CACHE_PREFETCH_SIGNATURE_PATH_V2_HH__

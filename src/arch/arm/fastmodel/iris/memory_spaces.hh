@@ -28,6 +28,9 @@
 #ifndef __ARCH_ARM_FASTMODEL_IRIS_MEMORY_SPACES_HH__
 #define __ARCH_ARM_FASTMODEL_IRIS_MEMORY_SPACES_HH__
 
+namespace gem5
+{
+
 namespace Iris
 {
 
@@ -47,5 +50,6 @@ enum CanonicalMsn
 };
 
 } // namespace Iris
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_IRIS_MEMORY_SPACES_HH__

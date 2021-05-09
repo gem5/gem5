@@ -52,6 +52,9 @@
 #include "params/BaseIndexingPolicy.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class ReplaceableEntry;
 
 /**
@@ -156,5 +159,7 @@ class BaseIndexingPolicy : public SimObject
     virtual Addr regenerateAddr(const Addr tag, const ReplaceableEntry* entry)
                                                                     const = 0;
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_INDEXING_POLICIES_BASE_HH__

@@ -43,6 +43,9 @@
 
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 class TimingResponseProtocol;
 
 class TimingRequestProtocol
@@ -182,5 +185,7 @@ class TimingResponseProtocol
      */
     virtual void recvRespRetry() = 0;
 };
+
+} // namespace gem5
 
 #endif //__MEM_GEM5_PROTOCOL_TIMING_HH__

@@ -31,6 +31,9 @@
 
 #include "arch/sparc/sparc_traits.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -76,5 +79,6 @@ const int SyscallPseudoReturnReg = INTREG_O1;
 const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
 
 } // namespace SparcISA
+} // namespace gem5
 
 #endif

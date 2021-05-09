@@ -34,6 +34,9 @@
 #include "cpu/thread_context.hh"
 #include "debug/Interrupt.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -183,4 +186,5 @@ Interrupts::interruptsPending() const
 
 }
 
-}
+} // namespace MipsISA
+} // namespace gem5

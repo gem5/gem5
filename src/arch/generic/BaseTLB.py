@@ -32,6 +32,8 @@ class BaseTLB(SimObject):
     type = 'BaseTLB'
     abstract = True
     cxx_header = "arch/generic/tlb.hh"
+    cxx_class = 'gem5::BaseTLB'
+
     # Ports to connect with other TLB levels
     cpu_side_ports  = VectorResponsePort("Ports closer to the CPU side")
     slave     = DeprecatedParam(cpu_side_ports,

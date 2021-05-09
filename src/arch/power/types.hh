@@ -34,6 +34,9 @@
 #include "arch/power/pcstate.hh"
 #include "base/bitunion.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -101,18 +104,19 @@ EndBitUnion(ExtMachInst)
 // typedef int RegContextParam;
 // typedef int RegContextVal;
 
-} // PowerISA namespace
+} // namespace PowerISA
+} // namespace gem5
 
 namespace std {
 
 template<>
-struct hash<PowerISA::ExtMachInst> : public hash<uint32_t>
+struct hash<gem5::PowerISA::ExtMachInst> : public hash<uint32_t>
 {
-    size_t operator()(const PowerISA::ExtMachInst &emi) const {
+    size_t operator()(const gem5::PowerISA::ExtMachInst &emi) const {
         return hash<uint32_t>::operator()((uint32_t)emi);
     };
 };
 
-}
+} // namespace std
 
 #endif // __ARCH_POWER_TYPES_HH__

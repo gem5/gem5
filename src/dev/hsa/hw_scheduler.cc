@@ -45,6 +45,9 @@
       return #XEVENT;                            \
   }
 
+namespace gem5
+{
+
 HWSCHDLR_EVENT_DESCRIPTION_GENERATOR(SchedulerWakeupEvent)
 
 void
@@ -369,3 +372,5 @@ HWScheduler::unregisterQueue(uint64_t queue_id, int doorbellSize)
     }
     schedWakeup();
 }
+
+} // namespace gem5

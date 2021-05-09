@@ -43,6 +43,9 @@
 #include "base/condcodes.hh"
 #include "debug/X86.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -75,4 +78,5 @@ RegOpBase::genFlags(uint64_t old_flags, uint64_t flag_mask,
     return flags;
 }
 
-}
+} // namespace X86ISA
+} // namespace gem5

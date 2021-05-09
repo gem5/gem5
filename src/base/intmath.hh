@@ -48,6 +48,9 @@
 
 #include "base/bitfield.hh"
 
+namespace gem5
+{
+
 /**
  * @ingroup api_base_utils
  */
@@ -294,5 +297,7 @@ log2i(int value)
     assert(isPowerOf2(value) && value > 0);
     return ctz32(value);
 }
+
+} // namespace gem5
 
 #endif // __BASE_INTMATH_HH__

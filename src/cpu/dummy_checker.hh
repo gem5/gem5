@@ -41,6 +41,9 @@
 #include "cpu/checker/cpu.hh"
 #include "params/DummyChecker.hh"
 
+namespace gem5
+{
+
 /**
  * Specific non-templated derived class used for SimObject configuration.
  */
@@ -57,5 +60,7 @@ class DummyChecker : public CheckerCPU
 
     }
 };
+
+} // namespace gem5
 
 #endif // __CPU_DUMMY_CHECKER_HH__

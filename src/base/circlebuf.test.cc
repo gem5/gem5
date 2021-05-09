@@ -43,6 +43,7 @@
 #include "base/circlebuf.hh"
 
 using testing::ElementsAreArray;
+using namespace gem5;
 
 const char data[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,

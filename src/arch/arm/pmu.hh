@@ -51,6 +51,9 @@
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 struct ArmPMUParams;
 class Platform;
 class ThreadContext;
@@ -628,4 +631,6 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
 };
 
 } // namespace ArmISA
+} // namespace gem5
+
 #endif

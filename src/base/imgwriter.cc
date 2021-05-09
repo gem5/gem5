@@ -46,6 +46,9 @@
 
 #endif
 
+namespace gem5
+{
+
 std::unique_ptr<ImgWriter>
 createImgWriter(enums::ImageFormat type, const FrameBuffer *fb)
 {
@@ -69,3 +72,5 @@ createImgWriter(enums::ImageFormat type, const FrameBuffer *fb)
         return std::unique_ptr<BmpWriter>(new BmpWriter(fb));
     }
 }
+
+} // namespace gem5

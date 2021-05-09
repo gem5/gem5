@@ -35,6 +35,7 @@ class BaseSimpleCPU(BaseCPU):
     type = 'BaseSimpleCPU'
     abstract = True
     cxx_header = "cpu/simple/base.hh"
+    cxx_class = 'gem5::BaseSimpleCPU'
 
     def addCheckerCpu(self):
         if buildEnv['TARGET_ISA'] in ['arm']:

@@ -40,6 +40,9 @@
 #include "debug/MemDepUnit.hh"
 #include "params/O3CPU.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -637,3 +640,4 @@ MemDepUnit::dumpLists()
 }
 
 } // namespace o3
+} // namespace gem5

@@ -43,6 +43,9 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 GlobalMemPipeline::GlobalMemPipeline(const ComputeUnitParams &p,
                                      ComputeUnit &cu)
     : computeUnit(cu), _name(cu.name() + ".GlobalMemPipeline"),
@@ -296,3 +299,5 @@ GlobalMemPipelineStats::GlobalMemPipelineStats(statistics::Group *parent)
                "are delayed before updating the VRF")
 {
 }
+
+} // namespace gem5

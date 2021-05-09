@@ -37,6 +37,9 @@
 #include "sim/byteswap.hh"
 #include "sim/insttracer.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -254,6 +257,7 @@ writeMemAtomic(ExecContext *xc, Trace::InstRecord *traceData,
     return fault;
 }
 
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif

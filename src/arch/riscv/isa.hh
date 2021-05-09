@@ -40,6 +40,9 @@
 #include "arch/riscv/types.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 struct RiscvISAParams;
 class Checkpoint;
 
@@ -98,5 +101,6 @@ class ISA : public BaseISA
 };
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_ISA_HH__

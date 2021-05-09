@@ -45,6 +45,8 @@
 
 #include "base/fiber.hh"
 
+using namespace gem5;
+
 /** This test is checking if the "started" member has its expected
  * value before and after the fiber runs. In the test an empty fiber
  * is used since we are just interested on the _started member and

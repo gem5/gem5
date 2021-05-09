@@ -52,6 +52,9 @@
 #include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 void
 ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 {
@@ -262,3 +265,5 @@ takeOverFrom(ThreadContext &ntc, ThreadContext &otc)
 
     otc.setStatus(ThreadContext::Halted);
 }
+
+} // namespace gem5

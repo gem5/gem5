@@ -35,6 +35,9 @@
 
 #include <iomanip>
 
+namespace gem5
+{
+
 namespace Gcn3ISA
 {
     // --- Inst_SOP2 base class methods ---
@@ -1588,3 +1591,4 @@ namespace Gcn3ISA
         disassembly = dis_stream.str();
     }
 } // namespace Gcn3ISA
+} // namespace gem5

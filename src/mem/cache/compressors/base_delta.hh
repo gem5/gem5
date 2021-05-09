@@ -41,6 +41,9 @@
 #include "base/bitfield.hh"
 #include "mem/cache/compressors/dictionary_compressor.hh"
 
+namespace gem5
+{
+
 struct BaseDictionaryCompressorParams;
 struct Base64Delta8Params;
 struct Base64Delta16Params;
@@ -207,5 +210,6 @@ class Base16Delta8 : public BaseDelta<uint16_t, 8>
 };
 
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_BASE_DELTA_HH__

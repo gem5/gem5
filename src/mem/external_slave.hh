@@ -62,6 +62,9 @@
 #include "params/ExternalSlave.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class ExternalSlave : public SimObject
 {
   public:
@@ -137,5 +140,6 @@ class ExternalSlave : public SimObject
     void init() override;
 };
 
+} // namespace gem5
 
 #endif //__MEM_EXTERNAL_SLAVE_HH__

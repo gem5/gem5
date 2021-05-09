@@ -35,6 +35,9 @@
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -361,5 +364,6 @@ void getPrivVector(ThreadContext *tc, Addr &PC, Addr &NPC, RegVal TT,
                    RegVal TL);
 
 } // namespace SparcISA
+} // namespace gem5
 
 #endif // __SPARC_FAULTS_HH__

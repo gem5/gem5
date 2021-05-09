@@ -66,6 +66,9 @@
 #define IS_BARRIER(PKT) ((hsa_packet_header_t)(((PKT->header) >> \
             HSA_PACKET_HEADER_BARRIER) & HSA_PACKET_HEADER_WIDTH_BARRIER))
 
+namespace gem5
+{
+
 HSAPP_EVENT_DESCRIPTION_GENERATOR(UpdateReadDispIdDmaEvent)
 HSAPP_EVENT_DESCRIPTION_GENERATOR(CmdQueueCmdDmaEvent)
 HSAPP_EVENT_DESCRIPTION_GENERATOR(QueueProcessEvent)
@@ -769,3 +772,5 @@ HSAPacketProcessor::sendCompletionSignal(hsa_signal_value_t signal)
 
     dmaWriteVirt(signal_addr, sizeof(hsa_signal_value_t), nullptr, new_signal, 0);
 }
+
+} // namespace gem5

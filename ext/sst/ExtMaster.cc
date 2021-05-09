@@ -56,10 +56,10 @@ using namespace SST;
 using namespace SST::gem5;
 using namespace SST::MemHierarchy;
 
-ExtMaster::ExtMaster(gem5Component *g, Output &o, ::ExternalMaster& p,
+ExtMaster::ExtMaster(gem5Component *g, Output &o, ::gem5::ExternalMaster& p,
         std::string &n) :
-    Port(n, p), out(o), port(p), simPhase(CONSTRUCTION),
-    gem5(g), name(n)
+    ::gem5::ExternalMaster::Port(n, p), out(o), port(p),
+    simPhase(CONSTRUCTION), gem5(g), name(n)
 {
     Params _p; // will be ignored
     nic = dynamic_cast<MemNIC*>(gem5->loadModuleWithComponent("memHierarchy.memNIC", g, _p));
@@ -130,12 +130,12 @@ ExtMaster::handleEvent(SST::Event* event)
     }
 
     Command cmdI = ev->getCmd(); // command in - SST
-    MemCmd::Command cmdO;        // command out - gem5
+    ::gem5::MemCmd::Command cmdO;        // command out - gem5
     bool data = false;
 
     switch (cmdI) {
-        case GetS:      cmdO = MemCmd::ReadReq;                break;
-        case GetX:      cmdO = MemCmd::WriteReq;  data = true; break;
+        case GetS:      cmdO = ::gem5::MemCmd::ReadReq;                break;
+        case GetX:      cmdO = ::gem5::MemCmd::WriteReq;  data = true; break;
         case GetSEx:
         case PutS:
         case PutM:
@@ -158,23 +158,24 @@ ExtMaster::handleEvent(SST::Event* event)
                       CommandString[cmdI]);
     }
 
-    Request::FlagsType flags = 0;
+    ::gem5::Request::FlagsType flags = 0;
     if (ev->queryFlag(MemEvent::F_LOCKED))
-        flags |= Request::LOCKED_RMW;
+        flags |= ::gem5::Request::LOCKED_RMW;
     if (ev->queryFlag(MemEvent::F_NONCACHEABLE))
-        flags |= Request::UNCACHEABLE;
+        flags |= ::gem5::Request::UNCACHEABLE;
     if (ev->isLoadLink()) {
         assert(cmdI == GetS);
-        cmdO = MemCmd::LoadLockedReq;
+        cmdO = ::gem5::MemCmd::LoadLockedReq;
     } else if (ev->isStoreConditional()) {
         assert(cmdI == GetX);
-        cmdO = MemCmd::StoreCondReq;
+        cmdO = ::gem5::MemCmd::StoreCondReq;
     }
 
-    auto req = std::make_shared<Request>(ev->getAddr(), ev->getSize(), flags, 0);
+    auto req = std::make_shared<::gem5::Request>(
+        ev->getAddr(), ev->getSize(), flags, 0);
     req->setContext(ev->getGroupId());
 
-    auto pkt = new Packet(req, cmdO);
+    auto pkt = new ::gem5::Packet(req, cmdO);
     pkt->allocate();
     if (data) {
         pkt->setData(ev->getPayload().data());
@@ -186,7 +187,7 @@ ExtMaster::handleEvent(SST::Event* event)
 }
 
 bool
-ExtMaster::recvTimingResp(PacketPtr pkt) {
+ExtMaster::recvTimingResp(::gem5::PacketPtr pkt) {
     if (simPhase == INIT) {
         out.fatal(CALL_INFO, 1, "not prepared to handle INIT-phase traffic\n");
     }

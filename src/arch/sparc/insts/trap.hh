@@ -36,6 +36,9 @@
 
 #include "arch/sparc/insts/static_inst.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -72,6 +75,7 @@ class FpUnimpl : public SparcStaticInst
     }
 };
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_INSTS_TRAP_HH__

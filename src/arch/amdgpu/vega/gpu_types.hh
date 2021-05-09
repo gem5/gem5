@@ -36,6 +36,9 @@
 
 #include <cstdint>
 
+namespace gem5
+{
+
 namespace VegaISA
 {
     union InstFormat;
@@ -60,5 +63,6 @@ namespace VegaISA
     typedef InstFormat *MachInst;
 
 } // namespace VegaISA
+} // namespace gem5
 
 #endif // __ARCH_VEGA_GPU_TYPES_HH__

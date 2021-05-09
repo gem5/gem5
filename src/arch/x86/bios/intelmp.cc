@@ -62,6 +62,9 @@
 #include "params/X86IntelMPBusHierarchy.hh"
 #include "params/X86IntelMPCompatAddrSpaceMod.hh"
 
+namespace gem5
+{
+
 const char X86ISA::intelmp::FloatingPointer::signature[] = "_MP_";
 
 template<class T>
@@ -393,3 +396,5 @@ X86ISA::intelmp::CompatAddrSpaceMod::CompatAddrSpaceMod(const Params &p) :
     if (p.add)
         mod |= 1;
 }
+
+} // namespace gem5

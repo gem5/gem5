@@ -39,6 +39,7 @@ from m5.SimObject import SimObject
 class ExternalSlave(SimObject):
     type = 'ExternalSlave'
     cxx_header = "mem/external_slave.hh"
+    cxx_class = 'gem5::ExternalSlave'
 
     port = SlavePort("Slave port")
 

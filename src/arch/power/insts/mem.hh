@@ -31,6 +31,9 @@
 
 #include "arch/power/insts/static_inst.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -115,5 +118,6 @@ class MemIndexOp : public MemOp
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif //__ARCH_POWER_INSTS_MEM_HH__

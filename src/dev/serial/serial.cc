@@ -41,6 +41,9 @@
 #include "params/SerialDevice.hh"
 #include "params/SerialNullDevice.hh"
 
+namespace gem5
+{
+
 SerialDevice::SerialDevice(const SerialDeviceParams &p) : SimObject(p)
 {
 }
@@ -82,3 +85,5 @@ SerialNullDevice::readData()
 {
     panic("SerialNullDevice does not have pending data.\n");
 }
+
+} // namespace gem5

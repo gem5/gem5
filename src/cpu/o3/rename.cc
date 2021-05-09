@@ -52,6 +52,9 @@
 #include "debug/Rename.hh"
 #include "params/O3CPU.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -1009,7 +1012,7 @@ Rename::removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid)
 void
 Rename::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
 {
-    ::ThreadContext *tc = inst->tcBase();
+    gem5::ThreadContext *tc = inst->tcBase();
     UnifiedRenameMap *map = renameMap[tid];
     unsigned num_src_regs = inst->numSrcRegs();
 
@@ -1075,7 +1078,7 @@ Rename::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
 void
 Rename::renameDestRegs(const DynInstPtr &inst, ThreadID tid)
 {
-    ::ThreadContext *tc = inst->tcBase();
+    gem5::ThreadContext *tc = inst->tcBase();
     UnifiedRenameMap *map = renameMap[tid];
     unsigned num_dest_regs = inst->numDestRegs();
 
@@ -1424,3 +1427,4 @@ Rename::dumpHistory()
 }
 
 } // namespace o3
+} // namespace gem5

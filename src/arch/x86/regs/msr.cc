@@ -28,6 +28,9 @@
 
 #include "arch/x86/regs/msr.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -156,3 +159,4 @@ msrAddrToIndex(MiscRegIndex &regNum, Addr addr)
 }
 
 } // namespace X86ISA
+} // namespace gem5

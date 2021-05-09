@@ -48,6 +48,9 @@
  * This implements the simple real view registers on a PBXA9
  */
 
+namespace gem5
+{
+
 class RealViewCtrl : public BasicPioDevice
 {
   public:
@@ -243,5 +246,6 @@ class RealViewTemperatureSensor
     System * system;
 };
 
+} // namespace gem5
 
 #endif // __DEV_ARM_RV_HH__

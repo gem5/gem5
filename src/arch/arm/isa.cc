@@ -58,6 +58,9 @@
 #include "sim/stat_control.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -2541,4 +2544,5 @@ ISA::MiscRegLUTEntryInitializer::highest(ArmSystem *const sys) const
     return *this;
 }
 
-}  // namespace ArmISA
+} // namespace ArmISA
+} // namespace gem5

@@ -48,6 +48,9 @@
 #include "kern/system_events.hh"
 #include "params/ArmFsWorkload.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -157,3 +160,4 @@ FsWorkload::getBootLoader(loader::ObjectFile *const obj)
 }
 
 } // namespace ArmISA
+} // namespace gem5

@@ -32,6 +32,9 @@
 #include "base/bitunion.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 enum MiscRegIndex
@@ -169,6 +172,7 @@ struct STS
 
 const int NumMiscRegs = MISCREG_NUMMISCREGS;
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif

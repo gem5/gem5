@@ -38,6 +38,9 @@
 #include "params/MipsInterrupts.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class BaseCPU;
 class Checkpoint;
 
@@ -107,7 +110,7 @@ class Interrupts : public BaseInterrupts
     }
 };
 
-}
+} // namespace MipsISA
+} // namespace gem5
 
 #endif
-

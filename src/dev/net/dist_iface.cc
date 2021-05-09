@@ -54,6 +54,9 @@
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 DistIface::Sync *DistIface::sync = nullptr;
 System *DistIface::sys = nullptr;
 DistIface::SyncEvent *DistIface::syncEvent = nullptr;
@@ -937,3 +940,5 @@ DistIface::sizeParam()
     }
     return val;
 }
+
+} // namespace gem5

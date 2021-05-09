@@ -50,6 +50,9 @@
 #include "enums/X86IntelMPTriggerMode.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class PortProxy;
 
 // Config entry types
@@ -310,8 +313,8 @@ class CompatAddrSpaceMod : public ExtConfigEntry
     CompatAddrSpaceMod(const Params &p);
 };
 
-} //IntelMP
-
-} //X86ISA
+} // namespace intelmp
+} // namespace X86ISA
+} // namespace gem5
 
 #endif

@@ -28,6 +28,9 @@
 
 #include "arch/sparc/insts/integer.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -119,4 +122,5 @@ SetHi::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     return response.str();
 }
 
-}
+} // namespace SparcISA
+} // namespace gem5

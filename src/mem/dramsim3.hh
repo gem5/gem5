@@ -52,6 +52,9 @@
 #include "mem/qport.hh"
 #include "params/DRAMsim3.hh"
 
+namespace gem5
+{
+
 class DRAMsim3 : public AbstractMemory
 {
   private:
@@ -214,5 +217,7 @@ class DRAMsim3 : public AbstractMemory
     void recvRespRetry();
 
 };
+
+} // namespace gem5
 
 #endif // __MEM_DRAMSIM3_HH__

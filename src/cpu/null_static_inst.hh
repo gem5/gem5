@@ -30,7 +30,12 @@
 
 #include "cpu/static_inst_fwd.hh"
 
+namespace gem5
+{
+
 /// Statically allocated null StaticInstPtr.
 extern const StaticInstPtr nullStaticInstPtr;
+
+} // namespace gem5
 
 #endif // __CPU_NULL_STATIC_INST_HH__

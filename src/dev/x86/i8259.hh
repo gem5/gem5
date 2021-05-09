@@ -34,6 +34,9 @@
 #include "enums/X86I8259CascadeMode.hh"
 #include "params/I8259.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -121,5 +124,6 @@ class I8259 : public BasicPioDevice
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif //__DEV_X86_I8259_HH__

@@ -48,6 +48,9 @@
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class EtherSwitch : public SimObject
 {
   public:
@@ -189,5 +192,7 @@ class EtherSwitch : public SimObject
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ETHERSWITCH_HH__

@@ -45,6 +45,7 @@ from m5.objects.PciDevice import PciDevice, PciIoBar
 class VirtIODeviceBase(SimObject):
     type = 'VirtIODeviceBase'
     cxx_header = 'dev/virtio/base.hh'
+    cxx_class = 'gem5::VirtIODeviceBase'
     abstract = True
 
     subsystem = Param.UInt8(0x00, "VirtIO subsystem ID")
@@ -55,10 +56,12 @@ class VirtIODeviceBase(SimObject):
 class VirtIODummyDevice(VirtIODeviceBase):
     type = 'VirtIODummyDevice'
     cxx_header = 'dev/virtio/base.hh'
+    cxx_class = 'gem5::VirtIODummyDevice'
 
 class PciVirtIO(PciDevice):
     type = 'PciVirtIO'
     cxx_header = 'dev/virtio/pci.hh'
+    cxx_class = 'gem5::PciVirtIO'
 
     vio = Param.VirtIODeviceBase(VirtIODummyDevice(), "VirtIO device")
 

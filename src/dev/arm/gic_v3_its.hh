@@ -50,6 +50,9 @@
 #include "dev/dma_device.hh"
 #include "params/Gicv3Its.hh"
 
+namespace gem5
+{
+
 class Gicv3;
 class Gicv3Redistributor;
 class ItsProcess;
@@ -79,9 +82,10 @@ struct ItsAction
  */
 class Gicv3Its : public BasicPioDevice
 {
-    friend class ::ItsProcess;
-    friend class ::ItsTranslation;
-    friend class ::ItsCommand;
+    friend class gem5::ItsProcess;
+    friend class gem5::ItsTranslation;
+    friend class gem5::ItsCommand;
+
   public:
     class DataPort : public RequestPort
     {
@@ -541,5 +545,7 @@ class ItsCommand : public ItsProcess
         return its.collectionOutOfRange(bits(command.raw[2], 15, 0));
     }
 };
+
+} // namespace gem5
 
 #endif

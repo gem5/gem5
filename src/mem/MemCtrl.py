@@ -53,6 +53,7 @@ class MemSched(Enum): vals = ['fcfs', 'frfcfs']
 class MemCtrl(QoSMemCtrl):
     type = 'MemCtrl'
     cxx_header = "mem/mem_ctrl.hh"
+    cxx_class = 'gem5::MemCtrl'
 
     # single-ported on the system interface side, instantiate with a
     # bus in front of the controller for multiple ports

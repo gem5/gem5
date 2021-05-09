@@ -49,6 +49,9 @@
 #include "debug/Fetch.hh"
 #include "debug/MinorTrace.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -650,3 +653,4 @@ Fetch2::minorTrace() const
 }
 
 } // namespace minor
+} // namespace gem5

@@ -30,6 +30,9 @@
 
 #include "mem/ruby/common/Histogram.hh"
 
+namespace gem5
+{
+
 AccessTraceForAddress::~AccessTraceForAddress()
 {
     if (m_histogram_ptr) {
@@ -103,3 +106,5 @@ AccessTraceForAddress::addSample(int value)
     }
     m_histogram_ptr->add(value);
 }
+
+} // namespace gem5

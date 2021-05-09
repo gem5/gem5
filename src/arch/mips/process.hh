@@ -31,6 +31,9 @@
 
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -48,5 +51,7 @@ class MipsProcess : public Process
     template<class IntType>
     void argsInit(int pageSize);
 };
+
+} // namespace gem5
 
 #endif // __MIPS_PROCESS_HH__

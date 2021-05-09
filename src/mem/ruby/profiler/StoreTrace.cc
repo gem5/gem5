@@ -30,6 +30,9 @@
 
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 bool StoreTrace::s_init = false; // Total number of store lifetimes of
                                  // all lines
 int64_t StoreTrace::s_total_samples = 0; // Total number of store
@@ -157,3 +160,5 @@ StoreTrace::downgrade(NodeID node)
         m_last_writer = -1;
     }
 }
+
+} // namespace gem5

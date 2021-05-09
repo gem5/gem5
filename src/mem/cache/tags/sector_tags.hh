@@ -44,6 +44,9 @@
 #include "mem/packet.hh"
 #include "params/SectorTags.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
@@ -212,5 +215,7 @@ class SectorTags : public BaseTags
      */
     bool anyBlk(std::function<bool(CacheBlk &)> visitor) override;
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_TAGS_SECTOR_TAGS_HH__

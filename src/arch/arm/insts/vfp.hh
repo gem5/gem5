@@ -45,6 +45,9 @@
 #include "arch/arm/insts/misc.hh"
 #include "arch/arm/regs/misc.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -1052,6 +1055,7 @@ class FpRegRegRegImmOp : public FpOp
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
-}
+} // namespace ArmISA
+} // namespace gem5
 
 #endif //__ARCH_ARM_INSTS_VFP_HH__

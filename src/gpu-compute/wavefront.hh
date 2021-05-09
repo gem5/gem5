@@ -56,6 +56,9 @@
 #include "params/Wavefront.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class Wavefront : public SimObject
 {
   public:
@@ -375,5 +378,7 @@ class Wavefront : public SimObject
         statistics::Distribution readsPerWrite;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_WAVEFRONT_HH__

@@ -45,6 +45,9 @@
 #include "arch/generic/types.hh"
 #include "cpu/o3/free_list.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -235,3 +238,4 @@ PhysRegFile::getTrueId(PhysRegIdPtr reg)
 }
 
 } // namespace o3
+} // namespace gem5

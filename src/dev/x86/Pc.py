@@ -48,6 +48,7 @@ class PcPciHost(GenericPciHost):
 class Pc(Platform):
     type = 'Pc'
     cxx_header = "dev/x86/pc.hh"
+    cxx_class = 'gem5::Pc'
     system = Param.System(Parent.any, "system")
 
     south_bridge = Param.SouthBridge(SouthBridge(), "Southbridge")

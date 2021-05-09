@@ -49,6 +49,9 @@
 #include "arch/generic/htm.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -85,5 +88,6 @@ class HTMCheckpoint : public BaseHTMCheckpoint
 };
 
 } // namespace ArmISA
+} // namespace gem5
 
 #endif

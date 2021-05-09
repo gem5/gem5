@@ -45,6 +45,9 @@
 #include "debug/Drain.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 DrainManager DrainManager::_instance;
 
 DrainManager::DrainManager()
@@ -224,3 +227,5 @@ Drainable::dmDrainResume()
     _drainState = DrainState::Running;
     drainResume();
 }
+
+} // namespace gem5

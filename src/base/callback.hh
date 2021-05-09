@@ -32,6 +32,9 @@
 #include <functional>
 #include <list>
 
+namespace gem5
+{
+
 class CallbackQueue : public std::list<std::function<void()>>
 {
   public:
@@ -49,5 +52,7 @@ class CallbackQueue : public std::list<std::function<void()>>
             f();
     }
 };
+
+} // namespace gem5
 
 #endif // __BASE_CALLBACK_HH__

@@ -31,6 +31,9 @@
 
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -72,4 +75,5 @@ PTE::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(OffsetMask);
 }
 
-}
+} // namespace MipsISA
+} // namespace gem5

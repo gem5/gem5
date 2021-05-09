@@ -35,6 +35,9 @@
 
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 MemPool::MemPool(System *system, Addr ptr, Addr limit)
         : sys(system), freePageNum(ptr >> sys->getPageShift()),
         _totalPages(limit >> sys->getPageShift())
@@ -114,3 +117,5 @@ MemPool::allocate(Addr npages)
 
     return return_addr;
 }
+
+} // namespace gem5

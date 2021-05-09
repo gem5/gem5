@@ -44,6 +44,9 @@
 #include "base/vnc/vncinput.hh"
 #include "dev/ps2/device.hh"
 
+namespace gem5
+{
+
 struct PS2KeyboardParams;
 
 namespace ps2
@@ -72,5 +75,6 @@ class PS2Keyboard : public Device, VncKeyboard
 };
 
 } // namespace ps2
+} // namespace gem5
 
 #endif // __DEV_PS2_KEYBOARD_hH__

@@ -42,6 +42,7 @@ class ClockedObject(SimObject):
     type = 'ClockedObject'
     abstract = True
     cxx_header = "sim/clocked_object.hh"
+    cxx_class = 'gem5::ClockedObject'
 
     # The clock domain this clocked object belongs to, inheriting the
     # parent's clock domain by default

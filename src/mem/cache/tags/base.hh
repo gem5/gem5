@@ -60,6 +60,9 @@
 #include "params/BaseTags.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class System;
 class IndexingPolicy;
 class ReplaceableEntry;
@@ -361,5 +364,7 @@ class BaseTags : public ClockedObject
      */
     void computeStatsVisitor(CacheBlk &blk);
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_TAGS_BASE_HH__

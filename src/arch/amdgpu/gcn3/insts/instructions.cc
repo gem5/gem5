@@ -40,6 +40,9 @@
 #include "debug/GPUSync.hh"
 #include "gpu-compute/shader.hh"
 
+namespace gem5
+{
+
 namespace Gcn3ISA
 {
 
@@ -41909,3 +41912,4 @@ namespace Gcn3ISA
         }
     } // completeAcc
 } // namespace Gcn3ISA
+} // namespace gem5

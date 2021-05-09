@@ -59,6 +59,9 @@
 #include "base/cprintf.hh"
 #include "sim/cxx_config.hh"
 
+namespace gem5
+{
+
 class CheckpointIn;
 
 /** This class allows a config file to be read into gem5 (generating the
@@ -151,7 +154,7 @@ class CxxConfigManager
 
     /** Class for resolving SimObject names to SimObjects usable by the
      *  checkpoint restore mechanism */
-    class SimObjectResolver : public ::SimObjectResolver
+    class SimObjectResolver : public gem5::SimObjectResolver
     {
       protected:
         CxxConfigManager &configManager;
@@ -308,5 +311,7 @@ class CxxConfigManager
         const std::string &param_name,
         const std::vector<std::string> &param_values);
 };
+
+} // namespace gem5
 
 #endif // __SIM_CXX_MANAGER_HH__

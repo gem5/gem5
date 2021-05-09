@@ -39,6 +39,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 using namespace MipsISA;
 
 namespace MipsISA {
@@ -207,3 +210,4 @@ isSnan(void *val_ptr, int size)
 }
 
 } // namespace MipsISA
+} // namespace gem5

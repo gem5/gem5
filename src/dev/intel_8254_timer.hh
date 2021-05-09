@@ -39,6 +39,9 @@
 #include "sim/eventq.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 /** Programmable Interval Timer (Intel 8254) */
 class Intel8254Timer : public EventManager
 {
@@ -258,5 +261,7 @@ class Intel8254Timer : public EventManager
     /** Start ticking */
     void startup();
 };
+
+} // namespace gem5
 
 #endif // __DEV_8254_HH__

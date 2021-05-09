@@ -30,6 +30,9 @@
 #ifndef __ARCH_MIPS_REGS_INT_HH__
 #define __ARCH_MIPS_REGS_INT_HH__
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -69,5 +72,6 @@ const int StackPointerReg = 29;
 const int SyscallPseudoReturnReg = 3;
 
 } // namespace MipsISA
+} // namespace gem5
 
 #endif

@@ -30,6 +30,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 bool
 PacketFifo::copyout(void *dest, unsigned offset, unsigned len)
 {
@@ -110,3 +113,5 @@ PacketFifo::unserialize(const std::string &base, CheckpointIn &cp)
         fifo.push_back(entry);
     }
 }
+
+} // namespace gem5

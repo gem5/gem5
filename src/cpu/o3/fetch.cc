@@ -70,6 +70,9 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -1621,3 +1624,4 @@ Fetch::IcachePort::recvReqRetry()
 }
 
 } // namespace o3
+} // namespace gem5

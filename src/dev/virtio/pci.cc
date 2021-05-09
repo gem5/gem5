@@ -43,6 +43,9 @@
 #include "mem/packet_access.hh"
 #include "params/PciVirtIO.hh"
 
+namespace gem5
+{
+
 PciVirtIO::PciVirtIO(const Params &params)
     : PciDevice(params), queueNotify(0), interruptDeliveryPending(false),
       vio(*params.vio)
@@ -223,3 +226,5 @@ PciVirtIO::kick()
     interruptDeliveryPending = true;
     intrPost();
 }
+
+} // namespace gem5

@@ -41,6 +41,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 using namespace X86ISA;
 
 void EmulEnv::doModRM(const ExtMachInst & machInst)
@@ -118,3 +121,5 @@ void EmulEnv::setSeg(const ExtMachInst & machInst)
     if (segFromInst)
         seg = (SegmentRegIndex)(segFromInst - 1);
 }
+
+} // namespace gem5

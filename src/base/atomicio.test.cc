@@ -42,6 +42,8 @@
 
 #include "base/atomicio.hh"
 
+using namespace gem5;
+
 /*
  * This will test reading from a file with a buffer capable of storing the
  * entirity of the file.

@@ -29,6 +29,9 @@
 #ifndef __ARCH_SPARC_REGS_FLOAT_HH__
 #define __ARCH_SPARC_REGS_FLOAT_HH__
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -36,5 +39,6 @@ const int NumFloatRegs = 64;
 const int NumFloatArchRegs = NumFloatRegs;
 
 } // namespace SparcISA
+} // namespace gem5
 
 #endif

@@ -39,6 +39,9 @@
 
 #include "params/MultiPrefetcher.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
@@ -82,3 +85,4 @@ Multi::getPacket()
 }
 
 } // namespace prefetch
+} // namespace gem5

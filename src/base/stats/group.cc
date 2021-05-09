@@ -44,6 +44,9 @@
 #include "base/trace.hh"
 #include "debug/Stats.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -187,3 +190,4 @@ Group::getStats() const
 }
 
 } // namespace statistics
+} // namespace gem5

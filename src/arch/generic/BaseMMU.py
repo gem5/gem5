@@ -43,6 +43,8 @@ class BaseMMU(SimObject):
     type = 'BaseMMU'
     abstract = True
     cxx_header = "arch/generic/mmu.hh"
+    cxx_class = 'gem5::BaseMMU'
+
     itb = Param.BaseTLB("Instruction TLB")
     dtb = Param.BaseTLB("Data TLB")
 

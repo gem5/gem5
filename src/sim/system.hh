@@ -67,6 +67,9 @@
 #include "sim/sim_object.hh"
 #include "sim/workload.hh"
 
+namespace gem5
+{
+
 class BaseRemoteGDB;
 class KvmVM;
 class ThreadContext;
@@ -638,5 +641,7 @@ class System : public SimObject, public PCEventScope
 };
 
 void printSystems();
+
+} // namespace gem5
 
 #endif // __SYSTEM_HH__

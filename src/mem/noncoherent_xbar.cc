@@ -50,6 +50,9 @@
 #include "debug/NoncoherentXBar.hh"
 #include "debug/XBar.hh"
 
+namespace gem5
+{
+
 NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams &p)
     : BaseXBar(p)
 {
@@ -310,3 +313,5 @@ NoncoherentXBar::recvFunctional(PacketPtr pkt, PortID cpu_side_port_id)
     // forward the request to the appropriate destination
     memSidePorts[dest_id]->sendFunctional(pkt);
 }
+
+} // namespace gem5

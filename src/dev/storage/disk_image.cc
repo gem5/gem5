@@ -50,6 +50,9 @@
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 ////////////////////////////////////////////////////////////////////////
 //
 // Raw Disk image
@@ -434,3 +437,5 @@ CowDiskImage::unserialize(CheckpointIn &cp)
     cowFilename = cp.getCptDir() + "/" + cowFilename;
     open(cowFilename);
 }
+
+} // namespace gem5

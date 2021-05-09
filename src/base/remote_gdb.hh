@@ -66,6 +66,9 @@
  * https://sourceware.org/gdb/current/onlinedocs/gdb/Remote-Protocol.html
  */
 
+namespace gem5
+{
+
 class System;
 class ThreadContext;
 
@@ -409,5 +412,7 @@ BaseRemoteGDB::write(Addr addr, T data)
 {
     write(addr, sizeof(T), (const char *)&data);
 }
+
+} // namespace gem5
 
 #endif /* __REMOTE_GDB_H__ */

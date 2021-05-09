@@ -34,6 +34,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace MipsISA {
 
 // ITB/DTB page table entry
@@ -104,6 +107,7 @@ struct TlbEntry
 
 };
 
-};
-#endif // __ARCH_MIPS_PAGETABLE_H__
+} // namespace MipsISA
+} // namespace gem5
 
+#endif // __ARCH_MIPS_PAGETABLE_H__

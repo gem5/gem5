@@ -61,6 +61,9 @@
 #include "params/X86LocalApic.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 class BaseCPU;
 
@@ -301,5 +304,6 @@ class Interrupts : public BaseInterrupts
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_INTERRUPTS_HH__

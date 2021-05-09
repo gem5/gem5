@@ -42,6 +42,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 inline void
 eat_lead_white(std::string &s)
 {
@@ -261,5 +264,6 @@ startswith(const std::string &s, const std::string &prefix)
     return (s.compare(0, prefix.size(), prefix) == 0);
 }
 
+} // namespace gem5
 
 #endif //__BASE_STR_HH__

@@ -28,6 +28,9 @@
 
 #include "arch/power/insts/condition.hh"
 
+namespace gem5
+{
+
 using namespace PowerISA;
 
 std::string
@@ -57,3 +60,5 @@ CondMoveOp::generateDisassembly(
 
     return ss.str();
 }
+
+} // namespace gem5

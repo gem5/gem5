@@ -31,9 +31,14 @@
 
 #include "base/statistics.hh"
 
+namespace gem5
+{
+
 extern statistics::Formula &simSeconds;
 extern statistics::Value &simTicks;
 extern statistics::Value &simFreq;
 extern statistics::Value &hostSeconds;
+
+} // namespace gem5
 
 #endif // __SIM_SIM_STATS_HH__

@@ -56,6 +56,8 @@ class VectorEtherInt(VectorPort):
 class EtherLink(SimObject):
     type = 'EtherLink'
     cxx_header = "dev/net/etherlink.hh"
+    cxx_class = 'gem5::EtherLink'
+
     int0 = EtherInt("interface 0")
     int1 = EtherInt("interface 1")
     delay = Param.Latency('0us', "packet transmit delay")
@@ -66,6 +68,8 @@ class EtherLink(SimObject):
 class DistEtherLink(SimObject):
     type = 'DistEtherLink'
     cxx_header = "dev/net/dist_etherlink.hh"
+    cxx_class = 'gem5::DistEtherLink'
+
     int0 = EtherInt("interface 0")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
@@ -84,6 +88,8 @@ class DistEtherLink(SimObject):
 class EtherBus(SimObject):
     type = 'EtherBus'
     cxx_header = "dev/net/etherbus.hh"
+    cxx_class = 'gem5::EtherBus'
+
     loopback = Param.Bool(True, "send packet back to the sending interface")
     dump = Param.EtherDump(NULL, "dump object")
     speed = Param.NetworkBandwidth('100Mbps', "bus speed in bits per second")
@@ -91,6 +97,8 @@ class EtherBus(SimObject):
 class EtherSwitch(SimObject):
     type = 'EtherSwitch'
     cxx_header = "dev/net/etherswitch.hh"
+    cxx_class = 'gem5::EtherSwitch'
+
     dump = Param.EtherDump(NULL, "dump object")
     fabric_speed = Param.NetworkBandwidth('10Gbps', "switch fabric speed in "
                                           "bits per second")
@@ -105,6 +113,8 @@ class EtherTapBase(SimObject):
     type = 'EtherTapBase'
     abstract = True
     cxx_header = "dev/net/ethertap.hh"
+    cxx_class = 'gem5::EtherTapBase'
+
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
     tap = EtherInt("Ethernet interface to connect to gem5's network")
@@ -113,6 +123,8 @@ if buildEnv['HAVE_TUNTAP']:
     class EtherTap(EtherTapBase):
         type = 'EtherTap'
         cxx_header = "dev/net/ethertap.hh"
+        cxx_class = 'gem5::EtherTap'
+
         tun_clone_device = Param.String('/dev/net/tun',
                                         "Path to the tun clone device node")
         tap_device_name = Param.String('gem5-tap', "Tap device name")
@@ -120,11 +132,15 @@ if buildEnv['HAVE_TUNTAP']:
 class EtherTapStub(EtherTapBase):
     type = 'EtherTapStub'
     cxx_header = "dev/net/ethertap.hh"
+    cxx_class = 'gem5::EtherTapStub'
+
     port = Param.UInt16(3500, "Port helper should send packets to")
 
 class EtherDump(SimObject):
     type = 'EtherDump'
     cxx_header = "dev/net/etherdump.hh"
+    cxx_class = 'gem5::EtherDump'
+
     file = Param.String("dump file")
     maxlen = Param.Int(96, "max portion of packet data to dump")
 
@@ -132,12 +148,16 @@ class EtherDevice(PciDevice):
     type = 'EtherDevice'
     abstract = True
     cxx_header = "dev/net/etherdevice.hh"
+    cxx_class = 'gem5::EtherDevice'
+
     interface = EtherInt("Ethernet Interface")
 
 class IGbE(EtherDevice):
     # Base class for two IGbE adapters listed above
     type = 'IGbE'
     cxx_header = "dev/net/i8254xGBe.hh"
+    cxx_class = 'gem5::IGbE'
+
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
     rx_fifo_size = Param.MemorySize('384KiB', "Size of the rx FIFO")
@@ -185,6 +205,7 @@ class EtherDevBase(EtherDevice):
     type = 'EtherDevBase'
     abstract = True
     cxx_header = "dev/net/etherdevice.hh"
+    cxx_class = 'gem5::EtherDevBase'
 
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
@@ -208,6 +229,7 @@ class EtherDevBase(EtherDevice):
 class NSGigE(EtherDevBase):
     type = 'NSGigE'
     cxx_header = "dev/net/ns_gige.hh"
+    cxx_class = 'gem5::NSGigE'
 
     dma_data_free = Param.Bool(False, "DMA of Data is free")
     dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
@@ -229,7 +251,7 @@ class NSGigE(EtherDevBase):
 
 class Sinic(EtherDevBase):
     type = 'Sinic'
-    cxx_class = 'sinic::Device'
+    cxx_class = 'gem5::sinic::Device'
     cxx_header = "dev/net/sinic.hh"
 
     rx_max_copy = Param.MemorySize('1514B', "rx max copy")

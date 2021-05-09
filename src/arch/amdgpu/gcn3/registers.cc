@@ -33,6 +33,9 @@
 
 #include "arch/amdgpu/gcn3/gpu_registers.hh"
 
+namespace gem5
+{
+
 namespace Gcn3ISA
 {
     std::string
@@ -234,3 +237,4 @@ namespace Gcn3ISA
     }
 
 } // namespace Gcn3ISA
+} // namespace gem5

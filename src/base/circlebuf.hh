@@ -46,6 +46,9 @@
 #include "base/logging.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 /**
  * Circular buffer backed by a vector.
  *
@@ -282,5 +285,7 @@ arrayParamIn(CheckpointIn &cp, const std::string &name, Fifo<T> &param)
     param.flush();
     param.write(temp.cbegin(), temp.size());
 }
+
+} // namespace gem5
 
 #endif // __BASE_CIRCLEBUF_HH__

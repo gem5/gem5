@@ -45,6 +45,9 @@
 
 #include "tarmac_record.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 /**
@@ -163,5 +166,6 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
 };
 
 } // namespace Trace
+} // namespace gem5
 
 #endif // __ARCH_ARM_TRACERS_TARMAC_RECORD_V8_HH__

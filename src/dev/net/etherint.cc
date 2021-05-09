@@ -31,6 +31,9 @@
 #include "base/logging.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 void
 EtherInt::bind(Port &peer)
 {
@@ -59,3 +62,5 @@ EtherInt::setPeer(EtherInt *p)
 
     peer = p;
 }
+
+} // namespace gem5

@@ -38,6 +38,9 @@
 #include "gpu-compute/wavefront.hh"
 #include "params/ComputeUnit.hh"
 
+namespace gem5
+{
+
 /**
  * Scoreboard/Schedule stage interface.
  */
@@ -150,3 +153,5 @@ ScheduleToExecute::dispatchStatus(int func_unit_id) const
 {
     return _dispatchStatus[func_unit_id];
 }
+
+} // namespace gem5

@@ -40,6 +40,9 @@
 
 #include "cpu/reg_class.hh"
 
+namespace gem5
+{
+
 const char *RegId::regClassStrings[] = {
     "IntRegClass",
     "FloatRegClass",
@@ -50,3 +53,4 @@ const char *RegId::regClassStrings[] = {
     "MiscRegClass"
 };
 
+} // namespace gem5

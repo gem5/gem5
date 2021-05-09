@@ -49,6 +49,9 @@
 #include "base_gen.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 /**
  * The random generator is similar to the linear one, but does
  * not generate sequential addresses. Instead it randomly
@@ -102,5 +105,7 @@ class RandomGen : public StochasticGen
      */
     Addr dataManipulated;
 };
+
+} // namespace gem5
 
 #endif

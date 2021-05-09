@@ -41,6 +41,9 @@
 #include "base/bitfield.hh"
 #include "base/bitunion.hh"
 
+namespace gem5
+{
+
 namespace QARMA
 {
 
@@ -89,5 +92,8 @@ namespace QARMA
 
   BIT64
   computePAC(BIT64 data, BIT64 modifier, BIT64 key0, BIT64 key1);
-};
+
+} // namespace QARMA
+} // namespace gem5
+
 #endif //__ARCH_ARM_QARMA_HH__

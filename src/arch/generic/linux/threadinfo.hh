@@ -32,6 +32,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Linux, linux);
 namespace linux
 {
@@ -186,5 +189,6 @@ class ThreadInfo
 };
 
 } // namespace linux
+} // namespace gem5
 
 #endif // __ARCH_GENERIC_LINUX_THREADINFO_HH__

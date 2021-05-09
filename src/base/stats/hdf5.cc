@@ -40,6 +40,9 @@
 #include "base/logging.hh"
 #include "base/stats/info.hh"
 
+namespace gem5
+{
+
 /**
  * Check if all strings in a container are empty.
  */
@@ -323,3 +326,4 @@ initHDF5(const std::string &filename, unsigned chunking,
 }
 
 }; // namespace statistics
+} // namespace gem5

@@ -63,6 +63,9 @@
 
 #define BAR_NUMBER(x) (((x) - PCI0_BASE_ADDR0) >> 0x2);
 
+namespace gem5
+{
+
 class PciBar : public SimObject
 {
   protected:
@@ -392,4 +395,7 @@ class PciDevice : public DmaDevice
 
     const PciBusAddr &busAddr() const { return _busAddr; }
 };
+
+} // namespace gem5
+
 #endif // __DEV_PCI_DEVICE_HH__

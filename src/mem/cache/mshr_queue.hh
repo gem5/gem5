@@ -52,6 +52,9 @@
 #include "mem/cache/queue.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 /**
  * A Class for maintaining a list of pending and allocated memory requests.
  */
@@ -159,5 +162,7 @@ class MSHRQueue : public Queue<MSHR>
         return (allocated < numEntries - (numReserve + 1 + demandReserve));
     }
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_MSHR_QUEUE_HH__

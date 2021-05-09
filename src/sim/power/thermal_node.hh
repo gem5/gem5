@@ -41,6 +41,9 @@
 #include "base/temperature.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct ThermalNodeParams;
 
 /**
@@ -57,5 +60,7 @@ class ThermalNode : public SimObject
     bool isref;
     Temperature temp;
 };
+
+} // namespace gem5
 
 #endif

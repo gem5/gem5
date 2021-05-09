@@ -67,6 +67,9 @@
 #include "dev/net/etherint.hh"
 #include "dev/net/etherpkt.hh"
 
+namespace gem5
+{
+
 class TapEvent : public PollEvent
 {
   protected:
@@ -466,5 +469,7 @@ EtherTap::sendReal(const void *data, size_t len)
     }
     return true;
 }
+
+} // namespace gem5
 
 #endif

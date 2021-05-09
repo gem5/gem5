@@ -51,6 +51,9 @@
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 class GenericTimer;
 class BaseGic;
 class FVPBasePwrCtrl;
@@ -355,5 +358,7 @@ class ArmSystem : public System
     /** Notify the power controller of WAKEREQUEST deassertion */
     static void callClearWakeRequest(ThreadContext *tc);
 };
+
+} // namespace gem5
 
 #endif

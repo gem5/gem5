@@ -37,6 +37,9 @@
 
 #include "debug/ProtocolTest.hh"
 
+namespace gem5
+{
+
 TesterThread::TesterThread(const Params &p)
       : ClockedObject(p),
         threadEvent(this, "TesterThread tick"),
@@ -444,3 +447,5 @@ TesterThread::printAllOutstandingReqs(std::stringstream& ss) const
     ss << "\t\tNumber of outstanding acquires & releases: "
        << pendingFenceCount << std::endl;
 }
+
+} // namespace gem5

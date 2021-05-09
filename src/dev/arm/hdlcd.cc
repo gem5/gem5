@@ -53,6 +53,8 @@
 
 using std::vector;
 
+namespace gem5
+{
 
 // initialize hdlcd registers
 HDLcd::HDLcd(const HDLcdParams &p)
@@ -688,3 +690,5 @@ HDLcd::PixelPump::dumpSettings()
     inform("PixelPump vertical fron porch: %u", t.vFrontPorch);
     inform("PixelPump vertical fron porch: %u", t.vSync);
 }
+
+} // namespace gem5

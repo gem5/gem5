@@ -39,6 +39,9 @@
 
 #include "arch/arm/insts/sve.hh"
 
+namespace gem5
+{
+
 namespace ArmISA {
 
 const char*
@@ -966,4 +969,5 @@ sveExpandFpImmMul(uint8_t imm, uint8_t size)
     }
 }
 
-}  // namespace ArmISA
+} // namespace ArmISA
+} // namespace gem5

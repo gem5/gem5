@@ -47,6 +47,7 @@ class DataDistribution(Enum): vals = ['sequential', 'stripe']
 class FlashDevice(AbstractNVM):
     type = 'FlashDevice'
     cxx_header = "dev/arm/flash_device.hh"
+    cxx_class = 'gem5::FlashDevice'
     # default blocksize is 128 KiB.This seems to be the most common size in
     # mobile devices (not the image blocksize)
     blk_size = Param.MemorySize("128KiB", "Size of one disk block")

@@ -44,6 +44,9 @@
 #include "debug/Interrupt.hh"
 #include "params/MuxingKvmGic.hh"
 
+namespace gem5
+{
+
 KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, Addr cpu_addr, Addr dist_addr,
                                unsigned it_lines)
     : cpuRange(RangeSize(cpu_addr, KVM_VGIC_V2_CPU_SIZE)),
@@ -426,3 +429,5 @@ MuxingKvmGic::fromKvmToGicV2()
        assert((cpuPriority[cpu] & ~0xff) == 0);
     }
 }
+
+} // namespace gem5

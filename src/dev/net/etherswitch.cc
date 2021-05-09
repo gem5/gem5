@@ -37,6 +37,9 @@
 #include "debug/EthernetAll.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 EtherSwitch::EtherSwitch(const Params &p)
     : SimObject(p), ttl(p.time_to_live)
 {
@@ -343,3 +346,5 @@ EtherSwitch::Interface::PortFifo::unserialize(CheckpointIn &cp)
 
     }
 }
+
+} // namespace gem5

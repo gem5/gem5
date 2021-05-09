@@ -42,6 +42,9 @@
 
 #include "params/IrisMMU.hh"
 
+namespace gem5
+{
+
 namespace Iris
 {
 
@@ -52,5 +55,6 @@ class MMU : public BaseMMU
 };
 
 } // namespace Iris
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_IRIS_MMU_HH__

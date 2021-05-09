@@ -33,6 +33,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 void
 X86ISA::I8254::counterInterrupt(unsigned int num)
 {
@@ -95,3 +98,5 @@ X86ISA::I8254::startup()
 {
     pit.startup();
 }
+
+} // namespace gem5

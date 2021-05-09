@@ -40,6 +40,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 /**
  * Calculates the offset of a given address wrt aligned fixed-size blocks.
  * @param addr Input address.
@@ -90,5 +93,7 @@ isAnyActiveElement(const std::vector<bool>::const_iterator& it_start,
     for (;it_tmp != it_end && !(*it_tmp); ++it_tmp);
     return (it_tmp != it_end);
 }
+
+} // namespace gem5
 
 #endif // __CPU_UTILS_HH__

@@ -35,6 +35,9 @@
 #include "sim/guest_abi/layout.hh"
 #include "sim/guest_abi/varargs.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 // These functions wrap a simulator level function with the given signature.
@@ -126,5 +129,7 @@ dumpSimcall(std::string name, ThreadContext *tc,
     return dumpSimcall<ABI>(
             name, tc, std::function<Ret(ThreadContext *, Args...)>(target));
 }
+
+} // namespace gem5
 
 #endif // __SIM_GUEST_ABI_HH__

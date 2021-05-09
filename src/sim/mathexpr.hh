@@ -44,6 +44,9 @@
 #include <string>
 #include <vector>
 
+namespace gem5
+{
+
 class MathExpr
 {
   public:
@@ -145,5 +148,7 @@ class MathExpr
      * strings */
     void getVariables(const Node *n, std::vector<std::string> &vars) const;
 };
+
+} // namespace gem5
 
 #endif

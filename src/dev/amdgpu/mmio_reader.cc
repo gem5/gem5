@@ -39,6 +39,8 @@
 #include "debug/AMDGPUDevice.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
 
 void
 AMDMMIOReader::readMMIOTrace(std::string trace_file)
@@ -113,3 +115,5 @@ AMDMMIOReader::writeFromTrace(PacketPtr pkt, int barnum, Addr offset)
         trace_cur_index++;
     }
 }
+
+} // namespace gem5

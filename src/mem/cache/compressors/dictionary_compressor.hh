@@ -56,6 +56,9 @@
 #include "base/types.hh"
 #include "mem/cache/compressors/base.hh"
 
+namespace gem5
+{
+
 struct BaseDictionaryCompressorParams;
 
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
@@ -789,5 +792,6 @@ class DictionaryCompressor<T>::SignExtendedPattern
 };
 
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_DICTIONARY_COMPRESSOR_HH__

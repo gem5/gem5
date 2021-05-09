@@ -31,6 +31,9 @@
 
 #include "arch/x86/insts/microop.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -84,6 +87,7 @@ class MediaOpBase : public X86MicroopBase
     static constexpr uint8_t dataSize = 0;
 };
 
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_INSTS_MICROMEDIAOP_HH__

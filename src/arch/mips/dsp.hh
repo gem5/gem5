@@ -33,6 +33,9 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace MipsISA {
@@ -200,5 +203,6 @@ void writeDSPControl(uint32_t *dspctl, uint32_t value, uint32_t mask);
 uint32_t readDSPControl(uint32_t *dspctl, uint32_t mask);
 
 } // namespace MipsISA
+} // namespace gem5
 
 #endif // __ARCH_MIPS_DSP_HH__

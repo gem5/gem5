@@ -37,6 +37,9 @@
 
 #include "cpu/minor/stats.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -79,3 +82,4 @@ MinorStats::MinorStats(BaseCPU *base_cpu)
 }
 
 } // namespace minor
+} // namespace gem5

@@ -42,6 +42,9 @@
 #include "debug/GPUExec.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 namespace Gcn3ISA
 {
     struct BufferRsrcDescriptor
@@ -806,5 +809,6 @@ namespace Gcn3ISA
         InFmt_FLAT_1 extData;
     }; // Inst_FLAT
 } // namespace Gcn3ISA
+} // namespace gem5
 
 #endif // __ARCH_GCN3_INSTS_OP_ENCODINGS_HH__

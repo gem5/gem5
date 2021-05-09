@@ -33,6 +33,9 @@
 #include "debug/GDBMisc.hh"
 #include "params/NativeTrace.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 NativeTrace::NativeTrace(const Params &p)
@@ -61,3 +64,4 @@ Trace::NativeTraceRecord::dump()
 }
 
 } // namespace Trace
+} // namespace gem5

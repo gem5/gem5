@@ -33,6 +33,9 @@
 
 #include "arch/mips/pcstate.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -162,4 +165,6 @@ struct CoreSpecific
 };
 
 } // namespace MipsISA
+} // namespace gem5
+
 #endif

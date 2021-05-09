@@ -41,6 +41,9 @@
 #include "base/atomicio.hh"
 #include "sim/backtrace.hh"
 
+namespace gem5
+{
+
 #define SAFE_MSG(m)                                             \
     do {                                                        \
         static const char msg[] = m;                            \
@@ -61,3 +64,5 @@ print_backtrace()
         STATIC_ERR("Warning: Backtrace may have been truncated.\n");
     STATIC_ERR("--- END LIBC BACKTRACE ---\n");
 }
+
+} // namespace gem5

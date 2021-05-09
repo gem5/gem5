@@ -38,6 +38,9 @@
 #include "mem/ruby/network/garnet/CommonTypes.hh"
 #include "mem/ruby/network/garnet/flit.hh"
 
+namespace gem5
+{
+
 class flitBuffer
 {
   public:
@@ -85,5 +88,7 @@ operator<<(std::ostream& out, const flitBuffer& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_FLITBUFFER_HH__

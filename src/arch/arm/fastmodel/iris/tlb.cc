@@ -32,9 +32,12 @@
 #include "params/IrisTLB.hh"
 #include "sim/faults.hh"
 
+namespace gem5
+{
+
 Fault
 Iris::TLB::translateFunctional(
-        const RequestPtr &req, ::ThreadContext *tc, Mode mode)
+        const RequestPtr &req, gem5::ThreadContext *tc, Mode mode)
 {
     auto *itc = dynamic_cast<Iris::ThreadContext *>(tc);
     panic_if(!itc, "Failed to cast to Iris::ThreadContext *");
@@ -53,15 +56,17 @@ Iris::TLB::translateFunctional(
 
 Fault
 Iris::TLB::translateAtomic(
-        const RequestPtr &req, ::ThreadContext *tc, Mode mode)
+        const RequestPtr &req, gem5::ThreadContext *tc, Mode mode)
 {
     return translateFunctional(req, tc, mode);
 }
 
 void
-Iris::TLB::translateTiming(const RequestPtr &req, ::ThreadContext *tc,
+Iris::TLB::translateTiming(const RequestPtr &req, gem5::ThreadContext *tc,
         Translation *translation, Mode mode)
 {
     assert(translation);
     translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
+
+} // namespace gem5

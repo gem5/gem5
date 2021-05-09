@@ -40,6 +40,8 @@
 #include "dev/arm/base_gic.hh"
 #include "params/GenericWatchdog.hh"
 
+namespace gem5
+{
 
 GenericWatchdog::GenericWatchdog(const GenericWatchdogParams &p)
     : PioDevice(p),
@@ -261,3 +263,5 @@ GenericWatchdog::unserialize(CheckpointIn &cp)
         reschedule(timeoutEvent, when, true);
     }
 }
+
+} // namespace gem5

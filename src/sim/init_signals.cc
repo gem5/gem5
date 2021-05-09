@@ -61,6 +61,9 @@
 #include "sim/core.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 // Use an separate stack for fatal signal handlers
 static uint8_t fatalSigStack[2 * SIGSTKSZ];
 
@@ -213,3 +216,4 @@ initSignals()
     installSignalHandler(SIGIO, ioHandler);
 }
 
+} // namespace gem5

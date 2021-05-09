@@ -44,6 +44,9 @@
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -828,4 +831,4 @@ TrapInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 }
 
 } // namespace SparcISA
-
+} // namespace gem5

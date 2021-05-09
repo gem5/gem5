@@ -43,6 +43,9 @@
 #include "params/QoSTurnaroundPolicy.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -79,5 +82,6 @@ class TurnaroundPolicy : public SimObject
 };
 
 } // namespace qos
+} // namespace gem5
 
 #endif /* __MEM_QOS_TURNAROUND_POLICY_HH__ */

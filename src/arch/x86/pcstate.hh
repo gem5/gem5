@@ -41,6 +41,9 @@
 #include "arch/generic/types.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -108,6 +111,7 @@ class PCState : public GenericISA::UPCState<8>
     }
 };
 
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_PCSTATE_HH__

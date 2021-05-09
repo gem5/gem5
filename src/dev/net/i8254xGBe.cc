@@ -52,6 +52,9 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace igbreg;
 using namespace networking;
 
@@ -2460,3 +2463,5 @@ IGbE::unserialize(CheckpointIn &cp)
     txDescCache.unserializeSection(cp, "TxDescCache");
     rxDescCache.unserializeSection(cp, "RxDescCache");
 }
+
+} // namespace gem5

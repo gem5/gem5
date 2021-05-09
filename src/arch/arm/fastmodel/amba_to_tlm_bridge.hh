@@ -35,6 +35,9 @@
 #include "arch/arm/fastmodel/amba_ports.hh"
 #include "systemc/tlm_port_wrapper.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
@@ -46,7 +49,7 @@ class AmbaToTlmBridge64 : public amba_pv::amba_pv_to_tlm_bridge<64>
   public:
     AmbaToTlmBridge64(const sc_core::sc_module_name &name);
 
-    ::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
+    gem5::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
 
   private:
     void bTransport(amba_pv::amba_pv_transaction &trans, sc_core::sc_time &t);
@@ -66,5 +69,6 @@ class AmbaToTlmBridge64 : public amba_pv::amba_pv_to_tlm_bridge<64>
 };
 
 } // namespace fastmodel
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_AMBA_TO_TLM_BRIDGE_HH__

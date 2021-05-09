@@ -32,6 +32,9 @@
 #include <systemc>
 #include <tlm>
 
+namespace gem5
+{
+
 // This protocol is an exportable version of the clock rate protocol native to
 // fast models. It's identical to the original, except it has some extra info
 // which lets it be exported into systemc.
@@ -118,5 +121,7 @@ class ClockRateControlTargetSocket :
         return typeid(ClockRateControlDummyProtocolType);
     }
 };
+
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_PROTOCOL_EXPORTED_CLOCK_RATE_CONTROL_HH__

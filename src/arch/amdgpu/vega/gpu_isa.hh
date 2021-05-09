@@ -42,6 +42,9 @@
 #include "gpu-compute/hsa_queue_entry.hh"
 #include "gpu-compute/misc.hh"
 
+namespace gem5
+{
+
 class Wavefront;
 
 namespace VegaISA
@@ -99,5 +102,6 @@ namespace VegaISA
         ScalarRegU32 m0;
     };
 } // namespace VegaISA
+} // namespace gem5
 
 #endif // __ARCH_VEGA_GPU_ISA_HH__

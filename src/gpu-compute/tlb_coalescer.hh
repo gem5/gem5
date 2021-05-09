@@ -51,6 +51,9 @@
 #include "params/TLBCoalescer.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class BaseTLB;
 class Packet;
 class ThreadContext;
@@ -217,5 +220,7 @@ class TLBCoalescer : public ClockedObject
         statistics::Formula localLatency;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __TLB_COALESCER_HH__

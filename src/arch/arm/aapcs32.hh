@@ -41,6 +41,9 @@
 #include "sim/guest_abi.hh"
 #include "sim/proxy_ptr.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 struct Aapcs32
@@ -637,5 +640,6 @@ struct Argument<Aapcs32Vfp, VarArgs<Types...>>
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __ARCH_ARM_AAPCS32_HH__

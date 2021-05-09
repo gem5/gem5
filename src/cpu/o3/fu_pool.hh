@@ -51,6 +51,9 @@
 #include "params/FUPool.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class FUDesc;
 class FuncUnit;
 
@@ -180,5 +183,6 @@ class FUPool : public SimObject
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_FU_POOL_HH__

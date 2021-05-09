@@ -37,6 +37,9 @@
 #include "debug/Checkpoint.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 ////////////////////////////////////////////////////////////////////////
 //
 // SimObject member definitions
@@ -214,3 +217,5 @@ debug_serialize(const std::string &cpt_dir)
 {
     SimObject::serializeAll(cpt_dir);
 }
+
+} // namespace gem5

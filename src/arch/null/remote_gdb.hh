@@ -40,6 +40,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 class BaseRemoteGDB
@@ -53,5 +56,7 @@ class BaseRemoteGDB
 
     virtual ~BaseRemoteGDB() {}
 };
+
+} // namespace gem5
 
 #endif // __ARCH_NULL_REMOTE_GDB_H__

@@ -47,6 +47,9 @@
 #include "mem/htm.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 typedef const char *FaultName;
@@ -152,5 +155,7 @@ class GenericHtmFailureFault : public FaultBase
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 nullStaticInstPtr) override;
 };
+
+} // namespace gem5
 
 #endif // __FAULTS_HH__

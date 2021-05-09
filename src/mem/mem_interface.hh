@@ -64,6 +64,9 @@
 #include "params/NVMInterface.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 /**
  * General interface to memory device
  * Includes functions and parameters shared across media types
@@ -1259,5 +1262,7 @@ class NVMInterface : public MemInterface
 
     NVMInterface(const NVMInterfaceParams &_p);
 };
+
+} // namespace gem5
 
 #endif //__MEM_INTERFACE_HH__

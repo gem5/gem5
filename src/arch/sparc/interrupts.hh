@@ -37,6 +37,9 @@
 #include "params/SparcInterrupts.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -251,6 +254,8 @@ class Interrupts : public BaseInterrupts
         UNSERIALIZE_SCALAR(intStatus);
     }
 };
-} // namespace SPARC_ISA
+
+} // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_INTERRUPT_HH__

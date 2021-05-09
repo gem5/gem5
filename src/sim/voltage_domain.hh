@@ -45,6 +45,9 @@
 #include "sim/clock_domain.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * A VoltageDomain is used to group clock domains that operate under
  * the same voltage. The class provides methods for setting and
@@ -155,5 +158,7 @@ class VoltageDomain : public SimObject
     typedef std::vector<SrcClockDomain *> SrcClockChildren;
     SrcClockChildren srcClockChildren;
 };
+
+} // namespace gem5
 
 #endif

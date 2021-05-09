@@ -45,6 +45,9 @@
 #include "params/X86E820Table.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class PortProxy;
 
 namespace X86ISA
@@ -75,6 +78,8 @@ namespace X86ISA
 
         void writeTo(PortProxy& proxy, Addr countAddr, Addr addr);
     };
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_BIOS_E820_HH__

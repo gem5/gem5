@@ -43,6 +43,9 @@
 
 #include "enums/OpClass.hh"
 
+namespace gem5
+{
+
 /*
  * Do a bunch of wonky stuff to maintain backward compatability so I
  * don't have to change code in a zillion places.
@@ -103,5 +106,7 @@ static const OpClass FloatMemWriteOp = enums::FloatMemWrite;
 static const OpClass IprAccessOp = enums::IprAccess;
 static const OpClass InstPrefetchOp = enums::InstPrefetch;
 static const OpClass Num_OpClasses = enums::Num_OpClass;
+
+} // namespace gem5
 
 #endif // __CPU__OP_CLASS_HH__

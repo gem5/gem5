@@ -50,6 +50,9 @@
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 
+namespace gem5
+{
+
 class WriteMask
 {
   public:
@@ -264,5 +267,7 @@ operator<<(std::ostream& out, const WriteMask& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_COMMON_WRITEMASK_HH__

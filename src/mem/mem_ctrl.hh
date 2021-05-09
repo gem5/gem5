@@ -60,6 +60,9 @@
 #include "params/MemCtrl.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 class DRAMInterface;
 class NVMInterface;
 
@@ -708,5 +711,7 @@ class MemCtrl : public qos::MemCtrl
     bool recvTimingReq(PacketPtr pkt);
 
 };
+
+} // namespace gem5
 
 #endif //__MEM_CTRL_HH__

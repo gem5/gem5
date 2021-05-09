@@ -39,11 +39,15 @@
 
 #include "arch/generic/locked_mem.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
 using namespace GenericISA::locked_mem;
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_LOCKED_MEM_HH__

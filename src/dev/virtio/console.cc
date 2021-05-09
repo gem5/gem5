@@ -41,6 +41,9 @@
 #include "params/VirtIOConsole.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 VirtIOConsole::VirtIOConsole(const Params &params)
     : VirtIODeviceBase(params, ID_CONSOLE, sizeof(Config), F_SIZE),
       qRecv(params.system->physProxy, byteOrder, params.qRecvSize, *this),
@@ -112,3 +115,5 @@ VirtIOConsole::TermTransQueue::onNotifyDescriptor(VirtDescriptor *desc)
     produceDescriptor(desc, 0);
     parent.kick();
 }
+
+} // namespace gem5

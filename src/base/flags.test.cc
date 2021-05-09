@@ -33,6 +33,8 @@
 
 #include "base/flags.hh"
 
+using namespace gem5;
+
 /** Test default zero-initialized constructor. */
 TEST(FlagsTest, ConstructorZero)
 {

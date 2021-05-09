@@ -34,6 +34,8 @@
 #include "base/gtest/logging.hh"
 #include "base/sat_counter.hh"
 
+using namespace gem5;
+
 /**
  * Test that an error is triggered when the number of bits exceeds the
  * counter's capacity.

@@ -41,6 +41,9 @@
 #include "dev/arm/smmu_v3_defs.hh"
 #include "dev/arm/smmu_v3_proc.hh"
 
+namespace gem5
+{
+
 class SMMUv3;
 
 class SMMUCommandExecProcess : public SMMUProcess
@@ -64,5 +67,7 @@ class SMMUCommandExecProcess : public SMMUProcess
 
     bool isBusy() const { return busy; }
 };
+
+} // namespace gem5
 
 #endif  /* __DEV_ARM_SMMU_V3_CMDEXEC_HH__ */

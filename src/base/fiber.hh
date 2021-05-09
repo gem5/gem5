@@ -50,6 +50,9 @@
 
 #include "config/have_valgrind.hh"
 
+namespace gem5
+{
+
 /**
  * This class represents a fiber, which is a light weight sort of thread which
  * is cooperatively scheduled and runs sequentially with other fibers, swapping
@@ -162,5 +165,7 @@ class Fiber
     bool _finished;
     void createContext();
 };
+
+} // namespace gem5
 
 #endif // __BASE_FIBER_HH__

@@ -41,6 +41,9 @@
 
 #include "crypto.hh"
 
+namespace gem5
+{
+
 namespace ArmISA {
 
 const uint8_t
@@ -513,3 +516,4 @@ Crypto::store1Reg(uint8_t *output, uint32_t *X)
 }
 
 } // namespace ArmISA
+} // namespace gem5

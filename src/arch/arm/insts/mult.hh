@@ -41,6 +41,9 @@
 #include "arch/arm/insts/static_inst.hh"
 #include "base/trace.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -73,6 +76,8 @@ class Mult4 : public Mult3
         Mult3(mnem, _machInst, __opClass, _reg0, _reg1, _reg2), reg3(_reg3)
     {}
 };
-}
+
+} // namespace ArmISA
+} // namespace gem5
 
 #endif //__ARCH_ARM_INSTS_MULT_HH__

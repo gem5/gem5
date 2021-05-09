@@ -35,6 +35,8 @@
 #include "base/gtest/logging.hh"
 #include "sim/port.hh"
 
+using namespace gem5;
+
 class TestPort : public Port
 {
   public:

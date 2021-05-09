@@ -38,6 +38,9 @@
 #include "base/types.hh"
 #include "kern/operatingsystem.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 class Process;
 
@@ -116,5 +119,7 @@ class FreeBSD : public OperatingSystem
     static const int TGT_AT_FDCWD   = -100;
 
 };  // class FreeBSD
+
+} // namespace gem5
 
 #endif // __FREEBSD_HH__

@@ -47,6 +47,9 @@
 #include "params/X86SMBiosSMBiosTable.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 const char X86ISA::smbios::SMBiosTable::SMBiosHeader::anchorString[] = "_SM_";
 const uint8_t X86ISA::smbios::SMBiosTable::
         SMBiosHeader::formattedArea[] = {0,0,0,0,0};
@@ -319,3 +322,5 @@ X86ISA::smbios::SMBiosTable::writeOut(PortProxy& proxy, Addr addr,
     intChecksum = -intChecksum;
     proxy.writeBlob(addr + 0x15, &intChecksum, 1);
 }
+
+} // namespace gem5

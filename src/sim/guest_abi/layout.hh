@@ -33,6 +33,9 @@
 #include "base/compiler.hh"
 #include "sim/guest_abi/definition.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
@@ -170,5 +173,6 @@ getArgument(ThreadContext *tc, typename ABI::State &state)
 }
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __SIM_GUEST_ABI_LAYOUT_HH__

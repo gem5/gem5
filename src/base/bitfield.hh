@@ -46,6 +46,9 @@
 #include <cstdint>
 #include <type_traits>
 
+namespace gem5
+{
+
 extern const uint8_t reverseBitsLookUpTable[];
 
 /**
@@ -407,5 +410,7 @@ ctz64(uint64_t value)
 {
     return value ? __builtin_ctzll(value) : 64;
 }
+
+} // namespace gem5
 
 #endif // __BASE_BITFIELD_HH__

@@ -31,6 +31,6 @@ from m5.objects.BaseTLB import BaseTLB
 
 class SparcTLB(BaseTLB):
     type = 'SparcTLB'
-    cxx_class = 'SparcISA::TLB'
+    cxx_class = 'gem5::SparcISA::TLB'
     cxx_header = 'arch/sparc/tlb.hh'
     size = Param.Int(64, "TLB size")

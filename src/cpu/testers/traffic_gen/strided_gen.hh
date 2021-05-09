@@ -49,6 +49,9 @@
 #include "base_gen.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 /**
  * The strided generator generates sequential requests from a
  * start to an end address, with a fixed block size. A
@@ -126,5 +129,7 @@ class StridedGen : public StochasticGen
      */
     int genID;
 };
+
+} // namespace gem5
 
 #endif

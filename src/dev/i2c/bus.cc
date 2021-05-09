@@ -48,6 +48,9 @@
 using std::vector;
 using std::map;
 
+namespace gem5
+{
+
 /**
  * 4KB - see e.g.
  * http://infocenter.arm.com/help/topic/com.arm.doc.dui0440b/Bbajihec.html
@@ -235,3 +238,5 @@ I2CBus::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(i2cAddr);
     UNSERIALIZE_SCALAR(message);
 }
+
+} // namespace gem5

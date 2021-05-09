@@ -48,6 +48,9 @@
 
 #include "base/compiler.hh"
 
+namespace gem5
+{
+
 class OutputDirectory;
 
 class OutputStream
@@ -300,5 +303,7 @@ class OutputDirectory
 };
 
 extern OutputDirectory simout;
+
+} // namespace gem5
 
 #endif // __BASE_OUTPUT_HH__

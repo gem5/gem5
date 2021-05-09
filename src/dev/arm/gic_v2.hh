@@ -56,6 +56,9 @@
 #include "dev/platform.hh"
 #include "params/GicV2.hh"
 
+namespace gem5
+{
+
 class GicV2 : public BaseGic, public BaseGicRegisters
 {
   protected:
@@ -546,5 +549,7 @@ class GicV2 : public BaseGic, public BaseGicRegisters
     Tick writeCpu(PacketPtr pkt);
     void writeCpu(ContextID ctx, Addr daddr, uint32_t data) override;
 };
+
+} // namespace gem5
 
 #endif //__DEV_ARM_GIC_H__

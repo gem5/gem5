@@ -4,6 +4,9 @@
 #include "base/trace.hh"
 #include "debug/HMCController.hh"
 
+namespace gem5
+{
+
 HMCController::HMCController(const HMCControllerParams &p) :
     NoncoherentXBar(p),
     numMemSidePorts(p.port_mem_side_ports_connection_count),
@@ -111,3 +114,5 @@ bool HMCController::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
 
     return true;
 }
+
+} // namespace gem5

@@ -32,6 +32,9 @@
 #include "base/types.hh"
 #include "kern/operatingsystem.hh"
 
+namespace gem5
+{
+
 ///
 /// This class encapsulates the types, structures, constants,
 /// functions, and syscall-number mappings specific to the Solaris
@@ -120,5 +123,7 @@ class Solaris : public OperatingSystem
     static const int TGT_AT_FDCWD   = -100;
 
 };  // class Solaris
+
+} // namespace gem5
 
 #endif // __SOLARIS_HH__

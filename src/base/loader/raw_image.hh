@@ -32,6 +32,9 @@
 #include "base/compiler.hh"
 #include "base/loader/object_file.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -53,5 +56,6 @@ class RawImage: public ObjectFile
 };
 
 } // namespace loader
+} // namespace gem5
 
 #endif // __BASE_LOADER_RAW_IMAGE_HH__

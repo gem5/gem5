@@ -47,6 +47,9 @@
 #include "mem/ruby/system/Sequencer.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 AbstractController::AbstractController(const Params &p)
     : ClockedObject(p), Consumer(this), m_version(p.version),
       m_clusterID(p.cluster_id),
@@ -457,3 +460,5 @@ ControllerStats::ControllerStats(statistics::Group *parent)
     delayHistogram
         .flags(statistics::nozero);
 }
+
+} // namespace gem5

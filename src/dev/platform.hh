@@ -40,6 +40,9 @@
 #include "params/Platform.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class Terminal;
 class Uart;
 class System;
@@ -74,5 +77,7 @@ class Platform : public SimObject
      */
     virtual void clearPciInt(int line);
 };
+
+} // namespace gem5
 
 #endif // __DEV_PLATFORM_HH__

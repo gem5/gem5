@@ -44,6 +44,9 @@
 #include "params/Clint.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace RiscvISA;
 
 Clint::Clint(const Params &params) :
@@ -228,3 +231,5 @@ Clint::unserialize(CheckpointIn &cp)
     }
     paramIn(cp, "mtime", registers.mtime);
 }
+
+} // namespace gem5

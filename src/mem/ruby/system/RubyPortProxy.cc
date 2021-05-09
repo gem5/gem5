@@ -37,6 +37,11 @@
 
 #include "mem/ruby/system/RubyPortProxy.hh"
 
+#include "base/logging.hh"
+
+namespace gem5
+{
+
 RubyPortProxy::RubyPortProxy(const RubyPortProxyParams &p) :
     RubyPort(p)
 {
@@ -61,3 +66,5 @@ RubyPortProxy::makeRequest(PacketPtr pkt)
     panic("RubyPortProxy::makeRequest should not be called");
     return RequestStatus_NULL;
 }
+
+} // namespace gem5

@@ -32,6 +32,9 @@
 
 #include "arch/sparc/insts/static_inst.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -108,6 +111,7 @@ class WrPrivImm : public PrivImm
     char const *regName;
 };
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif //__ARCH_SPARC_INSTS_PRIV_HH__

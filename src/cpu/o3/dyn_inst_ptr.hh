@@ -44,6 +44,9 @@
 
 #include "base/refcnt.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -53,5 +56,6 @@ using DynInstPtr = RefCountingPtr<DynInst>;
 using DynInstConstPtr = RefCountingPtr<const DynInst>;
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_DYN_INST_PTR_HH__

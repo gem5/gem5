@@ -40,6 +40,7 @@ from m5.util.fdthelper import *
 class Display(SimObject):
     type = 'Display'
     cxx_header = "dev/arm/display.hh"
+    cxx_class = 'gem5::Display'
     clock_frequency = Param.Unsigned("clock-frequency property")
     hactive = Param.Unsigned("hactive property")
     vactive = Param.Unsigned("vactive property")

@@ -50,6 +50,9 @@
 #include "base/stats/output.hh"
 #include "base/stats/types.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -105,5 +108,6 @@ std::string ValueToString(Result value, int precision);
 Output *initText(const std::string &filename, bool desc, bool spaces);
 
 } // namespace statistics
+} // namespace gem5
 
 #endif // __BASE_STATS_TEXT_HH__

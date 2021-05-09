@@ -38,6 +38,9 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace MipsISA {
@@ -74,7 +77,7 @@ RoundPage(Addr addr)
     return (addr + PageBytes - 1) & ~(PageBytes - 1);
 }
 
-};
-
+} // namespace MipsISA
+} // namespace gem5
 
 #endif

@@ -54,6 +54,9 @@
 #include "gpu-compute/operand_info.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 class BaseOperand;
 class BaseRegOperand;
 
@@ -356,5 +359,7 @@ class KernelLaunchStaticInst : public GPUStaticInst
     int numSrcRegOperands() override { return 0; }
     int instSize() const override { return 0; }
 };
+
+} // namespace gem5
 
 #endif // __GPU_STATIC_INST_HH__

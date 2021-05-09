@@ -44,6 +44,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 MathExpr::MathExpr(std::string expr)
  : ops(
      std::array<OpSearch, uNeg + 1> {{
@@ -188,3 +191,4 @@ MathExpr::getVariables(const Node *n,
     }
 }
 
+} // namespace gem5

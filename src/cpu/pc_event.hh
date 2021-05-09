@@ -34,6 +34,9 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 class PCEventQueue;
 class System;
@@ -159,5 +162,7 @@ class PanicPCEvent : public PCEvent
     PanicPCEvent(PCEventScope *s, const std::string &desc, Addr pc);
     virtual void process(ThreadContext *tc);
 };
+
+} // namespace gem5
 
 #endif // __PC_EVENT_HH__

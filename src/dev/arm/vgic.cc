@@ -46,6 +46,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 VGic::VGic(const Params &p)
     : PioDevice(p), gicvIIDR(p.gicv_iidr), platform(p.platform),
       gic(p.gic), vcpuAddr(p.vcpu_addr), hvAddr(p.hv_addr),
@@ -555,3 +558,5 @@ VGic::vcpuIntData::unserialize(CheckpointIn &cp)
         paramIn(cp, "lr", LR[i]);
     }
 }
+
+} // namespace gem5

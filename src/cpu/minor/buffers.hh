@@ -56,6 +56,9 @@
 #include "cpu/minor/trace.hh"
 #include "cpu/timebuf.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -656,5 +659,6 @@ class InputBuffer : public Reservable
 };
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_BUFFERS_HH__ */

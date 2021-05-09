@@ -59,6 +59,9 @@
 #include "mem/request.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 /**
  * A Basic Cache block.
  * Contains information regarding its coherence, prefetching status, as
@@ -556,5 +559,7 @@ class CacheBlkPrintWrapper : public Printable
     void print(std::ostream &o, int verbosity = 0,
                const std::string &prefix = "") const;
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_CACHE_BLK_HH__

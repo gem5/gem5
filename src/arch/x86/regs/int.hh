@@ -43,6 +43,9 @@
 #include "base/logging.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
     BitUnion64(X86IntReg)
@@ -184,6 +187,8 @@ namespace X86ISA
     }
 
     const int NumIntRegs = NUM_INTREGS;
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_INTREGS_HH__

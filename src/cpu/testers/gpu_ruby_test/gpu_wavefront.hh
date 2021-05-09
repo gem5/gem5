@@ -38,6 +38,9 @@
 #include "params/GpuWavefront.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class GpuWavefront : public TesterThread
 {
   public:
@@ -64,5 +67,7 @@ class GpuWavefront : public TesterThread
   protected:
     int cuId;    // compute unit associated with this wavefront
 };
+
+} // namespace gem5
 
 #endif /* CPU_TESTERS_PROTOCOL_TESTER_GPU_WAVEFRONT_HH_ */

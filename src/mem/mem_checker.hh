@@ -55,6 +55,9 @@
 #include "sim/core.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * MemChecker. Verifies that reads observe the values from permissible writes.
  * As memory operations have a start and completion time, we consider them as
@@ -565,5 +568,7 @@ MemChecker::abortWrite(MemChecker::Serial serial, Addr addr, size_t size)
         getByteTracker(addr + i)->abortWrite(serial);
     }
 }
+
+} // namespace gem5
 
 #endif // __MEM_MEM_CHECKER_HH__

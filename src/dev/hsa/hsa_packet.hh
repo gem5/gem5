@@ -38,6 +38,9 @@
 
 #include <cstdint>
 
+namespace gem5
+{
+
 typedef struct hsa_packet_header_s
 {
         // TODO: replace with more portable impl based on offset, length
@@ -98,5 +101,7 @@ typedef struct _hsa_barrier_or_packet_s
     uint64_t reserved2;
     uint64_t completion_signal;
 } _hsa_barrier_or_packet_t;
+
+} // namespace gem5
 
 #endif // __DEV_HSA_HSA_PACKET_HH__

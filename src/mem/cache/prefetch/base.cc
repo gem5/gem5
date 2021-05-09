@@ -52,6 +52,9 @@
 #include "params/BasePrefetcher.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
@@ -261,3 +264,4 @@ Base::addTLB(BaseTLB *t)
 }
 
 } // namespace prefetch
+} // namespace gem5

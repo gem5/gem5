@@ -38,6 +38,9 @@
 #ifndef __ARCH_ARM_REGS_CC_HH__
 #define __ARCH_ARM_REGS_CC_HH__
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -81,6 +84,7 @@ enum ConditionCode
     COND_UC  // 15
 };
 
-}
+} // namespace ArmISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_REGS_CC_HH__

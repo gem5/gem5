@@ -41,6 +41,7 @@ from m5.proxy import *
 class ClockDomain(SimObject):
     type = 'ClockDomain'
     cxx_header = "sim/clock_domain.hh"
+    cxx_class = 'gem5::ClockDomain'
     abstract = True
 
 # Source clock domain with an actual clock, and a list of voltage and frequency
@@ -48,6 +49,7 @@ class ClockDomain(SimObject):
 class SrcClockDomain(ClockDomain):
     type = 'SrcClockDomain'
     cxx_header = "sim/clock_domain.hh"
+    cxx_class = 'gem5::SrcClockDomain'
 
     # Single clock frequency value, or list of frequencies for DVFS
     # Frequencies must be ordered in descending order
@@ -73,5 +75,7 @@ class SrcClockDomain(ClockDomain):
 class DerivedClockDomain(ClockDomain):
     type = 'DerivedClockDomain'
     cxx_header = "sim/clock_domain.hh"
+    cxx_class = 'gem5::DerivedClockDomain'
+
     clk_domain = Param.ClockDomain("Parent clock domain")
     clk_divider = Param.Unsigned(1, "Frequency divider")

@@ -32,6 +32,9 @@
 #include "base/types.hh"
 #include "sim/syscall_debug_macros.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 void
@@ -48,3 +51,5 @@ SyscallDesc::doSyscall(ThreadContext *tc)
     else
         DPRINTF_SYSCALL(Base, "Returned %d.\n", retval.encodedValue());
 }
+
+} // namespace gem5

@@ -43,6 +43,9 @@
 #include "base/bitunion.hh"
 #include "dev/io_device.hh"
 
+namespace gem5
+{
+
 class ArmSystem;
 struct FVPBasePwrCtrlParams;
 class ThreadContext;
@@ -181,5 +184,7 @@ class FVPBasePwrCtrl : public BasicPioDevice
     /** Reference to the arm system */
     ArmSystem &system;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_FVP_BASE_PWR_CTRL_HH__

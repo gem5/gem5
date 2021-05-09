@@ -286,6 +286,9 @@
  * the RegisterBank.
  */
 
+namespace gem5
+{
+
 // Common bases to make it easier to identify both endiannesses at once.
 class RegisterBankBase
 {
@@ -960,5 +963,7 @@ struct ShowParam<T, std::enable_if_t<std::is_base_of<
         value.serialize(os);
     }
 };
+
+} // namespace gem5
 
 #endif // __DEV_REG_BANK_HH__

@@ -28,9 +28,13 @@
 
 #include "arch/power/decoder.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
 GenericISA::BasicDecodeCache<Decoder, ExtMachInst> Decoder::defaultCache;
 
-}
+} // namespace PowerISA
+} // namespace gem5

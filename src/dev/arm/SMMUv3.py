@@ -42,6 +42,7 @@ from m5.objects.ClockedObject import ClockedObject
 class SMMUv3DeviceInterface(ClockedObject):
     type = 'SMMUv3DeviceInterface'
     cxx_header = 'dev/arm/smmu_v3_deviceifc.hh'
+    cxx_class = 'gem5::SMMUv3DeviceInterface'
 
     device_port = ResponsePort('Device port')
     slave     = DeprecatedParam(device_port,
@@ -81,6 +82,7 @@ class SMMUv3DeviceInterface(ClockedObject):
 class SMMUv3(ClockedObject):
     type = 'SMMUv3'
     cxx_header = 'dev/arm/smmu_v3.hh'
+    cxx_class = 'gem5::SMMUv3'
 
     request = RequestPort('Request port')
     walker = RequestPort(

@@ -43,6 +43,9 @@
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 struct GEM5_PACKED DmesgEntry
 {
     uint64_t ts_nsec;
@@ -148,3 +151,5 @@ linux::dumpDmesg(ThreadContext *tc, std::ostream &os)
         cur += ret;
     }
 }
+
+} // namespace gem5

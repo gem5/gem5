@@ -44,6 +44,9 @@
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 namespace ArmISAInst {
@@ -266,4 +269,5 @@ MicroTcommit64::completeAcc(PacketPtr pkt, ExecContext *xc,
     return fault;
 }
 
-} // namespace
+} // namespace ArmISAInst
+} // namespace gem5

@@ -43,6 +43,9 @@
 #include "base/framebuffer.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 struct BasePixelPumpParams;
 
 struct DisplayTimings : public Serializable
@@ -361,5 +364,7 @@ class BasePixelPump
     /** Did a buffer underrun occur within this refresh interval? */
     bool _underrun;
 };
+
+} // namespace gem5
 
 #endif // __DEV_PIXELPUMP_HH__

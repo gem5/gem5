@@ -75,11 +75,11 @@ namespace sc_gem5
 {
 
 using PacketToPayloadConversionStep =
-    std::function<void(PacketPtr pkt, tlm::tlm_generic_payload &trans)>;
+    std::function<void(gem5::PacketPtr pkt, tlm::tlm_generic_payload &trans)>;
 
 void addPacketToPayloadConversionStep(PacketToPayloadConversionStep step);
 
-tlm::tlm_generic_payload *packet2payload(PacketPtr packet);
+tlm::tlm_generic_payload *packet2payload(gem5::PacketPtr packet);
 
 class Gem5ToTlmBridgeBase : public sc_core::sc_module
 {
@@ -91,43 +91,44 @@ template <unsigned int BITWIDTH>
 class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
 {
   private:
-    class BridgeResponsePort : public ResponsePort
+    class BridgeResponsePort : public gem5::ResponsePort
     {
       protected:
         Gem5ToTlmBridge<BITWIDTH> &bridge;
 
-        AddrRangeList
+        gem5::AddrRangeList
         getAddrRanges() const override
         {
             return bridge.getAddrRanges();
         }
-        Tick
-        recvAtomic(PacketPtr pkt) override
+        gem5::Tick
+        recvAtomic(gem5::PacketPtr pkt) override
         {
             return bridge.recvAtomic(pkt);
         }
-        Tick
-        recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor) override
+        gem5::Tick
+        recvAtomicBackdoor(gem5::PacketPtr pkt,
+            gem5::MemBackdoorPtr &backdoor) override
         {
             return bridge.recvAtomicBackdoor(pkt, backdoor);
         }
         void
-        recvFunctional(PacketPtr pkt) override
+        recvFunctional(gem5::PacketPtr pkt) override
         {
             return bridge.recvFunctional(pkt);
         }
         bool
-        recvTimingReq(PacketPtr pkt) override
+        recvTimingReq(gem5::PacketPtr pkt) override
         {
             return bridge.recvTimingReq(pkt);
         }
         bool
-        tryTiming(PacketPtr pkt) override
+        tryTiming(gem5::PacketPtr pkt) override
         {
             return bridge.tryTiming(pkt);
         }
         bool
-        recvTimingSnoopResp(PacketPtr pkt) override
+        recvTimingSnoopResp(gem5::PacketPtr pkt) override
         {
             return bridge.recvTimingSnoopResp(pkt);
         }
@@ -145,7 +146,7 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
         Gem5ToTlmBridge<BITWIDTH>, BITWIDTH> socket;
     sc_gem5::TlmInitiatorWrapper<BITWIDTH> wrapper;
 
-    System *system;
+    gem5::System *system;
 
     /**
      * A transaction after BEGIN_REQ has been sent but before END_REQ, which
@@ -165,24 +166,25 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
      */
     tlm::tlm_generic_payload *blockingResponse;
 
-    AddrRangeList addrRanges;
+    gem5::AddrRangeList addrRanges;
 
   protected:
     void pec(tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);
 
-    MemBackdoorPtr getBackdoor(tlm::tlm_generic_payload &trans);
-    AddrRangeMap<MemBackdoorPtr> backdoorMap;
+    gem5::MemBackdoorPtr getBackdoor(tlm::tlm_generic_payload &trans);
+    gem5::AddrRangeMap<gem5::MemBackdoorPtr> backdoorMap;
 
     // The gem5 port interface.
-    Tick recvAtomic(PacketPtr packet);
-    Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor);
-    void recvFunctional(PacketPtr packet);
-    bool recvTimingReq(PacketPtr packet);
-    bool tryTiming(PacketPtr packet);
-    bool recvTimingSnoopResp(PacketPtr packet);
+    gem5::Tick recvAtomic(gem5::PacketPtr packet);
+    gem5::Tick recvAtomicBackdoor(gem5::PacketPtr pkt,
+        gem5::MemBackdoorPtr &backdoor);
+    void recvFunctional(gem5::PacketPtr packet);
+    bool recvTimingReq(gem5::PacketPtr packet);
+    bool tryTiming(gem5::PacketPtr packet);
+    bool recvTimingSnoopResp(gem5::PacketPtr packet);
     void recvRespRetry();
-    void recvFunctionalSnoop(PacketPtr packet);
-    AddrRangeList getAddrRanges() const { return addrRanges; }
+    void recvFunctionalSnoop(gem5::PacketPtr packet);
+    gem5::AddrRangeList getAddrRanges() const { return addrRanges; }
 
     // The TLM initiator interface.
     tlm::tlm_sync_enum nb_transport_bw(tlm::tlm_generic_payload &trans,
@@ -192,9 +194,9 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
             sc_dt::uint64 start_range, sc_dt::uint64 end_range);
 
   public:
-    ::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
+    gem5::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
 
-    typedef Gem5ToTlmBridgeBaseParams Params;
+    typedef gem5::Gem5ToTlmBridgeBaseParams Params;
     Gem5ToTlmBridge(const Params &p, const sc_core::sc_module_name &mn);
 
     tlm_utils::simple_initiator_socket<Gem5ToTlmBridge<BITWIDTH>, BITWIDTH> &

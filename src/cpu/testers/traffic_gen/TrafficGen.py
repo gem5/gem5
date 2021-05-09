@@ -47,6 +47,7 @@ from m5.objects.BaseTrafficGen import *
 class TrafficGen(BaseTrafficGen):
     type = 'TrafficGen'
     cxx_header = "cpu/testers/traffic_gen/traffic_gen.hh"
+    cxx_class = 'gem5::TrafficGen'
 
     # Config file to parse for the state descriptions
     config_file = Param.String("Configuration file describing the behaviour")

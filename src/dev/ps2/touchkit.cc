@@ -49,6 +49,9 @@
 #include "dev/ps2/types.hh"
 #include "params/PS2TouchKit.hh"
 
+namespace gem5
+{
+
 namespace ps2
 {
 
@@ -212,3 +215,4 @@ TouchKit::mouseAt(uint16_t x, uint16_t y, uint8_t buttons)
 }
 
 } // namespace ps2
+} // namespace gem5

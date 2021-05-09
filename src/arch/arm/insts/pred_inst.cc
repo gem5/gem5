@@ -40,6 +40,9 @@
 
 #include "arch/arm/insts/pred_inst.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 std::string
@@ -115,4 +118,6 @@ PredMacroOp::generateDisassembly(
 
     return ss.str();
 }
-}
+
+} // namespace ArmISA
+} // namespace gem5

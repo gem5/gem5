@@ -45,6 +45,9 @@
 #include "arch/arm/tlb.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace ArmISA {
@@ -99,8 +102,7 @@ class Stage2LookUp : public BaseTLB::Translation
                 BaseTLB::Mode mode);
 };
 
-
 } // namespace ArmISA
+} // namespace gem5
 
 #endif //__ARCH_ARM_STAGE2_LOOKUP_HH__
-

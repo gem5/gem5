@@ -43,7 +43,7 @@ from m5.objects.FuncUnitConfig import *
 
 class FUPool(SimObject):
     type = 'FUPool'
-    cxx_class = 'o3::FUPool'
+    cxx_class = 'gem5::o3::FUPool'
     cxx_header = "cpu/o3/fu_pool.hh"
     FUList = VectorParam.FUDesc("list of FU's for this pool")
 

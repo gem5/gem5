@@ -47,6 +47,9 @@
 #include "dev/arm/gic_v3_distributor.hh"
 #include "dev/arm/gic_v3_redistributor.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 const uint8_t Gicv3CPUInterface::GIC_MIN_BPR;
@@ -2336,7 +2339,7 @@ Gicv3CPUInterface::inSecureState() const
 
     CPSR cpsr = isa->readMiscRegNoEffect(MISCREG_CPSR);
     SCR scr = isa->readMiscRegNoEffect(MISCREG_SCR);
-    return ::inSecureState(scr, cpsr);
+    return gem5::inSecureState(scr, cpsr);
 }
 
 int
@@ -2623,3 +2626,5 @@ Gicv3CPUInterface::unserialize(CheckpointIn & cp)
     UNSERIALIZE_SCALAR(hppi.prio);
     UNSERIALIZE_ENUM(hppi.group);
 }
+
+} // namespace gem5

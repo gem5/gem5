@@ -46,6 +46,9 @@
 #include "base/types.hh"
 #include "mem/cache/compressors/dictionary_compressor.hh"
 
+namespace gem5
+{
+
 struct FPCParams;
 
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
@@ -303,5 +306,6 @@ class FPC::Uncompressed : public UncompressedPattern
 };
 
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_FPC_HH__

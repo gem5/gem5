@@ -44,6 +44,9 @@
 #include "params/NSGigE.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 // Hash filtering constants
 const uint16_t FHASH_ADDR  = 0x100;
 const uint16_t FHASH_SIZE  = 0x100;
@@ -369,5 +372,7 @@ class NSGigEInt : public EtherInt
     virtual bool recvPacket(EthPacketPtr pkt) { return dev->recvPacket(pkt); }
     virtual void sendDone() { dev->transferDone(); }
 };
+
+} // namespace gem5
 
 #endif // __DEV_NET_NS_GIGE_HH__

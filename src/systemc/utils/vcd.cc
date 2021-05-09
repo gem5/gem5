@@ -164,7 +164,7 @@ VcdTraceScope::output(const std::string &name, std::ostream &os)
 
         int w = value->width();
         if (w <= 0) {
-            std::string msg = csprintf("'%s' has 0 bits", name);
+            std::string msg = gem5::csprintf("'%s' has 0 bits", name);
             // The typo in this error message is intentional to match the
             // Accellera output.
             SC_REPORT_ERROR("(E710) object cannot not be traced", msg.c_str());
@@ -173,10 +173,10 @@ VcdTraceScope::output(const std::string &name, std::ostream &os)
 
         std::string clean_name = cleanName(name);
         if (w == 1) {
-            ccprintf(os, "$var %s  % 3d  %s  %s       $end\n",
+            gem5::ccprintf(os, "$var %s  % 3d  %s  %s       $end\n",
                      value->vcdType(), w, value->vcdName(), clean_name);
         } else {
-            ccprintf(os, "$var %s  % 3d  %s  %s [%d:0]  $end\n",
+            gem5::ccprintf(os, "$var %s  % 3d  %s  %s [%d:0]  $end\n",
                      value->vcdType(), w, value->vcdName(), clean_name, w - 1);
         }
     }
@@ -249,12 +249,12 @@ VcdTraceFile::initialize()
 
     stream() << "$enddefinitions  $end" << std::endl << std::endl;
 
-    Tick now = scheduler.getCurTick();
+    gem5::Tick now = scheduler.getCurTick();
 
     std::string timedump_comment =
-        csprintf("All initial values are dumped below at time "
+        gem5::csprintf("All initial values are dumped below at time "
                  "%g sec = %g timescale units.",
-                 static_cast<double>(now) / sim_clock::as_float::s,
+                 static_cast<double>(now) / gem5::sim_clock::as_float::s,
                  static_cast<double>(now / timeUnitTicks));
     writeComment(timedump_comment);
 
@@ -274,8 +274,10 @@ VcdTraceFile::~VcdTraceFile()
         delete tv;
     traceVals.clear();
 
-    if (timeUnitTicks)
-        ccprintf(stream(), "#%u\n", scheduler.getCurTick() / timeUnitTicks);
+    if (timeUnitTicks) {
+        gem5::ccprintf(stream(), "#%u\n",
+            scheduler.getCurTick() / timeUnitTicks);
+    }
 }
 
 void
@@ -297,7 +299,7 @@ VcdTraceFile::trace(bool delta)
         return;
     }
 
-    Tick now = scheduler.getCurTick() / timeUnitTicks + deltaOffset;
+    gem5::Tick now = scheduler.getCurTick() / timeUnitTicks + deltaOffset;
 
     if (now <= lastPrintedTime) {
         // TODO warn about reversed time?
@@ -309,7 +311,7 @@ VcdTraceFile::trace(bool delta)
         if (tv->check()) {
             if (!time_printed) {
                 lastPrintedTime = now;
-                ccprintf(stream(), "#%u\n", now);
+                gem5::ccprintf(stream(), "#%u\n", now);
                 time_printed = true;
             }
 
@@ -349,7 +351,7 @@ class VcdTraceValFloat : public VcdTraceVal<T>
     void
     output(std::ostream &os) override
     {
-        ccprintf(os, "r%.16g %s\n", this->value(), this->vcdName());
+        gem5::ccprintf(os, "r%.16g %s\n", this->value(), this->vcdName());
     }
 };
 
@@ -480,7 +482,7 @@ class VcdTraceValFxval : public VcdTraceVal<T>
     void
     output(std::ostream &os) override
     {
-        ccprintf(os, "r%.16g %s\n",
+        gem5::ccprintf(os, "r%.16g %s\n",
                 this->value().to_double(), this->vcdName());
     }
 };
@@ -577,7 +579,7 @@ class VcdTraceValTime : public VcdTraceVal<::sc_core::sc_time>
 
         const uint64_t val = value().value();
         for (int i = 0; i < TimeWidth; i++)
-            str[i] = ::bits(val, TimeWidth - i - 1) ? '1' : '0';
+            str[i] = gem5::bits(val, TimeWidth - i - 1) ? '1' : '0';
 
         printVal(os, str);
     }
@@ -602,14 +604,14 @@ class VcdTraceValInt : public VcdTraceVal<T>
         str[w] = '\0';
 
         const uint64_t val =
-            static_cast<uint64_t>(this->value()) & ::mask(sizeof(T) * 8);
+            static_cast<uint64_t>(this->value()) & gem5::mask(sizeof(T) * 8);
 
-        if (::mask(w) < val) {
+        if (gem5::mask(w) < val) {
             for (int i = 0; i < w; i++)
                 str[i] = 'x';
         } else {
             for (int i = 0; i < w; i++)
-                str[i] = ::bits(val, w - i - 1) ? '1' : '0';
+                str[i] = gem5::bits(val, w - i - 1) ? '1' : '0';
         }
 
         this->printVal(os, str);

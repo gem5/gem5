@@ -55,6 +55,9 @@
 #include "base/trace.hh"
 #include "debug/Drain.hh"
 
+namespace gem5
+{
+
 /**
  * Flash Device constructor and destructor
  */
@@ -576,3 +579,5 @@ FlashDevice::checkDrain()
         signalDrainDone();
     }
 }
+
+} // namespace gem5

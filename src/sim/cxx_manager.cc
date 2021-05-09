@@ -46,6 +46,9 @@
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 CxxConfigManager::CxxConfigManager(CxxConfigFileBase &configFile_) :
     configFile(configFile_), flags(configFile_.getFlags()),
     simObjectResolver(*this)
@@ -713,3 +716,5 @@ void CxxConfigManager::addRenaming(const Renaming &renaming)
 {
     renamings.push_back(renaming);
 }
+
+} // namespace gem5

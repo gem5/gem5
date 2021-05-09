@@ -57,6 +57,8 @@
 
 #include "dev/reg_bank.hh"
 
+using namespace gem5;
+
 // Compare the elements of an array against expected values.
 using testing::ElementsAre;
 // This version is needed with enough elements, empirically more than 10.

@@ -31,6 +31,9 @@
 
 #include "cpu/pc_event.hh"
 
+namespace gem5
+{
+
 class IdleStartEvent : public PCEvent
 {
   public:
@@ -39,5 +42,7 @@ class IdleStartEvent : public PCEvent
     {}
     virtual void process(ThreadContext *tc);
 };
+
+} // namespace gem5
 
 #endif // __KERN_RISCV_IDLE_EVENT_HH__

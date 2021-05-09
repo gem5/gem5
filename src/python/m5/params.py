@@ -1325,6 +1325,8 @@ class MetaEnum(MetaParamValue):
 #ifndef $idem_macro
 #define $idem_macro
 
+namespace gem5
+{
 ''')
         if cls.is_class:
             code('''\
@@ -1356,7 +1358,10 @@ extern const char *${name}Strings[static_cast<int>(${name}::Num_${name})];
 
         if not cls.is_class:
             code.dedent(1)
-            code('};')
+            code('}; // $wrapper_name')
+
+        code()
+        code('} // namespace gem5')
 
         code()
         code('#endif // $idem_macro')
@@ -1368,6 +1373,12 @@ extern const char *${name}Strings[static_cast<int>(${name}::Num_${name})];
 
         code('#include "base/compiler.hh"')
         code('#include "enums/$file_name.hh"')
+
+        code()
+        code('namespace gem5')
+        code('{')
+        code()
+
         if cls.wrapper_is_struct:
             code('const char *${wrapper_name}::${name}Strings'
                 '[Num_${name}] =')
@@ -1392,7 +1403,9 @@ namespace enums
 
         if not cls.wrapper_is_struct and not cls.is_class:
             code.dedent(1)
-            code('} // namespace $wrapper_name')
+            code('} // namespace enums')
+
+        code('} // namespace gem5')
 
 
     def pybind_def(cls, code):
@@ -1406,6 +1419,9 @@ namespace enums
 #include <sim/init.hh>
 
 namespace py = pybind11;
+
+namespace gem5
+{
 
 static void
 module_init(py::module_ &m_internal)
@@ -1432,6 +1448,8 @@ module_init(py::module_ &m_internal)
         code.dedent()
         code()
         code('static EmbeddedPyBind embed_enum("enum_${name}", module_init);')
+        code()
+        code('} // namespace gem5')
 
 
 # Base class for enum types.

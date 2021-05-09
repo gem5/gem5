@@ -38,6 +38,9 @@
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 class SparcProcess : public Process
 {
   protected:
@@ -130,5 +133,7 @@ class Sparc64Process : public SparcProcess
 
     void argsInit(int intSize, int pageSize);
 };
+
+} // namespace gem5
 
 #endif // __SPARC_PROCESS_HH__

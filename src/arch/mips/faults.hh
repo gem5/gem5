@@ -38,6 +38,9 @@
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -325,5 +328,6 @@ template<> MipsFaultBase::FaultVals MipsFault<TlbModifiedFault>::vals;
 
 
 } // namespace MipsISA
+} // namespace gem5
 
 #endif // __MIPS_FAULTS_HH__

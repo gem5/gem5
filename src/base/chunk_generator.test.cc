@@ -30,6 +30,7 @@
 
 #include "chunk_generator.hh"
 
+using namespace gem5;
 
 /*
  * A test to ensure the object is in a sane state after initialization.

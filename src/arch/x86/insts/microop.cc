@@ -39,6 +39,9 @@
 
 #include "arch/x86/regs/misc.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -130,4 +133,5 @@ X86MicroopBase::branchTarget(const PCState &branchPC) const
     return pcs;
 }
 
-}
+} // namespace X86ISA
+} // namespace gem5

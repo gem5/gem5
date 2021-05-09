@@ -40,6 +40,9 @@
 #include "params/MipsTLB.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 /* MIPS does not distinguish between a DTLB and an ITLB -> unified TLB
@@ -103,8 +106,7 @@ class TLB : public BaseTLB
             ThreadContext *tc, Mode mode) const override;
 };
 
-}
-
-
+} // namespace MipsISA
+} // namespace gem5
 
 #endif // __MIPS_MEMORY_HH__

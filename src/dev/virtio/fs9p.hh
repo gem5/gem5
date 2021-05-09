@@ -46,6 +46,9 @@
 #include "base/pollevent.hh"
 #include "dev/virtio/base.hh"
 
+namespace gem5
+{
+
 struct VirtIO9PBaseParams;
 
 typedef uint8_t P9MsgType;
@@ -383,5 +386,7 @@ class VirtIO9PSocket : public VirtIO9PProxy
 
     std::unique_ptr<SocketDataEvent> dataEvent;
 };
+
+} // namespace gem5
 
 #endif // __DEV_VIRTIO_FS9P_HH__

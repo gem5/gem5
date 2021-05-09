@@ -35,6 +35,9 @@
 #include "params/RedirectPath.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * RedirectPath stores a mapping from one 'appPath' to a vector of
  * 'hostPath'. Each 'appPath' and 'hostPath' is a filesystem path.
@@ -59,5 +62,7 @@ class RedirectPath : public SimObject
      // _hostPaths holds a set of host filesystem paths
     std::vector<std::string> _hostPaths;
 };
+
+} // namespace gem5
 
 #endif

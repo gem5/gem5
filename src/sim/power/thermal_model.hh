@@ -47,6 +47,9 @@
 #include "sim/power/thermal_node.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct ThermalCapacitorParams;
 struct ThermalModelParams;
 struct ThermalReferenceParams;
@@ -176,5 +179,7 @@ class ThermalModel : public ClockedObject
     /** Step in seconds for thermal updates */
     const double _step;
 };
+
+} // namespace gem5
 
 #endif

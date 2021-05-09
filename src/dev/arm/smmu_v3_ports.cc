@@ -41,6 +41,9 @@
 #include "dev/arm/smmu_v3.hh"
 #include "dev/arm/smmu_v3_deviceifc.hh"
 
+namespace gem5
+{
+
 SMMURequestPort::SMMURequestPort(const std::string &_name, SMMUv3 &_smmu) :
     RequestPort(_name, &_smmu),
     smmu(_smmu)
@@ -174,3 +177,5 @@ SMMUATSDevicePort::recvTimingReq(PacketPtr pkt)
 {
     return ifc.atsRecvTimingReq(pkt);
 }
+
+} // namespace gem5

@@ -31,6 +31,9 @@
 
 #include "arch/power/insts/static_inst.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -192,5 +195,6 @@ class BranchRegCondOp : public BranchCondOp
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif //__ARCH_POWER_INSTS_BRANCH_HH__

@@ -42,7 +42,8 @@ from m5.SimObject import SimObject
 
 class RubyDirectoryMemory(SimObject):
     type = 'RubyDirectoryMemory'
-    cxx_class = 'DirectoryMemory'
+    cxx_class = 'gem5::DirectoryMemory'
     cxx_header = "mem/ruby/structures/DirectoryMemory.hh"
+
     addr_ranges = VectorParam.AddrRange(
         Parent.addr_ranges, "Address range this directory responds to")

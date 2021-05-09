@@ -29,6 +29,9 @@
 #ifndef __ARCH_POWER_REGS_FLOAT_HH__
 #define __ARCH_POWER_REGS_FLOAT_HH__
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -36,5 +39,6 @@ const int NumFloatArchRegs = 32;
 const int NumFloatRegs = NumFloatArchRegs;
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_REGS_FLOAT_HH__

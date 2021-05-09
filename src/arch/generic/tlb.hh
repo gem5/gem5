@@ -45,6 +45,9 @@
 #include "mem/request.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 class BaseTLB : public SimObject
@@ -138,5 +141,7 @@ class BaseTLB : public SimObject
 
     void memInvalidate() { flushAll(); }
 };
+
+} // namespace gem5
 
 #endif // __ARCH_GENERIC_TLB_HH__

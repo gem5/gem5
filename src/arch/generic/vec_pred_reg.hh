@@ -46,6 +46,9 @@
 #include "base/cprintf.hh"
 #include "sim/serialize_handlers.hh"
 
+namespace gem5
+{
+
 template <size_t NumBits, bool Packed>
 class VecPredRegContainer;
 
@@ -391,5 +394,7 @@ struct ShowParam<VecPredRegContainer<NumBits, Packed>>
 /// @{
 using DummyVecPredRegContainer = VecPredRegContainer<8, false>;
 /// @}
+
+} // namespace gem5
 
 #endif  // __ARCH_GENERIC_VEC_PRED_REG_HH__

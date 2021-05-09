@@ -45,6 +45,9 @@
 #include "sim/power_domain.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 PowerState::PowerState(const PowerStateParams &p) :
     SimObject(p), _currState(p.default_state),
     possibleStates(p.possible_states.begin(),
@@ -277,3 +280,5 @@ PowerState::PowerStateStats::preDumpStats()
      */
     powerState.computeStats();
 }
+
+} // namespace gem5

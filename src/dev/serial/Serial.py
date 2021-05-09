@@ -40,7 +40,9 @@ class SerialDevice(SimObject):
     type = 'SerialDevice'
     abstract = True
     cxx_header = "dev/serial/serial.hh"
+    cxx_class = 'gem5::SerialDevice'
 
 class SerialNullDevice(SerialDevice):
     type = 'SerialNullDevice'
     cxx_header = "dev/serial/serial.hh"
+    cxx_class = 'gem5::SerialNullDevice'

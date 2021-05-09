@@ -43,6 +43,9 @@
 #include <string>
 #include <vector>
 
+namespace gem5
+{
+
 /**
  * This class describes a linear equation with constant coefficients.
  * The equation has a certain (variable) number of unkowns and it can hold
@@ -130,5 +133,7 @@ class LinearSystem
   private:
     std::vector < LinearEquation > matrix;
 };
+
+} // namespace gem5
 
 #endif

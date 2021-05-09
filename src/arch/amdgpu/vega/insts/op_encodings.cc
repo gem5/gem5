@@ -35,6 +35,9 @@
 
 #include <iomanip>
 
+namespace gem5
+{
+
 namespace VegaISA
 {
     // --- Inst_SOP2 base class methods ---
@@ -1590,3 +1593,4 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 } // namespace VegaISA
+} // namespace gem5

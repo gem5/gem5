@@ -44,6 +44,9 @@
 #include "debug/Drain.hh"
 #include "debug/PacketQueue.hh"
 
+namespace gem5
+{
+
 PacketQueue::PacketQueue(EventManager& _em, const std::string& _label,
                          const std::string& _sendEventName,
                          bool force_order,
@@ -274,3 +277,5 @@ RespPacketQueue::sendTiming(PacketPtr pkt)
 {
     return cpuSidePort.sendTimingResp(pkt);
 }
+
+} // namespace gem5

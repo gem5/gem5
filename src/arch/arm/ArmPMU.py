@@ -67,7 +67,7 @@ ARCH_EVENT_CORE_CYCLES = 0x11
 
 class ArmPMU(SimObject):
     type = 'ArmPMU'
-    cxx_class = 'ArmISA::PMU'
+    cxx_class = 'gem5::ArmISA::PMU'
     cxx_header = 'arch/arm/pmu.hh'
 
     cxx_exports = [

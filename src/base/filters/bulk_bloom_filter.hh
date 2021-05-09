@@ -32,6 +32,9 @@
 
 #include "base/filters/multi_bit_sel_bloom_filter.hh"
 
+namespace gem5
+{
+
 struct BloomFilterBulkParams;
 
 GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
@@ -66,5 +69,6 @@ class Bulk : public MultiBitSel
 };
 
 } // namespace bloom_filter
+} // namespace gem5
 
 #endif // __BASE_FILTERS_BULK_BLOOM_FILTER_HH__

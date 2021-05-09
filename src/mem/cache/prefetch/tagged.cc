@@ -35,6 +35,9 @@
 
 #include "params/TaggedPrefetcher.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
@@ -58,3 +61,4 @@ Tagged::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 } // namespace prefetch
+} // namespace gem5

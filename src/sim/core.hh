@@ -44,6 +44,9 @@
 // until the transitive includes are fixed
 #include "sim/cur_tick.hh"
 
+namespace gem5
+{
+
 /// These are variables that are set based on the simulator frequency
 ///@{
 GEM5_DEPRECATED_NAMESPACE(SimClock, sim_clock);
@@ -104,5 +107,7 @@ void setOutputDir(const std::string &dir);
 
 void registerExitCallback(const std::function<void()> &callback);
 void doExitCleanup();
+
+} // namespace gem5
 
 #endif /* __SIM_CORE_HH__ */

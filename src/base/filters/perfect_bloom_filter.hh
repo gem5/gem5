@@ -33,6 +33,9 @@
 
 #include "base/filters/base.hh"
 
+namespace gem5
+{
+
 struct BloomFilterPerfectParams;
 
 GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
@@ -62,5 +65,6 @@ class Perfect : public Base
 };
 
 } // namespace bloom_filter
+} // namespace gem5
 
 #endif // __BASE_FILTERS_PERFECT_BLOOM_FILTER_HH__

@@ -34,6 +34,9 @@
 #include "base/compiler.hh"
 #include "base/cprintf.hh"
 
+namespace gem5
+{
+
 /**
  * Convenience macros to declare the unit of a stat.
  */
@@ -372,7 +375,7 @@ class Rate : public Base
 };
 
 } // namespace units
-
 } // namespace statistics
+} // namespace gem5
 
 #endif // __BASE_STATS_UNITS_HH__

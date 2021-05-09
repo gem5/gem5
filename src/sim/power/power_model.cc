@@ -43,6 +43,9 @@
 #include "sim/clocked_object.hh"
 #include "sim/sub_system.hh"
 
+namespace gem5
+{
+
 PowerModelState::PowerModelState(const Params &p)
     : SimObject(p), _temp(0), clocked_object(NULL),
       ADD_STAT(dynamicPower, statistics::units::Watt::get(),
@@ -160,3 +163,5 @@ PowerModel::getStaticPower() const
 
     return power;
 }
+
+} // namespace gem5

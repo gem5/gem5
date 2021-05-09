@@ -44,6 +44,9 @@
 
 #include "arch/generic/types.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -74,6 +77,7 @@ class PCState : public GenericISA::UPCState<4>
     }
 };
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_PCSTATE_HH__

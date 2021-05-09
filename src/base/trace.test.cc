@@ -36,6 +36,8 @@
 #include "base/named.hh"
 #include "base/trace.hh"
 
+using namespace gem5;
+
 // In test SetGetLogger this logger will be assigned to be the one returned
 // by Tracer::getDebugLogger(). All tests before that test should assume
 // that getDebugLogger() returns a cerr-based logger, and all tests after
@@ -46,11 +48,14 @@ Trace::OstreamLogger main_logger(ss);
 // Instantiate the mock class to have a valid curTick of 0
 GTestTickHandler tickHandler;
 
+namespace gem5
+{
 namespace Debug {
 /** Debug flag used for the tests in this file. */
 SimpleFlag TraceTestDebugFlag("TraceTestDebugFlag",
     "Exclusive debug flag for the trace tests");
 }
+} // namespace gem5
 
 /** @return The ostream as a std::string. */
 std::string

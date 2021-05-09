@@ -35,6 +35,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 X86ISA::I8259::I8259(const Params &p)
     : BasicPioDevice(p, 2),
       latency(p.pio_latency),
@@ -364,3 +367,5 @@ X86ISA::I8259::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(initControlWord);
     UNSERIALIZE_SCALAR(autoEOI);
 }
+
+} // namespace gem5

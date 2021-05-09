@@ -31,5 +31,6 @@ from m5.proxy import *
 class SimpleDisk(SimObject):
     type = 'SimpleDisk'
     cxx_header = "dev/storage/simple_disk.hh"
+    cxx_class = 'gem5::SimpleDisk'
     disk = Param.DiskImage("Disk Image")
     system = Param.System(Parent.any, "System Pointer")

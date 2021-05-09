@@ -53,6 +53,9 @@
 #include "params/KvmVM.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 namespace
 {
 
@@ -588,3 +591,5 @@ KvmVM::ioctl(int request, long p1) const
 
     return ::ioctl(vmFD, request, p1);
 }
+
+} // namespace gem5

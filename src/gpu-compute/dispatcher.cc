@@ -45,6 +45,9 @@
 #include "sim/syscall_emul_buf.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 GPUDispatcher::GPUDispatcher(const Params &p)
     : SimObject(p), shader(nullptr), gpuCmdProc(nullptr),
       tickEvent([this]{ exec(); },
@@ -352,3 +355,5 @@ GPUDispatcher::GPUDispatcherStats::GPUDispatcherStats(
                "wavefronts that are waiting to be dispatched")
 {
 }
+
+} // namespace gem5

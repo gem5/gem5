@@ -49,6 +49,9 @@
 #include "debug/Interrupt.hh"
 #include "params/ArmInterrupts.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -298,6 +301,8 @@ class Interrupts : public BaseInterrupts
         UNSERIALIZE_SCALAR(intStatus);
     }
 };
+
 } // namespace ARM_ISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_INTERRUPT_HH__

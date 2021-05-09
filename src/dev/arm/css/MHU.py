@@ -43,21 +43,25 @@ class MhuDoorbell(Doorbell):
     type = 'MhuDoorbell'
     abstract = True
     cxx_header = "dev/arm/css/mhu.hh"
+    cxx_class = 'gem5::MhuDoorbell'
 
 class Scp2ApDoorbell(MhuDoorbell):
     type = 'Scp2ApDoorbell'
     cxx_header = "dev/arm/css/mhu.hh"
+    cxx_class = 'gem5::Scp2ApDoorbell'
 
     interrupt = Param.ArmInterruptPin("Interrupt Pin")
 
 class Ap2ScpDoorbell(MhuDoorbell):
     type = 'Ap2ScpDoorbell'
     cxx_header = "dev/arm/css/mhu.hh"
+    cxx_class = 'gem5::Ap2ScpDoorbell'
 
 # Message Handling Unit
 class MHU(BasicPioDevice):
     type = 'MHU'
     cxx_header = "dev/arm/css/mhu.hh"
+    cxx_class = 'gem5::MHU'
     pio_size = Param.Unsigned(0x1000, "MHU pio size")
 
     lowp_scp2ap = Param.Scp2ApDoorbell(

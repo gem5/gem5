@@ -53,6 +53,9 @@
  * returned from the memory sub-system.
  */
 
+namespace gem5
+{
+
 class ComputeUnit;
 
 class GlobalMemPipeline
@@ -153,5 +156,7 @@ class GlobalMemPipeline
         statistics::Scalar loadVrfBankConflictCycles;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __GLOBAL_MEMORY_PIPELINE_HH__

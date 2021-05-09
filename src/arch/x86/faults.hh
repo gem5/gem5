@@ -46,6 +46,9 @@
 #include "cpu/null_static_inst.hh"
 #include "sim/faults.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -377,5 +380,6 @@ class SoftwareInterrupt : public X86Interrupt
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_FAULTS_HH__

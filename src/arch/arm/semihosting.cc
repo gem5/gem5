@@ -58,6 +58,9 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 const std::map<uint32_t, ArmSemihosting::SemiCall> ArmSemihosting::calls{
     { SYS_OPEN,     { "SYS_OPEN", &ArmSemihosting::callOpen } },
     { SYS_CLOSE,    { "SYS_CLOSE", &ArmSemihosting::callClose } },
@@ -1044,3 +1047,5 @@ operator << (std::ostream &os, const ArmSemihosting::InPlaceArg &ipa)
     ccprintf(os, "[%#x-%#x)", ipa.addr, ipa.addr + ipa.size - 1);
     return os;
 }
+
+} // namespace gem5

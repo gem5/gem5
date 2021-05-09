@@ -41,6 +41,9 @@
 #include "mem/page_table.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 /**
  * This class implements an in-memory multi-level page table that can be
  * configured to follow ISA specifications. It can be used instead of the
@@ -289,4 +292,7 @@ public:
         paramIn(cp, "ptable.pointer", _basePtr);
     }
 };
+
+} // namespace gem5
+
 #endif // __MEM_MULTI_LEVEL_PAGE_TABLE_HH__

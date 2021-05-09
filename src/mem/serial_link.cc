@@ -51,6 +51,9 @@
 #include "debug/SerialLink.hh"
 #include "params/SerialLink.hh"
 
+namespace gem5
+{
+
 SerialLink::SerialLinkResponsePort::
 SerialLinkResponsePort(const std::string& _name,
                                          SerialLink& _serial_link,
@@ -420,3 +423,5 @@ SerialLink::SerialLinkResponsePort::getAddrRanges() const
 {
     return ranges;
 }
+
+} // namespace gem5

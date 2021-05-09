@@ -35,6 +35,9 @@
 #include "debug/Decode.hh"
 #include "debug/Decoder.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -740,4 +743,5 @@ Decoder::fetchRomMicroop(MicroPC micropc, StaticInstPtr curMacroop)
     return microcodeRom.fetchMicroop(micropc, curMacroop);
 }
 
-}
+} // namespace X86ISA
+} // namespace gem5

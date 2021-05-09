@@ -39,6 +39,9 @@
 
 #include "base/intmath.hh"
 
+namespace gem5
+{
+
 TimingExprEvalContext::TimingExprEvalContext(const StaticInstPtr &inst_,
     ThreadContext *thread_,
     TimingExprLet *let_) :
@@ -197,3 +200,5 @@ uint64_t TimingExprIf::eval(TimingExprEvalContext &context)
     else
         return falseExpr->eval(context);
 }
+
+} // namespace gem5

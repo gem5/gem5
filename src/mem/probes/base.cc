@@ -39,6 +39,9 @@
 
 #include "params/BaseMemProbe.hh"
 
+namespace gem5
+{
+
 BaseMemProbe::BaseMemProbe(const BaseMemProbeParams &p)
     : SimObject(p)
 {
@@ -56,3 +59,5 @@ BaseMemProbe::regProbeListeners()
         listeners[i].reset(new PacketListener(*this, mgr, p.probe_name));
     }
 }
+
+} // namespace gem5

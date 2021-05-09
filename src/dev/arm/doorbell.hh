@@ -41,6 +41,9 @@
 #include "params/Doorbell.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * Generic doorbell interface.
  * A Doorbell implementation will override the set and
@@ -62,5 +65,7 @@ class Doorbell : public SimObject
     const Addr _setAddress;
     const Addr _clearAddress;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_DOORBELL_H__

@@ -38,7 +38,7 @@ from m5.objects.AbstractMemory import AbstractMemory
 class QoSMemSinkInterface(AbstractMemory):
     type = 'QoSMemSinkInterface'
     cxx_header = "mem/qos/mem_sink.hh"
-    cxx_class = 'qos::MemSinkInterface'
+    cxx_class = 'gem5::qos::MemSinkInterface'
 
     def controller(self):
         """

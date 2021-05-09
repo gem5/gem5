@@ -34,6 +34,8 @@
 static const int TestPort1 = 7893;
 static const int TestPort2 = 7894;
 
+using namespace gem5;
+
 /*
  * Socket.test tests socket.cc. It should be noted that some features of
  * socket.cc have not been fully tested due to interaction with system-calls.

@@ -118,7 +118,7 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 
     void ready();
 
-    virtual Fiber *fiber() { return Fiber::primaryFiber(); }
+    virtual gem5::Fiber *fiber() { return gem5::Fiber::primaryFiber(); }
 
     static Process *newest() { return _newest; }
 

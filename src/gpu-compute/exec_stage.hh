@@ -42,6 +42,9 @@
 #include "base/statistics.hh"
 #include "base/stats/group.hh"
 
+namespace gem5
+{
+
 class ComputeUnit;
 class ScheduleToExecute;
 class Wavefront;
@@ -120,5 +123,7 @@ class ExecStage
         statistics::Vector numCyclesWithNoInstrTypeIssued;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __EXEC_STAGE_HH__

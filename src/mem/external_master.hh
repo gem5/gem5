@@ -60,6 +60,9 @@
 #include "params/ExternalMaster.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class ExternalMaster : public SimObject
 {
   public:
@@ -131,5 +134,6 @@ class ExternalMaster : public SimObject
     const RequestorID id;
 };
 
+} // namespace gem5
 
 #endif //__MEM_EXTERNAL_MASTER_HH__

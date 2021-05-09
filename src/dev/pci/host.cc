@@ -45,6 +45,9 @@
 #include "params/GenericPciHost.hh"
 #include "params/PciHost.hh"
 
+namespace gem5
+{
+
 PciHost::PciHost(const PciHostParams &p)
     : PioDevice(p)
 {
@@ -217,3 +220,4 @@ GenericPciHost::mapPciInterrupt(const PciBusAddr &addr, PciIntPin pin) const
     return dev->interruptLine();
 }
 
+} // namespace gem5

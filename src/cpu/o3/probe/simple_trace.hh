@@ -48,6 +48,9 @@
 #include "params/SimpleTrace.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -76,5 +79,6 @@ class SimpleTrace : public ProbeListenerObject
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif//__CPU_O3_PROBE_SIMPLE_TRACE_HH__

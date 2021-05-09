@@ -35,6 +35,9 @@
 
 #include "dev/hsa/kfd_ioctl.h"
 
+namespace gem5
+{
+
 #define KFD_GPU_ID_HASH_WIDTH 16
 
 #define PAGE_SHIFT 12
@@ -49,5 +52,7 @@
     << KFD_MMAP_GPU_ID_SHIFT)
 #define KFD_MMAP_GPU_ID(gpu_id) \
     ((((uint64_t)gpu_id) << KFD_MMAP_GPU_ID_SHIFT) & KFD_MMAP_GPU_ID_MASK)
+
+} // namespace gem5
 
 #endif

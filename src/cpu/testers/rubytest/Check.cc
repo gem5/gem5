@@ -34,6 +34,9 @@
 #include "debug/RubyTest.hh"
 #include "mem/ruby/common/SubBlock.hh"
 
+namespace gem5
+{
+
 typedef RubyTester::SenderState SenderState;
 
 Check::Check(Addr address, Addr pc, int _num_writers, int _num_readers,
@@ -393,3 +396,5 @@ Check::debugPrint()
         m_address, (int)m_value, TesterStatus_to_string(m_status).c_str(),
         m_initiatingNode, m_store_count);
 }
+
+} // namespace gem5

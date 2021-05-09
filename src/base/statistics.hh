@@ -86,6 +86,9 @@
 #include "base/str.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 /* A namespace for all of the Statistics */
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
@@ -2941,5 +2944,7 @@ MapType &statsMap();
 } // namespace statistics
 
 void debugDumpStats();
+
+} // namespace gem5
 
 #endif // __BASE_STATISTICS_HH__

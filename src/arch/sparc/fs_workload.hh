@@ -34,6 +34,9 @@
 #include "params/SparcFsWorkload.hh"
 #include "sim/workload.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -76,5 +79,6 @@ class FsWorkload : public Workload
 };
 
 } // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_FS_WORKLOAD_HH__

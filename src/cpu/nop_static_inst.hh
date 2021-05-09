@@ -30,7 +30,12 @@
 
 #include "cpu/static_inst_fwd.hh"
 
+namespace gem5
+{
+
 /// Pointer to a statically allocated generic "nop" instruction object.
 extern StaticInstPtr nopStaticInstPtr;
+
+} // namespace gem5
 
 #endif // __CPU_NOP_STATIC_INST_HH__

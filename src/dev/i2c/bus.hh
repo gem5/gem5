@@ -48,6 +48,9 @@
 #include "dev/io_device.hh"
 #include "params/I2CBus.hh"
 
+namespace gem5
+{
+
 class I2CDevice;
 
 class I2CBus : public BasicPioDevice
@@ -149,5 +152,7 @@ class I2CBus : public BasicPioDevice
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };
+
+} // namespace gem5
 
 #endif // __DEV_I2C_BUS_HH__

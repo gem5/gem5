@@ -26,7 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+namespace gem5
+{
+
 /**
  * @ingroup api_base_utils
  */
 const char *compileDate = __DATE__ " " __TIME__;
+
+} // namespace gem5

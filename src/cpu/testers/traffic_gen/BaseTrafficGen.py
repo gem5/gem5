@@ -55,6 +55,7 @@ class BaseTrafficGen(ClockedObject):
     type = 'BaseTrafficGen'
     abstract = True
     cxx_header = "cpu/testers/traffic_gen/traffic_gen.hh"
+    cxx_class = 'gem5::BaseTrafficGen'
 
     # Port used for sending requests and receiving responses
     port = RequestPort("This port sends requests and receives responses")

@@ -40,6 +40,9 @@
 #include "gpu-compute/pool_manager.hh"
 #include "params/SimplePoolManager.hh"
 
+namespace gem5
+{
+
 // Simple Pool Manager: allows one region per pool. No region merging is
 // supported.
 class SimplePoolManager : public PoolManager
@@ -67,5 +70,7 @@ class SimplePoolManager : public PoolManager
     // number of groups that reserve a region
     uint32_t _reservedGroups;
 };
+
+} // namespace gem5
 
 #endif // __SIMPLE_POOL_MANAGER_HH__

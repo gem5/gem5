@@ -39,6 +39,9 @@
 #include "kern/freebsd/events.hh"
 #include "params/ArmFsFreebsd.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -98,5 +101,6 @@ class FsFreebsd : public ArmISA::FsWorkload
 };
 
 } // namespace ArmISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_FREEBSD_FS_WORKLOAD_HH__

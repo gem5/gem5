@@ -39,6 +39,9 @@
 #include "cpu/testers/gpu_ruby_test/protocol_tester.hh"
 #include "cpu/testers/gpu_ruby_test/tester_thread.hh"
 
+namespace gem5
+{
+
 Episode::Episode(ProtocolTester* _tester, TesterThread* _thread, int num_loads,
                  int num_stores)
       : tester(_tester),
@@ -319,3 +322,5 @@ Episode::Action::printType() const
     else
         panic("Invalid action type\n");
 }
+
+} // namespace gem5

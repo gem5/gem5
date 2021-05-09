@@ -44,14 +44,14 @@ class ScEvent
 {
   private:
     std::function<void()> work;
-    Tick _when;
+    gem5::Tick _when;
     ScEvents *_events;
     ScEvents::iterator _it;
 
     friend class Scheduler;
 
     void
-    schedule(ScEvents &events, Tick w)
+    schedule(ScEvents &events, gem5::Tick w)
     {
         when(w);
         assert(!scheduled());
@@ -70,7 +70,7 @@ class ScEvent
     }
   public:
     ScEvent(std::function<void()> work) :
-        work(work), _when(MaxTick), _events(nullptr)
+        work(work), _when(gem5::MaxTick), _events(nullptr)
     {}
 
     ~ScEvent();
@@ -78,8 +78,8 @@ class ScEvent
     bool scheduled() { return _events != nullptr; }
     ScEvents *scheduledOn() { return _events; }
 
-    void when(Tick w) { _when = w; }
-    Tick when() { return _when; }
+    void when(gem5::Tick w) { _when = w; }
+    gem5::Tick when() { return _when; }
 
     void run() { deschedule(); work(); }
 };

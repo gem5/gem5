@@ -42,6 +42,9 @@
 #include "params/SimpleUart.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 SimpleUart::SimpleUart(const SimpleUartParams &p)
     : Uart(p, p.pio_size), byteOrder(p.byte_order), endOnEOT(p.end_on_eot)
 {
@@ -78,3 +81,5 @@ SimpleUart::write(PacketPtr pkt)
     pkt->makeAtomicResponse();
     return pioDelay;
 }
+
+} // namespace gem5

@@ -34,6 +34,9 @@
 #include "params/SparcEmuLinux.hh"
 #include "sim/syscall_desc.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -61,5 +64,6 @@ class EmuLinux : public SEWorkload
 };
 
 } // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_LINUX_SE_WORKLOAD_HH__

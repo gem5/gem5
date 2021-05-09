@@ -31,6 +31,9 @@
 
 #include "arch/power/insts/static_inst.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -47,5 +50,6 @@ class MiscOp : public PowerStaticInst
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif //__ARCH_POWER_INSTS_MISC_HH__

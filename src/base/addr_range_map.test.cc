@@ -44,6 +44,8 @@
 
 #include "base/addr_range_map.hh"
 
+using namespace gem5;
+
 // Converted from legacy unit test framework
 TEST(AddrRangeMapTest, LegacyTests)
 {

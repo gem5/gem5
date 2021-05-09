@@ -44,7 +44,7 @@ class QoSQPolicy(Enum): vals = ["fifo", "lifo", "lrg"]
 class QoSMemCtrl(ClockedObject):
     type = 'QoSMemCtrl'
     cxx_header = "mem/qos/mem_ctrl.hh"
-    cxx_class = 'qos::MemCtrl'
+    cxx_class = 'gem5::qos::MemCtrl'
     abstract = True
 
     system = Param.System(Parent.any, "System that the controller belongs to.")

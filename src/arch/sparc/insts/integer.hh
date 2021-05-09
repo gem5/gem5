@@ -31,6 +31,9 @@
 
 #include "arch/sparc/insts/static_inst.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -124,6 +127,7 @@ class SetHi : public IntOpImm
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARCH_INSTS_INTEGER_HH__

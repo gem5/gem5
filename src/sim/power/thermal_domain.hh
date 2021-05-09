@@ -48,6 +48,9 @@
 #include "sim/sim_object.hh"
 #include "sim/sub_system.hh"
 
+namespace gem5
+{
+
 template <class T> class ProbePointArg;
 
 /**
@@ -106,5 +109,7 @@ class ThermalDomain : public SimObject, public ThermalEntity
     ProbePointArg<Temperature> *ppThermalUpdate;
 
 };
+
+} // namespace gem5
 
 #endif

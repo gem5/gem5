@@ -49,6 +49,9 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 static unsigned int TESTER_ALLOCATOR = 0;
 
 bool
@@ -322,3 +325,5 @@ MemTest::recvRetry()
         reschedule(noRequestEvent, clockEdge(progressCheck), true);
     }
 }
+
+} // namespace gem5

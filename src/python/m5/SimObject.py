@@ -135,6 +135,9 @@ def createCxxConfigDirectoryEntryFile(code, name, simobj, is_header):
         end_of_decl = ';'
         code('#include "sim/cxx_config.hh"')
         code()
+        code('namespace gem5')
+        code('{')
+        code()
         code('class ${param_class} : public CxxConfigParams,'
             ' public ${name}Params')
         code('{')
@@ -161,6 +164,8 @@ def createCxxConfigDirectoryEntryFile(code, name, simobj, is_header):
         code('#include "base/str.hh"')
         code('#include "cxx_config/${name}.hh"')
 
+        code('namespace gem5')
+        code('{')
         code()
         code('${member_prefix}DirectoryEntry::DirectoryEntry()');
         code('{')
@@ -383,6 +388,8 @@ def createCxxConfigDirectoryEntryFile(code, name, simobj, is_header):
     if is_header:
         code.dedent()
         code('};')
+
+    code('} // namespace gem5')
 
 # The metaclass for SimObject.  This class controls how new classes
 # that derive from SimObject are instantiated, and provides inherited
@@ -745,6 +752,9 @@ class MetaSimObject(type):
 
             code('''namespace py = pybind11;
 
+namespace gem5
+{
+
 static void
 module_init(py::module_ &m_internal)
 {
@@ -813,10 +823,15 @@ module_init(py::module_ &m_internal)
             code('static EmbeddedPyBind '
                  'embed_obj("${0}", module_init, "${1}");',
                 cls, cls._base.type if cls._base else "")
+            code()
+            code('} // namespace gem5')
 
         # include the create() methods whether or not python is enabled.
         if not hasattr(cls, 'abstract') or not cls.abstract:
             if 'type' in cls.__dict__:
+                code()
+                code('namespace gem5')
+                code('{')
                 code()
                 code('namespace')
                 code('{')
@@ -881,6 +896,8 @@ module_init(py::module_ &m_internal)
                 code('    return Dummy${cls}Shunt<${{cls.cxx_class}}>::')
                 code('        create(*this);')
                 code('}')
+                code()
+                code('} // namespace gem5')
 
     _warned_about_nested_templates = False
 
@@ -1009,6 +1026,10 @@ module_init(py::module_ &m_internal)
                 code('#include "enums/${{ptype.__name__}}.hh"')
                 code()
 
+        code('namespace gem5')
+        code('{')
+        code('')
+
         # now generate the actual param struct
         code("struct ${cls}Params")
         if cls._base:
@@ -1034,6 +1055,8 @@ module_init(py::module_ &m_internal)
 
         code.dedent()
         code('};')
+        code()
+        code('} // namespace gem5')
 
         code()
         code('#endif // __PARAMS__${cls}__')
@@ -1192,6 +1215,7 @@ class SimObject(object, metaclass=MetaSimObject):
     abstract = True
 
     cxx_header = "sim/sim_object.hh"
+    cxx_class = 'gem5::SimObject'
     cxx_extra_bases = [ "Drainable", "Serializable", "statistics::Group" ]
     eventq_index = Param.UInt32(Parent.eventq_index, "Event Queue Index")
 

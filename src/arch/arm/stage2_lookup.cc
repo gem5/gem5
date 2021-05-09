@@ -48,6 +48,9 @@
 #include "debug/TLBVerbose.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 Fault
@@ -201,3 +204,4 @@ Stage2LookUp::finish(const Fault &_fault, const RequestPtr &req,
     }
 }
 
+} // namespace gem5

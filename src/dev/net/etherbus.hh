@@ -38,6 +38,9 @@
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class EtherDump;
 class EtherInt;
 class EtherBus : public SimObject
@@ -66,5 +69,7 @@ class EtherBus : public SimObject
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
 };
+
+} // namespace gem5
 
 #endif // __DEV_NET_ETHERBUS_HH__

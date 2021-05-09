@@ -38,6 +38,9 @@
 #ifndef __ARCH_ARM_INSTS_CRYPTO_HH__
 #define __ARCH_ARM_INSTS_CRYPTO_HH__
 
+namespace gem5
+{
+
 namespace ArmISA {
 
 class Crypto
@@ -142,5 +145,6 @@ class Crypto
 };
 
 } // namespace ArmISA
+} // namespace gem5
 
 #endif //__ARCH_ARM_INSTS_CRYPTO_HH__

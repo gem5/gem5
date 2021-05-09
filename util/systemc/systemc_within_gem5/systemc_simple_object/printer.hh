@@ -71,7 +71,7 @@ class Printer : public sc_core::sc_module
         }
     }
 
-    statistics::Scalar numWords;
+    gem5::statistics::Scalar numWords;
 
     // Gem5 statistics should be set up during the "end_of_elabortion"
     // callback.

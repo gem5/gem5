@@ -50,6 +50,9 @@
 #include "mem/packet.hh"
 #include "proto/protoio.hh"
 
+namespace gem5
+{
+
 /**
  * The trace replay generator reads a trace file and plays
  * back the transactions. The trace is offset with respect to
@@ -205,5 +208,7 @@ class TraceGen : public BaseGen
      */
     bool traceComplete;
 };
+
+} // namespace gem5
 
 #endif

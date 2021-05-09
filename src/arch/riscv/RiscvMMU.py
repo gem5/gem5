@@ -44,8 +44,9 @@ from m5.objects.PMP import PMP
 
 class RiscvMMU(BaseMMU):
     type = 'RiscvMMU'
-    cxx_class = 'RiscvISA::MMU'
+    cxx_class = 'gem5::RiscvISA::MMU'
     cxx_header = 'arch/riscv/mmu.hh'
+
     itb = RiscvTLB()
     dtb = RiscvTLB()
     pma_checker = Param.PMAChecker(PMAChecker(), "PMA Checker")

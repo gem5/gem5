@@ -43,6 +43,9 @@
 #include "dev/arm/smmu_v3.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 SMMUProcess::SMMUProcess(const std::string &name, SMMUv3 &_smmu) :
     coroutine(NULL),
     myName(name),
@@ -209,3 +212,5 @@ SMMUProcess::run(PacketPtr pkt)
     assert(*coroutine);
     return (*coroutine)(pkt).get();
 }
+
+} // namespace gem5

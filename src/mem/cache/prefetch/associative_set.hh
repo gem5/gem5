@@ -33,6 +33,9 @@
 #include "mem/cache/tags/indexing_policies/base.hh"
 #include "mem/cache/tags/tagged_entry.hh"
 
+namespace gem5
+{
+
 /**
  * Associative container based on the previosuly defined Entry type
  * Each element is indexed by a key of type Addr, an additional
@@ -160,5 +163,7 @@ class AssociativeSet
         return entries.end();
     }
 };
+
+} // namespace gem5
 
 #endif//__CACHE_PREFETCH_ASSOCIATIVE_SET_HH__

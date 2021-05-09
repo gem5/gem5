@@ -44,6 +44,9 @@
 #include "dev/arm/smmu_v3_ptops.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 struct SMMUTranslRequest
 {
     Addr     addr;
@@ -181,5 +184,7 @@ class SMMUTranslationProcess : public SMMUProcess
     void beginTransaction(const SMMUTranslRequest &req);
     void resumeTransaction();
 };
+
+} // namespace gem5
 
 #endif /* __DEV_ARM_SMMU_V3_TRANSL_HH__ */

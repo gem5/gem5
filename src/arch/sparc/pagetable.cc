@@ -30,6 +30,9 @@
 
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -72,3 +75,5 @@ int PageTableEntry::pageSizes[] =
 
 
 }
+
+} // namespace gem5

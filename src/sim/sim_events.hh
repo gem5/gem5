@@ -46,6 +46,9 @@
 #include "sim/global_event.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 //
 // Event to terminate simulation at a particular cycle/instruction
 //
@@ -112,5 +115,6 @@ class CountedExitEvent : public Event
     const char *description() const override;
 };
 
+} // namespace gem5
 
 #endif  // __SIM_SIM_EVENTS_HH__

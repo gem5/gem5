@@ -66,6 +66,9 @@
 #include "sim/serialize.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 DistEtherLink::DistEtherLink(const Params &p)
     : SimObject(p), linkDelay(p.delay)
 {
@@ -251,4 +254,4 @@ DistEtherLink::LocalIface::LocalIface(const std::string &name,
     rx->setDistInt(m);
 }
 
-
+} // namespace gem5

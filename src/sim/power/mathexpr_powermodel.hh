@@ -44,6 +44,9 @@
 #include "sim/mathexpr.hh"
 #include "sim/power/power_model.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -103,5 +106,7 @@ class MathExprPowerModel : public PowerModelState
     // Map that contains relevant stats for this power model
     std::unordered_map<std::string, const statistics::Info*> statsMap;
 };
+
+} // namespace gem5
 
 #endif

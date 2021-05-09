@@ -38,18 +38,21 @@
 #include "sim/se_workload.hh"
 #include "sim/syscall_abi.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
-class SEWorkload : public ::SEWorkload
+class SEWorkload : public gem5::SEWorkload
 {
   public:
-    using ::SEWorkload::SEWorkload;
+    using gem5::SEWorkload::SEWorkload;
 
     void
     setSystem(System *sys) override
     {
-        ::SEWorkload::setSystem(sys);
+        gem5::SEWorkload::setSystem(sys);
         gdb = BaseRemoteGDB::build<RemoteGDB>(system);
     }
 
@@ -132,5 +135,6 @@ struct Argument<SparcISA::SEWorkload::SyscallABI32, Arg,
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __ARCH_SPARC_SE_WORKLOAD_HH__

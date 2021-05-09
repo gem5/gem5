@@ -36,6 +36,9 @@
 #include "base/compiler.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -58,5 +61,6 @@ typedef unsigned int size_type;
 typedef unsigned int off_type;
 
 } // namespace statistics
+} // namespace gem5
 
 #endif // __BASE_STATS_TYPES_HH__

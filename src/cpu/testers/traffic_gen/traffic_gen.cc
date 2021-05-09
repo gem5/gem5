@@ -50,6 +50,9 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 TrafficGen::TrafficGen(const TrafficGenParams &p)
     : BaseTrafficGen(p),
       configFile(p.config_file),
@@ -368,3 +371,5 @@ TrafficGen::nextGenerator()
     DPRINTF(TrafficGen, "Transition to state %d\n", currState);
     return states[currState];
 }
+
+} // namespace gem5

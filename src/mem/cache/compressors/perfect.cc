@@ -38,6 +38,9 @@
 #include "debug/CacheComp.hh"
 #include "params/PerfectCompressor.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -75,3 +78,4 @@ Perfect::decompress(const CompressionData* comp_data,
 }
 
 } // namespace compression
+} // namespace gem5

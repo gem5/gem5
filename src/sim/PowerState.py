@@ -57,6 +57,7 @@ class PwrState(Enum): vals = [
 class PowerState(SimObject):
     type = 'PowerState'
     cxx_header = "sim/power_state.hh"
+    cxx_class = 'gem5::PowerState'
 
     # Provide initial power state, should ideally get redefined in startup
     # routine

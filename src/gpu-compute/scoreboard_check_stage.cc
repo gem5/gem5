@@ -44,6 +44,9 @@
 #include "gpu-compute/wavefront.hh"
 #include "params/ComputeUnit.hh"
 
+namespace gem5
+{
+
 ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams &p,
                                            ComputeUnit &cu,
                                            ScoreboardCheckToSchedule
@@ -291,3 +294,5 @@ ScoreboardCheckStageStats::ScoreboardCheckStageStats(statistics::Group *parent)
     stallCycles.subname(NRDY_SGPR_NRDY, csprintf("SgprBusy"));
     stallCycles.subname(INST_RDY, csprintf("InstrReady"));
 }
+
+} // namespace gem5

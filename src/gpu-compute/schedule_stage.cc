@@ -44,6 +44,9 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 ScheduleStage::ScheduleStage(const ComputeUnitParams &p, ComputeUnit &cu,
                              ScoreboardCheckToSchedule &from_scoreboard_check,
                              ScheduleToExecute &to_execute)
@@ -855,3 +858,5 @@ ScheduleStage::ScheduleStageStats::ScheduleStageStats(
     rfAccessStalls.subname(SCH_SRF_WR_ACCESS_NRDY, csprintf("SrfWr"));
     rfAccessStalls.subname(SCH_RF_ACCESS_NRDY, csprintf("Any"));
 }
+
+} // namespace gem5

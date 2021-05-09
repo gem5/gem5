@@ -69,6 +69,7 @@ output header {{
 #include "mem/packet.hh"
 #include "sim/faults.hh"
 
+using namespace gem5;
 using X86ISA::GpRegIndex;
 using X86ISA::FpRegIndex;
 using X86ISA::CtrlRegIndex;
@@ -96,6 +97,7 @@ output decoder {{
 #include "mem/packet.hh"
 #include "sim/full_system.hh"
 
+using namespace gem5;
 using namespace X86ISA;
 }};
 
@@ -123,6 +125,7 @@ output exec {{
 #include "sim/pseudo_inst.hh"
 #include "sim/sim_exit.hh"
 
+using namespace gem5;
 using namespace X86ISA;
 }};
 

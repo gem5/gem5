@@ -64,6 +64,9 @@
 #include "mem/ruby/protocol/MessageSizeType.hh"
 #include "params/Switch.hh"
 
+namespace gem5
+{
+
 class MessageBuffer;
 class NetDest;
 class SimpleNetwork;
@@ -126,5 +129,7 @@ operator<<(std::ostream& out, const Switch& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_SIMPLE_SWITCH_HH__

@@ -55,6 +55,9 @@
 #include "cpu/pred/tage_base.hh"
 #include "params/TAGE.hh"
 
+namespace gem5
+{
+
 class TAGE: public BPredUnit
 {
   protected:
@@ -89,5 +92,7 @@ class TAGE: public BPredUnit
                 Addr corrTarget) override;
     virtual void squash(ThreadID tid, void *bp_history) override;
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_TAGE_HH__

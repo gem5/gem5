@@ -52,6 +52,9 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 class ArmSystem;
 
 namespace ArmISA {
@@ -413,5 +416,7 @@ inline ByteOrder byteOrder(const ThreadContext *tc)
 
 bool isUnpriviledgeAccess(ThreadContext * tc);
 
-}
+} // namespace ArmISA
+} // namespace gem5
+
 #endif

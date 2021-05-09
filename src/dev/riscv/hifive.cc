@@ -42,6 +42,9 @@
 #include "params/HiFive.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace RiscvISA;
 
 HiFive::HiFive(const Params &params) :
@@ -84,3 +87,5 @@ void
 HiFive::unserialize(CheckpointIn &cp)
 {
 }
+
+} // namespace gem5

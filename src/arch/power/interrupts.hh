@@ -33,6 +33,9 @@
 #include "base/logging.hh"
 #include "params/PowerInterrupts.hh"
 
+namespace gem5
+{
+
 class BaseCPU;
 class ThreadContext;
 
@@ -84,6 +87,6 @@ class Interrupts : public BaseInterrupts
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_INTERRUPT_HH__
-

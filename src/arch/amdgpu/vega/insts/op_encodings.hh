@@ -42,6 +42,9 @@
 #include "debug/VEGA.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 namespace VegaISA
 {
     struct BufferRsrcDescriptor
@@ -807,5 +810,6 @@ namespace VegaISA
         InFmt_FLAT_1 extData;
     }; // Inst_FLAT
 } // namespace VegaISA
+} // namespace gem5
 
 #endif // __ARCH_VEGA_INSTS_OP_ENCODINGS_HH__

@@ -45,6 +45,7 @@ from m5.SimObject import SimObject
 class AddrMapper(SimObject):
     type = 'AddrMapper'
     cxx_header = 'mem/addr_mapper.hh'
+    cxx_class = 'gem5::AddrMapper'
     abstract = True
 
     # one port in each direction
@@ -63,6 +64,7 @@ class AddrMapper(SimObject):
 class RangeAddrMapper(AddrMapper):
     type = 'RangeAddrMapper'
     cxx_header = 'mem/addr_mapper.hh'
+    cxx_class = 'gem5::RangeAddrMapper'
 
     # These two vectors should be the exact same length and each range
     # should be the exact same size. Each range in original_ranges is

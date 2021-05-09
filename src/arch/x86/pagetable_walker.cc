@@ -62,6 +62,9 @@
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 namespace X86ISA {
 
 Fault
@@ -735,4 +738,5 @@ Walker::WalkerState::pageFault(bool present)
                                        m5reg.cpl == 3, false);
 }
 
-/* end namespace X86ISA */ }
+} // namespace X86ISA
+} // namespace gem5

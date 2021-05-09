@@ -55,6 +55,9 @@
 #include "cpu/minor/trace.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -744,5 +747,6 @@ PacketPtr makePacketForRequest(const RequestPtr &request, bool isLoad,
     Packet::SenderState *sender_state = NULL, PacketDataPtr data = NULL);
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_NEW_LSQ_HH__ */

@@ -39,6 +39,9 @@
 #include "cpu/exetrace.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace Trace {
@@ -115,5 +118,6 @@ class NativeTrace : public ExeTracer
 };
 
 } // namespace Trace
+} // namespace gem5
 
 #endif // __CPU_NATIVETRACE_HH__

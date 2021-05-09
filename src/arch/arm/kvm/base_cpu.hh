@@ -43,6 +43,9 @@
 #include "cpu/kvm/base.hh"
 #include "dev/arm/base_gic.hh"
 
+namespace gem5
+{
+
 struct BaseArmKvmCPUParams;
 
 class BaseArmKvmCPU : public BaseKvmCPU
@@ -125,5 +128,7 @@ class BaseArmKvmCPU : public BaseKvmCPU
      */
     mutable RegIndexVector _regIndexList;
 };
+
+} // namespace gem5
 
 #endif // __ARCH_ARM_KVM_BASE_CPU_HH__

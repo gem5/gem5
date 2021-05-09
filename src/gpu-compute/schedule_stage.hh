@@ -46,6 +46,9 @@
 #include "gpu-compute/misc.hh"
 #include "gpu-compute/scheduler.hh"
 
+namespace gem5
+{
+
 // Schedule or execution arbitration stage.
 // From the pool of ready waves in the ready list,
 // one wave is selected for each execution resource.
@@ -229,5 +232,7 @@ class ScheduleStage
         statistics::Vector dispNrdyStalls;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __SCHEDULE_STAGE_HH__

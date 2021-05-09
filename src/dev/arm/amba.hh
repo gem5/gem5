@@ -40,6 +40,9 @@
 
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 namespace AMBA
 {
 
@@ -52,5 +55,6 @@ orderId(PacketPtr pkt)
 }
 
 } // namespace AMBA
+} // namespace gem5
 
 #endif // __DEV_ARM_AMBA_HH__

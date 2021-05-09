@@ -47,6 +47,9 @@
 #include "sim/stat_control.hh"
 #include "sim/voltage_domain.hh"
 
+namespace gem5
+{
+
 //
 //
 // DVFSHandler methods implementation
@@ -249,3 +252,5 @@ DVFSHandler::unserialize(CheckpointIn &cp)
     }
     UpdateEvent::dvfsHandler = this;
 }
+
+} // namespace gem5

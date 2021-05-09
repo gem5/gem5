@@ -52,6 +52,7 @@ Reference:
 
     type = 'SystemCounter'
     cxx_header = "dev/arm/generic_timer.hh"
+    cxx_class = 'gem5::SystemCounter'
 
     # Maximum of 1004 frequency entries, including end marker
     freqs = VectorParam.UInt32([0x01800000], "Frequencies available for the "
@@ -77,6 +78,7 @@ Reference:
 
     type = 'GenericTimer'
     cxx_header = "dev/arm/generic_timer.hh"
+    cxx_class = 'gem5::GenericTimer'
 
     _freq_in_dtb = False
 
@@ -129,6 +131,7 @@ Reference:
 
     type = 'GenericTimerFrame'
     cxx_header = "dev/arm/generic_timer.hh"
+    cxx_class = 'gem5::GenericTimerFrame'
 
     _frame_num = 0
 
@@ -173,6 +176,7 @@ Reference:
 
     type = 'GenericTimerMem'
     cxx_header = "dev/arm/generic_timer.hh"
+    cxx_class = 'gem5::GenericTimerMem'
 
     _freq_in_dtb = False
 

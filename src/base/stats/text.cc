@@ -57,6 +57,9 @@
 #include "base/stats/info.hh"
 #include "base/str.hh"
 
+namespace gem5
+{
+
 namespace
 {
 
@@ -392,7 +395,7 @@ VectorPrint::operator()(std::ostream &stream) const
         }
     }
 
-    if (flags.isSet(::statistics::total)) {
+    if (flags.isSet(statistics::total)) {
         print.pdf = Nan;
         print.cdf = Nan;
         print.name = base + "total";
@@ -690,7 +693,7 @@ Text::visit(const Vector2dInfo &info)
     std::vector<std::string> total_subname;
     total_subname.push_back("total");
 
-    if (info.flags.isSet(::statistics::total) && (info.x > 1)) {
+    if (info.flags.isSet(statistics::total) && (info.x > 1)) {
         print.name = statName(info.name);
         print.subnames = total_subname;
         print.desc = info.desc;
@@ -815,3 +818,4 @@ initText(const std::string &filename, bool desc, bool spaces)
 }
 
 } // namespace statistics
+} // namespace gem5

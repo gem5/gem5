@@ -39,6 +39,9 @@
 #include "gpu-compute/scheduling_policy.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 // oldest first where age is marked by the wave id
 class OFSchedulingPolicy final : public __SchedulingPolicy<OFSchedulingPolicy>
 {
@@ -76,5 +79,7 @@ class OFSchedulingPolicy final : public __SchedulingPolicy<OFSchedulingPolicy>
         return selected_wave;
     }
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_OF_SCHEDULING_POLICY_HH__

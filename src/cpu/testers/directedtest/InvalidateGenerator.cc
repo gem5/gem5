@@ -34,6 +34,9 @@
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
 #include "debug/DirectedTest.hh"
 
+namespace gem5
+{
+
 InvalidateGenerator::InvalidateGenerator(const Params &p)
     : DirectedGenerator(p)
 {
@@ -133,3 +136,5 @@ InvalidateGenerator::performCallback(uint32_t proc, Addr address)
     }
 
 }
+
+} // namespace gem5

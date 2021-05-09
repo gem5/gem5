@@ -66,6 +66,9 @@
 #include "sim/syscall_desc.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 namespace
 {
 
@@ -526,3 +529,5 @@ ProcessParams::create() const
 
     return process;
 }
+
+} // namespace gem5

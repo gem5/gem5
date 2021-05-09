@@ -47,6 +47,9 @@
 #include "sim/power/thermal_domain.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * ThermalReference
  */
@@ -243,3 +246,5 @@ ThermalModel::getTemperature() const
         temp = std::max(temp, n->temp);
     return temp;
 }
+
+} // namespace gem5

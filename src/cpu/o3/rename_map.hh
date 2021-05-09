@@ -52,6 +52,9 @@
 #include "cpu/reg_class.hh"
 #include "enums/VecRegRenameMode.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -401,5 +404,6 @@ class UnifiedRenameMap
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif //__CPU_O3_RENAME_MAP_HH__

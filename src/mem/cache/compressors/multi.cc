@@ -42,6 +42,9 @@
 #include "debug/CacheComp.hh"
 #include "params/MultiCompressor.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -213,3 +216,4 @@ Multi::MultiStats::regStats()
 }
 
 } // namespace compression
+} // namespace gem5

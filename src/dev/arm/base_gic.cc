@@ -45,6 +45,9 @@
 #include "params/ArmSPI.hh"
 #include "params/BaseGic.hh"
 
+namespace gem5
+{
+
 BaseGic::BaseGic(const Params &p)
         : PioDevice(p),
           platform(p.platform)
@@ -243,3 +246,5 @@ ArmSigInterruptPin::clear()
         if (pin)
             pin->lower();
 }
+
+} // namespace gem5

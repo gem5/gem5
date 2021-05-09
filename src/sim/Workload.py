@@ -31,6 +31,7 @@ from m5.objects.SimpleMemory import *
 class Workload(SimObject):
     type = 'Workload'
     cxx_header = "sim/workload.hh"
+    cxx_class = 'gem5::Workload'
     abstract = True
 
     wait_for_remote_gdb = Param.Bool(False,
@@ -39,6 +40,7 @@ class Workload(SimObject):
 class KernelWorkload(Workload):
     type = 'KernelWorkload'
     cxx_header = "sim/kernel_workload.hh"
+    cxx_class = 'gem5::KernelWorkload'
 
     object_file = Param.String("", "File that contains the kernel code")
     extras = VectorParam.String([], "Additional object files to load")
@@ -64,7 +66,7 @@ class SEWorkloadMeta(type(Workload)):
 class SEWorkload(Workload, metaclass=SEWorkloadMeta):
     type = 'SEWorkload'
     cxx_header = "sim/se_workload.hh"
-    cxx_class = 'SEWorkload'
+    cxx_class = 'gem5::SEWorkload'
 
     @classmethod
     def _is_compatible_with(cls, obj):

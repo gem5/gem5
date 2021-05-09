@@ -69,6 +69,9 @@
 #include "sim/full_system.hh"
 #include "sim/redirect_path.hh"
 
+namespace gem5
+{
+
 std::vector<System *> System::systemList;
 
 void
@@ -638,3 +641,5 @@ System::getRequestorName(RequestorID requestor_id)
     const auto& requestor_info = requestors[requestor_id];
     return requestor_info.req_name;
 }
+
+} // namespace gem5

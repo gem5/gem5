@@ -43,6 +43,9 @@
 #include "mem/packet_access.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 void
 Uart8250::processIntrEvent(int intrBit)
 {
@@ -293,3 +296,5 @@ Uart8250::unserialize(CheckpointIn &cp)
     if (txintrwhen != 0)
         schedule(txIntrEvent, txintrwhen);
 }
+
+} // namespace gem5

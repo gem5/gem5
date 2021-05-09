@@ -37,11 +37,15 @@
 
 #include "arch/generic/locked_mem.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
 using namespace GenericISA::locked_mem;
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_LOCKEDMEM_HH__

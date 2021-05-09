@@ -47,6 +47,9 @@
 #include "cpu/reg_class.hh"
 #include "debug/Rename.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -217,3 +220,4 @@ UnifiedRenameMap::switchMode(VecMode newVecMode)
 }
 
 } // namespace o3
+} // namespace gem5

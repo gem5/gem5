@@ -58,6 +58,9 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 void
 TimingSimpleCPU::init()
 {
@@ -1287,3 +1290,5 @@ TimingSimpleCPU::htmSendAbortSignal(HtmFailureFaultCause cause)
 
     sendData(req, data, nullptr, true);
 }
+
+} // namespace gem5

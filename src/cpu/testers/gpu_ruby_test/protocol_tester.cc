@@ -47,6 +47,9 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 ProtocolTester::ProtocolTester(const Params &p)
       : ClockedObject(p),
         _requestorId(p.system->getRequestorId(this)),
@@ -357,3 +360,5 @@ ProtocolTester::SeqPort::recvTimingResp(PacketPtr pkt)
 
     return true;
 }
+
+} // namespace gem5

@@ -53,6 +53,9 @@
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/protocol/AccessPermission.hh"
 
+namespace gem5
+{
+
 class AbstractCacheEntry : public ReplaceableEntry
 {
   private:
@@ -129,5 +132,7 @@ operator<<(std::ostream& out, const AbstractCacheEntry& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCACHEENTRY_HH__

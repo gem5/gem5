@@ -37,6 +37,9 @@
 #include "params/BaseReplacementPolicy.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * Replacement candidates as chosen by the indexing policy.
  */
@@ -110,5 +113,6 @@ class Base : public SimObject
 };
 
 } // namespace replacement_policy
+} // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BASE_HH__

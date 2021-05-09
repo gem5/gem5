@@ -45,6 +45,9 @@
 #include "params/PowerModelState.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 class SimObject;
 class ClockedObject;
 
@@ -163,5 +166,7 @@ class PowerModel : public SimObject
 
     statistics::Value dynamicPower, staticPower;
 };
+
+} // namespace gem5
 
 #endif

@@ -42,6 +42,7 @@ from m5.objects.Terminal import Terminal
 class ArmSemihosting(SimObject):
     type = 'ArmSemihosting'
     cxx_header = "arch/arm/semihosting.hh"
+    cxx_class = 'gem5::ArmSemihosting'
 
     cmd_line = Param.String("", "Command line to report to guest");
     stdin = Param.String("stdin",

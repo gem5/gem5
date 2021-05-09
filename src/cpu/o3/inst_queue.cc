@@ -57,6 +57,9 @@
 // we open up the entire namespace std
 using std::list;
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -1577,3 +1580,4 @@ InstructionQueue::dumpInsts()
 }
 
 } // namespace o3
+} // namespace gem5

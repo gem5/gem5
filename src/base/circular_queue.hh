@@ -45,6 +45,9 @@
 #include <type_traits>
 #include <vector>
 
+namespace gem5
+{
+
 /** Circular queue.
  * Circular queue implemented in a standard vector. All indices are
  * monotonically increasing, and modulo is used at access time to alias them
@@ -588,5 +591,7 @@ class CircularQueue
     /** Return an iterator to an index in the queue. */
     iterator getIterator(size_t idx) { return iterator(this, idx); }
 };
+
+} // namespace gem5
 
 #endif /* __BASE_CIRCULARQUEUE_HH__ */

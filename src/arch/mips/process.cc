@@ -44,6 +44,9 @@
 #include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace MipsISA;
 
 MipsProcess::MipsProcess(const ProcessParams &params,
@@ -203,3 +206,5 @@ MipsProcess::argsInit(int pageSize)
 
     tc->pcState(getStartPC());
 }
+
+} // namespace gem5

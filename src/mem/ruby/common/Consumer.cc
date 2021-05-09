@@ -40,6 +40,9 @@
 
 #include "mem/ruby/common/Consumer.hh"
 
+namespace gem5
+{
+
 Consumer::Consumer(ClockedObject *_em)
     : m_wakeup_event([this]{ processCurrentEvent(); },
                     "Consumer Event", false),
@@ -88,3 +91,5 @@ Consumer::processCurrentEvent()
     wakeup();
     scheduleNextWakeup();
 }
+
+} // namespace gem5

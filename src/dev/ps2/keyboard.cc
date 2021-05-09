@@ -49,6 +49,9 @@
 #include "dev/ps2/types.hh"
 #include "params/PS2Keyboard.hh"
 
+namespace gem5
+{
+
 namespace ps2
 {
 
@@ -179,3 +182,4 @@ PS2Keyboard::keyPress(uint32_t key, bool down)
 }
 
 } // namespace ps2
+} // namespace gem5

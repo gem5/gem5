@@ -53,6 +53,7 @@ class MinorOpClass(SimObject):
 
     type = 'MinorOpClass'
     cxx_header = "cpu/minor/func_unit.hh"
+    cxx_class = 'gem5::MinorOpClass'
 
     opClass = Param.OpClass("op class to match")
 
@@ -61,6 +62,7 @@ class MinorOpClassSet(SimObject):
 
     type = 'MinorOpClassSet'
     cxx_header = "cpu/minor/func_unit.hh"
+    cxx_class = 'gem5::MinorOpClassSet'
 
     opClasses = VectorParam.MinorOpClass([], "op classes to be matched."
         "  An empty list means any class")
@@ -68,6 +70,7 @@ class MinorOpClassSet(SimObject):
 class MinorFUTiming(SimObject):
     type = 'MinorFUTiming'
     cxx_header = "cpu/minor/func_unit.hh"
+    cxx_class = 'gem5::MinorFUTiming'
 
     mask = Param.UInt64(0, "mask for testing ExtMachInst")
     match = Param.UInt64(0, "match value for testing ExtMachInst:"
@@ -101,6 +104,7 @@ def minorMakeOpClassSet(op_classes):
 class MinorFU(SimObject):
     type = 'MinorFU'
     cxx_header = "cpu/minor/func_unit.hh"
+    cxx_class = 'gem5::MinorFU'
 
     opClasses = Param.MinorOpClassSet(MinorOpClassSet(), "type of operations"
         " allowed on this functional unit")
@@ -116,6 +120,7 @@ class MinorFU(SimObject):
 class MinorFUPool(SimObject):
     type = 'MinorFUPool'
     cxx_header = "cpu/minor/func_unit.hh"
+    cxx_class = 'gem5::MinorFUPool'
 
     funcUnits = VectorParam.MinorFU("functional units")
 
@@ -182,6 +187,7 @@ class ThreadPolicy(Enum): vals = ['SingleThreaded', 'RoundRobin', 'Random']
 class MinorCPU(BaseCPU):
     type = 'MinorCPU'
     cxx_header = "cpu/minor/cpu.hh"
+    cxx_class = 'gem5::MinorCPU'
 
     @classmethod
     def memory_mode(cls):

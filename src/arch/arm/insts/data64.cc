@@ -37,6 +37,9 @@
 
 #include "arch/arm/insts/data64.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -208,4 +211,5 @@ DataXCondSelOp::generateDisassembly(
     return ss.str();
 }
 
-}
+} // namespace ArmISA
+} // namespace gem5

@@ -50,6 +50,9 @@
 #include "mem/packet.hh"
 #include "random_gen.hh"
 
+namespace gem5
+{
+
 /**
  * NVM specific generator is for issuing request with variable buffer
  * hit length and bank utilization. Currently assumes a single
@@ -145,5 +148,7 @@ class NvmGen : public RandomGen
     const unsigned int nbrOfRanks;
 
 };
+
+} // namespace gem5
 
 #endif

@@ -33,6 +33,9 @@
 #include "cpu/nativetrace.hh"
 #include "params/ArmNativeTrace.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 class ArmNativeTrace : public NativeTrace
@@ -108,5 +111,6 @@ class ArmNativeTrace : public NativeTrace
 };
 
 } // namespace Trace
+} // namespace gem5
 
 #endif // __ARCH_ARM_NATIVETRACE_HH__

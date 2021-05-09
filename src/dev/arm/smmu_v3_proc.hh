@@ -46,6 +46,9 @@
 #include "base/types.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 class SMMUv3DeviceInterface;
 
 /*
@@ -131,5 +134,7 @@ class SMMUProcess : public Packet::SenderState
 
     const std::string name() const { return myName; };
 };
+
+} // namespace gem5
 
 #endif /* __DEV_ARM_SMMU_V3_PROC_HH__ */

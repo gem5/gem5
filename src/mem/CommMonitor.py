@@ -43,6 +43,7 @@ from m5.SimObject import SimObject
 class CommMonitor(SimObject):
     type = 'CommMonitor'
     cxx_header = "mem/comm_monitor.hh"
+    cxx_class = 'gem5::CommMonitor'
 
     system = Param.System(Parent.any, "System that the monitor belongs to.")
 

@@ -29,6 +29,9 @@
 #ifndef __SOCKET_HH__
 #define __SOCKET_HH__
 
+namespace gem5
+{
+
 class ListenSocket
 {
   protected:
@@ -73,5 +76,7 @@ class ListenSocket
     bool islistening() const { return listening; }
     /** @} */ // end of api_socket
 };
+
+} // namespace gem5
 
 #endif //__SOCKET_HH__

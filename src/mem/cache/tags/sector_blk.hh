@@ -39,6 +39,9 @@
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 
+namespace gem5
+{
+
 class SectorBlk;
 
 /**
@@ -185,5 +188,7 @@ class SectorBlk : public TaggedEntry
      */
     std::string print() const override;
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_TAGS_SECTOR_BLK_HH__

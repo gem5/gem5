@@ -33,6 +33,9 @@
 #include "params/RiscvBareMetal.hh"
 #include "sim/workload.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -84,5 +87,6 @@ class BareMetal : public Workload
 };
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_BARE_METAL_FS_WORKLOAD_HH__

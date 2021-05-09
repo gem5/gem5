@@ -31,6 +31,9 @@
 #include "params/SEWorkload.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 SEWorkload::SEWorkload(const Params &p) : Workload(p)
 {}
 
@@ -39,3 +42,5 @@ SEWorkload::syscall(ThreadContext *tc)
 {
     tc->getProcessPtr()->syscall(tc);
 }
+
+} // namespace gem5

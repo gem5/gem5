@@ -43,6 +43,9 @@
 #include "base/trace.hh"
 #include "debug/StackDist.hh"
 
+namespace gem5
+{
+
 StackDistCalc::StackDistCalc(bool verify_stack)
     : index(0),
       verifyStack(verify_stack)
@@ -595,3 +598,5 @@ StackDistCalc::printStack(int n) const
         }
     }
 }
+
+} // namespace gem5

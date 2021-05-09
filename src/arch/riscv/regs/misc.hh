@@ -54,6 +54,9 @@
 #include "base/bitunion.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -657,6 +660,7 @@ const std::map<int, RegVal> CSRMasks = {
     {CSR_MIP, MI_MASK}
 };
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_REGS_MISC_HH__

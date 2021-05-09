@@ -36,6 +36,9 @@
 #include "params/SimpleDisk.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class DiskImage;
 class System;
 
@@ -59,5 +62,7 @@ class SimpleDisk : public SimObject
     void read(Addr addr, baddr_t block, int count) const;
     void write(Addr addr, baddr_t block, int count);
 };
+
+} // namespace gem5
 
 #endif // __DEV_STORAGE_SIMPLE_DISK_HH__

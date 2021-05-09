@@ -59,6 +59,9 @@
 #include "dev/platform.hh"
 #include "params/VGic.hh"
 
+namespace gem5
+{
+
 class VGic : public PioDevice
 {
   private:
@@ -256,5 +259,7 @@ class VGic : public PioDevice
         return -1;
     }
 };
+
+} // namespace gem5
 
 #endif

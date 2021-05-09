@@ -44,6 +44,9 @@
 #include "arch/generic/tlb.hh"
 #include "mem/port_proxy.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 /**
@@ -87,5 +90,7 @@ class TranslatingPortProxy : public PortProxy
      */
     bool tryMemsetBlob(Addr address, uint8_t  v, int size) const override;
 };
+
+} // namespace gem5
 
 #endif //__MEM_TRANSLATING_PORT_PROXY_HH__

@@ -42,6 +42,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 struct PageTableOps
 {
     typedef int64_t pte_t;
@@ -108,5 +111,7 @@ struct V8PageTableOps64k : public PageTableOps
     unsigned firstLevel(uint8_t tsz) const override;
     unsigned lastLevel() const override;
 };
+
+} // namespace gem5
 
 #endif /* __DEV_ARM_SMMU_V3_PTOPS_HH__ */

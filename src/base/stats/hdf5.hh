@@ -50,6 +50,9 @@
 #include "base/stats/output.hh"
 #include "base/stats/types.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -156,5 +159,6 @@ std::unique_ptr<Output> initHDF5(
     bool desc = true, bool formulas = true);
 
 } // namespace statistics
+} // namespace gem5
 
 #endif // __BASE_STATS_HDF5_HH__

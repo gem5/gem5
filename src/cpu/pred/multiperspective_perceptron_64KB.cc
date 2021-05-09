@@ -39,6 +39,9 @@
 
 #include "cpu/pred/multiperspective_perceptron_64KB.hh"
 
+namespace gem5
+{
+
 MultiperspectivePerceptron64KB::MultiperspectivePerceptron64KB(
         const MultiperspectivePerceptron64KBParams &p)
     : MultiperspectivePerceptron(p)
@@ -85,3 +88,5 @@ MultiperspectivePerceptron64KB::createSpecs() {
     addSpec(new SGHISTPATH(1, 2, 5, 1.25, 768, 6, *this));
     addSpec(new SGHISTPATH(1, 5, 2, 1.3125, 972, 6, *this));
 }
+
+} // namespace gem5

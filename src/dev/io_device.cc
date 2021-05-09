@@ -44,6 +44,9 @@
 #include "debug/AddrRanges.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 PioDevice::PioDevice(const Params &p)
     : ClockedObject(p), sys(p.system), pioPort(this)
 {}
@@ -83,3 +86,5 @@ BasicPioDevice::getAddrRanges() const
     ranges.push_back(RangeSize(pioAddr, pioSize));
     return ranges;
 }
+
+} // namespace gem5

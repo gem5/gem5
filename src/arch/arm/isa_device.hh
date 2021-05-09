@@ -41,6 +41,9 @@
 #include "base/compiler.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace ArmISA
@@ -102,6 +105,7 @@ class DummyISADevice : public BaseISADevice
     RegVal readMiscReg(int misc_reg) override;
 };
 
-}
+} // namespace ArmISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_ISA_DEVICE_HH__

@@ -45,7 +45,9 @@ from m5.objects.ClockedObject import ClockedObject
 class PioDevice(ClockedObject):
     type = 'PioDevice'
     cxx_header = "dev/io_device.hh"
+    cxx_class = 'gem5::PioDevice'
     abstract = True
+
     pio = ResponsePort("Programmed I/O port")
     system = Param.System(Parent.any, "System this device is part of")
 
@@ -71,14 +73,18 @@ class PioDevice(ClockedObject):
 class BasicPioDevice(PioDevice):
     type = 'BasicPioDevice'
     cxx_header = "dev/io_device.hh"
+    cxx_class = 'gem5::BasicPioDevice'
     abstract = True
+
     pio_addr = Param.Addr("Device Address")
     pio_latency = Param.Latency('100ns', "Programmed IO latency")
 
 class DmaDevice(PioDevice):
     type = 'DmaDevice'
     cxx_header = "dev/dma_device.hh"
+    cxx_class = 'gem5::DmaDevice'
     abstract = True
+
     dma = RequestPort("DMA port")
 
     _iommu = None
@@ -105,6 +111,8 @@ class DmaDevice(PioDevice):
 class IsaFake(BasicPioDevice):
     type = 'IsaFake'
     cxx_header = "dev/isa_fake.hh"
+    cxx_class = 'gem5::IsaFake'
+
     pio_size = Param.Addr(0x8, "Size of address range")
     ret_data8 = Param.UInt8(0xFF, "Default data to return")
     ret_data16 = Param.UInt16(0xFFFF, "Default data to return")

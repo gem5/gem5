@@ -43,6 +43,9 @@
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 
+namespace gem5
+{
+
 struct IrregularStreamBufferPrefetcherParams;
 
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
@@ -139,5 +142,6 @@ class IrregularStreamBuffer : public Queued
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif//__MEM_CACHE_PREFETCH_IRREGULAR_STREAM_BUFFER_HH__

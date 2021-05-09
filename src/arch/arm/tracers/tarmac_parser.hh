@@ -58,6 +58,9 @@
 #include "sim/insttracer.hh"
 #include "tarmac_base.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 class TarmacParserRecord : public TarmacBaseRecord
@@ -295,5 +298,6 @@ class TarmacParser : public InstTracer
 };
 
 } // namespace Trace
+} // namespace gem5
 
 #endif // __ARCH_ARM_TRACERS_TARMAC_PARSER_HH__

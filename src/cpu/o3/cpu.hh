@@ -72,6 +72,9 @@
 #include "params/O3CPU.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 template <class>
 class Checker;
 class ThreadContext;
@@ -583,7 +586,7 @@ class CPU : public BaseCPU
 
   public:
     /** Returns a pointer to a thread context. */
-    ::ThreadContext *
+    gem5::ThreadContext *
     tcBase(ThreadID tid)
     {
         return thread[tid]->getTC();
@@ -596,7 +599,7 @@ class CPU : public BaseCPU
      * instruction results at run time.  This can be set to NULL if it
      * is not being used.
      */
-    ::Checker<DynInstPtr> *checker;
+    gem5::Checker<DynInstPtr> *checker;
 
     /** Pointer to the system. */
     System *system;
@@ -709,5 +712,6 @@ class CPU : public BaseCPU
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_CPU_HH__

@@ -35,6 +35,9 @@
 #include "params/IndirectPredictor.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class IndirectPredictor : public SimObject
 {
   public:
@@ -62,5 +65,7 @@ class IndirectPredictor : public SimObject
                                            void * indirect_history,
                                            bool actually_taken) = 0;
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_INDIRECT_BASE_HH__

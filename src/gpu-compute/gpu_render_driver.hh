@@ -33,6 +33,9 @@
 #include "sim/emul_driver.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 struct GPURenderDriverParams;
 
 class GPURenderDriver final : public EmulatedDriver
@@ -49,4 +52,6 @@ class GPURenderDriver final : public EmulatedDriver
     }
 };
 
-#endif
+} // namespace gem5
+
+#endif // __GPU_COMPUTE_GPU_RENDER_DRIVER_HH__

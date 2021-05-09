@@ -45,6 +45,9 @@
 #include "base/compiler.hh"
 #include "base/stats/units.hh"
 
+namespace gem5
+{
+
 /**
  * Convenience macro to add a stat to a statistics group.
  *
@@ -219,5 +222,6 @@ class Group
 };
 
 } // namespace statistics
+} // namespace gem5
 
 #endif // __BASE_STATS_GROUP_HH__

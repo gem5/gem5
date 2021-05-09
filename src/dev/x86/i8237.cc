@@ -32,6 +32,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -162,3 +165,4 @@ I8237::unserialize(CheckpointIn &cp)
 }
 
 } // namespace X86ISA
+} // namespace gem5

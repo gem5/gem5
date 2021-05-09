@@ -68,6 +68,9 @@
 #endif
 #endif
 
+namespace gem5
+{
+
 PhysicalMemory::PhysicalMemory(const std::string& _name,
                                const std::vector<AbstractMemory*>& _memories,
                                bool mmap_using_noreserve,
@@ -467,3 +470,5 @@ PhysicalMemory::unserializeStore(CheckpointIn &cp)
         fatal("Close failed on physical memory checkpoint file '%s'\n",
               filename);
 }
+
+} // namespace gem5

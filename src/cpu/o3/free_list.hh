@@ -51,6 +51,9 @@
 #include "cpu/o3/regfile.hh"
 #include "debug/FreeList.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -341,5 +344,6 @@ UnifiedFreeList::addReg(PhysRegIdPtr freed_reg)
 }
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_FREE_LIST_HH__

@@ -51,6 +51,9 @@
 #include "cpu/o3/limits.hh"
 #include "sim/faults.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -223,5 +226,6 @@ struct TimeStruct
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif //__CPU_O3_COMM_HH__

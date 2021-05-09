@@ -45,12 +45,15 @@
 #ifndef EXT_SST_GEM5_HH
 #define EXT_SST_GEM5_HH
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
 #include <core/sst_config.h>
 #include <core/component.h>
 
+#include <mem/external_master.hh>
+#include <mem/external_slave.hh>
 #include <sim/simulate.hh>
 
 #include "ExtMaster.hh"
@@ -60,8 +63,9 @@ namespace SST {
 namespace gem5 {
 
 class gem5Component : public SST::Component,
-                      public ExternalSlave::Handler,
-                      public ExternalMaster::Handler {
+                      public ::gem5::ExternalSlave::Handler,
+                      public ::gem5::ExternalMaster::Handler
+{
 private:
 
     Output dbg;
@@ -83,12 +87,12 @@ public:
     virtual void finish();
     bool clockTick(Cycle_t);
 
-    virtual ExternalMaster::Port *getExternalPort(
-        const std::string &name, ExternalMaster &owner,
+    virtual ::gem5::ExternalMaster::Port *getExternalPort(
+        const std::string &name, ::gem5::ExternalMaster &owner,
         const std::string &port_data);
 
-    virtual ExternalSlave::Port *getExternalPort(
-        const std::string &name, ExternalSlave &owner,
+    virtual ::gem5::ExternalSlave::Port *getExternalPort(
+        const std::string &name, ::gem5::ExternalSlave &owner,
         const std::string &port_data);
 };
 

@@ -33,6 +33,9 @@
 #include "params/SHiPPCRP.hh"
 #include "params/SHiPRP.hh"
 
+namespace gem5
+{
+
 namespace replacement_policy
 {
 
@@ -169,3 +172,4 @@ SHiPPC::getSignature(const PacketPtr pkt) const
 }
 
 } // namespace replacement_policy
+} // namespace gem5

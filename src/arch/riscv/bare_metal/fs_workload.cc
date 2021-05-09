@@ -34,6 +34,9 @@
 #include "sim/system.hh"
 #include "sim/workload.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -71,3 +74,4 @@ BareMetal::initState()
 }
 
 } // namespace RiscvISA
+} // namespace gem5

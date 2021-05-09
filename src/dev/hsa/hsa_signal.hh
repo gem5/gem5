@@ -35,6 +35,9 @@
 
 #include <cstdint>
 
+namespace gem5
+{
+
 // AMD Signal Kind Enumeration Values.
 typedef int64_t amd_signal_kind64_t;
 enum amd_signal_kind_t
@@ -67,5 +70,7 @@ typedef struct amd_signal_s
   };
   uint32_t reserved3[2];
 } amd_signal_t;
+
+} // namespace gem5
 
 #endif // DEV_HSA_HSA_SIGNAL_H

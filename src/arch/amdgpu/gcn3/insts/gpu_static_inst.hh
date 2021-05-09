@@ -41,6 +41,9 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 namespace Gcn3ISA
 {
     class GCN3GPUStaticInst : public GPUStaticInst
@@ -88,4 +91,6 @@ namespace Gcn3ISA
     }; // class GCN3GPUStaticInst
 
 } // namespace Gcn3ISA
+} // namespace gem5
+
 #endif //__ARCH_GCN3_INSTS_GPU_STATIC_INST_HH__

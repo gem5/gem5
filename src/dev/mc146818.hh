@@ -34,6 +34,9 @@
 #include "sim/core.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 /** Real-Time Clock (MC146818) */
 class MC146818 : public EventManager
 {
@@ -180,5 +183,7 @@ class MC146818 : public EventManager
      */
     void unserialize(const std::string &base, CheckpointIn &cp);
 };
+
+} // namespace gem5
 
 #endif // __DEV_MC146818_HH__

@@ -39,6 +39,9 @@
 #include "arch/amdgpu/vega/insts/op_encodings.hh"
 #include "debug/VEGA.hh"
 
+namespace gem5
+{
+
 namespace VegaISA
 {
     class Inst_SOP2__S_ADD_U32 : public Inst_SOP2
@@ -42799,5 +42802,6 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_FLAT__FLAT_ATOMIC_DEC_X2
 } // namespace VegaISA
+} // namespace gem5
 
 #endif // __ARCH_VEGA_INSTS_INSTRUCTIONS_HH__

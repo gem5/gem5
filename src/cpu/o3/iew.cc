@@ -59,6 +59,9 @@
 #include "debug/O3PipeView.hh"
 #include "params/O3CPU.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -1624,3 +1627,4 @@ IEW::checkMisprediction(const DynInstPtr& inst)
 }
 
 } // namespace o3
+} // namespace gem5

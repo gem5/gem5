@@ -37,6 +37,9 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -161,5 +164,6 @@ class StoreSet
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_STORE_SET_HH__

@@ -37,6 +37,9 @@
 #include "sim/port.hh"
 #include "systemc/ext/core/sc_module.hh"
 
+namespace gem5
+{
+
 class BaseCPU;
 
 GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
@@ -106,5 +109,6 @@ CortexR52::set_evs_param(const std::string &n, T val)
 }
 
 } // namespace fastmodel
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_CORTEXR52_CORETEX_R52_HH__

@@ -42,6 +42,7 @@ from m5.objects.AbstractNVM import *
 class UFSHostDevice(DmaDevice):
     type = 'UFSHostDevice'
     cxx_header = "dev/arm/ufs_device.hh"
+    cxx_class = 'gem5::UFSHostDevice'
     pio_addr = Param.Addr("Address for SCSI configuration responder interface")
     pio_latency = Param.Latency("10ns", "Time between action and write/read \
        result by AMBA DMA Device")

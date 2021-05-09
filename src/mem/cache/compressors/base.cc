@@ -45,6 +45,9 @@
 #include "mem/cache/tags/super_blk.hh"
 #include "params/BaseCacheCompressor.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -270,3 +273,4 @@ Base::BaseStats::regStats()
 }
 
 } // namespace compression
+} // namespace gem5

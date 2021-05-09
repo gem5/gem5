@@ -40,6 +40,9 @@
 #include "debug/GPUTLB.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 TLBCoalescer::TLBCoalescer(const Params &p)
     : ClockedObject(p),
       TLBProbesPerCycle(p.probesPerCycle),
@@ -532,3 +535,5 @@ TLBCoalescer::TLBCoalescerStats::TLBCoalescerStats(statistics::Group *parent)
 {
     localLatency = localqueuingCycles / uncoalescedAccesses;
 }
+
+} // namespace gem5

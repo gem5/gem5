@@ -42,6 +42,9 @@
 #include "sim/byteswap.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     : PciDevice(p), checkpoint_before_mmios(p.checkpoint_before_mmios),
       init_interrupt_count(0)
@@ -274,3 +277,5 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
     // Unserialize the PciDevice base class
     PciDevice::unserialize(cp);
 }
+
+} // namespace gem5

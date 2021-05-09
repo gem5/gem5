@@ -59,6 +59,9 @@
 #include "mem/port.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct O3CPUParams;
 
 namespace o3
@@ -228,7 +231,7 @@ class LSQ
     {
       protected:
         typedef uint32_t FlagsStorage;
-        typedef ::Flags<FlagsStorage> FlagsType;
+        typedef Flags<FlagsStorage> FlagsType;
 
         enum Flag : FlagsStorage
         {
@@ -481,7 +484,7 @@ class LSQ
          * Memory mapped IPR accesses
          */
         virtual Cycles handleLocalAccess(
-                ::ThreadContext *thread, PacketPtr pkt) = 0;
+                gem5::ThreadContext *thread, PacketPtr pkt) = 0;
 
         /**
          * Test if the request accesses a particular cache line.
@@ -664,12 +667,12 @@ class LSQ
         virtual ~SingleDataRequest() {}
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
-                ::ThreadContext* tc, BaseTLB::Mode mode);
+                gem5::ThreadContext* tc, BaseTLB::Mode mode);
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void sendPacketToCache();
         virtual void buildPackets();
         virtual Cycles handleLocalAccess(
-                ::ThreadContext *thread, PacketPtr pkt);
+                gem5::ThreadContext *thread, PacketPtr pkt);
         virtual bool isCacheBlockHit(Addr blockAddr, Addr cacheBlockMask);
         virtual std::string name() const { return "SingleDataRequest"; }
     };
@@ -698,7 +701,7 @@ class LSQ
         virtual ~HtmCmdRequest() {}
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
-                ::ThreadContext* tc, BaseTLB::Mode mode);
+                gem5::ThreadContext* tc, BaseTLB::Mode mode);
         virtual std::string name() const { return "HtmCmdRequest"; }
     };
 
@@ -764,14 +767,14 @@ class LSQ
             }
         }
         virtual void finish(const Fault &fault, const RequestPtr &req,
-                ::ThreadContext* tc, BaseTLB::Mode mode);
+                gem5::ThreadContext* tc, BaseTLB::Mode mode);
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void initiateTranslation();
         virtual void sendPacketToCache();
         virtual void buildPackets();
 
         virtual Cycles handleLocalAccess(
-                ::ThreadContext *thread, PacketPtr pkt);
+                gem5::ThreadContext *thread, PacketPtr pkt);
         virtual bool isCacheBlockHit(Addr blockAddr, Addr cacheBlockMask);
 
         virtual RequestPtr mainRequest();
@@ -1069,5 +1072,6 @@ class LSQ
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_LSQ_HH__

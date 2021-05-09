@@ -35,6 +35,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 // return the min number of elements that the manager can reserve given
 // a request for "size" elements
 uint32_t
@@ -102,3 +105,5 @@ SimplePoolManager::regionSize(std::pair<uint32_t, uint32_t> &region)
         return region.second + poolSize() - region.first + 1;
     }
 }
+
+} // namespace gem5

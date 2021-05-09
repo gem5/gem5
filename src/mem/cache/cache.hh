@@ -54,6 +54,9 @@
 #include "mem/cache/base.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 class CacheBlk;
 struct CacheParams;
 class MSHR;
@@ -168,5 +171,7 @@ class Cache : public BaseCache
      */
     bool sendMSHRQueuePacket(MSHR* mshr) override;
 };
+
+} // namespace gem5
 
 #endif // __MEM_CACHE_CACHE_HH__

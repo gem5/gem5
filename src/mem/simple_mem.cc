@@ -44,6 +44,9 @@
 #include "base/trace.hh"
 #include "debug/Drain.hh"
 
+namespace gem5
+{
+
 SimpleMemory::SimpleMemory(const SimpleMemoryParams &p) :
     AbstractMemory(p),
     port(name() + ".port", *this), latency(p.latency),
@@ -299,3 +302,5 @@ SimpleMemory::MemoryPort::recvRespRetry()
 {
     mem.recvRespRetry();
 }
+
+} // namespace gem5

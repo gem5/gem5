@@ -47,6 +47,9 @@
 #include "mem/ruby/network/garnet/flit.hh"
 #include "params/GarnetRouter.hh"
 
+namespace gem5
+{
+
 class NetworkLink;
 class CreditLink;
 class InputUnit;
@@ -153,5 +156,7 @@ class Router : public BasicRouter, public Consumer
 
     statistics::Scalar m_crossbar_activity;
 };
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_ROUTER_HH__

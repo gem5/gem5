@@ -47,7 +47,7 @@ class DecoderFlavor(Enum): vals = ['Generic']
 
 class ArmISA(BaseISA):
     type = 'ArmISA'
-    cxx_class = 'ArmISA::ISA'
+    cxx_class = 'gem5::ArmISA::ISA'
     cxx_header = "arch/arm/isa.hh"
 
     system = Param.System(Parent.any, "System this ISA object belongs to")

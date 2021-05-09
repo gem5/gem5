@@ -28,6 +28,9 @@
 
 #include "arch/sparc/insts/mem.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -87,4 +90,5 @@ MemImm::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     return response.str();
 }
 
-}
+} // namespace SparcISA
+} // namespace gem5

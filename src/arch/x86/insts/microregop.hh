@@ -41,6 +41,9 @@
 #include "arch/x86/insts/microop.hh"
 #include "arch/x86/insts/microop_args.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -70,6 +73,7 @@ class RegOpBase : public X86MicroopBase
 template <typename ...Operands>
 using RegOpT = InstOperands<RegOpBase, Operands...>;
 
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_INSTS_MICROREGOP_HH__

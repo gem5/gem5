@@ -40,6 +40,9 @@
 #include "gpu-compute/exec_stage.hh"
 #include "gpu-compute/misc.hh"
 
+namespace gem5
+{
+
 struct ComputeUnitParams;
 class Wavefront;
 
@@ -117,5 +120,7 @@ class ScheduleToExecute : public PipeStageIFace
     std::vector<GPUDynInstPtr> _readyInsts;
     std::vector<DISPATCH_STATUS> _dispatchStatus;
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_COMM_HH__

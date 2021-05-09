@@ -50,6 +50,9 @@
 #include "base/logging.hh"
 #include "sim/root.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -330,3 +333,5 @@ debugDumpStats()
 {
     statistics::dump();
 }
+
+} // namespace gem5

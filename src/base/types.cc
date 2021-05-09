@@ -28,6 +28,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 std::ostream&
 operator<<(std::ostream &out, const Cycles & cycles)
 {
@@ -35,3 +38,4 @@ operator<<(std::ostream &out, const Cycles & cycles)
     return out;
 }
 
+} // namespace gem5

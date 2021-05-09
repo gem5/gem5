@@ -44,6 +44,9 @@
 #include "base/random.hh"
 #include "debug/TageSCL.hh"
 
+namespace gem5
+{
+
 TAGE_SC_L_8KB_StatisticalCorrector::TAGE_SC_L_8KB_StatisticalCorrector(
     const TAGE_SC_L_8KB_StatisticalCorrectorParams &p)
   : StatisticalCorrector(p),
@@ -310,3 +313,5 @@ TAGE_SC_L_TAGE_8KB::handleTAGEUpdate(Addr branch_pc, bool taken,
             gtable[bi->hitBank][bi->hitBankIndex].u++;
     }
 }
+
+} // namespace gem5

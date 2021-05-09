@@ -46,6 +46,9 @@
 #include "debug/IQ.hh"
 #include "debug/O3PipeView.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -331,3 +334,4 @@ DynInst::initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
 }
 
 } // namespace o3
+} // namespace gem5

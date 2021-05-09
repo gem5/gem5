@@ -34,12 +34,16 @@ class DirectedGenerator(SimObject):
     type = 'DirectedGenerator'
     abstract = True
     cxx_header = "cpu/testers/directedtest/DirectedGenerator.hh"
+    cxx_class = 'gem5::DirectedGenerator'
+
     num_cpus = Param.Int("num of cpus")
     system = Param.System(Parent.any, "System we belong to")
 
 class SeriesRequestGenerator(DirectedGenerator):
     type = 'SeriesRequestGenerator'
     cxx_header = "cpu/testers/directedtest/SeriesRequestGenerator.hh"
+    cxx_class = 'gem5::SeriesRequestGenerator'
+
     addr_increment_size = Param.Int(64, "address increment size")
     num_series = Param.UInt32(1,
         "number of different address streams to generate")
@@ -48,11 +52,15 @@ class SeriesRequestGenerator(DirectedGenerator):
 class InvalidateGenerator(DirectedGenerator):
     type = 'InvalidateGenerator'
     cxx_header = "cpu/testers/directedtest/InvalidateGenerator.hh"
+    cxx_class = 'gem5::InvalidateGenerator'
+
     addr_increment_size = Param.Int(64, "address increment size")
 
 class RubyDirectedTester(ClockedObject):
     type = 'RubyDirectedTester'
     cxx_header = "cpu/testers/directedtest/RubyDirectedTester.hh"
+    cxx_class = 'gem5::RubyDirectedTester'
+
     cpuPort = VectorRequestPort("the cpu ports")
     requests_to_complete = Param.Int("checks to complete")
     generator = Param.DirectedGenerator("the request generator")

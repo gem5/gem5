@@ -54,6 +54,9 @@
 
 namespace py = pybind11;
 
+namespace gem5
+{
+
 static const py::object
 cast_stat_info(const statistics::Info *info)
 {
@@ -242,3 +245,5 @@ pybind_init_stats(py::module_ &m_native)
              })
         ;
 }
+
+} // namespace gem5

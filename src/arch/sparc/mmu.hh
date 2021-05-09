@@ -43,6 +43,9 @@
 
 #include "params/SparcMMU.hh"
 
+namespace gem5
+{
+
 namespace SparcISA {
 
 class MMU : public BaseMMU
@@ -70,5 +73,6 @@ class MMU : public BaseMMU
 };
 
 } // namespace SparcISA
+} // namespace gem5
 
 #endif  // __ARCH_SPARC_MMU_HH__

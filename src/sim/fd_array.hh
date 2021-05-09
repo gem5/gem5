@@ -42,6 +42,9 @@
 #include "sim/fd_entry.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class FDArray : public Serializable
 {
   public:
@@ -161,5 +164,7 @@ class FDArray : public Serializable
     std::map<std::string, int> _imap;
     std::map<std::string, int> _oemap;
 };
+
+} // namespace gem5
 
 #endif // __FD_ARRAY_HH__

@@ -39,7 +39,9 @@
 GEM5_DEPRECATED_NAMESPACE(m5, gem5);
 namespace gem5
 {
-namespace stl_helpers {
+
+namespace stl_helpers
+{
 
 template <typename T, typename Enabled=void>
 struct IsHelpedContainer : public std::false_type {};

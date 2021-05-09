@@ -28,6 +28,9 @@
 
 #include "arch/sparc/insts/blockmem.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -84,4 +87,5 @@ BlockMemImmMicro::generateDisassembly(
     return response.str();
 }
 
-}
+} // namespace SparcISA
+} // namespace gem5

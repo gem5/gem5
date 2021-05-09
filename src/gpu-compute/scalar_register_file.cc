@@ -41,6 +41,9 @@
 #include "gpu-compute/wavefront.hh"
 #include "params/ScalarRegisterFile.hh"
 
+namespace gem5
+{
+
 ScalarRegisterFile::ScalarRegisterFile(const ScalarRegisterFileParams &p)
     : RegisterFile(p)
 {
@@ -107,3 +110,5 @@ ScalarRegisterFile::scheduleWriteOperandsFromLoad(Wavefront *w,
 
     stats.registerWrites += ii->numDstScalarDWords();
 }
+
+} // namespace gem5

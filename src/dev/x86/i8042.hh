@@ -37,6 +37,9 @@
 #include "dev/ps2/device.hh"
 #include "params/I8042.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -143,5 +146,6 @@ class I8042 : public BasicPioDevice
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif //__DEV_X86_I8042_HH__

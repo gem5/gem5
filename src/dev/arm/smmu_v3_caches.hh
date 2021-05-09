@@ -51,6 +51,9 @@
 
 #define WALK_CACHE_LEVELS 4
 
+namespace gem5
+{
+
 enum
 {
     SMMU_CACHE_REPL_ROUND_ROBIN,
@@ -357,5 +360,7 @@ class WalkCache : public SMMUv3BaseCache
     size_t pickEntryIdxToReplace(const Set &set,
                                  unsigned stage, unsigned level);
 };
+
+} // namespace gem5
 
 #endif /* __DEV_ARM_SMMU_V3_CACHES_HH__ */

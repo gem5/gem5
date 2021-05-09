@@ -41,6 +41,9 @@
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
     enum FloatRegIndex
@@ -153,6 +156,8 @@ namespace X86ISA
     // Add 8 for the indices that are mapped over the fp stack
     const int NumFloatRegs =
         NumMMXRegs + 2 * NumXMMRegs + NumMicroFpRegs + 8;
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_FLOATREGS_HH__

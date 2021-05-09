@@ -60,6 +60,9 @@
 #include "mem/token_port.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class HSAQueueEntry;
 class LdsChunk;
 class ScalarRegisterFile;
@@ -1087,5 +1090,7 @@ class ComputeUnit : public ClockedObject
         statistics::VectorDistribution instInterleave;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __COMPUTE_UNIT_HH__

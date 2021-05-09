@@ -42,6 +42,9 @@
 #include "dev/storage/disk_image.hh"
 #include "dev/virtio/base.hh"
 
+namespace gem5
+{
+
 struct VirtIOBlockParams;
 
 /**
@@ -183,5 +186,7 @@ class VirtIOBlock : public VirtIODeviceBase
     /** Image backing this device */
     DiskImage &image;
 };
+
+} // namespace gem5
 
 #endif // __DEV_VIRTIO_BLOCK_HH__

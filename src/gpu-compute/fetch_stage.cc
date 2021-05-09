@@ -36,6 +36,9 @@
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 FetchStage::FetchStage(const ComputeUnitParams &p, ComputeUnit &cu)
     : numVectorALUs(p.num_SIMDs), computeUnit(cu),
       _name(cu.name() + ".FetchStage"), stats(&cu)
@@ -97,3 +100,5 @@ FetchStage::FetchStageStats::FetchStageStats(statistics::Group *parent)
 {
         instFetchInstReturned.init(1, 32, 1);
 }
+
+} // namespace gem5

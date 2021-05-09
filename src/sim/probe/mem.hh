@@ -43,6 +43,9 @@
 #include "mem/packet.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(ProbePoints, probing);
 namespace probing
 {
@@ -106,6 +109,8 @@ struct PacketInfo
 typedef ProbePointArg<PacketInfo> Packet;
 typedef std::unique_ptr<Packet> PacketUPtr;
 
-}
+} // namespace probing
+
+} // namespace gem5
 
 #endif

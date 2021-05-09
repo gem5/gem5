@@ -42,6 +42,9 @@
 
 #include "params/PowerMMU.hh"
 
+namespace gem5
+{
+
 namespace PowerISA {
 
 class MMU : public BaseMMU
@@ -53,5 +56,6 @@ class MMU : public BaseMMU
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif  // __ARCH_POWER_MMU_HH__

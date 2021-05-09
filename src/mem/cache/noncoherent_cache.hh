@@ -55,6 +55,9 @@
 #include "mem/cache/base.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 class CacheBlk;
 class MSHR;
 struct NoncoherentCacheParams;
@@ -122,5 +125,7 @@ class NoncoherentCache : public BaseCache
   public:
     NoncoherentCache(const NoncoherentCacheParams &p);
 };
+
+} // namespace gem5
 
 #endif // __MEM_CACHE_NONCOHERENTCACHE_HH__

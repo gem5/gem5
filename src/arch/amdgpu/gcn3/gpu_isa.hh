@@ -42,6 +42,9 @@
 #include "gpu-compute/hsa_queue_entry.hh"
 #include "gpu-compute/misc.hh"
 
+namespace gem5
+{
+
 class Wavefront;
 
 namespace Gcn3ISA
@@ -99,5 +102,6 @@ namespace Gcn3ISA
         ScalarRegU32 m0;
     };
 } // namespace Gcn3ISA
+} // namespace gem5
 
 #endif // __ARCH_GCN3_GPU_ISA_HH__

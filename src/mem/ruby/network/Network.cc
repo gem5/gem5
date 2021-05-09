@@ -45,6 +45,9 @@
 #include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 uint32_t Network::m_virtual_networks;
 uint32_t Network::m_control_msg_size;
 uint32_t Network::m_data_msg_size;
@@ -249,3 +252,5 @@ Network::getLocalNodeID(NodeID global_id) const
     assert(globalToLocalMap.count(global_id));
     return globalToLocalMap.at(global_id);
 }
+
+} // namespace gem5

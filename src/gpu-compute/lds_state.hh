@@ -46,6 +46,9 @@
 #include "params/LdsState.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class ComputeUnit;
 
 /**
@@ -528,5 +531,7 @@ class LdsState: public ClockedObject
     // the number of banks in the LDS underlying data store
     int banks = 0;
 };
+
+} // namespace gem5
 
 #endif // __LDS_STATE_HH__

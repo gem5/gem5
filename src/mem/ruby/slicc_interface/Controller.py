@@ -42,9 +42,10 @@ from m5.objects.ClockedObject import ClockedObject
 
 class RubyController(ClockedObject):
     type = 'RubyController'
-    cxx_class = 'AbstractController'
+    cxx_class = 'gem5::AbstractController'
     cxx_header = "mem/ruby/slicc_interface/AbstractController.hh"
     abstract = True
+
     version = Param.Int("")
     addr_ranges = VectorParam.AddrRange([AllMemory], "Address range this "
                                         "controller responds to")

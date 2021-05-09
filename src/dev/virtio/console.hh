@@ -42,6 +42,9 @@
 #include "dev/serial/serial.hh"
 #include "dev/virtio/base.hh"
 
+namespace gem5
+{
+
 struct VirtIOConsoleParams;
 
 /**
@@ -151,5 +154,7 @@ class VirtIOConsole : public VirtIODeviceBase
   protected:
     SerialDevice &device;
 };
+
+} // namespace gem5
 
 #endif // __DEV_VIRTIO_CONSOLE_HH__

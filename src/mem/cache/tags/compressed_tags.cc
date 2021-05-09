@@ -41,6 +41,9 @@
 #include "mem/packet.hh"
 #include "params/CompressedTags.hh"
 
+namespace gem5
+{
+
 CompressedTags::CompressedTags(const Params &p)
     : SectorTags(p)
 {
@@ -178,3 +181,5 @@ CompressedTags::anyBlk(std::function<bool(CacheBlk &)> visitor)
     }
     return false;
 }
+
+} // namespace gem5

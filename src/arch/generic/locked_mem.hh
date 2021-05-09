@@ -51,6 +51,9 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 namespace GenericISA
 {
 
@@ -93,5 +96,6 @@ globalClearExclusive(XC *xc)
 } // namespace locked_mem
 
 } // namespace Generic ISA
+} // namespace gem5
 
 #endif

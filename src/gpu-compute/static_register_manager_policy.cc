@@ -42,6 +42,9 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 StaticRegisterManagerPolicy::StaticRegisterManagerPolicy()
 {
 }
@@ -178,3 +181,5 @@ StaticRegisterManagerPolicy::freeRegisters(Wavefront *w)
     w->reservedScalarRegs = 0;
     w->startSgprIndex = 0;
 }
+
+} // namespace gem5

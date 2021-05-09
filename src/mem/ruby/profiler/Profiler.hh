@@ -59,6 +59,9 @@
 #include "mem/ruby/protocol/RubyRequestType.hh"
 #include "params/RubySystem.hh"
 
+namespace gem5
+{
+
 class RubyRequest;
 class AddressProfiler;
 
@@ -192,5 +195,7 @@ class Profiler
   public:
     ProfilerStats rubyProfilerStats;
 };
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_PROFILER_PROFILER_HH__

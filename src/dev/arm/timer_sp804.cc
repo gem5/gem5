@@ -48,6 +48,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 Sp804::Sp804(const Params &p)
     : AmbaPioDevice(p, 0x1000),
       timer0(name() + ".timer0", this, p.int0->get(), p.clock0),
@@ -283,3 +286,5 @@ Sp804::unserialize(CheckpointIn &cp)
     timer0.unserializeSection(cp, "timer0");
     timer1.unserializeSection(cp, "timer1");
 }
+
+} // namespace gem5

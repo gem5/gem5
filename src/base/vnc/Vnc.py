@@ -41,6 +41,7 @@ from m5.objects.Graphics import *
 class VncInput(SimObject):
     type = 'VncInput'
     cxx_header = "base/vnc/vncinput.hh"
+    cxx_class = 'gem5::VncInput'
     frame_capture = Param.Bool(False, "capture changed frames to files")
     img_format = Param.ImageFormat(
         "Auto", "Format of the dumped Framebuffer"
@@ -49,5 +50,6 @@ class VncInput(SimObject):
 class VncServer(VncInput):
     type = 'VncServer'
     cxx_header = "base/vnc/vncserver.hh"
+    cxx_class = 'gem5::VncServer'
     port = Param.TcpPort(5900, "listen port")
     number = Param.Int(0, "vnc client number")

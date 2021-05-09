@@ -41,6 +41,9 @@
 #include "mem/qport.hh"
 #include "mem/tport.hh"
 
+namespace gem5
+{
+
 class SMMUv3;
 class SMMUv3DeviceInterface;
 
@@ -137,5 +140,7 @@ class SMMUATSDevicePort : public QueuedResponsePort
     SMMUATSDevicePort(const std::string &_name, SMMUv3DeviceInterface &_ifc);
     virtual ~SMMUATSDevicePort() {}
 };
+
+} // namespace gem5
 
 #endif /* __DEV_ARM_SMMU_V3_PORTS_HH__ */

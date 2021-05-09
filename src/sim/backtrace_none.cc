@@ -37,7 +37,12 @@
 
 #include "sim/backtrace.hh"
 
+namespace gem5
+{
+
 void
 print_backtrace()
 {
 }
+
+} // namespace gem5

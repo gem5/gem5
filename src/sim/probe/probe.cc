@@ -40,6 +40,9 @@
 #include "debug/ProbeVerbose.hh"
 #include "params/ProbeListenerObject.hh"
 
+namespace gem5
+{
+
 ProbePoint::ProbePoint(ProbeManager *manager, const std::string& _name)
     : name(_name)
 {
@@ -121,3 +124,5 @@ ProbeManager::addPoint(ProbePoint &point)
     }
     points.push_back(&point);
 }
+
+} // namespace gem5

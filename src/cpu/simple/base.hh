@@ -56,6 +56,9 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 // forward declarations
 class Checkpoint;
 class Process;
@@ -195,5 +198,7 @@ class BaseSimpleCPU : public BaseCPU
      * well. */
     virtual void htmSendAbortSignal(HtmFailureFaultCause cause) = 0;
 };
+
+} // namespace gem5
 
 #endif // __CPU_SIMPLE_BASE_HH__

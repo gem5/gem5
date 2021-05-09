@@ -45,6 +45,9 @@
 #include "dev/arm/gic_v3.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class Gicv3Distributor : public Serializable
 {
   private:
@@ -270,5 +273,7 @@ class Gicv3Distributor : public Serializable
     void write(Addr addr, uint64_t data, size_t size,
                bool is_secure_access);
 };
+
+} // namespace gem5
 
 #endif //__DEV_ARM_GICV3_DISTRIBUTOR_H__

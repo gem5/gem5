@@ -55,6 +55,9 @@
 #include "enums/VecRegRenameMode.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct ArmISAParams;
 struct DummyArmISADeviceParams;
 class Checkpoint;
@@ -917,6 +920,8 @@ namespace ArmISA
 
         void copyRegsFrom(ThreadContext *src) override;
     };
-}
+
+} // namespace ArmISA
+} // namespace gem5
 
 #endif

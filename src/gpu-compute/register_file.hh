@@ -42,6 +42,9 @@
 #include "gpu-compute/misc.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class ComputeUnit;
 class Shader;
 class PoolManager;
@@ -168,5 +171,7 @@ class RegisterFile : public SimObject
         statistics::Scalar sramWrites;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __REGISTER_FILE_HH__

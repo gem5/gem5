@@ -51,6 +51,9 @@
 #include "sim/power_state.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * Helper class for objects that need to be clocked. Clocked objects
  * typically inherit from this class. Objects that need SimObject
@@ -241,5 +244,7 @@ class ClockedObject : public SimObject, public Clocked
 
     PowerState *powerState;
 };
+
+} // namespace gem5
 
 #endif //__SIM_CLOCKED_OBJECT_HH__

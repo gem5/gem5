@@ -39,6 +39,9 @@
 #include "dev/net/etherpkt.hh"
 #include "mem/port.hh"
 
+namespace gem5
+{
+
 /*
  * Class representing the actual interface between two ethernet
  * components.  These components are intended to attach to another
@@ -74,5 +77,7 @@ class EtherInt : public Port
     bool askBusy() {return peer->isBusy(); }
     virtual bool isBusy() { return false; }
 };
+
+} // namespace gem5
 
 #endif // __DEV_NET_ETHERINT_HH__

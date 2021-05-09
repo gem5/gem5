@@ -56,6 +56,9 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -445,7 +448,7 @@ LSQUnit::checkSnoop(PacketPtr pkt)
     DPRINTF(LSQUnit, "Got snoop for address %#x\n", pkt->getAddr());
 
     for (int x = 0; x < cpu->numContexts(); x++) {
-        ::ThreadContext *tc = cpu->getContext(x);
+        gem5::ThreadContext *tc = cpu->getContext(x);
         bool no_squash = cpu->thread[x]->noSquashFromTC;
         cpu->thread[x]->noSquashFromTC = true;
         TheISA::handleLockedSnoop(tc, pkt, cacheBlockMask);
@@ -905,7 +908,7 @@ LSQUnit::writebackStores()
         if (req->request()->isLocalAccess()) {
             assert(!inst->isStoreConditional());
             assert(!inst->inHtmTransactionalState());
-            ::ThreadContext *thread = cpu->tcBase(lsqID);
+            gem5::ThreadContext *thread = cpu->tcBase(lsqID);
             PacketPtr main_pkt = new Packet(req->mainRequest(),
                                             MemCmd::WriteReq);
             main_pkt->dataStatic(inst->memData);
@@ -1353,7 +1356,7 @@ LSQUnit::read(LSQRequest *req, int load_idx)
         assert(!load_inst->inHtmTransactionalState());
         load_inst->memData = new uint8_t[MaxDataBytes];
 
-        ::ThreadContext *thread = cpu->tcBase(lsqID);
+        gem5::ThreadContext *thread = cpu->tcBase(lsqID);
         PacketPtr main_pkt = new Packet(req->mainRequest(), MemCmd::ReadReq);
 
         main_pkt->dataStatic(load_inst->memData);
@@ -1668,3 +1671,4 @@ LSQUnit::getStoreHeadSeqNum()
 }
 
 } // namespace o3
+} // namespace gem5

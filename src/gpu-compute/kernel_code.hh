@@ -37,6 +37,9 @@
 #include <bitset>
 #include <cstdint>
 
+namespace gem5
+{
+
 /**
  * these enums represent the indices into the
  * initialRegState bitfields in HsaKernelInfo.
@@ -186,5 +189,7 @@ struct AMDKernelCode
     uint64_t runtime_loader_kernel_symbol;
     uint64_t control_directives[16];
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_KERNEL_CODE_HH__

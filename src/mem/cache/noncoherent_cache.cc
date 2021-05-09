@@ -56,6 +56,9 @@
 #include "mem/cache/mshr.hh"
 #include "params/NoncoherentCache.hh"
 
+namespace gem5
+{
+
 NoncoherentCache::NoncoherentCache(const NoncoherentCacheParams &p)
     : BaseCache(p, p.system->cacheLineSize())
 {
@@ -349,3 +352,5 @@ NoncoherentCache::evictBlock(CacheBlk *blk)
 
     return pkt;
 }
+
+} // namespace gem5

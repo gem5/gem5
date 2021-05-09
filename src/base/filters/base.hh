@@ -39,6 +39,9 @@
 #include "params/BloomFilterBase.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
 namespace bloom_filter
 {
@@ -150,5 +153,6 @@ class Base : public SimObject
 };
 
 } // namespace bloom_filter
+} // namespace gem5
 
 #endif // __BASE_FILTERS_BASE_HH__

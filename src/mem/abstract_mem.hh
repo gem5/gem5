@@ -52,6 +52,8 @@
 #include "sim/clocked_object.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
 
 class System;
 
@@ -345,5 +347,7 @@ class AbstractMemory : public ClockedObject
      */
     void functionalAccess(PacketPtr pkt);
 };
+
+} // namespace gem5
 
 #endif //__MEM_ABSTRACT_MEMORY_HH__

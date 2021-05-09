@@ -47,6 +47,9 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 /**
  * Implements an n bit saturating counter and provides methods to
  * increment, decrement, and read it.
@@ -339,5 +342,7 @@ typedef GenericSatCounter<uint64_t> SatCounter64;
 
 [[deprecated("Use SatCounter8 (or variants) instead")]]
 typedef SatCounter8 SatCounter;
+
+} // namespace gem5
 
 #endif // __BASE_SAT_COUNTER_HH__

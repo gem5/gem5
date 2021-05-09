@@ -48,6 +48,9 @@
 #include "params/X86FsWorkload.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -395,3 +398,4 @@ FsWorkload::writeOutACPITables(Addr fp, Addr &fpSize)
 }
 
 } // namespace X86ISA
+} // namespace gem5

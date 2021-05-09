@@ -36,6 +36,9 @@
 #include "arch/riscv/insts/static_inst.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -131,6 +134,7 @@ class AtomicGenericOp : public TypedAtomicOpFunctor<T>
     std::function<void(T*,T)> op;
 };
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_INSTS_AMO_HH__

@@ -50,6 +50,9 @@
 #include "enums/AddrMap.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 /**
  * Hybrid NVM + DRAM specific generator is for issuing request with variable
  * buffer hit length and bank utilization. Currently assumes a single
@@ -271,5 +274,7 @@ class HybridGen : public BaseGen
     unsigned int rankBits;
 
 };
+
+} // namespace gem5
 
 #endif

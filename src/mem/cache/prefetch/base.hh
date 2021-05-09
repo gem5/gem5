@@ -58,6 +58,9 @@
 #include "sim/clocked_object.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 class BaseCache;
 struct BasePrefetcherParams;
 
@@ -385,5 +388,6 @@ class Base : public ClockedObject
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif //__MEM_CACHE_PREFETCH_BASE_HH__

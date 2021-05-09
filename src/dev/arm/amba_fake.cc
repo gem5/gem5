@@ -45,6 +45,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 AmbaFake::AmbaFake(const Params &p)
     : AmbaPioDevice(p, 0x1000)
 {
@@ -81,3 +84,5 @@ AmbaFake::write(PacketPtr pkt)
     pkt->makeAtomicResponse();
     return pioDelay;
 }
+
+} // namespace gem5

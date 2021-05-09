@@ -31,10 +31,15 @@
 
 #include "arch/generic/types.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
 typedef GenericISA::DelaySlotPCState<4> PCState;
 
 } // namespace MipsISA
-#endif
+} // namespace gem5
+
+#endif // __ARCH_MIPS_PCSTATE_HH__

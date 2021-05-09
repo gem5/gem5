@@ -49,6 +49,9 @@
 #include "sim/faults.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace X86ISA
@@ -205,5 +208,8 @@ namespace X86ISA
         {
         }
     };
-}
+
+} // namespace X86ISA
+} // namespace gem5
+
 #endif // __ARCH_X86_PAGE_TABLE_WALKER_HH__

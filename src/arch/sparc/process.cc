@@ -47,6 +47,9 @@
 #include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace SparcISA;
 
 SparcProcess::SparcProcess(const ProcessParams &params,
@@ -387,3 +390,5 @@ Sparc32Process::argsInit(int intSize, int pageSize)
     initVirtMem->writeBlob(spillStart,
             spillHandler32, sizeof(MachInst) *  numSpillInsts);
 }
+
+} // namespace gem5

@@ -43,6 +43,7 @@ from m5.objects.KvmVM import KvmVM
 class BaseKvmCPU(BaseCPU):
     type = 'BaseKvmCPU'
     cxx_header = "cpu/kvm/base.hh"
+    cxx_class = 'gem5::BaseKvmCPU'
     abstract = True
 
     @cxxMethod

@@ -47,6 +47,9 @@
 #include "params/BaseArmKvmCPU.hh"
 #include "params/GenericTimer.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 #define INTERRUPT_ID(type, vcpu, irq) (                    \
@@ -233,3 +236,5 @@ BaseArmKvmCPU::getRegList(struct kvm_reg_list &regs) const
         return true;
     }
 }
+
+} // namespace gem5

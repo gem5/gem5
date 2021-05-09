@@ -33,6 +33,9 @@
 #include "arch/x86/emulenv.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace X86ISAInst
 {
 
@@ -74,7 +77,7 @@ namespace X86ISA
 
 using X86ISAInst::MicrocodeRom;
 
-}
-
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_MICROCODE_ROM_HH__

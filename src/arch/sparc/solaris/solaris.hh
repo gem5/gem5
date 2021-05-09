@@ -34,6 +34,9 @@
 #include "kern/solaris/solaris.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 class SparcSolaris : public Solaris
 {
   public:
@@ -78,5 +81,7 @@ class SparcSolaris : public Solaris
     static const unsigned TGT_MAP_ANONYMOUS     = 0x00020;
     static const unsigned TGT_MAP_FIXED         = 0x00010;
 };
+
+} // namespace gem5
 
 #endif

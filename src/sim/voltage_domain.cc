@@ -45,6 +45,9 @@
 #include "params/VoltageDomain.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 VoltageDomain::VoltageDomain(const Params &p)
     : SimObject(p), voltageOpPoints(p.voltage), _perfLevel(0), stats(*this)
 {
@@ -143,3 +146,5 @@ VoltageDomain::VoltageDomainStats::VoltageDomainStats(VoltageDomain &vd)
 {
     voltage.method(&vd, &VoltageDomain::voltage);
 }
+
+} // namespace gem5

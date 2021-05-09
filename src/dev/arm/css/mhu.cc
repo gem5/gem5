@@ -45,6 +45,9 @@
 #include "params/MHU.hh"
 #include "params/Scp2ApDoorbell.hh"
 
+namespace gem5
+{
+
 Scp2ApDoorbell::Scp2ApDoorbell(const Scp2ApDoorbellParams &p)
   : MhuDoorbell(p), interrupt(p.interrupt->get())
 {}
@@ -239,3 +242,5 @@ Ap2ScpDoorbell::clearInterrupt()
 {
     scp->clearInterrupt(this);
 }
+
+} // namespace gem5

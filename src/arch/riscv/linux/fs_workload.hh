@@ -33,6 +33,9 @@
 #include "params/RiscvLinux.hh"
 #include "sim/kernel_workload.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -53,5 +56,6 @@ class FsLinux : public KernelWorkload
 };
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_LINUX_FS_WORKLOAD_HH__

@@ -35,11 +35,13 @@ from m5.objects.Uart import Uart8250
 class MaltaCChip(BasicPioDevice):
     type = 'MaltaCChip'
     cxx_header = "dev/mips/malta_cchip.hh"
+    cxx_class = 'gem5::MaltaCChip'
     malta = Param.Malta(Parent.any, "Malta")
 
 class MaltaIO(BasicPioDevice):
     type = 'MaltaIO'
     cxx_header = "dev/mips/malta_io.hh"
+    cxx_class = 'gem5::MaltaIO'
     time = Param.Time('01/01/2009',
         "System time to use (0 for actual time, default is 1/1/06)")
     year_is_bcd = Param.Bool(False,
@@ -50,6 +52,7 @@ class MaltaIO(BasicPioDevice):
 class Malta(Platform):
     type = 'Malta'
     cxx_header = "dev/mips/malta.hh"
+    cxx_class = 'gem5::Malta'
     cchip = MaltaCChip(pio_addr=0x801a0000000)
     io = MaltaIO(pio_addr=0x801fc000000)
     uart = Uart8250(pio_addr=0xBFD003F8)

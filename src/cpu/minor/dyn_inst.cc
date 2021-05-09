@@ -48,6 +48,9 @@
 #include "debug/MinorExecute.hh"
 #include "enums/OpClass.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -243,3 +246,4 @@ MinorDynInst::~MinorDynInst()
 }
 
 } // namespace minor
+} // namespace gem5

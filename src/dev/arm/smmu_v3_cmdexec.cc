@@ -40,6 +40,9 @@
 #include "base/bitfield.hh"
 #include "dev/arm/smmu_v3.hh"
 
+namespace gem5
+{
+
 void
 SMMUCommandExecProcess::main(Yield &yield)
 {
@@ -86,3 +89,5 @@ SMMUCommandExecProcess::main(Yield &yield)
         doSleep(yield);
     }
 }
+
+} // namespace gem5

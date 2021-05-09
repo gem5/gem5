@@ -33,6 +33,9 @@
 
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -75,3 +78,4 @@ PTE::unserialize(CheckpointIn &cp)
 }
 
 } // namespace PowerISA
+} // namespace gem5

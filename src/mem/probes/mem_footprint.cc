@@ -41,6 +41,9 @@
 #include "base/intmath.hh"
 #include "params/MemFootprintProbe.hh"
 
+namespace gem5
+{
+
 MemFootprintProbe::MemFootprintProbe(const MemFootprintProbeParams &p)
     : BaseMemProbe(p),
       cacheLineSizeLg2(floorLog2(p.system->cacheLineSize())),
@@ -119,3 +122,5 @@ MemFootprintProbe::statReset()
     cacheLines.clear();
     pages.clear();
 }
+
+} // namespace gem5

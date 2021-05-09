@@ -30,6 +30,9 @@
 
 #include "arch/x86/insts/microop.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -65,5 +68,6 @@ class MicroDebug : public X86ISA::X86MicroopBase
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_INSTS_MICRODEBUG_HH__

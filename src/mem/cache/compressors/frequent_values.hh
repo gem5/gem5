@@ -43,6 +43,9 @@
 #include "sim/eventq.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 struct FrequentValuesCompressorParams;
 
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
@@ -221,5 +224,6 @@ class FrequentValues::CompData : public CompressionData
 };
 
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_FREQUENT_VALUES_HH__

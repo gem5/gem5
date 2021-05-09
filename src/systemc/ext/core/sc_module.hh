@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 
+#include "mem/port.hh"
 #include "sc_object.hh"
 #include "sc_process_handle.hh"
 #include "sc_sensitive.hh"
@@ -98,7 +99,7 @@ class sc_module : public sc_object
 {
   public:
     // Gem5 specific extensions
-    virtual ::Port &gem5_getPort(const std::string &if_name, int idx=-1);
+    virtual gem5::Port &gem5_getPort(const std::string &if_name, int idx=-1);
 
   public:
     friend class ::sc_gem5::Kernel;

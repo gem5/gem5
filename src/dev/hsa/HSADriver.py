@@ -38,4 +38,5 @@ class HSADriver(EmulatedDriver):
     type = 'HSADriver'
     abstract = True
     cxx_header = 'dev/hsa/hsa_driver.hh'
+    cxx_class = 'gem5::HSADriver'
     device = Param.HSADevice('HSA device controlled by this driver')

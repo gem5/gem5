@@ -31,6 +31,9 @@
 #include <cerrno>
 #include <cstdio>
 
+namespace gem5
+{
+
 ssize_t
 atomic_read(int fd, void *s, size_t n)
 {
@@ -88,3 +91,5 @@ atomic_write(int fd, const void *s, size_t n)
 
     return pos;
 }
+
+} // namespace gem5

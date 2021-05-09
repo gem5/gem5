@@ -40,10 +40,14 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace NullISA
 {
     const Addr PageShift = 12;
     const Addr PageBytes = 1ULL << PageShift;
-}
+} // namespace NullISA
+} // namespace gem5
 
 #endif //__ARCH_NULL_PAGE_SIZE_HH__

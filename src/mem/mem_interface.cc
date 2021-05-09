@@ -49,6 +49,9 @@
 #include "debug/NVM.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace Data;
 
 MemInterface::MemInterface(const MemInterfaceParams &_p)
@@ -2620,3 +2623,5 @@ NVMInterface::NVMStats::regStats()
     busUtilRead = avgRdBW / peakBW * 100;
     busUtilWrite = avgWrBW / peakBW * 100;
 }
+
+} // namespace gem5

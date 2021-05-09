@@ -30,6 +30,9 @@
 
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 TimerTable::TimerTable()
     : m_next_time(0)
 {
@@ -120,3 +123,5 @@ TimerTable::updateNext() const
 
     m_next_valid = true;
 }
+
+} // namespace gem5

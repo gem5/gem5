@@ -44,6 +44,9 @@
 #include "mem/port.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 DumbTOD::DumbTOD(const Params &p)
     : BasicPioDevice(p, 0x08)
 {
@@ -84,3 +87,5 @@ DumbTOD::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(todTime);
 }
+
+} // namespace gem5

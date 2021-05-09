@@ -39,6 +39,9 @@
 
 #include <cassert>
 
+namespace gem5
+{
+
 NonCachingSimpleCPU::NonCachingSimpleCPU(const NonCachingSimpleCPUParams &p)
     : AtomicSimpleCPU(p)
 {
@@ -95,3 +98,5 @@ NonCachingSimpleCPU::fetchInstMem()
     memcpy(decoder.moreBytesPtr(), bd->ptr() + offset, ifetch_req->getSize());
     return 0;
 }
+
+} // namespace gem5

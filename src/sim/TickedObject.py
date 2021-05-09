@@ -39,3 +39,4 @@ class TickedObject(ClockedObject):
     type = 'TickedObject'
     abstract = True
     cxx_header = "sim/ticked_object.hh"
+    cxx_class = 'gem5::TickedObject'

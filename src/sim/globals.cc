@@ -48,6 +48,9 @@
 #include "base/logging.hh"
 #include "sim/cur_tick.hh"
 
+namespace gem5
+{
+
 /// The version tags for this build of the simulator, to be stored in the
 /// Globals section during serialization and compared upon unserialization.
 extern std::set<std::string> version_tags;
@@ -119,3 +122,5 @@ Globals::unserialize(CheckpointIn &cp)
         warn(divider);
      }
 }
+
+} // namespace gem5

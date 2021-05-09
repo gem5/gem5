@@ -34,6 +34,9 @@
 #include "dev/io_device.hh"
 #include "params/I8254.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -121,5 +124,6 @@ class I8254 : public BasicPioDevice
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif //__DEV_X86_SOUTH_BRIDGE_I8254_HH__

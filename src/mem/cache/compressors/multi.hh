@@ -41,6 +41,9 @@
 #include "base/types.hh"
 #include "mem/cache/compressors/base.hh"
 
+namespace gem5
+{
+
 struct MultiCompressorParams;
 
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
@@ -139,5 +142,6 @@ class Multi::MultiCompData : public CompressionData
 };
 
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_MULTI_HH__

@@ -23,9 +23,13 @@
 #ifndef KFD_IOCTL_H_INCLUDED
 #define KFD_IOCTL_H_INCLUDED
 
+#include <cstdint>
 #include <drm/drm.h>
 #include <linux/ioctl.h>
 #include <linux/types.h>
+
+namespace gem5
+{
 
 /*
  * - 1.1 - initial version
@@ -612,5 +616,7 @@ enum kfd_mmio_remap
 
 #define AMDKFD_COMMAND_START		0x01
 #define AMDKFD_COMMAND_END              0x20
+
+} // namespace gem5
 
 #endif

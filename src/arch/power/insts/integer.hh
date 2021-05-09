@@ -34,6 +34,9 @@
 #include "base/bitfield.hh"
 #include "base/cprintf.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -790,5 +793,6 @@ class IntImmTrapOp : public IntTrapOp
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif //__ARCH_POWER_INSTS_INTEGER_HH__

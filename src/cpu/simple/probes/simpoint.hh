@@ -45,6 +45,9 @@
 #include "params/SimPoint.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 /**
  * Probe for SimPoints BBV generation
  */
@@ -57,17 +60,24 @@
  */
 typedef std::pair<Addr, Addr> BasicBlockRange;
 
+} // namespace gem5
+
 /** Overload hash function for BasicBlockRange type */
-namespace std {
+namespace std
+{
 template <>
-struct hash<BasicBlockRange>
+struct hash<gem5::BasicBlockRange>
 {
   public:
-    size_t operator()(const BasicBlockRange &bb) const {
-        return hash<Addr>()(bb.first + bb.second);
+    size_t operator()(const gem5::BasicBlockRange &bb) const
+    {
+        return hash<gem5::Addr>()(bb.first + bb.second);
     }
 };
-}
+} // namespace std
+
+namespace gem5
+{
 
 class SimPoint : public ProbeListenerObject
 {
@@ -115,5 +125,7 @@ class SimPoint : public ProbeListenerObject
     /** inst count in current basic block */
     uint64_t currentBBVInstCount;
 };
+
+} // namespace gem5
 
 #endif // __CPU_SIMPLE_PROBES_SIMPOINT_HH__

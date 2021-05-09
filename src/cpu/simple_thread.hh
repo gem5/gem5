@@ -71,6 +71,9 @@
 #include "sim/serialize.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 class BaseCPU;
 class CheckerCPU;
 
@@ -568,5 +571,6 @@ class SimpleThread : public ThreadState, public ThreadContext
     void setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt) override;
 };
 
+} // namespace gem5
 
 #endif // __CPU_SIMPLE_THREAD_HH__

@@ -45,6 +45,9 @@
  * This implements the ARM Primecell 031 RTC
  */
 
+namespace gem5
+{
+
 class PL031 : public AmbaIntDevice
 {
   protected:
@@ -124,5 +127,6 @@ class PL031 : public AmbaIntDevice
     void unserialize(CheckpointIn &cp) override;
 };
 
+} // namespace gem5
 
 #endif // __DEV_ARM_RTC_PL031_HH__

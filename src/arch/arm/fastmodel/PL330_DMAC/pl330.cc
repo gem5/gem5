@@ -32,6 +32,9 @@
 #include "params/FastModelPL330.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
@@ -260,3 +263,4 @@ PL330::start_of_simulation()
 }
 
 } // namespace fastmodel
+} // namespace gem5

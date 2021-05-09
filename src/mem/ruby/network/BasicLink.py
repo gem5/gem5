@@ -30,6 +30,8 @@ from m5.SimObject import SimObject
 class BasicLink(SimObject):
     type = 'BasicLink'
     cxx_header = "mem/ruby/network/BasicLink.hh"
+    cxx_class = 'gem5::BasicLink'
+
     link_id = Param.Int("ID in relation to other links")
     latency = Param.Cycles(1, "latency")
     # Width of the link in bytes
@@ -42,6 +44,8 @@ class BasicLink(SimObject):
 class BasicExtLink(BasicLink):
     type = 'BasicExtLink'
     cxx_header = "mem/ruby/network/BasicLink.hh"
+    cxx_class = 'gem5::BasicExtLink'
+
     ext_node = Param.RubyController("External node")
     int_node = Param.BasicRouter("ID of internal node")
     bandwidth_factor = 16 # only used by simple network
@@ -49,6 +53,8 @@ class BasicExtLink(BasicLink):
 class BasicIntLink(BasicLink):
     type = 'BasicIntLink'
     cxx_header = "mem/ruby/network/BasicLink.hh"
+    cxx_class = 'gem5::BasicIntLink'
+
     src_node = Param.BasicRouter("Router on src end")
     dst_node = Param.BasicRouter("Router on dst end")
 

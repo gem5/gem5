@@ -31,6 +31,9 @@
 #include "params/SEWorkload.hh"
 #include "sim/workload.hh"
 
+namespace gem5
+{
+
 class SEWorkload : public Workload
 {
   public:
@@ -76,5 +79,7 @@ class SEWorkload : public Workload
     // For now, assume the only type of events are system calls.
     void event(ThreadContext *tc) override { syscall(tc); }
 };
+
+} // namespace gem5
 
 #endif // __SIM_SE_WORKLOAD_HH__

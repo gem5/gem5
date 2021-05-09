@@ -31,6 +31,7 @@ from m5.objects.BaseSimpleCPU import BaseSimpleCPU
 class TimingSimpleCPU(BaseSimpleCPU):
     type = 'TimingSimpleCPU'
     cxx_header = "cpu/simple/timing.hh"
+    cxx_class = 'gem5::TimingSimpleCPU'
 
     @classmethod
     def memory_mode(cls):

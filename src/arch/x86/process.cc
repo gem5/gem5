@@ -66,6 +66,9 @@
 #include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace X86ISA;
 
 template class MultiLevelPageTable<LongModePTE<47, 39>,
@@ -1027,3 +1030,5 @@ I386Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
     X86Process::clone(old_tc, new_tc, p, flags);
     ((I386Process*)p)->vsyscallPage = vsyscallPage;
 }
+
+} // namespace gem5

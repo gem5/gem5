@@ -43,6 +43,9 @@
 
 #include "base/cprintf.hh"
 
+namespace gem5
+{
+
 void
 CacheBlk::insert(const Addr tag, const bool is_secure,
                  const int src_requestor_ID, const uint32_t task_ID)
@@ -76,3 +79,4 @@ CacheBlkPrintWrapper::print(std::ostream &os, int verbosity,
              blk->isSecure()   ? 'S' : '-');
 }
 
+} // namespace gem5

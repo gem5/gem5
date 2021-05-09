@@ -34,12 +34,15 @@
 #include "base/stats/types.hh"
 #include "base/stats/units.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
 
 typedef uint16_t FlagsType;
-typedef ::Flags<FlagsType> Flags;
+typedef gem5::Flags<FlagsType> Flags;
 
 /** Nothing extra to print. */
 const FlagsType none =          0x0000;
@@ -269,5 +272,6 @@ typedef std::map<std::string, Info *> NameMapType;
 NameMapType &nameMap();
 
 } // namespace statistics
+} // namespace gem5
 
 #endif // __BASE_STATS_INFO_HH__

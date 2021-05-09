@@ -40,6 +40,9 @@
 #include "base/types.hh"
 #include "enums/ByteOrder.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -134,5 +137,6 @@ class ObjectFileFormat
 ObjectFile *createObjectFile(const std::string &fname, bool raw=false);
 
 } // namespace loader
+} // namespace gem5
 
 #endif // __BASE_LOADER_OBJECT_FILE_HH__

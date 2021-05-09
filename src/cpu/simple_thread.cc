@@ -61,6 +61,9 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 // constructor
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            Process *_process, BaseMMU *_mmu,
@@ -90,7 +93,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 void
 SimpleThread::takeOverFrom(ThreadContext *oldContext)
 {
-    ::takeOverFrom(*this, *oldContext);
+    gem5::takeOverFrom(*this, *oldContext);
     decoder.takeOverFrom(oldContext->getDecoderPtr());
 
     isa->takeOverFrom(this, oldContext);
@@ -113,7 +116,7 @@ void
 SimpleThread::serialize(CheckpointOut &cp) const
 {
     ThreadState::serialize(cp);
-    ::serialize(*this, cp);
+    gem5::serialize(*this, cp);
 }
 
 
@@ -121,7 +124,7 @@ void
 SimpleThread::unserialize(CheckpointIn &cp)
 {
     ThreadState::unserialize(cp);
-    ::unserialize(*this, cp);
+    gem5::unserialize(*this, cp);
 }
 
 void
@@ -189,3 +192,5 @@ SimpleThread::setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt)
 {
     _htmCheckpoint = std::move(new_cpt);
 }
+
+} // namespace gem5

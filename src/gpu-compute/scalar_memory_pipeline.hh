@@ -52,6 +52,9 @@
  * returned from the memory sub-system.
  */
 
+namespace gem5
+{
+
 class ComputeUnit;
 
 class ScalarMemPipeline
@@ -106,5 +109,7 @@ class ScalarMemPipeline
     // scalar loads are sent to this FIFO from L1 Scalar Data Cache
     std::queue<GPUDynInstPtr> returnedLoads;
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_SCALAR_MEMORY_PIPELINE_HH__

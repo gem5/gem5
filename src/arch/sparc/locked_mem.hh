@@ -37,11 +37,15 @@
 
 #include "arch/generic/locked_mem.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
 using namespace GenericISA::locked_mem;
 
 } // namespace SparcISA
+} // namespace gem5
 
 #endif

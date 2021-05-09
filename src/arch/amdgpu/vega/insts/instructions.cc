@@ -40,6 +40,9 @@
 #include "debug/GPUSync.hh"
 #include "gpu-compute/shader.hh"
 
+namespace gem5
+{
+
 namespace VegaISA
 {
     // --- Inst_SOP2__S_ADD_U32 class methods ---
@@ -44433,3 +44436,4 @@ namespace VegaISA
         panicUnimplemented();
     } // execute
 } // namespace VegaISA
+} // namespace gem5

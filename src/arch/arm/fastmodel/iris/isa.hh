@@ -31,6 +31,9 @@
 #include "arch/arm/utility.hh"
 #include "arch/generic/isa.hh"
 
+namespace gem5
+{
+
 namespace Iris
 {
 
@@ -52,5 +55,6 @@ class ISA : public BaseISA
 };
 
 } // namespace Iris
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_IRIS_ISA_HH__

@@ -28,6 +28,9 @@
 
 #include "arch/sparc/insts/micro.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -40,4 +43,5 @@ SparcMacroInst::generateDisassembly(
     return response.str();
 }
 
-}
+} // namespace SparcISA
+} // namespace gem5

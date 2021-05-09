@@ -28,6 +28,9 @@
 
 #include "arch/power/insts/misc.hh"
 
+namespace gem5
+{
+
 using namespace PowerISA;
 
 std::string
@@ -56,3 +59,5 @@ MiscOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 
     return ss.str();
 }
+
+} // namespace gem5

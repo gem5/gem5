@@ -31,6 +31,9 @@
 #include "base/intmath.hh"
 #include "debug/Indirect.hh"
 
+namespace gem5
+{
+
 SimpleIndirectPredictor::SimpleIndirectPredictor(
         const SimpleIndirectPredictorParams &params)
     : IndirectPredictor(params),
@@ -233,3 +236,5 @@ SimpleIndirectPredictor::getTag(Addr br_addr)
 {
     return (br_addr >> instShift) & ((0x1<<tagBits)-1);
 }
+
+} // namespace gem5

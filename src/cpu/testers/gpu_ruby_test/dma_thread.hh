@@ -37,6 +37,9 @@
 #include "cpu/testers/gpu_ruby_test/tester_thread.hh"
 #include "params/DmaThread.hh"
 
+namespace gem5
+{
+
 class DmaThread : public TesterThread
 {
   public:
@@ -56,5 +59,7 @@ class DmaThread : public TesterThread
     void issueAcquireOp();
     void issueReleaseOp();
 };
+
+} // namespace gem5
 
 #endif /* CPU_TESTERS_PROTOCOL_TESTER_DMATHREAD_HH_ */

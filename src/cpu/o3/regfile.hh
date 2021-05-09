@@ -52,6 +52,9 @@
 #include "debug/IEW.hh"
 #include "enums/VecRegRenameMode.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -365,5 +368,6 @@ class PhysRegFile
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif //__CPU_O3_REGFILE_HH__

@@ -41,6 +41,9 @@
 #include "params/VirtIOBlock.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 VirtIOBlock::VirtIOBlock(const Params &params)
     : VirtIODeviceBase(params, ID_BLOCK, sizeof(Config), 0),
       qRequests(params.system->physProxy, byteOrder,
@@ -164,3 +167,5 @@ VirtIOBlock::RequestQueue::onNotifyDescriptor(VirtDescriptor *desc)
     produceDescriptor(desc, sizeof(BlkRequest) + data_size + sizeof(Status));
     parent.kick();
 }
+
+} // namespace gem5

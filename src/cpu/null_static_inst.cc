@@ -30,4 +30,9 @@
 
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 const StaticInstPtr nullStaticInstPtr;
+
+} // namespace gem5

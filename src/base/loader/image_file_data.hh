@@ -35,6 +35,9 @@
 
 #include "base/compiler.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -58,5 +61,6 @@ class ImageFileData
 typedef std::shared_ptr<ImageFileData> ImageFileDataPtr;
 
 } // namespace loader
+} // namespace gem5
 
 #endif // __BASE_LOADER_IMAGE_FILE_DATA_HH__

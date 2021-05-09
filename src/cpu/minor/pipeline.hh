@@ -54,6 +54,9 @@
 #include "params/MinorCPU.hh"
 #include "sim/ticked_object.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -140,5 +143,6 @@ class Pipeline : public Ticked
 };
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_PIPELINE_HH__ */

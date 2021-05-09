@@ -47,6 +47,7 @@ class NoMaliGpuType(Enum): vals = [
 class NoMaliGpu(PioDevice):
     type = 'NoMaliGpu'
     cxx_header = "dev/arm/gpu_nomali.hh"
+    cxx_class = 'gem5::NoMaliGpu'
 
     pio_addr = Param.Addr("Device base address")
 
@@ -69,6 +70,7 @@ class CustomNoMaliGpu(NoMaliGpu):
 
     type = 'CustomNoMaliGpu'
     cxx_header = "dev/arm/gpu_nomali.hh"
+    cxx_class = 'gem5::CustomNoMaliGpu'
 
     gpu_id = Param.UInt32("")
     l2_features = Param.UInt32("")

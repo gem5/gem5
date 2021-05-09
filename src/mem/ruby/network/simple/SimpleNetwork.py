@@ -34,6 +34,8 @@ from m5.objects.MessageBuffer import MessageBuffer
 class SimpleNetwork(RubyNetwork):
     type = 'SimpleNetwork'
     cxx_header = "mem/ruby/network/simple/SimpleNetwork.hh"
+    cxx_class = 'gem5::SimpleNetwork'
+
     buffer_size = Param.Int(0,
         "default buffer size; 0 indicates infinite buffering");
     endpoint_bandwidth = Param.Int(1000, "bandwidth adjustment factor");
@@ -72,6 +74,8 @@ class SimpleNetwork(RubyNetwork):
 class Switch(BasicRouter):
     type = 'Switch'
     cxx_header = 'mem/ruby/network/simple/Switch.hh'
+    cxx_class = 'gem5::Switch'
+
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
     port_buffers = VectorParam.MessageBuffer("Port buffers")

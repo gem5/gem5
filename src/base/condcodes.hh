@@ -31,6 +31,9 @@
 
 #include "base/bitfield.hh"
 
+namespace gem5
+{
+
 /**
  * Calculate the carry flag from an addition. This should work even when
  * a carry value is also added in.
@@ -150,5 +153,7 @@ findZero(int width, uint64_t dest)
 {
     return !(dest & mask(width));
 }
+
+} // namespace gem5
 
 #endif // __BASE_CONDCODE_HH__

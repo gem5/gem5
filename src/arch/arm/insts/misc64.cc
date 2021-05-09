@@ -38,6 +38,9 @@
 #include "arch/arm/insts/misc64.hh"
 #include "arch/arm/isa.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 std::string
@@ -881,3 +884,5 @@ RegNone::generateDisassembly(
     printIntReg(ss, dest);
     return ss.str();
 }
+
+} // namespace gem5

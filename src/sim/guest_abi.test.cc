@@ -32,6 +32,10 @@
 
 #include "sim/guest_abi.hh"
 
+using namespace gem5;
+
+namespace gem5
+{
 // Fake ThreadContext which holds data and captures results.
 class ThreadContext
 {
@@ -57,6 +61,8 @@ const double ThreadContext::floats[] = {
 
 const int ThreadContext::DefaultIntResult = 0;
 const double ThreadContext::DefaultFloatResult = 0.0;
+
+} // namespace gem5
 
 // ABI anchor for an ABI which has 1D progress. Conceptually, this could be
 // because integer and floating point arguments are stored in the same
@@ -88,6 +94,9 @@ struct TestABI_TcInit
         State(const ThreadContext *tc) : pos(tc->intOffset) {}
     };
 };
+
+namespace gem5
+{
 
 GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
 namespace guest_abi
@@ -224,6 +233,7 @@ struct Argument<TestABI_TcInit, int>
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 // Test function which verifies that its arguments reflect the 1D ABI and
 // which doesn't return anything.

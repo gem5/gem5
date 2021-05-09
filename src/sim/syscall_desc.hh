@@ -53,6 +53,9 @@
 #include "sim/process.hh"
 #include "sim/syscall_return.hh"
 
+namespace gem5
+{
+
 class SyscallDesc;
 
 SyscallReturn unimplementedFunc(SyscallDesc *desc, ThreadContext *tc);
@@ -205,5 +208,7 @@ class SyscallDescTable
         return &it->second;
     }
 };
+
+} // namespace gem5
 
 #endif // __SIM_SYSCALL_DESC_HH__

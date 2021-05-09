@@ -51,6 +51,9 @@
  * most one Gem5Module instantiated in any simulation.
  */
 
+#include <cassert>
+
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/pollevent.hh"
 #include "base/trace.hh"
@@ -70,8 +73,8 @@ namespace Gem5SystemC
 void
 setTickFrequency()
 {
-    ::setClockFrequency(1000000000000);
-    ::fixClockFrequency();
+    ::gem5::setClockFrequency(1000000000000);
+    ::gem5::fixClockFrequency();
 }
 
 Module::Module(sc_core::sc_module_name name) : sc_core::sc_channel(name),
@@ -87,7 +90,7 @@ Module::Module(sc_core::sc_module_name name) : sc_core::sc_channel(name),
 }
 
 void
-Module::SCEventQueue::wakeup(Tick when)
+Module::SCEventQueue::wakeup(gem5::Tick when)
 {
     DPRINTF(Event, "waking up SCEventQueue\n");
     /* Don't bother to use 'when' for now */
@@ -101,17 +104,17 @@ Module::setupEventQueues(Module &module)
         "Gem5SystemC::Module::setupEventQueues must be called"
         " before any gem5 event queues are set up");
 
-    numMainEventQueues = 1;
-    mainEventQueue.push_back(new SCEventQueue("events", module));
-    curEventQueue(getEventQueue(0));
+    gem5::numMainEventQueues = 1;
+    gem5::mainEventQueue.push_back(new SCEventQueue("events", module));
+    gem5::curEventQueue(getEventQueue(0));
 }
 
 void
 Module::catchup()
 {
-    EventQueue *eventq = getEventQueue(0);
-    Tick systemc_time = sc_core::sc_time_stamp().value();
-    Tick gem5_time = curTick();
+    gem5::EventQueue *eventq = getEventQueue(0);
+    gem5::Tick systemc_time = sc_core::sc_time_stamp().value();
+    gem5::Tick gem5_time = gem5::curTick();
 
     /* gem5 time *must* lag SystemC as SystemC is the master */
     fatal_if(gem5_time > systemc_time, "gem5 time must lag SystemC time"
@@ -120,7 +123,7 @@ Module::catchup()
     eventq->setCurTick(systemc_time);
 
     if (!eventq->empty()) {
-        Tick next_event_time M5_VAR_USED = eventq->nextTick();
+        gem5::Tick next_event_time M5_VAR_USED = eventq->nextTick();
 
         fatal_if(gem5_time > next_event_time,
             "Missed an event at time %d gem5: %d, SystemC: %d",
@@ -137,14 +140,14 @@ Module::notify(sc_core::sc_time time_from_now)
 void
 Module::serviceAsyncEvent()
 {
-    EventQueue *eventq = getEventQueue(0);
-    std::lock_guard<EventQueue> lock(*eventq);
+    gem5::EventQueue *eventq = gem5::getEventQueue(0);
+    std::lock_guard<gem5::EventQueue> lock(*eventq);
 
     assert(async_event);
 
     /* Catch up gem5 time with SystemC time so that any event here won't
      * be in the past relative to the current time */
-    Tick systemc_time = sc_core::sc_time_stamp().value();
+    gem5::Tick systemc_time = sc_core::sc_time_stamp().value();
 
     /* Move time on to match SystemC */
     catchup();
@@ -158,7 +161,7 @@ Module::serviceAsyncEvent()
 
     if (async_exit) {
         async_exit = false;
-        exitSimLoop("user interrupt received");
+        gem5::exitSimLoop("user interrupt received");
     }
 
     if (async_io) {
@@ -173,7 +176,7 @@ Module::serviceAsyncEvent()
 void
 Module::serviceExternalEvent()
 {
-    EventQueue *eventq = getEventQueue(0);
+    gem5::EventQueue *eventq = getEventQueue(0);
 
     if (!in_simulate && !async_event)
         warn("Gem5SystemC external event received while not in simulate");
@@ -188,7 +191,7 @@ Module::serviceExternalEvent()
 void
 Module::eventLoop()
 {
-    EventQueue *eventq = getEventQueue(0);
+    gem5::EventQueue *eventq = getEventQueue(0);
 
     fatal_if(!in_simulate, "Gem5SystemC event loop entered while"
         " outside Gem5SystemC::Module::simulate");
@@ -197,12 +200,12 @@ Module::eventLoop()
         serviceAsyncEvent();
 
     while (!eventq->empty()) {
-        Tick next_event_time = eventq->nextTick();
+        gem5::Tick next_event_time = eventq->nextTick();
 
         /* Move time on to match SystemC */
         catchup();
 
-        Tick gem5_time = curTick();
+        gem5::Tick gem5_time = gem5::curTick();
 
         /* Woken up early */
         if (wait_exit_time > sc_core::sc_time_stamp().value()) {
@@ -211,7 +214,7 @@ Module::eventLoop()
         }
 
         if (gem5_time < next_event_time) {
-            Tick wait_period = next_event_time - gem5_time;
+            gem5::Tick wait_period = next_event_time - gem5_time;
             wait_exit_time = gem5_time + wait_period;
 
             DPRINTF(Event, "Waiting for %d ticks for next gem5 event\n",
@@ -224,7 +227,7 @@ Module::eventLoop()
 
             return;
         } else if (gem5_time > next_event_time) {
-            Tick systemc_time = sc_core::sc_time_stamp().value();
+            gem5::Tick systemc_time = sc_core::sc_time_stamp().value();
 
             /* Missed event, for some reason the above test didn't work
              *  or an event was scheduled in the past */
@@ -247,14 +250,15 @@ Module::eventLoop()
 GlobalSimLoopExitEvent *
 Module::simulate(Tick num_cycles)
 {
-    inform("Entering event queue @ %d.  Starting simulation...", curTick());
+    inform("Entering event queue @ %d.  Starting simulation...",
+        gem5::curTick());
 
-    if (num_cycles < MaxTick - curTick())
-        num_cycles = curTick() + num_cycles;
+    if (num_cycles < gem5::MaxTick - gem5::curTick())
+        num_cycles = gem5::curTick() + num_cycles;
     else /* counter would roll over or be set to MaxTick anyhow */
-        num_cycles = MaxTick;
+        num_cycles = gem5::MaxTick;
 
-    GlobalEvent *limit_event = new GlobalSimLoopExitEvent(num_cycles,
+    gem5::GlobalEvent *limit_event = new GlobalSimLoopExitEvent(num_cycles,
         "simulate() limit reached", 0, 0);
 
     exitEvent = NULL;
@@ -277,10 +281,10 @@ Module::simulate(Tick num_cycles)
     in_simulate = false;
 
     /* Locate the global exit event */
-    BaseGlobalEvent *global_event = exitEvent->globalEvent();
+    gem5::BaseGlobalEvent *global_event = exitEvent->globalEvent();
     assert(global_event != NULL);
 
-    GlobalSimLoopExitEvent *global_exit_event =
+    gem5::GlobalSimLoopExitEvent *global_exit_event =
         dynamic_cast<GlobalSimLoopExitEvent *>(global_event);
     assert(global_exit_event != NULL);
 
@@ -292,4 +296,4 @@ Module::simulate(Tick num_cycles)
     return global_exit_event;
 }
 
-}
+} // namespace Gem5SystemC

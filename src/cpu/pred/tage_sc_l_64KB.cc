@@ -41,6 +41,9 @@
 
 #include "cpu/pred/tage_sc_l_64KB.hh"
 
+namespace gem5
+{
+
 TAGE_SC_L_64KB_StatisticalCorrector::TAGE_SC_L_64KB_StatisticalCorrector(
     const TAGE_SC_L_64KB_StatisticalCorrectorParams &p)
   : StatisticalCorrector(p),
@@ -307,3 +310,5 @@ TAGE_SC_L_64KB::TAGE_SC_L_64KB(const TAGE_SC_L_64KBParams &params)
   : TAGE_SC_L(params)
 {
 }
+
+} // namespace gem5

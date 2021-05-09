@@ -35,6 +35,8 @@
 
 #include "base/amo.hh"
 
+using namespace gem5;
+
 void
 multiply2Op(int *b, int a)
 {

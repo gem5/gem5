@@ -40,6 +40,9 @@
 #include "base/types.hh"
 #include "mem/se_translating_port_proxy.hh"
 
+namespace gem5
+{
+
 /**
  * Base class for BufferArg and TypedBufferArg, Not intended to be
  * used directly.
@@ -165,5 +168,6 @@ class TypedBufferArg : public BaseBufferArg
     T &operator[](int i) { return ((T *)bufPtr)[i]; }
 };
 
+} // namespace gem5
 
 #endif // __SIM_SYSCALL_EMUL_BUF_HH__

@@ -46,6 +46,9 @@
 #include "params/EtherBus.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 EtherBus::EtherBus(const Params &p)
     : SimObject(p), ticksPerByte(p.speed), loopback(p.loopback),
       event([this]{ txDone(); }, "ethernet bus completion"),
@@ -103,3 +106,5 @@ EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
 
     return true;
 }
+
+} // namespace gem5

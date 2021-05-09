@@ -39,6 +39,8 @@
 
 #include "base/channel_addr.hh"
 
+using namespace gem5;
+
 /* Default range should be invalid */
 TEST(ChannelAddrRange, DefaultInvalid)
 {

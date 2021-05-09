@@ -74,7 +74,7 @@ sc_vector_base::checkIndex(size_type index) const
 {
     if (index >= size()) {
         std::ostringstream ss;
-        ccprintf(ss, "%s[%d] >= size() = %d", name(), index, size());
+        gem5::ccprintf(ss, "%s[%d] >= size() = %d", name(), index, size());
         SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, ss.str().c_str());
         sc_abort();
     }

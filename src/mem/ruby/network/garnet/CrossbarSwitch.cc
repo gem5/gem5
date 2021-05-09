@@ -35,6 +35,9 @@
 #include "mem/ruby/network/garnet/OutputUnit.hh"
 #include "mem/ruby/network/garnet/Router.hh"
 
+namespace gem5
+{
+
 CrossbarSwitch::CrossbarSwitch(Router *router)
   : Consumer(router), m_router(router), m_num_vcs(m_router->get_num_vcs()),
     m_crossbar_activity(0), switchBuffers(0)
@@ -99,3 +102,5 @@ CrossbarSwitch::resetStats()
 {
     m_crossbar_activity = 0;
 }
+
+} // namespace gem5

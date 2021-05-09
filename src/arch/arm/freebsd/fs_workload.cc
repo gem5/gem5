@@ -45,6 +45,9 @@
 #include "mem/physical.hh"
 #include "sim/stat_control.hh"
 
+namespace gem5
+{
+
 using namespace free_bsd;
 
 namespace ArmISA
@@ -124,3 +127,4 @@ FsFreebsd::~FsFreebsd()
 }
 
 } // namespace ArmISA
+} // namespace gem5

@@ -44,6 +44,9 @@
 #include "debug/TrafficGen.hh"
 #include "enums/AddrMap.hh"
 
+namespace gem5
+{
+
 HybridGen::HybridGen(SimObject &obj,
                RequestorID requestor_id, Tick _duration,
                Addr start_addr_dram, Addr end_addr_dram,
@@ -308,3 +311,5 @@ HybridGen::nextPacketTick(bool elastic, Tick delay) const
         return curTick() + wait;
     }
 }
+
+} // namespace gem5

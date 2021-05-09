@@ -32,6 +32,7 @@ from os import getcwd
 class Process(SimObject):
     type = 'Process'
     cxx_header = "sim/process.hh"
+    cxx_class = 'gem5::Process'
 
     @cxxMethod
     def map(self, vaddr, paddr, size, cacheable=False):
@@ -69,5 +70,6 @@ class Process(SimObject):
 class EmulatedDriver(SimObject):
     type = 'EmulatedDriver'
     cxx_header = "sim/emul_driver.hh"
+    cxx_class = 'gem5::EmulatedDriver'
     abstract = True
     filename = Param.String("device file name (under /dev)")

@@ -42,6 +42,9 @@
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 HtmCacheFailure
 HTMSequencer::htmRetCodeConversion(
     const HtmFailedInCacheReason ruby_ret_code)
@@ -358,3 +361,5 @@ HTMSequencer::insertRequest(PacketPtr pkt, RubyRequestType primary_type,
         return Sequencer::insertRequest(pkt, primary_type, secondary_type);
     }
 }
+
+} // namespace gem5

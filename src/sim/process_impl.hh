@@ -34,6 +34,9 @@
 
 #include "mem/se_translating_port_proxy.hh"
 
+namespace gem5
+{
+
 //This needs to be templated for cases where 32 bit pointers are needed.
 template<class AddrType>
 void
@@ -54,5 +57,7 @@ copyStringArray(std::vector<std::string> &strings,
 
     memProxy.writeBlob(array_ptr, &data_ptr, sizeof(AddrType));
 }
+
+} // namespace gem5
 
 #endif

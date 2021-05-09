@@ -45,6 +45,9 @@
 #include "base/random.hh"
 #include "debug/TageSCL.hh"
 
+namespace gem5
+{
+
 bool
 TAGE_SC_L_LoopPredictor::calcConf(int index) const
 {
@@ -458,3 +461,5 @@ TAGE_SC_L::update(ThreadID tid, Addr branch_pc, bool taken, void *bp_history,
 
     delete bi;
 }
+
+} // namespace gem5

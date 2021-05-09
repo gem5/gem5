@@ -31,6 +31,8 @@
 
 #include "sim/proxy_ptr.hh"
 
+using namespace gem5;
+
 struct Access
 {
     bool read;
@@ -469,6 +471,9 @@ struct TestABI
     using State = int;
 };
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
 namespace guest_abi
 {
@@ -484,6 +489,7 @@ struct Argument<TestABI, Addr>
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 bool abiCalled = false;
 bool abiCalledConst = false;
@@ -502,7 +508,7 @@ abiTestFuncConst(ThreadContext *tc, ConstTestPtr<uint8_t> ptr)
     EXPECT_EQ(ptr.addr(), 0x1000);
 }
 
-TEST(ProxyPtr, guest_abi)
+TEST(ProxyPtrTest, GuestABI)
 {
     BackingStore store(0x1000, 0x1000);
 

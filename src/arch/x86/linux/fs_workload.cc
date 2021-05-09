@@ -45,6 +45,9 @@
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -127,3 +130,4 @@ FsLinux::initState()
 }
 
 } // namespace X86ISA
+} // namespace gem5

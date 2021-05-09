@@ -39,6 +39,9 @@
  * https://wiki.osdev.org/%228042%22_PS/2_Controller
  */
 
+namespace gem5
+{
+
 // The 8042 has a whopping 32 bytes of internal RAM.
 const uint8_t RamSize = 32;
 const uint8_t NumOutputBits = 14;
@@ -305,3 +308,5 @@ X86ISA::I8042::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(dataReg);
     UNSERIALIZE_SCALAR(lastCommand);
 }
+
+} // namespace gem5

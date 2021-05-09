@@ -41,6 +41,9 @@
 #include "arch/arm/insts/static_inst.hh"
 #include "arch/arm/tlb.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -150,6 +153,7 @@ class SveContigMemSI : public ArmStaticInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
-}  // namespace ArmISA
+} // namespace ArmISA
+} // namespace gem5
 
 #endif  // __ARCH_ARM_SVE_MEM_HH__

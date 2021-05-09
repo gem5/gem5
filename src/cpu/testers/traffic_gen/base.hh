@@ -47,6 +47,9 @@
 #include "mem/qport.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class BaseGen;
 class StreamGen;
 class System;
@@ -342,5 +345,7 @@ class BaseTrafficGen : public ClockedObject
     /** Stream/SubstreamID Generator */
     std::unique_ptr<StreamGen> streamGenerator;
 };
+
+} // namespace gem5
 
 #endif //__CPU_TRAFFIC_GEN_BASE_HH__

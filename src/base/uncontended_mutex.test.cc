@@ -32,6 +32,8 @@
 
 #include "base/uncontended_mutex.hh"
 
+using namespace gem5;
+
 TEST(UncontendedMutex, Lock)
 {
     int data = 0;

@@ -38,6 +38,9 @@
 #include "dev/platform.hh"
 #include "params/T1000.hh"
 
+namespace gem5
+{
+
 class T1000 : public Platform
 {
   public:
@@ -70,5 +73,7 @@ class T1000 : public Platform
      */
     virtual void clearPciInt(int line);
 };
+
+} // namespace gem5
 
 #endif // __DEV_T1000_HH__

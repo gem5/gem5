@@ -34,6 +34,9 @@
 #include "mem/cache/compressors/dictionary_compressor.hh"
 #include "params/BaseDictionaryCompressor.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -68,3 +71,4 @@ BaseDictionaryCompressor::DictionaryStats::regStats()
 }
 
 } // namespace compression
+} // namespace gem5

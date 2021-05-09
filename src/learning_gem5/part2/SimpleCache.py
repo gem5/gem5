@@ -32,6 +32,7 @@ from m5.objects.ClockedObject import ClockedObject
 class SimpleCache(ClockedObject):
     type = 'SimpleCache'
     cxx_header = "learning_gem5/part2/simple_cache.hh"
+    cxx_class = 'gem5::SimpleCache'
 
     # Vector port example. Both the instruction and data ports connect to this
     # port which is automatically split out into two ports.

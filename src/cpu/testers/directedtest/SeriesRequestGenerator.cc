@@ -35,6 +35,9 @@
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
 #include "debug/DirectedTest.hh"
 
+namespace gem5
+{
+
 SeriesRequestGenerator::SeriesRequestGenerator(const Params &p)
     : DirectedGenerator(p),
       m_addr_increment_size(p.addr_increment_size),
@@ -108,3 +111,5 @@ SeriesRequestGenerator::performCallback(uint32_t proc, Addr address)
         m_active_node = 0;
     }
 }
+
+} // namespace gem5

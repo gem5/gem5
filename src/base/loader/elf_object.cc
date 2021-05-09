@@ -58,6 +58,9 @@
 #include "gelf.h"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -433,3 +436,4 @@ ElfObject::updateBias(Addr bias_addr)
 }
 
 } // namespace loader
+} // namespace gem5

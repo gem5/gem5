@@ -60,6 +60,8 @@
 #include "sim/process.hh"
 #include "sim/pseudo_inst.hh"
 
+namespace gem5
+{
 namespace X86ISA
 {
 
@@ -1455,3 +1457,4 @@ namespace X86ISA
         globalTLBMissRate = 100 * globalNumTLBMisses / globalNumTLBAccesses;
     }
 } // namespace X86ISA
+} // namespace gem5

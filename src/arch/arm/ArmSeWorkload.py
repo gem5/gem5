@@ -30,13 +30,13 @@ from m5.objects.Workload import SEWorkload
 class ArmSEWorkload(SEWorkload):
     type = 'ArmSEWorkload'
     cxx_header = "arch/arm/se_workload.hh"
-    cxx_class = 'ArmISA::SEWorkload'
+    cxx_class = 'gem5::ArmISA::SEWorkload'
     abstract = True
 
 class ArmEmuLinux(ArmSEWorkload):
     type = 'ArmEmuLinux'
     cxx_header = "arch/arm/linux/se_workload.hh"
-    cxx_class = 'ArmISA::EmuLinux'
+    cxx_class = 'gem5::ArmISA::EmuLinux'
 
     @classmethod
     def _is_compatible_with(cls, obj):
@@ -46,7 +46,7 @@ class ArmEmuLinux(ArmSEWorkload):
 class ArmEmuFreebsd(ArmSEWorkload):
     type = 'ArmEmuFreebsd'
     cxx_header = "arch/arm/freebsd/se_workload.hh"
-    cxx_class = 'ArmISA::EmuFreebsd'
+    cxx_class = 'gem5::ArmISA::EmuFreebsd'
 
     @classmethod
     def _is_compatible_with(cls, obj):

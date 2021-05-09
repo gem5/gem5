@@ -29,8 +29,13 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 StaticInstPtr
 InstDecoder::fetchRomMicroop(MicroPC micropc, StaticInstPtr curMacroop)
 {
     panic("ROM based microcode isn't implemented.");
 }
+
+} // namespace gem5

@@ -32,6 +32,9 @@
 #include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 namespace X86ISA {
     enum StandardCpuidFunction
     {
@@ -186,3 +189,4 @@ namespace X86ISA {
         return true;
     }
 } // namespace X86ISA
+} // namespace gem5

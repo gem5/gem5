@@ -51,6 +51,9 @@
 #include "base/logging.hh"
 #include "perfevent.hh"
 
+namespace gem5
+{
+
 PerfKvmCounterConfig::PerfKvmCounterConfig(uint32_t type, uint64_t config)
 {
     memset(&attr, 0, sizeof(attr));
@@ -253,3 +256,5 @@ PerfKvmCounter::read(void *buf, size_t size) const
         }
     } while (_size);
 }
+
+} // namespace gem5

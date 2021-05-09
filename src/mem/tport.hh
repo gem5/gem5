@@ -49,6 +49,9 @@
 
 #include "mem/qport.hh"
 
+namespace gem5
+{
+
 class SimObject;
 
 /**
@@ -103,5 +106,7 @@ class SimpleTimingPort : public QueuedResponsePort
     virtual ~SimpleTimingPort() { }
 
 };
+
+} // namespace gem5
 
 #endif // __MEM_TPORT_HH__

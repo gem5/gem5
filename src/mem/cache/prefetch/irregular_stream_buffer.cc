@@ -32,6 +32,9 @@
 #include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/IrregularStreamBufferPrefetcher.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
@@ -211,3 +214,4 @@ IrregularStreamBuffer::addStructuralToPhysicalEntry(
 }
 
 } // namespace prefetch
+} // namespace gem5

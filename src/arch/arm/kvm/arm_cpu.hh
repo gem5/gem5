@@ -44,6 +44,9 @@
 #include "cpu/kvm/base.hh"
 #include "params/ArmKvmCPU.hh"
 
+namespace gem5
+{
+
 /**
  * ARM implementation of a KVM-based hardware virtualized CPU.
  * Architecture specific limitations:
@@ -164,5 +167,7 @@ class ArmKvmCPU : public BaseKvmCPU
      */
     static const std::set<uint64_t> invariant_regs;
 };
+
+} // namespace gem5
 
 #endif // __ARCH_ARM_KVM_ARM_CPU_HH__

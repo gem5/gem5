@@ -51,6 +51,9 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 AbstractMemory::AbstractMemory(const Params &p) :
     ClockedObject(p), range(p.range), pmemAddr(NULL),
     backdoor(params().range, nullptr,
@@ -505,3 +508,5 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
               pkt->cmdString());
     }
 }
+
+} // namespace gem5

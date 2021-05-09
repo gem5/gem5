@@ -43,6 +43,9 @@
 #include "dev/dma_device.hh"
 #include "params/ScmiPlatform.hh"
 
+namespace gem5
+{
+
 class Doorbell;
 
 GEM5_DEPRECATED_NAMESPACE(SCMI, scmi);
@@ -327,5 +330,6 @@ class Platform : public Scp
 };
 
 } // namespace scmi
+} // namespace gem5
 
 #endif // __DEV_ARM_CSS_SCMI_PLATFORM_H__

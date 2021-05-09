@@ -49,6 +49,9 @@
 #include "base/types.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 /**
  * Internal gem5 representation of a Pixel.
  */
@@ -227,5 +230,7 @@ operator<<(std::ostream &os, const Pixel &pxl)
     os << csprintf("%#.08x", PixelConverter::rgba8888_le.fromPixel(pxl));
     return os;
 }
+
+} // namespace gem5
 
 #endif // __BASE_PIXEL_HH__

@@ -32,6 +32,9 @@
 #include "arch/power/insts/static_inst.hh"
 #include "base/cprintf.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -82,5 +85,6 @@ class CondMoveOp : public PowerStaticInst
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif //__ARCH_POWER_INSTS_CONDITION_HH__

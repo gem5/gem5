@@ -42,6 +42,9 @@
 
 #include "base/loader/symtab.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -177,4 +180,5 @@ Memory::printInst(std::ostream &os, AddrMode addrMode) const
     }
 }
 
-}
+} // namespace ArmISA
+} // namespace gem5

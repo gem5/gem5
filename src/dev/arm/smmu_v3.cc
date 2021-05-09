@@ -52,6 +52,9 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 SMMUv3::SMMUv3(const SMMUv3Params &params) :
     ClockedObject(params),
     system(*params.system),
@@ -818,3 +821,5 @@ SMMUv3::getPort(const std::string &name, PortID id)
         return ClockedObject::getPort(name, id);
     }
 }
+
+} // namespace gem5

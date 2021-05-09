@@ -44,6 +44,9 @@
 #include "debug/TrafficGen.hh"
 #include "enums/AddrMap.hh"
 
+namespace gem5
+{
+
 DramGen::DramGen(SimObject &obj,
                  RequestorID requestor_id, Tick _duration,
                  Addr start_addr, Addr end_addr,
@@ -187,3 +190,5 @@ DramGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
         }
     }
 }
+
+} // namespace gem5

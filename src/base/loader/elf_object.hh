@@ -48,6 +48,9 @@
 #include "base/loader/object_file.hh"
 #include "gelf.h"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -134,5 +137,6 @@ class ElfObject : public ObjectFile
 void setInterpDir(const std::string &dirname);
 
 } // namespace loader
+} // namespace gem5
 
 #endif // __BASE_LOADER_ELF_OBJECT_HH__

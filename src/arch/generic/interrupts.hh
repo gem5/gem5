@@ -32,6 +32,9 @@
 #include "params/BaseInterrupts.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 class BaseCPU;
 
@@ -87,5 +90,7 @@ class BaseInterrupts : public SimObject
         panic("Interrupts::clearAll unimplemented!\n");
     }
 };
+
+} // namespace gem5
 
 #endif // __ARCH_GENERIC_INTERRUPTS_HH__

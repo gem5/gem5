@@ -37,6 +37,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA {
 
 BitUnion64(SATP)
@@ -109,6 +112,7 @@ struct TlbEntry : public Serializable
     void unserialize(CheckpointIn &cp) override;
 };
 
-};
-#endif // __ARCH_RISCV_PAGETABLE_H__
+} // namespace RiscvISA
+} // namespace gem5
 
+#endif // __ARCH_RISCV_PAGETABLE_H__

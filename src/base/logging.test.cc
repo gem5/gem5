@@ -32,6 +32,8 @@
 #include "base/gtest/logging.hh"
 #include "base/logging.hh"
 
+using namespace gem5;
+
 /** Temporarily redirects cerr to gtestLogOutput. */
 class LoggingFixture : public ::testing::Test
 {

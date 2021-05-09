@@ -54,6 +54,9 @@
 #include "mem/cache/base.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 inline void
 WriteQueueEntry::TargetList::add(PacketPtr pkt, Tick readyTime,
                                  Counter order)
@@ -182,3 +185,5 @@ WriteQueueEntry::print() const
     print(str);
     return str.str();
 }
+
+} // namespace gem5

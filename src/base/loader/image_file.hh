@@ -36,6 +36,9 @@
 #include "base/loader/image_file_data.hh"
 #include "base/loader/memory_image.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -52,5 +55,6 @@ class ImageFile
 };
 
 } // namespace loader
+} // namespace gem5
 
 #endif // __BASE_LOADER_IMAGE_FILE_HH__

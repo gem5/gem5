@@ -43,6 +43,9 @@
 #include "mem/ruby/common/WriteMask.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 DataBlock::DataBlock(const DataBlock &cp)
 {
     m_data = new uint8_t[RubySystem::getBlockSizeBytes()];
@@ -134,3 +137,5 @@ DataBlock::operator=(const DataBlock & obj)
     memcpy(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
     return *this;
 }
+
+} // namespace gem5

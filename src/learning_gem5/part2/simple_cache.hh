@@ -36,6 +36,9 @@
 #include "params/SimpleCache.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 /**
  * A very simple cache object. Has a fully-associative data store with random
  * replacement.
@@ -323,5 +326,6 @@ class SimpleCache : public ClockedObject
 
 };
 
+} // namespace gem5
 
 #endif // __LEARNING_GEM5_SIMPLE_CACHE_SIMPLE_CACHE_HH__

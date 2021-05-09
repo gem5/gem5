@@ -35,6 +35,9 @@
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/protocol/RubyRequest.hh"
 
+namespace gem5
+{
+
 typedef AddressProfiler::AddressMap AddressMap;
 
 using gem5::stl_helpers::operator<<;
@@ -339,3 +342,5 @@ AddressProfiler::profileRetry(Addr data_addr, AccessType type, int count)
         lookupTraceForAddress(data_addr, m_retryProfileMap).addSample(count);
     }
 }
+
+} // namespace gem5

@@ -56,6 +56,9 @@
 #include "enums/CommitPolicy.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 struct O3CPUParams;
 
 namespace o3
@@ -517,5 +520,6 @@ class Commit
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_COMMIT_HH__

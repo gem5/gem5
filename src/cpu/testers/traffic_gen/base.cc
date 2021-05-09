@@ -64,6 +64,8 @@
 #include "cpu/testers/traffic_gen/trace_gen.hh"
 #endif
 
+namespace gem5
+{
 
 BaseTrafficGen::BaseTrafficGen(const BaseTrafficGenParams &p)
     : ClockedObject(p),
@@ -585,3 +587,5 @@ BaseTrafficGen::recvTimingResp(PacketPtr pkt)
 
     return true;
 }
+
+} // namespace gem5

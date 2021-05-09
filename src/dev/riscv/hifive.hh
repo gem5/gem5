@@ -43,6 +43,9 @@
 #include "dev/riscv/plic.hh"
 #include "params/HiFive.hh"
 
+namespace gem5
+{
+
 using namespace RiscvISA;
 
 class HiFive : public Platform
@@ -68,5 +71,7 @@ class HiFive : public Platform
 
     void unserialize(CheckpointIn &cp) override;
 };
+
+} // namespace gem5
 
 #endif  // __DEV_RISCV_HIFIVE_HH__

@@ -51,6 +51,9 @@
 #include "sim/eventq.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 /**
  * The MemTest class tests a cache coherent memory system by
  * generating false sharing and verifying the read data against a
@@ -186,5 +189,7 @@ class MemTest : public ClockedObject
     void recvRetry();
 
 };
+
+} // namespace gem5
 
 #endif // __CPU_MEMTEST_MEMTEST_HH__

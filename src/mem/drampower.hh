@@ -46,6 +46,9 @@
 #include "libdrampower/LibDRAMPower.h"
 #include "params/DRAMInterface.hh"
 
+namespace gem5
+{
+
 /**
  * DRAMPower is a standalone tool which calculates the power consumed by a
  * DRAM in the system. This class wraps the DRAMPower library.
@@ -98,5 +101,6 @@ class DRAMPower
 
 };
 
-#endif //__MEM_DRAM_POWER_HH__
+} // namespace gem5
 
+#endif //__MEM_DRAM_POWER_HH__

@@ -33,6 +33,9 @@
 #include "params/SparcNativeTrace.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 static const char *intRegNames[SparcISA::NumIntArchRegs] = {
@@ -86,3 +89,4 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
 }
 
 } // namespace Trace
+} // namespace gem5

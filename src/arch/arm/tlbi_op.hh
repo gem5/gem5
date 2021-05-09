@@ -48,6 +48,10 @@
  * Instructions. Those are the ISA interface for TLB flushing
  * operations.
  */
+
+namespace gem5
+{
+
 namespace ArmISA {
 
 class TLBIOp
@@ -360,5 +364,6 @@ class TLBIIPA : public TLBIOp
 };
 
 } // namespace ArmISA
+} // namespace gem5
 
 #endif //__ARCH_ARM_TLBI_HH__

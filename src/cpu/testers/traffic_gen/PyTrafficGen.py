@@ -41,6 +41,7 @@ from m5.objects.BaseTrafficGen import *
 class PyTrafficGen(BaseTrafficGen):
     type = 'PyTrafficGen'
     cxx_header = "cpu/testers/traffic_gen/pygen.hh"
+    cxx_class = 'gem5::PyTrafficGen'
 
     @cxxMethod
     def start(self, meta_generator):

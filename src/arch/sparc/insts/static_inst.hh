@@ -37,6 +37,9 @@
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -128,6 +131,7 @@ class SparcStaticInst : public StaticInst
     }
 };
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif //__ARCH_SPARC_INSTS_STATIC_INST_HH__

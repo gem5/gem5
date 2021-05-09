@@ -60,6 +60,9 @@
 #include "params/VirtIO9PSocket.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 struct P9MsgInfo
 {
     P9MsgInfo(P9MsgType _type, std::string _name)
@@ -554,3 +557,5 @@ VirtIO9PSocket::SocketDataEvent::process(int revent)
 {
     parent.serverDataReady();
 }
+
+} // namespace gem5

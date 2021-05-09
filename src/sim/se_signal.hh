@@ -31,6 +31,9 @@
 #ifndef __SE_SIGNAL_HH__
 #define __SE_SIGNAL_HH__
 
+namespace gem5
+{
+
 class Process;
 
 class BasicSignal
@@ -43,5 +46,7 @@ class BasicSignal
     BasicSignal(Process *sender, Process *receiver, int signal_val);
     ~BasicSignal();
 };
+
+} // namespace gem5
 
 #endif // __SE_SIGNAL_HH__

@@ -53,6 +53,9 @@
  * See src/arch/<*>/linux/linux.cc.
  */
 
+namespace gem5
+{
+
 // open(2) flags translation table
 const std::map<int, int> TARGET::openFlagTable = {
 #ifdef _MSC_VER
@@ -105,3 +108,5 @@ const std::map<int, int> TARGET::openFlagTable = {
 #endif
 #endif /* _MSC_VER */
 };
+
+} // namespace gem5

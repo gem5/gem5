@@ -32,6 +32,9 @@
 
 #include "sim/syscall_abi.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -42,5 +45,6 @@ struct RegABI64 : public GenericSyscallABI64
 };
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_REG_ABI_HH__

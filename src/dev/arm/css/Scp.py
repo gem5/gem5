@@ -40,3 +40,4 @@ class Scp(ClockedObject):
     type = 'Scp'
     abstract = True
     cxx_header = "dev/arm/css/scp.hh"
+    cxx_class = 'gem5::Scp'

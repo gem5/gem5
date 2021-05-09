@@ -28,6 +28,9 @@
 
 #include <sim/futex_map.hh>
 
+namespace gem5
+{
+
 FutexKey::FutexKey(uint64_t addr_in, uint64_t tgid_in)
         : addr(addr_in), tgid(tgid_in) {}
 
@@ -35,18 +38,6 @@ bool
 FutexKey::operator==(const FutexKey &in) const
 {
     return addr == in.addr && tgid == in.tgid;
-}
-
-namespace std {
-    size_t hash<FutexKey>::operator()(const FutexKey& in) const
-    {
-        size_t hash = 65521;
-        for (int i = 0; i < sizeof(uint64_t) / sizeof(size_t); i++) {
-            hash ^= (size_t)(in.addr >> sizeof(size_t) * i) ^
-                    (size_t)(in.tgid >> sizeof(size_t) * i);
-        }
-        return hash;
-    }
 }
 
 WaiterState::WaiterState(ThreadContext* _tc, int _bitmask)
@@ -195,3 +186,5 @@ FutexMap::is_waiting(ThreadContext *tc)
 {
     return waitingTcs.find(tc) != waitingTcs.end();
 }
+
+} // namespace gem5

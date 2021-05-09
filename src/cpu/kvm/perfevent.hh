@@ -45,6 +45,9 @@
 
 #include "config/have_perf_attr_exclude_host.hh"
 
+namespace gem5
+{
+
 /**
  * PerfEvent counter configuration.
  */
@@ -377,5 +380,7 @@ private:
     /** Cached host page size */
     long pageSize;
 };
+
+} // namespace gem5
 
 #endif

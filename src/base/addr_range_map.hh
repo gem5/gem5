@@ -50,6 +50,9 @@
 #include "base/addr_range.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 /**
  * The AddrRangeMap uses an STL map to implement an interval tree for
  * address decoding. The value stored is a template type and can be
@@ -333,5 +336,7 @@ class AddrRangeMap
      */
     mutable std::list<iterator> cache;
 };
+
+} // namespace gem5
 
 #endif //__BASE_ADDR_RANGE_MAP_HH__

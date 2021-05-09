@@ -44,6 +44,9 @@
 #include "arch/arm/insts/pred_inst.hh"
 #include "arch/arm/tlb.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -539,6 +542,7 @@ class MacroVFPMemOp : public PredMacroOp
                   bool writeback, bool load, uint32_t offset);
 };
 
-}
+} // namespace ArmISA
+} // namespace gem5
 
 #endif //__ARCH_ARM_INSTS_MACROMEM_HH__

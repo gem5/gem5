@@ -48,6 +48,9 @@
 #include "cpu/base.hh"
 #include "fputils/fp80.h"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -166,3 +169,4 @@ storeFloat80(void *_mem, double value)
 }
 
 } // namespace X86_ISA
+} // namespace gem5

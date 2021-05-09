@@ -40,6 +40,7 @@ from m5.objects.AbstractMemory import *
 class DRAMSim2(AbstractMemory):
     type = 'DRAMSim2'
     cxx_header = "mem/dramsim2.hh"
+    cxx_class = 'gem5::DRAMSim2'
 
     # A single port for now
     port = ResponsePort("This port sends responses and receives requests")

@@ -48,6 +48,9 @@
 #include "mem/port_proxy.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 SimpleDisk::SimpleDisk(const Params &p)
     : SimObject(p), system(p.system), image(p.disk)
 {}
@@ -80,3 +83,5 @@ SimpleDisk::write(Addr addr, baddr_t block, int count)
 {
     panic("unimplemented!\n");
 }
+
+} // namespace gem5

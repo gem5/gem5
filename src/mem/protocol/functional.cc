@@ -40,6 +40,9 @@
 
 #include "mem/protocol/functional.hh"
 
+namespace gem5
+{
+
 /* The request protocol. */
 
 void
@@ -59,3 +62,5 @@ FunctionalResponseProtocol::sendSnoop(
     assert(pkt->isRequest());
     return peer->recvFunctionalSnoop(pkt);
 }
+
+} // namespace gem5

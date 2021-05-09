@@ -35,6 +35,8 @@
 #include "base/trie.hh"
 #include "base/types.hh"
 
+using namespace gem5;
+
 namespace {
 
 static inline uint32_t *ptr(uintptr_t val)

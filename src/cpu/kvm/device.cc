@@ -46,6 +46,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 KvmDevice::KvmDevice(int _fd)
     : fd(_fd)
 {
@@ -124,3 +127,4 @@ KvmDevice::ioctl(int request, long p1) const
     return ::ioctl(fd, request, p1);
 }
 
+} // namespace gem5

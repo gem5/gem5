@@ -57,6 +57,9 @@
 #include "enums/StaticInstFlags.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 // forward declarations
 class Packet;
 
@@ -399,5 +402,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
      */
     virtual size_t asBytes(void *buf, size_t max_size) { return 0; }
 };
+
+} // namespace gem5
 
 #endif // __CPU_STATIC_INST_HH__

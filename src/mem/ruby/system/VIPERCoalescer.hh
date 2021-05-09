@@ -44,6 +44,9 @@
 #include "mem/ruby/system/GPUCoalescer.hh"
 #include "mem/ruby/system/RubyPort.hh"
 
+namespace gem5
+{
+
 class DataBlock;
 class CacheMsg;
 struct MachineID;
@@ -84,4 +87,7 @@ class VIPERCoalescer : public GPUCoalescer
     // compute unit.
     std::unordered_map<uint64_t, std::vector<PacketPtr>> m_writeCompletePktMap;
 };
+
+} // namespace gem5
+
 #endif //__MEM_RUBY_SYSTEM_VIPERCOALESCER_HH__

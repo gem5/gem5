@@ -34,6 +34,9 @@
 #include "base/logging.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 void
 EthPacketData::serialize(const std::string &base, CheckpointOut &cp) const
 {
@@ -68,3 +71,4 @@ EthPacketData::unserialize(const std::string &base, CheckpointIn &cp)
         simLength = length;
 }
 
+} // namespace gem5

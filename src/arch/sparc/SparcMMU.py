@@ -42,7 +42,7 @@ from m5.objects.SparcTLB import SparcTLB
 
 class SparcMMU(BaseMMU):
     type = 'SparcMMU'
-    cxx_class = 'SparcISA::MMU'
+    cxx_class = 'gem5::SparcISA::MMU'
     cxx_header = 'arch/sparc/mmu.hh'
     itb = SparcTLB()
     dtb = SparcTLB()

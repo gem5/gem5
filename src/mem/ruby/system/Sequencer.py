@@ -45,6 +45,8 @@ class RubyPort(ClockedObject):
    type = 'RubyPort'
    abstract = True
    cxx_header = "mem/ruby/system/RubyPort.hh"
+   cxx_class = 'gem5::RubyPort'
+
    version = Param.Int(0, "")
 
    in_ports = VectorResponsePort("CPU side of this RubyPort/Sequencer. "
@@ -82,10 +84,11 @@ class RubyPort(ClockedObject):
 class RubyPortProxy(RubyPort):
    type = 'RubyPortProxy'
    cxx_header = "mem/ruby/system/RubyPortProxy.hh"
+   cxx_class = 'gem5::RubyPortProxy'
 
 class RubySequencer(RubyPort):
    type = 'RubySequencer'
-   cxx_class = 'Sequencer'
+   cxx_class = 'gem5::Sequencer'
    cxx_header = "mem/ruby/system/Sequencer.hh"
 
    dcache = Param.RubyCache("")
@@ -127,10 +130,12 @@ class RubySequencer(RubyPort):
 
 class RubyHTMSequencer(RubySequencer):
    type = 'RubyHTMSequencer'
-   cxx_class = 'HTMSequencer'
+   cxx_class = 'gem5::HTMSequencer'
    cxx_header = "mem/ruby/system/HTMSequencer.hh"
 
 class DMASequencer(RubyPort):
    type = 'DMASequencer'
    cxx_header = "mem/ruby/system/DMASequencer.hh"
+   cxx_class = 'gem5::DMASequencer'
+
    max_outstanding_requests = Param.Int(64, "max outstanding requests")

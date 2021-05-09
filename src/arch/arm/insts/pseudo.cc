@@ -42,6 +42,9 @@
 
 #include "cpu/exec_context.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 DecoderFaultInst::DecoderFaultInst(ExtMachInst _machInst)
@@ -212,3 +215,5 @@ DebugStep::execute(ExecContext *xc, Trace::InstRecord *traceData) const
                                                pc_state.stepped());
 
 }
+
+} // namespace gem5

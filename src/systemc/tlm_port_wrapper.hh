@@ -45,7 +45,7 @@ class TlmTargetBaseWrapper;
 
 template <unsigned int BUSWIDTH, typename FW_IF, typename BW_IF, int N,
           sc_core::sc_port_policy POL>
-class TlmInitiatorBaseWrapper : public ::Port
+class TlmInitiatorBaseWrapper : public gem5::Port
 {
   public:
     typedef tlm::tlm_base_initiator_socket<BUSWIDTH, FW_IF, BW_IF, N, POL>
@@ -56,24 +56,28 @@ class TlmInitiatorBaseWrapper : public ::Port
     InitiatorSocket &initiator() { return _initiator; }
 
     TlmInitiatorBaseWrapper(
-            InitiatorSocket &i, const std::string &_name, PortID _id) :
-        Port(_name, _id), _initiator(i)
+            InitiatorSocket &i, const std::string &_name, gem5::PortID _id) :
+        gem5::Port(_name, _id), _initiator(i)
     {}
 
     void
-    bind(::Port &peer) override
+    bind(gem5::Port &peer) override
     {
+        using namespace gem5;
+
         auto *target = dynamic_cast<TargetWrapper *>(&peer);
         fatal_if(!target, "Attempt to bind TLM initiator socket %s to "
                 "incompatible port %s.", name(), peer.name());
 
         initiator().bind(target->target());
-        Port::bind(peer);
+        gem5::Port::bind(peer);
     }
 
     void
     unbind() override
     {
+        using namespace gem5;
+
         panic("TLM sockets can't be unbound.");
     }
 
@@ -83,7 +87,7 @@ class TlmInitiatorBaseWrapper : public ::Port
 
 template <unsigned int BUSWIDTH, typename FW_IF, typename BW_IF, int N,
           sc_core::sc_port_policy POL>
-class TlmTargetBaseWrapper : public ::Port
+class TlmTargetBaseWrapper : public gem5::Port
 {
   public:
     typedef tlm::tlm_base_target_socket<BUSWIDTH, FW_IF, BW_IF, N, POL>
@@ -92,21 +96,23 @@ class TlmTargetBaseWrapper : public ::Port
     TargetSocket &target() { return _target; }
 
     TlmTargetBaseWrapper(TargetSocket &t, const std::string &_name,
-                         PortID _id) :
-        Port(_name, _id), _target(t)
+                         gem5::PortID _id) :
+        gem5::Port(_name, _id), _target(t)
     {}
 
     void
-    bind(::Port &peer) override
+    bind(gem5::Port &peer) override
     {
         // Ignore attempts to bind a target socket. The initiator will
         // handle it.
-        Port::bind(peer);
+        gem5::Port::bind(peer);
     }
 
     void
     unbind() override
     {
+        using namespace gem5;
+
         panic("TLM sockets can't be unbound.");
     }
 

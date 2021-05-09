@@ -39,6 +39,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 void
 MemChecker::WriteCluster::startWrite(MemChecker::Serial serial, Tick _start,
                                      uint8_t data)
@@ -346,3 +349,5 @@ MemChecker::reset(Addr addr, size_t size)
         byte_trackers.erase(addr + i);
     }
 }
+
+} // namespace gem5

@@ -38,6 +38,9 @@
 #include "params/CpuThread.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class CpuThread : public TesterThread
 {
   public:
@@ -57,5 +60,7 @@ class CpuThread : public TesterThread
     void issueAcquireOp();
     void issueReleaseOp();
 };
+
+} // namespace gem5
 
 #endif /* CPU_TESTERS_PROTOCOL_TESTER_CPU_THREAD_HH_ */

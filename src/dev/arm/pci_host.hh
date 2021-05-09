@@ -41,6 +41,9 @@
 #include "dev/pci/host.hh"
 #include "enums/ArmPciIntRouting.hh"
 
+namespace gem5
+{
+
 class BaseGic;
 struct GenericArmPciHostParams;
 
@@ -60,5 +63,7 @@ class GenericArmPciHost
     const uint32_t intBase;
     const uint32_t intCount;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_PCI_HOST_HH__

@@ -47,6 +47,9 @@
 #include "base/trace.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 namespace
 {
 
@@ -199,3 +202,5 @@ ResponsePort::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
     }
     return recvAtomic(pkt);
 }
+
+} // namespace gem5

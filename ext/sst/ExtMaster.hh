@@ -51,10 +51,11 @@
 #include <core/component.h>
 #include <elements/memHierarchy/memEvent.h>
 
-#include <sim/sim_object.hh>
+#include <base/addr_range.hh>
+#include <mem/external_master.hh>
 #include <mem/packet.hh>
 #include <mem/request.hh>
-#include <mem/external_master.hh>
+#include <sim/sim_object.hh>
 
 namespace SST {
 
@@ -70,34 +71,35 @@ namespace gem5 {
 
 class gem5Component;
 
-class ExtMaster : public ExternalMaster::Port {
+class ExtMaster : public ::gem5::ExternalMaster::Port
+{
 
     enum Phase { CONSTRUCTION, INIT, RUN };
 
     Output& out;
-    const ExternalMaster& port;
+    const ::gem5::ExternalMaster& port;
     Phase simPhase;
 
     gem5Component *const gem5;
     const std::string name;
-    std::list<PacketPtr> sendQ;
+    std::list<::gem5::PacketPtr> sendQ;
     bool blocked() { return !sendQ.empty(); }
 
     MemHierarchy::MemNIC * nic;
 
-    struct SenderState : public Packet::SenderState
+    struct SenderState : public ::gem5::Packet::SenderState
     {
         MemEvent *event;
         SenderState(MemEvent* e) : event(e) {}
     };
 
-    std::set<AddrRange> ranges;
+    std::set<::gem5::AddrRange> ranges;
 
 public:
-    bool recvTimingResp(PacketPtr);
+    bool recvTimingResp(::gem5::PacketPtr);
     void recvReqRetry();
 
-    ExtMaster(gem5Component*, Output&, ExternalMaster&, std::string&);
+    ExtMaster(gem5Component*, Output&, ::gem5::ExternalMaster&, std::string&);
     void init(unsigned phase);
     void setup();
     void finish();

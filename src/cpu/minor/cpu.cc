@@ -44,6 +44,9 @@
 #include "debug/MinorCPU.hh"
 #include "debug/Quiesce.hh"
 
+namespace gem5
+{
+
 MinorCPU::MinorCPU(const MinorCPUParams &params) :
     BaseCPU(params),
     threadPolicy(params.threadPolicy),
@@ -338,3 +341,5 @@ MinorCPU::totalOps() const
 
     return ret;
 }
+
+} // namespace gem5

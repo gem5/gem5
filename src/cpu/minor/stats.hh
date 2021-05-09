@@ -48,6 +48,9 @@
 #include "cpu/base.hh"
 #include "sim/ticked_object.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -82,5 +85,6 @@ struct MinorStats : public statistics::Group
 };
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_STATS_HH__ */

@@ -45,6 +45,9 @@
 #include "base/logging.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 Random::Random()
 {
     // default random seed
@@ -94,3 +97,5 @@ Random::unserialize(CheckpointIn &cp)
 }
 
 Random random_mt;
+
+} // namespace gem5

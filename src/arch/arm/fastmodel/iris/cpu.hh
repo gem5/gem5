@@ -35,6 +35,9 @@
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_module.hh"
 
+namespace gem5
+{
+
 namespace Iris
 {
 
@@ -54,7 +57,7 @@ class BaseCpuEvs
 // model CPUs to each other. It acts as a base class for the gem5 CPU, and
 // holds a pointer to the EVS. It also has some methods for setting up some
 // attributes in the fast model CPU to control its clock rate.
-class BaseCPU : public ::BaseCPU
+class BaseCPU : public gem5::BaseCPU
 {
   public:
     BaseCPU(const BaseCPUParams &params, sc_core::sc_module *_evs);
@@ -76,7 +79,7 @@ class BaseCPU : public ::BaseCPU
     wakeup(ThreadID tid) override
     {
         auto *tc = threadContexts.at(tid);
-        if (tc->status() == ::ThreadContext::Suspended)
+        if (tc->status() == gem5::ThreadContext::Suspended)
             tc->activate();
     }
 
@@ -129,5 +132,6 @@ class CPU : public Iris::BaseCPU
 };
 
 } // namespace Iris
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_IRIS_CPU_HH__

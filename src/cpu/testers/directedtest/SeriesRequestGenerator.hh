@@ -40,6 +40,9 @@
 #include "mem/ruby/protocol/SeriesRequestGeneratorStatus.hh"
 #include "params/SeriesRequestGenerator.hh"
 
+namespace gem5
+{
+
 class SeriesRequestGenerator : public DirectedGenerator
 {
   public:
@@ -59,5 +62,6 @@ class SeriesRequestGenerator : public DirectedGenerator
     uint32_t m_percent_writes;
 };
 
-#endif //__CPU_DIRECTEDTEST_SERIESREQUESTGENERATOR_HH__
+} // namespace gem5
 
+#endif //__CPU_DIRECTEDTEST_SERIESREQUESTGENERATOR_HH__

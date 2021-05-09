@@ -32,6 +32,9 @@
 #include "arch/riscv/types.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -46,3 +49,4 @@ RiscvMicroInst::advancePC(PCState &pcState) const
 }
 
 } // namespace RiscvISA
+} // namespace gem5

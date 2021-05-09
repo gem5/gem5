@@ -41,6 +41,9 @@
 #include "base/types.hh"
 #include "mem/cache/compressors/dictionary_compressor.hh"
 
+namespace gem5
+{
+
 struct CPackParams;
 
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
@@ -173,5 +176,6 @@ class CPack::PatternMMMX : public MaskedPattern<0xFFFFFF00>
 };
 
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_CPACK_HH__

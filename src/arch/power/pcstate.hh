@@ -31,11 +31,15 @@
 
 #include "arch/generic/types.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
 typedef GenericISA::SimplePCState<4> PCState;
 
-}
+} // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_PCSTATE_HH__

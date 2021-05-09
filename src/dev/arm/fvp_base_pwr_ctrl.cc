@@ -47,6 +47,9 @@
 #include "params/FVPBasePwrCtrl.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 FVPBasePwrCtrl::FVPBasePwrCtrl(const FVPBasePwrCtrlParams &params)
     : BasicPioDevice(params, 0x1000),
       regs(),
@@ -310,3 +313,5 @@ FVPBasePwrCtrl::startCoreUp(ThreadContext *const tc)
     ArmISA::Reset().invoke(tc);
     tc->activate();
 }
+
+} // namespace gem5

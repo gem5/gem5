@@ -32,6 +32,9 @@
 #include "arch/sparc/types.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 namespace SparcISA {
 
 // We only use 19 instructions for the trap handlers, but there would be
@@ -184,4 +187,6 @@ const MachInst spillHandler32[numSpillInsts] =
 };
 
 } // namespace SparcISA
+} // namespace gem5
+
 #endif // __ARCH_SPARC_HANDLERS_HH__

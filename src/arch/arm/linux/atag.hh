@@ -43,6 +43,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 enum
 {
     CoreTag   = 0x54410001,
@@ -293,5 +296,6 @@ struct atag
 };
 */
 
+} // namespace gem5
 
 #endif // __ARCH_ARM_LINUX_ATAG_HH__

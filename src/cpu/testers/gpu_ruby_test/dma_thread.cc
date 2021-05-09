@@ -35,6 +35,9 @@
 
 #include "debug/ProtocolTest.hh"
 
+namespace gem5
+{
+
 DmaThread::DmaThread(const Params& _params)
     : TesterThread(_params)
 {
@@ -287,3 +290,5 @@ DmaThread::hitCallback(PacketPtr pkt)
         scheduleWakeup();
     }
 }
+
+} // namespace gem5

@@ -61,6 +61,9 @@
 #include "mem/request.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 class BaseCache;
 
 /**
@@ -518,5 +521,7 @@ class MSHR : public QueueEntry, public Printable
     bool matchBlockAddr(const PacketPtr pkt) const override;
     bool conflictAddr(const QueueEntry* entry) const override;
 };
+
+} // namespace gem5
 
 #endif // __MEM_CACHE_MSHR_HH__

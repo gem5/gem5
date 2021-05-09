@@ -33,8 +33,7 @@
 #include <iostream>
 #include <systemc>
 
-#include <sim/core.hh>
-#include <sim/simulate.hh>
+#include <sim/cur_tick.hh>
 
 #include "report_handler.hh"
 
@@ -44,7 +43,7 @@ void
 reportHandler(const sc_report &report, const sc_actions &actions)
 {
     uint64_t systemc_time = report.get_time().value();
-    uint64_t gem5_time = curTick();
+    uint64_t gem5_time = gem5::curTick();
 
     if (actions & SC_DO_NOTHING)
         return;

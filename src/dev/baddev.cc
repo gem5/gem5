@@ -38,6 +38,9 @@
 #include "params/BadDevice.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 BadDevice::BadDevice(const Params &p)
     : BasicPioDevice(p, 0x10), devname(p.devicename)
 {
@@ -54,3 +57,5 @@ BadDevice::write(PacketPtr pkt)
 {
     panic("Device %s not imlpmented\n", devname);
 }
+
+} // namespace gem5

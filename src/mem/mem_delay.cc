@@ -40,6 +40,9 @@
 #include "params/MemDelay.hh"
 #include "params/SimpleMemDelay.hh"
 
+namespace gem5
+{
+
 MemDelay::MemDelay(const MemDelayParams &p)
     : ClockedObject(p),
       requestPort(name() + "-mem_side_port", *this),
@@ -209,3 +212,5 @@ SimpleMemDelay::delayResp(PacketPtr pkt)
         return 0;
     }
 }
+
+} // namespace gem5

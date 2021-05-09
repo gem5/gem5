@@ -32,6 +32,9 @@
 #include "arch/x86/linux/syscalls.hh"
 #include "sim/syscall_emul.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -361,3 +364,4 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
 };
 
 } // namespace X86ISA
+} // namespace gem5

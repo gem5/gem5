@@ -43,6 +43,9 @@
 #include "mem/backdoor.hh"
 #include "params/NonCachingSimpleCPU.hh"
 
+namespace gem5
+{
+
 /**
  * The NonCachingSimpleCPU is an AtomicSimpleCPU using the
  * 'atomic_noncaching' memory mode instead of just 'atomic'.
@@ -60,5 +63,7 @@ class NonCachingSimpleCPU : public AtomicSimpleCPU
     Tick sendPacket(RequestPort &port, const PacketPtr &pkt) override;
     Tick fetchInstMem() override;
 };
+
+} // namespace gem5
 
 #endif // __CPU_SIMPLE_NONCACHING_HH__

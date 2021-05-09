@@ -41,6 +41,8 @@
 
 #include "base/str.hh"
 
+using namespace gem5;
+
 /*
  * str.cc has "eat_lead_white", "eat_end_white", and "eat_white" fucntions to
  * remove leading and trailing whitespace. The following tests verify this

@@ -38,6 +38,9 @@
 #include "cpu/thread_context.hh"
 #include "mem/port_proxy.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Linux, linux);
 namespace linux
 {
@@ -250,3 +253,4 @@ printk(std::string &str, ThreadContext *tc, Addr format_ptr,
 }
 
 } // namespace linux
+} // namespace gem5

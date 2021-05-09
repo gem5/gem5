@@ -33,6 +33,9 @@
 #include "base/bitfield.hh"
 #include "base/cprintf.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -148,5 +151,6 @@ class FloatOp : public PowerStaticInst
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif //__ARCH_POWER_INSTS_FLOATING_HH__

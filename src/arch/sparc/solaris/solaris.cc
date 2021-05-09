@@ -31,6 +31,9 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
+namespace gem5
+{
+
 // open(2) flags translation table
 const std::map<int, int> SparcSolaris::openFlagTable = {
 #ifdef _MSC_VER
@@ -90,3 +93,5 @@ const std::map<int, int> SparcSolaris::mmapFlagTable = {
   { TGT_MAP_ANONYMOUS, MAP_ANONYMOUS },
   { TGT_MAP_FIXED, MAP_FIXED },
 };
+
+} // namespace gem5

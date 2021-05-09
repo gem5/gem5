@@ -40,6 +40,9 @@
 #include "debug/SCMI.hh"
 #include "dev/arm/css/scmi_platform.hh"
 
+namespace gem5
+{
+
 using namespace scmi;
 
 const std::string
@@ -280,3 +283,5 @@ BaseProtocol::invalidCommand(Message &msg)
     payload.status = NOT_FOUND;
     msg.length = sizeof(uint32_t) * 2;
 }
+
+} // namespace gem5

@@ -44,7 +44,7 @@ from m5.proxy import *
 # Basic stage 1 translation objects
 class ArmTableWalker(ClockedObject):
     type = 'ArmTableWalker'
-    cxx_class = 'ArmISA::TableWalker'
+    cxx_class = 'gem5::ArmISA::TableWalker'
     cxx_header = "arch/arm/table_walker.hh"
     is_stage2 =  Param.Bool(False, "Is this object for stage 2 translation?")
     num_squash_per_cycle = Param.Unsigned(2,
@@ -60,7 +60,7 @@ class ArmStage2TableWalker(ArmTableWalker):
 
 class ArmMMU(BaseMMU):
     type = 'ArmMMU'
-    cxx_class = 'ArmISA::MMU'
+    cxx_class = 'gem5::ArmISA::MMU'
     cxx_header = 'arch/arm/mmu.hh'
     itb = ArmITB()
     dtb = ArmDTB()

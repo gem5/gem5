@@ -64,6 +64,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 Gicv2m::Gicv2m(const Params &p)
     : PioDevice(p), pioDelay(p.pio_delay), frames(p.frames), gic(p.gic)
 {
@@ -154,3 +157,5 @@ Gicv2m::frameFromAddr(Addr a) const
     }
     return -1;
 }
+
+} // namespace gem5

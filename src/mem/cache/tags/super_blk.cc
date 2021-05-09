@@ -39,6 +39,9 @@
 
 #include "base/bitfield.hh"
 
+namespace gem5
+{
+
 CompressionBlk::CompressionBlk()
     : SectorSubBlk(), _size(0), _decompressionLatency(0), _compressed(false)
 {
@@ -242,3 +245,5 @@ SuperBlk::print() const
 {
     return csprintf("CF: %d %s", getCompressionFactor(), SectorBlk::print());
 }
+
+} // namespace gem5

@@ -34,6 +34,9 @@
 
 #include "base/remote_gdb.hh"
 
+namespace gem5
+{
+
 class System;
 class ThreadContext;
 
@@ -109,5 +112,6 @@ class RemoteGDB : public BaseRemoteGDB
     BaseGdbRegCache *gdbRegs();
 };
 } // namespace SparcISA
+} // namespace gem5
 
 #endif /* __ARCH_SPARC_REMOTE_GDB_H__ */

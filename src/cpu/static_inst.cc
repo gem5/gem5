@@ -30,6 +30,9 @@
 
 #include <iostream>
 
+namespace gem5
+{
+
 bool
 StaticInst::hasBranchTarget(const TheISA::PCState &pc, ThreadContext *tc,
                             TheISA::PCState &tgt) const
@@ -95,3 +98,5 @@ StaticInst::printFlags(std::ostream &outs,
         }
     }
 }
+
+} // namespace gem5

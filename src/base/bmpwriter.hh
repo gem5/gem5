@@ -47,6 +47,9 @@
  * @file Declaration of a class that writes a frame buffer to a bitmap
  */
 
+namespace gem5
+{
+
 // write frame buffer into a bitmap picture
 class  BmpWriter : public ImgWriter
 {
@@ -129,6 +132,6 @@ class  BmpWriter : public ImgWriter
     const CompleteV1Header getCompleteHeader() const;
 };
 
+} // namespace gem5
 
 #endif // __BASE_BITMAP_HH__
-

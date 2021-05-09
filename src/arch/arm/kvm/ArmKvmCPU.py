@@ -39,3 +39,4 @@ from m5.objects.BaseKvmCPU import BaseKvmCPU
 class ArmKvmCPU(BaseKvmCPU):
     type = 'ArmKvmCPU'
     cxx_header = "arch/arm/kvm/arm_cpu.hh"
+    cxx_class = 'gem5::ArmKvmCPU'

@@ -29,8 +29,8 @@
 #include "sim/sim_exit.hh"
 #include "systemc_simple_object/feeder.hh"
 
-Feeder::Feeder(const Gem5_FeederParams &params) :
-    SimObject(params), printer(params.printer), delay(params.delay),
+Feeder::Feeder(const gem5::Gem5_FeederParams &params) :
+    gem5::SimObject(params), printer(params.printer), delay(params.delay),
     strings(params.strings), index(0), event(this)
 {
     // Bind the printer objects "input" port to our sc_buffer. This will let
@@ -46,16 +46,16 @@ Feeder::Feeder(const Gem5_FeederParams &params) :
 void
 Feeder::startup()
 {
-    schedule(&event, curTick() + delay);
+    schedule(&event, gem5::curTick() + delay);
 }
 
 void
 Feeder::feed()
 {
     if (index >= strings.size())
-        exitSimLoop("Printed all the words.");
+        gem5::exitSimLoop("Printed all the words.");
     else
         buf.write(strings[index++].c_str());
 
-    schedule(&event, curTick() + delay);
+    schedule(&event, gem5::curTick() + delay);
 }

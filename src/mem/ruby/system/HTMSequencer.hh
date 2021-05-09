@@ -48,6 +48,9 @@
 #include "mem/ruby/system/Sequencer.hh"
 #include "params/RubyHTMSequencer.hh"
 
+namespace gem5
+{
+
 class HTMSequencer : public Sequencer
 {
   public:
@@ -109,5 +112,7 @@ operator<<(std::ostream& out, const HTMSequencer& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_SYSTEM_HTMSEQUENCER_HH__

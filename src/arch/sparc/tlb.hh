@@ -36,6 +36,9 @@
 #include "mem/request.hh"
 #include "params/SparcTLB.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 class Packet;
 
@@ -200,6 +203,7 @@ class TLB : public BaseTLB
     ASI cacheAsi[2];
 };
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_TLB_HH__

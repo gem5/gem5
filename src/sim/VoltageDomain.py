@@ -39,6 +39,7 @@ from m5.params import *
 class VoltageDomain(SimObject):
     type = 'VoltageDomain'
     cxx_header = "sim/voltage_domain.hh"
+    cxx_class = 'gem5::VoltageDomain'
 
     # Single or list of voltages for the voltage domain.  If only a single
     # voltage is specified, it is used for all different frequencies.

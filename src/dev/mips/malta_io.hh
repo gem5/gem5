@@ -41,6 +41,9 @@
 #include "params/MaltaIO.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 /**
  * Malta I/O device is a catch all for all the south bridge stuff we care
  * to implement.
@@ -129,5 +132,7 @@ class MaltaIO : public BasicPioDevice
     void startup() override;
 
 };
+
+} // namespace gem5
 
 #endif // __DEV_MALTA_IO_HH__

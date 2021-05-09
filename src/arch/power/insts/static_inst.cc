@@ -31,6 +31,9 @@
 
 #include "cpu/reg_class.hh"
 
+namespace gem5
+{
+
 using namespace PowerISA;
 
 void
@@ -68,3 +71,5 @@ PowerStaticInst::generateDisassembly(
 
     return ss.str();
 }
+
+} // namespace gem5

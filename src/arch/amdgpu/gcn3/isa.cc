@@ -38,6 +38,9 @@
 #include "gpu-compute/gpu_static_inst.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 namespace Gcn3ISA
 {
     GPUISA::GPUISA(Wavefront &wf) : wavefront(wf), m0(0)
@@ -99,3 +102,4 @@ namespace Gcn3ISA
             -16
         } };
 } // namespace Gcn3ISA
+} // namespace gem5

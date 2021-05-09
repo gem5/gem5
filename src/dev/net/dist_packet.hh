@@ -55,6 +55,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 class DistHeaderPkt
 {
   private:
@@ -111,4 +114,6 @@ class DistHeaderPkt
     };
 };
 
-#endif
+} // namespace gem5
+
+#endif // __DEV_DIST_PACKET_HH__

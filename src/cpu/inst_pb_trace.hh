@@ -46,11 +46,14 @@
 #include "proto/protoio.hh"
 #include "sim/insttracer.hh"
 
-class ThreadContext;
-
 namespace ProtoMessage {
 class Inst;
 }
+
+namespace gem5
+{
+
+class ThreadContext;
 
 namespace Trace {
 
@@ -132,5 +135,8 @@ class InstPBTrace : public InstTracer
 
     friend class InstPBTraceRecord;
 };
+
 } // namespace Trace
+} // namespace gem5
+
 #endif // __CPU_INST_PB_TRACE_HH__

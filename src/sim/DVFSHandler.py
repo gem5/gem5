@@ -44,6 +44,7 @@ from m5.proxy import *
 class DVFSHandler(SimObject):
     type = 'DVFSHandler'
     cxx_header = "sim/dvfs_handler.hh"
+    cxx_class = 'gem5::DVFSHandler'
 
     # List of controllable clock domains which in turn reference the appropriate
     # voltage domains

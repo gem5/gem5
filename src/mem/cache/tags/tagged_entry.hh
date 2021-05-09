@@ -35,6 +35,9 @@
 #include "base/types.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 
+namespace gem5
+{
+
 /**
  * A tagged entry is an entry containing a tag. Each tag is accompanied by a
  * secure bit, which informs whether it belongs to a secure address space.
@@ -150,5 +153,7 @@ class TaggedEntry : public ReplaceableEntry
     /** Clear secure bit. Should be only used by the invalidation function. */
     void clearSecure() { _secure = false; }
 };
+
+} // namespace gem5
 
 #endif//__CACHE_TAGGED_ENTRY_HH__

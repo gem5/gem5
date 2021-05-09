@@ -28,6 +28,9 @@
 
 #include "cpu/pred/ras.hh"
 
+namespace gem5
+{
+
 void
 ReturnAddrStack::init(unsigned _numEntries)
 {
@@ -79,3 +82,5 @@ ReturnAddrStack::restore(unsigned top_entry_idx,
         ++usedEntries;
     }
 }
+
+} // namespace gem5

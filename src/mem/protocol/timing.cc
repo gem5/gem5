@@ -40,6 +40,9 @@
 
 #include "mem/protocol/timing.hh"
 
+namespace gem5
+{
+
 /* The request protocol. */
 
 bool
@@ -99,3 +102,5 @@ TimingResponseProtocol::sendRetrySnoopResp(TimingRequestProtocol *peer)
 {
     peer->recvRetrySnoopResp();
 }
+
+} // namespace gem5

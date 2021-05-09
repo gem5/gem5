@@ -37,6 +37,9 @@
 #include "mem/ruby/protocol/RubyAccessMode.hh"
 #include "mem/ruby/protocol/TesterStatus.hh"
 
+namespace gem5
+{
+
 class SubBlock;
 
 const int CHECK_SIZE_BITS = 2;
@@ -85,5 +88,7 @@ operator<<(std::ostream& out, const Check& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __CPU_RUBYTEST_CHECK_HH__

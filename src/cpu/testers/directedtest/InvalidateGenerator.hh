@@ -40,6 +40,9 @@
 #include "mem/ruby/protocol/InvalidateGeneratorStatus.hh"
 #include "params/InvalidateGenerator.hh"
 
+namespace gem5
+{
+
 class InvalidateGenerator : public DirectedGenerator
 {
   public:
@@ -59,5 +62,6 @@ class InvalidateGenerator : public DirectedGenerator
     uint32_t m_addr_increment_size;
 };
 
-#endif //__CPU_DIRECTEDTEST_INVALIDATEGENERATOR_HH__
+} // namespace gem5
 
+#endif //__CPU_DIRECTEDTEST_INVALIDATEGENERATOR_HH__

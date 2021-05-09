@@ -55,7 +55,8 @@ sc_core::sc_status Kernel::status() { return _status; }
 void Kernel::status(sc_core::sc_status s) { _status = s; }
 
 Kernel::Kernel(const Params &params, int) :
-    SimObject(params), t0Event(this, false, EventBase::Default_Pri - 1)
+    gem5::SimObject(params),
+    t0Event(this, false, gem5::EventBase::Default_Pri - 1)
 {
     // Install ourselves as the scheduler's event manager.
     ::sc_gem5::scheduler.setEventQueue(eventQueue());
@@ -111,7 +112,7 @@ Kernel::startup()
     if (scMainFiber.finished())
         return;
 
-    schedule(t0Event, curTick());
+    schedule(t0Event, gem5::curTick());
 
     if (stopAfterCallbacks)
         return;
@@ -183,8 +184,9 @@ Kernel *kernel;
 } // namespace sc_gem5
 
 sc_gem5::Kernel *
-SystemC_KernelParams::create() const
+gem5::SystemC_KernelParams::create() const
 {
+    using namespace gem5;
     panic_if(sc_gem5::kernel,
             "Only one systemc kernel object may be defined.\n");
     sc_gem5::kernel = new sc_gem5::Kernel(*this, 0);

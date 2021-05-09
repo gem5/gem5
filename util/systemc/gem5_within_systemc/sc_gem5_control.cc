@@ -59,8 +59,8 @@ class Gem5TopLevelModule : public Gem5SystemC::Module
     friend class Gem5Control;
 
   protected:
-    CxxConfigFileBase *config_file;
-    CxxConfigManager *root_manager;
+    gem5::CxxConfigFileBase *config_file;
+    gem5::CxxConfigManager *root_manager;
     Gem5SystemC::Logger logger;
 
     /** Things to do at end_of_elaborate */
@@ -87,13 +87,13 @@ class Gem5TopLevelModule : public Gem5SystemC::Module
     void end_of_elaboration();
 };
 
-Gem5System::Gem5System(CxxConfigManager *manager_,
+Gem5System::Gem5System(gem5::CxxConfigManager *manager_,
     const std::string &system_name, const std::string &instance_name) :
     manager(manager_),
     systemName(system_name),
     instanceName(instance_name)
 {
-    manager->addRenaming(CxxConfigManager::Renaming(
+    manager->addRenaming(gem5::CxxConfigManager::Renaming(
         system_name, instance_name));
 }
 
@@ -124,7 +124,7 @@ Gem5System::instantiate()
 {
     try {
         /* Make a new System */
-        SimObject *obj = manager->findObject(systemName, true);
+        gem5::SimObject *obj = manager->findObject(systemName, true);
 
         /* Add the System's objects to the list of managed
          *  objects for initialisation */
@@ -142,7 +142,7 @@ Gem5System::instantiate()
         manager->instantiate(false);
         manager->initState();
         manager->startup();
-    } catch (CxxConfigManager::Exception &e) {
+    } catch (gem5::CxxConfigManager::Exception &e) {
         fatal("Config problem in Gem5System: %s: %s",
             e.name, e.message);
     }
@@ -165,19 +165,19 @@ Gem5Control::registerEndOfElaboration(void (*func)())
 void
 Gem5Control::setDebugFlag(const char *flag)
 {
-    ::setDebugFlag(flag);
+    ::gem5::setDebugFlag(flag);
 }
 
 void
 Gem5Control::clearDebugFlag(const char *flag)
 {
-    ::clearDebugFlag(flag);
+    ::gem5::clearDebugFlag(flag);
 }
 
 void
 Gem5Control::setRemoteGDBPort(unsigned int port)
 {
-    ::setRemoteGDBPort(port);
+    ::gem5::setRemoteGDBPort(port);
 }
 
 Gem5System *
@@ -185,7 +185,7 @@ Gem5Control::makeSystem(const std::string &system_name,
     const std::string &instance_name)
 {
     Gem5System *ret = new Gem5System(
-        new CxxConfigManager(*(module->config_file)),
+        new gem5::CxxConfigManager(*(module->config_file)),
         system_name, instance_name);
 
     return ret;
@@ -214,10 +214,10 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
 {
     SC_THREAD(run);
 
-    cxxConfigInit();
+    gem5::cxxConfigInit();
 
     /* Pass DPRINTF messages to SystemC */
-    Trace::setDebugLogger(&logger);
+    gem5::Trace::setDebugLogger(&logger);
 
     /* @todo need this as an option */
     Gem5SystemC::setTickFrequency();
@@ -233,13 +233,14 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
     }
 
     /* Enable keyboard interrupt, async I/O etc. */
-    initSignals();
+    gem5::initSignals();
 
     /* Enable stats */
-    statistics::initSimStats();
-    statistics::registerHandlers(CxxConfig::statsReset, CxxConfig::statsDump);
+    gem5::statistics::initSimStats();
+    gem5::statistics::registerHandlers(gem5::CxxConfig::statsReset,
+        gem5::CxxConfig::statsDump);
 
-    Trace::enable();
+    gem5::Trace::enable();
 
     config_file = new CxxIniFile();
 
@@ -248,13 +249,13 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
             config_filename);
     }
 
-    root_manager = new CxxConfigManager(*config_file);
+    root_manager = new gem5::CxxConfigManager(*config_file);
 
-    CxxConfig::statsEnable();
+    gem5::CxxConfig::statsEnable();
 
     /* Make the root object */
     try {
-        SimObject *root = root_manager->findObject("root", false);
+        gem5::SimObject *root = root_manager->findObject("root", false);
 
         /* Make sure we don't traverse into root's children */
         root_manager->objectsInOrder.push_back(root);
@@ -262,7 +263,7 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
         root_manager->instantiate(false);
         root_manager->initState();
         root_manager->startup();
-    } catch (CxxConfigManager::Exception &e) {
+    } catch (gem5::CxxConfigManager::Exception &e) {
         fatal("Config problem in Gem5TopLevelModule: %s: %s",
             e.name, e.message);
     }
@@ -277,11 +278,11 @@ Gem5TopLevelModule::~Gem5TopLevelModule()
 void
 Gem5TopLevelModule::run()
 {
-    GlobalSimLoopExitEvent *exit_event = NULL;
+    gem5::GlobalSimLoopExitEvent *exit_event = NULL;
 
     exit_event = simulate();
 
-    std::cerr << "Exit at tick " << curTick()
+    std::cerr << "Exit at tick " << gem5::curTick()
         << ", cause: " << exit_event->getCause() << '\n';
 
     getEventQueue(0)->dump();
@@ -304,4 +305,3 @@ makeGem5Control(const std::string &config_filename)
 {
     return new Gem5SystemC::Gem5Control(config_filename);
 }
-

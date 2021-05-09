@@ -38,6 +38,9 @@
 #include "base/flags.hh"
 #include "config/the_gpu_isa.hh"
 
+namespace gem5
+{
+
 class OperandInfo
 {
   public:
@@ -132,7 +135,7 @@ class OperandInfo
     }
 
     typedef uint32_t FlagsType;
-    typedef ::Flags<FlagsType> Flags;
+    typedef gem5::Flags<FlagsType> Flags;
 
   private:
 
@@ -193,5 +196,7 @@ class OperandInfo
      */
     mutable std::vector<int> _bankReadCounts;
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_OPERAND_INFO_H__

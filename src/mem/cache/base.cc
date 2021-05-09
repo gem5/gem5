@@ -62,6 +62,9 @@
 #include "params/WriteAllocator.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 BaseCache::CacheResponsePort::CacheResponsePort(const std::string &_name,
                                           BaseCache *_cache,
                                           const std::string &_label)
@@ -2606,3 +2609,5 @@ WriteAllocator::updateMode(Addr write_addr, unsigned write_size,
     }
     nextAddr = write_addr + write_size;
 }
+
+} // namespace gem5

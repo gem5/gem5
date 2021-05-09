@@ -35,6 +35,9 @@
 #include "mem/ruby/protocol/MachineType.hh"
 #include "mem/ruby/structures/DirectoryMemory.hh"
 
+namespace gem5
+{
+
 inline NetDest
 broadcast(MachineType type)
 {
@@ -90,5 +93,7 @@ MachineTypeAndNodeIDToMachineID(MachineType type, NodeID node)
     MachineID mach = {type, node};
     return mach;
 }
+
+} // namespace gem5
 
 #endif  // __MEM_RUBY_SLICC_INTERFACE_COMPONENTMAPPINGS_HH__

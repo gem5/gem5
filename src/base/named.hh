@@ -31,6 +31,9 @@
 
 #include <string>
 
+namespace gem5
+{
+
 /** Interface for things with names. This is useful when using DPRINTF. */
 class Named
 {
@@ -43,5 +46,7 @@ class Named
 
     virtual std::string name() const { return _name; }
 };
+
+} // namespace gem5
 
 #endif // __BASE_NAMED_HH__

@@ -68,6 +68,9 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace statistics;
 
 GEM5_DEPRECATED_NAMESPACE(PseudoInst, pseudo_inst);
@@ -586,3 +589,4 @@ workend(ThreadContext *tc, uint64_t workid, uint64_t threadid)
 }
 
 } // namespace pseudo_inst
+} // namespace gem5

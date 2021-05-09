@@ -41,6 +41,9 @@
 #include "params/PoolManager.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 // Pool Manager Logic
 class PoolManager : public SimObject
 {
@@ -72,5 +75,7 @@ class PoolManager : public SimObject
     // pool size in number of elements
     uint32_t _poolSize;
 };
+
+} // namespace gem5
 
 #endif // __POOL_MANAGER_HH__

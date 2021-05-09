@@ -43,6 +43,9 @@
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 
+namespace gem5
+{
+
 class MessageBuffer;
 class NetDest;
 class SimpleNetwork;
@@ -113,5 +116,7 @@ operator<<(std::ostream& out, const PerfectSwitch& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_SIMPLE_PERFECTSWITCH_HH__

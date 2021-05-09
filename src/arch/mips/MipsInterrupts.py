@@ -28,5 +28,5 @@ from m5.objects.BaseInterrupts import BaseInterrupts
 
 class MipsInterrupts(BaseInterrupts):
     type = 'MipsInterrupts'
-    cxx_class = 'MipsISA::Interrupts'
+    cxx_class = 'gem5::MipsISA::Interrupts'
     cxx_header = 'arch/mips/interrupts.hh'

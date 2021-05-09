@@ -54,6 +54,9 @@
 #include "base/time.hh"
 #include "sim/global_event.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -157,3 +160,4 @@ updateEvents()
 }
 
 } // namespace statistics
+} // namespace gem5

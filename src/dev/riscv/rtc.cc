@@ -40,6 +40,9 @@
 #include "dev/mc146818.hh"
 #include "params/RiscvRTC.hh"
 
+namespace gem5
+{
+
 RiscvRTC::RiscvRTC(const Params &params) :
     SimObject(params),
     rtc(this, params.name, params.time, params.bcd,
@@ -94,3 +97,5 @@ RiscvRTC::unserialize(CheckpointIn &cp)
     // Serialize the timer
     rtc.unserialize("rtc", cp);
 }
+
+} // namespace gem5

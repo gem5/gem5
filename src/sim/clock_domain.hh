@@ -52,6 +52,9 @@
 #include "params/SrcClockDomain.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * Forward declaration
  */
@@ -297,5 +300,7 @@ class DerivedClockDomain: public ClockDomain
      */
     const uint64_t clockDivider;
 };
+
+} // namespace gem5
 
 #endif

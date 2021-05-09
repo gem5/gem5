@@ -46,7 +46,7 @@ namespace Gem5SystemC
 class Gem5Extension: public tlm::tlm_extension<Gem5Extension>
 {
   public:
-    Gem5Extension(PacketPtr _packet);
+    Gem5Extension(gem5::PacketPtr _packet);
 
     virtual tlm_extension_base *clone() const;
     virtual void copy_from(const tlm_extension_base &ext);
@@ -55,17 +55,17 @@ class Gem5Extension: public tlm::tlm_extension<Gem5Extension>
             const tlm::tlm_generic_payload *payload);
     static Gem5Extension &getExtension(
             const tlm::tlm_generic_payload &payload);
-    PacketPtr getPacket();
+    gem5::PacketPtr getPacket();
 
   private:
-    PacketPtr packet;
+    gem5::PacketPtr packet;
 };
 
 class AtomicExtension: public tlm::tlm_extension<AtomicExtension>
 {
   public:
     AtomicExtension(
-        std::shared_ptr<AtomicOpFunctor> amo_op, bool need_return);
+        std::shared_ptr<gem5::AtomicOpFunctor> amo_op, bool need_return);
 
     virtual tlm_extension_base *clone() const;
     virtual void copy_from(const tlm_extension_base &ext);
@@ -76,10 +76,10 @@ class AtomicExtension: public tlm::tlm_extension<AtomicExtension>
             const tlm::tlm_generic_payload &payload);
 
     bool needReturn() const;
-    AtomicOpFunctor* getAtomicOpFunctor() const;
+    gem5::AtomicOpFunctor* getAtomicOpFunctor() const;
 
   private:
-    std::shared_ptr<AtomicOpFunctor> _op;
+    std::shared_ptr<gem5::AtomicOpFunctor> _op;
     bool _needReturn;
 };
 

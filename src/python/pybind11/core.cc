@@ -61,6 +61,9 @@
 
 namespace py = pybind11;
 
+namespace gem5
+{
+
 /** Resolve a SimObject name using the Pybind configuration */
 class PybindSimObjectResolver : public SimObjectResolver
 {
@@ -323,3 +326,4 @@ pybind_init_core(py::module_ &m_native)
     init_loader(m_native);
 }
 
+} // namespace gem5

@@ -31,6 +31,9 @@
 
 #include <cstdint>
 
+namespace gem5
+{
+
 /**
  * This image file contains the text "This is a test image.\n" 31 times.
  */
@@ -135,5 +138,7 @@ const uint8_t image_file_gzipped[] = {
     0x51, 0xd1, 0x51, 0xd1, 0x41, 0x26, 0x0a, 0x00,
     0xc9, 0x58, 0x6c, 0x4e, 0xaa, 0x02, 0x00, 0x00
 };
+
+} // namespace gem5
 
 #endif // __SMALL_IMAGE_FILE_HH__

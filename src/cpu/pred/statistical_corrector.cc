@@ -39,11 +39,14 @@
  * Statistical corrector base class
  */
 
- #include "cpu/pred/statistical_corrector.hh"
+#include "cpu/pred/statistical_corrector.hh"
 
- #include "params/StatisticalCorrector.hh"
+#include "params/StatisticalCorrector.hh"
 
- StatisticalCorrector::StatisticalCorrector(
+namespace gem5
+{
+
+StatisticalCorrector::StatisticalCorrector(
     const StatisticalCorrectorParams &p)
   : SimObject(p),
     logBias(p.logBias),
@@ -408,3 +411,5 @@ StatisticalCorrector::StatisticalCorrectorStats::StatisticalCorrectorStats(
                "prediction is wrong")
 {
 }
+
+} // namespace gem5

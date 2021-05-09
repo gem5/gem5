@@ -41,12 +41,12 @@ class QoSPolicy(SimObject):
     type = 'QoSPolicy'
     abstract = True
     cxx_header = "mem/qos/policy.hh"
-    cxx_class = 'qos::Policy'
+    cxx_class = 'gem5::qos::Policy'
 
 class QoSFixedPriorityPolicy(QoSPolicy):
     type = 'QoSFixedPriorityPolicy'
     cxx_header = "mem/qos/policy_fixed_prio.hh"
-    cxx_class = 'qos::FixedPriorityPolicy'
+    cxx_class = 'gem5::qos::FixedPriorityPolicy'
 
     cxx_exports = [
         PyBindMethod('initRequestorName'),
@@ -90,7 +90,7 @@ class QoSFixedPriorityPolicy(QoSPolicy):
 class QoSPropFairPolicy(QoSPolicy):
     type = 'QoSPropFairPolicy'
     cxx_header = "mem/qos/policy_pf.hh"
-    cxx_class = 'qos::PropFairPolicy'
+    cxx_class = 'gem5::qos::PropFairPolicy'
 
     cxx_exports = [
         PyBindMethod('initRequestorName'),

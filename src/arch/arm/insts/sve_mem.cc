@@ -37,6 +37,9 @@
 
 #include "arch/arm/insts/sve_mem.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -113,4 +116,5 @@ SveContigMemSI::generateDisassembly(
     return ss.str();
 }
 
-}  // namespace ArmISA
+} // namespace ArmISA
+} // namespace gem5

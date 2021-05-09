@@ -31,6 +31,9 @@
 
 #include "arch/sparc/insts/static_inst.hh"
 
+namespace gem5
+{
+
 ////////////////////////////////////////////////////////////////////
 //
 // Branch instructions
@@ -113,6 +116,7 @@ class BranchImm13 : public Branch
     int32_t imm;
 };
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_INSTS_BRANCH_HH__

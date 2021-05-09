@@ -31,6 +31,9 @@
 
 #include "cpu/profile.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -40,6 +43,7 @@ class StackTrace : public BaseStackTrace
     void trace(ThreadContext *tc, bool is_call) override {};
 };
 
-}
+} // namespace MipsISA
+} // namespace gem5
 
 #endif // __ARCH_MIPS_STACKTRACE_HH__

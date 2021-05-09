@@ -41,6 +41,7 @@ from m5.objects.PowerModelState import PowerModelState
 class MathExprPowerModel(PowerModelState):
     type = 'MathExprPowerModel'
     cxx_header = "sim/power/mathexpr_powermodel.hh"
+    cxx_class = 'gem5::MathExprPowerModel'
 
     # Equations for dynamic and static power in Watts
     # Equations may use gem5 stats ie. "1.1*ipc + 2.3*l2_cache.overall_misses"

@@ -37,7 +37,7 @@ from m5.objects.Probe import *
 
 class ElasticTrace(ProbeListenerObject):
     type = 'ElasticTrace'
-    cxx_class = 'o3::ElasticTrace'
+    cxx_class = 'gem5::o3::ElasticTrace'
     cxx_header = 'cpu/o3/probe/elastic_trace.hh'
 
     # Trace files for the following params are created in the output directory.

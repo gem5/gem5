@@ -31,6 +31,9 @@
 #include "base/bitfield.hh"
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 unsigned DuelingMonitor::numInstances = 0;
 
 Dueler::Dueler()
@@ -134,3 +137,5 @@ DuelingMonitor::initEntry(Dueler* dueler)
         regionCounter = 0;
     }
 }
+
+} // namespace gem5

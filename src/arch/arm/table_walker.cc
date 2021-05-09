@@ -53,6 +53,9 @@
 #include "debug/TLBVerbose.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 TableWalker::TableWalker(const Params &p)
@@ -2587,3 +2590,5 @@ TableWalker::TableWalkerStats::TableWalkerStats(Stats::Group *parent)
     requestOrigin.ysubname(0,"Data");
     requestOrigin.ysubname(1,"Inst");
 }
+
+} // namespace gem5

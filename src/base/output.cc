@@ -56,6 +56,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 OutputDirectory simout;
 
 
@@ -344,3 +347,5 @@ OutputDirectory::remove(const std::string &name, bool recursive)
         }
     }
 }
+
+} // namespace gem5

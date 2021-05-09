@@ -41,7 +41,9 @@ from m5.util.fdthelper import *
 class PlicIntDevice(BasicPioDevice):
     type = 'PlicIntDevice'
     cxx_header = 'dev/riscv/plic_device.hh'
+    cxx_class = 'gem5::PlicIntDevice'
     abstract = True
+
     platform = Param.Platform(Parent.any, "Platform")
     pio_size = Param.Addr("PIO Size")
     interrupt_id = Param.Int("PLIC Interrupt ID")

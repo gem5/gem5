@@ -150,6 +150,9 @@
 #include "mem/page_table.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 using namespace RiscvISA;
 
 RemoteGDB::RemoteGDB(System *_system, int _port)
@@ -488,3 +491,5 @@ RemoteGDB::gdbRegs()
 {
     return &regCache;
 }
+
+} // namespace gem5

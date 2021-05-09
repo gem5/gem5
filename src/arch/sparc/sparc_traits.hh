@@ -29,6 +29,9 @@
 #ifndef __ARCH_SPARC_SPARC_TRAITS_HH__
 #define __ARCH_SPARC_SPARC_TRAITS_HH__
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 // Max trap levels
@@ -39,6 +42,8 @@ const int MaxPGL = 2;
 
 // Number of register windows, can legally be 3 to 32
 const int NWindows = 8;
-}
+
+} // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_SPARC_TRAITS_HH__

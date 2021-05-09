@@ -54,6 +54,9 @@
 // we open up the entire namespace std
 using std::string;
 
+namespace gem5
+{
+
 // Bus master IDE registers
 enum BMIRegOffset
 {
@@ -446,3 +449,5 @@ IdeController::Channel::unserialize(const std::string &base, CheckpointIn &cp)
     paramIn(cp, base + ".selectBit", selectBit);
     select(selectBit);
 }
+
+} // namespace gem5

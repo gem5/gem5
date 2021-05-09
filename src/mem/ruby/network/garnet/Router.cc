@@ -39,6 +39,9 @@
 #include "mem/ruby/network/garnet/NetworkLink.hh"
 #include "mem/ruby/network/garnet/OutputUnit.hh"
 
+namespace gem5
+{
+
 Router::Router(const Params &p)
   : BasicRouter(p), Consumer(this), m_latency(p.latency),
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
@@ -281,3 +284,5 @@ Router::functionalWrite(Packet *pkt)
 
     return num_functional_writes;
 }
+
+} // namespace gem5

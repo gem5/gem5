@@ -42,6 +42,9 @@
 #include "base/compiler.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 /**
  * This is exposed globally, independent of the ISA.
  */
@@ -55,6 +58,7 @@ namespace X86ISA
         AddrSizeFlagBit = 2,
         StoreCheck = 4
     };
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_LDSTFLAGS_HH__

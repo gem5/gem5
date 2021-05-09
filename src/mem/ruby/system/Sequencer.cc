@@ -59,6 +59,9 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 Sequencer::Sequencer(const Params &p)
     : RubyPort(p), m_IncompleteTimes(MachineType_NUM),
       deadlockCheckEvent([this]{ wakeup(); }, "Sequencer deadlock check")
@@ -843,3 +846,5 @@ Sequencer::evictionCallback(Addr address)
     llscClearMonitor(address);
     ruby_eviction_callback(address);
 }
+
+} // namespace gem5

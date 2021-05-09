@@ -49,6 +49,9 @@
 #include "mem/mem_interface.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 MemCtrl::MemCtrl(const MemCtrlParams &p) :
     qos::MemCtrl(p),
     port(name() + ".port", *this), isTimingMode(false),
@@ -1510,3 +1513,5 @@ MemCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
     // pass it to the memory controller
     return ctrl.recvTimingReq(pkt);
 }
+
+} // namespace gem5

@@ -52,6 +52,9 @@
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
 
+namespace gem5
+{
+
 namespace
 {
 
@@ -169,3 +172,4 @@ EmuLinux::pageFault(ThreadContext *tc)
 }
 
 } // namespace X86ISA
+} // namespace gem5

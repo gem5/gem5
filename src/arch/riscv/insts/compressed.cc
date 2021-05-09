@@ -35,6 +35,9 @@
 #include "arch/riscv/utility.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -48,4 +51,5 @@ CompRegOp::generateDisassembly(
     return ss.str();
 }
 
-}
+} // namespace RiscvISA
+} // namespace gem5

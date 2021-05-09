@@ -37,5 +37,5 @@ from m5.objects.BaseISA import BaseISA
 
 class PowerISA(BaseISA):
     type = 'PowerISA'
-    cxx_class = 'PowerISA::ISA'
+    cxx_class = 'gem5::PowerISA::ISA'
     cxx_header = "arch/power/isa.hh"

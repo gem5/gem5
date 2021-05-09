@@ -58,6 +58,9 @@
  * TODO: move more code into this base class to reduce duplication.
  */
 
+namespace gem5
+{
+
 SMMUv3BaseCache::SMMUv3BaseCache(const std::string &policy_name, uint32_t seed,
     statistics::Group *parent, const std::string &name)
   : replacementPolicy(decodePolicyName(policy_name)),
@@ -1330,3 +1333,5 @@ WalkCache::WalkCacheStats::~WalkCacheStats()
     for (auto avg_hitrate : averageHitRateByStageLevel)
         delete avg_hitrate;
 }
+
+} // namespace gem5

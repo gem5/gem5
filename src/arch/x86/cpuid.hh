@@ -31,6 +31,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace X86ISA
@@ -57,6 +60,8 @@ namespace X86ISA
 
     bool doCpuid(ThreadContext * tc, uint32_t function,
             uint32_t index, CpuidResult &result);
+
 } // namespace X86ISA
+} // namespace gem5
 
 #endif

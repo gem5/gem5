@@ -40,7 +40,7 @@ from m5.objects.PowerTLB import PowerTLB
 
 class PowerMMU(BaseMMU):
     type = 'PowerMMU'
-    cxx_class = 'PowerISA::MMU'
+    cxx_class = 'gem5::PowerISA::MMU'
     cxx_header = 'arch/power/mmu.hh'
     itb = PowerTLB()
     dtb = PowerTLB()

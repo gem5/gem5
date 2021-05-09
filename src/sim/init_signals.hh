@@ -29,10 +29,15 @@
 #ifndef __SIM_INIT_SIGNALS_HH__
 #define __SIM_INIT_SIGNALS_HH__
 
+namespace gem5
+{
+
 void dumpStatsHandler(int sigtype);
 void dumprstStatsHandler(int sigtype);
 void exitNowHandler(int sigtype);
 void abortHandler(int sigtype);
 void initSignals();
+
+} // namespace gem5
 
 #endif // __SIM_INIT_SIGNALS_HH__

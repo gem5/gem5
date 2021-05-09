@@ -59,7 +59,7 @@ double TimeUnitScale[] = {
     [::sc_core::SC_SEC] = 1.0
 };
 
-Tick TimeUnitFrequency[] = {
+gem5::Tick TimeUnitFrequency[] = {
     [::sc_core::SC_FS] = 1ULL * 1000 * 1000 * 1000 * 1000 * 1000,
     [::sc_core::SC_PS] = 1ULL * 1000 * 1000 * 1000 * 1000,
     [::sc_core::SC_NS] = 1ULL * 1000 * 1000 * 1000,

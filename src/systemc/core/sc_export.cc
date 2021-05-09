@@ -44,9 +44,9 @@ reportError(const char *id, const char *add_msg,
 {
     std::string msg;
     if (add_msg)
-        msg = csprintf("%s: export '%s' (%s)", add_msg, name, kind);
+        msg = gem5::csprintf("%s: export '%s' (%s)", add_msg, name, kind);
     else
-        msg = csprintf("export '%s' (%s)", name, kind);
+        msg = gem5::csprintf("export '%s' (%s)", name, kind);
 
     SC_REPORT_ERROR(id, msg.c_str());
 }

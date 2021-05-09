@@ -44,11 +44,13 @@ from m5.objects import ThermalDomain
 class ThermalNode(SimObject):
     type = 'ThermalNode'
     cxx_header = "sim/power/thermal_node.hh"
+    cxx_class = 'gem5::ThermalNode'
 
 # Represents a thermal resistor
 class ThermalResistor(SimObject):
     type = 'ThermalResistor'
     cxx_header = "sim/power/thermal_model.hh"
+    cxx_class = 'gem5::ThermalResistor'
 
     cxx_exports = [
         PyBindMethod("setNodes"),
@@ -60,6 +62,7 @@ class ThermalResistor(SimObject):
 class ThermalCapacitor(SimObject):
     type = 'ThermalCapacitor'
     cxx_header = "sim/power/thermal_model.hh"
+    cxx_class = 'gem5::ThermalCapacitor'
 
     cxx_exports = [
         PyBindMethod("setNodes"),
@@ -71,6 +74,7 @@ class ThermalCapacitor(SimObject):
 class ThermalReference(SimObject, object):
     type = 'ThermalReference'
     cxx_header = "sim/power/thermal_model.hh"
+    cxx_class = 'gem5::ThermalReference'
 
     cxx_exports = [
         PyBindMethod("setNode"),
@@ -84,6 +88,7 @@ class ThermalReference(SimObject, object):
 class ThermalModel(ClockedObject):
     type = 'ThermalModel'
     cxx_header = "sim/power/thermal_model.hh"
+    cxx_class = 'gem5::ThermalModel'
 
     cxx_exports = [
         PyBindMethod("addCapacitor"),

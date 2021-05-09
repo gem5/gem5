@@ -46,4 +46,4 @@ from m5.objects.PowerState import PowerState
 class PowerDomain(PowerState):
     type = 'PowerDomain'
     cxx_header = 'sim/power_domain.hh'
-
+    cxx_class = 'gem5::PowerDomain'

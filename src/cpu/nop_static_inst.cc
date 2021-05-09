@@ -30,6 +30,9 @@
 
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace
 {
 
@@ -61,3 +64,5 @@ class NopStaticInst : public StaticInst
 }
 
 StaticInstPtr nopStaticInstPtr = new NopStaticInst;
+
+} // namespace gem5

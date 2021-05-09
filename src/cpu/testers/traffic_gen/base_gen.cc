@@ -42,6 +42,9 @@
 #include "base/logging.hh"
 #include "cpu/testers/traffic_gen/base.hh"
 
+namespace gem5
+{
+
 BaseGen::BaseGen(SimObject &obj, RequestorID requestor_id, Tick _duration)
     : _name(obj.name()), requestorId(requestor_id),
       duration(_duration)
@@ -95,3 +98,5 @@ StochasticGen::StochasticGen(SimObject &obj,
     if (min_period > max_period)
         fatal("%s cannot have min_period > max_period", name());
 }
+
+} // namespace gem5

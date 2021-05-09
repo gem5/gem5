@@ -37,6 +37,9 @@
 
 #include "arch/arm/insts/branch64.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -174,3 +177,4 @@ BranchImmImmReg64::generateDisassembly(
 }
 
 } // namespace ArmISA
+} // namespace gem5

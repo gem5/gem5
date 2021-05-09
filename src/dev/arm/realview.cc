@@ -47,6 +47,9 @@
 #include "base/logging.hh"
 #include "dev/arm/base_gic.hh"
 
+namespace gem5
+{
+
 RealView::RealView(const Params &p)
     : Platform(p), gic(nullptr)
 {}
@@ -76,3 +79,5 @@ RealView::clearPciInt(int line)
 {
     gic->clearInt(line);
 }
+
+} // namespace gem5

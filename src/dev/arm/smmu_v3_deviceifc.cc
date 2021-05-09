@@ -42,6 +42,9 @@
 #include "dev/arm/smmu_v3.hh"
 #include "dev/arm/smmu_v3_transl.hh"
 
+namespace gem5
+{
+
 SMMUv3DeviceInterface::SMMUv3DeviceInterface(
     const SMMUv3DeviceInterfaceParams &p) :
     ClockedObject(p),
@@ -261,3 +264,5 @@ SMMUv3DeviceInterface::drain()
     }
     return DrainState::Drained;
 }
+
+} // namespace gem5

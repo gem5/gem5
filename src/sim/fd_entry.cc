@@ -35,6 +35,9 @@
 
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 void
 FDEntry::serialize(CheckpointOut &cp) const
 {
@@ -98,3 +101,5 @@ DeviceFDEntry::unserialize(CheckpointIn &cp)
     //UNSERIALIZE_SCALAR(_driver);
     UNSERIALIZE_SCALAR(_fileName);
 }
+
+} // namespace gem5

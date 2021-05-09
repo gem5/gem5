@@ -30,6 +30,9 @@
 
 #include "base/loader/symtab.hh"
 
+namespace gem5
+{
+
 using namespace PowerISA;
 
 std::string
@@ -158,7 +161,6 @@ MemDispShiftOp::generateDisassembly(
     return ss.str();
 }
 
-
 std::string
 MemIndexOp::generateDisassembly(
         Addr pc, const Loader::SymbolTable *symtab) const
@@ -219,3 +221,5 @@ MemIndexOp::generateDisassembly(
 
     return ss.str();
 }
+
+} // namespace gem5

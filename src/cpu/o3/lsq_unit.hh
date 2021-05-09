@@ -51,6 +51,7 @@
 #include "arch/generic/debugfaults.hh"
 #include "arch/generic/vec_reg.hh"
 #include "arch/locked_mem.hh"
+#include "base/circular_queue.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/inst_seq.hh"
@@ -64,8 +65,10 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 
+namespace gem5
+{
+
 struct O3CPUParams;
-#include "base/circular_queue.hh"
 
 namespace o3
 {
@@ -605,5 +608,6 @@ class LSQUnit
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_LSQ_UNIT_HH__

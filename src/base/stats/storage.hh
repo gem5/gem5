@@ -41,6 +41,9 @@
 // For curTick().
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -782,5 +785,6 @@ class SparseHistStor
 };
 
 } // namespace statistics
+} // namespace gem5
 
 #endif // __BASE_STATS_STORAGE_HH__

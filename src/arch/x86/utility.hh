@@ -42,6 +42,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
     /**
@@ -134,6 +137,8 @@ namespace X86ISA
      * @param value Double precision float to store.
      */
     void storeFloat80(void *mem, double value);
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_UTILITY_HH__

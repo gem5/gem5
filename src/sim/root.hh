@@ -59,6 +59,9 @@
 #include "sim/globals.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class Root : public SimObject
 {
   private:
@@ -154,5 +157,7 @@ class Root : public SimObject
  * specific SimObject.
  */
 extern Root::RootStats &rootStats;
+
+} // namespace gem5
 
 #endif // __SIM_ROOT_HH__

@@ -40,6 +40,9 @@
 
 #include "arch/arm/insts/static_inst.hh"
 
+namespace gem5
+{
+
 class ImmOp64 : public ArmISA::ArmStaticInst
 {
   protected:
@@ -248,5 +251,7 @@ class RegNone : public ArmISA::ArmStaticInst
     std::string generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const;
 };
+
+} // namespace gem5
 
 #endif

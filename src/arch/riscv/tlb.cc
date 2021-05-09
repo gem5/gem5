@@ -54,6 +54,9 @@
 #include "sim/process.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace RiscvISA;
 
 ///////////////////////////////////////////////////////////////////////
@@ -532,3 +535,5 @@ TLB::getTableWalkerPort()
 {
     return &walker->getPort("port");
 }
+
+} // namespace gem5

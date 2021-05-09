@@ -105,6 +105,9 @@
 #define HSA_VERSION_1_0                              1
 
 #ifdef __cplusplus
+namespace gem5
+{
+
 extern "C" {
 #endif  /* __cplusplus */
 
@@ -5692,6 +5695,7 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_iterate_symbols(
 
 #ifdef __cplusplus
 }  // end extern "C" block
+} // namespace gem5
 #endif
 
 #endif  // header guard

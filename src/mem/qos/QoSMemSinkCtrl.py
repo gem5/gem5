@@ -42,7 +42,7 @@ from m5.objects.QoSMemSinkInterface import *
 class QoSMemSinkCtrl(QoSMemCtrl):
     type = 'QoSMemSinkCtrl'
     cxx_header = "mem/qos/mem_sink.hh"
-    cxx_class = "qos::MemSinkCtrl"
+    cxx_class = 'gem5::qos::MemSinkCtrl'
     port = ResponsePort("Response ports")
 
 

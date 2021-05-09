@@ -50,6 +50,9 @@
 #include "sim/process.hh"
 #include "sim/syscall_abi.hh"
 
+namespace gem5
+{
+
 class ArmProcess : public Process
 {
   protected:
@@ -98,5 +101,6 @@ class ArmProcess64 : public ArmProcess
     uint32_t armHwcapImpl() const override;
 };
 
-#endif // __ARM_PROCESS_HH__
+} // namespace gem5
 
+#endif // __ARM_PROCESS_HH__

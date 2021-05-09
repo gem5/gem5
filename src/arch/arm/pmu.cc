@@ -47,6 +47,9 @@
 #include "dev/arm/generic_timer.hh"
 #include "params/ArmPMU.hh"
 
+namespace gem5
+{
+
 namespace ArmISA {
 
 const RegVal PMU::reg_pmcr_wr_mask = 0x39;
@@ -807,3 +810,4 @@ PMU::SWIncrementEvent::write(uint64_t val)
 }
 
 } // namespace ArmISA
+} // namespace gem5

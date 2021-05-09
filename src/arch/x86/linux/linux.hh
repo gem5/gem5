@@ -46,6 +46,9 @@
 #include "sim/guest_abi.hh"
 #include "sim/syscall_return.hh"
 
+namespace gem5
+{
+
 class X86Linux : public Linux
 {
   public:
@@ -370,5 +373,7 @@ class X86Linux32 : public X86Linux
        uint32_t mem_unit;  /* Memory unit size in bytes */
     } tgt_sysinfo;
 };
+
+} // namespace gem5
 
 #endif

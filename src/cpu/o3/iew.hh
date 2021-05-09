@@ -55,6 +55,9 @@
 #include "debug/IEW.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 struct O3CPUParams;
 
 namespace o3
@@ -489,5 +492,6 @@ class IEW
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_IEW_HH__

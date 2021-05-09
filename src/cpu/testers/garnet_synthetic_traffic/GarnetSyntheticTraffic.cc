@@ -45,6 +45,9 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 int TESTER_NETWORK=0;
 
 bool
@@ -346,3 +349,5 @@ GarnetSyntheticTraffic::printAddr(Addr a)
 {
     cachePort.printAddr(a);
 }
+
+} // namespace gem5

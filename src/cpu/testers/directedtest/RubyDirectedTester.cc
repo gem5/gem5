@@ -46,6 +46,9 @@
 #include "debug/DirectedTest.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 RubyDirectedTester::RubyDirectedTester(const Params &p)
   : ClockedObject(p),
     directedStartEvent([this]{ wakeup(); }, "Directed tick",
@@ -136,3 +139,5 @@ RubyDirectedTester::wakeup()
         exitSimLoop("Ruby DirectedTester completed");
     }
 }
+
+} // namespace gem5

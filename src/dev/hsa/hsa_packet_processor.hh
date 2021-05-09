@@ -52,6 +52,9 @@
 // HSA runtime supports only 5 signals per barrier packet
 #define NumSignalsPerBarrier 5
 
+namespace gem5
+{
+
 // Ideally, each queue should store this status and
 // the processPkt() should make decisions based on that
 // status variable.
@@ -417,5 +420,7 @@ class HSAPacketProcessor: public DmaDevice
         virtual const char *description() const;
     };
 };
+
+} // namespace gem5
 
 #endif // __DEV_HSA_HSA_PACKET_PROCESSOR__

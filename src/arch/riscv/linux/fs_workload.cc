@@ -35,6 +35,9 @@
 #include "sim/kernel_workload.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -73,3 +76,4 @@ FsLinux::initState()
 }
 
 } // namespace RiscvISA
+} // namespace gem5

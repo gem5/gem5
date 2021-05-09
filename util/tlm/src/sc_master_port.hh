@@ -71,10 +71,10 @@ class Gem5MasterTransactor;
  * It is assumed that the mode (atomic/timing) does not change during
  * execution.
  */
-class SCMasterPort : public ExternalMaster::ExternalPort
+class SCMasterPort : public gem5::ExternalMaster::ExternalPort
 {
   private:
-    struct TlmSenderState : public Packet::SenderState
+    struct TlmSenderState : public gem5::Packet::SenderState
     {
         tlm::tlm_generic_payload& trans;
         TlmSenderState(tlm::tlm_generic_payload& trans)
@@ -87,7 +87,7 @@ class SCMasterPort : public ExternalMaster::ExternalPort
 
     bool waitForRetry;
     tlm::tlm_generic_payload* pendingRequest;
-    PacketPtr pendingPacket;
+    gem5::PacketPtr pendingPacket;
 
     bool needToSendRetry;
 
@@ -95,7 +95,7 @@ class SCMasterPort : public ExternalMaster::ExternalPort
 
     Gem5MasterTransactor* transactor;
 
-    System* system;
+    gem5::System* system;
 
     Gem5SimControl& simControl;
 
@@ -113,14 +113,14 @@ class SCMasterPort : public ExternalMaster::ExternalPort
                             tlm::tlm_dmi& dmi_data);
 
     // Gem5 SCMasterPort interface
-    bool recvTimingResp(PacketPtr pkt);
+    bool recvTimingResp(gem5::PacketPtr pkt);
     void recvReqRetry();
     void recvRangeChange();
 
   public:
     SCMasterPort(const std::string& name_,
                  const std::string& systemc_name,
-                 ExternalMaster& owner_,
+                 gem5::ExternalMaster& owner_,
                  Gem5SimControl& simControl);
 
     void bindToTransactor(Gem5MasterTransactor* transactor);
@@ -135,13 +135,13 @@ class SCMasterPort : public ExternalMaster::ExternalPort
     void handleBeginReq(tlm::tlm_generic_payload& trans);
     void handleEndResp(tlm::tlm_generic_payload& trans);
 
-    PacketPtr generatePacket(tlm::tlm_generic_payload& trans);
-    void destroyPacket(PacketPtr pkt);
+    gem5::PacketPtr generatePacket(tlm::tlm_generic_payload& trans);
+    void destroyPacket(gem5::PacketPtr pkt);
 
     void checkTransaction(tlm::tlm_generic_payload& trans);
 };
 
-class SCMasterPortHandler : public ExternalMaster::Handler
+class SCMasterPortHandler : public gem5::ExternalMaster::Handler
 {
   private:
     Gem5SimControl& control;
@@ -149,8 +149,8 @@ class SCMasterPortHandler : public ExternalMaster::Handler
   public:
     SCMasterPortHandler(Gem5SimControl& control) : control(control) {}
 
-    ExternalMaster::ExternalPort *
-        getExternalPort(const std::string &name, ExternalMaster &owner,
+    gem5::ExternalMaster::ExternalPort *
+        getExternalPort(const std::string &name, gem5::ExternalMaster &owner,
                         const std::string &port_data);
 };
 

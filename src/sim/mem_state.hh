@@ -40,6 +40,9 @@
 #include "sim/serialize.hh"
 #include "sim/vma.hh"
 
+namespace gem5
+{
+
 class Process;
 struct ProcessParams;
 class System;
@@ -277,5 +280,7 @@ class MemState : public Serializable
      */
     std::list<VMA> _vmaList;
 };
+
+} // namespace gem5
 
 #endif

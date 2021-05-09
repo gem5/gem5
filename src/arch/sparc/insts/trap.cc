@@ -28,6 +28,9 @@
 
 #include "arch/sparc/insts/trap.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -45,4 +48,5 @@ Trap::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     return response.str();
 }
 
-}
+} // namespace SparcISA
+} // namespace gem5

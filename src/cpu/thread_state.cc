@@ -38,6 +38,9 @@
 #include "sim/serialize.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
     : numInst(0), numOp(0), threadStats(cpu, _tid),
       numLoad(0), startNumLoad(0),
@@ -100,3 +103,5 @@ ThreadState::ThreadStateStats::ThreadStateStats(BaseCPU *cpu,
 {
 
 }
+
+} // namespace gem5

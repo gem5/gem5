@@ -46,6 +46,9 @@
 #include "cpu/o3/cpu.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -62,7 +65,7 @@ namespace o3
  * must be taken when using this interface (such as squashing all
  * in-flight instructions when doing a write to this interface).
  */
-class ThreadContext : public ::ThreadContext
+class ThreadContext : public gem5::ThreadContext
 {
   public:
    /** Pointer to the CPU. */
@@ -143,7 +146,7 @@ class ThreadContext : public ::ThreadContext
     PortProxy &getVirtProxy() override;
 
     void
-    initMemProxies(::ThreadContext *tc) override
+    initMemProxies(gem5::ThreadContext *tc) override
     {
         thread->initMemProxies(tc);
     }
@@ -168,7 +171,7 @@ class ThreadContext : public ::ThreadContext
     void halt() override;
 
     /** Takes over execution of a thread from another CPU. */
-    void takeOverFrom(::ThreadContext *old_context) override;
+    void takeOverFrom(gem5::ThreadContext *old_context) override;
 
     /** Reads the last tick that this thread was activated on. */
     Tick readLastActivate() override;
@@ -176,7 +179,7 @@ class ThreadContext : public ::ThreadContext
     Tick readLastSuspend() override;
 
     /** Copies the architectural registers from another TC into this TC. */
-    void copyArchRegs(::ThreadContext *tc) override;
+    void copyArchRegs(gem5::ThreadContext *tc) override;
 
     /** Resets all architectural registers to 0. */
     void clearArchRegs() override;
@@ -400,5 +403,6 @@ class ThreadContext : public ::ThreadContext
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif

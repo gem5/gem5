@@ -37,6 +37,9 @@
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -131,6 +134,7 @@ class RiscvMicroInst : public RiscvStaticInst
     void advancePC(PCState &pcState) const override;
 };
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_STATIC_INST_HH__

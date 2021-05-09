@@ -42,6 +42,9 @@
 #include "params/GarnetExtLink.hh"
 #include "params/GarnetIntLink.hh"
 
+namespace gem5
+{
+
 class GarnetIntLink : public BasicIntLink
 {
   public:
@@ -122,5 +125,7 @@ operator<<(std::ostream& out, const GarnetExtLink& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_GARNET_0_GARNETLINK_HH__

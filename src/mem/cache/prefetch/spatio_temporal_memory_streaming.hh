@@ -48,6 +48,9 @@
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 
+namespace gem5
+{
+
 struct STeMSPrefetcherParams;
 
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
@@ -205,5 +208,6 @@ class STeMS : public Queued
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif//__MEM_CACHE_PREFETCH_SPATIO_TEMPORAL_MEMORY_STREAMING_HH__

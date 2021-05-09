@@ -49,8 +49,9 @@ class MessageRandomization(ScopedEnum):
 
 class MessageBuffer(SimObject):
     type = 'MessageBuffer'
-    cxx_class = 'MessageBuffer'
+    cxx_class = 'gem5::MessageBuffer'
     cxx_header = "mem/ruby/network/MessageBuffer.hh"
+
     ordered = Param.Bool(False, "Whether the buffer is ordered")
     buffer_size = Param.Unsigned(0, "Maximum number of entries to buffer \
                                      (0 allows infinite entries)")

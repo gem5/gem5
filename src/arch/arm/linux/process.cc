@@ -54,6 +54,9 @@
 #include "sim/syscall_emul.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 const Addr ArmLinuxProcess32::commPage = 0xffff0000;
@@ -111,3 +114,5 @@ ArmLinuxProcess64::initState()
     ArmProcess64::initState();
     // The 64 bit equivalent of the comm page would be set up here.
 }
+
+} // namespace gem5

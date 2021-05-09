@@ -45,6 +45,9 @@
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 
+namespace gem5
+{
+
 struct IndirectMemoryPrefetcherParams;
 
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
@@ -203,5 +206,6 @@ class IndirectMemory : public Queued
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif//__MEM_CACHE_PREFETCH_INDIRECT_MEMORY_HH__

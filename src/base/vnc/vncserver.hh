@@ -56,6 +56,9 @@
  * Declaration of a VNC server
  */
 
+namespace gem5
+{
+
 class VncServer : public VncInput
 {
   public:
@@ -315,5 +318,7 @@ class VncServer : public VncInput
     void setDirty() override;
     void frameBufferResized() override;
 };
+
+} // namespace gem5
 
 #endif

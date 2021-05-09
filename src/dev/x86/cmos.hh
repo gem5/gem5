@@ -34,6 +34,9 @@
 #include "dev/mc146818.hh"
 #include "params/Cmos.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -100,5 +103,6 @@ class Cmos : public BasicPioDevice
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif //__DEV_X86_CMOS_HH__

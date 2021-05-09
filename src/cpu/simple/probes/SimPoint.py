@@ -41,6 +41,7 @@ class SimPoint(ProbeListenerObject):
 
     type = 'SimPoint'
     cxx_header = "cpu/simple/probes/simpoint.hh"
+    cxx_class = 'gem5::SimPoint'
 
     interval = Param.UInt64(100000000, "Interval Size (insts)")
     profile_file = Param.String("simpoint.bb.gz", "BBV (output) file")

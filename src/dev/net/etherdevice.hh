@@ -40,6 +40,9 @@
 #include "params/EtherDevice.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class EtherInt;
 
 class EtherDevice : public PciDevice
@@ -146,5 +149,6 @@ class EtherDevBase : public EtherDevice
     {}
 };
 
-#endif // __DEV_NET_ETHERDEVICE_HH__
+} // namespace gem5
 
+#endif // __DEV_NET_ETHERDEVICE_HH__

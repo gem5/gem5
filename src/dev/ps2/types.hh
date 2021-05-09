@@ -50,6 +50,9 @@
  * emulate ps2 devices
  */
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Ps2, ps2);
 namespace ps2
 {
@@ -133,5 +136,7 @@ EndBitUnion(Ps2MouseMovement)
 void keySymToPs2(uint32_t key, bool down, bool &cur_shift,
         std::list<uint8_t> &keys);
 
-} /* namespace ps2 */
+} // namespace ps2
+} // namespace gem5
+
 #endif // __DEV_PS2_HH__

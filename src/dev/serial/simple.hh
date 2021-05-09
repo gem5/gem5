@@ -41,6 +41,9 @@
 
 #include "dev/serial/uart.hh"
 
+namespace gem5
+{
+
 struct SimpleUartParams;
 
 class SimpleUart : public Uart
@@ -63,5 +66,7 @@ class SimpleUart : public Uart
 
     const bool endOnEOT;
 };
+
+} // namespace gem5
 
 #endif // __DEV_SERIAL_SIMPLE_HH__

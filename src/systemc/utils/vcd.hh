@@ -30,6 +30,7 @@
 
 #include <map>
 
+#include "base/types.hh"
 #include "systemc/utils/tracefile.hh"
 
 namespace sc_gem5
@@ -51,7 +52,7 @@ class VcdTraceScope
 class VcdTraceFile : public TraceFile
 {
   private:
-    Tick lastPrintedTime;
+    gem5::Tick lastPrintedTime;
     uint64_t deltasAtNow;
 
     static const int NextNameChars = 5;

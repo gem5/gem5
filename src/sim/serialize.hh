@@ -60,6 +60,9 @@
 #include "base/logging.hh"
 #include "sim/serialize_handlers.hh"
 
+namespace gem5
+{
+
 typedef std::ostream CheckpointOut;
 
 class CheckpointIn
@@ -662,5 +665,7 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
  */
 #define UNSERIALIZE_MAPPING(member, names, size) \
         mappingParamIn(cp, #member, names, member, size)
+
+} // namespace gem5
 
 #endif // __SERIALIZE_HH__

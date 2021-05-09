@@ -41,6 +41,9 @@
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/shader.hh"
 
+namespace gem5
+{
+
 /**
  * the default constructor that works with SWIG
  */
@@ -319,3 +322,5 @@ LdsState::TickEvent::process()
 {
     ldsState->process();
 }
+
+} // namespace gem5

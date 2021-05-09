@@ -42,6 +42,9 @@
 #include "params/Sinic.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Sinic, sinic);
 namespace sinic
 {
@@ -323,5 +326,6 @@ class Interface : public EtherInt
 };
 
 } // namespace sinic
+} // namespace gem5
 
 #endif // __DEV_NET_SINIC_HH__

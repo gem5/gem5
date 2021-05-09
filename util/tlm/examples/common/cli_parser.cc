@@ -105,7 +105,7 @@ CliParser::parse(int argc, char** argv)
                 usage(prog_name);
             }
         }
-    } catch (CxxConfigManager::Exception &e) {
+    } catch (gem5::CxxConfigManager::Exception &e) {
         std::cerr << e.name << ": " << e.message << "\n";
         std::exit(EXIT_FAILURE);
     }

@@ -46,6 +46,9 @@
 #include "sim/aux_vector.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 class SyscallDesc;
 
 namespace X86ISA
@@ -171,6 +174,7 @@ namespace X86ISA
                    Process *process, RegVal flags) override;
     };
 
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_PROCESS_HH__

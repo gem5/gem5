@@ -50,6 +50,9 @@
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 // The design of the "name" and "vect" functions is in sim/faults.hh
 
 namespace ArmISA
@@ -725,7 +728,7 @@ template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals;
  */
 bool getFaultVAddr(Fault fault, Addr &va);
 
-
 } // namespace ArmISA
+} // namespace gem5
 
 #endif // __ARM_FAULTS_HH__

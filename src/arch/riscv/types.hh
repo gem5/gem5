@@ -44,12 +44,16 @@
 
 #include "arch/riscv/pcstate.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_TYPES_HH__

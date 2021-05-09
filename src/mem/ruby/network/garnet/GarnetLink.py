@@ -38,6 +38,8 @@ class CDCType(Enum): vals = [
 class NetworkLink(ClockedObject):
     type = 'NetworkLink'
     cxx_header = "mem/ruby/network/garnet/NetworkLink.hh"
+    cxx_class = 'gem5::NetworkLink'
+
     link_id = Param.Int(Parent.link_id, "link id")
     link_latency = Param.Cycles(Parent.latency, "link latency")
     vcs_per_vnet = Param.Int(Parent.vcs_per_vnet,
@@ -51,10 +53,13 @@ class NetworkLink(ClockedObject):
 class CreditLink(NetworkLink):
     type = 'CreditLink'
     cxx_header = "mem/ruby/network/garnet/CreditLink.hh"
+    cxx_class = 'gem5::CreditLink'
 
 class NetworkBridge(CreditLink):
     type = 'NetworkBridge'
     cxx_header = "mem/ruby/network/garnet/NetworkBridge.hh"
+    cxx_class = 'gem5::NetworkBridge'
+
     link = Param.NetworkLink("Associated Network Link")
     vtype = Param.CDCType('LINK_OBJECT',
               "Direction of CDC LINK->OBJECT or OBJECT->LINK")
@@ -65,6 +70,8 @@ class NetworkBridge(CreditLink):
 class GarnetIntLink(BasicIntLink):
     type = 'GarnetIntLink'
     cxx_header = "mem/ruby/network/garnet/GarnetLink.hh"
+    cxx_class = 'gem5::GarnetIntLink'
+
     # The internal link includes one forward link (for flit)
     # and one backward flow-control link (for credit)
     network_link = Param.NetworkLink(NetworkLink(), "forward link")
@@ -102,6 +109,8 @@ class GarnetIntLink(BasicIntLink):
 class GarnetExtLink(BasicExtLink):
     type = 'GarnetExtLink'
     cxx_header = "mem/ruby/network/garnet/GarnetLink.hh"
+    cxx_class = 'gem5::GarnetExtLink'
+
     # The external link is bi-directional.
     # It includes two forward links (for flits)
     # and two backward flow-control links (for credits),

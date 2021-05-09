@@ -52,6 +52,9 @@
 #include "sim/core.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class EventQueue;       // forward declaration
 class BaseGlobalEvent;
 
@@ -94,7 +97,7 @@ class EventBase
 {
   protected:
     typedef unsigned short FlagsType;
-    typedef ::Flags<FlagsType> Flags;
+    typedef ::gem5::Flags<FlagsType> Flags;
 
     static const FlagsType PublicRead    = 0x003f; // public readable flags
     static const FlagsType PublicWrite   = 0x001d; // public writable flags
@@ -1169,5 +1172,7 @@ class EventFunctionWrapper : public Event
         event.unserializeSection(cp, #event);           \
         eventQueue()->checkpointReschedule(&event);     \
     } while (0)
+
+} // namespace gem5
 
 #endif // __SIM_EVENTQ_HH__

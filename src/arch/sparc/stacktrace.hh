@@ -31,6 +31,9 @@
 
 #include "cpu/profile.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -44,6 +47,7 @@ class StackTrace : public BaseStackTrace
     }
 };
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_STACKTRACE_HH__

@@ -32,6 +32,9 @@
 #include "debug/HelloExample.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 GoodbyeObject::GoodbyeObject(const GoodbyeObjectParams &params) :
     SimObject(params), event([this]{ processEvent(); }, name() + ".event"),
     bandwidth(params.write_bandwidth), bufferSize(params.buffer_size),
@@ -94,3 +97,5 @@ GoodbyeObject::fillBuffer()
         exitSimLoop(buffer, 0, curTick() + bandwidth * bytes_copied);
     }
 }
+
+} // namespace gem5

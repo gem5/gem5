@@ -32,6 +32,9 @@
 
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -49,5 +52,6 @@ class PowerProcess : public Process
     void argsInit(int intSize, int pageSize);
 };
 
-#endif // __POWER_PROCESS_HH__
+} // namespace gem5
 
+#endif // __POWER_PROCESS_HH__

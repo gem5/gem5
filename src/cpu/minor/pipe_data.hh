@@ -54,6 +54,9 @@
 #include "cpu/minor/dyn_inst.hh"
 #include "cpu/base.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -290,5 +293,6 @@ class ForwardInstData /* : public ReportIF, public BubbleIF */
 };
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_PIPE_DATA_HH__ */

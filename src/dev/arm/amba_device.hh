@@ -56,6 +56,8 @@
 #include "params/AmbaDmaDevice.hh"
 #include "params/AmbaIntDevice.hh"
 
+namespace gem5
+{
 
 class AmbaDevice
 {
@@ -108,5 +110,6 @@ class AmbaDmaDevice : public DmaDevice, public AmbaDevice
     AmbaDmaDevice(const Params &p, Addr pio_size = 0);
 };
 
+} // namespace gem5
 
 #endif //__DEV_ARM_AMBA_DEVICE_HH__

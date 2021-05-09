@@ -45,6 +45,9 @@
 #include "base/types.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -80,5 +83,6 @@ void schedStatEvent(bool dump, bool reset, Tick when = curTick(),
  */
 void periodicStatDump(Tick period = 0);
 } // namespace statistics
+} // namespace gem5
 
 #endif // __SIM_STAT_CONTROL_HH__

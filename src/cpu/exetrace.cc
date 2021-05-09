@@ -52,6 +52,9 @@
 #include "debug/FmtTicksOff.hh"
 #include "enums/OpClass.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 void
@@ -176,3 +179,4 @@ Trace::ExeTracerRecord::dump()
 }
 
 } // namespace Trace
+} // namespace gem5

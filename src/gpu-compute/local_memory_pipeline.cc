@@ -41,6 +41,9 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 LocalMemPipeline::LocalMemPipeline(const ComputeUnitParams &p, ComputeUnit &cu)
     : computeUnit(cu), _name(cu.name() + ".LocalMemPipeline"),
       lmQueueSize(p.local_mem_queue_size), stats(&cu)
@@ -132,3 +135,5 @@ LocalMemPipelineStats::LocalMemPipelineStats(statistics::Group *parent)
                "are delayed before updating the VRF")
 {
 }
+
+} // namespace gem5

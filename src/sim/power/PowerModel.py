@@ -46,6 +46,7 @@ class PMType(Enum) : vals = ['All', 'Static', 'Dynamic']
 class PowerModel(SimObject):
     type = 'PowerModel'
     cxx_header = "sim/power/power_model.hh"
+    cxx_class = 'gem5::PowerModel'
 
     cxx_exports = [
         PyBindMethod("getDynamicPower"),

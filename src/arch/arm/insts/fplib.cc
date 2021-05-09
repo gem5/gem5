@@ -44,6 +44,9 @@
 #include "base/logging.hh"
 #include "fplib.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -5037,4 +5040,5 @@ fplibDefaultNaN()
     return fp64_defaultNaN();
 }
 
-}
+} // namespace ArmISA
+} // namespace gem5

@@ -35,6 +35,9 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 
+namespace gem5
+{
+
 /** Return address stack class, implements a simple RAS. */
 class ReturnAddrStack
 {
@@ -96,5 +99,7 @@ class ReturnAddrStack
     /** The top of stack index. */
     unsigned tos;
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_RAS_HH__

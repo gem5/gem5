@@ -41,6 +41,9 @@
 #include "dev/io_device.hh"
 #include "dev/pci/types.hh"
 
+namespace gem5
+{
+
 struct PciHostParams;
 struct GenericPciHostParams;
 
@@ -90,7 +93,7 @@ class PciHost : public PioDevice
      */
     class DeviceInterface
     {
-        friend class ::PciHost;
+        friend class gem5::PciHost;
 
       protected:
         /**
@@ -324,5 +327,7 @@ class GenericPciHost : public PciHost
     const Addr pciMemBase;
     const Addr pciDmaBase;
 };
+
+} // namespace gem5
 
 #endif // __DEV_PCI_HOST_HH__

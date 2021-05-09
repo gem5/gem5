@@ -42,6 +42,9 @@
 #include "dev/pci/device.hh"
 #include "params/AMDGPUDevice.hh"
 
+namespace gem5
+{
+
 /* Names of BARs used by the device. */
 constexpr int FRAMEBUFFER_BAR = 0;
 constexpr int DOORBELL_BAR = 2;
@@ -127,5 +130,7 @@ class AMDGPUDevice : public PciDevice
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };
+
+} // namespace gem5
 
 #endif // __DEV_AMDGPU_AMDGPU_DEVICE_HH__

@@ -32,6 +32,9 @@
 #include "base/trace.hh"
 #include "debug/HelloExample.hh"
 
+namespace gem5
+{
+
 HelloObject::HelloObject(const HelloObjectParams &params) :
     SimObject(params),
     // This is a C++ lambda. When the event is triggered, it will call the
@@ -68,3 +71,5 @@ HelloObject::processEvent()
         schedule(event, curTick() + latency);
     }
 }
+
+} // namespace gem5

@@ -37,6 +37,9 @@
 
 #include <mem/ruby/structures/TBEStorage.hh>
 
+namespace gem5
+{
+
 TBEStorage::TBEStorage(statistics::Group *parent, int number_of_TBEs)
     : m_reserved(0), m_stats(parent)
 {
@@ -51,3 +54,5 @@ TBEStorage::TBEStorageStats::TBEStorageStats(statistics::Group *parent)
       ADD_STAT(avg_reserved, "Avg. number of slots reserved")
 {
 }
+
+} // namespace gem5

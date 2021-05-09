@@ -55,6 +55,7 @@ class MemInterface(AbstractMemory):
     type = 'MemInterface'
     abstract = True
     cxx_header = "mem/mem_interface.hh"
+    cxx_class = 'gem5::MemInterface'
 
     # Allow the interface to set required controller buffer sizes
     # each entry corresponds to a burst for the specific memory channel

@@ -42,10 +42,10 @@ namespace sc_gem5
  * accordingly. It also acts as a collecting point for systemc related
  * control functionality.
  */
-class Kernel : public SimObject
+class Kernel : public gem5::SimObject
 {
   public:
-    typedef SystemC_KernelParams Params;
+    typedef gem5::SystemC_KernelParams Params;
     Kernel(const Params &params, int);
 
     void init() override;
@@ -65,7 +65,7 @@ class Kernel : public SimObject
   private:
     static void stopWork();
 
-    EventWrapper<Kernel, &Kernel::t0Handler> t0Event;
+    gem5::EventWrapper<Kernel, &Kernel::t0Handler> t0Event;
 };
 
 extern Kernel *kernel;

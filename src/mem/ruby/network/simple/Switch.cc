@@ -48,7 +48,10 @@
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 
-using gem5::stl_helpers::operator<<;
+namespace gem5
+{
+
+using stl_helpers::operator<<;
 
 Switch::Switch(const Params &p)
   : BasicRouter(p),
@@ -205,3 +208,5 @@ SwitchStats::SwitchStats(statistics::Group *parent)
 {
 
 }
+
+} // namespace gem5

@@ -43,6 +43,9 @@
 #include "cpu/static_inst.hh"
 #include "debug/X86.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -208,6 +211,8 @@ class X86StaticInst : public StaticInst
         return retPC;
     }
 };
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_INSTS_STATICINST_HH__

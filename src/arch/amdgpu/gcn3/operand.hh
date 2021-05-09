@@ -42,6 +42,9 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 /**
  * classes that represnt vector/scalar operands in GCN3 ISA. these classes
  * wrap the generic vector register type (i.e., src/arch/generic/vec_reg.hh)
@@ -742,5 +745,7 @@ namespace Gcn3ISA
     using ConstVecOperandU256 = VecOperand<VecElemU32, true, 8>;
     using ConstVecOperandU512 = VecOperand<VecElemU32, true, 16>;
 }
+
+} // namespace gem5
 
 #endif // __ARCH_GCN3_OPERAND_HH__

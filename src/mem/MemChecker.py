@@ -40,10 +40,12 @@ from m5.proxy import *
 class MemChecker(SimObject):
     type = 'MemChecker'
     cxx_header = "mem/mem_checker.hh"
+    cxx_class = 'gem5::MemChecker'
 
 class MemCheckerMonitor(SimObject):
     type = 'MemCheckerMonitor'
     cxx_header = "mem/mem_checker_monitor.hh"
+    cxx_class = 'gem5::MemCheckerMonitor'
 
     # one port in each direction
     mem_side_port = RequestPort("This port sends requests and receives "

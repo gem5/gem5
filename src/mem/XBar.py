@@ -47,6 +47,7 @@ class BaseXBar(ClockedObject):
     type = 'BaseXBar'
     abstract = True
     cxx_header = "mem/xbar.hh"
+    cxx_class = 'gem5::BaseXBar'
 
     cpu_side_ports = VectorResponsePort("Vector port for connecting "
                                                 "mem side ports")
@@ -97,10 +98,12 @@ class BaseXBar(ClockedObject):
 class NoncoherentXBar(BaseXBar):
     type = 'NoncoherentXBar'
     cxx_header = "mem/noncoherent_xbar.hh"
+    cxx_class = 'gem5::NoncoherentXBar'
 
 class CoherentXBar(BaseXBar):
     type = 'CoherentXBar'
     cxx_header = "mem/coherent_xbar.hh"
+    cxx_class = 'gem5::CoherentXBar'
 
     # The coherent crossbar additionally has snoop responses that are
     # forwarded after a specific latency.
@@ -130,6 +133,7 @@ class CoherentXBar(BaseXBar):
 class SnoopFilter(SimObject):
     type = 'SnoopFilter'
     cxx_header = "mem/snoop_filter.hh"
+    cxx_class = 'gem5::SnoopFilter'
 
     # Lookup latency of the snoop filter, added to requests that pass
     # through a coherent crossbar.

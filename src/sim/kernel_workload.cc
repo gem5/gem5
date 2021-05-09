@@ -31,6 +31,9 @@
 #include "params/KernelWorkload.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 KernelWorkload::KernelWorkload(const Params &p) : Workload(p),
     _loadAddrMask(p.load_addr_mask), _loadAddrOffset(p.load_addr_offset),
     commandLine(p.command_line)
@@ -142,3 +145,5 @@ KernelWorkload::unserialize(CheckpointIn &cp)
 {
     kernelSymtab.unserialize("symtab", cp);
 }
+
+} // namespace gem5

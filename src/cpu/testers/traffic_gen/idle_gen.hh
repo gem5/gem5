@@ -48,6 +48,9 @@
 #include "base_gen.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 /**
  * The idle generator does nothing.
  */
@@ -66,5 +69,7 @@ class IdleGen : public BaseGen
 
     Tick nextPacketTick(bool elastic, Tick delay) const ;
 };
+
+} // namespace gem5
 
 #endif

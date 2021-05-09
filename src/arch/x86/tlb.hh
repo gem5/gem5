@@ -48,6 +48,9 @@
 #include "params/X86TLB.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace X86ISA
@@ -169,6 +172,8 @@ namespace X86ISA
          */
         Port *getTableWalkerPort() override;
     };
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_TLB_HH__

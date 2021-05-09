@@ -43,6 +43,9 @@
 #include "cpu/thread_context.hh"
 #include "params/PowerISA.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -75,4 +78,5 @@ ISA::copyRegsFrom(ThreadContext *src)
     tc->pcState(src->pcState());
 }
 
-}
+} // namespace PowerISA
+} // namespace gem5

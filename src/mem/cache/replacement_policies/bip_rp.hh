@@ -44,6 +44,9 @@
 
 #include "mem/cache/replacement_policies/lru_rp.hh"
 
+namespace gem5
+{
+
 struct BIPRPParams;
 
 GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
@@ -76,5 +79,6 @@ class BIP : public LRU
 };
 
 } // namespace replacement_policy
+} // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BIP_RP_HH__

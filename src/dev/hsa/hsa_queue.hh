@@ -36,6 +36,9 @@
 
 #include <cstdint>
 
+namespace gem5
+{
+
 typedef enum
 {
     _HSA_QUEUE_TYPE_MULTI = 0,
@@ -86,5 +89,7 @@ typedef struct _amd_queue_s
     _hsa_signal_t queue_inactive_signal;
     uint32_t reserved4[14];
 } _amd_queue_t;
+
+} // namespace gem5
 
 #endif // __DEV_HSA_HSA_QUEUE_HH__

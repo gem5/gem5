@@ -37,6 +37,9 @@
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -167,4 +170,4 @@ NonMaskableInterrupt::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 }
 
 } // namespace MipsISA
-
+} // namespace gem5

@@ -49,6 +49,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 CpuLocalTimer::CpuLocalTimer(const Params &p)
     : BasicPioDevice(p, 0x38)
 {
@@ -441,3 +444,5 @@ CpuLocalTimer::unserialize(CheckpointIn &cp)
     for (int i = 0; i < sys->threads.size(); i++)
         localTimer[i]->unserializeSection(cp, csprintf("timer%d", i));
 }
+
+} // namespace gem5

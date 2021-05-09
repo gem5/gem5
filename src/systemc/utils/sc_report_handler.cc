@@ -279,10 +279,10 @@ sc_report_handler::default_handler(
         const sc_report &report, const sc_actions &actions)
 {
     if (actions & SC_DISPLAY)
-        cprintf("\n%s\n", sc_report_compose_message(report));
+        gem5::cprintf("\n%s\n", sc_report_compose_message(report));
 
     if ((actions & SC_LOG) && logFile) {
-        ccprintf(*logFile, "%s: %s\n", report.get_time().to_string(),
+        gem5::ccprintf(*logFile, "%s: %s\n", report.get_time().to_string(),
                  sc_report_compose_message(report));
     }
     if (actions & SC_STOP) {
@@ -376,7 +376,7 @@ sc_report_compose_message(const sc_report &report)
 
     str << sevName << ": ";
     if (id >= 0) {
-        ccprintf(str, "(%c%d) ", sevName[0], id);
+        gem5::ccprintf(str, "(%c%d) ", sevName[0], id);
     }
     str << report.get_msg_type();
 
@@ -385,13 +385,13 @@ sc_report_compose_message(const sc_report &report)
         str << ": " << msg;
 
     if (report.get_severity() > SC_INFO) {
-        ccprintf(str, "\nIn file: %s:%d", report.get_file_name(),
+        gem5::ccprintf(str, "\nIn file: %s:%d", report.get_file_name(),
                  report.get_line_number());
 
         ::sc_gem5::Process *current = ::sc_gem5::scheduler.current();
         const char *name = report.get_process_name();
         if (current && sc_is_running() && name) {
-            ccprintf(str, "\nIn process: %s @ %s", name,
+            gem5::ccprintf(str, "\nIn process: %s @ %s", name,
                     report.get_time().to_string());
         }
     }

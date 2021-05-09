@@ -43,6 +43,9 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 A9SCU::A9SCU(const Params &p)
     : BasicPioDevice(p, 0x60)
 {
@@ -103,3 +106,5 @@ A9SCU::write(PacketPtr pkt)
     pkt->makeAtomicResponse();
     return pioDelay;
 }
+
+} // namespace gem5

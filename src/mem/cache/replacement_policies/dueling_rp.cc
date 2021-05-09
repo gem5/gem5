@@ -31,6 +31,9 @@
 #include "base/logging.hh"
 #include "params/DuelingRP.hh"
 
+namespace gem5
+{
+
 namespace replacement_policy
 {
 
@@ -187,3 +190,4 @@ Dueling::DuelingStats::DuelingStats(statistics::Group* parent)
 }
 
 } // namespace replacement_policy
+} // namespace gem5

@@ -32,6 +32,9 @@
 
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -57,4 +60,5 @@ TlbEntry::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(lruSeq);
 }
 
-}
+} // namespace RiscvISA
+} // namespace gem5

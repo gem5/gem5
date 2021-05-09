@@ -39,6 +39,9 @@
 
 #include "arch/arm/system.hh"
 
+namespace gem5
+{
+
 bool
 ArmISA::Interrupts::takeInt(InterruptTypes int_type) const
 {
@@ -156,3 +159,4 @@ ArmISA::Interrupts::takeInt(InterruptTypes int_type) const
             (mask != INT_MASK_P);
 }
 
+} // namespace gem5

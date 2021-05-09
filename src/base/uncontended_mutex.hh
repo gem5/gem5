@@ -32,6 +32,9 @@
 #include <condition_variable>
 #include <mutex>
 
+namespace gem5
+{
+
 /*
  * The std::mutex implementation is slower than expected because of many mode
  * checking and legacy support.
@@ -114,5 +117,7 @@ class UncontendedMutex
         cv.notify_all();
     }
 };
+
+} // namespace gem5
 
 #endif // __BASE_UNCONTENDED_MUTEX_HH__

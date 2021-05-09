@@ -52,6 +52,9 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 Shader::Shader(const Params &p) : ClockedObject(p),
     _activeCus(0), _lastInactiveTick(0), cpuThread(nullptr),
     gpuTc(nullptr), cpuPointer(p.cpu_pointer),
@@ -591,3 +594,5 @@ Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size)
             .flags(statistics::pdf | statistics::oneline);
     }
 }
+
+} // namespace gem5

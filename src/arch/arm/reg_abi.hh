@@ -33,6 +33,9 @@
 #include "base/logging.hh"
 #include "sim/syscall_abi.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -74,5 +77,6 @@ struct Argument<ABI, Arg,
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __ARCH_ARM_REG_ABI_HH__

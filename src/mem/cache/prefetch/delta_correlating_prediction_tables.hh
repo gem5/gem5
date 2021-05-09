@@ -33,6 +33,9 @@
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 
+namespace gem5
+{
+
 struct DeltaCorrelatingPredictionTablesParams;
 struct DCPTPrefetcherParams;
 
@@ -132,5 +135,6 @@ class DCPT : public Queued
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif//__MEM_CACHE_PREFETCH_DELTA_CORRELATING_PREDICTION_TABLES_HH_

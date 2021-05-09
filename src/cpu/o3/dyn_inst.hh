@@ -65,6 +65,9 @@
 #include "cpu/translation.hh"
 #include "debug/HtmCpu.hh"
 
+namespace gem5
+{
+
 class Packet;
 
 namespace o3
@@ -1018,7 +1021,7 @@ class DynInst : public ExecContext, public RefCounted
     void setThreadState(ThreadState *state) { thread = state; }
 
     /** Returns the thread context. */
-    ::ThreadContext *tcBase() const override { return thread->getTC(); }
+    gem5::ThreadContext *tcBase() const override { return thread->getTC(); }
 
   public:
     /** Is this instruction's memory access strictly ordered? */
@@ -1064,7 +1067,7 @@ class DynInst : public ExecContext, public RefCounted
         return cpu->mwait(threadNumber, pkt);
     }
     void
-    mwaitAtomic(::ThreadContext *tc) override
+    mwaitAtomic(gem5::ThreadContext *tc) override
     {
         return cpu->mwaitAtomic(threadNumber, tc, cpu->mmu);
     }
@@ -1328,5 +1331,6 @@ class DynInst : public ExecContext, public RefCounted
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_DYN_INST_HH__

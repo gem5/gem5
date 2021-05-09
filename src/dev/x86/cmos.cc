@@ -33,6 +33,9 @@
 #include "dev/x86/intdev.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 void
 X86ISA::Cmos::X86RTC::handleEvent()
 {
@@ -138,3 +141,5 @@ X86ISA::Cmos::unserialize(CheckpointIn &cp)
     // Serialize the timer
     rtc.unserialize("rtc", cp);
 }
+
+} // namespace gem5

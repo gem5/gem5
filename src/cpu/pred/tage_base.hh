@@ -56,6 +56,9 @@
 #include "params/TAGEBase.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class TAGEBase : public SimObject
 {
   public:
@@ -504,5 +507,7 @@ class TAGEBase : public SimObject
         statistics::Vector altMatchProvider;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_TAGE_BASE_HH__

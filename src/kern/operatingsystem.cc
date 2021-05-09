@@ -31,6 +31,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 int
 OperatingSystem::openSpecialFile(std::string path, Process *process,
                                  ThreadContext *tc)
@@ -41,4 +44,4 @@ OperatingSystem::openSpecialFile(std::string path, Process *process,
     return -1;
 }
 
-
+} // namespace gem5

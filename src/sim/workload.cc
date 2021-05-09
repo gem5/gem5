@@ -32,6 +32,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/debug.hh"
 
+namespace gem5
+{
+
 void
 Workload::registerThreadContext(ThreadContext *tc)
 {
@@ -100,3 +103,5 @@ Workload::startup()
     }
 #   endif
 }
+
+} // namespace gem5

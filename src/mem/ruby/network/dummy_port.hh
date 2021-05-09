@@ -30,6 +30,9 @@
 
 #include "mem/port.hh"
 
+namespace gem5
+{
+
 class RubyDummyPort : public Port
 {
   public:
@@ -53,5 +56,7 @@ class RubyDummyPort : public Port
         return dummy;
     }
 };
+
+} // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_DUMMY_PORT_HH__

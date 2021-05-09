@@ -46,6 +46,9 @@
 #include "base/compiler.hh"
 #include "base/remote_gdb.hh"
 
+namespace gem5
+{
+
 class System;
 class ThreadContext;
 
@@ -146,6 +149,8 @@ class RemoteGDB : public BaseRemoteGDB
     RemoteGDB(System *system, int _port);
     BaseGdbRegCache *gdbRegs();
 };
+
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_REMOTEGDB_HH__

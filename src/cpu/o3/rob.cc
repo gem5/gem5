@@ -49,6 +49,9 @@
 #include "debug/ROB.hh"
 #include "params/O3CPU.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -539,3 +542,4 @@ ROB::findInst(ThreadID tid, InstSeqNum squash_inst)
 }
 
 } // namespace o3
+} // namespace gem5

@@ -32,6 +32,8 @@ class Platform(SimObject):
     type = 'Platform'
     abstract = True
     cxx_header = "dev/platform.hh"
+    cxx_class = 'gem5::Platform'
+
     system = Param.System(Parent.any, "system")
 
     # for platforms using device trees to set properties of CPU nodes

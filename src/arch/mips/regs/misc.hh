@@ -30,6 +30,9 @@
 #ifndef __ARCH_MIPS_REGS_MISC_HH__
 #define __ARCH_MIPS_REGS_MISC_HH__
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -192,5 +195,6 @@ enum MiscRegIndex
 };
 
 } // namespace MipsISA
+} // namespace gem5
 
 #endif

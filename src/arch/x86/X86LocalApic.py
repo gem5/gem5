@@ -46,7 +46,7 @@ from m5.SimObject import SimObject
 
 class X86LocalApic(BaseInterrupts):
     type = 'X86LocalApic'
-    cxx_class = 'X86ISA::Interrupts'
+    cxx_class = 'gem5::X86ISA::Interrupts'
     cxx_header = 'arch/x86/interrupts.hh'
 
     int_requestor = RequestPort("Port for sending interrupt messages")

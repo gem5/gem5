@@ -41,6 +41,9 @@
 #include "base/types.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 namespace NullISA
 {
 
@@ -50,6 +53,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
     return 0;
 }
 
-}
+} // namespace NullISA
+} // namespace gem5
 
 #endif // __ARCH_NULL_UTILITY_HH__

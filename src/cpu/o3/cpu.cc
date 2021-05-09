@@ -61,6 +61,9 @@
 #include "sim/stat_control.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 struct BaseCPUParams;
 
 namespace o3
@@ -320,7 +323,7 @@ CPU::CPU(const O3CPUParams &params)
             }
         }
 
-        ::ThreadContext *tc;
+        gem5::ThreadContext *tc;
 
         // Setup the TC that will serve as the interface to the threads/CPU.
         auto *o3_tc = new ThreadContext;
@@ -734,7 +737,7 @@ CPU::insertThread(ThreadID tid)
     DPRINTF(O3CPU,"[tid:%i] Initializing thread into CPU");
     // Will change now that the PC and thread state is internal to the CPU
     // and not in the ThreadContext.
-    ::ThreadContext *src_tc;
+    gem5::ThreadContext *src_tc;
     if (FullSystem)
         src_tc = system->threads[tid];
     else
@@ -769,7 +772,7 @@ CPU::insertThread(ThreadID tid)
     //Set PC/NPC/NNPC
     pcState(src_tc->pcState(), tid);
 
-    src_tc->setStatus(::ThreadContext::Active);
+    src_tc->setStatus(gem5::ThreadContext::Active);
 
     activateContext(tid);
 
@@ -938,7 +941,7 @@ CPU::drain()
     if (!isCpuDrained())  {
         // If a thread is suspended, wake it up so it can be drained
         for (auto t : threadContexts) {
-            if (t->status() == ::ThreadContext::Suspended){
+            if (t->status() == gem5::ThreadContext::Suspended){
                 DPRINTF(Drain, "Currently suspended so activate %i \n",
                         t->threadId());
                 t->activate();
@@ -1055,7 +1058,7 @@ CPU::drainResume()
 
     _status = Idle;
     for (ThreadID i = 0; i < thread.size(); i++) {
-        if (thread[i]->status() == ::ThreadContext::Active) {
+        if (thread[i]->status() == gem5::ThreadContext::Active) {
             DPRINTF(Drain, "Activating thread: %i\n", i);
             activateThread(i);
             _status = Running;
@@ -1610,7 +1613,7 @@ CPU::wakeCPU()
 void
 CPU::wakeup(ThreadID tid)
 {
-    if (thread[tid]->status() != ::ThreadContext::Suspended)
+    if (thread[tid]->status() != gem5::ThreadContext::Suspended)
         return;
 
     wakeCPU();
@@ -1654,7 +1657,7 @@ CPU::addThreadToExitingList(ThreadID tid)
     DPRINTF(O3CPU, "Thread %d is inserted to exitingThreads list\n", tid);
 
     // the thread trying to exit can't be already halted
-    assert(tcBase(tid)->status() != ::ThreadContext::Halted);
+    assert(tcBase(tid)->status() != gem5::ThreadContext::Halted);
 
     // make sure the thread has not been added to the list yet
     assert(exitingThreads.count(tid) == 0);
@@ -1708,7 +1711,7 @@ CPU::exitThreads()
         if (readyToExit) {
             DPRINTF(O3CPU, "Exiting thread %d\n", thread_id);
             haltContext(thread_id);
-            tcBase(thread_id)->setStatus(::ThreadContext::Halted);
+            tcBase(thread_id)->setStatus(gem5::ThreadContext::Halted);
             it = exitingThreads.erase(it);
         } else {
             it++;
@@ -1752,3 +1755,4 @@ CPU::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
 }
 
 } // namespace o3
+} // namespace gem5

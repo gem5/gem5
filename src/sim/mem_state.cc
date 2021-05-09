@@ -38,6 +38,9 @@
 #include "sim/system.hh"
 #include "sim/vma.hh"
 
+namespace gem5
+{
+
 MemState::MemState(Process *owner, Addr brk_point, Addr stack_base,
                    Addr max_stack_size, Addr next_thread_stack_base,
                    Addr mmap_end)
@@ -489,3 +492,5 @@ MemState::printVmaList()
 
     return file_content.str();
 }
+
+} // namespace gem5

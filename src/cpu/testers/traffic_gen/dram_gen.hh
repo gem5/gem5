@@ -50,6 +50,9 @@
 #include "mem/packet.hh"
 #include "random_gen.hh"
 
+namespace gem5
+{
+
 /**
  * DRAM specific generator is for issuing request with variable page
  * hit length and bank utilization. Currently assumes a single
@@ -145,5 +148,7 @@ class DramGen : public RandomGen
     const unsigned int nbrOfRanks;
 
 };
+
+} // namespace gem5
 
 #endif

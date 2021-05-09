@@ -41,6 +41,9 @@
 #include "sim/power/power_model.hh"
 #include "sim/power/thermal_domain.hh"
 
+namespace gem5
+{
+
 SubSystem::SubSystem(const Params &p)
  : SimObject(p)
 {
@@ -66,3 +69,5 @@ SubSystem::getStaticPower() const
         ret += obj->getStaticPower();
     return ret;
 }
+
+} // namespace gem5

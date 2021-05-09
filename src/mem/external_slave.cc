@@ -44,6 +44,9 @@
 #include "base/trace.hh"
 #include "debug/ExternalPort.hh"
 
+namespace gem5
+{
+
 /** Implement a `stub' port which just responds to requests by printing
  *  a message.  The stub port can be used to configure and test a system
  *  where the external port is used for a peripheral before connecting
@@ -237,3 +240,5 @@ ExternalSlave::registerHandler(const std::string &handler_name,
 {
     portHandlers[handler_name] = handler;
 }
+
+} // namespace gem5

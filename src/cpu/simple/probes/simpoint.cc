@@ -39,6 +39,9 @@
 
 #include "base/output.hh"
 
+namespace gem5
+{
+
 SimPoint::SimPoint(const SimPointParams &p)
     : ProbeListenerObject(p),
       intervalSize(p.interval),
@@ -138,3 +141,5 @@ SimPoint::profile(const std::pair<SimpleThread*, StaticInstPtr>& p)
         }
     }
 }
+
+} // namespace gem5

@@ -50,6 +50,9 @@
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class TapEvent;
 class EtherTapInt;
 
@@ -172,5 +175,6 @@ class EtherTap : public EtherTapBase
 };
 #endif
 
+} // namespace gem5
 
 #endif // __DEV_NET_ETHERTAP_HH__

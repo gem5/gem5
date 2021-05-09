@@ -30,6 +30,8 @@
 
 #include "base/condcodes.hh"
 
+using namespace gem5;
+
 /*
  * Add 0x80 + 0x80 to get 0x100. findCarry should report a carry flag after
  * this operation.

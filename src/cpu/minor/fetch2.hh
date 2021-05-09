@@ -54,6 +54,9 @@
 #include "cpu/pred/bpred_unit.hh"
 #include "params/MinorCPU.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -229,5 +232,6 @@ class Fetch2 : public Named
 };
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_FETCH2_HH__ */

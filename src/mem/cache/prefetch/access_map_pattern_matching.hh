@@ -43,6 +43,9 @@
 #include "mem/packet.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 struct AccessMapPatternMatchingParams;
 struct AMPMPrefetcherParams;
 
@@ -203,5 +206,6 @@ class AMPM : public Queued
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif//__MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__

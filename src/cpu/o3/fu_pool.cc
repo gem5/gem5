@@ -44,6 +44,9 @@
 
 #include "cpu/func_unit.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -248,3 +251,4 @@ FUPool::isDrained() const
 }
 
 } // namespace o3
+} // namespace gem5

@@ -47,6 +47,9 @@
 #include "mem/port.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * A queued port is a port that has an infinite queue for outgoing
  * packets and thus decouples the module that wants to send
@@ -163,5 +166,7 @@ class QueuedRequestPort : public RequestPort
             snoopRespQueue.trySatisfyFunctional(pkt);
     }
 };
+
+} // namespace gem5
 
 #endif // __MEM_QPORT_HH__

@@ -46,6 +46,9 @@
 #include "params/PioDevice.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class PioDevice;
 class System;
 
@@ -164,5 +167,7 @@ class BasicPioDevice : public PioDevice
      */
     AddrRangeList getAddrRanges() const override;
 };
+
+} // namespace gem5
 
 #endif // __DEV_IO_DEVICE_HH__

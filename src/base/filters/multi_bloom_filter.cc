@@ -32,6 +32,9 @@
 #include "base/logging.hh"
 #include "params/BloomFilterMulti.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
 namespace bloom_filter
 {
@@ -112,3 +115,4 @@ Multi::getTotalCount() const
 }
 
 } // namespace bloom_filter
+} // namespace gem5

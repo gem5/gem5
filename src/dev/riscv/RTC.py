@@ -40,7 +40,7 @@ from m5.objects.IntPin import IntSourcePin
 
 class RiscvRTC(SimObject):
     type = 'RiscvRTC'
-    cxx_class='RiscvRTC'
+    cxx_class='gem5::RiscvRTC'
     cxx_header = "dev/riscv/rtc.hh"
     time = Param.Time('01/01/2012',
         "System time to use")

@@ -44,6 +44,9 @@
 #include "dev/arm/gic_v2.hh"
 #include "dev/platform.hh"
 
+namespace gem5
+{
+
 /**
  * KVM in-kernel GIC abstraction
  *
@@ -219,5 +222,7 @@ class MuxingKvmGic : public GicV2
     void clearDistRange(BaseGicRegisters* to,
                         Addr daddr, size_t size);
 };
+
+} // namespace gem5
 
 #endif // __ARCH_ARM_KVM_GIC_HH__

@@ -54,6 +54,9 @@
 #include "params/RubyTester.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class RubyTester : public ClockedObject
 {
   public:
@@ -156,5 +159,7 @@ operator<<(std::ostream& out, const RubyTester& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __CPU_RUBYTEST_RUBYTESTER_HH__

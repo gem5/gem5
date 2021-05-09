@@ -37,6 +37,9 @@
 #include "debug/Timer.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace SparcISA;
 
 
@@ -373,3 +376,4 @@ ISA::processHSTickCompare()
     }
 }
 
+} // namespace gem5

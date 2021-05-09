@@ -52,6 +52,9 @@
 #include "sim/eventq.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class IGbEInt;
 
 class IGbE : public EtherDevice
@@ -513,5 +516,7 @@ class IGbEInt : public EtherInt
     virtual bool recvPacket(EthPacketPtr pkt) { return dev->ethRxPkt(pkt); }
     virtual void sendDone() { dev->ethTxDone(); }
 };
+
+} // namespace gem5
 
 #endif //__DEV_NET_I8254XGBE_HH__

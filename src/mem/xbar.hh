@@ -56,6 +56,9 @@
 #include "sim/clocked_object.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 /**
  * The base crossbar contains the common elements of the non-coherent
  * and coherent crossbar. It is an abstract class that does not have
@@ -410,5 +413,7 @@ class BaseXBar : public ClockedObject
 
     void regStats() override;
 };
+
+} // namespace gem5
 
 #endif //__MEM_XBAR_HH__

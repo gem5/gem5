@@ -48,6 +48,9 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 
+namespace gem5
+{
+
 /** Enumerate the classes of registers. */
 enum RegClass
 {
@@ -304,19 +307,22 @@ class PhysRegId : private RegId
 
 using PhysRegIdPtr = PhysRegId*;
 
+} // namespace gem5
+
 namespace std
 {
 template<>
-struct hash<RegId>
+struct hash<gem5::RegId>
 {
     size_t
-    operator()(const RegId& reg_id) const
+    operator()(const gem5::RegId& reg_id) const
     {
         // Extract unique integral values for the effective fields of a RegId.
         const size_t flat_index = static_cast<size_t>(reg_id.flatIndex());
         const size_t class_num = static_cast<size_t>(reg_id.regClass);
 
-        const size_t shifted_class_num = class_num << (sizeof(RegIndex) << 3);
+        const size_t shifted_class_num =
+            class_num << (sizeof(gem5::RegIndex) << 3);
 
         // Concatenate the class_num to the end of the flat_index, in order to
         // maximize information retained.
@@ -325,12 +331,12 @@ struct hash<RegId>
         // If RegIndex is larger than size_t, then class_num will not be
         // considered by this hash function, so we may wish to perform a
         // different operation to include that information in the hash.
-        static_assert(sizeof(RegIndex) < sizeof(size_t),
+        static_assert(sizeof(gem5::RegIndex) < sizeof(size_t),
             "sizeof(RegIndex) should be less than sizeof(size_t)");
 
         return concatenated_hash;
     }
 };
-}
+} // namespace std
 
 #endif // __CPU__REG_CLASS_HH__

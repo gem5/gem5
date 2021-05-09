@@ -105,6 +105,9 @@
 #include "base/logging.hh"
 #include "sim/serialize_handlers.hh"
 
+namespace gem5
+{
+
 constexpr unsigned MaxVecRegLenInBytes = 4096;
 
 /**
@@ -265,5 +268,7 @@ constexpr unsigned DummyNumVecElemPerVecReg = 2;
 using DummyVecRegContainer =
     VecRegContainer<DummyNumVecElemPerVecReg * sizeof(DummyVecElem)>;
 /** @} */
+
+} // namespace gem5
 
 #endif /* __ARCH_GENERIC_VEC_REG_HH__ */

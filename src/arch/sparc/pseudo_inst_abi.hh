@@ -32,6 +32,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/guest_abi.hh"
 
+namespace gem5
+{
+
 struct SparcPseudoInstABI
 {
     using State = int;
@@ -66,5 +69,6 @@ struct Argument<SparcPseudoInstABI, uint64_t>
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __ARCH_SPARC_PSEUDO_INST_ABI_HH__

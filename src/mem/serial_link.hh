@@ -55,6 +55,9 @@
 #include "params/SerialLink.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 /**
  * SerialLink is a simple variation of the Bridge class, with the ability to
  * account for the latency of packet serialization. We assume that the
@@ -321,5 +324,7 @@ class SerialLink : public ClockedObject
 
     SerialLink(const SerialLinkParams &p);
 };
+
+} // namespace gem5
 
 #endif //__MEM_SERIAL_LINK_HH__

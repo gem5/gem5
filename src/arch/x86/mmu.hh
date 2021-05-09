@@ -43,6 +43,9 @@
 
 #include "params/X86MMU.hh"
 
+namespace gem5
+{
+
 namespace X86ISA {
 
 class MMU : public BaseMMU
@@ -67,5 +70,6 @@ class MMU : public BaseMMU
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_MMU_HH__

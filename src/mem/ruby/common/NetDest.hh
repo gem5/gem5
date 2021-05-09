@@ -35,6 +35,9 @@
 #include "mem/ruby/common/Set.hh"
 #include "mem/ruby/common/MachineID.hh"
 
+namespace gem5
+{
+
 // NetDest specifies the network destination of a Message
 class NetDest
 {
@@ -115,5 +118,7 @@ operator<<(std::ostream& out, const NetDest& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_COMMON_NETDEST_HH__

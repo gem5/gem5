@@ -38,6 +38,9 @@
 #ifndef __ARCH_X86_SEGMENTREGS_HH__
 #define __ARCH_X86_SEGMENTREGS_HH__
 
+namespace gem5
+{
+
 namespace X86ISA
 {
     enum SegmentRegIndex
@@ -61,6 +64,7 @@ namespace X86ISA
 
         NUM_SEGMENTREGS
     };
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_SEGMENTREGS_HH__

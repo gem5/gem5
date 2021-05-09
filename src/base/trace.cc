@@ -45,12 +45,16 @@
 #include "debug/FmtTicksOff.hh"
 #include "sim/backtrace.hh"
 
-const std::string &name()
+const std::string &
+name()
 {
     static const std::string default_name("global");
 
     return default_name;
 }
+
+namespace gem5
+{
 
 namespace Trace
 {
@@ -167,3 +171,4 @@ OstreamLogger::logMessage(Tick when, const std::string &name,
 }
 
 } // namespace Trace
+} // namespace gem5

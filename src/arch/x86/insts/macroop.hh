@@ -43,6 +43,9 @@
 #include "arch/x86/emulenv.hh"
 #include "arch/x86/types.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 // Base class for combinationally generated macroops
@@ -101,6 +104,8 @@ class MacroopBase : public X86StaticInst
         return env;
     }
 };
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_INSTS_MACROOP_HH__

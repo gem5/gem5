@@ -155,6 +155,9 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 static const char GDBStart = '$';
 static const char GDBEnd = '#';
 static const char GDBGoodP = '+';
@@ -1305,3 +1308,5 @@ BaseRemoteGDB::cmdSetHwBkpt(GdbCommand::Context &ctx)
 
     return true;
 }
+
+} // namespace gem5

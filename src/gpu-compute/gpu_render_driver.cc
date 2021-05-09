@@ -31,6 +31,9 @@
 #include "params/GPURenderDriver.hh"
 #include "sim/fd_entry.hh"
 
+namespace gem5
+{
+
 GPURenderDriver::GPURenderDriver(const GPURenderDriverParams &p)
     : EmulatedDriver(p)
 {
@@ -48,3 +51,5 @@ GPURenderDriver::open(ThreadContext *tc, int mode, int flags)
     int tgt_fd = process->fds->allocFD(device_fd_entry);
     return tgt_fd;
 }
+
+} // namespace gem5

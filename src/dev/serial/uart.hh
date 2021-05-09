@@ -38,6 +38,9 @@
 #include "dev/serial/serial.hh"
 #include "params/Uart.hh"
 
+namespace gem5
+{
+
 class Platform;
 
 const int RX_INT = 0x1;
@@ -65,5 +68,7 @@ class Uart : public BasicPioDevice
      */
     bool intStatus() { return status ? true : false; }
 };
+
+} // namespace gem5
 
 #endif // __UART_HH__

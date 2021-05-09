@@ -53,6 +53,9 @@
 #include "mem/ruby/protocol/AccessPermission.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 std::ostream&
 operator<<(std::ostream& out, const CacheMemory& obj)
 {
@@ -765,3 +768,4 @@ CacheMemory::profilePrefetchMiss()
     cacheMemoryStats.m_prefetch_misses++;
 }
 
+} // namespace gem5

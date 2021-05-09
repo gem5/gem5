@@ -37,6 +37,8 @@
 #include "base/sat_counter.hh"
 #include "mem/cache/tags/dueling.hh"
 
+using namespace gem5;
+
 /**
  * Test whether dueler provides correct sampling functionality and assigns
  * teams correctly.

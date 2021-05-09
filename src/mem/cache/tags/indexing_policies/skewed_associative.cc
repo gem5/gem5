@@ -38,6 +38,9 @@
 #include "base/logging.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 
+namespace gem5
+{
+
 SkewedAssociative::SkewedAssociative(const Params &p)
     : BaseIndexingPolicy(p), msbShift(floorLog2(numSets) - 1)
 {
@@ -216,3 +219,5 @@ SkewedAssociative::getPossibleEntries(const Addr addr) const
 
     return entries;
 }
+
+} // namespace gem5

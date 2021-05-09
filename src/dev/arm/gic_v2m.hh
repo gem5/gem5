@@ -51,6 +51,9 @@
 #include "params/Gicv2m.hh"
 #include "params/Gicv2mFrame.hh"
 
+namespace gem5
+{
+
 /**
  * Ultimately this class should be embedded in the Gicv2m class, but
  * this confuses Python as 'Gicv2m::Frame' gets interpreted as 'Frame'
@@ -114,5 +117,7 @@ class Gicv2m : public PioDevice
      */
     int frameFromAddr(Addr a) const;
 };
+
+} // namespace gem5
 
 #endif //__DEV_ARM_GIC_V2M_H__

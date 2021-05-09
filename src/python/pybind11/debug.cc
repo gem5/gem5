@@ -52,6 +52,9 @@
 
 namespace py = pybind11;
 
+namespace gem5
+{
+
 namespace Debug {
 extern int allFlagsVersion;
 }
@@ -126,3 +129,5 @@ pybind_init_debug(py::module_ &m_native)
         .def("disable", &Trace::disable)
         ;
 }
+
+} // namespace gem5

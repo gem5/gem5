@@ -56,6 +56,9 @@
 #include "mem/request.hh"
 #include "debug/MinorExecute.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -67,7 +70,7 @@ class Execute;
  *  separates that interface from other classes such as Pipeline, MinorCPU
  *  and DynMinorInst and makes it easier to see what state is accessed by it.
  */
-class ExecContext : public ::ExecContext
+class ExecContext : public gem5::ExecContext
 {
   public:
     MinorCPU &cpu;
@@ -405,5 +408,6 @@ class ExecContext : public ::ExecContext
 };
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_EXEC_CONTEXT_HH__ */

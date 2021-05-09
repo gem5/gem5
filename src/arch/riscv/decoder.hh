@@ -38,6 +38,9 @@
 #include "cpu/static_inst.hh"
 #include "debug/Decode.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -83,5 +86,6 @@ class Decoder : public InstDecoder
 };
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_DECODER_HH__

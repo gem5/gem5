@@ -32,6 +32,9 @@
  #include "mem/cache/prefetch/associative_set_impl.hh"
  #include "params/IndirectMemoryPrefetcher.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
@@ -257,3 +260,4 @@ IndirectMemory::checkAccessMatchOnActiveEntries(Addr addr)
 }
 
 } // namespace prefetch
+} // namespace gem5

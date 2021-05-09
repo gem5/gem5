@@ -41,6 +41,9 @@
 #include "base/types.hh"
 #include "mem/cache/compressors/base.hh"
 
+namespace gem5
+{
+
 struct PerfectCompressorParams;
 
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
@@ -92,5 +95,6 @@ class Perfect::CompData : public CompressionData
 };
 
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_PERFECT_COMPRESSOR_HH__

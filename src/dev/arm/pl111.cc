@@ -52,6 +52,9 @@
 // we open up the entire namespace std
 using std::vector;
 
+namespace gem5
+{
+
 // initialize clcd registers
 Pl111::Pl111(const Params &p)
     : AmbaDmaDevice(p, 0x10000), lcdTiming0(0), lcdTiming1(0), lcdTiming2(0),
@@ -740,3 +743,5 @@ Pl111::getAddrRanges() const
     ranges.push_back(RangeSize(pioAddr, pioSize));
     return ranges;
 }
+
+} // namespace gem5

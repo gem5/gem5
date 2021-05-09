@@ -45,6 +45,9 @@
 #include "params/Process.hh"
 #include "sim/fd_entry.hh"
 
+namespace gem5
+{
+
 FDArray::FDArray(std::string const& input, std::string const& output,
                  std::string const& errout)
     :  _fdArray(), _input(input), _output(output), _errout(errout),
@@ -429,3 +432,5 @@ FDArray::unserialize(CheckpointIn &cp) {
         lseek(sim_fd, file_offset, SEEK_SET);
     }
 }
+
+} // namespace gem5

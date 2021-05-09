@@ -1084,6 +1084,9 @@ if GetOption('with_cxx_config'):
             if not hasattr(simobj, 'abstract') or not simobj.abstract:
                 code('#include "cxx_config/${name}.hh"')
         code()
+        code('namespace gem5')
+        code('{')
+        code()
         code('void cxxConfigInit()')
         code('{')
         code.indent()
@@ -1095,6 +1098,8 @@ if GetOption('with_cxx_config'):
                      '${name}CxxConfigParams::makeDirectoryEntry();')
         code.dedent()
         code('}')
+        code('')
+        code('} // namespace gem5')
         code.write(target[0].abspath)
 
     py_source = PySource.modules[simobj.__module__]
@@ -1151,6 +1156,9 @@ def makeDebugFlagCC(target, source, env):
     code('''
 #include "base/debug.hh"
 
+namespace gem5
+{
+
 namespace Debug {
 
 ''')
@@ -1189,6 +1197,7 @@ namespace Debug {
     code.append(comp_code)
     code()
     code('} // namespace Debug')
+    code('} // namespace gem5')
 
     code.write(str(target[0]))
 
@@ -1205,6 +1214,9 @@ def makeDebugFlagHH(target, source, env):
 #ifndef __DEBUG_${name}_HH__
 #define __DEBUG_${name}_HH__
 
+namespace gem5
+{
+
 namespace Debug {
 ''')
 
@@ -1220,7 +1232,8 @@ namespace Debug {
         code('extern SimpleFlag& $name;')
 
     code('''
-}
+} // namespace Debug
+} // namespace gem5
 
 #endif // __DEBUG_${name}_HH__
 ''')
@@ -1282,7 +1295,10 @@ def embedPyFile(target, source, env):
     code('''\
 #include "sim/init.hh"
 
-namespace {
+namespace gem5
+{
+namespace
+{
 
 ''')
     blobToCpp(data, 'data_' + sym, code)
@@ -1298,6 +1314,7 @@ EmbeddedPython embedded_${sym}(
     ${{len(marshalled)}});
 
 } // anonymous namespace
+} // namespace gem5
 ''')
     code.write(str(target[0]))
 

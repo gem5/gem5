@@ -33,6 +33,9 @@
 #include "arch/sparc/regs/misc.hh"
 #include "base/bitunion.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -372,4 +375,5 @@ SparcStaticInst::passesCondition(uint32_t codes, uint32_t condition)
             "condition code %d", condition);
 }
 
-}
+} // namespace SparcISA
+} // namespace gem5

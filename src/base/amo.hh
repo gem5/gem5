@@ -37,6 +37,9 @@
 #include <functional>
 #include <memory>
 
+namespace gem5
+{
+
 struct AtomicOpFunctor
 {
     /**
@@ -237,5 +240,7 @@ class AtomicOpMin : public TypedAtomicOpFunctor<T>
  * @ingroup api_atomic_op
  */
 typedef std::unique_ptr<AtomicOpFunctor> AtomicOpFunctorPtr;
+
+} // namespace gem5
 
 #endif // __BASE_AMO_HH__

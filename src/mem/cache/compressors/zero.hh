@@ -41,6 +41,9 @@
 
 #include "mem/cache/compressors/dictionary_compressor.hh"
 
+namespace gem5
+{
+
 struct ZeroCompressorParams;
 
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
@@ -127,5 +130,6 @@ class Zero::PatternZ
 };
 
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_ZERO_HH__

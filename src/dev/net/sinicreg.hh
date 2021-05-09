@@ -56,6 +56,9 @@
         static inline uint64_t set_##NAME(uint64_t reg, uint64_t val) \
         { return (reg & ~NAME) | ((val << OFFSET) & NAME); }
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Sinic, sinic);
 namespace sinic
 {
@@ -242,5 +245,7 @@ regValid(Addr daddr)
 }
 
 } // namespace sinic
+
+} // namespace gem5
 
 #endif // __DEV_NET_SINICREG_HH__

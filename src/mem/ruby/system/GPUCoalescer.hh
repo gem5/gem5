@@ -50,6 +50,9 @@
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/token_port.hh"
 
+namespace gem5
+{
+
 class DataBlock;
 class CacheMsg;
 struct MachineID;
@@ -535,5 +538,7 @@ operator<<(std::ostream& out, const GPUCoalescer& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_SYSTEM_GPU_COALESCER_HH__

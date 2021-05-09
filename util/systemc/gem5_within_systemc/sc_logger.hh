@@ -53,7 +53,7 @@ namespace Gem5SystemC
 {
 
 /** sc_report logging class */
-class Logger : public Trace::Logger
+class Logger : public gem5::Trace::Logger
 {
   protected:
     /** Stream to offer getOstream.  This will cut messages up newlines and
@@ -67,7 +67,7 @@ class Logger : public Trace::Logger
     ~Logger();
 
     /** Log a single message as a single sc_report call */
-    void logMessage(Tick when, const std::string &name,
+    void logMessage(gem5::Tick when, const std::string &name,
             const std::string &flag, const std::string &message) override;
 
     std::ostream &getOstream();

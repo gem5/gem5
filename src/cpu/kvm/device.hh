@@ -40,6 +40,9 @@
 
 #include <cstdint>
 
+namespace gem5
+{
+
 /**
  * KVM device wrapper
  *
@@ -120,5 +123,7 @@ class KvmDevice
   private:
     int fd;
 };
+
+} // namespace gem5
 
 #endif // __CPU_KVM_DEVICE_HH__

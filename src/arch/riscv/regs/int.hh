@@ -49,6 +49,9 @@
 #include <string>
 #include <vector>
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -77,6 +80,7 @@ const std::vector<std::string> IntRegNames = {
     "t3", "t4", "t5", "t6"
 };
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_REGS_INT_HH__

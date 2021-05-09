@@ -61,6 +61,9 @@
 #include "sim/eventq.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -560,5 +563,6 @@ class ElasticTrace : public ProbeListenerObject
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif//__CPU_O3_PROBE_ELASTIC_TRACE_HH__

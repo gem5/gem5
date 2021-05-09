@@ -40,11 +40,15 @@
 
 #include "arch/generic/types.hh"
 
+namespace gem5
+{
+
 namespace NullISA
 {
 
 typedef GenericISA::UPCState<4> PCState;
 
-}
+} // namespace NullISA
+} // namespace gem5
 
 #endif // __ARCH_NULL_TYPES_HH__

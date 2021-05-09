@@ -32,6 +32,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -39,5 +42,6 @@ const Addr PageShift = 13;
 const Addr PageBytes = 1ULL << PageShift;
 
 } // namespace MipsISA
+} // namespace gem5
 
 #endif // __ARCH_MIPS_PAGE_SIZE_HH__

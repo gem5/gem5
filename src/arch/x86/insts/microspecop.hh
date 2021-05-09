@@ -31,6 +31,9 @@
 #include "arch/x86/insts/microop.hh"
 #include "cpu/exec_context.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -54,5 +57,6 @@ class MicroHalt : public InstOperands<X86MicroopBase>
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_INSTS_MICROSPECOP_HH__

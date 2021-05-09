@@ -49,6 +49,9 @@
 #include "params/PS2Device.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace ps2
 {
 
@@ -128,3 +131,4 @@ Device::sendAck()
 }
 
 } // namespace ps2
+} // namespace gem5

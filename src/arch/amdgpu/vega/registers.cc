@@ -33,6 +33,9 @@
 
 #include "arch/amdgpu/vega/gpu_registers.hh"
 
+namespace gem5
+{
+
 namespace VegaISA
 {
     std::string
@@ -243,3 +246,4 @@ namespace VegaISA
     }
 
 } // namespace VegaISA
+} // namespace gem5

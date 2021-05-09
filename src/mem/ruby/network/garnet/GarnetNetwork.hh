@@ -40,6 +40,9 @@
 #include "mem/ruby/network/garnet/CommonTypes.hh"
 #include "params/GarnetNetwork.hh"
 
+namespace gem5
+{
+
 class FaultModel;
 class NetworkInterface;
 class Router;
@@ -208,5 +211,7 @@ operator<<(std::ostream& out, const GarnetNetwork& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__

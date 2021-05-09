@@ -43,6 +43,9 @@
 #include "base/types.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class BaseCache;
 class CacheBlk;
 struct BaseCacheCompressorParams;
@@ -282,5 +285,6 @@ class Base::CompressionData
 };
 
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_BASE_HH__

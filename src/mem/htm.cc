@@ -37,6 +37,9 @@
 
 #include "mem/htm.hh"
 
+namespace gem5
+{
+
 std::string
 htmFailureToStr(HtmFailureFaultCause cause)
 {
@@ -66,3 +69,5 @@ htmFailureToStr(HtmCacheFailure rc)
     auto it = rc_to_str.find(rc);
     return it == rc_to_str.end() ? "Unrecognized Failure" : it->second;
 }
+
+} // namespace gem5

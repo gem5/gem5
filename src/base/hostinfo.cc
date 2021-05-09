@@ -39,6 +39,9 @@
 #include "base/logging.hh"
 #include "base/str.hh"
 
+namespace gem5
+{
+
 #ifndef __APPLE__
 uint64_t
 procInfo(const char *filename, const char *target)
@@ -92,3 +95,5 @@ memUsage()
     return procInfo("/proc/self/status", "VmSize:");
 #endif
 }
+
+} // namespace gem5

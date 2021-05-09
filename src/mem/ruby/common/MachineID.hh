@@ -47,6 +47,9 @@
 #include "base/cprintf.hh"
 #include "mem/ruby/protocol/MachineType.hh"
 
+namespace gem5
+{
+
 struct MachineID
 {
     MachineID() : type(MachineType_NUM), num(0) { }
@@ -81,22 +84,11 @@ operator!=(const MachineID & obj1, const MachineID & obj2)
     return (obj1.type != obj2.type || obj1.num != obj2.num);
 }
 
-namespace std {
-    template<>
-    struct hash<MachineID>
-    {
-        inline size_t operator()(const MachineID& id) const {
-            size_t hval = MachineType_base_level(id.type) << 16 | id.num;
-            return hval;
-        }
-    };
-}
-
 // Output operator declaration
-std::ostream& operator<<(std::ostream& out, const MachineID& obj);
+::std::ostream& operator<<(::std::ostream& out, const MachineID& obj);
 
-inline std::ostream&
-operator<<(std::ostream& out, const MachineID& obj)
+inline ::std::ostream&
+operator<<(::std::ostream& out, const MachineID& obj)
 {
     if ((obj.type < MachineType_NUM) && (obj.type >= MachineType_FIRST)) {
         out << MachineType_to_string(obj.type);
@@ -105,8 +97,23 @@ operator<<(std::ostream& out, const MachineID& obj)
     }
     out << "-";
     out << obj.num;
-    out << std::flush;
+    out << ::std::flush;
     return out;
 }
+
+} // namespace gem5
+
+namespace std
+{
+    template<>
+    struct hash<gem5::MachineID>
+    {
+        inline size_t operator()(const gem5::MachineID& id) const
+        {
+            size_t hval = gem5::MachineType_base_level(id.type) << 16 | id.num;
+            return hval;
+        }
+    };
+} // namespace std
 
 #endif // __MEM_RUBY_COMMON_MACHINEID_HH__

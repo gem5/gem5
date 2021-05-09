@@ -32,6 +32,9 @@
 
 #include "base/str.hh"
 
+namespace gem5
+{
+
 static std::string
 normalizePath(std::string path)
 {
@@ -55,3 +58,5 @@ RedirectPath::RedirectPath(const RedirectPathParams &p)
         _hostPaths.push_back(normalizePath(hp));
     }
 }
+
+} // namespace gem5

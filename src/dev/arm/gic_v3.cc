@@ -51,6 +51,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 Gicv3::Gicv3(const Params &p)
     : BaseGic(p)
 {
@@ -298,3 +301,5 @@ Gicv3::unserialize(CheckpointIn & cp)
         cpuInterfaces[cpu_interface_id]->unserializeSection(cp,
             csprintf("cpuInterface.%i", cpu_interface_id));
 }
+
+} // namespace gem5

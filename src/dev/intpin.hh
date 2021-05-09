@@ -30,6 +30,9 @@
 
 #include "sim/port.hh"
 
+namespace gem5
+{
+
 class IntSourcePinBase;
 
 class IntSinkPinBase : public Port
@@ -114,5 +117,7 @@ class IntSourcePin : public IntSourcePinBase
         IntSourcePinBase(_name, _id, def_state)
     {}
 };
+
+} // namespace gem5
 
 #endif //__DEV_INTPIN_HH__

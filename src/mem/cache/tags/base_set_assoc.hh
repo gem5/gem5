@@ -62,6 +62,9 @@
 #include "mem/packet.hh"
 #include "params/BaseSetAssoc.hh"
 
+namespace gem5
+{
+
 /**
  * A basic cache tag store.
  * @sa  \ref gem5MemorySystem "gem5 Memory System"
@@ -245,5 +248,7 @@ class BaseSetAssoc : public BaseTags
         return false;
     }
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_TAGS_BASE_SET_ASSOC_HH__

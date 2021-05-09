@@ -27,6 +27,9 @@
 
 #include "arch/mips/se_workload.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -35,3 +38,4 @@ const std::vector<int> SEWorkload::SyscallABI::ArgumentRegs = {
 };
 
 } // namespace MipsISA
+} // namespace gem5

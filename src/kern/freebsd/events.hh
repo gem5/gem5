@@ -37,6 +37,9 @@
 #include "kern/system_events.hh"
 #include "sim/guest_abi.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(FreeBSD, free_bsd);
 namespace free_bsd
 {
@@ -83,6 +86,7 @@ class SkipUDelay : public Base
     }
 };
 
-}
+} // namespace free_bsd
+} // namespace gem5
 
 #endif

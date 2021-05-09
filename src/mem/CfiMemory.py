@@ -43,6 +43,7 @@ from m5.util.fdthelper import FdtNode, FdtPropertyWords
 class CfiMemory(AbstractMemory):
     type = 'CfiMemory'
     cxx_header = "mem/cfi_mem.hh"
+    cxx_class = 'gem5::CfiMemory'
 
     port = ResponsePort("Response port")
 

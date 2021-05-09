@@ -39,6 +39,7 @@ from m5.objects.ClockedObject import ClockedObject
 class MemDelay(ClockedObject):
     type = 'MemDelay'
     cxx_header = 'mem/mem_delay.hh'
+    cxx_class = 'gem5::MemDelay'
     abstract = True
 
     mem_side_port = RequestPort("This port sends requests and "
@@ -53,6 +54,7 @@ class MemDelay(ClockedObject):
 class SimpleMemDelay(MemDelay):
     type = 'SimpleMemDelay'
     cxx_header = 'mem/mem_delay.hh'
+    cxx_class = 'gem5::SimpleMemDelay'
 
     read_req = Param.Latency("0t", "Read request delay")
     read_resp = Param.Latency("0t", "Read response delay")

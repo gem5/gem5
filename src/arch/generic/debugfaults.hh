@@ -45,6 +45,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/faults.hh"
 
+namespace gem5
+{
+
 namespace GenericISA
 {
 
@@ -171,5 +174,6 @@ using M5InformOnceFault =
     M5InformFaultBase<M5DebugOnceFault<M5InformFault>>;
 
 } // namespace GenericISA
+} // namespace gem5
 
 #endif // __ARCH_GENERIC_DEBUGFAULTS_HH__

@@ -37,6 +37,9 @@
 #include "cpu/static_inst.hh"
 #include "debug/Stack.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 class FunctionProfile;
 
@@ -154,5 +157,7 @@ FunctionProfile::consume(ThreadContext *tc, const StaticInstPtr &inst)
     trace->dprintf();
     return consume(trace->getstack());
 }
+
+} // namespace gem5
 
 #endif // __CPU_PROFILE_HH__

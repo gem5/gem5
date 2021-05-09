@@ -51,6 +51,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 /**
  * Internal gem5 representation of a frame buffer
  *
@@ -197,5 +200,7 @@ class FrameBuffer : public Serializable
     /** Height in pixels */
     unsigned _height;
 };
+
+} // namespace gem5
 
 #endif // __BASE_FRAMEBUFFER_HH__

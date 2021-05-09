@@ -31,6 +31,9 @@
 
 #include "cpu/profile.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -41,5 +44,6 @@ class StackTrace : public BaseStackTrace
 };
 
 } // Namespace ArmISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_STACKTRACE_HH__

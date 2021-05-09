@@ -50,6 +50,9 @@
 #include "enums/AddrMap.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 class DramRotGen : public DramGen
 {
 
@@ -122,5 +125,7 @@ class DramRotGen : public DramGen
         packet series       */
     unsigned int nextSeqCount;
 };
+
+} // namespace gem5
 
 #endif

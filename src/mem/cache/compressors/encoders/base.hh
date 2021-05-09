@@ -33,6 +33,9 @@
 
 #include "base/compiler.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -81,5 +84,6 @@ class Base
 
 } // namespace encoder
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_ENCODERS_BASE_HH__

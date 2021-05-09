@@ -41,6 +41,9 @@
 #include "dev/arm/generic_timer.hh"
 #include "dev/io_device.hh"
 
+namespace gem5
+{
+
 class ArmInterruptPin;
 struct GenericWatchdogParams;
 
@@ -152,5 +155,7 @@ class GenericWatchdog : public PioDevice
     ArmInterruptPin * const ws0;
     ArmInterruptPin * const ws1;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_WATCHDOG_GENERIC_HH__

@@ -54,6 +54,9 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "params/RubyGPUCoalescer.hh"
 
+namespace gem5
+{
+
 UncoalescedTable::UncoalescedTable(GPUCoalescer *gc)
     : coalescer(gc)
 {
@@ -952,3 +955,4 @@ GPUCoalescer::recordMissLatency(CoalescedRequest* crequest,
 {
 }
 
+} // namespace gem5

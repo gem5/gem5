@@ -41,6 +41,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -390,5 +393,6 @@ class SymbolTable
 extern SymbolTable debugSymbolTable;
 
 } // namespace loader
+} // namespace gem5
 
 #endif // __BASE_LOADER_SYMTAB_HH__

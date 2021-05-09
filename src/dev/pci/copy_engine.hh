@@ -55,6 +55,9 @@
 #include "sim/drain.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 class CopyEngine : public PciDevice
 {
     class CopyEngineChannel : public Drainable, public Serializable
@@ -176,5 +179,6 @@ class CopyEngine : public PciDevice
     void unserialize(CheckpointIn &cp) override;
 };
 
-#endif //__DEV_PCI_COPY_ENGINE_HH__
+} // namespace gem5
 
+#endif //__DEV_PCI_COPY_ENGINE_HH__

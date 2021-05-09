@@ -33,6 +33,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 class Checkpoint;
 
 /**
@@ -148,5 +151,7 @@ struct ThreadState : public Serializable
     // application deadlock situations.
     unsigned storeCondFailures;
 };
+
+} // namespace gem5
 
 #endif // __CPU_THREAD_STATE_HH__

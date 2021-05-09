@@ -43,6 +43,9 @@
 #include "mem/stack_dist_calc.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 struct StackDistProbeParams;
 
 class StackDistProbe : public BaseMemProbe
@@ -87,5 +90,6 @@ class StackDistProbe : public BaseMemProbe
     } stats;
 };
 
+} // namespace gem5
 
 #endif //__MEM_PROBES_STACK_DIST_HH__

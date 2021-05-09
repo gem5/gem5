@@ -52,6 +52,9 @@
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace ArmISA {
@@ -1020,7 +1023,7 @@ class TableWalker : public ClockedObject
     DrainState drain() override;
     void drainResume() override;
 
-    ::Port &getPort(const std::string &if_name,
+    gem5::Port &getPort(const std::string &if_name,
                     PortID idx=InvalidPortID) override;
 
     Port &getTableWalkerPort();
@@ -1100,6 +1103,6 @@ class TableWalker : public ClockedObject
 };
 
 } // namespace ArmISA
+} // namespace gem5
 
 #endif //__ARCH_ARM_TABLE_WALKER_HH__
-

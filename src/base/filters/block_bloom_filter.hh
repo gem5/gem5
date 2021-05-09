@@ -34,6 +34,9 @@
 
 #include "base/filters/base.hh"
 
+namespace gem5
+{
+
 struct BloomFilterBlockParams;
 
 GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
@@ -71,5 +74,6 @@ class Block : public Base
 };
 
 } // namespace bloom_filter
+} // namespace gem5
 
 #endif // __BASE_FILTERS_BLOCK_BLOOM_FILTER_HH__

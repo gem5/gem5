@@ -44,6 +44,9 @@
 #include "mem/packet.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 template <typename T>
 inline T
 Packet::getRaw() const
@@ -122,5 +125,7 @@ Packet::set(T v, ByteOrder endian)
         panic("Illegal byte order in Packet::set()\n");
     };
 }
+
+} // namespace gem5
 
 #endif //__MEM_PACKET_ACCESS_HH__

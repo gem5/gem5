@@ -44,6 +44,9 @@
 #include "debug/TrafficGen.hh"
 #include "proto/packet.pb.h"
 
+namespace gem5
+{
+
 TraceGen::InputStream::InputStream(const std::string& filename)
     : trace(filename)
 {
@@ -174,3 +177,5 @@ TraceGen::exit()
     // file
     trace.reset();
 }
+
+} // namespace gem5

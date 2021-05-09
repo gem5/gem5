@@ -30,6 +30,8 @@
 
 #include "sim/byteswap.hh"
 
+using namespace gem5;
+
 TEST(ByteswapTest, swap_byte64)
 {
     EXPECT_EQ(0x0123456789abcdef, swap_byte64(0xefcdab8967452301));

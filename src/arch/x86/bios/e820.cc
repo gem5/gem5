@@ -40,6 +40,9 @@
 #include "mem/port_proxy.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 using namespace X86ISA;
 
 template<class T>
@@ -68,3 +71,5 @@ void X86ISA::E820Table::writeTo(PortProxy& proxy, Addr countAddr, Addr addr)
         writeVal(entries[i]->type, proxy, addr);
     }
 }
+
+} // namespace gem5

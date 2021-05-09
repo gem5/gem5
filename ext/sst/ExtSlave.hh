@@ -45,12 +45,16 @@
 #ifndef EXT_SST_EXTSLAVE_HH
 #define EXT_SST_EXTSLAVE_HH
 
+#include <list>
+#include <string>
+
 #include <core/interfaces/simpleMem.h>
 
-#include <sim/sim_object.hh>
+#include <base/logging.hh>
 #include <mem/packet.hh>
 #include <mem/request.hh>
 #include <mem/external_slave.hh>
+#include <sim/sim_object.hh>
 
 namespace SST {
 class Link;
@@ -60,25 +64,26 @@ namespace gem5 {
 
 class gem5Component;
 
-class ExtSlave : public ExternalSlave::Port {
+class ExtSlave : public ::gem5::ExternalSlave::Port
+{
   public:
     const std::string name;
 
     bool
-    recvTimingSnoopResp(PacketPtr packet)
+    recvTimingSnoopResp(::gem5::PacketPtr packet)
     {
         fatal("recvTimingSnoopResp unimplemented");
         return false;
     }
 
-    bool recvTimingReq(PacketPtr packet);
+    bool recvTimingReq(::gem5::PacketPtr packet);
 
-    void recvFunctional(PacketPtr packet);
+    void recvFunctional(::gem5::PacketPtr packet);
 
     void recvRespRetry();
 
-    Tick
-    recvAtomic(PacketPtr packet)
+    ::gem5::Tick
+    recvAtomic(::gem5::PacketPtr packet)
     {
         fatal("recvAtomic unimplemented");
     }
@@ -91,14 +96,14 @@ class ExtSlave : public ExternalSlave::Port {
 
     std::list<MemEvent*>* initPackets;
     Link* link;
-    std::list<PacketPtr> respQ;
+    std::list<::gem5::PacketPtr> respQ;
     bool blocked() { return !respQ.empty(); }
 
-    typedef std::map<Event::id_type, ::Packet*> PacketMap_t;
+    typedef std::map<Event::id_type, ::gem5::Packet*> PacketMap_t;
     PacketMap_t PacketMap; // SST Event id -> gem5 Packet*
 
 public:
-    ExtSlave(gem5Component*, Output&, ExternalSlave&, std::string&);
+    ExtSlave(gem5Component*, Output&, ::gem5::ExternalSlave&, std::string&);
     void init(unsigned phase);
 
     void

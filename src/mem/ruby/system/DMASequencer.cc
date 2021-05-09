@@ -48,6 +48,9 @@
 #include "mem/ruby/protocol/SequencerRequestType.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 DMARequest::DMARequest(uint64_t start_paddr, int len, bool write,
                        int bytes_completed, int bytes_issued, uint8_t *data,
                        PacketPtr pkt)
@@ -261,3 +264,5 @@ DMASequencer::recordRequestType(DMASequencerRequestType requestType)
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
             DMASequencerRequestType_to_string(requestType));
 }
+
+} // namespace gem5

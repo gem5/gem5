@@ -41,6 +41,9 @@
 
 #include "cpu/minor/trace.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -65,3 +68,4 @@ MinorActivityRecorder::minorTrace() const
 }
 
 } // namespace minor
+} // namespace gem5

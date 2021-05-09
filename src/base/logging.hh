@@ -48,6 +48,9 @@
 #include "base/compiler.hh"
 #include "base/cprintf.hh"
 
+namespace gem5
+{
+
 class Logger
 {
   public:
@@ -137,7 +140,7 @@ class Logger
 
 
 #define base_message(logger, ...) \
-    logger.print(::Logger::Loc(__FILE__, __LINE__), __VA_ARGS__)
+    logger.print(::gem5::Logger::Loc(__FILE__, __LINE__), __VA_ARGS__)
 
 /*
  * Only print the message the first time this expression is
@@ -171,7 +174,7 @@ class Logger
  *
  * @ingroup api_logger
  */
-#define panic(...) exit_message(::Logger::getPanic(), __VA_ARGS__)
+#define panic(...) exit_message(::gem5::Logger::getPanic(), __VA_ARGS__)
 
 /**
  * This implements a cprintf based fatal() function.  fatal() should
@@ -183,7 +186,7 @@ class Logger
  *
  * @ingroup api_logger
  */
-#define fatal(...) exit_message(::Logger::getFatal(), __VA_ARGS__)
+#define fatal(...) exit_message(::gem5::Logger::getFatal(), __VA_ARGS__)
 
 /**
  * Conditional panic macro that checks the supplied condition and only panics
@@ -201,7 +204,7 @@ class Logger
     do {                                                     \
         if (GEM5_UNLIKELY(cond)) {                             \
             panic("panic condition " # cond " occurred: %s", \
-                  csprintf(__VA_ARGS__));                    \
+                  ::gem5::csprintf(__VA_ARGS__));                    \
         }                                                    \
     } while (0)
 
@@ -223,7 +226,7 @@ class Logger
     do {                                                        \
         if (GEM5_UNLIKELY(cond)) {                                \
             fatal("fatal condition " # cond " occurred: %s",    \
-                  csprintf(__VA_ARGS__));                       \
+                  ::gem5::csprintf(__VA_ARGS__));                       \
         }                                                       \
     } while (0)
 
@@ -239,13 +242,16 @@ class Logger
  * @ingroup api_logger
  * @{
  */
-#define warn(...) base_message(::Logger::getWarn(), __VA_ARGS__)
-#define inform(...) base_message(::Logger::getInfo(), __VA_ARGS__)
-#define hack(...) base_message(::Logger::getHack(), __VA_ARGS__)
+#define warn(...) base_message(::gem5::Logger::getWarn(), __VA_ARGS__)
+#define inform(...) base_message(::gem5::Logger::getInfo(), __VA_ARGS__)
+#define hack(...) base_message(::gem5::Logger::getHack(), __VA_ARGS__)
 
-#define warn_once(...) base_message_once(::Logger::getWarn(), __VA_ARGS__)
-#define inform_once(...) base_message_once(::Logger::getInfo(), __VA_ARGS__)
-#define hack_once(...) base_message_once(::Logger::getHack(), __VA_ARGS__)
+#define warn_once(...) \
+    base_message_once(::gem5::Logger::getWarn(), __VA_ARGS__)
+#define inform_once(...) \
+    base_message_once(::gem5::Logger::getInfo(), __VA_ARGS__)
+#define hack_once(...) \
+    base_message_once(::gem5::Logger::getHack(), __VA_ARGS__)
 /** @} */ // end of api_logger
 
 /**
@@ -295,8 +301,12 @@ class Logger
 #define chatty_assert(cond, ...)                                        \
     do {                                                                \
         if (GEM5_UNLIKELY(!(cond)))                                       \
-            panic("assert(" # cond ") failed: %s", csprintf(__VA_ARGS__)); \
+            panic("assert(" # cond ") failed: %s", \
+                ::gem5::csprintf(__VA_ARGS__)); \
     } while (0)
 #endif // NDEBUG
 /** @} */ // end of api_logger
+
+} // namespace gem5
+
 #endif // __BASE_LOGGING_HH__

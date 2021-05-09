@@ -46,6 +46,9 @@
 
 #include "base/compiler.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -80,5 +83,6 @@ struct Output
 };
 
 } // namespace statistics
+} // namespace gem5
 
 #endif // __BASE_STATS_OUTPUT_HH__

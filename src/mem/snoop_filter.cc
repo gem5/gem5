@@ -47,6 +47,9 @@
 #include "debug/SnoopFilter.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 const int SnoopFilter::SNOOP_MASK_SIZE;
 
 void
@@ -412,3 +415,5 @@ SnoopFilter::regStats()
 {
     SimObject::regStats();
 }
+
+} // namespace gem5

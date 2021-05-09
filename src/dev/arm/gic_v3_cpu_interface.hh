@@ -44,6 +44,9 @@
 #include "arch/arm/isa_device.hh"
 #include "dev/arm/gic_v3.hh"
 
+namespace gem5
+{
+
 class Gicv3Distributor;
 class Gicv3Redistributor;
 
@@ -356,5 +359,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     void setMiscReg(int misc_reg, RegVal val) override;
     void setThreadContext(ThreadContext *tc) override;
 };
+
+} // namespace gem5
 
 #endif //__DEV_ARM_GICV3_CPU_INTERFACE_H__

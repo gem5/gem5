@@ -42,6 +42,7 @@ from m5.objects.ClockedObject import ClockedObject
 class Bridge(ClockedObject):
     type = 'Bridge'
     cxx_header = "mem/bridge.hh"
+    cxx_class = 'gem5::Bridge'
 
     mem_side_port = RequestPort("This port sends requests and "
                                 "receives responses")

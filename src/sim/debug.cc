@@ -40,6 +40,9 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 //
 // Debug event: place a breakpoint on the process function and
 // schedule the event to break at a particular cycle
@@ -127,3 +130,4 @@ setRemoteGDBPort(int port)
     remote_gdb_base_port = port;
 }
 
+} // namespace gem5

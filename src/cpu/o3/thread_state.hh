@@ -46,6 +46,9 @@
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
 
+namespace gem5
+{
+
 class Process;
 
 namespace o3
@@ -60,7 +63,7 @@ class CPU;
  * pointer, etc.  It also handles anything related to a specific
  * thread's process, such as syscalls and checking valid addresses.
  */
-class ThreadState : public ::ThreadState
+class ThreadState : public gem5::ThreadState
 {
   public:
     PCEventQueue pcEventQueue;
@@ -94,12 +97,13 @@ class ThreadState : public ::ThreadState
     void unserialize(CheckpointIn &cp) override;
 
     /** Pointer to the ThreadContext of this thread. */
-    ::ThreadContext *tc = nullptr;
+    gem5::ThreadContext *tc = nullptr;
 
     /** Returns a pointer to the TC of this thread. */
-    ::ThreadContext *getTC() { return tc; }
+    gem5::ThreadContext *getTC() { return tc; }
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_THREAD_STATE_HH__

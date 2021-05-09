@@ -65,6 +65,9 @@
 #include "dnet/blob.h"
 #include "dnet/rand.h"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Net, networking);
 namespace networking
 {
@@ -831,5 +834,6 @@ uint16_t cksum(const UdpPtr &ptr);
 int hsplit(const EthPacketPtr &ptr);
 
 } // namespace networking
+} // namespace gem5
 
 #endif // __BASE_INET_HH__

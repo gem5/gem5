@@ -47,6 +47,9 @@
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 using namespace PowerISA;
 
 ///////////////////////////////////////////////////////////////////////
@@ -276,3 +279,5 @@ TLB::index(bool advance)
 
     return *pte;
 }
+
+} // namespace gem5

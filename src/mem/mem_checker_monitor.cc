@@ -44,6 +44,9 @@
 #include "base/trace.hh"
 #include "debug/MemCheckerMonitor.hh"
 
+namespace gem5
+{
+
 MemCheckerMonitor::MemCheckerMonitor(const Params &params)
     : SimObject(params),
       memSidePort(name() + "-memSidePort", *this),
@@ -352,3 +355,5 @@ MemCheckerMonitor::recvRangeChange()
 {
     cpuSidePort.sendRangeChange();
 }
+
+} // namespace gem5

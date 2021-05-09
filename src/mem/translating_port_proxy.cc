@@ -51,6 +51,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 TranslatingPortProxy::TranslatingPortProxy(
         ThreadContext *tc, Request::Flags _flags) :
     PortProxy(tc, tc->getSystemPtr()->cacheLineSize()), _tc(tc),
@@ -135,3 +138,5 @@ TranslatingPortProxy::tryMemsetBlob(Addr address, uint8_t v, int size) const
     }
     return true;
 }
+
+} // namespace gem5

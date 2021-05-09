@@ -36,6 +36,9 @@
 
 #include <cstdint>
 
+namespace gem5
+{
+
 class ComputeUnit;
 class HSAQueueEntry;
 class Wavefront;
@@ -77,5 +80,7 @@ class RegisterManagerPolicy
   protected:
     ComputeUnit *cu;
 };
+
+} // namespace gem5
 
 #endif // __REGISTER_MANAGER_POLICY_HH__

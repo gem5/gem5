@@ -30,13 +30,13 @@ from m5.objects.Workload import SEWorkload
 class PowerSEWorkload(SEWorkload):
     type = 'PowerSEWorkload'
     cxx_header = "arch/power/se_workload.hh"
-    cxx_class = 'PowerISA::SEWorkload'
+    cxx_class = 'gem5::PowerISA::SEWorkload'
     abstract = True
 
 class PowerEmuLinux(PowerSEWorkload):
     type = 'PowerEmuLinux'
     cxx_header = "arch/power/linux/se_workload.hh"
-    cxx_class = 'PowerISA::EmuLinux'
+    cxx_class = 'gem5::PowerISA::EmuLinux'
 
     @classmethod
     def _is_compatible_with(cls, obj):

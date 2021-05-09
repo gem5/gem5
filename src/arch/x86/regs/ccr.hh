@@ -40,6 +40,9 @@
 
 #include "arch/x86/x86_traits.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
     enum CCRegIndex
@@ -52,6 +55,7 @@ namespace X86ISA
 
         NUM_CCREGS
     };
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_CCREGS_HH__

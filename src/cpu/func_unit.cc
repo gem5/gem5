@@ -32,6 +32,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 ////////////////////////////////////////////////////////////////////////////
 //
 //  The funciton unit
@@ -92,3 +95,5 @@ FuncUnit::isPipelined(OpClass capability)
 {
     return pipelined[capability];
 }
+
+} // namespace gem5

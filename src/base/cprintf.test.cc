@@ -34,6 +34,8 @@
 
 #include "base/cprintf.hh"
 
+using namespace gem5;
+
 #define CPRINTF_TEST(...)                                \
     do {                                                 \
         std::stringstream ss;                            \

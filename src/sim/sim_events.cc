@@ -49,6 +49,9 @@
 #include "sim/sim_exit.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 GlobalSimLoopExitEvent::GlobalSimLoopExitEvent(Tick when,
                                                const std::string &_cause,
                                                int c, Tick r)
@@ -170,3 +173,5 @@ CountedExitEvent::description() const
 {
     return "counted exit";
 }
+
+} // namespace gem5

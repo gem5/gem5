@@ -42,6 +42,9 @@
 #include "dev/virtio/base.hh"
 #include "dev/pci/device.hh"
 
+namespace gem5
+{
+
 struct PciVirtIOParams;
 
 class PciVirtIO : public PciDevice
@@ -81,5 +84,7 @@ class PciVirtIO : public PciDevice
 
     VirtIODeviceBase &vio;
 };
+
+} // namespace gem5
 
 #endif // __DEV_VIRTIO_PCI_HH__

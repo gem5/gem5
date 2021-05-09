@@ -33,6 +33,9 @@
 #include "base/types.hh"
 #include "cpu/static_inst_fwd.hh"
 
+namespace gem5
+{
+
 class InstDecoder
 {
   protected:
@@ -54,5 +57,7 @@ class InstDecoder
     size_t moreBytesSize() const { return _moreBytesSize; }
     Addr pcMask() const { return _pcMask; }
 };
+
+} // namespace gem5
 
 #endif // __ARCH_DECODER_GENERIC_HH__

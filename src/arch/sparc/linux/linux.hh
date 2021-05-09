@@ -37,6 +37,9 @@
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
 
+namespace gem5
+{
+
 class SparcLinux : public Linux
 {
   public:
@@ -288,5 +291,7 @@ class Sparc32Linux : public SparcLinux
     static const unsigned TGT_RLIMIT_NPROC = 7;
     static const unsigned TGT_RLIMIT_NOFILE = 6;
 };
+
+} // namespace gem5
 
 #endif

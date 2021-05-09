@@ -32,7 +32,7 @@ class BloomFilterBase(SimObject):
     type = 'BloomFilterBase'
     abstract = True
     cxx_header = "base/filters/base.hh"
-    cxx_class = 'bloom_filter::Base'
+    cxx_class = 'gem5::bloom_filter::Base'
 
     size = Param.Int(4096, "Number of entries in the filter")
 
@@ -45,7 +45,7 @@ class BloomFilterBase(SimObject):
 
 class BloomFilterBlock(BloomFilterBase):
     type = 'BloomFilterBlock'
-    cxx_class = 'bloom_filter::Block'
+    cxx_class = 'gem5::bloom_filter::Block'
     cxx_header = "base/filters/block_bloom_filter.hh"
 
     masks_lsbs = VectorParam.Unsigned([Self.offset_bits,
@@ -55,7 +55,7 @@ class BloomFilterBlock(BloomFilterBase):
 
 class BloomFilterMultiBitSel(BloomFilterBase):
     type = 'BloomFilterMultiBitSel'
-    cxx_class = 'bloom_filter::MultiBitSel'
+    cxx_class = 'gem5::bloom_filter::MultiBitSel'
     cxx_header = "base/filters/multi_bit_sel_bloom_filter.hh"
 
     num_hashes = Param.Int(4, "Number of hashes")
@@ -65,17 +65,17 @@ class BloomFilterMultiBitSel(BloomFilterBase):
 
 class BloomFilterBulk(BloomFilterMultiBitSel):
     type = 'BloomFilterBulk'
-    cxx_class = 'bloom_filter::Bulk'
+    cxx_class = 'gem5::bloom_filter::Bulk'
     cxx_header = "base/filters/bulk_bloom_filter.hh"
 
 class BloomFilterH3(BloomFilterMultiBitSel):
     type = 'BloomFilterH3'
-    cxx_class = 'bloom_filter::H3'
+    cxx_class = 'gem5::bloom_filter::H3'
     cxx_header = "base/filters/h3_bloom_filter.hh"
 
 class BloomFilterMulti(BloomFilterBase):
     type = 'BloomFilterMulti'
-    cxx_class = 'bloom_filter::Multi'
+    cxx_class = 'gem5::bloom_filter::Multi'
     cxx_header = "base/filters/multi_bloom_filter.hh"
 
     # The base filter should not be used, since this filter is the combination
@@ -93,7 +93,7 @@ class BloomFilterMulti(BloomFilterBase):
 
 class BloomFilterPerfect(BloomFilterBase):
     type = 'BloomFilterPerfect'
-    cxx_class = 'bloom_filter::Perfect'
+    cxx_class = 'gem5::bloom_filter::Perfect'
     cxx_header = "base/filters/perfect_bloom_filter.hh"
 
     # The base filter is not needed. Use a dummy value.

@@ -41,6 +41,9 @@
 
 #include "base/bitfield.hh"
 
+namespace gem5
+{
+
 const FrameBuffer FrameBuffer::dummy(320, 240);
 
 FrameBuffer::FrameBuffer(unsigned width, unsigned height)
@@ -125,3 +128,5 @@ FrameBuffer::getHash() const
                    reinterpret_cast<const Bytef *>(pixels.data()),
                    area() * sizeof(Pixel));
 }
+
+} // namespace gem5

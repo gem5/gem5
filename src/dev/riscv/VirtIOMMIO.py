@@ -45,6 +45,7 @@ from m5.objects.VirtIO import VirtIODummyDevice
 class MmioVirtIO(PlicIntDevice):
     type = 'MmioVirtIO'
     cxx_header = 'dev/riscv/vio_mmio.hh'
+    cxx_class = 'gem5::MmioVirtIO'
     vio = Param.VirtIODeviceBase(VirtIODummyDevice(), "VirtIO device")
 
     def generateDeviceTree(self, state):

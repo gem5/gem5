@@ -42,6 +42,7 @@ from m5.util.fdthelper import *
 class EnergyCtrl(BasicPioDevice):
     type = 'EnergyCtrl'
     cxx_header = "dev/arm/energy_ctrl.hh"
+    cxx_class = 'gem5::EnergyCtrl'
     dvfs_handler = Param.DVFSHandler(Parent.dvfs_handler, "DVFS handler")
 
     def generateDeviceTree(self, state):

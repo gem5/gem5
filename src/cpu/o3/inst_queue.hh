@@ -61,6 +61,9 @@
 #include "enums/SMTQueuePolicy.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 struct O3CPUParams;
 class MemInterface;
 
@@ -556,5 +559,6 @@ class InstructionQueue
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif //__CPU_O3_INST_QUEUE_HH__

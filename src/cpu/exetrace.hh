@@ -37,6 +37,9 @@
 #include "params/ExeTracer.hh"
 #include "sim/insttracer.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace Trace {
@@ -77,5 +80,6 @@ class ExeTracer : public InstTracer
 };
 
 } // namespace Trace
+} // namespace gem5
 
 #endif // __CPU_EXETRACE_HH__

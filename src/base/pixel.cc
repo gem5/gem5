@@ -41,6 +41,9 @@
 
 #include "base/bitfield.hh"
 
+namespace gem5
+{
+
 const PixelConverter PixelConverter::rgba8888_le(4, 0, 8, 16, 8, 8, 8);
 const PixelConverter PixelConverter::rgba8888_be(4, 0, 8, 16, 8, 8, 8,
                                                  ByteOrder::big);
@@ -64,7 +67,7 @@ PixelConverter::PixelConverter(unsigned _length,
 
 PixelConverter::Channel::Channel(unsigned _offset, unsigned width)
     : offset(_offset),
-      mask(::mask(width)),
+      mask(gem5::mask(width)),
       factor(255.0 / mask)
 {
 }
@@ -96,3 +99,5 @@ PixelConverter::writeWord(uint8_t *p, uint32_t word) const
             p[i] = (word >> (8 * (length - i - 1))) & 0xFF;
     }
 }
+
+} // namespace gem5

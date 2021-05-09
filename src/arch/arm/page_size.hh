@@ -44,10 +44,15 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
     const Addr PageShift = 12;
     const Addr PageBytes = 1ULL << PageShift;
+
 } // namespace ArmISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_PAGE_SIZE_HH__

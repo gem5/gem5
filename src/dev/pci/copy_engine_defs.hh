@@ -33,6 +33,9 @@
 #include "base/compiler.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(CopyEngineReg, copy_engine_reg);
 namespace copy_engine_reg
 {
@@ -235,5 +238,4 @@ struct ChanRegs : public Serializable
 };
 
 } // namespace copy_engine_reg
-
-
+} // namespace gem5

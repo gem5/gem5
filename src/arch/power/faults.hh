@@ -32,6 +32,9 @@
 
 #include "sim/faults.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -93,5 +96,6 @@ class TrapFault : public PowerFault
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_FAULTS_HH__

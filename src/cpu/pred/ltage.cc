@@ -44,6 +44,9 @@
 #include "debug/Fetch.hh"
 #include "debug/LTage.hh"
 
+namespace gem5
+{
+
 LTAGE::LTAGE(const LTAGEParams &params)
   : TAGE(params), loopPredictor(params.loop_predictor)
 {
@@ -141,3 +144,4 @@ LTAGE::squash(ThreadID tid, void *bp_history)
     TAGE::squash(tid, bp_history);
 }
 
+} // namespace gem5

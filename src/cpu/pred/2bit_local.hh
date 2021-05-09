@@ -48,6 +48,9 @@
 #include "cpu/pred/bpred_unit.hh"
 #include "params/LocalBP.hh"
 
+namespace gem5
+{
+
 /**
  * Implements a local predictor that uses the PC to index into a table of
  * counters.  Note that any time a pointer to the bp_history is given, it
@@ -121,5 +124,7 @@ class LocalBP : public BPredUnit
     /** Mask to get index bits. */
     const unsigned indexMask;
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_2BIT_LOCAL_PRED_HH__

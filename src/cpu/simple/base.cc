@@ -77,6 +77,9 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
     : BaseCPU(p),
       curThread(0),
@@ -499,3 +502,5 @@ BaseSimpleCPU::advancePC(const Fault &fault)
         }
     }
 }
+
+} // namespace gem5

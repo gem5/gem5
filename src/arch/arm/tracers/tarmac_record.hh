@@ -51,6 +51,9 @@
 #include "cpu/reg_class.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 class TarmacContext;
@@ -267,5 +270,6 @@ class TarmacTracerRecord : public TarmacBaseRecord
 };
 
 } // namespace Trace
+} // namespace gem5
 
 #endif // __ARCH_ARM_TRACERS_TARMAC_RECORD_HH__

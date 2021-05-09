@@ -42,6 +42,9 @@
 #include "arch/arm/system.hh"
 #include "cpu/base.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 std::string
@@ -93,3 +96,4 @@ TarmacTracer::getInstRecord(Tick when, ThreadContext *tc,
 }
 
 } // namespace Trace
+} // namespace gem5

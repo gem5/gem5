@@ -44,6 +44,9 @@
 
 #include <base/statistics.hh>
 
+namespace gem5
+{
+
 // The TBEStorage is used to track the resources consumed by the TBETable,
 // i.e. the number of available TBE slots.
 //
@@ -185,5 +188,7 @@ TBEStorage::removeEntryFromSlot(int slot)
     m_stats.avg_size = size();
     m_stats.avg_util = utilization();
 }
+
+} // namespace gem5
 
 #endif

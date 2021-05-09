@@ -30,6 +30,8 @@
 
 #include "base/match.hh"
 
+using namespace gem5;
+
 TEST(MatchTest, Add)
 {
     /*

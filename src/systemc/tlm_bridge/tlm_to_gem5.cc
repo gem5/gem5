@@ -68,6 +68,8 @@
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/ext/core/sc_time.hh"
 
+using namespace gem5;
+
 namespace sc_gem5
 {
 
@@ -264,7 +266,7 @@ TlmToGem5Bridge<BITWIDTH>::checkTransaction(tlm::tlm_generic_payload &trans)
 
 template <unsigned int BITWIDTH>
 void
-TlmToGem5Bridge<BITWIDTH>::invalidateDmi(const ::MemBackdoor &backdoor)
+TlmToGem5Bridge<BITWIDTH>::invalidateDmi(const gem5::MemBackdoor &backdoor)
 {
     socket->invalidate_direct_mem_ptr(
             backdoor.range().start(), backdoor.range().end());
@@ -508,7 +510,7 @@ TlmToGem5Bridge<BITWIDTH>::recvRangeChange()
 }
 
 template <unsigned int BITWIDTH>
-::Port &
+gem5::Port &
 TlmToGem5Bridge<BITWIDTH>::gem5_getPort(const std::string &if_name, int idx)
 {
     if (if_name == "gem5")
@@ -568,35 +570,35 @@ TlmToGem5Bridge<BITWIDTH>::before_end_of_elaboration()
 } // namespace sc_gem5
 
 sc_gem5::TlmToGem5Bridge<32> *
-TlmToGem5Bridge32Params::create() const
+gem5::TlmToGem5Bridge32Params::create() const
 {
     return new sc_gem5::TlmToGem5Bridge<32>(
             *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::TlmToGem5Bridge<64> *
-TlmToGem5Bridge64Params::create() const
+gem5::TlmToGem5Bridge64Params::create() const
 {
     return new sc_gem5::TlmToGem5Bridge<64>(
             *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::TlmToGem5Bridge<128> *
-TlmToGem5Bridge128Params::create() const
+gem5::TlmToGem5Bridge128Params::create() const
 {
     return new sc_gem5::TlmToGem5Bridge<128>(
             *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::TlmToGem5Bridge<256> *
-TlmToGem5Bridge256Params::create() const
+gem5::TlmToGem5Bridge256Params::create() const
 {
     return new sc_gem5::TlmToGem5Bridge<256>(
             *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::TlmToGem5Bridge<512> *
-TlmToGem5Bridge512Params::create() const
+gem5::TlmToGem5Bridge512Params::create() const
 {
     return new sc_gem5::TlmToGem5Bridge<512>(
             *this, sc_core::sc_module_name(name.c_str()));

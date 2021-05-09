@@ -50,6 +50,9 @@
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct VirtIODeviceBaseParams;
 struct VirtIODummyDeviceParams;
 
@@ -909,5 +912,7 @@ class VirtIODummyDevice : public VirtIODeviceBase
     /** VirtIO device ID */
     static const DeviceId ID_INVALID = 0x00;
 };
+
+} // namespace gem5
 
 #endif // __DEV_VIRTIO_BASE_HH__

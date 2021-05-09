@@ -68,6 +68,9 @@
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -1536,3 +1539,4 @@ Commit::oldestReady()
 }
 
 } // namespace o3
+} // namespace gem5

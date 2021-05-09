@@ -39,6 +39,9 @@
 #include "debug/GPUMem.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 
+namespace gem5
+{
+
 /**
  * Helper function for instructions declared in op_encodings.  This function
  * takes in all of the arguments for a given memory request we are trying to
@@ -182,5 +185,7 @@ initMemReqScalarHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
         gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt);
     }
 }
+
+} // namespace gem5
 
 #endif // __ARCH_GCN3_GPU_MEM_HELPERS_HH__

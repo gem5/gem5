@@ -34,6 +34,9 @@
 #ifndef __DEV_NS_GIGE_REG_H__
 #define __DEV_NS_GIGE_REG_H__
 
+namespace gem5
+{
+
 /* Device Register Address Map */
 enum DeviceRegisterAddress
 {
@@ -420,5 +423,7 @@ SPDSTS_POLARITY(int lnksts)
     return (CFGR_SPDSTS1 | CFGR_SPDSTS0 | CFGR_DUPSTS |
             (lnksts ? CFGR_LNKSTS : CFGR_ZERO));
 }
+
+} // namespace gem5
 
 #endif /* __DEV_NS_GIGE_REG_H__ */

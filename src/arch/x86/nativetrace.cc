@@ -35,6 +35,9 @@
 #include "params/X86NativeTrace.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 void
@@ -185,3 +188,4 @@ X86NativeTrace::check(NativeTraceRecord *record)
 }
 
 } // namespace Trace
+} // namespace gem5

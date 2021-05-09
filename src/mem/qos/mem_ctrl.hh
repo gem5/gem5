@@ -58,6 +58,9 @@
 #include "sim/cur_tick.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -534,5 +537,6 @@ MemCtrl::qosSchedule(std::initializer_list<Queues*> queues,
 }
 
 } // namespace qos
+} // namespace gem5
 
 #endif /* __MEM_QOS_MEM_CTRL_HH__ */

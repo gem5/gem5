@@ -38,6 +38,9 @@
 #include "dev/storage/disk_image.hh"
 #include "params/MmDisk.hh"
 
+namespace gem5
+{
+
 class MmDisk : public BasicPioDevice
 {
   private:
@@ -56,5 +59,6 @@ class MmDisk : public BasicPioDevice
     void serialize(CheckpointOut &cp) const override;
 };
 
-#endif //__DEV_SPARC_MM_DISK_HH__
+} // namespace gem5
 
+#endif //__DEV_SPARC_MM_DISK_HH__

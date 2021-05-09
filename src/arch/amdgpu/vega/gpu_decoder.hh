@@ -39,6 +39,9 @@
 
 #include "arch/amdgpu/vega/gpu_types.hh"
 
+namespace gem5
+{
+
 class GPUStaticInst;
 
 namespace VegaISA
@@ -1934,5 +1937,6 @@ namespace VegaISA
         float               imm_f32;
     }; // union InstFormat
 } // namespace VegaISA
+} // namespace gem5
 
 #endif // __ARCH_VEGA_DECODER_HH__

@@ -50,6 +50,9 @@
 #include "config/the_isa.hh"
 #include "debug/Branch.hh"
 
+namespace gem5
+{
+
 BPredUnit::BPredUnit(const Params &params)
     : SimObject(params),
       numThreads(params.numThreads),
@@ -518,3 +521,4 @@ BPredUnit::dump()
     }
 }
 
+} // namespace gem5

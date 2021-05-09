@@ -42,6 +42,9 @@
 #include "base/trace.hh"
 #include "debug/PowerDomain.hh"
 
+namespace gem5
+{
+
 PowerDomain::PowerDomain(const PowerDomainParams &p) :
     PowerState(p),
     leaders(p.leaders),
@@ -263,3 +266,5 @@ PowerDomain::PowerDomainStats::regStats()
         .flags(statistics::nozero)
         ;
 }
+
+} // namespace gem5

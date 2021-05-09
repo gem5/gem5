@@ -48,6 +48,9 @@
 
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 struct TickedObjectParams;
 
 /** Ticked attaches gem5's event queue/scheduler to evaluate
@@ -176,5 +179,7 @@ class TickedObject : public ClockedObject, public Ticked
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };
+
+} // namespace gem5
 
 #endif /* __SIM_TICKED_OBJECT_HH__ */

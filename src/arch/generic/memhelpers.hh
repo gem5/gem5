@@ -47,6 +47,9 @@
 #include "sim/byteswap.hh"
 #include "sim/insttracer.hh"
 
+namespace gem5
+{
+
 template <class XC>
 Fault
 initiateMemRead(XC *xc, Addr addr, std::size_t size,
@@ -280,5 +283,7 @@ initiateMemAMO(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT& mem,
     AtomicOpFunctorPtr amo_op = AtomicOpFunctorPtr(_amo_op);
     return xc->initiateMemAMO(addr, sizeof(MemT), flags, std::move(amo_op));
 }
+
+} // namespace gem5
 
 #endif

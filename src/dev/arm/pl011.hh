@@ -49,6 +49,9 @@
 #include "dev/arm/amba_device.hh"
 #include "dev/serial/uart.hh"
 
+namespace gem5
+{
+
 class BaseGic;
 struct Pl011Params;
 
@@ -179,5 +182,7 @@ class Pl011 : public Uart, public AmbaDevice
     /** Delay before interrupting */
     const Tick intDelay;
 };
+
+} // namespace gem5
 
 #endif //__DEV_ARM_PL011_H__

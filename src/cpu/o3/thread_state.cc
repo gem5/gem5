@@ -42,21 +42,24 @@
 
 #include "cpu/o3/cpu.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
 ThreadState::ThreadState(CPU *_cpu, int _thread_num, Process *_process) :
-    ::ThreadState(_cpu, _thread_num, _process),
+    gem5::ThreadState(_cpu, _thread_num, _process),
     comInstEventQueue("instruction-based event queue")
 {}
 
 void
 ThreadState::serialize(CheckpointOut &cp) const
 {
-    ::ThreadState::serialize(cp);
+    gem5::ThreadState::serialize(cp);
     // Use the ThreadContext serialization helper to serialize the
     // TC.
-    ::serialize(*tc, cp);
+    gem5::serialize(*tc, cp);
 }
 
 void
@@ -66,11 +69,12 @@ ThreadState::unserialize(CheckpointIn &cp)
     // flight that we need to squash since we just instantiated a
     // clean system.
     noSquashFromTC = true;
-    ::ThreadState::unserialize(cp);
+    gem5::ThreadState::unserialize(cp);
     // Use the ThreadContext serialization helper to unserialize
     // the TC.
-    ::unserialize(*tc, cp);
+    gem5::unserialize(*tc, cp);
     noSquashFromTC = false;
 }
 
 } // namespace o3
+} // namespace gem5

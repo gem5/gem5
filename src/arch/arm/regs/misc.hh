@@ -48,6 +48,9 @@
 #include "base/compiler.hh"
 #include "dev/arm/generic_timer_miscregs_types.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 
@@ -2278,6 +2281,7 @@ namespace ArmISA
     int
     unflattenMiscReg(int reg);
 
-}
+} // namespace ArmISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_REGS_MISC_HH__

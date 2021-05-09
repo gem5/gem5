@@ -34,7 +34,7 @@
 namespace sc_gem5
 {
 
-class ScMainFiber : public Fiber
+class ScMainFiber : public gem5::Fiber
 {
   private:
     int _argc = 0;
@@ -45,7 +45,7 @@ class ScMainFiber : public Fiber
     bool _called = false;
 
   public:
-    ScMainFiber() : Fiber(8 * 1024 * 1024) {}
+    ScMainFiber() : gem5::Fiber(8 * 1024 * 1024) {}
 
     int argc() { return _argc; }
     const char *const *argv() { return _argv; }

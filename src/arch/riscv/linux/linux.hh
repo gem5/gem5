@@ -34,6 +34,9 @@
 #include "arch/riscv/utility.hh"
 #include "kern/linux/linux.hh"
 
+namespace gem5
+{
+
 class RiscvLinux : public Linux
 {
   public:
@@ -379,5 +382,7 @@ class RiscvLinux32 : public RiscvLinux
             ctc->setIntReg(RiscvISA::StackPointerReg, stack);
     }
 };
+
+} // namespace gem5
 
 #endif

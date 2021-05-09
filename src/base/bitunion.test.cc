@@ -34,6 +34,8 @@
 #include "base/bitunion.hh"
 #include "base/cprintf.hh"
 
+using namespace gem5;
+
 namespace {
 
 BitUnion64(SixtyFour)

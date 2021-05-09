@@ -43,6 +43,9 @@
 #include "params/RangeAddrMapper.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * An address mapper changes the packet addresses in going from the
  * response port side of the mapper to the request port side. When the
@@ -273,5 +276,7 @@ class RangeAddrMapper : public AddrMapper
         // in our output range(s).
     }
 };
+
+} // namespace gem5
 
 #endif //__MEM_ADDR_MAPPER_HH__

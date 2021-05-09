@@ -41,6 +41,9 @@
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/replacement_policies/fifo_rp.hh"
 
+namespace gem5
+{
+
 struct SecondChanceRPParams;
 
 GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
@@ -126,5 +129,6 @@ class SecondChance : public FIFO
 };
 
 } // namespace replacement_policy
+} // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_SECOND_CHANCE_RP_HH__

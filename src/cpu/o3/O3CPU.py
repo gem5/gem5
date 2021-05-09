@@ -56,7 +56,7 @@ class CommitPolicy(ScopedEnum):
 
 class O3CPU(BaseCPU):
     type = 'O3CPU'
-    cxx_class = 'o3::CPU'
+    cxx_class = 'gem5::o3::CPU'
     cxx_header = 'cpu/o3/dyn_inst.hh'
 
     @classmethod

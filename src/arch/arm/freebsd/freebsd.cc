@@ -34,6 +34,9 @@
 
 #include <fcntl.h>
 
+namespace gem5
+{
+
 // open(2) flags translation table
 const std::map<int, int> ArmFreebsd32::openFlagTable = {
   { ArmFreebsd32::TGT_O_RDONLY,     O_RDONLY },
@@ -73,3 +76,5 @@ const std::map<int, int> ArmFreebsd64::openFlagTable = {
   { ArmFreebsd64::TGT_O_DIRECTORY,  O_DIRECTORY },
   { ArmFreebsd64::TGT_O_NOFOLLOW,   O_NOFOLLOW },
 };
+
+} // namespace gem5

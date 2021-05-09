@@ -44,6 +44,9 @@
 #include "debug/TrafficGen.hh"
 #include "enums/AddrMap.hh"
 
+namespace gem5
+{
+
 NvmGen::NvmGen(SimObject &obj,
                RequestorID requestor_id, Tick _duration,
                Addr start_addr, Addr end_addr,
@@ -183,3 +186,5 @@ NvmGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
         }
     }
 }
+
+} // namespace gem5

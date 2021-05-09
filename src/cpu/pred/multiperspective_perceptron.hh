@@ -45,6 +45,9 @@
 #include "cpu/pred/bpred_unit.hh"
 #include "params/MultiperspectivePerceptron.hh"
 
+namespace gem5
+{
+
 class MultiperspectivePerceptron : public BPredUnit
 {
   protected:
@@ -1051,4 +1054,7 @@ class MultiperspectivePerceptron : public BPredUnit
             Addr corrTarget) override;
     void btbUpdate(ThreadID tid, Addr branch_addr, void* &bp_history) override;
 };
+
+} // namespace gem5
+
 #endif//__CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_HH__

@@ -29,6 +29,9 @@
 
 #include "arch/sparc/insts/priv.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -95,4 +98,5 @@ WrPrivImm::generateDisassembly(
     return response.str();
 }
 
-}
+} // namespace SparcISA
+} // namespace gem5

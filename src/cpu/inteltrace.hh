@@ -37,6 +37,9 @@
 #include "params/IntelTrace.hh"
 #include "sim/insttracer.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 class IntelTraceRecord : public InstRecord
@@ -73,5 +76,6 @@ class IntelTrace : public InstTracer
 };
 
 } // namespace Trace
+} // namespace gem5
 
 #endif // __CPU_INTELTRACE_HH__

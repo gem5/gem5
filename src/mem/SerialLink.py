@@ -46,6 +46,8 @@ from m5.objects.ClockedObject import ClockedObject
 class SerialLink(ClockedObject):
     type = 'SerialLink'
     cxx_header = "mem/serial_link.hh"
+    cxx_class = 'gem5::SerialLink'
+
     mem_side_port = RequestPort("This port sends requests and "
                                             "receives responses")
     master   = DeprecatedParam(mem_side_port,

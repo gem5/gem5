@@ -42,6 +42,9 @@
 #include <iostream>
 #include <unordered_map>
 
+namespace gem5
+{
+
 // ExpectedMap helper class is used to facilitate tracking of pending
 // response and data messages in the CHI protocol. It offers additional
 // functionality when compared to plain counters:
@@ -228,5 +231,6 @@ operator<<(std::ostream& out, const ExpectedMap<RespType,DataType>& obj)
     return out;
 }
 
+} // namespace gem5
 
 #endif // __MEM_RUBY_COMMON_EXPECTEDMAP_HH__

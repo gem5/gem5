@@ -43,6 +43,7 @@ from m5.objects.Serial import SerialDevice
 class VirtIOConsole(VirtIODeviceBase):
     type = 'VirtIOConsole'
     cxx_header = 'dev/virtio/console.hh'
+    cxx_class = 'gem5::VirtIOConsole'
 
     qRecvSize = Param.Unsigned(16, "Receive queue size (descriptors)")
     qTransSize = Param.Unsigned(16, "Transmit queue size (descriptors)")

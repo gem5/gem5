@@ -36,6 +36,9 @@
 
 #include <cstdint>
 
+namespace gem5
+{
+
 namespace Gcn3ISA
 {
     union InstFormat;
@@ -60,5 +63,6 @@ namespace Gcn3ISA
     typedef InstFormat *MachInst;
 
 } // namespace Gcn3ISA
+} // namespace gem5
 
 #endif // __ARCH_GCN3_GPU_TYPES_HH__

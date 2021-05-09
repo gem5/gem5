@@ -48,6 +48,9 @@
 #include "sim/full_system.hh"
 #include "sim/root.hh"
 
+namespace gem5
+{
+
 Root *Root::_root = NULL;
 Root::RootStats Root::RootStats::instance;
 Root::RootStats &rootStats = Root::RootStats::instance;
@@ -232,3 +235,5 @@ RootParams::create() const
 
     return new Root(*this, 0);
 }
+
+} // namespace gem5

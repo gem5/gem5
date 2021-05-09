@@ -37,6 +37,9 @@
 #include "base/types.hh"
 #include "sim/guest_abi.hh"
 
+namespace gem5
+{
+
 template <typename Proxy>
 class ProxyPtrBuffer
 {
@@ -396,5 +399,7 @@ template <typename T>
 using ConstVPtr = ConstProxyPtr<T, SETranslatingPortProxy>;
 template <typename T=void>
 using VPtr = ProxyPtr<T, SETranslatingPortProxy>;
+
+} // namespace gem5
 
 #endif // __SIM_PROXY_PTR_HH__

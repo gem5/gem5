@@ -35,6 +35,9 @@
 #include "base/compiler.hh"
 #include "cpu/static_inst_fwd.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(DecodeCache, decode_cache);
 namespace decode_cache
 {
@@ -134,5 +137,6 @@ class AddrMap
 };
 
 } // namespace decode_cache
+} // namespace gem5
 
 #endif // __CPU_DECODE_CACHE_HH__

@@ -48,6 +48,9 @@
 #include "arch/generic/tlb.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace ArmISA
@@ -461,5 +464,7 @@ class SelfDebug
     void init(ThreadContext *tc);
 };
 
-}
+} // namespace ArmISA
+} // namespace gem5
+
 #endif

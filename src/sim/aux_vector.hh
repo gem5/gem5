@@ -39,8 +39,7 @@
 namespace gem5
 {
 
-namespace auxv
-{
+namespace auxv {
 
 template<class IntType>
 class AuxVector
@@ -54,7 +53,7 @@ class AuxVector
 };
 
 // Ensure the global versions of swap_byte are visible.
-using ::swap_byte;
+using gem5::swap_byte;
 
 // Define swap_byte in this namespace, so argument dependent resolution can
 // find it.
@@ -94,8 +93,6 @@ enum Type
 };
 
 } // namespace auxv
-
-} // namespace gem5
 
 #define GEM5_DEPRECATE_AT(NAME, name) M5_AT_##NAME \
     GEM5_DEPRECATED_ENUM_VAL(\
@@ -137,5 +134,7 @@ template <class IntType>
 using AuxVector GEM5_DEPRECATED(
         "The AuxVector template is now in the gem5::auxv namespace.") =
         gem5::auxv::AuxVector<IntType>;
+
+} // namespace gem5
 
 #endif // __AUX_VECTOR_HH__

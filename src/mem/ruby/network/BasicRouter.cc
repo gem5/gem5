@@ -28,6 +28,9 @@
 
 #include "mem/ruby/network/BasicRouter.hh"
 
+namespace gem5
+{
+
 BasicRouter::BasicRouter(const Params &p)
     : ClockedObject(p)
 {
@@ -45,3 +48,5 @@ BasicRouter::print(std::ostream& out) const
 {
     out << name();
 }
+
+} // namespace gem5

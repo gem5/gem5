@@ -54,6 +54,9 @@
 #include "base/compiler.hh"
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 /**
  * DRAMSim2 requires SHOW_SIM_OUTPUT to be defined (declared extern in
  * the DRAMSim2 print macros), otherwise we get linking errors due to
@@ -196,3 +199,5 @@ DRAMSim2Wrapper::tick()
 {
     dramsim->update();
 }
+
+} // namespace gem5

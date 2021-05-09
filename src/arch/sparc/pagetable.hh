@@ -36,6 +36,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -276,6 +279,6 @@ struct TlbEntry
 };
 
 } // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_PAGE_TABLE_HH__
-

@@ -60,6 +60,9 @@
 #include "params/CheckerCPU.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 class Request;
 
@@ -602,5 +605,7 @@ class Checker : public CheckerCPU
     typedef typename std::list<DynInstPtr>::iterator InstListIt;
     void dumpInsts();
 };
+
+} // namespace gem5
 
 #endif // __CPU_CHECKER_CPU_HH__

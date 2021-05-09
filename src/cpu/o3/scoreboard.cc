@@ -29,6 +29,9 @@
 
 #include "cpu/o3/scoreboard.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -39,3 +42,4 @@ Scoreboard::Scoreboard(const std::string &_my_name, unsigned _numPhysicalRegs,
 {}
 
 } // namespace o3
+} // namespace gem5

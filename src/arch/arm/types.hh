@@ -47,6 +47,9 @@
 #include "base/bitunion.hh"
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
     typedef uint32_t MachInst;
@@ -461,6 +464,8 @@ namespace ArmISA
 
     constexpr unsigned VecRegSizeBytes = MaxSveVecLenInBytes;
     constexpr unsigned VecPredRegSizeBits = MaxSveVecLenInBytes;
+
 } // namespace ArmISA
+} // namespace gem5
 
 #endif

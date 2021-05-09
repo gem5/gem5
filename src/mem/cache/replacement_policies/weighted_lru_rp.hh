@@ -39,6 +39,9 @@
 #include "base/types.hh"
 #include "mem/cache/replacement_policies/lru_rp.hh"
 
+namespace gem5
+{
+
 struct WeightedLRURPParams;
 
 GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
@@ -86,5 +89,6 @@ class WeightedLRU : public LRU
 };
 
 } // namespace replacement_policy
+} // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_WEIGHTED_LRU_RP_HH__

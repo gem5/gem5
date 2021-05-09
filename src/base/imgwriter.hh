@@ -45,6 +45,9 @@
 
 #include "enums/ImageFormat.hh"
 
+namespace gem5
+{
+
 // write frame buffer to an image
 class ImgWriter
 {
@@ -86,5 +89,7 @@ class ImgWriter
  */
 std::unique_ptr<ImgWriter>
 createImgWriter(enums::ImageFormat type, const FrameBuffer *fb);
+
+} // namespace gem5
 
 #endif //__BASE_IMGWRITER_HH__

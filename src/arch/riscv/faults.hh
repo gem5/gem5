@@ -38,6 +38,9 @@
 #include "cpu/null_static_inst.hh"
 #include "sim/faults.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace RiscvISA
@@ -250,5 +253,6 @@ class SyscallFault : public RiscvFault
 };
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_FAULTS_HH__

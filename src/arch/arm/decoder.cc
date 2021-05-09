@@ -46,6 +46,9 @@
 #include "debug/Decoder.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -191,4 +194,5 @@ Decoder::decode(ArmISA::PCState &pc)
     return decode(this_emi, pc.instAddr());
 }
 
-}
+} // namespace ArmISA
+} // namespace gem5

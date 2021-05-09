@@ -40,6 +40,9 @@
 
 #include "arch/arm/insts/static_inst.hh"
 
+namespace gem5
+{
+
 namespace ArmISA {
 
 enum class SvePredType
@@ -978,6 +981,7 @@ uint64_t sveExpandFpImmMaxMin(uint8_t imm, uint8_t size);
 /// @return Encoding of the expanded value.
 uint64_t sveExpandFpImmMul(uint8_t imm, uint8_t size);
 
-}  // namespace ArmISA
+} // namespace ArmISA
+} // namespace gem5
 
 #endif  // __ARCH_ARM_INSTS_SVE_HH__

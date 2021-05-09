@@ -47,6 +47,9 @@
 #include "params/AtomicSimpleCPU.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 class AtomicSimpleCPU : public BaseSimpleCPU
 {
   public:
@@ -250,5 +253,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      */
     void printAddr(Addr a);
 };
+
+} // namespace gem5
 
 #endif // __CPU_SIMPLE_ATOMIC_HH__

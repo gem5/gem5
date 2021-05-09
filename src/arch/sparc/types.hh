@@ -32,12 +32,16 @@
 #include "arch/sparc/pcstate.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif

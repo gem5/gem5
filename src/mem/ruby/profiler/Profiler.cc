@@ -78,7 +78,10 @@
 
 #include "mem/ruby/system/Sequencer.hh"
 
-using gem5::stl_helpers::operator<<;
+namespace gem5
+{
+
+using stl_helpers::operator<<;
 
 Profiler::Profiler(const RubySystemParams &p, RubySystem *rs)
     : m_ruby_system(rs), m_hot_lines(p.hot_lines),
@@ -578,3 +581,4 @@ Profiler::addAddressTraceSample(const RubyRequest& msg, NodeID id)
     }
 }
 
+} // namespace gem5

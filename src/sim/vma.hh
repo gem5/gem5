@@ -37,6 +37,9 @@
 #include "debug/Vma.hh"
 #include "mem/se_translating_port_proxy.hh"
 
+namespace gem5
+{
+
 class VMA
 {
   class MappedFileBuffer;
@@ -194,5 +197,7 @@ class VMA
         size_t _length;       // Length of host ptr
     };
 };
+
+} // namespace gem5
 
 #endif // __SRC_MEM_VMA_HH__

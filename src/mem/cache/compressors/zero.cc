@@ -38,6 +38,9 @@
 #include "mem/cache/compressors/dictionary_compressor_impl.hh"
 #include "params/ZeroCompressor.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -78,3 +81,4 @@ Zero::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
 }
 
 } // namespace compression
+} // namespace gem5

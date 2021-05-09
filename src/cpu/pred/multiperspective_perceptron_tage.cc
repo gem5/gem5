@@ -40,6 +40,9 @@
 
 #include "base/random.hh"
 
+namespace gem5
+{
+
 void
 MPP_TAGE::calculateParameters()
 {
@@ -680,3 +683,5 @@ MultiperspectivePerceptronTAGE::squash(ThreadID tid, void *bp_history)
     MPPTAGEBranchInfo *bi = static_cast<MPPTAGEBranchInfo*>(bp_history);
     delete bi;
 }
+
+} // namespace gem5

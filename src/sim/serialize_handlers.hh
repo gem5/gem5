@@ -52,6 +52,9 @@
 
 #include "base/str.hh"
 
+namespace gem5
+{
+
 /**
  * @ingroup api_serialize
  * @{
@@ -153,5 +156,7 @@ struct ShowParam<bool>
 };
 
 /** @} */
+
+} // namespace gem5
 
 #endif // __SERIALIZE_HANDLERS_HH__

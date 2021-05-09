@@ -45,6 +45,9 @@
 #include "arch/arm/regs/int.hh"
 #include "arch/arm/regs/misc.hh"
 
+namespace gem5
+{
+
 struct ArmV8KvmCPUParams;
 
 /**
@@ -146,5 +149,7 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
     /** Cached mapping between system registers in kvm and misc regs in gem5 */
     mutable std::vector<ArmV8KvmCPU::MiscRegInfo> sysRegMap;
 };
+
+} // namespace gem5
 
 #endif // __ARCH_ARM_KVM_ARMV8_CPU_HH__

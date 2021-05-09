@@ -52,6 +52,9 @@
 #include "enums/ThreadPolicy.hh"
 #include "params/MinorCPU.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -198,5 +201,7 @@ class MinorCPU : public BaseCPU
     void wakeupOnEvent(unsigned int stage_id);
     EventFunctionWrapper *fetchEventWrapper;
 };
+
+} // namespace gem5
 
 #endif /* __CPU_MINOR_CPU_HH__ */

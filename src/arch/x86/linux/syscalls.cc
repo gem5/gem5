@@ -37,6 +37,9 @@
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -170,3 +173,4 @@ setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc,
 }
 
 } // namespace X86ISA
+} // namespace gem5

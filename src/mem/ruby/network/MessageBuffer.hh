@@ -65,6 +65,9 @@
 #include "params/MessageBuffer.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class MessageBuffer : public SimObject
 {
   public:
@@ -273,5 +276,7 @@ operator<<(std::ostream& out, const MessageBuffer& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_MESSAGEBUFFER_HH__

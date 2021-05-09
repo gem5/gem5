@@ -44,6 +44,9 @@
 #include "mem/request.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 class EmulationPageTable : public Serializable
@@ -164,5 +167,7 @@ class EmulationPageTable : public Serializable
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };
+
+} // namespace gem5
 
 #endif // __MEM_PAGE_TABLE_HH__

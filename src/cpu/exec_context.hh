@@ -51,6 +51,9 @@
 #include "cpu/translation.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 /**
  * The ExecContext is an abstract base class the provides the
  * interface used by the ISA to manipulate the state of the CPU model.
@@ -299,5 +302,7 @@ class ExecContext
 
     /** @} */
 };
+
+} // namespace gem5
 
 #endif // __CPU_EXEC_CONTEXT_HH__

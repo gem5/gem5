@@ -37,4 +37,9 @@
 
 #include "arch/generic/htm.hh"
 
+namespace gem5
+{
+
 uint64_t BaseHTMCheckpoint::globalHtmUid = 0;
+
+} // namespace gem5

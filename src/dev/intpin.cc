@@ -29,6 +29,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 void
 IntSinkPinBase::bind(Port &peer)
 {
@@ -65,3 +68,5 @@ IntSourcePinBase::unbind()
     sink = nullptr;
     Port::unbind();
 }
+
+} // namespace gem5

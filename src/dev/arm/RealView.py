@@ -84,12 +84,14 @@ class AmbaPioDevice(BasicPioDevice):
     type = 'AmbaPioDevice'
     abstract = True
     cxx_header = "dev/arm/amba_device.hh"
+    cxx_class = 'gem5::AmbaPioDevice'
     amba_id = Param.UInt32("ID of AMBA device for kernel detection")
 
 class AmbaIntDevice(AmbaPioDevice):
     type = 'AmbaIntDevice'
     abstract = True
     cxx_header = "dev/arm/amba_device.hh"
+    cxx_class = 'gem5::AmbaIntDevice'
     interrupt = Param.ArmInterruptPin("Interrupt that connects to GIC")
     int_delay = Param.Latency("100ns",
             "Time between action and interrupt generation by device")
@@ -98,6 +100,7 @@ class AmbaDmaDevice(DmaDevice):
     type = 'AmbaDmaDevice'
     abstract = True
     cxx_header = "dev/arm/amba_device.hh"
+    cxx_class = 'gem5::AmbaDmaDevice'
     pio_addr = Param.Addr("Address for AMBA responder interface")
     pio_latency = Param.Latency("10ns", "Time between action and write/read"
                                         "result by AMBA DMA Device")
@@ -107,6 +110,7 @@ class AmbaDmaDevice(DmaDevice):
 class A9SCU(BasicPioDevice):
     type = 'A9SCU'
     cxx_header = "dev/arm/a9scu.hh"
+    cxx_class = 'gem5::A9SCU'
 
 class ArmPciIntRouting(Enum): vals = [
     'ARM_PCI_INT_STATIC',
@@ -117,6 +121,7 @@ class ArmPciIntRouting(Enum): vals = [
 class GenericArmPciHost(GenericPciHost):
     type = 'GenericArmPciHost'
     cxx_header = "dev/arm/pci_host.hh"
+    cxx_class = 'gem5::GenericArmPciHost'
 
     int_policy = Param.ArmPciIntRouting("PCI interrupt routing policy")
     int_base = Param.Unsigned("PCI interrupt base")
@@ -208,6 +213,7 @@ class GenericArmPciHost(GenericPciHost):
 class RealViewCtrl(BasicPioDevice):
     type = 'RealViewCtrl'
     cxx_header = "dev/arm/rv_ctrl.hh"
+    cxx_class = 'gem5::RealViewCtrl'
     proc_id0 = Param.UInt32(0x0C000000, "Processor ID, SYS_PROCID")
     proc_id1 = Param.UInt32(0x0C000222, "Processor ID, SYS_PROCID1")
     idreg = Param.UInt32(0x00000000, "ID Register, SYS_ID")
@@ -227,6 +233,7 @@ class RealViewCtrl(BasicPioDevice):
 class RealViewOsc(ClockDomain):
     type = 'RealViewOsc'
     cxx_header = "dev/arm/rv_ctrl.hh"
+    cxx_class = 'gem5::RealViewOsc'
 
     parent = Param.RealViewCtrl(Parent.any, "RealView controller")
 
@@ -275,6 +282,7 @@ class RealViewOsc(ClockDomain):
 class RealViewTemperatureSensor(SimObject):
     type = 'RealViewTemperatureSensor'
     cxx_header = "dev/arm/rv_ctrl.hh"
+    cxx_class = 'gem5::RealViewTemperatureSensor'
 
     parent = Param.RealViewCtrl(Parent.any, "RealView controller")
 
@@ -362,7 +370,9 @@ ARM DUI 0604E for details.
 class AmbaFake(AmbaPioDevice):
     type = 'AmbaFake'
     cxx_header = "dev/arm/amba_fake.hh"
-    ignore_access = Param.Bool(False, "Ignore reads/writes to this device, (e.g. IsaFake + AMBA)")
+    cxx_class = 'gem5::AmbaFake'
+    ignore_access = Param.Bool(False,
+        "Ignore reads/writes to this device, (e.g. IsaFake + AMBA)")
     amba_id = 0;
 
 # Simple fixed-rate clock source. Intended to be instantiated in Platform
@@ -388,9 +398,12 @@ class FixedClock(SrcClockDomain):
 class Pl011(Uart):
     type = 'Pl011'
     cxx_header = "dev/arm/pl011.hh"
+    cxx_class = 'gem5::Pl011'
     interrupt = Param.ArmInterruptPin("Interrupt that connects to GIC")
-    end_on_eot = Param.Bool(False, "End the simulation when a EOT is received on the UART")
-    int_delay = Param.Latency("100ns", "Time between action and interrupt generation by UART")
+    end_on_eot = Param.Bool(False,
+        "End the simulation when a EOT is received on the UART")
+    int_delay = Param.Latency("100ns",
+        "Time between action and interrupt generation by UART")
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(state, 'uart', self.pio_addr,
@@ -409,6 +422,7 @@ class Pl011(Uart):
 class Sp804(AmbaPioDevice):
     type = 'Sp804'
     cxx_header = "dev/arm/timer_sp804.hh"
+    cxx_class = 'gem5::Sp804'
     int0 = Param.ArmSPI("Interrupt that connects to GIC")
     clock0 = Param.Clock('1MHz', "Clock speed of the input")
     int1 = Param.ArmSPI("Interrupt that connects to GIC")
@@ -425,6 +439,7 @@ Reference:
 
     type = 'Sp805'
     cxx_header = 'dev/arm/watchdog_sp805.hh'
+    cxx_class = 'gem5::Sp805'
 
     amba_id = 0x00141805
 
@@ -446,6 +461,7 @@ Reference:
 class GenericWatchdog(PioDevice):
     type = 'GenericWatchdog'
     cxx_header = 'dev/arm/watchdog_generic.hh'
+    cxx_class = 'gem5::GenericWatchdog'
 
     refresh_start = Param.Addr("Start address for the refresh frame")
     control_start = Param.Addr("Start address for the control frame")
@@ -461,13 +477,16 @@ class GenericWatchdog(PioDevice):
 class CpuLocalTimer(BasicPioDevice):
     type = 'CpuLocalTimer'
     cxx_header = "dev/arm/timer_cpulocal.hh"
+    cxx_class = 'gem5::CpuLocalTimer'
     int_timer = Param.ArmPPI("Interrrupt used per-cpu to GIC")
     int_watchdog = Param.ArmPPI("Interrupt for per-cpu watchdog to GIC")
 
 class PL031(AmbaIntDevice):
     type = 'PL031'
     cxx_header = "dev/arm/rtc_pl031.hh"
-    time = Param.Time('01/01/2009', "System time to use ('Now' for actual time)")
+    cxx_class = 'gem5::PL031'
+    time = Param.Time('01/01/2009',
+        "System time to use ('Now' for actual time)")
     amba_id = 0x00041031
 
     def generateDeviceTree(self, state):
@@ -484,6 +503,7 @@ class PL031(AmbaIntDevice):
 class Pl050(AmbaIntDevice):
     type = 'Pl050'
     cxx_header = "dev/arm/kmi.hh"
+    cxx_class = 'gem5::Pl050'
     amba_id = 0x00141050
 
     ps2 = Param.PS2Device("PS/2 device")
@@ -501,14 +521,18 @@ class Pl050(AmbaIntDevice):
 class Pl111(AmbaDmaDevice):
     type = 'Pl111'
     cxx_header = "dev/arm/pl111.hh"
+    cxx_class = 'gem5::Pl111'
     pixel_clock = Param.Clock('24MHz', "Pixel clock")
-    vnc   = Param.VncInput(Parent.any, "Vnc server for remote frame buffer display")
+    vnc   = Param.VncInput(Parent.any,
+        "Vnc server for remote frame buffer display")
     amba_id = 0x00141111
-    enable_capture = Param.Bool(True, "capture frame to system.framebuffer.bmp")
+    enable_capture = Param.Bool(True,
+        "capture frame to system.framebuffer.bmp")
 
 class HDLcd(AmbaDmaDevice):
     type = 'HDLcd'
     cxx_header = "dev/arm/hdlcd.hh"
+    cxx_class = 'gem5::HDLcd'
     vnc = Param.VncInput(Parent.any, "Vnc server for remote frame buffer "
                                      "display")
     amba_id = 0x00141000
@@ -630,6 +654,7 @@ Reference:
 
     type = 'FVPBasePwrCtrl'
     cxx_header = 'dev/arm/fvp_base_pwr_ctrl.hh'
+    cxx_class = 'gem5::FVPBasePwrCtrl'
 
 class GenericMHU(MHU):
     lowp_scp2ap = Scp2ApDoorbell(
@@ -651,6 +676,7 @@ class GenericMHU(MHU):
 class RealView(Platform):
     type = 'RealView'
     cxx_header = "dev/arm/realview.hh"
+    cxx_class = 'gem5::RealView'
     _mem_regions = [ AddrRange(0, size='256MiB') ]
     _num_pci_dev = 0
 

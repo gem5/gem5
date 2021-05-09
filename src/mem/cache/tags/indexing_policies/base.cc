@@ -52,6 +52,9 @@
 #include "base/logging.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 
+namespace gem5
+{
+
 BaseIndexingPolicy::BaseIndexingPolicy(const Params &p)
     : SimObject(p), assoc(p.assoc),
       numSets(p.size / (p.entry_size * assoc)),
@@ -97,3 +100,5 @@ BaseIndexingPolicy::extractTag(const Addr addr) const
 {
     return (addr >> tagShift);
 }
+
+} // namespace gem5

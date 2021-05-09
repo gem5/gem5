@@ -45,6 +45,9 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 namespace Trace {
@@ -115,3 +118,4 @@ TarmacBaseRecord::pcToISetState(PCState pc)
 }
 
 } // namespace Trace
+} // namespace gem5

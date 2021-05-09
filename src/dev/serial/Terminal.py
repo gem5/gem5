@@ -48,6 +48,7 @@ class TerminalDump(ScopedEnum): vals = [
 class Terminal(SerialDevice):
     type = 'Terminal'
     cxx_header = "dev/serial/terminal.hh"
+    cxx_class = 'gem5::Terminal'
     port = Param.TcpPort(3456, "listen port")
     number = Param.Int(0, "terminal number")
     outfile = Param.TerminalDump("file",

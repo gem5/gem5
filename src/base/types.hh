@@ -43,6 +43,9 @@
 #include <ostream>
 #include <stdexcept>
 
+namespace gem5
+{
+
 /** Statistics counter type.  Not much excuse for not using a 64-bit
  * integer here, but if you're desperate and only run short
  * simulations you could make this 32 bits.
@@ -255,5 +258,7 @@ typedef std::shared_ptr<FaultBase> Fault;
 // Rather than creating a shared_ptr instance and assigning it nullptr,
 // we just create an alias.
 constexpr decltype(nullptr) NoFault = nullptr;
+
+} // namespace gem5
 
 #endif // __BASE_TYPES_HH__

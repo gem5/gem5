@@ -52,6 +52,9 @@
 #include "debug/CoherentXBar.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 CoherentXBar::CoherentXBar(const CoherentXBarParams &p)
     : BaseXBar(p), system(p.system), snoopFilter(p.snoop_filter),
       snoopResponseLatency(p.snoop_response_latency),
@@ -1119,3 +1122,5 @@ CoherentXBar::regStats()
 
     snoopFanout.init(0, snoopPorts.size(), 1);
 }
+
+} // namespace gem5

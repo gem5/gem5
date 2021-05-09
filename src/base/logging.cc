@@ -44,6 +44,9 @@
 
 #include "base/hostinfo.hh"
 
+namespace gem5
+{
+
 namespace {
 
 class ExitLogger : public Logger
@@ -107,3 +110,5 @@ Logger::getHack() {
     static Logger* hack_logger = new Logger("hack: ");
     return *hack_logger;
 }
+
+} // namespace gem5

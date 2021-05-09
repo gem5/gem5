@@ -39,6 +39,9 @@
 #include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/FrequentValuesCompressor.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -298,3 +301,4 @@ FrequentValues::FrequentValuesListener::notify(const DataUpdate &data_update)
 }
 
 } // namespace compression
+} // namespace gem5

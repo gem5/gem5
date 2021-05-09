@@ -72,28 +72,30 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
     }
     instance = this;
 
-    cxxConfigInit();
+    gem5::cxxConfigInit();
 
     // register the systemc slave and master port handler
-    ExternalSlave::registerHandler("tlm_slave", new SCSlavePortHandler(*this));
-    ExternalMaster::registerHandler("tlm_master",
-                                    new SCMasterPortHandler(*this));
+    gem5::ExternalSlave::registerHandler("tlm_slave",
+        new SCSlavePortHandler(*this));
+    gem5::ExternalMaster::registerHandler("tlm_master",
+        new SCMasterPortHandler(*this));
 
-    Trace::setDebugLogger(&logger);
+    gem5::Trace::setDebugLogger(&logger);
 
     Gem5SystemC::setTickFrequency();
     assert(sc_core::sc_get_time_resolution()
                     == sc_core::sc_time(1,sc_core::SC_PS));
 
     Gem5SystemC::Module::setupEventQueues(*this);
-    initSignals();
+    gem5::initSignals();
 
-    statistics::initSimStats();
-    statistics::registerHandlers(CxxConfig::statsReset, CxxConfig::statsDump);
+    gem5::statistics::initSimStats();
+    gem5::statistics::registerHandlers(CxxConfig::statsReset,
+        CxxConfig::statsDump);
 
-    Trace::enable();
+    gem5::Trace::enable();
 
-    CxxConfigFileBase* conf = new CxxIniFile();
+    gem5::CxxConfigFileBase* conf = new gem5::CxxIniFile();
 
     if (configFile.empty()) {
         std::cerr << "No gem5 config file specified!\n";
@@ -105,7 +107,7 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
         std::exit(EXIT_FAILURE);
     }
 
-    config_manager = new CxxConfigManager(*conf);
+    config_manager = new gem5::CxxConfigManager(*conf);
 
     // parse debug flags string and clear/set flags accordingly
     std::stringstream ss;
@@ -114,19 +116,19 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
     while (std::getline(ss, flag, ' ')) {
         if (flag.at(0) == '-') {
             flag.erase(0, 1); // remove the '-'
-            clearDebugFlag(flag.c_str());
+            gem5::clearDebugFlag(flag.c_str());
         }
         else {
-            setDebugFlag(flag.c_str());
+            gem5::setDebugFlag(flag.c_str());
         }
     }
 
     CxxConfig::statsEnable();
-    getEventQueue(0)->dump();
+    gem5::getEventQueue(0)->dump();
 
     try {
         config_manager->instantiate();
-    } catch (CxxConfigManager::Exception &e) {
+    } catch (gem5::CxxConfigManager::Exception &e) {
         std::cerr << "Config problem in sim object "
                   << e.name << ": " << e.message << "\n";
         std::exit(EXIT_FAILURE);
@@ -139,7 +141,7 @@ Gem5SimControl::end_of_elaboration()
     try {
         config_manager->initState();
         config_manager->startup();
-    } catch (CxxConfigManager::Exception &e) {
+    } catch (gem5::CxxConfigManager::Exception &e) {
         std::cerr << "Config problem in sim object "
             << e.name << ": " << e.message << "\n";
         std::exit(EXIT_FAILURE);
@@ -152,7 +154,7 @@ Gem5SimControl::run()
     // notify callback
     beforeSimulate();
 
-    GlobalSimLoopExitEvent *exit_event = NULL;
+    gem5::GlobalSimLoopExitEvent *exit_event = NULL;
 
     if (simulationEnd == 0) {
         exit_event = simulate();
@@ -160,10 +162,10 @@ Gem5SimControl::run()
         exit_event = simulate(simulationEnd);
     }
 
-    std::cerr << "Exit at tick " << curTick()
+    std::cerr << "Exit at tick " << gem5::curTick()
               << ", cause: " << exit_event->getCause() << '\n';
 
-    getEventQueue(0)->dump();
+    gem5::getEventQueue(0)->dump();
 
     // notify callback
     afterSimulate();

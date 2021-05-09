@@ -43,6 +43,9 @@
 #include "proto/packet.pb.h"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 MemTraceProbe::MemTraceProbe(const MemTraceProbeParams &p)
     : BaseMemProbe(p),
       traceStream(nullptr),
@@ -118,3 +121,5 @@ MemTraceProbe::handleRequest(const probing::PacketInfo &pkt_info)
 
     traceStream->write(pkt_msg);
 }
+
+} // namespace gem5

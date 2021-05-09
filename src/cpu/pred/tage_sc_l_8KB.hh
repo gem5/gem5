@@ -47,6 +47,9 @@
 #include "params/TAGE_SC_L_8KB_StatisticalCorrector.hh"
 #include "params/TAGE_SC_L_TAGE_8KB.hh"
 
+namespace gem5
+{
+
 class TAGE_SC_L_TAGE_8KB : public TAGE_SC_L_TAGE
 {
   public:
@@ -111,5 +114,7 @@ class TAGE_SC_L_8KB : public TAGE_SC_L
   public:
     TAGE_SC_L_8KB(const TAGE_SC_L_8KBParams &params);
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_TAGE_SC_L_8KB_HH__

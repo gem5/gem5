@@ -54,6 +54,9 @@
 #include "base/trace.hh"
 #include "debug/MinorTrace.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -85,5 +88,6 @@ minorLine(const Named &named, const char *fmt, Args ...args)
 }
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_TRACE_HH__ */

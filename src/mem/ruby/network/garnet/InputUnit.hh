@@ -43,6 +43,9 @@
 #include "mem/ruby/network/garnet/VirtualChannel.hh"
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 
+namespace gem5
+{
+
 class InputUnit : public Consumer
 {
   public:
@@ -162,5 +165,7 @@ class InputUnit : public Consumer
     std::vector<double> m_num_buffer_writes;
     std::vector<double> m_num_buffer_reads;
 };
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_INPUTUNIT_HH__

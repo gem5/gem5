@@ -32,6 +32,8 @@ from m5.objects.SimpleMemory import *
 class RubySystem(ClockedObject):
     type = 'RubySystem'
     cxx_header = "mem/ruby/system/RubySystem.hh"
+    cxx_class = 'gem5::RubySystem'
+
     randomization = Param.Bool(False,
         "insert random delays on message enqueue times (if True, all message \
          buffers are enforced to have randomization; otherwise, a message \

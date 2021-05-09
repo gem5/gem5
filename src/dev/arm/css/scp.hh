@@ -40,6 +40,9 @@
 
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class Doorbell;
 
 class Scp : public ClockedObject
@@ -54,5 +57,7 @@ class Scp : public ClockedObject
     virtual void raiseInterrupt(const Doorbell *doorbell) = 0;
     virtual void clearInterrupt(const Doorbell *doorbell) = 0;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_CSS_SCP_H__

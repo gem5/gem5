@@ -59,6 +59,9 @@
 #include "sim/core.hh"
 #include "sim/drain.hh"
 
+namespace gem5
+{
+
 /**
  * A high-level queue interface, to be used by both the MSHR queue and
  * the write buffer.
@@ -260,5 +263,7 @@ class Queue : public Drainable, public Named
         return allocated == 0 ? DrainState::Drained : DrainState::Draining;
     }
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_QUEUE_HH__

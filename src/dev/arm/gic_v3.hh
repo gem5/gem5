@@ -45,6 +45,9 @@
 #include "dev/arm/base_gic.hh"
 #include "params/Gicv3.hh"
 
+namespace gem5
+{
+
 class Gicv3CPUInterface;
 class Gicv3Distributor;
 class Gicv3Redistributor;
@@ -160,5 +163,7 @@ class Gicv3 : public BaseGic
 
     void postInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
 };
+
+} // namespace gem5
 
 #endif //__DEV_ARM_GICV3_H__

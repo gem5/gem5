@@ -61,6 +61,9 @@
 #include "mem/token_port.hh"
 #include "params/ProtocolTester.hh"
 
+namespace gem5
+{
+
 class TesterThread;
 class CpuThread;
 class GpuWavefront;
@@ -197,5 +200,7 @@ class ProtocolTester : public ClockedObject
 
     OutputStream* logFile;
 };
+
+} // namespace gem5
 
 #endif /* CPU_TESTERS_PROTOCOL_TESTER_PROTOCOL_TESTER_HH_ */

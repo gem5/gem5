@@ -42,6 +42,9 @@
  * @todo Change comments to match documentation style.
  */
 
+namespace gem5
+{
+
 ///
 /// This class represents the contents of a ".ini" file.
 ///
@@ -215,5 +218,7 @@ class IniFile
     /// Iterate over key/value pairs of the given section.
     void visitSection(const std::string &sectionName, VisitSectionCallback cb);
 };
+
+} // namespace gem5
 
 #endif // __INIFILE_HH__

@@ -36,6 +36,9 @@
 #include "kern/operatingsystem.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 ///
@@ -317,5 +320,7 @@ class Linux : public OperatingSystem
     static const unsigned TGT_WCONTINUED            = 0x00000008;
     static const unsigned TGT_WNOWAIT               = 0x01000000;
 };  // class Linux
+
+} // namespace gem5
 
 #endif // __LINUX_HH__

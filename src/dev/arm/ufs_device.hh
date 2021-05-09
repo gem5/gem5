@@ -160,6 +160,9 @@
 #include "sim/serialize.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 /**
  * Host controller layer: This is your Host controller
  * This layer handles the UFS functionality.
@@ -1232,5 +1235,7 @@ class UFSHostDevice : public DmaDevice
         regUICCommandArg3 = 0x9C
     };
 };
+
+} // namespace gem5
 
 #endif //__DEV_ARM_UFS_DEVICE_HH__

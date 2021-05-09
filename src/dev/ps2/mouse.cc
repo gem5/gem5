@@ -47,6 +47,9 @@
 #include "params/PS2Mouse.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace ps2
 {
 
@@ -172,3 +175,4 @@ PS2Mouse::unserialize(CheckpointIn &cp)
 }
 
 } // namespace ps2
+} // namespace gem5

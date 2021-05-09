@@ -46,6 +46,9 @@
 #include "mem/ruby/network/garnet/Router.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 /*
  * GarnetNetwork sets up the routers and links and collects stats.
  * Default parameters (GarnetNetwork.py) can be overwritten from command line
@@ -613,3 +616,5 @@ GarnetNetwork::functionalWrite(Packet *pkt)
 
     return num_functional_writes;
 }
+
+} // namespace gem5

@@ -44,6 +44,9 @@
 #include "params/PMAChecker.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * Based on the RISC-V ISA privileged specifications
  * V1.11, there is no implementation guidelines on the
@@ -77,5 +80,7 @@ class PMAChecker : public SimObject
 
     void takeOverFrom(PMAChecker *old);
 };
+
+} // namespace gem5
 
 #endif // __ARCH_RISCV_PMA_CHECKER_HH__

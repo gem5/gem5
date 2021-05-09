@@ -39,6 +39,9 @@
 
 #include "params/QoSPolicy.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -57,3 +60,4 @@ Policy::schedule(const PacketPtr pkt)
 }
 
 } // namespace qos
+} // namespace gem5

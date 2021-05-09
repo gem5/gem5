@@ -35,6 +35,9 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
 
+namespace gem5
+{
+
 class SubBlock
 {
   public:
@@ -77,5 +80,7 @@ operator<<(std::ostream& out, const SubBlock& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_COMMON_SUBBLOCK_HH__

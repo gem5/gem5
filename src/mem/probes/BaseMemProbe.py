@@ -41,6 +41,7 @@ class BaseMemProbe(SimObject):
     type = 'BaseMemProbe'
     abstract = True
     cxx_header = "mem/probes/base.hh"
+    cxx_class = 'gem5::BaseMemProbe'
 
     manager = VectorParam.SimObject(Parent.any,
                                     "Probe manager(s) to instrument")

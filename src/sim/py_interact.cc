@@ -30,6 +30,9 @@
 
 #include "sim/py_interact.hh"
 
+namespace gem5
+{
+
 void
 py_interact()
 {
@@ -46,3 +49,4 @@ py_interact()
     Py_DECREF(locals);
 }
 
+} // namespace gem5

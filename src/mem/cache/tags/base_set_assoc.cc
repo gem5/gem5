@@ -49,6 +49,9 @@
 
 #include "base/intmath.hh"
 
+namespace gem5
+{
+
 BaseSetAssoc::BaseSetAssoc(const Params &p)
     :BaseTags(p), allocAssoc(p.assoc), blks(p.size / p.block_size),
      sequentialAccess(p.sequential_access),
@@ -105,3 +108,5 @@ BaseSetAssoc::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
     replacementPolicy->invalidate(src_blk->replacementData);
     replacementPolicy->reset(dest_blk->replacementData);
 }
+
+} // namespace gem5

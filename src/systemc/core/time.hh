@@ -36,7 +36,7 @@ namespace sc_gem5
 extern const char *TimeUnitNames[];
 extern const char *TimeUnitConstantNames[];
 extern double TimeUnitScale[];
-extern Tick TimeUnitFrequency[];
+extern gem5::Tick TimeUnitFrequency[];
 
 } // namespace sc_gem5
 

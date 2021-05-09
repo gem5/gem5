@@ -31,6 +31,9 @@
 
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 std::mutex BaseGlobalEvent::globalQMutex;
 
 BaseGlobalEvent::BaseGlobalEvent(Priority p, Flags f)
@@ -164,3 +167,5 @@ GlobalSyncEvent::description() const
 {
     return "GlobalSyncEvent";
 }
+
+} // namespace gem5

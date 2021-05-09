@@ -37,6 +37,9 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 class BaseRemoteGDB;
 class System;
 class ThreadContext;
@@ -155,5 +158,7 @@ class Workload : public SimObject
     }
     /** @} */
 };
+
+} // namespace gem5
 
 #endif // __SIM_WORKLOAD_HH__

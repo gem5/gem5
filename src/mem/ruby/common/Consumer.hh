@@ -52,6 +52,9 @@
 
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class Consumer
 {
   public:
@@ -97,5 +100,7 @@ operator<<(std::ostream& out, const Consumer& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_COMMON_CONSUMER_HH__

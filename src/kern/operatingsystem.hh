@@ -33,6 +33,9 @@
 
 #include <string>
 
+namespace gem5
+{
+
 class Process;
 class ThreadContext;
 
@@ -114,5 +117,7 @@ class OperatingSystem
                                ThreadContext *tc);
 
 };  // class OperatingSystem
+
+} // namespace gem5
 
 #endif // __OPERATINGSYSTEM_HH__

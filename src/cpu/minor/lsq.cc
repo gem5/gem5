@@ -51,6 +51,9 @@
 #include "debug/Activity.hh"
 #include "debug/MinorMem.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -1796,3 +1799,4 @@ LSQ::threadSnoop(LSQRequestPtr request)
 }
 
 } // namespace minor
+} // namespace gem5

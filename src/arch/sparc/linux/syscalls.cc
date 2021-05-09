@@ -30,6 +30,9 @@
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
 
+namespace gem5
+{
+
 class Process;
 class ThreadContext;
 
@@ -670,3 +673,4 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs = {
 };
 
 } // namespace SparcISA
+} // namespace gem5

@@ -42,6 +42,8 @@ from m5.objects.AbstractMemory import *
 class SimpleMemory(AbstractMemory):
     type = 'SimpleMemory'
     cxx_header = "mem/simple_mem.hh"
+    cxx_class = 'gem5::SimpleMemory'
+
     port = ResponsePort("This port sends responses and receives requests")
     latency = Param.Latency('30ns', "Request to response latency")
     latency_var = Param.Latency('0ns', "Request to response latency variance")

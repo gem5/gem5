@@ -33,6 +33,9 @@
 
 #include "base/loader/raw_image.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -130,3 +133,4 @@ createObjectFile(const std::string &fname, bool raw)
 }
 
 } // namespace loader
+} // namespace gem5

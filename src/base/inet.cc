@@ -50,6 +50,9 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Net, networking);
 namespace networking
 {
@@ -410,3 +413,4 @@ hsplit(const EthPacketPtr &ptr)
 }
 
 } // namespace networking
+} // namespace gem5

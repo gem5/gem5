@@ -39,6 +39,9 @@
 #include "base/compiler.hh"
 #include "mem/cache/compressors/encoders/base.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -181,5 +184,6 @@ class Huffman : public Base
 
 } // namespace encoder
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_ENCODERS_HUFFMAN_HH__

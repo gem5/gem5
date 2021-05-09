@@ -44,6 +44,9 @@
 #include "debug/ExternalPort.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 std::map<std::string, ExternalMaster::Handler *>
     ExternalMaster::portHandlers;
 
@@ -99,3 +102,5 @@ ExternalMaster::registerHandler(const std::string &handler_name,
 {
     portHandlers[handler_name] = handler;
 }
+
+} // namespace gem5

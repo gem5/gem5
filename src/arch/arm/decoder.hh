@@ -52,6 +52,9 @@
 #include "debug/Decode.hh"
 #include "enums/DecoderFlavor.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -218,5 +221,6 @@ class Decoder : public InstDecoder
 };
 
 } // namespace ArmISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_DECODER_HH__

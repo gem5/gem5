@@ -34,6 +34,9 @@
 
 #include "sim/guest_abi/definition.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
@@ -198,5 +201,6 @@ struct Argument<ABI, VarArgs<Types...>>
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __SIM_GUEST_ABI_VARARGS_HH__

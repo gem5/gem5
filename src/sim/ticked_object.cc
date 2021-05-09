@@ -41,6 +41,9 @@
 #include "sim/clocked_object.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 Ticked::Ticked(ClockedObject &object_,
     statistics::Scalar *imported_num_cycles,
     Event::Priority priority) :
@@ -133,3 +136,5 @@ TickedObject::unserialize(CheckpointIn &cp)
     Ticked::unserialize(cp);
     ClockedObject::unserialize(cp);
 }
+
+} // namespace gem5

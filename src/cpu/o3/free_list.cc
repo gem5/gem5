@@ -32,6 +32,9 @@
 #include "base/trace.hh"
 #include "debug/FreeList.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -47,3 +50,4 @@ UnifiedFreeList::UnifiedFreeList(const std::string &_my_name,
 }
 
 } // namespace o3
+} // namespace gem5

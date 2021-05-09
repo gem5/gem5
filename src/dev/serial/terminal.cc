@@ -73,6 +73,9 @@
 #include "dev/platform.hh"
 #include "dev/serial/uart.hh"
 
+namespace gem5
+{
+
 /*
  * Poll event for the listen socket
  */
@@ -356,3 +359,5 @@ Terminal::writeData(uint8_t c)
             isprint(c) ? c : ' ', (int)c);
 
 }
+
+} // namespace gem5

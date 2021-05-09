@@ -49,6 +49,9 @@
 #include "params/X86FsWorkload.hh"
 #include "sim/kernel_workload.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -105,5 +108,6 @@ class FsWorkload : public KernelWorkload
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_FS_WORKLOAD_HH__

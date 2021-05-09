@@ -43,6 +43,9 @@
 #include "arch/generic/types.hh"
 #include "arch/generic/vec_reg.hh"
 
+namespace gem5
+{
+
 class InstResult
 {
   public:
@@ -201,5 +204,7 @@ class InstResult
 
     /** @} */
 };
+
+} // namespace gem5
 
 #endif // __CPU_INST_RES_HH__

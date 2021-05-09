@@ -42,6 +42,9 @@
 #include "arch/arm/regs/misc_types.hh"
 #include "base/bitfield.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 Fault
@@ -834,3 +837,4 @@ VectorCatch::exceptionTrapping(ThreadContext *tc, ExceptionLevel el,
     return false;
 }
 
+} // namespace gem5

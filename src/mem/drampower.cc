@@ -40,6 +40,9 @@
 #include "base/intmath.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 DRAMPower::DRAMPower(const DRAMInterfaceParams &p, bool include_io) :
     powerlib(libDRAMPower(getMemSpec(p), include_io))
 {
@@ -157,3 +160,5 @@ DRAMPower::getDataRate(const DRAMInterfaceParams &p)
         fatal("Got unexpected data rate %d, should be 1 or 2 or 4 or 8\n");
     return data_rate;
 }
+
+} // namespace gem5

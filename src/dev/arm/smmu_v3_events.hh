@@ -41,6 +41,9 @@
 #include <base/types.hh>
 #include <sim/eventq.hh>
 
+namespace gem5
+{
+
 class SMMUv3DeviceInterface;
 
 class SMMUDeviceRetryEvent : public Event
@@ -60,5 +63,7 @@ class SMMUDeviceRetryEvent : public Event
     const char *description() const
     { return "DeviceRetryEvent"; }
 };
+
+} // namespace gem5
 
 #endif /* __DEV_ARM_SMMU_V3_EVENTS_HH__ */

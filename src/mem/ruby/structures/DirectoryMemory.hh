@@ -51,6 +51,9 @@
 #include "params/RubyDirectoryMemory.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class DirectoryMemory : public SimObject
 {
   public:
@@ -113,5 +116,7 @@ operator<<(std::ostream& out, const DirectoryMemory& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_STRUCTURES_DIRECTORYMEMORY_HH__

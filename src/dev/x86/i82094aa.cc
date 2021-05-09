@@ -39,6 +39,9 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 X86ISA::I82094AA::I82094AA(const Params &p)
     : BasicPioDevice(p, 20), extIntPic(p.external_int_pic),
       lowestPriorityOffset(0),
@@ -291,3 +294,5 @@ X86ISA::I82094AA::unserialize(CheckpointIn &cp)
         redirTable[i] = (RedirTableEntry)redirTableArray[i];
     }
 }
+
+} // namespace gem5

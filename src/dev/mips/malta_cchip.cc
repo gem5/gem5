@@ -48,6 +48,9 @@
 #include "params/MaltaCChip.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 MaltaCChip::MaltaCChip(const Params &p)
     : BasicPioDevice(p, 0xfffffff), malta(p.malta)
 {
@@ -139,3 +142,5 @@ void
 MaltaCChip::unserialize(CheckpointIn &cp)
 {
 }
+
+} // namespace gem5

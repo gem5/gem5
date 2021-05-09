@@ -38,6 +38,9 @@
 #include "base/types.hh"
 #include "config/the_gpu_isa.hh"
 
+namespace gem5
+{
+
 class ComputeUnit;
 class Wavefront;
 
@@ -62,5 +65,7 @@ class GPUExecContext
     Wavefront *wf;
     TheGpuISA::GPUISA *gpuISA;
 };
+
+} // namespace gem5
 
 #endif // __GPU_EXEC_CONTEXT_HH__

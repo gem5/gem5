@@ -35,6 +35,8 @@
 #include "base/gtest/logging.hh"
 #include "base/stats/storage.hh"
 
+using namespace gem5;
+
 // Instantiate the fake class to have a valid curTick of 0
 GTestTickHandler tickHandler;
 

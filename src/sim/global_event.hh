@@ -36,6 +36,9 @@
 #include "base/barrier.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 /**
  * @file sim/global_event.hh
  * Global events and related declarations.
@@ -233,5 +236,6 @@ class GlobalSyncEvent : public BaseGlobalEventTemplate<GlobalSyncEvent>
     Tick repeat;
 };
 
+} // namespace gem5
 
 #endif // __SIM_GLOBAL_EVENT_HH__

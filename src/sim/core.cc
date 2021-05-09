@@ -38,6 +38,9 @@
 #include "base/logging.hh"
 #include "base/output.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(SimClock, sim_clock);
 namespace sim_clock
 {
@@ -158,3 +161,4 @@ doExitCleanup()
     std::cout.flush();
 }
 
+} // namespace gem5

@@ -41,6 +41,9 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 namespace VegaISA
 {
     class VEGAGPUStaticInst : public GPUStaticInst
@@ -82,4 +85,6 @@ namespace VegaISA
     }; // class VEGAGPUStaticInst
 
 } // namespace VegaISA
+} // namespace gem5
+
 #endif //__ARCH_VEGA_INSTS_GPU_STATIC_INST_HH__

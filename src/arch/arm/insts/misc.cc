@@ -40,6 +40,9 @@
 
 #include "cpu/reg_class.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 std::string
@@ -402,3 +405,5 @@ McrMrcImplDefined::generateDisassembly(
 {
     return csprintf("%-10s (implementation defined)", mnemonic);
 }
+
+} // namespace gem5

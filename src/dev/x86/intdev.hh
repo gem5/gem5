@@ -49,6 +49,9 @@
 #include "mem/tport.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -148,5 +151,6 @@ class IntRequestPort : public QueuedRequestPort
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif //__DEV_X86_INTDEV_HH__

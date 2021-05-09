@@ -33,6 +33,7 @@ from m5.objects.PciDevice import PciDevice, PciMemBar
 class CopyEngine(PciDevice):
     type = 'CopyEngine'
     cxx_header = "dev/pci/copy_engine.hh"
+    cxx_class = 'gem5::CopyEngine'
     dma = VectorRequestPort("Copy engine DMA port")
     VendorID = 0x8086
     DeviceID = 0x1a38

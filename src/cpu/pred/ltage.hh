@@ -57,6 +57,9 @@
 #include "cpu/pred/tage.hh"
 #include "params/LTAGE.hh"
 
+namespace gem5
+{
+
 class LTAGE : public TAGE
 {
   public:
@@ -108,5 +111,7 @@ class LTAGE : public TAGE
     bool predict(
         ThreadID tid, Addr branch_pc, bool cond_branch, void* &b) override;
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_LTAGE_HH__

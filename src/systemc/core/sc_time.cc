@@ -48,9 +48,9 @@ void
 set(::sc_core::sc_time *time, double d, ::sc_core::sc_time_unit tu)
 {
     if (d != 0)
-        fixClockFrequency();
+        gem5::fixClockFrequency();
 
-    double scale = sc_gem5::TimeUnitScale[tu] * sim_clock::as_float::s;
+    double scale = sc_gem5::TimeUnitScale[tu] * gem5::sim_clock::as_float::s;
     // Accellera claims there is a linux bug, and that these next two
     // lines work around them.
     volatile double tmp = d * scale + 0.5;
@@ -94,13 +94,13 @@ sc_time::sc_time(double d, const char *unit)
 
 sc_time::sc_time(double d, bool scale)
 {
-    double scaler = scale ? defaultUnit : sim_clock::as_float::Hz;
+    double scaler = scale ? defaultUnit : gem5::sim_clock::as_float::Hz;
     set(this, d * scaler, SC_SEC);
 }
 
 sc_time::sc_time(sc_dt::uint64 v, bool scale)
 {
-    double scaler = scale ? defaultUnit : sim_clock::as_float::Hz;
+    double scaler = scale ? defaultUnit : gem5::sim_clock::as_float::Hz;
     set(this, static_cast<double>(v) * scaler, SC_SEC);
 }
 
@@ -125,7 +125,7 @@ sc_time::to_double() const
 double
 sc_time::to_seconds() const
 {
-    return to_double() * sim_clock::as_float::Hz;
+    return to_double() * gem5::sim_clock::as_float::Hz;
 }
 
 const std::string
@@ -210,7 +210,7 @@ sc_time
 sc_time::from_value(sc_dt::uint64 u)
 {
     if (u)
-        fixClockFrequency();
+        gem5::fixClockFrequency();
     sc_time t;
     t.val = u;
     return t;
@@ -309,7 +309,7 @@ sc_set_time_resolution(double d, sc_time_unit tu)
 
     // This won't detect the timescale being fixed outside of systemc, but
     // it's at least some protection.
-    if (clockFrequencyFixed()) {
+    if (gem5::clockFrequencyFixed()) {
         SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_,
                 "sc_time object(s) constructed");
     }
@@ -329,9 +329,9 @@ sc_set_time_resolution(double d, sc_time_unit tu)
         tu = (sc_time_unit)(tu - 1);
     }
 
-    Tick ticks_per_second =
-        sc_gem5::TimeUnitFrequency[tu] / static_cast<Tick>(d);
-    setClockFrequency(ticks_per_second);
+    gem5::Tick ticks_per_second =
+        sc_gem5::TimeUnitFrequency[tu] / static_cast<gem5::Tick>(d);
+    gem5::setClockFrequency(ticks_per_second);
     specified = true;
 }
 
@@ -344,7 +344,7 @@ sc_get_time_resolution()
 const sc_time &
 sc_max_time()
 {
-    static const sc_time MaxScTime = sc_time::from_value(MaxTick);
+    static const sc_time MaxScTime = sc_time::from_value(gem5::MaxTick);
     return MaxScTime;
 }
 
@@ -368,7 +368,7 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
     }
     // This won't detect the timescale being fixed outside of systemc, but
     // it's at least some protection.
-    if (clockFrequencyFixed()) {
+    if (gem5::clockFrequencyFixed()) {
         SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_,
                 "sc_time object(s) constructed");
     }
@@ -377,7 +377,7 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
     defaultUnit = d * sc_gem5::TimeUnitScale[tu];
     specified = true;
 
-    double resolution = sim_clock::as_float::Hz;
+    double resolution = gem5::sim_clock::as_float::Hz;
     if (resolution == 0.0)
         resolution = sc_gem5::TimeUnitScale[SC_PS];
     if (defaultUnit < resolution) {
@@ -398,7 +398,7 @@ sc_time_tuple::sc_time_tuple(const sc_time &t) :
     if (!t.value())
         return;
 
-    Tick frequency = sim_clock::Frequency;
+    gem5::Tick frequency = gem5::sim_clock::Frequency;
 
     // Shrink the frequency by scaling down the time period, ie converting
     // it from cycles per second to cycles per millisecond, etc.
@@ -408,7 +408,7 @@ sc_time_tuple::sc_time_tuple(const sc_time &t) :
     }
 
     // Convert the frequency into a period.
-    Tick period;
+    gem5::Tick period;
     if (frequency > 1) {
         _unit = (sc_time_unit)((int)_unit - 1);
         period = 1000 / frequency;

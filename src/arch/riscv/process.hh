@@ -37,6 +37,9 @@
 #include "sim/process.hh"
 #include "sim/syscall_abi.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -73,5 +76,7 @@ class RiscvProcess32 : public RiscvProcess
   protected:
     void initState() override;
 };
+
+} // namespace gem5
 
 #endif // __RISCV_PROCESS_HH__

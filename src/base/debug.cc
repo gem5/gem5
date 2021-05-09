@@ -49,6 +49,9 @@
 #include "base/cprintf.hh"
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 namespace Debug {
 
 //
@@ -178,3 +181,5 @@ dumpDebugFlags(std::ostream &os)
             ccprintf(os, "%s\n", f->name());
     }
 }
+
+} // namespace gem5

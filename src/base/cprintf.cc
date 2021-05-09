@@ -34,6 +34,9 @@
 
 #include "base/compiler.hh"
 
+namespace gem5
+{
+
 namespace cp
 {
 
@@ -313,3 +316,4 @@ Print::endArgs()
 }
 
 } // namespace cp
+} // namespace gem5

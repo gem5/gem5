@@ -41,6 +41,9 @@
 #include "base/compiler.hh"
 #include "mem/qos/turnaround_policy.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -69,5 +72,6 @@ class TurnaroundPolicyIdeal: public TurnaroundPolicy
 };
 
 } // namespace qos
+} // namespace gem5
 
 #endif /* __MEM_QOS_TURNAROUND_POLICY_IDEAL_HH_ */

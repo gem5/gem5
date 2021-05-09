@@ -39,6 +39,9 @@
 #include "params/OpDesc.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 ////////////////////////////////////////////////////////////////////////////
 //
 //  The SimObjects we use to get the FU information into the simulator
@@ -117,5 +120,7 @@ class FuncUnit
     unsigned &opLatency(OpClass capability);
     bool isPipelined(OpClass capability);
 };
+
+} // namespace gem5
 
 #endif // __FU_POOL_HH__

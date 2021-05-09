@@ -50,6 +50,9 @@
 #include "base/types.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 class BaseCache;
 
 /**
@@ -166,5 +169,7 @@ class QueueEntry : public Packet::SenderState, public Named
      */
     virtual Target* getTarget() = 0;
 };
+
+} // namespace gem5
 
 #endif // __MEM_CACHE_QUEUE_ENTRY_HH__

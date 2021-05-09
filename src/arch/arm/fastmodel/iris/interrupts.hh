@@ -32,6 +32,9 @@
 #include "arch/generic/interrupts.hh"
 #include "params/IrisInterrupts.hh"
 
+namespace gem5
+{
+
 namespace Iris
 {
 
@@ -53,5 +56,6 @@ class Interrupts : public BaseInterrupts
 };
 
 } // namespace Iris
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_IRIS_INTERRUPTS_HH__

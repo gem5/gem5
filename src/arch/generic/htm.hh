@@ -112,6 +112,9 @@
 
 #include "mem/htm.hh"
 
+namespace gem5
+{
+
 /**
  * @file
  *
@@ -210,5 +213,7 @@ class BaseHTMCheckpoint
     virtual void reset() { _valid = false; }
     bool _valid;
 };
+
+} // namespace gem5
 
 #endif // __ARCH_GENERIC_HTM_HH__

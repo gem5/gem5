@@ -31,6 +31,9 @@
 #include <string>
 #include <vector>
 
+namespace gem5
+{
+
 bool
 split_first(const std::string &s, std::string &lhs, std::string &rhs, char c)
 {
@@ -98,3 +101,5 @@ tokenize(std::vector<std::string>& v, const std::string &s, char token,
 
     v.push_back(s.substr(first));
 }
+
+} // namespace gem5

@@ -49,6 +49,9 @@
 #include "mem/ruby/system/RubyPort.hh"
 #include "params/RubyPortProxy.hh"
 
+namespace gem5
+{
+
 class RubyPortProxy : public RubyPort
 {
 
@@ -108,5 +111,7 @@ class RubyPortProxy : public RubyPort
     void descheduleDeadlockEvent() { }
 
 };
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_SYSTEM_RUBYPORTPROXY_HH__

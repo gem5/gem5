@@ -44,6 +44,7 @@ def x86IOAddress(port):
 class SouthBridge(SimObject):
     type = 'SouthBridge'
     cxx_header = "dev/x86/south_bridge.hh"
+    cxx_class = 'gem5::SouthBridge'
 
     pic1 = Param.I8259(I8259(pio_addr=x86IOAddress(0x20), mode='I8259Master'),
             "Master PIC")

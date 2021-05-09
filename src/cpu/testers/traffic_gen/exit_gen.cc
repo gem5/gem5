@@ -41,6 +41,9 @@
 #include "exit_gen.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 void
 ExitGen::enter()
 {
@@ -62,3 +65,5 @@ ExitGen::nextPacketTick(bool elastic, Tick delay) const
 {
     return MaxTick;
 }
+
+} // namespace gem5

@@ -43,6 +43,9 @@
 #include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/protocol/RubyRequestType.hh"
 
+namespace gem5
+{
+
 class Sequencer;
 
 /*!
@@ -126,5 +129,7 @@ operator<<(std::ostream& out, const TraceRecord& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif //__MEM_RUBY_SYSTEM_CACHERECORDER_HH__

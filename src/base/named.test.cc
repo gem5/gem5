@@ -30,6 +30,8 @@
 
 #include "base/named.hh"
 
+using namespace gem5;
+
 /** Test if a Named instance has the name it is assigned. */
 TEST(NamedTest, Name)
 {

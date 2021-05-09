@@ -40,6 +40,9 @@
 
 #include "arch/arm/insts/static_inst.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 // Branch to a target computed with an immediate
@@ -214,6 +217,7 @@ class BranchImmImmReg64 : public ArmStaticInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
-}
+} // namespace ArmISA
+} // namespace gem5
 
 #endif //__ARCH_ARM_INSTS_BRANCH_HH__

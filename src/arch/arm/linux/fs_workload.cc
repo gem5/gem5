@@ -57,6 +57,9 @@
 #include "mem/physical.hh"
 #include "sim/stat_control.hh"
 
+namespace gem5
+{
+
 using namespace linux;
 
 namespace ArmISA
@@ -361,3 +364,4 @@ DumpStats::process(ThreadContext *tc)
 }
 
 } // namespace ArmISA
+} // namespace gem5

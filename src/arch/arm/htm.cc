@@ -41,6 +41,9 @@
 #include "arch/arm/regs/misc.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 void
 ArmISA::HTMCheckpoint::reset()
 {
@@ -164,3 +167,5 @@ ArmISA::HTMCheckpoint::restore(ThreadContext *tc, HtmFailureFaultCause cause)
 
     BaseHTMCheckpoint::restore(tc, cause);
 }
+
+} // namespace gem5

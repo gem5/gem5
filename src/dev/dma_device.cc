@@ -52,6 +52,9 @@
 #include "sim/clocked_object.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 DmaPort::DmaPort(ClockedObject *dev, System *s,
                  uint32_t sid, uint32_t ssid)
     : RequestPort(dev->name() + ".dma", dev),
@@ -597,3 +600,5 @@ DmaReadFifo::DmaDoneEvent::process()
     _done = true;
     parent->dmaDone();
 }
+
+} // namespace gem5

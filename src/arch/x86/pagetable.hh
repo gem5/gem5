@@ -48,6 +48,9 @@
 #include "mem/port_proxy.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace X86ISA
@@ -196,6 +199,8 @@ namespace X86ISA
         PageTableEntry pte;
         Addr entryAddr;
     };
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif

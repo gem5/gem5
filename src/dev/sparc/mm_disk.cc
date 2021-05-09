@@ -43,6 +43,9 @@
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 MmDisk::MmDisk(const Params &p)
     : BasicPioDevice(p, p.image->size() * SectorSize),
       image(p.image), curSector((off_t)-1), dirty(false)
@@ -182,3 +185,5 @@ MmDisk::serialize(CheckpointOut &cp) const
     }
     ClockedObject::serialize(cp);
 }
+
+} // namespace gem5

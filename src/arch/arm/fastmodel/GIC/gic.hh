@@ -43,6 +43,9 @@
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/sc_port_wrapper.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
@@ -138,5 +141,6 @@ class GIC : public BaseGic
 };
 
 } // namespace fastmodel
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_GIC_GIC_HH__

@@ -31,6 +31,9 @@
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 using namespace PowerISA;
 
 const std::string &
@@ -168,3 +171,5 @@ BranchRegCondOp::generateDisassembly(
 
     return ss.str();
 }
+
+} // namespace gem5

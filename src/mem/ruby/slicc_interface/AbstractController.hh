@@ -62,6 +62,9 @@
 #include "params/RubyController.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class Network;
 class GPUCoalescer;
 class DMASequencer;
@@ -397,5 +400,7 @@ class AbstractController : public ClockedObject, public Consumer
     } stats;
 
 };
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

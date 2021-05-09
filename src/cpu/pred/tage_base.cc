@@ -42,6 +42,9 @@
 #include "debug/Fetch.hh"
 #include "debug/Tage.hh"
 
+namespace gem5
+{
+
 TAGEBase::TAGEBase(const TAGEBaseParams &p)
    : SimObject(p),
      logRatioBiModalHystEntries(p.logRatioBiModalHystEntries),
@@ -798,3 +801,5 @@ TAGEBase::getSizeInBits() const {
     bits += logUResetPeriod;
     return bits;
 }
+
+} // namespace gem5

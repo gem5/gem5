@@ -42,4 +42,6 @@ from m5.proxy import *
 class ProbeListenerObject(SimObject):
     type = 'ProbeListenerObject'
     cxx_header = 'sim/probe/probe.hh'
+    cxx_class = 'gem5::ProbeListenerObject'
+
     manager = Param.SimObject(Parent.any, "ProbeManager")

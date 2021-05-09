@@ -46,12 +46,14 @@ from m5.SimObject import SimObject
 class TimingExpr(SimObject):
     type = 'TimingExpr'
     cxx_header = 'cpu/timing_expr.hh'
+    cxx_class = 'gem5::TimingExpr'
     abstract = True;
 
 class TimingExprLiteral(TimingExpr):
     """Literal 64 bit unsigned value"""
     type = 'TimingExprLiteral'
     cxx_header = 'cpu/timing_expr.hh'
+    cxx_class = 'gem5::TimingExprLiteral'
 
     value = Param.UInt64("literal value")
 
@@ -67,6 +69,7 @@ class TimingExprSrcReg(TimingExpr):
     """Find the source register number from the current inst"""
     type = 'TimingExprSrcReg'
     cxx_header = 'cpu/timing_expr.hh'
+    cxx_class = 'gem5::TimingExprSrcReg'
 
     # index = Param.Unsigned("index into inst src regs")
     index = Param.Unsigned("index into inst src regs")
@@ -79,6 +82,7 @@ class TimingExprReadIntReg(TimingExpr):
     """Read an architectural register"""
     type = 'TimingExprReadIntReg'
     cxx_header = 'cpu/timing_expr.hh'
+    cxx_class = 'gem5::TimingExprReadIntReg'
 
     reg = Param.TimingExpr("register raw index to read")
 
@@ -90,6 +94,7 @@ class TimingExprLet(TimingExpr):
     """Block of declarations"""
     type = 'TimingExprLet'
     cxx_header = 'cpu/timing_expr.hh'
+    cxx_class = 'gem5::TimingExprLet'
 
     defns = VectorParam.TimingExpr("expressions for bindings")
     expr = Param.TimingExpr("body expression")
@@ -103,6 +108,7 @@ class TimingExprRef(TimingExpr):
     """Value of a bound sub-expression"""
     type = 'TimingExprRef'
     cxx_header = 'cpu/timing_expr.hh'
+    cxx_class = 'gem5::TimingExprRef'
 
     index = Param.Unsigned("expression index")
 
@@ -134,6 +140,7 @@ class TimingExprUn(TimingExpr):
     """Unary operator"""
     type = 'TimingExprUn'
     cxx_header = 'cpu/timing_expr.hh'
+    cxx_class = 'gem5::TimingExprUn'
 
     op = Param.TimingExprOp("operator")
     arg = Param.TimingExpr("expression")
@@ -147,6 +154,7 @@ class TimingExprBin(TimingExpr):
     """Binary operator"""
     type = 'TimingExprBin'
     cxx_header = 'cpu/timing_expr.hh'
+    cxx_class = 'gem5::TimingExprBin'
 
     op = Param.TimingExprOp("operator")
     left = Param.TimingExpr("LHS expression")
@@ -162,6 +170,7 @@ class TimingExprIf(TimingExpr):
     """If-then-else operator"""
     type = 'TimingExprIf'
     cxx_header = 'cpu/timing_expr.hh'
+    cxx_class = 'gem5::TimingExprIf'
 
     cond = Param.TimingExpr("condition expression")
     trueExpr = Param.TimingExpr("true expression")

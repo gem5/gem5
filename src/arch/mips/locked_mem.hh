@@ -55,6 +55,9 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 template <class XC>
@@ -146,5 +149,6 @@ globalClearExclusive(XC *xc)
 }
 
 } // namespace MipsISA
+} // namespace gem5
 
 #endif

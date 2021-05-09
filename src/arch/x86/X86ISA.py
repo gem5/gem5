@@ -38,7 +38,7 @@ from m5.params import *
 
 class X86ISA(BaseISA):
     type = 'X86ISA'
-    cxx_class = 'X86ISA::ISA'
+    cxx_class = 'gem5::X86ISA::ISA'
     cxx_header = "arch/x86/isa.hh"
 
     vendor_string = Param.String("M5 Simulator",

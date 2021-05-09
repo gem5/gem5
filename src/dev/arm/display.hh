@@ -40,6 +40,9 @@
 
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct DisplayParams;
 
 class Display : public SimObject
@@ -47,5 +50,7 @@ class Display : public SimObject
   public:
     Display(const DisplayParams &p);
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_DISPLAY_H__

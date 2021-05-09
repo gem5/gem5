@@ -163,6 +163,9 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 static bool
@@ -357,3 +360,5 @@ RemoteGDB::gdbRegs()
     else
         return &regCache32;
 }
+
+} // namespace gem5

@@ -30,6 +30,9 @@
 
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 EtherDevice::EtherDeviceStats::EtherDeviceStats(statistics::Group *parent)
     : statistics::Group(parent, "EtherDevice"),
       ADD_STAT(postedInterrupts, statistics::units::Count::get(),
@@ -326,3 +329,5 @@ EtherDevice::EtherDeviceStats::EtherDeviceStats(statistics::Group *parent)
                       totalTxOk + totalTxIdle + totalTxDesc +
                       totalRxOrn) / postedInterrupts;
 }
+
+} // namespace gem5

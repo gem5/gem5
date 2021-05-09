@@ -55,6 +55,9 @@
 #include "sim/clocked_object.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class BaseTLB;
 class Packet;
 class ThreadContext;
@@ -434,5 +437,7 @@ namespace X86ISA
         } stats;
     };
 }
+
+} // namespace gem5
 
 #endif // __GPU_TLB_HH__

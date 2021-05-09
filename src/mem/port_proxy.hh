@@ -63,6 +63,9 @@
 #include "mem/protocol/functional.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 class RequestPort;
 class ThreadContext;
 
@@ -311,5 +314,7 @@ PortProxy::write(Addr address, T data, ByteOrder byte_order) const
     data = htog(data, byte_order);
     writeBlob(address, &data, sizeof(T));
 }
+
+} // namespace gem5
 
 #endif // __MEM_PORT_PROXY_HH__

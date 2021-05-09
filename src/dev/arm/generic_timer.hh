@@ -63,6 +63,9 @@
 ///     G6.2  - The AArch32 view of the Generic Timer
 ///     I2 - System Level Implementation of the Generic Timer
 
+namespace gem5
+{
+
 class Checkpoint;
 struct SystemCounterParams;
 struct GenericTimerParams;
@@ -584,5 +587,7 @@ class GenericTimerMem : public PioDevice
 
     ArmSystem &system;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_GENERIC_TIMER_HH__

@@ -42,6 +42,9 @@
 #include "cpu/minor/pipeline.hh"
 #include "debug/Decode.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -350,3 +353,4 @@ Decode::minorTrace() const
 }
 
 } // namespace minor
+} // namespace gem5

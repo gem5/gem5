@@ -39,6 +39,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -131,3 +134,4 @@ ImageFileData::~ImageFileData()
 }
 
 } // namespace loader
+} // namespace gem5

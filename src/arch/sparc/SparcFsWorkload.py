@@ -31,4 +31,4 @@ from m5.objects.Workload import Workload
 class SparcFsWorkload(Workload):
     type = 'SparcFsWorkload'
     cxx_header = 'arch/sparc/fs_workload.hh'
-    cxx_class = 'SparcISA::FsWorkload'
+    cxx_class = 'gem5::SparcISA::FsWorkload'

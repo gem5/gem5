@@ -48,6 +48,9 @@
 #include "params/ArmNativeTrace.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 namespace Trace {
@@ -217,3 +220,4 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
 }
 
 } // namespace Trace
+} // namespace gem5

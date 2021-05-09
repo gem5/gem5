@@ -39,6 +39,9 @@
 #include "mem/cache/tags/sector_tags.hh"
 #include "mem/cache/tags/super_blk.hh"
 
+namespace gem5
+{
+
 class BaseCache;
 class CacheBlk;
 struct CompressedTagsParams;
@@ -126,5 +129,7 @@ class CompressedTags : public SectorTags
      */
     bool anyBlk(std::function<bool(CacheBlk &)> visitor) override;
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_TAGS_COMPRESSED_TAGS_HH__

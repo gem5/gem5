@@ -37,6 +37,9 @@
 #include "mem/ruby/network/garnet/Router.hh"
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 
+namespace gem5
+{
+
 OutputUnit::OutputUnit(int id, PortDirection direction, Router *router,
   uint32_t consumerVcs)
   : Consumer(router), m_router(router), m_id(id), m_direction(direction),
@@ -168,3 +171,5 @@ OutputUnit::functionalWrite(Packet *pkt)
 {
     return outBuffer.functionalWrite(pkt);
 }
+
+} // namespace gem5

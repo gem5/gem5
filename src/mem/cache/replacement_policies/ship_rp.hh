@@ -44,6 +44,9 @@
 #include "mem/cache/replacement_policies/brrip_rp.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 struct SHiPRPParams;
 struct SHiPMemRPParams;
 struct SHiPPCRPParams;
@@ -185,5 +188,6 @@ class SHiPPC : public SHiP
 };
 
 } // namespace replacement_policy
+} // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_SHIP_RP_HH__

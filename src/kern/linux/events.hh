@@ -52,6 +52,9 @@
 #include "mem/se_translating_port_proxy.hh"
 #include "sim/guest_abi.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 GEM5_DEPRECATED_NAMESPACE(Linux, linux);
@@ -170,5 +173,6 @@ class SkipUDelay : public Base
 };
 
 } // namespace linux
+} // namespace gem5
 
 #endif // __KERN_LINUX_EVENTS_HH__

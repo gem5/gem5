@@ -33,6 +33,9 @@
 #include "pv_userpayload_extension.h"
 #include "systemc/tlm_bridge/sc_ext.hh"
 
+namespace gem5
+{
+
 namespace {
 
 // According to AbstractMemory::access in mem/abstract_mem.cc, the gem5 memory
@@ -173,3 +176,5 @@ AmbaToTlmBridge64Params::create() const
 {
     return new fastmodel::AmbaToTlmBridge64(name.c_str());
 }
+
+} // namespace gem5

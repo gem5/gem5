@@ -46,6 +46,9 @@
 #include "cpu/translation.hh"
 #include "params/TimingSimpleCPU.hh"
 
+namespace gem5
+{
+
 class TimingSimpleCPU : public BaseSimpleCPU
 {
   public:
@@ -369,5 +372,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
      */
     bool tryCompleteDrain();
 };
+
+} // namespace gem5
 
 #endif // __CPU_SIMPLE_TIMING_HH__

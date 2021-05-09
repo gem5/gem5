@@ -41,6 +41,9 @@
 #include "base/logging.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class GPUDynInst;
 
 typedef std::bitset<std::numeric_limits<unsigned long long>::digits>
@@ -172,5 +175,7 @@ class Float16
         return *(reinterpret_cast<float *>(&val1));
     }
 };
+
+} // namespace gem5
 
 #endif // __MISC_HH__

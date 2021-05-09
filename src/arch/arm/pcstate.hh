@@ -46,6 +46,9 @@
 #include "base/types.hh"
 #include "debug/Decoder.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -417,5 +420,6 @@ class PCState : public GenericISA::UPCState<4>
 };
 
 } // namespace ArmISA
+} // namespace gem5
 
 #endif

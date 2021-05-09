@@ -49,6 +49,9 @@
 #include "cpu/thread_context.hh"
 #include "debug/Checker.hh"
 
+namespace gem5
+{
+
 namespace TheISA
 {
     class Decoder;
@@ -522,5 +525,7 @@ class CheckerThreadContext : public ThreadContext
     }
 
 };
+
+} // namespace gem5
 
 #endif // __CPU_CHECKER_EXEC_CONTEXT_HH__

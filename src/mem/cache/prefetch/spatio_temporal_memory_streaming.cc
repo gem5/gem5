@@ -32,6 +32,9 @@
 #include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/STeMSPrefetcher.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
@@ -249,3 +252,4 @@ STeMS::reconstructSequence(
 }
 
 } // namespace prefetch
+} // namespace gem5

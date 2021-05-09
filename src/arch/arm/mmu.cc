@@ -39,6 +39,9 @@
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlbi_op.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 MMU::MMU(const ArmMMUParams &p)
@@ -128,3 +131,5 @@ MMU::invalidateMiscReg(TLBType type)
         getDTBPtr()->invalidateMiscReg();
     }
 }
+
+} // namespace gem5

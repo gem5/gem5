@@ -51,6 +51,9 @@
 #include "sim/core.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Linux, linux);
 namespace linux
 {
@@ -95,3 +98,4 @@ onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul, uint64_t time)
 }
 
 } // namespace linux
+} // namespace gem5

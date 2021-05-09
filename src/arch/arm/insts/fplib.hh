@@ -51,6 +51,9 @@
 
 #include "arch/arm/regs/misc.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -414,6 +417,8 @@ template <>
 uint32_t fplibDefaultNaN();
 template <>
 uint64_t fplibDefaultNaN();
-}
+
+} // namespace ArmISA
+} // namespace gem5
 
 #endif

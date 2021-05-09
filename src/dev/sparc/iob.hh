@@ -37,6 +37,9 @@
 #include "dev/io_device.hh"
 #include "params/Iob.hh"
 
+namespace gem5
+{
+
 const int  MaxNiagaraProcs = 32;
 // IOB Managment Addresses
 const Addr IntManAddr       = 0x0000;
@@ -139,5 +142,6 @@ class Iob : public PioDevice
     void unserialize(CheckpointIn &cp) override;
 };
 
-#endif //__DEV_SPARC_IOB_HH__
+} // namespace gem5
 
+#endif //__DEV_SPARC_IOB_HH__

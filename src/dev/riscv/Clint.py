@@ -49,6 +49,7 @@ class Clint(BasicPioDevice):
     """
     type = 'Clint'
     cxx_header = 'dev/riscv/clint.hh'
+    cxx_class = 'gem5::Clint'
     int_pin = IntSinkPin('Pin to receive RTC signal')
     pio_size = Param.Addr(0xC000, "PIO Size")
 

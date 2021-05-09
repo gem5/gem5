@@ -33,6 +33,9 @@
 #include "cpu/static_inst.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 using namespace MipsISA;
 
 int32_t
@@ -1185,3 +1188,5 @@ MipsISA::readDSPControl(uint32_t *dspctl, uint32_t mask)
 
     return *dspctl & fmask;
 }
+
+} // namespace gem5

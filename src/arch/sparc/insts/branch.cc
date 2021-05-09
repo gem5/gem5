@@ -33,6 +33,9 @@
 // Branch instructions
 //
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -95,4 +98,5 @@ BranchDisp::generateDisassembly(
     return response.str();
 }
 
-}
+} // namespace SparcISA
+} // namespace gem5

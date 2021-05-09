@@ -32,6 +32,9 @@
 #include "base/trace.hh"
 #include "cpu/timebuf.hh"
 
+namespace gem5
+{
+
 /**
  * ActivityRecorder helper class that informs the CPU if it can switch
  * over to being idle or not.  It works by having a time buffer as
@@ -134,5 +137,7 @@ class ActivityRecorder
     /** Records which stages are active/inactive. */
     bool *stageActive;
 };
+
+} // namespace gem5
 
 #endif // __CPU_ACTIVITY_HH__

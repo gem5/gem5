@@ -51,6 +51,9 @@ extern "C"
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 const char* PngWriter::_imgExtension = "png";
 
 /**
@@ -172,3 +175,4 @@ PngWriter::write(std::ostream &png) const
     png_write_end(pngPtr, NULL);
 }
 
+} // namespace gem5

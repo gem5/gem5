@@ -43,6 +43,9 @@
 
 #include "params/ArmMMU.hh"
 
+namespace gem5
+{
+
 namespace ArmISA {
 
 class MMU : public BaseMMU
@@ -168,7 +171,7 @@ getMMUPtr(T *tc)
     return mmu;
 }
 
-
 } // namespace ArmISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_MMU_HH__

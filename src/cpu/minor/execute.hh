@@ -56,6 +56,9 @@
 #include "cpu/minor/pipe_data.hh"
 #include "cpu/minor/scoreboard.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -361,5 +364,6 @@ class Execute : public Named
 };
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_EXECUTE_HH__ */

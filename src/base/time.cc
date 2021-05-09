@@ -38,6 +38,9 @@
 #include "sim/core.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 void
 Time::_set(bool monotonic)
 {
@@ -179,3 +182,4 @@ mkutctime(struct tm *time)
     return ret;
 }
 
+} // namespace gem5

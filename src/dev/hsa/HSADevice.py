@@ -37,6 +37,8 @@ from m5.objects.Device import DmaDevice
 class HSAPacketProcessor(DmaDevice):
     type = 'HSAPacketProcessor'
     cxx_header = 'dev/hsa/hsa_packet_processor.hh'
+    cxx_class = 'gem5::HSAPacketProcessor'
+
     pioAddr = Param.Addr("doorbell physical address")
     numHWQueues = Param.Int("Number of HW queues")
     # See:

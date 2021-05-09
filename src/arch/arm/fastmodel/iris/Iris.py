@@ -46,30 +46,30 @@ from m5.objects.BaseMMU import BaseMMU
 
 class IrisTLB(BaseTLB):
     type = 'IrisTLB'
-    cxx_class = 'Iris::TLB'
+    cxx_class = 'gem5::Iris::TLB'
     cxx_header = 'arch/arm/fastmodel/iris/tlb.hh'
 
 class IrisMMU(BaseMMU):
     type = 'IrisMMU'
-    cxx_class = 'Iris::MMU'
+    cxx_class = 'gem5::Iris::MMU'
     cxx_header = 'arch/arm/fastmodel/iris/mmu.hh'
     itb = IrisTLB()
     dtb = IrisTLB()
 
 class IrisInterrupts(BaseInterrupts):
     type = 'IrisInterrupts'
-    cxx_class = 'Iris::Interrupts'
+    cxx_class = 'gem5::Iris::Interrupts'
     cxx_header = 'arch/arm/fastmodel/iris/interrupts.hh'
 
 class IrisISA(BaseISA):
     type = 'IrisISA'
-    cxx_class = 'Iris::ISA'
+    cxx_class = 'gem5::Iris::ISA'
     cxx_header = 'arch/arm/fastmodel/iris/isa.hh'
 
 class IrisBaseCPU(BaseCPU):
     type = 'IrisBaseCPU'
     abstract = True
-    cxx_class = 'Iris::BaseCPU'
+    cxx_class = 'gem5::Iris::BaseCPU'
     cxx_header = 'arch/arm/fastmodel/iris/cpu.hh'
 
     @classmethod

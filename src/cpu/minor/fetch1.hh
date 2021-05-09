@@ -54,6 +54,9 @@
 #include "cpu/minor/pipe_data.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -411,5 +414,6 @@ class Fetch1 : public Named
 };
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_FETCH1_HH__ */

@@ -43,6 +43,9 @@
 #include "base/statistics.hh"
 #include "base/stats/group.hh"
 
+namespace gem5
+{
+
 class ComputeUnit;
 class ScoreboardCheckToSchedule;
 class Wavefront;
@@ -106,5 +109,7 @@ class ScoreboardCheckStage
         statistics::Vector stallCycles;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __SCOREBOARD_CHECK_STAGE_HH__

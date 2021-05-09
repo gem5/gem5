@@ -32,6 +32,9 @@
 #include "base/compiler.hh"
 #include "base/loader/image_file.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -73,5 +76,6 @@ class DtbFile : public ImageFile
 };
 
 } // namespace loader
+} // namespace gem5
 
 #endif //__BASE_LOADER_DTB_FILE_HH__

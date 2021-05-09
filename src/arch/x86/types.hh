@@ -46,6 +46,9 @@
 #include "base/bitunion.hh"
 #include "base/cprintf.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -287,16 +290,27 @@ operator == (const ExtMachInst &emi1, const ExtMachInst &emi2)
     return true;
 }
 
-}
+} // namespace X86ISA
+
+// These two functions allow ExtMachInst to be used with SERIALIZE_SCALAR
+// and UNSERIALIZE_SCALAR.
+template <>
+void paramOut(CheckpointOut &cp, const std::string &name,
+        const X86ISA::ExtMachInst &machInst);
+template <>
+void paramIn(CheckpointIn &cp, const std::string &name,
+        X86ISA::ExtMachInst &machInst);
+
+} // namespace gem5
 
 namespace std
 {
 
 template<>
-struct hash<X86ISA::ExtMachInst>
+struct hash<gem5::X86ISA::ExtMachInst>
 {
     size_t
-    operator()(const X86ISA::ExtMachInst &emi) const
+    operator()(const gem5::X86ISA::ExtMachInst &emi) const
     {
         return (((uint64_t)emi.legacy << 48) |
                 ((uint64_t)emi.rex << 40) |
@@ -312,15 +326,6 @@ struct hash<X86ISA::ExtMachInst>
     };
 };
 
-}
-
-// These two functions allow ExtMachInst to be used with SERIALIZE_SCALAR
-// and UNSERIALIZE_SCALAR.
-template <>
-void paramOut(CheckpointOut &cp, const std::string &name,
-        const X86ISA::ExtMachInst &machInst);
-template <>
-void paramIn(CheckpointIn &cp, const std::string &name,
-        X86ISA::ExtMachInst &machInst);
+} // namespace std
 
 #endif // __ARCH_X86_TYPES_HH__

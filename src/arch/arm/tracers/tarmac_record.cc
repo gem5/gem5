@@ -42,6 +42,9 @@
 #include "arch/arm/insts/static_inst.hh"
 #include "tarmac_tracer.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 namespace Trace {
@@ -461,3 +464,4 @@ TarmacTracerRecord::TraceRegEntry::print(
 }
 
 } // namespace Trace
+} // namespace gem5

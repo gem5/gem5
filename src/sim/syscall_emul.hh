@@ -114,6 +114,9 @@
 #define CMSG_ALIGN(n) _ALIGN(n)
 #endif
 
+namespace gem5
+{
+
 //////////////////////////////////////////////////////////////////////
 //
 // The following emulation functions are generic enough that they
@@ -2626,4 +2629,7 @@ schedGetaffinityFunc(SyscallDesc *desc, ThreadContext *tc,
     return -1;
 #endif
 }
+
+} // namespace gem5
+
 #endif // __SIM_SYSCALL_EMUL_HH__

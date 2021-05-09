@@ -37,6 +37,9 @@
 #include <string>
 #include <vector>
 
+namespace gem5
+{
+
 /**
  * ObjectMatch contains a vector of expressions. ObjectMatch can then be
  * queried, via ObjectMatch.match(std::string), to check if a string matches
@@ -69,5 +72,6 @@ class ObjectMatch
     }
 };
 
-#endif // __BASE_MATCH_HH__
+} // namespace gem5
 
+#endif // __BASE_MATCH_HH__

@@ -39,6 +39,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 const DisplayTimings DisplayTimings::vga(
     640, 480,
     48, 96, 16,
@@ -355,3 +358,5 @@ BasePixelPump::PixelEvent::resume()
     suspended = false;
     relativeTick = 0;
 }
+
+} // namespace gem5

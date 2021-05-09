@@ -39,6 +39,9 @@
 #include "sim/system.hh"
 #include "sim/vma.hh"
 
+namespace gem5
+{
+
 // The OS methods are called statically. Instantiate the random number
 // generator for access to /dev/urandom here.
 Random Linux::random;
@@ -130,3 +133,5 @@ Linux::devRandom(Process *process, ThreadContext *tc)
     }
     return line.str();
 }
+
+} // namespace gem5

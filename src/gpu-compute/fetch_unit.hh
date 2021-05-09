@@ -47,6 +47,9 @@
 #include "gpu-compute/scheduler.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 class ComputeUnit;
 class Wavefront;
 
@@ -268,5 +271,7 @@ class FetchUnit
      */
     int fetchDepth;
 };
+
+} // namespace gem5
 
 #endif // __FETCH_UNIT_HH__

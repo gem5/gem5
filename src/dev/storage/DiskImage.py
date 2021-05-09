@@ -30,16 +30,19 @@ class DiskImage(SimObject):
     type = 'DiskImage'
     abstract = True
     cxx_header = "dev/storage/disk_image.hh"
+    cxx_class = 'gem5::DiskImage'
     image_file = Param.String("disk image file")
     read_only = Param.Bool(False, "read only image")
 
 class RawDiskImage(DiskImage):
     type = 'RawDiskImage'
     cxx_header = "dev/storage/disk_image.hh"
+    cxx_class = 'gem5::RawDiskImage'
 
 class CowDiskImage(DiskImage):
     type = 'CowDiskImage'
     cxx_header = "dev/storage/disk_image.hh"
+    cxx_class = 'gem5::CowDiskImage'
     child = Param.DiskImage(RawDiskImage(read_only=True),
                             "child image")
     table_size = Param.Int(65536, "initial table size")

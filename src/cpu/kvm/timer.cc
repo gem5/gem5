@@ -58,6 +58,9 @@
 #define sigev_notify_thread_id     _sigev_un._tid
 #endif
 
+namespace gem5
+{
+
 static pid_t
 sysGettid()
 {
@@ -195,3 +198,5 @@ PerfKvmTimer::calcResolution()
 {
     return ticksFromHostCycles(MIN_HOST_CYCLES);
 }
+
+} // namespace gem5

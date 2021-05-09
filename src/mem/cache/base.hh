@@ -76,6 +76,9 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
@@ -1485,5 +1488,7 @@ class WriteAllocator : public SimObject
      */
     std::unordered_map<Addr, Counter> delayCtr;
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_BASE_HH__

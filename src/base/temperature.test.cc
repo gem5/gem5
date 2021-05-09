@@ -41,6 +41,8 @@
 
 #include "base/temperature.hh"
 
+using namespace gem5;
+
 TEST(TemperatureTest, Constructor)
 {
     Temperature temp;

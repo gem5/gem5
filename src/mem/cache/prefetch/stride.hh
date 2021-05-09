@@ -60,6 +60,9 @@
 #include "mem/packet.hh"
 #include "params/StridePrefetcherHashedSetAssociative.hh"
 
+namespace gem5
+{
+
 class BaseIndexingPolicy;
 GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
@@ -163,5 +166,6 @@ class Stride : public Queued
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif // __MEM_CACHE_PREFETCH_STRIDE_HH__

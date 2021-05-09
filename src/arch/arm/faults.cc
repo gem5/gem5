@@ -54,6 +54,9 @@
 #include "debug/Faults.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -1850,3 +1853,4 @@ getFaultVAddr(Fault fault, Addr &va)
 }
 
 } // namespace ArmISA
+} // namespace gem5

@@ -31,6 +31,9 @@
 
 #include "arch/sparc/insts/micro.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -84,6 +87,7 @@ class BlockMemImmMicro : public BlockMemMicro
     const int32_t imm;
 };
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_INSTS_BLOCKMEM_HH__

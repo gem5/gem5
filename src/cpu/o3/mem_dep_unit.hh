@@ -54,6 +54,9 @@
 #include "cpu/o3/store_set.hh"
 #include "debug/MemDepUnit.hh"
 
+namespace gem5
+{
+
 struct SNHash
 {
     size_t
@@ -277,5 +280,6 @@ class MemDepUnit
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif // __CPU_O3_MEM_DEP_UNIT_HH__

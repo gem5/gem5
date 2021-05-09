@@ -44,6 +44,9 @@
 #include "gpu-compute/wavefront.hh"
 #include "params/VectorRegisterFile.hh"
 
+namespace gem5
+{
+
 VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams &p)
     : RegisterFile(p)
 {
@@ -163,3 +166,5 @@ VectorRegisterFile::scheduleWriteOperandsFromLoad(
         mask = mask >> 4;
     }
 }
+
+} // namespace gem5

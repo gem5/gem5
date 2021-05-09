@@ -36,6 +36,9 @@
 
 #include "gpu-compute/register_manager_policy.hh"
 
+namespace gem5
+{
+
 class HSAQueueEntry;
 
 class StaticRegisterManagerPolicy : public RegisterManagerPolicy
@@ -57,5 +60,7 @@ class StaticRegisterManagerPolicy : public RegisterManagerPolicy
 
     void freeRegisters(Wavefront *w) override;
 };
+
+} // namespace gem5
 
 #endif // __STATIC_REGISTER_MANAGER_POLICY_HH__

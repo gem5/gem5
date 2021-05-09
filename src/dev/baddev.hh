@@ -37,6 +37,9 @@
 #include "dev/io_device.hh"
 #include "params/BadDevice.hh"
 
+namespace gem5
+{
+
 /**
  * BadDevice
  * This device just panics when accessed. It is supposed to warn
@@ -61,5 +64,7 @@ class BadDevice : public BasicPioDevice
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
 };
+
+} // namespace gem5
 
 #endif // __DEV_BADDEV_HH__

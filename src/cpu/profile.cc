@@ -37,6 +37,9 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 void
 BaseStackTrace::dump()
 {
@@ -155,3 +158,5 @@ FunctionProfile::sample(ProfileNode *node, Addr pc)
         pc_count[pc]++;
     }
 }
+
+} // namespace gem5

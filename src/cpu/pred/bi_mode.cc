@@ -35,6 +35,9 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 
+namespace gem5
+{
+
 BiModeBP::BiModeBP(const BiModeBPParams &params)
     : BPredUnit(params),
       globalHistoryReg(params.numThreads, 0),
@@ -225,3 +228,5 @@ BiModeBP::updateGlobalHistReg(ThreadID tid, bool taken)
                                (globalHistoryReg[tid] << 1);
     globalHistoryReg[tid] &= historyRegisterMask;
 }
+
+} // namespace gem5

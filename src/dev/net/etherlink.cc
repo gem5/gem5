@@ -63,6 +63,9 @@
 #include "sim/serialize.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 EtherLink::EtherLink(const Params &p)
     : SimObject(p)
 {
@@ -264,3 +267,5 @@ EtherLink::Link::unserialize(const std::string &base, CheckpointIn &cp)
              "in-flight packets may have been dropped.\n");
     }
 }
+
+} // namespace gem5

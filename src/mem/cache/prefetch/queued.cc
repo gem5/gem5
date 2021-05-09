@@ -47,6 +47,9 @@
 #include "mem/request.hh"
 #include "params/QueuedPrefetcher.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
@@ -488,3 +491,4 @@ Queued::addToQueue(std::list<DeferredPacket> &queue,
 }
 
 } // namespace prefetch
+} // namespace gem5

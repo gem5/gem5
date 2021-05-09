@@ -31,6 +31,9 @@
 
 #include "cpu/profile.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -41,5 +44,6 @@ class StackTrace : public BaseStackTrace
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_STACKTRACE_HH__

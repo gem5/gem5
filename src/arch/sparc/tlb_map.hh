@@ -33,6 +33,9 @@
 
 #include "arch/sparc/pagetable.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -162,6 +165,7 @@ class TlbMap
 
 };
 
-};
+} // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_TLB_MAP_HH__

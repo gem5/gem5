@@ -63,6 +63,9 @@
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA {
 
 Fault
@@ -610,4 +613,5 @@ Walker::WalkerState::pageFault(bool present)
     return walker->tlb->createPagefault(entry.vaddr, mode);
 }
 
-} /* end namespace RiscvISA */
+} // namespace RiscvISA
+} // namespace gem5

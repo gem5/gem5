@@ -31,6 +31,8 @@
 #include "sim/init.hh"
 #include "sim/init_signals.hh"
 
+using namespace gem5;
+
 // main() is now pretty stripped down and just sets up python and then
 // calls initM5Python which loads the various embedded python modules
 // into the python environment and then starts things running by

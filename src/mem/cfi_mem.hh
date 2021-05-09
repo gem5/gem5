@@ -44,6 +44,9 @@
 #include "mem/abstract_mem.hh"
 #include "params/CfiMemory.hh"
 
+namespace gem5
+{
+
 /**
  * CfiMemory: This is modelling a flash memory adhering to the
  * Common Flash Interface (CFI):
@@ -391,5 +394,7 @@ class CfiMemory : public AbstractMemory
      */
     uint64_t cfiQuery(Addr addr);
 };
+
+} // namespace gem5
 
 #endif

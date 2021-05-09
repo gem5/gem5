@@ -45,6 +45,9 @@
 #include "arch/generic/tlb.hh"
 #include "sim/faults.hh"
 
+namespace gem5
+{
+
 /**
  * This class captures the state of an address translation.  A translation
  * can be split in two if the ISA supports it and the memory access crosses
@@ -267,5 +270,7 @@ class DataTranslation : public BaseTLB::Translation
         return xc->isSquashed();
     }
 };
+
+} // namespace gem5
 
 #endif // __CPU_TRANSLATION_HH__

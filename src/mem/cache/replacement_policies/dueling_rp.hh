@@ -36,6 +36,9 @@
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/tags/dueling.hh"
 
+namespace gem5
+{
+
 struct DuelingRPParams;
 
 GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
@@ -111,5 +114,6 @@ class Dueling : public Base
 };
 
 } // namespace replacement_policy
+} // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_DUELING_RP_HH__

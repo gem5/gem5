@@ -41,6 +41,9 @@
 #include "dev/io_device.hh"
 #include "dev/virtio/base.hh"
 
+namespace gem5
+{
+
 class ArmInterruptPin;
 struct MmioVirtIOParams;
 
@@ -109,5 +112,7 @@ class MmioVirtIO : public BasicPioDevice
     VirtIODeviceBase &vio;
     ArmInterruptPin *const interrupt;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_VIO_MMIO_HH__

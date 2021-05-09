@@ -50,6 +50,9 @@
 #include "debug/Bridge.hh"
 #include "params/Bridge.hh"
 
+namespace gem5
+{
+
 Bridge::BridgeResponsePort::BridgeResponsePort(const std::string& _name,
                                          Bridge& _bridge,
                                          BridgeRequestPort& _memSidePort,
@@ -390,3 +393,5 @@ Bridge::BridgeResponsePort::getAddrRanges() const
 {
     return ranges;
 }
+
+} // namespace gem5

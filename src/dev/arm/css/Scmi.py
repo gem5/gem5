@@ -46,7 +46,7 @@ class ScmiChannel(SimObject):
     """
     type = 'ScmiChannel'
     cxx_header = "dev/arm/css/scmi_platform.hh"
-    cxx_class = "scmi::VirtualChannel"
+    cxx_class = "gem5::scmi::VirtualChannel"
     shmem_range = Param.AddrRange(
         "Virtual channel's shared memory address range")
     phys_id = Param.Unsigned(4,
@@ -78,7 +78,7 @@ class ScmiAgentChannel(ScmiChannel):
     """
     type = 'ScmiAgentChannel'
     cxx_header = "dev/arm/css/scmi_platform.hh"
-    cxx_class = "scmi::AgentChannel"
+    cxx_class = "gem5::scmi::AgentChannel"
 
 
 class ScmiPlatformChannel(ScmiChannel):
@@ -87,7 +87,7 @@ class ScmiPlatformChannel(ScmiChannel):
     """
     type = 'ScmiPlatformChannel'
     cxx_header = "dev/arm/css/scmi_platform.hh"
-    cxx_class = "scmi::PlatformChannel"
+    cxx_class = "gem5::scmi::PlatformChannel"
 
 class ScmiCommunication(SimObject):
     """
@@ -98,7 +98,7 @@ class ScmiCommunication(SimObject):
     """
     type = 'ScmiCommunication'
     cxx_header = "dev/arm/css/scmi_platform.hh"
-    cxx_class = "scmi::Communication"
+    cxx_class = "gem5::scmi::Communication"
 
     agent_channel = Param.ScmiAgentChannel(
         "Agent to Platform channel")
@@ -108,7 +108,7 @@ class ScmiCommunication(SimObject):
 class ScmiPlatform(Scp):
     type = 'ScmiPlatform'
     cxx_header = "dev/arm/css/scmi_platform.hh"
-    cxx_class = "scmi::Platform"
+    cxx_class = "gem5::scmi::Platform"
 
     comms = VectorParam.ScmiCommunication([],
         "SCMI Communications")

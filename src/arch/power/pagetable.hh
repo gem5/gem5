@@ -35,6 +35,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -84,6 +87,6 @@ struct PTE
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_PAGETABLE_H__
-

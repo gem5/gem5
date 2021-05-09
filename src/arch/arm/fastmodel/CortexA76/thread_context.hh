@@ -30,6 +30,9 @@
 
 #include "arch/arm/fastmodel/iris/thread_context.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
@@ -48,8 +51,8 @@ class CortexA76TC : public Iris::ThreadContext
     static std::vector<iris::MemorySpaceId> bpSpaceIds;
 
   public:
-    CortexA76TC(::BaseCPU *cpu, int id, System *system,
-                ::BaseMMU *mmu, ::BaseISA *isa,
+    CortexA76TC(gem5::BaseCPU *cpu, int id, System *system,
+                gem5::BaseMMU *mmu, gem5::BaseISA *isa,
                 iris::IrisConnectionInterface *iris_if,
                 const std::string &iris_path);
 
@@ -67,5 +70,6 @@ class CortexA76TC : public Iris::ThreadContext
 };
 
 } // namespace fastmodel
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_CORTEXA76_THREAD_CONTEXT_HH__

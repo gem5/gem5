@@ -59,6 +59,9 @@
 #include "sim/core.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 IdeDisk::IdeDisk(const Params &p)
     : SimObject(p), ctrl(NULL), image(p.image), diskDelay(p.delay),
       ideDiskStats(this),
@@ -1184,3 +1187,5 @@ IdeDisk::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ENUM(dmaState);
     UNSERIALIZE_ARRAY(dataBuffer, MAX_DMA_SIZE);
 }
+
+} // namespace gem5

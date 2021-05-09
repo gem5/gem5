@@ -38,7 +38,7 @@ from m5.util.fdthelper import FdtNode, FdtPropertyWords
 
 class FastModelCortexA76(IrisBaseCPU):
     type = 'FastModelCortexA76'
-    cxx_class = 'fastmodel::CortexA76'
+    cxx_class = 'gem5::fastmodel::CortexA76'
     cxx_header = 'arch/arm/fastmodel/CortexA76/cortex_a76.hh'
 
     cntfrq = Param.UInt64(0x1800000, "Value for the CNTFRQ timer register")
@@ -136,7 +136,7 @@ class FastModelCortexA76(IrisBaseCPU):
 
 class FastModelCortexA76Cluster(SimObject):
     type = 'FastModelCortexA76Cluster'
-    cxx_class = 'fastmodel::CortexA76Cluster'
+    cxx_class = 'gem5::fastmodel::CortexA76Cluster'
     cxx_header = 'arch/arm/fastmodel/CortexA76/cortex_a76.hh'
 
     cores = VectorParam.FastModelCortexA76(
@@ -366,7 +366,8 @@ class FastModelCortexA76Cluster(SimObject):
 
 class FastModelScxEvsCortexA76x1(SystemC_ScModule):
     type = 'FastModelScxEvsCortexA76x1'
-    cxx_class = 'fastmodel::ScxEvsCortexA76<fastmodel::ScxEvsCortexA76x1Types>'
+    cxx_class = \
+        'gem5::fastmodel::ScxEvsCortexA76<fastmodel::ScxEvsCortexA76x1Types>'
     cxx_template_params = [ 'class Types' ]
     cxx_header = 'arch/arm/fastmodel/CortexA76/evs.hh'
 
@@ -377,7 +378,8 @@ class FastModelCortexA76x1(FastModelCortexA76Cluster):
 
 class FastModelScxEvsCortexA76x2(SystemC_ScModule):
     type = 'FastModelScxEvsCortexA76x2'
-    cxx_class = 'fastmodel::ScxEvsCortexA76<fastmodel::ScxEvsCortexA76x2Types>'
+    cxx_class = \
+        'gem5::fastmodel::ScxEvsCortexA76<fastmodel::ScxEvsCortexA76x2Types>'
     cxx_template_params = [ 'class Types' ]
     cxx_header = 'arch/arm/fastmodel/CortexA76/evs.hh'
 
@@ -389,7 +391,8 @@ class FastModelCortexA76x2(FastModelCortexA76Cluster):
 
 class FastModelScxEvsCortexA76x3(SystemC_ScModule):
     type = 'FastModelScxEvsCortexA76x3'
-    cxx_class = 'fastmodel::ScxEvsCortexA76<fastmodel::ScxEvsCortexA76x3Types>'
+    cxx_class = \
+        'gem5::fastmodel::ScxEvsCortexA76<fastmodel::ScxEvsCortexA76x3Types>'
     cxx_template_params = [ 'class Types' ]
     cxx_header = 'arch/arm/fastmodel/CortexA76/evs.hh'
 
@@ -402,7 +405,8 @@ class FastModelCortexA76x3(FastModelCortexA76Cluster):
 
 class FastModelScxEvsCortexA76x4(SystemC_ScModule):
     type = 'FastModelScxEvsCortexA76x4'
-    cxx_class = 'fastmodel::ScxEvsCortexA76<fastmodel::ScxEvsCortexA76x4Types>'
+    cxx_class = \
+        'gem5::fastmodel::ScxEvsCortexA76<fastmodel::ScxEvsCortexA76x4Types>'
     cxx_template_params = [ 'class Types' ]
     cxx_header = 'arch/arm/fastmodel/CortexA76/evs.hh'
 

@@ -30,7 +30,7 @@ from m5.objects.SystemC import SystemC_ScModule
 
 class FastModelPL330(SystemC_ScModule):
     type = 'FastModelPL330'
-    cxx_class = 'fastmodel::PL330'
+    cxx_class = 'gem5::fastmodel::PL330'
     cxx_header = 'arch/arm/fastmodel/PL330_DMAC/pl330.hh'
 
     clock = Param.Frequency("Clock frequency")

@@ -34,6 +34,9 @@
 #include "arch/arm/types.hh"
 #include "params/IrisInterrupts.hh"
 
+namespace gem5
+{
+
 void
 Iris::Interrupts::serialize(CheckpointOut &cp) const
 {
@@ -106,3 +109,5 @@ void
 Iris::Interrupts::unserialize(CheckpointIn &cp)
 {
 }
+
+} // namespace gem5

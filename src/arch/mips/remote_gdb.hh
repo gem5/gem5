@@ -34,6 +34,9 @@
 #include "base/bitfield.hh"
 #include "base/remote_gdb.hh"
 
+namespace gem5
+{
+
 class System;
 class ThreadContext;
 
@@ -88,5 +91,6 @@ class RemoteGDB : public BaseRemoteGDB
 };
 
 } // namespace MipsISA
+} // namespace gem5
 
 #endif /* __ARCH_MIPS_REMOTE_GDB_H__ */

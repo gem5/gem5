@@ -46,6 +46,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 PL031::PL031(const Params &p)
     : AmbaIntDevice(p, 0x1000), lastWrittenTick(0), loadVal(0), matchVal(0),
       rawInt(false), maskInt(false), pendingInt(false),
@@ -223,3 +226,5 @@ PL031::unserialize(CheckpointIn &cp)
         schedule(matchEvent, event_time);
     }
 }
+
+} // namespace gem5

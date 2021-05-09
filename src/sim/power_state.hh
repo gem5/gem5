@@ -53,6 +53,9 @@
 #include "sim/core.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class PowerDomain;
 
 /**
@@ -147,5 +150,7 @@ class PowerState : public SimObject
         statistics::Vector pwrStateResidencyTicks;
     } stats;
 };
+
+} // namespace gem5
 
 #endif //__SIM_POWER_STATE_HH__

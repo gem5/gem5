@@ -31,12 +31,16 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
 const Addr PageShift = 13;
 const Addr PageBytes = 1ULL << PageShift;
 
-}
+} // namespace SparcISA
+} // namespace gem5
 
 #endif // __ARCH_SPARC_PAGE_SIZE_HH__

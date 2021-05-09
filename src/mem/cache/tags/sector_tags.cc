@@ -45,6 +45,9 @@
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
 
+namespace gem5
+{
+
 SectorTags::SectorTags(const SectorTagsParams &p)
     : BaseTags(p), allocAssoc(p.assoc),
       sequentialAccess(p.sequential_access),
@@ -374,3 +377,5 @@ SectorTags::anyBlk(std::function<bool(CacheBlk &)> visitor)
     }
     return false;
 }
+
+} // namespace gem5

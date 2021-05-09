@@ -32,6 +32,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -136,3 +139,4 @@ Huffman::decode(const uint64_t code) const
 
 } // namespace encoder
 } // namespace compression
+} // namespace gem5

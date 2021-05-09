@@ -33,6 +33,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 void
 VMA::fillMemPages(Addr start, Addr size, PortProxy &port) const
 {
@@ -152,3 +155,5 @@ VMA::MappedFileBuffer::~MappedFileBuffer()
                  strerror(errno));
     }
 }
+
+} // namespace gem5

@@ -42,6 +42,9 @@
 #include "base/intmath.hh"
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 namespace VegaISA
 {
     enum OpSelector : int
@@ -229,5 +232,6 @@ namespace VegaISA
     bool isExecMask(int opIdx);
     bool isVccReg(int opIdx);
 } // namespace VegaISA
+} // namespace gem5
 
 #endif // __ARCH_VEGA_REGISTERS_HH__

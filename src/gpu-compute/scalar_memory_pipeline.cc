@@ -41,6 +41,9 @@
 #include "gpu-compute/shader.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 ScalarMemPipeline::ScalarMemPipeline(const ComputeUnitParams &p,
                                      ComputeUnit &cu)
     : computeUnit(cu), _name(cu.name() + ".ScalarMemPipeline"),
@@ -140,3 +143,5 @@ ScalarMemPipeline::exec()
                 computeUnit.cu_id, mp->simdId, mp->wfSlotId);
     }
 }
+
+} // namespace gem5

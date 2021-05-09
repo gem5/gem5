@@ -61,6 +61,9 @@
 #include "sim/clocked_object.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /** Boxing for MinorOpClass to get around a build problem with C++11 but
  *  also allow for future additions to op class checking */
 class MinorOpClass : public SimObject
@@ -270,5 +273,6 @@ class FUPipeline : public FUPipelineBase, public FuncUnit
 };
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_FUNC_UNIT_HH__ */

@@ -39,6 +39,9 @@
 #include "params/X86ISA.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -485,4 +488,5 @@ ISA::getVendorString() const
     return vendorString;
 }
 
-}
+} // namespace X86ISA
+} // namespace gem5

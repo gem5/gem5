@@ -39,6 +39,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 ChannelAddrRange::ChannelAddrRange(AddrRange ch_range, Addr start, Addr end)
     : ChannelAddrRange(ChannelAddr(ch_range, start),
                        ChannelAddr(ch_range, end))
@@ -59,3 +62,5 @@ operator<<(std::ostream &out, const ChannelAddr &addr)
 {
     return out << (ChannelAddr::Type)addr;
 }
+
+} // namespace gem5

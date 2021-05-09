@@ -33,6 +33,9 @@
 #include "sim/core.hh"
 #include "systemc/tlm_bridge/gem5_to_tlm.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
@@ -154,3 +157,4 @@ CortexR52Cluster::getPort(const std::string &if_name, PortID idx)
 }
 
 } // namespace fastmodel
+} // namespace gem5

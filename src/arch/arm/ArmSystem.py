@@ -46,6 +46,8 @@ class SveVectorLength(UInt8): min = 1; max = 16
 class ArmSystem(System):
     type = 'ArmSystem'
     cxx_header = "arch/arm/system.hh"
+    cxx_class = 'gem5::ArmSystem'
+
     multi_proc = Param.Bool(True, "Multiprocessor system?")
     gic_cpu_addr = Param.Addr(0, "Addres of the GIC CPU interface")
     have_security = Param.Bool(False,

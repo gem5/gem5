@@ -40,6 +40,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 /*
  * Reference counted class containing ethernet packet data
  */
@@ -85,5 +88,7 @@ class EthPacketData
 };
 
 typedef std::shared_ptr<EthPacketData> EthPacketPtr;
+
+} // namespace gem5
 
 #endif // __DEV_NET_ETHERPKT_HH__

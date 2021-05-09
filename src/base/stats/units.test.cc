@@ -31,6 +31,8 @@
 
 #include "base/stats/units.hh"
 
+using namespace gem5;
+
 TEST(StatsUnitsTest, Cycle)
 {
     statistics::units::Cycle *unit = statistics::units::Cycle::get();

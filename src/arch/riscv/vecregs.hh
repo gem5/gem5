@@ -51,17 +51,21 @@
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
 // Not applicable to RISC-V
-using VecElem = ::DummyVecElem;
-using VecRegContainer = ::DummyVecRegContainer;
-constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
+using VecElem = ::gem5::DummyVecElem;
+using VecRegContainer = ::gem5::DummyVecRegContainer;
+constexpr unsigned NumVecElemPerVecReg = ::gem5::DummyNumVecElemPerVecReg;
 
 // Not applicable to RISC-V
-using VecPredRegContainer = ::DummyVecPredRegContainer;
+using VecPredRegContainer = ::gem5::DummyVecPredRegContainer;
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_VECREGS_HH__

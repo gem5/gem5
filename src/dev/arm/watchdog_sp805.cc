@@ -42,6 +42,9 @@
 #include "mem/packet_access.hh"
 #include "params/Sp805.hh"
 
+namespace gem5
+{
+
 Sp805::Sp805(const Sp805Params &params)
     : AmbaIntDevice(params, 0x1000),
       timeoutInterval(0xffffffff),
@@ -259,3 +262,5 @@ Sp805::unserialize(CheckpointIn &cp)
         reschedule(timeoutEvent, when, true);
     }
 }
+
+} // namespace gem5

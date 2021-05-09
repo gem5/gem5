@@ -46,6 +46,9 @@
 #include "sim/mem_state.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -284,5 +287,7 @@ class Process : public SimObject
     // Track how many system calls are executed
     statistics::Scalar numSyscalls;
 };
+
+} // namespace gem5
 
 #endif // __PROCESS_HH__

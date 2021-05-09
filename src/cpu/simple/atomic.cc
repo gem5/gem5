@@ -57,6 +57,9 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 void
 AtomicSimpleCPU::init()
 {
@@ -766,3 +769,5 @@ AtomicSimpleCPU::printAddr(Addr a)
 {
     dcachePort.printAddr(a);
 }
+
+} // namespace gem5

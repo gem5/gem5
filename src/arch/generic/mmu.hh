@@ -42,6 +42,9 @@
 
 #include "params/BaseMMU.hh"
 
+namespace gem5
+{
+
 class BaseMMU : public SimObject
 {
   protected:
@@ -109,5 +112,7 @@ class BaseMMU : public SimObject
     BaseTLB* dtb;
     BaseTLB* itb;
 };
+
+} // namespace gem5
 
 #endif

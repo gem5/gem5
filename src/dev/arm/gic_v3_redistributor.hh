@@ -45,6 +45,9 @@
 #include "dev/arm/gic_v3.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class Gicv3CPUInterface;
 class Gicv3Distributor;
 class Gicv3Its;
@@ -258,5 +261,7 @@ class Gicv3Redistributor : public Serializable
     void clearPPInt(uint32_t int_id);
     void write(Addr addr, uint64_t data, size_t size, bool is_secure_access);
 };
+
+} // namespace gem5
 
 #endif //__DEV_ARM_GICV3_REDISTRIBUTOR_H__

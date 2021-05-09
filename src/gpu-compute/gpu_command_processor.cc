@@ -44,6 +44,9 @@
 #include "sim/proxy_ptr.hh"
 #include "sim/syscall_emul_buf.hh"
 
+namespace gem5
+{
+
 GPUCommandProcessor::GPUCommandProcessor(const Params &p)
     : DmaDevice(p), dispatcher(*p.dispatcher), _driver(nullptr), hsaPP(p.hsapp)
 {
@@ -404,3 +407,5 @@ GPUCommandProcessor::shader()
 {
     return _shader;
 }
+
+} // namespace gem5

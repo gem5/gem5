@@ -41,6 +41,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 const char* BmpWriter::_imgExtension = "bmp";
 
 // bitmap class ctor
@@ -105,4 +108,4 @@ BmpWriter::write(std::ostream &bmp) const
     bmp.flush();
 }
 
-
+} // namespace gem5

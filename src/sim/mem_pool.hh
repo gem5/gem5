@@ -36,6 +36,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 class System;
 
 /** Class for handling allocation of physical pages in SE mode. */
@@ -67,5 +70,7 @@ class MemPool
 
     Addr allocate(Addr npages);
 };
+
+} // namespace gem5
 
 #endif // __MEM_POOL_HH__

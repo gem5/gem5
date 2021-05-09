@@ -40,5 +40,6 @@ class Doorbell(SimObject):
     type = 'Doorbell'
     abstract = True
     cxx_header = "dev/arm/doorbell.hh"
+    cxx_class = 'gem5::Doorbell'
     set_address = Param.Addr("Doorbell set address")
     clear_address = Param.Addr("Doorbell clear address")

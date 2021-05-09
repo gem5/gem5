@@ -31,6 +31,9 @@
 #include "base/logging.hh"
 #include "debug/Intel8254Timer.hh"
 
+namespace gem5
+{
+
 Intel8254Timer::Intel8254Timer(EventManager *em, const std::string &name,
     Counter *counter0, Counter *counter1, Counter *counter2) :
     EventManager(em), _name(name)
@@ -322,3 +325,4 @@ Intel8254Timer::Counter::CounterEvent::getInterval()
     return interval;
 }
 
+} // namespace gem5

@@ -67,6 +67,9 @@
 
 namespace py = pybind11;
 
+namespace gem5
+{
+
 // The python library is totally messed up with respect to constness,
 // so make a simple macro to make life a little easier
 #define PyCC(x) (const_cast<char *>(x))
@@ -313,3 +316,5 @@ m5Main(int argc, char **_argv)
 
     return 0;
 }
+
+} // namespace gem5

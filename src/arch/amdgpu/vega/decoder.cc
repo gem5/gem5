@@ -37,6 +37,9 @@
 #include "arch/amdgpu/vega/insts/gpu_static_inst.hh"
 #include "arch/amdgpu/vega/insts/instructions.hh"
 
+namespace gem5
+{
+
 namespace VegaISA
 {
     Decoder::Decoder()
@@ -12830,3 +12833,4 @@ namespace VegaISA
         return nullptr;
     }
 } // namespace VegaISA
+} // namespace gem5

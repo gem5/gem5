@@ -38,6 +38,9 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 class BankedArray
 {
   private:
@@ -74,5 +77,7 @@ class BankedArray
 
     Cycles getLatency() const { return accessLatency; }
 };
+
+} // namespace gem5
 
 #endif

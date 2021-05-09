@@ -89,6 +89,7 @@ class BaseCPU(ClockedObject):
     type = 'BaseCPU'
     abstract = True
     cxx_header = "cpu/base.hh"
+    cxx_class = 'gem5::BaseCPU'
 
     cxx_exports = [
         PyBindMethod("switchOut"),

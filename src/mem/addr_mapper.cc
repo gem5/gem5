@@ -37,6 +37,9 @@
 
 #include "mem/addr_mapper.hh"
 
+namespace gem5
+{
+
 AddrMapper::AddrMapper(const AddrMapperParams &p)
     : SimObject(p),
       memSidePort(name() + "-mem_side_port", *this),
@@ -237,4 +240,4 @@ RangeAddrMapper::getAddrRanges() const
     return ranges;
 }
 
-
+} // namespace gem5

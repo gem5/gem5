@@ -37,6 +37,9 @@
 #include "mem/ruby/network/garnet/CommonTypes.hh"
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 
+namespace gem5
+{
+
 class VirtualChannel
 {
   public:
@@ -95,5 +98,7 @@ class VirtualChannel
     Tick m_enqueue_time;
     int m_output_vc;
 };
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_VIRTUALCHANNEL_HH__

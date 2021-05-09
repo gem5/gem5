@@ -41,6 +41,9 @@
 #include "mem/qport.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 struct MemDelayParams;
 struct SimpleMemDelayParams;
 
@@ -176,5 +179,7 @@ class SimpleMemDelay : public MemDelay
     const Tick writeReqDelay;
     const Tick writeRespDelay;
 };
+
+} // namespace gem5
 
 #endif //__MEM_MEM_DELAY_HH__

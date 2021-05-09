@@ -50,6 +50,9 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 const AddrRange GicV2::GICD_IGROUPR   (0x080, 0x100);
 const AddrRange GicV2::GICD_ISENABLER (0x100, 0x180);
 const AddrRange GicV2::GICD_ICENABLER (0x180, 0x200);
@@ -1095,3 +1098,5 @@ GicV2::BankedRegs::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ARRAY(intConfig, 2);
     UNSERIALIZE_ARRAY(intPriority, SGI_MAX + PPI_MAX);
 }
+
+} // namespace gem5

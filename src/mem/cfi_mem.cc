@@ -48,6 +48,9 @@
 #include "debug/CFI.hh"
 #include "debug/Drain.hh"
 
+namespace gem5
+{
+
 bool
 CfiMemory::BlockData::isLocked(Addr block_address) const
 {
@@ -728,3 +731,5 @@ CfiMemory::BlockData::erase(PacketPtr pkt)
     auto host_address = parent.toHostAddr(pkt->getAddr());
     std::memset(host_address, 0xff, blockSize);
 }
+
+} // namespace gem5

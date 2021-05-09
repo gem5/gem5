@@ -55,6 +55,9 @@
 #include "base/sat_counter.hh"
 #include "mem/cache/replacement_policies/base.hh"
 
+namespace gem5
+{
+
 struct BRRIPRPParams;
 
 GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
@@ -158,5 +161,6 @@ class BRRIP : public Base
 };
 
 } // namespace replacement_policy
+} // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BRRIP_RP_HH__

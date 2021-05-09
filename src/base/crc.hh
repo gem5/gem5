@@ -40,6 +40,9 @@
 
 #include "base/bitfield.hh"
 
+namespace gem5
+{
+
 /**
  * Evaluate the CRC32 of the first size bytes of a data buffer,
  * using a specific polynomium and an initial value.
@@ -77,5 +80,7 @@ crc32(const uint8_t* data, uint32_t crc, std::size_t size)
     }
     return reverseBits(crc);
 }
+
+} // namespace gem5
 
 #endif // __BASE_CRC_HH__

@@ -43,6 +43,9 @@
 
 #include "base/bitunion.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
     BitUnion32(CPSR)
@@ -786,6 +789,7 @@ namespace ArmISA
         Bitfield<3,0>   pcsample;
    EndBitUnion(DEVID)
 
-}
+} // namespace ArmISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_REGS_MISC_TYPES_HH__

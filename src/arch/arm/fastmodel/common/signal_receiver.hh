@@ -37,6 +37,9 @@
 
 #include "base/compiler.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
@@ -78,5 +81,6 @@ class SignalReceiver : public amba_pv::signal_slave_base<bool>
 };
 
 } // namespace fastmodel
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_COMMON_SIGNAL_RECEIVER_HH__

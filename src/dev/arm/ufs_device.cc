@@ -69,6 +69,9 @@
 
 #include "dev/arm/ufs_device.hh"
 
+namespace gem5
+{
+
 /**
  * Constructor and destructor functions of UFSHCM device
  */
@@ -2325,3 +2328,5 @@ UFSHostDevice::checkDrain()
         signalDrainDone();
     }
 }
+
+} // namespace gem5

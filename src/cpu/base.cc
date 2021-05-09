@@ -71,6 +71,9 @@
 // Hack
 #include "sim/stat_control.hh"
 
+namespace gem5
+{
+
 std::unique_ptr<BaseCPU::GlobalStats> BaseCPU::globalStats;
 
 std::vector<BaseCPU *> BaseCPU::cpuList;
@@ -726,8 +729,8 @@ BaseCPU::traceFunctionsInternal(Addr pc)
 }
 
 
-BaseCPU::GlobalStats::GlobalStats(::statistics::Group *parent)
-    : ::statistics::Group(parent),
+BaseCPU::GlobalStats::GlobalStats(statistics::Group *parent)
+    : statistics::Group(parent),
     ADD_STAT(simInsts, statistics::units::Count::get(),
              "Number of instructions simulated"),
     ADD_STAT(simOps, statistics::units::Count::get(),
@@ -764,3 +767,5 @@ BaseCPU::GlobalStats::GlobalStats(::statistics::Group *parent)
     hostInstRate = simInsts / hostSeconds;
     hostOpRate = simOps / hostSeconds;
 }
+
+} // namespace gem5

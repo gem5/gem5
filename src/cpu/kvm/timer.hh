@@ -43,6 +43,9 @@
 #include "cpu/kvm/perfevent.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 /**
  * Timer functions to interrupt VM execution after a number of
  * simulation ticks. The timer allows scaling of the host time to take
@@ -246,5 +249,7 @@ class PerfKvmTimer : public BaseKvmTimer
   private:
     PerfKvmCounter &hwOverflow;
 };
+
+} // namespace gem5
 
 #endif

@@ -41,6 +41,9 @@
 #include "params/RubyWireBuffer.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 //////////////////////////////////////////////////////////////////////////////
 // This object was written to literally mimic a Wire in Ruby, in the sense
 // that there is no way for messages to get reordered en route on the WireBuffer.
@@ -97,5 +100,7 @@ class WireBuffer : public SimObject
 };
 
 std::ostream& operator<<(std::ostream& out, const WireBuffer& obj);
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_STRUCTURES_WireBuffer_HH__

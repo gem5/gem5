@@ -40,6 +40,9 @@
 #include "gpu-compute/register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 struct VectorRegisterFileParams;
 
 // Vector Register File
@@ -105,5 +108,7 @@ class VectorRegisterFile : public RegisterFile
   private:
     std::vector<VecRegContainer> regFile;
 };
+
+} // namespace gem5
 
 #endif // __VECTOR_REGISTER_FILE_HH__

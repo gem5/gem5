@@ -63,6 +63,9 @@
 #include "mem/request.hh"
 #include "params/Cache.hh"
 
+namespace gem5
+{
+
 Cache::Cache(const CacheParams &p)
     : BaseCache(p, p.system->cacheLineSize()),
       doFastWrites(true)
@@ -1429,3 +1432,5 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
 
     return BaseCache::sendMSHRQueuePacket(mshr);
 }
+
+} // namespace gem5

@@ -56,6 +56,9 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 /*
  * ISA-specific helper functions for locked memory accesses.
  */
@@ -139,5 +142,6 @@ globalClearExclusive(XC *xc)
 }
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_LOCKED_MEM_HH__

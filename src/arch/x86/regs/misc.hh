@@ -49,6 +49,9 @@
 #undef CR2
 #undef CR3
 
+namespace gem5
+{
+
 namespace X86ISA
 {
     enum CondFlagBit
@@ -1054,6 +1057,8 @@ namespace X86ISA
         Bitfield<11> enable;
         Bitfield<8> bsp;
     EndBitUnion(LocalApicBase)
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_INTREGS_HH__

@@ -42,6 +42,9 @@
 #include "arch/arm/insts/pred_inst.hh"
 #include "arch/arm/insts/static_inst.hh"
 
+namespace gem5
+{
+
 namespace ArmISAInst {
 
 class MicroTmeOp : public ArmISA::MicroOp
@@ -163,6 +166,7 @@ class Tcommit64 : public MacroTmeOp
     Tcommit64(ArmISA::ExtMachInst _machInst);
 };
 
-} // namespace
+} // namespace ArmISAInst
+} // namespace gem5
 
 #endif

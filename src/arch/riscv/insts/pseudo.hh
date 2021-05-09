@@ -33,6 +33,9 @@
 
 #include "arch/riscv/insts/static_inst.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -48,6 +51,7 @@ class PseudoOp : public RiscvStaticInst
     }
 };
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_INSTS_PSEUDO_HH__

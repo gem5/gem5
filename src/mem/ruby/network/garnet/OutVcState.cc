@@ -32,6 +32,9 @@
 
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 OutVcState::OutVcState(int id, GarnetNetwork *network_ptr,
     uint32_t consumerVcs)
     : m_time(0)
@@ -67,3 +70,5 @@ OutVcState::decrement_credit()
     m_credit_count--;
     assert(m_credit_count >= 0);
 }
+
+} // namespace gem5

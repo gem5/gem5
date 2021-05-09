@@ -47,6 +47,8 @@ namespace sc_gem5
 void
 ScMainFiber::main()
 {
+    using namespace gem5;
+
     _called = true;
 
     if (::sc_main) {

@@ -39,6 +39,9 @@
 
 #include "base/cprintf.hh"
 
+namespace gem5
+{
+
 namespace ArmISA {
 
 std::string
@@ -74,3 +77,4 @@ BranchRegReg::generateDisassembly(
 }
 
 } // namespace ArmISA
+} // namespace gem5

@@ -37,6 +37,9 @@
 #include "arch/amdgpu/gcn3/insts/gpu_static_inst.hh"
 #include "arch/amdgpu/gcn3/insts/instructions.hh"
 
+namespace gem5
+{
+
 namespace Gcn3ISA
 {
     Decoder::Decoder()
@@ -10810,3 +10813,4 @@ namespace Gcn3ISA
         return nullptr;
     }
 } // namespace Gcn3ISA
+} // namespace gem5

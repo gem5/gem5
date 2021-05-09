@@ -33,6 +33,9 @@
 #include "base/trace.hh"
 #include "debug/StoreSet.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -369,3 +372,4 @@ StoreSet::dump()
 }
 
 } // namespace o3
+} // namespace gem5

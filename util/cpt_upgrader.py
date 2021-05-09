@@ -293,10 +293,15 @@ if __name__ == '__main__':
         print("#include <string>")
         print("#include <set>")
         print()
+        print("namespace gem5")
+        print("{")
+        print()
         print("std::set<std::string> version_tags = {")
         for tag in Upgrader.tag_set:
             print("  \"{}\",".format(tag))
         print("};")
+        print()
+        print("} // namespace gem5")
         exit(0)
     elif not args.checkpoint:
         parser.error("You must specify a checkpoint file to modify or a "

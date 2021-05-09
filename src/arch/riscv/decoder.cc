@@ -32,6 +32,9 @@
 #include "base/bitfield.hh"
 #include "debug/Decode.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -109,4 +112,5 @@ Decoder::decode(RiscvISA::PCState &nextPC)
     return decode(emi, nextPC.instAddr());
 }
 
-}
+} // namespace RiscvISA
+} // namespace gem5

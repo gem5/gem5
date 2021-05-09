@@ -35,6 +35,9 @@
 #include "cpu/static_inst.hh"
 #include "debug/Decode.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -114,5 +117,6 @@ class Decoder : public InstDecoder
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_DECODER_HH__

@@ -52,6 +52,9 @@
 #include "mem/ruby/network/simple/Throttle.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 
+namespace gem5
+{
+
 SimpleNetwork::SimpleNetwork(const Params &p)
     : Network(p), m_buffer_size(p.buffer_size),
       m_endpoint_bandwidth(p.endpoint_bandwidth),
@@ -239,3 +242,5 @@ NetworkStats::NetworkStats(statistics::Group *parent)
 {
 
 }
+
+} // namespace gem5

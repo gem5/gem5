@@ -44,12 +44,16 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
 const Addr PageShift = 12;
 const Addr PageBytes = 1ULL << PageShift;
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif //__ARCH_RISCV_PAGE_SIZE_HH__

@@ -39,6 +39,9 @@
 
 #include "params/GenericArmPciHost.hh"
 
+namespace gem5
+{
+
 GenericArmPciHost::GenericArmPciHost(const GenericArmPciHostParams &p)
     : GenericPciHost(p),
       intPolicy(p.int_policy), intBase(p.int_base),
@@ -68,3 +71,5 @@ GenericArmPciHost::mapPciInterrupt(const PciBusAddr &addr, PciIntPin pin) const
         fatal("Unsupported PCI interrupt routing policy.");
     }
 }
+
+} // namespace gem5

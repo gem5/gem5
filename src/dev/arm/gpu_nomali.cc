@@ -46,6 +46,9 @@
 #include "params/CustomNoMaliGpu.hh"
 #include "params/NoMaliGpu.hh"
 
+namespace gem5
+{
+
 static const std::map<enums::NoMaliGpuType, nomali_gpu_type_t> gpuTypeMap{
     { enums::T60x, NOMALI_GPU_T60X },
     { enums::T62x, NOMALI_GPU_T62X },
@@ -374,3 +377,5 @@ CustomNoMaliGpu::onReset()
     for (const auto &reg : idRegs)
         writeRegRaw(reg.first, reg.second);
 }
+
+} // namespace gem5

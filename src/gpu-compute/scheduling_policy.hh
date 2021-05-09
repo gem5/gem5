@@ -36,6 +36,9 @@
 
 #include <vector>
 
+namespace gem5
+{
+
 class Wavefront;
 
 /**
@@ -68,5 +71,7 @@ class __SchedulingPolicy : public SchedulingPolicy
         return Policy::__chooseWave(sched_list);
     }
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_SCHEDULING_POLICY_HH__

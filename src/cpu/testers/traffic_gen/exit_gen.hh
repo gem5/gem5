@@ -45,6 +45,9 @@
 
 #include "base_gen.hh"
 
+namespace gem5
+{
+
 /**
  * The exit generator exits from the simulation
  * once entered.
@@ -65,5 +68,7 @@ class ExitGen : public BaseGen
     Tick nextPacketTick(bool elastic, Tick delay) const;
 
 };
+
+} // namespace gem5
 
 #endif

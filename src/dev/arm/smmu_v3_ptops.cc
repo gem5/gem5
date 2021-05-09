@@ -40,6 +40,9 @@
 #include "base/bitfield.hh"
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 bool
 V7LPageTableOps::isValid(pte_t pte, unsigned level) const
 {
@@ -421,3 +424,5 @@ V8PageTableOps64k::lastLevel() const
 {
     return 3;
 }
+
+} // namespace gem5

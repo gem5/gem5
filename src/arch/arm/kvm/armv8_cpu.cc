@@ -42,6 +42,9 @@
 #include "debug/KvmContext.hh"
 #include "params/ArmV8KvmCPU.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 // Unlike gem5, kvm doesn't count the SP as a normal integer register,
@@ -398,3 +401,5 @@ ArmV8KvmCPU::getSysRegMap() const
 
     return sysRegMap;
 }
+
+} // namespace gem5

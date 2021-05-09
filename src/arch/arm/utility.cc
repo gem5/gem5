@@ -53,6 +53,9 @@
 #include "mem/port_proxy.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -1328,3 +1331,4 @@ encodePhysAddrRange64(int pa_size)
 }
 
 } // namespace ArmISA
+} // namespace gem5

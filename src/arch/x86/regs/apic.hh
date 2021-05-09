@@ -31,6 +31,9 @@
 
 #include "base/bitunion.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
     enum ApicRegIndex
@@ -100,6 +103,8 @@ namespace X86ISA
     BitUnion32(InterruptCommandRegHigh)
         Bitfield<31, 24> destination;
     EndBitUnion(InterruptCommandRegHigh)
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif

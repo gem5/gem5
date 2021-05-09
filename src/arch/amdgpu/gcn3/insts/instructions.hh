@@ -39,6 +39,9 @@
 #include "arch/amdgpu/gcn3/insts/op_encodings.hh"
 #include "debug/GCN3.hh"
 
+namespace gem5
+{
+
 namespace Gcn3ISA
 {
     class Inst_SOP2__S_ADD_U32 : public Inst_SOP2
@@ -42709,5 +42712,6 @@ namespace Gcn3ISA
         void completeAcc(GPUDynInstPtr) override;
     }; // Inst_FLAT__FLAT_ATOMIC_DEC_X2
 } // namespace Gcn3ISA
+} // namespace gem5
 
 #endif // __ARCH_GCN3_INSTS_INSTRUCTIONS_HH__

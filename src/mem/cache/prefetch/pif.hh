@@ -44,6 +44,9 @@
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 
+namespace gem5
+{
+
 struct PIFPrefetcherParams;
 
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
@@ -191,5 +194,6 @@ class PIF : public Queued
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif // __MEM_CACHE_PREFETCH_PIF_HH__

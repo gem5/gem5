@@ -26,8 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+namespace gem5
+{
+
 /**
  * @ingroup api_base_utils
  */
 const char *gem5Version = "[DEVELOP-FOR-V21.01]";
 
+} // namespace gem5

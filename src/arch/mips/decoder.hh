@@ -37,6 +37,9 @@
 #include "cpu/static_inst.hh"
 #include "debug/Decode.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -118,5 +121,6 @@ class Decoder : public InstDecoder
 };
 
 } // namespace MipsISA
+} // namespace gem5
 
 #endif // __ARCH_MIPS_DECODER_HH__

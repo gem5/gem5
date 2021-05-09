@@ -43,6 +43,8 @@
 #include "base/addr_range.hh"
 #include "base/bitfield.hh"
 
+using namespace gem5;
+
 TEST(AddrRangeTest, ValidRange)
 {
     AddrRange r;

@@ -31,6 +31,8 @@
 #include "base/debug.hh"
 #include "base/gtest/logging.hh"
 
+using namespace gem5;
+
 /** Test assignment of names and descriptions. */
 TEST(DebugFlagTest, NameDesc)
 {

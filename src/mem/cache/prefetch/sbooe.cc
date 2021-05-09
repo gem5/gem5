@@ -31,6 +31,9 @@
 #include "debug/HWPrefetch.hh"
 #include "params/SBOOEPrefetcher.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
@@ -135,3 +138,4 @@ SBOOE::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 } // namespace prefetch
+} // namespace gem5

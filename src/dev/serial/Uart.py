@@ -48,12 +48,14 @@ class Uart(BasicPioDevice):
     type = 'Uart'
     abstract = True
     cxx_header = "dev/serial/uart.hh"
+    cxx_class = 'gem5::Uart'
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     device = Param.SerialDevice(Parent.any, "The terminal")
 
 class SimpleUart(Uart):
     type = 'SimpleUart'
     cxx_header = "dev/serial/simple.hh"
+    cxx_class = 'gem5::SimpleUart'
     byte_order = Param.ByteOrder("little", "Device byte order")
     pio_size = Param.Addr(0x4, "Size of address range")
     end_on_eot = Param.Bool(False, "End the simulation when a EOT is "\
@@ -62,6 +64,7 @@ class SimpleUart(Uart):
 class Uart8250(Uart):
     type = 'Uart8250'
     cxx_header = "dev/serial/uart8250.hh"
+    cxx_class = 'gem5::Uart8250'
     pio_size = Param.Addr(0x8, "Size of address range")
 
     def generateDeviceTree(self, state):

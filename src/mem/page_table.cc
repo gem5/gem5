@@ -41,6 +41,9 @@
 #include "sim/faults.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 void
 EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
 {
@@ -203,3 +206,4 @@ EmulationPageTable::unserialize(CheckpointIn &cp)
     }
 }
 
+} // namespace gem5

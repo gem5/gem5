@@ -39,6 +39,9 @@
 #include "params/Base64Delta32.hh"
 #include "params/Base64Delta8.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -74,3 +77,4 @@ Base16Delta8::Base16Delta8(const Params &p)
 }
 
 } // namespace compression
+} // namespace gem5

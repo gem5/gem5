@@ -39,6 +39,9 @@
 #include "mem/ruby/protocol/AccessType.hh"
 #include "mem/ruby/protocol/RubyRequest.hh"
 
+namespace gem5
+{
+
 class Set;
 
 class AddressProfiler
@@ -111,5 +114,7 @@ operator<<(std::ostream& out, const AddressProfiler& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_PROFILER_ADDRESSPROFILER_HH__

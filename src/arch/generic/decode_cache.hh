@@ -33,6 +33,9 @@
 #include "cpu/decode_cache.hh"
 #include "cpu/static_inst_fwd.hh"
 
+namespace gem5
+{
+
 namespace GenericISA
 {
 
@@ -74,5 +77,6 @@ class BasicDecodeCache
 };
 
 } // namespace GenericISA
+} // namespace gem5
 
 #endif // __ARCH_GENERIC_DECODE_CACHE_HH__

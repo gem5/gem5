@@ -38,6 +38,9 @@
 #include "arch/arm/faults.hh"
 #include "arch/arm/insts/tme64.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 namespace ArmISAInst {
@@ -106,4 +109,5 @@ MicroTcommit64::completeAcc(PacketPtr pkt, ExecContext *xc,
 
 }
 
-} // namespace
+} // namespace ArmISAInst
+} // namespace gem5

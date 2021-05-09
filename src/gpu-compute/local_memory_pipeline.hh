@@ -50,6 +50,9 @@
  * loads and stores that have returned from the LDS.
  */
 
+namespace gem5
+{
+
 class ComputeUnit;
 class Wavefront;
 
@@ -104,5 +107,7 @@ class LocalMemPipeline
         statistics::Scalar loadVrfBankConflictCycles;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __LOCAL_MEMORY_PIPELINE_HH__

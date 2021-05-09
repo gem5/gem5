@@ -40,6 +40,9 @@
 
 #include "arch/arm/insts/pred_inst.hh"
 
+namespace gem5
+{
+
 class MrsOp : public ArmISA::PredOp
 {
   protected:
@@ -435,5 +438,7 @@ class McrMrcImplDefined : public McrMrcMiscInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 
 };
+
+} // namespace gem5
 
 #endif

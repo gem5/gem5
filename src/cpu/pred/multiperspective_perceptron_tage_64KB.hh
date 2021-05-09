@@ -43,6 +43,9 @@
 #include "params/MPP_StatisticalCorrector_64KB.hh"
 #include "params/MultiperspectivePerceptronTAGE64KB.hh"
 
+namespace gem5
+{
+
 class MPP_StatisticalCorrector_64KB : public MPP_StatisticalCorrector
 {
     const unsigned numEntriesSecondLocalHistories;
@@ -85,5 +88,7 @@ class MultiperspectivePerceptronTAGE64KB :
     MultiperspectivePerceptronTAGE64KB(
             const MultiperspectivePerceptronTAGE64KBParams &p);
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_TAGE_64KB_HH__

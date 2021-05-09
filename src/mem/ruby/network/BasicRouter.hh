@@ -36,6 +36,9 @@
 #include "params/BasicRouter.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class BasicRouter : public ClockedObject
 {
   public:
@@ -60,5 +63,7 @@ operator<<(std::ostream& out, const BasicRouter& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_BASICROUTER_HH__

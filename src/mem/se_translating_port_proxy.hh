@@ -43,6 +43,9 @@
 
 #include "mem/translating_port_proxy.hh"
 
+namespace gem5
+{
+
 class SETranslatingPortProxy : public TranslatingPortProxy
 {
 
@@ -64,5 +67,7 @@ class SETranslatingPortProxy : public TranslatingPortProxy
     SETranslatingPortProxy(ThreadContext *tc, AllocType alloc=NextPage,
                            Request::Flags _flags=0);
 };
+
+} // namespace gem5
 
 #endif // __MEM_SE_TRANSLATING_PORT_PROXY_HH__

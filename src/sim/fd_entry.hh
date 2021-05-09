@@ -40,6 +40,9 @@
 
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class EmulatedDriver;
 
 
@@ -263,5 +266,7 @@ class SocketFDEntry: public HBFDEntry
     int _type;
     int _protocol;
 };
+
+} // namespace gem5
 
 #endif // __FD_ENTRY_HH__

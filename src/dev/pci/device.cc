@@ -59,6 +59,9 @@
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 PciDevice::PciDevice(const PciDeviceParams &p)
     : DmaDevice(p),
       _busAddr(p.pci_bus, p.pci_dev, p.pci_func),
@@ -550,3 +553,5 @@ PciDevice::unserialize(CheckpointIn &cp)
     pxcap.pxdc2 = tmp32;
     pioPort.sendRangeChange();
 }
+
+} // namespace gem5

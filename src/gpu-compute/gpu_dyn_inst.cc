@@ -40,6 +40,9 @@
 #include "gpu-compute/shader.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
                        GPUStaticInst *static_inst, InstSeqNum instSeqNum)
     : GPUExecContext(_cu, _wf), scalarAddr(0), addr(computeUnit()->wfSize(),
@@ -987,3 +990,5 @@ GPUDynInst::profileLineAddressTime(Addr addr, Tick currentTime, int hopId)
         lineAddressTime.insert(std::make_pair(addr, addressTimeVec));
     }
 }
+
+} // namespace gem5

@@ -33,6 +33,9 @@
 #include "cpu/exetrace.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace Trace {
 
 void
@@ -50,3 +53,4 @@ Trace::IntelTraceRecord::dump()
 }
 
 } // namespace Trace
+} // namespace gem5

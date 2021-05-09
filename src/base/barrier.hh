@@ -40,6 +40,9 @@
 
 #include <condition_variable>
 
+namespace gem5
+{
+
 class Barrier
 {
   private:
@@ -76,5 +79,7 @@ class Barrier
         return false;
     }
 };
+
+} // namespace gem5
 
 #endif // __BASE_BARRIER_HH__

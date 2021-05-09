@@ -41,6 +41,9 @@
 #include "arch/arm/generated/decoder.hh"
 #include "arch/arm/insts/pred_inst.hh"
 
+namespace gem5
+{
+
 namespace ArmISA {
 
 template <typename Element,
@@ -537,6 +540,7 @@ class SveIndexedMemSV : public PredMacroOp
     }
 };
 
-}  // namespace ArmISA
+} // namespace ArmISA
+} // namespace gem5
 
 #endif  // __ARCH_ARM_SVE_MACROMEM_HH__

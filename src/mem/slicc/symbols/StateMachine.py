@@ -244,6 +244,7 @@ from m5.objects.Controller import RubyController
 class $py_ident(RubyController):
     type = '$py_ident'
     cxx_header = 'mem/ruby/protocol/${c_ident}.hh'
+    cxx_class = 'gem5::$py_ident'
 ''')
         code.indent()
         for param in self.config_parameters:
@@ -297,6 +298,9 @@ class $py_ident(RubyController):
 
         # for adding information to the protocol debug trace
         code('''
+namespace gem5
+{
+
 extern std::stringstream ${ident}_transitionComment;
 
 class $c_ident : public AbstractController
@@ -451,8 +455,14 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
             code('${{var.type.c_ident}}$th* m_${{var.ident}}_ptr;')
 
         code.dedent()
-        code('};')
-        code('#endif // __${ident}_CONTROLLER_H__')
+        code('''
+};
+
+} // namespace gem5
+
+#endif // __${ident}_CONTROLLER_H__
+''')
+
         code.write(path, '%s.hh' % c_ident)
 
     def printControllerCC(self, path, includes):
@@ -527,6 +537,9 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         num_in_ports = len(self.in_ports)
 
         code('''
+namespace gem5
+{
+
 int $c_ident::m_num_controllers = 0;
 std::vector<statistics::Vector *>  $c_ident::eventVec;
 std::vector<std::vector<statistics::Vector *> >  $c_ident::transVec;
@@ -1197,6 +1210,8 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
         code('''
     return read;
 }
+
+} // namespace gem5
 ''')
 
         code.write(path, "%s.cc" % c_ident)
@@ -1248,6 +1263,8 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
         port_to_buf_map, in_msg_bufs, msg_bufs = self.getBufferMaps(ident)
 
         code('''
+namespace gem5
+{
 
 void
 ${ident}_Controller::wakeup()
@@ -1323,6 +1340,8 @@ ${ident}_Controller::wakeup()
         break;
     }
 }
+
+} // namespace gem5
 ''')
 
         code.write(path, "%s_Wakeup.cc" % self.ident)
@@ -1352,6 +1371,9 @@ ${ident}_Controller::wakeup()
 
 #define GET_TRANSITION_COMMENT() (${ident}_transitionComment.str())
 #define CLEAR_TRANSITION_COMMENT() (${ident}_transitionComment.str(""))
+
+namespace gem5
+{
 
 TransitionResult
 ${ident}_Controller::doTransition(${ident}_Event event,
@@ -1580,6 +1602,8 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 
     return TransitionResult_Valid;
 }
+
+} // namespace gem5
 ''')
         code.write(path, "%s_Transitions.cc" % self.ident)
 

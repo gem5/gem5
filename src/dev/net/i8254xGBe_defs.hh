@@ -32,6 +32,9 @@
 #include "base/bitfield.hh"
 #include "base/compiler.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(iGbReg, igbreg);
 namespace igbreg
 {
@@ -940,4 +943,6 @@ struct Regs : public Serializable
         UNSERIALIZE_SCALAR(sw_fw_sync);
     }
 };
+
 } // namespace igbreg
+} // namespace gem5

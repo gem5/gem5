@@ -43,6 +43,9 @@
 #include "dev/arm/smmu_v3.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 SMMUTranslRequest
 SMMUTranslRequest::fromPacket(PacketPtr pkt, bool ats)
 {
@@ -1477,3 +1480,5 @@ SMMUTranslationProcess::doReadPTE(Yield &yield, Addr va, Addr addr,
 
     doRead(yield, base, ptr, pte_size);
 }
+
+} // namespace gem5

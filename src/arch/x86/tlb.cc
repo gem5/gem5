@@ -57,6 +57,9 @@
 #include "sim/process.hh"
 #include "sim/pseudo_inst.hh"
 
+namespace gem5
+{
+
 namespace X86ISA {
 
 TLB::TLB(const Params &p)
@@ -575,3 +578,4 @@ TLB::getTableWalkerPort()
 }
 
 } // namespace X86ISA
+} // namespace gem5

@@ -53,6 +53,9 @@
 #include "mem/ruby/system/RubyPort.hh"
 #include "params/RubySequencer.hh"
 
+namespace gem5
+{
+
 struct SequencerRequest
 {
     PacketPtr pkt;
@@ -321,5 +324,7 @@ operator<<(std::ostream& out, const Sequencer& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_SYSTEM_SEQUENCER_HH__

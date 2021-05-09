@@ -40,6 +40,7 @@ from m5.params import *
 class ThermalDomain(SimObject):
     type = 'ThermalDomain'
     cxx_header = "sim/power/thermal_domain.hh"
+    cxx_class = 'gem5::ThermalDomain'
 
     cxx_exports = [
         PyBindMethod("setNode"),

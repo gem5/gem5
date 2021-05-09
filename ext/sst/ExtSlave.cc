@@ -48,13 +48,15 @@
 #undef fatal
 #endif
 
+#include <base/types.hh>
+
 using namespace SST;
 using namespace SST::gem5;
 using namespace SST::MemHierarchy;
 
 ExtSlave::ExtSlave(gem5Component *g5c, Output &out,
-        ::ExternalSlave& port, std::string &name) :
-    Port(name, port),
+        ::gem5::ExternalSlave& port, std::string &name) :
+    ::gem5::ExternalSlave::Port(name, port),
     comp(g5c), out(out), simPhase(CONSTRUCTION), initPackets(NULL),
     link(comp->configureLink(name, new Event::Handler<ExtSlave>(this,
                                               &ExtSlave::handleEvent)))
@@ -64,7 +66,8 @@ ExtSlave::ExtSlave(gem5Component *g5c, Output &out,
     }
 }
 
-void ExtSlave::init(unsigned phase)
+void
+ExtSlave::init(unsigned phase)
 {
     simPhase = INIT;
     if (initPackets) {
@@ -78,15 +81,16 @@ void ExtSlave::init(unsigned phase)
 }
 
 void
-ExtSlave::recvFunctional(PacketPtr pkt)
+ExtSlave::recvFunctional(::gem5::PacketPtr pkt)
 {
     if (simPhase == CONSTRUCTION) {
         if (initPackets == NULL) {
             initPackets = new std::list<MemEvent*>;
         }
-        ::MemCmd::Command pktCmd = (::MemCmd::Command)pkt->cmd.toInt();
-        assert(pktCmd == ::MemCmd::WriteReq);
-        Addr a = pkt->getAddr();
+        ::gem5::MemCmd::Command pktCmd =
+            (::gem5::MemCmd::Command)pkt->cmd.toInt();
+        assert(pktCmd == ::gem5::MemCmd::WriteReq);
+        ::gem5::Addr a = pkt->getAddr();
         MemEvent* ev = new MemEvent(comp, a, a, GetX);
         ev->setPayload(pkt->getSize(), pkt->getPtr<uint8_t>());
         initPackets->push_back(ev);
@@ -96,17 +100,17 @@ ExtSlave::recvFunctional(PacketPtr pkt)
 }
 
 bool
-ExtSlave::recvTimingReq(PacketPtr pkt)
+ExtSlave::recvTimingReq(::gem5::PacketPtr pkt)
 {
     Command cmd;
-    switch ((::MemCmd::Command)pkt->cmd.toInt()) {
-    case ::MemCmd::HardPFReq:
-    case ::MemCmd::SoftPFReq:
-    case ::MemCmd::LoadLockedReq:
-    case ::MemCmd::ReadExReq:
-    case ::MemCmd::ReadReq:       cmd = GetS;   break;
-    case ::MemCmd::StoreCondReq:
-    case ::MemCmd::WriteReq:      cmd = GetX;   break;
+    switch ((::gem5::MemCmd::Command)pkt->cmd.toInt()) {
+    case ::gem5::MemCmd::HardPFReq:
+    case ::gem5::MemCmd::SoftPFReq:
+    case ::gem5::MemCmd::LoadLockedReq:
+    case ::gem5::MemCmd::ReadExReq:
+    case ::gem5::MemCmd::ReadReq:       cmd = GetS;   break;
+    case ::gem5::MemCmd::StoreCondReq:
+    case ::gem5::MemCmd::WriteReq:      cmd = GetX;   break;
     default:
         out.fatal(CALL_INFO, 1, "Don't know how to convert gem5 packet "
                   "command %s to SST\n", pkt->cmd.toString().c_str());
@@ -114,10 +118,13 @@ ExtSlave::recvTimingReq(PacketPtr pkt)
 
     auto ev = new MemEvent(comp, pkt->getAddr(), pkt->getAddr(), cmd);
     ev->setPayload(pkt->getSize(), pkt->getPtr<uint8_t>());
-    if ((::MemCmd::Command)pkt->cmd.toInt() == ::MemCmd::LoadLockedReq)
+    if ((::gem5::MemCmd::Command)pkt->cmd.toInt() ==
+        ::gem5::MemCmd::LoadLockedReq) {
         ev->setLoadLink();
-    else if ((::MemCmd::Command)pkt->cmd.toInt() == ::MemCmd::StoreCondReq)
+    } else if ((::gem5::MemCmd::Command)pkt->cmd.toInt() ==
+        ::gem5::MemCmd::StoreCondReq) {
         ev->setStoreConditional();
+    }
 
     if (pkt->req->isLockedRMW())   ev->setFlag(MemEvent::F_LOCKED);
     if (pkt->req->isUncacheable()) ev->setFlag(MemEvent::F_NONCACHEABLE);
@@ -152,7 +159,7 @@ ExtSlave::handleEvent(Event* ev)
 
     PacketMap_t::iterator mi = PacketMap.find(id);
     if (mi != PacketMap.end()) { // replying to prior request
-        PacketPtr pkt = mi->second;
+        ::gem5::PacketPtr pkt = mi->second;
         PacketMap.erase(mi);
 
         pkt->makeResponse();  // Convert to a response packet
@@ -175,10 +182,10 @@ ExtSlave::handleEvent(Event* ev)
 
         // make Req/Pkt for Snoop/no response needed
         // presently no consideration for masterId, packet type, flags...
-        RequestPtr req = std::make_shared<Request>(
+        ::gem5::RequestPtr req = std::make_shared<::gem5::Request>(
             event->getAddr(), event->getSize(), 0, 0);
 
-        auto pkt = new Packet(req, ::MemCmd::InvalidateReq);
+        auto pkt = new ::gem5::Packet(req, ::gem5::MemCmd::InvalidateReq);
 
         // Clear out bus delay notifications
         pkt->headerDelay = pkt->payloadDelay = 0;

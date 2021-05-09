@@ -38,6 +38,9 @@
 
 #include "arch/amdgpu/vega/gpu_registers.hh"
 
+namespace gem5
+{
+
 // values for SDWA select operations
 enum SDWASelVals : int
 {
@@ -890,5 +893,6 @@ namespace VegaISA
         sdwaInstDstImpl(dst, origDst, clamp, dst_sel, dst_unusedBits_format);
     }
 } // namespace VegaISA
+} // namespace gem5
 
 #endif // __ARCH_VEGA_INSTS_INST_UTIL_HH__

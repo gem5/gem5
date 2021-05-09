@@ -29,6 +29,8 @@
 
 #include "arch/arm/aapcs64.hh"
 
+using namespace gem5;
+
 TEST(Aapcs64, IsAapcs64ShortVector)
 {
     using Scalar = uint64_t;

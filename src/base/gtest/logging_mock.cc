@@ -31,6 +31,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 namespace {
 
 // This custom exception type will help prevent fatal exceptions from being
@@ -108,3 +111,5 @@ Logger::getHack() {
     static GTestLogger* hack_logger = new GTestLogger("hack: ");
     return *hack_logger;
 }
+
+} // namespace gem5

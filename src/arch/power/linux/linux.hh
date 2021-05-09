@@ -34,6 +34,9 @@
 
 #include "kern/linux/linux.hh"
 
+namespace gem5
+{
+
 /*
  * This works for a 2.6.15 kernel.
  */
@@ -212,5 +215,7 @@ class PowerLinux : public Linux
         }
     }
 };
+
+} // namespace gem5
 
 #endif // __ARCH_POWER_LINUX_LINUX_HH__

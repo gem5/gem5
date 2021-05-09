@@ -45,6 +45,6 @@
 
 #include "base/addr_range.hh"
 
-PYBIND11_MAKE_OPAQUE(std::vector<AddrRange>);
+PYBIND11_MAKE_OPAQUE(std::vector<gem5::AddrRange>);
 
-#endif
+#endif // __PYTHON_PYBIND11_CORE_HH__

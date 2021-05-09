@@ -43,6 +43,9 @@
 #include "base/trace.hh"
 #include "debug/TrafficGen.hh"
 
+namespace gem5
+{
+
 void
 IdleGen::enter() { }
 
@@ -58,3 +61,4 @@ IdleGen::nextPacketTick(bool elastic, Tick delay) const
         return MaxTick;
 }
 
+} // namespace gem5

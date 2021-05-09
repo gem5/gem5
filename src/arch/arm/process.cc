@@ -57,6 +57,9 @@
 #include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 ArmProcess::ArmProcess(const ProcessParams &params,
@@ -475,3 +478,5 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
     //Align the "stackMin" to a page boundary.
     memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
 }
+
+} // namespace gem5

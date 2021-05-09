@@ -42,6 +42,9 @@
 #include "base/intmath.hh"
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 namespace Gcn3ISA
 {
     enum OpSelector : int
@@ -227,5 +230,6 @@ namespace Gcn3ISA
     bool isExecMask(int opIdx);
     bool isVccReg(int opIdx);
 } // namespace Gcn3ISA
+} // namespace gem5
 
 #endif // __ARCH_GCN3_REGISTERS_HH__

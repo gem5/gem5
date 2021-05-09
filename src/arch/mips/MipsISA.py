@@ -40,7 +40,7 @@ from m5.objects.BaseISA import BaseISA
 
 class MipsISA(BaseISA):
     type = 'MipsISA'
-    cxx_class = 'MipsISA::ISA'
+    cxx_class = 'gem5::MipsISA::ISA'
     cxx_header = "arch/mips/isa.hh"
 
     system = Param.System(Parent.any, "System this ISA object belongs to")

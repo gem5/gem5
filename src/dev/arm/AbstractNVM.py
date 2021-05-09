@@ -41,3 +41,4 @@ class AbstractNVM(SimObject):
     type = 'AbstractNVM'
     abstract = True
     cxx_header = "dev/arm/abstract_nvm.hh"
+    cxx_class = 'gem5::AbstractNVM'

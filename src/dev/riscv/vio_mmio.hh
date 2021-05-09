@@ -43,6 +43,9 @@
 #include "dev/riscv/plic_device.hh"
 #include "dev/virtio/base.hh"
 
+namespace gem5
+{
+
 struct MmioVirtIOParams;
 
 class MmioVirtIO : public PlicIntDevice
@@ -109,5 +112,7 @@ class MmioVirtIO : public PlicIntDevice
   protected: // Params
     VirtIODeviceBase &vio;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_VIO_MMIO_HH__

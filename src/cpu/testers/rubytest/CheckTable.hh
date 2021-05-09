@@ -36,6 +36,9 @@
 
 #include "mem/ruby/common/Address.hh"
 
+namespace gem5
+{
+
 class Check;
 class RubyTester;
 
@@ -77,5 +80,7 @@ operator<<(std::ostream& out, const CheckTable& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __CPU_RUBYTEST_CHECKTABLE_HH__

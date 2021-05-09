@@ -42,6 +42,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class Time
 {
   protected:
@@ -264,5 +267,7 @@ operator<<(std::ostream &out, const Time &time)
 }
 
 time_t mkutctime(struct tm *time);
+
+} // namespace gem5
 
 #endif // __BASE_TIME_HH__

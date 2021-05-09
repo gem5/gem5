@@ -43,6 +43,9 @@
 #include "debug/CommMonitor.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 CommMonitor::CommMonitor(const Params &params)
     : SimObject(params),
       memSidePort(name() + "-mem_side_port", *this),
@@ -565,3 +568,5 @@ CommMonitor::startup()
 {
     schedule(samplePeriodicEvent, curTick() + samplePeriodTicks);
 }
+
+} // namespace gem5

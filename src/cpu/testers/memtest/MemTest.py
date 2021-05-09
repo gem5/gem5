@@ -44,6 +44,7 @@ from m5.objects.ClockedObject import ClockedObject
 class MemTest(ClockedObject):
     type = 'MemTest'
     cxx_header = "cpu/testers/memtest/memtest.hh"
+    cxx_class = 'gem5::MemTest'
 
     # Interval of packet injection, the size of the memory range
     # touched, and an optional stop condition

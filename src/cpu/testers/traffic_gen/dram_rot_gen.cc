@@ -44,6 +44,9 @@
 #include "debug/TrafficGen.hh"
 #include "enums/AddrMap.hh"
 
+namespace gem5
+{
+
 PacketPtr
 DramRotGen::getNextPacket()
 {
@@ -132,3 +135,5 @@ DramRotGen::getNextPacket()
     // return the generated packet
     return pkt;
 }
+
+} // namespace gem5

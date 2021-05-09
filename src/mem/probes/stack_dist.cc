@@ -40,6 +40,9 @@
 #include "params/StackDistProbe.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 StackDistProbe::StackDistProbe(const StackDistProbeParams &p)
     : BaseMemProbe(p),
       lineSize(p.line_size),
@@ -128,3 +131,5 @@ StackDistProbe::handleRequest(const probing::PacketInfo &pkt_info)
             stats.writeLogHist.sample(sd_lg2);
     }
 }
+
+} // namespace gem5

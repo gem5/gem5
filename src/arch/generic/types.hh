@@ -47,6 +47,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace GenericISA
 {
 
@@ -476,5 +479,7 @@ operator<<(std::ostream & os, const DelaySlotUPCState<InstWidth> &pc)
 }
 
 }
+
+} // namespace gem5
 
 #endif

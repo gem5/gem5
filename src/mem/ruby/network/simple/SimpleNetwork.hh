@@ -47,6 +47,9 @@
 #include "mem/ruby/network/Network.hh"
 #include "params/SimpleNetwork.hh"
 
+namespace gem5
+{
+
 class NetDest;
 class MessageBuffer;
 class Throttle;
@@ -121,5 +124,7 @@ operator<<(std::ostream& out, const SimpleNetwork& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_SIMPLE_SIMPLENETWORK_HH__

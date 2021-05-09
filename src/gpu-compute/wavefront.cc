@@ -44,6 +44,9 @@
 #include "gpu-compute/simple_pool_manager.hh"
 #include "gpu-compute/vector_register_file.hh"
 
+namespace gem5
+{
+
 Wavefront::Wavefront(const Params &p)
   : SimObject(p), wfSlotId(p.wf_slot_id), simdId(p.simdId),
     maxIbSize(p.max_ib_size), _gpuISA(*this),
@@ -1462,3 +1465,5 @@ Wavefront::WavefrontStats::WavefrontStats(statistics::Group *parent)
     vecRawDistance.init(0, 20, 1);
     readsPerWrite.init(0, 4, 1);
 }
+
+} // namespace gem5

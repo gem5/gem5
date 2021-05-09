@@ -42,6 +42,9 @@
 #include "base/types.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 /*
  * --- AddressManager has 3 main tasks ---
  *    (1) generate DRF request sequences
@@ -270,5 +273,7 @@ class AddressManager
     typedef std::vector<LastWriter*> LogTable;
     LogTable logTable;
 };
+
+} // namespace gem5
 
 #endif /* CPU_TESTERS_PROTOCOL_TESTER_ADDRESS_MANAGER_HH_ */

@@ -60,6 +60,9 @@
 #include "gpu-compute/hsa_queue_entry.hh"
 #include "params/GPUCommandProcessor.hh"
 
+namespace gem5
+{
+
 struct GPUCommandProcessorParams;
 class GPUComputeDriver;
 class GPUDispatcher;
@@ -300,5 +303,7 @@ class GPUCommandProcessor : public DmaDevice
         }
     }
 };
+
+} // namespace gem5
 
 #endif // __DEV_HSA_GPU_COMMAND_PROCESSOR_HH__

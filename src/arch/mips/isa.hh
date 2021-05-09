@@ -41,6 +41,9 @@
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class BaseCPU;
 class Checkpoint;
 struct MipsISAParams;
@@ -165,6 +168,7 @@ namespace MipsISA
 
         void copyRegsFrom(ThreadContext *src) override;
     };
-}
+} // namespace MipsISA
+} // namespace gem5
 
 #endif

@@ -42,6 +42,9 @@
 
 using std::string;
 
+namespace gem5
+{
+
 EtherDump::EtherDump(const Params &p)
     : SimObject(p), stream(simout.create(p.file, true)->stream()),
       maxlen(p.maxlen)
@@ -102,3 +105,5 @@ EtherDump::dumpPacket(EthPacketPtr &packet)
     stream->write(reinterpret_cast<char *>(packet->data), pkthdr.caplen);
     stream->flush();
 }
+
+} // namespace gem5

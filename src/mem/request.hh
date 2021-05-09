@@ -64,6 +64,9 @@
 #include "mem/htm.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 /**
  * Special TaskIds that are used for per-context-switch stats dumps
  * and Cache Occupancy. Having too many tasks seems to be a problem
@@ -96,7 +99,7 @@ class Request
   public:
     typedef uint64_t FlagsType;
     typedef uint8_t ArchFlagsType;
-    typedef ::Flags<FlagsType> Flags;
+    typedef gem5::Flags<FlagsType> Flags;
 
     enum : FlagsType
     {
@@ -266,7 +269,7 @@ class Request
     /** @} */
 
     typedef uint64_t CacheCoherenceFlagsType;
-    typedef ::Flags<CacheCoherenceFlagsType> CacheCoherenceFlags;
+    typedef gem5::Flags<CacheCoherenceFlagsType> CacheCoherenceFlags;
 
     /**
      * These bits are used to set the coherence policy for the GPU and are
@@ -322,7 +325,7 @@ class Request
 
   private:
     typedef uint16_t PrivateFlagsType;
-    typedef ::Flags<PrivateFlagsType> PrivateFlags;
+    typedef gem5::Flags<PrivateFlagsType> PrivateFlags;
 
     enum : PrivateFlagsType
     {
@@ -1012,5 +1015,7 @@ class Request
     bool isCacheMaintenance() const { return _flags.isSet(CLEAN|INVALIDATE); }
     /** @} */
 };
+
+} // namespace gem5
 
 #endif // __MEM_REQUEST_HH__

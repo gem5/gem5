@@ -53,6 +53,9 @@
 #include "sim/faults.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 namespace Trace {
@@ -1366,3 +1369,4 @@ TarmacParserRecord::iSetStateToStr(ISetState isetstate) const
 }
 
 } // namespace Trace
+} // namespace gem5

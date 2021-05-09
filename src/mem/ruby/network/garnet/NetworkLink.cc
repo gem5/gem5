@@ -36,6 +36,9 @@
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet/CreditLink.hh"
 
+namespace gem5
+{
+
 NetworkLink::NetworkLink(const Params &p)
     : ClockedObject(p), Consumer(this), m_id(p.link_id),
       m_type(NUM_LINK_TYPES_),
@@ -115,3 +118,5 @@ NetworkLink::functionalWrite(Packet *pkt)
 {
     return linkBuffer.functionalWrite(pkt);
 }
+
+} // namespace gem5

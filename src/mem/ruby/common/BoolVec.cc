@@ -40,9 +40,14 @@
 #include <iostream>
 #include <vector>
 
+namespace gem5
+{
+
 std::ostream& operator<<(std::ostream& os, const BoolVec& myvector) {
     for (const bool e: myvector) {
         os << " " << e;
     }
     return os;
 }
+
+} // namespace gem5

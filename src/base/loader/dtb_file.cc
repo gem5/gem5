@@ -37,6 +37,9 @@
 #include "libfdt.h"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -158,3 +161,4 @@ DtbFile::buildImage() const
 }
 
 } // namespace loader
+} // namespace gem5

@@ -43,6 +43,9 @@
 
 #include "arch/generic/mmu.hh"
 
+namespace gem5
+{
+
 void
 BaseMMU::takeOverFrom(BaseMMU *old_mmu)
 {
@@ -60,3 +63,5 @@ BaseMMU::takeOverFrom(BaseMMU *old_mmu)
     itb->takeOverFrom(old_mmu->itb);
     dtb->takeOverFrom(old_mmu->dtb);
 }
+
+} // namespace gem5

@@ -37,6 +37,9 @@
 #include "base/trace.hh"
 #include "debug/TokenPort.hh"
 
+namespace gem5
+{
+
 void
 TokenRequestPort::bind(Port &peer)
 {
@@ -179,3 +182,5 @@ TokenManager::acquireTokens(int num_tokens)
     DPRINTF(TokenPort, "Acquired %d tokens, have %d\n",
                        num_tokens, availableTokens);
 }
+
+} // namespace gem5

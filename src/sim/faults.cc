@@ -52,6 +52,9 @@
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 
+namespace gem5
+{
+
 void
 FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
@@ -128,3 +131,5 @@ void GenericHtmFailureFault::invoke(ThreadContext *tc,
     // send abort packet to ruby (in final breath)
     tc->htmAbortTransaction(htmUid, cause);
 }
+
+} // namespace gem5

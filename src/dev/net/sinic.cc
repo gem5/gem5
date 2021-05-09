@@ -43,6 +43,9 @@
 #include "sim/eventq.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 using namespace networking;
 
 GEM5_DEPRECATED_NAMESPACE(Sinic, sinic);
@@ -1494,3 +1497,4 @@ Device::unserialize(CheckpointIn &cp)
 }
 
 } // namespace sinic
+} // namespace gem5

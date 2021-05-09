@@ -32,6 +32,9 @@
 
 #include <cstdint>
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -71,5 +74,6 @@ enum FCSRFields
 };
 
 } // namespace MipsISA
+} // namespace gem5
 
 #endif

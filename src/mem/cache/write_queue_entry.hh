@@ -57,6 +57,9 @@
 #include "mem/packet.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 class BaseCache;
 
 /**
@@ -184,5 +187,7 @@ class WriteQueueEntry : public QueueEntry, public Printable
     bool matchBlockAddr(const PacketPtr pkt) const override;
     bool conflictAddr(const QueueEntry* entry) const override;
 };
+
+} // namespace gem5
 
 #endif // __MEM_CACHE_WRITE_QUEUE_ENTRY_HH__

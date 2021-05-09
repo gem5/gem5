@@ -37,6 +37,9 @@
 #include "mem/port.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class TokenManager;
 class TokenResponsePort;
 
@@ -159,5 +162,7 @@ class TokenManager
      */
     void acquireTokens(int num_tokens);
 };
+
+} // namespace gem5
 
 #endif

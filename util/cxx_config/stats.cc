@@ -40,7 +40,7 @@
  *
  *  C++-only configuration stats handling example
  *
- *  Register with: statistics::registerHandlers(statsReset, statsDump)
+ *  Register with: gem5::statistics::registerHandlers(statsReset, statsDump)
  */
 
 #include <iostream>
@@ -54,7 +54,7 @@ namespace CxxConfig
 
 void statsPrepare()
 {
-    std::list<statistics::Info *> stats = statistics::statsList();
+    std::list<gem5::statistics::Info *> stats = gem5::statistics::statsList();
 
     /* gather_stats -> prepare */
     for (auto i = stats.begin(); i != stats.end(); ++i)
@@ -65,26 +65,26 @@ void statsDump()
 {
     std::cerr << "Stats dump\n";
 
-    statistics::processDumpQueue();
+    gem5::statistics::processDumpQueue();
 
-    std::list<statistics::Info *> stats = statistics::statsList();
+    std::list<gem5::statistics::Info *> stats = gem5::statistics::statsList();
 
     statsPrepare();
 
     /* gather_stats -> convert_value */
     for (auto i = stats.begin(); i != stats.end(); ++i) {
-        statistics::Info *stat = *i;
+        gem5::statistics::Info *stat = *i;
 
-        statistics::ScalarInfo *scalar =
-            dynamic_cast<statistics::ScalarInfo *>(stat);
-        statistics::VectorInfo *vector =
-            dynamic_cast<statistics::VectorInfo *>(stat);
+        gem5::statistics::ScalarInfo *scalar =
+            dynamic_cast<gem5::statistics::ScalarInfo *>(stat);
+        gem5::statistics::VectorInfo *vector =
+            dynamic_cast<gem5::statistics::VectorInfo *>(stat);
 
         if (scalar) {
             std::cerr << "SCALAR " << stat->name << ' '
                 << scalar->value() << '\n';
         } else if (vector) {
-            statistics::VResult results = vector->value();
+            gem5::statistics::VResult results = vector->value();
 
             unsigned int index = 0;
             for (auto e = results.begin(); e != results.end(); ++e) {
@@ -104,12 +104,12 @@ void statsReset()
 {
     std::cerr << "Stats reset\n";
 
-    statistics::processResetQueue();
+    gem5::statistics::processResetQueue();
 }
 
 void statsEnable()
 {
-    std::list<statistics::Info *> stats = statistics::statsList();
+    std::list<gem5::statistics::Info *> stats = gem5::statistics::statsList();
 
     for (auto i = stats.begin(); i != stats.end(); ++i)
         (*i)->enable();

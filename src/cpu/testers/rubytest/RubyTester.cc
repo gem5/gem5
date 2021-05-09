@@ -49,6 +49,9 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 RubyTester::RubyTester(const Params &p)
   : ClockedObject(p),
     checkStartEvent([this]{ wakeup(); }, "RubyTester tick",
@@ -278,3 +281,5 @@ RubyTester::print(std::ostream& out) const
 {
     out << "[RubyTester]" << std::endl;
 }
+
+} // namespace gem5

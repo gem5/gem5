@@ -41,6 +41,9 @@
 #include "debug/MinorScoreboard.hh"
 #include "debug/MinorTiming.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -307,3 +310,4 @@ Scoreboard::minorTrace() const
 }
 
 } // namespace minor
+} // namespace gem5

@@ -41,6 +41,9 @@
 #include "cpu/o3/dyn_inst.hh"
 #include "debug/SimpleTrace.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -72,3 +75,4 @@ SimpleTrace::regProbeListeners()
 }
 
 } // namespace o3
+} // namespace gem5

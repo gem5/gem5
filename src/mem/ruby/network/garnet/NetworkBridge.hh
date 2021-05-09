@@ -46,6 +46,9 @@
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 #include "params/NetworkBridge.hh"
 
+namespace gem5
+{
+
 class GarnetNetwork;
 
 class NetworkBridge: public CreditLink
@@ -94,5 +97,7 @@ class NetworkBridge: public CreditLink
     std::vector<std::queue<int>> extraCredit;
 
 };
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_NETWORK_BRIDGE_HH__

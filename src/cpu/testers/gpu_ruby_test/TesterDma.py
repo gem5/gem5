@@ -34,3 +34,4 @@ from m5.objects.Device import DmaDevice
 class TesterDma(DmaDevice):
     type = 'TesterDma'
     cxx_header = "cpu/testers/gpu_ruby_test/tester_dma.hh"
+    cxx_class = 'gem5::TesterDma'

@@ -59,6 +59,9 @@
 
 #define MAX_PF_INFLIGHT 8
 
+namespace gem5
+{
+
 class PrefetchEntry
 {
     public:
@@ -254,5 +257,7 @@ class RubyPrefetcher : public SimObject
             statistics::Scalar numMissedPrefetchedBlocks;
         } rubyPrefetcherStats;
 };
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_STRUCTURES_PREFETCHER_HH__

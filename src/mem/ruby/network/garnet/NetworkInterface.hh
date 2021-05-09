@@ -46,6 +46,9 @@
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "params/GarnetNetworkInterface.hh"
 
+namespace gem5
+{
+
 class MessageBuffer;
 class flitBuffer;
 
@@ -296,5 +299,7 @@ class NetworkInterface : public ClockedObject, public Consumer
     InputPort *getInportForVnet(int vnet);
     OutputPort *getOutportForVnet(int vnet);
 };
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_NETWORKINTERFACE_HH__

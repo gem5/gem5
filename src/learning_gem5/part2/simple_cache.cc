@@ -33,6 +33,9 @@
 #include "debug/SimpleCache.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 SimpleCache::SimpleCache(const SimpleCacheParams &params) :
     ClockedObject(params),
     latency(params.latency),
@@ -434,3 +437,5 @@ SimpleCache::SimpleCacheStats::SimpleCacheStats(statistics::Group *parent)
 {
     missLatency.init(16); // number of buckets
 }
+
+} // namespace gem5

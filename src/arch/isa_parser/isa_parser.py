@@ -606,8 +606,10 @@ class ISAParser(Grammar):
 
             fn = 'decoder-ns.hh.inc'
             assert(fn in self.files)
-            f.write('namespace %s {\n#include "%s"\n}\n'
-                    % (self.namespace, fn))
+            f.write('namespace gem5\n{\n')
+            f.write('namespace %s {\n#include "%s"\n} // namespace %s\n'
+                    % (self.namespace, fn, self.namespace))
+            f.write('} // namespace gem5')
             f.write('\n#endif  // __ARCH_%s_GENERATED_DECODER_HH__\n' %
                     self.isa_name.upper())
 
@@ -648,11 +650,13 @@ class ISAParser(Grammar):
 
                 fn = 'decoder-ns.cc.inc'
                 assert(fn in self.files)
+                print('namespace gem5\n{\n', file=f)
                 print('namespace %s {' % self.namespace, file=f)
                 if splits > 1:
                     print('#define __SPLIT %u' % i, file=f)
                 print('#include "%s"' % fn, file=f)
-                print('}', file=f)
+                print('} // namespace %s' % self.namespace, file=f)
+                print('} // namespace gem5', file=f)
 
         # instruction execution
         splits = self.splits[self.get_file('exec')]
@@ -669,11 +673,13 @@ class ISAParser(Grammar):
 
                 fn = 'exec-ns.cc.inc'
                 assert(fn in self.files)
+                print('namespace gem5\n{\n', file=f)
                 print('namespace %s {' % self.namespace, file=f)
                 if splits > 1:
                     print('#define __SPLIT %u' % i, file=f)
                 print('#include "%s"' % fn, file=f)
-                print('}', file=f)
+                print('} // namespace %s' % self.namespace, file=f)
+                print('} // namespace gem5', file=f)
 
     scaremonger_template ='''// DO NOT EDIT
 // This file was automatically generated from an ISA description:
@@ -1152,6 +1158,7 @@ del wrap
         'top_level_decode_block : decode_block'
         codeObj = t[1]
         codeObj.wrap_decode_block('''
+using namespace gem5;
 StaticInstPtr
 %(isa_name)s::Decoder::decodeInst(%(isa_name)s::ExtMachInst machInst)
 {

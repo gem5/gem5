@@ -37,6 +37,9 @@
 #include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct PowerISAParams;
 class ThreadContext;
 class Checkpoint;
@@ -140,5 +143,6 @@ class ISA : public BaseISA
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_ISA_HH__

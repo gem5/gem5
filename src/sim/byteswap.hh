@@ -58,8 +58,12 @@
 struct vring_used_elem;
 struct vring_desc;
 
+namespace gem5
+{
+
 // These functions actually perform the swapping for parameters of various bit
 // lengths.
+
 inline uint64_t
 swap_byte64(uint64_t x)
 {
@@ -192,5 +196,7 @@ inline T gtoh(T value, ByteOrder guest_byte_order)
     return guest_byte_order == ByteOrder::big ?
         betoh(value) : letoh(value);
 }
+
+} // namespace gem5
 
 #endif // __SIM_BYTE_SWAP_HH__

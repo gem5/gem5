@@ -37,6 +37,9 @@
 
 #include "mem/cache/replacement_policies/base.hh"
 
+namespace gem5
+{
+
 struct LRURPParams;
 
 GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
@@ -108,5 +111,6 @@ class LRU : public Base
 };
 
 } // namespace replacement_policy
+} // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_LRU_RP_HH__

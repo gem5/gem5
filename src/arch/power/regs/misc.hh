@@ -31,6 +31,9 @@
 
 #include "base/bitunion.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -97,5 +100,6 @@ BitUnion32(Fpscr)
 EndBitUnion(Fpscr)
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_MISCREGS_HH__

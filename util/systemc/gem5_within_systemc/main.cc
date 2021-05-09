@@ -71,6 +71,8 @@
 #include "sim/system.hh"
 #include "stats.hh"
 
+using namespace gem5;
+
 // Defining global string variable decalred in stats.hh
 std::string filename;
 

@@ -38,6 +38,9 @@
 #include "kern/freebsd/freebsd.hh"
 #include "sim/byteswap.hh"
 
+namespace gem5
+{
+
 class ArmFreebsd : public FreeBSD
 {
   public:
@@ -373,5 +376,7 @@ class ArmFreebsd64 : public ArmFreebsd
         int64_t tms_cstime;     //!< system time of children
     };
 };
+
+} // namespace gem5
 
 #endif

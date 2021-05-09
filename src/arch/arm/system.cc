@@ -51,6 +51,9 @@
 #include "dev/arm/gic_v2.hh"
 #include "mem/physical.hh"
 
+namespace gem5
+{
+
 using namespace linux;
 using namespace ArmISA;
 
@@ -234,3 +237,5 @@ ArmSystem::callClearWakeRequest(ThreadContext *tc)
     if (FVPBasePwrCtrl *pwr_ctrl = getArmSystem(tc)->getPowerController())
         pwr_ctrl->clearWakeRequest(tc);
 }
+
+} // namespace gem5

@@ -146,6 +146,9 @@
 #include "mem/page_table.hh"
 #include "sim/full_system.hh"
 
+namespace gem5
+{
+
 using namespace MipsISA;
 
 RemoteGDB::RemoteGDB(System *_system, int _port)
@@ -221,3 +224,5 @@ RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
     output = it->second;
     return true;
 }
+
+} // namespace gem5

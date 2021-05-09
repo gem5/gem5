@@ -45,6 +45,9 @@
 #include "sim/dvfs_handler.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 EnergyCtrl::EnergyCtrl(const Params &p)
     : BasicPioDevice(p, PIO_NUM_FIELDS * 4),        // each field is 32 bit
       dvfsHandler(p.dvfs_handler),
@@ -255,3 +258,5 @@ EnergyCtrl::init()
 {
     BasicPioDevice::init();
 }
+
+} // namespace gem5

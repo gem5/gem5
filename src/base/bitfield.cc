@@ -37,6 +37,9 @@
 
 #include "base/bitfield.hh"
 
+namespace gem5
+{
+
 /** Lookup table used for High Speed bit reversing */
 const uint8_t reverseBitsLookUpTable[] =
 {
@@ -63,3 +66,5 @@ const uint8_t reverseBitsLookUpTable[] =
     0x0F, 0x8F, 0x4F, 0xCF, 0x2F, 0xAF, 0x6F, 0xEF, 0x1F, 0x9F, 0x5F, 0xDF,
     0x3F, 0xBF, 0x7F, 0xFF
 };
+
+} // namespace gem5

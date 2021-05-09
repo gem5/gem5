@@ -48,7 +48,8 @@
 #include <string>
 #include <vector>
 
-#include "base/compiler.hh"
+namespace gem5
+{
 
 namespace Debug {
 
@@ -155,5 +156,7 @@ void dumpDebugFlags(std::ostream &os=std::cout);
 #define DTRACE(x) GEM5_DEPRECATED_MACRO(DTRACE, Debug::x, \
         "Replace DTRACE(x) with Debug::x.")
 /** @} */ // end of api_trace
+
+} // namespace gem5
 
 #endif // __BASE_DEBUG_HH__

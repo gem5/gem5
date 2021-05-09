@@ -32,8 +32,9 @@ from m5.objects.PS2 import *
 
 class I8042(BasicPioDevice):
     type = 'I8042'
-    cxx_class = 'X86ISA::I8042'
+    cxx_class = 'gem5::X86ISA::I8042'
     cxx_header = "dev/x86/i8042.hh"
+
     # This isn't actually used for anything here.
     pio_addr = 0x0
     data_port = Param.Addr('Data port address')

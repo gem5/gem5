@@ -40,6 +40,9 @@
 #include "arch/arm/mmu.hh"
 #include "cpu/checker/cpu.hh"
 
+namespace gem5
+{
+
 namespace ArmISA {
 
 void
@@ -191,3 +194,4 @@ TLBIIPA::operator()(ThreadContext* tc)
 }
 
 } // namespace ArmISA
+} // namespace gem5

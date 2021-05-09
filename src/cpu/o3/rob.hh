@@ -54,6 +54,9 @@
 #include "cpu/reg_class.hh"
 #include "enums/SMTQueuePolicy.hh"
 
+namespace gem5
+{
+
 struct O3CPUParams;
 
 namespace o3
@@ -340,5 +343,6 @@ class ROB
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif //__CPU_O3_ROB_HH__

@@ -52,6 +52,9 @@
 #include "sim/kernel_workload.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -161,5 +164,6 @@ class FsWorkload : public KernelWorkload
 };
 
 } // namespace ArmISA
+} // namespace gem5
 
 #endif // __ARCH_ARM_FS_WORKLOAD_HH__

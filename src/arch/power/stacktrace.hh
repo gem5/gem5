@@ -34,6 +34,9 @@
 #include "base/logging.hh"
 #include "cpu/profile.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -48,5 +51,6 @@ class StackTrace : public BaseStackTrace
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_STACKTRACE_HH__

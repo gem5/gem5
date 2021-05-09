@@ -60,6 +60,9 @@
 #include "sim/process.hh"
 #include "sim/sim_exit.hh"
 
+namespace gem5
+{
+
 ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
     numVectorGlobalMemUnits(p.num_global_mem_pipes),
     numVectorSharedMemUnits(p.num_shared_mem_pipes),
@@ -2343,3 +2346,5 @@ ComputeUnit::ComputeUnitStats::ComputeUnitStats(statistics::Group *parent,
     numALUInstsExecuted = numInstrExecuted - dynamicGMemInstrCnt -
         dynamicLMemInstrCnt;
 }
+
+} // namespace gem5

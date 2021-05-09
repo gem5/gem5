@@ -40,7 +40,7 @@ from m5.SimObject import SimObject
 # contents as appropriate for that type of table.
 class X86ACPISysDescTable(SimObject):
     type = 'X86ACPISysDescTable'
-    cxx_class = 'X86ISA::ACPI::SysDescTable'
+    cxx_class = 'gem5::X86ISA::ACPI::SysDescTable'
     cxx_header = 'arch/x86/bios/acpi.hh'
     abstract = True
 
@@ -55,14 +55,14 @@ class X86ACPISysDescTable(SimObject):
 
 class X86ACPIRSDT(X86ACPISysDescTable):
     type = 'X86ACPIRSDT'
-    cxx_class = 'X86ISA::ACPI::RSDT'
+    cxx_class = 'gem5::X86ISA::ACPI::RSDT'
     cxx_header = 'arch/x86/bios/acpi.hh'
 
     entries = VectorParam.X86ACPISysDescTable([], 'system description tables')
 
 class X86ACPIXSDT(X86ACPISysDescTable):
     type = 'X86ACPIXSDT'
-    cxx_class = 'X86ISA::ACPI::XSDT'
+    cxx_class = 'gem5::X86ISA::ACPI::XSDT'
     cxx_header = 'arch/x86/bios/acpi.hh'
 
     entries = VectorParam.X86ACPISysDescTable([], 'system description tables')
@@ -70,13 +70,13 @@ class X86ACPIXSDT(X86ACPISysDescTable):
 
 class X86ACPIMadtRecord(SimObject):
     type = 'X86ACPIMadtRecord'
-    cxx_class = 'X86ISA::ACPI::MADT::Record'
+    cxx_class = 'gem5::X86ISA::ACPI::MADT::Record'
     cxx_header = 'arch/x86/bios/acpi.hh'
     abstract = True
 
 class X86ACPIMadt(X86ACPISysDescTable):
     type = 'X86ACPIMadt'
-    cxx_class = 'X86ISA::ACPI::MADT::MADT'
+    cxx_class = 'gem5::X86ISA::ACPI::MADT::MADT'
     cxx_header = 'arch/x86/bios/acpi.hh'
 
     local_apic_address = Param.UInt32(0, 'Address of the local apic')
@@ -86,7 +86,7 @@ class X86ACPIMadt(X86ACPISysDescTable):
 class X86ACPIMadtLAPIC(X86ACPIMadtRecord):
     type = 'X86ACPIMadtLAPIC'
     cxx_header = 'arch/x86/bios/acpi.hh'
-    cxx_class = 'X86ISA::ACPI::MADT::LAPIC'
+    cxx_class = 'gem5::X86ISA::ACPI::MADT::LAPIC'
 
     acpi_processor_id = Param.UInt8(0, 'ACPI Processor ID')
     apic_id = Param.UInt8(0, 'APIC ID')
@@ -95,7 +95,7 @@ class X86ACPIMadtLAPIC(X86ACPIMadtRecord):
 class X86ACPIMadtIOAPIC(X86ACPIMadtRecord):
     type = 'X86ACPIMadtIOAPIC'
     cxx_header = 'arch/x86/bios/acpi.hh'
-    cxx_class = 'X86ISA::ACPI::MADT::IOAPIC'
+    cxx_class = 'gem5::X86ISA::ACPI::MADT::IOAPIC'
 
     id = Param.UInt8(0, 'I/O APIC ID')
     address = Param.Addr(0, 'I/O APIC Address')
@@ -104,7 +104,7 @@ class X86ACPIMadtIOAPIC(X86ACPIMadtRecord):
 class X86ACPIMadtIntSourceOverride(X86ACPIMadtRecord):
     type = 'X86ACPIMadtIntSourceOverride'
     cxx_header = 'arch/x86/bios/acpi.hh'
-    cxx_class = 'X86ISA::ACPI::MADT::IntSourceOverride'
+    cxx_class = 'gem5::X86ISA::ACPI::MADT::IntSourceOverride'
 
     bus_source = Param.UInt8(0, 'Bus Source')
     irq_source = Param.UInt8(0, 'IRQ Source')
@@ -114,7 +114,7 @@ class X86ACPIMadtIntSourceOverride(X86ACPIMadtRecord):
 class X86ACPIMadtNMI(X86ACPIMadtRecord):
     type = 'X86ACPIMadtNMI'
     cxx_header = 'arch/x86/bios/acpi.hh'
-    cxx_class = 'X86ISA::ACPI::MADT::NMI'
+    cxx_class = 'gem5::X86ISA::ACPI::MADT::NMI'
 
     acpi_processor_id = Param.UInt8(0, 'ACPI Processor ID')
     flags = Param.UInt16(0, 'Flags')
@@ -123,14 +123,14 @@ class X86ACPIMadtNMI(X86ACPIMadtRecord):
 class X86ACPIMadtLAPICOverride(X86ACPIMadtRecord):
     type = 'X86ACPIMadtLAPICOverride'
     cxx_header = 'arch/x86/bios/acpi.hh'
-    cxx_class = 'X86ISA::ACPI::MADT::LAPICOverride'
+    cxx_class = 'gem5::X86ISA::ACPI::MADT::LAPICOverride'
 
     address = Param.Addr(0, '64-bit Physical Address of Local APIC')
 
 # Root System Description Pointer Structure
 class X86ACPIRSDP(SimObject):
     type = 'X86ACPIRSDP'
-    cxx_class = 'X86ISA::ACPI::RSDP'
+    cxx_class = 'gem5::X86ISA::ACPI::RSDP'
     cxx_header = 'arch/x86/bios/acpi.hh'
 
     oem_id = Param.String('', 'string identifying the oem')

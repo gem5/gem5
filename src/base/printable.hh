@@ -36,6 +36,9 @@
 #include <ostream>
 #include <string>
 
+namespace gem5
+{
+
 /**
  * Abstract base class for objects which support being printed
  * to a stream for debugging.  Primarily used to support PrintReq
@@ -51,5 +54,7 @@ class Printable
                        int verbosity = 0,
                        const std::string &prefix = "") const = 0;
 };
+
+} // namespace gem5
 
 #endif // __PRINTABLE_HH__

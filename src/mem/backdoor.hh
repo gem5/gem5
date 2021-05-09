@@ -35,6 +35,9 @@
 #include "base/addr_range.hh"
 #include "base/callback.hh"
 
+namespace gem5
+{
+
 class MemBackdoor
 {
   public:
@@ -122,5 +125,7 @@ class MemBackdoor
 };
 
 typedef MemBackdoor *MemBackdoorPtr;
+
+} // namespace gem5
 
 #endif  //__MEM_BACKDOOR_HH__

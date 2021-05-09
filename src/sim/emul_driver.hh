@@ -36,6 +36,9 @@
 #include "params/EmulatedDriver.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class Process;
 class ThreadContext;
 
@@ -96,5 +99,7 @@ class EmulatedDriver : public SimObject
                       int prot, int tgtFlags, int tgtFd, off_t offset)
                       { return -EBADF; }
 };
+
+} // namespace gem5
 
 #endif // __SIM_EMUL_DRIVER_HH

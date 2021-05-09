@@ -47,6 +47,9 @@
 #include "mem/qos/mem_ctrl.hh"
 #include "params/QoSMemCtrl.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -187,5 +190,6 @@ class LrgQueuePolicy : public QueuePolicy
 };
 
 } // namespace qos
+} // namespace gem5
 
 #endif /* __MEM_QOS_Q_POLICY_HH__ */

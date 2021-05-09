@@ -36,6 +36,7 @@ from m5.proxy import *
 class ProtocolTester(ClockedObject):
     type = 'ProtocolTester'
     cxx_header = "cpu/testers/gpu_ruby_test/protocol_tester.hh"
+    cxx_class = 'gem5::ProtocolTester'
 
     cpu_ports = VectorRequestPort("Ports for CPUs")
     dma_ports = VectorRequestPort("Ports for DMAs")

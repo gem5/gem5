@@ -40,6 +40,9 @@
 #include "dev/x86/south_bridge.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 Pc::Pc(const Params &p) : Platform(p), southBridge(p.south_bridge)
 {}
 
@@ -126,3 +129,5 @@ Pc::clearPciInt(int line)
 {
     warn_once("Tried to clear PCI interrupt %d\n", line);
 }
+
+} // namespace gem5

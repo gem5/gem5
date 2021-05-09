@@ -29,6 +29,9 @@
 
 #include "params/AmbaFromTlmBridge64.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
@@ -59,3 +62,5 @@ AmbaFromTlmBridge64Params::create() const
 {
     return new fastmodel::AmbaFromTlmBridge64(name.c_str());
 }
+
+} // namespace gem5

@@ -44,6 +44,9 @@
 #include "gpu-compute/wavefront.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+namespace gem5
+{
+
 uint32_t FetchUnit::globalFetchUnitID;
 
 FetchUnit::FetchUnit(const ComputeUnitParams &p, ComputeUnit &cu)
@@ -639,3 +642,5 @@ FetchUnit::FetchBufDesc::fetchBytesRemaining() const
     assert(bytes_remaining <= bufferedBytes());
     return bytes_remaining;
 }
+
+} // namespace gem5

@@ -43,6 +43,9 @@
 #include "arch/arm/mmu.hh"
 #include "arch/arm/tracers/tarmac_tracer.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 namespace Trace {
@@ -323,3 +326,4 @@ TarmacTracerRecordV8::TraceRegEntryV8::formatReg() const
 }
 
 } // namespace Trace
+} // namespace gem5

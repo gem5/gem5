@@ -70,6 +70,9 @@
 #include "params/RubyNetwork.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class NetDest;
 class MessageBuffer;
 
@@ -179,5 +182,7 @@ operator<<(std::ostream& out, const Network& obj)
     out << std::flush;
     return out;
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_NETWORK_HH__

@@ -56,6 +56,9 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace copy_engine_reg;
 
 CopyEngine::CopyEngine(const Params &p)
@@ -731,3 +734,5 @@ CopyEngine::CopyEngineChannel::drainResume()
     DPRINTF(DMACopyEngine, "Restarting state machine at state %d\n", nextState);
     restartStateMachine();
 }
+
+} // namespace gem5

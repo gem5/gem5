@@ -52,6 +52,9 @@
 #include "sim/guest_abi.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct ArmSemihostingParams;
 class SerialDevice;
 
@@ -657,5 +660,6 @@ struct Result<ArmSemihosting::Abi64, ArmSemihosting::RetErrno>
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __ARCH_ARM_SEMIHOSTING_HH__

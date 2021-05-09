@@ -54,6 +54,9 @@
 
 #include "dev/net/dist_iface.hh"
 
+namespace gem5
+{
+
 class EventManager;
 
 class TCPIface : public DistIface
@@ -149,5 +152,7 @@ class TCPIface : public DistIface
 
     ~TCPIface() override;
 };
+
+} // namespace gem5
 
 #endif // __DEV_NET_TCP_IFACE_HH__

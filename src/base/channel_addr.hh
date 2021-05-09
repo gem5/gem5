@@ -42,6 +42,9 @@
 
 #include "base/addr_range.hh"
 
+namespace gem5
+{
+
 /**
  * Class holding a guest address in a contiguous channel-local address
  * space.
@@ -192,25 +195,28 @@ class ChannelAddrRange
     ChannelAddr _end;
 };
 
+/**
+ * @ingroup api_channel_addr
+ */
+std::ostream &operator<<(std::ostream &out, const gem5::ChannelAddr &addr);
+
+} // namespace gem5
+
 namespace std
 {
     template<>
-    struct hash<ChannelAddr>
+    struct hash<gem5::ChannelAddr>
     {
-        typedef ChannelAddr argument_type;
+        typedef gem5::ChannelAddr argument_type;
         typedef std::size_t result_type;
 
         result_type
-        operator()(argument_type const &a) const noexcept {
-            return std::hash<ChannelAddr::Type>{}(
+        operator()(argument_type const &a) const noexcept
+        {
+            return std::hash<gem5::ChannelAddr::Type>{}(
                 static_cast<argument_type::Type>(a));
         }
     };
 }
-
-/**
- * @ingroup api_channel_addr
- */
-std::ostream &operator<<(std::ostream &out, const ChannelAddr &addr);
 
 #endif // __BASE_CHANNEL_ADDR_HH__

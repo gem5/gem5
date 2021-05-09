@@ -34,6 +34,9 @@
 
 #include "base/sat_counter.hh"
 
+namespace gem5
+{
+
 /**
  * A dueler is an entry that may or may not be accounted for sampling.
  * Whenever an action triggers sampling, the dueling monitor will check
@@ -200,5 +203,7 @@ class DuelingMonitor
      */
     void initEntry(Dueler* dueler);
 };
+
+} // namespace gem5
 
 #endif // __BASE_DUELING_HH__

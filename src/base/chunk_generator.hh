@@ -40,6 +40,9 @@
 #include "base/intmath.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 /**
  * This class takes an arbitrary memory region (address/length pair)
  * and generates a series of appropriately (e.g. block- or page-)
@@ -194,5 +197,7 @@ class ChunkGenerator
         return true;
     }
 };
+
+} // namespace gem5
 
 #endif // __BASE_CHUNK_GENERATOR_HH__

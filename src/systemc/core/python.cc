@@ -67,7 +67,7 @@ systemc_pybind(pybind11::module_ &m_internal)
     for (auto ptr = firstInitFunc(); ptr; ptr = ptr->next)
         ptr->run(m);
 }
-EmbeddedPyBind embed_("systemc", &systemc_pybind);
+gem5::EmbeddedPyBind embed_("systemc", &systemc_pybind);
 
 } // anonymous namespace
 

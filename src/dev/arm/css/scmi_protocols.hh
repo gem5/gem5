@@ -43,6 +43,9 @@
 
 #include "base/compiler.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(SCMI, scmi);
 namespace scmi
 {
@@ -151,6 +154,7 @@ class BaseProtocol : public Protocol
 
 };
 
-}; // namespace scmi
+} // namespace scmi
+} // namespace gem5
 
 #endif

@@ -35,6 +35,9 @@
 
 #include "debug/GPUInst.hh"
 
+namespace gem5
+{
+
 GPUStaticInst::GPUStaticInst(const std::string &opcode)
     : executed_as(enums::SC_NONE), _opcode(opcode),
       _instNum(0), _instAddr(0), srcVecDWords(-1), dstVecDWords(-1),
@@ -210,3 +213,5 @@ GPUStaticInst::maxOperandSize()
 
     return maxOpSize;
 }
+
+} // namespace gem5

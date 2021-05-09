@@ -58,6 +58,9 @@
 #include "base/trace.hh"
 #include "mem/packet_access.hh"
 
+namespace gem5
+{
+
 const MemCmd::CommandInfo
 MemCmd::commandInfo[] =
 {
@@ -533,3 +536,5 @@ Packet::getHtmTransactionUid() const
     assert(flags.isSet(FROM_TRANSACTION));
     return htmTransactionUid;
 }
+
+} // namespace gem5

@@ -42,6 +42,8 @@
 
 #include "base/intmath.hh"
 
+using namespace gem5;
+
 TEST(IntmathTest, isPowerOf2)
 {
     EXPECT_TRUE(isPowerOf2(1));

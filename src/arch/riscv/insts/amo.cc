@@ -37,6 +37,9 @@
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -144,4 +147,5 @@ AtomicMemOpMicro::generateDisassembly(
     return ss.str();
 }
 
-}
+} // namespace RiscvISA
+} // namespace gem5

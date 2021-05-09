@@ -46,6 +46,9 @@
 #include "sim/probe/mem.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * The communication monitor is a SimObject which can monitor statistics of
  * the communication happening between two ports in the memory system.
@@ -424,5 +427,7 @@ class CommMonitor : public SimObject
 
     /** @} */
 };
+
+} // namespace gem5
 
 #endif //__MEM_COMM_MONITOR_HH__

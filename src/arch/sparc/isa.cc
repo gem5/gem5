@@ -43,6 +43,9 @@
 #include "debug/Timer.hh"
 #include "params/SparcISA.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
@@ -940,4 +943,5 @@ ISA::unserialize(CheckpointIn &cp)
     }
 }
 
-}
+} // namespace SparcISA
+} // namespace gem5

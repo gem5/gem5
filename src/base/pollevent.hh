@@ -36,6 +36,9 @@
 #include "sim/core.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class PollQueue;
 
 class PollEvent : public Serializable
@@ -109,5 +112,7 @@ class PollQueue
  * @ingroup api_poll_queue
  */
 extern PollQueue pollQueue;
+
+} // namespace gem5
 
 #endif // __BASE_POLLEVENT_HH__

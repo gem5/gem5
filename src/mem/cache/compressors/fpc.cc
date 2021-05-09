@@ -31,6 +31,9 @@
 #include "mem/cache/compressors/dictionary_compressor_impl.hh"
 #include "params/FPC.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
@@ -97,3 +100,4 @@ FPC::instantiateDictionaryCompData() const
 }
 
 } // namespace compression
+} // namespace gem5

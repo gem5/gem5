@@ -42,6 +42,9 @@
 #include "cpu/reg_class.hh"
 #include "sim/faults.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -375,6 +378,7 @@ class InstOperands : public Base, public Operands...
     }
 };
 
-}
+} // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_INSTS_MICROOP_ARGS_HH__

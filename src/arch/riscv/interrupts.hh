@@ -41,6 +41,9 @@
 #include "params/RiscvInterrupts.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class BaseCPU;
 class ThreadContext;
 
@@ -174,5 +177,6 @@ class Interrupts : public BaseInterrupts
 };
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_INTERRUPT_HH__

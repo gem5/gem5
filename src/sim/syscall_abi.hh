@@ -34,6 +34,9 @@
 #include "sim/guest_abi.hh"
 #include "sim/syscall_return.hh"
 
+namespace gem5
+{
+
 class SyscallDesc;
 
 struct GenericSyscallABI
@@ -106,5 +109,6 @@ struct Argument<ABI, Arg,
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __SIM_SYSCALL_ABI_HH__

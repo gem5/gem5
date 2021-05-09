@@ -382,7 +382,7 @@ Process::Process(const char *name, ProcessFuncWrapper *func, bool internal) :
     _needsStart(true), _isUnwinding(false), _terminated(false),
     _scheduled(false), _suspended(false), _disabled(false),
     _syncReset(false), syncResetCount(0), asyncResetCount(0), _waitCount(0),
-    refCount(0), stackSize(::Fiber::DefaultStackSize),
+    refCount(0), stackSize(gem5::Fiber::DefaultStackSize),
     dynamicSensitivity(nullptr)
 {
     _dynamic =

@@ -47,6 +47,9 @@
 #include "cpu/static_inst.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 struct StatisticalCorrectorParams;
 
 class StatisticalCorrector : public SimObject
@@ -273,4 +276,7 @@ class StatisticalCorrector : public SimObject
 
     virtual size_t getSizeInBits() const;
 };
+
+} // namespace gem5
+
 #endif//__CPU_PRED_STATISTICAL_CORRECTOR_HH__

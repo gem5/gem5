@@ -31,6 +31,9 @@
 
 #include <unistd.h>
 
+namespace gem5
+{
+
 // These functions keep reading/writing, if possible, until all data
 // has been transferred.  Basically, try again when there's no error,
 // but there is data left also retry on EINTR.
@@ -62,5 +65,7 @@ ssize_t atomic_write(int fd, const void *s, size_t n);
  * error handling might not be feasible.
  */
 #define STATIC_ERR(m) STATIC_MSG(STDERR_FILENO, m)
+
+} // namespace gem5
 
 #endif // __BASE_ATOMICIO_HH__

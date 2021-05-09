@@ -45,6 +45,9 @@
 #include "params/RiscvTLB.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 /* To maintain compatibility with other architectures, we'll
@@ -147,6 +150,7 @@ class TLB : public BaseTLB
                       Translation *translation, Mode mode, bool &delayed);
 };
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __RISCV_MEMORY_HH__

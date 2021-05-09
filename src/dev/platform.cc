@@ -30,6 +30,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 Platform::Platform(const Params &p) : SimObject(p), system(p.system) {}
 
 void
@@ -43,3 +46,5 @@ Platform::clearPciInt(int line)
 {
    panic("No PCI interrupt support in platform.");
 }
+
+} // namespace gem5

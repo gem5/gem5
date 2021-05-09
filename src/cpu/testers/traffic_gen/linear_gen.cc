@@ -43,6 +43,9 @@
 #include "base/trace.hh"
 #include "debug/TrafficGen.hh"
 
+namespace gem5
+{
+
 void
 LinearGen::enter()
 {
@@ -111,3 +114,5 @@ LinearGen::nextPacketTick(bool elastic, Tick delay) const
         return curTick() + wait;
     }
 }
+
+} // namespace gem5

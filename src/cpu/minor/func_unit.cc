@@ -46,6 +46,9 @@
 #include "debug/MinorTiming.hh"
 #include "enums/OpClass.hh"
 
+namespace gem5
+{
+
 MinorOpClassSet::MinorOpClassSet(const MinorOpClassSetParams &params) :
     SimObject(params),
     opClasses(params.opClasses),
@@ -211,3 +214,4 @@ FUPipeline::findTiming(const StaticInstPtr &inst)
 }
 
 } // namespace minor
+} // namespace gem5

@@ -42,6 +42,9 @@
 #include "base/trace.hh"
 #include "params/QoSTurnaroundPolicyIdeal.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -101,3 +104,4 @@ TurnaroundPolicyIdeal::selectBusState()
 }
 
 } // namespace qos
+} // namespace gem5

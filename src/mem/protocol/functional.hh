@@ -43,6 +43,9 @@
 
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 class FunctionalResponseProtocol;
 
 class FunctionalRequestProtocol
@@ -84,5 +87,7 @@ class FunctionalResponseProtocol
      */
     virtual void recvFunctional(PacketPtr pkt) = 0;
 };
+
+} // namespace gem5
 
 #endif //__MEM_GEM5_PROTOCOL_FUNCTIONAL_HH__

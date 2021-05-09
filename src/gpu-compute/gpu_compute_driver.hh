@@ -53,6 +53,9 @@
 #include "mem/request.hh"
 #include "sim/emul_driver.hh"
 
+namespace gem5
+{
+
 struct GPUComputeDriverParams;
 class GPUCommandProcessor;
 class PortProxy;
@@ -242,5 +245,7 @@ class GPUComputeDriver final : public EmulatedDriver
     void allocateQueue(PortProxy &mem_proxy, Addr ioc_buf_addr);
 
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_GPU_COMPUTE_DRIVER_HH__

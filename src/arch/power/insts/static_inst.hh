@@ -33,6 +33,9 @@
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace PowerISA
 {
 
@@ -86,5 +89,6 @@ class PowerStaticInst : public StaticInst
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif //__ARCH_POWER_INSTS_STATICINST_HH__

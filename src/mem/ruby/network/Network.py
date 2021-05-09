@@ -31,9 +31,10 @@ from m5.objects.BasicLink import BasicLink
 
 class RubyNetwork(ClockedObject):
     type = 'RubyNetwork'
-    cxx_class = 'Network'
+    cxx_class = 'gem5::Network'
     cxx_header = "mem/ruby/network/Network.hh"
     abstract = True
+
     topology = Param.String("Not Specified",
                             "the name of the imported topology module")
 

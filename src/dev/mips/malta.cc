@@ -37,6 +37,9 @@
 #include "dev/mips/malta_io.hh"
 #include "params/Malta.hh"
 
+namespace gem5
+{
+
 Malta::Malta(const Params &p)
     : Platform(p)
 {
@@ -81,3 +84,5 @@ Malta::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(intr_sum_type, Malta::Max_CPUs);
 }
+
+} // namespace gem5

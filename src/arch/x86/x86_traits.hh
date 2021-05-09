@@ -42,6 +42,9 @@
 
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
     const int NumMicroIntRegs = 16;
@@ -94,6 +97,8 @@ namespace X86ISA
         assert(addr < PhysAddrAPICRangeSize);
         return PhysAddrPrefixInterrupts | (id * PhysAddrAPICRangeSize) | addr;
     }
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif //__ARCH_X86_X86TRAITS_HH__

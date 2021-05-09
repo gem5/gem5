@@ -41,6 +41,9 @@
 #include "arch/arm/insts/static_inst.hh"
 #include "base/trace.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -263,6 +266,7 @@ class DataXCondSelOp : public ArmStaticInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
-}
+} // namespace ArmISA
+} // namespace gem5
 
 #endif //__ARCH_ARM_INSTS_PREDINST_HH__

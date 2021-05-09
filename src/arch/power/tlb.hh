@@ -40,6 +40,9 @@
 #include "mem/request.hh"
 #include "params/PowerTLB.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace PowerISA {
@@ -159,5 +162,6 @@ class TLB : public BaseTLB
 };
 
 } // namespace PowerISA
+} // namespace gem5
 
 #endif // __ARCH_POWER_TLB_HH__

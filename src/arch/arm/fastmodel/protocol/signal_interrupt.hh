@@ -32,6 +32,9 @@
 #include <systemc>
 #include <tlm>
 
+namespace gem5
+{
+
 struct SignalInterruptDummyProtocolType {};
 
 class SignalInterruptFwIf : public virtual sc_core::sc_interface
@@ -115,5 +118,7 @@ class SignalInterruptTargetSocket :
         return typeid(SignalInterruptDummyProtocolType);
     }
 };
+
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_PROTOCOL_SIGNAL_INTERRUPT_HH__

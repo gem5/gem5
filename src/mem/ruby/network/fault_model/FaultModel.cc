@@ -47,6 +47,8 @@
 
 #define MAX(a,b) ((a > b) ? (a) : (b))
 
+namespace gem5
+{
 
 FaultModel::FaultModel(const Params &p) : SimObject(p)
 {
@@ -266,3 +268,5 @@ FaultModel::print(void)
         std::cout << "\n";
     }
 }
+
+} // namespace gem5

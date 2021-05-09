@@ -57,6 +57,9 @@
 
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class CxxConfigParams;
 
 /** Config details entry for a SimObject.  Instances of this class contain
@@ -129,7 +132,7 @@ class CxxConfigParams
     /** Flags passable to setParam... to smooth over any parsing difference
      *  between different config files */
     typedef uint32_t FlagsType;
-    typedef ::Flags<FlagsType> Flags;
+    typedef gem5::Flags<FlagsType> Flags;
 
     /** Example flag */
     /* static const FlagsType MY_NEW_FLAG = 0x00000001; */
@@ -233,5 +236,7 @@ extern std::map<std::string, CxxConfigDirectoryEntry *>
 /** Initialise cxx_config_directory.  This is defined in the
  *  auto-generated .../cxx_config/init.cc */
 void cxxConfigInit();
+
+} // namespace gem5
 
 #endif // __SIM_CXX_CONFIG_HH__

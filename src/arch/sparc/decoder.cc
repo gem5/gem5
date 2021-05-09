@@ -28,9 +28,13 @@
 
 #include "arch/sparc/decoder.hh"
 
+namespace gem5
+{
+
 namespace SparcISA
 {
 
 GenericISA::BasicDecodeCache<Decoder, ExtMachInst> Decoder::defaultCache;
 
-}
+} // namespace SparcISA
+} // namespace gem5

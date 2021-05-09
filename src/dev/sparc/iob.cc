@@ -50,6 +50,9 @@
 #include "sim/faults.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 Iob::Iob(const Params &p) : PioDevice(p)
 {
     iobManAddr = 0x9800000000ULL;
@@ -382,3 +385,5 @@ Iob::unserialize(CheckpointIn &cp)
         paramIn(cp, "source", jIntBusy[x].source);
     };
 }
+
+} // namespace gem5

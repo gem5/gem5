@@ -57,6 +57,9 @@
 #include "sim/eventq.hh"
 #include "sim/probe/probe.hh"
 
+namespace gem5
+{
+
 struct O3CPUParams;
 
 namespace o3
@@ -109,8 +112,8 @@ class Fetch
         void markDelayed() {}
 
         void
-        finish(const Fault &fault, const RequestPtr &req, ::ThreadContext *tc,
-               BaseTLB::Mode mode)
+        finish(const Fault &fault, const RequestPtr &req,
+            gem5::ThreadContext *tc, BaseTLB::Mode mode)
         {
             assert(mode == BaseTLB::Execute);
             fetch->finishTranslation(fault, req);
@@ -586,5 +589,6 @@ class Fetch
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif //__CPU_O3_FETCH_HH__

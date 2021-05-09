@@ -44,6 +44,9 @@
 #include "debug/Drain.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 DRAMSim2::DRAMSim2(const Params &p) :
     AbstractMemory(p),
     port(name() + ".port", *this),
@@ -388,3 +391,5 @@ DRAMSim2::MemoryPort::recvRespRetry()
 {
     mem.recvRespRetry();
 }
+
+} // namespace gem5

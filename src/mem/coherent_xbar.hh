@@ -53,6 +53,9 @@
 #include "mem/xbar.hh"
 #include "params/CoherentXBar.hh"
 
+namespace gem5
+{
+
 /**
  * A coherent crossbar connects a number of (potentially) snooping
  * requestors and responders, and routes the request and response packets
@@ -429,5 +432,7 @@ class CoherentXBar : public BaseXBar
 
     virtual void regStats();
 };
+
+} // namespace gem5
 
 #endif //__MEM_COHERENT_XBAR_HH__

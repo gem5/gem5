@@ -36,6 +36,9 @@
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -68,6 +71,7 @@ class Store : public MemInst
         Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_INST_MEM_HH__

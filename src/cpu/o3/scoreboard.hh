@@ -38,6 +38,9 @@
 #include "cpu/reg_class.hh"
 #include "debug/Scoreboard.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -137,5 +140,6 @@ class Scoreboard
 };
 
 } // namespace o3
+} // namespace gem5
 
 #endif

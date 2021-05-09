@@ -52,6 +52,9 @@
 #include "dev/arm/amba_device.hh"
 #include "params/AmbaFake.hh"
 
+namespace gem5
+{
+
 class AmbaFake : public AmbaPioDevice
 {
   public:
@@ -62,5 +65,7 @@ class AmbaFake : public AmbaPioDevice
     virtual Tick write(PacketPtr pkt);
 
 };
+
+} // namespace gem5
 
 #endif //__DEV_ARM_AMBA_FAKE_H__

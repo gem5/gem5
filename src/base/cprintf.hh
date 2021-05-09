@@ -37,6 +37,9 @@
 
 #include "base/cprintf_formats.hh"
 
+namespace gem5
+{
+
 namespace cp {
 
 struct Print
@@ -184,5 +187,7 @@ csprintf(const std::string &format, const Args &...args)
 {
     return csprintf(format.c_str(), args...);
 }
+
+} // namespace gem5
 
 #endif // __CPRINTF_HH__

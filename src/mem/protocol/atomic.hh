@@ -44,6 +44,9 @@
 #include "mem/backdoor.hh"
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 class AtomicResponseProtocol;
 
 class AtomicRequestProtocol
@@ -112,5 +115,7 @@ class AtomicResponseProtocol
     virtual Tick recvAtomicBackdoor(
             PacketPtr pkt, MemBackdoorPtr &backdoor) = 0;
 };
+
+} // namespace gem5
 
 #endif //__MEM_GEM5_PROTOCOL_ATOMIC_HH__

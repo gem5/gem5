@@ -42,6 +42,9 @@
 
 #include "cpu/testers/traffic_gen/base.hh"
 
+namespace gem5
+{
+
 struct TrafficGenParams;
 
 /**
@@ -132,5 +135,7 @@ class TrafficGen : public BaseTrafficGen
     void unserialize(CheckpointIn &cp) override;
 
 };
+
+} // namespace gem5
 
 #endif //__CPU_TRAFFIC_GEN_TRAFFIC_GEN_HH__

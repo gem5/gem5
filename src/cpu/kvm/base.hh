@@ -62,6 +62,9 @@ struct kvm_regs;
 struct kvm_run;
 struct kvm_sregs;
 
+namespace gem5
+{
+
 // forward declarations
 class ThreadContext;
 struct BaseKvmCPUParams;
@@ -807,5 +810,7 @@ class BaseKvmCPU : public BaseCPU
     /** Number of instructions executed by the CPU */
     Counter ctrInsts;
 };
+
+} // namespace gem5
 
 #endif

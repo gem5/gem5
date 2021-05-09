@@ -48,6 +48,9 @@
 #include "debug/MinorTrace.hh"
 #include "debug/Quiesce.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -256,3 +259,4 @@ Pipeline::isDrained()
 }
 
 } // namespace minor
+} // namespace gem5

@@ -59,6 +59,9 @@
 #include "params/X86ACPIXSDT.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class PortProxy;
 
 namespace X86ISA
@@ -359,5 +362,6 @@ class MADT : public SysDescTable
 } // namespace ACPI
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_BIOS_E820_HH__

@@ -48,6 +48,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/syscall_emul.hh"
 
+namespace gem5
+{
+
 namespace
 {
 
@@ -863,3 +866,4 @@ EmuLinux::syscall(ThreadContext *tc)
 }
 
 } // namespace ArmISA
+} // namespace gem5

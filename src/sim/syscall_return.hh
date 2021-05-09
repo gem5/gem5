@@ -31,6 +31,9 @@
 
 #include <inttypes.h>
 
+namespace gem5
+{
+
 /**
  * This class represents the return value from an emulated system call,
  * including any errno setting.
@@ -125,5 +128,7 @@ class SyscallReturn
 
     bool retryFlag = false;
 };
+
+} // namespace gem5
 
 #endif

@@ -55,6 +55,9 @@
 
 #include "base/bitfield.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -100,6 +103,7 @@ const std::vector<std::string> FloatRegNames = {
     "ft8", "ft9", "ft10", "ft11"
 };
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_REGS_FLOAT_HH__

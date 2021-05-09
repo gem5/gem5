@@ -30,6 +30,9 @@
 
 #include "sim/se_signal.hh"
 
+namespace gem5
+{
+
 BasicSignal::BasicSignal(Process *send, Process *receive, int signal_val)
     : sender(send),
       receiver(receive),
@@ -41,3 +44,5 @@ BasicSignal::BasicSignal(Process *send, Process *receive, int signal_val)
 BasicSignal::~BasicSignal()
 {
 }
+
+} // namespace gem5

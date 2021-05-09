@@ -41,6 +41,9 @@
 #include <map>
 #include <string>
 
+namespace gem5
+{
+
 enum class HtmFailureFaultCause : int
 {
     INVALID = -1,
@@ -66,5 +69,7 @@ std::string htmFailureToStr(HtmFailureFaultCause cause);
 
 /** Convert enum into string to be used for debug purposes */
 std::string htmFailureToStr(HtmCacheFailure rc);
+
+} // namespace gem5
 
 #endif // __MEM_HTM_HH__

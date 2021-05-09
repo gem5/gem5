@@ -39,6 +39,9 @@
 
 #include "arch/amdgpu/gcn3/gpu_types.hh"
 
+namespace gem5
+{
+
 class GPUStaticInst;
 
 namespace Gcn3ISA
@@ -1670,5 +1673,6 @@ namespace Gcn3ISA
         float               imm_f32;
     }; // union InstFormat
 } // namespace Gcn3ISA
+} // namespace gem5
 
 #endif // __ARCH_GCN3_DECODER_HH__

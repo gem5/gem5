@@ -40,12 +40,15 @@
 #include "iris/detail/IrisObjects.h"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 namespace Iris
 {
 
 // This class is the base for ThreadContexts which read and write state using
 // the Iris API.
-class ThreadContext : public ::ThreadContext
+class ThreadContext : public gem5::ThreadContext
 {
   public:
     typedef std::map<std::string, iris::ResourceInfo> ResourceMap;
@@ -54,12 +57,12 @@ class ThreadContext : public ::ThreadContext
     typedef std::map<int, std::string> IdxNameMap;
 
   protected:
-    ::BaseCPU *_cpu;
+    gem5::BaseCPU *_cpu;
     int _threadId;
     ContextID _contextId;
     System *_system;
-    ::BaseMMU *_mmu;
-    ::BaseISA *_isa;
+    gem5::BaseMMU *_mmu;
+    gem5::BaseISA *_isa;
 
     std::string _irisPath;
     iris::InstanceId _instId = iris::IRIS_UINT64_MAX;
@@ -166,8 +169,8 @@ class ThreadContext : public ::ThreadContext
                           Addr vaddr, iris::MemorySpaceId v_space);
 
   public:
-    ThreadContext(::BaseCPU *cpu, int id, System *system,
-                  ::BaseMMU *mmu, ::BaseISA *isa,
+    ThreadContext(gem5::BaseCPU *cpu, int id, System *system,
+                  gem5::BaseMMU *mmu, gem5::BaseISA *isa,
                   iris::IrisConnectionInterface *iris_if,
                   const std::string &iris_path);
     virtual ~ThreadContext();
@@ -181,7 +184,7 @@ class ThreadContext : public ::ThreadContext
     void descheduleInstCountEvent(Event *event) override;
     Tick getCurrentInstCount() override;
 
-    ::BaseCPU *getCpuPtr() override { return _cpu; }
+    gem5::BaseCPU *getCpuPtr() override { return _cpu; }
     int cpuId() const override { return _cpu->cpuId(); }
     uint32_t socketId() const override { return _cpu->socketId(); }
 
@@ -213,7 +216,7 @@ class ThreadContext : public ::ThreadContext
     }
 
     PortProxy &getVirtProxy() override { return *virtProxy; }
-    void initMemProxies(::ThreadContext *tc) override;
+    void initMemProxies(gem5::ThreadContext *tc) override;
 
     void sendFunctional(PacketPtr pkt) override;
 
@@ -235,7 +238,7 @@ class ThreadContext : public ::ThreadContext
     void halt() override { setStatus(Halted); }
 
     void
-    takeOverFrom(::ThreadContext *old_context) override
+    takeOverFrom(gem5::ThreadContext *old_context) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
@@ -255,7 +258,7 @@ class ThreadContext : public ::ThreadContext
     }
 
     void
-    copyArchRegs(::ThreadContext *tc) override
+    copyArchRegs(gem5::ThreadContext *tc) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
@@ -468,5 +471,6 @@ class ThreadContext : public ::ThreadContext
 };
 
 } // namespace Iris
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_IRIS_THREAD_CONTEXT_HH__

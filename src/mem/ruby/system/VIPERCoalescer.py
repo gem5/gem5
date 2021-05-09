@@ -35,7 +35,8 @@ from m5.objects.GPUCoalescer import *
 
 class VIPERCoalescer(RubyGPUCoalescer):
     type = 'VIPERCoalescer'
-    cxx_class = 'VIPERCoalescer'
+    cxx_class = 'gem5::VIPERCoalescer'
     cxx_header = "mem/ruby/system/VIPERCoalescer.hh"
+
     max_inv_per_cycle = Param.Int(32, "max invalidations per cycle")
     max_wb_per_cycle = Param.Int(32, "max writebacks per cycle")

@@ -48,6 +48,9 @@
 #include "debug/KvmIO.hh"
 #include "debug/KvmInt.hh"
 
+namespace gem5
+{
+
 using namespace X86ISA;
 
 #define MSR_TSC 0x10
@@ -1623,3 +1626,5 @@ X86KvmCPU::setVCpuEvents(const struct kvm_vcpu_events &events)
     if (ioctl(KVM_SET_VCPU_EVENTS, (void *)&events) == -1)
         panic("KVM: Failed to set guest debug registers\n");
 }
+
+} // namespace gem5

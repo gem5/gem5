@@ -26,6 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+namespace gem5
+{
+
 volatile bool async_event = false;
 volatile bool async_statdump = false;
 volatile bool async_statreset = false;
@@ -33,3 +36,4 @@ volatile bool async_exit = false;
 volatile bool async_io = false;
 volatile bool async_exception = false;
 
+} // namespace gem5

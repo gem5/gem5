@@ -48,6 +48,9 @@
 #include "params/Clint.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace RiscvISA;
 
 /**
@@ -143,5 +146,6 @@ class Clint : public BasicPioDevice
 
 };
 
+} // namespace gem5
 
 #endif // __DEV_RISCV_CLINT_HH__

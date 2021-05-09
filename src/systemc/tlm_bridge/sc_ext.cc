@@ -35,6 +35,8 @@
 
 #include "systemc/ext/utils/sc_report_handler.hh"
 
+using namespace gem5;
+
 namespace Gem5SystemC
 {
 
@@ -78,7 +80,7 @@ Gem5Extension::copy_from(const tlm::tlm_extension_base &ext)
 }
 
 AtomicExtension::AtomicExtension(
-    std::shared_ptr<AtomicOpFunctor> amo_op, bool need_return)
+    std::shared_ptr<gem5::AtomicOpFunctor> amo_op, bool need_return)
   : _op(amo_op), _needReturn(need_return)
 {
 }
@@ -117,7 +119,7 @@ AtomicExtension::needReturn() const
     return _needReturn;
 }
 
-AtomicOpFunctor*
+gem5::AtomicOpFunctor*
 AtomicExtension::getAtomicOpFunctor() const
 {
     return _op.get();

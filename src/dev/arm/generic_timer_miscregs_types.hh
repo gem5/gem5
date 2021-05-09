@@ -40,6 +40,9 @@
 
 #include "base/bitunion.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
     BitUnion64(CNTKCTL)
@@ -92,5 +95,7 @@ namespace ArmISA
     EndBitUnion(CNTHCTL_E2H)
     // ENDIF Armv8.1-VHE && HCR_EL2.E2H == 1
 }
+
+} // namespace gem5
 
 #endif // __DEV_ARM_GENERIC_TIMER_MISCREGS_TYPES_HH__

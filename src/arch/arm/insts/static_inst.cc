@@ -50,6 +50,9 @@
 #include "base/loader/symtab.hh"
 #include "cpu/reg_class.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 // Shift Rm by an immediate value
@@ -1219,4 +1222,5 @@ ArmStaticInst::getCurSveVecLenInBits(ThreadContext *tc)
     return isa->getCurSveVecLenInBits();
 }
 
-}
+} // namespace ArmISA
+} // namespace gem5

@@ -42,6 +42,9 @@
 
 #include "base/compiler.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 GEM5_DEPRECATED_NAMESPACE(Linux, linux);
@@ -57,5 +60,6 @@ namespace linux
 void dumpDmesg(ThreadContext *tc, std::ostream &os);
 
 } // namespace linux
+} // namespace gem5
 
 #endif // __KERN_LINUX_HELPERS_HH__

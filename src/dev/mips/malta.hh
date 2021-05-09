@@ -38,6 +38,9 @@
 #include "dev/platform.hh"
 #include "params/Malta.hh"
 
+namespace gem5
+{
+
 class MaltaCChip;
 class MaltaIO;
 
@@ -93,5 +96,7 @@ class Malta : public Platform
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };
+
+} // namespace gem5
 
 #endif // __DEV_MALTA_HH__

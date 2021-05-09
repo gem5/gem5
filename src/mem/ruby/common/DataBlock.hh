@@ -49,6 +49,9 @@
 
 #include "mem/packet.hh"
 
+namespace gem5
+{
+
 class WriteMask;
 
 class DataBlock
@@ -132,5 +135,7 @@ operator==(const DataBlock& obj1,const DataBlock& obj2)
 {
     return obj1.equal(obj2);
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_COMMON_DATABLOCK_HH__

@@ -37,6 +37,8 @@ from m5.objects.ClockedObject import ClockedObject
 class GarnetNetwork(RubyNetwork):
     type = 'GarnetNetwork'
     cxx_header = "mem/ruby/network/garnet/GarnetNetwork.hh"
+    cxx_class = 'gem5::GarnetNetwork'
+
     num_rows = Param.Int(0, "number of rows if 2D (mesh/torus/..) topology");
     ni_flit_size = Param.UInt32(16, "network interface flit size in bytes")
     vcs_per_vnet = Param.UInt32(4, "virtual channels per virtual network");
@@ -51,7 +53,7 @@ class GarnetNetwork(RubyNetwork):
 
 class GarnetNetworkInterface(ClockedObject):
     type = 'GarnetNetworkInterface'
-    cxx_class = 'NetworkInterface'
+    cxx_class = 'gem5::NetworkInterface'
     cxx_header = "mem/ruby/network/garnet/NetworkInterface.hh"
 
     id = Param.UInt32("ID in relation to other network interfaces")
@@ -64,7 +66,7 @@ class GarnetNetworkInterface(ClockedObject):
 
 class GarnetRouter(BasicRouter):
     type = 'GarnetRouter'
-    cxx_class = 'Router'
+    cxx_class = 'gem5::Router'
     cxx_header = "mem/ruby/network/garnet/Router.hh"
     vcs_per_vnet = Param.UInt32(Parent.vcs_per_vnet,
                               "virtual channels per virtual network")

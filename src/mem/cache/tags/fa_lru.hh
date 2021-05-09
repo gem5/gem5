@@ -62,6 +62,9 @@
 #include "mem/packet.hh"
 #include "params/FALRU.hh"
 
+namespace gem5
+{
+
 // Uncomment to enable sanity checks for the FALRU cache and the
 // TrackedCaches class
 //#define FALRU_DEBUG
@@ -367,5 +370,7 @@ class FALRU : public BaseTags
     };
     CacheTracking cacheTracking;
 };
+
+} // namespace gem5
 
 #endif // __MEM_CACHE_TAGS_FA_LRU_HH__

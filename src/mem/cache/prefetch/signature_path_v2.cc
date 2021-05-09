@@ -34,6 +34,9 @@
 #include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/SignaturePathPrefetcherV2.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
@@ -131,3 +134,4 @@ SignaturePathV2::handlePageCrossingLookahead(signature_t signature,
 }
 
 } // namespace prefetch
+} // namespace gem5

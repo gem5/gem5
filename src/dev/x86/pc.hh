@@ -38,6 +38,9 @@
 #include "dev/platform.hh"
 #include "params/Pc.hh"
 
+namespace gem5
+{
+
 class SouthBridge;
 
 class Pc : public Platform
@@ -62,5 +65,7 @@ class Pc : public Platform
     void postPciInt(int line) override;
     void clearPciInt(int line) override;
 };
+
+} // namespace gem5
 
 #endif // __DEV_PC_HH__

@@ -57,6 +57,9 @@
 #include "sim/port.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class EventManager;
 class ProbeManager;
 class SimObjectResolver;
@@ -405,5 +408,7 @@ void debugObjectBreak(const char *objs);
 void objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param);
 
 void debug_serialize(const std::string &cpt_dir);
+
+} // namespace gem5
 
 #endif // __SIM_OBJECT_HH__

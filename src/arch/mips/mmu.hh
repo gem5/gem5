@@ -42,6 +42,9 @@
 
 #include "params/MipsMMU.hh"
 
+namespace gem5
+{
+
 namespace MipsISA {
 
 class MMU : public BaseMMU
@@ -53,5 +56,6 @@ class MMU : public BaseMMU
 };
 
 } // namespace MipsISA
+} // namespace gem5
 
 #endif // __ARCH_MIPS_MMU_HH__

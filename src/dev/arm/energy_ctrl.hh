@@ -56,6 +56,9 @@
 #include "dev/io_device.hh"
 #include "params/EnergyCtrl.hh"
 
+namespace gem5
+{
+
 class DVFSHandler;
 
 class EnergyCtrl : public BasicPioDevice
@@ -181,4 +184,7 @@ class EnergyCtrl : public BasicPioDevice
 
     EventFunctionWrapper updateAckEvent;
 };
+
+} // namespace gem5
+
 #endif //__DEV_ARM_ENERGY_CTRL_HH__

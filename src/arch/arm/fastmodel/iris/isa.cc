@@ -32,6 +32,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 void
 Iris::ISA::serialize(CheckpointOut &cp) const
 {
@@ -46,3 +49,5 @@ Iris::ISA::copyRegsFrom(ThreadContext *src)
 {
     panic("copyRegsFrom not implemented");
 }
+
+} // namespace gem5

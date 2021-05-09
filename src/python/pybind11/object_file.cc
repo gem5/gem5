@@ -31,6 +31,9 @@
 
 namespace py = pybind11;
 
+namespace gem5
+{
+
 namespace
 {
 
@@ -55,3 +58,4 @@ objectfile_pybind(py::module_ &m_internal)
 EmbeddedPyBind embed_("object_file", &objectfile_pybind);
 
 } // anonymous namespace
+} // namespace gem5

@@ -48,6 +48,9 @@
 #include "params/SMMUv3DeviceInterface.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class SMMUTranslationProcess;
 class SMMUv3;
 class SMMUDevicePort;
@@ -132,5 +135,7 @@ class SMMUv3DeviceInterface : public ClockedObject
     void setSMMU(SMMUv3 *_smmu) { smmu = _smmu; }
     void sendRange();
 };
+
+} // namespace gem5
 
 #endif /* __DEV_ARM_SMMU_V3_DEVICEIFC_HH__ */

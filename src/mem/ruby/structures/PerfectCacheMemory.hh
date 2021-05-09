@@ -47,6 +47,9 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/protocol/AccessPermission.hh"
 
+namespace gem5
+{
+
 template<class ENTRY>
 struct PerfectCacheLineState
 {
@@ -202,5 +205,7 @@ inline void
 PerfectCacheMemory<ENTRY>::print(std::ostream& out) const
 {
 }
+
+} // namespace gem5
 
 #endif // __MEM_RUBY_STRUCTURES_PERFECTCACHEMEMORY_HH__

@@ -143,6 +143,9 @@
 #include "sim/process.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace SparcISA;
 
 RemoteGDB::RemoteGDB(System *_system, int _port)
@@ -247,3 +250,5 @@ RemoteGDB::gdbRegs()
         return &regCache64;
     }
 }
+
+} // namespace gem5

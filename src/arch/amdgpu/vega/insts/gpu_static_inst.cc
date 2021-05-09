@@ -39,6 +39,9 @@
 #include "gpu-compute/flexible_pool_manager.hh"
 #include "gpu-compute/shader.hh"
 
+namespace gem5
+{
+
 namespace VegaISA
 {
     VEGAGPUStaticInst::VEGAGPUStaticInst(const std::string &opcode)
@@ -56,3 +59,4 @@ namespace VegaISA
         fatal("Encountered unimplemented VEGA instruction: %s\n", _opcode);
     }
 } // namespace VegaISA
+} // namespace gem5

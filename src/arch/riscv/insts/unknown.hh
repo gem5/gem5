@@ -39,6 +39,9 @@
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -68,6 +71,7 @@ class Unknown : public RiscvStaticInst
     }
 };
 
-}
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_UNKNOWN_INST_HH__

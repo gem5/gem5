@@ -63,6 +63,9 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 int
 divideFromConf(uint32_t conf)
 {
@@ -779,3 +782,5 @@ X86ISA::Interrupts::processApicTimerEvent()
     if (triggerTimerInterrupt())
         setReg(APIC_INITIAL_COUNT, readReg(APIC_INITIAL_COUNT));
 }
+
+} // namespace gem5

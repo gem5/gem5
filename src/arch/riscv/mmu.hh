@@ -45,6 +45,9 @@
 
 #include "params/RiscvMMU.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA {
 
 class MMU : public BaseMMU
@@ -85,5 +88,6 @@ class MMU : public BaseMMU
 };
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif  // __ARCH_RISCV_MMU_HH__

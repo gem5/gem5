@@ -51,6 +51,9 @@
 #include "sim/syscall_desc.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 void
 warnUnsupportedOS(std::string syscall_name)
 {
@@ -1650,3 +1653,5 @@ getcpuFunc(SyscallDesc *desc, ThreadContext *tc,
 
     return 0;
 }
+
+} // namespace gem5

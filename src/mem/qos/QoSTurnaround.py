@@ -39,10 +39,10 @@ from m5.SimObject import SimObject
 class QoSTurnaroundPolicy(SimObject):
     type = 'QoSTurnaroundPolicy'
     cxx_header = "mem/qos/turnaround_policy.hh"
-    cxx_class = 'qos::TurnaroundPolicy'
+    cxx_class = 'gem5::qos::TurnaroundPolicy'
     abstract = True
 
 class QoSTurnaroundPolicyIdeal(QoSTurnaroundPolicy):
     type = 'QoSTurnaroundPolicyIdeal'
     cxx_header = "mem/qos/turnaround_policy_ideal.hh"
-    cxx_class = 'qos::TurnaroundPolicyIdeal'
+    cxx_class = 'gem5::qos::TurnaroundPolicyIdeal'

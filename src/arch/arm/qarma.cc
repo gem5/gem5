@@ -41,6 +41,9 @@
 
 #include "base/bitfield.hh"
 
+namespace gem5
+{
+
 using namespace QARMA;
 
 
@@ -393,3 +396,4 @@ QARMA::computePAC(BIT64 data, BIT64 modifier, BIT64 key0, BIT64 key1)
     return workingval;
 }
 
+} // namespace gem5

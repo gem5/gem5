@@ -36,6 +36,9 @@
 
 #include "base/str.hh"
 
+namespace gem5
+{
+
 IniFile::IniFile()
 {}
 
@@ -366,3 +369,5 @@ IniFile::visitSection(const std::string &sectionName,
         cb(pair.first, pair.second->getValue());
     }
 }
+
+} // namespace gem5

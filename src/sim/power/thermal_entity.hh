@@ -40,6 +40,9 @@
 
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class LinearEquation;
 class ThermalNode;
 
@@ -56,5 +59,6 @@ class ThermalEntity
                                        double step) const = 0;
 };
 
+} // namespace gem5
 
 #endif

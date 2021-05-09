@@ -41,6 +41,8 @@
 
 #include "base/types.hh"
 
+using namespace gem5;
+
 /*
  * The following test the Cycles class. Cycles is a wrapper for uint64_t.
  * It overloads most commonly used operators.

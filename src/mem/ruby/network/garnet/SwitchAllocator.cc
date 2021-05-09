@@ -37,6 +37,9 @@
 #include "mem/ruby/network/garnet/OutputUnit.hh"
 #include "mem/ruby/network/garnet/Router.hh"
 
+namespace gem5
+{
+
 SwitchAllocator::SwitchAllocator(Router *router)
     : Consumer(router)
 {
@@ -386,3 +389,5 @@ SwitchAllocator::resetStats()
     m_input_arbiter_activity = 0;
     m_output_arbiter_activity = 0;
 }
+
+} // namespace gem5

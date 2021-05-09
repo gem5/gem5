@@ -37,6 +37,9 @@
 #include "params/KernelWorkload.hh"
 #include "sim/workload.hh"
 
+namespace gem5
+{
+
 class System;
 
 class KernelWorkload : public Workload
@@ -136,5 +139,7 @@ class KernelWorkload : public Workload
     }
     /** @} */
 };
+
+} // namespace gem5
 
 #endif // __SIM_KERNEL_WORKLOAD_HH__

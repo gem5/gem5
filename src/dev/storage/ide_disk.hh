@@ -54,6 +54,9 @@
 #include "params/IdeDisk.hh"
 #include "sim/eventq.hh"
 
+namespace gem5
+{
+
 class ChunkGenerator;
 
 #define DMA_BACKOFF_PERIOD      200
@@ -374,5 +377,6 @@ class IdeDisk : public SimObject
     void unserialize(CheckpointIn &cp) override;
 };
 
+} // namespace gem5
 
 #endif // __DEV_STORAGE_IDE_DISK_HH__

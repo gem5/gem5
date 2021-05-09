@@ -49,6 +49,9 @@
 #include "base/trace.hh"
 #include "debug/VNC.hh"
 
+namespace gem5
+{
+
 VncInput::VncInput(const Params &p)
     : SimObject(p), keyboard(NULL), mouse(NULL),
       fb(&FrameBuffer::dummy),
@@ -131,3 +134,5 @@ VncInput::captureFrameBuffer()
 
     ++captureCurrentFrame;
 }
+
+} // namespace gem5

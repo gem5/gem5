@@ -37,6 +37,9 @@
 
 #include "sim/linear_solver.hh"
 
+namespace gem5
+{
+
 std::vector <double>
 LinearSystem::solve() const
 {
@@ -83,3 +86,5 @@ LinearSystem::solve() const
 
     return ret;
 }
+
+} // namespace gem5

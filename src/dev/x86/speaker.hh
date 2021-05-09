@@ -33,6 +33,9 @@
 #include "dev/io_device.hh"
 #include "params/PcSpeaker.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -70,5 +73,6 @@ class Speaker : public BasicPioDevice
 };
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif //__DEV_X86_SPEAKER_HH__

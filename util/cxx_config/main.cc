@@ -72,6 +72,8 @@
 #include "sim/system.hh"
 #include "stats.hh"
 
+using namespace gem5;
+
 void
 usage(const std::string &prog_name)
 {

@@ -35,6 +35,8 @@
 
 #include "base/refcnt.hh"
 
+using namespace gem5;
+
 namespace {
 
 class TestRC;

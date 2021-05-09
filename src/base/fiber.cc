@@ -48,6 +48,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 namespace
 {
 
@@ -181,3 +184,5 @@ Fiber::run()
 
 Fiber *Fiber::currentFiber() { return _currentFiber; }
 Fiber *Fiber::primaryFiber() { return &_primaryFiber; }
+
+} // namespace gem5

@@ -31,5 +31,5 @@ from m5.objects.CPUTracers import NativeTrace
 
 class SparcNativeTrace(NativeTrace):
     type = 'SparcNativeTrace'
-    cxx_class = 'Trace::SparcNativeTrace'
+    cxx_class = 'gem5::Trace::SparcNativeTrace'
     cxx_header = 'arch/sparc/nativetrace.hh'

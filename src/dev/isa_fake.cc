@@ -38,6 +38,9 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 IsaFake::IsaFake(const Params &p)
     : BasicPioDevice(p, p.ret_bad_addr ? 0 : p.pio_size)
 {
@@ -140,3 +143,5 @@ IsaFake::write(PacketPtr pkt)
     }
     return pioDelay;
 }
+
+} // namespace gem5

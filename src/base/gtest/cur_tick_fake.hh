@@ -29,7 +29,8 @@
 #include "base/types.hh"
 #include "sim/cur_tick.hh"
 
-namespace {
+namespace gem5
+{
 
 class GTestTickHandler
 {
@@ -45,4 +46,4 @@ class GTestTickHandler
     void setCurTick(Tick tick) { *Gem5Internal::_curTickPtr = tick; }
 };
 
-} // anonymous namespace
+} // namespace gem5

@@ -46,17 +46,21 @@
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
 // Not applicable to x86
-using VecElem = ::DummyVecElem;
-using VecRegContainer = ::DummyVecRegContainer;
-constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
+using VecElem = ::gem5::DummyVecElem;
+using VecRegContainer = ::gem5::DummyVecRegContainer;
+constexpr unsigned NumVecElemPerVecReg = ::gem5::DummyNumVecElemPerVecReg;
 
 // Not applicable to x86
-using VecPredRegContainer = ::DummyVecPredRegContainer;
+using VecPredRegContainer = ::gem5::DummyVecPredRegContainer;
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_VECREGS_HH__

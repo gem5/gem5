@@ -45,6 +45,9 @@
 #include "sim/system.hh"
 #include "sim/voltage_domain.hh"
 
+namespace gem5
+{
+
 RealViewCtrl::RealViewCtrl(const Params &p)
     : BasicPioDevice(p, 0xD4), flags(0), scData(0)
 {
@@ -313,3 +316,5 @@ RealViewTemperatureSensor::read() const
     // Report a dummy 25 degrees temperature
     return 25000000;
 }
+
+} // namespace gem5

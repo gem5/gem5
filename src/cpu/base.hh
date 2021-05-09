@@ -62,6 +62,9 @@
 #include "sim/system.hh"
 #include "debug/Mwait.hh"
 
+namespace gem5
+{
+
 class BaseCPU;
 struct BaseCPUParams;
 class CheckerCPU;
@@ -148,13 +151,13 @@ class BaseCPU : public ClockedObject
     /** Global CPU statistics that are merged into the Root object. */
     struct GlobalStats : public statistics::Group
     {
-        GlobalStats(::statistics::Group *parent);
+        GlobalStats(statistics::Group *parent);
 
-        ::statistics::Value simInsts;
-        ::statistics::Value simOps;
+        statistics::Value simInsts;
+        statistics::Value simOps;
 
-        ::statistics::Formula hostInstRate;
-        ::statistics::Formula hostOpRate;
+        statistics::Formula hostInstRate;
+        statistics::Formula hostOpRate;
     };
 
     /**
@@ -619,6 +622,8 @@ class BaseCPU : public ClockedObject
     const bool powerGatingOnIdle;
     EventFunctionWrapper enterPwrGatingEvent;
 };
+
+} // namespace gem5
 
 #endif // THE_ISA == NULL_ISA
 

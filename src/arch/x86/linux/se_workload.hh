@@ -47,6 +47,9 @@
 #include "sim/syscall_abi.hh"
 #include "sim/syscall_desc.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -64,7 +67,7 @@ class EmuLinux : public SEWorkload
         gdb = BaseRemoteGDB::build<RemoteGDB>(system);
     }
 
-    ::loader::Arch getArch() const override { return ::loader::X86_64; }
+    loader::Arch getArch() const override { return loader::X86_64; }
 
     void syscall(ThreadContext *tc) override;
     void event(ThreadContext *tc) override;
@@ -113,5 +116,6 @@ struct Argument<X86ISA::EmuLinux::SyscallABI32, Arg,
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __ARCH_X86_LINUX_SE_WORKLOAD_HH__

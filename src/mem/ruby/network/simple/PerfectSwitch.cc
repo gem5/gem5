@@ -39,6 +39,9 @@
 #include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
+namespace gem5
+{
+
 const int PRIORITY_SWITCH_LIMIT = 128;
 
 // Operator for helper class
@@ -326,3 +329,5 @@ PerfectSwitch::print(std::ostream& out) const
 {
     out << "[PerfectSwitch " << m_switch_id << "]";
 }
+
+} // namespace gem5

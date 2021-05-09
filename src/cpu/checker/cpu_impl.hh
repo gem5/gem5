@@ -59,6 +59,9 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
+namespace gem5
+{
+
 template <class DynInstPtr>
 void
 Checker<DynInstPtr>::advancePC(const Fault &fault)
@@ -699,5 +702,7 @@ Checker<DynInstPtr>::dumpInsts()
     }
 
 }
+
+} // namespace gem5
 
 #endif//__CPU_CHECKER_CPU_IMPL_HH__

@@ -58,6 +58,9 @@
 #include "sim/process.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class BaseTLB;
 class GPUCommandProcessor;
 class GPUDispatcher;
@@ -314,5 +317,7 @@ class Shader : public ClockedObject
         statistics::Vector vectorInstDstOperand;
     } stats;
 };
+
+} // namespace gem5
 
 #endif // __SHADER_HH__

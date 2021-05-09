@@ -40,6 +40,9 @@
 #include "arch/arm/faults.hh"
 #include "base/bitfield.hh"
 
+namespace gem5
+{
+
 using namespace ArmISA;
 
 bool
@@ -918,3 +921,4 @@ ArmISA::stripPAC(ThreadContext* tc, uint64_t A, bool data, uint64_t* out){
     return NoFault;
 }
 
+} // namespace gem5

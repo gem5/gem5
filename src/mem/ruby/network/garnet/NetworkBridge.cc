@@ -39,6 +39,9 @@
 #include "debug/RubyNetwork.hh"
 #include "params/GarnetIntLink.hh"
 
+namespace gem5
+{
+
 NetworkBridge::NetworkBridge(const Params &p)
     :CreditLink(p)
 {
@@ -264,3 +267,5 @@ NetworkBridge::wakeup()
         scheduleEvent(Cycles(1));
     }
 }
+
+} // namespace gem5

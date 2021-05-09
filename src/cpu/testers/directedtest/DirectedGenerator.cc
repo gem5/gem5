@@ -31,6 +31,9 @@
 
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 DirectedGenerator::DirectedGenerator(const Params &p)
     : SimObject(p),
       requestorId(p.system->getRequestorId(this))
@@ -45,3 +48,5 @@ DirectedGenerator::setDirectedTester(RubyDirectedTester* directed_tester)
     assert(m_directed_tester == NULL);
     m_directed_tester = directed_tester;
 }
+
+} // namespace gem5

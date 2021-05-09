@@ -43,6 +43,9 @@
 #include "params/VirtIODummyDevice.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 VirtDescriptor::VirtDescriptor(PortProxy &_memProxy, ByteOrder bo,
                                VirtQueue &_queue, Index descIndex)
     : memProxy(&_memProxy), queue(&_queue), byteOrder(bo), _index(descIndex),
@@ -495,3 +498,5 @@ VirtIODummyDevice::VirtIODummyDevice(const VirtIODummyDeviceParams &params)
     : VirtIODeviceBase(params, ID_INVALID, 0, 0)
 {
 }
+
+} // namespace gem5

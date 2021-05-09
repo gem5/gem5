@@ -43,6 +43,7 @@ from m5.objects.PciDevice import PciMemBar, PciMemUpperBar, PciLegacyIoBar
 class AMDGPUDevice(PciDevice):
     type = 'AMDGPUDevice'
     cxx_header = "dev/amdgpu/amdgpu_device.hh"
+    cxx_class = 'gem5::AMDGPUDevice'
 
     # IDs for AMD Vega 10
     VendorID = 0x1002

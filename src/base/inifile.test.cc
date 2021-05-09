@@ -38,6 +38,8 @@
 
 #include "base/inifile.hh"
 
+using namespace gem5;
+
 namespace {
 
 std::istringstream iniFile(R"ini_file(

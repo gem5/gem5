@@ -54,6 +54,9 @@
 #include "cpu/pc_event.hh"
 #include "cpu/reg_class.hh"
 
+namespace gem5
+{
+
 // @todo: Figure out a more architecture independent way to obtain the ITB and
 // DTB pointers.
 namespace TheISA
@@ -348,5 +351,7 @@ void unserialize(ThreadContext &tc, CheckpointIn &cp);
  * @param old_tc Source ThreadContext.
  */
 void takeOverFrom(ThreadContext &new_tc, ThreadContext &old_tc);
+
+} // namespace gem5
 
 #endif

@@ -49,6 +49,9 @@
 #include "debug/MSHR.hh"
 #include "mem/cache/mshr.hh"
 
+namespace gem5
+{
+
 MSHRQueue::MSHRQueue(const std::string &_label,
                      int num_entries, int reserve,
                      int demand_reserve, std::string cache_name = "")
@@ -144,3 +147,5 @@ MSHRQueue::forceDeallocateTarget(MSHR *mshr)
     // Notify if MSHR queue no longer full
     return was_full && !isFull();
 }
+
+} // namespace gem5

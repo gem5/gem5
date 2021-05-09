@@ -57,6 +57,9 @@
 #include "mem/request.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 MSHR::MSHR(const std::string &name)
     :   QueueEntry(name),
         downstreamPending(false),
@@ -760,3 +763,5 @@ MSHR::conflictAddr(const QueueEntry* entry) const
     assert(hasTargets());
     return entry->matchBlockAddr(blkAddr, isSecure);
 }
+
+} // namespace gem5

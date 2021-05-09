@@ -51,6 +51,9 @@
  * This implements the dual Sp804 timer block
  */
 
+namespace gem5
+{
+
 class BaseGic;
 
 class Sp804 : public AmbaPioDevice
@@ -163,6 +166,6 @@ class Sp804 : public AmbaPioDevice
     void unserialize(CheckpointIn &cp) override;
 };
 
+} // namespace gem5
 
 #endif // __DEV_ARM_SP804_HH__
-

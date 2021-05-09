@@ -32,6 +32,9 @@
 
 #include <type_traits>
 
+namespace gem5
+{
+
 /**
  * Wrapper that groups a few flag bits under the same undelying container.
  *
@@ -141,5 +144,7 @@ class Flags
     }
     /** @} */ // end of api_flags
 };
+
+} // namespace gem5
 
 #endif // __BASE_FLAGS_HH__

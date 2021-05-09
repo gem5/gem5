@@ -46,6 +46,9 @@
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 
+namespace gem5
+{
+
 namespace MipsISA
 {
 
@@ -332,6 +335,6 @@ updateTCStatusView(TC *tc)
 }
 
 } // namespace MipsISA
-
+} // namespace gem5
 
 #endif

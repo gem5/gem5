@@ -44,6 +44,9 @@
 
 namespace py = pybind11;
 
+namespace gem5
+{
+
 PyTrafficGen::PyTrafficGen(const PyTrafficGenParams &p)
     : BaseTrafficGen(p)
 {
@@ -90,3 +93,4 @@ pybind_init_tracers(py::module_ &m_native)
 
 static EmbeddedPyBind _py_tracers("trace", pybind_init_tracers);
 
+} // namespace gem5

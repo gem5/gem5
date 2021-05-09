@@ -48,6 +48,9 @@
 #include "cpu/static_inst.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace Trace {
@@ -268,8 +271,7 @@ class InstTracer : public SimObject
                 const StaticInstPtr macroStaticInst = NULL) = 0;
 };
 
-
-
 } // namespace Trace
+} // namespace gem5
 
 #endif // __INSTRECORD_HH__

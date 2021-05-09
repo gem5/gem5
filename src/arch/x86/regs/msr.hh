@@ -34,6 +34,9 @@
 #include "arch/x86/regs/misc.hh"
 #include "base/types.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
 
@@ -62,5 +65,6 @@ extern const MsrMap msrMap;
 bool msrAddrToIndex(MiscRegIndex &regNum, Addr addr);
 
 } // namespace X86ISA
+} // namespace gem5
 
 #endif // __ARCH_X86_REG_MSR_HH__

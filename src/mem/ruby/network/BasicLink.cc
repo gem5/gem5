@@ -28,6 +28,9 @@
 
 #include "mem/ruby/network/BasicLink.hh"
 
+namespace gem5
+{
+
 BasicLink::BasicLink(const Params &p)
     : SimObject(p)
 {
@@ -57,3 +60,5 @@ BasicIntLink::BasicIntLink(const Params &p)
     : BasicLink(p)
 {
 }
+
+} // namespace gem5

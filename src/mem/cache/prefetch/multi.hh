@@ -40,6 +40,9 @@
 
 #include "mem/cache/prefetch/base.hh"
 
+namespace gem5
+{
+
 struct MultiPrefetcherParams;
 
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
@@ -71,5 +74,6 @@ class Multi : public Base
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif //__MEM_CACHE_PREFETCH_MULTI_HH__

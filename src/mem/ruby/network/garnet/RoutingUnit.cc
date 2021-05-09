@@ -37,6 +37,9 @@
 #include "mem/ruby/network/garnet/Router.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
+namespace gem5
+{
+
 RoutingUnit::RoutingUnit(Router *router)
 {
     m_router = router;
@@ -260,3 +263,5 @@ RoutingUnit::outportComputeCustom(RouteInfo route,
 {
     panic("%s placeholder executed", __FUNCTION__);
 }
+
+} // namespace gem5

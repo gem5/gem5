@@ -41,6 +41,9 @@
 
 #include "mem/cache/compressors/dictionary_compressor.hh"
 
+namespace gem5
+{
+
 struct RepeatedQwordsCompressorParams;
 
 GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
@@ -126,5 +129,6 @@ class RepeatedQwords::PatternM
 };
 
 } // namespace compression
+} // namespace gem5
 
 #endif //__MEM_CACHE_COMPRESSORS_REPEATED_QWORDS_HH__

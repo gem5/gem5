@@ -41,6 +41,9 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
+namespace gem5
+{
+
 ExecStage::ExecStage(const ComputeUnitParams &p, ComputeUnit &cu,
                      ScheduleToExecute &from_schedule)
     : computeUnit(cu), fromSchedule(from_schedule),
@@ -236,3 +239,5 @@ ExecStage::ExecStageStats::ExecStageStats(statistics::Group *parent)
     numCyclesWithNoInstrTypeIssued.subname(c, "SharedMemPipe");
     numCyclesWithInstrTypeIssued.subname(c++, "SharedMemPipe");
 }
+
+} // namespace gem5

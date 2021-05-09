@@ -55,6 +55,9 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 BaseTags::BaseTags(const Params &p)
     : ClockedObject(p), blkSize(p.block_size), blkMask(blkSize - 1),
       size(p.size), lookupLatency(p.tag_latency),
@@ -295,3 +298,5 @@ BaseTags::BaseTagStats::preDumpStats()
 
     tags.computeStats();
 }
+
+} // namespace gem5

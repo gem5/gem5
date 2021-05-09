@@ -59,6 +59,9 @@
 /* Used by some KVM macros */
 #define PAGE_SIZE pageSize
 
+namespace gem5
+{
+
 BaseKvmCPU::BaseKvmCPU(const BaseKvmCPUParams &params)
     : BaseCPU(params),
       vm(*params.system->getKvmVM()),
@@ -1363,3 +1366,5 @@ BaseKvmCPU::setupInstCounter(uint64_t period)
 
     activeInstPeriod = period;
 }
+
+} // namespace gem5

@@ -61,6 +61,9 @@
 #include "params/TimingExprUn.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /** These classes are just the C++ counterparts for those in Expr.py and
  *  are, therefore, documented there */
 
@@ -210,5 +213,7 @@ class TimingExprIf : public TimingExpr
 
     uint64_t eval(TimingExprEvalContext &context);
 };
+
+} // namespace gem5
 
 #endif

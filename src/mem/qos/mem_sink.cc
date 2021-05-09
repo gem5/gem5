@@ -44,6 +44,9 @@
 #include "mem/qos/q_policy.hh"
 #include "params/QoSMemSinkInterface.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -392,3 +395,4 @@ MemSinkInterface::MemSinkInterface(const QoSMemSinkInterfaceParams &_p)
 }
 
 } // namespace qos
+} // namespace gem5

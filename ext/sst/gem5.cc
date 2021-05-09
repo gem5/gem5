@@ -108,14 +108,15 @@ gem5Component::gem5Component(ComponentId_t id, Params &params) :
     splitCommandArgs(gem5DbgFlags, flags);
     for (auto flag : flags) {
         dbg.output(CALL_INFO, "  Setting Debug Flag [%s]\n", flag);
-        setDebugFlag(flag);
+        ::gem5::setDebugFlag(flag);
     }
 
-    ExternalMaster::registerHandler("sst", this); // these are idempotent
-    ExternalSlave ::registerHandler("sst", this);
+    // These are idempotent
+    ::gem5::ExternalMaster::registerHandler("sst", this);
+    ::gem5::ExternalSlave::registerHandler("sst", this);
 
-    // Initialize m5 special signal handling.
-    initSignals();
+    // Initialize gem5's special signal handling.
+    ::gem5::initSignals();
 
     initPython(args.size(), &args[0]);
 
@@ -172,11 +173,12 @@ gem5Component::clockTick(Cycle_t cycle)
         m->clock();
     }
 
-    GlobalSimLoopExitEvent *event = simulate(sim_cycles);
+    ::gem5::GlobalSimLoopExitEvent *event = ::gem5::simulate(sim_cycles);
     ++clocks_processed;
     if (event != simulate_limit_event) {
         info.output("exiting: curTick()=%lu cause=`%s` code=%d\n",
-                curTick(), event->getCause().c_str(), event->getCode());
+                ::gem5::curTick(), event->getCause().c_str(),
+                event->getCode());
         primaryComponentOKToEndSim();
         return true;
     }
@@ -248,9 +250,9 @@ gem5Component::initPython(int argc, char *argv[])
     }
 }
 
-ExternalMaster::Port*
+::gem5::ExternalMaster::Port*
 gem5Component::getExternalPort(const std::string &name,
-    ExternalMaster &owner, const std::string &port_data)
+    ::gem5::ExternalMaster &owner, const std::string &port_data)
 {
     std::string s(name); // bridges non-& result and &-arg
     auto master = new ExtMaster(this, info, owner, s);
@@ -258,9 +260,9 @@ gem5Component::getExternalPort(const std::string &name,
     return master;
 }
 
-ExternalSlave::Port*
+::gem5::ExternalSlave::Port*
 gem5Component::getExternalPort(const std::string &name,
-    ExternalSlave &owner, const std::string &port_data)
+    ::gem5::ExternalSlave &owner, const std::string &port_data)
 {
     std::string s(name); // bridges non-& result and &-arg
     auto slave = new ExtSlave(this, info, owner, s);

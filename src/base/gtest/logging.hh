@@ -29,6 +29,9 @@
 
 #include <sstream>
 
+namespace gem5
+{
+
 class GTestLogOutput : public std::ostringstream
 {
   private:
@@ -54,3 +57,5 @@ class GTestLogOutput : public std::ostringstream
 };
 
 extern thread_local GTestLogOutput gtestLogOutput;
+
+} // namespace gem5

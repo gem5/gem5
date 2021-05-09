@@ -41,6 +41,9 @@
 #include "dev/arm/doorbell.hh"
 #include "dev/io_device.hh"
 
+namespace gem5
+{
+
 struct Ap2ScpDoorbellParams;
 class ArmInterruptPin;
 class MHU;
@@ -165,5 +168,7 @@ class MHU : public BasicPioDevice
 
     uint32_t scfg;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_CSS_MHU_H__

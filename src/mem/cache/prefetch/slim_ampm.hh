@@ -43,6 +43,9 @@
  * This prefetcher uses two other prefetchers, the AMPM and the DCPT.
  */
 
+namespace gem5
+{
+
 struct SlimAMPMPrefetcherParams;
 
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
@@ -64,5 +67,6 @@ class SlimAMPM : public Queued
 };
 
 } // namespace prefetch
+} // namespace gem5
 
 #endif//__MEM_CACHE_PREFETCH_SLIM_AMPM_HH__

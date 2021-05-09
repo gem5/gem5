@@ -53,6 +53,9 @@
 #include "cpu/minor/dyn_inst.hh"
 #include "cpu/minor/pipe_data.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
@@ -162,5 +165,6 @@ class Decode : public Named
 };
 
 } // namespace minor
+} // namespace gem5
 
 #endif /* __CPU_MINOR_DECODE_HH__ */

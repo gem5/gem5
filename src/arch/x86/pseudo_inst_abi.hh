@@ -38,6 +38,9 @@
 #include "arch/x86/regs/int.hh"
 #include "sim/guest_abi.hh"
 
+namespace gem5
+{
+
 struct X86PseudoInstABI
 {
     using State = int;
@@ -83,3 +86,4 @@ struct Argument<X86PseudoInstABI, uint64_t>
 };
 
 } // namespace guest_abi
+} // namespace gem5

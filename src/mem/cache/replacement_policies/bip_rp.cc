@@ -34,6 +34,9 @@
 #include "params/BIPRP.hh"
 #include "sim/core.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
@@ -59,3 +62,4 @@ BIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 } // namespace replacement_policy
+} // namespace gem5

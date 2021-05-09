@@ -42,6 +42,9 @@
 #include "base/logging.hh"
 #include "x11keysym/keysym.h"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Ps2, ps2);
 namespace ps2
 {
@@ -206,5 +209,5 @@ keySymToPs2(uint32_t key, bool down, bool &cur_shift,
     return;
 }
 
-} /* namespace ps2 */
-
+} // namespace ps2
+} // namespace gem5

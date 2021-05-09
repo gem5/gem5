@@ -42,6 +42,9 @@
 #include "sim/full_system.hh"
 #include "sim/workload.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -205,3 +208,4 @@ SyscallFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 }
 
 } // namespace RiscvISA
+} // namespace gem5

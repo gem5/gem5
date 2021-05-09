@@ -52,6 +52,9 @@
 #include "sim/faults.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 class ThreadContext;
 
 namespace RiscvISA
@@ -209,6 +212,8 @@ namespace RiscvISA
         {
         }
     };
-}
+
+} // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_PAGE_TABLE_WALKER_HH__

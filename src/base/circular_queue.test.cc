@@ -39,6 +39,8 @@
 
 #include "base/circular_queue.hh"
 
+using namespace gem5;
+
 /** Testing that once instantiated with a fixed size,
  * the queue is still empty */
 TEST(CircularQueueTest, Empty)

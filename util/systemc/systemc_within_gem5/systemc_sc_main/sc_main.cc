@@ -31,6 +31,8 @@
 
 #include "systemc/ext/systemc"
 
+using namespace gem5;
+
 class Printer : public sc_core::sc_module
 {
   public:

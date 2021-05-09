@@ -42,6 +42,9 @@
 #include "base/logging.hh"
 #include "params/QoSPropFairPolicy.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -125,3 +128,4 @@ PropFairPolicy::schedule(const RequestorID pkt_id, const uint64_t pkt_size)
 }
 
 } // namespace qos
+} // namespace gem5

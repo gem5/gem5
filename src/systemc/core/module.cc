@@ -52,6 +52,7 @@ Module::Module(const char *name) :
     _name(name), _sc_mod(nullptr), _obj(nullptr), _ended(false),
     _deprecatedConstructor(false), bindingIndex(0)
 {
+    using namespace gem5;
     panic_if(_new_module, "Previous module not finished.\n");
     _new_module = this;
 }
@@ -95,6 +96,7 @@ Module::pop()
     if (_modules.empty() || _modules.back() != this)
         return;
 
+    using namespace gem5;
     panic_if(_new_module, "Pop with unfinished module.\n");
 
     _modules.pop_back();
@@ -104,6 +106,7 @@ Module::pop()
 void
 Module::bindPorts(std::vector<const ::sc_core::sc_bind_proxy *> &proxies)
 {
+    using namespace gem5;
     panic_if(proxies.size() > ports.size(),
             "Trying to bind %d interfaces/ports to %d ports.\n",
             proxies.size(), ports.size());
@@ -141,7 +144,7 @@ void
 Module::endOfElaboration()
 {
     if (_deprecatedConstructor && !_ended) {
-        std::string msg = csprintf("module '%s'", name());
+        std::string msg = gem5::csprintf("module '%s'", name());
         SC_REPORT_WARNING(sc_core::SC_ID_END_MODULE_NOT_CALLED_, msg.c_str());
     }
     pushParentModule(this);

@@ -37,4 +37,6 @@ from m5.objects.TesterThread import TesterThread
 class GpuWavefront(TesterThread):
     type = 'GpuWavefront'
     cxx_header = "cpu/testers/gpu_ruby_test/gpu_wavefront.hh"
+    cxx_class = 'gem5::GpuWavefront'
+
     cu_id = Param.Int("Compute Unit ID")

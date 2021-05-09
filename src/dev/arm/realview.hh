@@ -50,6 +50,9 @@
 #include "dev/platform.hh"
 #include "params/RealView.hh"
 
+namespace gem5
+{
+
 class BaseGic;
 class IdeController;
 
@@ -73,5 +76,7 @@ class RealView : public Platform
     void postPciInt(int line) override;
     void clearPciInt(int line) override;
 };
+
+} // namespace gem5
 
 #endif // __DEV_ARM_RealView_HH__

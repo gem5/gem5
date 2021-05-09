@@ -53,6 +53,9 @@
 #include "params/Pl111.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class VncInput;
 
 class Pl111: public AmbaDmaDevice
@@ -374,5 +377,7 @@ class Pl111: public AmbaDmaDevice
      */
     AddrRangeList getAddrRanges() const override;
 };
+
+} // namespace gem5
 
 #endif

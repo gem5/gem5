@@ -33,6 +33,8 @@ from m5.objects.ClockedObject import ClockedObject
 class RubyTester(ClockedObject):
     type = 'RubyTester'
     cxx_header = "cpu/testers/rubytest/RubyTester.hh"
+    cxx_class = 'gem5::RubyTester'
+
     num_cpus = Param.Int("number of cpus / RubyPorts")
     cpuInstDataPort = VectorRequestPort("cpu combo ports to inst & "
                                         "data caches")

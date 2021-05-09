@@ -38,6 +38,9 @@
 #ifndef __DEV_PCI_TYPES_HH__
 #define __DEV_PCI_TYPES_HH__
 
+namespace gem5
+{
+
 struct PciBusAddr
 {
   public:
@@ -68,5 +71,7 @@ enum class PciIntPin : uint8_t
     INTC,
     INTD
 };
+
+} // namespace gem5
 
 #endif // __DEV_PCI_TYPES_HH__

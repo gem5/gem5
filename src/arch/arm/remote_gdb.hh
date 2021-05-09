@@ -51,6 +51,9 @@
 #include "base/compiler.hh"
 #include "base/remote_gdb.hh"
 
+namespace gem5
+{
+
 class System;
 class ThreadContext;
 
@@ -124,6 +127,8 @@ class RemoteGDB : public BaseRemoteGDB
     };
     bool getXferFeaturesRead(const std::string &annex, std::string &output);
 };
+
 } // namespace ArmISA
+} // namespace gem5
 
 #endif /* __ARCH_ARM_REMOTE_GDB_H__ */

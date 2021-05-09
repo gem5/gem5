@@ -37,5 +37,5 @@ from m5.objects.BaseISA import BaseISA
 
 class SparcISA(BaseISA):
     type = 'SparcISA'
-    cxx_class = 'SparcISA::ISA'
+    cxx_class = 'gem5::SparcISA::ISA'
     cxx_header = "arch/sparc/isa.hh"

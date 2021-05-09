@@ -54,6 +54,9 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 template <class XC>
@@ -160,5 +163,6 @@ globalClearExclusive(XC *xc)
 }
 
 } // namespace ArmISA
+} // namespace gem5
 
 #endif

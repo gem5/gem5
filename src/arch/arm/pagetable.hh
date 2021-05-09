@@ -48,6 +48,9 @@
 #include "arch/arm/utility.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -363,8 +366,7 @@ struct TlbEntry : public Serializable
 
 };
 
+} // namespace ArmISA
+} // namespace gem5
 
-
-}
 #endif // __ARCH_ARM_PAGETABLE_H__
-

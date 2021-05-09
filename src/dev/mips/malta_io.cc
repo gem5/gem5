@@ -51,6 +51,9 @@
 #include "params/MaltaIO.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 MaltaIO::RTC::RTC(const std::string &name, const MaltaIOParams &p)
     : MC146818(p.malta, name, p.time, p.year_is_bcd, p.frequency),
       malta(p.malta)
@@ -141,3 +144,5 @@ MaltaIO::startup()
     rtc.startup();
     pitimer.startup();
 }
+
+} // namespace gem5

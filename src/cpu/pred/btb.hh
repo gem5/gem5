@@ -34,6 +34,9 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 
+namespace gem5
+{
+
 class DefaultBTB
 {
   private:
@@ -127,5 +130,7 @@ class DefaultBTB
     /** Log2 NumThreads used for hashing threadid */
     unsigned log2NumThreads;
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_BTB_HH__

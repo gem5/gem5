@@ -43,6 +43,9 @@
 
 #define SectorSize (512)
 
+namespace gem5
+{
+
 /**
  * Basic interface for accessing a disk image.
  */
@@ -156,5 +159,8 @@ void SafeWrite(std::ofstream &stream, const T &data);
 
 template<class T>
 void SafeWriteSwap(std::ofstream &stream, const T &data);
+
+} // namespace gem5
+
 
 #endif // __DEV_STORAGE_DISK_IMAGE_HH__

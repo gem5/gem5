@@ -46,6 +46,9 @@
 #include "params/RubySystem.hh"
 #include "sim/clocked_object.hh"
 
+namespace gem5
+{
+
 class Network;
 class AbstractController;
 
@@ -148,5 +151,7 @@ class RubySystem : public ClockedObject
     CacheRecorder* m_cache_recorder;
     std::vector<std::map<uint32_t, AbstractController *> > m_abstract_controls;
 };
+
+} // namespace gem5
 
 #endif //__MEM_RUBY_SYSTEM_RUBYSYSTEM_HH__

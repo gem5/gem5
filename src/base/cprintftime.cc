@@ -36,6 +36,9 @@
 
 #include "base/cprintf.hh"
 
+namespace gem5
+{
+
 volatile int stop = false;
 
 void
@@ -87,3 +90,5 @@ main()
 
     return 0;
 }
+
+} // namespace gem5

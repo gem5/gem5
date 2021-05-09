@@ -30,8 +30,13 @@
 #ifndef __MEM_RUBY_COMMON_TYPEDEFINES_HH__
 #define __MEM_RUBY_COMMON_TYPEDEFINES_HH__
 
+namespace gem5
+{
+
 typedef unsigned int LinkID;
 typedef unsigned int NodeID;
 typedef unsigned int SwitchID;
+
+} // namespace gem5
 
 #endif //__MEM_RUBY_COMMON_TYPEDEFINES_HH__

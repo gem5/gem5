@@ -52,6 +52,9 @@
 #include "mem/cache/tags/indexing_policies/base.hh"
 #include "params/SetAssociative.hh"
 
+namespace gem5
+{
+
 class ReplaceableEntry;
 
 /**
@@ -125,5 +128,7 @@ class SetAssociative : public BaseIndexingPolicy
     Addr regenerateAddr(const Addr tag, const ReplaceableEntry* entry) const
                                                                    override;
 };
+
+} // namespace gem5
 
 #endif //__MEM_CACHE_INDEXING_POLICIES_SET_ASSOCIATIVE_HH__

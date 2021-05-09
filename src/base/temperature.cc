@@ -37,6 +37,9 @@
 
 #include "base/temperature.hh"
 
+namespace gem5
+{
+
 Temperature
 Temperature::fromKelvin(double _value)
 {
@@ -67,3 +70,5 @@ operator<<(std::ostream &out, const Temperature &temp)
     out << temp.value << "K";
     return out;
 }
+
+} // namespace gem5

@@ -46,6 +46,9 @@
 #include "base/framebuffer.hh"
 #include "base/imgwriter.hh"
 
+namespace gem5
+{
+
 /** Image writer implementing support for PNG */
 class PngWriter : public ImgWriter
 {
@@ -104,5 +107,7 @@ class PngWriter : public ImgWriter
 
     static const char* _imgExtension;
 };
+
+} // namespace gem5
 
 #endif // __BASE_PNG_HH__

@@ -46,6 +46,9 @@
 #include "arch/arm/insts/neon64_mem.hh"
 #include "base/compiler.hh"
 
+namespace gem5
+{
+
 using namespace ArmISAInst;
 
 namespace ArmISA
@@ -1622,4 +1625,5 @@ MicroMemPairOp::generateDisassembly(
     return ss.str();
 }
 
-}
+} // namespace ArmISA
+} // namespace gem5

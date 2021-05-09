@@ -49,6 +49,9 @@
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/tlm_port_wrapper.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
@@ -183,5 +186,6 @@ using ScxEvsCortexR52x4 = ScxEvsCortexR52<ScxEvsCortexR52x4Types>;
 extern template class ScxEvsCortexR52<ScxEvsCortexR52x4Types>;
 
 } // namespace fastmodel
+} // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_CORTEXR52_EVS_HH__

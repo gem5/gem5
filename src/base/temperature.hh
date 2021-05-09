@@ -40,6 +40,9 @@
 
 #include <ostream>
 
+namespace gem5
+{
+
 /**
  * The class stores temperatures in Kelvin and provides helper methods
  * to convert to/from Celsius.
@@ -172,5 +175,6 @@ operator/(const Temperature &lhs, const double &rhs)
     return Temperature(lhs.value / rhs);
 }
 
+} // namespace gem5
 
 #endif // __BASE_TEMPERATURE_HH__

@@ -33,6 +33,9 @@
 
 #include "kern/linux/linux.hh"
 
+namespace gem5
+{
+
 class MipsLinux : public Linux
 {
   public:
@@ -193,5 +196,7 @@ class MipsLinux : public Linux
     } tgt_sysinfo;
 
 };
+
+} // namespace gem5
 
 #endif

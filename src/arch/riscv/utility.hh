@@ -56,6 +56,9 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -129,5 +132,6 @@ registerName(RegId reg)
 }
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_UTILITY_HH__

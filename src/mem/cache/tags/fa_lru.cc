@@ -55,6 +55,9 @@
 #include "mem/cache/base.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 
+namespace gem5
+{
+
 std::string
 FALRUBlk::print() const
 {
@@ -455,3 +458,4 @@ FALRU::CacheTracking::recordAccess(FALRUBlk *blk)
     accesses++;
 }
 
+} // namespace gem5

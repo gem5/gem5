@@ -49,6 +49,9 @@
 #include "params/Plic.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace RiscvISA;
 /**
  * NOTE:
@@ -279,5 +282,6 @@ class Plic : public BasicPioDevice
     void updateInt();
 };
 
+} // namespace gem5
 
 #endif // __DEV_RISCV_PLIC_HH__

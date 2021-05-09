@@ -39,6 +39,8 @@
 
 #include "base/bitfield.hh"
 
+using namespace gem5;
+
 /*
  * The following tests the "mask(N)" function. It is assumed that the mask
  * returned is a 64 bit value with the N LSBs set to one.

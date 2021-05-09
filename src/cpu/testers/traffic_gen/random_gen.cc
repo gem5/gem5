@@ -43,6 +43,9 @@
 #include "base/trace.hh"
 #include "debug/TrafficGen.hh"
 
+namespace gem5
+{
+
 void
 RandomGen::enter()
 {
@@ -105,3 +108,5 @@ RandomGen::nextPacketTick(bool elastic, Tick delay) const
         return curTick() + wait;
     }
 }
+
+} // namespace gem5

@@ -48,6 +48,9 @@
 #include "sim/probe/probe.hh"
 #include "sim/sub_system.hh"
 
+namespace gem5
+{
+
 ThermalDomain::ThermalDomain(const Params &p)
     : SimObject(p), _initTemperature(p.initial_temperature),
     node(NULL), subsystem(NULL),
@@ -89,3 +92,5 @@ ThermalDomain::getEquation(ThermalNode * tn, unsigned n, double step) const
         eq[eq.cnt()] = power;
     return eq;
 }
+
+} // namespace gem5

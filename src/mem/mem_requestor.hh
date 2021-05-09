@@ -46,6 +46,9 @@
 #include "mem/request.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * The RequestorInfo class contains data about a specific requestor.
  */
@@ -66,5 +69,7 @@ struct RequestorInfo
     /** Requestor id */
     RequestorID id;
 };
+
+} // namespace gem5
 
 #endif // __MEM_MEM_REQUESTOR_HH__

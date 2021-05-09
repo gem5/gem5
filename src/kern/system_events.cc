@@ -33,6 +33,9 @@
 #include "cpu/thread_context.hh"
 #include "debug/PCEvent.hh"
 
+namespace gem5
+{
+
 void
 SkipFuncBase::process(ThreadContext *tc)
 {
@@ -43,3 +46,5 @@ SkipFuncBase::process(ThreadContext *tc)
     DPRINTF(PCEvent, "skipping %s: pc = %s, newpc = %s\n", description,
             oldPC, tc->pcState());
 }
+
+} // namespace gem5

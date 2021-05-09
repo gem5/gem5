@@ -38,6 +38,9 @@
 
 #include "gpu-compute/scheduling_policy.hh"
 
+namespace gem5
+{
+
 struct ComputeUnitParams;
 
 class Scheduler
@@ -55,5 +58,7 @@ class Scheduler
     SchedulingPolicy *schedPolicy;
     std::vector<Wavefront*> *scheduleList;
 };
+
+} // namespace gem5
 
 #endif // __GPU_COMPUTE_SCHEDULER_HH__

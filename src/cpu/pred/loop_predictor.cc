@@ -38,6 +38,9 @@
 #include "debug/LTage.hh"
 #include "params/LoopPredictor.hh"
 
+namespace gem5
+{
+
 LoopPredictor::LoopPredictor(const LoopPredictorParams &p)
   : SimObject(p), logSizeLoopPred(p.logSizeLoopPred),
     loopTableAgeBits(p.loopTableAgeBits),
@@ -365,3 +368,5 @@ LoopPredictor::getSizeInBits() const
         loopTableConfidenceBits + loopTableTagBits +
         loopTableAgeBits + useDirectionBit);
 }
+
+} // namespace gem5

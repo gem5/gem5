@@ -51,6 +51,8 @@
 
 namespace py = pybind11;
 
+namespace gem5
+{
 
 /**
  * PyBind wrapper for Events
@@ -183,3 +185,5 @@ pybind_init_event(py::module_ &m_native)
     PRIO(Sim_Exit_Pri);
     PRIO(Maximum_Pri);
 }
+
+} // namespace gem5

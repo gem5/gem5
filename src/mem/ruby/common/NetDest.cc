@@ -30,6 +30,9 @@
 
 #include <algorithm>
 
+namespace gem5
+{
+
 NetDest::NetDest()
 {
   resize();
@@ -278,3 +281,5 @@ NetDest::isEqual(const NetDest& n) const
     }
     return true;
 }
+
+} // namespace gem5

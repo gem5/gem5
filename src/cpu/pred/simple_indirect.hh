@@ -36,6 +36,9 @@
 #include "cpu/pred/indirect.hh"
 #include "params/SimpleIndirectPredictor.hh"
 
+namespace gem5
+{
+
 class SimpleIndirectPredictor : public IndirectPredictor
 {
   public:
@@ -98,5 +101,7 @@ class SimpleIndirectPredictor : public IndirectPredictor
 
     std::vector<ThreadInfo> threadInfo;
 };
+
+} // namespace gem5
 
 #endif // __CPU_PRED_INDIRECT_HH__

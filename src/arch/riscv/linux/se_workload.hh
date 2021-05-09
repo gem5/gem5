@@ -35,6 +35,9 @@
 #include "params/RiscvEmuLinux.hh"
 #include "sim/syscall_desc.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -57,5 +60,6 @@ class EmuLinux : public SEWorkload
 };
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif // __ARCH_RISCV_LINUX_SE_WORKLOAD_HH__

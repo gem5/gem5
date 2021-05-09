@@ -89,6 +89,9 @@
 #include "sim/global_event.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 class EventManager;
 class System;
 class ThreadContext;
@@ -640,4 +643,6 @@ class DistIface : public Drainable, public Serializable
     static void toggleSync(ThreadContext *tc);
  };
 
-#endif
+} // namespace gem5
+
+#endif // __DEV_DIST_IFACE_HH__

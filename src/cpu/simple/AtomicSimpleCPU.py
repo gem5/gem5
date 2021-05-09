@@ -47,6 +47,7 @@ class AtomicSimpleCPU(BaseSimpleCPU):
 
     type = 'AtomicSimpleCPU'
     cxx_header = "cpu/simple/atomic.hh"
+    cxx_class = 'gem5::AtomicSimpleCPU'
 
     @classmethod
     def memory_mode(cls):

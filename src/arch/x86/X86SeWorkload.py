@@ -30,7 +30,7 @@ from m5.objects.Workload import SEWorkload
 class X86EmuLinux(SEWorkload):
     type = 'X86EmuLinux'
     cxx_header = "arch/x86/linux/se_workload.hh"
-    cxx_class = 'X86ISA::EmuLinux'
+    cxx_class = 'gem5::X86ISA::EmuLinux'
 
     @classmethod
     def _is_compatible_with(cls, obj):

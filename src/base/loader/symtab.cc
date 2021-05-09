@@ -34,6 +34,9 @@
 #include "base/logging.hh"
 #include "base/str.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
@@ -121,3 +124,4 @@ SymbolTable::unserialize(const std::string &base, CheckpointIn &cp,
 }
 
 } // namespace loader
+} // namespace gem5

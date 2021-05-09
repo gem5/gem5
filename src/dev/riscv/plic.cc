@@ -47,6 +47,9 @@
 #include "params/Plic.hh"
 #include "sim/system.hh"
 
+namespace gem5
+{
+
 using namespace RiscvISA;
 
 Plic::Plic(const Params &params) :
@@ -553,3 +556,5 @@ Plic::unserialize(CheckpointIn &cp)
     UNSERIALIZE_CONTAINER(lastID);
     updateInt();
 }
+
+} // namespace gem5

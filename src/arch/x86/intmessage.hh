@@ -38,6 +38,9 @@
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 namespace X86ISA
 {
     BitUnion32(TriggerIntMessage)
@@ -84,6 +87,8 @@ namespace X86ISA
         Addr addr = x86InterruptAddress(id, TriggerIntOffset);
         return buildIntPacket(addr, message);
     }
-}
+
+} // namespace X86ISA
+} // namespace gem5
 
 #endif

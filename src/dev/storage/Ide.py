@@ -33,6 +33,7 @@ class IdeID(Enum): vals = ['device0', 'device1']
 class IdeDisk(SimObject):
     type = 'IdeDisk'
     cxx_header = "dev/storage/ide_disk.hh"
+    cxx_class = 'gem5::IdeDisk'
     delay = Param.Latency('1us', "Fixed disk delay in microseconds")
     driveID = Param.IdeID('device0', "Drive ID")
     image = Param.DiskImage("Disk image")
@@ -40,6 +41,7 @@ class IdeDisk(SimObject):
 class IdeController(PciDevice):
     type = 'IdeController'
     cxx_header = "dev/storage/ide_ctrl.hh"
+    cxx_class = 'gem5::IdeController'
     disks = VectorParam.IdeDisk("IDE disks attached to this controller")
 
     VendorID = 0x8086

@@ -39,6 +39,9 @@
 #include "debug/MC146818.hh"
 #include "dev/rtcreg.h"
 
+namespace gem5
+{
+
 static uint8_t
 bcdize(uint8_t val)
 {
@@ -342,3 +345,5 @@ MC146818::RTCTickEvent::description() const
 {
     return "RTC clock tick";
 }
+
+} // namespace gem5

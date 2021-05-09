@@ -32,6 +32,9 @@
 #include "arch/riscv/types.hh"
 #include "base/bitunion.hh"
 
+namespace gem5
+{
+
 namespace RiscvISA
 {
 
@@ -324,5 +327,6 @@ BitUnion32(TagLoReg)
 EndBitUnion(TagLoReg)
 
 } // namespace RiscvISA
+} // namespace gem5
 
 #endif

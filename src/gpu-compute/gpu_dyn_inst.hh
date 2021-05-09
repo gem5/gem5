@@ -47,6 +47,9 @@
 #include "gpu-compute/gpu_exec_context.hh"
 #include "gpu-compute/operand_info.hh"
 
+namespace gem5
+{
+
 class GPUStaticInst;
 
 template<typename T>
@@ -488,5 +491,7 @@ class GPUDynInst : public GPUExecContext
     // to hold the tick when the block arrives at certain hop points
     std::map<Addr, std::vector<Tick>> lineAddressTime;
 };
+
+} // namespace gem5
 
 #endif // __GPU_DYN_INST_HH__

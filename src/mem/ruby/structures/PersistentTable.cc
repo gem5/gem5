@@ -28,6 +28,9 @@
 
 #include "mem/ruby/structures/PersistentTable.hh"
 
+namespace gem5
+{
+
 PersistentTable::PersistentTable()
 {
 }
@@ -191,3 +194,4 @@ PersistentTable::print(std::ostream& out) const
 {
 }
 
+} // namespace gem5

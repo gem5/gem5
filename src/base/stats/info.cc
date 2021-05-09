@@ -50,6 +50,9 @@
 #include "base/logging.hh"
 #include "base/str.hh"
 
+namespace gem5
+{
+
 GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
@@ -214,3 +217,4 @@ Vector2dInfo::enable()
 }
 
 } // namespace statistics
+} // namespace gem5

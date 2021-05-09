@@ -34,6 +34,9 @@
 #include "params/ArmEmuLinux.hh"
 #include "sim/syscall_desc.hh"
 
+namespace gem5
+{
+
 namespace ArmISA
 {
 
@@ -79,5 +82,6 @@ struct Result<ABI, SyscallReturn,
 };
 
 } // namespace guest_abi
+} // namespace gem5
 
 #endif // __ARCH_ARM_LINUX_SE_WORKLOAD_HH__

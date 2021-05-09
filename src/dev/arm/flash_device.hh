@@ -46,6 +46,9 @@
 #include "params/FlashDevice.hh"
 #include "sim/serialize.hh"
 
+namespace gem5
+{
+
 /**
  * Flash Device model
  * The Flash Device model is a timing model for a NAND flash device.
@@ -198,4 +201,7 @@ class FlashDevice : public AbstractNVM
     /** Completion event */
     EventFunctionWrapper planeEvent;
 };
+
+} // namespace gem5
+
 #endif //__DEV_ARM_FLASH_DEVICE_HH__

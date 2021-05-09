@@ -70,6 +70,8 @@
 #include "systemc/tlm_bridge/sc_ext.hh"
 #include "systemc/tlm_bridge/sc_mm.hh"
 
+using namespace gem5;
+
 namespace sc_gem5
 {
 
@@ -511,7 +513,7 @@ Gem5ToTlmBridge<BITWIDTH>::Gem5ToTlmBridge(
 }
 
 template <unsigned int BITWIDTH>
-::Port &
+gem5::Port &
 Gem5ToTlmBridge<BITWIDTH>::gem5_getPort(const std::string &if_name, int idx)
 {
     if (if_name == "gem5")
@@ -537,35 +539,35 @@ Gem5ToTlmBridge<BITWIDTH>::before_end_of_elaboration()
 } // namespace sc_gem5
 
 sc_gem5::Gem5ToTlmBridge<32> *
-Gem5ToTlmBridge32Params::create() const
+gem5::Gem5ToTlmBridge32Params::create() const
 {
     return new sc_gem5::Gem5ToTlmBridge<32>(
             *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::Gem5ToTlmBridge<64> *
-Gem5ToTlmBridge64Params::create() const
+gem5::Gem5ToTlmBridge64Params::create() const
 {
     return new sc_gem5::Gem5ToTlmBridge<64>(
             *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::Gem5ToTlmBridge<128> *
-Gem5ToTlmBridge128Params::create() const
+gem5::Gem5ToTlmBridge128Params::create() const
 {
     return new sc_gem5::Gem5ToTlmBridge<128>(
             *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::Gem5ToTlmBridge<256> *
-Gem5ToTlmBridge256Params::create() const
+gem5::Gem5ToTlmBridge256Params::create() const
 {
     return new sc_gem5::Gem5ToTlmBridge<256>(
             *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::Gem5ToTlmBridge<512> *
-Gem5ToTlmBridge512Params::create() const
+gem5::Gem5ToTlmBridge512Params::create() const
 {
     return new sc_gem5::Gem5ToTlmBridge<512>(
             *this, sc_core::sc_module_name(name.c_str()));

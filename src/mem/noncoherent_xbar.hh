@@ -49,6 +49,9 @@
 #include "mem/xbar.hh"
 #include "params/NoncoherentXBar.hh"
 
+namespace gem5
+{
+
 /**
  * A non-coherent crossbar connects a number of non-snooping memory-side ports
  * and cpu_sides, and routes the request and response packets based on
@@ -183,5 +186,7 @@ class NoncoherentXBar : public BaseXBar
 
     virtual ~NoncoherentXBar();
 };
+
+} // namespace gem5
 
 #endif //__MEM_NONCOHERENT_XBAR_HH__

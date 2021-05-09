@@ -45,6 +45,9 @@
 #include "sim/power/thermal_model.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 MathExprPowerModel::MathExprPowerModel(const Params &p)
     : PowerModelState(p), dyn_expr(p.dyn), st_expr(p.st)
 {
@@ -113,3 +116,5 @@ MathExprPowerModel::regStats()
 {
     PowerModelState::regStats();
 }
+
+} // namespace gem5

@@ -38,6 +38,9 @@
 #ifndef __SIM_BACKTRACE_HH__
 #define __SIM_BACKTRACE_HH__
 
+namespace gem5
+{
+
 /**
  * Print a gem5 post-mortem report
  *
@@ -45,5 +48,7 @@
  * must support this use case.
  */
 void print_backtrace();
+
+} // namespace gem5
 
 #endif // __SIM_BACKTRACE_HH__

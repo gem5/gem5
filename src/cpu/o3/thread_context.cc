@@ -45,6 +45,9 @@
 #include "config/the_isa.hh"
 #include "debug/O3CPU.hh"
 
+namespace gem5
+{
+
 namespace o3
 {
 
@@ -55,9 +58,9 @@ ThreadContext::getVirtProxy()
 }
 
 void
-ThreadContext::takeOverFrom(::ThreadContext *old_context)
+ThreadContext::takeOverFrom(gem5::ThreadContext *old_context)
 {
-    ::takeOverFrom(*this, *old_context);
+    gem5::takeOverFrom(*this, *old_context);
 
     getIsaPtr()->takeOverFrom(this, old_context);
 
@@ -75,11 +78,11 @@ ThreadContext::activate()
     DPRINTF(O3CPU, "Calling activate on Thread Context %d\n",
             threadId());
 
-    if (thread->status() == ::ThreadContext::Active)
+    if (thread->status() == gem5::ThreadContext::Active)
         return;
 
     thread->lastActivate = curTick();
-    thread->setStatus(::ThreadContext::Active);
+    thread->setStatus(gem5::ThreadContext::Active);
 
     // status() == Suspended
     cpu->activateContext(thread->threadId());
@@ -91,7 +94,7 @@ ThreadContext::suspend()
     DPRINTF(O3CPU, "Calling suspend on Thread Context %d\n",
             threadId());
 
-    if (thread->status() == ::ThreadContext::Suspended)
+    if (thread->status() == gem5::ThreadContext::Suspended)
         return;
 
     if (cpu->isDraining()) {
@@ -102,7 +105,7 @@ ThreadContext::suspend()
     thread->lastActivate = curTick();
     thread->lastSuspend = curTick();
 
-    thread->setStatus(::ThreadContext::Suspended);
+    thread->setStatus(gem5::ThreadContext::Suspended);
     cpu->suspendContext(thread->threadId());
 }
 
@@ -111,15 +114,15 @@ ThreadContext::halt()
 {
     DPRINTF(O3CPU, "Calling halt on Thread Context %d\n", threadId());
 
-    if (thread->status() == ::ThreadContext::Halting ||
-        thread->status() == ::ThreadContext::Halted)
+    if (thread->status() == gem5::ThreadContext::Halting ||
+        thread->status() == gem5::ThreadContext::Halted)
         return;
 
     // the thread is not going to halt/terminate immediately in this cycle.
     // The thread will be removed after an exit trap is processed
     // (e.g., after trapLatency cycles). Until then, the thread's status
     // will be Halting.
-    thread->setStatus(::ThreadContext::Halting);
+    thread->setStatus(gem5::ThreadContext::Halting);
 
     // add this thread to the exiting list to mark that it is trying to exit.
     cpu->addThreadToExitingList(thread->threadId());
@@ -138,7 +141,7 @@ ThreadContext::readLastSuspend()
 }
 
 void
-ThreadContext::copyArchRegs(::ThreadContext *tc)
+ThreadContext::copyArchRegs(gem5::ThreadContext *tc)
 {
     // Set vector renaming mode before copying registers
     cpu->vecRenameMode(tc->getIsaPtr()->vecRegRenameMode(tc));
@@ -314,3 +317,4 @@ ThreadContext::setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt)
 }
 
 } // namespace o3
+} // namespace gem5

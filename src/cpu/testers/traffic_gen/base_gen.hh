@@ -50,6 +50,9 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
+namespace gem5
+{
+
 class BaseTrafficGen;
 class SimObject;
 
@@ -168,5 +171,7 @@ class StochasticGen : public BaseGen
     /** Maximum amount of data to manipulate */
     const Addr dataLimit;
 };
+
+} // namespace gem5
 
 #endif

@@ -38,6 +38,9 @@
 #include "debug/GPUExec.hh"
 #include "gpu-compute/shader.hh"
 
+namespace gem5
+{
+
 namespace Gcn3ISA
 {
     GCN3GPUStaticInst::GCN3GPUStaticInst(const std::string &opcode)
@@ -55,3 +58,4 @@ namespace Gcn3ISA
         fatal("Encountered unimplemented GCN3 instruction: %s\n", _opcode);
     }
 } // namespace Gcn3ISA
+} // namespace gem5

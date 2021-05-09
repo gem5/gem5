@@ -66,6 +66,9 @@
 #include "base/trace.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /** Forward declare the ProbeManager. */
 class ProbeManager;
 class ProbeListener;
@@ -305,4 +308,7 @@ class ProbePointArg : public ProbePoint
         }
     }
 };
+
+} // namespace gem5
+
 #endif//__SIM_PROBE_PROBE_HH__

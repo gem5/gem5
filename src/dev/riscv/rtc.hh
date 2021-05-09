@@ -43,6 +43,9 @@
 #include "params/RiscvRTC.hh"
 #include "sim/sim_object.hh"
 
+namespace gem5
+{
+
 /**
  * NOTE:
  * This is a generic wrapper around the MC146818 RTC
@@ -78,5 +81,7 @@ class RiscvRTC : public SimObject
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };
+
+} // namespace gem5
 
 #endif //__DEV_RISCV_RTC_HH__

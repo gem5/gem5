@@ -47,6 +47,9 @@
 
 #include "base/logging.hh"
 
+namespace gem5
+{
+
 Port::Port(const std::string& _name, PortID _id) :
     portName(_name), id(_id), _peer(nullptr), _connected(false)
 {}
@@ -58,3 +61,5 @@ Port::reportUnbound() const
 {
     fatal("%s: Unconnected port!", name());
 }
+
+} // namespace gem5
