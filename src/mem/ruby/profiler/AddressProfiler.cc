@@ -37,7 +37,7 @@
 
 typedef AddressProfiler::AddressMap AddressMap;
 
-using m5::stl_helpers::operator<<;
+using gem5::stl_helpers::operator<<;
 
 // Helper functions
 AccessTraceForAddress&

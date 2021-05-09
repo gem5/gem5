@@ -48,7 +48,7 @@
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 
-using m5::stl_helpers::operator<<;
+using gem5::stl_helpers::operator<<;
 
 Switch::Switch(const Params &p)
   : BasicRouter(p),

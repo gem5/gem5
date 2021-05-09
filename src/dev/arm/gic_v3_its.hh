@@ -354,7 +354,7 @@ class ItsProcess : public Packet::SenderState
     using DTE = Gicv3Its::DTE;
     using ITTE = Gicv3Its::ITTE;
     using CTE = Gicv3Its::CTE;
-    using Coroutine = m5::Coroutine<PacketPtr, ItsAction>;
+    using Coroutine = gem5::Coroutine<PacketPtr, ItsAction>;
     using Yield = Coroutine::CallerType;
 
     ItsProcess(Gicv3Its &_its);

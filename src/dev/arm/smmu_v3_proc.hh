@@ -94,7 +94,7 @@ struct SMMUSignal
 class SMMUProcess : public Packet::SenderState
 {
   private:
-    typedef m5::Coroutine<PacketPtr, SMMUAction> Coroutine;
+    typedef gem5::Coroutine<PacketPtr, SMMUAction> Coroutine;
 
     Coroutine *coroutine;
     std::string myName;

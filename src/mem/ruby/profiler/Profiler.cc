@@ -78,7 +78,7 @@
 
 #include "mem/ruby/system/Sequencer.hh"
 
-using m5::stl_helpers::operator<<;
+using gem5::stl_helpers::operator<<;
 
 Profiler::Profiler(const RubySystemParams &p, RubySystem *rs)
     : m_ruby_system(rs), m_hot_lines(p.hot_lines),

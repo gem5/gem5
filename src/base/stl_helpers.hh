@@ -34,7 +34,11 @@
 #include <type_traits>
 #include <vector>
 
-namespace m5 {
+#include "base/compiler.hh"
+
+GEM5_DEPRECATED_NAMESPACE(m5, gem5);
+namespace gem5
+{
 namespace stl_helpers {
 
 template <typename T, typename Enabled=void>
@@ -69,6 +73,6 @@ operator<<(std::ostream& out, const T &t)
 }
 
 } // namespace stl_helpers
-} // namespace m5
+} // namespace gem5
 
 #endif // __BASE_STL_HELPERS_HH__

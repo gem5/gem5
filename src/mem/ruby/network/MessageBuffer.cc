@@ -49,7 +49,7 @@
 #include "debug/RubyQueue.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-using m5::stl_helpers::operator<<;
+using gem5::stl_helpers::operator<<;
 
 MessageBuffer::MessageBuffer(const Params &p)
     : SimObject(p), m_stall_map_size(0),

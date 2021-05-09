@@ -39,7 +39,7 @@
 
 #include "base/coroutine.hh"
 
-using namespace m5;
+using namespace gem5;
 
 /**
  * This test is checking if the Coroutine, once it's created

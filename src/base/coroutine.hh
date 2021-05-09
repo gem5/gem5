@@ -41,9 +41,11 @@
 #include <functional>
 #include <stack>
 
+#include "base/compiler.hh"
 #include "base/fiber.hh"
 
-namespace m5
+GEM5_DEPRECATED_NAMESPACE(m5, gem5);
+namespace gem5
 {
 
 /**
@@ -292,6 +294,6 @@ class Coroutine : public Fiber
     CallerType caller;
 };
 
-} //namespace m5
+} //namespace gem5
 
 #endif // __BASE_COROUTINE_HH__

@@ -30,7 +30,7 @@
 
 #include "base/stl_helpers.hh"
 
-using m5::stl_helpers::operator<<;
+using gem5::stl_helpers::operator<<;
 
 SubBlock::SubBlock(Addr addr, int size)
 {
