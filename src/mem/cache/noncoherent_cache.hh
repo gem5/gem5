@@ -116,7 +116,7 @@ class NoncoherentCache : public BaseCache
                                bool needs_writable,
                                bool is_whole_line_write) const override;
 
-    M5_NODISCARD PacketPtr evictBlock(CacheBlk *blk) override;
+    GEM5_NO_DISCARD PacketPtr evictBlock(CacheBlk *blk) override;
 
   public:
     NoncoherentCache(const NoncoherentCacheParams &p);
