@@ -35,7 +35,7 @@
 void
 SkipFuncBase::process(ThreadContext *tc)
 {
-    M5_VAR_USED TheISA::PCState oldPC = tc->pcState();
+    GEM5_VAR_USED TheISA::PCState oldPC = tc->pcState();
 
     returnFromFuncIn(tc);
 

@@ -243,7 +243,7 @@ MemTest::tick()
     if (cmd < percentReads) {
         // start by ensuring there is a reference value if we have not
         // seen this address before
-        M5_VAR_USED uint8_t ref_data = 0;
+        GEM5_VAR_USED uint8_t ref_data = 0;
         auto ref = referenceData.find(req->getPaddr());
         if (ref == referenceData.end()) {
             referenceData[req->getPaddr()] = 0;

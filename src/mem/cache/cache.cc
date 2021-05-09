@@ -449,7 +449,7 @@ Cache::recvTimingReq(PacketPtr pkt)
         // this express snoop travels towards the memory, and at
         // every crossbar it is snooped upwards thus reaching
         // every cache in the system
-        M5_VAR_USED bool success = memSidePort.sendTimingReq(snoop_pkt);
+        GEM5_VAR_USED bool success = memSidePort.sendTimingReq(snoop_pkt);
         // express snoops always succeed
         assert(success);
 
@@ -992,7 +992,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     // responds in atomic mode, so remember a few things about the
     // original packet up front
     bool invalidate = pkt->isInvalidate();
-    M5_VAR_USED bool needs_writable = pkt->needsWritable();
+    GEM5_VAR_USED bool needs_writable = pkt->needsWritable();
 
     // at the moment we could get an uncacheable write which does not
     // have the invalidate flag, and we need a suitable way of dealing
@@ -1394,7 +1394,7 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
         // prefetchSquash first may result in the MSHR being
         // prematurely deallocated.
         if (snoop_pkt.cacheResponding()) {
-            M5_VAR_USED auto r = outstandingSnoop.insert(snoop_pkt.req);
+            GEM5_VAR_USED auto r = outstandingSnoop.insert(snoop_pkt.req);
             assert(r.second);
 
             // if we are getting a snoop response with no sharers it

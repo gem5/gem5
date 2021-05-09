@@ -109,7 +109,8 @@ prepareForResult(ThreadContext *tc, typename ABI::State &state)
 
 template <typename ABI, typename ...Args>
 static inline void
-prepareForArguments(M5_VAR_USED ThreadContext *tc, typename ABI::State &state)
+prepareForArguments(GEM5_VAR_USED ThreadContext *tc,
+        typename ABI::State &state)
 {
     M5_FOR_EACH_IN_PACK(Preparer<ABI, Argument, Args>::prepare(tc, state));
 }

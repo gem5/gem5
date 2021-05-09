@@ -213,7 +213,7 @@ let {{
                 Macroop * macroop = dynamic_cast<Macroop *>(curMacroop.get());
                 const ExtMachInst &machInst =
                     macroop ? macroop->getExtMachInst() : dummyExtMachInst;
-                M5_VAR_USED const EmulEnv &env =
+                GEM5_VAR_USED const EmulEnv &env =
                     macroop ? macroop->getEmulEnv() : dummyEmulEnv;
                 using namespace RomLabels;
                 return %s;

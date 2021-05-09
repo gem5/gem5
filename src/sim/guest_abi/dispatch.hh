@@ -96,7 +96,7 @@ callFrom(ThreadContext *tc, typename ABI::State &state,
 
 template <typename ABI, typename Ret, typename ...Args>
 static void
-dumpArgsFrom(std::ostream &os, M5_VAR_USED ThreadContext *tc,
+dumpArgsFrom(std::ostream &os, GEM5_VAR_USED ThreadContext *tc,
         typename ABI::State &state)
 {
     int count = 0;

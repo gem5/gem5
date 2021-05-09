@@ -691,7 +691,7 @@ RubySystem::functionalWrite(PacketPtr pkt)
 
     DPRINTF(RubySystem, "Functional Write request for %#x\n", addr);
 
-    M5_VAR_USED uint32_t num_functional_writes = 0;
+    GEM5_VAR_USED uint32_t num_functional_writes = 0;
 
     // Only send functional requests within the same network.
     assert(requestorToNetwork.count(pkt->requestorId()));

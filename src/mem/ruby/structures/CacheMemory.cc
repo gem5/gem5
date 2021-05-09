@@ -408,8 +408,8 @@ void
 CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
 {
     uint64_t warmedUpBlocks = 0;
-    M5_VAR_USED uint64_t totalBlocks = (uint64_t)m_cache_num_sets *
-                                       (uint64_t)m_cache_assoc;
+    GEM5_VAR_USED uint64_t totalBlocks = (uint64_t)m_cache_num_sets *
+                                         (uint64_t)m_cache_assoc;
 
     for (int i = 0; i < m_cache_num_sets; i++) {
         for (int j = 0; j < m_cache_assoc; j++) {

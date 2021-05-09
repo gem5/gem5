@@ -97,7 +97,7 @@ Tick
 StubSlavePort::recvAtomic(PacketPtr packet)
 {
     if (Debug::ExternalPort) {
-        M5_VAR_USED unsigned int size = packet->getSize();
+        GEM5_VAR_USED unsigned int size = packet->getSize();
 
         DPRINTF(ExternalPort, "StubSlavePort: recvAtomic a: 0x%x size: %d"
             " data: ...\n", packet->getAddr(), size);

@@ -352,7 +352,7 @@ ComputeUnit::startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
     // set the wavefront context to have a pointer to this section of the LDS
     w->ldsChunk = ldsChunk;
 
-    M5_VAR_USED int32_t refCount =
+    GEM5_VAR_USED int32_t refCount =
                 lds.increaseRefCounter(w->dispatchId, w->wgId);
     DPRINTF(GPUDisp, "CU%d: increase ref ctr wg[%d] to [%d]\n",
                     cu_id, w->wgId, refCount);
@@ -956,7 +956,7 @@ ComputeUnit::DataPort::recvReqRetry()
 
     for (int i = 0; i < len; ++i) {
         PacketPtr pkt = retries.front().first;
-        M5_VAR_USED GPUDynInstPtr gpuDynInst = retries.front().second;
+        GEM5_VAR_USED GPUDynInstPtr gpuDynInst = retries.front().second;
         DPRINTF(GPUMem, "CU%d: WF[%d][%d]: retry mem inst addr %#x\n",
                 computeUnit->cu_id, gpuDynInst->simdId, gpuDynInst->wfSlotId,
                 pkt->req->getPaddr());
@@ -990,7 +990,7 @@ ComputeUnit::SQCPort::recvReqRetry()
 
     for (int i = 0; i < len; ++i) {
         PacketPtr pkt = retries.front().first;
-        M5_VAR_USED Wavefront *wavefront = retries.front().second;
+        GEM5_VAR_USED Wavefront *wavefront = retries.front().second;
         DPRINTF(GPUFetch, "CU%d: WF[%d][%d]: retrying FETCH addr %#x\n",
                 computeUnit->cu_id, wavefront->simdId, wavefront->wfSlotId,
                 pkt->req->getPaddr());
@@ -1402,7 +1402,7 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
         DTLBPort::SenderState *sender_state =
             safe_cast<DTLBPort::SenderState*>(translation_state->saved);
 
-        M5_VAR_USED Wavefront *w =
+        GEM5_VAR_USED Wavefront *w =
             computeUnit->wfList[sender_state->_gpuDynInst->simdId]
             [sender_state->_gpuDynInst->wfSlotId];
 
@@ -1571,7 +1571,7 @@ ComputeUnit::DataPort::processMemReqEvent(PacketPtr pkt)
 {
     SenderState *sender_state = safe_cast<SenderState*>(pkt->senderState);
     GPUDynInstPtr gpuDynInst = sender_state->_gpuDynInst;
-    M5_VAR_USED ComputeUnit *compute_unit = computeUnit;
+    GEM5_VAR_USED ComputeUnit *compute_unit = computeUnit;
 
     if (!(sendTimingReq(pkt))) {
         retries.push_back(std::make_pair(pkt, gpuDynInst));
@@ -1600,7 +1600,7 @@ ComputeUnit::ScalarDataPort::MemReqEvent::process()
 {
     SenderState *sender_state = safe_cast<SenderState*>(pkt->senderState);
     GPUDynInstPtr gpuDynInst = sender_state->_gpuDynInst;
-    M5_VAR_USED ComputeUnit *compute_unit = scalarDataPort.computeUnit;
+    GEM5_VAR_USED ComputeUnit *compute_unit = scalarDataPort.computeUnit;
 
     if (!(scalarDataPort.sendTimingReq(pkt))) {
         scalarDataPort.retries.push_back(pkt);
@@ -1640,7 +1640,7 @@ ComputeUnit::DTLBPort::recvReqRetry()
 
     for (int i = 0; i < len; ++i) {
         PacketPtr pkt = retries.front();
-        M5_VAR_USED Addr vaddr = pkt->req->getVaddr();
+        GEM5_VAR_USED Addr vaddr = pkt->req->getVaddr();
         DPRINTF(GPUTLB, "CU%d: retrying D-translaton for address%#x", vaddr);
 
         if (!sendTimingReq(pkt)) {
@@ -1679,7 +1679,7 @@ ComputeUnit::ScalarDTLBPort::recvTimingResp(PacketPtr pkt)
     GPUDynInstPtr gpuDynInst = sender_state->_gpuDynInst;
     delete pkt->senderState;
 
-    M5_VAR_USED Wavefront *w = gpuDynInst->wavefront();
+    GEM5_VAR_USED Wavefront *w = gpuDynInst->wavefront();
 
     DPRINTF(GPUTLB, "CU%d: WF[%d][%d][wv=%d]: scalar DTLB port received "
         "translation: PA %#x -> %#x\n", computeUnit->cu_id, w->simdId,
@@ -1718,7 +1718,7 @@ ComputeUnit::ScalarDTLBPort::recvTimingResp(PacketPtr pkt)
 bool
 ComputeUnit::ITLBPort::recvTimingResp(PacketPtr pkt)
 {
-    M5_VAR_USED Addr line = pkt->req->getPaddr();
+    GEM5_VAR_USED Addr line = pkt->req->getPaddr();
     DPRINTF(GPUTLB, "CU%d: ITLBPort received %#x->%#x\n",
             computeUnit->cu_id, pkt->req->getVaddr(), line);
 
@@ -1784,7 +1784,7 @@ ComputeUnit::ITLBPort::recvReqRetry()
 
     for (int i = 0; i < len; ++i) {
         PacketPtr pkt = retries.front();
-        M5_VAR_USED Addr vaddr = pkt->req->getVaddr();
+        GEM5_VAR_USED Addr vaddr = pkt->req->getVaddr();
         DPRINTF(GPUTLB, "CU%d: retrying I-translaton for address%#x", vaddr);
 
         if (!sendTimingReq(pkt)) {
@@ -2037,7 +2037,7 @@ ComputeUnit::LDSPort::sendTimingReq(PacketPtr pkt)
             dynamic_cast<ComputeUnit::LDSPort::SenderState*>(pkt->senderState);
     fatal_if(!sender_state, "packet without a valid sender state");
 
-    M5_VAR_USED GPUDynInstPtr gpuDynInst = sender_state->getMemInst();
+    GEM5_VAR_USED GPUDynInstPtr gpuDynInst = sender_state->getMemInst();
 
     if (isStalled()) {
         fatal_if(retries.empty(), "must have retries waiting to be stalled");

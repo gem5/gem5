@@ -1164,7 +1164,7 @@ def template LoadRegConstructor {{
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
-        M5_VAR_USED bool conditional = false;
+        GEM5_VAR_USED bool conditional = false;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             conditional = true;
             for (int x = 0; x < _numDestRegs; x++) {
@@ -1231,7 +1231,7 @@ def template LoadImmConstructor {{
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
-        M5_VAR_USED bool conditional = false;
+        GEM5_VAR_USED bool conditional = false;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             conditional = true;
             for (int x = 0; x < _numDestRegs; x++) {

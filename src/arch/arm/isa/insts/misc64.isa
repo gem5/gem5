@@ -128,7 +128,7 @@ let {{
         bitMask = (bitMask >> imm1) | (bitMask << (intWidth - imm1));
         diff += intWidth;
     }
-    M5_VAR_USED uint64_t topBits = ~mask(diff+1);
+    GEM5_VAR_USED uint64_t topBits = ~mask(diff+1);
     uint64_t result = imm1 == 0 ? Op164 :
                       (Op164 >> imm1) | (Op164 << (intWidth - imm1));
     result &= bitMask;

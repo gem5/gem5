@@ -78,7 +78,7 @@ EmulationPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
             new_vaddr, size);
 
     while (size > 0) {
-        M5_VAR_USED auto new_it = pTable.find(new_vaddr);
+        GEM5_VAR_USED auto new_it = pTable.find(new_vaddr);
         auto old_it = pTable.find(vaddr);
         assert(old_it != pTable.end() && new_it == pTable.end());
 

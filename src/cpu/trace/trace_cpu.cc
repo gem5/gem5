@@ -811,7 +811,7 @@ TraceCPU::ElasticDataGen::printReadyList()
     DPRINTF(TraceCPUData, "Printing readyList:\n");
     while (itr != readyList.end()) {
         auto graph_itr = depGraph.find(itr->seqNum);
-        M5_VAR_USED GraphNode* node_ptr = graph_itr->second;
+        GEM5_VAR_USED GraphNode* node_ptr = graph_itr->second;
         DPRINTFR(TraceCPUData, "\t%lld(%s), %lld\n", itr->seqNum,
             node_ptr->typeToStr(), itr->execTick);
         itr++;
@@ -1322,7 +1322,7 @@ TraceCPU::ElasticDataGen::GraphNode::removeDepOnInst(NodeSeqNum done_seq_num)
         // If it is not an rob dependency then it must be a register dependency
         // If the register dependency is not found, it violates an assumption
         // and must be caught by assert.
-        M5_VAR_USED bool regdep_found = removeRegDep(done_seq_num);
+        GEM5_VAR_USED bool regdep_found = removeRegDep(done_seq_num);
         assert(regdep_found);
     }
     // Return true if the node is dependency free

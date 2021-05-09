@@ -2007,7 +2007,7 @@ let {{
         destPred.reset();
         for (unsigned i = 0; i < eCount; i++) {
             const Element& srcElem1 = AA64FpOp1_x[i];
-            M5_VAR_USED %(src_elem_2_ty)s srcElem2 = %(src_elem_2)s;
+            GEM5_VAR_USED %(src_elem_2_ty)s srcElem2 = %(src_elem_2)s;
             bool destElem = false;
             if (tmpPred[i]) {
                 %(op)s
@@ -2703,7 +2703,7 @@ let {{
         CondCodesC = !destPred.lastActive(GpOp, eCount);
         CondCodesV = 0;'''
         extraPrologCode = '''
-        M5_VAR_USED auto& destPred = PDest;'''
+        GEM5_VAR_USED auto& destPred = PDest;'''
         baseClass = ('SvePredUnaryWImplicitSrcOp' if predType == PredType.NONE
                      else 'SvePredUnaryWImplicitSrcPredOp')
         iop = ArmInstObjParams(name, 'Sve' + Name, baseClass,
@@ -2722,7 +2722,7 @@ let {{
         global header_output, exec_output, decoders
         code = sveEnabledCheckCode + op
         extraPrologCode = '''
-        M5_VAR_USED auto& destPred = Ffr;'''
+        GEM5_VAR_USED auto& destPred = Ffr;'''
         baseClass = ('SveWImplicitSrcDstOp' if isSetFfr
                      else 'SvePredUnaryWImplicitDstOp')
         iop = ArmInstObjParams(name, 'Sve' + Name, baseClass,

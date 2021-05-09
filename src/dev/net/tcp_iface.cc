@@ -251,7 +251,7 @@ TCPIface::connect()
 
 TCPIface::~TCPIface()
 {
-    M5_VAR_USED int ret;
+    GEM5_VAR_USED int ret;
 
     ret = close(sock);
     assert(ret == 0);

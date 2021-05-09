@@ -65,7 +65,7 @@ PciVirtIO::~PciVirtIO()
 Tick
 PciVirtIO::read(PacketPtr pkt)
 {
-    M5_VAR_USED const unsigned size(pkt->getSize());
+    GEM5_VAR_USED const unsigned size(pkt->getSize());
     int bar;
     Addr offset;
     if (!getBAR(pkt->getAddr(), bar, offset))
@@ -146,7 +146,7 @@ PciVirtIO::read(PacketPtr pkt)
 Tick
 PciVirtIO::write(PacketPtr pkt)
 {
-    M5_VAR_USED const unsigned size(pkt->getSize());
+    GEM5_VAR_USED const unsigned size(pkt->getSize());
     int bar;
     Addr offset;
     if (!getBAR(pkt->getAddr(), bar, offset))

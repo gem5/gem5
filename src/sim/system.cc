@@ -179,7 +179,7 @@ System::Threads::quiesce(ContextID id)
 {
     auto &t = thread(id);
 #   if THE_ISA != NULL_ISA
-    M5_VAR_USED BaseCPU *cpu = t.context->getCpuPtr();
+    GEM5_VAR_USED BaseCPU *cpu = t.context->getCpuPtr();
     DPRINTFS(Quiesce, cpu, "quiesce()\n");
 #   endif
     t.quiesce();
@@ -255,7 +255,7 @@ System::System(const Params &p)
     }
 
     // Get the generic system requestor IDs
-    M5_VAR_USED RequestorID tmp_id;
+    GEM5_VAR_USED RequestorID tmp_id;
     tmp_id = getRequestorId(this, "writebacks");
     assert(tmp_id == Request::wbRequestorId);
     tmp_id = getRequestorId(this, "functional");

@@ -206,7 +206,7 @@ RubyPort::PioResponsePort::recvTimingReq(PacketPtr pkt)
             if (it->contains(pkt->getAddr())) {
                 // generally it is not safe to assume success here as
                 // the port could be blocked
-                M5_VAR_USED bool success =
+                GEM5_VAR_USED bool success =
                     ruby_port->request_ports[i]->sendTimingReq(pkt);
                 assert(success);
                 return true;
@@ -373,7 +373,7 @@ RubyPort::MemResponsePort::recvFunctional(PacketPtr pkt)
 {
     DPRINTF(RubyPort, "Functional access for address: %#x\n", pkt->getAddr());
 
-    M5_VAR_USED RubyPort *rp = static_cast<RubyPort *>(&owner);
+    GEM5_VAR_USED RubyPort *rp = static_cast<RubyPort *>(&owner);
     RubySystem *rs = rp->m_ruby_system;
 
     // Check for pio requests and directly send them to the dedicated
@@ -600,7 +600,7 @@ RubyPort::PioResponsePort::getAddrRanges() const
         ranges.splice(ranges.begin(),
                 ruby_port->request_ports[i]->getAddrRanges());
     }
-    for (M5_VAR_USED const auto &r : ranges)
+    for (GEM5_VAR_USED const auto &r : ranges)
         DPRINTF(RubyPort, "%s\n", r.to_string());
     return ranges;
 }
