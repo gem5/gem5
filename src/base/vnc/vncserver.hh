@@ -110,7 +110,7 @@ class VncServer : public VncInput
         NormalPhase
     };
 
-    struct M5_ATTR_PACKED ServerInitMsg
+    struct GEM5_PACKED ServerInitMsg
     {
         uint16_t fbWidth;
         uint16_t fbHeight;
@@ -119,14 +119,14 @@ class VncServer : public VncInput
         char name[2]; // just to put M5 in here
     };
 
-    struct M5_ATTR_PACKED FrameBufferUpdate
+    struct GEM5_PACKED FrameBufferUpdate
     {
         uint8_t type;
         uint8_t padding;
         uint16_t num_rects;
     };
 
-    struct M5_ATTR_PACKED FrameBufferRect
+    struct GEM5_PACKED FrameBufferRect
     {
         uint16_t x;
         uint16_t y;
@@ -135,7 +135,7 @@ class VncServer : public VncInput
         int32_t encoding;
     };
 
-    struct M5_ATTR_PACKED ServerCutText
+    struct GEM5_PACKED ServerCutText
     {
         uint8_t type;
         uint8_t padding[3];

@@ -565,14 +565,14 @@ struct ip6_opt_routing_type2
 };
 
 #define HOME_ADDRESS_OPTION 0xC9
-struct M5_ATTR_PACKED ip6_opt_dstopts
+struct GEM5_PACKED ip6_opt_dstopts
 {
     uint8_t type;
     uint8_t length;
     ip6_addr_t addr;
 };
 
-struct M5_ATTR_PACKED ip6_opt_hdr
+struct GEM5_PACKED ip6_opt_hdr
 {
     uint8_t ext_nxt;
     uint8_t ext_len;

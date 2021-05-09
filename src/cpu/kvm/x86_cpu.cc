@@ -67,7 +67,7 @@ using namespace X86ISA;
 // data) is used to indicate that a segment has been accessed.
 #define SEG_TYPE_BIT_ACCESSED 1
 
-struct M5_ATTR_PACKED FXSave
+struct GEM5_PACKED FXSave
 {
     uint16_t fcw;
     uint16_t fsw;

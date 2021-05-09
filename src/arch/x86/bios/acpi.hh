@@ -95,7 +95,7 @@ class RSDP : public SimObject
 
     static const char signature[];
 
-    struct M5_ATTR_PACKED MemR0
+    struct GEM5_PACKED MemR0
     {
         // src: https://wiki.osdev.org/RSDP
         char signature[8] = {};
@@ -107,7 +107,7 @@ class RSDP : public SimObject
     static_assert(std::is_trivially_copyable<MemR0>::value,
             "Type not suitable for memcpy.");
 
-    struct M5_ATTR_PACKED Mem : public MemR0
+    struct GEM5_PACKED Mem : public MemR0
     {
         // since version 2
         uint32_t length = 0;
@@ -132,7 +132,7 @@ class SysDescTable : public SimObject
   protected:
     PARAMS(X86ACPISysDescTable);
 
-    struct M5_ATTR_PACKED Mem
+    struct GEM5_PACKED Mem
     {
         // src: https://wiki.osdev.org/RSDT
         char signature[4] = {};
@@ -207,7 +207,7 @@ class Record : public SimObject
   protected:
     PARAMS(X86ACPIMadtRecord);
 
-    struct M5_ATTR_PACKED Mem
+    struct GEM5_PACKED Mem
     {
         uint8_t type = 0;
         uint8_t length = 0;
@@ -236,7 +236,7 @@ class LAPIC : public Record
   protected:
     PARAMS(X86ACPIMadtLAPIC);
 
-    struct M5_ATTR_PACKED Mem : public Record::Mem
+    struct GEM5_PACKED Mem : public Record::Mem
     {
         uint8_t acpiProcessorId = 0;
         uint8_t apicId = 0;
@@ -256,7 +256,7 @@ class IOAPIC : public Record
   protected:
     PARAMS(X86ACPIMadtIOAPIC);
 
-    struct M5_ATTR_PACKED Mem : public Record::Mem
+    struct GEM5_PACKED Mem : public Record::Mem
     {
         uint8_t ioApicId = 0;
         uint8_t _reserved = 0;
@@ -277,7 +277,7 @@ class IntSourceOverride : public Record
   protected:
     PARAMS(X86ACPIMadtIntSourceOverride);
 
-    struct M5_ATTR_PACKED Mem : public Record::Mem
+    struct GEM5_PACKED Mem : public Record::Mem
     {
         uint8_t busSource = 0;
         uint8_t irqSource = 0;
@@ -298,7 +298,7 @@ class NMI : public Record
   protected:
     PARAMS(X86ACPIMadtNMI);
 
-    struct M5_ATTR_PACKED Mem : public Record::Mem
+    struct GEM5_PACKED Mem : public Record::Mem
     {
         uint8_t acpiProcessorId = 0;
         uint16_t flags = 0;
@@ -318,7 +318,7 @@ class LAPICOverride : public Record
   protected:
     PARAMS(X86ACPIMadtLAPICOverride);
 
-    struct M5_ATTR_PACKED Mem : public Record::Mem
+    struct GEM5_PACKED Mem : public Record::Mem
     {
         uint16_t _reserved = 0;
         uint64_t localAPICAddress = 0;
@@ -337,7 +337,7 @@ class MADT : public SysDescTable
   protected:
     PARAMS(X86ACPIMadt);
 
-    struct M5_ATTR_PACKED Mem : public SysDescTable::Mem
+    struct GEM5_PACKED Mem : public SysDescTable::Mem
     {
         uint32_t localAPICAddress = 0;
         uint32_t flags = 0;

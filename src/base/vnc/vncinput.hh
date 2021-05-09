@@ -97,7 +97,7 @@ class VncInput : public SimObject
         ClientCutText           = 6
     };
 
-    struct M5_ATTR_PACKED PixelFormat
+    struct GEM5_PACKED PixelFormat
     {
         uint8_t bpp;
         uint8_t depth;
@@ -112,21 +112,21 @@ class VncInput : public SimObject
         uint8_t padding[3];
     };
 
-    struct M5_ATTR_PACKED PixelFormatMessage
+    struct GEM5_PACKED PixelFormatMessage
     {
         uint8_t type;
         uint8_t padding[3];
         PixelFormat px;
     };
 
-    struct M5_ATTR_PACKED PixelEncodingsMessage
+    struct GEM5_PACKED PixelEncodingsMessage
     {
         uint8_t type;
         uint8_t padding;
         uint16_t num_encodings;
     };
 
-    struct M5_ATTR_PACKED FrameBufferUpdateReq
+    struct GEM5_PACKED FrameBufferUpdateReq
     {
         uint8_t type;
         uint8_t incremental;
@@ -136,7 +136,7 @@ class VncInput : public SimObject
         uint16_t height;
     };
 
-    struct M5_ATTR_PACKED KeyEventMessage
+    struct GEM5_PACKED KeyEventMessage
     {
         uint8_t type;
         uint8_t down_flag;
@@ -144,7 +144,7 @@ class VncInput : public SimObject
         uint32_t key;
     };
 
-    struct M5_ATTR_PACKED PointerEventMessage
+    struct GEM5_PACKED PointerEventMessage
     {
         uint8_t type;
         uint8_t button_mask;
@@ -152,7 +152,7 @@ class VncInput : public SimObject
         uint16_t y;
     };
 
-    struct M5_ATTR_PACKED ClientCutTextMessage
+    struct GEM5_PACKED ClientCutTextMessage
     {
         uint8_t type;
         uint8_t padding[3];

@@ -466,7 +466,7 @@ class VirtQueue : public Serializable
         typedef uint16_t Flags;
         typedef uint16_t Index;
 
-        struct M5_ATTR_PACKED Header
+        struct GEM5_PACKED Header
         {
             Flags flags;
             Index index;

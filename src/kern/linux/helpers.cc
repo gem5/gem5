@@ -43,7 +43,7 @@
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 
-struct M5_ATTR_PACKED DmesgEntry
+struct GEM5_PACKED DmesgEntry
 {
     uint64_t ts_nsec;
     uint16_t len;

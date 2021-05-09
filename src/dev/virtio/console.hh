@@ -77,7 +77,7 @@ class VirtIOConsole : public VirtIODeviceBase
      * @note This needs to be changed if the multiport feature is
      * announced!
      */
-    struct M5_ATTR_PACKED Config
+    struct GEM5_PACKED Config
     {
         uint16_t cols;
         uint16_t rows;

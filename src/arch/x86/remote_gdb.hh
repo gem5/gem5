@@ -94,7 +94,7 @@ class RemoteGDB : public BaseRemoteGDB
     {
       using BaseGdbRegCache::BaseGdbRegCache;
       private:
-        struct M5_ATTR_PACKED
+        struct GEM5_PACKED
         {
           uint64_t rax;
           uint64_t rbx;
