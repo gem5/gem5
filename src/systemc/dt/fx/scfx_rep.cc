@@ -549,10 +549,10 @@ scfx_rep::from_string(const char *s, int cte_wl)
                 switch (*s) {
                   case '1':
                     set_bin(j);
-                    M5_FALLTHROUGH;
+                    GEM5_FALLTHROUGH;
                   case '0':
                     j--;
-                    M5_FALLTHROUGH;
+                    GEM5_FALLTHROUGH;
                   case '.':
                     break;
                   default:
@@ -587,10 +587,10 @@ scfx_rep::from_string(const char *s, int cte_wl)
                   case '7': case '6': case '5': case '4':
                   case '3': case '2': case '1':
                     set_oct(j, *s - '0');
-                    M5_FALLTHROUGH;
+                    GEM5_FALLTHROUGH;
                   case '0':
                     j -= 3;
-                    M5_FALLTHROUGH;
+                    GEM5_FALLTHROUGH;
                   case '.':
                     break;
                   default:
@@ -677,10 +677,10 @@ scfx_rep::from_string(const char *s, int cte_wl)
                   case '9': case '8': case '7': case '6': case '5':
                   case '4': case '3': case '2': case '1':
                     set_hex(j, *s - '0');
-                    M5_FALLTHROUGH;
+                    GEM5_FALLTHROUGH;
                   case '0':
                     j -= 4;
-                    M5_FALLTHROUGH;
+                    GEM5_FALLTHROUGH;
                   case '.':
                     break;
                   default:

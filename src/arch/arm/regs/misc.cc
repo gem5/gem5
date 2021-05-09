@@ -2865,7 +2865,7 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                     }
                     break;
                 }
-                M5_FALLTHROUGH;
+                GEM5_FALLTHROUGH;
               default:
                 // S3_<op1>_11_<Cm>_<op2>
                 return MISCREG_IMPDEF_UNIMPL;

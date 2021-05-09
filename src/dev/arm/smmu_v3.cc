@@ -249,7 +249,7 @@ SMMUv3::runProcessAtomic(SMMUProcess *proc, PacketPtr pkt)
                     pkt = action.pkt;
                     break;
                 }
-                M5_FALLTHROUGH;
+                GEM5_FALLTHROUGH;
             case ACTION_SEND_REQ_FINAL:
                 delay += requestPort.sendAtomic(action.pkt);
                 pkt = action.pkt;
@@ -305,7 +305,7 @@ SMMUv3::runProcessTiming(SMMUProcess *proc, PacketPtr pkt)
 
                 break;
             }
-            M5_FALLTHROUGH;
+            GEM5_FALLTHROUGH;
         case ACTION_SEND_REQ_FINAL:
             action.pkt->pushSenderState(proc);
 

@@ -150,7 +150,7 @@ simd_modified_imm(bool op, uint8_t cmode, uint8_t data, bool &immValid,
                 break;
             }
         }
-        M5_FALLTHROUGH;
+        GEM5_FALLTHROUGH;
       default:
         immValid = false;
         break;

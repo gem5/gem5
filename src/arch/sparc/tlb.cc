@@ -1246,7 +1246,7 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_ITLB_DATA_ACCESS_REG:
         entry_insert = bits(va, 8,3);
-        M5_FALLTHROUGH;
+        GEM5_FALLTHROUGH;
       case ASI_ITLB_DATA_IN_REG:
         assert(entry_insert != -1 || mbits(va,10,9) == va);
         ta_insert = itb->tag_access;
@@ -1261,7 +1261,7 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_DTLB_DATA_ACCESS_REG:
         entry_insert = bits(va, 8,3);
-        M5_FALLTHROUGH;
+        GEM5_FALLTHROUGH;
       case ASI_DTLB_DATA_IN_REG:
         assert(entry_insert != -1 || mbits(va,10,9) == va);
         ta_insert = tag_access;

@@ -595,7 +595,7 @@ namespace Aarch64
                     return new Unknown64(machInst);
                 }
             }
-          M5_FALLTHROUGH;
+          GEM5_FALLTHROUGH;
           default:
             return new Unknown64(machInst);
         }

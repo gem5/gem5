@@ -1440,7 +1440,7 @@ def format Thumb32DataProcPlainBin() {{
                 const uint32_t satImm = bits(machInst, 4, 0);
                 return new Ssat16(machInst, rd, satImm + 1, rn);
             }
-            M5_FALLTHROUGH;
+            GEM5_FALLTHROUGH;
           case 0x10:
             {
                 const uint32_t satImm = bits(machInst, 4, 0);
@@ -1473,7 +1473,7 @@ def format Thumb32DataProcPlainBin() {{
                 const uint32_t satImm = bits(machInst, 4, 0);
                 return new Usat16(machInst, rd, satImm, rn);
             }
-            M5_FALLTHROUGH;
+            GEM5_FALLTHROUGH;
           case 0x18:
             {
                 const uint32_t satImm = bits(machInst, 4, 0);

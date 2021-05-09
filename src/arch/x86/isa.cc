@@ -377,7 +377,7 @@ ISA::setMiscReg(int miscReg, RegVal val)
         break;
       case MISCREG_DR4:
         miscReg = MISCREG_DR6;
-        M5_FALLTHROUGH;
+        GEM5_FALLTHROUGH;
       case MISCREG_DR6:
         {
             DR6 dr6 = regVal[MISCREG_DR6];
@@ -394,7 +394,7 @@ ISA::setMiscReg(int miscReg, RegVal val)
         break;
       case MISCREG_DR5:
         miscReg = MISCREG_DR7;
-        M5_FALLTHROUGH;
+        GEM5_FALLTHROUGH;
       case MISCREG_DR7:
         {
             DR7 dr7 = regVal[MISCREG_DR7];
