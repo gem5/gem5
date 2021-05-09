@@ -483,7 +483,7 @@ let {{
                             return new VbifD<uint64_t>(machInst, vd, vn, vm);
                         }
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                 } else {
                     switch (size) {
@@ -526,7 +526,7 @@ let {{
                                     machInst, vd, vn, vm);
                         }
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                 }
             }
@@ -702,7 +702,7 @@ let {{
                       case 0x3:
                         return new Unknown(machInst);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                 } else {
                     switch (size) {
@@ -715,7 +715,7 @@ let {{
                       case 0x3:
                         return new SHA1SU0(machInst, vd, vn, vm);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                 }
             }
@@ -2093,7 +2093,7 @@ let {{
                     return new VLdmStm(machInst, rn, vd, single,
                                        true, true, true, offset);
                   default:
-                    M5_UNREACHABLE;
+                    GEM5_UNREACHABLE;
                 }
             }
           case 0x2:

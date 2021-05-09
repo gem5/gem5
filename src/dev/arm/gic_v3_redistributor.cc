@@ -988,7 +988,7 @@ Gicv3Redistributor::getIntGroup(int int_id) const
         }
     }
 
-    M5_UNREACHABLE;
+    GEM5_UNREACHABLE;
 }
 
 void

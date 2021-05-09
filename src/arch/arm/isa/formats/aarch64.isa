@@ -108,7 +108,7 @@ namespace Aarch64
               case 0x3:
                 return new SubXImmCc(machInst, rdzr, rnsp, imm);
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           }
           case 0x4:
@@ -152,7 +152,7 @@ namespace Aarch64
               case 0x3:
                 return new AndXImmCc(machInst, rdzr, rn, imm);
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           }
           case 0x5:
@@ -171,7 +171,7 @@ namespace Aarch64
               case 0x3:
                 return new Movk(machInst, rdzr, imm16, hw * 16);
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           }
           case 0x6:
@@ -187,7 +187,7 @@ namespace Aarch64
               case 0x3:
                 return new Unknown64(machInst);
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           case 0x7:
           {
@@ -520,7 +520,7 @@ namespace Aarch64
                   }
                   break;
                   default:
-                    M5_UNREACHABLE;
+                    GEM5_UNREACHABLE;
                 }
             } else if (bits(machInst, 25) == 0x1) {
                 uint8_t opc = bits(machInst, 24, 21);
@@ -720,7 +720,7 @@ namespace Aarch64
                         else
                             return new LDADDLA64(machInst, rt, rnsp, rs);
                     default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                 }
             case 0x1:
                 switch(size_ar){
@@ -781,7 +781,7 @@ namespace Aarch64
                     case 0xf:
                         return new LDCLRLA64(machInst, rt, rnsp, rs);
                     default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                 }
             case 0x2:
                 switch(size_ar){
@@ -842,7 +842,7 @@ namespace Aarch64
                     case 0xf:
                         return new LDEORLA64(machInst, rt, rnsp, rs);
                     default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                 }
             case 0x3:
                 switch(size_ar){
@@ -903,7 +903,7 @@ namespace Aarch64
                     case 0xf:
                         return new LDSETLA64(machInst, rt, rnsp, rs);
                     default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                 }
             case 0x4:
                 switch(size_ar){
@@ -964,7 +964,7 @@ namespace Aarch64
                     case 0xf:
                         return new LDSMAXLA64(machInst, rt, rnsp, rs);
                     default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                 }
             case 0x5:
                 switch(size_ar){
@@ -1025,7 +1025,7 @@ namespace Aarch64
                     case 0xf:
                         return new LDSMINLA64(machInst, rt, rnsp, rs);
                     default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                 }
             case 0x6:
                 switch(size_ar){
@@ -1086,7 +1086,7 @@ namespace Aarch64
                     case 0xf:
                         return new LDUMAXLA64(machInst, rt, rnsp, rs);
                     default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                 }
             case 0x7:
                 switch(size_ar){
@@ -1147,7 +1147,7 @@ namespace Aarch64
                     case 0xf:
                         return new LDUMINLA64(machInst, rt, rnsp, rs);
                     default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                 }
             default:
                 return new Unknown64(machInst);
@@ -1190,7 +1190,7 @@ namespace Aarch64
                       case 0x3:
                         return new STXRX64(machInst, rt, rnsp, rs);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   case 0x1:
                     switch (size) {
@@ -1203,7 +1203,7 @@ namespace Aarch64
                       case 0x3:
                         return new STLXRX64(machInst, rt, rnsp, rs);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   case 0x2:
                     switch (size) {
@@ -1216,7 +1216,7 @@ namespace Aarch64
                       case 0x3:
                         return new STXPX64(machInst, rs, rt, rt2, rnsp);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
 
                   case 0x3:
@@ -1230,7 +1230,7 @@ namespace Aarch64
                       case 0x3:
                         return new STLXPX64(machInst, rs, rt, rt2, rnsp);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
 
                   case 0x4:
@@ -1244,7 +1244,7 @@ namespace Aarch64
                       case 0x3:
                         return new LDXRX64(machInst, rt, rnsp, rs);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   case 0x5:
                     switch (size) {
@@ -1257,7 +1257,7 @@ namespace Aarch64
                       case 0x3:
                         return new LDAXRX64(machInst, rt, rnsp, rs);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   case 0x6:
                     switch (size) {
@@ -1270,7 +1270,7 @@ namespace Aarch64
                       case 0x3:
                         return new LDXPX64(machInst, rt, rt2, rnsp);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   case 0x7:
                     switch (size) {
@@ -1283,7 +1283,7 @@ namespace Aarch64
                       case 0x3:
                         return new LDAXPX64(machInst, rt, rt2, rnsp);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   case 0x9:
                     switch (size) {
@@ -1296,7 +1296,7 @@ namespace Aarch64
                       case 0x3:
                         return new STLRX64(machInst, rt, rnsp);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   case 0xa:
                     switch (size) {
@@ -1309,7 +1309,7 @@ namespace Aarch64
                       case 0x3:
                         return new CAS64(machInst, rt, rnsp, rs);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   case 0xb:
                     switch (size) {
@@ -1322,7 +1322,7 @@ namespace Aarch64
                       case 0x3:
                         return new CASL64(machInst, rt, rnsp, rs);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   case 0xd:
                     switch (size) {
@@ -1335,7 +1335,7 @@ namespace Aarch64
                       case 0x3:
                         return new LDARX64(machInst, rt, rnsp);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   case 0xe:
                     switch (size) {
@@ -1348,7 +1348,7 @@ namespace Aarch64
                       case 0x3:
                         return new CASA64(machInst, rt, rnsp, rs);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   case 0xf:
                     switch (size) {
@@ -1361,7 +1361,7 @@ namespace Aarch64
                       case 0x3:
                         return new CASAL64(machInst, rt, rnsp, rs);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                   default:
                     return new Unknown64(machInst);
@@ -1543,7 +1543,7 @@ namespace Aarch64
                               case 0x3:
                                 return new LDAPRX64(machInst, rt, rnsp);
                               default:
-                                M5_UNREACHABLE;
+                                GEM5_UNREACHABLE;
                             }
                         } else {
                             return decodeAtomicArithOp(machInst);
@@ -1575,7 +1575,7 @@ namespace Aarch64
                             return new LDRAB_PRE(machInst, rt,
                                                  makeSP(rn), imm10);
                           default:
-                            M5_UNREACHABLE;
+                            GEM5_UNREACHABLE;
                         }
                     }
                   case 0x2:
@@ -1902,12 +1902,12 @@ namespace Aarch64
                     }
                   }
                   default:
-                    M5_UNREACHABLE;
+                    GEM5_UNREACHABLE;
                 }
             }
           }
           default:
-            M5_UNREACHABLE;
+            GEM5_UNREACHABLE;
         }
         return new FailUnimplemented("Unhandled Case1", machInst);
     }
@@ -1955,7 +1955,7 @@ namespace Aarch64
               case 0x7:
                 return new BicXSRegCc(machInst, rdzr, rn, rm, imm6, type);
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           }
           case 0x1:
@@ -1983,7 +1983,7 @@ namespace Aarch64
                   case 0x3:
                     return new SubXSRegCc(machInst, rdzr, rn, rm, imm6, type);
                   default:
-                    M5_UNREACHABLE;
+                    GEM5_UNREACHABLE;
                 }
             } else {
                 if (bits(machInst, 23, 22) != 0 || bits(machInst, 12, 10) > 0x4)
@@ -2008,7 +2008,7 @@ namespace Aarch64
                   case 0x3:
                     return new SubXERegCc(machInst, rdzr, rnsp, rm, type, imm3);
                   default:
-                    M5_UNREACHABLE;
+                    GEM5_UNREACHABLE;
                 }
             }
           }
@@ -2036,7 +2036,7 @@ namespace Aarch64
                   case 0x3:
                     return new SbcXSRegCc(machInst, rdzr, rn, rm, 0, LSL);
                   default:
-                    M5_UNREACHABLE;
+                    GEM5_UNREACHABLE;
                 }
               }
               case 0x1:
@@ -2091,7 +2091,7 @@ namespace Aarch64
                   case 0x3:
                     return new Csneg64(machInst, rdzr, rn, rm, cond);
                   default:
-                    M5_UNREACHABLE;
+                    GEM5_UNREACHABLE;
                 }
               }
               case 0x3:
@@ -2247,7 +2247,7 @@ namespace Aarch64
                     }
                 }
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           }
           case 0x3:
@@ -2289,7 +2289,7 @@ namespace Aarch64
             }
           }
           default:
-            M5_UNREACHABLE;
+            GEM5_UNREACHABLE;
         }
         return new FailUnimplemented("Unhandled Case2", machInst);
     }
@@ -2835,7 +2835,7 @@ namespace Aarch64
                         return new Unknown64(machInst);
                     }
                 }
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
               case 0x1:
               {
                 if (bits(machInst, 31) ||
@@ -2941,10 +2941,10 @@ namespace Aarch64
                     return new Unknown64(machInst);
               }
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
         }
-        M5_UNREACHABLE;
+        GEM5_UNREACHABLE;
     }
 }
 }};

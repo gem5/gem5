@@ -2870,7 +2870,7 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                 // S3_<op1>_11_<Cm>_<op2>
                 return MISCREG_IMPDEF_UNIMPL;
             }
-            M5_UNREACHABLE;
+            GEM5_UNREACHABLE;
           case 12:
             switch (op1) {
               case 0:

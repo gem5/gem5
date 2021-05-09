@@ -238,7 +238,7 @@ Print::processFlag()
             break;
 
           case '%':
-            M5_UNREACHABLE;
+            GEM5_UNREACHABLE;
             break;
 
           default:

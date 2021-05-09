@@ -605,7 +605,7 @@ def format Thumb32DataProcReg() {{
                     return new MovRegRegCc(machInst, rd,
                             INTREG_ZERO, rn, rm, ROR);
                   default:
-                    M5_UNREACHABLE;
+                    GEM5_UNREACHABLE;
                 }
             } else if (bits(op2, 3) == 0) {
                 return new Unknown(machInst);
@@ -921,7 +921,7 @@ def format Thumb16ShiftAddSubMoveCmp() {{
                     return new SubImmCc(machInst, rd, rn, imm3, true);
                 }
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           case 0x4:
             if (machInst.itstateMask) {
@@ -944,7 +944,7 @@ def format Thumb16ShiftAddSubMoveCmp() {{
                 return new SubImmCc(machInst, rd8, rd8, imm8, true);
             }
           default:
-            M5_UNREACHABLE;
+            GEM5_UNREACHABLE;
         }
     }
     '''
@@ -1049,7 +1049,7 @@ def format Thumb16DataProcessing() {{
                 return new MvnRegCc(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
             }
           default:
-            M5_UNREACHABLE;
+            GEM5_UNREACHABLE;
         }
     }
     '''
@@ -1080,7 +1080,7 @@ def format Thumb16SpecDataAndBx() {{
                                   COND_UC);
             }
           default:
-            M5_UNREACHABLE;
+            GEM5_UNREACHABLE;
         }
     }
     '''
@@ -1198,7 +1198,7 @@ def format Thumb16Misc() {{
                   case 0x3:
                     return new Uxtb(machInst, rd, 0, rm);
                   default:
-                    M5_UNREACHABLE;
+                    GEM5_UNREACHABLE;
                 }
             }
           case 0x1:

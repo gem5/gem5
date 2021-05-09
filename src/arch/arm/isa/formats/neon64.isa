@@ -184,7 +184,7 @@ namespace Aarch64
                         return new OrnDX<uint64_t>(machInst, vd, vn, vm);
                 }
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           case 0x04:
             if (size == 0x3)
@@ -2242,7 +2242,7 @@ namespace Aarch64
               case 0x3:
                 return new Unknown64(machInst);
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           case 0x1a:
             if (size < 0x2)
@@ -2322,7 +2322,7 @@ namespace Aarch64
               case 0x3:
                 return new Unknown64(machInst);
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           case 0x34:
             switch (size) {
@@ -2335,7 +2335,7 @@ namespace Aarch64
               case 0x3:
                 return new Unknown64(machInst);
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           case 0x36:
             if (size != 0x1) {

@@ -608,7 +608,7 @@ def format Thumb32StoreSingle() {{
                       case 7:
                         return new %(imm_puw)s(machInst, RT, RN, true, imm);
                       default:
-                        M5_UNREACHABLE;
+                        GEM5_UNREACHABLE;
                     }
                 }
         '''
@@ -1074,7 +1074,7 @@ def format Thumb16MemReg() {{
           case 0x7:
             return new %(ldrsh)s(machInst, rt, rn, true, 0, LSL, rm);
           default:
-            M5_UNREACHABLE;
+            GEM5_UNREACHABLE;
         }
     }
     '''

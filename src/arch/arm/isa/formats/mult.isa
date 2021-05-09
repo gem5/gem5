@@ -86,7 +86,7 @@ def format ArmMultAndMultAcc() {{
                   return new Smlal(machInst, ra, rd, rn, rm);
               }
             default:
-              M5_UNREACHABLE;
+              GEM5_UNREACHABLE;
         }
     }
     '''
@@ -113,7 +113,7 @@ def format ArmHalfWordMultAndMultAcc() {{
               case 0x3:
                 return new SmlattCc(machInst, rd, rn, rm, ra);
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           case 0x1:
             if (op) {
@@ -140,7 +140,7 @@ def format ArmHalfWordMultAndMultAcc() {{
               case 0x3:
                 return new Smlaltt(machInst, ra, rd, rn, rm);
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           case 0x3:
             switch (bits(machInst, 6, 5)) {
@@ -153,10 +153,10 @@ def format ArmHalfWordMultAndMultAcc() {{
               case 0x3:
                 return new Smultt(machInst, rd, rn, rm);
               default:
-                M5_UNREACHABLE;
+                GEM5_UNREACHABLE;
             }
           default:
-            M5_UNREACHABLE;
+            GEM5_UNREACHABLE;
         }
     }
     '''
@@ -209,7 +209,7 @@ def format Thumb32MulMulAccAndAbsDiff() {{
                     return new SmlattCc(machInst, rd, rn, rm, ra);
                 }
             }
-            M5_UNREACHABLE;
+            GEM5_UNREACHABLE;
           case 0x2:
             if (ra == 0xf) {
                 if (bits(machInst, 4)) {
@@ -281,7 +281,7 @@ def format Thumb32MulMulAccAndAbsDiff() {{
                 return new Usada8(machInst, rd, rn, rm, ra);
             }
           default:
-            M5_UNREACHABLE;
+            GEM5_UNREACHABLE;
         }
     }
     '''
