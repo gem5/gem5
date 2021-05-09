@@ -102,8 +102,8 @@ dumpArgsFrom(std::ostream &os, GEM5_VAR_USED ThreadContext *tc,
     int count = 0;
     // Extract all the arguments from the thread context and print them,
     // prefixed with either a ( or a , as appropriate.
-    M5_FOR_EACH_IN_PACK(os << (count++ ? ", " : "("),
-                        os << getArgument<ABI, Args>(tc, state));
+    GEM5_FOR_EACH_IN_PACK(os << (count++ ? ", " : "("),
+                          os << getArgument<ABI, Args>(tc, state));
     os << ")";
 }
 

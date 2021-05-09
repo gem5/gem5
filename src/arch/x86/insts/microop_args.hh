@@ -353,8 +353,8 @@ class InstOperands : public Base, public Operands...
         std::stringstream response;
         Base::printMnemonic(response, this->instMnem, this->mnemonic);
         int count = 0;
-        M5_FOR_EACH_IN_PACK(ccprintf(response, count++ ? ", " : ""),
-                            Operands::print(response));
+        GEM5_FOR_EACH_IN_PACK(ccprintf(response, count++ ? ", " : ""),
+                              Operands::print(response));
         return response.str();
     }
 };

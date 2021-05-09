@@ -112,7 +112,7 @@ static inline void
 prepareForArguments(GEM5_VAR_USED ThreadContext *tc,
         typename ABI::State &state)
 {
-    M5_FOR_EACH_IN_PACK(Preparer<ABI, Argument, Args>::prepare(tc, state));
+    GEM5_FOR_EACH_IN_PACK(Preparer<ABI, Argument, Args>::prepare(tc, state));
 }
 
 template <typename ABI, typename Ret, typename ...Args>
