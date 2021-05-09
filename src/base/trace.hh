@@ -174,34 +174,34 @@ const std::string &name();
  */
 
 #define DDUMP(x, data, count) do {               \
-    if (M5_UNLIKELY(TRACING_ON && Debug::x))     \
+    if (GEM5_UNLIKELY(TRACING_ON && Debug::x))     \
         Trace::getDebugLogger()->dump(           \
             curTick(), name(), data, count, #x); \
 } while (0)
 
 #define DPRINTF(x, ...) do {                     \
-    if (M5_UNLIKELY(TRACING_ON && Debug::x)) {   \
+    if (GEM5_UNLIKELY(TRACING_ON && Debug::x)) {   \
         Trace::getDebugLogger()->dprintf_flag(   \
             curTick(), name(), #x, __VA_ARGS__); \
     }                                            \
 } while (0)
 
 #define DPRINTFS(x, s, ...) do {                        \
-    if (M5_UNLIKELY(TRACING_ON && Debug::x)) {          \
+    if (GEM5_UNLIKELY(TRACING_ON && Debug::x)) {          \
         Trace::getDebugLogger()->dprintf_flag(          \
                 curTick(), s->name(), #x, __VA_ARGS__); \
     }                                                   \
 } while (0)
 
 #define DPRINTFR(x, ...) do {                          \
-    if (M5_UNLIKELY(TRACING_ON && Debug::x)) {         \
+    if (GEM5_UNLIKELY(TRACING_ON && Debug::x)) {         \
         Trace::getDebugLogger()->dprintf_flag(         \
             (Tick)-1, std::string(), #x, __VA_ARGS__); \
     }                                                  \
 } while (0)
 
 #define DPRINTFV(x, ...) do {                          \
-    if (M5_UNLIKELY(TRACING_ON && (x))) {              \
+    if (GEM5_UNLIKELY(TRACING_ON && (x))) {              \
         Trace::getDebugLogger()->dprintf_flag(         \
             curTick(), name(), x.name(), __VA_ARGS__); \
     }                                                  \
