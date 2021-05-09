@@ -153,26 +153,26 @@ SparcProcess::argsInit(int pageSize)
     // maintain double word alignment of the stack pointer.
     uint64_t align = 16;
 
-    enum hardwareCaps
+    enum HardwareCaps
     {
-        M5_HWCAP_SPARC_FLUSH = 1,
-        M5_HWCAP_SPARC_STBAR = 2,
-        M5_HWCAP_SPARC_SWAP = 4,
-        M5_HWCAP_SPARC_MULDIV = 8,
-        M5_HWCAP_SPARC_V9 = 16,
+        HwcapSparcFlush = 1,
+        HwcapSparcStbar = 2,
+        HwcapSparcSwap = 4,
+        HwcapSparcMuldiv = 8,
+        HwcapSparcV9 = 16,
         // This one should technically only be set
         // if there is a cheetah or cheetah_plus tlb,
         // but we'll use it all the time
-        M5_HWCAP_SPARC_ULTRA3 = 32
+        HwcapSparcUltra3 = 32
     };
 
     const int64_t hwcap =
-        M5_HWCAP_SPARC_FLUSH |
-        M5_HWCAP_SPARC_STBAR |
-        M5_HWCAP_SPARC_SWAP |
-        M5_HWCAP_SPARC_MULDIV |
-        M5_HWCAP_SPARC_V9 |
-        M5_HWCAP_SPARC_ULTRA3;
+        HwcapSparcFlush |
+        HwcapSparcStbar |
+        HwcapSparcSwap |
+        HwcapSparcMuldiv |
+        HwcapSparcV9 |
+        HwcapSparcUltra3;
 
     // Setup the auxilliary vectors. These will already have endian conversion.
     // Auxilliary vectors are loaded only for elf formatted executables.
