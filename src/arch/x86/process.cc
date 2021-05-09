@@ -711,11 +711,11 @@ I386Process::initState()
 template<class IntType>
 void
 X86Process::argsInit(int pageSize,
-                     std::vector<AuxVector<IntType> > extraAuxvs)
+                     std::vector<gem5::auxv::AuxVector<IntType>> extraAuxvs)
 {
     int intSize = sizeof(IntType);
 
-    std::vector<AuxVector<IntType>> auxv = extraAuxvs;
+    std::vector<gem5::auxv::AuxVector<IntType>> auxv = extraAuxvs;
 
     std::string filename;
     if (argv.size() < 1)
@@ -806,40 +806,40 @@ X86Process::argsInit(int pageSize,
 
         // Bits which describe the system hardware capabilities
         // XXX Figure out what these should be
-        auxv.emplace_back(M5_AT_HWCAP, features);
+        auxv.emplace_back(gem5::auxv::Hwcap, features);
         // The system page size
-        auxv.emplace_back(M5_AT_PAGESZ, X86ISA::PageBytes);
+        auxv.emplace_back(gem5::auxv::Pagesz, X86ISA::PageBytes);
         // Frequency at which times() increments
         // Defined to be 100 in the kernel source.
-        auxv.emplace_back(M5_AT_CLKTCK, 100);
+        auxv.emplace_back(gem5::auxv::Clktck, 100);
         // This is the virtual address of the program header tables if they
         // appear in the executable image.
-        auxv.emplace_back(M5_AT_PHDR, elfObject->programHeaderTable());
+        auxv.emplace_back(gem5::auxv::Phdr, elfObject->programHeaderTable());
         // This is the size of a program header entry from the elf file.
-        auxv.emplace_back(M5_AT_PHENT, elfObject->programHeaderSize());
+        auxv.emplace_back(gem5::auxv::Phent, elfObject->programHeaderSize());
         // This is the number of program headers from the original elf file.
-        auxv.emplace_back(M5_AT_PHNUM, elfObject->programHeaderCount());
+        auxv.emplace_back(gem5::auxv::Phnum, elfObject->programHeaderCount());
         // This is the base address of the ELF interpreter; it should be
         // zero for static executables or contain the base address for
         // dynamic executables.
-        auxv.emplace_back(M5_AT_BASE, getBias());
+        auxv.emplace_back(gem5::auxv::Base, getBias());
         // XXX Figure out what this should be.
-        auxv.emplace_back(M5_AT_FLAGS, 0);
+        auxv.emplace_back(gem5::auxv::Flags, 0);
         // The entry point to the program
-        auxv.emplace_back(M5_AT_ENTRY, objFile->entryPoint());
+        auxv.emplace_back(gem5::auxv::Entry, objFile->entryPoint());
         // Different user and group IDs
-        auxv.emplace_back(M5_AT_UID, uid());
-        auxv.emplace_back(M5_AT_EUID, euid());
-        auxv.emplace_back(M5_AT_GID, gid());
-        auxv.emplace_back(M5_AT_EGID, egid());
+        auxv.emplace_back(gem5::auxv::Uid, uid());
+        auxv.emplace_back(gem5::auxv::Euid, euid());
+        auxv.emplace_back(gem5::auxv::Gid, gid());
+        auxv.emplace_back(gem5::auxv::Egid, egid());
         // Whether to enable "secure mode" in the executable
-        auxv.emplace_back(M5_AT_SECURE, 0);
+        auxv.emplace_back(gem5::auxv::Secure, 0);
         // The address of 16 "random" bytes.
-        auxv.emplace_back(M5_AT_RANDOM, 0);
+        auxv.emplace_back(gem5::auxv::Random, 0);
         // The name of the program
-        auxv.emplace_back(M5_AT_EXECFN, 0);
+        auxv.emplace_back(gem5::auxv::Execfn, 0);
         // The platform string
-        auxv.emplace_back(M5_AT_PLATFORM, 0);
+        auxv.emplace_back(gem5::auxv::Platform, 0);
     }
 
     // Figure out how big the initial stack needs to be
@@ -953,11 +953,11 @@ X86Process::argsInit(int pageSize,
     initVirtMem->writeString(file_name_base, filename.c_str());
 
     // Fix up the aux vectors which point to data
-    assert(auxv[auxv.size() - 3].type == M5_AT_RANDOM);
+    assert(auxv[auxv.size() - 3].type == gem5::auxv::Random);
     auxv[auxv.size() - 3].val = aux_data_base;
-    assert(auxv[auxv.size() - 2].type == M5_AT_EXECFN);
+    assert(auxv[auxv.size() - 2].type == gem5::auxv::Execfn);
     auxv[auxv.size() - 2].val = argv_array_base;
-    assert(auxv[auxv.size() - 1].type == M5_AT_PLATFORM);
+    assert(auxv[auxv.size() - 1].type == gem5::auxv::Platform);
     auxv[auxv.size() - 1].val = aux_data_base + numRandomBytes;
 
 
@@ -968,7 +968,7 @@ X86Process::argsInit(int pageSize,
         auxv_array_end += sizeof(aux);
     }
     // Write out the terminating zeroed auxiliary vector
-    const AuxVector<uint64_t> zero(0, 0);
+    const gem5::auxv::AuxVector<uint64_t> zero(0, 0);
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
@@ -996,19 +996,19 @@ X86Process::argsInit(int pageSize,
 void
 X86_64Process::argsInit(int pageSize)
 {
-    std::vector<AuxVector<uint64_t> > extraAuxvs;
-    extraAuxvs.emplace_back(M5_AT_SYSINFO_EHDR, vsyscallPage.base);
+    std::vector<gem5::auxv::AuxVector<uint64_t> > extraAuxvs;
+    extraAuxvs.emplace_back(auxv::SysinfoEhdr, vsyscallPage.base);
     X86Process::argsInit<uint64_t>(pageSize, extraAuxvs);
 }
 
 void
 I386Process::argsInit(int pageSize)
 {
-    std::vector<AuxVector<uint32_t> > extraAuxvs;
+    std::vector<gem5::auxv::AuxVector<uint32_t> > extraAuxvs;
     //Tell the binary where the vsyscall part of the vsyscall page is.
-    extraAuxvs.emplace_back(M5_AT_SYSINFO,
+    extraAuxvs.emplace_back(auxv::Sysinfo,
             vsyscallPage.base + vsyscallPage.vsyscallOffset);
-    extraAuxvs.emplace_back(M5_AT_SYSINFO_EHDR, vsyscallPage.base);
+    extraAuxvs.emplace_back(auxv::SysinfoEhdr, vsyscallPage.base);
     X86Process::argsInit<uint32_t>(pageSize, extraAuxvs);
 }
 

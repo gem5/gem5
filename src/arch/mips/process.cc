@@ -88,37 +88,37 @@ MipsProcess::argsInit(int pageSize)
 {
     int intSize = sizeof(IntType);
 
-    std::vector<AuxVector<IntType>> auxv;
+    std::vector<gem5::auxv::AuxVector<IntType>> auxv;
 
     auto *elfObject = dynamic_cast<::Loader::ElfObject *>(objFile);
     if (elfObject)
     {
         // Set the system page size
-        auxv.emplace_back(M5_AT_PAGESZ, MipsISA::PageBytes);
+        auxv.emplace_back(gem5::auxv::Pagesz, MipsISA::PageBytes);
         // Set the frequency at which time() increments
-        auxv.emplace_back(M5_AT_CLKTCK, 100);
+        auxv.emplace_back(gem5::auxv::Clktck, 100);
         // For statically linked executables, this is the virtual
         // address of the program header tables if they appear in the
         // executable image.
-        auxv.emplace_back(M5_AT_PHDR, elfObject->programHeaderTable());
+        auxv.emplace_back(gem5::auxv::Phdr, elfObject->programHeaderTable());
         DPRINTF(Loader, "auxv at PHDR %08p\n",
                 elfObject->programHeaderTable());
         // This is the size of a program header entry from the elf file.
-        auxv.emplace_back(M5_AT_PHENT, elfObject->programHeaderSize());
+        auxv.emplace_back(gem5::auxv::Phent, elfObject->programHeaderSize());
         // This is the number of program headers from the original elf file.
-        auxv.emplace_back(M5_AT_PHNUM, elfObject->programHeaderCount());
+        auxv.emplace_back(gem5::auxv::Phnum, elfObject->programHeaderCount());
         // This is the base address of the ELF interpreter; it should be
         // zero for static executables or contain the base address for
         // dynamic executables.
-        auxv.emplace_back(M5_AT_BASE, getBias());
+        auxv.emplace_back(gem5::auxv::Base, getBias());
         //The entry point to the program
-        auxv.emplace_back(M5_AT_ENTRY, objFile->entryPoint());
+        auxv.emplace_back(gem5::auxv::Entry, objFile->entryPoint());
         //Different user and group IDs
-        auxv.emplace_back(M5_AT_UID, uid());
-        auxv.emplace_back(M5_AT_EUID, euid());
-        auxv.emplace_back(M5_AT_GID, gid());
-        auxv.emplace_back(M5_AT_EGID, egid());
-        auxv.emplace_back(M5_AT_RANDOM, 0);
+        auxv.emplace_back(gem5::auxv::Uid, uid());
+        auxv.emplace_back(gem5::auxv::Euid, euid());
+        auxv.emplace_back(gem5::auxv::Gid, gid());
+        auxv.emplace_back(gem5::auxv::Egid, egid());
+        auxv.emplace_back(gem5::auxv::Random, 0);
     }
 
     // Calculate how much space we need for arg & env & auxv arrays.
@@ -179,7 +179,7 @@ MipsProcess::argsInit(int pageSize)
 
     // Fix up the aux vectors which point to data.
     for (auto &aux: auxv) {
-        if (aux.type == M5_AT_RANDOM)
+        if (aux.type == gem5::auxv::Random)
             aux.val = aux_data_base;
     }
 
@@ -191,7 +191,7 @@ MipsProcess::argsInit(int pageSize)
     }
 
     // Write out the terminating zeroed auxilliary vector
-    const AuxVector<IntType> zero(0, 0);
+    const gem5::auxv::AuxVector<IntType> zero(0, 0);
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 

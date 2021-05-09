@@ -258,7 +258,7 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 {
     int intSize = sizeof(IntType);
 
-    std::vector<AuxVector<IntType>> auxv;
+    std::vector<gem5::auxv::AuxVector<IntType>> auxv;
 
     std::string filename;
     if (argv.size() < 1)
@@ -279,41 +279,41 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 
             //Bits which describe the system hardware capabilities
             //XXX Figure out what these should be
-            auxv.emplace_back(M5_AT_HWCAP, features);
+            auxv.emplace_back(gem5::auxv::Hwcap, features);
             //Frequency at which times() increments
-            auxv.emplace_back(M5_AT_CLKTCK, 0x64);
+            auxv.emplace_back(gem5::auxv::Clktck, 0x64);
             //Whether to enable "secure mode" in the executable
-            auxv.emplace_back(M5_AT_SECURE, 0);
+            auxv.emplace_back(gem5::auxv::Secure, 0);
             // Pointer to 16 bytes of random data
-            auxv.emplace_back(M5_AT_RANDOM, 0);
+            auxv.emplace_back(gem5::auxv::Random, 0);
             //The filename of the program
-            auxv.emplace_back(M5_AT_EXECFN, 0);
+            auxv.emplace_back(gem5::auxv::Execfn, 0);
             //The string "v71" -- ARM v7 architecture
-            auxv.emplace_back(M5_AT_PLATFORM, 0);
+            auxv.emplace_back(gem5::auxv::Platform, 0);
         }
 
         //The system page size
-        auxv.emplace_back(M5_AT_PAGESZ, ArmISA::PageBytes);
+        auxv.emplace_back(gem5::auxv::Pagesz, ArmISA::PageBytes);
         // For statically linked executables, this is the virtual address of
         // the program header tables if they appear in the executable image
-        auxv.emplace_back(M5_AT_PHDR, elfObject->programHeaderTable());
+        auxv.emplace_back(gem5::auxv::Phdr, elfObject->programHeaderTable());
         // This is the size of a program header entry from the elf file.
-        auxv.emplace_back(M5_AT_PHENT, elfObject->programHeaderSize());
+        auxv.emplace_back(gem5::auxv::Phent, elfObject->programHeaderSize());
         // This is the number of program headers from the original elf file.
-        auxv.emplace_back(M5_AT_PHNUM, elfObject->programHeaderCount());
+        auxv.emplace_back(gem5::auxv::Phnum, elfObject->programHeaderCount());
         // This is the base address of the ELF interpreter; it should be
         // zero for static executables or contain the base address for
         // dynamic executables.
-        auxv.emplace_back(M5_AT_BASE, getBias());
+        auxv.emplace_back(gem5::auxv::Base, getBias());
         //XXX Figure out what this should be.
-        auxv.emplace_back(M5_AT_FLAGS, 0);
+        auxv.emplace_back(gem5::auxv::Flags, 0);
         //The entry point to the program
-        auxv.emplace_back(M5_AT_ENTRY, objFile->entryPoint());
+        auxv.emplace_back(gem5::auxv::Entry, objFile->entryPoint());
         //Different user and group IDs
-        auxv.emplace_back(M5_AT_UID, uid());
-        auxv.emplace_back(M5_AT_EUID, euid());
-        auxv.emplace_back(M5_AT_GID, gid());
-        auxv.emplace_back(M5_AT_EGID, egid());
+        auxv.emplace_back(gem5::auxv::Uid, uid());
+        auxv.emplace_back(gem5::auxv::Euid, euid());
+        auxv.emplace_back(gem5::auxv::Gid, gid());
+        auxv.emplace_back(gem5::auxv::Egid, egid());
     }
 
     //Figure out how big the initial stack nedes to be
@@ -414,13 +414,13 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 
     //Fix up the aux vectors which point to other data
     for (int i = auxv.size() - 1; i >= 0; i--) {
-        if (auxv[i].type == M5_AT_PLATFORM) {
+        if (auxv[i].type == gem5::auxv::Platform) {
             auxv[i].val = platform_base;
             initVirtMem->writeString(platform_base, platform.c_str());
-        } else if (auxv[i].type == M5_AT_EXECFN) {
+        } else if (auxv[i].type == gem5::auxv::Execfn) {
             auxv[i].val = aux_data_base;
             initVirtMem->writeString(aux_data_base, filename.c_str());
-        } else if (auxv[i].type == M5_AT_RANDOM) {
+        } else if (auxv[i].type == gem5::auxv::Random) {
             auxv[i].val = aux_random_base;
             // Just leave the value 0, we don't want randomness
         }
@@ -433,7 +433,7 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
         auxv_array_end += sizeof(aux);
     }
     //Write out the terminating zeroed auxillary vector
-    const AuxVector<IntType> zero(0, 0);
+    const gem5::auxv::AuxVector<IntType> zero(0, 0);
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 

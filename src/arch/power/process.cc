@@ -84,7 +84,7 @@ PowerProcess::initState()
 void
 PowerProcess::argsInit(int intSize, int pageSize)
 {
-    std::vector<AuxVector<uint32_t>> auxv;
+    std::vector<gem5::auxv::AuxVector<uint32_t>> auxv;
 
     std::string filename;
     if (argv.size() < 1)
@@ -107,39 +107,39 @@ PowerProcess::argsInit(int intSize, int pageSize)
 
         //Bits which describe the system hardware capabilities
         //XXX Figure out what these should be
-        auxv.emplace_back(M5_AT_HWCAP, features);
+        auxv.emplace_back(gem5::auxv::Hwcap, features);
         //The system page size
-        auxv.emplace_back(M5_AT_PAGESZ, PowerISA::PageBytes);
+        auxv.emplace_back(gem5::auxv::Pagesz, PowerISA::PageBytes);
         //Frequency at which times() increments
-        auxv.emplace_back(M5_AT_CLKTCK, 0x64);
+        auxv.emplace_back(gem5::auxv::Clktck, 0x64);
         // For statically linked executables, this is the virtual address of
         // the program header tables if they appear in the executable image
-        auxv.emplace_back(M5_AT_PHDR, elfObject->programHeaderTable());
+        auxv.emplace_back(gem5::auxv::Phdr, elfObject->programHeaderTable());
         // This is the size of a program header entry from the elf file.
-        auxv.emplace_back(M5_AT_PHENT, elfObject->programHeaderSize());
+        auxv.emplace_back(gem5::auxv::Phent, elfObject->programHeaderSize());
         // This is the number of program headers from the original elf file.
-        auxv.emplace_back(M5_AT_PHNUM, elfObject->programHeaderCount());
+        auxv.emplace_back(gem5::auxv::Phnum, elfObject->programHeaderCount());
         // This is the base address of the ELF interpreter; it should be
         // zero for static executables or contain the base address for
         // dynamic executables.
-        auxv.emplace_back(M5_AT_BASE, getBias());
+        auxv.emplace_back(gem5::auxv::Base, getBias());
         //XXX Figure out what this should be.
-        auxv.emplace_back(M5_AT_FLAGS, 0);
+        auxv.emplace_back(gem5::auxv::Flags, 0);
         //The entry point to the program
-        auxv.emplace_back(M5_AT_ENTRY, objFile->entryPoint());
+        auxv.emplace_back(gem5::auxv::Entry, objFile->entryPoint());
         //Different user and group IDs
-        auxv.emplace_back(M5_AT_UID, uid());
-        auxv.emplace_back(M5_AT_EUID, euid());
-        auxv.emplace_back(M5_AT_GID, gid());
-        auxv.emplace_back(M5_AT_EGID, egid());
+        auxv.emplace_back(gem5::auxv::Uid, uid());
+        auxv.emplace_back(gem5::auxv::Euid, euid());
+        auxv.emplace_back(gem5::auxv::Gid, gid());
+        auxv.emplace_back(gem5::auxv::Egid, egid());
         //Whether to enable "secure mode" in the executable
-        auxv.emplace_back(M5_AT_SECURE, 0);
+        auxv.emplace_back(gem5::auxv::Secure, 0);
         //The address of 16 "random" bytes
-        auxv.emplace_back(M5_AT_RANDOM, 0);
+        auxv.emplace_back(gem5::auxv::Random, 0);
         //The filename of the program
-        auxv.emplace_back(M5_AT_EXECFN, 0);
+        auxv.emplace_back(gem5::auxv::Execfn, 0);
         //The string "v51" with unknown meaning
-        auxv.emplace_back(M5_AT_PLATFORM, 0);
+        auxv.emplace_back(gem5::auxv::Platform, 0);
     }
 
     //Figure out how big the initial stack nedes to be
@@ -239,13 +239,13 @@ PowerProcess::argsInit(int intSize, int pageSize)
 
     //Fix up the aux vectors which point to other data
     for (int i = auxv.size() - 1; i >= 0; i--) {
-        if (auxv[i].type == M5_AT_PLATFORM) {
+        if (auxv[i].type == gem5::auxv::Platform) {
             auxv[i].val = platform_base;
             initVirtMem->writeString(platform_base, platform.c_str());
-        } else if (auxv[i].type == M5_AT_EXECFN) {
+        } else if (auxv[i].type == gem5::auxv::Execfn) {
             auxv[i].val = aux_data_base + numRandomBytes;
             initVirtMem->writeString(aux_data_base, filename.c_str());
-        } else if (auxv[i].type == M5_AT_RANDOM) {
+        } else if (auxv[i].type == gem5::auxv::Random) {
             auxv[i].val = aux_data_base;
         }
     }
@@ -257,7 +257,7 @@ PowerProcess::argsInit(int intSize, int pageSize)
         auxv_array_end += sizeof(aux);
     }
     //Write out the terminating zeroed auxilliary vector
-    const AuxVector<uint64_t> zero(0, 0);
+    const gem5::auxv::AuxVector<uint64_t> zero(0, 0);
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 

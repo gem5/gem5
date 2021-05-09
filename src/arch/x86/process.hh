@@ -50,11 +50,16 @@ class SyscallDesc;
 
 namespace X86ISA
 {
+    namespace auxv
+    {
+
     enum X86AuxiliaryVectorTypes
     {
-        M5_AT_SYSINFO = 32,
-        M5_AT_SYSINFO_EHDR = 33
+        Sysinfo = 32,
+        SysinfoEhdr = 33
     };
+
+    } // namespace auxv
 
     class X86Process : public Process
     {
@@ -66,7 +71,7 @@ namespace X86ISA
 
         template<class IntType>
         void argsInit(int pageSize,
-                      std::vector<AuxVector<IntType> > extraAuxvs);
+                      std::vector<gem5::auxv::AuxVector<IntType>> extraAuxvs);
 
       public:
         Addr gdtStart() const { return _gdtStart; }

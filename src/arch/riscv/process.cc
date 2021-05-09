@@ -135,16 +135,16 @@ RiscvProcess::argsInit(int pageSize)
         stack_top -= env.size() + 1;
     stack_top &= -addrSize;
 
-    std::vector<AuxVector<IntType>> auxv;
+    std::vector<gem5::auxv::AuxVector<IntType>> auxv;
     if (elfObject != nullptr) {
-        auxv.emplace_back(M5_AT_ENTRY, objFile->entryPoint());
-        auxv.emplace_back(M5_AT_PHNUM, elfObject->programHeaderCount());
-        auxv.emplace_back(M5_AT_PHENT, elfObject->programHeaderSize());
-        auxv.emplace_back(M5_AT_PHDR, elfObject->programHeaderTable());
-        auxv.emplace_back(M5_AT_PAGESZ, PageBytes);
-        auxv.emplace_back(M5_AT_SECURE, 0);
-        auxv.emplace_back(M5_AT_RANDOM, stack_top);
-        auxv.emplace_back(M5_AT_NULL, 0);
+        auxv.emplace_back(gem5::auxv::Entry, objFile->entryPoint());
+        auxv.emplace_back(gem5::auxv::Phnum, elfObject->programHeaderCount());
+        auxv.emplace_back(gem5::auxv::Phent, elfObject->programHeaderSize());
+        auxv.emplace_back(gem5::auxv::Phdr, elfObject->programHeaderTable());
+        auxv.emplace_back(gem5::auxv::Pagesz, PageBytes);
+        auxv.emplace_back(gem5::auxv::Secure, 0);
+        auxv.emplace_back(gem5::auxv::Random, stack_top);
+        auxv.emplace_back(gem5::auxv::Null, 0);
     }
     stack_top -= (1 + argv.size()) * addrSize +
                    (1 + envp.size()) * addrSize +
@@ -223,14 +223,14 @@ RiscvProcess::argsInit(int pageSize)
 
     // Push aux vector onto stack
     std::map<IntType, std::string> aux_keys = {
-        {M5_AT_ENTRY, "M5_AT_ENTRY"},
-        {M5_AT_PHNUM, "M5_AT_PHNUM"},
-        {M5_AT_PHENT, "M5_AT_PHENT"},
-        {M5_AT_PHDR, "M5_AT_PHDR"},
-        {M5_AT_PAGESZ, "M5_AT_PAGESZ"},
-        {M5_AT_SECURE, "M5_AT_SECURE"},
-        {M5_AT_RANDOM, "M5_AT_RANDOM"},
-        {M5_AT_NULL, "M5_AT_NULL"}
+        {gem5::auxv::Entry, "gem5::auxv::Entry"},
+        {gem5::auxv::Phnum, "gem5::auxv::Phnum"},
+        {gem5::auxv::Phent, "gem5::auxv::Phent"},
+        {gem5::auxv::Phdr, "gem5::auxv::Phdr"},
+        {gem5::auxv::Pagesz, "gem5::auxv::Pagesz"},
+        {gem5::auxv::Secure, "gem5::auxv::Secure"},
+        {gem5::auxv::Random, "gem5::auxv::Random"},
+        {gem5::auxv::Null, "gem5::auxv::Null"}
     };
     for (const auto &aux: auxv) {
         DPRINTF(Stack, "Wrote aux key %s to address %#x\n",
