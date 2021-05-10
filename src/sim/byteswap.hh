@@ -33,7 +33,6 @@
 #ifndef __SIM_BYTE_SWAP_HH__
 #define __SIM_BYTE_SWAP_HH__
 
-#include "base/logging.hh"
 #include "base/types.hh"
 #include "enums/ByteOrder.hh"
 
@@ -54,8 +53,10 @@
 #include <libkern/OSByteOrder.h>
 #endif
 
-//These functions actually perform the swapping for parameters
-//of various bit lengths
+#include <type_traits>
+
+// These functions actually perform the swapping for parameters of various bit
+// lengths.
 inline uint64_t
 swap_byte64(uint64_t x)
 {
@@ -102,22 +103,36 @@ swap_byte16(uint16_t x)
 #endif
 }
 
-// This function lets the compiler figure out how to call the
-// swap_byte functions above for different data types.  Since the
-// sizeof() values are known at compile time, it should inline to a
-// direct call to the right swap_byteNN() function.
 template <typename T>
-inline T swap_byte(T x) {
-    if (sizeof(T) == 8)
-        return swap_byte64((uint64_t)x);
-    else if (sizeof(T) == 4)
-        return swap_byte32((uint32_t)x);
-    else if (sizeof(T) == 2)
-        return swap_byte16((uint16_t)x);
-    else if (sizeof(T) == 1)
-        return x;
-    else
-        panic("Can't byte-swap values larger than 64 bits");
+inline std::enable_if_t<
+    sizeof(T) == 8 && std::is_convertible<T, uint64_t>::value, T>
+swap_byte(T x)
+{
+    return swap_byte64((uint64_t)x);
+}
+
+template <typename T>
+inline std::enable_if_t<
+    sizeof(T) == 4 && std::is_convertible<T, uint32_t>::value, T>
+swap_byte(T x)
+{
+    return swap_byte32((uint32_t)x);
+}
+
+template <typename T>
+inline std::enable_if_t<
+    sizeof(T) == 2 && std::is_convertible<T, uint16_t>::value, T>
+swap_byte(T x)
+{
+    return swap_byte16((uint16_t)x);
+}
+
+template <typename T>
+inline std::enable_if_t<
+    sizeof(T) == 1 && std::is_convertible<T, uint8_t>::value, T>
+swap_byte(T x)
+{
+    return x;
 }
 
 template <typename T, size_t N>
