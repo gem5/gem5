@@ -42,9 +42,12 @@
 #ifndef __DEV_ARM_BASE_GIC_H__
 #define __DEV_ARM_BASE_GIC_H__
 
+#include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "arch/arm/system.hh"
+#include "dev/intpin.hh"
 #include "dev/io_device.hh"
 
 #include "enums/ArmInterruptType.hh"
@@ -55,10 +58,12 @@ class ThreadContext;
 class ArmInterruptPin;
 class ArmSPI;
 class ArmPPI;
+class ArmSigInterruptPin;
 
 struct ArmInterruptPinParams;
 struct ArmPPIParams;
 struct ArmSPIParams;
+struct ArmSigInterruptPinParams;
 struct BaseGicParams;
 
 class BaseGic :  public PioDevice
@@ -173,6 +178,19 @@ class ArmPPIGen : public ArmInterruptPinGen
     std::unordered_map<ContextID, ArmPPI*> pins;
 };
 
+class ArmSigInterruptPinGen : public ArmInterruptPinGen
+{
+  public:
+    ArmSigInterruptPinGen(const ArmSigInterruptPinParams &p);
+
+    ArmInterruptPin* get(ThreadContext* tc = nullptr) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
+
+  protected:
+    ArmSigInterruptPin* pin;
+};
+
 /**
  * Generic representation of an Arm interrupt pin.
  */
@@ -251,6 +269,19 @@ class ArmPPI : public ArmInterruptPin
     friend class ArmPPIGen;
   private:
     ArmPPI(const ArmPPIParams &p, ThreadContext *tc);
+
+  public:
+    void raise() override;
+    void clear() override;
+};
+
+class ArmSigInterruptPin : public ArmInterruptPin
+{
+    friend class ArmSigInterruptPinGen;
+  private:
+    ArmSigInterruptPin(const ArmSigInterruptPinParams &p);
+
+    std::vector<std::unique_ptr<IntSourcePin<ArmSigInterruptPinGen>>> sigPin;
 
   public:
     void raise() override;

@@ -40,6 +40,7 @@ from m5.SimObject import SimObject
 
 from m5.objects.Device import PioDevice, BasicPioDevice
 from m5.objects.Platform import Platform
+from m5.objects.IntPin import IntSourcePin
 
 class BaseGic(PioDevice):
     type = 'BaseGic'
@@ -136,6 +137,13 @@ class ArmPPI(ArmInterruptPin):
         """
         return gic.interruptCells(
             self._LINUX_ID, self.num - 16, int(self.int_type.getValue()))
+
+class ArmSigInterruptPin(ArmInterruptPin):
+    type = 'ArmSigInterruptPin'
+    cxx_header = "dev/arm/base_gic.hh"
+    cxx_class = "ArmSigInterruptPinGen"
+
+    irq = IntSourcePin('Interrupt pin')
 
 class GicV2(BaseGic):
     type = 'GicV2'

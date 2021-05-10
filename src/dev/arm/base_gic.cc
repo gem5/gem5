@@ -41,6 +41,7 @@
 #include "dev/arm/realview.hh"
 #include "params/ArmInterruptPin.hh"
 #include "params/ArmPPI.hh"
+#include "params/ArmSigInterruptPin.hh"
 #include "params/ArmSPI.hh"
 #include "params/BaseGic.hh"
 
@@ -115,6 +116,33 @@ ArmPPIGen::get(ThreadContext* tc)
 
         return pin;
     }
+}
+
+ArmSigInterruptPinGen::ArmSigInterruptPinGen(const ArmSigInterruptPinParams &p)
+    : ArmInterruptPinGen(p), pin(new ArmSigInterruptPin(p))
+{}
+
+ArmInterruptPin*
+ArmSigInterruptPinGen::get(ThreadContext* tc)
+{
+    return pin;
+}
+
+Port &
+ArmSigInterruptPinGen::getPort(const std::string &if_name, PortID idx)
+{
+    if (if_name == "irq") {
+        assert(idx != InvalidPortID);
+        if (idx >= pin->sigPin.size())
+            pin->sigPin.resize(idx + 1);
+        if (!pin->sigPin.at(idx))
+            pin->sigPin.at(idx).reset(
+                new IntSourcePin<ArmSigInterruptPinGen>(
+                    csprintf("%s.irq[%d]", name(), idx), idx, this));
+        return *pin->sigPin.at(idx);
+    }
+
+    return ArmInterruptPinGen::getPort(if_name, idx);
 }
 
 ArmInterruptPin::ArmInterruptPin(
@@ -192,4 +220,26 @@ ArmPPI::clear()
 {
     _active = false;
     platform->gic->clearPPInt(intNum, targetContext());
+}
+
+ArmSigInterruptPin::ArmSigInterruptPin(const ArmSigInterruptPinParams &p)
+      : ArmInterruptPin(p, nullptr)
+{}
+
+void
+ArmSigInterruptPin::raise()
+{
+    _active = true;
+    for (auto &pin : sigPin)
+        if (pin)
+            pin->raise();
+}
+
+void
+ArmSigInterruptPin::clear()
+{
+    _active = false;
+    for (auto &pin : sigPin)
+        if (pin)
+            pin->lower();
 }
