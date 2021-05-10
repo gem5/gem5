@@ -39,11 +39,15 @@
 
 #include "arch/arm/fastmodel/iris/thread_context.hh"
 
+#include <cstdint>
+#include <cstring>
 #include <utility>
+#include <vector>
 
 #include "arch/arm/fastmodel/iris/cpu.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
+#include "base/logging.hh"
 #include "iris/detail/IrisCppAdapter.h"
 #include "iris/detail/IrisObjects.h"
 #include "mem/se_translating_port_proxy.hh"
@@ -418,6 +422,25 @@ ThreadContext::remove(PCEvent *e)
         delBp(it);
 
     return true;
+}
+
+void
+ThreadContext::readMem(Addr addr, void *p, size_t size)
+{
+    iris::r0master::MemoryReadResult r;
+    auto err = call().memory_read(_instId, r, 0, addr, 1, size);
+    panic_if(err != iris::r0master::E_ok, "readMem failed.");
+    std::memcpy(p, r.data.data(), size);
+}
+
+void
+ThreadContext::writeMem(Addr addr, const void *p, size_t size)
+{
+    std::vector<uint64_t> data((size + 7) / 8);
+    std::memcpy(data.data(), p, size);
+    iris::MemoryWriteResult r;
+    auto err = call().memory_write(_instId, r, 0, addr, 1, size, data);
+    panic_if(err != iris::r0master::E_ok, "writeMem failed.");
 }
 
 bool
