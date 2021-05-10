@@ -68,15 +68,17 @@ class VirtQueue;
  */
 
 
-template <> inline vring_used_elem
-swap_byte(vring_used_elem v) {
+static inline vring_used_elem
+swap_byte(vring_used_elem v)
+{
     v.id = swap_byte(v.id);
     v.len = swap_byte(v.len);
     return v;
 }
 
-template <> inline vring_desc
-swap_byte(vring_desc v) {
+static inline vring_desc
+swap_byte(vring_desc v)
+{
     v.addr = swap_byte(v.addr);
     v.len = swap_byte(v.len);
     v.flags = swap_byte(v.flags);
