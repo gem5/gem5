@@ -1400,7 +1400,7 @@ let {{
             '''
 
     # Microops for manipulating segmentation registers
-    class SegOp(CondRegOp):
+    class SegOp(RegOp):
         abstract = True
         operand_types = (SegDestOp, FoldedSrc1Op)
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
