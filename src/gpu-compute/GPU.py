@@ -254,6 +254,10 @@ class GPUComputeDriver(EmulatedDriver):
     # default value: 5/C_RO_S (only allow caching in GL2 for read. Shared)
     m_type = Param.Int("Default MTYPE for cache. Valid values between 0-7");
 
+class GPURenderDriver(EmulatedDriver):
+    type = 'GPURenderDriver'
+    cxx_header = 'gpu-compute/gpu_render_driver.hh'
+
 class GPUDispatcher(SimObject):
     type = 'GPUDispatcher'
     cxx_header = 'gpu-compute/dispatcher.hh'

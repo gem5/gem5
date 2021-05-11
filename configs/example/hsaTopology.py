@@ -156,6 +156,9 @@ def createVegaTopology(options):
     file_append((node_dir, 'gpu_id'), 22124)
     file_append((node_dir, 'name'), 'Vega\n')
 
+    # Should be the same as the render driver filename (dri/renderD<drm_num>)
+    drm_num = 128
+
     # 96 in real Vega
     # Random comment for comparison purposes
     caches = 0
@@ -200,7 +203,7 @@ def createVegaTopology(options):
                 'vendor_id 4098\n'                          + \
                 'device_id 26720\n'                         + \
                 'location_id 1024\n'                        + \
-                'drm_render_minor 128\n'                    + \
+                'drm_render_minor %s\n' % drm_num           + \
                 'hive_id 0\n'                               + \
                 'num_sdma_engines 2\n'                      + \
                 'num_sdma_xgmi_engines 0\n'                 + \
@@ -329,6 +332,9 @@ def createFijiTopology(options):
     file_append((node_dir, 'gpu_id'), 50156)
     file_append((node_dir, 'name'), 'Fiji\n')
 
+    # Should be the same as the render driver filename (dri/renderD<drm_num>)
+    drm_num = 128
+
     # Real Fiji shows 96, but building that topology is complex and doesn't
     # appear to be required for anything.
     caches = 0
@@ -373,6 +379,7 @@ def createFijiTopology(options):
                 'vendor_id 4098\n'                                          + \
                 'device_id 29440\n'                                         + \
                 'location_id 512\n'                                         + \
+                'drm_render_minor %s\n' % drm_num                           + \
                 'max_engine_clk_fcompute %s\n'                                \
                     % int(toFrequency(options.gpu_clock) / 1e6)             + \
                 'local_mem_size 4294967296\n'                               + \
@@ -424,6 +431,9 @@ def createCarrizoTopology(options):
 
     mem_banks_cnt = 1
 
+    # Should be the same as the render driver filename (dri/renderD<drm_num>)
+    drm_num = 128
+
     # populate global node properties
     # NOTE: SIMD count triggers a valid GPU agent creation
     node_prop = 'cpu_cores_count %s\n' % options.num_cpus                   + \
@@ -446,6 +456,7 @@ def createCarrizoTopology(options):
                 'vendor_id 4098\n'                                          + \
                 'device_id 39028\n'                                         + \
                 'location_id 8\n'                                           + \
+                'drm_render_minor %s\n' % drm_num                           + \
                 'max_engine_clk_fcompute %s\n'                                \
                     % int(toFrequency(options.gpu_clock) / 1e6)             + \
                 'local_mem_size 0\n'                                        + \

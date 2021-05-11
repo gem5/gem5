@@ -436,6 +436,9 @@ gpu_driver = GPUComputeDriver(filename = "kfd", isdGPU = args.dgpu,
                               gfxVersion = args.gfx_version,
                               dGPUPoolID = 1, m_type = args.m_type)
 
+renderDriNum = 128
+render_driver = GPURenderDriver(filename = f'dri/renderD{renderDriNum}')
+
 # Creating the GPU kernel launching components: that is the HSA
 # packet processor (HSAPP), GPU command processor (CP), and the
 # dispatcher.
@@ -498,7 +501,8 @@ else:
            "HSA_ENABLE_SDMA=0"]
 
 process = Process(executable = executable, cmd = [args.cmd]
-                  + args.options.split(), drivers = [gpu_driver], env = env)
+                  + args.options.split(),
+                  drivers = [gpu_driver, render_driver], env = env)
 
 for cpu in cpu_list:
     cpu.createThreads()
