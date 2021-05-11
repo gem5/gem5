@@ -417,7 +417,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             TypedBufferArg<kfd_ioctl_create_event_args> args(ioc_buf);
             args.copyIn(virt_proxy);
             if (args->event_type != KFD_IOC_EVENT_SIGNAL) {
-                fatal("Signal events are only supported currently\n");
+                warn("Signal events are only supported currently\n");
             } else if (eventSlotIndex == SLOTS_PER_PAGE) {
                 fatal("Signal event wasn't created; signal limit reached\n");
             }
@@ -508,8 +508,8 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                         "\tamdkfd wait for event %d\n", EventData->event_id);
                 panic_if(ETable.count(EventData->event_id) == 0,
                          "Event ID invalid, cannot set this event\n");
-                panic_if(ETable[EventData->event_id].threadWaiting,
-                         "Multiple threads waiting on the same event\n");
+                if (ETable[EventData->event_id].threadWaiting)
+                         warn("Multiple threads waiting on the same event\n");
                 if (ETable[EventData->event_id].setEvent) {
                     // If event is already set, the event has already happened.
                     // Just unset the event and dont put this thread to sleep.
