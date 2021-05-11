@@ -257,7 +257,11 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 214, "epoll_ctl_old" },
     { 215, "epoll_wait_old" },
     { 216, "remap_file_pages" },
+#if defined(SYS_getdents64)
+    { 217, "getdents64", getdents64Func },
+#else
     { 217, "getdents64" },
+#endif
     { 218, "set_tid_address", setTidAddressFunc },
     { 219, "restart_syscall" },
     { 220, "semtimedop" },
