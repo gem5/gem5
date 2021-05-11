@@ -1,166 +1,120 @@
-FROM ubuntu:16.04
+# Copyright (c) 2021 Kyle Roarty
+# All Rights Reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+FROM ubuntu:20.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt -y update
+RUN apt -y upgrade
+RUN apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
+    libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
+    python3-dev python3-six python-is-python3 doxygen libboost-all-dev \
+    libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config
 
-# Needed for add-apt-repository
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    software-properties-common
+# Requirements for ROCm
+RUN apt -y install cmake mesa-common-dev libgflags-dev libgoogle-glog-dev
 
-# Ubuntu 16.04 does not have a python package new enough for gem5, use a PPA
-RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
+# Needed to get ROCm repo, build packages
+RUN apt -y install wget gnupg2 rpm
 
-# Should be minimal needed packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    findutils \
-    file \
-    libunwind8 \
-    libunwind-dev \
-    pkg-config \
-    build-essential \
-    gcc-multilib \
-    g++-multilib \
-    git \
-    ca-certificates \
-    m4 \
-    zlib1g \
-    zlib1g-dev \
-    libprotobuf-dev \
-    protobuf-compiler \
-    libprotoc-dev \
-    libgoogle-perftools-dev \
-    python-yaml \
-    python3.9 \
-    python3.9-dev \
-    python3.9-distutils \
-    wget \
-    libpci3 \
-    libelf1 \
-    libelf-dev \
-    cmake \
-    openssl \
-    libssl-dev \
-    libboost-filesystem-dev \
-    libboost-system-dev \
-    libboost-dev \
-    libpng12-dev \
-    gdb
+RUN wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | apt-key add -
 
-# Use python 3.9 by default
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+# ROCm webpage says to use debian main, but the individual versions
+# only have xenial
+RUN echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/4.0.1/ xenial main' | tee /etc/apt/sources.list.d/rocm.list
 
-# Setuptools is needed for cmake for ROCm build. Install using pip.
-# Instructions to install PIP from https://pypi.org/project/pip/
-RUN wget https://bootstrap.pypa.io/get-pip.py -qO get-pip.py
-RUN python3 get-pip.py
-RUN pip install -U setuptools scons==3.1.2 six
+RUN apt-get update && apt -y install hsakmt-roct hsakmt-roct-dev
+RUN ln -s /opt/rocm-4.0.1 /opt/rocm
 
-ARG gem5_dist=http://dist.gem5.org/dist/v21-0
+RUN git clone -b rocm-4.0.0 https://github.com/RadeonOpenCompute/ROCR-Runtime.git && \
+    mkdir -p /ROCR-Runtime/src/build
 
-# Install ROCm 1.6 binaries
-RUN wget -qO- ${gem5_dist}/apt_1.6.4.tar.bz2 \
-    | tar -xjv \
-    && cd apt_1.6.4/pool/main/ \
-    && dpkg -i h/hsakmt-roct-dev/* \
-    && dpkg -i h/hsa-ext-rocr-dev/* \
-    && dpkg -i h/hsa-rocr-dev/* \
-    && dpkg -i r/rocm-utils/* \
-    && dpkg -i h/hcc/* \
-    && dpkg -i r/rocm-opencl/* \
-    && dpkg -i r/rocm-opencl-dev/* \
-    && dpkg -i h/hip_base/* \
-    && dpkg -i h/hip_hcc/*
-
-# Get ROCm libraries we need to compile from source (and ROCm-profiler)
-RUN git clone --single-branch https://github.com/ROCmSoftwarePlatform/hipBLAS/ && \
-    git clone --single-branch https://github.com/ROCmSoftwarePlatform/rocBLAS/ && \
-    git clone --single-branch https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/ && \
-    git clone --single-branch https://github.com/ROCmSoftwarePlatform/MIOpen/ && \
-    git clone --single-branch https://github.com/RadeonOpenCompute/rocm-cmake/ && \
-    git clone --single-branch https://github.com/rocmarchive/ROCm-Profiler.git
-
-# Apply patches to various repos
-RUN mkdir -p /patch && cd /patch && \
-    wget ${gem5_dist}/rocm_patches/hipBLAS.patch && \
-    wget ${gem5_dist}/rocm_patches/miopen-conv.patch && \
-    wget ${gem5_dist}/rocm_patches/rocBLAS.patch
-
-RUN git -C /hipBLAS/ checkout ee57787e && git -C /hipBLAS/ apply /patch/hipBLAS.patch && \
-    git -C /rocBLAS/ checkout cbff4b4e && git -C /rocBLAS/ apply /patch/rocBLAS.patch && \
-    git -C /rocm-cmake/ checkout 12670acb && \
-    git -C /MIOpenGEMM/ checkout 9547fb9e && \
-    git -C /MIOpen/ checkout 01d6ca55c && git -C /MIOpen/ apply /patch/miopen-conv.patch
-
-ENV ROCM_PATH /opt/rocm
-ENV HCC_HOME ${ROCM_PATH}/hcc
-ENV HSA_PATH ${ROCM_PATH}/hsa
-ENV HIP_PATH ${ROCM_PATH}/hip
-ENV HIP_PLATFORM hcc
-ENV PATH ${ROCM_PATH}/bin:${HCC_HOME}/bin:${HSA_PATH}/bin:${HIP_PATH}/bin:${PATH}
-ENV HCC_AMDGPU_TARGET gfx801
-
-# Create build dirs for machine learning ROCm installs
-RUN mkdir -p /rocBLAS/build && \
-    mkdir -p /hipBLAS/build && \
-    mkdir -p /rocm-cmake/build && \
-    mkdir -p /MIOpenGEMM/build && \
-    mkdir -p /MIOpen/build
-
-# Do the builds, empty build dir to trim image size
-WORKDIR /rocBLAS/build
-RUN CXX=/opt/rocm/bin/hcc cmake -DCMAKE_CXX_FLAGS="--amdgpu-target=gfx801" .. && \
-    make -j$(nproc) && make install && rm -rf *
-
-WORKDIR /hipBLAS/build
-RUN CXX=/opt/rocm/bin/hcc cmake -DCMAKE_CXX_FLAGS="--amdgpu-target=gfx801" .. && \
-    make -j$(nproc) && make install && rm -rf *
-
-WORKDIR /rocm-cmake/build
-RUN cmake .. && cmake --build . --target install && rm -rf *
-
-WORKDIR /MIOpenGEMM/build
-RUN cmake .. && make miopengemm && make install && rm -rf *
-
-# Should link this in as a volume if at all possible
-RUN mkdir -p /.cache/miopen && chmod 777 /.cache/miopen
-
-# Un-set default c++ version for MIOpen compilation
-# As MIOpen 1.7 requires c++14 or higher
-RUN sed -i 's/INTERFACE_COMPILE_OPTIONS "-std=c++amp;-fPIC;-gline-tables-only"/#&/' /opt/rocm/hcc-1.0/lib/cmake/hcc/hcc-targets.cmake && \
-    sed -i 's/INTERFACE_COMPILE_OPTIONS "-hc"/#&/' /opt/rocm/hcc-1.0/lib/cmake/hcc/hcc-targets.cmake
-
-WORKDIR /MIOpen
-# Half is required; This is the version that MIOpen would download
-RUN wget https://github.com/pfultz2/half/archive/1.12.0.tar.gz && \
-    tar -xzf 1.12.0.tar.gz
-
-WORKDIR /MIOpen/build
-RUN CXX=/opt/rocm/hcc/bin/hcc cmake \
-    -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_INSTALL_PREFIX=/opt/rocm \
-    -DMIOPEN_BACKEND=HIP \
-    -DCMAKE_PREFIX_PATH="/opt/rocm/hip;/opt/rocm/hcc;/opt/rocm/rocdl;/opt/rocm/miopengemm;/opt/rocm/hsa" \
-    -DMIOPEN_CACHE_DIR=/.cache/miopen \
-    -DMIOPEN_AMDGCN_ASSEMBLER_PATH=/opt/rocm/opencl/bin \
-    -DHALF_INCLUDE_DIR=/MIOpen/half-1.12.0/include \
-    -DCMAKE_CXX_FLAGS="-isystem /usr/include/x86_64-linux-gnu -DDGPU" .. && \
-    make -j$(nproc) && make install && rm -rf *
-
-# Re-set defaults
-RUN sed -i 's/#\(INTERFACE_COMPILE_OPTIONS "-std=c++amp;-fPIC;-gline-tables-only"\)/\1/' /opt/rocm/hcc-1.0/lib/cmake/hcc/hcc-targets.cmake && \
-    sed -i 's/#\(INTERFACE_COMPILE_OPTIONS "-hc"\)/\1/' /opt/rocm/hcc-1.0/lib/cmake/hcc/hcc-targets.cmake
-
-# Create performance DB for gfx801.
-WORKDIR /opt/rocm/miopen/share/miopen/db
-RUN cp gfx803_64.cd.pdb.txt gfx801_4.cd.pdb.txt && \
-    cp gfx803_64.cd.pdb.txt gfx801_8.cd.pdb.txt && \
-    cp gfx803_64.cd.pdb.txt gfx801_16.cd.pdb.txt && \
-    cp gfx803_64.cd.pdb.txt gfx801_32.cd.pdb.txt && \
-    cp gfx803_64.cd.pdb.txt gfx801_64.cd.pdb.txt
-
-# Install profiler from .deb file, works for 1.6.2
-WORKDIR /ROCm-Profiler
-RUN dpkg -i package/rocm-profiler_4.0.6036_amd64.deb
-
-# Always use python3 and create a link to config command for gem5 to find
-RUN ln -sf /usr/bin/python3 /usr/bin/python
-RUN ln -sf /usr/bin/python3.9-config /usr/bin/python3-config
-
+WORKDIR /ROCR-Runtime/src/build
+# need MEMFD_CREATE=OFF as MEMFD_CREATE syscall isn't implemented
+RUN cmake -DIMAGE_SUPPORT=OFF -DHAVE_MEMFD_CREATE=OFF \
+    -DCMAKE_BUILD_TYPE=Release .. && make -j$(nproc) && make package
+RUN apt -y install ./hsa-rocr-dev*.deb
 WORKDIR /
+
+# Dependencies for ROCclr
+RUN apt -y install llvm-amdgpu libncurses5 libtinfo-dev rocm-device-libs comgr
+
+RUN git clone -b rocm-4.0.0 \
+    https://github.com/ROCm-Developer-Tools/ROCclr.git && \
+    mkdir -p ROCclr/build
+
+RUN git clone -b rocm-4.0.0 \
+    https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git && \
+    mkdir -p ROCm-OpenCL-Runtime/build
+
+WORKDIR /ROCclr
+# The patch allows us to avoid building blit kernels on-the-fly in gem5
+RUN wget -q -O - dist.gem5.org/dist/develop/rocm_patches/ROCclr.patch | git apply -v
+
+WORKDIR /ROCclr/build
+RUN cmake -DOPENCL_DIR="/ROCm-OpenCL-Runtime" \
+    -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j$(nproc) && make install
+WORKDIR /
+
+WORKDIR ROCm-OpenCL-Runtime/build
+RUN cmake -DUSE_COMGR_LIBRARY=ON -DCMAKE_PREFIX_PATH="/opt/rocm" \
+    -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j$(nproc) && make package
+RUN apt -y install ./rocm-opencl-2.0.0-amd64.deb ./rocm-opencl-dev-2.0.0-amd64.deb
+WORKDIR /
+
+RUN git clone -b rocm-4.0.0 \
+    https://github.com/ROCm-Developer-Tools/HIP.git && mkdir -p HIP/build
+
+WORKDIR HIP/build
+RUN cmake -DCMAKE_BUILD_TYPE=Release -DHSA_PATH=/usr/hsa \
+    -DHIP_COMPILER=clang -DHIP_PLATFORM=rocclr -DCMAKE_PREFIX_PATH="/opt/rocm"\
+    .. && make -j$(nproc) && make package
+RUN apt -y install ./hip-base*.deb ./hip-rocclr*.deb
+# These files here are needed but don't get installed through the .deb file,
+# even though they seem to be included in the packaging, so symlink them
+RUN ln -s /HIP/build/rocclr/CMakeFiles/Export/_opt/rocm/hip/lib/cmake/hip/* /opt/rocm/hip/lib/cmake/hip/
+WORKDIR /
+
+RUN git clone -b rocm-4.0.0 \
+    https://github.com/ROCmSoftwarePlatform/rocBLAS.git && mkdir rocBLAS/build
+
+ENV HCC_AMDGPU_TARGET=gfx801
+WORKDIR rocBLAS
+# rocBLAS needs to be built from source otherwise gfx801 gets an error in HIP
+# about there being no GPU binary available
+RUN ./install.sh -d -a all -i
+WORKDIR /
+
+# MIOpen dependencies + MIOpen
+RUN apt install rocm-cmake rocm-clang-ocl miopen-hip
+
+# Clone MIOpen repo so that we have the kernel sources available
+RUN git clone -b rocm-4.0.1 https://github.com/ROCmSoftwarePlatform/MIOpen.git
+
+# Make the MIOpen cache dir ahead of time and symlink for easier access
+# when linking in the database file
+RUN mkdir -p /root/.cache/miopen/2.9.0.8252-rocm-rel-4.0-26-64506314 && \
+    ln -s /root/.cache/miopen/2.9.0.8252-rocm-rel-4.0-26-64506314 /root/.cache/miopen/2.9.0
