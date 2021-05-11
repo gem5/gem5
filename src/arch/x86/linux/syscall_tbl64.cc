@@ -244,7 +244,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 201, "time", timeFunc<X86Linux64> },
     { 202, "futex", futexFunc<X86Linux64> },
     { 203, "sched_setaffinity", ignoreFunc },
-    { 204, "sched_getaffinity", ignoreFunc },
+    { 204, "sched_getaffinity", schedGetaffinityFunc<X86Linux64> },
     { 205, "set_thread_area" },
     { 206, "io_setup" },
     { 207, "io_destroy" },

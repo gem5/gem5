@@ -57,6 +57,7 @@
 /// application on the host machine.
 
 #if defined(__linux__)
+#include <sched.h>
 #include <sys/eventfd.h>
 #include <sys/statfs.h>
 
@@ -2603,4 +2604,26 @@ eventfdFunc(SyscallDesc *desc, ThreadContext *tc,
 #endif
 }
 
+/// Target sched_getaffinity
+template <class OS>
+SyscallReturn
+schedGetaffinityFunc(SyscallDesc *desc, ThreadContext *tc,
+                     pid_t pid, size_t cpusetsize, VPtr<> cpu_set_mask)
+{
+#if defined(__linux__)
+    if (cpusetsize < CPU_ALLOC_SIZE(tc->getSystemPtr()->threads.size()))
+        return -EINVAL;
+
+    BufferArg maskBuf(cpu_set_mask, cpusetsize);
+    maskBuf.copyIn(tc->getVirtProxy());
+    for (int i = 0; i < tc->getSystemPtr()->threads.size(); i++) {
+        CPU_SET(i, (cpu_set_t *)maskBuf.bufferPtr());
+    }
+    maskBuf.copyOut(tc->getVirtProxy());
+    return CPU_ALLOC_SIZE(tc->getSystemPtr()->threads.size());
+#else
+    warnUnsupportedOS("sched_getaffinity");
+    return -1;
+#endif
+}
 #endif // __SIM_SYSCALL_EMUL_HH__
