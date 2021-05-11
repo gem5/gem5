@@ -171,7 +171,6 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
     DPRINTF(GPUCommandProc, "Machine code starts at addr: %#x\n",
         machine_code_addr);
 
-    Addr kern_name_addr(0);
     std::string kernel_name;
 
     /**
@@ -184,10 +183,7 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
      * host memory.  I have no idea what BLIT stands for.
      * */
     if (akc.runtime_loader_kernel_symbol) {
-        virt_proxy.readBlob(akc.runtime_loader_kernel_symbol + 0x10,
-            (uint8_t*)&kern_name_addr, 0x8);
-
-        virt_proxy.readString(kernel_name, kern_name_addr);
+        kernel_name = "Some kernel";
     } else {
         kernel_name = "Blit kernel";
     }
