@@ -36,7 +36,7 @@ from os import mkdir, makedirs, getpid, listdir, fsync
 from os.path import join as joinpath
 from os.path import isdir
 from shutil import rmtree, copyfile
-from m5.util.convert import toFrequency
+from m5.util.convert import toFrequency, toMemorySize
 
 def file_append(path, contents):
     with open(joinpath(*path), 'a') as f:
@@ -422,12 +422,14 @@ def createCarrizoTopology(options):
     # must have marketing name
     file_append((node_dir, 'name'), 'Carrizo\n')
 
+    mem_banks_cnt = 1
+
     # populate global node properties
     # NOTE: SIMD count triggers a valid GPU agent creation
     node_prop = 'cpu_cores_count %s\n' % options.num_cpus                   + \
                 'simd_count %s\n'                                             \
                     % (options.num_compute_units * options.simds_per_cu)    + \
-                'mem_banks_count 0\n'                                       + \
+                'mem_banks_count %s\n' % mem_banks_cnt                      + \
                 'caches_count 0\n'                                          + \
                 'io_links_count 0\n'                                        + \
                 'cpu_core_id_base 16\n'                                     + \
@@ -453,3 +455,14 @@ def createCarrizoTopology(options):
                     % int(toFrequency(options.CPUClock) / 1e6)
 
     file_append((node_dir, 'properties'), node_prop)
+
+    for i in range(mem_banks_cnt):
+        mem_dir = joinpath(node_dir, f'mem_banks/{i}')
+        remake_dir(mem_dir)
+
+        mem_prop = f'heap_type 0\n'                                         + \
+                   f'size_in_bytes {toMemorySize(options.mem_size)}'        + \
+                   f'flags 0\n'                                             + \
+                   f'width 64\n'                                            + \
+                   f'mem_clk_max 1600\n'
+        file_append((mem_dir, 'properties'), mem_prop)
