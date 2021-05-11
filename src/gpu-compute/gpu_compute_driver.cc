@@ -559,7 +559,91 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             warn("unimplemented ioctl: AMDKFD_IOC_DBG_WAVE_CONTROL\n");
           }
           break;
-        /**
+        case AMDKFD_IOC_SET_SCRATCH_BACKING_VA:
+          {
+            warn("unimplemented ioctl: AMDKFD_IOC_SET_SCRATCH_BACKING_VA\n");
+          }
+          break;
+        case AMDKFD_IOC_GET_TILE_CONFIG:
+          {
+            warn("unimplemented ioctl: AMDKFD_IOC_GET_TILE_CONFIG\n");
+          }
+          break;
+        case AMDKFD_IOC_SET_TRAP_HANDLER:
+          {
+            warn("unimplemented ioctl: AMDKFD_IOC_SET_TRAP_HANDLER\n");
+          }
+          break;
+        case AMDKFD_IOC_GET_PROCESS_APERTURES_NEW:
+          {
+            DPRINTF(GPUDriver,
+                    "ioctl: AMDKFD_IOC_GET_PROCESS_APERTURES_NEW\n");
+
+            TypedBufferArg<kfd_ioctl_get_process_apertures_new_args>
+                ioc_args(ioc_buf);
+
+            ioc_args.copyIn(virt_proxy);
+            ioc_args->num_of_nodes = 1;
+
+            for (int i = 0; i < ioc_args->num_of_nodes; ++i) {
+                TypedBufferArg<kfd_process_device_apertures> ape_args
+                    (ioc_args->kfd_process_device_apertures_ptr);
+
+                ape_args->scratch_base = scratchApeBase(i + 1);
+                ape_args->scratch_limit =
+                    scratchApeLimit(ape_args->scratch_base);
+                ape_args->lds_base = ldsApeBase(i + 1);
+                ape_args->lds_limit = ldsApeLimit(ape_args->lds_base);
+                ape_args->gpuvm_base = gpuVmApeBase(i + 1);
+                ape_args->gpuvm_limit = gpuVmApeLimit(ape_args->gpuvm_base);
+
+                // NOTE: Must match ID populated by hsaTopology.py
+                if (isdGPU) {
+                    switch (gfxVersion) {
+                      case GfxVersion::gfx803:
+                        ape_args->gpu_id = 50156;
+                        break;
+                      case GfxVersion::gfx900:
+                        ape_args->gpu_id = 22124;
+                        break;
+                      default:
+                        fatal("Invalid gfx version for dGPU\n");
+                    }
+                } else {
+                    switch (gfxVersion) {
+                      case GfxVersion::gfx801:
+                        ape_args->gpu_id = 2765;
+                        break;
+                      default:
+                        fatal("Invalid gfx version for APU\n");
+                    }
+                }
+
+                assert(bits<Addr>(ape_args->scratch_base, 63, 47) != 0x1ffff);
+                assert(bits<Addr>(ape_args->scratch_base, 63, 47) != 0);
+                assert(bits<Addr>(ape_args->scratch_limit, 63, 47) != 0x1ffff);
+                assert(bits<Addr>(ape_args->scratch_limit, 63, 47) != 0);
+                assert(bits<Addr>(ape_args->lds_base, 63, 47) != 0x1ffff);
+                assert(bits<Addr>(ape_args->lds_base, 63, 47) != 0);
+                assert(bits<Addr>(ape_args->lds_limit, 63, 47) != 0x1ffff);
+                assert(bits<Addr>(ape_args->lds_limit, 63, 47) != 0);
+                assert(bits<Addr>(ape_args->gpuvm_base, 63, 47) != 0x1ffff);
+                assert(bits<Addr>(ape_args->gpuvm_base, 63, 47) != 0);
+                assert(bits<Addr>(ape_args->gpuvm_limit, 63, 47) != 0x1ffff);
+                assert(bits<Addr>(ape_args->gpuvm_limit, 63, 47) != 0);
+
+                ape_args.copyOut(virt_proxy);
+            }
+
+            ioc_args.copyOut(virt_proxy);
+          }
+          break;
+        case AMDKFD_IOC_ACQUIRE_VM:
+          {
+            warn("unimplemented ioctl: AMDKFD_IOC_ACQUIRE_VM\n");
+          }
+          break;
+         /**
          * In real hardware, this IOCTL maps host memory, dGPU memory, or dGPU
          * doorbells into GPUVM space. Essentially, ROCm implements SVM by
          * carving out a region of free VA space that both the host and GPUVM
@@ -740,89 +824,14 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             warn("unimplemented ioctl: AMDKFD_IOC_UNMAP_MEMORY_FROM_GPU\n");
           }
           break;
-        case AMDKFD_IOC_ALLOC_MEMORY_OF_SCRATCH:
-          {
-            warn("unimplemented ioctl: AMDKFD_IOC_ALLOC_MEMORY_OF_SCRATCH\n");
-          }
-          break;
         case AMDKFD_IOC_SET_CU_MASK:
           {
             warn("unimplemented ioctl: AMDKFD_IOC_SET_CU_MASK\n");
           }
           break;
-        case AMDKFD_IOC_SET_PROCESS_DGPU_APERTURE:
+        case AMDKFD_IOC_GET_QUEUE_WAVE_STATE:
           {
-            warn("unimplemented ioctl: AMDKFD_IOC_SET_PROCESS_DGPU_APERTURE"
-                 "\n");
-          }
-          break;
-        case AMDKFD_IOC_SET_TRAP_HANDLER:
-          {
-            warn("unimplemented ioctl: AMDKFD_IOC_SET_TRAP_HANDLER\n");
-          }
-          break;
-        case AMDKFD_IOC_GET_PROCESS_APERTURES_NEW:
-          {
-            DPRINTF(GPUDriver,
-                    "ioctl: AMDKFD_IOC_GET_PROCESS_APERTURES_NEW\n");
-
-            TypedBufferArg<kfd_ioctl_get_process_apertures_new_args>
-                ioc_args(ioc_buf);
-
-            ioc_args.copyIn(virt_proxy);
-            ioc_args->num_of_nodes = 1;
-
-            for (int i = 0; i < ioc_args->num_of_nodes; ++i) {
-                TypedBufferArg<kfd_process_device_apertures> ape_args
-                    (ioc_args->kfd_process_device_apertures_ptr);
-
-                ape_args->scratch_base = scratchApeBase(i + 1);
-                ape_args->scratch_limit =
-                    scratchApeLimit(ape_args->scratch_base);
-                ape_args->lds_base = ldsApeBase(i + 1);
-                ape_args->lds_limit = ldsApeLimit(ape_args->lds_base);
-                ape_args->gpuvm_base = gpuVmApeBase(i + 1);
-                ape_args->gpuvm_limit = gpuVmApeLimit(ape_args->gpuvm_base);
-
-                // NOTE: Must match ID populated by hsaTopology.py
-                if (isdGPU) {
-                    switch (gfxVersion) {
-                      case GfxVersion::gfx803:
-                        ape_args->gpu_id = 50156;
-                        break;
-                      case GfxVersion::gfx900:
-                        ape_args->gpu_id = 22124;
-                        break;
-                      default:
-                        fatal("Invalid gfx version for dGPU\n");
-                    }
-                } else {
-                    switch (gfxVersion) {
-                      case GfxVersion::gfx801:
-                        ape_args->gpu_id = 2765;
-                        break;
-                      default:
-                        fatal("Invalid gfx version for APU\n");
-                    }
-                }
-
-                assert(bits<Addr>(ape_args->scratch_base, 63, 47) != 0x1ffff);
-                assert(bits<Addr>(ape_args->scratch_base, 63, 47) != 0);
-                assert(bits<Addr>(ape_args->scratch_limit, 63, 47) != 0x1ffff);
-                assert(bits<Addr>(ape_args->scratch_limit, 63, 47) != 0);
-                assert(bits<Addr>(ape_args->lds_base, 63, 47) != 0x1ffff);
-                assert(bits<Addr>(ape_args->lds_base, 63, 47) != 0);
-                assert(bits<Addr>(ape_args->lds_limit, 63, 47) != 0x1ffff);
-                assert(bits<Addr>(ape_args->lds_limit, 63, 47) != 0);
-                assert(bits<Addr>(ape_args->gpuvm_base, 63, 47) != 0x1ffff);
-                assert(bits<Addr>(ape_args->gpuvm_base, 63, 47) != 0);
-                assert(bits<Addr>(ape_args->gpuvm_limit, 63, 47) != 0x1ffff);
-                assert(bits<Addr>(ape_args->gpuvm_limit, 63, 47) != 0);
-
-                ape_args.copyOut(virt_proxy);
-            }
-
-            ioc_args.copyOut(virt_proxy);
+            warn("unimplemented ioctl: AMDKFD_IOC_GET_QUEUE_WAVE_STATE\n");
           }
           break;
         case AMDKFD_IOC_GET_DMABUF_INFO:
@@ -835,29 +844,14 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             warn("unimplemented ioctl: AMDKFD_IOC_IMPORT_DMABUF\n");
           }
           break;
-        case AMDKFD_IOC_GET_TILE_CONFIG:
+        case AMDKFD_IOC_ALLOC_QUEUE_GWS:
           {
-            warn("unimplemented ioctl: AMDKFD_IOC_GET_TILE_CONFIG\n");
+            warn("unimplemented ioctl: AMDKFD_IOC_ALLOC_QUEUE_GWS\n");
           }
           break;
-        case AMDKFD_IOC_IPC_IMPORT_HANDLE:
+        case AMDKFD_IOC_SMI_EVENTS:
           {
-            warn("unimplemented ioctl: AMDKFD_IOC_IPC_IMPORT_HANDLE\n");
-          }
-          break;
-        case AMDKFD_IOC_IPC_EXPORT_HANDLE:
-          {
-            warn("unimplemented ioctl: AMDKFD_IOC_IPC_EXPORT_HANDLE\n");
-          }
-          break;
-        case AMDKFD_IOC_CROSS_MEMORY_COPY:
-          {
-            warn("unimplemented ioctl: AMDKFD_IOC_CROSS_MEMORY_COPY\n");
-          }
-          break;
-        case AMDKFD_IOC_OPEN_GRAPHIC_HANDLE:
-          {
-            warn("unimplemented ioctl: AMDKFD_IOC_OPEN_GRAPHIC_HANDLE\n");
+            warn("unimplemented ioctl: AMDKFD_IOC_SMI_EVENTS\n");
           }
           break;
         default:
