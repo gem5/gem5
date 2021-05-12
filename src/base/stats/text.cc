@@ -48,6 +48,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 
@@ -56,28 +57,12 @@
 #include "base/stats/info.hh"
 #include "base/str.hh"
 
-#ifndef NAN
-float __nan();
-/** Define Not a number. */
-#define NAN (__nan())
-/** Need to define __nan() */
-#define __M5_NAN
-#endif
-
-#ifdef __M5_NAN
-float
-__nan()
+namespace
 {
-    union
-    {
-        uint32_t ui;
-        float f;
-    } nan;
 
-    nan.ui = 0x7fc00000;
-    return nan.f;
-}
-#endif
+constexpr auto Nan = std::numeric_limits<float>::quiet_NaN();
+
+} // anonymous namespace
 
 namespace Stats {
 
@@ -342,8 +327,8 @@ VectorPrint::operator()(std::ostream &stream) const
     print.descriptions = descriptions;
     print.units = units;
     print.flags = flags;
-    print.pdf = _total ? 0.0 : NAN;
-    print.cdf = _total ? 0.0 : NAN;
+    print.pdf = _total ? 0.0 : Nan;
+    print.cdf = _total ? 0.0 : Nan;
 
     bool havesub = !subnames.empty();
 
@@ -389,8 +374,8 @@ VectorPrint::operator()(std::ostream &stream) const
     }
 
     if (flags.isSet(::Stats::total)) {
-        print.pdf = NAN;
-        print.cdf = NAN;
+        print.pdf = Nan;
+        print.cdf = Nan;
         print.name = base + "total";
         print.desc = desc;
         print.unitStr = unitStr;
@@ -472,8 +457,8 @@ DistPrint::operator()(std::ostream &stream) const
     print.descriptions = descriptions;
     print.desc = desc;
     print.unitStr = unitStr;
-    print.pdf = NAN;
-    print.cdf = NAN;
+    print.pdf = Nan;
+    print.cdf = Nan;
 
     if (flags.isSet(oneline)) {
         print.name = base + "bucket_size";
@@ -494,16 +479,16 @@ DistPrint::operator()(std::ostream &stream) const
     print(stream);
 
     print.name = base + "mean";
-    print.value = data.samples ? data.sum / data.samples : NAN;
+    print.value = data.samples ? data.sum / data.samples : Nan;
     print(stream);
 
     if (data.type == Hist) {
         print.name = base + "gmean";
-        print.value = data.samples ? exp(data.logs / data.samples) : NAN;
+        print.value = data.samples ? exp(data.logs / data.samples) : Nan;
         print(stream);
     }
 
-    Result stdev = NAN;
+    Result stdev = Nan;
     if (data.samples)
         stdev = sqrt((data.samples * data.squares - data.sum * data.sum) /
                      (data.samples * (data.samples - 1.0)));
@@ -517,11 +502,11 @@ DistPrint::operator()(std::ostream &stream) const
     size_t size = data.cvec.size();
 
     Result total = 0.0;
-    if (data.type == Dist && data.underflow != NAN)
+    if (data.type == Dist && data.underflow != Nan)
         total += data.underflow;
     for (off_type i = 0; i < size; ++i)
         total += data.cvec[i];
-    if (data.type == Dist && data.overflow != NAN)
+    if (data.type == Dist && data.overflow != Nan)
         total += data.overflow;
 
     if (total) {
@@ -529,7 +514,7 @@ DistPrint::operator()(std::ostream &stream) const
         print.cdf = 0.0;
     }
 
-    if (data.type == Dist && data.underflow != NAN) {
+    if (data.type == Dist && data.underflow != Nan) {
         print.name = base + "underflows";
         print.update(data.underflow, total);
         print(stream);
@@ -565,22 +550,22 @@ DistPrint::operator()(std::ostream &stream) const
         stream << std::endl;
     }
 
-    if (data.type == Dist && data.overflow != NAN) {
+    if (data.type == Dist && data.overflow != Nan) {
         print.name = base + "overflows";
         print.update(data.overflow, total);
         print(stream);
     }
 
-    print.pdf = NAN;
-    print.cdf = NAN;
+    print.pdf = Nan;
+    print.cdf = Nan;
 
-    if (data.type == Dist && data.min_val != NAN) {
+    if (data.type == Dist && data.min_val != Nan) {
         print.name = base + "min_value";
         print.value = data.min_val;
         print(stream);
     }
 
-    if (data.type == Dist && data.max_val != NAN) {
+    if (data.type == Dist && data.max_val != Nan) {
         print.name = base + "max_value";
         print.value = data.max_val;
         print(stream);
@@ -606,8 +591,8 @@ Text::visit(const ScalarInfo &info)
     print.descriptions = descriptions;
     print.units = units;
     print.precision = info.precision;
-    print.pdf = NAN;
-    print.cdf = NAN;
+    print.pdf = Nan;
+    print.cdf = Nan;
 
     print(*stream);
 }
@@ -810,8 +795,8 @@ SparseHistPrint::operator()(std::ostream &stream) const
     print.units = units;
     print.desc = desc;
     print.unitStr = unitStr;
-    print.pdf = NAN;
-    print.cdf = NAN;
+    print.pdf = Nan;
+    print.cdf = Nan;
 
     print.name = base + "samples";
     print.value = data.samples;
