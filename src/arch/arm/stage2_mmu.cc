@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,8 +48,8 @@ using namespace ArmISA;
 
 Stage2MMU::Stage2MMU(const Params &p)
     : SimObject(p), _stage1Tlb(p.tlb), _stage2Tlb(p.stage2_tlb),
-      port(_stage1Tlb->getTableWalker(), p.sys),
-      requestorId(p.sys->getRequestorId(_stage1Tlb->getTableWalker()))
+      requestorId(p.sys->getRequestorId(_stage1Tlb->getTableWalker())),
+      port(_stage1Tlb->getTableWalker(), requestorId)
 {
     // we use the stage-one table walker as the parent of the port,
     // and to get our requestor id, this is done to keep things
@@ -131,9 +131,10 @@ Stage2MMU::Stage2Translation::finish(const Fault &_fault,
     }
 
     if (_fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
-        parent.getDMAPort().dmaAction(
-            MemCmd::ReadReq, req->getPaddr(), numBytes, event, data,
-            tc->getCpuPtr()->clockPeriod(), req->getFlags());
+        TableWalker::Port &port = parent.getTableWalkerPort();
+        port.sendTimingReq(
+            req->getPaddr(), numBytes, data, req->getFlags(),
+            tc->getCpuPtr()->clockPeriod(), event);
     } else {
         // We can't do the DMA access as there's been a problem, so tell the
         // event we're done

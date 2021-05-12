@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016, 2019 ARM Limited
+ * Copyright (c) 2010-2016, 2019, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,14 +45,14 @@
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
+#include "mem/packet_queue.hh"
+#include "mem/qport.hh"
 #include "mem/request.hh"
 #include "params/ArmTableWalker.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 
 class ThreadContext;
-
-class DmaPort;
 
 namespace ArmISA {
 class Translation;
@@ -855,6 +855,48 @@ class TableWalker : public ClockedObject
         std::string name() const { return tableWalker->name(); }
     };
 
+    class TableWalkerState : public Packet::SenderState
+    {
+      public:
+        Tick delay = 0;
+        Event *event = nullptr;
+    };
+
+    class Port : public QueuedRequestPort
+    {
+      public:
+        Port(TableWalker* _walker, RequestorID id);
+
+        void sendFunctionalReq(Addr desc_addr, int size,
+            uint8_t *data, Request::Flags flag);
+        void sendAtomicReq(Addr desc_addr, int size,
+            uint8_t *data, Request::Flags flag, Tick delay);
+        void sendTimingReq(Addr desc_addr, int size,
+            uint8_t *data, Request::Flags flag, Tick delay,
+            Event *event);
+
+        bool recvTimingResp(PacketPtr pkt) override;
+
+      private:
+        void handleRespPacket(PacketPtr pkt, Tick delay=0);
+        void handleResp(TableWalkerState *state, Addr addr,
+                        Addr size, Tick delay=0);
+
+        PacketPtr createPacket(Addr desc_addr, int size,
+                               uint8_t *data, Request::Flags flag,
+                               Tick delay, Event *event);
+
+      private:
+        /** Packet queue used to store outgoing requests. */
+        ReqPacketQueue reqQueue;
+
+        /** Packet queue used to store outgoing snoop responses. */
+        SnoopRespPacketQueue snoopRespQueue;
+
+        /** Cached requestorId of the table walker */
+        RequestorID requestorId;
+    };
+
   protected:
 
     /** Queues of requests for all the different lookup levels */
@@ -868,7 +910,7 @@ class TableWalker : public ClockedObject
     Stage2MMU *stage2Mmu;
 
     /** Port shared by the two table walkers. */
-    DmaPort* port;
+    Port* port;
 
     /** Requestor id assigned by the MMU. */
     RequestorID requestorId;
@@ -938,8 +980,8 @@ class TableWalker : public ClockedObject
     DrainState drain() override;
     void drainResume() override;
 
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+    ::Port &getPort(const std::string &if_name,
+                    PortID idx=InvalidPortID) override;
 
     Fault walk(const RequestPtr &req, ThreadContext *tc,
                uint16_t asid, vmid_t _vmid,

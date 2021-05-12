@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2019 ARM Limited
+ * Copyright (c) 2010, 2012-2019, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -36,6 +36,7 @@
  */
 #include "arch/arm/table_walker.hh"
 
+#include <cassert>
 #include <memory>
 
 #include "arch/arm/faults.hh"
@@ -50,7 +51,6 @@
 #include "debug/PageTableWalker.hh"
 #include "debug/TLB.hh"
 #include "debug/TLBVerbose.hh"
-#include "dev/dma_device.hh"
 #include "sim/system.hh"
 
 using namespace ArmISA;
@@ -102,7 +102,7 @@ void
 TableWalker::setMMU(Stage2MMU *m, RequestorID requestor_id)
 {
     stage2Mmu = m;
-    port = &m->getDMAPort();
+    port = &m->getTableWalkerPort();
     requestorId = requestor_id;
 }
 
@@ -141,6 +141,107 @@ TableWalker::WalkerState::WalkerState() :
     mode(BaseTLB::Read), tranType(TLB::NormalTran), l2Desc(l1Desc),
     delayed(false), tableWalker(nullptr)
 {
+}
+
+TableWalker::Port::Port(TableWalker *_walker, RequestorID id)
+  : QueuedRequestPort(_walker->name() + ".port", _walker,
+        reqQueue, snoopRespQueue),
+    reqQueue(*_walker, *this), snoopRespQueue(*_walker, *this),
+    requestorId(id)
+{
+}
+
+PacketPtr
+TableWalker::Port::createPacket(
+    Addr desc_addr, int size,
+    uint8_t *data, Request::Flags flags, Tick delay,
+    Event *event)
+{
+    RequestPtr req = std::make_shared<Request>(
+        desc_addr, size, flags, requestorId);
+    req->taskId(ContextSwitchTaskId::DMA);
+
+    PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
+    pkt->dataStatic(data);
+
+    auto state = new TableWalkerState;
+    state->event = event;
+    state->delay = delay;
+
+    pkt->senderState = state;
+    return pkt;
+}
+
+void
+TableWalker::Port::sendFunctionalReq(
+    Addr desc_addr, int size,
+    uint8_t *data, Request::Flags flags)
+{
+    auto pkt = createPacket(desc_addr, size, data, flags, 0, nullptr);
+
+    sendFunctional(pkt);
+
+    handleRespPacket(pkt);
+}
+
+void
+TableWalker::Port::sendAtomicReq(
+    Addr desc_addr, int size,
+    uint8_t *data, Request::Flags flags, Tick delay)
+{
+    auto pkt = createPacket(desc_addr, size, data, flags, delay, nullptr);
+
+    Tick lat = sendAtomic(pkt);
+
+    handleRespPacket(pkt, lat);
+}
+
+void
+TableWalker::Port::sendTimingReq(
+    Addr desc_addr, int size,
+    uint8_t *data, Request::Flags flags, Tick delay,
+    Event *event)
+{
+    auto pkt = createPacket(desc_addr, size, data, flags, delay, event);
+
+    schedTimingReq(pkt, curTick());
+}
+
+bool
+TableWalker::Port::recvTimingResp(PacketPtr pkt)
+{
+    // We shouldn't ever get a cacheable block in Modified state.
+    assert(pkt->req->isUncacheable() ||
+           !(pkt->cacheResponding() && !pkt->hasSharers()));
+
+    handleRespPacket(pkt);
+
+    return true;
+}
+
+void
+TableWalker::Port::handleRespPacket(PacketPtr pkt, Tick delay)
+{
+    // Should always see a response with a sender state.
+    assert(pkt->isResponse());
+
+    // Get the DMA sender state.
+    auto *state = dynamic_cast<TableWalkerState*>(pkt->senderState);
+    assert(state);
+
+    handleResp(state, pkt->getAddr(), pkt->req->getSize(), delay);
+
+    delete pkt;
+}
+
+void
+TableWalker::Port::handleResp(TableWalkerState *state, Addr addr,
+                              Addr size, Tick delay)
+{
+    if (state->event) {
+        owner.schedule(state->event, curTick() + delay);
+    }
+    delete state;
 }
 
 void
@@ -2158,8 +2259,9 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
         }
     } else {
         if (isTiming) {
-            port->dmaAction(MemCmd::ReadReq, descAddr, numBytes, event, data,
-                           currState->tc->getCpuPtr()->clockPeriod(),flags);
+            port->sendTimingReq(descAddr, numBytes, data, flags,
+                currState->tc->getCpuPtr()->clockPeriod(), event);
+
             if (queueIndex >= 0) {
                 DPRINTF(PageTableWalker, "Adding to walker fifo: "
                         "queue size before adding: %d\n",
@@ -2168,19 +2270,13 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
                 currState = NULL;
             }
         } else if (!currState->functional) {
-            port->dmaAction(MemCmd::ReadReq, descAddr, numBytes, NULL, data,
-                           currState->tc->getCpuPtr()->clockPeriod(), flags);
+            port->sendAtomicReq(descAddr, numBytes, data, flags,
+                currState->tc->getCpuPtr()->clockPeriod());
+
             (this->*doDescriptor)();
         } else {
-            RequestPtr req = std::make_shared<Request>(
-                descAddr, numBytes, flags, requestorId);
-
-            req->taskId(ContextSwitchTaskId::DMA);
-            PacketPtr  pkt = new Packet(req, MemCmd::ReadReq);
-            pkt->dataStatic(data);
-            port->sendFunctional(pkt);
+            port->sendFunctionalReq(descAddr, numBytes, data, flags);
             (this->*doDescriptor)();
-            delete pkt;
         }
     }
     return (isTiming);
