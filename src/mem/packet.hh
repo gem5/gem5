@@ -49,6 +49,7 @@
 
 #include <bitset>
 #include <cassert>
+#include <initializer_list>
 #include <list>
 
 #include "base/addr_range.hh"
@@ -167,6 +168,15 @@ class MemCmd
         NUM_COMMAND_ATTRIBUTES
     };
 
+    static constexpr unsigned long long
+    buildAttributes(std::initializer_list<Attribute> attrs)
+    {
+        unsigned long long ret = 0;
+        for (const auto &attr: attrs)
+            ret |= (1ULL << attr);
+        return ret;
+    }
+
     /**
      * Structure that defines attributes and other data associated
      * with a Command.
@@ -180,6 +190,11 @@ class MemCmd
         const Command response;
         /// String representation (for printing)
         const std::string str;
+
+        CommandInfo(std::initializer_list<Attribute> attrs,
+                Command _response, const std::string &_str) :
+            attributes(buildAttributes(attrs)), response(_response), str(_str)
+        {}
     };
 
     /// Array to map Command enum to associated info.

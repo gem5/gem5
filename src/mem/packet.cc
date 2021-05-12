@@ -58,34 +58,24 @@
 #include "base/trace.hh"
 #include "mem/packet_access.hh"
 
-// The one downside to bitsets is that static initializers can get ugly.
-#define SET1(a1)                     (1 << (a1))
-#define SET2(a1, a2)                 (SET1(a1) | SET1(a2))
-#define SET3(a1, a2, a3)             (SET2(a1, a2) | SET1(a3))
-#define SET4(a1, a2, a3, a4)         (SET3(a1, a2, a3) | SET1(a4))
-#define SET5(a1, a2, a3, a4, a5)     (SET4(a1, a2, a3, a4) | SET1(a5))
-#define SET6(a1, a2, a3, a4, a5, a6) (SET5(a1, a2, a3, a4, a5) | SET1(a6))
-#define SET7(a1, a2, a3, a4, a5, a6, a7) (SET6(a1, a2, a3, a4, a5, a6) | \
-                                          SET1(a7))
-
 const MemCmd::CommandInfo
 MemCmd::commandInfo[] =
 {
     /* InvalidCmd */
-    { 0, InvalidCmd, "InvalidCmd" },
+    { {}, InvalidCmd, "InvalidCmd" },
     /* ReadReq - Read issued by a non-caching agent such as a CPU or
      * device, with no restrictions on alignment. */
-    { SET3(IsRead, IsRequest, NeedsResponse), ReadResp, "ReadReq" },
+    { {IsRead, IsRequest, NeedsResponse}, ReadResp, "ReadReq" },
     /* ReadResp */
-    { SET3(IsRead, IsResponse, HasData), InvalidCmd, "ReadResp" },
+    { {IsRead, IsResponse, HasData}, InvalidCmd, "ReadResp" },
     /* ReadRespWithInvalidate */
-    { SET4(IsRead, IsResponse, HasData, IsInvalidate),
+    { {IsRead, IsResponse, HasData, IsInvalidate},
             InvalidCmd, "ReadRespWithInvalidate" },
     /* WriteReq */
-    { SET5(IsWrite, NeedsWritable, IsRequest, NeedsResponse, HasData),
+    { {IsWrite, NeedsWritable, IsRequest, NeedsResponse, HasData},
             WriteResp, "WriteReq" },
     /* WriteResp */
-    { SET2(IsWrite, IsResponse), InvalidCmd, "WriteResp" },
+    { {IsWrite, IsResponse}, InvalidCmd, "WriteResp" },
     /* WriteCompleteResp - The WriteCompleteResp command is needed
      * because in the GPU memory model we use a WriteResp to indicate
      * that a write has reached the cache controller so we can free
@@ -93,148 +83,139 @@ MemCmd::commandInfo[] =
      * completes we send a WriteCompleteResp to the CU so its wait
      * counters can be updated. Wait counters in the CU is how memory
      * dependences are handled in the GPU ISA. */
-    { SET2(IsWrite, IsResponse), InvalidCmd, "WriteCompleteResp" },
+    { {IsWrite, IsResponse}, InvalidCmd, "WriteCompleteResp" },
     /* WritebackDirty */
-    { SET5(IsWrite, IsRequest, IsEviction, HasData, FromCache),
+    { {IsWrite, IsRequest, IsEviction, HasData, FromCache},
             InvalidCmd, "WritebackDirty" },
     /* WritebackClean - This allows the upstream cache to writeback a
      * line to the downstream cache without it being considered
      * dirty. */
-    { SET5(IsWrite, IsRequest, IsEviction, HasData, FromCache),
+    { {IsWrite, IsRequest, IsEviction, HasData, FromCache},
             InvalidCmd, "WritebackClean" },
     /* WriteClean - This allows a cache to write a dirty block to a memory
        below without evicting its copy. */
-    { SET4(IsWrite, IsRequest, HasData, FromCache), InvalidCmd, "WriteClean" },
+    { {IsWrite, IsRequest, HasData, FromCache}, InvalidCmd, "WriteClean" },
     /* CleanEvict */
-    { SET3(IsRequest, IsEviction, FromCache), InvalidCmd, "CleanEvict" },
+    { {IsRequest, IsEviction, FromCache}, InvalidCmd, "CleanEvict" },
     /* SoftPFReq */
-    { SET4(IsRead, IsRequest, IsSWPrefetch, NeedsResponse),
+    { {IsRead, IsRequest, IsSWPrefetch, NeedsResponse},
             SoftPFResp, "SoftPFReq" },
     /* SoftPFExReq */
-    { SET6(IsRead, NeedsWritable, IsInvalidate, IsRequest,
-           IsSWPrefetch, NeedsResponse), SoftPFResp, "SoftPFExReq" },
+    { {IsRead, NeedsWritable, IsInvalidate, IsRequest,
+           IsSWPrefetch, NeedsResponse}, SoftPFResp, "SoftPFExReq" },
     /* HardPFReq */
-    { SET5(IsRead, IsRequest, IsHWPrefetch, NeedsResponse, FromCache),
+    { {IsRead, IsRequest, IsHWPrefetch, NeedsResponse, FromCache},
             HardPFResp, "HardPFReq" },
     /* SoftPFResp */
-    { SET4(IsRead, IsResponse, IsSWPrefetch, HasData),
-            InvalidCmd, "SoftPFResp" },
+    { {IsRead, IsResponse, IsSWPrefetch, HasData}, InvalidCmd, "SoftPFResp" },
     /* HardPFResp */
-    { SET4(IsRead, IsResponse, IsHWPrefetch, HasData),
-            InvalidCmd, "HardPFResp" },
+    { {IsRead, IsResponse, IsHWPrefetch, HasData}, InvalidCmd, "HardPFResp" },
     /* WriteLineReq */
-    { SET5(IsWrite, NeedsWritable, IsRequest, NeedsResponse, HasData),
+    { {IsWrite, NeedsWritable, IsRequest, NeedsResponse, HasData},
             WriteResp, "WriteLineReq" },
     /* UpgradeReq */
-    { SET6(IsInvalidate, NeedsWritable, IsUpgrade, IsRequest, NeedsResponse,
-            FromCache),
-            UpgradeResp, "UpgradeReq" },
+    { {IsInvalidate, NeedsWritable, IsUpgrade, IsRequest, NeedsResponse,
+            FromCache}, UpgradeResp, "UpgradeReq" },
     /* SCUpgradeReq: response could be UpgradeResp or UpgradeFailResp */
-    { SET7(IsInvalidate, NeedsWritable, IsUpgrade, IsLlsc,
-           IsRequest, NeedsResponse, FromCache),
+    { {IsInvalidate, NeedsWritable, IsUpgrade, IsLlsc,
+           IsRequest, NeedsResponse, FromCache},
             UpgradeResp, "SCUpgradeReq" },
     /* UpgradeResp */
-    { SET2(IsUpgrade, IsResponse),
-            InvalidCmd, "UpgradeResp" },
+    { {IsUpgrade, IsResponse}, InvalidCmd, "UpgradeResp" },
     /* SCUpgradeFailReq: generates UpgradeFailResp but still gets the data */
-    { SET7(IsRead, NeedsWritable, IsInvalidate,
-           IsLlsc, IsRequest, NeedsResponse, FromCache),
+    { {IsRead, NeedsWritable, IsInvalidate,
+           IsLlsc, IsRequest, NeedsResponse, FromCache},
             UpgradeFailResp, "SCUpgradeFailReq" },
     /* UpgradeFailResp - Behaves like a ReadExReq, but notifies an SC
      * that it has failed, acquires line as Dirty*/
-    { SET3(IsRead, IsResponse, HasData),
-            InvalidCmd, "UpgradeFailResp" },
+    { {IsRead, IsResponse, HasData}, InvalidCmd, "UpgradeFailResp" },
     /* ReadExReq - Read issues by a cache, always cache-line aligned,
      * and the response is guaranteed to be writeable (exclusive or
-     * even modified) */
-    { SET6(IsRead, NeedsWritable, IsInvalidate, IsRequest, NeedsResponse,
-            FromCache),
-            ReadExResp, "ReadExReq" },
+     * even modified} */
+    { {IsRead, NeedsWritable, IsInvalidate, IsRequest, NeedsResponse,
+          FromCache}, ReadExResp, "ReadExReq" },
     /* ReadExResp - Response matching a read exclusive, as we check
      * the need for exclusive also on responses */
-    { SET3(IsRead, IsResponse, HasData),
-            InvalidCmd, "ReadExResp" },
+    { {IsRead, IsResponse, HasData}, InvalidCmd, "ReadExResp" },
     /* ReadCleanReq - Read issued by a cache, always cache-line
      * aligned, and the response is guaranteed to not contain dirty data
-     * (exclusive or shared).*/
-    { SET4(IsRead, IsRequest, NeedsResponse, FromCache),
+     * (exclusive or shared}.*/
+    { {IsRead, IsRequest, NeedsResponse, FromCache},
             ReadResp, "ReadCleanReq" },
     /* ReadSharedReq - Read issued by a cache, always cache-line
      * aligned, response is shared, possibly exclusive, owned or even
      * modified. */
-    { SET4(IsRead, IsRequest, NeedsResponse, FromCache),
+    { {IsRead, IsRequest, NeedsResponse, FromCache},
             ReadResp, "ReadSharedReq" },
     /* LoadLockedReq: note that we use plain ReadResp as response, so that
      *                we can also use ReadRespWithInvalidate when needed */
-    { SET4(IsRead, IsLlsc, IsRequest, NeedsResponse),
+    { {IsRead, IsLlsc, IsRequest, NeedsResponse},
             ReadResp, "LoadLockedReq" },
     /* StoreCondReq */
-    { SET6(IsWrite, NeedsWritable, IsLlsc,
-           IsRequest, NeedsResponse, HasData),
+    { {IsWrite, NeedsWritable, IsLlsc,
+           IsRequest, NeedsResponse, HasData},
             StoreCondResp, "StoreCondReq" },
     /* StoreCondFailReq: generates failing StoreCondResp */
-    { SET6(IsWrite, NeedsWritable, IsLlsc,
-           IsRequest, NeedsResponse, HasData),
+    { {IsWrite, NeedsWritable, IsLlsc, IsRequest, NeedsResponse, HasData},
             StoreCondResp, "StoreCondFailReq" },
     /* StoreCondResp */
-    { SET3(IsWrite, IsLlsc, IsResponse),
+    { {IsWrite, IsLlsc, IsResponse},
             InvalidCmd, "StoreCondResp" },
     /* SwapReq -- for Swap ldstub type operations */
-    { SET6(IsRead, IsWrite, NeedsWritable, IsRequest, HasData, NeedsResponse),
+    { {IsRead, IsWrite, NeedsWritable, IsRequest, HasData, NeedsResponse},
         SwapResp, "SwapReq" },
     /* SwapResp -- for Swap ldstub type operations */
-    { SET4(IsRead, IsWrite, IsResponse, HasData),
-            InvalidCmd, "SwapResp" },
-    { 0, InvalidCmd, "Deprecated_MessageReq" },
-    { 0, InvalidCmd, "Deprecated_MessageResp" },
+    { {IsRead, IsWrite, IsResponse, HasData}, InvalidCmd, "SwapResp" },
+    { {}, InvalidCmd, "Deprecated_MessageReq" },
+    { {}, InvalidCmd, "Deprecated_MessageResp" },
     /* MemFenceReq -- for synchronization requests */
-    {SET2(IsRequest, NeedsResponse), MemFenceResp, "MemFenceReq"},
+    {{IsRequest, NeedsResponse}, MemFenceResp, "MemFenceReq"},
     /* MemSyncReq */
-    {SET2(IsRequest, NeedsResponse), MemSyncResp, "MemSyncReq"},
+    {{IsRequest, NeedsResponse}, MemSyncResp, "MemSyncReq"},
     /* MemSyncResp */
-    {SET1(IsResponse), InvalidCmd, "MemSyncResp"},
+    {{IsResponse}, InvalidCmd, "MemSyncResp"},
     /* MemFenceResp -- for synchronization responses */
-    {SET1(IsResponse), InvalidCmd, "MemFenceResp"},
+    {{IsResponse}, InvalidCmd, "MemFenceResp"},
     /* Cache Clean Request -- Update with the latest data all existing
        copies of the block down to the point indicated by the
        request */
-    { SET4(IsRequest, IsClean, NeedsResponse, FromCache),
+    { {IsRequest, IsClean, NeedsResponse, FromCache},
       CleanSharedResp, "CleanSharedReq" },
     /* Cache Clean Response - Indicates that all caches up to the
        specified point of reference have a up-to-date copy of the
        cache block or no copy at all */
-    { SET2(IsResponse, IsClean), InvalidCmd, "CleanSharedResp" },
+    { {IsResponse, IsClean}, InvalidCmd, "CleanSharedResp" },
     /* Cache Clean and Invalidate Request -- Invalidate all existing
        copies down to the point indicated by the request */
-    { SET5(IsRequest, IsInvalidate, IsClean, NeedsResponse, FromCache),
+    { {IsRequest, IsInvalidate, IsClean, NeedsResponse, FromCache},
       CleanInvalidResp, "CleanInvalidReq" },
      /* Cache Clean and Invalidate Respose -- Indicates that no cache
         above the specified point holds the block and that the block
         was written to a memory below the specified point. */
-    { SET3(IsResponse, IsInvalidate, IsClean),
+    { {IsResponse, IsInvalidate, IsClean},
       InvalidCmd, "CleanInvalidResp" },
     /* InvalidDestError  -- packet dest field invalid */
-    { SET2(IsResponse, IsError), InvalidCmd, "InvalidDestError" },
+    { {IsResponse, IsError}, InvalidCmd, "InvalidDestError" },
     /* BadAddressError   -- memory address invalid */
-    { SET2(IsResponse, IsError), InvalidCmd, "BadAddressError" },
+    { {IsResponse, IsError}, InvalidCmd, "BadAddressError" },
     /* FunctionalReadError */
-    { SET3(IsRead, IsResponse, IsError), InvalidCmd, "FunctionalReadError" },
+    { {IsRead, IsResponse, IsError}, InvalidCmd, "FunctionalReadError" },
     /* FunctionalWriteError */
-    { SET3(IsWrite, IsResponse, IsError), InvalidCmd, "FunctionalWriteError" },
+    { {IsWrite, IsResponse, IsError}, InvalidCmd, "FunctionalWriteError" },
     /* PrintReq */
-    { SET2(IsRequest, IsPrint), InvalidCmd, "PrintReq" },
+    { {IsRequest, IsPrint}, InvalidCmd, "PrintReq" },
     /* Flush Request */
-    { SET3(IsRequest, IsFlush, NeedsWritable), InvalidCmd, "FlushReq" },
+    { {IsRequest, IsFlush, NeedsWritable}, InvalidCmd, "FlushReq" },
     /* Invalidation Request */
-    { SET5(IsInvalidate, IsRequest, NeedsWritable, NeedsResponse, FromCache),
+    { {IsInvalidate, IsRequest, NeedsWritable, NeedsResponse, FromCache},
       InvalidateResp, "InvalidateReq" },
     /* Invalidation Response */
-    { SET2(IsInvalidate, IsResponse),
+    { {IsInvalidate, IsResponse},
       InvalidCmd, "InvalidateResp" },
       // hardware transactional memory
-    { SET3(IsRead, IsRequest, NeedsResponse), HTMReqResp, "HTMReq" },
-    { SET2(IsRead, IsResponse), InvalidCmd, "HTMReqResp" },
-    { SET2(IsRead, IsRequest), InvalidCmd, "HTMAbort" },
+    { {IsRead, IsRequest, NeedsResponse}, HTMReqResp, "HTMReq" },
+    { {IsRead, IsResponse}, InvalidCmd, "HTMReqResp" },
+    { {IsRead, IsRequest}, InvalidCmd, "HTMAbort" },
 };
 
 AddrRange
