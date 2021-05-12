@@ -42,19 +42,9 @@
 #define _GLIBCPP_USE_C99 1
 #endif
 
-#if defined(__sun)
-#include <cmath>
-
-#endif
-
-#include <cassert>
-
-#ifdef __SUNPRO_CC
-#include <cmath>
-
-#endif
 #include "base/stats/text.hh"
 
+#include <cassert>
 #include <cmath>
 #include <fstream>
 #include <iostream>
