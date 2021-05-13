@@ -960,10 +960,10 @@ namespace X86ISA
 
             Process *p = sender_state->tc->getProcessPtr();
             Addr vaddr = pkt->req->getVaddr();
-    #ifndef NDEBUG
+
             Addr alignedVaddr = p->pTable->pageAlign(vaddr);
             assert(alignedVaddr == virtPageAddr);
-    #endif
+
             const EmulationPageTable::Entry *pte = p->pTable->lookup(vaddr);
             if (!pte && sender_state->tlbMode != BaseTLB::Execute &&
                     p->fixupFault(vaddr)) {
@@ -1164,10 +1164,9 @@ namespace X86ISA
                 Process *p = tc->getProcessPtr();
 
                 Addr vaddr = pkt->req->getVaddr();
-    #ifndef NDEBUG
+
                 Addr alignedVaddr = p->pTable->pageAlign(vaddr);
                 assert(alignedVaddr == virt_page_addr);
-    #endif
 
                 const EmulationPageTable::Entry *pte =
                         p->pTable->lookup(vaddr);
