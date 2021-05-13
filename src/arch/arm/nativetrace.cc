@@ -42,6 +42,7 @@
 
 #include "arch/arm/regs/cc.hh"
 #include "arch/arm/regs/misc.hh"
+#include "base/compiler.hh"
 #include "cpu/thread_context.hh"
 #include "debug/ExecRegDelta.hh"
 #include "params/ArmNativeTrace.hh"
@@ -51,7 +52,7 @@ using namespace ArmISA;
 
 namespace Trace {
 
-static const char *regNames[] = {
+GEM5_VAR_USED static const char *regNames[] = {
     "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
     "r8", "r9", "r10", "fp", "r12", "sp", "lr", "pc",
     "cpsr", "f0", "f1", "f2", "f3", "f4", "f5", "f6",
