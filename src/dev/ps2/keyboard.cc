@@ -84,7 +84,7 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
       case ReadID:
         DPRINTF(PS2, "Got keyboard read ID command.\n");
         sendAck();
-        send(Keyboard::ID);
+        send(keyboard::ID);
         return true;
       case Enable:
         DPRINTF(PS2, "Enabling the keyboard.\n");
@@ -110,7 +110,7 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
       case Resend:
         panic("Keyboard resend unimplemented.\n");
 
-      case Keyboard::LEDWrite:
+      case keyboard::LEDWrite:
         if (data.size() == 1) {
             DPRINTF(PS2, "Got LED write command.\n");
             sendAck();
@@ -124,11 +124,11 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
             sendAck();
             return true;
         }
-      case Keyboard::DiagnosticEcho:
+      case keyboard::DiagnosticEcho:
         panic("Keyboard diagnostic echo unimplemented.\n");
-      case Keyboard::AlternateScanCodes:
+      case keyboard::AlternateScanCodes:
         panic("Accessing alternate scan codes unimplemented.\n");
-      case Keyboard::TypematicInfo:
+      case keyboard::TypematicInfo:
         if (data.size() == 1) {
             DPRINTF(PS2, "Setting typematic info.\n");
             sendAck();
@@ -138,20 +138,20 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
             sendAck();
             return true;
         }
-      case Keyboard::AllKeysToTypematic:
+      case keyboard::AllKeysToTypematic:
         panic("Setting all keys to typemantic unimplemented.\n");
-      case Keyboard::AllKeysToMakeRelease:
+      case keyboard::AllKeysToMakeRelease:
         panic("Setting all keys to make/release unimplemented.\n");
-      case Keyboard::AllKeysToMake:
+      case keyboard::AllKeysToMake:
         panic("Setting all keys to make unimplemented.\n");
-      case Keyboard::AllKeysToTypematicMakeRelease:
+      case keyboard::AllKeysToTypematicMakeRelease:
         panic("Setting all keys to "
                 "typematic/make/release unimplemented.\n");
-      case Keyboard::KeyToTypematic:
+      case keyboard::KeyToTypematic:
         panic("Setting a key to typematic unimplemented.\n");
-      case Keyboard::KeyToMakeRelease:
+      case keyboard::KeyToMakeRelease:
         panic("Setting a key to make/release unimplemented.\n");
-      case Keyboard::KeyToMakeOnly:
+      case keyboard::KeyToMakeOnly:
         panic("Setting key to make only unimplemented.\n");
       default:
         panic("Unknown keyboard command %#02x.\n", data[0]);

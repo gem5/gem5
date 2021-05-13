@@ -67,7 +67,9 @@ enum
     Reset              = 0xFF,
 };
 
-namespace Keyboard {
+GEM5_DEPRECATED_NAMESPACE(Keyboard, keyboard);
+namespace keyboard
+{
 
 enum
 {
@@ -86,7 +88,7 @@ enum
 
 extern const std::vector<uint8_t> ID;
 
-};
+} // namespace keyboard
 
 namespace Mouse {
 

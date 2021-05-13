@@ -46,7 +46,7 @@ GEM5_DEPRECATED_NAMESPACE(Ps2, ps2);
 namespace ps2
 {
 
-const std::vector<uint8_t> Keyboard::ID{0xAB, 0x83};
+const std::vector<uint8_t> keyboard::ID{0xAB, 0x83};
 const std::vector<uint8_t> Mouse::ID{0x00};
 
 /** Table to convert simple key symbols (0x00XX) into ps2 bytes. Lower byte
