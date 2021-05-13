@@ -35,6 +35,7 @@
 
 #include <memory>
 
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"

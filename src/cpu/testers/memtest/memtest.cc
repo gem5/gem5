@@ -40,6 +40,7 @@
 
 #include "cpu/testers/memtest/memtest.hh"
 
+#include "base/compiler.hh"
 #include "base/random.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"

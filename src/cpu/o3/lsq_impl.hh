@@ -46,6 +46,7 @@
 #include <list>
 #include <string>
 
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "cpu/o3/cpu.hh"
 #include "cpu/o3/iew.hh"

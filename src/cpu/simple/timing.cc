@@ -42,6 +42,7 @@
 #include "cpu/simple/timing.hh"
 
 #include "arch/locked_mem.hh"
+#include "base/compiler.hh"
 #include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "debug/Config.hh"

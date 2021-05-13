@@ -37,6 +37,7 @@
 
 #include "base/stats/group.hh"
 
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/stats/info.hh"
 #include "base/trace.hh"

@@ -42,6 +42,7 @@
 #include <sstream>
 
 #include "base/cast.hh"
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/minor/pipeline.hh"

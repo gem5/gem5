@@ -32,6 +32,7 @@
 #include <limits>
 
 #include "base/bitfield.hh"
+#include "base/compiler.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "debug/CacheComp.hh"

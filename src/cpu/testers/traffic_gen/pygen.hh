@@ -40,6 +40,7 @@
 
 #include "pybind11/pybind11.h"
 
+#include "base/compiler.hh"
 #include "cpu/testers/traffic_gen/base.hh"
 #include "cpu/testers/traffic_gen/base_gen.hh"
 

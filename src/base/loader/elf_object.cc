@@ -50,6 +50,7 @@
 #include <string>
 
 #include "base/bitfield.hh"
+#include "base/compiler.hh"
 #include "base/loader/symtab.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"

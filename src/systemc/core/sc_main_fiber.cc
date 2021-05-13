@@ -30,6 +30,7 @@
 #include <cstring>
 #include <string>
 
+#include "base/compiler.hh"
 #include "systemc/core/kernel.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/messages.hh"

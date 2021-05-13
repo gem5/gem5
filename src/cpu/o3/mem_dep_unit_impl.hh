@@ -45,6 +45,7 @@
 #include <memory>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/debug.hh"
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/limits.hh"

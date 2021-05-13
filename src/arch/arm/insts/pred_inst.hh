@@ -42,6 +42,7 @@
 #define __ARCH_ARM_INSTS_PREDINST_HH__
 
 #include "arch/arm/insts/static_inst.hh"
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 

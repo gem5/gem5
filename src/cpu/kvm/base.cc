@@ -46,6 +46,7 @@
 #include <csignal>
 #include <ostream>
 
+#include "base/compiler.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/Drain.hh"
 #include "debug/Kvm.hh"

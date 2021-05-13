@@ -47,6 +47,7 @@
 #include <utility>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/types.hh"
 #include "dev/net/etherpkt.hh"
 #include "dnet/os.h"

@@ -42,6 +42,7 @@
 
 #include <algorithm>
 
+#include "base/compiler.hh"
 #include "base/intmath.hh"
 #include "debug/GIC.hh"
 #include "dev/arm/gic_v3.hh"

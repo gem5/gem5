@@ -36,6 +36,7 @@
 #include "arch/sparc/sparc_traits.hh"
 #include "arch/sparc/types.hh"
 #include "base/bitfield.hh"
+#include "base/compiler.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"

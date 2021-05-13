@@ -29,6 +29,10 @@
 #ifndef __ARCH_MIPS_LINUX_ALIGNED_HH__
 #define __ARCH_MIPS_LINUX_ALIGNED_HH__
 
+#include <cstdint>
+
+#include "base/compiler.hh"
+#include "base/types.hh"
 
 typedef GEM5_ALIGNED(8) uint64_t uint64_ta;
 typedef GEM5_ALIGNED(8) int64_t int64_ta;

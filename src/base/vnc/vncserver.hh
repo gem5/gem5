@@ -44,10 +44,11 @@
 
 #include <iostream>
 
-#include "base/vnc/vncinput.hh"
 #include "base/circlebuf.hh"
+#include "base/compiler.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"
+#include "base/vnc/vncinput.hh"
 #include "params/VncServer.hh"
 #include "sim/sim_object.hh"
 

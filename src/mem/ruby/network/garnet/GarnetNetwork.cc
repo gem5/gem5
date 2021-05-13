@@ -34,6 +34,7 @@
 #include <cassert>
 
 #include "base/cast.hh"
+#include "base/compiler.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/MessageBuffer.hh"

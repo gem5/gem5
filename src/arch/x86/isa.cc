@@ -33,6 +33,7 @@
 #include "arch/x86/regs/ccr.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"
+#include "base/compiler.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "params/X86ISA.hh"

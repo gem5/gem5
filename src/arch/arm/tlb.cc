@@ -55,6 +55,7 @@
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlbi_op.hh"
 #include "arch/arm/utility.hh"
+#include "base/compiler.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"

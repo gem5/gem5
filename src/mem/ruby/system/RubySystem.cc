@@ -46,6 +46,7 @@
 #include <cstdio>
 #include <list>
 
+#include "base/compiler.hh"
 #include "base/intmath.hh"
 #include "base/statistics.hh"
 #include "debug/RubyCacheTrace.hh"

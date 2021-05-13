@@ -42,6 +42,7 @@
 #include <memory>
 #include <string>
 
+#include "base/compiler.hh"
 #include "base/pollevent.hh"
 #include "dev/virtio/base.hh"
 

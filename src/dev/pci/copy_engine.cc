@@ -46,6 +46,7 @@
 
 #include <algorithm>
 
+#include "base/compiler.hh"
 #include "base/trace.hh"
 #include "debug/DMACopyEngine.hh"
 #include "debug/Drain.hh"

@@ -74,4 +74,4 @@ struct Argument<ABI, Arg,
 
 } // namespace GuestABI
 
-#endif // __ARCH_ARM_GEM5_OP_HH__
+#endif // __ARCH_ARM_REG_ABI_HH__

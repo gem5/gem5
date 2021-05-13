@@ -40,6 +40,7 @@
 
 #include "dev/arm/gic_v2.hh"
 
+#include "base/compiler.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "debug/Checkpoint.hh"

@@ -45,6 +45,7 @@
 
 #include "mem/coherent_xbar.hh"
 
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/AddrRanges.hh"

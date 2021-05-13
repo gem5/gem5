@@ -40,6 +40,7 @@
 #include <cctype>
 #include <iomanip>
 
+#include "base/compiler.hh"
 #include "base/trace.hh"
 #include "debug/ExternalPort.hh"
 

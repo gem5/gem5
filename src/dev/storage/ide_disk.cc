@@ -50,6 +50,7 @@
 #include <string>
 
 #include "base/chunk_generator.hh"
+#include "base/compiler.hh"
 #include "base/cprintf.hh" // csprintf
 #include "base/trace.hh"
 #include "debug/IdeDisk.hh"

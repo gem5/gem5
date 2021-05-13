@@ -37,6 +37,7 @@
 
 #include "cpu/trace/trace_cpu.hh"
 
+#include "base/compiler.hh"
 #include "sim/sim_exit.hh"
 
 // Declare and initialize the static counter for number of trace CPUs.

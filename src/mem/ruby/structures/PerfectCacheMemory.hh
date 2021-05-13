@@ -43,6 +43,7 @@
 
 #include <unordered_map>
 
+#include "base/compiler.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/protocol/AccessPermission.hh"
 

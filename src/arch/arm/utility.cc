@@ -46,6 +46,7 @@
 #include "arch/arm/regs/cc.hh"
 #include "arch/arm/regs/int.hh"
 #include "arch/arm/system.hh"
+#include "base/compiler.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/thread_context.hh"

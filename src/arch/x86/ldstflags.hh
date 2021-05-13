@@ -39,6 +39,7 @@
 #define __ARCH_X86_LDSTFLAGS_HH__
 
 #include "base/bitfield.hh"
+#include "base/compiler.hh"
 #include "mem/request.hh"
 
 /**

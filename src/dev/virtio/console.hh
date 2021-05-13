@@ -38,6 +38,7 @@
 #ifndef __DEV_VIRTIO_CONSOLE_HH__
 #define __DEV_VIRTIO_CONSOLE_HH__
 
+#include "base/compiler.hh"
 #include "dev/serial/serial.hh"
 #include "dev/virtio/base.hh"
 

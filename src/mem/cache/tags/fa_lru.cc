@@ -49,6 +49,7 @@
 #include <cassert>
 #include <sstream>
 
+#include "base/compiler.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "mem/cache/base.hh"

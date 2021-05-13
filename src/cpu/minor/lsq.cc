@@ -41,6 +41,7 @@
 #include <sstream>
 
 #include "arch/locked_mem.hh"
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/minor/exec_context.hh"

@@ -49,6 +49,7 @@
 #include <cstdint>
 #include <unordered_set>
 
+#include "base/compiler.hh"
 #include "base/types.hh"
 #include "mem/cache/base.hh"
 #include "mem/packet.hh"

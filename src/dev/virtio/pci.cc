@@ -38,6 +38,7 @@
 #include "dev/virtio/pci.hh"
 
 #include "base/bitfield.hh"
+#include "base/compiler.hh"
 #include "debug/VIOIface.hh"
 #include "mem/packet_access.hh"
 #include "params/PciVirtIO.hh"

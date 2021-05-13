@@ -49,6 +49,7 @@
 #ifndef __MEM_CACHE_NONCOHERENT_CACHE_HH__
 #define __MEM_CACHE_NONCOHERENT_CACHE_HH__
 
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
 #include "mem/cache/base.hh"

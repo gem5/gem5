@@ -39,6 +39,7 @@
 #include "arch/x86/interrupts.hh"
 #include "arch/x86/regs/msr.hh"
 #include "arch/x86/utility.hh"
+#include "base/compiler.hh"
 #include "cpu/kvm/base.hh"
 #include "debug/Drain.hh"
 #include "debug/Kvm.hh"

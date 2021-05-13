@@ -28,6 +28,7 @@
 
 #include "learning_gem5/part2/simple_cache.hh"
 
+#include "base/compiler.hh"
 #include "base/random.hh"
 #include "debug/SimpleCache.hh"
 #include "sim/system.hh"

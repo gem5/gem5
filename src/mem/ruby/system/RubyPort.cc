@@ -41,6 +41,7 @@
 
 #include "mem/ruby/system/RubyPort.hh"
 
+#include "base/compiler.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/Config.hh"
 #include "debug/Drain.hh"

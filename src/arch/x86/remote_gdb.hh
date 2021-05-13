@@ -43,6 +43,7 @@
 #include <algorithm>
 
 #include "arch/x86/types.hh"
+#include "base/compiler.hh"
 #include "base/remote_gdb.hh"
 
 class System;

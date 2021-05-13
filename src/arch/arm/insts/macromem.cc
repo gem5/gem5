@@ -44,6 +44,7 @@
 
 #include "arch/arm/generated/decoder.hh"
 #include "arch/arm/insts/neon64_mem.hh"
+#include "base/compiler.hh"
 
 using namespace ArmISAInst;
 

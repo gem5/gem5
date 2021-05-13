@@ -43,6 +43,7 @@
 #include <vector>
 
 #include "base/bitunion.hh"
+#include "base/compiler.hh"
 #include "base/types.hh"
 #include "dev/virtio/virtio_ring.h"
 #include "mem/port_proxy.hh"

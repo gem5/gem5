@@ -33,6 +33,7 @@
 
 #include "mem/ruby/system/GPUCoalescer.hh"
 
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/str.hh"
 #include "config/the_isa.hh"

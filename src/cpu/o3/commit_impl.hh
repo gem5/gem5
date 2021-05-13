@@ -45,6 +45,7 @@
 #include <set>
 #include <string>
 
+#include "base/compiler.hh"
 #include "base/loader/symtab.hh"
 #include "base/logging.hh"
 #include "config/the_isa.hh"

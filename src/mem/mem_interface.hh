@@ -52,6 +52,7 @@
 #include <utility>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/statistics.hh"
 #include "enums/AddrMap.hh"
 #include "enums/PageManage.hh"

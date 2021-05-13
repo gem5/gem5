@@ -45,6 +45,7 @@
 #include <iostream>
 #include <memory>
 
+#include "base/compiler.hh"
 #include "base/imgwriter.hh"
 #include "params/VncInput.hh"
 #include "sim/sim_object.hh"

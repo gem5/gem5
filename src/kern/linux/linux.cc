@@ -31,6 +31,7 @@
 #include <cstdio>
 #include <string>
 
+#include "base/compiler.hh"
 #include "cpu/base.hh"
 #include "debug/SyscallVerbose.hh"
 #include "sim/mem_state.hh"

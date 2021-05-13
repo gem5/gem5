@@ -39,6 +39,7 @@
 #define __ARCH_X86_LINUX_LINUX_HH__
 
 #include "arch/x86/utility.hh"
+#include "base/compiler.hh"
 #include "kern/linux/linux.hh"
 #include "sim/guest_abi.hh"
 #include "sim/syscall_return.hh"

@@ -34,6 +34,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "base/compiler.hh"
 #include "cpu/thread_context.hh"
 #include "mem/port_proxy.hh"
 

@@ -35,6 +35,7 @@
 
 #include <unordered_set>
 
+#include "base/compiler.hh"
 #include "debug/GPUSched.hh"
 #include "debug/GPUVRF.hh"
 #include "gpu-compute/compute_unit.hh"

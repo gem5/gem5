@@ -28,6 +28,7 @@
 
 #include "kern/system_events.hh"
 
+#include "base/compiler.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/PCEvent.hh"

@@ -51,6 +51,7 @@
 #include <string>
 
 #include "base/addr_range.hh"
+#include "base/compiler.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
 #include "base/types.hh"

@@ -41,6 +41,7 @@
 
 #include "mem/ruby/structures/CacheMemory.hh"
 
+#include "base/compiler.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "debug/HtmMem.hh"

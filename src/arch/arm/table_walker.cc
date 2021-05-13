@@ -42,6 +42,7 @@
 #include "arch/arm/stage2_mmu.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
+#include "base/compiler.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Checkpoint.hh"

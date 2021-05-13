@@ -73,6 +73,7 @@
 #include <vector>
 
 #include "base/cast.hh"
+#include "base/compiler.hh"
 #include "base/cprintf.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"

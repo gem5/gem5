@@ -52,6 +52,7 @@
 #include <cstring>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/DistEthernet.hh"
