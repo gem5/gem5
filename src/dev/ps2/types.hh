@@ -90,7 +90,9 @@ extern const std::vector<uint8_t> ID;
 
 } // namespace keyboard
 
-namespace Mouse {
+GEM5_DEPRECATED_NAMESPACE(Mouse, mouse);
+namespace mouse
+{
 
 enum
 {
@@ -107,7 +109,7 @@ enum
 
 extern const std::vector<uint8_t> ID;
 
-};
+} // namespace mouse
 
 /** A bitfield that represents the first byte of a mouse movement packet
  */

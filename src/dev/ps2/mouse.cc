@@ -63,7 +63,7 @@ PS2Mouse::recv(const std::vector<uint8_t> &data)
       case ReadID:
         DPRINTF(PS2, "Mouse ID requested.\n");
         sendAck();
-        send(Mouse::ID);
+        send(mouse::ID);
         return true;
       case Disable:
         DPRINTF(PS2, "Disabling data reporting.\n");
@@ -85,20 +85,20 @@ PS2Mouse::recv(const std::vector<uint8_t> &data)
         status.enabled = 0;
         sendAck();
         send(SelfTestPass);
-        send(Mouse::ID);
+        send(mouse::ID);
         return true;
 
-      case Mouse::Scale1to1:
+      case mouse::Scale1to1:
         DPRINTF(PS2, "Setting mouse scale to 1:1.\n");
         status.twoToOne = 0;
         sendAck();
         return true;
-      case Mouse::Scale2to1:
+      case mouse::Scale2to1:
         DPRINTF(PS2, "Setting mouse scale to 2:1.\n");
         status.twoToOne = 1;
         sendAck();
         return true;
-      case Mouse::SetResolution:
+      case mouse::SetResolution:
         if (data.size() == 1) {
             DPRINTF(PS2, "Setting mouse resolution.\n");
             sendAck();
@@ -109,22 +109,22 @@ PS2Mouse::recv(const std::vector<uint8_t> &data)
             sendAck();
             return true;
         }
-      case Mouse::GetStatus:
+      case mouse::GetStatus:
         DPRINTF(PS2, "Getting mouse status.\n");
         sendAck();
         send((uint8_t *)&(status), 1);
         send(&resolution, sizeof(resolution));
         send(&sampleRate, sizeof(sampleRate));
         return true;
-      case Mouse::ReadData:
+      case mouse::ReadData:
         panic("Reading mouse data unimplemented.\n");
-      case Mouse::ResetWrapMode:
+      case mouse::ResetWrapMode:
         panic("Resetting mouse wrap mode unimplemented.\n");
-      case Mouse::WrapMode:
+      case mouse::WrapMode:
         panic("Setting mouse wrap mode unimplemented.\n");
-      case Mouse::RemoteMode:
+      case mouse::RemoteMode:
         panic("Setting mouse remote mode unimplemented.\n");
-      case Mouse::SampleRate:
+      case mouse::SampleRate:
         if (data.size() == 1) {
             DPRINTF(PS2, "Setting mouse sample rate.\n");
             sendAck();

@@ -93,7 +93,7 @@ TouchKit::recv(const std::vector<uint8_t> &data)
 
       case ReadID:
         sendAck();
-        send(Mouse::ID);
+        send(mouse::ID);
         return true;
 
       case Disable:
@@ -114,17 +114,17 @@ TouchKit::recv(const std::vector<uint8_t> &data)
         sendAck();
         return true;
 
-      case Mouse::Scale1to1:
-      case Mouse::Scale2to1:
+      case mouse::Scale1to1:
+      case mouse::Scale2to1:
         sendAck();
         return true;
 
-      case Mouse::SetResolution:
-      case Mouse::SampleRate:
+      case mouse::SetResolution:
+      case mouse::SampleRate:
         sendAck();
         return data.size() == 2;
 
-      case Mouse::GetStatus:
+      case mouse::GetStatus:
         sendAck();
         send(0);
         send(2); // default resolution

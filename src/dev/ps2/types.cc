@@ -47,7 +47,7 @@ namespace ps2
 {
 
 const std::vector<uint8_t> keyboard::ID{0xAB, 0x83};
-const std::vector<uint8_t> Mouse::ID{0x00};
+const std::vector<uint8_t> mouse::ID{0x00};
 
 /** Table to convert simple key symbols (0x00XX) into ps2 bytes. Lower byte
  * is the scan code to send and upper byte is if a modifier is required to
