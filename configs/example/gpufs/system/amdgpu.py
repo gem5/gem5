@@ -148,3 +148,5 @@ def connectGPU(system, args):
 
     system.pc.south_bridge.gpu.trace_file = args.gpu_mmio_trace
     system.pc.south_bridge.gpu.rom_binary = args.gpu_rom
+    system.pc.south_bridge.gpu.checkpoint_before_mmios = \
+        args.checkpoint_before_mmios

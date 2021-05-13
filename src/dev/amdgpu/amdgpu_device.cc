@@ -40,9 +40,11 @@
 #include "mem/packet_access.hh"
 #include "params/AMDGPUDevice.hh"
 #include "sim/byteswap.hh"
+#include "sim/sim_exit.hh"
 
 AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
-    : PciDevice(p)
+    : PciDevice(p), checkpoint_before_mmios(p.checkpoint_before_mmios),
+      init_interrupt_count(0)
 {
     // Loading the rom binary dumped from hardware.
     std::ifstream romBin;
@@ -100,7 +102,25 @@ AMDGPUDevice::readConfig(PacketPtr pkt)
     DPRINTF(AMDGPUDevice, "Read Config: from offset: %#x size: %#x "
             "data: %#x\n", offset, pkt->getSize(), config.data[offset]);
 
-    return PciDevice::readConfig(pkt);
+    Tick delay = PciDevice::readConfig(pkt);
+
+    // Before sending MMIOs the driver sends three interrupts in a row.
+    // Use this to trigger creating a checkpoint to restore in timing mode.
+    // This is only necessary until we can create a "hole" in the KVM VM
+    // around the VGA ROM region such that KVM exits and sends requests to
+    // this device rather than the KVM VM.
+    if (checkpoint_before_mmios) {
+        if (offset == PCI0_INTERRUPT_PIN) {
+            if (++init_interrupt_count == 3) {
+                DPRINTF(AMDGPUDevice, "Checkpointing before first MMIO\n");
+                exitSimLoop("checkpoint", 0, curTick() + delay + 1);
+            }
+        } else {
+            init_interrupt_count = 0;
+        }
+    }
+
+    return delay;
 }
 
 Tick

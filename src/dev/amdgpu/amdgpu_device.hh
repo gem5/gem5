@@ -102,6 +102,9 @@ class AMDGPUDevice : public PciDevice
      */
     std::unordered_map<uint32_t, uint64_t> regs;
 
+    bool checkpoint_before_mmios;
+    int init_interrupt_count;
+
   public:
     AMDGPUDevice(const AMDGPUDeviceParams &p);
 

@@ -58,6 +58,8 @@ def addRunFSOptions(parser):
     parser.add_argument("--host-parallel", default=False,
                         action="store_true",
                         help="Run multiple host threads in KVM mode")
+    parser.add_argument("--restore-dir", type=str, default=None,
+                        help="Directory to restore checkpoints from")
     parser.add_argument("--disk-image", default="",
                         help="The boot disk image to mount (/dev/sda)")
     parser.add_argument("--second-disk", default=None,
@@ -66,6 +68,11 @@ def addRunFSOptions(parser):
     parser.add_argument("--gpu-rom", default=None, help="GPU BIOS to load")
     parser.add_argument("--gpu-mmio-trace", default=None,
                         help="GPU MMIO trace to load")
+    parser.add_argument("--checkpoint-before-mmios", default=False,
+                        action="store_true",
+                        help="Take a checkpoint before driver sends MMIOs. "
+                        "This is used to switch out of KVM mode and into "
+                        "timing mode required to read the VGA ROM on boot.")
 
 
 def runGpuFSSystem(args):
@@ -89,13 +96,30 @@ def runGpuFSSystem(args):
     if args.script is not None:
         system.readfile = args.script
 
-    m5.instantiate()
+    if args.restore_dir is None:
+        m5.instantiate()
+    else:
+        m5.instantiate(args.restore_dir)
 
 
     print("Running the simulation")
     sim_ticks = args.abs_max_tick
 
     exit_event = m5.simulate(sim_ticks)
+
+    # Keep executing while there is something to do
+    while True:
+        if exit_event.getCause() == "m5_exit instruction encountered" or \
+            exit_event.getCause() == "user interrupt received" or \
+            exit_event.getCause() == "simulate() limit reached":
+            break
+        elif "checkpoint" in exit_event.getCause():
+            assert(args.checkpoint_dir is not None)
+            m5.checkpoint(args.checkpoint_dir)
+            break
+        else:
+            print('Unknown exit event: %s. Continuing...'
+                    % exit_event.getCause())
 
     print('Exiting @ tick %i because %s' %
           (m5.curTick(), exit_event.getCause()))
