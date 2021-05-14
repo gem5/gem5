@@ -672,18 +672,21 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
         train(tid, *bi, taken);
     }
 
-#define RECORD_FILTERED_IMLI      1
-#define RECORD_FILTERED_GHIST     2
-#define RECORD_FILTERED_PATH      4
-#define RECORD_FILTERED_ACYCLIC   8
-#define RECORD_FILTERED_MOD      16
-#define RECORD_FILTERED_BLURRY   32
-// should never record a filtered local branch - duh!
-#define RECORD_FILTERED_LOCAL    64
-#define RECORD_FILTERED_RECENCY 128
+    enum RecordFiltered
+    {
+        Imli = 1,
+        GHist = 2,
+        Path = 4,
+        Acyclic = 8,
+        Mod = 16,
+        Blurry = 32,
+        // Should never record a filtered local branch - duh!
+        Local = 64,
+        Recency = 128
+    };
 
     // four different styles of IMLI
-    if (!bi->filtered || (record_mask & RECORD_FILTERED_IMLI)) {
+    if (!bi->filtered || (record_mask & Imli)) {
         unsigned int target = corrTarget;
         if (target < bi->getPC()) {
             if (taken) {
@@ -713,7 +716,7 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
     bool hashed_taken = hash_taken ? (taken ^ !!(bi->getPC() & (1<<pcbit)))
                                    : taken;
     // record into ghist
-    if (!bi->filtered || (record_mask & RECORD_FILTERED_GHIST)) {
+    if (!bi->filtered || (record_mask & GHist)) {
         bool ab = hashed_taken;
         assert(threadData[tid]->ghist_words.size() > 0);
         for (int i = 0; i < ghist_length / blockSize + 1; i += 1) {
@@ -728,7 +731,7 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
     }
 
     // record into path history
-    if (!bi->filtered || (record_mask & RECORD_FILTERED_PATH)) {
+    if (!bi->filtered || (record_mask & Path)) {
         assert(threadData[tid]->path_history.size() > 0);
         memmove(&threadData[tid]->path_history[1],
                 &threadData[tid]->path_history[0],
@@ -737,12 +740,12 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
     }
 
     // record into acyclic history
-    if (!bi->filtered || (record_mask & RECORD_FILTERED_ACYCLIC)) {
+    if (!bi->filtered || (record_mask & Acyclic)) {
         threadData[tid]->updateAcyclic(hashed_taken, bi->getHPC());
     }
 
     // record into modulo path history
-    if (!bi->filtered || (record_mask & RECORD_FILTERED_MOD)) {
+    if (!bi->filtered || (record_mask & Mod)) {
         for (int ii = 0; ii < modpath_indices.size(); ii += 1) {
             int i = modpath_indices[ii];
             if (bi->getHPC() % (i + 2) == 0) {
@@ -755,7 +758,7 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
     }
 
     // update blurry history
-    if (!bi->filtered || (record_mask & RECORD_FILTERED_BLURRY)) {
+    if (!bi->filtered || (record_mask & Blurry)) {
         std::vector<std::vector<unsigned int>> &blurrypath_histories =
              threadData[tid]->blurrypath_histories;
 
@@ -775,7 +778,7 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
     }
 
     // record into modulo pattern history
-    if (!bi->filtered || (record_mask & RECORD_FILTERED_MOD)) {
+    if (!bi->filtered || (record_mask & Mod)) {
         for (int ii = 0; ii < modhist_indices.size(); ii += 1) {
             int i = modhist_indices[ii];
             if (bi->getHPC() % (i + 2) == 0) {
@@ -790,13 +793,13 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
 
     // insert this PC into the recency stack
     if (doing_recency) {
-        if (!bi->filtered || (record_mask & RECORD_FILTERED_RECENCY)) {
+        if (!bi->filtered || (record_mask & Recency)) {
             threadData[tid]->insertRecency(bi->getPC2(), assoc);
         }
     }
 
     // record into a local history
-    if (!bi->filtered || (record_mask & RECORD_FILTERED_LOCAL)) {
+    if (!bi->filtered || (record_mask & Local)) {
         threadData[tid]->localHistories.update(bi->getPC(), hashed_taken);
     }
 
