@@ -66,17 +66,11 @@ def template ImmExecute {{
     %(class_name)s::execute(
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
         %(op_decl)s;
         %(op_rd)s;
-        if (fault == NoFault) {
-            %(code)s;
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-        }
-        return fault;
+        %(code)s;
+        %(op_wb)s;
+        return NoFault;
     }
 
     std::string
@@ -98,17 +92,11 @@ def template CILuiExecute {{
     %(class_name)s::execute(
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
         %(op_decl)s;
         %(op_rd)s;
-        if (fault == NoFault) {
-            %(code)s;
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-        }
-        return fault;
+        %(code)s;
+        %(op_wb)s;
+        return NoFault;
     }
 
     std::string
@@ -132,17 +120,11 @@ def template FenceExecute {{
     %(class_name)s::execute(
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
         %(op_decl)s;
         %(op_rd)s;
-        if (fault == NoFault) {
-            %(code)s;
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-        }
-        return fault;
+        %(code)s;
+        %(op_wb)s;
+        return NoFault;
     }
 
     std::string
@@ -205,17 +187,11 @@ def template BranchExecute {{
     %(class_name)s::execute(ExecContext *xc,
         Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
         %(op_decl)s;
         %(op_rd)s;
-        if (fault == NoFault) {
-            %(code)s;
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-        }
-        return fault;
+        %(code)s;
+        %(op_wb)s;
+        return NoFault;
     }
 
     RiscvISA::PCState
@@ -268,17 +244,11 @@ def template JumpExecute {{
     %(class_name)s::execute(
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
         %(op_decl)s;
         %(op_rd)s;
-        if (fault == NoFault) {
-            %(code)s;
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-        }
-        return fault;
+        %(code)s;
+        %(op_wb)s;
+        return NoFault;
     }
 
     RiscvISA::PCState
@@ -309,8 +279,6 @@ def template CSRExecute {{
     %(class_name)s::execute(ExecContext *xc,
         Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
         %(op_decl)s;
         %(op_rd)s;
 
@@ -324,10 +292,9 @@ def template CSRExecute {{
             auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
             STATUS status = xc->readMiscReg(MISCREG_STATUS);
             if (pm == PRV_U || (pm == PRV_S && status.tvm == 1)) {
-                std::string error = csprintf(
-                    "SATP access in user mode or with TVM enabled\n");
-                fault = std::make_shared<IllegalInstFault>(error, machInst);
-                olddata = 0;
+                return std::make_shared<IllegalInstFault>(
+                        "SATP access in user mode or with TVM enabled\n",
+                        machInst);
             } else {
                 olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
             }
@@ -336,10 +303,9 @@ def template CSRExecute {{
           case CSR_MSTATUS: {
             auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
             if (pm != PrivilegeMode::PRV_M) {
-                std::string error = csprintf(
-                    "MSTATUS is only accessibly in machine mode\n");
-                fault = std::make_shared<IllegalInstFault>(error, machInst);
-                olddata = 0;
+                return std::make_shared<IllegalInstFault>(
+                        "MSTATUS is only accessibly in machine mode\n",
+                        machInst);
             } else {
                 olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
             }
@@ -349,9 +315,8 @@ def template CSRExecute {{
             if (CSRData.find(csr) != CSRData.end()) {
                 olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
             } else {
-                std::string error = csprintf("Illegal CSR index %#x\n", csr);
-                fault = std::make_shared<IllegalInstFault>(error, machInst);
-                olddata = 0;
+                return std::make_shared<IllegalInstFault>(
+                        csprintf("Illegal CSR index %#x\n", csr), machInst);
             }
             break;
         }
@@ -363,60 +328,51 @@ def template CSRExecute {{
                 olddata);
         data = olddata;
 
-        if (fault == NoFault) {
-            %(code)s;
-            if (fault == NoFault) {
-                if (mask != CSRMasks.end())
-                    data &= mask->second;
-                if (data != olddata) {
-                    if (bits(csr, 11, 10) == 0x3) {
-                        std::string error = csprintf("CSR %s is read-only\n",
-                                                     CSRData.at(csr).name);
-                        fault = std::make_shared<IllegalInstFault>(
-                                error, machInst);
-                    } else {
-                        auto newdata_all = data;
-                        if (mask != CSRMasks.end()) {
-                            // we must keep those original bits not in mask
-                            // olddata and data only contain thebits visable
-                            // in current privilige level
-                            newdata_all = (olddata_all & (~mask->second))
-                                          | data;
-                        }
-                        DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n",
-                                newdata_all,
-                                CSRData.at(csr).name);
-                        switch (csr) {
-                          case CSR_FCSR:
-                            xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
-                            xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
-                            break;
-                          case CSR_MIP: case CSR_MIE:
-                          case CSR_SIP: case CSR_SIE:
-                          case CSR_UIP: case CSR_UIE:
-                          case CSR_MSTATUS: case CSR_SSTATUS: case CSR_USTATUS:
-                            if (newdata_all != olddata_all) {
-                                xc->setMiscReg(CSRData.at(csr).physIndex,
-                                               newdata_all);
-                            } else {
-                                std::string error = "Only bits in mask are "
-                                                    "allowed to be set\n";
-                                fault = std::make_shared<IllegalInstFault>(
-                                        error, machInst);
-                            }
-                            break;
-                          default:
-                            xc->setMiscReg(CSRData.at(csr).physIndex, data);
-                            break;
-                        }
-                    }
-                }
+        %(code)s;
+        if (mask != CSRMasks.end())
+            data &= mask->second;
+        if (data != olddata) {
+            if (bits(csr, 11, 10) == 0x3) {
+                return std::make_shared<IllegalInstFault>(
+                        csprintf("CSR %s is read-only\n",
+                            CSRData.at(csr).name), machInst);
             }
-            if (fault == NoFault) {
-                %(op_wb)s;
+            auto newdata_all = data;
+            if (mask != CSRMasks.end()) {
+                // we must keep those original bits not in mask
+                // olddata and data only contain thebits visable
+                // in current privilige level
+                newdata_all = (olddata_all & (~mask->second))
+                              | data;
+            }
+            DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n",
+                    newdata_all,
+                    CSRData.at(csr).name);
+            switch (csr) {
+              case CSR_FCSR:
+                xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
+                xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
+                break;
+              case CSR_MIP: case CSR_MIE:
+              case CSR_SIP: case CSR_SIE:
+              case CSR_UIP: case CSR_UIE:
+              case CSR_MSTATUS: case CSR_SSTATUS: case CSR_USTATUS:
+                if (newdata_all != olddata_all) {
+                    xc->setMiscReg(CSRData.at(csr).physIndex,
+                                   newdata_all);
+                } else {
+                    return std::make_shared<IllegalInstFault>(
+                            "Only bits in mask are allowed to be set\n",
+                            machInst);
+                }
+                break;
+              default:
+                xc->setMiscReg(CSRData.at(csr).physIndex, data);
+                break;
             }
         }
-        return fault;
+        %(op_wb)s;
+        return NoFault;
     }
 }};
 

@@ -236,22 +236,22 @@ def template LoadReservedExecute {{
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault fault = NoFault;
 
         %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;
 
-        if (fault == NoFault) {
-            fault = readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
-            %(memacc_code)s;
+        {
+            Fault fault =
+                readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
+            if (fault != NoFault)
+                return fault;
         }
 
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
+        %(memacc_code)s;
+        %(op_wb)s;
 
-        return fault;
+        return NoFault;
     }
 }};
 
@@ -260,34 +260,29 @@ def template StoreCondExecute {{
         Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault fault = NoFault;
         uint64_t result;
 
         %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;
 
-        if (fault == NoFault) {
-            %(memacc_code)s;
-        }
+        %(memacc_code)s;
 
-        if (fault == NoFault) {
-            fault = writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
-                &result);
-            // RISC-V has the opposite convention gem5 has for success flags,
-            // so we invert the result here.
-            result = !result;
+        {
+            Fault fault =
+                writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
+                        &result);
+            if (fault != NoFault)
+                return fault;
         }
+        // RISC-V has the opposite convention gem5 has for success flags,
+        // so we invert the result here.
+        result = !result;
 
-        if (fault == NoFault) {
-            %(postacc_code)s;
-        }
+        %(postacc_code)s;
+        %(op_wb)s;
 
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
-        return fault;
+        return NoFault;
     }
 }};
 
@@ -296,7 +291,6 @@ def template AtomicMemOpRMWExecute {{
         Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault fault = NoFault;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -305,21 +299,18 @@ def template AtomicMemOpRMWExecute {{
 
         assert(amo_op);
 
-        if (fault == NoFault) {
-            fault = amoMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
-                                 amo_op);
-            %(memacc_code)s;
+        {
+            Fault fault =
+                amoMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags, amo_op);
+            if (fault != NoFault)
+                return fault;
         }
 
-        if (fault == NoFault) {
-            %(postacc_code)s;
-        }
+        %(memacc_code)s;
+        %(postacc_code)s;
+        %(op_wb)s;
 
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
-        return fault;
+        return NoFault;
     }
 }};
 
@@ -331,17 +322,12 @@ def template LoadReservedInitiateAcc {{
         Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault fault = NoFault;
 
         %(op_src_decl)s;
         %(op_rd)s;
         %(ea_code)s;
 
-        if (fault == NoFault) {
-            fault = initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
-        }
-
-        return fault;
+        return initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
     }
 }};
 
@@ -351,26 +337,22 @@ def template StoreCondInitiateAcc {{
         Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault fault = NoFault;
 
         %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;
+        %(memacc_code)s;
 
-        if (fault == NoFault) {
-            %(memacc_code)s;
-        }
-
-        if (fault == NoFault) {
-            fault = writeMemTimingLE(xc, traceData, Mem, EA,
+        {
+            Fault fault = writeMemTimingLE(xc, traceData, Mem, EA,
                 memAccessFlags, nullptr);
+            if (fault != NoFault)
+                return fault;
         }
 
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
+        %(op_wb)s;
 
-        return fault;
+        return NoFault;
     }
 }};
 
@@ -380,7 +362,6 @@ def template AtomicMemOpRMWInitiateAcc {{
         Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault fault = NoFault;
 
         %(op_src_decl)s;
         %(op_rd)s;
@@ -389,12 +370,7 @@ def template AtomicMemOpRMWInitiateAcc {{
 
         assert(amo_op);
 
-        if (fault == NoFault) {
-            fault = initiateMemAMO(xc, traceData, EA, Mem, memAccessFlags,
-                                   amo_op);
-        }
-
-        return fault;
+        return initiateMemAMO(xc, traceData, EA, Mem, memAccessFlags, amo_op);
     }
 }};
 
@@ -405,22 +381,15 @@ def template LoadReservedCompleteAcc {{
     %(class_name)s::%(class_name)sMicro::completeAcc(PacketPtr pkt,
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
         %(op_decl)s;
         %(op_rd)s;
 
         getMemLE(pkt, Mem, traceData);
 
-        if (fault == NoFault) {
-            %(memacc_code)s;
-        }
+        %(memacc_code)s;
+        %(op_wb)s;
 
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
-        return fault;
+        return NoFault;
     }
 }};
 
@@ -428,23 +397,16 @@ def template StoreCondCompleteAcc {{
     Fault %(class_name)s::%(class_name)sMicro::completeAcc(Packet *pkt,
           ExecContext *xc, Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
         %(op_dest_decl)s;
 
         // RISC-V has the opposite convention gem5 has for success flags,
         // so we invert the result here.
         uint64_t result = !pkt->req->getExtraData();
 
-        if (fault == NoFault) {
-            %(postacc_code)s;
-        }
+        %(postacc_code)s;
+        %(op_wb)s;
 
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
-        return fault;
+        return NoFault;
     }
 }};
 
@@ -452,22 +414,15 @@ def template AtomicMemOpRMWCompleteAcc {{
     Fault %(class_name)s::%(class_name)sRMW::completeAcc(Packet *pkt,
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
         %(op_decl)s;
         %(op_rd)s;
 
         getMemLE(pkt, Mem, traceData);
 
-        if (fault == NoFault) {
-            %(memacc_code)s;
-        }
+        %(memacc_code)s;
+        %(op_wb)s;
 
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
-        return fault;
+        return NoFault;
     }
 }};
 
