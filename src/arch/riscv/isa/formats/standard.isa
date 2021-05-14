@@ -279,15 +279,17 @@ def template CSRExecute {{
     %(class_name)s::execute(ExecContext *xc,
         Trace::InstRecord *traceData) const
     {
+        if (!valid) {
+            return std::make_shared<IllegalInstFault>(
+                    csprintf("Illegal CSR index %#x\n", csr), machInst);
+        }
+
         %(op_decl)s;
         %(op_rd)s;
 
         RegVal data, olddata;
+
         switch (csr) {
-          case CSR_FCSR:
-            olddata = xc->readMiscReg(MISCREG_FFLAGS) |
-                      (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
-            break;
           case CSR_SATP: {
             auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
             STATUS status = xc->readMiscReg(MISCREG_STATUS);
@@ -295,8 +297,6 @@ def template CSRExecute {{
                 return std::make_shared<IllegalInstFault>(
                         "SATP access in user mode or with TVM enabled\n",
                         machInst);
-            } else {
-                olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
             }
             break;
           }
@@ -306,48 +306,40 @@ def template CSRExecute {{
                 return std::make_shared<IllegalInstFault>(
                         "MSTATUS is only accessibly in machine mode\n",
                         machInst);
-            } else {
-                olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
             }
             break;
           }
           default:
-            if (CSRData.find(csr) != CSRData.end()) {
-                olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
-            } else {
-                return std::make_shared<IllegalInstFault>(
-                        csprintf("Illegal CSR index %#x\n", csr), machInst);
-            }
             break;
         }
-        auto mask = CSRMasks.find(csr);
+
+        if (csr == CSR_FCSR) {
+            olddata = xc->readMiscReg(MISCREG_FFLAGS) |
+                      (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
+        } else {
+            olddata = xc->readMiscReg(midx);
+        }
         auto olddata_all = olddata;
-        if (mask != CSRMasks.end())
-            olddata &= mask->second;
-        DPRINTF(RiscvMisc, "Reading CSR %s: %#x\n", CSRData.at(csr).name,
-                olddata);
+
+        olddata &= maskVal;
+        DPRINTF(RiscvMisc, "Reading CSR %s: %#x\n", csrName, olddata);
         data = olddata;
 
         %(code)s;
-        if (mask != CSRMasks.end())
-            data &= mask->second;
+
+        data &= maskVal;
         if (data != olddata) {
             if (bits(csr, 11, 10) == 0x3) {
                 return std::make_shared<IllegalInstFault>(
-                        csprintf("CSR %s is read-only\n",
-                            CSRData.at(csr).name), machInst);
+                        csprintf("CSR %s is read-only\n", csrName), machInst);
             }
             auto newdata_all = data;
-            if (mask != CSRMasks.end()) {
-                // we must keep those original bits not in mask
-                // olddata and data only contain thebits visable
-                // in current privilige level
-                newdata_all = (olddata_all & (~mask->second))
-                              | data;
-            }
+            // We must keep those original bits not in mask.
+            // olddata and data only contain the bits visable
+            // in current privilige level.
+            newdata_all = (olddata_all & ~maskVal) | data;
             DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n",
-                    newdata_all,
-                    CSRData.at(csr).name);
+                    newdata_all, csrName);
             switch (csr) {
               case CSR_FCSR:
                 xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
@@ -358,8 +350,7 @@ def template CSRExecute {{
               case CSR_UIP: case CSR_UIE:
               case CSR_MSTATUS: case CSR_SSTATUS: case CSR_USTATUS:
                 if (newdata_all != olddata_all) {
-                    xc->setMiscReg(CSRData.at(csr).physIndex,
-                                   newdata_all);
+                    xc->setMiscReg(midx, newdata_all);
                 } else {
                     return std::make_shared<IllegalInstFault>(
                             "Only bits in mask are allowed to be set\n",
@@ -367,7 +358,7 @@ def template CSRExecute {{
                 }
                 break;
               default:
-                xc->setMiscReg(CSRData.at(csr).physIndex, data);
+                xc->setMiscReg(midx, data);
                 break;
             }
         }
