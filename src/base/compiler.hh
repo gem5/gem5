@@ -116,6 +116,16 @@
 // Mark a c++ declaration as deprecated, with a message explaining what to do
 // to update to a non-deprecated alternative.
 #  define GEM5_DEPRECATED(message) [[gnu::deprecated(message)]]
+// Mark a C++ emum value as deprecated, with a message explaining what to do
+// to update to a non-deprecated alternative. This wraps GEM5_DEPRECATED but
+// is guarded by a preprocessor if directive to ensure it is not included
+// when compiled in GCC < 6, as deprecation of enum values was introduced in
+// GCC 6. All supported clang compilers allow enum value deprecation.
+#  if defined(__clang__) || __GNUC__ >= 6
+#    define GEM5_DEPRECATED_ENUM_VAL(message) GEM5_DEPRECATED(message)
+#  else
+#    define GEM5_DEPRECATED_ENUM_VAL(message)
+#  endif
 // Mark an expression-like macro as deprecated by wrapping it in some code
 // which declares and uses a deprecated variable with the same name as the
 // macro. The wrapping macro evaluates to the same thing as the original macro.
