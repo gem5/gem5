@@ -63,13 +63,14 @@ MemFootprintProbe::MemFootprintProbe(const MemFootprintProbeParams &p)
 MemFootprintProbe::
 MemFootprintProbeStats::MemFootprintProbeStats(MemFootprintProbe *parent)
     : Stats::Group(parent),
-      ADD_STAT(cacheLine, UNIT_COUNT,
+      ADD_STAT(cacheLine, Stats::Units::Count::get(),
                "Memory footprint at cache line granularity"),
-      ADD_STAT(cacheLineTotal, UNIT_COUNT,
+      ADD_STAT(cacheLineTotal, Stats::Units::Count::get(),
                "Total memory footprint at cache line granularity since "
                "simulation begin"),
-      ADD_STAT(page, UNIT_COUNT, "Memory footprint at page granularity"),
-      ADD_STAT(pageTotal, UNIT_COUNT,
+      ADD_STAT(page, Stats::Units::Count::get(),
+               "Memory footprint at page granularity"),
+      ADD_STAT(pageTotal, Stats::Units::Count::get(),
                "Total memory footprint at page granularity since simulation "
                "begin")
 {

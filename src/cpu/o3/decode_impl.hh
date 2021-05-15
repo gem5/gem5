@@ -123,24 +123,26 @@ DefaultDecode<Impl>::name() const
 template <class Impl>
 DefaultDecode<Impl>::DecodeStats::DecodeStats(O3CPU *cpu)
     : Stats::Group(cpu, "decode"),
-      ADD_STAT(idleCycles, UNIT_CYCLE, "Number of cycles decode is idle"),
-      ADD_STAT(blockedCycles, UNIT_CYCLE,
+      ADD_STAT(idleCycles, Stats::Units::Cycle::get(),
+               "Number of cycles decode is idle"),
+      ADD_STAT(blockedCycles, Stats::Units::Cycle::get(),
                "Number of cycles decode is blocked"),
-      ADD_STAT(runCycles, UNIT_CYCLE, "Number of cycles decode is running"),
-      ADD_STAT(unblockCycles, UNIT_CYCLE,
+      ADD_STAT(runCycles, Stats::Units::Cycle::get(),
+               "Number of cycles decode is running"),
+      ADD_STAT(unblockCycles, Stats::Units::Cycle::get(),
                "Number of cycles decode is unblocking"),
-      ADD_STAT(squashCycles, UNIT_CYCLE,
+      ADD_STAT(squashCycles, Stats::Units::Cycle::get(),
                "Number of cycles decode is squashing"),
-      ADD_STAT(branchResolved, UNIT_COUNT,
+      ADD_STAT(branchResolved, Stats::Units::Count::get(),
                "Number of times decode resolved a branch"),
-      ADD_STAT(branchMispred, UNIT_COUNT,
+      ADD_STAT(branchMispred, Stats::Units::Count::get(),
                "Number of times decode detected a branch misprediction"),
-      ADD_STAT(controlMispred, UNIT_COUNT,
+      ADD_STAT(controlMispred, Stats::Units::Count::get(),
                "Number of times decode detected an instruction incorrectly "
                "predicted as a control"),
-      ADD_STAT(decodedInsts, UNIT_COUNT,
+      ADD_STAT(decodedInsts, Stats::Units::Count::get(),
                "Number of instructions handled by decode"),
-      ADD_STAT(squashedInsts, UNIT_COUNT,
+      ADD_STAT(squashedInsts, Stats::Units::Count::get(),
                "Number of squashed instructions handled by decode")
 {
     idleCycles.prereq(idleCycles);

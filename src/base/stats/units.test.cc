@@ -33,68 +33,68 @@
 
 TEST(StatsUnitsTest, Cycle)
 {
-    Stats::Units::Cycle *unit = UNIT_CYCLE;
+    Stats::Units::Cycle *unit = Stats::Units::Cycle::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::Cycle::toString());
 }
 
 TEST(StatsUnitsTest, Tick)
 {
-    Stats::Units::Tick *unit = UNIT_TICK;
+    Stats::Units::Tick *unit = Stats::Units::Tick::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::Tick::toString());
 }
 
 TEST(StatsUnitsTest, Second)
 {
-    Stats::Units::Second *unit = UNIT_SECOND;
+    Stats::Units::Second *unit = Stats::Units::Second::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::Second::toString());
 }
 
 TEST(StatsUnitsTest, Bit)
 {
-    Stats::Units::Bit *unit = UNIT_BIT;
+    Stats::Units::Bit *unit = Stats::Units::Bit::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::Bit::toString());
 }
 
 TEST(StatsUnitsTest, Byte)
 {
-    Stats::Units::Byte *unit = UNIT_BYTE;
+    Stats::Units::Byte *unit = Stats::Units::Byte::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::Byte::toString());
 }
 
 TEST(StatsUnitsTest, Watt)
 {
-    Stats::Units::Watt *unit = UNIT_WATT;
+    Stats::Units::Watt *unit = Stats::Units::Watt::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::Watt::toString());
 }
 
 TEST(StatsUnitsTest, Joule)
 {
-    Stats::Units::Joule *unit = UNIT_JOULE;
+    Stats::Units::Joule *unit = Stats::Units::Joule::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::Joule::toString());
 }
 
 TEST(StatsUnitsTest, Volt)
 {
-    Stats::Units::Volt *unit = UNIT_VOLT;
+    Stats::Units::Volt *unit = Stats::Units::Volt::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::Volt::toString());
 }
 
 TEST(StatsUnitsTest, DegreeCelsius)
 {
-    Stats::Units::DegreeCelsius *unit = UNIT_CELSIUS;
+    Stats::Units::DegreeCelsius *unit = Stats::Units::DegreeCelsius::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::DegreeCelsius::toString());
 }
 
 TEST(StatsUnitsTest, Count)
 {
-    Stats::Units::Count *unit = UNIT_COUNT;
+    Stats::Units::Count *unit = Stats::Units::Count::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::Count::toString());
 }
 
 TEST(StatsUnitsTest, Rate1)
 {
     Stats::Units::Rate<Stats::Units::Count, Stats::Units::Count> *unit =
-        UNIT_RATE(Stats::Units::Count, Stats::Units::Count);
+        Stats::Units::Rate<Stats::Units::Count, Stats::Units::Count>::get();
     ASSERT_EQ(unit->getUnitString(), "(Count/Count)");
     ASSERT_EQ(unit->getUnitString(), (Stats::Units::Rate<Stats::Units::Count,
         Stats::Units::Count>::toString()));
@@ -103,7 +103,7 @@ TEST(StatsUnitsTest, Rate1)
 TEST(StatsUnitsTest, Rate2)
 {
     Stats::Units::Rate<Stats::Units::Tick, Stats::Units::Second> *unit =
-        UNIT_RATE(Stats::Units::Tick, Stats::Units::Second);
+        Stats::Units::Rate<Stats::Units::Tick, Stats::Units::Second>::get();
     ASSERT_EQ(unit->getUnitString(), "(Tick/Second)");
     ASSERT_EQ(unit->getUnitString(), (Stats::Units::Rate<Stats::Units::Tick,
         Stats::Units::Second>::toString()));
@@ -116,7 +116,7 @@ TEST(StatsUnitsTest, RateOfRates)
     typedef Stats::Units::Rate<Stats::Units::Count, Stats::Units::Cycle>
         CountPerCycle;
     Stats::Units::Rate<BitPerSecond, CountPerCycle> *unit =
-        UNIT_RATE(BitPerSecond, CountPerCycle);
+        Stats::Units::Rate<BitPerSecond, CountPerCycle>::get();
     ASSERT_EQ(unit->getUnitString(), "((Bit/Second)/(Count/Cycle))");
     ASSERT_EQ(unit->getUnitString(),
         (Stats::Units::Rate<BitPerSecond, CountPerCycle>::toString()));
@@ -124,12 +124,12 @@ TEST(StatsUnitsTest, RateOfRates)
 
 TEST(StatsUnitsTest, Ratio)
 {
-    Stats::Units::Ratio *unit = UNIT_RATIO;
+    Stats::Units::Ratio *unit = Stats::Units::Ratio::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::Ratio::toString());
 }
 
 TEST(StatsUnitsTest, Unspecified)
 {
-    Stats::Units::Unspecified *unit = UNIT_UNSPECIFIED;
+    Stats::Units::Unspecified *unit = Stats::Units::Unspecified::get();
     ASSERT_EQ(unit->getUnitString(), Stats::Units::Unspecified::toString());
 }

@@ -85,20 +85,23 @@ SMMUv3BaseCache::
 SMMUv3BaseCacheStats::SMMUv3BaseCacheStats(
     Stats::Group *parent, const std::string &name)
     : Stats::Group(parent, name.c_str()),
-      ADD_STAT(averageLookups,
-               UNIT_RATE(Stats::Units::Count, Stats::Units::Second),
+      ADD_STAT(averageLookups, Stats::Units::Rate<
+                    Stats::Units::Count, Stats::Units::Second>::get(),
                "Average number lookups per second"),
-      ADD_STAT(totalLookups, UNIT_COUNT, "Total number of lookups"),
-      ADD_STAT(averageMisses,
-               UNIT_RATE(Stats::Units::Count, Stats::Units::Second),
+      ADD_STAT(totalLookups, Stats::Units::Count::get(),
+               "Total number of lookups"),
+      ADD_STAT(averageMisses, Stats::Units::Rate<
+                    Stats::Units::Count, Stats::Units::Second>::get(),
                "Average number misses per second"),
-      ADD_STAT(totalMisses, UNIT_COUNT, "Total number of misses"),
-      ADD_STAT(averageUpdates,
-               UNIT_RATE(Stats::Units::Count, Stats::Units::Second),
+      ADD_STAT(totalMisses, Stats::Units::Count::get(),
+               "Total number of misses"),
+      ADD_STAT(averageUpdates, Stats::Units::Rate<
+                    Stats::Units::Count, Stats::Units::Second>::get(),
                "Average number updates per second"),
-      ADD_STAT(totalUpdates, UNIT_COUNT, "Total number of updates"),
-      ADD_STAT(averageHitRate, UNIT_RATIO, "Average hit rate"),
-      ADD_STAT(insertions, UNIT_COUNT,
+      ADD_STAT(totalUpdates, Stats::Units::Count::get(),
+               "Total number of updates"),
+      ADD_STAT(averageHitRate, Stats::Units::Ratio::get(), "Average hit rate"),
+      ADD_STAT(insertions, Stats::Units::Count::get(),
                "Number of insertions (not replacements)")
 {
     using namespace Stats;
@@ -1226,13 +1229,13 @@ WalkCache::pickEntryIdxToReplace(const Set &set,
 WalkCache::
 WalkCacheStats::WalkCacheStats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(totalLookupsByStageLevel, UNIT_COUNT,
+      ADD_STAT(totalLookupsByStageLevel, Stats::Units::Count::get(),
           "Total number of lookups"),
-      ADD_STAT(totalMissesByStageLevel, UNIT_COUNT,
+      ADD_STAT(totalMissesByStageLevel, Stats::Units::Count::get(),
           "Total number of misses"),
-      ADD_STAT(totalUpdatesByStageLevel, UNIT_COUNT,
+      ADD_STAT(totalUpdatesByStageLevel, Stats::Units::Count::get(),
           "Total number of updates"),
-      ADD_STAT(insertionsByStageLevel, UNIT_COUNT,
+      ADD_STAT(insertionsByStageLevel, Stats::Units::Count::get(),
           "Number of insertions (not replacements)")
 {
     using namespace Stats;
@@ -1265,7 +1268,8 @@ WalkCacheStats::WalkCacheStats(Stats::Group *parent)
             auto avg_lookup = new Stats::Formula(
                 this,
                 csprintf("averageLookups_S%dL%d", s+1, l).c_str(),
-                UNIT_RATE(Stats::Units::Count, Stats::Units::Second),
+                Stats::Units::Rate<Stats::Units::Count,
+                                   Stats::Units::Second>::get(),
                 "Average number lookups per second");
             avg_lookup->flags(pdf);
             averageLookupsByStageLevel.push_back(avg_lookup);
@@ -1276,7 +1280,8 @@ WalkCacheStats::WalkCacheStats(Stats::Group *parent)
             auto avg_misses = new Stats::Formula(
                 this,
                 csprintf("averageMisses_S%dL%d", s+1, l).c_str(),
-                UNIT_RATE(Stats::Units::Count, Stats::Units::Second),
+                Stats::Units::Rate<Stats::Units::Count,
+                                   Stats::Units::Second>::get(),
                 "Average number misses per second");
             avg_misses->flags(pdf);
             averageMissesByStageLevel.push_back(avg_misses);
@@ -1287,7 +1292,8 @@ WalkCacheStats::WalkCacheStats(Stats::Group *parent)
             auto avg_updates = new Stats::Formula(
                 this,
                 csprintf("averageUpdates_S%dL%d", s+1, l).c_str(),
-                UNIT_RATE(Stats::Units::Count, Stats::Units::Second),
+                Stats::Units::Rate<Stats::Units::Count,
+                                   Stats::Units::Second>::get(),
                 "Average number updates per second");
             avg_updates->flags(pdf);
             averageUpdatesByStageLevel.push_back(avg_updates);
@@ -1298,8 +1304,7 @@ WalkCacheStats::WalkCacheStats(Stats::Group *parent)
             auto avg_hitrate = new Stats::Formula(
                 this,
                 csprintf("averageHitRate_S%dL%d", s+1, l).c_str(),
-                UNIT_RATIO,
-                "Average hit rate");
+                Stats::Units::Ratio::get(), "Average hit rate");
             avg_hitrate->flags(pdf);
             averageHitRateByStageLevel.push_back(avg_hitrate);
 

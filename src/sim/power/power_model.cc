@@ -45,9 +45,10 @@
 
 PowerModelState::PowerModelState(const Params &p)
     : SimObject(p), _temp(0), clocked_object(NULL),
-      ADD_STAT(dynamicPower, UNIT_WATT,
+      ADD_STAT(dynamicPower, Stats::Units::Watt::get(),
                "Dynamic power for this object (Watts)"),
-      ADD_STAT(staticPower, UNIT_WATT, "Static power for this object (Watts)")
+      ADD_STAT(staticPower, Stats::Units::Watt::get(),
+               "Static power for this object (Watts)")
 {
     dynamicPower
       .method(this, &PowerModelState::getDynamicPower);
@@ -58,9 +59,9 @@ PowerModelState::PowerModelState(const Params &p)
 PowerModel::PowerModel(const Params &p)
     : SimObject(p), states_pm(p.pm), subsystem(p.subsystem),
       clocked_object(NULL), power_model_type(p.pm_type),
-      ADD_STAT(dynamicPower, UNIT_WATT,
+      ADD_STAT(dynamicPower, Stats::Units::Watt::get(),
                          "Dynamic power for this power state"),
-      ADD_STAT(staticPower, UNIT_WATT,
+      ADD_STAT(staticPower, Stats::Units::Watt::get(),
                          "Static power for this power state")
 {
     panic_if(subsystem == NULL,

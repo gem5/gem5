@@ -121,9 +121,11 @@ ThreadState::getVirtProxy()
 ThreadState::ThreadStateStats::ThreadStateStats(BaseCPU *cpu,
                                                 const ThreadID& tid)
       : Stats::Group(cpu, csprintf("thread_%i", tid).c_str()),
-      ADD_STAT(numInsts, UNIT_COUNT, "Number of Instructions committed"),
-      ADD_STAT(numOps, UNIT_COUNT, "Number of Ops committed"),
-      ADD_STAT(numMemRefs, UNIT_COUNT, "Number of Memory References")
+      ADD_STAT(numInsts, Stats::Units::Count::get(),
+               "Number of Instructions committed"),
+      ADD_STAT(numOps, Stats::Units::Count::get(), "Number of Ops committed"),
+      ADD_STAT(numMemRefs, Stats::Units::Count::get(),
+               "Number of Memory References")
 {
 
 }

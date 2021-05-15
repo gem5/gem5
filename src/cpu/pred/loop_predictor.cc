@@ -347,10 +347,10 @@ LoopPredictor::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
 
 LoopPredictor::LoopPredictorStats::LoopPredictorStats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(correct, UNIT_COUNT,
+      ADD_STAT(correct, Stats::Units::Count::get(),
                "Number of times the loop predictor is the provider and the "
                "prediction is correct"),
-      ADD_STAT(wrong, UNIT_COUNT,
+      ADD_STAT(wrong, Stats::Units::Count::get(),
                "Number of times the loop predictor is the provider and the "
                "prediction is wrong")
 {

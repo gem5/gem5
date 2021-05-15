@@ -424,10 +424,11 @@ SimpleCache::sendRangeChange() const
 
 SimpleCache::SimpleCacheStats::SimpleCacheStats(Stats::Group *parent)
       : Stats::Group(parent),
-      ADD_STAT(hits, UNIT_COUNT, "Number of hits"),
-      ADD_STAT(misses, UNIT_COUNT, "Number of misses"),
-      ADD_STAT(missLatency, UNIT_TICK, "Ticks for misses to the cache"),
-      ADD_STAT(hitRatio, UNIT_RATIO,
+      ADD_STAT(hits, Stats::Units::Count::get(), "Number of hits"),
+      ADD_STAT(misses, Stats::Units::Count::get(), "Number of misses"),
+      ADD_STAT(missLatency, Stats::Units::Tick::get(),
+               "Ticks for misses to the cache"),
+      ADD_STAT(hitRatio, Stats::Units::Ratio::get(),
                "The ratio of hits to the total accesses to the cache",
                hits / (hits + misses))
 {

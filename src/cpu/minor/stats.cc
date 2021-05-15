@@ -42,22 +42,26 @@ namespace Minor
 
 MinorStats::MinorStats(BaseCPU *base_cpu)
     : Stats::Group(base_cpu),
-    ADD_STAT(numInsts, UNIT_COUNT, "Number of instructions committed"),
-    ADD_STAT(numOps, UNIT_COUNT,
+    ADD_STAT(numInsts, Stats::Units::Count::get(),
+             "Number of instructions committed"),
+    ADD_STAT(numOps, Stats::Units::Count::get(),
              "Number of ops (including micro ops) committed"),
-    ADD_STAT(numDiscardedOps, UNIT_COUNT,
+    ADD_STAT(numDiscardedOps, Stats::Units::Count::get(),
              "Number of ops (including micro ops) which were discarded before "
              "commit"),
-    ADD_STAT(numFetchSuspends, UNIT_COUNT,
+    ADD_STAT(numFetchSuspends, Stats::Units::Count::get(),
              "Number of times Execute suspended instruction fetching"),
-    ADD_STAT(quiesceCycles, UNIT_CYCLE,
+    ADD_STAT(quiesceCycles, Stats::Units::Cycle::get(),
              "Total number of cycles that CPU has spent quiesced or waiting "
              "for an interrupt"),
-    ADD_STAT(cpi, UNIT_RATE(Stats::Units::Cycle, Stats::Units::Count),
+    ADD_STAT(cpi, Stats::Units::Rate<
+                Stats::Units::Cycle, Stats::Units::Count>::get(),
              "CPI: cycles per instruction"),
-    ADD_STAT(ipc, UNIT_RATE(Stats::Units::Count, Stats::Units::Cycle),
+    ADD_STAT(ipc, Stats::Units::Rate<
+                Stats::Units::Count, Stats::Units::Cycle>::get(),
              "IPC: instructions per cycle"),
-    ADD_STAT(committedInstType, UNIT_COUNT, "Class of committed instruction")
+    ADD_STAT(committedInstType, Stats::Units::Count::get(),
+             "Class of committed instruction")
 {
     quiesceCycles.prereq(quiesceCycles);
 

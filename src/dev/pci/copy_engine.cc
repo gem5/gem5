@@ -431,9 +431,9 @@ CopyEngine::
 CopyEngineStats::CopyEngineStats(Stats::Group *parent,
                                  const uint8_t &channel_count)
     : Stats::Group(parent, "CopyEngine"),
-      ADD_STAT(bytesCopied, UNIT_BYTE,
+      ADD_STAT(bytesCopied, Stats::Units::Byte::get(),
                "Number of bytes copied by each engine"),
-      ADD_STAT(copiesProcessed, UNIT_COUNT,
+      ADD_STAT(copiesProcessed, Stats::Units::Count::get(),
                "Number of copies processed by each engine")
 {
     bytesCopied

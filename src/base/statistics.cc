@@ -132,8 +132,8 @@ InfoAccess::info() const
 }
 
 Formula::Formula(Group *parent, const char *name, const char *desc)
-    : DataWrapVec<Formula, FormulaInfoProxy>(parent, name, UNIT_UNSPECIFIED,
-                                             desc)
+    : DataWrapVec<Formula, FormulaInfoProxy>(
+            parent, name, Units::Unspecified::get(), desc)
 
 {
 }
@@ -146,8 +146,8 @@ Formula::Formula(Group *parent, const char *name, const Units::Base *unit,
 
 Formula::Formula(Group *parent, const char *name, const char *desc,
                  const Temp &r)
-    : DataWrapVec<Formula, FormulaInfoProxy>(parent, name, UNIT_UNSPECIFIED,
-                                             desc)
+    : DataWrapVec<Formula, FormulaInfoProxy>(
+            parent, name, Units::Unspecified::get(), desc)
 {
     *this = r;
 }

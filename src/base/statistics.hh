@@ -374,7 +374,7 @@ class DataWrapVec : public DataWrap<Derived, InfoProxyType>
     typedef InfoProxyType<Derived> Info;
 
     DataWrapVec(Group *parent = nullptr, const char *name = nullptr,
-                const Units::Base *unit = UNIT_UNSPECIFIED,
+                const Units::Base *unit=Units::Unspecified::get(),
                 const char *desc = nullptr)
         : DataWrap<Derived, InfoProxyType>(parent, name, unit, desc)
     {}
@@ -551,7 +551,7 @@ class ScalarBase : public DataWrap<Derived, ScalarInfoProxy>
 
   public:
     ScalarBase(Group *parent = nullptr, const char *name = nullptr,
-               const Units::Base *unit = UNIT_UNSPECIFIED,
+               const Units::Base *unit=Units::Unspecified::get(),
                const char *desc = nullptr)
         : DataWrap<Derived, ScalarInfoProxy>(parent, name, unit, desc)
     {
@@ -1946,13 +1946,14 @@ class Scalar : public ScalarBase<Scalar, StatStor>
     using ScalarBase<Scalar, StatStor>::operator=;
 
     Scalar(Group *parent = nullptr)
-        : ScalarBase<Scalar, StatStor>(parent, nullptr, UNIT_UNSPECIFIED,
-                                       nullptr)
+        : ScalarBase<Scalar, StatStor>(
+                parent, nullptr, Units::Unspecified::get(), nullptr)
     {
     }
 
     Scalar(Group *parent, const char *name, const char *desc = nullptr)
-        : ScalarBase<Scalar, StatStor>(parent, name, UNIT_UNSPECIFIED, desc)
+        : ScalarBase<Scalar, StatStor>(
+                parent, name, Units::Unspecified::get(), desc)
     {
     }
 
@@ -1973,13 +1974,14 @@ class Average : public ScalarBase<Average, AvgStor>
     using ScalarBase<Average, AvgStor>::operator=;
 
     Average(Group *parent = nullptr)
-        : ScalarBase<Average, AvgStor>(parent, nullptr, UNIT_UNSPECIFIED,
-                                       nullptr)
+        : ScalarBase<Average, AvgStor>(
+                parent, nullptr, Units::Unspecified::get(), nullptr)
     {
     }
 
     Average(Group *parent, const char *name, const char *desc = nullptr)
-        : ScalarBase<Average, AvgStor>(parent, name, UNIT_UNSPECIFIED, desc)
+        : ScalarBase<Average, AvgStor>(
+                parent, name, Units::Unspecified::get(), desc)
     {
     }
 
@@ -1994,12 +1996,12 @@ class Value : public ValueBase<Value>
 {
   public:
     Value(Group *parent = nullptr)
-        : ValueBase<Value>(parent, nullptr, UNIT_UNSPECIFIED, nullptr)
+        : ValueBase<Value>(parent, nullptr, Units::Unspecified::get(), nullptr)
     {
     }
 
     Value(Group *parent, const char *name, const char *desc = nullptr)
-        : ValueBase<Value>(parent, name, UNIT_UNSPECIFIED, desc)
+        : ValueBase<Value>(parent, name, Units::Unspecified::get(), desc)
     {
     }
 
@@ -2018,13 +2020,14 @@ class Vector : public VectorBase<Vector, StatStor>
 {
   public:
     Vector(Group *parent = nullptr)
-        : VectorBase<Vector, StatStor>(parent, nullptr, UNIT_UNSPECIFIED,
-                                       nullptr)
+        : VectorBase<Vector, StatStor>(
+                parent, nullptr, Units::Unspecified::get(), nullptr)
     {
     }
 
     Vector(Group *parent, const char *name, const char *desc = nullptr)
-        : VectorBase<Vector, StatStor>(parent, name, UNIT_UNSPECIFIED, desc)
+        : VectorBase<Vector, StatStor>(
+                parent, name, Units::Unspecified::get(), desc)
     {
     }
 
@@ -2043,14 +2046,14 @@ class AverageVector : public VectorBase<AverageVector, AvgStor>
 {
   public:
     AverageVector(Group *parent = nullptr)
-        : VectorBase<AverageVector, AvgStor>(parent, nullptr, UNIT_UNSPECIFIED,
-                                             nullptr)
+        : VectorBase<AverageVector, AvgStor>(
+                parent, nullptr, Units::Unspecified::get(), nullptr)
     {
     }
 
     AverageVector(Group *parent, const char *name, const char *desc = nullptr)
-        : VectorBase<AverageVector, AvgStor>(parent, name, UNIT_UNSPECIFIED,
-                                             desc)
+        : VectorBase<AverageVector, AvgStor>(
+                parent, name, Units::Unspecified::get(), desc)
     {
     }
 
@@ -2069,14 +2072,14 @@ class Vector2d : public Vector2dBase<Vector2d, StatStor>
 {
   public:
     Vector2d(Group *parent = nullptr)
-        : Vector2dBase<Vector2d, StatStor>(parent, nullptr, UNIT_UNSPECIFIED,
-                                           nullptr)
+        : Vector2dBase<Vector2d, StatStor>(
+                parent, nullptr, Units::Unspecified::get(), nullptr)
     {
     }
 
     Vector2d(Group *parent, const char *name, const char *desc = nullptr)
-        : Vector2dBase<Vector2d, StatStor>(parent, name, UNIT_UNSPECIFIED,
-                                           desc)
+        : Vector2dBase<Vector2d, StatStor>(
+                parent, name, Units::Unspecified::get(), desc)
     {
     }
 
@@ -2095,14 +2098,14 @@ class Distribution : public DistBase<Distribution, DistStor>
 {
   public:
     Distribution(Group *parent = nullptr)
-        : DistBase<Distribution, DistStor>(parent, nullptr, UNIT_UNSPECIFIED,
-                                           nullptr)
+        : DistBase<Distribution, DistStor>(
+                parent, nullptr, Units::Unspecified::get(), nullptr)
     {
     }
 
     Distribution(Group *parent, const char *name, const char *desc = nullptr)
-        : DistBase<Distribution, DistStor>(parent, name, UNIT_UNSPECIFIED,
-                                           desc)
+        : DistBase<Distribution, DistStor>(
+                parent, name, Units::Unspecified::get(), desc)
     {
     }
 
@@ -2137,14 +2140,15 @@ class Histogram : public DistBase<Histogram, HistStor>
 {
   public:
     Histogram(Group *parent = nullptr)
-        : DistBase<Histogram, HistStor>(parent, nullptr, UNIT_UNSPECIFIED,
-                                        nullptr)
+        : DistBase<Histogram, HistStor>(
+                parent, nullptr, Units::Unspecified::get(), nullptr)
     {
     }
 
     Histogram(Group *parent, const char *name,
               const char *desc = nullptr)
-        : DistBase<Histogram, HistStor>(parent, name, UNIT_UNSPECIFIED, desc)
+        : DistBase<Histogram, HistStor>(
+                parent, name, Units::Unspecified::get(), desc)
     {
     }
 
@@ -2180,8 +2184,8 @@ class StandardDeviation : public DistBase<StandardDeviation, SampleStor>
      * Construct and initialize this distribution.
      */
     StandardDeviation(Group *parent = nullptr)
-        : DistBase<StandardDeviation, SampleStor>(parent, nullptr,
-                                                  UNIT_UNSPECIFIED, nullptr)
+        : DistBase<StandardDeviation, SampleStor>(
+                parent, nullptr, Units::Unspecified::get(), nullptr)
     {
         SampleStor::Params *params = new SampleStor::Params;
         this->doInit();
@@ -2190,8 +2194,8 @@ class StandardDeviation : public DistBase<StandardDeviation, SampleStor>
 
     StandardDeviation(Group *parent, const char *name,
                       const char *desc = nullptr)
-        : DistBase<StandardDeviation, SampleStor>(parent, name,
-                                                  UNIT_UNSPECIFIED, desc)
+        : DistBase<StandardDeviation, SampleStor>(
+                parent, name, Units::Unspecified::get(), desc)
     {
         SampleStor::Params *params = new SampleStor::Params;
         this->doInit();
@@ -2219,8 +2223,8 @@ class AverageDeviation : public DistBase<AverageDeviation, AvgSampleStor>
      * Construct and initialize this distribution.
      */
     AverageDeviation(Group *parent = nullptr)
-        : DistBase<AverageDeviation, AvgSampleStor>(parent, nullptr,
-                                                    UNIT_UNSPECIFIED, nullptr)
+        : DistBase<AverageDeviation, AvgSampleStor>(
+                parent, nullptr, Units::Unspecified::get(), nullptr)
     {
         AvgSampleStor::Params *params = new AvgSampleStor::Params;
         this->doInit();
@@ -2229,8 +2233,8 @@ class AverageDeviation : public DistBase<AverageDeviation, AvgSampleStor>
 
     AverageDeviation(Group *parent, const char *name,
                      const char *desc = nullptr)
-        : DistBase<AverageDeviation, AvgSampleStor>(parent, name,
-                                                    UNIT_UNSPECIFIED, desc)
+        : DistBase<AverageDeviation, AvgSampleStor>(
+                parent, name, Units::Unspecified::get(), desc)
     {
         AvgSampleStor::Params *params = new AvgSampleStor::Params;
         this->doInit();
@@ -2256,14 +2260,14 @@ class VectorDistribution : public VectorDistBase<VectorDistribution, DistStor>
   public:
     VectorDistribution(Group *parent = nullptr)
         : VectorDistBase<VectorDistribution, DistStor>(parent, nullptr,
-            UNIT_UNSPECIFIED, nullptr)
+            Units::Unspecified::get(), nullptr)
     {
     }
 
     VectorDistribution(Group *parent, const char *name,
                        const char *desc = nullptr)
-        : VectorDistBase<VectorDistribution, DistStor>(parent, name,
-                                                       UNIT_UNSPECIFIED, desc)
+        : VectorDistBase<VectorDistribution, DistStor>(
+                parent, name, Units::Unspecified::get(), desc)
     {
     }
 
@@ -2303,14 +2307,14 @@ class VectorStandardDeviation
   public:
     VectorStandardDeviation(Group *parent = nullptr)
         : VectorDistBase<VectorStandardDeviation, SampleStor>(parent, nullptr,
-            UNIT_UNSPECIFIED, nullptr)
+            Units::Unspecified::get(), nullptr)
     {
     }
 
     VectorStandardDeviation(Group *parent, const char *name,
                             const char *desc = nullptr)
         : VectorDistBase<VectorStandardDeviation, SampleStor>(parent, name,
-            UNIT_UNSPECIFIED, desc)
+            Units::Unspecified::get(), desc)
     {
     }
 
@@ -2347,14 +2351,14 @@ class VectorAverageDeviation
   public:
     VectorAverageDeviation(Group *parent = nullptr)
         : VectorDistBase<VectorAverageDeviation, AvgSampleStor>(parent,
-            nullptr, UNIT_UNSPECIFIED, nullptr)
+            nullptr, Units::Unspecified::get(), nullptr)
     {
     }
 
     VectorAverageDeviation(Group *parent, const char *name,
                            const char *desc = nullptr)
         : VectorDistBase<VectorAverageDeviation, AvgSampleStor>(parent, name,
-            UNIT_UNSPECIFIED, desc)
+            Units::Unspecified::get(), desc)
     {
     }
 
@@ -2506,14 +2510,14 @@ class SparseHistogram : public SparseHistBase<SparseHistogram, SparseHistStor>
   public:
     SparseHistogram(Group *parent = nullptr)
         : SparseHistBase<SparseHistogram, SparseHistStor>(parent, nullptr,
-            UNIT_UNSPECIFIED, nullptr)
+            Units::Unspecified::get(), nullptr)
     {
     }
 
     SparseHistogram(Group *parent, const char *name,
                     const char *desc = nullptr)
         : SparseHistBase<SparseHistogram, SparseHistStor>(parent, name,
-            UNIT_UNSPECIFIED, desc)
+            Units::Unspecified::get(), desc)
     {
     }
 

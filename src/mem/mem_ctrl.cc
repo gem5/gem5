@@ -1185,87 +1185,94 @@ MemCtrl::CtrlStats::CtrlStats(MemCtrl &_ctrl)
     : Stats::Group(&_ctrl),
     ctrl(_ctrl),
 
-    ADD_STAT(readReqs, UNIT_COUNT, "Number of read requests accepted"),
-    ADD_STAT(writeReqs, UNIT_COUNT, "Number of write requests accepted"),
+    ADD_STAT(readReqs, Stats::Units::Count::get(),
+             "Number of read requests accepted"),
+    ADD_STAT(writeReqs, Stats::Units::Count::get(),
+             "Number of write requests accepted"),
 
-    ADD_STAT(readBursts, UNIT_COUNT,
+    ADD_STAT(readBursts, Stats::Units::Count::get(),
              "Number of controller read bursts, including those serviced by "
              "the write queue"),
-    ADD_STAT(writeBursts, UNIT_COUNT,
+    ADD_STAT(writeBursts, Stats::Units::Count::get(),
              "Number of controller write bursts, including those merged in "
              "the write queue"),
-    ADD_STAT(servicedByWrQ, UNIT_COUNT,
+    ADD_STAT(servicedByWrQ, Stats::Units::Count::get(),
              "Number of controller read bursts serviced by the write queue"),
-    ADD_STAT(mergedWrBursts, UNIT_COUNT,
+    ADD_STAT(mergedWrBursts, Stats::Units::Count::get(),
              "Number of controller write bursts merged with an existing one"),
 
-    ADD_STAT(neitherReadNorWriteReqs, UNIT_COUNT,
+    ADD_STAT(neitherReadNorWriteReqs, Stats::Units::Count::get(),
              "Number of requests that are neither read nor write"),
 
-    ADD_STAT(avgRdQLen,
-             UNIT_RATE(Stats::Units::Count, Stats::Units::Tick),
+    ADD_STAT(avgRdQLen, Stats::Units::Rate<
+                Stats::Units::Count, Stats::Units::Tick>::get(),
              "Average read queue length when enqueuing"),
-    ADD_STAT(avgWrQLen,
-             UNIT_RATE(Stats::Units::Count, Stats::Units::Tick),
+    ADD_STAT(avgWrQLen, Stats::Units::Rate<
+                Stats::Units::Count, Stats::Units::Tick>::get(),
              "Average write queue length when enqueuing"),
 
-    ADD_STAT(numRdRetry, UNIT_COUNT,
+    ADD_STAT(numRdRetry, Stats::Units::Count::get(),
              "Number of times read queue was full causing retry"),
-    ADD_STAT(numWrRetry, UNIT_COUNT,
+    ADD_STAT(numWrRetry, Stats::Units::Count::get(),
              "Number of times write queue was full causing retry"),
 
-    ADD_STAT(readPktSize, UNIT_COUNT, "Read request sizes (log2)"),
-    ADD_STAT(writePktSize, UNIT_COUNT, "Write request sizes (log2)"),
+    ADD_STAT(readPktSize, Stats::Units::Count::get(),
+             "Read request sizes (log2)"),
+    ADD_STAT(writePktSize, Stats::Units::Count::get(),
+             "Write request sizes (log2)"),
 
-    ADD_STAT(rdQLenPdf, UNIT_COUNT,
+    ADD_STAT(rdQLenPdf, Stats::Units::Count::get(),
              "What read queue length does an incoming req see"),
-    ADD_STAT(wrQLenPdf, UNIT_COUNT,
+    ADD_STAT(wrQLenPdf, Stats::Units::Count::get(),
              "What write queue length does an incoming req see"),
 
-    ADD_STAT(rdPerTurnAround, UNIT_COUNT,
+    ADD_STAT(rdPerTurnAround, Stats::Units::Count::get(),
              "Reads before turning the bus around for writes"),
-    ADD_STAT(wrPerTurnAround, UNIT_COUNT,
+    ADD_STAT(wrPerTurnAround, Stats::Units::Count::get(),
              "Writes before turning the bus around for reads"),
 
-    ADD_STAT(bytesReadWrQ, UNIT_BYTE,
+    ADD_STAT(bytesReadWrQ, Stats::Units::Byte::get(),
              "Total number of bytes read from write queue"),
-    ADD_STAT(bytesReadSys, UNIT_BYTE,
+    ADD_STAT(bytesReadSys, Stats::Units::Byte::get(),
              "Total read bytes from the system interface side"),
-    ADD_STAT(bytesWrittenSys, UNIT_BYTE,
+    ADD_STAT(bytesWrittenSys, Stats::Units::Byte::get(),
              "Total written bytes from the system interface side"),
 
-    ADD_STAT(avgRdBWSys, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
+    ADD_STAT(avgRdBWSys, Stats::Units::Rate<
+                Stats::Units::Byte, Stats::Units::Second>::get(),
              "Average system read bandwidth in Byte/s"),
-    ADD_STAT(avgWrBWSys, UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
+    ADD_STAT(avgWrBWSys, Stats::Units::Rate<
+                Stats::Units::Byte, Stats::Units::Second>::get(),
              "Average system write bandwidth in Byte/s"),
 
-    ADD_STAT(totGap, UNIT_TICK, "Total gap between requests"),
-    ADD_STAT(avgGap, UNIT_RATE(Stats::Units::Tick, Stats::Units::Count),
+    ADD_STAT(totGap, Stats::Units::Tick::get(), "Total gap between requests"),
+    ADD_STAT(avgGap, Stats::Units::Rate<
+                Stats::Units::Tick, Stats::Units::Count>::get(),
              "Average gap between requests"),
 
-    ADD_STAT(requestorReadBytes, UNIT_BYTE,
+    ADD_STAT(requestorReadBytes, Stats::Units::Byte::get(),
              "Per-requestor bytes read from memory"),
-    ADD_STAT(requestorWriteBytes, UNIT_BYTE,
+    ADD_STAT(requestorWriteBytes, Stats::Units::Byte::get(),
              "Per-requestor bytes write to memory"),
-    ADD_STAT(requestorReadRate,
-             UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
+    ADD_STAT(requestorReadRate, Stats::Units::Rate<
+                Stats::Units::Byte, Stats::Units::Second>::get(),
              "Per-requestor bytes read from memory rate"),
-    ADD_STAT(requestorWriteRate,
-             UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
+    ADD_STAT(requestorWriteRate, Stats::Units::Rate<
+                Stats::Units::Byte, Stats::Units::Second>::get(),
              "Per-requestor bytes write to memory rate"),
-    ADD_STAT(requestorReadAccesses, UNIT_COUNT,
+    ADD_STAT(requestorReadAccesses, Stats::Units::Count::get(),
              "Per-requestor read serviced memory accesses"),
-    ADD_STAT(requestorWriteAccesses, UNIT_COUNT,
+    ADD_STAT(requestorWriteAccesses, Stats::Units::Count::get(),
              "Per-requestor write serviced memory accesses"),
-    ADD_STAT(requestorReadTotalLat, UNIT_TICK,
+    ADD_STAT(requestorReadTotalLat, Stats::Units::Tick::get(),
              "Per-requestor read total memory access latency"),
-    ADD_STAT(requestorWriteTotalLat, UNIT_TICK,
+    ADD_STAT(requestorWriteTotalLat, Stats::Units::Tick::get(),
              "Per-requestor write total memory access latency"),
-    ADD_STAT(requestorReadAvgLat,
-             UNIT_RATE(Stats::Units::Tick, Stats::Units::Count),
+    ADD_STAT(requestorReadAvgLat, Stats::Units::Rate<
+                Stats::Units::Tick, Stats::Units::Count>::get(),
              "Per-requestor read average memory access latency"),
-    ADD_STAT(requestorWriteAvgLat,
-             UNIT_RATE(Stats::Units::Tick, Stats::Units::Count),
+    ADD_STAT(requestorWriteAvgLat, Stats::Units::Rate<
+                Stats::Units::Tick, Stats::Units::Count>::get(),
              "Per-requestor write average memory access latency")
 
 {

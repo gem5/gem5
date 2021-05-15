@@ -63,10 +63,11 @@ BaseXBar::BaseXBar(const BaseXBarParams &p)
       gotAllAddrRanges(false), defaultPortID(InvalidPortID),
       useDefaultRange(p.use_default_range),
 
-      ADD_STAT(transDist, UNIT_COUNT, "Transaction distribution"),
-      ADD_STAT(pktCount, UNIT_COUNT,
+      ADD_STAT(transDist, Stats::Units::Count::get(),
+               "Transaction distribution"),
+      ADD_STAT(pktCount, Stats::Units::Count::get(),
                "Packet count per connected requestor and responder"),
-      ADD_STAT(pktSize, UNIT_BYTE,
+      ADD_STAT(pktSize, Stats::Units::Byte::get(),
                "Cumulative packet size per connected requestor and responder")
 {
 }
@@ -141,8 +142,8 @@ BaseXBar::Layer<SrcType, DstType>::Layer(DstType& _port, BaseXBar& _xbar,
     Stats::Group(&_xbar, _name.c_str()),
     port(_port), xbar(_xbar), _name(xbar.name() + "." + _name), state(IDLE),
     waitingForPeer(NULL), releaseEvent([this]{ releaseLayer(); }, name()),
-    ADD_STAT(occupancy, UNIT_TICK, "Layer occupancy (ticks)"),
-    ADD_STAT(utilization, UNIT_RATIO, "Layer utilization")
+    ADD_STAT(occupancy, Stats::Units::Tick::get(), "Layer occupancy (ticks)"),
+    ADD_STAT(utilization, Stats::Units::Ratio::get(), "Layer utilization")
 {
     occupancy
         .flags(Stats::nozero);

@@ -216,27 +216,34 @@ BaseTags::BaseTagStats::BaseTagStats(BaseTags &_tags)
     : Stats::Group(&_tags),
     tags(_tags),
 
-    ADD_STAT(tagsInUse, UNIT_RATE(Stats::Units::Tick, Stats::Units::Count),
+    ADD_STAT(tagsInUse, Stats::Units::Rate<
+                Stats::Units::Tick, Stats::Units::Count>::get(),
              "Average ticks per tags in use"),
-    ADD_STAT(totalRefs, UNIT_COUNT,
+    ADD_STAT(totalRefs, Stats::Units::Count::get(),
              "Total number of references to valid blocks."),
-    ADD_STAT(sampledRefs, UNIT_COUNT,
+    ADD_STAT(sampledRefs, Stats::Units::Count::get(),
              "Sample count of references to valid blocks."),
-    ADD_STAT(avgRefs, UNIT_RATE(Stats::Units::Count, Stats::Units::Count),
+    ADD_STAT(avgRefs, Stats::Units::Rate<
+                Stats::Units::Count, Stats::Units::Count>::get(),
              "Average number of references to valid blocks."),
-    ADD_STAT(warmupTick, UNIT_TICK,
+    ADD_STAT(warmupTick, Stats::Units::Tick::get(),
              "The tick when the warmup percentage was hit."),
-    ADD_STAT(occupancies, UNIT_RATE(Stats::Units::Count, Stats::Units::Tick),
+    ADD_STAT(occupancies, Stats::Units::Rate<
+                Stats::Units::Count, Stats::Units::Tick>::get(),
              "Average occupied blocks per tick, per requestor"),
-    ADD_STAT(avgOccs, UNIT_RATE(Stats::Units::Ratio, Stats::Units::Tick),
+    ADD_STAT(avgOccs, Stats::Units::Rate<
+                Stats::Units::Ratio, Stats::Units::Tick>::get(),
              "Average percentage of cache occupancy"),
-    ADD_STAT(occupanciesTaskId, UNIT_COUNT, "Occupied blocks per task id"),
-    ADD_STAT(ageTaskId, UNIT_COUNT,
+    ADD_STAT(occupanciesTaskId, Stats::Units::Count::get(),
+             "Occupied blocks per task id"),
+    ADD_STAT(ageTaskId, Stats::Units::Count::get(),
              "Occupied blocks per task id, per block age"),
-    ADD_STAT(ratioOccsTaskId, UNIT_RATIO,
+    ADD_STAT(ratioOccsTaskId, Stats::Units::Ratio::get(),
              "Ratio of occupied blocks and all blocks, per task id"),
-    ADD_STAT(tagAccesses, UNIT_COUNT, "Number of tag accesses"),
-    ADD_STAT(dataAccesses, UNIT_COUNT, "Number of data accesses")
+    ADD_STAT(tagAccesses, Stats::Units::Count::get(),
+             "Number of tag accesses"),
+    ADD_STAT(dataAccesses, Stats::Units::Count::get(),
+             "Number of data accesses")
 {
 }
 

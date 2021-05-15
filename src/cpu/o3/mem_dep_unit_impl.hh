@@ -117,12 +117,14 @@ template <class MemDepPred, class Impl>
 MemDepUnit<MemDepPred, Impl>::
 MemDepUnitStats::MemDepUnitStats(Stats::Group *parent)
     : Stats::Group(parent),
-      ADD_STAT(insertedLoads, UNIT_COUNT,
+      ADD_STAT(insertedLoads, Stats::Units::Count::get(),
                "Number of loads inserted to the mem dependence unit."),
-      ADD_STAT(insertedStores, UNIT_COUNT,
+      ADD_STAT(insertedStores, Stats::Units::Count::get(),
                "Number of stores inserted to the mem dependence unit."),
-      ADD_STAT(conflictingLoads, UNIT_COUNT, "Number of conflicting loads."),
-      ADD_STAT(conflictingStores, UNIT_COUNT, "Number of conflicting stores.")
+      ADD_STAT(conflictingLoads, Stats::Units::Count::get(),
+               "Number of conflicting loads."),
+      ADD_STAT(conflictingStores, Stats::Units::Count::get(),
+               "Number of conflicting stores.")
 {
 }
 

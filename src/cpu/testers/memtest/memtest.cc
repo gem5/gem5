@@ -191,8 +191,10 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
 }
 MemTest::MemTestStats::MemTestStats(Stats::Group *parent)
       : Stats::Group(parent),
-      ADD_STAT(numReads, UNIT_COUNT, "number of read accesses completed"),
-      ADD_STAT(numWrites, UNIT_COUNT, "number of write accesses completed")
+      ADD_STAT(numReads, Stats::Units::Count::get(),
+               "number of read accesses completed"),
+      ADD_STAT(numWrites, Stats::Units::Count::get(),
+               "number of write accesses completed")
 {
 
 }

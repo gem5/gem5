@@ -540,8 +540,8 @@ ROB<Impl>::readTailInst(ThreadID tid)
 template <class Impl>
 ROB<Impl>::ROBStats::ROBStats(Stats::Group *parent)
     : Stats::Group(parent, "rob"),
-      ADD_STAT(reads, UNIT_COUNT, "The number of ROB reads"),
-      ADD_STAT(writes, UNIT_COUNT, "The number of ROB writes")
+      ADD_STAT(reads, Stats::Units::Count::get(), "The number of ROB reads"),
+      ADD_STAT(writes, Stats::Units::Count::get(), "The number of ROB writes")
 {
 }
 

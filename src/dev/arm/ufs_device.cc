@@ -756,56 +756,56 @@ UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams &p) :
 UFSHostDevice::
 UFSHostDeviceStats::UFSHostDeviceStats(UFSHostDevice *parent)
     : Stats::Group(parent, "UFSDiskHost"),
-      ADD_STAT(currentSCSIQueue, UNIT_COUNT,
+      ADD_STAT(currentSCSIQueue, Stats::Units::Count::get(),
                "Most up to date length of the command queue"),
-      ADD_STAT(currentReadSSDQueue, UNIT_COUNT,
+      ADD_STAT(currentReadSSDQueue, Stats::Units::Count::get(),
                "Most up to date length of the read SSD queue"),
-      ADD_STAT(currentWriteSSDQueue, UNIT_COUNT,
+      ADD_STAT(currentWriteSSDQueue, Stats::Units::Count::get(),
                "Most up to date length of the write SSD queue"),
       /** Amount of data read/written */
-      ADD_STAT(totalReadSSD, UNIT_BYTE,
+      ADD_STAT(totalReadSSD, Stats::Units::Byte::get(),
                "Number of bytes read from SSD"),
-      ADD_STAT(totalWrittenSSD, UNIT_BYTE,
+      ADD_STAT(totalWrittenSSD, Stats::Units::Byte::get(),
                "Number of bytes written to SSD"),
-      ADD_STAT(totalReadDiskTransactions, UNIT_COUNT,
+      ADD_STAT(totalReadDiskTransactions, Stats::Units::Count::get(),
                "Number of transactions from disk"),
-      ADD_STAT(totalWriteDiskTransactions, UNIT_COUNT,
+      ADD_STAT(totalWriteDiskTransactions, Stats::Units::Count::get(),
                "Number of transactions to disk"),
-      ADD_STAT(totalReadUFSTransactions, UNIT_COUNT,
+      ADD_STAT(totalReadUFSTransactions, Stats::Units::Count::get(),
                "Number of transactions from device"),
-      ADD_STAT(totalWriteUFSTransactions, UNIT_COUNT,
+      ADD_STAT(totalWriteUFSTransactions, Stats::Units::Count::get(),
                "Number of transactions to device"),
       /** Average bandwidth for reads and writes */
-      ADD_STAT(averageReadSSDBW,
-               UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
+      ADD_STAT(averageReadSSDBW, Stats::Units::Rate<
+                    Stats::Units::Byte, Stats::Units::Second>::get(),
                "Average read bandwidth",
                totalReadSSD / simSeconds),
-      ADD_STAT(averageWriteSSDBW,
-               UNIT_RATE(Stats::Units::Byte, Stats::Units::Second),
+      ADD_STAT(averageWriteSSDBW, Stats::Units::Rate<
+                    Stats::Units::Byte, Stats::Units::Second>::get(),
                "Average write bandwidth",
                totalWrittenSSD / simSeconds),
-      ADD_STAT(averageSCSIQueue,
-               UNIT_RATE(Stats::Units::Count, Stats::Units::Tick),
+      ADD_STAT(averageSCSIQueue, Stats::Units::Rate<
+                    Stats::Units::Count, Stats::Units::Tick>::get(),
                "Average command queue length"),
-      ADD_STAT(averageReadSSDQueue,
-               UNIT_RATE(Stats::Units::Count, Stats::Units::Tick),
+      ADD_STAT(averageReadSSDQueue, Stats::Units::Rate<
+                    Stats::Units::Count, Stats::Units::Tick>::get(),
                "Average read queue length"),
-      ADD_STAT(averageWriteSSDQueue,
-               UNIT_RATE(Stats::Units::Count, Stats::Units::Tick),
+      ADD_STAT(averageWriteSSDQueue, Stats::Units::Rate<
+                    Stats::Units::Count, Stats::Units::Tick>::get(),
                "Average write queue length"),
       /** Number of doorbells rung*/
-      ADD_STAT(curDoorbell, UNIT_COUNT,
+      ADD_STAT(curDoorbell, Stats::Units::Count::get(),
                "Most up to date number of doorbells used",
                parent->activeDoorbells),
-      ADD_STAT(maxDoorbell, UNIT_COUNT,
+      ADD_STAT(maxDoorbell, Stats::Units::Count::get(),
                "Maximum number of doorbells utilized"),
-      ADD_STAT(averageDoorbell,
-               UNIT_RATE(Stats::Units::Count, Stats::Units::Tick),
+      ADD_STAT(averageDoorbell, Stats::Units::Rate<
+                    Stats::Units::Count, Stats::Units::Tick>::get(),
                "Average number of Doorbells used"),
       /** Latency*/
-      ADD_STAT(transactionLatency, UNIT_TICK,
+      ADD_STAT(transactionLatency, Stats::Units::Tick::get(),
                "Histogram of transaction times"),
-      ADD_STAT(idleTimes, UNIT_TICK, "Histogram of idle times")
+      ADD_STAT(idleTimes, Stats::Units::Tick::get(), "Histogram of idle times")
 {
     using namespace Stats;
 

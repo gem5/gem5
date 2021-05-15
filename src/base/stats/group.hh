@@ -60,7 +60,7 @@
  *
  *     Group()
  *         : ADD_STAT(scalar0, "Description of scalar0"),
- *           scalar1(this, "scalar1", UNIT_UNSPECIFIED,
+ *           scalar1(this, "scalar1", Stats::Units::Unspecified::get(),
  *                   "Description of scalar1")
  *     {
  *     }

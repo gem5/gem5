@@ -98,13 +98,14 @@ Device::~Device()
 
 Device::DeviceStats::DeviceStats(Stats::Group *parent)
     : Stats::Group(parent, "SinicDevice"),
-      ADD_STAT(totalVnicDistance, UNIT_COUNT,
+      ADD_STAT(totalVnicDistance, Stats::Units::Count::get(),
                "Total vnic distance"),
-      ADD_STAT(numVnicDistance, UNIT_COUNT,
+      ADD_STAT(numVnicDistance, Stats::Units::Count::get(),
                "Number of vnic distance measurements"),
-      ADD_STAT(maxVnicDistance, UNIT_COUNT, "Maximum vnic distance"),
-      ADD_STAT(avgVnicDistance,
-               UNIT_RATE(Stats::Units::Count, Stats::Units::Count),
+      ADD_STAT(maxVnicDistance, Stats::Units::Count::get(),
+               "Maximum vnic distance"),
+      ADD_STAT(avgVnicDistance, Stats::Units::Rate<
+                    Stats::Units::Count, Stats::Units::Count>::get(),
                "Average vnic distance", totalVnicDistance / numVnicDistance),
       _maxVnicDistance(0)
 {
