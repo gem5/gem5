@@ -31,24 +31,46 @@
 
 #include <type_traits>
 
+#include "base/compiler.hh"
 #include "base/cprintf.hh"
 
 /**
  * Convenience macros to declare the unit of a stat.
  */
-#define UNIT_CYCLE Stats::Units::Cycle::get()
-#define UNIT_TICK Stats::Units::Tick::get()
-#define UNIT_SECOND Stats::Units::Second::get()
-#define UNIT_BIT Stats::Units::Bit::get()
-#define UNIT_BYTE Stats::Units::Byte::get()
-#define UNIT_JOULE Stats::Units::Joule::get()
-#define UNIT_VOLT Stats::Units::Volt::get()
-#define UNIT_CELSIUS Stats::Units::DegreeCelsius::get()
-#define UNIT_RATE(T1, T2) Stats::Units::Rate<T1, T2>::get()
-#define UNIT_RATIO Stats::Units::Ratio::get()
-#define UNIT_COUNT Stats::Units::Count::get()
-#define UNIT_WATT Stats::Units::Watt::get()
-#define UNIT_UNSPECIFIED Stats::Units::Unspecified::get()
+#define UNIT_CYCLE GEM5_DEPRECATED_MACRO( \
+        UNIT_CYCLE, Stats::Units::Cycle::get(), \
+        "Use Stats::Units::Cycle::get()")
+#define UNIT_TICK GEM5_DEPRECATED_MACRO( \
+        UNIT_TICK, Stats::Units::Tick::get(), "Use Stats::Units::Tick::get()")
+#define UNIT_SECOND GEM5_DEPRECATED_MACRO( \
+        UNIT_SECOND, Stats::Units::Second::get(), \
+        "Use Stats::Units::Second::get()")
+#define UNIT_BIT GEM5_DEPRECATED_MACRO( \
+        UNIT_BIT, Stats::Units::Bit::get(), "Use Stats::Units::Bit::get()")
+#define UNIT_BYTE GEM5_DEPRECATED_MACRO( \
+        UNIT_BYTE, Stats::Units::Byte::get(), "Use Stats::Units::Byte::get()")
+#define UNIT_JOULE GEM5_DEPRECATED_MACRO( \
+        UNIT_JOULE, Stats::Units::Joule::get(), \
+        "Use Stats::Units::Joule::get()")
+#define UNIT_VOLT GEM5_DEPRECATED_MACRO( \
+        UNIT_VOLD, Stats::Units::Volt::get(), "Use Stats::Units::Volt::get()")
+#define UNIT_CELSIUS GEM5_DEPRECATED_MACRO( \
+        UNIT_CELSIUS, Stats::Units::DegreeCelsius::get(), \
+        "Use Stats::Units::DegreeCelsius::get()")
+#define UNIT_RATE(T1, T2) GEM5_DEPRECATED_MACRO( \
+        UNIT_RATE, (Stats::Units::Rate<T1, T2>::get()), \
+        "Use Stats::Units::Rate<T1, T2>::get()")
+#define UNIT_RATIO GEM5_DEPRECATED_MACRO( \
+        UNIT_RATIO, Stats::Units::Ratio::get(), \
+        "Use Stats::Units::Ratio::get()")
+#define UNIT_COUNT GEM5_DEPRECATED_MACRO( \
+        UNIT_COUNT, Stats::Units::Count::get(), \
+        "Use Stats::Units::Count::get()")
+#define UNIT_WATT GEM5_DEPRECATED_MACRO( \
+        UNIT_WATT, Stats::Units::Watt::get(), "Use Stats::Units::Watt::get()")
+#define UNIT_UNSPECIFIED GEM5_DEPRECATED_MACRO( \
+        UNIT_UNSPECIFIED, Stats::Units::Unspecified::get(), \
+        "Use Stats::Units::Unspecified::get()")
 
 namespace Stats {
 
