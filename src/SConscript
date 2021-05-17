@@ -1177,18 +1177,32 @@ namespace Debug {
         n, compound, desc, fmt = flag
         assert n == name
 
+        # We intentionally make flag a reference to a heap allocated object so
+        # (1) It has a similar interface to a global object like before
+        # (2) It does not get destructed at the end of simulation
+        # The second property is desirable as global objects from different
+        # translation units do not have a defined destruction order, so it'll
+        # be unsafe to access debug flags in their destructor in such cases.
         if not compound:
+            code('SimpleFlag& $name = *(')
+            code.indent()
             if fmt:
-                code('SimpleFlag $name("$name", "$desc", true);')
+                code('new SimpleFlag("$name", "$desc", true)')
             else:
-                code('SimpleFlag $name("$name", "$desc", false);')
+                code('new SimpleFlag("$name", "$desc", false)')
+            code.dedent()
+            code(');')
         else:
-            comp_code('CompoundFlag $name("$name", "$desc", {')
+            comp_code('CompoundFlag& $name = *(')
+            comp_code.indent()
+            comp_code('new CompoundFlag("$name", "$desc", {')
             comp_code.indent()
             for flag in compound:
                 comp_code('&$flag,')
             comp_code.dedent()
-            comp_code('});')
+            comp_code('})')
+            comp_code.dedent()
+            comp_code(');')
 
     code.append(comp_code)
     code()
@@ -1221,11 +1235,11 @@ namespace Debug {
     code('class SimpleFlag;')
 
     if compound:
-        code('extern CompoundFlag $name;')
+        code('extern CompoundFlag& $name;')
         for flag in compound:
-            code('extern SimpleFlag $flag;')
+            code('extern SimpleFlag& $flag;')
     else:
-        code('extern SimpleFlag $name;')
+        code('extern SimpleFlag& $name;')
 
     code('''
 }
