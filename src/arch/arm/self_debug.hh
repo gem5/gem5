@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2021 Arm Limited
  * Copyright (c) 2019 Metempsy Technology LSC
  * All rights reserved
  *
@@ -103,7 +104,7 @@ class BrkPoint
     }
 
 
-    inline uint32_t getVMIDfromReg(ThreadContext *tc);
+    vmid_t getVMIDfromReg(ThreadContext *tc, bool vs);
 
   public:
     bool testAddrMatch(ThreadContext *tc, Addr pc, uint8_t bas);

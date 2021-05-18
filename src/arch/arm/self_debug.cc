@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2021 Arm Limited
  * Copyright (c) 2019 Metempsy Technology LSC
  * All rights reserved
  *
@@ -452,15 +453,18 @@ BrkPoint::testContextMatch(ThreadContext *tc, bool ctx1, bool low_ctx)
 bool
 BrkPoint::testVMIDMatch(ThreadContext *tc)
 {
+    const bool vs = ((VTCR_t)(tc->readMiscReg(MISCREG_VTCR_EL2))).vs;
+
     uint32_t vmid_index = 55;
-    if (VMID16enabled)
+    if (VMID16enabled && vs)
         vmid_index = 63;
     ExceptionLevel el = currEL(tc);
     if (el == EL2)
         return false;
 
-    uint32_t vmid = bits(tc->readMiscReg(MISCREG_VTTBR_EL2), vmid_index, 48);
-    uint32_t v = getVMIDfromReg(tc);
+    vmid_t vmid = bits(tc->readMiscReg(MISCREG_VTTBR_EL2), vmid_index, 48);
+    vmid_t v = getVMIDfromReg(tc, vs);
+
     return (v == vmid);
 }
 
@@ -520,11 +524,11 @@ BrkPoint::isEnabled(ThreadContext *tc, ExceptionLevel el,
     return v && SelfDebug::securityStateMatch(tc, ssc, hmc || !aarch32);
 }
 
-uint32_t
-BrkPoint::getVMIDfromReg(ThreadContext *tc)
+vmid_t
+BrkPoint::getVMIDfromReg(ThreadContext *tc, bool vs)
 {
     uint32_t vmid_index = 39;
-    if (VMID16enabled)
+    if (VMID16enabled && vs)
         vmid_index = 47;
     return bits(tc->readMiscReg(valRegIndex), vmid_index, 32);
 }
