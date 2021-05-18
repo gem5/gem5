@@ -77,7 +77,7 @@ def scx_get_parameter(name):
     _m5.arm_fast_model.scx_get_parameter(name, value)
     return value
 
-def scx_get_parameter_list(self):
+def scx_get_parameter_list():
     return _m5.arm_fast_model.scx_get_parameter_list()
 
 def scx_set_cpi_file(cpi_file_path):

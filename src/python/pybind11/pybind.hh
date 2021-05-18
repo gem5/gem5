@@ -39,6 +39,7 @@
 #define __PYTHON_PYBIND11_PYBIND_HH__
 
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 void pybind_init_core(pybind11::module_ &m_native);
 void pybind_init_debug(pybind11::module_ &m_native);
