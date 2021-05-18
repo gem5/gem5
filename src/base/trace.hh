@@ -189,7 +189,7 @@ const std::string &name();
 #define DPRINTFS(x, s, ...) do {                        \
     if (GEM5_UNLIKELY(TRACING_ON && Debug::x)) {          \
         Trace::getDebugLogger()->dprintf_flag(          \
-                curTick(), s->name(), #x, __VA_ARGS__); \
+                curTick(), (s)->name(), #x, __VA_ARGS__); \
     }                                                   \
 } while (0)
 
