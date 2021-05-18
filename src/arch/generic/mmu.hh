@@ -61,7 +61,7 @@ class BaseMMU : public SimObject
     }
 
   public:
-    void
+    virtual void
     flushAll()
     {
         dtb->flushAll();
