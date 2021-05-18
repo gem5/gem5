@@ -20,9 +20,7 @@ images=("gcc-version-10"
         "clang-version-8"
         "clang-version-7"
         "clang-version-6.0"
-        "clang-version-5.0"
-        "clang-version-4.0"
-        "clang-version-3.9" )
+       )
 
 # A subset of the above list: these images will build against every target,
 # ignoring builds_per_compiler.
