@@ -376,8 +376,8 @@ if main['GCC']:
                                   '-fno-builtin-realloc', '-fno-builtin-free'])
 
 elif main['CLANG']:
-    if compareVersions(main['CXXVERSION'], "3.9") < 0:
-        error('clang version 3.9 or newer required.\n'
+    if compareVersions(main['CXXVERSION'], "6") < 0:
+        error('clang version 6 or newer required.\n'
               'Installed version:', main['CXXVERSION'])
 
     # Set the Link-Time Optimization (LTO) flags if enabled.
