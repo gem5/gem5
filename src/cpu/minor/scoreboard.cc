@@ -302,7 +302,7 @@ Scoreboard::minorTrace() const
         i++;
     }
 
-    MINORTRACE("busy=%s\n", result_stream.str());
+    Minor::minorTrace("busy=%s\n", result_stream.str());
 }
 
 }

@@ -391,16 +391,16 @@ void
 Fetch1::minorTraceResponseLine(const std::string &name,
     Fetch1::FetchRequestPtr response) const
 {
-    GEM5_VAR_USED const RequestPtr &request = response->request;
+    const RequestPtr &request = response->request;
 
     if (response->packet && response->packet->isError()) {
-        MINORLINE(this, "id=F;%s vaddr=0x%x fault=\"error packet\"\n",
+        minorLine(*this, "id=F;%s vaddr=0x%x fault=\"error packet\"\n",
             response->id, request->getVaddr());
     } else if (response->fault != NoFault) {
-        MINORLINE(this, "id=F;%s vaddr=0x%x fault=\"%s\"\n",
+        minorLine(*this, "id=F;%s vaddr=0x%x fault=\"%s\"\n",
             response->id, request->getVaddr(), response->fault->name());
     } else {
-        MINORLINE(this, "id=%s size=%d vaddr=0x%x paddr=0x%x\n",
+        minorLine(*this, "id=%s size=%d vaddr=0x%x paddr=0x%x\n",
             response->id, request->getSize(),
             request->getVaddr(), request->getPaddr());
     }
@@ -765,7 +765,7 @@ Fetch1::minorTrace() const
     else
         (*out.inputWire).reportData(data);
 
-    MINORTRACE("state=%s icacheState=%s in_tlb_mem=%s/%s"
+    Minor::minorTrace("state=%s icacheState=%s in_tlb_mem=%s/%s"
         " streamSeqNum=%d lines=%s\n", thread.state, icacheState,
         numFetchesInITLB, numFetchesInMemorySystem,
         thread.streamSeqNum, data.str());

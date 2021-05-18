@@ -1675,7 +1675,7 @@ Execute::minorTrace() const
             stalled << ',';
     }
 
-    MINORTRACE("insts=%s inputIndex=%d streamSeqNum=%d"
+    Minor::minorTrace("insts=%s inputIndex=%d streamSeqNum=%d"
         " stalled=%s drainState=%d isInbetweenInsts=%d\n",
         insts.str(), executeInfo[0].inputIndex, executeInfo[0].streamSeqNum,
         stalled.str(), executeInfo[0].drainState, isInbetweenInsts(0));

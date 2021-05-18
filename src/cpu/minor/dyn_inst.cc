@@ -182,7 +182,7 @@ MinorDynInst::minorTraceInst(const Named &named_object,
         const BaseISA::RegClasses &reg_classes) const
 {
     if (isFault()) {
-        MINORINST(&named_object, "id=F;%s addr=0x%x fault=\"%s\"\n",
+        minorInst(named_object, "id=F;%s addr=0x%x fault=\"%s\"\n",
             id, pc.instAddr(), fault->name());
     } else {
         unsigned int num_src_regs = staticInst->numSrcRegs();
@@ -223,7 +223,7 @@ MinorDynInst::minorTraceInst(const Named &named_object,
         std::ostringstream flags;
         staticInst->printFlags(flags, " ");
 
-        MINORINST(&named_object, "id=%s addr=0x%x inst=\"%s\" class=%s"
+        minorInst(named_object, "id=%s addr=0x%x inst=\"%s\" class=%s"
             " flags=\"%s\"%s%s\n",
             id, pc.instAddr(),
             (staticInst->opClass() == No_OpClass ?

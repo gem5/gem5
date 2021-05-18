@@ -344,7 +344,7 @@ Decode::minorTrace() const
     else
         (*out.inputWire).reportData(data);
 
-    MINORTRACE("insts=%s\n", data.str());
+    Minor::minorTrace("insts=%s\n", data.str());
     inputBuffer[0].minorTrace();
 }
 

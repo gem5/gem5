@@ -208,7 +208,7 @@ class MinorBuffer : public Named, public TimeBuffer<ElemType>
                 data << ',';
         }
 
-        MINORTRACE("%s=%s\n", dataName, data.str());
+        Minor::minorTrace("%s=%s\n", dataName, data.str());
     }
 };
 
@@ -547,7 +547,7 @@ class Queue : public Named, public Reservable
                 data << ',';
         }
 
-        MINORTRACE("%s=%s\n", dataName, data.str());
+        Minor::minorTrace("%s=%s\n", dataName, data.str());
     }
 };
 

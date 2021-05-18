@@ -644,8 +644,9 @@ Fetch2::minorTrace() const
     else
         (*out.inputWire).reportData(data);
 
-    MINORTRACE("inputIndex=%d havePC=%d predictionSeqNum=%d insts=%s\n",
-        fetchInfo[0].inputIndex, fetchInfo[0].havePC, fetchInfo[0].predictionSeqNum, data.str());
+    Minor::minorTrace("inputIndex=%d havePC=%d predictionSeqNum=%d insts=%s\n",
+        fetchInfo[0].inputIndex, fetchInfo[0].havePC,
+        fetchInfo[0].predictionSeqNum, data.str());
     inputBuffer[0].minorTrace();
 }
 

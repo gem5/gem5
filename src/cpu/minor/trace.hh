@@ -50,6 +50,7 @@
 
 #include <string>
 
+#include "base/named.hh"
 #include "base/trace.hh"
 #include "debug/MinorTrace.hh"
 
@@ -57,16 +58,30 @@ namespace Minor
 {
 
 /** DPRINTFN for MinorTrace reporting */
-#define MINORTRACE(...) \
-    DPRINTF(MinorTrace, "MinorTrace: " __VA_ARGS__)
+template <class ...Args>
+inline void
+minorTrace(const char *fmt, Args ...args)
+{
+    DPRINTF(MinorTrace, (std::string("MinorTrace: ") + fmt).c_str(), args...);
+}
 
 /** DPRINTFN for MinorTrace MinorInst line reporting */
-#define MINORINST(sim_object, ...) \
-    DPRINTFS(MinorTrace, (sim_object), "MinorInst: " __VA_ARGS__)
+template <class ...Args>
+inline void
+minorInst(const Named &named, const char *fmt, Args ...args)
+{
+    DPRINTFS(MinorTrace, &named, (std::string("MinorInst: ") + fmt).c_str(),
+             args...);
+}
 
 /** DPRINTFN for MinorTrace MinorLine line reporting */
-#define MINORLINE(sim_object, ...) \
-    DPRINTFS(MinorTrace, (sim_object), "MinorLine: " __VA_ARGS__)
+template <class ...Args>
+inline void
+minorLine(const Named &named, const char *fmt, Args ...args)
+{
+    DPRINTFS(MinorTrace, &named, (std::string("MinorLine: ") + fmt).c_str(),
+             args...);
+}
 
 }
 

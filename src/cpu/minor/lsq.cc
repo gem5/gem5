@@ -950,7 +950,7 @@ LSQ::StoreBuffer::minorTrace() const
             os << ',';
     }
 
-    MINORTRACE("addr=%s num_unissued_stores=%d\n", os.str(),
+    Minor::minorTrace("addr=%s num_unissued_stores=%d\n", os.str(),
         numUnissuedAccesses);
 }
 
@@ -1665,7 +1665,7 @@ LSQ::pushFailedRequest(MinorDynInstPtr inst)
 void
 LSQ::minorTrace() const
 {
-    MINORTRACE("state=%s in_tlb_mem=%d/%d stores_in_transfers=%d"
+    Minor::minorTrace("state=%s in_tlb_mem=%d/%d stores_in_transfers=%d"
         " lastMemBarrier=%d\n",
         state, numAccessesInDTLB, numAccessesInMemorySystem,
         numStoresInTransfers, lastMemBarrier[0]);
