@@ -565,7 +565,6 @@ struct ip6_opt_routing_type2
     ip6_addr_t addr;
 };
 
-#define HOME_ADDRESS_OPTION 0xC9
 struct GEM5_PACKED ip6_opt_dstopts
 {
     uint8_t type;

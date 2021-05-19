@@ -274,12 +274,18 @@ IpHdr::options(std::vector<const IpOpt *> &vec) const
     return true;
 }
 
-#define IP6_EXTENSION(nxt) (nxt == IP_PROTO_HOPOPTS) ? true : \
-                           (nxt == IP_PROTO_ROUTING) ? true : \
-                           (nxt == IP_PROTO_FRAGMENT) ? true : \
-                           (nxt == IP_PROTO_AH) ? true : \
-                           (nxt == IP_PROTO_ESP) ? true: \
-                           (nxt == IP_PROTO_DSTOPTS) ? true : false
+namespace
+{
+
+bool
+ip6Extension(uint8_t nxt)
+{
+    return nxt == IP_PROTO_HOPOPTS || nxt == IP_PROTO_ROUTING ||
+        nxt == IP_PROTO_FRAGMENT || nxt == IP_PROTO_AH ||
+        nxt == IP_PROTO_ESP || nxt == IP_PROTO_DSTOPTS;
+}
+
+} // anonymous namespace
 
 /* Scan the IP6 header for all header extensions
  * and return the number of headers found
@@ -292,7 +298,7 @@ Ip6Hdr::extensionLength() const
     int len = 0;
     int all = plen();
 
-    while (IP6_EXTENSION(nxt)) {
+    while (ip6Extension(nxt)) {
         const Ip6Opt *ext = (const Ip6Opt *)data;
         nxt = ext->nxt();
         len += ext->len();
@@ -315,7 +321,7 @@ Ip6Hdr::getExt(uint8_t ext_type) const
     Ip6Opt* opt = NULL;
     int all = plen();
 
-    while (IP6_EXTENSION(nxt)) {
+    while (ip6Extension(nxt)) {
         opt = (Ip6Opt *)data;
         if (nxt == ext_type) {
             break;
@@ -340,7 +346,7 @@ Ip6Hdr::proto() const
     uint8_t nxt = ip6_nxt;
     int all = plen();
 
-    while (IP6_EXTENSION(nxt)) {
+    while (ip6Extension(nxt)) {
         const Ip6Opt *ext = (const Ip6Opt *)data;
         nxt = ext->nxt();
         data += ext->len();
