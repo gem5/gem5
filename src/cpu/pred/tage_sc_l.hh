@@ -40,8 +40,8 @@
  * It consits of a TAGE + a statistical corrector (SC) + a loop predictor (L)
  */
 
-#ifndef __CPU_PRED_TAGE_SC_L
-#define __CPU_PRED_TAGE_SC_L
+#ifndef __CPU_PRED_TAGE_SC_L_HH__
+#define __CPU_PRED_TAGE_SC_L_HH__
 
 #include "cpu/pred/ltage.hh"
 #include "cpu/pred/statistical_corrector.hh"
@@ -185,5 +185,4 @@ class TAGE_SC_L: public LTAGE
 
 };
 
-#endif // __CPU_PRED_TAGE_SC_L
-
+#endif // __CPU_PRED_TAGE_SC_L_HH__

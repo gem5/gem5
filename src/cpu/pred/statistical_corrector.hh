@@ -39,8 +39,8 @@
  * Statistical corrector base class
  */
 
-#ifndef __CPU_PRED_STATISTICAL_CORRECTOR_HH
-#define __CPU_PRED_STATISTICAL_CORRECTOR_HH
+#ifndef __CPU_PRED_STATISTICAL_CORRECTOR_HH__
+#define __CPU_PRED_STATISTICAL_CORRECTOR_HH__
 
 #include "base/statistics.hh"
 #include "base/types.hh"
@@ -273,4 +273,4 @@ class StatisticalCorrector : public SimObject
 
     virtual size_t getSizeInBits() const;
 };
-#endif//__CPU_PRED_STATISTICAL_CORRECTOR_HH
+#endif//__CPU_PRED_STATISTICAL_CORRECTOR_HH__

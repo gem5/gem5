@@ -45,8 +45,8 @@
  * one that predicted when the prediction is incorrect.
  */
 
-#ifndef __CPU_PRED_TAGE_BASE
-#define __CPU_PRED_TAGE_BASE
+#ifndef __CPU_PRED_TAGE_BASE_HH__
+#define __CPU_PRED_TAGE_BASE_HH__
 
 #include <vector>
 
@@ -505,4 +505,4 @@ class TAGEBase : public SimObject
     } stats;
 };
 
-#endif // __CPU_PRED_TAGE_BASE
+#endif // __CPU_PRED_TAGE_BASE_HH__

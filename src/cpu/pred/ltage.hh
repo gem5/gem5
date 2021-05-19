@@ -46,8 +46,8 @@
  * one that predicted when the prediction is incorrect.
  */
 
-#ifndef __CPU_PRED_LTAGE
-#define __CPU_PRED_LTAGE
+#ifndef __CPU_PRED_LTAGE_HH__
+#define __CPU_PRED_LTAGE_HH__
 
 
 #include <vector>
@@ -109,4 +109,4 @@ class LTAGE : public TAGE
         ThreadID tid, Addr branch_pc, bool cond_branch, void* &b) override;
 };
 
-#endif // __CPU_PRED_LTAGE
+#endif // __CPU_PRED_LTAGE_HH__
