@@ -132,7 +132,7 @@
 // The definition must be an c++ expression and not a statement because of how
 // the original macro is wrapped.
 #  define GEM5_DEPRECATED_MACRO(name, definition, message) \
-     ([](){GEM5_DEPRECATED(message) int name{}; return name;}, (definition))
+     ([](){GEM5_DEPRECATED(message) int name{}; return name;}(), (definition))
 // This version is for macros which are statement-like, which frequently use
 // "do {} while (0)" to make their syntax look more like normal c++ statements.
 #  define GEM5_DEPRECATED_MACRO_STMT(name, definition, message) \
