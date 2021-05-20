@@ -358,7 +358,7 @@ machine(MachineType:L1Cache, "Token protocol")
       }
 
       // You have at least half the token in O-like states
-      if (state == State:O && state == State:OM) {
+      if (state == State:O || state == State:OM) {
         assert(cache_entry.Tokens > (max_tokens() / 2));
       }
 
