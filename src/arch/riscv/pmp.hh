@@ -88,14 +88,15 @@ class PMP : public SimObject
     int numRules;
 
     /** single pmp entry struct*/
-    typedef struct {
+    struct PmpEntry
+    {
         /** addr range corresponding to a single pmp entry */
         AddrRange pmpAddr = AddrRange(0, 0);
         /** raw addr in pmpaddr register for a pmp entry */
         Addr rawAddr;
         /** pmpcfg reg value for a pmp entry */
         uint8_t pmpCfg = 0;
-    } PmpEntry;
+    };
 
     /** a table of pmp entries */
     std::vector<PmpEntry> pmpTable;
