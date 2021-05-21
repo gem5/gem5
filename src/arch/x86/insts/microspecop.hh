@@ -42,7 +42,7 @@ class MicroHalt : public InstOperands<X86MicroopBase>
         InstOperands<X86MicroopBase>(mach_inst, "halt", inst_mnem,
                 set_flags | (1ULL << StaticInst::IsNonSpeculative) |
                             (1ULL << StaticInst::IsQuiesce),
-                No_OpClass)
+                No_OpClass, {})
     {}
 
     Fault

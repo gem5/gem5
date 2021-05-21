@@ -75,7 +75,7 @@ def template MicroFaultConstructor {{
             ExtMachInst mach_inst, const char *inst_mnem, uint64_t set_flags,
             Fault _fault, uint8_t _cc) :
         %(base_class)s(mach_inst, "fault", inst_mnem, set_flags, No_OpClass,
-                _fault, _cc)
+                { _fault }, _cc)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;

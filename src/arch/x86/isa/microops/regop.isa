@@ -79,7 +79,7 @@ def template MicroRegOpDeclare {{
                 uint64_t set_flags, uint8_t data_size, uint16_t _ext,
                 Args... args) :
             %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
-                    %(op_class)s, args..., data_size, _ext)
+                    %(op_class)s, { args... }, data_size, _ext)
         {
             %(set_reg_idx_arr)s;
             %(constructor)s;
@@ -102,7 +102,7 @@ def template MicroRegOpBranchDeclare {{
                 uint64_t set_flags, uint8_t data_size, uint16_t _ext,
                 Args... args) :
             %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
-                    %(op_class)s, args..., data_size, _ext)
+                    %(op_class)s, { args... }, data_size, _ext)
         {
             %(set_reg_idx_arr)s;
             %(constructor)s;

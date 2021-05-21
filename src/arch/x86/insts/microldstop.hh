@@ -39,6 +39,8 @@
 #ifndef __ARCH_X86_INSTS_MICROLDSTOP_HH__
 #define __ARCH_X86_INSTS_MICROLDSTOP_HH__
 
+#include <tuple>
+
 #include "arch/x86/insts/microop.hh"
 #include "arch/x86/insts/microop_args.hh"
 #include "arch/x86/ldstflags.hh"
@@ -89,7 +91,7 @@ class LdStOp : public InstOperands<MemOp, FoldedDataOp, AddrOp>
             Request::FlagsType mem_flags, OpClass op_class) :
     InstOperands<MemOp, FoldedDataOp, AddrOp>(
             mach_inst, mnem, inst_mnem, set_flags, op_class,
-            _data, { _scale, _index, _base, _disp, _segment },
+            { _data, { _scale, _index, _base, _disp, _segment } },
             data_size, address_size, mem_flags | _segment.index)
     {}
 };
@@ -108,7 +110,7 @@ class LdStFpOp : public InstOperands<MemOp, FloatDataOp, AddrOp>
             Request::FlagsType mem_flags, OpClass op_class) :
     InstOperands<MemOp, FloatDataOp, AddrOp>(
             mach_inst, mnem, inst_mnem, set_flags, op_class,
-            _data, { _scale, _index, _base, _disp, _segment },
+            { _data, { _scale, _index, _base, _disp, _segment } },
             data_size, address_size, mem_flags | _segment.index)
     {}
 };
@@ -126,7 +128,7 @@ class MemNoDataOp : public InstOperands<MemOp, AddrOp>
             Request::FlagsType mem_flags, OpClass op_class) :
     InstOperands<MemOp, AddrOp>(
             mach_inst, mnem, inst_mnem, set_flags, op_class,
-            { _scale, _index, _base, _disp, _segment },
+            { { _scale, _index, _base, _disp, _segment } },
             data_size, address_size, mem_flags | _segment.index)
     {}
 };
@@ -148,7 +150,7 @@ class LdStSplitOp :
             Request::FlagsType mem_flags, OpClass op_class) :
     InstOperands<MemOp, FoldedDataLowOp, FoldedDataHiOp, AddrOp>(
             mach_inst, mnem, inst_mnem, set_flags, op_class,
-            data_low, data_hi, { _scale, _index, _base, _disp, _segment },
+            { data_low, data_hi, { _scale, _index, _base, _disp, _segment } },
             data_size, address_size, mem_flags | _segment.index)
     {}
 };

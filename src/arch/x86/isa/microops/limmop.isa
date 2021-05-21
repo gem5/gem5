@@ -64,7 +64,7 @@ def template MicroLimmOpDeclare {{
                 uint64_t set_flags, Dest _dest,
                 uint64_t _imm, uint8_t data_size) :
         %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
-                %(op_class)s, _dest, _imm, data_size, 0)
+                %(op_class)s, { _dest, _imm }, data_size, 0)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;

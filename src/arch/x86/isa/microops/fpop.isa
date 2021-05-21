@@ -92,7 +92,7 @@ def template MicroFpOpConstructor {{
             const char *inst_mnem, uint64_t set_flags,
             uint8_t data_size, int8_t _spm, Args... args) :
         %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
-                %(op_class)s, args..., data_size, _spm)
+                %(op_class)s, { args... }, data_size, _spm)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;

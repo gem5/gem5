@@ -43,7 +43,7 @@ def template BrDeclare {{
         %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
                 uint64_t set_flags, uint16_t _target, uint8_t _cc) :
             %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
-                    %(op_class)s, _target, _cc)
+                    %(op_class)s, { _target }, _cc)
         {
             %(set_reg_idx_arr)s;
             %(constructor)s;
@@ -77,7 +77,7 @@ def template EretDeclare {{
         %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
                 uint64_t set_flags, uint8_t _cc) :
             %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
-                    %(op_class)s, _cc)
+                    %(op_class)s, {}, _cc)
         {
             %(set_reg_idx_arr)s;
             %(constructor)s;
