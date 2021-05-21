@@ -217,7 +217,7 @@ structure(CHIDataMsg, desc="", interface="Message") {
     assert(bitMask.isEmpty() == false);
     WriteMask test_mask := mask;
     test_mask.orMask(bitMask);
-    if ((test_mask.cmpMask(mask) == false) || is_dirty) {
+    if ((mask.cmpMask(test_mask) == false) || is_dirty) {
       if (testAndReadMask(addr, dataBlk, bitMask, pkt)) {
         mask.orMask(bitMask);
         return true;
