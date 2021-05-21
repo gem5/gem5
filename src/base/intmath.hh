@@ -228,7 +228,7 @@ template <typename T>
 static constexpr std::pair<std::make_unsigned_t<T>, std::make_unsigned_t<T>>
 mulUnsigned(std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
 {
-    std::make_unsigned_t<T> hi, low;
+    std::make_unsigned_t<T> hi{}, low{};
     mulUnsigned<T>(hi, low, val_a, val_b);
     return {hi, low};
 };
@@ -237,7 +237,7 @@ template <typename T>
 static constexpr std::pair<std::make_signed_t<T>, std::make_signed_t<T>>
 mulSigned(std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
 {
-    std::make_signed_t<T> hi, low;
+    std::make_signed_t<T> hi{}, low{};
     mulSigned<T>(hi, low, val_a, val_b);
     return {hi, low};
 };
