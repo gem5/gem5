@@ -69,7 +69,8 @@ namespace TheISA
     class ITB;
 }
 
-namespace Trace {
+namespace Trace
+{
     class InstRecord;
 }
 
@@ -143,33 +144,41 @@ class BaseSimpleCPU : public BaseCPU
     // statistics
     void resetStats() override;
 
-    virtual Fault readMem(Addr addr, uint8_t* data, unsigned size,
-                          Request::Flags flags,
-                          const std::vector<bool>& byte_enable =
-                              std::vector<bool>())
-    { panic("readMem() is not implemented\n"); }
+    virtual Fault
+    readMem(Addr addr, uint8_t* data, unsigned size, Request::Flags flags,
+            const std::vector<bool>& byte_enable=std::vector<bool>())
+    {
+        panic("readMem() is not implemented");
+    }
 
-    virtual Fault initiateMemRead(Addr addr, unsigned size,
-                                  Request::Flags flags,
-                                  const std::vector<bool>& byte_enable =
-                                      std::vector<bool>())
-    { panic("initiateMemRead() is not implemented\n"); }
+    virtual Fault
+    initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
+            const std::vector<bool>& byte_enable=std::vector<bool>())
+    {
+        panic("initiateMemRead() is not implemented\n");
+    }
 
-    virtual Fault writeMem(uint8_t* data, unsigned size, Addr addr,
-                           Request::Flags flags, uint64_t* res,
-                           const std::vector<bool>& byte_enable =
-                               std::vector<bool>())
-    { panic("writeMem() is not implemented\n"); }
+    virtual Fault
+    writeMem(uint8_t* data, unsigned size, Addr addr, Request::Flags flags,
+            uint64_t* res,
+            const std::vector<bool>& byte_enable=std::vector<bool>())
+    {
+        panic("writeMem() is not implemented\n");
+    }
 
-    virtual Fault amoMem(Addr addr, uint8_t* data, unsigned size,
-                         Request::Flags flags,
-                         AtomicOpFunctorPtr amo_op)
-    { panic("amoMem() is not implemented\n"); }
+    virtual Fault
+    amoMem(Addr addr, uint8_t* data, unsigned size, Request::Flags flags,
+            AtomicOpFunctorPtr amo_op)
+    {
+        panic("amoMem() is not implemented\n");
+    }
 
-    virtual Fault initiateMemAMO(Addr addr, unsigned size,
-                                 Request::Flags flags,
-                                 AtomicOpFunctorPtr amo_op)
-    { panic("initiateMemAMO() is not implemented\n"); }
+    virtual Fault
+    initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
+            AtomicOpFunctorPtr amo_op)
+    {
+        panic("initiateMemAMO() is not implemented\n");
+    }
 
     void countInst();
     Counter totalInsts() const override;
