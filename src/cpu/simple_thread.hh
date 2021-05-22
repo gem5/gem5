@@ -113,7 +113,8 @@ class SimpleThread : public ThreadState, public ThreadContext
     bool memAccPredicate;
 
   public:
-    std::string name() const
+    std::string
+    name() const
     {
         return csprintf("%s.[tid:%i]", baseCpu->name(), threadId());
     }
@@ -215,7 +216,8 @@ class SimpleThread : public ThreadState, public ThreadContext
     PortProxy &getPhysProxy() override { return ThreadState::getPhysProxy(); }
     PortProxy &getVirtProxy() override { return ThreadState::getVirtProxy(); }
 
-    void initMemProxies(ThreadContext *tc) override
+    void
+    initMemProxies(ThreadContext *tc) override
     {
         ThreadState::initMemProxies(tc);
     }
@@ -574,4 +576,4 @@ class SimpleThread : public ThreadState, public ThreadContext
 };
 
 
-#endif // __CPU_CPU_EXEC_CONTEXT_HH__
+#endif // __CPU_SIMPLE_THREAD_HH__
