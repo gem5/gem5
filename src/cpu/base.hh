@@ -174,17 +174,6 @@ class BaseCPU : public ClockedObject
     virtual Port &getDataPort() = 0;
 
     /**
-     * Returns a sendFunctional delegate for use with port proxies.
-     */
-    virtual PortProxy::SendFunctionalFunc
-    getSendFunctional()
-    {
-        auto port = dynamic_cast<RequestPort *>(&getDataPort());
-        assert(port);
-        return [port](PacketPtr pkt)->void { port->sendFunctional(pkt); };
-    }
-
-    /**
      * Purely virtual method that returns a reference to the instruction
      * port. All subclasses must implement this method.
      *

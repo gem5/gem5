@@ -83,12 +83,6 @@ class BaseCPU : public ::BaseCPU
     Counter totalInsts() const override;
     Counter totalOps() const override { return totalInsts(); }
 
-    PortProxy::SendFunctionalFunc
-    getSendFunctional() override
-    {
-        return [this] (PacketPtr pkt) { evs_base_cpu->sendFunc(pkt); };
-    }
-
   protected:
     sc_core::sc_module *evs;
     // Hold casted pointer to *evs.
