@@ -897,7 +897,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
     if (!FullSystem)
         return tc->getProcessPtr()->pTable->translate(req);
 
-    PortProxy &mem = tc->getPhysProxy();
+    PortProxy mem(tc, tc->getSystemPtr()->cacheLineSize());
     // We didn't find it in the tlbs, so lets look at the TSBs
     GetTsbPtr(tc, vaddr, ctx_zero ? 0 : pri_context, tsbs);
     va_tag = bits(vaddr, 63, 22);
