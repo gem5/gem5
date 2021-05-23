@@ -60,8 +60,11 @@
 #include <functional>
 #include <limits>
 
-#include "mem/port.hh"
+#include "mem/protocol/functional.hh"
 #include "sim/byteswap.hh"
+
+class RequestPort;
+class ThreadContext;
 
 /**
  * This object is a proxy for a port or other object which implements the
@@ -97,16 +100,15 @@ class PortProxy : FunctionalRequestProtocol
     }
 
   public:
-    PortProxy(SendFunctionalFunc func, unsigned int cacheLineSize) :
-        sendFunctional(func), _cacheLineSize(cacheLineSize)
+    PortProxy(SendFunctionalFunc func, unsigned int cache_line_size) :
+        sendFunctional(func), _cacheLineSize(cache_line_size)
     {}
-    PortProxy(const RequestPort &port, unsigned int cacheLineSize) :
-        sendFunctional([&port](PacketPtr pkt)->void {
-                port.sendFunctional(pkt);
-            }), _cacheLineSize(cacheLineSize)
-    {}
-    virtual ~PortProxy() { }
 
+    // Helpers which create typical SendFunctionalFunc-s from other objects.
+    PortProxy(ThreadContext *tc, unsigned int cache_line_size);
+    PortProxy(const RequestPort &port, unsigned int cache_line_size);
+
+    virtual ~PortProxy() {}
 
 
     /** Fixed functionality for use in base classes. */
