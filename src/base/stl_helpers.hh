@@ -35,37 +35,6 @@
 namespace m5 {
 namespace stl_helpers {
 
-template <class T>
-class ContainerPrint
-{
-  private:
-    std::ostream &out;
-    bool first;
-
-  public:
-    /**
-     * @ingroup api_base_utils
-     */
-    ContainerPrint(std::ostream &out)
-        : out(out), first(true)
-    {}
-
-    /**
-     * @ingroup api_base_utils
-     */
-    void
-    operator()(const T &elem)
-    {
-        // First one doesn't get a space before it.  The rest do.
-        if (first)
-            first = false;
-        else
-            out << " ";
-
-        out << elem;
-    }
-};
-
 /**
  * Write out all elements in an stl container as a space separated
  * list enclosed in square brackets
@@ -77,7 +46,14 @@ std::ostream &
 operator<<(std::ostream& out, const C<T,A> &vec)
 {
     out << "[ ";
-    std::for_each(vec.begin(), vec.end(), ContainerPrint<T>(out));
+    bool first = true;
+    auto printer = [&first, &out](const T &elem) {
+        if (first)
+            out << elem;
+        else
+            out << " " << elem;
+    };
+    std::for_each(vec.begin(), vec.end(), printer);
     out << " ]";
     out << std::flush;
     return out;
