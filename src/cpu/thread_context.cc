@@ -48,6 +48,7 @@
 #include "cpu/base.hh"
 #include "debug/Context.hh"
 #include "debug/Quiesce.hh"
+#include "mem/port.hh"
 #include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
 
@@ -125,6 +126,15 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         panic("Context ids don't match, one: %d, two: %d", id1, id2);
 
 
+}
+
+void
+ThreadContext::sendFunctional(PacketPtr pkt)
+{
+    const auto *port =
+        dynamic_cast<const RequestPort *>(&getCpuPtr()->getDataPort());
+    assert(port);
+    port->sendFunctional(pkt);
 }
 
 void

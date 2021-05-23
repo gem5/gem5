@@ -68,6 +68,8 @@ class Checkpoint;
 class PortProxy;
 class Process;
 class System;
+class Packet;
+using PacketPtr = Packet *;
 
 /**
  * ThreadContext is the external interface to all thread state for
@@ -145,6 +147,8 @@ class ThreadContext : public PCEventScope
     virtual PortProxy &getPhysProxy() = 0;
 
     virtual PortProxy &getVirtProxy() = 0;
+
+    virtual void sendFunctional(PacketPtr pkt);
 
     /**
      * Initialise the physical and virtual port proxies and tie them to
