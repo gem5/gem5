@@ -75,7 +75,7 @@ class BaseBufferArg
      * copy data into simulator space (read from target memory)
      */
     bool
-    copyIn(PortProxy &memproxy)
+    copyIn(const PortProxy &memproxy)
     {
         memproxy.readBlob(addr, bufPtr, size);
         return true;    // no EFAULT detection for now
@@ -85,7 +85,7 @@ class BaseBufferArg
      * copy data out of simulator space (write to target memory)
      */
     bool
-    copyOut(PortProxy &memproxy)
+    copyOut(const PortProxy &memproxy)
     {
         memproxy.writeBlob(addr, bufPtr, size);
         return true;    // no EFAULT detection for now
