@@ -29,6 +29,8 @@
 #ifndef __ARCH_SPARC_LINUX_LINUX_HH__
 #define __ARCH_SPARC_LINUX_LINUX_HH__
 
+#include <map>
+
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/regs/int.hh"
 #include "arch/sparc/regs/misc.hh"
@@ -124,7 +126,7 @@ class SparcLinux : public Linux
     static const int TGT_SIGUSR1        = 0x00001e;
     static const int TGT_SIGUSR2        = 0x00001f;
 
-    static SyscallFlagTransTable openFlagTable[];
+    static const std::map<int, int> openFlagTable;
 
     static const int TGT_O_RDONLY       = 0x00000000;   //!< O_RDONLY
     static const int TGT_O_WRONLY       = 0x00000001;   //!< O_WRONLY
@@ -147,8 +149,6 @@ class SparcLinux : public Linux
     static const int TGT_O_DIRECTORY    = 000200000;   //!< O_DIRECTORY
     static const int TGT_O_NOFOLLOW     = 000400000;   //!< O_NOFOLLOW
 
-    static const int NUM_OPEN_FLAGS;
-
     static const unsigned TGT_MAP_SHARED        = 0x00001;
     static const unsigned TGT_MAP_PRIVATE       = 0x00002;
     static const unsigned TGT_MAP_ANON          = 0x00020;
@@ -165,8 +165,6 @@ class SparcLinux : public Linux
     static const unsigned TGT_MAP_ANONYMOUS     = 0x00020;
     static const unsigned TGT_MAP_FIXED         = 0x00010;
     static const unsigned TGT_MAP_INHERIT       = 0x00080;
-
-    static const unsigned NUM_MMAP_FLAGS;
 
     typedef struct
     {

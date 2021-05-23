@@ -38,6 +38,8 @@
 #ifndef __ARCH_X86_LINUX_LINUX_HH__
 #define __ARCH_X86_LINUX_LINUX_HH__
 
+#include <map>
+
 #include "arch/x86/utility.hh"
 #include "base/compiler.hh"
 #include "kern/linux/linux.hh"
@@ -171,7 +173,7 @@ class X86Linux64 : public X86Linux
     static const int TGT_SIGSYS         = 0x00001f;
     static const int TGT_SIGUNUSED      = 0x00001f;
 
-    static SyscallFlagTransTable openFlagTable[];
+    static const std::map<int, int> openFlagTable;
 
     static const int TGT_O_RDONLY       = 000000000;     //!< O_RDONLY
     static const int TGT_O_WRONLY       = 000000001;     //!< O_WRONLY
@@ -192,8 +194,6 @@ class X86Linux64 : public X86Linux
     static const int TGT_O_CLOEXEC      = 002000000;
     static const int TGT_O_SYNC         = 004010000;     //!< O_SYNC
     static const int TGT_O_PATH         = 010000000;
-
-    static const int NUM_OPEN_FLAGS;
 
     //@{
     /// Basic X86_64 Linux types
@@ -219,8 +219,6 @@ class X86Linux64 : public X86Linux
     static const unsigned TGT_MAP_STACK         = 0x20000;
     static const unsigned TGT_MAP_ANONYMOUS     = 0x00020;
     static const unsigned TGT_MAP_FIXED         = 0x00010;
-
-    static const unsigned NUM_MMAP_FLAGS;
 
     typedef struct
     {
@@ -307,7 +305,7 @@ class X86Linux32 : public X86Linux
     static const int TGT_SIGSYS         = 0x00001f;
     static const int TGT_SIGUNUSED      = 0x00001f;
 
-    static SyscallFlagTransTable openFlagTable[];
+    static const std::map<int, int> openFlagTable;
 
     static const int TGT_O_RDONLY       = 000000000;     //!< O_RDONLY
     static const int TGT_O_WRONLY       = 000000001;     //!< O_WRONLY
@@ -329,9 +327,7 @@ class X86Linux32 : public X86Linux
     static const int TGT_O_SYNC         = 004010000;     //!< O_SYNC
     static const int TGT_O_PATH         = 010000000;
 
-    static const int NUM_OPEN_FLAGS;
-
-    static SyscallFlagTransTable mmapFlagTable[];
+    static const std::map<int, int> mmapFlagTable;
 
     //@{
     /// Basic X86 Linux types
@@ -357,8 +353,6 @@ class X86Linux32 : public X86Linux
     static const unsigned TGT_MAP_STACK         = 0x20000;
     static const unsigned TGT_MAP_ANONYMOUS     = 0x00020;
     static const unsigned TGT_MAP_FIXED         = 0x00010;
-
-    static const unsigned NUM_MMAP_FLAGS;
 
     typedef struct
     {

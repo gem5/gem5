@@ -33,6 +33,8 @@
 #ifndef __ARCH_ARM_FREEBSD_FREEBSD_HH__
 #define __ARCH_ARM_FREEBSD_FREEBSD_HH__
 
+#include <map>
+
 #include "kern/freebsd/freebsd.hh"
 #include "sim/byteswap.hh"
 
@@ -47,10 +49,7 @@ class ArmFreebsd32 : public ArmFreebsd
   public:
     /// This table maps the target open() flags to the corresponding
     /// host open() flags.
-    static SyscallFlagTransTable openFlagTable[];
-
-    /// Number of entries in openFlagTable[].
-    static const int NUM_OPEN_FLAGS;
+    static const std::map<int, int> openFlagTable;
 
     //@{
     /// Basic ARM FreeBSD types
@@ -211,10 +210,7 @@ class ArmFreebsd64 : public ArmFreebsd
 
     /// This table maps the target open() flags to the corresponding
     /// host open() flags.
-    static SyscallFlagTransTable openFlagTable[];
-
-    /// Number of entries in openFlagTable[].
-    static const int NUM_OPEN_FLAGS;
+    static const std::map<int, int> openFlagTable;
 
     //@{
     /// Basic ARM FreeBSD types

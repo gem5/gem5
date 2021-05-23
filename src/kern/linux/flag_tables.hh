@@ -54,7 +54,7 @@
  */
 
 // open(2) flags translation table
-SyscallFlagTransTable TARGET::openFlagTable[] = {
+const std::map<int, int> TARGET::openFlagTable = {
 #ifdef _MSC_VER
   { TARGET::TGT_O_RDONLY,     _O_RDONLY },
   { TARGET::TGT_O_WRONLY,     _O_WRONLY },
@@ -105,6 +105,3 @@ SyscallFlagTransTable TARGET::openFlagTable[] = {
 #endif
 #endif /* _MSC_VER */
 };
-
-const int TARGET::NUM_OPEN_FLAGS =
-  sizeof(TARGET::openFlagTable) / sizeof(TARGET::openFlagTable[0]);

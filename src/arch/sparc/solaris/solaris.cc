@@ -32,7 +32,7 @@
 #include <sys/mman.h>
 
 // open(2) flags translation table
-SyscallFlagTransTable SparcSolaris::openFlagTable[] = {
+const std::map<int, int> SparcSolaris::openFlagTable = {
 #ifdef _MSC_VER
   { SparcSolaris::TGT_O_RDONLY, _O_RDONLY },
   { SparcSolaris::TGT_O_WRONLY, _O_WRONLY },
@@ -72,11 +72,8 @@ SyscallFlagTransTable SparcSolaris::openFlagTable[] = {
 #endif /* _MSC_VER */
 };
 
-const int SparcSolaris::NUM_OPEN_FLAGS =
-        (sizeof(SparcSolaris::openFlagTable)/sizeof(SparcSolaris::openFlagTable[0]));
-
 // mmap(2) flags translation table
-SyscallFlagTransTable SparcSolaris::mmapFlagTable[] = {
+const std::map<int, int> SparcSolaris::mmapFlagTable = {
   { TGT_MAP_SHARED, MAP_SHARED },
   { TGT_MAP_PRIVATE, MAP_PRIVATE },
   { TGT_MAP_ANON, MAP_ANON },
@@ -93,8 +90,3 @@ SyscallFlagTransTable SparcSolaris::mmapFlagTable[] = {
   { TGT_MAP_ANONYMOUS, MAP_ANONYMOUS },
   { TGT_MAP_FIXED, MAP_FIXED },
 };
-
-const unsigned SparcSolaris::NUM_MMAP_FLAGS =
-        sizeof(SparcSolaris::mmapFlagTable) /
-        sizeof(SparcSolaris::mmapFlagTable[0]);
-

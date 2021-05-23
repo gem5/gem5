@@ -36,15 +36,6 @@
 class Process;
 class ThreadContext;
 
-/// This struct is used to build target-OS-dependent tables that
-/// map the target's flags to the host's flags.
-struct SyscallFlagTransTable
-{
-    int tgtFlag;        //!< Target system flag value.
-    int hostFlag;       //!< Corresponding host system flag value.
-};
-
-
 ///
 /// This class encapsulates the types, structures, constants,
 /// functions, and syscall-number mappings specific to an operating system

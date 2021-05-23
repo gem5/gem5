@@ -29,6 +29,8 @@
 #ifndef __ARCH_SPARC_SOLARIS_SOLARIS_HH__
 #define __ARCH_SPARC_SOLARIS_SOLARIS_HH__
 
+#include <map>
+
 #include "kern/solaris/solaris.hh"
 #include "sim/byteswap.hh"
 
@@ -38,7 +40,7 @@ class SparcSolaris : public Solaris
 
     static const ByteOrder byteOrder = ByteOrder::big;
 
-    static SyscallFlagTransTable openFlagTable[];
+    static const std::map<int, int> openFlagTable;
 
     static const int TGT_O_RDONLY       = 0x00000000;   //!< O_RDONLY
     static const int TGT_O_WRONLY       = 0x00000001;   //!< O_WRONLY
@@ -57,10 +59,8 @@ class SparcSolaris : public Solaris
     static const int TGT_O_NOCTTY       = 0x00000800;   //!< O_NOCTTY
     static const int TGT_O_XATTR        = 0x00004000;   //??
 
-    static const int NUM_OPEN_FLAGS;
-
     /// For mmap().
-    static SyscallFlagTransTable mmapFlagTable[];
+    static const std::map<int, int> mmapFlagTable;
 
     static const unsigned TGT_MAP_SHARED        = 0x00001;
     static const unsigned TGT_MAP_PRIVATE       = 0x00002;
@@ -77,8 +77,6 @@ class SparcSolaris : public Solaris
     static const unsigned TGT_MAP_STACK         = 0x20000;
     static const unsigned TGT_MAP_ANONYMOUS     = 0x00020;
     static const unsigned TGT_MAP_FIXED         = 0x00010;
-
-    static const unsigned NUM_MMAP_FLAGS;
 };
 
 #endif

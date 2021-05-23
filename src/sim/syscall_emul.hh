@@ -771,14 +771,13 @@ openatFunc(SyscallDesc *desc, ThreadContext *tc,
      * Translate target flags into host flags. Flags exist which are not
      * ported between architectures which can cause check failures.
      */
-    for (int i = 0; i < OS::NUM_OPEN_FLAGS; i++) {
-        if (tgt_flags & OS::openFlagTable[i].tgtFlag) {
-            tgt_flags &= ~OS::openFlagTable[i].tgtFlag;
-            host_flags |= OS::openFlagTable[i].hostFlag;
+    for (const auto &p: OS::openFlagTable) {
+        if (tgt_flags & p.first) {
+            tgt_flags &= ~p.first;
+            host_flags |= p.second;
         }
     }
-    if (tgt_flags)
-        warn("%s: cannot decode flags %#x", desc->name(), tgt_flags);
+    warn_if(tgt_flags, "%s: cannot decode flags %#x", desc->name(), tgt_flags);
 
 #ifdef __CYGWIN32__
     host_flags |= O_BINARY;

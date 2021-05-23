@@ -29,6 +29,8 @@
 #ifndef __ARCH_RISCV_LINUX_LINUX_HH__
 #define __ARCH_RISCV_LINUX_LINUX_HH__
 
+#include <map>
+
 #include "arch/riscv/utility.hh"
 #include "kern/linux/linux.hh"
 
@@ -79,10 +81,7 @@ class RiscvLinux64 : public RiscvLinux
 
     /// This table maps the target open() flags to the corresponding
     /// host open() flags.
-    static SyscallFlagTransTable openFlagTable[];
-
-    /// Number of entries in openFlagTable[].
-    static const int NUM_OPEN_FLAGS;
+    static const std::map<int, int> openFlagTable;
 
     //@{
     /// open(2) flag values.
@@ -118,8 +117,6 @@ class RiscvLinux64 : public RiscvLinux
     static const unsigned TGT_MAP_ANONYMOUS     = 0x0020;
     static const unsigned TGT_MAP_POPULATE      = 0x1000;
     static const unsigned TGT_MREMAP_FIXED      = 0x0020;
-
-    static const unsigned NUM_MMAP_FLAGS;
 
     typedef int64_t time_t;
     typedef uint64_t dev_t;
@@ -253,10 +250,7 @@ class RiscvLinux32 : public RiscvLinux
 
     /// This table maps the target open() flags to the corresponding
     /// host open() flags.
-    static SyscallFlagTransTable openFlagTable[];
-
-    /// Number of entries in openFlagTable[].
-    static const int NUM_OPEN_FLAGS;
+    static const std::map<int, int> openFlagTable;
 
     //@{
     /// open(2) flag values.
@@ -294,8 +288,6 @@ class RiscvLinux32 : public RiscvLinux
     static const unsigned TGT_MAP_ANONYMOUS     = 0x0020;
     static const unsigned TGT_MAP_POPULATE      = 0x1000;
     static const unsigned TGT_MREMAP_FIXED      = 0x0020;
-
-    static const unsigned NUM_MMAP_FLAGS;
 
     // Newlib 3.0.0 defaults to 64-bits for time_t.
     // Currently time_t in glibc for riscv32 is 32-bits, but will be changed.

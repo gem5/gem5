@@ -42,6 +42,8 @@
 #ifndef __ARCH_ARM_LINUX_LINUX_HH__
 #define __ARCH_ARM_LINUX_LINUX_HH__
 
+#include <map>
+
 #include "arch/arm/utility.hh"
 #include "base/compiler.hh"
 #include "kern/linux/linux.hh"
@@ -108,10 +110,7 @@ class ArmLinux32 : public ArmLinux
 
     /// This table maps the target open() flags to the corresponding
     /// host open() flags.
-    static SyscallFlagTransTable openFlagTable[];
-
-    /// Number of entries in openFlagTable[].
-    static const int NUM_OPEN_FLAGS;
+    static const std::map<int, int> openFlagTable;
 
     //@{
     /// Basic ARM Linux types
@@ -159,8 +158,6 @@ class ArmLinux32 : public ArmLinux
     static const unsigned TGT_MAP_STACK         = 0x20000;
     static const unsigned TGT_MAP_ANONYMOUS     = 0x00020;
     static const unsigned TGT_MAP_FIXED         = 0x00010;
-
-    static const unsigned NUM_MMAP_FLAGS;
 
     /// For table().
     static const int TBL_SYSINFO = 12;
@@ -338,10 +335,7 @@ class ArmLinux64 : public ArmLinux
 
     /// This table maps the target open() flags to the corresponding
     /// host open() flags.
-    static SyscallFlagTransTable openFlagTable[];
-
-    /// Number of entries in openFlagTable[].
-    static const int NUM_OPEN_FLAGS;
+    static const std::map<int, int> openFlagTable;
 
     //@{
     /// Basic ARM Linux types
@@ -375,7 +369,7 @@ class ArmLinux64 : public ArmLinux
     //@}
 
     /// For mmap().
-    static SyscallFlagTransTable mmapFlagTable[];
+    static const std::map<int, int> mmapFlagTable;
 
     static const unsigned TGT_MAP_SHARED        = 0x00001;
     static const unsigned TGT_MAP_PRIVATE       = 0x00002;
@@ -392,8 +386,6 @@ class ArmLinux64 : public ArmLinux
     static const unsigned TGT_MAP_STACK         = 0x20000;
     static const unsigned TGT_MAP_ANONYMOUS     = 0x00020;
     static const unsigned TGT_MAP_FIXED         = 0x00010;
-
-    static const unsigned NUM_MMAP_FLAGS;
 
     //@{
     /// For getrusage().

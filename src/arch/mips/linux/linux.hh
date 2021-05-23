@@ -29,6 +29,8 @@
 #ifndef __ARCH_MIPS_LINUX_LINUX_HH__
 #define __ARCH_MIPS_LINUX_LINUX_HH__
 
+#include <map>
+
 #include "kern/linux/linux.hh"
 
 class MipsLinux : public Linux
@@ -74,10 +76,7 @@ class MipsLinux : public Linux
 
     /// This table maps the target open() flags to the corresponding
     /// host open() flags.
-    static SyscallFlagTransTable openFlagTable[];
-
-    /// Number of entries in openFlagTable[].
-    static const int NUM_OPEN_FLAGS;
+    static const std::map<int, int> openFlagTable;
 
     //@{
     /// open(2) flag values.
@@ -117,8 +116,6 @@ class MipsLinux : public Linux
     static const unsigned TGT_MAP_STACK         = 0x40000;
     static const unsigned TGT_MAP_ANONYMOUS     = 0x00800;
     static const unsigned TGT_MAP_FIXED         = 0x00010;
-
-    static const unsigned NUM_MMAP_FLAGS;
 
     //@{
     /// For getsysinfo().
