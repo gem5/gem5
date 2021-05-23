@@ -147,8 +147,6 @@ class ThreadContext : public PCEventScope
 
     virtual System *getSystemPtr() = 0;
 
-    virtual PortProxy &getVirtProxy() = 0;
-
     virtual void sendFunctional(PacketPtr pkt);
 
     /**

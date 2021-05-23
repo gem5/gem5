@@ -167,12 +167,6 @@ class CheckerThreadContext : public ThreadContext
 
     void setProcessPtr(Process *p) override { actualTC->setProcessPtr(p); }
 
-    PortProxy &
-    getVirtProxy() override
-    {
-        return actualTC->getVirtProxy();
-    }
-
     void
     initMemProxies(ThreadContext *tc) override
     {

@@ -98,9 +98,6 @@ class ThreadContext : public gem5::ThreadContext
     std::vector<iris::MemorySpaceInfo> memorySpaces;
     std::vector<iris::MemorySupportedAddressTranslationResult> translations;
 
-    std::unique_ptr<PortProxy> virtProxy = nullptr;
-
-
     // A queue to keep track of instruction count based events.
     EventQueue comInstEventQueue;
     // A helper function to maintain the IRIS step count. This makes sure the
@@ -215,8 +212,7 @@ class ThreadContext : public gem5::ThreadContext
         return _isa;
     }
 
-    PortProxy &getVirtProxy() override { return *virtProxy; }
-    void initMemProxies(gem5::ThreadContext *tc) override;
+    void initMemProxies(gem5::ThreadContext *tc) override {}
 
     void sendFunctional(PacketPtr pkt) override;
 

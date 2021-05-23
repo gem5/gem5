@@ -46,14 +46,8 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
       numLoad(0), startNumLoad(0),
       _status(ThreadContext::Halted), baseCpu(cpu),
       _contextId(0), _threadId(_tid), lastActivate(0), lastSuspend(0),
-      process(_process), virtProxy(NULL), storeCondFailures(0)
+      process(_process), storeCondFailures(0)
 {
-}
-
-ThreadState::~ThreadState()
-{
-    if (virtProxy != NULL)
-        delete virtProxy;
 }
 
 void
@@ -68,29 +62,6 @@ ThreadState::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ENUM(_status);
 }
 
-void
-ThreadState::initMemProxies(ThreadContext *tc)
-{
-    // The port proxies only refer to the data port on the CPU side
-    // and can safely be done at init() time even if the CPU is not
-    // connected, i.e. when restoring from a checkpoint and later
-    // switching the CPU in.
-    assert(virtProxy == NULL);
-    if (FullSystem) {
-        virtProxy = new TranslatingPortProxy(tc);
-    } else {
-        virtProxy = new SETranslatingPortProxy(
-                tc, SETranslatingPortProxy::NextPage);
-    }
-}
-
-PortProxy &
-ThreadState::getVirtProxy()
-{
-    assert(virtProxy != NULL);
-    return *virtProxy;
-}
-
 ThreadState::ThreadStateStats::ThreadStateStats(BaseCPU *cpu,
                                                 const ThreadID& tid)
       : statistics::Group(cpu, csprintf("thread_%i", tid).c_str()),
@@ -101,7 +72,6 @@ ThreadState::ThreadStateStats::ThreadStateStats(BaseCPU *cpu,
       ADD_STAT(numMemRefs, statistics::units::Count::get(),
                "Number of Memory References")
 {
-
 }
 
 } // namespace gem5

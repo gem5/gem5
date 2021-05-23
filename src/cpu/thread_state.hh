@@ -50,7 +50,7 @@ struct ThreadState : public Serializable
 
     ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process);
 
-    virtual ~ThreadState();
+    virtual ~ThreadState() = default;
 
     void serialize(CheckpointOut &cp) const override;
 
@@ -78,9 +78,7 @@ struct ThreadState : public Serializable
      *
      * @param tc ThreadContext for the virtual-to-physical translation
      */
-    void initMemProxies(ThreadContext *tc);
-
-    PortProxy &getVirtProxy();
+    void initMemProxies(ThreadContext *tc) {}
 
     Process *getProcessPtr() { return process; }
 
@@ -139,10 +137,6 @@ struct ThreadState : public Serializable
 
   protected:
     Process *process;
-
-    /** A translating port proxy, outgoing only, for functional
-     * accesse to virtual addresses. */
-    PortProxy *virtProxy;
 
   public:
 

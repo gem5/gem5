@@ -143,8 +143,6 @@ class ThreadContext : public gem5::ThreadContext
 
     void setProcessPtr(Process *p) override { thread->setProcessPtr(p); }
 
-    PortProxy &getVirtProxy() override;
-
     void
     initMemProxies(gem5::ThreadContext *tc) override
     {

@@ -478,18 +478,6 @@ ThreadContext::getCurrentInstCount()
 }
 
 void
-ThreadContext::initMemProxies(gem5::ThreadContext *tc)
-{
-    assert(!virtProxy);
-    if (FullSystem) {
-        virtProxy.reset(new TranslatingPortProxy(tc));
-    } else {
-        virtProxy.reset(new SETranslatingPortProxy(this,
-                        SETranslatingPortProxy::NextPage));
-    }
-}
-
-void
 ThreadContext::sendFunctional(PacketPtr pkt)
 {
     auto *iris_cpu = dynamic_cast<Iris::BaseCPU *>(getCpuPtr());

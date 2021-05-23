@@ -51,12 +51,6 @@ namespace gem5
 namespace o3
 {
 
-PortProxy&
-ThreadContext::getVirtProxy()
-{
-    return thread->getVirtProxy();
-}
-
 void
 ThreadContext::takeOverFrom(gem5::ThreadContext *old_context)
 {
