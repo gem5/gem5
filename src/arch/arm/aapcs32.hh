@@ -38,6 +38,9 @@
 #include "base/intmath.hh"
 #include "cpu/thread_context.hh"
 #include "mem/port_proxy.hh"
+#include "mem/se_translating_port_proxy.hh"
+#include "mem/translating_port_proxy.hh"
+#include "sim/full_system.hh"
 #include "sim/guest_abi.hh"
 #include "sim/proxy_ptr.hh"
 
@@ -343,7 +346,9 @@ struct Argument<Aapcs32, Composite, typename std::enable_if_t<
             }
 
             if (bytes) {
-                tc->getVirtProxy().readBlob(state.nsaa, buf, bytes);
+                (FullSystem ? TranslatingPortProxy(tc) :
+                    SETranslatingPortProxy(tc)).readBlob(
+                    state.nsaa, buf, bytes);
 
                 state.stackUsed = true;
                 state.nsaa += roundUp(bytes, 4);

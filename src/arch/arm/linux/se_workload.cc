@@ -46,6 +46,7 @@
 #include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "sim/syscall_emul.hh"
 
 namespace gem5
@@ -129,8 +130,8 @@ unameFunc64(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
 static SyscallReturn
 setTLSFunc32(SyscallDesc *desc, ThreadContext *tc, uint32_t tlsPtr)
 {
-    tc->getVirtProxy().writeBlob(ArmLinuxProcess32::commPage + 0x0ff0,
-                                &tlsPtr, sizeof(tlsPtr));
+    SETranslatingPortProxy(tc).writeBlob(
+            ArmLinuxProcess32::commPage + 0x0ff0, &tlsPtr, sizeof(tlsPtr));
     tc->setMiscReg(MISCREG_TPIDRURO, tlsPtr);
     return 0;
 }

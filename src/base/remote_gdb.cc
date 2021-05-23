@@ -152,6 +152,8 @@
 #include "debug/GDBAll.hh"
 #include "mem/port.hh"
 #include "mem/port_proxy.hh"
+#include "mem/se_translating_port_proxy.hh"
+#include "mem/translating_port_proxy.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
@@ -687,8 +689,8 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 {
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
-    PortProxy &proxy = tc->getVirtProxy();
-    proxy.readBlob(vaddr, data, size);
+    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc)).
+        readBlob(vaddr, data, size);
 
 #if TRACING_ON
     if (debug::GDBRead) {
@@ -717,8 +719,8 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
         } else
             DPRINTFNR("\n");
     }
-    PortProxy &proxy = tc->getVirtProxy();
-    proxy.writeBlob(vaddr, data, size);
+    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc)).
+        writeBlob(vaddr, data, size);
 
     return true;
 }

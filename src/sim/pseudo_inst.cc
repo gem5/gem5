@@ -59,7 +59,10 @@
 #include "debug/Quiesce.hh"
 #include "debug/WorkItems.hh"
 #include "dev/net/dist_iface.hh"
+#include "mem/se_translating_port_proxy.hh"
+#include "mem/translating_port_proxy.hh"
 #include "params/BaseCPU.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_events.hh"
@@ -259,7 +262,8 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
             addr, symbolAddr);
 
     std::string symbol;
-    tc->getVirtProxy().readString(symbol, symbolAddr);
+    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc)).
+        readString(symbol, symbolAddr);
 
     DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
 
@@ -389,7 +393,8 @@ readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
     }
 
     close(fd);
-    tc->getVirtProxy().writeBlob(vaddr, buf, result);
+    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc)).
+        writeBlob(vaddr, buf, result);
     delete [] buf;
     return result;
 }
@@ -403,7 +408,8 @@ writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
 
     // copy out target filename
     std::string filename;
-    tc->getVirtProxy().readString(filename, filename_addr);
+    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc)).
+        readString(filename, filename_addr);
 
     OutputStream *out;
     if (offset == 0) {
@@ -428,7 +434,8 @@ writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
 
     // copy out data and write to file
     char *buf = new char[len];
-    tc->getVirtProxy().readBlob(vaddr, buf, len);
+    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc)).
+        readBlob(vaddr, buf, len);
     os->write(buf, len);
     if (os->fail() || os->bad())
         panic("Error while doing writefile!\n");

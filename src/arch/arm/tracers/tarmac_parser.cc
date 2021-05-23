@@ -49,8 +49,12 @@
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"
 #include "mem/port_proxy.hh"
+#include "mem/se_translating_port_proxy.hh"
+#include "mem/translating_port_proxy.hh"
+#include "sim/core.hh"
 #include "sim/cur_tick.hh"
 #include "sim/faults.hh"
+#include "sim/full_system.hh"
 #include "sim/sim_exit.hh"
 
 namespace gem5
@@ -1310,7 +1314,8 @@ TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
             return false;
         // the translating proxy will perform the virtual to physical
         // translation again
-        thread->getVirtProxy().readBlob(addr, data, size);
+        (FullSystem ? TranslatingPortProxy(thread) :
+         SETranslatingPortProxy(thread)).readBlob(addr, data, size);
     } else {
         return false;
     }

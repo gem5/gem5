@@ -249,6 +249,7 @@ PortProxy &
 ArmSemihosting::portProxy(ThreadContext *tc)
 {
     static std::unique_ptr<PortProxy> port_proxy_s;
+    static std::unique_ptr<PortProxy> port_proxy_ns;
     static System *secure_sys = nullptr;
 
     if (ArmISA::isSecure(tc)) {
@@ -267,7 +268,15 @@ ArmSemihosting::portProxy(ThreadContext *tc)
         secure_sys = sys;
         return *port_proxy_s;
     } else {
-        return tc->getVirtProxy();
+        if (!port_proxy_ns) {
+            if (FullSystem) {
+                port_proxy_ns.reset(new TranslatingPortProxy(tc));
+            } else {
+                port_proxy_ns.reset(new SETranslatingPortProxy(tc));
+            }
+        }
+
+        return *port_proxy_ns;
     }
 }
 

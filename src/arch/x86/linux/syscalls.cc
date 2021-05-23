@@ -33,6 +33,7 @@
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "sim/process.hh"
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
@@ -70,7 +71,7 @@ archPrctlFunc(SyscallDesc *desc, ThreadContext *tc, int code, uint64_t addr)
     };
 
     uint64_t fsBase, gsBase;
-    PortProxy &p = tc->getVirtProxy();
+    SETranslatingPortProxy p(tc);
     switch(code)
     {
       // Each of these valid options should actually check addr.
@@ -104,6 +105,7 @@ setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc,
     const int maxTLSEntry = minTLSEntry + numTLSEntries - 1;
 
     auto process = tc->getProcessPtr();
+    SETranslatingPortProxy proxy(tc);
 
     X86Process *x86p = dynamic_cast<X86Process *>(process);
     assert(x86p);
@@ -114,7 +116,7 @@ setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc,
         gdt(x86p->gdtStart() + minTLSEntry * sizeof(uint64_t),
             numTLSEntries * sizeof(uint64_t));
 
-    if (!gdt.copyIn(tc->getVirtProxy()))
+    if (!gdt.copyIn(proxy))
         panic("Failed to copy in GDT for %s.\n", desc->name());
 
     if (userDesc->entry_number == (uint32_t)(-1)) {
@@ -166,7 +168,7 @@ setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc,
 
     gdt[index] = (uint64_t)segDesc;
 
-    if (!gdt.copyOut(tc->getVirtProxy()))
+    if (!gdt.copyOut(proxy))
         panic("Failed to copy out GDT for %s.\n", desc->name());
 
     return 0;

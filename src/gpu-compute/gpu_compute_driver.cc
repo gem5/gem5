@@ -47,7 +47,10 @@
 #include "gpu-compute/gpu_command_processor.hh"
 #include "gpu-compute/shader.hh"
 #include "mem/port_proxy.hh"
+#include "mem/se_translating_port_proxy.hh"
+#include "mem/translating_port_proxy.hh"
 #include "params/GPUComputeDriver.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/syscall_emul_buf.hh"
 
@@ -221,7 +224,9 @@ GPUComputeDriver::DriverWakeupEvent::process()
 int
 GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
 {
-    auto &virt_proxy = tc->getVirtProxy();
+    TranslatingPortProxy fs_proxy(tc);
+    SETranslatingPortProxy se_proxy(tc);
+    PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
     auto process = tc->getProcessPtr();
     auto mem_state = process->memState;
 

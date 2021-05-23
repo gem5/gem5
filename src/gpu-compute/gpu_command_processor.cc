@@ -39,7 +39,10 @@
 #include "debug/GPUCommandProc.hh"
 #include "debug/GPUKernelInfo.hh"
 #include "gpu-compute/dispatcher.hh"
+#include "mem/se_translating_port_proxy.hh"
+#include "mem/translating_port_proxy.hh"
 #include "params/GPUCommandProcessor.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/proxy_ptr.hh"
 #include "sim/syscall_emul_buf.hh"
@@ -106,7 +109,10 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
      * space to pull out the kernel code descriptor.
      */
     auto *tc = sys->threads[0];
-    auto &virt_proxy = tc->getVirtProxy();
+
+    TranslatingPortProxy fs_proxy(tc);
+    SETranslatingPortProxy se_proxy(tc);
+    PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
 
     /**
      * The kernel_object is a pointer to the machine code, whose entry
