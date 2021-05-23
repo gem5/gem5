@@ -34,7 +34,6 @@ if env['TARGET_ISA'] == 'sparc':
     Source('faults.cc')
     Source('fs_workload.cc')
     Source('isa.cc')
-    Source('linux/linux.cc')
     Source('linux/se_workload.cc')
     Source('linux/syscalls.cc')
     Source('nativetrace.cc')
@@ -42,7 +41,6 @@ if env['TARGET_ISA'] == 'sparc':
     Source('process.cc')
     Source('remote_gdb.cc')
     Source('se_workload.cc')
-    Source('solaris/solaris.cc')
     Source('tlb.cc')
     Source('ua2005.cc')
 

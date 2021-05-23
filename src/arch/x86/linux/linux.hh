@@ -42,6 +42,7 @@
 
 #include "arch/x86/utility.hh"
 #include "base/compiler.hh"
+#include "kern/linux/flag_tables.hh"
 #include "kern/linux/linux.hh"
 #include "sim/guest_abi.hh"
 #include "sim/syscall_return.hh"
@@ -95,7 +96,7 @@ struct Result<ABI, SyscallReturn,
 
 } // namespace guest_abi
 
-class X86Linux64 : public X86Linux
+class X86Linux64 : public X86Linux, public OpenFlagTable<X86Linux64>
 {
   public:
 
@@ -176,27 +177,25 @@ class X86Linux64 : public X86Linux
     static const int TGT_SIGSYS         = 0x00001f;
     static const int TGT_SIGUNUSED      = 0x00001f;
 
-    static const std::map<int, int> openFlagTable;
-
-    static const int TGT_O_RDONLY       = 000000000;     //!< O_RDONLY
-    static const int TGT_O_WRONLY       = 000000001;     //!< O_WRONLY
-    static const int TGT_O_RDWR         = 000000002;     //!< O_RDWR
-    static const int TGT_O_CREAT        = 000000100;     //!< O_CREAT
-    static const int TGT_O_EXCL         = 000000200;     //!< O_EXCL
-    static const int TGT_O_NOCTTY       = 000000400;     //!< O_NOCTTY
-    static const int TGT_O_TRUNC        = 000001000;     //!< O_TRUNC
-    static const int TGT_O_APPEND       = 000002000;     //!< O_APPEND
-    static const int TGT_O_NONBLOCK     = 000004000;     //!< O_NONBLOCK
-    static const int TGT_O_DSYNC        = 000010000;
-    static const int TGT_FASYNC         = 000020000;
-    static const int TGT_O_DIRECT       = 000040000;     //!< O_DIRECTIO
-    static const int TGT_O_LARGEFILE    = 000100000;
-    static const int TGT_O_DIRECTORY    = 000200000;
-    static const int TGT_O_NOFOLLOW     = 000400000;
-    static const int TGT_O_NOATIME      = 001000000;
-    static const int TGT_O_CLOEXEC      = 002000000;
-    static const int TGT_O_SYNC         = 004010000;     //!< O_SYNC
-    static const int TGT_O_PATH         = 010000000;
+    static constexpr int TGT_O_RDONLY       = 000000000;     //!< O_RDONLY
+    static constexpr int TGT_O_WRONLY       = 000000001;     //!< O_WRONLY
+    static constexpr int TGT_O_RDWR         = 000000002;     //!< O_RDWR
+    static constexpr int TGT_O_CREAT        = 000000100;     //!< O_CREAT
+    static constexpr int TGT_O_EXCL         = 000000200;     //!< O_EXCL
+    static constexpr int TGT_O_NOCTTY       = 000000400;     //!< O_NOCTTY
+    static constexpr int TGT_O_TRUNC        = 000001000;     //!< O_TRUNC
+    static constexpr int TGT_O_APPEND       = 000002000;     //!< O_APPEND
+    static constexpr int TGT_O_NONBLOCK     = 000004000;     //!< O_NONBLOCK
+    static constexpr int TGT_O_DSYNC        = 000010000;
+    static constexpr int TGT_FASYNC         = 000020000;
+    static constexpr int TGT_O_DIRECT       = 000040000;     //!< O_DIRECTIO
+    static constexpr int TGT_O_LARGEFILE    = 000100000;
+    static constexpr int TGT_O_DIRECTORY    = 000200000;
+    static constexpr int TGT_O_NOFOLLOW     = 000400000;
+    static constexpr int TGT_O_NOATIME      = 001000000;
+    static constexpr int TGT_O_CLOEXEC      = 002000000;
+    static constexpr int TGT_O_SYNC         = 004010000;     //!< O_SYNC
+    static constexpr int TGT_O_PATH         = 010000000;
 
     //@{
     /// Basic X86_64 Linux types
@@ -206,22 +205,22 @@ class X86Linux64 : public X86Linux
     typedef int64_t clock_t;
     //@}
 
-    static const unsigned TGT_MAP_SHARED        = 0x00001;
-    static const unsigned TGT_MAP_PRIVATE       = 0x00002;
-    static const unsigned TGT_MAP_32BIT         = 0x00040;
-    static const unsigned TGT_MAP_ANON          = 0x00020;
-    static const unsigned TGT_MAP_DENYWRITE     = 0x00800;
-    static const unsigned TGT_MAP_EXECUTABLE    = 0x01000;
-    static const unsigned TGT_MAP_FILE          = 0x00000;
-    static const unsigned TGT_MAP_GROWSDOWN     = 0x00100;
-    static const unsigned TGT_MAP_HUGETLB       = 0x40000;
-    static const unsigned TGT_MAP_LOCKED        = 0x02000;
-    static const unsigned TGT_MAP_NONBLOCK      = 0x10000;
-    static const unsigned TGT_MAP_NORESERVE     = 0x04000;
-    static const unsigned TGT_MAP_POPULATE      = 0x08000;
-    static const unsigned TGT_MAP_STACK         = 0x20000;
-    static const unsigned TGT_MAP_ANONYMOUS     = 0x00020;
-    static const unsigned TGT_MAP_FIXED         = 0x00010;
+    static constexpr unsigned TGT_MAP_SHARED        = 0x00001;
+    static constexpr unsigned TGT_MAP_PRIVATE       = 0x00002;
+    static constexpr unsigned TGT_MAP_32BIT         = 0x00040;
+    static constexpr unsigned TGT_MAP_ANON          = 0x00020;
+    static constexpr unsigned TGT_MAP_DENYWRITE     = 0x00800;
+    static constexpr unsigned TGT_MAP_EXECUTABLE    = 0x01000;
+    static constexpr unsigned TGT_MAP_FILE          = 0x00000;
+    static constexpr unsigned TGT_MAP_GROWSDOWN     = 0x00100;
+    static constexpr unsigned TGT_MAP_HUGETLB       = 0x40000;
+    static constexpr unsigned TGT_MAP_LOCKED        = 0x02000;
+    static constexpr unsigned TGT_MAP_NONBLOCK      = 0x10000;
+    static constexpr unsigned TGT_MAP_NORESERVE     = 0x04000;
+    static constexpr unsigned TGT_MAP_POPULATE      = 0x08000;
+    static constexpr unsigned TGT_MAP_STACK         = 0x20000;
+    static constexpr unsigned TGT_MAP_ANONYMOUS     = 0x00020;
+    static constexpr unsigned TGT_MAP_FIXED         = 0x00010;
 
     struct tgt_iovec
     {
@@ -247,7 +246,7 @@ class X86Linux64 : public X86Linux
 
 };
 
-class X86Linux32 : public X86Linux
+class X86Linux32 : public X86Linux, public OpenFlagTable<X86Linux32>
 {
   public:
     struct GEM5_PACKED tgt_stat64
@@ -308,27 +307,25 @@ class X86Linux32 : public X86Linux
     static const int TGT_SIGSYS         = 0x00001f;
     static const int TGT_SIGUNUSED      = 0x00001f;
 
-    static const std::map<int, int> openFlagTable;
-
-    static const int TGT_O_RDONLY       = 000000000;     //!< O_RDONLY
-    static const int TGT_O_WRONLY       = 000000001;     //!< O_WRONLY
-    static const int TGT_O_RDWR         = 000000002;     //!< O_RDWR
-    static const int TGT_O_CREAT        = 000000100;     //!< O_CREAT
-    static const int TGT_O_EXCL         = 000000200;     //!< O_EXCL
-    static const int TGT_O_NOCTTY       = 000000400;     //!< O_NOCTTY
-    static const int TGT_O_TRUNC        = 000001000;     //!< O_TRUNC
-    static const int TGT_O_APPEND       = 000002000;     //!< O_APPEND
-    static const int TGT_O_NONBLOCK     = 000004000;     //!< O_NONBLOCK
-    static const int TGT_O_DSYNC        = 000010000;     //!< O_DSYNC
-    static const int TGT_FASYNC         = 000020000;
-    static const int TGT_O_DIRECT       = 000040000;     //!< O_DIRECTIO
-    static const int TGT_O_LARGEFILE    = 000100000;
-    static const int TGT_O_DIRECTORY    = 000200000;
-    static const int TGT_O_NOFOLLOW     = 000400000;
-    static const int TGT_O_NOATIME      = 001000000;
-    static const int TGT_O_CLOEXEC      = 002000000;
-    static const int TGT_O_SYNC         = 004010000;     //!< O_SYNC
-    static const int TGT_O_PATH         = 010000000;
+    static constexpr int TGT_O_RDONLY       = 000000000;     //!< O_RDONLY
+    static constexpr int TGT_O_WRONLY       = 000000001;     //!< O_WRONLY
+    static constexpr int TGT_O_RDWR         = 000000002;     //!< O_RDWR
+    static constexpr int TGT_O_CREAT        = 000000100;     //!< O_CREAT
+    static constexpr int TGT_O_EXCL         = 000000200;     //!< O_EXCL
+    static constexpr int TGT_O_NOCTTY       = 000000400;     //!< O_NOCTTY
+    static constexpr int TGT_O_TRUNC        = 000001000;     //!< O_TRUNC
+    static constexpr int TGT_O_APPEND       = 000002000;     //!< O_APPEND
+    static constexpr int TGT_O_NONBLOCK     = 000004000;     //!< O_NONBLOCK
+    static constexpr int TGT_O_DSYNC        = 000010000;     //!< O_DSYNC
+    static constexpr int TGT_FASYNC         = 000020000;
+    static constexpr int TGT_O_DIRECT       = 000040000;     //!< O_DIRECTIO
+    static constexpr int TGT_O_LARGEFILE    = 000100000;
+    static constexpr int TGT_O_DIRECTORY    = 000200000;
+    static constexpr int TGT_O_NOFOLLOW     = 000400000;
+    static constexpr int TGT_O_NOATIME      = 001000000;
+    static constexpr int TGT_O_CLOEXEC      = 002000000;
+    static constexpr int TGT_O_SYNC         = 004010000;     //!< O_SYNC
+    static constexpr int TGT_O_PATH         = 010000000;
 
     static const std::map<int, int> mmapFlagTable;
 
@@ -340,22 +337,22 @@ class X86Linux32 : public X86Linux
     typedef int32_t clock_t;
     //@}
 
-    static const unsigned TGT_MAP_SHARED        = 0x00001;
-    static const unsigned TGT_MAP_PRIVATE       = 0x00002;
-    static const unsigned TGT_MAP_32BIT         = 0x00040;
-    static const unsigned TGT_MAP_ANON          = 0x00020;
-    static const unsigned TGT_MAP_DENYWRITE     = 0x00800;
-    static const unsigned TGT_MAP_EXECUTABLE    = 0x01000;
-    static const unsigned TGT_MAP_FILE          = 0x00000;
-    static const unsigned TGT_MAP_GROWSDOWN     = 0x00100;
-    static const unsigned TGT_MAP_HUGETLB       = 0x40000;
-    static const unsigned TGT_MAP_LOCKED        = 0x02000;
-    static const unsigned TGT_MAP_NONBLOCK      = 0x10000;
-    static const unsigned TGT_MAP_NORESERVE     = 0x04000;
-    static const unsigned TGT_MAP_POPULATE      = 0x08000;
-    static const unsigned TGT_MAP_STACK         = 0x20000;
-    static const unsigned TGT_MAP_ANONYMOUS     = 0x00020;
-    static const unsigned TGT_MAP_FIXED         = 0x00010;
+    static constexpr unsigned TGT_MAP_SHARED        = 0x00001;
+    static constexpr unsigned TGT_MAP_PRIVATE       = 0x00002;
+    static constexpr unsigned TGT_MAP_32BIT         = 0x00040;
+    static constexpr unsigned TGT_MAP_ANON          = 0x00020;
+    static constexpr unsigned TGT_MAP_DENYWRITE     = 0x00800;
+    static constexpr unsigned TGT_MAP_EXECUTABLE    = 0x01000;
+    static constexpr unsigned TGT_MAP_FILE          = 0x00000;
+    static constexpr unsigned TGT_MAP_GROWSDOWN     = 0x00100;
+    static constexpr unsigned TGT_MAP_HUGETLB       = 0x40000;
+    static constexpr unsigned TGT_MAP_LOCKED        = 0x02000;
+    static constexpr unsigned TGT_MAP_NONBLOCK      = 0x10000;
+    static constexpr unsigned TGT_MAP_NORESERVE     = 0x04000;
+    static constexpr unsigned TGT_MAP_POPULATE      = 0x08000;
+    static constexpr unsigned TGT_MAP_STACK         = 0x20000;
+    static constexpr unsigned TGT_MAP_ANONYMOUS     = 0x00020;
+    static constexpr unsigned TGT_MAP_FIXED         = 0x00010;
 
     struct tgt_sysinfo
     {

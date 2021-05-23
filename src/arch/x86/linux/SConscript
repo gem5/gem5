@@ -44,7 +44,6 @@ if env['TARGET_ISA'] != 'x86':
     Return()
 
 Source('fs_workload.cc')
-Source('linux.cc')
 Source('se_workload.cc')
 Source('syscalls.cc')
 Source('syscall_tbl32.cc')

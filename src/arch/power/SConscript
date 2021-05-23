@@ -42,7 +42,6 @@ if env['TARGET_ISA'] == 'power':
     Source('insts/floating.cc')
     Source('insts/condition.cc')
     Source('insts/static_inst.cc')
-    Source('linux/linux.cc')
     Source('linux/se_workload.cc')
     Source('isa.cc')
     Source('pagetable.cc')

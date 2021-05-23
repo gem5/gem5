@@ -40,73 +40,78 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <fcntl.h>
+#include <sys/mman.h>
+
 /*
  * @file flag_tables.hh
  *
  * This file contains definitions of flag translation tables for the
  * open() system call.  Since the tables are nearly identical
  * across target platforms (other than the values of the target flags),
- * we use a single copy of the tables but include it separately for
- * each target platform.  The TARGET macro must be #defined before including
- * to indicate the class for which the table is being defined.
- *
- * See src/arch/<*>/linux/linux.cc.
+ * we use a template to build the tables which is inherited by each target
+ * platform.
  */
 
 namespace gem5
 {
 
-// open(2) flags translation table
-const std::map<int, int> TARGET::openFlagTable = {
+template <typename Target>
+class OpenFlagTable
+{
+  public:
+    // open(2) flags translation table
+    static inline const std::map<int, int> openFlagTable = {
 #ifdef _MSC_VER
-  { TARGET::TGT_O_RDONLY,     _O_RDONLY },
-  { TARGET::TGT_O_WRONLY,     _O_WRONLY },
-  { TARGET::TGT_O_RDWR,       _O_RDWR },
-  { TARGET::TGT_O_CREAT,      _O_CREAT },
-  { TARGET::TGT_O_EXCL,       _O_EXCL },
-  { TARGET::TGT_O_TRUNC,      _O_TRUNC },
-  { TARGET::TGT_O_APPEND,     _O_APPEND },
+      { Target::TGT_O_RDONLY,     _O_RDONLY },
+      { Target::TGT_O_WRONLY,     _O_WRONLY },
+      { Target::TGT_O_RDWR,       _O_RDWR },
+      { Target::TGT_O_CREAT,      _O_CREAT },
+      { Target::TGT_O_EXCL,       _O_EXCL },
+      { Target::TGT_O_TRUNC,      _O_TRUNC },
+      { Target::TGT_O_APPEND,     _O_APPEND },
 #else /* !_MSC_VER */
-  { TARGET::TGT_O_RDONLY,     O_RDONLY },
-  { TARGET::TGT_O_WRONLY,     O_WRONLY },
-  { TARGET::TGT_O_RDWR,       O_RDWR },
-  { TARGET::TGT_O_CREAT,      O_CREAT },
-  { TARGET::TGT_O_EXCL,       O_EXCL },
-  { TARGET::TGT_O_TRUNC,      O_TRUNC },
-  { TARGET::TGT_O_APPEND,     O_APPEND },
-  { TARGET::TGT_O_NOCTTY,     O_NOCTTY },
-  { TARGET::TGT_O_NONBLOCK,   O_NONBLOCK },
+      { Target::TGT_O_RDONLY,     O_RDONLY },
+      { Target::TGT_O_WRONLY,     O_WRONLY },
+      { Target::TGT_O_RDWR,       O_RDWR },
+      { Target::TGT_O_CREAT,      O_CREAT },
+      { Target::TGT_O_EXCL,       O_EXCL },
+      { Target::TGT_O_TRUNC,      O_TRUNC },
+      { Target::TGT_O_APPEND,     O_APPEND },
+      { Target::TGT_O_NOCTTY,     O_NOCTTY },
+      { Target::TGT_O_NONBLOCK,   O_NONBLOCK },
 #ifdef O_DSYNC
-  { TARGET::TGT_O_DSYNC,      O_DSYNC },
+      { Target::TGT_O_DSYNC,      O_DSYNC },
 #endif
 #ifdef O_ASYNC
-  { TARGET::TGT_FASYNC,       O_ASYNC },
+      { Target::TGT_FASYNC,       O_ASYNC },
 #endif
 #ifdef O_DIRECT
-  { TARGET::TGT_O_DIRECT,     O_DIRECT },
+      { Target::TGT_O_DIRECT,     O_DIRECT },
 #endif
 #ifdef O_LARGEFILE
-  { TARGET::TGT_O_LARGEFILE,  O_LARGEFILE },
+      { Target::TGT_O_LARGEFILE,  O_LARGEFILE },
 #endif
 #ifdef O_DIRECTORY
-  { TARGET::TGT_O_DIRECTORY,  O_DIRECTORY },
+      { Target::TGT_O_DIRECTORY,  O_DIRECTORY },
 #endif
 #ifdef O_NOFOLLOW
-  { TARGET::TGT_O_NOFOLLOW,   O_NOFOLLOW },
+      { Target::TGT_O_NOFOLLOW,   O_NOFOLLOW },
 #endif
 #ifdef O_NOATIME
-  { TARGET::TGT_O_NOATIME,    O_NOATIME },
+      { Target::TGT_O_NOATIME,    O_NOATIME },
 #endif
 #ifdef O_CLOEXEC
-  { TARGET::TGT_O_CLOEXEC,    O_CLOEXEC },
+      { Target::TGT_O_CLOEXEC,    O_CLOEXEC },
 #endif
 #ifdef O_SYNC
-  { TARGET::TGT_O_SYNC,       O_SYNC },
+      { Target::TGT_O_SYNC,       O_SYNC },
 #endif
 #ifdef O_PATH
-  { TARGET::TGT_O_PATH,       O_PATH },
+      { Target::TGT_O_PATH,       O_PATH },
 #endif
 #endif /* _MSC_VER */
+    };
 };
 
 } // namespace gem5

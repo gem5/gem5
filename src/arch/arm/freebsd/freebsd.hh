@@ -36,6 +36,7 @@
 #include <map>
 
 #include "kern/freebsd/freebsd.hh"
+#include "kern/linux/flag_tables.hh"
 #include "sim/byteswap.hh"
 
 namespace gem5
@@ -47,13 +48,9 @@ class ArmFreebsd : public FreeBSD
     static const ByteOrder byteOrder = ByteOrder::little;
 };
 
-class ArmFreebsd32 : public ArmFreebsd
+class ArmFreebsd32 : public ArmFreebsd, public OpenFlagTable<ArmFreebsd32>
 {
   public:
-    /// This table maps the target open() flags to the corresponding
-    /// host open() flags.
-    static const std::map<int, int> openFlagTable;
-
     //@{
     /// Basic ARM FreeBSD types
     typedef uint32_t size_t;
@@ -64,28 +61,28 @@ class ArmFreebsd32 : public ArmFreebsd
 
     //@{
     /// open(2) flag values.
-    static const int TGT_O_RDONLY    = 0x00000000; //!< O_RDONLY
-    static const int TGT_O_WRONLY    = 0x00000001; //!< O_WRONLY
-    static const int TGT_O_RDWR      = 0x00000002; //!< O_RDWR
-    static const int TGT_O_CREAT     = 0x00000200; //!< O_CREAT
-    static const int TGT_O_EXCL      = 0x00000800; //!< O_EXCL
-    static const int TGT_O_NOCTTY    = 0x00008000; //!< O_NOCTTY
-    static const int TGT_O_TRUNC     = 0x00000400; //!< O_TRUNC
-    static const int TGT_O_APPEND    = 0x00000008; //!< O_APPEND
-    static const int TGT_O_NONBLOCK  = 0x00000004; //!< O_NONBLOCK
-    static const int TGT_O_SYNC      = 0x00000080; //!< O_SYNC
-    static const int TGT_FASYNC      = 0x00000040; //!< FASYNC
-    static const int TGT_O_DIRECT    = 0x00010000; //!< O_DIRECT
-    static const int TGT_O_DIRECTORY = 0x00020000; //!< O_DIRECTORY
-    static const int TGT_O_NOFOLLOW  = 0x00000100; //!< O_NOFOLLOW
-    static const int TGT_O_CLOEXEC   = 0x00100000; //!< O_CLOEXEC
+    static constexpr int TGT_O_RDONLY    = 0x00000000; //!< O_RDONLY
+    static constexpr int TGT_O_WRONLY    = 0x00000001; //!< O_WRONLY
+    static constexpr int TGT_O_RDWR      = 0x00000002; //!< O_RDWR
+    static constexpr int TGT_O_CREAT     = 0x00000200; //!< O_CREAT
+    static constexpr int TGT_O_EXCL      = 0x00000800; //!< O_EXCL
+    static constexpr int TGT_O_NOCTTY    = 0x00008000; //!< O_NOCTTY
+    static constexpr int TGT_O_TRUNC     = 0x00000400; //!< O_TRUNC
+    static constexpr int TGT_O_APPEND    = 0x00000008; //!< O_APPEND
+    static constexpr int TGT_O_NONBLOCK  = 0x00000004; //!< O_NONBLOCK
+    static constexpr int TGT_O_SYNC      = 0x00000080; //!< O_SYNC
+    static constexpr int TGT_FASYNC      = 0x00000040; //!< FASYNC
+    static constexpr int TGT_O_DIRECT    = 0x00010000; //!< O_DIRECT
+    static constexpr int TGT_O_DIRECTORY = 0x00020000; //!< O_DIRECTORY
+    static constexpr int TGT_O_NOFOLLOW  = 0x00000100; //!< O_NOFOLLOW
+    static constexpr int TGT_O_CLOEXEC   = 0x00100000; //!< O_CLOEXEC
     //@}
 
     /// For mmap().
-    static const unsigned TGT_MAP_SHARED    = 0x0001;
-    static const unsigned TGT_MAP_PRIVATE   = 0x0002;
-    static const unsigned TGT_MAP_ANONYMOUS = 0x1000;
-    static const unsigned TGT_MAP_FIXED     = 0x0010;
+    static constexpr unsigned TGT_MAP_SHARED    = 0x0001;
+    static constexpr unsigned TGT_MAP_PRIVATE   = 0x0002;
+    static constexpr unsigned TGT_MAP_ANONYMOUS = 0x1000;
+    static constexpr unsigned TGT_MAP_FIXED     = 0x0010;
 
     /// Limit struct for getrlimit/setrlimit.
     struct rlimit
@@ -207,13 +204,9 @@ class ArmFreebsd32 : public ArmFreebsd
     };
 };
 
-class ArmFreebsd64 : public ArmFreebsd
+class ArmFreebsd64 : public ArmFreebsd, public OpenFlagTable<ArmFreebsd64>
 {
   public:
-
-    /// This table maps the target open() flags to the corresponding
-    /// host open() flags.
-    static const std::map<int, int> openFlagTable;
 
     //@{
     /// Basic ARM FreeBSD types
@@ -225,28 +218,28 @@ class ArmFreebsd64 : public ArmFreebsd
 
     //@{
     /// open(2) flag values.
-    static const int TGT_O_RDONLY    = 0x00000000; //!< O_RDONLY
-    static const int TGT_O_WRONLY    = 0x00000001; //!< O_WRONLY
-    static const int TGT_O_RDWR      = 0x00000002; //!< O_RDWR
-    static const int TGT_O_CREAT     = 0x00000200; //!< O_CREAT
-    static const int TGT_O_EXCL      = 0x00000800; //!< O_EXCL
-    static const int TGT_O_NOCTTY    = 0x00008000; //!< O_NOCTTY
-    static const int TGT_O_TRUNC     = 0x00000400; //!< O_TRUNC
-    static const int TGT_O_APPEND    = 0x00000008; //!< O_APPEND
-    static const int TGT_O_NONBLOCK  = 0x00000004; //!< O_NONBLOCK
-    static const int TGT_O_SYNC      = 0x00000080; //!< O_SYNC
-    static const int TGT_FASYNC      = 0x00000040; //!< FASYNC
-    static const int TGT_O_DIRECT    = 0x00010000; //!< O_DIRECT
-    static const int TGT_O_DIRECTORY = 0x00020000; //!< O_DIRECTORY
-    static const int TGT_O_NOFOLLOW  = 0x00000100; //!< O_NOFOLLOW
-    static const int TGT_O_CLOEXEC   = 0x00100000; //!< O_CLOEXEC
+    static constexpr int TGT_O_RDONLY    = 0x00000000; //!< O_RDONLY
+    static constexpr int TGT_O_WRONLY    = 0x00000001; //!< O_WRONLY
+    static constexpr int TGT_O_RDWR      = 0x00000002; //!< O_RDWR
+    static constexpr int TGT_O_CREAT     = 0x00000200; //!< O_CREAT
+    static constexpr int TGT_O_EXCL      = 0x00000800; //!< O_EXCL
+    static constexpr int TGT_O_NOCTTY    = 0x00008000; //!< O_NOCTTY
+    static constexpr int TGT_O_TRUNC     = 0x00000400; //!< O_TRUNC
+    static constexpr int TGT_O_APPEND    = 0x00000008; //!< O_APPEND
+    static constexpr int TGT_O_NONBLOCK  = 0x00000004; //!< O_NONBLOCK
+    static constexpr int TGT_O_SYNC      = 0x00000080; //!< O_SYNC
+    static constexpr int TGT_FASYNC      = 0x00000040; //!< FASYNC
+    static constexpr int TGT_O_DIRECT    = 0x00010000; //!< O_DIRECT
+    static constexpr int TGT_O_DIRECTORY = 0x00020000; //!< O_DIRECTORY
+    static constexpr int TGT_O_NOFOLLOW  = 0x00000100; //!< O_NOFOLLOW
+    static constexpr int TGT_O_CLOEXEC   = 0x00100000; //!< O_CLOEXEC
     //@}
 
     /// For mmap().
-    static const unsigned TGT_MAP_SHARED    = 0x0001;
-    static const unsigned TGT_MAP_PRIVATE   = 0x0002;
-    static const unsigned TGT_MAP_ANONYMOUS = 0x1000;
-    static const unsigned TGT_MAP_FIXED     = 0x0010;
+    static constexpr unsigned TGT_MAP_SHARED    = 0x0001;
+    static constexpr unsigned TGT_MAP_PRIVATE   = 0x0002;
+    static constexpr unsigned TGT_MAP_ANONYMOUS = 0x1000;
+    static constexpr unsigned TGT_MAP_FIXED     = 0x0010;
 
     //@{
     /// For getrusage().

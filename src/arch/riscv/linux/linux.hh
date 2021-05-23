@@ -32,6 +32,7 @@
 #include <map>
 
 #include "arch/riscv/utility.hh"
+#include "kern/linux/flag_tables.hh"
 #include "kern/linux/linux.hh"
 
 namespace gem5
@@ -43,7 +44,7 @@ class RiscvLinux : public Linux
     static const ByteOrder byteOrder = ByteOrder::little;
 };
 
-class RiscvLinux64 : public RiscvLinux
+class RiscvLinux64 : public RiscvLinux, public OpenFlagTable<RiscvLinux64>
 {
   public:
     static const int TGT_SIGHUP         =  1;
@@ -82,44 +83,40 @@ class RiscvLinux64 : public RiscvLinux
     static const int TGT_SIGUSR1        = 30;
     static const int TGT_SIGUSR2        = 31;
 
-    /// This table maps the target open() flags to the corresponding
-    /// host open() flags.
-    static const std::map<int, int> openFlagTable;
-
     //@{
     /// open(2) flag values.
-    static const int TGT_O_RDONLY       = 0x000000; //!< O_RDONLY
-    static const int TGT_O_WRONLY       = 0x000001; //!< O_WRONLY
-    static const int TGT_O_RDWR         = 0x000002; //!< O_RDWR
-    static const int TGT_O_CREAT        = 0x000040; //!< O_CREAT
-    static const int TGT_O_EXCL         = 0x000080; //!< O_EXCL
-    static const int TGT_O_NOCTTY       = 0x000100; //!< O_NOCTTY
-    static const int TGT_O_TRUNC        = 0x000200; //!< O_TRUNC
-    static const int TGT_O_APPEND       = 0x000400; //!< O_APPEND
-    static const int TGT_O_NONBLOCK     = 0x000800; //!< O_NONBLOCK
-    static const int TGT_O_SYNC         = 0x001000; //!< O_SYNC
-    static const int TGT_FSYNC          = 0x001000; //!< FSYNC
-    static const int TGT_FASYNC         = 0x008000; //!< FASYNC
+    static constexpr int TGT_O_RDONLY       = 0x000000; //!< O_RDONLY
+    static constexpr int TGT_O_WRONLY       = 0x000001; //!< O_WRONLY
+    static constexpr int TGT_O_RDWR         = 0x000002; //!< O_RDWR
+    static constexpr int TGT_O_CREAT        = 0x000040; //!< O_CREAT
+    static constexpr int TGT_O_EXCL         = 0x000080; //!< O_EXCL
+    static constexpr int TGT_O_NOCTTY       = 0x000100; //!< O_NOCTTY
+    static constexpr int TGT_O_TRUNC        = 0x000200; //!< O_TRUNC
+    static constexpr int TGT_O_APPEND       = 0x000400; //!< O_APPEND
+    static constexpr int TGT_O_NONBLOCK     = 0x000800; //!< O_NONBLOCK
+    static constexpr int TGT_O_SYNC         = 0x001000; //!< O_SYNC
+    static constexpr int TGT_FSYNC          = 0x001000; //!< FSYNC
+    static constexpr int TGT_FASYNC         = 0x008000; //!< FASYNC
     // The following are not present in riscv64-unknown-elf <fcntl.h>
-    static const int TGT_O_DSYNC        = 0x010000; //!< O_DSYNC
-    static const int TGT_O_CLOEXEC      = 0x040000; //!< O_CLOEXEC
-    static const int TGT_O_NOINHERIT    = 0x040000; //!< O_NOINHERIT
-    static const int TGT_O_DIRECT       = 0x080000; //!< O_DIRECT
-    static const int TGT_O_NOFOLLOW     = 0x100000; //!< O_NOFOLLOW
-    static const int TGT_O_DIRECTORY    = 0x200000; //!< O_DIRECTORY
+    static constexpr int TGT_O_DSYNC        = 0x010000; //!< O_DSYNC
+    static constexpr int TGT_O_CLOEXEC      = 0x040000; //!< O_CLOEXEC
+    static constexpr int TGT_O_NOINHERIT    = 0x040000; //!< O_NOINHERIT
+    static constexpr int TGT_O_DIRECT       = 0x080000; //!< O_DIRECT
+    static constexpr int TGT_O_NOFOLLOW     = 0x100000; //!< O_NOFOLLOW
+    static constexpr int TGT_O_DIRECTORY    = 0x200000; //!< O_DIRECTORY
     // The following are not defined by riscv64-unknown-elf
-    static const int TGT_O_LARGEFILE    = 0x020000; //!< O_LARGEFILE
-    static const int TGT_O_NOATIME      = 0x800000; //!< O_NOATIME
-    static const int TGT_O_PATH         = 0x400000; //!< O_PATH
+    static constexpr int TGT_O_LARGEFILE    = 0x020000; //!< O_LARGEFILE
+    static constexpr int TGT_O_NOATIME      = 0x800000; //!< O_NOATIME
+    static constexpr int TGT_O_PATH         = 0x400000; //!< O_PATH
     //@}
 
     // Only defined in riscv-unknown-elf for proxy kernel and not linux kernel
-    static const unsigned TGT_MAP_SHARED        = 0x0001;
-    static const unsigned TGT_MAP_PRIVATE       = 0x0002;
-    static const unsigned TGT_MAP_FIXED         = 0x0010;
-    static const unsigned TGT_MAP_ANONYMOUS     = 0x0020;
-    static const unsigned TGT_MAP_POPULATE      = 0x1000;
-    static const unsigned TGT_MREMAP_FIXED      = 0x0020;
+    static constexpr unsigned TGT_MAP_SHARED        = 0x0001;
+    static constexpr unsigned TGT_MAP_PRIVATE       = 0x0002;
+    static constexpr unsigned TGT_MAP_FIXED         = 0x0010;
+    static constexpr unsigned TGT_MAP_ANONYMOUS     = 0x0020;
+    static constexpr unsigned TGT_MAP_POPULATE      = 0x1000;
+    static constexpr unsigned TGT_MREMAP_FIXED      = 0x0020;
 
     typedef int64_t time_t;
     typedef uint64_t dev_t;
@@ -212,7 +209,7 @@ class RiscvLinux64 : public RiscvLinux
     }
 };
 
-class RiscvLinux32 : public RiscvLinux
+class RiscvLinux32 : public RiscvLinux, public OpenFlagTable<RiscvLinux32>
 {
   public:
     static const int TGT_SIGHUP         =  1;
@@ -251,46 +248,42 @@ class RiscvLinux32 : public RiscvLinux
     static const int TGT_SIGUSR1        = 30;
     static const int TGT_SIGUSR2        = 31;
 
-    /// This table maps the target open() flags to the corresponding
-    /// host open() flags.
-    static const std::map<int, int> openFlagTable;
-
     //@{
     /// open(2) flag values.
     // The following values match newlib 3.0.0.
     // Note that glibc has different values.
-    static const int TGT_O_RDONLY       = 0x000000; //!< O_RDONLY
-    static const int TGT_O_WRONLY       = 0x000001; //!< O_WRONLY
-    static const int TGT_O_RDWR         = 0x000002; //!< O_RDWR
-    static const int TGT_O_CREAT        = 0x000200; //!< O_CREAT
-    static const int TGT_O_EXCL         = 0x000800; //!< O_EXCL
-    static const int TGT_O_NOCTTY       = 0x008000; //!< O_NOCTTY
-    static const int TGT_O_TRUNC        = 0x000400; //!< O_TRUNC
-    static const int TGT_O_APPEND       = 0x000008; //!< O_APPEND
-    static const int TGT_O_NONBLOCK     = 0x004000; //!< O_NONBLOCK
-    static const int TGT_O_SYNC         = 0x002000; //!< O_SYNC
-    static const int TGT_FSYNC          = 0x002000; //!< FSYNC
-    static const int TGT_FASYNC         = 0x000040; //!< FASYNC
+    static constexpr int TGT_O_RDONLY       = 0x000000; //!< O_RDONLY
+    static constexpr int TGT_O_WRONLY       = 0x000001; //!< O_WRONLY
+    static constexpr int TGT_O_RDWR         = 0x000002; //!< O_RDWR
+    static constexpr int TGT_O_CREAT        = 0x000200; //!< O_CREAT
+    static constexpr int TGT_O_EXCL         = 0x000800; //!< O_EXCL
+    static constexpr int TGT_O_NOCTTY       = 0x008000; //!< O_NOCTTY
+    static constexpr int TGT_O_TRUNC        = 0x000400; //!< O_TRUNC
+    static constexpr int TGT_O_APPEND       = 0x000008; //!< O_APPEND
+    static constexpr int TGT_O_NONBLOCK     = 0x004000; //!< O_NONBLOCK
+    static constexpr int TGT_O_SYNC         = 0x002000; //!< O_SYNC
+    static constexpr int TGT_FSYNC          = 0x002000; //!< FSYNC
+    static constexpr int TGT_FASYNC         = 0x000040; //!< FASYNC
     // The following are not present in riscv32-unknown-elf <fcntl.h>
-    static const int TGT_O_DSYNC        = 0x010000; //!< O_DSYNC
-    static const int TGT_O_CLOEXEC      = 0x040000; //!< O_CLOEXEC
-    static const int TGT_O_NOINHERIT    = 0x040000; //!< O_NOINHERIT
-    static const int TGT_O_DIRECT       = 0x080000; //!< O_DIRECT
-    static const int TGT_O_NOFOLLOW     = 0x100000; //!< O_NOFOLLOW
-    static const int TGT_O_DIRECTORY    = 0x200000; //!< O_DIRECTORY
+    static constexpr int TGT_O_DSYNC        = 0x010000; //!< O_DSYNC
+    static constexpr int TGT_O_CLOEXEC      = 0x040000; //!< O_CLOEXEC
+    static constexpr int TGT_O_NOINHERIT    = 0x040000; //!< O_NOINHERIT
+    static constexpr int TGT_O_DIRECT       = 0x080000; //!< O_DIRECT
+    static constexpr int TGT_O_NOFOLLOW     = 0x100000; //!< O_NOFOLLOW
+    static constexpr int TGT_O_DIRECTORY    = 0x200000; //!< O_DIRECTORY
     // The following are not defined by riscv32-unknown-elf
-    static const int TGT_O_LARGEFILE    = 0x020000; //!< O_LARGEFILE
-    static const int TGT_O_NOATIME      = 0x800000; //!< O_NOATIME
-    static const int TGT_O_PATH         = 0x400000; //!< O_PATH
+    static constexpr int TGT_O_LARGEFILE    = 0x020000; //!< O_LARGEFILE
+    static constexpr int TGT_O_NOATIME      = 0x800000; //!< O_NOATIME
+    static constexpr int TGT_O_PATH         = 0x400000; //!< O_PATH
     //@}
 
     // Only defined in riscv-unknown-elf for proxy kernel and not linux kernel
-    static const unsigned TGT_MAP_SHARED        = 0x0001;
-    static const unsigned TGT_MAP_PRIVATE       = 0x0002;
-    static const unsigned TGT_MAP_FIXED         = 0x0010;
-    static const unsigned TGT_MAP_ANONYMOUS     = 0x0020;
-    static const unsigned TGT_MAP_POPULATE      = 0x1000;
-    static const unsigned TGT_MREMAP_FIXED      = 0x0020;
+    static constexpr unsigned TGT_MAP_SHARED        = 0x0001;
+    static constexpr unsigned TGT_MAP_PRIVATE       = 0x0002;
+    static constexpr unsigned TGT_MAP_FIXED         = 0x0010;
+    static constexpr unsigned TGT_MAP_ANONYMOUS     = 0x0020;
+    static constexpr unsigned TGT_MAP_POPULATE      = 0x1000;
+    static constexpr unsigned TGT_MREMAP_FIXED      = 0x0020;
 
     // Newlib 3.0.0 defaults to 64-bits for time_t.
     // Currently time_t in glibc for riscv32 is 32-bits, but will be changed.

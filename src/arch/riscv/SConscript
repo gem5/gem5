@@ -58,7 +58,6 @@ if env['TARGET_ISA'] == 'riscv':
     Source('tlb.cc')
 
     Source('linux/se_workload.cc')
-    Source('linux/linux.cc')
     Source('linux/fs_workload.cc')
 
     Source('bare_metal/fs_workload.cc')
