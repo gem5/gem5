@@ -31,9 +31,17 @@
 
 #include <algorithm>
 #include <iostream>
+#include <type_traits>
+#include <vector>
 
 namespace m5 {
 namespace stl_helpers {
+
+template <typename T, typename Enabled=void>
+struct IsHelpedContainer : public std::false_type {};
+
+template <typename ...Types>
+struct IsHelpedContainer<std::vector<Types...>> : public std::true_type {};
 
 /**
  * Write out all elements in an stl container as a space separated
@@ -41,19 +49,20 @@ namespace stl_helpers {
  *
  * @ingroup api_base_utils
  */
-template <template <typename T, typename A> class C, typename T, typename A>
-std::ostream &
-operator<<(std::ostream& out, const C<T,A> &vec)
+
+template <typename T>
+std::enable_if_t<IsHelpedContainer<T>::value, std::ostream &>
+operator<<(std::ostream& out, const T &t)
 {
     out << "[ ";
     bool first = true;
-    auto printer = [&first, &out](const T &elem) {
+    auto printer = [&first, &out](const auto &elem) {
         if (first)
             out << elem;
         else
             out << " " << elem;
     };
-    std::for_each(vec.begin(), vec.end(), printer);
+    std::for_each(t.begin(), t.end(), printer);
     out << " ]";
     out << std::flush;
     return out;
