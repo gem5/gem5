@@ -216,6 +216,8 @@ class ThreadContext : public ::ThreadContext
     PortProxy &getVirtProxy() override { return *virtProxy; }
     void initMemProxies(::ThreadContext *tc) override;
 
+    void sendFunctional(PacketPtr pkt) override;
+
     Process *
     getProcessPtr() override
     {

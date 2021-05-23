@@ -41,6 +41,7 @@
 
 #include <utility>
 
+#include "arch/arm/fastmodel/iris/cpu.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
 #include "iris/detail/IrisCppAdapter.h"
@@ -304,7 +305,7 @@ ThreadContext::semihostingEvent(
 }
 
 ThreadContext::ThreadContext(
-        BaseCPU *cpu, int id, System *system, ::BaseMMU *mmu,
+        ::BaseCPU *cpu, int id, System *system, ::BaseMMU *mmu,
         BaseISA *isa, iris::IrisConnectionInterface *iris_if,
         const std::string &iris_path) :
     _cpu(cpu), _threadId(id), _system(system), _mmu(mmu), _isa(isa),
@@ -486,6 +487,14 @@ ThreadContext::initMemProxies(::ThreadContext *tc)
         virtProxy.reset(new SETranslatingPortProxy(this,
                         SETranslatingPortProxy::NextPage));
     }
+}
+
+void
+ThreadContext::sendFunctional(PacketPtr pkt)
+{
+    auto *iris_cpu = dynamic_cast<Iris::BaseCPU *>(getCpuPtr());
+    assert(iris_cpu);
+    iris_cpu->evs_base_cpu->sendFunc(pkt);
 }
 
 ThreadContext::Status

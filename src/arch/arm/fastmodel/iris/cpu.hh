@@ -38,6 +38,8 @@
 namespace Iris
 {
 
+class ThreadContext;
+
 // The base interface of the EVS used by gem5 BaseCPU below.
 class BaseCpuEvs
 {
@@ -93,6 +95,8 @@ class BaseCPU : public ::BaseCPU
     Iris::BaseCpuEvs *evs_base_cpu;
 
   protected:
+    friend ThreadContext;
+
     void
     clockPeriodUpdated() override
     {
