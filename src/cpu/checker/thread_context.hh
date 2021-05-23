@@ -168,12 +168,6 @@ class CheckerThreadContext : public ThreadContext
     void setProcessPtr(Process *p) override { actualTC->setProcessPtr(p); }
 
     void
-    initMemProxies(ThreadContext *tc) override
-    {
-        actualTC->initMemProxies(tc);
-    }
-
-    void
     connectMemPorts(ThreadContext *tc)
     {
         actualTC->connectMemPorts(tc);

@@ -564,8 +564,6 @@ CPU::init()
         // Set noSquashFromTC so that the CPU doesn't squash when initially
         // setting up registers.
         thread[tid]->noSquashFromTC = true;
-        // Initialise the ThreadContext's memory proxies
-        thread[tid]->initMemProxies(thread[tid]->getTC());
     }
 
     // Clear noSquashFromTC.

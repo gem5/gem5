@@ -72,14 +72,6 @@ struct ThreadState : public Serializable
 
     Tick readLastSuspend() const { return lastSuspend; }
 
-    /**
-     * Initialise the physical and virtual port proxies and tie them to
-     * the data port of the CPU.
-     *
-     * @param tc ThreadContext for the virtual-to-physical translation
-     */
-    void initMemProxies(ThreadContext *tc) {}
-
     Process *getProcessPtr() { return process; }
 
     void setProcessPtr(Process *p) { process = p; }

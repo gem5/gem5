@@ -67,14 +67,6 @@ BaseCPU::totalInsts() const
 }
 
 void
-BaseCPU::init()
-{
-    gem5::BaseCPU::init();
-    for (auto *tc: threadContexts)
-        tc->initMemProxies(tc);
-}
-
-void
 BaseCPU::serializeThread(CheckpointOut &cp, ThreadID tid) const
 {
     gem5::serialize(*threadContexts[tid], cp);

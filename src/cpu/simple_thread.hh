@@ -216,12 +216,6 @@ class SimpleThread : public ThreadState, public ThreadContext
 
     System *getSystemPtr() override { return system; }
 
-    void
-    initMemProxies(ThreadContext *tc) override
-    {
-        ThreadState::initMemProxies(tc);
-    }
-
     Process *getProcessPtr() override { return ThreadState::getProcessPtr(); }
     void setProcessPtr(Process *p) override { ThreadState::setProcessPtr(p); }
 

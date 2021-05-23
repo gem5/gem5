@@ -119,17 +119,6 @@ BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
 }
 
 void
-BaseSimpleCPU::init()
-{
-    BaseCPU::init();
-
-    for (auto tc : threadContexts) {
-        // Initialise the ThreadContext's memory proxies
-        tc->initMemProxies(tc);
-    }
-}
-
-void
 BaseSimpleCPU::checkPcEventQueue()
 {
     Addr oldpc, pc = threadInfo[curThread]->thread->instAddr();

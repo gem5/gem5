@@ -109,11 +109,7 @@ void
 BaseKvmCPU::init()
 {
     BaseCPU::init();
-
-    if (numThreads != 1)
-        fatal("KVM: Multithreading not supported");
-
-    tc->initMemProxies(tc);
+    fatal_if(numThreads != 1, "KVM: Multithreading not supported");
 }
 
 void

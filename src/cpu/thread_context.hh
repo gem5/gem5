@@ -149,14 +149,6 @@ class ThreadContext : public PCEventScope
 
     virtual void sendFunctional(PacketPtr pkt);
 
-    /**
-     * Initialise the physical and virtual port proxies and tie them to
-     * the data port of the CPU.
-     *
-     * tc ThreadContext for the virtual-to-physical translation
-     */
-    virtual void initMemProxies(ThreadContext *tc) = 0;
-
     virtual Process *getProcessPtr() = 0;
 
     virtual void setProcessPtr(Process *p) = 0;

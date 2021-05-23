@@ -212,8 +212,6 @@ class ThreadContext : public gem5::ThreadContext
         return _isa;
     }
 
-    void initMemProxies(gem5::ThreadContext *tc) override {}
-
     void sendFunctional(PacketPtr pkt) override;
 
     Process *

@@ -101,18 +101,9 @@ MinorCPU::init()
 {
     BaseCPU::init();
 
-    if (!params().switched_out &&
-        system->getMemoryMode() != enums::timing)
-    {
+    if (!params().switched_out && system->getMemoryMode() != enums::timing) {
         fatal("The Minor CPU requires the memory system to be in "
             "'timing' mode.\n");
-    }
-
-    /* Initialise the ThreadContext's memory proxies */
-    for (ThreadID thread_id = 0; thread_id < threads.size(); thread_id++) {
-        ThreadContext *tc = getContext(thread_id);
-
-        tc->initMemProxies(tc);
     }
 }
 

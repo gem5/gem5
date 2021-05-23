@@ -143,12 +143,6 @@ class ThreadContext : public gem5::ThreadContext
 
     void setProcessPtr(Process *p) override { thread->setProcessPtr(p); }
 
-    void
-    initMemProxies(gem5::ThreadContext *tc) override
-    {
-        thread->initMemProxies(tc);
-    }
-
     /** Returns this thread's status. */
     Status status() const override { return thread->status(); }
 
