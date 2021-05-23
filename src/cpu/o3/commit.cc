@@ -1013,13 +1013,6 @@ Commit::commitInsts()
         } else {
             pc[tid] = head_inst->pcState();
 
-            // Increment the total number of non-speculative instructions
-            // executed.
-            // Hack for now: it really shouldn't happen until after the
-            // commit is deemed to be successful, but this count is needed
-            // for syscalls.
-            thread[tid]->funcExeInst++;
-
             // Try to commit the head instruction.
             bool commit_success = commitHead(head_inst, num_committed);
 
@@ -1155,10 +1148,6 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     // If the instruction is not executed yet, then it will need extra
     // handling.  Signal backwards that it should be executed.
     if (!head_inst->isExecuted()) {
-        // Keep this number correct.  We have not yet actually executed
-        // and committed this instruction.
-        thread[tid]->funcExeInst--;
-
         // Make sure we are only trying to commit un-executed instructions we
         // think are possible.
         assert(head_inst->isNonSpeculative() || head_inst->isStoreConditional()

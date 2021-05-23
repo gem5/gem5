@@ -44,7 +44,7 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
       _status(ThreadContext::Halted), baseCpu(cpu),
       _contextId(0), _threadId(_tid), lastActivate(0), lastSuspend(0),
       process(_process), physProxy(NULL), virtProxy(NULL),
-      funcExeInst(0), storeCondFailures(0)
+      storeCondFailures(0)
 {
 }
 
@@ -60,23 +60,12 @@ void
 ThreadState::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_ENUM(_status);
-    // thread_num and cpu_id are deterministic from the config
-    SERIALIZE_SCALAR(funcExeInst);
-
-    if (!FullSystem)
-        return;
 }
 
 void
 ThreadState::unserialize(CheckpointIn &cp)
 {
-
     UNSERIALIZE_ENUM(_status);
-    // thread_num and cpu_id are deterministic from the config
-    UNSERIALIZE_SCALAR(funcExeInst);
-
-    if (!FullSystem)
-        return;
 }
 
 void

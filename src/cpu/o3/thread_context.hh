@@ -355,9 +355,6 @@ class ThreadContext : public ::ThreadContext
         thread->storeCondFailures = sc_failures;
     }
 
-    /** Reads the funcExeInst counter. */
-    Counter readFuncExeInst() const override { return thread->funcExeInst; }
-
     /** check if the cpu is currently in state update mode and squash if not.
      * This function will return true if a trap is pending or if a fault or
      * similar is currently writing to the thread context and doesn't want

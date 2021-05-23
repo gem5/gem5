@@ -400,12 +400,6 @@ class CheckerThreadContext : public ThreadContext
         actualTC->setStCondFailures(sc_failures);
     }
 
-    Counter
-    readFuncExeInst() const override
-    {
-        return actualTC->readFuncExeInst();
-    }
-
     RegVal
     readIntRegFlat(RegIndex idx) const override
     {

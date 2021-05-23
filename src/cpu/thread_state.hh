@@ -87,16 +87,6 @@ struct ThreadState : public Serializable
 
     void setProcessPtr(Process *p) { process = p; }
 
-    /** Reads the number of instructions functionally executed and
-     * committed.
-     */
-    Counter readFuncExeInst() const { return funcExeInst; }
-
-    /** Sets the total number of instructions functionally executed
-     * and committed.
-     */
-    void setFuncExeInst(Counter new_val) { funcExeInst = new_val; }
-
     /** Returns the status of this thread. */
     Status status() const { return _status; }
 
@@ -160,11 +150,6 @@ struct ThreadState : public Serializable
     PortProxy *virtProxy;
 
   public:
-    /*
-     * number of executed instructions, for matching with syscall trace
-     * points in EIO files.
-     */
-    Counter funcExeInst;
 
     //
     // Count failed store conditionals so we can warn of apparent

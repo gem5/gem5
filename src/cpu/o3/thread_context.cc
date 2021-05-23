@@ -65,8 +65,6 @@ ThreadContext::takeOverFrom(::ThreadContext *old_context)
     TheISA::Decoder *oldDecoder = old_context->getDecoderPtr();
     newDecoder->takeOverFrom(oldDecoder);
 
-    thread->funcExeInst = old_context->readFuncExeInst();
-
     thread->noSquashFromTC = false;
     thread->trapPending = false;
 }
@@ -149,9 +147,6 @@ ThreadContext::copyArchRegs(::ThreadContext *tc)
     thread->noSquashFromTC = true;
     getIsaPtr()->copyRegsFrom(tc);
     thread->noSquashFromTC = false;
-
-    if (!FullSystem)
-        thread->funcExeInst = tc->readFuncExeInst();
 }
 
 void

@@ -268,9 +268,6 @@ class ThreadContext : public PCEventScope
 
     virtual void setStCondFailures(unsigned sc_failures) = 0;
 
-    // Same with st cond failures.
-    virtual Counter readFuncExeInst() const = 0;
-
     // This function exits the thread context in the CPU and returns
     // 1 if the CPU has no more active threads (meaning it's OK to exit);
     // Used in syscall-emulation mode when a  thread calls the exit syscall.

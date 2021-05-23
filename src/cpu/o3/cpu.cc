@@ -348,9 +348,6 @@ CPU::CPU(const O3CPUParams &params)
         fatal("O3CPU %s has no interrupt controller.\n"
               "Ensure createInterruptController() is called.\n", name());
     }
-
-    for (ThreadID tid = 0; tid < numThreads; tid++)
-        thread[tid]->setFuncExeInst(0);
 }
 
 void

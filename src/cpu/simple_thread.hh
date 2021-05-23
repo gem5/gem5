@@ -490,12 +490,6 @@ class SimpleThread : public ThreadState, public ThreadContext
         storeCondFailures = sc_failures;
     }
 
-    Counter
-    readFuncExeInst() const override
-    {
-        return ThreadState::readFuncExeInst();
-    }
-
     RegVal readIntRegFlat(RegIndex idx) const override { return intRegs[idx]; }
     void
     setIntRegFlat(RegIndex idx, RegVal val) override

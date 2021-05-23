@@ -361,7 +361,6 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
             }
 
             if (fault == NoFault && unverifiedFault == NoFault) {
-                thread->funcExeInst++;
                 // Checks to make sure instrution results are correct.
                 validateExecution(unverifiedInst);
 

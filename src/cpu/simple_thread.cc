@@ -95,7 +95,6 @@ SimpleThread::takeOverFrom(ThreadContext *oldContext)
 
     isa->takeOverFrom(this, oldContext);
 
-    funcExeInst = oldContext->readFuncExeInst();
     storeCondFailures = 0;
 }
 
@@ -105,8 +104,6 @@ SimpleThread::copyState(ThreadContext *oldContext)
     // copy over functional state
     _status = oldContext->status();
     copyArchRegs(oldContext);
-    if (FullSystem)
-        funcExeInst = oldContext->readFuncExeInst();
 
     _threadId = oldContext->threadId();
     _contextId = oldContext->contextId();
