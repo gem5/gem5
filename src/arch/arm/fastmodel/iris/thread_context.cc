@@ -479,8 +479,7 @@ ThreadContext::initMemProxies(::ThreadContext *tc)
 {
     if (FullSystem) {
         assert(!physProxy && !virtProxy);
-        physProxy.reset(new PortProxy(_cpu->getSendFunctional(),
-                                      _cpu->cacheLineSize()));
+        physProxy.reset(new PortProxy(tc, _cpu->cacheLineSize()));
         virtProxy.reset(new TranslatingPortProxy(tc));
     } else {
         assert(!virtProxy);

@@ -53,8 +53,7 @@
 
 TranslatingPortProxy::TranslatingPortProxy(
         ThreadContext *tc, Request::Flags _flags) :
-    PortProxy(tc->getCpuPtr()->getSendFunctional(),
-              tc->getSystemPtr()->cacheLineSize()), _tc(tc),
+    PortProxy(tc, tc->getSystemPtr()->cacheLineSize()), _tc(tc),
               pageBytes(tc->getSystemPtr()->getPageBytes()),
               flags(_flags)
 {}

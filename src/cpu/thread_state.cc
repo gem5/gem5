@@ -88,11 +88,7 @@ ThreadState::initMemProxies(ThreadContext *tc)
     // switching the CPU in.
     if (FullSystem) {
         assert(physProxy == NULL);
-        // This cannot be done in the constructor as the thread state
-        // itself is created in the base cpu constructor and the
-        // getSendFunctional is a virtual function
-        physProxy = new PortProxy(baseCpu->getSendFunctional(),
-                                  baseCpu->cacheLineSize());
+        physProxy = new PortProxy(tc, baseCpu->cacheLineSize());
 
         assert(virtProxy == NULL);
         virtProxy = new TranslatingPortProxy(tc);
