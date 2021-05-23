@@ -95,7 +95,6 @@ class ThreadContext : public ::ThreadContext
     std::vector<iris::MemorySupportedAddressTranslationResult> translations;
 
     std::unique_ptr<PortProxy> virtProxy = nullptr;
-    std::unique_ptr<PortProxy> physProxy = nullptr;
 
 
     // A queue to keep track of instruction count based events.
@@ -212,7 +211,6 @@ class ThreadContext : public ::ThreadContext
         return _isa;
     }
 
-    PortProxy &getPhysProxy() override { return *physProxy; }
     PortProxy &getVirtProxy() override { return *virtProxy; }
     void initMemProxies(::ThreadContext *tc) override;
 

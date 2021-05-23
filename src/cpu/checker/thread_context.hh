@@ -149,8 +149,6 @@ class CheckerThreadContext : public ThreadContext
 
     void setProcessPtr(Process *p) override { actualTC->setProcessPtr(p); }
 
-    PortProxy &getPhysProxy() override { return actualTC->getPhysProxy(); }
-
     PortProxy &
     getVirtProxy() override
     {

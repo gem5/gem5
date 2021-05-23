@@ -213,7 +213,6 @@ class SimpleThread : public ThreadState, public ThreadContext
 
     System *getSystemPtr() override { return system; }
 
-    PortProxy &getPhysProxy() override { return ThreadState::getPhysProxy(); }
     PortProxy &getVirtProxy() override { return ThreadState::getVirtProxy(); }
 
     void

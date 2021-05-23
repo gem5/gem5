@@ -77,8 +77,6 @@ struct ThreadState : public Serializable
      */
     void initMemProxies(ThreadContext *tc);
 
-    PortProxy &getPhysProxy();
-
     PortProxy &getVirtProxy();
 
     Process *getProcessPtr() { return process; }
@@ -138,10 +136,6 @@ struct ThreadState : public Serializable
 
   protected:
     Process *process;
-
-    /** A port proxy outgoing only for functional accesses to physical
-     * addresses.*/
-    PortProxy *physProxy;
 
     /** A translating port proxy, outgoing only, for functional
      * accesse to virtual addresses. */

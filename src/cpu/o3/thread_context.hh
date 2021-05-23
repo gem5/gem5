@@ -140,8 +140,6 @@ class ThreadContext : public ::ThreadContext
 
     void setProcessPtr(Process *p) override { thread->setProcessPtr(p); }
 
-    PortProxy &getPhysProxy() override { return thread->getPhysProxy(); }
-
     PortProxy &getVirtProxy() override;
 
     void

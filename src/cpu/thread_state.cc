@@ -43,15 +43,12 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
       numLoad(0), startNumLoad(0),
       _status(ThreadContext::Halted), baseCpu(cpu),
       _contextId(0), _threadId(_tid), lastActivate(0), lastSuspend(0),
-      process(_process), physProxy(NULL), virtProxy(NULL),
-      storeCondFailures(0)
+      process(_process), virtProxy(NULL), storeCondFailures(0)
 {
 }
 
 ThreadState::~ThreadState()
 {
-    if (physProxy != NULL)
-        delete physProxy;
     if (virtProxy != NULL)
         delete virtProxy;
 }
@@ -75,25 +72,13 @@ ThreadState::initMemProxies(ThreadContext *tc)
     // and can safely be done at init() time even if the CPU is not
     // connected, i.e. when restoring from a checkpoint and later
     // switching the CPU in.
+    assert(virtProxy == NULL);
     if (FullSystem) {
-        assert(physProxy == NULL);
-        physProxy = new PortProxy(tc, baseCpu->cacheLineSize());
-
-        assert(virtProxy == NULL);
         virtProxy = new TranslatingPortProxy(tc);
     } else {
-        assert(virtProxy == NULL);
         virtProxy = new SETranslatingPortProxy(
                 tc, SETranslatingPortProxy::NextPage);
     }
-}
-
-PortProxy &
-ThreadState::getPhysProxy()
-{
-    assert(FullSystem);
-    assert(physProxy != NULL);
-    return *physProxy;
 }
 
 PortProxy &

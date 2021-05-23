@@ -477,12 +477,10 @@ ThreadContext::getCurrentInstCount()
 void
 ThreadContext::initMemProxies(::ThreadContext *tc)
 {
+    assert(!virtProxy);
     if (FullSystem) {
-        assert(!physProxy && !virtProxy);
-        physProxy.reset(new PortProxy(tc, _cpu->cacheLineSize()));
         virtProxy.reset(new TranslatingPortProxy(tc));
     } else {
-        assert(!virtProxy);
         virtProxy.reset(new SETranslatingPortProxy(this,
                         SETranslatingPortProxy::NextPage));
     }
