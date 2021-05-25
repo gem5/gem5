@@ -418,7 +418,7 @@ Walker::WalkerState::endWalk()
 void
 Walker::WalkerState::setupWalk(Addr vaddr)
 {
-    vaddr &= (static_cast<Addr>(1) << VADDR_BITS) - 1;
+    vaddr = Addr(sext<VADDR_BITS>(vaddr));
 
     Addr shift = PageShift + LEVEL_BITS * 2;
     Addr idx = (vaddr >> shift) & LEVEL_MASK;
@@ -486,7 +486,7 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
              * well.
              */
             Addr vaddr = req->getVaddr();
-            vaddr &= (static_cast<Addr>(1) << VADDR_BITS) - 1;
+            vaddr = Addr(sext<VADDR_BITS>(vaddr));
             Addr paddr = walker->tlb->translateWithTLB(vaddr, satp.asid, mode);
             req->setPaddr(paddr);
             walker->pma->check(req);

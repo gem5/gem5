@@ -277,7 +277,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
 {
     delayed = false;
 
-    Addr vaddr = req->getVaddr() & ((static_cast<Addr>(1) << VADDR_BITS) - 1);
+    Addr vaddr = Addr(sext<VADDR_BITS>(req->getVaddr()));
     SATP satp = tc->readMiscReg(MISCREG_SATP);
 
     TlbEntry *e = lookup(vaddr, satp.asid, mode, false);
