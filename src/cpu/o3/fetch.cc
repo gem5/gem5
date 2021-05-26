@@ -1151,7 +1151,7 @@ Fetch::fetch(bool &status_change)
             else
                 ++fetchStats.miscStallCycles;
             return;
-        } else if (checkInterrupt(thisPC.instAddr() && !delayedCommit[tid])) {
+        } else if (checkInterrupt(thisPC.instAddr()) && !delayedCommit[tid]) {
             // Stall CPU if an interrupt is posted and we're not issuing
             // an delayed commit micro-op currently (delayed commit
             // instructions are not interruptable by interrupts, only faults)
