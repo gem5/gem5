@@ -71,16 +71,40 @@ class GTestExitLogger : public Logger
     void exit() override { throw GTestException(); }
 };
 
-GTestExitLogger panicLogger("panic: ");
-GTestExitLogger fatalLogger("fatal: ");
-GTestLogger warnLogger("warn: ");
-GTestLogger infoLogger("info: ");
-GTestLogger hackLogger("hack: ");
-
 } // anonymous namespace
 
-Logger &Logger::getPanic() { return panicLogger; }
-Logger &Logger::getFatal() { return fatalLogger; }
-Logger &Logger::getWarn() { return warnLogger; }
-Logger &Logger::getInfo() { return infoLogger; }
-Logger &Logger::getHack() { return hackLogger; }
+// We intentionally put all the loggers on the heap to prevent them from being
+// destructed at the end of the program. This make them safe to be used inside
+// destructor of other global objects. Also, we make them function static
+// veriables to ensure they are initialized ondemand, so it is also safe to use
+// them inside constructor of other global objects.
+
+Logger&
+Logger::getPanic() {
+    static GTestExitLogger* panic_logger = new GTestExitLogger("panic: ");
+    return *panic_logger;
+}
+
+Logger&
+Logger::getFatal() {
+    static GTestExitLogger* fatal_logger = new GTestExitLogger("fatal: ");
+    return *fatal_logger;
+}
+
+Logger&
+Logger::getWarn() {
+    static GTestLogger* warn_logger = new GTestLogger("warn: ");
+    return *warn_logger;
+}
+
+Logger&
+Logger::getInfo() {
+    static GTestLogger* info_logger = new GTestLogger("info: ");
+    return *info_logger;
+}
+
+Logger&
+Logger::getHack() {
+    static GTestLogger* hack_logger = new GTestLogger("hack: ");
+    return *hack_logger;
+}

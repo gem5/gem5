@@ -70,16 +70,40 @@ class FatalLogger : public ExitLogger
     void exit() override { ::exit(1); }
 };
 
-ExitLogger panicLogger("panic: ");
-FatalLogger fatalLogger("fatal: ");
-Logger warnLogger("warn: ");
-Logger infoLogger("info: ");
-Logger hackLogger("hack: ");
-
 } // anonymous namespace
 
-Logger &Logger::getPanic() { return panicLogger; }
-Logger &Logger::getFatal() { return fatalLogger; }
-Logger &Logger::getWarn() { return warnLogger; }
-Logger &Logger::getInfo() { return infoLogger; }
-Logger &Logger::getHack() { return hackLogger; }
+// We intentionally put all the loggers on the heap to prevent them from being
+// destructed at the end of the program. This make them safe to be used inside
+// destructor of other global objects. Also, we make them function static
+// veriables to ensure they are initialized ondemand, so it is also safe to use
+// them inside constructor of other global objects.
+
+Logger&
+Logger::getPanic() {
+    static ExitLogger* panic_logger = new ExitLogger("panic: ");
+    return *panic_logger;
+}
+
+Logger&
+Logger::getFatal() {
+    static FatalLogger* fatal_logger = new FatalLogger("fatal: ");
+    return *fatal_logger;
+}
+
+Logger&
+Logger::getWarn() {
+    static Logger* warn_logger = new Logger("warn: ");
+    return *warn_logger;
+}
+
+Logger&
+Logger::getInfo() {
+    static Logger* info_logger = new Logger("info: ");
+    return *info_logger;
+}
+
+Logger&
+Logger::getHack() {
+    static Logger* hack_logger = new Logger("hack: ");
+    return *hack_logger;
+}
