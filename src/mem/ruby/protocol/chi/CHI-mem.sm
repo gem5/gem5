@@ -80,7 +80,7 @@ machine(MachineType:Memory, "Memory controller interface") :
 
   state_declaration(State, desc="Transaction states", default="Memory_State_READY") {
     // We don't know if the line is cached, so the memory copy is maybe stable
-    READY, AccessPermission:Backing_Store, desk="Ready to transfer the line";
+    READY, AccessPermission:Backing_Store, desc="Ready to transfer the line";
 
     WAITING_NET_DATA, AccessPermission:Backing_Store_Busy, desc="Waiting data from the network";
     SENDING_NET_DATA, AccessPermission:Backing_Store_Busy, desc="Sending data to the network";
@@ -97,28 +97,28 @@ machine(MachineType:Memory, "Memory controller interface") :
 
   enumeration(Event, desc="Memory events") {
     // Checks if a request can allocate a TBE be moved to reqRdy
-    CheckAllocTBE;
-    CheckAllocTBE_WithCredit;
+    CheckAllocTBE, desc="";
+    CheckAllocTBE_WithCredit, desc="";
 
     // Requests
-    WriteNoSnpPtl;
-    WriteNoSnp;
-    ReadNoSnp;
-    ReadNoSnpSep;
+    WriteNoSnpPtl, desc="";
+    WriteNoSnp, desc="";
+    ReadNoSnp, desc="";
+    ReadNoSnpSep, desc="";
 
     // Data
-    WriteData;
+    WriteData, desc="";
 
     // Memory side
-    MemoryData;
-    MemoryAck;
+    MemoryData, desc="";
+    MemoryAck, desc="";
 
     // Internal event triggers
-    Trigger_Send;
-    Trigger_SendDone;
-    Trigger_ReceiveDone;
-    Trigger_SendRetry;
-    Trigger_SendPCrdGrant;
+    Trigger_Send, desc="";
+    Trigger_SendDone, desc="";
+    Trigger_ReceiveDone, desc="";
+    Trigger_SendRetry, desc="";
+    Trigger_SendPCrdGrant, desc="";
   }
 
 

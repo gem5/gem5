@@ -206,7 +206,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   state_declaration(State, default="Cache_State_null") {
     // Stable states
 
-    I, AccessPermission:Invalid,    desk="Invalid / not present locally or upstream";
+    I, AccessPermission:Invalid,    desc="Invalid / not present locally or upstream";
 
     // States when block is present in local cache only
     SC, AccessPermission:Read_Only,     desc="Shared Clean";
@@ -216,21 +216,21 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     UD_T, AccessPermission:Read_Write,  desc="UD with use timeout";
 
     // Invalid in local cache but present in upstream caches
-    RU, AccessPermission:Invalid,   desk="Upstream requester has line in UD/UC";
-    RSC, AccessPermission:Invalid,  desk="Upstream requester has line in SC";
-    RSD, AccessPermission:Invalid,  desk="Upstream requester has line in SD and maybe SC";
-    RUSC, AccessPermission:Invalid, desk="RSC + this node stills has exclusive access";
-    RUSD, AccessPermission:Invalid, desk="RSD + this node stills has exclusive access";
+    RU, AccessPermission:Invalid,   desc="Upstream requester has line in UD/UC";
+    RSC, AccessPermission:Invalid,  desc="Upstream requester has line in SC";
+    RSD, AccessPermission:Invalid,  desc="Upstream requester has line in SD and maybe SC";
+    RUSC, AccessPermission:Invalid, desc="RSC + this node stills has exclusive access";
+    RUSD, AccessPermission:Invalid, desc="RSD + this node stills has exclusive access";
 
     // Both in local and upstream caches. In some cases local maybe stale
-    SC_RSC, AccessPermission:Read_Only,    desk="SC + RSC";
-    SD_RSC, AccessPermission:Read_Only,    desk="SD + RSC";
-    SD_RSD, AccessPermission:Read_Only,    desk="SD + RSD";
-    UC_RSC, AccessPermission:Read_Write,   desk="UC + RSC";
-    UC_RU, AccessPermission:Invalid,       desk="UC + RU";
-    UD_RU, AccessPermission:Invalid,       desk="UD + RU";
-    UD_RSD, AccessPermission:Read_Write,   desk="UD + RSD";
-    UD_RSC, AccessPermission:Read_Write,   desk="UD + RSC";
+    SC_RSC, AccessPermission:Read_Only,    desc="SC + RSC";
+    SD_RSC, AccessPermission:Read_Only,    desc="SD + RSC";
+    SD_RSD, AccessPermission:Read_Only,    desc="SD + RSD";
+    UC_RSC, AccessPermission:Read_Write,   desc="UC + RSC";
+    UC_RU, AccessPermission:Invalid,       desc="UC + RU";
+    UD_RU, AccessPermission:Invalid,       desc="UD + RU";
+    UD_RSD, AccessPermission:Read_Write,   desc="UD + RSD";
+    UD_RSC, AccessPermission:Read_Write,   desc="UD + RSC";
 
     // Generic transient state
     // There is only a transient "BUSY" state. The actions taken at this state
@@ -261,90 +261,90 @@ machine(MachineType:Cache, "Cache coherency protocol") :
 
     // Events triggered by sequencer requests or snoops in the rdy queue
     // See CHIRequestType in CHi-msg.sm for descriptions
-    Load;
-    Store;
-    Prefetch;
-    ReadShared;
-    ReadNotSharedDirty;
-    ReadUnique;
-    ReadUnique_PoC;
-    ReadOnce;
-    CleanUnique;
-    Evict;
-    WriteBackFull;
-    WriteEvictFull;
-    WriteCleanFull;
-    WriteUnique;
-    WriteUniquePtl_PoC;
-    WriteUniqueFull_PoC;
-    WriteUniqueFull_PoC_Alloc;
-    SnpCleanInvalid;
-    SnpShared;
-    SnpSharedFwd;
-    SnpNotSharedDirtyFwd;
-    SnpUnique;
-    SnpUniqueFwd;
-    SnpOnce;
-    SnpOnceFwd;
-    SnpStalled; // A snoop stall triggered from the inport
+    Load,                        desc="";
+    Store,                       desc="";
+    Prefetch,                    desc="";
+    ReadShared,                  desc="";
+    ReadNotSharedDirty,          desc="";
+    ReadUnique,                  desc="";
+    ReadUnique_PoC,              desc="";
+    ReadOnce,                    desc="";
+    CleanUnique,                 desc="";
+    Evict,                       desc="";
+    WriteBackFull,               desc="";
+    WriteEvictFull,              desc="";
+    WriteCleanFull,              desc="";
+    WriteUnique,                 desc="";
+    WriteUniquePtl_PoC,          desc="";
+    WriteUniqueFull_PoC,         desc="";
+    WriteUniqueFull_PoC_Alloc,   desc="";
+    SnpCleanInvalid,             desc="";
+    SnpShared,                   desc="";
+    SnpSharedFwd,                desc="";
+    SnpNotSharedDirtyFwd,        desc="";
+    SnpUnique,                   desc="";
+    SnpUniqueFwd,                desc="";
+    SnpOnce,                     desc="";
+    SnpOnceFwd,                  desc="";
+    SnpStalled, desc=""; // A snoop stall triggered from the inport
 
     // Events triggered by incoming response messages
     // See CHIResponseType in CHi-msg.sm for descriptions
-    CompAck;
-    Comp_I;
-    Comp_UC;
-    Comp_SC;
-    CompDBIDResp;
-    DBIDResp;
-    Comp;
-    ReadReceipt;
-    RespSepData;
-    SnpResp_I;
-    SnpResp_I_Fwded_UC;
-    SnpResp_I_Fwded_UD_PD;
-    SnpResp_SC;
-    SnpResp_SC_Fwded_SC;
-    SnpResp_SC_Fwded_SD_PD;
-    SnpResp_UC_Fwded_I;
-    SnpResp_UD_Fwded_I;
-    SnpResp_SC_Fwded_I;
-    SnpResp_SD_Fwded_I;
-    RetryAck;
-    RetryAck_PoC;
-    PCrdGrant;
-    PCrdGrant_PoC;
-    RetryAck_Hazard;
-    RetryAck_PoC_Hazard;
-    PCrdGrant_Hazard;
-    PCrdGrant_PoC_Hazard;
+    CompAck,                 desc="";
+    Comp_I,                  desc="";
+    Comp_UC,                 desc="";
+    Comp_SC,                 desc="";
+    CompDBIDResp,            desc="";
+    DBIDResp,                desc="";
+    Comp,                    desc="";
+    ReadReceipt,             desc="";
+    RespSepData,             desc="";
+    SnpResp_I,               desc="";
+    SnpResp_I_Fwded_UC,      desc="";
+    SnpResp_I_Fwded_UD_PD,   desc="";
+    SnpResp_SC,              desc="";
+    SnpResp_SC_Fwded_SC,     desc="";
+    SnpResp_SC_Fwded_SD_PD,  desc="";
+    SnpResp_UC_Fwded_I,      desc="";
+    SnpResp_UD_Fwded_I,      desc="";
+    SnpResp_SC_Fwded_I,      desc="";
+    SnpResp_SD_Fwded_I,      desc="";
+    RetryAck,                desc="";
+    RetryAck_PoC,            desc="";
+    PCrdGrant,               desc="";
+    PCrdGrant_PoC,           desc="";
+    RetryAck_Hazard,         desc="";
+    RetryAck_PoC_Hazard,     desc="";
+    PCrdGrant_Hazard,        desc="";
+    PCrdGrant_PoC_Hazard,    desc="";
 
     // Events triggered by incoming data response messages
     // See CHIDataType in CHi-msg.sm for descriptions
-    CompData_I;
-    CompData_UC;
-    CompData_SC;
-    CompData_UD_PD;
-    CompData_SD_PD;
-    DataSepResp_UC;
-    CBWrData_I;
-    CBWrData_UC;
-    CBWrData_SC;
-    CBWrData_UD_PD;
-    CBWrData_SD_PD;
-    NCBWrData;
-    SnpRespData_I;
-    SnpRespData_I_PD;
-    SnpRespData_SC;
-    SnpRespData_SC_PD;
-    SnpRespData_SD;
-    SnpRespData_UC;
-    SnpRespData_UD;
-    SnpRespData_SC_Fwded_SC;
-    SnpRespData_SC_Fwded_SD_PD;
-    SnpRespData_SC_PD_Fwded_SC;
-    SnpRespData_I_Fwded_SD_PD;
-    SnpRespData_I_PD_Fwded_SC;
-    SnpRespData_I_Fwded_SC;
+    CompData_I,                    desc="";
+    CompData_UC,                   desc="";
+    CompData_SC,                   desc="";
+    CompData_UD_PD,                desc="";
+    CompData_SD_PD,                desc="";
+    DataSepResp_UC,                desc="";
+    CBWrData_I,                    desc="";
+    CBWrData_UC,                   desc="";
+    CBWrData_SC,                   desc="";
+    CBWrData_UD_PD,                desc="";
+    CBWrData_SD_PD,                desc="";
+    NCBWrData,                     desc="";
+    SnpRespData_I,                 desc="";
+    SnpRespData_I_PD,              desc="";
+    SnpRespData_SC,                desc="";
+    SnpRespData_SC_PD,             desc="";
+    SnpRespData_SD,                desc="";
+    SnpRespData_UC,                desc="";
+    SnpRespData_UD,                desc="";
+    SnpRespData_SC_Fwded_SC,       desc="";
+    SnpRespData_SC_Fwded_SD_PD,    desc="";
+    SnpRespData_SC_PD_Fwded_SC,    desc="";
+    SnpRespData_I_Fwded_SD_PD,     desc="";
+    SnpRespData_I_PD_Fwded_SC,     desc="";
+    SnpRespData_I_Fwded_SC,        desc="";
 
     // We use special events for requests that we detect to be stale. This is
     // done for debugging only. We sent a stale response so the requester can
@@ -352,10 +352,10 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     // A Write or Evict becomes stale when the requester receives a snoop that
     // changes the state of the data while the request was pending.
     // Actual CHI implementations don't have this check.
-    Evict_Stale;
-    WriteBackFull_Stale;
-    WriteEvictFull_Stale;
-    WriteCleanFull_Stale;
+    Evict_Stale,            desc="";
+    WriteBackFull_Stale,    desc="";
+    WriteEvictFull_Stale,   desc="";
+    WriteCleanFull_Stale,   desc="";
 
     // Cache fill handling
     CheckCacheFill,   desc="Check if need to write or update the cache and trigger any necessary allocation and evictions";
@@ -474,9 +474,9 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     // any queued action and is not expecting responses/data. The transaction
     // is finalized and the next stable state is stored in the cache/directory
     // See the processNextState and makeFinalState functions
-    Final;
+    Final, desc="";
 
-    null;
+    null, desc="";
   }
 
   ////////////////////////////////////////////////////////////////////////////
