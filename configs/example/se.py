@@ -166,8 +166,7 @@ mp0_path = multiprocesses[0].executable
 system = System(cpu = [CPUClass(cpu_id=i) for i in range(np)],
                 mem_mode = test_mem_mode,
                 mem_ranges = [AddrRange(args.mem_size)],
-                cache_line_size = args.cacheline_size,
-                workload = SEWorkload.init_compatible(mp0_path))
+                cache_line_size = args.cacheline_size)
 
 if numThreads > 1:
     system.multi_thread = True
@@ -261,6 +260,8 @@ else:
     CacheConfig.config_cache(args, system)
     MemConfig.config_mem(args, system)
     config_filesystem(system, args)
+
+system.workload = SEWorkload.init_compatible(mp0_path)
 
 if args.wait_gdb:
     for cpu in system.cpu:
