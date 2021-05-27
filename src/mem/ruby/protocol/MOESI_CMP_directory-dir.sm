@@ -114,7 +114,7 @@ machine(MachineType:Directory, "Directory protocol")
     DMA_WRITE_PARTIAL, desc="DMA Write partial line";
     DMA_ACK,       desc="DMA Ack";
     Data,          desc="Data to directory";
-    All_Acks,      desk="All pending acks, unblocks, etc have been received";
+    All_Acks,      desc="All pending acks, unblocks, etc have been received";
   }
 
   // TYPES
