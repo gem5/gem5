@@ -148,7 +148,20 @@ void
 AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Read framebuffer address %#lx\n", offset);
+
     mmioReader.readFromTrace(pkt, FRAMEBUFFER_BAR, offset);
+
+    /* Handle special counter addresses in framebuffer. */
+    if (offset == 0xa28000) {
+        /* Counter addresses expect the read to return previous value + 1. */
+        if (regs.find(pkt->getAddr()) == regs.end()) {
+            regs[pkt->getAddr()] = 1;
+        } else {
+            regs[pkt->getAddr()]++;
+        }
+
+        pkt->setUintX(regs[pkt->getAddr()], ByteOrder::little);
+    }
 }
 
 void
