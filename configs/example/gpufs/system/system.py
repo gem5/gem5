@@ -75,6 +75,9 @@ def makeGpuFSSystem(args):
                                              voltage_domain =
                                              system.cpu_voltage_domain)
 
+    # Setup VGA ROM region
+    system.shadow_rom_ranges = [AddrRange(0xc0000, size = Addr('128kB'))]
+
     # Create specified number of CPUs. GPUFS really only needs one.
     system.cpu = [TestCPUClass(clk_domain=system.cpu_clk_domain, cpu_id=i)
                     for i in range(args.num_cpus)]

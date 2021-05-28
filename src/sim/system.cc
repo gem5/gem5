@@ -202,6 +202,8 @@ System::System(const Params &p)
 #endif
       physmem(name() + ".physmem", p.memories, p.mmap_using_noreserve,
               p.shared_backstore),
+      ShadowRomRanges(p.shadow_rom_ranges.begin(),
+                      p.shadow_rom_ranges.end()),
       memoryMode(p.mem_mode),
       _cacheLineSize(p.cache_line_size),
       numWorkIds(p.num_work_ids),

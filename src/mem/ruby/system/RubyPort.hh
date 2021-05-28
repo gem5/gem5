@@ -99,6 +99,7 @@ class RubyPort : public ClockedObject
         void addToRetryList();
 
       private:
+        bool isShadowRomAddress(Addr addr) const;
         bool isPhysMemAddress(PacketPtr pkt) const;
     };
 

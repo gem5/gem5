@@ -607,11 +607,27 @@ RubyPort::PioResponsePort::getAddrRanges() const
 }
 
 bool
+RubyPort::MemResponsePort::isShadowRomAddress(Addr addr) const
+{
+    RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
+    AddrRangeList ranges = ruby_port->system->getShadowRomRanges();
+
+    for (auto it = ranges.begin(); it != ranges.end(); ++it) {
+        if (it->contains(addr)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool
 RubyPort::MemResponsePort::isPhysMemAddress(PacketPtr pkt) const
 {
     RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
-    return ruby_port->system->isMemAddr(pkt->getAddr())
-        || ruby_port->system->isDeviceMemAddr(pkt);
+    Addr addr = pkt->getAddr();
+    return (ruby_port->system->isMemAddr(addr) && !isShadowRomAddress(addr))
+           || ruby_port->system->isDeviceMemAddr(pkt);
 }
 
 void

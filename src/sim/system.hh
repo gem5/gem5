@@ -378,6 +378,13 @@ class System : public SimObject, public PCEventScope
      */
     AbstractMemory *getDeviceMemory(RequestorID _id) const;
 
+    /*
+     * Return the list of address ranges backed by a shadowed ROM.
+     *
+     * @return List of address ranges backed by a shadowed ROM
+     */
+    AddrRangeList getShadowRomRanges() const { return ShadowRomRanges; }
+
     /**
      * Get the architecture.
      */
@@ -412,6 +419,8 @@ class System : public SimObject, public PCEventScope
     KvmVM *const kvmVM = nullptr;
 
     PhysicalMemory physmem;
+
+    AddrRangeList ShadowRomRanges;
 
     enums::MemoryMode memoryMode;
 
