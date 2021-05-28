@@ -32,6 +32,7 @@
 #include <map>
 #include <memory>
 
+#include "arch/arm/regs/vec.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "iris/IrisInstance.h"
@@ -276,21 +277,22 @@ class ThreadContext : public ::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const VecRegContainer &readVecReg(const RegId &reg) const override;
-    VecRegContainer &
+    const ArmISA::VecRegContainer &readVecReg(const RegId &reg) const override;
+    ArmISA::VecRegContainer &
     getWritableVecReg(const RegId &reg) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const VecElem &
+    const ArmISA::VecElem &
     readVecElem(const RegId &reg) const override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const VecPredRegContainer &readVecPredReg(const RegId &reg) const override;
-    VecPredRegContainer &
+    const ArmISA::VecPredRegContainer &
+        readVecPredReg(const RegId &reg) const override;
+    ArmISA::VecPredRegContainer &
     getWritableVecPredReg(const RegId &reg) override
     {
         panic("%s not implemented.", __FUNCTION__);
@@ -311,20 +313,20 @@ class ThreadContext : public ::ThreadContext
     }
 
     void
-    setVecReg(const RegId &reg, const VecRegContainer &val) override
+    setVecReg(const RegId &reg, const ArmISA::VecRegContainer &val) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
     void
-    setVecElem(const RegId& reg, const VecElem& val) override
+    setVecElem(const RegId& reg, const ArmISA::VecElem& val) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
     void
     setVecPredReg(const RegId &reg,
-                  const VecPredRegContainer &val) override
+                  const ArmISA::VecPredRegContainer &val) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
@@ -403,38 +405,40 @@ class ThreadContext : public ::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const VecRegContainer &readVecRegFlat(RegIndex idx) const override;
-    VecRegContainer &
+    const ArmISA::VecRegContainer &readVecRegFlat(RegIndex idx) const override;
+    ArmISA::VecRegContainer &
     getWritableVecRegFlat(RegIndex idx) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
     void
-    setVecRegFlat(RegIndex idx, const VecRegContainer &val) override
+    setVecRegFlat(RegIndex idx, const ArmISA::VecRegContainer &val) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const VecElem&
+    const ArmISA::VecElem&
     readVecElemFlat(RegIndex idx, const ElemIndex& elemIdx) const override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
     void
     setVecElemFlat(RegIndex idx, const ElemIndex &elemIdx,
-                   const VecElem &val) override
+                   const ArmISA::VecElem &val) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const VecPredRegContainer &readVecPredRegFlat(RegIndex idx) const override;
-    VecPredRegContainer &
+    const ArmISA::VecPredRegContainer &
+        readVecPredRegFlat(RegIndex idx) const override;
+    ArmISA::VecPredRegContainer &
     getWritableVecPredRegFlat(RegIndex idx) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
     void
-    setVecPredRegFlat(RegIndex idx, const VecPredRegContainer &val) override
+    setVecPredRegFlat(RegIndex idx,
+            const ArmISA::VecPredRegContainer &val) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }

@@ -39,13 +39,15 @@ class ISA : public BaseISA
   public:
     ISA(const Params &p) : BaseISA(p) {}
 
-    void serialize(CheckpointOut &cp) const;
+    void serialize(CheckpointOut &cp) const override;
+
+    void copyRegsFrom(ThreadContext *src) override;
 
     bool
     inUserMode() const override
     {
-        CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-        return ::inUserMode(cpsr);
+        ArmISA::CPSR cpsr = tc->readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
+        return ArmISA::inUserMode(cpsr);
     }
 };
 

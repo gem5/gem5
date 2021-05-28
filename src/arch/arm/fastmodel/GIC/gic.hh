@@ -81,6 +81,7 @@ class SCGIC : public scx_evs_GIC
     };
 
     std::unique_ptr<Terminator> terminator;
+    const SCFastModelGICParams &_params;
 
   public:
     SCGIC(const SCFastModelGICParams &p) : SCGIC(p, p.name.c_str()) {}

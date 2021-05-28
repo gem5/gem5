@@ -28,8 +28,8 @@
 #include "arch/arm/fastmodel/iris/isa.hh"
 
 #include "arch/arm/regs/misc.hh"
+#include "base/logging.hh"
 #include "cpu/thread_context.hh"
-#include "params/IrisISA.hh"
 #include "sim/serialize.hh"
 
 void
@@ -39,4 +39,10 @@ Iris::ISA::serialize(CheckpointOut &cp) const
     for (int i = 0; i < ArmISA::NUM_PHYS_MISCREGS; i++)
         miscRegs[i] = tc->readMiscRegNoEffect(i);
     SERIALIZE_ARRAY(miscRegs, ArmISA::NUM_PHYS_MISCREGS);
+}
+
+void
+Iris::ISA::copyRegsFrom(ThreadContext *src)
+{
+    panic("copyRegsFrom not implemented");
 }

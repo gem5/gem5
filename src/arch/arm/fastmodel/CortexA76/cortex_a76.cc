@@ -28,6 +28,7 @@
 #include "arch/arm/fastmodel/CortexA76/cortex_a76.hh"
 
 #include "arch/arm/fastmodel/iris/cpu.hh"
+#include "arch/arm/regs/misc.hh"
 #include "base/logging.hh"
 #include "dev/arm/base_gic.hh"
 #include "sim/core.hh"
