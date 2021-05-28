@@ -38,5 +38,6 @@ if env['TARGET_ISA'] != 'x86' or not env['BUILD_GPU']:
 SimObject('AMDGPU.py')
 
 Source('amdgpu_device.cc')
+Source('mmio_reader.cc')
 
 DebugFlag('AMDGPUDevice')

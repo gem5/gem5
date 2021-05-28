@@ -55,6 +55,10 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     } else {
         romRange = RangeSize(VGA_ROM_DEFAULT, ROM_SIZE);
     }
+
+    if (p.trace_file != "") {
+        mmioReader.readMMIOTrace(p.trace_file);
+    }
 }
 
 void
@@ -124,36 +128,42 @@ void
 AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Read framebuffer address %#lx\n", offset);
+    mmioReader.readFromTrace(pkt, FRAMEBUFFER_BAR, offset);
 }
 
 void
 AMDGPUDevice::readDoorbell(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Read doorbell %#lx\n", offset);
+    mmioReader.readFromTrace(pkt, DOORBELL_BAR, offset);
 }
 
 void
-AMDGPUDevice::readMmio(PacketPtr pkt, Addr offset)
+AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Read MMIO %#lx\n", offset);
+    mmioReader.readFromTrace(pkt, MMIO_BAR, offset);
 }
 
 void
 AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Wrote framebuffer address %#lx\n", offset);
+    mmioReader.writeFromTrace(pkt, FRAMEBUFFER_BAR, offset);
 }
 
 void
 AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Wrote doorbell %#lx\n", offset);
+    mmioReader.writeFromTrace(pkt, DOORBELL_BAR, offset);
 }
 
 void
-AMDGPUDevice::writeMmio(PacketPtr pkt, Addr offset)
+AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Wrote MMIO %#lx\n", offset);
+    mmioReader.writeFromTrace(pkt, MMIO_BAR, offset);
 }
 
 Tick
@@ -167,14 +177,14 @@ AMDGPUDevice::read(PacketPtr pkt)
         getBAR(pkt->getAddr(), barnum, offset);
 
         switch (barnum) {
-          case 0:
+          case FRAMEBUFFER_BAR:
               readFrame(pkt, offset);
               break;
-          case 2:
+          case DOORBELL_BAR:
               readDoorbell(pkt, offset);
               break;
-          case 5:
-              readMmio(pkt, offset);
+          case MMIO_BAR:
+              readMMIO(pkt, offset);
               break;
           default:
             panic("Request with address out of mapped range!");
@@ -193,14 +203,14 @@ AMDGPUDevice::write(PacketPtr pkt)
     getBAR(pkt->getAddr(), barnum, offset);
 
     switch (barnum) {
-      case 0:
+      case FRAMEBUFFER_BAR:
           writeFrame(pkt, offset);
           break;
-      case 2:
+      case DOORBELL_BAR:
           writeDoorbell(pkt, offset);
           break;
-      case 5:
-          writeMmio(pkt, offset);
+      case MMIO_BAR:
+          writeMMIO(pkt, offset);
           break;
       default:
         panic("Request with address out of mapped range!");

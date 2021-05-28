@@ -37,11 +37,17 @@
 #include <map>
 
 #include "base/bitunion.hh"
+#include "dev/amdgpu/mmio_reader.hh"
 #include "dev/io_device.hh"
 #include "dev/pci/device.hh"
 #include "params/AMDGPUDevice.hh"
 
-// By default (no expansion enabled), X86 kernel expects the vga ROM at 0xc0000
+/* Names of BARs used by the device. */
+constexpr int FRAMEBUFFER_BAR = 0;
+constexpr int DOORBELL_BAR = 2;
+constexpr int MMIO_BAR = 5;
+
+/* By default the X86 kernel expects the vga ROM at 0xc0000. */
 constexpr uint32_t VGA_ROM_DEFAULT = 0xc0000;
 constexpr uint32_t ROM_SIZE = 0x20000;        // 128kB
 
@@ -67,15 +73,15 @@ class AMDGPUDevice : public PciDevice
      *
      * read/writeFrame are used for BAR0 requests
      * read/writeDoorbell are used for BAR2 requests
-     * read/writeMmio are used for BAR5 requests
+     * read/writeMMIO are used for BAR5 requests
      */
     void readFrame(PacketPtr pkt, Addr offset);
     void readDoorbell(PacketPtr pkt, Addr offset);
-    void readMmio(PacketPtr pkt, Addr offset);
+    void readMMIO(PacketPtr pkt, Addr offset);
 
     void writeFrame(PacketPtr pkt, Addr offset);
     void writeDoorbell(PacketPtr pkt, Addr offset);
-    void writeMmio(PacketPtr pkt, Addr offset);
+    void writeMMIO(PacketPtr pkt, Addr offset);
 
     /**
      * VGA ROM methods
@@ -85,6 +91,11 @@ class AMDGPUDevice : public PciDevice
     void readROM(PacketPtr pkt);
 
     std::array<uint8_t, ROM_SIZE> rom;
+
+    /**
+     * MMIO reader to populate device registers map.
+     */
+    AMDMMIOReader mmioReader;
 
     /**
      * Device registers - Maps register address to register value
