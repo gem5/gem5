@@ -109,10 +109,13 @@ class PMP : public SimObject
      * @param mode mode of request (read, write, execute).
      * @param pmode current privilege mode of execution (U, S, M).
      * @param tc thread context.
+     * @param vaddr optional parameter to pass vaddr of original
+     * request for which a page table walk is consulted by pmp unit
      * @return Fault.
      */
     Fault pmpCheck(const RequestPtr &req, BaseTLB::Mode mode,
-                  RiscvISA::PrivilegeMode pmode, ThreadContext *tc);
+                  RiscvISA::PrivilegeMode pmode, ThreadContext *tc,
+                  Addr vaddr = 0);
 
     /**
      * pmpUpdateCfg updates the pmpcfg for a pmp

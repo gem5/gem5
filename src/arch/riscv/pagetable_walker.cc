@@ -295,76 +295,101 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
 
     DPRINTF(PageTableWalker, "Got level%d PTE: %#x\n", level, pte);
 
-    // step 2: TODO check PMA and PMP
+    // step 2:
+    // Performing PMA/PMP checks on physical address of PTE
 
-    // step 3:
-    if (!pte.v || (!pte.r && pte.w)) {
-        doEndWalk = true;
-        DPRINTF(PageTableWalker, "PTE invalid, raising PF\n");
-        fault = pageFault(pte.v);
-    }
-    else {
-        // step 4:
-        if (pte.r || pte.x) {
-            // step 5: leaf PTE
+    walker->pma->check(read->req);
+    // Effective privilege mode for pmp checks for page table
+    // walks is S mode according to specs
+    fault = walker->pmp->pmpCheck(read->req, mode,
+                    RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
+
+    if (fault == NoFault) {
+        // step 3:
+        if (!pte.v || (!pte.r && pte.w)) {
             doEndWalk = true;
-            fault = walker->tlb->checkPermissions(status, pmode,
-                                                  entry.vaddr, mode, pte);
-
-            // step 6
-            if (fault == NoFault) {
-                if (level >= 1 && pte.ppn0 != 0) {
-                    DPRINTF(PageTableWalker,
-                            "PTE has misaligned PPN, raising PF\n");
-                    fault = pageFault(true);
-                }
-                else if (level == 2 && pte.ppn1 != 0) {
-                    DPRINTF(PageTableWalker,
-                            "PTE has misaligned PPN, raising PF\n");
-                    fault = pageFault(true);
-                }
-            }
-
-            if (fault == NoFault) {
-                // step 7
-                if (!pte.a) {
-                    pte.a = 1;
-                    doWrite = true;
-                }
-                if (!pte.d && mode == TLB::Write) {
-                    pte.d = 1;
-                    doWrite = true;
-                }
-                // TODO check if this violates a PMA or PMP
-
-                // step 8
-                entry.logBytes = PageShift + (level * LEVEL_BITS);
-                entry.paddr = pte.ppn;
-                entry.vaddr &= ~((1 << entry.logBytes) - 1);
-                entry.pte = pte;
-                // put it non-writable into the TLB to detect writes and redo
-                // the page table walk in order to update the dirty flag.
-                if (!pte.d && mode != TLB::Write)
-                    entry.pte.w = 0;
-                doTLBInsert = true;
-            }
+            DPRINTF(PageTableWalker, "PTE invalid, raising PF\n");
+            fault = pageFault(pte.v);
         }
         else {
-            level--;
-            if (level < 0) {
-                DPRINTF(PageTableWalker, "No leaf PTE found, raising PF\n");
+            // step 4:
+            if (pte.r || pte.x) {
+                // step 5: leaf PTE
                 doEndWalk = true;
-                fault = pageFault(true);
-            }
-            else {
-                Addr shift = (PageShift + LEVEL_BITS * level);
-                Addr idx = (entry.vaddr >> shift) & LEVEL_MASK;
-                nextRead = (pte.ppn << PageShift) + (idx * sizeof(pte));
-                nextState = Translate;
+                fault = walker->tlb->checkPermissions(status, pmode,
+                                                    entry.vaddr, mode, pte);
+
+                // step 6
+                if (fault == NoFault) {
+                    if (level >= 1 && pte.ppn0 != 0) {
+                        DPRINTF(PageTableWalker,
+                                "PTE has misaligned PPN, raising PF\n");
+                        fault = pageFault(true);
+                    }
+                    else if (level == 2 && pte.ppn1 != 0) {
+                        DPRINTF(PageTableWalker,
+                                "PTE has misaligned PPN, raising PF\n");
+                        fault = pageFault(true);
+                    }
+                }
+
+                if (fault == NoFault) {
+                    // step 7
+                    if (!pte.a) {
+                        pte.a = 1;
+                        doWrite = true;
+                    }
+                    if (!pte.d && mode == TLB::Write) {
+                        pte.d = 1;
+                        doWrite = true;
+                    }
+                    // Performing PMA/PMP checks
+
+                    if (doWrite) {
+
+                        // this read will eventually become write
+                        // if doWrite is True
+
+                        walker->pma->check(read->req);
+
+                        fault = walker->pmp->pmpCheck(read->req,
+                                            mode, pmode, tc, entry.vaddr);
+
+                    }
+                    // perform step 8 only if pmp checks pass
+                    if (fault == NoFault) {
+
+                        // step 8
+                        entry.logBytes = PageShift + (level * LEVEL_BITS);
+                        entry.paddr = pte.ppn;
+                        entry.vaddr &= ~((1 << entry.logBytes) - 1);
+                        entry.pte = pte;
+                        // put it non-writable into the TLB to detect
+                        // writes and redo the page table walk in order
+                        // to update the dirty flag.
+                        if (!pte.d && mode != TLB::Write)
+                            entry.pte.w = 0;
+                        doTLBInsert = true;
+                    }
+                }
+            } else {
+                level--;
+                if (level < 0) {
+                    DPRINTF(PageTableWalker, "No leaf PTE found,"
+                                                  "raising PF\n");
+                    doEndWalk = true;
+                    fault = pageFault(true);
+                } else {
+                    Addr shift = (PageShift + LEVEL_BITS * level);
+                    Addr idx = (entry.vaddr >> shift) & LEVEL_MASK;
+                    nextRead = (pte.ppn << PageShift) + (idx * sizeof(pte));
+                    nextState = Translate;
+                }
             }
         }
+    } else {
+        doEndWalk = true;
     }
-
     PacketPtr oldRead = read;
     Request::Flags flags = oldRead->req->getFlags();
 

@@ -51,14 +51,21 @@ PMP::PMP(const Params &params) :
 
 Fault
 PMP::pmpCheck(const RequestPtr &req, BaseTLB::Mode mode,
-              RiscvISA::PrivilegeMode pmode, ThreadContext *tc)
+              RiscvISA::PrivilegeMode pmode, ThreadContext *tc,
+              Addr vaddr)
 {
     // First determine if pmp table should be consulted
     if (!shouldCheckPMP(pmode, mode, tc))
         return NoFault;
 
-    DPRINTF(PMP, "Checking pmp permissions for va: %#x , pa: %#x\n",
-            req->getVaddr(), req->getPaddr());
+    if (req->hasVaddr()) {
+        DPRINTF(PMP, "Checking pmp permissions for va: %#x , pa: %#x\n",
+                req->getVaddr(), req->getPaddr());
+    }
+    else { // this access is corresponding to a page table walk
+        DPRINTF(PMP, "Checking pmp permissions for pa: %#x\n",
+                req->getPaddr());
+    }
 
     // An access should be successful if there are
     // no rules defined yet or we are in M mode (based
@@ -100,12 +107,20 @@ PMP::pmpCheck(const RequestPtr &req, BaseTLB::Mode mode,
                                         (PMP_EXEC & allowed_privs)) {
                 return NoFault;
             } else {
-                return createAddrfault(req->getVaddr(), mode);
+                if (req->hasVaddr()) {
+                    return createAddrfault(req->getVaddr(), mode);
+                } else {
+                    return createAddrfault(vaddr, mode);
+                }
             }
         }
     }
     // if no entry matched and we are not in M mode return fault
-    return createAddrfault(req->getVaddr(), mode);
+    if (req->hasVaddr()) {
+        return createAddrfault(req->getVaddr(), mode);
+    } else {
+        return createAddrfault(vaddr, mode);
+    }
 }
 
 Fault
