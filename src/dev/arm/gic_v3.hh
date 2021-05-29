@@ -81,27 +81,27 @@ class Gicv3 : public BaseGic
     static const int PPI_MAX = 16;
 
     // Interrupt states for PPIs, SGIs and SPIs, as per SPEC 4.1.2 section
-    typedef enum
+    enum IntStatus
     {
         INT_INACTIVE,
         INT_PENDING,
         INT_ACTIVE,
         INT_ACTIVE_PENDING,
-    } IntStatus;
+    };
 
     // Interrupt groups, as per SPEC section 4.6
-    typedef enum
+    enum GroupId
     {
         G0S,
         G1S,
         G1NS,
-    } GroupId;
+    };
 
-    typedef enum
+    enum IntTriggerType
     {
         INT_LEVEL_SENSITIVE,
         INT_EDGE_TRIGGERED,
-    } IntTriggerType;
+    };
 
   protected:
 

@@ -99,7 +99,7 @@ class X86Linux64 : public X86Linux
 {
   public:
 
-    typedef struct
+    struct tgt_stat64
     {
         uint64_t st_dev;
         uint64_t st_ino;
@@ -119,14 +119,14 @@ class X86Linux64 : public X86Linux
         uint64_t st_ctimeX;
         uint64_t st_ctime_nsec;
         int64_t unused0[3];
-    } tgt_stat64;
+    };
 
-    typedef struct
+    struct tgt_fsid
     {
         long val[2];
-    } tgt_fsid;
+    };
 
-    typedef struct
+    struct tgt_statfs
     {
         long f_type;
         long f_bsize;
@@ -139,7 +139,7 @@ class X86Linux64 : public X86Linux
         long f_namelen;
         long f_frsize;
         long f_spare[5];
-    } tgt_statfs;
+    };
 
     static const int TGT_SIGHUP         = 0x000001;
     static const int TGT_SIGINT         = 0x000002;
@@ -223,13 +223,13 @@ class X86Linux64 : public X86Linux
     static const unsigned TGT_MAP_ANONYMOUS     = 0x00020;
     static const unsigned TGT_MAP_FIXED         = 0x00010;
 
-    typedef struct
+    struct tgt_iovec
     {
         uint64_t iov_base; // void *
         uint64_t iov_len;  // size_t
-    } tgt_iovec;
+    };
 
-    typedef struct
+    struct tgt_sysinfo
     {
         int64_t  uptime;    /* Seconds since boot */
         uint64_t loads[3];  /* 1, 5, and 15 minute load averages */
@@ -243,14 +243,14 @@ class X86Linux64 : public X86Linux
         uint64_t totalhigh; /* Total high memory size */
         uint64_t freehigh;  /* Available high memory size */
         uint64_t mem_unit;  /* Memory unit size in bytes */
-    } tgt_sysinfo;
+    };
 
 };
 
 class X86Linux32 : public X86Linux
 {
   public:
-    typedef struct GEM5_PACKED
+    struct GEM5_PACKED tgt_stat64
     {
         uint64_t st_dev;
         uint8_t __pad0[4];
@@ -271,7 +271,7 @@ class X86Linux32 : public X86Linux
         uint32_t st_ctimeX;
         uint32_t st_ctime_nsec;
         uint64_t st_ino;
-    } tgt_stat64;
+    };
 
     static const int TGT_SIGHUP         = 0x000001;
     static const int TGT_SIGINT         = 0x000002;
@@ -357,7 +357,7 @@ class X86Linux32 : public X86Linux
     static const unsigned TGT_MAP_ANONYMOUS     = 0x00020;
     static const unsigned TGT_MAP_FIXED         = 0x00010;
 
-    typedef struct
+    struct tgt_sysinfo
     {
        int32_t  uptime;    /* Seconds since boot */
        uint32_t loads[3];  /* 1, 5, and 15 minute load averages */
@@ -371,7 +371,7 @@ class X86Linux32 : public X86Linux
        uint32_t totalhigh; /* Total high memory size */
        uint32_t freehigh;  /* Available high memory size */
        uint32_t mem_unit;  /* Memory unit size in bytes */
-    } tgt_sysinfo;
+    };
 };
 
 } // namespace gem5

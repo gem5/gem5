@@ -138,7 +138,7 @@ class RiscvLinux64 : public RiscvLinux
         int64_t tv_nsec;
     };
 
-    typedef struct
+    struct tgt_stat64
     {
         dev_t st_dev;
         ino_t st_ino;
@@ -158,14 +158,14 @@ class RiscvLinux64 : public RiscvLinux
         uint64_t st_ctimeX;
         uint64_t st_ctime_nsec;
         int32_t ___glibc_reserved[2];
-    } tgt_stat64;
+    };
 
-    typedef struct
+    struct tgt_fsid_t
     {
         int32_t val[2];
-    } tgt_fsid_t;
+    };
 
-    typedef struct
+    struct tgt_statfs
     {
         uint64_t f_type;
         uint64_t f_bsize;
@@ -179,9 +179,9 @@ class RiscvLinux64 : public RiscvLinux
         uint64_t f_frsize;
         uint64_t f_flags;
         uint64_t f_spare[4];
-    } tgt_statfs;
+    };
 
-    typedef struct
+    struct tgt_sysinfo
     {
         int64_t uptime;
         uint64_t loads[3];
@@ -196,7 +196,7 @@ class RiscvLinux64 : public RiscvLinux
         uint64_t totalhigh;
         uint64_t freehigh;
         uint32_t mem_unit;
-    } tgt_sysinfo;
+    };
 
     static void
     archClone(uint64_t flags,
@@ -309,12 +309,12 @@ class RiscvLinux32 : public RiscvLinux
         int32_t tv_nsec;
     };
 
-    typedef struct
+    struct tgt_fsid_t
     {
         int32_t val[2];
-    } tgt_fsid_t;
+    };
 
-    typedef struct
+    struct tgt_stat
     {
         uint64_t st_dev;
         uint64_t st_ino;
@@ -336,9 +336,9 @@ class RiscvLinux32 : public RiscvLinux
         int32_t st_ctime_nsec;
         int32_t __unused4;
         int32_t __unused5;
-    } tgt_stat;
+    };
 
-    typedef struct
+    struct tgt_statfs
     {
         uint32_t f_type;
         uint32_t f_bsize;
@@ -352,9 +352,9 @@ class RiscvLinux32 : public RiscvLinux
         uint32_t f_frsize;
         uint32_t f_flags;
         uint32_t f_spare[4];
-    } tgt_statfs;
+    };
 
-    typedef struct
+    struct tgt_sysinfo
     {
         int32_t uptime;
         uint32_t loads[3];
@@ -369,7 +369,7 @@ class RiscvLinux32 : public RiscvLinux
         uint32_t totalhigh;
         uint32_t freehigh;
         uint32_t mem_unit;
-    } tgt_sysinfo;
+    };
 
     static void
     archClone(uint64_t flags,

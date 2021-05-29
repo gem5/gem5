@@ -68,12 +68,13 @@ class PMP : public SimObject
      * PMP_NA4 = naturally aligned four byte region
      * PMP_NAPOT = naturally aligned power of two region, >= 8 bytes
      */
-    typedef enum {
+    enum pmpAmatch
+    {
         PMP_OFF,
         PMP_TOR,
         PMP_NA4,
         PMP_NAPOT
-    } pmpAmatch;
+    };
 
     /** pmpcfg address range read permission mask */
     const uint8_t PMP_READ = 1 << 0;

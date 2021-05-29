@@ -52,7 +52,7 @@ class PowerLinux : public Linux
 
     typedef int32_t time_t;
 
-    typedef struct
+    struct tgt_stat
     {
         uint64_t st_dev;
         uint32_t __pad1;
@@ -74,9 +74,9 @@ class PowerLinux : public Linux
         uint32_t st_ctime_nsec;
         uint32_t __unused4;
         uint32_t __unused5;
-    } tgt_stat;
+    };
 
-    typedef struct
+    struct tgt_stat64
     {
         uint64_t st_dev;
         uint64_t st_ino;
@@ -98,7 +98,7 @@ class PowerLinux : public Linux
         uint32_t st_ctime_nsec;
         uint32_t __unused4;
         uint32_t __unused5;
-    } tgt_stat64;
+    };
 
     /// For times().
     struct tms

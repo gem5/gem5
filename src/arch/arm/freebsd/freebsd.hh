@@ -126,7 +126,7 @@ class ArmFreebsd32 : public ArmFreebsd
      * sizeof st_lspare 4
      */
 
-    typedef struct
+    struct tgt_stat
     {
         uint32_t   st_dev;
         uint32_t   st_ino;
@@ -149,9 +149,9 @@ class ArmFreebsd32 : public ArmFreebsd
         uint32_t   st_lspare;
         uint64_t   st_birthtimX;
         uint64_t   st_birthtim;
-    } tgt_stat;
+    };
 
-    typedef struct
+    struct tgt_stat64
     {
         uint32_t   st_dev;
         uint32_t   st_ino;
@@ -174,7 +174,7 @@ class ArmFreebsd32 : public ArmFreebsd
         uint32_t   st_lspare;
         uint64_t   st_birthtimX;
         uint64_t   st_birthtim;
-    } tgt_stat64;
+    };
 
     /// For getrusage().
     struct rusage
@@ -296,7 +296,7 @@ class ArmFreebsd64 : public ArmFreebsd
         uint64_t iov_len;
     };
 
-    typedef struct
+    struct tgt_stat
     {
         uint32_t   st_dev;
         uint32_t   st_ino;
@@ -319,9 +319,9 @@ class ArmFreebsd64 : public ArmFreebsd
         uint32_t   st_lspare;
         uint64_t   st_birthtimX;
         uint64_t   st_birthtim;
-    } tgt_stat;
+    };
 
-    typedef struct
+    struct tgt_stat64
     {
         uint32_t   st_dev;
         uint32_t   st_ino;
@@ -344,7 +344,7 @@ class ArmFreebsd64 : public ArmFreebsd
         uint32_t   st_lspare;
         uint64_t   st_birthtimX;
         uint64_t   st_birthtim;
-    } tgt_stat64;
+    };
 
     /// For getrusage().
     struct rusage

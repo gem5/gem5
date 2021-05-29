@@ -41,7 +41,7 @@
 namespace gem5
 {
 
-typedef struct hsa_packet_header_s
+struct hsa_packet_header_bitfield_t
 {
         // TODO: replace with more portable impl based on offset, length
         uint16_t type:8;
@@ -49,10 +49,10 @@ typedef struct hsa_packet_header_s
         uint16_t acquire_fence_scope:2;
         uint16_t release_fence_scope:2;
         uint16_t reserved:3;
-} hsa_packet_header_bitfield_t;
+};
 
 //TODO: put an _ in front of these guys to avoud prob with hsa.h for now
-typedef struct _hsa_dispatch_packet_s
+struct _hsa_dispatch_packet_t
 {
     uint16_t header;
     uint16_t setup;
@@ -69,9 +69,9 @@ typedef struct _hsa_dispatch_packet_s
     uint64_t kernarg_address;
     uint64_t reserved1;
     uint64_t completion_signal;
-} _hsa_dispatch_packet_t;
+};
 
-typedef struct _hsa_agent_dispatch_packet_s
+struct _hsa_agent_dispatch_packet_t
 {
     uint16_t header;
     uint16_t type;
@@ -80,9 +80,9 @@ typedef struct _hsa_agent_dispatch_packet_s
     uint64_t arg[4];
     uint64_t reserved2;
     uint64_t completion_signal;
-} _hsa_agent_dispatch_packet_t;
+};
 
-typedef struct _hsa_barrier_and_packet_s
+struct _hsa_barrier_and_packet_t
 {
     uint16_t header;
     uint16_t reserved0;
@@ -90,9 +90,9 @@ typedef struct _hsa_barrier_and_packet_s
     uint64_t dep_signal[5];
     uint64_t reserved2;
     uint64_t completion_signal;
-} _hsa_barrier_and_packet_t;
+};
 
-typedef struct _hsa_barrier_or_packet_s
+struct _hsa_barrier_or_packet_t
 {
     uint16_t header;
     uint16_t reserved0;
@@ -100,7 +100,7 @@ typedef struct _hsa_barrier_or_packet_s
     uint64_t dep_signal[5];
     uint64_t reserved2;
     uint64_t completion_signal;
-} _hsa_barrier_or_packet_t;
+};
 
 } // namespace gem5
 

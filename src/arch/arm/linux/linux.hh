@@ -193,7 +193,7 @@ class ArmLinux32 : public ArmLinux
     };
 
 
-    typedef struct
+    struct tgt_stat
     {
         uint32_t st_dev;
         uint32_t st_ino;
@@ -213,9 +213,9 @@ class ArmLinux32 : public ArmLinux
         uint32_t st_mtime_nsec;
         uint32_t st_ctimeX;
         uint32_t st_ctime_nsec;
-    } tgt_stat;
+    };
 
-    typedef struct
+    struct tgt_stat64
     {
         uint64_t  st_dev;
         uint8_t   __pad0[4];
@@ -236,9 +236,9 @@ class ArmLinux32 : public ArmLinux
         uint32_t  st_ctimeX;
         uint32_t  st_ctime_nsec;
         uint64_t  st_ino;
-    } tgt_stat64;
+    };
 
-    typedef struct
+    struct tgt_sysinfo
     {
         int32_t  uptime;    /* Seconds since boot */
         uint32_t loads[3];  /* 1, 5, and 15 minute load averages */
@@ -252,7 +252,7 @@ class ArmLinux32 : public ArmLinux
         uint32_t totalhigh; /* Total high memory size */
         uint32_t freehigh;  /* Available high memory size */
         uint32_t mem_unit;  /* Memory unit size in bytes */
-    } tgt_sysinfo;
+    };
 
     /// For getrusage().
     struct rusage
@@ -457,7 +457,7 @@ class ArmLinux64 : public ArmLinux
         uint64_t iov_len;
     };
 
-    typedef struct
+    struct tgt_stat
     {
         uint64_t st_dev;
         uint64_t st_ino;
@@ -476,9 +476,9 @@ class ArmLinux64 : public ArmLinux
         uint64_t st_mtime_nsec;
         uint64_t st_ctimeX;
         uint64_t st_ctime_nsec;
-    } tgt_stat;
+    };
 
-    typedef struct
+    struct tgt_stat64
     {
         uint64_t st_dev;
         uint64_t st_ino;
@@ -497,9 +497,9 @@ class ArmLinux64 : public ArmLinux
         uint64_t st_mtime_nsec;
         uint64_t st_ctimeX;
         uint64_t st_ctime_nsec;
-    } tgt_stat64;
+    };
 
-    typedef struct
+    struct tgt_sysinfo
     {
         int64_t  uptime;    /* Seconds since boot */
         uint64_t loads[3];  /* 1, 5, and 15 minute load averages */
@@ -514,7 +514,7 @@ class ArmLinux64 : public ArmLinux
         uint64_t totalhigh; /* Total high memory size */
         uint64_t freehigh;  /* Available high memory size */
         uint32_t mem_unit;  /* Memory unit size in bytes */
-    } tgt_sysinfo;
+    };
 
     /// For getrusage().
     struct rusage

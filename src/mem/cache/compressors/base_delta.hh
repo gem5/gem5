@@ -85,10 +85,10 @@ class BaseDelta : public DictionaryCompressor<BaseType>
      * These are used as indexes to reference the pattern data. If a new
      * pattern is added, it must be done before NUM_PATTERNS.
      */
-    typedef enum
+    enum PatternNumber
     {
         X, M, NUM_PATTERNS
-    } PatternNumber;
+    };
 
     uint64_t getNumPatterns() const override { return NUM_PATTERNS; }
 

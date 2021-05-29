@@ -64,7 +64,7 @@ class Linux : public OperatingSystem
     /// Stat buffer.  Note that we can't call it 'stat' since that
     /// gets #defined to something else on some systems. This type
     /// can be specialized by architecture specific "Linux" classes
-    typedef struct
+    struct tgt_stat
     {
         uint32_t        st_dev;         //!< device
         uint32_t        st_ino;         //!< inode
@@ -82,10 +82,10 @@ class Linux : public OperatingSystem
         int32_t         st_blocks;      //!< number of blocks allocated
         uint32_t        st_flags;       //!< flags
         uint32_t        st_gen;         //!< unknown
-    } tgt_stat;
+    };
 
     // same for stat64
-    typedef struct
+    struct tgt_stat64
     {
         uint64_t        st_dev;
         uint64_t        st_ino;
@@ -107,7 +107,7 @@ class Linux : public OperatingSystem
         uint64_t        st_ctimeX;
         uint64_t        st_ctime_nsec;
         int64_t         ___unused[3];
-    } tgt_stat64;
+    };
 
     /// Length of strings in struct utsname (plus 1 for null char).
     static const int _SYS_NMLN = 65;

@@ -154,12 +154,12 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
 
     static const uint8_t GIC_MIN_VBPR = 7 - VIRTUAL_PREEMPTION_BITS;
 
-    typedef struct
+    struct hppi_t
     {
         uint32_t intid;
         uint8_t prio;
         Gicv3::GroupId group;
-    } hppi_t;
+    };
 
     hppi_t hppi;
 

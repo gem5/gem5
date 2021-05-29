@@ -65,10 +65,10 @@ class RepeatedQwords : public DictionaryCompressor<uint64_t>
      * These are used as indexes to reference the pattern data. If a new
      * pattern is added, it must be done before NUM_PATTERNS.
      */
-    typedef enum
+    enum PatternNumber
     {
         X, M, NUM_PATTERNS
-    } PatternNumber;
+    };
 
     /**
      * Convenience factory declaration. The templates must be organized by

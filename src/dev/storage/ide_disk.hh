@@ -69,12 +69,12 @@ class ChunkGenerator;
 #define PRD_COUNT_MASK 0xfffe
 #define PRD_EOT_MASK   0x8000
 
-typedef struct PrdEntry
+struct PrdEntry_t
 {
     uint32_t baseAddr;
     uint16_t byteCount;
     uint16_t endOfTable;
-} PrdEntry_t;
+};
 
 class PrdTableEntry
 {
@@ -126,7 +126,7 @@ class PrdTableEntry
 #define DEV0 (0)
 #define DEV1 (1)
 
-typedef struct CommandReg
+struct CommandReg_t
 {
     uint16_t data;
     uint8_t error;
@@ -140,9 +140,9 @@ typedef struct CommandReg
         uint8_t head;
     };
     uint8_t command;
-} CommandReg_t;
+};
 
-typedef enum Events
+enum Events_t
 {
     None = 0,
     Transfer,
@@ -151,9 +151,9 @@ typedef enum Events
     PrdRead,
     DmaRead,
     DmaWrite
-} Events_t;
+};
 
-typedef enum DevAction
+enum DevAction_t
 {
     ACT_NONE = 0,
     ACT_CMD_WRITE,
@@ -170,9 +170,9 @@ typedef enum DevAction
     ACT_DMA_DONE,
     ACT_SRST_SET,
     ACT_SRST_CLEAR
-} DevAction_t;
+};
 
-typedef enum DevState
+enum DevState_t
 {
     // Device idle
     Device_Idle_S = 0,
@@ -199,14 +199,14 @@ typedef enum DevState
     Prepare_Data_Dma,
     Transfer_Data_Dma,
     Device_Dma_Abort
-} DevState_t;
+};
 
-typedef enum DmaState
+enum DmaState_t
 {
     Dma_Idle = 0,
     Dma_Start,
     Dma_Transfer
-} DmaState_t;
+};
 
 class IdeController;
 

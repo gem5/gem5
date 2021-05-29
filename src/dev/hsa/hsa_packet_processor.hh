@@ -58,7 +58,7 @@ namespace gem5
 // Ideally, each queue should store this status and
 // the processPkt() should make decisions based on that
 // status variable.
-typedef enum
+enum Q_STATE
 {
     UNBLOCKED = 0, // Unblocked queue, can submit packets.
     BLOCKED_BBIT,  // Queue blocked by barrier bit.
@@ -67,7 +67,7 @@ typedef enum
     BLOCKED_BPKT,  // Queue blocked by barrier packet.
                    // Can submit packet packets after
                    // barrier packet completes.
-} Q_STATE;
+};
 
 class GPUCommandProcessor;
 class HWScheduler;
@@ -209,18 +209,17 @@ class AQLRingBuffer
      uint64_t compltnPending() { return (_dispIdx - _rdIdx); }
 };
 
-typedef struct QueueContext
+struct QCntxt
 {
     HSAQueueDescriptor* qDesc;
     AQLRingBuffer* aqlBuf;
     // used for HSA packets that enforce synchronization with barrier bit
     bool barrierBit;
-    QueueContext(HSAQueueDescriptor* q_desc,
-                 AQLRingBuffer* aql_buf)
-                 : qDesc(q_desc), aqlBuf(aql_buf), barrierBit(false)
+    QCntxt(HSAQueueDescriptor* q_desc, AQLRingBuffer* aql_buf) :
+        qDesc(q_desc), aqlBuf(aql_buf), barrierBit(false)
     {}
-    QueueContext() : qDesc(NULL), aqlBuf(NULL), barrierBit(false) {}
-} QCntxt;
+    QCntxt() : qDesc(NULL), aqlBuf(NULL), barrierBit(false) {}
+};
 
 class HSAPacketProcessor: public DmaDevice
 {
