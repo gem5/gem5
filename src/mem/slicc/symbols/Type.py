@@ -586,6 +586,8 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
       default:
         panic("Unknown state access permission converstion for ${{self.c_ident}}");
     }
+    // Appease the compiler since this function has a return value
+    return AccessPermission_Invalid;
 }
 
 ''')
@@ -626,6 +628,8 @@ ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj)
       default:
         panic("Invalid range for type ${{self.c_ident}}");
     }
+    // Appease the compiler since this function has a return value
+    return "";
 }
 
 // Code to convert from a string to the enumeration
@@ -689,6 +693,8 @@ ${{self.c_ident}}_base_level(const ${{self.c_ident}}& obj)
       default:
         panic("Invalid range for type ${{self.c_ident}}");
     }
+    // Appease the compiler since this function has a return value
+    return -1;
 }
 
 /** \\brief returns the machine type for each base vector index used by NetDest
@@ -772,6 +778,8 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
       default:
         panic("Invalid range for type ${{self.c_ident}}");
     }
+    // Appease the compiler since this function has a return value
+    return -1;
 }
 ''')
 
