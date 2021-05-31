@@ -53,7 +53,8 @@
 
 GPUComputeDriver::GPUComputeDriver(const Params &p)
     : EmulatedDriver(p), device(p.device), queueId(0),
-      isdGPU(p.isdGPU), gfxVersion(p.gfxVersion), dGPUPoolID(p.dGPUPoolID)
+      isdGPU(p.isdGPU), gfxVersion(p.gfxVersion), dGPUPoolID(p.dGPUPoolID),
+      eventPage(0), eventSlotIndex(0)
 {
     device->attachDriver(this);
     DPRINTF(GPUDriver, "Constructing KFD: device\n");
