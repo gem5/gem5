@@ -217,7 +217,7 @@ BOP::bestOffsetLearning(Addr x)
             phaseBestOffset = 0;
             resetScores();
             issuePrefetchRequests = true;
-        } else if (phaseBestOffset <= badScore) {
+        } else if (bestScore <= badScore) {
             issuePrefetchRequests = false;
         }
     }
