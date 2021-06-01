@@ -271,11 +271,6 @@ class IEW
      */
     void writebackInsts();
 
-    /** Returns the number of valid, non-squashed instructions coming from
-     * rename to dispatch.
-     */
-    unsigned validInstsFromRename();
-
     /** Checks if any of the stall conditions are currently true. */
     bool checkStall(ThreadID tid);
 

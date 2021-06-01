@@ -590,19 +590,6 @@ IEW::instToCommit(const DynInstPtr& inst)
     (*iewQueue)[wbCycle].size++;
 }
 
-unsigned
-IEW::validInstsFromRename()
-{
-    unsigned inst_count = 0;
-
-    for (int i=0; i<fromRename->size; i++) {
-        if (!fromRename->insts[i]->isSquashed())
-            inst_count++;
-    }
-
-    return inst_count;
-}
-
 void
 IEW::skidInsert(ThreadID tid)
 {
@@ -875,7 +862,7 @@ IEW::dispatch(ThreadID tid)
 
         ++iewStats.unblockCycles;
 
-        if (validInstsFromRename()) {
+        if (fromRename->size != 0) {
             // Add the current inputs to the skid buffer so they can be
             // reprocessed when this stage unblocks.
             skidInsert(tid);
