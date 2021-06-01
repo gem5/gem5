@@ -68,17 +68,18 @@ class VirtQueue;
  * of byte swapping.
  */
 
-
-static inline vring_used_elem
-swap_byte(vring_used_elem v)
+template <typename T>
+inline std::enable_if_t<std::is_same<T, vring_used_elem>::value, T>
+swap_byte(T v)
 {
     v.id = swap_byte(v.id);
     v.len = swap_byte(v.len);
     return v;
 }
 
-static inline vring_desc
-swap_byte(vring_desc v)
+template <typename T>
+inline std::enable_if_t<std::is_same<T, vring_desc>::value, T>
+swap_byte(T v)
 {
     v.addr = swap_byte(v.addr);
     v.len = swap_byte(v.len);

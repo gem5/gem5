@@ -33,9 +33,6 @@
 #ifndef __SIM_BYTE_SWAP_HH__
 #define __SIM_BYTE_SWAP_HH__
 
-#include "base/types.hh"
-#include "enums/ByteOrder.hh"
-
 // This lets us figure out what the byte order of the host system is
 #if defined(__linux__)
 #include <endian.h>
@@ -54,6 +51,12 @@
 #endif
 
 #include <type_traits>
+
+#include "base/types.hh"
+#include "enums/ByteOrder.hh"
+
+struct vring_used_elem;
+struct vring_desc;
 
 // These functions actually perform the swapping for parameters of various bit
 // lengths.
@@ -134,6 +137,15 @@ swap_byte(T x)
 {
     return x;
 }
+
+// Make the function visible in case we need to declare a version of it for
+// other types
+template <typename T>
+std::enable_if_t<std::is_same<T, vring_used_elem>::value, T>
+swap_byte(T v);
+template <typename T>
+std::enable_if_t<std::is_same<T, vring_desc>::value, T>
+swap_byte(T v);
 
 template <typename T, size_t N>
 inline std::array<T, N>
