@@ -1342,7 +1342,7 @@ Commit::getInsts()
             changedROBNumEntries[tid] = true;
 
             DPRINTF(Commit, "[tid:%i] [sn:%llu] Inserting PC %s into ROB.\n",
-                    inst->seqNum, tid, inst->pcState());
+                    tid, inst->seqNum, inst->pcState());
 
             rob->insertInst(inst);
 
@@ -1352,7 +1352,7 @@ Commit::getInsts()
         } else {
             DPRINTF(Commit, "[tid:%i] [sn:%llu] "
                     "Instruction PC %s was squashed, skipping.\n",
-                    inst->seqNum, tid, inst->pcState());
+                    tid, inst->seqNum, inst->pcState());
         }
     }
 }
