@@ -290,11 +290,18 @@ Decode::squash(const DynInstPtr &inst, ThreadID tid)
     toFetch->decodeInfo[tid].squash = true;
     toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
     toFetch->decodeInfo[tid].nextPC = inst->branchTarget();
-    toFetch->decodeInfo[tid].branchTaken = inst->pcState().branching();
+
+    // Looking at inst->pcState().branching()
+    // may yield unexpected results if the branch
+    // was predicted taken but aliased in the BTB
+    // with a branch jumping to the next instruction (mistarget)
+    // Using PCState::branching()  will send execution on the
+    // fallthrough and this will not be caught at execution (since
+    // branch was correctly predicted taken)
+    toFetch->decodeInfo[tid].branchTaken = inst->readPredTaken() |
+                                           inst->isUncondCtrl();
+
     toFetch->decodeInfo[tid].squashInst = inst;
-    if (toFetch->decodeInfo[tid].mispredictInst->isUncondCtrl()) {
-            toFetch->decodeInfo[tid].branchTaken = true;
-    }
 
     InstSeqNum squash_seq_num = inst->seqNum;
 
