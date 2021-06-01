@@ -44,6 +44,11 @@
 #include "base/addr_range.hh"
 #include "sim/sim_object.hh"
 
+struct kvm_cpuid_entry2;
+struct kvm_cpuid2;
+struct kvm_msr_list;
+struct kvm_vcpu_init;
+
 // forward declarations
 struct KvmVMParams;
 class BaseKvmCPU;

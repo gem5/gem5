@@ -55,6 +55,13 @@
 /** Signal to use to trigger exits from KVM */
 #define KVM_KICK_SIGNAL SIGRTMIN
 
+struct kvm_coalesced_mmio_ring;
+struct kvm_fpu;
+struct kvm_interrupt;
+struct kvm_regs;
+struct kvm_run;
+struct kvm_sregs;
+
 // forward declarations
 class ThreadContext;
 struct BaseKvmCPUParams;

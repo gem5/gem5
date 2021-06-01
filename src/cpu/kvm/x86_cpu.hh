@@ -29,9 +29,18 @@
 #ifndef __CPU_KVM_X86_CPU_HH__
 #define __CPU_KVM_X86_CPU_HH__
 
+#include <vector>
+
 #include "cpu/kvm/base.hh"
 #include "cpu/kvm/vm.hh"
 #include "params/X86KvmCPU.hh"
+
+struct kvm_debugregs;
+struct kvm_msr_entry;
+struct kvm_msrs;
+struct kvm_vcpu_events;
+struct kvm_xcrs;
+struct kvm_xsave;
 
 /**
  * x86 implementation of a KVM-based hardware virtualized CPU.
