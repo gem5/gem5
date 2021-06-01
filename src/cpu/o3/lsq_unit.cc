@@ -1380,7 +1380,7 @@ LSQUnit::read(LSQRequest *req, int load_idx)
     auto store_it = load_inst->sqIt;
     assert (store_it >= storeWBIt);
     // End once we've reached the top of the LSQ
-    while (store_it != storeWBIt) {
+    while (store_it != storeWBIt && !load_inst->isDataPrefetch()) {
         // Move the index to one younger
         store_it--;
         assert(store_it->valid());
