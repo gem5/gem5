@@ -1094,6 +1094,10 @@ class DynInst : public ExecContext, public RefCounted
     int32_t storeTick = -1;
 #endif
 
+    /* Values used by LoadToUse stat */
+    Tick firstIssue = -1;
+    Tick lastWakeDependents = -1;
+
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */

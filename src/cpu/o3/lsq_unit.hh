@@ -571,6 +571,10 @@ class LSQUnit
 
         /** Number of times the LSQ is blocked due to the cache. */
         statistics::Scalar blockedByCache;
+
+        /** Distribution of cycle latency between the first time a load
+         * is issued and its completion */
+        statistics::Distribution loadToUse;
     } stats;
 
   public:

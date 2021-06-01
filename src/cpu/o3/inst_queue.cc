@@ -875,6 +875,9 @@ InstructionQueue::scheduleReadyInsts()
             issuing_inst->issueTick = curTick() - issuing_inst->fetchTick;
 #endif
 
+            if (issuing_inst->firstIssue == -1)
+                issuing_inst->firstIssue = curTick();
+
             if (!issuing_inst->isMemRef()) {
                 // Memory instructions can not be freed from the IQ until they
                 // complete.
@@ -965,6 +968,8 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
     } else {
         iqIOStats.intInstQueueWakeupAccesses++;
     }
+
+    completed_inst->lastWakeDependents = curTick();
 
     DPRINTF(IQ, "Waking dependents of completed instruction.\n");
 

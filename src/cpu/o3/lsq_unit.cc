@@ -275,8 +275,13 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
                "Number of loads that were rescheduled"),
       ADD_STAT(blockedByCache, statistics::units::Count::get(),
                "Number of times an access to memory failed due to the cache "
-               "being blocked")
+               "being blocked"),
+      ADD_STAT(loadToUse, "Distribution of cycle latency between the "
+                "first time a load is issued and its completion")
 {
+    loadToUse
+        .init(0, 299, 10)
+        .flags(statistics::nozero);
 }
 
 void
@@ -713,8 +718,19 @@ LSQUnit::commitLoad()
 {
     assert(loadQueue.front().valid());
 
+    DynInstPtr inst = loadQueue.front().instruction();
+
     DPRINTF(LSQUnit, "Committing head load instruction, PC %s\n",
-            loadQueue.front().instruction()->pcState());
+            inst->pcState());
+
+    // Update histogram with memory latency from load
+    // Only take latency from load demand that where issued and did not fault
+    if (!inst->isInstPrefetch() && !inst->isDataPrefetch()
+            && inst->firstIssue != -1
+            && inst->lastWakeDependents != -1) {
+        stats.loadToUse.sample(cpu->ticksToCycles(
+                    inst->lastWakeDependents - inst->firstIssue));
+    }
 
     loadQueue.front().clear();
     loadQueue.pop_front();
