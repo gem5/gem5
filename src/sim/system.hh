@@ -108,7 +108,8 @@ class System : public SimObject, public PCEventScope
     SystemPort _systemPort;
 
     // Map of memory address ranges for devices with their own backing stores
-    std::unordered_map<RequestorID, AbstractMemory *> deviceMemMap;
+    std::unordered_map<RequestorID, std::vector<AbstractMemory *>>
+        deviceMemMap;
 
   public:
 
@@ -371,12 +372,12 @@ class System : public SimObject, public PCEventScope
      * of the packet match an address range of a device corresponding to the
      * RequestorId of the request.
      */
-    bool isDeviceMemAddr(PacketPtr pkt) const;
+    bool isDeviceMemAddr(const PacketPtr& pkt) const;
 
     /**
      * Return a pointer to the device memory.
      */
-    AbstractMemory *getDeviceMemory(RequestorID _id) const;
+    AbstractMemory *getDeviceMemory(const PacketPtr& pkt) const;
 
     /*
      * Return the list of address ranges backed by a shadowed ROM.

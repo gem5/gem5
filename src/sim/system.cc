@@ -378,26 +378,34 @@ System::isMemAddr(Addr addr) const
 void
 System::addDeviceMemory(RequestorID requestor_id, AbstractMemory *deviceMemory)
 {
-    if (!deviceMemMap.count(requestor_id)) {
-        deviceMemMap.insert(std::make_pair(requestor_id, deviceMemory));
-    }
+    deviceMemMap[requestor_id].push_back(deviceMemory);
 }
 
 bool
-System::isDeviceMemAddr(PacketPtr pkt) const
+System::isDeviceMemAddr(const PacketPtr& pkt) const
 {
-    const RequestorID& id = pkt->requestorId();
+    if (!deviceMemMap.count(pkt->requestorId())) {
+        return false;
+    }
 
-    return (deviceMemMap.count(id) &&
-            deviceMemMap.at(id)->getAddrRange().contains(pkt->getAddr()));
+    return (getDeviceMemory(pkt) != nullptr);
 }
 
 AbstractMemory *
-System::getDeviceMemory(RequestorID id) const
+System::getDeviceMemory(const PacketPtr& pkt) const
 {
-    panic_if(!deviceMemMap.count(id),
-             "No device memory found for RequestorID %d\n", id);
-    return deviceMemMap.at(id);
+    const RequestorID& rid = pkt->requestorId();
+
+    panic_if(!deviceMemMap.count(rid),
+             "No device memory found for Requestor %d\n", rid);
+
+    for (auto& mem : deviceMemMap.at(rid)) {
+        if (pkt->getAddrRange().isSubset(mem->getAddrRange())) {
+            return mem;
+        }
+    }
+
+    return nullptr;
 }
 
 void

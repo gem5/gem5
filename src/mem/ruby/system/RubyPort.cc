@@ -565,7 +565,7 @@ RubyPort::MemResponsePort::hitCallback(PacketPtr pkt)
         // We must check device memory first in case it overlaps with the
         // system memory range.
         if (ruby_port->system->isDeviceMemAddr(pkt)) {
-            auto dmem = ruby_port->system->getDeviceMemory(pkt->requestorId());
+            auto dmem = ruby_port->system->getDeviceMemory(pkt);
             dmem->access(pkt);
         } else if (ruby_port->system->isMemAddr(pkt->getAddr())) {
             rs->getPhysMem()->access(pkt);
