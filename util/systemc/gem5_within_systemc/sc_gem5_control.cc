@@ -236,8 +236,8 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
     initSignals();
 
     /* Enable stats */
-    Stats::initSimStats();
-    Stats::registerHandlers(CxxConfig::statsReset, CxxConfig::statsDump);
+    statistics::initSimStats();
+    statistics::registerHandlers(CxxConfig::statsReset, CxxConfig::statsDump);
 
     Trace::enable();
 

@@ -88,8 +88,8 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
     Gem5SystemC::Module::setupEventQueues(*this);
     initSignals();
 
-    Stats::initSimStats();
-    Stats::registerHandlers(CxxConfig::statsReset, CxxConfig::statsDump);
+    statistics::initSimStats();
+    statistics::registerHandlers(CxxConfig::statsReset, CxxConfig::statsDump);
 
     Trace::enable();
 

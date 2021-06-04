@@ -40,8 +40,11 @@
  *
  *  C++-only configuration stats handling example
  *
- *  Register with: Stats::registerHandlers(statsReset, statsDump)
+ *  Register with: statistics::registerHandlers(statsReset, statsDump)
  */
+
+#include <iostream>
+#include <list>
 
 #include "base/statistics.hh"
 #include "stats.hh"
@@ -51,7 +54,7 @@ namespace CxxConfig
 
 void statsPrepare()
 {
-    std::list<Stats::Info *> stats = Stats::statsList();
+    std::list<statistics::Info *> stats = statistics::statsList();
 
     /* gather_stats -> prepare */
     for (auto i = stats.begin(); i != stats.end(); ++i)
@@ -62,24 +65,26 @@ void statsDump()
 {
     std::cerr << "Stats dump\n";
 
-    Stats::processDumpQueue();
+    statistics::processDumpQueue();
 
-    std::list<Stats::Info *> stats = Stats::statsList();
+    std::list<statistics::Info *> stats = statistics::statsList();
 
     statsPrepare();
 
     /* gather_stats -> convert_value */
     for (auto i = stats.begin(); i != stats.end(); ++i) {
-        Stats::Info *stat = *i;
+        statistics::Info *stat = *i;
 
-        Stats::ScalarInfo *scalar = dynamic_cast<Stats::ScalarInfo *>(stat);
-        Stats::VectorInfo *vector = dynamic_cast<Stats::VectorInfo *>(stat);
+        statistics::ScalarInfo *scalar =
+            dynamic_cast<statistics::ScalarInfo *>(stat);
+        statistics::VectorInfo *vector =
+            dynamic_cast<statistics::VectorInfo *>(stat);
 
         if (scalar) {
             std::cerr << "SCALAR " << stat->name << ' '
                 << scalar->value() << '\n';
         } else if (vector) {
-            Stats::VResult results = vector->value();
+            statistics::VResult results = vector->value();
 
             unsigned int index = 0;
             for (auto e = results.begin(); e != results.end(); ++e) {
@@ -99,12 +104,12 @@ void statsReset()
 {
     std::cerr << "Stats reset\n";
 
-    Stats::processResetQueue();
+    statistics::processResetQueue();
 }
 
 void statsEnable()
 {
-    std::list<Stats::Info *> stats = Stats::statsList();
+    std::list<statistics::Info *> stats = statistics::statsList();
 
     for (auto i = stats.begin(); i != stats.end(); ++i)
         (*i)->enable();

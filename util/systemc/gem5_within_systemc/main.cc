@@ -176,8 +176,8 @@ SimControl::SimControl(sc_core::sc_module_name name,
     initSignals();
 
     /* Enable stats */
-    Stats::initSimStats();
-    Stats::registerHandlers(CxxConfig::statsReset, CxxConfig::statsDump);
+    statistics::initSimStats();
+    statistics::registerHandlers(CxxConfig::statsReset, CxxConfig::statsDump);
 
     Trace::enable();
     setDebugFlag("Terminal");
@@ -434,7 +434,7 @@ SimControl::switchCpu(unsigned cpuNum, unsigned numTotalCpus) {
     // it is best to just move this call before the switchCpu loop in run()
     // where it previously was
     if (cpuNum == 0)
-        system.setMemoryMode(Enums::timing);
+        system.setMemoryMode(enums::timing);
 
     new_cpu.takeOverFrom(&old_cpu);
 

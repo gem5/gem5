@@ -40,7 +40,7 @@
  *
  *  C++-only configuration stats handling example
  *
- *  Register with: Stats::registerHandlers(statsReset, statsDump)
+ *  Register with: statistics::registerHandlers(statsReset, statsDump)
  */
 
 #ifndef __UTIL_CXX_CONFIG_STATS_H__

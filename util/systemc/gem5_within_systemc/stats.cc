@@ -40,9 +40,13 @@
  *
  *  C++-only configuration stats handling example
  *
- *  Register with: Stats::registerHandlers(statsReset, statsDump)
+ *  Register with: statistics::registerHandlers(statsReset, statsDump)
  */
 
+#include <iostream>
+#include <list>
+
+#include "base/logging.hh"
 #include "base/output.hh"
 #include "base/statistics.hh"
 #include "base/stats/text.hh"
@@ -53,14 +57,15 @@ namespace CxxConfig
 
 void statsPrepare()
 {
-    std::list<Stats::Info *> stats = Stats::statsList();
+    std::list<statistics::Info *> stats = statistics::statsList();
 
     /* gather_stats -> prepare */
     for (auto i = stats.begin(); i != stats.end(); ++i){
-        Stats::Info *stat = *i;
-        Stats::VectorInfo *vector = dynamic_cast<Stats::VectorInfo *>(stat);
+        statistics::Info *stat = *i;
+        statistics::VectorInfo *vector =
+            dynamic_cast<statistics::VectorInfo *>(stat);
         if (vector){
-            (dynamic_cast<Stats::VectorInfo *>(*i))->prepare();
+            (dynamic_cast<statistics::VectorInfo *>(*i))->prepare();
         }
         else {
             (*i)->prepare();
@@ -72,11 +77,11 @@ void statsPrepare()
 void statsDump()
 {
     bool desc = true;
-    Stats::Output *output = Stats::initText(filename, desc, true);
+    statistics::Output *output = statistics::initText(filename, desc, true);
 
-    Stats::processDumpQueue();
+    statistics::processDumpQueue();
 
-    std::list<Stats::Info *> stats = Stats::statsList();
+    std::list<statistics::Info *> stats = statistics::statsList();
 
     statsEnable();
     statsPrepare();
@@ -84,29 +89,32 @@ void statsDump()
     output->begin();
     /* gather_stats -> convert_value */
     for (auto i = stats.begin(); i != stats.end(); ++i) {
-        Stats::Info *stat = *i;
+        statistics::Info *stat = *i;
 
-        const Stats::ScalarInfo *scalar = dynamic_cast<Stats::ScalarInfo
-            *>(stat);
-        Stats::VectorInfo *vector = dynamic_cast<Stats::VectorInfo *>(stat);
-        const Stats::Vector2dInfo *vector2d = dynamic_cast<Stats::Vector2dInfo
-            *>(vector);
-        const Stats::DistInfo *dist = dynamic_cast<Stats::DistInfo *>(stat);
-        const Stats::VectorDistInfo *vectordist =
-            dynamic_cast<Stats::VectorDistInfo *>(stat);
-        const Stats::SparseHistInfo *sparse =
-            dynamic_cast<Stats::SparseHistInfo *>(stat);
-        const Stats::InfoProxy <Stats::Vector2d,Stats::Vector2dInfo> *info =
-            dynamic_cast<Stats::InfoProxy
-            <Stats::Vector2d,Stats::Vector2dInfo>*>(stat);
+        const statistics::ScalarInfo *scalar =
+            dynamic_cast<statistics::ScalarInfo *>(stat);
+        statistics::VectorInfo *vector =
+            dynamic_cast<statistics::VectorInfo *>(stat);
+        const statistics::Vector2dInfo *vector2d =
+            dynamic_cast<statistics::Vector2dInfo *>(vector);
+        const statistics::DistInfo *dist =
+            dynamic_cast<statistics::DistInfo *>(stat);
+        const statistics::VectorDistInfo *vectordist =
+            dynamic_cast<statistics::VectorDistInfo *>(stat);
+        const statistics::SparseHistInfo *sparse =
+            dynamic_cast<statistics::SparseHistInfo *>(stat);
+        const statistics::InfoProxy <statistics::Vector2d,
+            statistics::Vector2dInfo> *info =
+            dynamic_cast<statistics::InfoProxy
+            <statistics::Vector2d,statistics::Vector2dInfo>*>(stat);
 
         if (vector) {
-            const Stats::FormulaInfo *formula = dynamic_cast<Stats::FormulaInfo
-                *>(vector);
+            const statistics::FormulaInfo *formula =
+                dynamic_cast<statistics::FormulaInfo *>(vector);
             if (formula){
                 output->visit(*formula);
             } else {
-                const Stats::VectorInfo *vector1 = vector;
+                const statistics::VectorInfo *vector1 = vector;
                 output->visit(*vector1);
             }
         } else if (vector2d) {
@@ -132,18 +140,19 @@ void statsReset()
 {
     std::cerr << "Stats reset\n";
 
-    Stats::processResetQueue();
+    statistics::processResetQueue();
 }
 
 void statsEnable()
 {
-    std::list<Stats::Info *> stats = Stats::statsList();
+    std::list<statistics::Info *> stats = statistics::statsList();
 
     for (auto i = stats.begin(); i != stats.end(); ++i){
-        Stats::Info *stat = *i;
-        Stats::VectorInfo *vector = dynamic_cast<Stats::VectorInfo *>(stat);
+        statistics::Info *stat = *i;
+        statistics::VectorInfo *vector =
+            dynamic_cast<statistics::VectorInfo *>(stat);
         if (vector){
-            (dynamic_cast<Stats::VectorInfo *>(*i))->enable();
+            (dynamic_cast<statistics::VectorInfo *>(*i))->enable();
         }
         else {
             (*i)->enable();

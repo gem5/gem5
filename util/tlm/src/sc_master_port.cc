@@ -273,8 +273,8 @@ SCMasterPort::b_transport(tlm::tlm_generic_payload& trans,
              "Packet sending failed!\n");
 
     // one tick is a pico second
-    auto delay =
-      sc_core::sc_time((double)(ticks / SimClock::Int::ps), sc_core::SC_PS);
+    auto delay = sc_core::sc_time((double)(ticks / sim_clock::as_int::ps),
+        sc_core::SC_PS);
 
     // update time
     t += delay;
