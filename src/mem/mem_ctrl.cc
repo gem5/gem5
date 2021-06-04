@@ -234,7 +234,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
                         stats.servicedByWrQ++;
                         pktsServicedByWrQ++;
                         DPRINTF(MemCtrl,
-                                "Read to addr %lld with size %d serviced by "
+                                "Read to addr %#x with size %d serviced by "
                                 "write queue\n",
                                 addr, size);
                         stats.bytesReadWrQ += burst_size;
@@ -250,7 +250,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
 
             // Make the burst helper for split packets
             if (pkt_count > 1 && burst_helper == NULL) {
-                DPRINTF(MemCtrl, "Read to addr %lld translates to %d "
+                DPRINTF(MemCtrl, "Read to addr %#x translates to %d "
                         "memory requests\n", pkt->getAddr(), pkt_count);
                 burst_helper = new BurstHelper(pkt_count);
             }
@@ -394,19 +394,19 @@ MemCtrl::printQs() const
     DPRINTF(MemCtrl, "===READ QUEUE===\n\n");
     for (const auto& queue : readQueue) {
         for (const auto& packet : queue) {
-            DPRINTF(MemCtrl, "Read %lu\n", packet->addr);
+            DPRINTF(MemCtrl, "Read %#x\n", packet->addr);
         }
     }
 
     DPRINTF(MemCtrl, "\n===RESP QUEUE===\n\n");
     for (const auto& packet : respQueue) {
-        DPRINTF(MemCtrl, "Response %lu\n", packet->addr);
+        DPRINTF(MemCtrl, "Response %#x\n", packet->addr);
     }
 
     DPRINTF(MemCtrl, "\n===WRITE QUEUE===\n\n");
     for (const auto& queue : writeQueue) {
         for (const auto& packet : queue) {
-            DPRINTF(MemCtrl, "Write %lu\n", packet->addr);
+            DPRINTF(MemCtrl, "Write %#x\n", packet->addr);
         }
     }
 #endif // TRACING_ON
@@ -416,7 +416,7 @@ bool
 MemCtrl::recvTimingReq(PacketPtr pkt)
 {
     // This is where we enter from the outside world
-    DPRINTF(MemCtrl, "recvTimingReq: request %s addr %lld size %d\n",
+    DPRINTF(MemCtrl, "recvTimingReq: request %s addr %#x size %d\n",
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
@@ -631,7 +631,7 @@ MemCtrl::chooseNextFRFCFS(MemPacketQueue& queue, Tick extra_col_delay)
 void
 MemCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
 {
-    DPRINTF(MemCtrl, "Responding to Address %lld.. \n",pkt->getAddr());
+    DPRINTF(MemCtrl, "Responding to Address %#x.. \n", pkt->getAddr());
 
     bool needsResponse = pkt->needsResponse();
     // do the actual memory access which also turns the packet into a
@@ -837,7 +837,7 @@ MemCtrl::doBurstAccess(MemPacket* mem_pkt)
 
     }
 
-    DPRINTF(MemCtrl, "Access to %lld, ready at %lld next burst at %lld.\n",
+    DPRINTF(MemCtrl, "Access to %#x, ready at %lld next burst at %lld.\n",
             mem_pkt->addr, mem_pkt->readyTime, nextBurstAt);
 
     // Update the minimum timing between the requests, this is a

@@ -153,7 +153,7 @@ MemInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
     assert(row < rowsPerBank);
     assert(row < Bank::NO_ROW);
 
-    DPRINTF(DRAM, "Address: %lld Rank %d Bank %d Row %d\n",
+    DPRINTF(DRAM, "Address: %#x Rank %d Bank %d Row %d\n",
             pkt_addr, rank, bank, row);
 
     // create the corresponding memory packet with the entry time and
@@ -456,7 +456,7 @@ std::pair<Tick, Tick>
 DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
                              const std::vector<MemPacketQueue>& queue)
 {
-    DPRINTF(DRAM, "Timing access to addr %lld, rank/bank/row %d %d %d\n",
+    DPRINTF(DRAM, "Timing access to addr %#x, rank/bank/row %d %d %d\n",
             mem_pkt->addr, mem_pkt->rank, mem_pkt->bank, mem_pkt->row);
 
     // get the rank
@@ -2305,7 +2305,7 @@ NVMInterface::burstReady(MemPacket* pkt) const {
     std::pair<Tick, Tick>
 NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at)
 {
-    DPRINTF(NVM, "NVM Timing access to addr %lld, rank/bank/row %d %d %d\n",
+    DPRINTF(NVM, "NVM Timing access to addr %#x, rank/bank/row %d %d %d\n",
             pkt->addr, pkt->rank, pkt->bank, pkt->row);
 
     // get the bank
@@ -2358,7 +2358,7 @@ NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at)
         }
     }
 
-    DPRINTF(NVM, "NVM Access to %lld, ready at %lld.\n",
+    DPRINTF(NVM, "NVM Access to %#x, ready at %lld.\n",
             pkt->addr, pkt->readyTime);
 
     if (pkt->isRead()) {

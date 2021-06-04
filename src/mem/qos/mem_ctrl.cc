@@ -91,7 +91,7 @@ MemCtrl::logRequest(BusState dir, RequestorID id, uint8_t _qos,
     addRequestor(id);
 
     DPRINTF(QOS,
-            "qos::MemCtrl::logRequest REQUESTOR %s [id %d] address %d"
+            "qos::MemCtrl::logRequest REQUESTOR %s [id %d] address %#x"
             " prio %d this requestor q packets %d"
             " - queue size %d - requested entries %d\n",
             requestors[id], id, addr, _qos, packetPriorities[id][_qos],
@@ -147,7 +147,7 @@ MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t _qos,
         "Logging response with invalid requestor\n");
 
     DPRINTF(QOS,
-            "qos::MemCtrl::logResponse REQUESTOR %s [id %d] address %d prio"
+            "qos::MemCtrl::logResponse REQUESTOR %s [id %d] address %#x prio"
             " %d this requestor q packets %d"
             " - queue size %d - requested entries %d\n",
             requestors[id], id, addr, _qos, packetPriorities[id][_qos],
@@ -172,7 +172,7 @@ MemCtrl::logResponse(BusState dir, RequestorID id, uint8_t _qos,
         auto it = requestTimes[id].find(addr);
         panic_if(it == requestTimes[id].end(),
                  "qos::MemCtrl::logResponse requestor %s unmatched response "
-                 "for address %d received", requestors[id], addr);
+                 "for address %#x received", requestors[id], addr);
 
         // Load request time
         uint64_t requestTime = it->second.front();
