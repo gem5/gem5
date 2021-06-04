@@ -26,7 +26,7 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
-from SystemC import SystemC_ScModule
+from m5.objects.SystemC import SystemC_ScModule
 
 # This class is a subclass of sc_module, and all the special magic which makes
 # that work is handled in the base classes.
