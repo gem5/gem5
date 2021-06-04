@@ -47,7 +47,7 @@ class Gem5_FeederParams;
 class Feeder : public SimObject
 {
   public:
-    Feeder(Gem5_FeederParams *params);
+    Feeder(const Gem5_FeederParams &params);
 
     void feed();
 

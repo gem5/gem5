@@ -36,7 +36,7 @@
 // systemc object could accept those parameters however it likes, for instance
 // through its constructor or by assigning them to a member variable.
 Printer *
-SystemC_PrinterParams::create()
+SystemC_PrinterParams::create() const
 {
     Printer *printer = new Printer(name.c_str());
     printer->prefix = prefix;
