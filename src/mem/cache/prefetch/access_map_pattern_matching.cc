@@ -80,7 +80,7 @@ AccessMapPatternMatching::processEpochEvent()
     double num_requests = (double) (numRawCacheMisses - numGoodPrefetches +
         numTotalPrefetches);
     double memory_bandwidth = num_requests * offChipMemoryLatency /
-        clockEdge(epochCycles);
+        cyclesToTicks(epochCycles);
 
     if (prefetch_coverage > highCoverageThreshold &&
         (prefetch_accuracy > highAccuracyThreshold ||
