@@ -126,7 +126,6 @@ class SymbolTable(object):
         makeDir(path)
 
         code = self.codeFormatter()
-        code('/** Auto generated C++ code started by $__file__:$__line__ */')
 
         for include_path in includes:
             code('#include "${{include_path}}"')

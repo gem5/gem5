@@ -272,11 +272,7 @@ class $py_ident(RubyController):
         c_ident = "%s_Controller" % self.ident
 
         code('''
-/** \\file $c_ident.hh
- *
- * Auto generated C++ code started by $__file__:$__line__
- * Created by slicc definition of Module "${{self.short}}"
- */
+// Created by slicc definition of Module "${{self.short}}"
 
 #ifndef __${ident}_CONTROLLER_HH__
 #define __${ident}_CONTROLLER_HH__
@@ -492,11 +488,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 '''
 
         code('''
-/** \\file $c_ident.cc
- *
- * Auto generated C++ code started by $__file__:$__line__
- * Created by slicc definition of Module "${{self.short}}"
- */
+// Created by slicc definition of Module "${{self.short}}"
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -1220,7 +1212,6 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
             outputRequest_types = False
 
         code('''
-// Auto generated C++ code started by $__file__:$__line__
 // ${ident}: ${{self.short}}
 
 #include <sys/types.h>
@@ -1343,7 +1334,6 @@ ${ident}_Controller::wakeup()
         ident = self.ident
 
         code('''
-// Auto generated C++ code started by $__file__:$__line__
 // ${ident}: ${{self.short}}
 
 #include <cassert>

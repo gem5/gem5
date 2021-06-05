@@ -204,12 +204,6 @@ class Type(Symbol):
     def printTypeHH(self, path):
         code = self.symtab.codeFormatter()
         code('''
-/** \\file ${{self.c_ident}}.hh
- *
- *
- * Auto generated C++ code started by $__file__:$__line__
- */
-
 #ifndef __${{self.c_ident}}_HH__
 #define __${{self.c_ident}}_HH__
 
@@ -404,11 +398,6 @@ operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
         code = self.symtab.codeFormatter()
 
         code('''
-/** \\file ${{self.c_ident}}.cc
- *
- * Auto generated C++ code started by $__file__:$__line__
- */
-
 #include <iostream>
 #include <memory>
 
@@ -449,11 +438,6 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";''')
     def printEnumHH(self, path):
         code = self.symtab.codeFormatter()
         code('''
-/** \\file ${{self.c_ident}}.hh
- *
- * Auto generated C++ code started by $__file__:$__line__
- */
-
 #ifndef __${{self.c_ident}}_HH__
 #define __${{self.c_ident}}_HH__
 
@@ -555,11 +539,6 @@ std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
     def printEnumCC(self, path):
         code = self.symtab.codeFormatter()
         code('''
-/** \\file ${{self.c_ident}}.hh
- *
- * Auto generated C++ code started by $__file__:$__line__
- */
-
 #include <cassert>
 #include <iostream>
 #include <string>
