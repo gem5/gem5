@@ -48,6 +48,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 class MultiperspectivePerceptron : public BPredUnit
 {
   protected:
@@ -1055,6 +1058,7 @@ class MultiperspectivePerceptron : public BPredUnit
     void btbUpdate(ThreadID tid, Addr branch_addr, void* &bp_history) override;
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif//__CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_HH__

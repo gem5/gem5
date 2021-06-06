@@ -46,6 +46,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 class MPP_StatisticalCorrector_64KB : public MPP_StatisticalCorrector
 {
     const unsigned numEntriesSecondLocalHistories;
@@ -89,6 +92,7 @@ class MultiperspectivePerceptronTAGE64KB :
             const MultiperspectivePerceptronTAGE64KBParams &p);
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_TAGE_64KB_HH__

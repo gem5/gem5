@@ -51,6 +51,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 /**
  * Implements a tournament branch predictor, hopefully identical to the one
  * used in the 21264.  It has a local predictor, which uses a local history
@@ -242,6 +245,7 @@ class TournamentBP : public BPredUnit
     unsigned choiceThreshold;
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_TOURNAMENT_PRED_HH__

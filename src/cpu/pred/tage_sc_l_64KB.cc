@@ -44,6 +44,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 TAGE_SC_L_64KB_StatisticalCorrector::TAGE_SC_L_64KB_StatisticalCorrector(
     const TAGE_SC_L_64KB_StatisticalCorrectorParams &p)
   : StatisticalCorrector(p),
@@ -311,4 +314,5 @@ TAGE_SC_L_64KB::TAGE_SC_L_64KB(const TAGE_SC_L_64KBParams &params)
 {
 }
 
+} // namespace branch_prediction
 } // namespace gem5

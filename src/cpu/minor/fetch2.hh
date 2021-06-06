@@ -93,7 +93,7 @@ class Fetch2 : public Named
     bool processMoreThanOneInput;
 
     /** Branch predictor passed from Python configuration */
-    BPredUnit &branchPredictor;
+    branch_prediction::BPredUnit &branchPredictor;
 
   public:
     /* Public so that Pipeline can pass it to Fetch1 */

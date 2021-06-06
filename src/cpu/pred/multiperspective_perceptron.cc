@@ -44,6 +44,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 int
 MultiperspectivePerceptron::xlat[] =
     {1,3,4,5,7,8,9,11,12,14,15,17,19,21,23,25,27,29,32,34,37,41,45,49,53,58,63,
@@ -826,4 +829,5 @@ MultiperspectivePerceptron::squash(ThreadID tid, void *bp_history)
     delete bi;
 }
 
+} // namespace branch_prediction
 } // namespace gem5

@@ -31,6 +31,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 void
 ReturnAddrStack::init(unsigned _numEntries)
 {
@@ -83,4 +86,5 @@ ReturnAddrStack::restore(unsigned top_entry_idx,
     }
 }
 
+} // namespace branch_prediction
 } // namespace gem5

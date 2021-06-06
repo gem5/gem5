@@ -35,6 +35,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 DefaultBTB::DefaultBTB(unsigned _numEntries,
                        unsigned _tagBits,
                        unsigned _instShiftAmt,
@@ -140,4 +143,5 @@ DefaultBTB::update(Addr instPC, const TheISA::PCState &target, ThreadID tid)
     btb[btb_idx].tag = getTag(instPC);
 }
 
+} // namespace branch_prediction
 } // namespace gem5

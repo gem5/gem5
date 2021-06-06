@@ -58,6 +58,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 class TAGE: public BPredUnit
 {
   protected:
@@ -93,6 +96,7 @@ class TAGE: public BPredUnit
     virtual void squash(ThreadID tid, void *bp_history) override;
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_TAGE_HH__

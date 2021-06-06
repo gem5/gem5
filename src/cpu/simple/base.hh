@@ -71,14 +71,17 @@ namespace Trace
 }
 
 struct BaseSimpleCPUParams;
-class BPredUnit;
+namespace branch_prediction
+{
+    class BPredUnit;
+} // namespace branch_prediction
 class SimpleExecContext;
 
 class BaseSimpleCPU : public BaseCPU
 {
   protected:
     ThreadID curThread;
-    BPredUnit *branchPred;
+    branch_prediction::BPredUnit *branchPred;
 
     const RegIndex zeroReg;
 

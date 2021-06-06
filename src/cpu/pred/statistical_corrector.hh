@@ -52,6 +52,9 @@ namespace gem5
 
 struct StatisticalCorrectorParams;
 
+namespace branch_prediction
+{
+
 class StatisticalCorrector : public SimObject
 {
   protected:
@@ -277,6 +280,7 @@ class StatisticalCorrector : public SimObject
     virtual size_t getSizeInBits() const;
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif//__CPU_PRED_STATISTICAL_CORRECTOR_HH__

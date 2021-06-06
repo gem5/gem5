@@ -47,6 +47,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 LTAGE::LTAGE(const LTAGEParams &params)
   : TAGE(params), loopPredictor(params.loop_predictor)
 {
@@ -144,4 +147,5 @@ LTAGE::squash(ThreadID tid, void *bp_history)
     TAGE::squash(tid, bp_history);
 }
 
+} // namespace branch_prediction
 } // namespace gem5

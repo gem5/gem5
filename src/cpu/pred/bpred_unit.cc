@@ -53,6 +53,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 BPredUnit::BPredUnit(const Params &params)
     : SimObject(params),
       numThreads(params.numThreads),
@@ -521,4 +524,5 @@ BPredUnit::dump()
     }
 }
 
+} // namespace branch_prediction
 } // namespace gem5

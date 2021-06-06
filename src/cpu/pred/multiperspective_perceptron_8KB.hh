@@ -46,6 +46,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 class MultiperspectivePerceptron8KB : public MultiperspectivePerceptron
 {
     void createSpecs() override;
@@ -54,6 +57,7 @@ class MultiperspectivePerceptron8KB : public MultiperspectivePerceptron
             const MultiperspectivePerceptron8KBParams &p);
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_8KB_HH__

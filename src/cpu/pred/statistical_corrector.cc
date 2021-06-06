@@ -46,6 +46,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 StatisticalCorrector::StatisticalCorrector(
     const StatisticalCorrectorParams &p)
   : SimObject(p),
@@ -412,4 +415,5 @@ StatisticalCorrector::StatisticalCorrectorStats::StatisticalCorrectorStats(
 {
 }
 
+} // namespace branch_prediction
 } // namespace gem5

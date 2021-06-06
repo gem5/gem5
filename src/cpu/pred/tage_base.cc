@@ -45,6 +45,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 TAGEBase::TAGEBase(const TAGEBaseParams &p)
    : SimObject(p),
      logRatioBiModalHystEntries(p.logRatioBiModalHystEntries),
@@ -802,4 +805,5 @@ TAGEBase::getSizeInBits() const {
     return bits;
 }
 
+} // namespace branch_prediction
 } // namespace gem5

@@ -39,6 +39,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 class SimpleIndirectPredictor : public IndirectPredictor
 {
   public:
@@ -102,6 +105,7 @@ class SimpleIndirectPredictor : public IndirectPredictor
     std::vector<ThreadInfo> threadInfo;
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_INDIRECT_HH__

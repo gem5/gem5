@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 /**
  * Implements a bi-mode branch predictor. The bi-mode predictor is a two-level
  * branch predictor that has three seprate history arrays: a taken array, a
@@ -112,6 +115,7 @@ class BiModeBP : public BPredUnit
     unsigned notTakenThreshold;
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_BI_MODE_PRED_HH__

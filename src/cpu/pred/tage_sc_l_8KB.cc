@@ -47,6 +47,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 TAGE_SC_L_8KB_StatisticalCorrector::TAGE_SC_L_8KB_StatisticalCorrector(
     const TAGE_SC_L_8KB_StatisticalCorrectorParams &p)
   : StatisticalCorrector(p),
@@ -314,4 +317,5 @@ TAGE_SC_L_TAGE_8KB::handleTAGEUpdate(Addr branch_pc, bool taken,
     }
 }
 
+} // namespace branch_prediction
 } // namespace gem5

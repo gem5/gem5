@@ -43,6 +43,9 @@ namespace gem5
 
 struct LoopPredictorParams;
 
+namespace branch_prediction
+{
+
 class LoopPredictor : public SimObject
 {
   protected:
@@ -261,6 +264,7 @@ class LoopPredictor : public SimObject
     size_t getSizeInBits() const;
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif//__CPU_PRED_LOOP_PREDICTOR_HH__

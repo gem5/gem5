@@ -60,6 +60,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 class LTAGE : public TAGE
 {
   public:
@@ -112,6 +115,7 @@ class LTAGE : public TAGE
         ThreadID tid, Addr branch_pc, bool cond_branch, void* &b) override;
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_LTAGE_HH__

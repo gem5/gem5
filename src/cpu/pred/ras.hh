@@ -38,6 +38,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 /** Return address stack class, implements a simple RAS. */
 class ReturnAddrStack
 {
@@ -100,6 +103,7 @@ class ReturnAddrStack
     unsigned tos;
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_RAS_HH__

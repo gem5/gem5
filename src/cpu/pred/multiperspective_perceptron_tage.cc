@@ -43,6 +43,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 void
 MPP_TAGE::calculateParameters()
 {
@@ -684,4 +687,5 @@ MultiperspectivePerceptronTAGE::squash(ThreadID tid, void *bp_history)
     delete bi;
 }
 
+} // namespace branch_prediction
 } // namespace gem5

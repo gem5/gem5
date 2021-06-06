@@ -41,6 +41,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 LoopPredictor::LoopPredictor(const LoopPredictorParams &p)
   : SimObject(p), logSizeLoopPred(p.logSizeLoopPred),
     loopTableAgeBits(p.loopTableAgeBits),
@@ -369,4 +372,5 @@ LoopPredictor::getSizeInBits() const
         loopTableAgeBits + useDirectionBit);
 }
 
+} // namespace branch_prediction
 } // namespace gem5

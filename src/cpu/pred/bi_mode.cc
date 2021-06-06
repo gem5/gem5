@@ -38,6 +38,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 BiModeBP::BiModeBP(const BiModeBPParams &params)
     : BPredUnit(params),
       globalHistoryReg(params.numThreads, 0),
@@ -229,4 +232,5 @@ BiModeBP::updateGlobalHistReg(ThreadID tid, bool taken)
     globalHistoryReg[tid] &= historyRegisterMask;
 }
 
+} // namespace branch_prediction
 } // namespace gem5

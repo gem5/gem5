@@ -411,7 +411,7 @@ class Fetch
     TimeBuffer<FetchStruct>::wire toDecode;
 
     /** BPredUnit. */
-    BPredUnit *branchPred;
+    branch_prediction::BPredUnit *branchPred;
 
     TheISA::PCState pc[MaxThreads];
 

@@ -36,6 +36,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 LocalBP::LocalBP(const LocalBPParams &params)
     : BPredUnit(params),
       localPredictorSize(params.localPredictorSize),
@@ -137,4 +140,5 @@ LocalBP::uncondBranch(ThreadID tid, Addr pc, void *&bp_history)
 {
 }
 
+} // namespace branch_prediction
 } // namespace gem5

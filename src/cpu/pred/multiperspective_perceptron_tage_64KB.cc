@@ -42,6 +42,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 MPP_StatisticalCorrector_64KB::MPP_StatisticalCorrector_64KB(
     const MPP_StatisticalCorrector_64KBParams &p)
   : MPP_StatisticalCorrector(p),
@@ -219,4 +222,5 @@ MultiperspectivePerceptronTAGE64KB::createSpecs()
     addSpec(new ACYCLIC(12, -1, -1, 2.0, 0, 6, *this));
 }
 
+} // namespace branch_prediction
 } // namespace gem5

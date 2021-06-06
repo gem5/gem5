@@ -46,6 +46,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 TournamentBP::TournamentBP(const TournamentBPParams &params)
     : BPredUnit(params),
       localPredictorSize(params.localPredictorSize),
@@ -351,4 +354,5 @@ int
 TournamentBP::BPHistory::newCount = 0;
 #endif
 
+} // namespace branch_prediction
 } // namespace gem5

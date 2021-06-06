@@ -58,6 +58,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 /**
  * Basically a wrapper class to hold both the branch predictor
  * and the BTB.
@@ -344,6 +347,7 @@ class BPredUnit : public SimObject
     /** @} */
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_BPRED_UNIT_HH__

@@ -49,6 +49,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 class MPP_TAGE_8KB : public MPP_TAGE
 {
   public:
@@ -88,6 +91,7 @@ class MultiperspectivePerceptronTAGE8KB :
             const MultiperspectivePerceptronTAGE8KBParams &p);
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_TAGE_8KB_HH__

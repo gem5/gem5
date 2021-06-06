@@ -38,6 +38,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 class IndirectPredictor : public SimObject
 {
   public:
@@ -66,6 +69,7 @@ class IndirectPredictor : public SimObject
                                            bool actually_taken) = 0;
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_INDIRECT_BASE_HH__

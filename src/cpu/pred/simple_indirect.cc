@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 SimpleIndirectPredictor::SimpleIndirectPredictor(
         const SimpleIndirectPredictorParams &params)
     : IndirectPredictor(params),
@@ -237,4 +240,5 @@ SimpleIndirectPredictor::getTag(Addr br_addr)
     return (br_addr >> instShift) & ((0x1<<tagBits)-1);
 }
 
+} // namespace branch_prediction
 } // namespace gem5

@@ -42,6 +42,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 MultiperspectivePerceptron64KB::MultiperspectivePerceptron64KB(
         const MultiperspectivePerceptron64KBParams &p)
     : MultiperspectivePerceptron(p)
@@ -89,4 +92,5 @@ MultiperspectivePerceptron64KB::createSpecs() {
     addSpec(new SGHISTPATH(1, 5, 2, 1.3125, 972, 6, *this));
 }
 
+} // namespace branch_prediction
 } // namespace gem5

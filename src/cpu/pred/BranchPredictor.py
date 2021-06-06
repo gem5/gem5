@@ -31,7 +31,7 @@ from m5.proxy import *
 
 class IndirectPredictor(SimObject):
     type = 'IndirectPredictor'
-    cxx_class = 'gem5::IndirectPredictor'
+    cxx_class = 'gem5::branch_prediction::IndirectPredictor'
     cxx_header = "cpu/pred/indirect.hh"
     abstract = True
 
@@ -39,7 +39,7 @@ class IndirectPredictor(SimObject):
 
 class SimpleIndirectPredictor(IndirectPredictor):
     type = 'SimpleIndirectPredictor'
-    cxx_class = 'gem5::SimpleIndirectPredictor'
+    cxx_class = 'gem5::branch_prediction::SimpleIndirectPredictor'
     cxx_header = "cpu/pred/simple_indirect.hh"
 
     indirectHashGHR = Param.Bool(True, "Hash branch predictor GHR")
@@ -54,7 +54,7 @@ class SimpleIndirectPredictor(IndirectPredictor):
 
 class BranchPredictor(SimObject):
     type = 'BranchPredictor'
-    cxx_class = 'gem5::BPredUnit'
+    cxx_class = 'gem5::branch_prediction::BPredUnit'
     cxx_header = "cpu/pred/bpred_unit.hh"
     abstract = True
 
@@ -69,7 +69,7 @@ class BranchPredictor(SimObject):
 
 class LocalBP(BranchPredictor):
     type = 'LocalBP'
-    cxx_class = 'gem5::LocalBP'
+    cxx_class = 'gem5::branch_prediction::LocalBP'
     cxx_header = "cpu/pred/2bit_local.hh"
 
     localPredictorSize = Param.Unsigned(2048, "Size of local predictor")
@@ -78,7 +78,7 @@ class LocalBP(BranchPredictor):
 
 class TournamentBP(BranchPredictor):
     type = 'TournamentBP'
-    cxx_class = 'gem5::TournamentBP'
+    cxx_class = 'gem5::branch_prediction::TournamentBP'
     cxx_header = "cpu/pred/tournament.hh"
 
     localPredictorSize = Param.Unsigned(2048, "Size of local predictor")
@@ -92,7 +92,7 @@ class TournamentBP(BranchPredictor):
 
 class BiModeBP(BranchPredictor):
     type = 'BiModeBP'
-    cxx_class = 'gem5::BiModeBP'
+    cxx_class = 'gem5::branch_prediction::BiModeBP'
     cxx_header = "cpu/pred/bi_mode.hh"
 
     globalPredictorSize = Param.Unsigned(8192, "Size of global predictor")
@@ -102,7 +102,7 @@ class BiModeBP(BranchPredictor):
 
 class TAGEBase(SimObject):
     type = 'TAGEBase'
-    cxx_class = 'gem5::TAGEBase'
+    cxx_class = 'gem5::branch_prediction::TAGEBase'
     cxx_header = "cpu/pred/tage_base.hh"
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
@@ -147,8 +147,9 @@ class TAGEBase(SimObject):
 # The default sizes below are for the 8C-TAGE configuration (63.5 Kbits)
 class TAGE(BranchPredictor):
     type = 'TAGE'
-    cxx_class = 'gem5::TAGE'
+    cxx_class = 'gem5::branch_prediction::TAGE'
     cxx_header = "cpu/pred/tage.hh"
+
     tage = Param.TAGEBase(TAGEBase(), "Tage object")
 
 class LTAGE_TAGE(TAGEBase):
@@ -161,7 +162,7 @@ class LTAGE_TAGE(TAGEBase):
 
 class LoopPredictor(SimObject):
     type = 'LoopPredictor'
-    cxx_class = 'gem5::LoopPredictor'
+    cxx_class = 'gem5::branch_prediction::LoopPredictor'
     cxx_header = 'cpu/pred/loop_predictor.hh'
 
     logSizeLoopPred = Param.Unsigned(8, "Log size of the loop predictor")
@@ -201,9 +202,10 @@ class LoopPredictor(SimObject):
 
 class TAGE_SC_L_TAGE(TAGEBase):
     type = 'TAGE_SC_L_TAGE'
-    cxx_class = 'gem5::TAGE_SC_L_TAGE'
+    cxx_class = 'gem5::branch_prediction::TAGE_SC_L_TAGE'
     cxx_header = "cpu/pred/tage_sc_l.hh"
     abstract = True
+
     tagTableTagWidths = [0]
     numUseAltOnNa = 16
     pathHistBits = 27
@@ -238,8 +240,9 @@ class TAGE_SC_L_TAGE(TAGEBase):
 
 class TAGE_SC_L_TAGE_64KB(TAGE_SC_L_TAGE):
     type = 'TAGE_SC_L_TAGE_64KB'
-    cxx_class = 'gem5::TAGE_SC_L_TAGE_64KB'
+    cxx_class = 'gem5::branch_prediction::TAGE_SC_L_TAGE_64KB'
     cxx_header = "cpu/pred/tage_sc_l_64KB.hh"
+
     nHistoryTables = 36
 
     minHist = 6
@@ -268,7 +271,7 @@ class TAGE_SC_L_TAGE_64KB(TAGE_SC_L_TAGE):
 
 class TAGE_SC_L_TAGE_8KB(TAGE_SC_L_TAGE):
     type = 'TAGE_SC_L_TAGE_8KB'
-    cxx_class = 'gem5::TAGE_SC_L_TAGE_8KB'
+    cxx_class = 'gem5::branch_prediction::TAGE_SC_L_TAGE_8KB'
     cxx_header = "cpu/pred/tage_sc_l_8KB.hh"
 
     nHistoryTables = 30
@@ -297,7 +300,7 @@ class TAGE_SC_L_TAGE_8KB(TAGE_SC_L_TAGE):
 # The differnt TAGE sizes are updated according to the paper values (256 Kbits)
 class LTAGE(TAGE):
     type = 'LTAGE'
-    cxx_class = 'gem5::LTAGE'
+    cxx_class = 'gem5::branch_prediction::LTAGE'
     cxx_header = "cpu/pred/ltage.hh"
 
     tage = LTAGE_TAGE()
@@ -306,8 +309,9 @@ class LTAGE(TAGE):
 
 class TAGE_SC_L_LoopPredictor(LoopPredictor):
     type = 'TAGE_SC_L_LoopPredictor'
-    cxx_class  = 'gem5::TAGE_SC_L_LoopPredictor'
+    cxx_class  = 'gem5::branch_prediction::TAGE_SC_L_LoopPredictor'
     cxx_header = "cpu/pred/tage_sc_l.hh"
+
     loopTableAgeBits = 4
     loopTableConfidenceBits = 4
     loopTableTagBits = 10
@@ -322,7 +326,7 @@ class TAGE_SC_L_LoopPredictor(LoopPredictor):
 
 class StatisticalCorrector(SimObject):
     type = 'StatisticalCorrector'
-    cxx_class  = 'gem5::StatisticalCorrector'
+    cxx_class  = 'gem5::branch_prediction::StatisticalCorrector'
     cxx_header = "cpu/pred/statistical_corrector.hh"
     abstract = True
 
@@ -385,7 +389,7 @@ class StatisticalCorrector(SimObject):
 # of speculation: All the structures/histories are updated at commit time
 class TAGE_SC_L(LTAGE):
     type = 'TAGE_SC_L'
-    cxx_class = 'gem5::TAGE_SC_L'
+    cxx_class = 'gem5::branch_prediction::TAGE_SC_L'
     cxx_header = "cpu/pred/tage_sc_l.hh"
     abstract = True
 
@@ -400,7 +404,7 @@ class TAGE_SC_L_8KB_LoopPredictor(TAGE_SC_L_LoopPredictor):
 
 class TAGE_SC_L_64KB_StatisticalCorrector(StatisticalCorrector):
     type = 'TAGE_SC_L_64KB_StatisticalCorrector'
-    cxx_class  = 'gem5::TAGE_SC_L_64KB_StatisticalCorrector'
+    cxx_class  = 'gem5::branch_prediction::TAGE_SC_L_64KB_StatisticalCorrector'
     cxx_header = "cpu/pred/tage_sc_l_64KB.hh"
 
     pnb = Param.Unsigned(3, "Num variation global branch GEHL lengths")
@@ -446,7 +450,7 @@ class TAGE_SC_L_64KB_StatisticalCorrector(StatisticalCorrector):
 
 class TAGE_SC_L_8KB_StatisticalCorrector(StatisticalCorrector):
     type = 'TAGE_SC_L_8KB_StatisticalCorrector'
-    cxx_class  = 'gem5::TAGE_SC_L_8KB_StatisticalCorrector'
+    cxx_class  = 'gem5::branch_prediction::TAGE_SC_L_8KB_StatisticalCorrector'
     cxx_header = "cpu/pred/tage_sc_l_8KB.hh"
 
     gnb = Param.Unsigned(2, "Num global branch GEHL lengths")
@@ -474,7 +478,7 @@ class TAGE_SC_L_8KB_StatisticalCorrector(StatisticalCorrector):
 # http://www.jilp.org/cbp2016/paper/AndreSeznecLimited.pdf
 class TAGE_SC_L_64KB(TAGE_SC_L):
     type = 'TAGE_SC_L_64KB'
-    cxx_class = 'gem5::TAGE_SC_L_64KB'
+    cxx_class = 'gem5::branch_prediction::TAGE_SC_L_64KB'
     cxx_header = "cpu/pred/tage_sc_l_64KB.hh"
 
     tage = TAGE_SC_L_TAGE_64KB()
@@ -485,7 +489,7 @@ class TAGE_SC_L_64KB(TAGE_SC_L):
 # http://www.jilp.org/cbp2016/paper/AndreSeznecLimited.pdf
 class TAGE_SC_L_8KB(TAGE_SC_L):
     type = 'TAGE_SC_L_8KB'
-    cxx_class = 'gem5::TAGE_SC_L_8KB'
+    cxx_class = 'gem5::branch_prediction::TAGE_SC_L_8KB'
     cxx_header = "cpu/pred/tage_sc_l_8KB.hh"
 
     tage = TAGE_SC_L_TAGE_8KB()
@@ -494,7 +498,7 @@ class TAGE_SC_L_8KB(TAGE_SC_L):
 
 class MultiperspectivePerceptron(BranchPredictor):
     type = 'MultiperspectivePerceptron'
-    cxx_class = 'gem5::MultiperspectivePerceptron'
+    cxx_class = 'gem5::branch_prediction::MultiperspectivePerceptron'
     cxx_header = 'cpu/pred/multiperspective_perceptron.hh'
     abstract = True
 
@@ -557,7 +561,7 @@ class MultiperspectivePerceptron(BranchPredictor):
 
 class MultiperspectivePerceptron8KB(MultiperspectivePerceptron):
     type = 'MultiperspectivePerceptron8KB'
-    cxx_class = 'gem5::MultiperspectivePerceptron8KB'
+    cxx_class = 'gem5::branch_prediction::MultiperspectivePerceptron8KB'
     cxx_header = 'cpu/pred/multiperspective_perceptron_8KB.hh'
 
     budgetbits = 8192 * 8 + 2048
@@ -569,7 +573,7 @@ class MultiperspectivePerceptron8KB(MultiperspectivePerceptron):
 
 class MultiperspectivePerceptron64KB(MultiperspectivePerceptron):
     type = 'MultiperspectivePerceptron64KB'
-    cxx_class = 'gem5::MultiperspectivePerceptron64KB'
+    cxx_class = 'gem5::branch_prediction::MultiperspectivePerceptron64KB'
     cxx_header = 'cpu/pred/multiperspective_perceptron_64KB.hh'
 
     budgetbits = 65536 * 8 + 2048
@@ -581,7 +585,7 @@ class MultiperspectivePerceptron64KB(MultiperspectivePerceptron):
 
 class MPP_TAGE(TAGEBase):
     type = 'MPP_TAGE'
-    cxx_class = 'gem5::MPP_TAGE'
+    cxx_class = 'gem5::branch_prediction::MPP_TAGE'
     cxx_header = 'cpu/pred/multiperspective_perceptron_tage.hh'
 
     nHistoryTables = 15
@@ -603,7 +607,7 @@ class MPP_TAGE(TAGEBase):
 
 class MPP_LoopPredictor(LoopPredictor):
     type = 'MPP_LoopPredictor'
-    cxx_class = 'gem5::MPP_LoopPredictor'
+    cxx_class = 'gem5::branch_prediction::MPP_LoopPredictor'
     cxx_header = 'cpu/pred/multiperspective_perceptron_tage.hh'
 
     useDirectionBit = True
@@ -621,7 +625,7 @@ class MPP_LoopPredictor(LoopPredictor):
 
 class MPP_StatisticalCorrector(StatisticalCorrector):
     type = 'MPP_StatisticalCorrector'
-    cxx_class = 'gem5::MPP_StatisticalCorrector'
+    cxx_class = 'gem5::branch_prediction::MPP_StatisticalCorrector'
     cxx_header = 'cpu/pred/multiperspective_perceptron_tage.hh'
     abstract = True
 
@@ -657,7 +661,7 @@ class MPP_StatisticalCorrector(StatisticalCorrector):
 
 class MultiperspectivePerceptronTAGE(MultiperspectivePerceptron):
     type = 'MultiperspectivePerceptronTAGE'
-    cxx_class = 'gem5::MultiperspectivePerceptronTAGE'
+    cxx_class = 'gem5::branch_prediction::MultiperspectivePerceptronTAGE'
     cxx_header = 'cpu/pred/multiperspective_perceptron_tage.hh'
     abstract = True
 
@@ -679,7 +683,7 @@ class MultiperspectivePerceptronTAGE(MultiperspectivePerceptron):
 
 class MPP_StatisticalCorrector_64KB(MPP_StatisticalCorrector):
     type = 'MPP_StatisticalCorrector_64KB'
-    cxx_class = 'gem5::MPP_StatisticalCorrector_64KB'
+    cxx_class = 'gem5::branch_prediction::MPP_StatisticalCorrector_64KB'
     cxx_header = 'cpu/pred/multiperspective_perceptron_tage_64KB.hh'
 
     logBias = 8
@@ -703,7 +707,7 @@ class MPP_StatisticalCorrector_64KB(MPP_StatisticalCorrector):
 
 class MultiperspectivePerceptronTAGE64KB(MultiperspectivePerceptronTAGE):
     type = 'MultiperspectivePerceptronTAGE64KB'
-    cxx_class = 'gem5::MultiperspectivePerceptronTAGE64KB'
+    cxx_class = 'gem5::branch_prediction::MultiperspectivePerceptronTAGE64KB'
     cxx_header = 'cpu/pred/multiperspective_perceptron_tage_64KB.hh'
 
     budgetbits = 65536 * 8 + 2048
@@ -714,7 +718,7 @@ class MultiperspectivePerceptronTAGE64KB(MultiperspectivePerceptronTAGE):
 
 class MPP_TAGE_8KB(MPP_TAGE):
     type = 'MPP_TAGE_8KB'
-    cxx_class = 'gem5::MPP_TAGE_8KB'
+    cxx_class = 'gem5::branch_prediction::MPP_TAGE_8KB'
     cxx_header = 'cpu/pred/multiperspective_perceptron_tage_8KB.hh'
 
     nHistoryTables = 10
@@ -724,7 +728,7 @@ class MPP_TAGE_8KB(MPP_TAGE):
 
 class MPP_LoopPredictor_8KB(MPP_LoopPredictor):
     type = 'MPP_LoopPredictor_8KB'
-    cxx_class = 'gem5::MPP_LoopPredictor_8KB'
+    cxx_class = 'gem5::branch_prediction::MPP_LoopPredictor_8KB'
     cxx_header = 'cpu/pred/multiperspective_perceptron_tage_8KB.hh'
 
     loopTableIterBits = 10
@@ -732,7 +736,7 @@ class MPP_LoopPredictor_8KB(MPP_LoopPredictor):
 
 class MPP_StatisticalCorrector_8KB(MPP_StatisticalCorrector):
     type = 'MPP_StatisticalCorrector_8KB'
-    cxx_class = 'gem5::MPP_StatisticalCorrector_8KB'
+    cxx_class = 'gem5::branch_prediction::MPP_StatisticalCorrector_8KB'
     cxx_header = 'cpu/pred/multiperspective_perceptron_tage_8KB.hh'
 
     logBias = 7
@@ -749,7 +753,7 @@ class MPP_StatisticalCorrector_8KB(MPP_StatisticalCorrector):
 
 class MultiperspectivePerceptronTAGE8KB(MultiperspectivePerceptronTAGE):
     type = 'MultiperspectivePerceptronTAGE8KB'
-    cxx_class = 'gem5::MultiperspectivePerceptronTAGE8KB'
+    cxx_class = 'gem5::branch_prediction::MultiperspectivePerceptronTAGE8KB'
     cxx_header = 'cpu/pred/multiperspective_perceptron_tage_8KB.hh'
 
     budgetbits = 8192 * 8 + 2048

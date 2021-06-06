@@ -52,6 +52,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 class TAGE_SC_L_TAGE : public TAGEBase
 {
     const unsigned firstLongTagTable;
@@ -188,6 +191,7 @@ class TAGE_SC_L: public LTAGE
 
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_TAGE_SC_L_HH__

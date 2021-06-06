@@ -48,6 +48,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 bool
 TAGE_SC_L_LoopPredictor::calcConf(int index) const
 {
@@ -462,4 +465,5 @@ TAGE_SC_L::update(ThreadID tid, Addr branch_pc, bool taken, void *bp_history,
     delete bi;
 }
 
+} // namespace branch_prediction
 } // namespace gem5

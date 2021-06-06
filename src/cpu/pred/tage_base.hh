@@ -59,6 +59,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 class TAGEBase : public SimObject
 {
   public:
@@ -508,6 +511,7 @@ class TAGEBase : public SimObject
     } stats;
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif // __CPU_PRED_TAGE_BASE_HH__

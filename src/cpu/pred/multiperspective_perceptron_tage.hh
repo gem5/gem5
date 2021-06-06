@@ -51,6 +51,9 @@
 namespace gem5
 {
 
+namespace branch_prediction
+{
+
 class MPP_TAGE : public TAGEBase
 {
     std::vector<unsigned int> tunedHistoryLengths;
@@ -242,6 +245,7 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
 
 };
 
+} // namespace branch_prediction
 } // namespace gem5
 
 #endif//__CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_TAGE_HH__
