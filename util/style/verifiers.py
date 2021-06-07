@@ -361,8 +361,10 @@ class SortedIncludes(Verifier):
 
         if modified:
             if not silent:
-                self.ui.write("invalid sorting of includes in %s\n"
-                                % (filename))
+                self.ui.write("invalid sorting of includes in %s. Note: If "
+                              "there is more than one empty line under the "
+                              "#include region, please reduce it to one.\n"
+                              % (filename))
                 if self.ui.verbose:
                     for start, end in modified.regions:
                         self.ui.write("bad region [%d, %d)\n" % (start, end))
