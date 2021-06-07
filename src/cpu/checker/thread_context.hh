@@ -497,7 +497,7 @@ class CheckerThreadContext : public ThreadContext
     BaseHTMCheckpointPtr&
     getHtmCheckpointPtr() override
     {
-        panic("function not implemented");
+        return actualTC->getHtmCheckpointPtr();
     }
 
     void

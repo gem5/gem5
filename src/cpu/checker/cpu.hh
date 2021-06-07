@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016-2018, 2020 ARM Limited
+ * Copyright (c) 2011, 2016-2018, 2020-2021 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -380,15 +380,14 @@ class CheckerCPU : public BaseCPU, public ExecContext
     bool
     inHtmTransactionalState() const override
     {
-        panic("not yet supported!");
-        return false;
+        return (getHtmTransactionalDepth() > 0);
     }
 
     uint64_t
     getHtmTransactionalDepth() const override
     {
-        panic("not yet supported!");
-        return 0;
+        assert(thread->htmTransactionStarts >= thread->htmTransactionStops);
+        return (thread->htmTransactionStarts - thread->htmTransactionStops);
     }
 
     TheISA::PCState pcState() const override { return thread->pcState(); }
