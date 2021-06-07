@@ -178,7 +178,7 @@ class O3CPU(BaseCPU):
 
     def addCheckerCpu(self):
         if buildEnv['TARGET_ISA'] in ['arm']:
-            from m5.objects.ArmTLB import ArmMMU
+            from m5.objects.ArmMMU import ArmMMU
 
             self.checker = O3Checker(workload=self.workload,
                                      exitOnError=False,
