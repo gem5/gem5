@@ -56,6 +56,7 @@ void
 CheckerCPU::init()
 {
     requestorId = systemPtr->getRequestorId(this);
+    tc->getIsaPtr()->setThreadContext(tc);
 }
 
 CheckerCPU::CheckerCPU(const Params &p)
