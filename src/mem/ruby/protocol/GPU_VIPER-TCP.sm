@@ -362,7 +362,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
 
   action(norl_issueRdBlkOrloadDone, "norl", desc="local load done") {
     peek(mandatoryQueue_in, RubyRequest){
-      if (cache_entry.writeMask.cmpMask(in_msg.writeMask)) {
+      if (cache_entry.writeMask.containsMask(in_msg.writeMask)) {
           if (use_seq_not_coal) {
             sequencer.readCallback(address, cache_entry.DataBlk, false, MachineType:L1Cache);
           } else {

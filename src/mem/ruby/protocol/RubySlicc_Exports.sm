@@ -54,7 +54,7 @@ external_type(RequestPtr, primitive="yes", default="nullptr");
 
 structure(WriteMask, external="yes", desc="...") {
   void clear();
-  bool cmpMask(WriteMask);
+  bool containsMask(WriteMask);
   bool isEmpty();
   bool isFull();
   bool isOverlap(WriteMask);

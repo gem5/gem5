@@ -215,7 +215,7 @@ void functionalRead(Addr addr, Packet *pkt, WriteMask &mask) {
 
   WriteMask test_mask := mask;
   test_mask.orMask(read_mask);
-  if ((mask.cmpMask(test_mask) == false) || dirty) {
+  if ((mask.containsMask(test_mask) == false) || dirty) {
     if (from_tbe) {
       if(testAndReadMask(addr, tbe.dataBlk, read_mask, pkt)) {
         DPRINTF(RubySlicc, "functionalRead tbe %x %s dirty=%d %s %s\n", addr, tbe.dataBlk, tbe.dataDirty, read_mask, mask);

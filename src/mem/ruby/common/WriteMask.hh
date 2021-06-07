@@ -126,7 +126,7 @@ class WriteMask
     }
 
     bool
-    cmpMask(const WriteMask &readMask) const
+    containsMask(const WriteMask &readMask) const
     {
         bool tmp = true;
         assert(mSize == readMask.mSize);
