@@ -221,7 +221,7 @@ class BaseCPU(ClockedObject):
             # Checker doesn't need its own tlb caches because it does
             # functional accesses only
             if self.checker != NULL:
-                self._cached_ports += [ ".".join("checker", port) \
+                self._cached_ports += [ "checker." + port
                     for port in ArchMMU.walkerPorts() ]
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc=None, dwc=None,
