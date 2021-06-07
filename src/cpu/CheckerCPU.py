@@ -27,6 +27,7 @@
 from m5.params import *
 
 from m5.objects.BaseCPU import BaseCPU
+from m5.SimObject import SimObject
 
 class CheckerCPU(BaseCPU):
     type = 'CheckerCPU'
@@ -37,3 +38,9 @@ class CheckerCPU(BaseCPU):
         "Update the checker with the main CPU's state on an error")
     warnOnlyOnLoadError = Param.Bool(True,
         "If a load result is incorrect, only print a warning and do not exit")
+
+    def generateDeviceTree(self, state):
+        # The CheckerCPU is not a real CPU and shouldn't generate a DTB
+        # node. This is why we are skipping the BaseCPU implementation
+        # and we are calling the base SimObject one.
+        return SimObject.generateDeviceTree(self, state)
