@@ -651,13 +651,21 @@ RubySystem::functionalRead(PacketPtr pkt)
     for (auto ctrl : ctrl_ro)
         ctrl->functionalRead(line_address, pkt, bytes);
 
-    ctrl_bs->functionalRead(line_address, pkt, bytes);
+    if (ctrl_bs)
+        ctrl_bs->functionalRead(line_address, pkt, bytes);
 
     // if there is any busy controller or bytes still not set, then a partial
     // and/or dirty copy of the line might be in a message buffer or the
     // network
     if (!ctrl_busy.empty() || !bytes.isFull()) {
-        DPRINTF(RubySystem, "Reading from busy controllers and network\n");
+        DPRINTF(RubySystem, "Reading from remaining controllers, "
+                            "buffers and networks\n");
+        if (ctrl_rw != nullptr)
+            ctrl_rw->functionalReadBuffers(pkt, bytes);
+        for (auto ctrl : ctrl_ro)
+            ctrl->functionalReadBuffers(pkt, bytes);
+        if (ctrl_bs != nullptr)
+            ctrl_bs->functionalReadBuffers(pkt, bytes);
         for (auto ctrl : ctrl_busy) {
             ctrl->functionalRead(line_address, pkt, bytes);
             ctrl->functionalReadBuffers(pkt, bytes);
