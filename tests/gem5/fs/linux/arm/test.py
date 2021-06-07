@@ -70,6 +70,7 @@ arm_fs_long_tests = [
     'realview-switcheroo-o3',
     'realview-switcheroo-full',
     'realview64-o3',
+    'realview64-o3-checker',
     'realview64-o3-dual',
     'realview64-minor',
     'realview64-minor-dual',
@@ -80,8 +81,8 @@ arm_fs_long_tests = [
     'realview64-simple-timing-dual-ruby',
 
 
-    # The following tests fail. These are recorded in the GEM5-640 and GEM5-364
-    # Jira issues.
+    # The following tests fail. These are recorded in the GEM5-640
+    # Jira issue.
     #
     # https://gem5.atlassian.net/browse/GEM5-640
     #'realview-simple-atomic-dual',
@@ -89,10 +90,6 @@ arm_fs_long_tests = [
     #'realview-o3-dual',
     #'realview-minor-dual',
     #'realview-simple-timing-dual-ruby',
-    #
-    # https://gem5.atlassian.net/browse/GEM5-364
-    #'realview-o3-checker',
-    #'realview64-o3-checker',
 ]
 
 tarball = 'aarch-system-20210904.tar.bz2'
