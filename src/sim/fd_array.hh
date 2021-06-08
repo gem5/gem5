@@ -40,8 +40,9 @@
 #include <string>
 
 #include "sim/fd_entry.hh"
+#include "sim/serialize.hh"
 
-class FDArray
+class FDArray : public Serializable
 {
   public:
     /**
@@ -110,6 +111,12 @@ class FDArray
      * @param tgt_fd Use target file descriptors to index the array.
      */
     int closeFDEntry(int tgt_fd);
+
+    /*
+     * Serialization methods for file descriptors
+     */
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   private:
     /**

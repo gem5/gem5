@@ -887,6 +887,8 @@ openatFunc(SyscallDesc *desc, ThreadContext *tc,
      * process to act as a handle for the opened file.
      */
     auto ffdp = std::make_shared<FileFDEntry>(sim_fd, host_flags, path, 0);
+    // Record the file mode for checkpoint restoring
+    ffdp->setFileMode(mode);
     int tgt_fd = p->fds->allocFD(ffdp);
     DPRINTF_SYSCALL(Verbose, "%s: sim_fd[%d], target_fd[%d] -> path:%s\n"
                     "(inferred from:%s)\n", desc->name(),

@@ -298,7 +298,7 @@ FDArray::openFile(std::string const& filename, int flags, mode_t mode) const
     int sim_fd = open(filename.c_str(), flags, mode);
     if (sim_fd != -1)
         return sim_fd;
-    fatal("Unable to open %s with mode %O", filename, mode);
+    fatal("Unable to open %s with mode %d", filename, mode);
 }
 
 int
@@ -347,4 +347,85 @@ FDArray::closeFDEntry(int tgt_fd)
         _fdArray[tgt_fd] = nullptr;
 
     return status;
+}
+
+void
+FDArray::serialize(CheckpointOut &cp) const {
+    ScopedCheckpointSection sec(cp, "fdarray");
+    paramOut(cp, "size", _fdArray.size());
+    for (int tgt_fd = 0; tgt_fd < _fdArray.size(); tgt_fd++) {
+        auto fd = _fdArray[tgt_fd];
+        ScopedCheckpointSection sec(cp, csprintf("Entry%d", tgt_fd));
+        if (!fd) {
+            paramOut(cp, "class", FDEntry::FDClass::fd_null);
+            continue;
+        }
+        paramOut(cp, "class", fd->getClass());
+        fd->serialize(cp);
+    }
+}
+
+void
+FDArray::unserialize(CheckpointIn &cp) {
+    ScopedCheckpointSection sec(cp, "fdarray");
+    uint64_t size;
+    paramIn(cp, "size", size);
+    assert(_fdArray.size() == size &&
+            "FDArray sizes do not match at unserialize!");
+
+    for (int tgt_fd = 0; tgt_fd < _fdArray.size(); tgt_fd++) {
+        if (tgt_fd == STDIN_FILENO || tgt_fd == STDOUT_FILENO ||
+                tgt_fd == STDERR_FILENO)
+            continue;
+        ScopedCheckpointSection sec(cp, csprintf("Entry%d", tgt_fd));
+        FDEntry::FDClass fd_class;
+        paramIn(cp, "class", fd_class);
+        std::shared_ptr<FDEntry> fdep;
+
+        switch (fd_class) {
+            case FDEntry::FDClass::fd_base:
+                panic("Abstract fd entry was serialized");
+                break;
+            case FDEntry::FDClass::fd_hb:
+                fdep = std::make_shared<HBFDEntry>(0, 0);
+                break;
+            case FDEntry::FDClass::fd_file:
+                fdep = std::make_shared<FileFDEntry>(0, 0, "", 0, 00);
+                break;
+            case FDEntry::FDClass::fd_device:
+                fdep = std::make_shared<DeviceFDEntry>(nullptr, "");
+                break;
+            case FDEntry::FDClass::fd_pipe:
+                fdep = std::make_shared<PipeFDEntry>(
+                        0, 0, PipeFDEntry::EndType::read);
+                break;
+            case FDEntry::FDClass::fd_socket:
+                fdep = std::make_shared<SocketFDEntry>(0, 0, 0, 0);
+                break;
+            case FDEntry::FDClass::fd_null:
+                continue;
+            default:
+                panic("Unrecognized fd class");
+                break;
+        }
+
+        fdep->unserialize(cp);
+
+        auto this_ffd = std::dynamic_pointer_cast<FileFDEntry>(fdep);
+        if (!this_ffd)
+            continue;
+        setFDEntry(tgt_fd, fdep);
+
+        mode_t mode = this_ffd->getFileMode();
+        std::string const& path = this_ffd->getFileName();
+        int flags = this_ffd->getFlags();
+
+        // Re-open the file and assign a new sim_fd
+        int sim_fd = openFile(path, flags, mode);
+        this_ffd->setSimFD(sim_fd);
+
+        // Restore the file offset to the proper value
+        uint64_t file_offset = this_ffd->getFileOffset();
+        lseek(sim_fd, file_offset, SEEK_SET);
+    }
 }

@@ -356,12 +356,14 @@ Process::serialize(CheckpointOut &cp) const
 {
     memState->serialize(cp);
     pTable->serialize(cp);
+    fds->serialize(cp);
+
     /**
-     * Checkpoints for file descriptors currently do not work. Need to
-     * come back and fix them at a later date.
+     * Checkpoints for pipes, device drivers or sockets currently
+     * do not work. Need to come back and fix them at a later date.
      */
 
-    warn("Checkpoints for file descriptors currently do not work.");
+    warn("Checkpoints for pipes, device drivers and sockets do not work.");
 }
 
 void
@@ -369,11 +371,12 @@ Process::unserialize(CheckpointIn &cp)
 {
     memState->unserialize(cp);
     pTable->unserialize(cp);
+    fds->unserialize(cp);
     /**
-     * Checkpoints for file descriptors currently do not work. Need to
-     * come back and fix them at a later date.
+     * Checkpoints for pipes, device drivers or sockets currently
+     * do not work. Need to come back and fix them at a later date.
      */
-    warn("Checkpoints for file descriptors currently do not work.");
+    warn("Checkpoints for pipes, device drivers and sockets do not work.");
     // The above returns a bool so that you could do something if you don't
     // find the param in the checkpoint if you wanted to, like set a default
     // but in this case we'll just stick with the instantiated value if not
