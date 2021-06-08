@@ -96,8 +96,7 @@ SelfDebug::testBreakPoints(ThreadContext *tc, Addr vaddr)
         if (p.enable && p.isActive(pc) &&(!to32 || !p.onUse)) {
             const DBGBCR ctr = p.getControlReg(tc);
             if (p.isEnabled(tc, el, ctr.hmc, ctr.ssc, ctr.pmc)) {
-                bool debug = p.test(tc, pc, el, ctr, false);
-                if (debug){
+                if (p.test(tc, pc, el, ctr, false)) {
                     if (to32)
                         p.onUse = true;
                     return triggerException(tc, pc);
@@ -138,8 +137,7 @@ SelfDebug::testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
     for (auto &p: arWatchPoints){
         idxtmp ++;
         if (p.enable) {
-            bool debug = p.test(tc, vaddr, el, write, atomic, size);
-            if (debug){
+            if (p.test(tc, vaddr, el, write, atomic, size)) {
                 return triggerWatchpointException(tc, vaddr, write, cm);
             }
         }
@@ -212,12 +210,8 @@ SelfDebug::isDebugEnabledForEL32(ThreadContext *tc, ExceptionLevel el,
 bool
 BrkPoint::testLinkedBk(ThreadContext *tc, Addr vaddr, ExceptionLevel el)
 {
-    bool debug = false;
     const DBGBCR ctr = getControlReg(tc);
-    if ((ctr.bt & 0x1) && enable) {
-        debug = test(tc, vaddr, el, ctr, true);
-    }
-    return debug;
+    return ((ctr.bt & 0x1) && enable) && test(tc, vaddr, el, ctr, true);
 }
 
 bool
@@ -730,12 +724,12 @@ SelfDebug::testVectorCatch(ThreadContext *tc, Addr addr,
         return NoFault;
 
     ExceptionLevel el = (ExceptionLevel) currEL(tc);
-    bool debug;
+    bool do_debug;
     if (fault == nullptr)
-        debug = vcExcpt->addressMatching(tc, addr, el);
+        do_debug = vcExcpt->addressMatching(tc, addr, el);
     else
-        debug = vcExcpt->exceptionTrapping(tc, el, fault);
-    if (debug) {
+        do_debug = vcExcpt->exceptionTrapping(tc, el, fault);
+    if (do_debug) {
         if (enableTdeTge) {
             return std::make_shared<HypervisorTrap>(0, 0x22,
                                         EC_PREFETCH_ABORT_TO_HYP);

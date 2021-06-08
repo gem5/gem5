@@ -456,7 +456,7 @@ class AbortFault : public ArmFaultVals<T>
     bool stage2;
     bool s1ptw;
     ArmFault::TranMethod tranMethod;
-    ArmFault::DebugType debug;
+    ArmFault::DebugType debugType;
 
   public:
     AbortFault(Addr _faultAddr, bool _write, TlbEntry::DomainType _domain,
@@ -465,7 +465,8 @@ class AbortFault : public ArmFaultVals<T>
                ArmFault::DebugType _debug = ArmFault::NODEBUG) :
         faultAddr(_faultAddr), OVAddr(0), write(_write),
         domain(_domain), source(_source), srcEncoded(0),
-        stage2(_stage2), s1ptw(false), tranMethod(_tranMethod), debug(_debug)
+        stage2(_stage2), s1ptw(false), tranMethod(_tranMethod),
+        debugType(_debug)
     {}
 
     bool getFaultVAddr(Addr &va) const override;

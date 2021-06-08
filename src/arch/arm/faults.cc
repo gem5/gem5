@@ -1103,16 +1103,16 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         } else if (stage2) {
             tc->setMiscReg(MISCREG_HPFAR, (faultAddr >> 8) & ~0xf);
             tc->setMiscReg(T::HFarIndex,  OVAddr);
-        } else if (debug > ArmFault::NODEBUG) {
+        } else if (debugType > ArmFault::NODEBUG) {
             DBGDS32 Rext =  tc->readMiscReg(MISCREG_DBGDSCRext);
             tc->setMiscReg(T::FarIndex, faultAddr);
-            if (debug == ArmFault::BRKPOINT){
+            if (debugType == ArmFault::BRKPOINT){
                 Rext.moe = 0x1;
-            } else if (debug == ArmFault::VECTORCATCH){
+            } else if (debugType == ArmFault::VECTORCATCH){
                 Rext.moe = 0x5;
-            } else if (debug > ArmFault::VECTORCATCH) {
+            } else if (debugType > ArmFault::VECTORCATCH) {
                 Rext.moe = 0xa;
-                fsr.cm = (debug == ArmFault::WPOINT_CM)? 1 : 0;
+                fsr.cm = (debugType == ArmFault::WPOINT_CM)? 1 : 0;
             }
 
             tc->setMiscReg(T::FsrIndex, fsr);
