@@ -198,7 +198,7 @@ void
 VirtIO9PBase::dumpMsg(const P9MsgHeader &header, const uint8_t *data, size_t size)
 {
 #ifndef NDEBUG
-    if (!Debug::VIO9P)
+    if (!debug::VIO9P)
         return;
 
     const P9MsgInfoMap::const_iterator it_msg(p9_msg_info.find(header.type));
@@ -390,7 +390,7 @@ VirtIO9PDiod::startDiod()
 
         // Start diod
         execlp(p.diod.c_str(), p.diod.c_str(),
-               "-d", Debug::VIO9P ? "1" : "0", // show debug output
+               "-d", debug::VIO9P ? "1" : "0", // show debug output
                "-f", // start in foreground
                "-r", diod_rfd_s.c_str(), // setup read FD
                "-w", diod_wfd_s.c_str(), // setup write FD

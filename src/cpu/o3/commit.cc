@@ -1264,7 +1264,7 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
         if (head_inst->traceData) {
             // We ignore ReExecution "faults" here as they are not real
             // (architectural) faults but signal flush/replays.
-            if (Debug::ExecFaulting
+            if (debug::ExecFaulting
                 && dynamic_cast<ReExec*>(inst_fault.get()) == nullptr) {
 
                 head_inst->traceData->setFaulting(true);
@@ -1314,7 +1314,7 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     rob->retireHead(tid);
 
 #if TRACING_ON
-    if (Debug::O3PipeView) {
+    if (debug::O3PipeView) {
         head_inst->commitTick = curTick() - head_inst->fetchTick;
     }
 #endif

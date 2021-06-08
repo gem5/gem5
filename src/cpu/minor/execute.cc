@@ -783,7 +783,7 @@ Execute::issue(ThreadID thread_id)
         if (issued) {
             /* Generate MinorTrace's MinorInst lines.  Do this at commit
              *  to allow better instruction annotation? */
-            if (Debug::MinorTrace && !inst->isBubble()) {
+            if (debug::MinorTrace && !inst->isBubble()) {
                 inst->minorTraceInst(*this,
                         cpu.threads[0]->getIsaPtr()->regClasses());
             }
@@ -989,7 +989,7 @@ Execute::commitInst(MinorDynInstPtr inst, bool early_memory_issue,
 
         if (fault != NoFault) {
             if (inst->traceData) {
-                if (Debug::ExecFaulting) {
+                if (debug::ExecFaulting) {
                     inst->traceData->setFaulting(true);
                 } else {
                     delete inst->traceData;
@@ -1393,7 +1393,7 @@ Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
 
             /* Don't show no cost instructions as having taken a commit
              *  slot */
-            if (Debug::MinorTrace && !is_no_cost_inst)
+            if (debug::MinorTrace && !is_no_cost_inst)
                 ex_info.instsBeingCommitted.insts[num_insts_committed] = inst;
 
             if (!is_no_cost_inst)

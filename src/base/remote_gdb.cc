@@ -691,8 +691,8 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
     proxy.readBlob(vaddr, data, size);
 
 #if TRACING_ON
-    if (Debug::GDBRead) {
-        if (Debug::GDBExtra) {
+    if (debug::GDBRead) {
+        if (debug::GDBExtra) {
             char buf[1024];
             mem2hex(buf, data, size);
             DPRINTFNR(": %s\n", buf);
@@ -708,9 +708,9 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 bool
 BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
 {
-    if (Debug::GDBWrite) {
+    if (debug::GDBWrite) {
         DPRINTFN("write: addr=%#x, size=%d", vaddr, size);
-        if (Debug::GDBExtra) {
+        if (debug::GDBExtra) {
             char buf[1024];
             mem2hex(buf, data, size);
             DPRINTFNR(": %s\n", buf);

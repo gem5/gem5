@@ -36,15 +36,15 @@ using namespace gem5;
 /** Test assignment of names and descriptions. */
 TEST(DebugFlagTest, NameDesc)
 {
-    Debug::SimpleFlag flag_a("FlagNameDescTestKidA", "Kid A");
+    debug::SimpleFlag flag_a("FlagNameDescTestKidA", "Kid A");
     EXPECT_EQ("FlagNameDescTestKidA", flag_a.name());
     EXPECT_EQ("Kid A", flag_a.desc());
 
-    Debug::SimpleFlag flag_b("FlagNameDescTestKidB", "Kid B");
+    debug::SimpleFlag flag_b("FlagNameDescTestKidB", "Kid B");
     EXPECT_EQ("FlagNameDescTestKidB", flag_b.name());
     EXPECT_EQ("Kid B", flag_b.desc());
 
-    Debug::CompoundFlag compound_flag("FlagNameDescTest", "Compound Flag",
+    debug::CompoundFlag compound_flag("FlagNameDescTest", "Compound Flag",
         {&flag_a, &flag_b});
     EXPECT_EQ("FlagNameDescTest", compound_flag.name());
     EXPECT_EQ("Compound Flag", compound_flag.desc());
@@ -53,9 +53,9 @@ TEST(DebugFlagTest, NameDesc)
 /** Test that names are unique. */
 TEST(DebugFlagDeathTest, UniqueNames)
 {
-    Debug::SimpleFlag flag("FlagUniqueNamesTest", "A");
+    debug::SimpleFlag flag("FlagUniqueNamesTest", "A");
     gtestLogOutput.str("");
-    EXPECT_ANY_THROW(Debug::SimpleFlag("FlagUniqueNamesTest", "B"));
+    EXPECT_ANY_THROW(debug::SimpleFlag("FlagUniqueNamesTest", "B"));
     const std::string expected = "panic: panic condition !result.second "
         "occurred: Flag FlagUniqueNamesTest already defined!\n";
     std::string actual = gtestLogOutput.str();
@@ -65,19 +65,19 @@ TEST(DebugFlagDeathTest, UniqueNames)
 /** Test format attribute. */
 TEST(DebugFlagTest, IsFormat)
 {
-    Debug::SimpleFlag flag_a("FlagIsFormatTestA", "", true);
+    debug::SimpleFlag flag_a("FlagIsFormatTestA", "", true);
     EXPECT_TRUE(flag_a.isFormat());
-    Debug::SimpleFlag flag_b("FlagIsFormatTestB", "", false);
+    debug::SimpleFlag flag_b("FlagIsFormatTestB", "", false);
     EXPECT_FALSE(flag_b.isFormat());
-    Debug::SimpleFlag flag_c("FlagIsFormatTestC", "");
+    debug::SimpleFlag flag_c("FlagIsFormatTestC", "");
     EXPECT_FALSE(flag_c.isFormat());
 }
 
 /** Test enabling and disabling simple flags, as well as the global enabler. */
 TEST(DebugSimpleFlagTest, Enabled)
 {
-    Debug::Flag::globalDisable();
-    Debug::SimpleFlag flag("SimpleFlagEnabledTest", "");
+    debug::Flag::globalDisable();
+    debug::SimpleFlag flag("SimpleFlagEnabledTest", "");
 
     // By default flags are initialized disabled
     ASSERT_FALSE(flag.tracing());
@@ -85,13 +85,13 @@ TEST(DebugSimpleFlagTest, Enabled)
     // Flags must be globally enabled before individual flags are enabled
     flag.enable();
     ASSERT_FALSE(flag.tracing());
-    Debug::Flag::globalEnable();
+    debug::Flag::globalEnable();
     ASSERT_TRUE(!TRACING_ON || flag.tracing());
 
     // Verify that the global enabler works
-    Debug::Flag::globalDisable();
+    debug::Flag::globalDisable();
     ASSERT_FALSE(flag.tracing());
-    Debug::Flag::globalEnable();
+    debug::Flag::globalEnable();
     ASSERT_TRUE(!TRACING_ON || flag.tracing());
 
     // Test disabling the flag with global enabled
@@ -105,10 +105,10 @@ TEST(DebugSimpleFlagTest, Enabled)
  */
 TEST(DebugCompoundFlagTest, Enabled)
 {
-    Debug::Flag::globalDisable();
-    Debug::SimpleFlag flag_a("CompoundFlagEnabledTestKidA", "");
-    Debug::SimpleFlag flag_b("CompoundFlagEnabledTestKidB", "");
-    Debug::CompoundFlag flag("CompoundFlagEnabledTest", "",
+    debug::Flag::globalDisable();
+    debug::SimpleFlag flag_a("CompoundFlagEnabledTestKidA", "");
+    debug::SimpleFlag flag_b("CompoundFlagEnabledTestKidB", "");
+    debug::CompoundFlag flag("CompoundFlagEnabledTest", "",
         {&flag_a, &flag_b});
 
     // By default flags are initialized disabled
@@ -119,7 +119,7 @@ TEST(DebugCompoundFlagTest, Enabled)
     ASSERT_FALSE(flag_a.tracing());
     ASSERT_FALSE(flag_b.tracing());
     ASSERT_FALSE(flag.tracing());
-    Debug::Flag::globalEnable();
+    debug::Flag::globalEnable();
     for (auto &kid : flag.kids()) {
         ASSERT_TRUE(!TRACING_ON || kid->tracing());
     }
@@ -139,8 +139,8 @@ TEST(DebugCompoundFlagTest, Enabled)
 /** Test that the conversion operator matches the enablement status. */
 TEST(DebugFlagTest, ConversionOperator)
 {
-    Debug::Flag::globalEnable();
-    Debug::SimpleFlag flag("FlagConversionOperatorTest", "");
+    debug::Flag::globalEnable();
+    debug::SimpleFlag flag("FlagConversionOperatorTest", "");
 
     ASSERT_EQ(flag, flag.tracing());
     flag.enable();
@@ -154,10 +154,10 @@ TEST(DebugFlagTest, ConversionOperator)
  */
 TEST(DebugCompoundFlagTest, EnabledKids)
 {
-    Debug::Flag::globalEnable();
-    Debug::SimpleFlag flag_a("CompoundFlagEnabledKidsTestKidA", "");
-    Debug::SimpleFlag flag_b("CompoundFlagEnabledKidsTestKidB", "");
-    Debug::CompoundFlag flag("CompoundFlagEnabledKidsTest", "",
+    debug::Flag::globalEnable();
+    debug::SimpleFlag flag_a("CompoundFlagEnabledKidsTestKidA", "");
+    debug::SimpleFlag flag_b("CompoundFlagEnabledKidsTestKidB", "");
+    debug::CompoundFlag flag("CompoundFlagEnabledKidsTest", "",
         {&flag_a, &flag_b});
 
     // Test enabling only flag A
@@ -187,58 +187,58 @@ TEST(DebugCompoundFlagTest, EnabledKids)
 /** Search for existent and non-existent flags. */
 TEST(DebugFlagTest, FindFlag)
 {
-    Debug::Flag::globalEnable();
-    Debug::SimpleFlag flag_a("FlagFindFlagTestA", "");
-    Debug::SimpleFlag flag_b("FlagFindFlagTestB", "");
+    debug::Flag::globalEnable();
+    debug::SimpleFlag flag_a("FlagFindFlagTestA", "");
+    debug::SimpleFlag flag_b("FlagFindFlagTestB", "");
 
     // Enable the found flags and verify that the original flags are
     // enabled too
-    Debug::Flag *flag;
-    EXPECT_TRUE(flag = Debug::findFlag("FlagFindFlagTestA"));
+    debug::Flag *flag;
+    EXPECT_TRUE(flag = debug::findFlag("FlagFindFlagTestA"));
     ASSERT_FALSE(flag_a.tracing());
     flag->enable();
     ASSERT_TRUE(!TRACING_ON || flag_a.tracing());
-    EXPECT_TRUE(flag = Debug::findFlag("FlagFindFlagTestB"));
+    EXPECT_TRUE(flag = debug::findFlag("FlagFindFlagTestB"));
     ASSERT_FALSE(flag_b.tracing());
     flag->enable();
     ASSERT_TRUE(!TRACING_ON || flag_b.tracing());
 
     // Search for a non-existent flag
-    EXPECT_FALSE(Debug::findFlag("FlagFindFlagTestC"));
+    EXPECT_FALSE(debug::findFlag("FlagFindFlagTestC"));
 }
 
 /** Test changing flag enabled. */
 TEST(DebugFlagTest, ChangeFlag)
 {
-    Debug::Flag::globalEnable();
-    Debug::SimpleFlag flag_a("FlagChangeFlagTestA", "");
-    Debug::SimpleFlag flag_b("FlagChangeFlagTestB", "");
+    debug::Flag::globalEnable();
+    debug::SimpleFlag flag_a("FlagChangeFlagTestA", "");
+    debug::SimpleFlag flag_b("FlagChangeFlagTestB", "");
 
     // Enable the found flags and verify that the original flags are
     // enabled too
     ASSERT_FALSE(flag_a.tracing());
-    EXPECT_TRUE(Debug::changeFlag("FlagChangeFlagTestA", true));
+    EXPECT_TRUE(debug::changeFlag("FlagChangeFlagTestA", true));
     ASSERT_TRUE(!TRACING_ON || flag_a.tracing());
-    EXPECT_TRUE(Debug::changeFlag("FlagChangeFlagTestA", false));
+    EXPECT_TRUE(debug::changeFlag("FlagChangeFlagTestA", false));
     ASSERT_FALSE(flag_a.tracing());
 
     // Disable and enable a flag
     ASSERT_FALSE(flag_b.tracing());
-    EXPECT_TRUE(Debug::changeFlag("FlagChangeFlagTestB", false));
+    EXPECT_TRUE(debug::changeFlag("FlagChangeFlagTestB", false));
     ASSERT_FALSE(flag_b.tracing());
-    EXPECT_TRUE(Debug::changeFlag("FlagChangeFlagTestB", true));
+    EXPECT_TRUE(debug::changeFlag("FlagChangeFlagTestB", true));
     ASSERT_TRUE(!TRACING_ON || flag_b.tracing());
 
     // Change a non-existent flag
-    ASSERT_FALSE(Debug::changeFlag("FlagChangeFlagTestC", true));
+    ASSERT_FALSE(debug::changeFlag("FlagChangeFlagTestC", true));
 }
 
 /** Test changing flag enabled with aux functions. */
 TEST(DebugFlagTest, SetClearDebugFlag)
 {
-    Debug::Flag::globalEnable();
-    Debug::SimpleFlag flag_a("FlagSetClearDebugFlagTestA", "");
-    Debug::SimpleFlag flag_b("FlagSetClearDebugFlagTestB", "");
+    debug::Flag::globalEnable();
+    debug::SimpleFlag flag_a("FlagSetClearDebugFlagTestA", "");
+    debug::SimpleFlag flag_b("FlagSetClearDebugFlagTestB", "");
 
     // Enable and disable a flag
     ASSERT_FALSE(flag_a.tracing());
@@ -262,8 +262,8 @@ TEST(DebugFlagTest, SetClearDebugFlag)
 /** Test dumping no enabled debug flags. */
 TEST(DebugFlagTest, NoDumpDebugFlags)
 {
-    Debug::Flag::globalEnable();
-    Debug::SimpleFlag flag("FlagDumpDebugFlagTest", "");
+    debug::Flag::globalEnable();
+    debug::SimpleFlag flag("FlagDumpDebugFlagTest", "");
 
     // Verify that the names of the enabled flags are printed
     gtestLogOutput.str("");
@@ -276,15 +276,15 @@ TEST(DebugFlagTest, NoDumpDebugFlags)
 /** Test dumping enabled debug flags with a larger set of flags. */
 TEST(DebugFlagTest, DumpDebugFlags)
 {
-    Debug::Flag::globalEnable();
-    Debug::SimpleFlag flag_a("FlagDumpDebugFlagTestA", "");
-    Debug::SimpleFlag flag_b("FlagDumpDebugFlagTestB", "");
-    Debug::SimpleFlag flag_c("FlagDumpDebugFlagTestC", "");
-    Debug::SimpleFlag flag_d("FlagDumpDebugFlagTestD", "");
-    Debug::SimpleFlag flag_e("FlagDumpDebugFlagTestE", "");
-    Debug::CompoundFlag compound_flag_a("CompoundFlagDumpDebugFlagTestA", "",
+    debug::Flag::globalEnable();
+    debug::SimpleFlag flag_a("FlagDumpDebugFlagTestA", "");
+    debug::SimpleFlag flag_b("FlagDumpDebugFlagTestB", "");
+    debug::SimpleFlag flag_c("FlagDumpDebugFlagTestC", "");
+    debug::SimpleFlag flag_d("FlagDumpDebugFlagTestD", "");
+    debug::SimpleFlag flag_e("FlagDumpDebugFlagTestE", "");
+    debug::CompoundFlag compound_flag_a("CompoundFlagDumpDebugFlagTestA", "",
         {&flag_d});
-    Debug::CompoundFlag compound_flag_b("CompoundFlagDumpDebugFlagTestB", "",
+    debug::CompoundFlag compound_flag_b("CompoundFlagDumpDebugFlagTestB", "",
         {&flag_e});
 
     // Enable a few flags

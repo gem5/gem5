@@ -688,7 +688,7 @@ Decode::decodeInsts(ThreadID tid)
         --insts_available;
 
 #if TRACING_ON
-        if (Debug::O3PipeView) {
+        if (debug::O3PipeView) {
             inst->decodeTick = curTick() - inst->fetchTick;
         }
 #endif

@@ -1566,7 +1566,7 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
     iewStats.executedInstStats.numInsts++;
 
 #if TRACING_ON
-    if (Debug::O3PipeView) {
+    if (debug::O3PipeView) {
         inst->completeTick = curTick() - inst->fetchTick;
     }
 #endif

@@ -63,23 +63,23 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     std::stringstream outs;
 
     const bool in_user_mode = thread->getIsaPtr()->inUserMode();
-    if (in_user_mode && !Debug::ExecUser)
+    if (in_user_mode && !debug::ExecUser)
         return;
-    if (!in_user_mode && !Debug::ExecKernel)
+    if (!in_user_mode && !debug::ExecKernel)
         return;
 
-    if (Debug::ExecAsid) {
+    if (debug::ExecAsid) {
         outs << "A" << std::dec <<
             thread->getIsaPtr()->getExecutingAsid() << " ";
     }
 
-    if (Debug::ExecThread)
+    if (debug::ExecThread)
         outs << "T" << thread->threadId() << " : ";
 
     Addr cur_pc = pc.instAddr();
     loader::SymbolTable::const_iterator it;
     ccprintf(outs, "%#x", cur_pc);
-    if (Debug::ExecSymbol && (!FullSystem || !in_user_mode) &&
+    if (debug::ExecSymbol && (!FullSystem || !in_user_mode) &&
             (it = loader::debugSymbolTable.findNearest(cur_pc)) !=
                 loader::debugSymbolTable.end()) {
         Addr delta = cur_pc - it->address;
@@ -107,15 +107,15 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     if (ran) {
         outs << " : ";
 
-        if (Debug::ExecOpClass) {
+        if (debug::ExecOpClass) {
             outs << enums::OpClassStrings[inst->opClass()] << " : ";
         }
 
-        if (Debug::ExecResult && !predicate) {
+        if (debug::ExecResult && !predicate) {
             outs << "Predicated False";
         }
 
-        if (Debug::ExecResult && data_status != DataInvalid) {
+        if (debug::ExecResult && data_status != DataInvalid) {
             switch (data_status) {
               case DataVec:
                 ccprintf(outs, " D=%s", *data.as_vec);
@@ -129,16 +129,16 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
             }
         }
 
-        if (Debug::ExecEffAddr && getMemValid())
+        if (debug::ExecEffAddr && getMemValid())
             outs << " A=0x" << std::hex << addr;
 
-        if (Debug::ExecFetchSeq && fetch_seq_valid)
+        if (debug::ExecFetchSeq && fetch_seq_valid)
             outs << "  FetchSeq=" << std::dec << fetch_seq;
 
-        if (Debug::ExecCPSeq && cp_seq_valid)
+        if (debug::ExecCPSeq && cp_seq_valid)
             outs << "  CPSeq=" << std::dec << cp_seq;
 
-        if (Debug::ExecFlags) {
+        if (debug::ExecFlags) {
             outs << "  flags=(";
             inst->printFlags(outs, "|");
             outs << ")";
@@ -166,14 +166,14 @@ Trace::ExeTracerRecord::dump()
      * finishes. Macroops then behave like regular instructions and don't
      * complete/print when they fault.
      */
-    if (Debug::ExecMacro && staticInst->isMicroop() &&
-        ((Debug::ExecMicro &&
+    if (debug::ExecMacro && staticInst->isMicroop() &&
+        ((debug::ExecMicro &&
             macroStaticInst && staticInst->isFirstMicroop()) ||
-            (!Debug::ExecMicro &&
+            (!debug::ExecMicro &&
              macroStaticInst && staticInst->isLastMicroop()))) {
         traceInst(macroStaticInst, false);
     }
-    if (Debug::ExecMicro || !staticInst->isMicroop()) {
+    if (debug::ExecMicro || !staticInst->isMicroop()) {
         traceInst(staticInst, true);
     }
 }

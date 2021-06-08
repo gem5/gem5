@@ -583,7 +583,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         /* This code no longer works since the zero register (e.g.,
          * r31 on Alpha) doesn't necessarily contain zero at this
          * point.
-           if (Debug::Context)
+           if (debug::Context)
             ThreadContext::compare(oldTC, newTC);
         */
 

@@ -444,7 +444,7 @@ void
 debugbreak(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "pseudo_inst::debugbreak()\n");
-    Debug::breakpoint();
+    debug::breakpoint();
 }
 
 void

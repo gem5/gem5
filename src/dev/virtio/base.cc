@@ -108,7 +108,7 @@ VirtDescriptor::updateChain()
 void
 VirtDescriptor::dump() const
 {
-    if (!Debug::VIO)
+    if (!debug::VIO)
         return;
 
     DPRINTF(VIO, "Descriptor[%i]: "
@@ -125,7 +125,7 @@ VirtDescriptor::dump() const
 void
 VirtDescriptor::dumpChain() const
 {
-    if (!Debug::VIO)
+    if (!debug::VIO)
         return;
 
     const VirtDescriptor *desc(this);
@@ -317,7 +317,7 @@ VirtQueue::produceDescriptor(VirtDescriptor *desc, uint32_t len)
 void
 VirtQueue::dump() const
 {
-    if (!Debug::VIO)
+    if (!debug::VIO)
         return;
 
     for (const VirtDescriptor &d : descriptors)

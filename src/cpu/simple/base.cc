@@ -246,7 +246,7 @@ BaseSimpleCPU::wakeup(ThreadID tid)
 void
 BaseSimpleCPU::traceFault()
 {
-    if (Debug::ExecFaulting) {
+    if (debug::ExecFaulting) {
         traceData->setFaulting(true);
     } else {
         delete traceData;

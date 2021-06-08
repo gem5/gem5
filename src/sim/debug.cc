@@ -68,7 +68,7 @@ DebugBreakEvent::DebugBreakEvent(Tick when)
 void
 DebugBreakEvent::process()
 {
-    Debug::breakpoint();
+    debug::breakpoint();
 }
 
 

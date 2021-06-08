@@ -1154,12 +1154,15 @@ def makeDebugFlagCC(target, source, env):
 
     # file header
     code('''
+#include "base/compiler.hh" // For namespace deprecation
 #include "base/debug.hh"
 
 namespace gem5
 {
 
-namespace Debug {
+GEM5_DEPRECATED_NAMESPACE(Debug, debug);
+namespace debug
+{
 
 ''')
 
@@ -1196,7 +1199,7 @@ namespace Debug {
 
     code.append(comp_code)
     code()
-    code('} // namespace Debug')
+    code('} // namespace debug')
     code('} // namespace gem5')
 
     code.write(str(target[0]))
@@ -1214,10 +1217,14 @@ def makeDebugFlagHH(target, source, env):
 #ifndef __DEBUG_${name}_HH__
 #define __DEBUG_${name}_HH__
 
+#include "base/compiler.hh" // For namespace deprecation
+
 namespace gem5
 {
 
-namespace Debug {
+GEM5_DEPRECATED_NAMESPACE(Debug, debug);
+namespace debug
+{
 ''')
 
     if compound:
@@ -1232,7 +1239,7 @@ namespace Debug {
         code('extern SimpleFlag& $name;')
 
     code('''
-} // namespace Debug
+} // namespace debug
 } // namespace gem5
 
 #endif // __DEBUG_${name}_HH__

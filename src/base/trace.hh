@@ -158,10 +158,10 @@ struct StringWrap
  * If you desire that the automatic printing not occur, use DPRINTFR
  * (R for raw)
  *
- * With DPRINTFV it is possible to pass a Debug::SimpleFlag variable
+ * With DPRINTFV it is possible to pass a debug::SimpleFlag variable
  * as first argument. Example:
  *
- * Debug::Flag some_flag = Debug::DMA;
+ * debug::Flag some_flag = debug::DMA;
  * DPRINTFV(some_flag, ...);
  *
  * \def DDUMP(x, data, count)
@@ -178,27 +178,27 @@ struct StringWrap
  */
 
 #define DDUMP(x, data, count) do {               \
-    if (GEM5_UNLIKELY(TRACING_ON && ::gem5::Debug::x))     \
+    if (GEM5_UNLIKELY(TRACING_ON && ::gem5::debug::x))     \
         ::gem5::Trace::getDebugLogger()->dump(           \
             ::gem5::curTick(), name(), data, count, #x); \
 } while (0)
 
 #define DPRINTF(x, ...) do {                     \
-    if (GEM5_UNLIKELY(TRACING_ON && ::gem5::Debug::x)) {   \
+    if (GEM5_UNLIKELY(TRACING_ON && ::gem5::debug::x)) {   \
         ::gem5::Trace::getDebugLogger()->dprintf_flag(   \
             ::gem5::curTick(), name(), #x, __VA_ARGS__); \
     }                                            \
 } while (0)
 
 #define DPRINTFS(x, s, ...) do {                        \
-    if (GEM5_UNLIKELY(TRACING_ON && ::gem5::Debug::x)) {          \
+    if (GEM5_UNLIKELY(TRACING_ON && ::gem5::debug::x)) {          \
         ::gem5::Trace::getDebugLogger()->dprintf_flag(          \
                 ::gem5::curTick(), (s)->name(), #x, __VA_ARGS__); \
     }                                                   \
 } while (0)
 
 #define DPRINTFR(x, ...) do {                          \
-    if (GEM5_UNLIKELY(TRACING_ON && ::gem5::Debug::x)) {         \
+    if (GEM5_UNLIKELY(TRACING_ON && ::gem5::debug::x)) {         \
         ::gem5::Trace::getDebugLogger()->dprintf_flag(         \
             (::gem5::Tick)-1, std::string(), #x, __VA_ARGS__); \
     }                                                  \

@@ -136,7 +136,7 @@ Pipeline::evaluate()
     fetch2.evaluate();
     fetch1.evaluate();
 
-    if (Debug::MinorTrace)
+    if (debug::MinorTrace)
         minorTrace();
 
     /* Update the time buffers after the stages */

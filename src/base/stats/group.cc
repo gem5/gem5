@@ -72,7 +72,7 @@ Group::regStats()
         g->regStats();
 
     for (auto &g : statGroups) {
-        if (Debug::Stats) {
+        if (debug::Stats) {
             M5_VAR_USED const Named *named = dynamic_cast<const Named *>(this);
             DPRINTF(Stats, "%s: regStats in group %s\n",
                     named ? named->name() : "?",

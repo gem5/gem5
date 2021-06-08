@@ -100,7 +100,7 @@ class StubSlavePortHandler : public
 Tick
 StubSlavePort::recvAtomic(PacketPtr packet)
 {
-    if (Debug::ExternalPort) {
+    if (debug::ExternalPort) {
         GEM5_VAR_USED unsigned int size = packet->getSize();
 
         DPRINTF(ExternalPort, "StubSlavePort: recvAtomic a: 0x%x size: %d"

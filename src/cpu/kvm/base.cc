@@ -288,7 +288,7 @@ BaseKvmCPU::StatGroup::StatGroup(statistics::Group *parent)
 void
 BaseKvmCPU::serializeThread(CheckpointOut &cp, ThreadID tid) const
 {
-    if (Debug::Checkpoint) {
+    if (debug::Checkpoint) {
         DPRINTF(Checkpoint, "KVM: Serializing thread %i:\n", tid);
         dump();
     }

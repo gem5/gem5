@@ -687,7 +687,7 @@ X86KvmCPU::updateKvmState()
     updateKvmStateMSRs();
 
     DPRINTF(KvmContext, "X86KvmCPU::updateKvmState():\n");
-    if (Debug::KvmContext)
+    if (debug::KvmContext)
         dump();
 }
 
@@ -951,7 +951,7 @@ X86KvmCPU::updateThreadContext()
     getSpecialRegisters(sregs);
 
     DPRINTF(KvmContext, "X86KvmCPU::updateThreadContext():\n");
-    if (Debug::KvmContext)
+    if (debug::KvmContext)
         dump();
 
     updateThreadContextRegs(regs, sregs);

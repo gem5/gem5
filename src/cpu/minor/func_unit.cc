@@ -109,7 +109,7 @@ FUPipeline::FUPipeline(const std::string &name, const MinorFU &description_,
     for (unsigned int i = 0; i < description.timings.size(); i++) {
         MinorFUTiming &timing = *(description.timings[i]);
 
-        if (Debug::MinorTiming) {
+        if (debug::MinorTiming) {
             std::ostringstream lats;
 
             unsigned int num_lats = timing.srcRegsRelativeLats.size();

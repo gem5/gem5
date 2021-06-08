@@ -48,10 +48,14 @@
 #include <string>
 #include <vector>
 
+#include "base/compiler.hh"
+
 namespace gem5
 {
 
-namespace Debug {
+GEM5_DEPRECATED_NAMESPACE(Debug, debug);
+namespace debug
+{
 
 void breakpoint();
 
@@ -139,7 +143,7 @@ Flag *findFlag(const std::string &name);
 
 bool changeFlag(const char *s, bool value);
 
-} // namespace Debug
+} // namespace debug
 
 void setDebugFlag(const char *string);
 
@@ -153,8 +157,8 @@ void dumpDebugFlags(std::ostream &os=std::cout);
  * @ingroup api_trace
  * @{
  */
-#define DTRACE(x) GEM5_DEPRECATED_MACRO(DTRACE, Debug::x, \
-        "Replace DTRACE(x) with Debug::x.")
+#define DTRACE(x) GEM5_DEPRECATED_MACRO(DTRACE, debug::x, \
+        "Replace DTRACE(x) with debug::x.")
 /** @} */ // end of api_trace
 
 } // namespace gem5

@@ -93,13 +93,13 @@ setDebugLogger(Logger *logger)
 void
 enable()
 {
-    Debug::Flag::globalEnable();
+    debug::Flag::globalEnable();
 }
 
 void
 disable()
 {
-    Debug::Flag::globalDisable();
+    debug::Flag::globalDisable();
 }
 
 ObjectMatch ignore;
@@ -152,10 +152,10 @@ OstreamLogger::logMessage(Tick when, const std::string &name,
     if (!name.empty() && ignore.match(name))
         return;
 
-    if (!Debug::FmtTicksOff && (when != MaxTick))
+    if (!debug::FmtTicksOff && (when != MaxTick))
         ccprintf(stream, "%7d: ", when);
 
-    if (Debug::FmtFlag && !flag.empty())
+    if (debug::FmtFlag && !flag.empty())
         stream << flag << ": ";
 
     if (!name.empty())
@@ -164,7 +164,7 @@ OstreamLogger::logMessage(Tick when, const std::string &name,
     stream << message;
     stream.flush();
 
-    if (Debug::FmtStackTrace) {
+    if (debug::FmtStackTrace) {
         print_backtrace();
         STATIC_ERR("\n");
     }

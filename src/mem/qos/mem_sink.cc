@@ -228,7 +228,7 @@ MemSinkCtrl::processNextReqEvent()
             "%s DUMPING %s queues status\n", __func__,
             (busState == WRITE ? "WRITE" : "READ"));
 
-    if (Debug::QOS) {
+    if (debug::QOS) {
         for (uint8_t i = 0; i < numPriorities(); ++i) {
             std::string plist = "";
             for (auto& e : (busState == WRITE ? writeQueue[i]: readQueue[i])) {

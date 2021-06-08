@@ -45,6 +45,7 @@
 #include <map>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/debug.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
@@ -55,9 +56,11 @@ namespace py = pybind11;
 namespace gem5
 {
 
-namespace Debug {
+GEM5_DEPRECATED_NAMESPACE(Debug, debug);
+namespace debug
+{
 extern int allFlagsVersion;
-}
+} // namespace debug
 
 static void
 output(const char *filename)
@@ -84,40 +87,40 @@ pybind_init_debug(py::module_ &m_native)
     py::module_ m_debug = m_native.def_submodule("debug");
 
     m_debug
-        .def("getAllFlagsVersion", []() { return Debug::allFlagsVersion; })
-        .def("allFlags", &Debug::allFlags, py::return_value_policy::reference)
+        .def("getAllFlagsVersion", []() { return debug::allFlagsVersion; })
+        .def("allFlags", &debug::allFlags, py::return_value_policy::reference)
 
         .def("schedBreak", &schedBreak)
         .def("setRemoteGDBPort", &setRemoteGDBPort)
         ;
 
-    py::class_<Debug::Flag> c_flag(m_debug, "Flag");
+    py::class_<debug::Flag> c_flag(m_debug, "Flag");
     c_flag
-        .def_property_readonly("name", &Debug::Flag::name)
-        .def_property_readonly("desc", &Debug::Flag::desc)
-        .def("enable", &Debug::Flag::enable)
-        .def("disable", &Debug::Flag::disable)
+        .def_property_readonly("name", &debug::Flag::name)
+        .def_property_readonly("desc", &debug::Flag::desc)
+        .def("enable", &debug::Flag::enable)
+        .def("disable", &debug::Flag::disable)
         .def_property("tracing",
-                      [](const Debug::Flag *flag) {
+                      [](const debug::Flag *flag) {
                           return flag->tracing();
                       },
-                      [](Debug::Flag *flag, bool state) {
+                      [](debug::Flag *flag, bool state) {
                           if (state) {
                               flag->enable();
                           } else {
                               flag->disable();
                           }
                       })
-        .def("__bool__", [](const Debug::Flag *flag) {
+        .def("__bool__", [](const debug::Flag *flag) {
                 return (bool)*flag;
             })
         ;
 
-    py::class_<Debug::SimpleFlag>(m_debug, "SimpleFlag", c_flag)
-        .def_property_readonly("isFormat", &Debug::SimpleFlag::isFormat)
+    py::class_<debug::SimpleFlag>(m_debug, "SimpleFlag", c_flag)
+        .def_property_readonly("isFormat", &debug::SimpleFlag::isFormat)
         ;
-    py::class_<Debug::CompoundFlag>(m_debug, "CompoundFlag", c_flag)
-        .def("kids", &Debug::CompoundFlag::kids)
+    py::class_<debug::CompoundFlag>(m_debug, "CompoundFlag", c_flag)
+        .def("kids", &debug::CompoundFlag::kids)
         ;
 
 

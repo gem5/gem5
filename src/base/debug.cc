@@ -52,7 +52,9 @@
 namespace gem5
 {
 
-namespace Debug {
+GEM5_DEPRECATED_NAMESPACE(Debug, debug);
+namespace debug
+{
 
 //
 // This function will cause the process to signal itself with a
@@ -65,7 +67,7 @@ breakpoint()
 #ifndef NDEBUG
     kill(getpid(), SIGTRAP);
 #else
-    cprintf("Debug::breakpoint suppressed, compiled with NDEBUG\n");
+    cprintf("debug::breakpoint suppressed, compiled with NDEBUG\n");
 #endif
 }
 
@@ -154,25 +156,25 @@ changeFlag(const char *s, bool value)
     return true;
 }
 
-} // namespace Debug
+} // namespace debug
 
 // add a set of functions that can easily be invoked from gdb
 void
 setDebugFlag(const char *string)
 {
-    Debug::changeFlag(string, true);
+    debug::changeFlag(string, true);
 }
 
 void
 clearDebugFlag(const char *string)
 {
-    Debug::changeFlag(string, false);
+    debug::changeFlag(string, false);
 }
 
 void
 dumpDebugFlags(std::ostream &os)
 {
-    using namespace Debug;
+    using namespace debug;
     FlagsMap::iterator i = allFlags().begin();
     FlagsMap::iterator end = allFlags().end();
     for (; i != end; ++i) {

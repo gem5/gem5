@@ -124,7 +124,7 @@ InstPBTrace::getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr si,
                            TheISA::PCState pc, const StaticInstPtr mi)
 {
     // Only record the trace if Exec debugging is enabled
-    if (!Debug::ExecEnable)
+    if (!debug::ExecEnable)
         return NULL;
 
     return new InstPBTraceRecord(*this, when, tc, si, pc, mi);

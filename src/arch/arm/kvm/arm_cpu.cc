@@ -679,7 +679,7 @@ ArmKvmCPU::updateKvmStateCore()
         setOneReg(ri->id, value);
     }
 
-    if (Debug::KvmContext)
+    if (debug::KvmContext)
         dumpKvmStateCore();
 }
 
@@ -717,7 +717,7 @@ ArmKvmCPU::updateKvmStateMisc()
     }
 
     warned = true;
-    if (Debug::KvmContext)
+    if (debug::KvmContext)
         dumpKvmStateMisc();
 }
 
@@ -823,7 +823,7 @@ ArmKvmCPU::updateTCStateCore()
     pc.set(getOneRegU32(REG_CORE32(usr_regs.ARM_pc)));
     tc->pcState(pc);
 
-    if (Debug::KvmContext)
+    if (debug::KvmContext)
         dumpKvmStateCore();
 }
 
@@ -856,7 +856,7 @@ ArmKvmCPU::updateTCStateMisc()
 
     warned = true;
 
-    if (Debug::KvmContext)
+    if (debug::KvmContext)
         dumpKvmStateMisc();
 }
 

@@ -170,7 +170,7 @@ RiscvProcess::argsInit(int pageSize)
         memState->setStackMin(memState->getStackMin() - (arg.size() + 1));
         initVirtMem->writeString(memState->getStackMin(), arg.c_str());
         argPointers.push_back(memState->getStackMin());
-        if (Debug::Stack) {
+        if (debug::Stack) {
             std::string wrote;
             initVirtMem->readString(wrote, argPointers.back());
             DPRINTFN("Wrote arg \"%s\" to address %p\n",

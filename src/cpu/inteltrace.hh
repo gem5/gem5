@@ -68,7 +68,7 @@ class IntelTrace : public InstTracer
             const StaticInstPtr staticInst, TheISA::PCState pc,
             const StaticInstPtr macroStaticInst = NULL)
     {
-        if (!Debug::ExecEnable)
+        if (!debug::ExecEnable)
             return NULL;
 
         return new IntelTraceRecord(when, tc, staticInst, pc, macroStaticInst);

@@ -798,7 +798,7 @@ Rename::sortInsts()
         const DynInstPtr &inst = fromDecode->insts[i];
         insts[inst->threadNumber].push_back(inst);
 #if TRACING_ON
-        if (Debug::O3PipeView) {
+        if (debug::O3PipeView) {
             inst->renameTick = curTick() - inst->fetchTick;
         }
 #endif

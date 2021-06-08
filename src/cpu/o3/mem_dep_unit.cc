@@ -164,7 +164,7 @@ MemDepUnit::insertBarrierSN(const DynInstPtr &barr_inst)
     if (barr_inst->isWriteBarrier() || barr_inst->isHtmCmd())
         storeBarrierSNs.insert(barr_sn);
 
-    if (Debug::MemDepUnit) {
+    if (debug::MemDepUnit) {
         const char *barrier_type = nullptr;
         if (barr_inst->isReadBarrier() && barr_inst->isWriteBarrier())
             barrier_type = "memory";
@@ -439,7 +439,7 @@ MemDepUnit::completeInst(const DynInstPtr &inst)
         assert(hasLoadBarrier());
         loadBarrierSNs.erase(barr_sn);
     }
-    if (Debug::MemDepUnit) {
+    if (debug::MemDepUnit) {
         const char *barrier_type = nullptr;
         if (inst->isWriteBarrier() && inst->isReadBarrier())
             barrier_type = "Memory";

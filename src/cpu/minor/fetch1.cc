@@ -258,7 +258,7 @@ Fetch1::handleTLBResponse(FetchRequestPtr response)
                 response->request->getPaddr() : 0),
             response->request->getVaddr());
 
-        if (Debug::MinorTrace)
+        if (debug::MinorTrace)
             minorTraceResponseLine(name(), response);
     } else {
         DPRINTF(Fetch, "Got ITLB response\n");
@@ -427,7 +427,7 @@ Fetch1::recvTimingResp(PacketPtr response)
     numFetchesInMemorySystem--;
     fetch_request->state = FetchRequest::Complete;
 
-    if (Debug::MinorTrace)
+    if (debug::MinorTrace)
         minorTraceResponseLine(name(), fetch_request);
 
     if (response->isError()) {

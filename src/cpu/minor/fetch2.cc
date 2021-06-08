@@ -491,7 +491,7 @@ Fetch2::evaluate()
 
                 /* Output MinorTrace instruction info for
                  *  pre-microop decomposition macroops */
-                if (Debug::MinorTrace && !dyn_inst->isFault() &&
+                if (debug::MinorTrace && !dyn_inst->isFault() &&
                     dyn_inst->staticInst->isMacroop())
                 {
                     dyn_inst->minorTraceInst(*this,

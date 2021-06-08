@@ -264,7 +264,7 @@ Scoreboard::canInstIssue(MinorDynInstPtr inst,
         src_index++;
     }
 
-    if (Debug::MinorTiming) {
+    if (debug::MinorTiming) {
         if (ret && num_srcs > num_relative_latencies &&
             num_relative_latencies != 0)
         {

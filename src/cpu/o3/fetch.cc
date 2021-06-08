@@ -1277,7 +1277,7 @@ Fetch::fetch(bool &status_change)
             numInst++;
 
 #if TRACING_ON
-            if (Debug::O3PipeView) {
+            if (debug::O3PipeView) {
                 instruction->fetchTick = curTick();
             }
 #endif

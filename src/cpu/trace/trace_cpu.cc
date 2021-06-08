@@ -267,7 +267,7 @@ TraceCPU::ElasticDataGen::init()
             depGraph.size());
 
     // Print readyList
-    if (Debug::TraceCPUData) {
+    if (debug::TraceCPUData) {
         printReadyList();
     }
     auto free_itr = readyList.begin();
@@ -519,7 +519,7 @@ TraceCPU::ElasticDataGen::execute()
     } // end of while loop
 
     // Print readyList, sizes of queues and resource status after updating
-    if (Debug::TraceCPUData) {
+    if (debug::TraceCPUData) {
         printReadyList();
         DPRINTF(TraceCPUData, "Execute end occupancy:\n");
         DPRINTFR(TraceCPUData, "\tdepGraph = %d, readyList = %d, "
@@ -723,7 +723,7 @@ TraceCPU::ElasticDataGen::completeMemAccess(PacketPtr pkt)
         depGraph.erase(graph_itr);
     }
 
-    if (Debug::TraceCPUData) {
+    if (debug::TraceCPUData) {
         printReadyList();
     }
 

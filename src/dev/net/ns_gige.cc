@@ -1166,7 +1166,7 @@ NSGigE::rxKick()
             rxPacketBufPtr = rxPacket->data;
 
 #if TRACING_ON
-            if (Debug::Ethernet) {
+            if (debug::Ethernet) {
                 IpPtr ip(rxPacket);
                 if (ip) {
                     DPRINTF(Ethernet, "ID is %d\n", ip->id());
@@ -1363,7 +1363,7 @@ NSGigE::transmit()
             txFifo.size());
     if (interface->sendPacket(txFifo.front())) {
 #if TRACING_ON
-        if (Debug::Ethernet) {
+        if (debug::Ethernet) {
             IpPtr ip(txFifo.front());
             if (ip) {
                 DPRINTF(Ethernet, "ID is %d\n", ip->id());
@@ -1607,7 +1607,7 @@ NSGigE::txKick()
                             udp->sum(cksum(udp));
                             etherDeviceStats.txUdpChecksums++;
                         } else {
-                            Debug::breakpoint();
+                            debug::breakpoint();
                             warn_once("UDPPKT set, but not UDP!\n");
                         }
                     } else if (extsts & EXTSTS_TCPPKT) {

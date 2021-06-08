@@ -154,7 +154,7 @@ void
 ExecStage::exec()
 {
     initStatistics();
-    if (Debug::GPUSched) {
+    if (debug::GPUSched) {
         dumpDispList();
     }
     for (int unitId = 0; unitId < computeUnit.numExeUnits(); ++unitId) {
