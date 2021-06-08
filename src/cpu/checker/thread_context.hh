@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2016-2018, 2020 ARM Limited
+ * Copyright (c) 2011-2012, 2016-2018, 2020-2021 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -84,8 +84,23 @@ class CheckerThreadContext : public ThreadContext
     CheckerCPU *checkerCPU;
 
   public:
-    bool schedule(PCEvent *e) override { return actualTC->schedule(e); }
-    bool remove(PCEvent *e) override { return actualTC->remove(e); }
+    bool
+    schedule(PCEvent *e) override
+    {
+        GEM5_VAR_USED bool check_ret = checkerTC->schedule(e);
+        bool actual_ret = actualTC->schedule(e);
+        assert(actual_ret == check_ret);
+        return actual_ret;
+    }
+
+    bool
+    remove(PCEvent *e) override
+    {
+        GEM5_VAR_USED bool check_ret = checkerTC->remove(e);
+        bool actual_ret = actualTC->remove(e);
+        assert(actual_ret == check_ret);
+        return actual_ret;
+    }
 
     void
     scheduleInstCountEvent(Event *event, Tick count) override
