@@ -1146,7 +1146,7 @@ VldMultOp64::VldMultOp64(const char *mnem, ExtMachInst machInst,
 
     microOps = new StaticInstPtr[numMicroops];
     unsigned uopIdx = 0;
-    uint32_t memaccessFlags = (TLB::ArmFlags)eSize | TLB::AllowUnaligned;
+    uint32_t memaccessFlags = (MMU::ArmFlags)eSize | MMU::AllowUnaligned;
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {
@@ -1254,7 +1254,7 @@ VstMultOp64::VstMultOp64(const char *mnem, ExtMachInst machInst,
         }
     }
 
-    uint32_t memaccessFlags = (TLB::ArmFlags)eSize | TLB::AllowUnaligned;
+    uint32_t memaccessFlags = (MMU::ArmFlags)eSize | MMU::AllowUnaligned;
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {
@@ -1322,7 +1322,7 @@ VldSingleOp64::VldSingleOp64(const char *mnem, ExtMachInst machInst,
     microOps = new StaticInstPtr[numMicroops];
     unsigned uopIdx = 0;
 
-    uint32_t memaccessFlags = (TLB::ArmFlags)eSize | TLB::AllowUnaligned;
+    uint32_t memaccessFlags = (MMU::ArmFlags)eSize | MMU::AllowUnaligned;
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {
@@ -1401,7 +1401,7 @@ VstSingleOp64::VstSingleOp64(const char *mnem, ExtMachInst machInst,
             numStructElems, index, i /* step */, replicate);
     }
 
-    uint32_t memaccessFlags = (TLB::ArmFlags)eSize | TLB::AllowUnaligned;
+    uint32_t memaccessFlags = (MMU::ArmFlags)eSize | MMU::AllowUnaligned;
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {

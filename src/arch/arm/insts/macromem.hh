@@ -395,7 +395,7 @@ class MicroMemOp : public MicroIntImmOp
     MicroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                RegIndex _ura, RegIndex _urb, bool _up, uint8_t _imm)
             : MicroIntImmOp(mnem, machInst, __opClass, _ura, _urb, _imm),
-              up(_up), memAccessFlags(TLB::AlignWord)
+              up(_up), memAccessFlags(MMU::AlignWord)
     {
     }
 
@@ -416,7 +416,7 @@ class MicroMemPairOp : public MicroOp
             bool _up, uint8_t _imm)
         : MicroOp(mnem, machInst, __opClass),
         dest(_dreg1), dest2(_dreg2), urb(_base), up(_up), imm(_imm),
-        memAccessFlags(TLB::AlignWord)
+        memAccessFlags(MMU::AlignWord)
     {
     }
 

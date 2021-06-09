@@ -83,7 +83,7 @@ let {{
 
             # Add memory request flags where necessary
             if self.user:
-                self.memFlags.append("ArmISA::TLB::UserMode")
+                self.memFlags.append("ArmISA::MMU::UserMode")
 
             sz = self.size*2 if paired else self.size
             self.memFlags.append("%d" % int(math.log(sz, 2)))

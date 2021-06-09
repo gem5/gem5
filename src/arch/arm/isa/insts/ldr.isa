@@ -92,7 +92,7 @@ let {{
             super(RfeInst, self).__init__(mnem, post, add, writeback)
             self.Name = "RFE_" + loadImmClassName(post, add, writeback, 8)
 
-            self.memFlags.append("ArmISA::TLB::AlignWord")
+            self.memFlags.append("ArmISA::MMU::AlignWord")
 
         def emit(self):
             offset = 0
@@ -163,7 +163,7 @@ let {{
             # Add memory request flags where necessary
             self.memFlags.append("%d" % int(math.log(self.size, 2)))
             if self.user:
-                self.memFlags.append("ArmISA::TLB::UserMode")
+                self.memFlags.append("ArmISA::MMU::UserMode")
 
             self.instFlags = []
             if self.flavor == "dprefetch":
@@ -173,7 +173,7 @@ let {{
                 self.memFlags.append("Request::PREFETCH")
                 self.instFlags = ['IsInstPrefetch']
             elif self.flavor == "normal":
-                self.memFlags.append("ArmISA::TLB::AllowUnaligned")
+                self.memFlags.append("ArmISA::MMU::AllowUnaligned")
 
             if self.flavor in ("exclusive", "acex"):
                 self.memFlags.append("Request::LLSC")
@@ -249,9 +249,9 @@ let {{
             # Add memory request flags where necessary
             if self.flavor in ("exclusive", "acex"):
                 self.memFlags.append("Request::LLSC")
-                self.memFlags.append("ArmISA::TLB::AlignDoubleWord")
+                self.memFlags.append("ArmISA::MMU::AlignDoubleWord")
             else:
-                self.memFlags.append("ArmISA::TLB::AlignWord")
+                self.memFlags.append("ArmISA::MMU::AlignWord")
 
             # Disambiguate the class name for different flavors of loads
             if self.flavor != "normal":

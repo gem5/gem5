@@ -985,7 +985,7 @@ TarmacParserRecord::dump()
     std::ostream &outs = Trace::output();
 
     uint64_t written_data = 0;
-    unsigned mem_flags = 3 | ArmISA::TLB::AllowUnaligned;
+    unsigned mem_flags = 3 | ArmISA::MMU::AllowUnaligned;
 
     ISetState isetstate;
 

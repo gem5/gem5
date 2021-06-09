@@ -137,7 +137,7 @@ let {{
             (newHeader,
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
-                 ["ArmISA::TLB::AlignWord"], [], 'SrsOp', wbDecl)
+                 ["ArmISA::MMU::AlignWord"], [], 'SrsOp', wbDecl)
 
             header_output += newHeader
             decoder_output += newDecoder
@@ -178,13 +178,13 @@ let {{
             # Add memory request flags where necessary
             self.memFlags.append("%d" % int(math.log(self.size, 2)))
             if self.user:
-                self.memFlags.append("ArmISA::TLB::UserMode")
+                self.memFlags.append("ArmISA::MMU::UserMode")
 
             if self.flavor in ("exclusive", "relex"):
                 self.instFlags.append("IsStoreConditional")
                 self.memFlags.append("Request::LLSC")
             elif self.flavor != "fp":
-                self.memFlags.append("ArmISA::TLB::AllowUnaligned")
+                self.memFlags.append("ArmISA::MMU::AllowUnaligned")
 
             if self.flavor in ("release", "relex"):
                 self.instFlags.extend(["IsWriteBarrier",
@@ -263,9 +263,9 @@ let {{
             if self.flavor in ("exclusive", "relex"):
                 self.instFlags.append("IsStoreConditional")
                 self.memFlags.append("Request::LLSC")
-                self.memFlags.append("ArmISA::TLB::AlignDoubleWord")
+                self.memFlags.append("ArmISA::MMU::AlignDoubleWord")
             else:
-                self.memFlags.append("ArmISA::TLB::AlignWord")
+                self.memFlags.append("ArmISA::MMU::AlignWord")
 
             if self.flavor in ("release", "relex"):
                 self.instFlags.extend(["IsWriteBarrier",

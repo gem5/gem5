@@ -88,7 +88,7 @@ let {{
 
             if self.flavor not in ("acquire", "acex", "exclusive",
                                    "acexp", "exp"):
-                self.memFlags.append("ArmISA::TLB::AllowUnaligned")
+                self.memFlags.append("ArmISA::MMU::AllowUnaligned")
 
             if self.flavor in ("acquire", "acex", "acexp"):
                 self.instFlags.extend(["IsWriteBarrier", "IsReadBarrier"])
@@ -136,7 +136,7 @@ let {{
             if self.user:
                 eaCode += " uint8_t userFlag = 0;\n"\
                           "  if(isUnpriviledgeAccess(xc->tcBase()))\n"\
-                          "     userFlag = ArmISA::TLB::UserMode;"
+                          "     userFlag = ArmISA::MMU::UserMode;"
 
             self.codeBlobs["ea_code"] = eaCode
 

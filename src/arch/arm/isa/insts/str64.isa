@@ -73,7 +73,7 @@ let {{
 
             if self.flavor not in ("release", "relex", "exclusive",
                                    "relexp", "exp"):
-                self.memFlags.append("ArmISA::TLB::AllowUnaligned")
+                self.memFlags.append("ArmISA::MMU::AllowUnaligned")
 
             if self.micro:
                 self.instFlags.append("IsMicroop")
@@ -137,7 +137,7 @@ let {{
             if self.user:
                 eaCode += " uint8_t userFlag = 0;\n"\
                           "  if(isUnpriviledgeAccess(xc->tcBase()))\n"\
-                          "     userFlag = ArmISA::TLB::UserMode;"
+                          "     userFlag = ArmISA::MMU::UserMode;"
             self.codeBlobs["ea_code"] = eaCode
 
 

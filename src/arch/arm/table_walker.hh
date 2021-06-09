@@ -41,6 +41,7 @@
 #include <list>
 
 #include "arch/arm/faults.hh"
+#include "arch/arm/mmu.hh"
 #include "arch/arm/regs/misc.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
@@ -61,7 +62,6 @@ class ThreadContext;
 namespace ArmISA {
 class Translation;
 class TLB;
-class MMU;
 
 class TableWalker : public ClockedObject
 {
@@ -828,7 +828,7 @@ class TableWalker : public ClockedObject
         BaseMMU::Mode mode;
 
         /** The translation type that has been requested */
-        TLB::ArmTranslationType tranType;
+        MMU::ArmTranslationType tranType;
 
         /** Short-format descriptors */
         L1Descriptor l1Desc;
@@ -912,12 +912,15 @@ class TableWalker : public ClockedObject
         Event        *event;
         TableWalker  &parent;
         Addr         oVAddr;
+        BaseMMU::Mode mode;
+        MMU::ArmTranslationType tranType;
 
       public:
         Fault fault;
 
         Stage2Walk(TableWalker &_parent, uint8_t *_data, Event *_event,
-                   Addr vaddr);
+                   Addr vaddr, BaseMMU::Mode mode,
+                   MMU::ArmTranslationType tran_type);
 
         void markDelayed() {}
 
@@ -937,6 +940,7 @@ class TableWalker : public ClockedObject
 
     Fault readDataUntimed(ThreadContext *tc, Addr vaddr, Addr desc_addr,
                           uint8_t *data, int num_bytes, Request::Flags flags,
+                          BaseMMU::Mode mode, MMU::ArmTranslationType tran_type,
                           bool functional);
     void readDataTimed(ThreadContext *tc, Addr desc_addr,
                        Stage2Walk *translation, int num_bytes,
@@ -1033,11 +1037,10 @@ class TableWalker : public ClockedObject
                uint16_t asid, vmid_t _vmid,
                bool _isHyp, BaseMMU::Mode mode, BaseMMU::Translation *_trans,
                bool timing, bool functional, bool secure,
-               TLB::ArmTranslationType tranType, bool _stage2Req);
+               MMU::ArmTranslationType tranType, bool _stage2Req);
 
     void setMmu(MMU *_mmu) { mmu = _mmu; }
     void setTlb(TLB *_tlb) { tlb = _tlb; }
-    void setPort(Port *_port) { port = _port; }
     TLB* getTlb() { return tlb; }
     void memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,
                   uint8_t texcb, bool s);
@@ -1101,7 +1104,7 @@ class TableWalker : public ClockedObject
     static uint8_t pageSizeNtoStatBin(uint8_t N);
 
     Fault testWalk(Addr pa, Addr size, TlbEntry::DomainType domain,
-                   LookupLevel lookup_level);
+                   LookupLevel lookup_level, bool stage2);
 };
 
 } // namespace ArmISA

@@ -152,7 +152,7 @@ let {{
             if (singleAll) {
                 size = bits(machInst, 7, 6);
                 bool t = bits(machInst, 5);
-                align = size | TLB::AllowUnaligned;
+                align = size | MMU::AllowUnaligned;
                 if (width == 1) {
                     regs = t ? 2 : 1;
                     inc = 1;
@@ -185,7 +185,7 @@ let {{
                 }
             } else {
                 size = bits(machInst, 11, 10);
-                align = size | TLB::AllowUnaligned;
+                align = size | MMU::AllowUnaligned;
                 regs = width;
                 unsigned indexAlign = bits(machInst, 7, 4);
                 // If width is 1, inc is always 1. That's overridden later.
@@ -251,7 +251,7 @@ let {{
             align = bits(machInst, 5, 4);
             if (align == 0) {
                 // @align wasn't specified, so alignment can be turned off.
-                align = size | TLB::AllowUnaligned;
+                align = size | MMU::AllowUnaligned;
             } else {
                 align = align + 2;
             }

@@ -55,10 +55,10 @@ using namespace ArmISA;
 
 Fault
 Stage2LookUp::getTe(ThreadContext *tc, TlbEntry *destTe)
-
 {
-    fault = stage2Tlb->getTE(&stage2Te, req, tc, mode, this, timing,
-                                   functional, secure, tranType);
+    fault = mmu->getTE(&stage2Te, req, tc, mode, this, timing,
+        functional, secure, tranType, true);
+
     // Call finish if we're done already
     if ((fault != NoFault) || (stage2Te != NULL)) {
         // Since we directly requested the table entry (which we need later on
@@ -67,19 +67,19 @@ Stage2LookUp::getTe(ThreadContext *tc, TlbEntry *destTe)
         // entry is now in the TLB this should always hit the cache.
         if (fault == NoFault) {
             if (ELIs64(tc, EL2))
-                fault = stage2Tlb->checkPermissions64(stage2Te, req, mode, tc);
+                fault = mmu->checkPermissions64(stage2Te, req, mode, tc, true);
             else
-                fault = stage2Tlb->checkPermissions(stage2Te, req, mode);
+                fault = mmu->checkPermissions(stage2Te, req, mode, true);
         }
 
-        mergeTe(req, mode);
+        mergeTe(mode);
         *destTe = stage1Te;
     }
     return fault;
 }
 
 void
-Stage2LookUp::mergeTe(const RequestPtr &req, BaseMMU::Mode mode)
+Stage2LookUp::mergeTe(BaseMMU::Mode mode)
 {
     // Check again that we haven't got a fault
     if (fault == NoFault) {
@@ -169,8 +169,9 @@ Stage2LookUp::mergeTe(const RequestPtr &req, BaseMMU::Mode mode)
     if (fault != NoFault) {
         // If the second stage of translation generated a fault add the
         // details of the original stage 1 virtual address
-        reinterpret_cast<ArmFault *>(fault.get())->annotate(ArmFault::OVA,
-            s1Req->getVaddr());
+        if (auto arm_fault = reinterpret_cast<ArmFault *>(fault.get())) {
+            arm_fault->annotate(ArmFault::OVA, s1Req->getVaddr());
+        }
     }
     complete = true;
 }
@@ -182,13 +183,14 @@ Stage2LookUp::finish(const Fault &_fault, const RequestPtr &req,
     fault = _fault;
     // if we haven't got the table entry get it now
     if ((fault == NoFault) && (stage2Te == NULL)) {
-        fault = stage2Tlb->getTE(&stage2Te, req, tc, mode, this,
-            timing, functional, secure, tranType);
+        // OLD_LOOK: stage2Tlb
+        fault = mmu->getTE(&stage2Te, req, tc, mode, this,
+            timing, functional, secure, tranType, true);
     }
 
     // Now we have the stage 2 table entry we need to merge it with the stage
     // 1 entry we were given at the start
-    mergeTe(req, mode);
+    mergeTe(mode);
 
     if (fault != NoFault) {
         // Returning with a fault requires the original request
@@ -196,7 +198,10 @@ Stage2LookUp::finish(const Fault &_fault, const RequestPtr &req,
     } else if (timing) {
         // Now notify the original stage 1 translation that we finally have
         // a result
-        stage1Tlb->translateComplete(s1Req, tc, transState, mode, tranType, true);
+        // tran_s1.callFromStage2 = true;
+        // OLD_LOOK: stage1Tlb
+        mmu->translateComplete(
+            s1Req, tc, transState, mode, tranType, true);
     }
     // if we have been asked to delete ourselfs do it now
     if (selfDelete) {

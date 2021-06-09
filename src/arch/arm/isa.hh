@@ -42,11 +42,11 @@
 #define __ARCH_ARM_ISA_HH__
 
 #include "arch/arm/isa_device.hh"
+#include "arch/arm/mmu.hh"
 #include "arch/arm/regs/int.hh"
 #include "arch/arm/regs/misc.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
-#include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/isa.hh"
@@ -514,9 +514,9 @@ namespace ArmISA
         void initID32(const ArmISAParams &p);
         void initID64(const ArmISAParams &p);
 
-        void addressTranslation(TLB::ArmTranslationType tran_type,
+        void addressTranslation(MMU::ArmTranslationType tran_type,
             BaseMMU::Mode mode, Request::Flags flags, RegVal val);
-        void addressTranslation64(TLB::ArmTranslationType tran_type,
+        void addressTranslation64(MMU::ArmTranslationType tran_type,
             BaseMMU::Mode mode, Request::Flags flags, RegVal val);
 
       public:

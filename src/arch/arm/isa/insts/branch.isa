@@ -186,16 +186,16 @@ let {{
     for isTbh in (0, 1):
         if isTbh:
             eaCode = '''
-            unsigned memAccessFlags = ArmISA::TLB::AllowUnaligned |
-                                      ArmISA::TLB::AlignHalfWord;
+            unsigned memAccessFlags = ArmISA::MMU::AllowUnaligned |
+                                      ArmISA::MMU::AlignHalfWord;
             EA = Op1 + Op2 * 2
             '''
             accCode = 'NPC = PC + 2 * (Mem_uh);\n'
             mnem = "tbh"
         else:
             eaCode = '''
-            unsigned memAccessFlags = ArmISA::TLB::AllowUnaligned |
-                                      ArmISA::TLB::AlignByte;
+            unsigned memAccessFlags = ArmISA::MMU::AllowUnaligned |
+                                      ArmISA::MMU::AlignByte;
             EA = Op1 + Op2
             '''
             accCode = 'NPC = PC + 2 * (Mem_ub)'

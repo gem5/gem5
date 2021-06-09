@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2020 ARM Limited
+# Copyright (c) 2020-2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -80,10 +80,15 @@ class ArmMMU(BaseMMU):
     stage2_dtb_walker = Param.ArmTableWalker(
         ArmStage2TableWalker(), "HW Table walker")
 
+    sys = Param.System(Parent.any, "system object parameter")
+
     @classmethod
     def walkerPorts(cls):
-        return ["mmu.itb_walker.port", "mmu.dtb_walker.port"]
+        return ["mmu.itb_walker.port", "mmu.dtb_walker.port",
+                "mmu.stage2_itb_walker.port", "mmu.stage2_dtb_walker.port"]
 
     def connectWalkerPorts(self, iport, dport):
         self.itb_walker.port = iport
         self.dtb_walker.port = dport
+        self.stage2_itb_walker.port = iport
+        self.stage2_dtb_walker.port = dport
