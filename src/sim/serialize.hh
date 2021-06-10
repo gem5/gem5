@@ -655,25 +655,6 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
 #define UNSERIALIZE_OBJ(obj) obj.unserializeSection(cp, #obj)
 
 /**
- * \def SERIALIZE_OBJPTR(objptr)
- *
- * @ingroup api_serialize
- */
-#define SERIALIZE_OBJPTR(objptr)        paramOut(cp, #objptr, (objptr)->name())
-
-/**
- * \def UNSERIALIZE_OBJPTR(objptr)
- *
- * @ingroup api_serialize
- */
-#define UNSERIALIZE_OBJPTR(objptr)                      \
-    do {                                                \
-        SimObject *sptr;                                \
-        objParamIn(cp, #objptr, sptr);                  \
-        objptr = dynamic_cast<decltype(objptr)>(sptr);  \
-    } while (0)
-
-/**
  * \def SERIALIZE_MAPPING(member, names, size)
  */
 #define SERIALIZE_MAPPING(member, names, size) \
