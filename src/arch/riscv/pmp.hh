@@ -117,7 +117,7 @@ class PMP : public SimObject
      * request for which a page table walk is consulted by pmp unit
      * @return Fault.
      */
-    Fault pmpCheck(const RequestPtr &req, BaseTLB::Mode mode,
+    Fault pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
                   RiscvISA::PrivilegeMode pmode, ThreadContext *tc,
                   Addr vaddr = 0);
 
@@ -150,7 +150,7 @@ class PMP : public SimObject
      * @return true or false.
      */
     bool shouldCheckPMP(RiscvISA::PrivilegeMode pmode,
-                BaseTLB::Mode mode, ThreadContext *tc);
+                BaseMMU::Mode mode, ThreadContext *tc);
 
     /**
      * createAddrfault creates an address fault
@@ -162,7 +162,7 @@ class PMP : public SimObject
      * @param mode mode of access(read, write, execute).
      * @return Fault.
      */
-    Fault createAddrfault(Addr vaddr, BaseTLB::Mode mode);
+    Fault createAddrfault(Addr vaddr, BaseMMU::Mode mode);
 
     /**
      * pmpUpdateRule updates the pmp rule for a

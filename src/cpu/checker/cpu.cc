@@ -190,7 +190,7 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
 
         // translate to physical address
         if (predicate) {
-            fault = mmu->translateFunctional(mem_req, tc, BaseTLB::Read);
+            fault = mmu->translateFunctional(mem_req, tc, BaseMMU::Read);
         }
 
         if (predicate && !checked_flags && fault == NoFault && unverifiedReq) {
@@ -274,7 +274,7 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
         predicate = (mem_req != nullptr);
 
         if (predicate) {
-            fault = mmu->translateFunctional(mem_req, tc, BaseTLB::Write);
+            fault = mmu->translateFunctional(mem_req, tc, BaseMMU::Write);
         }
 
         if (predicate && !checked_flags && fault == NoFault && unverifiedReq) {

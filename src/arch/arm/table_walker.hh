@@ -45,6 +45,7 @@
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
+#include "arch/generic/mmu.hh"
 #include "mem/packet_queue.hh"
 #include "mem/qport.hh"
 #include "mem/request.hh"
@@ -752,7 +753,7 @@ class TableWalker : public ClockedObject
         bool    isHyp;
 
         /** Translation state for delayed requests */
-        TLB::Translation *transState;
+        BaseMMU::Translation *transState;
 
         /** The fault that we are going to return */
         Fault fault;
@@ -815,7 +816,7 @@ class TableWalker : public ClockedObject
         bool stage2Req;
 
         /** A pointer to the stage 2 translation that's in progress */
-        TLB::Translation *stage2Tran;
+        BaseMMU::Translation *stage2Tran;
 
         /** If the mode is timing or atomic */
         bool timing;
@@ -824,7 +825,7 @@ class TableWalker : public ClockedObject
         bool functional;
 
         /** Save mode for use in delayed response */
-        BaseTLB::Mode mode;
+        BaseMMU::Mode mode;
 
         /** The translation type that has been requested */
         TLB::ArmTranslationType tranType;
@@ -902,7 +903,7 @@ class TableWalker : public ClockedObject
 
     /** This translation class is used to trigger the data fetch once a timing
         translation returns the translated physical address */
-    class Stage2Walk : public BaseTLB::Translation
+    class Stage2Walk : public BaseMMU::Translation
     {
       private:
         uint8_t      *data;
@@ -921,7 +922,7 @@ class TableWalker : public ClockedObject
         void markDelayed() {}
 
         void finish(const Fault &fault, const RequestPtr &req,
-            ThreadContext *tc, BaseTLB::Mode mode);
+            ThreadContext *tc, BaseMMU::Mode mode);
 
         void
         setVirt(Addr vaddr, int size, Request::Flags flags,
@@ -1030,7 +1031,7 @@ class TableWalker : public ClockedObject
 
     Fault walk(const RequestPtr &req, ThreadContext *tc,
                uint16_t asid, vmid_t _vmid,
-               bool _isHyp, TLB::Mode mode, TLB::Translation *_trans,
+               bool _isHyp, BaseMMU::Mode mode, BaseMMU::Translation *_trans,
                bool timing, bool functional, bool secure,
                TLB::ArmTranslationType tranType, bool _stage2Req);
 

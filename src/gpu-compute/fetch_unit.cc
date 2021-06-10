@@ -174,7 +174,7 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
 
         // Sender State needed by TLB hierarchy
         pkt->senderState =
-            new TheISA::GpuTLB::TranslationState(BaseTLB::Execute,
+            new TheISA::GpuTLB::TranslationState(BaseMMU::Execute,
                                                  computeUnit.shader->gpuTc,
                                                  false, pkt->senderState);
 
@@ -201,7 +201,7 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
         }
     } else {
         pkt->senderState =
-            new TheISA::GpuTLB::TranslationState(BaseTLB::Execute,
+            new TheISA::GpuTLB::TranslationState(BaseMMU::Execute,
                                                  computeUnit.shader->gpuTc);
 
         computeUnit.sqcTLBPort.sendFunctional(pkt);

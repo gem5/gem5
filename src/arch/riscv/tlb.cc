@@ -106,7 +106,7 @@ TLB::evictLRU()
 }
 
 TlbEntry *
-TLB::lookup(Addr vpn, uint16_t asid, Mode mode, bool hidden)
+TLB::lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden)
 {
     TlbEntry *entry = trie.lookup(buildKey(vpn, asid));
 
@@ -114,19 +114,19 @@ TLB::lookup(Addr vpn, uint16_t asid, Mode mode, bool hidden)
         if (entry)
             entry->lruSeq = nextSeq();
 
-        if (mode == Write)
+        if (mode == BaseMMU::Write)
             stats.writeAccesses++;
         else
             stats.readAccesses++;
 
         if (!entry) {
-            if (mode == Write)
+            if (mode == BaseMMU::Write)
                 stats.writeMisses++;
             else
                 stats.readMisses++;
         }
         else {
-            if (mode == Write)
+            if (mode == BaseMMU::Write)
                 stats.writeHits++;
             else
                 stats.readHits++;
@@ -146,7 +146,7 @@ TLB::insert(Addr vpn, const TlbEntry &entry)
         vpn, entry.asid, entry.paddr, entry.pte, entry.size());
 
     // If somebody beat us to it, just use that existing entry.
-    TlbEntry *newEntry = lookup(vpn, entry.asid, Mode::Read, true);
+    TlbEntry *newEntry = lookup(vpn, entry.asid, BaseMMU::Read, true);
     if (newEntry) {
         // update PTE flags (maybe we set the dirty/writable flag)
         newEntry->pte = entry.pte;
@@ -179,7 +179,7 @@ TLB::demapPage(Addr vpn, uint64_t asid)
     else {
         DPRINTF(TLB, "flush(vpn=%#x, asid=%#x)\n", vpn, asid);
         if (vpn != 0 && asid != 0) {
-            TlbEntry *newEntry = lookup(vpn, asid, Mode::Read, true);
+            TlbEntry *newEntry = lookup(vpn, asid, BaseMMU::Read, true);
             if (newEntry)
                 remove(newEntry - tlb.data());
         }
@@ -221,19 +221,19 @@ TLB::remove(size_t idx)
 
 Fault
 TLB::checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
-                      Mode mode, PTESv39 pte)
+                      BaseMMU::Mode mode, PTESv39 pte)
 {
     Fault fault = NoFault;
 
-    if (mode == TLB::Read && !pte.r) {
+    if (mode == BaseMMU::Read && !pte.r) {
         DPRINTF(TLB, "PTE has no read perm, raising PF\n");
         fault = createPagefault(vaddr, mode);
     }
-    else if (mode == TLB::Write && !pte.w) {
+    else if (mode == BaseMMU::Write && !pte.w) {
         DPRINTF(TLB, "PTE has no write perm, raising PF\n");
         fault = createPagefault(vaddr, mode);
     }
-    else if (mode == TLB::Execute && !pte.x) {
+    else if (mode == BaseMMU::Execute && !pte.x) {
         DPRINTF(TLB, "PTE has no exec perm, raising PF\n");
         fault = createPagefault(vaddr, mode);
     }
@@ -254,12 +254,12 @@ TLB::checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
 }
 
 Fault
-TLB::createPagefault(Addr vaddr, Mode mode)
+TLB::createPagefault(Addr vaddr, BaseMMU::Mode mode)
 {
     ExceptionCode code;
-    if (mode == TLB::Read)
+    if (mode == BaseMMU::Read)
         code = ExceptionCode::LOAD_PAGE;
-    else if (mode == TLB::Write)
+    else if (mode == BaseMMU::Write)
         code = ExceptionCode::STORE_PAGE;
     else
         code = ExceptionCode::INST_PAGE;
@@ -267,7 +267,7 @@ TLB::createPagefault(Addr vaddr, Mode mode)
 }
 
 Addr
-TLB::translateWithTLB(Addr vaddr, uint16_t asid, Mode mode)
+TLB::translateWithTLB(Addr vaddr, uint16_t asid, BaseMMU::Mode mode)
 {
     TlbEntry *e = lookup(vaddr, asid, mode, false);
     assert(e != nullptr);
@@ -276,7 +276,8 @@ TLB::translateWithTLB(Addr vaddr, uint16_t asid, Mode mode)
 
 Fault
 TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
-                 Translation *translation, Mode mode, bool &delayed)
+                 BaseMMU::Translation *translation, BaseMMU::Mode mode,
+                 bool &delayed)
 {
     delayed = false;
 
@@ -301,7 +302,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     if (fault != NoFault) {
         // if we want to write and it isn't writable, do a page table walk
         // again to update the dirty flag.
-        if (mode == TLB::Write && !e->pte.w) {
+        if (mode == BaseMMU::Write && !e->pte.w) {
             DPRINTF(TLB, "Dirty bit not set, repeating PT walk\n");
             fault = walker->start(tc, translation, req, mode);
             if (translation != nullptr || fault != NoFault) {
@@ -322,18 +323,19 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
 }
 
 PrivilegeMode
-TLB::getMemPriv(ThreadContext *tc, Mode mode)
+TLB::getMemPriv(ThreadContext *tc, BaseMMU::Mode mode)
 {
     STATUS status = (STATUS)tc->readMiscReg(MISCREG_STATUS);
     PrivilegeMode pmode = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
-    if (mode != Mode::Execute && status.mprv == 1)
+    if (mode != BaseMMU::Execute && status.mprv == 1)
         pmode = (PrivilegeMode)(RegVal)status.mpp;
     return pmode;
 }
 
 Fault
 TLB::translate(const RequestPtr &req, ThreadContext *tc,
-               Translation *translation, Mode mode, bool &delayed)
+               BaseMMU::Translation *translation, BaseMMU::Mode mode,
+               bool &delayed)
 {
     delayed = false;
 
@@ -359,9 +361,9 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
         // TODO where is that written in the manual?
         if (!delayed && fault == NoFault && bits(req->getPaddr(), 63)) {
             ExceptionCode code;
-            if (mode == TLB::Read)
+            if (mode == BaseMMU::Read)
                 code = ExceptionCode::LOAD_ACCESS;
-            else if (mode == TLB::Write)
+            else if (mode == BaseMMU::Write)
                 code = ExceptionCode::STORE_ACCESS;
             else
                 code = ExceptionCode::INST_ACCESS;
@@ -401,7 +403,8 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
 }
 
 Fault
-TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                     BaseMMU::Mode mode)
 {
     bool delayed;
     return translate(req, tc, nullptr, mode, delayed);
@@ -409,7 +412,7 @@ TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
 
 void
 TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
-                     Translation *translation, Mode mode)
+                     BaseMMU::Translation *translation, BaseMMU::Mode mode)
 {
     bool delayed;
     assert(translation);
@@ -421,7 +424,8 @@ TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
 }
 
 Fault
-TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                         BaseMMU::Mode mode)
 {
     const Addr vaddr = req->getVaddr();
     Addr paddr = vaddr;
@@ -448,7 +452,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
         Process *process = tc->getProcessPtr();
         const auto *pte = process->pTable->lookup(vaddr);
 
-        if (!pte && mode != Execute) {
+        if (!pte && mode != BaseMMU::Execute) {
             // Check if we just need to grow the stack.
             if (process->fixupFault(vaddr)) {
                 // If we did, lookup the entry for the new page.
@@ -469,7 +473,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
 
 Fault
 TLB::finalizePhysical(const RequestPtr &req,
-                      ThreadContext *tc, Mode mode) const
+                      ThreadContext *tc, BaseMMU::Mode mode) const
 {
     return NoFault;
 }

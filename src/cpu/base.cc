@@ -258,7 +258,7 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseMMU *mmu)
     req->setVirt(addr, size, 0x0, dataRequestorId(), tc->instAddr());
 
     // translate to physical address
-    Fault fault = mmu->translateAtomic(req, tc, BaseTLB::Read);
+    Fault fault = mmu->translateAtomic(req, tc, BaseMMU::Read);
     assert(fault == NoFault);
 
     monitor.pAddr = req->getPaddr() & mask;

@@ -83,13 +83,13 @@ Queued::DeferredPacket::startTranslation(BaseTLB *tlb)
     if (!ongoingTranslation) {
         ongoingTranslation = true;
         // Prefetchers only operate in Timing mode
-        tlb->translateTiming(translationRequest, tc, this, BaseTLB::Read);
+        tlb->translateTiming(translationRequest, tc, this, BaseMMU::Read);
     }
 }
 
 void
 Queued::DeferredPacket::finish(const Fault &fault,
-    const RequestPtr &req, ThreadContext *tc, BaseTLB::Mode mode)
+    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
 {
     assert(ongoingTranslation);
     ongoingTranslation = false;

@@ -52,11 +52,11 @@ SETranslatingPortProxy::SETranslatingPortProxy(
 {}
 
 bool
-SETranslatingPortProxy::fixupAddr(Addr addr, BaseTLB::Mode mode) const
+SETranslatingPortProxy::fixupAddr(Addr addr, BaseMMU::Mode mode) const
 {
     auto *process = _tc->getProcessPtr();
 
-    if (mode == BaseTLB::Write) {
+    if (mode == BaseMMU::Write) {
         if (allocating == Always) {
             process->allocateMem(roundDown(addr, pageBytes), pageBytes);
             return true;

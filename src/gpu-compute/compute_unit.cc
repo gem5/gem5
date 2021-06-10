@@ -1021,7 +1021,7 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
     pkt->req->setReqInstSeqNum(gpuDynInst->seqNum());
 
     // figure out the type of the request to set read/write
-    BaseTLB::Mode TLB_mode;
+    BaseMMU::Mode TLB_mode;
     assert(pkt->isRead() || pkt->isWrite());
 
     // only do some things if actually accessing data
@@ -1036,11 +1036,11 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
     shader->gpuCmdProc.driver()->setMtype(pkt->req);
 
     // Check write before read for atomic operations
-    // since atomic operations should use BaseTLB::Write
+    // since atomic operations should use BaseMMU::Write
     if (pkt->isWrite()) {
-        TLB_mode = BaseTLB::Write;
+        TLB_mode = BaseMMU::Write;
     } else if (pkt->isRead()) {
-        TLB_mode = BaseTLB::Read;
+        TLB_mode = BaseMMU::Read;
     } else {
         fatal("pkt is not a read nor a write\n");
     }
@@ -1205,7 +1205,7 @@ ComputeUnit::sendScalarRequest(GPUDynInstPtr gpuDynInst, PacketPtr pkt)
 {
     assert(pkt->isWrite() || pkt->isRead());
 
-    BaseTLB::Mode tlb_mode = pkt->isRead() ? BaseTLB::Read : BaseTLB::Write;
+    BaseMMU::Mode tlb_mode = pkt->isRead() ? BaseMMU::Read : BaseMMU::Write;
 
     pkt->senderState =
         new ComputeUnit::ScalarDTLBPort::SenderState(gpuDynInst);
@@ -1222,7 +1222,7 @@ ComputeUnit::sendScalarRequest(GPUDynInstPtr gpuDynInst, PacketPtr pkt)
         scalarDTLBPort.retries.push_back(pkt);
     } else {
         DPRINTF(GPUTLB, "sent scalar %s translation request for addr %#x\n",
-                tlb_mode == BaseTLB::Read ? "read" : "write",
+                tlb_mode == BaseMMU::Read ? "read" : "write",
                 pkt->req->getVaddr());
     }
 }
@@ -1422,7 +1422,7 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
     pkt->senderState = translation_state->saved;
 
     // for prefetch pkt
-    BaseTLB::Mode TLB_mode = translation_state->tlbMode;
+    BaseMMU::Mode TLB_mode = translation_state->tlbMode;
 
     delete translation_state;
 

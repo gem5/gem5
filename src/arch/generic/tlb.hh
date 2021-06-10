@@ -41,6 +41,7 @@
 #ifndef __ARCH_GENERIC_TLB_HH__
 #define __ARCH_GENERIC_TLB_HH__
 
+#include "arch/generic/mmu.hh"
 #include "base/logging.hh"
 #include "mem/request.hh"
 #include "sim/sim_object.hh"
@@ -56,47 +57,16 @@ class BaseTLB : public SimObject
     BaseTLB(const Params &p) : SimObject(p) {}
 
   public:
-
-    enum Mode { Read, Write, Execute };
-
-    class Translation
-    {
-      public:
-        virtual ~Translation()
-        {}
-
-        /**
-         * Signal that the translation has been delayed due to a hw page table
-         * walk.
-         */
-        virtual void markDelayed() = 0;
-
-        /*
-         * The memory for this object may be dynamically allocated, and it may
-         * be responsible for cleaning itself up which will happen in this
-         * function. Once it's called, the object is no longer valid.
-         */
-        virtual void finish(const Fault &fault, const RequestPtr &req,
-                            ThreadContext *tc, Mode mode) = 0;
-
-        /** This function is used by the page table walker to determine if it
-         * should translate the a pending request or if the underlying request
-         * has been squashed.
-         * @ return Is the instruction that requested this translation squashed?
-         */
-        virtual bool squashed() const { return false; }
-    };
-
-  public:
     virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
 
     virtual Fault translateAtomic(
-            const RequestPtr &req, ThreadContext *tc, Mode mode) = 0;
+            const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) = 0;
     virtual void translateTiming(
             const RequestPtr &req, ThreadContext *tc,
-            Translation *translation, Mode mode) = 0;
+            BaseMMU::Translation *translation, BaseMMU::Mode mode) = 0;
     virtual Fault
-    translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
+    translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                        BaseMMU::Mode mode)
     {
         panic("Not implemented.\n");
     }
@@ -116,7 +86,8 @@ class BaseTLB : public SimObject
      * @return A fault on failure, NoFault otherwise.
      */
     virtual Fault finalizePhysical(
-            const RequestPtr &req, ThreadContext *tc, Mode mode) const = 0;
+            const RequestPtr &req, ThreadContext *tc,
+            BaseMMU::Mode mode) const = 0;
 
     /**
      * Remove all entries from the TLB

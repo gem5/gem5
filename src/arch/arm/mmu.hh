@@ -63,7 +63,7 @@ class MMU : public BaseMMU
         return static_cast<ArmISA::TLB *>(itb);
     }
 
-    TLB * getTlb(BaseTLB::Mode mode, bool stage2) const;
+    TLB * getTlb(BaseMMU::Mode mode, bool stage2) const;
 
   protected:
     TLB *itbStage2;
@@ -89,18 +89,18 @@ class MMU : public BaseMMU
     bool translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr);
 
     Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
-        BaseTLB::Mode mode, TLB::ArmTranslationType tran_type);
+        BaseMMU::Mode mode, TLB::ArmTranslationType tran_type);
 
     Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
-        BaseTLB::Mode mode, TLB::ArmTranslationType tran_type,
+        BaseMMU::Mode mode, TLB::ArmTranslationType tran_type,
         bool stage2);
 
     using BaseMMU::translateAtomic;
     Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
-        BaseTLB::Mode mode, bool stage2);
+        BaseMMU::Mode mode, bool stage2);
 
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
-        BaseTLB::Translation *translation, BaseTLB::Mode mode, bool stage2);
+        BaseMMU::Translation *translation, BaseMMU::Mode mode, bool stage2);
 
     void invalidateMiscReg(TLBType type = ALL_TLBS);
 

@@ -515,9 +515,9 @@ namespace ArmISA
         void initID64(const ArmISAParams &p);
 
         void addressTranslation(TLB::ArmTranslationType tran_type,
-            BaseTLB::Mode mode, Request::Flags flags, RegVal val);
+            BaseMMU::Mode mode, Request::Flags flags, RegVal val);
         void addressTranslation64(TLB::ArmTranslationType tran_type,
-            BaseTLB::Mode mode, Request::Flags flags, RegVal val);
+            BaseMMU::Mode mode, Request::Flags flags, RegVal val);
 
       public:
         SelfDebug*

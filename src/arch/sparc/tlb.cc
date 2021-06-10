@@ -831,16 +831,18 @@ handleMmuRegAccess:
 };
 
 Fault
-TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                     BaseMMU::Mode mode)
 {
-    if (mode == Execute)
+    if (mode == BaseMMU::Execute)
         return translateInst(req, tc);
     else
-        return translateData(req, tc, mode == Write);
+        return translateData(req, tc, mode == BaseMMU::Write);
 }
 
 Fault
-TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                         BaseMMU::Mode mode)
 {
     Addr vaddr = req->getVaddr();
 
@@ -866,7 +868,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
     int pri_context = bits(tlbdata,47,32);
     // int sec_context = bits(tlbdata,63,48);
 
-    bool real = (mode == Execute) ? inst_real : data_real;
+    bool real = (mode == BaseMMU::Execute) ? inst_real : data_real;
 
     TlbEntry* tbe;
     PageTableEntry pte;
@@ -883,7 +885,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
         vaddr = vaddr & VAddrAMask;
 
     if (!validVirtualAddress(vaddr, addr_mask)) {
-        if (mode == Execute)
+        if (mode == BaseMMU::Execute)
             return std::make_shared<InstructionAccessException>();
         else
             return std::make_shared<DataAccessException>();
@@ -918,7 +920,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
         }
     }
 
-    if (mode == Execute) {
+    if (mode == BaseMMU::Execute) {
         if (real)
             return std::make_shared<InstructionRealTranslationMiss>();
         else if (FullSystem)
@@ -937,7 +939,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
 
 void
 TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
-        Translation *translation, Mode mode)
+        BaseMMU::Translation *translation, BaseMMU::Mode mode)
 {
     assert(translation);
     translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
@@ -945,7 +947,7 @@ TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
 
 Fault
 TLB::finalizePhysical(const RequestPtr &req,
-                      ThreadContext *tc, Mode mode) const
+                      ThreadContext *tc, BaseMMU::Mode mode) const
 {
     return NoFault;
 }

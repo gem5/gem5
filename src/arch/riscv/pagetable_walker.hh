@@ -41,6 +41,7 @@
 
 #include <vector>
 
+#include "arch/generic/mmu.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/pma_checker.hh"
 #include "arch/riscv/pmp.hh"
@@ -104,8 +105,8 @@ namespace RiscvISA
             PacketPtr read;
             std::vector<PacketPtr> writes;
             Fault timingFault;
-            TLB::Translation * translation;
-            BaseTLB::Mode mode;
+            BaseMMU::Translation * translation;
+            BaseMMU::Mode mode;
             SATP satp;
             STATUS status;
             PrivilegeMode pmode;
@@ -115,7 +116,7 @@ namespace RiscvISA
             bool started;
             bool squashed;
           public:
-            WalkerState(Walker * _walker, BaseTLB::Translation *_translation,
+            WalkerState(Walker * _walker, BaseMMU::Translation *_translation,
                         const RequestPtr &_req, bool _isFunctional = false) :
                 walker(_walker), req(_req), state(Ready),
                 nextState(Ready), level(0), inflight(0),
@@ -124,7 +125,7 @@ namespace RiscvISA
                 retrying(false), started(false), squashed(false)
             {
             }
-            void initState(ThreadContext * _tc, BaseTLB::Mode _mode,
+            void initState(ThreadContext * _tc, BaseMMU::Mode _mode,
                            bool _isTiming = false);
             Fault startWalk();
             Fault startFunctional(Addr &addr, unsigned &logBytes);
@@ -161,10 +162,10 @@ namespace RiscvISA
 
       public:
         // Kick off the state machine.
-        Fault start(ThreadContext * _tc, BaseTLB::Translation *translation,
-                const RequestPtr &req, BaseTLB::Mode mode);
+        Fault start(ThreadContext * _tc, BaseMMU::Translation *translation,
+                const RequestPtr &req, BaseMMU::Mode mode);
         Fault startFunctional(ThreadContext * _tc, Addr &addr,
-                unsigned &logBytes, BaseTLB::Mode mode);
+                unsigned &logBytes, BaseMMU::Mode mode);
         Port &getPort(const std::string &if_name,
                       PortID idx=InvalidPortID) override;
 

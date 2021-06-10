@@ -53,7 +53,7 @@ PMP::PMP(const Params &params) :
 }
 
 Fault
-PMP::pmpCheck(const RequestPtr &req, BaseTLB::Mode mode,
+PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
               RiscvISA::PrivilegeMode pmode, ThreadContext *tc,
               Addr vaddr)
 {
@@ -100,13 +100,13 @@ PMP::pmpCheck(const RequestPtr &req, BaseTLB::Mode mode,
             // i is the index of pmp table which matched
             allowed_privs &= pmpTable[match_index].pmpCfg;
 
-            if ((mode == BaseTLB::Mode::Read) &&
+            if ((mode == BaseMMU::Mode::Read) &&
                                         (PMP_READ & allowed_privs)) {
                 return NoFault;
-            } else if ((mode == BaseTLB::Mode::Write) &&
+            } else if ((mode == BaseMMU::Mode::Write) &&
                                         (PMP_WRITE & allowed_privs)) {
                 return NoFault;
-            } else if ((mode == BaseTLB::Mode::Execute) &&
+            } else if ((mode == BaseMMU::Mode::Execute) &&
                                         (PMP_EXEC & allowed_privs)) {
                 return NoFault;
             } else {
@@ -127,12 +127,12 @@ PMP::pmpCheck(const RequestPtr &req, BaseTLB::Mode mode,
 }
 
 Fault
-PMP::createAddrfault(Addr vaddr, BaseTLB::Mode mode)
+PMP::createAddrfault(Addr vaddr, BaseMMU::Mode mode)
 {
     RiscvISA::ExceptionCode code;
-    if (mode == BaseTLB::Read) {
+    if (mode == BaseMMU::Read) {
         code = RiscvISA::ExceptionCode::LOAD_ACCESS;
-    } else if (mode == BaseTLB::Write) {
+    } else if (mode == BaseMMU::Write) {
         code = RiscvISA::ExceptionCode::STORE_ACCESS;
     } else {
         code = RiscvISA::ExceptionCode::INST_ACCESS;
@@ -229,22 +229,22 @@ PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
 
 bool
 PMP::shouldCheckPMP(RiscvISA::PrivilegeMode pmode,
-            BaseTLB::Mode mode, ThreadContext *tc)
+            BaseMMU::Mode mode, ThreadContext *tc)
 {
     // instruction fetch in S and U mode
-    bool cond1 = (mode == BaseTLB::Execute &&
+    bool cond1 = (mode == BaseMMU::Execute &&
             (pmode != RiscvISA::PrivilegeMode::PRV_M));
 
     // data access in S and U mode when MPRV in mstatus is clear
     RiscvISA::STATUS status =
             tc->readMiscRegNoEffect(RiscvISA::MISCREG_STATUS);
-    bool cond2 = (mode != BaseTLB::Execute &&
+    bool cond2 = (mode != BaseMMU::Execute &&
                  (pmode != RiscvISA::PrivilegeMode::PRV_M)
                  && (!status.mprv));
 
     // data access in any mode when MPRV bit in mstatus is set
     // and the MPP field in mstatus is S or U
-    bool cond3 = (mode != BaseTLB::Execute && (status.mprv)
+    bool cond3 = (mode != BaseMMU::Execute && (status.mprv)
     && (status.mpp != RiscvISA::PrivilegeMode::PRV_M));
 
     return (cond1 || cond2 || cond3);

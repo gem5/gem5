@@ -267,7 +267,7 @@ class Shader : public ClockedObject
 
     bool dispatchWorkgroups(HSAQueueEntry *task);
     Addr mmap(int length);
-    void functionalTLBAccess(PacketPtr pkt, int cu_id, BaseTLB::Mode mode);
+    void functionalTLBAccess(PacketPtr pkt, int cu_id, BaseMMU::Mode mode);
     void updateContext(int cid);
     void notifyCuSleep();
 

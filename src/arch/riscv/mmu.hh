@@ -60,7 +60,7 @@ class MMU : public BaseMMU
     {}
 
     PrivilegeMode
-    getMemPriv(ThreadContext *tc, BaseTLB::Mode mode)
+    getMemPriv(ThreadContext *tc, BaseMMU::Mode mode)
     {
         return static_cast<TLB*>(dtb)->getMemPriv(tc, mode);
     }

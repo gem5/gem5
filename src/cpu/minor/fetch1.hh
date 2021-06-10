@@ -47,6 +47,7 @@
 
 #include <vector>
 
+#include "arch/generic/mmu.hh"
 #include "base/named.hh"
 #include "cpu/base.hh"
 #include "cpu/minor/buffers.hh"
@@ -104,7 +105,7 @@ class Fetch1 : public Named
     /** Structure to hold SenderState info through
      *  translation and memory accesses. */
     class FetchRequest :
-        public BaseTLB::Translation, /* For TLB lookups */
+        public BaseMMU::Translation, /* For TLB lookups */
         public Packet::SenderState /* For packing into a Packet */
     {
       protected:
@@ -159,7 +160,7 @@ class Fetch1 : public Named
         bool isComplete() const { return state == Complete; }
 
       protected:
-        /** BaseTLB::Translation interface */
+        /** BaseMMU::Translation interface */
 
         /** Interface for ITLB responses.  We can handle delay, so don't
          *  do anything */
@@ -169,7 +170,7 @@ class Fetch1 : public Named
          *  the request on to the ports' handleTLBResponse member
          *  function */
         void finish(const Fault &fault_, const RequestPtr &request_,
-                    ThreadContext *tc, BaseTLB::Mode mode);
+                    ThreadContext *tc, BaseMMU::Mode mode);
 
       public:
         FetchRequest(Fetch1 &fetch_, InstId id_, TheISA::PCState pc_) :

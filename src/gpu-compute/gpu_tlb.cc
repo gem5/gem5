@@ -457,11 +457,11 @@ namespace X86ISA
                 SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
 
                 if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
-                    if (!attr.writable && (mode == BaseTLB::Write ||
+                    if (!attr.writable && (mode == BaseMMU::Write ||
                         storeCheck))
                         return std::make_shared<GeneralProtection>(0);
 
-                    if (!attr.readable && mode == BaseTLB::Read)
+                    if (!attr.readable && mode == BaseMMU::Read)
                         return std::make_shared<GeneralProtection>(0);
 
                     expandDown = attr.expandDown;
@@ -519,7 +519,7 @@ namespace X86ISA
                         const EmulationPageTable::Entry *pte =
                             p->pTable->lookup(vaddr);
 
-                        if (!pte && mode != BaseTLB::Execute) {
+                        if (!pte && mode != BaseMMU::Execute) {
                             // penalize a "page fault" more
                             if (timing)
                                 latency += missLatency2;
@@ -560,7 +560,7 @@ namespace X86ISA
                 CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
                 bool badWrite = (!entry->writable && (inUser || cr0.wp));
 
-                if ((inUser && !entry->user) || (mode == BaseTLB::Write &&
+                if ((inUser && !entry->user) || (mode == BaseMMU::Write &&
                      badWrite)) {
                     // The page must have been present to get into the TLB in
                     // the first place. We'll assume the reserved bits are
@@ -573,7 +573,7 @@ namespace X86ISA
                     // This would fault if this were a write, so return a page
                     // fault that reflects that happening.
                     return std::make_shared<PageFault>(vaddr, true,
-                                                       BaseTLB::Write,
+                                                       BaseMMU::Write,
                                                        inUser, false);
                 }
 
@@ -774,7 +774,7 @@ namespace X86ISA
         bool badWrite = (!tlb_entry->writable && (inUser || cr0.wp));
 
         if ((inUser && !tlb_entry->user) ||
-            (mode == BaseTLB::Write && badWrite)) {
+            (mode == BaseMMU::Write && badWrite)) {
             // The page must have been present to get into the TLB in
             // the first place. We'll assume the reserved bits are
             // fine even though we're not checking them.
@@ -967,7 +967,7 @@ namespace X86ISA
             assert(alignedVaddr == virtPageAddr);
 
             const EmulationPageTable::Entry *pte = p->pTable->lookup(vaddr);
-            if (!pte && sender_state->tlbMode != BaseTLB::Execute &&
+            if (!pte && sender_state->tlbMode != BaseMMU::Execute &&
                     p->fixupFault(vaddr)) {
                 pte = p->pTable->lookup(vaddr);
             }
@@ -1172,7 +1172,7 @@ namespace X86ISA
 
                 const EmulationPageTable::Entry *pte =
                         p->pTable->lookup(vaddr);
-                if (!pte && sender_state->tlbMode != BaseTLB::Execute &&
+                if (!pte && sender_state->tlbMode != BaseMMU::Execute &&
                         p->fixupFault(vaddr)) {
                     pte = p->pTable->lookup(vaddr);
                 }

@@ -308,7 +308,7 @@ class SelfDebug
     }
 
     Fault testDebug(ThreadContext *tc, const RequestPtr &req,
-                    BaseTLB::Mode mode);
+                    BaseMMU::Mode mode);
 
   protected:
     Fault testBreakPoints(ThreadContext *tc, Addr vaddr);

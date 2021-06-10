@@ -42,9 +42,52 @@
  */
 
 #include "arch/generic/mmu.hh"
+#include "arch/generic/tlb.hh"
 
 namespace gem5
 {
+
+void
+BaseMMU::flushAll()
+{
+    dtb->flushAll();
+    itb->flushAll();
+}
+
+void
+BaseMMU::demapPage(Addr vaddr, uint64_t asn)
+{
+    itb->demapPage(vaddr, asn);
+    dtb->demapPage(vaddr, asn);
+}
+
+Fault
+BaseMMU::translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                         BaseMMU::Mode mode)
+{
+    return getTlb(mode)->translateAtomic(req, tc, mode);
+}
+
+void
+BaseMMU::translateTiming(const RequestPtr &req, ThreadContext *tc,
+                         BaseMMU::Translation *translation, BaseMMU::Mode mode)
+{
+    return getTlb(mode)->translateTiming(req, tc, translation, mode);
+}
+
+Fault
+BaseMMU::translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                             BaseMMU::Mode mode)
+{
+    return getTlb(mode)->translateFunctional(req, tc, mode);
+}
+
+Fault
+BaseMMU::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                          BaseMMU::Mode mode) const
+{
+    return getTlb(mode)->finalizePhysical(req, tc, mode);
+}
 
 void
 BaseMMU::takeOverFrom(BaseMMU *old_mmu)

@@ -69,8 +69,8 @@ namespace gem5
 namespace RiscvISA {
 
 Fault
-Walker::start(ThreadContext * _tc, BaseTLB::Translation *_translation,
-              const RequestPtr &_req, BaseTLB::Mode _mode)
+Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
+              const RequestPtr &_req, BaseMMU::Mode _mode)
 {
     // TODO: in timing mode, instead of blocking when there are other
     // outstanding requests, see if this request can be coalesced with
@@ -95,7 +95,7 @@ Walker::start(ThreadContext * _tc, BaseTLB::Translation *_translation,
 
 Fault
 Walker::startFunctional(ThreadContext * _tc, Addr &addr, unsigned &logBytes,
-              BaseTLB::Mode _mode)
+              BaseMMU::Mode _mode)
 {
     funcState.initState(_tc, _mode);
     return funcState.startFunctional(addr, logBytes);
@@ -180,7 +180,7 @@ Walker::getPort(const std::string &if_name, PortID idx)
 
 void
 Walker::WalkerState::initState(ThreadContext * _tc,
-        BaseTLB::Mode _mode, bool _isTiming)
+        BaseMMU::Mode _mode, bool _isTiming)
 {
     assert(state == Ready);
     started = false;
@@ -342,7 +342,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         pte.a = 1;
                         doWrite = true;
                     }
-                    if (!pte.d && mode == TLB::Write) {
+                    if (!pte.d && mode == BaseMMU::Write) {
                         pte.d = 1;
                         doWrite = true;
                     }
@@ -370,7 +370,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         // put it non-writable into the TLB to detect
                         // writes and redo the page table walk in order
                         // to update the dirty flag.
-                        if (!pte.d && mode != TLB::Write)
+                        if (!pte.d && mode != BaseMMU::Write)
                             entry.pte.w = 0;
                         doTLBInsert = true;
                     }

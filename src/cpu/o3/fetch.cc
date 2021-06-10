@@ -596,7 +596,7 @@ Fetch::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     fetchStatus[tid] = ItlbWait;
     FetchTranslation *trans = new FetchTranslation(this);
     cpu->mmu->translateTiming(mem_req, cpu->thread[tid]->getTC(),
-                              trans, BaseTLB::Execute);
+                              trans, BaseMMU::Execute);
     return true;
 }
 

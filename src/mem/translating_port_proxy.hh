@@ -58,8 +58,8 @@ class ThreadContext;
 class TranslatingPortProxy : public PortProxy
 {
   private:
-    bool tryTLBsOnce(RequestPtr req, BaseTLB::Mode) const;
-    bool tryTLBs(RequestPtr req, BaseTLB::Mode) const;
+    bool tryTLBsOnce(RequestPtr req, BaseMMU::Mode) const;
+    bool tryTLBs(RequestPtr req, BaseMMU::Mode) const;
 
   protected:
     ThreadContext* _tc;
@@ -68,7 +68,7 @@ class TranslatingPortProxy : public PortProxy
     Request::Flags flags;
 
     virtual bool
-    fixupAddr(Addr addr, BaseTLB::Mode mode) const
+    fixupAddr(Addr addr, BaseMMU::Mode mode) const
     {
         return false;
     }

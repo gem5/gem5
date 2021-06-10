@@ -127,7 +127,7 @@ class LSQ : public Named
      *  translation, the queues in this port and back from the memory
      *  system. */
     class LSQRequest :
-        public BaseTLB::Translation, /* For TLB lookups */
+        public BaseMMU::Translation, /* For TLB lookups */
         public Packet::SenderState /* For packing into a Packet */
     {
       public:
@@ -196,7 +196,7 @@ class LSQ : public Named
         LSQRequestState state;
 
       protected:
-        /** BaseTLB::Translation interface */
+        /** BaseMMU::Translation interface */
         void markDelayed() { isTranslationDelayed = true; }
 
         /** Instructions may want to suppress translation faults (e.g.
@@ -292,7 +292,7 @@ class LSQ : public Named
       protected:
         /** TLB interace */
         void finish(const Fault &fault_, const RequestPtr &request_,
-                    ThreadContext *tc, BaseTLB::Mode mode)
+                    ThreadContext *tc, BaseMMU::Mode mode)
         { }
 
       public:
@@ -353,7 +353,7 @@ class LSQ : public Named
       protected:
         /** TLB interace */
         void finish(const Fault &fault_, const RequestPtr &request_,
-                    ThreadContext *tc, BaseTLB::Mode mode);
+                    ThreadContext *tc, BaseMMU::Mode mode);
 
         /** Has my only packet been sent to the memory system but has not
          *  yet been responded to */
@@ -426,7 +426,7 @@ class LSQ : public Named
       protected:
         /** TLB response interface */
         void finish(const Fault &fault_, const RequestPtr &request_,
-                    ThreadContext *tc, BaseTLB::Mode mode);
+                    ThreadContext *tc, BaseMMU::Mode mode);
 
       public:
         SplitDataRequest(LSQ &port_, MinorDynInstPtr inst_,

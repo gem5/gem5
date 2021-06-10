@@ -78,7 +78,7 @@ RemoteGDB::acc(Addr va, size_t len)
             context()->getMMUPtr())->getDataWalker();
         unsigned logBytes;
         Fault fault = walker->startFunctional(context(), va, logBytes,
-                                              BaseTLB::Read);
+                                              BaseMMU::Read);
         if (fault != NoFault)
             return false;
 
@@ -87,7 +87,7 @@ RemoteGDB::acc(Addr va, size_t len)
             return true;
 
         fault = walker->startFunctional(context(), endVa, logBytes,
-                                        BaseTLB::Read);
+                                        BaseMMU::Read);
         return fault == NoFault;
     } else {
         return context()->getProcessPtr()->pTable->lookup(va) != nullptr;

@@ -49,11 +49,11 @@ using namespace ArmISA;
 
 Fault
 SelfDebug::testDebug(ThreadContext *tc, const RequestPtr &req,
-                     BaseTLB::Mode mode)
+                     BaseMMU::Mode mode)
 {
     Fault fault = NoFault;
 
-    if (mode == BaseTLB::Execute) {
+    if (mode == BaseMMU::Execute) {
         const bool d_step = softStep->advanceSS(tc);
         if (!d_step) {
             fault = testVectorCatch(tc, req->getVaddr(), nullptr);
@@ -62,7 +62,7 @@ SelfDebug::testDebug(ThreadContext *tc, const RequestPtr &req,
         }
     } else if (!req->isCacheMaintenance() ||
              (req->isCacheInvalidate() && !req->isCacheClean())) {
-        bool md = mode == BaseTLB::Write ? true: false;
+        bool md = mode == BaseMMU::Write ? true: false;
         fault = testWatchPoints(tc, req->getVaddr(), md,
                                 req->isAtomic(),
                                 req->getSize(),

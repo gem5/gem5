@@ -245,7 +245,7 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
                                  thread->instAddr());
 
                 fault = mmu->translateFunctional(
-                    mem_req, tc, BaseTLB::Execute);
+                    mem_req, tc, BaseMMU::Execute);
 
                 if (fault != NoFault) {
                     if (unverifiedInst->getFault() == NoFault) {

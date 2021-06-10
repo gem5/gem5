@@ -183,8 +183,8 @@ tryTranslate(ThreadContext *tc, Addr addr)
     // Calling translateFunctional invokes a table-walk if required
     // so we should always succeed
     auto *mmu = tc->getMMUPtr();
-    return mmu->translateFunctional(req, tc, BaseTLB::Read) == NoFault ||
-           mmu->translateFunctional(req, tc, BaseTLB::Execute) == NoFault;
+    return mmu->translateFunctional(req, tc, BaseMMU::Read) == NoFault ||
+           mmu->translateFunctional(req, tc, BaseMMU::Execute) == NoFault;
 }
 
 RemoteGDB::RemoteGDB(System *_system, int _port)

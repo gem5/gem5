@@ -42,6 +42,7 @@
 #define __CPU_O3_FETCH_HH__
 
 #include "arch/decoder.hh"
+#include "arch/generic/mmu.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
@@ -101,7 +102,7 @@ class Fetch
         virtual void recvReqRetry();
     };
 
-    class FetchTranslation : public BaseTLB::Translation
+    class FetchTranslation : public BaseMMU::Translation
     {
       protected:
         Fetch *fetch;
@@ -113,9 +114,9 @@ class Fetch
 
         void
         finish(const Fault &fault, const RequestPtr &req,
-            gem5::ThreadContext *tc, BaseTLB::Mode mode)
+            gem5::ThreadContext *tc, BaseMMU::Mode mode)
         {
-            assert(mode == BaseTLB::Execute);
+            assert(mode == BaseMMU::Execute);
             fetch->finishTranslation(fault, req);
             delete this;
         }

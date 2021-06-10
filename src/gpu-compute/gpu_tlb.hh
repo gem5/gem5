@@ -78,7 +78,7 @@ namespace X86ISA
         GpuTLB(const Params &p);
         ~GpuTLB();
 
-        typedef enum BaseTLB::Mode Mode;
+        typedef enum BaseMMU::Mode Mode;
 
         class Translation
         {

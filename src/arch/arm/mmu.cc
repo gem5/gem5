@@ -70,9 +70,9 @@ MMU::init()
 }
 
 TLB *
-MMU::getTlb(BaseTLB::Mode mode, bool stage2) const
+MMU::getTlb(BaseMMU::Mode mode, bool stage2) const
 {
-    if (mode == BaseTLB::Execute) {
+    if (mode == BaseMMU::Execute) {
         if (stage2)
             return itbStage2;
         else
@@ -93,14 +93,14 @@ MMU::translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr)
 
 Fault
 MMU::translateFunctional(const RequestPtr &req, ThreadContext *tc,
-    BaseTLB::Mode mode, TLB::ArmTranslationType tran_type)
+    BaseMMU::Mode mode, TLB::ArmTranslationType tran_type)
 {
     return translateFunctional(req, tc, mode, tran_type, false);
 }
 
 Fault
 MMU::translateFunctional(const RequestPtr &req, ThreadContext *tc,
-    BaseTLB::Mode mode, TLB::ArmTranslationType tran_type,
+    BaseMMU::Mode mode, TLB::ArmTranslationType tran_type,
     bool stage2)
 {
     return getTlb(mode, stage2)->translateFunctional(
@@ -109,14 +109,14 @@ MMU::translateFunctional(const RequestPtr &req, ThreadContext *tc,
 
 Fault
 MMU::translateAtomic(const RequestPtr &req, ThreadContext *tc,
-    BaseTLB::Mode mode, bool stage2)
+    BaseMMU::Mode mode, bool stage2)
 {
     return getTlb(mode, stage2)->translateAtomic(req, tc, mode);
 }
 
 void
 MMU::translateTiming(const RequestPtr &req, ThreadContext *tc,
-    BaseTLB::Translation *translation, BaseTLB::Mode mode, bool stage2)
+    BaseMMU::Translation *translation, BaseMMU::Mode mode, bool stage2)
 {
     return getTlb(mode, stage2)->translateTiming(req, tc, translation, mode);
 }

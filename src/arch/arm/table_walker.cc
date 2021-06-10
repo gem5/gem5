@@ -128,7 +128,7 @@ TableWalker::WalkerState::WalkerState() :
     secureLookup(false), rwTable(false), userTable(false), xnTable(false),
     pxnTable(false), hpd(false), stage2Req(false),
     stage2Tran(nullptr), timing(false), functional(false),
-    mode(BaseTLB::Read), tranType(TLB::NormalTran), l2Desc(l1Desc),
+    mode(BaseMMU::Read), tranType(TLB::NormalTran), l2Desc(l1Desc),
     delayed(false), tableWalker(nullptr)
 {
 }
@@ -280,8 +280,8 @@ TableWalker::drainResume()
 
 Fault
 TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
-                  vmid_t _vmid, bool _isHyp, TLB::Mode _mode,
-                  TLB::Translation *_trans, bool _timing, bool _functional,
+                  vmid_t _vmid, bool _isHyp, BaseMMU::Mode _mode,
+                  BaseMMU::Translation *_trans, bool _timing, bool _functional,
                   bool secure, TLB::ArmTranslationType tranType,
                   bool _stage2Req)
 {
@@ -354,7 +354,7 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
     if (currState->aarch64)
         currState->vaddr = purifyTaggedAddr(currState->vaddr_tainted,
                                             currState->tc, currState->el,
-                                            currState->mode==TLB::Execute);
+                                            currState->mode==BaseMMU::Execute);
     else
         currState->vaddr = currState->vaddr_tainted;
 
@@ -409,8 +409,8 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
     }
     sctlr = currState->sctlr;
 
-    currState->isFetch = (currState->mode == TLB::Execute);
-    currState->isWrite = (currState->mode == TLB::Write);
+    currState->isFetch = (currState->mode == BaseMMU::Execute);
+    currState->isWrite = (currState->mode == BaseMMU::Write);
 
     stats.requestOrigin[REQUESTED][currState->isFetch]++;
 
@@ -480,7 +480,7 @@ TableWalker::processWalkWrapper()
     // @TODO Should this always be the TLB or should we look in the stage2 TLB?
     TlbEntry* te = tlb->lookup(currState->vaddr, currState->asid,
             currState->vmid, currState->isHyp, currState->isSecure, true, false,
-            currState->el, false, BaseTLB::Read);
+            currState->el, false, BaseMMU::Read);
 
     // Check if we still need to have a walk for this request. If the requesting
     // instruction has been squashed, or a previous walk has filled the TLB with
@@ -546,7 +546,7 @@ TableWalker::processWalkWrapper()
             currState = pendingQueue.front();
             te = tlb->lookup(currState->vaddr, currState->asid,
                 currState->vmid, currState->isHyp, currState->isSecure, true,
-                false, currState->el, false, BaseTLB::Read);
+                false, currState->el, false, BaseMMU::Read);
         } else {
             // Terminate the loop, nothing more to do
             currState = NULL;
@@ -887,7 +887,7 @@ TableWalker::processWalkAArch64()
 
     int top_bit = computeAddrTop(currState->tc,
         bits(currState->vaddr, 55),
-        currState->mode==TLB::Execute,
+        currState->mode==BaseMMU::Execute,
         currState->tcr,
         currState->el);
 
@@ -2419,10 +2419,10 @@ TableWalker::readDataUntimed(ThreadContext *tc, Addr vaddr, Addr desc_addr,
     req->setVirt(desc_addr, num_bytes, flags | Request::PT_WALK,
                 requestorId, 0);
     if (functional) {
-        fault = mmu->translateFunctional(req, tc, BaseTLB::Read,
+        fault = mmu->translateFunctional(req, tc, BaseMMU::Read,
             TLB::NormalTran, true);
     } else {
-        fault = mmu->translateAtomic(req, tc, BaseTLB::Read, true);
+        fault = mmu->translateAtomic(req, tc, BaseMMU::Read, true);
     }
 
     // Now do the access.
@@ -2469,7 +2469,7 @@ TableWalker::Stage2Walk::Stage2Walk(TableWalker &_parent,
 void
 TableWalker::Stage2Walk::finish(const Fault &_fault,
                                 const RequestPtr &req,
-                                ThreadContext *tc, BaseTLB::Mode mode)
+                                ThreadContext *tc, BaseMMU::Mode mode)
 {
     fault = _fault;
 
@@ -2495,7 +2495,7 @@ TableWalker::Stage2Walk::finish(const Fault &_fault,
 void
 TableWalker::Stage2Walk::translateTiming(ThreadContext *tc)
 {
-    parent.mmu->translateTiming(req, tc, this, BaseTLB::Read, true);
+    parent.mmu->translateTiming(req, tc, this, BaseMMU::Read, true);
 }
 
 TableWalker::TableWalkerStats::TableWalkerStats(Stats::Group *parent)

@@ -193,7 +193,7 @@ Fetch1::fetchLine(ThreadID tid)
     cpu.threads[request->id.threadId]->mmu->translateTiming(
         request->request,
         cpu.getContext(request->id.threadId),
-        request, BaseTLB::Execute);
+        request, BaseMMU::Execute);
 
     lineSeqNum++;
 
@@ -234,7 +234,7 @@ Fetch1::FetchRequest::makePacket()
 
 void
 Fetch1::FetchRequest::finish(const Fault &fault_, const RequestPtr &request_,
-                             ThreadContext *tc, BaseTLB::Mode mode)
+                             ThreadContext *tc, BaseMMU::Mode mode)
 {
     fault = fault_;
 

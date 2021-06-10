@@ -458,7 +458,7 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
     Fault fault;
     const Addr pc = thread->instAddr();
     unsigned block_size = cacheLineSize();
-    BaseTLB::Mode mode = BaseTLB::Read;
+    BaseMMU::Mode mode = BaseMMU::Read;
 
     if (traceData)
         traceData->setMem(addr, size, flags);
@@ -532,7 +532,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
     uint8_t *newData = new uint8_t[size];
     const Addr pc = thread->instAddr();
     unsigned block_size = cacheLineSize();
-    BaseTLB::Mode mode = BaseTLB::Write;
+    BaseMMU::Mode mode = BaseMMU::Write;
 
     if (data == NULL) {
         assert(flags & Request::STORE_NO_DATA);
@@ -596,7 +596,7 @@ TimingSimpleCPU::initiateMemAMO(Addr addr, unsigned size,
     Fault fault;
     const Addr pc = thread->instAddr();
     unsigned block_size = cacheLineSize();
-    BaseTLB::Mode mode = BaseTLB::Write;
+    BaseMMU::Mode mode = BaseMMU::Write;
 
     if (traceData)
         traceData->setMem(addr, size, flags);
@@ -662,10 +662,10 @@ TimingSimpleCPU::finishTranslation(WholeTranslationState *state)
     } else {
         if (!state->isSplit) {
             sendData(state->mainReq, state->data, state->res,
-                     state->mode == BaseTLB::Read);
+                     state->mode == BaseMMU::Read);
         } else {
             sendSplitData(state->sreqLow, state->sreqHigh, state->mainReq,
-                          state->data, state->mode == BaseTLB::Read);
+                          state->data, state->mode == BaseMMU::Read);
         }
     }
 
@@ -705,7 +705,7 @@ TimingSimpleCPU::fetch()
         setupFetchRequest(ifetch_req);
         DPRINTF(SimpleCPU, "Translating address %#x\n", ifetch_req->getVaddr());
         thread->mmu->translateTiming(ifetch_req, thread->getTC(),
-                &fetchTranslation, BaseTLB::Execute);
+                &fetchTranslation, BaseMMU::Execute);
     } else {
         _status = IcacheWaitResponse;
         completeIfetch(NULL);

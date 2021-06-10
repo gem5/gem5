@@ -859,7 +859,7 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
 
 void
 LSQ::SingleDataRequest::finish(const Fault &fault, const RequestPtr &req,
-        gem5::ThreadContext* tc, BaseTLB::Mode mode)
+        gem5::ThreadContext* tc, BaseMMU::Mode mode)
 {
     _fault.push_back(fault);
     numInTranslationFragments = 0;
@@ -891,7 +891,7 @@ LSQ::SingleDataRequest::finish(const Fault &fault, const RequestPtr &req,
 
 void
 LSQ::SplitDataRequest::finish(const Fault &fault, const RequestPtr &req,
-        gem5::ThreadContext* tc, BaseTLB::Mode mode)
+        gem5::ThreadContext* tc, BaseMMU::Mode mode)
 {
     int i;
     for (i = 0; i < _requests.size() && _requests[i] != req; i++);
@@ -1117,7 +1117,7 @@ LSQ::LSQRequest::sendFragmentToTranslation(int i)
 {
     numInTranslationFragments++;
     _port.getMMUPtr()->translateTiming(request(i), _inst->thread->getTC(),
-            this, isLoad() ? BaseTLB::Read : BaseTLB::Write);
+            this, isLoad() ? BaseMMU::Read : BaseMMU::Write);
 }
 
 bool
@@ -1415,7 +1415,7 @@ LSQ::HtmCmdRequest::initiateTranslation()
 
 void
 LSQ::HtmCmdRequest::finish(const Fault &fault, const RequestPtr &req,
-        gem5::ThreadContext* tc, BaseTLB::Mode mode)
+        gem5::ThreadContext* tc, BaseMMU::Mode mode)
 {
     panic("unexpected behaviour");
 }

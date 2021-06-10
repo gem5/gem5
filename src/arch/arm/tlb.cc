@@ -126,7 +126,7 @@ TLB::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
     }
 
     TlbEntry *e = lookup(va, asid, vmid, isHyp, isSecure, true, false,
-                         aarch64 ? aarch64EL : EL1, false, BaseTLB::Read);
+                         aarch64 ? aarch64EL : EL1, false, BaseMMU::Read);
     if (!e)
         return false;
     pa = e->pAddr(va);
@@ -135,7 +135,7 @@ TLB::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
 
 Fault
 TLB::finalizePhysical(const RequestPtr &req,
-                      ThreadContext *tc, Mode mode) const
+                      ThreadContext *tc, BaseMMU::Mode mode) const
 {
     const Addr paddr = req->getPaddr();
 
@@ -151,7 +151,7 @@ TLB::finalizePhysical(const RequestPtr &req,
                 else
                     pseudo_inst::pseudoInst<RegABI32>(tc, func, ret);
 
-                if (mode == Read)
+                if (mode == BaseMMU::Read)
                     pkt->setLE(ret);
 
                 return Cycles(1);
@@ -165,7 +165,7 @@ TLB::finalizePhysical(const RequestPtr &req,
 TlbEntry*
 TLB::lookup(Addr va, uint16_t asn, vmid_t vmid, bool hyp, bool secure,
             bool functional, bool ignore_asn, ExceptionLevel target_el,
-            bool in_host, BaseTLB::Mode mode)
+            bool in_host, BaseMMU::Mode mode)
 {
 
     TlbEntry *retval = NULL;
@@ -206,16 +206,16 @@ TLB::lookup(Addr va, uint16_t asn, vmid_t vmid, bool hyp, bool secure,
     // Updating stats if this was not a functional lookup
     if (!functional) {
         if (!retval) {
-            if (mode == BaseTLB::Execute)
+            if (mode == BaseMMU::Execute)
                 stats.instMisses++;
-            else if (mode == BaseTLB::Write)
+            else if (mode == BaseMMU::Write)
                 stats.writeMisses++;
             else
                 stats.readMisses++;
         } else {
-            if (mode == BaseTLB::Execute)
+            if (mode == BaseMMU::Execute)
                 stats.instHits++;
-            else if (mode == BaseTLB::Write)
+            else if (mode == BaseMMU::Write)
                stats.writeHits++;
             else
                 stats.readHits++;
@@ -442,7 +442,7 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
     bool hyp = target_el == EL2;
 
     te = lookup(mva, asn, vmid, hyp, secure_lookup, true, ignore_asn,
-                target_el, in_host, BaseTLB::Read);
+                target_el, in_host, BaseMMU::Read);
     while (te != NULL) {
         if (secure_lookup == !te->nstid) {
             DPRINTF(TLB, " -  %s\n", te->print());
@@ -450,7 +450,7 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
             stats.flushedEntries++;
         }
         te = lookup(mva, asn, vmid, hyp, secure_lookup, true, ignore_asn,
-                    target_el, in_host, BaseTLB::Read);
+                    target_el, in_host, BaseMMU::Read);
     }
 }
 
@@ -538,21 +538,21 @@ TLB::regProbePoints()
 }
 
 Fault
-TLB::translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
-                 Translation *translation, bool &delay, bool timing)
+TLB::translateSe(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode,
+                 BaseMMU::Translation *translation, bool &delay, bool timing)
 {
     updateMiscReg(tc);
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
     if (aarch64)
         vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, (TCR)ttbcr,
-                                 mode==Execute);
+                                 mode==BaseMMU::Execute);
     else
         vaddr = vaddr_tainted;
     Request::Flags flags = req->getFlags();
 
-    bool is_fetch = (mode == Execute);
-    bool is_write = (mode == Write);
+    bool is_fetch = (mode == BaseMMU::Execute);
+    bool is_write = (mode == BaseMMU::Write);
 
     if (!is_fetch) {
         if (sctlr.a || !(flags & AllowUnaligned)) {
@@ -578,7 +578,7 @@ TLB::translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
 }
 
 Fault
-TLB::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode)
+TLB::checkPermissions(TlbEntry *te, const RequestPtr &req, BaseMMU::Mode mode)
 {
     // a data cache maintenance instruction that operates by MVA does
     // not generate a Data Abort exeception due to a Permission fault
@@ -588,8 +588,8 @@ TLB::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode)
 
     Addr vaddr = req->getVaddr(); // 32-bit don't have to purify
     Request::Flags flags = req->getFlags();
-    bool is_fetch  = (mode == Execute);
-    bool is_write  = (mode == Write);
+    bool is_fetch  = (mode == BaseMMU::Execute);
+    bool is_write  = (mode == BaseMMU::Write);
     bool is_priv   = isPriv && !(flags & UserMode);
 
     // Get the translation type from the actuall table entry
@@ -756,8 +756,8 @@ TLB::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode)
 
 
 Fault
-TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
-                        ThreadContext *tc)
+TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req,
+                        BaseMMU::Mode mode, ThreadContext *tc)
 {
     assert(aarch64);
 
@@ -772,12 +772,12 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
 
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, (TCR)ttbcr,
-                                  mode==Execute);
+                                  mode==BaseMMU::Execute);
 
     Request::Flags flags = req->getFlags();
-    bool is_fetch  = (mode == Execute);
+    bool is_fetch  = (mode == BaseMMU::Execute);
     // Cache clean operations require read permissions to the specified VA
-    bool is_write = !req->isCacheClean() && mode == Write;
+    bool is_write = !req->isCacheClean() && mode == BaseMMU::Write;
     bool is_atomic = req->isAtomic();
     GEM5_VAR_USED bool is_priv = isPriv && !(flags & UserMode);
 
@@ -997,7 +997,8 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
 }
 
 bool
-TLB::checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req, Mode mode)
+TLB::checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
+              BaseMMU::Mode mode)
 {
     // The PAN bit has no effect on:
     // 1) Instruction accesses.
@@ -1007,7 +1008,7 @@ TLB::checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req, Mode mode)
     // gem5)
     // 4) Unprivileged instructions (Unimplemented in gem5)
     AA64MMFR1 mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
-    if (mmfr1.pan && cpsr.pan && (ap & 0x1) && mode != Execute &&
+    if (mmfr1.pan && cpsr.pan && (ap & 0x1) && mode != BaseMMU::Execute &&
         (!req->isCacheMaintenance() ||
             (req->getFlags() & Request::CACHE_BLOCK_ZERO))) {
         return true;
@@ -1017,10 +1018,11 @@ TLB::checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req, Mode mode)
 }
 
 Fault
-TLB::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
-        TLB::ArmTranslationType tranType, Addr vaddr, bool long_desc_format)
+TLB::translateMmuOff(ThreadContext *tc, const RequestPtr &req,
+                     BaseMMU::Mode mode, TLB::ArmTranslationType tranType,
+                     Addr vaddr, bool long_desc_format)
 {
-    bool is_fetch  = (mode == Execute);
+    bool is_fetch  = (mode == BaseMMU::Execute);
     bool is_atomic = req->isAtomic();
     req->setPaddr(vaddr);
     // When the MMU is off the security attribute corresponds to the
@@ -1041,7 +1043,7 @@ TLB::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
             else
                 f = std::make_shared<DataAbort>( vaddr,
                     TlbEntry::DomainType::NoAccess,
-                    is_atomic ? false : mode==Write,
+                    is_atomic ? false : mode==BaseMMU::Write,
                     ArmFault::AddressSizeLL, isStage2, ArmFault::LpaeTran);
             return f;
         }
@@ -1089,13 +1091,14 @@ TLB::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
 }
 
 Fault
-TLB::translateMmuOn(ThreadContext* tc, const RequestPtr &req, Mode mode,
-                    Translation *translation, bool &delay, bool timing,
+TLB::translateMmuOn(ThreadContext* tc, const RequestPtr &req,
+                    BaseMMU::Mode mode, BaseMMU::Translation *translation,
+                    bool &delay, bool timing,
                     bool functional, Addr vaddr,
                     ArmFault::TranMethod tranMethod)
 {
     TlbEntry *te = NULL;
-    bool is_fetch  = (mode == Execute);
+    bool is_fetch  = (mode == BaseMMU::Execute);
     TlbEntry mergeTe;
 
     Request::Flags flags = req->getFlags();
@@ -1138,7 +1141,7 @@ TLB::translateMmuOn(ThreadContext* tc, const RequestPtr &req, Mode mode,
                 // Unaligned accesses to Device memory should always cause an
                 // abort regardless of sctlr.a
                 stats.alignFaults++;
-                bool is_write  = (mode == Write);
+                bool is_write  = (mode == BaseMMU::Write);
                 return std::make_shared<DataAbort>(
                     vaddr_tainted,
                     TlbEntry::DomainType::NoAccess, is_write,
@@ -1161,8 +1164,8 @@ TLB::translateMmuOn(ThreadContext* tc, const RequestPtr &req, Mode mode,
 }
 
 Fault
-TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
-        Translation *translation, bool &delay, bool timing,
+TLB::translateFs(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode,
+        BaseMMU::Translation *translation, bool &delay, bool timing,
         TLB::ArmTranslationType tranType, bool functional)
 {
     // No such thing as a functional timing access
@@ -1174,13 +1177,13 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
     Addr vaddr = 0;
     if (aarch64)
         vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, (TCR)ttbcr,
-                                 mode==Execute);
+                                 mode==BaseMMU::Execute);
     else
         vaddr = vaddr_tainted;
     Request::Flags flags = req->getFlags();
 
-    bool is_fetch  = (mode == Execute);
-    bool is_write  = (mode == Write);
+    bool is_fetch  = (mode == BaseMMU::Execute);
+    bool is_write  = (mode == BaseMMU::Write);
     bool long_desc_format = aarch64 || longDescFormatInUse(tc);
     ArmFault::TranMethod tranMethod = long_desc_format ? ArmFault::LpaeTran
                                                        : ArmFault::VmsaTran;
@@ -1243,8 +1246,8 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
 }
 
 Fault
-TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode,
-    TLB::ArmTranslationType tranType)
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
+    BaseMMU::Mode mode, TLB::ArmTranslationType tranType)
 {
     updateMiscReg(tc, tranType);
 
@@ -1264,8 +1267,8 @@ TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode,
 }
 
 Fault
-TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode,
-    TLB::ArmTranslationType tranType)
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
+    BaseMMU::Mode mode, TLB::ArmTranslationType tranType)
 {
     updateMiscReg(tc, tranType);
 
@@ -1286,7 +1289,8 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode,
 
 void
 TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
-    Translation *translation, Mode mode, TLB::ArmTranslationType tranType)
+    BaseMMU::Translation *translation, BaseMMU::Mode mode,
+    TLB::ArmTranslationType tranType)
 {
     updateMiscReg(tc, tranType);
 
@@ -1303,8 +1307,8 @@ TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
 
 Fault
 TLB::translateComplete(const RequestPtr &req, ThreadContext *tc,
-        Translation *translation, Mode mode, TLB::ArmTranslationType tranType,
-        bool callFromS2)
+    BaseMMU::Translation *translation, BaseMMU::Mode mode,
+    TLB::ArmTranslationType tranType, bool callFromS2)
 {
     bool delay = false;
     Fault fault;
@@ -1572,9 +1576,9 @@ TLB::tranTypeEL(CPSR cpsr, ArmTranslationType type)
 }
 
 Fault
-TLB::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
-        Translation *translation, bool timing, bool functional,
-        bool is_secure, TLB::ArmTranslationType tranType)
+TLB::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc,
+    BaseMMU::Mode mode, BaseMMU::Translation *translation, bool timing,
+    bool functional, bool is_secure, TLB::ArmTranslationType tranType)
 {
     // In a 2-stage system, the IPA->PA translation can be started via this
     // call so make sure the miscRegs are correct.
@@ -1587,7 +1591,7 @@ TLB::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
     ExceptionLevel target_el = aarch64 ? aarch64EL : EL1;
     if (aarch64) {
         vaddr = purifyTaggedAddr(vaddr_tainted, tc, target_el, (TCR)ttbcr,
-                                 mode==Execute);
+                                 mode==BaseMMU::Execute);
     } else {
         vaddr = vaddr_tainted;
     }
@@ -1627,8 +1631,8 @@ TLB::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
 
 Fault
 TLB::getResultTe(TlbEntry **te, const RequestPtr &req,
-        ThreadContext *tc, Mode mode,
-        Translation *translation, bool timing, bool functional,
+        ThreadContext *tc, BaseMMU::Mode mode,
+        BaseMMU::Translation *translation, bool timing, bool functional,
         TlbEntry *mergeTe)
 {
     Fault fault;
@@ -1711,7 +1715,7 @@ TLB::setTestInterface(SimObject *_ti)
 }
 
 Fault
-TLB::testTranslation(const RequestPtr &req, Mode mode,
+TLB::testTranslation(const RequestPtr &req, BaseMMU::Mode mode,
                      TlbEntry::DomainType domain)
 {
     if (!test || !req->hasSize() || req->getSize() == 0 ||
@@ -1723,7 +1727,7 @@ TLB::testTranslation(const RequestPtr &req, Mode mode,
 }
 
 Fault
-TLB::testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
+TLB::testWalk(Addr pa, Addr size, Addr va, bool is_secure, BaseMMU::Mode mode,
               TlbEntry::DomainType domain, LookupLevel lookup_level)
 {
     if (!test) {

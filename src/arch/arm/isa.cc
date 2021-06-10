@@ -2076,46 +2076,46 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             misc_reg = MISCREG_IFAR_S;
             break;
           case MISCREG_ATS1CPR:
-            addressTranslation(TLB::S1CTran, BaseTLB::Read, 0, val);
+            addressTranslation(TLB::S1CTran, BaseMMU::Read, 0, val);
             return;
           case MISCREG_ATS1CPW:
-            addressTranslation(TLB::S1CTran, BaseTLB::Write, 0, val);
+            addressTranslation(TLB::S1CTran, BaseMMU::Write, 0, val);
             return;
           case MISCREG_ATS1CUR:
-            addressTranslation(TLB::S1CTran, BaseTLB::Read,
+            addressTranslation(TLB::S1CTran, BaseMMU::Read,
                 TLB::UserMode, val);
             return;
           case MISCREG_ATS1CUW:
-            addressTranslation(TLB::S1CTran, BaseTLB::Write,
+            addressTranslation(TLB::S1CTran, BaseMMU::Write,
                 TLB::UserMode, val);
             return;
           case MISCREG_ATS12NSOPR:
             if (!haveSecurity)
                 panic("Security Extensions required for ATS12NSOPR");
-            addressTranslation(TLB::S1S2NsTran, BaseTLB::Read, 0, val);
+            addressTranslation(TLB::S1S2NsTran, BaseMMU::Read, 0, val);
             return;
           case MISCREG_ATS12NSOPW:
             if (!haveSecurity)
                 panic("Security Extensions required for ATS12NSOPW");
-            addressTranslation(TLB::S1S2NsTran, BaseTLB::Write, 0, val);
+            addressTranslation(TLB::S1S2NsTran, BaseMMU::Write, 0, val);
             return;
           case MISCREG_ATS12NSOUR:
             if (!haveSecurity)
                 panic("Security Extensions required for ATS12NSOUR");
-            addressTranslation(TLB::S1S2NsTran, BaseTLB::Read,
+            addressTranslation(TLB::S1S2NsTran, BaseMMU::Read,
                 TLB::UserMode, val);
             return;
           case MISCREG_ATS12NSOUW:
             if (!haveSecurity)
                 panic("Security Extensions required for ATS12NSOUW");
-            addressTranslation(TLB::S1S2NsTran, BaseTLB::Write,
+            addressTranslation(TLB::S1S2NsTran, BaseMMU::Write,
                 TLB::UserMode, val);
             return;
           case MISCREG_ATS1HR:
-            addressTranslation(TLB::HypMode, BaseTLB::Read, 0, val);
+            addressTranslation(TLB::HypMode, BaseMMU::Read, 0, val);
             return;
           case MISCREG_ATS1HW:
-            addressTranslation(TLB::HypMode, BaseTLB::Write, 0, val);
+            addressTranslation(TLB::HypMode, BaseMMU::Write, 0, val);
             return;
           case MISCREG_TTBCR:
             {
@@ -2252,44 +2252,44 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             }
             break;
           case MISCREG_AT_S1E1R_Xt:
-            addressTranslation64(TLB::S1E1Tran, BaseTLB::Read, 0, val);
+            addressTranslation64(TLB::S1E1Tran, BaseMMU::Read, 0, val);
             return;
           case MISCREG_AT_S1E1W_Xt:
-            addressTranslation64(TLB::S1E1Tran, BaseTLB::Write, 0, val);
+            addressTranslation64(TLB::S1E1Tran, BaseMMU::Write, 0, val);
             return;
           case MISCREG_AT_S1E0R_Xt:
-            addressTranslation64(TLB::S1E0Tran, BaseTLB::Read,
+            addressTranslation64(TLB::S1E0Tran, BaseMMU::Read,
                 TLB::UserMode, val);
             return;
           case MISCREG_AT_S1E0W_Xt:
-            addressTranslation64(TLB::S1E0Tran, BaseTLB::Write,
+            addressTranslation64(TLB::S1E0Tran, BaseMMU::Write,
                 TLB::UserMode, val);
             return;
           case MISCREG_AT_S1E2R_Xt:
-            addressTranslation64(TLB::S1E2Tran, BaseTLB::Read, 0, val);
+            addressTranslation64(TLB::S1E2Tran, BaseMMU::Read, 0, val);
             return;
           case MISCREG_AT_S1E2W_Xt:
-            addressTranslation64(TLB::S1E2Tran, BaseTLB::Write, 0, val);
+            addressTranslation64(TLB::S1E2Tran, BaseMMU::Write, 0, val);
             return;
           case MISCREG_AT_S12E1R_Xt:
-            addressTranslation64(TLB::S12E1Tran, BaseTLB::Read, 0, val);
+            addressTranslation64(TLB::S12E1Tran, BaseMMU::Read, 0, val);
             return;
           case MISCREG_AT_S12E1W_Xt:
-            addressTranslation64(TLB::S12E1Tran, BaseTLB::Write, 0, val);
+            addressTranslation64(TLB::S12E1Tran, BaseMMU::Write, 0, val);
             return;
           case MISCREG_AT_S12E0R_Xt:
-            addressTranslation64(TLB::S12E0Tran, BaseTLB::Read,
+            addressTranslation64(TLB::S12E0Tran, BaseMMU::Read,
                 TLB::UserMode, val);
             return;
           case MISCREG_AT_S12E0W_Xt:
-            addressTranslation64(TLB::S12E0Tran, BaseTLB::Write,
+            addressTranslation64(TLB::S12E0Tran, BaseMMU::Write,
                 TLB::UserMode, val);
             return;
           case MISCREG_AT_S1E3R_Xt:
-            addressTranslation64(TLB::S1E3Tran, BaseTLB::Read, 0, val);
+            addressTranslation64(TLB::S1E3Tran, BaseMMU::Read, 0, val);
             return;
           case MISCREG_AT_S1E3W_Xt:
-            addressTranslation64(TLB::S1E3Tran, BaseTLB::Write, 0, val);
+            addressTranslation64(TLB::S1E3Tran, BaseMMU::Write, 0, val);
             return;
           case MISCREG_SPSR_EL3:
           case MISCREG_SPSR_EL2:
@@ -2416,7 +2416,7 @@ ISA::unserialize(CheckpointIn &cp)
 
 void
 ISA::addressTranslation64(TLB::ArmTranslationType tran_type,
-    BaseTLB::Mode mode, Request::Flags flags, RegVal val)
+    BaseMMU::Mode mode, Request::Flags flags, RegVal val)
 {
     // If we're in timing mode then doing the translation in
     // functional mode then we're slightly distorting performance
@@ -2467,7 +2467,7 @@ ISA::addressTranslation64(TLB::ArmTranslationType tran_type,
 
 void
 ISA::addressTranslation(TLB::ArmTranslationType tran_type,
-    BaseTLB::Mode mode, Request::Flags flags, RegVal val)
+    BaseMMU::Mode mode, Request::Flags flags, RegVal val)
 {
     // If we're in timing mode then doing the translation in
     // functional mode then we're slightly distorting performance

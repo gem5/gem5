@@ -42,6 +42,7 @@
 #ifndef __CPU_TRANSLATION_HH__
 #define __CPU_TRANSLATION_HH__
 
+#include "arch/generic/mmu.hh"
 #include "arch/generic/tlb.hh"
 #include "sim/faults.hh"
 
@@ -72,19 +73,19 @@ class WholeTranslationState
     RequestPtr sreqHigh;
     uint8_t *data;
     uint64_t *res;
-    BaseTLB::Mode mode;
+    BaseMMU::Mode mode;
 
     /**
      * Single translation state.  We set the number of outstanding
      * translations to one and indicate that it is not split.
      */
     WholeTranslationState(const RequestPtr &_req, uint8_t *_data,
-                          uint64_t *_res, BaseTLB::Mode _mode)
+                          uint64_t *_res, BaseMMU::Mode _mode)
         : outstanding(1), delay(false), isSplit(false), mainReq(_req),
           sreqLow(NULL), sreqHigh(NULL), data(_data), res(_res), mode(_mode)
     {
         faults[0] = faults[1] = NoFault;
-        assert(mode == BaseTLB::Read || mode == BaseTLB::Write);
+        assert(mode == BaseMMU::Read || mode == BaseMMU::Write);
     }
 
     /**
@@ -94,13 +95,13 @@ class WholeTranslationState
      */
     WholeTranslationState(const RequestPtr &_req, const RequestPtr &_sreqLow,
                           const RequestPtr &_sreqHigh, uint8_t *_data,
-                          uint64_t *_res, BaseTLB::Mode _mode)
+                          uint64_t *_res, BaseMMU::Mode _mode)
         : outstanding(2), delay(false), isSplit(true), mainReq(_req),
           sreqLow(_sreqLow), sreqHigh(_sreqHigh), data(_data), res(_res),
           mode(_mode)
     {
         faults[0] = faults[1] = NoFault;
-        assert(mode == BaseTLB::Read || mode == BaseTLB::Write);
+        assert(mode == BaseMMU::Read || mode == BaseMMU::Write);
     }
 
     /**
@@ -215,7 +216,7 @@ class WholeTranslationState
  * then the execution context is informed.
  */
 template <class ExecContextPtr>
-class DataTranslation : public BaseTLB::Translation
+class DataTranslation : public BaseMMU::Translation
 {
   protected:
     ExecContextPtr xc;
@@ -250,7 +251,7 @@ class DataTranslation : public BaseTLB::Translation
      */
     void
     finish(const Fault &fault, const RequestPtr &req, ThreadContext *tc,
-           BaseTLB::Mode mode)
+           BaseMMU::Mode mode)
     {
         assert(state);
         assert(mode == state->mode);

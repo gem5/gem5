@@ -117,7 +117,7 @@ namespace X86ISA
         Fault translateInt(bool read, RequestPtr req, ThreadContext *tc);
 
         Fault translate(const RequestPtr &req, ThreadContext *tc,
-                Translation *translation, Mode mode,
+                BaseMMU::Translation *translation, BaseMMU::Mode mode,
                 bool &delayedResponse, bool timing);
 
       public:
@@ -131,12 +131,14 @@ namespace X86ISA
         }
 
         Fault translateAtomic(
-            const RequestPtr &req, ThreadContext *tc, Mode mode) override;
+            const RequestPtr &req, ThreadContext *tc,
+            BaseMMU::Mode mode) override;
         Fault translateFunctional(
-            const RequestPtr &req, ThreadContext *tc, Mode mode) override;
+            const RequestPtr &req, ThreadContext *tc,
+            BaseMMU::Mode mode) override;
         void translateTiming(
             const RequestPtr &req, ThreadContext *tc,
-            Translation *translation, Mode mode) override;
+            BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
 
         /**
          * Do post-translation physical address finalization.
@@ -152,7 +154,7 @@ namespace X86ISA
          * @return A fault on failure, NoFault otherwise.
          */
         Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-                               Mode mode) const override;
+                               BaseMMU::Mode mode) const override;
 
         TlbEntry *insert(Addr vpn, const TlbEntry &entry);
 

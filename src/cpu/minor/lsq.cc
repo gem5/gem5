@@ -272,7 +272,7 @@ LSQ::clearMemBarrier(MinorDynInstPtr inst)
 
 void
 LSQ::SingleDataRequest::finish(const Fault &fault_, const RequestPtr &request_,
-                               ThreadContext *tc, BaseTLB::Mode mode)
+                               ThreadContext *tc, BaseMMU::Mode mode)
 {
     port.numAccessesInDTLB--;
 
@@ -317,7 +317,7 @@ LSQ::SingleDataRequest::startAddrTranslation()
          *  finish/markDelayed on the LSQRequest as it bears the Translation
          *  interface */
         thread->getMMUPtr()->translateTiming(
-            request, thread, this, (isLoad ? BaseTLB::Read : BaseTLB::Write));
+            request, thread, this, (isLoad ? BaseMMU::Read : BaseMMU::Write));
     } else {
         disableMemAccess();
         setState(LSQ::LSQRequest::Complete);
@@ -335,7 +335,7 @@ LSQ::SingleDataRequest::retireResponse(PacketPtr packet_)
 
 void
 LSQ::SplitDataRequest::finish(const Fault &fault_, const RequestPtr &request_,
-                              ThreadContext *tc, BaseTLB::Mode mode)
+                              ThreadContext *tc, BaseMMU::Mode mode)
 {
     port.numAccessesInDTLB--;
 
@@ -716,7 +716,7 @@ LSQ::SplitDataRequest::sendNextFragmentToTranslation()
 
     thread->getMMUPtr()->translateTiming(
         fragmentRequests[fragment_index], thread, this, (isLoad ?
-        BaseTLB::Read : BaseTLB::Write));
+        BaseMMU::Read : BaseMMU::Write));
 }
 
 bool

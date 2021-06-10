@@ -290,12 +290,12 @@ Shader::doFunctionalAccess(const RequestPtr &req, MemCmd cmd, void *data,
     unsigned size = req->getSize();
 
     Addr tmp_addr;
-    BaseTLB::Mode trans_mode;
+    BaseMMU::Mode trans_mode;
 
     if (cmd == MemCmd::ReadReq) {
-        trans_mode = BaseTLB::Read;
+        trans_mode = BaseMMU::Read;
     } else if (cmd == MemCmd::WriteReq) {
-        trans_mode = BaseTLB::Write;
+        trans_mode = BaseMMU::Write;
     } else {
         fatal("unexcepted MemCmd\n");
     }
@@ -426,7 +426,7 @@ Shader::WriteMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
  * Otherwise it's the TLB of the cu_id compute unit.
  */
 void
-Shader::functionalTLBAccess(PacketPtr pkt, int cu_id, BaseTLB::Mode mode)
+Shader::functionalTLBAccess(PacketPtr pkt, int cu_id, BaseMMU::Mode mode)
 {
     // update senderState. Need to know the gpuTc and the TLB mode
     pkt->senderState =

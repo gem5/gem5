@@ -42,6 +42,7 @@
 #include <list>
 #include <utility>
 
+#include "arch/generic/mmu.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/cache/prefetch/base.hh"
@@ -59,7 +60,7 @@ namespace prefetch
 class Queued : public Base
 {
   protected:
-    struct DeferredPacket : public BaseTLB::Translation
+    struct DeferredPacket : public BaseMMU::Translation
     {
         /** Owner of the packet */
         Queued *owner;
@@ -130,7 +131,7 @@ class Queued : public Base
         {}
 
         void finish(const Fault &fault, const RequestPtr &req,
-                            ThreadContext *tc, BaseTLB::Mode mode) override;
+                            ThreadContext *tc, BaseMMU::Mode mode) override;
 
         /**
          * Issues the translation request to the provided TLB

@@ -49,6 +49,7 @@
 #include <queue>
 #include <vector>
 
+#include "arch/generic/mmu.hh"
 #include "arch/generic/tlb.hh"
 #include "base/flags.hh"
 #include "base/types.hh"
@@ -227,7 +228,7 @@ class LSQ
      *
      *
      */
-    class LSQRequest : public BaseTLB::Translation
+    class LSQRequest : public BaseMMU::Translation
     {
       protected:
         typedef uint32_t FlagsStorage;
@@ -667,7 +668,7 @@ class LSQ
         virtual ~SingleDataRequest() {}
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
-                gem5::ThreadContext* tc, BaseTLB::Mode mode);
+                gem5::ThreadContext* tc, BaseMMU::Mode mode);
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void sendPacketToCache();
         virtual void buildPackets();
@@ -701,7 +702,7 @@ class LSQ
         virtual ~HtmCmdRequest() {}
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
-                gem5::ThreadContext* tc, BaseTLB::Mode mode);
+                gem5::ThreadContext* tc, BaseMMU::Mode mode);
         virtual std::string name() const { return "HtmCmdRequest"; }
     };
 
@@ -767,7 +768,7 @@ class LSQ
             }
         }
         virtual void finish(const Fault &fault, const RequestPtr &req,
-                gem5::ThreadContext* tc, BaseTLB::Mode mode);
+                gem5::ThreadContext* tc, BaseMMU::Mode mode);
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void initiateTranslation();
         virtual void sendPacketToCache();

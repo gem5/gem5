@@ -279,16 +279,16 @@ class PageFault : public X86Fault
         X86Fault("Page-Fault", "#PF", 14, _errorCode), addr(_addr)
     {}
 
-    PageFault(Addr _addr, bool present, BaseTLB::Mode mode,
+    PageFault(Addr _addr, bool present, BaseMMU::Mode mode,
             bool user, bool reserved) :
         X86Fault("Page-Fault", "#PF", 14, 0), addr(_addr)
     {
         PageFaultErrorCode code = 0;
         code.present = present;
-        code.write = (mode == BaseTLB::Write);
+        code.write = (mode == BaseMMU::Write);
         code.user = user;
         code.reserved = reserved;
-        code.fetch = (mode == BaseTLB::Execute);
+        code.fetch = (mode == BaseMMU::Execute);
         errorCode = code;
     }
 

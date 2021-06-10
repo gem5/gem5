@@ -41,6 +41,7 @@
 #ifndef __CPU_SIMPLE_TIMING_HH__
 #define __CPU_SIMPLE_TIMING_HH__
 
+#include "arch/generic/mmu.hh"
 #include "cpu/simple/base.hh"
 #include "cpu/simple/exec_context.hh"
 #include "cpu/translation.hh"
@@ -107,7 +108,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
         }
     };
 
-    class FetchTranslation : public BaseTLB::Translation
+    class FetchTranslation : public BaseMMU::Translation
     {
       protected:
         TimingSimpleCPU *cpu;
@@ -126,7 +127,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         void
         finish(const Fault &fault, const RequestPtr &req, ThreadContext *tc,
-               BaseTLB::Mode mode)
+               BaseMMU::Mode mode)
         {
             cpu->sendFetch(fault, req, tc);
         }

@@ -1089,8 +1089,8 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
     // before they are inserted into the memory system. This enables
     // APIC accesses on x86 and m5ops where supported through a MMIO
     // interface.
-    BaseTLB::Mode tlb_mode(write ? BaseTLB::Write : BaseTLB::Read);
-    Fault fault(tc->getMMUPtr()->finalizePhysical(mmio_req, tc, tlb_mode));
+    BaseMMU::Mode access_type(write ? BaseMMU::Write : BaseMMU::Read);
+    Fault fault(tc->getMMUPtr()->finalizePhysical(mmio_req, tc, access_type));
     if (fault != NoFault)
         warn("Finalization of MMIO address failed: %s\n", fault->name());
 

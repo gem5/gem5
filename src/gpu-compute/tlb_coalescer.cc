@@ -121,8 +121,8 @@ TLBCoalescer::canCoalesce(PacketPtr incoming_pkt, PacketPtr coalesced_pkt)
     //* Rule 2: Coalesce requests only if they
     // share a TLB Mode, i.e. they are both read
     // or write requests.
-    BaseTLB::Mode incoming_mode = incoming_state->tlbMode;
-    BaseTLB::Mode coalesced_mode = coalesced_state->tlbMode;
+    BaseMMU::Mode incoming_mode = incoming_state->tlbMode;
+    BaseMMU::Mode coalesced_mode = coalesced_state->tlbMode;
 
     if (incoming_mode != coalesced_mode)
         return false;

@@ -38,15 +38,49 @@
 #ifndef __ARCH_GENERIC_MMU_HH__
 #define __ARCH_GENERIC_MMU_HH__
 
-#include "arch/generic/tlb.hh"
-
 #include "params/BaseMMU.hh"
+#include "mem/request.hh"
+#include "sim/sim_object.hh"
 
 namespace gem5
 {
 
+class BaseTLB;
+
 class BaseMMU : public SimObject
 {
+  public:
+    enum Mode { Read, Write, Execute };
+
+    class Translation
+    {
+      public:
+        virtual ~Translation()
+        {}
+
+        /**
+         * Signal that the translation has been delayed due to a hw page table
+         * walk.
+         */
+        virtual void markDelayed() = 0;
+
+        /*
+         * The memory for this object may be dynamically allocated, and it may
+         * be responsible for cleaning itself up which will happen in this
+         * function. Once it's called, the object is no longer valid.
+         */
+        virtual void finish(const Fault &fault, const RequestPtr &req,
+                            ThreadContext *tc, BaseMMU::Mode mode) = 0;
+
+        /** This function is used by the page table walker to determine
+         * if it should translate the a pending request or if the underlying
+         * request has been squashed.
+         * @ return Is the instruction that requested this translation
+         * squashed?
+         */
+        virtual bool squashed() const { return false; }
+    };
+
   protected:
     typedef BaseMMUParams Params;
 
@@ -55,56 +89,30 @@ class BaseMMU : public SimObject
     {}
 
     BaseTLB*
-    getTlb(BaseTLB::Mode mode) const
+    getTlb(Mode mode) const
     {
-        if (mode == BaseTLB::Execute)
+        if (mode == Execute)
             return itb;
         else
             return dtb;
     }
 
   public:
-    virtual void
-    flushAll()
-    {
-        dtb->flushAll();
-        itb->flushAll();
-    }
+    virtual void flushAll();
 
-    void
-    demapPage(Addr vaddr, uint64_t asn)
-    {
-        itb->demapPage(vaddr, asn);
-        dtb->demapPage(vaddr, asn);
-    }
+    void demapPage(Addr vaddr, uint64_t asn);
 
-    Fault
-    translateAtomic(const RequestPtr &req, ThreadContext *tc,
-                    BaseTLB::Mode mode)
-    {
-        return getTlb(mode)->translateAtomic(req, tc, mode);
-    }
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                          Mode mode);
 
-    void
-    translateTiming(const RequestPtr &req, ThreadContext *tc,
-                    BaseTLB::Translation *translation, BaseTLB::Mode mode)
-    {
-        return getTlb(mode)->translateTiming(req, tc, translation, mode);
-    }
+    void translateTiming(const RequestPtr &req, ThreadContext *tc,
+                         Translation *translation, Mode mode);
 
-    Fault
-    translateFunctional(const RequestPtr &req, ThreadContext *tc,
-                        BaseTLB::Mode mode)
-    {
-        return getTlb(mode)->translateFunctional(req, tc, mode);
-    }
+    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                              Mode mode);
 
-    Fault
-    finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-                     BaseTLB::Mode mode) const
-    {
-        return getTlb(mode)->finalizePhysical(req, tc, mode);
-    }
+    Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                           Mode mode) const;
 
     virtual void takeOverFrom(BaseMMU *old_mmu);
 

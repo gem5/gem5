@@ -259,7 +259,7 @@ TLB::translateInt(bool read, RequestPtr req, ThreadContext *tc)
 
 Fault
 TLB::finalizePhysical(const RequestPtr &req,
-                      ThreadContext *tc, Mode mode) const
+                      ThreadContext *tc, BaseMMU::Mode mode) const
 {
     Addr paddr = req->getPaddr();
 
@@ -272,7 +272,7 @@ TLB::finalizePhysical(const RequestPtr &req,
             {
                 uint64_t ret;
                 pseudo_inst::pseudoInst<X86PseudoInstABI, true>(tc, func, ret);
-                if (mode == Read)
+                if (mode == BaseMMU::Read)
                     pkt->setLE(ret);
                 return Cycles(1);
             }
@@ -308,8 +308,8 @@ TLB::finalizePhysical(const RequestPtr &req,
 
 Fault
 TLB::translate(const RequestPtr &req,
-        ThreadContext *tc, Translation *translation,
-        Mode mode, bool &delayedResponse, bool timing)
+        ThreadContext *tc, BaseMMU::Translation *translation,
+        BaseMMU::Mode mode, bool &delayedResponse, bool timing)
 {
     Request::Flags flags = req->getFlags();
     int seg = flags & SegmentFlagMask;
@@ -320,7 +320,7 @@ TLB::translate(const RequestPtr &req,
     // If this is true, we're dealing with a request to a non-memory address
     // space.
     if (seg == SEGMENT_REG_MS) {
-        return translateInt(mode == Read, req, tc);
+        return translateInt(mode == BaseMMU::Read, req, tc);
     }
 
     Addr vaddr = req->getVaddr();
@@ -342,9 +342,9 @@ TLB::translate(const RequestPtr &req,
             bool expandDown = false;
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
-                if (!attr.writable && (mode == Write || storeCheck))
+                if (!attr.writable && (mode == BaseMMU::Write || storeCheck))
                     return std::make_shared<GeneralProtection>(0);
-                if (!attr.readable && mode == Read)
+                if (!attr.readable && mode == BaseMMU::Read)
                     return std::make_shared<GeneralProtection>(0);
                 expandDown = attr.expandDown;
 
@@ -375,7 +375,7 @@ TLB::translate(const RequestPtr &req,
             DPRINTF(TLB, "Paging enabled.\n");
             // The vaddr already has the segment base applied.
             TlbEntry *entry = lookup(vaddr);
-            if (mode == Read) {
+            if (mode == BaseMMU::Read) {
                 stats.rdAccesses++;
             } else {
                 stats.wrAccesses++;
@@ -384,7 +384,7 @@ TLB::translate(const RequestPtr &req,
                 DPRINTF(TLB, "Handling a TLB miss for "
                         "address %#x at pc %#x.\n",
                         vaddr, tc->instAddr());
-                if (mode == Read) {
+                if (mode == BaseMMU::Read) {
                     stats.rdMisses++;
                 } else {
                     stats.wrMisses++;
@@ -425,7 +425,8 @@ TLB::translate(const RequestPtr &req,
                     !(flags & (CPL0FlagBit << FlagShift)));
             CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
             bool badWrite = (!entry->writable && (inUser || cr0.wp));
-            if ((inUser && !entry->user) || (mode == Write && badWrite)) {
+            if ((inUser && !entry->user) ||
+                (mode == BaseMMU::Write && badWrite)) {
                 // The page must have been present to get into the TLB in
                 // the first place. We'll assume the reserved bits are
                 // fine even though we're not checking them.
@@ -435,8 +436,8 @@ TLB::translate(const RequestPtr &req,
             if (storeCheck && badWrite) {
                 // This would fault if this were a write, so return a page
                 // fault that reflects that happening.
-                return std::make_shared<PageFault>(vaddr, true, Write, inUser,
-                                                   false);
+                return std::make_shared<PageFault>(
+                    vaddr, true, BaseMMU::Write, inUser, false);
             }
 
             Addr paddr = entry->paddr | (vaddr & mask(entry->logBytes));
@@ -461,14 +462,16 @@ TLB::translate(const RequestPtr &req,
 }
 
 Fault
-TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
+    BaseMMU::Mode mode)
 {
     bool delayedResponse;
     return TLB::translate(req, tc, NULL, mode, delayedResponse, false);
 }
 
 Fault
-TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
+    BaseMMU::Mode mode)
 {
     unsigned logBytes;
     const Addr vaddr = req->getVaddr();
@@ -483,7 +486,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
         Process *process = tc->getProcessPtr();
         const auto *pte = process->pTable->lookup(vaddr);
 
-        if (!pte && mode != Execute) {
+        if (!pte && mode != BaseMMU::Execute) {
             // Check if we just need to grow the stack.
             if (process->fixupFault(vaddr)) {
                 // If we did, lookup the entry for the new page.
@@ -503,7 +506,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
 
 void
 TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
-        Translation *translation, Mode mode)
+    BaseMMU::Translation *translation, BaseMMU::Mode mode)
 {
     bool delayedResponse;
     assert(translation);
