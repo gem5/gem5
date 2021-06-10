@@ -472,7 +472,7 @@ Queued::addToQueue(std::list<DeferredPacket> &queue,
         queue.erase(it);
     }
 
-    if (queue.size() == 0) {
+    if ((queue.size() == 0) || (dpp <= queue.back())) {
         queue.emplace_back(dpp);
     } else {
         iterator it = queue.end();
