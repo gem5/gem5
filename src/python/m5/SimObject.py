@@ -700,17 +700,21 @@ class MetaSimObject(type):
     def pybind_predecls(cls, code):
         code('#include "${{cls.cxx_header}}"')
 
-    def pybind_decl(cls, code):
+    def params_create_decl(cls, code, python_enabled):
         py_class_name = cls.pybind_class
 
         # The 'local' attribute restricts us to the params declared in
         # the object itself, not including inherited params (which
         # will also be inherited from the base class's param struct
         # here). Sort the params based on their key
-        params = list(map(lambda k_v: k_v[1], sorted(cls._params.local.items())))
+        params = list(map(lambda k_v: k_v[1],
+                          sorted(cls._params.local.items())))
         ports = cls._ports.local
 
-        code('''#include "pybind11/pybind11.h"
+        # only include pybind if python is enabled in the build
+        if python_enabled:
+
+            code('''#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
 #include <type_traits>
@@ -724,79 +728,93 @@ class MetaSimObject(type):
 #include "${{cls.cxx_header}}"
 
 ''')
+        else:
+            code('''
+#include <type_traits>
 
-        for param in params:
-            param.pybind_predecls(code)
+#include "base/compiler.hh"
+#include "params/$cls.hh"
 
-        code('''namespace py = pybind11;
+#include "${{cls.cxx_header}}"
+
+''')
+        # only include the python params code if python is enabled.
+        if python_enabled:
+            for param in params:
+                param.pybind_predecls(code)
+
+            code('''namespace py = pybind11;
 
 static void
 module_init(py::module_ &m_internal)
 {
     py::module_ m = m_internal.def_submodule("param_${cls}");
 ''')
-        code.indent()
-        if cls._base:
-            code('py::class_<${cls}Params, ${{cls._base.type}}Params, ' \
-                 'std::unique_ptr<${{cls}}Params, py::nodelete>>(' \
-                 'm, "${cls}Params")')
-        else:
-            code('py::class_<${cls}Params, ' \
-                 'std::unique_ptr<${cls}Params, py::nodelete>>(' \
-                 'm, "${cls}Params")')
+            code.indent()
+            if cls._base:
+                code('py::class_<${cls}Params, ${{cls._base.type}}Params, ' \
+                    'std::unique_ptr<${{cls}}Params, py::nodelete>>(' \
+                    'm, "${cls}Params")')
+            else:
+                code('py::class_<${cls}Params, ' \
+                    'std::unique_ptr<${cls}Params, py::nodelete>>(' \
+                    'm, "${cls}Params")')
 
-        code.indent()
-        if not hasattr(cls, 'abstract') or not cls.abstract:
-            code('.def(py::init<>())')
-            code('.def("create", &${cls}Params::create)')
+            code.indent()
+            if not hasattr(cls, 'abstract') or not cls.abstract:
+                code('.def(py::init<>())')
+                code('.def("create", &${cls}Params::create)')
 
-        param_exports = cls.cxx_param_exports + [
-            PyBindProperty(k)
-            for k, v in sorted(cls._params.local.items())
-        ] + [
-            PyBindProperty("port_%s_connection_count" % port.name)
-            for port in ports.values()
-        ]
-        for exp in param_exports:
-            exp.export(code, "%sParams" % cls)
+            param_exports = cls.cxx_param_exports + [
+                PyBindProperty(k)
+                for k, v in sorted(cls._params.local.items())
+            ] + [
+                PyBindProperty("port_%s_connection_count" % port.name)
+                for port in ports.values()
+            ]
+            for exp in param_exports:
+                exp.export(code, "%sParams" % cls)
 
-        code(';')
-        code()
-        code.dedent()
+            code(';')
+            code()
+            code.dedent()
 
-        bases = []
-        if 'cxx_base' in cls._value_dict:
-            # If the c++ base class implied by python inheritance was
-            # overridden, use that value.
-            if cls.cxx_base:
-                bases.append(cls.cxx_base)
-        elif cls._base:
-            # If not and if there was a SimObject base, use its c++ class
-            # as this class' base.
-            bases.append(cls._base.cxx_class)
-        # Add in any extra bases that were requested.
-        bases.extend(cls.cxx_extra_bases)
+            bases = []
+            if 'cxx_base' in cls._value_dict:
+                # If the c++ base class implied by python inheritance was
+                # overridden, use that value.
+                if cls.cxx_base:
+                    bases.append(cls.cxx_base)
+            elif cls._base:
+                # If not and if there was a SimObject base, use its c++ class
+                # as this class' base.
+                bases.append(cls._base.cxx_class)
+            # Add in any extra bases that were requested.
+            bases.extend(cls.cxx_extra_bases)
 
-        if bases:
-            base_str = ", ".join(bases)
-            code('py::class_<${{cls.cxx_class}}, ${base_str}, ' \
-                 'std::unique_ptr<${{cls.cxx_class}}, py::nodelete>>(' \
-                 'm, "${py_class_name}")')
-        else:
-            code('py::class_<${{cls.cxx_class}}, ' \
-                 'std::unique_ptr<${{cls.cxx_class}}, py::nodelete>>(' \
-                 'm, "${py_class_name}")')
-        code.indent()
-        for exp in cls.cxx_exports:
-            exp.export(code, cls.cxx_class)
-        code(';')
-        code.dedent()
-        code()
-        code.dedent()
-        code('}')
-        code()
-        code('static EmbeddedPyBind embed_obj("${0}", module_init, "${1}");',
-             cls, cls._base.type if cls._base else "")
+            if bases:
+                base_str = ", ".join(bases)
+                code('py::class_<${{cls.cxx_class}}, ${base_str}, ' \
+                    'std::unique_ptr<${{cls.cxx_class}}, py::nodelete>>(' \
+                    'm, "${py_class_name}")')
+            else:
+                code('py::class_<${{cls.cxx_class}}, ' \
+                    'std::unique_ptr<${{cls.cxx_class}}, py::nodelete>>(' \
+                    'm, "${py_class_name}")')
+            code.indent()
+            for exp in cls.cxx_exports:
+                exp.export(code, cls.cxx_class)
+            code(';')
+            code.dedent()
+            code()
+            code.dedent()
+            code('}')
+            code()
+            code('static EmbeddedPyBind '
+                 'embed_obj("${0}", module_init, "${1}");',
+                cls, cls._base.type if cls._base else "")
+
+        # include the create() methods whether or not python is enabled.
         if not hasattr(cls, 'abstract') or not cls.abstract:
             if 'type' in cls.__dict__:
                 code()
