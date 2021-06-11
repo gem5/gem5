@@ -185,7 +185,7 @@ class Upgrader:
 def process_file(path, **kwargs):
     if not osp.isfile(path):
         import errno
-        raise IOError(ennro.ENOENT, "No such file", path)
+        raise IOError(errno.ENOENT, "No such file", path)
 
     verboseprint("Processing file %s...." % path)
 
