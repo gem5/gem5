@@ -917,7 +917,7 @@ PySource('m5', 'python/m5/info.py')
 # Create all of the SimObject param headers and enum headers
 #
 
-def createSimObjectParamDecl(target, source, env):
+def createSimObjectParamStruct(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
     name = source[0].get_text_contents()
@@ -925,16 +925,6 @@ def createSimObjectParamDecl(target, source, env):
 
     code = code_formatter()
     obj.cxx_param_decl(code)
-    code.write(target[0].abspath)
-
-def createSimObjectParamDef(target, source, env):
-    assert len(target) == 1 and len(source) == 1
-
-    name = source[0].get_text_contents()
-    obj = sim_objects[name]
-
-    code = code_formatter()
-    obj.cxx_param_def(code)
     code.write(target[0].abspath)
 
 def createSimObjectCxxConfig(is_header):
@@ -997,15 +987,8 @@ for name,simobj in sorted(sim_objects.items()):
     hh_file = File('params/%s.hh' % name)
     params_hh_files.append(hh_file)
     env.Command(hh_file, Value(name),
-                MakeAction(createSimObjectParamDecl, Transform("SOPARMHH")))
+                MakeAction(createSimObjectParamStruct, Transform("SO PARAM")))
     env.Depends(hh_file, depends + extra_deps)
-
-    if not getattr(simobj, 'abstract', False) and hasattr(simobj, 'type'):
-        cc_file = File('params/%s.cc' % name)
-        env.Command(cc_file, Value(name),
-                    MakeAction(createSimObjectParamDef, Transform("SOPARMCC")))
-        env.Depends(cc_file, depends + extra_deps)
-        Source(cc_file)
 
 # C++ parameter description files
 if GetOption('with_cxx_config'):
