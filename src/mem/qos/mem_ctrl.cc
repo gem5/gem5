@@ -45,6 +45,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -371,4 +374,5 @@ MemCtrl::recordTurnaroundStats()
 }
 
 } // namespace qos
+} // namespace memory
 } // namespace gem5

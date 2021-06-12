@@ -54,6 +54,9 @@ namespace gem5
 
 struct QoSPolicyParams;
 
+namespace memory
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -138,6 +141,7 @@ Policy::pair(Requestor requestor, T value)
 }
 
 } // namespace qos
+} // namespace memory
 } // namespace gem5
 
 #endif /* __MEM_QOS_POLICY_HH__ */

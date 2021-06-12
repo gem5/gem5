@@ -61,6 +61,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -537,6 +540,7 @@ MemCtrl::qosSchedule(std::initializer_list<Queues*> queues,
 }
 
 } // namespace qos
+} // namespace memory
 } // namespace gem5
 
 #endif /* __MEM_QOS_MEM_CTRL_HH__ */

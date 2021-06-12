@@ -50,6 +50,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -190,6 +193,7 @@ class LrgQueuePolicy : public QueuePolicy
 };
 
 } // namespace qos
+} // namespace memory
 } // namespace gem5
 
 #endif /* __MEM_QOS_Q_POLICY_HH__ */

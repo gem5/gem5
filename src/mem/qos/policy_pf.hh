@@ -49,6 +49,9 @@ namespace gem5
 
 struct QoSPropFairPolicyParams;
 
+namespace memory
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -119,6 +122,7 @@ class PropFairPolicy : public Policy
 };
 
 } // namespace qos
+} // namespace memory
 } // namespace gem5
 
 #endif // __MEM_QOS_POLICY_PF_HH__

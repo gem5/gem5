@@ -45,6 +45,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -128,4 +131,5 @@ PropFairPolicy::schedule(const RequestorID pkt_id, const uint64_t pkt_size)
 }
 
 } // namespace qos
+} // namespace memory
 } // namespace gem5

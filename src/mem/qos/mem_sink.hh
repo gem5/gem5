@@ -56,6 +56,9 @@ namespace gem5
 
 struct QoSMemSinkInterfaceParams;
 
+namespace memory
+{
+
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
@@ -279,6 +282,7 @@ class MemSinkInterface : public AbstractMemory
 };
 
 } // namespace qos
+} // namespace memory
 } // namespace gem5
 
 #endif // __MEM_QOS_MEM_SINK_HH__
