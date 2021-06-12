@@ -45,6 +45,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 HtmCacheFailure
 HTMSequencer::htmRetCodeConversion(
     const HtmFailedInCacheReason ruby_ret_code)
@@ -362,4 +365,5 @@ HTMSequencer::insertRequest(PacketPtr pkt, RubyRequestType primary_type,
     }
 }
 
+} // namespace ruby
 } // namespace gem5

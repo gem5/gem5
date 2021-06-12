@@ -42,6 +42,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 RubyPortProxy::RubyPortProxy(const RubyPortProxyParams &p) :
     RubyPort(p)
 {
@@ -67,4 +70,5 @@ RubyPortProxy::makeRequest(PacketPtr pkt)
     return RequestStatus_NULL;
 }
 
+} // namespace ruby
 } // namespace gem5

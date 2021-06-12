@@ -53,12 +53,15 @@
 namespace gem5
 {
 
+struct RubyGPUCoalescerParams;
+
+namespace ruby
+{
+
 class DataBlock;
 class CacheMsg;
 struct MachineID;
 class CacheMemory;
-
-struct RubyGPUCoalescerParams;
 
 // List of packets that belongs to a specific instruction.
 typedef std::list<PacketPtr> PerInstPackets;
@@ -539,6 +542,7 @@ operator<<(std::ostream& out, const GPUCoalescer& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_SYSTEM_GPU_COALESCER_HH__

@@ -41,6 +41,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 // Output operator definition
 
 std::ostream&
@@ -144,4 +147,5 @@ WireBuffer::wakeup()
 {
 }
 
+} // namespace ruby
 } // namespace gem5

@@ -36,6 +36,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 void
 TraceRecord::print(std::ostream& out) const
 {
@@ -204,4 +207,5 @@ CacheRecorder::aggregateRecords(uint8_t **buf, uint64_t total_size)
     return current_size;
 }
 
+} // namespace ruby
 } // namespace gem5

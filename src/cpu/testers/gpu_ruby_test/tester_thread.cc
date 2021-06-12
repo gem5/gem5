@@ -343,7 +343,7 @@ TesterThread::validateAtomicResp(Location loc, int lane, Value ret_val)
         ss << threadName << ": Atomic Op returned unexpected value\n"
            << "\tEpisode " << curEpisode->getEpisodeId() << "\n"
            << "\tLane ID " << lane << "\n"
-           << "\tAddress " << printAddress(addr) << "\n"
+           << "\tAddress " << ruby::printAddress(addr) << "\n"
            << "\tAtomic Op's return value " << ret_val << "\n";
 
         // print out basic info
@@ -369,7 +369,7 @@ TesterThread::validateLoadResp(Location loc, int lane, Value ret_val)
            << "\tTesterThread " << threadId << "\n"
            << "\tEpisode " << curEpisode->getEpisodeId() << "\n"
            << "\tLane ID " << lane << "\n"
-           << "\tAddress " << printAddress(addr) << "\n"
+           << "\tAddress " << ruby::printAddress(addr) << "\n"
            << "\tLoaded value " << ret_val << "\n"
            << "\tLast writer " << addrManager->printLastWriter(loc) << "\n";
 
@@ -427,7 +427,7 @@ TesterThread::printOutstandingReqs(const OutstandingReqTable& table,
 
     for (const auto& m : table) {
         for (const auto& req : m.second) {
-            ss << "\t\t\tAddr " << printAddress(m.first)
+            ss << "\t\t\tAddr " << ruby::printAddress(m.first)
                << ": delta (curCycle - issueCycle) = "
                << (cur_cycle - req.issueCycle) << std::endl;
         }

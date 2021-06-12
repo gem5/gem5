@@ -57,6 +57,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 UncoalescedTable::UncoalescedTable(GPUCoalescer *gc)
     : coalescer(gc)
 {
@@ -955,4 +958,5 @@ GPUCoalescer::recordMissLatency(CoalescedRequest* crequest,
 {
 }
 
+} // namespace ruby
 } // namespace gem5

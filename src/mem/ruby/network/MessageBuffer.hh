@@ -68,6 +68,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class MessageBuffer : public SimObject
 {
   public:
@@ -277,6 +280,7 @@ operator<<(std::ostream& out, const MessageBuffer& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_MESSAGEBUFFER_HH__

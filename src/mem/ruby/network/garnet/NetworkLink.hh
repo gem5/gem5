@@ -45,6 +45,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -104,6 +107,7 @@ class NetworkLink : public ClockedObject, public Consumer
 };
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_NETWORKLINK_HH__

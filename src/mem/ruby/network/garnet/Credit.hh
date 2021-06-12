@@ -41,6 +41,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -68,6 +71,7 @@ class Credit : public flit
 };
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_CREDIT_HH__

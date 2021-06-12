@@ -38,6 +38,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 // NetDest specifies the network destination of a Message
 class NetDest
 {
@@ -119,6 +122,7 @@ operator<<(std::ostream& out, const NetDest& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_COMMON_NETDEST_HH__

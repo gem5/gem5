@@ -31,6 +31,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 BasicLink::BasicLink(const Params &p)
     : SimObject(p)
 {
@@ -61,4 +64,5 @@ BasicIntLink::BasicIntLink(const Params &p)
 {
 }
 
+} // namespace ruby
 } // namespace gem5

@@ -31,6 +31,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 PersistentTable::PersistentTable()
 {
 }
@@ -194,4 +197,5 @@ PersistentTable::print(std::ostream& out) const
 {
 }
 
+} // namespace ruby
 } // namespace gem5

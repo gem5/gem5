@@ -52,6 +52,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class NetDest;
 class Network;
 
@@ -125,6 +128,7 @@ operator<<(std::ostream& out, const Topology& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_TOPOLOGY_HH__

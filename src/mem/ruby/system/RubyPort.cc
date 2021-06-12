@@ -55,6 +55,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 RubyPort::RubyPort(const Params &p)
     : ClockedObject(p), m_ruby_system(p.ruby_system), m_version(p.version),
       m_controller(NULL), m_mandatory_q_ptr(NULL),
@@ -679,4 +682,5 @@ RubyPort::functionalWrite(Packet *func_pkt)
     return num_written;
 }
 
+} // namespace ruby
 } // namespace gem5

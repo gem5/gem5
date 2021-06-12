@@ -38,6 +38,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 typedef AddressProfiler::AddressMap AddressMap;
 
 using gem5::stl_helpers::operator<<;
@@ -343,4 +346,5 @@ AddressProfiler::profileRetry(Addr data_addr, AccessType type, int count)
     }
 }
 
+} // namespace ruby
 } // namespace gem5

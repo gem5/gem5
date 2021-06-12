@@ -50,6 +50,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 struct MachineID
 {
     MachineID() : type(MachineType_NUM), num(0) { }
@@ -101,16 +104,18 @@ operator<<(::std::ostream& out, const MachineID& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 namespace std
 {
     template<>
-    struct hash<gem5::MachineID>
+    struct hash<gem5::ruby::MachineID>
     {
-        inline size_t operator()(const gem5::MachineID& id) const
+        inline size_t operator()(const gem5::ruby::MachineID& id) const
         {
-            size_t hval = gem5::MachineType_base_level(id.type) << 16 | id.num;
+            size_t hval = gem5::ruby::MachineType_base_level(
+                id.type) << 16 | id.num;
             return hval;
         }
     };

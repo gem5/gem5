@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class BankedArray
 {
   private:
@@ -77,6 +80,7 @@ class BankedArray
     Cycles getLatency() const { return accessLatency; }
 };
 
+} // namespace ruby
 } // namespace gem5
 
 #endif

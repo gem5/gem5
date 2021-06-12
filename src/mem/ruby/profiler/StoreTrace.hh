@@ -38,6 +38,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class StoreTrace
 {
   public:
@@ -90,6 +93,7 @@ operator<<(std::ostream& out, const StoreTrace& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_PROFILER_STORETRACE_HH__

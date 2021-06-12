@@ -49,6 +49,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class Network;
 class AbstractController;
 
@@ -152,6 +155,7 @@ class RubySystem : public ClockedObject
     std::vector<std::map<uint32_t, AbstractController *> > m_abstract_controls;
 };
 
+} // namespace ruby
 } // namespace gem5
 
 #endif //__MEM_RUBY_SYSTEM_RUBYSYSTEM_HH__

@@ -56,6 +56,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 std::ostream&
 operator<<(std::ostream& out, const CacheMemory& obj)
 {
@@ -768,4 +771,5 @@ CacheMemory::profilePrefetchMiss()
     cacheMemoryStats.m_prefetch_misses++;
 }
 
+} // namespace ruby
 } // namespace gem5

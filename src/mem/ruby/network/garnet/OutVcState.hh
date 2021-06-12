@@ -37,6 +37,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -71,6 +74,7 @@ class OutVcState
 };
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_GARNET_0_OUTVCSTATE_HH__

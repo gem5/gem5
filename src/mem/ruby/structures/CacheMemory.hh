@@ -63,6 +63,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class CacheMemory : public SimObject
 {
   public:
@@ -249,6 +252,7 @@ class CacheMemory : public SimObject
 
 std::ostream& operator<<(std::ostream& out, const CacheMemory& obj);
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_STRUCTURES_CACHEMEMORY_HH__

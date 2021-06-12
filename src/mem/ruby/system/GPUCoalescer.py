@@ -37,7 +37,7 @@ from m5.objects.Sequencer import *
 class RubyGPUCoalescer(RubyPort):
    type = 'RubyGPUCoalescer'
    abstract = True
-   cxx_class = 'gem5::GPUCoalescer'
+   cxx_class = 'gem5::ruby::GPUCoalescer'
    cxx_header = "mem/ruby/system/GPUCoalescer.hh"
 
    # max_outstanding_requests = (wave front slots) x (wave front size)

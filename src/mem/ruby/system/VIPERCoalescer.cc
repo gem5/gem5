@@ -53,6 +53,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 VIPERCoalescer::VIPERCoalescer(const Params &p)
     : GPUCoalescer(p),
       m_cache_inv_pkt(nullptr),
@@ -303,4 +306,5 @@ VIPERCoalescer::invTCP()
             m_num_pending_invs);
 }
 
+} // namespace ruby
 } // namespace gem5

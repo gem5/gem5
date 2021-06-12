@@ -40,7 +40,10 @@
 namespace gem5
 {
 
+namespace ruby
+{
 class SubBlock;
+} // namespace ruby
 
 const int CHECK_SIZE_BITS = 2;
 const int CHECK_SIZE = (1 << CHECK_SIZE_BITS);
@@ -52,7 +55,8 @@ class Check
           int _num_readers, RubyTester* _tester);
 
     void initiate(); // Does Action or Check or nether
-    void performCallback(NodeID proc, SubBlock* data, Cycles curTime);
+    void performCallback(ruby::NodeID proc, ruby::SubBlock* data,
+        Cycles curTime);
     Addr getAddress() const { return m_address; }
     void changeAddress(Addr address);
 
@@ -69,13 +73,13 @@ class Check
 
     void debugPrint();
 
-    TesterStatus m_status;
+    ruby::TesterStatus m_status;
     uint8_t m_value;
     int m_store_count;
-    NodeID m_initiatingNode;
+    ruby::NodeID m_initiatingNode;
     Addr m_address;
     Addr m_pc;
-    RubyAccessMode m_access_mode;
+    ruby::RubyAccessMode m_access_mode;
     int m_num_writers;
     int m_num_readers;
     RubyTester* m_tester_ptr;

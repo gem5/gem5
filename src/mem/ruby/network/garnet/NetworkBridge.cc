@@ -42,6 +42,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -272,4 +275,5 @@ NetworkBridge::wakeup()
 }
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5

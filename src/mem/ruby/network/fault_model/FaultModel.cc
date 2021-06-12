@@ -50,6 +50,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 FaultModel::FaultModel(const Params &p) : SimObject(p)
 {
     // read configurations into "configurations" vector
@@ -269,4 +272,5 @@ FaultModel::print(void)
     }
 }
 
+} // namespace ruby
 } // namespace gem5

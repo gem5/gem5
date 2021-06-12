@@ -244,7 +244,7 @@ from m5.objects.Controller import RubyController
 class $py_ident(RubyController):
     type = '$py_ident'
     cxx_header = 'mem/ruby/protocol/${c_ident}.hh'
-    cxx_class = 'gem5::$py_ident'
+    cxx_class = 'gem5::ruby::$py_ident'
 ''')
         code.indent()
         for param in self.config_parameters:
@@ -299,6 +299,9 @@ class $py_ident(RubyController):
         # for adding information to the protocol debug trace
         code('''
 namespace gem5
+{
+
+namespace ruby
 {
 
 extern std::stringstream ${ident}_transitionComment;
@@ -458,6 +461,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         code('''
 };
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __${ident}_CONTROLLER_H__
@@ -538,6 +542,9 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 
         code('''
 namespace gem5
+{
+
+namespace ruby
 {
 
 int $c_ident::m_num_controllers = 0;
@@ -1211,6 +1218,7 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
     return read;
 }
 
+} // namespace ruby
 } // namespace gem5
 ''')
 
@@ -1264,6 +1272,9 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
 
         code('''
 namespace gem5
+{
+
+namespace ruby
 {
 
 void
@@ -1341,6 +1352,7 @@ ${ident}_Controller::wakeup()
     }
 }
 
+} // namespace ruby
 } // namespace gem5
 ''')
 
@@ -1373,6 +1385,9 @@ ${ident}_Controller::wakeup()
 #define CLEAR_TRANSITION_COMMENT() (${ident}_transitionComment.str(""))
 
 namespace gem5
+{
+
+namespace ruby
 {
 
 TransitionResult
@@ -1603,6 +1618,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
     return TransitionResult_Valid;
 }
 
+} // namespace ruby
 } // namespace gem5
 ''')
         code.write(path, "%s_Transitions.cc" % self.ident)

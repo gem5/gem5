@@ -35,6 +35,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -87,4 +90,5 @@ Credit::print(std::ostream& out) const
 }
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5

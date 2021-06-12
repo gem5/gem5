@@ -38,6 +38,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class SubBlock
 {
   public:
@@ -81,6 +84,7 @@ operator<<(std::ostream& out, const SubBlock& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_COMMON_SUBBLOCK_HH__

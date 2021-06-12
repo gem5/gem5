@@ -52,6 +52,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 using stl_helpers::operator<<;
 
 MessageBuffer::MessageBuffer(const Params &p)
@@ -530,4 +533,5 @@ MessageBuffer::functionalAccess(Packet *pkt, bool is_read, WriteMask *mask)
     return num_functional_accesses;
 }
 
+} // namespace ruby
 } // namespace gem5

@@ -46,6 +46,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -170,6 +173,7 @@ class InputUnit : public Consumer
 };
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_INPUTUNIT_HH__

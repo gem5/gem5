@@ -42,6 +42,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 const int MESSAGE_SIZE_MULTIPLIER = 1000;
 //const int BROADCAST_SCALING = 4; // Have a 16p system act like a 64p systems
 const int BROADCAST_SCALING = 1;
@@ -274,4 +277,5 @@ ThrottleStats::ThrottleStats(statistics::Group *parent, const NodeID &nodeID)
 
 }
 
+} // namespace ruby
 } // namespace gem5

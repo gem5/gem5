@@ -33,10 +33,14 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 typedef unsigned int LinkID;
 typedef unsigned int NodeID;
 typedef unsigned int SwitchID;
 
+} // namespace ruby
 } // namespace gem5
 
 #endif //__MEM_RUBY_COMMON_TYPEDEFINES_HH__

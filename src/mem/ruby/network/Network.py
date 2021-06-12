@@ -31,7 +31,7 @@ from m5.objects.BasicLink import BasicLink
 
 class RubyNetwork(ClockedObject):
     type = 'RubyNetwork'
-    cxx_class = 'gem5::Network'
+    cxx_class = 'gem5::ruby::Network'
     cxx_header = "mem/ruby/network/Network.hh"
     abstract = True
 

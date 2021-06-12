@@ -45,7 +45,7 @@ class RubyPort(ClockedObject):
    type = 'RubyPort'
    abstract = True
    cxx_header = "mem/ruby/system/RubyPort.hh"
-   cxx_class = 'gem5::RubyPort'
+   cxx_class = 'gem5::ruby::RubyPort'
 
    version = Param.Int(0, "")
 
@@ -84,11 +84,11 @@ class RubyPort(ClockedObject):
 class RubyPortProxy(RubyPort):
    type = 'RubyPortProxy'
    cxx_header = "mem/ruby/system/RubyPortProxy.hh"
-   cxx_class = 'gem5::RubyPortProxy'
+   cxx_class = 'gem5::ruby::RubyPortProxy'
 
 class RubySequencer(RubyPort):
    type = 'RubySequencer'
-   cxx_class = 'gem5::Sequencer'
+   cxx_class = 'gem5::ruby::Sequencer'
    cxx_header = "mem/ruby/system/Sequencer.hh"
 
    dcache = Param.RubyCache("")
@@ -130,12 +130,12 @@ class RubySequencer(RubyPort):
 
 class RubyHTMSequencer(RubySequencer):
    type = 'RubyHTMSequencer'
-   cxx_class = 'gem5::HTMSequencer'
+   cxx_class = 'gem5::ruby::HTMSequencer'
    cxx_header = "mem/ruby/system/HTMSequencer.hh"
 
 class DMASequencer(RubyPort):
    type = 'DMASequencer'
    cxx_header = "mem/ruby/system/DMASequencer.hh"
-   cxx_class = 'gem5::DMASequencer'
+   cxx_class = 'gem5::ruby::DMASequencer'
 
    max_outstanding_requests = Param.Int(64, "max outstanding requests")

@@ -117,7 +117,7 @@ RubyDirectedTester::getCpuPort(int idx)
 }
 
 void
-RubyDirectedTester::hitCallback(NodeID proc, Addr addr)
+RubyDirectedTester::hitCallback(ruby::NodeID proc, Addr addr)
 {
     DPRINTF(DirectedTest,
             "completed request for proc: %d addr: 0x%x\n",

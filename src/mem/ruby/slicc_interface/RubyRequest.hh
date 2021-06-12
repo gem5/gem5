@@ -55,6 +55,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class RubyRequest : public Message
 {
   public:
@@ -173,6 +176,7 @@ operator<<(std::ostream& out, const RubyRequest& obj)
   return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif  //__MEM_RUBY_SLICC_INTERFACE_RUBYREQUEST_HH__

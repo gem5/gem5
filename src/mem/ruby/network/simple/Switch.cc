@@ -51,6 +51,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 using stl_helpers::operator<<;
 
 Switch::Switch(const Params &p)
@@ -209,4 +212,5 @@ SwitchStats::SwitchStats(statistics::Group *parent)
 
 }
 
+} // namespace ruby
 } // namespace gem5

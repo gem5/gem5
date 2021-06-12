@@ -53,6 +53,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class FaultModel : public SimObject
 {
   public:
@@ -138,6 +141,7 @@ class FaultModel : public SimObject
     std::vector <int> temperature_weights;
 };
 
+} // namespace ruby
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_FAULT_MODEL_FAULTMODEL_HH__

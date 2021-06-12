@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 TBEStorage::TBEStorage(statistics::Group *parent, int number_of_TBEs)
     : m_reserved(0), m_stats(parent)
 {
@@ -55,4 +58,5 @@ TBEStorage::TBEStorageStats::TBEStorageStats(statistics::Group *parent)
 {
 }
 
+} // namespace ruby
 } // namespace gem5

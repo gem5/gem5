@@ -47,6 +47,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 // The TBEStorage is used to track the resources consumed by the TBETable,
 // i.e. the number of available TBE slots.
 //
@@ -189,6 +192,7 @@ TBEStorage::removeEntryFromSlot(int slot)
     m_stats.avg_util = utilization();
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif

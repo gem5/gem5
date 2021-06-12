@@ -62,6 +62,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 Sequencer::Sequencer(const Params &p)
     : RubyPort(p), m_IncompleteTimes(MachineType_NUM),
       deadlockCheckEvent([this]{ wakeup(); }, "Sequencer deadlock check")
@@ -847,4 +850,5 @@ Sequencer::evictionCallback(Addr address)
     ruby_eviction_callback(address);
 }
 
+} // namespace ruby
 } // namespace gem5

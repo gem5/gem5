@@ -31,7 +31,7 @@ from m5.objects.ClockedObject import ClockedObject
 class BasicRouter(ClockedObject):
     type = 'BasicRouter'
     cxx_header = "mem/ruby/network/BasicRouter.hh"
-    cxx_class = 'gem5::BasicRouter'
+    cxx_class = 'gem5::ruby::BasicRouter'
 
     router_id = Param.Int("ID in relation to other routers")
 

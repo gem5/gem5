@@ -42,6 +42,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -75,6 +78,7 @@ class CrossbarSwitch : public Consumer
 };
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_CROSSBARSWITCH_HH__

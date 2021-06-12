@@ -44,6 +44,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 // TriggerQueue helper class is used keep a list of events that trigger the
 // actions that need to be executed before an ouststanding transaction
 // completes in the CHI protocol. When a transaction no longer has pending
@@ -126,6 +129,7 @@ TriggerQueue<T>::print(std::ostream& out) const
 {
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_COMMON_QUEUE_HH__

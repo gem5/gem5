@@ -36,7 +36,7 @@ from m5.SimObject import SimObject
 
 class FaultModel(SimObject):
     type = 'FaultModel'
-    cxx_class = 'gem5::FaultModel'
+    cxx_class = 'gem5::ruby::FaultModel'
     cxx_header = "mem/ruby/network/fault_model/FaultModel.hh"
 
     baseline_fault_vector_database = VectorParam.Float([

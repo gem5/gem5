@@ -54,6 +54,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class DirectoryMemory : public SimObject
 {
   public:
@@ -117,6 +120,7 @@ operator<<(std::ostream& out, const DirectoryMemory& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_STRUCTURES_DIRECTORYMEMORY_HH__

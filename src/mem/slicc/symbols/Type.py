@@ -222,12 +222,13 @@ class Type(Symbol):
             code('#include "mem/ruby/protocol/$0.hh"', self["interface"])
             parent = " :  public %s" % self["interface"]
 
-        code('')
-        code('namespace gem5')
-        code('{')
-        code('')
-
         code('''
+namespace gem5
+{
+
+namespace ruby
+{
+
 $klass ${{self.c_ident}}$parent
 {
   public:
@@ -394,6 +395,7 @@ operator<<(::std::ostream& out, const ${{self.c_ident}}& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __${{self.c_ident}}_HH__
@@ -410,14 +412,13 @@ operator<<(::std::ostream& out, const ${{self.c_ident}}& obj)
 
 #include "mem/ruby/protocol/${{self.c_ident}}.hh"
 #include "mem/ruby/system/RubySystem.hh"
-''')
 
-        code('')
-        code('namespace gem5')
-        code('{')
-        code('')
+namespace gem5
+{
 
-        code('''
+namespace ruby
+{
+
 /** \\brief Print the state of this object */
 void
 ${{self.c_ident}}::print(std::ostream& out) const
@@ -445,9 +446,10 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";''')
         for item in self.methods:
             code(self.methods[item].generateCode())
 
-        code('')
-        code('} // namespace gem5')
-        code('')
+        code('''
+} // namespace ruby
+} // namespace gem5
+''')
 
         code.write(path, "%s.cc" % self.c_ident)
 
@@ -470,10 +472,14 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";''')
             code('#include "mem/ruby/common/Address.hh"')
             code('#include "mem/ruby/common/TypeDefines.hh"')
 
-        code('')
-        code('namespace gem5')
-        code('{')
-        code('')
+        code('''
+namespace gem5
+{
+
+namespace ruby
+{
+
+''')
 
         if self.isMachineType:
             code('struct MachineID;')
@@ -540,6 +546,7 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj);
 ::std::ostream&
 operator<<(::std::ostream& out, const ${{self.c_ident}}& obj);
 
+} // namespace ruby
 } // namespace gem5
 ''')
 
@@ -549,10 +556,10 @@ operator<<(::std::ostream& out, const ${{self.c_ident}}& obj);
 // define a hash function for the MachineType class
 namespace std {
 template<>
-struct hash<gem5::MachineType>
+struct hash<gem5::ruby::MachineType>
 {
     std::size_t
-    operator()(const gem5::MachineType &mtype) const
+    operator()(const gem5::ruby::MachineType &mtype) const
     {
         return hash<size_t>()(static_cast<size_t>(mtype));
     }
@@ -585,6 +592,9 @@ struct hash<gem5::MachineType>
 namespace gem5
 {
 
+namespace ruby
+{
+
 // Code to convert the current state to an access permission
 AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
 {
@@ -604,6 +614,7 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
     return AccessPermission_Invalid;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 ''')
@@ -617,6 +628,9 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
 
         code('''
 namespace gem5
+{
+
+namespace ruby
 {
 
 // Code for output operator
@@ -813,9 +827,10 @@ get${{enum.ident}}MachineID(NodeID RubyNode)
 }
 ''')
 
-        code('')
-        code('} // namespace gem5')
-        code('')
+        code('''
+} // namespace ruby
+} // namespace gem5
+''')
 
         # Write the file
         code.write(path, "%s.cc" % self.c_ident)

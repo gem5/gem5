@@ -48,6 +48,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 uint32_t Network::m_virtual_networks;
 uint32_t Network::m_control_msg_size;
 uint32_t Network::m_data_msg_size;
@@ -253,4 +256,5 @@ Network::getLocalNodeID(NodeID global_id) const
     return globalToLocalMap.at(global_id);
 }
 
+} // namespace ruby
 } // namespace gem5

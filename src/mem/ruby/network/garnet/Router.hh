@@ -50,6 +50,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class FaultModel;
 
 namespace garnet
@@ -162,6 +165,7 @@ class Router : public BasicRouter, public Consumer
 };
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_ROUTER_HH__

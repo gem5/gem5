@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -79,4 +82,5 @@ VirtualChannel::functionalWrite(Packet *pkt)
 }
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5

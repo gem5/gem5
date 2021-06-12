@@ -32,9 +32,9 @@ from m5.objects.BasicLink import BasicIntLink, BasicExtLink
 class SimpleExtLink(BasicExtLink):
     type = 'SimpleExtLink'
     cxx_header = "mem/ruby/network/simple/SimpleLink.hh"
-    cxx_class = 'gem5::SimpleExtLink'
+    cxx_class = 'gem5::ruby::SimpleExtLink'
 
 class SimpleIntLink(BasicIntLink):
     type = 'SimpleIntLink'
     cxx_header = "mem/ruby/network/simple/SimpleLink.hh"
-    cxx_class = 'gem5::SimpleIntLink'
+    cxx_class = 'gem5::ruby::SimpleIntLink'

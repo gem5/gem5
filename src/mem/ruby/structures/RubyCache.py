@@ -31,7 +31,7 @@ from m5.SimObject import SimObject
 
 class RubyCache(SimObject):
     type = 'RubyCache'
-    cxx_class = 'gem5::CacheMemory'
+    cxx_class = 'gem5::ruby::CacheMemory'
     cxx_header = "mem/ruby/structures/CacheMemory.hh"
 
     size = Param.MemorySize("capacity in bytes");

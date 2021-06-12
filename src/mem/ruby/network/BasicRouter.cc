@@ -31,6 +31,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 BasicRouter::BasicRouter(const Params &p)
     : ClockedObject(p)
 {
@@ -49,4 +52,5 @@ BasicRouter::print(std::ostream& out) const
     out << name();
 }
 
+} // namespace ruby
 } // namespace gem5

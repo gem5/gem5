@@ -35,6 +35,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -75,4 +78,5 @@ OutVcState::decrement_credit()
 }
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5

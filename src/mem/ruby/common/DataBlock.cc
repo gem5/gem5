@@ -46,6 +46,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 DataBlock::DataBlock(const DataBlock &cp)
 {
     m_data = new uint8_t[RubySystem::getBlockSizeBytes()];
@@ -138,4 +141,5 @@ DataBlock::operator=(const DataBlock & obj)
     return *this;
 }
 
+} // namespace ruby
 } // namespace gem5

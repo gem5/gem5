@@ -50,6 +50,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 template<class ENTRY>
 struct PerfectCacheLineState
 {
@@ -206,6 +209,7 @@ PerfectCacheMemory<ENTRY>::print(std::ostream& out) const
 {
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_STRUCTURES_PERFECTCACHEMEMORY_HH__

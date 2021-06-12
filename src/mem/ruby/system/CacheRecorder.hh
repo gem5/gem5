@@ -46,6 +46,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class Sequencer;
 
 /*!
@@ -130,6 +133,7 @@ operator<<(std::ostream& out, const TraceRecord& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif //__MEM_RUBY_SYSTEM_CACHERECORDER_HH__

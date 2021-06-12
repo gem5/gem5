@@ -33,6 +33,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 TimerTable::TimerTable()
     : m_next_time(0)
 {
@@ -124,4 +127,5 @@ TimerTable::updateNext() const
     m_next_valid = true;
 }
 
+} // namespace ruby
 } // namespace gem5

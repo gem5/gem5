@@ -42,6 +42,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class Set;
 
 class AddressProfiler
@@ -115,6 +118,7 @@ operator<<(std::ostream& out, const AddressProfiler& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_PROFILER_ADDRESSPROFILER_HH__

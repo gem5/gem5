@@ -53,6 +53,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class Message;
 typedef std::shared_ptr<Message> MsgPtr;
 
@@ -149,6 +152,7 @@ operator<<(std::ostream& out, const Message& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_MESSAGE_HH__

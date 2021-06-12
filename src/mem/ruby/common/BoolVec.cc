@@ -43,6 +43,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 std::ostream& operator<<(std::ostream& os, const BoolVec& myvector) {
     for (const bool e: myvector) {
         os << " " << e;
@@ -50,4 +53,5 @@ std::ostream& operator<<(std::ostream& os, const BoolVec& myvector) {
     return os;
 }
 
+} // namespace ruby
 } // namespace gem5

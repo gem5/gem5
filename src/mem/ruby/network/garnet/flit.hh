@@ -41,6 +41,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -134,6 +137,7 @@ operator<<(std::ostream& out, const flit& obj)
 }
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_FLIT_HH__

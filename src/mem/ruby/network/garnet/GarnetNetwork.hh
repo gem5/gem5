@@ -43,6 +43,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class FaultModel;
 class NetDest;
 
@@ -217,6 +220,7 @@ operator<<(std::ostream& out, const GarnetNetwork& obj)
 }
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__

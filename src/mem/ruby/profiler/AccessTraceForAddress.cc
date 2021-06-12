@@ -33,6 +33,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 AccessTraceForAddress::~AccessTraceForAddress()
 {
     if (m_histogram_ptr) {
@@ -107,4 +110,5 @@ AccessTraceForAddress::addSample(int value)
     m_histogram_ptr->add(value);
 }
 
+} // namespace ruby
 } // namespace gem5

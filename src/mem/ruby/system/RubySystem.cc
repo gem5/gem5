@@ -63,6 +63,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 bool RubySystem::m_randomization;
 uint32_t RubySystem::m_block_size_bytes;
 uint32_t RubySystem::m_block_size_bits;
@@ -740,4 +743,5 @@ RubySystem::functionalWrite(PacketPtr pkt)
     return true;
 }
 
+} // namespace ruby
 } // namespace gem5

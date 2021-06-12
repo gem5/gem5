@@ -47,6 +47,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 void
 RubyRequest::print(std::ostream& out) const
 {
@@ -120,4 +123,5 @@ RubyRequest::functionalWrite(Packet *pkt)
     return cBase < cTail;
 }
 
+} // namespace ruby
 } // namespace gem5

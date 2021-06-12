@@ -36,6 +36,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -72,6 +75,7 @@ struct RouteInfo
 #define INFINITE_ 10000
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_GARNET_0_COMMONTYPES_HH__

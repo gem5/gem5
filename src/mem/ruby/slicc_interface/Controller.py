@@ -42,7 +42,7 @@ from m5.objects.ClockedObject import ClockedObject
 
 class RubyController(ClockedObject):
     type = 'RubyController'
-    cxx_class = 'gem5::AbstractController'
+    cxx_class = 'gem5::ruby::AbstractController'
     cxx_header = "mem/ruby/slicc_interface/AbstractController.hh"
     abstract = True
 

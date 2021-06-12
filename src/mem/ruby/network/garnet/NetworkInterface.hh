@@ -49,6 +49,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class MessageBuffer;
 
 namespace garnet
@@ -305,6 +308,7 @@ class NetworkInterface : public ClockedObject, public Consumer
 };
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_NETWORKINTERFACE_HH__

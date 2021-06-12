@@ -146,7 +146,7 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
     Addr vaddr = fetchBuf.at(wavefront->wfSlotId).nextFetchAddr();
 
     // this should already be aligned to a cache line
-    assert(vaddr == makeLineAddress(vaddr,
+    assert(vaddr == ruby::makeLineAddress(vaddr,
            computeUnit.getCacheLineBits()));
 
     // shouldn't be fetching a line that is already buffered
@@ -400,7 +400,7 @@ FetchUnit::FetchBufDesc::nextFetchAddr()
          * beginning of a cache line, so we adjust the readPtr by
          * the current PC's offset from the start of the line.
          */
-        next_line = makeLineAddress(wavefront->pc(), cacheLineBits);
+        next_line = ruby::makeLineAddress(wavefront->pc(), cacheLineBits);
         readPtr = bufStart;
 
         /**
@@ -412,7 +412,7 @@ FetchUnit::FetchBufDesc::nextFetchAddr()
         if (restartFromBranch) {
             restartFromBranch = false;
             int byte_offset
-                = wavefront->pc() - makeLineAddress(wavefront->pc(),
+                = wavefront->pc() - ruby::makeLineAddress(wavefront->pc(),
                                     cacheLineBits);
             readPtr += byte_offset;
         }

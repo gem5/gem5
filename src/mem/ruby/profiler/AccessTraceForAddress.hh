@@ -39,6 +39,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class Histogram;
 
 class AccessTraceForAddress
@@ -88,6 +91,7 @@ operator<<(std::ostream& out, const AccessTraceForAddress& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_PROFILER_ACCESSTRACEFORADDRESS_HH__

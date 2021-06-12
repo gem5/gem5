@@ -56,6 +56,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 struct SequencerRequest
 {
     PacketPtr pkt;
@@ -325,6 +328,7 @@ operator<<(std::ostream& out, const Sequencer& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_SYSTEM_SEQUENCER_HH__

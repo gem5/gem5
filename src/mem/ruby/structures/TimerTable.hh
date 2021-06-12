@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class TimerTable
 {
   public:
@@ -96,6 +99,7 @@ operator<<(std::ostream& out, const TimerTable& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_STRUCTURES_TIMERTABLE_HH__

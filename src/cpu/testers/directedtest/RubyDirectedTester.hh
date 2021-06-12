@@ -92,7 +92,7 @@ class RubyDirectedTester : public ClockedObject
     EventFunctionWrapper directedStartEvent;
 
   private:
-    void hitCallback(NodeID proc, Addr addr);
+    void hitCallback(ruby::NodeID proc, Addr addr);
 
     void checkForDeadlock();
 

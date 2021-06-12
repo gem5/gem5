@@ -39,6 +39,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class BasicRouter : public ClockedObject
 {
   public:
@@ -64,6 +67,7 @@ operator<<(std::ostream& out, const BasicRouter& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_BASICROUTER_HH__

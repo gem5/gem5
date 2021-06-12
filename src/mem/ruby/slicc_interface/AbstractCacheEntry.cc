@@ -46,6 +46,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 AbstractCacheEntry::AbstractCacheEntry() : ReplaceableEntry()
 {
     m_Permission = AccessPermission_NotPresent;
@@ -123,4 +126,5 @@ AbstractCacheEntry::getInHtmWriteSet() const
     return m_htmInWriteSet;
 }
 
+} // namespace ruby
 } // namespace gem5

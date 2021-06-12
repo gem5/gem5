@@ -49,6 +49,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 template<class ENTRY>
 class TBETable
 {
@@ -144,6 +147,7 @@ TBETable<ENTRY>::print(std::ostream& out) const
 {
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_STRUCTURES_TBETABLE_HH__

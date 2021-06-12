@@ -55,7 +55,7 @@ class InvalidateGenerator : public DirectedGenerator
     void performCallback(uint32_t proc, Addr address);
 
   private:
-    InvalidateGeneratorStatus m_status;
+    ruby::InvalidateGeneratorStatus m_status;
     Addr m_address;
     uint32_t m_active_read_node;
     uint32_t m_active_inv_node;

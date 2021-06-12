@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 Addr
 bitSelect(Addr addr, unsigned int small, unsigned int big)
 {
@@ -82,4 +85,5 @@ printAddress(Addr addr)
     return out.str();
 }
 
+} // namespace ruby
 } // namespace gem5

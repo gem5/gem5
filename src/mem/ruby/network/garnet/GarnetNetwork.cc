@@ -49,6 +49,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -621,4 +624,5 @@ GarnetNetwork::functionalWrite(Packet *pkt)
 }
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5

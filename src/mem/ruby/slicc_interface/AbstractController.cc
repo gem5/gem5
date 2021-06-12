@@ -50,6 +50,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 AbstractController::AbstractController(const Params &p)
     : ClockedObject(p), Consumer(this), m_version(p.version),
       m_clusterID(p.cluster_id),
@@ -461,4 +464,5 @@ ControllerStats::ControllerStats(statistics::Group *parent)
         .flags(statistics::nozero);
 }
 
+} // namespace ruby
 } // namespace gem5

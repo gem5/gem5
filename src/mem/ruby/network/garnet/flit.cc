@@ -36,6 +36,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -128,4 +131,5 @@ flit::functionalWrite(Packet *pkt)
 }
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5

@@ -52,6 +52,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class WriteMask;
 
 class DataBlock
@@ -136,6 +139,7 @@ operator==(const DataBlock& obj1,const DataBlock& obj2)
     return obj1.equal(obj2);
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_COMMON_DATABLOCK_HH__

@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class SimpleExtLink : public BasicExtLink
 {
   public:
@@ -80,6 +83,7 @@ operator<<(std::ostream& out, const SimpleIntLink& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_SIMPLE_SIMPLELINK_HH__

@@ -73,6 +73,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class NetDest;
 class MessageBuffer;
 
@@ -183,6 +186,7 @@ operator<<(std::ostream& out, const Network& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_NETWORK_HH__

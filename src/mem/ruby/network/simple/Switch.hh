@@ -67,6 +67,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class MessageBuffer;
 class NetDest;
 class SimpleNetwork;
@@ -130,6 +133,7 @@ operator<<(std::ostream& out, const Switch& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_SIMPLE_SWITCH_HH__

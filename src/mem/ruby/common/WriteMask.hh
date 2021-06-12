@@ -53,6 +53,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class WriteMask
 {
   public:
@@ -268,6 +271,7 @@ operator<<(std::ostream& out, const WriteMask& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_COMMON_WRITEMASK_HH__

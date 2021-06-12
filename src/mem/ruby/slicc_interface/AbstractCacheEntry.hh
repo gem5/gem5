@@ -56,6 +56,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class AbstractCacheEntry : public ReplaceableEntry
 {
   private:
@@ -133,6 +136,7 @@ operator<<(std::ostream& out, const AbstractCacheEntry& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCACHEENTRY_HH__

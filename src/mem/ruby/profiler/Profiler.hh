@@ -62,6 +62,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class RubyRequest;
 class AddressProfiler;
 
@@ -196,6 +199,7 @@ class Profiler
     ProfilerStats rubyProfilerStats;
 };
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_PROFILER_PROFILER_HH__

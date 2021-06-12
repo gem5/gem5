@@ -86,7 +86,7 @@ void
 CheckTable::addCheck(Addr address)
 {
     if (floorLog2(CHECK_SIZE) != 0) {
-        if (bitSelect(address, 0, CHECK_SIZE_BITS - 1) != 0) {
+        if (ruby::bitSelect(address, 0, CHECK_SIZE_BITS - 1) != 0) {
             panic("Check not aligned");
         }
     }

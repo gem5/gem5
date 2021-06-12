@@ -65,6 +65,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class Network;
 class GPUCoalescer;
 class DMASequencer;
@@ -401,6 +404,7 @@ class AbstractController : public ClockedObject, public Consumer
 
 };
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

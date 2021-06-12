@@ -49,6 +49,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class MessageBuffer;
 class Switch;
 
@@ -130,6 +133,7 @@ operator<<(std::ostream& out, const Throttle& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_SIMPLE_THROTTLE_HH__

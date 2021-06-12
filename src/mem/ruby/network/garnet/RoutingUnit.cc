@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -268,4 +271,5 @@ RoutingUnit::outportComputeCustom(RouteInfo route,
 }
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5

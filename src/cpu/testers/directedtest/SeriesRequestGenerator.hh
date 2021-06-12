@@ -55,7 +55,7 @@ class SeriesRequestGenerator : public DirectedGenerator
     void performCallback(uint32_t proc, Addr address);
 
   private:
-    SeriesRequestGeneratorStatus m_status;
+    ruby::SeriesRequestGeneratorStatus m_status;
     Addr m_address;
     uint32_t m_active_node;
     uint32_t m_addr_increment_size;

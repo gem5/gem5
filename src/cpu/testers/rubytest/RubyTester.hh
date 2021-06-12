@@ -88,7 +88,7 @@ class RubyTester : public ClockedObject
 
     struct SenderState : public Packet::SenderState
     {
-        SubBlock subBlock;
+        ruby::SubBlock subBlock;
 
         SenderState(Addr addr, int size) : subBlock(addr, size) {}
 
@@ -127,7 +127,7 @@ class RubyTester : public ClockedObject
     RequestorID _requestorId;
 
   private:
-    void hitCallback(NodeID proc, SubBlock* data);
+    void hitCallback(ruby::NodeID proc, ruby::SubBlock* data);
 
     void checkForDeadlock();
 

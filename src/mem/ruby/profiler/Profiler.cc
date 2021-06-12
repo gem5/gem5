@@ -81,6 +81,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 using stl_helpers::operator<<;
 
 Profiler::Profiler(const RubySystemParams &p, RubySystem *rs)
@@ -581,4 +584,5 @@ Profiler::addAddressTraceSample(const RubyRequest& msg, NodeID id)
     }
 }
 
+} // namespace ruby
 } // namespace gem5

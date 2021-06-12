@@ -37,6 +37,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 Histogram::Histogram(int binsize, uint32_t bins)
 {
     m_binsize = binsize;
@@ -238,4 +241,5 @@ node_less_then_eq(const Histogram* n1, const Histogram* n2)
     return (n1->size() > n2->size());
 }
 
+} // namespace ruby
 } // namespace gem5

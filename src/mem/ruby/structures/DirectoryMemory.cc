@@ -52,6 +52,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 DirectoryMemory::DirectoryMemory(const Params &p)
     : SimObject(p), addrRanges(p.addr_ranges.begin(), p.addr_ranges.end())
 {
@@ -160,4 +163,5 @@ DirectoryMemory::recordRequestType(DirectoryRequestType requestType) {
             DirectoryRequestType_to_string(requestType));
 }
 
+} // namespace ruby
 } // namespace gem5

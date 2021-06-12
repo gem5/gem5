@@ -33,6 +33,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 bool StoreTrace::s_init = false; // Total number of store lifetimes of
                                  // all lines
 int64_t StoreTrace::s_total_samples = 0; // Total number of store
@@ -161,4 +164,5 @@ StoreTrace::downgrade(NodeID node)
     }
 }
 
+} // namespace ruby
 } // namespace gem5

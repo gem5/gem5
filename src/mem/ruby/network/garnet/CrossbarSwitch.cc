@@ -38,6 +38,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 namespace garnet
 {
 
@@ -107,4 +110,5 @@ CrossbarSwitch::resetStats()
 }
 
 } // namespace garnet
+} // namespace ruby
 } // namespace gem5

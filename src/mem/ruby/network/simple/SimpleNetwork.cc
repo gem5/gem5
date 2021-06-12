@@ -55,6 +55,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 SimpleNetwork::SimpleNetwork(const Params &p)
     : Network(p), m_buffer_size(p.buffer_size),
       m_endpoint_bandwidth(p.endpoint_bandwidth),
@@ -243,4 +246,5 @@ NetworkStats::NetworkStats(statistics::Group *parent)
 
 }
 
+} // namespace ruby
 } // namespace gem5

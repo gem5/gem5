@@ -38,6 +38,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 inline NetDest
 broadcast(MachineType type)
 {
@@ -94,6 +97,7 @@ MachineTypeAndNodeIDToMachineID(MachineType type, NodeID node)
     return mach;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif  // __MEM_RUBY_SLICC_INTERFACE_COMPONENTMAPPINGS_HH__

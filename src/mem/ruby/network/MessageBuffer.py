@@ -49,7 +49,7 @@ class MessageRandomization(ScopedEnum):
 
 class MessageBuffer(SimObject):
     type = 'MessageBuffer'
-    cxx_class = 'gem5::MessageBuffer'
+    cxx_class = 'gem5::ruby::MessageBuffer'
     cxx_header = "mem/ruby/network/MessageBuffer.hh"
 
     ordered = Param.Bool(False, "Whether the buffer is ordered")

@@ -51,6 +51,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class HTMSequencer : public Sequencer
 {
   public:
@@ -113,6 +116,7 @@ operator<<(std::ostream& out, const HTMSequencer& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_SYSTEM_HTMSEQUENCER_HH__

@@ -62,6 +62,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class PrefetchEntry
 {
     public:
@@ -258,6 +261,7 @@ class RubyPrefetcher : public SimObject
         } rubyPrefetcherStats;
 };
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_STRUCTURES_PREFETCHER_HH__

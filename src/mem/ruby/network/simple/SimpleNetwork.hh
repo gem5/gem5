@@ -50,6 +50,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class NetDest;
 class MessageBuffer;
 class Throttle;
@@ -125,6 +128,7 @@ operator<<(std::ostream& out, const SimpleNetwork& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_SIMPLE_SIMPLENETWORK_HH__

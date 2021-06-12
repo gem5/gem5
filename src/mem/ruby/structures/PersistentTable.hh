@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 class PersistentTableEntry
 {
   public:
@@ -100,6 +103,7 @@ operator<<(std::ostream& out, const PersistentTableEntry& obj)
     return out;
 }
 
+} // namespace ruby
 } // namespace gem5
 
 #endif // __MEM_RUBY_STRUCTURES_PERSISTENTTABLE_HH__

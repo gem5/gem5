@@ -39,10 +39,14 @@
 namespace gem5
 {
 
+namespace ruby
+{
+
 std::ostream& operator<<(std::ostream& os, const IntVec& myvector) {
     for (auto& it : myvector)
         os << " " << it;
     return os;
 }
 
+} // namespace ruby
 } // namespace gem5
