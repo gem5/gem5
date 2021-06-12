@@ -386,9 +386,9 @@ MemSinkCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
     return mem.recvTimingReq(pkt);
 }
 
-} // namespace qos
-
-QoSMemSinkInterface::QoSMemSinkInterface(const QoSMemSinkInterfaceParams &_p)
+MemSinkInterface::MemSinkInterface(const QoSMemSinkInterfaceParams &_p)
     : AbstractMemory(_p)
 {
 }
+
+} // namespace qos

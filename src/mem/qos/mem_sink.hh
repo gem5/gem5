@@ -52,11 +52,12 @@
 #include "sim/eventq.hh"
 
 struct QoSMemSinkInterfaceParams;
-class QoSMemSinkInterface;
 
 GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
+
+class MemSinkInterface;
 
 /**
  * QoS Memory Sink
@@ -177,7 +178,7 @@ class MemSinkCtrl : public MemCtrl
     /**
      * Create pointer to interface of actual media
      */
-    QoSMemSinkInterface* const interface;
+    MemSinkInterface* const interface;
 
     /** Read request pending */
     bool retryRdReq;
@@ -262,19 +263,18 @@ class MemSinkCtrl : public MemCtrl
     MemSinkCtrlStats stats;
 };
 
-} // namespace qos
-
-class QoSMemSinkInterface : public AbstractMemory
+class MemSinkInterface : public AbstractMemory
 {
   public:
     /** Setting a pointer to the interface */
-    void setMemCtrl(qos::MemSinkCtrl* _ctrl) { ctrl = _ctrl; };
+    void setMemCtrl(MemSinkCtrl* _ctrl) { ctrl = _ctrl; };
 
     /** Pointer to the controller */
-    qos::MemSinkCtrl* ctrl;
+    MemSinkCtrl* ctrl;
 
-    QoSMemSinkInterface(const QoSMemSinkInterfaceParams &_p);
+    MemSinkInterface(const QoSMemSinkInterfaceParams &_p);
 };
 
+} // namespace qos
 
 #endif /* __MEM_QOS_MEM_SINK_HH__ */
