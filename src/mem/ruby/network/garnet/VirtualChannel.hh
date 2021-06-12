@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 class VirtualChannel
 {
   public:
@@ -99,6 +102,7 @@ class VirtualChannel
     int m_output_vc;
 };
 
+} // namespace garnet
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_VIRTUALCHANNEL_HH__

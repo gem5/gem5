@@ -41,6 +41,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 class Router;
 class InputUnit;
 class OutputUnit;
@@ -86,6 +89,7 @@ class SwitchAllocator : public Consumer
     std::vector<int> m_vc_winners;
 };
 
+} // namespace garnet
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_SWITCHALLOCATOR_HH__

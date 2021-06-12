@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 flitBuffer::flitBuffer()
 {
     max_size = INFINITE_;
@@ -93,4 +96,5 @@ flitBuffer::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
+} // namespace garnet
 } // namespace gem5

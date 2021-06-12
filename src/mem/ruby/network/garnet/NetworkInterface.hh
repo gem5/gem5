@@ -50,6 +50,10 @@ namespace gem5
 {
 
 class MessageBuffer;
+
+namespace garnet
+{
+
 class flitBuffer;
 
 class NetworkInterface : public ClockedObject, public Consumer
@@ -300,6 +304,7 @@ class NetworkInterface : public ClockedObject, public Consumer
     OutputPort *getOutportForVnet(int vnet);
 };
 
+} // namespace garnet
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_NETWORKINTERFACE_HH__

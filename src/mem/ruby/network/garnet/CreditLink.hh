@@ -37,6 +37,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 class CreditLink : public NetworkLink
 {
   public:
@@ -44,6 +47,7 @@ class CreditLink : public NetworkLink
     CreditLink(const Params &p) : NetworkLink(p) {}
 };
 
+} // namespace garnet
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_CREDITLINK_HH__

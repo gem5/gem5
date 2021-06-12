@@ -36,6 +36,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 // Constructor for the flit
 flit::flit(int id, int  vc, int vnet, RouteInfo route, int size,
     MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime)
@@ -124,4 +127,5 @@ flit::functionalWrite(Packet *pkt)
     return msg->functionalWrite(pkt);
 }
 
+} // namespace garnet
 } // namespace gem5

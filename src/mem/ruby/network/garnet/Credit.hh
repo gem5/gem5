@@ -41,6 +41,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 // Credit Signal for buffers inside VC
 // Carries m_vc (inherits from flit.hh)
 // and m_is_free_signal (whether VC is free or not)
@@ -64,6 +67,7 @@ class Credit : public flit
     bool m_is_free_signal;
 };
 
+} // namespace garnet
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_CREDIT_HH__

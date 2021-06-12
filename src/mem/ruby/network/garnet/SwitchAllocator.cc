@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 SwitchAllocator::SwitchAllocator(Router *router)
     : Consumer(router)
 {
@@ -390,4 +393,5 @@ SwitchAllocator::resetStats()
     m_output_arbiter_activity = 0;
 }
 
+} // namespace garnet
 } // namespace gem5

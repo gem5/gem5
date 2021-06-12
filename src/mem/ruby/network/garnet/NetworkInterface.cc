@@ -45,6 +45,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 NetworkInterface::NetworkInterface(const Params &p)
   : ClockedObject(p), Consumer(this), m_id(p.id),
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(0),
@@ -674,4 +677,5 @@ NetworkInterface::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
+} // namespace garnet
 } // namespace gem5

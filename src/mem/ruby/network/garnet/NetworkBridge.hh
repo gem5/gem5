@@ -49,6 +49,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 class GarnetNetwork;
 
 class NetworkBridge: public CreditLink
@@ -98,6 +101,7 @@ class NetworkBridge: public CreditLink
 
 };
 
+} // namespace garnet
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_NETWORK_BRIDGE_HH__

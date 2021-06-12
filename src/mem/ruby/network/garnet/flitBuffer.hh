@@ -41,6 +41,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 class flitBuffer
 {
   public:
@@ -89,6 +92,7 @@ operator<<(std::ostream& out, const flitBuffer& obj)
     return out;
 }
 
+} // namespace garnet
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_FLITBUFFER_HH__

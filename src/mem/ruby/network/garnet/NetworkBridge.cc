@@ -42,6 +42,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 NetworkBridge::NetworkBridge(const Params &p)
     :CreditLink(p)
 {
@@ -268,4 +271,5 @@ NetworkBridge::wakeup()
     }
 }
 
+} // namespace garnet
 } // namespace gem5

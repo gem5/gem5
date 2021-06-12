@@ -44,6 +44,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 class CreditLink;
 class Router;
 
@@ -114,6 +117,7 @@ class OutputUnit : public Consumer
     std::vector<OutVcState> outVcState;
 };
 
+} // namespace garnet
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_OUTPUTUNIT_HH__

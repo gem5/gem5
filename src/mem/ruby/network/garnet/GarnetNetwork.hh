@@ -44,9 +44,13 @@ namespace gem5
 {
 
 class FaultModel;
+class NetDest;
+
+namespace garnet
+{
+
 class NetworkInterface;
 class Router;
-class NetDest;
 class NetworkLink;
 class CreditLink;
 
@@ -212,6 +216,7 @@ operator<<(std::ostream& out, const GarnetNetwork& obj)
     return out;
 }
 
+} // namespace garnet
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__

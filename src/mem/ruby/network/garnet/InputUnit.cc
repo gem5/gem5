@@ -38,6 +38,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 InputUnit::InputUnit(int id, PortDirection direction, Router *router)
   : Consumer(router), m_router(router), m_id(id), m_direction(direction),
     m_vc_per_vnet(m_router->get_vc_per_vnet())
@@ -166,4 +169,5 @@ InputUnit::resetStats()
     }
 }
 
+} // namespace garnet
 } // namespace gem5

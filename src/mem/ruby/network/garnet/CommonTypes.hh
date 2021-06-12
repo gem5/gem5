@@ -36,6 +36,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 // All common enums and typedefs go here
 
 enum flit_type {HEAD_, BODY_, TAIL_, HEAD_TAIL_,
@@ -68,6 +71,7 @@ struct RouteInfo
 
 #define INFINITE_ 10000
 
+} // namespace garnet
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_GARNET_0_COMMONTYPES_HH__

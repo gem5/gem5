@@ -50,11 +50,15 @@
 namespace gem5
 {
 
+class FaultModel;
+
+namespace garnet
+{
+
 class NetworkLink;
 class CreditLink;
 class InputUnit;
 class OutputUnit;
-class FaultModel;
 
 class Router : public BasicRouter, public Consumer
 {
@@ -157,6 +161,7 @@ class Router : public BasicRouter, public Consumer
     statistics::Scalar m_crossbar_activity;
 };
 
+} // namespace garnet
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_ROUTER_HH__

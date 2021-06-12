@@ -38,6 +38,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 GarnetIntLink::GarnetIntLink(const Params &p)
     : BasicIntLink(p)
 {
@@ -157,4 +160,5 @@ GarnetExtLink::print(std::ostream& out) const
     out << name();
 }
 
+} // namespace garnet
 } // namespace gem5

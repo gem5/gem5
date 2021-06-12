@@ -35,6 +35,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 // Credit Signal for buffers inside VC
 // Carries m_vc (inherits from flit.hh)
 // and m_is_free_signal (whether VC is free or not)
@@ -83,4 +86,5 @@ Credit::print(std::ostream& out) const
     out << "]";
 }
 
+} // namespace garnet
 } // namespace gem5

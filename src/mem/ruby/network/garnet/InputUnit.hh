@@ -46,6 +46,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 class InputUnit : public Consumer
 {
   public:
@@ -166,6 +169,7 @@ class InputUnit : public Consumer
     std::vector<double> m_num_buffer_reads;
 };
 
+} // namespace garnet
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_INPUTUNIT_HH__

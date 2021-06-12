@@ -49,6 +49,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 /*
  * GarnetNetwork sets up the routers and links and collects stats.
  * Default parameters (GarnetNetwork.py) can be overwritten from command line
@@ -617,4 +620,5 @@ GarnetNetwork::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
+} // namespace garnet
 } // namespace gem5

@@ -37,6 +37,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 class OutVcState
 {
   public:
@@ -67,6 +70,7 @@ class OutVcState
     int m_max_credit_count;
 };
 
+} // namespace garnet
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_GARNET_0_OUTVCSTATE_HH__

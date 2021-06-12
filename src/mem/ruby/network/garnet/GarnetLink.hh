@@ -45,6 +45,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 class GarnetIntLink : public BasicIntLink
 {
   public:
@@ -126,6 +129,7 @@ operator<<(std::ostream& out, const GarnetExtLink& obj)
     return out;
 }
 
+} // namespace garnet
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_GARNET_0_GARNETLINK_HH__

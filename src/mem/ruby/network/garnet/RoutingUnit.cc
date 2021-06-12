@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 RoutingUnit::RoutingUnit(Router *router)
 {
     m_router = router;
@@ -264,4 +267,5 @@ RoutingUnit::outportComputeCustom(RouteInfo route,
     panic("%s placeholder executed", __FUNCTION__);
 }
 
+} // namespace garnet
 } // namespace gem5

@@ -35,6 +35,9 @@
 namespace gem5
 {
 
+namespace garnet
+{
+
 OutVcState::OutVcState(int id, GarnetNetwork *network_ptr,
     uint32_t consumerVcs)
     : m_time(0)
@@ -71,4 +74,5 @@ OutVcState::decrement_credit()
     assert(m_credit_count >= 0);
 }
 
+} // namespace garnet
 } // namespace gem5
