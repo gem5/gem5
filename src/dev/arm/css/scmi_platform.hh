@@ -41,7 +41,6 @@
 #include "dev/arm/css/scmi_protocols.hh"
 #include "dev/arm/css/scp.hh"
 #include "dev/dma_device.hh"
-#include "mem/mem_object.hh"
 #include "params/ScmiPlatform.hh"
 
 class Doorbell;
