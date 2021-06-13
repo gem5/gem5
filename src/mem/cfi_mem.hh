@@ -47,6 +47,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 /**
  * CfiMemory: This is modelling a flash memory adhering to the
  * Common Flash Interface (CFI):
@@ -395,6 +398,7 @@ class CfiMemory : public AbstractMemory
     uint64_t cfiQuery(Addr addr);
 };
 
+} // namespace memory
 } // namespace gem5
 
 #endif

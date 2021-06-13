@@ -54,6 +54,9 @@ namespace gem5
 
 using namespace Data;
 
+namespace memory
+{
+
 MemInterface::MemInterface(const MemInterfaceParams &_p)
     : AbstractMemory(_p),
       addrMapping(_p.addr_mapping),
@@ -2624,4 +2627,5 @@ NVMInterface::NVMStats::regStats()
     busUtilWrite = avgWrBW / peakBW * 100;
 }
 
+} // namespace memory
 } // namespace gem5

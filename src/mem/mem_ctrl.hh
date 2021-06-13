@@ -63,6 +63,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 class DRAMInterface;
 class NVMInterface;
 
@@ -236,7 +239,7 @@ typedef std::deque<MemPacket*> MemPacketQueue;
  * please cite the paper.
  *
  */
-class MemCtrl : public memory::qos::MemCtrl
+class MemCtrl : public qos::MemCtrl
 {
   private:
 
@@ -712,6 +715,7 @@ class MemCtrl : public memory::qos::MemCtrl
 
 };
 
+} // namespace memory
 } // namespace gem5
 
 #endif //__MEM_CTRL_HH__

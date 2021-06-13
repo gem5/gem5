@@ -57,6 +57,9 @@ namespace gem5
 
 class System;
 
+namespace memory
+{
+
 /**
  * Locked address class that represents a physical address and a
  * context id.
@@ -348,6 +351,7 @@ class AbstractMemory : public ClockedObject
     void functionalAccess(PacketPtr pkt);
 };
 
+} // namespace memory
 } // namespace gem5
 
 #endif //__MEM_ABSTRACT_MEMORY_HH__

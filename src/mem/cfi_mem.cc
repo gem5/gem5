@@ -51,6 +51,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 bool
 CfiMemory::BlockData::isLocked(Addr block_address) const
 {
@@ -732,4 +735,5 @@ CfiMemory::BlockData::erase(PacketPtr pkt)
     std::memset(host_address, 0xff, blockSize);
 }
 
+} // namespace memory
 } // namespace gem5

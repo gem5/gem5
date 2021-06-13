@@ -50,6 +50,7 @@
 
 #include "cpu/kvm/base.hh"
 #include "debug/Kvm.hh"
+#include "mem/physical.hh"
 #include "params/KvmVM.hh"
 #include "sim/system.hh"
 
@@ -355,7 +356,7 @@ void
 KvmVM::delayedStartup()
 {
     assert(system); // set by the system during its construction
-    const std::vector<BackingStoreEntry> &memories(
+    const std::vector<memory::BackingStoreEntry> &memories(
         system->getPhysMem().getBackingStore());
 
     DPRINTF(Kvm, "Mapping %i memory region(s)\n", memories.size());

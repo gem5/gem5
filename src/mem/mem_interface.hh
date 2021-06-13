@@ -67,6 +67,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 /**
  * General interface to memory device
  * Includes functions and parameters shared across media types
@@ -1263,6 +1266,7 @@ class NVMInterface : public MemInterface
     NVMInterface(const NVMInterfaceParams &_p);
 };
 
+} // namespace memory
 } // namespace gem5
 
 #endif //__MEM_INTERFACE_HH__

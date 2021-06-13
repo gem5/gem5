@@ -52,8 +52,11 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 MemCtrl::MemCtrl(const MemCtrlParams &p) :
-    memory::qos::MemCtrl(p),
+    qos::MemCtrl(p),
     port(name() + ".port", *this), isTimingMode(false),
     retryRdReq(false), retryWrReq(false),
     nextReqEvent([this]{ processNextReqEvent(); }, name()),
@@ -1396,7 +1399,7 @@ Port &
 MemCtrl::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "port") {
-        return memory::qos::MemCtrl::getPort(if_name, idx);
+        return qos::MemCtrl::getPort(if_name, idx);
     } else {
         return port;
     }
@@ -1514,4 +1517,5 @@ MemCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
     return ctrl.recvTimingReq(pkt);
 }
 
+} // namespace memory
 } // namespace gem5

@@ -551,7 +551,7 @@ ArmSemihosting::gatherHeapInfo(ThreadContext *tc, bool aarch64,
                                Addr &heap_base, Addr &heap_limit,
                                Addr &stack_base, Addr &stack_limit)
 {
-    const PhysicalMemory &phys = tc->getSystemPtr()->getPhysMem();
+    const memory::PhysicalMemory &phys = tc->getSystemPtr()->getPhysMem();
     const AddrRangeList memories = phys.getConfAddrRanges();
     fatal_if(memories.size() < 1, "No memories reported from System");
     warn_if(memories.size() > 1, "Multiple physical memory ranges available. "

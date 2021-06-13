@@ -46,6 +46,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 DRAMsim3::DRAMsim3(const Params &p) :
     AbstractMemory(p),
     port(name() + ".port", *this),
@@ -390,4 +393,5 @@ DRAMsim3::MemoryPort::recvRespRetry()
     mem.recvRespRetry();
 }
 
+} // namespace memory
 } // namespace gem5

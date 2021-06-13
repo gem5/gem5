@@ -65,7 +65,11 @@ namespace gem5
 {
 
 struct O3CPUParams;
+
+namespace memory
+{
 class MemInterface;
+} // namespace memory
 
 namespace o3
 {
@@ -284,7 +288,7 @@ class InstructionQueue
     CPU *cpu;
 
     /** Cache interface. */
-    MemInterface *dcacheInterface;
+    memory::MemInterface *dcacheInterface;
 
     /** Pointer to IEW stage. */
     IEW *iewStage;

@@ -50,6 +50,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 /**
  * Forward declaration to avoid header dependencies.
  */
@@ -277,6 +280,7 @@ class PhysicalMemory : public Serializable
 
 };
 
+} // namespace memory
 } // namespace gem5
 
 #endif //__MEM_PHYSICAL_HH__

@@ -43,7 +43,7 @@ class AbstractMemory(ClockedObject):
     type = 'AbstractMemory'
     abstract = True
     cxx_header = "mem/abstract_mem.hh"
-    cxx_class = 'gem5::AbstractMemory'
+    cxx_class = 'gem5::memory::AbstractMemory'
 
     # A default memory size of 128 MiB (starting at 0) is used to
     # simplify the regressions

@@ -71,6 +71,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 PhysicalMemory::PhysicalMemory(const std::string& _name,
                                const std::vector<AbstractMemory*>& _memories,
                                bool mmap_using_noreserve,
@@ -471,4 +474,5 @@ PhysicalMemory::unserializeStore(CheckpointIn &cp)
               filename);
 }
 
+} // namespace memory
 } // namespace gem5

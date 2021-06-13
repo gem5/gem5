@@ -54,6 +54,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 AbstractMemory::AbstractMemory(const Params &p) :
     ClockedObject(p), range(p.range), pmemAddr(NULL),
     backdoor(params().range, nullptr,
@@ -509,4 +512,5 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
     }
 }
 
+} // namespace memory
 } // namespace gem5

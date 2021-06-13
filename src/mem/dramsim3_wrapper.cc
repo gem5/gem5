@@ -58,6 +58,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 DRAMsim3Wrapper::DRAMsim3Wrapper(const std::string& config_file,
                                  const std::string& working_dir,
                                  std::function<void(uint64_t)> read_cb,
@@ -154,4 +157,5 @@ DRAMsim3Wrapper::tick()
     dramsim->ClockTick();
 }
 
+} // namespace memory
 } // namespace gem5

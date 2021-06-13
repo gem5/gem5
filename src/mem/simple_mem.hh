@@ -55,6 +55,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 /**
  * The simple memory is a basic single-ported memory controller with
  * a configurable throughput and latency.
@@ -192,6 +195,7 @@ class SimpleMemory : public AbstractMemory
     void recvRespRetry();
 };
 
+} // namespace memory
 } // namespace gem5
 
 #endif //__MEM_SIMPLE_MEMORY_HH__

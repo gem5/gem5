@@ -111,7 +111,7 @@ class System : public SimObject, public PCEventScope
     SystemPort _systemPort;
 
     // Map of memory address ranges for devices with their own backing stores
-    std::unordered_map<RequestorID, std::vector<AbstractMemory *>>
+    std::unordered_map<RequestorID, std::vector<memory::AbstractMemory *>>
         deviceMemMap;
 
   public:
@@ -345,7 +345,7 @@ class System : public SimObject, public PCEventScope
     bool validKvmEnvironment() const;
 
     /** Get a pointer to access the physical memory of the system */
-    PhysicalMemory& getPhysMem() { return physmem; }
+    memory::PhysicalMemory& getPhysMem() { return physmem; }
 
     /** Amount of physical memory that is still free */
     Addr freeMemSize(int poolID = 0) const;
@@ -368,7 +368,7 @@ class System : public SimObject, public PCEventScope
      * and range match something in the device memory map.
      */
     void addDeviceMemory(RequestorID requestorId,
-                      AbstractMemory *deviceMemory);
+        memory::AbstractMemory *deviceMemory);
 
     /**
      * Similar to isMemAddr but for devices. Checks if a physical address
@@ -380,7 +380,7 @@ class System : public SimObject, public PCEventScope
     /**
      * Return a pointer to the device memory.
      */
-    AbstractMemory *getDeviceMemory(const PacketPtr& pkt) const;
+    memory::AbstractMemory *getDeviceMemory(const PacketPtr& pkt) const;
 
     /*
      * Return the list of address ranges backed by a shadowed ROM.
@@ -422,7 +422,7 @@ class System : public SimObject, public PCEventScope
 
     KvmVM *const kvmVM = nullptr;
 
-    PhysicalMemory physmem;
+    memory::PhysicalMemory physmem;
 
     AddrRangeList ShadowRomRanges;
 

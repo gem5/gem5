@@ -379,7 +379,8 @@ System::isMemAddr(Addr addr) const
 }
 
 void
-System::addDeviceMemory(RequestorID requestor_id, AbstractMemory *deviceMemory)
+System::addDeviceMemory(RequestorID requestor_id,
+    memory::AbstractMemory *deviceMemory)
 {
     deviceMemMap[requestor_id].push_back(deviceMemory);
 }
@@ -394,7 +395,7 @@ System::isDeviceMemAddr(const PacketPtr& pkt) const
     return (getDeviceMemory(pkt) != nullptr);
 }
 
-AbstractMemory *
+memory::AbstractMemory *
 System::getDeviceMemory(const PacketPtr& pkt) const
 {
     const RequestorID& rid = pkt->requestorId();

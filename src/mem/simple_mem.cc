@@ -47,6 +47,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 SimpleMemory::SimpleMemory(const SimpleMemoryParams &p) :
     AbstractMemory(p),
     port(name() + ".port", *this), latency(p.latency),
@@ -303,4 +306,5 @@ SimpleMemory::MemoryPort::recvRespRetry()
     mem.recvRespRetry();
 }
 
+} // namespace memory
 } // namespace gem5

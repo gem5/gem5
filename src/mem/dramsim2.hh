@@ -53,6 +53,9 @@
 namespace gem5
 {
 
+namespace memory
+{
+
 class DRAMSim2 : public AbstractMemory
 {
   private:
@@ -207,6 +210,7 @@ class DRAMSim2 : public AbstractMemory
 
 };
 
+} // namespace memory
 } // namespace gem5
 
 #endif // __MEM_DRAMSIM2_HH__
