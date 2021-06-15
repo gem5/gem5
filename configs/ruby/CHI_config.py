@@ -1,4 +1,4 @@
-# Copyright (c) 2021,2022 ARM Limited
+# Copyright (c) 2021-2023 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -231,7 +231,8 @@ class CHI_L1Controller(CHI_Cache_Controller):
         super().__init__(ruby_system)
         self.sequencer = sequencer
         self.cache = cache
-        self.use_prefetcher = False
+        self.prefetcher = prefetcher
+        self.use_prefetcher = prefetcher != NULL
         self.send_evictions = True
         self.is_HN = False
         self.enable_DMT = False
@@ -268,7 +269,8 @@ class CHI_L2Controller(CHI_Cache_Controller):
         super().__init__(ruby_system)
         self.sequencer = NULL
         self.cache = cache
-        self.use_prefetcher = False
+        self.prefetcher = prefetcher
+        self.use_prefetcher = prefetcher != NULL
         self.allow_SD = True
         self.is_HN = False
         self.enable_DMT = False
@@ -304,7 +306,8 @@ class CHI_HNFController(CHI_Cache_Controller):
         super().__init__(ruby_system)
         self.sequencer = NULL
         self.cache = cache
-        self.use_prefetcher = False
+        self.prefetcher = prefetcher
+        self.use_prefetcher = prefetcher != NULL
         self.addr_ranges = addr_ranges
         self.allow_SD = True
         self.is_HN = True
@@ -380,6 +383,7 @@ class CHI_DMAController(CHI_Cache_Controller):
             size = "128"
             assoc = 1
 
+        self.prefetcher = NULL
         self.use_prefetcher = False
         self.cache = DummyCache()
         self.sequencer.dcache = NULL
@@ -499,11 +503,16 @@ class CHI_RNF(CHI_Node):
                 start_index_bit=self._block_size_bits, is_icache=False
             )
 
-            # Placeholders for future prefetcher support
-            if l1Iprefetcher_type != None or l1Dprefetcher_type != None:
-                m5.fatal("Prefetching not supported yet")
-            l1i_pf = NULL
-            l1d_pf = NULL
+            # prefetcher wrappers
+            if l1Iprefetcher_type != None:
+                l1i_pf = l1Iprefetcher_type()
+            else:
+                l1i_pf = NULL
+
+            if l1Dprefetcher_type != None:
+                l1d_pf = l1Dprefetcher_type()
+            else:
+                l1d_pf = NULL
 
             # cache controllers
             cpu.l1i = CHI_L1Controller(
@@ -548,9 +557,11 @@ class CHI_RNF(CHI_Node):
             l2_cache = cache_type(
                 start_index_bit=self._block_size_bits, is_icache=False
             )
+
             if pf_type != None:
-                m5.fatal("Prefetching not supported yet")
-            l2_pf = NULL
+                l2_pf = pf_type()
+            else:
+                l2_pf = NULL
 
             cpu.l2 = CHI_L2Controller(self._ruby_system, l2_cache, l2_pf)
 

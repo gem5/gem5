@@ -68,12 +68,6 @@ void outgoingTransactionEnd(Addr, bool, bool);
 Event curTransitionEvent();
 State curTransitionNextState();
 
-// Placeholders for future prefetch support
-void notifyPfHit(RequestPtr req, bool is_read, DataBlock blk) { }
-void notifyPfMiss(RequestPtr req, bool is_read, DataBlock blk) { }
-void notifyPfFill(RequestPtr req, DataBlock blk, bool from_pf) { }
-void notifyPfEvict(Addr blkAddr, bool hwPrefetched) { }
-void notifyPfComplete(Addr addr) { }
 
 ////////////////////////////////////////////////////////////////////////////
 // Interface functions required by SLICC
@@ -307,7 +301,11 @@ bool fromSequencer(CHIRequestType reqType) {
          reqType == CHIRequestType:AtomicStore;
 }
 
-bool inCache(Addr addr) {
+void regProbePoints() {
+  pfProxy.regProbePoints();
+}
+
+bool inCache(Addr addr, bool is_secure) {
   CacheEntry entry := getCacheEntry(makeLineAddress(addr));
   // NOTE: we consider data for the addr to be in cache if it exists in local,
   // upstream, or both caches.
@@ -318,7 +316,16 @@ bool inCache(Addr addr) {
   }
 }
 
-bool hasBeenPrefetched(Addr addr) {
+bool hasBeenPrefetched(Addr addr, bool is_secure, RequestorID requestor) {
+  CacheEntry entry := getCacheEntry(makeLineAddress(addr));
+  if (is_valid(entry)) {
+    return entry.HWPrefetched && (entry.requestor == requestor);
+  } else {
+    return false;
+  }
+}
+
+bool hasBeenPrefetched(Addr addr, bool is_secure) {
   CacheEntry entry := getCacheEntry(makeLineAddress(addr));
   if (is_valid(entry)) {
     return entry.HWPrefetched;
@@ -327,10 +334,14 @@ bool hasBeenPrefetched(Addr addr) {
   }
 }
 
-bool inMissQueue(Addr addr) {
+bool inMissQueue(Addr addr, bool is_secure) {
   Addr line_addr := makeLineAddress(addr);
   TBE tbe := getCurrentActiveTBE(line_addr);
   return is_valid(tbe);
+}
+
+bool coalesce() {
+  return false;
 }
 
 void notifyCoalesced(Addr addr, RubyRequestType type, RequestPtr req,
@@ -347,9 +358,9 @@ void notifyCoalesced(Addr addr, RubyRequestType type, RequestPtr req,
                     (type == RubyRequestType:Load_Linked) ||
                     (type == RubyRequestType:IFETCH);
     if (was_miss) {
-      notifyPfMiss(req, is_read, data_blk);
+      pfProxy.notifyPfMiss(req, is_read, data_blk);
     } else {
-      notifyPfHit(req, is_read, data_blk);
+      pfProxy.notifyPfHit(req, is_read, data_blk);
     }
   }
 }

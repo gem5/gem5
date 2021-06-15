@@ -46,6 +46,10 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   // happen in parallel. The cache tag latency is used for both cases.
   CacheMemory * cache;
 
+  // Prefetcher to insert prefetch requests
+  // null if the cache does not support prefetching
+  prefetch::Base * prefetcher;
+
   // Additional pipeline latency modeling for the different request types
   // When defined, these are applied after the initial tag array read and
   // sending necessary snoops.
@@ -568,6 +572,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     State state,        desc="SLICC line state";
     DataBlock DataBlk,  desc="data for the block";
     bool HWPrefetched,  default="false", desc="Set if this cache entry was prefetched";
+    RequestorID requestor,  desc="First requestor to fill this block";
   }
 
   // Directory entry
@@ -811,6 +816,10 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   // TBE table for incoming DVM snoops
   TBETable dvmSnpTBEs,      template="<Cache_TBE>", constructor="m_number_of_DVM_snoop_TBEs";
   TBEStorage storDvmSnpTBEs, constructor="this, m_number_of_DVM_snoop_TBEs";
+
+  // Interface to prefetchers
+  RubyPrefetcherProxy pfProxy, constructor="this, m_prefetcher_ptr, m_prefetchQueue_ptr";
+
 
   // DVM data
   // Queue of non-sync operations that haven't been Comp-d yet.
