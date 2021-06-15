@@ -685,7 +685,7 @@ transition(UD_T, {Global_Eviction, Local_Eviction, LocalHN_Eviction}, UD) {
 
 transition(BUSY_BLKD,
             {SnpCleanInvalid,SnpShared,SnpUnique,SnpSharedFwd,SnpUniqueFwd,
-            SnpNotSharedDirtyFwd, SnpOnce}) {
+            SnpOnce,SnpOnceFwd,SnpNotSharedDirtyFwd}) {
   StallSnoop;
 }
 
