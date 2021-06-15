@@ -41,6 +41,7 @@
 #ifndef __SIM_STAT_CONTROL_HH__
 #define __SIM_STAT_CONTROL_HH__
 
+#include "base/compiler.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
 
