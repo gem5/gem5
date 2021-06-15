@@ -274,6 +274,26 @@ Router::printAggregateFaultProbability(std::ostream& out)
     out << aggregate_fault_prob << std::endl;
 }
 
+bool
+Router::functionalRead(Packet *pkt, WriteMask &mask)
+{
+    bool read = false;
+    if (crossbarSwitch.functionalRead(pkt, mask))
+        read = true;
+
+    for (uint32_t i = 0; i < m_input_unit.size(); i++) {
+        if (m_input_unit[i]->functionalRead(pkt, mask))
+            read = true;
+    }
+
+    for (uint32_t i = 0; i < m_output_unit.size(); i++) {
+        if (m_output_unit[i]->functionalRead(pkt, mask))
+            read = true;
+    }
+
+    return read;
+}
+
 uint32_t
 Router::functionalWrite(Packet *pkt)
 {

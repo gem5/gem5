@@ -151,6 +151,17 @@ InputUnit::increment_credit(int in_vc, bool free_signal, Tick curTime)
     m_credit_link->scheduleEventAbsolute(m_router->clockEdge(Cycles(1)));
 }
 
+bool
+InputUnit::functionalRead(Packet *pkt, WriteMask &mask)
+{
+    bool read = false;
+    for (auto& virtual_channel : virtualChannels) {
+        if (virtual_channel.functionalRead(pkt, mask))
+            read = true;
+    }
+
+    return read;
+}
 
 uint32_t
 InputUnit::functionalWrite(Packet *pkt)

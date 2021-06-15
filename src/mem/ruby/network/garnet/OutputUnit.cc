@@ -172,6 +172,12 @@ OutputUnit::insert_flit(flit *t_flit)
     m_out_link->scheduleEventAbsolute(m_router->clockEdge(Cycles(1)));
 }
 
+bool
+OutputUnit::functionalRead(Packet *pkt, WriteMask &mask)
+{
+    return outBuffer.functionalRead(pkt, mask);
+}
+
 uint32_t
 OutputUnit::functionalWrite(Packet *pkt)
 {
