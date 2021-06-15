@@ -469,7 +469,6 @@ TLB::takeOverFrom(BaseTLB *_otlb)
     /* Make sure we actually have a valid type */
     if (otlb) {
         _attr = otlb->_attr;
-        haveLPAE = otlb->haveLPAE;
         directToStage2 = otlb->directToStage2;
         stage2Req = otlb->stage2Req;
         stage2DescReq = otlb->stage2DescReq;
