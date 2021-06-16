@@ -6988,19 +6988,19 @@ namespace VegaISA
 
         vdst.write();
     } // execute
-    // --- Inst_VOP2__V_ADD_U32 class methods ---
+    // --- Inst_VOP2__V_ADD_CO_U32 class methods ---
 
-    Inst_VOP2__V_ADD_U32::Inst_VOP2__V_ADD_U32(InFmt_VOP2 *iFmt)
-        : Inst_VOP2(iFmt, "v_add_u32")
+    Inst_VOP2__V_ADD_CO_U32::Inst_VOP2__V_ADD_CO_U32(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_add_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP2__V_ADD_U32
+    } // Inst_VOP2__V_ADD_CO_U32
 
-    Inst_VOP2__V_ADD_U32::~Inst_VOP2__V_ADD_U32()
+    Inst_VOP2__V_ADD_CO_U32::~Inst_VOP2__V_ADD_CO_U32()
     {
-    } // ~Inst_VOP2__V_ADD_U32
+    } // ~Inst_VOP2__V_ADD_CO_U32
 
     // --- description from .arch file ---
     // D.u = S0.u + S1.u;
@@ -7008,7 +7008,7 @@ namespace VegaISA
     // ---  overflow or carry-out for V_ADDC_U32.
     // In VOP3 the VCC destination may be an arbitrary SGPR-pair.
     void
-    Inst_VOP2__V_ADD_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP2__V_ADD_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
@@ -7031,8 +7031,8 @@ namespace VegaISA
             origSrc0_sdwa.read();
             origSrc1.read();
 
-            DPRINTF(VEGA, "Handling V_ADD_U32 SRC SDWA. SRC0: register v[%d], "
-                    "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, "
+            DPRINTF(VEGA, "Handling V_ADD_CO_U32 SRC SDWA. SRC0: register "
+                    "v[%d], DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, "
                     "SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, "
                     "SRC1_SEXT: %d, SRC1_NEG: %d, SRC1_ABS: %d\n",
                     extData.iFmt_VOP_SDWA.SRC0, extData.iFmt_VOP_SDWA.DST_SEL,
@@ -7073,19 +7073,19 @@ namespace VegaISA
         vcc.write();
         vdst.write();
     } // execute
-    // --- Inst_VOP2__V_SUB_U32 class methods ---
+    // --- Inst_VOP2__V_SUB_CO_U32 class methods ---
 
-    Inst_VOP2__V_SUB_U32::Inst_VOP2__V_SUB_U32(InFmt_VOP2 *iFmt)
-        : Inst_VOP2(iFmt, "v_sub_u32")
+    Inst_VOP2__V_SUB_CO_U32::Inst_VOP2__V_SUB_CO_U32(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_sub_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP2__V_SUB_U32
+    } // Inst_VOP2__V_SUB_CO_U32
 
-    Inst_VOP2__V_SUB_U32::~Inst_VOP2__V_SUB_U32()
+    Inst_VOP2__V_SUB_CO_U32::~Inst_VOP2__V_SUB_CO_U32()
     {
-    } // ~Inst_VOP2__V_SUB_U32
+    } // ~Inst_VOP2__V_SUB_CO_U32
 
     // --- description from .arch file ---
     // D.u = S0.u - S1.u;
@@ -7093,7 +7093,7 @@ namespace VegaISA
     // carry-out for V_SUBB_U32.
     // In VOP3 the VCC destination may be an arbitrary SGPR-pair.
     void
-    Inst_VOP2__V_SUB_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP2__V_SUB_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
@@ -7114,28 +7114,27 @@ namespace VegaISA
         vdst.write();
         vcc.write();
     } // execute
-    // --- Inst_VOP2__V_SUBREV_U32 class methods ---
+    // --- Inst_VOP2__V_SUBREV_CO_U32 class methods ---
 
-    Inst_VOP2__V_SUBREV_U32::Inst_VOP2__V_SUBREV_U32(InFmt_VOP2 *iFmt)
-        : Inst_VOP2(iFmt, "v_subrev_u32")
+    Inst_VOP2__V_SUBREV_CO_U32::Inst_VOP2__V_SUBREV_CO_U32(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_subrev_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP2__V_SUBREV_U32
+    } // Inst_VOP2__V_SUBREV_CO_U32
 
-    Inst_VOP2__V_SUBREV_U32::~Inst_VOP2__V_SUBREV_U32()
+    Inst_VOP2__V_SUBREV_CO_U32::~Inst_VOP2__V_SUBREV_CO_U32()
     {
-    } // ~Inst_VOP2__V_SUBREV_U32
+    } // ~Inst_VOP2__V_SUBREV_CO_U32
 
     // --- description from .arch file ---
     // D.u = S1.u - S0.u;
     // VCC[threadId] = (S0.u > S1.u ? 1 : 0) is an UNSIGNED overflow or
     // carry-out for V_SUBB_U32.
     // In VOP3 the VCC destination may be an arbitrary SGPR-pair.
-    // SQ translates this to V_SUB_U32 with reversed operands.
     void
-    Inst_VOP2__V_SUBREV_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP2__V_SUBREV_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
@@ -7156,20 +7155,20 @@ namespace VegaISA
         vdst.write();
         vcc.write();
     } // execute
-    // --- Inst_VOP2__V_ADDC_U32 class methods ---
+    // --- Inst_VOP2__V_ADDC_CO_U32 class methods ---
 
-    Inst_VOP2__V_ADDC_U32::Inst_VOP2__V_ADDC_U32(InFmt_VOP2 *iFmt)
-        : Inst_VOP2(iFmt, "v_addc_u32")
+    Inst_VOP2__V_ADDC_CO_U32::Inst_VOP2__V_ADDC_CO_U32(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_addc_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ReadsVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP2__V_ADDC_U32
+    } // Inst_VOP2__V_ADDC_CO_U32
 
-    Inst_VOP2__V_ADDC_U32::~Inst_VOP2__V_ADDC_U32()
+    Inst_VOP2__V_ADDC_CO_U32::~Inst_VOP2__V_ADDC_CO_U32()
     {
-    } // ~Inst_VOP2__V_ADDC_U32
+    } // ~Inst_VOP2__V_ADDC_CO_U32
 
     // --- description from .arch file ---
     // D.u = S0.u + S1.u + VCC[threadId];
@@ -7178,7 +7177,7 @@ namespace VegaISA
     // In VOP3 the VCC destination may be an arbitrary SGPR-pair, and the VCC
     // source comes from the SGPR-pair at S2.u.
     void
-    Inst_VOP2__V_ADDC_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP2__V_ADDC_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
@@ -7204,20 +7203,20 @@ namespace VegaISA
         vdst.write();
         vcc.write();
     } // execute
-    // --- Inst_VOP2__V_SUBB_U32 class methods ---
+    // --- Inst_VOP2__V_SUBB_CO_U32 class methods ---
 
-    Inst_VOP2__V_SUBB_U32::Inst_VOP2__V_SUBB_U32(InFmt_VOP2 *iFmt)
-        : Inst_VOP2(iFmt, "v_subb_u32")
+    Inst_VOP2__V_SUBB_CO_U32::Inst_VOP2__V_SUBB_CO_U32(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_subb_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ReadsVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP2__V_SUBB_U32
+    } // Inst_VOP2__V_SUBB_CO_U32
 
-    Inst_VOP2__V_SUBB_U32::~Inst_VOP2__V_SUBB_U32()
+    Inst_VOP2__V_SUBB_CO_U32::~Inst_VOP2__V_SUBB_CO_U32()
     {
-    } // ~Inst_VOP2__V_SUBB_U32
+    } // ~Inst_VOP2__V_SUBB_CO_U32
 
     // --- description from .arch file ---
     // D.u = S0.u - S1.u - VCC[threadId];
@@ -7226,7 +7225,7 @@ namespace VegaISA
     // In VOP3 the VCC destination may be an arbitrary SGPR-pair, and the VCC
     // ---  source comes from the SGPR-pair at S2.u.
     void
-    Inst_VOP2__V_SUBB_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP2__V_SUBB_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
@@ -7250,20 +7249,20 @@ namespace VegaISA
         vdst.write();
         vcc.write();
     } // execute
-    // --- Inst_VOP2__V_SUBBREV_U32 class methods ---
+    // --- Inst_VOP2__V_SUBBREV_CO_U32 class methods ---
 
-    Inst_VOP2__V_SUBBREV_U32::Inst_VOP2__V_SUBBREV_U32(InFmt_VOP2 *iFmt)
-        : Inst_VOP2(iFmt, "v_subbrev_u32")
+    Inst_VOP2__V_SUBBREV_CO_U32::Inst_VOP2__V_SUBBREV_CO_U32(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_subbrev_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ReadsVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP2__V_SUBBREV_U32
+    } // Inst_VOP2__V_SUBBREV_CO_U32
 
-    Inst_VOP2__V_SUBBREV_U32::~Inst_VOP2__V_SUBBREV_U32()
+    Inst_VOP2__V_SUBBREV_CO_U32::~Inst_VOP2__V_SUBBREV_CO_U32()
     {
-    } // ~Inst_VOP2__V_SUBBREV_U32
+    } // ~Inst_VOP2__V_SUBBREV_CO_U32
 
     // --- description from .arch file ---
     // D.u = S1.u - S0.u - VCC[threadId];
@@ -7273,7 +7272,7 @@ namespace VegaISA
     // source comes from the SGPR-pair at S2.u. SQ translates to V_SUBB_U32.
     // SQ translates this to V_SUBREV_U32 with reversed operands.
     void
-    Inst_VOP2__V_SUBBREV_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP2__V_SUBBREV_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
@@ -7892,6 +7891,149 @@ namespace VegaISA
     Inst_VOP2__V_LDEXP_F16::execute(GPUDynInstPtr gpuDynInst)
     {
         panicUnimplemented();
+    } // execute
+    // --- Inst_VOP2__V_ADD_U32 class methods ---
+
+    Inst_VOP2__V_ADD_U32::Inst_VOP2__V_ADD_U32(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_add_u32")
+    {
+        setFlag(ALU);
+        setFlag(ValuCacGrp2);
+    } // Inst_VOP2__V_ADD_U32
+
+    Inst_VOP2__V_ADD_U32::~Inst_VOP2__V_ADD_U32()
+    {
+    } // ~Inst_VOP2__V_ADD_U32
+
+    // --- description from .arch file ---
+    // D.u = S0.u + S1.u;
+    void
+    Inst_VOP2__V_ADD_U32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
+        VecOperandU32 src1(gpuDynInst, instData.VSRC1);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.read();
+
+        if (isSDWAInst()) {
+            VecOperandU32 src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+            // use copies of original src0, src1, and dest during selecting
+            VecOperandU32 origSrc0_sdwa(gpuDynInst,
+                                        extData.iFmt_VOP_SDWA.SRC0);
+            VecOperandU32 origSrc1(gpuDynInst, instData.VSRC1);
+            VecOperandU32 origVdst(gpuDynInst, instData.VDST);
+
+            src0_sdwa.read();
+            origSrc0_sdwa.read();
+            origSrc1.read();
+
+            DPRINTF(VEGA, "Handling V_ADD_U32 SRC SDWA. SRC0: register v[%d], "
+                    "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, "
+                    "SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, "
+                    "SRC1_SEXT: %d, SRC1_NEG: %d, SRC1_ABS: %d\n",
+                    extData.iFmt_VOP_SDWA.SRC0, extData.iFmt_VOP_SDWA.DST_SEL,
+                    extData.iFmt_VOP_SDWA.DST_U,
+                    extData.iFmt_VOP_SDWA.CLMP,
+                    extData.iFmt_VOP_SDWA.SRC0_SEL,
+                    extData.iFmt_VOP_SDWA.SRC0_SEXT,
+                    extData.iFmt_VOP_SDWA.SRC0_NEG,
+                    extData.iFmt_VOP_SDWA.SRC0_ABS,
+                    extData.iFmt_VOP_SDWA.SRC1_SEL,
+                    extData.iFmt_VOP_SDWA.SRC1_SEXT,
+                    extData.iFmt_VOP_SDWA.SRC1_NEG,
+                    extData.iFmt_VOP_SDWA.SRC1_ABS);
+
+            processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa,
+                            src1, origSrc1);
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src0_sdwa[lane] + src1[lane];
+                    origVdst[lane] = vdst[lane]; // keep copy consistent
+                }
+            }
+
+            processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src0[lane] + src1[lane];
+                }
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP2__V_SUB_U32 class methods ---
+
+    Inst_VOP2__V_SUB_U32::Inst_VOP2__V_SUB_U32(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_sub_u32")
+    {
+        setFlag(ALU);
+        setFlag(ValuCacGrp2);
+    } // Inst_VOP2__V_SUB_U32
+
+    Inst_VOP2__V_SUB_U32::~Inst_VOP2__V_SUB_U32()
+    {
+    } // ~Inst_VOP2__V_SUB_U32
+
+    // --- description from .arch file ---
+    // D.u = S0.u - S1.u;
+    void
+    Inst_VOP2__V_SUB_U32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
+        ConstVecOperandU32 src1(gpuDynInst, instData.VSRC1);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.read();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = src0[lane] - src1[lane];
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP2__V_SUBREV_U32 class methods ---
+
+    Inst_VOP2__V_SUBREV_U32::Inst_VOP2__V_SUBREV_U32(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_subrev_u32")
+    {
+        setFlag(ALU);
+        setFlag(ValuCacGrp2);
+    } // Inst_VOP2__V_SUBREV_U32
+
+    Inst_VOP2__V_SUBREV_U32::~Inst_VOP2__V_SUBREV_U32()
+    {
+    } // ~Inst_VOP2__V_SUBREV_U32
+
+    // --- description from .arch file ---
+    // D.u = S1.u - S0.u;
+    void
+    Inst_VOP2__V_SUBREV_U32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
+        ConstVecOperandU32 src1(gpuDynInst, instData.VSRC1);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.read();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = src1[lane] - src0[lane];
+            }
+        }
+
+        vdst.write();
     } // execute
     // --- Inst_VOP1__V_NOP class methods ---
 
@@ -26157,19 +26299,19 @@ namespace VegaISA
 
         vdst.write();
     } // execute
-    // --- Inst_VOP3__V_ADD_U32 class methods ---
+    // --- Inst_VOP3__V_ADD_CO_U32 class methods ---
 
-    Inst_VOP3__V_ADD_U32::Inst_VOP3__V_ADD_U32(InFmt_VOP3B *iFmt)
-        : Inst_VOP3B(iFmt, "v_add_u32")
+    Inst_VOP3__V_ADD_CO_U32::Inst_VOP3__V_ADD_CO_U32(InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_add_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP3__V_ADD_U32
+    } // Inst_VOP3__V_ADD_CO_U32
 
-    Inst_VOP3__V_ADD_U32::~Inst_VOP3__V_ADD_U32()
+    Inst_VOP3__V_ADD_CO_U32::~Inst_VOP3__V_ADD_CO_U32()
     {
-    } // ~Inst_VOP3__V_ADD_U32
+    } // ~Inst_VOP3__V_ADD_CO_U32
 
     // --- description from .arch file ---
     // D.u = S0.u + S1.u;
@@ -26177,7 +26319,7 @@ namespace VegaISA
     // ---  overflow or carry-out for V_ADDC_U32.
     // In VOP3 the VCC destination may be an arbitrary SGPR-pair.
     void
-    Inst_VOP3__V_ADD_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP3__V_ADD_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
@@ -26206,19 +26348,19 @@ namespace VegaISA
         vdst.write();
         vcc.write();
     } // execute
-    // --- Inst_VOP3__V_SUB_U32 class methods ---
+    // --- Inst_VOP3__V_SUB_CO_U32 class methods ---
 
-    Inst_VOP3__V_SUB_U32::Inst_VOP3__V_SUB_U32(InFmt_VOP3B *iFmt)
-        : Inst_VOP3B(iFmt, "v_sub_u32")
+    Inst_VOP3__V_SUB_CO_U32::Inst_VOP3__V_SUB_CO_U32(InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_sub_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP3__V_SUB_U32
+    } // Inst_VOP3__V_SUB_CO_U32
 
-    Inst_VOP3__V_SUB_U32::~Inst_VOP3__V_SUB_U32()
+    Inst_VOP3__V_SUB_CO_U32::~Inst_VOP3__V_SUB_CO_U32()
     {
-    } // ~Inst_VOP3__V_SUB_U32
+    } // ~Inst_VOP3__V_SUB_CO_U32
 
     // --- description from .arch file ---
     // D.u = S0.u - S1.u;
@@ -26226,7 +26368,7 @@ namespace VegaISA
     // carry-out for V_SUBB_U32.
     // In VOP3 the VCC destination may be an arbitrary SGPR-pair.
     void
-    Inst_VOP3__V_SUB_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP3__V_SUB_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
@@ -26254,20 +26396,20 @@ namespace VegaISA
         vdst.write();
         vcc.write();
     } // execute
-    // --- Inst_VOP3__V_SUBREV_U32 class methods ---
+    // --- Inst_VOP3__V_SUBREV_CO_U32 class methods ---
 
-    Inst_VOP3__V_SUBREV_U32::Inst_VOP3__V_SUBREV_U32(
+    Inst_VOP3__V_SUBREV_CO_U32::Inst_VOP3__V_SUBREV_CO_U32(
           InFmt_VOP3B *iFmt)
-        : Inst_VOP3B(iFmt, "v_subrev_u32")
+        : Inst_VOP3B(iFmt, "v_subrev_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP3__V_SUBREV_U32
+    } // Inst_VOP3__V_SUBREV_CO_U32
 
-    Inst_VOP3__V_SUBREV_U32::~Inst_VOP3__V_SUBREV_U32()
+    Inst_VOP3__V_SUBREV_CO_U32::~Inst_VOP3__V_SUBREV_CO_U32()
     {
-    } // ~Inst_VOP3__V_SUBREV_U32
+    } // ~Inst_VOP3__V_SUBREV_CO_U32
 
     // --- description from .arch file ---
     // D.u = S1.u - S0.u;
@@ -26276,7 +26418,7 @@ namespace VegaISA
     // In VOP3 the VCC destination may be an arbitrary SGPR-pair.
     // SQ translates this to V_SUB_U32 with reversed operands.
     void
-    Inst_VOP3__V_SUBREV_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP3__V_SUBREV_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);
@@ -26304,20 +26446,20 @@ namespace VegaISA
         vdst.write();
         vcc.write();
     } // execute
-    // --- Inst_VOP3__V_ADDC_U32 class methods ---
+    // --- Inst_VOP3__V_ADDC_CO_U32 class methods ---
 
-    Inst_VOP3__V_ADDC_U32::Inst_VOP3__V_ADDC_U32(InFmt_VOP3B *iFmt)
-        : Inst_VOP3B(iFmt, "v_addc_u32")
+    Inst_VOP3__V_ADDC_CO_U32::Inst_VOP3__V_ADDC_CO_U32(InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_addc_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ReadsVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP3__V_ADDC_U32
+    } // Inst_VOP3__V_ADDC_CO_U32
 
-    Inst_VOP3__V_ADDC_U32::~Inst_VOP3__V_ADDC_U32()
+    Inst_VOP3__V_ADDC_CO_U32::~Inst_VOP3__V_ADDC_CO_U32()
     {
-    } // ~Inst_VOP3__V_ADDC_U32
+    } // ~Inst_VOP3__V_ADDC_CO_U32
 
     // --- description from .arch file ---
     // D.u = S0.u + S1.u + VCC[threadId];
@@ -26326,7 +26468,7 @@ namespace VegaISA
     // In VOP3 the VCC destination may be an arbitrary SGPR-pair, and the VCC
     // source comes from the SGPR-pair at S2.u.
     void
-    Inst_VOP3__V_ADDC_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP3__V_ADDC_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
@@ -26360,20 +26502,20 @@ namespace VegaISA
         vdst.write();
         sdst.write();
     } // execute
-    // --- Inst_VOP3__V_SUBB_U32 class methods ---
+    // --- Inst_VOP3__V_SUBB_CO_U32 class methods ---
 
-    Inst_VOP3__V_SUBB_U32::Inst_VOP3__V_SUBB_U32(InFmt_VOP3B *iFmt)
-        : Inst_VOP3B(iFmt, "v_subb_u32")
+    Inst_VOP3__V_SUBB_CO_U32::Inst_VOP3__V_SUBB_CO_U32(InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_subb_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ReadsVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP3__V_SUBB_U32
+    } // Inst_VOP3__V_SUBB_CO_U32
 
-    Inst_VOP3__V_SUBB_U32::~Inst_VOP3__V_SUBB_U32()
+    Inst_VOP3__V_SUBB_CO_U32::~Inst_VOP3__V_SUBB_CO_U32()
     {
-    } // ~Inst_VOP3__V_SUBB_U32
+    } // ~Inst_VOP3__V_SUBB_CO_U32
 
     // --- description from .arch file ---
     // D.u = S0.u - S1.u - VCC[threadId];
@@ -26382,7 +26524,7 @@ namespace VegaISA
     // In VOP3 the VCC destination may be an arbitrary SGPR-pair, and the VCC
     // ---  source comes from the SGPR-pair at S2.u.
     void
-    Inst_VOP3__V_SUBB_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP3__V_SUBB_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
@@ -26414,21 +26556,21 @@ namespace VegaISA
         vdst.write();
         sdst.write();
     } // execute
-    // --- Inst_VOP3__V_SUBBREV_U32 class methods ---
+    // --- Inst_VOP3__V_SUBBREV_CO_U32 class methods ---
 
-    Inst_VOP3__V_SUBBREV_U32::Inst_VOP3__V_SUBBREV_U32(
+    Inst_VOP3__V_SUBBREV_CO_U32::Inst_VOP3__V_SUBBREV_CO_U32(
           InFmt_VOP3B *iFmt)
-        : Inst_VOP3B(iFmt, "v_subbrev_u32")
+        : Inst_VOP3B(iFmt, "v_subbrev_co_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
         setFlag(ReadsVCC);
         setFlag(ValuCacGrp2);
-    } // Inst_VOP3__V_SUBBREV_U32
+    } // Inst_VOP3__V_SUBBREV_CO_U32
 
-    Inst_VOP3__V_SUBBREV_U32::~Inst_VOP3__V_SUBBREV_U32()
+    Inst_VOP3__V_SUBBREV_CO_U32::~Inst_VOP3__V_SUBBREV_CO_U32()
     {
-    } // ~Inst_VOP3__V_SUBBREV_U32
+    } // ~Inst_VOP3__V_SUBBREV_CO_U32
 
     // --- description from .arch file ---
     // D.u = S1.u - S0.u - VCC[threadId];
@@ -26436,9 +26578,8 @@ namespace VegaISA
     // overflow.
     // In VOP3 the VCC destination may be an arbitrary SGPR-pair, and the VCC
     // source comes from the SGPR-pair at S2.u. SQ translates to V_SUBB_U32.
-    // SQ translates this to V_SUBREV_U32 with reversed operands.
     void
-    Inst_VOP3__V_SUBBREV_U32::execute(GPUDynInstPtr gpuDynInst)
+    Inst_VOP3__V_SUBBREV_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);

@@ -6987,11 +6987,11 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP2__V_MADAK_F32
 
-    class Inst_VOP2__V_ADD_U32 : public Inst_VOP2
+    class Inst_VOP2__V_ADD_CO_U32 : public Inst_VOP2
     {
       public:
-        Inst_VOP2__V_ADD_U32(InFmt_VOP2*);
-        ~Inst_VOP2__V_ADD_U32();
+        Inst_VOP2__V_ADD_CO_U32(InFmt_VOP2*);
+        ~Inst_VOP2__V_ADD_CO_U32();
 
         int
         getNumOperands() override
@@ -7021,13 +7021,13 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP2__V_ADD_U32
+    }; // Inst_VOP2__V_ADD_CO_U32
 
-    class Inst_VOP2__V_SUB_U32 : public Inst_VOP2
+    class Inst_VOP2__V_SUB_CO_U32 : public Inst_VOP2
     {
       public:
-        Inst_VOP2__V_SUB_U32(InFmt_VOP2*);
-        ~Inst_VOP2__V_SUB_U32();
+        Inst_VOP2__V_SUB_CO_U32(InFmt_VOP2*);
+        ~Inst_VOP2__V_SUB_CO_U32();
 
         int
         getNumOperands() override
@@ -7057,13 +7057,13 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP2__V_SUB_U32
+    }; // Inst_VOP2__V_SUB_CO_U32
 
-    class Inst_VOP2__V_SUBREV_U32 : public Inst_VOP2
+    class Inst_VOP2__V_SUBREV_CO_U32 : public Inst_VOP2
     {
       public:
-        Inst_VOP2__V_SUBREV_U32(InFmt_VOP2*);
-        ~Inst_VOP2__V_SUBREV_U32();
+        Inst_VOP2__V_SUBREV_CO_U32(InFmt_VOP2*);
+        ~Inst_VOP2__V_SUBREV_CO_U32();
 
         int
         getNumOperands() override
@@ -7093,13 +7093,13 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP2__V_SUBREV_U32
+    }; // Inst_VOP2__V_SUBREV_CO_U32
 
-    class Inst_VOP2__V_ADDC_U32 : public Inst_VOP2
+    class Inst_VOP2__V_ADDC_CO_U32 : public Inst_VOP2
     {
       public:
-        Inst_VOP2__V_ADDC_U32(InFmt_VOP2*);
-        ~Inst_VOP2__V_ADDC_U32();
+        Inst_VOP2__V_ADDC_CO_U32(InFmt_VOP2*);
+        ~Inst_VOP2__V_ADDC_CO_U32();
 
         int
         getNumOperands() override
@@ -7131,13 +7131,13 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP2__V_ADDC_U32
+    }; // Inst_VOP2__V_ADDC_CO_U32
 
-    class Inst_VOP2__V_SUBB_U32 : public Inst_VOP2
+    class Inst_VOP2__V_SUBB_CO_U32 : public Inst_VOP2
     {
       public:
-        Inst_VOP2__V_SUBB_U32(InFmt_VOP2*);
-        ~Inst_VOP2__V_SUBB_U32();
+        Inst_VOP2__V_SUBB_CO_U32(InFmt_VOP2*);
+        ~Inst_VOP2__V_SUBB_CO_U32();
 
         int
         getNumOperands() override
@@ -7169,13 +7169,13 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP2__V_SUBB_U32
+    }; // Inst_VOP2__V_SUBB_CO_U32
 
-    class Inst_VOP2__V_SUBBREV_U32 : public Inst_VOP2
+    class Inst_VOP2__V_SUBBREV_CO_U32 : public Inst_VOP2
     {
       public:
-        Inst_VOP2__V_SUBBREV_U32(InFmt_VOP2*);
-        ~Inst_VOP2__V_SUBBREV_U32();
+        Inst_VOP2__V_SUBBREV_CO_U32(InFmt_VOP2*);
+        ~Inst_VOP2__V_SUBBREV_CO_U32();
 
         int
         getNumOperands() override
@@ -7207,7 +7207,7 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP2__V_SUBBREV_U32
+    }; // Inst_VOP2__V_SUBBREV_CO_U32
 
     class Inst_VOP2__V_ADD_F16 : public Inst_VOP2
     {
@@ -7926,6 +7926,108 @@ namespace VegaISA
 
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP2__V_LDEXP_F16
+
+    class Inst_VOP2__V_ADD_U32 : public Inst_VOP2
+    {
+      public:
+        Inst_VOP2__V_ADD_U32(InFmt_VOP2*);
+        ~Inst_VOP2__V_ADD_U32();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 2; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //src_0
+                return 4;
+              case 1: //src_1
+                return 4;
+              case 2: //vdst
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    }; // Inst_VOP2__V_ADD_U32
+
+    class Inst_VOP2__V_SUB_U32 : public Inst_VOP2
+    {
+      public:
+        Inst_VOP2__V_SUB_U32(InFmt_VOP2*);
+        ~Inst_VOP2__V_SUB_U32();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 2; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //src_0
+                return 4;
+              case 1: //src_1
+                return 4;
+              case 2: //vdst
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    }; // Inst_VOP2__V_SUB_U32
+
+    class Inst_VOP2__V_SUBREV_U32 : public Inst_VOP2
+    {
+      public:
+        Inst_VOP2__V_SUBREV_U32(InFmt_VOP2*);
+        ~Inst_VOP2__V_SUBREV_U32();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 2; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //src_0
+                return 4;
+              case 1: //src_1
+                return 4;
+              case 2: //vdst
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    }; // Inst_VOP2__V_SUBREV_U32
 
     class Inst_VOP1__V_NOP : public Inst_VOP1
     {
@@ -24637,11 +24739,11 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAC_F32
 
-    class Inst_VOP3__V_ADD_U32 : public Inst_VOP3B
+    class Inst_VOP3__V_ADD_CO_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_ADD_U32(InFmt_VOP3B*);
-        ~Inst_VOP3__V_ADD_U32();
+        Inst_VOP3__V_ADD_CO_U32(InFmt_VOP3B*);
+        ~Inst_VOP3__V_ADD_CO_U32();
 
         int
         getNumOperands() override
@@ -24671,13 +24773,13 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP3__V_ADD_U32
+    }; // Inst_VOP3__V_ADD_CO_U32
 
-    class Inst_VOP3__V_SUB_U32 : public Inst_VOP3B
+    class Inst_VOP3__V_SUB_CO_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_SUB_U32(InFmt_VOP3B*);
-        ~Inst_VOP3__V_SUB_U32();
+        Inst_VOP3__V_SUB_CO_U32(InFmt_VOP3B*);
+        ~Inst_VOP3__V_SUB_CO_U32();
 
         int
         getNumOperands() override
@@ -24707,13 +24809,13 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP3__V_SUB_U32
+    }; // Inst_VOP3__V_SUB_CO_U32
 
-    class Inst_VOP3__V_SUBREV_U32 : public Inst_VOP3B
+    class Inst_VOP3__V_SUBREV_CO_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_SUBREV_U32(InFmt_VOP3B*);
-        ~Inst_VOP3__V_SUBREV_U32();
+        Inst_VOP3__V_SUBREV_CO_U32(InFmt_VOP3B*);
+        ~Inst_VOP3__V_SUBREV_CO_U32();
 
         int
         getNumOperands() override
@@ -24743,13 +24845,13 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP3__V_SUBREV_U32
+    }; // Inst_VOP3__V_SUBREV_CO_U32
 
-    class Inst_VOP3__V_ADDC_U32 : public Inst_VOP3B
+    class Inst_VOP3__V_ADDC_CO_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_ADDC_U32(InFmt_VOP3B*);
-        ~Inst_VOP3__V_ADDC_U32();
+        Inst_VOP3__V_ADDC_CO_U32(InFmt_VOP3B*);
+        ~Inst_VOP3__V_ADDC_CO_U32();
 
         int
         getNumOperands() override
@@ -24781,13 +24883,13 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP3__V_ADDC_U32
+    }; // Inst_VOP3__V_ADDC_CO_U32
 
-    class Inst_VOP3__V_SUBB_U32 : public Inst_VOP3B
+    class Inst_VOP3__V_SUBB_CO_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_SUBB_U32(InFmt_VOP3B*);
-        ~Inst_VOP3__V_SUBB_U32();
+        Inst_VOP3__V_SUBB_CO_U32(InFmt_VOP3B*);
+        ~Inst_VOP3__V_SUBB_CO_U32();
 
         int
         getNumOperands() override
@@ -24819,13 +24921,13 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP3__V_SUBB_U32
+    }; // Inst_VOP3__V_SUBB_CO_U32
 
-    class Inst_VOP3__V_SUBBREV_U32 : public Inst_VOP3B
+    class Inst_VOP3__V_SUBBREV_CO_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_SUBBREV_U32(InFmt_VOP3B*);
-        ~Inst_VOP3__V_SUBBREV_U32();
+        Inst_VOP3__V_SUBBREV_CO_U32(InFmt_VOP3B*);
+        ~Inst_VOP3__V_SUBBREV_CO_U32();
 
         int
         getNumOperands() override
@@ -24857,7 +24959,7 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    }; // Inst_VOP3__V_SUBBREV_U32
+    }; // Inst_VOP3__V_SUBBREV_CO_U32
 
     class Inst_VOP3__V_ADD_F16 : public Inst_VOP3A
     {

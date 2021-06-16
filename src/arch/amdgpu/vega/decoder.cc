@@ -849,12 +849,12 @@ namespace VegaISA
         &Decoder::decode_OPU_VOP3__V_MAC_F32,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
-        &Decoder::decode_OPU_VOP3__V_ADD_U32,
-        &Decoder::decode_OPU_VOP3__V_SUB_U32,
-        &Decoder::decode_OPU_VOP3__V_SUBREV_U32,
-        &Decoder::decode_OPU_VOP3__V_ADDC_U32,
-        &Decoder::decode_OPU_VOP3__V_SUBB_U32,
-        &Decoder::decode_OPU_VOP3__V_SUBBREV_U32,
+        &Decoder::decode_OPU_VOP3__V_ADD_CO_U32,
+        &Decoder::decode_OPU_VOP3__V_SUB_CO_U32,
+        &Decoder::decode_OPU_VOP3__V_SUBREV_CO_U32,
+        &Decoder::decode_OPU_VOP3__V_ADDC_CO_U32,
+        &Decoder::decode_OPU_VOP3__V_SUBB_CO_U32,
+        &Decoder::decode_OPU_VOP3__V_SUBBREV_CO_U32,
         &Decoder::decode_OPU_VOP3__V_ADD_F16,
         &Decoder::decode_OPU_VOP3__V_SUB_F16,
         &Decoder::decode_OPU_VOP3__V_SUBREV_F16,
@@ -3993,37 +3993,37 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_ADD_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP2__V_ADD_U32(&iFmt->iFmt_VOP2);
+        return new Inst_VOP2__V_ADD_CO_U32(&iFmt->iFmt_VOP2);
     } // decode_OP_VOP2__V_ADD_CO_U32
 
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_SUB_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP2__V_SUB_U32(&iFmt->iFmt_VOP2);
+        return new Inst_VOP2__V_SUB_CO_U32(&iFmt->iFmt_VOP2);
     } // decode_OP_VOP2__V_SUB_CO_U32
 
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_SUBREV_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP2__V_SUBREV_U32(&iFmt->iFmt_VOP2);
+        return new Inst_VOP2__V_SUBREV_CO_U32(&iFmt->iFmt_VOP2);
     } // decode_OP_VOP2__V_SUBREV_CO_U32
 
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_ADDC_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP2__V_ADDC_U32(&iFmt->iFmt_VOP2);
+        return new Inst_VOP2__V_ADDC_CO_U32(&iFmt->iFmt_VOP2);
     } // decode_OP_VOP2__V_ADDC_CO_U32
 
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_SUBB_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP2__V_SUBB_U32(&iFmt->iFmt_VOP2);
+        return new Inst_VOP2__V_SUBB_CO_U32(&iFmt->iFmt_VOP2);
     } // decode_OP_VOP2__V_SUBB_CO_U32
 
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_SUBBREV_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP2__V_SUBBREV_U32(&iFmt->iFmt_VOP2);
+        return new Inst_VOP2__V_SUBBREV_CO_U32(&iFmt->iFmt_VOP2);
     } // decode_OP_VOP2__V_SUBBREV_CO_U32
 
     GPUStaticInst*
@@ -5947,40 +5947,40 @@ namespace VegaISA
     } // decode_OPU_VOP3__V_MAC_F32
 
     GPUStaticInst*
-    Decoder::decode_OPU_VOP3__V_ADD_U32(MachInst iFmt)
+    Decoder::decode_OPU_VOP3__V_ADD_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP3__V_ADD_U32(&iFmt->iFmt_VOP3B);
-    } // decode_OPU_VOP3__V_ADD_U32
+        return new Inst_VOP3__V_ADD_CO_U32(&iFmt->iFmt_VOP3B);
+    } // decode_OPU_VOP3__V_ADD_CO_U32
 
     GPUStaticInst*
-    Decoder::decode_OPU_VOP3__V_SUB_U32(MachInst iFmt)
+    Decoder::decode_OPU_VOP3__V_SUB_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP3__V_SUB_U32(&iFmt->iFmt_VOP3B);
-    } // decode_OPU_VOP3__V_SUB_U32
+        return new Inst_VOP3__V_SUB_CO_U32(&iFmt->iFmt_VOP3B);
+    } // decode_OPU_VOP3__V_SUB_CO_U32
 
     GPUStaticInst*
-    Decoder::decode_OPU_VOP3__V_SUBREV_U32(MachInst iFmt)
+    Decoder::decode_OPU_VOP3__V_SUBREV_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP3__V_SUBREV_U32(&iFmt->iFmt_VOP3B);
-    } // decode_OPU_VOP3__V_SUBREV_U32
+        return new Inst_VOP3__V_SUBREV_CO_U32(&iFmt->iFmt_VOP3B);
+    } // decode_OPU_VOP3__V_SUBREV_CO_U32
 
     GPUStaticInst*
-    Decoder::decode_OPU_VOP3__V_ADDC_U32(MachInst iFmt)
+    Decoder::decode_OPU_VOP3__V_ADDC_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP3__V_ADDC_U32(&iFmt->iFmt_VOP3B);
-    } // decode_OPU_VOP3__V_ADDC_U32
+        return new Inst_VOP3__V_ADDC_CO_U32(&iFmt->iFmt_VOP3B);
+    } // decode_OPU_VOP3__V_ADDC_CO_U32
 
     GPUStaticInst*
-    Decoder::decode_OPU_VOP3__V_SUBB_U32(MachInst iFmt)
+    Decoder::decode_OPU_VOP3__V_SUBB_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP3__V_SUBB_U32(&iFmt->iFmt_VOP3B);
-    } // decode_OPU_VOP3__V_SUBB_U32
+        return new Inst_VOP3__V_SUBB_CO_U32(&iFmt->iFmt_VOP3B);
+    } // decode_OPU_VOP3__V_SUBB_CO_U32
 
     GPUStaticInst*
-    Decoder::decode_OPU_VOP3__V_SUBBREV_U32(MachInst iFmt)
+    Decoder::decode_OPU_VOP3__V_SUBBREV_CO_U32(MachInst iFmt)
     {
-        return new Inst_VOP3__V_SUBBREV_U32(&iFmt->iFmt_VOP3B);
-    } // decode_OPU_VOP3__V_SUBBREV_U32
+        return new Inst_VOP3__V_SUBBREV_CO_U32(&iFmt->iFmt_VOP3B);
+    } // decode_OPU_VOP3__V_SUBBREV_CO_U32
 
     GPUStaticInst*
     Decoder::decode_OPU_VOP3__V_ADD_F16(MachInst iFmt)
