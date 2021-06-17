@@ -37,6 +37,16 @@ from m5.objects import (
 from .abstract_node import TriggerMessageBuffer
 
 
+class MemCtrlMessageBuffer(MessageBuffer):
+    """
+    MessageBuffer exchanging messages with the memory
+    These buffers should also not be affected by the Ruby tester randomization.
+    """
+
+    randomization = "disabled"
+    ordered = True
+
+
 class MemoryController(Memory_Controller):
     """A controller that connects to memory"""
 
@@ -62,8 +72,8 @@ class MemoryController(Memory_Controller):
 
     def connectQueues(self, network):
         self.triggerQueue = TriggerMessageBuffer()
-        self.responseFromMemory = MessageBuffer()
-        self.requestToMemory = MessageBuffer(ordered=True)
+        self.responseFromMemory = MemCtrlMessageBuffer()
+        self.requestToMemory = MemCtrlMessageBuffer()
         self.reqRdy = TriggerMessageBuffer()
 
         self.reqOut = MessageBuffer()

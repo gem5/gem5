@@ -183,6 +183,16 @@ class OrderedTriggerMessageBuffer(TriggerMessageBuffer):
     ordered = True
 
 
+class MemCtrlMessageBuffer(MessageBuffer):
+    """
+    MessageBuffer exchanging messages with the memory
+    These buffers should also not be affected by the Ruby tester randomization.
+    """
+
+    randomization = "disabled"
+    ordered = True
+
+
 class CHI_Cache_Controller(Cache_Controller):
     """
     Default parameters for a Cache controller
@@ -667,8 +677,8 @@ class CHI_SNF_Base(CHI_Node):
             version=Versions.getVersion(Memory_Controller),
             ruby_system=ruby_system,
             triggerQueue=TriggerMessageBuffer(),
-            responseFromMemory=MessageBuffer(),
-            requestToMemory=MessageBuffer(ordered=True),
+            responseFromMemory=MemCtrlMessageBuffer(),
+            requestToMemory=MemCtrlMessageBuffer(),
             reqRdy=TriggerMessageBuffer(),
             transitions_per_cycle=1024,
         )
