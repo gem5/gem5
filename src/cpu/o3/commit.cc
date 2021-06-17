@@ -1444,13 +1444,6 @@ Commit::getCommittingThread()
 {
     if (numThreads > 1) {
         switch (commitPolicy) {
-
-          case CommitPolicy::Aggressive:
-            //If Policy is Aggressive, commit will call
-            //this function multiple times per
-            //cycle
-            return oldestReady();
-
           case CommitPolicy::RoundRobin:
             return roundRobin();
 

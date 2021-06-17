@@ -52,7 +52,7 @@ class SMTQueuePolicy(ScopedEnum):
     vals = [ 'Dynamic', 'Partitioned', 'Threshold' ]
 
 class CommitPolicy(ScopedEnum):
-    vals = [ 'Aggressive', 'RoundRobin', 'OldestReady' ]
+    vals = [ 'RoundRobin', 'OldestReady' ]
 
 class O3CPU(BaseCPU):
     type = 'O3CPU'
