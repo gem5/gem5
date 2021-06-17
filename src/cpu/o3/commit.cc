@@ -1498,6 +1498,7 @@ ThreadID
 Commit::oldestReady()
 {
     unsigned oldest = 0;
+    unsigned oldest_seq_num = 0;
     bool first = true;
 
     std::list<ThreadID>::iterator threads = activeThreads->begin();
@@ -1517,9 +1518,11 @@ Commit::oldestReady()
 
                 if (first) {
                     oldest = tid;
+                    oldest_seq_num = head_inst->seqNum;
                     first = false;
-                } else if (head_inst->seqNum < oldest) {
+                } else if (head_inst->seqNum < oldest_seq_num) {
                     oldest = tid;
+                    oldest_seq_num = head_inst->seqNum;
                 }
             }
         }
