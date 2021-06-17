@@ -491,19 +491,19 @@ TEST(TraceTest, MacroDPRINTFS)
     Trace::enable();
     EXPECT_TRUE(Debug::changeFlag("TraceTestDebugFlag", true));
     EXPECT_TRUE(Debug::changeFlag("FmtFlag", true));
-    DPRINTFS(TraceTestDebugFlag, named_ptr, "Test message");
 #if TRACING_ON
+    DPRINTFS(TraceTestDebugFlag, named_ptr, "Test message");
     ASSERT_EQ(getString(Trace::output()),
         "      0: TraceTestDebugFlag: Foo: Test message");
-#else
-    ASSERT_EQ(getString(Trace::output()), "");
 #endif
 
     // Flag disabled
     Trace::disable();
     EXPECT_TRUE(Debug::changeFlag("TraceTestDebugFlag", false));
+#if TRACING_ON
     DPRINTFS(TraceTestDebugFlag, named_ptr, "Test message");
     ASSERT_EQ(getString(Trace::output()), "");
+#endif
 }
 
 /** Test DPRINTFR with tracing on. */
