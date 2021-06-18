@@ -52,7 +52,7 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
-#include "debug/Cache.hh"
+#include "debug/MSHR.hh"
 #include "mem/cache/base.hh"
 #include "mem/request.hh"
 #include "sim/core.hh"
@@ -184,13 +184,13 @@ replaceUpgrade(PacketPtr pkt)
 
     if (pkt->cmd == MemCmd::UpgradeReq) {
         pkt->cmd = MemCmd::ReadExReq;
-        DPRINTF(Cache, "Replacing UpgradeReq with ReadExReq\n");
+        DPRINTF(MSHR, "Replacing UpgradeReq with ReadExReq\n");
     } else if (pkt->cmd == MemCmd::SCUpgradeReq) {
         pkt->cmd = MemCmd::SCUpgradeFailReq;
-        DPRINTF(Cache, "Replacing SCUpgradeReq with SCUpgradeFailReq\n");
+        DPRINTF(MSHR, "Replacing SCUpgradeReq with SCUpgradeFailReq\n");
     } else if (pkt->cmd == MemCmd::StoreCondReq) {
         pkt->cmd = MemCmd::StoreCondFailReq;
-        DPRINTF(Cache, "Replacing StoreCondReq with StoreCondFailReq\n");
+        DPRINTF(MSHR, "Replacing StoreCondReq with StoreCondFailReq\n");
     }
 
     if (!has_data) {
@@ -411,7 +411,7 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order,
 bool
 MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 {
-    DPRINTF(Cache, "%s for %s\n", __func__, pkt->print());
+    DPRINTF(MSHR, "%s for %s\n", __func__, pkt->print());
 
     // when we snoop packets the needsWritable and isInvalidate flags
     // should always be the same, however, this assumes that we never
