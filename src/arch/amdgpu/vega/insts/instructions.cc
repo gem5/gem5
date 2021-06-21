@@ -42799,7 +42799,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             return;
@@ -42813,7 +42813,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -42887,7 +42887,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             return;
@@ -42901,7 +42901,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -42976,7 +42976,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             return;
@@ -42990,7 +42990,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -43035,7 +43035,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             return;
@@ -43049,7 +43049,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -43094,7 +43094,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             return;
@@ -43108,7 +43108,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -43162,7 +43162,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             return;
@@ -43176,7 +43176,7 @@ namespace VegaISA
 
         addr.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -43233,7 +43233,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->decExpInstsIssued();
@@ -43250,7 +43250,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43292,7 +43292,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->decExpInstsIssued();
@@ -43309,7 +43309,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43351,7 +43351,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->decExpInstsIssued();
@@ -43368,7 +43368,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43411,7 +43411,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->decExpInstsIssued();
@@ -43428,7 +43428,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43471,7 +43471,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->decExpInstsIssued();
@@ -43492,7 +43492,7 @@ namespace VegaISA
         data1.read();
         data2.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43539,7 +43539,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             wf->decExpInstsIssued();
@@ -43562,7 +43562,7 @@ namespace VegaISA
         data2.read();
         data3.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43618,7 +43618,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             return;
@@ -43634,7 +43634,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43700,7 +43700,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             return;
@@ -43718,7 +43718,7 @@ namespace VegaISA
         data.read();
         cmp.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -43782,7 +43782,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             return;
@@ -43798,7 +43798,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -44172,7 +44172,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             return;
@@ -44190,7 +44190,7 @@ namespace VegaISA
         data.read();
         cmp.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -44255,7 +44255,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none()) {
+        if (gpuDynInst->exec_mask.none() && isFlat()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
             return;
@@ -44271,7 +44271,7 @@ namespace VegaISA
         addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
+        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {

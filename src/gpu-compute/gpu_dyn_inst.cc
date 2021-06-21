@@ -429,6 +429,12 @@ GPUDynInst::isFlat() const
 }
 
 bool
+GPUDynInst::isFlatGlobal() const
+{
+    return _staticInst->isFlatGlobal();
+}
+
+bool
 GPUDynInst::isLoad() const
 {
     return _staticInst->isLoad();

@@ -8465,64 +8465,55 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_UBYTE(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_UBYTE(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SBYTE(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_SBYTE(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_USHORT(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_USHORT(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SSHORT(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_SSHORT(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORD(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_DWORD(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORDX2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_DWORDX2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORDX3(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_DWORDX3(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORDX4(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_DWORDX4(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_STORE_BYTE(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_BYTE(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
@@ -8535,8 +8526,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_STORE_SHORT(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_SHORT(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
@@ -8549,29 +8539,26 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORD(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
+        return new Inst_FLAT__FLAT_STORE_DWORD(&iFmt->iFmt_FLAT);
         return nullptr;
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORDX2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_DWORDX2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORDX3(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_DWORDX3(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORDX4(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_DWORDX4(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
@@ -8619,183 +8606,157 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SWAP(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_SWAP(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_CMPSWAP(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_CMPSWAP(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_ADD(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_ADD(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SUB(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_SUB(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMIN(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_SMIN(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMIN(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_UMIN(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMAX(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_SMAX(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMAX(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_UMAX(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_AND(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_AND(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_OR(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_OR(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_XOR(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_XOR(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_INC(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_INC(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_DEC(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_DEC(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SWAP_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_SWAP_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_CMPSWAP_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_ADD_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_ADD_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SUB_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_SUB_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMIN_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_SMIN_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMIN_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_UMIN_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMAX_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_SMAX_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMAX_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_UMAX_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_AND_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_AND_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_OR_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_OR_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_XOR_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_XOR_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_INC_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_INC_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_DEC_X2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_ATOMIC_DEC_X2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*

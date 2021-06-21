@@ -131,6 +131,7 @@ class GPUStaticInst : public GPUStaticInstFlags
     bool isMemSync() const { return _flags[MemSync]; }
     bool isMemRef() const { return _flags[MemoryRef]; }
     bool isFlat() const { return _flags[Flat]; }
+    bool isFlatGlobal() const { return _flags[FlatGlobal]; }
     bool isLoad() const { return _flags[Load]; }
     bool isStore() const { return _flags[Store]; }
 
@@ -179,7 +180,7 @@ class GPUStaticInst : public GPUStaticInstFlags
     {
         return _flags[MemoryRef] && (_flags[GlobalSegment] ||
                _flags[PrivateSegment] || _flags[ReadOnlySegment] ||
-               _flags[SpillSegment]);
+               _flags[SpillSegment] || _flags[FlatGlobal]);
     }
 
     bool

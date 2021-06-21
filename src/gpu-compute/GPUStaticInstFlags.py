@@ -55,6 +55,7 @@ class GPUStaticInstFlags(Enum):
         'MemSync',           # Synchronizing instruction
         'MemoryRef',         # References memory (load, store, or atomic)
         'Flat',              # Flat memory op
+        'FlatGlobal',        # Global memory op
         'Load',              # Reads from memory
         'Store',             # Writes to memory
 

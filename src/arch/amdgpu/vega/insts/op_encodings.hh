@@ -793,24 +793,35 @@ namespace VegaISA
         }
 
         void
-        calcAddr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr,
-                 ScalarRegU32 offset)
+        calcAddr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &vaddr,
+                 ScalarRegU32 saddr, ScalarRegU32 offset)
         {
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    gpuDynInst->addr.at(lane) = addr[lane] + offset;
-                }
+            // If saddr = 0x7f there is no scalar reg to read and address will
+            // be a 64-bit address. Otherwise, saddr is the reg index for a
+            // scalar reg used as the base address for a 32-bit address.
+            if ((saddr == 0x7f && isFlatGlobal()) || isFlat()) {
+                calcAddr64(gpuDynInst, vaddr, offset);
+            } else {
+                ConstScalarOperandU32 sbase(gpuDynInst, saddr);
+                sbase.read();
+
+                calcAddr32(gpuDynInst, vaddr, sbase, offset);
             }
-            gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
+
+            if (isFlat()) {
+                gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
+            }
         }
 
         void
         issueRequestHelper(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            if ((gpuDynInst->executedAs() == enums::SC_GLOBAL && isFlat())
+                    || isFlatGlobal()) {
                 gpuDynInst->computeUnit()->globalMemoryPipe
                     .issueRequest(gpuDynInst);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                assert(isFlat());
                 gpuDynInst->computeUnit()->localMemoryPipe
                     .issueRequest(gpuDynInst);
             } else {
@@ -822,6 +833,36 @@ namespace VegaISA
         InFmt_FLAT instData;
         // second instruction DWORD
         InFmt_FLAT_1 extData;
+
+      private:
+        void initFlatOperandInfo();
+        void initGlobalOperandInfo();
+
+        void generateFlatDisassembly();
+        void generateGlobalDisassembly();
+
+        void
+        calcAddr32(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &vaddr,
+                   ConstScalarOperandU32 &saddr, ScalarRegU32 offset)
+        {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    gpuDynInst->addr.at(lane) =
+                        (vaddr[lane] + saddr.rawData() + offset) & 0xffffffff;
+                }
+            }
+        }
+
+        void
+        calcAddr64(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr,
+                   ScalarRegU32 offset)
+        {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    gpuDynInst->addr.at(lane) = addr[lane] + offset;
+                }
+            }
+        }
     }; // Inst_FLAT
 } // namespace VegaISA
 } // namespace gem5
