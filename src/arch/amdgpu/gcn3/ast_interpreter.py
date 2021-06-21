@@ -577,7 +577,7 @@ class GenOne(object):
                             params = (SpecialCtx[d.ctx], self.decl_type(d.var),
                                       d.fld, d.var)
                         else:
-                            params =
+                            params = \
                                 (TypeToAccessMethod[self.decl_type(d.var)],
                                  self.decl_type(d.var), d.fld, d.var)
                         typ1 = self.decl_type(d.var)
@@ -2814,7 +2814,7 @@ class AstInterpreter(object):
                     empty_count += 1
                     if op_inst not in known_empty:
                         found_empty.append(op_inst)
-                        print 'Parse Empty'
+                        print('Parse Empty')
                         pprint(found_empty)
                         import pdb; pdb.set_trace()
                     else:
@@ -2824,7 +2824,7 @@ class AstInterpreter(object):
                     exception_count += 1
                     if op_inst not in known_except:
                         found_exceptions.append(op_inst)
-                        print 'Parse Error'
+                        print('Parse Error')
                         pprint(found_exceptions)
                         import pdb; pdb.set_trace()
                     else:
@@ -2832,16 +2832,16 @@ class AstInterpreter(object):
                     cg.cg_end('execute') # cg_method
             instruction_index += 1
         if known_empty:
-            print 'Problems in instructions %s are no longer seen.' % (
-                repr(known_empty))
+            print('Problems in instructions %s are no longer seen.' % (
+                repr(known_empty)))
         if known_except:
-            print 'Exceptions in instructions %s are no longer seen.' % (
-                repr(known_except))
+            print('Exceptions in instructions %s are no longer seen.' % (
+                repr(known_except)))
         i = instruction_index
         e = empty_count
-        print 'Found no pseudo code in %d of %d instructions' % (e, i)
+        print('Found no pseudo code in %d of %d instructions' % (e, i))
         e = exception_count
-        print 'Found exceptions in %d of %d instructions' % (e, i)
+        print('Found exceptions in %d of %d instructions' % (e, i))
 
         for op_enc in self.inst_with_encodings:
             if op_enc == 'EXP':
