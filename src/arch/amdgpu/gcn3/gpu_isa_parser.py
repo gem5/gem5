@@ -1245,9 +1245,9 @@ class GpuIsaParser(Grammar):
     # error rule
     def p_error(self, t):
         if t:
-            print '%d: syntax error at "%s"' % (t.lexer.lineno, t.value)
+            print('%d: syntax error at "%s"' % (t.lexer.lineno, t.value))
         else:
-            print 'unknown syntax error'
+            print('unknown syntax error')
         import pdb; pdb.set_trace()
 
     # end rules
