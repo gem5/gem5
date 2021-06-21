@@ -106,7 +106,7 @@ def txn_generator(nr):
       if random.random() < 0.25:  break
     length = random.choice(lengths)
     addr_base = random.choice(list(range(0,1024,bus_width)))
-    addr_offset = random.choice(list(range(bus_width))+[0]*(bus_width/2))
+    addr_offset = random.choice(list(range(bus_width))+[0]*int(bus_width//2))
     txn = transaction(
       bus_width = bus_width,
       data_width = data_width,
@@ -137,15 +137,15 @@ def txn_generator(nr):
 # test code for transaction generator
 if False:
   for t in txn_generator(20):
-    print t
+    print(t)
   raise Exception
 # end test code
 
 
 class memory_state_cl:
   buffer_size = 2048
-  repeats = 10 * buffer_size / 36
-  population = (string.lowercase + string.digits) * repeats
+  repeats = 10 * buffer_size // 36
+  population = (string.ascii_lowercase + string.digits) * int(repeats)
   def __init__(self):
     self.initiator = "".join(
       random.sample(memory_state_cl.population, memory_state_cl.buffer_size))
@@ -293,10 +293,10 @@ fragmenters = [globals()[n] for n in globals().keys() if n[:8]=="__FRAG__"]
 # test code for fragmenters
 if False:
   for t in txn_generator(1):
-    print t
-    print
+    print(t)
+    print()
     for u in fragmenters[4](t):
-      print u
+      print(u)
   raise Exception
 # end test code
 
@@ -401,16 +401,16 @@ actual memory:
 
 from sys import argv
 
-print "Testing Endianness Conversion Functions"
-print "March 2008"
-print "OSCI TLM-2"
+print("Testing Endianness Conversion Functions")
+print("March 2008")
+print("OSCI TLM-2")
 
 try:  nr_txns_to_test = int(argv[1])
 except:
-  print "No command line input for number of tests, using default"
+  print("No command line input for number of tests, using default")
   nr_txns_to_test = 1000
 
-print "Number to test:", nr_txns_to_test
+print("Number to test:", nr_txns_to_test)
 
 # generate and test a number of transactions
 for txn in txn_generator(nr_txns_to_test):
@@ -445,12 +445,12 @@ golden memory:
 actual memory:
 %s""" % (fragmenter, txn, initial_memory, golden_memory_state, memory_state))
 
-  print ".",
-print
+  print("."),
+print()
 
 
-print "Conversion functions usage frequency:"
+print("Conversion functions usage frequency:")
 for c in all_converters:
-  print c.nr, c.__name__, c.usage
+  print(c.nr, c.__name__, c.usage)
 
 
