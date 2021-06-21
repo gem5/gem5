@@ -85,7 +85,7 @@ def main():
         outfile = open(texfile_s, 'w')
 
         startDocText(outfile)
-        outfile.write("\\begin{figure} \n\centering\n")
+        outfile.write("\\begin{figure} \n\\centering\n")
         ## Time plots for all delay values
         for delay in delays:
             # Time
@@ -95,13 +95,13 @@ def main():
         outfile.write("\end{figure}\n")
 
         # Energy plots for all delay values
-        outfile.write("\\begin{figure} \n\centering\n")
+        outfile.write("\\begin{figure} \n\\centering\n")
         for delay in delays:
             # Energy
             filename = plotter.stateEnergyPlotName(str(delay) + '-')
             outfile.write(wrapForGraphic(filename, textwidth))
             outfile.write(getCaption(delay))
-        outfile.write("\end{figure}\n")
+        outfile.write("\\end{figure}\n")
 
         endDocText(outfile)
         outfile.close()
@@ -115,31 +115,31 @@ def main():
 
 
 def getCaption(delay):
-    return ('\caption{' +
+    return ('\\caption{' +
             'itt delay = ' + str(delay) +
             '}\n')
 
 def wrapForGraphic(filename, width='1.0'):
     # \t is tab and needs to be escaped, therefore \\textwidth
-    return '\includegraphics[width=' + width + \
+    return '\\includegraphics[width=' + width + \
         '\\textwidth]{' + filename + '}\n'
 
 def startDocText(outfile):
 
-    start_stuff = '''
-\documentclass[a4paper,landscape,twocolumn]{article}
+    start_stuff = """
+\\documentclass[a4paper,landscape,twocolumn]{article}
 
-\usepackage{graphicx}
-\usepackage[margin=0.5cm]{geometry}
+\\usepackage{graphicx}
+\\usepackage[margin=0.5cm]{geometry}
 \\begin{document}
-'''
+"""
     outfile.write(start_stuff)
 
 def endDocText(outfile):
 
     end_stuff = '''
 
-\end{document}
+\\end{document}
 
 '''
     outfile.write(end_stuff)
