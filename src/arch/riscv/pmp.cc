@@ -204,7 +204,9 @@ PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
     // will convert it into a range, once cfg
     // reg is written
     pmpTable[pmp_index].rawAddr = this_addr;
-    pmpUpdateRule(pmp_index);
+    for (int index = 0; index < pmpEntries; index++) {
+        pmpUpdateRule(index);
+    }
 }
 
 bool
