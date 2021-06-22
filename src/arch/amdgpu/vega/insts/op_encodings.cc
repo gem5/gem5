@@ -482,7 +482,7 @@ namespace VegaISA
         : VEGAGPUStaticInst(opcode)
     {
         setFlag(Scalar);
-        setFlag(SMEM);
+        setFlag(GlobalSegment);
 
         // copy first instruction DWORD
         instData = iFmt[0];
@@ -491,7 +491,7 @@ namespace VegaISA
         _srcLiteral = *reinterpret_cast<uint32_t*>(&iFmt[1]);
 
         if (instData.GLC)
-            setFlag(GroupCoherent);
+            setFlag(GloballyCoherent);
     } // Inst_SMEM
 
     Inst_SMEM::~Inst_SMEM()
@@ -1152,7 +1152,7 @@ namespace VegaISA
     Inst_DS::Inst_DS(InFmt_DS *iFmt, const std::string &opcode)
         : VEGAGPUStaticInst(opcode)
     {
-        setFlag(LDS);
+        setFlag(GroupSegment);
 
         // copy first instruction DWORD
         instData = iFmt[0];
@@ -1237,10 +1237,9 @@ namespace VegaISA
         // copy second instruction DWORD
         extData = ((InFmt_MUBUF_1 *)iFmt)[1];
         _srcLiteral = *reinterpret_cast<uint32_t*>(&iFmt[1]);
-        setFlag(TextureMem);
 
         if (instData.GLC)
-            setFlag(GroupCoherent);
+            setFlag(GloballyCoherent);
 
         if (instData.SLC)
             setFlag(SystemCoherent);
@@ -1331,10 +1330,9 @@ namespace VegaISA
         // copy second instruction DWORD
         extData = ((InFmt_MTBUF_1 *)iFmt)[1];
         _srcLiteral = *reinterpret_cast<uint32_t*>(&iFmt[1]);
-        setFlag(TextureMem);
 
         if (instData.GLC)
-            setFlag(GroupCoherent);
+            setFlag(GloballyCoherent);
 
         if (extData.SLC)
             setFlag(SystemCoherent);
@@ -1404,10 +1402,9 @@ namespace VegaISA
         // copy second instruction DWORD
         extData = ((InFmt_MIMG_1 *)iFmt)[1];
         _srcLiteral = *reinterpret_cast<uint32_t*>(&iFmt[1]);
-        setFlag(TextureMem);
 
         if (instData.GLC)
-            setFlag(GroupCoherent);
+            setFlag(GloballyCoherent);
 
         if (instData.SLC)
             setFlag(SystemCoherent);
@@ -1523,7 +1520,7 @@ namespace VegaISA
         _srcLiteral = *reinterpret_cast<uint32_t*>(&iFmt[1]);
 
         if (instData.GLC)
-            setFlag(GroupCoherent);
+            setFlag(GloballyCoherent);
 
         if (instData.SLC)
             setFlag(SystemCoherent);
