@@ -112,7 +112,9 @@ class WriteQueueEntry : public QueueEntry, public Printable
   public:
 
     /** A simple constructor. */
-    WriteQueueEntry() {}
+    WriteQueueEntry(const std::string &name)
+        :   QueueEntry(name)
+    {}
 
     /**
      * Allocate a miss to this entry.

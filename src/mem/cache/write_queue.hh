@@ -65,7 +65,8 @@ class WriteQueue : public Queue<WriteQueueEntry>
      * @param reserve The maximum number of entries needed to satisfy
      *        any access.
      */
-    WriteQueue(const std::string &_label, int num_entries, int reserve);
+    WriteQueue(const std::string &_label, int num_entries, int reserve,
+            const std::string &name);
 
     /**
      * Allocates a new WriteQueueEntry for the request and size. This

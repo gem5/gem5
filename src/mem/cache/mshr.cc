@@ -57,16 +57,21 @@
 #include "mem/request.hh"
 #include "sim/core.hh"
 
-MSHR::MSHR() : downstreamPending(false),
-               pendingModified(false),
-               postInvalidate(false), postDowngrade(false),
-               wasWholeLineWrite(false), isForward(false)
+MSHR::MSHR(const std::string &name)
+    :   QueueEntry(name),
+        downstreamPending(false),
+        pendingModified(false),
+        postInvalidate(false), postDowngrade(false),
+        wasWholeLineWrite(false), isForward(false),
+        targets(name + ".targets"),
+        deferredTargets(name + ".deferredTargets")
 {
 }
 
-MSHR::TargetList::TargetList()
-    : needsWritable(false), hasUpgrade(false), allocOnFill(false),
-      hasFromCache(false)
+MSHR::TargetList::TargetList(const std::string &name)
+    :   Named(name),
+        needsWritable(false), hasUpgrade(false),
+        allocOnFill(false), hasFromCache(false)
 {}
 
 

@@ -46,6 +46,7 @@
 #ifndef __MEM_CACHE_QUEUE_ENTRY_HH__
 #define __MEM_CACHE_QUEUE_ENTRY_HH__
 
+#include "base/named.hh"
 #include "base/types.hh"
 #include "mem/packet.hh"
 
@@ -55,7 +56,7 @@ class BaseCache;
  * A queue entry base class, to be used by both the MSHRs and
  * write-queue entries.
  */
-class QueueEntry : public Packet::SenderState
+class QueueEntry : public Packet::SenderState, public Named
 {
 
     /**
@@ -117,8 +118,9 @@ class QueueEntry : public Packet::SenderState
     /** True if the entry targets the secure memory space. */
     bool isSecure;
 
-    QueueEntry()
-        : readyTime(0), _isUncacheable(false),
+    QueueEntry(const std::string &name)
+        : Named(name),
+          readyTime(0), _isUncacheable(false),
           inService(false), order(0), blkAddr(0), blkSize(0), isSecure(false)
     {}
 

@@ -161,7 +161,7 @@ class MSHR : public QueueEntry, public Printable
         {}
     };
 
-    class TargetList : public std::list<Target>
+    class TargetList : public std::list<Target>, public Named
     {
 
       public:
@@ -175,7 +175,7 @@ class MSHR : public QueueEntry, public Printable
          */
         bool hasFromCache;
 
-        TargetList();
+        TargetList(const std::string &name = ".unnamedTargetList");
 
         /**
          * Use the provided packet and the source to update the
@@ -416,7 +416,7 @@ class MSHR : public QueueEntry, public Printable
     bool handleSnoop(PacketPtr target, Counter order);
 
     /** A simple constructor. */
-    MSHR();
+    MSHR(const std::string &name);
 
     /**
      * Returns the current number of allocated targets.

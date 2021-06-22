@@ -76,8 +76,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     : ClockedObject(p),
       cpuSidePort (p.name + ".cpu_side_port", this, "CpuSidePort"),
       memSidePort(p.name + ".mem_side_port", this, "MemSidePort"),
-      mshrQueue("MSHRs", p.mshrs, 0, p.demand_mshr_reserve), // see below
-      writeBuffer("write buffer", p.write_buffers, p.mshrs), // see below
+      mshrQueue("MSHRs", p.mshrs, 0, p.demand_mshr_reserve, p.name),
+      writeBuffer("write buffer", p.write_buffers, p.mshrs, p.name),
       tags(p.tags),
       compressor(p.compressor),
       prefetcher(p.prefetcher),

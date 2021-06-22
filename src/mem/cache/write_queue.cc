@@ -49,8 +49,9 @@
 #include "mem/cache/write_queue_entry.hh"
 
 WriteQueue::WriteQueue(const std::string &_label,
-                       int num_entries, int reserve)
-    : Queue<WriteQueueEntry>(_label, num_entries, reserve)
+                       int num_entries, int reserve, const std::string &name)
+    : Queue<WriteQueueEntry>(_label, num_entries, reserve,
+            name + ".write_queue")
 {}
 
 WriteQueueEntry *
