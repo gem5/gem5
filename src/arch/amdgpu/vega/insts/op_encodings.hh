@@ -554,9 +554,10 @@ namespace VegaISA
             // create request and set flags
             gpuDynInst->resetEntireStatusVector();
             gpuDynInst->setStatusVector(0, 1);
-            auto req = std::make_shared<Request>(0, 0, 0, 0,
-                                        gpuDynInst->computeUnit()->masterId(),
-                                        0, gpuDynInst->wfDynId);
+            RequestPtr req = std::make_shared<Request>(0, 0, 0,
+                                       gpuDynInst->computeUnit()->
+                                       requestorId(), 0,
+                                       gpuDynInst->wfDynId);
             gpuDynInst->setRequestFlags(req);
             gpuDynInst->computeUnit()->
                 injectGlobalMemFence(gpuDynInst, false, req);
