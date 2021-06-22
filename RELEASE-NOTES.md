@@ -1,3 +1,26 @@
+# Version 21.0.1.0
+
+Version 21.0.1 is a minor gem5 release consisting of bug fixes. The 21.0.1 release:
+
+* Fixes the [GCN-GPU Dockerfile](https://gem5.googlesource.com/public/gem5/+/refs/tags/v21.0.1.0/util/dockerfiles/gcn-gpu/Dockerfile) to pull from the v21-0 bucket.
+* Fixes the tests to download from the v21-0 bucket instead of the develop bucket.
+* Fixes the Temperature class:
+    * Fixes [fs_power.py](https://gem5.googlesource.com/public/gem5/+/refs/tags/v21.0.1.0/configs/example/arm/fs_power.py), which was producing a ["Temperature is not JSON serializable" error](https://gem5.atlassian.net/browse/GEM5-951).
+    * Fixes temperature printing in `config.ini`.
+    * Fixes the pybind export for the `from_kelvin` function.
+* Eliminates a duplicated name warning in [ClockTick](https://gem5.googlesource.com/public/gem5/+/refs/tags/v21.0.1.0/src/systemc/channel/sc_clock.cc).
+* Fixes the [Ubuntu 18.04 Dockerfile](https://gem5.googlesource.com/public/gem5/+/refs/tags/v21.0.1.0/util/dockerfiles/ubuntu-20.04_all-dependencies/Dockerfile) to use Python3 instead of Python2.
+* Makes [verify.py](https://gem5.googlesource.com/public/gem5/+/refs/tags/v21.0.1.0/src/systemc/tests/verify.py) compatible with Python3.
+* Fixes GCN3_X86 builds for aarch64 hosts.
+* Fixes building with `SLICC_HTML=True`.
+* Fixes the [cpt_upgrader.py](https://gem5.googlesource.com/public/gem5/+/refs/tags/v21.0.1.0/util/cpt_upgrader.py) string formatter.
+* Fixes typo in [cpy_upgrader.py](https://gem5.googlesource.com/public/gem5/+/refs/tags/v21.0.1.0/util/cpt_upgrader.py) where module `errno` was incorrectly put as `ennro`.
+* Sets the `--restore-simpoint-checkpoint` flag default to "False" instead of the ambiguous "None".
+* Fixes a nonsensical check in [MOESI_CMP_token-L1cache](https://gem5.googlesource.com/public/gem5/+/refs/tags/v21.0.1.0/src/mem/ruby/protocol/MOESI_CMP_token-L1cache.sm) which caused compilation bugs in Clang-11.
+* Fixes the `scx_get_parameter_list` for ARM fast models.
+* Fixes [bloated object binaries, known to cause issues during linking](https://gem5.atlassian.net/browse/GEM5-1003).
+* Due to LTO causing unacceptably long link times for some users, and stripping debug symbols in some setups, it is no longer enabled by default. It may be enabled with the `--with-lto` flag. The `--no-lto` flag has been removed.
+
 # Version 21.0.0.0
 
 Version 21.0 marks *one full year* of gem5 releases, and on this anniversary, I think we have some of the biggest new features yet!
