@@ -154,7 +154,7 @@ namespace VegaISA
             ComputeUnit *cu = _gpuDynInst->computeUnit();
 
             for (auto i = 0; i < NumDwords; ++i) {
-                int vgprIdx = cu->registerManager.mapVgpr(wf, _opIdx + i);
+                int vgprIdx = cu->registerManager->mapVgpr(wf, _opIdx + i);
                 vrfData[i] = &cu->vrf[wf->simdId]->readWriteable(vgprIdx);
 
                 DPRINTF(GPUVRF, "Read v[%d]\n", vgprIdx);
@@ -208,7 +208,7 @@ namespace VegaISA
                 ? _gpuDynInst->exec_mask : wf->execMask();
 
             if (NumDwords == 1) {
-                int vgprIdx = cu->registerManager.mapVgpr(wf, _opIdx);
+                int vgprIdx = cu->registerManager->mapVgpr(wf, _opIdx);
                 vrfData[0] = &cu->vrf[wf->simdId]->readWriteable(vgprIdx);
                 assert(vrfData[0]);
                 auto reg_file_vgpr = vrfData[0]->template as<VecElemU32>();
@@ -224,8 +224,8 @@ namespace VegaISA
                 DPRINTF(GPUVRF, "Write v[%d]\n", vgprIdx);
                 cu->vrf[wf->simdId]->printReg(wf, vgprIdx);
             } else if (NumDwords == 2) {
-                int vgprIdx0 = cu->registerManager.mapVgpr(wf, _opIdx);
-                int vgprIdx1 = cu->registerManager.mapVgpr(wf, _opIdx + 1);
+                int vgprIdx0 = cu->registerManager->mapVgpr(wf, _opIdx);
+                int vgprIdx1 = cu->registerManager->mapVgpr(wf, _opIdx + 1);
                 vrfData[0] = &cu->vrf[wf->simdId]->readWriteable(vgprIdx0);
                 vrfData[1] = &cu->vrf[wf->simdId]->readWriteable(vgprIdx1);
                 assert(vrfData[0]);
@@ -521,7 +521,7 @@ namespace VegaISA
                     ScalarRegU64 exec_mask = _gpuDynInst->wavefront()->
                         execMask().to_ullong();
                     std::memcpy((void*)srfData.data(), (void*)&exec_mask,
-                        sizeof(srfData));
+                        sizeof(exec_mask));
                     DPRINTF(GPUSRF, "Read EXEC\n");
                     DPRINTF(GPUSRF, "EXEC = %#x\n", exec_mask);
                 }
@@ -538,7 +538,7 @@ namespace VegaISA
 
                     ScalarRegU32 exec_mask_hi = bits(exec_mask, 63, 32);
                     std::memcpy((void*)srfData.data(), (void*)&exec_mask_hi,
-                                sizeof(srfData));
+                                sizeof(exec_mask_hi));
                     DPRINTF(GPUSRF, "Read EXEC_HI\n");
                     DPRINTF(GPUSRF, "EXEC_HI = %#x\n", exec_mask_hi);
                 }
@@ -553,7 +553,7 @@ namespace VegaISA
                 {
                     typename OpTraits<DataType>::FloatT pos_half = 0.5;
                     std::memcpy((void*)srfData.data(), (void*)&pos_half,
-                        sizeof(srfData));
+                        sizeof(pos_half));
 
                 }
                 break;
@@ -561,44 +561,44 @@ namespace VegaISA
                 {
                     typename OpTraits<DataType>::FloatT neg_half = -0.5;
                     std::memcpy((void*)srfData.data(), (void*)&neg_half,
-                        sizeof(srfData));
+                        sizeof(neg_half));
                 }
                 break;
               case REG_POS_ONE:
                 {
                     typename OpTraits<DataType>::FloatT pos_one = 1.0;
-                    std::memcpy(srfData.data(), &pos_one, sizeof(srfData));
+                    std::memcpy(srfData.data(), &pos_one, sizeof(pos_one));
                 }
                 break;
               case REG_NEG_ONE:
                 {
                     typename OpTraits<DataType>::FloatT neg_one = -1.0;
-                    std::memcpy(srfData.data(), &neg_one, sizeof(srfData));
+                    std::memcpy(srfData.data(), &neg_one, sizeof(neg_one));
                 }
                 break;
               case REG_POS_TWO:
                 {
                     typename OpTraits<DataType>::FloatT pos_two = 2.0;
-                    std::memcpy(srfData.data(), &pos_two, sizeof(srfData));
+                    std::memcpy(srfData.data(), &pos_two, sizeof(pos_two));
                 }
                 break;
               case REG_NEG_TWO:
                 {
                     typename OpTraits<DataType>::FloatT neg_two = -2.0;
-                    std::memcpy(srfData.data(), &neg_two, sizeof(srfData));
+                    std::memcpy(srfData.data(), &neg_two, sizeof(neg_two));
                 }
                 break;
               case REG_POS_FOUR:
                 {
                     typename OpTraits<DataType>::FloatT pos_four = 4.0;
-                    std::memcpy(srfData.data(), &pos_four, sizeof(srfData));
+                    std::memcpy(srfData.data(), &pos_four, sizeof(pos_four));
                 }
                 break;
               case REG_NEG_FOUR:
                 {
                     typename OpTraits<DataType>::FloatT neg_four = -4.0;
                     std::memcpy((void*)srfData.data(), (void*)&neg_four ,
-                        sizeof(srfData));
+                        sizeof(neg_four));
                 }
                 break;
                 case REG_PI:
@@ -611,10 +611,10 @@ namespace VegaISA
 
                     if (sizeof(DataType) == sizeof(ScalarRegF64)) {
                         std::memcpy((void*)srfData.data(),
-                            (void*)&pi_u64, sizeof(srfData));
+                            (void*)&pi_u64, sizeof(pi_u64));
                     } else {
                         std::memcpy((void*)srfData.data(),
-                            (void*)&pi_u32, sizeof(srfData));
+                            (void*)&pi_u32, sizeof(pi_u32));
                     }
                 }
                 break;
@@ -648,16 +648,16 @@ namespace VegaISA
 
             if (_opIdx == REG_VCC_LO) {
                 sgprIdx = cu->registerManager
-                    .mapSgpr(wf, wf->reservedScalarRegs - 2 + dword);
+                    ->mapSgpr(wf, wf->reservedScalarRegs - 2 + dword);
             } else if (_opIdx == REG_FLAT_SCRATCH_HI) {
                 sgprIdx = cu->registerManager
-                    .mapSgpr(wf, wf->reservedScalarRegs - 3 + dword);
+                    ->mapSgpr(wf, wf->reservedScalarRegs - 3 + dword);
             } else if (_opIdx == REG_FLAT_SCRATCH_LO) {
                 assert(NumDwords == 1);
                 sgprIdx = cu->registerManager
-                    .mapSgpr(wf, wf->reservedScalarRegs - 4 + dword);
+                    ->mapSgpr(wf, wf->reservedScalarRegs - 4 + dword);
             } else {
-                sgprIdx = cu->registerManager.mapSgpr(wf, _opIdx + dword);
+                sgprIdx = cu->registerManager->mapSgpr(wf, _opIdx + dword);
             }
 
             assert(sgprIdx > -1);

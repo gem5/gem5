@@ -36,7 +36,6 @@
 #include "arch/amdgpu/vega/gpu_decoder.hh"
 #include "arch/amdgpu/vega/insts/instructions.hh"
 #include "debug/GPUExec.hh"
-#include "gpu-compute/flexible_pool_manager.hh"
 #include "gpu-compute/shader.hh"
 
 namespace gem5

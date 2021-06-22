@@ -1903,11 +1903,12 @@ namespace VegaISA
     Inst_SOPK__S_MULK_I32::execute(GPUDynInstPtr gpuDynInst)
     {
         ScalarRegI16 simm16 = instData.SIMM16;
+        ConstScalarOperandI32 src(gpuDynInst, instData.SDST);
         ScalarOperandI32 sdst(gpuDynInst, instData.SDST);
 
-        sdst.read();
+        src.read();
 
-        sdst = sdst.rawData() * (ScalarRegI32)simm16;
+        sdst = src.rawData() * (ScalarRegI32)simm16;
 
         sdst.write();
     } // execute
@@ -4172,7 +4173,7 @@ namespace VegaISA
         DPRINTF(GPUExec, "CU%d: decrease ref ctr WG[%d] to [%d]\n",
             wf->computeUnit->cu_id, wf->wgId, refCount);
 
-        wf->computeUnit->registerManager.freeRegisters(wf);
+        wf->computeUnit->registerManager->freeRegisters(wf);
         wf->computeUnit->stats.completedWfs++;
         wf->computeUnit->activeWaves--;
 
@@ -5641,7 +5642,7 @@ namespace VegaISA
         sdata.read();
 
         std::memcpy((void*)gpuDynInst->scalar_data, sdata.rawDataPtr(),
-            4 * sizeof(ScalarRegU32));
+            sizeof(gpuDynInst->scalar_data));
 
         if (instData.IMM) {
             offset = extData.OFFSET;
