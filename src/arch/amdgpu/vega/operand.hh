@@ -326,12 +326,8 @@ namespace VegaISA
               scRegData.read();
           }
 
-          using VecRegCont = typename std::conditional_t<NumDwords == 2,
-              VecRegContainerU64, typename std::conditional_t<sizeof(DataType)
-                  == sizeof(VecElemU16), VecRegContainerU16,
-                      typename std::conditional_t<sizeof(DataType)
-                          == sizeof(VecElemU8), VecRegContainerU8,
-                              VecRegContainerU32>>>;
+          using VecRegCont =
+              VecRegContainer<sizeof(DataType) * NumVecElemPerVecReg>;
 
           /**
            * whether this operand a scalar or not.
