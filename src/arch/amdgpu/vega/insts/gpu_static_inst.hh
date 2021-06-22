@@ -60,6 +60,12 @@ namespace VegaISA
             return isFlatScratchReg(opIdx);
         }
 
+        bool
+        isExecMaskRegister(int opIdx) override
+        {
+            return isExecMask(opIdx);
+        }
+
         void initOperandInfo() override { return; }
         int getOperandSize(int opIdx) override { return 0; }
 

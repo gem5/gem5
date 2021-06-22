@@ -284,6 +284,18 @@ GPUDynInst::seqNum() const
     return _seqNum;
 }
 
+Addr
+GPUDynInst::pc()
+{
+    return wavefront()->pc();
+}
+
+void
+GPUDynInst::pc(Addr _pc)
+{
+    wavefront()->pc(_pc);
+}
+
 enums::StorageClassType
 GPUDynInst::executedAs()
 {

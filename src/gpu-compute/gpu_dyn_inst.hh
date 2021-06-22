@@ -162,6 +162,9 @@ class GPUDynInst : public GPUExecContext
 
     InstSeqNum seqNum() const;
 
+    Addr pc();
+    void pc(Addr _pc);
+
     enums::StorageClassType executedAs();
 
     // virtual address for scalar memory operations
