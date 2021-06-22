@@ -97,6 +97,11 @@ class MSHRQueue : public Queue<MSHR>
                    Tick when_ready, Counter order, bool alloc_on_fill);
 
     /**
+     * Deallocate a MSHR and its targets
+     */
+    void deallocate(MSHR *mshr) override;
+
+    /**
      * Moves the MSHR to the front of the pending list if it is not
      * in service.
      * @param mshr The entry to move.

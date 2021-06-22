@@ -178,6 +178,8 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
     }
 
     emplace_back(pkt, readyTime, order, source, markPending, alloc_on_fill);
+
+    DPRINTF(MSHR, "New target allocated: %s\n", pkt->print());
 }
 
 
@@ -411,6 +413,8 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order,
         targets.add(pkt, whenReady, _order, Target::FromCPU, !inService,
                     alloc_on_fill);
     }
+
+    DPRINTF(MSHR, "After target allocation: %s", print());
 }
 
 bool
@@ -719,12 +723,12 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
              hasFromCache() ? "HasFromCache" : "");
 
     if (!targets.empty()) {
-        ccprintf(os, "%s  Targets:\n", prefix);
-        targets.print(os, verbosity, prefix + "    ");
+        ccprintf(os, "%s      Targets:\n", prefix);
+        targets.print(os, verbosity, prefix + "        ");
     }
     if (!deferredTargets.empty()) {
-        ccprintf(os, "%s  Deferred Targets:\n", prefix);
-        deferredTargets.print(os, verbosity, prefix + "      ");
+        ccprintf(os, "%s      Deferred Targets:\n", prefix);
+        deferredTargets.print(os, verbosity, prefix + "        ");
     }
 }
 

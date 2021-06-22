@@ -53,7 +53,9 @@
 #include <vector>
 
 #include "base/printable.hh"
+#include "base/trace.hh"
 #include "base/types.hh"
+#include "debug/MSHR.hh"
 #include "mem/cache/queue_entry.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
@@ -460,6 +462,8 @@ class MSHR : public QueueEntry, public Printable
      */
     void popTarget()
     {
+        DPRINTF(MSHR, "Force deallocating MSHR targets: %s\n",
+                targets.front().pkt->print());
         targets.pop_front();
     }
 

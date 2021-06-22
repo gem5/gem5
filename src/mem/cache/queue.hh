@@ -234,7 +234,8 @@ class Queue : public Drainable, public Named
      *
      * @param entry
      */
-    void deallocate(Entry *entry)
+    virtual void
+    deallocate(Entry *entry)
     {
         allocatedList.erase(entry->allocIter);
         freeList.push_front(entry);
