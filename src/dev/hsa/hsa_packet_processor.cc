@@ -69,13 +69,10 @@
 namespace gem5
 {
 
-HSAPP_EVENT_DESCRIPTION_GENERATOR(UpdateReadDispIdDmaEvent)
-HSAPP_EVENT_DESCRIPTION_GENERATOR(CmdQueueCmdDmaEvent)
 HSAPP_EVENT_DESCRIPTION_GENERATOR(QueueProcessEvent)
-HSAPP_EVENT_DESCRIPTION_GENERATOR(DepSignalsReadDmaEvent)
 
 HSAPacketProcessor::HSAPacketProcessor(const Params &p)
-    : DmaDevice(p), numHWQueues(p.numHWQueues), pioAddr(p.pioAddr),
+    : DmaVirtDevice(p), numHWQueues(p.numHWQueues), pioAddr(p.pioAddr),
       pioSize(PAGE_SIZE), pioDelay(10), pktProcessDelay(p.pktProcessDelay)
 {
     DPRINTF(HSAPacketProcessor, "%s:\n", __FUNCTION__);
@@ -174,55 +171,15 @@ HSAPacketProcessor::translateOrDie(Addr vaddr, Addr &paddr)
         fatal("failed translation: vaddr 0x%x\n", vaddr);
 }
 
+/**
+ * this event is used to update the read_disp_id field (the read pointer)
+ * of the MQD, which is how the host code knows the status of the HQD's
+ * read pointer
+ */
 void
-HSAPacketProcessor::dmaVirt(DmaFnPtr dmaFn, Addr addr, unsigned size,
-                         Event *event, void *data, Tick delay)
+HSAPacketProcessor::updateReadDispIdDma()
 {
-    if (size == 0) {
-        schedule(event, curTick() + delay);
-        return;
-    }
-
-    // move the buffer data pointer with the chunks
-    uint8_t *loc_data = (uint8_t*)data;
-
-    for (ChunkGenerator gen(addr, size, PAGE_SIZE); !gen.done(); gen.next()) {
-        Addr phys;
-
-        // translate pages into their corresponding frames
-        translateOrDie(gen.addr(), phys);
-
-        // only send event on last transfer; transfers complete in-order
-        Event *ev = gen.last() ? event : NULL;
-
-        (this->*dmaFn)(phys, gen.size(), ev, loc_data, delay);
-
-        loc_data += gen.size();
-    }
-}
-
-void
-HSAPacketProcessor::dmaReadVirt(Addr host_addr, unsigned size,
-                             Event *event, void *data, Tick delay)
-{
-    DPRINTF(HSAPacketProcessor,
-            "%s:host_addr = 0x%lx, size = %d\n", __FUNCTION__, host_addr, size);
-    dmaVirt(&DmaDevice::dmaRead, host_addr, size, event, data, delay);
-}
-
-void
-HSAPacketProcessor::dmaWriteVirt(Addr host_addr, unsigned size,
-                              Event *event, void *data, Tick delay)
-{
-    dmaVirt(&DmaDevice::dmaWrite, host_addr, size, event, data, delay);
-}
-
-HSAPacketProcessor::UpdateReadDispIdDmaEvent::
-        UpdateReadDispIdDmaEvent()
-    : Event(Default_Pri, AutoDelete)
-{
-    DPRINTF(HSAPacketProcessor, "%s:\n", __FUNCTION__);
-    setFlags(AutoDelete);
+    DPRINTF(HSAPacketProcessor, "updateReaddispId\n");
 }
 
 void
@@ -230,14 +187,14 @@ HSAPacketProcessor::updateReadIndex(int pid, uint32_t rl_idx)
 {
     AQLRingBuffer* aqlbuf = regdQList[rl_idx]->qCntxt.aqlBuf;
     HSAQueueDescriptor* qDesc = regdQList[rl_idx]->qCntxt.qDesc;
-    auto *dmaEvent = new UpdateReadDispIdDmaEvent();
+    auto cb = new DmaVirtCallback<uint64_t>(
+        [ = ] (const uint32_t &dma_data) { this->updateReadDispIdDma(); }, 0);
 
     DPRINTF(HSAPacketProcessor,
             "%s: read-pointer offset [0x%x]\n", __FUNCTION__, aqlbuf->rdIdx());
 
-    dmaWriteVirt((Addr)qDesc->hostReadIndexPtr,
-                 sizeof(aqlbuf->rdIdx()),
-                 dmaEvent, aqlbuf->rdIdxPtr());
+    dmaWriteVirt((Addr)qDesc->hostReadIndexPtr, sizeof(aqlbuf->rdIdx()),
+                 cb, aqlbuf->rdIdxPtr());
 
     DPRINTF(HSAPacketProcessor,
             "%s: rd-ptr offset [0x%x], wr-ptr offset [0x%x], space used = %d," \
@@ -249,23 +206,10 @@ HSAPacketProcessor::updateReadIndex(int pid, uint32_t rl_idx)
     }
 }
 
-HSAPacketProcessor::CmdQueueCmdDmaEvent::
-CmdQueueCmdDmaEvent(HSAPacketProcessor *_hsaPP, int _pid, bool _isRead,
-                    uint32_t _ix_start, unsigned _num_pkts,
-                    dma_series_ctx *_series_ctx, void *_dest_4debug)
-    : Event(Default_Pri, AutoDelete), hsaPP(_hsaPP), pid(_pid), isRead(_isRead),
-      ix_start(_ix_start), num_pkts(_num_pkts), series_ctx(_series_ctx),
-      dest_4debug(_dest_4debug)
-{
-    setFlags(AutoDelete);
-
-    DPRINTF(HSAPacketProcessor, "%s, ix = %d, npkts = %d," \
-            "active list ID = %d\n", __FUNCTION__,
-            _ix_start, num_pkts, series_ctx->rl_idx);
-}
-
 void
-HSAPacketProcessor::CmdQueueCmdDmaEvent::process()
+HSAPacketProcessor::cmdQueueCmdDma(HSAPacketProcessor *hsaPP, int pid,
+    bool isRead, uint32_t ix_start, unsigned num_pkts,
+    dma_series_ctx *series_ctx, void *dest_4debug)
 {
     uint32_t rl_idx = series_ctx->rl_idx;
     GEM5_VAR_USED AQLRingBuffer *aqlRingBuffer =
@@ -385,10 +329,12 @@ HSAPacketProcessor::processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr)
                     if (*signal_val != 0) {
                         // This signal is not yet ready, read it again
                         isReady = false;
-                        DepSignalsReadDmaEvent *sgnl_rd_evnt =
-                            new DepSignalsReadDmaEvent(dep_sgnl_rd_st);
+
+                        auto cb = new DmaVirtCallback<int64_t>(
+                            [ = ] (const uint32_t &dma_data)
+                                { dep_sgnl_rd_st->handleReadDMA(); }, 0);
                         dmaReadVirt(signal_addr, sizeof(hsa_signal_value_t),
-                                    sgnl_rd_evnt, signal_val);
+                                    cb, signal_val);
                         dep_sgnl_rd_st->pendingReads++;
                         DPRINTF(HSAPacketProcessor, "%s: Pending reads %d," \
                             " active list %d\n", __FUNCTION__,
@@ -397,10 +343,11 @@ HSAPacketProcessor::processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr)
                 } else {
                     // This signal is not yet ready, read it again
                     isReady = false;
-                    DepSignalsReadDmaEvent *sgnl_rd_evnt =
-                        new DepSignalsReadDmaEvent(dep_sgnl_rd_st);
+                    auto cb = new DmaVirtCallback<int64_t>(
+                        [ = ] (const uint32_t &dma_data)
+                            { dep_sgnl_rd_st->handleReadDMA(); }, 0);
                     dmaReadVirt(signal_addr, sizeof(hsa_signal_value_t),
-                                sgnl_rd_evnt, signal_val);
+                                cb, signal_val);
                     dep_sgnl_rd_st->pendingReads++;
                     DPRINTF(HSAPacketProcessor, "%s: Pending reads %d," \
                         " active list %d\n", __FUNCTION__,
@@ -582,18 +529,19 @@ HSAPacketProcessor::getCommandsFromHost(int pid, uint32_t rl_idx)
         }
 
         void *aql_buf = aqlRingBuffer->ptr(dma_start_ix);
-        CmdQueueCmdDmaEvent *dmaEvent
-            = new CmdQueueCmdDmaEvent(this, pid, true, dma_start_ix,
-                                      num_2_xfer, series_ctx, aql_buf);
-        DPRINTF(HSAPacketProcessor,
-                "%s: aql_buf = %p, umq_nxt = %d, dma_ix = %d, num2xfer = %d\n",
-                __FUNCTION__, aql_buf, umq_nxt, dma_start_ix, num_2_xfer);
-
+        auto cb = new DmaVirtCallback<uint64_t>(
+            [ = ] (const uint32_t &dma_data)
+                { this->cmdQueueCmdDma(this, pid, true, dma_start_ix,
+                                num_2_xfer, series_ctx, aql_buf); }, 0);
         dmaReadVirt(qDesc->ptr(umq_nxt), num_2_xfer * qDesc->objSize(),
-                    dmaEvent, aql_buf);
+                    cb, aql_buf);
 
         aqlRingBuffer->saveHostDispAddr(qDesc->ptr(umq_nxt), num_2_xfer,
                                         dma_start_ix);
+
+        DPRINTF(HSAPacketProcessor,
+                "%s: aql_buf = %p, umq_nxt = %d, dma_ix = %d, num2xfer = %d\n",
+                __FUNCTION__, aql_buf, umq_nxt, dma_start_ix, num_2_xfer);
 
         num_umq -= num_2_xfer;
         got_aql_buf -= num_2_xfer;

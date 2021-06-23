@@ -32,6 +32,7 @@ SimObject('Device.py')
 Source('io_device.cc')
 Source('isa_fake.cc')
 Source('dma_device.cc')
+Source('dma_virt_device.cc')
 
 SimObject('IntPin.py')
 Source('intpin.cc')

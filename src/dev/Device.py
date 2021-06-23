@@ -108,6 +108,12 @@ class DmaDevice(PioDevice):
             node.append(FdtPropertyWords("iommus",
                 [ state.phandle(self._iommu), self.sid ]))
 
+class DmaVirtDevice(DmaDevice):
+    type = 'DmaVirtDevice'
+    cxx_header = "dev/dma_virt_device.hh"
+    cxx_class = 'gem5::DmaVirtDevice'
+    abstract = True
+
 class IsaFake(BasicPioDevice):
     type = 'IsaFake'
     cxx_header = "dev/isa_fake.hh"

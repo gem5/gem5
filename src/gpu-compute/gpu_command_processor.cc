@@ -48,7 +48,8 @@ namespace gem5
 {
 
 GPUCommandProcessor::GPUCommandProcessor(const Params &p)
-    : DmaDevice(p), dispatcher(*p.dispatcher), _driver(nullptr), hsaPP(p.hsapp)
+    : DmaVirtDevice(p), dispatcher(*p.dispatcher), _driver(nullptr),
+      hsaPP(p.hsapp)
 {
     assert(hsaPP);
     hsaPP->setDevice(this);
@@ -59,47 +60,6 @@ HSAPacketProcessor&
 GPUCommandProcessor::hsaPacketProc()
 {
     return *hsaPP;
-}
-
-void
-GPUCommandProcessor::dmaReadVirt(Addr host_addr, unsigned size,
-                                 DmaCallback *cb, void *data, Tick delay)
-{
-    dmaVirt(&DmaDevice::dmaRead, host_addr, size, cb, data, delay);
-}
-
-void
-GPUCommandProcessor::dmaWriteVirt(Addr host_addr, unsigned size,
-                                  DmaCallback *cb, void *data, Tick delay)
-{
-    dmaVirt(&DmaDevice::dmaWrite, host_addr, size, cb, data, delay);
-}
-
-void
-GPUCommandProcessor::dmaVirt(DmaFnPtr dmaFn, Addr addr, unsigned size,
-                             DmaCallback *cb, void *data, Tick delay)
-{
-    if (size == 0) {
-        if (cb)
-            schedule(cb->getChunkEvent(), curTick() + delay);
-        return;
-    }
-
-    // move the buffer data pointer with the chunks
-    uint8_t *loc_data = (uint8_t*)data;
-
-    for (ChunkGenerator gen(addr, size, PAGE_SIZE); !gen.done(); gen.next()) {
-        Addr phys;
-
-        // translate pages into their corresponding frames
-        translateOrDie(gen.addr(), phys);
-
-        Event *event = cb ? cb->getChunkEvent() : nullptr;
-
-        (this->*dmaFn)(phys, gen.size(), event, loc_data, delay);
-
-        loc_data += gen.size();
-    }
 }
 
 void
@@ -233,7 +193,7 @@ GPUCommandProcessor::updateHsaSignal(Addr signal_handle, uint64_t signal_value,
     Addr event_addr = getHsaSignalEventAddr(signal_handle);
     DPRINTF(GPUCommandProc, "Triggering completion signal: %x!\n", value_addr);
 
-    auto cb = new CPDmaCallback<uint64_t>(function, signal_value);
+    auto cb = new DmaVirtCallback<uint64_t>(function, signal_value);
 
     dmaWriteVirt(value_addr, sizeof(Addr), cb, &cb->dmaBuffer, 0);
 
@@ -372,7 +332,7 @@ GPUCommandProcessor::signalWakeupEvent(uint32_t event_id)
 void
 GPUCommandProcessor::initABI(HSAQueueEntry *task)
 {
-    auto cb = new CPDmaCallback<uint32_t>(
+    auto cb = new DmaVirtCallback<uint32_t>(
         [ = ] (const uint32_t &readDispIdOffset)
             { ReadDispIdOffsetDmaEvent(task, readDispIdOffset); }, 0);
 

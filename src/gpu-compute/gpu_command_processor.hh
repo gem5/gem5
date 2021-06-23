@@ -52,7 +52,7 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/GPUCommandProc.hh"
-#include "dev/dma_device.hh"
+#include "dev/dma_virt_device.hh"
 #include "dev/hsa/hsa_packet_processor.hh"
 #include "dev/hsa/hsa_signal.hh"
 #include "gpu-compute/dispatcher.hh"
@@ -68,7 +68,7 @@ class GPUComputeDriver;
 class GPUDispatcher;
 class Shader;
 
-class GPUCommandProcessor : public DmaDevice
+class GPUCommandProcessor : public DmaVirtDevice
 {
   public:
     typedef GPUCommandProcessorParams Params;
@@ -78,11 +78,6 @@ class GPUCommandProcessor : public DmaDevice
     GPUCommandProcessor(const Params &p);
 
     HSAPacketProcessor& hsaPacketProc();
-
-    void dmaReadVirt(Addr host_addr, unsigned size, DmaCallback *cb,
-                     void *data, Tick delay = 0);
-    void dmaWriteVirt(Addr host_addr, unsigned size, DmaCallback *b,
-                      void *data, Tick delay = 0);
 
     void setShader(Shader *shader);
     Shader* shader();
@@ -140,35 +135,7 @@ class GPUCommandProcessor : public DmaDevice
     typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event*, uint8_t*, Tick);
     void initABI(HSAQueueEntry *task);
     HSAPacketProcessor *hsaPP;
-    void dmaVirt(DmaFnPtr, Addr host_addr, unsigned size, DmaCallback *cb,
-                 void *data, Tick delay = 0);
     void translateOrDie(Addr vaddr, Addr &paddr);
-
-    /**
-     * Wraps a std::function object in a DmaCallback.  Much cleaner than
-     * defining a bunch of callback objects for each desired behavior when a
-     * DMA completes.  Contains a built in templated buffer that can be used
-     * for DMA temporary storage.
-     */
-    template <class T>
-    class CPDmaCallback : public DmaCallback
-    {
-        std::function<void(const T &)> _function;
-
-        virtual void
-        process() override
-        {
-            _function(dmaBuffer);
-        }
-
-      public:
-        T dmaBuffer;
-
-        CPDmaCallback(const std::function<void(const T &)> &function,
-                      T dma_buffer_value = 0)
-          : DmaCallback(), _function(function), dmaBuffer(dma_buffer_value)
-        { }
-    };
 
     /**
      * Perform a DMA read of the read_dispatch_id_field_base_byte_offset
@@ -200,7 +167,7 @@ class GPUCommandProcessor : public DmaDevice
          * DMA a copy of the MQD into the task. some fields of
          * the MQD will be used to initialize register state in VI
          */
-        auto *mqdDmaEvent = new CPDmaCallback<int>(
+        auto *mqdDmaEvent = new DmaVirtCallback<int>(
             [ = ] (const int &) { MQDDmaEvent(task); });
 
         dmaReadVirt(task->hostAMDQueueAddr,
@@ -282,7 +249,7 @@ class GPUCommandProcessor : public DmaDevice
             * TODO: Technically only need to update private segment fields
             * since other MQD entries won't change since we last read them.
             */
-            auto cb = new CPDmaCallback<int>(
+            auto cb = new DmaVirtCallback<int>(
                 [ = ] (const int &) { MQDDmaEvent(task); });
 
             dmaReadVirt(task->hostAMDQueueAddr, sizeof(_amd_queue_t), cb,
@@ -296,7 +263,7 @@ class GPUCommandProcessor : public DmaDevice
                 task->amdQueue.queue_inactive_signal.handle);
             DPRINTF(GPUCommandProc, "Polling queue inactive signal at "
                     "%p.\n", value_addr);
-            auto cb = new CPDmaCallback<uint64_t>(
+            auto cb = new DmaVirtCallback<uint64_t>(
                 [ = ] (const uint64_t &dma_buffer)
                 { WaitScratchDmaEvent(task, dma_buffer); } );
             dmaReadVirt(value_addr, sizeof(Addr), cb, &cb->dmaBuffer);

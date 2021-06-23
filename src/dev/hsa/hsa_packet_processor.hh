@@ -39,7 +39,7 @@
 #include <vector>
 
 #include "base/types.hh"
-#include "dev/dma_device.hh"
+#include "dev/dma_virt_device.hh"
 #include "dev/hsa/hsa.h"
 #include "dev/hsa/hsa_queue.hh"
 #include "params/HSAPacketProcessor.hh"
@@ -221,7 +221,7 @@ struct QCntxt
     QCntxt() : qDesc(NULL), aqlBuf(NULL), barrierBit(false) {}
 };
 
-class HSAPacketProcessor: public DmaDevice
+class HSAPacketProcessor: public DmaVirtDevice
 {
     friend class HWScheduler;
   protected:
@@ -290,15 +290,6 @@ class HSAPacketProcessor: public DmaDevice
     // Keeps track of queueDescriptors of registered queues
     std::vector<class RQLEntry *> regdQList;
 
-    void translateOrDie(Addr vaddr, Addr &paddr);
-    void dmaVirt(DmaFnPtr, Addr host_addr, unsigned size, Event *event,
-                 void *data, Tick delay = 0);
-
-    void dmaReadVirt(Addr host_addr, unsigned size, Event *event,
-                     void *data, Tick delay = 0);
-
-    void dmaWriteVirt(Addr host_addr, unsigned size, Event *event,
-                      void *data, Tick delay = 0);
     Q_STATE processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr);
     void displayQueueDescriptor(int pid, uint32_t rl_idx);
 
@@ -330,6 +321,7 @@ class HSAPacketProcessor: public DmaDevice
     typedef HSAPacketProcessorParams Params;
     HSAPacketProcessor(const Params &p);
     ~HSAPacketProcessor();
+    void translateOrDie(Addr vaddr, Addr &paddr) override;
     void setDeviceQueueDesc(uint64_t hostReadIndexPointer,
                             uint64_t basePointer,
                             uint64_t queue_id,
@@ -352,33 +344,6 @@ class HSAPacketProcessor: public DmaDevice
                                            hsa_signal_value_t signal);
     void sendCompletionSignal(hsa_signal_value_t signal);
 
-    class DepSignalsReadDmaEvent : public Event
-    {
-      protected:
-        SignalState *signalState;
-      public:
-        DepSignalsReadDmaEvent(SignalState *ss)
-            : Event(Default_Pri, AutoDelete), signalState(ss)
-        {}
-        virtual void process() { signalState->handleReadDMA(); }
-        virtual const char *description() const;
-    };
-
-    /**
-     * this event is used to update the read_disp_id field (the read pointer)
-     * of the MQD, which is how the host code knows the status of the HQD's
-     * read pointer
-     */
-    class UpdateReadDispIdDmaEvent : public Event
-    {
-      public:
-        UpdateReadDispIdDmaEvent();
-
-        void process() override { }
-        const char *description() const override;
-
-    };
-
     /**
      * Calls getCurrentEntry once the queueEntry has been dmaRead.
      */
@@ -400,24 +365,11 @@ class HSAPacketProcessor: public DmaDevice
         ~dma_series_ctx() {};
     };
 
-    class CmdQueueCmdDmaEvent : public Event
-    {
-      protected:
-        HSAPacketProcessor *hsaPP;
-        int pid;
-        bool isRead;
-        uint32_t ix_start;
-        uint num_pkts;
-        dma_series_ctx *series_ctx;
-        void *dest_4debug;
-
-      public:
-        CmdQueueCmdDmaEvent(HSAPacketProcessor *hsaPP, int pid, bool isRead,
-                            uint32_t dma_buf_ix, uint num_bufs,
-                            dma_series_ctx *series_ctx, void *dest_4debug);
-        virtual void process();
-        virtual const char *description() const;
-    };
+    void updateReadDispIdDma();
+    void cmdQueueCmdDma(HSAPacketProcessor *hsaPP, int pid, bool isRead,
+            uint32_t ix_start, unsigned num_pkts,
+            dma_series_ctx *series_ctx, void *dest_4debug);
+    void handleReadDMA();
 };
 
 } // namespace gem5
