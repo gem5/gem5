@@ -6,3 +6,4 @@ dist/
 *.egg-info/
 .vscode/
 .mypy_cache/
+/run/results/**
