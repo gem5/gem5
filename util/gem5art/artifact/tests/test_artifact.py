@@ -92,7 +92,7 @@ class TestGit(unittest.TestCase):
     def test_origin(self):
         git = artifact.artifact.getGit(Path("."))
         self.assertTrue(
-            git["origin"].endswith("gem5art"), "Origin should end with gem5art"
+            git["origin"].endswith("gem5"), "Origin should end with gem5art"
         )
 
 
