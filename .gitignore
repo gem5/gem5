@@ -30,3 +30,4 @@ m5out
 /system/arm/bootloader/arm64/boot_v2.arm64
 configs/example/memcheck.cfg
 configs/dram/lowp_sweep.cfg
+.pyenv

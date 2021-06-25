@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2018 The Regents of the University of California
+# Copyright (c) 2021 The Regents of the University of California
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -37,35 +37,33 @@
 
 set -e
 
-DOCKER_IMAGE_ALL_DEP=gcr.io/gem5-test/ubuntu-20.04_all-dependencies
-DOCKER_IMAGE_CLANG_COMPILE=gcr.io/gem5-test/clang-version-9
-PRESUBMIT_STAGE2=tests/jenkins/presubmit-stage2.sh
-GEM5ART_TESTS=tests/jenkins/gem5art-tests.sh
+# Creating a virtual environment allows us to cleanly install the packages
+# within a Docker container.
+mkdir -p .pyenv
+python3 -m venv .pyenv
+source .pyenv/bin/activate
 
-# Move the docker base directory to tempfs.
-sudo /etc/init.d/docker stop
-sudo mv /var/lib/docker /tmpfs/
-sudo ln -s /tmpfs/docker /var/lib/docker
-sudo /etc/init.d/docker start
+# The 18.04_all-depenencies image has an outdated version of setuptools. We
+# update it here. Attempts to fix this via the Dockerfile have been
+# unsuccessful.
+pip install -U setuptools
 
-# Move the CWD to the gem5 checkout.
-cd git/jenkins-gem5-prod/
+# Install the packages
+pip install -e util/gem5art/artifact
+pip install -e util/gem5art/run
+pip install -e util/gem5art/tasks
 
-#  Using a docker image with all the dependencies, we run the gem5art tests.
-docker run -u $UID:$GID --volume $(pwd):$(pwd) -w $(pwd) --rm \
-    "${DOCKER_IMAGE_ALL_DEP}" "${GEM5ART_TESTS}"
+# Run the gem5art artificat tests.
+cd util/gem5art/artifact
+python3 -m unittest
+mypy -p gem5art.artifact
 
-#  Using a docker image with all the dependencies, we run the presubmit tests.
-docker run -u $UID:$GID --volume $(pwd):$(pwd) -w $(pwd) --rm \
-    "${DOCKER_IMAGE_ALL_DEP}" "${PRESUBMIT_STAGE2}"
+# Run the gem5art run tests.
+cd ../run
+python3 -m unittest
+mypy -p gem5art.run
 
-# DOCKER_IMAGE_ALL_DEP compiles gem5.opt with GCC. We run a compilation of
-# gem5.fast on the Clang compiler to ensure changes are compilable with the
-# clang compiler. Due to the costs of compilation, we only compile
-# ARM_MESI_Three_Level_HTM at this point. Further compiler tests are carried
-# out as part of our weekly "Compiler Checks" tests:
-# http://jenkins.gem5.org/job/Compiler-Checks.
-rm -rf build
-docker run -u $UID:$GID --volume $(pwd):$(pwd) -w $(pwd) --rm \
-    "${DOCKER_IMAGE_CLANG_COMPILE}" /usr/bin/env python3 /usr/bin/scons \
-    build/ARM_MESI_Three_Level_HTM/gem5.fast -j4 --no-compress-debug
+# Run the gem5art task tests.
+cd ../tasks
+python3 -m unittest
+mypy -p gem5art.tasks
