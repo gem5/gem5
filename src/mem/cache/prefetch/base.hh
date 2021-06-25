@@ -52,6 +52,7 @@
 #include "base/compiler.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
+#include "mem/cache/cache_blk.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
@@ -328,6 +329,9 @@ class Base : public ClockedObject
     {
         StatGroup(statistics::Group *parent);
         statistics::Scalar pfIssued;
+        /** The number of times a HW-prefetched block is evicted w/o
+         * reference. */
+        statistics::Scalar pfUnused;
     } prefetchStats;
 
     /** Total prefetches issued */
@@ -358,6 +362,11 @@ class Base : public ClockedObject
 
     virtual Tick nextPrefetchReadyTime() const = 0;
 
+    void
+    prefetchUnused()
+    {
+        prefetchStats.pfUnused++;
+    }
 
     /**
      * Register probe points for this object.

@@ -1570,7 +1570,7 @@ BaseCache::invalidateBlock(CacheBlk *blk)
 {
     // If block is still marked as prefetched, then it hasn't been used
     if (blk->wasPrefetched()) {
-        stats.unusedPrefetches++;
+        prefetcher->prefetchUnused();
     }
 
     // Notify that the data contents for this address are no longer present
@@ -2126,9 +2126,8 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     ADD_STAT(avgBlocked, statistics::units::Rate<
                 statistics::units::Cycle, statistics::units::Count>::get(),
              "average number of cycles each access was blocked"),
-    ADD_STAT(unusedPrefetches, statistics::units::Count::get(),
-             "number of HardPF blocks evicted w/o reference"),
-    ADD_STAT(writebacks, statistics::units::Count::get(), "number of writebacks"),
+    ADD_STAT(writebacks, statistics::units::Count::get(),
+             "number of writebacks"),
     ADD_STAT(demandMshrHits, statistics::units::Count::get(),
              "number of demand (read+write) MSHR hits"),
     ADD_STAT(overallMshrHits, statistics::units::Count::get(),
@@ -2286,8 +2285,6 @@ BaseCache::CacheStats::regStats()
         .subname(Blocked_NoTargets, "no_targets")
         ;
     avgBlocked = blockedCycles / blockedCauses;
-
-    unusedPrefetches.flags(nozero);
 
     writebacks
         .init(max_requestors)

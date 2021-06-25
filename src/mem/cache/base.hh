@@ -1084,10 +1084,6 @@ class BaseCache : public ClockedObject
         /** The average number of cycles blocked for each blocked cause. */
         statistics::Formula avgBlocked;
 
-        /** The number of times a HW-prefetched block is evicted w/o
-         * reference. */
-        statistics::Scalar unusedPrefetches;
-
         /** Number of blocks written back per thread. */
         statistics::Vector writebacks;
 

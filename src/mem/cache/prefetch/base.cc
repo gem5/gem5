@@ -120,8 +120,11 @@ Base::setCache(BaseCache *_cache)
 Base::StatGroup::StatGroup(statistics::Group *parent)
   : statistics::Group(parent),
     ADD_STAT(pfIssued, statistics::units::Count::get(),
-        "number of hwpf issued")
+        "number of hwpf issued"),
+    ADD_STAT(pfUnused, statistics::units::Count::get(),
+             "number of HardPF blocks evicted w/o reference")
 {
+    pfUnused.flags(statistics::nozero);
 }
 
 
