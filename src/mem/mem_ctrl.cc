@@ -520,7 +520,6 @@ MemCtrl::processRespondEvent()
         accessAndRespond(mem_pkt->pkt, frontendLatency + backendLatency);
     }
 
-    delete respQueue.front();
     respQueue.pop_front();
 
     if (!respQueue.empty()) {
@@ -542,6 +541,8 @@ MemCtrl::processRespondEvent()
             dram->checkRefreshState(mem_pkt->rank);
         }
     }
+
+    delete mem_pkt;
 
     // We have made a location in the queue available at this point,
     // so if there is a read that was forced to wait, retry now
