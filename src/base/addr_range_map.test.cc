@@ -40,6 +40,8 @@
 
 #include <gtest/gtest.h>
 
+#include <vector>
+
 #include "base/addr_range_map.hh"
 
 // Converted from legacy unit test framework
@@ -65,4 +67,90 @@ TEST(AddrRangeMapTest, LegacyTests)
     ASSERT_NE(i, r.end());
 
     EXPECT_NE(r.contains(RangeIn(20, 30)), r.end());
+}
+
+/**
+ * Test AddrRangeMap with interleaved address ranges defined by bitmasks.
+ * An AddrRangeMap containing a set of N interleaved address ranges,
+ * defined with the same start and end address, and including all possible
+ * intlvMatch values 0..N-1, must contain the start address.
+ * For N-way interleaving, log2(N) selection masks are needed.
+ * For N = 16, define the masks as follows,
+ *
+ * masks[0] = 1 << 6
+ * masks[1] = 1 << 7
+ * masks[2] = 1 << 8
+ * masks[3] = 1 << 9
+ *
+ */
+TEST(AddrRangeMapTest, InterleavedTest1)
+{
+    const auto N = 16;
+    const auto masks = std::vector<Addr>{
+        0x40,
+        0x80,
+        0x100,
+        0x200
+    };
+    const Addr start = 0x80000000;
+    const Addr end   = 0xc0000000;
+
+    AddrRangeMap<int> r;
+    AddrRangeMap<int>::const_iterator i;
+
+    // populate AddrRangeMap with N-way interleaved address ranges
+    // for all intlvMatch values 0..N-1
+    for (int k=0; k < N; k++) {
+        r.insert(AddrRange(start, end, masks, k), k);
+    }
+    // find AddrRange element containing start address
+    i = r.contains(start);
+    // i must not be the past-the-end iterator
+    ASSERT_NE(i, r.end()) << "start address not found in AddrRangeMap";
+    // intlvMatch = 0 for start = 0x80000000
+    EXPECT_EQ(i->second, 0);
+}
+
+/**
+ * Test AddrRangeMap with interleaved address ranges defined by bitmasks.
+ * An AddrRangeMap containing a set of N interleaved address ranges,
+ * defined with the same start and end address, and including all possible
+ * intlvMatch values 0..N-1, must contain the start address.
+ * For N-way interleaving, log2(N) selection masks are needed.
+ * For N = 16, define the masks as described in the
+ * CMN-600 Technical Reference Manual [1], section 2.17.3
+ *
+ * masks[0] = 1 << 6 | 1 << 10 | 1 << 14 | .. | 1 << 50
+ * masks[1] = 1 << 7 | 1 << 11 | 1 << 15 | .. | 1 << 51
+ * masks[2] = 1 << 8 | 1 << 12 | 1 << 16 | .. | 1 << 48
+ * masks[3] = 1 << 9 | 1 << 13 | 1 << 17 | .. | 1 << 49
+ *
+ * [1] https://developer.arm.com/documentation/100180/0302
+ */
+TEST(AddrRangeMapTest, InterleavedTest2)
+{
+    const auto N = 16;
+    const auto masks = std::vector<Addr>{
+        0x4444444444440,
+        0x8888888888880,
+        0x1111111111100,
+        0x2222222222200
+    };
+    const Addr start = 0x80000000;
+    const Addr end   = 0xc0000000;
+
+    AddrRangeMap<int> r;
+    AddrRangeMap<int>::const_iterator i;
+
+    // populate AddrRangeMap with N-way interleaved address ranges
+    // for all intlvMatch values 0..N-1
+    for (int k=0; k < N; k++) {
+        r.insert(AddrRange(start, end, masks, k), k);
+    }
+    // find AddrRange element containing start address
+    i = r.contains(start);
+    // i must not be the past-the-end iterator
+    ASSERT_NE(i, r.end()) << "start address not found in AddrRangeMap";
+    // intlvMatch = 2 for start = 0x80000000
+    EXPECT_EQ(i->second, 2);
 }

@@ -593,12 +593,19 @@ class AddrRange
      */
     bool operator<(const AddrRange& r) const
     {
-        if (_start != r._start)
+        if (_start != r._start) {
             return _start < r._start;
-        else
-            // for now assume that the end is also the same, and that
-            // we are looking at the same interleaving bits
-            return intlvMatch < r.intlvMatch;
+        } else {
+            // For now assume that the end is also the same.
+            // If both regions are interleaved, assume same interleaving,
+            // and compare intlvMatch values.
+            // Otherwise, return true if this address range is interleaved.
+            if (interleaved() && r.interleaved()) {
+                return intlvMatch < r.intlvMatch;
+            } else {
+                return interleaved();
+            }
+        }
     }
 
     /**
