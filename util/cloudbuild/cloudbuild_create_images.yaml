@@ -8,14 +8,14 @@ steps:
     - name: 'gcr.io/cloud-builders/docker'
       args: ['build',
             '-t',
-            'gcr.io/$PROJECT_ID/ubuntu-18.04_all-dependencies:latest',
-            'util/dockerfiles/ubuntu-18.04_all-dependencies']
+            'gcr.io/$PROJECT_ID/ubuntu-20.04_min-dependencies:latest',
+            'util/dockerfiles/ubuntu-20.04_min-dependencies']
 
     - name: 'gcr.io/cloud-builders/docker'
       args: ['build',
             '-t',
-            'gcr.io/$PROJECT_ID/ubuntu-18.04_min-dependencies:latest',
-            'util/dockerfiles/ubuntu-18.04_min-dependencies']
+            'gcr.io/$PROJECT_ID/ubuntu-18.04_all-dependencies:latest',
+            'util/dockerfiles/ubuntu-18.04_all-dependencies']
 
     - name: 'gcr.io/cloud-builders/docker'
       args: ['build',
@@ -108,8 +108,8 @@ steps:
             'util/dockerfiles/gcn-gpu']
 
 images: ['gcr.io/$PROJECT_ID/ubuntu-20.04_all-dependencies:latest',
+         'gcr.io/$PROJECT_ID/ubuntu-20.04_min-dependencies:latest',
          'gcr.io/$PROJECT_ID/ubuntu-18.04_all-dependencies:latest',
-         'gcr.io/$PROJECT_ID/ubuntu-18.04_min-dependencies:latest',
          'gcr.io/$PROJECT_ID/gcc-version-5:latest',
          'gcr.io/$PROJECT_ID/gcc-version-6:latest',
          'gcr.io/$PROJECT_ID/gcc-version-7:latest',
