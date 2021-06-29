@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # This script will run all our supported compilers (see the "images" set)
-# against gem5. The "ubuntu-20.04_all-dependencies" and "clang-version-9"
-# images are run against all built targets. The remainder are evaluated
+# against gem5. The images for the latests supported gcc and clang compiler
+# versions are run against all built targets. The remainder are evaluated
 # against a random shuffling of built targets.
 
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
