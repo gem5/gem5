@@ -37,9 +37,12 @@ comprehensive=("gcc-version-10"
 # All build targets in build_opt/ which we want to build using each image.
 builds=("ARM"
         "ARM_MESI_Three_Level"
+        "ARM_MESI_Three_Level_HTM"
+        "ARM_MOESI_hammer"
         "Garnet_standalone"
         "GCN3_X86"
         "MIPS"
+        "NULL"
         "NULL_MESI_Two_Level"
         "NULL_MOESI_CMP_directory"
         "NULL_MOESI_CMP_token"
@@ -48,6 +51,7 @@ builds=("ARM"
         "RISCV"
         "SPARC"
         "X86"
+        "X86_MESI_Two_Level"
         "X86_MOESI_AMD_Base")
 
 # The optimizations to use for each build target.
