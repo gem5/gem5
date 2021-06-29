@@ -218,11 +218,13 @@ TLB::unserialize(CheckpointIn &cp)
 Fault
 TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
 {
+    Addr vaddr = req->getVaddr();
+
     // Instruction accesses must be word-aligned
-    if (req->getVaddr() & 0x3) {
-        DPRINTF(TLB, "Alignment Fault on %#x, size = %d\n", req->getVaddr(),
+    if (vaddr & 0x3) {
+        DPRINTF(TLB, "Alignment Fault on %#x, size = %d\n", vaddr,
                 req->getSize());
-        return std::make_shared<AlignmentFault>();
+        return std::make_shared<AlignmentFault>(vaddr);
     }
 
     return tc->getProcessPtr()->pTable->translate(req);

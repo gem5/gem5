@@ -575,7 +575,6 @@ def format IntTrapOp(src1, src2, inst_flags = []) {{
     code  = 'int64_t src1 = ' + src1 + ';\n'
     code += 'int64_t src2 = ' + src2 + ';\n'
     code += 'if (checkTrap(src1, src2)) {\n'
-    code += '    panic("trap generated at %#x", xc->pcState().pc());\n'
     code += '    return std::make_shared<TrapFault>();\n'
     code += '}\n'
 
@@ -590,7 +589,6 @@ def format IntImmTrapOp(src, inst_flags = []) {{
     # Add code to set up variables and check for a trap
     code  = 'int64_t src = ' + src + ';\n'
     code += 'if (checkTrap(src, si)) {\n'
-    code += '    panic("trap generated at %#x", xc->pcState().pc());\n'
     code += '    return std::make_shared<TrapFault>();\n'
     code += '}\n'
 

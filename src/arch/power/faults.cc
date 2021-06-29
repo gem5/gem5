@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
- * Copyright (c) 2009 The University of Edinburgh
+ * Copyright (c) 2021 IBM Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,10 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_POWER_FAULTS_HH__
-#define __ARCH_POWER_FAULTS_HH__
+#include "arch/power/faults.hh"
 
-#include "sim/faults.hh"
+#include <csignal>
+
+#include "cpu/base.hh"
+#include "cpu/thread_context.hh"
 
 namespace gem5
 {
@@ -38,75 +39,29 @@ namespace gem5
 namespace PowerISA
 {
 
-class PowerFault : public FaultBase
+void
+UnimplementedOpcodeFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-  protected:
-    FaultName _name;
+    panic_if(tc->getSystemPtr()->trapToGdb(SIGILL, tc->contextId()),
+             "Unimplemented opcode encountered at virtual address %#x\n",
+             tc->pcState().pc());
+}
 
-    PowerFault(FaultName name)
-        : _name(name)
-    {
-    }
-
-    FaultName
-    name() const
-    {
-        return _name;
-    }
-};
-
-
-class UnimplementedOpcodeFault : public PowerFault
+void
+AlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-  public:
-    UnimplementedOpcodeFault()
-        : PowerFault("Unimplemented Opcode")
-    {
-    }
+    panic_if(!tc->getSystemPtr()->trapToGdb(SIGBUS, tc->contextId()),
+             "Alignment fault when accessing virtual address %#x\n", vaddr);
+}
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
-};
-
-
-class MachineCheckFault : public PowerFault
+void
+TrapFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-  public:
-    MachineCheckFault()
-        : PowerFault("Machine Check")
-    {
-    }
-};
-
-
-class AlignmentFault : public PowerFault
-{
-  private:
-    Addr vaddr;
-  public:
-    AlignmentFault(Addr va)
-        : PowerFault("Alignment"), vaddr(va)
-    {
-    }
-
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
-};
-
-
-class TrapFault : public PowerFault
-{
-  public:
-    TrapFault()
-        : PowerFault("Trap")
-    {
-    }
-
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
-};
+    panic_if(tc->getSystemPtr()->trapToGdb(SIGTRAP, tc->contextId()),
+             "Trap encountered at virtual address %#x\n",
+             tc->pcState().pc());
+}
 
 } // namespace PowerISA
-} // namespace gem5
 
-#endif // __ARCH_POWER_FAULTS_HH__
+} // namespace gem5
