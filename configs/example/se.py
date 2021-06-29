@@ -264,8 +264,7 @@ else:
 system.workload = SEWorkload.init_compatible(mp0_path)
 
 if args.wait_gdb:
-    for cpu in system.cpu:
-        cpu.wait_for_remote_gdb = True
+    system.workload.wait_for_remote_gdb = True
 
 root = Root(full_system = False, system = system)
 Simulation.run(args, root, system, FutureClass)

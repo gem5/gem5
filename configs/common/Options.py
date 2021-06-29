@@ -455,7 +455,7 @@ def addSEOptions(parser):
                         "to be used in syscall emulation."
                         "Usage: gem5.opt [...] --redirects /dir1=/path/"
                         "to/host/dir1 --redirects /dir2=/path/to/host/dir2")
-    parser.add_argument("--wait-gdb", default=False,
+    parser.add_argument("--wait-gdb", default=False, action='store_true',
                         help="Wait for remote GDB to connect.")
 
 
