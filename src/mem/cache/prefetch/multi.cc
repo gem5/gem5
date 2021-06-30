@@ -77,6 +77,8 @@ Multi::getPacket()
         if (pf->nextPrefetchReadyTime() <= curTick()) {
             PacketPtr pkt = pf->getPacket();
             panic_if(!pkt, "Prefetcher is ready but didn't return a packet.");
+            prefetchStats.pfIssued++;
+            issuedPrefetches++;
             return pkt;
         }
     }
