@@ -119,6 +119,8 @@ Base::setCache(BaseCache *_cache)
 
 Base::StatGroup::StatGroup(statistics::Group *parent)
   : statistics::Group(parent),
+    ADD_STAT(demandMshrMisses, statistics::units::Count::get(),
+        "demands not covered by prefetchs"),
     ADD_STAT(pfIssued, statistics::units::Count::get(),
         "number of hwpf issued"),
     ADD_STAT(pfUnused, statistics::units::Count::get(),
@@ -127,11 +129,22 @@ Base::StatGroup::StatGroup(statistics::Group *parent)
         "number of useful prefetch"),
     ADD_STAT(pfUsefulButMiss, statistics::units::Count::get(),
         "number of hit on prefetch but cache block is not in an usable "
-        "state")
+        "state"),
+    ADD_STAT(accuracy, statistics::units::Count::get(),
+        "accuracy of the prefetcher"),
+    ADD_STAT(coverage, statistics::units::Count::get(),
+    "coverage brought by this prefetcher")
 {
-    pfUnused.flags(statistics::nozero);
-}
+    using namespace statistics;
 
+    pfUnused.flags(nozero);
+
+    accuracy.flags(total);
+    accuracy = pfUseful / pfIssued;
+
+    coverage.flags(total);
+    coverage = pfUseful / (pfUseful + demandMshrMisses);
+}
 
 bool
 Base::observeAccess(const PacketPtr &pkt, bool miss) const

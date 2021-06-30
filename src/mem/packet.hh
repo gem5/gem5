@@ -247,6 +247,14 @@ class MemCmd
     bool isPrint() const        { return testCmdAttrib(IsPrint); }
     bool isFlush() const        { return testCmdAttrib(IsFlush); }
 
+    bool
+    isDemand() const
+    {
+        return (cmd == ReadReq || cmd == WriteReq ||
+                cmd == WriteLineReq || cmd == ReadExReq ||
+                cmd == ReadCleanReq || cmd == ReadSharedReq);
+    }
+
     Command
     responseCommand() const
     {
@@ -573,6 +581,7 @@ class Packet : public Printable
 
     bool isRead() const              { return cmd.isRead(); }
     bool isWrite() const             { return cmd.isWrite(); }
+    bool isDemand() const            { return cmd.isDemand(); }
     bool isUpgrade()  const          { return cmd.isUpgrade(); }
     bool isRequest() const           { return cmd.isRequest(); }
     bool isResponse() const          { return cmd.isResponse(); }

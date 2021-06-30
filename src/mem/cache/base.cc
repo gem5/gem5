@@ -308,6 +308,8 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
         // no MSHR
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
+        if (prefetcher && pkt->isDemand())
+            prefetcher->incrDemandMhsrMisses();
 
         if (pkt->isEviction() || pkt->cmd == MemCmd::WriteClean) {
             // We use forward_time here because there is an

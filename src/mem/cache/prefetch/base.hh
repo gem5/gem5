@@ -328,6 +328,7 @@ class Base : public ClockedObject
     struct StatGroup : public statistics::Group
     {
         StatGroup(statistics::Group *parent);
+        statistics::Scalar demandMshrMisses;
         statistics::Scalar pfIssued;
         /** The number of times a HW-prefetched block is evicted w/o
          * reference. */
@@ -337,6 +338,8 @@ class Base : public ClockedObject
         /** The number of times there is a hit on prefetch but cache block
          * is not in an usable state */
         statistics::Scalar pfUsefulButMiss;
+        statistics::Formula accuracy;
+        statistics::Formula coverage;
     } prefetchStats;
 
     /** Total prefetches issued */
@@ -371,6 +374,12 @@ class Base : public ClockedObject
     prefetchUnused()
     {
         prefetchStats.pfUnused++;
+    }
+
+    void
+    incrDemandMhsrMisses()
+    {
+        prefetchStats.demandMshrMisses++;
     }
 
     /**
