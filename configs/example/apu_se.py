@@ -189,7 +189,9 @@ parser.add_argument("--m-type", type=int, default=5,
                     "between 0-7")
 
 parser.add_argument("--gfx-version", type=str, default='gfx801',
-                    help="Gfx version for gpu: gfx801, gfx803, gfx900")
+                    choices=GfxVersion.vals,
+                    help="Gfx version for gpu"
+                    "Note: gfx902 is not fully supported by ROCm")
 
 Ruby.define_options(parser)
 
@@ -683,7 +685,7 @@ if args.dgpu:
     elif args.gfx_version == 'gfx900':
         hsaTopology.createVegaTopology(args)
 else:
-    assert (args.gfx_version in ['gfx801']),\
+    assert (args.gfx_version in ['gfx801', 'gfx902']),\
             "Incorrect gfx version for APU"
     hsaTopology.createCarrizoTopology(args)
 

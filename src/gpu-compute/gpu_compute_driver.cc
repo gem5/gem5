@@ -351,6 +351,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     break;
                   case GfxVersion::gfx803:
                   case GfxVersion::gfx900:
+                  case GfxVersion::gfx902:
                     // Taken from SVM_USE_BASE in Linux kernel
                     args->process_apertures[i].gpuvm_base = 0x1000000ull;
                     // Taken from AMDGPU_GMC_HOLE_START in Linux kernel
@@ -384,6 +385,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 } else {
                     switch (gfxVersion) {
                       case GfxVersion::gfx801:
+                      case GfxVersion::gfx902:
                         args->process_apertures[i].gpu_id = 2765;
                         break;
                       default:
@@ -644,6 +646,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     break;
                   case GfxVersion::gfx803:
                   case GfxVersion::gfx900:
+                  case GfxVersion::gfx902:
                     // Taken from SVM_USE_BASE in Linux kernel
                     ape_args->gpuvm_base = 0x1000000ull;
                     // Taken from AMDGPU_GMC_HOLE_START in Linux kernel
@@ -668,6 +671,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 } else {
                     switch (gfxVersion) {
                       case GfxVersion::gfx801:
+                      case GfxVersion::gfx902:
                         ape_args->gpu_id = 2765;
                         break;
                       default:
@@ -717,7 +721,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             TypedBufferArg<kfd_ioctl_alloc_memory_of_gpu_args> args(ioc_buf);
             args.copyIn(virt_proxy);
 
-            assert(isdGPU);
+            assert(isdGPU || gfxVersion == GfxVersion::gfx902);
             assert((args->va_addr % TheISA::PageBytes) == 0);
             GEM5_VAR_USED Addr mmap_offset = 0;
 

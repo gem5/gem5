@@ -90,8 +90,10 @@ class GPUComputeDriver final : public EmulatedDriver
         switch (gfxVersion) {
           case GfxVersion::gfx801:
           case GfxVersion::gfx803:
+          case GfxVersion::gfx902:
             return 4;
           case GfxVersion::gfx900:
+            // gfx900 supports large BAR, so it has a larger doorbell
             return 8;
           default:
             fatal("Invalid GPU type\n");

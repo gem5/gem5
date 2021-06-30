@@ -52,6 +52,7 @@ class GfxVersion(ScopedEnum): vals = [
     'gfx801',
     'gfx803',
     'gfx900',
+    'gfx902',
     ]
 
 class PoolManager(SimObject):

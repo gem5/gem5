@@ -434,13 +434,18 @@ def createCarrizoTopology(options):
     # must show valid kaveri gpu id or massive meltdown
     file_append((node_dir, 'gpu_id'), 2765)
 
+    gfx_dict = { "gfx801": {"name": "Carrizo\n", "id": 39028},
+                 "gfx902": {"name": "Raven\n", "id": 5597}}
+
     # must have marketing name
-    file_append((node_dir, 'name'), 'Carrizo\n')
+    file_append((node_dir, 'name'), gfx_dict[options.gfx_version]["name"])
 
     mem_banks_cnt = 1
 
     # Should be the same as the render driver filename (dri/renderD<drm_num>)
     drm_num = 128
+
+    device_id = gfx_dict[options.gfx_version]["id"]
 
     # populate global node properties
     # NOTE: SIMD count triggers a valid GPU agent creation
@@ -462,7 +467,7 @@ def createCarrizoTopology(options):
                 'simd_per_cu %s\n' % options.simds_per_cu                   + \
                 'max_slots_scratch_cu 32\n'                                 + \
                 'vendor_id 4098\n'                                          + \
-                'device_id 39028\n'                                         + \
+                'device_id %s\n' % device_id                                + \
                 'location_id 8\n'                                           + \
                 'drm_render_minor %s\n' % drm_num                           + \
                 'max_engine_clk_fcompute %s\n'                                \
