@@ -380,6 +380,8 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         ppHit->notify(pkt);
 
         if (prefetcher && blk && blk->wasPrefetched()) {
+            DPRINTF(Cache, "Hit on prefetch for addr %#x (%s)\n",
+                    pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
             blk->clearPrefetched();
         }
 
