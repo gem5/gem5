@@ -284,7 +284,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 234, "tgkill", tgkillFunc<X86Linux64> },
     { 235, "utimes" },
     { 236, "vserver" },
-    { 237, "mbind" },
+    { 237, "mbind", ignoreFunc },
     { 238, "set_mempolicy" },
     { 239, "get_mempolicy", ignoreFunc },
     { 240, "mq_open" },
