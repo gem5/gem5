@@ -140,7 +140,9 @@ def createVegaTopology(options):
     # CPU memory reporting
     mem_dir = joinpath(node_dir, 'mem_banks/0')
     remake_dir(mem_dir)
-    mem_prop = 'heap_type %s\n' % HsaHeaptype.HSA_HEAPTYPE_SYSTEM.value + \
+    # Heap type value taken from real system, heap type values:
+    # https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/blob/roc-4.0.x/include/hsakmttypes.h#L317
+    mem_prop = 'heap_type 0\n'                                           + \
                'size_in_bytes 33704329216\n'                            + \
                'flags 0\n'                                              + \
                'width 72\n'                                             + \
@@ -221,7 +223,9 @@ def createVegaTopology(options):
     # TODO: Extract size, clk, and width from sim paramters
     mem_dir = joinpath(node_dir, 'mem_banks/0')
     remake_dir(mem_dir)
-    mem_prop = 'heap_type %s\n' % heap_type.value           + \
+    # Heap type value taken from real system, heap type values:
+    # https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/blob/roc-4.0.x/include/hsakmttypes.h#L317
+    mem_prop = 'heap_type 1\n'                              + \
                'size_in_bytes 17163091968\n'                + \
                'flags 0\n'                                  + \
                'width 2048\n'                               + \
@@ -316,6 +320,8 @@ def createFijiTopology(options):
     # CPU memory reporting
     mem_dir = joinpath(node_dir, 'mem_banks/0')
     remake_dir(mem_dir)
+    # Heap type value taken from real system, heap type values:
+    # https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/blob/roc-4.0.x/include/hsakmttypes.h#L317
     mem_prop = 'heap_type 0\n'                              + \
                'size_in_bytes 33704329216\n'                + \
                'flags 0\n'                                  + \
@@ -394,6 +400,8 @@ def createFijiTopology(options):
     # TODO: Extract size, clk, and width from sim paramters
     mem_dir = joinpath(node_dir, 'mem_banks/0')
     remake_dir(mem_dir)
+    # Heap type value taken from real system, heap type values:
+    # https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/blob/roc-4.0.x/include/hsakmttypes.h#L317
     mem_prop = 'heap_type 1\n'                              + \
                'size_in_bytes 4294967296\n'                 + \
                'flags 0\n'                                  + \
@@ -471,6 +479,8 @@ def createCarrizoTopology(options):
         mem_dir = joinpath(node_dir, f'mem_banks/{i}')
         remake_dir(mem_dir)
 
+        # Heap type value taken from real system, heap type values:
+        # https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/blob/roc-4.0.x/include/hsakmttypes.h#L317
         mem_prop = f'heap_type 0\n'                                         + \
                    f'size_in_bytes {toMemorySize(options.mem_size)}'        + \
                    f'flags 0\n'                                             + \
