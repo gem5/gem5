@@ -245,7 +245,7 @@ class GPUComputeDriver(EmulatedDriver):
     device = Param.GPUCommandProcessor('GPU controlled by this driver')
     isdGPU = Param.Bool(False, 'Driver is for a dGPU')
     gfxVersion = Param.GfxVersion('gfx801', 'ISA of gpu to model')
-    dGPUPoolID = Param.Int(False, 'Pool ID for dGPU.')
+    dGPUPoolID = Param.Int(0, 'Pool ID for dGPU.')
     # Default Mtype for caches
     #--     1   1   1   C_RW_S  (Cached-ReadWrite-Shared)
     #--     1   1   0   C_RW_US (Cached-ReadWrite-Unshared)
