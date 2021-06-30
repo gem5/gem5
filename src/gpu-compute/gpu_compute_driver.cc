@@ -316,18 +316,50 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                  * ensure that the base/limit addresses are
                  * calculated correctly.
                  */
-                args->process_apertures[i].scratch_base
-                    = scratchApeBase(i + 1);
+
+                switch (gfxVersion) {
+                  case GfxVersion::gfx801:
+                  case GfxVersion::gfx803:
+                    args->process_apertures[i].scratch_base =
+                        scratchApeBase(i + 1);
+                    args->process_apertures[i].lds_base =
+                        ldsApeBase(i + 1);
+                    break;
+                  case GfxVersion::gfx900:
+                    args->process_apertures[i].scratch_base =
+                        scratchApeBaseV9();
+                    args->process_apertures[i].lds_base =
+                        ldsApeBaseV9();
+                    break;
+                  default:
+                    fatal("Invalid gfx version\n");
+                }
+
+                // GFX8 and GFX9 set lds and scratch limits the same way
                 args->process_apertures[i].scratch_limit =
                     scratchApeLimit(args->process_apertures[i].scratch_base);
 
-                args->process_apertures[i].lds_base = ldsApeBase(i + 1);
                 args->process_apertures[i].lds_limit =
                     ldsApeLimit(args->process_apertures[i].lds_base);
 
-                args->process_apertures[i].gpuvm_base = gpuVmApeBase(i + 1);
-                args->process_apertures[i].gpuvm_limit =
-                    gpuVmApeLimit(args->process_apertures[i].gpuvm_base);
+                switch (gfxVersion) {
+                  case GfxVersion::gfx801:
+                    args->process_apertures[i].gpuvm_base =
+                        gpuVmApeBase(i + 1);
+                    args->process_apertures[i].gpuvm_limit =
+                        gpuVmApeLimit(args->process_apertures[i].gpuvm_base);
+                    break;
+                  case GfxVersion::gfx803:
+                  case GfxVersion::gfx900:
+                    // Taken from SVM_USE_BASE in Linux kernel
+                    args->process_apertures[i].gpuvm_base = 0x1000000ull;
+                    // Taken from AMDGPU_GMC_HOLE_START in Linux kernel
+                    args->process_apertures[i].gpuvm_limit =
+                        0x0000800000000000ULL - 1;
+                    break;
+                  default:
+                    fatal("Invalid gfx version");
+                }
 
                 // NOTE: Must match ID populated by hsaTopology.py
                 //
@@ -395,14 +427,6 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 assert(bits<Addr>(args->process_apertures[i].lds_limit, 63,
                        47) != 0x1ffff);
                 assert(bits<Addr>(args->process_apertures[i].lds_limit, 63,
-                       47) != 0);
-                assert(bits<Addr>(args->process_apertures[i].gpuvm_base, 63,
-                       47) != 0x1ffff);
-                assert(bits<Addr>(args->process_apertures[i].gpuvm_base, 63,
-                       47) != 0);
-                assert(bits<Addr>(args->process_apertures[i].gpuvm_limit, 63,
-                       47) != 0x1ffff);
-                assert(bits<Addr>(args->process_apertures[i].gpuvm_limit, 63,
                        47) != 0);
             }
 
@@ -593,13 +617,41 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 TypedBufferArg<kfd_process_device_apertures> ape_args
                     (ioc_args->kfd_process_device_apertures_ptr);
 
-                ape_args->scratch_base = scratchApeBase(i + 1);
+                switch (gfxVersion) {
+                  case GfxVersion::gfx801:
+                  case GfxVersion::gfx803:
+                    ape_args->scratch_base = scratchApeBase(i + 1);
+                    ape_args->lds_base = ldsApeBase(i + 1);
+                    break;
+                  case GfxVersion::gfx900:
+                    ape_args->scratch_base = scratchApeBaseV9();
+                    ape_args->lds_base = ldsApeBaseV9();
+                    break;
+                  default:
+                    fatal("Invalid gfx version\n");
+                }
+
+                // GFX8 and GFX9 set lds and scratch limits the same way
                 ape_args->scratch_limit =
                     scratchApeLimit(ape_args->scratch_base);
-                ape_args->lds_base = ldsApeBase(i + 1);
                 ape_args->lds_limit = ldsApeLimit(ape_args->lds_base);
-                ape_args->gpuvm_base = gpuVmApeBase(i + 1);
-                ape_args->gpuvm_limit = gpuVmApeLimit(ape_args->gpuvm_base);
+
+                switch (gfxVersion) {
+                  case GfxVersion::gfx801:
+                    ape_args->gpuvm_base = gpuVmApeBase(i + 1);
+                    ape_args->gpuvm_limit =
+                        gpuVmApeLimit(ape_args->gpuvm_base);
+                    break;
+                  case GfxVersion::gfx803:
+                  case GfxVersion::gfx900:
+                    // Taken from SVM_USE_BASE in Linux kernel
+                    ape_args->gpuvm_base = 0x1000000ull;
+                    // Taken from AMDGPU_GMC_HOLE_START in Linux kernel
+                    ape_args->gpuvm_limit = 0x0000800000000000ULL - 1;
+                    break;
+                  default:
+                    fatal("Invalid gfx version\n");
+                }
 
                 // NOTE: Must match ID populated by hsaTopology.py
                 if (isdGPU) {
@@ -631,10 +683,6 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 assert(bits<Addr>(ape_args->lds_base, 63, 47) != 0);
                 assert(bits<Addr>(ape_args->lds_limit, 63, 47) != 0x1ffff);
                 assert(bits<Addr>(ape_args->lds_limit, 63, 47) != 0);
-                assert(bits<Addr>(ape_args->gpuvm_base, 63, 47) != 0x1ffff);
-                assert(bits<Addr>(ape_args->gpuvm_base, 63, 47) != 0);
-                assert(bits<Addr>(ape_args->gpuvm_limit, 63, 47) != 0x1ffff);
-                assert(bits<Addr>(ape_args->gpuvm_limit, 63, 47) != 0);
 
                 ape_args.copyOut(virt_proxy);
             }
@@ -895,6 +943,14 @@ GPUComputeDriver::scratchApeBase(int gpuNum) const
     return ((Addr)gpuNum << 61) + 0x100000000L;
 }
 
+// Used for GFX9 devices
+// From drivers/gpu/drm/amd/amdkfd/kfd_flat_memory.c in the Linux kernel
+Addr
+GPUComputeDriver::scratchApeBaseV9() const
+{
+    return ((Addr)0x1 << 48);
+}
+
 Addr
 GPUComputeDriver::scratchApeLimit(Addr apeBase) const
 {
@@ -905,6 +961,14 @@ Addr
 GPUComputeDriver::ldsApeBase(int gpuNum) const
 {
     return ((Addr)gpuNum << 61) + 0x0;
+}
+
+//Used for GFX9 devices
+// From drivers/gpu/drm/amd/amdkfd/kfd_flat_memory.c in the Linux kernel
+Addr
+GPUComputeDriver::ldsApeBaseV9() const
+{
+    return ((Addr)0x2 << 48);
 }
 
 Addr

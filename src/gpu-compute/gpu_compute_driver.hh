@@ -228,8 +228,10 @@ class GPUComputeDriver final : public EmulatedDriver
     Addr gpuVmApeBase(int gpuNum) const;
     Addr gpuVmApeLimit(Addr apeBase) const;
     Addr scratchApeBase(int gpuNum) const;
+    Addr scratchApeBaseV9() const;
     Addr scratchApeLimit(Addr apeBase) const;
     Addr ldsApeBase(int gpuNum) const;
+    Addr ldsApeBaseV9() const;
     Addr ldsApeLimit(Addr apeBase) const;
 
     /**
