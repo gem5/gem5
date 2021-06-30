@@ -332,6 +332,11 @@ class Base : public ClockedObject
         /** The number of times a HW-prefetched block is evicted w/o
          * reference. */
         statistics::Scalar pfUnused;
+        /** The number of times a HW-prefetch is useful. */
+        statistics::Scalar pfUseful;
+        /** The number of times there is a hit on prefetch but cache block
+         * is not in an usable state */
+        statistics::Scalar pfUsefulButMiss;
     } prefetchStats;
 
     /** Total prefetches issued */

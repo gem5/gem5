@@ -122,7 +122,12 @@ Base::StatGroup::StatGroup(statistics::Group *parent)
     ADD_STAT(pfIssued, statistics::units::Count::get(),
         "number of hwpf issued"),
     ADD_STAT(pfUnused, statistics::units::Count::get(),
-             "number of HardPF blocks evicted w/o reference")
+             "number of HardPF blocks evicted w/o reference"),
+    ADD_STAT(pfUseful, statistics::units::Count::get(),
+        "number of useful prefetch"),
+    ADD_STAT(pfUsefulButMiss, statistics::units::Count::get(),
+        "number of hit on prefetch but cache block is not in an usable "
+        "state")
 {
     pfUnused.flags(statistics::nozero);
 }
@@ -219,6 +224,11 @@ Base::probeNotify(const PacketPtr &pkt, bool miss)
 
     if (hasBeenPrefetched(pkt->getAddr(), pkt->isSecure())) {
         usefulPrefetches += 1;
+        prefetchStats.pfUseful++;
+        if (miss)
+            // This case happens when a demand hits on a prefetched line
+            // that's not in the requested coherency state.
+            prefetchStats.pfUsefulButMiss++;
     }
 
     // Verify this access type is observed by prefetcher
