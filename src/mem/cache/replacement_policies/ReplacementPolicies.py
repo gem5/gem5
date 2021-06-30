@@ -120,7 +120,7 @@ class TreePLRURP(BaseReplacementPolicy):
     cxx_header = "mem/cache/replacement_policies/tree_plru_rp.hh"
     num_leaves = Param.Int(Parent.assoc, "Number of leaves in each tree")
 
-class WeightedLRURP(BaseReplacementPolicy):
+class WeightedLRURP(LRURP):
     type = "WeightedLRURP"
     cxx_class = "replacement_policy::WeightedLRU"
     cxx_header = "mem/cache/replacement_policies/weighted_lru_rp.hh"

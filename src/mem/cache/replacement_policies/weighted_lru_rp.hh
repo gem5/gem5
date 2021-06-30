@@ -37,7 +37,7 @@
 #include <memory>
 
 #include "base/types.hh"
-#include "mem/cache/replacement_policies/base.hh"
+#include "mem/cache/replacement_policies/lru_rp.hh"
 
 struct WeightedLRURPParams;
 
@@ -45,57 +45,28 @@ GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 
-class WeightedLRU : public Base
+class WeightedLRU : public LRU
 {
   protected:
     /** Weighted LRU implementation of replacement data. */
-    struct WeightedLRUReplData : ReplacementData
+    struct WeightedLRUReplData : LRUReplData
     {
         /** pointer for last occupancy */
         int last_occ_ptr;
 
-        /** Tick on which the entry was last touched. */
-        Tick last_touch_tick;
-
         /**
          * Default constructor. Invalidate data.
          */
-        WeightedLRUReplData() : ReplacementData(),
-                                last_occ_ptr(0), last_touch_tick(0) {}
+        WeightedLRUReplData() : LRUReplData(), last_occ_ptr(0) {}
     };
   public:
     typedef WeightedLRURPParams Params;
     WeightedLRU(const Params &p);
     ~WeightedLRU() = default;
 
-    /**
-     * Invalidate replacement data to set it as the next probable victim.
-     * Sets its last touch tick as the starting tick.
-     *
-     * @param replacement_data Replacement data to be invalidated.
-     */
-    void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-                                                                    override;
-
-    /**
-     * Touch an entry to update its replacement data.
-     * Sets its last touch tick as the current tick.
-     *
-     * @param replacement_data Replacement data to be touched.
-     */
-    void touch(const std::shared_ptr<ReplacementData>&
-                                        replacement_data) const override;
+    using Base::touch;
     void touch(const std::shared_ptr<ReplacementData>& replacement_data,
                                         int occupancy) const;
-
-    /**
-     * Reset replacement data. Used when an entry is inserted.
-     * Sets its last touch tick as the current tick.
-     *
-     * @param replacement_data Replacement data to be reset.
-     */
-    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
-                                                                     override;
 
     /**
      * Instantiate a replacement data entry.
