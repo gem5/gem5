@@ -359,7 +359,7 @@ def createFijiTopology(options):
     file_append((io_dir, 'properties'), io_prop)
 
     # Populate GPU node properties
-    node_prop = 'cpu_cores_count %s\n' % options.num_cpus                   + \
+    node_prop = 'cpu_cores_count 0\n'                                       + \
                 'simd_count %s\n'                                             \
                     % (options.num_compute_units * options.simds_per_cu)    + \
                 'mem_banks_count 1\n'                                       + \
