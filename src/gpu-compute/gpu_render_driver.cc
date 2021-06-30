@@ -41,7 +41,7 @@ GPURenderDriver::GPURenderDriver(const GPURenderDriverParams &p)
 
 /* ROCm 4 utilizes the render driver located at /dev/dri/renderDXXX. This
  * patch implements a very simple driver that just returns a file
- * descriptor when opened, as testing has shown that's all that's needed
+ * descriptor when opened.
  */
 int
 GPURenderDriver::open(ThreadContext *tc, int mode, int flags)
@@ -50,6 +50,16 @@ GPURenderDriver::open(ThreadContext *tc, int mode, int flags)
     auto device_fd_entry = std::make_shared<DeviceFDEntry>(this, filename);
     int tgt_fd = process->fds->allocFD(device_fd_entry);
     return tgt_fd;
+}
+
+/* DGPUs try to mmap the driver file. It doesn't appear they do anything
+ * with it, so we just return the address that's provided
+ */
+Addr GPURenderDriver::mmap(ThreadContext *tc, Addr start, uint64_t length,
+                           int prot, int tgt_flags, int tgt_fd, off_t offset)
+{
+    warn_once("GPURenderDriver::mmap returning start address %#x", start);
+    return start;
 }
 
 } // namespace gem5
