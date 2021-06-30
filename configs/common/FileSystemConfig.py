@@ -217,6 +217,8 @@ def register_cache(level, idu_type, size, line_size, assoc, cpus):
         file_append((indexdir, 'number_of_sets'), num_sets)
         file_append((indexdir, 'physical_line_partition'), '1')
         file_append((indexdir, 'shared_cpu_map'), hex_mask(cpus))
+        file_append((indexdir, 'shared_cpu_list'),
+                    ','.join(str(cpu) for cpu in cpus))
 
 def _redirect_paths(options):
     # Redirect filesystem syscalls from src to the first matching dests
