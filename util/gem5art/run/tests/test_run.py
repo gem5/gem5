@@ -45,7 +45,7 @@ class TestSERun(unittest.TestCase):
                 "type": "test-binary",
                 "documentation": "This is a description of gem5 artifact",
                 "command": "scons build/X86/gem5.opt",
-                "path": "/",
+                "path": "gem5/build/X86/gem5.opt",
                 "hash": hashlib.md5().hexdigest(),
                 "git": artifact.getGit(Path(".")),
                 "cwd": "/",
@@ -85,7 +85,6 @@ class TestSERun(unittest.TestCase):
 
         self.run = gem5Run.createSERun(
             "test SE run",
-            "gem5/build/X86/gem5.opt",
             "configs-tests/run_test.py",
             "results/run_test/out",
             self.gem5art,
