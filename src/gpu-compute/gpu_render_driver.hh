@@ -46,7 +46,7 @@ class GPURenderDriver final : public EmulatedDriver
     int open(ThreadContext *tc, int mode, int flags) override;
 
     int
-    ioctl(ThreadContext *tc, unsigned req, Addr buf)
+    ioctl(ThreadContext *tc, unsigned req, Addr buf) override
     {
         return -EBADF;
     }
