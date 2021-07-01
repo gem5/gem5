@@ -898,7 +898,7 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req,
             break;
           case EL1:
             {
-                if (checkPAN(tc, ap, req, mode)) {
+                if (checkPAN(tc, ap, req, mode, is_priv)) {
                     grant = false;
                     grant_read = false;
                     break;
@@ -938,7 +938,7 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req,
             }
             break;
           case EL2:
-            if (hcr.e2h && checkPAN(tc, ap, req, mode)) {
+            if (hcr.e2h && checkPAN(tc, ap, req, mode, is_priv)) {
                 grant = false;
                 grant_read = false;
                 break;
@@ -998,7 +998,7 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req,
 
 bool
 TLB::checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
-              BaseMMU::Mode mode)
+              BaseMMU::Mode mode, const bool is_priv)
 {
     // The PAN bit has no effect on:
     // 1) Instruction accesses.
@@ -1006,15 +1006,22 @@ TLB::checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
     // 3) Address translation instructions, other than ATS1E1RP and
     // ATS1E1WP when ARMv8.2-ATS1E1 is implemented. (Unimplemented in
     // gem5)
-    // 4) Unprivileged instructions (Unimplemented in gem5)
-    AA64MMFR1 mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
-    if (mmfr1.pan && cpsr.pan && (ap & 0x1) && mode != BaseMMU::Execute &&
-        (!req->isCacheMaintenance() ||
-            (req->getFlags() & Request::CACHE_BLOCK_ZERO))) {
+    // 4) Instructions to be treated as unprivileged, unless
+    // HCR_EL2.{E2H, TGE} == {1, 0}
+    const AA64MMFR1 mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
+    if (mmfr1.pan && cpsr.pan && (ap & 0x1) && mode != BaseMMU::Execute) {
+        if (req->isCacheMaintenance() &&
+            !(req->getFlags() & Request::CACHE_BLOCK_ZERO)) {
+            // Cache maintenance other than DC ZVA
+            return false;
+        } else if (!is_priv && !(hcr.e2h && !hcr.tge)) {
+            // Treated as unprivileged unless HCR_EL2.{E2H, TGE} == {1, 0}
+            return false;
+        }
         return true;
-    } else {
-        return false;
     }
+
+    return false;
 }
 
 Fault

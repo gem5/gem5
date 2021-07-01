@@ -259,7 +259,7 @@ class TLB : public BaseTLB
     Fault checkPermissions64(TlbEntry *te, const RequestPtr &req,
                              BaseMMU::Mode mode, ThreadContext *tc);
     bool checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
-                  BaseMMU::Mode mode);
+                  BaseMMU::Mode mode, const bool is_priv);
 
     /** Reset the entire TLB. Used for CPU switching to prevent stale
      * translations after multiple switches
