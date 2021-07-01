@@ -36,13 +36,23 @@ Some common queries can be found in common_queries.py
 
 from abc import ABC, abstractmethod
 
-import gridfs  # type: ignore
+import copy
+import json
 import os
 from pathlib import Path
-from pymongo import MongoClient  # type: ignore
-from typing import Any, Dict, Iterable, Union, Type
+import shutil
+from typing import Any, Dict, Iterable, Union, Type, List, Tuple
 from urllib.parse import urlparse
 from uuid import UUID
+
+try:
+    import gridfs  # type: ignore
+    from pymongo import MongoClient  # type: ignore
+
+    MONGO_SUPPORT = True
+except ModuleNotFoundError:
+    # If pymongo isn't installed, then disable support for it
+    MONGO_SUPPORT = False
 
 
 class ArtifactDB(ABC):
@@ -51,7 +61,7 @@ class ArtifactDB(ABC):
     """
 
     @abstractmethod
-    def __init__(self, uri: str):
+    def __init__(self, uri: str) -> None:
         """Initialize the database with a URI"""
         pass
 
@@ -205,11 +215,194 @@ class ArtifactMongoDB(ArtifactDB):
             yield d
 
 
+class ArtifactFileDB(ArtifactDB):
+    """
+    This is a file-based database where Artifacts (as defined in artifacts.py)
+    are stored in a JSON file.
+
+    This database stores a list of serialized artifacts in a JSON file.
+    This database is not thread-safe.
+
+    If the user specifies a valid path in the environment variable
+    GEM5ART_STORAGE then this database will copy all artifacts to that
+    directory named with their UUIDs.
+    """
+
+    class ArtifactEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, UUID):
+                return str(obj)
+            return ArtifactFileDB.ArtifactEncoder(self, obj)
+
+    _json_file: Path
+    _uuid_artifact_map: Dict[str, Dict[str, str]]
+    _hash_uuid_map: Dict[str, List[str]]
+    _storage_enabled: bool
+    _storage_path: Path
+
+    def __init__(self, uri: str) -> None:
+        """Initialize the file-driven database from a JSON file.
+        If the file doesn't exist, a new file will be created.
+        """
+        parsed_uri = urlparse(uri)
+        # using urlparse to parse relative/absolute file path
+        # abs path: urlparse("file:///path/to/file") ->
+        #           (netloc='', path='/path/to/file')
+        # rel path: urlparse("file://path/to/file") ->
+        #           (netloc='path', path='/to/file')
+        # so, the filepath would be netloc+path for both cases
+        self._json_file = Path(parsed_uri.netloc) / Path(parsed_uri.path)
+        storage_path = os.environ.get("GEM5ART_STORAGE", "")
+        self._storage_enabled = True if storage_path else False
+        self._storage_path = Path(storage_path)
+        if (
+            self._storage_enabled
+            and self._storage_path.exists()
+            and not self._storage_path.is_dir()
+        ):
+            raise Exception(
+                f"GEM5ART_STORAGE={storage_path} exists and is not a directory"
+            )
+        if self._storage_enabled:
+            os.makedirs(self._storage_path, exist_ok=True)
+
+        self._uuid_artifact_map, self._hash_uuid_map = self._load_from_file(
+            self._json_file
+        )
+
+    def put(self, key: UUID, artifact: Dict[str, Union[str, UUID]]) -> None:
+        """Insert the artifact into the database with the key."""
+        assert artifact["_id"] == key
+        assert isinstance(artifact["hash"], str)
+        self.insert_artifact(key, artifact["hash"], artifact)
+
+    def upload(self, key: UUID, path: Path) -> None:
+        """Copy the artifact to the folder specified by GEM5ART_STORAGE."""
+        if not self._storage_enabled:
+            return
+        src_path = path
+        dst_path = self._storage_path / str(key)
+        if not dst_path.exists():
+            shutil.copy2(src_path, dst_path)
+
+    def __contains__(self, key: Union[UUID, str]) -> bool:
+        """Key can be a UUID or a string. Returns true if item in DB"""
+        if isinstance(key, UUID):
+            return self.has_uuid(key)
+        return self.has_hash(key)
+
+    def get(self, key: Union[UUID, str]) -> Dict[str, str]:
+        """Key can be a UUID or a string. Returns a dictionary to construct
+        an artifact.
+        """
+        artifact: List[Dict[str, str]] = []
+        if isinstance(key, UUID):
+            artifact = list(self.get_artifact_by_uuid(key))
+        else:
+            # This is a hash.
+            artifact = list(self.get_artifact_by_hash(key))
+        return artifact[0]
+
+    def downloadFile(self, key: UUID, path: Path) -> None:
+        """Copy the file from the storage to specified path."""
+        assert path.exists()
+        if not self._storage_enabled:
+            return
+        src_path = self._storage_path / str(key)
+        dst_path = path
+        shutil.copy2(src_path, dst_path)
+
+    def _load_from_file(
+        self, json_file: Path
+    ) -> Tuple[Dict[str, Dict[str, str]], Dict[str, List[str]]]:
+        uuid_mapping: Dict[str, Dict[str, str]] = {}
+        hash_mapping: Dict[str, List[str]] = {}
+        if json_file.exists():
+            with open(json_file, "r") as f:
+                j = json.load(f)
+                for an_artifact in j:
+                    the_uuid = an_artifact["_id"]
+                    the_hash = an_artifact["hash"]
+                    uuid_mapping[the_uuid] = an_artifact
+                    if not the_hash in hash_mapping:
+                        hash_mapping[the_hash] = []
+                    hash_mapping[the_hash].append(the_uuid)
+        return uuid_mapping, hash_mapping
+
+    def _save_to_file(self, json_file: Path) -> None:
+        content = list(self._uuid_artifact_map.values())
+        with open(json_file, "w") as f:
+            json.dump(content, f, indent=4, cls=ArtifactFileDB.ArtifactEncoder)
+
+    def has_uuid(self, the_uuid: UUID) -> bool:
+        return str(the_uuid) in self._uuid_artifact_map
+
+    def has_hash(self, the_hash: str) -> bool:
+        return the_hash in self._hash_uuid_map
+
+    def get_artifact_by_uuid(self, the_uuid: UUID) -> Iterable[Dict[str, str]]:
+        uuid_str = str(the_uuid)
+        if not uuid_str in self._uuid_artifact_map:
+            return
+        yield self._uuid_artifact_map[uuid_str]
+
+    def get_artifact_by_hash(self, the_hash: str) -> Iterable[Dict[str, str]]:
+        if not the_hash in self._hash_uuid_map:
+            return
+        for the_uuid in self._hash_uuid_map[the_hash]:
+            yield self._uuid_artifact_map[the_uuid]
+
+    def insert_artifact(
+        self,
+        the_uuid: UUID,
+        the_hash: str,
+        the_artifact: Dict[str, Union[str, UUID]],
+    ) -> bool:
+        """
+        Put the artifact to the database.
+
+        Return True if the artifact uuid does not exist in the database prior
+        to calling this function; return False otherwise.
+        """
+        uuid_str = str(the_uuid)
+        if uuid_str in self._uuid_artifact_map:
+            return False
+        artifact_copy = copy.deepcopy(the_artifact)
+        artifact_copy["_id"] = str(artifact_copy["_id"])
+        self._uuid_artifact_map[uuid_str] = artifact_copy  # type: ignore
+        if not the_hash in self._hash_uuid_map:
+            self._hash_uuid_map[the_hash] = []
+        self._hash_uuid_map[the_hash].append(uuid_str)
+        self._save_to_file(self._json_file)
+        return True
+
+    def find_exact(
+        self, attr: Dict[str, str], limit: int
+    ) -> Iterable[Dict[str, Any]]:
+        """
+        Return all artifacts such that, for every yielded artifact,
+        and for every (k,v) in attr, the attribute `k` of the artifact has
+        the value of `v`.
+        """
+        count = 0
+        if count >= limit:
+            return
+        for artifact in self._uuid_artifact_map.values():
+            #https://docs.python.org/3/library/stdtypes.html#frozenset.issubset
+            if attr.items() <= artifact.items():
+                yield artifact
+
+
 _db = None
 
-_default_uri = "mongodb://localhost:27017"
+if MONGO_SUPPORT:
+    _default_uri = "mongodb://localhost:27017"
+else:
+    _default_uri = "file://db.json"
 
-_db_schemes: Dict[str, Type[ArtifactDB]] = {"mongodb": ArtifactMongoDB}
+_db_schemes: Dict[str, Type[ArtifactDB]] = {"file": ArtifactFileDB}
+if MONGO_SUPPORT:
+    _db_schemes["mongodb"] = ArtifactMongoDB
 
 
 def _getDBType(uri: str) -> Type[ArtifactDB]:
@@ -220,6 +413,10 @@ def _getDBType(uri: str) -> Type[ArtifactDB]:
     Supported types:
         **ArtifactMongoDB**: mongodb://...
             See http://dochub.mongodb.org/core/connections for details.
+        **ArtifactFileDB**: file://...
+            A simple flat file database with optional storage for the binary
+            artifacts. The filepath is where the json file is stored and the
+            data storage can be specified with GEM5ART_STORAGE
     """
     result = urlparse(uri)
     if result.scheme in _db_schemes:

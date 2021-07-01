@@ -48,7 +48,6 @@ class MockDB(ArtifactDB):
         self.hashes = {}
 
     def put(self, key, metadata):
-        print("putting an entry in the mock database")
         self.db[key] = metadata
         self.hashes[metadata["hash"]] = key
 
