@@ -39,7 +39,7 @@ from pathlib import Path
 import signal
 import subprocess
 import time
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 from uuid import UUID, uuid4
 import zipfile
 
@@ -64,6 +64,7 @@ class gem5Run:
     run_script_git_artifact: Artifact
     params: Tuple[str, ...]
     timeout: int
+    check_failure: Callable[["gem5Run"], bool]
 
     gem5_name: str
     script_name: str
@@ -93,6 +94,8 @@ class gem5Run:
     results: Optional[Artifact]
     artifacts: List[Artifact]
 
+    rerunnable: bool
+
     @classmethod
     def _create(
         cls,
@@ -105,6 +108,7 @@ class gem5Run:
         run_script_git_artifact: Artifact,
         params: Tuple[str, ...],
         timeout: int,
+        check_failure: Callable[["gem5Run"], bool],
     ) -> "gem5Run":
         """
         Shared code between SE and FS when creating a run object.
@@ -118,6 +122,9 @@ class gem5Run:
         run.run_script_git_artifact = run_script_git_artifact
         run.params = params
         run.timeout = timeout
+
+        # Note: Mypy doesn't support monkey patching like this
+        run.check_failure = check_failure  # type: ignore
 
         run._id = uuid4()
 
@@ -142,6 +149,8 @@ class gem5Run:
         # Initially, there are no results
         run.results = None
 
+        run.rerunnable = False
+
         return run
 
     @classmethod
@@ -156,6 +165,7 @@ class gem5Run:
         run_script_git_artifact: Artifact,
         *params: str,
         timeout: int = 60 * 15,
+        check_failure: Callable[["gem5Run"], bool] = lambda run: False,
     ) -> "gem5Run":
         """
         name is the name of the run. The name is not necessarily unique. The
@@ -186,6 +196,7 @@ class gem5Run:
             run_script_git_artifact,
             params,
             timeout,
+            check_failure,
         )
 
         run.artifacts = [
@@ -230,6 +241,7 @@ class gem5Run:
         disk_image_artifact: Artifact,
         *params: str,
         timeout: int = 60 * 15,
+        check_failure: Callable[["gem5Run"], bool] = lambda run: False,
     ) -> "gem5Run":
         """
         name is the name of the run. The name is not necessarily unique. The
@@ -243,6 +255,10 @@ class gem5Run:
 
         Further parameters can be passed via extra arguments. These
         parameters will be passed in order to the gem5 run script.
+
+        check_failure is a user-defined function that will be executed
+        periodically (e.g., every 10 seconds) to check the health of the
+        simulation. When it returns True, the simulation will be killed
 
         Note: When instantiating this class for the first time, it will create
         a file `info.json` in the outdir which contains a serialized version
@@ -259,6 +275,7 @@ class gem5Run:
             run_script_git_artifact,
             params,
             timeout,
+            check_failure,
         )
         run.linux_binary = Path(linux_binary)
         run.disk_image = Path(disk_image)
@@ -397,6 +414,10 @@ class gem5Run:
         # Remove list of artifacts
         del d["artifacts"]
 
+        # Doesn't make sense to serialize the user-specified fail function
+        if "check_failure" in d.keys():
+            del d["check_failure"]
+
         # Replace the artifacts with their UUIDs
         for k, v in d.items():
             if isinstance(v, Artifact):
@@ -438,7 +459,7 @@ class gem5Run:
         d = self._convertForJson(self._getSerializable())
         return json.dumps(d)
 
-    def run(self, task: Any = None, cwd: str = ".") -> None:
+    def _run(self, task: Any = None, cwd: str = ".") -> None:
         """Actually run the test.
 
         Calls Popen with the command to fork a new process.
@@ -452,11 +473,8 @@ class gem5Run:
         process to run in a different directory than the running process. Note
         that only the spawned process runs in the new directory.
         """
-        # Check if the run is already in the database
+        # Connect to the database
         db = artifact.getDBConnection()
-        if self.hash in db:
-            print(f"Error: Have already run {self.command}. Exiting!")
-            return
 
         self.status = "Begin run"
         self.dumpJson("info.json")
@@ -503,6 +521,15 @@ class gem5Run:
                 proc.kill()
                 self.kill_reason = "kernel panic"
 
+            # Assigning a function/lambda to an object variable does not make
+            # the function/lambda become a bound one. Therefore, the
+            # user-defined function must pass `self` in.
+            # Here, mypy classifies self.check_failure() as a bound function,
+            # so we tell mypy to ignore it./
+            if self.check_failure(self):  # type: ignore
+                proc.kill()
+                self.kill_reason = "User defined kill"
+
             self.dumpJson("info.json")
 
             # Check again in five seconds
@@ -528,6 +555,44 @@ class gem5Run:
         db.put(self._id, self._getSerializable())
 
         print("Done storing the results of {}".format(" ".join(self.command)))
+
+    def run(self, task: Any = None, cwd: str = ".") -> None:
+        """Actually run the test.
+
+        Calls Popen with the command to fork a new process.
+        Then, this function polls the process every 5 seconds to check if it
+        has finished or not. Each time it checks, it dumps the json info so
+        other applications can poll those files.
+
+        task is the celery task that is running this gem5 instance.
+
+        cwd is the directory to change to before running. This allows a server
+        process to run in a different directory than the running process. Note
+        that only the spawned process runs in the new directory.
+        """
+        # Check if the run is already in the database
+        db = artifact.getDBConnection()
+        if self.hash in db:
+            print(f"Error: Have already run {self.command}. Exiting!")
+            return
+        self._run(task, cwd)
+
+    def rerun(self, task: Any = None, cwd: str = ".") -> None:
+        """Rerun the test.
+
+        Calls Popen with the command to fork a new process.
+        Then, this function polls the process every 5 seconds to check if it
+        has finished or not. Each time it checks, it dumps the json info so
+        other applications can poll those files.
+
+        task is the celery task that is running this gem5 instance.
+
+        cwd is the directory to change to before running. This allows a server
+        process to run in a different directory than the running process. Note
+        that only the spawned process runs in the new directory.
+        """
+        # TODO: remove the old runs?
+        self._run(task, cwd)
 
     def saveResults(self) -> None:
         """Zip up the output directory and store the results in the
@@ -616,3 +681,20 @@ def getRunsByNameLike(
 
     for run in fsruns:
         yield gem5Run.loadFromDict(run)
+
+
+def getRerunnableRunsByNameLike(
+    db: ArtifactDB, name: str, fs_only: bool = False, limit: int = 0
+) -> Iterable[gem5Run]:
+
+    """Returns a generator of gem5Run objects having rerunnable as true
+    and the object "name" containing the name parameter as a substring. The
+    parameter is case sensitive.
+
+    If fs_only is True, then only full system runs will be returned.
+    Limit specifies the maximum number of runs to return.
+    """
+
+    for run in getRunsByNameLike(db, name, fs_only, limit):
+        if run.rerunnable:
+            yield run
