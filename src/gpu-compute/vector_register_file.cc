@@ -71,6 +71,17 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
         }
     }
 
+    for (const auto& dstVecOp : ii->dstVecRegOperands()) {
+        for (const auto& physIdx : dstVecOp.physIndices()) {
+            if (regBusy(physIdx)) {
+                DPRINTF(GPUVRF, "WAX stall: WV[%d]: %s: physReg[%d]\n",
+                        w->wfDynId, ii->disassemble(), physIdx);
+                w->stats.numTimesBlockedDueWAXDependencies++;
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 

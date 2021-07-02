@@ -64,6 +64,17 @@ ScalarRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
         }
     }
 
+    for (const auto& dstScalarOp : ii->dstScalarRegOperands()) {
+        for (const auto& physIdx : dstScalarOp.physIndices()) {
+            if (regBusy(physIdx)) {
+                DPRINTF(GPUSRF, "WAX stall: WV[%d]: %s: physReg[%d]\n",
+                        w->wfDynId, ii->disassemble(), physIdx);
+                w->stats.numTimesBlockedDueWAXDependencies++;
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 
