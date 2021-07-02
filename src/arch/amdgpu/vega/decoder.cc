@@ -4158,19 +4158,19 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_ADD_U32(MachInst iFmt)
     {
-        return nullptr;
+        return new Inst_VOP2__V_ADD_U32(&iFmt->iFmt_VOP2);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_SUB_U32(MachInst iFmt)
     {
-        return nullptr;
+        return new Inst_VOP2__V_SUB_U32(&iFmt->iFmt_VOP2);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_SUBREV_U32(MachInst iFmt)
     {
-        return nullptr;
+        return new Inst_VOP2__V_SUBREV_U32(&iFmt->iFmt_VOP2);
     }
 
     GPUStaticInst*
@@ -4446,7 +4446,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_SOP2__S_MUL_HI_I32(MachInst iFmt)
     {
-        return nullptr;
+        return new Inst_SOP2__S_MUL_I32(&iFmt->iFmt_SOP2);
     }
 
     GPUStaticInst*
@@ -6942,31 +6942,31 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OPU_VOP3__V_MAD_F16(MachInst iFmt)
     {
-        return nullptr;
+        return new Inst_VOP3__V_MAD_F16(&iFmt->iFmt_VOP3A);
     }
 
     GPUStaticInst*
     Decoder::decode_OPU_VOP3__V_MAD_U16(MachInst iFmt)
     {
-        return nullptr;
+        return new Inst_VOP3__V_MAD_U16(&iFmt->iFmt_VOP3A);
     }
 
     GPUStaticInst*
     Decoder::decode_OPU_VOP3__V_MAD_I16(MachInst iFmt)
     {
-        return nullptr;
+        return new Inst_VOP3__V_MAD_I16(&iFmt->iFmt_VOP3A);
     }
 
     GPUStaticInst*
     Decoder::decode_OPU_VOP3__V_FMA_F16(MachInst iFmt)
     {
-        return nullptr;
+        return new Inst_VOP3__V_FMA_F16(&iFmt->iFmt_VOP3A);
     }
 
     GPUStaticInst*
     Decoder::decode_OPU_VOP3__V_DIV_FIXUP_F16(MachInst iFmt)
     {
-        return nullptr;
+        return new Inst_VOP3__V_DIV_FIXUP_F16(&iFmt->iFmt_VOP3A);
     }
 
     GPUStaticInst*
