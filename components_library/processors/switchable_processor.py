@@ -1,0 +1,128 @@
+# Copyright (c) 2021 The Regents of the University of California
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+from components_library.processors.simple_core import SimpleCore
+from components_library.processors.abstract_core import AbstractCore
+import m5
+
+from typing import Dict, Any, List
+
+from .abstract_processor import AbstractProcessor
+from ..boards.abstract_board import AbstractBoard
+from ..utils.override import *
+
+
+class SwitchableProcessor(AbstractProcessor):
+    """
+    This class can be used to setup a switchable processor/processors on a
+    system.
+
+    Though this class can be used directly, it is best inherited from. See
+    "SimpleSwitchableCPU" for an example of this.
+    """
+
+    def __init__(
+        self,
+        switchable_cores: Dict[Any, List[SimpleCore]],
+        starting_cores: Any,
+    ) -> None:
+
+        if starting_cores not in switchable_cores.keys():
+            raise AssertionError(
+                f"Key {starting_cores} cannot be found in the "
+                "switchable_processors dictionary."
+            )
+
+        self._current_cores = switchable_cores[starting_cores]
+        self._switchable_cores = switchable_cores
+
+        all_cores = []
+        for core_list in self._switchable_cores.values():
+            for core in core_list:
+                core.set_switched_out(core not in self._current_cores)
+                all_cores.append(core)
+
+        super(SwitchableProcessor, self).__init__(cores=all_cores)
+
+    @overrides(AbstractProcessor)
+    def incorporate_processor(self, board: AbstractBoard) -> None:
+
+        # This is a bit of a hack. The `m5.switchCpus` function, used in the
+        # "switch_to_processor" function, requires the System simobject as an
+        # argument. We therefore need to store the board when incorporating the
+        # procsesor
+        self._board = board
+
+    @overrides(AbstractProcessor)
+    def get_num_cores(self) -> int:
+        # Note: This is a special case where the total number of cores in the
+        # design is not the number of cores, due to some being switched out.
+        return len(self._current_cores)
+
+    @overrides(AbstractProcessor)
+    def get_cores(self) -> List[AbstractCore]:
+        return self._current_cores
+
+    def switch_to_processor(self, switchable_core_key: Any):
+
+        # Run various checks.
+        if not hasattr(self, "_board"):
+            raise AssertionError("The processor has not been incorporated.")
+
+        if switchable_core_key not in self._switchable_cores.keys():
+            raise AssertionError(
+                f"Key {switchable_core_key} is not a key in the"
+                " switchable_processor dictionary."
+            )
+
+        # Select the correct processor to switch to.
+        to_switch = self._switchable_cores[switchable_core_key]
+
+        # Run more checks.
+        if to_switch == self._current_cores:
+            raise AssertionError(
+                "Cannot swap current cores with the current cores"
+            )
+
+        if len(to_switch) != len(self._current_cores):
+            raise AssertionError(
+                "The number of cores to swap in is not the same as the number "
+                "already swapped in. This is not allowed."
+            )
+
+        current_core_simobj = [
+            core.get_simobject() for core in self._current_cores
+        ]
+        to_switch_simobj = [core.get_simobject() for core in to_switch]
+
+        # Switch the CPUs
+        m5.switchCpus(
+            self._board,
+            list(zip(current_core_simobj, to_switch_simobj)),
+        )
+
+        # Ensure the current processor is updated.
+        self._current_cores = to_switch
