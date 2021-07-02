@@ -4137,7 +4137,12 @@ namespace VegaISA
         ComputeUnit *cu = gpuDynInst->computeUnit();
 
         // delete extra instructions fetched for completed work-items
-        wf->instructionBuffer.clear();
+        wf->instructionBuffer.erase(wf->instructionBuffer.begin() + 1,
+            wf->instructionBuffer.end());
+
+        if (wf->pendingFetch) {
+            wf->dropFetch = true;
+        }
 
         wf->computeUnit->fetchStage.fetchUnit(wf->simdId)
             .flushBuf(wf->wfSlotId);
@@ -4215,8 +4220,11 @@ namespace VegaISA
             bool kernelEnd =
                 wf->computeUnit->shader->dispatcher().isReachingKernelEnd(wf);
 
+            bool relNeeded =
+                wf->computeUnit->shader->impl_kern_end_rel;
+
             //if it is not a kernel end, then retire the workgroup directly
-            if (!kernelEnd) {
+            if (!kernelEnd || !relNeeded) {
                 wf->computeUnit->shader->dispatcher().notifyWgCompl(wf);
                 wf->setStatus(Wavefront::S_STOPPED);
                 wf->computeUnit->completedWGs++;
@@ -4232,6 +4240,7 @@ namespace VegaISA
              * the complex
              */
             setFlag(MemSync);
+            setFlag(GlobalSegment);
             // Notify Memory System of Kernel Completion
             // Kernel End = isKernel + isMemSync
             wf->setStatus(Wavefront::S_RETURNING);
