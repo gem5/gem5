@@ -42984,6 +42984,7 @@ namespace VegaISA
         if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
             wf->decLGKMInstsIssued();
+            return;
         }
 
         gpuDynInst->execUnitId = wf->execUnitId;
