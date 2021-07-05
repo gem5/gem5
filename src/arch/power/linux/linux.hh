@@ -32,6 +32,9 @@
 
 #include <map>
 
+#include "arch/power/isa.hh"
+#include "arch/power/regs/int.hh"
+#include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
 
 namespace gem5
@@ -213,6 +216,21 @@ class PowerLinux : public Linux
           default:
             return false;
         }
+    }
+
+    static void
+    archClone(uint64_t flags,
+              Process *pp, Process *cp,
+              ThreadContext *ptc, ThreadContext *ctc,
+              uint64_t stack, uint64_t tls)
+    {
+        ctc->getIsaPtr()->copyRegsFrom(ptc);
+
+        if (flags & TGT_CLONE_SETTLS)
+            ctc->setIntReg(PowerISA::ThreadPointerReg, tls);
+
+        if (stack)
+            ctc->setIntReg(PowerISA::StackPointerReg, stack);
     }
 };
 

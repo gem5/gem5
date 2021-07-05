@@ -227,7 +227,7 @@ SyscallDescTable<PowerISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     { 117, "ipc" },
     { 118, "fsync" },
     { 119, "sigreturn" },
-    { 120, "clone" },
+    { 120, "clone", cloneBackwardsFunc<PowerLinux> },
     { 121, "setdomainname" },
     { 122, "uname", unameFunc },
     { 123, "modify_ldt" },

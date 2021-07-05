@@ -55,6 +55,7 @@ const int ArgumentReg4 = 7;
 const int ArgumentReg5 = 8;
 const int StackPointerReg = 1;
 const int TOCPointerReg = 2;
+const int ThreadPointerReg = 13;
 
 enum MiscIntRegNums
 {
