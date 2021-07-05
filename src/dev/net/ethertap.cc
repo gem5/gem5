@@ -472,6 +472,6 @@ EtherTap::sendReal(const void *data, size_t len)
     return true;
 }
 
-} // namespace gem5
+#endif // HAVE_TUNTAP
 
-#endif
+} // namespace gem5
