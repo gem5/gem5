@@ -43,6 +43,8 @@
 #include "cpu/kvm/base.hh"
 #include "dev/arm/base_gic.hh"
 
+struct kvm_reg_list;
+
 namespace gem5
 {
 
@@ -112,7 +114,7 @@ class BaseArmKvmCPU : public BaseKvmCPU
     void kvmArmVCpuInit(const struct kvm_vcpu_init &init);
 
   private:
-    std::unique_ptr<struct kvm_reg_list> tryGetRegList(uint64_t nelem) const;
+    std::unique_ptr<kvm_reg_list> tryGetRegList(uint64_t nelem) const;
 
     /**
      * Get a list of registers supported by getOneReg() and setOneReg().
@@ -121,7 +123,7 @@ class BaseArmKvmCPU : public BaseKvmCPU
      * is too small to hold the complete register list (the required
      * size is written to regs.n in this case). True on success.
      */
-    bool getRegList(struct kvm_reg_list &regs) const;
+    bool getRegList(kvm_reg_list &regs) const;
 
     /**
      * Cached copy of the list of registers supported by KVM

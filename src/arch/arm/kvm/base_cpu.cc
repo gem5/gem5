@@ -201,10 +201,10 @@ BaseArmKvmCPU::getRegList() const
 
         // Request the actual register list now that we know how many
         // register we need to allocate space for.
-        std::unique_ptr<struct kvm_reg_list> regs;
-        const size_t size(sizeof(struct kvm_reg_list) +
+        std::unique_ptr<kvm_reg_list> regs;
+        const size_t size(sizeof(kvm_reg_list) +
                           regs_probe.n * sizeof(uint64_t));
-        regs.reset((struct kvm_reg_list *)operator new(size));
+        regs.reset((kvm_reg_list *)operator new(size));
         regs->n = regs_probe.n;
         if (!getRegList(*regs))
             panic("Failed to determine register list size.\n");
@@ -223,7 +223,7 @@ BaseArmKvmCPU::kvmArmVCpuInit(const struct kvm_vcpu_init &init)
 }
 
 bool
-BaseArmKvmCPU::getRegList(struct kvm_reg_list &regs) const
+BaseArmKvmCPU::getRegList(kvm_reg_list &regs) const
 {
     if (ioctl(KVM_GET_REG_LIST, (void *)&regs) == -1) {
         if (errno == E2BIG) {
