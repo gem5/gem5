@@ -253,8 +253,15 @@ Hdf5::appendStat(const Info &info, int rank, hsize_t *dims, const double *data)
         props.setDeflate(1);
 
         fspace = H5::DataSpace(rank, dims, max_dims.data());
-        data_set = group.createDataSet(info.name, H5::PredType::NATIVE_DOUBLE,
-                                       fspace, props);
+        try {
+            data_set = group.createDataSet(info.name,
+                H5::PredType::NATIVE_DOUBLE, fspace, props);
+        } catch (const H5::Exception &e) {
+          std::string err = "Failed creating H5::DataSet " +  info.name + "; ";
+          err += e.getDetailMsg() + " in " + e.getFuncName();
+          // Rethrow std exception so that it's passed on to the Python world
+          throw std::runtime_error(err);
+        }
 
         if (enableDescriptions && !info.desc.empty()) {
             addMetaData(data_set, "description", info.desc);

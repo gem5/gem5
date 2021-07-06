@@ -11,6 +11,7 @@
 # modified or unmodified, in source code or in binary form.
 #
 # Copyright (c) 2017 Mark D. Hill and David A. Wood
+# Copyright (c) 2021 Huawei International
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,6 +41,7 @@
 Built in test cases that verify particular details about a gem5 run.
 '''
 import re
+import os
 
 from testlib import test_util
 from testlib.configuration import constants
@@ -58,6 +60,17 @@ class Verifier(object):
         name = '-'.join([name_pfx, self.__class__.__name__])
         return test_util.TestFunction(self._test,
                 name=name, fixtures=self.fixtures)
+
+class CheckH5StatsExist(Verifier):
+    def __init__(self, stats_file='stats.h5'):
+        super(CheckH5StatsExist, self).__init__()
+        self.stats_file = stats_file
+
+    def test(self, params):
+        tempdir = params.fixtures[constants.tempdir_fixture_name].path
+        h5_file = joinpath(tempdir, self.stats_file)
+        if not os.path.isfile(h5_file):
+            test_util.fail('Could not find h5 stats file %s', h5_file)
 
 class MatchGoldStandard(Verifier):
     '''
