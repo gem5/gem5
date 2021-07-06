@@ -44,6 +44,7 @@
 #include "dev/arm/base_gic.hh"
 
 struct kvm_reg_list;
+struct kvm_vcpu_init;
 
 namespace gem5
 {
@@ -111,7 +112,7 @@ class BaseArmKvmCPU : public BaseKvmCPU
      *
      * @param target CPU type to emulate
      */
-    void kvmArmVCpuInit(const struct kvm_vcpu_init &init);
+    void kvmArmVCpuInit(const kvm_vcpu_init &init);
 
   private:
     std::unique_ptr<kvm_reg_list> tryGetRegList(uint64_t nelem) const;
