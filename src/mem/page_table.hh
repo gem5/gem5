@@ -162,6 +162,12 @@ class EmulationPageTable : public Serializable
      */
     Fault translate(const RequestPtr &req);
 
+    /**
+     * Dump all items in the pTable, to a concatenation of strings of the form
+     *    Addr:Entry;
+     */
+    const std::string externalize() const;
+
     void getMappings(std::vector<std::pair<Addr, Addr>> *addr_mappings);
 
     void serialize(CheckpointOut &cp) const override;

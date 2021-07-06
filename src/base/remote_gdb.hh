@@ -336,6 +336,7 @@ class BaseRemoteGDB
     bool cmdAsyncStep(GdbCommand::Context &ctx);
     bool cmdClrHwBkpt(GdbCommand::Context &ctx);
     bool cmdSetHwBkpt(GdbCommand::Context &ctx);
+    bool cmdDumpPageTable(GdbCommand::Context &ctx);
 
     struct QuerySetCommand
     {

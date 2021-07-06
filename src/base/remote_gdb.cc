@@ -153,6 +153,7 @@
 #include "mem/port.hh"
 #include "mem/port_proxy.hh"
 #include "sim/full_system.hh"
+#include "sim/process.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -872,6 +873,8 @@ std::map<char, BaseRemoteGDB::GdbCommand> BaseRemoteGDB::commandMap = {
     { 'z', { "KGDB_CLR_HW_BKPT", &BaseRemoteGDB::cmdClrHwBkpt } },
     // insert breakpoint or watchpoint
     { 'Z', { "KGDB_SET_HW_BKPT", &BaseRemoteGDB::cmdSetHwBkpt } },
+    // non-standard RSP extension: dump page table
+    { '.', { "GET_PAGE_TABLE", &BaseRemoteGDB::cmdDumpPageTable } },
 };
 
 bool
@@ -1216,6 +1219,13 @@ BaseRemoteGDB::encodeXferResponse(const std::string &unencoded,
     else
         encoded += 'l';
     encodeBinaryData(unencoded.substr(offset, unencoded_length), encoded);
+}
+
+bool
+BaseRemoteGDB::cmdDumpPageTable(GdbCommand::Context &ctx)
+{
+    send(tc->getProcessPtr()->pTable->externalize().c_str());
+    return true;
 }
 
 bool
