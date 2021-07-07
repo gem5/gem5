@@ -1328,15 +1328,9 @@ class HPI_FUPool(MinorFUPool):
         HPI_MiscFU() # 6
         ]
 
-class HPI_DTB(ArmDTB):
-    size = 256
-
-class HPI_ITB(ArmITB):
-    size = 256
-
 class HPI_MMU(ArmMMU):
-    itb = HPI_ITB()
-    dtb = HPI_DTB()
+    itb = ArmTLB(entry_type="instruction", size=256)
+    dtb = ArmTLB(entry_type="data", size=256)
 
 class HPI_WalkCache(Cache):
     data_latency = 4

@@ -51,9 +51,3 @@ class ArmTLB(BaseTLB):
 class ArmStage2TLB(ArmTLB):
     size = 32
     is_stage2 = True
-
-class ArmITB(ArmTLB):
-    entry_type = "instruction"
-
-class ArmDTB(ArmTLB):
-    entry_type = "data"

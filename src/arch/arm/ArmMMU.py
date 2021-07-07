@@ -35,7 +35,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.ArmTLB import ArmITB, ArmDTB, ArmStage2TLB
+from m5.objects.ArmTLB import ArmTLB, ArmStage2TLB
 from m5.objects.BaseMMU import BaseMMU
 from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
@@ -62,8 +62,9 @@ class ArmMMU(BaseMMU):
     type = 'ArmMMU'
     cxx_class = 'gem5::ArmISA::MMU'
     cxx_header = 'arch/arm/mmu.hh'
-    itb = ArmITB()
-    dtb = ArmDTB()
+
+    itb = ArmTLB(entry_type="instruction")
+    dtb = ArmTLB(entry_type="data")
 
     sys = Param.System(Parent.any, "system object parameter")
 
