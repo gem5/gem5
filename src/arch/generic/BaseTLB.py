@@ -67,3 +67,5 @@ class BaseTLB(SimObject):
                     '`master` is now called `mem_side_port`')
 
     entry_type = Param.TypeTLB("Instruction/Data/Unified TLB entries")
+
+    next_level = Param.BaseTLB(NULL, "next level")

@@ -57,10 +57,12 @@ class BaseTLB : public SimObject
 {
   protected:
     BaseTLB(const BaseTLBParams &p)
-      : SimObject(p), _type(p.entry_type)
+      : SimObject(p), _type(p.entry_type), _nextLevel(p.next_level)
     {}
 
     TypeTLB _type;
+
+    BaseTLB *_nextLevel;
 
   public:
     virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
@@ -119,6 +121,8 @@ class BaseTLB : public SimObject
     void memInvalidate() { flushAll(); }
 
     TypeTLB type() const { return _type; }
+
+    BaseTLB* nextLevel() const { return _nextLevel; }
 };
 
 } // namespace gem5
