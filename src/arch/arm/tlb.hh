@@ -180,7 +180,7 @@ class TLB : public BaseTLB
 
     void setVMID(vmid_t _vmid) { vmid = _vmid; }
 
-    void insert(Addr vaddr, TlbEntry &pte);
+    void insert(TlbEntry &pte);
 
     /** Reset the entire TLB. Used for CPU switching to prevent stale
      * translations after multiple switches

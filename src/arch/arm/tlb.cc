@@ -143,7 +143,7 @@ TLB::lookup(Addr va, uint16_t asn, vmid_t vmid, bool hyp, bool secure,
 
 // insert a new TLB entry
 void
-TLB::insert(Addr addr, TlbEntry &entry)
+TLB::insert(TlbEntry &entry)
 {
     DPRINTF(TLB, "Inserting entry into TLB with pfn:%#x size:%#x vpn: %#x"
             " asid:%d vmid:%d N:%d global:%d valid:%d nc:%d xn:%d"
