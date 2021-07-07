@@ -44,5 +44,5 @@ class SparcMMU(BaseMMU):
     type = 'SparcMMU'
     cxx_class = 'gem5::SparcISA::MMU'
     cxx_header = 'arch/sparc/mmu.hh'
-    itb = SparcTLB()
-    dtb = SparcTLB()
+    itb = SparcTLB(entry_type="instruction")
+    dtb = SparcTLB(entry_type="data")

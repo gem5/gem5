@@ -53,8 +53,8 @@ class IrisMMU(BaseMMU):
     type = 'IrisMMU'
     cxx_class = 'gem5::Iris::MMU'
     cxx_header = 'arch/arm/fastmodel/iris/mmu.hh'
-    itb = IrisTLB()
-    dtb = IrisTLB()
+    itb = IrisTLB(entry_type="instruction")
+    dtb = IrisTLB(entry_type="data")
 
 class IrisInterrupts(BaseInterrupts):
     type = 'IrisInterrupts'

@@ -47,8 +47,8 @@ class RiscvMMU(BaseMMU):
     cxx_class = 'gem5::RiscvISA::MMU'
     cxx_header = 'arch/riscv/mmu.hh'
 
-    itb = RiscvTLB()
-    dtb = RiscvTLB()
+    itb = RiscvTLB(entry_type="instruction")
+    dtb = RiscvTLB(entry_type="data")
     pma_checker = Param.PMAChecker(PMAChecker(), "PMA Checker")
     pmp = Param.PMP(PMP(), "Physical Memory Protection Unit")
 

@@ -53,7 +53,7 @@ class ArmStage2TLB(ArmTLB):
     is_stage2 = True
 
 class ArmITB(ArmTLB):
-    pass
+    entry_type = "instruction"
 
 class ArmDTB(ArmTLB):
-    pass
+    entry_type = "data"

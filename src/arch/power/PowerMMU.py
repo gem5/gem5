@@ -42,5 +42,5 @@ class PowerMMU(BaseMMU):
     type = 'PowerMMU'
     cxx_class = 'gem5::PowerISA::MMU'
     cxx_header = 'arch/power/mmu.hh'
-    itb = PowerTLB()
-    dtb = PowerTLB()
+    itb = PowerTLB(entry_type="instruction")
+    dtb = PowerTLB(entry_type="data")

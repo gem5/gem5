@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2021 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -43,7 +43,9 @@
 
 #include "arch/generic/mmu.hh"
 #include "base/logging.hh"
+#include "enums/TypeTLB.hh"
 #include "mem/request.hh"
+#include "params/BaseTLB.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
@@ -54,7 +56,11 @@ class ThreadContext;
 class BaseTLB : public SimObject
 {
   protected:
-    BaseTLB(const Params &p) : SimObject(p) {}
+    BaseTLB(const BaseTLBParams &p)
+      : SimObject(p), _type(p.entry_type)
+    {}
+
+    TypeTLB _type;
 
   public:
     virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
@@ -111,6 +117,8 @@ class BaseTLB : public SimObject
     virtual Port* getTableWalkerPort() { return NULL; }
 
     void memInvalidate() { flushAll(); }
+
+    TypeTLB type() const { return _type; }
 };
 
 } // namespace gem5

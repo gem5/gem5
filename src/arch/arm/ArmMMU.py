@@ -67,8 +67,12 @@ class ArmMMU(BaseMMU):
 
     sys = Param.System(Parent.any, "system object parameter")
 
-    stage2_itb = Param.ArmTLB(ArmStage2TLB(), "Stage 2 Instruction TLB")
-    stage2_dtb = Param.ArmTLB(ArmStage2TLB(), "Stage 2 Data TLB")
+    stage2_itb = Param.ArmTLB(
+        ArmStage2TLB(entry_type="instruction"),
+        "Stage 2 Instruction TLB")
+    stage2_dtb = Param.ArmTLB(
+        ArmStage2TLB(entry_type="data"),
+        "Stage 2 Data TLB")
 
     itb_walker = Param.ArmTableWalker(
         ArmTableWalker(), "HW Table walker")
