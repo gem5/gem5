@@ -2546,9 +2546,9 @@ NVMInterface::NVMStats::NVMStats(NVMInterface &_nvm)
              "Average memory access latency per NVM burst"),
 
     ADD_STAT(bytesRead, statistics::units::Byte::get(),
-             "Total number of bytes read from DRAM"),
+             "Total number of bytes read from NVM"),
     ADD_STAT(bytesWritten, statistics::units::Byte::get(),
-             "Total number of bytes written to DRAM"),
+             "Total number of bytes written to NVM"),
     ADD_STAT(avgRdBW, statistics::units::Rate<
                 statistics::units::Byte, statistics::units::Second>::get(),
              "Average DRAM read bandwidth in MiBytes/s"),
