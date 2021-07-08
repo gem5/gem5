@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -46,6 +46,7 @@
 #include "arch/arm/page_size.hh"
 #include "arch/arm/types.hh"
 #include "arch/arm/utility.hh"
+#include "enums/TypeTLB.hh"
 #include "sim/serialize.hh"
 
 namespace gem5
@@ -136,6 +137,9 @@ struct TlbEntry : public Serializable
     bool nstid;
     // Exception level on insert, AARCH64 EL0&1, AARCH32 -> el=1
     ExceptionLevel el;
+    // This is used to distinguish between instruction and data entries
+    // in unified TLBs
+    TypeTLB type;
 
     // Type of memory
     bool nonCacheable;     // Can we wrap this in mtype?
@@ -156,7 +160,8 @@ struct TlbEntry : public Serializable
          innerAttrs(0), outerAttrs(0), ap(read_only ? 0x3 : 0), hap(0x3),
          domain(DomainType::Client),  mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), isHyp(false), global(false), valid(true),
-         ns(true), nstid(true), el(EL0), nonCacheable(uncacheable),
+         ns(true), nstid(true), el(EL0), type(TypeTLB::unified),
+         nonCacheable(uncacheable),
          shareable(false), outerShareable(false), xn(0), pxn(0)
     {
         // no restrictions by default, hap = 0x3
@@ -171,7 +176,8 @@ struct TlbEntry : public Serializable
          vmid(0), N(0), innerAttrs(0), outerAttrs(0), ap(0), hap(0x3),
          domain(DomainType::Client), mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), isHyp(false), global(false), valid(false),
-         ns(true), nstid(true), el(EL0), nonCacheable(false),
+         ns(true), nstid(true), el(EL0), type(TypeTLB::unified),
+         nonCacheable(false),
          shareable(false), outerShareable(false), xn(0), pxn(0)
     {
         // no restrictions by default, hap = 0x3
@@ -317,6 +323,7 @@ struct TlbEntry : public Serializable
         SERIALIZE_SCALAR(valid);
         SERIALIZE_SCALAR(ns);
         SERIALIZE_SCALAR(nstid);
+        SERIALIZE_ENUM(type);
         SERIALIZE_SCALAR(nonCacheable);
         SERIALIZE_ENUM(lookupLevel);
         SERIALIZE_ENUM(mtype);
@@ -347,6 +354,7 @@ struct TlbEntry : public Serializable
         UNSERIALIZE_SCALAR(valid);
         UNSERIALIZE_SCALAR(ns);
         UNSERIALIZE_SCALAR(nstid);
+        UNSERIALIZE_ENUM(type);
         UNSERIALIZE_SCALAR(nonCacheable);
         UNSERIALIZE_ENUM(lookupLevel);
         UNSERIALIZE_ENUM(mtype);

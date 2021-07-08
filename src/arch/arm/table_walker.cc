@@ -1449,16 +1449,16 @@ TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,
 
 void
 TableWalker::memAttrsLPAE(ThreadContext *tc, TlbEntry &te,
-    LongDescriptor &lDescriptor)
+    LongDescriptor &l_descriptor)
 {
     assert(_haveLPAE);
 
     uint8_t attr;
-    uint8_t sh = lDescriptor.sh();
+    uint8_t sh = l_descriptor.sh();
     // Different format and source of attributes if this is a stage 2
     // translation
     if (isStage2) {
-        attr = lDescriptor.memAttr();
+        attr = l_descriptor.memAttr();
         uint8_t attr_3_2 = (attr >> 2) & 0x3;
         uint8_t attr_1_0 =  attr       & 0x3;
 
@@ -1479,7 +1479,7 @@ TableWalker::memAttrsLPAE(ThreadContext *tc, TlbEntry &te,
             te.nonCacheable = (attr_3_2 == 1) || (attr_1_0 == 1);
         }
     } else {
-        uint8_t attrIndx = lDescriptor.attrIndx();
+        uint8_t attrIndx = l_descriptor.attrIndx();
 
         // LPAE always uses remapping of memory attributes, irrespective of the
         // value of SCTLR.TRE
@@ -1575,15 +1575,15 @@ TableWalker::memAttrsLPAE(ThreadContext *tc, TlbEntry &te,
 
 void
 TableWalker::memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
-                             LongDescriptor &lDescriptor)
+                             LongDescriptor &l_descriptor)
 {
     uint8_t attr;
     uint8_t attr_hi;
     uint8_t attr_lo;
-    uint8_t sh = lDescriptor.sh();
+    uint8_t sh = l_descriptor.sh();
 
     if (isStage2) {
-        attr = lDescriptor.memAttr();
+        attr = l_descriptor.memAttr();
         uint8_t attr_hi = (attr >> 2) & 0x3;
         uint8_t attr_lo =  attr       & 0x3;
 
@@ -1607,7 +1607,7 @@ TableWalker::memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
                 (attr_lo == 1) || (attr_lo == 2);
         }
     } else {
-        uint8_t attrIndx = lDescriptor.attrIndx();
+        uint8_t attrIndx = l_descriptor.attrIndx();
 
         DPRINTF(TLBVerbose, "memAttrsAArch64 AttrIndx:%#x sh:%#x\n", attrIndx, sh);
         ExceptionLevel regime =  s1TranslationRegime(tc, currState->el);
@@ -2285,13 +2285,13 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
 }
 
 void
-TableWalker::insertTableEntry(DescriptorBase &descriptor, bool longDescriptor)
+TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
 {
     TlbEntry te;
 
     // Create and fill a new page table entry
     te.valid          = true;
-    te.longDescFormat = longDescriptor;
+    te.longDescFormat = long_descriptor;
     te.isHyp          = currState->isHyp;
     te.asid           = currState->asid;
     te.vmid           = currState->vmid;
@@ -2304,6 +2304,9 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool longDescriptor)
     te.ns             = !descriptor.secure(haveSecurity, currState) || isStage2;
     te.nstid          = !currState->isSecure;
     te.xn             = descriptor.xn();
+    te.type           = currState->mode == BaseMMU::Execute ?
+        TypeTLB::instruction : TypeTLB::data;
+
     if (currState->aarch64)
         te.el         = currState->el;
     else
@@ -2315,24 +2318,24 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool longDescriptor)
     // ASID has no meaning for stage 2 TLB entries, so mark all stage 2 entries
     // as global
     te.global         = descriptor.global(currState) || isStage2;
-    if (longDescriptor) {
-        LongDescriptor lDescriptor =
+    if (long_descriptor) {
+        LongDescriptor l_descriptor =
             dynamic_cast<LongDescriptor &>(descriptor);
 
         te.xn |= currState->xnTable;
-        te.pxn = currState->pxnTable || lDescriptor.pxn();
+        te.pxn = currState->pxnTable || l_descriptor.pxn();
         if (isStage2) {
             // this is actually the HAP field, but its stored in the same bit
             // possitions as the AP field in a stage 1 translation.
-            te.hap = lDescriptor.ap();
+            te.hap = l_descriptor.ap();
         } else {
            te.ap = ((!currState->rwTable || descriptor.ap() >> 1) << 1) |
                (currState->userTable && (descriptor.ap() & 0x1));
         }
         if (currState->aarch64)
-            memAttrsAArch64(currState->tc, te, lDescriptor);
+            memAttrsAArch64(currState->tc, te, l_descriptor);
         else
-            memAttrsLPAE(currState->tc, te, lDescriptor);
+            memAttrsLPAE(currState->tc, te, l_descriptor);
     } else {
         te.ap = descriptor.ap();
         memAttrs(currState->tc, te, currState->sctlr, descriptor.texcb(),
