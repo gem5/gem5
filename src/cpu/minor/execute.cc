@@ -37,6 +37,8 @@
 
 #include "cpu/minor/execute.hh"
 
+#include <functional>
+
 #include "arch/locked_mem.hh"
 #include "cpu/minor/cpu.hh"
 #include "cpu/minor/exec_context.hh"
@@ -1685,7 +1687,7 @@ Execute::minorTrace() const
         stalled.str(), executeInfo[0].drainState, isInbetweenInsts(0));
 
     std::for_each(funcUnits.begin(), funcUnits.end(),
-        std::mem_fun(&FUPipeline::minorTrace));
+        std::mem_fn(&FUPipeline::minorTrace));
 
     executeInfo[0].inFlightInsts->minorTrace();
     executeInfo[0].inFUMemInsts->minorTrace();

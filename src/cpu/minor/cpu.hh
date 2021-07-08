@@ -45,9 +45,10 @@
 #define __CPU_MINOR_CPU_HH__
 
 #include "base/compiler.hh"
+#include "base/random.hh"
+#include "cpu/base.hh"
 #include "cpu/minor/activity.hh"
 #include "cpu/minor/stats.hh"
-#include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "enums/ThreadPolicy.hh"
 #include "params/MinorCPU.hh"
@@ -184,7 +185,10 @@ class MinorCPU : public BaseCPU
         for (ThreadID i = 0; i < numThreads; i++) {
             prio_list.push_back(i);
         }
-        std::random_shuffle(prio_list.begin(), prio_list.end());
+
+        std::shuffle(prio_list.begin(), prio_list.end(),
+                     random_mt.gen);
+
         return prio_list;
     }
 
