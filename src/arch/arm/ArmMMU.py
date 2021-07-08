@@ -63,8 +63,12 @@ class ArmMMU(BaseMMU):
     cxx_class = 'gem5::ArmISA::MMU'
     cxx_header = 'arch/arm/mmu.hh'
 
-    itb = ArmTLB(entry_type="instruction")
-    dtb = ArmTLB(entry_type="data")
+    # L2 TLBs
+    l2_shared = ArmTLB(entry_type="unified", size=1280)
+
+    # L1 TLBs
+    itb = ArmTLB(entry_type="instruction", next_level=Parent.l2_shared)
+    dtb = ArmTLB(entry_type="data", next_level=Parent.l2_shared)
 
     sys = Param.System(Parent.any, "system object parameter")
 
