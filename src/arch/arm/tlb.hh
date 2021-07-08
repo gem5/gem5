@@ -47,6 +47,7 @@
 #include "arch/arm/utility.hh"
 #include "arch/generic/tlb.hh"
 #include "base/statistics.hh"
+#include "enums/TypeTLB.hh"
 #include "mem/request.hh"
 #include "params/ArmTLB.hh"
 #include "sim/probe/pmu.hh"
@@ -62,11 +63,17 @@ class TableWalker;
 class TLB;
 
 class TLBIALL;
+class ITLBIALL;
+class DTLBIALL;
 class TLBIALLEL;
 class TLBIVMALL;
 class TLBIALLN;
 class TLBIMVA;
+class ITLBIMVA;
+class DTLBIMVA;
 class TLBIASID;
+class ITLBIASID;
+class DTLBIASID;
 class TLBIMVAA;
 
 class TlbTestInterface
@@ -191,6 +198,8 @@ class TLB : public BaseTLB
     /** Reset the entire TLB
      */
     void flush(const TLBIALL &tlbi_op);
+    void flush(const ITLBIALL &tlbi_op);
+    void flush(const DTLBIALL &tlbi_op);
 
     /** Implementaton of AArch64 TLBI ALLE1(IS), ALLE2(IS), ALLE3(IS)
      * instructions
@@ -210,10 +219,14 @@ class TLB : public BaseTLB
     /** Remove any entries that match both a va and asn
      */
     void flush(const TLBIMVA &tlbi_op);
+    void flush(const ITLBIMVA &tlbi_op);
+    void flush(const DTLBIMVA &tlbi_op);
 
     /** Remove any entries that match the asn
      */
     void flush(const TLBIASID &tlbi_op);
+    void flush(const ITLBIASID &tlbi_op);
+    void flush(const DTLBIASID &tlbi_op);
 
     /** Remove all entries that match the va regardless of asn
      */
@@ -283,10 +296,11 @@ class TLB : public BaseTLB
      * @param secure_lookup if the operation affects the secure world
      * @param ignore_asn if the flush should ignore the asn
      * @param in_host if hcr.e2h == 1 and hcr.tge == 1 for VHE.
+     * @param entry_type type of entry to flush (instruction/data/unified)
      */
     void _flushMva(Addr mva, uint64_t asn, bool secure_lookup,
                    bool ignore_asn, ExceptionLevel target_el,
-                   bool in_host);
+                   bool in_host, TypeTLB entry_type);
 };
 
 } // namespace ArmISA
