@@ -141,6 +141,41 @@ TLB::lookup(Addr va, uint16_t asn, vmid_t vmid, bool hyp, bool secure,
     return retval;
 }
 
+TlbEntry*
+TLB::multiLookup(Addr va, uint16_t asid, vmid_t vmid, bool hyp, bool secure,
+                 bool functional, bool ignore_asn, ExceptionLevel target_el,
+                 bool in_host, BaseMMU::Mode mode)
+{
+    TlbEntry* te = lookup(va, asid, vmid, hyp, secure, functional,
+                          ignore_asn, target_el, in_host, mode);
+
+    if (te) {
+        checkPromotion(te, mode);
+    } else {
+        if (auto tlb = static_cast<TLB*>(nextLevel())) {
+            te = tlb->multiLookup(va, asid, vmid, hyp, secure, functional,
+                                  ignore_asn, target_el, in_host, mode);
+            if (te && !functional)
+                insert(*te);
+        }
+    }
+
+    return te;
+}
+
+void
+TLB::checkPromotion(TlbEntry *entry, BaseMMU::Mode mode)
+{
+    TypeTLB acc_type = (mode == BaseMMU::Execute) ?
+       TypeTLB::instruction : TypeTLB::data;
+
+    // Hitting an instruction TLB entry on a data access or
+    // a data TLB entry on an instruction access:
+    // promoting the entry to unified
+    if (!(entry->type & acc_type))
+       entry->type = TypeTLB::unified;
+}
+
 // insert a new TLB entry
 void
 TLB::insert(TlbEntry &entry)
@@ -162,14 +197,23 @@ TLB::insert(TlbEntry &entry)
                 table[size-1].nstid, table[size-1].global, table[size-1].isHyp,
                 table[size-1].el);
 
-    //inserting to MRU position and evicting the LRU one
-
+    // inserting to MRU position and evicting the LRU one
     for (int i = size - 1; i > 0; --i)
         table[i] = table[i-1];
     table[0] = entry;
 
     stats.inserts++;
     ppRefills->notify(1);
+}
+
+void
+TLB::multiInsert(TlbEntry &entry)
+{
+    insert(entry);
+
+    if (auto next_level = static_cast<TLB*>(nextLevel())) {
+        next_level->multiInsert(entry);
+    }
 }
 
 void

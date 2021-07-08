@@ -175,6 +175,26 @@ class TLB : public BaseTLB
                      bool ignore_asn, ExceptionLevel target_el,
                      bool in_host, BaseMMU::Mode mode);
 
+    /** Lookup an entry in the TLB and in the next levels by
+     * following the nextLevel pointer
+     *
+     * @param vpn virtual address
+     * @param asn context id/address space id to use
+     * @param vmid The virtual machine ID used for stage 2 translation
+     * @param secure if the lookup is secure
+     * @param hyp if the lookup is done from hyp mode
+     * @param functional if the lookup should modify state
+     * @param ignore_asn if on lookup asn should be ignored
+     * @param target_el selecting the translation regime
+     * @param in_host if we are in host (EL2&0 regime)
+     * @param mode to differentiate between read/writes/fetches.
+     * @return pointer to TLB entry if it exists
+     */
+    TlbEntry *multiLookup(Addr vpn, uint16_t asn, vmid_t vmid, bool hyp,
+                          bool secure, bool functional,
+                          bool ignore_asn, ExceptionLevel target_el,
+                          bool in_host, BaseMMU::Mode mode);
+
     virtual ~TLB();
 
     void takeOverFrom(BaseTLB *otlb) override;
@@ -187,7 +207,11 @@ class TLB : public BaseTLB
 
     void setVMID(vmid_t _vmid) { vmid = _vmid; }
 
+    /** Insert a PTE in the current TLB */
     void insert(TlbEntry &pte);
+
+    /** Insert a PTE in the current TLB and in the higher levels */
+    void multiInsert(TlbEntry &pte);
 
     /** Reset the entire TLB. Used for CPU switching to prevent stale
      * translations after multiple switches
@@ -301,6 +325,13 @@ class TLB : public BaseTLB
     void _flushMva(Addr mva, uint64_t asn, bool secure_lookup,
                    bool ignore_asn, ExceptionLevel target_el,
                    bool in_host, TypeTLB entry_type);
+
+    /** Check if the tlb entry passed as an argument needs to
+     * be "promoted" as a unified entry:
+     * this should happen if we are hitting an instruction TLB entry on a
+     * data access or a data TLB entry on an instruction access:
+     */
+    void checkPromotion(TlbEntry *entry, BaseMMU::Mode mode);
 };
 
 } // namespace ArmISA

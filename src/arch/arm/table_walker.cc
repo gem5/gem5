@@ -478,9 +478,9 @@ TableWalker::processWalkWrapper()
 
     // Check if a previous walk filled this request already
     // @TODO Should this always be the TLB or should we look in the stage2 TLB?
-    TlbEntry* te = tlb->lookup(currState->vaddr, currState->asid,
-            currState->vmid, currState->isHyp, currState->isSecure, true, false,
-            currState->el, false, BaseMMU::Read);
+    TlbEntry* te = mmu->lookup(currState->vaddr, currState->asid,
+        currState->vmid, currState->isHyp, currState->isSecure, true, false,
+        currState->el, false, isStage2, currState->mode);
 
     // Check if we still need to have a walk for this request. If the requesting
     // instruction has been squashed, or a previous walk has filled the TLB with
@@ -544,9 +544,9 @@ TableWalker::processWalkWrapper()
         // peak at the next one
         if (pendingQueue.size()) {
             currState = pendingQueue.front();
-            te = tlb->lookup(currState->vaddr, currState->asid,
+            te = mmu->lookup(currState->vaddr, currState->asid,
                 currState->vmid, currState->isHyp, currState->isSecure, true,
-                false, currState->el, false, BaseMMU::Read);
+                false, currState->el, false, isStage2, currState->mode);
         } else {
             // Terminate the loop, nothing more to do
             currState = NULL;
@@ -2354,8 +2354,8 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
             descriptor.lookupLevel, static_cast<uint8_t>(descriptor.domain()),
             descriptor.getRawData());
 
-    // Insert the entry into the TLB
-    tlb->insert(te);
+    // Insert the entry into the TLBs
+    tlb->multiInsert(te);
     if (!currState->timing) {
         currState->tc  = NULL;
         currState->req = NULL;

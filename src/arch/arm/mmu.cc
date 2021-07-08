@@ -1089,8 +1089,16 @@ MMU::updateMiscReg(ThreadContext *tc,
 
         itbStage2->setVMID(state.vmid);
         dtbStage2->setVMID(state.vmid);
-        getITBPtr()->setVMID(state.vmid);
-        getDTBPtr()->setVMID(state.vmid);
+
+        for (auto tlb : instruction) {
+            static_cast<TLB*>(tlb)->setVMID(state.vmid);
+        }
+        for (auto tlb : data) {
+            static_cast<TLB*>(tlb)->setVMID(state.vmid);
+        }
+        for (auto tlb : unified) {
+            static_cast<TLB*>(tlb)->setVMID(state.vmid);
+        }
 
         miscRegContext = tc->contextId();
     }
@@ -1309,6 +1317,16 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         is_secure, tran_type, stage2 ? s2State : s1State);
 }
 
+TlbEntry*
+MMU::lookup(Addr va, uint16_t asid, vmid_t vmid, bool hyp, bool secure,
+            bool functional, bool ignore_asn, ExceptionLevel target_el,
+            bool in_host, bool stage2, BaseMMU::Mode mode)
+{
+    TLB *tlb = getTlb(mode, stage2);
+    return tlb->multiLookup(va, asid, vmid, hyp, secure, functional,
+                            ignore_asn, target_el, in_host, mode);
+}
+
 Fault
 MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         Translation *translation, bool timing, bool functional,
@@ -1331,9 +1349,9 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         vaddr = vaddr_tainted;
     }
 
-    auto tlb = getTlb(mode, state.isStage2);
-    *te = tlb->lookup(vaddr, state.asid, state.vmid, state.isHyp, is_secure,
-                      false, false, target_el, false, mode);
+    *te = lookup(vaddr, state.asid, state.vmid, state.isHyp, is_secure, false,
+                 false, target_el, false, state.isStage2, mode);
+
     if (*te == NULL) {
         if (req->isPrefetch()) {
             // if the request is a prefetch don't attempt to fill the TLB or go
@@ -1361,10 +1379,8 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
             return fault;
         }
 
-        *te = tlb->lookup(vaddr, state.asid, state.vmid, state.isHyp, is_secure,
-                          true, false, target_el, false, mode);
-        if (!*te)
-            tlb->printTlb();
+        *te = lookup(vaddr, state.asid, state.vmid, state.isHyp, is_secure,
+                     true, false, target_el, false, state.isStage2, mode);
         assert(*te);
     }
     return NoFault;

@@ -269,8 +269,15 @@ class MMU : public BaseMMU
     void
     flushStage1(const OP &tlbi_op)
     {
-        iflush(tlbi_op);
-        dflush(tlbi_op);
+        for (auto tlb : instruction) {
+            static_cast<TLB*>(tlb)->flush(tlbi_op);
+        }
+        for (auto tlb : data) {
+            static_cast<TLB*>(tlb)->flush(tlbi_op);
+        }
+        for (auto tlb : unified) {
+            static_cast<TLB*>(tlb)->flush(tlbi_op);
+        }
     }
 
     template <typename OP>
@@ -285,14 +292,24 @@ class MMU : public BaseMMU
     void
     iflush(const OP &tlbi_op)
     {
-        getITBPtr()->flush(tlbi_op);
+        for (auto tlb : instruction) {
+            static_cast<TLB*>(tlb)->flush(tlbi_op);
+        }
+        for (auto tlb : unified) {
+            static_cast<TLB*>(tlb)->flush(tlbi_op);
+        }
     }
 
     template <typename OP>
     void
     dflush(const OP &tlbi_op)
     {
-        getDTBPtr()->flush(tlbi_op);
+        for (auto tlb : data) {
+            static_cast<TLB*>(tlb)->flush(tlbi_op);
+        }
+        for (auto tlb : unified) {
+            static_cast<TLB*>(tlb)->flush(tlbi_op);
+        }
     }
 
     void
@@ -325,6 +342,24 @@ class MMU : public BaseMMU
     static ExceptionLevel tranTypeEL(CPSR cpsr, ArmTranslationType type);
 
   public:
+    /** Lookup an entry in the TLB
+     * @param vpn virtual address
+     * @param asn context id/address space id to use
+     * @param vmid The virtual machine ID used for stage 2 translation
+     * @param secure if the lookup is secure
+     * @param hyp if the lookup is done from hyp mode
+     * @param functional if the lookup should modify state
+     * @param ignore_asn if on lookup asn should be ignored
+     * @param target_el selecting the translation regime
+     * @param in_host if we are in host (EL2&0 regime)
+     * @param mode to differentiate between read/writes/fetches.
+     * @return pointer to TLB entry if it exists
+     */
+    TlbEntry *lookup(Addr vpn, uint16_t asn, vmid_t vmid, bool hyp,
+                     bool secure, bool functional,
+                     bool ignore_asn, ExceptionLevel target_el,
+                     bool in_host, bool stage2, BaseMMU::Mode mode);
+
     Fault getTE(TlbEntry **te, const RequestPtr &req,
                 ThreadContext *tc, Mode mode,
                 Translation *translation, bool timing, bool functional,
