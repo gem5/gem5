@@ -61,11 +61,12 @@ class Checkpoint;
 class Random : public Serializable
 {
 
-  private:
-
-    std::mt19937_64 gen;
-
   public:
+
+    /**
+     * @ingroup api_base_utils
+     */
+    std::mt19937_64 gen;
 
     /**
      * @ingroup api_base_utils
