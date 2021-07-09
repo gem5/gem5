@@ -576,18 +576,16 @@ class Executable(object, metaclass=ExecutableMeta):
         env['BIN_RPATH_PREFIX'] = os.path.relpath(
                 env['BUILDDIR'], self.path(env).dir.abspath)
 
-        if env['STRIP_EXES']:
-            stripped = self.path(env)
-            unstripped = env.File(str(stripped) + '.unstripped')
-            if sys.platform == 'sunos5':
-                cmd = 'cp $SOURCE $TARGET; strip $TARGET'
-            else:
-                cmd = 'strip $SOURCE -o $TARGET'
-            env.Program(unstripped, objs)
-            return env.Command(stripped, unstripped,
-                               MakeAction(cmd, Transform("STRIP")))
+        executable = env.Program(self.path(env), objs)[0]
+
+        if sys.platform == 'sunos5':
+            cmd = 'cp $SOURCE $TARGET; strip $TARGET'
         else:
-            return env.Program(self.path(env), objs)
+            cmd = 'strip $SOURCE -o $TARGET'
+        stripped = env.Command(str(executable) + '.stripped',
+                executable, MakeAction(cmd, Transform("STRIP")))[0]
+
+        return [executable, stripped]
 
 class GTest(Executable):
     '''Create a unit test based on the google test framework.'''
@@ -1344,7 +1342,7 @@ Gem5('gem5')
 # environment 'env' with modified object suffix and optional stripped
 # binary.  Additional keyword arguments are appended to corresponding
 # build environment vars.
-def makeEnv(env, label, objsfx, strip=False, **kwargs):
+def makeEnv(env, label, objsfx, **kwargs):
     # SCons doesn't know to append a library suffix when there is a '.' in the
     # name.  Use '_' instead.
     libname = 'gem5_' + label
@@ -1390,7 +1388,6 @@ def makeEnv(env, label, objsfx, strip=False, **kwargs):
 
     # Record some settings for building Executables.
     new_env['EXE_SUFFIX'] = label
-    new_env['STRIP_EXES'] = strip
 
     for cls in ExecutableMeta.all:
         cls.declare_all(new_env)
@@ -1469,7 +1466,7 @@ if 'opt' in needed_envs:
 
 # "Fast" binary
 if 'fast' in needed_envs:
-    makeEnv(env, 'fast', '.fo', strip = True,
+    makeEnv(env, 'fast', '.fo',
             CCFLAGS = Split(ccflags['fast']),
             CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
             LINKFLAGS = Split(ldflags['fast']))
