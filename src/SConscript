@@ -1345,7 +1345,7 @@ if main['USE_PYTHON']:
 # List of constructed environments to pass back to SConstruct
 date_source = Source('base/date.cc', tags=[])
 
-gem5_binary = Gem5('gem5')
+Gem5('gem5')
 
 # Function to create a new build environment as clone of current
 # environment 'env' with modified object suffix and optional stripped
@@ -1355,7 +1355,6 @@ def makeEnv(env, label, objsfx, strip=False, **kwargs):
     # SCons doesn't know to append a library suffix when there is a '.' in the
     # name.  Use '_' instead.
     libname = 'gem5_' + label
-    secondary_exename = 'm5.' + label
 
     new_env = env.Clone(OBJSUFFIX=objsfx, SHOBJSUFFIX=objsfx + 's')
     new_env.Label = label
@@ -1402,11 +1401,6 @@ def makeEnv(env, label, objsfx, strip=False, **kwargs):
 
     for cls in ExecutableMeta.all:
         cls.declare_all(new_env)
-
-    new_env.M5Binary = File(gem5_binary.path(new_env))
-
-    new_env.Command(secondary_exename, new_env.M5Binary,
-            MakeAction('ln $SOURCE $TARGET', Transform("HARDLINK")))
 
 # Start out with the compiler flags common to all compilers,
 # i.e. they all use -g for opt and -g -pg for prof
