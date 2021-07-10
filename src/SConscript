@@ -1322,7 +1322,6 @@ def makeEnv(env, label, objsfx, **kwargs):
     libname = 'gem5_' + label
 
     new_env = env.Clone(OBJSUFFIX=objsfx, SHOBJSUFFIX=objsfx + 's')
-    new_env.Label = label
     new_env.Append(**kwargs)
 
     lib_sources = Source.all.with_tag(new_env, 'gem5 lib')
