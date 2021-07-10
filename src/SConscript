@@ -1407,7 +1407,7 @@ else:
 # need.  We try to identify the needed environment for each target; if
 # we can't, we fall back on instantiating all the environments just to
 # be safe.
-target_types = ['debug', 'opt', 'fast', 'prof', 'perf']
+target_types = {'debug', 'opt', 'fast', 'prof', 'perf'}
 obj2target = {'do': 'debug', 'o': 'opt', 'fo': 'fast', 'po': 'prof',
               'gpo' : 'perf'}
 
@@ -1419,9 +1419,9 @@ def identifyTarget(t):
         return obj2target[ext]
     return 'all'
 
-needed_envs = [identifyTarget(target) for target in BUILD_TARGETS]
+needed_envs = {identifyTarget(target) for target in BUILD_TARGETS}
 if 'all' in needed_envs:
-    needed_envs += target_types
+    needed_envs = target_types
 
 # Debug binary
 if 'debug' in needed_envs:
