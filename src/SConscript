@@ -48,8 +48,6 @@ import re
 import sys
 import zlib
 
-from os.path import dirname, exists, isdir, isfile, join as joinpath
-
 import SCons
 
 from gem5_scons import Transform, warning, error
@@ -327,7 +325,7 @@ def Blob(blob_path, symbol):
     '''
     blob_path = os.path.abspath(blob_path)
     blob_out_dir = os.path.join(env['BUILDDIR'], 'blobs')
-    path_noext = joinpath(blob_out_dir, symbol)
+    path_noext = os.path.join(blob_out_dir, symbol)
     cpp_path = path_noext + '.cc'
     hpp_path = path_noext + '.hh'
     def embedBlob(target, source, env):
@@ -348,7 +346,7 @@ def Blob(blob_path, symbol):
     Source(cpp_path)
 
 def GdbXml(xml_id, symbol):
-    Blob(joinpath(gdb_xml_dir, xml_id), symbol)
+    Blob(os.path.join(gdb_xml_dir, xml_id), symbol)
 
 class Source(SourceFile):
     pass
@@ -380,13 +378,13 @@ class PySource(SourceFile):
 
         arcpath = path + [ basename ]
         abspath = self.snode.abspath
-        if not exists(abspath):
+        if not os.path.exists(abspath):
             abspath = self.tnode.abspath
 
         self.package = package
         self.modname = modname
         self.modpath = modpath
-        self.arcname = joinpath(*arcpath)
+        self.arcname = os.path.join(*arcpath)
         self.abspath = abspath
         self.compiled = File(self.filename + 'c')
         self.cpp = File(self.filename + '.cc')
@@ -688,15 +686,16 @@ for root, dirs, files in os.walk(base_dir, topdown=True):
         continue
 
     if 'SConscript' in files:
-        build_dir = joinpath(env['BUILDDIR'], root[len(base_dir) + 1:])
-        SConscript(joinpath(root, 'SConscript'), variant_dir=build_dir)
+        build_dir = os.path.join(env['BUILDDIR'], root[len(base_dir) + 1:])
+        SConscript(os.path.join(root, 'SConscript'), variant_dir=build_dir)
 
 for extra_dir in extras_dir_list:
-    prefix_len = len(dirname(extra_dir)) + 1
+    prefix_len = len(os.path.dirname(extra_dir)) + 1
 
     # Also add the corresponding build directory to pick up generated
     # include files.
-    env.Append(CPPPATH=Dir(joinpath(env['BUILDDIR'], extra_dir[prefix_len:])))
+    env.Append(CPPPATH=Dir(os.path.join(env['BUILDDIR'],
+                    extra_dir[prefix_len:])))
 
     for root, dirs, files in os.walk(extra_dir, topdown=True):
         # if build lives in the extras directory, don't walk down it
@@ -704,8 +703,8 @@ for extra_dir in extras_dir_list:
             dirs.remove('build')
 
         if 'SConscript' in files:
-            build_dir = joinpath(env['BUILDDIR'], root[prefix_len:])
-            SConscript(joinpath(root, 'SConscript'), variant_dir=build_dir)
+            build_dir = os.path.join(env['BUILDDIR'], root[prefix_len:])
+            SConscript(os.path.join(root, 'SConscript'), variant_dir=build_dir)
 
 for opt in export_vars:
     env.ConfigFile(opt)
