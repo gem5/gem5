@@ -694,8 +694,7 @@ for extra_dir in extras_dir_list:
 
     # Also add the corresponding build directory to pick up generated
     # include files.
-    env.Append(CPPPATH=Dir(os.path.join(env['BUILDDIR'],
-                    extra_dir[prefix_len:])))
+    env.Append(CPPPATH=Dir(env['BUILDDIR']).Dir(extra_dir[prefix_len:]))
 
     for root, dirs, files in os.walk(extra_dir, topdown=True):
         # if build lives in the extras directory, don't walk down it
