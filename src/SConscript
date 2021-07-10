@@ -1365,17 +1365,32 @@ def makeEnv(env, label, objsfx, **kwargs):
     for cls in ExecutableMeta.all:
         cls.declare_all(new_env)
 
-# Start out with the compiler flags common to all compilers,
-# i.e. they all use -g for opt and -g -pg for prof
-ccflags = {'debug' : [], 'opt' : ['-g'], 'fast' : [], 'prof' : ['-g', '-pg'],
-           'perf' : ['-g']}
+class EnvParams(object):
+    def __init__(self, label, obj, ccflags=None, cppdefines=None,
+            ldflags=None):
+        self.label = label
+        self.obj = obj
+        self.ccflags = ccflags if ccflags else []
+        self.cppdefines = cppdefines if cppdefines else []
+        self.ldflags = ldflags if ldflags else []
 
-# Start out with the linker flags common to all linkers, i.e. -pg for
-# prof, and -lprofiler for perf. The -lprofile flag is surrounded by
-# no-as-needed and as-needed as the binutils linker is too clever and
-# simply doesn't link to the library otherwise.
-ldflags = {'debug' : [], 'opt' : [], 'fast' : [], 'prof' : ['-pg'],
-           'perf' : ['-Wl,--no-as-needed', '-lprofiler', '-Wl,--as-needed']}
+# Start out with the compiler flags common to all compilers and linkers,
+# i.e. all compilers use -g for opt and -g -pg for prof, and all linkers use
+# -pg for prof, and -lprofiler for perf.
+env_params = {
+    'debug': EnvParams('debug', 'do', cppdefines=['DEBUG', 'TRACING_ON=1']),
+    'opt': EnvParams('opt', 'o', ccflags=['-g'], cppdefines=['TRACING_ON=1']),
+    'fast': EnvParams('fast', 'fo', cppdefines=['NDEBUG', 'TRACING_ON=0']),
+    'prof': EnvParams('prof', 'po', ccflags=['-g', '-pg'],
+                      cppdefines=['NDEBUG', 'TRACING_ON=0'], ldflags=['-pg']),
+    # The -lprofile flag is surrounded by no-as-needed and as-needed as the
+    # binutils linker is too clever and simply doesn't link to the library
+    # otherwise.
+    'perf': EnvParams('perf', 'gpo', ccflags=['-g'],
+                      cppdefines=['NDEBUG', 'TRACING_ON=0'],
+                      ldflags=['-Wl,--no-as-needed', '-lprofiler',
+                               '-Wl,--as-needed'])
+}
 
 # For Link Time Optimization, the optimisation flags used to compile
 # individual files are decoupled from those used at link time
@@ -1383,77 +1398,46 @@ ldflags = {'debug' : [], 'opt' : [], 'fast' : [], 'prof' : ['-pg'],
 # to also update the linker flags based on the target.
 if env['GCC']:
     if sys.platform == 'sunos5':
-        ccflags['debug'] += ['-gstabs+']
+        env_params['debug'].ccflags += ['-gstabs+']
     else:
-        ccflags['debug'] += ['-ggdb3']
-    ldflags['debug'] += ['-O0']
+        env_params['debug'].ccflags += ['-ggdb3']
+    env_params['debug'].ldflags += ['-O0']
     # opt, fast, prof and perf all share the same cc flags, also add
     # the optimization to the ldflags as LTO defers the optimization
     # to link time
     for target in ['opt', 'fast', 'prof', 'perf']:
-        ccflags[target] += ['-O3'] + env['LTO_CCFLAGS']
-        ldflags[target] += ['-O3'] + env['LTO_LDFLAGS']
+        env_params[target].ccflags += ['-O3'] + env['LTO_CCFLAGS']
+        env_params[target].ldflags += ['-O3'] + env['LTO_LDFLAGS']
 
 elif env['CLANG']:
-    ccflags['debug'] += ['-g', '-O0']
+    env_params['debug'].ccflags += ['-g', '-O0']
     # opt, fast, prof and perf all share the same cc flags
     for target in ['opt', 'fast', 'prof', 'perf']:
-        ccflags[target] += ['-O3']
+        env_params[target].ccflags += ['-O3']
 else:
     error('Unknown compiler, please fix compiler options')
 
 
-# To speed things up, we only instantiate the build environments we
-# need.  We try to identify the needed environment for each target; if
-# we can't, we fall back on instantiating all the environments just to
-# be safe.
-target_types = {'debug', 'opt', 'fast', 'prof', 'perf'}
-obj2target = {'do': 'debug', 'o': 'opt', 'fo': 'fast', 'po': 'prof',
-              'gpo' : 'perf'}
+# To speed things up, we only instantiate the build environments we need. We
+# try to identify the needed environment for each target; if we can't, we fall
+# back on instantiating all the environments just to be safe.
 
-def identifyTarget(t):
-    ext = t.split('.')[-1]
-    if ext in target_types:
-        return ext
-    if ext in obj2target:
-        return obj2target[ext]
-    return 'all'
+# A set of all the extensions on targets.
+target_exts = set({ os.path.splitext(t)[1] for t in BUILD_TARGETS })
+needed_envs = set()
+for ext in target_exts:
+    if ext:
+        ext = ext[1:]
+    match = next((p for p in env_params.values() if ext in (p.label, p.obj)),
+                 None)
+    if match:
+        needed_envs.add(match)
+    else:
+        needed_envs |= set(env_params.values())
+        break
 
-needed_envs = {identifyTarget(target) for target in BUILD_TARGETS}
-if 'all' in needed_envs:
-    needed_envs = target_types
-
-# Debug binary
-if 'debug' in needed_envs:
-    makeEnv(env, 'debug', '.do',
-            CCFLAGS = Split(ccflags['debug']),
-            CPPDEFINES = ['DEBUG', 'TRACING_ON=1'],
-            LINKFLAGS = Split(ldflags['debug']))
-
-# Optimized binary
-if 'opt' in needed_envs:
-    makeEnv(env, 'opt', '.o',
-            CCFLAGS = Split(ccflags['opt']),
-            CPPDEFINES = ['TRACING_ON=1'],
-            LINKFLAGS = Split(ldflags['opt']))
-
-# "Fast" binary
-if 'fast' in needed_envs:
-    makeEnv(env, 'fast', '.fo',
-            CCFLAGS = Split(ccflags['fast']),
-            CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-            LINKFLAGS = Split(ldflags['fast']))
-
-# Profiled binary using gprof
-if 'prof' in needed_envs:
-    makeEnv(env, 'prof', '.po',
-            CCFLAGS = Split(ccflags['prof']),
-            CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-            LINKFLAGS = Split(ldflags['prof']))
-
-# Profiled binary using google-pprof
-if 'perf' in needed_envs:
-    makeEnv(env, 'perf', '.gpo',
-            CCFLAGS = Split(ccflags['perf']),
-            CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-            LINKFLAGS = Split(ldflags['perf']))
+for params in needed_envs:
+    makeEnv(env, params.label, '.' + params.obj,
+            CCFLAGS = Split(params.ccflags),
+            CPPDEFINES = Split(params.cppdefines),
+            LINKFLAGS = Split(params.ldflags))
