@@ -278,10 +278,6 @@ class SourceFile(object, metaclass=SourceMeta):
         return str(self.tnode)
 
     @property
-    def dirname(self):
-        return dirname(self.filename)
-
-    @property
     def basename(self):
         return basename(self.filename)
 
