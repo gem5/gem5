@@ -533,7 +533,7 @@ class Executable(object, metaclass=ExecutableMeta):
         self.dir = Dir('.')
 
     def path(self, env):
-        return self.dir.File(self.target + '.' + env['EXE_SUFFIX'])
+        return self.dir.File(self.target + '.${EXE_SUFFIX}')
 
     def srcs_to_objs(self, env, sources):
         return list([ s.static(env) for s in sources ])
@@ -550,7 +550,7 @@ class Executable(object, metaclass=ExecutableMeta):
         env['BIN_RPATH_PREFIX'] = os.path.relpath(
                 env['BUILDDIR'], self.path(env).dir.abspath)
 
-        executable = env.Program(self.path(env), objs)[0]
+        executable = env.Program(self.path(env).abspath, objs)[0]
 
         if sys.platform == 'sunos5':
             cmd = 'cp $SOURCE $TARGET; strip $TARGET'
@@ -576,7 +576,7 @@ class GTest(Executable):
         env.Append(CPPFLAGS=env['GTEST_CPPFLAGS'])
         env['GTEST_LIB_SOURCES'] = Source.all.with_tag(env, 'gtest lib')
         env['GTEST_OUT_DIR'] = \
-            Dir(env['BUILDDIR']).Dir('unittests.' + env['EXE_SUFFIX'])
+            Dir(env['BUILDDIR']).Dir('unittests.${EXE_SUFFIX}')
         return super(GTest, cls).declare_all(env)
 
     def declare(self, env):
@@ -591,7 +591,7 @@ class GTest(Executable):
 
         out_dir = env['GTEST_OUT_DIR']
         xml_file = out_dir.Dir(str(self.dir)).File(self.target + '.xml')
-        AlwaysBuild(env.Command(xml_file, binary,
+        AlwaysBuild(env.Command(xml_file.abspath, binary,
             "${SOURCES[0]} --gtest_output=xml:${TARGETS[0]}"))
 
         return binary
@@ -1390,7 +1390,7 @@ for env in (envs[e] for e in needed_envs):
     env['SHARED_LIB'] = shared_lib
 
     # Record some settings for building Executables.
-    env['EXE_SUFFIX'] = env['ENV_LABEL']
+    env['EXE_SUFFIX'] = '${ENV_LABEL}'
 
     for cls in ExecutableMeta.all:
         cls.declare_all(env)
