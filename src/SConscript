@@ -1286,85 +1286,23 @@ date_source = Source('base/date.cc', tags=[])
 
 Gem5('gem5')
 
-# Function to create a new build environment as clone of current
-# environment 'env' with modified object suffix and optional stripped
-# binary.  Additional keyword arguments are appended to corresponding
-# build environment vars.
-def makeEnv(env, label, objsfx, **kwargs):
-    # SCons doesn't know to append a library suffix when there is a '.' in the
-    # name.  Use '_' instead.
-    libname = 'gem5_' + label
+env['SHOBJSUFFIX'] = '${OBJSUFFIX}s'
 
-    new_env = env.Clone(OBJSUFFIX=objsfx, SHOBJSUFFIX=objsfx + 's')
-    new_env.Append(**kwargs)
-
-    lib_sources = Source.all.with_tag(new_env, 'gem5 lib')
-
-    # Without Python, leave out all Python content from the library
-    # builds.  The option doesn't affect gem5 built as a program
-    if GetOption('without_python'):
-        lib_sources = lib_sources.without_tag(new_env, 'python')
-
-    static_objs = list([ s.static(new_env) for s in lib_sources ])
-    shared_objs = list([ s.shared(new_env) for s in lib_sources ])
-
-    static_date = date_source.static(new_env)
-    new_env.Depends(static_date, static_objs)
-    static_objs.extend(static_date)
-
-    shared_date = date_source.shared(new_env)
-    new_env.Depends(shared_date, shared_objs)
-    shared_objs.extend(shared_date)
-
-    main_objs = [ s.static(new_env) for s in
-            Source.all.with_tag(new_env, 'main') ]
-
-    # First make a library of everything but main() so other programs can
-    # link against m5.
-    static_lib = new_env.StaticLibrary(libname, static_objs)
-    shared_lib = new_env.SharedLibrary(libname, shared_objs)
-
-    # Keep track of the object files generated so far so Executables can
-    # include them.
-    new_env['STATIC_OBJS'] = static_objs
-    new_env['SHARED_OBJS'] = shared_objs
-    new_env['MAIN_OBJS'] = main_objs
-
-    new_env['STATIC_LIB'] = static_lib
-    new_env['SHARED_LIB'] = shared_lib
-
-    # Record some settings for building Executables.
-    new_env['EXE_SUFFIX'] = label
-
-    for cls in ExecutableMeta.all:
-        cls.declare_all(new_env)
-
-class EnvParams(object):
-    def __init__(self, label, obj, ccflags=None, cppdefines=None,
-            ldflags=None):
-        self.label = label
-        self.obj = obj
-        self.ccflags = ccflags if ccflags else []
-        self.cppdefines = cppdefines if cppdefines else []
-        self.ldflags = ldflags if ldflags else []
-
-# Start out with the compiler flags common to all compilers and linkers,
-# i.e. all compilers use -g for opt and -g -pg for prof, and all linkers use
-# -pg for prof, and -lprofiler for perf.
-env_params = {
-    'debug': EnvParams('debug', 'do', cppdefines=['DEBUG', 'TRACING_ON=1']),
-    'opt': EnvParams('opt', 'o', ccflags=['-g'], cppdefines=['TRACING_ON=1']),
-    'fast': EnvParams('fast', 'fo', cppdefines=['NDEBUG', 'TRACING_ON=0']),
-    'prof': EnvParams('prof', 'po', ccflags=['-g', '-pg'],
-                      cppdefines=['NDEBUG', 'TRACING_ON=0'], ldflags=['-pg']),
-    # The -lprofile flag is surrounded by no-as-needed and as-needed as the
-    # binutils linker is too clever and simply doesn't link to the library
-    # otherwise.
-    'perf': EnvParams('perf', 'gpo', ccflags=['-g'],
-                      cppdefines=['NDEBUG', 'TRACING_ON=0'],
-                      ldflags=['-Wl,--no-as-needed', '-lprofiler',
-                               '-Wl,--as-needed'])
+envs = {
+    'debug': env.Clone(ENV_LABEL='debug', OBJSUFFIX='.do'),
+    'opt': env.Clone(ENV_LABEL='opt', OBJSUFFIX='.o'),
+    'fast': env.Clone(ENV_LABEL='fast', OBJSUFFIX='.fo'),
+    'prof': env.Clone(ENV_LABEL='prof', OBJSUFFIX='.po'),
+    'perf': env.Clone(ENV_LABEL='perf', OBJSUFFIX='.gpo')
 }
+
+envs['debug'].Append(CPPDEFINES=['DEBUG', 'TRACING_ON=1'])
+envs['opt'].Append(CCFLAGS=['-g'], CPPDEFINES=['TRACING_ON=1'])
+envs['fast'].Append(CPPDEFINES=['NDEBUG', 'TRACING_ON=0'])
+envs['prof'].Append(CCFLAGS=['-g', '-pg'], LDFLAGS=['-pg'],
+        CPPDEFINES=['NDEBUG', 'TRACING_ON=0'])
+envs['perf'].Append(CCFLAGS=['-g'], CPPDEFINES=['NDEBUG', 'TRACING_ON=0'],
+        LDFLAGS=['-Wl,--no-as-needed', '-lprofiler', '-Wl,--as-needed'])
 
 # For Link Time Optimization, the optimisation flags used to compile
 # individual files are decoupled from those used at link time
@@ -1372,22 +1310,22 @@ env_params = {
 # to also update the linker flags based on the target.
 if env['GCC']:
     if sys.platform == 'sunos5':
-        env_params['debug'].ccflags += ['-gstabs+']
+        envs['debug'].Append(CCFLAGS=['-gstabs+'])
     else:
-        env_params['debug'].ccflags += ['-ggdb3']
-    env_params['debug'].ldflags += ['-O0']
+        envs['debug'].Append(CCFLAGS=['-ggdb3'])
+    envs['debug'].Append(LDFLAGS=['-O0'])
     # opt, fast, prof and perf all share the same cc flags, also add
     # the optimization to the ldflags as LTO defers the optimization
     # to link time
     for target in ['opt', 'fast', 'prof', 'perf']:
-        env_params[target].ccflags += ['-O3'] + env['LTO_CCFLAGS']
-        env_params[target].ldflags += ['-O3'] + env['LTO_LDFLAGS']
+        envs[target].Append(CCFLAGS=['-O3', '${LTO_CCFLAGS}'])
+        envs[target].Append(LDFLAGS=['-O3', '${LTO_LDFLAGS}'])
 
 elif env['CLANG']:
-    env_params['debug'].ccflags += ['-g', '-O0']
+    envs['debug'].Append(CCFLAGS=['-g', '-O0'])
     # opt, fast, prof and perf all share the same cc flags
     for target in ['opt', 'fast', 'prof', 'perf']:
-        env_params[target].ccflags += ['-O3']
+        envs[target].Append(CCFLAGS=['-O3'])
 else:
     error('Unknown compiler, please fix compiler options')
 
@@ -1400,18 +1338,59 @@ else:
 target_exts = set({ os.path.splitext(t)[1] for t in BUILD_TARGETS })
 needed_envs = set()
 for ext in target_exts:
-    if ext:
-        ext = ext[1:]
-    match = next((p for p in env_params.values() if ext in (p.label, p.obj)),
-                 None)
+    match = next((e for e in envs.values() if ext in (
+                    '.' + e['ENV_LABEL'], e['OBJSUFFIX'])), None)
     if match:
-        needed_envs.add(match)
+        needed_envs.add(match['ENV_LABEL'])
     else:
-        needed_envs |= set(env_params.values())
+        needed_envs |= set(envs.keys())
         break
 
-for params in needed_envs:
-    makeEnv(env, params.label, '.' + params.obj,
-            CCFLAGS = Split(params.ccflags),
-            CPPDEFINES = Split(params.cppdefines),
-            LINKFLAGS = Split(params.ldflags))
+
+# Function to create a new build environment as clone of current
+# environment 'env' with modified object suffix and optional stripped
+# binary.
+for env in (envs[e] for e in needed_envs):
+    # SCons doesn't know to append a library suffix when there is a '.' in the
+    # name.  Use '_' instead.
+    libname = 'gem5_${ENV_LABEL}'
+
+    lib_sources = Source.all.with_tag(env, 'gem5 lib')
+
+    # Without Python, leave out all Python content from the library
+    # builds.  The option doesn't affect gem5 built as a program
+    if GetOption('without_python'):
+        lib_sources = lib_sources.without_tag(env, 'python')
+
+    static_objs = list([ s.static(env) for s in lib_sources ])
+    shared_objs = list([ s.shared(env) for s in lib_sources ])
+
+    static_date = date_source.static(env)
+    env.Depends(static_date, static_objs)
+    static_objs.extend(static_date)
+
+    shared_date = date_source.shared(env)
+    env.Depends(shared_date, shared_objs)
+    shared_objs.extend(shared_date)
+
+    main_objs = [ s.static(env) for s in Source.all.with_tag(env, 'main') ]
+
+    # First make a library of everything but main() so other programs can
+    # link against m5.
+    static_lib = env.StaticLibrary(libname, static_objs)
+    shared_lib = env.SharedLibrary(libname, shared_objs)
+
+    # Keep track of the object files generated so far so Executables can
+    # include them.
+    env['STATIC_OBJS'] = static_objs
+    env['SHARED_OBJS'] = shared_objs
+    env['MAIN_OBJS'] = main_objs
+
+    env['STATIC_LIB'] = static_lib
+    env['SHARED_LIB'] = shared_lib
+
+    # Record some settings for building Executables.
+    env['EXE_SUFFIX'] = env['ENV_LABEL']
+
+    for cls in ExecutableMeta.all:
+        cls.declare_all(env)
