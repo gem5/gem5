@@ -250,6 +250,7 @@ class SourceFile(object, metaclass=SourceMeta):
             tnode = File(source)
 
         self.tnode = tnode
+        self.filename = str(self.tnode)
         self.snode = tnode.srcnode()
 
         for base in type(self).__mro__:
@@ -273,10 +274,6 @@ class SourceFile(object, metaclass=SourceMeta):
         if not key in self.shared_objs:
             self.shared_objs[key] = env.SharedObject(self.tnode)
         return self.shared_objs[key]
-
-    @property
-    def filename(self):
-        return str(self.tnode)
 
     @property
     def basename(self):
