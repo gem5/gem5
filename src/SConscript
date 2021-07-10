@@ -48,7 +48,7 @@ import re
 import sys
 import zlib
 
-from os.path import basename, dirname, exists, isdir, isfile, join as joinpath
+from os.path import dirname, exists, isdir, isfile, join as joinpath
 
 import SCons
 
@@ -275,10 +275,6 @@ class SourceFile(object, metaclass=SourceMeta):
             self.shared_objs[key] = env.SharedObject(self.tnode)
         return self.shared_objs[key]
 
-    @property
-    def basename(self):
-        return basename(self.filename)
-
     def __lt__(self, other): return self.filename < other.filename
     def __le__(self, other): return self.filename <= other.filename
     def __gt__(self, other): return self.filename > other.filename
@@ -375,7 +371,8 @@ class PySource(SourceFile):
         '''specify the python package, the source file, and any tags'''
         super(PySource, self).__init__(source, tags, add_tags)
 
-        modname, ext = os.path.splitext(self.basename)
+        basename = os.path.basename(self.filename)
+        modname, ext = os.path.splitext(basename)
         assert ext == '.py'
 
         if package:
@@ -388,7 +385,7 @@ class PySource(SourceFile):
             modpath += [ modname ]
         modpath = '.'.join(modpath)
 
-        arcpath = path + [ self.basename ]
+        arcpath = path + [ basename ]
         abspath = self.snode.abspath
         if not exists(abspath):
             abspath = self.tnode.abspath
@@ -461,7 +458,8 @@ class ProtoBuf(SourceFile):
             error('Got protobuf to build, but lacks support!')
 
         # Get the file name and the extension
-        modname, ext = os.path.splitext(self.basename)
+        basename = os.path.basename(self.filename)
+        modname, ext = os.path.splitext(basename)
         assert ext == '.proto'
 
         self.cc_file, self.hh_file = env.ProtoBufCC(source=source)
