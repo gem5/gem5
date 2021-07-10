@@ -275,13 +275,6 @@ class SourceFile(object, metaclass=SourceMeta):
             self.shared_objs[key] = env.SharedObject(self.tnode)
         return self.shared_objs[key]
 
-    def __lt__(self, other): return self.filename < other.filename
-    def __le__(self, other): return self.filename <= other.filename
-    def __gt__(self, other): return self.filename > other.filename
-    def __ge__(self, other): return self.filename >= other.filename
-    def __eq__(self, other): return self.filename == other.filename
-    def __ne__(self, other): return self.filename != other.filename
-
 def blobToCpp(data, symbol, cpp_code, hpp_code=None, namespace=None):
     '''
     Convert bytes data into C++ .cpp and .hh uint8_t byte array
