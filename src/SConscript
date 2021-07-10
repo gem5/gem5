@@ -43,6 +43,7 @@ import distutils.spawn
 import functools
 import imp
 import os
+import os.path
 import re
 import sys
 import zlib
@@ -281,15 +282,6 @@ class SourceFile(object, metaclass=SourceMeta):
     def basename(self):
         return basename(self.filename)
 
-    @property
-    def extname(self):
-        index = self.basename.rfind('.')
-        if index <= 0:
-            # dot files aren't extensions
-            return self.basename, None
-
-        return self.basename[:index], self.basename[index+1:]
-
     def __lt__(self, other): return self.filename < other.filename
     def __le__(self, other): return self.filename <= other.filename
     def __gt__(self, other): return self.filename > other.filename
@@ -386,8 +378,8 @@ class PySource(SourceFile):
         '''specify the python package, the source file, and any tags'''
         super(PySource, self).__init__(source, tags, add_tags)
 
-        modname,ext = self.extname
-        assert ext == 'py'
+        modname, ext = os.path.splitext(self.basename)
+        assert ext == '.py'
 
         if package:
             path = package.split('.')
@@ -472,8 +464,8 @@ class ProtoBuf(SourceFile):
             error('Got protobuf to build, but lacks support!')
 
         # Get the file name and the extension
-        modname,ext = self.extname
-        assert ext == 'proto'
+        modname, ext = os.path.splitext(self.basename)
+        assert ext == '.proto'
 
         self.cc_file, self.hh_file = env.ProtoBufCC(source=source)
 
