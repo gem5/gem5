@@ -345,16 +345,27 @@ RubyPort::MemResponsePort::recvAtomic(PacketPtr pkt)
                RubySystem::getBlockSizeBytes());
     }
 
-    // Find appropriate directory for address
-    // This assumes that protocols have a Directory machine,
-    // which has its memPort hooked up to memory. This can
-    // fail for some custom protocols.
-    MachineID id = ruby_port->m_controller->mapAddressToMachine(
-                    pkt->getAddr(), MachineType_Directory);
+    // Find the machine type of memory controller interface
     RubySystem *rs = ruby_port->m_ruby_system;
-    AbstractController *directory =
-        rs->m_abstract_controls[id.getType()][id.getNum()];
-    Tick latency = directory->recvAtomic(pkt);
+    static int mem_interface_type = -1;
+    if (mem_interface_type == -1) {
+        if (rs->m_abstract_controls[MachineType_Directory].size() != 0) {
+            mem_interface_type = MachineType_Directory;
+        }
+        else if (rs->m_abstract_controls[MachineType_Memory].size() != 0) {
+            mem_interface_type = MachineType_Memory;
+        }
+        else {
+            panic("Can't find the memory controller interface\n");
+        }
+    }
+
+    // Find the controller for the target address
+    MachineID id = ruby_port->m_controller->mapAddressToMachine(
+                    pkt->getAddr(), (MachineType)mem_interface_type);
+    AbstractController *mem_interface =
+        rs->m_abstract_controls[mem_interface_type][id.getNum()];
+    Tick latency = mem_interface->recvAtomic(pkt);
     if (access_backing_store)
         rs->getPhysMem()->access(pkt);
     return latency;
