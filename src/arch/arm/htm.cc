@@ -129,7 +129,7 @@ ArmISA::HTMCheckpoint::restore(ThreadContext *tc, HtmFailureFaultCause cause)
       case HtmFailureFaultCause::EXPLICIT:
         replaceBits(error_code, 14, 0, tcreason);
         replaceBits(error_code, 16, 1);
-        retry = bits(15, tcreason);
+        retry = bits(tcreason, 15);
         break;
       case HtmFailureFaultCause::MEMORY:
         replaceBits(error_code, 17, 1);
