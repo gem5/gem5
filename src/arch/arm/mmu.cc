@@ -99,6 +99,8 @@ MMU::init()
 
     getITBPtr()->setTableWalker(itbWalker);
     getDTBPtr()->setTableWalker(dtbWalker);
+
+    BaseMMU::init();
 }
 
 void

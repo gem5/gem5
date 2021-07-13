@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2016-2017, 2019-2020 ARM Limited
+ * Copyright (c) 2011-2012,2016-2017, 2019-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,10 +48,47 @@ namespace gem5
 {
 
 void
+BaseMMU::init()
+{
+    auto traverse_hierarchy = [this](BaseTLB *starter) {
+        for (BaseTLB *tlb = starter; tlb; tlb = tlb->nextLevel()) {
+            switch (tlb->type()) {
+              case TypeTLB::instruction:
+                if (instruction.find(tlb) == instruction.end())
+                    instruction.insert(tlb);
+                break;
+              case TypeTLB::data:
+                if (data.find(tlb) == data.end())
+                    data.insert(tlb);
+                break;
+              case TypeTLB::unified:
+                if (unified.find(tlb) == unified.end())
+                    unified.insert(tlb);
+                break;
+              default:
+                panic("Invalid TLB type\n");
+            }
+        }
+    };
+
+    traverse_hierarchy(itb);
+    traverse_hierarchy(dtb);
+}
+
+void
 BaseMMU::flushAll()
 {
-    dtb->flushAll();
-    itb->flushAll();
+    for (auto tlb : instruction) {
+        tlb->flushAll();
+    }
+
+    for (auto tlb : data) {
+        tlb->flushAll();
+    }
+
+    for (auto tlb : unified) {
+        tlb->flushAll();
+    }
 }
 
 void
