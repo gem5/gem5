@@ -985,7 +985,7 @@ void
 GPUComputeDriver::allocateGpuVma(Request::CacheCoherenceFlags mtype,
                                  Addr start, Addr length)
 {
-    AddrRange range = AddrRange(start, start + length - 1);
+    AddrRange range = AddrRange(start, start + length);
     DPRINTF(GPUDriver, "Registering [%p - %p] with MTYPE %d\n",
             range.start(), range.end(), mtype);
     fatal_if(gpuVmas.insert(range, mtype) == gpuVmas.end(),
