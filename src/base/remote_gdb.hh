@@ -190,8 +190,19 @@ class BaseRemoteGDB
     /*
      * Connection to the external GDB.
      */
+
+    /*
+     * Asynchronous socket events and event handlers.
+     *
+     * These events occur asynchronously and are handled asynchronously
+     * to main simulation loop - therefore they *shall not* interact with
+     * rest of gem5.
+     *
+     * The only thing they do is to schedule a synchronous event at instruction
+     * boundary to deal with the request.
+     */
     void incomingData(int revent);
-    void connectWrapper(int revent) { connect(); }
+    void incomingConnection(int revent);
 
     template <void (BaseRemoteGDB::*F)(int revent)>
     class SocketEvent : public PollEvent
@@ -207,14 +218,16 @@ class BaseRemoteGDB
         void process(int revent) { (gdb->*F)(revent); }
     };
 
-    typedef SocketEvent<&BaseRemoteGDB::connectWrapper> ConnectEvent;
-    typedef SocketEvent<&BaseRemoteGDB::incomingData> DataEvent;
+    typedef SocketEvent<&BaseRemoteGDB::incomingConnection>
+        IncomingConnectionEvent;
+    typedef SocketEvent<&BaseRemoteGDB::incomingData>
+        IncomingDataEvent;
 
-    friend ConnectEvent;
-    friend DataEvent;
+    friend IncomingConnectionEvent;
+    friend IncomingDataEvent;
 
-    ConnectEvent *connectEvent;
-    DataEvent *dataEvent;
+    IncomingConnectionEvent *incomingConnectionEvent;
+    IncomingDataEvent *incomingDataEvent;
 
     ListenSocket listener;
     int _port;
@@ -248,7 +261,6 @@ class BaseRemoteGDB
     /*
      * Simulator side debugger state.
      */
-    bool active = false;
     bool attached = false;
     bool threadSwitching = false;
 
@@ -258,6 +270,9 @@ class BaseRemoteGDB
     ThreadContext *tc = nullptr;
 
     BaseGdbRegCache *regCachePtr = nullptr;
+
+    EventWrapper<BaseRemoteGDB, &BaseRemoteGDB::connect> connectEvent;
+    EventWrapper<BaseRemoteGDB, &BaseRemoteGDB::detach>  disconnectEvent;
 
     class TrapEvent : public Event
     {

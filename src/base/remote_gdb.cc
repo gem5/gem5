@@ -356,14 +356,16 @@ std::map<Addr, HardBreakpoint *> hardBreakMap;
 }
 
 BaseRemoteGDB::BaseRemoteGDB(System *_system, int _port) :
-        connectEvent(nullptr), dataEvent(nullptr), _port(_port), fd(-1),
-        sys(_system), trapEvent(this), singleStepEvent(*this)
+        incomingConnectionEvent(nullptr), incomingDataEvent(nullptr),
+        _port(_port), fd(-1), sys(_system),
+        connectEvent(this), disconnectEvent(this), trapEvent(this),
+        singleStepEvent(*this)
 {}
 
 BaseRemoteGDB::~BaseRemoteGDB()
 {
-    delete connectEvent;
-    delete dataEvent;
+    delete incomingConnectionEvent;
+    delete incomingDataEvent;
 }
 
 std::string
@@ -385,8 +387,9 @@ BaseRemoteGDB::listen()
         _port++;
     }
 
-    connectEvent = new ConnectEvent(this, listener.getfd(), POLLIN);
-    pollQueue.schedule(connectEvent);
+    incomingConnectionEvent =
+            new IncomingConnectionEvent(this, listener.getfd(), POLLIN);
+    pollQueue.schedule(incomingConnectionEvent);
 
     ccprintf(std::cerr, "%d: %s: listening for remote gdb on port %d\n",
              curTick(), name(), _port);
@@ -397,6 +400,8 @@ BaseRemoteGDB::connect()
 {
     panic_if(!listener.islistening(),
              "Can't accept GDB connections without any threads!");
+
+    pollQueue.remove(incomingConnectionEvent);
 
     int sfd = listener.accept(true);
 
@@ -421,23 +426,48 @@ BaseRemoteGDB::attach(int f)
 {
     fd = f;
 
-    dataEvent = new DataEvent(this, fd, POLLIN);
-    pollQueue.schedule(dataEvent);
-
     attached = true;
     DPRINTFN("remote gdb attached\n");
+
+    processCommands();
+
+    if (isAttached()) {
+        // At this point an initial communication with GDB is handled
+        // and we're ready to continue. Here we arrange IncomingDataEvent
+        // to get notified when GDB breaks in.
+        //
+        // However, GDB can decide to disconnect during that initial
+        // communication. In that case, we cannot arrange data event because
+        // the socket is already closed (not that it makes any sense, anyways).
+        //
+        // Hence the check above.
+        incomingDataEvent = new IncomingDataEvent(this, fd, POLLIN);
+        pollQueue.schedule(incomingDataEvent);
+    }
 }
 
 void
 BaseRemoteGDB::detach()
 {
     attached = false;
-    active = false;
     clearSingleStep();
     close(fd);
     fd = -1;
 
-    pollQueue.remove(dataEvent);
+    if (incomingDataEvent) {
+        // incomingDataEvent gets scheduled in attach() after
+        // initial communication with GDB is handled and GDB tells
+        // gem5 to continue.
+        //
+        // GDB can disconnect before that in which case `incomingDataEvent`
+        // is NULL.
+        //
+        // Hence the check above.
+
+        pollQueue.remove(incomingDataEvent);
+        incomingDataEvent = nullptr;
+    }
+    pollQueue.schedule(incomingConnectionEvent);
     DPRINTFN("remote gdb detached\n");
 }
 
@@ -498,19 +528,7 @@ BaseRemoteGDB::trap(ContextID id, int signum)
 
     clearSingleStep();
 
-    /*
-     * The first entry to this function is normally through
-     * a breakpoint trap in kgdb_connect(), in which case we
-     * must advance past the breakpoint because gdb will not.
-     *
-     * On the first entry here, we expect that gdb is not yet
-     * listening to us, so just enter the interaction loop.
-     * After the debugger is "active" (connected) it will be
-     * waiting for a "signaled" message from us.
-     */
-    if (!active) {
-        active = true;
-    } else if (threadSwitching) {
+    if (threadSwitching) {
         threadSwitching = false;
         // Tell GDB the thread switch has completed.
         send("OK");
@@ -520,6 +538,19 @@ BaseRemoteGDB::trap(ContextID id, int signum)
     }
 
     processCommands(signum);
+}
+
+void
+BaseRemoteGDB::incomingConnection(int revent)
+{
+    if (connectEvent.scheduled()) {
+        warn("GDB connect event has already been scheduled!");
+        return;
+    }
+
+    if (revent & POLLIN) {
+        scheduleInstCommitEvent(&connectEvent, 0);
+    }
 }
 
 void
@@ -536,7 +567,7 @@ BaseRemoteGDB::incomingData(int revent)
         scheduleInstCommitEvent(&trapEvent, 0);
     } else if (revent & POLLNVAL) {
         descheduleInstCommitEvent(&trapEvent);
-        detach();
+        scheduleInstCommitEvent(&disconnectEvent, 0);
     }
 }
 
