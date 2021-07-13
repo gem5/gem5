@@ -10,7 +10,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright 2015 LabWare
+ * Copyright 2015, 2021 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
@@ -171,7 +171,7 @@ class BaseRemoteGDB
     void replaceThreadContext(ThreadContext *_tc);
     bool selectThreadContext(ContextID id);
 
-    bool trap(ContextID id, int type);
+    void trap(ContextID id, int signum);
 
     /** @} */ // end of api_remote_gdb
 

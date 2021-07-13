@@ -10,7 +10,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright 2015 LabWare
+ * Copyright 2015, 2021 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
@@ -483,15 +483,15 @@ BaseRemoteGDB::selectThreadContext(ContextID id)
 // present, but might eventually become meaningful. (XXX) It might
 // makes sense to use POSIX errno values, because that is what the
 // gdb/remote.c functions want to return.
-bool
-BaseRemoteGDB::trap(ContextID id, int type)
+void
+BaseRemoteGDB::trap(ContextID id, int signum)
 {
     if (!attached)
-        return false;
+        return;
 
     if (tc->contextId() != id) {
         if (!selectThreadContext(id))
-            return false;
+            return;
     }
 
     DPRINTF(GDBMisc, "trap: PC=%s\n", tc->pcState());
@@ -516,7 +516,7 @@ BaseRemoteGDB::trap(ContextID id, int type)
         send("OK");
     } else {
         // Tell remote host that an exception has occurred.
-        send("S%02x", type);
+        send("S%02x", signum);
     }
 
     // Stick frame regs into our reg cache.
@@ -524,7 +524,7 @@ BaseRemoteGDB::trap(ContextID id, int type)
     regCachePtr->getRegs(tc);
 
     GdbCommand::Context cmd_ctx;
-    cmd_ctx.type = type;
+    cmd_ctx.type = signum;
     std::vector<char> data;
 
     for (;;) {
@@ -561,8 +561,6 @@ BaseRemoteGDB::trap(ContextID id, int type)
             panic("Unrecognzied GDB exception.");
         }
     }
-
-    return true;
 }
 
 void
