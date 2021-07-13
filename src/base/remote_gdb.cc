@@ -519,50 +519,7 @@ BaseRemoteGDB::trap(ContextID id, int signum)
         send("S%02x", signum);
     }
 
-    // Stick frame regs into our reg cache.
-    regCachePtr = gdbRegs();
-    regCachePtr->getRegs(tc);
-
-    GdbCommand::Context cmd_ctx;
-    cmd_ctx.type = signum;
-    std::vector<char> data;
-
-    for (;;) {
-        try {
-            recv(data);
-            if (data.size() == 1)
-                throw BadClient();
-            cmd_ctx.cmdByte = data[0];
-            cmd_ctx.data = data.data() + 1;
-            // One for sentinel, one for cmdByte.
-            cmd_ctx.len = data.size() - 2;
-
-            auto cmd_it = commandMap.find(cmd_ctx.cmdByte);
-            if (cmd_it == commandMap.end()) {
-                DPRINTF(GDBMisc, "Unknown command: %c(%#x)\n",
-                        cmd_ctx.cmdByte, cmd_ctx.cmdByte);
-                throw Unsupported();
-            }
-            cmd_ctx.cmd = &(cmd_it->second);
-
-            if (!(this->*(cmd_ctx.cmd->func))(cmd_ctx))
-                break;
-
-        } catch (BadClient &e) {
-            if (e.warning)
-                warn(e.warning);
-            detach();
-            break;
-        } catch (Unsupported &e) {
-            send("");
-        } catch (CmdError &e) {
-            send(e.error);
-        } catch (std::exception &e) {
-            panic("Unrecognzied GDB exception: %s", e.what());
-        } catch (...) {
-            panic("Unrecognzied GDB exception.");
-        }
-    }
+    processCommands(signum);
 }
 
 void
@@ -681,6 +638,55 @@ BaseRemoteGDB::send(const char *bp)
         // send an error back.
         c = getbyte();
     } while ((c & 0x7f) == GDBBadP);
+}
+
+void
+BaseRemoteGDB::processCommands(int signum)
+{
+    // Stick frame regs into our reg cache.
+    regCachePtr = gdbRegs();
+    regCachePtr->getRegs(tc);
+
+    GdbCommand::Context cmd_ctx;
+    cmd_ctx.type = signum;
+    std::vector<char> data;
+
+    for (;;) {
+        try {
+            recv(data);
+            if (data.size() == 1)
+                throw BadClient();
+            cmd_ctx.cmdByte = data[0];
+            cmd_ctx.data = data.data() + 1;
+            // One for sentinel, one for cmdByte.
+            cmd_ctx.len = data.size() - 2;
+
+            auto cmd_it = commandMap.find(cmd_ctx.cmdByte);
+            if (cmd_it == commandMap.end()) {
+                DPRINTF(GDBMisc, "Unknown command: %c(%#x)\n",
+                        cmd_ctx.cmdByte, cmd_ctx.cmdByte);
+                throw Unsupported();
+            }
+            cmd_ctx.cmd = &(cmd_it->second);
+
+            if (!(this->*(cmd_ctx.cmd->func))(cmd_ctx))
+                break;
+
+        } catch (BadClient &e) {
+            if (e.warning)
+                warn(e.warning);
+            detach();
+            break;
+        } catch (Unsupported &e) {
+            send("");
+        } catch (CmdError &e) {
+            send(e.error);
+        } catch (std::exception &e) {
+            panic("Unrecognized GDB exception: %s", e.what());
+        } catch (...) {
+            panic("Unrecognized GDB exception.");
+        }
+    }
 }
 
 // Read bytes from kernel address space for debugger.

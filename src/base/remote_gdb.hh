@@ -238,6 +238,14 @@ class BaseRemoteGDB
     }
 
     /*
+     * Process commands from remote GDB. If simulation has been
+     * stopped because of some kind of fault (as segmentation violation,
+     * or SW trap), 'signum' is the signal value reported back to GDB
+     * in "S" packet (this is done in trap()).
+     */
+    void processCommands(int signum=0);
+
+    /*
      * Simulator side debugger state.
      */
     bool active = false;
