@@ -836,7 +836,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             // of the region.
             //
             // This is a simplified version of regular system VMAs, but for
-            // GPUVM space (non of the clobber/remap nonsense we find in real
+            // GPUVM space (none of the clobber/remap nonsense we find in real
             // OS managed memory).
             allocateGpuVma(mtype, args->va_addr, args->size);
 
