@@ -332,9 +332,9 @@ class HSAPacketProcessor: public DmaVirtDevice
     void getCommandsFromHost(int pid, uint32_t rl_idx);
 
     // PIO interface
-    virtual Tick read(Packet*);
-    virtual Tick write(Packet*);
-    virtual AddrRangeList getAddrRanges() const;
+    virtual Tick read(Packet*) override;
+    virtual Tick write(Packet*) override;
+    virtual AddrRangeList getAddrRanges() const override;
     void finishPkt(void *pkt, uint32_t rl_idx);
     void finishPkt(void *pkt) { finishPkt(pkt, 0); }
     void schedAQLProcessing(uint32_t rl_idx);
