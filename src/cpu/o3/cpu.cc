@@ -46,6 +46,7 @@
 #include "cpu/activity.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/checker/thread_context.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/thread_context.hh"
 #include "cpu/simple_thread.hh"

@@ -51,7 +51,6 @@
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/inst_res.hh"
-#include "cpu/o3/dyn_inst.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
