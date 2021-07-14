@@ -645,7 +645,10 @@ GPUCoalescer::makeRequest(PacketPtr pkt)
         // of the exec_mask.
         int num_packets = 1;
         if (!m_usingRubyTester) {
-            num_packets = getDynInst(pkt)->exec_mask.count();
+            num_packets = 0;
+            for (int i = 0; i < TheGpuISA::NumVecElemPerVecReg; i++) {
+                num_packets += getDynInst(pkt)->getLaneStatus(i);
+            }
         }
 
         // the pkt is temporarily stored in the uncoalesced table until
