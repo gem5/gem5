@@ -132,6 +132,13 @@ import gem5_scons
 from gem5_scons.builders import ConfigFile, AddLocalRPATH, SwitchingHeaders
 from gem5_scons.util import compareVersions, readCommand
 
+# Disable warnings when targets can be built with multiple environments but
+# with the same actions. This can happen intentionally if, for instance, a
+# generated source file is used to build object files in different ways in
+# different environments, but generating the source file itself is exactly the
+# same. This can be re-enabled from the command line if desired.
+SetOption('warn', 'no-duplicate-environment')
+
 Export('MakeAction')
 
 ########################################################################
