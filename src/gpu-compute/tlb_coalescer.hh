@@ -100,7 +100,7 @@ class TLBCoalescer : public ClockedObject
      * option is to change it to curTick(), so we coalesce based
      * on the receive time.
      */
-    typedef std::unordered_map<int64_t, std::vector<coalescedReq>>
+    typedef std::map<int64_t, std::vector<coalescedReq>>
         CoalescingFIFO;
 
     CoalescingFIFO coalescerFIFO;
