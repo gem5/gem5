@@ -430,36 +430,25 @@ def protoc_emitter(target, source, env):
     root, ext = os.path.splitext(source[0].get_abspath())
     return [root + '.pb.cc', root + '.pb.h'], source
 
-env.Append(BUILDERS={'ProtoBufCC' : Builder(
-            action=MakeAction('${PROTOC} --cpp_out ${BUILDDIR} '
-                              '--proto_path ${BUILDDIR} '
-                              '${SOURCE.get_abspath()}',
-                              Transform("PROTOC")),
-            emitter=protoc_emitter
-        )})
+protoc_action = MakeAction('${PROTOC} --cpp_out ${BUILDDIR} '
+        '--proto_path ${BUILDDIR} ${SOURCE.get_abspath()}',
+        Transform("PROTOC"))
+protobuf_builder = Builder(action=protoc_action, emitter=protoc_emitter,
+        src_suffix='.proto')
+env.Append(BUILDERS={'ProtoBufCC' : protobuf_builder})
 
-class ProtoBuf(SourceFile):
+c_file, cxx_file = SCons.Tool.createCFileBuilders(env)
+cxx_file.add_action('.proto', protoc_action)
+cxx_file.add_emitter('.proto', protoc_emitter)
+
+def ProtoBuf(source, tags=None, add_tags=None):
     '''Add a Protocol Buffer to build'''
 
-    def __init__(self, source, tags=None, add_tags=None):
-        '''Specify the source file, and any tags'''
-        super(ProtoBuf, self).__init__(source, tags, add_tags)
+    if not env['HAVE_PROTOC'] or not env['HAVE_PROTOBUF']:
+        error('Got protobuf to build, but lacks support!')
 
-        if not env['HAVE_PROTOC'] or not env['HAVE_PROTOBUF']:
-            error('Got protobuf to build, but lacks support!')
-
-        # Get the file name and the extension
-        basename = os.path.basename(self.filename)
-        modname, ext = os.path.splitext(basename)
-        assert ext == '.proto'
-
-        self.cc_file, self.hh_file = env.ProtoBufCC(source=source)
-
-        # Add the C++ source file
-        Source(self.cc_file, tags=self.tags,
-                append={'CXXFLAGS': '-Wno-array-bounds'})
-
-
+    '''Specify the source file, and any tags'''
+    Source(source, tags, add_tags, append={'CXXFLAGS': '-Wno-array-bounds'})
 
 env['PROTOC_GRPC'] = distutils.spawn.find_executable('grpc_cpp_plugin')
 if env['PROTOC_GRPC']:
@@ -469,34 +458,24 @@ def protoc_grpc_emitter(target, source, env):
     root, ext = os.path.splitext(source[0].get_abspath())
     return [root + '.grpc.pb.cc', root + '.grpc.pb.h'], source
 
+protoc_grpc_action=MakeAction('${PROTOC} --grpc_out ${BUILDDIR} '
+        '--plugin=protoc-gen-grpc=${PROTOC_GRPC} --proto_path ${BUILDDIR} '
+        '${SOURCE.get_abspath()}',
+        Transform("PROTOC"))
+
 env.Append(BUILDERS={'GrpcProtoBufCC' : Builder(
-            action=MakeAction('${PROTOC} --grpc_out ${BUILDDIR} '
-                              '--plugin=protoc-gen-grpc=${PROTOC_GRPC} '
-                              '--proto_path ${BUILDDIR} '
-                              '${SOURCE.get_abspath()}',
-                              Transform("PROTOC")),
+            action=protoc_grpc_action,
             emitter=protoc_grpc_emitter
         )})
 
-class GrpcProtoBuf(SourceFile):
+def GrpcProtoBuf(source, tags=None, add_tags=None):
     '''Add a GRPC protocol buffer to the build'''
 
-    def __init__(self, source, tags=None, add_tags=None):
-        '''Specify the source file, and any tags'''
+    if not env['PROTOC_GRPC']:
+        error('No grpc_cpp_plugin found')
 
-        super(GrpcProtoBuf, self).__init__(source, tags, add_tags)
-
-        if not env['PROTOC_GRPC']:
-            error('No grpc_cpp_plugin found')
-
-        self.cc_file, self.hh_file = env.GrpcProtoBufCC(source=source)
-
-        # We still need to build the normal protobuf code too.
-        self.protobuf = ProtoBuf(source, tags=self.tags)
-
-        # Add the C++ source file.
-        Source(self.cc_file, tags=self.tags,
-                append={'CXXFLAGS': '-Wno-array-bounds'})
+    Source(env.GrpcProtoBufCC(source=source)[0], tags=tags, add_tags=add_tags)
+    Source(env.ProtoBufCC(source=source)[0], tags=tags, add_tags=add_tags)
 
 
 exectuable_classes = []
