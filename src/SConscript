@@ -273,7 +273,21 @@ class SourceFile(object, metaclass=SourceMeta):
             self.shared_objs[key] = env.SharedObject(self.tnode)
         return self.shared_objs[key]
 
-def blobToCpp(data, symbol, cpp_code, hpp_code=None, namespace=None):
+def bytesToCppArray(code, symbol, data):
+    '''
+    Output an array of bytes to a code formatter as a c++ array declaration.
+    '''
+    code('const std::uint8_t ${symbol}[] = {')
+    code.indent()
+    step = 16
+    for i in range(0, len(data), step):
+        x = array.array('B', data[i:i + step])
+        strs = map(lambda i: f'{i},', x)
+        code(functools.reduce(lambda x, y: x + y, strs))
+    code.dedent()
+    code('};')
+
+def blobToCpp(data, symbol, cpp_code, hpp_code, namespace):
     '''
     Convert bytes data into C++ .cpp and .hh uint8_t byte array
     code containing that binary data.
@@ -282,41 +296,32 @@ def blobToCpp(data, symbol, cpp_code, hpp_code=None, namespace=None):
     :param symbol: name of the symbol
     :param cpp_code: append the generated cpp_code to this object
     :param hpp_code: append the generated hpp_code to this object
-                     If None, ignore it. Otherwise, also include it
-                     in the .cpp file.
-    :param namespace: namespace to put the symbol into. If None,
-                      don't put the symbols into any namespace.
+                     Also include it in the .cpp file.
+    :param namespace: namespace to put the symbol into.
     '''
-    symbol_len_declaration = 'const std::size_t {}_len'.format(symbol)
-    symbol_declaration = 'const std::uint8_t {}[]'.format(symbol)
-    if hpp_code is not None:
-        cpp_code('''\
-#include "blobs/{}.hh"
-'''.format(symbol))
-        hpp_code('''\
+    hpp_code('''\
 #include <cstddef>
 #include <cstdint>
+
+namespace ${namespace}
+{
+
+extern const std::size_t ${symbol}_len;
+extern const std::uint8_t ${symbol}[];
+
+}
 ''')
-        if namespace is not None:
-            hpp_code('namespace {} {{'.format(namespace))
-        hpp_code('extern ' + symbol_len_declaration + ';')
-        hpp_code('extern ' + symbol_declaration + ';')
-        if namespace is not None:
-            hpp_code('}')
-    if namespace is not None:
-        cpp_code('namespace {} {{'.format(namespace))
-    if hpp_code is not None:
-        cpp_code(symbol_len_declaration + ' = {};'.format(len(data)))
-    cpp_code(symbol_declaration + ' = {')
-    cpp_code.indent()
-    step = 16
-    for i in range(0, len(data), step):
-        x = array.array('B', data[i:i+step])
-        cpp_code(''.join('%d,' % d for d in x))
-    cpp_code.dedent()
-    cpp_code('};')
-    if namespace is not None:
-        cpp_code('}')
+
+    cpp_code('''\
+#include "blobs/${symbol}.hh"
+
+namespace ${namespace}
+{
+
+const std::size_t ${symbol}_len = ${{len(data)}};
+''')
+    bytesToCppArray(cpp_code, symbol, data)
+    cpp_code('} // namespace ${namespace}')
 
 def Blob(blob_path, symbol):
     '''
@@ -1225,10 +1230,8 @@ namespace
 {
 
 ''')
-    blobToCpp(data, 'data_' + sym, code)
-    code('''\
-
-
+    bytesToCppArray(code, 'data_{}'.format(sym), data)
+    code('''
 EmbeddedPython embedded_${sym}(
     ${{c_str(pysource.arcname)}},
     ${{c_str(pysource.abspath)}},
