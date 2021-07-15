@@ -80,7 +80,7 @@ bool
 Workload::trapToGdb(int signal, ContextID ctx_id)
 {
 #   if !IS_NULL_ISA
-    if (gdb) {
+    if (gdb && gdb->isAttached()) {
         gdb->trap(ctx_id, signal);
         return true;
     }
