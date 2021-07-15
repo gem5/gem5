@@ -90,6 +90,7 @@ class MMU : public BaseMMU
 
     void init() override;
 
+    using BaseMMU::translateFunctional;
     bool translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr);
 
     Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
@@ -103,6 +104,7 @@ class MMU : public BaseMMU
     Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
         BaseMMU::Mode mode, bool stage2);
 
+    using BaseMMU::translateTiming;
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
         BaseMMU::Translation *translation, BaseMMU::Mode mode, bool stage2);
 
