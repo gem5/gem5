@@ -136,10 +136,10 @@
 #include <string>
 
 #include "arch/mips/decoder.hh"
+#include "arch/mips/gdb-xml/gdb_xml_mips.hh"
 #include "arch/mips/regs/float.hh"
 #include "arch/mips/regs/int.hh"
 #include "arch/mips/regs/misc.hh"
-#include "blobs/gdb_xml_mips.hh"
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"
 #include "debug/GDBMisc.hh"

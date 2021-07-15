@@ -1,8 +1,7 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009 The University of Edinburgh
+# Copyright (c) 2004-2006 The Regents of The University of Michigan
 # Copyright (c) 2020 LabWare
-# Copyright (c) 2021 IBM Corporation
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,32 +29,5 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'power':
-# Workaround for bug in SCons version > 0.97d20071212
-# Scons bug id: 2006 M5 Bug id: 308
-    Dir('isa/formats')
-    Source('decoder.cc')
-    Source('faults.cc')
-    Source('insts/branch.cc')
-    Source('insts/mem.cc')
-    Source('insts/integer.cc')
-    Source('insts/floating.cc')
-    Source('insts/condition.cc')
-    Source('insts/static_inst.cc')
-    Source('linux/se_workload.cc')
-    Source('isa.cc')
-    Source('pagetable.cc')
-    Source('process.cc')
-    Source('remote_gdb.cc')
-    Source('se_workload.cc')
-    Source('tlb.cc')
-
-    SimObject('PowerInterrupts.py')
-    SimObject('PowerISA.py')
-    SimObject('PowerMMU.py')
-    SimObject('PowerSeWorkload.py')
-    SimObject('PowerTLB.py')
-
-    DebugFlag('Power')
-
-    ISADesc('isa/main.isa')
+if env['TARGET_ISA'] == 'mips':
+    GdbXml('mips.xml', 'gdb_xml_mips')

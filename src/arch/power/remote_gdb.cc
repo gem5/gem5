@@ -137,12 +137,12 @@
 
 #include <string>
 
+#include "arch/power/gdb-xml/gdb_xml_power64_core.hh"
+#include "arch/power/gdb-xml/gdb_xml_power_core.hh"
+#include "arch/power/gdb-xml/gdb_xml_power_fpu.hh"
+#include "arch/power/gdb-xml/gdb_xml_powerpc_32.hh"
+#include "arch/power/gdb-xml/gdb_xml_powerpc_64.hh"
 #include "arch/power/regs/misc.hh"
-#include "blobs/gdb_xml_power64_core.hh"
-#include "blobs/gdb_xml_power_core.hh"
-#include "blobs/gdb_xml_power_fpu.hh"
-#include "blobs/gdb_xml_powerpc_32.hh"
-#include "blobs/gdb_xml_powerpc_64.hh"
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"
 #include "debug/GDBMisc.hh"

@@ -619,9 +619,6 @@ for root, dirs, files in os.walk(ext_dir):
         main.SConscript(os.path.join(root, 'SConscript'),
                         variant_dir=os.path.join(build_root, build_dir))
 
-gdb_xml_dir = os.path.join(ext_dir, 'gdb-xml')
-Export('gdb_xml_dir')
-
 
 ########################################################################
 #

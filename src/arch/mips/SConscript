@@ -53,5 +53,3 @@ if env['TARGET_ISA'] == 'mips':
     DebugFlag('MipsPRA')
 
     ISADesc('isa/main.isa')
-
-    GdbXml('mips.xml', 'gdb_xml_mips')

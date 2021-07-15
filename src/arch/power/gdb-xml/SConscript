@@ -31,31 +31,8 @@
 Import('*')
 
 if env['TARGET_ISA'] == 'power':
-# Workaround for bug in SCons version > 0.97d20071212
-# Scons bug id: 2006 M5 Bug id: 308
-    Dir('isa/formats')
-    Source('decoder.cc')
-    Source('faults.cc')
-    Source('insts/branch.cc')
-    Source('insts/mem.cc')
-    Source('insts/integer.cc')
-    Source('insts/floating.cc')
-    Source('insts/condition.cc')
-    Source('insts/static_inst.cc')
-    Source('linux/se_workload.cc')
-    Source('isa.cc')
-    Source('pagetable.cc')
-    Source('process.cc')
-    Source('remote_gdb.cc')
-    Source('se_workload.cc')
-    Source('tlb.cc')
-
-    SimObject('PowerInterrupts.py')
-    SimObject('PowerISA.py')
-    SimObject('PowerMMU.py')
-    SimObject('PowerSeWorkload.py')
-    SimObject('PowerTLB.py')
-
-    DebugFlag('Power')
-
-    ISADesc('isa/main.isa')
+    GdbXml('power-core.xml', 'gdb_xml_power_core')
+    GdbXml('power64-core.xml', 'gdb_xml_power64_core')
+    GdbXml('power-fpu.xml', 'gdb_xml_power_fpu')
+    GdbXml('powerpc-32.xml', 'gdb_xml_powerpc_32')
+    GdbXml('powerpc-64.xml', 'gdb_xml_powerpc_64')
