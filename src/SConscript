@@ -347,10 +347,8 @@ class Source(SourceFile):
 
 class PySource(SourceFile):
     '''Add a python source file to the named package'''
-    invalid_sym_char = re.compile('[^A-z0-9_]')
     modules = {}
     tnodes = {}
-    symnames = {}
 
     def __init__(self, package, source, tags=None, add_tags=None):
         '''specify the python package, the source file, and any tags'''
@@ -380,13 +378,10 @@ class PySource(SourceFile):
         self.modpath = modpath
         self.arcname = os.path.join(*arcpath)
         self.abspath = abspath
-        self.compiled = File(self.filename + 'c')
         self.cpp = File(self.filename + '.cc')
-        self.symname = PySource.invalid_sym_char.sub('_', modpath)
 
         PySource.modules[modpath] = self
         PySource.tnodes[self.tnode] = self
-        PySource.symnames[self.symname] = self
 
 class SimObject(PySource):
     '''Add a SimObject python file as a python source object and add
@@ -1205,7 +1200,6 @@ def embedPyFile(target, source, env):
     compressed = zlib.compress(marshalled)
     data = compressed
     pysource = PySource.tnodes[source[1]]
-    sym = pysource.symname
 
     code = code_formatter()
     code('''\
@@ -1217,13 +1211,16 @@ namespace
 {
 
 ''')
-    bytesToCppArray(code, 'data_{}'.format(sym), data)
+    bytesToCppArray(code, 'embedded_module_data', data)
+    # The name of the EmbeddedPython object doesn't matter since it's in an
+    # anonymous namespace, and it's constructor takes care of installing it
+    # into a global list.
     code('''
-EmbeddedPython embedded_${sym}(
+EmbeddedPython embedded_module_info(
     ${{c_str(pysource.arcname)}},
     ${{c_str(pysource.abspath)}},
     ${{c_str(pysource.modpath)}},
-    data_${sym},
+    embedded_module_data,
     ${{len(data)}},
     ${{len(marshalled)}});
 
