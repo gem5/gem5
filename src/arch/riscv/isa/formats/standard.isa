@@ -274,7 +274,7 @@ def template JumpExecute {{
     }
 }};
 
-def template CSRExecuteRo {{
+def template CSRExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
         Trace::InstRecord *traceData) const
@@ -286,6 +286,8 @@ def template CSRExecuteRo {{
 
         %(op_decl)s;
         %(op_rd)s;
+
+        RegVal data, olddata;
 
         switch (csr) {
           case CSR_SATP: {
@@ -311,91 +313,55 @@ def template CSRExecuteRo {{
             break;
         }
 
-        RegVal data;
         if (csr == CSR_FCSR) {
-            data = xc->readMiscReg(MISCREG_FFLAGS) |
-                   (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
-        } else {
-            data = xc->readMiscReg(midx);
-        }
-
-        DPRINTF(RiscvMisc, "Reading CSR %s: %#x\n", csrName, data);
-
-        %(code)s;
-        %(op_wb)s;
-
-        return NoFault;
-    }
-}};
-
-def template CSRExecuteRw {{
-    Fault
-    %(class_name)s::execute(ExecContext *xc,
-        Trace::InstRecord *traceData) const
-    {
-        if (!valid) {
-            return std::make_shared<IllegalInstFault>(
-                    csprintf("Illegal CSR index %#x\n", csr), machInst);
-        }
-        if (bits(csr, 11, 10) == 0x3) {
-            return std::make_shared<IllegalInstFault>(
-                    csprintf("CSR %s is read-only\n", csrName), machInst);
-        }
-
-        %(op_decl)s;
-        %(op_rd)s;
-
-        switch (csr) {
-          case CSR_SATP: {
-            auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
-            STATUS status = xc->readMiscReg(MISCREG_STATUS);
-            if (pm == PRV_U || (pm == PRV_S && status.tvm == 1)) {
-                return std::make_shared<IllegalInstFault>(
-                        "SATP access in user mode or with TVM enabled\n",
-                        machInst);
-            }
-            break;
-          }
-          case CSR_MSTATUS: {
-            auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
-            if (pm != PrivilegeMode::PRV_M) {
-                return std::make_shared<IllegalInstFault>(
-                        "MSTATUS is only accessibly in machine mode\n",
-                        machInst);
-            }
-            break;
-          }
-          default:
-            break;
-        }
-
-        RegVal data;
-        if (csr == CSR_FCSR) {
-            data = xc->readMiscReg(MISCREG_FFLAGS) |
+            olddata = xc->readMiscReg(MISCREG_FFLAGS) |
                       (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
         } else {
-            data = xc->readMiscReg(midx);
+            olddata = xc->readMiscReg(midx);
         }
+        auto olddata_all = olddata;
 
-        RegVal original = data;
-
-        DPRINTF(RiscvMisc, "Reading CSR %s: %#x\n", csrName, data & maskVal);
+        olddata &= maskVal;
+        DPRINTF(RiscvMisc, "Reading CSR %s: %#x\n", csrName, olddata);
+        data = olddata;
 
         %(code)s;
 
-        // We must keep those original bits not in the mask. Hidden bits should
-        // keep their original value.
-        data = (original & ~maskVal) | (data & maskVal);
-
-        DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n", data, csrName);
-
-        if (csr == CSR_FCSR) {
-            xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
-            xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
-        } else {
-            xc->setMiscReg(midx, data);
+        data &= maskVal;
+        if (data != olddata) {
+            if (bits(csr, 11, 10) == 0x3) {
+                return std::make_shared<IllegalInstFault>(
+                        csprintf("CSR %s is read-only\n", csrName), machInst);
+            }
+            auto newdata_all = data;
+            // We must keep those original bits not in mask.
+            // olddata and data only contain the bits visable
+            // in current privilige level.
+            newdata_all = (olddata_all & ~maskVal) | data;
+            DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n",
+                    newdata_all, csrName);
+            switch (csr) {
+              case CSR_FCSR:
+                xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
+                xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
+                break;
+              case CSR_MIP: case CSR_MIE:
+              case CSR_SIP: case CSR_SIE:
+              case CSR_UIP: case CSR_UIE:
+              case CSR_MSTATUS: case CSR_SSTATUS: case CSR_USTATUS:
+                if (newdata_all != olddata_all) {
+                    xc->setMiscReg(midx, newdata_all);
+                } else {
+                    return std::make_shared<IllegalInstFault>(
+                            "Only bits in mask are allowed to be set\n",
+                            machInst);
+                }
+                break;
+              default:
+                xc->setMiscReg(midx, data);
+                break;
+            }
         }
-
         %(op_wb)s;
         return NoFault;
     }
@@ -499,24 +465,10 @@ def format SystemOp(code, *opt_flags) {{
     exec_output = BasicExecute.subst(iop)
 }};
 
-def template CSRDecode {{
-    if (RS1)
-        return new %(class_name)sRw(machInst);
-    else
-        return new %(class_name)sRo(machInst);
-}};
-
 def format CSROp(code, *opt_flags) {{
-    iop = InstObjParams(name, Name + "Ro", 'CSROp', code, opt_flags)
+    iop = InstObjParams(name, Name, 'CSROp', code, opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
-    exec_output = CSRExecuteRo.subst(iop)
-
-    iop = InstObjParams(name, Name + "Rw", 'CSROp', code, opt_flags)
-    header_output += BasicDeclare.subst(iop)
-    decoder_output += BasicConstructor.subst(iop)
-    exec_output += CSRExecuteRw.subst(iop)
-
-    iop = InstObjParams(name, Name, 'CSROp', "", opt_flags)
-    decode_block = CSRDecode.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = CSRExecute.subst(iop)
 }};
