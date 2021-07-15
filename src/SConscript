@@ -222,9 +222,6 @@ class SourceFile(object, metaclass=SourceMeta):
     of those.  A source file also specifies a set of tags which
     describing arbitrary properties of the source file.'''
 
-    static_objs = {}
-    shared_objs = {}
-
     def __init__(self, source, tags=None, add_tags=None, append=None):
         if tags is None:
             tags='gem5 lib'
@@ -256,22 +253,16 @@ class SourceFile(object, metaclass=SourceMeta):
                 base.all.append(self)
 
     def static(self, env):
-        key = (self.tnode, env['OBJSUFFIX'])
         if self.append:
             env = env.Clone()
             env.Append(**self.append)
-        if not key in self.static_objs:
-            self.static_objs[key] = env.StaticObject(self.tnode)
-        return self.static_objs[key]
+        return env.StaticObject(self.tnode)
 
     def shared(self, env):
-        key = (self.tnode, env['OBJSUFFIX'])
         if self.append:
             env = env.Clone()
             env.Append(**self.append)
-        if not key in self.shared_objs:
-            self.shared_objs[key] = env.SharedObject(self.tnode)
-        return self.shared_objs[key]
+        return env.SharedObject(self.tnode)
 
 def bytesToCppArray(code, symbol, data):
     '''
