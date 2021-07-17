@@ -800,7 +800,6 @@ class DictImporter(object):
 
 import m5.SimObject
 import m5.params
-from m5.util import code_formatter
 
 m5.SimObject.clear()
 m5.params.clear()
