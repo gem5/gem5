@@ -769,9 +769,6 @@ class DictImporter(object):
         if fullname == 'm5.objects':
             return self
 
-        if fullname.startswith('_m5'):
-            return None
-
         source = self.modules.get(fullname, None)
         if source is not None and fullname.startswith('m5.objects'):
             return self
