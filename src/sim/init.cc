@@ -143,12 +143,10 @@ EmbeddedPython::initAll()
 
     // Load the rest of the embedded python files into the embedded
     // python importer
-    std::list<EmbeddedPython *>::iterator i = getList().begin();
-    std::list<EmbeddedPython *>::iterator end = getList().end();
-    for (; i != end; ++i)
-        if (!(*i)->addModule())
+    for (auto *embedded: getList()) {
+        if (!embedded->addModule())
             return 1;
-
+    }
     return 0;
 }
 
