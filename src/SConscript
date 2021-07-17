@@ -363,16 +363,14 @@ class PySource(SourceFile):
         assert ext == '.py'
 
         if package:
-            path = package.split('.')
+            modpath = package.split('.')
         else:
-            path = []
+            modpath = []
 
-        modpath = path[:]
         if modname != '__init__':
             modpath += [ modname ]
         modpath = '.'.join(modpath)
 
-        arcpath = path + [ basename ]
         abspath = self.snode.abspath
         if not os.path.exists(abspath):
             abspath = self.tnode.abspath
@@ -380,7 +378,6 @@ class PySource(SourceFile):
         self.package = package
         self.modname = modname
         self.modpath = modpath
-        self.arcname = os.path.join(*arcpath)
         self.abspath = abspath
         self.cpp = File(self.filename + '.cc')
 
@@ -1235,7 +1232,6 @@ namespace
     # into a global list.
     code('''
 EmbeddedPython embedded_module_info(
-    ${{c_str(pysource.arcname)}},
     ${{c_str(pysource.abspath)}},
     ${{c_str(pysource.modpath)}},
     embedded_module_data,

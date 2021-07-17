@@ -62,15 +62,14 @@ namespace gem5
  */
 struct EmbeddedPython
 {
-    const char *filename;
     const char *abspath;
     const char *modpath;
     const uint8_t *code;
     int zlen;
     int len;
 
-    EmbeddedPython(const char *filename, const char *abspath,
-                   const char *modpath, const uint8_t *code, int zlen, int len);
+    EmbeddedPython(const char *abspath, const char *modpath,
+            const uint8_t *code, int zlen, int len);
 
     PyObject *getCode() const;
     bool addModule() const;

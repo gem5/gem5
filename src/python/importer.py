@@ -46,23 +46,23 @@ class CodeImporter(object):
         override_var = os.environ.get('M5_OVERRIDE_PY_SOURCE', 'false')
         self.override = (override_var.lower() in ('true', 'yes'))
 
-    def add_module(self, filename, abspath, modpath, code):
+    def add_module(self, abspath, modpath, code):
         if modpath in self.modules:
             raise AttributeError("%s already found in importer" % modpath)
 
-        self.modules[modpath] = (filename, abspath, code)
+        self.modules[modpath] = (abspath, code)
 
     def find_spec(self, fullname, path, target=None):
         if fullname not in self.modules:
             return None
 
-        srcfile, abspath, code = self.modules[fullname]
+        abspath, code = self.modules[fullname]
 
         if self.override and os.path.exists(abspath):
             src = open(abspath, 'r').read()
             code = compile(src, abspath, 'exec')
 
-        is_package = (os.path.basename(srcfile) == '__init__.py')
+        is_package = (os.path.basename(abspath) == '__init__.py')
         spec = importlib.util.spec_from_loader(
                 name=fullname, loader=ByteCodeLoader(code),
                 is_package=is_package)

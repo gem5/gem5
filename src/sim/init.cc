@@ -75,10 +75,9 @@ namespace gem5
 
 EmbeddedPython *EmbeddedPython::importer = NULL;
 PyObject *EmbeddedPython::importerModule = NULL;
-EmbeddedPython::EmbeddedPython(const char *filename, const char *abspath,
-    const char *modpath, const unsigned char *code, int zlen, int len)
-    : filename(filename), abspath(abspath), modpath(modpath), code(code),
-      zlen(zlen), len(len)
+EmbeddedPython::EmbeddedPython(const char *abspath, const char *modpath,
+        const unsigned char *code, int zlen, int len)
+    : abspath(abspath), modpath(modpath), code(code), zlen(zlen), len(len)
 {
     // if we've added the importer keep track of it because we need it
     // to bootstrap.
@@ -117,7 +116,7 @@ EmbeddedPython::addModule() const
 {
     PyObject *code = getCode();
     PyObject *result = PyObject_CallMethod(importerModule, PyCC("add_module"),
-        PyCC("sssO"), filename, abspath, modpath, code);
+        PyCC("ssO"), abspath, modpath, code);
     if (!result) {
         PyErr_Print();
         return false;
