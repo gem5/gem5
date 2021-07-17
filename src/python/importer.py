@@ -24,12 +24,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import importlib
+import importlib.abc
+import importlib.util
+import os
+
+class ByteCodeLoader(importlib.abc.Loader):
+    def __init__(self, code):
+        super(ByteCodeLoader, self).__init__()
+        self.code = code
+
+    def exec_module(self, module):
+        exec(self.code, module.__dict__)
+
 # Simple importer that allows python to import data from a dict of
 # code objects.  The keys are the module path, and the items are the
 # filename and bytecode of the file.
 class CodeImporter(object):
     def __init__(self):
         self.modules = {}
+        override_var = os.environ.get('M5_OVERRIDE_PY_SOURCE', 'false')
+        self.override = (override_var.lower() in ('true', 'yes'))
 
     def add_module(self, filename, abspath, modpath, code):
         if modpath in self.modules:
@@ -37,50 +52,24 @@ class CodeImporter(object):
 
         self.modules[modpath] = (filename, abspath, code)
 
-    def find_module(self, fullname, path):
-        if fullname in self.modules:
-            return self
+    def find_spec(self, fullname, path, target=None):
+        if fullname not in self.modules:
+            return None
 
-        return None
+        srcfile, abspath, code = self.modules[fullname]
 
-    def load_module(self, fullname):
-        # Because the importer is created and initialized in its own
-        # little sandbox (in init.cc), the globals that were available
-        # when the importer module was loaded and CodeImporter was
-        # defined are not available when load_module is actually
-        # called. Soooo, the imports must live here.
-        import imp
-        import os
-        import sys
+        if self.override and os.path.exists(abspath):
+            src = open(abspath, 'r').read()
+            code = compile(src, abspath, 'exec')
 
-        try:
-            mod = sys.modules[fullname]
-        except KeyError:
-            mod = imp.new_module(fullname)
-            sys.modules[fullname] = mod
+        is_package = (os.path.basename(srcfile) == '__init__.py')
+        spec = importlib.util.spec_from_loader(
+                name=fullname, loader=ByteCodeLoader(code),
+                is_package=is_package)
 
-        try:
-            mod.__loader__ = self
-            srcfile,abspath,code = self.modules[fullname]
+        spec.loader_state = self.modules.keys()
 
-            override = os.environ.get('M5_OVERRIDE_PY_SOURCE', 'false').lower()
-            if override in ('true', 'yes') and  os.path.exists(abspath):
-                src = open(abspath, 'r').read()
-                code = compile(src, abspath, 'exec')
-
-            if os.path.basename(srcfile) == '__init__.py':
-                mod.__path__ = fullname.split('.')
-                mod.__package__ = fullname
-            else:
-                mod.__package__ = fullname.rpartition('.')[0]
-            mod.__file__ = srcfile
-
-            exec(code, mod.__dict__)
-        except Exception:
-            del sys.modules[fullname]
-            raise
-
-        return mod
+        return spec
 
 # Create an importer and add it to the meta_path so future imports can
 # use it.  There's currently nothing in the importer, but calls to

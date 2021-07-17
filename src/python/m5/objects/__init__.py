@@ -28,10 +28,10 @@ from m5.internal import params
 from m5.SimObject import *
 
 try:
-    modules = __loader__.modules
+    modules = __spec__.loader_state
 except NameError:
     modules = { }
 
-for module in modules.keys():
+for module in modules:
     if module.startswith('m5.objects.'):
         exec("from %s import *" % module)

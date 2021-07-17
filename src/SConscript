@@ -42,6 +42,10 @@ import bisect
 import distutils.spawn
 import functools
 import imp
+import importlib
+import importlib.abc
+import importlib.machinery
+import importlib.util
 import os
 import os.path
 import re
@@ -735,10 +739,20 @@ env.Command('config/the_gpu_isa.hh', [],
 #
 SimObject.fixed = True
 
-class DictImporter(object):
-    '''This importer takes a dictionary of arbitrary module names that
-    map to arbitrary filenames.'''
+class SimpleModuleLoader(importlib.abc.Loader):
+    '''A simple wrapper which delegates setting up a module to a function.'''
+    def __init__(self, executor):
+        super(SimpleModuleLoader, self).__init__()
+        self.executor = executor
+    def create_module(self, spec):
+        return None
+
+    def exec_module(self, module):
+        self.executor(module)
+
+class M5MetaPathFinder(importlib.abc.MetaPathFinder):
     def __init__(self, modules):
+        super(M5MetaPathFinder, self).__init__()
         self.modules = modules
         self.installed = set()
 
@@ -748,42 +762,46 @@ class DictImporter(object):
             del sys.modules[module]
         self.installed = set()
 
-    def find_module(self, fullname, path):
-        if fullname == 'm5.defines':
-            return self
+    def find_spec(self, fullname, path, target=None):
+        spec = None
 
-        if fullname == 'm5.objects':
-            return self
+        # If this isn't even in the m5 package, ignore it.
+        if fullname.startswith('m5.'):
+            if fullname.startswith('m5.objects'):
+                # When imported in this context, return a spec for a dummy
+                # package which just serves to house the modules within it.
+                # This is subtley different from "import * from m5.objects"
+                # which relies on the __init__.py in m5.objects. That in turn
+                # indirectly relies on the c++ based _m5 package which doesn't
+                # exist yet.
+                if fullname == 'm5.objects':
+                    dummy_loader = SimpleModuleLoader(lambda x: None)
+                    spec = importlib.machinery.ModuleSpec(
+                            name=fullname, loader=dummy_loader,
+                            is_package=True)
+                    spec.loader_state = self.modules.keys()
 
-        source = self.modules.get(fullname, None)
-        if source is not None and fullname.startswith('m5.objects'):
-            return self
+                # If this is a module within the m5.objects package, return a
+                # spec that maps to its source file.
+                elif fullname in self.modules:
+                    source = self.modules[fullname]
+                    spec = importlib.util.spec_from_file_location(
+                            name=fullname, location=source.abspath)
 
-        return None
+            # The artificial m5.defines subpackage.
+            elif fullname == 'm5.defines':
+                def build_m5_defines(module):
+                    module.__dict__['buildEnv'] = dict(build_env)
 
-    def load_module(self, fullname):
-        mod = imp.new_module(fullname)
-        sys.modules[fullname] = mod
-        self.installed.add(fullname)
+                spec = importlib.util.spec_from_loader(name=fullname,
+                        loader=SimpleModuleLoader(build_m5_defines))
 
-        mod.__loader__ = self
-        if fullname == 'm5.objects':
-            mod.__path__ = fullname.split('.')
-            return mod
+        # If we're handling this module, write it down so we can unload it
+        # later.
+        if spec is not None:
+            self.installed.add(fullname)
 
-        if fullname == 'm5.defines':
-            mod.__dict__['buildEnv'] = dict(build_env)
-            return mod
-
-        source = self.modules[fullname]
-        if source.modname == '__init__':
-            mod.__path__ = source.modpath
-        mod.__file__ = source.abspath
-
-        compiled = compile(open(source.abspath).read(), source.abspath, 'exec')
-        exec(compiled, mod.__dict__)
-
-        return mod
+        return spec
 
 import m5.SimObject
 import m5.params
@@ -794,7 +812,7 @@ m5.params.clear()
 # install the python importer so we can grab stuff from the source
 # tree itself.  We can't have SimObjects added after this point or
 # else we won't know about them for the rest of the stuff.
-importer = DictImporter(PySource.modules)
+importer = M5MetaPathFinder(PySource.modules)
 sys.meta_path[0:0] = [ importer ]
 
 # import all sim objects so we can populate the all_objects list
