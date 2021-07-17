@@ -1716,6 +1716,9 @@ class SimObject(object, metaclass=MetaSimObject):
         if self._ccParams:
             return self._ccParams
 
+        # Ensure that m5.internal.params is available.
+        import m5.internal.params
+
         cc_params_struct = getattr(m5.internal.params, '%sParams' % self.type)
         cc_params = cc_params_struct()
         cc_params.name = str(self)
