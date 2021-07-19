@@ -71,13 +71,17 @@ breakpoint()
 #endif
 }
 
-//
-// Flags for debugging purposes.  Primarily for trace.hh
-//
-int allFlagsVersion = 0;
+// Used to check the freshness of cached views of all flags.
 FlagsMap &
 allFlags()
 {
+    // Ensure that the special "All" compound debug flag has been created,
+    // and avoid infinite recursion.
+    static bool done = false;
+    if (!done) {
+        done = true;
+        AllFlagsFlag::instance();
+    }
     static FlagsMap flags;
     return flags;
 }
@@ -88,8 +92,9 @@ Flag *
 findFlag(const std::string &name)
 {
     FlagsMap::iterator i = allFlags().find(name);
-    if (i == allFlags().end())
+    if (i == allFlags().end()) {
         return NULL;
+    }
     return i->second;
 }
 
@@ -100,8 +105,6 @@ Flag::Flag(const char *name, const char *desc)
         allFlags().insert(std::make_pair(name, this));
 
     panic_if(!result.second, "Flag %s already defined!", name);
-
-    ++allFlagsVersion;
 
     sync();
 }
@@ -127,6 +130,14 @@ Flag::globalDisable()
         i.second->sync();
 }
 
+SimpleFlag::SimpleFlag(const char *name, const char *desc, bool is_format)
+  : Flag(name, desc), _isFormat(is_format)
+{
+    // Add non-format flags to the special "All" compound flag.
+    if (!isFormat())
+        AllFlagsFlag::instance().add(this);
+}
+
 void
 CompoundFlag::enable()
 {
@@ -139,6 +150,26 @@ CompoundFlag::disable()
 {
     for (auto& k : _kids)
         k->disable();
+}
+
+AllFlagsFlag::AllFlagsFlag() : CompoundFlag("All",
+        "Controls all debug flags. It should not be used within C++ code.", {})
+{}
+
+void
+AllFlagsFlag::add(SimpleFlag *flag)
+{
+    ++_version;
+    _kids.push_back(flag);
+}
+
+int AllFlagsFlag::_version = 0;
+
+AllFlagsFlag &
+AllFlagsFlag::instance()
+{
+    static AllFlagsFlag flag;
+    return flag;
 }
 
 bool

@@ -56,12 +56,6 @@ namespace py = pybind11;
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(Debug, debug);
-namespace debug
-{
-extern int allFlagsVersion;
-} // namespace debug
-
 static void
 output(const char *filename)
 {
@@ -87,7 +81,8 @@ pybind_init_debug(py::module_ &m_native)
     py::module_ m_debug = m_native.def_submodule("debug");
 
     m_debug
-        .def("getAllFlagsVersion", []() { return debug::allFlagsVersion; })
+        .def("getAllFlagsVersion",
+             []() { return debug::AllFlagsFlag::version(); })
         .def("allFlags", &debug::allFlags, py::return_value_policy::reference)
 
         .def("schedBreak", &schedBreak)
