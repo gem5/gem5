@@ -297,7 +297,7 @@ if __name__ == '__main__':
         print("{")
         print()
         print("std::set<std::string> version_tags = {")
-        for tag in Upgrader.tag_set:
+        for tag in sorted(Upgrader.tag_set):
             print("  \"{}\",".format(tag))
         print("};")
         print()
