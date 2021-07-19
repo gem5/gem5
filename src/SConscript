@@ -349,6 +349,67 @@ def GdbXml(xml_id, symbol):
 class Source(SourceFile):
     pass
 
+# Build a small helper that marshals the Python code using the same version
+# of Python as gem5. This is in an unorthodox location to avoid building it
+# for every variant.
+py_marshal = marshal_env.Program('marshal', 'python/marshal.cc')[0]
+
+# Embed python files.  All .py files that have been indicated by a
+# PySource() call in a SConscript need to be embedded into the M5
+# library.  To do that, we compile the file to byte code, marshal the
+# byte code, compress it, and then generate a c++ file that
+# inserts the result into an array.
+def embedPyFile(target, source, env):
+    def c_str(string):
+        if string is None:
+            return "0"
+        return '"%s"' % string
+
+    '''Action function to compile a .py into a code object, marshal it,
+    compress it, and stick it into an asm file so the code appears as
+    just bytes with a label in the data section. The action takes two
+    sources:
+
+    source[0]: Binary used to marshal Python sources
+    source[1]: Python script to marshal
+    '''
+
+    import subprocess
+
+    marshalled = subprocess.check_output(
+            [source[0].abspath, str(source[1])], env=env['ENV'])
+
+    compressed = zlib.compress(marshalled)
+    data = compressed
+    pysource = PySource.tnodes[source[1]]
+
+    code = code_formatter()
+    code('''\
+#include "sim/init.hh"
+
+namespace gem5
+{
+namespace
+{
+
+''')
+    bytesToCppArray(code, 'embedded_module_data', data)
+    # The name of the EmbeddedPython object doesn't matter since it's in an
+    # anonymous namespace, and it's constructor takes care of installing it
+    # into a global list.
+    code('''
+EmbeddedPython embedded_module_info(
+    ${{c_str(pysource.abspath)}},
+    ${{c_str(pysource.modpath)}},
+    embedded_module_data,
+    ${{len(data)}},
+    ${{len(marshalled)}});
+
+} // anonymous namespace
+} // namespace gem5
+''')
+    code.write(str(target[0]))
+
 class PySource(SourceFile):
     '''Add a python source file to the named package'''
     modules = {}
@@ -383,6 +444,9 @@ class PySource(SourceFile):
 
         PySource.modules[modpath] = self
         PySource.tnodes[self.tnode] = self
+
+        marshal_env.Command(self.cpp, [ py_marshal, self.tnode ],
+                        MakeAction(embedPyFile, Transform("EMBED PY")))
 
 class SimObject(PySource):
     '''Add a SimObject python file as a python source object and add
@@ -1037,7 +1101,7 @@ for name,simobj in sorted(sim_objects.items()):
                 MakeAction(createSimObjectWrappers,
                             Transform("SO PyB/C")))
     env.Depends(cc_file, depends + extra_deps)
-    Source(cc_file)
+    Source(cc_file, add_tags='python')
 
 #
 # Handle debug flags
@@ -1166,71 +1230,8 @@ env.Command('sim/tags.cc', None,
                        Transform("VER TAGS")))
 env.AlwaysBuild(tags)
 
-# Embed python files.  All .py files that have been indicated by a
-# PySource() call in a SConscript need to be embedded into the M5
-# library.  To do that, we compile the file to byte code, marshal the
-# byte code, compress it, and then generate a c++ file that
-# inserts the result into an array.
-def embedPyFile(target, source, env):
-    def c_str(string):
-        if string is None:
-            return "0"
-        return '"%s"' % string
-
-    '''Action function to compile a .py into a code object, marshal it,
-    compress it, and stick it into an asm file so the code appears as
-    just bytes with a label in the data section. The action takes two
-    sources:
-
-    source[0]: Binary used to marshal Python sources
-    source[1]: Python script to marshal
-    '''
-
-    import subprocess
-
-    marshalled = subprocess.check_output(
-            [source[0].abspath, str(source[1])], env=env['ENV'])
-
-    compressed = zlib.compress(marshalled)
-    data = compressed
-    pysource = PySource.tnodes[source[1]]
-
-    code = code_formatter()
-    code('''\
-#include "sim/init.hh"
-
-namespace gem5
-{
-namespace
-{
-
-''')
-    bytesToCppArray(code, 'embedded_module_data', data)
-    # The name of the EmbeddedPython object doesn't matter since it's in an
-    # anonymous namespace, and it's constructor takes care of installing it
-    # into a global list.
-    code('''
-EmbeddedPython embedded_module_info(
-    ${{c_str(pysource.abspath)}},
-    ${{c_str(pysource.modpath)}},
-    embedded_module_data,
-    ${{len(data)}},
-    ${{len(marshalled)}});
-
-} // anonymous namespace
-} // namespace gem5
-''')
-    code.write(str(target[0]))
-
 if main['USE_PYTHON']:
-    # Build a small helper that marshals the Python code using the same
-    # version of Python as gem5. This is in an unorthodox location to
-    # avoid building it for every variant.
-    py_marshal = marshal_env.Program('marshal', 'python/marshal.cc')[0]
-
     for source in PySource.all:
-        marshal_env.Command(source.cpp, [ py_marshal, source.tnode ],
-                        MakeAction(embedPyFile, Transform("EMBED PY")))
         Source(source.cpp, tags=source.tags, add_tags='python')
 
 ########################################################################

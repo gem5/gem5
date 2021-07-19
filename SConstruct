@@ -516,12 +516,6 @@ if main['USE_PYTHON']:
         if not py_version:
             error("Can't find a working Python installation")
 
-    marshal_env = main.Clone()
-
-    # Bare minimum environment that only includes python
-    marshal_env.Append(CCFLAGS='$MARSHAL_CCFLAGS_EXTRA')
-    marshal_env.Append(LINKFLAGS='$MARSHAL_LDFLAGS_EXTRA')
-
     # Found a working Python installation. Check if it meets minimum
     # requirements.
     ver_string = '.'.join(map(str, py_version))
@@ -531,6 +525,12 @@ if main['USE_PYTHON']:
     elif py_version[0] > 3:
         warning('Embedded python library too new. '
                 'Python 3 expected, found %s.' % ver_string)
+
+marshal_env = main.Clone()
+
+# Bare minimum environment that only includes python
+marshal_env.Append(CCFLAGS='$MARSHAL_CCFLAGS_EXTRA')
+marshal_env.Append(LINKFLAGS='$MARSHAL_LDFLAGS_EXTRA')
 
 main['HAVE_PKG_CONFIG'] = main.Detect('pkg-config')
 
@@ -704,9 +704,7 @@ Build variables for {dir}:
     env.Append(CCFLAGS='$CCFLAGS_EXTRA')
     env.Append(LINKFLAGS='$LDFLAGS_EXTRA')
 
-    exports=['env']
-    if main['USE_PYTHON']:
-        exports.append('marshal_env')
+    exports=['env', 'marshal_env']
 
     # The src/SConscript file sets up the build rules in 'env' according
     # to the configured variables.  It returns a list of environments,
