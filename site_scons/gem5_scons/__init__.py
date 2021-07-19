@@ -39,6 +39,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import pickle
 import sys
 import tempfile
 import textwrap
@@ -46,6 +47,7 @@ import textwrap
 from gem5_scons.util import get_termcap
 from gem5_scons.configure import Configure
 from gem5_scons.defaults import EnvDefaults
+import SCons.Node.Python
 import SCons.Script
 
 termcap = get_termcap()
@@ -260,5 +262,11 @@ else:
         env['SHCCCOMSTR']      = Transform("SHCC")
         env['SHCXXCOMSTR']     = Transform("SHCXX")
 
+def ToValue(obj):
+    return SCons.Node.Python.Value(pickle.dumps(obj))
+
+def FromValue(node):
+    return pickle.loads(node.read())
+
 __all__ = ['Configure', 'EnvDefaults', 'Transform', 'warning', 'error',
-           'MakeAction', 'MakeActionTool']
+           'MakeAction', 'MakeActionTool', 'ToValue', 'FromValue']
