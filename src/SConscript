@@ -54,7 +54,7 @@ import zlib
 
 import SCons
 
-from gem5_scons import Transform, warning, error
+from gem5_scons import Transform, warning, error, ToValue, FromValue
 
 # This file defines how to build a particular configuration of gem5
 # based on variable settings in the 'env' build environment.
@@ -677,13 +677,58 @@ Export('GTest')
 #
 # Debug Flags
 #
+
+def makeDebugFlagHH(target, source, env):
+    assert len(target) == 1 and len(source) == 1
+
+    name, components, desc, fmt = FromValue(source[0])
+
+    code = code_formatter()
+
+    typename = "CompoundFlag" if components else "SimpleFlag"
+    component_flag_decls = \
+            ''.join('extern SimpleFlag& %s;\n' % flag for flag in components)
+
+    # file header boilerplate
+    code('''\
+#ifndef __DEBUG_${name}_HH__
+#define __DEBUG_${name}_HH__
+
+#include "base/compiler.hh" // For namespace deprecation
+
+namespace gem5
+{
+
+GEM5_DEPRECATED_NAMESPACE(Debug, debug);
+namespace debug
+{
+
+class SimpleFlag;
+class CompoundFlag;
+extern ${typename}& ${name};
+${component_flag_decls}
+
+} // namespace debug
+} // namespace gem5
+
+#endif // __DEBUG_${name}_HH__
+''')
+
+    code.write(str(target[0]))
+
 debug_flags = {}
 def DebugFlag(name, desc=None, fmt=False):
     if name == "All":
         raise AttributeError('The "All" flag name is reserved')
     if name in debug_flags:
-        raise AttributeError('Flag {} already specified'.format(name))
-    debug_flags[name] = (name, (), desc, fmt)
+        raise AttributeError("Flag {} already specified".format(name))
+
+    flag = (name, (), desc, fmt)
+    debug_flags[name] = flag
+
+    hh_file = Dir(env['BUILDDIR']).Dir('debug').File('%s.hh' % name)
+    env.Command(hh_file, ToValue(flag),
+            MakeAction(makeDebugFlagHH, Transform("TRACING", 0)))
 
 def CompoundFlag(name, flags, desc=None):
     if name == "All":
@@ -691,8 +736,12 @@ def CompoundFlag(name, flags, desc=None):
     if name in debug_flags:
         raise AttributeError('Flag {} already specified'.format(name))
 
-    compound = tuple(flags)
-    debug_flags[name] = (name, compound, desc, False)
+    flag = (name, flags, desc, False)
+    debug_flags[name] = flag
+
+    env.Command(Dir(env['BUILDDIR']).Dir('debug').File('%s.hh' % name),
+            ToValue(flag),
+            MakeAction(makeDebugFlagHH, Transform("TRACING", 0)))
 
 def DebugFormatFlag(name, desc=None):
     DebugFlag(name, desc, True)
@@ -1188,58 +1237,7 @@ namespace debug
 
     code.write(str(target[0]))
 
-def makeDebugFlagHH(target, source, env):
-    assert(len(target) == 1 and len(source) == 1)
-
-    val = eval(source[0].get_contents())
-    name, compound, desc, fmt = val
-
-    code = code_formatter()
-
-    # file header boilerplate
-    code('''\
-#ifndef __DEBUG_${name}_HH__
-#define __DEBUG_${name}_HH__
-
-#include "base/compiler.hh" // For namespace deprecation
-
-namespace gem5
-{
-
-GEM5_DEPRECATED_NAMESPACE(Debug, debug);
-namespace debug
-{
-''')
-
-    if compound:
-        code('class CompoundFlag;')
-    code('class SimpleFlag;')
-
-    if compound:
-        code('extern CompoundFlag& $name;')
-        for flag in compound:
-            code('extern SimpleFlag& $flag;')
-    else:
-        code('extern SimpleFlag& $name;')
-
-    code('''
-} // namespace debug
-} // namespace gem5
-
-#endif // __DEBUG_${name}_HH__
-''')
-
-    code.write(str(target[0]))
-
 # Generate the files for the debug and debug-format flags
-for name,flag in sorted(debug_flags.items()):
-    n, compound, desc, fmt = flag
-    assert n == name
-
-    hh_file = 'debug/%s.hh' % name
-    env.Command(hh_file, Value(flag),
-                MakeAction(makeDebugFlagHH, Transform("TRACING", 0)))
-
 env.Command('debug/flags.cc', Value(debug_flags),
             MakeAction(makeDebugFlagCC, Transform("TRACING", 0)))
 Source('debug/flags.cc', add_tags='gem5 trace')
