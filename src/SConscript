@@ -532,23 +532,25 @@ def GrpcProtoBuf(source, tags=None, add_tags=None):
     Source(env.ProtoBufCC(source=source)[0], tags=tags, add_tags=add_tags)
 
 
-exectuable_classes = []
-class ExecutableMeta(type):
-    '''Meta class for Executables.'''
+
+date_source = File('base/date.cc')
+
+class TopLevelMeta(type):
+    '''Meta class for top level build products, ie binaries and libraries.'''
     all = []
 
     def __init__(cls, name, bases, d):
-        ExecutableMeta.all.append(cls)
-        super(ExecutableMeta, cls).__init__(name, bases, d)
+        TopLevelMeta.all.append(cls)
+        super(TopLevelMeta, cls).__init__(name, bases, d)
         cls.all = []
 
-class Executable(object, metaclass=ExecutableMeta):
-    '''Base class for creating an executable from sources.'''
+class TopLevelBase(object, metaclass=TopLevelMeta):
+    '''Base class for linked build products.'''
 
     def __init__(self, target, *srcs_and_filts):
         '''Specify the target name and any sources. Sources that are
         not SourceFiles are evalued with Source().'''
-        super(Executable, self).__init__()
+        super(TopLevelBase, self).__init__()
         self.all.append(self)
         self.target = target
 
@@ -561,12 +563,15 @@ class Executable(object, metaclass=ExecutableMeta):
             if not isinstance(src, SourceFile):
                 src = Source(src, tags=[])
             srcs.append(src)
+        self.srcs = srcs
 
-        self.sources = srcs
         self.dir = Dir('.')
 
-    def path(self, env):
-        return self.dir.File(self.target + '.${EXE_SUFFIX}')
+    def sources(self, env):
+        srcs = self.srcs
+        for f in self.filters:
+            srcs += Source.all.apply_filter(env, f)
+        return srcs
 
     def srcs_to_objs(self, env, sources):
         return list([ s.static(env) for s in sources ])
@@ -575,15 +580,49 @@ class Executable(object, metaclass=ExecutableMeta):
     def declare_all(cls, env):
         return list([ instance.declare(env) for instance in cls.all ])
 
+class StaticLib(TopLevelBase):
+    '''Base class for creating a static library from sources.'''
+
+    def declare(self, env):
+        objs = self.srcs_to_objs(env, self.sources(env))
+
+        date_obj = env.StaticObject(date_source)
+        env.Depends(date_obj, objs)
+
+        return env.StaticLibrary(self.target, [date_obj, objs])[0]
+
+class SharedLib(TopLevelBase):
+    '''Base class for creating a shared library from sources.'''
+
+    def srcs_to_objs(self, env, sources):
+        return list([ s.shared(env) for s in sources ])
+
+    def declare(self, env):
+        objs = self.srcs_to_objs(env, self.sources(env))
+
+        date_obj = env.SharedObject(date_source)
+        env.Depends(date_obj, objs)
+
+        return env.SharedLibrary(self.target, [date_obj, objs])[0]
+
+class Executable(TopLevelBase):
+    '''Base class for creating an executable from sources.'''
+
+    def path(self, env):
+        return self.dir.File(self.target + '.${ENV_LABEL}')
+
     def declare(self, env, objs=None):
         if objs is None:
-            objs = self.srcs_to_objs(env, self.sources)
+            objs = self.srcs_to_objs(env, self.sources(env))
 
         env = env.Clone()
         env['BIN_RPATH_PREFIX'] = os.path.relpath(
                 env['BUILDDIR'], self.path(env).dir.abspath)
 
-        executable = env.Program(self.path(env).abspath, objs)[0]
+        date_obj = env.StaticObject(date_source)
+        env.Depends(date_obj, objs)
+
+        executable = env.Program(self.path(env).abspath, [date_obj, objs])[0]
 
         if sys.platform == 'sunos5':
             cmd = 'cp $SOURCE $TARGET; strip $TARGET'
@@ -598,9 +637,9 @@ class GTest(Executable):
     '''Create a unit test based on the google test framework.'''
     all = []
     def __init__(self, *srcs_and_filts, **kwargs):
+        if not kwargs.pop('skip_lib', False):
+            srcs_and_filts = srcs_and_filts + (with_tag('gtest lib'),)
         super(GTest, self).__init__(*srcs_and_filts)
-
-        self.skip_lib = kwargs.pop('skip_lib', False)
 
     @classmethod
     def declare_all(cls, env):
@@ -609,20 +648,12 @@ class GTest(Executable):
         env['SHOBJSUFFIX'] = '.t' + env['SHOBJSUFFIX'][1:]
         env.Append(LIBS=env['GTEST_LIBS'])
         env.Append(CPPFLAGS=env['GTEST_CPPFLAGS'])
-        env['GTEST_LIB_SOURCES'] = Source.all.with_tag(env, 'gtest lib')
         env['GTEST_OUT_DIR'] = \
-            Dir(env['BUILDDIR']).Dir('unittests.${EXE_SUFFIX}')
+            Dir(env['BUILDDIR']).Dir('unittests.${ENV_LABEL}')
         return super(GTest, cls).declare_all(env)
 
     def declare(self, env):
-        sources = list(self.sources)
-        if not self.skip_lib:
-            sources += env['GTEST_LIB_SOURCES']
-        for f in self.filters:
-            sources += Source.all.apply_filter(env, f)
-        objs = self.srcs_to_objs(env, sources)
-
-        binary = super(GTest, self).declare(env, objs)
+        binary, stripped = super(GTest, self).declare(env)
 
         out_dir = env['GTEST_OUT_DIR']
         xml_file = out_dir.Dir(str(self.dir)).File(self.target + '.xml')
@@ -630,16 +661,6 @@ class GTest(Executable):
             "${SOURCES[0]} --gtest_output=xml:${TARGETS[0]}"))
 
         return binary
-
-class Gem5(Executable):
-    '''Create a gem5 executable.'''
-
-    def __init__(self, target):
-        super(Gem5, self).__init__(target)
-
-    def declare(self, env):
-        objs = env['MAIN_OBJS'] + env['STATIC_OBJS']
-        return super(Gem5, self).declare(env, objs)
 
 
 # Children should have access
@@ -1240,11 +1261,6 @@ if main['USE_PYTHON']:
 # a slightly different build environment.
 #
 
-# List of constructed environments to pass back to SConstruct
-date_source = Source('base/date.cc', tags=[])
-
-Gem5('gem5')
-
 env['SHOBJSUFFIX'] = '${OBJSUFFIX}s'
 
 envs = {
@@ -1306,50 +1322,26 @@ for ext in target_exts:
         break
 
 
+# SCons doesn't know to append a library suffix when there is a '.' in the
+# name. Use '_' instead.
+lib_name = 'gem5_${ENV_LABEL}'
+
+lib_filter = with_tag('gem5 lib')
+
+# Without Python, leave out all Python content from the library builds. The
+# option doesn't affect gem5 built as a program.
+if GetOption('without_python'):
+    lib_filter = lib_filter & without_tag('python')
+
+StaticLib(lib_name, lib_filter)
+SharedLib(lib_name, lib_filter)
+
+Executable('gem5', with_any_tags('gem5 lib', 'main'))
+
+
 # Function to create a new build environment as clone of current
 # environment 'env' with modified object suffix and optional stripped
 # binary.
 for env in (envs[e] for e in needed_envs):
-    # SCons doesn't know to append a library suffix when there is a '.' in the
-    # name.  Use '_' instead.
-    libname = 'gem5_${ENV_LABEL}'
-
-    lib_sources = Source.all.with_tag(env, 'gem5 lib')
-
-    # Without Python, leave out all Python content from the library
-    # builds.  The option doesn't affect gem5 built as a program
-    if GetOption('without_python'):
-        lib_sources = lib_sources.without_tag(env, 'python')
-
-    static_objs = list([ s.static(env) for s in lib_sources ])
-    shared_objs = list([ s.shared(env) for s in lib_sources ])
-
-    static_date = date_source.static(env)
-    env.Depends(static_date, static_objs)
-    static_objs.extend(static_date)
-
-    shared_date = date_source.shared(env)
-    env.Depends(shared_date, shared_objs)
-    shared_objs.extend(shared_date)
-
-    main_objs = [ s.static(env) for s in Source.all.with_tag(env, 'main') ]
-
-    # First make a library of everything but main() so other programs can
-    # link against m5.
-    static_lib = env.StaticLibrary(libname, static_objs)
-    shared_lib = env.SharedLibrary(libname, shared_objs)
-
-    # Keep track of the object files generated so far so Executables can
-    # include them.
-    env['STATIC_OBJS'] = static_objs
-    env['SHARED_OBJS'] = shared_objs
-    env['MAIN_OBJS'] = main_objs
-
-    env['STATIC_LIB'] = static_lib
-    env['SHARED_LIB'] = shared_lib
-
-    # Record some settings for building Executables.
-    env['EXE_SUFFIX'] = '${ENV_LABEL}'
-
-    for cls in ExecutableMeta.all:
+    for cls in TopLevelMeta.all:
         cls.declare_all(env)
