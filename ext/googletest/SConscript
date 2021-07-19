@@ -43,9 +43,8 @@ gmock_src = Dir('googlemock/src')
 main.Append(CPPPATH=[gtest_include, gmock_include])
 main.Append(LIBPATH=[build])
 
-env = main.Clone(CPPFLAGS=['-g', '-Wall', '-Wextra', '-pthread',
-                           '-Wno-undef', '-isystem', str(gtest_include),
-                           '-isystem', str(gmock_include)])
+env = main.Clone(CCFLAGS=['-g', '-pthread', '-Wno-undef', '-isystem',
+                          str(gtest_include), '-isystem', str(gmock_include)])
 env.Append(CPPPATH=[gtest_base, gmock_base])
 
 gtest_all = env.Object(gtest_src.File('gtest-all.cc'))
