@@ -230,23 +230,21 @@ class SourceFile(object, metaclass=SourceMeta):
         if tags is None:
             tags='gem5 lib'
         if isinstance(tags, str):
-            tags = set([tags])
+            tags = { tags }
         if not isinstance(tags, set):
             tags = set(tags)
         self.tags = tags
 
         if add_tags:
             if isinstance(add_tags, str):
-                add_tags = set([add_tags])
+                add_tags = { add_tags }
             if not isinstance(add_tags, set):
                 add_tags = set(add_tags)
             self.tags |= add_tags
 
         self.append = append
 
-        tnode = source
-        if not isinstance(source, SCons.Node.FS.File):
-            tnode = File(source)
+        tnode = File(source)
 
         self.tnode = tnode
         self.filename = str(self.tnode)
