@@ -1452,6 +1452,7 @@ cloneFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     pp->euid = p->euid();
     pp->gid = p->gid();
     pp->egid = p->egid();
+    pp->release = p->release;
 
     /* Find the first free PID that's less than the maximum */
     std::set<int> const& pids = p->system->PIDs;
@@ -2017,6 +2018,7 @@ execveFunc(SyscallDesc *desc, ThreadContext *tc,
     pp->errout.assign("cerr");
     pp->cwd.assign(p->tgtCwd);
     pp->system = p->system;
+    pp->release = p->release;
     /**
      * Prevent process object creation with identical PIDs (which will trip
      * a fatal check in Process constructor). The execve call is supposed to
@@ -2027,7 +2029,9 @@ execveFunc(SyscallDesc *desc, ThreadContext *tc,
      */
     p->system->PIDs.erase(p->pid());
     Process *new_p = pp->create();
-    delete pp;
+    // TODO: there is no way to know when the Process SimObject is done with
+    // the params pointer. Both the params pointer (pp) and the process
+    // pointer (p) are normally managed in python and are never cleaned up.
 
     /**
      * Work through the file descriptor array and close any files marked
@@ -2042,10 +2046,10 @@ execveFunc(SyscallDesc *desc, ThreadContext *tc,
 
     *new_p->sigchld = true;
 
-    delete p;
     tc->clearArchRegs();
     tc->setProcessPtr(new_p);
     new_p->assignThreadContext(tc->contextId());
+    new_p->init();
     new_p->initState();
     tc->activate();
     TheISA::PCState pcState = tc->pcState();
