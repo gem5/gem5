@@ -25,5 +25,6 @@
 
 
 from .add_local_rpath import AddLocalRPATH
+from .blob import Blob
 from .config_file import ConfigFile
 from .switching_headers import SwitchingHeaders

@@ -130,6 +130,7 @@ from gem5_scons import error, warning, summarize_warnings, parse_build_path
 from gem5_scons import TempFileSpawn, EnvDefaults, MakeAction, MakeActionTool
 import gem5_scons
 from gem5_scons.builders import ConfigFile, AddLocalRPATH, SwitchingHeaders
+from gem5_scons.builders import Blob
 from gem5_scons.sources import TagImpliesTool
 from gem5_scons.util import compareVersions, readCommand
 
@@ -150,7 +151,7 @@ Export('MakeAction')
 
 main = Environment(tools=[
         'default', 'git', TempFileSpawn, EnvDefaults, MakeActionTool,
-        ConfigFile, AddLocalRPATH, SwitchingHeaders, TagImpliesTool
+        ConfigFile, AddLocalRPATH, SwitchingHeaders, TagImpliesTool, Blob
     ])
 
 main.Tool(SCons.Tool.FindTool(['gcc', 'clang'], main))

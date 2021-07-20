@@ -69,66 +69,6 @@ build_env = [(opt, env[opt]) for opt in export_vars]
 
 from m5.util import code_formatter
 
-def build_blob(target, source, env):
-    '''
-    Embed an arbitrary blob into the gem5 executable,
-    and make it accessible to C++ as a byte array.
-    '''
-
-    with open(str(source[0]), 'rb') as f:
-        data = f.read()
-    symbol = str(source[1])
-    cc, hh = target
-
-    hh_code = code_formatter()
-    hh_code('''\
-#include <cstddef>
-#include <cstdint>
-
-namespace gem5
-{
-namespace Blobs
-{
-
-extern const std::size_t ${symbol}_len;
-extern const std::uint8_t ${symbol}[];
-
-} // namespace Blobs
-} // namespace gem5
-''')
-    hh_code.write(str(hh))
-
-    include_path = os.path.relpath(hh.abspath, env['BUILDDIR'])
-
-    cc_code = code_formatter()
-    cc_code('''\
-#include "${include_path}"
-
-namespace gem5
-{
-namespace Blobs
-{
-
-const std::size_t ${symbol}_len = ${{len(data)}};
-''')
-    bytesToCppArray(cc_code, symbol, data)
-    cc_code('''
-} // namespace Blobs
-} // namespace gem5
-''')
-    cc_code.write(str(cc))
-
-blob_action = MakeAction(build_blob, Transform("EMBED BLOB"))
-
-def blob_emitter(target, source, env):
-    symbol = str(target[0])
-    cc_file = File(symbol + '.cc')
-    hh_file = File(symbol + '.hh')
-    return [cc_file, hh_file], [source, Value(symbol)]
-
-blob_builder = Builder(action=blob_action, emitter=blob_emitter)
-env.Append(BUILDERS={'Blob': blob_builder})
-
 def GdbXml(xml_id, symbol):
     cc, hh = env.Blob(symbol, xml_id)
     Source(cc)
