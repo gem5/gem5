@@ -41,7 +41,6 @@ import array
 import bisect
 import distutils.spawn
 import functools
-import imp
 import importlib
 import importlib.abc
 import importlib.machinery
@@ -55,6 +54,9 @@ import zlib
 import SCons
 
 from gem5_scons import Transform, warning, error, ToValue, FromValue
+from gem5_scons.sources import *
+
+Export(SourceFilter.factories)
 
 # This file defines how to build a particular configuration of gem5
 # based on variable settings in the 'env' build environment.
@@ -67,200 +69,6 @@ Export('env')
 build_env = [(opt, env[opt]) for opt in export_vars]
 
 from m5.util import code_formatter
-
-########################################################################
-# Code for adding source files of various types
-#
-# When specifying a source file of some type, a set of tags can be
-# specified for that file.
-
-def tag_implies(env, tag, tag_list):
-    '''
-    Associates a tag X to a list of tags which are implied by X.
-
-    For example, assume:
-    - Each file <X>.cc is tagged with the tag "Tag <X>".
-    - B.cc refers to symbols from A.cc
-    - C.cc refers to symbols from B.cc
-    - D.cc refers to symbols from A.cc and C.cc
-
-    Then:
-    - "Tag A" is implied by "Tag B"
-    - "Tag B" is implied by "Tag C"
-    - "Tag A" is transitively implied by "Tag C" (from "Tag B")
-    - "Tag A" and "Tag C" are implied by "Tag D"
-    - "Tag B" is transitively implied by "Tag D" (from "Tag C")
-    - "Tag A" is transitively implied by "Tag D" (from transitive "Tag B")
-
-    All of these implications are simply declared as:
-        env.TagImplies("Tag B", "Tag A")
-        env.TagImplies("Tag C", "Tag B")
-        env.TagImplies("Tag D", ["Tag A", "Tag C"])
-
-    So that any use of a tag will automatically include its transitive tags
-    after being resolved.
-    '''
-
-    env.SetDefault(_tag_implies={})
-    implications = env['_tag_implies']
-
-    if isinstance(tag_list, str):
-        tag_list = frozenset([tag_list])
-    if not isinstance(tag_list, frozenset):
-        tag_list = frozenset(tag_list)
-    if tag in implications:
-        implications[tag] |= tag_list
-    else:
-        implications[tag] = tag_list
-
-    # Check if any of the tags on which the new tag depends on already
-    # has a list of implications. If so, add the list to the new tag's
-    # implications
-    for t in tag_list:
-        if t in implications:
-            implications[tag] |= implications[t]
-
-    # Check if another tag depends on this tag. If so, add this tag's
-    # implications to that tag.
-    for t,implied in implications.items():
-        if tag in implied:
-            implications[t] |= implications[tag]
-
-env.AddMethod(tag_implies, 'TagImplies')
-
-def resolve_tags(env, tags):
-    '''
-    Returns the complete set of tags implied (dependencies) by the
-    supplied tags.
-    '''
-
-    implications = env.SetDefault(_tag_implies={})
-    implications = env['_tag_implies']
-
-    if isinstance(tags, str):
-        tags = frozenset([tags])
-    if not isinstance(tags, frozenset):
-        tags = frozenset(tags)
-
-    tags = tags.copy()
-    for tag in tags:
-        if tag in implications:
-            tags |= implications[tag]
-    return tags
-
-class SourceFilter(object):
-    factories = {}
-    def __init__(self, predicate):
-        self.predicate = predicate
-
-    def __or__(self, other):
-        return SourceFilter(lambda env, tags: self.predicate(env, tags) or
-                                              other.predicate(env, tags))
-
-    def __and__(self, other):
-        return SourceFilter(lambda env, tags: self.predicate(env, tags) and
-                                              other.predicate(env, tags))
-
-def with_any_tags(*tags):
-    '''Return a list of sources with any of the supplied tags.'''
-    return SourceFilter(lambda env, stags: \
-        len(resolve_tags(env, tags) & stags) > 0)
-
-def with_all_tags(*tags):
-    '''Return a list of sources with all of the supplied tags.'''
-    return SourceFilter(lambda env, stags: resolve_tags(env, tags) <= stags)
-
-def with_tag(tag):
-    '''Return a list of sources with the supplied tag.'''
-    return with_any_tags(*[tag])
-
-def without_tags(*tags):
-    '''Return a list of sources without any of the supplied tags.'''
-    return SourceFilter(lambda env, stags: \
-        len(resolve_tags(env, tags) & stags) == 0)
-
-def without_tag(tag):
-    '''Return a list of sources without the supplied tag.'''
-    return without_tags(*[tag])
-
-SourceFilter.factories.update({
-    'with_any_tags': with_any_tags,
-    'with_all_tags': with_all_tags,
-    'with_tag': with_tag,
-    'without_tags': without_tags,
-    'without_tag': without_tag,
-})
-
-Export(SourceFilter.factories)
-
-class SourceList(list):
-    def apply_filter(self, env, f):
-        def match(source):
-            return f.predicate(env, source.tags)
-        return SourceList(filter(match, self))
-
-    def __getattr__(self, name):
-        func = SourceFilter.factories.get(name, None)
-        if not func:
-            raise AttributeError
-
-        @functools.wraps(func)
-        def wrapper(env, *args, **kwargs):
-            return self.apply_filter(env, func(*args, **kwargs))
-        return wrapper
-
-class SourceMeta(type):
-    '''Meta class for source files that keeps track of all files of a
-    particular type.'''
-    def __init__(cls, name, bases, dict):
-        super(SourceMeta, cls).__init__(name, bases, dict)
-        cls.all = SourceList()
-
-class SourceFile(object, metaclass=SourceMeta):
-    '''Base object that encapsulates the notion of a source file.
-    This includes, the source node, target node, various manipulations
-    of those.  A source file also specifies a set of tags which
-    describing arbitrary properties of the source file.'''
-
-    def __init__(self, source, tags=None, add_tags=None, append=None):
-        if tags is None:
-            tags='gem5 lib'
-        if isinstance(tags, str):
-            tags = { tags }
-        if not isinstance(tags, set):
-            tags = set(tags)
-        self.tags = tags
-
-        if add_tags:
-            if isinstance(add_tags, str):
-                add_tags = { add_tags }
-            if not isinstance(add_tags, set):
-                add_tags = set(add_tags)
-            self.tags |= add_tags
-
-        self.append = append
-
-        tnode = File(source)
-
-        self.tnode = tnode
-        self.filename = str(self.tnode)
-        self.snode = tnode.srcnode()
-
-        for base in type(self).__mro__:
-            if issubclass(base, SourceFile):
-                base.all.append(self)
-
-    def static(self, env):
-        if self.append:
-            env = env.Clone()
-            env.Append(**self.append)
-        return env.StaticObject(self.tnode)
-
-    def shared(self, env):
-        if self.append:
-            env = env.Clone()
-            env.Append(**self.append)
-        return env.SharedObject(self.tnode)
 
 def bytesToCppArray(code, symbol, data):
     '''
