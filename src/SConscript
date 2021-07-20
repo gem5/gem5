@@ -695,18 +695,11 @@ def makeDefinesPyFile(target, source, env):
     code = code_formatter()
     code("""
 import _m5.core
-import m5.util
 
 buildEnv = dict($build_env)
 
 compileDate = _m5.core.compileDate
 gem5Version = _m5.core.gem5Version
-_globals = globals()
-for key,val in _m5.core.__dict__.items():
-    if key.startswith('flag_'):
-        flag = key[5:]
-        _globals[flag] = val
-del _globals
 """)
     code.write(target[0].abspath)
 
