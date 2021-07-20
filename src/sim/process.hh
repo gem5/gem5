@@ -284,6 +284,9 @@ class Process : public SimObject
     // Process was forked with SIGCHLD set.
     bool *sigchld;
 
+    // Contexts to wake up when this thread exits or calls execve
+    std::vector<ContextID> vforkContexts;
+
     // Track how many system calls are executed
     statistics::Scalar numSyscalls;
 };
