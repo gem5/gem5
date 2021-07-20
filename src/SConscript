@@ -149,6 +149,7 @@ def resolve_tags(env, tags):
     return tags
 
 class SourceFilter(object):
+    factories = {}
     def __init__(self, predicate):
         self.predicate = predicate
 
@@ -159,10 +160,6 @@ class SourceFilter(object):
     def __and__(self, other):
         return SourceFilter(lambda env, tags: self.predicate(env, tags) and
                                               other.predicate(env, tags))
-
-def with_tags_that(predicate):
-    '''Return a list of sources with tags that satisfy a predicate.'''
-    return SourceFilter(predicate)
 
 def with_any_tags(*tags):
     '''Return a list of sources with any of the supplied tags.'''
@@ -186,16 +183,15 @@ def without_tag(tag):
     '''Return a list of sources without the supplied tag.'''
     return without_tags(*[tag])
 
-source_filter_factories = {
-    'with_tags_that': with_tags_that,
+SourceFilter.factories.update({
     'with_any_tags': with_any_tags,
     'with_all_tags': with_all_tags,
     'with_tag': with_tag,
     'without_tags': without_tags,
     'without_tag': without_tag,
-}
+})
 
-Export(source_filter_factories)
+Export(SourceFilter.factories)
 
 class SourceList(list):
     def apply_filter(self, env, f):
@@ -204,7 +200,7 @@ class SourceList(list):
         return SourceList(filter(match, self))
 
     def __getattr__(self, name):
-        func = source_filter_factories.get(name, None)
+        func = SourceFilter.factories.get(name, None)
         if not func:
             raise AttributeError
 
