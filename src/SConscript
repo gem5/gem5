@@ -690,15 +690,12 @@ depends.sort(key = lambda x: x.name)
 # Generate Python file containing a dict specifying the current
 # buildEnv flags.
 def makeDefinesPyFile(target, source, env):
-    build_env = source[0].get_contents().decode('utf-8')
-
     code = code_formatter()
-    code("buildEnv = dict($build_env)")
+    code("buildEnv = $0", FromValue(source[0]))
     code.write(target[0].abspath)
 
-defines_info = Value(build_env)
 # Generate a file with all of the compile options in it
-env.Command('python/m5/defines.py', defines_info,
+env.Command('python/m5/defines.py', ToValue(dict(build_env)),
             MakeAction(makeDefinesPyFile, Transform("DEFINES", 0)))
 PySource('m5', 'python/m5/defines.py')
 
