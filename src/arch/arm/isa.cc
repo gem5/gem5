@@ -42,14 +42,17 @@
 #include "arch/arm/interrupts.hh"
 #include "arch/arm/mmu.hh"
 #include "arch/arm/pmu.hh"
+#include "arch/arm/regs/misc.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlbi_op.hh"
+#include "arch/arm/utility.hh"
 #include "base/cprintf.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Arm.hh"
+#include "debug/LLSC.hh"
 #include "debug/MiscRegs.hh"
 #include "dev/arm/generic_timer.hh"
 #include "dev/arm/gic_v3.hh"
@@ -2572,6 +2575,166 @@ ISA::MiscRegLUTEntryInitializer::highest(ArmSystem *const sys) const
       case EL3: mon(); break;
     }
     return *this;
+}
+
+template <class XC>
+static inline void
+lockedSnoopHandler(ThreadContext *tc, XC *xc, PacketPtr pkt,
+        Addr cacheBlockMask)
+{
+    // Should only every see invalidations / direct writes
+    assert(pkt->isInvalidate() || pkt->isWrite());
+
+    DPRINTF(LLSC, "%s:  handling snoop for address: %#x locked: %d\n",
+            tc->getCpuPtr()->name(), pkt->getAddr(),
+            xc->readMiscReg(MISCREG_LOCKFLAG));
+    if (!xc->readMiscReg(MISCREG_LOCKFLAG))
+        return;
+
+    Addr locked_addr = xc->readMiscReg(MISCREG_LOCKADDR) & cacheBlockMask;
+    // If no caches are attached, the snoop address always needs to be masked
+    Addr snoop_addr = pkt->getAddr() & cacheBlockMask;
+
+    DPRINTF(LLSC, "%s:  handling snoop for address: %#x locked addr: %#x\n",
+            tc->getCpuPtr()->name(), snoop_addr, locked_addr);
+    if (locked_addr == snoop_addr) {
+        DPRINTF(LLSC, "%s: address match, clearing lock and signaling sev\n",
+                tc->getCpuPtr()->name());
+        xc->setMiscReg(MISCREG_LOCKFLAG, false);
+        // Implement ARMv8 WFE/SEV semantics
+        sendEvent(tc);
+        xc->setMiscReg(MISCREG_SEV_MAILBOX, true);
+    }
+}
+
+void
+ISA::handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask)
+{
+    lockedSnoopHandler(tc, tc, pkt, cacheBlockMask);
+}
+
+void
+ISA::handleLockedSnoop(ExecContext *xc, PacketPtr pkt, Addr cacheBlockMask)
+{
+    lockedSnoopHandler(xc->tcBase(), xc, pkt, cacheBlockMask);
+}
+
+void
+ISA::handleLockedRead(const RequestPtr &req)
+{
+    tc->setMiscReg(MISCREG_LOCKADDR, req->getPaddr());
+    tc->setMiscReg(MISCREG_LOCKFLAG, true);
+    DPRINTF(LLSC, "%s: Placing address %#x in monitor\n",
+            tc->getCpuPtr()->name(), req->getPaddr());
+}
+
+void
+ISA::handleLockedRead(ExecContext *xc, const RequestPtr &req)
+{
+    xc->setMiscReg(MISCREG_LOCKADDR, req->getPaddr());
+    xc->setMiscReg(MISCREG_LOCKFLAG, true);
+    DPRINTF(LLSC, "%s: Placing address %#x in monitor\n",
+            xc->tcBase()->getCpuPtr()->name(), req->getPaddr());
+}
+
+void
+ISA::handleLockedSnoopHit()
+{
+    DPRINTF(LLSC, "%s:  handling snoop lock hit address: %#x\n",
+            tc->getCpuPtr()->name(), tc->readMiscReg(MISCREG_LOCKADDR));
+    tc->setMiscReg(MISCREG_LOCKFLAG, false);
+    tc->setMiscReg(MISCREG_SEV_MAILBOX, true);
+}
+
+void
+ISA::handleLockedSnoopHit(ExecContext *xc)
+{
+    DPRINTF(LLSC, "%s:  handling snoop lock hit address: %#x\n",
+            xc->tcBase()->getCpuPtr()->name(),
+            xc->readMiscReg(MISCREG_LOCKADDR));
+    xc->setMiscReg(MISCREG_LOCKFLAG, false);
+    xc->setMiscReg(MISCREG_SEV_MAILBOX, true);
+}
+
+template <class XC>
+static inline bool
+lockedWriteHandler(ThreadContext *tc, XC *xc, const RequestPtr &req,
+        Addr cacheBlockMask)
+{
+    if (req->isSwap())
+        return true;
+
+    DPRINTF(LLSC, "Handling locked write for address %#x in monitor.\n",
+            req->getPaddr());
+    // Verify that the lock flag is still set and the address
+    // is correct
+    bool lock_flag = xc->readMiscReg(MISCREG_LOCKFLAG);
+    Addr lock_addr = xc->readMiscReg(MISCREG_LOCKADDR) & cacheBlockMask;
+    if (!lock_flag || (req->getPaddr() & cacheBlockMask) != lock_addr) {
+        // Lock flag not set or addr mismatch in CPU;
+        // don't even bother sending to memory system
+        req->setExtraData(0);
+        xc->setMiscReg(MISCREG_LOCKFLAG, false);
+        DPRINTF(LLSC, "clearing lock flag in handle locked write\n",
+                tc->getCpuPtr()->name());
+        // the rest of this code is not architectural;
+        // it's just a debugging aid to help detect
+        // livelock by warning on long sequences of failed
+        // store conditionals
+        int stCondFailures = xc->readStCondFailures();
+        stCondFailures++;
+        xc->setStCondFailures(stCondFailures);
+        if (stCondFailures % 100000 == 0) {
+            warn("context %d: %d consecutive "
+                 "store conditional failures\n",
+                 tc->contextId(), stCondFailures);
+        }
+
+        // store conditional failed already, so don't issue it to mem
+        return false;
+    }
+    return true;
+}
+
+bool
+ISA::handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
+{
+    return lockedWriteHandler(tc, tc, req, cacheBlockMask);
+}
+
+bool
+ISA::handleLockedWrite(ExecContext *xc, const RequestPtr &req,
+        Addr cacheBlockMask)
+{
+    return lockedWriteHandler(xc->tcBase(), xc, req, cacheBlockMask);
+}
+
+void
+ISA::globalClearExclusive()
+{
+    // A spinlock would typically include a Wait For Event (WFE) to
+    // conserve energy. The ARMv8 architecture specifies that an event
+    // is automatically generated when clearing the exclusive monitor
+    // to wake up the processor in WFE.
+    DPRINTF(LLSC, "Clearing lock and signaling sev\n");
+    tc->setMiscReg(MISCREG_LOCKFLAG, false);
+    // Implement ARMv8 WFE/SEV semantics
+    sendEvent(tc);
+    tc->setMiscReg(MISCREG_SEV_MAILBOX, true);
+}
+
+void
+ISA::globalClearExclusive(ExecContext *xc)
+{
+    // A spinlock would typically include a Wait For Event (WFE) to
+    // conserve energy. The ARMv8 architecture specifies that an event
+    // is automatically generated when clearing the exclusive monitor
+    // to wake up the processor in WFE.
+    DPRINTF(LLSC, "Clearing lock and signaling sev\n");
+    xc->setMiscReg(MISCREG_LOCKFLAG, false);
+    // Implement ARMv8 WFE/SEV semantics
+    sendEvent(xc->tcBase());
+    xc->setMiscReg(MISCREG_SEV_MAILBOX, true);
 }
 
 } // namespace ArmISA

@@ -47,7 +47,6 @@ if env['TARGET_ISA'] == 'riscv':
     Source('decoder.cc')
     Source('faults.cc')
     Source('isa.cc')
-    Source('locked_mem.cc')
     Source('process.cc')
     Source('pagetable.cc')
     Source('pagetable_walker.cc')

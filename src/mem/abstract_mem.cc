@@ -42,7 +42,6 @@
 
 #include <vector>
 
-#include "arch/locked_mem.hh"
 #include "base/loader/memory_image.hh"
 #include "base/loader/object_file.hh"
 #include "cpu/thread_context.hh"
@@ -339,7 +338,7 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
                                            InvalidContextID;
                 if (owner_cid != requestor_cid) {
                     ThreadContext* ctx = system()->threads[owner_cid];
-                    TheISA::globalClearExclusive(ctx);
+                    ctx->getIsaPtr()->globalClearExclusive();
                 }
                 i = lockedAddrList.erase(i);
             } else {

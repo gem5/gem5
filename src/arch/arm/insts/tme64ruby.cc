@@ -38,7 +38,6 @@
 #include "arch/arm/faults.hh"
 #include "arch/arm/htm.hh"
 #include "arch/arm/insts/tme64.hh"
-#include "arch/arm/locked_mem.hh"
 #include "arch/generic/memhelpers.hh"
 #include "debug/ArmTme.hh"
 #include "mem/packet_access.hh"
@@ -120,7 +119,7 @@ Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
             armcpt->save(tc);
             armcpt->destinationRegister(dest);
 
-            ArmISA::globalClearExclusive(tc);
+            tc->getIsaPtr()->globalClearExclusive();
         }
 
         xc->setIntRegOperand(this, 0, (Dest64) & mask(intWidth));
@@ -262,7 +261,7 @@ MicroTcommit64::completeAcc(PacketPtr pkt, ExecContext *xc,
             assert(tme_checkpoint->valid());
 
             tme_checkpoint->reset();
-            ArmISA::globalClearExclusive(tc);
+            tc->getIsaPtr()->globalClearExclusive();
         }
     }
 

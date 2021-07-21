@@ -919,6 +919,23 @@ namespace ArmISA
         }
 
         void copyRegsFrom(ThreadContext *src) override;
+
+        void handleLockedRead(const RequestPtr &req) override;
+        void handleLockedRead(ExecContext *xc, const RequestPtr &req) override;
+
+        bool handleLockedWrite(const RequestPtr &req,
+                Addr cacheBlockMask) override;
+        bool handleLockedWrite(ExecContext *xc, const RequestPtr &req,
+                Addr cacheBlockMask) override;
+
+        void handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask) override;
+        void handleLockedSnoop(ExecContext *xc, PacketPtr pkt,
+                Addr cacheBlockMask) override;
+        void handleLockedSnoopHit() override;
+        void handleLockedSnoopHit(ExecContext *xc) override;
+
+        void globalClearExclusive() override;
+        void globalClearExclusive(ExecContext *xc) override;
     };
 
 } // namespace ArmISA

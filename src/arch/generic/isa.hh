@@ -44,12 +44,15 @@
 
 #include "cpu/reg_class.hh"
 #include "enums/VecRegRenameMode.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
 {
 
 class ThreadContext;
+class ExecContext;
 
 class BaseISA : public SimObject
 {
@@ -84,6 +87,45 @@ class BaseISA : public SimObject
     }
 
     const RegClasses &regClasses() const { return _regClasses; }
+
+    // Locked memory handling functions.
+    virtual void handleLockedRead(const RequestPtr &req) {}
+    virtual void
+    handleLockedRead(ExecContext *xc, const RequestPtr &req)
+    {
+        handleLockedRead(req);
+    }
+    virtual bool
+    handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
+    {
+        return true;
+    }
+    virtual bool
+    handleLockedWrite(ExecContext *xc, const RequestPtr &req,
+            Addr cacheBlockMask)
+    {
+        return handleLockedWrite(req, cacheBlockMask);
+    }
+
+    virtual void handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask) {}
+    virtual void
+    handleLockedSnoop(ExecContext *xc, PacketPtr pkt, Addr cacheBlockMask)
+    {
+        handleLockedSnoop(pkt, cacheBlockMask);
+    }
+    virtual void handleLockedSnoopHit() {}
+    virtual void
+    handleLockedSnoopHit(ExecContext *xc)
+    {
+        handleLockedSnoopHit();
+    }
+
+    virtual void globalClearExclusive() {}
+    virtual void
+    globalClearExclusive(ExecContext *xc)
+    {
+        globalClearExclusive();
+    }
 };
 
 } // namespace gem5

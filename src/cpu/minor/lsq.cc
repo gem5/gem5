@@ -40,7 +40,6 @@
 #include <iomanip>
 #include <sstream>
 
-#include "arch/locked_mem.hh"
 #include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
@@ -1137,10 +1136,10 @@ LSQ::tryToSendToTransfers(LSQRequestPtr request)
 
         /* Handle LLSC requests and tests */
         if (is_load) {
-            TheISA::handleLockedRead(&context, request->request);
+            thread.getIsaPtr()->handleLockedRead(&context, request->request);
         } else {
-            do_access = TheISA::handleLockedWrite(&context,
-                request->request, cacheBlockMask);
+            do_access = thread.getIsaPtr()->handleLockedWrite(&context,
+                    request->request, cacheBlockMask);
 
             if (!do_access) {
                 DPRINTF(MinorMem, "Not perfoming a memory "
@@ -1769,8 +1768,8 @@ LSQ::recvTimingSnoopReq(PacketPtr pkt)
 
     if (pkt->isInvalidate() || pkt->isWrite()) {
         for (ThreadID tid = 0; tid < cpu.numThreads; tid++) {
-            TheISA::handleLockedSnoop(cpu.getContext(tid), pkt,
-                                      cacheBlockMask);
+            cpu.getContext(tid)->getIsaPtr()->handleLockedSnoop(
+                    pkt, cacheBlockMask);
         }
     }
 }
@@ -1791,8 +1790,8 @@ LSQ::threadSnoop(LSQRequestPtr request)
             }
 
             if (pkt->isInvalidate() || pkt->isWrite()) {
-                TheISA::handleLockedSnoop(cpu.getContext(tid), pkt,
-                                          cacheBlockMask);
+                cpu.getContext(tid)->getIsaPtr()->handleLockedSnoop(pkt,
+                        cacheBlockMask);
             }
         }
     }
