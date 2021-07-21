@@ -214,6 +214,7 @@ def _check_tracing():
 
 def main(*args):
     import m5
+    import _m5.core
 
     from . import core
     from . import debug
@@ -336,8 +337,8 @@ def main(*args):
         print(brief_copyright)
         print()
 
-        print("gem5 version %s" % defines.gem5Version)
-        print("gem5 compiled %s" % defines.compileDate)
+        print("gem5 version %s" % _m5.core.gem5Version)
+        print("gem5 compiled %s" % _m5.core.compileDate)
 
         print("gem5 started %s" %
               datetime.datetime.now().strftime("%b %e %Y %X"))

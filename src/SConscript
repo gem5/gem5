@@ -693,14 +693,7 @@ def makeDefinesPyFile(target, source, env):
     build_env = source[0].get_contents().decode('utf-8')
 
     code = code_formatter()
-    code("""
-import _m5.core
-
-buildEnv = dict($build_env)
-
-compileDate = _m5.core.compileDate
-gem5Version = _m5.core.gem5Version
-""")
+    code("buildEnv = dict($build_env)")
     code.write(target[0].abspath)
 
 defines_info = Value(build_env)
