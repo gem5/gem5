@@ -43,9 +43,14 @@
 #include "arch/riscv/regs/misc.hh"
 #include "base/bitfield.hh"
 #include "base/compiler.hh"
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "cpu/base.hh"
 #include "debug/Checkpoint.hh"
+#include "debug/LLSC.hh"
 #include "debug/RiscvMisc.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
 #include "params/RiscvISA.hh"
 #include "sim/pseudo_inst.hh"
 
@@ -482,6 +487,77 @@ ISA::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Riscv Misc Registers\n");
     UNSERIALIZE_CONTAINER(miscRegFile);
+}
+
+const int WARN_FAILURE = 10000;
+
+// RISC-V allows multiple locks per hart, but each SC has to unlock the most
+// recent one, so we use a stack here.
+std::unordered_map<int, std::stack<Addr>> locked_addrs;
+
+void
+ISA::handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask)
+{
+    std::stack<Addr>& locked_addr_stack = locked_addrs[tc->contextId()];
+
+    if (locked_addr_stack.empty())
+        return;
+    Addr snoop_addr = pkt->getAddr() & cacheBlockMask;
+    DPRINTF(LLSC, "Locked snoop on address %x.\n", snoop_addr);
+    if ((locked_addr_stack.top() & cacheBlockMask) == snoop_addr)
+        locked_addr_stack.pop();
+}
+
+
+void
+ISA::handleLockedRead(const RequestPtr &req)
+{
+    std::stack<Addr>& locked_addr_stack = locked_addrs[tc->contextId()];
+
+    locked_addr_stack.push(req->getPaddr() & ~0xF);
+    DPRINTF(LLSC, "[cid:%d]: Reserved address %x.\n",
+            req->contextId(), req->getPaddr() & ~0xF);
+}
+
+bool
+ISA::handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
+{
+    std::stack<Addr>& locked_addr_stack = locked_addrs[tc->contextId()];
+
+    // Normally RISC-V uses zero to indicate success and nonzero to indicate
+    // failure (right now only 1 is reserved), but in gem5 zero indicates
+    // failure and one indicates success, so here we conform to that (it should
+    // be switched in the instruction's implementation)
+
+    DPRINTF(LLSC, "[cid:%d]: locked_addrs empty? %s.\n", req->contextId(),
+            locked_addr_stack.empty() ? "yes" : "no");
+    if (!locked_addr_stack.empty()) {
+        DPRINTF(LLSC, "[cid:%d]: addr = %x.\n", req->contextId(),
+                req->getPaddr() & ~0xF);
+        DPRINTF(LLSC, "[cid:%d]: last locked addr = %x.\n", req->contextId(),
+                locked_addr_stack.top());
+    }
+    if (locked_addr_stack.empty()
+            || locked_addr_stack.top() != ((req->getPaddr() & ~0xF))) {
+        req->setExtraData(0);
+        int stCondFailures = tc->readStCondFailures();
+        tc->setStCondFailures(++stCondFailures);
+        if (stCondFailures % WARN_FAILURE == 0) {
+            warn("%i: context %d: %d consecutive SC failures.\n",
+                    curTick(), tc->contextId(), stCondFailures);
+        }
+        return false;
+    }
+    if (req->isUncacheable()) {
+        req->setExtraData(2);
+    }
+    return true;
+}
+
+void
+ISA::globalClearExclusive()
+{
+    tc->getCpuPtr()->wakeup(tc->threadId());
 }
 
 } // namespace RiscvISA

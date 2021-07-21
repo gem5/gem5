@@ -98,6 +98,15 @@ class ISA : public BaseISA
     void unserialize(CheckpointIn &cp) override;
 
     ISA(const Params &p);
+
+    void handleLockedRead(const RequestPtr &req) override;
+
+    bool handleLockedWrite(const RequestPtr &req,
+            Addr cacheBlockMask) override;
+
+    void handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask) override;
+
+    void globalClearExclusive() override;
 };
 
 } // namespace RiscvISA

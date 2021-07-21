@@ -41,7 +41,6 @@
 
 #include "cpu/simple/timing.hh"
 
-#include "arch/locked_mem.hh"
 #include "base/compiler.hh"
 #include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
@@ -276,7 +275,7 @@ TimingSimpleCPU::handleReadPacket(PacketPtr pkt)
     // We're about the issues a locked load, so tell the monitor
     // to start caring about this address
     if (pkt->isRead() && pkt->req->isLLSC()) {
-        TheISA::handleLockedRead(thread, pkt->req);
+        thread->getIsaPtr()->handleLockedRead(pkt->req);
     }
     if (req->isLocalAccess()) {
         Cycles delay = req->localAccessor(thread->getTC(), pkt);
@@ -325,7 +324,8 @@ TimingSimpleCPU::sendData(const RequestPtr &req, uint8_t *data, uint64_t *res,
         bool do_access = true;  // flag to suppress cache access
 
         if (req->isLLSC()) {
-            do_access = TheISA::handleLockedWrite(thread, req, dcachePort.cacheBlockMask);
+            do_access = thread->getIsaPtr()->handleLockedWrite(
+                    req, dcachePort.cacheBlockMask);
         } else if (req->isCondSwap()) {
             assert(res);
             req->setExtraData(*res);
@@ -641,7 +641,7 @@ TimingSimpleCPU::threadSnoop(PacketPtr pkt, ThreadID sender)
             if (getCpuAddrMonitor(tid)->doMonitor(pkt)) {
                 wakeup(tid);
             }
-            TheISA::handleLockedSnoop(threadInfo[tid]->thread, pkt,
+            threadInfo[tid]->thread->getIsaPtr()->handleLockedSnoop(pkt,
                     dcachePort.cacheBlockMask);
         }
     }
@@ -1100,7 +1100,8 @@ TimingSimpleCPU::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
     // It is not necessary to wake up the processor on all incoming packets
     if (pkt->isInvalidate() || pkt->isWrite()) {
         for (auto &t_info : cpu->threadInfo) {
-            TheISA::handleLockedSnoop(t_info->thread, pkt, cacheBlockMask);
+            t_info->thread->getIsaPtr()->handleLockedSnoop(pkt,
+                    cacheBlockMask);
         }
     }
 }

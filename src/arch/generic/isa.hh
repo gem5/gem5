@@ -44,6 +44,8 @@
 
 #include "cpu/reg_class.hh"
 #include "enums/VecRegRenameMode.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
@@ -84,6 +86,19 @@ class BaseISA : public SimObject
     }
 
     const RegClasses &regClasses() const { return _regClasses; }
+
+    // Locked memory handling functions.
+    virtual void handleLockedRead(const RequestPtr &req) {}
+    virtual bool
+    handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
+    {
+        return true;
+    }
+
+    virtual void handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask) {}
+    virtual void handleLockedSnoopHit() {}
+
+    virtual void globalClearExclusive() {}
 };
 
 } // namespace gem5
