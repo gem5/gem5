@@ -42,23 +42,29 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
+constexpr auto MarshalScript = R"(
+import marshal
+
+with open(source, 'r') as f:
+    src = f.read()
+
+compiled = compile(src, source, 'exec')
+marshalled = marshal.dumps(compiled)
+)";
+
 int
-main(int argc, char **argv) {
-    py::scoped_interpreter guard{};
+main(int argc, const char **argv)
+{
+    py::scoped_interpreter guard;
 
     if (argc != 2) {
-        std::cerr << "Usage: marshal PYSOURCE\n" << std::endl;
+        std::cerr << "Usage: marshal PYSOURCE" << std::endl;
         exit(1);
     }
 
     auto locals = py::dict("source"_a=argv[1]);
 
-    py::exec(
-        "import marshal\n"
-        "with open(source, 'r') as f: src = f.read()\n"
-        "compiled = compile(src, source, 'exec')\n"
-        "marshalled = marshal.dumps(compiled)\n",
-        py::globals(), locals);
+    py::exec(MarshalScript, py::globals(), locals);
 
     auto marshalled = locals["marshalled"].cast<std::string>();
     std::cout << marshalled;
