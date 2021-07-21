@@ -1,3 +1,146 @@
+# Version 21.1.0.0
+
+Since v21.0 we have received 780 commits with 48 unique contributors, closing 64 issues on our [Jira Issue Tracker](https://gem5.atlassian.net/).
+In addition to our [first gem5 minor release](#version-21.0.1.0), we have included a range of new features, and API changes which we outline below.
+
+## Added the Components Library [Alpha Release]
+
+The purpose of the gem5 components library is to provide gem5 users a standard set of common and useful gem5 components, pre-built, to add to their experiments.
+The gem5 components library adopts a modular architecture design so components may be easily added, removed, and extended, as needed.
+
+Examples of using the gem5 components library can be found in [`configs/example/components-library`](https://gem5.googlesource.com/public/gem5/+/refs/tags/v21.1.0.0/configs/example/components-library).
+
+**Important Disclaimer:**
+This is a pre-alpha release.
+The purpose of this release is to get community feedback.
+Though some testing has been done, we expect regular fixes and improvements until the library reaches a stable state.
+A Jira Ticket outlining TODOs and known bugs can be found at <https://gem5.atlassian.net/browse/GEM5-648>.
+
+## Improvements to GPU simulation
+
+### ROCm 4.0 support
+
+ROCm 4.0 is now officially supported.
+
+### gfx801 (Carrizo) and gfx803 (Fiji) support
+
+gfx801 (Carrizo) and gfx803 (Fiji) are both supported and tested with the gem5-resources applications.
+
+### Better scoreboarding support
+
+Better scoreboarding support has been added.
+This reduces stalls by up to 42%.
+
+## Accuracy and coverage stat added to prefetcher caches
+
+Accuracy and coverage stats have been added for prefetcher caches.
+Accuracy is defined as the ratio of the number of prefetch requests counted as useful over the total number of prefetch requests issued.
+Coverage is defined as the ratio of the number of prefetch requests counted as useful over the number of useful prefetch request plus the remaining demand misses.
+
+## POWER 64-bit SE mode
+
+The POWER 64-bit ISA is now supported in Syscall Execution mode.
+
+## RISC-V PMP now supported
+
+gem5 now supports simulation of RISC-V Physical Memory Protection (PMP).
+Simulations can boot and run Keystone and Eyrie.
+
+## Improvements to the replacement policies
+
+The gem5 replacement policies framework now supports more complex algorithms.
+It now allows using addresses, PC, and other information within a policy.
+
+**Note:**
+Assuming this information is promptly available at the cache may be unrealistic.
+
+### Set Dueling
+
+Classes that handle set dueling have been created ([Dueler and DuelingMonitor](https://gem5.googlesource.com/public/gem5/+/refs/tags/v21.1.0.0/src/mem/cache/tags/dueling.hh)).
+They can be used in conjunction with different cache policies.
+A [replacement policy that uses it](https://gem5.googlesource.com/public/gem5/+/refs/tags/v21.1.0.0/src/mem/cache/replacement_policies/dueling_rp.hh) has been added for guidance.
+
+## RISC-V is now supported as a host machine.
+
+gem5 is now compilable and runnable on a RISC-V host system.
+
+## New Deprecation MARCOs added
+
+Deprecation MACROS have been added for deprecating namespaces (`GEM5_DEPRECATED_NAMESPACE`), and deprecating other MACROs (`GEM5_DEPRECATED_MACRO`).
+
+**Note:**
+For technical reasons, using old macros won't produce any deprecation warnings.
+## Refactoring of the gem5 Namespaces
+
+Snake case has been adopted as the new convention for name spaces.
+As a consequence, multiple namespaces have been renamed:
+
+* `Minor` -> `minor`
+* `Loader` -> `loader`
+* `Stats` -> `statistics`
+* `Enums` -> `enums`
+* `Net` -> `networking`
+* `ProbePoints` -> `probing`
+* `ContextSwitchTaskId` -> `context_switch_task_id`
+* `Prefetcher` -> `prefetch`
+* `Encoder` -> `encoder`
+* `Compressor` -> `compression`
+* `QoS` -> `qos`
+* `ReplacementPolicy` -> `replacement_policy`
+* `Mouse` -> `mouse`
+* `Keyboard` -> `keyboard`
+* `Int` -> `as_int`
+* `Float` -> `as_float`
+* `FastModel` -> `fastmodel`
+* `GuestABI` -> `guest_abi`
+* `LockedMem` -> `locked_mem`
+* `DeliveryMode` -> `delivery_mode`
+* `PseudoInst` -> `pseudo_inst`
+* `DecodeCache` -> `decode_cache`
+* `BitfieldBackend` -> `bitfield_backend`
+* `FreeBSD` -> `free_bsd`
+* `Linux` -> `linux`
+* `Units` -> `units`
+* `SimClock` -> `sim_clock`
+* `BloomFilter` -> `bloom_filter`
+* `X86Macroop` -> `x86_macroop`
+* `ConditionTests` -> `condition_tests`
+* `IntelMP` -> `intelmp`
+* `SMBios` -> `smbios`
+* `RomLables` -> `rom_labels`
+* `SCMI` -> `scmi`
+* `iGbReg` -> `igbreg`
+* `Ps2` -> `ps2`
+* `CopyEngineReg` -> `copy_engine_reg`
+* `TxdOp` -> `txd_op`
+* `Sinic` -> `sinic`
+* `Debug` -> `debug`
+
+In addition some other namespaces were added:
+
+* `gem5::ruby`, for Ruby-related files
+* `gem5::ruby::garnet`, for garnet-related files
+* `gem5::o3`, for the O3-cpu's related files
+* `gem5::memory`, for files related to memories
+
+Finally, the `m5` namespace has been renamed `gem5`.
+
+## MACROs in `base/compiler.hh`
+
+The MACROs in base/compiler.hh of the form `M5_*` have been deprecated and replaced with macros of the form `GEM5_*`, with some other minor name adjustments.
+
+## MemObject Removed
+
+MemObject simobject had been marked for deprecation and has now been officially removed from the gem5 codebase.
+
+## Minimum GCC version increased to 7; minimum Clang version increased to 6; Clang 10 and 11 supported; C++17 supported
+
+GCC version 5 and 6 are no longer supported.
+GCC 7 is now the minimum GCC compiler version supported.
+This changes allows has allowed us to move to the C++17 standard for development.
+
+In addition, the minimum Clang version has increased to 6, and Clang 10 and 11 are now officially supported.
+
 # Version 21.0.1.0
 
 Version 21.0.1 is a minor gem5 release consisting of bug fixes. The 21.0.1 release:
