@@ -41,6 +41,8 @@
 #ifndef __ARCH_GENERIC_TLB_HH__
 #define __ARCH_GENERIC_TLB_HH__
 
+#include <type_traits>
+
 #include "arch/generic/mmu.hh"
 #include "base/logging.hh"
 #include "enums/TypeTLB.hh"
@@ -124,6 +126,21 @@ class BaseTLB : public SimObject
 
     BaseTLB* nextLevel() const { return _nextLevel; }
 };
+
+/** Implementing the "&" bitwise operator for TypeTLB allows us to handle
+ * TypeTLB::unified efficiently. For example if I want to check if a TLB
+ * is storing instruction entries I can do this with:
+ *
+ * tlb->type() & TypeTLB::instruction
+ *
+ * which will cover both TypeTLB::instruction and TypeTLB::unified TLBs
+ */
+inline auto
+operator&(TypeTLB lhs, TypeTLB rhs)
+{
+    using T = std::underlying_type_t<TypeTLB>;
+    return static_cast<T>(lhs) & static_cast<T>(rhs);
+}
 
 } // namespace gem5
 

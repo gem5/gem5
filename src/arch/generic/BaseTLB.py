@@ -45,6 +45,13 @@ class TypeTLB(ScopedEnum):
     instruction: TLB contains instruction entries only
     data: TLB contains data entries only
     unified: TLB contains both instruction and data entries
+
+    The enum values have been selected in order to perform bitwise
+    operations on them. For example a unified TLB contains both
+    instruction and data entries so code trying to assess if the
+    TLB is storing (e.g.) data entries can do that with:
+
+    bool has_data = tlb->type() & TypeTLB::data;
     """
     map = {
         'instruction' : 0x1,
