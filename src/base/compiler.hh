@@ -80,16 +80,6 @@
 #  define GEM5_LIKELY(cond) __builtin_expect(!!(cond), 1)
 #  define GEM5_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
 
-// Mark a C++ emum value as deprecated, with a message explaining what to do
-// to update to a non-deprecated alternative. This wraps GEM5_DEPRECATED but
-// is guarded by a preprocessor if directive to ensure it is not included
-// when compiled in GCC < 6, as deprecation of enum values was introduced in
-// GCC 6. All supported clang compilers allow enum value deprecation.
-#  if defined(__clang__) || __GNUC__ >= 6
-#    define GEM5_DEPRECATED_ENUM_VAL(message) [[deprecated(message)]]
-#  else
-#    define GEM5_DEPRECATED_ENUM_VAL(message)
-#  endif
 // Mark an expression-like macro as deprecated by wrapping it in some code
 // which declares and uses a deprecated variable with the same name as the
 // macro. The wrapping macro evaluates to the same thing as the original macro.
@@ -173,6 +163,10 @@ do { [[maybe_unused]] int i[] = { 0, ((void)(__VA_ARGS__), 0)... }; } while (0)
 #define GEM5_DEPRECATED(message) \
      [[deprecated(message " The GEM5_DEPRECATED macro is also deprecated, "\
              "please use the [[deprecated()]] attribute directly.")]]
+#define GEM5_DEPRECATED_ENUM_VAL(message) \
+     [[deprecated(message " The GEM5_DEPRECATED_ENUM_VAL macro is also "\
+             "deprecated, please use the [[deprecated()]] attribute "\
+             "directly.")]]
 
 // Deprecated attributes which can't be made to warn without possibly breaking
 // existing code.
