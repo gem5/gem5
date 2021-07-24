@@ -131,8 +131,8 @@ enum AuxiliaryVectorType
 #undef GEM5_DEPRECATE_AT
 
 template <class IntType>
-using AuxVector GEM5_DEPRECATED(
-        "The AuxVector template is now in the gem5::auxv namespace.") =
+using AuxVector [[deprecated(
+        "The AuxVector template is now in the gem5::auxv namespace.")]] =
         gem5::auxv::AuxVector<IntType>;
 
 } // namespace gem5
