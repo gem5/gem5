@@ -351,8 +351,8 @@ else:
           "src/SConscript to support that compiler.")))
 
 if main['GCC']:
-    if compareVersions(main['CXXVERSION'], "5") < 0:
-        error('gcc version 5 or newer required.\n'
+    if compareVersions(main['CXXVERSION'], "7") < 0:
+        error('gcc version 7 or newer required.\n'
               'Installed version:', main['CXXVERSION'])
 
     # Add the appropriate Link-Time Optimization (LTO) flags if `--with-lto` is
