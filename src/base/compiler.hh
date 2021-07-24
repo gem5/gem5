@@ -52,15 +52,6 @@
  * Attributes that become standard in later versions of c++.
  */
 
-// Use GEM5_FALLTHROUGH to mark when you're intentionally falling through from
-// one case to another in a switch statement.
-#if __has_cpp_attribute(fallthrough) // Standard in c++17.
-#  define GEM5_FALLTHROUGH [[fallthrough]]
-#else
-// Not supported, so it's not necessary to avoid warnings.
-#  define GEM5_FALLTHROUGH
-#endif
-
 // When the return value of a function should not be discarded, mark it with
 // GEM5_NO_DISCARD.
 #if __has_cpp_attribute(nodiscard) // Standard in c++17, with message in c++20.
@@ -204,5 +195,8 @@ do { GEM5_VAR_USED int i[] = { 0, ((void)(__VA_ARGS__), 0)... }; } while (0)
 #define M5_UNLIKELY(x) GEM5_UNLIKELY(x)
 #define M5_FOR_EACH_IN_PACK(...) GEM5_FOR_EACH_IN_PACK(__VA_ARGS__)
 #define M5_CLASS_VAR_USED GEM5_CLASS_VAR_USED
+
+#define GEM5_FALLTHROUGH GEM5_DEPRECATED_MACRO_STMT(GEM5_FALLTHROUGH,,\
+        "Please use the [[fallthrough]] attribute directly."); [[fallthrough]]
 
 #endif // __BASE_COMPILER_HH__
