@@ -53,7 +53,7 @@ For more details, see:
 
 # Check for the python version. Python 2 is no longer supported.
 try:
-    EnsurePythonVersion(3, 0)
+    EnsurePythonVersion(3, 6)
 except SystemExit as e:
     print("""\033[93m
 Python 3 is now required.
