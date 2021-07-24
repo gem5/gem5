@@ -117,7 +117,7 @@ def template LoadCompleteAcc {{
                                       ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
-        GEM5_VAR_USED Addr EA;
+        [[maybe_unused]] Addr EA;
         Fault fault = NoFault;
         Msr msr = xc->tcBase()->readIntReg(INTREG_MSR);
 
@@ -211,7 +211,7 @@ def template StoreCompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
-        GEM5_VAR_USED Addr EA;
+        [[maybe_unused]] Addr EA;
         Fault fault = NoFault;
 
         %(op_decl)s;

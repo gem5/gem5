@@ -255,7 +255,7 @@ MemDepUnit::insert(const DynInstPtr &inst)
     } else {
         // Otherwise make the instruction dependent on the store/barrier.
         DPRINTF(MemDepUnit, "Adding to dependency list\n");
-        for (GEM5_VAR_USED auto producing_store : producing_stores)
+        for ([[maybe_unused]] auto producing_store : producing_stores)
             DPRINTF(MemDepUnit, "\tinst PC %s is dependent on [sn:%lli].\n",
                 inst->pcState(), producing_store);
 

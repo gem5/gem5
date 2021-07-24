@@ -542,7 +542,8 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
 {
     PacketPtr pkt = crequest->getFirstPkt();
     Addr request_address = pkt->getAddr();
-    GEM5_VAR_USED Addr request_line_address = makeLineAddress(request_address);
+    [[maybe_unused]] Addr request_line_address =
+        makeLineAddress(request_address);
 
     RubyRequestType type = crequest->getRubyType();
 

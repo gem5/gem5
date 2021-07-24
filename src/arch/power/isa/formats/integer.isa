@@ -34,7 +34,7 @@
 
 let {{
 
-readXERCode = 'GEM5_VAR_USED Xer xer = XER;'
+readXERCode = '[[maybe_unused]] Xer xer = XER;'
 
 setXERCode = 'XER = xer;'
 
@@ -218,7 +218,7 @@ def format IntDispArithOp(code, inst_flags = []) {{
 def format IntCompOp(code, inst_flags = []) {{
 
     # Add code to setup variables
-    code = 'GEM5_VAR_USED uint32_t cr = 0;\n' + code
+    code = '[[maybe_unused]] uint32_t cr = 0;\n' + code
     code += 'CR = insertCRField(CR, bf, cr);\n'
 
     # Add code to access XER
@@ -235,7 +235,7 @@ def format IntCompOp(code, inst_flags = []) {{
 def format IntImmCompOp(code, inst_flags = []) {{
 
     # Add code to setup variables
-    code = 'GEM5_VAR_USED uint32_t cr = 0;\n' + code
+    code = '[[maybe_unused]] uint32_t cr = 0;\n' + code
     code += 'CR = insertCRField(CR, bf, cr);\n'
 
     # Add code to access XER
@@ -252,7 +252,7 @@ def format IntImmCompOp(code, inst_flags = []) {{
 def format IntImmCompLogicOp(code, inst_flags = []) {{
 
     # Add code to setup variables
-    code = 'GEM5_VAR_USED uint32_t cr = 0;\n' + code
+    code = '[[maybe_unused]] uint32_t cr = 0;\n' + code
     code += 'CR = insertCRField(CR, bf, cr);\n'
 
     # Add code to access XER
@@ -311,7 +311,7 @@ def format IntShiftOp(code, computeCA = 0, inst_flags = []) {{
     dict = {'result':'Ra'}
 
     # Add code to setup variables and access XER if necessary
-    code  = 'GEM5_VAR_USED bool setCA = false;\n' + code
+    code  = '[[maybe_unused]] bool setCA = false;\n' + code
 
     # Code when Rc is set
     code_rc1 = readXERCode + code + computeCR0Code % dict
@@ -426,7 +426,7 @@ def format IntArithCheckRcOp(code, computeOV = 0, inst_flags = []) {{
     # Deal with setting the overflow flag
     if computeOV:
         # Setup the 4 code versions and add code to access XER if necessary
-        code  = 'GEM5_VAR_USED bool setOV = false;\n' + code
+        code  = '[[maybe_unused]] bool setOV = false;\n' + code
         code_rc1 = readXERCode + code + computeCR0Code % dict
         code_oe1 = readXERCode + code + setOVCode + setXERCode
         code_rc1_oe1 = readXERCode + code + setOVCode + setXERCode
@@ -484,7 +484,7 @@ def format IntConcatShiftOp(code, computeCA = 0, inst_flags = []) {{
     dict = {'result':'Ra'}
 
     # Add code to setup variables and access XER if necessary
-    code  = 'GEM5_VAR_USED bool setCA = false;\n' + code
+    code  = '[[maybe_unused]] bool setCA = false;\n' + code
 
     # Code when Rc is set
     code_rc1 = readXERCode + code + computeCR0Code % dict

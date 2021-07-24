@@ -157,7 +157,7 @@ template<class ENTRY>
 inline void
 PerfectCacheMemory<ENTRY>::deallocate(Addr address)
 {
-    GEM5_VAR_USED auto num_erased = m_map.erase(makeLineAddress(address));
+    [[maybe_unused]] auto num_erased = m_map.erase(makeLineAddress(address));
     assert(num_erased == 1);
 }
 

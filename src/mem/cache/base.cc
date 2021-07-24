@@ -917,7 +917,8 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
 
     // Get previous compressed size
     CompressionBlk* compression_blk = static_cast<CompressionBlk*>(blk);
-    GEM5_VAR_USED const std::size_t prev_size = compression_blk->getSizeBits();
+    [[maybe_unused]] const std::size_t prev_size =
+        compression_blk->getSizeBits();
 
     // If compressed size didn't change enough to modify its co-allocatability
     // there is nothing to do. Otherwise we may be facing a data expansion
@@ -2453,7 +2454,7 @@ BaseCache::CpuSidePort::recvTimingReq(PacketPtr pkt)
     if (cache->system->bypassCaches()) {
         // Just forward the packet if caches are disabled.
         // @todo This should really enqueue the packet rather
-        GEM5_VAR_USED bool success = cache->memSidePort.sendTimingReq(pkt);
+        [[maybe_unused]] bool success = cache->memSidePort.sendTimingReq(pkt);
         assert(success);
         return true;
     } else if (tryTiming(pkt)) {

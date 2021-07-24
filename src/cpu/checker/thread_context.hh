@@ -90,7 +90,7 @@ class CheckerThreadContext : public ThreadContext
     bool
     schedule(PCEvent *e) override
     {
-        GEM5_VAR_USED bool check_ret = checkerTC->schedule(e);
+        [[maybe_unused]] bool check_ret = checkerTC->schedule(e);
         bool actual_ret = actualTC->schedule(e);
         assert(actual_ret == check_ret);
         return actual_ret;
@@ -99,7 +99,7 @@ class CheckerThreadContext : public ThreadContext
     bool
     remove(PCEvent *e) override
     {
-        GEM5_VAR_USED bool check_ret = checkerTC->remove(e);
+        [[maybe_unused]] bool check_ret = checkerTC->remove(e);
         bool actual_ret = actualTC->remove(e);
         assert(actual_ret == check_ret);
         return actual_ret;

@@ -728,7 +728,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
 
             assert(isdGPU || gfxVersion == GfxVersion::gfx902);
             assert((args->va_addr % TheISA::PageBytes) == 0);
-            GEM5_VAR_USED Addr mmap_offset = 0;
+            [[maybe_unused]] Addr mmap_offset = 0;
 
             Request::CacheCoherenceFlags mtype = defaultMtype;
             Addr pa_addr = 0;

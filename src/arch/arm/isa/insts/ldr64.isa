@@ -201,7 +201,7 @@ let {{
             accEpilogCode = None
             # Code that actually handles the access
             if self.flavor in ("dprefetch", "iprefetch", "mprefetch"):
-                accCode = 'GEM5_VAR_USED uint64_t temp = Mem%s;'
+                accCode = '[[maybe_unused]] uint64_t temp = Mem%s;'
             elif self.flavor == "fp":
                 accEpilogCode = '''
                     ArmISA::ISA::zeroSveVecRegUpperPart(AA64FpDest,

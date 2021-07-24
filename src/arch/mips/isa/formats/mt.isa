@@ -111,7 +111,7 @@ def template ThreadRegisterExecute {{
             ExecContext *xc, Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
-            GEM5_VAR_USED int64_t data;
+            [[maybe_unused]] int64_t data;
             %(op_decl)s;
             %(op_rd)s;
 

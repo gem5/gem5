@@ -55,7 +55,7 @@ using namespace ArmISA;
 
 namespace Trace {
 
-GEM5_VAR_USED static const char *regNames[] = {
+[[maybe_unused]] static const char *regNames[] = {
     "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
     "r8", "r9", "r10", "fp", "r12", "sp", "lr", "pc",
     "cpsr", "f0", "f1", "f2", "f3", "f4", "f5", "f6",

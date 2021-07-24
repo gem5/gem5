@@ -817,7 +817,7 @@ TrapInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     Process *p = tc->getProcessPtr();
 
-    GEM5_VAR_USED SparcProcess *sp = dynamic_cast<SparcProcess *>(p);
+    [[maybe_unused]] SparcProcess *sp = dynamic_cast<SparcProcess *>(p);
     assert(sp);
 
     auto *workload = dynamic_cast<SEWorkload *>(tc->getSystemPtr()->workload);

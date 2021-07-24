@@ -467,7 +467,7 @@ let {{
     exec_output = ""
 
     singleSimpleCode = vfpEnabledCheckCode + '''
-        GEM5_VAR_USED FPSCR fpscr = (FPSCR) FpscrExc;
+        [[maybe_unused]] FPSCR fpscr = (FPSCR) FpscrExc;
         FpDest = %(op)s;
     '''
     singleCode = singleSimpleCode + '''
@@ -488,7 +488,7 @@ let {{
                 "%(func)s, fpscr.fz, fpscr.dn, fpscr.rMode)"
     singleUnaryOp = "unaryOp(fpscr, FpOp1, %(func)s, fpscr.fz, fpscr.rMode)"
     doubleCode = vfpEnabledCheckCode + '''
-        GEM5_VAR_USED FPSCR fpscr = (FPSCR) FpscrExc;
+        [[maybe_unused]] FPSCR fpscr = (FPSCR) FpscrExc;
         double dest = %(op)s;
         FpDestP0_uw = dblLow(dest);
         FpDestP1_uw = dblHi(dest);

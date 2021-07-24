@@ -349,7 +349,7 @@ class InstOperands : public Base, public Operands...
     template <std::size_t ...I, typename ...CTorArgs>
     InstOperands(std::index_sequence<I...>, ExtMachInst mach_inst,
             const char *mnem, const char *inst_mnem, uint64_t set_flags,
-            OpClass op_class, GEM5_VAR_USED ArgTuple args,
+            OpClass op_class, [[maybe_unused]] ArgTuple args,
             CTorArgs... ctor_args) :
         Base(mach_inst, mnem, inst_mnem, set_flags, op_class, ctor_args...),
         Operands(this, std::get<I>(args))...

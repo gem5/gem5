@@ -49,23 +49,6 @@
 
 
 /*
- * Attributes that become standard in later versions of c++.
- */
-
-// When a variable may purposefully not be used, for instance if it's only used
-// in debug statements which might be disabled, mark it with GEM5_VAR_USED.
-#if __has_cpp_attribute(maybe_unused) // Standard in c++17.
-#  define GEM5_VAR_USED [[maybe_unused]]
-#elif defined(__GNUC__)
-// gcc and clang support a custom attribute which is essentially the same
-// thing.
-#  define GEM5_VAR_USED [[gnu::unused]]
-#else
-#  error "Don't know what to do for your compiler."
-#endif
-
-
-/*
  * Compiler specific features.
  */
 
@@ -152,7 +135,7 @@
 // as are the arguments to the comma operator, which evaluates to the last
 // value. This is compiler specific because it uses variadic macros.
 #define GEM5_FOR_EACH_IN_PACK(...) \
-do { GEM5_VAR_USED int i[] = { 0, ((void)(__VA_ARGS__), 0)... }; } while (0)
+do { [[maybe_unused]] int i[] = { 0, ((void)(__VA_ARGS__), 0)... }; } while (0)
 
 #else
 #  error "Don't know what to do for your compiler."
@@ -191,8 +174,9 @@ do { GEM5_VAR_USED int i[] = { 0, ((void)(__VA_ARGS__), 0)... }; } while (0)
      [[deprecated(message " The GEM5_DEPRECATED macro is also deprecated, "\
              "please use the [[deprecated()]] attribute directly.")]]
 
-// A deprecated attribute which can't be made to warn without possibly breaking
+// Deprecated attributes which can't be made to warn without possibly breaking
 // existing code.
 #define GEM5_NO_DISCARD [[nodiscard]]
+#define GEM5_VAR_USED [[maybe_unused]]
 
 #endif // __BASE_COMPILER_HH__

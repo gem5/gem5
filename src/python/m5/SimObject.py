@@ -889,7 +889,7 @@ module_init(py::module_ &m_internal)
                 # method, or the Dummy one. Either an implementation is
                 # mandantory since this was shunted off to the dummy class, or
                 # one is optional which will override this weak version.
-                code('GEM5_VAR_USED ${{cls.cxx_class}} *')
+                code('[[maybe_unused]] ${{cls.cxx_class}} *')
                 code('Dummy${cls}Shunt<${{cls.cxx_class}}>::Params::create() '
                      'const')
                 code('{')

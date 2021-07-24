@@ -520,7 +520,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     saved_cpsr.v = tc->readCCReg(CCREG_V);
     saved_cpsr.ge = tc->readCCReg(CCREG_GE);
 
-    GEM5_VAR_USED Addr curPc = tc->pcState().pc();
+    [[maybe_unused]] Addr curPc = tc->pcState().pc();
     ITSTATE it = tc->pcState().itstate();
     saved_cpsr.it2 = it.top6;
     saved_cpsr.it1 = it.bottom2;
@@ -528,7 +528,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     // if we have a valid instruction then use it to annotate this fault with
     // extra information. This is used to generate the correct fault syndrome
     // information
-    GEM5_VAR_USED ArmStaticInst *arm_inst = instrAnnotate(inst);
+    [[maybe_unused]] ArmStaticInst *arm_inst = instrAnnotate(inst);
 
     // Ensure Secure state if initially in Monitor mode
     if (have_security && saved_cpsr.mode == MODE_MON) {
@@ -706,7 +706,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     // If we have a valid instruction then use it to annotate this fault with
     // extra information. This is used to generate the correct fault syndrome
     // information
-    GEM5_VAR_USED ArmStaticInst *arm_inst = instrAnnotate(inst);
+    [[maybe_unused]] ArmStaticInst *arm_inst = instrAnnotate(inst);
 
     // Set PC to start of exception handler
     Addr new_pc = purifyTaggedAddr(vec_address, tc, toEL, true);
@@ -758,7 +758,7 @@ Reset::getVector(ThreadContext *tc)
     Addr base;
 
     // Check for invalid modes
-    GEM5_VAR_USED CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
+    [[maybe_unused]] CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
     assert(ArmSystem::haveSecurity(tc) || cpsr.mode != MODE_MON);
     assert(ArmSystem::haveVirtualization(tc) || cpsr.mode != MODE_HYP);
 
@@ -1072,7 +1072,8 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             // See ARM ARM B3-1416
             bool override_LPAE = false;
             TTBCR ttbcr_s = tc->readMiscReg(MISCREG_TTBCR_S);
-            GEM5_VAR_USED TTBCR ttbcr_ns = tc->readMiscReg(MISCREG_TTBCR_NS);
+            [[maybe_unused]] TTBCR ttbcr_ns =
+                tc->readMiscReg(MISCREG_TTBCR_NS);
             if (ttbcr_s.eae) {
                 override_LPAE = true;
             } else {

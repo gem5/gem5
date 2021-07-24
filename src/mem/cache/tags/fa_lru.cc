@@ -114,7 +114,7 @@ void
 FALRU::invalidate(CacheBlk *blk)
 {
     // Erase block entry reference in the hash table
-    GEM5_VAR_USED auto num_erased =
+    [[maybe_unused]] auto num_erased =
         tagHash.erase(std::make_pair(blk->getTag(), blk->isSecure()));
 
     // Sanity check; only one block reference should be erased

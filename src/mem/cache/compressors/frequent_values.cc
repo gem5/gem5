@@ -147,7 +147,7 @@ FrequentValues::decompress(const CompressionData* comp_data, uint64_t* data)
                 // its corresponding value, in order to make life easier we
                 // search for the value and verify that the stored code
                 // matches the table's
-                GEM5_VAR_USED const encoder::Code code =
+                [[maybe_unused]] const encoder::Code code =
                     indexEncoder.encode(comp_chunk.value);
 
                 // Either the value will be found and the codes match, or the

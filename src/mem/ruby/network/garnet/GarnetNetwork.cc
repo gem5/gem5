@@ -138,7 +138,7 @@ GarnetNetwork::init()
         for (std::vector<Router*>::const_iterator i= m_routers.begin();
              i != m_routers.end(); ++i) {
             Router* router = safe_cast<Router*>(*i);
-            GEM5_VAR_USED int router_id =
+            [[maybe_unused]] int router_id =
                 fault_model->declare_router(router->get_num_inports(),
                                             router->get_num_outports(),
                                             router->get_vc_per_vnet(),

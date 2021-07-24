@@ -407,7 +407,7 @@ def template MiscExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
-        GEM5_VAR_USED Addr EA = 0;
+        [[maybe_unused]] Addr EA = 0;
         Fault fault = NoFault;
 
         %(fp_enable_check)s;

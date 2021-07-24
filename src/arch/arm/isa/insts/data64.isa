@@ -83,16 +83,16 @@ let {{
         "logic": '0'
     }
 
-    immOp2 = "GEM5_VAR_USED uint64_t secOp = imm;"
-    sRegOp2 = "GEM5_VAR_USED uint64_t secOp = " + \
+    immOp2 = "[[maybe_unused]] uint64_t secOp = imm;"
+    sRegOp2 = "[[maybe_unused]] uint64_t secOp = " + \
               "shiftReg64(Op264, shiftAmt, shiftType, intWidth);"
-    eRegOp2 = "GEM5_VAR_USED uint64_t secOp = " + \
+    eRegOp2 = "[[maybe_unused]] uint64_t secOp = " + \
               "extendReg64(Op264, extendType, shiftAmt, intWidth);"
 
     def buildDataWork(mnem, code, flagType, suffix, buildCc, buildNonCc,
                       base, templateBase):
         code = '''
-        GEM5_VAR_USED uint64_t resTemp = 0;
+        [[maybe_unused]] uint64_t resTemp = 0;
         ''' + code
         ccCode = createCcCode64(carryCode64[flagType], overflowCode64[flagType])
         Name = mnem.capitalize() + suffix
@@ -577,9 +577,9 @@ let {{
 
     def condCompCode(flagType, op, imm):
         ccCode = createCcCode64(carryCode64[flagType], overflowCode64[flagType])
-        opDecl = "GEM5_VAR_USED uint64_t secOp = imm;"
+        opDecl = "[[maybe_unused]] uint64_t secOp = imm;"
         if not imm:
-            opDecl = "GEM5_VAR_USED uint64_t secOp = Op264;"
+            opDecl = "[[maybe_unused]] uint64_t secOp = Op264;"
         return opDecl + '''
             if (testPredicate(CondCodesNZ, CondCodesC, CondCodesV, condCode)) {
                 uint64_t resTemp = Op164 ''' + op + ''' secOp;

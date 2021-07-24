@@ -170,7 +170,7 @@ void
 TimingSimpleCPU::switchOut()
 {
     SimpleExecContext& t_info = *threadInfo[curThread];
-    GEM5_VAR_USED SimpleThread* thread = t_info.thread;
+    [[maybe_unused]] SimpleThread* thread = t_info.thread;
 
     // hardware transactional memory
     // Cannot switch out the CPU in the middle of a transaction
@@ -945,7 +945,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     // hardware transactional memory
 
     SimpleExecContext *t_info = threadInfo[curThread];
-    GEM5_VAR_USED const bool is_htm_speculative =
+    [[maybe_unused]] const bool is_htm_speculative =
         t_info->inHtmTransactionalState();
 
     // received a response from the dcache: complete the load or store

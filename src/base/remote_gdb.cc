@@ -444,7 +444,7 @@ BaseRemoteGDB::detach()
 void
 BaseRemoteGDB::addThreadContext(ThreadContext *_tc)
 {
-    GEM5_VAR_USED auto it_success = threads.insert({_tc->contextId(), _tc});
+    [[maybe_unused]] auto it_success = threads.insert({_tc->contextId(), _tc});
     assert(it_success.second);
     // If no ThreadContext is current selected, select this one.
     if (!tc)

@@ -55,7 +55,7 @@ namespace gem5
 namespace RiscvISA
 {
 
-GEM5_VAR_USED const std::array<const char *, NUM_MISCREGS> MiscRegNames = {{
+[[maybe_unused]] const std::array<const char *, NUM_MISCREGS> MiscRegNames = {{
     [MISCREG_PRV]           = "PRV",
     [MISCREG_ISA]           = "ISA",
     [MISCREG_VENDORID]      = "VENDORID",

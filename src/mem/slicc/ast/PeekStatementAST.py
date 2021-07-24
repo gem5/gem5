@@ -61,7 +61,7 @@ class PeekStatementAST(StatementAST):
         code('''
 {
     // Declare message
-    GEM5_VAR_USED const $mtid* in_msg_ptr;
+    [[maybe_unused]] const $mtid* in_msg_ptr;
     in_msg_ptr = dynamic_cast<const $mtid *>(($qcode).${{self.method}}());
     if (in_msg_ptr == NULL) {
         // If the cast fails, this is the wrong inport (wrong message type).

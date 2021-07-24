@@ -39,7 +39,7 @@ namespace gem5
 void
 SkipFuncBase::process(ThreadContext *tc)
 {
-    GEM5_VAR_USED TheISA::PCState oldPC = tc->pcState();
+    [[maybe_unused]] TheISA::PCState oldPC = tc->pcState();
 
     returnFromFuncIn(tc);
 

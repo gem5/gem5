@@ -211,7 +211,7 @@ RoutingUnit::outportComputeXY(RouteInfo route,
 {
     PortDirection outport_dirn = "Unknown";
 
-    GEM5_VAR_USED int num_rows = m_router->get_net_ptr()->getNumRows();
+    [[maybe_unused]] int num_rows = m_router->get_net_ptr()->getNumRows();
     int num_cols = m_router->get_net_ptr()->getNumCols();
     assert(num_rows > 0 && num_cols > 0);
 
