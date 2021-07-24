@@ -808,7 +808,7 @@ class BaseCache : public ClockedObject
      * @param blk Block to invalidate
      * @return A packet with the writeback, can be nullptr
      */
-    GEM5_NO_DISCARD virtual PacketPtr evictBlock(CacheBlk *blk) = 0;
+    [[nodiscard]] virtual PacketPtr evictBlock(CacheBlk *blk) = 0;
 
     /**
      * Evict a cache block.

@@ -137,7 +137,7 @@ class Cache : public BaseCache
     uint32_t handleSnoop(PacketPtr pkt, CacheBlk *blk,
                          bool is_timing, bool is_deferred, bool pending_inval);
 
-    GEM5_NO_DISCARD PacketPtr evictBlock(CacheBlk *blk) override;
+    [[nodiscard]] PacketPtr evictBlock(CacheBlk *blk) override;
 
     /**
      * Create a CleanEvict request for the given block.

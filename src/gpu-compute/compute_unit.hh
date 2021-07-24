@@ -479,7 +479,7 @@ class ComputeUnit : public ClockedObject
     int32_t
     getRefCounter(const uint32_t dispatchId, const uint32_t wgId) const;
 
-    GEM5_NO_DISCARD bool sendToLds(GPUDynInstPtr gpuDynInst);
+    [[nodiscard]] bool sendToLds(GPUDynInstPtr gpuDynInst);
 
     typedef std::unordered_map<Addr, std::pair<int, int>> pageDataStruct;
     pageDataStruct pageAccesses;
