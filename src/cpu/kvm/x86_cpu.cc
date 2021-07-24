@@ -403,7 +403,7 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
       case MISCREG_ES:
         if (seg.unusable)
             break;
-        GEM5_FALLTHROUGH;
+        [[fallthrough]];
       case MISCREG_CS:
         if (seg.base & 0xffffffff00000000ULL)
             warn("Illegal %s base: 0x%x\n", name, seg.base);
@@ -441,7 +441,7 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
           case 3:
             if (sregs.cs.type == 3 && seg.dpl != 0)
                 warn("CS type is 3, but SS DPL is != 0.\n");
-            GEM5_FALLTHROUGH;
+            [[fallthrough]];
           case 7:
             if (!(sregs.cr0 & 1) && seg.dpl != 0)
                 warn("SS DPL is %i, but CR0 PE is 0\n", seg.dpl);
@@ -485,7 +485,7 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
       case MISCREG_GS:
         if (seg.unusable)
             break;
-        GEM5_FALLTHROUGH;
+        [[fallthrough]];
       case MISCREG_CS:
         if (!seg.s)
             warn("%s: S flag not set\n", name);
@@ -494,7 +494,7 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
       case MISCREG_TSL:
         if (seg.unusable)
             break;
-        GEM5_FALLTHROUGH;
+        [[fallthrough]];
       case MISCREG_TR:
         if (seg.s)
             warn("%s: S flag is set\n", name);
@@ -510,7 +510,7 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
       case MISCREG_TSL:
         if (seg.unusable)
             break;
-        GEM5_FALLTHROUGH;
+        [[fallthrough]];
       case MISCREG_TR:
       case MISCREG_CS:
         if (!seg.present)

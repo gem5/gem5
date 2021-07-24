@@ -337,7 +337,7 @@ BaseKvmCPU::drain()
             deschedule(tickEvent);
         _status = Idle;
 
-        GEM5_FALLTHROUGH;
+        [[fallthrough]];
       case Idle:
         // Idle, no need to drain
         assert(!tickEvent.scheduled());

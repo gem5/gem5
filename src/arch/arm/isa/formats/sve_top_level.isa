@@ -248,7 +248,7 @@ namespace Aarch64
               case 4:
                 if (!bits(machInst, 10))
                     return decodeSveFpMulIndexed(machInst);
-                GEM5_FALLTHROUGH;
+                [[fallthrough]];
               default:
                 return new Unknown64(machInst);
             }

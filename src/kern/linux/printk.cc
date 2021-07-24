@@ -111,7 +111,7 @@ printk(std::string &str, ThreadContext *tc, Addr format_ptr,
                 break;
               case 'P':
                 format = true;
-                GEM5_FALLTHROUGH;
+                [[fallthrough]];
               case 'p':
                 hexnum = true;
                 break;

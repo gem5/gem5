@@ -144,7 +144,7 @@ readMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
         // be part of the table even if MPIDR is not accessible in user
         // mode.
         warn_once("Trying to read MPIDR at EL0\n");
-        GEM5_FALLTHROUGH;
+        [[fallthrough]];
       case EL1:
         if (ArmSystem::haveEL(tc, EL2) && !is_secure)
             return tc->readMiscReg(MISCREG_VMPIDR_EL2);

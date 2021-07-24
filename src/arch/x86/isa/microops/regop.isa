@@ -1504,7 +1504,7 @@ let {{
                     fault = std::make_shared<GeneralProtection>(selector);
                     break;
                 }
-                GEM5_FALLTHROUGH;
+                [[fallthrough]];
               case SegIntGateCheck:
                 // Make sure the gate's the right type.
                 if ((m5reg.mode == LongMode && (desc.type & 0xe) != 0xe) ||

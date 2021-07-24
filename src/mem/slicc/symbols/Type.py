@@ -775,7 +775,7 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
                     code('    base += ${{enum.ident}}_Controller::getNumControllers();')
                 else:
                     code('    base += 0;')
-                code('    GEM5_FALLTHROUGH;')
+                code('    [[fallthrough]];')
                 code('  case ${{self.c_ident}}_${{enum.ident}}:')
             code('    break;')
             code.dedent()

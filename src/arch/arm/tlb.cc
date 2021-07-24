@@ -943,7 +943,7 @@ TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req,
                 grant_read = false;
                 break;
             }
-            GEM5_FALLTHROUGH;
+            [[fallthrough]];
           case EL3:
             {
                 uint8_t perm = (ap & 0x2) | xn;

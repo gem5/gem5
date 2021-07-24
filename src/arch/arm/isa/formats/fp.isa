@@ -131,7 +131,7 @@ let {{
                     width = 1;
                     break;
                 }
-                GEM5_FALLTHROUGH;
+                [[fallthrough]];
               default:
                 return new Unknown(machInst);
             }
@@ -2113,7 +2113,7 @@ let {{
                                        false, true, true, offset);
                 }
             }
-            GEM5_FALLTHROUGH;
+            [[fallthrough]];
           case 0x3:
             const bool up = (bits(machInst, 23) == 1);
             const uint32_t imm = bits(machInst, 7, 0) << 2;
