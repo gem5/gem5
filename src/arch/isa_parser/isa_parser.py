@@ -464,8 +464,6 @@ class InstObjParams(object):
         # function (which should be provided by isa_desc via a declare)
         if 'IsFloating' in self.flags:
             self.fp_enable_check = 'fault = checkFpEnableFault(xc);'
-        elif 'IsVector' in self.flags:
-            self.fp_enable_check = 'fault = checkVecEnableFault(xc);'
         else:
             self.fp_enable_check = ''
 

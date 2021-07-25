@@ -136,12 +136,6 @@ output exec {{
             return NoFault;
         }
     }
-
-    static inline Fault
-    checkVecEnableFault(ExecContext *xc)
-    {
-        return std::make_shared<VecDisabled>();
-    }
 }};
 
 
