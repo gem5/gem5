@@ -102,6 +102,9 @@ SparcProcess::initState()
     // Set the MMU Primary Context Register to hold the process' pid
     tc->setMiscReg(MISCREG_MMU_P_CONTEXT, _pid);
 
+    // Enable floating point.
+    tc->setMiscReg(MISCREG_FPRS, 0x4);
+
     /*
      * T1 specific registers
      */
@@ -117,6 +120,7 @@ Sparc32Process::initState()
     ThreadContext *tc = system->threads[contextIds[0]];
     // The process runs in user mode with 32 bit addresses
     PSTATE pstate = 0;
+    pstate.pef = 1;
     pstate.ie = 1;
     pstate.am = 1;
     tc->setMiscReg(MISCREG_PSTATE, pstate);
@@ -132,6 +136,7 @@ Sparc64Process::initState()
     ThreadContext *tc = system->threads[contextIds[0]];
     // The process runs in user mode
     PSTATE pstate = 0;
+    pstate.pef = 1;
     pstate.ie = 1;
     tc->setMiscReg(MISCREG_PSTATE, pstate);
 

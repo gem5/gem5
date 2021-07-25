@@ -121,19 +121,15 @@ output exec {{
     /// Check "FP enabled" machine status bit.  Called when executing any FP
     /// instruction.
     /// @retval Full-system mode: NoFault if FP is enabled, FpDisabled
-    /// if not.  Non-full-system mode: always returns NoFault.
+    /// if not.
     static inline Fault
     checkFpEnableFault(ExecContext *xc)
     {
-        if (FullSystem) {
-            PSTATE pstate = xc->readMiscReg(MISCREG_PSTATE);
-            if (pstate.pef && xc->readMiscReg(MISCREG_FPRS) & 0x4) {
-                return NoFault;
-            } else {
-                return std::make_shared<FpDisabled>();
-            }
-        } else {
+        PSTATE pstate = xc->readMiscReg(MISCREG_PSTATE);
+        if (pstate.pef && xc->readMiscReg(MISCREG_FPRS) & 0x4) {
             return NoFault;
+        } else {
+            return std::make_shared<FpDisabled>();
         }
     }
 }};
