@@ -1258,7 +1258,7 @@ decode OP default Unknown::unknown()
                          }}, MEM_SWAP);
 
         format Trap {
-            0x20: Load::ldf({{Frds_uw = Mem_uw;}});
+            0x20: Loadf::ldf({{Frds_uw = Mem_uw;}});
             0x21: decode RD {
                 0x0: Load::ldfsr({{fault = checkFpEnableFault(xc);
                                      if (fault)
@@ -1271,8 +1271,8 @@ decode OP default Unknown::unknown()
                 default: FailUnimpl::ldfsrOther();
             }
             0x22: ldqf({{fault = std::make_shared<FpDisabled>();}});
-            0x23: Load::lddf({{Frd_udw = Mem_udw;}});
-            0x24: Store::stf({{Mem_uw = Frds_uw;}});
+            0x23: Loadf::lddf({{Frd_udw = Mem_udw;}});
+            0x24: Storef::stf({{Mem_uw = Frds_uw;}});
             0x25: decode RD {
                 0x0: StoreFsr::stfsr({{fault = checkFpEnableFault(xc);
                                        if (fault)
@@ -1285,11 +1285,11 @@ decode OP default Unknown::unknown()
                 default: FailUnimpl::stfsrOther();
             }
             0x26: stqf({{fault = std::make_shared<FpDisabled>();}});
-            0x27: Store::stdf({{Mem_udw = Frd_udw;}});
+            0x27: Storef::stdf({{Mem_udw = Frd_udw;}});
             0x2D: Nop::prefetch();
-            0x30: LoadAlt::ldfa({{Frds_uw = Mem_uw;}});
+            0x30: LoadfAlt::ldfa({{Frds_uw = Mem_uw;}});
             0x32: ldqfa({{fault = std::make_shared<FpDisabled>();}});
-            format LoadAlt {
+            format LoadfAlt {
                 0x33: decode EXT_ASI {
                     // ASI_NUCLEUS
                     0x04: FailUnimpl::lddfa_n();
@@ -1328,7 +1328,7 @@ decode OP default Unknown::unknown()
                     // ASI_SECONDARY_NO_FAULT_LITTLE
                     0x8B: FailUnimpl::lddfa_snfl();
 
-                    format BlockLoad {
+                    format BlockLoadf {
                         // LDBLOCKF
                         // ASI_BLOCK_AS_IF_USER_PRIMARY
                         0x16: FailUnimpl::ldblockf_aiup();
@@ -1370,9 +1370,9 @@ decode OP default Unknown::unknown()
                         {{fault = std::make_shared<DataAccessException>();}});
                 }
             }
-            0x34: Store::stfa({{Mem_uw = Frds_uw;}});
+            0x34: Storef::stfa({{Mem_uw = Frds_uw;}});
             0x36: stqfa({{fault = std::make_shared<FpDisabled>();}});
-            format StoreAlt {
+            format StorefAlt {
                 0x37: decode EXT_ASI {
                     // ASI_NUCLEUS
                     0x04: FailUnimpl::stdfa_n();
@@ -1411,7 +1411,7 @@ decode OP default Unknown::unknown()
                     // ASI_SECONDARY_NO_FAULT_LITTLE
                     0x8B: FailUnimpl::stdfa_snfl();
 
-                    format BlockStore {
+                    format BlockStoref {
                         // STBLOCKF
                         // ASI_BLOCK_AS_IF_USER_PRIMARY
                         0x16: FailUnimpl::stblockf_aiup();

@@ -36,7 +36,6 @@ def template LoadExecute {{
         {
             Fault fault = NoFault;
             Addr EA;
-            %(fp_enable_check)s;
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
@@ -64,7 +63,6 @@ def template LoadInitiateAcc {{
         {
             Fault fault = NoFault;
             Addr EA;
-            %(fp_enable_check)s;
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
@@ -104,7 +102,6 @@ def template StoreExecute {{
             // It should be optomized out in all the others
             bool storeCond = true;
             Addr EA;
-            %(fp_enable_check)s;
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
@@ -134,7 +131,6 @@ def template StoreInitiateAcc {{
             Fault fault = NoFault;
             bool storeCond = true;
             Addr EA;
-            %(fp_enable_check)s;
             %(op_decl)s;
 
             %(op_rd)s;

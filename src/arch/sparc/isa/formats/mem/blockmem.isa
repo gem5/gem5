@@ -165,12 +165,40 @@ def format BlockLoad(code, *opt_flags) {{
              LoadFuncs, name, Name, opt_flags)
 }};
 
+def format BlockLoadf(code, *opt_flags) {{
+        code = filterDoubles(code)
+        # We need to make sure to check the highest priority fault last.
+        # That way, if other faults have been detected, they'll be overwritten
+        # rather than the other way around.
+        faultCode = AlternateASIPrivFaultCheck + BlockAlignmentFaultCheck + \
+            fp_enabled
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doBlockMemFormat(code, faultCode,
+             LoadFuncs, name, Name, opt_flags)
+}};
+
 def format BlockStore(code, *opt_flags) {{
         code = filterDoubles(code)
         # We need to make sure to check the highest priority fault last.
         # That way, if other faults have been detected, they'll be overwritten
         # rather than the other way around.
         faultCode = AlternateASIPrivFaultCheck + BlockAlignmentFaultCheck
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doBlockMemFormat(code, faultCode,
+             StoreFuncs, name, Name, opt_flags)
+}};
+
+def format BlockStoref(code, *opt_flags) {{
+        code = filterDoubles(code)
+        # We need to make sure to check the highest priority fault last.
+        # That way, if other faults have been detected, they'll be overwritten
+        # rather than the other way around.
+        faultCode = AlternateASIPrivFaultCheck + BlockAlignmentFaultCheck + \
+            fp_enabled
         (header_output,
          decoder_output,
          exec_output,

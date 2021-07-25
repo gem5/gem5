@@ -104,6 +104,25 @@ Fault
 {
     Fault fault = NoFault;
 
+    %(op_decl)s;
+    %(op_rd)s;
+    %(code)s;
+
+    if (fault == NoFault) {
+        %(op_wb)s;
+    }
+    return fault;
+}
+}};
+
+// Basic instruction class execute method template.
+def template FpExecute {{
+Fault
+%(class_name)s::execute(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+{
+    Fault fault = NoFault;
+
     %(fp_enable_check)s;
     %(op_decl)s;
     %(op_rd)s;
@@ -152,6 +171,10 @@ def format BasicOperate(code, *flags) {{
 
 }};
 
+let {{
+    fp_enabled = 'fault = checkFpEnabled(Pstate, Fprs);'
+}};
+
 def format FpBasic(code, *flags) {{
     exec_code = """
     Fsr |= bits(Fsr, 4, 0) << 5;
@@ -181,7 +204,9 @@ def format FpBasic(code, *flags) {{
 """
     fp_code = filterDoubles(code)
     iop = InstObjParams(name, Name, 'SparcStaticInst',
-                        { "code" : exec_code, "fp_code" : fp_code }, flags)
+                        { "code" : exec_code,
+                          "fp_code" : fp_code,
+                          "fp_enabled" : fp_enabled }, flags)
     header_output = FpBasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)

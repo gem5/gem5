@@ -34,7 +34,6 @@ def template SwapExecute {{
             // It should be optomized out in all the others
             bool storeCond = true;
             Addr EA;
-            %(fp_enable_check)s;
             %(op_decl)s;
             uint64_t mem_data = 0;
 
@@ -70,7 +69,6 @@ def template SwapInitiateAcc {{
         {
             Fault fault = NoFault;
             Addr EA;
-            %(fp_enable_check)s;
             uint64_t mem_data = 0;
             %(op_decl)s;
             %(op_rd)s;

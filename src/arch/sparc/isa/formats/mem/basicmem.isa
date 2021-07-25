@@ -83,6 +83,16 @@ def format LoadAlt(code, *opt_flags) {{
             AlternateASIPrivFaultCheck, name, Name, "EXT_ASI", opt_flags)
 }};
 
+def format LoadfAlt(code, *opt_flags) {{
+        code = filterDoubles(code)
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doMemFormat(code, LoadFuncs,
+            AlternateASIPrivFaultCheck + fp_enabled, name, Name, "EXT_ASI",
+            opt_flags)
+}};
+
 def format StoreAlt(code, *opt_flags) {{
         code = filterDoubles(code)
         (header_output,
@@ -90,6 +100,16 @@ def format StoreAlt(code, *opt_flags) {{
          exec_output,
          decode_block) = doMemFormat(code, StoreFuncs,
             AlternateASIPrivFaultCheck, name, Name, "EXT_ASI", opt_flags)
+}};
+
+def format StorefAlt(code, *opt_flags) {{
+        code = filterDoubles(code)
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doMemFormat(code, StoreFuncs,
+            AlternateASIPrivFaultCheck + fp_enabled, name, Name, "EXT_ASI",
+            opt_flags)
 }};
 
 def format Load(code, *opt_flags) {{
@@ -101,6 +121,15 @@ def format Load(code, *opt_flags) {{
              LoadFuncs, '', name, Name, 0, opt_flags)
 }};
 
+def format Loadf(code, *opt_flags) {{
+        code = filterDoubles(code)
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doMemFormat(code,
+             LoadFuncs, fp_enabled, name, Name, 0, opt_flags)
+}};
+
 def format Store(code, *opt_flags) {{
         code = filterDoubles(code)
         (header_output,
@@ -108,6 +137,15 @@ def format Store(code, *opt_flags) {{
          exec_output,
          decode_block) = doMemFormat(code,
              StoreFuncs, '', name, Name, 0, opt_flags)
+}};
+
+def format Storef(code, *opt_flags) {{
+        code = filterDoubles(code)
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doMemFormat(code,
+             StoreFuncs, fp_enabled, name, Name, 0, opt_flags)
 }};
 
 def format StoreFsr(code, *opt_flags) {{

@@ -123,10 +123,9 @@ output exec {{
     /// @retval Full-system mode: NoFault if FP is enabled, FpDisabled
     /// if not.
     static inline Fault
-    checkFpEnableFault(ExecContext *xc)
+    checkFpEnabled(PSTATE pstate, RegVal fprs)
     {
-        PSTATE pstate = xc->readMiscReg(MISCREG_PSTATE);
-        if (pstate.pef && xc->readMiscReg(MISCREG_FPRS) & 0x4) {
+        if (pstate.pef && fprs & 0x4) {
             return NoFault;
         } else {
             return std::make_shared<FpDisabled>();
