@@ -30,9 +30,10 @@ def parse_commit_subject(subject):
     parsed_subject = subject.split(":", maxsplit = 1)
 
     # If the subject does not have a colon, it either does not have tags
-    # or does not have a message
+    # or does not have a message. In this case, we assume that the subject
+    # is the commit message.
     if len(parsed_subject) <= 1:
-        return None, None
+        return [], parsed_subject[0]
 
     tags = [ tag.strip() for tag in parsed_subject[0].split(",") ]
     message = parsed_subject[1]
