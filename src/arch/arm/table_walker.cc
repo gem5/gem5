@@ -61,7 +61,7 @@ using namespace ArmISA;
 TableWalker::TableWalker(const Params &p)
     : ClockedObject(p),
       requestorId(p.sys->getRequestorId(this)),
-      port(new Port(this, requestorId)),
+      port(nullptr),
       isStage2(p.is_stage2), tlb(NULL),
       currState(NULL), pending(false),
       numSquashable(p.num_squash_per_cycle),

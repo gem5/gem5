@@ -38,6 +38,7 @@
 #ifndef __ARCH_ARM_MMU_HH__
 #define __ARCH_ARM_MMU_HH__
 
+#include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/generic/mmu.hh"
 
@@ -68,6 +69,9 @@ class MMU : public BaseMMU
   protected:
     TLB *itbStage2;
     TLB *dtbStage2;
+
+    TableWalker::Port iport;
+    TableWalker::Port dport;
 
     TableWalker *itbWalker;
     TableWalker *dtbWalker;

@@ -46,6 +46,7 @@
 #include "base/str.hh"
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq.hh"
 #include "debug/Activity.hh"

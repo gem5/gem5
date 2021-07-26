@@ -1037,6 +1037,7 @@ class TableWalker : public ClockedObject
 
     void setMmu(MMU *_mmu) { mmu = _mmu; }
     void setTlb(TLB *_tlb) { tlb = _tlb; }
+    void setPort(Port *_port) { port = _port; }
     TLB* getTlb() { return tlb; }
     void memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,
                   uint8_t texcb, bool s);

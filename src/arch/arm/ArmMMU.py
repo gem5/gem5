@@ -65,6 +65,8 @@ class ArmMMU(BaseMMU):
     itb = ArmITB()
     dtb = ArmDTB()
 
+    sys = Param.System(Parent.any, "system object parameter")
+
     stage2_itb = Param.ArmTLB(ArmStage2TLB(), "Stage 2 Instruction TLB")
     stage2_dtb = Param.ArmTLB(ArmStage2TLB(), "Stage 2 Data TLB")
 
@@ -80,12 +82,8 @@ class ArmMMU(BaseMMU):
 
     @classmethod
     def walkerPorts(cls):
-        return ["mmu.itb_walker.port", "mmu.dtb_walker.port",
-                "mmu.stage2_itb_walker.port", "mmu.stage2_dtb_walker.port"]
+        return ["mmu.itb_walker.port", "mmu.dtb_walker.port"]
 
     def connectWalkerPorts(self, iport, dport):
         self.itb_walker.port = iport
         self.dtb_walker.port = dport
-
-        self.stage2_itb_walker.port = iport
-        self.stage2_dtb_walker.port = dport
