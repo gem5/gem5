@@ -29,6 +29,9 @@
 #ifndef __SOCKET_HH__
 #define __SOCKET_HH__
 
+#include <sys/socket.h>
+#include <sys/types.h>
+
 namespace gem5
 {
 
@@ -58,6 +61,13 @@ class ListenSocket
      * cleanup resets the static variables back to their default values.
      */
     static void cleanup();
+
+  private:
+    /* Create a socket, adding SOCK_CLOEXEC if available. */
+    static int socketCloexec(int domain, int type, int protocol);
+    /* Accept a connection, adding SOCK_CLOEXEC if available. */
+    static int acceptCloexec(int sockfd, struct sockaddr *addr,
+                              socklen_t *addrlen);
 
 
   public:
