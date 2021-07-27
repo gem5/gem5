@@ -517,7 +517,7 @@ Queued::addToQueue(std::list<DeferredPacket> &queue,
         queue.insert(it, dpp);
     }
 
-    if (Debug::HWPrefetchQueue)
+    if (debug::HWPrefetchQueue)
         printQueue(queue);
 }
 
