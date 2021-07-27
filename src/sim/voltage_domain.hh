@@ -77,10 +77,10 @@ class VoltageDomain : public SimObject
      */
     double voltage(PerfLevel perf_level) const
     {
-        chatty_assert(perf_level < numVoltages(), "VoltageDomain %s "\
-                      "request for voltage perf level %u is outside "\
-                      "of numVoltages %u", name(), perf_level,
-                      numVoltages());
+        gem5_assert(perf_level < numVoltages(), "VoltageDomain %s "\
+                    "request for voltage perf level %u is outside "\
+                    "of numVoltages %u", name(), perf_level,
+                    numVoltages());
         return voltageOpPoints[perf_level];
     }
 

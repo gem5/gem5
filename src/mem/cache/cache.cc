@@ -165,9 +165,9 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     if (pkt->req->isUncacheable()) {
         assert(pkt->isRequest());
 
-        chatty_assert(!(isReadOnly && pkt->isWrite()),
-                      "Should never see a write in a read-only cache %s\n",
-                      name());
+        gem5_assert(!(isReadOnly && pkt->isWrite()),
+                    "Should never see a write in a read-only cache %s\n",
+                    name());
 
         DPRINTF(Cache, "%s for %s\n", __func__, pkt->print());
 
@@ -1104,7 +1104,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         // xbar.
         respond = blk->isSet(CacheBlk::DirtyBit) && pkt->needsResponse();
 
-        chatty_assert(!(isReadOnly && blk->isSet(CacheBlk::DirtyBit)),
+        gem5_assert(!(isReadOnly && blk->isSet(CacheBlk::DirtyBit)),
             "Should never have a dirty block in a read-only cache %s\n",
             name());
     }

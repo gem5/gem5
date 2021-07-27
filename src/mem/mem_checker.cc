@@ -53,7 +53,7 @@ MemChecker::WriteCluster::startWrite(MemChecker::Serial serial, Tick _start,
         // Initialize a fresh write cluster
         start = _start;
     }
-    chatty_assert(start <= _start, "WriteClusters must filled in order!");
+    gem5_assert(start <= _start, "WriteClusters must filled in order!");
 
     ++numIncomplete;
 

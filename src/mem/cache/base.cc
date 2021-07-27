@@ -1157,9 +1157,9 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     // sanity check
     assert(pkt->isRequest());
 
-    chatty_assert(!(isReadOnly && pkt->isWrite()),
-                  "Should never see a write in a read-only cache %s\n",
-                  name());
+    gem5_assert(!(isReadOnly && pkt->isWrite()),
+                "Should never see a write in a read-only cache %s\n",
+                name());
 
     // Access block in the tags
     Cycles tag_latency(0);
@@ -1502,8 +1502,8 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
             // owners copy
             blk->setCoherenceBits(CacheBlk::DirtyBit);
 
-            chatty_assert(!isReadOnly, "Should never see dirty snoop response "
-                          "in read-only cache %s\n", name());
+            gem5_assert(!isReadOnly, "Should never see dirty snoop response "
+                        "in read-only cache %s\n", name());
 
         }
     }
@@ -1616,8 +1616,8 @@ BaseCache::evictBlock(CacheBlk *blk, PacketList &writebacks)
 PacketPtr
 BaseCache::writebackBlk(CacheBlk *blk)
 {
-    chatty_assert(!isReadOnly || writebackClean,
-                  "Writeback from read-only cache");
+    gem5_assert(!isReadOnly || writebackClean,
+                "Writeback from read-only cache");
     assert(blk && blk->isValid() &&
         (blk->isSet(CacheBlk::DirtyBit) || writebackClean));
 
