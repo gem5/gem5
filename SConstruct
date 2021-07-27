@@ -408,13 +408,13 @@ if GetOption('with_asan'):
     sanitizers.append('address')
     suppressions_file = Dir('util').File('lsan-suppressions').get_abspath()
     suppressions_opt = 'suppressions=%s' % suppressions_file
-    main['ENV']['LSAN_OPTIONS'] = ':'.join([suppressions_opt,
-                                            'print_suppressions=0'])
+    suppressions_opts = ':'.join([suppressions_opt, 'print_suppressions=0'])
+    main['ENV']['LSAN_OPTIONS'] = suppressions_opts
     print()
     warning('To suppress false positive leaks, set the LSAN_OPTIONS '
             'environment variable to "%s" when running gem5' %
-            suppressions_opt)
-    warning('LSAN_OPTIONS=%s' % suppressions_opt)
+            suppressions_opts)
+    warning('LSAN_OPTIONS=%s' % suppressions_opts)
     print()
 if sanitizers:
     sanitizers = ','.join(sanitizers)
