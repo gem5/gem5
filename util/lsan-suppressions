@@ -1,2 +1,2 @@
 # Suppress detection of leaks from within the python3 interpreter.
-leak:libpython3.so
+leak:libpython3*.so
