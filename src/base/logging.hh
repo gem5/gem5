@@ -282,11 +282,17 @@ class Logger
     } while (0)
 /** @} */ // end of api_logger
 
+#ifdef NDEBUG
+#define NDEBUG_DEFINED 1
+#else
+#define NDEBUG_DEFINED 0
+#endif
+
 /**
  * The chatty assert macro will function like a normal assert, but will allow
  * the specification of additional, helpful material to aid debugging why the
- * assertion actually failed.  Like the normal assertion, the chatty_assert
- * will not be active in fast builds.
+ * assertion actually failed. chatty_assert will not actually check its
+ * condition for fast builds, but the condition must still be valid code.
  *
  * @param cond Condition that is checked; if false -> assert
  * @param ...  Printf-based format string with arguments, extends printout.
@@ -295,16 +301,12 @@ class Logger
  *
  * @ingroup api_logger
  */
-#ifdef NDEBUG
-#define chatty_assert(cond, ...)
-#else //!NDEBUG
-#define chatty_assert(cond, ...)                                        \
-    do {                                                                \
-        if (GEM5_UNLIKELY(!(cond)))                                       \
+#define chatty_assert(cond, ...) \
+    do { \
+        if (GEM5_UNLIKELY(!NDEBUG_DEFINED && !static_cast<bool>(cond))) \
             panic("assert(" # cond ") failed: %s", \
                 ::gem5::csprintf(__VA_ARGS__)); \
     } while (0)
-#endif // NDEBUG
 /** @} */ // end of api_logger
 
 } // namespace gem5
