@@ -355,6 +355,10 @@ if main['GCC']:
         error('gcc version 7 or newer required.\n'
               'Installed version:', main['CXXVERSION'])
 
+    with gem5_scons.Configure(main) as conf:
+        # This warning has a false positive in the systemc code in g++ 11.1.
+        conf.CheckCxxFlag('-Wno-free-nonheap-object')
+
     # Add the appropriate Link-Time Optimization (LTO) flags if `--with-lto` is
     # set.
     if GetOption('with_lto'):
