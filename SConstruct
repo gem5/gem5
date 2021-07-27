@@ -414,7 +414,7 @@ if GetOption('with_asan'):
     warning('To suppress false positive leaks, set the LSAN_OPTIONS '
             'environment variable to "%s" when running gem5' %
             suppressions_opt)
-    warning('LSAN_OPTIONS=suppressions=%s' % suppressions_opt)
+    warning('LSAN_OPTIONS=%s' % suppressions_opt)
     print()
 if sanitizers:
     sanitizers = ','.join(sanitizers)
