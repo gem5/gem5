@@ -543,18 +543,6 @@ TEST(LoggingDeathTest, FatalIf)
         "fatal: fatal condition true occurred: message\nMemory Usage:"));
 }
 
-/** Test macro chatty_assert. */
-TEST(LoggingDeathTest, ChattyAssert)
-{
-#ifdef NDEBUG
-    GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
-#endif
-    chatty_assert(true, "message\n");
-    ASSERT_DEATH(chatty_assert(false, "message\n"), ::testing::HasSubstr(
-        "panic: assert(false) failed: message\nMemory Usage:"));
-}
-
 /** Test macro gem5_assert. */
 TEST(LoggingDeathTest, gem5Assert)
 {
@@ -562,6 +550,9 @@ TEST(LoggingDeathTest, gem5Assert)
     GTEST_SKIP() << "Skipping as assertions are "
         "stripped out of fast builds";
 #endif
+    gem5_assert(true, "message\n");
+    ASSERT_DEATH(gem5_assert(false, "message\n"), ::testing::HasSubstr(
+        "panic: assert(false) failed: message\nMemory Usage:"));
     gem5_assert(true);
     ASSERT_DEATH(gem5_assert(false), ::testing::HasSubstr(
         "panic: assert(false) failed\nMemory Usage:"));
