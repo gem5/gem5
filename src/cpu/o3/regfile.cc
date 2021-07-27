@@ -42,7 +42,6 @@
 #include "cpu/o3/regfile.hh"
 
 #include "cpu/o3/free_list.hh"
-#include "arch/generic/types.hh"
 #include "cpu/o3/free_list.hh"
 
 namespace gem5

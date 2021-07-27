@@ -38,7 +38,7 @@
 #ifndef __ARCH_X86_PCSTATE_HH__
 #define __ARCH_X86_PCSTATE_HH__
 
-#include "arch/generic/types.hh"
+#include "arch/generic/pcstate.hh"
 #include "sim/serialize.hh"
 
 namespace gem5

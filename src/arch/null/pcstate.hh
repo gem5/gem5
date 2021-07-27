@@ -35,10 +35,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_NULL_TYPES_HH__
-#define __ARCH_NULL_TYPES_HH__
+#ifndef __ARCH_NULL_PCSTATE_HH__
+#define __ARCH_NULL_PCSTATE_HH__
 
-#include "arch/generic/types.hh"
+#include "arch/generic/pcstate.hh"
 
 namespace gem5
 {
@@ -51,4 +51,4 @@ typedef GenericISA::UPCState<4> PCState;
 } // namespace NullISA
 } // namespace gem5
 
-#endif // __ARCH_NULL_TYPES_HH__
+#endif // __ARCH_NULL_PCSTATE_HH__

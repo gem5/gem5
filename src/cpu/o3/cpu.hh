@@ -49,7 +49,6 @@
 #include <set>
 #include <vector>
 
-#include "arch/generic/types.hh"
 #include "arch/pcstate.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"

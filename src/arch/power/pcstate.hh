@@ -29,7 +29,7 @@
 #ifndef __ARCH_POWER_PCSTATE_HH__
 #define __ARCH_POWER_PCSTATE_HH__
 
-#include "arch/generic/types.hh"
+#include "arch/generic/pcstate.hh"
 #include "arch/power/types.hh"
 #include "enums/ByteOrder.hh"
 

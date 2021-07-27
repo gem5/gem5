@@ -40,7 +40,6 @@
 
 #include <type_traits>
 
-#include "arch/generic/types.hh"
 #include "arch/generic/vec_reg.hh"
 
 namespace gem5
