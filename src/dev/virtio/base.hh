@@ -72,7 +72,7 @@ class VirtQueue;
  */
 
 template <typename T>
-inline std::enable_if_t<std::is_same<T, vring_used_elem>::value, T>
+inline std::enable_if_t<std::is_same_v<T, vring_used_elem>, T>
 swap_byte(T v)
 {
     v.id = swap_byte(v.id);
@@ -81,7 +81,7 @@ swap_byte(T v)
 }
 
 template <typename T>
-inline std::enable_if_t<std::is_same<T, vring_desc>::value, T>
+inline std::enable_if_t<std::is_same_v<T, vring_desc>, T>
 swap_byte(T v)
 {
     v.addr = swap_byte(v.addr);

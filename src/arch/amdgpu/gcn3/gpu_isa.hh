@@ -57,7 +57,7 @@ namespace Gcn3ISA
         template<typename T> T
         readConstVal(int opIdx) const
         {
-            panic_if(!std::is_integral<T>::value, "Constant values must "
+            panic_if(!std::is_integral_v<T>, "Constant values must "
                      "be an integer.\n");
             T val(0);
 

@@ -130,14 +130,14 @@ struct ShowParam
 // Handle characters specially so that we print their value, not the character
 // they encode.
 template <class T>
-struct ShowParam<T, std::enable_if_t<std::is_same<char, T>::value ||
-                                     std::is_same<unsigned char, T>::value ||
-                                     std::is_same<signed char, T>::value>>
+struct ShowParam<T, std::enable_if_t<std::is_same_v<char, T> ||
+                                     std::is_same_v<unsigned char, T> ||
+                                     std::is_same_v<signed char, T>>>
 {
     static void
     show(std::ostream &os, const T &value)
     {
-        if (std::is_signed<T>::value)
+        if (std::is_signed_v<T>)
             os << (int)value;
         else
             os << (unsigned int)value;

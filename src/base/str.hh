@@ -136,7 +136,7 @@ __to_number(const std::string &value)
 }
 
 template <class T>
-typename std::enable_if_t<std::is_enum<T>::value, T>
+typename std::enable_if_t<std::is_enum_v<T>, T>
 __to_number(const std::string &value)
 {
     auto r = __to_number<typename std::underlying_type_t<T>>(value);
@@ -144,7 +144,7 @@ __to_number(const std::string &value)
 }
 
 template <class T>
-typename std::enable_if_t<std::is_floating_point<T>::value, T>
+typename std::enable_if_t<std::is_floating_point_v<T>, T>
 __to_number(const std::string &value)
 {
     // start big and narrow it down if needed
@@ -166,10 +166,10 @@ __to_number(const std::string &value)
  * @return True if the parsing was successful
  */
 template <class T>
-inline std::enable_if_t<(std::is_integral<T>::value ||
-                         std::is_floating_point<T>::value ||
-                         std::is_enum<T>::value) &&
-                        !std::is_same<bool, T>::value, bool>
+inline std::enable_if_t<(std::is_integral_v<T> ||
+                         std::is_floating_point_v<T> ||
+                         std::is_enum_v<T>) &&
+                        !std::is_same_v<bool, T>, bool>
 to_number(const std::string &value, T &retval)
 {
     try {

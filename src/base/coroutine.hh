@@ -69,10 +69,10 @@ class Coroutine : public Fiber
     // are void. (See following ArgChannel, RetChannel typedef)
     struct Empty {};
     using ArgChannel = typename std::conditional_t<
-        std::is_same<Arg, void>::value, Empty, std::stack<Arg>>;
+        std::is_same_v<Arg, void>, Empty, std::stack<Arg>>;
 
     using RetChannel = typename std::conditional_t<
-        std::is_same<Ret, void>::value, Empty, std::stack<Ret>>;
+        std::is_same_v<Ret, void>, Empty, std::stack<Ret>>;
 
   public:
     /**
@@ -101,7 +101,7 @@ class Coroutine : public Fiber
         template <typename T = Ret>
         CallerType&
         operator()(typename std::enable_if_t<
-                   !std::is_same<T, void>::value, T> param)
+                   !std::is_same_v<T, void>, T> param)
         {
             retChannel.push(param);
             callerFiber->run();
@@ -117,7 +117,7 @@ class Coroutine : public Fiber
          * @ingroup api_coroutine
          */
         template <typename T = Ret>
-        typename std::enable_if_t<std::is_same<T, void>::value,
+        typename std::enable_if_t<std::is_same_v<T, void>,
                                 CallerType> &
         operator()()
         {
@@ -138,7 +138,7 @@ class Coroutine : public Fiber
          * @ingroup api_coroutine
          */
         template <typename T = Arg>
-        typename std::enable_if_t<!std::is_same<T, void>::value, T>
+        typename std::enable_if_t<!std::is_same_v<T, void>, T>
         get()
         {
             auto& args_channel = coro.argsChannel;
@@ -210,8 +210,7 @@ class Coroutine : public Fiber
      */
     template <typename T = Arg>
     Coroutine&
-    operator()(typename std::enable_if_t<
-               !std::is_same<T, void>::value, T> param)
+    operator()(typename std::enable_if_t<!std::is_same_v<T, void>, T> param)
     {
         argsChannel.push(param);
         this->call();
@@ -227,7 +226,7 @@ class Coroutine : public Fiber
      * @ingroup api_coroutine
      */
     template <typename T = Arg>
-    typename std::enable_if_t<std::is_same<T, void>::value, Coroutine> &
+    typename std::enable_if_t<std::is_same_v<T, void>, Coroutine> &
     operator()()
     {
         this->call();
@@ -247,7 +246,7 @@ class Coroutine : public Fiber
      * @ingroup api_coroutine
      */
     template <typename T = Ret>
-    typename std::enable_if_t<!std::is_same<T, void>::value, T>
+    typename std::enable_if_t<!std::is_same_v<T, void>, T>
     get()
     {
         auto& ret_channel = caller.retChannel;

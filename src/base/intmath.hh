@@ -55,7 +55,7 @@ namespace gem5
  * @ingroup api_base_utils
  */
 template <class T>
-static constexpr std::enable_if_t<std::is_integral<T>::value, int>
+static constexpr std::enable_if_t<std::is_integral_v<T>, int>
 floorLog2(T x)
 {
     assert(x > 0);

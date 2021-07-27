@@ -943,8 +943,8 @@ using RegisterBankBE = RegisterBank<ByteOrder::big>;
 
 // Delegate serialization to the individual RegisterBase subclasses.
 template <class T>
-struct ParseParam<T, std::enable_if_t<std::is_base_of<
-    typename RegisterBankBase::RegisterBaseBase, T>::value>>
+struct ParseParam<T, std::enable_if_t<std::is_base_of_v<
+    typename RegisterBankBase::RegisterBaseBase, T>>>
 {
     static bool
     parse(const std::string &s, T &value)
@@ -954,8 +954,8 @@ struct ParseParam<T, std::enable_if_t<std::is_base_of<
 };
 
 template <class T>
-struct ShowParam<T, std::enable_if_t<std::is_base_of<
-    typename RegisterBankBase::RegisterBaseBase, T>::value>>
+struct ShowParam<T, std::enable_if_t<std::is_base_of_v<
+    typename RegisterBankBase::RegisterBaseBase, T>>>
 {
     static void
     show(std::ostream &os, const T &value)

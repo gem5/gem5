@@ -42,41 +42,41 @@ TEST(Aapcs64, IsAapcs64ShortVector)
     using EightLongFloat = float[2];
     using SixteenLongFloat = double[2];
 
-    EXPECT_FALSE(guest_abi::IsAapcs64ShortVector<Scalar>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64ShortVector<TooShort>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64ShortVector<TooLong>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64ShortVector<TooLongFloat>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64ShortVector<void>::value);
+    EXPECT_FALSE(guest_abi::IsAapcs64ShortVectorV<Scalar>);
+    EXPECT_FALSE(guest_abi::IsAapcs64ShortVectorV<TooShort>);
+    EXPECT_FALSE(guest_abi::IsAapcs64ShortVectorV<TooLong>);
+    EXPECT_FALSE(guest_abi::IsAapcs64ShortVectorV<TooLongFloat>);
+    EXPECT_FALSE(guest_abi::IsAapcs64ShortVectorV<void>);
 
-    EXPECT_TRUE(guest_abi::IsAapcs64ShortVector<EightLong>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64ShortVector<SixteenLong>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64ShortVector<EightLongFloat>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64ShortVector<SixteenLongFloat>::value);
+    EXPECT_TRUE(guest_abi::IsAapcs64ShortVectorV<EightLong>);
+    EXPECT_TRUE(guest_abi::IsAapcs64ShortVectorV<SixteenLong>);
+    EXPECT_TRUE(guest_abi::IsAapcs64ShortVectorV<EightLongFloat>);
+    EXPECT_TRUE(guest_abi::IsAapcs64ShortVectorV<SixteenLongFloat>);
 }
 
 TEST(Aapcs64, IsAapcs64Hfa)
 {
     // Accept floating point arrays with up to 4 members.
-    EXPECT_TRUE(guest_abi::IsAapcs64Hfa<float[1]>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64Hfa<float[2]>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64Hfa<float[3]>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64Hfa<float[4]>::value);
+    EXPECT_TRUE(guest_abi::IsAapcs64HfaV<float[1]>);
+    EXPECT_TRUE(guest_abi::IsAapcs64HfaV<float[2]>);
+    EXPECT_TRUE(guest_abi::IsAapcs64HfaV<float[3]>);
+    EXPECT_TRUE(guest_abi::IsAapcs64HfaV<float[4]>);
 
-    EXPECT_TRUE(guest_abi::IsAapcs64Hfa<double[1]>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64Hfa<double[2]>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64Hfa<double[3]>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64Hfa<double[4]>::value);
+    EXPECT_TRUE(guest_abi::IsAapcs64HfaV<double[1]>);
+    EXPECT_TRUE(guest_abi::IsAapcs64HfaV<double[2]>);
+    EXPECT_TRUE(guest_abi::IsAapcs64HfaV<double[3]>);
+    EXPECT_TRUE(guest_abi::IsAapcs64HfaV<double[4]>);
 
     // Too many members.
-    EXPECT_FALSE(guest_abi::IsAapcs64Hfa<float[5]>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hfa<double[5]>::value);
+    EXPECT_FALSE(guest_abi::IsAapcs64HfaV<float[5]>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HfaV<double[5]>);
 
     // Wrong type of members, or not arrays.
-    EXPECT_FALSE(guest_abi::IsAapcs64Hfa<int32_t[3]>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hfa<float>::value);
+    EXPECT_FALSE(guest_abi::IsAapcs64HfaV<int32_t[3]>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HfaV<float>);
     struct Struct {};
-    EXPECT_FALSE(guest_abi::IsAapcs64Hfa<Struct>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hfa<void>::value);
+    EXPECT_FALSE(guest_abi::IsAapcs64HfaV<Struct>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HfaV<void>);
 }
 
 TEST(Aapcs64, IsAapcs64Hva)
@@ -85,36 +85,36 @@ TEST(Aapcs64, IsAapcs64Hva)
     using SvaTiny = uint8_t[16];
     using SvaFloat = float[2];
 
-    EXPECT_TRUE(guest_abi::IsAapcs64Hva<SvaInt[3]>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64Hva<SvaInt[4]>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hva<SvaInt[5]>::value);
+    EXPECT_TRUE(guest_abi::IsAapcs64HvaV<SvaInt[3]>);
+    EXPECT_TRUE(guest_abi::IsAapcs64HvaV<SvaInt[4]>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HvaV<SvaInt[5]>);
 
-    EXPECT_TRUE(guest_abi::IsAapcs64Hva<SvaFloat[3]>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64Hva<SvaFloat[4]>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hva<SvaFloat[5]>::value);
+    EXPECT_TRUE(guest_abi::IsAapcs64HvaV<SvaFloat[3]>);
+    EXPECT_TRUE(guest_abi::IsAapcs64HvaV<SvaFloat[4]>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HvaV<SvaFloat[5]>);
 
-    EXPECT_TRUE(guest_abi::IsAapcs64Hva<SvaTiny[3]>::value);
-    EXPECT_TRUE(guest_abi::IsAapcs64Hva<SvaTiny[4]>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hva<SvaTiny[5]>::value);
+    EXPECT_TRUE(guest_abi::IsAapcs64HvaV<SvaTiny[3]>);
+    EXPECT_TRUE(guest_abi::IsAapcs64HvaV<SvaTiny[4]>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HvaV<SvaTiny[5]>);
 
-    EXPECT_FALSE(guest_abi::IsAapcs64Hva<uint64_t>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hva<uint64_t[1]>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hva<SvaTiny>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hva<void>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hva<float>::value);
+    EXPECT_FALSE(guest_abi::IsAapcs64HvaV<uint64_t>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HvaV<uint64_t[1]>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HvaV<SvaTiny>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HvaV<void>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HvaV<float>);
 }
 
 TEST(Aapcs64, IsAapcs64Hxa)
 {
     using SvaInt = uint32_t[2];
 
-    EXPECT_TRUE(guest_abi::IsAapcs64Hxa<SvaInt[4]>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hxa<SvaInt[5]>::value);
+    EXPECT_TRUE(guest_abi::IsAapcs64HxaV<SvaInt[4]>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HxaV<SvaInt[5]>);
 
-    EXPECT_TRUE(guest_abi::IsAapcs64Hxa<float[4]>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hxa<float[5]>::value);
+    EXPECT_TRUE(guest_abi::IsAapcs64HxaV<float[4]>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HxaV<float[5]>);
 
-    EXPECT_FALSE(guest_abi::IsAapcs64Hxa<SvaInt>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hxa<uint64_t>::value);
-    EXPECT_FALSE(guest_abi::IsAapcs64Hxa<void>::value);
+    EXPECT_FALSE(guest_abi::IsAapcs64HxaV<SvaInt>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HxaV<uint64_t>);
+    EXPECT_FALSE(guest_abi::IsAapcs64HxaV<void>);
 }

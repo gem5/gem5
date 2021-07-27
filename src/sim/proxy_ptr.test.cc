@@ -341,7 +341,7 @@ TEST(ProxyPtr, ConstOperators)
     EXPECT_EQ((const PtrType *)null, nullptr);
 
     // Dereferences.
-    is_same = std::is_same<decltype(*test_ptr1), const PtrType &>::value;
+    is_same = std::is_same_v<decltype(*test_ptr1), const PtrType &>;
     EXPECT_TRUE(is_same);
 
     store.store[0x100] = 0x55;
@@ -373,7 +373,7 @@ TEST(ProxyPtr, ConstOperators)
     EXPECT_EQ(struct_ptr->c, 0x33);
     EXPECT_EQ(struct_ptr->d, 0x44);
 
-    is_same = std::is_same<decltype((struct_ptr->a)), const uint8_t &>::value;
+    is_same = std::is_same_v<decltype((struct_ptr->a)), const uint8_t &>;
     EXPECT_TRUE(is_same);
 }
 
@@ -426,7 +426,7 @@ TEST(ProxyPtr, NonConstOperators)
     EXPECT_EQ((const PtrType *)null, nullptr);
 
     // Dereferences.
-    is_same = std::is_same<decltype(*test_ptr1), PtrType &>::value;
+    is_same = std::is_same_v<decltype(*test_ptr1), PtrType &>;
     EXPECT_TRUE(is_same);
 
     // Flush test_ptr1, which has been conservatively marked as dirty.
@@ -461,7 +461,7 @@ TEST(ProxyPtr, NonConstOperators)
     EXPECT_EQ(struct_ptr->c, 0x33);
     EXPECT_EQ(struct_ptr->d, 0x44);
 
-    is_same = std::is_same<decltype((struct_ptr->a)), uint8_t &>::value;
+    is_same = std::is_same_v<decltype((struct_ptr->a)), uint8_t &>;
     EXPECT_TRUE(is_same);
 }
 

@@ -84,10 +84,13 @@ struct IsAapcs64ShortVector : public std::false_type {};
 template <typename E, size_t N>
 struct IsAapcs64ShortVector<E[N],
     typename std::enable_if_t<
-        (std::is_integral<E>::value || std::is_floating_point<E>::value) &&
+        (std::is_integral_v<E> || std::is_floating_point_v<E>) &&
         (sizeof(E) * N == 8 || sizeof(E) * N == 16)>> :
         public std::true_type
 {};
+
+template <typename T>
+constexpr bool IsAapcs64ShortVectorV = IsAapcs64ShortVector<T>::value;
 
 /*
  * Composite Types
@@ -98,15 +101,16 @@ struct IsAapcs64Composite : public std::false_type {};
 
 template <typename T>
 struct IsAapcs64Composite<T, typename std::enable_if_t<
-    (std::is_array<T>::value ||
-     std::is_class<T>::value ||
-     std::is_union<T>::value) &&
+    (std::is_array_v<T> || std::is_class_v<T> || std::is_union_v<T>) &&
     // VarArgs is technically a composite type, but it's not a normal argument.
-    !IsVarArgs<T>::value &&
+    !IsVarArgsV<T> &&
     // Short vectors are also composite types, but don't treat them as one.
-    !IsAapcs64ShortVector<T>::value
+    !IsAapcs64ShortVectorV<T>
     >> : public std::true_type
 {};
+
+template <typename T>
+constexpr bool IsAapcs64CompositeV = IsAapcs64Composite<T>::value;
 
 // Homogeneous Aggregates
 // These *should* be any aggregate type which has only one type of member, but
@@ -122,9 +126,12 @@ struct IsAapcs64Hfa : public std::false_type {};
 
 template <typename E, size_t N>
 struct IsAapcs64Hfa<E[N],
-    typename std::enable_if_t<std::is_floating_point<E>::value && N <= 4>> :
+    typename std::enable_if_t<std::is_floating_point_v<E> && N <= 4>> :
     public std::true_type
 {};
+
+template <typename T>
+constexpr bool IsAapcs64HfaV = IsAapcs64Hfa<T>::value;
 
 // An Homogeneous Short-Vector Aggregate (HVA) is an Homogeneous Aggregate with
 // a Fundamental Data Type that is a Short-Vector type and at most four
@@ -135,9 +142,12 @@ struct IsAapcs64Hva : public std::false_type {};
 
 template <typename E, size_t N>
 struct IsAapcs64Hva<E[N],
-    typename std::enable_if_t<IsAapcs64ShortVector<E>::value && N <= 4>> :
+    typename std::enable_if_t<IsAapcs64ShortVectorV<E> && N <= 4>> :
     public std::true_type
 {};
+
+template <typename T>
+constexpr bool IsAapcs64HvaV = IsAapcs64Hva<T>::value;
 
 // A shorthand to test if a type is an HVA or an HFA.
 template <typename T, typename Enabled=void>
@@ -145,9 +155,12 @@ struct IsAapcs64Hxa : public std::false_type {};
 
 template <typename T>
 struct IsAapcs64Hxa<T, typename std::enable_if_t<
-    IsAapcs64Hfa<T>::value || IsAapcs64Hva<T>::value>> :
+    IsAapcs64HfaV<T> || IsAapcs64HvaV<T>>> :
     public std::true_type
 {};
+
+template <typename T>
+constexpr bool IsAapcs64HxaV = IsAapcs64Hxa<T>::value;
 
 struct Aapcs64ArgumentBase
 {
@@ -181,8 +194,7 @@ struct Aapcs64ArgumentBase
 
 template <typename Float>
 struct Argument<Aapcs64, Float, typename std::enable_if_t<
-    std::is_floating_point<Float>::value ||
-    IsAapcs64ShortVector<Float>::value>> :
+    std::is_floating_point_v<Float> || IsAapcs64ShortVectorV<Float>>> :
     public Aapcs64ArgumentBase
 {
     static Float
@@ -199,8 +211,7 @@ struct Argument<Aapcs64, Float, typename std::enable_if_t<
 
 template <typename Float>
 struct Result<Aapcs64, Float, typename std::enable_if_t<
-    std::is_floating_point<Float>::value ||
-    IsAapcs64ShortVector<Float>::value>>
+    std::is_floating_point_v<Float> || IsAapcs64ShortVectorV<Float>>>
 {
     static void
     store(ThreadContext *tc, const Float &f)
@@ -220,7 +231,7 @@ struct Result<Aapcs64, Float, typename std::enable_if_t<
 // This will pick up Addr as well, which should be used for guest pointers.
 template <typename Integer>
 struct Argument<Aapcs64, Integer, typename std::enable_if_t<
-    std::is_integral<Integer>::value && (sizeof(Integer) <= 8)>> :
+    std::is_integral_v<Integer> && (sizeof(Integer) <= 8)>> :
     public Aapcs64ArgumentBase
 {
     static Integer
@@ -238,7 +249,7 @@ struct Argument<Aapcs64, Integer, typename std::enable_if_t<
 
 template <typename Integer>
 struct Argument<Aapcs64, Integer, typename std::enable_if_t<
-    std::is_integral<Integer>::value && (sizeof(Integer) > 8)>> :
+    std::is_integral_v<Integer> && (sizeof(Integer) > 8)>> :
     public Aapcs64ArgumentBase
 {
     static Integer
@@ -263,7 +274,7 @@ struct Argument<Aapcs64, Integer, typename std::enable_if_t<
 
 template <typename Integer>
 struct Result<Aapcs64, Integer, typename std::enable_if_t<
-    std::is_integral<Integer>::value && (sizeof(Integer) <= 8)>>
+    std::is_integral_v<Integer> && (sizeof(Integer) <= 8)>>
 {
     static void
     store(ThreadContext *tc, const Integer &i)
@@ -274,7 +285,7 @@ struct Result<Aapcs64, Integer, typename std::enable_if_t<
 
 template <typename Integer>
 struct Result<Aapcs64, Integer, typename std::enable_if_t<
-    std::is_integral<Integer>::value && (sizeof(Integer) > 8)>>
+    std::is_integral_v<Integer> && (sizeof(Integer) > 8)>>
 {
     static void
     store(ThreadContext *tc, const Integer &i)
@@ -298,7 +309,7 @@ struct Aapcs64ArrayType<E[N]> { using Type = E; };
 
 template <typename HA>
 struct Argument<Aapcs64, HA, typename std::enable_if_t<
-    IsAapcs64Hxa<HA>::value>> : public Aapcs64ArgumentBase
+    IsAapcs64HxaV<HA>>> : public Aapcs64ArgumentBase
 {
     static HA
     get(ThreadContext *tc, Aapcs64::State &state)
@@ -321,8 +332,7 @@ struct Argument<Aapcs64, HA, typename std::enable_if_t<
 };
 
 template <typename HA>
-struct Result<Aapcs64, HA,
-    typename std::enable_if_t<IsAapcs64Hxa<HA>::value>>
+struct Result<Aapcs64, HA, typename std::enable_if_t<IsAapcs64HxaV<HA>>>
 {
     static HA
     store(ThreadContext *tc, const HA &ha)
@@ -342,7 +352,7 @@ struct Result<Aapcs64, HA,
 
 template <typename Composite>
 struct Argument<Aapcs64, Composite, typename std::enable_if_t<
-    IsAapcs64Composite<Composite>::value && !IsAapcs64Hxa<Composite>::value>> :
+    IsAapcs64CompositeV<Composite> && !IsAapcs64HxaV<Composite>>> :
     public Aapcs64ArgumentBase
 {
     static Composite
@@ -387,7 +397,7 @@ struct Argument<Aapcs64, Composite, typename std::enable_if_t<
 
 template <typename Composite>
 struct Result<Aapcs64, Composite, typename std::enable_if_t<
-    IsAapcs64Composite<Composite>::value && !IsAapcs64Hxa<Composite>::value>>
+    IsAapcs64CompositeV<Composite> && !IsAapcs64HxaV<Composite>>>
 {
     static void
     store(ThreadContext *tc, const Composite &c)

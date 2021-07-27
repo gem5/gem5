@@ -247,7 +247,7 @@ namespace VegaISA
     inline T
     median(T val_0, T val_1, T val_2)
     {
-        if (std::is_floating_point<T>::value) {
+        if (std::is_floating_point_v<T>) {
             return std::fmax(std::fmin(val_0, val_1),
                 std::fmin(std::fmax(val_0, val_1), val_2));
         } else {

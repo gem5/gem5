@@ -112,7 +112,7 @@ swap_byte16(uint16_t x)
 
 template <typename T>
 inline std::enable_if_t<
-    sizeof(T) == 8 && std::is_convertible<T, uint64_t>::value, T>
+    sizeof(T) == 8 && std::is_convertible_v<T, uint64_t>, T>
 swap_byte(T x)
 {
     return swap_byte64((uint64_t)x);
@@ -120,7 +120,7 @@ swap_byte(T x)
 
 template <typename T>
 inline std::enable_if_t<
-    sizeof(T) == 4 && std::is_convertible<T, uint32_t>::value, T>
+    sizeof(T) == 4 && std::is_convertible_v<T, uint32_t>, T>
 swap_byte(T x)
 {
     return swap_byte32((uint32_t)x);
@@ -128,7 +128,7 @@ swap_byte(T x)
 
 template <typename T>
 inline std::enable_if_t<
-    sizeof(T) == 2 && std::is_convertible<T, uint16_t>::value, T>
+    sizeof(T) == 2 && std::is_convertible_v<T, uint16_t>, T>
 swap_byte(T x)
 {
     return swap_byte16((uint16_t)x);
@@ -136,7 +136,7 @@ swap_byte(T x)
 
 template <typename T>
 inline std::enable_if_t<
-    sizeof(T) == 1 && std::is_convertible<T, uint8_t>::value, T>
+    sizeof(T) == 1 && std::is_convertible_v<T, uint8_t>, T>
 swap_byte(T x)
 {
     return x;
@@ -145,10 +145,10 @@ swap_byte(T x)
 // Make the function visible in case we need to declare a version of it for
 // other types
 template <typename T>
-std::enable_if_t<std::is_same<T, vring_used_elem>::value, T>
+std::enable_if_t<std::is_same_v<T, vring_used_elem>, T>
 swap_byte(T v);
 template <typename T>
-std::enable_if_t<std::is_same<T, vring_desc>::value, T>
+std::enable_if_t<std::is_same_v<T, vring_desc>, T>
 swap_byte(T v);
 
 template <typename T, size_t N>

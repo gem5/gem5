@@ -176,6 +176,9 @@ struct IsVarArgs : public std::false_type {};
 template <typename ...Types>
 struct IsVarArgs<VarArgs<Types...>> : public std::true_type {};
 
+template <typename T>
+constexpr bool IsVarArgsV = IsVarArgs<T>::value;
+
 template <typename ...Types>
 std::ostream &
 operator << (std::ostream &os, const VarArgs<Types...> &va)

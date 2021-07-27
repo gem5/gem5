@@ -58,9 +58,9 @@ namespace guest_abi
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
     typename std::enable_if_t<
-        std::is_base_of<ArmISA::RegABI32, ABI>::value &&
-        std::is_integral<Arg>::value &&
-        ABI::template IsWide<Arg>::value>>
+        std::is_base_of_v<ArmISA::RegABI32, ABI> &&
+        std::is_integral_v<Arg> &&
+        ABI::template IsWideV<Arg>>>
 {
     static Arg
     get(ThreadContext *tc, typename ABI::State &state)

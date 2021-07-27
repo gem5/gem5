@@ -274,12 +274,12 @@ namespace Gcn3ISA
                 DataType ret_val = scRegData.rawData();
 
                 if (absMod) {
-                    assert(std::is_floating_point<DataType>::value);
+                    assert(std::is_floating_point_v<DataType>);
                     ret_val = std::fabs(ret_val);
                 }
 
                 if (negMod) {
-                    assert(std::is_floating_point<DataType>::value);
+                    assert(std::is_floating_point_v<DataType>);
                     ret_val = -ret_val;
                 }
 
@@ -289,12 +289,12 @@ namespace Gcn3ISA
                 DataType ret_val = vgpr[idx];
 
                 if (absMod) {
-                    assert(std::is_floating_point<DataType>::value);
+                    assert(std::is_floating_point_v<DataType>);
                     ret_val = std::fabs(ret_val);
                 }
 
                 if (negMod) {
-                    assert(std::is_floating_point<DataType>::value);
+                    assert(std::is_floating_point_v<DataType>);
                     ret_val = -ret_val;
                 }
 

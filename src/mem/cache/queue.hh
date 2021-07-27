@@ -69,7 +69,7 @@ namespace gem5
 template<class Entry>
 class Queue : public Drainable, public Named
 {
-    static_assert(std::is_base_of<QueueEntry, Entry>::value,
+    static_assert(std::is_base_of_v<QueueEntry, Entry>,
         "Entry must be derived from QueueEntry");
 
   protected:

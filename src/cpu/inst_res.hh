@@ -80,12 +80,11 @@ class InstResult
     /** Scalar result from scalar. */
     template<typename T>
     explicit InstResult(T i, const ResultType& t) : type(t) {
-        static_assert(std::is_integral<T>::value ^
-                        std::is_floating_point<T>::value,
+        static_assert(std::is_integral_v<T> ^ std::is_floating_point_v<T>,
                 "Parameter type is neither integral nor fp, or it is both");
-        if (std::is_integral<T>::value) {
+        if (std::is_integral_v<T>) {
             result.integer = i;
-        } else if (std::is_floating_point<T>::value) {
+        } else if (std::is_floating_point_v<T>) {
             result.dbl = i;
         }
     }

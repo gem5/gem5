@@ -116,7 +116,7 @@ struct Argument<TestABI_1D, int>
 
 template <typename Arg>
 struct Argument<TestABI_1D, Arg,
-    typename std::enable_if_t<std::is_floating_point<Arg>::value>>
+    typename std::enable_if_t<std::is_floating_point_v<Arg>>>
 {
     static Arg
     get(ThreadContext *tc, TestABI_1D::State &state)
@@ -137,7 +137,7 @@ struct Result<TestABI_1D, int>
 
 template <typename Ret>
 struct Result<TestABI_1D, Ret,
-    typename std::enable_if_t<std::is_floating_point<Ret>::value>>
+    typename std::enable_if_t<std::is_floating_point_v<Ret>>>
 {
     static void
     store(ThreadContext *tc, const Ret &ret)
@@ -191,7 +191,7 @@ struct Argument<TestABI_2D, int>
 
 template <typename Arg>
 struct Argument<TestABI_2D, Arg,
-    typename std::enable_if_t<std::is_floating_point<Arg>::value>>
+    typename std::enable_if_t<std::is_floating_point_v<Arg>>>
 {
     static Arg
     get(ThreadContext *tc, TestABI_2D::State &state)
@@ -212,7 +212,7 @@ struct Result<TestABI_2D, int>
 
 template <typename Ret>
 struct Result<TestABI_2D, Ret,
-    typename std::enable_if_t<std::is_floating_point<Ret>::value>>
+    typename std::enable_if_t<std::is_floating_point_v<Ret>>>
 {
     static void
     store(ThreadContext *tc, const Ret &ret)
@@ -399,11 +399,11 @@ TEST(GuestABITest, dumpSimcall)
 
 TEST(GuestABITest, isVarArgs)
 {
-    EXPECT_TRUE(guest_abi::IsVarArgs<guest_abi::VarArgs<int>>::value);
-    EXPECT_FALSE(guest_abi::IsVarArgs<int>::value);
-    EXPECT_FALSE(guest_abi::IsVarArgs<double>::value);
+    EXPECT_TRUE(guest_abi::IsVarArgsV<guest_abi::VarArgs<int>>);
+    EXPECT_FALSE(guest_abi::IsVarArgsV<int>);
+    EXPECT_FALSE(guest_abi::IsVarArgsV<double>);
     struct FooStruct {};
-    EXPECT_FALSE(guest_abi::IsVarArgs<FooStruct>::value);
+    EXPECT_FALSE(guest_abi::IsVarArgsV<FooStruct>);
     union FooUnion {};
-    EXPECT_FALSE(guest_abi::IsVarArgs<FooUnion>::value);
+    EXPECT_FALSE(guest_abi::IsVarArgsV<FooUnion>);
 }

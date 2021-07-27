@@ -179,7 +179,7 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     template <class Head>
     struct Factory<Head>
     {
-        static_assert(std::is_base_of<UncompressedPattern, Head>::value,
+        static_assert(std::is_base_of_v<UncompressedPattern, Head>,
             "The last pattern must always be derived from the uncompressed "
             "pattern.");
 

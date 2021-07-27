@@ -342,12 +342,12 @@ class Unspecified : public Base
 template <typename T1, typename T2>
 class Rate : public Base
 {
-    static_assert(std::is_base_of<Base, T1>::value, "Rate(T1,T2) must have "
+    static_assert(std::is_base_of_v<Base, T1>, "Rate(T1,T2) must have "
         "T1 and T2 derived from statistics::units::Base");
-    static_assert(std::is_base_of<Base, T2>::value, "Rate(T1,T2) must have "
+    static_assert(std::is_base_of_v<Base, T2>, "Rate(T1,T2) must have "
         "T1 and T2 derived from statistics::units::Base");
-    static_assert(!std::is_same<T1, T2>::value ||
-        std::is_same<T1, Count>::value || std::is_same<T1, Unspecified>::value,
+    static_assert(!std::is_same_v<T1, T2> || std::is_same_v<T1, Count> ||
+            std::is_same_v<T1, Unspecified>,
         "Rate(T1,T2) must have T1 and T2 of different types; "
         "otherwise, it would be a Ratio");
 

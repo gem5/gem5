@@ -49,6 +49,9 @@ struct IsHelpedContainer : public std::false_type {};
 template <typename ...Types>
 struct IsHelpedContainer<std::vector<Types...>> : public std::true_type {};
 
+template <typename ...Types>
+constexpr bool IsHelpedContainerV = IsHelpedContainer<Types...>::value;
+
 /**
  * Write out all elements in an stl container as a space separated
  * list enclosed in square brackets
@@ -57,7 +60,7 @@ struct IsHelpedContainer<std::vector<Types...>> : public std::true_type {};
  */
 
 template <typename T>
-std::enable_if_t<IsHelpedContainer<T>::value, std::ostream &>
+std::enable_if_t<IsHelpedContainerV<T>, std::ostream &>
 operator<<(std::ostream& out, const T &t)
 {
     out << "[ ";

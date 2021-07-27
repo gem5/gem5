@@ -86,7 +86,7 @@ class Random : public Serializable
      * @ingroup api_base_utils
      */
     template <typename T>
-    typename std::enable_if_t<std::is_integral<T>::value, T>
+    typename std::enable_if_t<std::is_integral_v<T>, T>
     random()
     {
         // [0, max_value] for integer types
@@ -98,7 +98,7 @@ class Random : public Serializable
      * @ingroup api_base_utils
      */
     template <typename T>
-    typename std::enable_if_t<std::is_floating_point<T>::value, T>
+    typename std::enable_if_t<std::is_floating_point_v<T>, T>
     random()
     {
         // [0, 1) for real types
@@ -109,7 +109,7 @@ class Random : public Serializable
      * @ingroup api_base_utils
      */
     template <typename T>
-    typename std::enable_if_t<std::is_integral<T>::value, T>
+    typename std::enable_if_t<std::is_integral_v<T>, T>
     random(T min, T max)
     {
         std::uniform_int_distribution<T> dist(min, max);

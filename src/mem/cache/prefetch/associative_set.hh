@@ -44,7 +44,7 @@ namespace gem5
 template<class Entry>
 class AssociativeSet
 {
-    static_assert(std::is_base_of<TaggedEntry, Entry>::value,
+    static_assert(std::is_base_of_v<TaggedEntry, Entry>,
                   "Entry must derive from TaggedEntry");
 
     /** Associativity of the container */
