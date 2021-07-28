@@ -317,8 +317,8 @@ Queued::translationComplete(DeferredPacket *dp, bool failed)
                     "cache/MSHR prefetch addr:%#x\n", target_paddr);
         } else {
             Tick pf_time = curTick() + clockPeriod() * latency;
-            it->createPkt(it->translationRequest->getPaddr(), blkSize,
-                    requestorId, tagPrefetch, pf_time);
+            it->createPkt(target_paddr, blkSize, requestorId, tagPrefetch,
+                          pf_time);
             addToQueue(pfq, *it);
         }
     } else {
