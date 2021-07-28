@@ -1,4 +1,5 @@
 # Copyright (c) 2021 Huawei International
+# Copyright (c) 2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -43,23 +44,38 @@ import re
 import os
 from testlib import *
 
-ok_exit_regex = re.compile(
-r'Exiting @ tick \d+ because exiting with last active thread context'
-)
+def have_hdf5():
+    have_hdf5_file = os.path.join(
+        config.base_dir, 'build', constants.arm_tag, 'config', 'have_hdf5.hh')
+    with open(have_hdf5_file) as f:
+        content = f.read()
 
-path = joinpath(config.bin_path, 'test-progs', 'hello', 'bin', 'arm', 'linux')
-filename = 'hello'
-url = (config.resource_url + '/test-progs/hello/bin/arm/linux/hello')
-test_program = DownloadedProgram(url, path, filename)
+    result = re.match("#define HAVE_HDF5 ([0-1])", content)
+    if not result:
+        raise Exception(
+            f"Unable to find the HAVE_HDF5 in {have_hdf5_file}")
+    else:
+        return result.group(1) == "1"
 
-stdout_verifier = verifier.MatchRegex(ok_exit_regex)
-h5_verifier = verifier.CheckH5StatsExist()
-gem5_verify_config(
-    name='hdf5_test',
-    verifiers=[stdout_verifier, h5_verifier],
-    fixtures=(test_program,),
-    config=os.path.join(config.base_dir, 'configs', 'example','se.py'),
-    config_args=['--cmd', joinpath(test_program.path, filename)],
-    gem5_args=['--stats-file=h5://stats.h5'],
-    valid_isas=(constants.arm_tag,)
-)
+if have_hdf5():
+    ok_exit_regex = re.compile(
+    r'Exiting @ tick \d+ because exiting with last active thread context'
+    )
+
+    path = joinpath(config.bin_path, 'test-progs', 'hello',
+        'bin', 'arm', 'linux')
+    filename = 'hello'
+    url = (config.resource_url + '/test-progs/hello/bin/arm/linux/hello')
+    test_program = DownloadedProgram(url, path, filename)
+
+    stdout_verifier = verifier.MatchRegex(ok_exit_regex)
+    h5_verifier = verifier.CheckH5StatsExist()
+    gem5_verify_config(
+        name='hdf5_test',
+        verifiers=[stdout_verifier, h5_verifier],
+        fixtures=(test_program,),
+        config=os.path.join(config.base_dir, 'configs', 'example','se.py'),
+        config_args=['--cmd', joinpath(test_program.path, filename)],
+        gem5_args=['--stats-file=h5://stats.h5'],
+        valid_isas=(constants.arm_tag,)
+    )
