@@ -43,6 +43,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <string>
 
 #include "arch/vecregs.hh"
 #include "base/types.hh"
@@ -65,19 +66,43 @@ enum RegClass
     MiscRegClass        ///< Control (misc) register
 };
 
+class RegId;
+
+class RegClassOps
+{
+  public:
+    virtual std::string regName(const RegId &id) const = 0;
+};
+
+class DefaultRegClassOps : public RegClassOps
+{
+  public:
+    std::string regName(const RegId &id) const override;
+};
+
 class RegClassInfo
 {
   private:
     size_t _size;
     const RegIndex _zeroReg;
 
+    static inline DefaultRegClassOps defaultOps;
+    RegClassOps *_ops = &defaultOps;
+
   public:
-    RegClassInfo(size_t new_size, RegIndex new_zero = -1) :
+    RegClassInfo(size_t new_size, RegIndex new_zero=-1) :
         _size(new_size), _zeroReg(new_zero)
     {}
+    RegClassInfo(size_t new_size, RegClassOps &new_ops, RegIndex new_zero=-1) :
+        RegClassInfo(new_size, new_zero)
+    {
+        _ops = &new_ops;
+    }
 
     size_t size() const { return _size; }
     RegIndex zeroReg() const { return _zeroReg; }
+
+    std::string regName(const RegId &id) const { return _ops->regName(id); }
 };
 
 /** Register ID: describe an architectural register with its class and index.
