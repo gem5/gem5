@@ -57,11 +57,14 @@ namespace GenericISA
 class PCStateBase : public Serializable
 {
   protected:
-    Addr _pc;
-    Addr _npc;
+    Addr _pc = 0;
+    Addr _npc = 0;
 
-    PCStateBase() : _pc(0), _npc(0) {}
-    PCStateBase(Addr val) : _pc(0), _npc(0) { set(val); }
+    MicroPC _upc = 0;
+    MicroPC _nupc = 1;
+
+    PCStateBase() {}
+    PCStateBase(Addr val) { set(val); }
 
   public:
     /**
@@ -94,7 +97,15 @@ class PCStateBase : public Serializable
     MicroPC
     microPC() const
     {
-        return 0;
+        return _upc;
+    }
+
+    // Reset the macroop's upc without advancing the regular pc.
+    void
+    uReset()
+    {
+        _upc = 0;
+        _nupc = 1;
     }
 
     /**
@@ -122,6 +133,8 @@ class PCStateBase : public Serializable
     {
         SERIALIZE_SCALAR(_pc);
         SERIALIZE_SCALAR(_npc);
+        SERIALIZE_SCALAR(_upc);
+        SERIALIZE_SCALAR(_nupc);
     }
 
     void
@@ -129,6 +142,8 @@ class PCStateBase : public Serializable
     {
         UNSERIALIZE_SCALAR(_pc);
         UNSERIALIZE_SCALAR(_npc);
+        UNSERIALIZE_SCALAR(_upc);
+        UNSERIALIZE_SCALAR(_nupc);
     }
 };
 
@@ -200,22 +215,13 @@ class UPCState : public SimplePCState<InstWidth>
   protected:
     typedef SimplePCState<InstWidth> Base;
 
-    MicroPC _upc;
-    MicroPC _nupc;
-
   public:
 
-    MicroPC upc() const { return _upc; }
-    void upc(MicroPC val) { _upc = val; }
+    MicroPC upc() const { return this->_upc; }
+    void upc(MicroPC val) { this->_upc = val; }
 
-    MicroPC nupc() const { return _nupc; }
-    void nupc(MicroPC val) { _nupc = val; }
-
-    MicroPC
-    microPC() const
-    {
-        return _upc;
-    }
+    MicroPC nupc() const { return this->_nupc; }
+    void nupc(MicroPC val) { this->_nupc = val; }
 
     void
     set(Addr val)
@@ -225,8 +231,8 @@ class UPCState : public SimplePCState<InstWidth>
         nupc(1);
     }
 
-    UPCState() : _upc(0), _nupc(1) {}
-    UPCState(Addr val) : _upc(0), _nupc(0) { set(val); }
+    UPCState() {}
+    UPCState(Addr val) { set(val); }
 
     bool
     branching() const
@@ -239,8 +245,8 @@ class UPCState : public SimplePCState<InstWidth>
     void
     uAdvance()
     {
-        _upc = _nupc;
-        _nupc++;
+        upc(nupc());
+        nupc(nupc() + 1);
     }
 
     // End the macroop by resetting the upc and advancing the regular pc.
@@ -248,46 +254,21 @@ class UPCState : public SimplePCState<InstWidth>
     uEnd()
     {
         this->advance();
-        _upc = 0;
-        _nupc = 1;
-    }
-
-    // Reset the macroop's upc without advancing the regular pc.
-    void
-    uReset()
-    {
-        _upc = 0;
-        _nupc = 1;
+        upc(0);
+        nupc(1);
     }
 
     bool
     operator == (const UPCState<InstWidth> &opc) const
     {
-        return Base::_pc == opc._pc &&
-               Base::_npc == opc._npc &&
-               _upc == opc._upc && _nupc == opc._nupc;
+        return this->pc() == opc.pc() && this->npc() == opc.npc() &&
+               this->upc() == opc.upc() && this->nupc() == opc.nupc();
     }
 
     bool
     operator != (const UPCState<InstWidth> &opc) const
     {
         return !(*this == opc);
-    }
-
-    void
-    serialize(CheckpointOut &cp) const override
-    {
-        Base::serialize(cp);
-        SERIALIZE_SCALAR(_upc);
-        SERIALIZE_SCALAR(_nupc);
-    }
-
-    void
-    unserialize(CheckpointIn &cp) override
-    {
-        Base::unserialize(cp);
-        UNSERIALIZE_SCALAR(_upc);
-        UNSERIALIZE_SCALAR(_nupc);
     }
 };
 
