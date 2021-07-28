@@ -51,7 +51,7 @@ Import('*')
 # ISA "switch header" generation.
 #
 # Auto-generate arch headers that include the right ISA-specific
-# header based on the setting of THE_ISA preprocessor variable.
+# header based on the setting of TARGET_ISA setting.
 #
 #################################################################
 

@@ -44,7 +44,7 @@ Workload::registerThreadContext(ThreadContext *tc)
     panic_if(!success, "Failed to add thread context %d.",
             tc->contextId());
 
-#   if THE_ISA != NULL_ISA
+#   if !IS_NULL_ISA
     if (gdb)
         gdb->addThreadContext(tc);
 #   endif
@@ -66,7 +66,7 @@ Workload::replaceThreadContext(ThreadContext *tc)
         panic_if(!success,
                 "Failed to insert replacement thread context %d.", id);
 
-#       if THE_ISA != NULL_ISA
+#       if !IS_NULL_ISA
         if (gdb)
             gdb->replaceThreadContext(tc);
 #       endif
@@ -79,7 +79,7 @@ Workload::replaceThreadContext(ThreadContext *tc)
 bool
 Workload::trapToGdb(int signal, ContextID ctx_id)
 {
-#   if THE_ISA != NULL_ISA
+#   if !IS_NULL_ISA
     if (gdb) {
         gdb->trap(ctx_id, signal);
         return true;
@@ -93,7 +93,7 @@ Workload::startup()
 {
     SimObject::startup();
 
-#   if THE_ISA != NULL_ISA
+#   if !IS_NULL_ISA
     // Now that we're about to start simulation, wait for GDB connections if
     // requested.
     if (gdb && waitForRemoteGDB) {

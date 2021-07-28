@@ -1285,7 +1285,7 @@ INCLUDE_FILE_PATTERNS  =
 # omitted =1 is assumed.
 
 PREDEFINED             = DOXYGEN_SHOULD_SKIP_THIS \
-                         THE_ISA
+                         IS_NULL_ISA
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 
