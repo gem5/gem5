@@ -692,17 +692,6 @@ def makeTheISA(source, target, env):
 #ifndef __CONFIG_THE_ISA_HH__
 #define __CONFIG_THE_ISA_HH__
 
-''')
-
-    # create an enum for any run-time determination of the ISA, we
-    # reuse the same name as the namespaces
-    code('enum class Arch {')
-    for isa in isas:
-        code('  $0,', namespace(isa))
-    code('};')
-
-    code('''
-
 #define IS_NULL_ISA ${{is_null_isa}}
 #define TheISA ${{namespace(target_isa)}}
 
