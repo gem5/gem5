@@ -45,6 +45,7 @@
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlbi_op.hh"
+#include "base/cprintf.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/reg_class.hh"
@@ -64,6 +65,16 @@ namespace gem5
 namespace ArmISA
 {
 
+class MiscRegClassOps : public RegClassOps
+{
+  public:
+    std::string
+    regName(const RegId &id) const override
+    {
+        return miscRegName[id.index()];
+    }
+} miscRegClassOps;
+
 ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     _decoderFlavor(p.decoderFlavor), pmu(p.pmu), impdefAsNop(p.impdef_nop),
     afterStartup(false)
@@ -74,7 +85,7 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     _regClasses.emplace_back(NumVecRegs * TheISA::NumVecElemPerVecReg);
     _regClasses.emplace_back(NumVecPredRegs);
     _regClasses.emplace_back(NUM_CCREGS);
-    _regClasses.emplace_back(NUM_MISCREGS);
+    _regClasses.emplace_back(NUM_MISCREGS, miscRegClassOps);
 
     miscRegs[MISCREG_SCTLR_RST] = 0;
 
