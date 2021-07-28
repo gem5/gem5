@@ -313,7 +313,7 @@ TLB::translate(const RequestPtr &req,
 {
     Request::Flags flags = req->getFlags();
     int seg = flags & SegmentFlagMask;
-    bool storeCheck = flags & (StoreCheck << FlagShift);
+    bool storeCheck = flags & Request::READ_MODIFY_WRITE;
 
     delayedResponse = false;
 

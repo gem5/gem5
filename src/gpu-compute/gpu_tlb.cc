@@ -424,7 +424,7 @@ namespace X86ISA
     {
         uint32_t flags = req->getFlags();
         int seg = flags & SegmentFlagMask;
-        bool storeCheck = flags & (StoreCheck << FlagShift);
+        bool storeCheck = flags & Request::READ_MODIFY_WRITE;
 
         // If this is true, we're dealing with a request
         // to a non-memory address space.
@@ -764,7 +764,7 @@ namespace X86ISA
     {
         HandyM5Reg m5Reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
         uint32_t flags = pkt->req->getFlags();
-        bool storeCheck = flags & (StoreCheck << FlagShift);
+        bool storeCheck = flags & Request::READ_MODIFY_WRITE;
 
         // Do paging protection checks.
         bool inUser

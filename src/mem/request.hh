@@ -157,6 +157,8 @@ class Request
         /** This request is for a memory swap. */
         MEM_SWAP                    = 0x00400000,
         MEM_SWAP_COND               = 0x00800000,
+        /** This request is a read which will be followed by a write. */
+        READ_MODIFY_WRITE           = 0x00020000,
 
         /** The request is a prefetch. */
         PREFETCH                    = 0x01000000,
@@ -939,14 +941,22 @@ class Request
     bool isUncacheable() const { return _flags.isSet(UNCACHEABLE); }
     bool isStrictlyOrdered() const { return _flags.isSet(STRICT_ORDER); }
     bool isInstFetch() const { return _flags.isSet(INST_FETCH); }
-    bool isPrefetch() const { return (_flags.isSet(PREFETCH) ||
-                                      _flags.isSet(PF_EXCLUSIVE)); }
+    bool
+    isPrefetch() const
+    {
+        return (_flags.isSet(PREFETCH | PF_EXCLUSIVE));
+    }
     bool isPrefetchEx() const { return _flags.isSet(PF_EXCLUSIVE); }
     bool isLLSC() const { return _flags.isSet(LLSC); }
     bool isPriv() const { return _flags.isSet(PRIVILEGED); }
     bool isLockedRMW() const { return _flags.isSet(LOCKED_RMW); }
-    bool isSwap() const { return _flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
+    bool isSwap() const { return _flags.isSet(MEM_SWAP | MEM_SWAP_COND); }
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
+    bool
+    isReadModifyWrite() const
+    {
+        return _flags.isSet(LOCKED_RMW | READ_MODIFY_WRITE);
+    }
     bool isSecure() const { return _flags.isSet(SECURE); }
     bool isPTWalk() const { return _flags.isSet(PT_WALK); }
     bool isRelease() const { return _flags.isSet(RELEASE); }

@@ -56,7 +56,6 @@ namespace X86ISA
     {
         CPL0FlagBit = 1,
         AddrSizeFlagBit = 2,
-        StoreCheck = 4
     };
 } // namespace X86ISA
 } // namespace gem5
