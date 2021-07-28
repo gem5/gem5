@@ -131,8 +131,11 @@ Queued::printQueue(const std::list<DeferredPacket> &queue) const
 
     for (const_iterator it = queue.cbegin(); it != queue.cend();
                                                             it++, pos++) {
-        DPRINTF(HWPrefetchQueue, "%s[%d]: Prefetch Req Addr: %#x prio: %3d\n",
-                queue_name, pos, it->pkt->getAddr(), it->priority);
+        Addr vaddr = it->pfInfo.getAddr();
+        /* Set paddr to 0 if not yet translated */
+        Addr paddr = it->pkt ? it->pkt->getAddr() : 0;
+        DPRINTF(HWPrefetchQueue, "%s[%d]: Prefetch Req VA: %#x PA: %#x "
+                "prio: %3d\n", queue_name, pos, vaddr, paddr, it->priority);
     }
 }
 
