@@ -169,8 +169,10 @@ class ThreadContext : public gem5::ThreadContext
     iris::IrisCppAdapter &call() const { return client.irisCall(); }
     iris::IrisCppAdapter &noThrow() const { return client.irisCallNoThrow(); }
 
-    void readMem(Addr addr, void *p, size_t size);
-    void writeMem(Addr addr, const void *p, size_t size);
+    void readMem(iris::MemorySpaceId space,
+                 Addr addr, void *p, size_t size);
+    void writeMem(iris::MemorySpaceId space,
+                  Addr addr, const void *p, size_t size);
     bool translateAddress(Addr &paddr, iris::MemorySpaceId p_space,
                           Addr vaddr, iris::MemorySpaceId v_space);
 

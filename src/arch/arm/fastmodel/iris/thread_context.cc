@@ -437,21 +437,23 @@ ThreadContext::remove(PCEvent *e)
 }
 
 void
-ThreadContext::readMem(Addr addr, void *p, size_t size)
+ThreadContext::readMem(
+    iris::MemorySpaceId space, Addr addr, void *p, size_t size)
 {
     iris::r0master::MemoryReadResult r;
-    auto err = call().memory_read(_instId, r, 0, addr, 1, size);
+    auto err = call().memory_read(_instId, r, space, addr, 1, size);
     panic_if(err != iris::r0master::E_ok, "readMem failed.");
     std::memcpy(p, r.data.data(), size);
 }
 
 void
-ThreadContext::writeMem(Addr addr, const void *p, size_t size)
+ThreadContext::writeMem(
+    iris::MemorySpaceId space, Addr addr, const void *p, size_t size)
 {
     std::vector<uint64_t> data((size + 7) / 8);
     std::memcpy(data.data(), p, size);
     iris::MemoryWriteResult r;
-    auto err = call().memory_write(_instId, r, 0, addr, 1, size, data);
+    auto err = call().memory_write(_instId, r, space, addr, 1, size, data);
     panic_if(err != iris::r0master::E_ok, "writeMem failed.");
 }
 
@@ -515,15 +517,19 @@ ThreadContext::getCurrentInstCount()
 void
 ThreadContext::sendFunctional(PacketPtr pkt)
 {
+    auto msn = ArmISA::isSecure(this) ?
+        Iris::PhysicalMemorySecureMsn : Iris::PhysicalMemoryNonSecureMsn;
+    auto id = getMemorySpaceId(msn);
+
     auto addr = pkt->getAddr();
     auto size = pkt->getSize();
     auto data = pkt->getPtr<uint8_t>();
 
     pkt->makeResponse();
     if (pkt->isRead())
-        readMem(addr, data, size);
+        readMem(id, addr, data, size);
     else
-        writeMem(addr, data, size);
+        writeMem(id, addr, data, size);
 }
 
 ThreadContext::Status
