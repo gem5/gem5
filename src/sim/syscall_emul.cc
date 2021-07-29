@@ -194,6 +194,16 @@ exitImpl(SyscallDesc *desc, ThreadContext *tc, bool group, int status)
         }
     }
 
+    /**
+     * If we were a thread created by a clone with vfork set, wake up
+     * the thread that created us
+     */
+    if (!p->vforkContexts.empty()) {
+        ThreadContext *vtc = sys->threads[p->vforkContexts.front()];
+        assert(vtc->status() == ThreadContext::Suspended);
+        vtc->activate();
+    }
+
     tc->halt();
 
     /**

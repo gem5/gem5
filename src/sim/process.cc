@@ -175,6 +175,9 @@ Process::clone(ThreadContext *otc, ThreadContext *ntc,
 #ifndef CLONE_THREAD
 #define CLONE_THREAD 0
 #endif
+#ifndef CLONE_VFORK
+#define CLONE_VFORK 0
+#endif
     if (CLONE_VM & flags) {
         /**
          * Share the process memory address space between the new process
@@ -247,6 +250,10 @@ Process::clone(ThreadContext *otc, ThreadContext *ntc,
         np->_tgid = _tgid;
         delete np->exitGroup;
         np->exitGroup = exitGroup;
+    }
+
+    if (CLONE_VFORK & flags) {
+        np->vforkContexts.push_back(otc->contextId());
     }
 
     np->argv.insert(np->argv.end(), argv.begin(), argv.end());
