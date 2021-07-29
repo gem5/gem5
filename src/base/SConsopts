@@ -56,12 +56,21 @@ with gem5_scons.Configure(main) as conf:
     # alternative stacks.
     conf.env['HAVE_VALGRIND'] = conf.CheckCHeader('valgrind/valgrind.h')
 
-    conf.env['HAVE_DEPRECATED_NAMESPACE'] = conf.TryCompile('''
+
+# Check if the compiler supports the [[gnu::deprecated]] attribute
+# Create a temporary environment with -Werror in CCFLAGS
+werror_env = main.Clone()
+werror_env.Append(CCFLAGS=['-Werror'])
+with gem5_scons.Configure(werror_env) as conf:
+
+    # Store result in the main environment
+    main['HAVE_DEPRECATED_NAMESPACE'] = conf.TryCompile('''
         int main() {return 0;}
         namespace [[gnu::deprecated("Test namespace deprecation")]]
         test_deprecated_namespace {}
     ''', '.cc')
-    if not conf.env['HAVE_DEPRECATED_NAMESPACE']:
+
+    if not main['HAVE_DEPRECATED_NAMESPACE']:
         warning("Deprecated namespaces are not supported by this compiler.\n"
                 "Please make sure to check the mailing list for deprecation "
                 "announcements.")
