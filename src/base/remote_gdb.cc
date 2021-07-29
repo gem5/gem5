@@ -557,6 +557,8 @@ BaseRemoteGDB::trap(ContextID id, int signum)
             send("");
         } catch (CmdError &e) {
             send(e.error);
+        } catch (std::exception &e) {
+            panic("Unrecognzied GDB exception: %s", e.what());
         } catch (...) {
             panic("Unrecognzied GDB exception.");
         }
