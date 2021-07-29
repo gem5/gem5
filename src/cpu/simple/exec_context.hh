@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018, 2020 ARM Limited
+ * Copyright (c) 2014-2018, 2020-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -128,6 +128,10 @@ class SimpleExecContext : public ExecContext
                        "Number of times the CC registers were read"),
               ADD_STAT(numCCRegWrites, statistics::units::Count::get(),
                        "Number of times the CC registers were written"),
+              ADD_STAT(numMiscRegReads, statistics::units::Count::get(),
+                       "Number of times the Misc registers were read"),
+              ADD_STAT(numMiscRegWrites, statistics::units::Count::get(),
+                       "Number of times the Misc registers were written"),
               ADD_STAT(numMemRefs, statistics::units::Count::get(),
                        "Number of memory refs"),
               ADD_STAT(numLoadInsts, statistics::units::Count::get(),
@@ -236,6 +240,10 @@ class SimpleExecContext : public ExecContext
         // Number of condition code register file accesses
         statistics::Scalar numCCRegReads;
         statistics::Scalar numCCRegWrites;
+
+        // Number of misc register file accesses
+        statistics::Scalar numMiscRegReads;
+        statistics::Scalar numMiscRegWrites;
 
         // Number of simulated memory references
         statistics::Scalar numMemRefs;
@@ -423,7 +431,7 @@ class SimpleExecContext : public ExecContext
     RegVal
     readMiscRegOperand(const StaticInst *si, int idx) override
     {
-        execContextStats.numIntRegReads++;
+        execContextStats.numMiscRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.is(MiscRegClass));
         return thread->readMiscReg(reg.index());
@@ -432,7 +440,7 @@ class SimpleExecContext : public ExecContext
     void
     setMiscRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
-        execContextStats.numIntRegWrites++;
+        execContextStats.numMiscRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(MiscRegClass));
         thread->setMiscReg(reg.index(), val);
@@ -445,7 +453,7 @@ class SimpleExecContext : public ExecContext
     RegVal
     readMiscReg(int misc_reg) override
     {
-        execContextStats.numIntRegReads++;
+        execContextStats.numMiscRegReads++;
         return thread->readMiscReg(misc_reg);
     }
 
@@ -456,7 +464,7 @@ class SimpleExecContext : public ExecContext
     void
     setMiscReg(int misc_reg, RegVal val) override
     {
-        execContextStats.numIntRegWrites++;
+        execContextStats.numMiscRegWrites++;
         thread->setMiscReg(misc_reg, val);
     }
 
