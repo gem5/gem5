@@ -106,11 +106,11 @@ IGbE::IGbE(const Params &p)
     eeOpcode            = 0;
 
     // clear all 64 16 bit words of the eeprom
-    memset(&flash, 0, EEPROM_SIZE*2);
+    memset(&flash, 0, EEPROM_SIZE * 2);
 
     // Set the MAC address
     memcpy(flash, p.hardware_address.bytes(), ETH_ADDR_LEN);
-    for (int x = 0; x < ETH_ADDR_LEN/2; x++)
+    for (int x = 0; x < ETH_ADDR_LEN / 2; x++)
         flash[x] = htobe(flash[x]);
 
     uint16_t csum = 0;
@@ -119,7 +119,7 @@ IGbE::IGbE(const Params &p)
 
 
     // Magic happy checksum value
-    flash[EEPROM_SIZE-1] = htobe((uint16_t)(EEPROM_CSUM - csum));
+    flash[EEPROM_SIZE - 1] = htobe((uint16_t)(EEPROM_CSUM - csum));
 
     // Store the MAC address as queue ID
     macAddr = p.hardware_address;
@@ -341,9 +341,9 @@ IGbE::read(PacketPtr pkt)
         pkt->setLE<uint32_t>(regs.sw_fw_sync);
         break;
       default:
-        if (!IN_RANGE(daddr, REG_VFTA, VLAN_FILTER_TABLE_SIZE*4) &&
-            !IN_RANGE(daddr, REG_RAL, RCV_ADDRESS_TABLE_SIZE*8) &&
-            !IN_RANGE(daddr, REG_MTA, MULTICAST_TABLE_SIZE*4) &&
+        if (!IN_RANGE(daddr, REG_VFTA, VLAN_FILTER_TABLE_SIZE * 4) &&
+            !IN_RANGE(daddr, REG_RAL, RCV_ADDRESS_TABLE_SIZE * 8) &&
+            !IN_RANGE(daddr, REG_MTA, MULTICAST_TABLE_SIZE * 4) &&
             !IN_RANGE(daddr, REG_CRCERRS, STATS_REGS_SIZE))
             panic("Read request to unknown register number: %#x\n", daddr);
         else
@@ -408,11 +408,12 @@ IGbE::write(PacketPtr pkt)
                 eeAddr = eeAddr << 1 | regs.eecd.din();
                 eeAddrBits++;
             } else if (eeDataBits < 16 && eeOpcode == EEPROM_READ_OPCODE_SPI) {
-                assert(eeAddr>>1 < EEPROM_SIZE);
+                assert(eeAddr >> 1 < EEPROM_SIZE);
                 DPRINTF(EthernetEEPROM, "EEPROM bit read: %d word: %#X\n",
-                        flash[eeAddr>>1] >> eeDataBits & 0x1,
-                        flash[eeAddr>>1]);
-                regs.eecd.dout((flash[eeAddr>>1] >> (15-eeDataBits)) & 0x1);
+                        flash[eeAddr >> 1] >> eeDataBits & 0x1,
+                        flash[eeAddr >> 1]);
+                regs.eecd.dout(
+                        (flash[eeAddr >> 1] >> (15 - eeDataBits)) & 0x1);
                 eeDataBits++;
             } else if (eeDataBits < 8 && eeOpcode == EEPROM_RDSR_OPCODE_SPI) {
                 regs.eecd.dout(0);
@@ -435,7 +436,7 @@ IGbE::write(PacketPtr pkt)
 
             DPRINTF(EthernetEEPROM, "EEPROM: opcode: %#X:%d addr: %#X:%d\n",
                     (uint32_t)eeOpcode, (uint32_t) eeOpBits,
-                    (uint32_t)eeAddr>>1, (uint32_t)eeAddrBits);
+                    (uint32_t)eeAddr >> 1, (uint32_t)eeAddrBits);
             if (eeOpBits == 8 && !(eeOpcode == EEPROM_READ_OPCODE_SPI ||
                                    eeOpcode == EEPROM_RDSR_OPCODE_SPI ))
                 panic("Unknown eeprom opcode: %#X:%d\n", (uint32_t)eeOpcode,
@@ -495,7 +496,7 @@ IGbE::write(PacketPtr pkt)
                 regs.icr(), regs.imr, regs.iam, regs.ctrl_ext.iame());
         if (regs.ctrl_ext.iame())
             regs.imr &= ~regs.iam;
-        regs.icr = ~bits(val,30,0) & regs.icr();
+        regs.icr = ~bits(val, 30, 0) & regs.icr();
         chkInterrupt();
         break;
       case REG_ITR:
@@ -569,7 +570,7 @@ IGbE::write(PacketPtr pkt)
         regs.fcrth = val;
         break;
       case REG_RDBAL:
-        regs.rdba.rdbal( val & ~mask(4));
+        regs.rdba.rdbal(val & ~mask(4));
         rxDescCache.areaChanged();
         break;
       case REG_RDBAH:
@@ -607,7 +608,7 @@ IGbE::write(PacketPtr pkt)
         regs.rxdctl = val;
         break;
       case REG_TDBAL:
-        regs.tdba.tdbal( val & ~mask(4));
+        regs.tdba.tdbal(val & ~mask(4));
         txDescCache.areaChanged();
         break;
       case REG_TDBAH:
@@ -681,9 +682,9 @@ IGbE::write(PacketPtr pkt)
         regs.sw_fw_sync = val;
         break;
       default:
-        if (!IN_RANGE(daddr, REG_VFTA, VLAN_FILTER_TABLE_SIZE*4) &&
-            !IN_RANGE(daddr, REG_RAL, RCV_ADDRESS_TABLE_SIZE*8) &&
-            !IN_RANGE(daddr, REG_MTA, MULTICAST_TABLE_SIZE*4))
+        if (!IN_RANGE(daddr, REG_VFTA, VLAN_FILTER_TABLE_SIZE * 4) &&
+            !IN_RANGE(daddr, REG_RAL, RCV_ADDRESS_TABLE_SIZE * 8) &&
+            !IN_RANGE(daddr, REG_MTA, MULTICAST_TABLE_SIZE * 4))
             panic("Write request to unknown register number: %#x\n", daddr);
     };
 
@@ -921,7 +922,7 @@ IGbE::DescCache<T>::writeback1()
 
     assert(wbOut);
     igbe->dmaWrite(pciToDma(descBase() + descHead() * sizeof(T)),
-                   wbOut * sizeof(T), &wbEvent, (uint8_t*)wbBuf,
+                   wbOut * sizeof(T), &wbEvent, (uint8_t *)wbBuf,
                    igbe->wbCompDelay);
 }
 
@@ -980,7 +981,7 @@ IGbE::DescCache<T>::fetchDescriptors1()
             curFetching * sizeof(T));
     assert(curFetching);
     igbe->dmaRead(pciToDma(descBase() + cachePnt * sizeof(T)),
-                  curFetching * sizeof(T), &fetchEvent, (uint8_t*)fetchBuf,
+                  curFetching * sizeof(T), &fetchEvent, (uint8_t *)fetchBuf,
                   igbe->fetchCompDelay);
 }
 
@@ -1082,14 +1083,14 @@ IGbE::DescCache<T>::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(usedCacheSize);
     for (typename CacheType::size_type x = 0; x < usedCacheSize; x++) {
         arrayParamOut(cp, csprintf("usedCache_%d", x),
-                      (uint8_t*)usedCache[x],sizeof(T));
+                      (uint8_t *)usedCache[x], sizeof(T));
     }
 
     typename CacheType::size_type unusedCacheSize = unusedCache.size();
     SERIALIZE_SCALAR(unusedCacheSize);
     for (typename CacheType::size_type x = 0; x < unusedCacheSize; x++) {
         arrayParamOut(cp, csprintf("unusedCache_%d", x),
-                      (uint8_t*)unusedCache[x],sizeof(T));
+                      (uint8_t *)unusedCache[x], sizeof(T));
     }
 
     Tick fetch_delay = 0, wb_delay = 0;
@@ -1119,7 +1120,7 @@ IGbE::DescCache<T>::unserialize(CheckpointIn &cp)
     for (typename CacheType::size_type x = 0; x < usedCacheSize; x++) {
         temp = new T;
         arrayParamIn(cp, csprintf("usedCache_%d", x),
-                     (uint8_t*)temp,sizeof(T));
+                     (uint8_t *)temp, sizeof(T));
         usedCache.push_back(temp);
     }
 
@@ -1128,7 +1129,7 @@ IGbE::DescCache<T>::unserialize(CheckpointIn &cp)
     for (typename CacheType::size_type x = 0; x < unusedCacheSize; x++) {
         temp = new T;
         arrayParamIn(cp, csprintf("unusedCache_%d", x),
-                     (uint8_t*)temp,sizeof(T));
+                     (uint8_t *)temp, sizeof(T));
         unusedCache.push_back(temp);
     }
     Tick fetch_delay = 0, wb_delay = 0;
@@ -1495,7 +1496,7 @@ IGbE::RxDescCache::unserialize(CheckpointIn &cp)
 ///////////////////////////// IGbE::TxDescCache //////////////////////////////
 
 IGbE::TxDescCache::TxDescCache(IGbE *i, const std::string n, int s)
-    : DescCache<TxDesc>(i,n, s), pktDone(false), isTcp(false),
+    : DescCache<TxDesc>(i, n, s), pktDone(false), isTcp(false),
       pktWaiting(false), pktMultiDesc(false),
       completionAddress(0), completionEnabled(false),
       useTso(false), tsoHeaderLen(0), tsoMss(0), tsoTotalLen(0), tsoUsedLen(0),
@@ -1679,7 +1680,7 @@ IGbE::TxDescCache::getPacketData(EthPacketPtr p)
             DPRINTF(EthernetDesc,
                     "Loading TSO header (%d bytes) into start of packet\n",
                     tsoHeaderLen);
-            memcpy(p->data, &tsoHeader,tsoHeaderLen);
+            memcpy(p->data, &tsoHeader, tsoHeaderLen);
             p->length +=tsoHeaderLen;
             tsoPktHasHeader = true;
         }
@@ -1738,7 +1739,7 @@ IGbE::TxDescCache::pktComplete()
 
 
     if ((!txd_op::eop(desc) && !useTso) ||
-        (pktPtr->length < ( tsoMss + tsoHeaderLen) &&
+        (pktPtr->length < (tsoMss + tsoHeaderLen) &&
          tsoTotalLen != tsoUsedLen && useTso)) {
         assert(!useTso || (tsoDescBytesUsed == txd_op::getLen(desc)));
         unusedCache.pop_front();
@@ -1909,7 +1910,7 @@ IGbE::TxDescCache::actionAfterWb()
                 "Completion writing back value: %d to addr: %#x\n", descEnd,
                 completionAddress);
         igbe->dmaWrite(pciToDma(mbits(completionAddress, 63, 2)),
-                       sizeof(descEnd), &nullEvent, (uint8_t*)&descEnd, 0);
+                       sizeof(descEnd), &nullEvent, (uint8_t *)&descEnd, 0);
     }
 }
 
@@ -2369,7 +2370,7 @@ IGbE::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(eeOpcode);
     SERIALIZE_SCALAR(eeAddr);
     SERIALIZE_SCALAR(lastInterrupt);
-    SERIALIZE_ARRAY(flash,igbreg::EEPROM_SIZE);
+    SERIALIZE_ARRAY(flash, igbreg::EEPROM_SIZE);
 
     rxFifo.serialize("rxfifo", cp);
     txFifo.serialize("txfifo", cp);
@@ -2420,7 +2421,7 @@ IGbE::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(eeOpcode);
     UNSERIALIZE_SCALAR(eeAddr);
     UNSERIALIZE_SCALAR(lastInterrupt);
-    UNSERIALIZE_ARRAY(flash,igbreg::EEPROM_SIZE);
+    UNSERIALIZE_ARRAY(flash, igbreg::EEPROM_SIZE);
 
     rxFifo.unserialize("rxfifo", cp);
     txFifo.unserialize("txfifo", cp);
