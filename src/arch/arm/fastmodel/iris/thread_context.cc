@@ -45,6 +45,7 @@
 #include <vector>
 
 #include "arch/arm/fastmodel/iris/cpu.hh"
+#include "arch/arm/fastmodel/iris/memory_spaces.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
 #include "base/logging.hh"
@@ -70,6 +71,10 @@ ThreadContext::initFromIrisInstance(const ResourceMap &resources)
     suspend();
 
     call().memory_getMemorySpaces(_instId, memorySpaces);
+    for (const auto &space: memorySpaces) {
+        memorySpaceIds.emplace(
+            Iris::CanonicalMsn(space.canonicalMsn), space.spaceId);
+    }
     call().memory_getUsefulAddressTranslations(_instId, translations);
 
     typedef ThreadContext Self;
@@ -118,6 +123,13 @@ ThreadContext::extractResourceMap(
 
         ids[idx] = extractResourceId(resources, name);
     }
+}
+
+iris::MemorySpaceId
+ThreadContext::getMemorySpaceId(const Iris::CanonicalMsn& msn) const
+{
+    auto it = memorySpaceIds.find(msn);
+    return it == memorySpaceIds.end() ? iris::IRIS_UINT64_MAX : it->second;
 }
 
 void

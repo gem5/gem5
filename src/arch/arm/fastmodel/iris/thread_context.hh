@@ -31,7 +31,9 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <unordered_map>
 
+#include "arch/arm/fastmodel/iris/memory_spaces.hh"
 #include "arch/arm/regs/vec.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -55,6 +57,9 @@ class ThreadContext : public gem5::ThreadContext
 
     typedef std::vector<iris::ResourceId> ResourceIds;
     typedef std::map<int, std::string> IdxNameMap;
+
+    typedef std::unordered_map<Iris::CanonicalMsn, iris::MemorySpaceId>
+        MemorySpaceMap;
 
   protected:
     gem5::BaseCPU *_cpu;
@@ -81,6 +86,7 @@ class ThreadContext : public gem5::ThreadContext
             const ResourceMap &resources, const std::string &name);
     void extractResourceMap(ResourceIds &ids,
             const ResourceMap &resources, const IdxNameMap &idx_names);
+    iris::MemorySpaceId getMemorySpaceId(const Iris::CanonicalMsn& msn) const;
 
 
     ResourceIds miscRegIds;
@@ -97,6 +103,7 @@ class ThreadContext : public gem5::ThreadContext
 
     std::vector<iris::MemorySpaceInfo> memorySpaces;
     std::vector<iris::MemorySupportedAddressTranslationResult> translations;
+    MemorySpaceMap memorySpaceIds;
 
     // A queue to keep track of instruction count based events.
     EventQueue comInstEventQueue;
