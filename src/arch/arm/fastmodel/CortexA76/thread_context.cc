@@ -67,15 +67,8 @@ CortexA76TC::translateAddress(Addr &paddr, Addr vaddr)
         Iris::PhysicalMemorySecureMsn : Iris::PhysicalMemoryNonSecureMsn;
 
     // Figure out what memory spaces match the canonical numbers we need.
-    iris::MemorySpaceId in = iris::IRIS_UINT64_MAX;
-    iris::MemorySpaceId out = iris::IRIS_UINT64_MAX;
-
-    for (auto &space: memorySpaces) {
-        if (space.canonicalMsn == in_msn)
-            in = space.spaceId;
-        else if (space.canonicalMsn == out_msn)
-            out = space.spaceId;
-    }
+    iris::MemorySpaceId in = getMemorySpaceId(in_msn);
+    iris::MemorySpaceId out = getMemorySpaceId(out_msn);
 
     panic_if(in == iris::IRIS_UINT64_MAX || out == iris::IRIS_UINT64_MAX,
             "Canonical IRIS memory space numbers not found.");
@@ -188,14 +181,13 @@ const std::vector<iris::MemorySpaceId> &
 CortexA76TC::getBpSpaceIds() const
 {
     if (bpSpaceIds.empty()) {
-        for (auto &space: memorySpaces) {
-            auto cmsn = space.canonicalMsn;
-            if (cmsn == Iris::SecureMonitorMsn ||
-                    cmsn == Iris::GuestMsn ||
-                    cmsn == Iris::NsHypMsn ||
-                    cmsn == Iris::HypAppMsn) {
-                bpSpaceIds.push_back(space.spaceId);
-            }
+        std::vector<Iris::CanonicalMsn> msns{
+            Iris::SecureMonitorMsn, Iris::GuestMsn, Iris::NsHypMsn,
+            Iris::HypAppMsn};
+        for (auto &msn : msns) {
+            auto id = getMemorySpaceId(msn);
+            if (id != iris::IRIS_UINT64_MAX)
+                bpSpaceIds.push_back(id);
         }
         panic_if(bpSpaceIds.empty(),
                 "Unable to find address space(s) for breakpoints.");
