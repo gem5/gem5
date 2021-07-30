@@ -769,7 +769,6 @@ def makeTheISA(source, target, env):
 
 #define THE_ISA ${{define(target_isa)}}
 #define TheISA ${{namespace(target_isa)}}
-#define THE_ISA_STR "${{target_isa}}"
 
 #endif // __CONFIG_THE_ISA_HH__''')
 
