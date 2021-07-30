@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2014, 2017-2019 ARM Limited
+ * Copyright (c) 2012, 2014, 2017-2019, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -583,6 +583,62 @@ class AddrRange
         } else {
             return a - _start;
         }
+    }
+
+    /**
+     * Subtract a list of intervals from the range and return
+     * the resulting collection of ranges, so that the union
+     * of the two lists cover the original range
+     *
+     * The exclusion list can contain overlapping ranges
+     * Interleaving ranges are not supported and will fail the
+     * assertion.
+     *
+     * @param the input exclusion list
+     * @return the resulting collection of ranges
+     *
+     * @ingroup api_addr_range
+     */
+    std::vector<AddrRange>
+    exclude(const std::vector<AddrRange> &exclude_ranges)
+    {
+        assert(!interleaved());
+
+        auto sorted_ranges = exclude_ranges;
+        std::sort(sorted_ranges.begin(), sorted_ranges.end());
+
+        std::vector<AddrRange> ranges;
+
+        Addr next_start = start();
+        for (const auto &e : sorted_ranges) {
+            assert(!e.interleaved());
+            if (!intersects(e)) {
+                continue;
+            }
+
+            if (e.start() <= next_start) {
+                if (e.end() < end()) {
+                    if (next_start < e.end()) {
+                        next_start = e.end();
+                    }
+                } else {
+                    return ranges;
+                }
+            } else {
+                ranges.push_back(AddrRange(next_start, e.start()));
+                if (e.end() < end()) {
+                    next_start = e.end();
+                } else {
+                    return ranges;
+                }
+            }
+        }
+
+        if (next_start < end()) {
+            ranges.push_back(AddrRange(next_start, end()));
+        }
+
+        return ranges;
     }
 
     /**

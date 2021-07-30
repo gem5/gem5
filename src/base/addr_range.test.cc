@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019 The Regents of the University of California
- * Copyright (c) 2018-2019 ARM Limited
+ * Copyright (c) 2018-2019, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1089,4 +1089,339 @@ TEST(AddrRangeTest, RangeSizeConstruction){
     AddrRange r = RangeSize(0x5, 5);
     EXPECT_EQ(0x5, r.start());
     EXPECT_EQ(0xA, r.end());
+}
+
+/*
+ * The exclude list is excluding the entire range: return an empty
+ * list of ranges
+ *
+ * |---------------------|
+ * |       range         |
+ * |---------------------|
+ *
+ * |------------------------------|
+ * |       exclude_range          |
+ * |------------------------------|
+ */
+TEST(AddrRangeTest, ExcludeAll)
+{
+    const std::vector<AddrRange> exclude_ranges{
+        AddrRange(0x0, 0x200)
+    };
+
+    AddrRange r(0x00, 0x100);
+    auto ranges = r.exclude(exclude_ranges);
+
+    EXPECT_TRUE(ranges.empty());
+}
+
+/*
+ * The exclude list is excluding the entire range: return an empty
+ * list of ranges. The exclude_range = range
+ *
+ * |---------------------|
+ * |       range         |
+ * |---------------------|
+ *
+ * |---------------------|
+ * |    exclude_range    |
+ * |---------------------|
+ */
+TEST(AddrRangeTest, ExcludeAllEqual)
+{
+    const std::vector<AddrRange> exclude_ranges{
+        AddrRange(0x0, 0x100)
+    };
+
+    AddrRange r(0x00, 0x100);
+    auto ranges = r.exclude(exclude_ranges);
+
+    EXPECT_TRUE(ranges.empty());
+}
+
+/*
+ * The exclude list is made of multiple adjacent ranges covering the entire
+ * interval: return an empty list of ranges.
+ *
+ * |---------------------------------------------------------------|
+ * |                            range                              |
+ * |---------------------------------------------------------------|
+ *
+ * |--------------------------|---------------|--------------------------|
+ * |       exclude_range      | exclude_range |       exclude_range      |
+ * |--------------------------|---------------|--------------------------|
+ */
+TEST(AddrRangeTest, ExcludeAllMultiple)
+{
+    const std::vector<AddrRange> exclude_ranges{
+        AddrRange(0x0, 0x30),
+        AddrRange(0x30, 0x40),
+        AddrRange(0x40, 0x120)
+    };
+
+    AddrRange r(0x00, 0x100);
+    auto ranges = r.exclude(exclude_ranges);
+
+    EXPECT_TRUE(ranges.empty());
+}
+
+/*
+ * ExcludeAllOverlapping:
+ * The exclude list is made of multiple overlapping ranges covering the entire
+ * interval: return an empty list of ranges.
+ *
+ *           |-----------------------------------|
+ *           |              range                |
+ *           |-----------------------------------|
+ *
+ *  |-----------------------------|
+ *  |       exclude_range         |
+ *  |-----------------------------|
+ *                          |-----------------------------|
+ *                          |       exclude_range         |
+ *                          |-----------------------------|
+ */
+TEST(AddrRangeTest, ExcludeAllOverlapping)
+{
+    const std::vector<AddrRange> exclude_ranges{
+        AddrRange(0x0, 0x150),
+        AddrRange(0x140, 0x220)
+    };
+
+    AddrRange r(0x100, 0x200);
+
+    auto ranges = r.exclude(exclude_ranges);
+
+    EXPECT_TRUE(ranges.empty());
+}
+
+/*
+ * The exclude list is empty:
+ * the return list contains the unmodified range
+ *
+ * |---------------------|
+ * |       range         |
+ * |---------------------|
+ *
+ */
+TEST(AddrRangeTest, ExcludeEmpty)
+{
+    const std::vector<AddrRange> exclude_ranges;
+
+    AddrRange r(0x00, 0x100);
+    auto ranges = r.exclude(exclude_ranges);
+
+    EXPECT_EQ(ranges.size(), 1);
+    EXPECT_EQ(ranges.front(), r);
+}
+
+
+/*
+ * Ranges do not overlap:
+ * the return list contains the unmodified range
+ *
+ * |---------------------|
+ * |       range         |
+ * |---------------------|
+ *
+ *                       |------------------------------|
+ *                       |       exclude_range          |
+ *                       |------------------------------|
+ */
+TEST(AddrRangeTest, NoExclusion)
+{
+    const std::vector<AddrRange> exclude_ranges{
+        AddrRange(0x100, 0x200)
+    };
+
+    AddrRange r(0x00, 0x100);
+    auto ranges = r.exclude(exclude_ranges);
+
+    EXPECT_EQ(ranges.size(), 1);
+    EXPECT_EQ(ranges.front(), r);
+}
+
+/*
+ * DoubleExclusion:
+ * The exclusion should return two ranges:
+ * AddrRange(0x130, 0x140)
+ * AddrRange(0x170, 0x200)
+ *
+ *           |-----------------------------------|
+ *           |              range                |
+ *           |-----------------------------------|
+ *
+ *  |-----------------|  |-----------------|
+ *  |  exclude_range  |  |  exclude_range  |
+ *  |-----------------|  |-----------------|
+ */
+TEST(AddrRangeTest, DoubleExclusion)
+{
+    const std::vector<AddrRange> exclude_ranges{
+        AddrRange(0x000, 0x130),
+        AddrRange(0x140, 0x170),
+    };
+
+    const AddrRange expected_range1(0x130, 0x140);
+    const AddrRange expected_range2(0x170, 0x200);
+
+    AddrRange r(0x100, 0x200);
+    auto ranges = r.exclude(exclude_ranges);
+
+    EXPECT_EQ(ranges.size(), 2);
+    EXPECT_EQ(ranges[0], expected_range1);
+    EXPECT_EQ(ranges[1], expected_range2);
+}
+
+/*
+ * MultipleExclusion:
+ * The exclusion should return two ranges:
+ * AddrRange(0x130, 0x140)
+ * AddrRange(0x170, 0x180)
+ *
+ *           |-----------------------------------|
+ *           |              range                |
+ *           |-----------------------------------|
+ *
+ *  |-----------------|  |-----------------|  |-----------------|
+ *  |  exclude_range  |  |  exclude_range  |  |  exclude_range  |
+ *  |-----------------|  |-----------------|  |-----------------|
+ */
+TEST(AddrRangeTest, MultipleExclusion)
+{
+    const std::vector<AddrRange> exclude_ranges{
+        AddrRange(0x000, 0x130),
+        AddrRange(0x140, 0x170),
+        AddrRange(0x180, 0x210)
+    };
+
+    const AddrRange expected_range1(0x130, 0x140);
+    const AddrRange expected_range2(0x170, 0x180);
+
+    AddrRange r(0x100, 0x200);
+    auto ranges = r.exclude(exclude_ranges);
+
+    EXPECT_EQ(ranges.size(), 2);
+    EXPECT_EQ(ranges[0], expected_range1);
+    EXPECT_EQ(ranges[1], expected_range2);
+}
+
+/*
+ * MultipleExclusionOverlapping:
+ * The exclusion should return one range:
+ * AddrRange(0x130, 0x140)
+ *
+ *           |-----------------------------------|
+ *           |              range                |
+ *           |-----------------------------------|
+ *
+ *  |-----------------|  |-----------------|
+ *  |  exclude_range  |  |  exclude_range  |
+ *  |-----------------|  |-----------------|
+ *                                 |-----------------|
+ *                                 |  exclude_range  |
+ *                                 |-----------------|
+ */
+TEST(AddrRangeTest, MultipleExclusionOverlapping)
+{
+    const std::vector<AddrRange> exclude_ranges{
+        AddrRange(0x000, 0x130),
+        AddrRange(0x140, 0x170),
+        AddrRange(0x150, 0x210)
+    };
+
+    const AddrRange expected_range1(0x130, 0x140);
+
+    AddrRange r(0x100, 0x200);
+    auto ranges = r.exclude(exclude_ranges);
+
+    EXPECT_EQ(ranges.size(), 1);
+    EXPECT_EQ(ranges[0], expected_range1);
+}
+
+/*
+ * ExclusionOverlapping:
+ * The exclusion should return two range:
+ * AddrRange(0x100, 0x120)
+ * AddrRange(0x180, 0x200)
+ *
+ *           |-----------------------------------|
+ *           |              range                |
+ *           |-----------------------------------|
+ *
+ *                   |--------------------|
+ *                   |    exclude_range   |
+ *                   |--------------------|
+ *
+ *                      |---------------|
+ *                      | exclude_range |
+ *                      |---------------|
+ */
+TEST(AddrRangeTest, ExclusionOverlapping)
+{
+    const std::vector<AddrRange> exclude_ranges{
+        AddrRange(0x120, 0x180),
+        AddrRange(0x130, 0x170)
+    };
+
+    const AddrRange expected_range1(0x100, 0x120);
+    const AddrRange expected_range2(0x180, 0x200);
+
+    AddrRange r(0x100, 0x200);
+    auto ranges = r.exclude(exclude_ranges);
+
+    EXPECT_EQ(ranges.size(), 2);
+    EXPECT_EQ(ranges[0], expected_range1);
+    EXPECT_EQ(ranges[1], expected_range2);
+}
+
+/*
+ * MultipleExclusionUnsorted:
+ * The exclusion should return two ranges:
+ * AddrRange(0x130, 0x140)
+ * AddrRange(0x170, 0x180)
+ * Same as MultipleExclusion, but the exclude list is provided
+ * in unsorted order
+ *
+ *           |-----------------------------------|
+ *           |              range                |
+ *           |-----------------------------------|
+ *
+ *  |-----------------|  |-----------------|  |-----------------|
+ *  |  exclude_range  |  |  exclude_range  |  |  exclude_range  |
+ *  |-----------------|  |-----------------|  |-----------------|
+ */
+TEST(AddrRangeTest, MultipleExclusionUnsorted)
+{
+    const std::vector<AddrRange> exclude_ranges{
+        AddrRange(0x180, 0x210),
+        AddrRange(0x000, 0x130),
+        AddrRange(0x140, 0x170)
+    };
+
+    const AddrRange expected_range1(0x130, 0x140);
+    const AddrRange expected_range2(0x170, 0x180);
+
+    AddrRange r(0x100, 0x200);
+    auto ranges = r.exclude(exclude_ranges);
+
+    EXPECT_EQ(ranges.size(), 2);
+    EXPECT_EQ(ranges[0], expected_range1);
+    EXPECT_EQ(ranges[1], expected_range2);
+}
+
+/*
+ * InterleavingRanges:
+ * The exclude method does not support interleaving ranges
+ */
+TEST(AddrRangeDeathTest, ExcludeInterleavingRanges)
+{
+    const std::vector<AddrRange> exclude_ranges{
+        AddrRange(0x180, 0x210),
+    };
+
+    AddrRange r(0x100, 0x200, {1}, 0);
+
+    EXPECT_TRUE(r.interleaved());
+    EXPECT_DEATH(r.exclude(exclude_ranges), "");
 }
