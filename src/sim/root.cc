@@ -42,7 +42,6 @@
 #include "base/hostinfo.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "debug/TimeSync.hh"
 #include "sim/core.hh"
 #include "sim/cur_tick.hh"
@@ -206,8 +205,6 @@ void
 Root::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(FullSystem);
-    std::string isa = THE_ISA_STR;
-    SERIALIZE_SCALAR(isa);
 
     globals.serializeSection(cp, "globals");
 }
