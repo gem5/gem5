@@ -166,7 +166,8 @@ class IllegalInstFault : public InstFault
 
   public:
     IllegalInstFault(std::string r, const ExtMachInst inst)
-        : InstFault("Illegal instruction", inst)
+        : InstFault("Illegal instruction", inst),
+          reason(r)
     {}
 
     void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
