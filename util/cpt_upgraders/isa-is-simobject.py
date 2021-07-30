@@ -1,7 +1,9 @@
 # The ISA is now a separate SimObject, which means that we serialize
 # it in a separate section instead of as a part of the ThreadContext.
 def upgrader(cpt):
-    isa = cpt.get('root','isa')
+    isa = cpt.get('root', 'isa', fallback='')
+    if isa == '':
+        return
     isa_fields = {
         "arm" : ( "miscRegs" ),
         "sparc" : ( "asi", "tick", "fprs", "gsr", "softint", "tick_cmpr",

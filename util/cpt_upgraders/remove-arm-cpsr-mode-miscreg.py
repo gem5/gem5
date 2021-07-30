@@ -1,6 +1,6 @@
 # Remove the MISCREG_CPSR_MODE register from the ARM register file
 def upgrader(cpt):
-    if cpt.get('root','isa') == 'arm':
+    if cpt.get('root', 'isa', fallback='') == 'arm':
         for sec in cpt.sections():
             import re
             # Search for all ISA sections

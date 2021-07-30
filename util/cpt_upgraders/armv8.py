@@ -1,6 +1,6 @@
 # Add all ARMv8 state
 def upgrader(cpt):
-    if cpt.get('root','isa') != 'arm':
+    if cpt.get('root', 'isa', fallback='') != 'arm':
         return
     import re
     print("Warning: The size of the FP register file has changed. "

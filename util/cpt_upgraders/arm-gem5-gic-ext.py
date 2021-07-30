@@ -38,7 +38,7 @@ def upgrader(cpt):
     structures. Resize them to match the new GIC."""
 
     import re
-    if cpt.get('root','isa') != 'arm':
+    if cpt.get('root', 'isa', fallback='') != 'arm':
         return
 
     old_cpu_max = 8

@@ -7,7 +7,7 @@ def upgrader(cpt):
     2) Set isa.sveVL to 1
     3) Add SVE misc registers in the checkpoint
     """
-    if cpt.get('root','isa') == 'arm':
+    if cpt.get('root', 'isa', fallback='') == 'arm':
         for sec in cpt.sections():
             import re
             # Search for all ISA sections

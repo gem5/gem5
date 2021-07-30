@@ -1,6 +1,6 @@
 # Add TLB to x86 checkpoints
 def upgrader(cpt):
-    if cpt.get('root','isa') == 'x86':
+    if cpt.get('root', 'isa', fallback='') == 'x86':
         for sec in cpt.sections():
             import re
             # Search for all ISA sections

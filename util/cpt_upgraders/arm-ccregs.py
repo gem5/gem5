@@ -1,7 +1,7 @@
 # Use condition code registers for the ARM architecture.
 # Previously the integer register file was used for these registers.
 def upgrader(cpt):
-    if cpt.get('root','isa') == 'arm':
+    if cpt.get('root', 'isa', fallback='') == 'arm':
         for sec in cpt.sections():
             import re
 
