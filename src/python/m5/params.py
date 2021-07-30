@@ -864,6 +864,17 @@ class AddrRange(ParamValue):
         return AddrRange(int(self.start), int(self.end),
                          self.masks, int(self.intlvMatch))
 
+    def exclude(self, ranges):
+        from _m5.range import AddrRangeVector
+
+        # The wrapped C++ class is assuming an AddrRangeVector
+        # We are therefore converting to it before excluding ranges
+        # and reconverting it into a list of AddrRange before returning
+        pybind_exclude = AddrRangeVector([ r.getValue() for r in ranges ])
+        pybind_include = self.getValue().exclude(pybind_exclude)
+
+        return [ AddrRange(r.start(), r.end()) for r in pybind_include ]
+
 # Boolean parameter type.  Python doesn't let you subclass bool, since
 # it doesn't want to let you create multiple instances of True and
 # False.  Thus this is a little more complicated than String.

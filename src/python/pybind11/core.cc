@@ -167,6 +167,7 @@ init_range(py::module_ &m_native)
         .def("mergesWith", &AddrRange::mergesWith)
         .def("intersects", &AddrRange::intersects)
         .def("isSubset", &AddrRange::isSubset)
+        .def("exclude", &AddrRange::exclude)
         ;
 
     // We need to make vectors of AddrRange opaque to avoid weird
