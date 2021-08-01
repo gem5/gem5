@@ -37,4 +37,4 @@
 
 Import('*')
 
-CpuModel('MinorCPU')
+main.Append(ALL_CPU_MODELS=['MinorCPU'])

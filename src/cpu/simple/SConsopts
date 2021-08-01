@@ -28,5 +28,4 @@
 
 Import('*')
 
-CpuModel('AtomicSimpleCPU')
-CpuModel('TimingSimpleCPU')
+main.Append(ALL_CPU_MODELS=['AtomicSimpleCPU', 'TimingSimpleCPU'])

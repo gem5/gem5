@@ -709,7 +709,7 @@ for opt in export_vars:
     env.ConfigFile(opt)
 
 def makeTheISA(source, target, env):
-    isas = [ src.get_contents().decode('utf-8') for src in source ]
+    isas = sorted(set(env.Split('${ALL_ISAS}')))
     target_isa = env['TARGET_ISA']
     is_null_isa = '1' if (target_isa.lower() == 'null') else '0'
 
@@ -740,11 +740,11 @@ def makeTheISA(source, target, env):
 
     code.write(str(target[0]))
 
-env.Command('config/the_isa.hh', list(map(Value, all_isa_list)),
+env.Command('config/the_isa.hh', [],
             MakeAction(makeTheISA, Transform("CFG ISA", 0)))
 
 def makeTheGPUISA(source, target, env):
-    isas = [ src.get_contents().decode('utf-8') for src in source ]
+    isas = sorted(set(env.Split('${ALL_ISAS}')))
     target_gpu_isa = env['TARGET_GPU_ISA']
     def define(isa):
         return str(isa.upper()) + '_ISA'
@@ -782,7 +782,7 @@ def makeTheGPUISA(source, target, env):
 
     code.write(str(target[0]))
 
-env.Command('config/the_gpu_isa.hh', list(map(Value, all_gpu_isa_list)),
+env.Command('config/the_gpu_isa.hh', [],
             MakeAction(makeTheGPUISA, Transform("CFG ISA", 0)))
 
 ########################################################################

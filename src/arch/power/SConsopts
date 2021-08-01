@@ -28,4 +28,4 @@
 
 Import('*')
 
-all_isa_list.append('power')
+main.Append(ALL_ISAS=['power'])

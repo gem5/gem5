@@ -37,4 +37,4 @@
 
 Import('*')
 
-all_isa_list.append('null')
+main.Append(ALL_ISAS=['null'])

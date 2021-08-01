@@ -28,4 +28,4 @@
 
 Import('*')
 
-CpuModel('CheckerCPU')
+main.Append(ALL_CPU_MODELS=['CheckerCPU'])
