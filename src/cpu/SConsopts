@@ -25,29 +25,12 @@
 
 Import('*')
 
-class CpuModel(object):
-    '''The CpuModel class encapsulates everything the ISA parser needs to
-    know about a particular CPU model.'''
-
-    # Dict of available CPU model objects.  Accessible as CpuModel.dict.
-    dict = {}
-
-    # Constructor.  Automatically adds models to CpuModel.dict.
-    def __init__(self, name, default=False):
-        self.name = name           # name of model
-
-        # This cpu is enabled by default
-        self.default = default
-
-        # Add self to dict
-        if name in CpuModel.dict:
-            raise AttributeError("CpuModel '%s' already registered" % name)
-        CpuModel.dict[name] = self
+all_cpus = set()
+def CpuModel(name):
+    all_cpus.add(name)
 
 Export('CpuModel')
 
 def add_cpu_models_var():
-    sticky_vars.Add(ListVariable('CPU_MODELS', 'CPU models',
-                sorted(n for n,m in CpuModel.dict.items() if m.default),
-                sorted(CpuModel.dict.keys())))
+    sticky_vars.Add(ListVariable('CPU_MODELS', 'CPU models', [], all_cpus))
 AfterSConsopts(add_cpu_models_var)

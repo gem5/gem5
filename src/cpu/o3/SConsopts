@@ -28,4 +28,4 @@
 
 Import('*')
 
-CpuModel('O3CPU', default=True)
+CpuModel('O3CPU')

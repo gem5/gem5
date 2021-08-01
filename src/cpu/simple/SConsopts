@@ -28,5 +28,5 @@
 
 Import('*')
 
-CpuModel('AtomicSimpleCPU', default=True)
-CpuModel('TimingSimpleCPU', default=True)
+CpuModel('AtomicSimpleCPU')
+CpuModel('TimingSimpleCPU')

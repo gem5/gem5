@@ -37,4 +37,4 @@
 
 Import('*')
 
-CpuModel('MinorCPU', default=True)
+CpuModel('MinorCPU')
