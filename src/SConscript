@@ -744,39 +744,17 @@ env.Command('config/the_isa.hh', [],
             MakeAction(makeTheISA, Transform("CFG ISA", 0)))
 
 def makeTheGPUISA(source, target, env):
-    isas = sorted(set(env.Split('${ALL_ISAS}')))
     target_gpu_isa = env['TARGET_GPU_ISA']
-    def define(isa):
-        return str(isa.upper()) + '_ISA'
 
     def namespace(isa):
         return isa[0].upper() + isa[1:].lower() + 'ISA'
-
 
     code = code_formatter()
     code('''\
 #ifndef __CONFIG_THE_GPU_ISA_HH__
 #define __CONFIG_THE_GPU_ISA_HH__
 
-''')
-
-    # create defines for the preprocessing and compile-time determination
-    for i,isa in enumerate(isas):
-        code('#define $0 $1', define(isa), i + 1)
-    code()
-
-    # create an enum for any run-time determination of the ISA, we
-    # reuse the same name as the namespaces
-    code('enum class GPUArch {')
-    for isa in isas:
-        code('  $0 = $1,', namespace(isa), define(isa))
-    code('};')
-
-    code('''
-
-#define THE_GPU_ISA ${{define(target_gpu_isa)}}
 #define TheGpuISA ${{namespace(target_gpu_isa)}}
-#define THE_GPU_ISA_STR "${{target_gpu_isa}}"
 
 #endif // __CONFIG_THE_GPU_ISA_HH__''')
 
