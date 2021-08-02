@@ -372,15 +372,6 @@ class TableWalker : public ClockedObject
 
     };
 
-    // Granule sizes for AArch64 long descriptors
-    enum GrainSize
-    {
-        Grain4KB  = 12,
-        Grain16KB = 14,
-        Grain64KB = 16,
-        ReservedGrain = 0
-    };
-
     /** Long-descriptor format (LPAE) */
     class LongDescriptor : public DescriptorBase
     {

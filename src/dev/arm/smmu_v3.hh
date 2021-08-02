@@ -52,7 +52,6 @@
 #include "dev/arm/smmu_v3_events.hh"
 #include "dev/arm/smmu_v3_ports.hh"
 #include "dev/arm/smmu_v3_proc.hh"
-#include "dev/arm/smmu_v3_ptops.hh"
 #include "mem/packet.hh"
 #include "params/SMMUv3.hh"
 #include "sim/clocked_object.hh"
@@ -171,8 +170,6 @@ class SMMUv3 : public ClockedObject
     EventWrapper<SMMUv3, &SMMUv3::processCommands> processCommandsEvent;
 
     void processCommand(const SMMUCommand &cmd);
-
-    const PageTableOps *getPageTableOps(uint8_t trans_granule);
 
   public:
     SMMUv3(const SMMUv3Params &p);

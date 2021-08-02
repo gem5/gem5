@@ -41,6 +41,7 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/mmu.hh"
+#include "arch/arm/pagetable.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
 #include "base/compiler.hh"
@@ -873,11 +874,6 @@ TableWalker::processWalkAArch64()
     DPRINTF(TLB, "Beginning table walk for address %#llx, TCR: %#llx\n",
             currState->vaddr_tainted, currState->tcr);
 
-    static const GrainSize GrainMap_tg0[] =
-      { Grain4KB, Grain64KB, Grain16KB, ReservedGrain };
-    static const GrainSize GrainMap_tg1[] =
-      { ReservedGrain, Grain16KB, Grain4KB, Grain64KB };
-
     stats.walkWaitTime.sample(curTick() - currState->startTime);
 
     // Determine TTBR, table size, granule size and phys. address range
@@ -953,18 +949,10 @@ TableWalker::processWalkAArch64()
             }
             tsz = 64 - currState->vtcr.t0sz64;
             tg = GrainMap_tg0[currState->vtcr.tg0];
-            // ARM DDI 0487A.f D7-2148
-            // The starting level of stage 2 translation depends on
-            // VTCR_EL2.SL0 and VTCR_EL2.TG0
-            LookupLevel __ = MAX_LOOKUP_LEVELS; // invalid level
-            uint8_t sl_tg = (currState->vtcr.sl0 << 2) | currState->vtcr.tg0;
-            static const LookupLevel SLL[] = {
-                L2, L3, L3, __, // sl0 == 0
-                L1, L2, L2, __, // sl0 == 1, etc.
-                L0, L1, L1, __,
-                __, __, __, __
-            };
-            start_lookup_level = SLL[sl_tg];
+
+            start_lookup_level = getPageTableOps(tg)->firstS2Level(
+                currState->vtcr.sl0);
+
             panic_if(start_lookup_level == MAX_LOOKUP_LEVELS,
                      "Cannot discern lookup level from vtcr.{sl0,tg0}");
             ps = currState->vtcr.ps;
@@ -1100,39 +1088,10 @@ TableWalker::processWalkAArch64()
     }
 
     // Determine starting lookup level
-    // See aarch64/translation/walk in Appendix G: ARMv8 Pseudocode Library
-    // in ARM DDI 0487A.  These table values correspond to the cascading tests
-    // to compute the lookup level and are of the form
-    // (grain_size + N*stride), for N = {1, 2, 3}.
-    // A value of 64 will never succeed and a value of 0 will always succeed.
     if (start_lookup_level == MAX_LOOKUP_LEVELS) {
-        struct GrainMap
-        {
-            GrainSize grain_size;
-            unsigned lookup_level_cutoff[MAX_LOOKUP_LEVELS];
-        };
-        static const GrainMap GM[] = {
-            { Grain4KB,  { 39, 30,  0, 0 } },
-            { Grain16KB, { 47, 36, 25, 0 } },
-            { Grain64KB, { 64, 42, 29, 0 } }
-        };
+        const auto* ptops = getPageTableOps(tg);
 
-        const unsigned *lookup = NULL; // points to a lookup_level_cutoff
-
-        for (unsigned i = 0; i < 3; ++i) { // choose entry of GM[]
-            if (tg == GM[i].grain_size) {
-                lookup = GM[i].lookup_level_cutoff;
-                break;
-            }
-        }
-        assert(lookup);
-
-        for (int L = L0; L != MAX_LOOKUP_LEVELS; ++L) {
-            if (tsz > lookup[L]) {
-                start_lookup_level = (LookupLevel) L;
-                break;
-            }
-        }
+        start_lookup_level = ptops->firstLevel(64 - tsz);
         panic_if(start_lookup_level == MAX_LOOKUP_LEVELS,
                  "Table walker couldn't find lookup level\n");
     }

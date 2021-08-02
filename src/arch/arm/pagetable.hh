@@ -56,6 +56,28 @@ namespace gem5
 namespace ArmISA
 {
 
+// Lookup level
+enum LookupLevel
+{
+    L0 = 0,  // AArch64 only
+    L1,
+    L2,
+    L3,
+    MAX_LOOKUP_LEVELS
+};
+
+// Granule sizes
+enum GrainSize
+{
+    Grain4KB  = 12,
+    Grain16KB = 14,
+    Grain64KB = 16,
+    ReservedGrain = 0
+};
+
+extern const GrainSize GrainMap_tg0[];
+extern const GrainSize GrainMap_tg1[];
+
 // Max. physical address range in bits supported by the architecture
 const unsigned MaxPhysAddrRange = 52;
 
@@ -74,14 +96,75 @@ struct PTE
 
 };
 
-// Lookup level
-enum LookupLevel
+struct PageTableOps
 {
-    L0 = 0,  // AArch64 only
-    L1,
-    L2,
-    L3,
-    MAX_LOOKUP_LEVELS
+    typedef int64_t pte_t;
+
+    virtual bool isValid(pte_t pte, unsigned level) const = 0;
+    virtual bool isLeaf(pte_t pte, unsigned level) const = 0;
+    virtual bool isWritable(pte_t pte, unsigned level, bool stage2) const = 0;
+    virtual Addr nextLevelPointer(pte_t pte, unsigned level) const = 0;
+    virtual Addr index(Addr va, unsigned level) const = 0;
+    virtual Addr pageMask(pte_t pte, unsigned level) const = 0;
+    virtual Addr walkMask(unsigned level) const = 0;
+    virtual LookupLevel firstLevel(uint8_t tsz) const = 0;
+    virtual LookupLevel firstS2Level(uint8_t sl0) const = 0;
+    virtual LookupLevel lastLevel() const = 0;
+};
+
+struct V7LPageTableOps : public PageTableOps
+{
+    bool isValid(pte_t pte, unsigned level) const override;
+    bool isLeaf(pte_t pte, unsigned level) const override;
+    bool isWritable(pte_t pte, unsigned level, bool stage2) const override;
+    Addr nextLevelPointer(pte_t pte, unsigned level) const override;
+    Addr index(Addr va, unsigned level) const override;
+    Addr pageMask(pte_t pte, unsigned level) const override;
+    Addr walkMask(unsigned level) const override;
+    LookupLevel firstLevel(uint8_t tsz) const override;
+    LookupLevel lastLevel() const override;
+};
+
+struct V8PageTableOps4k : public PageTableOps
+{
+    bool isValid(pte_t pte, unsigned level) const override;
+    bool isLeaf(pte_t pte, unsigned level) const override;
+    bool isWritable(pte_t pte, unsigned level, bool stage2) const override;
+    Addr nextLevelPointer(pte_t pte, unsigned level) const override;
+    Addr index(Addr va, unsigned level) const override;
+    Addr pageMask(pte_t pte, unsigned level) const override;
+    Addr walkMask(unsigned level) const override;
+    LookupLevel firstLevel(uint8_t tsz) const override;
+    LookupLevel firstS2Level(uint8_t sl0) const override;
+    LookupLevel lastLevel() const override;
+};
+
+struct V8PageTableOps16k : public PageTableOps
+{
+    bool isValid(pte_t pte, unsigned level) const override;
+    bool isLeaf(pte_t pte, unsigned level) const override;
+    bool isWritable(pte_t pte, unsigned level, bool stage2) const override;
+    Addr nextLevelPointer(pte_t pte, unsigned level) const override;
+    Addr index(Addr va, unsigned level) const override;
+    Addr pageMask(pte_t pte, unsigned level) const override;
+    Addr walkMask(unsigned level) const override;
+    LookupLevel firstLevel(uint8_t tsz) const override;
+    LookupLevel firstS2Level(uint8_t sl0) const override;
+    LookupLevel lastLevel() const override;
+};
+
+struct V8PageTableOps64k : public PageTableOps
+{
+    bool isValid(pte_t pte, unsigned level) const override;
+    bool isLeaf(pte_t pte, unsigned level) const override;
+    bool isWritable(pte_t pte, unsigned level, bool stage2) const override;
+    Addr nextLevelPointer(pte_t pte, unsigned level) const override;
+    Addr index(Addr va, unsigned level) const override;
+    Addr pageMask(pte_t pte, unsigned level) const override;
+    Addr walkMask(unsigned level) const override;
+    LookupLevel firstLevel(uint8_t tsz) const override;
+    LookupLevel firstS2Level(uint8_t sl0) const override;
+    LookupLevel lastLevel() const override;
 };
 
 // ITB/DTB table entry
@@ -388,6 +471,8 @@ struct TlbEntry : public Serializable
     }
 
 };
+
+const PageTableOps *getPageTableOps(GrainSize trans_granule);
 
 } // namespace ArmISA
 } // namespace gem5

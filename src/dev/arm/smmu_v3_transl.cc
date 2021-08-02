@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2019 ARM Limited
+ * Copyright (c) 2013, 2018-2019, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,6 +37,7 @@
 
 #include "dev/arm/smmu_v3_transl.hh"
 
+#include "arch/arm/pagetable.hh"
 #include "debug/SMMUv3.hh"
 #include "debug/SMMUv3Hazard.hh"
 #include "dev/arm/amba.hh"
@@ -45,6 +46,8 @@
 
 namespace gem5
 {
+
+using namespace ArmISA;
 
 SMMUTranslRequest
 SMMUTranslRequest::fromPacket(PacketPtr pkt, bool ats)
@@ -657,10 +660,11 @@ SMMUTranslationProcess::walkCacheLookup(
     const char *indent = stage==2 ? "  " : "";
     (void) indent; // this is only used in DPRINTFs
 
-    const PageTableOps *pt_ops =
-        stage == 1 ?
-            smmu.getPageTableOps(context.stage1TranslGranule) :
-            smmu.getPageTableOps(context.stage2TranslGranule);
+    const auto tg = stage == 1 ?
+        GrainMap_tg0[context.stage1TranslGranule] :
+        GrainMap_tg0[context.stage2TranslGranule];
+
+    const auto *pt_ops = getPageTableOps(tg);
 
     unsigned walkCacheLevels =
         smmu.walkCacheEnable ?
@@ -882,8 +886,8 @@ SMMUTranslationProcess::walkStage2(Yield &yield, Addr addr, bool final_tr,
 SMMUTranslationProcess::TranslResult
 SMMUTranslationProcess::translateStage1And2(Yield &yield, Addr addr)
 {
-    const PageTableOps *pt_ops =
-        smmu.getPageTableOps(context.stage1TranslGranule);
+    const auto tg = GrainMap_tg0[context.stage1TranslGranule];
+    const auto *pt_ops = getPageTableOps(tg);
 
     const WalkCache::Entry *walk_ep = NULL;
     unsigned level;
@@ -938,8 +942,8 @@ SMMUTranslationProcess::translateStage1And2(Yield &yield, Addr addr)
 SMMUTranslationProcess::TranslResult
 SMMUTranslationProcess::translateStage2(Yield &yield, Addr addr, bool final_tr)
 {
-    const PageTableOps *pt_ops =
-            smmu.getPageTableOps(context.stage2TranslGranule);
+    const auto tg = GrainMap_tg0[context.stage2TranslGranule];
+    const auto *pt_ops = getPageTableOps(tg);
 
     const IPACache::Entry *ipa_ep = NULL;
     if (smmu.ipaCacheEnable) {

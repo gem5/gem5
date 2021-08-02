@@ -76,7 +76,6 @@ Source('smmu_v3_cmdexec.cc', tags='arm isa');
 Source('smmu_v3_events.cc', tags='arm isa');
 Source('smmu_v3_ports.cc', tags='arm isa');
 Source('smmu_v3_proc.cc', tags='arm isa');
-Source('smmu_v3_ptops.cc', tags='arm isa');
 Source('smmu_v3_deviceifc.cc', tags='arm isa');
 Source('smmu_v3_transl.cc', tags='arm isa');
 Source('timer_sp804.cc', tags='arm isa')

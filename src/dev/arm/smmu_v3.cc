@@ -567,22 +567,6 @@ SMMUv3::processCommand(const SMMUCommand &cmd)
     }
 }
 
-const PageTableOps*
-SMMUv3::getPageTableOps(uint8_t trans_granule)
-{
-    static V8PageTableOps4k  ptOps4k;
-    static V8PageTableOps16k ptOps16k;
-    static V8PageTableOps64k ptOps64k;
-
-    switch (trans_granule) {
-    case TRANS_GRANULE_4K:  return &ptOps4k;
-    case TRANS_GRANULE_16K: return &ptOps16k;
-    case TRANS_GRANULE_64K: return &ptOps64k;
-    default:
-        panic("Unknown translation granule size %d", trans_granule);
-    }
-}
-
 Tick
 SMMUv3::readControl(PacketPtr pkt)
 {

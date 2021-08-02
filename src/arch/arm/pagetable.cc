@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2019 ARM Limited
+ * Copyright (c) 2013, 2018-2019, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,13 +35,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "dev/arm/smmu_v3_ptops.hh"
+#include "arch/arm/pagetable.hh"
 
 #include "base/bitfield.hh"
 #include "base/logging.hh"
 
 namespace gem5
 {
+
+namespace ArmISA
+{
+
+const GrainSize GrainMap_tg0[] =
+  { Grain4KB, Grain64KB, Grain16KB, ReservedGrain };
+const GrainSize GrainMap_tg1[] =
+  { ReservedGrain, Grain16KB, Grain4KB, Grain64KB };
 
 bool
 V7LPageTableOps::isValid(pte_t pte, unsigned level) const
@@ -122,16 +130,16 @@ V7LPageTableOps::walkMask(unsigned level) const
     }
 }
 
-unsigned
+LookupLevel
 V7LPageTableOps::firstLevel(uint8_t tsz) const
 {
-    return 1;
+    return L1;
 }
 
-unsigned
+LookupLevel
 V7LPageTableOps::lastLevel() const
 {
-    return 3;
+    return L3;
 }
 
 bool
@@ -216,20 +224,31 @@ V8PageTableOps4k::walkMask(unsigned level) const
     }
 }
 
-unsigned
+LookupLevel
 V8PageTableOps4k::firstLevel(uint8_t tsz) const
 {
-    if (tsz >= 16 && tsz <= 24) return 0;
-    if (tsz >= 25 && tsz <= 33) return 1;
-    if (tsz >= 34 && tsz <= 39) return 2;
+    if (tsz >= 16 && tsz <= 24) return L0;
+    if (tsz >= 25 && tsz <= 33) return L1;
+    if (tsz >= 34 && tsz <= 39) return L2;
 
     panic("Unsupported TnSZ: %d\n", tsz);
 }
 
-unsigned
+LookupLevel
+V8PageTableOps4k::firstS2Level(uint8_t sl0) const
+{
+    switch (sl0) {
+      case 0: return L2;
+      case 1: return L1;
+      case 2: return L0;
+      default: panic("Unsupported VTCR_EL2.SL0: %d", sl0);
+    }
+}
+
+LookupLevel
 V8PageTableOps4k::lastLevel() const
 {
-    return 3;
+    return L3;
 }
 
 bool
@@ -316,21 +335,32 @@ V8PageTableOps16k::walkMask(unsigned level) const
     }
 }
 
-unsigned
+LookupLevel
 V8PageTableOps16k::firstLevel(uint8_t tsz) const
 {
-    if (tsz == 16) return 0;
-    if (tsz >= 17 && tsz <= 27) return 1;
-    if (tsz >= 28 && tsz <= 38) return 2;
-    if (tsz == 39) return 3;
+    if (tsz == 16) return L0;
+    if (tsz >= 17 && tsz <= 27) return L1;
+    if (tsz >= 28 && tsz <= 38) return L2;
+    if (tsz == 39) return L3;
 
     panic("Unsupported TnSZ: %d\n", tsz);
 }
 
-unsigned
+LookupLevel
+V8PageTableOps16k::firstS2Level(uint8_t sl0) const
+{
+    switch (sl0) {
+      case 0: return L3;
+      case 1: return L2;
+      case 2: return L1;
+      default: panic("Unsupported VTCR_EL2.SL0: %d", sl0);
+    }
+}
+
+LookupLevel
 V8PageTableOps16k::lastLevel() const
 {
-    return 3;
+    return L3;
 }
 
 bool
@@ -409,20 +439,48 @@ V8PageTableOps64k::walkMask(unsigned level) const
     }
 }
 
-unsigned
+LookupLevel
 V8PageTableOps64k::firstLevel(uint8_t tsz) const
 {
-    if (tsz >= 12 && tsz <= 21) return 1;
-    if (tsz >= 22 && tsz <= 34) return 2;
-    if (tsz >= 35 && tsz <= 39) return 3;
+    if (tsz >= 12 && tsz <= 21) return L1;
+    if (tsz >= 22 && tsz <= 34) return L2;
+    if (tsz >= 35 && tsz <= 39) return L3;
 
     panic("Unsupported TnSZ: %d\n", tsz);
 }
 
-unsigned
-V8PageTableOps64k::lastLevel() const
+LookupLevel
+V8PageTableOps64k::firstS2Level(uint8_t sl0) const
 {
-    return 3;
+    switch (sl0) {
+      case 0: return L3;
+      case 1: return L2;
+      case 2: return L1;
+      default: panic("Unsupported VTCR_EL2.SL0: %d", sl0);
+    }
 }
 
+LookupLevel
+V8PageTableOps64k::lastLevel() const
+{
+    return L3;
+}
+
+const PageTableOps *
+getPageTableOps(GrainSize trans_granule)
+{
+    static V8PageTableOps4k  ptOps4k;
+    static V8PageTableOps16k ptOps16k;
+    static V8PageTableOps64k ptOps64k;
+
+    switch (trans_granule) {
+    case Grain4KB:  return &ptOps4k;
+    case Grain16KB: return &ptOps16k;
+    case Grain64KB: return &ptOps64k;
+    default:
+        panic("Unknown translation granule size %d", trans_granule);
+    }
+}
+
+} // namespace ArmISA
 } // namespace gem5
