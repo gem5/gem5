@@ -35,8 +35,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+
 if __name__ == "__main__":
-    import sys
     print("ERROR: This file must be run from gem5.", file=sys.stderr)
     sys.exit(1)
 
@@ -47,5 +48,9 @@ if __name__ == "__m5_main__":
     tests = loader.discover("pyunit", pattern='pyunit*.py')
 
     runner = unittest.runner.TextTestRunner(verbosity=2)
-    runner.run(tests)
+    result = runner.run(tests)
+    if result.wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
