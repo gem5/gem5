@@ -744,19 +744,15 @@ env.Command('config/the_isa.hh', [],
             MakeAction(makeTheISA, Transform("CFG ISA", 0)))
 
 def makeTheGPUISA(source, target, env):
-    target_gpu_isa = env['TARGET_GPU_ISA']
+    gpu_isa = env['TARGET_GPU_ISA']
 
-    def namespace(isa):
-        return isa[0].upper() + isa[1:].lower() + 'ISA'
+    namespace = gpu_isa[0].upper() + gpu_isa[1:].lower() + 'ISA'
 
     code = code_formatter()
     code('''\
-#ifndef __CONFIG_THE_GPU_ISA_HH__
-#define __CONFIG_THE_GPU_ISA_HH__
-
-#define TheGpuISA ${{namespace(target_gpu_isa)}}
-
-#endif // __CONFIG_THE_GPU_ISA_HH__''')
+#ifndef TheGpuISA
+#define TheGpuISA ${namespace}
+#endif // TheGpuISA''')
 
     code.write(str(target[0]))
 
