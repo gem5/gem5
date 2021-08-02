@@ -34,10 +34,8 @@ NUM_CPUS := 1 2 4 8 16
 CREATE_TARGET=$(foreach n, $(NUM_CPUS), $(1)_$(n)cpu.dtb)
 
 TARGET_PREFIX=\
-	armv7_gem5_v1 \
 	armv8_gem5_v1 \
 	armv8_gem5_v2 \
-	armv7_gem5_v1_hdlcd \
 	armv8_gem5_v1_hdlcd \
 	armv8_gem5_v2_hdlcd
 
@@ -74,14 +72,6 @@ GEN_DTS=mkdir -p .gen; \
 		-o $@ $<
 
 all: $(TARGETS)
-
-.gen/armv7_gem5_v1_%cpu.dts: armv7.dts \
-	$(VEXPRESS_GEM5_V1_DTSIS)
-	$(call GEN_DTS,vexpress_gem5_v1_base.dtsi,$*)
-
-.gen/armv7_gem5_v1_hdlcd_%cpu.dts: armv7.dts \
-	$(VEXPRESS_GEM5_V1_HDLCD_DTSIS)
-	$(call GEN_DTS,vexpress_gem5_v1_hdlcd.dtsi,$*)
 
 .gen/armv8_gem5_v1_%cpu.dts: armv8.dts \
 	$(VEXPRESS_GEM5_V1_DTSIS)
