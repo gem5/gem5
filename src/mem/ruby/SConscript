@@ -61,36 +61,6 @@ CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
     'RubyDma', 'RubyPort', 'RubySequencer', 'RubyCacheTrace',
     'RubyPrefetcher'])
 
-def do_embed_text(target, source, env):
-    """convert a text file into a file that can be embedded in C
-    using an #include statement, that defines a \"const char *\" pointing
-    to the same text.
-
-    This is useful to embed scripts and configuration files in object files.
-    """
-
-    escape = [ "\'", "\"", "\\", "\?" ]
-
-    # reads the text file in, line by line, converting it to a C string
-    fin = open(str(source[0]), 'r')
-    fout = open(str(target[0]), 'w' )
-    fout.write("static const char *%s =\n" % source[1].get_contents());
-    for l in fin:
-        # add escape sequences for the characters in escape
-        fout.write("\"")
-        for char in l:
-            if char == "\n":
-                break
-            if char in escape:
-                fout.write("\\")
-                fout.write(char)
-            else:
-                fout.write(char)
-        fout.write("\\n\"\n");
-    fout.write(";\n");
-    fin.close()
-    fout.close()
-
 #
 # Link includes
 #
