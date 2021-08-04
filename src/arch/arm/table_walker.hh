@@ -120,50 +120,58 @@ class TableWalker : public ClockedObject
             lookupLevel = L1;
         }
 
-        virtual uint64_t getRawData() const
+        uint64_t
+        getRawData() const override
         {
             return (data);
         }
 
-        virtual std::string dbgHeader() const
+        std::string
+        dbgHeader() const override
         {
             return "Inserting Section Descriptor into TLB\n";
         }
 
-        virtual uint8_t offsetBits() const
+        uint8_t
+        offsetBits() const override
         {
             return 20;
         }
 
-        EntryType type() const
+        EntryType
+        type() const
         {
             return (EntryType)(data & 0x3);
         }
 
         /** Is the page a Supersection (16 MiB)?*/
-        bool supersection() const
+        bool
+        supersection() const
         {
             return bits(data, 18);
         }
 
         /** Return the physcal address of the entry, bits in position*/
-        Addr paddr() const
+        Addr
+        paddr() const
         {
             if (supersection())
                 panic("Super sections not implemented\n");
             return mbits(data, 31, 20);
         }
+
         /** Return the physcal address of the entry, bits in position*/
-        Addr paddr(Addr va) const
+        Addr
+        paddr(Addr va) const
         {
             if (supersection())
                 panic("Super sections not implemented\n");
             return mbits(data, 31, 20) | mbits(va, 19, 0);
         }
 
-
         /** Return the physical frame, bits shifted right */
-        Addr pfn() const
+        Addr
+        pfn() const override
         {
             if (supersection())
                 panic("Super sections not implemented\n");
@@ -171,31 +179,36 @@ class TableWalker : public ClockedObject
         }
 
         /** Is the translation global (no asid used)? */
-        bool global(WalkerState *currState) const
+        bool
+        global(WalkerState *currState) const override
         {
             return !bits(data, 17);
         }
 
         /** Is the translation not allow execution? */
-        bool xn() const
+        bool
+        xn() const override
         {
             return bits(data, 4);
         }
 
         /** Three bit access protection flags */
-        uint8_t ap() const
+        uint8_t
+        ap() const override
         {
             return (bits(data, 15) << 2) | bits(data, 11, 10);
         }
 
         /** Domain Client/Manager: ARM DDI 0406B: B3-31 */
-        TlbEntry::DomainType domain() const
+        TlbEntry::DomainType
+        domain() const override
         {
             return static_cast<TlbEntry::DomainType>(bits(data, 8, 5));
         }
 
         /** Address of L2 descriptor if it exists */
-        Addr l2Addr() const
+        Addr
+        l2Addr() const
         {
             return mbits(data, 31, 10);
         }
@@ -205,13 +218,15 @@ class TableWalker : public ClockedObject
          * provide the illusion that the memory system cares about
          * anything but cachable vs. uncachable.
          */
-        uint8_t texcb() const
+        uint8_t
+        texcb() const override
         {
             return bits(data, 2) | bits(data, 3) << 1 | bits(data, 14, 12) << 2;
         }
 
         /** If the section is shareable. See texcb() comment. */
-        bool shareable() const
+        bool
+        shareable() const override
         {
             return bits(data, 16);
         }
@@ -219,14 +234,16 @@ class TableWalker : public ClockedObject
         /** Set access flag that this entry has been touched. Mark
          * the entry as requiring a writeback, in the future.
          */
-        void setAp0()
+        void
+        setAp0()
         {
             data |= 1 << 10;
             _dirty = true;
         }
 
         /** This entry needs to be written back to memory */
-        bool dirty() const
+        bool
+        dirty() const
         {
             return _dirty;
         }
@@ -235,7 +252,8 @@ class TableWalker : public ClockedObject
          * Returns true if this entry targets the secure physical address
          * map.
          */
-        bool secure(bool have_security, WalkerState *currState) const
+        bool
+        secure(bool have_security, WalkerState *currState) const override
         {
             if (have_security && currState->secureLookup) {
                 if (type() == PageTable)
@@ -271,63 +289,74 @@ class TableWalker : public ClockedObject
             lookupLevel = L2;
         }
 
-        virtual uint64_t getRawData() const
+        uint64_t
+        getRawData() const override
         {
             return (data);
         }
 
-        virtual std::string dbgHeader() const
+        std::string
+        dbgHeader() const override
         {
             return "Inserting L2 Descriptor into TLB\n";
         }
 
-        virtual TlbEntry::DomainType domain() const
+        TlbEntry::DomainType
+        domain() const override
         {
             return l1Parent->domain();
         }
 
-        bool secure(bool have_security, WalkerState *currState) const
+        bool
+        secure(bool have_security, WalkerState *currState) const override
         {
             return l1Parent->secure(have_security, currState);
         }
 
-        virtual uint8_t offsetBits() const
+        uint8_t
+        offsetBits() const override
         {
             return large() ? 16 : 12;
         }
 
         /** Is the entry invalid */
-        bool invalid() const
+        bool
+        invalid() const
         {
             return bits(data, 1, 0) == 0;
         }
 
         /** What is the size of the mapping? */
-        bool large() const
+        bool
+        large() const
         {
             return bits(data, 1) == 0;
         }
 
         /** Is execution allowed on this mapping? */
-        bool xn() const
+        bool
+        xn() const override
         {
             return large() ? bits(data, 15) : bits(data, 0);
         }
 
         /** Is the translation global (no asid used)? */
-        bool global(WalkerState *currState) const
+        bool
+        global(WalkerState *currState) const override
         {
             return !bits(data, 11);
         }
 
         /** Three bit access protection flags */
-        uint8_t ap() const
+        uint8_t
+        ap() const override
         {
            return bits(data, 5, 4) | (bits(data, 9) << 2);
         }
 
         /** Memory region attributes: ARM DDI 0406B: B3-32 */
-        uint8_t texcb() const
+        uint8_t
+        texcb() const override
         {
             return large() ?
                 (bits(data, 2) | (bits(data, 3) << 1) | (bits(data, 14, 12) << 2)) :
@@ -335,13 +364,15 @@ class TableWalker : public ClockedObject
         }
 
         /** Return the physical frame, bits shifted right */
-        Addr pfn() const
+        Addr
+        pfn() const override
         {
             return large() ? bits(data, 31, 16) : bits(data, 31, 12);
         }
 
         /** Return complete physical address given a VA */
-        Addr paddr(Addr va) const
+        Addr
+        paddr(Addr va) const
         {
             if (large())
                 return mbits(data, 31, 16) | mbits(va, 15, 0);
@@ -350,7 +381,8 @@ class TableWalker : public ClockedObject
         }
 
         /** If the section is shareable. See texcb() comment. */
-        bool shareable() const
+        bool
+        shareable() const override
         {
             return bits(data, 10);
         }
@@ -358,14 +390,16 @@ class TableWalker : public ClockedObject
         /** Set access flag that this entry has been touched. Mark
          * the entry as requiring a writeback, in the future.
          */
-        void setAp0()
+        void
+        setAp0()
         {
             data |= 1 << 4;
             _dirty = true;
         }
 
         /** This entry needs to be written back to memory */
-        bool dirty() const
+        bool
+        dirty() const
         {
             return _dirty;
         }
@@ -405,13 +439,14 @@ class TableWalker : public ClockedObject
 
         uint8_t physAddrRange;
 
-
-        virtual uint64_t getRawData() const
+        uint64_t
+        getRawData() const override
         {
             return (data);
         }
 
-        virtual std::string dbgHeader() const
+        std::string
+        dbgHeader() const override
         {
             if (type() == LongDescriptor::Page) {
                 assert(lookupLevel == L3);
@@ -426,14 +461,16 @@ class TableWalker : public ClockedObject
          * Returns true if this entry targets the secure physical address
          * map.
          */
-        bool secure(bool have_security, WalkerState *currState) const
+        bool
+        secure(bool have_security, WalkerState *currState) const override
         {
             assert(type() == Block || type() == Page);
             return have_security && (currState->secureLookup && !bits(data, 5));
         }
 
         /** Return the descriptor type */
-        EntryType type() const
+        EntryType
+        type() const
         {
             switch (bits(data, 1, 0)) {
               case 0x1:
@@ -472,7 +509,8 @@ class TableWalker : public ClockedObject
         }
 
         /** Return the bit width of the page/block offset */
-        uint8_t offsetBits() const
+        uint8_t
+        offsetBits() const override
         {
             if (type() == Block) {
                 switch (grainSize) {
@@ -502,13 +540,15 @@ class TableWalker : public ClockedObject
         }
 
         /** Return the physical frame, bits shifted right */
-        Addr pfn() const
+        Addr
+        pfn() const override
         {
             return paddr() >> offsetBits();
         }
 
         /** Return the physical address of the entry */
-        Addr paddr() const
+        Addr
+        paddr() const
         {
             Addr addr = 0;
             if (aarch64) {
@@ -523,7 +563,8 @@ class TableWalker : public ClockedObject
         }
 
         /** Return the address of the next page table */
-        Addr nextTableAddr() const
+        Addr
+        nextTableAddr() const
         {
             assert(type() == Table);
             Addr table_address = 0;
@@ -540,7 +581,8 @@ class TableWalker : public ClockedObject
         }
 
         /** Return the address of the next descriptor */
-        Addr nextDescAddr(Addr va) const
+        Addr
+        nextDescAddr(Addr va) const
         {
             assert(type() == Table);
             Addr pa = 0;
@@ -559,28 +601,32 @@ class TableWalker : public ClockedObject
         }
 
         /** Is execution allowed on this mapping? */
-        bool xn() const
+        bool
+        xn() const override
         {
             assert(type() == Block || type() == Page);
             return bits(data, 54);
         }
 
         /** Is privileged execution allowed on this mapping? (LPAE only) */
-        bool pxn() const
+        bool
+        pxn() const
         {
             assert(type() == Block || type() == Page);
             return bits(data, 53);
         }
 
         /** Contiguous hint bit. */
-        bool contiguousHint() const
+        bool
+        contiguousHint() const
         {
             assert(type() == Block || type() == Page);
             return bits(data, 52);
         }
 
         /** Is the translation global (no asid used)? */
-        bool global(WalkerState *currState) const
+        bool
+        global(WalkerState *currState) const override
         {
             assert(currState && (type() == Block || type() == Page));
             if (!currState->aarch64 && (currState->isSecure &&
@@ -598,21 +644,24 @@ class TableWalker : public ClockedObject
         }
 
         /** Returns true if the access flag (AF) is set. */
-        bool af() const
+        bool
+        af() const
         {
             assert(type() == Block || type() == Page);
             return bits(data, 10);
         }
 
         /** 2-bit shareability field */
-        uint8_t sh() const
+        uint8_t
+        sh() const
         {
             assert(type() == Block || type() == Page);
             return bits(data, 9, 8);
         }
 
         /** 2-bit access protection flags */
-        uint8_t ap() const
+        uint8_t
+        ap() const override
         {
             assert(type() == Block || type() == Page);
             // Long descriptors only support the AP[2:1] scheme
@@ -620,14 +669,16 @@ class TableWalker : public ClockedObject
         }
 
         /** Read/write access protection flag */
-        bool rw() const
+        bool
+        rw() const
         {
             assert(type() == Block || type() == Page);
             return !bits(data, 7);
         }
 
         /** User/privileged level access protection flag */
-        bool user() const
+        bool
+        user() const
         {
             assert(type() == Block || type() == Page);
             return bits(data, 6);
@@ -636,12 +687,14 @@ class TableWalker : public ClockedObject
         /** Return the AP bits as compatible with the AP[2:0] format.  Utility
          * function used to simplify the code in the TLB for performing
          * permission checks. */
-        static uint8_t ap(bool rw, bool user)
+        static uint8_t
+        ap(bool rw, bool user)
         {
             return ((!rw) << 2) | (user << 1);
         }
 
-        TlbEntry::DomainType domain() const
+        TlbEntry::DomainType
+        domain() const override
         {
             // Long-desc. format only supports Client domain
             assert(type() == Block || type() == Page);
@@ -649,14 +702,16 @@ class TableWalker : public ClockedObject
         }
 
         /** Attribute index */
-        uint8_t attrIndx() const
+        uint8_t
+        attrIndx() const
         {
             assert(type() == Block || type() == Page);
             return bits(data, 4, 2);
         }
 
         /** Memory attributes, only used by stage 2 translations */
-        uint8_t memAttr() const
+        uint8_t
+        memAttr() const
         {
             assert(type() == Block || type() == Page);
             return bits(data, 5, 2);
@@ -664,34 +719,39 @@ class TableWalker : public ClockedObject
 
         /** Set access flag that this entry has been touched.  Mark the entry as
          * requiring a writeback, in the future. */
-        void setAf()
+        void
+        setAf()
         {
             data |= 1 << 10;
             _dirty = true;
         }
 
         /** This entry needs to be written back to memory */
-        bool dirty() const
+        bool
+        dirty() const
         {
             return _dirty;
         }
 
         /** Whether the subsequent levels of lookup are secure */
-        bool secureTable() const
+        bool
+        secureTable() const
         {
             assert(type() == Table);
             return !bits(data, 63);
         }
 
         /** Two bit access protection flags for subsequent levels of lookup */
-        uint8_t apTable() const
+        uint8_t
+        apTable() const
         {
             assert(type() == Table);
             return bits(data, 62, 61);
         }
 
         /** R/W protection flag for subsequent levels of lookup */
-        uint8_t rwTable() const
+        uint8_t
+        rwTable() const
         {
             assert(type() == Table);
             return !bits(data, 62);
@@ -699,21 +759,24 @@ class TableWalker : public ClockedObject
 
         /** User/privileged mode protection flag for subsequent levels of
          * lookup */
-        uint8_t userTable() const
+        uint8_t
+        userTable() const
         {
             assert(type() == Table);
             return !bits(data, 61);
         }
 
         /** Is execution allowed on subsequent lookup levels? */
-        bool xnTable() const
+        bool
+        xnTable() const
         {
             assert(type() == Table);
             return bits(data, 60);
         }
 
         /** Is privileged execution allowed on subsequent lookup levels? */
-        bool pxnTable() const
+        bool
+        pxnTable() const
         {
             assert(type() == Table);
             return bits(data, 59);
