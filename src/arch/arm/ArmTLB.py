@@ -51,6 +51,11 @@ class ArmTLB(BaseTLB):
     size = Param.Int(64, "TLB size")
     is_stage2 = Param.Bool(False, "Is this a stage 2 TLB?")
 
+    partial_levels = VectorParam.ArmLookupLevel([],
+        "List of intermediate lookup levels allowed to be cached in the TLB "
+        "(=holding intermediate PAs obtained during a table walk")
+
+
 class ArmStage2TLB(ArmTLB):
     size = 32
     is_stage2 = True

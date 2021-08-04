@@ -67,6 +67,7 @@ MMU::MMU(const ArmMMUParams &p)
     s1State(this, false), s2State(this, true),
     _attr(0),
     _release(nullptr),
+    _hasWalkCache(false),
     stats(this)
 {
     // Cache system-level properties
@@ -102,6 +103,27 @@ MMU::init()
     getDTBPtr()->setTableWalker(dtbWalker);
 
     BaseMMU::init();
+
+    _hasWalkCache = checkWalkCache();
+}
+
+bool
+MMU::checkWalkCache() const
+{
+    for (auto tlb : instruction) {
+        if (static_cast<TLB*>(tlb)->walkCache())
+            return true;
+    }
+    for (auto tlb : data) {
+        if (static_cast<TLB*>(tlb)->walkCache())
+            return true;
+    }
+    for (auto tlb : unified) {
+        if (static_cast<TLB*>(tlb)->walkCache())
+            return true;
+    }
+
+    return false;
 }
 
 void
@@ -858,11 +880,11 @@ MMU::translateMmuOn(ThreadContext* tc, const RequestPtr &req, Mode mode,
     Fault fault = getResultTe(&te, req, tc, mode, translation, timing,
                               functional, &mergeTe, state);
     // only proceed if we have a valid table entry
-    if ((te == NULL) && (fault == NoFault)) delay = true;
+    if (!isCompleteTranslation(te) && (fault == NoFault)) delay = true;
 
     // If we have the table entry transfer some of the attributes to the
     // request that triggered the translation
-    if (te != NULL) {
+    if (isCompleteTranslation(te)) {
         // Set memory attributes
         DPRINTF(TLBVerbose,
                 "Setting memory attributes: shareable: %d, innerAttrs: %d, "
@@ -1429,7 +1451,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
     *te = lookup(vaddr, state.asid, state.vmid, state.isHyp, is_secure, false,
                  false, target_el, false, state.isStage2, mode);
 
-    if (*te == NULL) {
+    if (!isCompleteTranslation(*te)) {
         if (req->isPrefetch()) {
             // if the request is a prefetch don't attempt to fill the TLB or go
             // any further with the memory access (here we can safely use the
@@ -1474,12 +1496,12 @@ MMU::getResultTe(TlbEntry **te, const RequestPtr &req,
     if (state.isStage2) {
         // We are already in the stage 2 TLB. Grab the table entry for stage
         // 2 only. We are here because stage 1 translation is disabled.
-        TlbEntry *s2_te = NULL;
+        TlbEntry *s2_te = nullptr;
         // Get the stage 2 table entry
         fault = getTE(&s2_te, req, tc, mode, translation, timing, functional,
                       state.isSecure, state.curTranType, state);
         // Check permissions of stage 2
-        if ((s2_te != NULL) && (fault == NoFault)) {
+        if (isCompleteTranslation(s2_te) && (fault == NoFault)) {
             if (state.aarch64)
                 fault = checkPermissions64(s2_te, req, mode, tc, state);
             else
@@ -1489,22 +1511,22 @@ MMU::getResultTe(TlbEntry **te, const RequestPtr &req,
         return fault;
     }
 
-    TlbEntry *s1Te = NULL;
+    TlbEntry *s1_te = nullptr;
 
     Addr vaddr_tainted = req->getVaddr();
 
     // Get the stage 1 table entry
-    fault = getTE(&s1Te, req, tc, mode, translation, timing, functional,
+    fault = getTE(&s1_te, req, tc, mode, translation, timing, functional,
                   state.isSecure, state.curTranType, state);
     // only proceed if we have a valid table entry
-    if ((s1Te != NULL) && (fault == NoFault)) {
+    if (isCompleteTranslation(s1_te) && (fault == NoFault)) {
         // Check stage 1 permissions before checking stage 2
         if (state.aarch64)
-            fault = checkPermissions64(s1Te, req, mode, tc, state);
+            fault = checkPermissions64(s1_te, req, mode, tc, state);
         else
-            fault = checkPermissions(s1Te, req, mode, state);
+            fault = checkPermissions(s1_te, req, mode, state);
         if (state.stage2Req & (fault == NoFault)) {
-            Stage2LookUp *s2_lookup = new Stage2LookUp(this, *s1Te,
+            Stage2LookUp *s2_lookup = new Stage2LookUp(this, *s1_te,
                 req, translation, mode, timing, functional, state.isSecure,
                 state.curTranType);
             fault = s2_lookup->getTe(tc, mergeTe);
@@ -1531,10 +1553,16 @@ MMU::getResultTe(TlbEntry **te, const RequestPtr &req,
                     arm_fault->annotate(ArmFault::OVA, vaddr_tainted);
                 }
             }
-            *te = s1Te;
+            *te = s1_te;
         }
     }
     return fault;
+}
+
+bool
+MMU::isCompleteTranslation(TlbEntry *entry) const
+{
+    return entry && !entry->partial;
 }
 
 void

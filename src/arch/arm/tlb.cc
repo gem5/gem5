@@ -61,9 +61,33 @@ using namespace ArmISA;
 TLB::TLB(const ArmTLBParams &p)
     : BaseTLB(p), table(new TlbEntry[p.size]), size(p.size),
       isStage2(p.is_stage2),
+      _walkCache(false),
       tableWalker(nullptr),
       stats(*this), rangeMRU(1), vmid(0)
 {
+    for (int lvl = LookupLevel::L0;
+         lvl < LookupLevel::Num_ArmLookupLevel; lvl++) {
+
+        auto it = std::find(
+            p.partial_levels.begin(),
+            p.partial_levels.end(),
+            lvl);
+
+        auto lookup_lvl = static_cast<LookupLevel>(lvl);
+
+        if (it != p.partial_levels.end()) {
+            // A partial entry from of the current LookupLevel can be
+            // cached within the TLB
+            partialLevels[lookup_lvl] = true;
+
+            // Make sure this is not the last level (complete translation)
+            if (lvl != LookupLevel::Num_ArmLookupLevel - 1) {
+                _walkCache = true;
+            }
+        } else {
+            partialLevels[lookup_lvl] = false;
+        }
+    }
 }
 
 TLB::~TLB()
@@ -79,31 +103,62 @@ TLB::setTableWalker(TableWalker *table_walker)
 }
 
 TlbEntry*
-TLB::lookup(const Lookup &lookup_data)
+TLB::match(const Lookup &lookup_data)
 {
-    TlbEntry *retval = NULL;
-    const auto functional = lookup_data.functional;
-    const auto mode = lookup_data.mode;
+    // Vector of TLB entry candidates.
+    // Only one of them will be assigned to retval and will
+    // be returned to the MMU (in case of a hit)
+    // The vector has one entry per lookup level as it stores
+    // both complete and partial matches
+    std::vector<std::pair<int, const TlbEntry*>> hits{
+        LookupLevel::Num_ArmLookupLevel, {0, nullptr}};
 
-    // Maintaining LRU array
     int x = 0;
-    while (retval == NULL && x < size) {
+    while (x < size) {
         if (table[x].match(lookup_data)) {
-            // We only move the hit entry ahead when the position is higher
-            // than rangeMRU
-            if (x > rangeMRU && !functional) {
-                TlbEntry tmp_entry = table[x];
-                for (int i = x; i > 0; i--)
-                    table[i] = table[i - 1];
-                table[0] = tmp_entry;
-                retval = &table[0];
-            } else {
-                retval = &table[x];
-            }
-            break;
+            const TlbEntry &entry = table[x];
+            hits[entry.lookupLevel] = std::make_pair(x, &entry);
+
+            // This is a complete translation, no need to loop further
+            if (!entry.partial)
+                break;
         }
         ++x;
     }
+
+    // Loop over the list of TLB entries matching our translation
+    // request, starting from the highest lookup level (complete
+    // translation) and iterating backwards (using reverse iterators)
+    for (auto it = hits.rbegin(); it != hits.rend(); it++) {
+        const auto& [idx, entry] = *it;
+        if (!entry) {
+            // No match for the current LookupLevel
+            continue;
+        }
+
+        // Maintaining LRU array
+        // We only move the hit entry ahead when the position is higher
+        // than rangeMRU
+        if (idx > rangeMRU && !lookup_data.functional) {
+            TlbEntry tmp_entry = *entry;
+            for (int i = idx; i > 0; i--)
+                table[i] = table[i - 1];
+            table[0] = tmp_entry;
+            return &table[0];
+        } else {
+            return &table[idx];
+        }
+    }
+
+    return nullptr;
+}
+
+TlbEntry*
+TLB::lookup(const Lookup &lookup_data)
+{
+    const auto mode = lookup_data.mode;
+
+    TlbEntry *retval = match(lookup_data);
 
     DPRINTF(TLBVerbose, "Lookup %#x, asn %#x -> %s vmn 0x%x hyp %d secure %d "
             "ppn %#x size: %#x pa: %#x ap:%d ns:%d nstid:%d g:%d asid: %d "
@@ -118,21 +173,27 @@ TLB::lookup(const Lookup &lookup_data)
             retval ? retval->el        : 0);
 
     // Updating stats if this was not a functional lookup
-    if (!functional) {
+    if (!lookup_data.functional) {
         if (!retval) {
-            if (mode == BaseMMU::Execute)
+            if (mode == BaseMMU::Execute) {
                 stats.instMisses++;
-            else if (mode == BaseMMU::Write)
+            } else if (mode == BaseMMU::Write) {
                 stats.writeMisses++;
-            else
+            } else {
                 stats.readMisses++;
+            }
         } else {
-            if (mode == BaseMMU::Execute)
+            if (retval->partial) {
+                stats.partialHits++;
+            }
+
+            if (mode == BaseMMU::Execute) {
                 stats.instHits++;
-            else if (mode == BaseMMU::Write)
+            } else if (mode == BaseMMU::Write) {
                stats.writeHits++;
-            else
+            } else {
                 stats.readHits++;
+            }
         }
     }
 
@@ -149,8 +210,13 @@ TLB::multiLookup(const Lookup &lookup_data)
     } else {
         if (auto tlb = static_cast<TLB*>(nextLevel())) {
             te = tlb->multiLookup(lookup_data);
-            if (te && !lookup_data.functional)
+            if (te && !lookup_data.functional &&
+                (!te->partial || partialLevels[te->lookupLevel])) {
+                // Insert entry only if this is not a functional
+                // lookup and if the translation is complete (unless this
+                // TLB caches partial translations)
                 insert(*te);
+            }
         }
     }
 
@@ -203,7 +269,11 @@ TLB::insert(TlbEntry &entry)
 void
 TLB::multiInsert(TlbEntry &entry)
 {
-    insert(entry);
+    // Insert a partial translation only if the TLB is configured
+    // as a walk cache
+    if (!entry.partial || partialLevels[entry.lookupLevel]) {
+        insert(entry);
+    }
 
     if (auto next_level = static_cast<TLB*>(nextLevel())) {
         next_level->multiInsert(entry);
@@ -233,9 +303,11 @@ TLB::flushAll()
     while (x < size) {
         te = &table[x];
 
-        DPRINTF(TLB, " -  %s\n", te->print());
-        te->valid = false;
-        stats.flushedEntries++;
+        if (te->valid) {
+            DPRINTF(TLB, " -  %s\n", te->print());
+            te->valid = false;
+            stats.flushedEntries++;
+        }
         ++x;
     }
 
@@ -559,6 +631,8 @@ TLB::takeOverFrom(BaseTLB *_otlb)
 
 TLB::TlbStats::TlbStats(TLB &parent)
   : statistics::Group(&parent), tlb(parent),
+    ADD_STAT(partialHits, statistics::units::Count::get(),
+             "partial translation hits"),
     ADD_STAT(instHits, statistics::units::Count::get(), "Inst hits"),
     ADD_STAT(instMisses, statistics::units::Count::get(), "Inst misses"),
     ADD_STAT(readHits, statistics::units::Count::get(), "Read hits"),
@@ -615,6 +689,8 @@ TLB::TlbStats::TlbStats(TLB &parent)
         readAccesses.flags(statistics::nozero);
         writeAccesses.flags(statistics::nozero);
     }
+
+    partialHits.flags(statistics::nozero);
 }
 
 void

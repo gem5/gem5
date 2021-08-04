@@ -115,9 +115,25 @@ class TlbTestInterface
 class TLB : public BaseTLB
 {
   protected:
-    TlbEntry* table;     // the Page Table
-    int size;            // TLB Size
-    bool isStage2;       // Indicates this TLB is part of the second stage MMU
+    TlbEntry* table;
+
+    /** TLB Size */
+    int size;
+
+    /** Indicates this TLB caches IPA->PA translations */
+    bool isStage2;
+
+    /**
+     * Hash map containing one entry per lookup level
+     * The TLB is caching partial translations from the key lookup level
+     * if the matching value is true.
+     */
+    std::unordered_map<enums::ArmLookupLevel, bool> partialLevels;
+
+    /**
+     * True if the TLB caches partial translations
+     */
+    bool _walkCache;
 
     TableWalker *tableWalker;
 
@@ -128,6 +144,7 @@ class TLB : public BaseTLB
         const TLB &tlb;
 
         // Access Stats
+        mutable statistics::Scalar partialHits;
         mutable statistics::Scalar instHits;
         mutable statistics::Scalar instMisses;
         mutable statistics::Scalar readHits;
@@ -185,6 +202,8 @@ class TLB : public BaseTLB
     TableWalker *getTableWalker() { return tableWalker; }
 
     int getsize() const { return size; }
+
+    bool walkCache() const { return _walkCache; }
 
     void setVMID(vmid_t _vmid) { vmid = _vmid; }
 
@@ -313,6 +332,10 @@ class TLB : public BaseTLB
      * data access or a data TLB entry on an instruction access:
      */
     void checkPromotion(TlbEntry *entry, BaseMMU::Mode mode);
+
+    /** Helper function looking up for a matching TLB entry
+     * Does not update stats; see lookup method instead */
+    TlbEntry *match(const Lookup &lookup_data);
 };
 
 } // namespace ArmISA

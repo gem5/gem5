@@ -344,6 +344,8 @@ class MMU : public BaseMMU
 
     const ArmRelease* release() const { return _release; }
 
+    bool hasWalkCache() const { return _hasWalkCache; }
+
     /**
      * Determine the EL to use for the purpose of a translation given
      * a specific translation type. If the translation type doesn't
@@ -425,6 +427,15 @@ class MMU : public BaseMMU
                    LookupLevel lookup_level, CachedState &state);
 
   protected:
+    bool checkWalkCache() const;
+
+    bool isCompleteTranslation(TlbEntry *te) const;
+
+    CachedState& updateMiscReg(
+        ThreadContext *tc, ArmTranslationType tran_type,
+        bool stage2);
+
+  protected:
     ContextID miscRegContext;
 
   public:
@@ -440,9 +451,7 @@ class MMU : public BaseMMU
 
     AddrRange m5opRange;
 
-    CachedState& updateMiscReg(
-        ThreadContext *tc, ArmTranslationType tran_type,
-        bool stage2);
+    bool _hasWalkCache;
 
     struct Stats : public statistics::Group
     {
