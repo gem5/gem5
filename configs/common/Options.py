@@ -533,3 +533,7 @@ def addFSOptions(parser):
     parser.add_argument(
         "--command-line-file", action="store", default=None, type=str,
         help="File with a template for the kernel command line")
+
+    # Debug option
+    parser.add_argument("--wait-gdb", default=False, action='store_true',
+                        help="Wait for remote GDB to connect.")
