@@ -244,6 +244,8 @@ struct TlbEntry : public Serializable
     // This is used to distinguish between instruction and data entries
     // in unified TLBs
     TypeTLB type;
+    // True if the entry is caching a partial translation (a table walk)
+    bool partial;
 
     // Type of memory
     bool nonCacheable;     // Can we wrap this in mtype?
@@ -266,6 +268,7 @@ struct TlbEntry : public Serializable
          domain(DomainType::Client),  mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), isHyp(false), global(false), valid(true),
          ns(true), nstid(true), el(EL0), type(TypeTLB::unified),
+         partial(false),
          nonCacheable(uncacheable),
          shareable(false), outerShareable(false), xn(0), pxn(0)
     {
@@ -283,7 +286,7 @@ struct TlbEntry : public Serializable
          domain(DomainType::Client), mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), isHyp(false), global(false), valid(false),
          ns(true), nstid(true), el(EL0), type(TypeTLB::unified),
-         nonCacheable(false),
+         partial(false), nonCacheable(false),
          shareable(false), outerShareable(false), xn(0), pxn(0)
     {
         // no restrictions by default, hap = 0x3
