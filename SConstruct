@@ -98,6 +98,8 @@ import SCons.Tool
 #
 ########################################################################
 
+linker_options = ('bfd', 'gold', 'lld')
+
 AddOption('--no-colors', dest='use_colors', action='store_false',
           help="Don't add color to abbreviated scons output")
 AddOption('--with-cxx-config', action='store_true',
@@ -106,7 +108,10 @@ AddOption('--default',
           help='Override which build_opts file to use for defaults')
 AddOption('--ignore-style', action='store_true',
           help='Disable style checking hooks')
-AddOption('--gold-linker', action='store_true', help='Use the gold linker')
+AddOption('--linker', action='store', default=None, choices=linker_options,
+          help=f'Select which linker to use ({", ".join(linker_options)})')
+AddOption('--gold-linker', action='store_const', const='gold', dest='linker',
+          help='Use the gold linker. Deprecated: Use --linker=gold')
 AddOption('--no-compress-debug', action='store_true',
           help="Don't compress debug info in build files")
 AddOption('--with-lto', action='store_true',
@@ -345,8 +350,18 @@ if main['GCC'] or main['CLANG']:
 
     with gem5_scons.Configure(main) as conf:
         conf.CheckLinkFlag('-Wl,--as-needed')
-    if GetOption('gold_linker'):
-        main.Append(LINKFLAGS='-fuse-ld=gold')
+
+    linker = GetOption('linker')
+    if linker:
+        with gem5_scons.Configure(main) as conf:
+            if not conf.CheckLinkFlag(f'-fuse-ld={linker}'):
+                error(f'Linker "{linker}" is not supported')
+            if linker == 'gold' and not GetOption('with_lto'):
+                # Tell the gold linker to use threads. The gold linker
+                # segfaults if both threads and LTO are enabled.
+                conf.CheckLinkFlag('-Wl,--threads')
+                conf.CheckLinkFlag(
+                        '-Wl,--thread-count=%d' % GetOption('num_jobs'))
 
 else:
     error('\n'.join((
