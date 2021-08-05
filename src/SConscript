@@ -892,10 +892,6 @@ def makeDebugFlagCC(target, source, env):
 
     code = code_formatter()
 
-    # delay definition of CompoundFlags until after all the definition
-    # of all constituent SimpleFlags
-    comp_code = code_formatter()
-
     # file header
     code('''
 #include "base/compiler.hh" // For namespace deprecation
@@ -907,43 +903,33 @@ namespace gem5
 GEM5_DEPRECATED_NAMESPACE(Debug, debug);
 namespace debug
 {
-
 ''')
 
-    for flag in sorted(env.get('DEBUG_FLAGS', [])):
-        name, compound, desc, fmt = flag
+    all_flags = env.get('DEBUG_FLAGS', [])
+    simple_flags = sorted(filter(lambda f: not f[1], all_flags))
+    compound_flags = sorted(filter(lambda f: f[1], all_flags))
 
-        # We intentionally make flag a reference to a heap allocated object so
-        # (1) It has a similar interface to a global object like before
-        # (2) It does not get destructed at the end of simulation
-        # The second property is desirable as global objects from different
-        # translation units do not have a defined destruction order, so it'll
-        # be unsafe to access debug flags in their destructor in such cases.
-        if not compound:
-            code('SimpleFlag& $name = *(')
-            code.indent()
-            if fmt:
-                code('new SimpleFlag("$name", "$desc", true)')
-            else:
-                code('new SimpleFlag("$name", "$desc", false)')
-            code.dedent()
-            code(');')
-        else:
-            comp_code('CompoundFlag& $name = *(')
-            comp_code.indent()
-            comp_code('new CompoundFlag("$name", "$desc", {')
-            comp_code.indent()
-            for flag in compound:
-                comp_code('&$flag,')
-            comp_code.dedent()
-            comp_code('})')
-            comp_code.dedent()
-            comp_code(');')
+    # We intentionally make flag a reference to a heap allocated object so
+    # (1) It has a similar interface to a global object like before
+    # (2) It does not get destructed at the end of simulation
+    # The second property is desirable as global objects from different
+    # translation units do not have a defined destruction order, so it'll
+    # be unsafe to access debug flags in their destructor in such cases.
+    for name, _, desc, fmt in simple_flags:
+        fmt = 'true' if fmt else 'false'
+        code('''
+SimpleFlag& $name = *(
+    new SimpleFlag("$name", "$desc", $fmt));''')
 
-    code.append(comp_code)
-    code()
-    code('} // namespace debug')
-    code('} // namespace gem5')
+    for name, compound, desc, _ in compound_flags:
+        code('''
+CompoundFlag& $name = *(new CompoundFlag("$name", "$desc", {
+    ${{', '.join('&' + flag for flag in compound)}}
+}));''')
+
+    code('''
+} // namespace debug
+} // namespace gem5''')
 
     code.write(str(target[0]))
 
