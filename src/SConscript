@@ -176,8 +176,7 @@ class PySource(SourceFile):
                 MakeAction(embedPyFile, Transform("EMBED PY"),
                     varlist=overrides.keys()),
                 **overrides)
-        if main['USE_PYTHON']:
-            Source(cpp, tags=self.tags, add_tags='python')
+        Source(cpp, tags=self.tags, add_tags='python')
 
 class SimObject(PySource):
     '''Add a SimObject python file as a python source object and add
