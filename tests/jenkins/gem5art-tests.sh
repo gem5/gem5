@@ -43,11 +43,6 @@ mkdir -p .pyenv
 python3 -m venv .pyenv
 source .pyenv/bin/activate
 
-# The 18.04_all-depenencies image has an outdated version of setuptools. We
-# update it here. Attempts to fix this via the Dockerfile have been
-# unsuccessful.
-pip install -U setuptools
-
 # Install the packages
 pip install -e util/gem5art/artifact
 pip install -e util/gem5art/run
