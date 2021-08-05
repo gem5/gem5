@@ -160,24 +160,24 @@ class PySource(SourceFile):
         if not os.path.exists(abspath):
             abspath = self.tnode.abspath
 
-        self.package = package
         self.modname = modname
         self.modpath = modpath
         self.abspath = abspath
-        self.cpp = File(self.filename + '.cc')
 
         PySource.modules[modpath] = self
+
+        cpp = File(self.filename + '.cc')
 
         overrides = {
                 'PYSOURCE_MODPATH': modpath,
                 'PYSOURCE_ABSPATH': abspath,
         }
-        marshal_env.Command(self.cpp, [ py_marshal, File(source) ],
+        marshal_env.Command(cpp, [ py_marshal, File(source) ],
                 MakeAction(embedPyFile, Transform("EMBED PY"),
                     varlist=overrides.keys()),
                 **overrides)
         if main['USE_PYTHON']:
-            Source(self.cpp, tags=self.tags, add_tags='python')
+            Source(cpp, tags=self.tags, add_tags='python')
 
 class SimObject(PySource):
     '''Add a SimObject python file as a python source object and add
