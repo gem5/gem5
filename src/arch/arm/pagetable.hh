@@ -46,6 +46,7 @@
 #include "arch/arm/page_size.hh"
 #include "arch/arm/types.hh"
 #include "arch/arm/utility.hh"
+#include "arch/generic/mmu.hh"
 #include "enums/TypeTLB.hh"
 #include "sim/serialize.hh"
 
@@ -100,6 +101,30 @@ struct TlbEntry : public Serializable
         Client,
         Reserved,
         Manager
+    };
+
+    struct Lookup
+    {
+        // virtual address
+        Addr va = 0;
+        // context id/address space id to use
+        uint16_t asn = 0;
+        // if on lookup asn should be ignored
+        bool ignoreAsn = false;
+        // The virtual machine ID used for stage 2 translation
+        vmid_t vmid = 0;
+        // if the lookup is done from hyp mode
+        bool hyp = false;
+        // if the lookup is secure
+        bool secure = false;
+        // if the lookup should modify state
+        bool functional = false;
+        // selecting the translation regime
+        ExceptionLevel targetEL = EL0;
+        // if we are in host (EL2&0 regime)
+        bool inHost = false;
+        // mode to differentiate between read/writes/fetches.
+        BaseMMU::Mode mode = BaseMMU::Read;
     };
 
     // Matching variables
@@ -198,30 +223,20 @@ struct TlbEntry : public Serializable
     }
 
     bool
-    match(Addr va, vmid_t _vmid, bool hyp_lookup, bool secure_lookup,
-          ExceptionLevel target_el, bool in_host) const
-    {
-        return match(va, 0, _vmid, hyp_lookup, secure_lookup, true,
-                     target_el, in_host);
-    }
-
-    bool
-    match(Addr va, uint16_t asn, vmid_t _vmid, bool hyp_lookup,
-          bool secure_lookup, bool ignore_asn, ExceptionLevel target_el,
-          bool in_host) const
+    match(const Lookup &lookup) const
     {
         bool match = false;
         Addr v = vpn << N;
-        if (valid && va >= v && va <= v + size && (secure_lookup == !nstid) &&
-            (hyp_lookup == isHyp))
+        if (valid && lookup.va >= v && lookup.va <= v + size &&
+            (lookup.secure == !nstid) && (lookup.hyp == isHyp))
         {
-            match = checkELMatch(target_el, in_host);
+            match = checkELMatch(lookup.targetEL, lookup.inHost);
 
-            if (match && !ignore_asn) {
-                match = global || (asn == asid);
+            if (match && !lookup.ignoreAsn) {
+                match = global || (lookup.asn == asid);
             }
             if (match && nstid) {
-                match = isHyp || (_vmid == vmid);
+                match = isHyp || (lookup.vmid == vmid);
             }
         }
         return match;

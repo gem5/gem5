@@ -79,20 +79,16 @@ TLB::setTableWalker(TableWalker *table_walker)
 }
 
 TlbEntry*
-TLB::lookup(Addr va, uint16_t asn, vmid_t vmid, bool hyp, bool secure,
-            bool functional, bool ignore_asn, ExceptionLevel target_el,
-            bool in_host, BaseMMU::Mode mode)
+TLB::lookup(const Lookup &lookup_data)
 {
-
     TlbEntry *retval = NULL;
+    const auto functional = lookup_data.functional;
+    const auto mode = lookup_data.mode;
 
     // Maintaining LRU array
     int x = 0;
     while (retval == NULL && x < size) {
-        if ((!ignore_asn && table[x].match(va, asn, vmid, hyp, secure, false,
-             target_el, in_host)) ||
-            (ignore_asn && table[x].match(va, vmid, hyp, secure, target_el,
-             in_host))) {
+        if (table[x].match(lookup_data)) {
             // We only move the hit entry ahead when the position is higher
             // than rangeMRU
             if (x > rangeMRU && !functional) {
@@ -112,9 +108,11 @@ TLB::lookup(Addr va, uint16_t asn, vmid_t vmid, bool hyp, bool secure,
     DPRINTF(TLBVerbose, "Lookup %#x, asn %#x -> %s vmn 0x%x hyp %d secure %d "
             "ppn %#x size: %#x pa: %#x ap:%d ns:%d nstid:%d g:%d asid: %d "
             "el: %d\n",
-            va, asn, retval ? "hit" : "miss", vmid, hyp, secure,
+            lookup_data.va, lookup_data.asn, retval ? "hit" : "miss",
+            lookup_data.vmid, lookup_data.hyp, lookup_data.secure,
             retval ? retval->pfn       : 0, retval ? retval->size  : 0,
-            retval ? retval->pAddr(va) : 0, retval ? retval->ap    : 0,
+            retval ? retval->pAddr(lookup_data.va) : 0,
+            retval ? retval->ap        : 0,
             retval ? retval->ns        : 0, retval ? retval->nstid : 0,
             retval ? retval->global    : 0, retval ? retval->asid  : 0,
             retval ? retval->el        : 0);
@@ -142,20 +140,16 @@ TLB::lookup(Addr va, uint16_t asn, vmid_t vmid, bool hyp, bool secure,
 }
 
 TlbEntry*
-TLB::multiLookup(Addr va, uint16_t asid, vmid_t vmid, bool hyp, bool secure,
-                 bool functional, bool ignore_asn, ExceptionLevel target_el,
-                 bool in_host, BaseMMU::Mode mode)
+TLB::multiLookup(const Lookup &lookup_data)
 {
-    TlbEntry* te = lookup(va, asid, vmid, hyp, secure, functional,
-                          ignore_asn, target_el, in_host, mode);
+    TlbEntry* te = lookup(lookup_data);
 
     if (te) {
-        checkPromotion(te, mode);
+        checkPromotion(te, lookup_data.mode);
     } else {
         if (auto tlb = static_cast<TLB*>(nextLevel())) {
-            te = tlb->multiLookup(va, asid, vmid, hyp, secure, functional,
-                                  ignore_asn, target_el, in_host, mode);
-            if (te && !functional)
+            te = tlb->multiLookup(lookup_data);
+            if (te && !lookup_data.functional)
                 insert(*te);
         }
     }
@@ -521,13 +515,20 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
                TypeTLB entry_type)
 {
     TlbEntry *te;
-    // D5.7.2: Sign-extend address to 64 bits
-    mva = sext<56>(mva);
+    Lookup lookup_data;
 
-    bool hyp = target_el == EL2;
+    lookup_data.va = sext<56>(mva);
+    lookup_data.asn = asn;
+    lookup_data.ignoreAsn = ignore_asn;
+    lookup_data.vmid = vmid;
+    lookup_data.hyp = target_el == EL2;
+    lookup_data.secure = secure_lookup;
+    lookup_data.functional = true;
+    lookup_data.targetEL = target_el;
+    lookup_data.inHost = in_host;
+    lookup_data.mode = BaseMMU::Read;
 
-    te = lookup(mva, asn, vmid, hyp, secure_lookup, true, ignore_asn,
-                target_el, in_host, BaseMMU::Read);
+    te = lookup(lookup_data);
     while (te != NULL) {
         bool matching_type = (te->type & entry_type);
         if (matching_type && secure_lookup == !te->nstid) {
@@ -535,8 +536,7 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
             te->valid = false;
             stats.flushedEntries++;
         }
-        te = lookup(mva, asn, vmid, hyp, secure_lookup, true, ignore_asn,
-                    target_el, in_host, BaseMMU::Read);
+        te = lookup(lookup_data);
     }
 }
 

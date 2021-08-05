@@ -149,9 +149,20 @@ MMU::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
 
     auto tlb = getTlb(BaseMMU::Read, state.directToStage2);
 
-    TlbEntry *e = tlb->lookup(
-        va, state.asid, state.vmid, state.isHyp, state.isSecure, true, false,
-        state.aarch64 ? state.aarch64EL : EL1, false, BaseMMU::Read);
+    TlbEntry::Lookup lookup_data;
+
+    lookup_data.va = va;
+    lookup_data.asn = state.asid;
+    lookup_data.ignoreAsn = false;
+    lookup_data.vmid = state.vmid;
+    lookup_data.hyp = state.isHyp;
+    lookup_data.secure = state.isSecure;
+    lookup_data.functional = true;
+    lookup_data.targetEL = state.aarch64 ? state.aarch64EL : EL1;
+    lookup_data.inHost = false;
+    lookup_data.mode = BaseMMU::Read;
+
+    TlbEntry *e = tlb->multiLookup(lookup_data);
 
     if (!e)
         return false;
@@ -1375,8 +1386,21 @@ MMU::lookup(Addr va, uint16_t asid, vmid_t vmid, bool hyp, bool secure,
             bool in_host, bool stage2, BaseMMU::Mode mode)
 {
     TLB *tlb = getTlb(mode, stage2);
-    return tlb->multiLookup(va, asid, vmid, hyp, secure, functional,
-                            ignore_asn, target_el, in_host, mode);
+
+    TlbEntry::Lookup lookup_data;
+
+    lookup_data.va = va;
+    lookup_data.asn = asid;
+    lookup_data.ignoreAsn = ignore_asn;
+    lookup_data.vmid = vmid;
+    lookup_data.hyp = hyp;
+    lookup_data.secure = secure;
+    lookup_data.functional = functional;
+    lookup_data.targetEL = target_el;
+    lookup_data.inHost = in_host;
+    lookup_data.mode = mode;
+
+    return tlb->multiLookup(lookup_data);
 }
 
 Fault

@@ -157,46 +157,23 @@ class TLB : public BaseTLB
 
   public:
     using Params = ArmTLBParams;
+    using Lookup = TlbEntry::Lookup;
+
     TLB(const Params &p);
     TLB(const Params &p, int _size, TableWalker *_walker);
 
     /** Lookup an entry in the TLB
-     * @param vpn virtual address
-     * @param asn context id/address space id to use
-     * @param vmid The virtual machine ID used for stage 2 translation
-     * @param secure if the lookup is secure
-     * @param hyp if the lookup is done from hyp mode
-     * @param functional if the lookup should modify state
-     * @param ignore_asn if on lookup asn should be ignored
-     * @param target_el selecting the translation regime
-     * @param in_host if we are in host (EL2&0 regime)
-     * @param mode to differentiate between read/writes/fetches.
      * @return pointer to TLB entry if it exists
      */
-    TlbEntry *lookup(Addr vpn, uint16_t asn, vmid_t vmid, bool hyp,
-                     bool secure, bool functional,
-                     bool ignore_asn, ExceptionLevel target_el,
-                     bool in_host, BaseMMU::Mode mode);
+    TlbEntry *lookup(const Lookup &lookup_data);
 
     /** Lookup an entry in the TLB and in the next levels by
      * following the nextLevel pointer
      *
-     * @param vpn virtual address
-     * @param asn context id/address space id to use
-     * @param vmid The virtual machine ID used for stage 2 translation
-     * @param secure if the lookup is secure
-     * @param hyp if the lookup is done from hyp mode
-     * @param functional if the lookup should modify state
-     * @param ignore_asn if on lookup asn should be ignored
-     * @param target_el selecting the translation regime
-     * @param in_host if we are in host (EL2&0 regime)
      * @param mode to differentiate between read/writes/fetches.
      * @return pointer to TLB entry if it exists
      */
-    TlbEntry *multiLookup(Addr vpn, uint16_t asn, vmid_t vmid, bool hyp,
-                          bool secure, bool functional,
-                          bool ignore_asn, ExceptionLevel target_el,
-                          bool in_host, BaseMMU::Mode mode);
+    TlbEntry *multiLookup(const Lookup &lookup_data);
 
     virtual ~TLB();
 
