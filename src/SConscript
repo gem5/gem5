@@ -175,6 +175,8 @@ class PySource(SourceFile):
 
         marshal_env.Command(self.cpp, [ py_marshal, self.tnode ],
                         MakeAction(embedPyFile, Transform("EMBED PY")))
+        if main['USE_PYTHON']:
+            Source(self.cpp, tags=self.tags, add_tags='python')
 
 class SimObject(PySource):
     '''Add a SimObject python file as a python source object and add
@@ -956,10 +958,6 @@ env.Command('sim/tags.cc', None,
             MakeAction('util/cpt_upgrader.py --get-cc-file > $TARGET',
                        Transform("VER TAGS")))
 env.AlwaysBuild(tags)
-
-if main['USE_PYTHON']:
-    for source in PySource.all:
-        Source(source.cpp, tags=source.tags, add_tags='python')
 
 ########################################################################
 #
