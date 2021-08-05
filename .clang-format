@@ -1,0 +1,456 @@
+---
+# Language (LanguageKind) clang-format 3.5
+Language:        Cpp
+
+# Based on clang-10 (latest version supported on Ubuntu 20)
+# No BasedOnStyle
+
+# AccessModifierOffset (Integer) clang-format 3.3
+AccessModifierOffset: -2
+
+# AlignAfterOpenBracket (BracketAlignmentStyle) clang-format 3.8
+AlignAfterOpenBracket: Align
+
+# AlignArrayOfStructures (ArrayInitializerAlignmentStyle) clang-format 13
+
+# AlignConsecutiveAssignments (Boolean) clang-format 3.8
+AlignConsecutiveAssignments: false
+
+# AlignConsecutiveBitFields (AlignConsecutiveStyle) clang-format 11
+
+# AlignConsecutiveDeclarations (Boolean) clang-format 3.8
+AlignConsecutiveDeclarations: false
+
+# AlignConsecutiveMacros (Boolean) clang-format 9
+AlignConsecutiveMacros: false
+
+# AlignEscapedNewlines (EscapedNewlineAlignmentStyle) clang-format 5
+AlignEscapedNewlines: Right
+
+# AlignOperands (Boolean) clang-format 3.5
+AlignOperands:   true
+
+# AlignTrailingComments (TrailingCommentsAlignmentStyle) clang-format 3.7
+AlignTrailingComments: true
+
+# AllowAllArgumentsOnNextLine (Boolean) clang-format 9
+AllowAllArgumentsOnNextLine: true
+
+# AllowAllConstructorInitializersOnNextLine (Boolean) clang-format 9
+AllowAllConstructorInitializersOnNextLine: true
+
+# AllowAllParametersOfDeclarationOnNextLine (Boolean) clang-format 3.3
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# AllowShortBlocksOnASingleLine (ShortBlockStyle) clang-format 3.5
+AllowShortBlocksOnASingleLine: Empty
+
+# AllowShortCaseLabelsOnASingleLine (Boolean) clang-format 3.6
+AllowShortCaseLabelsOnASingleLine: false
+
+# AllowShortEnumsOnASingleLine (Boolean) clang-format 11
+
+# AllowShortFunctionsOnASingleLine (ShortFunctionStyle) clang-format 3.5
+AllowShortFunctionsOnASingleLine: All
+
+# AllowShortIfStatementsOnASingleLine (ShortIfStyle) clang-format 3.3
+AllowShortIfStatementsOnASingleLine: Never
+
+# AllowShortLambdasOnASingleLine (ShortLambdaStyle) clang-format 9
+AllowShortLambdasOnASingleLine: All
+
+# AllowShortLoopsOnASingleLine (Boolean) clang-format 3.7
+AllowShortLoopsOnASingleLine: false
+
+# AlwaysBreakAfterDefinitionReturnType (DefinitionReturnTypeBreakingStyle) clang-format 3.7
+# Deprecated
+
+# AlwaysBreakAfterReturnType (ReturnTypeBreakingStyle) clang-format 3.8
+AlwaysBreakAfterReturnType: AllDefinitions
+
+# AlwaysBreakBeforeMultilineStrings (Boolean) clang-format 3.4
+AlwaysBreakBeforeMultilineStrings: false
+
+# AlwaysBreakTemplateDeclarations (BreakTemplateDeclarationsStyle) clang-format 3.4
+AlwaysBreakTemplateDeclarations: Yes
+
+# AttributeMacros (List of Strings) clang-format 12
+
+# BinPackArguments (Boolean) clang-format 3.7
+BinPackArguments: true
+
+# BinPackParameters (Boolean) clang-format 3.7
+BinPackParameters: true
+
+# BitFieldColonSpacing (BitFieldColonSpacingStyle) clang-format 12
+
+# BraceWrapping (BraceWrappingFlags) clang-format 3.8
+BraceWrapping:
+  AfterCaseLabel:  false
+  AfterClass:      true
+  AfterControlStatement: Never
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
+  # AfterObjCDeclaration
+  AfterStruct:     true
+  AfterUnion:      true
+  AfterExternBlock: true
+  BeforeCatch:     false
+  BeforeElse:      false
+  # Not clang-format 10
+  # BeforeLambdaBody: false
+  # BeforeWhile:     false
+  IndentBraces:    false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+# BreakAfterAttributes (AttributeBreakingStyle) clang-format 16
+
+# BreakAfterJavaFieldAnnotations (Boolean) clang-format 3.8
+
+# BreakArrays (Boolean) clang-format 16
+
+# BreakBeforeBinaryOperators (BinaryOperatorStyle) clang-format 3.6
+BreakBeforeBinaryOperators: None
+
+# BreakBeforeBraces (BraceBreakingStyle) clang-format 3.7
+BreakBeforeBraces: Custom
+
+# BreakBeforeConceptDeclarations (BreakBeforeConceptDeclarationsStyle) clang-format 12
+
+# BreakBeforeInlineASMColon (BreakBeforeInlineASMColonStyle) clang-format 16
+
+# BreakBeforeTernaryOperators (Boolean) clang-format 3.7
+BreakBeforeTernaryOperators: false
+
+# BreakConstructorInitializers (BreakConstructorInitializersStyle) clang-format 5
+BreakConstructorInitializers: BeforeColon
+
+# BreakInheritanceList (BreakInheritanceListStyle) clang-format 7
+BreakInheritanceList: AfterColon
+
+# BreakStringLiterals (Boolean) clang-format 3.9
+BreakStringLiterals: true
+
+# ColumnLimit (Unsigned) clang-format 3.7
+ColumnLimit:     79
+
+# CommentPragmas (String) clang-format 3.7
+CommentPragmas:  ''
+
+# CompactNamespaces (Boolean) clang-format 5
+CompactNamespaces: false
+
+# ConstructorInitializerAllOnOneLineOrOnePerLine (Boolean) clang-format 3.7
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+
+# ConstructorInitializerIndentWidth (Unsigned) clang-format 3.7
+ConstructorInitializerIndentWidth: 4
+
+# ContinuationIndentWidth (Unsigned) clang-format 3.7
+ContinuationIndentWidth: 4
+
+# Cpp11BracedListStyle (Boolean) clang-format 3.4
+Cpp11BracedListStyle: false
+
+# DeriveLineEnding (Boolean) clang-format 10
+DeriveLineEnding: true
+
+# DerivePointerAlignment (Boolean) clang-format 3.7
+DerivePointerAlignment: false
+
+# DisableFormat (Boolean) clang-format 3.7
+DisableFormat:   false
+
+# EmptyLineAfterAccessModifier (EmptyLineAfterAccessModifierStyle) clang-format 13
+
+# EmptyLineBeforeAccessModifier (EmptyLineBeforeAccessModifierStyle) clang-format 12
+
+# ExperimentalAutoDetectBinPacking (Boolean) clang-format 3.7
+
+# FixNamespaceComments (Boolean) clang-format 5
+FixNamespaceComments: true
+
+# ForEachMacros (List of Strings) clang-format 3.7
+ForEachMacros:
+  - GEM5_FOR_EACH_IN_PACK
+
+# IfMacros (List of Strings) clang-format 13
+
+# IncludeBlocks (IncludeBlocksStyle) clang-format 6
+IncludeBlocks:   Preserve
+
+# IncludeCategories (List of IncludeCategories) clang-format 3.8
+IncludeCategories:
+  - Regex:           '^<.*\.h>'
+    Priority:        1
+    SortPriority:    0
+  - Regex:           '^<.*'
+    Priority:        2
+    SortPriority:    0
+  - Regex:           '.*'
+    Priority:        3
+    SortPriority:    0
+
+# IncludeIsMainRegex (String) clang-format 3.9
+IncludeIsMainRegex: '([-_](test|unittest))?$'
+
+# IncludeIsMainSourceRegex (String) clang-format 10
+IncludeIsMainSourceRegex: ''
+
+# IndentAccessModifiers (Boolean) clang-format 13
+
+# IndentCaseBlocks (Boolean) clang-format 11
+
+# IndentCaseLabels (Boolean) clang-format 3.3
+IndentCaseLabels: false
+
+# IndentExternBlock (IndentExternBlockStyle) clang-format 11
+
+# IndentGotoLabels (Boolean) clang-format 10
+IndentGotoLabels: true
+
+# IndentPPDirectives (PPDirectiveIndentStyle) clang-format 6
+IndentPPDirectives: None
+
+# IndentRequiresClause (Boolean) clang-format 15
+
+# IndentWidth (Unsigned) clang-format 3.7
+IndentWidth:     4
+
+# IndentWrappedFunctionNames (Boolean) clang-format 3.7
+IndentWrappedFunctionNames: false
+
+# InsertBraces (Boolean) clang-format 15
+
+# InsertNewlineAtEOF (Boolean) clang-format 16
+
+# InsertTrailingCommas (TrailingCommaStyle) clang-format 11
+
+# IntegerLiteralSeparator (IntegerLiteralSeparatorStyle) clang-format 16
+
+# JavaImportGroups (List of Strings) clang-format 8
+
+# JavaScriptQuotes (JavaScriptQuoteStyle) clang-format 3.9
+
+# JavaScriptWrapImports (Boolean) clang-format 3.9
+
+# KeepEmptyLinesAtTheStartOfBlocks (Boolean) clang-format 3.7
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# LambdaBodyIndentation (LambdaBodyIndentationKind) clang-format 13
+
+# LineEnding (LineEndingStyle) clang-format 16
+
+# MacroBlockBegin (String) clang-format 3.7
+MacroBlockBegin: "^(\
+BitUnion(8|16|32|64)|\
+SubBitUnion\
+)$"
+
+# MacroBlockEnd (String) clang-format 3.7
+MacroBlockEnd: "^(\
+EndBitUnion|\
+EndSubBitUnion\
+)$"
+
+# MaxEmptyLinesToKeep (Unsigned) clang-format 3.7
+MaxEmptyLinesToKeep: 1
+
+# NamespaceIndentation (NamespaceIndentationKind) clang-format 3.7
+NamespaceIndentation: None
+
+# NamespaceMacros (List of Strings) clang-format 9
+
+# ObjCBinPackProtocolList (BinPackStyle) clang-format 7
+
+# ObjCBlockIndentWidth (Unsigned) clang-format 3.7
+
+# ObjCBreakBeforeNestedBlockParam (Boolean) clang-format 11
+
+# ObjCSpaceAfterProperty (Boolean) clang-format 3.7
+
+# ObjCSpaceBeforeProtocolList (Boolean) clang-format 3.7
+
+# PPIndentWidth (Integer) clang-format 13
+
+# PackConstructorInitializers (PackConstructorInitializersStyle) clang-format 14
+
+# PenaltyBreakAssignment (Unsigned) clang-format 5
+
+# PenaltyBreakBeforeFirstCallParameter (Unsigned) clang-format 3.7
+
+# PenaltyBreakComment (Unsigned) clang-format 3.7
+
+# PenaltyBreakFirstLessLess (Unsigned) clang-format 3.7
+
+# PenaltyBreakOpenParenthesis (Unsigned) clang-format 14
+
+# PenaltyBreakString (Unsigned) clang-format 3.7
+
+# PenaltyBreakTemplateDeclaration (Unsigned) clang-format 7
+
+# PenaltyExcessCharacter (Unsigned) clang-format 3.7
+
+# PenaltyIndentedWhitespace (Unsigned) clang-format 12
+
+# PenaltyReturnTypeOnItsOwnLine (Unsigned) clang-format 3.7
+
+# PointerAlignment (PointerAlignmentStyle) clang-format 3.7
+PointerAlignment: Right
+
+# QualifierAlignment (QualifierAlignmentStyle) clang-format 14
+
+# QualifierOrder (List of Strings) clang-format 14
+
+# RawStringFormats (List of RawStringFormats) clang-format 6
+RawStringFormats:
+  - Language:        Cpp
+    Delimiters:
+      - cc
+      - CC
+      - cpp
+      - Cpp
+      - CPP
+      - 'c++'
+      - 'C++'
+    CanonicalDelimiter: ''
+    BasedOnStyle:    google
+  - Language:        TextProto
+    Delimiters:
+      - pb
+      - PB
+      - proto
+      - PROTO
+    EnclosingFunctions:
+      - EqualsProto
+      - EquivToProto
+      - PARSE_PARTIAL_TEXT_PROTO
+      - PARSE_TEST_PROTO
+      - PARSE_TEXT_PROTO
+      - ParseTextOrDie
+      - ParseTextProtoOrDie
+      - ParseTestProto
+      - ParsePartialTestProto
+    CanonicalDelimiter: ''
+    BasedOnStyle:    google
+
+# ReferenceAlignment (ReferenceAlignmentStyle) clang-format 13
+
+# ReflowComments (Boolean) clang-format 3.8
+ReflowComments:  true
+
+# RemoveBracesLLVM (Boolean) clang-format 14
+
+# RemoveSemicolon (Boolean) clang-format 16
+
+# RequiresClausePosition (RequiresClausePositionStyle) clang-format 15
+
+# RequiresExpressionIndentation (RequiresExpressionIndentationKind) clang-format 16
+
+# SeparateDefinitionBlocks (SeparateDefinitionStyle) clang-format 14
+SeparateDefinitionBlocks: Always
+
+# ShortNamespaceLines (Unsigned) clang-format 13
+
+# SortIncludes (SortIncludesOptions) clang-format 3.8
+# TODO: we cannot sort includes as it breaks the compilation
+# One way to fix this would be to use IWYU (include what you use)
+# But this adds complexity as some header are generated during the compilation,
+# hence cannot be run during pre-commit.
+SortIncludes:    false
+
+# SortJavaStaticImport (SortJavaStaticImportOptions) clang-format 12
+
+# SortUsingDeclarations (SortUsingDeclarationsOptions) clang-format 5
+SortUsingDeclarations: true
+
+# SpaceAfterCStyleCast (Boolean) clang-format 3.5
+SpaceAfterCStyleCast: false
+
+# SpaceAfterLogicalNot (Boolean) clang-format 9
+SpaceAfterLogicalNot: false
+
+# SpaceAfterTemplateKeyword (Boolean) clang-format 4
+SpaceAfterTemplateKeyword: true
+
+# SpaceAroundPointerQualifiers (SpaceAroundPointerQualifiersStyle) clang-format 12
+
+# SpaceBeforeAssignmentOperators (Boolean) clang-format 3.7
+SpaceBeforeAssignmentOperators: true
+
+# SpaceBeforeCaseColon (Boolean) clang-format 12
+
+# SpaceBeforeCpp11BracedList (Boolean) clang-format 7
+SpaceBeforeCpp11BracedList: false
+
+# SpaceBeforeCtorInitializerColon (Boolean) clang-format 7
+SpaceBeforeCtorInitializerColon: true
+
+# SpaceBeforeInheritanceColon (Boolean) clang-format 7
+SpaceBeforeInheritanceColon: true
+
+# SpaceBeforeParens (SpaceBeforeParensStyle) clang-format 3.5
+SpaceBeforeParens: ControlStatements
+
+# SpaceBeforeParensOptions (SpaceBeforeParensCustom) clang-format 14
+
+# SpaceBeforeRangeBasedForLoopColon (Boolean) clang-format 7
+SpaceBeforeRangeBasedForLoopColon: true
+
+# SpaceBeforeSquareBrackets (Boolean) clang-format 10
+SpaceBeforeSquareBrackets: false
+
+# SpaceInEmptyBlock (Boolean) clang-format 10
+SpaceInEmptyBlock: false
+
+# SpaceInEmptyParentheses (Boolean) clang-format 3.7
+SpaceInEmptyParentheses: false
+
+# SpacesBeforeTrailingComments (Unsigned) clang-format 3.7
+SpacesBeforeTrailingComments: 1
+
+# SpacesInAngles (SpacesInAnglesStyle) clang-format 3.4
+SpacesInAngles:  false
+
+# SpacesInCStyleCastParentheses (Boolean) clang-format 3.7
+SpacesInCStyleCastParentheses: false
+
+# SpacesInConditionalStatement (Boolean) clang-format 10
+SpacesInConditionalStatement: false
+
+# SpacesInContainerLiterals (Boolean) clang-format 3.7
+SpacesInContainerLiterals: true
+
+# SpacesInLineCommentPrefix (SpacesInLineComment) clang-format 13
+
+# SpacesInParentheses (Boolean) clang-format 3.7
+SpacesInParentheses: false
+
+# SpacesInSquareBrackets (Boolean) clang-format 3.7
+SpacesInSquareBrackets: false
+
+# Standard (LanguageStandard) clang-format 3.7
+Standard:        Auto
+
+# StatementAttributeLikeMacros (List of Strings) clang-format 12
+
+# StatementMacros (List of Strings) clang-format 8
+StatementMacros:
+
+# TabWidth (Unsigned) clang-format 3.7
+TabWidth:        8
+
+# TypenameMacros (List of Strings) clang-format 9
+
+# UseCRLF (Boolean) clang-format 10
+UseCRLF:         false
+
+# UseTab (UseTabStyle) clang-format 3.7
+UseTab:          Never
+
+# WhitespaceSensitiveMacros (List of Strings) clang-format 11
+#
+...
