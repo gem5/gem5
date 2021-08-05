@@ -88,11 +88,6 @@ py_marshal = marshal_env.Program('marshal', 'python/marshal.cc')[0]
 # byte code, compress it, and then generate a c++ file that
 # inserts the result into an array.
 def embedPyFile(target, source, env):
-    def c_str(string):
-        if string is None:
-            return "0"
-        return '"%s"' % string
-
     '''Action function to compile a .py into a code object, marshal it,
     compress it, and stick it into an asm file so the code appears as
     just bytes with a label in the data section. The action takes two
@@ -104,12 +99,14 @@ def embedPyFile(target, source, env):
 
     import subprocess
 
+    marshal_bin, pysource = source
+    modpath = env['PYSOURCE_MODPATH']
+    abspath = env['PYSOURCE_ABSPATH']
     marshalled = subprocess.check_output(
-            [source[0].abspath, str(source[1])], env=env['ENV'])
+            [marshal_bin.abspath, str(pysource)], env=env['ENV'])
 
     compressed = zlib.compress(marshalled)
     data = compressed
-    pysource = PySource.tnodes[source[1]]
 
     code = code_formatter()
     code('''\
@@ -127,8 +124,8 @@ namespace
     # into a global list.
     code('''
 EmbeddedPython embedded_module_info(
-    ${{c_str(pysource.abspath)}},
-    ${{c_str(pysource.modpath)}},
+    "${abspath}",
+    "${modpath}",
     embedded_module_data,
     ${{len(data)}},
     ${{len(marshalled)}});
@@ -141,7 +138,6 @@ EmbeddedPython embedded_module_info(
 class PySource(SourceFile):
     '''Add a python source file to the named package'''
     modules = {}
-    tnodes = {}
 
     def __init__(self, package, source, tags=None, add_tags=None):
         '''specify the python package, the source file, and any tags'''
@@ -171,10 +167,15 @@ class PySource(SourceFile):
         self.cpp = File(self.filename + '.cc')
 
         PySource.modules[modpath] = self
-        PySource.tnodes[self.tnode] = self
 
-        marshal_env.Command(self.cpp, [ py_marshal, self.tnode ],
-                        MakeAction(embedPyFile, Transform("EMBED PY")))
+        overrides = {
+                'PYSOURCE_MODPATH': modpath,
+                'PYSOURCE_ABSPATH': abspath,
+        }
+        marshal_env.Command(self.cpp, [ py_marshal, File(source) ],
+                MakeAction(embedPyFile, Transform("EMBED PY"),
+                    varlist=overrides.keys()),
+                **overrides)
         if main['USE_PYTHON']:
             Source(self.cpp, tags=self.tags, add_tags='python')
 
