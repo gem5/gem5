@@ -443,30 +443,31 @@ ${component_flag_decls}
 
     code.write(str(target[0]))
 
-debug_flags = {}
 def DebugFlag(name, desc=None, fmt=False):
     if name == "All":
         raise AttributeError('The "All" flag name is reserved')
-    if name in debug_flags:
-        raise AttributeError("Flag {} already specified".format(name))
+    debug_flags = env.get('DEBUG_FLAGS', [])
+    if any(name == flag[0] for flag in debug_flags):
+        raise AttributeError(f'Flag {name} already specified')
 
     flag = (name, (), desc, fmt)
-    debug_flags[name] = flag
+    env.Append(DEBUG_FLAGS=[flag])
 
-    hh_file = Dir(env['BUILDDIR']).Dir('debug').File('%s.hh' % name)
+    hh_file = Dir(env['BUILDDIR']).Dir('debug').File(f'{name}.hh')
     env.Command(hh_file, ToValue(flag),
             MakeAction(makeDebugFlagHH, Transform("TRACING", 0)))
 
 def CompoundFlag(name, flags, desc=None):
     if name == "All":
         raise AttributeError('The "All" flag name is reserved')
-    if name in debug_flags:
-        raise AttributeError('Flag {} already specified'.format(name))
+    debug_flags = env.get('DEBUG_FLAGS', [])
+    if any(name == flag[0] for flag in debug_flags):
+        raise AttributeError(f'Flag {name} already specified')
 
     flag = (name, flags, desc, False)
-    debug_flags[name] = flag
+    env.Append(DEBUG_FLAGS=[flag])
 
-    env.Command(Dir(env['BUILDDIR']).Dir('debug').File('%s.hh' % name),
+    env.Command(Dir(env['BUILDDIR']).Dir('debug').File(f'{name}.hh'),
             ToValue(flag),
             MakeAction(makeDebugFlagHH, Transform("TRACING", 0)))
 
@@ -887,7 +888,7 @@ for name,simobj in sorted(sim_objects.items()):
 # Handle debug flags
 #
 def makeDebugFlagCC(target, source, env):
-    assert(len(target) == 1 and len(source) == 1)
+    assert(len(target) == 1)
 
     code = code_formatter()
 
@@ -909,9 +910,8 @@ namespace debug
 
 ''')
 
-    for name, flag in sorted(source[0].read().items()):
-        n, compound, desc, fmt = flag
-        assert n == name
+    for flag in sorted(env.get('DEBUG_FLAGS', [])):
+        name, compound, desc, fmt = flag
 
         # We intentionally make flag a reference to a heap allocated object so
         # (1) It has a similar interface to a global object like before
@@ -948,8 +948,9 @@ namespace debug
     code.write(str(target[0]))
 
 # Generate the files for the debug and debug-format flags
-env.Command('debug/flags.cc', Value(debug_flags),
-            MakeAction(makeDebugFlagCC, Transform("TRACING", 0)))
+env.Command('debug/flags.cc', [],
+            MakeAction(makeDebugFlagCC, Transform("TRACING", 0),
+                varlist=['DEBUG_FLAGS']))
 Source('debug/flags.cc', add_tags='gem5 trace')
 
 # version tags
