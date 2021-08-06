@@ -1416,6 +1416,16 @@ TEST(AddrRangeTest, MultipleExclusionUnsorted)
  */
 TEST(AddrRangeDeathTest, ExcludeInterleavingRanges)
 {
+  /* An `assert(!interleaved());` exists at the top of the `exclude(...)`
+   * method. This means EXPECT_DEATH will only function when DEBUG is enabled
+   * (as when compiled to `.opt`). When disabled (as when compiled to `.fast`),
+   * `r.exclude` fails more catastrophically via a `panic` which GTest cannot
+   * handle correctly. We therefore include a `#ifdef NDEBUG` guard so this
+   * test is skipped when DEBUG is disabled.
+   */
+#ifdef NDEBUG
+    GTEST_SKIP() << "Skipping as assetions are stripped from fast builds.";
+#endif
     const std::vector<AddrRange> exclude_ranges{
         AddrRange(0x180, 0x210),
     };
