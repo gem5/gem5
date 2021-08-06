@@ -1129,8 +1129,7 @@ illegalExceptionReturn(ThreadContext *tc, CPSR cpsr, CPSR spsr)
         return true;
 
     bool spsr_mode_is_aarch32 = (spsr.width == 1);
-    bool known, target_el_is_aarch32;
-    std::tie(known, target_el_is_aarch32) = ELUsingAArch32K(tc, target_el);
+    auto [known, target_el_is_aarch32] = ELUsingAArch32K(tc, target_el);
     assert(known || (target_el == EL0 && ELIs64(tc, EL1)));
 
     if (known && (spsr_mode_is_aarch32 != target_el_is_aarch32))

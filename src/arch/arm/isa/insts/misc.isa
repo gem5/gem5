@@ -891,9 +891,8 @@ let {{
     mrc14code = '''
     MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
                                RegId(MiscRegClass, op1)).index();
-    bool can_read, undefined;
-    std::tie(can_read, undefined) = canReadCoprocReg(miscReg, Scr, Cpsr,
-                                                     xc->tcBase());
+    auto [can_read, undefined] = canReadCoprocReg(miscReg, Scr, Cpsr,
+                                                  xc->tcBase());
     if (!can_read || undefined) {
         return std::make_shared<UndefinedInstruction>(machInst, false,
                                                       mnemonic);
@@ -917,9 +916,8 @@ let {{
     mcr14code = '''
     MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
                                RegId(MiscRegClass, dest)).index();
-    bool can_write, undefined;
-    std::tie(can_write, undefined) = canWriteCoprocReg(miscReg, Scr, Cpsr,
-                                                       xc->tcBase());
+    auto [can_write, undefined] = canWriteCoprocReg(miscReg, Scr, Cpsr,
+                                                    xc->tcBase());
     if (undefined || !can_write) {
         return std::make_shared<UndefinedInstruction>(machInst, false,
                                                       mnemonic);
@@ -947,9 +945,8 @@ let {{
 
     Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
-    bool can_read, undefined;
-    std::tie(can_read, undefined) = canReadCoprocReg(miscReg, Scr, Cpsr,
-                                                     xc->tcBase());
+    auto [can_read, undefined] = canReadCoprocReg(miscReg, Scr, Cpsr,
+                                                  xc->tcBase());
     // if we're in non secure PL1 mode then we can trap regargless of whether
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
@@ -980,9 +977,8 @@ let {{
 
     Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
-    bool can_write, undefined;
-    std::tie(can_write, undefined) = canWriteCoprocReg(miscReg, Scr, Cpsr,
-                                                       xc->tcBase());
+    auto [can_write, undefined] = canWriteCoprocReg(miscReg, Scr, Cpsr,
+                                                    xc->tcBase());
 
     // if we're in non secure PL1 mode then we can trap regargless of whether
     // the register is accessable, in other modes we trap if only if the register
@@ -1014,9 +1010,8 @@ let {{
 
     Fault fault = mcrrMrrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
-    bool can_read, undefined;
-    std::tie(can_read, undefined) = canReadCoprocReg(miscReg, Scr, Cpsr,
-                                                     xc->tcBase());
+    auto [can_read, undefined] = canReadCoprocReg(miscReg, Scr, Cpsr,
+                                                  xc->tcBase());
     // if we're in non secure PL1 mode then we can trap regargless of whether
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
@@ -1047,9 +1042,8 @@ let {{
 
     Fault fault = mcrrMrrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
-    bool can_write, undefined;
-    std::tie(can_write, undefined) = canWriteCoprocReg(miscReg, Scr, Cpsr,
-                                                       xc->tcBase());
+    auto [can_write, undefined] = canWriteCoprocReg(miscReg, Scr, Cpsr,
+                                                    xc->tcBase());
 
     // if we're in non secure PL1 mode then we can trap regargless of whether
     // the register is accessable, in other modes we trap if only if the register
@@ -1125,9 +1119,8 @@ let {{
 
         bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), imm);
 
-        bool can_write, undefined;
-        std::tie(can_write, undefined) = canWriteCoprocReg(miscReg, Scr, Cpsr,
-                                                           xc->tcBase());
+        auto [can_write, undefined] = canWriteCoprocReg(miscReg, Scr, Cpsr,
+                                                        xc->tcBase());
 
         // if we're in non secure PL1 mode then we can trap regardless
         // of whether the register is accessible, in other modes we

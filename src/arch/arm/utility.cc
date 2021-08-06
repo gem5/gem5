@@ -287,8 +287,7 @@ ELIs64(ThreadContext *tc, ExceptionLevel el)
 bool
 ELIs32(ThreadContext *tc, ExceptionLevel el)
 {
-    bool known, aarch32;
-    std::tie(known, aarch32) = ELUsingAArch32K(tc, el);
+    auto [known, aarch32] = ELUsingAArch32K(tc, el);
     panic_if(!known, "EL state is UNKNOWN");
     return aarch32;
 }
@@ -375,11 +374,10 @@ ELStateUsingAArch32K(ThreadContext *tc, ExceptionLevel el, bool secure)
     return std::make_pair(known, aarch32);
 }
 
-bool ELStateUsingAArch32(ThreadContext *tc, ExceptionLevel el, bool secure)
+bool
+ELStateUsingAArch32(ThreadContext *tc, ExceptionLevel el, bool secure)
 {
-
-    bool known, aarch32;
-    std::tie(known, aarch32) = ELStateUsingAArch32K(tc, el, secure);
+    auto [known, aarch32] = ELStateUsingAArch32K(tc, el, secure);
     panic_if(!known, "EL state is UNKNOWN");
     return aarch32;
 }
