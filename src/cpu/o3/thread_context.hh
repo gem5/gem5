@@ -178,12 +178,6 @@ class ThreadContext : public gem5::ThreadContext
 
     /** Reads an integer register. */
     RegVal
-    readReg(RegIndex reg_idx)
-    {
-        return readIntRegFlat(flattenRegId(RegId(IntRegClass,
-                                                 reg_idx)).index());
-    }
-    RegVal
     readIntReg(RegIndex reg_idx) const override
     {
         return readIntRegFlat(flattenRegId(RegId(IntRegClass,
