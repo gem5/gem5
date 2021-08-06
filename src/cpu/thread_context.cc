@@ -153,6 +153,127 @@ ThreadContext::quiesceTick(Tick resume)
     getSystemPtr()->threads.quiesceTick(contextId(), resume);
 }
 
+RegVal
+ThreadContext::getReg(const RegId &reg) const
+{
+    return getRegFlat(flattenRegId(reg));
+}
+
+void *
+ThreadContext::getWritableReg(const RegId &reg)
+{
+    return getWritableRegFlat(flattenRegId(reg));
+}
+
+void
+ThreadContext::setReg(const RegId &reg, RegVal val)
+{
+    setRegFlat(flattenRegId(reg), val);
+}
+
+void
+ThreadContext::getReg(const RegId &reg, void *val) const
+{
+    getRegFlat(flattenRegId(reg), val);
+}
+
+void
+ThreadContext::setReg(const RegId &reg, const void *val)
+{
+    setRegFlat(flattenRegId(reg), val);
+}
+
+RegVal
+ThreadContext::getRegFlat(const RegId &reg) const
+{
+    RegVal val;
+    getRegFlat(reg, &val);
+    return val;
+}
+
+void
+ThreadContext::setRegFlat(const RegId &reg, RegVal val)
+{
+    setRegFlat(reg, &val);
+}
+
+void
+ThreadContext::getRegFlat(const RegId &reg, void *val) const
+{
+    const RegIndex idx = reg.index();
+    const RegClassType type = reg.classValue();
+    switch (type) {
+      case IntRegClass:
+        *(RegVal *)val = readIntRegFlat(idx);
+        break;
+      case FloatRegClass:
+        *(RegVal *)val = readFloatRegFlat(idx);
+        break;
+      case VecRegClass:
+        *(TheISA::VecRegContainer *)val = readVecRegFlat(idx);
+        break;
+      case VecElemClass:
+        *(RegVal *)val = readVecElemFlat(idx);
+        break;
+      case VecPredRegClass:
+        *(TheISA::VecPredRegContainer *)val = readVecPredRegFlat(idx);
+        break;
+      case CCRegClass:
+        *(RegVal *)val = readCCRegFlat(idx);
+        break;
+      case MiscRegClass:
+        panic("MiscRegs should not be read with getReg.");
+      default:
+        panic("Unrecognized register class type %d.", type);
+    }
+}
+
+void *
+ThreadContext::getWritableRegFlat(const RegId &reg)
+{
+    const RegIndex idx = reg.index();
+    const RegClassType type = reg.classValue();
+    switch (type) {
+      case VecRegClass:
+        return &getWritableVecRegFlat(idx);
+      case VecPredRegClass:
+        return &getWritableVecPredRegFlat(idx);
+      default:
+        panic("Unrecognized register class type %d.", type);
+    }
+}
+
+void
+ThreadContext::setRegFlat(const RegId &reg, const void *val)
+{
+    const RegIndex idx = reg.index();
+    const RegClassType type = reg.classValue();
+    switch (type) {
+      case IntRegClass:
+        setIntRegFlat(idx, *(RegVal *)val);
+        break;
+      case FloatRegClass:
+        setFloatRegFlat(idx, *(RegVal *)val);
+        break;
+      case VecRegClass:
+        setVecRegFlat(idx, *(TheISA::VecRegContainer *)val);
+        break;
+      case VecElemClass:
+        setVecElemFlat(idx, *(RegVal *)val);
+        break;
+      case VecPredRegClass:
+        setVecPredRegFlat(idx, *(TheISA::VecPredRegContainer *)val);
+        break;
+      case CCRegClass:
+        setCCRegFlat(idx, *(RegVal *)val);
+        break;
+      case MiscRegClass:
+        panic("MiscRegs should not be read with getReg.");
+      default:
+        panic("Unrecognized register class type %d.", type);
+    }
+}
+
 void
 serialize(const ThreadContext &tc, CheckpointOut &cp)
 {

@@ -193,6 +193,13 @@ class ThreadContext : public PCEventScope
     //
     // New accessors for new decoder.
     //
+    virtual RegVal getReg(const RegId &reg) const;
+    virtual void getReg(const RegId &reg, void *val) const;
+    virtual void *getWritableReg(const RegId &reg);
+
+    virtual void setReg(const RegId &reg, RegVal val);
+    virtual void setReg(const RegId &reg, const void *val);
+
     virtual RegVal readIntReg(RegIndex reg_idx) const = 0;
 
     virtual RegVal readFloatReg(RegIndex reg_idx) const = 0;
@@ -271,6 +278,13 @@ class ThreadContext : public PCEventScope
      * the underlying register file, which allows for example
      * serialization code to access all registers.
      */
+
+    virtual RegVal getRegFlat(const RegId &reg) const;
+    virtual void getRegFlat(const RegId &reg, void *val) const;
+    virtual void *getWritableRegFlat(const RegId &reg);
+
+    virtual void setRegFlat(const RegId &reg, RegVal val);
+    virtual void setRegFlat(const RegId &reg, const void *val);
 
     virtual RegVal readIntRegFlat(RegIndex idx) const = 0;
     virtual void setIntRegFlat(RegIndex idx, RegVal val) = 0;
