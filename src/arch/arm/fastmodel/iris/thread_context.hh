@@ -279,6 +279,13 @@ class ThreadContext : public gem5::ThreadContext
     //
     // New accessors for new decoder.
     //
+    RegVal getReg(const RegId &reg) const override;
+    void getReg(const RegId &reg, void *val) const override;
+    void *getWritableReg(const RegId &reg) override;
+
+    void setReg(const RegId &reg, RegVal val) override;
+    void setReg(const RegId &reg, const void *val) override;
+
     RegVal readIntReg(RegIndex reg_idx) const override;
 
     RegVal
@@ -397,6 +404,13 @@ class ThreadContext : public gem5::ThreadContext
      * the underlying register file, which allows for example
      * serialization code to access all registers.
      */
+
+    RegVal getRegFlat(const RegId &reg) const override;
+    void getRegFlat(const RegId &reg, void *val) const override;
+    void *getWritableRegFlat(const RegId &reg) override;
+
+    void setRegFlat(const RegId &reg, RegVal val) override;
+    void setRegFlat(const RegId &reg, const void *val) override;
 
     RegVal readIntRegFlat(RegIndex idx) const override;
     void setIntRegFlat(RegIndex idx, uint64_t val) override;
