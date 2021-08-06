@@ -1,4 +1,4 @@
-# Copyright (c) 2016, 2020 ARM Limited
+# Copyright (c) 2016, 2020-2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -94,6 +94,17 @@ def addToPath(path):
     # sys.path[0] should always refer to the current script's directory,
     # so place the new dir right after that.
     sys.path.insert(1, path)
+
+def repoPath():
+    """
+    Return the abspath of the gem5 repository.
+    This is relying on the following structure:
+
+    <gem5-repo>/build/<ISA>/gem5.[opt,debug...]
+    """
+    return os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(sys.executable)))
 
 # Apply method to object.
 # applyMethod(obj, 'meth', <args>) is equivalent to obj.meth(<args>)
