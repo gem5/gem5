@@ -160,7 +160,7 @@ class ExecContext : public gem5::ExecContext
         return thread.readFloatReg(reg.index());
     }
 
-    const TheISA::VecRegContainer &
+    TheISA::VecRegContainer
     readVecRegOperand(const StaticInst *si, int idx) const override
     {
         const RegId& reg = si->srcRegIdx(idx);
@@ -184,7 +184,7 @@ class ExecContext : public gem5::ExecContext
         return thread.readVecElem(reg);
     }
 
-    const TheISA::VecPredRegContainer&
+    TheISA::VecPredRegContainer
     readVecPredRegOperand(const StaticInst *si, int idx) const override
     {
         const RegId& reg = si->srcRegIdx(idx);

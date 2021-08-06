@@ -718,9 +718,6 @@ ThreadContext::getRegFlat(const RegId &reg, void *val) const
       case IntRegClass:
         *(RegVal *)val = readIntRegFlat(idx);
         break;
-      case FloatRegClass:
-        *(RegVal *)val = readFloatRegFlat(idx);
-        break;
       case VecRegClass:
         *(ArmISA::VecRegContainer *)val = readVecRegFlat(idx);
         break;
@@ -748,9 +745,6 @@ ThreadContext::setRegFlat(const RegId &reg, const void *val)
     switch (type) {
       case IntRegClass:
         setIntRegFlat(idx, *(RegVal *)val);
-        break;
-      case FloatRegClass:
-        setFloatRegFlat(idx, *(RegVal *)val);
         break;
       case VecRegClass:
         setVecRegFlat(idx, *(ArmISA::VecRegContainer *)val);
@@ -916,7 +910,7 @@ ThreadContext::readVecPredReg(const RegId &reg_id) const
     return reg;
 }
 
-const ArmISA::VecPredRegContainer &
+ArmISA::VecPredRegContainer
 ThreadContext::readVecPredRegFlat(RegIndex idx) const
 {
     return readVecPredReg(RegId(VecPredRegClass, idx));

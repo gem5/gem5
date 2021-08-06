@@ -176,100 +176,6 @@ class ThreadContext : public gem5::ThreadContext
     /** Resets all architectural registers to 0. */
     void clearArchRegs() override;
 
-    /** Reads an integer register. */
-    RegVal
-    readIntReg(RegIndex reg_idx) const override
-    {
-        return readIntRegFlat(flattenRegId(RegId(IntRegClass,
-                                                 reg_idx)).index());
-    }
-
-    RegVal
-    readFloatReg(RegIndex reg_idx) const override
-    {
-        return readFloatRegFlat(flattenRegId(RegId(FloatRegClass,
-                                             reg_idx)).index());
-    }
-
-    const TheISA::VecRegContainer &
-    readVecReg(const RegId& id) const override
-    {
-        return readVecRegFlat(flattenRegId(id).index());
-    }
-
-    /**
-     * Read vector register operand for modification, hierarchical indexing.
-     */
-    TheISA::VecRegContainer &
-    getWritableVecReg(const RegId& id) override
-    {
-        return getWritableVecRegFlat(flattenRegId(id).index());
-    }
-
-    RegVal
-    readVecElem(const RegId& reg) const override
-    {
-        return readVecElemFlat(flattenRegId(reg).index());
-    }
-
-    const TheISA::VecPredRegContainer &
-    readVecPredReg(const RegId& id) const override
-    {
-        return readVecPredRegFlat(flattenRegId(id).index());
-    }
-
-    TheISA::VecPredRegContainer&
-    getWritableVecPredReg(const RegId& id) override
-    {
-        return getWritableVecPredRegFlat(flattenRegId(id).index());
-    }
-
-    RegVal
-    readCCReg(RegIndex reg_idx) const override
-    {
-        return readCCRegFlat(flattenRegId(RegId(CCRegClass,
-                                                 reg_idx)).index());
-    }
-
-    /** Sets an integer register to a value. */
-    void
-    setIntReg(RegIndex reg_idx, RegVal val) override
-    {
-        setIntRegFlat(flattenRegId(RegId(IntRegClass, reg_idx)).index(), val);
-    }
-
-    void
-    setFloatReg(RegIndex reg_idx, RegVal val) override
-    {
-        setFloatRegFlat(flattenRegId(RegId(FloatRegClass,
-                                           reg_idx)).index(), val);
-    }
-
-    void
-    setVecReg(const RegId& reg, const TheISA::VecRegContainer& val) override
-    {
-        setVecRegFlat(flattenRegId(reg).index(), val);
-    }
-
-    void
-    setVecElem(const RegId& reg, RegVal val) override
-    {
-        setVecElemFlat(flattenRegId(reg).index(), val);
-    }
-
-    void
-    setVecPredReg(const RegId& reg,
-                  const TheISA::VecPredRegContainer& val) override
-    {
-        setVecPredRegFlat(flattenRegId(reg).index(), val);
-    }
-
-    void
-    setCCReg(RegIndex reg_idx, RegVal val) override
-    {
-        setCCRegFlat(flattenRegId(RegId(CCRegClass, reg_idx)).index(), val);
-    }
-
     /** Reads this thread's PC state. */
     const PCStateBase &
     pcState() const override
@@ -339,31 +245,6 @@ class ThreadContext : public gem5::ThreadContext
 
     void setRegFlat(const RegId &reg, RegVal val) override;
     void setRegFlat(const RegId &reg, const void *val) override;
-
-    RegVal readIntRegFlat(RegIndex idx) const override;
-    void setIntRegFlat(RegIndex idx, RegVal val) override;
-
-    RegVal readFloatRegFlat(RegIndex idx) const override;
-    void setFloatRegFlat(RegIndex idx, RegVal val) override;
-
-    const TheISA::VecRegContainer& readVecRegFlat(RegIndex idx) const override;
-    /** Read vector register operand for modification, flat indexing. */
-    TheISA::VecRegContainer& getWritableVecRegFlat(RegIndex idx) override;
-    void setVecRegFlat(RegIndex idx,
-            const TheISA::VecRegContainer& val) override;
-
-    RegVal readVecElemFlat(RegIndex idx) const override;
-    void setVecElemFlat(RegIndex idx, RegVal val) override;
-
-    const TheISA::VecPredRegContainer&
-        readVecPredRegFlat(RegIndex idx) const override;
-    TheISA::VecPredRegContainer&
-        getWritableVecPredRegFlat(RegIndex idx) override;
-    void setVecPredRegFlat(RegIndex idx,
-                           const TheISA::VecPredRegContainer& val) override;
-
-    RegVal readCCRegFlat(RegIndex idx) const override;
-    void setCCRegFlat(RegIndex idx, RegVal val) override;
 
     // hardware transactional memory
     void htmAbortTransaction(uint64_t htm_uid,

@@ -108,7 +108,7 @@ class ExecContext
     /** Vector Register Interfaces. */
     /** @{ */
     /** Reads source vector register operand. */
-    virtual const TheISA::VecRegContainer& readVecRegOperand(
+    virtual TheISA::VecRegContainer readVecRegOperand(
             const StaticInst *si, int idx) const = 0;
 
     /** Gets destination vector register operand for modification. */
@@ -133,7 +133,7 @@ class ExecContext
     /** Predicate registers interface. */
     /** @{ */
     /** Reads source predicate register operand. */
-    virtual const TheISA::VecPredRegContainer& readVecPredRegOperand(
+    virtual TheISA::VecPredRegContainer readVecPredRegOperand(
             const StaticInst *si, int idx) const = 0;
 
     /** Gets destination predicate register operand for modification. */
