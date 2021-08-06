@@ -100,7 +100,7 @@ class SimpleRenameMap
      * it's awkward to initialize this object via the constructor.
      * Instead, this method is used for initialization.
      */
-    void init(const RegClassInfo &reg_class_info, SimpleFreeList *_freeList);
+    void init(const RegClass &reg_class, SimpleFreeList *_freeList);
 
     /**
      * Pair of a physical register and a physical register.  Used to

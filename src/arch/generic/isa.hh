@@ -54,7 +54,7 @@ class ThreadContext;
 class BaseISA : public SimObject
 {
   public:
-    typedef std::vector<RegClassInfo> RegClasses;
+    typedef std::vector<RegClass> RegClasses;
 
   protected:
     using SimObject::SimObject;

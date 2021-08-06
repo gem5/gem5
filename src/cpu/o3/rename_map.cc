@@ -60,15 +60,14 @@ SimpleRenameMap::SimpleRenameMap()
 
 
 void
-SimpleRenameMap::init(const RegClassInfo &reg_class_info,
-        SimpleFreeList *_freeList)
+SimpleRenameMap::init(const RegClass &reg_class, SimpleFreeList *_freeList)
 {
     assert(freeList == NULL);
     assert(map.empty());
 
-    map.resize(reg_class_info.size());
+    map.resize(reg_class.size());
     freeList = _freeList;
-    zeroReg = RegId(IntRegClass, reg_class_info.zeroReg());
+    zeroReg = RegId(IntRegClass, reg_class.zeroReg());
 }
 
 SimpleRenameMap::RenameInfo

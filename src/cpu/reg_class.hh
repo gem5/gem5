@@ -80,7 +80,7 @@ class DefaultRegClassOps : public RegClassOps
     std::string regName(const RegId &id) const override;
 };
 
-class RegClassInfo
+class RegClass
 {
   private:
     size_t _size;
@@ -90,11 +90,11 @@ class RegClassInfo
     RegClassOps *_ops = &defaultOps;
 
   public:
-    RegClassInfo(size_t new_size, RegIndex new_zero=-1) :
+    RegClass(size_t new_size, RegIndex new_zero=-1) :
         _size(new_size), _zeroReg(new_zero)
     {}
-    RegClassInfo(size_t new_size, RegClassOps &new_ops, RegIndex new_zero=-1) :
-        RegClassInfo(new_size, new_zero)
+    RegClass(size_t new_size, RegClassOps &new_ops, RegIndex new_zero=-1) :
+        RegClass(new_size, new_zero)
     {
         _ops = &new_ops;
     }
