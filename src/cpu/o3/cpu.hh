@@ -123,7 +123,8 @@ class CPU : public BaseCPU
     EventFunctionWrapper threadExitEvent;
 
     /** Schedule tick event, regardless of its current state. */
-    void scheduleTickEvent(Cycles delay)
+    void
+    scheduleTickEvent(Cycles delay)
     {
         if (tickEvent.squashed())
             reschedule(tickEvent, clockEdge(delay));
@@ -132,7 +133,8 @@ class CPU : public BaseCPU
     }
 
     /** Unschedule tick event, regardless of its current state. */
-    void unscheduleTickEvent()
+    void
+    unscheduleTickEvent()
     {
         if (tickEvent.scheduled())
             tickEvent.squash();
@@ -192,8 +194,11 @@ class CPU : public BaseCPU
     void startup() override;
 
     /** Returns the Number of Active Threads in the CPU */
-    int numActiveThreads()
-    { return activeThreads.size(); }
+    int
+    numActiveThreads()
+    {
+        return activeThreads.size();
+    }
 
     /** Add Thread to Active Threads List */
     void activateThread(ThreadID tid);
@@ -274,8 +279,7 @@ class CPU : public BaseCPU
     void verifyMemoryMode() const override;
 
     /** Get the current instruction sequence number, and increment it. */
-    InstSeqNum getAndIncrementInstSeq()
-    { return globalSeqNum++; }
+    InstSeqNum getAndIncrementInstSeq() { return globalSeqNum++; }
 
     /** Traps to handle given fault. */
     void trap(const Fault &fault, ThreadID tid, const StaticInstPtr &inst);
@@ -336,8 +340,11 @@ class CPU : public BaseCPU
     enums::VecRegRenameMode vecRenameMode() const { return vecMode; }
 
     /** Sets the current vector renaming mode */
-    void vecRenameMode(enums::VecRegRenameMode vec_mode)
-    { vecMode = vec_mode; }
+    void
+    vecRenameMode(enums::VecRegRenameMode vec_mode)
+    {
+        vecMode = vec_mode;
+    }
 
     const TheISA::VecElem& readVecElem(PhysRegIdPtr reg_idx) const;
 
@@ -568,12 +575,18 @@ class CPU : public BaseCPU
     void activityThisCycle() { activityRec.activity(); }
 
     /** Changes a stage's status to active within the activity recorder. */
-    void activateStage(const StageIdx idx)
-    { activityRec.activateStage(idx); }
+    void
+    activateStage(const StageIdx idx)
+    {
+        activityRec.activateStage(idx);
+    }
 
     /** Changes a stage's status to inactive within the activity recorder. */
-    void deactivateStage(const StageIdx idx)
-    { activityRec.deactivateStage(idx); }
+    void
+    deactivateStage(const StageIdx idx)
+    {
+        activityRec.deactivateStage(idx);
+    }
 
     /** Wakes the CPU, rescheduling the CPU if it's not already active. */
     void wakeCPU();
@@ -622,11 +635,11 @@ class CPU : public BaseCPU
     std::vector<ThreadID> tids;
 
     /** CPU pushRequest function, forwards request to LSQ. */
-    Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
-                      unsigned int size, Addr addr, Request::Flags flags,
-                      uint64_t *res, AtomicOpFunctorPtr amo_op = nullptr,
-                      const std::vector<bool>& byte_enable =
-                          std::vector<bool>())
+    Fault
+    pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
+                unsigned int size, Addr addr, Request::Flags flags,
+                uint64_t *res, AtomicOpFunctorPtr amo_op = nullptr,
+                const std::vector<bool>& byte_enable=std::vector<bool>())
 
     {
         return iew.ldstQueue.pushRequest(inst, isLoad, data, size, addr,
@@ -634,13 +647,15 @@ class CPU : public BaseCPU
     }
 
     /** CPU read function, forwards read to LSQ. */
-    Fault read(LSQRequest* req, int load_idx)
+    Fault
+    read(LSQRequest* req, int load_idx)
     {
         return iew.ldstQueue.read(req, load_idx);
     }
 
     /** CPU write function, forwards write to LSQ. */
-    Fault write(LSQRequest* req, uint8_t *data, int store_idx)
+    Fault
+    write(LSQRequest* req, uint8_t *data, int store_idx)
     {
         return iew.ldstQueue.write(req, data, store_idx);
     }
