@@ -227,6 +227,38 @@ class CheckerThreadContext : public ThreadContext
     // New accessors for new decoder.
     //
     RegVal
+    getReg(const RegId &reg) const override
+    {
+        return actualTC->getReg(reg);
+    }
+
+    void
+    getReg(const RegId &reg, void *val) const override
+    {
+        actualTC->getReg(reg, val);
+    }
+
+    void *
+    getWritableReg(const RegId &reg) override
+    {
+        return actualTC->getWritableReg(reg);
+    }
+
+    void
+    setReg(const RegId &reg, RegVal val) override
+    {
+        actualTC->setReg(reg, val);
+        checkerTC->setReg(reg, val);
+    }
+
+    void
+    setReg(const RegId &reg, const void *val) override
+    {
+        actualTC->setReg(reg, val);
+        checkerTC->setReg(reg, val);
+    }
+
+    RegVal
     readIntReg(RegIndex reg_idx) const override
     {
         return actualTC->readIntReg(reg_idx);
@@ -386,6 +418,38 @@ class CheckerThreadContext : public ThreadContext
     setStCondFailures(unsigned sc_failures) override
     {
         actualTC->setStCondFailures(sc_failures);
+    }
+
+    RegVal
+    getRegFlat(const RegId &reg) const override
+    {
+        return actualTC->getRegFlat(reg);
+    }
+
+    void
+    getRegFlat(const RegId &reg, void *val) const override
+    {
+        actualTC->getRegFlat(reg, val);
+    }
+
+    void *
+    getWritableRegFlat(const RegId &reg) override
+    {
+        return actualTC->getWritableRegFlat(reg);
+    }
+
+    void
+    setRegFlat(const RegId &reg, RegVal val) override
+    {
+        actualTC->setRegFlat(reg, val);
+        checkerTC->setRegFlat(reg, val);
+    }
+
+    void
+    setRegFlat(const RegId &reg, const void *val) override
+    {
+        actualTC->setRegFlat(reg, val);
+        checkerTC->setRegFlat(reg, val);
     }
 
     RegVal
