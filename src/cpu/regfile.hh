@@ -28,7 +28,9 @@
 #ifndef __CPU_REGFILE_HH__
 #define __CPU_REGFILE_HH__
 
+#include <algorithm>
 #include <cassert>
+#include <cstring>
 #include <vector>
 
 #include "cpu/reg_class.hh"
@@ -70,6 +72,30 @@ class RegFile
         assert(sizeof(Reg) == _regBytes && idx < _size);
         return *reinterpret_cast<const Reg *>(
                 data.data() + (idx << _regShift));
+    }
+
+    void *
+    ptr(size_t idx)
+    {
+        return data.data() + (idx << _regShift);
+    }
+
+    const void *
+    ptr(size_t idx) const
+    {
+        return data.data() + (idx << _regShift);
+    }
+
+    void
+    get(size_t idx, void *val) const
+    {
+        std::memcpy(val, ptr(idx), _regBytes);
+    }
+
+    void
+    set(size_t idx, const void *val)
+    {
+        std::memcpy(ptr(idx), val, _regBytes);
     }
 
     void clear() { std::fill(data.begin(), data.end(), 0); }

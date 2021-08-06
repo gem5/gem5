@@ -1086,6 +1086,36 @@ CPU::setMiscReg(int misc_reg, RegVal val, ThreadID tid)
 }
 
 RegVal
+CPU::getReg(PhysRegIdPtr phys_reg)
+{
+    return regFile.getReg(phys_reg);
+}
+
+void
+CPU::getReg(PhysRegIdPtr phys_reg, void *val)
+{
+    regFile.getReg(phys_reg, val);
+}
+
+void *
+CPU::getWritableReg(PhysRegIdPtr phys_reg)
+{
+    return regFile.getWritableReg(phys_reg);
+}
+
+void
+CPU::setReg(PhysRegIdPtr phys_reg, RegVal val)
+{
+    regFile.setReg(phys_reg, val);
+}
+
+void
+CPU::setReg(PhysRegIdPtr phys_reg, const void *val)
+{
+    regFile.setReg(phys_reg, val);
+}
+
+RegVal
 CPU::readIntReg(PhysRegIdPtr phys_reg)
 {
     cpuStats.intRegfileReads++;
@@ -1182,6 +1212,131 @@ CPU::setCCReg(PhysRegIdPtr phys_reg, RegVal val)
 {
     cpuStats.ccRegfileWrites++;
     regFile.setCCReg(phys_reg, val);
+}
+
+RegVal
+CPU::getArchReg(const RegId &reg, ThreadID tid)
+{
+    switch (reg.classValue()) {
+      case IntRegClass:
+        cpuStats.intRegfileReads++;
+        break;
+      case FloatRegClass:
+        cpuStats.fpRegfileReads++;
+        break;
+      case CCRegClass:
+        cpuStats.ccRegfileReads++;
+        break;
+      case VecRegClass:
+      case VecElemClass:
+        cpuStats.vecRegfileReads++;
+        break;
+      case VecPredRegClass:
+        cpuStats.vecPredRegfileReads++;
+        break;
+      default:
+        break;
+    }
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    return getReg(phys_reg);
+}
+
+void
+CPU::getArchReg(const RegId &reg, void *val, ThreadID tid)
+{
+    switch (reg.classValue()) {
+      case IntRegClass:
+        cpuStats.intRegfileReads++;
+        break;
+      case FloatRegClass:
+        cpuStats.fpRegfileReads++;
+        break;
+      case CCRegClass:
+        cpuStats.ccRegfileReads++;
+        break;
+      case VecRegClass:
+      case VecElemClass:
+        cpuStats.vecRegfileReads++;
+        break;
+      case VecPredRegClass:
+        cpuStats.vecPredRegfileReads++;
+        break;
+      default:
+        break;
+    }
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    getReg(phys_reg, val);
+}
+
+void *
+CPU::getWritableArchReg(const RegId &reg, ThreadID tid)
+{
+    switch (reg.classValue()) {
+      case VecRegClass:
+        cpuStats.vecRegfileReads++;
+        break;
+      case VecPredRegClass:
+        cpuStats.vecPredRegfileReads++;
+        break;
+      default:
+        break;
+    }
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    return getWritableReg(phys_reg);
+}
+
+void
+CPU::setArchReg(const RegId &reg, RegVal val, ThreadID tid)
+{
+    switch (reg.classValue()) {
+      case IntRegClass:
+        cpuStats.intRegfileWrites++;
+        break;
+      case FloatRegClass:
+        cpuStats.fpRegfileWrites++;
+        break;
+      case CCRegClass:
+        cpuStats.ccRegfileWrites++;
+        break;
+      case VecRegClass:
+      case VecElemClass:
+        cpuStats.vecRegfileWrites++;
+        break;
+      case VecPredRegClass:
+        cpuStats.vecPredRegfileWrites++;
+        break;
+      default:
+        break;
+    }
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    setReg(phys_reg, val);
+}
+
+void
+CPU::setArchReg(const RegId &reg, const void *val, ThreadID tid)
+{
+    switch (reg.classValue()) {
+      case IntRegClass:
+        cpuStats.intRegfileWrites++;
+        break;
+      case FloatRegClass:
+        cpuStats.fpRegfileWrites++;
+        break;
+      case CCRegClass:
+        cpuStats.ccRegfileWrites++;
+        break;
+      case VecRegClass:
+      case VecElemClass:
+        cpuStats.vecRegfileWrites++;
+        break;
+      case VecPredRegClass:
+        cpuStats.vecPredRegfileWrites++;
+        break;
+      default:
+        break;
+    }
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    setReg(phys_reg, val);
 }
 
 RegVal

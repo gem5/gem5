@@ -311,6 +311,13 @@ class CPU : public BaseCPU
      */
     void setMiscReg(int misc_reg, RegVal val, ThreadID tid);
 
+    RegVal getReg(PhysRegIdPtr phys_reg);
+    void getReg(PhysRegIdPtr phys_reg, void *val);
+    void *getWritableReg(PhysRegIdPtr phys_reg);
+
+    void setReg(PhysRegIdPtr phys_reg, RegVal val);
+    void setReg(PhysRegIdPtr phys_reg, const void *val);
+
     RegVal readIntReg(PhysRegIdPtr phys_reg);
 
     RegVal readFloatReg(PhysRegIdPtr phys_reg);
@@ -343,6 +350,13 @@ class CPU : public BaseCPU
             const TheISA::VecPredRegContainer& val);
 
     void setCCReg(PhysRegIdPtr phys_reg, RegVal val);
+
+    RegVal getArchReg(const RegId &reg, ThreadID tid);
+    void getArchReg(const RegId &reg, void *val, ThreadID tid);
+    void *getWritableArchReg(const RegId &reg, ThreadID tid);
+
+    void setArchReg(const RegId &reg, RegVal val, ThreadID tid);
+    void setArchReg(const RegId &reg, const void *val, ThreadID tid);
 
     RegVal readArchIntReg(int reg_idx, ThreadID tid);
 

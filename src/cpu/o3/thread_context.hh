@@ -333,6 +333,13 @@ class ThreadContext : public gem5::ThreadContext
             cpu->squashFromTC(thread->threadId());
     }
 
+    RegVal getRegFlat(const RegId &reg) const override;
+    void getRegFlat(const RegId &reg, void *val) const override;
+    void *getWritableRegFlat(const RegId &reg) override;
+
+    void setRegFlat(const RegId &reg, RegVal val) override;
+    void setRegFlat(const RegId &reg, const void *val) override;
+
     RegVal readIntRegFlat(RegIndex idx) const override;
     void setIntRegFlat(RegIndex idx, RegVal val) override;
 
