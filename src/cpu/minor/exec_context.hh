@@ -145,101 +145,33 @@ class ExecContext : public gem5::ExecContext
     }
 
     RegVal
-    readIntRegOperand(const StaticInst *si, int idx) override
+    getRegOperand(const StaticInst *si, int idx) override
     {
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(IntRegClass));
-        return thread.readIntReg(reg.index());
-    }
-
-    RegVal
-    readFloatRegOperandBits(const StaticInst *si, int idx) override
-    {
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(FloatRegClass));
-        return thread.readFloatReg(reg.index());
-    }
-
-    TheISA::VecRegContainer
-    readVecRegOperand(const StaticInst *si, int idx) const override
-    {
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(VecRegClass));
-        return thread.readVecReg(reg);
-    }
-
-    TheISA::VecRegContainer &
-    getWritableVecRegOperand(const StaticInst *si, int idx) override
-    {
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(VecRegClass));
-        return thread.getWritableVecReg(reg);
-    }
-
-    RegVal
-    readVecElemOperand(const StaticInst *si, int idx) const override
-    {
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(VecElemClass));
-        return thread.readVecElem(reg);
-    }
-
-    TheISA::VecPredRegContainer
-    readVecPredRegOperand(const StaticInst *si, int idx) const override
-    {
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(VecPredRegClass));
-        return thread.readVecPredReg(reg);
-    }
-
-    TheISA::VecPredRegContainer&
-    getWritableVecPredRegOperand(const StaticInst *si, int idx) override
-    {
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(VecPredRegClass));
-        return thread.getWritableVecPredReg(reg);
+        return thread.getReg(si->srcRegIdx(idx));
     }
 
     void
-    setIntRegOperand(const StaticInst *si, int idx, RegVal val) override
+    getRegOperand(const StaticInst *si, int idx, void *val) override
     {
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(IntRegClass));
-        thread.setIntReg(reg.index(), val);
+        thread.getReg(si->srcRegIdx(idx), val);
+    }
+
+    void *
+    getWritableRegOperand(const StaticInst *si, int idx) override
+    {
+        return thread.getWritableReg(si->destRegIdx(idx));
     }
 
     void
-    setFloatRegOperandBits(const StaticInst *si, int idx, RegVal val) override
+    setRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(FloatRegClass));
-        thread.setFloatReg(reg.index(), val);
+        thread.setReg(si->destRegIdx(idx), val);
     }
 
     void
-    setVecRegOperand(const StaticInst *si, int idx,
-                     const TheISA::VecRegContainer& val) override
+    setRegOperand(const StaticInst *si, int idx, const void *val) override
     {
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(VecRegClass));
-        thread.setVecReg(reg, val);
-    }
-
-    void
-    setVecPredRegOperand(const StaticInst *si, int idx,
-                         const TheISA::VecPredRegContainer& val) override
-    {
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(VecPredRegClass));
-        thread.setVecPredReg(reg, val);
-    }
-
-    void
-    setVecElemOperand(const StaticInst *si, int idx, RegVal val) override
-    {
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(VecElemClass));
-        thread.setVecElem(reg, val);
+        thread.setReg(si->destRegIdx(idx), val);
     }
 
     bool
@@ -359,22 +291,6 @@ class ExecContext : public gem5::ExecContext
     demapPage(Addr vaddr, uint64_t asn) override
     {
         thread.getMMUPtr()->demapPage(vaddr, asn);
-    }
-
-    RegVal
-    readCCRegOperand(const StaticInst *si, int idx) override
-    {
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(CCRegClass));
-        return thread.readCCReg(reg.index());
-    }
-
-    void
-    setCCRegOperand(const StaticInst *si, int idx, RegVal val) override
-    {
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(CCRegClass));
-        thread.setCCReg(reg.index(), val);
     }
 
     BaseCPU *getCpuPtr() { return &cpu; }

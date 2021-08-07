@@ -288,143 +288,126 @@ class SimpleExecContext : public ExecContext
         lastDcacheStall(0), execContextStats(cpu, thread)
     { }
 
-    /** Reads an integer register. */
     RegVal
-    readIntRegOperand(const StaticInst *si, int idx) override
+    getRegOperand(const StaticInst *si, int idx) override
     {
-        execContextStats.numIntRegReads++;
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(IntRegClass));
-        return thread->readIntReg(reg.index());
-    }
-
-    /** Sets an integer register to a value. */
-    void
-    setIntRegOperand(const StaticInst *si, int idx, RegVal val) override
-    {
-        execContextStats.numIntRegWrites++;
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(IntRegClass));
-        thread->setIntReg(reg.index(), val);
-    }
-
-    /** Reads a floating point register in its binary format, instead
-     * of by value. */
-    RegVal
-    readFloatRegOperandBits(const StaticInst *si, int idx) override
-    {
-        execContextStats.numFpRegReads++;
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(FloatRegClass));
-        return thread->readFloatReg(reg.index());
-    }
-
-    /** Sets the bits of a floating point register of single width
-     * to a binary value. */
-    void
-    setFloatRegOperandBits(const StaticInst *si, int idx, RegVal val) override
-    {
-        execContextStats.numFpRegWrites++;
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(FloatRegClass));
-        thread->setFloatReg(reg.index(), val);
-    }
-
-    /** Reads a vector register. */
-    TheISA::VecRegContainer
-    readVecRegOperand(const StaticInst *si, int idx) const override
-    {
-        execContextStats.numVecRegReads++;
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(VecRegClass));
-        return thread->readVecReg(reg);
-    }
-
-    /** Reads a vector register for modification. */
-    TheISA::VecRegContainer &
-    getWritableVecRegOperand(const StaticInst *si, int idx) override
-    {
-        execContextStats.numVecRegWrites++;
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(VecRegClass));
-        return thread->getWritableVecReg(reg);
-    }
-
-    /** Sets a vector register to a value. */
-    void
-    setVecRegOperand(const StaticInst *si, int idx,
-                     const TheISA::VecRegContainer& val) override
-    {
-        execContextStats.numVecRegWrites++;
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(VecRegClass));
-        thread->setVecReg(reg, val);
-    }
-
-    /** Reads an element of a vector register. */
-    RegVal
-    readVecElemOperand(const StaticInst *si, int idx) const override
-    {
-        execContextStats.numVecRegReads++;
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(VecElemClass));
-        return thread->readVecElem(reg);
-    }
-
-    /** Sets an element of a vector register to a value. */
-    void
-    setVecElemOperand(const StaticInst *si, int idx, RegVal val) override
-    {
-        execContextStats.numVecRegWrites++;
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(VecElemClass));
-        thread->setVecElem(reg, val);
-    }
-
-    TheISA::VecPredRegContainer
-    readVecPredRegOperand(const StaticInst *si, int idx) const override
-    {
-        execContextStats.numVecPredRegReads++;
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(VecPredRegClass));
-        return thread->readVecPredReg(reg);
-    }
-
-    TheISA::VecPredRegContainer&
-    getWritableVecPredRegOperand(const StaticInst *si, int idx) override
-    {
-        execContextStats.numVecPredRegWrites++;
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(VecPredRegClass));
-        return thread->getWritableVecPredReg(reg);
+        const RegId &reg = si->srcRegIdx(idx);
+        const RegClassType type = reg.classValue();
+        switch (type) {
+          case IntRegClass:
+            execContextStats.numIntRegReads++;
+            break;
+          case FloatRegClass:
+            execContextStats.numFpRegReads++;
+            break;
+          case CCRegClass:
+            execContextStats.numCCRegReads++;
+            break;
+          case VecElemClass:
+            execContextStats.numVecRegReads++;
+            break;
+          default:
+            break;
+        }
+        return thread->getReg(reg);
     }
 
     void
-    setVecPredRegOperand(const StaticInst *si, int idx,
-                         const TheISA::VecPredRegContainer& val) override
+    getRegOperand(const StaticInst *si, int idx, void *val) override
     {
-        execContextStats.numVecPredRegWrites++;
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(VecPredRegClass));
-        thread->setVecPredReg(reg, val);
+        const RegId &reg = si->srcRegIdx(idx);
+        const RegClassType type = reg.classValue();
+        switch (type) {
+          case IntRegClass:
+            execContextStats.numIntRegReads++;
+            break;
+          case FloatRegClass:
+            execContextStats.numFpRegReads++;
+            break;
+          case VecRegClass:
+          case VecElemClass:
+            execContextStats.numVecRegReads++;
+            break;
+          case VecPredRegClass:
+            execContextStats.numVecPredRegReads++;
+            break;
+          case CCRegClass:
+            execContextStats.numCCRegReads++;
+            break;
+          default:
+            break;
+        }
+        thread->getReg(reg, val);
     }
 
-    RegVal
-    readCCRegOperand(const StaticInst *si, int idx) override
+    void *
+    getWritableRegOperand(const StaticInst *si, int idx) override
     {
-        execContextStats.numCCRegReads++;
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.is(CCRegClass));
-        return thread->readCCReg(reg.index());
+        const RegId &reg = si->destRegIdx(idx);
+        const RegClassType type = reg.classValue();
+        switch (type) {
+          case VecRegClass:
+            execContextStats.numVecRegWrites++;
+            break;
+          case VecPredRegClass:
+            execContextStats.numVecPredRegWrites++;
+            break;
+          default:
+            break;
+        }
+        return thread->getWritableReg(reg);
     }
 
     void
-    setCCRegOperand(const StaticInst *si, int idx, RegVal val) override
+    setRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
-        execContextStats.numCCRegWrites++;
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.is(CCRegClass));
-        thread->setCCReg(reg.index(), val);
+        const RegId &reg = si->destRegIdx(idx);
+        const RegClassType type = reg.classValue();
+        switch (type) {
+          case IntRegClass:
+            execContextStats.numIntRegWrites++;
+            break;
+          case FloatRegClass:
+            execContextStats.numFpRegWrites++;
+            break;
+          case CCRegClass:
+            execContextStats.numCCRegWrites++;
+            break;
+          case VecElemClass:
+            execContextStats.numVecRegWrites++;
+            break;
+          default:
+            break;
+        }
+        thread->setReg(reg, val);
+    }
+
+    void
+    setRegOperand(const StaticInst *si, int idx, const void *val) override
+    {
+        const RegId &reg = si->destRegIdx(idx);
+        const RegClassType type = reg.classValue();
+        switch (type) {
+          case IntRegClass:
+            execContextStats.numIntRegWrites++;
+            break;
+          case FloatRegClass:
+            execContextStats.numFpRegWrites++;
+            break;
+          case VecRegClass:
+          case VecElemClass:
+            execContextStats.numVecRegWrites++;
+            break;
+          case VecPredRegClass:
+            execContextStats.numVecPredRegWrites++;
+            break;
+          case CCRegClass:
+            execContextStats.numCCRegWrites++;
+            break;
+          default:
+            break;
+        }
+        thread->setReg(reg, val);
     }
 
     RegVal

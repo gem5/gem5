@@ -58,11 +58,11 @@ let {{
         return ('IntReg', 'uqw', idx, 'IsInteger', id)
     def pickedReg(idx, id, size='dataSize'):
         return ('IntReg', 'uqw', idx, 'IsInteger', id,
-                'pick(xc->readIntRegOperand(this, %(op_idx)s), '
+                'pick(xc->getRegOperand(this, %(op_idx)s), '
                 '%(reg_idx)s, ' + size + ')')
     def signedPickedReg(idx, id, size='dataSize'):
         return ('IntReg', 'uqw', idx, 'IsInteger', id,
-                'signedPick(xc->readIntRegOperand(this, %(op_idx)s), '
+                'signedPick(xc->getRegOperand(this, %(op_idx)s), '
                 '%(reg_idx)s, ' + size + ')')
     def floatReg(idx, id):
         return ('FloatReg', 'df', idx, 'IsFloating', id)

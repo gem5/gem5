@@ -73,87 +73,13 @@ namespace gem5
 class ExecContext
 {
   public:
-    /**
-     * @{
-     * @name Integer Register Interfaces
-     *
-     */
 
-    /** Reads an integer register. */
-    virtual RegVal readIntRegOperand(const StaticInst *si, int idx) = 0;
-
-    /** Sets an integer register to a value. */
-    virtual void setIntRegOperand(const StaticInst *si,
-                                  int idx, RegVal val) = 0;
-
-    /** @} */
-
-
-    /**
-     * @{
-     * @name Floating Point Register Interfaces
-     */
-
-    /** Reads a floating point register in its binary format, instead
-     * of by value. */
-    virtual RegVal readFloatRegOperandBits(const StaticInst *si, int idx) = 0;
-
-    /** Sets the bits of a floating point register of single width
-     * to a binary value. */
-    virtual void setFloatRegOperandBits(const StaticInst *si,
-                                        int idx, RegVal val) = 0;
-
-    /** @} */
-
-    /** Vector Register Interfaces. */
-    /** @{ */
-    /** Reads source vector register operand. */
-    virtual TheISA::VecRegContainer readVecRegOperand(
-            const StaticInst *si, int idx) const = 0;
-
-    /** Gets destination vector register operand for modification. */
-    virtual TheISA::VecRegContainer& getWritableVecRegOperand(
-            const StaticInst *si, int idx) = 0;
-
-    /** Sets a destination vector register operand to a value. */
-    virtual void setVecRegOperand(const StaticInst *si, int idx,
-            const TheISA::VecRegContainer& val) = 0;
-    /** @} */
-
-    /** Vector Elem Interfaces. */
-    /** @{ */
-    /** Reads an element of a vector register. */
-    virtual RegVal readVecElemOperand(const StaticInst *si, int idx) const = 0;
-
-    /** Sets a vector register to a value. */
-    virtual void setVecElemOperand(
-            const StaticInst *si, int idx, RegVal val) = 0;
-    /** @} */
-
-    /** Predicate registers interface. */
-    /** @{ */
-    /** Reads source predicate register operand. */
-    virtual TheISA::VecPredRegContainer readVecPredRegOperand(
-            const StaticInst *si, int idx) const = 0;
-
-    /** Gets destination predicate register operand for modification. */
-    virtual TheISA::VecPredRegContainer& getWritableVecPredRegOperand(
-            const StaticInst *si, int idx) = 0;
-
-    /** Sets a destination predicate register operand to a value. */
-    virtual void setVecPredRegOperand(
-            const StaticInst *si, int idx,
-            const TheISA::VecPredRegContainer& val) = 0;
-    /** @} */
-
-    /**
-     * @{
-     * @name Condition Code Registers
-     */
-    virtual RegVal readCCRegOperand(const StaticInst *si, int idx) = 0;
-    virtual void setCCRegOperand(
-            const StaticInst *si, int idx, RegVal val) = 0;
-    /** @} */
+    virtual RegVal getRegOperand(const StaticInst *si, int idx) = 0;
+    virtual void getRegOperand(const StaticInst *si, int idx, void *val) = 0;
+    virtual void *getWritableRegOperand(const StaticInst *si, int idx) = 0;
+    virtual void setRegOperand(const StaticInst *si, int idx, RegVal val) = 0;
+    virtual void setRegOperand(const StaticInst *si, int idx,
+            const void *val) = 0;
 
     /**
      * @{

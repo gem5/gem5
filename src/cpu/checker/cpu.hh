@@ -176,108 +176,35 @@ class CheckerCPU : public BaseCPU, public ExecContext
     // to do).
 
     RegVal
-    readIntRegOperand(const StaticInst *si, int idx) override
-    {
-        return thread->getReg(si->srcRegIdx(idx));
-    }
-
-    RegVal
-    readFloatRegOperandBits(const StaticInst *si, int idx) override
-    {
-        return thread->getReg(si->srcRegIdx(idx));
-    }
-
-    /**
-     * Read source vector register operand.
-     */
-    TheISA::VecRegContainer
-    readVecRegOperand(const StaticInst *si, int idx) const override
-    {
-        TheISA::VecRegContainer val;
-        thread->getReg(si->srcRegIdx(idx), &val);
-        return val;
-    }
-
-    /**
-     * Read destination vector register operand for modification.
-     */
-    TheISA::VecRegContainer &
-    getWritableVecRegOperand(const StaticInst *si, int idx) override
-    {
-        const RegId& reg = si->destRegIdx(idx);
-        return *(TheISA::VecRegContainer *)thread->getWritableReg(reg);
-    }
-
-    RegVal
-    readVecElemOperand(const StaticInst *si, int idx) const override
-    {
-        const RegId& reg = si->srcRegIdx(idx);
-        return thread->readVecElem(reg);
-    }
-
-    TheISA::VecPredRegContainer
-    readVecPredRegOperand(const StaticInst *si, int idx) const override
-    {
-        TheISA::VecPredRegContainer val;
-        thread->getReg(si->srcRegIdx(idx), &val);
-        return val;
-    }
-
-    TheISA::VecPredRegContainer&
-    getWritableVecPredRegOperand(const StaticInst *si, int idx) override
-    {
-        const RegId& reg = si->destRegIdx(idx);
-        return *(TheISA::VecPredRegContainer *)thread->getWritableReg(reg);
-    }
-
-    RegVal
-    readCCRegOperand(const StaticInst *si, int idx) override
+    getRegOperand(const StaticInst *si, int idx) override
     {
         return thread->getReg(si->srcRegIdx(idx));
     }
 
     void
-    setIntRegOperand(const StaticInst *si, int idx, RegVal val) override
+    getRegOperand(const StaticInst *si, int idx, void *val) override
+    {
+        thread->getReg(si->srcRegIdx(idx), val);
+    }
+
+    void *
+    getWritableRegOperand(const StaticInst *si, int idx) override
+    {
+        return thread->getWritableReg(si->destRegIdx(idx));
+    }
+
+    void
+    setRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         thread->setReg(si->destRegIdx(idx), val);
         result.emplace(val);
     }
 
     void
-    setFloatRegOperandBits(const StaticInst *si, int idx, RegVal val) override
+    setRegOperand(const StaticInst *si, int idx, const void *val) override
     {
         thread->setReg(si->destRegIdx(idx), val);
-        result.emplace(val);
-    }
-
-    void
-    setCCRegOperand(const StaticInst *si, int idx, RegVal val) override
-    {
-        thread->setReg(si->destRegIdx(idx), val);
-        result.emplace(val);
-    }
-
-    void
-    setVecRegOperand(const StaticInst *si, int idx,
-                     const TheISA::VecRegContainer& val) override
-    {
-        thread->setReg(si->destRegIdx(idx), &val);
-        result.emplace(val);
-    }
-
-    void
-    setVecElemOperand(const StaticInst *si, int idx, RegVal val) override
-    {
-        thread->setReg(si->destRegIdx(idx), val);
-        result.emplace(val);
-    }
-
-    void
-    setVecPredRegOperand(const StaticInst *si, int idx,
-                         const TheISA::VecPredRegContainer& val) override
-    {
-        thread->setReg(si->destRegIdx(idx), &val);
-        result.emplace(val);
+        //TODO setVecResult, setVecPredResult setVecElemResult?
     }
 
     bool readPredicate() const override { return thread->readPredicate(); }

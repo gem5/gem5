@@ -68,16 +68,17 @@
  * ...
  * // Usage example, for a macro op:
  * VecFloat8Add(ExecContext* xd) {
- *    // Request source vector register to the execution context (const as it
- *    // is read only).
- *    const Vec512& vsrc1raw = xc->readVecRegOperand(this, 0);
+ *    // Request source vector register to the execution context.
+ *    Vec512 vsrc1raw;
+ *    xc->getRegOperand(this, 0, &vsrc1raw);
  *    // View it as a vector of floats (we could just specify the first
  *    // template parametre, the second has a default value that works, and the
  *    // last one is derived by the constness of vsrc1raw).
  *    VecRegT<float, 8, true>& vsrc1 = vsrc1raw->as<float, 8>();
  *
  *    // Second source and view
- *    const Vec512& vsrc2raw = xc->readVecRegOperand(this, 1);
+ *    Vec512 vsrc2raw;
+ *    xc->getRegOperand(this, 1, &vsrc2raw);
  *    VecRegT<float, 8, true>& vsrc2 = vsrc2raw->as<float, 8>();
  *
  *    // Destination and view
