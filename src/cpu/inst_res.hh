@@ -41,7 +41,6 @@
 #include <any>
 #include <type_traits>
 
-#include "arch/vecregs.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
 
@@ -88,6 +87,10 @@ class InstResult
     {
         static_assert(!std::is_pointer_v<T>,
                 "InstResult shouldn't point to external data.");
+        // Floating point values should be converted to/from ints using
+        // floatToBits and bitsToFloat, and not stored in InstResult directly.
+        static_assert(!std::is_floating_point_v<T>,
+                "Floating point values should be converted to/from ints.");
     }
 
     // Convert floating point values to integers.
@@ -127,23 +130,21 @@ class InstResult
 
     /** Checks */
     /** @{ */
-    /** Is this a scalar result?. */
+
+    template <typename T>
     bool
-    isScalar() const
+    is() const
     {
-        return result.type() == typeid(RegVal);
+        static_assert(!std::is_floating_point_v<T>,
+                "Floating point values should be converted to/from ints.");
+        return result.type() == typeid(T);
     }
-    /** Is this a vector result?. */
-    bool
-    isVector() const
+
+    template <typename T>
+    std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, RegVal>, bool>
+    is() const
     {
-        return result.type() == typeid(TheISA::VecRegContainer);
-    }
-    /** Is this a predicate result?. */
-    bool
-    isPred() const
-    {
-        return result.type() == typeid(TheISA::VecPredRegContainer);
+        return is<RegVal>();
     }
 
     /** Is this a valid result?. */
@@ -152,37 +153,33 @@ class InstResult
 
     /** Explicit cast-like operations. */
     /** @{ */
-    RegVal
-    asInteger() const
+    template <typename T>
+    T
+    as() const
     {
-        panic_if(!isScalar(), "Converting non-scalar to scalar!!");
-        return std::any_cast<RegVal>(result);
+        assert(is<T>());
+        return std::any_cast<T>(result);
+    }
+
+    template <typename T>
+    std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, RegVal>,
+                     RegVal>
+    as() const
+    {
+        return as<RegVal>();
     }
 
     /** Cast to integer without checking type.
      * This is required to have the o3 cpu checker happy, as it
      * compares results as integers without being fully aware of
      * their nature. */
-    RegVal
-    asIntegerNoAssert() const
+    template <typename T>
+    T
+    asNoAssert() const
     {
-        if (!isScalar())
-            return 0;
-        return std::any_cast<RegVal>(result);
-    }
-
-    TheISA::VecRegContainer
-    asVector() const
-    {
-        panic_if(!isVector(), "Converting scalar (or invalid) to vector!!");
-        return std::any_cast<TheISA::VecRegContainer>(result);
-    }
-
-    TheISA::VecPredRegContainer
-    asPred() const
-    {
-        panic_if(!isPred(), "Converting scalar (or invalid) to predicate!!");
-        return std::any_cast<TheISA::VecPredRegContainer>(result);
+        if (!is<T>())
+            return T{};
+        return as<T>();
     }
 
     /** @} */

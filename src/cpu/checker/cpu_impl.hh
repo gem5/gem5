@@ -471,7 +471,6 @@ Checker<DynInstPtr>::validateExecution(const DynInstPtr &inst)
     int idx = -1;
     bool result_mismatch = false;
     bool scalar_mismatch = false;
-    bool vector_mismatch = false;
 
     if (inst->isUnverifiable()) {
         // Unverifiable instructions assume they were executed
@@ -488,10 +487,7 @@ Checker<DynInstPtr>::validateExecution(const DynInstPtr &inst)
             if (checker_val != inst_val) {
                 result_mismatch = true;
                 idx = i;
-                scalar_mismatch = checker_val.isScalar();
-                vector_mismatch = checker_val.isVector();
-                panic_if(!(scalar_mismatch || vector_mismatch),
-                        "Unknown type of result\n");
+                scalar_mismatch = checker_val.is<RegVal>();
             }
         }
     } // Checker CPU checks all the saved results in the dyninst passed by
@@ -504,8 +500,8 @@ Checker<DynInstPtr>::validateExecution(const DynInstPtr &inst)
         if (scalar_mismatch) {
             warn("%lli: Instruction results (%i) do not match! (Values may"
                  " not actually be integers) Inst: %#x, checker: %#x",
-                 curTick(), idx, inst_val.asIntegerNoAssert(),
-                 checker_val.asInteger());
+                 curTick(), idx, inst_val.asNoAssert<RegVal>(),
+                 checker_val.as<RegVal>());
         }
 
         // It's useful to verify load values from memory, but in MP
@@ -590,28 +586,22 @@ Checker<DynInstPtr>::copyResult(
         const RegId& idx = inst->destRegIdx(start_idx);
         switch (idx.classValue()) {
           case IntRegClass:
-            panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
-            thread->setIntReg(idx.index(), mismatch_val.asInteger());
+            thread->setIntReg(idx.index(), mismatch_val.as<RegVal>());
             break;
           case FloatRegClass:
-            panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
-            thread->setFloatReg(idx.index(), mismatch_val.asInteger());
+            thread->setFloatReg(idx.index(), mismatch_val.as<RegVal>());
             break;
           case VecRegClass:
-            panic_if(!mismatch_val.isVector(), "Unexpected type of result");
-            thread->setVecReg(idx, mismatch_val.asVector());
+            thread->setVecReg(idx, mismatch_val.as<TheISA::VecRegContainer>());
             break;
           case VecElemClass:
-            panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
-            thread->setVecElem(idx, mismatch_val.asInteger());
+            thread->setVecElem(idx, mismatch_val.as<RegVal>());
             break;
           case CCRegClass:
-            panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
-            thread->setCCReg(idx.index(), mismatch_val.asInteger());
+            thread->setCCReg(idx.index(), mismatch_val.as<RegVal>());
             break;
           case MiscRegClass:
-            panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
-            thread->setMiscReg(idx.index(), mismatch_val.asInteger());
+            thread->setMiscReg(idx.index(), mismatch_val.as<RegVal>());
             break;
           default:
             panic("Unknown register class: %d", (int)idx.classValue());
@@ -624,27 +614,21 @@ Checker<DynInstPtr>::copyResult(
         res = inst->popResult();
         switch (idx.classValue()) {
           case IntRegClass:
-            panic_if(!res.isScalar(), "Unexpected type of result");
-            thread->setIntReg(idx.index(), res.asInteger());
+            thread->setIntReg(idx.index(), res.as<RegVal>());
             break;
           case FloatRegClass:
-            panic_if(!res.isScalar(), "Unexpected type of result");
-            thread->setFloatReg(idx.index(), res.asInteger());
+            thread->setFloatReg(idx.index(), res.as<RegVal>());
             break;
           case VecRegClass:
-            panic_if(!res.isVector(), "Unexpected type of result");
-            thread->setVecReg(idx, res.asVector());
+            thread->setVecReg(idx, res.as<TheISA::VecRegContainer>());
             break;
           case VecElemClass:
-            panic_if(!res.isScalar(), "Unexpected type of result");
-            thread->setVecElem(idx, res.asInteger());
+            thread->setVecElem(idx, res.as<RegVal>());
             break;
           case CCRegClass:
-            panic_if(!res.isScalar(), "Unexpected type of result");
-            thread->setCCReg(idx.index(), res.asInteger());
+            thread->setCCReg(idx.index(), res.as<RegVal>());
             break;
           case MiscRegClass:
-            panic_if(res.isValid(), "MiscReg expecting invalid result");
             // Try to get the proper misc register index for ARM here...
             thread->setMiscReg(idx.index(), 0);
             break;
