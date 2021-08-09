@@ -38,10 +38,11 @@
 #ifndef __CPU_INST_RES_HH__
 #define __CPU_INST_RES_HH__
 
+#include <any>
 #include <type_traits>
-#include <variant>
 
 #include "arch/vecregs.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 namespace gem5
@@ -50,25 +51,61 @@ namespace gem5
 class InstResult
 {
   private:
-    std::variant<RegVal, TheISA::VecRegContainer,
-        TheISA::VecPredRegContainer> result;
+    std::any result;
+    std::function<bool(const std::any &a, const std::any &b)> equals;
 
   public:
     /** Default constructor creates an invalid result. */
-    InstResult() = default;
+    InstResult() :
+        // This InstResult is empty, and will only equal other InstResults
+        // which are also empty.
+        equals([](const std::any &a, const std::any &b) -> bool {
+            gem5_assert(!a.has_value());
+            return !b.has_value();
+        })
+    {}
     InstResult(const InstResult &) = default;
 
     template <typename T>
-    explicit InstResult(T val) : result(val) {}
+    explicit InstResult(T val) : result(val),
 
-    template <typename T, typename enable=
-        std::enable_if_t<std::is_floating_point_v<T>>>
-    explicit InstResult(T val) : result(floatToBits(val)) {}
+        // Set equals so it knows how to compare results of type T.
+        equals([](const std::any &a, const std::any &b) -> bool {
+            // If one has a value but the other doesn't, not equal.
+            if (a.has_value() != b.has_value())
+                return false;
+            // If they are both empty, equal.
+            if (!a.has_value())
+                return true;
+            // At least the local object should be of the right type.
+            gem5_assert(a.type() == typeid(T));
+            // If these aren't the same type, not equal.
+            if (a.type() != b.type())
+                return false;
+            // We now know these both hold a result of the right type.
+            return std::any_cast<const T&>(a) == std::any_cast<const T&>(b);
+        })
+    {
+        static_assert(!std::is_pointer_v<T>,
+                "InstResult shouldn't point to external data.");
+    }
+
+    // Convert floating point values to integers.
+    template <typename T,
+             std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
+    explicit InstResult(T val) : InstResult(floatToBits(val)) {}
+
+    // Convert all integer types to RegVal.
+    template <typename T,
+        std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, RegVal>,
+                         int> = 0>
+    explicit InstResult(T val) : InstResult(static_cast<RegVal>(val)) {}
 
     InstResult &
     operator=(const InstResult& that)
     {
         result = that.result;
+        equals = that.equals;
         return *this;
     }
 
@@ -79,7 +116,7 @@ class InstResult
     bool
     operator==(const InstResult& that) const
     {
-        return result == that.result;
+        return equals(result, that.result);
     }
 
     bool
@@ -94,23 +131,23 @@ class InstResult
     bool
     isScalar() const
     {
-        return std::holds_alternative<RegVal>(result);
+        return result.type() == typeid(RegVal);
     }
     /** Is this a vector result?. */
     bool
     isVector() const
     {
-        return std::holds_alternative<TheISA::VecRegContainer>(result);
+        return result.type() == typeid(TheISA::VecRegContainer);
     }
     /** Is this a predicate result?. */
     bool
     isPred() const
     {
-        return std::holds_alternative<TheISA::VecPredRegContainer>(result);
+        return result.type() == typeid(TheISA::VecPredRegContainer);
     }
 
     /** Is this a valid result?. */
-    bool isValid() const { return result.index() != 0; }
+    bool isValid() const { return result.has_value(); }
     /** @} */
 
     /** Explicit cast-like operations. */
@@ -118,8 +155,8 @@ class InstResult
     RegVal
     asInteger() const
     {
-        assert(isScalar());
-        return std::get<RegVal>(result);
+        panic_if(!isScalar(), "Converting non-scalar to scalar!!");
+        return std::any_cast<RegVal>(result);
     }
 
     /** Cast to integer without checking type.
@@ -129,21 +166,23 @@ class InstResult
     RegVal
     asIntegerNoAssert() const
     {
-        const RegVal *ptr = std::get_if<RegVal>(&result);
-        return ptr ? *ptr : 0;
+        if (!isScalar())
+            return 0;
+        return std::any_cast<RegVal>(result);
     }
-    const TheISA::VecRegContainer&
+
+    TheISA::VecRegContainer
     asVector() const
     {
         panic_if(!isVector(), "Converting scalar (or invalid) to vector!!");
-        return std::get<TheISA::VecRegContainer>(result);
+        return std::any_cast<TheISA::VecRegContainer>(result);
     }
 
-    const TheISA::VecPredRegContainer&
+    TheISA::VecPredRegContainer
     asPred() const
     {
         panic_if(!isPred(), "Converting scalar (or invalid) to predicate!!");
-        return std::get<TheISA::VecPredRegContainer>(result);
+        return std::any_cast<TheISA::VecPredRegContainer>(result);
     }
 
     /** @} */
