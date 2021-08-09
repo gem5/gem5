@@ -477,15 +477,14 @@ Checker<DynInstPtr>::validateExecution(const DynInstPtr &inst)
         // Unverifiable instructions assume they were executed
         // properly by the CPU. Grab the result from the
         // instruction and write it to the register.
-        copyResult(inst, InstResult(0ul, InstResult::ResultType::Scalar), idx);
+        copyResult(inst, InstResult((RegVal)0), idx);
     } else if (inst->numDestRegs() > 0 && !result.empty()) {
         DPRINTF(Checker, "Dest regs %d, number of checker dest regs %d\n",
                          inst->numDestRegs(), result.size());
         for (int i = 0; i < inst->numDestRegs() && !result.empty(); i++) {
             checker_val = result.front();
             result.pop();
-            inst_val = inst->popResult(
-                    InstResult(0ul, InstResult::ResultType::Scalar));
+            inst_val = inst->popResult(InstResult((RegVal)0));
             if (checker_val != inst_val) {
                 result_mismatch = true;
                 idx = i;

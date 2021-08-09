@@ -248,24 +248,21 @@ class CheckerCPU : public BaseCPU, public ExecContext
     void
     setScalarResult(T&& t)
     {
-        result.push(InstResult(std::forward<T>(t),
-                               InstResult::ResultType::Scalar));
+        result.push(InstResult(std::forward<T>(t)));
     }
 
     template<typename T>
     void
     setVecResult(T&& t)
     {
-        result.push(InstResult(std::forward<T>(t),
-                               InstResult::ResultType::VecReg));
+        result.push(InstResult(std::forward<T>(t)));
     }
 
     template<typename T>
     void
     setVecPredResult(T&& t)
     {
-        result.push(InstResult(std::forward<T>(t),
-                               InstResult::ResultType::VecPredReg));
+        result.push(InstResult(std::forward<T>(t)));
     }
 
     void

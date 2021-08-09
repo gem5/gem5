@@ -39,8 +39,9 @@
 #define __CPU_INST_RES_HH__
 
 #include <type_traits>
+#include <variant>
 
-#include "arch/generic/vec_reg.hh"
+#include "arch/vecregs.hh"
 #include "base/types.hh"
 
 namespace gem5
@@ -48,81 +49,26 @@ namespace gem5
 
 class InstResult
 {
-  public:
-    union MultiResult
-    {
-        RegVal integer;
-        TheISA::VecRegContainer vector;
-        TheISA::VecPredRegContainer pred;
-        MultiResult() {}
-    };
-
-    enum class ResultType
-    {
-        Scalar,
-        VecReg,
-        VecPredReg,
-        NumResultTypes,
-        Invalid
-    };
-
   private:
-    MultiResult result;
-    ResultType type;
+    std::variant<RegVal, TheISA::VecRegContainer,
+        TheISA::VecPredRegContainer> result;
 
   public:
     /** Default constructor creates an invalid result. */
-    InstResult() : type(ResultType::Invalid) { }
+    InstResult() = default;
     InstResult(const InstResult &) = default;
-    /** Scalar result from scalar. */
-    template<typename T>
-    explicit InstResult(T i, const ResultType& t) : type(t)
-    {
-        static_assert(std::is_integral_v<T> ^ std::is_floating_point_v<T>,
-                "Parameter type is neither integral nor fp, or it is both");
-        if constexpr (std::is_integral_v<T>) {
-            result.integer = i;
-        } else if constexpr (std::is_floating_point_v<T>) {
-            result.integer = floatToBits(i);
-        }
-    }
-    /** Vector result. */
-    explicit InstResult(const TheISA::VecRegContainer& v, const ResultType& t)
-        : type(t)
-    {
-        result.vector = v;
-    }
-    /** Predicate result. */
-    explicit InstResult(const TheISA::VecPredRegContainer& v,
-            const ResultType& t)
-        : type(t)
-    {
-        result.pred = v;
-    }
 
-    InstResult&
+    template <typename T>
+    explicit InstResult(T val) : result(val) {}
+
+    template <typename T, typename enable=
+        std::enable_if_t<std::is_floating_point_v<T>>>
+    explicit InstResult(T val) : result(floatToBits(val)) {}
+
+    InstResult &
     operator=(const InstResult& that)
     {
-        type = that.type;
-        switch (type) {
-          // Given that misc regs are not written to, there may be invalids in
-          //the result stack.
-          case ResultType::Invalid:
-            break;
-          case ResultType::Scalar:
-            result.integer = that.result.integer;
-            break;
-          case ResultType::VecReg:
-            result.vector = that.result.vector;
-            break;
-          case ResultType::VecPredReg:
-            result.pred = that.result.pred;
-            break;
-
-          default:
-            panic("Assigning result from unknown result type");
-            break;
-        }
+        result = that.result;
         return *this;
     }
 
@@ -133,20 +79,7 @@ class InstResult
     bool
     operator==(const InstResult& that) const
     {
-        if (this->type != that.type)
-            return false;
-        switch (type) {
-          case ResultType::Scalar:
-            return result.integer == that.result.integer;
-          case ResultType::VecReg:
-            return result.vector == that.result.vector;
-          case ResultType::VecPredReg:
-            return result.pred == that.result.pred;
-          case ResultType::Invalid:
-            return false;
-          default:
-            panic("Unknown type of result: %d\n", (int)type);
-        }
+        return result == that.result;
     }
 
     bool
@@ -158,45 +91,59 @@ class InstResult
     /** Checks */
     /** @{ */
     /** Is this a scalar result?. */
-    bool isScalar() const { return type == ResultType::Scalar; }
+    bool
+    isScalar() const
+    {
+        return std::holds_alternative<RegVal>(result);
+    }
     /** Is this a vector result?. */
-    bool isVector() const { return type == ResultType::VecReg; }
+    bool
+    isVector() const
+    {
+        return std::holds_alternative<TheISA::VecRegContainer>(result);
+    }
     /** Is this a predicate result?. */
-    bool isPred() const { return type == ResultType::VecPredReg; }
+    bool
+    isPred() const
+    {
+        return std::holds_alternative<TheISA::VecPredRegContainer>(result);
+    }
+
     /** Is this a valid result?. */
-    bool isValid() const { return type != ResultType::Invalid; }
+    bool isValid() const { return result.index() != 0; }
     /** @} */
 
     /** Explicit cast-like operations. */
     /** @{ */
-    const uint64_t&
+    RegVal
     asInteger() const
     {
         assert(isScalar());
-        return result.integer;
+        return std::get<RegVal>(result);
     }
 
     /** Cast to integer without checking type.
      * This is required to have the o3 cpu checker happy, as it
      * compares results as integers without being fully aware of
      * their nature. */
-    const uint64_t&
+    RegVal
     asIntegerNoAssert() const
     {
-        return result.integer;
+        const RegVal *ptr = std::get_if<RegVal>(&result);
+        return ptr ? *ptr : 0;
     }
     const TheISA::VecRegContainer&
     asVector() const
     {
         panic_if(!isVector(), "Converting scalar (or invalid) to vector!!");
-        return result.vector;
+        return std::get<TheISA::VecRegContainer>(result);
     }
 
     const TheISA::VecPredRegContainer&
     asPred() const
     {
         panic_if(!isPred(), "Converting scalar (or invalid) to predicate!!");
-        return result.pred;
+        return std::get<TheISA::VecPredRegContainer>(result);
     }
 
     /** @} */

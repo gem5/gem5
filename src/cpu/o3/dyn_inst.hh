@@ -777,8 +777,7 @@ class DynInst : public ExecContext, public RefCounted
     setScalarResult(T &&t)
     {
         if (instFlags[RecordResult]) {
-            instResult.push(InstResult(std::forward<T>(t),
-                        InstResult::ResultType::Scalar));
+            instResult.push(InstResult(std::forward<T>(t)));
         }
     }
 
@@ -788,8 +787,7 @@ class DynInst : public ExecContext, public RefCounted
     setVecResult(T &&t)
     {
         if (instFlags[RecordResult]) {
-            instResult.push(InstResult(std::forward<T>(t),
-                        InstResult::ResultType::VecReg));
+            instResult.push(InstResult(std::forward<T>(t)));
         }
     }
 
@@ -799,8 +797,7 @@ class DynInst : public ExecContext, public RefCounted
     setVecPredResult(T &&t)
     {
         if (instFlags[RecordResult]) {
-            instResult.push(InstResult(std::forward<T>(t),
-                            InstResult::ResultType::VecPredReg));
+            instResult.push(InstResult(std::forward<T>(t)));
         }
     }
     /** @} */
