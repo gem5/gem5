@@ -244,34 +244,13 @@ class CheckerCPU : public BaseCPU, public ExecContext
         return thread->readCCReg(reg.index());
     }
 
-    template<typename T>
-    void
-    setScalarResult(T&& t)
-    {
-        result.push(InstResult(std::forward<T>(t)));
-    }
-
-    template<typename T>
-    void
-    setVecResult(T&& t)
-    {
-        result.push(InstResult(std::forward<T>(t)));
-    }
-
-    template<typename T>
-    void
-    setVecPredResult(T&& t)
-    {
-        result.push(InstResult(std::forward<T>(t)));
-    }
-
     void
     setIntRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(IntRegClass));
         thread->setIntReg(reg.index(), val);
-        setScalarResult(val);
+        result.emplace(val);
     }
 
     void
@@ -280,7 +259,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(FloatRegClass));
         thread->setFloatReg(reg.index(), val);
-        setScalarResult(val);
+        result.emplace(val);
     }
 
     void
@@ -289,7 +268,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(CCRegClass));
         thread->setCCReg(reg.index(), val);
-        setScalarResult((uint64_t)val);
+        result.emplace(val);
     }
 
     void
@@ -299,7 +278,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(VecRegClass));
         thread->setVecReg(reg, val);
-        setVecResult(val);
+        result.emplace(val);
     }
 
     void
@@ -308,7 +287,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(VecElemClass));
         thread->setVecElem(reg, val);
-        setScalarResult(val);
+        result.emplace(val);
     }
 
     void
@@ -318,7 +297,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(VecPredRegClass));
         thread->setVecPredReg(reg, val);
-        setVecPredResult(val);
+        result.emplace(val);
     }
 
     bool readPredicate() const override { return thread->readPredicate(); }

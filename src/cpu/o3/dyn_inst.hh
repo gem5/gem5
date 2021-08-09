@@ -771,33 +771,12 @@ class DynInst : public ExecContext, public RefCounted
 
     /** Pushes a result onto the instResult queue. */
     /** @{ */
-    /** Scalar result. */
     template<typename T>
     void
-    setScalarResult(T &&t)
+    setResult(T &&t)
     {
         if (instFlags[RecordResult]) {
-            instResult.push(InstResult(std::forward<T>(t)));
-        }
-    }
-
-    /** Full vector result. */
-    template<typename T>
-    void
-    setVecResult(T &&t)
-    {
-        if (instFlags[RecordResult]) {
-            instResult.push(InstResult(std::forward<T>(t)));
-        }
-    }
-
-    /** Predicate result. */
-    template<typename T>
-    void
-    setVecPredResult(T &&t)
-    {
-        if (instFlags[RecordResult]) {
-            instResult.push(InstResult(std::forward<T>(t)));
+            instResult.emplace(std::forward<T>(t));
         }
     }
     /** @} */
@@ -1273,14 +1252,14 @@ class DynInst : public ExecContext, public RefCounted
     setIntRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         this->cpu->setIntReg(this->regs.renamedDestIdx(idx), val);
-        setScalarResult(val);
+        setResult(val);
     }
 
     void
     setFloatRegOperandBits(const StaticInst *si, int idx, RegVal val) override
     {
         this->cpu->setFloatReg(this->regs.renamedDestIdx(idx), val);
-        setScalarResult(val);
+        setResult(val);
     }
 
     void
@@ -1288,7 +1267,7 @@ class DynInst : public ExecContext, public RefCounted
                      const TheISA::VecRegContainer& val) override
     {
         this->cpu->setVecReg(this->regs.renamedDestIdx(idx), val);
-        setVecResult(val);
+        setResult(val);
     }
 
     void
@@ -1296,7 +1275,7 @@ class DynInst : public ExecContext, public RefCounted
     {
         int reg_idx = idx;
         this->cpu->setVecElem(this->regs.renamedDestIdx(reg_idx), val);
-        setScalarResult(val);
+        setResult(val);
     }
 
     void
@@ -1304,14 +1283,14 @@ class DynInst : public ExecContext, public RefCounted
                          const TheISA::VecPredRegContainer& val) override
     {
         this->cpu->setVecPredReg(this->regs.renamedDestIdx(idx), val);
-        setVecPredResult(val);
+        setResult(val);
     }
 
     void
     setCCRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         this->cpu->setCCReg(this->regs.renamedDestIdx(idx), val);
-        setScalarResult(val);
+        setResult(val);
     }
 };
 
