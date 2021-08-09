@@ -262,14 +262,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     template<typename T>
     void
-    setVecElemResult(T&& t)
-    {
-        result.push(InstResult(std::forward<T>(t),
-                               InstResult::ResultType::VecElem));
-    }
-
-    template<typename T>
-    void
     setVecPredResult(T&& t)
     {
         result.push(InstResult(std::forward<T>(t),
@@ -319,7 +311,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(VecElemClass));
         thread->setVecElem(reg, val);
-        setVecElemResult(val);
+        setScalarResult(val);
     }
 
     void

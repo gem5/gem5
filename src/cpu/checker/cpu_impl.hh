@@ -603,9 +603,8 @@ Checker<DynInstPtr>::copyResult(
             thread->setVecReg(idx, mismatch_val.asVector());
             break;
           case VecElemClass:
-            panic_if(!mismatch_val.isVecElem(),
-                     "Unexpected type of result");
-            thread->setVecElem(idx, mismatch_val.asVectorElem());
+            panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
+            thread->setVecElem(idx, mismatch_val.asInteger());
             break;
           case CCRegClass:
             panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
@@ -638,8 +637,8 @@ Checker<DynInstPtr>::copyResult(
             thread->setVecReg(idx, res.asVector());
             break;
           case VecElemClass:
-            panic_if(!res.isVecElem(), "Unexpected type of result");
-            thread->setVecElem(idx, res.asVectorElem());
+            panic_if(!res.isScalar(), "Unexpected type of result");
+            thread->setVecElem(idx, res.asInteger());
             break;
           case CCRegClass:
             panic_if(!res.isScalar(), "Unexpected type of result");

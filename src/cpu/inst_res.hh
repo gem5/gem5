@@ -54,7 +54,6 @@ class InstResult
         RegVal integer;
         double dbl;
         TheISA::VecRegContainer vector;
-        RegVal vecElem;
         TheISA::VecPredRegContainer pred;
         MultiResult() {}
     };
@@ -62,7 +61,6 @@ class InstResult
     enum class ResultType
     {
         Scalar,
-        VecElem,
         VecReg,
         VecPredReg,
         NumResultTypes,
@@ -115,9 +113,6 @@ class InstResult
           case ResultType::Scalar:
             result.integer = that.result.integer;
             break;
-          case ResultType::VecElem:
-            result.vecElem = that.result.vecElem;
-            break;
           case ResultType::VecReg:
             result.vector = that.result.vector;
             break;
@@ -144,8 +139,6 @@ class InstResult
         switch (type) {
           case ResultType::Scalar:
             return result.integer == that.result.integer;
-          case ResultType::VecElem:
-            return result.vecElem == that.result.vecElem;
           case ResultType::VecReg:
             return result.vector == that.result.vector;
           case ResultType::VecPredReg:
@@ -169,8 +162,6 @@ class InstResult
     bool isScalar() const { return type == ResultType::Scalar; }
     /** Is this a vector result?. */
     bool isVector() const { return type == ResultType::VecReg; }
-    /** Is this a vector element result?. */
-    bool isVecElem() const { return type == ResultType::VecElem; }
     /** Is this a predicate result?. */
     bool isPred() const { return type == ResultType::VecPredReg; }
     /** Is this a valid result?. */
@@ -200,12 +191,6 @@ class InstResult
     {
         panic_if(!isVector(), "Converting scalar (or invalid) to vector!!");
         return result.vector;
-    }
-    const RegVal&
-    asVectorElem() const
-    {
-        panic_if(!isVecElem(), "Converting scalar (or invalid) to vector!!");
-        return result.vecElem;
     }
 
     const TheISA::VecPredRegContainer&

@@ -793,17 +793,6 @@ class DynInst : public ExecContext, public RefCounted
         }
     }
 
-    /** Vector element result. */
-    template<typename T>
-    void
-    setVecElemResult(T &&t)
-    {
-        if (instFlags[RecordResult]) {
-            instResult.push(InstResult(std::forward<T>(t),
-                        InstResult::ResultType::VecElem));
-        }
-    }
-
     /** Predicate result. */
     template<typename T>
     void
@@ -1310,7 +1299,7 @@ class DynInst : public ExecContext, public RefCounted
     {
         int reg_idx = idx;
         this->cpu->setVecElem(this->regs.renamedDestIdx(reg_idx), val);
-        setVecElemResult(val);
+        setScalarResult(val);
     }
 
     void
