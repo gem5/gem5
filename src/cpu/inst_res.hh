@@ -52,7 +52,6 @@ class InstResult
     union MultiResult
     {
         RegVal integer;
-        double dbl;
         TheISA::VecRegContainer vector;
         TheISA::VecPredRegContainer pred;
         MultiResult() {}
@@ -81,10 +80,10 @@ class InstResult
     {
         static_assert(std::is_integral_v<T> ^ std::is_floating_point_v<T>,
                 "Parameter type is neither integral nor fp, or it is both");
-        if (std::is_integral_v<T>) {
+        if constexpr (std::is_integral_v<T>) {
             result.integer = i;
-        } else if (std::is_floating_point_v<T>) {
-            result.dbl = i;
+        } else if constexpr (std::is_floating_point_v<T>) {
+            result.integer = floatToBits(i);
         }
     }
     /** Vector result. */
