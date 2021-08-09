@@ -78,7 +78,8 @@ class InstResult
     InstResult(const InstResult &) = default;
     /** Scalar result from scalar. */
     template<typename T>
-    explicit InstResult(T i, const ResultType& t) : type(t) {
+    explicit InstResult(T i, const ResultType& t) : type(t)
+    {
         static_assert(std::is_integral_v<T> ^ std::is_floating_point_v<T>,
                 "Parameter type is neither integral nor fp, or it is both");
         if (std::is_integral_v<T>) {
@@ -89,62 +90,75 @@ class InstResult
     }
     /** Vector result. */
     explicit InstResult(const TheISA::VecRegContainer& v, const ResultType& t)
-        : type(t) { result.vector = v; }
+        : type(t)
+    {
+        result.vector = v;
+    }
     /** Predicate result. */
     explicit InstResult(const TheISA::VecPredRegContainer& v,
             const ResultType& t)
-        : type(t) { result.pred = v; }
+        : type(t)
+    {
+        result.pred = v;
+    }
 
-    InstResult& operator=(const InstResult& that) {
+    InstResult&
+    operator=(const InstResult& that)
+    {
         type = that.type;
         switch (type) {
-        /* Given that misc regs are not written to, there may be invalids in
-         * the result stack. */
-        case ResultType::Invalid:
+          // Given that misc regs are not written to, there may be invalids in
+          //the result stack.
+          case ResultType::Invalid:
             break;
-        case ResultType::Scalar:
+          case ResultType::Scalar:
             result.integer = that.result.integer;
             break;
-        case ResultType::VecElem:
+          case ResultType::VecElem:
             result.vecElem = that.result.vecElem;
             break;
-        case ResultType::VecReg:
+          case ResultType::VecReg:
             result.vector = that.result.vector;
             break;
-        case ResultType::VecPredReg:
+          case ResultType::VecPredReg:
             result.pred = that.result.pred;
             break;
 
-        default:
+          default:
             panic("Assigning result from unknown result type");
             break;
         }
         return *this;
     }
+
     /**
      * Result comparison
      * Two invalid results always differ.
      */
-    bool operator==(const InstResult& that) const {
+    bool
+    operator==(const InstResult& that) const
+    {
         if (this->type != that.type)
             return false;
         switch (type) {
-        case ResultType::Scalar:
+          case ResultType::Scalar:
             return result.integer == that.result.integer;
-        case ResultType::VecElem:
+          case ResultType::VecElem:
             return result.vecElem == that.result.vecElem;
-        case ResultType::VecReg:
+          case ResultType::VecReg:
             return result.vector == that.result.vector;
-        case ResultType::VecPredReg:
+          case ResultType::VecPredReg:
             return result.pred == that.result.pred;
-        case ResultType::Invalid:
+          case ResultType::Invalid:
             return false;
-        default:
+          default:
             panic("Unknown type of result: %d\n", (int)type);
         }
     }
 
-    bool operator!=(const InstResult& that) const {
+    bool
+    operator!=(const InstResult& that) const
+    {
         return !operator==(that);
     }
 
