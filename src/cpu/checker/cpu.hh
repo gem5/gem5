@@ -153,15 +153,9 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     BaseMMU* getMMUPtr() { return mmu; }
 
-    virtual Counter totalInsts() const override
-    {
-        return 0;
-    }
+    virtual Counter totalInsts() const override { return 0; }
 
-    virtual Counter totalOps() const override
-    {
-        return 0;
-    }
+    virtual Counter totalOps() const override { return 0; }
 
     // number of simulated loads
     Counter numLoad;
@@ -329,8 +323,9 @@ class CheckerCPU : public BaseCPU, public ExecContext
         setVecElemResult(val);
     }
 
-    void setVecPredRegOperand(const StaticInst *si, int idx,
-                              const TheISA::VecPredRegContainer& val) override
+    void
+    setVecPredRegOperand(const StaticInst *si, int idx,
+                         const TheISA::VecPredRegContainer& val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(VecPredRegClass));
@@ -476,8 +471,11 @@ class CheckerCPU : public BaseCPU, public ExecContext
         return BaseCPU::mwaitAtomic(0, tc, thread->mmu);
     }
 
-    AddressMonitor *getAddrMonitor() override
-    { return BaseCPU::getCpuAddrMonitor(0); }
+    AddressMonitor *
+    getAddrMonitor() override
+    {
+        return BaseCPU::getCpuAddrMonitor(0);
+    }
 
     /**
      * Helper function used to generate the request for a single fragment of a
@@ -502,22 +500,22 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     Fault readMem(Addr addr, uint8_t *data, unsigned size,
                   Request::Flags flags,
-                  const std::vector<bool>& byte_enable)
-        override;
+                  const std::vector<bool>& byte_enable) override;
 
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
                    Request::Flags flags, uint64_t *res,
-                   const std::vector<bool>& byte_enable)
-        override;
+                   const std::vector<bool>& byte_enable) override;
 
-    Fault amoMem(Addr addr, uint8_t* data, unsigned size,
-                 Request::Flags flags, AtomicOpFunctorPtr amo_op) override
+    Fault
+    amoMem(Addr addr, uint8_t* data, unsigned size,
+           Request::Flags flags, AtomicOpFunctorPtr amo_op) override
     {
         panic("AMO is not supported yet in CPU checker\n");
     }
 
     unsigned int
-    readStCondFailures() const override {
+    readStCondFailures() const override
+    {
         return thread->readStCondFailures();
     }
 
@@ -585,7 +583,8 @@ class Checker : public CheckerCPU
     void handlePendingInt();
 
   private:
-    void handleError(const DynInstPtr &inst)
+    void
+    handleError(const DynInstPtr &inst)
     {
         if (exitOnError) {
             dumpAndExit(inst);
