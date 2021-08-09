@@ -212,7 +212,7 @@ class ThreadContext : public gem5::ThreadContext
         return getWritableVecRegFlat(flattenRegId(id).index());
     }
 
-    const TheISA::VecElem &
+    RegVal
     readVecElem(const RegId& reg) const override
     {
         return readVecElemFlat(flattenRegId(reg).index(), reg.elemIndex());
@@ -258,7 +258,7 @@ class ThreadContext : public gem5::ThreadContext
     }
 
     void
-    setVecElem(const RegId& reg, const TheISA::VecElem& val) override
+    setVecElem(const RegId& reg, RegVal val) override
     {
         setVecElemFlat(flattenRegId(reg).index(), reg.elemIndex(), val);
     }
@@ -372,10 +372,10 @@ class ThreadContext : public gem5::ThreadContext
     void setVecRegFlat(RegIndex idx,
             const TheISA::VecRegContainer& val) override;
 
-    const TheISA::VecElem &readVecElemFlat(RegIndex idx,
+    RegVal readVecElemFlat(RegIndex idx,
             const ElemIndex& elemIndex) const override;
     void setVecElemFlat(RegIndex idx, const ElemIndex& elemIdx,
-                        const TheISA::VecElem& val) override;
+                        RegVal val) override;
 
     const TheISA::VecPredRegContainer&
         readVecPredRegFlat(RegIndex idx) const override;

@@ -292,7 +292,7 @@ class ThreadContext : public gem5::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const ArmISA::VecElem &
+    RegVal
     readVecElem(const RegId &reg) const override
     {
         panic("%s not implemented.", __FUNCTION__);
@@ -327,7 +327,7 @@ class ThreadContext : public gem5::ThreadContext
     }
 
     void
-    setVecElem(const RegId& reg, const ArmISA::VecElem& val) override
+    setVecElem(const RegId& reg, RegVal val) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
@@ -425,14 +425,13 @@ class ThreadContext : public gem5::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const ArmISA::VecElem&
+    RegVal
     readVecElemFlat(RegIndex idx, const ElemIndex& elemIdx) const override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
     void
-    setVecElemFlat(RegIndex idx, const ElemIndex &elemIdx,
-                   const ArmISA::VecElem &val) override
+    setVecElemFlat(RegIndex idx, const ElemIndex &elemIdx, RegVal val) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }

@@ -253,7 +253,7 @@ class CheckerThreadContext : public ThreadContext
         return actualTC->getWritableVecReg(reg);
     }
 
-    const TheISA::VecElem &
+    RegVal
     readVecElem(const RegId& reg) const override
     {
         return actualTC->readVecElem(reg);
@@ -299,7 +299,7 @@ class CheckerThreadContext : public ThreadContext
     }
 
     void
-    setVecElem(const RegId& reg, const TheISA::VecElem& val) override
+    setVecElem(const RegId& reg, RegVal val) override
     {
         actualTC->setVecElem(reg, val);
         checkerTC->setVecElem(reg, val);
@@ -449,7 +449,7 @@ class CheckerThreadContext : public ThreadContext
         actualTC->setVecRegFlat(idx, val);
     }
 
-    const TheISA::VecElem &
+    RegVal
     readVecElemFlat(RegIndex idx, const ElemIndex& elem_idx) const override
     {
         return actualTC->readVecElemFlat(idx, elem_idx);
@@ -457,7 +457,7 @@ class CheckerThreadContext : public ThreadContext
 
     void
     setVecElemFlat(RegIndex idx, const ElemIndex& elem_idx,
-            const TheISA::VecElem& val) override
+            RegVal val) override
     {
         actualTC->setVecElemFlat(idx, elem_idx, val);
     }

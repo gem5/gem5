@@ -362,7 +362,7 @@ class SimpleExecContext : public ExecContext
     }
 
     /** Reads an element of a vector register. */
-    TheISA::VecElem
+    RegVal
     readVecElemOperand(const StaticInst *si, int idx) const override
     {
         execContextStats.numVecRegReads++;
@@ -373,8 +373,7 @@ class SimpleExecContext : public ExecContext
 
     /** Sets an element of a vector register to a value. */
     void
-    setVecElemOperand(const StaticInst *si, int idx,
-                      const TheISA::VecElem val) override
+    setVecElemOperand(const StaticInst *si, int idx, RegVal val) override
     {
         execContextStats.numVecRegWrites++;
         const RegId& reg = si->destRegIdx(idx);

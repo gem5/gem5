@@ -41,6 +41,7 @@
 #include <type_traits>
 
 #include "arch/generic/vec_reg.hh"
+#include "base/types.hh"
 
 namespace gem5
 {
@@ -50,10 +51,10 @@ class InstResult
   public:
     union MultiResult
     {
-        uint64_t integer;
+        RegVal integer;
         double dbl;
         TheISA::VecRegContainer vector;
-        TheISA::VecElem vecElem;
+        RegVal vecElem;
         TheISA::VecPredRegContainer pred;
         MultiResult() {}
     };
@@ -200,7 +201,7 @@ class InstResult
         panic_if(!isVector(), "Converting scalar (or invalid) to vector!!");
         return result.vector;
     }
-    const TheISA::VecElem&
+    const RegVal&
     asVectorElem() const
     {
         panic_if(!isVecElem(), "Converting scalar (or invalid) to vector!!");

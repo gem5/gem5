@@ -176,7 +176,7 @@ class ExecContext : public gem5::ExecContext
         return thread.getWritableVecReg(reg);
     }
 
-    TheISA::VecElem
+    RegVal
     readVecElemOperand(const StaticInst *si, int idx) const override
     {
         const RegId& reg = si->srcRegIdx(idx);
@@ -235,8 +235,7 @@ class ExecContext : public gem5::ExecContext
     }
 
     void
-    setVecElemOperand(const StaticInst *si, int idx,
-                      const TheISA::VecElem val) override
+    setVecElemOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(VecElemClass));

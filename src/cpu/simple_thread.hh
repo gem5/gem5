@@ -306,13 +306,12 @@ class SimpleThread : public ThreadState, public ThreadContext
         return regVal;
     }
 
-    const TheISA::VecElem &
+    RegVal
     readVecElem(const RegId &reg) const override
     {
         int flatIndex = isa->flattenVecElemIndex(reg.index());
         assert(flatIndex < vecRegs.size());
-        const TheISA::VecElem& regVal =
-            readVecElemFlat(flatIndex, reg.elemIndex());
+        RegVal regVal = readVecElemFlat(flatIndex, reg.elemIndex());
         DPRINTF(VecRegs, "Reading element %d of vector reg %d (%d) as"
                 " %#x.\n", reg.elemIndex(), reg.index(), flatIndex, regVal);
         return regVal;
@@ -389,7 +388,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     }
 
     void
-    setVecElem(const RegId &reg, const TheISA::VecElem &val) override
+    setVecElem(const RegId &reg, RegVal val) override
     {
         int flatIndex = isa->flattenVecElemIndex(reg.index());
         assert(flatIndex < vecRegs.size());
@@ -520,7 +519,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         vecRegs[reg] = val;
     }
 
-    const TheISA::VecElem &
+    RegVal
     readVecElemFlat(RegIndex reg, const ElemIndex &elemIndex) const override
     {
         return vecRegs[reg].as<TheISA::VecElem>()[elemIndex];
@@ -528,7 +527,7 @@ class SimpleThread : public ThreadState, public ThreadContext
 
     void
     setVecElemFlat(RegIndex reg, const ElemIndex &elemIndex,
-                   const TheISA::VecElem &val) override
+                   RegVal val) override
     {
         vecRegs[reg].as<TheISA::VecElem>()[elemIndex] = val;
     }

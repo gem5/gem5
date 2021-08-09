@@ -1170,7 +1170,7 @@ CPU::getWritableVecReg(PhysRegIdPtr phys_reg)
     return regFile.getWritableVecReg(phys_reg);
 }
 
-const TheISA::VecElem&
+RegVal
 CPU::readVecElem(PhysRegIdPtr phys_reg) const
 {
     cpuStats.vecRegfileReads++;
@@ -1220,7 +1220,7 @@ CPU::setVecReg(PhysRegIdPtr phys_reg, const TheISA::VecRegContainer& val)
 }
 
 void
-CPU::setVecElem(PhysRegIdPtr phys_reg, const TheISA::VecElem& val)
+CPU::setVecElem(PhysRegIdPtr phys_reg, RegVal val)
 {
     cpuStats.vecRegfileWrites++;
     regFile.setVecElem(phys_reg, val);
@@ -1277,7 +1277,7 @@ CPU::getWritableArchVecReg(int reg_idx, ThreadID tid)
     return getWritableVecReg(phys_reg);
 }
 
-const TheISA::VecElem&
+RegVal
 CPU::readArchVecElem(
         const RegIndex& reg_idx, const ElemIndex& ldx, ThreadID tid) const
 {
@@ -1343,7 +1343,7 @@ CPU::setArchVecReg(int reg_idx, const TheISA::VecRegContainer& val,
 
 void
 CPU::setArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
-                                const TheISA::VecElem& val, ThreadID tid)
+                    RegVal val, ThreadID tid)
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecElemClass, reg_idx, ldx));

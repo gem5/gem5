@@ -346,7 +346,7 @@ class CPU : public BaseCPU
         vecMode = vec_mode;
     }
 
-    const TheISA::VecElem& readVecElem(PhysRegIdPtr reg_idx) const;
+    RegVal readVecElem(PhysRegIdPtr reg_idx) const;
 
     const TheISA::VecPredRegContainer&
         readVecPredReg(PhysRegIdPtr reg_idx) const;
@@ -361,7 +361,7 @@ class CPU : public BaseCPU
 
     void setVecReg(PhysRegIdPtr reg_idx, const TheISA::VecRegContainer& val);
 
-    void setVecElem(PhysRegIdPtr reg_idx, const TheISA::VecElem& val);
+    void setVecElem(PhysRegIdPtr reg_idx, RegVal val);
 
     void setVecPredReg(PhysRegIdPtr reg_idx,
             const TheISA::VecPredRegContainer& val);
@@ -377,7 +377,7 @@ class CPU : public BaseCPU
     /** Read architectural vector register for modification. */
     TheISA::VecRegContainer& getWritableArchVecReg(int reg_idx, ThreadID tid);
 
-    const TheISA::VecElem& readArchVecElem(const RegIndex& reg_idx,
+    RegVal readArchVecElem(const RegIndex& reg_idx,
             const ElemIndex& ldx, ThreadID tid) const;
 
     const TheISA::VecPredRegContainer& readArchVecPredReg(
@@ -404,7 +404,7 @@ class CPU : public BaseCPU
             ThreadID tid);
 
     void setArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
-                        const TheISA::VecElem& val, ThreadID tid);
+                        RegVal val, ThreadID tid);
 
     void setArchCCReg(int reg_idx, RegVal val, ThreadID tid);
 

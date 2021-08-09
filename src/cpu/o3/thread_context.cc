@@ -176,7 +176,7 @@ ThreadContext::getWritableVecRegFlat(RegIndex reg_id)
     return cpu->getWritableArchVecReg(reg_id, thread->threadId());
 }
 
-const TheISA::VecElem&
+RegVal
 ThreadContext::readVecElemFlat(RegIndex idx, const ElemIndex& elemIndex) const
 {
     return cpu->readArchVecElem(idx, elemIndex, thread->threadId());
@@ -227,7 +227,7 @@ ThreadContext::setVecRegFlat(
 
 void
 ThreadContext::setVecElemFlat(RegIndex idx,
-        const ElemIndex& elemIndex, const TheISA::VecElem& val)
+        const ElemIndex& elemIndex, RegVal val)
 {
     cpu->setArchVecElem(idx, elemIndex, val, thread->threadId());
     conditionalSquash();

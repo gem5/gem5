@@ -1255,7 +1255,7 @@ class DynInst : public ExecContext, public RefCounted
         return this->cpu->getWritableVecReg(this->regs.renamedDestIdx(idx));
     }
 
-    TheISA::VecElem
+    RegVal
     readVecElemOperand(const StaticInst *si, int idx) const override
     {
         return this->cpu->readVecElem(this->regs.renamedSrcIdx(idx));
@@ -1306,8 +1306,7 @@ class DynInst : public ExecContext, public RefCounted
     }
 
     void
-    setVecElemOperand(const StaticInst *si, int idx,
-            const TheISA::VecElem val) override
+    setVecElemOperand(const StaticInst *si, int idx, RegVal val) override
     {
         int reg_idx = idx;
         this->cpu->setVecElem(this->regs.renamedDestIdx(reg_idx), val);
