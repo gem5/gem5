@@ -223,7 +223,8 @@ class UnifiedRenameMap
      * @return A RenameInfo pair indicating both the new and previous
      * physical registers.
      */
-    RenameInfo rename(const RegId& arch_reg)
+    RenameInfo
+    rename(const RegId& arch_reg)
     {
         switch (arch_reg.classValue()) {
           case IntRegClass:
@@ -242,11 +243,11 @@ class UnifiedRenameMap
             return ccMap.rename(arch_reg);
           case MiscRegClass:
             {
-            // misc regs aren't really renamed, just remapped
-            PhysRegIdPtr phys_reg = lookup(arch_reg);
-            // Set the new register to the previous one to keep the same
-            // mapping throughout the execution.
-            return RenameInfo(phys_reg, phys_reg);
+                // misc regs aren't really renamed, just remapped
+                PhysRegIdPtr phys_reg = lookup(arch_reg);
+                // Set the new register to the previous one to keep the same
+                // mapping throughout the execution.
+                return RenameInfo(phys_reg, phys_reg);
             }
 
           default:
