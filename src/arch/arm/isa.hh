@@ -52,7 +52,6 @@
 #include "arch/generic/isa.hh"
 #include "debug/Checkpoint.hh"
 #include "enums/DecoderFlavor.hh"
-#include "enums/VecRegRenameMode.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
@@ -882,18 +881,6 @@ namespace ArmISA
             // to an error
             assert(afterStartup);
             return gicv3CpuInterface != nullptr;
-        }
-
-        enums::VecRegRenameMode
-        initVecRegRenameMode() const override
-        {
-            return highestELIs64 ? enums::Full : enums::Elem;
-        }
-
-        enums::VecRegRenameMode
-        vecRegRenameMode(ThreadContext *_tc) const override
-        {
-            return _tc->pcState().aarch64() ? enums::Full : enums::Elem;
         }
 
         PARAMS(ArmISA);

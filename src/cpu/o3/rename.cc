@@ -955,9 +955,6 @@ Rename::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
 
         ++stats.undoneMaps;
     }
-
-    // Check if we need to change vector renaming mode after squashing
-    cpu->switchRenameMode(tid, freeList);
 }
 
 void
@@ -1250,7 +1247,7 @@ Rename::readFreeEntries(ThreadID tid)
     }
 
     DPRINTF(Rename, "[tid:%i] Free IQ: %i, Free ROB: %i, "
-                    "Free LQ: %i, Free SQ: %i, FreeRM %i(%i %i %i %i %i)\n",
+                    "Free LQ: %i, Free SQ: %i, FreeRM %i(%i %i %i %i %i %i)\n",
             tid,
             freeEntries[tid].iqEntries,
             freeEntries[tid].robEntries,
@@ -1260,6 +1257,7 @@ Rename::readFreeEntries(ThreadID tid)
             renameMap[tid]->numFreeIntEntries(),
             renameMap[tid]->numFreeFloatEntries(),
             renameMap[tid]->numFreeVecEntries(),
+            renameMap[tid]->numFreeVecElemEntries(),
             renameMap[tid]->numFreePredEntries(),
             renameMap[tid]->numFreeCCEntries());
 

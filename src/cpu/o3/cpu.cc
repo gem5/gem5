@@ -87,16 +87,12 @@ CPU::CPU(const O3CPUParams &params)
       iew(this, params),
       commit(this, params),
 
-      /* It is mandatory that all SMT threads use the same renaming mode as
-       * they are sharing registers and rename */
-      vecMode(params.isa[0]->initVecRegRenameMode()),
       regFile(params.numPhysIntRegs,
               params.numPhysFloatRegs,
               params.numPhysVecRegs,
               params.numPhysVecPredRegs,
               params.numPhysCCRegs,
-              params.isa[0]->regClasses(),
-              vecMode),
+              params.isa[0]->regClasses()),
 
       freeList(name() + ".freelist", &regFile),
 
@@ -221,12 +217,8 @@ CPU::CPU(const O3CPUParams &params)
     // Setup the rename map for whichever stages need it.
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         isa[tid] = dynamic_cast<TheISA::ISA *>(params.isa[tid]);
-        assert(isa[tid]);
-        assert(isa[tid]->initVecRegRenameMode() ==
-                isa[0]->initVecRegRenameMode());
-
-        commitRenameMap[tid].init(regClasses, &regFile, &freeList, vecMode);
-        renameMap[tid].init(regClasses, &regFile, &freeList, vecMode);
+        commitRenameMap[tid].init(regClasses, &regFile, &freeList);
+        renameMap[tid].init(regClasses, &regFile, &freeList);
     }
 
     // Initialize rename map to assign physical registers to the
@@ -249,29 +241,23 @@ CPU::CPU(const O3CPUParams &params)
                     RegId(FloatRegClass, ridx), phys_reg);
         }
 
-        /* Here we need two 'interfaces' the 'whole register' and the
-         * 'register element'. At any point only one of them will be
-         * active. */
         const size_t numVecs = regClasses.at(VecRegClass).size();
-        if (vecMode == enums::Full) {
-            /* Initialize the full-vector interface */
-            for (RegIndex ridx = 0; ridx < numVecs; ++ridx) {
-                RegId rid = RegId(VecRegClass, ridx);
-                PhysRegIdPtr phys_reg = freeList.getVecReg();
-                renameMap[tid].setEntry(rid, phys_reg);
-                commitRenameMap[tid].setEntry(rid, phys_reg);
-            }
-        } else {
-            /* Initialize the vector-element interface */
-            const size_t numElems = regClasses.at(VecElemClass).size();
-            const size_t elemsPerVec = numElems / numVecs;
-            for (RegIndex ridx = 0; ridx < numVecs; ++ridx) {
-                for (ElemIndex ldx = 0; ldx < elemsPerVec; ++ldx) {
-                    RegId lrid = RegId(VecElemClass, ridx, ldx);
-                    PhysRegIdPtr phys_elem = freeList.getVecElem();
-                    renameMap[tid].setEntry(lrid, phys_elem);
-                    commitRenameMap[tid].setEntry(lrid, phys_elem);
-                }
+        /* Initialize the full-vector interface */
+        for (RegIndex ridx = 0; ridx < numVecs; ++ridx) {
+            RegId rid = RegId(VecRegClass, ridx);
+            PhysRegIdPtr phys_reg = freeList.getVecReg();
+            renameMap[tid].setEntry(rid, phys_reg);
+            commitRenameMap[tid].setEntry(rid, phys_reg);
+        }
+        /* Initialize the vector-element interface */
+        const size_t numElems = regClasses.at(VecElemClass).size();
+        const size_t elemsPerVec = numElems / numVecs;
+        for (RegIndex ridx = 0; ridx < numVecs; ++ridx) {
+            for (ElemIndex ldx = 0; ldx < elemsPerVec; ++ldx) {
+                RegId lrid = RegId(VecElemClass, ridx, ldx);
+                PhysRegIdPtr phys_elem = freeList.getVecElem();
+                renameMap[tid].setEntry(lrid, phys_elem);
+                commitRenameMap[tid].setEntry(lrid, phys_elem);
             }
         }
 
@@ -829,48 +815,6 @@ CPU::removeThread(ThreadID tid)
         iew.resetEntries();
     }
 */
-}
-
-void
-CPU::setVectorsAsReady(ThreadID tid)
-{
-    const auto &regClasses = isa[tid]->regClasses();
-
-    const size_t numVecs = regClasses.at(VecRegClass).size();
-    if (vecMode == enums::Elem) {
-        const size_t numElems = regClasses.at(VecElemClass).size();
-        const size_t elemsPerVec = numElems / numVecs;
-        for (auto v = 0; v < numVecs; v++) {
-            for (auto e = 0; e < elemsPerVec; e++) {
-                scoreboard.setReg(commitRenameMap[tid].lookup(
-                            RegId(VecElemClass, v, e)));
-            }
-        }
-    } else if (vecMode == enums::Full) {
-        for (auto v = 0; v < numVecs; v++) {
-            scoreboard.setReg(commitRenameMap[tid].lookup(
-                        RegId(VecRegClass, v)));
-        }
-    }
-}
-
-void
-CPU::switchRenameMode(ThreadID tid, UnifiedFreeList* freelist)
-{
-    auto pc = pcState(tid);
-
-    // new_mode is the new vector renaming mode
-    auto new_mode = isa[tid]->vecRegRenameMode(thread[tid]->getTC());
-
-    // We update vecMode only if there has been a change
-    if (new_mode != vecMode) {
-        vecMode = new_mode;
-
-        renameMap[tid].switchMode(vecMode);
-        commitRenameMap[tid].switchMode(vecMode);
-        renameMap[tid].switchFreeList(freelist);
-        setVectorsAsReady(tid);
-    }
 }
 
 Fault

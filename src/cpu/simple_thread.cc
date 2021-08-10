@@ -80,6 +80,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     intRegs.resize(regClasses.at(IntRegClass).size());
     floatRegs.resize(regClasses.at(FloatRegClass).size());
     vecRegs.resize(regClasses.at(VecRegClass).size());
+    vecElemRegs.resize(regClasses.at(VecElemClass).size());
     vecPredRegs.resize(regClasses.at(VecPredRegClass).size());
     ccRegs.resize(regClasses.at(CCRegClass).size());
     clearArchRegs();

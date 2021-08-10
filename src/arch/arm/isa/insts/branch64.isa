@@ -248,6 +248,16 @@ let {{
                     CondCodesV  = new_cpsr.v;
 
                     NextAArch64 = !new_cpsr.width;
+                    // Switch between aarch64 and aarch32, or vice versa.
+                    if (new_cpsr.width != cpsr.width) {
+                        if (new_cpsr.width) {
+                            // Going to aarch32.
+                            syncVecRegsToElems(xc->tcBase());
+                        } else {
+                            // Going to aarch64.
+                            syncVecElemsToRegs(xc->tcBase());
+                        }
+                    }
                     NextItState = itState(new_cpsr);
                     NPC = purifyTaggedAddr(newPc, xc->tcBase(),
                         currEL(new_cpsr), true);

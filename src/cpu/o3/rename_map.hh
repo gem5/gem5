@@ -50,7 +50,6 @@
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/regfile.hh"
 #include "cpu/reg_class.hh"
-#include "enums/VecRegRenameMode.hh"
 
 namespace gem5
 {
@@ -192,9 +191,6 @@ class UnifiedRenameMap
     /** The predicate register rename map */
     SimpleRenameMap predMap;
 
-    using VecMode = enums::VecRegRenameMode;
-    VecMode vecMode;
-
     /**
      * The register file object is used only to get PhysRegIdPtr
      * on MiscRegs, as they are stored in it.
@@ -213,7 +209,7 @@ class UnifiedRenameMap
 
     /** Initializes rename map with given parameters. */
     void init(const BaseISA::RegClasses &regClasses,
-              PhysRegFile *_regFile, UnifiedFreeList *freeList, VecMode _mode);
+              PhysRegFile *_regFile, UnifiedFreeList *freeList);
 
     /**
      * Tell rename map to get a new free physical register to remap
@@ -232,10 +228,8 @@ class UnifiedRenameMap
           case FloatRegClass:
             return floatMap.rename(arch_reg);
           case VecRegClass:
-            assert(vecMode == enums::Full);
             return vecMap.rename(arch_reg);
           case VecElemClass:
-            assert(vecMode == enums::Elem);
             return vecElemMap.rename(arch_reg);
           case VecPredRegClass:
             return predMap.rename(arch_reg);
@@ -274,11 +268,9 @@ class UnifiedRenameMap
             return  floatMap.lookup(arch_reg);
 
           case VecRegClass:
-            assert(vecMode == enums::Full);
             return  vecMap.lookup(arch_reg);
 
           case VecElemClass:
-            assert(vecMode == enums::Elem);
             return  vecElemMap.lookup(arch_reg);
 
           case VecPredRegClass:
@@ -318,11 +310,9 @@ class UnifiedRenameMap
             return floatMap.setEntry(arch_reg, phys_reg);
 
           case VecRegClass:
-            assert(vecMode == enums::Full);
             return vecMap.setEntry(arch_reg, phys_reg);
 
           case VecElemClass:
-            assert(vecMode == enums::Elem);
             return vecElemMap.setEntry(arch_reg, phys_reg);
 
           case VecPredRegClass:
@@ -356,19 +346,18 @@ class UnifiedRenameMap
     {
         return std::min({intMap.numFreeEntries(),
                          floatMap.numFreeEntries(),
-                         vecMode == enums::Full ? vecMap.numFreeEntries() :
-                                                  vecElemMap.numFreeEntries(),
+                         vecMap.numFreeEntries(),
+                         vecElemMap.numFreeEntries(),
                          predMap.numFreeEntries()});
     }
 
     unsigned numFreeIntEntries() const { return intMap.numFreeEntries(); }
     unsigned numFreeFloatEntries() const { return floatMap.numFreeEntries(); }
+    unsigned numFreeVecEntries() const { return vecMap.numFreeEntries(); }
     unsigned
-    numFreeVecEntries() const
+    numFreeVecElemEntries() const
     {
-        return vecMode == enums::Full
-                ? vecMap.numFreeEntries()
-                : vecElemMap.numFreeEntries();
+        return vecElemMap.numFreeEntries();
     }
     unsigned numFreePredEntries() const { return predMap.numFreeEntries(); }
     unsigned numFreeCCEntries() const { return ccMap.numFreeEntries(); }
@@ -388,20 +377,6 @@ class UnifiedRenameMap
             vecPredRegs <= predMap.numFreeEntries() &&
             ccRegs <= ccMap.numFreeEntries();
     }
-    /**
-     * Set vector mode to Full or Elem.
-     * Ignore 'silent' modifications.
-     *
-     * @param newVecMode new vector renaming mode
-     */
-    void switchMode(VecMode newVecMode);
-
-    /**
-     * Switch freeList of registers from Full to Elem or vicevers
-     * depending on vecMode (vector renaming mode).
-     */
-    void switchFreeList(UnifiedFreeList* freeList);
-
 };
 
 } // namespace o3

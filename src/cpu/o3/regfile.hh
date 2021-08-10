@@ -50,7 +50,6 @@
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
 #include "debug/IEW.hh"
-#include "enums/VecRegRenameMode.hh"
 
 namespace gem5
 {
@@ -68,7 +67,6 @@ class PhysRegFile
   private:
 
     using PhysIds = std::vector<PhysRegId>;
-    using VecMode = enums::VecRegRenameMode;
   public:
     using IdRange = std::pair<PhysIds::iterator,
                               PhysIds::iterator>;
@@ -85,6 +83,9 @@ class PhysRegFile
     /** Vector register file. */
     std::vector<TheISA::VecRegContainer> vectorRegFile;
     std::vector<PhysRegId> vecRegIds;
+
+    /** Vector element register file. */
+    std::vector<RegVal> vectorElemRegFile;
     std::vector<PhysRegId> vecElemIds;
 
     /** Predicate register file. */
@@ -131,9 +132,6 @@ class PhysRegFile
     /** Total number of physical registers. */
     unsigned totalNumRegs;
 
-    /** Mode in which vector registers are addressed. */
-    VecMode vecMode;
-
   public:
     /**
      * Constructs a physical register file with the specified amount of
@@ -144,9 +142,7 @@ class PhysRegFile
                 unsigned _numPhysicalVecRegs,
                 unsigned _numPhysicalVecPredRegs,
                 unsigned _numPhysicalCCRegs,
-                const BaseISA::RegClasses &regClasses,
-                VecMode vmode
-                );
+                const BaseISA::RegClasses &regClasses);
 
     /**
      * Destructor to free resources
@@ -230,11 +226,10 @@ class PhysRegFile
     readVecElem(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->is(VecElemClass));
-        auto ret = vectorRegFile[phys_reg->index()].as<TheISA::VecElem>();
-        RegVal val = ret[phys_reg->elemIndex()];
+        RegVal val = vectorElemRegFile[phys_reg->flatIndex()];
         DPRINTF(IEW, "RegFile: Access to element %d of vector register %i,"
                 " has data %#x\n", phys_reg->elemIndex(),
-                int(phys_reg->index()), val);
+                phys_reg->index(), val);
 
         return val;
     }
@@ -318,8 +313,7 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting element %d of vector register %i to"
                 " %#x\n", phys_reg->elemIndex(), int(phys_reg->index()), val);
 
-        vectorRegFile[phys_reg->index()].as<TheISA::VecElem>()[
-            phys_reg->elemIndex()] = val;
+        vectorElemRegFile[phys_reg->flatIndex()] = val;
     }
 
     /** Sets a predicate register to the given value. */
@@ -346,11 +340,6 @@ class PhysRegFile
 
         ccRegFile[phys_reg->index()] = val;
     }
-
-    /** Get the PhysRegIds of the elems of a vector register.
-     * Auxiliary function to transition from Full vector mode to Elem mode.
-     */
-    IdRange getRegElemIds(PhysRegIdPtr reg);
 
     /**
      * Get the PhysRegIds of the elems of all vector registers.

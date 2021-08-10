@@ -547,24 +547,6 @@ ISA::takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc)
     setupThreadContext();
 }
 
-static void
-copyVecRegs(ThreadContext *src, ThreadContext *dest)
-{
-    auto src_mode = src->getIsaPtr()->vecRegRenameMode(src);
-
-    // The way vector registers are copied (VecReg vs VecElem) is relevant
-    // in the O3 model only.
-    if (src_mode == enums::Full) {
-        for (auto idx = 0; idx < NumVecRegs; idx++)
-            dest->setVecRegFlat(idx, src->readVecRegFlat(idx));
-    } else {
-        for (auto idx = 0; idx < NumVecRegs; idx++)
-            for (auto elem_idx = 0; elem_idx < NumVecElemPerVecReg; elem_idx++)
-                dest->setVecElemFlat(
-                    idx, elem_idx, src->readVecElemFlat(idx, elem_idx));
-    }
-}
-
 void
 ISA::copyRegsFrom(ThreadContext *src)
 {
@@ -577,7 +559,14 @@ ISA::copyRegsFrom(ThreadContext *src)
     for (int i = 0; i < NUM_MISCREGS; i++)
         tc->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
 
-    copyVecRegs(src, tc);
+    for (int i = 0; i < NumVecRegs; i++)
+        tc->setVecRegFlat(i, src->readVecRegFlat(i));
+
+    for (int i = 0; i < NumVecRegs; i++) {
+        for (int e = 0; e < NumVecElemPerVecReg; e++) {
+            tc->setVecElemFlat(i, e, src->readVecElemFlat(i, e));
+        }
+    }
 
     // setMiscReg "with effect" will set the misc register mapping correctly.
     // e.g. updateRegMap(val)

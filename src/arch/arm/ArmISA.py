@@ -40,7 +40,6 @@ from m5.SimObject import SimObject
 from m5.objects.ArmPMU import ArmPMU
 from m5.objects.ArmSystem import SveVectorLength, ArmRelease
 from m5.objects.BaseISA import BaseISA
-from m5.objects.ISACommon import VecRegRenameMode
 
 # Enum for DecoderFlavor
 class DecoderFlavor(Enum): vals = ['Generic']

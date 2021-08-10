@@ -494,6 +494,15 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     // be handled in AArch64 mode (to64).
     update(tc);
 
+    if (from64 != to64) {
+        // Switching modes, sync up versions of the vector register file.
+        if (from64) {
+            syncVecRegsToElems(tc);
+        } else {
+            syncVecElemsToRegs(tc);
+        }
+    }
+
     if (to64) {
         // Invoke exception handler in AArch64 state
         invoke64(tc, inst);

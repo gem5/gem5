@@ -256,6 +256,8 @@ ArmV8KvmCPU::updateKvmState()
 
     for (int i = 0; i < NUM_QREGS; ++i) {
         KvmFPReg reg;
+        if (!inAArch64(tc))
+            syncVecElemsToRegs(tc);
         auto v = tc->readVecReg(RegId(VecRegClass, i)).as<VecElem>();
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
             reg.s[j].i = v[j];
@@ -333,6 +335,8 @@ ArmV8KvmCPU::updateThreadContext()
         auto v = tc->getWritableVecReg(RegId(VecRegClass, i)).as<VecElem>();
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
             v[j] = reg.s[j].i;
+        if (!inAArch64(tc))
+            syncVecRegsToElems(tc);
     }
 
     for (const auto &ri : getSysRegMap()) {

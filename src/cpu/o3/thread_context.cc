@@ -137,9 +137,6 @@ ThreadContext::readLastSuspend()
 void
 ThreadContext::copyArchRegs(gem5::ThreadContext *tc)
 {
-    // Set vector renaming mode before copying registers
-    cpu->vecRenameMode(tc->getIsaPtr()->vecRegRenameMode(tc));
-
     // Prevent squashing
     thread->noSquashFromTC = true;
     getIsaPtr()->copyRegsFrom(tc);

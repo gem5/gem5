@@ -43,7 +43,6 @@
 #include <vector>
 
 #include "cpu/reg_class.hh"
-#include "enums/VecRegRenameMode.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/sim_object.hh"
@@ -73,18 +72,6 @@ class BaseISA : public SimObject
     virtual uint64_t getExecutingAsid() const { return 0; }
     virtual bool inUserMode() const = 0;
     virtual void copyRegsFrom(ThreadContext *src) = 0;
-
-    virtual enums::VecRegRenameMode
-    initVecRegRenameMode() const
-    {
-        return enums::Full;
-    }
-
-    virtual enums::VecRegRenameMode
-    vecRegRenameMode(ThreadContext *_tc) const
-    {
-        return initVecRegRenameMode();
-    }
 
     const RegClasses &regClasses() const { return _regClasses; }
 

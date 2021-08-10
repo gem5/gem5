@@ -45,7 +45,6 @@ SimObject('BaseInterrupts.py')
 SimObject('BaseISA.py')
 SimObject('BaseMMU.py')
 SimObject('BaseTLB.py')
-SimObject('ISACommon.py')
 
 DebugFlag('PageTableWalker',
           "Page table walker state machine debugging")

@@ -100,6 +100,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     std::vector<RegVal> floatRegs;
     std::vector<RegVal> intRegs;
     std::vector<TheISA::VecRegContainer> vecRegs;
+    std::vector<RegVal> vecElemRegs;
     std::vector<TheISA::VecPredRegContainer> vecPredRegs;
     std::vector<RegVal> ccRegs;
     TheISA::ISA *const isa;    // one "instance" of the current ISA.
@@ -253,6 +254,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         std::fill(floatRegs.begin(), floatRegs.end(), 0);
         for (auto &vec_reg: vecRegs)
             vec_reg.zero();
+        std::fill(vecElemRegs.begin(), vecElemRegs.end(), 0);
         for (auto &pred_reg: vecPredRegs)
             pred_reg.reset();
         std::fill(ccRegs.begin(), ccRegs.end(), 0);
@@ -522,14 +524,14 @@ class SimpleThread : public ThreadState, public ThreadContext
     RegVal
     readVecElemFlat(RegIndex reg, const ElemIndex &elemIndex) const override
     {
-        return vecRegs[reg].as<TheISA::VecElem>()[elemIndex];
+        return vecElemRegs[reg * TheISA::NumVecElemPerVecReg + elemIndex];
     }
 
     void
     setVecElemFlat(RegIndex reg, const ElemIndex &elemIndex,
                    RegVal val) override
     {
-        vecRegs[reg].as<TheISA::VecElem>()[elemIndex] = val;
+        vecElemRegs[reg * TheISA::NumVecElemPerVecReg + elemIndex] = val;
     }
 
     const TheISA::VecPredRegContainer &

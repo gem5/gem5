@@ -284,20 +284,6 @@ class CPU : public BaseCPU
     /** Traps to handle given fault. */
     void trap(const Fault &fault, ThreadID tid, const StaticInstPtr &inst);
 
-    /**
-     * Mark vector fields in scoreboard as ready right after switching
-     * vector mode, since software may read vectors at this time.
-     */
-    void setVectorsAsReady(ThreadID tid);
-
-    /** Check if a change in renaming is needed for vector registers.
-     * The vecMode variable is updated and propagated to rename maps.
-     *
-     * @param tid ThreadID
-     * @param freelist list of free registers
-     */
-    void switchRenameMode(ThreadID tid, UnifiedFreeList* freelist);
-
     /** Returns the Fault for any valid interrupt. */
     Fault getInterrupts();
 
@@ -335,16 +321,6 @@ class CPU : public BaseCPU
      * Read physical vector register for modification.
      */
     TheISA::VecRegContainer& getWritableVecReg(PhysRegIdPtr reg_idx);
-
-    /** Returns current vector renaming mode */
-    enums::VecRegRenameMode vecRenameMode() const { return vecMode; }
-
-    /** Sets the current vector renaming mode */
-    void
-    vecRenameMode(enums::VecRegRenameMode vec_mode)
-    {
-        vecMode = vec_mode;
-    }
 
     RegVal readVecElem(PhysRegIdPtr reg_idx) const;
 
@@ -499,9 +475,6 @@ class CPU : public BaseCPU
 
     /** The commit stage. */
     Commit commit;
-
-    /** The rename mode of the vector registers */
-    enums::VecRegRenameMode vecMode;
 
     /** The register file. */
     PhysRegFile regFile;
