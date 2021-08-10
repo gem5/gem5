@@ -55,7 +55,6 @@ namespace X86ISA
 // Not applicable to x86
 using VecElem = ::gem5::DummyVecElem;
 using VecRegContainer = ::gem5::DummyVecRegContainer;
-constexpr unsigned NumVecElemPerVecReg = ::gem5::DummyNumVecElemPerVecReg;
 
 // Not applicable to x86
 using VecPredRegContainer = ::gem5::DummyVecPredRegContainer;

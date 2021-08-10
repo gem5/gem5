@@ -264,9 +264,7 @@ struct ShowParam<VecRegContainer<Sz>>
  */
 /** @{ */
 using DummyVecElem = uint32_t;
-constexpr unsigned DummyNumVecElemPerVecReg = 2;
-using DummyVecRegContainer =
-    VecRegContainer<DummyNumVecElemPerVecReg * sizeof(DummyVecElem)>;
+using DummyVecRegContainer = VecRegContainer<2 * sizeof(DummyVecElem)>;
 /** @} */
 
 } // namespace gem5

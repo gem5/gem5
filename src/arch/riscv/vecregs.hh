@@ -60,7 +60,6 @@ namespace RiscvISA
 // Not applicable to RISC-V
 using VecElem = ::gem5::DummyVecElem;
 using VecRegContainer = ::gem5::DummyVecRegContainer;
-constexpr unsigned NumVecElemPerVecReg = ::gem5::DummyNumVecElemPerVecReg;
 
 // Not applicable to RISC-V
 using VecPredRegContainer = ::gem5::DummyVecPredRegContainer;

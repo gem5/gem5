@@ -41,7 +41,6 @@ namespace SparcISA
 // Not applicable to SPARC
 using VecElem = ::gem5::DummyVecElem;
 using VecRegContainer = ::gem5::DummyVecRegContainer;
-constexpr unsigned NumVecElemPerVecReg = ::gem5::DummyNumVecElemPerVecReg;
 
 // Not applicable to SPARC
 using VecPredRegContainer = ::gem5::DummyVecPredRegContainer;
