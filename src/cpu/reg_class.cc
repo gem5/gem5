@@ -50,6 +50,14 @@ DefaultRegClassOps::regName(const RegId &id) const
     return csprintf("r%d", id.index());
 }
 
+std::string
+VecElemRegClassOps::regName(const RegId &id) const
+{
+    RegIndex reg_idx = id.index() / elemsPerVec;
+    RegIndex elem_idx = id.index() % elemsPerVec;
+    return csprintf("v%d[%d]", reg_idx, elem_idx);
+}
+
 const char *RegId::regClassStrings[] = {
     "IntRegClass",
     "FloatRegClass",
