@@ -393,6 +393,9 @@ byteOrder(const ThreadContext *tc)
 
 bool isUnpriviledgeAccess(ThreadContext *tc);
 
+void syncVecRegsToElems(ThreadContext *tc);
+void syncVecElemsToRegs(ThreadContext *tc);
+
 } // namespace ArmISA
 } // namespace gem5
 

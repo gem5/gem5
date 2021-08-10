@@ -45,6 +45,7 @@
 #include "arch/arm/page_size.hh"
 #include "arch/arm/regs/cc.hh"
 #include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/vec.hh"
 #include "arch/arm/system.hh"
 #include "base/compiler.hh"
 #include "cpu/base.hh"
@@ -1324,6 +1325,33 @@ encodePhysAddrRange64(int pa_size)
         return 0x6;
       default:
         panic("Invalid phys. address range");
+    }
+}
+
+void
+syncVecRegsToElems(ThreadContext *tc)
+{
+    for (int ri = 0; ri < NumVecRegs; ri++) {
+        RegId reg_id(VecRegClass, ri);
+        const VecRegContainer &reg = tc->readVecReg(reg_id);
+        for (int ei = 0; ei < NumVecElemPerVecReg; ei++) {
+            RegId elem_id(VecElemClass, ri, ei);
+            tc->setVecElem(elem_id, reg.as<VecElem>()[ei]);
+        }
+    }
+}
+
+void
+syncVecElemsToRegs(ThreadContext *tc)
+{
+    for (int ri = 0; ri < NumVecRegs; ri++) {
+        VecRegContainer reg;
+        for (int ei = 0; ei < NumVecElemPerVecReg; ei++) {
+            RegId elem_id(VecElemClass, ri, ei);
+            reg.as<VecElem>()[ei] = tc->readVecElem(elem_id);
+        }
+        RegId reg_id(VecRegClass, ri);
+        tc->setVecReg(reg_id, reg);
     }
 }
 
