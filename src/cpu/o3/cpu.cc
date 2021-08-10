@@ -251,14 +251,11 @@ CPU::CPU(const BaseO3CPUParams &params)
         }
         /* Initialize the vector-element interface */
         const size_t numElems = regClasses.at(VecElemClass).size();
-        const size_t elemsPerVec = numElems / numVecs;
-        for (RegIndex ridx = 0; ridx < numVecs; ++ridx) {
-            for (ElemIndex ldx = 0; ldx < elemsPerVec; ++ldx) {
-                RegId lrid = RegId(VecElemClass, ridx, ldx);
-                PhysRegIdPtr phys_elem = freeList.getVecElem();
-                renameMap[tid].setEntry(lrid, phys_elem);
-                commitRenameMap[tid].setEntry(lrid, phys_elem);
-            }
+        for (RegIndex ridx = 0; ridx < numElems; ++ridx) {
+            RegId lrid = RegId(VecElemClass, ridx);
+            PhysRegIdPtr phys_elem = freeList.getVecElem();
+            renameMap[tid].setEntry(lrid, phys_elem);
+            commitRenameMap[tid].setEntry(lrid, phys_elem);
         }
 
         for (RegIndex ridx = 0; ridx < regClasses.at(VecPredRegClass).size();
@@ -1220,11 +1217,10 @@ CPU::getWritableArchVecReg(int reg_idx, ThreadID tid)
 }
 
 RegVal
-CPU::readArchVecElem(
-        const RegIndex& reg_idx, const ElemIndex& ldx, ThreadID tid) const
+CPU::readArchVecElem(const RegIndex& reg_idx, ThreadID tid) const
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
-                                RegId(VecElemClass, reg_idx, ldx));
+                                RegId(VecElemClass, reg_idx));
     return regFile.readVecElem(phys_reg);
 }
 
@@ -1281,11 +1277,10 @@ CPU::setArchVecReg(int reg_idx, const TheISA::VecRegContainer& val,
 }
 
 void
-CPU::setArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
-                    RegVal val, ThreadID tid)
+CPU::setArchVecElem(const RegIndex& reg_idx, RegVal val, ThreadID tid)
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
-                RegId(VecElemClass, reg_idx, ldx));
+                RegId(VecElemClass, reg_idx));
     regFile.setVecElem(phys_reg, val);
 }
 

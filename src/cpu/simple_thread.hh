@@ -311,10 +311,11 @@ class SimpleThread : public ThreadState, public ThreadContext
     readVecElem(const RegId &reg) const override
     {
         int flatIndex = isa->flattenVecElemIndex(reg.index());
-        assert(flatIndex < vecRegs.size());
-        RegVal regVal = readVecElemFlat(flatIndex, reg.elemIndex());
+        assert(flatIndex < vecElemRegs.size());
+        RegVal regVal = readVecElemFlat(flatIndex);
         DPRINTF(VecRegs, "Reading element %d of vector reg %d (%d) as"
-                " %#x.\n", reg.elemIndex(), reg.index(), flatIndex, regVal);
+                " %#x.\n", reg.index() % TheISA::NumVecElemPerVecReg,
+                reg.index() / TheISA::NumVecElemPerVecReg, flatIndex, regVal);
         return regVal;
     }
 
@@ -392,10 +393,11 @@ class SimpleThread : public ThreadState, public ThreadContext
     setVecElem(const RegId &reg, RegVal val) override
     {
         int flatIndex = isa->flattenVecElemIndex(reg.index());
-        assert(flatIndex < vecRegs.size());
-        setVecElemFlat(flatIndex, reg.elemIndex(), val);
+        assert(flatIndex < vecElemRegs.size());
+        setVecElemFlat(flatIndex, val);
         DPRINTF(VecRegs, "Setting element %d of vector reg %d (%d) to"
-                " %#x.\n", reg.elemIndex(), reg.index(), flatIndex, val);
+                " %#x.\n", reg.index() % TheISA::NumVecElemPerVecReg,
+                reg.index() / TheISA::NumVecElemPerVecReg, flatIndex, val);
     }
 
     void
@@ -518,16 +520,15 @@ class SimpleThread : public ThreadState, public ThreadContext
     }
 
     RegVal
-    readVecElemFlat(RegIndex reg, const ElemIndex &elemIndex) const override
+    readVecElemFlat(RegIndex reg) const override
     {
-        return vecElemRegs[reg * TheISA::NumVecElemPerVecReg + elemIndex];
+        return vecElemRegs[reg];
     }
 
     void
-    setVecElemFlat(RegIndex reg, const ElemIndex &elemIndex,
-                   RegVal val) override
+    setVecElemFlat(RegIndex reg, RegVal val) override
     {
-        vecElemRegs[reg * TheISA::NumVecElemPerVecReg + elemIndex] = val;
+        vecElemRegs[reg] = val;
     }
 
     const TheISA::VecPredRegContainer &

@@ -434,16 +434,15 @@ class CheckerThreadContext : public ThreadContext
     }
 
     RegVal
-    readVecElemFlat(RegIndex idx, const ElemIndex& elem_idx) const override
+    readVecElemFlat(RegIndex idx) const override
     {
-        return actualTC->readVecElemFlat(idx, elem_idx);
+        return actualTC->readVecElemFlat(idx);
     }
 
     void
-    setVecElemFlat(RegIndex idx, const ElemIndex& elem_idx,
-            RegVal val) override
+    setVecElemFlat(RegIndex idx, RegVal val) override
     {
-        actualTC->setVecElemFlat(idx, elem_idx, val);
+        actualTC->setVecElemFlat(idx, val);
     }
 
     const TheISA::VecPredRegContainer &

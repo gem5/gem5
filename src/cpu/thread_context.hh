@@ -284,10 +284,8 @@ class ThreadContext : public PCEventScope
     virtual void setVecRegFlat(RegIndex idx,
             const TheISA::VecRegContainer& val) = 0;
 
-    virtual RegVal readVecElemFlat(RegIndex idx,
-            const ElemIndex& elem_idx) const = 0;
-    virtual void setVecElemFlat(RegIndex idx, const ElemIndex& elem_idx,
-            RegVal val) = 0;
+    virtual RegVal readVecElemFlat(RegIndex idx) const = 0;
+    virtual void setVecElemFlat(RegIndex idx, RegVal val) = 0;
 
     virtual const TheISA::VecPredRegContainer &
         readVecPredRegFlat(RegIndex idx) const = 0;

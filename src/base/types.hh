@@ -175,13 +175,6 @@ using RegVal = uint64_t;
 // Logical register index type.
 using RegIndex = uint16_t;
 
-/** Logical vector register elem index type. */
-using ElemIndex = uint16_t;
-
-/** ElemIndex value that indicates that the register is not a vector. */
-static const ElemIndex IllegalElemIndex =
-    std::numeric_limits<ElemIndex>::max();
-
 static inline uint32_t
 floatToBits32(float val)
 {

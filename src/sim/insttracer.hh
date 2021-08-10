@@ -44,9 +44,9 @@
 #include <memory>
 
 #include "arch/generic/pcstate.hh"
-#include "arch/generic/vec_pred_reg.hh"
-#include "arch/generic/vec_reg.hh"
+#include "arch/vecregs.hh"
 #include "base/types.hh"
+#include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/static_inst.hh"
 #include "sim/sim_object.hh"

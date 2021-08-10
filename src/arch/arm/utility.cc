@@ -1344,12 +1344,13 @@ encodePhysAddrRange64(int pa_size)
 void
 syncVecRegsToElems(ThreadContext *tc)
 {
+    int ei = 0;
     for (int ri = 0; ri < NumVecRegs; ri++) {
         RegId reg_id(VecRegClass, ri);
         const VecRegContainer &reg = tc->readVecReg(reg_id);
-        for (int ei = 0; ei < NumVecElemPerVecReg; ei++) {
-            RegId elem_id(VecElemClass, ri, ei);
-            tc->setVecElem(elem_id, reg.as<VecElem>()[ei]);
+        for (int j = 0; j < NumVecElemPerVecReg; j++, ei++) {
+            RegId elem_id(VecElemClass, ei);
+            tc->setVecElem(elem_id, reg.as<VecElem>()[j]);
         }
     }
 }
@@ -1357,11 +1358,12 @@ syncVecRegsToElems(ThreadContext *tc)
 void
 syncVecElemsToRegs(ThreadContext *tc)
 {
+    int ei = 0;
     for (int ri = 0; ri < NumVecRegs; ri++) {
         VecRegContainer reg;
-        for (int ei = 0; ei < NumVecElemPerVecReg; ei++) {
-            RegId elem_id(VecElemClass, ri, ei);
-            reg.as<VecElem>()[ei] = tc->readVecElem(elem_id);
+        for (int j = 0; j < NumVecElemPerVecReg; j++, ei++) {
+            RegId elem_id(VecElemClass, ei);
+            reg.as<VecElem>()[j] = tc->readVecElem(elem_id);
         }
         RegId reg_id(VecRegClass, ri);
         tc->setVecReg(reg_id, reg);

@@ -353,8 +353,7 @@ class CPU : public BaseCPU
     /** Read architectural vector register for modification. */
     TheISA::VecRegContainer& getWritableArchVecReg(int reg_idx, ThreadID tid);
 
-    RegVal readArchVecElem(const RegIndex& reg_idx,
-            const ElemIndex& ldx, ThreadID tid) const;
+    RegVal readArchVecElem(const RegIndex& reg_idx, ThreadID tid) const;
 
     const TheISA::VecPredRegContainer& readArchVecPredReg(
             int reg_idx, ThreadID tid) const;
@@ -379,8 +378,7 @@ class CPU : public BaseCPU
     void setArchVecReg(int reg_idx, const TheISA::VecRegContainer& val,
             ThreadID tid);
 
-    void setArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
-                        RegVal val, ThreadID tid);
+    void setArchVecElem(const RegIndex& reg_idx, RegVal val, ThreadID tid);
 
     void setArchCCReg(int reg_idx, RegVal val, ThreadID tid);
 

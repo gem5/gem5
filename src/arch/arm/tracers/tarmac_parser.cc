@@ -765,9 +765,7 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
                 values.push_back(vv[0]);
             } else {
                 const VecElem elem = thread->readVecElem(
-                    RegId(VecElemClass,
-                        it->index / NumVecElemPerNeonVecReg,
-                        it->index % NumVecElemPerNeonVecReg));
+                    RegId(VecElemClass, it->index));
                 values.push_back(elem);
             }
             break;
@@ -779,13 +777,9 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
                 values.push_back(vv[0]);
             } else {
                 const VecElem w0 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        it->index / NumVecElemPerNeonVecReg,
-                        it->index % NumVecElemPerNeonVecReg));
+                    RegId(VecElemClass, it->index));
                 const VecElem w1 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        (it->index + 1) / NumVecElemPerNeonVecReg,
-                        (it->index + 1) % NumVecElemPerNeonVecReg));
+                    RegId(VecElemClass, it->index + 1));
 
                 values.push_back((uint64_t)(w1) << 32 | w0);
             }
@@ -811,21 +805,13 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
                 values.push_back(vv[1]);
             } else {
                 const VecElem w0 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        it->index / NumVecElemPerNeonVecReg,
-                        it->index % NumVecElemPerNeonVecReg));
+                    RegId(VecElemClass, it->index));
                 const VecElem w1 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        (it->index + 1) / NumVecElemPerNeonVecReg,
-                        (it->index + 1) % NumVecElemPerNeonVecReg));
+                    RegId(VecElemClass, it->index + 1));
                 const VecElem w2 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        (it->index + 2) / NumVecElemPerNeonVecReg,
-                        (it->index + 2) % NumVecElemPerNeonVecReg));
+                    RegId(VecElemClass, it->index + 2));
                 const VecElem w3 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        (it->index + 3) / NumVecElemPerNeonVecReg,
-                        (it->index + 3) % NumVecElemPerNeonVecReg));
+                    RegId(VecElemClass, it->index + 3));
 
                 values.push_back((uint64_t)(w1) << 32 | w0);
                 values.push_back((uint64_t)(w3) << 32 | w2);

@@ -37,6 +37,7 @@
 
 #include "arch/x86/insts/static_inst.hh"
 #include "arch/x86/regs/int.hh"
+#include "arch/x86/regs/segment.hh"
 #include "arch/x86/types.hh"
 #include "base/compiler.hh"
 #include "base/cprintf.hh"

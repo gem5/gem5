@@ -564,11 +564,8 @@ ISA::copyRegsFrom(ThreadContext *src)
     for (int i = 0; i < NumVecRegs; i++)
         tc->setVecRegFlat(i, src->readVecRegFlat(i));
 
-    for (int i = 0; i < NumVecRegs; i++) {
-        for (int e = 0; e < NumVecElemPerVecReg; e++) {
-            tc->setVecElemFlat(i, e, src->readVecElemFlat(i, e));
-        }
-    }
+    for (int i = 0; i < NumVecRegs * NumVecElemPerVecReg; i++)
+        tc->setVecElemFlat(i, src->readVecElemFlat(i));
 
     // setMiscReg "with effect" will set the misc register mapping correctly.
     // e.g. updateRegMap(val)

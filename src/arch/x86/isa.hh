@@ -35,6 +35,7 @@
 #include "arch/generic/isa.hh"
 #include "arch/x86/pcstate.hh"
 #include "arch/x86/regs/float.hh"
+#include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"
 #include "base/types.hh"
 #include "cpu/reg_class.hh"

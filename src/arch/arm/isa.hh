@@ -658,8 +658,7 @@ namespace ArmISA
               case VecRegClass:
                 return RegId(VecRegClass, flattenVecIndex(regId.index()));
               case VecElemClass:
-                return RegId(VecElemClass, flattenVecElemIndex(regId.index()),
-                             regId.elemIndex());
+                return RegId(VecElemClass, flattenVecElemIndex(regId.index()));
               case VecPredRegClass:
                 return RegId(VecPredRegClass,
                              flattenVecPredIndex(regId.index()));

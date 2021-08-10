@@ -45,7 +45,6 @@
 #include <cstddef>
 #include <string>
 
-#include "arch/vecregs.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 
@@ -116,8 +115,6 @@ class RegId
     static const char* regClassStrings[];
     RegClassType regClass;
     RegIndex regIdx;
-    ElemIndex elemIdx;
-    static constexpr size_t Scale = TheISA::NumVecElemPerVecReg;
     int numPinnedWrites;
 
     friend struct std::hash<RegId>;
@@ -125,28 +122,14 @@ class RegId
   public:
     RegId() : RegId(IntRegClass, 0) {}
 
-    RegId(RegClassType reg_class, RegIndex reg_idx)
-        : RegId(reg_class, reg_idx, IllegalElemIndex) {}
-
-    explicit RegId(RegClassType reg_class, RegIndex reg_idx,
-            ElemIndex elem_idx)
-        : regClass(reg_class), regIdx(reg_idx), elemIdx(elem_idx),
-          numPinnedWrites(0)
-    {
-        if (elemIdx == IllegalElemIndex) {
-            panic_if(regClass == VecElemClass,
-                    "Creating vector physical index w/o element index");
-        } else {
-            panic_if(regClass != VecElemClass,
-                    "Creating non-vector physical index w/ element index");
-        }
-    }
+    explicit RegId(RegClassType reg_class, RegIndex reg_idx)
+        : regClass(reg_class), regIdx(reg_idx), numPinnedWrites(0)
+    {}
 
     bool
     operator==(const RegId& that) const
     {
-        return regClass == that.classValue() && regIdx == that.index() &&
-            elemIdx == that.elemIndex();
+        return regClass == that.classValue() && regIdx == that.index();
     }
 
     bool operator!=(const RegId& that) const { return !(*this==that); }
@@ -158,9 +141,7 @@ class RegId
     operator<(const RegId& that) const
     {
         return regClass < that.classValue() ||
-            (regClass == that.classValue() && (
-                   regIdx < that.index() ||
-                   (regIdx == that.index() && elemIdx < that.elemIndex())));
+            (regClass == that.classValue() && (regIdx < that.index()));
     }
 
     /**
@@ -179,29 +160,6 @@ class RegId
     /** @{ */
     RegIndex index() const { return regIdx; }
 
-    /** Index flattening.
-     * Required to be able to use a vector for the register mapping.
-     */
-    RegIndex
-    flatIndex() const
-    {
-        switch (regClass) {
-          case IntRegClass:
-          case FloatRegClass:
-          case VecRegClass:
-          case VecPredRegClass:
-          case CCRegClass:
-          case MiscRegClass:
-            return regIdx;
-          case VecElemClass:
-            return Scale * regIdx + elemIdx;
-        }
-        panic("Trying to flatten a register without class!");
-    }
-    /** @} */
-
-    /** Elem accessor */
-    RegIndex elemIndex() const { return elemIdx; }
     /** Class accessor */
     RegClassType classValue() const { return regClass; }
     /** Return a const char* with the register class name. */
@@ -240,19 +198,11 @@ class PhysRegId : private RegId
           numPinnedWritesToComplete(0), pinned(false)
     {}
 
-    /** Vector PhysRegId constructor (w/ elemIndex). */
-    explicit PhysRegId(RegClassType _regClass, RegIndex _regIdx,
-              ElemIndex elem_idx, RegIndex flat_idx)
-        : RegId(_regClass, _regIdx, elem_idx), flatIdx(flat_idx),
-          numPinnedWritesToComplete(0), pinned(false)
-    {}
-
     /** Visible RegId methods */
     /** @{ */
     using RegId::index;
     using RegId::classValue;
     using RegId::className;
-    using RegId::elemIndex;
     using RegId::is;
      /** @} */
     /**
@@ -287,13 +237,6 @@ class PhysRegId : private RegId
 
     /** Flat index accessor */
     const RegIndex& flatIndex() const { return flatIdx; }
-
-    static PhysRegId
-    elemId(PhysRegId* vid, ElemIndex elem)
-    {
-        assert(vid->is(VecRegClass));
-        return PhysRegId(VecElemClass, vid->index(), elem);
-    }
 
     int getNumPinnedWrites() const { return numPinnedWrites; }
 
@@ -344,7 +287,7 @@ struct hash<gem5::RegId>
     operator()(const gem5::RegId& reg_id) const
     {
         // Extract unique integral values for the effective fields of a RegId.
-        const size_t flat_index = static_cast<size_t>(reg_id.flatIndex());
+        const size_t index = static_cast<size_t>(reg_id.index());
         const size_t class_num = static_cast<size_t>(reg_id.regClass);
 
         const size_t shifted_class_num =
@@ -352,7 +295,7 @@ struct hash<gem5::RegId>
 
         // Concatenate the class_num to the end of the flat_index, in order to
         // maximize information retained.
-        const size_t concatenated_hash = flat_index | shifted_class_num;
+        const size_t concatenated_hash = index | shifted_class_num;
 
         // If RegIndex is larger than size_t, then class_num will not be
         // considered by this hash function, so we may wish to perform a

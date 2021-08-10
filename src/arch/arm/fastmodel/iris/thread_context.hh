@@ -425,12 +425,12 @@ class ThreadContext : public gem5::ThreadContext
     }
 
     RegVal
-    readVecElemFlat(RegIndex idx, const ElemIndex& elemIdx) const override
+    readVecElemFlat(RegIndex idx) const override
     {
         panic("%s not implemented.", __FUNCTION__);
     }
     void
-    setVecElemFlat(RegIndex idx, const ElemIndex &elemIdx, RegVal val) override
+    setVecElemFlat(RegIndex idx, RegVal val) override
     {
         panic("%s not implemented.", __FUNCTION__);
     }

@@ -126,8 +126,8 @@ class SimpleRenameMap
     PhysRegIdPtr
     lookup(const RegId& arch_reg) const
     {
-        assert(arch_reg.flatIndex() <= map.size());
-        return map[arch_reg.flatIndex()];
+        assert(arch_reg.index() <= map.size());
+        return map[arch_reg.index()];
     }
 
     /**
@@ -139,8 +139,8 @@ class SimpleRenameMap
     void
     setEntry(const RegId& arch_reg, PhysRegIdPtr phys_reg)
     {
-        assert(arch_reg.flatIndex() <= map.size());
-        map[arch_reg.flatIndex()] = phys_reg;
+        assert(arch_reg.index() <= map.size());
+        map[arch_reg.index()] = phys_reg;
     }
 
     /** Return the number of free entries on the associated free list. */
@@ -282,7 +282,7 @@ class UnifiedRenameMap
           case MiscRegClass:
             // misc regs aren't really renamed, they keep the same
             // mapping throughout the execution.
-            return regFile->getMiscRegId(arch_reg.flatIndex());
+            return regFile->getMiscRegId(arch_reg.index());
 
           default:
             panic("rename lookup(): unknown reg class %s\n",

@@ -475,12 +475,12 @@ class VecElemOperand(Operand):
         numAccessNeeded = 1
 
         if self.is_src:
-            c_src = ('\n\tsetSrcRegIdx(_numSrcRegs++, RegId(%s, %s, %s));' %
-                    (self.reg_class, self.reg_spec, self.elem_spec))
+            c_src = ('\n\tsetSrcRegIdx(_numSrcRegs++, RegId(%s, %s));' %
+                    (self.reg_class, self.reg_spec))
 
         if self.is_dest:
-            c_dest = ('\n\tsetDestRegIdx(_numDestRegs++, RegId(%s, %s, %s));' %
-                    (self.reg_class, self.reg_spec, self.elem_spec))
+            c_dest = ('\n\tsetDestRegIdx(_numDestRegs++, RegId(%s, %s));' %
+                    (self.reg_class, self.reg_spec))
             c_dest += '\n\t_numVecElemDestRegs++;'
         return c_src + c_dest
 

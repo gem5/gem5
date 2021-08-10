@@ -478,11 +478,8 @@ struct Result<Aapcs32Vfp, Float, typename std::enable_if_t<
         auto bytes = floatToBits(f);
         auto *vec_elems = static_cast<ArmISA::VecElem *>(&bytes);
         constexpr int chunks = sizeof(Float) / sizeof(ArmISA::VecElem);
-        for (int chunk = 0; chunk < chunks; chunk++) {
-            int reg = chunk / ArmISA::NumVecElemPerVecReg;
-            int elem = chunk % ArmISA::NumVecElemPerVecReg;
-            tc->setVecElem(RegId(VecElemClass, reg, elem), vec_elems[chunk]);
-        }
+        for (int chunk = 0; chunk < chunks; chunk++)
+            tc->setVecElem(RegId(VecElemClass, chunk), vec_elems[chunk]);
     };
 };
 
@@ -505,11 +502,8 @@ struct Argument<Aapcs32Vfp, Float, typename std::enable_if_t<
         auto *vec_elems = static_cast<ArmISA::VecElem *>(&result);
 
         constexpr int chunks = sizeof(Float) / sizeof(ArmISA::VecElem);
-        for (int chunk = 0; chunk < chunks; chunk++) {
-            int reg = chunk / ArmISA::NumVecElemPerVecReg;
-            int elem = chunk % ArmISA::NumVecElemPerVecReg;
-            vec_elems[chunk] = tc->readVecElem(RegId(VecElemClass, reg, elem));
-        }
+        for (int chunk = 0; chunk < chunks; chunk++)
+            vec_elems[chunk] = tc->readVecElem(RegId(VecElemClass, chunk));
 
         return bitsToFloat(result);
     }

@@ -126,8 +126,9 @@ let {{
     srtMode = 1
     srtEPC = 0
 
-    def vectorElem(idx, elem):
-        return ('VecElem', 'sf', (idx, elem), 'IsVectorElem', srtNormal)
+    def vectorElem(idx):
+        flat_idx = f'((({idx}) / 4) * NumVecElemPerVecReg) + ({idx}) % 4'
+        return ('VecElem', 'sf', flat_idx, 'IsVectorElem', srtNormal)
 
     def vectorReg(idx, base, suffix = ''):
         elems = {
@@ -285,71 +286,55 @@ def operands {{
     'FpCondCodes': ccReg('CCREG_FP'),
 
     #Abstracted floating point reg operands
-    'FpDest': vectorElem('dest / 4', 'dest % 4'),
-    'FpDestP0': vectorElem('(dest + 0) / 4', '(dest + 0) % 4'),
-    'FpDestP1': vectorElem('(dest + 1) / 4', '(dest + 1) % 4'),
-    'FpDestP2': vectorElem('(dest + 2) / 4', '(dest + 2) % 4'),
-    'FpDestP3': vectorElem('(dest + 3) / 4', '(dest + 3) % 4'),
-    'FpDestP4': vectorElem('(dest + 4) / 4', '(dest + 4) % 4'),
-    'FpDestP5': vectorElem('(dest + 5) / 4', '(dest + 5) % 4'),
-    'FpDestP6': vectorElem('(dest + 6) / 4', '(dest + 6) % 4'),
-    'FpDestP7': vectorElem('(dest + 7) / 4', '(dest + 7) % 4'),
+    'FpDest': vectorElem('dest'),
+    'FpDestP0': vectorElem('dest + 0'),
+    'FpDestP1': vectorElem('dest + 1'),
+    'FpDestP2': vectorElem('dest + 2'),
+    'FpDestP3': vectorElem('dest + 3'),
+    'FpDestP4': vectorElem('dest + 4'),
+    'FpDestP5': vectorElem('dest + 5'),
+    'FpDestP6': vectorElem('dest + 6'),
+    'FpDestP7': vectorElem('dest + 7'),
 
-    'FpDestS0P0': vectorElem(
-        '(dest + step * 0 + 0) / 4', '(dest + step * 0 + 0) % 4'),
-    'FpDestS0P1': vectorElem(
-        '(dest + step * 0 + 1) / 4', '(dest + step * 0 + 1) % 4'),
-    'FpDestS1P0': vectorElem(
-        '(dest + step * 1 + 0) / 4', '(dest + step * 1 + 0) % 4'),
-    'FpDestS1P1': vectorElem(
-        '(dest + step * 1 + 1) / 4', '(dest + step * 1 + 1) % 4'),
-    'FpDestS2P0': vectorElem(
-        '(dest + step * 2 + 0) / 4', '(dest + step * 2 + 0) % 4'),
-    'FpDestS2P1': vectorElem(
-        '(dest + step * 2 + 1) / 4', '(dest + step * 2 + 1) % 4'),
-    'FpDestS3P0': vectorElem(
-        '(dest + step * 3 + 0) / 4', '(dest + step * 3 + 0) % 4'),
-    'FpDestS3P1': vectorElem(
-        '(dest + step * 3 + 1) / 4', '(dest + step * 3 + 1) % 4'),
+    'FpDestS0P0': vectorElem('dest + step * 0 + 0'),
+    'FpDestS0P1': vectorElem('dest + step * 0 + 1'),
+    'FpDestS1P0': vectorElem('dest + step * 1 + 0'),
+    'FpDestS1P1': vectorElem('dest + step * 1 + 1'),
+    'FpDestS2P0': vectorElem('dest + step * 2 + 0'),
+    'FpDestS2P1': vectorElem('dest + step * 2 + 1'),
+    'FpDestS3P0': vectorElem('dest + step * 3 + 0'),
+    'FpDestS3P1': vectorElem('dest + step * 3 + 1'),
 
-    'FpDest2': vectorElem('dest2 / 4', 'dest2 % 4'),
-    'FpDest2P0': vectorElem('(dest2 + 0) / 4', '(dest2 + 0) % 4'),
-    'FpDest2P1': vectorElem('(dest2 + 1) / 4', '(dest2 + 1) % 4'),
-    'FpDest2P2': vectorElem('(dest2 + 2) / 4', '(dest2 + 2) % 4'),
-    'FpDest2P3': vectorElem('(dest2 + 3) / 4', '(dest2 + 3) % 4'),
+    'FpDest2': vectorElem('dest2'),
+    'FpDest2P0': vectorElem('dest2 + 0'),
+    'FpDest2P1': vectorElem('dest2 + 1'),
+    'FpDest2P2': vectorElem('dest2 + 2'),
+    'FpDest2P3': vectorElem('dest2 + 3'),
 
-    'FpOp1': vectorElem('op1 / 4', 'op1 % 4'),
-    'FpOp1P0': vectorElem('(op1 + 0) / 4', '(op1 + 0) % 4'),
-    'FpOp1P1': vectorElem('(op1 + 1) / 4', '(op1 + 1) % 4'),
-    'FpOp1P2': vectorElem('(op1 + 2) / 4', '(op1 + 2) % 4'),
-    'FpOp1P3': vectorElem('(op1 + 3) / 4', '(op1 + 3) % 4'),
-    'FpOp1P4': vectorElem('(op1 + 4) / 4', '(op1 + 4) % 4'),
-    'FpOp1P5': vectorElem('(op1 + 5) / 4', '(op1 + 5) % 4'),
-    'FpOp1P6': vectorElem('(op1 + 6) / 4', '(op1 + 6) % 4'),
-    'FpOp1P7': vectorElem('(op1 + 7) / 4', '(op1 + 7) % 4'),
+    'FpOp1': vectorElem('op1'),
+    'FpOp1P0': vectorElem('op1 + 0'),
+    'FpOp1P1': vectorElem('op1 + 1'),
+    'FpOp1P2': vectorElem('op1 + 2'),
+    'FpOp1P3': vectorElem('op1 + 3'),
+    'FpOp1P4': vectorElem('op1 + 4'),
+    'FpOp1P5': vectorElem('op1 + 5'),
+    'FpOp1P6': vectorElem('op1 + 6'),
+    'FpOp1P7': vectorElem('op1 + 7'),
 
-    'FpOp1S0P0': vectorElem(
-        '(op1 + step * 0 + 0) / 4', '(op1 + step * 0 + 0) % 4'),
-    'FpOp1S0P1': vectorElem(
-        '(op1 + step * 0 + 1) / 4', '(op1 + step * 0 + 1) % 4'),
-    'FpOp1S1P0': vectorElem(
-        '(op1 + step * 1 + 0) / 4', '(op1 + step * 1 + 0) % 4'),
-    'FpOp1S1P1': vectorElem(
-        '(op1 + step * 1 + 1) / 4', '(op1 + step * 1 + 1) % 4'),
-    'FpOp1S2P0': vectorElem(
-        '(op1 + step * 2 + 0) / 4', '(op1 + step * 2 + 0) % 4'),
-    'FpOp1S2P1': vectorElem(
-        '(op1 + step * 2 + 1) / 4', '(op1 + step * 2 + 1) % 4'),
-    'FpOp1S3P0': vectorElem(
-        '(op1 + step * 3 + 0) / 4', '(op1 + step * 3 + 0) % 4'),
-    'FpOp1S3P1': vectorElem(
-        '(op1 + step * 3 + 1) / 4', '(op1 + step * 3 + 1) % 4'),
+    'FpOp1S0P0': vectorElem('op1 + step * 0 + 0'),
+    'FpOp1S0P1': vectorElem('op1 + step * 0 + 1'),
+    'FpOp1S1P0': vectorElem('op1 + step * 1 + 0'),
+    'FpOp1S1P1': vectorElem('op1 + step * 1 + 1'),
+    'FpOp1S2P0': vectorElem('op1 + step * 2 + 0'),
+    'FpOp1S2P1': vectorElem('op1 + step * 2 + 1'),
+    'FpOp1S3P0': vectorElem('op1 + step * 3 + 0'),
+    'FpOp1S3P1': vectorElem('op1 + step * 3 + 1'),
 
-    'FpOp2': vectorElem('op2 / 4', 'op2 % 4'),
-    'FpOp2P0': vectorElem('(op2 + 0) / 4', '(op2 + 0) % 4'),
-    'FpOp2P1': vectorElem('(op2 + 1) / 4', '(op2 + 1) % 4'),
-    'FpOp2P2': vectorElem('(op2 + 2) / 4', '(op2 + 2) % 4'),
-    'FpOp2P3': vectorElem('(op2 + 3) / 4', '(op2 + 3) % 4'),
+    'FpOp2': vectorElem('op2'),
+    'FpOp2P0': vectorElem('op2 + 0'),
+    'FpOp2P1': vectorElem('op2 + 1'),
+    'FpOp2P2': vectorElem('op2 + 2'),
+    'FpOp2P3': vectorElem('op2 + 3'),
 
     # Create AArch64 unpacked view of the FP registers
     # Name   ::= 'AA64Vec' OpSpec [LaneSpec]
@@ -440,7 +425,7 @@ def operands {{
     'XURa' : intRegX64('ura'),
     'WURa' : intRegW64('ura'),
     'IWRa' : intRegIWPC('ura'),
-    'Fa' : vectorElem('ura / 4', 'ura % 4'),
+    'Fa' : vectorElem('ura'),
     'URb' : intReg('urb'),
     'XURb' : intRegX64('urb'),
     'URc' : intReg('urc'),

@@ -98,14 +98,11 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
         vecRegIds.emplace_back(VecRegClass, phys_reg, flat_reg_idx++);
     }
     // The next batch of the registers are the vector element physical
-    // registers; they refer to the same containers as the vector
-    // registers, just a different (and incompatible) way to access
-    // them; put them onto the vector free list.
-    for (phys_reg = 0; phys_reg < numPhysicalVecRegs; phys_reg++) {
-        for (ElemIndex eIdx = 0; eIdx < TheISA::NumVecElemPerVecReg; eIdx++) {
-            vecElemIds.emplace_back(VecElemClass, phys_reg,
-                    eIdx, flat_reg_idx++);
-        }
+    // registers; put them onto the vector free list.
+    for (phys_reg = 0;
+            phys_reg < numPhysicalVecRegs * TheISA::NumVecElemPerVecReg;
+            phys_reg++) {
+        vecElemIds.emplace_back(VecElemClass, phys_reg, flat_reg_idx++);
     }
 
     // The next batch of the registers are the predicate physical
@@ -151,15 +148,13 @@ PhysRegFile::initFreeList(UnifiedFreeList *freeList)
      * registers; put them onto the vector free list. */
     for (reg_idx = 0; reg_idx < numPhysicalVecRegs; reg_idx++) {
         assert(vecRegIds[reg_idx].index() == reg_idx);
-        for (ElemIndex elemIdx = 0; elemIdx < TheISA::NumVecElemPerVecReg;
-                elemIdx++) {
-            assert(vecElemIds[reg_idx * TheISA::NumVecElemPerVecReg +
-                    elemIdx].index() == reg_idx);
-            assert(vecElemIds[reg_idx * TheISA::NumVecElemPerVecReg +
-                    elemIdx].elemIndex() == elemIdx);
-        }
     }
     freeList->addRegs(vecRegIds.begin(), vecRegIds.end());
+    for (reg_idx = 0;
+            reg_idx < numPhysicalVecRegs * TheISA::NumVecElemPerVecReg;
+            reg_idx++) {
+        assert(vecElemIds[reg_idx].index() == reg_idx);
+    }
     freeList->addRegs(vecElemIds.begin(), vecElemIds.end());
 
     // The next batch of the registers are the predicate physical
@@ -209,8 +204,7 @@ PhysRegFile::getTrueId(PhysRegIdPtr reg)
     case VecRegClass:
         return &vecRegIds[reg->index()];
     case VecElemClass:
-        return &vecElemIds[reg->index() * TheISA::NumVecElemPerVecReg +
-            reg->elemIndex()];
+        return &vecElemIds[reg->index()];
     default:
         panic_if(!reg->is(VecElemClass),
             "Trying to get the register of a %s register", reg->className());

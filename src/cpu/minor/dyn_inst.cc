@@ -152,7 +152,8 @@ printRegName(std::ostream &os, const RegId& reg,
         os << 'v' << reg.index();
         break;
       case VecElemClass:
-        os << 'v' << reg.index() << '[' << reg.elemIndex() << ']';
+        os << 'v' << (reg.index() / TheISA::NumVecElemPerVecReg) << '[' <<
+            (reg.index() % TheISA::NumVecElemPerVecReg) << ']';
         break;
       case IntRegClass:
         if (reg.index() == reg_class.zeroReg()) {
