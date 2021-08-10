@@ -39,10 +39,7 @@ namespace SparcISA
 {
 
 // Not applicable to SPARC
-using VecElem = ::gem5::DummyVecElem;
 using VecRegContainer = ::gem5::DummyVecRegContainer;
-
-// Not applicable to SPARC
 using VecPredRegContainer = ::gem5::DummyVecPredRegContainer;
 
 } // namespace SparcISA

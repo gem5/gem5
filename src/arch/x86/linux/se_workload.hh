@@ -40,6 +40,7 @@
 #define __ARCH_X86_LINUX_SE_WORKLOAD_HH__
 
 #include "arch/x86/linux/linux.hh"
+#include "arch/x86/regs/int.hh"
 #include "arch/x86/remote_gdb.hh"
 #include "params/X86EmuLinux.hh"
 #include "sim/process.hh"

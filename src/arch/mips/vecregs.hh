@@ -40,10 +40,7 @@ namespace MipsISA
 {
 
 // Not applicable to MIPS
-using VecElem = ::gem5::DummyVecElem;
 using VecRegContainer = ::gem5::DummyVecRegContainer;
-
-// Not applicable to MIPS
 using VecPredRegContainer = ::gem5::DummyVecPredRegContainer;
 
 } // namespace MipsISA

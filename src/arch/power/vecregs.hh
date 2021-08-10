@@ -30,8 +30,6 @@
 #ifndef __ARCH_POWER_VECREGS_HH__
 #define __ARCH_POWER_VECREGS_HH__
 
-#include <cstdint>
-
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
 
@@ -42,10 +40,7 @@ namespace PowerISA
 {
 
 // Not applicable to Power
-using VecElem = ::gem5::DummyVecElem;
 using VecRegContainer = ::gem5::DummyVecRegContainer;
-
-// Not applicable to Power
 using VecPredRegContainer = ::gem5::DummyVecPredRegContainer;
 
 } // namespace PowerISA

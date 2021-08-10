@@ -263,8 +263,7 @@ struct ShowParam<VecRegContainer<Sz>>
  * vector registers.
  */
 /** @{ */
-using DummyVecElem = uint32_t;
-using DummyVecRegContainer = VecRegContainer<2 * sizeof(DummyVecElem)>;
+using DummyVecRegContainer = VecRegContainer<8>;
 /** @} */
 
 } // namespace gem5

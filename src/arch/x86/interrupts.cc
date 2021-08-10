@@ -54,6 +54,7 @@
 
 #include "arch/x86/intmessage.hh"
 #include "arch/x86/regs/apic.hh"
+#include "arch/x86/regs/misc.hh"
 #include "cpu/base.hh"
 #include "debug/LocalApic.hh"
 #include "dev/x86/i82094aa.hh"

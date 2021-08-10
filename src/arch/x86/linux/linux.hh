@@ -40,6 +40,8 @@
 
 #include <map>
 
+#include "arch/x86/regs/int.hh"
+#include "arch/x86/regs/misc.hh"
 #include "arch/x86/utility.hh"
 #include "base/compiler.hh"
 #include "kern/linux/flag_tables.hh"

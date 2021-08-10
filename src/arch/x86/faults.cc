@@ -43,6 +43,7 @@
 #include "arch/x86/generated/decoder.hh"
 #include "arch/x86/insts/static_inst.hh"
 #include "arch/x86/mmu.hh"
+#include "arch/x86/regs/misc.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"

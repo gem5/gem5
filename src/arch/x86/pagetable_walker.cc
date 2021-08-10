@@ -53,6 +53,7 @@
 
 #include "arch/x86/faults.hh"
 #include "arch/x86/pagetable.hh"
+#include "arch/x86/regs/misc.hh"
 #include "arch/x86/tlb.hh"
 #include "base/bitfield.hh"
 #include "base/trie.hh"
