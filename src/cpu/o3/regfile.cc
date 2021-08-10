@@ -54,26 +54,30 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
                          unsigned _numPhysicalVecRegs,
                          unsigned _numPhysicalVecPredRegs,
                          unsigned _numPhysicalCCRegs,
-                         const BaseISA::RegClasses &regClasses)
+                         const BaseISA::RegClasses &classes)
     : intRegFile(_numPhysicalIntRegs),
       floatRegFile(_numPhysicalFloatRegs),
       vectorRegFile(_numPhysicalVecRegs),
-      vectorElemRegFile(_numPhysicalVecRegs * TheISA::NumVecElemPerVecReg),
+      vectorElemRegFile(_numPhysicalVecRegs * (
+                  classes.at(VecElemClass).size() /
+                  classes.at(VecRegClass).size())),
       vecPredRegFile(_numPhysicalVecPredRegs),
       ccRegFile(_numPhysicalCCRegs),
       numPhysicalIntRegs(_numPhysicalIntRegs),
       numPhysicalFloatRegs(_numPhysicalFloatRegs),
       numPhysicalVecRegs(_numPhysicalVecRegs),
-      numPhysicalVecElemRegs(_numPhysicalVecRegs *
-                             TheISA::NumVecElemPerVecReg),
+      numPhysicalVecElemRegs(_numPhysicalVecRegs * (
+                  classes.at(VecElemClass).size() /
+                  classes.at(VecRegClass).size())),
       numPhysicalVecPredRegs(_numPhysicalVecPredRegs),
       numPhysicalCCRegs(_numPhysicalCCRegs),
       totalNumRegs(_numPhysicalIntRegs
                    + _numPhysicalFloatRegs
                    + _numPhysicalVecRegs
-                   + _numPhysicalVecRegs * TheISA::NumVecElemPerVecReg
+                   + numPhysicalVecElemRegs
                    + _numPhysicalVecPredRegs
-                   + _numPhysicalCCRegs)
+                   + _numPhysicalCCRegs),
+      regClasses(classes)
 {
     RegIndex phys_reg;
     RegIndex flat_reg_idx = 0;
@@ -99,9 +103,7 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     }
     // The next batch of the registers are the vector element physical
     // registers; put them onto the vector free list.
-    for (phys_reg = 0;
-            phys_reg < numPhysicalVecRegs * TheISA::NumVecElemPerVecReg;
-            phys_reg++) {
+    for (phys_reg = 0; phys_reg < numPhysicalVecElemRegs; phys_reg++) {
         vecElemIds.emplace_back(VecElemClass, phys_reg, flat_reg_idx++);
     }
 
@@ -150,9 +152,7 @@ PhysRegFile::initFreeList(UnifiedFreeList *freeList)
         assert(vecRegIds[reg_idx].index() == reg_idx);
     }
     freeList->addRegs(vecRegIds.begin(), vecRegIds.end());
-    for (reg_idx = 0;
-            reg_idx < numPhysicalVecRegs * TheISA::NumVecElemPerVecReg;
-            reg_idx++) {
+    for (reg_idx = 0; reg_idx < numPhysicalVecElemRegs; reg_idx++) {
         assert(vecElemIds[reg_idx].index() == reg_idx);
     }
     freeList->addRegs(vecElemIds.begin(), vecElemIds.end());

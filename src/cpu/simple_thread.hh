@@ -313,9 +313,9 @@ class SimpleThread : public ThreadState, public ThreadContext
         int flatIndex = isa->flattenVecElemIndex(reg.index());
         assert(flatIndex < vecElemRegs.size());
         RegVal regVal = readVecElemFlat(flatIndex);
-        DPRINTF(VecRegs, "Reading element %d of vector reg %d (%d) as"
-                " %#x.\n", reg.index() % TheISA::NumVecElemPerVecReg,
-                reg.index() / TheISA::NumVecElemPerVecReg, flatIndex, regVal);
+        DPRINTF(VecRegs, "Reading vector register element %s (%d) as %#x.\n",
+                isa->regClasses().at(VecElemClass).regName(reg), flatIndex,
+                regVal);
         return regVal;
     }
 
@@ -395,9 +395,9 @@ class SimpleThread : public ThreadState, public ThreadContext
         int flatIndex = isa->flattenVecElemIndex(reg.index());
         assert(flatIndex < vecElemRegs.size());
         setVecElemFlat(flatIndex, val);
-        DPRINTF(VecRegs, "Setting element %d of vector reg %d (%d) to"
-                " %#x.\n", reg.index() % TheISA::NumVecElemPerVecReg,
-                reg.index() / TheISA::NumVecElemPerVecReg, flatIndex, val);
+        DPRINTF(VecRegs, "Setting vector register element %s (%d) to %#x.\n",
+                isa->regClasses().at(VecElemClass).regName(reg), flatIndex,
+                val);
     }
 
     void

@@ -132,6 +132,8 @@ class PhysRegFile
     /** Total number of physical registers. */
     unsigned totalNumRegs;
 
+    const BaseISA::RegClasses &regClasses;
+
   public:
     /**
      * Constructs a physical register file with the specified amount of
@@ -142,7 +144,7 @@ class PhysRegFile
                 unsigned _numPhysicalVecRegs,
                 unsigned _numPhysicalVecPredRegs,
                 unsigned _numPhysicalCCRegs,
-                const BaseISA::RegClasses &regClasses);
+                const BaseISA::RegClasses &classes);
 
     /**
      * Destructor to free resources
@@ -227,10 +229,8 @@ class PhysRegFile
     {
         assert(phys_reg->is(VecElemClass));
         RegVal val = vectorElemRegFile[phys_reg->index()];
-        DPRINTF(IEW, "RegFile: Access to element %d of vector register %i,"
-                " has data %#x\n",
-                phys_reg->index() / TheISA::NumVecElemPerVecReg,
-                phys_reg->index() % TheISA::NumVecElemPerVecReg, val);
+        DPRINTF(IEW, "RegFile: Access to vector register element %d,"
+                " has data %#x\n", phys_reg->index(), val);
 
         return val;
     }
@@ -311,10 +311,8 @@ class PhysRegFile
     {
         assert(phys_reg->is(VecElemClass));
 
-        DPRINTF(IEW, "RegFile: Setting element %d of vector register %i to"
-                " %#x\n",
-                phys_reg->index() / TheISA::NumVecElemPerVecReg,
-                phys_reg->index() % TheISA::NumVecElemPerVecReg, val);
+        DPRINTF(IEW, "RegFile: Setting vector register element %d to %#x\n",
+                phys_reg->index(), val);
 
         vectorElemRegFile[phys_reg->index()] = val;
     }
