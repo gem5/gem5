@@ -76,6 +76,7 @@ class Operand(object):
         }''' % (self.dflt_ctype, self.base_name, code)
 
     def __init__(self, parser, full_name, ext, is_src, is_dest):
+        self.parser = parser
         self.full_name = full_name
         self.ext = ext
         self.is_src = is_src
@@ -311,7 +312,6 @@ class VecRegOperand(Operand):
     def __init__(self, parser, full_name, ext, is_src, is_dest):
         Operand.__init__(self, parser, full_name, ext, is_src, is_dest)
         self.elemExt = None
-        self.parser = parser
 
     def isReg(self):
         return 1
@@ -379,8 +379,8 @@ class VecRegOperand(Operand):
             rindex = '%d' % self.dest_reg_idx
 
         c_readw = f'\t\tauto &tmp_d{rindex} = \n' \
-                  f'\t\t    *(TheISA::VecRegContainer *)xc->{func}(\n' \
-                  f'\t\t    this, {rindex});\n'
+                  f'\t\t    *({self.parser.namespace}::VecRegContainer *)\n' \
+                  f'\t\t    xc->{func}(this, {rindex});\n'
         if self.elemExt:
             c_readw += '\t\tauto %s = tmp_d%s.as<%s>();\n' % (self.base_name,
                         rindex, self.parser.operandTypeMap[self.elemExt])
@@ -421,7 +421,8 @@ class VecRegOperand(Operand):
         if self.is_dest and self.is_src:
             name += '_merger'
 
-        c_read = f'\t\tTheISA::VecRegContainer tmp_s{rindex};\n' \
+        c_read = f'\t\t{self.parser.namespace}::VecRegContainer ' \
+                 f'\t\t        tmp_s{rindex};\n' \
                  f'\t\txc->{func}(this, {rindex}, &tmp_s{rindex});\n'
         # If the parser has detected that elements are being access, create
         # the appropriate view
@@ -506,10 +507,6 @@ class VecElemOperand(Operand):
 class VecPredRegOperand(Operand):
     reg_class = 'VecPredRegClass'
 
-    def __init__(self, parser, full_name, ext, is_src, is_dest):
-        Operand.__init__(self, parser, full_name, ext, is_src, is_dest)
-        self.parser = parser
-
     def isReg(self):
         return 1
 
@@ -542,7 +539,8 @@ class VecPredRegOperand(Operand):
         else:
             rindex = '%d' % self.src_reg_idx
 
-        c_read =  f'\t\tTheISA::VecPredRegContainer tmp_s{rindex}; ' \
+        c_read =  f'\t\t{self.parser.namespace}::VecPredRegContainer ' \
+                  f'\t\t        tmp_s{rindex}; ' \
                   f'xc->{func}(this, {rindex}, &tmp_s{rindex});\n'
         if self.ext:
             c_read += f'\t\tauto {self.base_name} = ' \
@@ -561,8 +559,8 @@ class VecPredRegOperand(Operand):
             rindex = '%d' % self.dest_reg_idx
 
         c_readw = f'\t\tauto &tmp_d{rindex} = \n' \
-                  f'\t\t    *(TheISA::VecPredRegContainer *)xc->{func}(\n' \
-                  f'\t\t    this, {rindex});\n'
+                  f'\t\t    *({self.parser.namespace}::' \
+                  f'VecPredRegContainer *)xc->{func}(this, {rindex});\n'
         if self.ext:
             c_readw += '\t\tauto %s = tmp_d%s.as<%s>();\n' % (
                     self.base_name, rindex,
