@@ -335,11 +335,11 @@ class ThreadContext : public PCEventScope
      */
 
     virtual RegVal getRegFlat(const RegId &reg) const;
-    virtual void getRegFlat(const RegId &reg, void *val) const;
-    virtual void *getWritableRegFlat(const RegId &reg);
+    virtual void getRegFlat(const RegId &reg, void *val) const = 0;
+    virtual void *getWritableRegFlat(const RegId &reg) = 0;
 
     virtual void setRegFlat(const RegId &reg, RegVal val);
-    virtual void setRegFlat(const RegId &reg, const void *val);
+    virtual void setRegFlat(const RegId &reg, const void *val) = 0;
 
     RegVal
     readIntRegFlat(RegIndex idx) const
