@@ -157,7 +157,23 @@ class SimpleExecContext : public ExecContext
               ADD_STAT(numBranchMispred, statistics::units::Count::get(),
                        "Number of branch mispredictions"),
               ADD_STAT(statExecutedInstType, statistics::units::Count::get(),
-                       "Class of executed instruction.")
+                       "Class of executed instruction."),
+              numRegReads{
+                  &numIntRegReads,
+                  &numFpRegReads,
+                  &numVecRegReads,
+                  &numVecRegReads,
+                  &numVecPredRegReads,
+                  &numCCRegReads
+              },
+              numRegWrites{
+                  &numIntRegWrites,
+                  &numFpRegWrites,
+                  &numVecRegWrites,
+                  &numVecRegWrites,
+                  &numVecPredRegWrites,
+                  &numCCRegWrites
+              }
         {
             numCCRegReads
                 .flags(statistics::nozero);
@@ -278,6 +294,9 @@ class SimpleExecContext : public ExecContext
         // Instruction mix histogram by OpClass
         statistics::Vector statExecutedInstType;
 
+        std::array<statistics::Scalar *, CCRegClass + 1> numRegReads;
+        std::array<statistics::Scalar *, CCRegClass + 1> numRegWrites;
+
     } execContextStats;
 
   public:
@@ -292,23 +311,7 @@ class SimpleExecContext : public ExecContext
     getRegOperand(const StaticInst *si, int idx) override
     {
         const RegId &reg = si->srcRegIdx(idx);
-        const RegClassType type = reg.classValue();
-        switch (type) {
-          case IntRegClass:
-            execContextStats.numIntRegReads++;
-            break;
-          case FloatRegClass:
-            execContextStats.numFpRegReads++;
-            break;
-          case CCRegClass:
-            execContextStats.numCCRegReads++;
-            break;
-          case VecElemClass:
-            execContextStats.numVecRegReads++;
-            break;
-          default:
-            break;
-        }
+        (*execContextStats.numRegReads[reg.classValue()])++;
         return thread->getReg(reg);
     }
 
@@ -316,27 +319,7 @@ class SimpleExecContext : public ExecContext
     getRegOperand(const StaticInst *si, int idx, void *val) override
     {
         const RegId &reg = si->srcRegIdx(idx);
-        const RegClassType type = reg.classValue();
-        switch (type) {
-          case IntRegClass:
-            execContextStats.numIntRegReads++;
-            break;
-          case FloatRegClass:
-            execContextStats.numFpRegReads++;
-            break;
-          case VecRegClass:
-          case VecElemClass:
-            execContextStats.numVecRegReads++;
-            break;
-          case VecPredRegClass:
-            execContextStats.numVecPredRegReads++;
-            break;
-          case CCRegClass:
-            execContextStats.numCCRegReads++;
-            break;
-          default:
-            break;
-        }
+        (*execContextStats.numRegReads[reg.classValue()])++;
         thread->getReg(reg, val);
     }
 
@@ -344,17 +327,7 @@ class SimpleExecContext : public ExecContext
     getWritableRegOperand(const StaticInst *si, int idx) override
     {
         const RegId &reg = si->destRegIdx(idx);
-        const RegClassType type = reg.classValue();
-        switch (type) {
-          case VecRegClass:
-            execContextStats.numVecRegWrites++;
-            break;
-          case VecPredRegClass:
-            execContextStats.numVecPredRegWrites++;
-            break;
-          default:
-            break;
-        }
+        (*execContextStats.numRegWrites[reg.classValue()])++;
         return thread->getWritableReg(reg);
     }
 
@@ -362,23 +335,7 @@ class SimpleExecContext : public ExecContext
     setRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId &reg = si->destRegIdx(idx);
-        const RegClassType type = reg.classValue();
-        switch (type) {
-          case IntRegClass:
-            execContextStats.numIntRegWrites++;
-            break;
-          case FloatRegClass:
-            execContextStats.numFpRegWrites++;
-            break;
-          case CCRegClass:
-            execContextStats.numCCRegWrites++;
-            break;
-          case VecElemClass:
-            execContextStats.numVecRegWrites++;
-            break;
-          default:
-            break;
-        }
+        (*execContextStats.numRegWrites[reg.classValue()])++;
         thread->setReg(reg, val);
     }
 
@@ -386,27 +343,7 @@ class SimpleExecContext : public ExecContext
     setRegOperand(const StaticInst *si, int idx, const void *val) override
     {
         const RegId &reg = si->destRegIdx(idx);
-        const RegClassType type = reg.classValue();
-        switch (type) {
-          case IntRegClass:
-            execContextStats.numIntRegWrites++;
-            break;
-          case FloatRegClass:
-            execContextStats.numFpRegWrites++;
-            break;
-          case VecRegClass:
-          case VecElemClass:
-            execContextStats.numVecRegWrites++;
-            break;
-          case VecPredRegClass:
-            execContextStats.numVecPredRegWrites++;
-            break;
-          case CCRegClass:
-            execContextStats.numCCRegWrites++;
-            break;
-          default:
-            break;
-        }
+        (*execContextStats.numRegWrites[reg.classValue()])++;
         thread->setReg(reg, val);
     }
 
