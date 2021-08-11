@@ -86,7 +86,7 @@ ArmISA::HTMCheckpoint::save(ThreadContext *tc)
     }
     for (auto n = 0; n < NumVecPredRegs; n++) {
         RegId idx = RegId(VecPredRegClass, n);
-        p[n] = tc->readVecPredReg(idx);
+        tc->getReg(idx, &p[n]);
     }
     fpcr = tc->readMiscReg(MISCREG_FPCR);
     fpsr = tc->readMiscReg(MISCREG_FPSR);
@@ -113,7 +113,7 @@ ArmISA::HTMCheckpoint::restore(ThreadContext *tc, HtmFailureFaultCause cause)
     }
     for (auto n = 0; n < NumVecPredRegs; n++) {
         RegId idx = RegId(VecPredRegClass, n);
-        tc->setVecPredReg(idx, p[n]);
+        tc->setReg(idx, &p[n]);
     }
     tc->setMiscReg(MISCREG_FPCR, fpcr);
     tc->setMiscReg(MISCREG_FPSR, fpsr);
