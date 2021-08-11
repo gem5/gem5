@@ -39,23 +39,61 @@
  */
 
 #include "cpu/reg_class.hh"
+
+#include <sstream>
+
 #include "base/cprintf.hh"
 
 namespace gem5
 {
 
 std::string
-DefaultRegClassOps::regName(const RegId &id) const
+RegClassOps::regName(const RegId &id) const
 {
     return csprintf("r%d", id.index());
 }
 
 std::string
-VecElemRegClassOps::regName(const RegId &id) const
+RegClassOps::valString(const void *val, size_t size) const
 {
-    RegIndex reg_idx = id.index() / elemsPerVec;
-    RegIndex elem_idx = id.index() % elemsPerVec;
-    return csprintf("v%d[%d]", reg_idx, elem_idx);
+    // If this is just a RegVal, or could be interpreted as one, print it
+    // that way.
+    if (size == sizeof(uint64_t))
+        return csprintf("0x%016x", *(const uint64_t *)val);
+    else if (size == sizeof(uint32_t))
+        return csprintf("0x%08x", *(const uint32_t *)val);
+    else if (size == sizeof(uint16_t))
+        return csprintf("0x%04x", *(const uint16_t *)val);
+    else if (size == sizeof(uint8_t))
+        return csprintf("0x%02x", *(const uint8_t *)val);
+
+    // Otherwise, print it as a sequence of bytes, 4 in a chunk, separated by
+    // spaces, and all surrounded by []s.
+
+    std::stringstream out;
+    ccprintf(out, "[");
+
+    constexpr size_t chunk_size = 4;
+    const uint8_t *bytes = (const uint8_t *)val;
+
+    while (size >= chunk_size) {
+        size -= chunk_size;
+        if (size) {
+            ccprintf(out, "%02x%02x%02x%02x ", bytes[0], bytes[1], bytes[2],
+                    bytes[3]);
+        } else {
+            ccprintf(out, "%02x%02x%02x%02x", bytes[0], bytes[1], bytes[2],
+                    bytes[3]);
+        }
+        bytes += chunk_size;
+    }
+
+    while (size--)
+        ccprintf(out, "%02x", *bytes++);
+
+    ccprintf(out, "]");
+
+    return out.str();
 }
 
 const char *RegId::regClassStrings[] = {

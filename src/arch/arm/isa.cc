@@ -80,7 +80,7 @@ class MiscRegClassOps : public RegClassOps
     }
 } miscRegClassOps;
 
-VecElemRegClassOps vecRegElemClassOps(NumVecElemPerVecReg);
+VecElemRegClassOps<ArmISA::VecElem> vecRegElemClassOps(NumVecElemPerVecReg);
 
 ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     _decoderFlavor(p.decoderFlavor), pmu(p.pmu), impdefAsNop(p.impdef_nop),

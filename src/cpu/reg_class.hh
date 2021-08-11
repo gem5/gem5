@@ -44,6 +44,7 @@
 #include <cstddef>
 #include <string>
 
+#include "base/cprintf.hh"
 #include "base/intmath.hh"
 #include "base/types.hh"
 
@@ -69,26 +70,10 @@ class RegId;
 class RegClassOps
 {
   public:
-    virtual std::string regName(const RegId &id) const = 0;
-};
-
-class DefaultRegClassOps : public RegClassOps
-{
-  public:
-    std::string regName(const RegId &id) const override;
-};
-
-class VecElemRegClassOps : public RegClassOps
-{
-  protected:
-    size_t elemsPerVec;
-
-  public:
-    explicit VecElemRegClassOps(size_t elems_per_vec) :
-        elemsPerVec(elems_per_vec)
-    {}
-
-    std::string regName(const RegId &id) const override;
+    /** Print the name of the register specified in id. */
+    virtual std::string regName(const RegId &id) const;
+    /** Print the value of a register pointed to by val of size size. */
+    virtual std::string valString(const void *val, size_t size) const;
 };
 
 class RegClass
@@ -102,7 +87,7 @@ class RegClass
     // be calculated with a multiply.
     size_t _regShift;
 
-    static inline DefaultRegClassOps defaultOps;
+    static inline RegClassOps defaultOps;
     RegClassOps *_ops = &defaultOps;
 
   public:
@@ -124,6 +109,11 @@ class RegClass
     size_t regShift() const { return _regShift; }
 
     std::string regName(const RegId &id) const { return _ops->regName(id); }
+    std::string
+    valString(const void *val) const
+    {
+        return _ops->valString(val, regBytes());
+    }
 };
 
 /** Register ID: describe an architectural register with its class and index.
@@ -194,6 +184,38 @@ class RegId
     operator<<(std::ostream& os, const RegId& rid)
     {
         return os << rid.className() << "{" << rid.index() << "}";
+    }
+};
+
+template <typename ValueType>
+class TypedRegClassOps : public RegClassOps
+{
+  public:
+    std::string
+    valString(const void *val, size_t size) const override
+    {
+        assert(size == sizeof(ValueType));
+        return csprintf("%s", *(const ValueType *)val);
+    }
+};
+
+template <typename ValueType>
+class VecElemRegClassOps : public TypedRegClassOps<ValueType>
+{
+  protected:
+    size_t elemsPerVec;
+
+  public:
+    explicit VecElemRegClassOps(size_t elems_per_vec) :
+        elemsPerVec(elems_per_vec)
+    {}
+
+    std::string
+    regName(const RegId &id) const override
+    {
+        RegIndex reg_idx = id.index() / elemsPerVec;
+        RegIndex elem_idx = id.index() % elemsPerVec;
+        return csprintf("v%d[%d]", reg_idx, elem_idx);
     }
 };
 
