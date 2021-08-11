@@ -45,6 +45,7 @@
 #include <string>
 
 #include "base/cprintf.hh"
+#include "base/debug.hh"
 #include "base/intmath.hh"
 #include "base/types.hh"
 
@@ -89,16 +90,18 @@ class RegClass
 
     static inline RegClassOps defaultOps;
     RegClassOps *_ops = &defaultOps;
+    const debug::Flag &debugFlag;
 
   public:
-    RegClass(size_t num_regs, RegIndex new_zero=-1,
-            size_t reg_bytes=sizeof(RegVal)) :
+    RegClass(size_t num_regs, const debug::Flag &debug_flag,
+            RegIndex new_zero=-1, size_t reg_bytes=sizeof(RegVal)) :
         _numRegs(num_regs), _zeroReg(new_zero), _regBytes(reg_bytes),
-        _regShift(ceilLog2(reg_bytes))
+        _regShift(ceilLog2(reg_bytes)), debugFlag(debug_flag)
     {}
-    RegClass(size_t num_regs, RegClassOps &new_ops, RegIndex new_zero=-1,
+    RegClass(size_t num_regs, RegClassOps &new_ops,
+            const debug::Flag &debug_flag, RegIndex new_zero=-1,
             size_t reg_bytes=sizeof(RegVal)) :
-        RegClass(num_regs, new_zero, reg_bytes)
+        RegClass(num_regs, debug_flag, new_zero, reg_bytes)
     {
         _ops = &new_ops;
     }
@@ -107,6 +110,7 @@ class RegClass
     RegIndex zeroReg() const { return _zeroReg; }
     size_t regBytes() const { return _regBytes; }
     size_t regShift() const { return _regShift; }
+    const debug::Flag &debug() const { return debugFlag; }
 
     std::string regName(const RegId &id) const { return _ops->regName(id); }
     std::string

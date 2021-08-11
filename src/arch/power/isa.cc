@@ -41,6 +41,9 @@
 #include "arch/power/regs/int.hh"
 #include "arch/power/regs/misc.hh"
 #include "cpu/thread_context.hh"
+#include "debug/FloatRegs.hh"
+#include "debug/IntRegs.hh"
+#include "debug/MiscRegs.hh"
 #include "params/PowerISA.hh"
 
 namespace gem5
@@ -51,13 +54,13 @@ namespace PowerISA
 
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.emplace_back(NumIntRegs, NumIntRegs - 1);
-    _regClasses.emplace_back(NumFloatRegs);
-    _regClasses.emplace_back(1);
-    _regClasses.emplace_back(2);
-    _regClasses.emplace_back(1);
-    _regClasses.emplace_back(0);
-    _regClasses.emplace_back(NUM_MISCREGS);
+    _regClasses.emplace_back(NumIntRegs, debug::IntRegs, NumIntRegs - 1);
+    _regClasses.emplace_back(NumFloatRegs, debug::FloatRegs);
+    _regClasses.emplace_back(1, debug::IntRegs);
+    _regClasses.emplace_back(2, debug::IntRegs);
+    _regClasses.emplace_back(1, debug::IntRegs);
+    _regClasses.emplace_back(0, debug::IntRegs);
+    _regClasses.emplace_back(NUM_MISCREGS, debug::MiscRegs);
     clear();
 }
 

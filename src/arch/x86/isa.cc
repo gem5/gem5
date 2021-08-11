@@ -36,6 +36,10 @@
 #include "base/compiler.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/CCRegs.hh"
+#include "debug/FloatRegs.hh"
+#include "debug/IntRegs.hh"
+#include "debug/MiscRegs.hh"
 #include "params/X86ISA.hh"
 #include "sim/serialize.hh"
 
@@ -142,13 +146,13 @@ ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string)
     fatal_if(vendorString.size() != 12,
              "CPUID vendor string must be 12 characters\n");
 
-    _regClasses.emplace_back(NumIntRegs, INTREG_T0);
-    _regClasses.emplace_back(NumFloatRegs);
-    _regClasses.emplace_back(1); // Not applicable to X86
-    _regClasses.emplace_back(2); // Not applicable to X86
-    _regClasses.emplace_back(1); // Not applicable to X86
-    _regClasses.emplace_back(NUM_CCREGS);
-    _regClasses.emplace_back(NUM_MISCREGS);
+    _regClasses.emplace_back(NumIntRegs, debug::IntRegs, INTREG_T0);
+    _regClasses.emplace_back(NumFloatRegs, debug::FloatRegs);
+    _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to X86
+    _regClasses.emplace_back(2, debug::IntRegs); // Not applicable to X86
+    _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to X86
+    _regClasses.emplace_back(NUM_CCREGS, debug::CCRegs);
+    _regClasses.emplace_back(NUM_MISCREGS, debug::MiscRegs);
 
     clear();
 }

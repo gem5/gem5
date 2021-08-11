@@ -54,8 +54,13 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Arm.hh"
+#include "debug/CCRegs.hh"
+#include "debug/FloatRegs.hh"
+#include "debug/IntRegs.hh"
 #include "debug/LLSC.hh"
 #include "debug/MiscRegs.hh"
+#include "debug/VecPredRegs.hh"
+#include "debug/VecRegs.hh"
 #include "dev/arm/generic_timer.hh"
 #include "dev/arm/gic_v3.hh"
 #include "dev/arm/gic_v3_cpu_interface.hh"
@@ -88,16 +93,16 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     _decoderFlavor(p.decoderFlavor), pmu(p.pmu), impdefAsNop(p.impdef_nop),
     afterStartup(false)
 {
-    _regClasses.emplace_back(NUM_INTREGS, INTREG_ZERO);
-    _regClasses.emplace_back(0);
-    _regClasses.emplace_back(NumVecRegs, vecRegClassOps, -1,
+    _regClasses.emplace_back(NUM_INTREGS, debug::IntRegs, INTREG_ZERO);
+    _regClasses.emplace_back(0, debug::FloatRegs);
+    _regClasses.emplace_back(NumVecRegs, vecRegClassOps, debug::VecRegs, -1,
             sizeof(VecRegContainer));
     _regClasses.emplace_back(NumVecRegs * NumVecElemPerVecReg,
-            vecRegElemClassOps);
-    _regClasses.emplace_back(NumVecPredRegs, vecPredRegClassOps, -1,
-            sizeof(VecPredRegContainer));
-    _regClasses.emplace_back(NUM_CCREGS);
-    _regClasses.emplace_back(NUM_MISCREGS, miscRegClassOps);
+            vecRegElemClassOps, debug::VecRegs);
+    _regClasses.emplace_back(NumVecPredRegs, vecPredRegClassOps,
+            debug::VecPredRegs, -1, sizeof(VecPredRegContainer));
+    _regClasses.emplace_back(NUM_CCREGS, debug::CCRegs);
+    _regClasses.emplace_back(NUM_MISCREGS, miscRegClassOps, debug::MiscRegs);
 
     miscRegs[MISCREG_SCTLR_RST] = 0;
 
