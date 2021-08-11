@@ -154,22 +154,6 @@ class PhysRegFile
     /** Initialize the free list */
     void initFreeList(UnifiedFreeList *freeList);
 
-    /** @return the number of integer physical registers. */
-    unsigned numIntPhysRegs() const { return numPhysicalIntRegs; }
-
-    /** @return the number of floating-point physical registers. */
-    unsigned numFloatPhysRegs() const { return numPhysicalFloatRegs; }
-    /** @return the number of vector physical registers. */
-    unsigned numVecPhysRegs() const { return numPhysicalVecRegs; }
-    /** @return the number of predicate physical registers. */
-    unsigned numPredPhysRegs() const { return numPhysicalVecPredRegs; }
-
-    /** @return the number of vector physical registers. */
-    unsigned numVecElemPhysRegs() const { return numPhysicalVecElemRegs; }
-
-    /** @return the number of condition-code physical registers. */
-    unsigned numCCPhysRegs() const { return numPhysicalCCRegs; }
-
     /** @return the total number of physical registers. */
     unsigned totalNumPhysRegs() const { return totalNumRegs; }
 
