@@ -83,9 +83,9 @@ class InstRecord
      * Memory request information in the instruction accessed memory.
      * @see mem_valid
      */
-    Addr addr; ///< The address that was accessed
-    Addr size; ///< The size of the memory request
-    unsigned flags; ///< The flags that were assigned to the request.
+    Addr addr = 0; ///< The address that was accessed
+    Addr size = 0; ///< The size of the memory request
+    unsigned flags = 0; ///< The flags that were assigned to the request.
 
     /** @} */
 
@@ -103,19 +103,19 @@ class InstRecord
         double as_double;
         TheISA::VecRegContainer* as_vec;
         TheISA::VecPredRegContainer* as_pred;
-    } data;
+    } data = {0};
 
     /** @defgroup fetch_seq
      * This records the serial number that the instruction was fetched in.
      * @see fetch_seq_valid
      */
-    InstSeqNum fetch_seq;
+    InstSeqNum fetch_seq = 0;
 
     /** @defgroup commit_seq
      * This records the instruction number that was committed in the pipeline
      * @see cp_seq_valid
      */
-    InstSeqNum cp_seq;
+    InstSeqNum cp_seq = 0;
 
     /** @ingroup data
      * What size of data was written?
@@ -130,42 +130,39 @@ class InstRecord
         DataDouble = 3,
         DataVec = 5,
         DataVecPred = 6
-    } data_status;
+    } data_status = DataInvalid;
 
     /** @ingroup memory
      * Are the memory fields in the record valid?
      */
-    bool mem_valid;
+    bool mem_valid = false;
 
     /** @ingroup fetch_seq
      * Are the fetch sequence number fields valid?
      */
-    bool fetch_seq_valid;
+    bool fetch_seq_valid = false;
     /** @ingroup commit_seq
      * Are the commit sequence number fields valid?
      */
-    bool cp_seq_valid;
+    bool cp_seq_valid = false;
 
     /** is the predicate for execution this inst true or false (not execed)?
      */
-    bool predicate;
+    bool predicate = true;
 
     /**
      * Did the execution of this instruction fault? (requires ExecFaulting
      * to be enabled)
      */
-    bool faulting;
+    bool faulting = false;
 
   public:
     InstRecord(Tick _when, ThreadContext *_thread,
                const StaticInstPtr _staticInst, const PCStateBase &_pc,
                const StaticInstPtr _macroStaticInst=nullptr)
         : when(_when), thread(_thread), staticInst(_staticInst),
-        pc(_pc.clone()), macroStaticInst(_macroStaticInst), addr(0), size(0),
-        flags(0), fetch_seq(0), cp_seq(0), data_status(DataInvalid),
-        mem_valid(false), fetch_seq_valid(false), cp_seq_valid(false),
-        predicate(true), faulting(false)
-    { }
+        pc(_pc.clone()), macroStaticInst(_macroStaticInst)
+    {}
 
     virtual ~InstRecord()
     {
@@ -179,9 +176,13 @@ class InstRecord
     }
 
     void setWhen(Tick new_when) { when = new_when; }
-    void setMem(Addr a, Addr s, unsigned f)
+    void
+    setMem(Addr a, Addr s, unsigned f)
     {
-        addr = a; size = s; flags = f; mem_valid = true;
+        addr = a;
+        size = s;
+        flags = f;
+        mem_valid = true;
     }
 
     template <typename T, size_t N>
@@ -195,17 +196,42 @@ class InstRecord
                       "Type T has an unrecognized size.");
     }
 
-    void setData(uint64_t d) { data.as_int = d; data_status = DataInt64; }
-    void setData(uint32_t d) { data.as_int = d; data_status = DataInt32; }
-    void setData(uint16_t d) { data.as_int = d; data_status = DataInt16; }
-    void setData(uint8_t d) { data.as_int = d; data_status = DataInt8; }
+    void
+    setData(uint64_t d)
+    {
+        data.as_int = d;
+        data_status = DataInt64;
+    }
+    void
+    setData(uint32_t d)
+    {
+        data.as_int = d;
+        data_status = DataInt32;
+    }
+    void
+    setData(uint16_t d)
+    {
+        data.as_int = d;
+        data_status = DataInt16;
+    }
+    void
+    setData(uint8_t d)
+    {
+        data.as_int = d;
+        data_status = DataInt8;
+    }
 
     void setData(int64_t d) { setData((uint64_t)d); }
     void setData(int32_t d) { setData((uint32_t)d); }
     void setData(int16_t d) { setData((uint16_t)d); }
     void setData(int8_t d)  { setData((uint8_t)d); }
 
-    void setData(double d) { data.as_double = d; data_status = DataDouble; }
+    void
+    setData(double d)
+    {
+        data.as_double = d;
+        data_status = DataDouble;
+    }
 
     void
     setData(TheISA::VecRegContainer& d)
@@ -221,11 +247,19 @@ class InstRecord
         data_status = DataVecPred;
     }
 
-    void setFetchSeq(InstSeqNum seq)
-    { fetch_seq = seq; fetch_seq_valid = true; }
+    void
+    setFetchSeq(InstSeqNum seq)
+    {
+        fetch_seq = seq;
+        fetch_seq_valid = true;
+    }
 
-    void setCPSeq(InstSeqNum seq)
-    { cp_seq = seq; cp_seq_valid = true; }
+    void
+    setCPSeq(InstSeqNum seq)
+    {
+        cp_seq = seq;
+        cp_seq_valid = true;
+    }
 
     void setPredicate(bool val) { predicate = val; }
 
@@ -261,11 +295,9 @@ class InstRecord
 class InstTracer : public SimObject
 {
   public:
-    InstTracer(const Params &p) : SimObject(p)
-    {}
+    InstTracer(const Params &p) : SimObject(p) {}
 
-    virtual ~InstTracer()
-    {};
+    virtual ~InstTracer() {}
 
     virtual InstRecord *
         getInstRecord(Tick when, ThreadContext *tc,
