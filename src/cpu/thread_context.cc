@@ -41,6 +41,8 @@
 
 #include "cpu/thread_context.hh"
 
+#include <vector>
+
 #include "arch/generic/vec_pred_reg.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
@@ -91,13 +93,19 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
     }
 
     // Then loop through the predicate registers.
-    for (int i = 0; i < regClasses.at(VecPredRegClass).numRegs(); ++i) {
+    const auto &vec_pred_class = regClasses.at(VecPredRegClass);
+    std::vector<uint8_t> pred1(vec_pred_class.regBytes());
+    std::vector<uint8_t> pred2(vec_pred_class.regBytes());
+    for (int i = 0; i < vec_pred_class.numRegs(); ++i) {
         RegId rid(VecPredRegClass, i);
-        const TheISA::VecPredRegContainer& t1 = one->readVecPredReg(rid);
-        const TheISA::VecPredRegContainer& t2 = two->readVecPredReg(rid);
-        if (t1 != t2)
-            panic("Pred reg idx %d doesn't match, one: %#x, two: %#x",
-                  i, t1, t2);
+
+        one->getReg(rid, pred1.data());
+        two->getReg(rid, pred2.data());
+        if (pred1 != pred2) {
+            panic("Pred reg idx %d doesn't match, one: %s, two: %s",
+                  i, vec_pred_class.valString(pred1.data()),
+                  vec_pred_class.valString(pred2.data()));
+        }
     }
 
     for (int i = 0; i < regClasses.at(MiscRegClass).numRegs(); ++i) {
