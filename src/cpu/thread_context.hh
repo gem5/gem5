@@ -231,19 +231,6 @@ class ThreadContext : public PCEventScope
         return getReg(reg);
     }
 
-    TheISA::VecPredRegContainer
-    readVecPredReg(const RegId &reg) const
-    {
-        TheISA::VecPredRegContainer val;
-        getReg(reg, &val);
-        return val;
-    }
-    TheISA::VecPredRegContainer&
-    getWritableVecPredReg(const RegId& reg)
-    {
-        return *(TheISA::VecPredRegContainer *)getWritableReg(reg);
-    }
-
     RegVal
     readCCReg(RegIndex reg_idx) const
     {
@@ -272,12 +259,6 @@ class ThreadContext : public PCEventScope
     setVecElem(const RegId& reg, RegVal val)
     {
         setReg(reg, val);
-    }
-
-    void
-    setVecPredReg(const RegId &reg, const TheISA::VecPredRegContainer &val)
-    {
-        setReg(reg, &val);
     }
 
     void
