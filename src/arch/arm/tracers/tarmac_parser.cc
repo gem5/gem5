@@ -786,8 +786,8 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
             break;
           case REG_P:
             {
-                const ArmISA::VecPredRegContainer& pc =
-                    thread->readVecPredReg(RegId(VecPredRegClass, it->index));
+                ArmISA::VecPredRegContainer pc;
+                thread->getReg(RegId(VecPredRegClass, it->index), &pc);
                 auto pv = pc.as<uint8_t>();
                 uint64_t p = 0;
                 for (int i = maxVectorLength * 8; i > 0; ) {

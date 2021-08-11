@@ -163,8 +163,8 @@ TarmacTracerRecordV8::TraceRegEntryV8::updatePred(
 )
 {
     auto thread = tarmCtx.thread;
-    const auto& pred_container = thread->readVecPredReg(
-        RegId(regClass, regRelIdx));
+    ArmISA::VecPredRegContainer pred_container;
+    thread->getReg(RegId(regClass, regRelIdx), &pred_container);
 
     // Predicate registers are always 1/8 the size of related vector
     // registers. (getCurSveVecLenInBits(thread) / 8)
