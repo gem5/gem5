@@ -51,6 +51,7 @@
 #include "arch/generic/tlb.hh"
 #include "arch/isa.hh"
 #include "arch/vecregs.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/regfile.hh"
@@ -97,12 +98,8 @@ class SimpleThread : public ThreadState, public ThreadContext
     typedef ThreadContext::Status Status;
 
   protected:
-    RegFile floatRegs;
-    RegFile intRegs;
-    RegFile vecRegs;
-    RegFile vecElemRegs;
-    RegFile vecPredRegs;
-    RegFile ccRegs;
+    std::array<RegFile, CCRegClass + 1> regFiles;
+
     TheISA::ISA *const isa;    // one "instance" of the current ISA.
 
     std::unique_ptr<PCStateBase> _pcState;
@@ -250,12 +247,8 @@ class SimpleThread : public ThreadState, public ThreadContext
     clearArchRegs() override
     {
         set(_pcState, isa->newPCState());
-        intRegs.clear();
-        floatRegs.clear();
-        vecRegs.clear();
-        vecElemRegs.clear();
-        vecPredRegs.clear();
-        ccRegs.clear();
+        for (auto &rf: regFiles)
+            rf.clear();
         isa->clear();
     }
 
@@ -329,65 +322,29 @@ class SimpleThread : public ThreadState, public ThreadContext
     {
         const RegId reg = flattenRegId(arch_reg);
 
-        const RegClassType type = reg.classValue();
         const RegIndex idx = reg.index();
-        const RegIndex arch_idx = arch_reg.index();
 
-        RegVal val;
-        switch (type) {
-          case IntRegClass:
-            val = intRegs.reg(idx);
-            DPRINTF(IntRegs, "Reading int reg %d (%d) as %#x.\n",
-                    arch_idx, idx, val);
-            return val;
-          case FloatRegClass:
-            val = floatRegs.reg(idx);
-            DPRINTF(FloatRegs, "Reading float reg %d (%d) as %#x.\n",
-                    arch_idx, idx, val);
-            return val;
-          case VecElemClass:
-            val = vecElemRegs.reg(idx);
-            DPRINTF(VecRegs, "Reading vector element reg %d (%d) as %#x.\n",
-                    arch_idx, idx, val);
-            return val;
-          case CCRegClass:
-            val = ccRegs.reg(idx);
-            DPRINTF(CCRegs, "Reading cc reg %d (%d) as %#x.\n",
-                    arch_idx, idx, val);
-            return val;
-          default:
-            panic("Unsupported register class type %d.", type);
-        }
+        const auto &reg_file = regFiles[reg.classValue()];
+        const auto &reg_class = reg_file.regClass;
+
+        RegVal val = reg_file.reg(idx);
+        DPRINTFV(reg_class.debug(), "Reading %s reg %s (%d) as %#x.\n",
+                reg.className(), reg_class.regName(arch_reg), idx, val);
+        return val;
     }
 
     RegVal
     getRegFlat(const RegId &reg) const override
     {
-        const RegClassType type = reg.classValue();
         const RegIndex idx = reg.index();
 
-        RegVal val;
-        switch (type) {
-          case IntRegClass:
-            val = intRegs.reg(idx);
-            DPRINTF(IntRegs, "Reading int reg %d as %#x.\n", idx, val);
-            return val;
-          case FloatRegClass:
-            val = floatRegs.reg(idx);
-            DPRINTF(FloatRegs, "Reading float reg %d as %#x.\n", idx, val);
-            return val;
-          case VecElemClass:
-            val = vecElemRegs.reg(idx);
-            DPRINTF(VecRegs, "Reading vector element reg %d as %#x.\n",
-                    idx, val);
-            return val;
-          case CCRegClass:
-            val = ccRegs.reg(idx);
-            DPRINTF(CCRegs, "Reading cc reg %d as %#x.\n", idx, val);
-            return val;
-          default:
-            panic("Unsupported register class type %d.", type);
-        }
+        const auto &reg_file = regFiles[reg.classValue()];
+        const auto &reg_class = reg_file.regClass;
+
+        RegVal val = reg_file.reg(idx);
+        DPRINTFV(reg_class.debug(), "Reading %s reg %d as %#x.\n",
+                reg.className(), idx, val);
+        return val;
     }
 
     void
@@ -395,104 +352,47 @@ class SimpleThread : public ThreadState, public ThreadContext
     {
         const RegId reg = flattenRegId(arch_reg);
 
-        const RegClassType type = reg.classValue();
         const RegIndex idx = reg.index();
-        const RegIndex arch_idx = arch_reg.index();
 
-        switch (type) {
-          case IntRegClass:
-            *(RegVal *)val = getRegFlat(reg);
-            break;
-          case FloatRegClass:
-            *(RegVal *)val = getRegFlat(reg);
-            break;
-          case VecRegClass:
-            vecRegs.get(idx, val);
-            DPRINTF(VecRegs, "Reading vector register %d (%d) as %s.\n",
-                    arch_idx, idx, *(TheISA::VecRegContainer *)val);
-            break;
-          case VecElemClass:
-            *(RegVal *)val = getRegFlat(reg);
-            break;
-          case VecPredRegClass:
-            vecPredRegs.get(idx, val);
-            DPRINTF(VecPredRegs, "Reading predicate register %d (%d) as %s.\n",
-                    arch_idx, idx, *(TheISA::VecRegContainer *)val);
-            break;
-          case CCRegClass:
-            *(RegVal *)val = getRegFlat(reg);
-            break;
-          default:
-            panic("Unrecognized register class type %d.", type);
-        }
+        const auto &reg_file = regFiles[reg.classValue()];
+        const auto &reg_class = reg_file.regClass;
+
+        reg_file.get(idx, val);
+        DPRINTFV(reg_class.debug(), "Reading %s register %s (%d) as %s.\n",
+                reg.className(), reg_class.regName(arch_reg), idx,
+                reg_class.valString(val));
     }
 
     void
     getRegFlat(const RegId &reg, void *val) const override
     {
-        const RegClassType type = reg.classValue();
         const RegIndex idx = reg.index();
 
-        switch (type) {
-          case IntRegClass:
-            *(RegVal *)val = getRegFlat(reg);
-            break;
-          case FloatRegClass:
-            *(RegVal *)val = getRegFlat(reg);
-            break;
-          case VecRegClass:
-            vecRegs.get(idx, val);
-            DPRINTF(VecRegs, "Reading vector register %d as %s.\n",
-                    idx, *(TheISA::VecRegContainer *)val);
-            break;
-          case VecElemClass:
-            *(RegVal *)val = getRegFlat(reg);
-            break;
-          case VecPredRegClass:
-            vecPredRegs.get(idx, val);
-            DPRINTF(VecPredRegs, "Reading predicate register %d as %s.\n",
-                    idx, *(TheISA::VecRegContainer *)val);
-            break;
-          case CCRegClass:
-            *(RegVal *)val = getRegFlat(reg);
-            break;
-          default:
-            panic("Unrecognized register class type %d.", type);
-        }
+        const auto &reg_file = regFiles[reg.classValue()];
+        const auto &reg_class = reg_file.regClass;
+
+        reg_file.get(idx, val);
+        DPRINTFV(reg_class.debug(), "Reading %s register %d as %s.\n",
+                reg.className(), idx, reg_class.valString(val));
     }
 
     void *
     getWritableReg(const RegId &arch_reg) override
     {
         const RegId reg = flattenRegId(arch_reg);
-
-        const RegClassType type = reg.classValue();
         const RegIndex idx = reg.index();
+        auto &reg_file = regFiles[reg.classValue()];
 
-        switch (type) {
-          case VecRegClass:
-            return vecRegs.ptr(idx);
-          case VecPredRegClass:
-            return vecPredRegs.ptr(idx);
-          default:
-            panic("Unrecognized register class type %d.", type);
-        }
+        return reg_file.ptr(idx);
     }
 
     void *
     getWritableRegFlat(const RegId &reg) override
     {
-        const RegClassType type = reg.classValue();
         const RegIndex idx = reg.index();
+        auto &reg_file = regFiles[reg.classValue()];
 
-        switch (type) {
-          case VecRegClass:
-            return vecRegs.ptr(idx);
-          case VecPredRegClass:
-            return vecPredRegs.ptr(idx);
-          default:
-            panic("Unrecognized register class type %d.", type);
-        }
+        return reg_file.ptr(idx);
     }
 
     void
@@ -500,64 +400,27 @@ class SimpleThread : public ThreadState, public ThreadContext
     {
         const RegId reg = flattenRegId(arch_reg);
 
-        const RegClassType type = reg.classValue();
         const RegIndex idx = reg.index();
-        const RegIndex arch_idx = arch_reg.index();
 
-        switch (type) {
-          case IntRegClass:
-            DPRINTF(IntRegs, "Setting int register %d (%d) to %#x.\n",
-                    arch_idx, idx, val);
-            intRegs.reg(idx) = val;
-            break;
-          case FloatRegClass:
-            DPRINTF(FloatRegs, "Setting float register %d (%d) to %#x.\n",
-                    arch_idx, idx, val);
-            floatRegs.reg(idx) = val;
-            break;
-          case VecElemClass:
-            DPRINTF(VecRegs, "Setting vector element register %d (%d) to "
-                    "%#x.\n", arch_idx, idx, val);
-            vecElemRegs.reg(idx) = val;
-            break;
-          case CCRegClass:
-            DPRINTF(CCRegs, "Setting cc register %d (%d) to %#x.\n",
-                    arch_idx, idx, val);
-            ccRegs.reg(idx) = val;
-            break;
-          default:
-            panic("Unsupported register class type %d.", type);
-        }
+        auto &reg_file = regFiles[reg.classValue()];
+        const auto &reg_class = reg_file.regClass;
+
+        DPRINTFV(reg_class.debug(), "Setting %s register %s (%d) to %#x.\n",
+                reg.className(), reg_class.regName(arch_reg), idx, val);
+        reg_file.reg(idx) = val;
     }
 
     void
     setRegFlat(const RegId &reg, RegVal val) override
     {
-        const RegClassType type = reg.classValue();
         const RegIndex idx = reg.index();
 
-        switch (type) {
-          case IntRegClass:
-            DPRINTF(IntRegs, "Setting int register %d to %#x.\n", idx, val);
-            intRegs.reg(idx) = val;
-            break;
-          case FloatRegClass:
-            DPRINTF(FloatRegs, "Setting float register %d to %#x.\n",
-                    idx, val);
-            floatRegs.reg(idx) = val;
-            break;
-          case VecElemClass:
-            DPRINTF(VecRegs, "Setting vector element register %d to %#x.\n",
-                    idx, val);
-            vecElemRegs.reg(idx) = val;
-            break;
-          case CCRegClass:
-            DPRINTF(CCRegs, "Setting cc register %d to %#x.\n", idx, val);
-            ccRegs.reg(idx) = val;
-            break;
-          default:
-            panic("Unsupported register class type %d.", type);
-        }
+        auto &reg_file = regFiles[reg.classValue()];
+        const auto &reg_class = reg_file.regClass;
+
+        DPRINTFV(reg_class.debug(), "Setting %s register %d to %#x.\n",
+                reg.className(), idx, val);
+        reg_file.reg(idx) = val;
     }
 
     void
@@ -565,70 +428,28 @@ class SimpleThread : public ThreadState, public ThreadContext
     {
         const RegId reg = flattenRegId(arch_reg);
 
-        const RegClassType type = reg.classValue();
         const RegIndex idx = reg.index();
-        const RegIndex arch_idx = arch_reg.index();
 
-        switch (type) {
-          case IntRegClass:
-            setRegFlat(reg, *(RegVal *)val);
-            break;
-          case FloatRegClass:
-            setRegFlat(reg, *(RegVal *)val);
-            break;
-          case VecRegClass:
-            DPRINTF(VecRegs, "Setting vector register %d (%d) to %s.\n",
-                    idx, arch_idx, *(TheISA::VecRegContainer *)val);
-            vecRegs.set(idx, val);
-            break;
-          case VecElemClass:
-            setRegFlat(reg, *(RegVal *)val);
-            break;
-          case VecPredRegClass:
-            DPRINTF(VecPredRegs, "Setting predicate register %d (%d) to %s.\n",
-                    idx, arch_idx, *(TheISA::VecRegContainer *)val);
-            vecPredRegs.set(idx, val);
-            break;
-          case CCRegClass:
-            setRegFlat(reg, *(RegVal *)val);
-            break;
-          default:
-            panic("Unrecognized register class type %d.", type);
-        }
+        auto &reg_file = regFiles[reg.classValue()];
+        const auto &reg_class = reg_file.regClass;
+
+        DPRINTFV(reg_class.debug(), "Setting %s register %s (%d) to %s.\n",
+                reg.className(), reg_class.regName(arch_reg), idx,
+                reg_class.valString(val));
+        reg_file.set(idx, val);
     }
 
     void
     setRegFlat(const RegId &reg, const void *val) override
     {
-        const RegClassType type = reg.classValue();
         const RegIndex idx = reg.index();
 
-        switch (type) {
-          case IntRegClass:
-            setRegFlat(reg, *(RegVal *)val);
-            break;
-          case FloatRegClass:
-            setRegFlat(reg, *(RegVal *)val);
-            break;
-          case VecRegClass:
-            DPRINTF(VecRegs, "Setting vector register %d to %s.\n",
-                    idx, *(TheISA::VecRegContainer *)val);
-            vecRegs.set(idx, val);
-            break;
-          case VecElemClass:
-            setRegFlat(reg, *(RegVal *)val);
-            break;
-          case VecPredRegClass:
-            DPRINTF(VecPredRegs, "Setting predicate register %d to %s.\n",
-                    idx, *(TheISA::VecRegContainer *)val);
-            vecPredRegs.set(idx, val);
-            break;
-          case CCRegClass:
-            setRegFlat(reg, *(RegVal *)val);
-            break;
-          default:
-            panic("Unrecognized register class type %d.", type);
-        }
+        auto &reg_file = regFiles[reg.classValue()];
+        const auto &reg_class = reg_file.regClass;
+
+        DPRINTFV(reg_class.debug(), "Setting %s register %d to %s.\n",
+                reg.className(), idx, reg_class.valString(val));
+        reg_file.set(idx, val);
     }
 
     // hardware transactional memory

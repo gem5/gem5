@@ -47,9 +47,12 @@ class RegFile
     const size_t _regBytes;
 
   public:
+    const RegClass &regClass;
+
     RegFile(const RegClass &info, const size_t new_size) :
         data(new_size << info.regShift()), _size(new_size),
-        _regShift(info.regShift()), _regBytes(info.regBytes())
+        _regShift(info.regShift()), _regBytes(info.regBytes()),
+        regClass(info)
     {}
 
     RegFile(const RegClass &info) : RegFile(info, info.numRegs()) {}
