@@ -64,10 +64,7 @@ output decoder {{
             Addr PC, const loader::SymbolTable *symtab) const
     {
         std::stringstream response;
-
         printMnemonic(response, mnemonic);
-        ccprintf(response, " ");
-        printReg(response, srcRegIdx(0), machInst.opSize);
         return response.str();
     }
 }};
