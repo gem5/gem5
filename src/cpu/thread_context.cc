@@ -231,7 +231,7 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
     const size_t numPreds = regClasses.at(VecPredRegClass).numRegs();
     std::vector<TheISA::VecPredRegContainer> vecPredRegs(numPreds);
     for (int i = 0; i < numPreds; ++i) {
-        vecPredRegs[i] = tc.readVecPredRegFlat(i);
+        tc.getRegFlat(RegId(VecPredRegClass, i), &vecPredRegs[i]);
     }
     SERIALIZE_CONTAINER(vecPredRegs);
 
@@ -278,7 +278,7 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
     std::vector<TheISA::VecPredRegContainer> vecPredRegs(numPreds);
     UNSERIALIZE_CONTAINER(vecPredRegs);
     for (int i = 0; i < numPreds; ++i) {
-        tc.setVecPredRegFlat(i, vecPredRegs[i]);
+        tc.setRegFlat(RegId(VecPredRegClass, i), &vecPredRegs[i]);
     }
 
     const size_t numInts = regClasses.at(IntRegClass).numRegs();

@@ -374,25 +374,6 @@ class ThreadContext : public PCEventScope
         setRegFlat(RegId(VecElemClass, idx), val);
     }
 
-    TheISA::VecPredRegContainer
-    readVecPredRegFlat(RegIndex idx) const
-    {
-        TheISA::VecPredRegContainer val;
-        getRegFlat(RegId(VecPredRegClass, idx), &val);
-        return val;
-    }
-    TheISA::VecPredRegContainer&
-    getWritableVecPredRegFlat(RegIndex idx)
-    {
-        return *(TheISA::VecPredRegContainer *)getWritableRegFlat(
-                RegId(VecPredRegClass, idx));
-    }
-    void
-    setVecPredRegFlat(RegIndex idx, const TheISA::VecPredRegContainer& val)
-    {
-        setRegFlat(RegId(VecPredRegClass, idx), &val);
-    }
-
     RegVal
     readCCRegFlat(RegIndex idx) const
     {
