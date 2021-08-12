@@ -112,9 +112,6 @@ class HiFive(Platform):
     uart_int_id = Param.Int(0xa, "PLIC Uart interrupt ID")
     terminal = Terminal()
 
-    # Dummy param for generating devicetree
-    cpu_count = Param.Int(0, "dummy")
-
     def _on_chip_devices(self):
         """Returns a list of on-chip peripherals
         """
@@ -172,6 +169,13 @@ class HiFive(Platform):
         for device in self._off_chip_devices():
             device.pio = bus.mem_side_ports
 
+    def setNumCores(self, num_cpu):
+        """ Sets the PLIC and CLINT to have the right number of threads and
+            contexts. Assumes that the cores have a single hardware thread.
+        """
+        self.plic.n_contexts = num_cpu * 2
+        self.clint.num_threads = num_cpu
+
     def generateDeviceTree(self, state):
         cpus_node = FdtNode("cpus")
         cpus_node.append(FdtPropertyWords("timebase-frequency", [10000000]))
@@ -189,6 +193,8 @@ class HiFive(Platform):
 
         yield node
 
+    # For generating devicetree
+    _cpu_count = 0
     def annotateCpuDeviceNode(self, cpu, state):
         cpu.append(FdtPropertyStrings('mmu-type', 'riscv,sv48'))
         cpu.append(FdtPropertyStrings('status', 'okay'))
@@ -202,8 +208,8 @@ class HiFive(Platform):
         int_node.appendCompatible("riscv,cpu-intc")
 
         cpus = self.system.unproxy(self).cpu
-        phandle = int_state.phandle(cpus[self.cpu_count])
-        self.cpu_count += 1
+        phandle = int_state.phandle(cpus[self._cpu_count])
+        self._cpu_count += 1
         int_node.append(FdtPropertyWords("phandle", [phandle]))
 
         cpu.append(int_node)

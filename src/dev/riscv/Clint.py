@@ -52,6 +52,7 @@ class Clint(BasicPioDevice):
     cxx_class = 'gem5::Clint'
     int_pin = IntSinkPin('Pin to receive RTC signal')
     pio_size = Param.Addr(0xC000, "PIO Size")
+    num_threads = Param.Int("Number of threads in the system.")
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(state, "clint", self.pio_addr,

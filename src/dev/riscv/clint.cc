@@ -52,6 +52,7 @@ using namespace RiscvISA;
 Clint::Clint(const Params &params) :
     BasicPioDevice(params, params.pio_size),
     system(params.system),
+    nThread(params.num_threads),
     signal(params.name + ".signal", 0, this),
     registers(params.name + ".registers", params.pio_addr, this)
 {
@@ -194,7 +195,6 @@ Clint::write(PacketPtr pkt)
 void
 Clint::init()
 {
-    nThread = system->threads.size();
     registers.init();
     BasicPioDevice::init();
 }

@@ -56,6 +56,7 @@ Plic::Plic(const Params &params) :
     BasicPioDevice(params, params.pio_size),
     system(params.system),
     nSrc(params.n_src),
+    nContext(params.n_contexts),
     registers(params.name, pioAddr, this),
     update([this]{updateOutput();}, name() + ".update")
 {
@@ -163,8 +164,6 @@ Plic::write(PacketPtr pkt)
 void
 Plic::init()
 {
-    // Number of contexts
-    nContext = system->threads.size() * 2;
     // Number of 32-bit pending registesrs where
     // each bit correspondings to one interrupt source
     nSrc32 = divCeil(nSrc, 32);
