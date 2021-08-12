@@ -450,12 +450,17 @@ class TableWalker : public ClockedObject
         std::string
         dbgHeader() const override
         {
-            if (type() == LongDescriptor::Page) {
+            switch (type()) {
+              case LongDescriptor::Page:
                 assert(lookupLevel == LookupLevel::L3);
                 return "Inserting Page descriptor into TLB\n";
-            } else {
+              case LongDescriptor::Block:
                 assert(lookupLevel < LookupLevel::L3);
                 return "Inserting Block descriptor into TLB\n";
+              case LongDescriptor::Table:
+                return "Inserting Table descriptor into TLB\n";
+              default:
+                panic("Trying to insert and invalid descriptor\n");
             }
         }
 
@@ -466,8 +471,12 @@ class TableWalker : public ClockedObject
         bool
         secure(bool have_security, WalkerState *currState) const override
         {
-            assert(type() == Block || type() == Page);
-            return have_security && (currState->secureLookup && !bits(data, 5));
+            if (type() == Block || type() == Page) {
+                return have_security &&
+                    (currState->secureLookup && !bits(data, 5));
+            } else {
+                return have_security && currState->secureLookup;
+            }
         }
 
         /** Return the descriptor type */
@@ -537,9 +546,11 @@ class TableWalker : public ClockedObject
                     default:
                         panic("Invalid AArch64 VM granule size\n");
                 }
-            } else {
-                panic("AArch64 page table entry must be block or page\n");
+            } else if (type() == Table) {
+                const auto* ptops = getPageTableOps(grainSize);
+                return ptops->walkBits(lookupLevel);
             }
+            panic("AArch64 page table entry must be block or page\n");
         }
 
         /** Return the physical frame, bits shifted right */
@@ -700,7 +711,6 @@ class TableWalker : public ClockedObject
         domain() const override
         {
             // Long-desc. format only supports Client domain
-            assert(type() == Block || type() == Page);
             return TlbEntry::DomainType::Client;
         }
 
@@ -803,6 +813,9 @@ class TableWalker : public ClockedObject
 
         /** Request that is currently being serviced */
         RequestPtr req;
+
+        /** Initial walk entry allowing to skip lookup levels */
+        TlbEntry walkEntry;
 
         /** ASID that we're servicing the request under */
         uint16_t asid;
@@ -1088,9 +1101,10 @@ class TableWalker : public ClockedObject
 
     Fault walk(const RequestPtr &req, ThreadContext *tc,
                uint16_t asid, vmid_t _vmid,
-               bool _isHyp, BaseMMU::Mode mode, BaseMMU::Translation *_trans,
+               bool hyp, BaseMMU::Mode mode, BaseMMU::Translation *_trans,
                bool timing, bool functional, bool secure,
-               MMU::ArmTranslationType tranType, bool _stage2Req);
+               MMU::ArmTranslationType tran_type, bool stage2,
+               const TlbEntry *walk_entry);
 
     void setMmu(MMU *_mmu);
     void setTlb(TLB *_tlb) { tlb = _tlb; }
@@ -1135,6 +1149,15 @@ class TableWalker : public ClockedObject
     Fault generateLongDescFault(ArmFault::FaultSource src);
 
     void insertTableEntry(DescriptorBase &descriptor, bool longDescriptor);
+    void insertPartialTableEntry(LongDescriptor &descriptor);
+
+    /** Returns a tuple made of:
+     * 1) The address of the first page table
+     * 2) The address of the first descriptor within the table
+     * 3) The page table level
+     */
+    std::tuple<Addr, Addr, LookupLevel> walkAddresses(
+        Addr ttbr, GrainSize tg, int tsz, int pa_range);
 
     Fault processWalk();
     Fault processWalkLPAE();

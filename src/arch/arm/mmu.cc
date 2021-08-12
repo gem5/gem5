@@ -1471,7 +1471,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         fault = getTableWalker(mode, state.isStage2)->walk(
             req, tc, state.asid, state.vmid, state.isHyp, mode,
             translation, timing, functional, is_secure,
-            tran_type, state.stage2DescReq);
+            tran_type, state.stage2DescReq, *te);
 
         // for timing mode, return and wait for table walk,
         if (timing || fault != NoFault) {

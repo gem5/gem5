@@ -290,7 +290,7 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
                   vmid_t _vmid, bool _isHyp, MMU::Mode _mode,
                   MMU::Translation *_trans, bool _timing, bool _functional,
                   bool secure, MMU::ArmTranslationType tranType,
-                  bool _stage2Req)
+                  bool _stage2Req, const TlbEntry *walk_entry)
 {
     assert(!(_functional && _timing));
     ++stats.walks;
@@ -344,6 +344,11 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
     }
     currState->transState = _trans;
     currState->req = _req;
+    if (walk_entry) {
+        currState->walkEntry = *walk_entry;
+    } else {
+        currState->walkEntry = TlbEntry();
+    }
     currState->fault = NoFault;
     currState->asid = _asid;
     currState->vmid = _vmid;
@@ -494,11 +499,15 @@ TableWalker::processWalkWrapper()
     // a match, we just want to get rid of the walk. The latter could happen
     // when there are multiple outstanding misses to a single page and a
     // previous request has been successfully translated.
-    if (!currState->transState->squashed() && !te) {
+    if (!currState->transState->squashed() && (!te || te->partial)) {
         // We've got a valid request, lets process it
         pending = true;
         pendingQueue.pop_front();
         // Keep currState in case one of the processWalk... calls NULLs it
+
+        if (te && te->partial) {
+            currState->walkEntry = *te;
+        }
         WalkerState *curr_state_copy = currState;
         Fault f;
         if (currState->aarch64)
@@ -897,7 +906,6 @@ TableWalker::processWalkAArch64()
         currState->tcr,
         currState->el);
 
-    LookupLevel start_lookup_level = LookupLevel::Num_ArmLookupLevel;
     bool vaddr_fault = false;
     switch (currState->el) {
       case EL0:
@@ -959,11 +967,6 @@ TableWalker::processWalkAArch64()
             tsz = 64 - currState->vtcr.t0sz64;
             tg = GrainMap_tg0[currState->vtcr.tg0];
 
-            start_lookup_level = getPageTableOps(tg)->firstS2Level(
-                currState->vtcr.sl0);
-
-            panic_if(start_lookup_level == LookupLevel::Num_ArmLookupLevel,
-                     "Cannot discern lookup level from vtcr.{sl0,tg0}");
             ps = currState->vtcr.ps;
             currState->isUncacheable = currState->vtcr.irgn0 == 0;
         } else {
@@ -1096,15 +1099,6 @@ TableWalker::processWalkAArch64()
         tg = Grain4KB;
     }
 
-    // Determine starting lookup level
-    if (start_lookup_level == LookupLevel::Num_ArmLookupLevel) {
-        const auto* ptops = getPageTableOps(tg);
-
-        start_lookup_level = ptops->firstLevel(64 - tsz);
-        panic_if(start_lookup_level == LookupLevel::Num_ArmLookupLevel,
-                 "Table walker couldn't find lookup level\n");
-    }
-
     // Clamp to lower limit
     int pa_range = decodePhysAddrRange64(ps);
     if (pa_range > _physAddrRange) {
@@ -1113,22 +1107,12 @@ TableWalker::processWalkAArch64()
         currState->physAddrRange = pa_range;
     }
 
-    // Determine table base address
-    int stride = tg - 3;
-    int base_addr_lo = 3 + tsz - stride * (3 - start_lookup_level) - tg;
-    Addr base_addr = 0;
-
-    if (pa_range == 52) {
-        int z = (base_addr_lo < 6) ? 6 : base_addr_lo;
-        base_addr = mbits(ttbr, 47, z);
-        base_addr |= (bits(ttbr, 5, 2) << 48);
-    } else {
-        base_addr = mbits(ttbr, 47, base_addr_lo);
-    }
+    auto [table_addr, desc_addr, start_lookup_level] = walkAddresses(
+        ttbr, tg, tsz, pa_range);
 
     // Determine physical address size and raise an Address Size Fault if
     // necessary
-    if (checkAddrSizeFaultAArch64(base_addr, currState->physAddrRange)) {
+    if (checkAddrSizeFaultAArch64(table_addr, currState->physAddrRange)) {
         DPRINTF(TLB, "Address size fault before any lookup\n");
         Fault f;
         if (currState->isFetch)
@@ -1158,11 +1142,6 @@ TableWalker::processWalkAArch64()
         return f;
 
     }
-
-    // Determine descriptor address
-    Addr desc_addr = base_addr |
-        (bits(currState->vaddr, tsz - 1,
-              stride * (3 - start_lookup_level) + tg) << 3);
 
     // Trickbox address check
     Fault f = testWalk(desc_addr, sizeof(uint64_t),
@@ -1206,6 +1185,54 @@ TableWalker::processWalkAArch64()
     }
 
     return f;
+}
+
+std::tuple<Addr, Addr, TableWalker::LookupLevel>
+TableWalker::walkAddresses(Addr ttbr, GrainSize tg, int tsz, int pa_range)
+{
+    const auto* ptops = getPageTableOps(tg);
+
+    LookupLevel first_level = LookupLevel::Num_ArmLookupLevel;
+    Addr table_addr = 0;
+    Addr desc_addr = 0;
+
+    if (currState->walkEntry.valid) {
+        // WalkCache hit
+        TlbEntry* entry = &currState->walkEntry;
+        DPRINTF(PageTableWalker,
+                "Walk Cache hit: va=%#x, level=%d, table address=%#x\n",
+                currState->vaddr, entry->lookupLevel, entry->pfn);
+
+        currState->xnTable = entry->xn;
+        currState->pxnTable = entry->pxn;
+        currState->rwTable = bits(entry->ap, 1);
+        currState->userTable = bits(entry->ap, 0);
+
+        table_addr = entry->pfn;
+        first_level = (LookupLevel)(entry->lookupLevel + 1);
+    } else {
+        // WalkCache miss
+        first_level = isStage2 ?
+            ptops->firstS2Level(currState->vtcr.sl0) :
+            ptops->firstLevel(64 - tsz);
+        panic_if(first_level == LookupLevel::Num_ArmLookupLevel,
+                 "Table walker couldn't find lookup level\n");
+
+        int stride = tg - 3;
+        int base_addr_lo = 3 + tsz - stride * (3 - first_level) - tg;
+
+        if (pa_range == 52) {
+            int z = (base_addr_lo < 6) ? 6 : base_addr_lo;
+            table_addr = mbits(ttbr, 47, z);
+            table_addr |= (bits(ttbr, 5, 2) << 48);
+        } else {
+            table_addr = mbits(ttbr, 47, base_addr_lo);
+        }
+    }
+
+    desc_addr = table_addr + ptops->index(currState->vaddr, first_level, tsz);
+
+    return std::make_tuple(table_addr, desc_addr, first_level);
 }
 
 void
@@ -1890,6 +1917,11 @@ TableWalker::doLongDescriptor()
                 return;
             }
 
+            if (mmu->hasWalkCache()) {
+                insertPartialTableEntry(currState->longDesc);
+            }
+
+
             Request::Flags flag = Request::PT_WALK;
             if (currState->secureLookup)
                 flag.set(Request::SECURE);
@@ -2250,6 +2282,55 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
         }
     }
     return (isTiming);
+}
+
+void
+TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
+{
+    const bool have_security = release->has(ArmExtension::SECURITY);
+    TlbEntry te;
+
+    // Create and fill a new page table entry
+    te.valid          = true;
+    te.longDescFormat = true;
+    te.partial        = true;
+    te.global         = false;
+    te.isHyp          = currState->isHyp;
+    te.asid           = currState->asid;
+    te.vmid           = currState->vmid;
+    te.N              = descriptor.offsetBits();
+    te.vpn            = currState->vaddr >> te.N;
+    te.size           = (1ULL << te.N) - 1;
+    te.pfn            = descriptor.nextTableAddr();
+    te.domain         = descriptor.domain();
+    te.lookupLevel    = descriptor.lookupLevel;
+    te.ns             = !descriptor.secure(have_security, currState);
+    te.nstid          = !currState->isSecure;
+    te.type           = TypeTLB::unified;
+
+    if (currState->aarch64)
+        te.el         = currState->el;
+    else
+        te.el         = EL1;
+
+    te.xn = currState->xnTable;
+    te.pxn = currState->pxnTable;
+    te.ap = (currState->rwTable << 1) | (currState->userTable);
+
+    // Debug output
+    DPRINTF(TLB, descriptor.dbgHeader().c_str());
+    DPRINTF(TLB, " - N:%d pfn:%#x size:%#x global:%d valid:%d\n",
+            te.N, te.pfn, te.size, te.global, te.valid);
+    DPRINTF(TLB, " - vpn:%#x xn:%d pxn:%d ap:%d domain:%d asid:%d "
+            "vmid:%d hyp:%d nc:%d ns:%d\n", te.vpn, te.xn, te.pxn,
+            te.ap, static_cast<uint8_t>(te.domain), te.asid, te.vmid, te.isHyp,
+            te.nonCacheable, te.ns);
+    DPRINTF(TLB, " - domain from L%d desc:%d data:%#x\n",
+            descriptor.lookupLevel, static_cast<uint8_t>(descriptor.domain()),
+            descriptor.getRawData());
+
+    // Insert the entry into the TLBs
+    tlb->multiInsert(te);
 }
 
 void
