@@ -28,7 +28,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional
 from .cpu_types import CPUTypes
 
-from m5.objects import Port, SubSystem
+from m5.objects import BaseMMU, Port, SubSystem
 
 
 class AbstractCore(SubSystem):
@@ -89,5 +89,13 @@ class AbstractCore(SubSystem):
 
         This function is usually called from the cache hierarchy since the
         optional ports can be implemented as cache ports.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_mmu(self) -> BaseMMU:
+        """ Return the MMU for this core.
+
+        This is used in the board to setup system-specific MMU settings.
         """
         raise NotImplementedError

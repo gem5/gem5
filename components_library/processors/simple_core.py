@@ -33,6 +33,7 @@ from ..isas import ISA
 from ..utils.override import overrides
 
 from m5.objects import (
+    BaseMMU,
     Port,
     AtomicSimpleCPU,
     DerivO3CPU,
@@ -96,3 +97,7 @@ class SimpleCore(AbstractCore):
             self.core.interrupts[0].pio = interrupt_requestor
             self.core.interrupts[0].int_requestor = interrupt_responce
             self.core.interrupts[0].int_responder = interrupt_requestor
+
+    @overrides(AbstractCore)
+    def get_mmu(self) -> BaseMMU:
+        return self.core.mmu
