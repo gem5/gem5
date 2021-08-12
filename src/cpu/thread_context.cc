@@ -83,13 +83,19 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
     }
 
     // Then loop through the vector registers.
-    for (int i = 0; i < regClasses.at(VecRegClass).numRegs(); ++i) {
+    const auto &vec_class = regClasses.at(VecRegClass);
+    std::vector<uint8_t> vec1(vec_class.regBytes());
+    std::vector<uint8_t> vec2(vec_class.regBytes());
+    for (int i = 0; i < vec_class.numRegs(); ++i) {
         RegId rid(VecRegClass, i);
-        const TheISA::VecRegContainer& t1 = one->readVecReg(rid);
-        const TheISA::VecRegContainer& t2 = two->readVecReg(rid);
-        if (t1 != t2)
+
+        one->getReg(rid, vec1.data());
+        two->getReg(rid, vec2.data());
+        if (vec1 != vec2) {
             panic("Vec reg idx %d doesn't match, one: %#x, two: %#x",
-                  i, t1, t2);
+                  i, vec_class.valString(vec1.data()),
+                  vec_class.valString(vec2.data()));
+        }
     }
 
     // Then loop through the predicate registers.
