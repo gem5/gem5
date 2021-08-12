@@ -32,6 +32,7 @@
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "arch/x86/insts/static_inst.hh"
@@ -55,6 +56,10 @@ struct DestOp
     RegIndex opIndex() const { return dest; }
 
     DestOp(RegIndex _dest, size_t _size) : dest(_dest), size(_size) {}
+    template <class InstType>
+    DestOp(RegIndex _dest, InstType *inst) : dest(_dest),
+        size(inst->getDestSize())
+    {}
 };
 
 struct Src1Op
@@ -64,6 +69,10 @@ struct Src1Op
     RegIndex opIndex() const { return src1; }
 
     Src1Op(RegIndex _src1, size_t _size) : src1(_src1), size(_size) {}
+    template <class InstType>
+    Src1Op(RegIndex _src1, InstType *inst) : src1(_src1),
+        size(inst->getSrcSize())
+    {}
 };
 
 struct Src2Op
@@ -73,6 +82,10 @@ struct Src2Op
     RegIndex opIndex() const { return src2; }
 
     Src2Op(RegIndex _src2, size_t _size) : src2(_src2), size(_size) {}
+    template <class InstType>
+    Src2Op(RegIndex _src2, InstType *inst) : src2(_src2),
+        size(inst->getSrcSize())
+    {}
 };
 
 struct DataOp
@@ -103,13 +116,29 @@ struct DataLowOp
     {}
 };
 
+template <class T, class Enabled=void>
+struct HasDataSize : public std::false_type {};
+
+template <class T>
+struct HasDataSize<T, decltype((void)&T::dataSize)> : public std::true_type {};
+
+template <class T>
+constexpr bool HasDataSizeV = HasDataSize<T>::value;
+
 template <class Base>
 struct IntOp : public Base
 {
     using ArgType = GpRegIndex;
 
-    template <class InstType>
-    IntOp(InstType *inst, ArgType idx) : Base(idx.index, inst->dataSize) {}
+    template <class Inst>
+    IntOp(Inst *inst, std::enable_if_t<HasDataSizeV<Inst>, ArgType> idx) :
+        Base(idx.index, inst->dataSize)
+    {}
+
+    template <class Inst>
+    IntOp(Inst *inst, std::enable_if_t<!HasDataSizeV<Inst>, ArgType> idx) :
+        Base(idx.index, inst)
+    {}
 
     void
     print(std::ostream &os) const
@@ -204,8 +233,15 @@ struct FloatOp : public Base
 {
     using ArgType = FpRegIndex;
 
-    template <class InstType>
-    FloatOp(InstType *inst, ArgType idx) : Base(idx.index, inst->dataSize) {}
+    template <class Inst>
+    FloatOp(Inst *inst, std::enable_if_t<HasDataSizeV<Inst>, ArgType> idx) :
+        Base(idx.index, inst->dataSize)
+    {}
+
+    template <class Inst>
+    FloatOp(Inst *inst, std::enable_if_t<!HasDataSizeV<Inst>, ArgType> idx) :
+        Base(idx.index, inst)
+    {}
 
     void
     print(std::ostream &os) const
