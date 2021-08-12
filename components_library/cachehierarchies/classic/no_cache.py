@@ -113,6 +113,8 @@ class NoCache(AbstractClassicCacheHierarchy):
                 int_req_port = self.membus.mem_side_ports
                 int_resp_port = self.membus.cpu_side_ports
                 core.connect_interrupt(int_req_port, int_resp_port)
+            else:
+                core.connect_interrupt()
 
         # Set up the system port for functional access from the simulator.
         board.connect_system_port(self.membus.cpu_side_ports)

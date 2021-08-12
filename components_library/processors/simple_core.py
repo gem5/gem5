@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Optional
 from components_library.runtime import get_runtime_isa
 from components_library.processors.abstract_core import AbstractCore
 
@@ -83,7 +84,8 @@ class SimpleCore(AbstractCore):
 
     @overrides(AbstractCore)
     def connect_interrupt(
-        self, interrupt_requestor: Port, interrupt_responce: Port
+        self, interrupt_requestor: Optional[Port] = None,
+        interrupt_responce: Optional[Port] = None
     ) -> None:
 
         # TODO: This model assumes that we will only create an interrupt

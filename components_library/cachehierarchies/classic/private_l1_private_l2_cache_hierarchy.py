@@ -157,3 +157,5 @@ class PrivateL1PrivateL2CacheHierarchy(
                 int_req_port = self.membus.mem_side_ports
                 int_resp_port = self.membus.cpu_side_ports
                 cpu.connect_interrupt(int_req_port, int_resp_port)
+            else:
+                cpu.connect_interrupt()

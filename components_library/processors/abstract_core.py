@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABCMeta, abstractmethod
+from typing import Optional
 from .cpu_types import CPUTypes
 
 from m5.objects import Port, SubSystem
@@ -81,6 +82,12 @@ class AbstractCore(SubSystem):
 
     @abstractmethod
     def connect_interrupt(
-        self, interrupt_requestor: Port, interrupt_responce: Port
+        self, interrupt_requestor: Optional[Port] = None,
+        interrupt_responce: Optional[Port] = None
     ) -> None:
+        """ Connect the core interrupts to the interrupt controller
+
+        This function is usually called from the cache hierarchy since the
+        optional ports can be implemented as cache ports.
+        """
         raise NotImplementedError
