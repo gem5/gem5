@@ -28,7 +28,6 @@
 from components_library.utils.override import overrides
 from components_library.boards.mem_mode import MemMode
 from components_library.processors.simple_core import SimpleCore
-from m5.objects import KvmVM
 
 from m5.util import warn
 

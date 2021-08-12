@@ -36,7 +36,6 @@ from m5.objects import (
     AtomicSimpleCPU,
     DerivO3CPU,
     TimingSimpleCPU,
-    X86KvmCPU,
     BaseCPU,
     Process,
 )
