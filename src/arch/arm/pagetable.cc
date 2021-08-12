@@ -51,6 +51,12 @@ const GrainSize GrainMap_tg0[] =
 const GrainSize GrainMap_tg1[] =
   { ReservedGrain, Grain16KB, Grain4KB, Grain64KB };
 
+Addr
+PageTableOps::walkMask(unsigned level) const
+{
+    return ~mask(walkBits(level));
+}
+
 bool
 V7LPageTableOps::isValid(pte_t pte, unsigned level) const
 {
@@ -119,14 +125,14 @@ V7LPageTableOps::pageMask(pte_t pte, unsigned level) const
     }
 }
 
-Addr
-V7LPageTableOps::walkMask(unsigned level) const
+unsigned
+V7LPageTableOps::walkBits(unsigned level) const
 {
     switch (level) {
-        case 1: return ~mask(30);
-        case 2: return ~mask(21);
-        case 3: return ~mask(12);
-        default: panic("bad level %d", level);
+      case 1: return 30;
+      case 2: return 21;
+      case 3: return 12;
+      default: panic("bad level %d", level);
     }
 }
 
@@ -212,15 +218,15 @@ V8PageTableOps4k::pageMask(pte_t pte, unsigned level) const
     }
 }
 
-Addr
-V8PageTableOps4k::walkMask(unsigned level) const
+unsigned
+V8PageTableOps4k::walkBits(unsigned level) const
 {
     switch (level) {
-        case 0: return ~mask(39);
-        case 1: return ~mask(30);
-        case 2: return ~mask(21);
-        case 3: return ~mask(12);
-        default: panic("bad level %d", level);
+      case 0: return 39;
+      case 1: return 30;
+      case 2: return 21;
+      case 3: return 12;
+      default: panic("bad level %d", level);
     }
 }
 
@@ -323,15 +329,15 @@ V8PageTableOps16k::pageMask(pte_t pte, unsigned level) const
     }
 }
 
-Addr
-V8PageTableOps16k::walkMask(unsigned level) const
+unsigned
+V8PageTableOps16k::walkBits(unsigned level) const
 {
     switch (level) {
-        case 0: return ~mask(47);
-        case 1: return ~mask(36);
-        case 2: return ~mask(25);
-        case 3: return ~mask(14);
-        default: panic("bad level %d", level);
+      case 0: return 47;
+      case 1: return 36;
+      case 2: return 25;
+      case 3: return 14;
+      default: panic("bad level %d", level);
     }
 }
 
@@ -428,14 +434,14 @@ V8PageTableOps64k::pageMask(pte_t pte, unsigned level) const
     }
 }
 
-Addr
-V8PageTableOps64k::walkMask(unsigned level) const
+unsigned
+V8PageTableOps64k::walkBits(unsigned level) const
 {
     switch (level) {
-        case 1: return ~mask(42);
-        case 2: return ~mask(29);
-        case 3: return ~mask(16);
-        default: panic("bad level %d", level);
+      case 1: return 42;
+      case 2: return 29;
+      case 3: return 16;
+      default: panic("bad level %d", level);
     }
 }
 

@@ -98,10 +98,12 @@ struct PageTableOps
     virtual Addr nextLevelPointer(pte_t pte, unsigned level) const = 0;
     virtual Addr index(Addr va, unsigned level, int tsz) const = 0;
     virtual Addr pageMask(pte_t pte, unsigned level) const = 0;
-    virtual Addr walkMask(unsigned level) const = 0;
+    virtual unsigned walkBits(unsigned level) const = 0;
     virtual LookupLevel firstLevel(uint8_t tsz) const = 0;
     virtual LookupLevel firstS2Level(uint8_t sl0) const = 0;
     virtual LookupLevel lastLevel() const = 0;
+
+    Addr walkMask(unsigned level) const;
 };
 
 struct V7LPageTableOps : public PageTableOps
@@ -112,7 +114,7 @@ struct V7LPageTableOps : public PageTableOps
     Addr nextLevelPointer(pte_t pte, unsigned level) const override;
     Addr index(Addr va, unsigned level, int tsz) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
-    Addr walkMask(unsigned level) const override;
+    unsigned walkBits(unsigned level) const override;
     LookupLevel firstLevel(uint8_t tsz) const override;
     LookupLevel lastLevel() const override;
 };
@@ -125,7 +127,7 @@ struct V8PageTableOps4k : public PageTableOps
     Addr nextLevelPointer(pte_t pte, unsigned level) const override;
     Addr index(Addr va, unsigned level, int tsz) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
-    Addr walkMask(unsigned level) const override;
+    unsigned walkBits(unsigned level) const override;
     LookupLevel firstLevel(uint8_t tsz) const override;
     LookupLevel firstS2Level(uint8_t sl0) const override;
     LookupLevel lastLevel() const override;
@@ -139,7 +141,7 @@ struct V8PageTableOps16k : public PageTableOps
     Addr nextLevelPointer(pte_t pte, unsigned level) const override;
     Addr index(Addr va, unsigned level, int tsz) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
-    Addr walkMask(unsigned level) const override;
+    unsigned walkBits(unsigned level) const override;
     LookupLevel firstLevel(uint8_t tsz) const override;
     LookupLevel firstS2Level(uint8_t sl0) const override;
     LookupLevel lastLevel() const override;
@@ -153,7 +155,7 @@ struct V8PageTableOps64k : public PageTableOps
     Addr nextLevelPointer(pte_t pte, unsigned level) const override;
     Addr index(Addr va, unsigned level, int tsz) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
-    Addr walkMask(unsigned level) const override;
+    unsigned walkBits(unsigned level) const override;
     LookupLevel firstLevel(uint8_t tsz) const override;
     LookupLevel firstS2Level(uint8_t sl0) const override;
     LookupLevel lastLevel() const override;
