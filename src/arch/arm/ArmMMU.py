@@ -65,7 +65,8 @@ class ArmMMU(BaseMMU):
     cxx_header = 'arch/arm/mmu.hh'
 
     # L2 TLBs
-    l2_shared = ArmTLB(entry_type="unified", size=1280)
+    l2_shared = ArmTLB(entry_type="unified", size=1280,
+        partial_levels=["L2"])
 
     # L1 TLBs
     itb = ArmTLB(entry_type="instruction", next_level=Parent.l2_shared)
