@@ -890,7 +890,7 @@ def template SveStructMemSIMicroopDeclare {{
         typedef _Element Element;
         typedef _Element TPElem;
 
-        IntRegIndex dest;
+        RegIndex dest;
         IntRegIndex gp;
         IntRegIndex base;
         int64_t imm;
@@ -904,7 +904,7 @@ def template SveStructMemSIMicroopDeclare {{
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
-                IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
+                RegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
                 int64_t _imm, uint8_t _numRegs, int _regIndex) :
             %(base_class)s(mnem, machInst, %(op_class)s),
             dest(_dest), gp(_gp), base(_base), imm(_imm),
@@ -1167,7 +1167,7 @@ def template SveStructMemSSMicroopDeclare {{
         typedef _Element Element;
         typedef _Element TPElem;
 
-        IntRegIndex dest;
+        RegIndex dest;
         IntRegIndex gp;
         IntRegIndex base;
         IntRegIndex offset;
@@ -1181,7 +1181,7 @@ def template SveStructMemSSMicroopDeclare {{
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
-                IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
+                RegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
                 IntRegIndex _offset, uint8_t _numRegs, int _regIndex) :
             %(base_class)s(mnem, machInst, %(op_class)s),
             dest(_dest), gp(_gp), base(_base), offset(_offset),

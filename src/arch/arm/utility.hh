@@ -372,7 +372,7 @@ decodeMrsMsrBankedIntRegIndex(uint8_t sysM, bool r)
 
     validReg = decodeMrsMsrBankedReg(
             sysM, r, isIntReg, regIdx, 0, 0, 0, false);
-    return (validReg && isIntReg) ? regIdx : INTREG_DUMMY;
+    return (validReg && isIntReg) ? regIdx : INTREG_ZERO;
 }
 
 /**

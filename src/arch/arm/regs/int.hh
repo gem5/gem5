@@ -127,7 +127,6 @@ enum IntRegIndex
     INTREG_UREG0,
     INTREG_UREG1,
     INTREG_UREG2,
-    INTREG_DUMMY, // Dummy reg used to throw away int reg results
 
     INTREG_SP0,
     INTREG_SP1,
