@@ -34,8 +34,6 @@ from m5.util import warn
 from .abstract_processor import AbstractProcessor
 from .cpu_types import CPUTypes
 from ..boards.abstract_board import AbstractBoard
-from ..coherence_protocol import is_ruby
-from ..runtime import get_runtime_coherence_protocol
 
 from typing import List
 
@@ -79,7 +77,7 @@ class SimpleProcessor(AbstractProcessor):
         elif self._cpu_type == CPUTypes.KVM:
             board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
         elif self._cpu_type == CPUTypes.ATOMIC:
-            if is_ruby(get_runtime_coherence_protocol()):
+            if board.get_cache_hierarchy().is_ruby():
                 warn(
                     "Using an atomic core with Ruby will result in "
                     "'atomic_noncaching' memory mode. This will skip caching "

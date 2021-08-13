@@ -29,9 +29,6 @@ from .mem_mode import MemMode
 
 from m5.objects import System, Port, IOXBar, ClockDomain
 
-from ..isas import ISA
-from ..coherence_protocol import CoherenceProtocol
-
 from typing import List
 
 

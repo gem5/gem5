@@ -67,6 +67,16 @@ class MESITwoLevelCacheHierarchy(
         l2_assoc: str,
         num_l2_banks: int,
     ):
+
+        if (
+            get_runtime_coherence_protocol()
+            != CoherenceProtocol.MESI_TWO_LEVEL
+        ):
+            raise EnvironmentError(
+                "The MESITwoLevelCacheHierarchy must be used with with the "
+                "MESI_Two_Level coherence protocol."
+            )
+
         AbstractRubyCacheHierarchy.__init__(self=self)
         AbstractTwoLevelCacheHierarchy.__init__(
             self,
@@ -81,15 +91,6 @@ class MESITwoLevelCacheHierarchy(
         self._num_l2_banks = num_l2_banks
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
-        if (
-            get_runtime_coherence_protocol()
-            != CoherenceProtocol.MESI_TWO_LEVEL
-        ):
-            raise EnvironmentError(
-                "The MESITwoLevelCacheHierarchy must be used with with the "
-                "MESI_Two_Level coherence protocol."
-            )
-
         cache_line_size = board.get_cache_line_size()
 
         self.ruby_system = RubySystem()
