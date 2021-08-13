@@ -27,8 +27,6 @@ output decoder {{
         std::stringstream response;
 
         printMnemonic(response, mnemonic);
-        ccprintf(response, " ");
-        printReg(response, srcRegIdx(0), machInst.opSize);
         return response.str();
     }
 }};
