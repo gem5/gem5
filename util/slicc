@@ -31,7 +31,6 @@ if __name__ == "__main__":
 
     base = dirname(__file__)
     sys.path.insert(1, join(base, "../src/mem"))
-    sys.path.insert(1, join(base, "../src/python"))
     sys.path.insert(1, join(base, "../build_tools"))
     sys.path.insert(1, join(base, "../ext/ply"))
 

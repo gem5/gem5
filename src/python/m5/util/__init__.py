@@ -155,15 +155,6 @@ def printList(items, indent=4):
             line += item
             print(line)
 
-def makeDir(path):
-    """Make a directory if it doesn't exist.  If the path does exist,
-    ensure that it is a directory"""
-    if os.path.exists(path):
-        if not os.path.isdir(path):
-            raise AttributeError("%s exists but is not directory" % path)
-    else:
-        os.mkdir(path)
-
 def isInteractive():
     """Check if the simulator is run interactively or in a batch environment"""
 
