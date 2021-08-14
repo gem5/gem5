@@ -97,7 +97,6 @@ class ExecContext : public gem5::ExecContext
         pcState(*inst->pc);
         setPredicate(inst->readPredicate());
         setMemAccPredicate(inst->readMemAccPredicate());
-        thread.setIntReg(zeroReg, 0);
     }
 
     ~ExecContext()

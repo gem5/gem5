@@ -307,9 +307,6 @@ BaseSimpleCPU::preExecute()
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
 
-    // maintain $r0 semantics
-    thread->setIntReg(zeroReg, 0);
-
     // resets predicates
     t_info.setPredicate(true);
     t_info.setMemAccPredicate(true);
