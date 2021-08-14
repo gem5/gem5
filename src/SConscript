@@ -676,14 +676,6 @@ sys.meta_path.remove(importer)
 sim_objects = m5.SimObject.allClasses
 all_enums = m5.params.allEnums
 
-for name,obj in sorted(sim_objects.items()):
-    for param in obj._params.local.values():
-        # load the ptype attribute now because it depends on the
-        # current version of SimObject.allClasses, but when scons
-        # actually uses the value, all versions of
-        # SimObject.allClasses will have been loaded
-        param.ptype
-
 ########################################################################
 #
 # calculate extra dependencies
