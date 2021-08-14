@@ -68,7 +68,7 @@ Export('env')
 
 build_env = [(opt, env[opt]) for opt in export_vars]
 
-from m5.util import code_formatter
+from code_formatter import code_formatter
 
 def GdbXml(xml_id, symbol):
     cc, hh = env.Blob(symbol, xml_id)

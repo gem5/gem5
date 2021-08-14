@@ -40,7 +40,7 @@ import shlex
 
 Import('*')
 
-from m5.util.grammar import Grammar
+from grammar import Grammar
 
 from gem5_scons import Transform, warning, error
 

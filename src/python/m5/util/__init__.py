@@ -44,7 +44,6 @@ import sys
 from . import convert
 
 from .attrdict import attrdict, multiattrdict, optiondict
-from .code_formatter import code_formatter
 from .multidict import multidict
 
 # panic() should be called when something happens that should never

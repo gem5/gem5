@@ -42,7 +42,7 @@ import os.path
 from gem5_scons import Transform, MakeAction
 from gem5_scons.util import bytesToCppArray
 
-from m5.util import code_formatter
+from code_formatter import code_formatter
 
 import SCons.Node.Python
 

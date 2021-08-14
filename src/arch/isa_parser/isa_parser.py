@@ -44,7 +44,7 @@ import traceback
 # get type names
 from types import *
 
-from m5.util.grammar import Grammar
+from grammar import Grammar
 from .operand_list import *
 from .operand_types import *
 from .util import *

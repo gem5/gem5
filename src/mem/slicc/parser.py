@@ -41,8 +41,8 @@ import os.path
 import re
 import sys
 
-from m5.util import code_formatter
-from m5.util.grammar import Grammar, ParseError
+from code_formatter import code_formatter
+from grammar import Grammar, ParseError
 
 import slicc.ast as ast
 import slicc.util as util

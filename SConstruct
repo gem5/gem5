@@ -126,6 +126,9 @@ AddOption('--with-systemc-tests', action='store_true',
 AddOption('--install-hooks', action='store_true',
           help='Install revision control hooks non-interactively')
 
+# Inject the built_tools directory into the python path.
+sys.path[1:1] = [ Dir('#build_tools').abspath ]
+
 # Imports of gem5_scons happen here since it depends on some options which are
 # declared above.
 from gem5_scons import error, warning, summarize_warnings, parse_build_path
