@@ -189,6 +189,8 @@ PhysRegFile::getRegIds(RegClassType cls)
         return std::make_pair(ccRegIds.begin(), ccRegIds.end());
       case MiscRegClass:
         return std::make_pair(miscRegIds.begin(), miscRegIds.end());
+      case InvalidRegClass:
+        panic("Tried to get register IDs for the invalid class.");
     }
     /* There is no way to make an empty iterator */
     return std::make_pair(PhysIds::iterator(),

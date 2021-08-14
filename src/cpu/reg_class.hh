@@ -63,7 +63,8 @@ enum RegClassType
     VecElemClass,
     VecPredRegClass,
     CCRegClass,         ///< Condition-code register
-    MiscRegClass        ///< Control (misc) register
+    MiscRegClass,       ///< Control (misc) register
+    InvalidRegClass = -1
 };
 
 class RegId;
@@ -136,7 +137,7 @@ class RegId
     friend struct std::hash<RegId>;
 
   public:
-    RegId() : RegId(IntRegClass, 0) {}
+    RegId() : RegId(InvalidRegClass, 0) {}
 
     explicit RegId(RegClassType reg_class, RegIndex reg_idx)
         : regClass(reg_class), regIdx(reg_idx), numPinnedWrites(0)
@@ -235,7 +236,7 @@ class PhysRegId : private RegId
     bool pinned;
 
   public:
-    explicit PhysRegId() : RegId(IntRegClass, -1), flatIdx(-1),
+    explicit PhysRegId() : RegId(InvalidRegClass, -1), flatIdx(-1),
                            numPinnedWritesToComplete(0)
     {}
 
