@@ -153,27 +153,22 @@ def operands {{
         # would be retained, the write predicate checks if any of the bits
         # are being written.
 
-        'PredccFlagBits': ('CCReg', 'uqw', '(X86ISA::CCREG_ZAPS)', None,
+        'PredccFlagBits': ('CCReg', 'uqw', 'X86ISA::CCREG_ZAPS', None,
                 60, None, None,
-                '''(((ext & (X86ISA::PFBit | X86ISA::AFBit |
-                          X86ISA::ZFBit | X86ISA::SFBit)) !=
-                  (X86ISA::PFBit | X86ISA::AFBit |
-                   X86ISA::ZFBit | X86ISA::SFBit)) &&
-                ((ext & (X86ISA::PFBit | X86ISA::AFBit |
-                         X86ISA::ZFBit | X86ISA::SFBit)) != 0))''',
-                '''((ext & (X86ISA::PFBit | X86ISA::AFBit |
-                            X86ISA::ZFBit | X86ISA::SFBit)) != 0)'''),
-        'PredcfofBits':   ('CCReg', 'uqw', '(X86ISA::CCREG_CFOF)', None,
-                61, None, None, '''(((ext & X86ISA::CFBit) == 0 ||
-                (ext & X86ISA::OFBit) == 0) &&
-                    ((ext & (X86ISA::CFBit | X86ISA::OFBit)) != 0))''',
-                '((ext & (X86ISA::CFBit | X86ISA::OFBit)) != 0)'),
-        'PreddfBit':   ('CCReg', 'uqw', '(X86ISA::CCREG_DF)', None,
-                62, None, None, '(false)', '((ext & X86ISA::DFBit) != 0)'),
-        'PredecfBit':   ('CCReg', 'uqw', '(X86ISA::CCREG_ECF)', None,
-                63, None, None, '(false)', '((ext & X86ISA::ECFBit) != 0)'),
-        'PredezfBit':   ('CCReg', 'uqw', '(X86ISA::CCREG_EZF)', None,
-                64, None, None, '(false)', '((ext & X86ISA::EZFBit) != 0)'),
+                '(ext & X86ISA::ccFlagMask) != X86ISA::ccFlagMask && '
+                '(ext & X86ISA::ccFlagMask) != 0',
+                '(ext & X86ISA::ccFlagMask) != 0'),
+        'PredcfofBits':   ('CCReg', 'uqw', 'X86ISA::CCREG_CFOF', None,
+                61, None, None,
+                '(ext & X86ISA::cfofMask) != X86ISA::cfofMask && '
+                '(ext & X86ISA::cfofMask) != 0',
+                '(ext & X86ISA::cfofMask) != 0'),
+        'PreddfBit':     ('CCReg', 'uqw', 'X86ISA::CCREG_DF', None,
+                62, None, None, 'false', '(ext & X86ISA::DFBit) != 0'),
+        'PredecfBit':    ('CCReg', 'uqw', 'X86ISA::CCREG_ECF', None,
+                63, None, None, 'false', '(ext & X86ISA::ECFBit) != 0'),
+        'PredezfBit':    ('CCReg', 'uqw', 'X86ISA::CCREG_EZF', None,
+                64, None, None, 'false', '(ext & X86ISA::EZFBit) != 0'),
 
         # These register should needs to be more protected so that later
         # instructions don't map their indexes with an old value.
