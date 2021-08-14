@@ -37,19 +37,23 @@
 
 #include <pybind11/embed.h>
 
-#include <iostream>
-
 namespace py = pybind11;
-using namespace pybind11::literals;
 
 constexpr auto MarshalScript = R"(
 import marshal
+import sys
 
+if len(sys.argv) < 2:
+    print(f"Usage: {sys.argv[0]} PYSOURCE", file=sys.stderr)
+    sys.exit(1)
+
+source = sys.argv[1]
 with open(source, 'r') as f:
     src = f.read()
 
 compiled = compile(src, source, 'exec')
 marshalled = marshal.dumps(compiled)
+sys.stdout.buffer.write(marshalled)
 )";
 
 int
@@ -57,17 +61,25 @@ main(int argc, const char **argv)
 {
     py::scoped_interpreter guard;
 
-    if (argc != 2) {
-        std::cerr << "Usage: marshal PYSOURCE" << std::endl;
-        exit(1);
+    // Embedded python doesn't set up sys.argv, so we'll do that ourselves.
+    py::list py_argv;
+    auto sys = py::module::import("sys");
+    if (py::hasattr(sys, "argv")) {
+        // sys.argv already exists, so grab that.
+        py_argv = sys.attr("argv");
+    } else {
+        // sys.argv doesn't exist, so create it.
+        sys.add_object("argv", py_argv);
     }
+    // Clear out argv just in case it has something in it.
+    py_argv.attr("clear")();
 
-    auto locals = py::dict("source"_a=argv[1]);
+    // Fill it with our argvs.
+    for (int i = 0; i < argc; i++)
+        py_argv.append(argv[i]);
 
-    py::exec(MarshalScript, py::globals(), locals);
-
-    auto marshalled = locals["marshalled"].cast<std::string>();
-    std::cout << marshalled;
+    // Actually call the script.
+    py::exec(MarshalScript, py::globals());
 
     return 0;
 }
