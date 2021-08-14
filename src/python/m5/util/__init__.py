@@ -42,7 +42,6 @@ import re
 import sys
 
 from . import convert
-from . import jobfile
 
 from .attrdict import attrdict, multiattrdict, optiondict
 from .code_formatter import code_formatter
