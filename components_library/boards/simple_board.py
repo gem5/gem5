@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects import (
+    AddrRange,
     SrcClockDomain,
     VoltageDomain,
     Process,
@@ -74,8 +75,6 @@ class SimpleBoard(AbstractBoard):
         self.clk_domain.clock = clk_freq
         self.clk_domain.voltage_domain = VoltageDomain()
 
-        self.mem_ranges = memory.get_memory_ranges()
-
         self.exit_on_work_items = exit_on_work_items
 
     @overrides(AbstractBoard)
@@ -92,6 +91,9 @@ class SimpleBoard(AbstractBoard):
 
     @overrides(AbstractBoard)
     def connect_things(self) -> None:
+        # Before incorporating the memory, set up the memory ranges
+        self.setup_memory_ranges()
+
         # Incorporate the cache hierarchy for the motherboard.
         self.get_cache_hierarchy().incorporate_cache(self)
 
@@ -122,6 +124,15 @@ class SimpleBoard(AbstractBoard):
             "SimpleBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."
         )
+
+    @overrides(AbstractBoard)
+    def setup_memory_ranges(self) -> None:
+        memory = self.get_memory()
+
+        # The simple board just has one memory range that is the size of the
+        # memory.
+        self.mem_ranges = [AddrRange(memory.get_size())]
+        memory.set_memory_range(self.mem_ranges)
 
     def set_workload(self, binary: str) -> None:
         """Set up the system to run a specific binary.

@@ -3,6 +3,7 @@ import os
 import configparser
 
 from m5.objects import DRAMsim3, AddrRange, Port, MemCtrl
+from m5.util.convert import toMemorySize
 
 from ..utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
@@ -95,9 +96,8 @@ class SingleChannel(AbstractMemorySystem):
         """
         super(SingleChannel, self).__init__()
         self.mem_ctrl = DRAMSim3MemCtrl(mem_type, 1)
-        if size:
-            self.mem_ctrl.range = AddrRange(size)
-        else:
+        self._size = toMemorySize(size)
+        if not size:
             raise NotImplementedError(
                 "DRAMSim3 memory controller requires a size parameter."
             )
@@ -115,8 +115,17 @@ class SingleChannel(AbstractMemorySystem):
         return [self.mem_ctrl]
 
     @overrides(AbstractMemorySystem)
-    def get_memory_ranges(self):
-        return [self.mem_ctrl.range]
+    def get_size(self) -> int:
+        return self._size
+
+    @overrides(AbstractMemorySystem)
+    def set_memory_range(self, ranges: List[AddrRange]) -> None:
+        if len(ranges != 1) or ranges[0].size != self._size:
+            raise Exception(
+                "Single channel DRAMSim memory controller requires a single "
+                "range which matches the memory's size."
+            )
+        self.mem_ctrl.range = ranges[0]
 
 
 def SingleChannelDDR3_1600(

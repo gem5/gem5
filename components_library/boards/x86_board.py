@@ -49,9 +49,10 @@ from m5.objects import (
     CowDiskImage,
     RawDiskImage,
     BaseXBar,
+    Port,
 )
 
-from m5.params import Port
+from m5.util.convert import toMemorySize
 
 
 from .simple_board import SimpleBoard
@@ -94,16 +95,16 @@ class X86Board(SimpleBoard):
                 "X86Motherboard will only work with the X86 ISA."
             )
 
-        # Add the address range for the IO
-        # TODO: This should definitely NOT be hardcoded to 3GB
-        self.mem_ranges = [
-            AddrRange(Addr("3GB")),  # All data
-            AddrRange(0xC0000000, size=0x100000),  # For I/0
-        ]
-
         self.pc = Pc()
 
         self.workload = X86FsLinux()
+
+    def _setup_io_devices(self):
+        """ Sets up the x86 IO devices.
+
+        Note: This is mostly copy-paste from prior X86 FS setups. Some of it
+        may not be documented and there may be bugs.
+        """
 
         # Constants similar to x86_traits.hh
         IO_address_space_base = 0x8000000000000000
@@ -267,7 +268,25 @@ class X86Board(SimpleBoard):
         self.workload.e820_table.entries = entries
 
     def connect_things(self) -> None:
-        super().connect_things()
+        # This board is a bit particular about the order that things are
+        # connected together.
+
+        # Before incorporating the memory or creating the I/O devices figure
+        # out the memory ranges.
+        self.setup_memory_ranges()
+
+        # Set up all of the I/O before we incorporate anything else.
+        self._setup_io_devices()
+
+        # Incorporate the cache hierarchy for the motherboard.
+        self.get_cache_hierarchy().incorporate_cache(self)
+
+        # Incorporate the processor into the motherboard.
+        self.get_processor().incorporate_processor(self)
+
+        # Incorporate the memory into the motherboard.
+        self.get_memory().incorporate_memory(self)
+
 
     def set_workload(
         self, kernel: str, disk_image: str, command: Optional[str] = None
@@ -340,3 +359,21 @@ class X86Board(SimpleBoard):
     @overrides(AbstractBoard)
     def get_dma_ports(self) -> Sequence[Port]:
         return [self.pc.south_bridge.ide.dma, self.iobus.mem_side_ports]
+
+    @overrides(AbstractBoard)
+    def setup_memory_ranges(self):
+        memory = self.get_memory()
+
+        if memory.get_size() > toMemorySize("3GB"):
+            raise Exception(
+                "X86Board currently only supports memory sizes up "
+                "to 3GB because of the I/O hole."
+            )
+        data_range = AddrRange(memory.get_size())
+        memory.set_memory_range([data_range])
+
+        # Add the address range for the IO
+        self.mem_ranges = [
+            data_range,  # All data
+            AddrRange(0xC0000000, size=0x100000),  # For I/0
+        ]

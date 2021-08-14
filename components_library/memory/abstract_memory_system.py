@@ -41,17 +41,33 @@ class AbstractMemorySystem(SubSystem):
 
     @abstractmethod
     def incorporate_memory(self, board: AbstractBoard) -> None:
+        """This function completes all of the necessary steps to add this
+        memory system to the board."""
         raise NotImplementedError
 
     @abstractmethod
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+        """Get the ports to connect this memory system to the cache"""
         raise NotImplementedError
 
     @abstractmethod
     def get_memory_controllers(self) -> List[MemCtrl]:
+        """Get all of the memory controllers in this memory system"""
         raise NotImplementedError
 
     @abstractmethod
-    def get_memory_ranges(self) -> List[AddrRange]:
-        """All of the memory ranges that this memory system responds to."""
+    def get_size(self) -> int:
+        """Returns the total size of the memory system"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_memory_range(self, ranges: List[AddrRange]) -> None:
+        """Set the total range for this memory system
+
+        May pass multiple non-overlapping ranges. The total size of the ranges
+        should match the size of the memory.
+
+        If this memory system is incompatible with the ranges, an exception
+        will be raised.
+        """
         raise NotImplementedError

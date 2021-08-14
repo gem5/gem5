@@ -32,6 +32,7 @@ from .abstract_memory_system import AbstractMemorySystem
 from ..utils.override import overrides
 
 from m5.objects import AddrRange, DRAMInterface, MemCtrl, Port
+from m5.util.convert import toMemorySize
 
 from typing import List, Sequence, Tuple, Type, Optional
 
@@ -59,12 +60,12 @@ class SingleChannelMemory(AbstractMemorySystem):
 
         self._dram = dram_interface_class()
         if size:
-            self._dram.range = size
+            self._size = toMemorySize(size)
         else:
-            self._dram.range = AddrRange(self.get_size(self._dram))
+            self._size = self._get_dram_size(self._dram)
         self.mem_ctrl = MemCtrl(dram=self._dram)
 
-    def get_size(self, dram: DRAMInterface) -> int:
+    def _get_dram_size(self, dram: DRAMInterface) -> int:
         return (
             dram.device_size.value
             * dram.devices_per_rank.value
@@ -84,8 +85,18 @@ class SingleChannelMemory(AbstractMemorySystem):
         return [self.mem_ctrl]
 
     @overrides(AbstractMemorySystem)
-    def get_memory_ranges(self):
-        return [self._dram.range]
+    def get_size(self) -> int:
+        return self._size
+
+    @overrides(AbstractMemorySystem)
+    def set_memory_range(self, ranges: List[AddrRange]) -> None:
+        if len(ranges) != 1 or ranges[0].size() != self._size:
+            print(ranges[0].size())
+            raise Exception(
+                "Single channel memory controller requires a single range "
+                "which matches the memory's size."
+            )
+        self.mem_ctrl.dram.range = ranges[0]
 
 
 from .dram_interfaces.ddr3 import DDR3_1600_8x8, DDR3_2133_8x8

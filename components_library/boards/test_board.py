@@ -24,7 +24,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import SrcClockDomain, ClockDomain, VoltageDomain, Port, IOXBar
+from m5.objects import (
+    SrcClockDomain,
+    ClockDomain,
+    VoltageDomain,
+    Port,
+    IOXBar,
+    AddrRange,
+)
 
 from .mem_mode import MemMode, mem_mode_to_string
 from ..utils.override import overrides
@@ -61,12 +68,12 @@ class TestBoard(AbstractBoard):
             clock=clk_freq, voltage_domain=VoltageDomain()
         )
 
-        self.mem_ranges = memory.get_memory_ranges()
-
     def connect_system_port(self, port: Port) -> None:
         self.system_port = port
 
     def connect_things(self) -> None:
+        self.set_memory_ranges()
+
         self.get_cache_hierarchy().incorporate_cache(self)
 
         self.get_processor().incorporate_processor(self)
@@ -101,3 +108,12 @@ class TestBoard(AbstractBoard):
     @overrides(AbstractBoard)
     def set_mem_mode(self, mem_mode: MemMode) -> None:
         self.mem_mode = mem_mode_to_string(mem_mode=mem_mode)
+
+    @overrides(AbstractBoard)
+    def setup_memory_ranges(self) -> None:
+        memory = self.get_memory()
+
+        # The simple board just has one memory range that is the size of the
+        # memory.
+        self.mem_ranges = [AddrRange(memory.get_size())]
+        memory.set_memory_range(self.mem_ranges)
