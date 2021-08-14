@@ -376,77 +376,33 @@ Export('GTest')
 # Debug Flags
 #
 
-def makeDebugFlagHH(target, source, env):
-    assert len(target) == 1
-
-    flag = env['DEBUG_FLAG'][0]
-    name, desc, components, fmt = \
-            flag.name, flag.desc, flag.components, flag.fmt
-
-    code = code_formatter()
-
-    typename = "CompoundFlag" if flag.components else "SimpleFlag"
-    component_flag_decls = ''.join('extern SimpleFlag& %s;\n' % simple for
-            simple in components)
-
-    # file header boilerplate
-    code('''\
-#ifndef __DEBUG_${name}_HH__
-#define __DEBUG_${name}_HH__
-
-#include "base/compiler.hh" // For namespace deprecation
-
-namespace gem5
-{
-
-GEM5_DEPRECATED_NAMESPACE(Debug, debug);
-namespace debug
-{
-
-class SimpleFlag;
-class CompoundFlag;
-extern ${typename}& ${name};
-${component_flag_decls}
-
-} // namespace debug
-} // namespace gem5
-
-#endif // __DEBUG_${name}_HH__
-''')
-
-    code.write(str(target[0]))
-
 DebugFlagInfo = collections.namedtuple('DebugFlag',
         ['name', 'desc', 'components', 'fmt'])
-def DebugFlag(name, desc=None, fmt=False):
+def DebugFlagCommon(name, flags, desc, fmt):
     if name == "All":
         raise AttributeError('The "All" flag name is reserved')
     debug_flags = env.get('DEBUG_FLAGS', [])
     if any(name == flag.name for flag in debug_flags):
         raise AttributeError(f'Flag {name} already specified')
 
-    flag = DebugFlagInfo(name, desc, (), fmt)
+    flag = DebugFlagInfo(name, desc, flags, fmt)
     env.Append(DEBUG_FLAGS=[flag])
 
     hh_file = Dir(env['BUILDDIR']).Dir('debug').File(f'{name}.hh')
-    env.Command(hh_file, [], DEBUG_FLAG=[flag],
-            action=MakeAction(makeDebugFlagHH, Transform("TRACING", 0),
-                varlist=['DEBUG_FLAG']))
+    gem5py_env.Command(hh_file,
+        [ '${GEM5PY}', '${DEBUGFLAGHH_PY}' ],
+        MakeAction('"${GEM5PY}" "${DEBUGFLAGHH_PY}" "${TARGET}" "${NAME}" ' \
+                   '"${FMT}" "${COMPONENTS}"',
+        Transform("TRACING", 0)),
+        DEBUGFLAGHH_PY=build_tools.File('debugflaghh.py'),
+        NAME=name, FMT=('True' if fmt else 'False'),
+        COMPONENTS=':'.join(flags))
+
+def DebugFlag(name, desc=None, fmt=False):
+    DebugFlagCommon(name, (), desc, fmt)
 
 def CompoundFlag(name, flags, desc=None):
-    if name == "All":
-        raise AttributeError('The "All" flag name is reserved')
-    debug_flags = env.get('DEBUG_FLAGS', [])
-    if any(name == flag[0] for flag in debug_flags):
-        raise AttributeError(f'Flag {name} already specified')
-
-    flag = DebugFlagInfo(name, desc, flags, None)
-    env.Append(DEBUG_FLAGS=[flag])
-
-    hh_file = Dir(env['BUILDDIR']).Dir('debug').File(f'{name}.hh')
-    env.Command(hh_file, [], DEBUG_FLAG=[flag],
-            action=MakeAction(makeDebugFlagHH, Transform("TRACING", 0),
-                varlist=['DEBUG_FLAG']))
+    DebugFlagCommon(name, flags, desc, False)
 
 def DebugFormatFlag(name, desc=None):
     DebugFlag(name, desc, True)
