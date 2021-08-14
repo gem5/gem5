@@ -84,6 +84,9 @@ Scoreboard::findIndex(const RegId& reg, Index &scoreboard_index)
           /* Don't bother with Misc registers */
         ret = false;
         break;
+      case InvalidRegClass:
+        ret = false;
+        break;
       default:
         panic("Unknown register class: %d", reg.classValue());
     }
@@ -135,8 +138,8 @@ Scoreboard::markupInstDests(MinorDynInstPtr inst, Cycles retire_time,
                 " regIndex: %d final numResults: %d returnCycle: %d\n",
                 *inst, index, numResults[index], returnCycle[index]);
         } else {
-            /* Use zeroReg to mark invalid/untracked dests */
-            inst->flatDestRegIdx[dest_index] = RegId(IntRegClass, zeroReg);
+            /* Use an invalid ID to mark invalid/untracked dests */
+            inst->flatDestRegIdx[dest_index] = RegId();
         }
     }
 }
