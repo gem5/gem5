@@ -50,15 +50,57 @@ this script, and to read in and execute the marshalled code later.
 
 import marshal
 import sys
+import zlib
 
-if len(sys.argv) < 2:
-    print(f"Usage: {sys.argv[0]} PYSOURCE", file=sys.stderr)
+from blob import bytesToCppArray
+from code_formatter import code_formatter
+
+# Embed python files.  All .py files that have been indicated by a
+# PySource() call in a SConscript need to be embedded into the M5
+# library.  To do that, we compile the file to byte code, marshal the
+# byte code, compress it, and then generate a c++ file that
+# inserts the result into an array.
+
+if len(sys.argv) < 4:
+    print(f"Usage: {sys.argv[0]} CPP PY MODPATH ABSPATH", file=sys.stderr)
     sys.exit(1)
 
-source = sys.argv[1]
-with open(source, 'r') as f:
+_, cpp, python, modpath, abspath = sys.argv
+
+with open(python, 'r') as f:
     src = f.read()
 
-compiled = compile(src, source, 'exec')
+compiled = compile(src, python, 'exec')
 marshalled = marshal.dumps(compiled)
-sys.stdout.buffer.write(marshalled)
+
+compressed = zlib.compress(marshalled)
+
+code = code_formatter()
+code('''\
+#include "sim/init.hh"
+
+namespace gem5
+{
+namespace
+{
+
+''')
+
+bytesToCppArray(code, 'embedded_module_data', compressed)
+
+# The name of the EmbeddedPython object doesn't matter since it's in an
+# anonymous namespace, and it's constructor takes care of installing it into a
+# global list.
+code('''
+EmbeddedPython embedded_module_info(
+    "${abspath}",
+    "${modpath}",
+    embedded_module_data,
+    ${{len(compressed)}},
+    ${{len(marshalled)}});
+
+} // anonymous namespace
+} // namespace gem5
+''')
+
+code.write(cpp)

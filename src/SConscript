@@ -48,13 +48,11 @@ import os
 import os.path
 import re
 import sys
-import zlib
 
 import SCons
 
 from gem5_scons import Transform, warning, error, ToValue, FromValue
 from gem5_scons.sources import *
-from blob import bytesToCppArray
 
 Export(SourceFilter.factories)
 
@@ -79,64 +77,15 @@ class Source(SourceFile):
 
 build_tools = Dir('#build_tools')
 
-# Build a small helper that marshals the Python code using the same version
-# of Python as gem5. This is in an unorthodox location to avoid building it
-# for every variant.
+# Build a small helper that runs Python code using the same version of Python
+# as gem5. This is in an unorthodox location to avoid building it for every
+# variant.
 gem5py = gem5py_env.Program('gem5py', 'python/gem5py.cc')[0]
-marshal_py = build_tools.File('marshal.py')
-
-# Embed python files.  All .py files that have been indicated by a
-# PySource() call in a SConscript need to be embedded into the M5
-# library.  To do that, we compile the file to byte code, marshal the
-# byte code, compress it, and then generate a c++ file that
-# inserts the result into an array.
-def embedPyFile(target, source, env):
-    '''Action function to compile a .py into a code object, marshal it,
-    compress it, and stick it into an asm file so the code appears as
-    just bytes with a label in the data section. The action takes two
-    sources:
-
-    source[0]: Binary used to marshal Python sources
-    source[1]: Python script to marshal
-    '''
-
-    import subprocess
-
-    pysource, gem5py, marshal_py = source
-    modpath = env['PYSOURCE_MODPATH']
-    abspath = env['PYSOURCE_ABSPATH']
-    marshalled = subprocess.check_output(
-            [gem5py.abspath, str(marshal_py), str(pysource)], env=env['ENV'])
-
-    compressed = zlib.compress(marshalled)
-    data = compressed
-
-    code = code_formatter()
-    code('''\
-#include "sim/init.hh"
-
-namespace gem5
-{
-namespace
-{
-
-''')
-    bytesToCppArray(code, 'embedded_module_data', data)
-    # The name of the EmbeddedPython object doesn't matter since it's in an
-    # anonymous namespace, and it's constructor takes care of installing it
-    # into a global list.
-    code('''
-EmbeddedPython embedded_module_info(
-    "${abspath}",
-    "${modpath}",
-    embedded_module_data,
-    ${{len(data)}},
-    ${{len(marshalled)}});
-
-} // anonymous namespace
-} // namespace gem5
-''')
-    code.write(str(target[0]))
+gem5py_env['GEM5PY'] = gem5py
+# Inject build_tools into PYTHONPATH for when we run gem5py.
+pythonpath = gem5py_env['ENV'].get('PYTHONPATH', '').split(':')
+pythonpath.append(build_tools.abspath)
+gem5py_env['ENV']['PYTHONPATH'] = ':'.join(pythonpath)
 
 class PySource(SourceFile):
     '''Add a python source file to the named package'''
@@ -172,13 +121,18 @@ class PySource(SourceFile):
         cpp = File(self.filename + '.cc')
 
         overrides = {
-                'PYSOURCE_MODPATH': modpath,
-                'PYSOURCE_ABSPATH': abspath,
+            'PYSOURCE_MODPATH': modpath,
+            'PYSOURCE_ABSPATH': abspath,
+            'PYSOURCE': File(source),
+            'MARSHAL_PY': build_tools.File('marshal.py')
         }
-        gem5py_env.Command(cpp, [ File(source), gem5py, marshal_py ],
-                MakeAction(embedPyFile, Transform("EMBED PY", max_sources=1),
-                    varlist=overrides.keys()),
-                **overrides)
+        gem5py_env.Command(cpp,
+            [ '${PYSOURCE}', '${GEM5PY}', '${MARSHAL_PY}' ],
+            MakeAction('"${GEM5PY}" "${MARSHAL_PY}" "${TARGET}" ' \
+                       '"${PYSOURCE}" "${PYSOURCE_MODPATH}" ' \
+                       '"${PYSOURCE_ABSPATH}"',
+                       Transform("EMBED PY", max_sources=1)),
+            **overrides)
         Source(cpp, tags=self.tags, add_tags='python')
 
 class SimObject(PySource):
