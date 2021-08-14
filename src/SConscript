@@ -77,11 +77,13 @@ def GdbXml(xml_id, symbol):
 class Source(SourceFile):
     pass
 
+build_tools = Dir('#build_tools')
+
 # Build a small helper that marshals the Python code using the same version
 # of Python as gem5. This is in an unorthodox location to avoid building it
 # for every variant.
 gem5py = gem5py_env.Program('gem5py', 'python/gem5py.cc')[0]
-marshal_py = Dir('python').File('marshal.py')
+marshal_py = build_tools.File('marshal.py')
 
 # Embed python files.  All .py files that have been indicated by a
 # PySource() call in a SConscript need to be embedded into the M5
