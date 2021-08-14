@@ -38,8 +38,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import array
-import functools
 import itertools
 import re
 import sys
@@ -111,17 +109,3 @@ def compareVersions(v1, v2):
         if n1 > n2: return  1
 
     return 0
-
-def bytesToCppArray(code, symbol, data):
-    '''
-    Output an array of bytes to a code formatter as a c++ array declaration.
-    '''
-    code('const std::uint8_t ${symbol}[] = {')
-    code.indent()
-    step = 16
-    for i in range(0, len(data), step):
-        x = array.array('B', data[i:i+step])
-        strs = map(lambda i: f'{i},', x)
-        code(functools.reduce(lambda x, y: x + y, strs))
-    code.dedent()
-    code('};')

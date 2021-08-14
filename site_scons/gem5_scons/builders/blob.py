@@ -40,7 +40,7 @@
 import os.path
 
 from gem5_scons import Transform, MakeAction
-from gem5_scons.util import bytesToCppArray
+from blob import bytesToCppArray
 
 from code_formatter import code_formatter
 
