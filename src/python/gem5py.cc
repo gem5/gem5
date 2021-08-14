@@ -37,24 +37,16 @@
 
 #include <pybind11/embed.h>
 
+#include <cstdlib>
+#include <iostream>
+
 namespace py = pybind11;
 
-constexpr auto MarshalScript = R"(
-import marshal
-import sys
-
-if len(sys.argv) < 2:
-    print(f"Usage: {sys.argv[0]} PYSOURCE", file=sys.stderr)
-    sys.exit(1)
-
-source = sys.argv[1]
-with open(source, 'r') as f:
-    src = f.read()
-
-compiled = compile(src, source, 'exec')
-marshalled = marshal.dumps(compiled)
-sys.stdout.buffer.write(marshalled)
-)";
+/*
+ * This wrapper program runs python scripts using the python interpretter which
+ * will be built into gem5. Its first argument is the script to run, and then
+ * all subsequent arguments are passed to the python script as its argv.
+ */
 
 int
 main(int argc, const char **argv)
@@ -74,12 +66,17 @@ main(int argc, const char **argv)
     // Clear out argv just in case it has something in it.
     py_argv.attr("clear")();
 
+    if (argc < 2) {
+        std::cerr << "Usage: gem5py SCRIPT [arg] ..." << std::endl;
+        std::exit(1);
+    }
+
     // Fill it with our argvs.
-    for (int i = 0; i < argc; i++)
+    for (int i = 1; i < argc; i++)
         py_argv.append(argv[i]);
 
     // Actually call the script.
-    py::exec(MarshalScript, py::globals());
+    py::eval_file(argv[1]);
 
     return 0;
 }

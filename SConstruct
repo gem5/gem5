@@ -244,9 +244,9 @@ global_vars.AddVariables(
     ('CC', 'C compiler', environ.get('CC', main['CC'])),
     ('CXX', 'C++ compiler', environ.get('CXX', main['CXX'])),
     ('CCFLAGS_EXTRA', 'Extra C and C++ compiler flags', ''),
+    ('GEM5PY_CCFLAGS_EXTRA', 'Extra C and C++ gem5py compiler flags', ''),
+    ('GEM5PY_LDFLAGS_EXTRA', 'Extra marshal gem5py flags', ''),
     ('LDFLAGS_EXTRA', 'Extra linker flags', ''),
-    ('MARSHAL_CCFLAGS_EXTRA', 'Extra C and C++ marshal compiler flags', ''),
-    ('MARSHAL_LDFLAGS_EXTRA', 'Extra marshal linker flags', ''),
     ('PYTHON_CONFIG', 'Python config binary to use',
      [ 'python3-config', 'python-config']
     ),
@@ -530,11 +530,11 @@ if main['USE_PYTHON']:
         warning('Embedded python library too new. '
                 'Python 3 expected, found %s.' % ver_string)
 
-marshal_env = main.Clone()
+gem5py_env = main.Clone()
 
 # Bare minimum environment that only includes python
-marshal_env.Append(CCFLAGS='$MARSHAL_CCFLAGS_EXTRA')
-marshal_env.Append(LINKFLAGS='$MARSHAL_LDFLAGS_EXTRA')
+gem5py_env.Append(CCFLAGS=['${GEM5PY_CCFLAGS_EXTRA}'])
+gem5py_env.Append(LINKFLAGS=['${GEM5PY_LDFLAGS_EXTRA}'])
 
 main['HAVE_PKG_CONFIG'] = main.Detect('pkg-config')
 
@@ -708,7 +708,7 @@ Build variables for {dir}:
     env.Append(CCFLAGS='$CCFLAGS_EXTRA')
     env.Append(LINKFLAGS='$LDFLAGS_EXTRA')
 
-    exports=['env', 'marshal_env']
+    exports=['env', 'gem5py_env']
 
     # The src/SConscript file sets up the build rules in 'env' according
     # to the configured variables.  It returns a list of environments,

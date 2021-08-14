@@ -80,7 +80,8 @@ class Source(SourceFile):
 # Build a small helper that marshals the Python code using the same version
 # of Python as gem5. This is in an unorthodox location to avoid building it
 # for every variant.
-py_marshal = marshal_env.Program('marshal', 'python/marshal.cc')[0]
+gem5py = gem5py_env.Program('gem5py', 'python/gem5py.cc')[0]
+marshal_py = Dir('python').File('marshal.py')
 
 # Embed python files.  All .py files that have been indicated by a
 # PySource() call in a SConscript need to be embedded into the M5
@@ -99,11 +100,11 @@ def embedPyFile(target, source, env):
 
     import subprocess
 
-    marshal_bin, pysource = source
+    pysource, gem5py, marshal_py = source
     modpath = env['PYSOURCE_MODPATH']
     abspath = env['PYSOURCE_ABSPATH']
     marshalled = subprocess.check_output(
-            [marshal_bin.abspath, str(pysource)], env=env['ENV'])
+            [gem5py.abspath, str(marshal_py), str(pysource)], env=env['ENV'])
 
     compressed = zlib.compress(marshalled)
     data = compressed
@@ -172,8 +173,8 @@ class PySource(SourceFile):
                 'PYSOURCE_MODPATH': modpath,
                 'PYSOURCE_ABSPATH': abspath,
         }
-        marshal_env.Command(cpp, [ py_marshal, File(source) ],
-                MakeAction(embedPyFile, Transform("EMBED PY"),
+        gem5py_env.Command(cpp, [ File(source), gem5py, marshal_py ],
+                MakeAction(embedPyFile, Transform("EMBED PY", max_sources=1),
                     varlist=overrides.keys()),
                 **overrides)
         Source(cpp, tags=self.tags, add_tags='python')
