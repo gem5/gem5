@@ -812,60 +812,20 @@ for name,simobj in sorted(sim_objects.items()):
 #
 # Handle debug flags
 #
-def makeDebugFlagCC(target, source, env):
-    assert(len(target) == 1)
-
-    code = code_formatter()
-
-    # file header
-    code('''
-#include "base/compiler.hh" // For namespace deprecation
-#include "base/debug.hh"
-
-namespace gem5
-{
-
-GEM5_DEPRECATED_NAMESPACE(Debug, debug);
-namespace debug
-{
-''')
-
-    all_flags = env.get('DEBUG_FLAGS', [])
-    simple_flags = sorted(filter(lambda f: not f.components, all_flags))
-    compound_flags = sorted(filter(lambda f: f.components, all_flags))
-
-    # We intentionally make flag a reference to a heap allocated object so
-    # (1) It has a similar interface to a global object like before
-    # (2) It does not get destructed at the end of simulation
-    # The second property is desirable as global objects from different
-    # translation units do not have a defined destruction order, so it'll
-    # be unsafe to access debug flags in their destructor in such cases.
-    for flag in simple_flags:
-        name, desc, components, fmt = \
-                flag.name, flag.desc, flag.components, flag.fmt
-        fmt = 'true' if flag.fmt else 'false'
-        code('''
-SimpleFlag& $name = *(
-    new SimpleFlag("$name", "$desc", $fmt));''')
-
-    for flag in compound_flags:
-        name, desc, components, fmt = \
-                flag.name, flag.desc, flag.components, flag.fmt
-        code('''
-CompoundFlag& $name = *(new CompoundFlag("$name", "$desc", {
-    ${{', '.join('&' + simple for simple in components)}}
-}));''')
-
-    code('''
-} // namespace debug
-} // namespace gem5''')
-
-    code.write(str(target[0]))
 
 # Generate the files for the debug and debug-format flags
-env.Command('debug/flags.cc', [],
-            MakeAction(makeDebugFlagCC, Transform("TRACING", 0),
-                varlist=['DEBUG_FLAGS']))
+flag_args = []
+for flag in env.get('DEBUG_FLAGS', []):
+    components = ":".join(c for c in flag.components)
+    arg = f'"{flag.name}" "{flag.desc}" "{bool(flag.fmt)}" ' \
+          f'"{components}"'
+    flag_args.append(arg)
+gem5py_env.Command('debug/flags.cc',
+        [ "${GEM5PY}", "${DEBUGFLAGCC_PY}" ],
+        MakeAction('"${GEM5PY}" "${DEBUGFLAGCC_PY}" "${TARGET}" ${FLAGS}',
+            Transform("TRACING", 0)),
+        DEBUGFLAGCC_PY=build_tools.File('debugflagcc.py'),
+        FLAGS=' '.join(flag_args))
 Source('debug/flags.cc', add_tags='gem5 trace')
 
 # version tags
