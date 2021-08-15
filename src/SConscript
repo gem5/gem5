@@ -633,19 +633,14 @@ env.Command('python/m5/defines.py', ToValue(dict(build_env)),
             MakeAction(makeDefinesPyFile, Transform("DEFINES", 0)))
 PySource('m5', 'python/m5/defines.py')
 
-# Generate python file containing info about the M5 source code
-def makeInfoPyFile(target, source, env):
-    code = code_formatter()
-    for src in source:
-        with open(src.srcnode().abspath, 'r') as f:
-            data = ''.join(f)
-        code('$src = ${{repr(data)}}')
-    code.write(str(target[0]))
-
 # Generate a file that wraps the basic top level files
-env.Command('python/m5/info.py',
-            [ '#/COPYING', '#/LICENSE', '#/README', ],
-            MakeAction(makeInfoPyFile, Transform("INFO")))
+gem5py_env.Command('python/m5/info.py',
+            [ File('#/COPYING'), File('#/LICENSE'), File('#/README'),
+                "${GEM5PY}", "${INFOPY_PY}" ],
+            MakeAction('"${GEM5PY}" "${INFOPY_PY}" "${TARGET}" '
+                       '${SOURCES[:-2]}',
+                Transform("INFO", 3)),
+            INFOPY_PY=build_tools.File('infopy.py'))
 PySource('m5', 'python/m5/info.py')
 
 ########################################################################
