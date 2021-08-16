@@ -36,13 +36,6 @@ from m5.proxy import *
 from m5.objects.ClockedObject import ClockedObject
 from m5.SimObject import SimObject
 
-if buildEnv.get('FULL_SYSTEM', False):
-    class X86PagetableWalker(SimObject):
-        type = 'X86PagetableWalker'
-        cxx_class = 'gem5::X86ISA::Walker'
-        port = ResponsePort("Port for the hardware table walker")
-        system = Param.System(Parent.any, "system object")
-
 class X86GPUTLB(ClockedObject):
     type = 'X86GPUTLB'
     cxx_class = 'gem5::X86ISA::GpuTLB'
