@@ -594,12 +594,13 @@ m5.params.clear()
 importer = M5MetaPathFinder(PySource.modules)
 sys.meta_path[0:0] = [ importer ]
 
+import_globals = globals().copy()
 # import all sim objects so we can populate the all_objects list
 # make sure that we're working with a list, then let's sort it
 gem5_lib_simobjects = SimObject.all.with_tag(env, 'gem5 lib')
 gem5_lib_modnames = sorted(map(lambda so: so.modname, gem5_lib_simobjects))
 for modname in gem5_lib_modnames:
-    exec('from m5.objects import %s' % modname)
+    exec('from m5.objects import %s' % modname, import_globals)
 
 # we need to unload all of the currently imported modules so that they
 # will be re-imported the next time the sconscript is run
