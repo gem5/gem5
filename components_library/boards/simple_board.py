@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from components_library.resources.resource import AbstractResource
 from m5.objects import (
     AddrRange,
     SrcClockDomain,
@@ -145,7 +146,7 @@ class SimpleBoard(AbstractBoard):
         self.mem_ranges = [AddrRange(memory.get_size())]
         memory.set_memory_range(self.mem_ranges)
 
-    def set_workload(self, binary: str) -> None:
+    def set_workload(self, binary: AbstractResource) -> None:
         """Set up the system to run a specific binary.
 
         **Limitations**
@@ -153,11 +154,11 @@ class SimpleBoard(AbstractBoard):
         * Dynamically linked executables are partially supported when the host
           ISA and the simulated ISA are the same.
 
-        :param binary: The path on the *host* to the binary to run in gem5.
+        :param binary: The resource encapsulating the binary to be run.
         """
 
-        self.workload = SEWorkload.init_compatible(binary)
+        self.workload = SEWorkload.init_compatible(binary.get_local_path())
 
         process = Process()
-        process.cmd = [binary]
+        process.cmd = [binary.get_local_path()]
         self.get_processor().get_cores()[0].set_workload(process)

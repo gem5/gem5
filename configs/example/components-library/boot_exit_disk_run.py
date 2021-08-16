@@ -60,11 +60,9 @@ from components_library.processors.simple_processor import SimpleProcessor
 from components_library.processors.cpu_types import CPUTypes
 from components_library.isas import ISA
 from components_library.coherence_protocol import CoherenceProtocol
+from components_library.resources.resource import Resource
 
 import os
-import subprocess
-import gzip
-import shutil
 
 # Run a check to ensure the right version of gem5 is being used.
 if (
@@ -110,31 +108,10 @@ motherboard = X86Board(
 
 motherboard.connect_things()
 
-# Download the resources as necessary.
-thispath = os.path.dirname(os.path.realpath(__file__))
-
-kernel_url = (
-    "http://dist.gem5.org/dist/v21-0/kernels/x86/static/vmlinux-5.4.49"
-)
-kernel_path = os.path.join(thispath, "vmlinux-5.4.49")
-if not os.path.exists(kernel_path):
-    subprocess.run(["wget", "-P", thispath, kernel_url])
-
-boot_img_url = (
-    "http://dist.gem5.org/dist/v21-0/images/x86/ubuntu-18-04/boot-exit.img.gz"
-)
-boot_img_path_gz = os.path.join(thispath, "boot-exit.img.gz")
-boot_img_path = os.path.join(thispath, "boot-exit.img")
-
-if not os.path.exists(boot_img_path):
-    subprocess.run(["wget", "-P", thispath, boot_img_url])
-    with gzip.open(boot_img_path_gz, "rb") as f:
-        with open(boot_img_path, "wb") as o:
-            shutil.copyfileobj(f, o)
-
 # Set the Full System workload.
 motherboard.set_workload(
-    kernel=kernel_path, disk_image=boot_img_path, command="m5 exit \n"
+    kernel=Resource("x86-linux-kernel-5.4.49"),
+    disk_image=Resource("x86-boot-exit"), command="m5 exit \n"
 )
 
 

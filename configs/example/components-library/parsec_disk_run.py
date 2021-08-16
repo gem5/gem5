@@ -52,6 +52,7 @@ sys.path.append(
     )
 )
 
+from components_library.resources.resource import Resource
 from components_library.boards.x86_board import X86Board
 from components_library.cachehierarchies.classic.\
     private_l1_private_l2_cache_hierarchy import (
@@ -67,10 +68,7 @@ from components_library.runtime import (
     get_runtime_coherence_protocol,
 )
 
-import subprocess
-import gzip
 import time
-import shutil
 import time
 
 
@@ -110,31 +108,6 @@ motherboard = X86Board(
 
 motherboard.connect_things()
 
-
-# Download the linux kernel and parsec disk image needed to run the
-# simuluation.
-thispath = os.path.dirname(os.path.realpath(__file__))
-
-kernel_url = (
-    "http://dist.gem5.org/dist/v21-0/kernels/x86/static/vmlinux-5.4.49"
-)
-kernel_path = os.path.join(thispath, "vmlinux-5.4.49")
-if not os.path.exists(kernel_path):
-    subprocess.run(["wget", "-P", thispath, kernel_url])
-
-parsec_img_url = (
-    "http://dist.gem5.org/dist/v21-0/images/x86/ubuntu-18-04/parsec.img.gz"
-)
-parsec_img_path_gz = os.path.join(thispath, "parsec.img.gz")
-parsec_img_path = os.path.join(thispath, "parsec.img")
-
-if not os.path.exists(parsec_img_path):
-    subprocess.run(["wget", "-P", thispath, parsec_img_url])
-    with gzip.open(parsec_img_path_gz, "rb") as f:
-        with open(parsec_img_path, "wb") as o:
-            shutil.copyfileobj(f, o)
-
-
 # The command to run. In this case the blackscholes app with the simsmall
 # workload.
 command = "cd /home/gem5/parsec-benchmark\n"
@@ -145,7 +118,9 @@ command += "sleep 5 \n"
 command += "m5 exit \n"
 
 motherboard.set_workload(
-    kernel=kernel_path, disk_image=parsec_img_path, command=command
+    kernel=Resource("x86-linux-kernel-5.4.49"),
+    disk_image=Resource("x86-parsec"),
+    command=command,
 )
 
 print("Running with ISA: " + get_runtime_isa().name)

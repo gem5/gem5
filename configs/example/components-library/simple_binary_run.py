@@ -48,6 +48,7 @@ sys.path.append(
     )
 )
 
+from components_library.resources.resource import CustomResource
 from components_library.boards.simple_board import SimpleBoard
 from components_library.cachehierarchies.classic.no_cache import NoCache
 from components_library.memory.single_channel import SingleChannelDDR3_1600
@@ -76,9 +77,10 @@ motherboard.connect_things()
 
 # Set the workload
 thispath = os.path.dirname(os.path.realpath(__file__))
-binary = os.path.join(
-    thispath, "../../../tests/test-progs/hello/bin/x86/linux/hello"
-)
+binary = CustomResource(os.path.join(
+    thispath,
+    "../../../tests/test-progs/hello/bin/x86/linux/hello"
+))
 motherboard.set_workload(binary)
 
 

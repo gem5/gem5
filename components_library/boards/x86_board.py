@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from components_library.resources.resource import AbstractResource
 from components_library.utils.override import overrides
 from components_library.boards.abstract_board import AbstractBoard
 from components_library.isas import ISA
@@ -273,7 +274,10 @@ class X86Board(SimpleBoard):
 
 
     def set_workload(
-        self, kernel: str, disk_image: str, command: Optional[str] = None
+        self,
+        kernel: AbstractResource,
+        disk_image: AbstractResource,
+        command: Optional[str] = None,
     ):
         """Setup the full system files
 
@@ -287,14 +291,14 @@ class X86Board(SimpleBoard):
         * Only supports a Linux kernel
         * Disk must be configured correctly to use the command option
 
-        :param kernel: The compiled kernel binary
-        :param disk_image: A disk image containing the OS data. The first
-            partition should be the root partition.
+        :param kernel: The compiled kernel binary resource
+        :param disk_image: A disk image resource containing the OS data. The
+            first partition should be the root partition.
         :param command: The command(s) to run with bash once the OS is booted
         """
 
         # Set the Linux kernel to use.
-        self.workload.object_file = kernel
+        self.workload.object_file = kernel.get_local_path()
 
         # Options specified on the kernel command line.
         self.workload.command_line = " ".join(
@@ -312,7 +316,7 @@ class X86Board(SimpleBoard):
         ide_disk.image = CowDiskImage(
             child=RawDiskImage(read_only=True), read_only=False
         )
-        ide_disk.image.child.image_file = disk_image
+        ide_disk.image.child.image_file = disk_image.get_local_path()
 
         # Attach the SimObject to the system.
         self.pc.south_bridge.ide.disks = [ide_disk]
