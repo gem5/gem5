@@ -24,13 +24,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.Device import BasicPioDevice
+from m5.params import Param
+from m5.proxy import Parent
 
-SimObject('LupioRTC.py', tags='riscv isa')
-SimObject('LupioRNG.py', tags='riscv isa')
+class LupioRNG(BasicPioDevice):
 
-DebugFlag('LupioRNG')
-DebugFlag('LupioRTC')
-
-Source('lupio_rtc.cc', tags='riscv isa')
-Source('lupio_rng.cc', tags='riscv isa')
+    type = 'LupioRNG'
+    cxx_class='gem5::LupioRNG'
+    cxx_header = 'dev/lupio/lupio_rng.hh'
+    pio_size = Param.Addr(0x1000, "PIO Size")
+    seed = Param.Int(0, "Initial seed for the random number generator")
+    platform = Param.Platform(Parent.any,
+                              "Platform this device is part of.")
+    int_id = Param.Int("Interrupt ID to be used by the PIC")
