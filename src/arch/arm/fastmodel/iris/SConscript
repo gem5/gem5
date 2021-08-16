@@ -28,7 +28,8 @@ Import('*')
 if not env['USE_ARM_FASTMODEL']:
     Return()
 
-SimObject('Iris.py')
+SimObject('Iris.py', sim_objects=[
+    'IrisTLB', 'IrisMMU', 'IrisInterrupts', 'IrisISA', 'IrisBaseCPU'])
 Source('cpu.cc')
 Source('interrupts.cc')
 Source('isa.cc')

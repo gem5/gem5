@@ -41,11 +41,11 @@ Import('*')
 Source('htm.cc')
 Source('mmu.cc')
 
-SimObject('BaseInterrupts.py')
-SimObject('BaseISA.py')
-SimObject('BaseMMU.py')
-SimObject('BaseTLB.py')
-SimObject('InstDecoder.py')
+SimObject('BaseInterrupts.py', sim_objects=['BaseInterrupts'])
+SimObject('BaseISA.py', sim_objects=['BaseISA'])
+SimObject('BaseMMU.py', sim_objects=['BaseMMU'])
+SimObject('BaseTLB.py', sim_objects=['BaseTLB'], enums=['TypeTLB'])
+SimObject('InstDecoder.py', sim_objects=['InstDecoder'])
 
 DebugFlag('PageTableWalker',
           "Page table walker state machine debugging")

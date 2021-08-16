@@ -37,7 +37,7 @@
 
 Import('*')
 
-SimObject('Vnc.py')
+SimObject('Vnc.py', sim_objects=['VncInput', 'VncServer'])
 Source('vncinput.cc')
 Source('vncserver.cc')
 DebugFlag('VNC')

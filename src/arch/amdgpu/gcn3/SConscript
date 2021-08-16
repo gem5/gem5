@@ -39,7 +39,7 @@ if not env['BUILD_GPU']:
     Return()
 
 if env['TARGET_GPU_ISA'] == 'gcn3':
-    SimObject('X86GPUTLB.py')
+    SimObject('X86GPUTLB.py', sim_objects=['X86GPUTLB', 'TLBCoalescer'])
 
     Source('decoder.cc')
     Source('insts/gpu_static_inst.cc')

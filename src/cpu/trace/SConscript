@@ -5,7 +5,7 @@ if env['TARGET_ISA'] == 'null':
 
 # Only build TraceCPU if we have support for protobuf as TraceCPU relies on it
 if env['HAVE_PROTOBUF']:
-    SimObject('TraceCPU.py')
+    SimObject('TraceCPU.py', sim_objects=['TraceCPU'])
     Source('trace_cpu.cc')
 
 DebugFlag('TraceCPUData')

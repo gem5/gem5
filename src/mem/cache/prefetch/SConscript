@@ -28,7 +28,14 @@
 
 Import('*')
 
-SimObject('Prefetcher.py')
+SimObject('Prefetcher.py', sim_objects=[
+    'BasePrefetcher', 'MultiPrefetcher', 'QueuedPrefetcher',
+    'StridePrefetcherHashedSetAssociative', 'StridePrefetcher',
+    'TaggedPrefetcher', 'IndirectMemoryPrefetcher', 'SignaturePathPrefetcher',
+    'SignaturePathPrefetcherV2', 'AccessMapPatternMatching', 'AMPMPrefetcher',
+    'DeltaCorrelatingPredictionTables', 'DCPTPrefetcher',
+    'IrregularStreamBufferPrefetcher', 'SlimAMPMPrefetcher',
+    'BOPPrefetcher', 'SBOOEPrefetcher', 'STeMSPrefetcher', 'PIFPrefetcher'])
 
 Source('access_map_pattern_matching.cc')
 Source('base.cc')

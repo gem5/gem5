@@ -37,6 +37,6 @@
 
 Import('*')
 
-SimObject('Probe.py')
+SimObject('Probe.py', sim_objects=['ProbeListenerObject'])
 Source('probe.cc')
 DebugFlag('ProbeVerbose')

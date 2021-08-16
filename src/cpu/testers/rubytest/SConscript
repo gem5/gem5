@@ -38,7 +38,7 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
-SimObject('RubyTester.py')
+SimObject('RubyTester.py', sim_objects=['RubyTester'])
 
 Source('RubyTester.cc')
 Source('Check.cc')

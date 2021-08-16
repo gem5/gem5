@@ -31,10 +31,10 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
-SimObject('RubyCache.py')
-SimObject('DirectoryMemory.py')
-SimObject('RubyPrefetcher.py')
-SimObject('WireBuffer.py')
+SimObject('RubyCache.py', sim_objects=['RubyCache'])
+SimObject('DirectoryMemory.py', sim_objects=['RubyDirectoryMemory'])
+SimObject('RubyPrefetcher.py', sim_objects=['RubyPrefetcher'])
+SimObject('WireBuffer.py', sim_objects=['RubyWireBuffer'])
 
 Source('DirectoryMemory.cc')
 Source('CacheMemory.cc')

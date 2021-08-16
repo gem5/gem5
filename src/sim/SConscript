@@ -28,18 +28,20 @@
 
 Import('*')
 
-SimObject('ClockedObject.py')
-SimObject('TickedObject.py')
-SimObject('Workload.py')
-SimObject('Root.py')
-SimObject('ClockDomain.py')
-SimObject('VoltageDomain.py')
-SimObject('System.py')
-SimObject('DVFSHandler.py')
-SimObject('SubSystem.py')
-SimObject('RedirectPath.py')
-SimObject('PowerState.py')
-SimObject('PowerDomain.py')
+SimObject('ClockedObject.py', sim_objects=['ClockedObject'])
+SimObject('TickedObject.py', sim_objects=['TickedObject'])
+SimObject('Workload.py', sim_objects=[
+    'Workload', 'StubWorkload', 'KernelWorkload', 'SEWorkload'])
+SimObject('Root.py', sim_objects=['Root'])
+SimObject('ClockDomain.py', sim_objects=[
+    'ClockDomain', 'SrcClockDomain', 'DerivedClockDomain'])
+SimObject('VoltageDomain.py', sim_objects=['VoltageDomain'])
+SimObject('System.py', sim_objects=['System'], enums=['MemoryMode'])
+SimObject('DVFSHandler.py', sim_objects=['DVFSHandler'])
+SimObject('SubSystem.py', sim_objects=['SubSystem'])
+SimObject('RedirectPath.py', sim_objects=['RedirectPath'])
+SimObject('PowerState.py', sim_objects=['PowerState'], enums=['PwrState'])
+SimObject('PowerDomain.py', sim_objects=['PowerDomain'])
 
 Source('async.cc')
 Source('backtrace_%s.cc' % env['BACKTRACE_IMPL'], add_tags='gem5 trace')
@@ -97,8 +99,8 @@ GTest('serialize.test', 'serialize.test.cc', with_tag('gem5 serialize'))
 GTest('serialize_handlers.test', 'serialize_handlers.test.cc')
 
 if env['TARGET_ISA'] != 'null':
-    SimObject('InstTracer.py')
-    SimObject('Process.py')
+    SimObject('InstTracer.py', sim_objects=['InstTracer'])
+    SimObject('Process.py', sim_objects=['Process', 'EmulatedDriver'])
     Source('faults.cc')
     Source('process.cc')
     Source('fd_array.cc')

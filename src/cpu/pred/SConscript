@@ -31,7 +31,20 @@ Import('*')
 if env['TARGET_ISA'] == 'null':
     Return()
 
-SimObject('BranchPredictor.py')
+SimObject('BranchPredictor.py', sim_objects=[
+    'IndirectPredictor', 'SimpleIndirectPredictor', 'BranchPredictor',
+    'LocalBP', 'TournamentBP', 'BiModeBP', 'TAGEBase', 'TAGE', 'LoopPredictor',
+    'TAGE_SC_L_TAGE', 'TAGE_SC_L_TAGE_64KB', 'TAGE_SC_L_TAGE_8KB',
+    'LTAGE', 'TAGE_SC_L_LoopPredictor', 'StatisticalCorrector', 'TAGE_SC_L',
+    'TAGE_SC_L_64KB_StatisticalCorrector',
+    'TAGE_SC_L_8KB_StatisticalCorrector',
+    'TAGE_SC_L_64KB', 'TAGE_SC_L_8KB', 'MultiperspectivePerceptron',
+    'MultiperspectivePerceptron8KB', 'MultiperspectivePerceptron64KB',
+    'MPP_TAGE', 'MPP_LoopPredictor', 'MPP_StatisticalCorrector',
+    'MultiperspectivePerceptronTAGE', 'MPP_StatisticalCorrector_64KB',
+    'MultiperspectivePerceptronTAGE64KB', 'MPP_TAGE_8KB',
+    'MPP_LoopPredictor_8KB', 'MPP_StatisticalCorrector_8KB',
+    'MultiperspectivePerceptronTAGE8KB'])
 
 DebugFlag('Indirect')
 Source('bpred_unit.cc')

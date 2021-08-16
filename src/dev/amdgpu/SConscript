@@ -35,7 +35,7 @@ if not env['BUILD_GPU']:
     Return()
 
 # Controllers
-SimObject('AMDGPU.py', tags='x86 isa')
+SimObject('AMDGPU.py', sim_objects=['AMDGPUDevice'], tags='x86 isa')
 
 Source('amdgpu_device.cc', tags='x86 isa')
 Source('mmio_reader.cc', tags='x86 isa')

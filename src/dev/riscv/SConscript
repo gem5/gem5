@@ -28,13 +28,14 @@
 
 Import('*')
 
-SimObject('HiFive.py', tags='riscv isa')
-SimObject('LupV.py', tags='riscv isa')
-SimObject('Clint.py', tags='riscv isa')
-SimObject('PlicDevice.py', tags='riscv isa')
-SimObject('Plic.py', tags='riscv isa')
-SimObject('RTC.py', tags='riscv isa')
-SimObject('RiscvVirtIOMMIO.py', tags='riscv isa')
+SimObject('HiFive.py', sim_objects=['HiFive'], tags='riscv isa')
+SimObject('LupV.py', sim_objects=['LupV'], tags='riscv isa')
+SimObject('Clint.py', sim_objects=['Clint'], tags='riscv isa')
+SimObject('PlicDevice.py', sim_objects=['PlicIntDevice'], tags='riscv isa')
+SimObject('Plic.py', sim_objects=['Plic'], tags='riscv isa')
+SimObject('RTC.py', sim_objects=['RiscvRTC'], tags='riscv isa')
+SimObject('RiscvVirtIOMMIO.py', sim_objects=['RiscvMmioVirtIO'],
+    tags='riscv isa')
 
 DebugFlag('Clint', tags='riscv isa')
 DebugFlag('Plic', tags='riscv isa')

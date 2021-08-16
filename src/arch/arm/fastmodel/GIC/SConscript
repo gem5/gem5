@@ -33,5 +33,5 @@ protocol_dir = Dir('..').Dir('protocol')
 ArmFastModelComponent(File('GIC.sgproj'), File('GIC.lisa'),
                       protocol_dir.File('SignalInterruptProtocol.lisa')
                       ).prepare_env(env)
-SimObject('FastModelGIC.py')
+SimObject('FastModelGIC.py', sim_objects=['SCFastModelGIC', 'FastModelGIC'])
 Source('gic.cc')

@@ -142,7 +142,8 @@ class SimObject(PySource):
 
     fixed = False
 
-    def __init__(self, source, tags=None, add_tags=None):
+    def __init__(self, source, *, sim_objects=[], enums=[],
+            tags=None, add_tags=None):
         '''Specify the source file and any tags (automatically in
         the m5.objects package)'''
         super().__init__('m5.objects', source, tags, add_tags)

@@ -53,19 +53,20 @@ Source('stream_gen.cc')
 Source('strided_gen.cc')
 
 DebugFlag('TrafficGen')
-SimObject('BaseTrafficGen.py')
+SimObject('BaseTrafficGen.py', sim_objects=['BaseTrafficGen'],
+        enums=['StreamGenType'])
 
 DebugFlag('GUPSGen')
-SimObject('GUPSGen.py')
+SimObject('GUPSGen.py', sim_objects=['GUPSGen'])
 
 if env['USE_PYTHON']:
     Source('pygen.cc', add_tags='python')
-    SimObject('PyTrafficGen.py')
+    SimObject('PyTrafficGen.py', sim_objects=['PyTrafficGen'])
 
 # Only build the traffic generator if we have support for protobuf as the
 # tracing relies on it
 if env['HAVE_PROTOBUF']:
-    SimObject('TrafficGen.py')
+    SimObject('TrafficGen.py', sim_objects=['TrafficGen'])
     Source('trace_gen.cc')
     Source('traffic_gen.cc')
 

@@ -82,22 +82,27 @@ CompoundFlag('ExecNoTicks', [ 'Exec', 'FmtTicksOff' ])
 Source('func_unit.cc')
 Source('pc_event.cc')
 
-SimObject('FuncUnit.py')
-SimObject('StaticInstFlags.py')
+SimObject('FuncUnit.py', sim_objects=['OpDesc', 'FUDesc'], enums=['OpClass'])
+SimObject('StaticInstFlags.py', enums=['StaticInstFlags'])
 
 if env['TARGET_ISA'] == 'null':
     Return()
 
 # Only build the protobuf instructions tracer if we have protobuf support.
 if env['HAVE_PROTOBUF']:
-    SimObject('InstPBTrace.py')
+    SimObject('InstPBTrace.py', sim_objects=['InstPBTrace'])
     Source('inst_pb_trace.cc')
 
-SimObject('CheckerCPU.py')
+SimObject('CheckerCPU.py', sim_objects=['CheckerCPU'])
 
-SimObject('BaseCPU.py')
-SimObject('CPUTracers.py')
-SimObject('TimingExpr.py')
+SimObject('BaseCPU.py', sim_objects=['BaseCPU'])
+SimObject('CPUTracers.py', sim_objects=[
+    'ExeTracer', 'IntelTrace', 'NativeTrace'])
+SimObject('TimingExpr.py', sim_objects=[
+    'TimingExpr', 'TimingExprLiteral', 'TimingExprSrcReg',
+    'TimingExprReadIntReg', 'TimingExprLet', 'TimingExprRef', 'TimingExprUn',
+    'TimingExprBin', 'TimingExprIf'],
+    enums=['TimingExprOp'])
 
 Source('activity.cc')
 Source('base.cc')
@@ -114,6 +119,6 @@ Source('thread_context.cc')
 Source('thread_state.cc')
 Source('timing_expr.cc')
 
-SimObject('DummyChecker.py')
+SimObject('DummyChecker.py', sim_objects=['DummyChecker'])
 Source('checker/cpu.cc')
 DebugFlag('Checker')

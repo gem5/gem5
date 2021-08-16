@@ -43,12 +43,13 @@ Source('se_workload.cc', tags='mips isa')
 Source('tlb.cc', tags='mips isa')
 Source('utility.cc', tags='mips isa')
 
-SimObject('MipsDecoder.py', tags='mips isa')
-SimObject('MipsInterrupts.py', tags='mips isa')
-SimObject('MipsISA.py', tags='mips isa')
-SimObject('MipsMMU.py', tags='mips isa')
-SimObject('MipsSeWorkload.py', tags='mips isa')
-SimObject('MipsTLB.py', tags='mips isa')
+SimObject('MipsDecoder.py', sim_objects=['MipsDecoder'], tags='mips isa')
+SimObject('MipsInterrupts.py', sim_objects=['MipsInterrupts'], tags='mips isa')
+SimObject('MipsISA.py', sim_objects=['MipsISA'], tags='mips isa')
+SimObject('MipsMMU.py', sim_objects=['MipsMMU'], tags='mips isa')
+SimObject('MipsSeWorkload.py', sim_objects=['MipsSEWorkload', 'MipsEmuLinux'],
+    tags='mips isa')
+SimObject('MipsTLB.py', sim_objects=['MipsTLB'], tags='mips isa')
 
 DebugFlag('MipsPRA', tags='mips isa')
 

@@ -31,10 +31,12 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
-SimObject('BasicLink.py')
-SimObject('BasicRouter.py')
-SimObject('MessageBuffer.py')
-SimObject('Network.py')
+SimObject('BasicLink.py', sim_objects=[
+    'BasicLink', 'BasicExtLink', 'BasicIntLink'])
+SimObject('BasicRouter.py', sim_objects=['BasicRouter'])
+SimObject('MessageBuffer.py', sim_objects=['MessageBuffer'],
+        enums=['MessageRandomization'])
+SimObject('Network.py', sim_objects=['RubyNetwork'])
 
 Source('BasicLink.cc')
 Source('BasicRouter.cc')

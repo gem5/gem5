@@ -28,7 +28,7 @@
 
 Import('*')
 
-SimObject('Graphics.py')
+SimObject('Graphics.py', enums=['ImageFormat'])
 GTest('amo.test', 'amo.test.cc')
 Source('atomicio.cc', add_tags='gem5 trace')
 GTest('atomicio.test', 'atomicio.test.cc', 'atomicio.cc')

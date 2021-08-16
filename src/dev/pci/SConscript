@@ -40,14 +40,16 @@
 
 Import('*')
 
-SimObject('PciDevice.py')
+SimObject('PciDevice.py', sim_objects=[
+    'PciBar', 'PciBarNone', 'PciIoBar', 'PciLegacyIoBar', 'PciMemBar',
+    'PciMemUpperBar', 'PciDevice'])
 Source('device.cc')
 DebugFlag('PciDevice')
 
-SimObject('PciHost.py')
+SimObject('PciHost.py', sim_objects=['PciHost', 'GenericPciHost'])
 Source('host.cc')
 DebugFlag('PciHost')
 
-SimObject('CopyEngine.py')
+SimObject('CopyEngine.py', sim_objects=['CopyEngine'])
 Source('copy_engine.cc')
 DebugFlag('DMACopyEngine')

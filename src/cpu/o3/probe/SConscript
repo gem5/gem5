@@ -38,11 +38,11 @@
 Import('*')
 
 if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('SimpleTrace.py')
+    SimObject('SimpleTrace.py', sim_objects=['SimpleTrace'])
     Source('simple_trace.cc')
     DebugFlag('SimpleTrace')
 
     if env['HAVE_PROTOBUF']:
-        SimObject('ElasticTrace.py')
+        SimObject('ElasticTrace.py', sim_objects=['ElasticTrace'])
         Source('elastic_trace.cc')
         DebugFlag('ElasticTrace')

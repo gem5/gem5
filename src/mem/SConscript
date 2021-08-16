@@ -40,25 +40,27 @@
 
 Import('*')
 
-SimObject('CommMonitor.py')
+SimObject('CommMonitor.py', sim_objects=['CommMonitor'])
 Source('comm_monitor.cc')
 
-SimObject('AbstractMemory.py')
-SimObject('AddrMapper.py')
-SimObject('Bridge.py')
-SimObject('MemCtrl.py')
-SimObject('MemInterface.py')
-SimObject('DRAMInterface.py')
-SimObject('NVMInterface.py')
-SimObject('ExternalMaster.py')
-SimObject('ExternalSlave.py')
-SimObject('CfiMemory.py')
-SimObject('SimpleMemory.py')
-SimObject('XBar.py')
-SimObject('HMCController.py')
-SimObject('SerialLink.py')
-SimObject('MemDelay.py')
-SimObject('PortTerminator.py')
+SimObject('AbstractMemory.py', sim_objects=['AbstractMemory'])
+SimObject('AddrMapper.py', sim_objects=['AddrMapper', 'RangeAddrMapper'])
+SimObject('Bridge.py', sim_objects=['Bridge'])
+SimObject('MemCtrl.py', sim_objects=['MemCtrl'], enums=['MemSched'])
+SimObject('MemInterface.py', sim_objects=['MemInterface'], enums=['AddrMap'])
+SimObject('DRAMInterface.py', sim_objects=['DRAMInterface'],
+        enums=['PageManage'])
+SimObject('NVMInterface.py', sim_objects=['NVMInterface'])
+SimObject('ExternalMaster.py', sim_objects=['ExternalMaster'])
+SimObject('ExternalSlave.py', sim_objects=['ExternalSlave'])
+SimObject('CfiMemory.py', sim_objects=['CfiMemory'])
+SimObject('SimpleMemory.py', sim_objects=['SimpleMemory'])
+SimObject('XBar.py', sim_objects=[
+    'BaseXBar', 'NoncoherentXBar', 'CoherentXBar', 'SnoopFilter'])
+SimObject('HMCController.py', sim_objects=['HMCController'])
+SimObject('SerialLink.py', sim_objects=['SerialLink'])
+SimObject('MemDelay.py', sim_objects=['MemDelay', 'SimpleMemDelay'])
+SimObject('PortTerminator.py', sim_objects=['PortTerminator'])
 
 Source('abstract_mem.cc')
 Source('addr_mapper.cc')
@@ -96,16 +98,16 @@ if env['TARGET_ISA'] != 'null':
     Source('page_table.cc')
 
 if env['HAVE_DRAMSIM']:
-    SimObject('DRAMSim2.py')
+    SimObject('DRAMSim2.py', sim_objects=['DRAMSim2'])
     Source('dramsim2_wrapper.cc')
     Source('dramsim2.cc')
 
 if env['HAVE_DRAMSIM3']:
-    SimObject('DRAMsim3.py')
+    SimObject('DRAMsim3.py', sim_objects=['DRAMsim3'])
     Source('dramsim3_wrapper.cc')
     Source('dramsim3.cc')
 
-SimObject('MemChecker.py')
+SimObject('MemChecker.py', sim_objects=['MemChecker', 'MemCheckerMonitor'])
 Source('mem_checker.cc')
 Source('mem_checker_monitor.cc')
 

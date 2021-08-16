@@ -28,7 +28,8 @@
 
 Import('*')
 
-SimObject('Device.py')
+SimObject('Device.py', sim_objects=[
+    'PioDevice', 'BasicPioDevice', 'DmaDevice', 'DmaVirtDevice', 'IsaFake'])
 Source('io_device.cc')
 Source('isa_fake.cc')
 Source('dma_device.cc')
@@ -40,13 +41,13 @@ Source('intpin.cc')
 DebugFlag('IsaFake')
 DebugFlag('DMA')
 
-SimObject('Platform.py')
+SimObject('Platform.py', sim_objects=['Platform'])
 Source('platform.cc')
 
 if env['TARGET_ISA'] == 'null':
     Return()
 
-SimObject('BadDevice.py')
+SimObject('BadDevice.py', sim_objects=['BadDevice'])
 
 Source('baddev.cc')
 Source('intel_8254_timer.cc')

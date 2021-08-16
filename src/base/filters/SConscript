@@ -29,7 +29,10 @@
 
 Import('*')
 
-SimObject('BloomFilters.py')
+SimObject('BloomFilters.py', sim_objects=[
+    'BloomFilterBase', 'BloomFilterBlock', 'BloomFilterMultiBitSel',
+    'BloomFilterBulk', 'BloomFilterH3', 'BloomFilterMulti',
+    'BloomFilterPerfect'])
 
 Source('block_bloom_filter.cc')
 Source('bulk_bloom_filter.cc')

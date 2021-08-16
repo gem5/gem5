@@ -28,7 +28,10 @@ Import('*')
 if not env['USE_SYSTEMC']:
     Return()
 
-SimObject('TlmBridge.py')
+SimObject('TlmBridge.py', sim_objects=[
+    'Gem5ToTlmBridgeBase', 'TlmToGem5BridgeBase'] +
+    [f'Gem5ToTlmBridge{bits}' for bits in (32, 64, 128, 256, 512)] +
+    [f'TlmToGem5Bridge{bits}' for bits in (32, 64, 128, 256, 512)])
 
 Source('gem5_to_tlm.cc')
 Source('sc_ext.cc')

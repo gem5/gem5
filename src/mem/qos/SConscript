@@ -35,11 +35,13 @@
 
 Import('*')
 
-SimObject('QoSMemCtrl.py')
-SimObject('QoSMemSinkCtrl.py')
-SimObject('QoSMemSinkInterface.py')
-SimObject('QoSPolicy.py')
-SimObject('QoSTurnaround.py')
+SimObject('QoSMemCtrl.py', sim_objects=['QoSMemCtrl'], enums=['QoSQPolicy'])
+SimObject('QoSMemSinkCtrl.py', sim_objects=['QoSMemSinkCtrl'])
+SimObject('QoSMemSinkInterface.py', sim_objects=['QoSMemSinkInterface'])
+SimObject('QoSPolicy.py', sim_objects=[
+    'QoSPolicy', 'QoSFixedPriorityPolicy', 'QoSPropFairPolicy'])
+SimObject('QoSTurnaround.py', sim_objects=[
+    'QoSTurnaroundPolicy', 'QoSTurnaroundPolicyIdeal'])
 
 Source('policy.cc')
 Source('policy_fixed_prio.cc')

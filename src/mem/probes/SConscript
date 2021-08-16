@@ -37,16 +37,16 @@
 
 Import('*')
 
-SimObject('BaseMemProbe.py')
+SimObject('BaseMemProbe.py', sim_objects=['BaseMemProbe'])
 Source('base.cc')
 
-SimObject('StackDistProbe.py')
+SimObject('StackDistProbe.py', sim_objects=['StackDistProbe'])
 Source('stack_dist.cc')
 
-SimObject('MemFootprintProbe.py')
+SimObject('MemFootprintProbe.py', sim_objects=['MemFootprintProbe'])
 Source('mem_footprint.cc')
 
 # Packet tracing requires protobuf support
 if env['HAVE_PROTOBUF']:
-    SimObject('MemTraceProbe.py')
+    SimObject('MemTraceProbe.py', sim_objects=['MemTraceProbe'])
     Source('mem_trace.cc')

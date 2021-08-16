@@ -38,7 +38,9 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
-SimObject('RubyDirectedTester.py')
+SimObject('RubyDirectedTester.py', sim_objects=[
+    'DirectedGenerator', 'SeriesRequestGenerator', 'InvalidateGenerator',
+    'RubyDirectedTester'])
 
 Source('RubyDirectedTester.cc')
 Source('DirectedGenerator.cc')

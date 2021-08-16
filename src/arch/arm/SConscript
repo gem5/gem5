@@ -93,17 +93,24 @@ Source('tlb.cc', tags='arm isa')
 Source('tlbi_op.cc', tags='arm isa')
 Source('utility.cc', tags='arm isa')
 
-SimObject('ArmDecoder.py', tags='arm isa')
-SimObject('ArmFsWorkload.py', tags='arm isa')
-SimObject('ArmInterrupts.py', tags='arm isa')
-SimObject('ArmISA.py', tags='arm isa')
-SimObject('ArmMMU.py', tags='arm isa')
-SimObject('ArmNativeTrace.py', tags='arm isa')
-SimObject('ArmSemihosting.py', tags='arm isa')
-SimObject('ArmSeWorkload.py', tags='arm isa')
-SimObject('ArmSystem.py', tags='arm isa')
-SimObject('ArmTLB.py', tags='arm isa')
-SimObject('ArmPMU.py', tags='arm isa')
+SimObject('ArmDecoder.py', sim_objects=['ArmDecoder'], tags='arm isa')
+SimObject('ArmFsWorkload.py', sim_objects=[
+    'ArmFsWorkload', 'ArmFsLinux', 'ArmFsFreebsd'],
+    enums=['ArmMachineType'], tags='arm isa')
+SimObject('ArmInterrupts.py', sim_objects=['ArmInterrupts'], tags='arm isa')
+SimObject('ArmISA.py', sim_objects=['ArmISA'], enums=['DecoderFlavor'],
+    tags='arm isa')
+SimObject('ArmMMU.py', sim_objects=['ArmTableWalker', 'ArmMMU'],
+    tags='arm isa')
+SimObject('ArmNativeTrace.py', sim_objects=['ArmNativeTrace'], tags='arm isa')
+SimObject('ArmSemihosting.py', sim_objects=['ArmSemihosting'], tags='arm isa')
+SimObject('ArmSeWorkload.py', sim_objects=[
+    'ArmSEWorkload', 'ArmEmuLinux', 'ArmEmuFreebsd'], tags='arm isa')
+SimObject('ArmSystem.py', sim_objects=['ArmSystem', 'ArmRelease'],
+    enums=['ArmExtension'], tags='arm isa')
+SimObject('ArmTLB.py', sim_objects=['ArmTLB'], enums=['ArmLookupLevel'],
+    tags='arm isa')
+SimObject('ArmPMU.py', sim_objects=['ArmPMU'], tags='arm isa')
 
 DebugFlag('Arm', tags='arm isa')
 DebugFlag('ArmTme', 'Transactional Memory Extension', tags='arm isa')

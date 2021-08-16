@@ -36,9 +36,14 @@ Import('*')
 if not env['BUILD_GPU']:
     Return()
 
-SimObject('GPU.py')
-SimObject('GPUStaticInstFlags.py')
-SimObject('LdsState.py')
+SimObject('GPU.py', sim_objects=[
+    'PoolManager', 'SimplePoolManager', 'DynPoolManager', 'RegisterFile',
+    'ScalarRegisterFile', 'VectorRegisterFile', 'RegisterManager', 'Wavefront',
+    'ComputeUnit', 'Shader', 'GPUComputeDriver', 'GPURenderDriver',
+    'GPUDispatcher', 'GPUCommandProcessor'],
+    enums=['PrefetchType', 'GfxVersion', 'StorageClassType'])
+SimObject('GPUStaticInstFlags.py', enums=['GPUStaticInstFlags'])
+SimObject('LdsState.py', sim_objects=['LdsState'])
 
 Source('comm.cc')
 Source('compute_unit.cc')

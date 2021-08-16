@@ -36,6 +36,6 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
-SimObject('FaultModel.py')
+SimObject('FaultModel.py', sim_objects=['FaultModel'])
 Source('FaultModel.cc')
 

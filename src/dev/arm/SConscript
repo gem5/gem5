@@ -37,18 +37,32 @@
 
 Import('*')
 
-SimObject('AbstractNVM.py', tags='arm isa')
-SimObject('Display.py', tags='arm isa')
-SimObject('Doorbell.py', tags='arm isa')
-SimObject('FlashDevice.py', tags='arm isa')
-SimObject('GenericTimer.py', tags='arm isa')
-SimObject('Gic.py', tags='arm isa')
-SimObject('RealView.py', tags='arm isa')
-SimObject('SMMUv3.py', tags='arm isa')
-SimObject('UFSHostDevice.py', tags='arm isa')
-SimObject('EnergyCtrl.py', tags='arm isa')
-SimObject('NoMali.py', tags='arm isa')
-SimObject('VirtIOMMIO.py', tags='arm isa')
+SimObject('AbstractNVM.py', sim_objects=['AbstractNVM'], tags='arm isa')
+SimObject('Display.py', sim_objects=['Display'], tags='arm isa')
+SimObject('Doorbell.py', sim_objects=['Doorbell'], tags='arm isa')
+SimObject('FlashDevice.py', sim_objects=['FlashDevice'],
+        enums=['DataDistribution'], tags='arm isa')
+SimObject('GenericTimer.py', sim_objects=[
+    'SystemCounter', 'GenericTimer', 'GenericTimerFrame',
+    'GenericTimerMem'], tags='arm isa')
+SimObject('Gic.py', sim_objects=[
+    'BaseGic', 'ArmInterruptPin', 'ArmSPI', 'ArmPPI', 'ArmSigInterruptPin',
+    'GicV2', 'Gicv2mFrame', 'Gicv2m', 'VGic', 'Gicv3Its', 'Gicv3'],
+    enums=['ArmInterruptType'], tags='arm isa')
+SimObject('RealView.py', sim_objects=[
+    'AmbaPioDevice', 'AmbaIntDevice', 'AmbaDmaDevice', 'A9SCU',
+    'GenericArmPciHost', 'RealViewCtrl', 'RealViewOsc',
+    'RealViewTemperatureSensor', 'AmbaFake', 'Pl011', 'Sp804', 'Sp805',
+    'GenericWatchdog', 'CpuLocalTimer', 'PL031', 'Pl050', 'Pl111', 'HDLcd',
+    'FVPBasePwrCtrl', 'RealView'],
+    enums=['ArmPciIntRouting'], tags='arm isa')
+SimObject('SMMUv3.py', sim_objects=['SMMUv3DeviceInterface', 'SMMUv3'],
+    tags='arm isa')
+SimObject('UFSHostDevice.py', sim_objects=['UFSHostDevice'], tags='arm isa')
+SimObject('EnergyCtrl.py', sim_objects=['EnergyCtrl'], tags='arm isa')
+SimObject('NoMali.py', sim_objects=['NoMaliGpu', 'CustomNoMaliGpu'],
+    enums=['NoMaliGpuType'], tags='arm isa')
+SimObject('VirtIOMMIO.py', sim_objects=['MmioVirtIO'], tags='arm isa')
 if env['USE_ARM_FASTMODEL']:
     SimObject('VExpressFastmodel.py', tags='arm isa')
 

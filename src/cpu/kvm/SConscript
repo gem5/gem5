@@ -40,8 +40,8 @@ Import('*')
 if not env['USE_KVM'] or env['TARGET_ISA'] != env['KVM_ISA']:
     Return()
 
-SimObject('KvmVM.py')
-SimObject('BaseKvmCPU.py')
+SimObject('KvmVM.py', sim_objects=['KvmVM'])
+SimObject('BaseKvmCPU.py', sim_objects=['BaseKvmCPU'])
 
 Source('base.cc')
 Source('device.cc')

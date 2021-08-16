@@ -26,11 +26,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
+import os.path
 import re
 import sys
-
-from os.path import isdir, isfile, join as joinpath
 
 from SCons.Scanner import Classic
 
@@ -52,7 +50,7 @@ slicc_depends = []
 for root,dirs,files in os.walk(slicc_dir.srcnode().abspath):
     for f in files:
         if f.endswith('.py'):
-            slicc_depends.append(File(joinpath(root, f)))
+            slicc_depends.append(File(os.path.join(root, f)))
 
 #
 # Use SLICC
@@ -113,5 +111,9 @@ for f in nodes:
     if s.endswith('.cc'):
         Source(f, append=append)
     elif s.endswith('.py'):
-        SimObject(f)
+        filename = os.path.basename(s)
+        # We currently only expect ${ident}_Controller.py to be generated, and
+        # for it to contain a single SimObject with the same name.
+        assert(filename.endswith('_Controller.py'))
+        SimObject(f, sim_objects=[os.path.splitext(filename)[0]])
 

@@ -44,7 +44,7 @@ if env['TARGET_ISA'] == 'null':
     Return()
 
 # Controllers
-SimObject('Ide.py')
+SimObject('Ide.py', sim_objects=['IdeDisk', 'IdeController'], enums=['IdeID'])
 
 Source('ide_ctrl.cc')
 Source('ide_disk.cc')
@@ -53,8 +53,9 @@ DebugFlag('IdeCtrl')
 DebugFlag('IdeDisk')
 
 # Disk models
-SimObject('DiskImage.py')
-SimObject('SimpleDisk.py')
+SimObject('DiskImage.py', sim_objects=[
+    'DiskImage', 'RawDiskImage', 'CowDiskImage'])
+SimObject('SimpleDisk.py', sim_objects=['SimpleDisk'])
 
 Source('disk_image.cc')
 Source('simple_disk.cc')

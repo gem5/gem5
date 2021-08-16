@@ -37,9 +37,12 @@
 
 Import('*')
 
-SimObject('MHU.py', tags='arm isa')
-SimObject('Scmi.py', tags='arm isa')
-SimObject('Scp.py', tags='arm isa')
+SimObject('MHU.py', sim_objects=[
+    'MhuDoorbell', 'Scp2ApDoorbell', 'Ap2ScpDoorbell', 'MHU'], tags='arm isa')
+SimObject('Scmi.py', sim_objects=[
+    'ScmiChannel', 'ScmiAgentChannel', 'ScmiPlatformChannel',
+    'ScmiCommunication', 'ScmiPlatform'], tags='arm isa')
+SimObject('Scp.py', sim_objects=['Scp'], tags='arm isa')
 
 Source('mhu.cc', tags='arm isa')
 Source('scmi_platform.cc', tags='arm isa')

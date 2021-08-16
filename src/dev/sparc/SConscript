@@ -28,7 +28,8 @@
 
 Import('*')
 
-SimObject('T1000.py', tags='sparc isa')
+SimObject('T1000.py', sim_objects=['MmDisk', 'DumbTOD', 'Iob', 'T1000'],
+    tags='sparc isa')
 
 Source('dtod.cc', tags='sparc isa')
 Source('iob.cc', tags='sparc isa')

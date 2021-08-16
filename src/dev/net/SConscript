@@ -40,7 +40,11 @@
 
 Import('*')
 
-SimObject('Ethernet.py')
+SimObject('Ethernet.py', sim_objects=[
+    'EtherLink', 'DistEtherLink', 'EtherBus', 'EtherSwitch', 'EtherTapBase',
+    'EtherTapStub', 'EtherDump', 'EtherDevice', 'IGbE', 'EtherDevBase',
+    'NSGigE', 'Sinic'] +
+    (['EtherTap'] if env['HAVE_TUNTAP'] else []))
 
 # Basic Ethernet infrastructure
 Source('etherbus.cc')

@@ -28,7 +28,8 @@
 
 Import('*')
 
-SimObject('Tags.py')
+SimObject('Tags.py', sim_objects=[
+    'BaseTags', 'BaseSetAssoc', 'SectorTags', 'CompressedTags', 'FALRU'])
 
 Source('base.cc')
 Source('base_set_assoc.cc')

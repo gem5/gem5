@@ -28,7 +28,8 @@
 
 Import('*')
 
-SimObject('Malta.py', tags='mips isa')
+SimObject('Malta.py', sim_objects=['MaltaCChip', 'MaltaIO', 'Malta'],
+    tags='mips isa')
 
 DebugFlag('Malta', tags='mips isa')
 

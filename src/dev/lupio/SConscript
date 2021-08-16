@@ -26,14 +26,14 @@
 
 Import('*')
 
-SimObject('LupioBLK.py', tags='riscv isa')
-SimObject('LupioIPI.py', tags='riscv isa')
-SimObject('LupioPIC.py', tags='riscv isa')
-SimObject('LupioRNG.py', tags='riscv isa')
-SimObject('LupioRTC.py', tags='riscv isa')
-SimObject('LupioTMR.py', tags='riscv isa')
-SimObject('LupioTTY.py', tags='riscv isa')
-SimObject('LupioSYS.py', tags='riscv isa')
+SimObject('LupioBLK.py', sim_objects=['LupioBLK'], tags='riscv isa')
+SimObject('LupioIPI.py', sim_objects=['LupioIPI'], tags='riscv isa')
+SimObject('LupioPIC.py', sim_objects=['LupioPIC'], tags='riscv isa')
+SimObject('LupioRNG.py', sim_objects=['LupioRNG'], tags='riscv isa')
+SimObject('LupioRTC.py', sim_objects=['LupioRTC'], tags='riscv isa')
+SimObject('LupioTMR.py', sim_objects=['LupioTMR'], tags='riscv isa')
+SimObject('LupioTTY.py', sim_objects=['LupioTTY'], tags='riscv isa')
+SimObject('LupioSYS.py', sim_objects=['LupioSYS'], tags='riscv isa')
 
 DebugFlag('LupioBLK')
 DebugFlag('LupioIPI')

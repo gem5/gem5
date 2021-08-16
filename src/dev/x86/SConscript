@@ -28,36 +28,37 @@
 
 Import('*')
 
-SimObject('Pc.py', tags='x86 isa')
+SimObject('Pc.py', sim_objects=['Pc'], tags='x86 isa')
 Source('pc.cc', tags='x86 isa')
 
-SimObject('SouthBridge.py', tags='x86 isa')
+SimObject('SouthBridge.py', sim_objects=['SouthBridge'], tags='x86 isa')
 Source('south_bridge.cc', tags='x86 isa')
 
-SimObject('Cmos.py', tags='x86 isa')
+SimObject('Cmos.py', sim_objects=['Cmos'], tags='x86 isa')
 Source('cmos.cc', tags='x86 isa')
 DebugFlag('CMOS', 'Accesses to CMOS devices', tags='x86 isa')
 
-SimObject('I8259.py', tags='x86 isa')
+SimObject('I8259.py', sim_objects=['I8259'], enums=['X86I8259CascadeMode'],
+    tags='x86 isa')
 Source('i8259.cc', tags='x86 isa')
 DebugFlag('I8259', 'Accesses to the I8259 PIC devices', tags='x86 isa')
 
-SimObject('I8254.py', tags='x86 isa')
+SimObject('I8254.py', sim_objects=['I8254'], tags='x86 isa')
 Source('i8254.cc', tags='x86 isa')
 DebugFlag('I8254', 'Interrupts from the I8254 timer', tags='x86 isa');
 
-SimObject('I8237.py', tags='x86 isa')
+SimObject('I8237.py', sim_objects=['I8237'], tags='x86 isa')
 Source('i8237.cc', tags='x86 isa')
 DebugFlag('I8237', 'The I8237 dma controller', tags='x86 isa');
 
-SimObject('I8042.py', tags='x86 isa')
+SimObject('I8042.py', sim_objects=['I8042'], tags='x86 isa')
 Source('i8042.cc', tags='x86 isa')
 DebugFlag('I8042', 'The I8042 keyboard controller', tags='x86 isa');
 
-SimObject('PcSpeaker.py', tags='x86 isa')
+SimObject('PcSpeaker.py', sim_objects=['PcSpeaker'], tags='x86 isa')
 Source('speaker.cc', tags='x86 isa')
 DebugFlag('PcSpeaker', tags='x86 isa')
 
-SimObject('I82094AA.py', tags='x86 isa')
+SimObject('I82094AA.py', sim_objects=['I82094AA'], tags='x86 isa')
 Source('i82094aa.cc', tags='x86 isa')
 DebugFlag('I82094AA', tags='x86 isa')

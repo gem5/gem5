@@ -27,10 +27,10 @@
 
 Import('*')
 
-SimObject('SimpleObject.py')
-SimObject('HelloObject.py')
-SimObject('SimpleMemobj.py')
-SimObject('SimpleCache.py')
+SimObject('SimpleObject.py', sim_objects=['SimpleObject'])
+SimObject('HelloObject.py', sim_objects=['HelloObject', 'GoodbyeObject'])
+SimObject('SimpleMemobj.py', sim_objects=['SimpleMemobj'])
+SimObject('SimpleCache.py', sim_objects=['SimpleCache'])
 
 Source('simple_object.cc')
 Source('hello_object.cc')

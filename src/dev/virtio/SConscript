@@ -40,10 +40,12 @@ Import('*')
 if env['TARGET_ISA'] == 'null':
     Return()
 
-SimObject('VirtIO.py')
-SimObject('VirtIOConsole.py')
-SimObject('VirtIOBlock.py')
-SimObject('VirtIO9P.py')
+SimObject('VirtIO.py', sim_objects=[
+    'VirtIODeviceBase', 'VirtIODummyDevice', 'PciVirtIO'])
+SimObject('VirtIOConsole.py', sim_objects=['VirtIOConsole'])
+SimObject('VirtIOBlock.py', sim_objects=['VirtIOBlock'])
+SimObject('VirtIO9P.py', sim_objects=[
+    'VirtIO9PBase', 'VirtIO9PProxy', 'VirtIO9PDiod', 'VirtIO9PSocket'])
 
 Source('base.cc')
 Source('pci.cc')

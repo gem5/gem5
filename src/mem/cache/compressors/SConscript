@@ -28,7 +28,12 @@
 
 Import('*')
 
-SimObject('Compressors.py')
+SimObject('Compressors.py', sim_objects=[
+    'BaseCacheCompressor', 'BaseDictionaryCompressor',
+    'Base64Delta8', 'Base64Delta16', 'Base64Delta32',
+    'Base32Delta8', 'Base32Delta16', 'Base16Delta8',
+    'CPack', 'FPC', 'FPCD', 'FrequentValuesCompressor', 'MultiCompressor',
+    'PerfectCompressor', 'RepeatedQwordsCompressor', 'ZeroCompressor'])
 
 Source('base.cc')
 Source('base_dictionary_compressor.cc')

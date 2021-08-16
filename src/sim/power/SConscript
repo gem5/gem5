@@ -28,11 +28,13 @@
 
 Import('*')
 
-SimObject('MathExprPowerModel.py')
-SimObject('PowerModel.py')
-SimObject('PowerModelState.py')
-SimObject('ThermalDomain.py')
-SimObject('ThermalModel.py')
+SimObject('MathExprPowerModel.py', sim_objects=['MathExprPowerModel'])
+SimObject('PowerModel.py', sim_objects=['PowerModel'], enums=['PMType'])
+SimObject('PowerModelState.py', sim_objects=['PowerModelState'])
+SimObject('ThermalDomain.py', sim_objects=['ThermalDomain'])
+SimObject('ThermalModel.py', sim_objects=[
+    'ThermalNode', 'ThermalResistor', 'ThermalCapacitor',
+    'ThermalReference', 'ThermalModel'])
 
 Source('power_model.cc')
 Source('mathexpr_powermodel.cc')

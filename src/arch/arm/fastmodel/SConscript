@@ -353,7 +353,8 @@ Export('ArmFastModelComponent')
 PySource('m5', 'arm_fast_model.py')
 Source('fastmodel.cc')
 
-SimObject('FastModel.py')
+SimObject('FastModel.py', sim_objects=[
+    'AmbaToTlmBridge64', 'AmbaFromTlmBridge64'])
 Source('amba_to_tlm_bridge.cc')
 Source('amba_from_tlm_bridge.cc')
 

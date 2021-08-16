@@ -31,8 +31,8 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
-SimObject('SimpleLink.py')
-SimObject('SimpleNetwork.py')
+SimObject('SimpleLink.py', sim_objects=['SimpleExtLink', 'SimpleIntLink'])
+SimObject('SimpleNetwork.py', sim_objects=['SimpleNetwork', 'Switch'])
 
 Source('PerfectSwitch.cc')
 Source('SimpleLink.cc')

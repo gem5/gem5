@@ -46,12 +46,14 @@ Source('remote_gdb.cc', tags='power isa')
 Source('se_workload.cc', tags='power isa')
 Source('tlb.cc', tags='power isa')
 
-SimObject('PowerDecoder.py', tags='power isa')
-SimObject('PowerInterrupts.py', tags='power isa')
-SimObject('PowerISA.py', tags='power isa')
-SimObject('PowerMMU.py', tags='power isa')
-SimObject('PowerSeWorkload.py', tags='power isa')
-SimObject('PowerTLB.py', tags='power isa')
+SimObject('PowerDecoder.py', sim_objects=['PowerDecoder'], tags='power isa')
+SimObject('PowerInterrupts.py', sim_objects=['PowerInterrupts'],
+    tags='power isa')
+SimObject('PowerISA.py', sim_objects=['PowerISA'], tags='power isa')
+SimObject('PowerMMU.py', sim_objects=['PowerMMU'], tags='power isa')
+SimObject('PowerSeWorkload.py', sim_objects=[
+    'PowerSEWorkload', 'PowerEmuLinux'], tags='power isa')
+SimObject('PowerTLB.py', sim_objects=['PowerTLB'], tags='power isa')
 
 DebugFlag('Power', tags='power isa')
 

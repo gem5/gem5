@@ -36,7 +36,7 @@ Import('*')
 if not env['BUILD_GPU']:
     Return()
 
-SimObject('HSADevice.py')
+SimObject('HSADevice.py', sim_objects=['HSAPacketProcessor'])
 
 Source('hsa_packet_processor.cc')
 Source('hw_scheduler.cc')

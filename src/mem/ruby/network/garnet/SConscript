@@ -31,8 +31,11 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
-SimObject('GarnetLink.py')
-SimObject('GarnetNetwork.py')
+SimObject('GarnetLink.py', enums=['CDCType'], sim_objects=[
+    'NetworkLink', 'CreditLink', 'NetworkBridge', 'GarnetIntLink',
+    'GarnetExtLink'])
+SimObject('GarnetNetwork.py', sim_objects=[
+    'GarnetNetwork', 'GarnetNetworkInterface', 'GarnetRouter'])
 
 Source('GarnetLink.cc')
 Source('GarnetNetwork.cc')

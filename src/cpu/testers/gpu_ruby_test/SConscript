@@ -39,12 +39,12 @@ if not env['BUILD_GPU']:
 if env['PROTOCOL'] == 'None':
     Return()
 
-SimObject('ProtocolTester.py')
-SimObject('CpuThread.py')
-SimObject('DmaThread.py')
-SimObject('GpuWavefront.py')
-SimObject('TesterThread.py')
-SimObject('TesterDma.py')
+SimObject('ProtocolTester.py', sim_objects=['ProtocolTester'])
+SimObject('CpuThread.py', sim_objects=['CpuThread'])
+SimObject('DmaThread.py', sim_objects=['DmaThread'])
+SimObject('GpuWavefront.py', sim_objects=['GpuWavefront'])
+SimObject('TesterThread.py', sim_objects=['TesterThread'])
+SimObject('TesterDma.py', sim_objects=['TesterDma'])
 
 Source('address_manager.cc')
 Source('episode.cc')
