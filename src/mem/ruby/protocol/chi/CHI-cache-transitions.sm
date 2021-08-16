@@ -587,7 +587,7 @@ transition(SC_RSC, Global_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
 
 // This could happen if enqueued the eviction when the line was busy
 // or couldn't handle it immediately due to no TBE available
-transition({RU,RSC,RSD,RUSD,I}, {Local_Eviction, LocalHN_Eviction}) {
+transition({RU,RSC,RSD,RUSC,RUSD,I}, {Local_Eviction, LocalHN_Eviction}) {
   Pop_ReplTriggerQueue;
 }
 transition(I, Global_Eviction) {
