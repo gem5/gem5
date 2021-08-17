@@ -34,7 +34,8 @@ from ...boards.abstract_board import AbstractBoard
 from ...coherence_protocol import CoherenceProtocol
 from ...isas import ISA
 from ...utils.override import overrides
-from ...runtime import get_runtime_coherence_protocol, get_runtime_isa
+from ...runtime import get_runtime_isa
+from components_library.utils.requires import requires
 
 
 from m5.objects import (
@@ -67,11 +68,8 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
 
     @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
-        if get_runtime_coherence_protocol() != CoherenceProtocol.MI_EXAMPLE:
-            raise EnvironmentError(
-                "The MIExampleCacheHierarchy must be used with with the "
-                "MI_EXAMPLE coherence protocol."
-            )
+
+        requires(coherence_protocol_required=CoherenceProtocol.MI_EXAMPLE)
 
         self.ruby_system = RubySystem()
 

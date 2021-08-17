@@ -49,6 +49,7 @@ from components_library.runtime import (
     get_runtime_coherence_protocol,
     get_runtime_isa,
 )
+from components_library.utils.requires import requires
 from components_library.boards.x86_board import X86Board
 from components_library.memory.single_channel import SingleChannelDDR3_1600
 from components_library.processors.simple_processor import SimpleProcessor
@@ -123,21 +124,15 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-# We check the gem5 binary is correct at runtime runtime.
-if get_runtime_isa() != ISA.X86:
-    raise EnvironmentError("The boot-exit tests must be run with the X86 ISA.")
+coherence_protocol_required = None
+if args.mem_system == "mi_example":
+    coherence_protocol_required = CoherenceProtocol.MI_EXAMPLE
+elif args.mem_system == "mesi_two_level":
+    coherence_protocol_required = CoherenceProtocol.MESI_TWO_LEVEL
 
-if (
-    args.mem_system == "mi_example"
-    and get_runtime_coherence_protocol() != CoherenceProtocol.MI_EXAMPLE
-):
-    raise EnvironmentError("gem5 binary not compiled to MI_EXAMPLE.")
-
-if (
-    args.mem_system == "mesi_two_level"
-    and get_runtime_coherence_protocol() != CoherenceProtocol.MESI_TWO_LEVEL
-):
-    raise EnvironmentError("gem5 binary not compiled to MESI_Two_Level.")
+requires(isa_required=ISA.X86,
+         coherence_protocol_required=coherence_protocol_required,
+         kvm_required=(args.cpu == "kvm"))
 
 cache_hierarchy = None
 if args.mem_system == "mi_example":

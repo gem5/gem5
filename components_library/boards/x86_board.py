@@ -60,7 +60,7 @@ from .simple_board import SimpleBoard
 from ..processors.abstract_processor import AbstractProcessor
 from ..memory.abstract_memory_system import AbstractMemorySystem
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-from ..runtime import get_runtime_isa
+from ..utils.requires import requires
 
 import os
 from typing import List, Optional, Sequence
@@ -91,10 +91,7 @@ class X86Board(SimpleBoard):
             exit_on_work_items=exit_on_work_items,
         )
 
-        if get_runtime_isa() != ISA.X86:
-            raise EnvironmentError(
-                "X86Motherboard will only work with the X86 ISA."
-            )
+        requires(isa_required=ISA.X86)
 
         self.pc = Pc()
 

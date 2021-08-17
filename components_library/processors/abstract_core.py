@@ -27,6 +27,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Optional
 from .cpu_types import CPUTypes
+from ..utils.requires import requires
 
 from m5.objects import BaseMMU, Port, SubSystem
 
@@ -36,6 +37,8 @@ class AbstractCore(SubSystem):
 
     def __init__(self, cpu_type: CPUTypes):
         super(AbstractCore, self).__init__()
+        if cpu_type == CPUTypes.KVM:
+            requires(kvm_required=True)
         self._cpu_type = cpu_type
 
     def get_type(self) -> CPUTypes:

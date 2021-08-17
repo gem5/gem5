@@ -58,6 +58,10 @@ from components_library.runtime import (
     get_runtime_coherence_protocol,
     get_runtime_isa,
 )
+from components_library.utils.requires import requires
+from components_library.isas import ISA
+
+requires(isa_required=ISA.X86)
 
 # Setup the system.
 cache_hierarchy = NoCache()

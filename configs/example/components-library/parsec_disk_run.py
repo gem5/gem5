@@ -63,14 +63,17 @@ from components_library.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
 from components_library.processors.cpu_types import CPUTypes
+from components_library.isas import ISA
 from components_library.runtime import (
     get_runtime_isa,
     get_runtime_coherence_protocol,
 )
+from components_library.utils.requires import requires
 
 import time
 import time
 
+requires(isa_required=ISA.X86)
 
 # Setup the cachie hierarchy.
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
