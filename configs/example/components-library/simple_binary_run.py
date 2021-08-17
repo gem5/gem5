@@ -77,10 +77,12 @@ motherboard.connect_things()
 
 # Set the workload
 thispath = os.path.dirname(os.path.realpath(__file__))
-binary = CustomResource(os.path.join(
-    thispath,
-    "../../../tests/test-progs/hello/bin/x86/linux/hello"
-))
+binary = CustomResource(
+    os.path.join(
+        thispath,
+        "../../../tests/test-progs/hello/bin/x86/linux/hello",
+    )
+)
 motherboard.set_workload(binary)
 
 

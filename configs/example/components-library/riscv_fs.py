@@ -66,11 +66,9 @@ import shutil
 
 # Run a check to ensure the right version of gem5 is being used.
 if get_runtime_isa() != ISA.RISCV:
-    raise EnvironmentError(
-        "The riscv_fs.py should be run with RISCV ISA."
-    )
+    raise EnvironmentError("The riscv_fs.py should be run with RISCV ISA.")
 
-from components_library.cachehierarchies.classic. \
+from components_library.cachehierarchies.classic.\
     private_l1_private_l2_cache_hierarchy import (
     PrivateL1PrivateL2CacheHierarchy,
 )
@@ -78,9 +76,7 @@ from components_library.boards.riscv_board import RiscvBoard
 
 # Setup the cache hierarchy. PrivateL1PrivateL2 and NoCache have been tested.
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-    l1d_size='32KiB',
-    l1i_size='32KiB',
-    l2_size='512KiB'
+    l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
 )
 
 # Setup the system memory.

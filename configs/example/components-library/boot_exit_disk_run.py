@@ -103,7 +103,7 @@ parser.add_argument(
     type=int,
     required=False,
     help="The tick to exit the simulation. Note: using this may make the "
-         "selected boot-type selection pointless."
+    "selected boot-type selection pointless.",
 )
 
 parser.add_argument(

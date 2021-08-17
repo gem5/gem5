@@ -164,7 +164,10 @@ else:
     print("Ran a total of", m5.curTick() / 1e12, "simulated seconds")
     print(
         "Total wallclock time: {}s, {} min".format(
-            (time.time() - globalStart, (time.time() - globalStart) / 60)
+            (
+                time.time() - globalStart,
+                (time.time() - globalStart) / 60,
+            )
         )
     )
     exit()
@@ -195,7 +198,8 @@ else:
     print("Ran a total of", m5.curTick() / 1e12, "simulated seconds")
     print(
         "Total wallclock time: {}s, {} min".format(
-            time.time() - globalStart, (time.time() - globalStart) / 60
+            time.time() - globalStart,
+            (time.time() - globalStart) / 60,
         )
     )
     exit()
