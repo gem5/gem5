@@ -1,5 +1,18 @@
 /*
- * Copyright 2021 Google, Inc.
+ * Copyright (c) 2017 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2008 The Hewlett-Packard Development Company
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,19 +38,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "pybind11/embed.h"
+#ifndef __PYTHON_EMBEDDED_HH__
+#define __PYTHON_EMBEDDED_HH__
+
 #include "pybind11/pybind11.h"
-#include "python/m5ImporterCode.hh"
 
-#include "python/embedded.hh"
+#include <inttypes.h>
 
-namespace py = pybind11;
+#include <list>
 
-PYBIND11_EMBEDDED_MODULE(importer, m)
+namespace gem5
 {
-    m.def("_init_all_embedded", gem5::EmbeddedPython::initAll);
-    py::str importer_code(
-            reinterpret_cast<const char *>(gem5::Blobs::m5ImporterCode),
-            gem5::Blobs::m5ImporterCode_len);
-    py::exec(std::move(importer_code), m.attr("__dict__"));
-}
+
+/*
+ * Data structure describing an embedded python file.
+ */
+struct EmbeddedPython
+{
+    const char *abspath;
+    const char *modpath;
+    const uint8_t *code;
+    int zlen;
+    int len;
+
+    EmbeddedPython(const char *abspath, const char *modpath,
+            const uint8_t *code, int zlen, int len);
+
+    pybind11::object getCode() const;
+    bool addModule() const;
+
+    static std::list<EmbeddedPython *> &getList();
+    static int initAll();
+};
+
+} // namespace gem5
+
+#endif // __PYTHON_EMBEDDED_HH__

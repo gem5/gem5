@@ -77,7 +77,7 @@ compressed = zlib.compress(marshalled)
 
 code = code_formatter()
 code('''\
-#include "sim/init.hh"
+#include "python/embedded.hh"
 
 namespace gem5
 {

@@ -41,94 +41,71 @@
 
 #include "pybind11/embed.h"
 
-#include "sim/init.hh"
+#include "python/embedded.hh"
 
-#include <map>
-#include <string>
+#include <zlib.h>
 
-#include "base/cprintf.hh"
-#include "python/pybind11/pybind.hh"
+#include <list>
+
+#include "base/logging.hh"
 
 namespace py = pybind11;
 
 namespace gem5
 {
 
-EmbeddedPyBind::EmbeddedPyBind(const char *_name,
-                               void (*init_func)(py::module_ &),
-                               const char *_base)
-    : initFunc(init_func), registered(false), name(_name), base(_base)
+EmbeddedPython::EmbeddedPython(const char *abspath, const char *modpath,
+        const unsigned char *code, int zlen, int len)
+    : abspath(abspath), modpath(modpath), code(code), zlen(zlen), len(len)
 {
-    getMap()[_name] = this;
+    getList().push_back(this);
 }
 
-EmbeddedPyBind::EmbeddedPyBind(const char *_name,
-                               void (*init_func)(py::module_ &))
-    : initFunc(init_func), registered(false), name(_name), base("")
+std::list<EmbeddedPython *> &
+EmbeddedPython::getList()
 {
-    getMap()[_name] = this;
+    static std::list<EmbeddedPython *> the_list;
+    return the_list;
 }
 
-void
-EmbeddedPyBind::init(py::module_ &m)
+/*
+ * Uncompress and unmarshal the code object stored in the
+ * EmbeddedPython
+ */
+py::object
+EmbeddedPython::getCode() const
 {
-    if (!registered) {
-        initFunc(m);
-        registered = true;
-    } else {
-        cprintf("Warning: %s already registered.\n", name);
-    }
+    Bytef marshalled[len];
+    uLongf unzlen = len;
+    int ret = uncompress(marshalled, &unzlen, (const Bytef *)code, zlen);
+    if (ret != Z_OK)
+        panic("Could not uncompress code: %s\n", zError(ret));
+    assert(unzlen == (uLongf)len);
+
+    auto marshal = py::module_::import("marshal");
+    return marshal.attr("loads")(py::bytes((char *)marshalled, len));
 }
 
 bool
-EmbeddedPyBind::depsReady() const
+EmbeddedPython::addModule() const
 {
-    return base.empty() || getMap()[base]->registered;
+    auto importer = py::module_::import("importer");
+    importer.attr("add_module")(abspath, modpath, getCode());
+    return true;
 }
 
-std::map<std::string, EmbeddedPyBind *> &
-EmbeddedPyBind::getMap()
+/*
+ * Load and initialize all of the python parts of M5.
+ */
+int
+EmbeddedPython::initAll()
 {
-    static std::map<std::string, EmbeddedPyBind *> objs;
-    return objs;
-}
-
-void
-EmbeddedPyBind::initAll(py::module_ &_m5)
-{
-    std::list<EmbeddedPyBind *> pending;
-
-    pybind_init_core(_m5);
-    pybind_init_debug(_m5);
-
-    pybind_init_event(_m5);
-    pybind_init_stats(_m5);
-
-    for (auto &kv : EmbeddedPyBind::getMap()) {
-        auto &obj = kv.second;
-        if (obj->base.empty()) {
-            obj->init(_m5);
-        } else {
-            pending.push_back(obj);
-        }
+    // Load the embedded python files into the embedded python importer.
+    for (auto *embedded: getList()) {
+        if (!embedded->addModule())
+            return 1;
     }
-
-    while (!pending.empty()) {
-        for (auto it = pending.begin(); it != pending.end(); ) {
-            EmbeddedPyBind &obj = **it;
-            if (obj.depsReady()) {
-                obj.init(_m5);
-                it = pending.erase(it);
-            } else {
-                ++it;
-            }
-        }
-    }
-}
-
-PYBIND11_EMBEDDED_MODULE(_m5, _m5)
-{
-    EmbeddedPyBind::initAll(_m5);
+    return 0;
 }
 
 } // namespace gem5

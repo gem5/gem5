@@ -33,7 +33,7 @@
 #include "pybind11/embed.h"
 #include "pybind11/pybind11.h"
 
-#include "sim/init.hh"
+#include "python/embedded.hh"
 #include "sim/init_signals.hh"
 
 using namespace gem5;
