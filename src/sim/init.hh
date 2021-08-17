@@ -49,11 +49,6 @@
 
 #include <inttypes.h>
 
-#ifndef PyObject_HEAD
-struct _object;
-typedef _object PyObject;
-#endif
-
 namespace gem5
 {
 
@@ -71,7 +66,7 @@ struct EmbeddedPython
     EmbeddedPython(const char *abspath, const char *modpath,
             const uint8_t *code, int zlen, int len);
 
-    PyObject *getCode() const;
+    pybind11::object getCode() const;
     bool addModule() const;
 
     static std::list<EmbeddedPython *> &getList();
@@ -88,11 +83,7 @@ class EmbeddedPyBind
     EmbeddedPyBind(const char *_name,
                    void (*init_func)(pybind11::module_ &));
 
-#if PY_MAJOR_VERSION >= 3
-    static PyObject *initAll();
-#else
-    static void initAll();
-#endif
+    static void initAll(pybind11::module_ &_m5);
 
   private:
     void (*initFunc)(pybind11::module_ &);
@@ -106,8 +97,6 @@ class EmbeddedPyBind
 
     static std::map<std::string, EmbeddedPyBind *> &getMap();
 };
-
-void registerNativeModules();
 
 int m5Main(int argc, char **argv);
 

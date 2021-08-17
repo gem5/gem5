@@ -39,14 +39,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Python.h>
+#include "pybind11/embed.h"
 
 #include "sim/init.hh"
 
-#include <marshal.h>
 #include <zlib.h>
 
-#include <iostream>
 #include <list>
 #include <string>
 #include <vector>
@@ -57,7 +55,6 @@
 #include "base/types.hh"
 #include "config/have_protobuf.hh"
 #include "python/pybind11/pybind.hh"
-#include "sim/async.hh"
 
 #if HAVE_PROTOBUF
 #include <google/protobuf/stubs/common.h>
@@ -68,10 +65,6 @@ namespace py = pybind11;
 
 namespace gem5
 {
-
-// The python library is totally messed up with respect to constness,
-// so make a simple macro to make life a little easier
-#define PyCC(x) (const_cast<char *>(x))
 
 EmbeddedPython::EmbeddedPython(const char *abspath, const char *modpath,
         const unsigned char *code, int zlen, int len)
@@ -91,7 +84,7 @@ EmbeddedPython::getList()
  * Uncompress and unmarshal the code object stored in the
  * EmbeddedPython
  */
-PyObject *
+py::object
 EmbeddedPython::getCode() const
 {
     Bytef marshalled[len];
@@ -101,17 +94,15 @@ EmbeddedPython::getCode() const
         panic("Could not uncompress code: %s\n", zError(ret));
     assert(unzlen == (uLongf)len);
 
-    return PyMarshal_ReadObjectFromString((char *)marshalled, len);
+    auto marshal = py::module_::import("marshal");
+    return marshal.attr("loads")(py::bytes((char *)marshalled, len));
 }
 
 bool
 EmbeddedPython::addModule() const
 {
-    auto code = py::reinterpret_borrow<py::object>(getCode());
-    // Ensure that "code" is not garbage collected.
-    code.inc_ref();
     auto importer = py::module_::import("importer");
-    importer.attr("add_module")(abspath, modpath, code);
+    importer.attr("add_module")(abspath, modpath, getCode());
     return true;
 }
 
@@ -168,34 +159,21 @@ EmbeddedPyBind::getMap()
     return objs;
 }
 
-PyObject *
-EmbeddedPyBind::initAll()
+void
+EmbeddedPyBind::initAll(py::module_ &_m5)
 {
     std::list<EmbeddedPyBind *> pending;
 
-    // The PyModuleDef structure needs to live as long as the module it
-    // defines, so we'll leak it here so it lives forever. This is what
-    // pybind11 does internally in the module_ constructor we were using. We
-    // could theoretically keep track of the lifetime of the _m5 module
-    // somehow and clean this up when it goes away, but that doesn't seem
-    // worth the effort. The docs recommend statically allocating it, but that
-    // could be unsafe on the very slim chance this method is called more than
-    // once.
-    auto *py_mod_def = new py::module_::module_def;
-    py::module_ m_m5 = py::module_::create_extension_module(
-            "_m5", nullptr, py_mod_def);
-    m_m5.attr("__package__") = py::cast("_m5");
+    pybind_init_core(_m5);
+    pybind_init_debug(_m5);
 
-    pybind_init_core(m_m5);
-    pybind_init_debug(m_m5);
+    pybind_init_event(_m5);
+    pybind_init_stats(_m5);
 
-    pybind_init_event(m_m5);
-    pybind_init_stats(m_m5);
-
-    for (auto &kv : getMap()) {
+    for (auto &kv : EmbeddedPyBind::getMap()) {
         auto &obj = kv.second;
         if (obj->base.empty()) {
-            obj->init(m_m5);
+            obj->init(_m5);
         } else {
             pending.push_back(obj);
         }
@@ -205,23 +183,18 @@ EmbeddedPyBind::initAll()
         for (auto it = pending.begin(); it != pending.end(); ) {
             EmbeddedPyBind &obj = **it;
             if (obj.depsReady()) {
-                obj.init(m_m5);
+                obj.init(_m5);
                 it = pending.erase(it);
             } else {
                 ++it;
             }
         }
     }
-
-    return m_m5.ptr();
 }
 
-void
-registerNativeModules()
+PYBIND11_EMBEDDED_MODULE(_m5, _m5)
 {
-    auto result = PyImport_AppendInittab("_m5", EmbeddedPyBind::initAll);
-    if (result == -1)
-        panic("Failed to add _m5 to Python's inittab\n");
+    EmbeddedPyBind::initAll(_m5);
 }
 
 /*
@@ -229,7 +202,7 @@ registerNativeModules()
  * main function.
  */
 int
-m5Main(int argc, char **_argv)
+m5Main(int argc, char **argv)
 {
 #if HAVE_PROTOBUF
     // Verify that the version of the protobuf library that we linked
@@ -239,19 +212,22 @@ m5Main(int argc, char **_argv)
 #endif
 
 
-    typedef std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> WArgUPtr;
-    std::vector<WArgUPtr> v_argv;
-    std::vector<wchar_t *> vp_argv;
-    v_argv.reserve(argc);
-    vp_argv.reserve(argc);
-    for (int i = 0; i < argc; i++) {
-        v_argv.emplace_back(Py_DecodeLocale(_argv[i], NULL), &PyMem_RawFree);
-        vp_argv.emplace_back(v_argv.back().get());
+    // Embedded python doesn't set up sys.argv, so we'll do that ourselves.
+    py::list py_argv;
+    auto sys = py::module::import("sys");
+    if (py::hasattr(sys, "argv")) {
+        // sys.argv already exists, so grab that.
+        py_argv = sys.attr("argv");
+    } else {
+        // sys.argv doesn't exist, so create it.
+        sys.add_object("argv", py_argv);
     }
+    // Clear out argv just in case it has something in it.
+    py_argv.attr("clear")();
 
-    wchar_t **argv = vp_argv.data();
-
-    PySys_SetArgv(argc, argv);
+    // Fill it with our argvs.
+    for (int i = 0; i < argc; i++)
+        py_argv.append(argv[i]);
 
     try {
         py::module_::import("m5").attr("main")();
