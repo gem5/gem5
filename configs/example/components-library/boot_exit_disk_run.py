@@ -55,7 +55,7 @@ from components_library.runtime import (
     get_runtime_isa,
 )
 from components_library.boards.x86_board import X86Board
-from components_library.memory.ddr3_1600_8x8 import DDR3_1600_8x8
+from components_library.memory.single_channel import SingleChannelDDR3_1600
 from components_library.processors.simple_processor import SimpleProcessor
 from components_library.processors.cpu_types import CPUTypes
 from components_library.isas import ISA
@@ -94,7 +94,7 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
 # Setup the system memory.
 # Warning: This must be kept at 3GB for now. X86Motherboard does not support
 # anything else right now!
-memory = DDR3_1600_8x8(size="3GB")
+memory = SingleChannelDDR3_1600(size="3GB")
 
 # Setup a single core Timing Processor.
 processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, num_cores=1)

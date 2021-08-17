@@ -57,7 +57,7 @@ from components_library.cachehierarchies.classic.\
     private_l1_private_l2_cache_hierarchy import (
     PrivateL1PrivateL2CacheHierarchy,
 )
-from components_library.memory.ddr3_1600_8x8 import DDR3_1600_8x8
+from components_library.memory.single_channel import SingleChannelDDR3_1600
 from components_library.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
@@ -84,7 +84,7 @@ cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
 # Setup the memory system.
 # Warning!!! This must be kept at 3GB for now. X86Motherboard does not support
 # anything else right now!
-memory = DDR3_1600_8x8(size="3GB")
+memory = SingleChannelDDR3_1600(size="3GB")
 
 
 # The processor. In this case we use the special "SwitchableProcessor" which
