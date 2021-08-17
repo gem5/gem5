@@ -98,8 +98,6 @@ class EmbeddedPyBind
     static std::map<std::string, EmbeddedPyBind *> &getMap();
 };
 
-int gem5Main(int argc, char **argv);
-
 } // namespace gem5
 
 #endif // __SIM_INIT_HH__
