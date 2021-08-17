@@ -53,13 +53,7 @@
 #include "base/cprintf.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
-#include "config/have_protobuf.hh"
 #include "python/pybind11/pybind.hh"
-
-#if HAVE_PROTOBUF
-#include <google/protobuf/stubs/common.h>
-
-#endif
 
 namespace py = pybind11;
 
@@ -204,14 +198,6 @@ PYBIND11_EMBEDDED_MODULE(_m5, _m5)
 int
 gem5Main(int argc, char **argv)
 {
-#if HAVE_PROTOBUF
-    // Verify that the version of the protobuf library that we linked
-    // against is compatible with the version of the headers we
-    // compiled against.
-    GOOGLE_PROTOBUF_VERIFY_VERSION;
-#endif
-
-
     // Embedded python doesn't set up sys.argv, so we'll do that ourselves.
     py::list py_argv;
     auto sys = py::module::import("sys");
@@ -238,10 +224,6 @@ gem5Main(int argc, char **argv)
         std::cerr << e.what();
         return 1;
     }
-
-#if HAVE_PROTOBUF
-    google::protobuf::ShutdownProtobufLibrary();
-#endif
 
     return 0;
 }

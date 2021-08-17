@@ -42,6 +42,7 @@ if env['HAVE_PROTOBUF']:
     ProtoBuf('inst_dep_record.proto')
     ProtoBuf('packet.proto')
     ProtoBuf('inst.proto')
+    Source('protobuf.cc')
     Source('protoio.cc')
 
     # protoc relies on the fact that undefined preprocessor symbols are
