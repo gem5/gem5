@@ -74,8 +74,6 @@ struct EmbeddedPython
     PyObject *getCode() const;
     bool addModule() const;
 
-    static EmbeddedPython *importer;
-    static PyObject *importerModule;
     static std::list<EmbeddedPython *> &getList();
     static int initAll();
 };

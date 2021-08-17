@@ -73,18 +73,11 @@ namespace gem5
 // so make a simple macro to make life a little easier
 #define PyCC(x) (const_cast<char *>(x))
 
-EmbeddedPython *EmbeddedPython::importer = NULL;
-PyObject *EmbeddedPython::importerModule = NULL;
 EmbeddedPython::EmbeddedPython(const char *abspath, const char *modpath,
         const unsigned char *code, int zlen, int len)
     : abspath(abspath), modpath(modpath), code(code), zlen(zlen), len(len)
 {
-    // if we've added the importer keep track of it because we need it
-    // to bootstrap.
-    if (std::string(modpath) == std::string("importer"))
-        importer = this;
-    else
-        getList().push_back(this);
+    getList().push_back(this);
 }
 
 std::list<EmbeddedPython *> &
@@ -114,15 +107,11 @@ EmbeddedPython::getCode() const
 bool
 EmbeddedPython::addModule() const
 {
-    PyObject *code = getCode();
-    PyObject *result = PyObject_CallMethod(importerModule, PyCC("add_module"),
-        PyCC("ssO"), abspath, modpath, code);
-    if (!result) {
-        PyErr_Print();
-        return false;
-    }
-
-    Py_DECREF(result);
+    auto code = py::reinterpret_borrow<py::object>(getCode());
+    // Ensure that "code" is not garbage collected.
+    code.inc_ref();
+    auto importer = py::module_::import("importer");
+    importer.attr("add_module")(abspath, modpath, code);
     return true;
 }
 
@@ -132,16 +121,7 @@ EmbeddedPython::addModule() const
 int
 EmbeddedPython::initAll()
 {
-    // Load the importer module
-    PyObject *code = importer->getCode();
-    importerModule = PyImport_ExecCodeModule(PyCC("importer"), code);
-    if (!importerModule) {
-        PyErr_Print();
-        return 1;
-    }
-
-    // Load the rest of the embedded python files into the embedded
-    // python importer
+    // Load the embedded python files into the embedded python importer.
     for (auto *embedded: getList()) {
         if (!embedded->addModule())
             return 1;
