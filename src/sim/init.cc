@@ -189,11 +189,7 @@ EmbeddedPyBind::getMap()
     return objs;
 }
 
-#if PY_MAJOR_VERSION >= 3
 PyObject *
-#else
-void
-#endif
 EmbeddedPyBind::initAll()
 {
     std::list<EmbeddedPyBind *> pending;
@@ -228,9 +224,7 @@ EmbeddedPyBind::initAll()
         }
     }
 
-#if PY_MAJOR_VERSION >= 3
     return m_m5.ptr();
-#endif
 }
 
 void
@@ -266,7 +260,6 @@ m5Main(int argc, char **_argv)
 #endif
 
 
-#if PY_MAJOR_VERSION >= 3
     typedef std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> WArgUPtr;
     std::vector<WArgUPtr> v_argv;
     std::vector<wchar_t *> vp_argv;
@@ -278,9 +271,6 @@ m5Main(int argc, char **_argv)
     }
 
     wchar_t **argv = vp_argv.data();
-#else
-    char **argv = _argv;
-#endif
 
     PySys_SetArgv(argc, argv);
 
