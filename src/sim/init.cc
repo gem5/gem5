@@ -225,16 +225,6 @@ registerNativeModules()
 }
 
 /*
- * Make the commands array weak so that they can be overridden (used
- * by unit tests to specify a different python main function.
- */
-GEM5_WEAK const char *m5MainCommands[] = {
-    "import m5",
-    "m5.main()",
-    0 // sentinel is required
-};
-
-/*
  * Start up the M5 simulator.  This mostly vectors into the python
  * main function.
  */
@@ -263,27 +253,14 @@ m5Main(int argc, char **_argv)
 
     PySys_SetArgv(argc, argv);
 
-    // We have to set things up in the special __main__ module
-    PyObject *module = PyImport_AddModule(PyCC("__main__"));
-    if (module == NULL)
-        panic("Could not import __main__");
-    PyObject *dict = PyModule_GetDict(module);
+    try {
+        py::module_::import("m5").attr("main")();
+    } catch (py::error_already_set &e) {
+        if (e.matches(PyExc_SystemExit))
+            return e.value().attr("code").cast<int>();
 
-    // import the main m5 module
-    PyObject *result;
-    const char **command = m5MainCommands;
-
-    // evaluate each command in the m5MainCommands array (basically a
-    // bunch of python statements.
-    while (*command) {
-        result = PyRun_String(*command, Py_file_input, dict, dict);
-        if (!result) {
-            PyErr_Print();
-            return 1;
-        }
-        Py_DECREF(result);
-
-        command++;
+        std::cerr << e.what();
+        return 1;
     }
 
 #if HAVE_PROTOBUF
