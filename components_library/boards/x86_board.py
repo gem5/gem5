@@ -63,7 +63,7 @@ from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
 from ..runtime import get_runtime_isa
 
 import os
-from typing import Optional, Sequence
+from typing import List, Optional, Sequence
 
 
 class X86Board(SimpleBoard):
@@ -278,6 +278,7 @@ class X86Board(SimpleBoard):
         kernel: AbstractResource,
         disk_image: AbstractResource,
         command: Optional[str] = None,
+        kernel_args: Optional[List[str]] = [],
     ):
         """Setup the full system files
 
@@ -295,6 +296,9 @@ class X86Board(SimpleBoard):
         :param disk_image: A disk image resource containing the OS data. The
             first partition should be the root partition.
         :param command: The command(s) to run with bash once the OS is booted
+        :param kernel_args: Additional arguments to be passed to the kernel.
+        `earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1` are
+        already passed. This parameter is used to pass additional arguments.
         """
 
         # Set the Linux kernel to use.
@@ -307,7 +311,7 @@ class X86Board(SimpleBoard):
                 "console=ttyS0",
                 "lpj=7999923",
                 "root=/dev/hda1",
-            ]
+            ] + kernel_args
         )
 
         # Create the Disk image SimObject.
