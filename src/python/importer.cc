@@ -29,10 +29,13 @@
 #include "pybind11/pybind11.h"
 #include "python/m5ImporterCode.hh"
 
+#include "sim/init.hh"
+
 namespace py = pybind11;
 
 PYBIND11_EMBEDDED_MODULE(importer, m)
 {
+    m.def("_init_all_embedded", gem5::EmbeddedPython::initAll);
     py::str importer_code(
             reinterpret_cast<const char *>(gem5::Blobs::m5ImporterCode),
             gem5::Blobs::m5ImporterCode_len);

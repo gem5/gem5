@@ -202,7 +202,7 @@ PYBIND11_EMBEDDED_MODULE(_m5, _m5)
  * main function.
  */
 int
-m5Main(int argc, char **argv)
+gem5Main(int argc, char **argv)
 {
 #if HAVE_PROTOBUF
     // Verify that the version of the protobuf library that we linked

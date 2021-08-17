@@ -98,7 +98,7 @@ class EmbeddedPyBind
     static std::map<std::string, EmbeddedPyBind *> &getMap();
 };
 
-int m5Main(int argc, char **argv);
+int gem5Main(int argc, char **argv);
 
 } // namespace gem5
 

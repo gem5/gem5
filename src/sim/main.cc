@@ -28,45 +28,40 @@
 
 #include <Python.h>
 
+#include "pybind11/embed.h"
+#include "pybind11/pybind11.h"
+
 #include "sim/init.hh"
 #include "sim/init_signals.hh"
 
 using namespace gem5;
 
+namespace py = pybind11;
+
 // main() is now pretty stripped down and just sets up python and then
-// calls initM5Python which loads the various embedded python modules
-// into the python environment and then starts things running by
-// calling m5Main.
+// calls EmbeddedPython::initAll which loads the various embedded python
+// modules into the python environment and then starts things running by
+// calling gem5Main.
 int
 main(int argc, char **argv)
 {
-    int ret;
-
-    // Initialize m5 special signal handling.
+    // Initialize gem5 special signal handling.
     initSignals();
 
-#if PY_MAJOR_VERSION >= 3
+    // Convert argv[0] to a wchar_t string, using python's locale and cleanup
+    // functions.
     std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> program(
-        Py_DecodeLocale(argv[0], NULL),
+        Py_DecodeLocale(argv[0], nullptr),
         &PyMem_RawFree);
+
+    // This can help python find libraries at run time relative to this binary.
+    // It's probably not necessary, but is mostly harmless and might be useful.
     Py_SetProgramName(program.get());
-#else
-    Py_SetProgramName(argv[0]);
-#endif
 
-    // initialize embedded Python interpreter
-    Py_Initialize();
+    py::scoped_interpreter guard;
 
-    // Initialize the embedded m5 python library
-    ret = EmbeddedPython::initAll();
+    auto importer = py::module_::import("importer");
+    importer.attr("install")();
 
-    if (ret == 0) {
-        // start m5
-        ret = m5Main(argc, argv);
-    }
-
-    // clean up Python intepreter.
-    Py_Finalize();
-
-    return ret;
+    return gem5Main(argc, argv);
 }

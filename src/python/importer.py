@@ -74,7 +74,12 @@ class CodeImporter(object):
 # Create an importer and add it to the meta_path so future imports can
 # use it.  There's currently nothing in the importer, but calls to
 # add_module can be used to add code.
-import sys
-importer = CodeImporter()
-add_module = importer.add_module
-sys.meta_path.insert(0, importer)
+def install():
+    importer = CodeImporter()
+    global add_module
+    add_module = importer.add_module
+    import sys
+    sys.meta_path.insert(0, importer)
+
+    # Injected into this module's namespace by the c++ code that loads it.
+    _init_all_embedded()
