@@ -731,7 +731,7 @@ if GetOption('with_cxx_config'):
                     Transform("CXXCPRCC")))
         env.Depends(cxx_config_hh_file, depends + extra_deps)
         env.Depends(cxx_config_cc_file, depends + extra_deps)
-        Source(cxx_config_cc_file)
+        Source(cxx_config_cc_file, add_tags='python')
 
     cxx_config_init_cc_file = File('cxx_config/init.cc')
 
@@ -766,44 +766,31 @@ if GetOption('with_cxx_config'):
         MakeAction(createCxxConfigInitCC, Transform("CXXCINIT")))
     Source(cxx_config_init_cc_file)
 
-# Generate all enum header files
-def createEnumStrings(target, source, env):
-    assert len(target) == 1 and len(source) == 2
-
-    name = source[0].get_text_contents()
-    use_python = source[1].read()
-    obj = all_enums[name]
-
-    code = code_formatter()
-    obj.cxx_def(code)
-    if use_python:
-        obj.pybind_def(code)
-    code.write(target[0].abspath)
-
-def createEnumDecls(target, source, env):
-    assert len(target) == 1 and len(source) == 1
-
-    name = source[0].get_text_contents()
-    obj = all_enums[name]
-
-    code = code_formatter()
-    obj.cxx_decl(code)
-    code.write(target[0].abspath)
-
-for name,enum in sorted(all_enums.items()):
-    py_source = PySource.modules[enum.__module__]
-    extra_deps = [ py_source.tnode ]
-
-    cc_file = File('enums/%s.cc' % name)
-    env.Command(cc_file, [Value(name), Value(env['USE_PYTHON'])],
-                MakeAction(createEnumStrings, Transform("ENUM STR")))
-    env.Depends(cc_file, depends + extra_deps)
-    Source(cc_file)
-
-    hh_file = File('enums/%s.hh' % name)
-    env.Command(hh_file, Value(name),
-                MakeAction(createEnumDecls, Transform("ENUMDECL")))
-    env.Depends(hh_file, depends + extra_deps)
+# C++ versions of enum params.
+for module, enums in sorted(SimObject.enums.items()):
+    tags = SimObject.tags[module]
+    for enum in enums:
+        gem5py_env.Command([ "${ENUM_HH}" ],
+                [ Value(module), Value(enum), "${GEM5PY_M5}", "${ENUMHH_PY}" ],
+                MakeAction('"${GEM5PY_M5}" "${ENUMHH_PY}" "${MODULE}" ' \
+                        '"${ENUM_HH}"',
+                    Transform("ENUMDECL", 2)),
+                MODULE=module,
+                ENUM=enum,
+                ENUM_HH=File(f'enums/{enum}.hh'),
+                ENUMHH_PY=build_tools.File('enum_hh.py'))
+        cc_file = File(f'enums/{enum}.cc')
+        gem5py_env.Command([ "${ENUM_CC}" ],
+                [ Value(module), Value(enum), "${GEM5PY_M5}", "${ENUMCC_PY}" ],
+                MakeAction('"${GEM5PY_M5}" "${ENUMCC_PY}" "${MODULE}" ' \
+                        '"${ENUM_CC}" "${USE_PYTHON}"',
+                    Transform("ENUM STR", 2)),
+                MODULE=module,
+                ENUM=enum,
+                ENUM_CC=cc_file,
+                ENUMCC_PY=build_tools.File('enum_cc.py'),
+                USE_PYTHON='--use-python' if env['USE_PYTHON'] else '')
+        Source(cc_file, tags=tags, add_tags='python')
 
 
 # version tags
