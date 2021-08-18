@@ -432,11 +432,6 @@ env.Append(CPPPATH=Dir('.'))
 for extra_dir in extras_dir_list:
     env.Append(CPPPATH=Dir(extra_dir))
 
-# Workaround for bug in SCons version > 0.97d20071212
-# Scons bug id: 2006 gem5 Bug id: 308
-for root, dirs, files in os.walk(base_dir, topdown=True):
-    Dir(root[len(base_dir) + 1:])
-
 ########################################################################
 #
 # Walk the tree and execute all SConscripts in subdirectories
