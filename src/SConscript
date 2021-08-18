@@ -664,34 +664,17 @@ gem5py_env.Program(gem5py_m5, [ 'python/gem5py.cc' ] + m5_module_static)
 
 # Generate all of the SimObject param C++ struct header files
 
-def createSimObjectParamStruct(target, source, env):
-    assert len(target) == 1 and len(source) == 1
-
-    name = source[0].get_text_contents()
-    obj = sim_objects[name]
-
-    code = code_formatter()
-    obj.cxx_param_decl(code)
-    code.write(target[0].abspath)
-
-params_hh_files = []
-for name,simobj in sorted(sim_objects.items()):
-    # If this simobject's source changes, we need to regenerate the header.
-    py_source = PySource.modules[simobj.__module__]
-    extra_deps = [ py_source.tnode ]
-
-    # Get the params for just this SimObject, excluding base classes.
-    params = simobj._params.local.values()
-    # Extract the parameters' c++ types.
-    types = sorted(map(lambda p: p.ptype.cxx_type, params))
-    # If any of these types have changed, we need to regenerate the header.
-    extra_deps.append(Value(types))
-
-    hh_file = File('params/%s.hh' % name)
-    params_hh_files.append(hh_file)
-    env.Command(hh_file, Value(name),
-                MakeAction(createSimObjectParamStruct, Transform("SO PARAM")))
-    env.Depends(hh_file, depends + extra_deps)
+for module, simobjs in sorted(SimObject.sim_objects.items()):
+    for simobj in simobjs:
+        gem5py_env.Command(f'params/{simobj}.hh',
+                [ Value(module), Value(simobj),
+                    "${GEM5PY_M5}", "${PARAMSTRUCT_PY}" ],
+                MakeAction('"${GEM5PY_M5}" "${PARAMSTRUCT_PY}" "${MODULE}" ' \
+                        '"${TARGET}"',
+                    Transform("SO Param", 2)),
+                PARAMSTRUCT_PY=build_tools.File(
+                    'sim_object_param_struct_hh.py'),
+                MODULE=module)
 
 # C++ parameter description files
 if GetOption('with_cxx_config'):
