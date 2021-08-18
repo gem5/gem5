@@ -81,8 +81,11 @@ build_tools = Dir('#build_tools')
 # as gem5. This is in an unorthodox location to avoid building it for every
 # variant.
 gem5py_env = gem5py_env.Clone()
-gem5py = gem5py_env.Program('gem5py', 'python/gem5py.cc')[0]
+gem5py = gem5py_env.File('gem5py')
+gem5py_m5 = gem5py_env.File('gem5py_m5')
 gem5py_env['GEM5PY'] = gem5py
+gem5py_env['GEM5PY_M5'] = gem5py_m5
+gem5py_env['OBJSUFFIX'] = '.pyo'
 # Inject build_tools into PYTHONPATH for when we run gem5py.
 pythonpath = gem5py_env['ENV'].get('PYTHONPATH', '').split(':')
 pythonpath.append(build_tools.abspath)
@@ -134,7 +137,7 @@ class PySource(SourceFile):
                        '"${PYSOURCE_ABSPATH}"',
                        Transform("EMBED PY", max_sources=1)),
             **overrides)
-        Source(cpp, tags=self.tags, add_tags='python')
+        Source(cpp, tags=self.tags, add_tags=['python', 'm5_module'])
 
 class SimObject(PySource):
     '''Add a SimObject python file as a python source object and add
@@ -639,6 +642,15 @@ gem5py_env.Command('python/m5/info.py',
                 Transform("INFO", 3)),
             INFOPY_PY=build_tools.File('infopy.py'))
 PySource('m5', 'python/m5/info.py')
+
+gem5py_m5_env = gem5py_env.Clone()
+gem5py_env.Append(CPPPATH=env['CPPPATH'])
+gem5py_env.Append(LIBS='z')
+gem5py_env.Program(gem5py, 'python/gem5py.cc')[0]
+m5_module_source = \
+        Source.all.with_all_tags(env, 'm5_module', 'gem5 lib')
+m5_module_static = list(map(lambda s: s.static(gem5py_env), m5_module_source))
+gem5py_env.Program(gem5py_m5, [ 'python/gem5py.cc' ] + m5_module_static)
 
 ########################################################################
 #

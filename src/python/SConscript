@@ -253,10 +253,10 @@ PySource('m5.ext.pystats', 'm5/ext/pystats/timeconversion.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/jsonloader.py')
 PySource('m5.stats', 'm5/stats/gem5stats.py')
 
-Source('embedded.cc', add_tags='python')
-Source('importer.cc', add_tags='python')
+Source('embedded.cc', add_tags=['python', 'm5_module'])
+Source('importer.cc', add_tags=['python', 'm5_module'])
 cc, hh = env.Blob('m5ImporterCode', 'importer.py')
-Source(cc, add_tags='python')
+Source(cc, add_tags=['python', 'm5_module'])
 
 Source('pybind11/core.cc', add_tags='python')
 Source('pybind11/debug.cc', add_tags='python')
