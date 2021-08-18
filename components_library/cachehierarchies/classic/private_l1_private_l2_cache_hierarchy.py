@@ -159,3 +159,17 @@ class PrivateL1PrivateL2CacheHierarchy(
                 cpu.connect_interrupt(int_req_port, int_resp_port)
             else:
                 cpu.connect_interrupt()
+    def _setup_io_cache(self, board: AbstractBoard) -> None:
+        """Create a cache for coherent I/O connections"""
+        self.iocache = Cache(
+            assoc=8,
+            tag_latency=50,
+            data_latency=50,
+            response_latency=50,
+            mshrs=20,
+            size="1kB",
+            tgts_per_mshr=12,
+            addr_ranges=board.mem_ranges,
+        )
+        self.iocache.mem_side = self.membus.cpu_side_ports
+        self.iocache.cpu_side = board.get_mem_side_coherent_io_port()

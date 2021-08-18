@@ -126,6 +126,17 @@ class SimpleBoard(AbstractBoard):
         )
 
     @overrides(AbstractBoard)
+    def has_coherent_io(self) -> bool:
+        return False
+
+    @overrides(AbstractBoard)
+    def get_mem_side_coherent_io_port(self) -> Port:
+        raise NotImplementedError(
+            "SimpleBoard does not have any I/O ports. Use has_coherent_io to "
+            "check this."
+        )
+
+    @overrides(AbstractBoard)
     def setup_memory_ranges(self) -> None:
         memory = self.get_memory()
 

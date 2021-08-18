@@ -145,6 +145,24 @@ class AbstractBoard(System):
         raise NotImplementedError
 
     @abstractmethod
+    def has_coherent_io(self) -> bool:
+        """Determine whether the board needs coherent I/O
+
+        :returns: True if the board needs coherent I/O, false otherwise
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_mem_side_coherent_io_port(self):
+        """Get the memory-side coherent I/O port.
+        This abstract method must be implemented if has_coherent_io is true.
+
+        This returns a *port* (not a bus) that should be connected to a
+        CPU-side port for which coherent I/O (DMA) is issued.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def get_clock_domain(self) -> ClockDomain:
         """Get the clock domain.
 

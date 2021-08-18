@@ -99,6 +99,9 @@ class X86Board(SimpleBoard):
 
         self.workload = X86FsLinux()
 
+        # North Bridge
+        self.iobus = IOXBar()
+
     def _setup_io_devices(self):
         """ Sets up the x86 IO devices.
 
@@ -111,9 +114,6 @@ class X86Board(SimpleBoard):
         pci_config_address_space_base = 0xC000000000000000
         interrupts_address_space_base = 0xA000000000000000
         APIC_range_size = 1 << 12
-
-        # North Bridge
-        self.iobus = IOXBar()
 
         # Setup memory system specific settings.
         if self.get_cache_hierarchy().is_ruby():
@@ -153,22 +153,6 @@ class X86Board(SimpleBoard):
                 )
             ]
             self.pc.attachIO(self.get_io_bus())
-
-            self.iocache = Cache(
-                assoc=8,
-                tag_latency=50,
-                data_latency=50,
-                response_latency=50,
-                mshrs=20,
-                size="1kB",
-                tgts_per_mshr=12,
-                addr_ranges=self.mem_ranges,
-            )
-
-            self.iocache.cpu_side = self.get_io_bus().mem_side_ports
-            self.iocache.mem_side = (
-                self.get_cache_hierarchy().get_cpu_side_port()
-            )
 
         # Add in a Bios information structure.
         self.workload.smbios_table.structures = [X86SMBiosBiosInformation()]
@@ -359,6 +343,14 @@ class X86Board(SimpleBoard):
     @overrides(AbstractBoard)
     def get_dma_ports(self) -> Sequence[Port]:
         return [self.pc.south_bridge.ide.dma, self.iobus.mem_side_ports]
+
+    @overrides(AbstractBoard)
+    def has_coherent_io(self) -> bool:
+        return True
+
+    @overrides(AbstractBoard)
+    def get_mem_side_coherent_io_port(self) -> Port:
+        return self.iobus.mem_side_ports
 
     @overrides(AbstractBoard)
     def setup_memory_ranges(self):

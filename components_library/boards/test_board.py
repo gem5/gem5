@@ -106,6 +106,17 @@ class TestBoard(AbstractBoard):
         )
 
     @overrides(AbstractBoard)
+    def has_coherent_io(self) -> bool:
+        return False
+
+    @overrides(AbstractBoard)
+    def get_mem_side_coherent_io_port(self):
+        raise NotImplementedError(
+            "SimpleBoard does not have any I/O ports. Use has_coherent_io to "
+            "check this."
+        )
+
+    @overrides(AbstractBoard)
     def set_mem_mode(self, mem_mode: MemMode) -> None:
         self.mem_mode = mem_mode_to_string(mem_mode=mem_mode)
 
