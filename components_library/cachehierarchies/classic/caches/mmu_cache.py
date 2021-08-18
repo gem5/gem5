@@ -46,7 +46,6 @@ class MMUCache(Cache):
         mshrs: Optional[int] = 20,
         tgts_per_mshr: Optional[int] = 12,
         writeback_clean: Optional[bool] = True,
-        prefetcher: BasePrefetcher = StridePrefetcher(),
     ):
         super(MMUCache, self).__init__()
         self.size = size
@@ -57,4 +56,3 @@ class MMUCache(Cache):
         self.mshrs = mshrs
         self.tgts_per_mshr = tgts_per_mshr
         self.writeback_clean = writeback_clean
-        self.prefetcher = prefetcher
