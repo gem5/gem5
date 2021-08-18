@@ -45,9 +45,9 @@
 
 #include <zlib.h>
 
+#include <cstdlib>
+#include <iostream>
 #include <list>
-
-#include "base/logging.hh"
 
 namespace py = pybind11;
 
@@ -78,8 +78,10 @@ EmbeddedPython::getCode() const
     Bytef marshalled[len];
     uLongf unzlen = len;
     int ret = uncompress(marshalled, &unzlen, (const Bytef *)code, zlen);
-    if (ret != Z_OK)
-        panic("Could not uncompress code: %s\n", zError(ret));
+    if (ret != Z_OK) {
+        std::cerr << "Could not uncompress code: " << zError(ret) << std::endl;
+        std::abort();
+    }
     assert(unzlen == (uLongf)len);
 
     auto marshal = py::module_::import("marshal");
