@@ -248,6 +248,7 @@ def define_constants(constants):
     constants.length_tag_type = 'length'
     constants.quick_tag = 'quick'
     constants.long_tag = 'long'
+    constants.very_long_tag = 'very-long'
 
     constants.host_isa_tag_type = 'host'
     constants.host_x86_64_tag = 'x86_64'
@@ -272,6 +273,7 @@ def define_constants(constants):
         constants.length_tag_type: (
             constants.quick_tag,
             constants.long_tag,
+            constants.very_long_tag,
         ),
         constants.host_isa_tag_type: (
             constants.host_x86_64_tag,
