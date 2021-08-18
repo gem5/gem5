@@ -145,6 +145,9 @@ class SimObject(PySource):
 
     fixed = False
 
+    sim_objects = dict()
+    enums = dict()
+
     def __init__(self, source, *, sim_objects=[], enums=[],
             tags=None, add_tags=None):
         '''Specify the source file and any tags (automatically in
@@ -153,6 +156,8 @@ class SimObject(PySource):
         if self.fixed:
             raise AttributeError("Too late to call SimObject now.")
 
+        SimObject.sim_objects[self.modpath] = sim_objects
+        SimObject.enums[self.modpath] = enums
 
 # This regular expression is simplistic and assumes that the import takes up
 # the entire line, doesn't have the keyword "public", uses double quotes, has
