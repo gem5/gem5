@@ -672,67 +672,57 @@ gem5py_env.Program(gem5py_m5, [ 'python/gem5py.cc' ] + m5_module_static)
 # Create all of the SimObject param headers and enum headers
 #
 
-# Generate all of the SimObject param C++ struct header files
+# Generate all of the SimObject param C++ files.
 
 for module, simobjs in sorted(SimObject.sim_objects.items()):
     tags = SimObject.tags[module]
     for simobj in simobjs:
-        gem5py_env.Command([ "${PARAMS_HH}" ],
-                [ Value(module), Value(simobj),
-                    "${GEM5PY_M5}", "${PARAMSTRUCT_PY}" ],
-                MakeAction('"${GEM5PY_M5}" "${PARAMSTRUCT_PY}" "${MODULE}" ' \
-                        '"${PARAMS_HH}"',
-                    Transform("SO Param", 2)),
+
+        # Some helper functions
+        srcs = [ Value(module), Value(simobj), "${GEM5PY_M5}", "${PYSCRIPT}" ]
+        def cmdline(*args):
+            all_args = [ 'GEM5PY_M5', 'PYSCRIPT', 'MODULE' ] + list(args)
+            return ' '.join(list('"${%s}"' % arg for arg in all_args))
+
+        # Params header.
+        gem5py_env.Command([ "${PARAMS_HH}" ], srcs,
+                MakeAction(cmdline('PARAMS_HH'), Transform("SO Param", 2)),
                 MODULE=module,
                 SIMOBJ=simobj,
-                PARAMSTRUCT_PY=build_tools.File(
-                    'sim_object_param_struct_hh.py'),
+                PYSCRIPT=build_tools.File('sim_object_param_struct_hh.py'),
                 PARAMS_HH=File(f'params/{simobj}.hh'))
+
+        # Params cc.
         cc_file = File(f'python/_m5/param_{simobj}.cc')
-        gem5py_env.Command([ "${PARAMS_CC}" ],
-                [ Value(module), Value(simobj),
-                    "${GEM5PY_M5}", "${PARAMSTRUCT_PY}" ],
-                MakeAction('"${GEM5PY_M5}" "${PARAMSTRUCT_PY}" "${MODULE}" ' \
-                        '"${PARAMS_CC}" "${USE_PYTHON}"',
+        gem5py_env.Command([ "${PARAMS_CC}" ], srcs,
+                MakeAction(cmdline('PARAMS_CC', 'USE_PYTHON'),
                     Transform("SO Param", 2)),
-                PARAMSTRUCT_PY=build_tools.File(
-                    'sim_object_param_struct_cc.py'),
+                PYSCRIPT=build_tools.File('sim_object_param_struct_cc.py'),
                 MODULE=module,
                 SIMOBJ=simobj,
                 PARAMS_CC=cc_file,
                 USE_PYTHON=env['USE_PYTHON'])
         Source(cc_file, tags=tags, add_tags='python')
 
+        # CXX config header.
+        gem5py_env.Command([ "${CXXCONFIG_HH}" ], srcs,
+                MakeAction(cmdline('CXXCONFIG_HH'), Transform("CXXCPRHH", 2)),
+                PYSCRIPT=build_tools.File('cxx_config_hh.py'),
+                MODULE=module,
+                CXXCONFIG_HH=File(f'cxx_config/{simobj}.hh'))
+
+        # CXX config cc.
+        cc_file=File(f'cxx_config/{simobj}.cc')
+        gem5py_env.Command([ "${CXXCONFIG_CC}" ], srcs,
+                MakeAction(cmdline('CXXCONFIG_CC'), Transform("CXXCPRCC", 2)),
+                PYSCRIPT=build_tools.File('cxx_config_cc.py'),
+                MODULE=module,
+                CXXCONFIG_CC=cc_file)
+        if GetOption('with_cxx_config'):
+            Source(cc_file)
+
 # C++ parameter description files
 if GetOption('with_cxx_config'):
-    def createSimObjectCxxConfig(is_header):
-        def body(target, source, env):
-            assert len(target) == 1 and len(source) == 1
-
-            name = source[0].get_contents().decode('utf-8')
-            obj = sim_objects[name]
-
-            code = code_formatter()
-            obj.cxx_config_param_file(code, is_header)
-            code.write(target[0].abspath)
-        return body
-
-    for name,simobj in sorted(sim_objects.items()):
-        py_source = PySource.modules[simobj.__module__]
-        extra_deps = [ py_source.tnode ]
-
-        cxx_config_hh_file = File('cxx_config/%s.hh' % name)
-        cxx_config_cc_file = File('cxx_config/%s.cc' % name)
-        env.Command(cxx_config_hh_file, Value(name),
-                    MakeAction(createSimObjectCxxConfig(True),
-                    Transform("CXXCPRHH")))
-        env.Command(cxx_config_cc_file, Value(name),
-                    MakeAction(createSimObjectCxxConfig(False),
-                    Transform("CXXCPRCC")))
-        env.Depends(cxx_config_hh_file, depends + extra_deps)
-        env.Depends(cxx_config_cc_file, depends + extra_deps)
-        Source(cxx_config_cc_file, add_tags='python')
-
     cxx_config_init_cc_file = File('cxx_config/init.cc')
 
     def createCxxConfigInitCC(target, source, env):
