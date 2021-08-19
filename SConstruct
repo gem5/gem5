@@ -482,24 +482,25 @@ if not GetOption('no_compress_debug'):
 ########################################################################
 
 main['USE_PYTHON'] = not GetOption('without_python')
-if main['USE_PYTHON']:
+
+def config_embedded_python(env):
     # Find Python include and library directories for embedding the
     # interpreter. We rely on python-config to resolve the appropriate
     # includes and linker flags. If you want to link in an alternate version
     # of python, override the PYTHON_CONFIG variable.
 
-    python_config = main.Detect(main['PYTHON_CONFIG'])
+    python_config = env.Detect(env['PYTHON_CONFIG'])
     if python_config is None:
-        error("Can't find a suitable python-config, tried %s" % \
-              main['PYTHON_CONFIG'])
+        error("Can't find a suitable python-config, tried "
+              f"{env['PYTHON_CONFIG']}")
 
-    print("Info: Using Python config: %s" % python_config)
+    print(f"Info: Using Python config: {python_config}")
 
     cmd = [python_config, '--ldflags', '--includes']
 
     # Starting in Python 3.8 the --embed flag is required. Use it if supported.
-    with gem5_scons.Configure(main) as conf:
-        if conf.TryAction('@%s --embed' % python_config)[0]:
+    with gem5_scons.Configure(env) as conf:
+        if conf.TryAction(f'@{python_config} --embed')[0]:
             cmd.append('--embed')
 
     def flag_filter(env, cmd_output):
@@ -509,11 +510,11 @@ if main['USE_PYTHON']:
         useful_flags = list(filter(is_useful, flags))
         env.MergeFlags(' '.join(useful_flags))
 
-    main.ParseConfig(cmd, flag_filter)
+    env.ParseConfig(cmd, flag_filter)
 
-    main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
+    env.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
 
-    with gem5_scons.Configure(main) as conf:
+    with gem5_scons.Configure(env) as conf:
         # verify that this stuff works
         if not conf.CheckHeader('Python.h', '<>'):
             error("Check failed for Python.h header.\n",
@@ -522,7 +523,7 @@ if main['USE_PYTHON']:
                   "package python-dev on Ubuntu and RedHat)\n"
                   "2. SCons is using a wrong C compiler. This can happen if "
                   "CC has the wrong value.\n"
-                  "CC = %s" % main['CC'])
+                  f"CC = {env['CC']}")
         py_version = conf.CheckPythonLib()
         if not py_version:
             error("Can't find a working Python installation")
@@ -531,13 +532,18 @@ if main['USE_PYTHON']:
     # requirements.
     ver_string = '.'.join(map(str, py_version))
     if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 6):
-        error('Embedded python library 3.6 or newer required, found %s.' %
-              ver_string)
+        error('Embedded python library 3.6 or newer required, found '
+              f'{ver_string}.')
     elif py_version[0] > 3:
         warning('Embedded python library too new. '
-                'Python 3 expected, found %s.' % ver_string)
+                f'Python 3 expected, found {ver_string}.')
 
-gem5py_env = main.Clone()
+if main['USE_PYTHON']:
+    config_embedded_python(main)
+    gem5py_env = main.Clone()
+else:
+    gem5py_env = main.Clone()
+    config_embedded_python(gem5py_env)
 
 # Bare minimum environment that only includes python
 gem5py_env.Append(CCFLAGS=['${GEM5PY_CCFLAGS_EXTRA}'])
