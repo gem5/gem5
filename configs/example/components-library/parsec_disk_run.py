@@ -27,11 +27,12 @@
 """
 A run script for running the parsec benchmark suite in gem5.
 
-On the first run of this script it will download the disk image for parsec
-and Linux kernel version 5.4.
+Notes
+-----
 
-The disk image is about 8 GB so this can take 10-15 minutes on a fast
-connection.
+* This will download the PARSEC disk image if not found locally. This image is
+  8 GB compressed, and 25 GB decompressed.
+* This will only function for the X86 ISA.
 """
 
 import m5
@@ -54,10 +55,6 @@ sys.path.append(
 
 from components_library.resources.resource import Resource
 from components_library.boards.x86_board import X86Board
-from components_library.cachehierarchies.classic.\
-    private_l1_private_l2_cache_hierarchy import (
-    PrivateL1PrivateL2CacheHierarchy,
-)
 from components_library.memory.single_channel import SingleChannelDDR3_1600
 from components_library.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
@@ -71,37 +68,165 @@ from components_library.runtime import (
 from components_library.utils.requires import requires
 
 import time
-import time
+import argparse
 
 requires(isa_required=ISA.X86)
 
-# Setup the cachie hierarchy.
-cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-    l1d_size="32kB",
-    l1i_size="32kB",
-    l2_size="256kB",
+
+parser = argparse.ArgumentParser(
+    description="A script to run the PARSEC benchmarks on a basic X86 full "
+    "system."
 )
 
+parser.add_argument(
+    "-n",
+    "--num-cpus",
+    type=int,
+    choices=(1, 2, 8),
+    required=True,
+    help="The number of CPUs. Note: 1, 2, and 8 cores supported on KVM; 1 and "
+    "2 supported on TimingSimpleCPU.",
+)
+
+parser.add_argument(
+    "-b",
+    "--boot-cpu",
+    type=str,
+    choices=("kvm", "timing", "atomic", "o3"),
+    required=False,
+    help="The CPU type to run before and after the ROI. If not specified will "
+    "be equal to that of the CPU type used in the ROI.",
+)
+
+parser.add_argument(
+    "-c",
+    "--cpu",
+    type=str,
+    choices=("kvm", "timing", "atomic", "o3"),
+    required=True,
+    help="The CPU type used in the ROI.",
+)
+
+parser.add_argument(
+    "-m",
+    "--mem-system",
+    type=str,
+    choices=("classic", "mesi_two_level"),
+    required=True,
+    help="The memory system to be used",
+)
+
+parser.add_argument(
+    "-e",
+    "--benchmark",
+    type=str,
+    choices=(
+        "blackscholes",
+        "bodytrack",
+        "canneal",
+        "dedup",
+        "facesim",
+        "ferret",
+        "fluidanimate",
+        "freqmine",
+        "raytrace",
+        "streamcluster",
+        "swaptions",
+        "vips",
+        "x264",
+    ),
+    required=True,
+    help="The PARSEC benchmark to run.",
+)
+
+parser.add_argument(
+    "-s",
+    "--size",
+    type=str,
+    choices=("simsmall", "simmedium", "simlarge"),
+    required=True,
+    help="The size of the PARSEC benchmark input size.",
+)
+
+parser.add_argument(
+    "-r",
+    "--resource-directory",
+    type=str,
+    required=False,
+    help="The directory in which resources will be downloaded or exist.",
+)
+
+parser.add_argument(
+    "-o",
+    "--override-download",
+    action="store_true",
+    help="Override a local resource if the hashes do not match.",
+)
+
+args = parser.parse_args()
+
+# Setup the cachie hierarchy.
+
+if args.mem_system == "classic":
+
+    from components_library.cachehierarchies.classic.\
+        private_l1_private_l2_cache_hierarchy import (
+        PrivateL1PrivateL2CacheHierarchy,
+    )
+
+    cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+        l1d_size="32kB",
+        l1i_size="32kB",
+        l2_size="256kB",
+    )
+elif args.mem_system == "mesi_two_level":
+    from components_library.cachehierarchies.ruby.\
+        mesi_two_level_cache_hierarchy import (
+        MESITwoLevelCacheHierarchy,
+    )
+
+    cache_hierarchy = MESITwoLevelCacheHierarchy(
+        l1i_size="32kB",
+        l1i_assoc=8,
+        l1d_size="32kB",
+        l1d_assoc=8,
+        l2_size="256kB",
+        l2_assoc=16,
+        num_l2_banks=1,
+    )
+
 # Setup the memory system.
-# Warning!!! This must be kept at 3GB for now. X86Motherboard does not support
-# anything else right now!
 memory = SingleChannelDDR3_1600(size="3GB")
 
 
-# The processor. In this case we use the special "SwitchableProcessor" which
-# allows us to switch between different SimpleProcessors.
-#
-# WARNING: This is known buggy. While it works starting with Atomic and
-# switching to Timing. The reverse is not true. KVM is not yet functional.
+def input_to_cputype(input: str) -> CPUTypes:
+    if input == "kvm":
+        return CPUTypes.KVM
+    elif input == "timing":
+        return CPUTypes.TIMING
+    elif input == "atomic":
+        return CPUTypes.ATOMIC
+    elif input == "o3":
+        return CPUTypes.O3
+    else:
+        raise NotADirectoryError("Unknown CPU type '{}'.".format(input))
+
+
+roi_type = input_to_cputype(args.cpu)
+if args.boot_cpu != None:
+    boot_type = input_to_cputype(args.boot_cpu)
+else:
+    boot_type = roi_type
+
 
 processor = SimpleSwitchableProcessor(
-    starting_core_type=CPUTypes.ATOMIC,
-    switch_core_type=CPUTypes.TIMING,
-    num_cores=4,
+    starting_core_type=boot_type,
+    switch_core_type=roi_type,
+    num_cores=args.num_cpus,
 )
 
 # Setup the board.
-motherboard = X86Board(
+board = X86Board(
     clk_freq="3GHz",
     processor=processor,
     memory=memory,
@@ -109,20 +234,30 @@ motherboard = X86Board(
     exit_on_work_items=True,
 )
 
-motherboard.connect_things()
+board.connect_things()
 
-# The command to run. In this case the blackscholes app with the simsmall
-# workload.
-command = "cd /home/gem5/parsec-benchmark\n"
-command += "source env.sh\n"
-command += "parsecmgmt -a run -p blackscholes "
-command += "-c gcc-hooks -i simsmall -n {}\n".format(processor.get_num_cores())
-command += "sleep 5 \n"
-command += "m5 exit \n"
+# The command to run.
+command = (
+    "cd /home/gem5/parsec-benchmark\n"
+    + "source env.sh\n"
+    + "parsecmgmt -a run -p {} ".format(args.benchmark)
+    + "-c gcc-hooks -i {} ".format(args.size)
+    + "-n {}\n".format(str(args.num_cpus))
+    + "sleep 5 \n"
+    + "m5 exit \n"
+)
 
-motherboard.set_workload(
-    kernel=Resource("x86-linux-kernel-5.4.49"),
-    disk_image=Resource("x86-parsec"),
+board.set_workload(
+    kernel=Resource(
+        "x86-linux-kernel-5.4.49",
+        resource_directory=args.resource_directory,
+        override=args.override_download,
+    ),
+    disk_image=Resource(
+        "x86-parsec",
+        resource_directory=args.resource_directory,
+        override=args.override_download,
+    ),
     command=command,
 )
 
@@ -130,7 +265,7 @@ print("Running with ISA: " + get_runtime_isa().name)
 print("Running with protocol: " + get_runtime_coherence_protocol().name)
 print()
 
-root = Root(full_system=True, system=motherboard)
+root = Root(full_system=True, system=board)
 
 if args.cpu == "kvm" or args.boot_cpu == "kvm":
     # TODO: This of annoying. Is there a way to fix this to happen
@@ -158,9 +293,10 @@ if exit_event.getCause() == "workbegin":
     start_tick = m5.curTick()
 
     # Switch to the Timing Processor.
-    motherboard.get_processor().switch()
+    board.get_processor().switch()
 else:
     print("Unexpected termination of simulation!")
+    print("Cause: {}".format(exit_event.getCause()))
     print()
 
     m5.stats.dump()
@@ -178,7 +314,7 @@ else:
             )
         )
     )
-    exit()
+    exit(1)
 
 # Simulate the ROI.
 exit_event = m5.simulate()
@@ -193,9 +329,10 @@ if exit_event.getCause() == "workend":
     m5.stats.reset()
 
     # Switch back to the Atomic Processor
-    motherboard.get_processor().switch()
+    board.get_processor().switch()
 else:
     print("Unexpected termination of simulation!")
+    print("Cause: {}".format(exit_event.getCause()))
     print()
     m5.stats.dump()
     end_tick = m5.curTick()
@@ -210,7 +347,7 @@ else:
             (time.time() - globalStart) / 60,
         )
     )
-    exit()
+    exit(1)
 
 # Simulate the remaning part of the benchmark
 # Run the rest of the workload until m5 exit
