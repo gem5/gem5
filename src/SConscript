@@ -37,13 +37,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import bisect
 import collections
 import distutils.spawn
-import importlib
-import importlib.abc
-import importlib.machinery
-import importlib.util
 import itertools
 import os
 import os.path
@@ -94,8 +89,6 @@ gem5py_env['ENV']['PYTHONPATH'] = ':'.join(pythonpath)
 
 class PySource(SourceFile):
     '''Add a python source file to the named package'''
-    modules = {}
-
     def __init__(self, package, source, tags=None, add_tags=None):
         '''specify the python package, the source file, and any tags'''
         super().__init__(source, tags, add_tags)
@@ -117,11 +110,7 @@ class PySource(SourceFile):
         if not os.path.exists(abspath):
             abspath = self.tnode.abspath
 
-        self.modname = modname
         self.modpath = modpath
-        self.abspath = abspath
-
-        PySource.modules[modpath] = self
 
         cpp = File(self.filename + '.cc')
 
@@ -532,105 +521,6 @@ env.Command('config/the_gpu_isa.hh', [],
 #
 SimObject.fixed = True
 
-class SimpleModuleLoader(importlib.abc.Loader):
-    '''A simple wrapper which delegates setting up a module to a function.'''
-    def __init__(self, executor):
-        super().__init__()
-        self.executor = executor
-    def create_module(self, spec):
-        return None
-
-    def exec_module(self, module):
-        self.executor(module)
-
-class M5MetaPathFinder(importlib.abc.MetaPathFinder):
-    def __init__(self, modules):
-        super().__init__()
-        self.modules = modules
-        self.installed = set()
-
-    def unload(self):
-        import sys
-        for module in self.installed:
-            del sys.modules[module]
-        self.installed = set()
-
-    def find_spec(self, fullname, path, target=None):
-        spec = None
-
-        # If this isn't even in the m5 package, ignore it.
-        if fullname.startswith('m5.'):
-            if fullname.startswith('m5.objects'):
-                # When imported in this context, return a spec for a dummy
-                # package which just serves to house the modules within it.
-                # This is subtley different from "import * from m5.objects"
-                # which relies on the __init__.py in m5.objects. That in turn
-                # indirectly relies on the c++ based _m5 package which doesn't
-                # exist yet.
-                if fullname == 'm5.objects':
-                    dummy_loader = SimpleModuleLoader(lambda x: None)
-                    spec = importlib.machinery.ModuleSpec(
-                            name=fullname, loader=dummy_loader,
-                            is_package=True)
-                    spec.loader_state = self.modules.keys()
-
-                # If this is a module within the m5.objects package, return a
-                # spec that maps to its source file.
-                elif fullname in self.modules:
-                    source = self.modules[fullname]
-                    spec = importlib.util.spec_from_file_location(
-                            name=fullname, location=source.abspath)
-
-            # The artificial m5.defines subpackage.
-            elif fullname == 'm5.defines':
-                def build_m5_defines(module):
-                    module.__dict__['buildEnv'] = dict(build_env)
-
-                spec = importlib.util.spec_from_loader(name=fullname,
-                        loader=SimpleModuleLoader(build_m5_defines))
-
-        # If we're handling this module, write it down so we can unload it
-        # later.
-        if spec is not None:
-            self.installed.add(fullname)
-
-        return spec
-
-import m5.SimObject
-import m5.params
-
-m5.SimObject.clear()
-m5.params.clear()
-
-# install the python importer so we can grab stuff from the source
-# tree itself.  We can't have SimObjects added after this point or
-# else we won't know about them for the rest of the stuff.
-importer = M5MetaPathFinder(PySource.modules)
-sys.meta_path[0:0] = [ importer ]
-
-import_globals = globals().copy()
-# import all sim objects so we can populate the all_objects list
-# make sure that we're working with a list, then let's sort it
-gem5_lib_simobjects = SimObject.all.with_tag(env, 'gem5 lib')
-gem5_lib_modnames = sorted(map(lambda so: so.modname, gem5_lib_simobjects))
-for modname in gem5_lib_modnames:
-    exec('from m5.objects import %s' % modname, import_globals)
-
-# we need to unload all of the currently imported modules so that they
-# will be re-imported the next time the sconscript is run
-importer.unload()
-sys.meta_path.remove(importer)
-
-sim_objects = m5.SimObject.allClasses
-all_enums = m5.params.allEnums
-
-########################################################################
-#
-# calculate extra dependencies
-#
-module_depends = ["m5", "m5.SimObject", "m5.params"]
-depends = [ PySource.modules[dep].snode for dep in module_depends ]
-depends.sort(key = lambda x: x.name)
 
 ########################################################################
 #
