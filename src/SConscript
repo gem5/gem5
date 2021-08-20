@@ -135,9 +135,7 @@ class SimObject(PySource):
 
     fixed = False
 
-    sim_objects = dict()
-    enums = dict()
-    tags = dict()
+    sim_objects = []
 
     def __init__(self, source, *, sim_objects=None, enums=None,
             tags=None, add_tags=None):
@@ -155,9 +153,84 @@ class SimObject(PySource):
         if self.fixed:
             error("Too late to call SimObject now.")
 
-        SimObject.sim_objects[self.modpath] = sim_objects
-        SimObject.enums[self.modpath] = enums
-        SimObject.tags[self.modpath] = self.tags
+        SimObject.sim_objects.extend(sim_objects)
+
+        build_dir = Dir(env['BUILDDIR'])
+        module = self.modpath
+
+        # Generate all of the SimObject param C++ files.
+        for simobj in sim_objects:
+            # Some helper functions
+            srcs = [ Value(module), Value(simobj),
+                    "${GEM5PY_M5}", "${PYSCRIPT}" ]
+            def cmdline(*args):
+                all_args = [ 'GEM5PY_M5', 'PYSCRIPT', 'MODULE' ] + list(args)
+                return ' '.join(list('"${%s}"' % arg for arg in all_args))
+
+            # Params header.
+            gem5py_env.Command([ "${PARAMS_HH}" ], srcs,
+                    MakeAction(cmdline('PARAMS_HH'), Transform("SO Param", 2)),
+                    MODULE=module,
+                    SIMOBJ=simobj,
+                    PYSCRIPT=build_tools.File('sim_object_param_struct_hh.py'),
+                    PARAMS_HH=build_dir.File(f'params/{simobj}.hh'))
+
+            # Params cc.
+            cc_file = build_dir.File(f'python/_m5/param_{simobj}.cc')
+            gem5py_env.Command([ "${PARAMS_CC}" ], srcs,
+                    MakeAction(cmdline('PARAMS_CC', 'USE_PYTHON'),
+                        Transform("SO Param", 2)),
+                    PYSCRIPT=build_tools.File('sim_object_param_struct_cc.py'),
+                    MODULE=module,
+                    SIMOBJ=simobj,
+                    PARAMS_CC=cc_file,
+                    USE_PYTHON=env['USE_PYTHON'])
+            Source(cc_file, tags=self.tags, add_tags='python')
+
+            # CXX config header.
+            gem5py_env.Command([ "${CXXCONFIG_HH}" ], srcs,
+                    MakeAction(cmdline('CXXCONFIG_HH'),
+                        Transform("CXXCPRHH", 2)),
+                    PYSCRIPT=build_tools.File('cxx_config_hh.py'),
+                    MODULE=module,
+                    CXXCONFIG_HH=build_dir.File(f'cxx_config/{simobj}.hh'))
+
+            # CXX config cc.
+            cc_file=build_dir.File(f'cxx_config/{simobj}.cc')
+            gem5py_env.Command([ "${CXXCONFIG_CC}" ], srcs,
+                    MakeAction(cmdline('CXXCONFIG_CC'),
+                        Transform("CXXCPRCC", 2)),
+                    PYSCRIPT=build_tools.File('cxx_config_cc.py'),
+                    MODULE=module,
+                    CXXCONFIG_CC=cc_file)
+            if GetOption('with_cxx_config'):
+                Source(cc_file, tags=self.tags)
+
+        # C++ versions of enum params.
+        for enum in enums:
+            gem5py_env.Command([ "${ENUM_HH}" ],
+                    [ Value(module), Value(enum),
+                        "${GEM5PY_M5}", "${ENUMHH_PY}" ],
+                    MakeAction('"${GEM5PY_M5}" "${ENUMHH_PY}" "${MODULE}" ' \
+                            '"${ENUM_HH}"',
+                        Transform("ENUMDECL", 2)),
+                    MODULE=module,
+                    ENUM=enum,
+                    ENUM_HH=build_dir.File(f'enums/{enum}.hh'),
+                    ENUMHH_PY=build_tools.File('enum_hh.py'))
+            cc_file = build_dir.File(f'enums/{enum}.cc')
+            gem5py_env.Command([ "${ENUM_CC}" ],
+                    [ Value(module), Value(enum),
+                        "${GEM5PY_M5}", "${ENUMCC_PY}" ],
+                    MakeAction('"${GEM5PY_M5}" "${ENUMCC_PY}" "${MODULE}" ' \
+                            '"${ENUM_CC}" "${USE_PYTHON}"',
+                        Transform("ENUM STR", 2)),
+                    MODULE=module,
+                    ENUM=enum,
+                    ENUM_CC=cc_file,
+                    ENUMCC_PY=build_tools.File('enum_cc.py'),
+                    USE_PYTHON='--use-python' if env['USE_PYTHON'] else '')
+            Source(cc_file, tags=self.tags, add_tags='python')
 
 # This regular expression is simplistic and assumes that the import takes up
 # the entire line, doesn't have the keyword "public", uses double quotes, has
@@ -560,61 +633,10 @@ gem5py_env.Program(gem5py_m5, [ 'python/gem5py.cc' ] + m5_module_static)
 
 ########################################################################
 #
-# Create all of the SimObject param headers and enum headers
+# Create the CXX config init.cc.
 #
 
-# Generate all of the SimObject param C++ files.
-
-for module, simobjs in sorted(SimObject.sim_objects.items()):
-    tags = SimObject.tags[module]
-    for simobj in simobjs:
-
-        # Some helper functions
-        srcs = [ Value(module), Value(simobj), "${GEM5PY_M5}", "${PYSCRIPT}" ]
-        def cmdline(*args):
-            all_args = [ 'GEM5PY_M5', 'PYSCRIPT', 'MODULE' ] + list(args)
-            return ' '.join(list('"${%s}"' % arg for arg in all_args))
-
-        # Params header.
-        gem5py_env.Command([ "${PARAMS_HH}" ], srcs,
-                MakeAction(cmdline('PARAMS_HH'), Transform("SO Param", 2)),
-                MODULE=module,
-                SIMOBJ=simobj,
-                PYSCRIPT=build_tools.File('sim_object_param_struct_hh.py'),
-                PARAMS_HH=File(f'params/{simobj}.hh'))
-
-        # Params cc.
-        cc_file = File(f'python/_m5/param_{simobj}.cc')
-        gem5py_env.Command([ "${PARAMS_CC}" ], srcs,
-                MakeAction(cmdline('PARAMS_CC', 'USE_PYTHON'),
-                    Transform("SO Param", 2)),
-                PYSCRIPT=build_tools.File('sim_object_param_struct_cc.py'),
-                MODULE=module,
-                SIMOBJ=simobj,
-                PARAMS_CC=cc_file,
-                USE_PYTHON=env['USE_PYTHON'])
-        Source(cc_file, tags=tags, add_tags='python')
-
-        # CXX config header.
-        gem5py_env.Command([ "${CXXCONFIG_HH}" ], srcs,
-                MakeAction(cmdline('CXXCONFIG_HH'), Transform("CXXCPRHH", 2)),
-                PYSCRIPT=build_tools.File('cxx_config_hh.py'),
-                MODULE=module,
-                CXXCONFIG_HH=File(f'cxx_config/{simobj}.hh'))
-
-        # CXX config cc.
-        cc_file=File(f'cxx_config/{simobj}.cc')
-        gem5py_env.Command([ "${CXXCONFIG_CC}" ], srcs,
-                MakeAction(cmdline('CXXCONFIG_CC'), Transform("CXXCPRCC", 2)),
-                PYSCRIPT=build_tools.File('cxx_config_cc.py'),
-                MODULE=module,
-                CXXCONFIG_CC=cc_file)
-        if GetOption('with_cxx_config'):
-            Source(cc_file)
-
-# CXX config init.cc
-all_sim_objects = sorted(itertools.chain.from_iterable(
-    SimObject.sim_objects.values()))
+all_sim_objects = sorted(SimObject.sim_objects)
 sim_object_args = list(f'"{sim_object}"' for sim_object in all_sim_objects)
 cc_file = File('cxx_config/init.cc')
 gem5py_env.Command([ "${CXXCONFIGINIT_CC}" ],
@@ -627,32 +649,6 @@ gem5py_env.Command([ "${CXXCONFIGINIT_CC}" ],
         CXXCONFIGINIT_CC=cc_file)
 if GetOption('with_cxx_config'):
     Source(cc_file)
-
-# C++ versions of enum params.
-for module, enums in sorted(SimObject.enums.items()):
-    tags = SimObject.tags[module]
-    for enum in enums:
-        gem5py_env.Command([ "${ENUM_HH}" ],
-                [ Value(module), Value(enum), "${GEM5PY_M5}", "${ENUMHH_PY}" ],
-                MakeAction('"${GEM5PY_M5}" "${ENUMHH_PY}" "${MODULE}" ' \
-                        '"${ENUM_HH}"',
-                    Transform("ENUMDECL", 2)),
-                MODULE=module,
-                ENUM=enum,
-                ENUM_HH=File(f'enums/{enum}.hh'),
-                ENUMHH_PY=build_tools.File('enum_hh.py'))
-        cc_file = File(f'enums/{enum}.cc')
-        gem5py_env.Command([ "${ENUM_CC}" ],
-                [ Value(module), Value(enum), "${GEM5PY_M5}", "${ENUMCC_PY}" ],
-                MakeAction('"${GEM5PY_M5}" "${ENUMCC_PY}" "${MODULE}" ' \
-                        '"${ENUM_CC}" "${USE_PYTHON}"',
-                    Transform("ENUM STR", 2)),
-                MODULE=module,
-                ENUM=enum,
-                ENUM_CC=cc_file,
-                ENUMCC_PY=build_tools.File('enum_cc.py'),
-                USE_PYTHON='--use-python' if env['USE_PYTHON'] else '')
-        Source(cc_file, tags=tags, add_tags='python')
 
 
 # version tags
