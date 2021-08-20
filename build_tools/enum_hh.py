@@ -1,4 +1,17 @@
+# Copyright 2004-2006 The Regents of The University of Michigan
+# Copyright 2010-20013 Advanced Micro Devices, Inc.
+# Copyright 2013 Mark D. Hill and David A. Wood
+# Copyright 2017-2020 ARM Limited
 # Copyright 2021 Google, Inc.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -46,5 +59,58 @@ module = importlib.import_module(args.modpath)
 enum = getattr(module, enum_name)
 
 code = code_formatter()
-enum.cxx_decl(code)
+
+# Generate C++ class declaration for this enum type.
+# Note that we wrap the enum in a class/struct to act as a namespace,
+# so that the enum strings can be brief w/o worrying about collisions.
+wrapper_name = enum.wrapper_name
+wrapper = 'struct' if enum.wrapper_is_struct else 'namespace'
+name = enum.__name__ if enum.enum_name is None else enum.enum_name
+idem_macro = '__ENUM__%s__%s__' % (wrapper_name, name)
+
+code('''\
+#ifndef $idem_macro
+#define $idem_macro
+
+namespace gem5
+{
+''')
+if enum.is_class:
+    code('''\
+enum class $name
+{
+''')
+else:
+    code('''\
+$wrapper $wrapper_name {
+enum $name
+{
+''')
+    code.indent(1)
+code.indent(1)
+for val in enum.vals:
+    code('$val = ${{enum.map[val]}},')
+code('Num_$name = ${{len(enum.vals)}}')
+code.dedent(1)
+code('};')
+
+if enum.is_class:
+    code('''\
+extern const char *${name}Strings[static_cast<int>(${name}::Num_${name})];
+''')
+elif enum.wrapper_is_struct:
+    code('static const char *${name}Strings[Num_${name}];')
+else:
+    code('extern const char *${name}Strings[Num_${name}];')
+
+if not enum.is_class:
+    code.dedent(1)
+    code('}; // $wrapper_name')
+
+code()
+code('} // namespace gem5')
+
+code()
+code('#endif // $idem_macro')
+
 code.write(args.enum_hh)
