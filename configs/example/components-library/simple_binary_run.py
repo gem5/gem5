@@ -25,10 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-A run script for a very simple Syscall-Execution running a hello world program.
-The system has no cache heirarchy.
-
-This is as simple a setup as gem5 will allow.
+A run script for a very simple Syscall-Execution running simple binaries.
+The system has no cache heirarchy and is as "bare-bones" as you can get in
+gem5 while still being functinal.
 """
 
 import m5
@@ -48,27 +47,66 @@ sys.path.append(
     )
 )
 
-from components_library.resources.resource import CustomResource
+from components_library.resources.resource import Resource
 from components_library.boards.simple_board import SimpleBoard
 from components_library.cachehierarchies.classic.no_cache import NoCache
 from components_library.memory.single_channel import SingleChannelDDR3_1600
 from components_library.processors.simple_processor import SimpleProcessor
 from components_library.processors.cpu_types import CPUTypes
-from components_library.runtime import (
-    get_runtime_coherence_protocol,
-    get_runtime_isa,
-)
-from components_library.utils.requires import requires
-from components_library.isas import ISA
 
-requires(isa_required=ISA.X86)
+import argparse
+
+parser = argparse.ArgumentParser(
+    description="A script to run the gem5 boot test. This test boots the "
+    "linux kernel."
+)
+
+parser.add_argument(
+    "resource",
+    type=str,
+    help="The gem5 resource binary to run.",
+)
+
+parser.add_argument(
+    "cpu",
+    type=str,
+    choices=("kvm", "timing", "atomic", "o3"),
+    help="The CPU type used.",
+)
+
+parser.add_argument(
+    "-r",
+    "--resource-directory",
+    type=str,
+    required=False,
+    help="The directory in which resources will be downloaded or exist.",
+)
+
+parser.add_argument(
+    "-o",
+    "--override-download",
+    action="store_true",
+    help="Override a local resource if the hashes do not match.",
+)
+
+args = parser.parse_args()
+
+def input_to_cputype(input: str) -> CPUTypes:
+    if input == "kvm":
+        return CPUTypes.KVM
+    elif input == "timing":
+        return CPUTypes.TIMING
+    elif input == "atomic":
+        return CPUTypes.ATOMIC
+    elif input == "o3":
+        return CPUTypes.O3
+    else:
+        raise NotADirectoryError("Unknown CPU type '{}'.".format(input))
 
 # Setup the system.
 cache_hierarchy = NoCache()
-
 memory = SingleChannelDDR3_1600()
-
-processor = SimpleProcessor(cpu_type=CPUTypes.ATOMIC, num_cores=1)
+processor = SimpleProcessor(cpu_type=input_to_cputype(args.cpu), num_cores=1)
 
 motherboard = SimpleBoard(
     clk_freq="3GHz",
@@ -80,22 +118,10 @@ motherboard = SimpleBoard(
 motherboard.connect_things()
 
 # Set the workload
-thispath = os.path.dirname(os.path.realpath(__file__))
-binary = CustomResource(
-    os.path.join(
-        thispath,
-        "../../../tests/test-progs/hello/bin/x86/linux/hello",
-    )
-)
+binary = Resource(args.resource,
+        resource_directory=args.resource_directory,
+        override=args.override_download)
 motherboard.set_workload(binary)
-
-
-# Run the simulation.
-print("Running with ISA: {}.".format(get_runtime_isa().name))
-print(
-    "Running with protocol: {}.".format(get_runtime_coherence_protocol().name)
-)
-print()
 
 root = Root(full_system=False, system=motherboard)
 
