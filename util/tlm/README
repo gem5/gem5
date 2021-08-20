@@ -93,12 +93,12 @@ without python.
 
 > cd ../..
 > scons build/ARM/gem5.opt
-> scons --with-cxx-config --without-python --without-tcmalloc \
+> scons --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 \
 >       build/ARM/libgem5_opt.so
 > cd util/tlm
 
 Note: For MAC / OSX this command should be used:
-> scons --with-cxx-config --without-python --without-tcmalloc \
+> scons --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 \
 >       build/ARM/libgem5_opt.dylib
 
 To build all sources of the SystemC binding and the examples simply run scons:
