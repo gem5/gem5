@@ -77,4 +77,4 @@ class CodeImporter(object):
 import sys
 importer = CodeImporter()
 add_module = importer.add_module
-sys.meta_path.append(importer)
+sys.meta_path.insert(0, importer)
