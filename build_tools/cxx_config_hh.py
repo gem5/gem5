@@ -1,4 +1,17 @@
+# Copyright 2004-2006 The Regents of The University of Michigan
+# Copyright 2010-20013 Advanced Micro Devices, Inc.
+# Copyright 2013 Mark D. Hill and David A. Wood
+# Copyright 2017-2020 ARM Limited
 # Copyright 2021 Google, Inc.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -46,5 +59,61 @@ module = importlib.import_module(args.modpath)
 sim_object = getattr(module, sim_object_name)
 
 code = code_formatter()
-sim_object.cxx_config_param_file(code, True)
+
+entry_class = 'CxxConfigDirectoryEntry_%s' % sim_object_name
+param_class = '%sCxxConfigParams' % sim_object_name
+
+code('''#include "params/${sim_object_name}.hh"
+
+#include "sim/cxx_config.hh"
+
+namespace gem5
+{
+
+class ${param_class} : public CxxConfigParams, public ${sim_object_name}Params
+{
+  private:
+    class DirectoryEntry : public CxxConfigDirectoryEntry
+    {
+      public:
+        DirectoryEntry();
+
+        CxxConfigParams *
+        makeParamsObject() const
+        {
+            return new ${param_class};
+        }
+    };
+
+  public:
+    bool setSimObject(const std::string &name, SimObject *simObject);
+
+    bool setSimObjectVector(const std::string &name,
+        const std::vector<SimObject *> &simObjects);
+
+    void setName(const std::string &name_);
+
+    const std::string &getName() { return this->name; }
+
+    bool setParam(const std::string &name, const std::string &value,
+        const Flags flags);
+
+    bool setParamVector(const std::string &name,
+        const std::vector<std::string> &values, const Flags flags);
+
+    bool setPortConnectionCount(const std::string &name, unsigned int count);
+
+    SimObject *simObjectCreate();
+
+    static CxxConfigDirectoryEntry *
+    makeDirectoryEntry()
+    {
+        return new DirectoryEntry;
+    }
+
+};
+
+} // namespace gem5
+''')
+
 code.write(args.cxx_config_hh)
