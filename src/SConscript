@@ -133,10 +133,6 @@ class SimObject(PySource):
     '''Add a SimObject python file as a python source object and add
     it to a list of sim object modules'''
 
-    fixed = False
-
-    sim_objects = []
-
     def __init__(self, source, *, sim_objects=None, enums=None,
             tags=None, add_tags=None):
         '''Specify the source file and any tags (automatically in
@@ -150,10 +146,6 @@ class SimObject(PySource):
             enums = []
 
         super().__init__('m5.objects', source, tags, add_tags)
-        if self.fixed:
-            error("Too late to call SimObject now.")
-
-        SimObject.sim_objects.extend(sim_objects)
 
         build_dir = Dir(env['BUILDDIR'])
         module = self.modpath
@@ -587,13 +579,6 @@ def makeTheGPUISA(source, target, env):
 env.Command('config/the_gpu_isa.hh', [],
             MakeAction(makeTheGPUISA, Transform("CFG ISA", 0)))
 
-########################################################################
-#
-# Prevent any SimObjects from being added after this point, they
-# should all have been added in the SConscripts above
-#
-SimObject.fixed = True
-
 
 ########################################################################
 #
@@ -630,25 +615,6 @@ m5_module_source = \
         Source.all.with_all_tags(env, 'm5_module', 'gem5 lib')
 m5_module_static = list(map(lambda s: s.static(gem5py_env), m5_module_source))
 gem5py_env.Program(gem5py_m5, [ 'python/gem5py.cc' ] + m5_module_static)
-
-########################################################################
-#
-# Create the CXX config init.cc.
-#
-
-all_sim_objects = sorted(SimObject.sim_objects)
-sim_object_args = list(f'"{sim_object}"' for sim_object in all_sim_objects)
-cc_file = File('cxx_config/init.cc')
-gem5py_env.Command([ "${CXXCONFIGINIT_CC}" ],
-        [ "${GEM5PY}", "${CXXCONFIGINITCC_PY}" ],
-        MakeAction('"${GEM5PY}" "${CXXCONFIGINITCC_PY}" "${TARGET}" '
-                '${SIM_OBJECTS}',
-            Transform("CXXCINIT", 0)),
-        CXXCONFIGINITCC_PY=build_tools.File('cxx_config_init_cc.py'),
-        SIM_OBJECTS=' '.join(sim_object_args),
-        CXXCONFIGINIT_CC=cc_file)
-if GetOption('with_cxx_config'):
-    Source(cc_file)
 
 
 # version tags

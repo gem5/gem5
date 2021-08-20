@@ -85,6 +85,9 @@ class ${param_class} : public CxxConfigParams, public ${sim_object_name}Params
         }
     };
 
+    static inline AddToConfigDir dirEntry
+        {"${sim_object_name}", new DirectoryEntry};
+
   public:
     bool setSimObject(const std::string &name, SimObject *simObject);
 
@@ -104,13 +107,6 @@ class ${param_class} : public CxxConfigParams, public ${sim_object_name}Params
     bool setPortConnectionCount(const std::string &name, unsigned int count);
 
     SimObject *simObjectCreate();
-
-    static CxxConfigDirectoryEntry *
-    makeDirectoryEntry()
-    {
-        return new DirectoryEntry;
-    }
-
 };
 
 } // namespace gem5
