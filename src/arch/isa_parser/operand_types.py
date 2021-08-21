@@ -170,12 +170,12 @@ class Operand(object):
         # to avoid 'uninitialized variable' errors from the compiler.
         return self.ctype + ' ' + self.base_name + ' = 0;\n';
 
-
-class IntRegOperand(Operand):
-    reg_class = 'IntRegClass'
-
+class RegOperand(Operand):
     def isReg(self):
         return 1
+
+class IntRegOperand(RegOperand):
+    reg_class = 'IntRegClass'
 
     def isIntReg(self):
         return 1
@@ -243,11 +243,8 @@ class IntRegOperand(Operand):
 
         return wb
 
-class FloatRegOperand(Operand):
+class FloatRegOperand(RegOperand):
     reg_class = 'FloatRegClass'
-
-    def isReg(self):
-        return 1
 
     def isFloatReg(self):
         return 1
@@ -306,15 +303,12 @@ class FloatRegOperand(Operand):
         }''' % (self.ctype, self.base_name, wp)
         return wb
 
-class VecRegOperand(Operand):
+class VecRegOperand(RegOperand):
     reg_class = 'VecRegClass'
 
     def __init__(self, parser, full_name, ext, is_src, is_dest):
-        Operand.__init__(self, parser, full_name, ext, is_src, is_dest)
+        super().__init__(parser, full_name, ext, is_src, is_dest)
         self.elemExt = None
-
-    def isReg(self):
-        return 1
 
     def isVecReg(self):
         return 1
@@ -453,11 +447,8 @@ class VecRegOperand(Operand):
         if self.is_dest:
             self.op_rd = self.makeReadW(predWrite) + self.op_rd
 
-class VecElemOperand(Operand):
+class VecElemOperand(RegOperand):
     reg_class = 'VecElemClass'
-
-    def isReg(self):
-        return 1
 
     def isVecElem(self):
         return 1
@@ -500,11 +491,8 @@ class VecElemOperand(Operand):
             val = f'floatToBits64({val})'
         return f'\n\txc->setRegOperand(this, {self.dest_reg_idx}, {val});'
 
-class VecPredRegOperand(Operand):
+class VecPredRegOperand(RegOperand):
     reg_class = 'VecPredRegClass'
-
-    def isReg(self):
-        return 1
 
     def isVecPredReg(self):
         return 1
@@ -580,11 +568,8 @@ class VecPredRegOperand(Operand):
         if self.is_dest:
             self.op_rd = self.makeReadW(predWrite) + self.op_rd
 
-class CCRegOperand(Operand):
+class CCRegOperand(RegOperand):
     reg_class = 'CCRegClass'
-
-    def isReg(self):
-        return 1
 
     def isCCReg(self):
         return 1
