@@ -1456,19 +1456,10 @@ StaticInstPtr
 
     def buildOperandNameMap(self, user_dict, lineno):
         operand_name = {}
-        for op_name, val in user_dict.items():
-            if isinstance(val, OperandDesc):
-                op_desc = val
-                base_cls_name = op_desc.attrs['base_cls_name']
-            else:
-                assert(isinstance(val, (list, tuple)))
-                base_cls_name = val[0]
-                # Check if extra attributes have been specified.
-                if len(val) > 9:
-                    error(lineno,
-                            'error: too many attributes for operand "%s"' %
-                            base_cls_name)
-                op_desc = OperandDesc(*val)
+        for op_name, op_desc in user_dict.items():
+            assert(isinstance(op_desc, OperandDesc))
+
+            base_cls_name = op_desc.attrs['base_cls_name']
 
             op_desc.setName(op_name)
 
