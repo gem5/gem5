@@ -344,8 +344,6 @@ class VecRegOperand(Operand):
         c_src = ''
         c_dest = ''
 
-        numAccessNeeded = 1
-
         if self.is_src:
             c_src = self.src_reg_constructor % (self.reg_class, self.reg_spec)
 
@@ -473,8 +471,6 @@ class VecElemOperand(Operand):
     def makeConstructor(self, predRead, predWrite):
         c_src = ''
         c_dest = ''
-
-        numAccessNeeded = 1
 
         if self.is_src:
             c_src = ('\n\tsetSrcRegIdx(_numSrcRegs++, RegId(%s, %s));' %
