@@ -153,9 +153,6 @@ class RegOperand(Operand):
     def isReg(self):
         return 1
 
-class IntRegOperand(RegOperand):
-    reg_class = 'IntRegClass'
-
     def makeConstructor(self, predRead, predWrite):
         c_src = ''
         c_dest = ''
@@ -174,6 +171,9 @@ class IntRegOperand(RegOperand):
                          (self.write_predicate, c_dest)
 
         return c_src + c_dest
+
+class IntRegOperand(RegOperand):
+    reg_class = 'IntRegClass'
 
     def makeRead(self, predRead):
         if (self.ctype == 'float' or self.ctype == 'double'):
@@ -221,19 +221,6 @@ class IntRegOperand(RegOperand):
 
 class FloatRegOperand(RegOperand):
     reg_class = 'FloatRegClass'
-
-    def makeConstructor(self, predRead, predWrite):
-        c_src = ''
-        c_dest = ''
-
-        if self.is_src:
-            c_src = self.src_reg_constructor % (self.reg_class, self.reg_spec)
-
-        if self.is_dest:
-            c_dest = self.dst_reg_constructor % (self.reg_class, self.reg_spec)
-            c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
-
-        return c_src + c_dest
 
     def makeRead(self, predRead):
         if self.read_code != None:
@@ -303,19 +290,6 @@ class VecRegOperand(RegOperand):
             return c_decl + '\t/* End vars for %s */\n' % (self.base_name)
         else:
             return ''
-
-    def makeConstructor(self, predRead, predWrite):
-        c_src = ''
-        c_dest = ''
-
-        if self.is_src:
-            c_src = self.src_reg_constructor % (self.reg_class, self.reg_spec)
-
-        if self.is_dest:
-            c_dest = self.dst_reg_constructor % (self.reg_class, self.reg_spec)
-            c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
-
-        return c_src + c_dest
 
     # Read destination register to write
     def makeReadWElem(self, elem_op):
@@ -426,20 +400,6 @@ class VecElemOperand(RegOperand):
         else:
             return ''
 
-    def makeConstructor(self, predRead, predWrite):
-        c_src = ''
-        c_dest = ''
-
-        if self.is_src:
-            c_src = ('\n\tsetSrcRegIdx(_numSrcRegs++, RegId(%s, %s));' %
-                    (self.reg_class, self.reg_spec))
-
-        if self.is_dest:
-            c_dest = ('\n\tsetDestRegIdx(_numDestRegs++, RegId(%s, %s));' %
-                    (self.reg_class, self.reg_spec))
-            c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
-        return c_src + c_dest
-
     def makeRead(self, predRead):
         c_read = f'xc->getRegOperand(this, {self.src_reg_idx})'
 
@@ -463,19 +423,6 @@ class VecPredRegOperand(RegOperand):
 
     def makeDecl(self):
         return ''
-
-    def makeConstructor(self, predRead, predWrite):
-        c_src = ''
-        c_dest = ''
-
-        if self.is_src:
-            c_src = self.src_reg_constructor % (self.reg_class, self.reg_spec)
-
-        if self.is_dest:
-            c_dest = self.dst_reg_constructor % (self.reg_class, self.reg_spec)
-            c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
-
-        return c_src + c_dest
 
     def makeRead(self, predRead):
         func = 'getRegOperand'
@@ -534,25 +481,6 @@ class VecPredRegOperand(RegOperand):
 
 class CCRegOperand(RegOperand):
     reg_class = 'CCRegClass'
-
-    def makeConstructor(self, predRead, predWrite):
-        c_src = ''
-        c_dest = ''
-
-        if self.is_src:
-            c_src = self.src_reg_constructor % (self.reg_class, self.reg_spec)
-            if self.hasReadPred():
-                c_src = '\n\tif (%s) {%s\n\t}' % \
-                        (self.read_predicate, c_src)
-
-        if self.is_dest:
-            c_dest = self.dst_reg_constructor % (self.reg_class, self.reg_spec)
-            c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
-            if self.hasWritePred():
-                c_dest = '\n\tif (%s) {%s\n\t}' % \
-                         (self.write_predicate, c_dest)
-
-        return c_src + c_dest
 
     def makeRead(self, predRead):
         if (self.ctype == 'float' or self.ctype == 'double'):
