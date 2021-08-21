@@ -283,29 +283,17 @@ class RegOperandDesc(OperandDesc):
         super().__init__(*args, **kwargs)
         self.attrs['reg_class'] = reg_class
 
-class IntRegOperand(RegValOperand):
-    reg_class = 'IntRegClass'
-
 class IntRegOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
         super().__init__('IntRegClass', RegValOperand, *args, **kwargs)
-
-class FloatRegOperand(RegValOperand):
-    reg_class = 'FloatRegClass'
 
 class FloatRegOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
         super().__init__('FloatRegClass', RegValOperand, *args, **kwargs)
 
-class CCRegOperand(RegValOperand):
-    reg_class = 'CCRegClass'
-
 class CCRegOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
         super().__init__('CCRegClass', RegValOperand, *args, **kwargs)
-
-class VecElemOperand(RegValOperand):
-    reg_class = 'VecElemClass'
 
 class VecElemOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
