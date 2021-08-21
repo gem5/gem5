@@ -115,36 +115,19 @@ class StaticInst : public RefCounted, public StaticInstFlags
   public:
 
     /// @name Register information.
-    /// The sum of numFPDestRegs(), numIntDestRegs(), numVecDestRegs(),
-    /// numVecElemDestRegs() and numVecPredDestRegs() equals numDestRegs().
-    /// The former two functions are used to track physical register usage for
-    /// machines with separate int & FP reg files, the next three are for
-    /// machines with vector and predicate register files.
+    /// The sum of the different numDestRegs([type])-s equals numDestRegs().
+    /// The per-type function is used to track physical register usage.
     //@{
     /// Number of source registers.
     uint8_t numSrcRegs()  const { return _numSrcRegs; }
     /// Number of destination registers.
     uint8_t numDestRegs() const { return _numDestRegs; }
-    /// Number of floating-point destination regs.
-    uint8_t numFPDestRegs() const { return _numTypedDestRegs[FloatRegClass]; }
-    /// Number of integer destination regs.
-    uint8_t numIntDestRegs() const { return _numTypedDestRegs[IntRegClass]; }
-    /// Number of vector destination regs.
-    uint8_t numVecDestRegs() const { return _numTypedDestRegs[VecRegClass]; }
-    /// Number of vector element destination regs.
+    /// Number of destination registers of a particular type.
     uint8_t
-    numVecElemDestRegs() const
+    numDestRegs(RegClassType type) const
     {
-        return _numTypedDestRegs[VecElemClass];
+        return _numTypedDestRegs[type];
     }
-    /// Number of predicate destination regs.
-    uint8_t
-    numVecPredDestRegs() const
-    {
-        return _numTypedDestRegs[VecPredRegClass];
-    }
-    /// Number of coprocesor destination regs.
-    uint8_t numCCDestRegs() const { return _numTypedDestRegs[CCRegClass]; }
     //@}
 
     /// @name Flag accessors.

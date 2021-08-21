@@ -680,21 +680,10 @@ class DynInst : public ExecContext, public RefCounted
     /** Returns the number of destination registers. */
     size_t numDestRegs() const { return numDests(); }
 
-    // the following are used to track physical register usage
-    // for machines with separate int & FP reg files
-    int8_t numFPDestRegs()  const { return staticInst->numFPDestRegs(); }
-    int8_t numIntDestRegs() const { return staticInst->numIntDestRegs(); }
-    int8_t numCCDestRegs() const { return staticInst->numCCDestRegs(); }
-    int8_t numVecDestRegs() const { return staticInst->numVecDestRegs(); }
-    int8_t
-    numVecElemDestRegs() const
+    size_t
+    numDestRegs(RegClassType type) const
     {
-        return staticInst->numVecElemDestRegs();
-    }
-    int8_t
-    numVecPredDestRegs() const
-    {
-        return staticInst->numVecPredDestRegs();
+        return staticInst->numDestRegs(type);
     }
 
     /** Returns the logical register index of the i'th destination register. */

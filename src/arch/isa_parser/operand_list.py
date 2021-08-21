@@ -116,12 +116,6 @@ class OperandList(object):
 
         self.numSrcRegs = len(srcs)
         self.numDestRegs = len(dests)
-        self.numFPDestRegs = sum(r.isFloatReg() for r in dests)
-        self.numIntDestRegs = sum(r.isIntReg() for r in dests)
-        self.numVecDestRegs = sum(r.isVecReg() for r in dests)
-        self.numVecPredDestRegs = sum(r.isVecPredReg() for r in dests)
-        self.numCCDestRegs = sum(r.isCCReg() for r in dests)
-        self.numMiscDestRegs = sum(r.isControlReg() for r in dests)
 
         if len(mem) > 1:
             error("Code block has more than one memory operand")
