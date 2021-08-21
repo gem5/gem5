@@ -192,7 +192,7 @@ class IntRegOperand(Operand):
 
         if self.is_dest:
             c_dest = self.dst_reg_constructor % (self.reg_class, self.reg_spec)
-            c_dest += '\n\t_numIntDestRegs++;'
+            c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
             if self.hasWritePred():
                 c_dest = '\n\tif (%s) {%s\n\t}' % \
                          (self.write_predicate, c_dest)
@@ -261,7 +261,7 @@ class FloatRegOperand(Operand):
 
         if self.is_dest:
             c_dest = self.dst_reg_constructor % (self.reg_class, self.reg_spec)
-            c_dest += '\n\t_numFPDestRegs++;'
+            c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
 
         return c_src + c_dest
 
@@ -349,7 +349,7 @@ class VecRegOperand(Operand):
 
         if self.is_dest:
             c_dest = self.dst_reg_constructor % (self.reg_class, self.reg_spec)
-            c_dest += '\n\t_numVecDestRegs++;'
+            c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
 
         return c_src + c_dest
 
@@ -479,7 +479,7 @@ class VecElemOperand(Operand):
         if self.is_dest:
             c_dest = ('\n\tsetDestRegIdx(_numDestRegs++, RegId(%s, %s));' %
                     (self.reg_class, self.reg_spec))
-            c_dest += '\n\t_numVecElemDestRegs++;'
+            c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
         return c_src + c_dest
 
     def makeRead(self, predRead):
@@ -521,7 +521,7 @@ class VecPredRegOperand(Operand):
 
         if self.is_dest:
             c_dest = self.dst_reg_constructor % (self.reg_class, self.reg_spec)
-            c_dest += '\n\t_numVecPredDestRegs++;'
+            c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
 
         return c_src + c_dest
 
@@ -601,7 +601,7 @@ class CCRegOperand(Operand):
 
         if self.is_dest:
             c_dest = self.dst_reg_constructor % (self.reg_class, self.reg_spec)
-            c_dest += '\n\t_numCCDestRegs++;'
+            c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
             if self.hasWritePred():
                 c_dest = '\n\tif (%s) {%s\n\t}' % \
                          (self.write_predicate, c_dest)
