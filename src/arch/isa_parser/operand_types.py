@@ -394,12 +394,6 @@ class VecRegOperand(RegOperand):
 class VecElemOperand(RegOperand):
     reg_class = 'VecElemClass'
 
-    def makeDecl(self):
-        if self.is_dest and not self.is_src:
-            return '\n\t%s %s;' % (self.ctype, self.base_name)
-        else:
-            return ''
-
     def makeRead(self, predRead):
         c_read = f'xc->getRegOperand(this, {self.src_reg_idx})'
 
@@ -408,7 +402,7 @@ class VecElemOperand(RegOperand):
         elif self.ctype == 'double':
             c_read = f'bitsToFloat64({c_read})'
 
-        return f'\n\t{self.ctype} {self.base_name} = {c_read};\n'
+        return f'{self.base_name} = {c_read};\n'
 
     def makeWrite(self, predWrite):
         val = self.base_name
