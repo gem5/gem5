@@ -122,27 +122,6 @@ class Operand(object):
     def isReg(self):
         return 0
 
-    def isFloatReg(self):
-        return 0
-
-    def isIntReg(self):
-        return 0
-
-    def isCCReg(self):
-        return 0
-
-    def isControlReg(self):
-        return 0
-
-    def isVecReg(self):
-        return 0
-
-    def isVecElem(self):
-        return 0
-
-    def isVecPredReg(self):
-        return 0
-
     def isPCState(self):
         return 0
 
@@ -176,9 +155,6 @@ class RegOperand(Operand):
 
 class IntRegOperand(RegOperand):
     reg_class = 'IntRegClass'
-
-    def isIntReg(self):
-        return 1
 
     def makeConstructor(self, predRead, predWrite):
         c_src = ''
@@ -246,9 +222,6 @@ class IntRegOperand(RegOperand):
 class FloatRegOperand(RegOperand):
     reg_class = 'FloatRegClass'
 
-    def isFloatReg(self):
-        return 1
-
     def makeConstructor(self, predRead, predWrite):
         c_src = ''
         c_dest = ''
@@ -309,9 +282,6 @@ class VecRegOperand(RegOperand):
     def __init__(self, parser, full_name, ext, is_src, is_dest):
         super().__init__(parser, full_name, ext, is_src, is_dest)
         self.elemExt = None
-
-    def isVecReg(self):
-        return 1
 
     def makeDeclElem(self, elem_op):
         (elem_name, elem_ext) = elem_op
@@ -450,9 +420,6 @@ class VecRegOperand(RegOperand):
 class VecElemOperand(RegOperand):
     reg_class = 'VecElemClass'
 
-    def isVecElem(self):
-        return 1
-
     def makeDecl(self):
         if self.is_dest and not self.is_src:
             return '\n\t%s %s;' % (self.ctype, self.base_name)
@@ -493,9 +460,6 @@ class VecElemOperand(RegOperand):
 
 class VecPredRegOperand(RegOperand):
     reg_class = 'VecPredRegClass'
-
-    def isVecPredReg(self):
-        return 1
 
     def makeDecl(self):
         return ''
@@ -570,9 +534,6 @@ class VecPredRegOperand(RegOperand):
 
 class CCRegOperand(RegOperand):
     reg_class = 'CCRegClass'
-
-    def isCCReg(self):
-        return 1
 
     def makeConstructor(self, predRead, predWrite):
         c_src = ''
