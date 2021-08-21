@@ -115,23 +115,30 @@ UnifiedRenameMap::init(const BaseISA::RegClasses &regClasses,
 {
     regFile = _regFile;
 
-    intMap.init(regClasses.at(IntRegClass), &(freeList->intList));
-    floatMap.init(regClasses.at(FloatRegClass), &(freeList->floatList));
-    vecMap.init(regClasses.at(VecRegClass), &(freeList->vecList));
-    vecElemMap.init(regClasses.at(VecElemClass), &(freeList->vecElemList));
-    predMap.init(regClasses.at(VecPredRegClass), &(freeList->predList));
-    ccMap.init(regClasses.at(CCRegClass), &(freeList->ccList));
+    renameMaps[IntRegClass].init(regClasses.at(IntRegClass),
+            &(freeList->intList));
+    renameMaps[FloatRegClass].init(regClasses.at(FloatRegClass),
+            &(freeList->floatList));
+    renameMaps[VecRegClass].init(regClasses.at(VecRegClass),
+            &(freeList->vecList));
+    renameMaps[VecElemClass].init(regClasses.at(VecElemClass),
+            &(freeList->vecElemList));
+    renameMaps[VecPredRegClass].init(regClasses.at(VecPredRegClass),
+            &(freeList->predList));
+    renameMaps[CCRegClass].init(regClasses.at(CCRegClass),
+            &(freeList->ccList));
 }
 
 bool
 UnifiedRenameMap::canRename(DynInstPtr inst) const
 {
-    return inst->numDestRegs(IntRegClass) <= intMap.numFreeEntries() &&
-        inst->numDestRegs(FloatRegClass) <= floatMap.numFreeEntries() &&
-        inst->numDestRegs(VecRegClass) <= vecMap.numFreeEntries() &&
-        inst->numDestRegs(VecElemClass) <= vecElemMap.numFreeEntries() &&
-        inst->numDestRegs(VecPredRegClass) <= predMap.numFreeEntries() &&
-        inst->numDestRegs(CCRegClass) <= ccMap.numFreeEntries();
+    for (int i = 0; i < renameMaps.size(); i++) {
+        if (inst->numDestRegs((RegClassType)i) >
+                renameMaps[i].numFreeEntries()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace o3

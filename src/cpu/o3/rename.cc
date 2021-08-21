@@ -1250,12 +1250,12 @@ Rename::readFreeEntries(ThreadID tid)
             freeEntries[tid].lqEntries,
             freeEntries[tid].sqEntries,
             renameMap[tid]->numFreeEntries(),
-            renameMap[tid]->numFreeIntEntries(),
-            renameMap[tid]->numFreeFloatEntries(),
-            renameMap[tid]->numFreeVecEntries(),
-            renameMap[tid]->numFreeVecElemEntries(),
-            renameMap[tid]->numFreePredEntries(),
-            renameMap[tid]->numFreeCCEntries());
+            renameMap[tid]->numFreeEntries(IntRegClass),
+            renameMap[tid]->numFreeEntries(FloatRegClass),
+            renameMap[tid]->numFreeEntries(VecRegClass),
+            renameMap[tid]->numFreeEntries(VecElemClass),
+            renameMap[tid]->numFreeEntries(VecPredRegClass),
+            renameMap[tid]->numFreeEntries(CCRegClass));
 
     DPRINTF(Rename, "[tid:%i] %i instructions not yet in ROB\n",
             tid, instsInProgress[tid]);

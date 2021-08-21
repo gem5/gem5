@@ -42,7 +42,10 @@
 #ifndef __CPU_O3_RENAME_MAP_HH__
 #define __CPU_O3_RENAME_MAP_HH__
 
+#include <algorithm>
+#include <array>
 #include <iostream>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -174,23 +177,7 @@ class SimpleRenameMap
 class UnifiedRenameMap
 {
   private:
-    /** The integer register rename map */
-    SimpleRenameMap intMap;
-
-    /** The floating-point register rename map */
-    SimpleRenameMap floatMap;
-
-    /** The condition-code register rename map */
-    SimpleRenameMap ccMap;
-
-    /** The vector register rename map */
-    SimpleRenameMap vecMap;
-
-    /** The vector element register rename map */
-    SimpleRenameMap vecElemMap;
-
-    /** The predicate register rename map */
-    SimpleRenameMap predMap;
+    std::array<SimpleRenameMap, CCRegClass + 1> renameMaps;
 
     /**
      * The register file object is used only to get PhysRegIdPtr
@@ -223,32 +210,16 @@ class UnifiedRenameMap
     RenameInfo
     rename(const RegId& arch_reg)
     {
-        switch (arch_reg.classValue()) {
-          case IntRegClass:
-            return intMap.rename(arch_reg);
-          case FloatRegClass:
-            return floatMap.rename(arch_reg);
-          case VecRegClass:
-            return vecMap.rename(arch_reg);
-          case VecElemClass:
-            return vecElemMap.rename(arch_reg);
-          case VecPredRegClass:
-            return predMap.rename(arch_reg);
-          case CCRegClass:
-            return ccMap.rename(arch_reg);
-          case MiscRegClass:
-            {
-                // misc regs aren't really renamed, just remapped
-                PhysRegIdPtr phys_reg = lookup(arch_reg);
-                // Set the new register to the previous one to keep the same
-                // mapping throughout the execution.
-                return RenameInfo(phys_reg, phys_reg);
-            }
-
-          default:
-            panic("rename rename(): unknown reg class %s\n",
-                  arch_reg.className());
+        auto reg_class = arch_reg.classValue();
+        if (reg_class == MiscRegClass) {
+            // misc regs aren't really renamed, just remapped
+            PhysRegIdPtr phys_reg = lookup(arch_reg);
+            // Set the new register to the previous one to keep the same
+            // mapping throughout the execution.
+            return RenameInfo(phys_reg, phys_reg);
         }
+
+        return renameMaps[reg_class].rename(arch_reg);
     }
 
     /**
@@ -261,34 +232,13 @@ class UnifiedRenameMap
     PhysRegIdPtr
     lookup(const RegId& arch_reg) const
     {
-        switch (arch_reg.classValue()) {
-          case IntRegClass:
-            return intMap.lookup(arch_reg);
-
-          case FloatRegClass:
-            return  floatMap.lookup(arch_reg);
-
-          case VecRegClass:
-            return  vecMap.lookup(arch_reg);
-
-          case VecElemClass:
-            return  vecElemMap.lookup(arch_reg);
-
-          case VecPredRegClass:
-            return predMap.lookup(arch_reg);
-
-          case CCRegClass:
-            return ccMap.lookup(arch_reg);
-
-          case MiscRegClass:
+        auto reg_class = arch_reg.classValue();
+        if (reg_class == MiscRegClass) {
             // misc regs aren't really renamed, they keep the same
             // mapping throughout the execution.
             return regFile->getMiscRegId(arch_reg.index());
-
-          default:
-            panic("rename lookup(): unknown reg class %s\n",
-                  arch_reg.className());
         }
+        return renameMaps[reg_class].lookup(arch_reg);
     }
 
     /**
@@ -303,37 +253,17 @@ class UnifiedRenameMap
     setEntry(const RegId& arch_reg, PhysRegIdPtr phys_reg)
     {
         assert(phys_reg->is(arch_reg.classValue()));
-        switch (arch_reg.classValue()) {
-          case IntRegClass:
-            return intMap.setEntry(arch_reg, phys_reg);
-
-          case FloatRegClass:
-            return floatMap.setEntry(arch_reg, phys_reg);
-
-          case VecRegClass:
-            return vecMap.setEntry(arch_reg, phys_reg);
-
-          case VecElemClass:
-            return vecElemMap.setEntry(arch_reg, phys_reg);
-
-          case VecPredRegClass:
-            return predMap.setEntry(arch_reg, phys_reg);
-
-          case CCRegClass:
-            return ccMap.setEntry(arch_reg, phys_reg);
-
-          case MiscRegClass:
+        auto reg_class = arch_reg.classValue();
+        if (reg_class == MiscRegClass) {
             // Misc registers do not actually rename, so don't change
             // their mappings.  We end up here when a commit or squash
             // tries to update or undo a hardwired misc reg nmapping,
             // which should always be setting it to what it already is.
             assert(phys_reg == lookup(arch_reg));
             return;
-
-          default:
-            panic("rename setEntry(): unknown reg class %s\n",
-                  arch_reg.className());
         }
+
+        return renameMaps[reg_class].setEntry(arch_reg, phys_reg);
     }
 
     /**
@@ -345,23 +275,20 @@ class UnifiedRenameMap
     unsigned
     numFreeEntries() const
     {
-        return std::min({intMap.numFreeEntries(),
-                         floatMap.numFreeEntries(),
-                         vecMap.numFreeEntries(),
-                         vecElemMap.numFreeEntries(),
-                         predMap.numFreeEntries()});
+        auto min_free = std::numeric_limits<unsigned>::max();
+        for (auto &map: renameMaps) {
+            // If this map isn't empty (not used)...
+            if (map.numArchRegs())
+                min_free = std::min(min_free, map.numFreeEntries());
+        }
+        return min_free;
     }
 
-    unsigned numFreeIntEntries() const { return intMap.numFreeEntries(); }
-    unsigned numFreeFloatEntries() const { return floatMap.numFreeEntries(); }
-    unsigned numFreeVecEntries() const { return vecMap.numFreeEntries(); }
     unsigned
-    numFreeVecElemEntries() const
+    numFreeEntries(RegClassType type) const
     {
-        return vecElemMap.numFreeEntries();
+        return renameMaps[type].numFreeEntries();
     }
-    unsigned numFreePredEntries() const { return predMap.numFreeEntries(); }
-    unsigned numFreeCCEntries() const { return ccMap.numFreeEntries(); }
 
     /**
      * Return whether there are enough registers to serve the request.
