@@ -115,18 +115,8 @@ UnifiedRenameMap::init(const BaseISA::RegClasses &regClasses,
 {
     regFile = _regFile;
 
-    renameMaps[IntRegClass].init(regClasses.at(IntRegClass),
-            &(freeList->intList));
-    renameMaps[FloatRegClass].init(regClasses.at(FloatRegClass),
-            &(freeList->floatList));
-    renameMaps[VecRegClass].init(regClasses.at(VecRegClass),
-            &(freeList->vecList));
-    renameMaps[VecElemClass].init(regClasses.at(VecElemClass),
-            &(freeList->vecElemList));
-    renameMaps[VecPredRegClass].init(regClasses.at(VecPredRegClass),
-            &(freeList->predList));
-    renameMaps[CCRegClass].init(regClasses.at(CCRegClass),
-            &(freeList->ccList));
+    for (int i = 0; i < renameMaps.size(); i++)
+        renameMaps[i].init(regClasses.at(i), &(freeList->freeLists[i]));
 }
 
 bool
