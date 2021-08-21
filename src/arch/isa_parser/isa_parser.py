@@ -1447,58 +1447,14 @@ StaticInstPtr
         operand_name = {}
         for op_name, val in user_dict.items():
 
+            base_cls_name = val[0]
             # Check if extra attributes have been specified.
             if len(val) > 9:
                 error(lineno, 'error: too many attributes for operand "%s"' %
                       base_cls_name)
 
-            # Pad val with None in case optional args are missing
-            val += (None, None, None, None)
-            base_cls_name, dflt_ext, reg_spec, flags, sort_pri, \
-            read_code, write_code, read_predicate, write_predicate = val[:9]
-
-            # Canonical flag structure is a triple of lists, where each list
-            # indicates the set of flags implied by this operand always, when
-            # used as a source, and when used as a dest, respectively.
-            # For simplicity this can be initialized using a variety of fairly
-            # obvious shortcuts; we convert these to canonical form here.
-            if not flags:
-                # no flags specified (e.g., 'None')
-                flags = ( [], [], [] )
-            elif isinstance(flags, str):
-                # a single flag: assumed to be unconditional
-                flags = ( [ flags ], [], [] )
-            elif isinstance(flags, list):
-                # a list of flags: also assumed to be unconditional
-                flags = ( flags, [], [] )
-            elif isinstance(flags, tuple):
-                # it's a tuple: it should be a triple,
-                # but each item could be a single string or a list
-                (uncond_flags, src_flags, dest_flags) = flags
-                flags = (makeList(uncond_flags),
-                         makeList(src_flags), makeList(dest_flags))
-
-            # Accumulate attributes of new operand class in tmp_dict
-            tmp_dict = {}
-            attrList = ['reg_spec', 'flags', 'sort_pri',
-                        'read_code', 'write_code',
-                        'read_predicate', 'write_predicate']
-            if dflt_ext:
-                dflt_ctype = self.operandTypeMap[dflt_ext]
-                attrList.extend(['dflt_ctype', 'dflt_ext'])
-            # reg_spec is either just a string or a dictionary
-            # (for elems of vector)
-            if isinstance(reg_spec, tuple):
-                (reg_spec, elem_spec) = reg_spec
-                if isinstance(elem_spec, str):
-                    attrList.append('elem_spec')
-                else:
-                    assert(isinstance(elem_spec, dict))
-                    elems = elem_spec
-                    attrList.append('elems')
-            for attr in attrList:
-                tmp_dict[attr] = eval(attr)
-            tmp_dict['base_name'] = op_name
+            op_desc = OperandDesc(*val)
+            op_desc.setName(op_name)
 
             # New class name will be e.g. "IntReg_Ra"
             cls_name = base_cls_name + '_' + op_name
@@ -1512,8 +1468,8 @@ StaticInstPtr
                       'error: unknown operand base class "%s"' % base_cls_name)
             # The following statement creates a new class called
             # <cls_name> as a subclass of <base_cls> with the attributes
-            # in tmp_dict, just as if we evaluated a class declaration.
-            operand_name[op_name] = type(cls_name, (base_cls,), tmp_dict)
+            # in op_desc.attrs, just as if we evaluated a class declaration.
+            operand_name[op_name] = type(cls_name, (base_cls,), op_desc.attrs)
 
         self.operandNameMap.update(operand_name)
 

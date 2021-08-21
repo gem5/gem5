@@ -37,6 +37,62 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+class OperandDesc(object):
+    def __init__(self, base_cls_name, dflt_ext, reg_spec, flags=None,
+            sort_pri=None, read_code=None, write_code=None,
+            read_predicate=None, write_predicate=None):
+
+        from .isa_parser import makeList
+
+        # Canonical flag structure is a triple of lists, where each list
+        # indicates the set of flags implied by this operand always, when
+        # used as a source, and when used as a dest, respectively.
+        # For simplicity this can be initialized using a variety of fairly
+        # obvious shortcuts; we convert these to canonical form here.
+        if not flags:
+            # no flags specified (e.g., 'None')
+            flags = ( [], [], [] )
+        elif isinstance(flags, str):
+            # a single flag: assumed to be unconditional
+            flags = ( [ flags ], [], [] )
+        elif isinstance(flags, list):
+            # a list of flags: also assumed to be unconditional
+            flags = ( flags, [], [] )
+        elif isinstance(flags, tuple):
+            # it's a tuple: it should be a triple,
+            # but each item could be a single string or a list
+            (uncond_flags, src_flags, dest_flags) = flags
+            flags = (makeList(uncond_flags),
+                     makeList(src_flags), makeList(dest_flags))
+
+        attrs = {}
+        # reg_spec is either just a string or a dictionary
+        # (for elems of vector)
+        if isinstance(reg_spec, tuple):
+            (reg_spec, elem_spec) = reg_spec
+            if isinstance(elem_spec, str):
+                attrs['elem_spec'] = elem_spec
+            else:
+                assert(isinstance(elem_spec, dict))
+                attrs['elems'] = elem_spec
+
+        attrs.update({
+            'base_cls_name': base_cls_name,
+            'dflt_ext': dflt_ext,
+            'reg_spec': reg_spec,
+            'flags': flags,
+            'sort_pri': sort_pri,
+            'read_code': read_code,
+            'write_code': write_code,
+            'read_predicate': read_predicate,
+            'write_predicate': write_predicate,
+        })
+        self.attrs = attrs
+
+    def setName(self, name):
+        self.attrs['base_name'] = name
+
+
 class Operand(object):
     '''Base class for operand descriptors.  An instance of this class
     (or actually a class derived from this one) represents a specific
@@ -73,7 +129,7 @@ class Operand(object):
             %s final_val = %s;
             %s;
             if (traceData) { traceData->setData(final_val); }
-        }''' % (self.dflt_ctype, self.base_name, code)
+        }''' % (self.ctype, self.base_name, code)
 
     def __init__(self, parser, full_name, ext, is_src, is_dest):
         self.parser = parser
