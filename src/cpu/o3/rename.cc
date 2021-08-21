@@ -656,12 +656,7 @@ Rename::renameInsts(ThreadID tid)
 
         // Check here to make sure there are enough destination registers
         // to rename to.  Otherwise block.
-        if (!renameMap[tid]->canRename(inst->numDestRegs(IntRegClass),
-                                       inst->numDestRegs(FloatRegClass),
-                                       inst->numDestRegs(VecRegClass),
-                                       inst->numDestRegs(VecElemClass),
-                                       inst->numDestRegs(VecPredRegClass),
-                                       inst->numDestRegs(CCRegClass))) {
+        if (!renameMap[tid]->canRename(inst)) {
             DPRINTF(Rename,
                     "Blocking due to "
                     " lack of free physical registers to rename to.\n");

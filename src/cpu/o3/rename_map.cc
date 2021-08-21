@@ -44,6 +44,7 @@
 #include <vector>
 
 #include "arch/vecregs.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Rename.hh"
 
@@ -120,6 +121,17 @@ UnifiedRenameMap::init(const BaseISA::RegClasses &regClasses,
     vecElemMap.init(regClasses.at(VecElemClass), &(freeList->vecElemList));
     predMap.init(regClasses.at(VecPredRegClass), &(freeList->predList));
     ccMap.init(regClasses.at(CCRegClass), &(freeList->ccList));
+}
+
+bool
+UnifiedRenameMap::canRename(DynInstPtr inst) const
+{
+    return inst->numDestRegs(IntRegClass) <= intMap.numFreeEntries() &&
+        inst->numDestRegs(FloatRegClass) <= floatMap.numFreeEntries() &&
+        inst->numDestRegs(VecRegClass) <= vecMap.numFreeEntries() &&
+        inst->numDestRegs(VecElemClass) <= vecElemMap.numFreeEntries() &&
+        inst->numDestRegs(VecPredRegClass) <= predMap.numFreeEntries() &&
+        inst->numDestRegs(CCRegClass) <= ccMap.numFreeEntries();
 }
 
 } // namespace o3

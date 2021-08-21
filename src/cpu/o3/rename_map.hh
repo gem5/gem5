@@ -47,6 +47,7 @@
 #include <vector>
 
 #include "arch/generic/isa.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/regfile.hh"
 #include "cpu/reg_class.hh"
@@ -365,18 +366,7 @@ class UnifiedRenameMap
     /**
      * Return whether there are enough registers to serve the request.
      */
-    bool
-    canRename(uint32_t intRegs, uint32_t floatRegs, uint32_t vectorRegs,
-              uint32_t vecElemRegs, uint32_t vecPredRegs,
-              uint32_t ccRegs) const
-    {
-        return intRegs <= intMap.numFreeEntries() &&
-            floatRegs <= floatMap.numFreeEntries() &&
-            vectorRegs <= vecMap.numFreeEntries() &&
-            vecElemRegs <= vecElemMap.numFreeEntries() &&
-            vecPredRegs <= predMap.numFreeEntries() &&
-            ccRegs <= ccMap.numFreeEntries();
-    }
+    bool canRename(DynInstPtr inst) const;
 };
 
 } // namespace o3
