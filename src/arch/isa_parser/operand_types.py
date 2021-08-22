@@ -37,6 +37,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+def overrideInOperand(func):
+    func.override_in_operand = True
+    return func
+
+overrideInOperand.overrides = dict()
+
 class OperandDesc(object):
     def __init__(self, base_cls, dflt_ext, reg_spec, flags=None,
             sort_pri=None, read_code=None, write_code=None,
@@ -75,6 +81,15 @@ class OperandDesc(object):
             else:
                 assert(isinstance(elem_spec, dict))
                 attrs['elems'] = elem_spec
+
+        for key in dir(self):
+            val = getattr(self, key)
+            # If this is a method, extract the function that implements it.
+            if hasattr(val, '__func__'):
+                val = val.__func__
+            # If this should override something in the operand
+            if getattr(val, 'override_in_operand', False):
+                attrs[key] = val
 
         attrs.update({
             'base_cls': base_cls,
