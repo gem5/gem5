@@ -147,7 +147,10 @@ class ExecContext : public gem5::ExecContext
     RegVal
     getRegOperand(const StaticInst *si, int idx) override
     {
-        return thread.getReg(si->srcRegIdx(idx));
+        const RegId &reg = si->srcRegIdx(idx);
+        if (reg.is(InvalidRegClass))
+            return 0;
+        return thread.getReg(reg);
     }
 
     void
@@ -165,6 +168,9 @@ class ExecContext : public gem5::ExecContext
     void
     setRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
+        const RegId &reg = si->destRegIdx(idx);
+        if (reg.is(InvalidRegClass))
+            return;
         thread.setReg(si->destRegIdx(idx), val);
     }
 

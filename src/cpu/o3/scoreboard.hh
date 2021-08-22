@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "base/compiler.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Scoreboard.hh"
@@ -85,17 +86,17 @@ class Scoreboard
     bool
     getReg(PhysRegIdPtr phys_reg) const
     {
-        assert(phys_reg->flatIndex() < numPhysRegs);
-
         if (phys_reg->isFixedMapping()) {
             // Fixed mapping regs are always ready
             return true;
         }
 
+        assert(phys_reg->flatIndex() < numPhysRegs);
+
         bool ready = regScoreBoard[phys_reg->flatIndex()];
 
         if (phys_reg->is(IntRegClass) && phys_reg->index() == zeroReg)
-            assert(ready);
+            gem5_assert(ready);
 
         return ready;
     }
@@ -104,13 +105,13 @@ class Scoreboard
     void
     setReg(PhysRegIdPtr phys_reg)
     {
-        assert(phys_reg->flatIndex() < numPhysRegs);
-
         if (phys_reg->isFixedMapping()) {
             // Fixed mapping regs are always ready, ignore attempts to change
             // that
             return;
         }
+
+        assert(phys_reg->flatIndex() < numPhysRegs);
 
         DPRINTF(Scoreboard, "Setting reg %i (%s) as ready\n",
                 phys_reg->index(), phys_reg->className());
@@ -122,13 +123,13 @@ class Scoreboard
     void
     unsetReg(PhysRegIdPtr phys_reg)
     {
-        assert(phys_reg->flatIndex() < numPhysRegs);
-
         if (phys_reg->isFixedMapping()) {
             // Fixed mapping regs are always ready, ignore attempts to
             // change that
             return;
         }
+
+        assert(phys_reg->flatIndex() < numPhysRegs);
 
         // zero reg should never be marked unready
         if (phys_reg->is(IntRegClass) && phys_reg->index() == zeroReg)

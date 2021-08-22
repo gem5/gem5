@@ -167,7 +167,7 @@ class RegId
     bool
     isRenameable() const
     {
-        return regClass != MiscRegClass;
+        return regClass != MiscRegClass && regClass != InvalidRegClass;
     }
 
     /** @return true if it is of the specified class. */

@@ -179,6 +179,8 @@ class UnifiedRenameMap
   private:
     std::array<SimpleRenameMap, CCRegClass + 1> renameMaps;
 
+    static inline PhysRegId invalidPhysRegId{};
+
     /**
      * The register file object is used only to get PhysRegIdPtr
      * on MiscRegs, as they are stored in it.
@@ -210,8 +212,7 @@ class UnifiedRenameMap
     RenameInfo
     rename(const RegId& arch_reg)
     {
-        auto reg_class = arch_reg.classValue();
-        if (reg_class == MiscRegClass) {
+        if (!arch_reg.isRenameable()) {
             // misc regs aren't really renamed, just remapped
             PhysRegIdPtr phys_reg = lookup(arch_reg);
             // Set the new register to the previous one to keep the same
@@ -219,7 +220,7 @@ class UnifiedRenameMap
             return RenameInfo(phys_reg, phys_reg);
         }
 
-        return renameMaps[reg_class].rename(arch_reg);
+        return renameMaps[arch_reg.classValue()].rename(arch_reg);
     }
 
     /**
@@ -233,7 +234,9 @@ class UnifiedRenameMap
     lookup(const RegId& arch_reg) const
     {
         auto reg_class = arch_reg.classValue();
-        if (reg_class == MiscRegClass) {
+        if (reg_class == InvalidRegClass) {
+            return &invalidPhysRegId;
+        } else if (reg_class == MiscRegClass) {
             // misc regs aren't really renamed, they keep the same
             // mapping throughout the execution.
             return regFile->getMiscRegId(arch_reg.index());
@@ -253,8 +256,7 @@ class UnifiedRenameMap
     setEntry(const RegId& arch_reg, PhysRegIdPtr phys_reg)
     {
         assert(phys_reg->is(arch_reg.classValue()));
-        auto reg_class = arch_reg.classValue();
-        if (reg_class == MiscRegClass) {
+        if (!arch_reg.isRenameable()) {
             // Misc registers do not actually rename, so don't change
             // their mappings.  We end up here when a commit or squash
             // tries to update or undo a hardwired misc reg nmapping,
@@ -263,7 +265,7 @@ class UnifiedRenameMap
             return;
         }
 
-        return renameMaps[reg_class].setEntry(arch_reg, phys_reg);
+        return renameMaps[arch_reg.classValue()].setEntry(arch_reg, phys_reg);
     }
 
     /**

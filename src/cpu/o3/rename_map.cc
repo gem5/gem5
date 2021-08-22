@@ -82,6 +82,9 @@ SimpleRenameMap::rename(const RegId& arch_reg)
     if (arch_reg == zeroReg) {
         assert(prev_reg->index() == zeroReg.index());
         renamed_reg = prev_reg;
+    } else if (arch_reg.is(InvalidRegClass)) {
+        assert(prev_reg->is(InvalidRegClass));
+        renamed_reg = prev_reg;
     } else if (prev_reg->getNumPinnedWrites() > 0) {
         // Do not rename if the register is pinned
         assert(arch_reg.getNumPinnedWrites() == 0);  // Prevent pinning the

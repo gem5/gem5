@@ -584,6 +584,8 @@ Checker<DynInstPtr>::copyResult(
     if (start_idx >= 0) {
         const RegId& idx = inst->destRegIdx(start_idx);
         switch (idx.classValue()) {
+          case InvalidRegClass:
+            break;
           case IntRegClass:
             thread->setIntReg(idx.index(), mismatch_val.as<RegVal>());
             break;
@@ -612,6 +614,8 @@ Checker<DynInstPtr>::copyResult(
         const RegId& idx = inst->destRegIdx(i);
         res = inst->popResult();
         switch (idx.classValue()) {
+          case InvalidRegClass:
+            break;
           case IntRegClass:
             thread->setIntReg(idx.index(), res.as<RegVal>());
             break;

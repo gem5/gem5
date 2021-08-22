@@ -252,6 +252,8 @@ class PhysRegFile
         const RegIndex idx = phys_reg->index();
 
         switch (type) {
+          case InvalidRegClass:
+            break;
           case IntRegClass:
             if (phys_reg->index() != zeroReg.index())
                 intRegFile.reg(idx) = val;

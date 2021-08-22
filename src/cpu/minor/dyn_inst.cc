@@ -139,6 +139,9 @@ printRegName(std::ostream &os, const RegId& reg,
 {
     const auto &reg_class = reg_classes.at(reg.classValue());
     switch (reg.classValue()) {
+      case InvalidRegClass:
+        os << 'z';
+        break;
       case MiscRegClass:
         {
             RegIndex misc_reg = reg.index();

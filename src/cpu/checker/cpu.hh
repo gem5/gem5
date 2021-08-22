@@ -196,14 +196,20 @@ class CheckerCPU : public BaseCPU, public ExecContext
     void
     setRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
-        thread->setReg(si->destRegIdx(idx), val);
+        const RegId& id = si->destRegIdx(idx);
+        if (id.is(InvalidRegClass))
+            return;
+        thread->setReg(id, val);
         result.emplace(val);
     }
 
     void
     setRegOperand(const StaticInst *si, int idx, const void *val) override
     {
-        thread->setReg(si->destRegIdx(idx), val);
+        const RegId& id = si->destRegIdx(idx);
+        if (id.is(InvalidRegClass))
+            return;
+        thread->setReg(id, val);
         //TODO setVecResult, setVecPredResult setVecElemResult?
     }
 

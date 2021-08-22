@@ -400,6 +400,9 @@ class SimpleThread : public ThreadState, public ThreadContext
     {
         const RegId reg = flattenRegId(arch_reg);
 
+        if (reg.is(InvalidRegClass))
+            return;
+
         const RegIndex idx = reg.index();
 
         auto &reg_file = regFiles[reg.classValue()];
@@ -416,6 +419,9 @@ class SimpleThread : public ThreadState, public ThreadContext
     void
     setRegFlat(const RegId &reg, RegVal val) override
     {
+        if (reg.is(InvalidRegClass))
+            return;
+
         const RegIndex idx = reg.index();
 
         auto &reg_file = regFiles[reg.classValue()];

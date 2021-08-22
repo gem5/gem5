@@ -311,6 +311,8 @@ class SimpleExecContext : public ExecContext
     getRegOperand(const StaticInst *si, int idx) override
     {
         const RegId &reg = si->srcRegIdx(idx);
+        if (reg.is(InvalidRegClass))
+            return 0;
         (*execContextStats.numRegReads[reg.classValue()])++;
         return thread->getReg(reg);
     }
@@ -335,6 +337,8 @@ class SimpleExecContext : public ExecContext
     setRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId &reg = si->destRegIdx(idx);
+        if (reg.is(InvalidRegClass))
+            return;
         (*execContextStats.numRegWrites[reg.classValue()])++;
         thread->setReg(reg, val);
     }
