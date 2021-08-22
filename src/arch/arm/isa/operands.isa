@@ -62,59 +62,8 @@ def operand_types {{
 }};
 
 let {{
-    maybePCRead = '''
-        ((%(reg_idx)s == PCReg) ? readPC(xc) :
-         xc->getRegOperand(this, %(op_idx)s))
-    '''
-    maybeAlignedPCRead = '''
-        ((%(reg_idx)s == PCReg) ? (roundDown(readPC(xc), 4)) :
-         xc->getRegOperand(this, %(op_idx)s))
-    '''
-    maybePCWrite = '''
-        ((%(reg_idx)s == PCReg) ? setNextPC(xc, %(final_val)s) :
-         xc->setRegOperand(this, %(op_idx)s, %(final_val)s))
-    '''
-    maybeIWPCWrite = '''
-        ((%(reg_idx)s == PCReg) ? setIWNextPC(xc, %(final_val)s) :
-         xc->setRegOperand(this, %(op_idx)s, %(final_val)s))
-    '''
-    maybeAIWPCWrite = '''
-        if (%(reg_idx)s == PCReg) {
-            bool thumb = THUMB;
-            if (thumb) {
-                setNextPC(xc, %(final_val)s);
-            } else {
-                setIWNextPC(xc, %(final_val)s);
-            }
-        } else {
-            xc->setRegOperand(this, %(op_idx)s, %(final_val)s);
-        }
-    '''
-    aarch64Read = '''
-        ((xc->getRegOperand(this, %(op_idx)s)) & mask(intWidth))
-    '''
-    aarch64Write = '''
-        xc->setRegOperand(this, %(op_idx)s, (%(final_val)s) & mask(intWidth))
-    '''
-    aarchX64Read = '''
-        ((xc->getRegOperand(this, %(op_idx)s)) & mask(aarch64 ? 64 : 32))
-    '''
-    aarchX64Write = '''
-        xc->setRegOperand(this, %(op_idx)s, (%(final_val)s) &
-                mask(aarch64 ? 64 : 32))
-    '''
-    aarchW64Read = '''
-        ((xc->getRegOperand(this, %(op_idx)s)) & mask(32))
-    '''
-    aarchW64Write = '''
-        xc->setRegOperand(this, %(op_idx)s, (%(final_val)s) & mask(32))
-    '''
     cntrlNsBankedWrite = '''
         xc->setMiscReg(snsBankedIndex(dest, xc->tcBase()), %(final_val)s)
-    '''
-
-    cntrlNsBankedRead = '''
-        xc->readMiscReg(snsBankedIndex(op1, xc->tcBase()))
     '''
 
     #PCState operands need to have a sorting index (the number at the end)
@@ -150,68 +99,147 @@ let {{
         def __init__(self, idx):
             super().__init__('pc', idx, sort_pri=srtNormal)
 
-    class IntReg(IntRegOp):
-        read_code = maybePCRead
-        write_code = maybePCWrite
+    class IntRegNPC(IntRegOp):
         def __init__(self, idx, ctype='uw', id=srtNormal):
-            super().__init__(ctype, idx, 'IsInteger', id,
-                    read_code=self.read_code, write_code=self.write_code)
+            super().__init__(ctype, idx, 'IsInteger', id)
+
+    class IntReg(IntRegNPC):
+        @overrideInOperand
+        def makeRead(self, predRead, op_idx):
+            '''Maybe PC read'''
+            return f'{self.base_name} = ({self.reg_spec} == PCReg) ? ' \
+                   f'readPC(xc) : xc->getRegOperand(this, {op_idx});\n'
+        @overrideInOperand
+        def makeWrite(self, predWrite, op_idx):
+            '''Maybe PC write'''
+            return f'''
+            if ({self.reg_spec} == PCReg)
+                setNextPC(xc, {self.base_name});
+            else
+                xc->setRegOperand(this, {op_idx}, {self.base_name});
+            if (traceData)
+                traceData->setData({self.base_name});
+            '''
 
     class PIntReg(IntReg):
         def __init__(self, idx):
             super().__init__(idx, ctype='pint')
 
-    class IntRegNPC(IntReg):
-        read_code = None
-        write_code = None
-
     class IntRegAPC(IntReg):
-        read_code = maybeAlignedPCRead
+        @overrideInOperand
+        def makeRead(self, predRead, op_idx):
+            '''Maybe aligned PC read'''
+            return f'{self.base_name} = ({self.reg_spec} == PCReg) ? ' \
+                   f'(roundDown(readPC(xc), 4)) : ' \
+                   f'xc->getRegOperand(this, {op_idx});\n'
 
     class IntRegIWPC(IntReg):
-        write_code = maybeIWPCWrite
+        @overrideInOperand
+        def makeWrite(self, predWrite, op_idx):
+            '''Maybe interworking PC write'''
+            return f'''
+            if ({self.reg_spec} == PCReg)
+                setIWNextPC(xc, {self.base_name});
+            else
+                xc->setRegOperand(this, {op_idx}, {self.base_name});
+            if (traceData)
+                traceData->setData({self.base_name});
+            '''
 
     class IntRegAIWPC(IntReg):
-        write_code = maybeAIWPCWrite
+        @overrideInOperand
+        def makeWrite(self, predWrite, op_idx):
+            '''Maybe aligned interworking PC write'''
+            return f'''
+            if ({self.reg_spec} == PCReg) {"{"}
+                if ((bool)THUMB)
+                    setNextPC(xc, {self.base_name});
+                else
+                    setIWNextPC(xc, {self.base_name});
+            {"}"} else {"{"}
+                xc->setRegOperand(this, {op_idx}, {self.base_name});
+            {"}"}
+            if (traceData)
+                traceData->setData({self.base_name});
+            '''
 
     class IntReg64(IntRegOp):
-        read_code = aarch64Read
-        write_code = aarch64Write
+        @overrideInOperand
+        def makeRead(self, predRead, op_idx):
+            '''aarch64 read'''
+            return f'{self.base_name} = ' \
+                   f'(xc->getRegOperand(this, {op_idx})) & mask(intWidth);\n'
+        @overrideInOperand
+        def makeWrite(self, predWrite, op_idx):
+            '''aarch64 write'''
+            return f'''
+            xc->setRegOperand(this, {op_idx}, {self.base_name} &
+                mask(intWidth));
+            if (traceData)
+                traceData->setData({self.base_name});
+            '''
         def __init__(self, idx, id=srtNormal):
-            super().__init__('ud', idx, 'IsInteger', id,
-                    read_code=self.read_code, write_code=self.write_code)
+            super().__init__('ud', idx, 'IsInteger', id)
 
     class IntRegX64(IntReg64):
-        read_code = aarchX64Read
-        write_code = aarchX64Write
+        @overrideInOperand
+        def makeRead(self, predRead, op_idx):
+            '''Maybe masked to 32 bit read'''
+            return f'{self.base_name} = ' \
+                   f'(xc->getRegOperand(this, {op_idx}) & ' \
+                    'mask(aarch64 ? 64 : 32));\n'
+        @overrideInOperand
+        def makeWrite(self, predWrite, op_idx):
+            '''Maybe masked to 32 bit write'''
+            return f'''
+            xc->setRegOperand(this, {op_idx}, {self.base_name} &
+                    mask(aarch64 ? 64 : 32));
+            if (traceData)
+                traceData->setData({self.base_name});
+            '''
 
     class IntRegW64(IntReg64):
-        read_code = aarchW64Read
-        write_code = aarchW64Write
+        @overrideInOperand
+        def makeRead(self, predRead, op_idx):
+            '''Masked to 32 bit read'''
+            return f'{self.base_name} = ' \
+                   f'(xc->getRegOperand(this, {op_idx})) & mask(32);\n'
+        @overrideInOperand
+        def makeWrite(self, predWrite, op_idx):
+            '''Masked to 32 bit write'''
+            return f'''
+            xc->setRegOperand(this, {op_idx}, {self.base_name} & mask(32));
+            if (traceData)
+                traceData->setData({self.base_name});
+            '''
 
     class CCReg(CCRegOp):
         def __init__(self, idx):
             super().__init__('uw', idx, sort_pri=srtNormal)
 
     class CntrlReg(ControlRegOp):
-        read_code = None
-        write_code = None
-        flags = None
-        def __init__(self, idx, id=srtNormal, ctype='uw'):
-            super().__init__(ctype, idx, sort_pri=id,
-                    read_code=self.read_code, write_code=self.write_code,
-                    flags=self.flags)
+        def __init__(self, idx, id=srtNormal, ctype='uw', flags=None):
+            super().__init__(ctype, idx, flags, id)
 
     class CntrlReg64(CntrlReg):
         def __init__(self, idx, id=srtNormal, ctype='ud'):
             super().__init__(idx, id, ctype)
 
     class CntrlNsBankedReg(CntrlReg):
-        read_code = cntrlNsBankedRead
-        write_code = cntrlNsBankedWrite
-        flags = (None, None, 'IsControl')
+        @overrideInOperand
+        def makeRead(self, predRead, op_idx):
+            return f'{self.base_name} = ' \
+                   f'xc->readMiscReg(snsBankedIndex(op1, xc->tcBase()));\n'
+        @overrideInOperand
+        def makeWrite(self, predWrite, op_idx):
+            return f'''
+            xc->setMiscReg(snsBankedIndex(dest, xc->tcBase()),
+                           {self.base_name});
+            if (traceData)
+                traceData->setData({self.base_name});
+            '''
         def __init__(self, idx, id=srtNormal, ctype='uw'):
-            super().__init__(idx, id, ctype)
+            super().__init__(idx, id, ctype, (None, None, 'IsControl'))
 
     class CntrlNsBankedReg64(CntrlNsBankedReg):
         def __init__(self, idx, id=srtNormal, ctype='ud'):
