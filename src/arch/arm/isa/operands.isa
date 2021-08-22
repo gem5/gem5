@@ -63,19 +63,20 @@ def operand_types {{
 
 let {{
     maybePCRead = '''
-        ((%(reg_idx)s == PCReg) ? readPC(xc) : xc->%(func)s(this, %(op_idx)s))
+        ((%(reg_idx)s == PCReg) ? readPC(xc) :
+         xc->getRegOperand(this, %(op_idx)s))
     '''
     maybeAlignedPCRead = '''
         ((%(reg_idx)s == PCReg) ? (roundDown(readPC(xc), 4)) :
-         xc->%(func)s(this, %(op_idx)s))
+         xc->getRegOperand(this, %(op_idx)s))
     '''
     maybePCWrite = '''
         ((%(reg_idx)s == PCReg) ? setNextPC(xc, %(final_val)s) :
-         xc->%(func)s(this, %(op_idx)s, %(final_val)s))
+         xc->setRegOperand(this, %(op_idx)s, %(final_val)s))
     '''
     maybeIWPCWrite = '''
         ((%(reg_idx)s == PCReg) ? setIWNextPC(xc, %(final_val)s) :
-         xc->%(func)s(this, %(op_idx)s, %(final_val)s))
+         xc->setRegOperand(this, %(op_idx)s, %(final_val)s))
     '''
     maybeAIWPCWrite = '''
         if (%(reg_idx)s == PCReg) {
@@ -86,26 +87,27 @@ let {{
                 setIWNextPC(xc, %(final_val)s);
             }
         } else {
-            xc->%(func)s(this, %(op_idx)s, %(final_val)s);
+            xc->setRegOperand(this, %(op_idx)s, %(final_val)s);
         }
     '''
     aarch64Read = '''
-        ((xc->%(func)s(this, %(op_idx)s)) & mask(intWidth))
+        ((xc->getRegOperand(this, %(op_idx)s)) & mask(intWidth))
     '''
     aarch64Write = '''
-        xc->%(func)s(this, %(op_idx)s, (%(final_val)s) & mask(intWidth))
+        xc->setRegOperand(this, %(op_idx)s, (%(final_val)s) & mask(intWidth))
     '''
     aarchX64Read = '''
-        ((xc->%(func)s(this, %(op_idx)s)) & mask(aarch64 ? 64 : 32))
+        ((xc->getRegOperand(this, %(op_idx)s)) & mask(aarch64 ? 64 : 32))
     '''
     aarchX64Write = '''
-        xc->%(func)s(this, %(op_idx)s, (%(final_val)s) & mask(aarch64 ? 64 : 32))
+        xc->setRegOperand(this, %(op_idx)s, (%(final_val)s) &
+                mask(aarch64 ? 64 : 32))
     '''
     aarchW64Read = '''
-        ((xc->%(func)s(this, %(op_idx)s)) & mask(32))
+        ((xc->getRegOperand(this, %(op_idx)s)) & mask(32))
     '''
     aarchW64Write = '''
-        xc->%(func)s(this, %(op_idx)s, (%(final_val)s) & mask(32))
+        xc->setRegOperand(this, %(op_idx)s, (%(final_val)s) & mask(32))
     '''
     cntrlNsBankedWrite = '''
         xc->setMiscReg(snsBankedIndex(dest, xc->tcBase()), %(final_val)s)
