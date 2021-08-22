@@ -100,8 +100,8 @@ class Operand(object):
     derived classes encapsulates the traits of a particular operand
     type (e.g., "32-bit integer register").'''
 
-    src_reg_constructor = '\n\tsetSrcRegIdx(_numSrcRegs++, RegId(%s, %s));'
-    dst_reg_constructor = '\n\tsetDestRegIdx(_numDestRegs++, RegId(%s, %s));'
+    src_reg_constructor = '\n\tsetSrcRegIdx(_numSrcRegs++, %s);'
+    dst_reg_constructor = '\n\tsetDestRegIdx(_numDestRegs++, %s);'
 
     def buildReadCode(self, pred_read, op_idx):
         subst_dict = {"name": self.base_name,
@@ -124,6 +124,9 @@ class Operand(object):
             {code};
             if (traceData) {{ traceData->setData(final_val); }}
         }}'''
+
+    def regId(self):
+        return f'RegId({self.reg_class}, {self.reg_spec})'
 
     def __init__(self, parser, full_name, ext, is_src, is_dest):
         self.parser = parser
@@ -220,13 +223,13 @@ class RegOperand(Operand):
         c_dest = ''
 
         if self.is_src:
-            c_src = self.src_reg_constructor % (self.reg_class, self.reg_spec)
+            c_src = self.src_reg_constructor % self.regId()
             if self.hasReadPred():
                 c_src = '\n\tif (%s) {%s\n\t}' % \
                         (self.read_predicate, c_src)
 
         if self.is_dest:
-            c_dest = self.dst_reg_constructor % (self.reg_class, self.reg_spec)
+            c_dest = self.dst_reg_constructor % self.regId()
             c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
             if self.hasWritePred():
                 c_dest = '\n\tif (%s) {%s\n\t}' % \
@@ -481,10 +484,10 @@ class ControlRegOperand(Operand):
         c_dest = ''
 
         if self.is_src:
-            c_src = self.src_reg_constructor % (self.reg_class, self.reg_spec)
+            c_src = self.src_reg_constructor % self.regId()
 
         if self.is_dest:
-            c_dest = self.dst_reg_constructor % (self.reg_class, self.reg_spec)
+            c_dest = self.dst_reg_constructor % self.regId()
 
         return c_src + c_dest
 
