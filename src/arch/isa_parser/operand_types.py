@@ -103,7 +103,7 @@ class Operand(object):
     src_reg_constructor = '\n\tsetSrcRegIdx(_numSrcRegs++, RegId(%s, %s));'
     dst_reg_constructor = '\n\tsetDestRegIdx(_numDestRegs++, RegId(%s, %s));'
 
-    def buildReadCode(self, predRead, func=None):
+    def buildReadCode(self, predRead, func='getRegOperand'):
         subst_dict = {"name": self.base_name,
                       "func": func,
                       "reg_idx": self.reg_spec,
@@ -114,7 +114,7 @@ class Operand(object):
         code = self.read_code % subst_dict
         return '%s = %s;\n' % (self.base_name, code)
 
-    def buildWriteCode(self, predWrite, func=None):
+    def buildWriteCode(self, predWrite, func='setRegOperand'):
         subst_dict = {"name": self.base_name,
                       "func": func,
                       "reg_idx": self.reg_spec,
@@ -231,7 +231,7 @@ class RegOperand(Operand):
 class RegValOperand(RegOperand):
     def makeRead(self, predRead):
         if self.read_code != None:
-            return self.buildReadCode(predRead, 'getRegOperand')
+            return self.buildReadCode(predRead)
 
         if predRead:
             rindex = '_sourceIndex++'
@@ -251,7 +251,7 @@ class RegValOperand(RegOperand):
 
     def makeWrite(self, predWrite):
         if self.write_code != None:
-            return self.buildWriteCode(predWrite, 'setRegOperand')
+            return self.buildWriteCode(predWrite)
 
         reg_val = self.base_name
 
@@ -352,7 +352,7 @@ class VecRegOperand(RegOperand):
 
         c_readw = f'\t\tauto &tmp_d{rindex} = \n' \
                   f'\t\t    *({self.parser.namespace}::VecRegContainer *)\n' \
-                  f'\t\t    xc->{func}(this, {rindex});\n'
+                  f'\t\t    xc->getWritableRegOperand(this, {rindex});\n'
         if self.elemExt:
             c_readw += '\t\tauto %s = tmp_d%s.as<%s>();\n' % (self.base_name,
                         rindex, self.parser.operandTypeMap[self.elemExt])
@@ -380,9 +380,8 @@ class VecRegOperand(RegOperand):
         return c_read
 
     def makeRead(self, predRead):
-        func = 'getRegOperand'
         if self.read_code != None:
-            return self.buildReadCode(predRead, func)
+            return self.buildReadCode(predRead)
 
         if predRead:
             rindex = '_sourceIndex++'
@@ -395,7 +394,7 @@ class VecRegOperand(RegOperand):
 
         c_read = f'\t\t{self.parser.namespace}::VecRegContainer ' \
                  f'\t\t        tmp_s{rindex};\n' \
-                 f'\t\txc->{func}(this, {rindex}, &tmp_s{rindex});\n'
+                 f'\t\txc->getRegOperand(this, {rindex}, &tmp_s{rindex});\n'
         # If the parser has detected that elements are being access, create
         # the appropriate view
         if self.elemExt:
@@ -411,9 +410,8 @@ class VecRegOperand(RegOperand):
         return c_read
 
     def makeWrite(self, predWrite):
-        func = 'setRegOperand'
         if self.write_code != None:
-            return self.buildWriteCode(predWrite, func)
+            return self.buildWriteCode(predWrite)
 
         wb = '''
         if (traceData) {
@@ -438,9 +436,8 @@ class VecPredRegOperand(RegOperand):
         return ''
 
     def makeRead(self, predRead):
-        func = 'getRegOperand'
         if self.read_code != None:
-            return self.buildReadCode(predRead, func)
+            return self.buildReadCode(predRead)
 
         if predRead:
             rindex = '_sourceIndex++'
@@ -449,7 +446,7 @@ class VecPredRegOperand(RegOperand):
 
         c_read =  f'\t\t{self.parser.namespace}::VecPredRegContainer ' \
                   f'\t\t        tmp_s{rindex}; ' \
-                  f'xc->{func}(this, {rindex}, &tmp_s{rindex});\n'
+                  f'xc->getRegOperand(this, {rindex}, &tmp_s{rindex});\n'
         if self.ext:
             c_read += f'\t\tauto {self.base_name} = ' \
                       f'tmp_s{rindex}.as<' \
@@ -459,7 +456,7 @@ class VecPredRegOperand(RegOperand):
     def makeReadW(self, predWrite):
         func = 'getWritableRegOperand'
         if self.read_code != None:
-            return self.buildReadCode(predWrite, func)
+            return self.buildReadCode(predWrite, 'getWritableRegOperand')
 
         if predWrite:
             rindex = '_destIndex++'
@@ -468,7 +465,8 @@ class VecPredRegOperand(RegOperand):
 
         c_readw = f'\t\tauto &tmp_d{rindex} = \n' \
                   f'\t\t    *({self.parser.namespace}::' \
-                  f'VecPredRegContainer *)xc->{func}(this, {rindex});\n'
+                  f'VecPredRegContainer *)xc->getWritableRegOperand(' \
+                  f'this, {rindex});\n'
         if self.ext:
             c_readw += '\t\tauto %s = tmp_d%s.as<%s>();\n' % (
                     self.base_name, rindex,
@@ -476,9 +474,8 @@ class VecPredRegOperand(RegOperand):
         return c_readw
 
     def makeWrite(self, predWrite):
-        func = 'setRegOperand'
         if self.write_code != None:
-            return self.buildWriteCode(predWrite, func)
+            return self.buildWriteCode(predWrite)
 
         wb = '''
         if (traceData) {
