@@ -86,8 +86,6 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
         intRegIds.emplace_back(IntRegClass, phys_reg, flat_reg_idx++);
     }
 
-    zeroReg = RegId(IntRegClass, reg_classes.at(IntRegClass).zeroReg());
-
     // The next batch of the registers are the floating-point physical
     // registers; put them onto the floating-point free list.
     for (phys_reg = 0; phys_reg < numPhysicalFloatRegs; phys_reg++) {

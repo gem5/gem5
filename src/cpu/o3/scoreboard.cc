@@ -35,9 +35,9 @@ namespace gem5
 namespace o3
 {
 
-Scoreboard::Scoreboard(const std::string &_my_name, unsigned _numPhysicalRegs,
-        RegIndex zero_reg) :
-    _name(_my_name), zeroReg(zero_reg), regScoreBoard(_numPhysicalRegs, true),
+Scoreboard::Scoreboard(const std::string &_my_name,
+        unsigned _numPhysicalRegs) :
+    _name(_my_name), regScoreBoard(_numPhysicalRegs, true),
     numPhysRegs(_numPhysicalRegs)
 {}
 

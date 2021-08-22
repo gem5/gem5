@@ -70,8 +70,6 @@ Execute::Execute(const std::string &name_,
     inp(inp_),
     out(out_),
     cpu(cpu_),
-    zeroReg(cpu.threads[0]->getIsaPtr()->regClasses().
-        at(IntRegClass).zeroReg()),
     issueLimit(params.executeIssueLimit),
     memoryIssueLimit(params.executeMemoryIssueLimit),
     commitLimit(params.executeCommitLimit),
@@ -90,8 +88,7 @@ Execute::Execute(const std::string &name_,
         params.executeLSQRequestsQueueSize,
         params.executeLSQTransfersQueueSize,
         params.executeLSQStoreBufferSize,
-        params.executeLSQMaxStoreBufferStoresPerCycle,
-        zeroReg),
+        params.executeLSQMaxStoreBufferStoresPerCycle),
     executeInfo(params.numThreads,
             ExecuteThreadInfo(params.executeCommitLimit)),
     interruptPriority(0),
@@ -332,7 +329,7 @@ Execute::handleMemResponse(MinorDynInstPtr inst,
     ThreadID thread_id = inst->id.threadId;
     ThreadContext *thread = cpu.getContext(thread_id);
 
-    ExecContext context(cpu, *cpu.threads[thread_id], *this, inst, zeroReg);
+    ExecContext context(cpu, *cpu.threads[thread_id], *this, inst);
 
     PacketPtr packet = response->packet;
 
@@ -467,8 +464,7 @@ Execute::executeMemRefInst(MinorDynInstPtr inst, BranchData &branch,
         ThreadContext *thread = cpu.getContext(inst->id.threadId);
         std::unique_ptr<PCStateBase> old_pc(thread->pcState().clone());
 
-        ExecContext context(cpu, *cpu.threads[inst->id.threadId],
-            *this, inst, zeroReg);
+        ExecContext context(cpu, *cpu.threads[inst->id.threadId], *this, inst);
 
         DPRINTF(MinorExecute, "Initiating memRef inst: %s\n", *inst);
 
@@ -914,8 +910,7 @@ Execute::commitInst(MinorDynInstPtr inst, bool early_memory_issue,
         panic("We should never hit the case where we try to commit from a "
               "suspended thread as the streamSeqNum should not match");
     } else if (inst->isFault()) {
-        ExecContext context(cpu, *cpu.threads[thread_id], *this,
-                inst, zeroReg);
+        ExecContext context(cpu, *cpu.threads[thread_id], *this, inst);
 
         DPRINTF(MinorExecute, "Fault inst reached Execute: %s\n",
             inst->fault->name());
@@ -976,8 +971,7 @@ Execute::commitInst(MinorDynInstPtr inst, bool early_memory_issue,
          * backwards, so no other branches may evaluate this cycle*/
         completed_inst = false;
     } else {
-        ExecContext context(cpu, *cpu.threads[thread_id], *this,
-                inst, zeroReg);
+        ExecContext context(cpu, *cpu.threads[thread_id], *this, inst);
 
         DPRINTF(MinorExecute, "Committing inst: %s\n", *inst);
 

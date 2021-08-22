@@ -85,15 +85,6 @@ class SimpleRenameMap
      */
     SimpleFreeList *freeList;
 
-    /**
-     * The architectural index of the zero register. This register is
-     * mapped but read-only, so we ignore attempts to rename it via
-     * the rename() method.  If there is no such register for this map
-     * table, it should be set to an invalid index so that it never
-     * matches.
-     */
-    RegId zeroReg;
-
   public:
 
     SimpleRenameMap();

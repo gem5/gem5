@@ -408,9 +408,6 @@ class SimpleThread : public ThreadState, public ThreadContext
         auto &reg_file = regFiles[reg.classValue()];
         const auto &reg_class = reg_file.regClass;
 
-        if (reg.index() == reg_class.zeroReg())
-            return;
-
         DPRINTFV(reg_class.debug(), "Setting %s register %s (%d) to %#x.\n",
                 reg.className(), reg_class.regName(arch_reg), idx, val);
         reg_file.reg(idx) = val;
@@ -426,9 +423,6 @@ class SimpleThread : public ThreadState, public ThreadContext
 
         auto &reg_file = regFiles[reg.classValue()];
         const auto &reg_class = reg_file.regClass;
-
-        if (reg.index() == reg_class.zeroReg())
-            return;
 
         DPRINTFV(reg_class.debug(), "Setting %s register %d to %#x.\n",
                 reg.className(), idx, val);

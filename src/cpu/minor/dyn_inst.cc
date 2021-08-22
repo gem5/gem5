@@ -158,11 +158,7 @@ printRegName(std::ostream &os, const RegId& reg,
         os << reg_class.regName(reg);
         break;
       case IntRegClass:
-        if (reg.index() == reg_class.zeroReg()) {
-            os << 'z';
-        } else {
-            os << 'r' << reg.index();
-        }
+        os << 'r' << reg.index();
         break;
       case CCRegClass:
         os << 'c' << reg.index();

@@ -98,8 +98,7 @@ CPU::CPU(const BaseO3CPUParams &params)
 
       rob(this, params),
 
-      scoreboard(name() + ".scoreboard", regFile.totalNumPhysRegs(),
-              params.isa[0]->regClasses().at(IntRegClass).zeroReg()),
+      scoreboard(name() + ".scoreboard", regFile.totalNumPhysRegs()),
 
       isa(numThreads, NULL),
 

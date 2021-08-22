@@ -100,7 +100,7 @@ ISA::miscRegNames[MISCREG_NUMREGS] =
 ISA::ISA(const Params &p) : BaseISA(p), numThreads(p.num_threads),
     numVpes(p.num_vpes)
 {
-    _regClasses.emplace_back(NumIntRegs, debug::IntRegs, 0);
+    _regClasses.emplace_back(NumIntRegs, debug::IntRegs);
     _regClasses.emplace_back(NumFloatRegs, debug::FloatRegs);
     _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to MIPS.
     _regClasses.emplace_back(2, debug::IntRegs); // Not applicable to MIPS.

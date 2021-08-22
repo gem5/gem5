@@ -76,7 +76,6 @@ class PhysRegFile
     /** Integer register file. */
     RegFile intRegFile;
     std::vector<PhysRegId> intRegIds;
-    RegId zeroReg;
 
     /** Floating point register file. */
     RegFile floatRegFile;
@@ -255,8 +254,7 @@ class PhysRegFile
           case InvalidRegClass:
             break;
           case IntRegClass:
-            if (phys_reg->index() != zeroReg.index())
-                intRegFile.reg(idx) = val;
+            intRegFile.reg(idx) = val;
             DPRINTF(IEW, "RegFile: Setting int register %i to %#x\n",
                     idx, val);
             break;

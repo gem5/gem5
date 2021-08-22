@@ -92,14 +92,14 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     _decoderFlavor(p.decoderFlavor), pmu(p.pmu), impdefAsNop(p.impdef_nop),
     afterStartup(false)
 {
-    _regClasses.emplace_back(NUM_INTREGS, debug::IntRegs, INTREG_ZERO);
+    _regClasses.emplace_back(NUM_INTREGS, debug::IntRegs);
     _regClasses.emplace_back(0, debug::FloatRegs);
-    _regClasses.emplace_back(NumVecRegs, vecRegClassOps, debug::VecRegs, -1,
+    _regClasses.emplace_back(NumVecRegs, vecRegClassOps, debug::VecRegs,
             sizeof(VecRegContainer));
     _regClasses.emplace_back(NumVecRegs * NumVecElemPerVecReg,
             vecRegElemClassOps, debug::VecRegs);
     _regClasses.emplace_back(NumVecPredRegs, vecPredRegClassOps,
-            debug::VecPredRegs, -1, sizeof(VecPredRegContainer));
+            debug::VecPredRegs, sizeof(VecPredRegContainer));
     _regClasses.emplace_back(NUM_CCREGS, debug::CCRegs);
     _regClasses.emplace_back(NUM_MISCREGS, miscRegClassOps, debug::MiscRegs);
 

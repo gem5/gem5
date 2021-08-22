@@ -55,13 +55,8 @@ Scoreboard::findIndex(const RegId& reg, Index &scoreboard_index)
 
     switch (reg.classValue()) {
       case IntRegClass:
-        if (reg.index() == zeroReg) {
-            /* Don't bother with the zero register */
-            ret = false;
-        } else {
-            scoreboard_index = reg.index();
-            ret = true;
-        }
+        scoreboard_index = reg.index();
+        ret = true;
         break;
       case FloatRegClass:
         scoreboard_index = floatRegOffset + reg.index();

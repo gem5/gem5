@@ -85,7 +85,6 @@ BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
     : BaseCPU(p),
       curThread(0),
       branchPred(p.branchPred),
-      zeroReg(p.isa[0]->regClasses().at(IntRegClass).zeroReg()),
       traceData(NULL),
       _status(Idle)
 {

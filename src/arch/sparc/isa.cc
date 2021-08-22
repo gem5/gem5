@@ -70,7 +70,7 @@ static const PSTATE PstateMask = buildPstateMask();
 
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.emplace_back(NumIntRegs, debug::IntRegs, 0);
+    _regClasses.emplace_back(NumIntRegs, debug::IntRegs);
     _regClasses.emplace_back(NumFloatRegs, debug::FloatRegs);
     _regClasses.emplace_back(1, debug::IntRegs); // Not applicable for SPARC
     _regClasses.emplace_back(2, debug::IntRegs); // Not applicable for SPARC

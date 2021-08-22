@@ -82,8 +82,6 @@ class Scoreboard : public Named
      *  [NumIntRegs+NumCCRegs, NumFloatRegs+NumIntRegs+NumCCRegs-1] */
     const unsigned numRegs;
 
-    const RegIndex zeroReg;
-
     /** Type to use when indexing numResults */
     typedef unsigned short int Index;
 
@@ -120,7 +118,6 @@ class Scoreboard : public Named
         vecPredRegOffset(vecRegOffset +
                 reg_classes.at(VecElemClass).numRegs()),
         numRegs(vecPredRegOffset + reg_classes.at(VecPredRegClass).numRegs()),
-        zeroReg(reg_classes.at(IntRegClass).zeroReg()),
         numResults(numRegs, 0),
         numUnpredictableResults(numRegs, 0),
         fuIndices(numRegs, invalidFUIndex),

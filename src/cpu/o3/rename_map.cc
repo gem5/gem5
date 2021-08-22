@@ -54,8 +54,7 @@ namespace gem5
 namespace o3
 {
 
-SimpleRenameMap::SimpleRenameMap()
-    : freeList(NULL), zeroReg(IntRegClass, 0)
+SimpleRenameMap::SimpleRenameMap() : freeList(NULL)
 {
 }
 
@@ -68,7 +67,6 @@ SimpleRenameMap::init(const RegClass &reg_class, SimpleFreeList *_freeList)
 
     map.resize(reg_class.numRegs());
     freeList = _freeList;
-    zeroReg = RegId(IntRegClass, reg_class.zeroReg());
 }
 
 SimpleRenameMap::RenameInfo
@@ -79,10 +77,7 @@ SimpleRenameMap::rename(const RegId& arch_reg)
     // requested architected register.
     PhysRegIdPtr prev_reg = map[arch_reg.index()];
 
-    if (arch_reg == zeroReg) {
-        assert(prev_reg->index() == zeroReg.index());
-        renamed_reg = prev_reg;
-    } else if (arch_reg.is(InvalidRegClass)) {
+    if (arch_reg.is(InvalidRegClass)) {
         assert(prev_reg->is(InvalidRegClass));
         renamed_reg = prev_reg;
     } else if (prev_reg->getNumPinnedWrites() > 0) {
