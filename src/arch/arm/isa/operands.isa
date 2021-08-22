@@ -100,6 +100,10 @@ let {{
             super().__init__('pc', idx, sort_pri=srtNormal)
 
     class IntRegNPC(IntRegOp):
+        @overrideInOperand
+        def regId(self):
+            return f'gem5::ArmISA::couldBeZero({self.reg_spec}) ? RegId() : ' \
+                   f'RegId({self.reg_class}, {self.reg_spec})'
         def __init__(self, idx, ctype='uw', id=srtNormal):
             super().__init__(ctype, idx, 'IsInteger', id)
 
@@ -164,6 +168,10 @@ let {{
             '''
 
     class IntReg64(IntRegOp):
+        @overrideInOperand
+        def regId(self):
+            return f'gem5::ArmISA::couldBeZero({self.reg_spec}) ? RegId() : ' \
+                   f'RegId({self.reg_class}, {self.reg_spec})'
         @overrideInOperand
         def makeRead(self, predRead, op_idx):
             '''aarch64 read'''

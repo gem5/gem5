@@ -41,20 +41,28 @@ def operand_types {{
     'df' : 'double'
 }};
 
+let {{
+    class IntReg(IntRegOp):
+        @overrideInOperand
+        def regId(self):
+            return f'(({self.reg_spec}) == 0) ? RegId() : ' \
+                   f'RegId({self.reg_class}, {self.reg_spec})'
+}};
+
 def operands {{
 #General Purpose Integer Reg Operands
-    'Rd': IntRegOp('ud', 'RD', 'IsInteger', 1),
-    'Rs1': IntRegOp('ud', 'RS1', 'IsInteger', 2),
-    'Rs2': IntRegOp('ud', 'RS2', 'IsInteger', 3),
-    'Rt': IntRegOp('ud', 'AMOTempReg', 'IsInteger', 4),
-    'Rc1': IntRegOp('ud', 'RC1', 'IsInteger', 2),
-    'Rc2': IntRegOp('ud', 'RC2', 'IsInteger', 3),
-    'Rp1': IntRegOp('ud', 'RP1 + 8', 'IsInteger', 2),
-    'Rp2': IntRegOp('ud', 'RP2 + 8', 'IsInteger', 3),
-    'ra': IntRegOp('ud', 'ReturnAddrReg', 'IsInteger', 1),
-    'sp': IntRegOp('ud', 'StackPointerReg', 'IsInteger', 2),
+    'Rd': IntReg('ud', 'RD', 'IsInteger', 1),
+    'Rs1': IntReg('ud', 'RS1', 'IsInteger', 2),
+    'Rs2': IntReg('ud', 'RS2', 'IsInteger', 3),
+    'Rt': IntReg('ud', 'AMOTempReg', 'IsInteger', 4),
+    'Rc1': IntReg('ud', 'RC1', 'IsInteger', 2),
+    'Rc2': IntReg('ud', 'RC2', 'IsInteger', 3),
+    'Rp1': IntReg('ud', 'RP1 + 8', 'IsInteger', 2),
+    'Rp2': IntReg('ud', 'RP2 + 8', 'IsInteger', 3),
+    'ra': IntReg('ud', 'ReturnAddrReg', 'IsInteger', 1),
+    'sp': IntReg('ud', 'StackPointerReg', 'IsInteger', 2),
 
-    'a0': IntRegOp('ud', '10', 'IsInteger', 1),
+    'a0': IntReg('ud', '10', 'IsInteger', 1),
 
     'Fd': FloatRegOp('df', 'FD', 'IsFloating', 1),
     'Fd_bits': FloatRegOp('ud', 'FD', 'IsFloating', 1),

@@ -39,42 +39,50 @@ def operand_types {{
     'df' : 'double'
 }};
 
+let {{
+    class IntReg(IntRegOp):
+        @overrideInOperand
+        def regId(self):
+            return f'(({self.reg_spec}) == 0) ? RegId() : ' \
+                   f'RegId({self.reg_class}, {self.reg_spec})'
+}};
+
 def operands {{
     #General Purpose Integer Reg Operands
-    'Rd': IntRegOp('uw', 'RD', 'IsInteger', 1),
-    'Rs': IntRegOp('uw', 'RS', 'IsInteger', 2),
-    'Rt': IntRegOp('uw', 'RT', 'IsInteger', 3),
+    'Rd': IntReg('uw', 'RD', 'IsInteger', 1),
+    'Rs': IntReg('uw', 'RS', 'IsInteger', 2),
+    'Rt': IntReg('uw', 'RT', 'IsInteger', 3),
 
     #Immediate Value operand
-    'IntImm': IntRegOp('uw', 'INTIMM', 'IsInteger', 3),
+    'IntImm': IntReg('uw', 'INTIMM', 'IsInteger', 3),
 
     #Operands used for Link Insts
-    'R31': IntRegOp('uw', '31', 'IsInteger', 4),
+    'R31': IntReg('uw', '31', 'IsInteger', 4),
 
     #Special Integer Reg operands
-    'LO0':  IntRegOp('uw', 'INTREG_LO', 'IsInteger', 6),
-    'HI0':  IntRegOp('uw', 'INTREG_HI', 'IsInteger', 7),
+    'LO0':  IntReg('uw', 'INTREG_LO', 'IsInteger', 6),
+    'HI0':  IntReg('uw', 'INTREG_HI', 'IsInteger', 7),
 
     #Bitfield-dependent HI/LO Register Access
-    'LO_RD_SEL': IntRegOp('uw', 'INTREG_DSP_LO0 + ACDST*3', None, 6),
-    'HI_RD_SEL': IntRegOp('uw', 'INTREG_DSP_HI0 + ACDST*3', None, 7),
-    'LO_RS_SEL': IntRegOp('uw', 'INTREG_DSP_LO0 + ACSRC*3', None, 6),
-    'HI_RS_SEL': IntRegOp('uw', 'INTREG_DSP_HI0 + ACSRC*3', None, 7),
+    'LO_RD_SEL': IntReg('uw', 'INTREG_DSP_LO0 + ACDST*3', None, 6),
+    'HI_RD_SEL': IntReg('uw', 'INTREG_DSP_HI0 + ACDST*3', None, 7),
+    'LO_RS_SEL': IntReg('uw', 'INTREG_DSP_LO0 + ACSRC*3', None, 6),
+    'HI_RS_SEL': IntReg('uw', 'INTREG_DSP_HI0 + ACSRC*3', None, 7),
 
     #DSP Special Purpose Integer Operands
-    'DSPControl': IntRegOp('uw', 'INTREG_DSP_CONTROL', None, 8),
-    'DSPLo0': IntRegOp('uw', 'INTREG_LO', None, 1),
-    'DSPHi0': IntRegOp('uw', 'INTREG_HI', None, 1),
-    'DSPACX0': IntRegOp('uw', 'INTREG_DSP_ACX0', None, 1),
-    'DSPLo1': IntRegOp('uw', 'INTREG_DSP_LO1', None, 1),
-    'DSPHi1': IntRegOp('uw', 'INTREG_DSP_HI1', None, 1),
-    'DSPACX1': IntRegOp('uw', 'INTREG_DSP_ACX1', None, 1),
-    'DSPLo2': IntRegOp('uw', 'INTREG_DSP_LO2', None, 1),
-    'DSPHi2': IntRegOp('uw', 'INTREG_DSP_HI2', None, 1),
-    'DSPACX2': IntRegOp('uw', 'INTREG_DSP_ACX2', None, 1),
-    'DSPLo3': IntRegOp('uw', 'INTREG_DSP_LO3', None, 1),
-    'DSPHi3': IntRegOp('uw', 'INTREG_DSP_HI3', None, 1),
-    'DSPACX3': IntRegOp('uw', 'INTREG_DSP_ACX3', None, 1),
+    'DSPControl': IntReg('uw', 'INTREG_DSP_CONTROL', None, 8),
+    'DSPLo0': IntReg('uw', 'INTREG_LO', None, 1),
+    'DSPHi0': IntReg('uw', 'INTREG_HI', None, 1),
+    'DSPACX0': IntReg('uw', 'INTREG_DSP_ACX0', None, 1),
+    'DSPLo1': IntReg('uw', 'INTREG_DSP_LO1', None, 1),
+    'DSPHi1': IntReg('uw', 'INTREG_DSP_HI1', None, 1),
+    'DSPACX1': IntReg('uw', 'INTREG_DSP_ACX1', None, 1),
+    'DSPLo2': IntReg('uw', 'INTREG_DSP_LO2', None, 1),
+    'DSPHi2': IntReg('uw', 'INTREG_DSP_HI2', None, 1),
+    'DSPACX2': IntReg('uw', 'INTREG_DSP_ACX2', None, 1),
+    'DSPLo3': IntReg('uw', 'INTREG_DSP_LO3', None, 1),
+    'DSPHi3': IntReg('uw', 'INTREG_DSP_HI3', None, 1),
+    'DSPACX3': IntReg('uw', 'INTREG_DSP_ACX3', None, 1),
 
     #Floating Point Reg Operands
     'Fd': FloatRegOp('sf', 'FD', 'IsFloating', 1),

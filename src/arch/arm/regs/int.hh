@@ -516,18 +516,36 @@ makeSP(IntRegIndex reg)
     return reg;
 }
 
+static inline bool
+couldBeSP(RegIndex reg)
+{
+    return (reg == INTREG_X31 || reg == INTREG_SPX);
+}
+
+static inline bool
+isSP(RegIndex reg)
+{
+    return reg == INTREG_SPX;
+}
+
+static inline bool
+couldBeZero(RegIndex reg)
+{
+    return (reg == INTREG_X31 || reg == INTREG_ZERO);
+}
+
+static inline bool
+isZero(RegIndex reg)
+{
+    return reg == INTREG_ZERO;
+}
+
 static inline IntRegIndex
 makeZero(IntRegIndex reg)
 {
     if (reg == INTREG_X31)
         reg = INTREG_ZERO;
     return reg;
-}
-
-static inline bool
-isSP(IntRegIndex reg)
-{
-    return reg == INTREG_SPX;
 }
 
 // Semantically meaningful register indices
