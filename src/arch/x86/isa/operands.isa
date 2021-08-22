@@ -55,20 +55,29 @@ def operand_types {{
 
 let {{
     class IntReg(IntRegOp):
-        def __init__(self, idx, id, *args, **kwargs):
+        def __init__(self, idx, id, data_size='dataSize', *args, **kwargs):
             super().__init__('uqw', idx, 'IsInteger', id, *args, **kwargs)
+            self.attrs['data_size'] = data_size
 
     class PickedReg(IntReg):
-        def __init__(self, idx, id, size='dataSize'):
-            super().__init__(idx, id,
-                    read_code='pick(xc->getRegOperand(this, %(op_idx)s), '
-                              '%(reg_idx)s, ' + size + ')')
+        @overrideInOperand
+        def makeRead(self, predRead, op_idx):
+            return f'{self.base_name} = pick(xc->getRegOperand(' \
+                        f'this, {op_idx}), {self.reg_spec}, ' \
+                        f'{self.data_size});\n'
+
+        def __init__(self, idx, id, data_size='dataSize'):
+            super().__init__(idx, id, data_size)
 
     class SignedPickedReg(IntReg):
-        def __init__(self, idx, id, size='dataSize'):
-            super().__init__(idx, id,
-                    read_code='signedPick(xc->getRegOperand(this, '
-                            '%(op_idx)s), %(reg_idx)s, ' + size + ')')
+        @overrideInOperand
+        def makeRead(self, predRead, op_idx):
+            return f'{self.base_name} = signedPick(xc->getRegOperand(' \
+                        f'this, {op_idx}), {self.reg_spec}, ' \
+                        f'{self.data_size});\n'
+
+        def __init__(self, idx, id, data_size='dataSize'):
+            super().__init__(idx, id, data_size)
 
     class FloatReg(FloatRegOp):
         def __init__(self, idx, id):
