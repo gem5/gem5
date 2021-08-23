@@ -52,8 +52,9 @@ for isa in test_progs:
                 verifiers=verifiers,
                 config=joinpath(
                     config.base_dir,
+                    "tests",
+                    "gem5",
                     "configs",
-                    "example",
                     "components-library",
                     "simple_binary_run.py",
                 ),

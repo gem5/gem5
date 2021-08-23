@@ -101,8 +101,9 @@ def verify_config(isa, binary, cpu, hosts):
         verifiers=(stdout_verifier,),
         config=joinpath(
             config.base_dir,
+            "tests",
+            "gem5",
             "configs",
-            "example",
             "components-library",
             "simple_binary_run.py",
         ),

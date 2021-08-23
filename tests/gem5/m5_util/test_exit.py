@@ -58,8 +58,9 @@ gem5_verify_config(
     fixtures=(),
     config=joinpath(
         config.base_dir,
+        "tests",
+        "gem5",
         "configs",
-        "example",
         "components-library",
         "simple_binary_run.py",
     ),

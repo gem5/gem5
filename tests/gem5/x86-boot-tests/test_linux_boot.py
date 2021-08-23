@@ -74,8 +74,9 @@ def test_boot(
         fixtures=(),
         config=joinpath(
             config.base_dir,
+            "tests",
+            "gem5",
             "configs",
-            "example",
             "components-library",
             "boot_exit_disk_run.py",
         ),

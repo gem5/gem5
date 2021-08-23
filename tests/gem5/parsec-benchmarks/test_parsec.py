@@ -70,8 +70,9 @@ def test_parsec(
         fixtures=(),
         config=joinpath(
             config.base_dir,
+            "tests",
+            "gem5",
             "configs",
-            "example",
             "components-library",
             "parsec_disk_run.py",
         ),

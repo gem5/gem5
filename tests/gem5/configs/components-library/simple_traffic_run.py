@@ -25,16 +25,18 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-A run script for a very simple Syscall-Execution running simple binaries.
-The system has no cache heirarchy and is as "bare-bones" as you can get in
-gem5 while still being functinal.
+This script creates a simple traffic generator.
+
+The simulator starts with a linear traffic generator, and ends with a random
+traffic generator.
 """
 
 import m5
+
 from m5.objects import Root
 
-import os
 import sys
+import os
 
 # This is a lame hack to get the imports working correctly.
 # TODO: This needs fixed.
@@ -44,94 +46,49 @@ sys.path.append(
         os.pardir,
         os.pardir,
         os.pardir,
+        os.pardir,
     )
 )
 
-from components_library.resources.resource import Resource
-from components_library.boards.simple_board import SimpleBoard
+from components_library.boards.test_board import TestBoard
 from components_library.cachehierarchies.classic.no_cache import NoCache
 from components_library.memory.single_channel import SingleChannelDDR3_1600
-from components_library.processors.simple_processor import SimpleProcessor
-from components_library.processors.cpu_types import CPUTypes
+from components_library.processors.complex_generator import ComplexGenerator
 
-import argparse
-
-parser = argparse.ArgumentParser(
-    description="A script to run the gem5 boot test. This test boots the "
-    "linux kernel."
-)
-
-parser.add_argument(
-    "resource",
-    type=str,
-    help="The gem5 resource binary to run.",
-)
-
-parser.add_argument(
-    "cpu",
-    type=str,
-    choices=("kvm", "timing", "atomic", "o3"),
-    help="The CPU type used.",
-)
-
-parser.add_argument(
-    "-r",
-    "--resource-directory",
-    type=str,
-    required=False,
-    help="The directory in which resources will be downloaded or exist.",
-)
-
-parser.add_argument(
-    "-o",
-    "--override-download",
-    action="store_true",
-    help="Override a local resource if the hashes do not match.",
-)
-
-args = parser.parse_args()
-
-def input_to_cputype(input: str) -> CPUTypes:
-    if input == "kvm":
-        return CPUTypes.KVM
-    elif input == "timing":
-        return CPUTypes.TIMING
-    elif input == "atomic":
-        return CPUTypes.ATOMIC
-    elif input == "o3":
-        return CPUTypes.O3
-    else:
-        raise NotADirectoryError("Unknown CPU type '{}'.".format(input))
-
-# Setup the system.
+# This setup does not require a cache heirarchy. We therefore use the `NoCache`
+# setup.
 cache_hierarchy = NoCache()
-memory = SingleChannelDDR3_1600()
-processor = SimpleProcessor(cpu_type=input_to_cputype(args.cpu), num_cores=1)
 
-motherboard = SimpleBoard(
+# We test a Single Channel DDR3_1600.
+memory = SingleChannelDDR3_1600(size="512MiB")
+
+cmxgen = ComplexGenerator(num_cores=1)
+cmxgen.add_linear(rate="100GB/s")
+cmxgen.add_random(block_size=32, rate="50MB/s")
+
+# We use the Test Board. This is a special board to run traffic generation
+# tasks
+motherboard = TestBoard(
     clk_freq="3GHz",
-    processor=processor,
+    processor=cmxgen,  # We pass the traffic generator as the processor.
     memory=memory,
     cache_hierarchy=cache_hierarchy,
 )
 
 motherboard.connect_things()
 
-# Set the workload
-binary = Resource(args.resource,
-        resource_directory=args.resource_directory,
-        override=args.override_download)
-motherboard.set_workload(binary)
-
 root = Root(full_system=False, system=motherboard)
-
-if args.cpu == "kvm":
-    # TODO: This of annoying. Is there a way to fix this to happen
-    # automatically when running KVM?
-    root.sim_quantum = int(1e9)
 
 m5.instantiate()
 
+cmxgen.start_traffic()
+print("Beginning simulation!")
+exit_event = m5.simulate()
+print(
+    "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
+)
+cmxgen.start_traffic()
+print("The Linear taffic has finished. Swiching to random traffic!")
 exit_event = m5.simulate()
 print(
     "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
