@@ -39,75 +39,83 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 Test file for the util m5 exit assembly instruction.
-'''
+"""
 from testlib import *
 
+import re
+
 static_progs = {
-    constants.gcn3_x86_tag : ('hello64-static', 'hello32-static'),
-    constants.arm_tag : ('hello64-static', 'hello32-static'),
-    constants.mips_tag : ('hello',),
-    constants.riscv_tag : ('hello',),
-    constants.sparc_tag : ('hello',)
+    constants.gcn3_x86_tag: (
+        "x86-hello64-static",
+        # "x86-hello32-static", # Running 32-bit binaries on gem5 is broken:
+                                # https://gem5.atlassian.net/browse/GEM5-1074
+    ),
+    constants.arm_tag: (
+        "arm-hello64-static",
+        # "arm-hello32-static", # Running 32-bit binaries on gem5 is broken.
+                                # https://gem5.atlassian.net/browse/GEM5-1074
+    ),
+    constants.mips_tag: ("mips-hello",),
+    constants.riscv_tag: ("riscv-hello",),
+    constants.sparc_tag: ("sparc-hello",),
 }
 
-dynamic_progs = {
-    constants.gcn3_x86_tag : ('hello64-dynamic',)
-}
+dynamic_progs = {constants.gcn3_x86_tag: ("x86-hello64-dynamic",)}
 
 cpu_types = {
-    constants.gcn3_x86_tag :
-        ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU'),
-    constants.arm_tag :  ('TimingSimpleCPU', 'AtomicSimpleCPU','DerivO3CPU'),
-    constants.mips_tag : ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU'),
-    constants.riscv_tag :
-        ('TimingSimpleCPU', 'AtomicSimpleCPU', 'DerivO3CPU', 'MinorCPU'),
-    constants.sparc_tag : ('TimingSimpleCPU', 'AtomicSimpleCPU')
+    constants.gcn3_x86_tag: ("timing", "atomic", "o3"),
+    constants.arm_tag: ("timing", "atomic", "o3"),
+    constants.mips_tag: ("timing", "atomic", "o3"),
+    constants.riscv_tag: ("timing", "atomic", "o3"),
+    constants.sparc_tag: ("timing", "atomic"),
 }
 
 # We only want to test x86, arm, and riscv on quick. Mips and sparc will be
 # left for long.
 os_length = {
-    constants.gcn3_x86_tag : constants.quick_tag,
-    constants.arm_tag : constants.quick_tag,
-    constants.mips_tag : constants.long_tag,
-    constants.riscv_tag : constants.quick_tag,
-    constants.sparc_tag : constants.long_tag,
+    constants.gcn3_x86_tag: constants.quick_tag,
+    constants.arm_tag: constants.quick_tag,
+    constants.mips_tag: constants.long_tag,
+    constants.riscv_tag: constants.quick_tag,
+    constants.sparc_tag: constants.long_tag,
 }
 
-base_path = joinpath(config.bin_path, 'hello')
 
-urlbase = config.resource_url + '/test-progs/hello/bin/'
+if config.bin_path:
+    resource_path = config.bin_path
+else:
+    resource_path = joinpath(absdirpath(__file__), "..", "resources")
 
-isa_urls = {
-    constants.gcn3_x86_tag : urlbase + "x86/linux",
-    constants.arm_tag : urlbase + "arm/linux",
-    constants.mips_tag : urlbase + "mips/linux",
-    constants.riscv_tag : urlbase + "riscv/linux",
-    constants.sparc_tag : urlbase + "sparc/linux",
-}
 
-ref_path = joinpath(getcwd(), 'ref')
-verifiers = (
-    verifier.MatchStdoutNoPerf(joinpath(ref_path, 'simout')),
-)
+regex = re.compile(r"Hello world!")
+stdout_verifier = verifier.MatchRegex(regex)
+
 
 def verify_config(isa, binary, cpu, hosts):
-    url = isa_urls[isa] + '/' + binary
-    path = joinpath(base_path, isa.lower())
-    hello_program = DownloadedProgram(url, path, binary)
 
     gem5_verify_config(
-        name='test-' + binary + '-' + cpu,
-        fixtures=(hello_program,),
-        verifiers=verifiers,
-        config=joinpath(config.base_dir, 'configs', 'example','se.py'),
-        config_args=['--cmd', joinpath(path, binary), '--cpu-type', cpu,
-            '--caches'],
+        name="test-" + binary + "-" + cpu,
+        fixtures=(),
+        verifiers=(stdout_verifier,),
+        config=joinpath(
+            config.base_dir,
+            "configs",
+            "example",
+            "components-library",
+            "simple_binary_run.py",
+        ),
+        config_args=[
+            binary,
+            cpu,
+            "--override-download",
+            "--resource-directory",
+            resource_path,
+        ],
         valid_isas=(isa,),
         valid_hosts=hosts,
-        length = os_length[isa],
+        length=os_length[isa],
     )
 
 # Run statically linked hello worlds
