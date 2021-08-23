@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2011, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -301,9 +301,11 @@ DynInst::initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
 Fault
 DynInst::initiateHtmCmd(Request::Flags flags)
 {
+    const unsigned int size = 8;
     return cpu->pushRequest(
             dynamic_cast<DynInstPtr::PtrType>(this),
-            /* ld */ true, nullptr, 8, 0x0ul, flags, nullptr, nullptr);
+            /* ld */ true, nullptr, size, 0x0ul, flags, nullptr, nullptr,
+            std::vector<bool>(size, true));
 }
 
 Fault

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2014, 2018-2019 ARM Limited
+ * Copyright (c) 2011-2012, 2014, 2018-2019, 2021 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -362,8 +362,8 @@ class LSQ
         /** Helper function used to add a (sub)request, given its address
          * `addr`, size `size` and byte-enable mask `byteEnable`.
          *
-         * The request is only added if the mask is empty or if there is at
-         * least an active element in it.
+         * The request is only added if there is at least one active
+         * element in the mask.
          */
         void addRequest(Addr addr, unsigned size,
                 const std::vector<bool>& byte_enable);
