@@ -143,6 +143,12 @@ class Operand(object):
     def regId(self):
         return f'RegId({self.reg_class}, {self.reg_spec})'
 
+    def srcRegId(self):
+        return self.regId()
+
+    def destRegId(self):
+        return self.regId()
+
     def __init__(self, parser, full_name, ext, is_src, is_dest):
         self.parser = parser
         self.full_name = full_name
@@ -238,13 +244,13 @@ class RegOperand(Operand):
         c_dest = ''
 
         if self.is_src:
-            c_src = self.src_reg_constructor % self.regId()
+            c_src = self.src_reg_constructor % self.srcRegId()
             if self.hasReadPred():
                 c_src = '\n\tif (%s) {%s\n\t}' % \
                         (self.read_predicate, c_src)
 
         if self.is_dest:
-            c_dest = self.dst_reg_constructor % self.regId()
+            c_dest = self.dst_reg_constructor % self.destRegId()
             c_dest += f'\n\t_numTypedDestRegs[{self.reg_class}]++;'
             if self.hasWritePred():
                 c_dest = '\n\tif (%s) {%s\n\t}' % \
@@ -499,10 +505,10 @@ class ControlRegOperand(Operand):
         c_dest = ''
 
         if self.is_src:
-            c_src = self.src_reg_constructor % self.regId()
+            c_src = self.src_reg_constructor % self.srcRegId()
 
         if self.is_dest:
-            c_dest = self.dst_reg_constructor % self.regId()
+            c_dest = self.dst_reg_constructor % self.destRegId()
 
         return c_src + c_dest
 
