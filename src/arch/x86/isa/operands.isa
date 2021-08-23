@@ -91,6 +91,18 @@ let {{
         def __init__(self, idx, id):
             super().__init__('uqw', idx, None, id)
 
+    class CCRegPred(CCRegOp):
+        @overrideInOperand
+        def srcRegId(self):
+            return f'({self.readPredicate}) ? {self.regId()} : RegId()'
+        @overrideInOperand
+        def destRegId(self):
+            return f'({self.writePredicate}) ? {self.regId()} : RegId()'
+        def __init__(self, idx, id, *, read_predicate, write_predicate):
+            super().__init__('uqw', idx, None, id)
+            self.attrs['readPredicate'] = read_predicate
+            self.attrs['writePredicate'] = write_predicate
+
     class ControlReg(ControlRegOp):
         def __init__(self, idx, id, ctype='uqw'):
             super().__init__(ctype, idx,
@@ -184,21 +196,21 @@ def operands {{
         # would be retained, the write predicate checks if any of the bits
         # are being written.
 
-        'PredccFlagBits': CCRegOp('uqw', 'X86ISA::CCREG_ZAPS', sort_pri=60,
+        'PredccFlagBits': CCRegPred('X86ISA::CCREG_ZAPS', 60,
                 read_predicate='(ext & X86ISA::ccFlagMask) != '
                 'X86ISA::ccFlagMask && (ext & X86ISA::ccFlagMask) != 0',
                 write_predicate='(ext & X86ISA::ccFlagMask) != 0'),
-        'PredcfofBits':  CCRegOp('uqw', 'X86ISA::CCREG_CFOF', sort_pri=61,
+        'PredcfofBits':  CCRegPred('X86ISA::CCREG_CFOF', 61,
                 read_predicate='(ext & X86ISA::cfofMask) '
                 '!= X86ISA::cfofMask && (ext & X86ISA::cfofMask) != 0',
                 write_predicate='(ext & X86ISA::cfofMask) != 0'),
-        'PreddfBit':     CCRegOp('uqw', 'X86ISA::CCREG_DF', sort_pri=62,
+        'PreddfBit':     CCRegPred('X86ISA::CCREG_DF', 62,
                 read_predicate='false',
                 write_predicate='(ext & X86ISA::DFBit) != 0'),
-        'PredecfBit':    CCRegOp('uqw', 'X86ISA::CCREG_ECF', sort_pri=63,
+        'PredecfBit':    CCRegPred('X86ISA::CCREG_ECF', 63,
                 read_predicate='false',
                 write_predicate='(ext & X86ISA::ECFBit) != 0'),
-        'PredezfBit':    CCRegOp('uqw', 'X86ISA::CCREG_EZF', sort_pri=64,
+        'PredezfBit':    CCRegPred('X86ISA::CCREG_EZF', 64,
                 read_predicate='false',
                 write_predicate='(ext & X86ISA::EZFBit) != 0'),
 
