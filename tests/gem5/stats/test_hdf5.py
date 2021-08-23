@@ -34,48 +34,61 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 Test file for the hdf5 stats.
 It just runs an SE simulation with the hdf5 stats and checks that the
 simulation succeeds and the stats file exists.
 No specific checks on the stats are performed.
-'''
+"""
 import re
 import os
 from testlib import *
 
+
+if config.bin_path:
+    resource_path = config.bin_path
+else:
+    resource_path = joinpath(absdirpath(__file__), '..', 'resources')
+
 def have_hdf5():
     have_hdf5_file = os.path.join(
-        config.base_dir, 'build', constants.arm_tag, 'config', 'have_hdf5.hh')
+        config.base_dir, "build", constants.arm_tag, "config", "have_hdf5.hh"
+    )
     with open(have_hdf5_file) as f:
         content = f.read()
 
     result = re.match("#define HAVE_HDF5 ([0-1])", content)
     if not result:
-        raise Exception(
-            f"Unable to find the HAVE_HDF5 in {have_hdf5_file}")
+        raise Exception(f"Unable to find the HAVE_HDF5 in {have_hdf5_file}")
     else:
         return result.group(1) == "1"
 
+
 if have_hdf5():
     ok_exit_regex = re.compile(
-    r'Exiting @ tick \d+ because exiting with last active thread context'
+        r"Exiting @ tick \d+ because exiting with last active thread context"
     )
-
-    path = joinpath(config.bin_path, 'test-progs', 'hello',
-        'bin', 'arm', 'linux')
-    filename = 'hello'
-    url = (config.resource_url + '/test-progs/hello/bin/arm/linux/hello')
-    test_program = DownloadedProgram(url, path, filename)
 
     stdout_verifier = verifier.MatchRegex(ok_exit_regex)
     h5_verifier = verifier.CheckH5StatsExist()
     gem5_verify_config(
-        name='hdf5_test',
+        name="hdf5_test",
         verifiers=[stdout_verifier, h5_verifier],
-        fixtures=(test_program,),
-        config=os.path.join(config.base_dir, 'configs', 'example','se.py'),
-        config_args=['--cmd', joinpath(test_program.path, filename)],
-        gem5_args=['--stats-file=h5://stats.h5'],
-        valid_isas=(constants.arm_tag,)
+        fixtures=(),
+        config=joinpath(
+            config.base_dir,
+            "configs",
+            "example",
+            "components-library",
+            "simple_binary_run.py",
+        ),
+        config_args=[
+            "arm-hello64-static",
+            "atomic",
+            "--override-download",
+            "--resource-directory",
+            resource_path,
+        ],
+        gem5_args=["--stats-file=h5://stats.h5"],
+        valid_isas=(constants.arm_tag,),
     )
