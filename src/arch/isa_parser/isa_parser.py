@@ -127,17 +127,6 @@ class Template(object):
             if operands.readPC or operands.setPC:
                 myDict['op_decl'] += pcstate_decl
 
-            # In case there are predicated register reads and write, declare
-            # the variables for register indicies. It is being assumed that
-            # all the operands in the OperandList are also in the
-            # SubOperandList and in the same order. Otherwise, it is
-            # expected that predication would not be used for the operands.
-            if operands.predRead:
-                myDict['op_decl'] += 'uint8_t _sourceIndex = 0;\n'
-            if operands.predWrite:
-                myDict['op_decl'] += \
-                    '[[maybe_unused]] uint8_t _destIndex = 0;\n'
-
             is_src = lambda op: op.is_src
             is_dest = lambda op: op.is_dest
 

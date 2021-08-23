@@ -109,12 +109,12 @@ let {{
 
     class IntReg(IntRegNPC):
         @overrideInOperand
-        def makeRead(self, predRead, op_idx):
+        def makeRead(self, op_idx):
             '''Maybe PC read'''
             return f'{self.base_name} = ({self.reg_spec} == PCReg) ? ' \
                    f'readPC(xc) : xc->getRegOperand(this, {op_idx});\n'
         @overrideInOperand
-        def makeWrite(self, predWrite, op_idx):
+        def makeWrite(self, op_idx):
             '''Maybe PC write'''
             return f'''
             if ({self.reg_spec} == PCReg)
@@ -131,7 +131,7 @@ let {{
 
     class IntRegAPC(IntReg):
         @overrideInOperand
-        def makeRead(self, predRead, op_idx):
+        def makeRead(self, op_idx):
             '''Maybe aligned PC read'''
             return f'{self.base_name} = ({self.reg_spec} == PCReg) ? ' \
                    f'(roundDown(readPC(xc), 4)) : ' \
@@ -139,7 +139,7 @@ let {{
 
     class IntRegIWPC(IntReg):
         @overrideInOperand
-        def makeWrite(self, predWrite, op_idx):
+        def makeWrite(self, op_idx):
             '''Maybe interworking PC write'''
             return f'''
             if ({self.reg_spec} == PCReg)
@@ -152,7 +152,7 @@ let {{
 
     class IntRegAIWPC(IntReg):
         @overrideInOperand
-        def makeWrite(self, predWrite, op_idx):
+        def makeWrite(self, op_idx):
             '''Maybe aligned interworking PC write'''
             return f'''
             if ({self.reg_spec} == PCReg) {"{"}
@@ -173,12 +173,12 @@ let {{
             return f'gem5::ArmISA::couldBeZero({self.reg_spec}) ? RegId() : ' \
                    f'RegId({self.reg_class}, {self.reg_spec})'
         @overrideInOperand
-        def makeRead(self, predRead, op_idx):
+        def makeRead(self, op_idx):
             '''aarch64 read'''
             return f'{self.base_name} = ' \
                    f'(xc->getRegOperand(this, {op_idx})) & mask(intWidth);\n'
         @overrideInOperand
-        def makeWrite(self, predWrite, op_idx):
+        def makeWrite(self, op_idx):
             '''aarch64 write'''
             return f'''
             xc->setRegOperand(this, {op_idx}, {self.base_name} &
@@ -191,13 +191,13 @@ let {{
 
     class IntRegX64(IntReg64):
         @overrideInOperand
-        def makeRead(self, predRead, op_idx):
+        def makeRead(self, op_idx):
             '''Maybe masked to 32 bit read'''
             return f'{self.base_name} = ' \
                    f'(xc->getRegOperand(this, {op_idx}) & ' \
                     'mask(aarch64 ? 64 : 32));\n'
         @overrideInOperand
-        def makeWrite(self, predWrite, op_idx):
+        def makeWrite(self, op_idx):
             '''Maybe masked to 32 bit write'''
             return f'''
             xc->setRegOperand(this, {op_idx}, {self.base_name} &
@@ -208,12 +208,12 @@ let {{
 
     class IntRegW64(IntReg64):
         @overrideInOperand
-        def makeRead(self, predRead, op_idx):
+        def makeRead(self, op_idx):
             '''Masked to 32 bit read'''
             return f'{self.base_name} = ' \
                    f'(xc->getRegOperand(this, {op_idx})) & mask(32);\n'
         @overrideInOperand
-        def makeWrite(self, predWrite, op_idx):
+        def makeWrite(self, op_idx):
             '''Masked to 32 bit write'''
             return f'''
             xc->setRegOperand(this, {op_idx}, {self.base_name} & mask(32));
@@ -235,11 +235,11 @@ let {{
 
     class CntrlNsBankedReg(CntrlReg):
         @overrideInOperand
-        def makeRead(self, predRead, op_idx):
+        def makeRead(self, op_idx):
             return f'{self.base_name} = ' \
                    f'xc->readMiscReg(snsBankedIndex(op1, xc->tcBase()));\n'
         @overrideInOperand
-        def makeWrite(self, predWrite, op_idx):
+        def makeWrite(self, op_idx):
             return f'''
             xc->setMiscReg(snsBankedIndex(dest, xc->tcBase()),
                            {self.base_name});
