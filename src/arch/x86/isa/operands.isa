@@ -65,9 +65,9 @@ let {{
 
     class PickedReg(IntReg):
         @overrideInOperand
-        def makeRead(self, op_idx):
+        def makeRead(self):
             return f'{self.base_name} = pick(xc->getRegOperand(' \
-                        f'this, {op_idx}), {self.reg_spec}, ' \
+                        f'this, {self.src_reg_idx}), {self.reg_spec}, ' \
                         f'{self.data_size});\n'
 
         def __init__(self, idx, id, data_size='dataSize'):
@@ -75,9 +75,9 @@ let {{
 
     class SignedPickedReg(IntReg):
         @overrideInOperand
-        def makeRead(self, op_idx):
+        def makeRead(self):
             return f'{self.base_name} = signedPick(xc->getRegOperand(' \
-                        f'this, {op_idx}), {self.reg_spec}, ' \
+                        f'this, {self.src_reg_idx}), {self.reg_spec}, ' \
                         f'{self.data_size});\n'
 
         def __init__(self, idx, id, data_size='dataSize'):
