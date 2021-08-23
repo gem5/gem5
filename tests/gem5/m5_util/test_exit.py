@@ -36,28 +36,39 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 Test file for the util m5 exit assembly instruction.
-'''
+"""
 import re
-import os
 from testlib import *
 
 m5_exit_regex = re.compile(
-r'Exiting @ tick \d* because m5_exit instruction encountered'
+    r"Exiting @ tick \d* because m5_exit instruction encountered"
 )
 
-path = joinpath(config.bin_path, 'test-progs', 'hello', 'bin', 'x86', 'linux')
-filename = 'm5_exit'
-url = (config.resource_url + '/test-progs/m5-exit/bin/x86/linux/m5_exit')
-test_program = DownloadedProgram(url, path, filename)
+if config.bin_path:
+    resource_path = config.bin_path
+else:
+    resource_path = joinpath(absdirpath(__file__), "..", "resources")
 
 a = verifier.MatchRegex(m5_exit_regex)
 gem5_verify_config(
-    name='m5_exit_test',
+    name="m5_exit_test",
     verifiers=[a],
-    fixtures=(test_program,),
-    config=os.path.join(config.base_dir, 'configs', 'example','se.py'),
-    config_args=['--cmd', joinpath(test_program.path, filename)],
-    valid_isas=(constants.gcn3_x86_tag,)
+    fixtures=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "components-library",
+        "simple_binary_run.py",
+    ),
+    config_args=[
+        "x86-m5-exit",
+        "atomic",
+        "--override-download",
+        "--resource-directory",
+        resource_path,
+    ],
+    valid_isas=(constants.gcn3_x86_tag,),
 )
