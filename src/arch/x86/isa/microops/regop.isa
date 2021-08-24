@@ -404,7 +404,7 @@ let {{
                     PredezfBit, ext & ~mask, result, PSrcReg1, op2);
             PredezfBit = newFlags & EZFBit;
             PreddfBit = newFlags & DFBit;
-            PredccFlagBits = newFlags & ccFlagMask;
+            PredccFlagBits = newFlags & CcFlagMask;
 
             //If a logic microop wants to set these, it wants to set them to 0.
             PredcfofBits = PredcfofBits & ~((CFBit | OFBit) & ext);
@@ -418,11 +418,11 @@ let {{
                                     PreddfBit | PredecfBit | PredezfBit,
                                     ext, result, PSrcReg1, op2);
 
-            PredcfofBits = newFlags & cfofMask;
+            PredcfofBits = newFlags & CfofMask;
             PredecfBit = newFlags & ECFBit;
             PredezfBit = newFlags & EZFBit;
             PreddfBit = newFlags & DFBit;
-            PredccFlagBits = newFlags & ccFlagMask;
+            PredccFlagBits = newFlags & CcFlagMask;
         '''
 
     class SubRegOp(BasicRegOp):
@@ -432,11 +432,11 @@ let {{
                                          PreddfBit | PredecfBit | PredezfBit,
                                          ext, result, PSrcReg1, ~op2, true);
 
-            PredcfofBits = newFlags & cfofMask;
+            PredcfofBits = newFlags & CfofMask;
             PredecfBit = newFlags & ECFBit;
             PredezfBit = newFlags & EZFBit;
             PreddfBit = newFlags & DFBit;
-            PredccFlagBits = newFlags & ccFlagMask;
+            PredccFlagBits = newFlags & CcFlagMask;
         '''
 
     class CondRegOp(RegOp):
@@ -748,7 +748,7 @@ let {{
 
                 PredezfBit = newFlags & EZFBit;
                 PreddfBit = newFlags & DFBit;
-                PredccFlagBits = newFlags & ccFlagMask;
+                PredccFlagBits = newFlags & CcFlagMask;
             }
         '''
 
@@ -794,7 +794,7 @@ let {{
 
                 PredezfBit = newFlags & EZFBit;
                 PreddfBit = newFlags & DFBit;
-                PredccFlagBits = newFlags & ccFlagMask;
+                PredccFlagBits = newFlags & CcFlagMask;
             }
         '''
 
@@ -840,7 +840,7 @@ let {{
 
                 PredezfBit = newFlags & EZFBit;
                 PreddfBit = newFlags & DFBit;
-                PredccFlagBits = newFlags & ccFlagMask;
+                PredccFlagBits = newFlags & CcFlagMask;
             }
         '''
 
@@ -884,7 +884,7 @@ let {{
 
                 PredezfBit = newFlags & EZFBit;
                 PreddfBit = newFlags & DFBit;
-                PredccFlagBits = newFlags & ccFlagMask;
+                PredccFlagBits = newFlags & CcFlagMask;
             }
         '''
 
@@ -933,7 +933,7 @@ let {{
 
                 PredezfBit = newFlags & EZFBit;
                 PreddfBit = newFlags & DFBit;
-                PredccFlagBits = newFlags & ccFlagMask;
+                PredccFlagBits = newFlags & CcFlagMask;
             }
         '''
 
@@ -978,7 +978,7 @@ let {{
 
                 PredezfBit = newFlags & EZFBit;
                 PreddfBit = newFlags & DFBit;
-                PredccFlagBits = newFlags & ccFlagMask;
+                PredccFlagBits = newFlags & CcFlagMask;
             }
         '''
 
@@ -1028,7 +1028,7 @@ let {{
 
                 PredezfBit = newFlags & EZFBit;
                 PreddfBit = newFlags & DFBit;
-                PredccFlagBits = newFlags & ccFlagMask;
+                PredccFlagBits = newFlags & CcFlagMask;
             }
         '''
 
@@ -1088,7 +1088,7 @@ let {{
 
                 PredezfBit = newFlags & EZFBit;
                 PreddfBit = newFlags & DFBit;
-                PredccFlagBits = newFlags & ccFlagMask;
+                PredccFlagBits = newFlags & CcFlagMask;
             }
         '''
 
@@ -1154,7 +1154,7 @@ let {{
 
                 PredezfBit = newFlags & EZFBit;
                 PreddfBit = newFlags & DFBit;
-                PredccFlagBits = newFlags & ccFlagMask;
+                PredccFlagBits = newFlags & CcFlagMask;
             }
         '''
 
@@ -1168,11 +1168,11 @@ let {{
     class Wruflags(WrRegOp):
         code = '''
             uint64_t newFlags = PSrcReg1 ^ op2;
-            cfofBits = newFlags & cfofMask;
+            cfofBits = newFlags & CfofMask;
             ecfBit = newFlags & ECFBit;
             ezfBit = newFlags & EZFBit;
             dfBit = newFlags & DFBit;
-            ccFlagBits = newFlags & ccFlagMask;
+            ccFlagBits = newFlags & CcFlagMask;
         '''
 
     class Wrflags(WrRegOp):
@@ -1180,9 +1180,9 @@ let {{
             const RegVal new_flags = PSrcReg1 ^ op2;
 
             // Get only the user flags
-            ccFlagBits = new_flags & ccFlagMask;
+            ccFlagBits = new_flags & CcFlagMask;
             dfBit = new_flags & DFBit;
-            cfofBits = new_flags & cfofMask;
+            cfofBits = new_flags & CfofMask;
             ecfBit = 0;
             ezfBit = 0;
 

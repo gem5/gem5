@@ -176,7 +176,7 @@ namespace
 {
 
 Cycles
-localMiscRegAccess(bool read, MiscRegIndex regNum,
+localMiscRegAccess(bool read, RegIndex regNum,
                    ThreadContext *tc, PacketPtr pkt)
 {
     if (read) {
@@ -205,7 +205,7 @@ TLB::translateInt(bool read, RequestPtr req, ThreadContext *tc)
     } else if (prefix == IntAddrPrefixMSR) {
         vaddr = (vaddr >> 3) & ~IntAddrPrefixMask;
 
-        MiscRegIndex regNum;
+        RegIndex regNum;
         if (!msrAddrToIndex(regNum, vaddr))
             return std::make_shared<GeneralProtection>(0);
 
@@ -232,13 +232,13 @@ TLB::translateInt(bool read, RequestPtr req, ThreadContext *tc)
                 [read](ThreadContext *tc, PacketPtr pkt)
                 {
                     return localMiscRegAccess(
-                            read, MISCREG_PCI_CONFIG_ADDRESS, tc, pkt);
+                            read, misc_reg::PciConfigAddress, tc, pkt);
                 }
             );
         } else if ((IOPort & ~mask(2)) == 0xCFC) {
             req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
             Addr configAddress =
-                tc->readMiscRegNoEffect(MISCREG_PCI_CONFIG_ADDRESS);
+                tc->readMiscRegNoEffect(misc_reg::PciConfigAddress);
             if (bits(configAddress, 31, 31)) {
                 req->setPaddr(PhysAddrPrefixPciConfig |
                         mbits(configAddress, 30, 2) |
@@ -280,7 +280,7 @@ TLB::finalizePhysical(const RequestPtr &req,
     } else if (FullSystem) {
         // Check for an access to the local APIC
         LocalApicBase localApicBase =
-            tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
+            tc->readMiscRegNoEffect(misc_reg::ApicBase);
         AddrRange apicRange(localApicBase.base * PageBytes,
                             (localApicBase.base + 1) * PageBytes);
 
@@ -326,7 +326,7 @@ TLB::translate(const RequestPtr &req,
     Addr vaddr = req->getVaddr();
     DPRINTF(TLB, "Translating vaddr %#x.\n", vaddr);
 
-    HandyM5Reg m5Reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+    HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
 
     const Addr logAddrSize = (flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
     const int addrSize = 8 << logAddrSize;
@@ -344,7 +344,7 @@ TLB::translate(const RequestPtr &req,
             if (mode == BaseMMU::Execute)
                 seg = segment_idx::Cs;
 
-            SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
+            SegAttr attr = tc->readMiscRegNoEffect(misc_reg::segAttr(seg));
             // Check for an unusable segment.
             if (attr.unusable) {
                 DPRINTF(TLB, "Unusable segment.\n");
@@ -363,8 +363,8 @@ TLB::translate(const RequestPtr &req,
                 expandDown = attr.expandDown;
 
             }
-            Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
-            Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
+            Addr base = tc->readMiscRegNoEffect(misc_reg::segBase(seg));
+            Addr limit = tc->readMiscRegNoEffect(misc_reg::segLimit(seg));
             Addr offset;
             if (mode == BaseMMU::Execute)
                 offset = vaddr - base;
@@ -438,7 +438,7 @@ TLB::translate(const RequestPtr &req,
                     "doing protection checks.\n", entry->paddr);
             // Do paging protection checks.
             bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
-            CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
+            CR0 cr0 = tc->readMiscRegNoEffect(misc_reg::Cr0);
             bool badWrite = (!entry->writable && (inUser || cr0.wp));
             if ((inUser && !entry->user) ||
                 (mode == BaseMMU::Write && badWrite)) {

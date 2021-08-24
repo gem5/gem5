@@ -112,7 +112,7 @@ RemoteGDB::gdbRegs()
     }
 
     // If that didn't work, decide based on the current mode of the context.
-    HandyM5Reg m5reg = context()->readMiscRegNoEffect(MISCREG_M5_REG);
+    HandyM5Reg m5reg = context()->readMiscRegNoEffect(misc_reg::M5Reg);
     if (m5reg.submode == SixtyFourBitMode)
         return &regCache64;
     else
@@ -142,13 +142,13 @@ RemoteGDB::AMD64GdbRegCache::getRegs(ThreadContext *context)
     r.r14 = context->getReg(int_reg::R14);
     r.r15 = context->getReg(int_reg::R15);
     r.rip = context->pcState().instAddr();
-    r.eflags = context->readMiscRegNoEffect(MISCREG_RFLAGS);
-    r.cs = context->readMiscRegNoEffect(MISCREG_CS);
-    r.ss = context->readMiscRegNoEffect(MISCREG_SS);
-    r.ds = context->readMiscRegNoEffect(MISCREG_DS);
-    r.es = context->readMiscRegNoEffect(MISCREG_ES);
-    r.fs = context->readMiscRegNoEffect(MISCREG_FS);
-    r.gs = context->readMiscRegNoEffect(MISCREG_GS);
+    r.eflags = context->readMiscRegNoEffect(misc_reg::Rflags);
+    r.cs = context->readMiscRegNoEffect(misc_reg::Cs);
+    r.ss = context->readMiscRegNoEffect(misc_reg::Ss);
+    r.ds = context->readMiscRegNoEffect(misc_reg::Ds);
+    r.es = context->readMiscRegNoEffect(misc_reg::Es);
+    r.fs = context->readMiscRegNoEffect(misc_reg::Fs);
+    r.gs = context->readMiscRegNoEffect(misc_reg::Gs);
 }
 
 void
@@ -164,13 +164,13 @@ RemoteGDB::X86GdbRegCache::getRegs(ThreadContext *context)
     r.esi = context->getReg(int_reg::Rsi);
     r.edi = context->getReg(int_reg::Rdi);
     r.eip = context->pcState().instAddr();
-    r.eflags = context->readMiscRegNoEffect(MISCREG_RFLAGS);
-    r.cs = context->readMiscRegNoEffect(MISCREG_CS);
-    r.ss = context->readMiscRegNoEffect(MISCREG_SS);
-    r.ds = context->readMiscRegNoEffect(MISCREG_DS);
-    r.es = context->readMiscRegNoEffect(MISCREG_ES);
-    r.fs = context->readMiscRegNoEffect(MISCREG_FS);
-    r.gs = context->readMiscRegNoEffect(MISCREG_GS);
+    r.eflags = context->readMiscRegNoEffect(misc_reg::Rflags);
+    r.cs = context->readMiscRegNoEffect(misc_reg::Cs);
+    r.ss = context->readMiscRegNoEffect(misc_reg::Ss);
+    r.ds = context->readMiscRegNoEffect(misc_reg::Ds);
+    r.es = context->readMiscRegNoEffect(misc_reg::Es);
+    r.fs = context->readMiscRegNoEffect(misc_reg::Fs);
+    r.gs = context->readMiscRegNoEffect(misc_reg::Gs);
 }
 
 void
@@ -194,18 +194,18 @@ RemoteGDB::AMD64GdbRegCache::setRegs(ThreadContext *context) const
     context->setReg(int_reg::R14, r.r14);
     context->setReg(int_reg::R15, r.r15);
     context->pcState(r.rip);
-    context->setMiscReg(MISCREG_RFLAGS, r.eflags);
-    if (r.cs != context->readMiscRegNoEffect(MISCREG_CS))
+    context->setMiscReg(misc_reg::Rflags, r.eflags);
+    if (r.cs != context->readMiscRegNoEffect(misc_reg::Cs))
         warn("Remote gdb: Ignoring update to CS.\n");
-    if (r.ss != context->readMiscRegNoEffect(MISCREG_SS))
+    if (r.ss != context->readMiscRegNoEffect(misc_reg::Ss))
         warn("Remote gdb: Ignoring update to SS.\n");
-    if (r.ds != context->readMiscRegNoEffect(MISCREG_DS))
+    if (r.ds != context->readMiscRegNoEffect(misc_reg::Ds))
         warn("Remote gdb: Ignoring update to DS.\n");
-    if (r.es != context->readMiscRegNoEffect(MISCREG_ES))
+    if (r.es != context->readMiscRegNoEffect(misc_reg::Es))
         warn("Remote gdb: Ignoring update to ES.\n");
-    if (r.fs != context->readMiscRegNoEffect(MISCREG_FS))
+    if (r.fs != context->readMiscRegNoEffect(misc_reg::Fs))
         warn("Remote gdb: Ignoring update to FS.\n");
-    if (r.gs != context->readMiscRegNoEffect(MISCREG_GS))
+    if (r.gs != context->readMiscRegNoEffect(misc_reg::Gs))
         warn("Remote gdb: Ignoring update to GS.\n");
 }
 
@@ -222,18 +222,18 @@ RemoteGDB::X86GdbRegCache::setRegs(ThreadContext *context) const
     context->setReg(int_reg::Rsi, r.esi);
     context->setReg(int_reg::Rdi, r.edi);
     context->pcState(r.eip);
-    context->setMiscReg(MISCREG_RFLAGS, r.eflags);
-    if (r.cs != context->readMiscRegNoEffect(MISCREG_CS))
+    context->setMiscReg(misc_reg::Rflags, r.eflags);
+    if (r.cs != context->readMiscRegNoEffect(misc_reg::Cs))
         warn("Remote gdb: Ignoring update to CS.\n");
-    if (r.ss != context->readMiscRegNoEffect(MISCREG_SS))
+    if (r.ss != context->readMiscRegNoEffect(misc_reg::Ss))
         warn("Remote gdb: Ignoring update to SS.\n");
-    if (r.ds != context->readMiscRegNoEffect(MISCREG_DS))
+    if (r.ds != context->readMiscRegNoEffect(misc_reg::Ds))
         warn("Remote gdb: Ignoring update to DS.\n");
-    if (r.es != context->readMiscRegNoEffect(MISCREG_ES))
+    if (r.es != context->readMiscRegNoEffect(misc_reg::Es))
         warn("Remote gdb: Ignoring update to ES.\n");
-    if (r.fs != context->readMiscRegNoEffect(MISCREG_FS))
+    if (r.fs != context->readMiscRegNoEffect(misc_reg::Fs))
         warn("Remote gdb: Ignoring update to FS.\n");
-    if (r.gs != context->readMiscRegNoEffect(MISCREG_GS))
+    if (r.gs != context->readMiscRegNoEffect(misc_reg::Gs))
         warn("Remote gdb: Ignoring update to GS.\n");
 }
 

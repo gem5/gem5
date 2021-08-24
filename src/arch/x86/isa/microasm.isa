@@ -178,10 +178,14 @@ let {{
     assembler.symbols["CTrue"] = "condition_tests::True"
     assembler.symbols["CFalse"] = "condition_tests::False"
 
-    for reg in ('sysenter_cs', 'sysenter_esp', 'sysenter_eip',
-                'star', 'lstar', 'cstar', 'sf_mask',
-                'kernel_gs_base'):
-        assembler.symbols[reg] = ctrlRegIdx("MISCREG_%s" % reg.upper())
+    for reg in (('sysenter_cs', 'SysenterCs'), ('sysenter_esp', 'SysenterEsp'),
+                ('sysenter_eip', 'SysenterEip'), 'star', 'lstar', 'cstar',
+                ('sf_mask', 'SfMask'), ('kernel_gs_base', 'KernelGsBase')):
+        if isinstance(reg, tuple):
+            assembler.symbols[reg[0]] = ctrlRegIdx(f"misc_reg::{reg[1]}")
+        else:
+            assembler.symbols[reg] = \
+                ctrlRegIdx(f"misc_reg::{reg.capitalize()}")
 
     for flag in ('Scalar', 'MultHi', 'Signed'):
         assembler.symbols[flag] = 'Media%sOp' % flag
@@ -232,9 +236,9 @@ let {{
     assembler.symbols["sti"] = stack_index("env.reg")
     assembler.symbols["stim"] = stack_index("env.regm")
 
-    assembler.symbols["fsw"] = ctrlRegIdx("MISCREG_FSW")
-    assembler.symbols["fcw"] = ctrlRegIdx("MISCREG_FCW")
-    assembler.symbols["ftw"] = ctrlRegIdx("MISCREG_FTW")
+    assembler.symbols["fsw"] = ctrlRegIdx("misc_reg::Fsw")
+    assembler.symbols["fcw"] = ctrlRegIdx("misc_reg::Fcw")
+    assembler.symbols["ftw"] = ctrlRegIdx("misc_reg::Ftw")
 
     macroopDict = assembler.assemble(microcode)
 

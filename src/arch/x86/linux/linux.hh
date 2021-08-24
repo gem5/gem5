@@ -66,8 +66,8 @@ class X86Linux : public Linux
         ctc->getIsaPtr()->copyRegsFrom(ptc);
 
         if (flags & TGT_CLONE_SETTLS) {
-            ctc->setMiscRegNoEffect(X86ISA::MISCREG_FS_BASE, tls);
-            ctc->setMiscRegNoEffect(X86ISA::MISCREG_FS_EFF_BASE, tls);
+            ctc->setMiscRegNoEffect(X86ISA::misc_reg::FsBase, tls);
+            ctc->setMiscRegNoEffect(X86ISA::misc_reg::FsEffBase, tls);
         }
 
         if (stack)

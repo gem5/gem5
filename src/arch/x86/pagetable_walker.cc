@@ -545,9 +545,9 @@ void
 Walker::WalkerState::setupWalk(Addr vaddr)
 {
     VAddr addr = vaddr;
-    CR3 cr3 = tc->readMiscRegNoEffect(MISCREG_CR3);
+    CR3 cr3 = tc->readMiscRegNoEffect(misc_reg::Cr3);
     // Check if we're in long mode or not
-    Efer efer = tc->readMiscRegNoEffect(MISCREG_EFER);
+    Efer efer = tc->readMiscRegNoEffect(misc_reg::Efer);
     dataSize = 8;
     Addr topAddr;
     if (efer.lma) {
@@ -557,7 +557,7 @@ Walker::WalkerState::setupWalk(Addr vaddr)
         enableNX = efer.nxe;
     } else {
         // We're in some flavor of legacy mode.
-        CR4 cr4 = tc->readMiscRegNoEffect(MISCREG_CR4);
+        CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
         if (cr4.pae) {
             // Do legacy PAE.
             state = PAEPDP;
@@ -725,7 +725,7 @@ Fault
 Walker::WalkerState::pageFault(bool present)
 {
     DPRINTF(PageTableWalker, "Raising page fault.\n");
-    HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+    HandyM5Reg m5reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
     if (mode == BaseMMU::Execute && !enableNX)
         mode = BaseMMU::Read;
     return std::make_shared<PageFault>(entry.vaddr, present, mode,

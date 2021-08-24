@@ -52,7 +52,7 @@ namespace X86ISA
 class ISA : public BaseISA
 {
   private:
-    RegVal regVal[NUM_MISCREGS];
+    RegVal regVal[misc_reg::NumRegs];
     void updateHandyM5Reg(Efer efer, CR0 cr0,
             SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags);
 
@@ -102,7 +102,7 @@ class ISA : public BaseISA
     {
         if (reg >= NUM_FLOATREGS) {
             reg = FLOATREG_STACK(reg - NUM_FLOATREGS,
-                                 regVal[MISCREG_X87_TOP]);
+                                 regVal[misc_reg::X87Top]);
         }
         return reg;
     }
@@ -116,7 +116,7 @@ class ISA : public BaseISA
     bool
     inUserMode() const override
     {
-        HandyM5Reg m5reg = readMiscRegNoEffect(MISCREG_M5_REG);
+        HandyM5Reg m5reg = readMiscRegNoEffect(misc_reg::M5Reg);
         return m5reg.cpl == 3;
     }
 

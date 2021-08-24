@@ -282,7 +282,7 @@ namespace X86ISA
     {
 
     Cycles
-    localMiscRegAccess(bool read, MiscRegIndex regNum,
+    localMiscRegAccess(bool read, RegIndex regNum,
                        ThreadContext *tc, PacketPtr pkt)
     {
         if (read) {
@@ -310,12 +310,12 @@ namespace X86ISA
         } else if (prefix == IntAddrPrefixMSR) {
             vaddr = (vaddr >> 3) & ~IntAddrPrefixMask;
 
-            MiscRegIndex regNum;
+            RegIndex regNum;
             if (!msrAddrToIndex(regNum, vaddr))
                 return std::make_shared<GeneralProtection>(0);
 
             req->setLocalAccessor(
-                [read,regNum](ThreadContext *tc, PacketPtr pkt)
+                [read, regNum](ThreadContext *tc, PacketPtr pkt)
                 {
                     return localMiscRegAccess(read, regNum, tc, pkt);
                 }
@@ -335,13 +335,13 @@ namespace X86ISA
                     [read](ThreadContext *tc, PacketPtr pkt)
                     {
                         return localMiscRegAccess(
-                                read, MISCREG_PCI_CONFIG_ADDRESS, tc, pkt);
+                                read, misc_reg::PciConfigAddress, tc, pkt);
                     }
                 );
             } else if ((IOPort & ~mask(2)) == 0xCFC) {
                 req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
                 Addr configAddress =
-                    tc->readMiscRegNoEffect(MISCREG_PCI_CONFIG_ADDRESS);
+                    tc->readMiscRegNoEffect(misc_reg::PciConfigAddress);
                 if (bits(configAddress, 31, 31)) {
                     req->setPaddr(PhysAddrPrefixPciConfig |
                             mbits(configAddress, 30, 2) |
@@ -380,7 +380,7 @@ namespace X86ISA
         assert(seg != segment_idx::Ms);
         Addr vaddr = req->getVaddr();
         DPRINTF(GPUTLB, "TLB Lookup for vaddr %#x.\n", vaddr);
-        HandyM5Reg m5Reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+        HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
 
         if (m5Reg.prot) {
             DPRINTF(GPUTLB, "In protected mode.\n");
@@ -435,7 +435,7 @@ namespace X86ISA
         Addr vaddr = req->getVaddr();
         DPRINTF(GPUTLB, "Translating vaddr %#x.\n", vaddr);
 
-        HandyM5Reg m5Reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+        HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
 
         // If protected mode has been enabled...
         if (m5Reg.prot) {
@@ -448,12 +448,12 @@ namespace X86ISA
                 // Check for a null segment selector.
                 if (!(seg == segment_idx::Tsg || seg == segment_idx::Idtr ||
                     seg == segment_idx::Hs || seg == segment_idx::Ls)
-                    && !tc->readMiscRegNoEffect(MISCREG_SEG_SEL(seg))) {
+                    && !tc->readMiscRegNoEffect(misc_reg::segSel(seg))) {
                     return std::make_shared<GeneralProtection>(0);
                 }
 
                 bool expandDown = false;
-                SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
+                SegAttr attr = tc->readMiscRegNoEffect(misc_reg::segAttr(seg));
 
                 if (seg >= segment_idx::Es && seg <= segment_idx::Hs) {
                     if (!attr.writable && (mode == BaseMMU::Write ||
@@ -467,8 +467,8 @@ namespace X86ISA
 
                 }
 
-                Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
-                Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
+                Addr base = tc->readMiscRegNoEffect(misc_reg::segBase(seg));
+                Addr limit = tc->readMiscRegNoEffect(misc_reg::segLimit(seg));
                 Addr logSize = (flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
                 int size = 8 << logSize;
 
@@ -548,7 +548,7 @@ namespace X86ISA
                 // Do paging protection checks.
                 bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
 
-                CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
+                CR0 cr0 = tc->readMiscRegNoEffect(misc_reg::Cr0);
                 bool badWrite = (!entry->writable && (inUser || cr0.wp));
 
                 if ((inUser && !entry->user) || (mode == BaseMMU::Write &&
@@ -595,7 +595,7 @@ namespace X86ISA
         // Check for an access to the local APIC
         if (FullSystem) {
             LocalApicBase localApicBase =
-                tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
+                tc->readMiscRegNoEffect(misc_reg::ApicBase);
 
             Addr baseAddr = localApicBase.base * PageBytes;
             Addr paddr = req->getPaddr();
@@ -753,13 +753,13 @@ namespace X86ISA
     GpuTLB::pagingProtectionChecks(ThreadContext *tc, PacketPtr pkt,
             TlbEntry * tlb_entry, Mode mode)
     {
-        HandyM5Reg m5Reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+        HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
         uint32_t flags = pkt->req->getFlags();
         bool storeCheck = flags & Request::READ_MODIFY_WRITE;
 
         // Do paging protection checks.
         bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
-        CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
+        CR0 cr0 = tc->readMiscRegNoEffect(misc_reg::Cr0);
 
         bool badWrite = (!tlb_entry->writable && (inUser || cr0.wp));
 

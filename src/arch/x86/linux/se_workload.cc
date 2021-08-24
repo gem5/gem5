@@ -155,7 +155,7 @@ void
 EmuLinux::pageFault(ThreadContext *tc)
 {
     Process *p = tc->getProcessPtr();
-    if (!p->fixupFault(tc->readMiscReg(MISCREG_CR2))) {
+    if (!p->fixupFault(tc->readMiscReg(misc_reg::Cr2))) {
         SETranslatingPortProxy proxy(tc);
         // at this point we should have 6 values on the interrupt stack
         int size = 6;
@@ -170,7 +170,7 @@ EmuLinux::pageFault(ThreadContext *tc)
                 "\tcs: %#x\n"
                 "\trip: %#x\n"
                 "\terr_code: %#x\n",
-                tc->readMiscReg(MISCREG_CR2),
+                tc->readMiscReg(misc_reg::Cr2),
                 is[5], is[4], is[3], is[2], is[1], is[0]);
    }
 }

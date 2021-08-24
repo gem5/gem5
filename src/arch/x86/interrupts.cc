@@ -664,7 +664,7 @@ X86ISA::Interrupts::Interrupts(const Params &p)
 bool
 X86ISA::Interrupts::checkInterrupts() const
 {
-    RFLAGS rflags = tc->readMiscRegNoEffect(MISCREG_RFLAGS);
+    RFLAGS rflags = tc->readMiscRegNoEffect(misc_reg::Rflags);
     if (pendingUnmaskableInt) {
         DPRINTF(LocalApic, "Reported pending unmaskable interrupt.\n");
         return true;

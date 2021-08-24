@@ -67,8 +67,8 @@ enum CondFlagBit
     OFBit = 1 << 11
 };
 
-const uint32_t cfofMask = CFBit | OFBit;
-const uint32_t ccFlagMask = PFBit | AFBit | ZFBit | SFBit;
+constexpr uint32_t CfofMask = CFBit | OFBit;
+constexpr uint32_t CcFlagMask = PFBit | AFBit | ZFBit | SFBit;
 
 enum RFLAGBit
 {
@@ -103,445 +103,438 @@ enum X87StatusBit
     BusyBit = 1 << 15,
 };
 
-enum MiscRegIndex
+namespace misc_reg
+{
+
+enum : RegIndex
 {
     // Control registers
-    // Most of these are invalid.  See isValidMiscReg() below.
-    MISCREG_CR_BASE,
-    MISCREG_CR0 = MISCREG_CR_BASE,
-    MISCREG_CR1,
-    MISCREG_CR2,
-    MISCREG_CR3,
-    MISCREG_CR4,
-    MISCREG_CR5,
-    MISCREG_CR6,
-    MISCREG_CR7,
-    MISCREG_CR8,
-    MISCREG_CR9,
-    MISCREG_CR10,
-    MISCREG_CR11,
-    MISCREG_CR12,
-    MISCREG_CR13,
-    MISCREG_CR14,
-    MISCREG_CR15,
+    // Most of these are invalid.  See isValid() below.
+    CrBase,
+    Cr0 = CrBase,
+    Cr1,
+    Cr2,
+    Cr3,
+    Cr4,
+    Cr5,
+    Cr6,
+    Cr7,
+    Cr8,
+    Cr9,
+    Cr10,
+    Cr11,
+    Cr12,
+    Cr13,
+    Cr14,
+    Cr15,
 
     // Debug registers
-    MISCREG_DR_BASE = MISCREG_CR_BASE + NumCRegs,
-    MISCREG_DR0 = MISCREG_DR_BASE,
-    MISCREG_DR1,
-    MISCREG_DR2,
-    MISCREG_DR3,
-    MISCREG_DR4,
-    MISCREG_DR5,
-    MISCREG_DR6,
-    MISCREG_DR7,
+    DrBase = CrBase + NumCRegs,
+    Dr0 = DrBase,
+    Dr1,
+    Dr2,
+    Dr3,
+    Dr4,
+    Dr5,
+    Dr6,
+    Dr7,
 
     // Flags register
-    MISCREG_RFLAGS = MISCREG_DR_BASE + NumDRegs,
+    Rflags = DrBase + NumDRegs,
 
     //Register to keep handy values like the CPU mode in.
-    MISCREG_M5_REG,
+    M5Reg,
 
     /*
      * Model Specific Registers
      */
     // Time stamp counter
-    MISCREG_TSC,
+    Tsc,
 
-    MISCREG_MTRRCAP,
+    Mtrrcap,
 
-    MISCREG_SYSENTER_CS,
-    MISCREG_SYSENTER_ESP,
-    MISCREG_SYSENTER_EIP,
+    SysenterCs,
+    SysenterEsp,
+    SysenterEip,
 
-    MISCREG_MCG_CAP,
-    MISCREG_MCG_STATUS,
-    MISCREG_MCG_CTL,
+    McgCap,
+    McgStatus,
+    McgCtl,
 
-    MISCREG_DEBUG_CTL_MSR,
+    DebugCtlMsr,
 
-    MISCREG_LAST_BRANCH_FROM_IP,
-    MISCREG_LAST_BRANCH_TO_IP,
-    MISCREG_LAST_EXCEPTION_FROM_IP,
-    MISCREG_LAST_EXCEPTION_TO_IP,
+    LastBranchFromIp,
+    LastBranchToIp,
+    LastExceptionFromIp,
+    LastExceptionToIp,
 
-    MISCREG_MTRR_PHYS_BASE_BASE,
-    MISCREG_MTRR_PHYS_BASE_0 = MISCREG_MTRR_PHYS_BASE_BASE,
-    MISCREG_MTRR_PHYS_BASE_1,
-    MISCREG_MTRR_PHYS_BASE_2,
-    MISCREG_MTRR_PHYS_BASE_3,
-    MISCREG_MTRR_PHYS_BASE_4,
-    MISCREG_MTRR_PHYS_BASE_5,
-    MISCREG_MTRR_PHYS_BASE_6,
-    MISCREG_MTRR_PHYS_BASE_7,
-    MISCREG_MTRR_PHYS_BASE_END,
+    MtrrPhysBaseBase,
+    MtrrPhysBase0 = MtrrPhysBaseBase,
+    MtrrPhysBase1,
+    MtrrPhysBase2,
+    MtrrPhysBase3,
+    MtrrPhysBase4,
+    MtrrPhysBase5,
+    MtrrPhysBase6,
+    MtrrPhysBase7,
+    MtrrPhysBaseEnd,
 
-    MISCREG_MTRR_PHYS_MASK_BASE = MISCREG_MTRR_PHYS_BASE_END,
-    MISCREG_MTRR_PHYS_MASK_0 = MISCREG_MTRR_PHYS_MASK_BASE,
-    MISCREG_MTRR_PHYS_MASK_1,
-    MISCREG_MTRR_PHYS_MASK_2,
-    MISCREG_MTRR_PHYS_MASK_3,
-    MISCREG_MTRR_PHYS_MASK_4,
-    MISCREG_MTRR_PHYS_MASK_5,
-    MISCREG_MTRR_PHYS_MASK_6,
-    MISCREG_MTRR_PHYS_MASK_7,
-    MISCREG_MTRR_PHYS_MASK_END,
+    MtrrPhysMaskBase = MtrrPhysBaseEnd,
+    MtrrPhysMask0 = MtrrPhysMaskBase,
+    MtrrPhysMask1,
+    MtrrPhysMask2,
+    MtrrPhysMask3,
+    MtrrPhysMask4,
+    MtrrPhysMask5,
+    MtrrPhysMask6,
+    MtrrPhysMask7,
+    MtrrPhysMaskEnd,
 
-    MISCREG_MTRR_FIX_64K_00000 = MISCREG_MTRR_PHYS_MASK_END,
-    MISCREG_MTRR_FIX_16K_80000,
-    MISCREG_MTRR_FIX_16K_A0000,
-    MISCREG_MTRR_FIX_4K_C0000,
-    MISCREG_MTRR_FIX_4K_C8000,
-    MISCREG_MTRR_FIX_4K_D0000,
-    MISCREG_MTRR_FIX_4K_D8000,
-    MISCREG_MTRR_FIX_4K_E0000,
-    MISCREG_MTRR_FIX_4K_E8000,
-    MISCREG_MTRR_FIX_4K_F0000,
-    MISCREG_MTRR_FIX_4K_F8000,
+    MtrrFix64k00000 = MtrrPhysMaskEnd,
+    MtrrFix16k80000,
+    MtrrFix16kA0000,
+    MtrrFix4kC0000,
+    MtrrFix4kC8000,
+    MtrrFix4kD0000,
+    MtrrFix4kD8000,
+    MtrrFix4kE0000,
+    MtrrFix4kE8000,
+    MtrrFix4kF0000,
+    MtrrFix4kF8000,
 
-    MISCREG_PAT,
+    Pat,
 
-    MISCREG_DEF_TYPE,
+    DefType,
 
-    MISCREG_MC_CTL_BASE,
-    MISCREG_MC0_CTL = MISCREG_MC_CTL_BASE,
-    MISCREG_MC1_CTL,
-    MISCREG_MC2_CTL,
-    MISCREG_MC3_CTL,
-    MISCREG_MC4_CTL,
-    MISCREG_MC5_CTL,
-    MISCREG_MC6_CTL,
-    MISCREG_MC7_CTL,
-    MISCREG_MC_CTL_END,
+    McCtlBase,
+    Mc0Ctl = McCtlBase,
+    Mc1Ctl,
+    Mc2Ctl,
+    Mc3Ctl,
+    Mc4Ctl,
+    Mc5Ctl,
+    Mc6Ctl,
+    Mc7Ctl,
+    McCtlEnd,
 
-    MISCREG_MC_STATUS_BASE = MISCREG_MC_CTL_END,
-    MISCREG_MC0_STATUS = MISCREG_MC_STATUS_BASE,
-    MISCREG_MC1_STATUS,
-    MISCREG_MC2_STATUS,
-    MISCREG_MC3_STATUS,
-    MISCREG_MC4_STATUS,
-    MISCREG_MC5_STATUS,
-    MISCREG_MC6_STATUS,
-    MISCREG_MC7_STATUS,
-    MISCREG_MC_STATUS_END,
+    McStatusBase = McCtlEnd,
+    Mc0Status = McStatusBase,
+    Mc1Status,
+    Mc2Status,
+    Mc3Status,
+    Mc4Status,
+    Mc5Status,
+    Mc6Status,
+    Mc7Status,
+    McStatusEnd,
 
-    MISCREG_MC_ADDR_BASE = MISCREG_MC_STATUS_END,
-    MISCREG_MC0_ADDR = MISCREG_MC_ADDR_BASE,
-    MISCREG_MC1_ADDR,
-    MISCREG_MC2_ADDR,
-    MISCREG_MC3_ADDR,
-    MISCREG_MC4_ADDR,
-    MISCREG_MC5_ADDR,
-    MISCREG_MC6_ADDR,
-    MISCREG_MC7_ADDR,
-    MISCREG_MC_ADDR_END,
+    McAddrBase = McStatusEnd,
+    Mc0Addr = McAddrBase,
+    Mc1Addr,
+    Mc2Addr,
+    Mc3Addr,
+    Mc4Addr,
+    Mc5Addr,
+    Mc6Addr,
+    Mc7Addr,
+    McAddrEnd,
 
-    MISCREG_MC_MISC_BASE = MISCREG_MC_ADDR_END,
-    MISCREG_MC0_MISC = MISCREG_MC_MISC_BASE,
-    MISCREG_MC1_MISC,
-    MISCREG_MC2_MISC,
-    MISCREG_MC3_MISC,
-    MISCREG_MC4_MISC,
-    MISCREG_MC5_MISC,
-    MISCREG_MC6_MISC,
-    MISCREG_MC7_MISC,
-    MISCREG_MC_MISC_END,
+    McMiscBase = McAddrEnd,
+    Mc0Misc = McMiscBase,
+    Mc1Misc,
+    Mc2Misc,
+    Mc3Misc,
+    Mc4Misc,
+    Mc5Misc,
+    Mc6Misc,
+    Mc7Misc,
+    McMiscEnd,
 
     // Extended feature enable register
-    MISCREG_EFER = MISCREG_MC_MISC_END,
+    Efer = McMiscEnd,
 
-    MISCREG_STAR,
-    MISCREG_LSTAR,
-    MISCREG_CSTAR,
+    Star,
+    Lstar,
+    Cstar,
 
-    MISCREG_SF_MASK,
+    SfMask,
 
-    MISCREG_KERNEL_GS_BASE,
+    KernelGsBase,
 
-    MISCREG_TSC_AUX,
+    TscAux,
 
-    MISCREG_PERF_EVT_SEL_BASE,
-    MISCREG_PERF_EVT_SEL0 = MISCREG_PERF_EVT_SEL_BASE,
-    MISCREG_PERF_EVT_SEL1,
-    MISCREG_PERF_EVT_SEL2,
-    MISCREG_PERF_EVT_SEL3,
-    MISCREG_PERF_EVT_SEL_END,
+    PerfEvtSelBase,
+    PerfEvtSel0 = PerfEvtSelBase,
+    PerfEvtSel1,
+    PerfEvtSel2,
+    PerfEvtSel3,
+    PerfEvtSelEnd,
 
-    MISCREG_PERF_EVT_CTR_BASE = MISCREG_PERF_EVT_SEL_END,
-    MISCREG_PERF_EVT_CTR0 = MISCREG_PERF_EVT_CTR_BASE,
-    MISCREG_PERF_EVT_CTR1,
-    MISCREG_PERF_EVT_CTR2,
-    MISCREG_PERF_EVT_CTR3,
-    MISCREG_PERF_EVT_CTR_END,
+    PerfEvtCtrBase = PerfEvtSelEnd,
+    PerfEvtCtr0 = PerfEvtCtrBase,
+    PerfEvtCtr1,
+    PerfEvtCtr2,
+    PerfEvtCtr3,
+    PerfEvtCtrEnd,
 
-    MISCREG_SYSCFG = MISCREG_PERF_EVT_CTR_END,
+    Syscfg = PerfEvtCtrEnd,
 
-    MISCREG_IORR_BASE_BASE,
-    MISCREG_IORR_BASE0 = MISCREG_IORR_BASE_BASE,
-    MISCREG_IORR_BASE1,
-    MISCREG_IORR_BASE_END,
+    IorrBaseBase,
+    IorrBase0 = IorrBaseBase,
+    IorrBase1,
+    IorrBaseEnd,
 
-    MISCREG_IORR_MASK_BASE = MISCREG_IORR_BASE_END,
-    MISCREG_IORR_MASK0 = MISCREG_IORR_MASK_BASE,
-    MISCREG_IORR_MASK1,
-    MISCREG_IORR_MASK_END,
+    IorrMaskBase = IorrBaseEnd,
+    IorrMask0 = IorrMaskBase,
+    IorrMask1,
+    IorrMaskEnd,
 
-    MISCREG_TOP_MEM = MISCREG_IORR_MASK_END,
-    MISCREG_TOP_MEM2,
+    TopMem = IorrMaskEnd,
+    TopMem2,
 
-    MISCREG_VM_CR,
-    MISCREG_IGNNE,
-    MISCREG_SMM_CTL,
-    MISCREG_VM_HSAVE_PA,
+    VmCr,
+    Ignne,
+    SmmCtl,
+    VmHsavePa,
 
     /*
      * Segment registers
      */
     // Segment selectors
-    MISCREG_SEG_SEL_BASE,
-    MISCREG_ES = MISCREG_SEG_SEL_BASE,
-    MISCREG_CS,
-    MISCREG_SS,
-    MISCREG_DS,
-    MISCREG_FS,
-    MISCREG_GS,
-    MISCREG_HS,
-    MISCREG_TSL,
-    MISCREG_TSG,
-    MISCREG_LS,
-    MISCREG_MS,
-    MISCREG_TR,
-    MISCREG_IDTR,
+    SegSelBase,
+    Es = SegSelBase,
+    Cs,
+    Ss,
+    Ds,
+    Fs,
+    Gs,
+    Hs,
+    Tsl,
+    Tsg,
+    Ls,
+    Ms,
+    Tr,
+    Idtr,
 
     // Hidden segment base field
-    MISCREG_SEG_BASE_BASE = MISCREG_SEG_SEL_BASE + segment_idx::NumIdxs,
-    MISCREG_ES_BASE = MISCREG_SEG_BASE_BASE,
-    MISCREG_CS_BASE,
-    MISCREG_SS_BASE,
-    MISCREG_DS_BASE,
-    MISCREG_FS_BASE,
-    MISCREG_GS_BASE,
-    MISCREG_HS_BASE,
-    MISCREG_TSL_BASE,
-    MISCREG_TSG_BASE,
-    MISCREG_LS_BASE,
-    MISCREG_MS_BASE,
-    MISCREG_TR_BASE,
-    MISCREG_IDTR_BASE,
+    SegBaseBase = SegSelBase + segment_idx::NumIdxs,
+    EsBase = SegBaseBase,
+    CsBase,
+    SsBase,
+    DsBase,
+    FsBase,
+    GsBase,
+    HsBase,
+    TslBase,
+    TsgBase,
+    LsBase,
+    MsBase,
+    TrBase,
+    IdtrBase,
 
     // The effective segment base, ie what is actually added to an
     // address. In 64 bit mode this can be different from the above,
     // namely 0.
-    MISCREG_SEG_EFF_BASE_BASE =
-        MISCREG_SEG_BASE_BASE + segment_idx::NumIdxs,
-    MISCREG_ES_EFF_BASE = MISCREG_SEG_EFF_BASE_BASE,
-    MISCREG_CS_EFF_BASE,
-    MISCREG_SS_EFF_BASE,
-    MISCREG_DS_EFF_BASE,
-    MISCREG_FS_EFF_BASE,
-    MISCREG_GS_EFF_BASE,
-    MISCREG_HS_EFF_BASE,
-    MISCREG_TSL_EFF_BASE,
-    MISCREG_TSG_EFF_BASE,
-    MISCREG_LS_EFF_BASE,
-    MISCREG_MS_EFF_BASE,
-    MISCREG_TR_EFF_BASE,
-    MISCREG_IDTR_EFF_BASE,
+    SegEffBaseBase = SegBaseBase + segment_idx::NumIdxs,
+    EsEffBase = SegEffBaseBase,
+    CsEffBase,
+    SsEffBase,
+    DsEffBase,
+    FsEffBase,
+    GsEffBase,
+    HsEffBase,
+    TslEffBase,
+    TsgEffBase,
+    LsEffBase,
+    MsEffBase,
+    TrEffBase,
+    IdtrEffBase,
 
     // Hidden segment limit field
-    MISCREG_SEG_LIMIT_BASE =
-        MISCREG_SEG_EFF_BASE_BASE + segment_idx::NumIdxs,
-    MISCREG_ES_LIMIT = MISCREG_SEG_LIMIT_BASE,
-    MISCREG_CS_LIMIT,
-    MISCREG_SS_LIMIT,
-    MISCREG_DS_LIMIT,
-    MISCREG_FS_LIMIT,
-    MISCREG_GS_LIMIT,
-    MISCREG_HS_LIMIT,
-    MISCREG_TSL_LIMIT,
-    MISCREG_TSG_LIMIT,
-    MISCREG_LS_LIMIT,
-    MISCREG_MS_LIMIT,
-    MISCREG_TR_LIMIT,
-    MISCREG_IDTR_LIMIT,
+    SegLimitBase = SegEffBaseBase + segment_idx::NumIdxs,
+    EsLimit = SegLimitBase,
+    CsLimit,
+    SsLimit,
+    DsLimit,
+    FsLimit,
+    GsLimit,
+    HsLimit,
+    TslLimit,
+    TsgLimit,
+    LsLimit,
+    MsLimit,
+    TrLimit,
+    IdtrLimit,
 
     // Hidden segment limit attributes
-    MISCREG_SEG_ATTR_BASE = MISCREG_SEG_LIMIT_BASE + segment_idx::NumIdxs,
-    MISCREG_ES_ATTR = MISCREG_SEG_ATTR_BASE,
-    MISCREG_CS_ATTR,
-    MISCREG_SS_ATTR,
-    MISCREG_DS_ATTR,
-    MISCREG_FS_ATTR,
-    MISCREG_GS_ATTR,
-    MISCREG_HS_ATTR,
-    MISCREG_TSL_ATTR,
-    MISCREG_TSG_ATTR,
-    MISCREG_LS_ATTR,
-    MISCREG_MS_ATTR,
-    MISCREG_TR_ATTR,
-    MISCREG_IDTR_ATTR,
+    SegAttrBase = SegLimitBase + segment_idx::NumIdxs,
+    EsAttr = SegAttrBase,
+    CsAttr,
+    SsAttr,
+    DsAttr,
+    FsAttr,
+    GsAttr,
+    HsAttr,
+    TslAttr,
+    TsgAttr,
+    LsAttr,
+    MsAttr,
+    TrAttr,
+    IdtrAttr,
 
     // Floating point control registers
-    MISCREG_X87_TOP = MISCREG_SEG_ATTR_BASE + segment_idx::NumIdxs,
+    X87Top = SegAttrBase + segment_idx::NumIdxs,
 
-    MISCREG_MXCSR,
-    MISCREG_FCW,
-    MISCREG_FSW,
-    MISCREG_FTW,
-    MISCREG_FTAG,
-    MISCREG_FISEG,
-    MISCREG_FIOFF,
-    MISCREG_FOSEG,
-    MISCREG_FOOFF,
-    MISCREG_FOP,
+    Mxcsr,
+    Fcw,
+    Fsw,
+    Ftw,
+    Ftag,
+    Fiseg,
+    Fioff,
+    Foseg,
+    Fooff,
+    Fop,
 
     //XXX Add "Model-Specific Registers"
 
-    MISCREG_APIC_BASE,
+    ApicBase,
 
     // "Fake" MSRs for internally implemented devices
-    MISCREG_PCI_CONFIG_ADDRESS,
+    PciConfigAddress,
 
-    NUM_MISCREGS
+    NumRegs
 };
 
 static inline bool
-isValidMiscReg(int index)
+isValid(int index)
 {
-    return (index >= MISCREG_CR0 && index < NUM_MISCREGS &&
-            index != MISCREG_CR1 &&
-            !(index > MISCREG_CR4 && index < MISCREG_CR8) &&
-            !(index > MISCREG_CR8 && index <= MISCREG_CR15));
+    return (index >= Cr0 && index < NumRegs &&
+            index != Cr1 &&
+            !(index > Cr4 && index < Cr8) &&
+            !(index > Cr8 && index <= Cr15));
 }
 
-static inline MiscRegIndex
-MISCREG_CR(int index)
+static inline RegIndex
+cr(int index)
 {
     assert(index >= 0 && index < NumCRegs);
-    return (MiscRegIndex)(MISCREG_CR_BASE + index);
+    return CrBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_DR(int index)
+static inline RegIndex
+dr(int index)
 {
     assert(index >= 0 && index < NumDRegs);
-    return (MiscRegIndex)(MISCREG_DR_BASE + index);
+    return DrBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_MTRR_PHYS_BASE(int index)
+static inline RegIndex
+mtrrPhysBase(int index)
 {
-    assert(index >= 0 && index < (MISCREG_MTRR_PHYS_BASE_END -
-                                  MISCREG_MTRR_PHYS_BASE_BASE));
-    return (MiscRegIndex)(MISCREG_MTRR_PHYS_BASE_BASE + index);
+    assert(index >= 0 && index < (MtrrPhysBaseEnd - MtrrPhysBaseBase));
+    return MtrrPhysBaseBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_MTRR_PHYS_MASK(int index)
+static inline RegIndex
+mtrrPhysMask(int index)
 {
-    assert(index >= 0 && index < (MISCREG_MTRR_PHYS_MASK_END -
-                                  MISCREG_MTRR_PHYS_MASK_BASE));
-    return (MiscRegIndex)(MISCREG_MTRR_PHYS_MASK_BASE + index);
+    assert(index >= 0 && index < (MtrrPhysMaskEnd - MtrrPhysMaskBase));
+    return MtrrPhysMaskBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_MC_CTL(int index)
+static inline RegIndex
+mcCtl(int index)
 {
-    assert(index >= 0 && index < (MISCREG_MC_CTL_END -
-                                  MISCREG_MC_CTL_BASE));
-    return (MiscRegIndex)(MISCREG_MC_CTL_BASE + index);
+    assert(index >= 0 && index < (McCtlEnd - McCtlBase));
+    return McCtlBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_MC_STATUS(int index)
+static inline RegIndex
+mcStatus(int index)
 {
-    assert(index >= 0 && index < (MISCREG_MC_STATUS_END -
-                                  MISCREG_MC_STATUS_BASE));
-    return (MiscRegIndex)(MISCREG_MC_STATUS_BASE + index);
+    assert(index >= 0 && index < (McStatusEnd - McStatusBase));
+    return McStatusBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_MC_ADDR(int index)
+static inline RegIndex
+mcAddr(int index)
 {
-    assert(index >= 0 && index < (MISCREG_MC_ADDR_END -
-                                  MISCREG_MC_ADDR_BASE));
-    return (MiscRegIndex)(MISCREG_MC_ADDR_BASE + index);
+    assert(index >= 0 && index < (McAddrEnd - McAddrBase));
+    return McAddrBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_MC_MISC(int index)
+static inline RegIndex
+mcMisc(int index)
 {
-    assert(index >= 0 && index < (MISCREG_MC_MISC_END -
-                                  MISCREG_MC_MISC_BASE));
-    return (MiscRegIndex)(MISCREG_MC_MISC_BASE + index);
+    assert(index >= 0 && index < (McMiscEnd - McMiscBase));
+    return McMiscBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_PERF_EVT_SEL(int index)
+static inline RegIndex
+perfEvtSel(int index)
 {
-    assert(index >= 0 && index < (MISCREG_PERF_EVT_SEL_END -
-                                  MISCREG_PERF_EVT_SEL_BASE));
-    return (MiscRegIndex)(MISCREG_PERF_EVT_SEL_BASE + index);
+    assert(index >= 0 && index < (PerfEvtSelEnd - PerfEvtSelBase));
+    return PerfEvtSelBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_PERF_EVT_CTR(int index)
+static inline RegIndex
+perfEvtCtr(int index)
 {
-    assert(index >= 0 && index < (MISCREG_PERF_EVT_CTR_END -
-                                  MISCREG_PERF_EVT_CTR_BASE));
-    return (MiscRegIndex)(MISCREG_PERF_EVT_CTR_BASE + index);
+    assert(index >= 0 && index < (PerfEvtCtrEnd - PerfEvtCtrBase));
+    return PerfEvtCtrBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_IORR_BASE(int index)
+static inline RegIndex
+iorrBase(int index)
 {
-    assert(index >= 0 && index < (MISCREG_IORR_BASE_END -
-                                  MISCREG_IORR_BASE_BASE));
-    return (MiscRegIndex)(MISCREG_IORR_BASE_BASE + index);
+    assert(index >= 0 && index < (IorrBaseEnd - IorrBaseBase));
+    return IorrBaseBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_IORR_MASK(int index)
+static inline RegIndex
+iorrMask(int index)
 {
-    assert(index >= 0 && index < (MISCREG_IORR_MASK_END -
-                                  MISCREG_IORR_MASK_BASE));
-    return (MiscRegIndex)(MISCREG_IORR_MASK_BASE + index);
+    assert(index >= 0 && index < (IorrMaskEnd - IorrMaskBase));
+    return IorrMaskBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_SEG_SEL(int index)
+static inline RegIndex
+segSel(int index)
 {
     assert(index >= 0 && index < segment_idx::NumIdxs);
-    return (MiscRegIndex)(MISCREG_SEG_SEL_BASE + index);
+    return SegSelBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_SEG_BASE(int index)
+static inline RegIndex
+segBase(int index)
 {
     assert(index >= 0 && index < segment_idx::NumIdxs);
-    return (MiscRegIndex)(MISCREG_SEG_BASE_BASE + index);
+    return SegBaseBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_SEG_EFF_BASE(int index)
+static inline RegIndex
+segEffBase(int index)
 {
     assert(index >= 0 && index < segment_idx::NumIdxs);
-    return (MiscRegIndex)(MISCREG_SEG_EFF_BASE_BASE + index);
+    return SegEffBaseBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_SEG_LIMIT(int index)
+static inline RegIndex
+segLimit(int index)
 {
     assert(index >= 0 && index < segment_idx::NumIdxs);
-    return (MiscRegIndex)(MISCREG_SEG_LIMIT_BASE + index);
+    return SegLimitBase + index;
 }
 
-static inline MiscRegIndex
-MISCREG_SEG_ATTR(int index)
+static inline RegIndex
+segAttr(int index)
 {
     assert(index >= 0 && index < segment_idx::NumIdxs);
-    return (MiscRegIndex)(MISCREG_SEG_ATTR_BASE + index);
+    return SegAttrBase + index;
 }
+
+} // namespace misc_reg
 
 /**
  * A type to describe the condition code bits of the RFLAGS register,

@@ -312,29 +312,29 @@ X86_64Process::initState()
         for (int i = 0; i < contextIds.size(); i++) {
             ThreadContext *tc = system->threads[contextIds[i]];
 
-            tc->setMiscReg(MISCREG_CS, cs);
-            tc->setMiscReg(MISCREG_DS, ds);
-            tc->setMiscReg(MISCREG_ES, ds);
-            tc->setMiscReg(MISCREG_FS, ds);
-            tc->setMiscReg(MISCREG_GS, ds);
-            tc->setMiscReg(MISCREG_SS, ds);
+            tc->setMiscReg(misc_reg::Cs, cs);
+            tc->setMiscReg(misc_reg::Ds, ds);
+            tc->setMiscReg(misc_reg::Es, ds);
+            tc->setMiscReg(misc_reg::Fs, ds);
+            tc->setMiscReg(misc_reg::Gs, ds);
+            tc->setMiscReg(misc_reg::Ss, ds);
 
             // LDT
-            tc->setMiscReg(MISCREG_TSL, 0);
+            tc->setMiscReg(misc_reg::Tsl, 0);
             SegAttr tslAttr = 0;
             tslAttr.unusable = 1;
             tslAttr.present = 0;
             tslAttr.type = 2;
-            tc->setMiscReg(MISCREG_TSL_ATTR, tslAttr);
+            tc->setMiscReg(misc_reg::TslAttr, tslAttr);
 
-            tc->setMiscReg(MISCREG_TSG_BASE, GDTVirtAddr);
-            tc->setMiscReg(MISCREG_TSG_LIMIT, 8 * numGDTEntries - 1);
+            tc->setMiscReg(misc_reg::TsgBase, GDTVirtAddr);
+            tc->setMiscReg(misc_reg::TsgLimit, 8 * numGDTEntries - 1);
 
-            tc->setMiscReg(MISCREG_TR, tssSel);
-            tc->setMiscReg(MISCREG_TR_BASE, tss_base_addr);
-            tc->setMiscReg(MISCREG_TR_EFF_BASE, tss_base_addr);
-            tc->setMiscReg(MISCREG_TR_LIMIT, tss_limit);
-            tc->setMiscReg(MISCREG_TR_ATTR, tss_attr);
+            tc->setMiscReg(misc_reg::Tr, tssSel);
+            tc->setMiscReg(misc_reg::TrBase, tss_base_addr);
+            tc->setMiscReg(misc_reg::TrEffBase, tss_base_addr);
+            tc->setMiscReg(misc_reg::TrLimit, tss_limit);
+            tc->setMiscReg(misc_reg::TrAttr, tss_attr);
 
             //Start using longmode segments.
             installSegDesc(tc, segment_idx::Cs, csDesc, true);
@@ -351,7 +351,7 @@ X86_64Process::initState()
             efer.nxe = 1; // Enable nx support.
             efer.svme = 0; // Disable svm support for now.
             efer.ffxsr = 0; // Disable fast fxsave and fxrstor.
-            tc->setMiscReg(MISCREG_EFER, efer);
+            tc->setMiscReg(misc_reg::Efer, efer);
 
             //Set up the registers that describe the operating mode.
             CR0 cr0 = 0;
@@ -368,13 +368,13 @@ X86_64Process::initState()
             cr0.mp = 1; // This doesn't really matter, but the manual suggests
                         // setting it to one.
             cr0.pe = 1; // We're definitely in protected mode.
-            tc->setMiscReg(MISCREG_CR0, cr0);
+            tc->setMiscReg(misc_reg::Cr0, cr0);
 
             CR0 cr2 = 0;
-            tc->setMiscReg(MISCREG_CR2, cr2);
+            tc->setMiscReg(misc_reg::Cr2, cr2);
 
             CR3 cr3 = dynamic_cast<ArchPageTable *>(pTable)->basePtr();
-            tc->setMiscReg(MISCREG_CR3, cr3);
+            tc->setMiscReg(misc_reg::Cr3, cr3);
 
             CR4 cr4 = 0;
             //Turn on pae.
@@ -391,28 +391,28 @@ X86_64Process::initState()
             cr4.pvi = 0; // Protected-Mode Virtual Interrupts
             cr4.vme = 0; // Virtual-8086 Mode Extensions
 
-            tc->setMiscReg(MISCREG_CR4, cr4);
+            tc->setMiscReg(misc_reg::Cr4, cr4);
 
             CR8 cr8 = 0;
-            tc->setMiscReg(MISCREG_CR8, cr8);
+            tc->setMiscReg(misc_reg::Cr8, cr8);
 
-            tc->setMiscReg(MISCREG_MXCSR, 0x1f80);
+            tc->setMiscReg(misc_reg::Mxcsr, 0x1f80);
 
-            tc->setMiscReg(MISCREG_APIC_BASE, 0xfee00900);
+            tc->setMiscReg(misc_reg::ApicBase, 0xfee00900);
 
-            tc->setMiscReg(MISCREG_TSG_BASE, GDTVirtAddr);
-            tc->setMiscReg(MISCREG_TSG_LIMIT, 0xffff);
+            tc->setMiscReg(misc_reg::TsgBase, GDTVirtAddr);
+            tc->setMiscReg(misc_reg::TsgLimit, 0xffff);
 
-            tc->setMiscReg(MISCREG_IDTR_BASE, IDTVirtAddr);
-            tc->setMiscReg(MISCREG_IDTR_LIMIT, 0xffff);
+            tc->setMiscReg(misc_reg::IdtrBase, IDTVirtAddr);
+            tc->setMiscReg(misc_reg::IdtrLimit, 0xffff);
 
             /* enabling syscall and sysret */
             RegVal star = ((RegVal)sret << 48) | ((RegVal)scall << 32);
-            tc->setMiscReg(MISCREG_STAR, star);
+            tc->setMiscReg(misc_reg::Star, star);
             RegVal lstar = (RegVal)syscallCodeVirtAddr;
-            tc->setMiscReg(MISCREG_LSTAR, lstar);
+            tc->setMiscReg(misc_reg::Lstar, lstar);
             RegVal sfmask = (1 << 8) | (1 << 10); // TF | DF
-            tc->setMiscReg(MISCREG_SF_MASK, sfmask);
+            tc->setMiscReg(misc_reg::SfMask, sfmask);
         }
 
         /* Set up the content of the TSS and write it to physical memory. */
@@ -545,9 +545,9 @@ X86_64Process::initState()
 
             // Initialize the segment registers.
             for (int seg = 0; seg < segment_idx::NumIdxs; seg++) {
-                tc->setMiscRegNoEffect(MISCREG_SEG_BASE(seg), 0);
-                tc->setMiscRegNoEffect(MISCREG_SEG_EFF_BASE(seg), 0);
-                tc->setMiscRegNoEffect(MISCREG_SEG_ATTR(seg), dataAttr);
+                tc->setMiscRegNoEffect(misc_reg::segBase(seg), 0);
+                tc->setMiscRegNoEffect(misc_reg::segEffBase(seg), 0);
+                tc->setMiscRegNoEffect(misc_reg::segAttr(seg), dataAttr);
             }
 
             SegAttr csAttr = 0;
@@ -564,7 +564,7 @@ X86_64Process::initState()
             csAttr.expandDown = 0;
             csAttr.system = 1;
 
-            tc->setMiscRegNoEffect(MISCREG_CS_ATTR, csAttr);
+            tc->setMiscRegNoEffect(misc_reg::CsAttr, csAttr);
 
             Efer efer = 0;
             efer.sce = 1; // Enable system call extensions.
@@ -573,7 +573,7 @@ X86_64Process::initState()
             efer.nxe = 1; // Enable nx support.
             efer.svme = 0; // Disable svm support for now. It isn't implemented.
             efer.ffxsr = 1; // Turn on fast fxsave and fxrstor.
-            tc->setMiscReg(MISCREG_EFER, efer);
+            tc->setMiscReg(misc_reg::Efer, efer);
 
             // Set up the registers that describe the operating mode.
             CR0 cr0 = 0;
@@ -590,9 +590,9 @@ X86_64Process::initState()
             cr0.mp = 1; // This doesn't really matter, but the manual suggests
                         // setting it to one.
             cr0.pe = 1; // We're definitely in protected mode.
-            tc->setMiscReg(MISCREG_CR0, cr0);
+            tc->setMiscReg(misc_reg::Cr0, cr0);
 
-            tc->setMiscReg(MISCREG_MXCSR, 0x1f80);
+            tc->setMiscReg(misc_reg::Mxcsr, 0x1f80);
         }
     }
 }
@@ -656,11 +656,11 @@ I386Process::initState()
 
         // Initialize the segment registers.
         for (int seg = 0; seg < segment_idx::NumIdxs; seg++) {
-            tc->setMiscRegNoEffect(MISCREG_SEG_BASE(seg), 0);
-            tc->setMiscRegNoEffect(MISCREG_SEG_EFF_BASE(seg), 0);
-            tc->setMiscRegNoEffect(MISCREG_SEG_ATTR(seg), dataAttr);
-            tc->setMiscRegNoEffect(MISCREG_SEG_SEL(seg), 0xB);
-            tc->setMiscRegNoEffect(MISCREG_SEG_LIMIT(seg), (uint32_t)(-1));
+            tc->setMiscRegNoEffect(misc_reg::segBase(seg), 0);
+            tc->setMiscRegNoEffect(misc_reg::segEffBase(seg), 0);
+            tc->setMiscRegNoEffect(misc_reg::segAttr(seg), dataAttr);
+            tc->setMiscRegNoEffect(misc_reg::segSel(seg), 0xB);
+            tc->setMiscRegNoEffect(misc_reg::segLimit(seg), (uint32_t)(-1));
         }
 
         SegAttr csAttr = 0;
@@ -677,17 +677,17 @@ I386Process::initState()
         csAttr.expandDown = 0;
         csAttr.system = 1;
 
-        tc->setMiscRegNoEffect(MISCREG_CS_ATTR, csAttr);
+        tc->setMiscRegNoEffect(misc_reg::CsAttr, csAttr);
 
-        tc->setMiscRegNoEffect(MISCREG_TSG_BASE, _gdtStart);
-        tc->setMiscRegNoEffect(MISCREG_TSG_EFF_BASE, _gdtStart);
-        tc->setMiscRegNoEffect(MISCREG_TSG_LIMIT, _gdtStart + _gdtSize - 1);
+        tc->setMiscRegNoEffect(misc_reg::TsgBase, _gdtStart);
+        tc->setMiscRegNoEffect(misc_reg::TsgEffBase, _gdtStart);
+        tc->setMiscRegNoEffect(misc_reg::TsgLimit, _gdtStart + _gdtSize - 1);
 
         // Set the LDT selector to 0 to deactivate it.
-        tc->setMiscRegNoEffect(MISCREG_TSL, 0);
+        tc->setMiscRegNoEffect(misc_reg::Tsl, 0);
         SegAttr attr = 0;
         attr.unusable = 1;
-        tc->setMiscRegNoEffect(MISCREG_TSL_ATTR, attr);
+        tc->setMiscRegNoEffect(misc_reg::TslAttr, attr);
 
         Efer efer = 0;
         efer.sce = 1; // Enable system call extensions.
@@ -696,7 +696,7 @@ I386Process::initState()
         efer.nxe = 1; // Enable nx support.
         efer.svme = 0; // Disable svm support for now. It isn't implemented.
         efer.ffxsr = 1; // Turn on fast fxsave and fxrstor.
-        tc->setMiscReg(MISCREG_EFER, efer);
+        tc->setMiscReg(misc_reg::Efer, efer);
 
         // Set up the registers that describe the operating mode.
         CR0 cr0 = 0;
@@ -713,9 +713,9 @@ I386Process::initState()
         cr0.mp = 1; // This doesn't really matter, but the manual suggests
                     // setting it to one.
         cr0.pe = 1; // We're definitely in protected mode.
-        tc->setMiscReg(MISCREG_CR0, cr0);
+        tc->setMiscReg(misc_reg::Cr0, cr0);
 
-        tc->setMiscReg(MISCREG_MXCSR, 0x1f80);
+        tc->setMiscReg(misc_reg::Mxcsr, 0x1f80);
     }
 }
 
