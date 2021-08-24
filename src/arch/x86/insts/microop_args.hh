@@ -366,7 +366,7 @@ struct AddrOp
         disp(args.disp), segment(args.segment.index),
         size(inst->addressSize)
     {
-        assert(segment < NUM_SEGMENTREGS);
+        assert(segment < segment_idx::NumIdxs);
     }
 
     void

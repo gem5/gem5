@@ -319,7 +319,7 @@ TLB::translate(const RequestPtr &req,
 
     // If this is true, we're dealing with a request to a non-memory address
     // space.
-    if (seg == SEGMENT_REG_MS) {
+    if (seg == segment_idx::Ms) {
         return translateInt(mode == BaseMMU::Read, req, tc);
     }
 
@@ -342,7 +342,7 @@ TLB::translate(const RequestPtr &req,
             // CPUs won't know to use CS when building fetch requests, so we
             // need to override the value of "seg" here if this is a fetch.
             if (mode == BaseMMU::Execute)
-                seg = SEGMENT_REG_CS;
+                seg = segment_idx::Cs;
 
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             // Check for an unusable segment.
@@ -351,7 +351,7 @@ TLB::translate(const RequestPtr &req,
                 return std::make_shared<GeneralProtection>(0);
             }
             bool expandDown = false;
-            if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
+            if (seg >= segment_idx::Es && seg <= segment_idx::Hs) {
                 if (!attr.writable && (mode == BaseMMU::Write || storeCheck)) {
                     DPRINTF(TLB, "Tried to write to unwritable segment.\n");
                     return std::make_shared<GeneralProtection>(0);

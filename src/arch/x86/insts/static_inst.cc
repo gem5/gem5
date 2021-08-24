@@ -64,43 +64,43 @@ void X86StaticInst::printSegment(std::ostream &os, int segment)
 {
     switch (segment)
     {
-      case SEGMENT_REG_ES:
+      case segment_idx::Es:
         ccprintf(os, "ES");
         break;
-      case SEGMENT_REG_CS:
+      case segment_idx::Cs:
         ccprintf(os, "CS");
         break;
-      case SEGMENT_REG_SS:
+      case segment_idx::Ss:
         ccprintf(os, "SS");
         break;
-      case SEGMENT_REG_DS:
+      case segment_idx::Ds:
         ccprintf(os, "DS");
         break;
-      case SEGMENT_REG_FS:
+      case segment_idx::Fs:
         ccprintf(os, "FS");
         break;
-      case SEGMENT_REG_GS:
+      case segment_idx::Gs:
         ccprintf(os, "GS");
         break;
-      case SEGMENT_REG_HS:
+      case segment_idx::Hs:
         ccprintf(os, "HS");
         break;
-      case SEGMENT_REG_TSL:
+      case segment_idx::Tsl:
         ccprintf(os, "TSL");
         break;
-      case SEGMENT_REG_TSG:
+      case segment_idx::Tsg:
         ccprintf(os, "TSG");
         break;
-      case SEGMENT_REG_LS:
+      case segment_idx::Ls:
         ccprintf(os, "LS");
         break;
-      case SEGMENT_REG_MS:
+      case segment_idx::Ms:
         ccprintf(os, "MS");
         break;
-      case SYS_SEGMENT_REG_TR:
+      case segment_idx::Tr:
         ccprintf(os, "TR");
         break;
-      case SYS_SEGMENT_REG_IDTR:
+      case segment_idx::Idtr:
         ccprintf(os, "IDTR");
         break;
       default:

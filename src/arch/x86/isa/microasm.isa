@@ -83,9 +83,9 @@ let {{
         assembler.symbols["ufp%d" % num] = \
             fpRegIdx("FLOATREG_MICROFP(%d)" % num)
     # Add in symbols for the segment descriptor registers
-    for letter in ("C", "D", "E", "F", "G", "H", "S"):
+    for letter in ("c", "d", "e", "f", "g", "h", "s"):
         assembler.symbols["%ss" % letter.lower()] = \
-            segRegIdx("SEGMENT_REG_%sS" % letter)
+            segRegIdx(f"segment_idx::{letter.capitalize()}s")
 
     # Add in symbols for the various checks of segment selectors.
     for check in ("NoCheck", "CSCheck", "CallGateCheck", "IntGateCheck",
@@ -93,11 +93,11 @@ let {{
                   "TRCheck", "TSSCheck", "InGDTCheck", "LDTCheck"):
         assembler.symbols[check] = "Seg%s" % check
 
-    for reg in ("TR", "IDTR"):
-        assembler.symbols[reg.lower()] = segRegIdx("SYS_SEGMENT_REG_%s" % reg)
+    for reg in ("tr", "idtr"):
+        assembler.symbols[reg] = segRegIdx(f"segment_idx::{reg.capitalize()}")
 
-    for reg in ("TSL", "TSG"):
-        assembler.symbols[reg.lower()] = segRegIdx("SEGMENT_REG_%s" % reg)
+    for reg in ("tsl", "tsg"):
+        assembler.symbols[reg] = segRegIdx(f"segment_idx::{reg.capitalize()}")
 
     # Miscellaneous symbols
     symbols = {
@@ -144,10 +144,10 @@ let {{
 
     # This segment selects an internal address space mapped to MSRs,
     # CPUID info, etc.
-    assembler.symbols["intseg"] = segRegIdx("SEGMENT_REG_MS")
+    assembler.symbols["intseg"] = segRegIdx("segment_idx::Ms")
     # This segment always has base 0, and doesn't imply any special handling
     # like the internal segment above
-    assembler.symbols["flatseg"] = segRegIdx("SEGMENT_REG_LS")
+    assembler.symbols["flatseg"] = segRegIdx("segment_idx::Ls")
 
     for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di', \
                 '8',  '9',  '10', '11', '12', '13', '14', '15'):

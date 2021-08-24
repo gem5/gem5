@@ -157,7 +157,7 @@ let {{
                 Name += "_R"
 
             elif opType.seg:
-                env.addReg("SEGMENT_REG_%sS" % opType.seg)
+                env.addReg("segment_idx::%ss" % opType.seg)
                 if env.regmUsed:
                     regString = "env.regm"
                 else:
@@ -280,7 +280,7 @@ let {{
                                 env.addressSize, false);''')
                 else:
                     env.addToDisassembly(
-                            '''printMem(out, SEGMENT_REG_ES,
+                            '''printMem(out, segment_idx::Es,
                                 1, X86ISA::int_reg::NumRegs,
                                 X86ISA::int_reg::Rdi, 0,
                                 env.addressSize, false);''')

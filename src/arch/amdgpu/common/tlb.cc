@@ -43,6 +43,7 @@
 #include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/regs/msr.hh"
+#include "arch/x86/regs/segment.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/bitfield.hh"
 #include "base/logging.hh"
@@ -376,7 +377,7 @@ namespace X86ISA
         int seg = flags & SegmentFlagMask;
     #endif
 
-        assert(seg != SEGMENT_REG_MS);
+        assert(seg != segment_idx::Ms);
         Addr vaddr = req->getVaddr();
         DPRINTF(GPUTLB, "TLB Lookup for vaddr %#x.\n", vaddr);
         HandyM5Reg m5Reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
@@ -426,7 +427,7 @@ namespace X86ISA
 
         // If this is true, we're dealing with a request
         // to a non-memory address space.
-        if (seg == SEGMENT_REG_MS) {
+        if (seg == segment_idx::Ms) {
             return translateInt(mode == Mode::Read, req, tc);
         }
 
@@ -445,8 +446,8 @@ namespace X86ISA
                         "protection.\n");
 
                 // Check for a null segment selector.
-                if (!(seg == SEGMENT_REG_TSG || seg == SYS_SEGMENT_REG_IDTR ||
-                    seg == SEGMENT_REG_HS || seg == SEGMENT_REG_LS)
+                if (!(seg == segment_idx::Tsg || seg == segment_idx::Idtr ||
+                    seg == segment_idx::Hs || seg == segment_idx::Ls)
                     && !tc->readMiscRegNoEffect(MISCREG_SEG_SEL(seg))) {
                     return std::make_shared<GeneralProtection>(0);
                 }
@@ -454,7 +455,7 @@ namespace X86ISA
                 bool expandDown = false;
                 SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
 
-                if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
+                if (seg >= segment_idx::Es && seg <= segment_idx::Hs) {
                     if (!attr.writable && (mode == BaseMMU::Write ||
                         storeCheck))
                         return std::make_shared<GeneralProtection>(0);

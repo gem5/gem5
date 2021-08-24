@@ -125,7 +125,7 @@ let {{
 
     class SquashCSReg(SquashCheckReg):
         def __init__(self, idx, id, ctype='uqw'):
-            super().__init__(idx, id, 'dest == X86ISA::SEGMENT_REG_CS', ctype)
+            super().__init__(idx, id, 'dest == X86ISA::segment_idx::Cs', ctype)
 
     class SquashCR0Reg(SquashCheckReg):
         def __init__(self, idx, id, ctype='uqw'):

@@ -62,11 +62,10 @@ FsWorkload::FsWorkload(const Params &p) : KernelWorkload(p),
 {}
 
 void
-installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
-               SegDescriptor desc, bool longmode)
+installSegDesc(ThreadContext *tc, int seg, SegDescriptor desc, bool longmode)
 {
-    bool honorBase = !longmode || seg == SEGMENT_REG_FS ||
-                                  seg == SEGMENT_REG_GS;
+    bool honorBase = !longmode || seg == segment_idx::Fs ||
+                                  seg == segment_idx::Gs;
 
     SegAttr attr = 0;
 
@@ -231,7 +230,7 @@ FsWorkload::initState()
     tss.si = numGDTEntries - 1;
 
     tc->setMiscReg(MISCREG_TR, (RegVal)tss);
-    installSegDesc(tc, SYS_SEGMENT_REG_TR, tssDesc, true);
+    installSegDesc(tc, segment_idx::Tr, tssDesc, true);
 
     /*
      * Identity map the first 4GB of memory. In order to map this region
@@ -307,12 +306,12 @@ FsWorkload::initState()
     tc->setMiscReg(MISCREG_EFER, efer);
 
     // Start using longmode segments.
-    installSegDesc(tc, SEGMENT_REG_CS, csDesc, true);
-    installSegDesc(tc, SEGMENT_REG_DS, dsDesc, true);
-    installSegDesc(tc, SEGMENT_REG_ES, dsDesc, true);
-    installSegDesc(tc, SEGMENT_REG_FS, dsDesc, true);
-    installSegDesc(tc, SEGMENT_REG_GS, dsDesc, true);
-    installSegDesc(tc, SEGMENT_REG_SS, dsDesc, true);
+    installSegDesc(tc, segment_idx::Cs, csDesc, true);
+    installSegDesc(tc, segment_idx::Ds, dsDesc, true);
+    installSegDesc(tc, segment_idx::Es, dsDesc, true);
+    installSegDesc(tc, segment_idx::Fs, dsDesc, true);
+    installSegDesc(tc, segment_idx::Gs, dsDesc, true);
+    installSegDesc(tc, segment_idx::Ss, dsDesc, true);
 
     // Activate long mode.
     cr0.pg = 1;

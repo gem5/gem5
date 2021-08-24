@@ -214,7 +214,7 @@ InitInterrupt::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     dataAttr.expandDown = 0;
     dataAttr.system = 1;
 
-    for (int seg = 0; seg != NUM_SEGMENTREGS; seg++) {
+    for (int seg = 0; seg != segment_idx::NumIdxs; seg++) {
         tc->setMiscReg(MISCREG_SEG_SEL(seg), 0);
         tc->setMiscReg(MISCREG_SEG_BASE(seg), 0);
         tc->setMiscReg(MISCREG_SEG_EFF_BASE(seg), 0);

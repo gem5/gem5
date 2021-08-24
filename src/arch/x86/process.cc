@@ -337,12 +337,12 @@ X86_64Process::initState()
             tc->setMiscReg(MISCREG_TR_ATTR, tss_attr);
 
             //Start using longmode segments.
-            installSegDesc(tc, SEGMENT_REG_CS, csDesc, true);
-            installSegDesc(tc, SEGMENT_REG_DS, dsDesc, true);
-            installSegDesc(tc, SEGMENT_REG_ES, dsDesc, true);
-            installSegDesc(tc, SEGMENT_REG_FS, dsDesc, true);
-            installSegDesc(tc, SEGMENT_REG_GS, dsDesc, true);
-            installSegDesc(tc, SEGMENT_REG_SS, dsDesc, true);
+            installSegDesc(tc, segment_idx::Cs, csDesc, true);
+            installSegDesc(tc, segment_idx::Ds, dsDesc, true);
+            installSegDesc(tc, segment_idx::Es, dsDesc, true);
+            installSegDesc(tc, segment_idx::Fs, dsDesc, true);
+            installSegDesc(tc, segment_idx::Gs, dsDesc, true);
+            installSegDesc(tc, segment_idx::Ss, dsDesc, true);
 
             Efer efer = 0;
             efer.sce = 1; // Enable system call extensions.
@@ -544,7 +544,7 @@ X86_64Process::initState()
             dataAttr.system = 1;
 
             // Initialize the segment registers.
-            for (int seg = 0; seg < NUM_SEGMENTREGS; seg++) {
+            for (int seg = 0; seg < segment_idx::NumIdxs; seg++) {
                 tc->setMiscRegNoEffect(MISCREG_SEG_BASE(seg), 0);
                 tc->setMiscRegNoEffect(MISCREG_SEG_EFF_BASE(seg), 0);
                 tc->setMiscRegNoEffect(MISCREG_SEG_ATTR(seg), dataAttr);
@@ -655,7 +655,7 @@ I386Process::initState()
         dataAttr.system = 1;
 
         // Initialize the segment registers.
-        for (int seg = 0; seg < NUM_SEGMENTREGS; seg++) {
+        for (int seg = 0; seg < segment_idx::NumIdxs; seg++) {
             tc->setMiscRegNoEffect(MISCREG_SEG_BASE(seg), 0);
             tc->setMiscRegNoEffect(MISCREG_SEG_EFF_BASE(seg), 0);
             tc->setMiscRegNoEffect(MISCREG_SEG_ATTR(seg), dataAttr);

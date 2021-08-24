@@ -314,7 +314,7 @@ namespace X86ISA
         MISCREG_IDTR,
 
         // Hidden segment base field
-        MISCREG_SEG_BASE_BASE = MISCREG_SEG_SEL_BASE + NUM_SEGMENTREGS,
+        MISCREG_SEG_BASE_BASE = MISCREG_SEG_SEL_BASE + segment_idx::NumIdxs,
         MISCREG_ES_BASE = MISCREG_SEG_BASE_BASE,
         MISCREG_CS_BASE,
         MISCREG_SS_BASE,
@@ -332,7 +332,8 @@ namespace X86ISA
         // The effective segment base, ie what is actually added to an
         // address. In 64 bit mode this can be different from the above,
         // namely 0.
-        MISCREG_SEG_EFF_BASE_BASE = MISCREG_SEG_BASE_BASE + NUM_SEGMENTREGS,
+        MISCREG_SEG_EFF_BASE_BASE =
+            MISCREG_SEG_BASE_BASE + segment_idx::NumIdxs,
         MISCREG_ES_EFF_BASE = MISCREG_SEG_EFF_BASE_BASE,
         MISCREG_CS_EFF_BASE,
         MISCREG_SS_EFF_BASE,
@@ -348,7 +349,8 @@ namespace X86ISA
         MISCREG_IDTR_EFF_BASE,
 
         // Hidden segment limit field
-        MISCREG_SEG_LIMIT_BASE = MISCREG_SEG_EFF_BASE_BASE + NUM_SEGMENTREGS,
+        MISCREG_SEG_LIMIT_BASE =
+            MISCREG_SEG_EFF_BASE_BASE + segment_idx::NumIdxs,
         MISCREG_ES_LIMIT = MISCREG_SEG_LIMIT_BASE,
         MISCREG_CS_LIMIT,
         MISCREG_SS_LIMIT,
@@ -364,7 +366,7 @@ namespace X86ISA
         MISCREG_IDTR_LIMIT,
 
         // Hidden segment limit attributes
-        MISCREG_SEG_ATTR_BASE = MISCREG_SEG_LIMIT_BASE + NUM_SEGMENTREGS,
+        MISCREG_SEG_ATTR_BASE = MISCREG_SEG_LIMIT_BASE + segment_idx::NumIdxs,
         MISCREG_ES_ATTR = MISCREG_SEG_ATTR_BASE,
         MISCREG_CS_ATTR,
         MISCREG_SS_ATTR,
@@ -380,8 +382,7 @@ namespace X86ISA
         MISCREG_IDTR_ATTR,
 
         // Floating point control registers
-        MISCREG_X87_TOP =
-            MISCREG_SEG_ATTR_BASE + NUM_SEGMENTREGS,
+        MISCREG_X87_TOP = MISCREG_SEG_ATTR_BASE + segment_idx::NumIdxs,
 
         MISCREG_MXCSR,
         MISCREG_FCW,
@@ -510,35 +511,35 @@ namespace X86ISA
     static inline MiscRegIndex
     MISCREG_SEG_SEL(int index)
     {
-        assert(index >= 0 && index < NUM_SEGMENTREGS);
+        assert(index >= 0 && index < segment_idx::NumIdxs);
         return (MiscRegIndex)(MISCREG_SEG_SEL_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_SEG_BASE(int index)
     {
-        assert(index >= 0 && index < NUM_SEGMENTREGS);
+        assert(index >= 0 && index < segment_idx::NumIdxs);
         return (MiscRegIndex)(MISCREG_SEG_BASE_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_SEG_EFF_BASE(int index)
     {
-        assert(index >= 0 && index < NUM_SEGMENTREGS);
+        assert(index >= 0 && index < segment_idx::NumIdxs);
         return (MiscRegIndex)(MISCREG_SEG_EFF_BASE_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_SEG_LIMIT(int index)
     {
-        assert(index >= 0 && index < NUM_SEGMENTREGS);
+        assert(index >= 0 && index < segment_idx::NumIdxs);
         return (MiscRegIndex)(MISCREG_SEG_LIMIT_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_SEG_ATTR(int index)
     {
-        assert(index >= 0 && index < NUM_SEGMENTREGS);
+        assert(index >= 0 && index < segment_idx::NumIdxs);
         return (MiscRegIndex)(MISCREG_SEG_ATTR_BASE + index);
     }
 

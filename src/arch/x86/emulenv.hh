@@ -51,7 +51,7 @@ namespace X86ISA
     {
         RegIndex reg;
         RegIndex regm;
-        SegmentRegIndex seg;
+        int seg;
         uint8_t scale;
         RegId index;
         RegId base;
@@ -61,7 +61,7 @@ namespace X86ISA
 
         EmulEnv(RegIndex _reg, RegIndex _regm,
                 int _dataSize, int _addressSize, int _stackSize) :
-            reg(_reg), regm(_regm), seg(SEGMENT_REG_DS),
+            reg(_reg), regm(_regm), seg(segment_idx::Ds),
             scale(0), index(int_reg::T0),
             base(int_reg::T0),
             dataSize(_dataSize), addressSize(_addressSize),
