@@ -62,8 +62,8 @@ namespace X86ISA
         EmulEnv(RegIndex _reg, RegIndex _regm,
                 int _dataSize, int _addressSize, int _stackSize) :
             reg(_reg), regm(_regm), seg(SEGMENT_REG_DS),
-            scale(0), index(INTREG_T0),
-            base(INTREG_T0),
+            scale(0), index(int_reg::T0),
+            base(int_reg::T0),
             dataSize(_dataSize), addressSize(_addressSize),
             stackSize(_stackSize)
         {;}

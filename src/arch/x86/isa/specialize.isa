@@ -142,9 +142,9 @@ let {{
                 #Figure out what to do with fixed register operands
                 #This is the index to use, so we should stick it some place.
                 if opType.reg in ("A", "B", "C", "D"):
-                    regString = "INTREG_R%sX" % opType.reg
+                    regString = "int_reg::R%sx" % opType.reg.lower()
                 else:
-                    regString = "INTREG_R%s" % opType.reg
+                    regString = "int_reg::R%s" % opType.reg.lower()
                 env.addReg(regString)
                 if env.regmUsed:
                     regString = "env.regm"
@@ -275,12 +275,14 @@ let {{
                 if opType.tag == "X":
                     env.addToDisassembly(
                             '''printMem(out, env.seg,
-                                1, X86ISA::NUM_INTREGS, X86ISA::INTREG_RSI, 0,
+                                1, X86ISA::int_reg::NumRegs,
+                                X86ISA::int_reg::Rsi, 0,
                                 env.addressSize, false);''')
                 else:
                     env.addToDisassembly(
                             '''printMem(out, SEGMENT_REG_ES,
-                                1, X86ISA::NUM_INTREGS, X86ISA::INTREG_RDI, 0,
+                                1, X86ISA::int_reg::NumRegs,
+                                X86ISA::int_reg::Rdi, 0,
                                 env.addressSize, false);''')
                 Name += "_M"
             else:

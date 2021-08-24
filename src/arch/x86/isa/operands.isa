@@ -57,7 +57,7 @@ let {{
     class IntReg(IntRegOp):
         @overrideInOperand
         def regId(self):
-            return f'(({self.reg_spec}) == gem5::X86ISA::INTREG_T0) ? ' \
+            return f'(({self.reg_spec}) == gem5::X86ISA::int_reg::T0) ? ' \
                    f'RegId() : RegId({self.reg_class}, {self.reg_spec})'
         def __init__(self, idx, id, data_size='dataSize', *args, **kwargs):
             super().__init__('uqw', idx, 'IsInteger', id, *args, **kwargs)
@@ -147,22 +147,22 @@ def operands {{
         'PData':         PickedReg('data', 6),
         'DataLow':       IntReg('dataLow', 6),
         'DataHi':        IntReg('dataHi', 6),
-        'ProdLow':       IntReg('X86ISA::INTREG_PRODLOW', 7),
-        'ProdHi':        IntReg('X86ISA::INTREG_PRODHI', 8),
-        'Quotient':      IntReg('X86ISA::INTREG_QUOTIENT', 9),
-        'Remainder':     IntReg('X86ISA::INTREG_REMAINDER', 10),
-        'Divisor':       IntReg('X86ISA::INTREG_DIVISOR', 11),
-        'DoubleBits':    IntReg('X86ISA::INTREG_DOUBLEBITS', 11),
-        'Rax':           IntReg('X86ISA::INTREG_RAX', 12),
-        'Rbx':           IntReg('X86ISA::INTREG_RBX', 13),
-        'Rcx':           IntReg('X86ISA::INTREG_RCX', 14),
-        'Rdx':           IntReg('X86ISA::INTREG_RDX', 15),
-        'Rsp':           IntReg('X86ISA::INTREG_RSP', 16),
-        'Rbp':           IntReg('X86ISA::INTREG_RBP', 17),
-        'Rsi':           IntReg('X86ISA::INTREG_RSI', 18),
-        'Rdi':           IntReg('X86ISA::INTREG_RDI', 19),
-        'R8':            IntReg('X86ISA::INTREG_R8', 20),
-        'R9':            IntReg('X86ISA::INTREG_R9', 21),
+        'ProdLow':       IntReg('X86ISA::int_reg::Prodlow', 7),
+        'ProdHi':        IntReg('X86ISA::int_reg::Prodhi', 8),
+        'Quotient':      IntReg('X86ISA::int_reg::Quotient', 9),
+        'Remainder':     IntReg('X86ISA::int_reg::Remainder', 10),
+        'Divisor':       IntReg('X86ISA::int_reg::Divisor', 11),
+        'DoubleBits':    IntReg('X86ISA::int_reg::Doublebits', 11),
+        'Rax':           IntReg('X86ISA::int_reg::Rax', 12),
+        'Rbx':           IntReg('X86ISA::int_reg::Rbx', 13),
+        'Rcx':           IntReg('X86ISA::int_reg::Rcx', 14),
+        'Rdx':           IntReg('X86ISA::int_reg::Rdx', 15),
+        'Rsp':           IntReg('X86ISA::int_reg::Rsp', 16),
+        'Rbp':           IntReg('X86ISA::int_reg::Rbp', 17),
+        'Rsi':           IntReg('X86ISA::int_reg::Rsi', 18),
+        'Rdi':           IntReg('X86ISA::int_reg::Rdi', 19),
+        'R8':            IntReg('X86ISA::int_reg::R8', 20),
+        'R9':            IntReg('X86ISA::int_reg::R9', 21),
         'FpSrcReg1':     FloatReg('src1', 22),
         'FpSrcReg2':     FloatReg('src2', 23),
         'FpDestReg':     FloatReg('dest', 24),

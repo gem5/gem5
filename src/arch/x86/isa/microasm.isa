@@ -78,7 +78,7 @@ let {{
 
     # Add in symbols for the microcode registers
     for num in range(16):
-        assembler.symbols["t%d" % num] = gpRegIdx("INTREG_MICRO(%d)" % num)
+        assembler.symbols["t%d" % num] = gpRegIdx("intRegMicro(%d)" % num)
     for num in range(8):
         assembler.symbols["ufp%d" % num] = \
             fpRegIdx("FLOATREG_MICROFP(%d)" % num)
@@ -152,12 +152,12 @@ let {{
     for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di', \
                 '8',  '9',  '10', '11', '12', '13', '14', '15'):
         assembler.symbols["r%s" % reg] = \
-            gpRegIdx("INTREG_R%s" % reg.upper())
+            gpRegIdx("int_reg::R%s" % reg)
 
     for reg in ('ah', 'bh', 'ch', 'dh'):
         assembler.symbols[reg] = \
-            gpRegIdx("X86ISA::INTREG_FOLDED(INTREG_%s, IntFoldBit)" %
-                    reg.upper())
+            gpRegIdx("X86ISA::intRegFolded(int_reg::%s, IntFoldBit)" %
+                    reg.capitalize())
 
     for reg in range(16):
         assembler.symbols["cr%d" % reg] = crRegIdx("%d" % reg)

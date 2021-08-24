@@ -994,7 +994,7 @@ X86Process::argsInit(int pageSize,
 
     ThreadContext *tc = system->threads[contextIds[0]];
     // Set the stack pointer register
-    tc->setIntReg(INTREG_RSP, stack_min);
+    tc->setIntReg(int_reg::Rsp, stack_min);
 
     // There doesn't need to be any segment base added in since we're dealing
     // with the flat segmentation model.

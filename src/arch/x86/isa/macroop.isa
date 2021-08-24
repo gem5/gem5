@@ -252,7 +252,7 @@ let {{
                 memoryInst = "true"
             else:
                 memoryInst = "false"
-            regSize = '''(%s || (env.base == INTREG_RSP && %s) ?
+            regSize = '''(%s || (env.base == int_reg::Rsp && %s) ?
                          env.stackSize :
                          env.dataSize)''' % (useStackSize, memoryInst)
             iop = InstObjParams(self.getMnemonic(), self.name, "Macroop",

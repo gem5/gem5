@@ -108,24 +108,24 @@ struct GEM5_PACKED FXSave
 
 static_assert(sizeof(FXSave) == 512, "Unexpected size of FXSave");
 
-#define FOREACH_IREG()                          \
-    do {                                        \
-        APPLY_IREG(rax, INTREG_RAX);            \
-        APPLY_IREG(rbx, INTREG_RBX);            \
-        APPLY_IREG(rcx, INTREG_RCX);            \
-        APPLY_IREG(rdx, INTREG_RDX);            \
-        APPLY_IREG(rsi, INTREG_RSI);            \
-        APPLY_IREG(rdi, INTREG_RDI);            \
-        APPLY_IREG(rsp, INTREG_RSP);            \
-        APPLY_IREG(rbp, INTREG_RBP);            \
-        APPLY_IREG(r8, INTREG_R8);              \
-        APPLY_IREG(r9, INTREG_R9);              \
-        APPLY_IREG(r10, INTREG_R10);            \
-        APPLY_IREG(r11, INTREG_R11);            \
-        APPLY_IREG(r12, INTREG_R12);            \
-        APPLY_IREG(r13, INTREG_R13);            \
-        APPLY_IREG(r14, INTREG_R14);            \
-        APPLY_IREG(r15, INTREG_R15);            \
+#define FOREACH_IREG() \
+    do { \
+        APPLY_IREG(rax, int_reg::Rax); \
+        APPLY_IREG(rbx, int_reg::Rbx); \
+        APPLY_IREG(rcx, int_reg::Rcx); \
+        APPLY_IREG(rdx, int_reg::Rdx); \
+        APPLY_IREG(rsi, int_reg::Rsi); \
+        APPLY_IREG(rdi, int_reg::Rdi); \
+        APPLY_IREG(rsp, int_reg::Rsp); \
+        APPLY_IREG(rbp, int_reg::Rbp); \
+        APPLY_IREG(r8, int_reg::R8); \
+        APPLY_IREG(r9, int_reg::R9); \
+        APPLY_IREG(r10, int_reg::R10); \
+        APPLY_IREG(r11, int_reg::R11); \
+        APPLY_IREG(r12, int_reg::R12); \
+        APPLY_IREG(r13, int_reg::R13); \
+        APPLY_IREG(r14, int_reg::R14); \
+        APPLY_IREG(r15, int_reg::R15); \
     } while (0)
 
 #define FOREACH_SREG()                                  \

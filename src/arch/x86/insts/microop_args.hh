@@ -156,7 +156,7 @@ struct FoldedOp : public Base
 
     template <class InstType>
     FoldedOp(InstType *inst, ArgType idx) :
-        Base(INTREG_FOLDED(idx.index, inst->foldOBit), inst->dataSize)
+        Base(intRegFolded(idx.index, inst->foldOBit), inst->dataSize)
     {}
 
     void
@@ -361,8 +361,8 @@ struct AddrOp
 
     template <class InstType>
     AddrOp(InstType *inst, const ArgType &args) : scale(args.scale),
-        index(INTREG_FOLDED(args.index.index, inst->foldABit)),
-        base(INTREG_FOLDED(args.base.index, inst->foldABit)),
+        index(intRegFolded(args.index.index, inst->foldABit)),
+        base(intRegFolded(args.base.index, inst->foldABit)),
         disp(args.disp), segment(args.segment.index),
         size(inst->addressSize)
     {

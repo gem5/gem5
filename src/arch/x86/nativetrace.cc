@@ -72,22 +72,22 @@ X86NativeTrace::ThreadState::update(NativeTrace *parent)
 void
 X86NativeTrace::ThreadState::update(ThreadContext *tc)
 {
-    rax = tc->readIntReg(X86ISA::INTREG_RAX);
-    rcx = tc->readIntReg(X86ISA::INTREG_RCX);
-    rdx = tc->readIntReg(X86ISA::INTREG_RDX);
-    rbx = tc->readIntReg(X86ISA::INTREG_RBX);
-    rsp = tc->readIntReg(X86ISA::INTREG_RSP);
-    rbp = tc->readIntReg(X86ISA::INTREG_RBP);
-    rsi = tc->readIntReg(X86ISA::INTREG_RSI);
-    rdi = tc->readIntReg(X86ISA::INTREG_RDI);
-    r8 = tc->readIntReg(X86ISA::INTREG_R8);
-    r9 = tc->readIntReg(X86ISA::INTREG_R9);
-    r10 = tc->readIntReg(X86ISA::INTREG_R10);
-    r11 = tc->readIntReg(X86ISA::INTREG_R11);
-    r12 = tc->readIntReg(X86ISA::INTREG_R12);
-    r13 = tc->readIntReg(X86ISA::INTREG_R13);
-    r14 = tc->readIntReg(X86ISA::INTREG_R14);
-    r15 = tc->readIntReg(X86ISA::INTREG_R15);
+    rax = tc->readIntReg(X86ISA::int_reg::Rax);
+    rcx = tc->readIntReg(X86ISA::int_reg::Rcx);
+    rdx = tc->readIntReg(X86ISA::int_reg::Rdx);
+    rbx = tc->readIntReg(X86ISA::int_reg::Rbx);
+    rsp = tc->readIntReg(X86ISA::int_reg::Rsp);
+    rbp = tc->readIntReg(X86ISA::int_reg::Rbp);
+    rsi = tc->readIntReg(X86ISA::int_reg::Rsi);
+    rdi = tc->readIntReg(X86ISA::int_reg::Rdi);
+    r8 = tc->readIntReg(X86ISA::int_reg::R8);
+    r9 = tc->readIntReg(X86ISA::int_reg::R9);
+    r10 = tc->readIntReg(X86ISA::int_reg::R10);
+    r11 = tc->readIntReg(X86ISA::int_reg::R11);
+    r12 = tc->readIntReg(X86ISA::int_reg::R12);
+    r13 = tc->readIntReg(X86ISA::int_reg::R13);
+    r14 = tc->readIntReg(X86ISA::int_reg::R14);
+    r15 = tc->readIntReg(X86ISA::int_reg::R15);
     rip = tc->pcState().as<X86ISA::PCState>().npc();
     //This should be expanded if x87 registers are considered
     for (int i = 0; i < 8; i++)

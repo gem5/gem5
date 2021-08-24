@@ -97,12 +97,14 @@ namespace X86ISA
 EmuLinux::EmuLinux(const Params &p) : SEWorkload(p, PageShift)
 {}
 
-const std::vector<IntRegIndex> EmuLinux::SyscallABI64::ArgumentRegs = {
-    INTREG_RDI, INTREG_RSI, INTREG_RDX, INTREG_R10W, INTREG_R8W, INTREG_R9W
+const std::vector<RegIndex> EmuLinux::SyscallABI64::ArgumentRegs = {
+    int_reg::Rdi, int_reg::Rsi, int_reg::Rdx,
+    int_reg::R10, int_reg::R8, int_reg::R9
 };
 
-const std::vector<IntRegIndex> EmuLinux::SyscallABI32::ArgumentRegs = {
-    INTREG_EBX, INTREG_ECX, INTREG_EDX, INTREG_ESI, INTREG_EDI, INTREG_EBP
+const std::vector<RegIndex> EmuLinux::SyscallABI32::ArgumentRegs = {
+    int_reg::Ebx, int_reg::Ecx, int_reg::Edx,
+    int_reg::Esi, int_reg::Edi, int_reg::Ebp
 };
 
 void
@@ -113,7 +115,7 @@ EmuLinux::syscall(ThreadContext *tc)
     // This will move into the base SEWorkload function at some point.
     process->Process::syscall(tc);
 
-    RegVal rax = tc->readIntReg(INTREG_RAX);
+    RegVal rax = tc->readIntReg(int_reg::Rax);
     if (dynamic_cast<X86_64Process *>(process)) {
         syscallDescs64.get(rax)->doSyscall(tc);
     } else if (auto *proc32 = dynamic_cast<I386Process *>(process)) {

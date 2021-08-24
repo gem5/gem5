@@ -47,145 +47,149 @@ namespace gem5
 
 namespace X86ISA
 {
-    BitUnion64(X86IntReg)
-        Bitfield<63,0> R;
-        SignedBitfield<63,0> SR;
-        Bitfield<31,0> E;
-        SignedBitfield<31,0> SE;
-        Bitfield<15,0> X;
-        SignedBitfield<15,0> SX;
-        Bitfield<15,8> H;
-        SignedBitfield<15,8> SH;
-        Bitfield<7, 0> L;
-        SignedBitfield<7, 0> SL;
-    EndBitUnion(X86IntReg)
 
-    enum IntRegIndex
-    {
-        INTREG_RAX,
-        INTREG_EAX = INTREG_RAX,
-        INTREG_AX = INTREG_RAX,
-        INTREG_AL = INTREG_RAX,
+BitUnion64(X86IntReg)
+    Bitfield<63,0> R;
+    SignedBitfield<63,0> SR;
+    Bitfield<31,0> E;
+    SignedBitfield<31,0> SE;
+    Bitfield<15,0> X;
+    SignedBitfield<15,0> SX;
+    Bitfield<15,8> H;
+    SignedBitfield<15,8> SH;
+    Bitfield<7, 0> L;
+    SignedBitfield<7, 0> SL;
+EndBitUnion(X86IntReg)
 
-        INTREG_RCX,
-        INTREG_ECX = INTREG_RCX,
-        INTREG_CX = INTREG_RCX,
-        INTREG_CL = INTREG_RCX,
+namespace int_reg
+{
 
-        INTREG_RDX,
-        INTREG_EDX = INTREG_RDX,
-        INTREG_DX = INTREG_RDX,
-        INTREG_DL = INTREG_RDX,
+enum : RegIndex
+{
+    Rax,
+    Eax = Rax,
+    Ax = Rax,
+    Al = Rax,
 
-        INTREG_RBX,
-        INTREG_EBX = INTREG_RBX,
-        INTREG_BX = INTREG_RBX,
-        INTREG_BL = INTREG_RBX,
+    Rcx,
+    Ecx = Rcx,
+    Cx = Rcx,
+    Cl = Rcx,
 
-        INTREG_RSP,
-        INTREG_ESP = INTREG_RSP,
-        INTREG_SP = INTREG_RSP,
-        INTREG_SPL = INTREG_RSP,
-        INTREG_AH = INTREG_RSP,
+    Rdx,
+    Edx = Rdx,
+    Dx = Rdx,
+    Dl = Rdx,
 
-        INTREG_RBP,
-        INTREG_EBP = INTREG_RBP,
-        INTREG_BP = INTREG_RBP,
-        INTREG_BPL = INTREG_RBP,
-        INTREG_CH = INTREG_RBP,
+    Rbx,
+    Ebx = Rbx,
+    Bx = Rbx,
+    Bl = Rbx,
 
-        INTREG_RSI,
-        INTREG_ESI = INTREG_RSI,
-        INTREG_SI = INTREG_RSI,
-        INTREG_SIL = INTREG_RSI,
-        INTREG_DH = INTREG_RSI,
+    Rsp,
+    Esp = Rsp,
+    Sp = Rsp,
+    Spl = Rsp,
+    Ah = Rsp,
 
-        INTREG_RDI,
-        INTREG_EDI = INTREG_RDI,
-        INTREG_DI = INTREG_RDI,
-        INTREG_DIL = INTREG_RDI,
-        INTREG_BH = INTREG_RDI,
+    Rbp,
+    Ebp = Rbp,
+    Bp = Rbp,
+    Bpl = Rbp,
+    Ch = Rbp,
 
-        INTREG_R8,
-        INTREG_R8D = INTREG_R8,
-        INTREG_R8W = INTREG_R8,
-        INTREG_R8B = INTREG_R8,
+    Rsi,
+    Esi = Rsi,
+    Si = Rsi,
+    Sil = Rsi,
+    Dh = Rsi,
 
-        INTREG_R9,
-        INTREG_R9D = INTREG_R9,
-        INTREG_R9W = INTREG_R9,
-        INTREG_R9B = INTREG_R9,
+    Rdi,
+    Edi = Rdi,
+    Di = Rdi,
+    Dil = Rdi,
+    Bh = Rdi,
 
-        INTREG_R10,
-        INTREG_R10D = INTREG_R10,
-        INTREG_R10W = INTREG_R10,
-        INTREG_R10B = INTREG_R10,
+    R8,
+    R8d = R8,
+    R8w = R8,
+    R8b = R8,
 
-        INTREG_R11,
-        INTREG_R11D = INTREG_R11,
-        INTREG_R11W = INTREG_R11,
-        INTREG_R11B = INTREG_R11,
+    R9,
+    R9d = R9,
+    R9w = R9,
+    R9b = R9,
 
-        INTREG_R12,
-        INTREG_R12D = INTREG_R12,
-        INTREG_R12W = INTREG_R12,
-        INTREG_R12B = INTREG_R12,
+    R10,
+    R10d = R10,
+    R10w = R10,
+    R10b = R10,
 
-        INTREG_R13,
-        INTREG_R13D = INTREG_R13,
-        INTREG_R13W = INTREG_R13,
-        INTREG_R13B = INTREG_R13,
+    R11,
+    R11d = R11,
+    R11w = R11,
+    R11b = R11,
 
-        INTREG_R14,
-        INTREG_R14D = INTREG_R14,
-        INTREG_R14W = INTREG_R14,
-        INTREG_R14B = INTREG_R14,
+    R12,
+    R12d = R12,
+    R12w = R12,
+    R12b = R12,
 
-        INTREG_R15,
-        INTREG_R15D = INTREG_R15,
-        INTREG_R15W = INTREG_R15,
-        INTREG_R15B = INTREG_R15,
+    R13,
+    R13d = R13,
+    R13w = R13,
+    R13b = R13,
 
-        NUM_ARCH_INTREGS,
+    R14,
+    R14d = R14,
+    R14w = R14,
+    R14b = R14,
 
-        INTREG_MICRO_BEGIN = NUM_ARCH_INTREGS,
-        INTREG_T0 = INTREG_MICRO_BEGIN,
-        INTREG_MICRO_END = INTREG_MICRO_BEGIN + NumMicroIntRegs,
+    R15,
+    R15d = R15,
+    R15w = R15,
+    R15b = R15,
 
-        // The lower part of the result of multiplication.
-        INTREG_PRODLOW,
-        // The upper part of the result of multiplication.
-        INTREG_PRODHI,
-        // The quotient from division.
-        INTREG_QUOTIENT,
-        // The remainder from division.
-        INTREG_REMAINDER,
-        // The divisor for division.
-        INTREG_DIVISOR,
-        // The register to use for shift doubles.
-        INTREG_DOUBLEBITS,
+    NumArchRegs,
 
-        NUM_INTREGS,
-    };
+    MicroBegin = NumArchRegs,
+    T0 = MicroBegin,
+    MicroEnd = MicroBegin + NumMicroIntRegs,
 
-    // This needs to be large enough to miss all the other bits of an index.
-    static const IntRegIndex IntFoldBit = (IntRegIndex)(1 << 6);
+    // The lower part of the result of multiplication.
+    Prodlow,
+    // The upper part of the result of multiplication.
+    Prodhi,
+    // The quotient from division.
+    Quotient,
+    // The remainder from division.
+    Remainder,
+    // The divisor for division.
+    Divisor,
+    // The register to use for shift doubles.
+    Doublebits,
 
-    inline static IntRegIndex
-    INTREG_MICRO(int index)
-    {
-        return (IntRegIndex)(INTREG_MICRO_BEGIN + index);
-    }
+    NumRegs,
+};
 
-    inline static IntRegIndex
-    INTREG_FOLDED(int index, int foldBit)
-    {
-        if ((index & 0x1C) == 4 && foldBit)
-            index = (index - 4) | foldBit;
-        return (IntRegIndex)index;
-    }
+} // namespace int_reg
 
-    const int NumIntRegs = NUM_INTREGS;
+// This needs to be large enough to miss all the other bits of an index.
+inline constexpr RegIndex IntFoldBit = 1 << 6;
+
+inline static constexpr RegIndex
+intRegMicro(int index)
+{
+    return int_reg::MicroBegin + index;
+}
+
+inline static constexpr RegIndex
+intRegFolded(RegIndex index, RegIndex foldBit)
+{
+    if ((index & 0x1C) == 4 && foldBit)
+        index = (index - 4) | foldBit;
+    return index;
+}
 
 } // namespace X86ISA
 } // namespace gem5

@@ -56,37 +56,39 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
         base = machInst.sib.base | (machInst.rex.b << 3);
         //In this special case, we don't use a base. The displacement also
         //changes, but that's managed by the decoder.
-        if (machInst.sib.base == INTREG_RBP && machInst.modRM.mod == 0)
-            base = INTREG_T0;
+        if (machInst.sib.base == (RegIndex)int_reg::Rbp &&
+                machInst.modRM.mod == 0)
+            base = int_reg::T0;
         //In -this- special case, we don't use an index.
-        if (index == INTREG_RSP)
-            index = INTREG_T0;
+        if (index == int_reg::Rsp)
+            index = int_reg::T0;
     } else {
         if (machInst.addrSize == 2) {
             unsigned rm = machInst.modRM.rm;
             if (rm <= 3) {
                 scale = 1;
                 if (rm < 2) {
-                    base = INTREG_RBX;
+                    base = int_reg::Rbx;
                 } else {
-                    base = INTREG_RBP;
+                    base = int_reg::Rbp;
                 }
-                index = (rm % 2) ? INTREG_RDI : INTREG_RSI;
+                index = (rm % 2) ? int_reg::Rdi : int_reg::Rsi;
             } else {
                 scale = 0;
                 switch (rm) {
                   case 4:
-                    base = INTREG_RSI;
+                    base = int_reg::Rsi;
                     break;
                   case 5:
-                    base = INTREG_RDI;
+                    base = int_reg::Rdi;
                     break;
                   case 6:
                     // There is a special case when mod is 0 and rm is 6.
-                    base = machInst.modRM.mod == 0 ? INTREG_T0 : INTREG_RBP;
+                    base = machInst.modRM.mod == 0 ? int_reg::T0 :
+                        int_reg::Rbp;
                     break;
                   case 7:
-                    base = INTREG_RBX;
+                    base = int_reg::Rbx;
                     break;
                 }
             }
@@ -96,12 +98,12 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
             if (machInst.modRM.mod == 0 && machInst.modRM.rm == 5) {
                 //Since we need to use a different encoding of this
                 //instruction anyway, just ignore the base in those cases
-                base = INTREG_T0;
+                base = int_reg::T0;
             }
         }
     }
     //Figure out what segment to use.
-    if (base != INTREG_RBP && base != INTREG_RSP) {
+    if (base != int_reg::Rbp && base != int_reg::Rsp) {
         seg = SEGMENT_REG_DS;
     } else {
         seg = SEGMENT_REG_SS;
