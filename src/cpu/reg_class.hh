@@ -93,22 +93,22 @@ class RegClass
     const debug::Flag &debugFlag;
 
   public:
-    RegClass(size_t num_regs, const debug::Flag &debug_flag,
+    constexpr RegClass(size_t num_regs, const debug::Flag &debug_flag,
             size_t reg_bytes=sizeof(RegVal)) :
         _numRegs(num_regs), _regBytes(reg_bytes),
         _regShift(ceilLog2(reg_bytes)), debugFlag(debug_flag)
     {}
-    RegClass(size_t num_regs, RegClassOps &new_ops,
+    constexpr RegClass(size_t num_regs, RegClassOps &new_ops,
             const debug::Flag &debug_flag, size_t reg_bytes=sizeof(RegVal)) :
         RegClass(num_regs, debug_flag, reg_bytes)
     {
         _ops = &new_ops;
     }
 
-    size_t numRegs() const { return _numRegs; }
-    size_t regBytes() const { return _regBytes; }
-    size_t regShift() const { return _regShift; }
-    const debug::Flag &debug() const { return debugFlag; }
+    constexpr size_t numRegs() const { return _numRegs; }
+    constexpr size_t regBytes() const { return _regBytes; }
+    constexpr size_t regShift() const { return _regShift; }
+    constexpr const debug::Flag &debug() const { return debugFlag; }
 
     std::string regName(const RegId &id) const { return _ops->regName(id); }
     std::string
@@ -134,24 +134,33 @@ class RegId
     friend struct std::hash<RegId>;
 
   public:
-    RegId() : RegId(InvalidRegClass, 0) {}
+    constexpr RegId() : RegId(InvalidRegClass, 0) {}
 
-    explicit RegId(RegClassType reg_class, RegIndex reg_idx)
+    constexpr RegId(RegClassType reg_class, RegIndex reg_idx)
         : regClass(reg_class), regIdx(reg_idx), numPinnedWrites(0)
     {}
 
-    bool
+    constexpr operator RegIndex() const
+    {
+        return index();
+    }
+
+    constexpr bool
     operator==(const RegId& that) const
     {
         return regClass == that.classValue() && regIdx == that.index();
     }
 
-    bool operator!=(const RegId& that) const { return !(*this==that); }
+    constexpr bool
+    operator!=(const RegId& that) const
+    {
+        return !(*this==that);
+    }
 
     /** Order operator.
      * The order is required to implement maps with key type RegId
      */
-    bool
+    constexpr bool
     operator<(const RegId& that) const
     {
         return regClass < that.classValue() ||
@@ -161,23 +170,31 @@ class RegId
     /**
      * Return true if this register can be renamed
      */
-    bool
+    constexpr bool
     isRenameable() const
     {
         return regClass != MiscRegClass && regClass != InvalidRegClass;
     }
 
     /** @return true if it is of the specified class. */
-    bool is(RegClassType reg_class) const { return regClass == reg_class; }
+    constexpr bool
+    is(RegClassType reg_class) const
+    {
+        return regClass == reg_class;
+    }
 
     /** Index accessors */
     /** @{ */
-    RegIndex index() const { return regIdx; }
+    constexpr RegIndex index() const { return regIdx; }
 
     /** Class accessor */
-    RegClassType classValue() const { return regClass; }
+    constexpr RegClassType classValue() const { return regClass; }
     /** Return a const char* with the register class name. */
-    const char* className() const { return regClassStrings[regClass]; }
+    constexpr const char*
+    className() const
+    {
+        return regClassStrings[regClass];
+    }
 
     int getNumPinnedWrites() const { return numPinnedWrites; }
     void setNumPinnedWrites(int num_writes) { numPinnedWrites = num_writes; }
