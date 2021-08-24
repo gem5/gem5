@@ -181,14 +181,16 @@ void
 ISA::copyRegsFrom(ThreadContext *src)
 {
     //copy int regs
-    for (int i = 0; i < int_reg::NumRegs; ++i)
-         tc->setIntRegFlat(i, src->readIntRegFlat(i));
+    for (int i = 0; i < int_reg::NumRegs; ++i) {
+        RegId reg(IntRegClass, i);
+        tc->setRegFlat(reg, src->getRegFlat(reg));
+    }
     //copy float regs
     for (int i = 0; i < NumFloatRegs; ++i)
-         tc->setFloatRegFlat(i, src->readFloatRegFlat(i));
+        tc->setFloatRegFlat(i, src->readFloatRegFlat(i));
     //copy condition-code regs
     for (int i = 0; i < NUM_CCREGS; ++i)
-         tc->setCCRegFlat(i, src->readCCRegFlat(i));
+        tc->setCCRegFlat(i, src->readCCRegFlat(i));
     copyMiscRegs(src, tc);
     tc->pcState(src->pcState());
 }

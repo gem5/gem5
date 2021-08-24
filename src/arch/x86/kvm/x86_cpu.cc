@@ -707,7 +707,7 @@ X86KvmCPU::updateKvmStateRegs()
 {
     struct kvm_regs regs;
 
-#define APPLY_IREG(kreg, mreg) regs.kreg = tc->readIntReg(mreg)
+#define APPLY_IREG(kreg, mreg) regs.kreg = tc->getReg(mreg)
     FOREACH_IREG();
 #undef APPLY_IREG
 
@@ -985,7 +985,7 @@ void
 X86KvmCPU::updateThreadContextRegs(const struct kvm_regs &regs,
                                    const struct kvm_sregs &sregs)
 {
-#define APPLY_IREG(kreg, mreg) tc->setIntReg(mreg, regs.kreg)
+#define APPLY_IREG(kreg, mreg) tc->setReg(mreg, regs.kreg)
 
     FOREACH_IREG();
 

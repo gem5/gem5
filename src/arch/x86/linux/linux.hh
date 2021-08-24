@@ -71,7 +71,7 @@ class X86Linux : public Linux
         }
 
         if (stack)
-            ctc->setIntReg(X86ISA::int_reg::Rsp, stack);
+            ctc->setReg(X86ISA::int_reg::Rsp, stack);
     }
 
     class SyscallABI {};
@@ -88,7 +88,7 @@ struct Result<ABI, SyscallReturn,
     static void
     store(ThreadContext *tc, const SyscallReturn &ret)
     {
-        tc->setIntReg(X86ISA::int_reg::Rax, ret.encodedValue());
+        tc->setReg(X86ISA::int_reg::Rax, ret.encodedValue());
     }
 };
 

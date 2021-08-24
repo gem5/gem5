@@ -115,7 +115,7 @@ EmuLinux::syscall(ThreadContext *tc)
     // This will move into the base SEWorkload function at some point.
     process->Process::syscall(tc);
 
-    RegVal rax = tc->readIntReg(int_reg::Rax);
+    RegVal rax = tc->getReg(int_reg::Rax);
     if (dynamic_cast<X86_64Process *>(process)) {
         syscallDescs64.get(rax)->doSyscall(tc);
     } else if (auto *proc32 = dynamic_cast<I386Process *>(process)) {

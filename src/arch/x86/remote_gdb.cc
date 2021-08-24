@@ -125,22 +125,22 @@ void
 RemoteGDB::AMD64GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getRegs in remotegdb \n");
-    r.rax = context->readIntReg(int_reg::Rax);
-    r.rbx = context->readIntReg(int_reg::Rbx);
-    r.rcx = context->readIntReg(int_reg::Rcx);
-    r.rdx = context->readIntReg(int_reg::Rdx);
-    r.rsi = context->readIntReg(int_reg::Rsi);
-    r.rdi = context->readIntReg(int_reg::Rdi);
-    r.rbp = context->readIntReg(int_reg::Rbp);
-    r.rsp = context->readIntReg(int_reg::Rsp);
-    r.r8 = context->readIntReg(int_reg::R8);
-    r.r9 = context->readIntReg(int_reg::R9);
-    r.r10 = context->readIntReg(int_reg::R10);
-    r.r11 = context->readIntReg(int_reg::R11);
-    r.r12 = context->readIntReg(int_reg::R12);
-    r.r13 = context->readIntReg(int_reg::R13);
-    r.r14 = context->readIntReg(int_reg::R14);
-    r.r15 = context->readIntReg(int_reg::R15);
+    r.rax = context->getReg(int_reg::Rax);
+    r.rbx = context->getReg(int_reg::Rbx);
+    r.rcx = context->getReg(int_reg::Rcx);
+    r.rdx = context->getReg(int_reg::Rdx);
+    r.rsi = context->getReg(int_reg::Rsi);
+    r.rdi = context->getReg(int_reg::Rdi);
+    r.rbp = context->getReg(int_reg::Rbp);
+    r.rsp = context->getReg(int_reg::Rsp);
+    r.r8 = context->getReg(int_reg::R8);
+    r.r9 = context->getReg(int_reg::R9);
+    r.r10 = context->getReg(int_reg::R10);
+    r.r11 = context->getReg(int_reg::R11);
+    r.r12 = context->getReg(int_reg::R12);
+    r.r13 = context->getReg(int_reg::R13);
+    r.r14 = context->getReg(int_reg::R14);
+    r.r15 = context->getReg(int_reg::R15);
     r.rip = context->pcState().instAddr();
     r.eflags = context->readMiscRegNoEffect(MISCREG_RFLAGS);
     r.cs = context->readMiscRegNoEffect(MISCREG_CS);
@@ -155,14 +155,14 @@ void
 RemoteGDB::X86GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getRegs in remotegdb \n");
-    r.eax = context->readIntReg(int_reg::Rax);
-    r.ecx = context->readIntReg(int_reg::Rcx);
-    r.edx = context->readIntReg(int_reg::Rdx);
-    r.ebx = context->readIntReg(int_reg::Rbx);
-    r.esp = context->readIntReg(int_reg::Rsp);
-    r.ebp = context->readIntReg(int_reg::Rbp);
-    r.esi = context->readIntReg(int_reg::Rsi);
-    r.edi = context->readIntReg(int_reg::Rdi);
+    r.eax = context->getReg(int_reg::Rax);
+    r.ecx = context->getReg(int_reg::Rcx);
+    r.edx = context->getReg(int_reg::Rdx);
+    r.ebx = context->getReg(int_reg::Rbx);
+    r.esp = context->getReg(int_reg::Rsp);
+    r.ebp = context->getReg(int_reg::Rbp);
+    r.esi = context->getReg(int_reg::Rsi);
+    r.edi = context->getReg(int_reg::Rdi);
     r.eip = context->pcState().instAddr();
     r.eflags = context->readMiscRegNoEffect(MISCREG_RFLAGS);
     r.cs = context->readMiscRegNoEffect(MISCREG_CS);
@@ -177,22 +177,22 @@ void
 RemoteGDB::AMD64GdbRegCache::setRegs(ThreadContext *context) const
 {
     DPRINTF(GDBAcc, "setRegs in remotegdb \n");
-    context->setIntReg(int_reg::Rax, r.rax);
-    context->setIntReg(int_reg::Rbx, r.rbx);
-    context->setIntReg(int_reg::Rcx, r.rcx);
-    context->setIntReg(int_reg::Rdx, r.rdx);
-    context->setIntReg(int_reg::Rsi, r.rsi);
-    context->setIntReg(int_reg::Rdi, r.rdi);
-    context->setIntReg(int_reg::Rbp, r.rbp);
-    context->setIntReg(int_reg::Rsp, r.rsp);
-    context->setIntReg(int_reg::R8, r.r8);
-    context->setIntReg(int_reg::R9, r.r9);
-    context->setIntReg(int_reg::R10, r.r10);
-    context->setIntReg(int_reg::R11, r.r11);
-    context->setIntReg(int_reg::R12, r.r12);
-    context->setIntReg(int_reg::R13, r.r13);
-    context->setIntReg(int_reg::R14, r.r14);
-    context->setIntReg(int_reg::R15, r.r15);
+    context->setReg(int_reg::Rax, r.rax);
+    context->setReg(int_reg::Rbx, r.rbx);
+    context->setReg(int_reg::Rcx, r.rcx);
+    context->setReg(int_reg::Rdx, r.rdx);
+    context->setReg(int_reg::Rsi, r.rsi);
+    context->setReg(int_reg::Rdi, r.rdi);
+    context->setReg(int_reg::Rbp, r.rbp);
+    context->setReg(int_reg::Rsp, r.rsp);
+    context->setReg(int_reg::R8, r.r8);
+    context->setReg(int_reg::R9, r.r9);
+    context->setReg(int_reg::R10, r.r10);
+    context->setReg(int_reg::R11, r.r11);
+    context->setReg(int_reg::R12, r.r12);
+    context->setReg(int_reg::R13, r.r13);
+    context->setReg(int_reg::R14, r.r14);
+    context->setReg(int_reg::R15, r.r15);
     context->pcState(r.rip);
     context->setMiscReg(MISCREG_RFLAGS, r.eflags);
     if (r.cs != context->readMiscRegNoEffect(MISCREG_CS))
@@ -213,14 +213,14 @@ void
 RemoteGDB::X86GdbRegCache::setRegs(ThreadContext *context) const
 {
     DPRINTF(GDBAcc, "setRegs in remotegdb \n");
-    context->setIntReg(int_reg::Rax, r.eax);
-    context->setIntReg(int_reg::Rcx, r.ecx);
-    context->setIntReg(int_reg::Rdx, r.edx);
-    context->setIntReg(int_reg::Rbx, r.ebx);
-    context->setIntReg(int_reg::Rsp, r.esp);
-    context->setIntReg(int_reg::Rbp, r.ebp);
-    context->setIntReg(int_reg::Rsi, r.esi);
-    context->setIntReg(int_reg::Rdi, r.edi);
+    context->setReg(int_reg::Rax, r.eax);
+    context->setReg(int_reg::Rcx, r.ecx);
+    context->setReg(int_reg::Rdx, r.edx);
+    context->setReg(int_reg::Rbx, r.ebx);
+    context->setReg(int_reg::Rsp, r.esp);
+    context->setReg(int_reg::Rbp, r.ebp);
+    context->setReg(int_reg::Rsi, r.esi);
+    context->setReg(int_reg::Rdi, r.edi);
     context->pcState(r.eip);
     context->setMiscReg(MISCREG_RFLAGS, r.eflags);
     if (r.cs != context->readMiscRegNoEffect(MISCREG_CS))
