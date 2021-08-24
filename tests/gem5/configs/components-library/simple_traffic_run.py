@@ -25,10 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This script creates a simple traffic generator.
-
-The simulator starts with a linear traffic generator, and ends with a random
-traffic generator.
+This script creates a simple traffic generator. The simulator starts with a
+linear traffic generator, and ends with a random traffic generator. It is used
+for testing purposes.
 """
 
 import m5
@@ -37,6 +36,8 @@ from m5.objects import Root
 
 import sys
 import os
+import argparse
+import importlib
 
 # This is a lame hack to get the imports working correctly.
 # TODO: This needs fixed.
@@ -52,15 +53,40 @@ sys.path.append(
 
 from components_library.boards.test_board import TestBoard
 from components_library.cachehierarchies.classic.no_cache import NoCache
-from components_library.memory.single_channel import SingleChannelDDR3_1600
+from components_library.memory.single_channel import *
 from components_library.processors.complex_generator import ComplexGenerator
+
+parser = argparse.ArgumentParser(
+    description="A traffic generator that can be used to test a gem5 "
+    "memory component."
+)
+
+parser.add_argument(
+    "module",
+    type=str,
+    help="The python module to import.",
+)
+
+parser.add_argument(
+    "mem_class",
+    type=str,
+    help="The memory class to import and instantiate.",
+)
+
+parser.add_argument(
+    "arguments",
+    nargs="*",
+    help="The arguments needed to instantiate the memory class.",
+)
+
+args = parser.parse_args()
 
 # This setup does not require a cache heirarchy. We therefore use the `NoCache`
 # setup.
 cache_hierarchy = NoCache()
 
-# We test a Single Channel DDR3_1600.
-memory = SingleChannelDDR3_1600(size="512MiB")
+memory_class = getattr(importlib.import_module(args.module), args.mem_class)
+memory = memory_class(*args.arguments)
 
 cmxgen = ComplexGenerator(num_cores=1)
 cmxgen.add_linear(rate="100GB/s")
