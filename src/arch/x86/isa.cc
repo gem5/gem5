@@ -151,7 +151,7 @@ ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string)
     _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to X86
     _regClasses.emplace_back(2, debug::IntRegs); // Not applicable to X86
     _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to X86
-    _regClasses.emplace_back(NUM_CCREGS, debug::CCRegs);
+    _regClasses.emplace_back(cc_reg::NumRegs, debug::CCRegs);
     _regClasses.emplace_back(misc_reg::NumRegs, debug::MiscRegs);
 
     clear();
@@ -189,8 +189,10 @@ ISA::copyRegsFrom(ThreadContext *src)
     for (int i = 0; i < NumFloatRegs; ++i)
         tc->setFloatRegFlat(i, src->readFloatRegFlat(i));
     //copy condition-code regs
-    for (int i = 0; i < NUM_CCREGS; ++i)
-        tc->setCCRegFlat(i, src->readCCRegFlat(i));
+    for (int i = 0; i < cc_reg::NumRegs; ++i) {
+        RegId reg(CCRegClass, i);
+        tc->setRegFlat(reg, src->getRegFlat(reg));
+    }
     copyMiscRegs(src, tc);
     tc->pcState(src->pcState());
 }

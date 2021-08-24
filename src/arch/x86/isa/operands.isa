@@ -175,11 +175,11 @@ def operands {{
                           (None, None, 'IsControl'), 50),
         # These registers hold the condition code portion of the flag
         # register. The nccFlagBits version holds the rest.
-        'ccFlagBits':    CCReg('X86ISA::CCREG_ZAPS', 60),
-        'cfofBits':      CCReg('X86ISA::CCREG_CFOF', 61),
-        'dfBit':         CCReg('X86ISA::CCREG_DF', 62),
-        'ecfBit':        CCReg('X86ISA::CCREG_ECF', 63),
-        'ezfBit':        CCReg('X86ISA::CCREG_EZF', 64),
+        'ccFlagBits':    CCReg('X86ISA::cc_reg::Zaps', 60),
+        'cfofBits':      CCReg('X86ISA::cc_reg::Cfof', 61),
+        'dfBit':         CCReg('X86ISA::cc_reg::Df', 62),
+        'ecfBit':        CCReg('X86ISA::cc_reg::Ecf', 63),
+        'ezfBit':        CCReg('X86ISA::cc_reg::Ezf', 64),
 
         # These Pred registers are to be used where reading the portions of
         # condition code registers is possibly optional, depending on how the
@@ -196,21 +196,21 @@ def operands {{
         # would be retained, the write predicate checks if any of the bits
         # are being written.
 
-        'PredccFlagBits': CCRegPred('X86ISA::CCREG_ZAPS', 60,
+        'PredccFlagBits': CCRegPred('X86ISA::cc_reg::Zaps', 60,
                 read_predicate='(ext & X86ISA::CcFlagMask) != '
                 'X86ISA::CcFlagMask && (ext & X86ISA::CcFlagMask) != 0',
                 write_predicate='(ext & X86ISA::CcFlagMask) != 0'),
-        'PredcfofBits':  CCRegPred('X86ISA::CCREG_CFOF', 61,
+        'PredcfofBits':  CCRegPred('X86ISA::cc_reg::Cfof', 61,
                 read_predicate='(ext & X86ISA::CfofMask) '
                 '!= X86ISA::CfofMask && (ext & X86ISA::CfofMask) != 0',
                 write_predicate='(ext & X86ISA::CfofMask) != 0'),
-        'PreddfBit':     CCRegPred('X86ISA::CCREG_DF', 62,
+        'PreddfBit':     CCRegPred('X86ISA::cc_reg::Df', 62,
                 read_predicate='false',
                 write_predicate='(ext & X86ISA::DFBit) != 0'),
-        'PredecfBit':    CCRegPred('X86ISA::CCREG_ECF', 63,
+        'PredecfBit':    CCRegPred('X86ISA::cc_reg::Ecf', 63,
                 read_predicate='false',
                 write_predicate='(ext & X86ISA::ECFBit) != 0'),
-        'PredezfBit':    CCRegPred('X86ISA::CCREG_EZF', 64,
+        'PredezfBit':    CCRegPred('X86ISA::cc_reg::Ezf', 64,
                 read_predicate='false',
                 write_predicate='(ext & X86ISA::EZFBit) != 0'),
 
