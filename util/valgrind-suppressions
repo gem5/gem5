@@ -1,117 +1,60 @@
 {
    python error
    Memcheck:Cond
-   fun:PyObject_Free
+   obj:*libpython3*
 }
 {
    python error
    Memcheck:Addr1
-   fun:PyObject_Free
+   obj:*libpython3*
 }
 {
    python error
    Memcheck:Addr2
-   fun:PyObject_Free
+   obj:*libpython3*
 }
 {
    python error
    Memcheck:Addr4
-   fun:PyObject_Free
+   obj:*libpython3*
 }
 {
    python error
    Memcheck:Addr8
-   fun:PyObject_Free
+   obj:*libpython3*
 }
 {
    python error
    Memcheck:Addr16
-   fun:PyObject_Free
+   obj:*libpython3*
 }
 {
    python error
    Memcheck:Value1
-   fun:PyObject_Free
+   obj:*libpython3*
 }
 {
    python error
    Memcheck:Value2
-   fun:PyObject_Free
+   obj:*libpython3*
 }
 {
    python error
    Memcheck:Value4
-   fun:PyObject_Free
+   obj:*libpython3*
 }
 {
    python error
    Memcheck:Value8
-   fun:PyObject_Free
+   obj:*libpython3*
 }
 {
    python error
    Memcheck:Value16
-   fun:PyObject_Free
-}
-
-{
-   python error
-   Memcheck:Cond
-   fun:PyObject_Realloc
-}
-{
-   python error
-   Memcheck:Addr1
-   fun:PyObject_Realloc
-}
-{
-   python error
-   Memcheck:Addr2
-   fun:PyObject_Realloc
-}
-{
-   python error
-   Memcheck:Addr4
-   fun:PyObject_Realloc
-}
-{
-   python error
-   Memcheck:Addr8
-   fun:PyObject_Realloc
-}
-{
-   python error
-   Memcheck:Addr16
-   fun:PyObject_Realloc
-}
-{
-   python error
-   Memcheck:Value1
-   fun:PyObject_Realloc
-}
-{
-   python error
-   Memcheck:Value2
-   fun:PyObject_Realloc
-}
-{
-   python error
-   Memcheck:Value4
-   fun:PyObject_Realloc
-}
-{
-   python error
-   Memcheck:Value8
-   fun:PyObject_Realloc
-}
-{
-   python error
-   Memcheck:Value16
-   fun:PyObject_Realloc
+   obj:*libpython3*
 }
 {
    zlib error
    Memcheck:Cond
    fun:inflateReset2
 }
-
