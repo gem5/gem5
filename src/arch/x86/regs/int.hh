@@ -41,6 +41,7 @@
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 #include "base/logging.hh"
+#include "cpu/reg_class.hh"
 
 namespace gem5
 {
@@ -66,129 +67,99 @@ namespace int_reg
 
 enum : RegIndex
 {
-    Rax,
-    Eax = Rax,
-    Ax = Rax,
-    Al = Rax,
-
-    Rcx,
-    Ecx = Rcx,
-    Cx = Rcx,
-    Cl = Rcx,
-
-    Rdx,
-    Edx = Rdx,
-    Dx = Rdx,
-    Dl = Rdx,
-
-    Rbx,
-    Ebx = Rbx,
-    Bx = Rbx,
-    Bl = Rbx,
-
-    Rsp,
-    Esp = Rsp,
-    Sp = Rsp,
-    Spl = Rsp,
-    Ah = Rsp,
-
-    Rbp,
-    Ebp = Rbp,
-    Bp = Rbp,
-    Bpl = Rbp,
-    Ch = Rbp,
-
-    Rsi,
-    Esi = Rsi,
-    Si = Rsi,
-    Sil = Rsi,
-    Dh = Rsi,
-
-    Rdi,
-    Edi = Rdi,
-    Di = Rdi,
-    Dil = Rdi,
-    Bh = Rdi,
-
-    R8,
-    R8d = R8,
-    R8w = R8,
-    R8b = R8,
-
-    R9,
-    R9d = R9,
-    R9w = R9,
-    R9b = R9,
-
-    R10,
-    R10d = R10,
-    R10w = R10,
-    R10b = R10,
-
-    R11,
-    R11d = R11,
-    R11w = R11,
-    R11b = R11,
-
-    R12,
-    R12d = R12,
-    R12w = R12,
-    R12b = R12,
-
-    R13,
-    R13d = R13,
-    R13w = R13,
-    R13b = R13,
-
-    R14,
-    R14d = R14,
-    R14w = R14,
-    R14b = R14,
-
-    R15,
-    R15d = R15,
-    R15w = R15,
-    R15b = R15,
+    _RaxIdx,
+    _RcxIdx,
+    _RdxIdx,
+    _RbxIdx,
+    _RspIdx,
+    _RbpIdx,
+    _RsiIdx,
+    _RdiIdx,
+    _R8Idx,
+    _R9Idx,
+    _R10Idx,
+    _R11Idx,
+    _R12Idx,
+    _R13Idx,
+    _R14Idx,
+    _R15Idx,
 
     NumArchRegs,
-
     MicroBegin = NumArchRegs,
-    T0 = MicroBegin,
+    _T0Idx = MicroBegin,
     MicroEnd = MicroBegin + NumMicroIntRegs,
 
-    // The lower part of the result of multiplication.
-    Prodlow,
-    // The upper part of the result of multiplication.
-    Prodhi,
-    // The quotient from division.
-    Quotient,
-    // The remainder from division.
-    Remainder,
-    // The divisor for division.
-    Divisor,
-    // The register to use for shift doubles.
-    Doublebits,
+    _ProdlowIdx,
+    _ProdhiIdx,
+    _QuotientIdx,
+    _RemainderIdx,
+    _DivisorIdx,
+    _DoublebitsIdx,
 
-    NumRegs,
+    NumRegs
 };
+
+inline constexpr RegId
+    Rax(IntRegClass, _RaxIdx),
+    Rcx(IntRegClass, _RcxIdx),
+    Rdx(IntRegClass, _RdxIdx),
+    Rbx(IntRegClass, _RbxIdx),
+    Rsp(IntRegClass, _RspIdx),
+    Rbp(IntRegClass, _RbpIdx),
+    Rsi(IntRegClass, _RsiIdx),
+    Rdi(IntRegClass, _RdiIdx),
+    R8(IntRegClass, _R8Idx),
+    R9(IntRegClass, _R9Idx),
+    R10(IntRegClass, _R10Idx),
+    R11(IntRegClass, _R11Idx),
+    R12(IntRegClass, _R12Idx),
+    R13(IntRegClass, _R13Idx),
+    R14(IntRegClass, _R14Idx),
+    R15(IntRegClass, _R15Idx),
+    T0(IntRegClass, _T0Idx),
+    Prodlow(IntRegClass, _ProdlowIdx),
+    Prodhi(IntRegClass, _ProdhiIdx),
+    Quotient(IntRegClass, _QuotientIdx),
+    Remainder(IntRegClass, _RemainderIdx),
+    Divisor(IntRegClass, _DivisorIdx),
+    Doublebits(IntRegClass, _DoublebitsIdx);
+
+// Aliases for other register sizes.
+inline constexpr auto
+    &Eax = Rax, &Ax = Rax, &Al = Rax,
+    &Ecx = Rcx, &Cx = Rcx, &Cl = Rcx,
+    &Edx = Rdx, &Dx = Rdx, &Dl = Rdx,
+    &Ebx = Rbx, &Bx = Rbx, &Bl = Rbx,
+    &Esp = Rsp, &Sp = Rsp, &Spl = Rsp, &Ah = Rsp,
+    &Ebp = Rbp, &Bp = Rbp, &Bpl = Rbp, &Ch = Rbp,
+    &Esi = Rsi, &Si = Rsi, &Sil = Rsi, &Dh = Rsi,
+    &Edi = Rdi, &Di = Rdi, &Dil = Rdi, &Bh = Rdi,
+    &R8d = R8, &R8w = R8, &R8b = R8,
+    &R9d = R9, &R9w = R9, &R9b = R9,
+    &R10d = R10, &R10w = R10, &R10b = R10,
+    &R11d = R11, &R11w = R11, &R11b = R11,
+    &R12d = R12, &R12w = R12, &R12b = R12,
+    &R13d = R13, &R13w = R13, &R13b = R13,
+    &R14d = R14, &R14w = R14, &R14b = R14,
+    &R15d = R15, &R15w = R15, &R15b = R15;
 
 } // namespace int_reg
 
 // This needs to be large enough to miss all the other bits of an index.
 inline constexpr RegIndex IntFoldBit = 1 << 6;
 
-inline static constexpr RegIndex
+inline static constexpr RegId
 intRegMicro(int index)
 {
-    return int_reg::MicroBegin + index;
+    return RegId(IntRegClass, int_reg::MicroBegin + index);
 }
 
-inline static constexpr RegIndex
+inline static constexpr RegId
 intRegFolded(RegIndex index, RegIndex foldBit)
 {
     if ((index & 0x1C) == 4 && foldBit)
         index = (index - 4) | foldBit;
-    return index;
+    return RegId(IntRegClass, index);
 }
 
 } // namespace X86ISA

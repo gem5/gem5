@@ -53,8 +53,8 @@ namespace X86ISA
         RegIndex regm;
         SegmentRegIndex seg;
         uint8_t scale;
-        RegIndex index;
-        RegIndex base;
+        RegId index;
+        RegId base;
         int dataSize;
         int addressSize;
         int stackSize;
