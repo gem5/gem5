@@ -147,7 +147,7 @@ output exec {{
     bool
     isDspEnabled(ExecContext *xc)
     {
-        return !FullSystem || bits(xc->readMiscReg(MISCREG_STATUS), 24);
+        return !FullSystem || bits(xc->readMiscReg(misc_reg::Status), 24);
     }
 }};
 
@@ -155,7 +155,7 @@ output exec {{
     bool
     isDspPresent(ExecContext *xc)
     {
-        return !FullSystem || bits(xc->readMiscReg(MISCREG_CONFIG3), 10);
+        return !FullSystem || bits(xc->readMiscReg(misc_reg::Config3), 10);
     }
 }};
 

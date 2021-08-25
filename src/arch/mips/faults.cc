@@ -100,32 +100,32 @@ void
 MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
 {
     // modify SRS Ctl - Save CSS, put ESS into CSS
-    StatusReg status = tc->readMiscReg(MISCREG_STATUS);
+    StatusReg status = tc->readMiscReg(misc_reg::Status);
     if (status.exl != 1 && status.bev != 1) {
         // SRS Ctl is modified only if Status_EXL and Status_BEV are not set
-        SRSCtlReg srsCtl = tc->readMiscReg(MISCREG_SRSCTL);
+        SRSCtlReg srsCtl = tc->readMiscReg(misc_reg::Srsctl);
         srsCtl.pss = srsCtl.css;
         srsCtl.css = srsCtl.ess;
-        tc->setMiscRegNoEffect(MISCREG_SRSCTL, srsCtl);
+        tc->setMiscRegNoEffect(misc_reg::Srsctl, srsCtl);
     }
 
     // set EXL bit (don't care if it is already set!)
     status.exl = 1;
-    tc->setMiscRegNoEffect(MISCREG_STATUS, status);
+    tc->setMiscRegNoEffect(misc_reg::Status, status);
 
     // write EPC
     auto pc = tc->pcState().as<PCState>();
     DPRINTF(MipsPRA, "PC: %s\n", pc);
     bool delay_slot = pc.pc() + sizeof(MachInst) != pc.npc();
-    tc->setMiscRegNoEffect(MISCREG_EPC,
+    tc->setMiscRegNoEffect(misc_reg::Epc,
             pc.pc() - (delay_slot ? sizeof(MachInst) : 0));
 
     // Set Cause_EXCCODE field
-    CauseReg cause = tc->readMiscReg(MISCREG_CAUSE);
+    CauseReg cause = tc->readMiscReg(misc_reg::Cause);
     cause.excCode = excCode;
     cause.bd = delay_slot ? 1 : 0;
     cause.ce = 0;
-    tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
+    tc->setMiscRegNoEffect(misc_reg::Cause, cause);
 }
 
 void
@@ -152,9 +152,9 @@ ResetFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     }
 
     // Set Coprocessor 1 (Floating Point) To Usable
-    StatusReg status = tc->readMiscRegNoEffect(MISCREG_STATUS);
+    StatusReg status = tc->readMiscRegNoEffect(misc_reg::Status);
     status.cu.cu1 = 1;
-    tc->setMiscReg(MISCREG_STATUS, status);
+    tc->setMiscReg(misc_reg::Status, status);
 }
 
 void

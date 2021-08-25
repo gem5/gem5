@@ -79,15 +79,15 @@ struct Result<MipsISA::SEWorkload::SyscallABI, SyscallReturn>
     {
         if (ret.successful()) {
             // no error
-            tc->setIntReg(MipsISA::SyscallSuccessReg, 0);
-            tc->setIntReg(MipsISA::ReturnValueReg, ret.returnValue());
+            tc->setReg(MipsISA::int_reg::SyscallSuccess, (RegVal)0);
+            tc->setReg(MipsISA::int_reg::V0, ret.returnValue());
         } else {
             // got an error, return details
-            tc->setIntReg(MipsISA::SyscallSuccessReg, (uint32_t)(-1));
-            tc->setIntReg(MipsISA::ReturnValueReg, ret.errnoValue());
+            tc->setReg(MipsISA::int_reg::SyscallSuccess, (uint32_t)(-1));
+            tc->setReg(MipsISA::int_reg::V0, ret.errnoValue());
         }
         if (ret.count() > 1)
-            tc->setIntReg(MipsISA::SyscallPseudoReturnReg, ret.value2());
+            tc->setReg(MipsISA::int_reg::V1, ret.value2());
     }
 };
 

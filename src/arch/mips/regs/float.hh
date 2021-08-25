@@ -34,27 +34,97 @@
 
 namespace gem5
 {
-
 namespace MipsISA
 {
-
-// Constants Related to the number of registers
-const int NumFloatArchRegs = 32;
-const int NumFloatSpecialRegs = 5;
-
-const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;//
-
-const uint32_t MIPS32_QNAN = 0x7fbfffff;
-const uint64_t MIPS64_QNAN = 0x7ff7ffffffffffffULL;
+namespace float_reg
+{
 
 enum FPControlRegNums
 {
-   FLOATREG_FIR = NumFloatArchRegs,
-   FLOATREG_FCCR,
-   FLOATREG_FEXR,
-   FLOATREG_FENR,
-   FLOATREG_FCSR
+    _F0Idx,
+    _F1Idx,
+    _F2Idx,
+    _F3Idx,
+    _F4Idx,
+    _F5Idx,
+    _F6Idx,
+    _F7Idx,
+    _F8Idx,
+    _F9Idx,
+    _F10Idx,
+    _F11Idx,
+    _F12Idx,
+    _F13Idx,
+    _F14Idx,
+    _F15Idx,
+    _F16Idx,
+    _F17Idx,
+    _F18Idx,
+    _F19Idx,
+    _F20Idx,
+    _F21Idx,
+    _F22Idx,
+    _F23Idx,
+    _F24Idx,
+    _F25Idx,
+    _F26Idx,
+    _F27Idx,
+    _F28Idx,
+    _F29Idx,
+    _F30Idx,
+    _F31Idx,
+    NumArchRegs,
+
+    _FirIdx = NumArchRegs,
+    _FccrIdx,
+    _FexrIdx,
+    _FenrIdx,
+    _FcsrIdx,
+
+    NumRegs,
 };
+
+inline constexpr RegId
+    F0(FloatRegClass, _F0Idx),
+    F1(FloatRegClass, _F1Idx),
+    F2(FloatRegClass, _F2Idx),
+    F3(FloatRegClass, _F3Idx),
+    F4(FloatRegClass, _F4Idx),
+    F5(FloatRegClass, _F5Idx),
+    F6(FloatRegClass, _F6Idx),
+    F7(FloatRegClass, _F7Idx),
+    F8(FloatRegClass, _F8Idx),
+    F9(FloatRegClass, _F9Idx),
+    F10(FloatRegClass, _F10Idx),
+    F11(FloatRegClass, _F11Idx),
+    F12(FloatRegClass, _F12Idx),
+    F13(FloatRegClass, _F13Idx),
+    F14(FloatRegClass, _F14Idx),
+    F15(FloatRegClass, _F15Idx),
+    F16(FloatRegClass, _F16Idx),
+    F17(FloatRegClass, _F17Idx),
+    F18(FloatRegClass, _F18Idx),
+    F19(FloatRegClass, _F19Idx),
+    F20(FloatRegClass, _F20Idx),
+    F21(FloatRegClass, _F21Idx),
+    F22(FloatRegClass, _F22Idx),
+    F23(FloatRegClass, _F23Idx),
+    F24(FloatRegClass, _F24Idx),
+    F25(FloatRegClass, _F25Idx),
+    F26(FloatRegClass, _F26Idx),
+    F27(FloatRegClass, _F27Idx),
+    F28(FloatRegClass, _F28Idx),
+    F29(FloatRegClass, _F29Idx),
+    F30(FloatRegClass, _F30Idx),
+    F31(FloatRegClass, _F31Idx),
+
+    Fir(FloatRegClass, _FirIdx),
+    Fccr(FloatRegClass, _FccrIdx),
+    Fexr(FloatRegClass, _FexrIdx),
+    Fenr(FloatRegClass, _FenrIdx),
+    Fcsr(FloatRegClass, _FcsrIdx);
+
+} // namespace float_reg
 
 enum FCSRBits
 {
@@ -72,6 +142,9 @@ enum FCSRFields
     Enable_Field = 6,
     Cause_Field = 11
 };
+
+const uint32_t MIPS32_QNAN = 0x7fbfffff;
+const uint64_t MIPS64_QNAN = 0x7ff7ffffffffffffULL;
 
 } // namespace MipsISA
 } // namespace gem5

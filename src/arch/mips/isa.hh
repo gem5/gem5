@@ -137,7 +137,7 @@ namespace MipsISA
         // and if necessary alert the CPU
         void updateCPU(BaseCPU *cpu);
 
-        static std::string miscRegNames[MISCREG_NUMREGS];
+        static std::string miscRegNames[misc_reg::NumRegs];
 
       public:
         ISA(const Params &p);
@@ -156,8 +156,8 @@ namespace MipsISA
         bool
         inUserMode() const override
         {
-            RegVal Stat = readMiscRegNoEffect(MISCREG_STATUS);
-            RegVal Dbg = readMiscRegNoEffect(MISCREG_DEBUG);
+            RegVal Stat = readMiscRegNoEffect(misc_reg::Status);
+            RegVal Dbg = readMiscRegNoEffect(misc_reg::Debug);
 
             if (// EXL, ERL or CU0 set, CP0 accessible
                 (Stat & 0x10000006) == 0 &&

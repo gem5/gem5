@@ -89,9 +89,9 @@ class MipsFaultBase : public FaultBase
     virtual ExcCode code() const = 0;
     virtual FaultVect base(ThreadContext *tc) const
     {
-        StatusReg status = tc->readMiscReg(MISCREG_STATUS);
+        StatusReg status = tc->readMiscReg(misc_reg::Status);
         if (!status.bev)
-            return tc->readMiscReg(MISCREG_EBASE);
+            return tc->readMiscReg(misc_reg::Ebase);
         else
             return 0xbfc00200;
     }
@@ -167,9 +167,9 @@ class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
     {
         MipsFault<CoprocessorUnusableFault>::invoke(tc, inst);
         if (FullSystem) {
-            CauseReg cause = tc->readMiscReg(MISCREG_CAUSE);
+            CauseReg cause = tc->readMiscReg(misc_reg::Cause);
             cause.ce = coProcID;
-            tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
+            tc->setMiscRegNoEffect(misc_reg::Cause, cause);
         }
     }
 };
@@ -180,7 +180,7 @@ class InterruptFault : public MipsFault<InterruptFault>
     FaultVect
     offset(ThreadContext *tc) const
     {
-        CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
+        CauseReg cause = tc->readMiscRegNoEffect(misc_reg::Cause);
         // offset 0x200 for release 2, 0x180 for release 1.
         return cause.iv ? 0x200 : 0x180;
     }
@@ -202,7 +202,7 @@ class AddressFault : public MipsFault<T>
     {
         MipsFault<T>::invoke(tc, inst);
         if (FullSystem)
-            tc->setMiscRegNoEffect(MISCREG_BADVADDR, vaddr);
+            tc->setMiscRegNoEffect(misc_reg::Badvaddr, vaddr);
     }
 };
 
@@ -237,16 +237,16 @@ class TlbFault : public AddressFault<T>
     {
         this->setExceptionState(tc, excCode);
 
-        tc->setMiscRegNoEffect(MISCREG_BADVADDR, this->vaddr);
-        EntryHiReg entryHi = tc->readMiscReg(MISCREG_ENTRYHI);
+        tc->setMiscRegNoEffect(misc_reg::Badvaddr, this->vaddr);
+        EntryHiReg entryHi = tc->readMiscReg(misc_reg::Entryhi);
         entryHi.asid = this->asid;
         entryHi.vpn2 = this->vpn >> 2;
         entryHi.vpn2x = this->vpn & 0x3;
-        tc->setMiscRegNoEffect(MISCREG_ENTRYHI, entryHi);
+        tc->setMiscRegNoEffect(misc_reg::Entryhi, entryHi);
 
-        ContextReg context = tc->readMiscReg(MISCREG_CONTEXT);
+        ContextReg context = tc->readMiscReg(misc_reg::Context);
         context.badVPN2 = this->vpn >> 2;
-        tc->setMiscRegNoEffect(MISCREG_CONTEXT, context);
+        tc->setMiscRegNoEffect(misc_reg::Context, context);
     }
 
     void
@@ -280,7 +280,7 @@ class TlbRefillFault : public TlbFault<TlbRefillFault>
     FaultVect
     offset(ThreadContext *tc) const
     {
-        StatusReg status = tc->readMiscReg(MISCREG_STATUS);
+        StatusReg status = tc->readMiscReg(misc_reg::Status);
         return status.exl ? 0x180 : 0x000;
     }
 };

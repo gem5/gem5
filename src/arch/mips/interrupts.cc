@@ -63,16 +63,16 @@ enum InterruptLevels
 static inline uint8_t
 getCauseIP(ThreadContext *tc)
 {
-    CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
+    CauseReg cause = tc->readMiscRegNoEffect(misc_reg::Cause);
     return cause.ip;
 }
 
 static inline void
 setCauseIP(ThreadContext *tc, uint8_t val)
 {
-    CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
+    CauseReg cause = tc->readMiscRegNoEffect(misc_reg::Cause);
     cause.ip = val;
-    tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
+    tc->setMiscRegNoEffect(misc_reg::Cause, cause);
 }
 
 void
@@ -127,14 +127,14 @@ Interrupts::checkInterrupts() const
         return false;
 
     //Check if there are any outstanding interrupts
-    StatusReg status = tc->readMiscRegNoEffect(MISCREG_STATUS);
+    StatusReg status = tc->readMiscRegNoEffect(misc_reg::Status);
     // Interrupts must be enabled, error level must be 0 or interrupts
     // inhibited, and exception level must be 0 or interrupts inhibited
     if ((status.ie == 1) && (status.erl == 0) && (status.exl == 0)) {
         // Software interrupts & hardware interrupts are handled in software.
         // So if any interrupt that isn't masked is detected, jump to interrupt
         // handler
-        CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
+        CauseReg cause = tc->readMiscRegNoEffect(misc_reg::Cause);
         if (status.im && cause.ip)
             return true;
 
@@ -149,8 +149,8 @@ Interrupts::getInterrupt()
     assert(checkInterrupts());
 
     [[maybe_unused]] StatusReg status =
-        tc->readMiscRegNoEffect(MISCREG_STATUS);
-    [[maybe_unused]] CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
+        tc->readMiscRegNoEffect(misc_reg::Status);
+    [[maybe_unused]] CauseReg cause = tc->readMiscRegNoEffect(misc_reg::Cause);
     DPRINTF(Interrupt, "Interrupt! IM[7:0]=%d IP[7:0]=%d \n",
             (unsigned)status.im, (unsigned)cause.ip);
 
@@ -160,8 +160,8 @@ Interrupts::getInterrupt()
 bool
 Interrupts::onCpuTimerInterrupt() const
 {
-    RegVal compare = tc->readMiscRegNoEffect(MISCREG_COMPARE);
-    RegVal count = tc->readMiscRegNoEffect(MISCREG_COUNT);
+    RegVal compare = tc->readMiscRegNoEffect(misc_reg::Compare);
+    RegVal count = tc->readMiscRegNoEffect(misc_reg::Count);
     if (compare == count && count != 0)
         return true;
     return false;
@@ -177,7 +177,7 @@ Interrupts::interruptsPending() const
     if (onCpuTimerInterrupt()) {
         DPRINTF(Interrupt, "Interrupts OnCpuTimerInterrupt() == true\n");
         //determine timer interrupt IP #
-        IntCtlReg intCtl = tc->readMiscRegNoEffect(MISCREG_INTCTL);
+        IntCtlReg intCtl = tc->readMiscRegNoEffect(misc_reg::Intctl);
         uint8_t intStatus = getCauseIP(tc);
         intStatus |= 1 << intCtl.ipti;
         setCauseIP(tc, intStatus);
