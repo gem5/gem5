@@ -219,6 +219,9 @@ CfiMemory::CfiMemory(const CfiMemoryParams &p)
         static_cast<uint8_t>(bits(blocks.number(), 15, 8)),
         static_cast<uint8_t>(bits(blocks.size(), 7, 0)),
         static_cast<uint8_t>(bits(blocks.size(), 15, 8)),
+        0x00,0x00,0x00,0x00,//empty Block region 2 info
+        0x00,0x00,0x00,0x00,//empty Block region 3 info
+        0x00,0x00,0x00,0x00//empty Block region 4 info
     }
 {}
 
@@ -708,6 +711,11 @@ CfiMemory::handleCommand(CfiCommand new_cmd)
         DPRINTF(CFI, "CFI Command: Buffered Program Setup\n");
         writeState = CfiCommand::BUFFERED_PROGRAM_SETUP;
         readState = CfiCommand::READ_STATUS_REG;
+        break;
+      case CfiCommand::AMD_RESET:
+        //because of how u-boot works and reset the flash
+        //we have to ignore the AMD RESET explicitly
+        // (see the function __flash_cmd_reset in drivers/mtd/cfi_flash.c)
         break;
       default:
         panic("Don't know what to do with %#x\n",

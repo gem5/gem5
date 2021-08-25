@@ -86,8 +86,8 @@ class CfiMemory : public AbstractMemory
         BUFFERED_PROGRAM_CONFIRM = 0xD0,
         BLOCK_ERASE_CONFIRM = 0xD0,
         UNLOCK_BLOCK = 0xD0,
+        AMD_RESET=0xF0,
         READ_ARRAY = 0xFF,
-
         /** This is not a real command, but it is used by the internal
          * model only to represent the 2nd write cycle state for a buffered
          * program (when the buffer size is supplied) */
@@ -343,7 +343,7 @@ class CfiMemory : public AbstractMemory
 
     ProgramBuffer programBuffer;
 
-    uint8_t cfiQueryTable[49];
+    uint8_t cfiQueryTable[61];
 
   public:
     CfiMemory(const CfiMemoryParams &p);
