@@ -72,7 +72,7 @@ class TestBoard(AbstractBoard):
         self.system_port = port
 
     def connect_things(self) -> None:
-        self.set_memory_ranges()
+        self.setup_memory_ranges()
 
         self.get_cache_hierarchy().incorporate_cache(self)
 
