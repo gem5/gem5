@@ -147,7 +147,7 @@ ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string)
              "CPUID vendor string must be 12 characters\n");
 
     _regClasses.emplace_back(int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(NumFloatRegs, debug::FloatRegs);
+    _regClasses.emplace_back(float_reg::NumRegs, debug::FloatRegs);
     _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to X86
     _regClasses.emplace_back(2, debug::IntRegs); // Not applicable to X86
     _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to X86
@@ -186,8 +186,10 @@ ISA::copyRegsFrom(ThreadContext *src)
         tc->setRegFlat(reg, src->getRegFlat(reg));
     }
     //copy float regs
-    for (int i = 0; i < NumFloatRegs; ++i)
-        tc->setFloatRegFlat(i, src->readFloatRegFlat(i));
+    for (int i = 0; i < float_reg::NumRegs; ++i) {
+        RegId reg(FloatRegClass, i);
+        tc->setRegFlat(reg, src->getRegFlat(reg));
+    }
     //copy condition-code regs
     for (int i = 0; i < cc_reg::NumRegs; ++i) {
         RegId reg(CCRegClass, i);

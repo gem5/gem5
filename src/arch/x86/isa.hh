@@ -100,9 +100,9 @@ class ISA : public BaseISA
     int
     flattenFloatIndex(int reg) const
     {
-        if (reg >= NUM_FLOATREGS) {
-            reg = FLOATREG_STACK(reg - NUM_FLOATREGS,
-                                 regVal[misc_reg::X87Top]);
+        if (reg >= float_reg::NumRegs) {
+            reg = float_reg::stack(reg - float_reg::NumRegs,
+                                   regVal[misc_reg::X87Top]);
         }
         return reg;
     }

@@ -81,7 +81,7 @@ let {{
         assembler.symbols["t%d" % num] = gpRegIdx("intRegMicro(%d)" % num)
     for num in range(8):
         assembler.symbols["ufp%d" % num] = \
-            fpRegIdx("FLOATREG_MICROFP(%d)" % num)
+            fpRegIdx("float_reg::microfp(%d)" % num)
     # Add in symbols for the segment descriptor registers
     for letter in ("c", "d", "e", "f", "g", "h", "s"):
         assembler.symbols["%ss" % letter.lower()] = \
@@ -105,16 +105,16 @@ let {{
         "cr" : crRegIdx("env.reg"),
         "dr" : drRegIdx("env.reg"),
         "sr" : segRegIdx("env.reg"),
-        "xmml" : fpRegIdx("FLOATREG_XMM_LOW(env.reg)"),
-        "xmmh" : fpRegIdx("FLOATREG_XMM_HIGH(env.reg)"),
+        "xmml" : fpRegIdx("float_reg::xmmLow(env.reg)"),
+        "xmmh" : fpRegIdx("float_reg::xmmHigh(env.reg)"),
         "regm" : gpRegIdx("env.regm"),
         "crm" : crRegIdx("env.regm"),
         "drm" : drRegIdx("env.regm"),
         "srm" : segRegIdx("env.regm"),
-        "xmmlm" : fpRegIdx("FLOATREG_XMM_LOW(env.regm)"),
-        "xmmhm" : fpRegIdx("FLOATREG_XMM_HIGH(env.regm)"),
-        "mmx" : fpRegIdx("FLOATREG_MMX(env.reg)"),
-        "mmxm" : fpRegIdx("FLOATREG_MMX(env.regm)"),
+        "xmmlm" : fpRegIdx("float_reg::xmmLow(env.regm)"),
+        "xmmhm" : fpRegIdx("float_reg::xmmHigh(env.regm)"),
+        "mmx" : fpRegIdx("float_reg::mmx(env.reg)"),
+        "mmxm" : fpRegIdx("float_reg::mmx(env.regm)"),
         "imm" : "adjustedImm",
         "disp" : "adjustedDisp",
         "seg" : segRegIdx("env.seg"),
@@ -230,7 +230,7 @@ let {{
     assembler.symbols["rom_local_label"] = rom_local_labeler
 
     def stack_index(index):
-        return fpRegIdx("NUM_FLOATREGS + (((%s) + 8) %% 8)" % index)
+        return fpRegIdx("float_reg::NumRegs + (((%s) + 8) %% 8)" % index)
 
     assembler.symbols["st"] = stack_index
     assembler.symbols["sti"] = stack_index("env.reg")
