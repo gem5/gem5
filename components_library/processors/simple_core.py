@@ -54,6 +54,7 @@ class SimpleCore(AbstractCore):
         elif cpu_type == CPUTypes.TIMING:
             self.core = TimingSimpleCPU(cpu_id=core_id)
         elif cpu_type == CPUTypes.KVM:
+            from m5.objects import X86KvmCPU
             self.core = X86KvmCPU(cpu_id=core_id)
         else:
             raise NotImplementedError

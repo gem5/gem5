@@ -53,13 +53,9 @@ class SimpleProcessor(AbstractProcessor):
 
         self._cpu_type = cpu_type
         if self._cpu_type == CPUTypes.KVM:
+            from m5.objects import KvmVM
+
             self.kvm_vm = KvmVM()
-            # To get the KVM CPUs to run on different host CPUs
-            # Specify a different event queue for each CPU
-            for i, core in enumerate(self.cores):
-                for obj in core.get_simobject().descendants():
-                    obj.eventq_index = 0
-                core.get_simobject().eventq_index = i + 1
 
     def _create_cores(self, cpu_type: CPUTypes, num_cores: int):
         return [
@@ -87,3 +83,11 @@ class SimpleProcessor(AbstractProcessor):
                 board.set_mem_mode(MemMode.ATOMIC)
         else:
             raise NotImplementedError
+
+        if self._cpu_type == CPUTypes.KVM:
+            # To get the KVM CPUs to run on different host CPUs
+            # Specify a different event queue for each CPU
+            for i, core in enumerate(self.cores):
+                for obj in core.get_simobject().descendants():
+                    obj.eventq_index = 0
+                core.get_simobject().eventq_index = i + 1

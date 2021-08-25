@@ -99,6 +99,11 @@ print()
 
 root = Root(full_system=False, system=motherboard)
 
+if args.cpu == "kvm":
+    # TODO: This of annoying. Is there a way to fix this to happen
+    # automatically when running KVM?
+    root.sim_quantum = int(1e9)
+
 m5.instantiate()
 
 exit_event = m5.simulate()
