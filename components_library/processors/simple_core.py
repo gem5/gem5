@@ -95,9 +95,11 @@ class SimpleCore(AbstractCore):
         self.core.createInterruptController()
 
         if get_runtime_isa() == ISA.X86:
-            self.core.interrupts[0].pio = interrupt_requestor
-            self.core.interrupts[0].int_requestor = interrupt_responce
-            self.core.interrupts[0].int_responder = interrupt_requestor
+            if interrupt_requestor != None:
+                self.core.interrupts[0].pio = interrupt_requestor
+                self.core.interrupts[0].int_responder = interrupt_requestor
+            if interrupt_responce != None:
+                self.core.interrupts[0].int_requestor = interrupt_responce
 
     @overrides(AbstractCore)
     def get_mmu(self) -> BaseMMU:
