@@ -1286,7 +1286,7 @@ class Packet : public Printable
             assert(req->getByteEnable().size() == getSize());
             // Write only the enabled bytes
             const uint8_t *base = getConstPtr<uint8_t>();
-            for (int i = 0; i < getSize(); i++) {
+            for (unsigned int i = 0; i < getSize(); i++) {
                 if (req->getByteEnable()[i]) {
                     p[i] = *(base + i);
                 }

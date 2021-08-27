@@ -334,7 +334,7 @@ class AddrRange
     {
         if (interleaved()) {
             std::string str;
-            for (int i = 0; i < masks.size(); i++) {
+            for (unsigned int i = 0; i < masks.size(); i++) {
                 str += " ";
                 Addr mask = masks[i];
                 while (mask) {
@@ -443,7 +443,7 @@ class AddrRange
         bool in_range = a >= _start && a < _end;
         if (in_range) {
             auto sel = 0;
-            for (int i = 0; i < masks.size(); i++) {
+            for (unsigned int i = 0; i < masks.size(); i++) {
                 Addr masked = a & masks[i];
                 // The result of an xor operation is 1 if the number
                 // of bits set is odd or 0 othersize, thefore it
@@ -490,7 +490,7 @@ class AddrRange
 
         // Get the LSB set from each mask
         int masks_lsb[masks.size()];
-        for (int i = 0; i < masks.size(); i++) {
+        for (unsigned int i = 0; i < masks.size(); i++) {
             masks_lsb[i] = ctz64(masks[i]);
         }
 
@@ -498,7 +498,7 @@ class AddrRange
         // discard them one by one starting.
         std::sort(masks_lsb, masks_lsb + masks.size());
 
-        for (int i = 0; i < masks.size(); i++) {
+        for (unsigned int i = 0; i < masks.size(); i++) {
             const int intlv_bit = masks_lsb[i];
             if (intlv_bit > 0) {
                 // on every iteration we remove one bit from the input
@@ -528,13 +528,13 @@ class AddrRange
 
         // Get the LSB set from each mask
         int masks_lsb[masks.size()];
-        for (int i = 0; i < masks.size(); i++) {
+        for (unsigned int i = 0; i < masks.size(); i++) {
             masks_lsb[i] = ctz64(masks[i]);
         }
 
         // Add bits one-by-one from the LSB side.
         std::sort(masks_lsb, masks_lsb + masks.size());
-        for (int i = 0; i < masks.size(); i++) {
+        for (unsigned int i = 0; i < masks.size(); i++) {
             const int intlv_bit = masks_lsb[i];
             if (intlv_bit > 0) {
                 // on every iteration we add one bit from the input
@@ -547,7 +547,7 @@ class AddrRange
             }
         }
 
-        for (int i = 0; i < masks.size(); i++) {
+        for (unsigned int i = 0; i < masks.size(); i++) {
             const int lsb = ctz64(masks[i]);
             const Addr intlv_bit = bits(intlvMatch, i);
             // Calculate the mask ignoring the LSB
