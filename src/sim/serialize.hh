@@ -598,7 +598,7 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
 #define UNSERIALIZE_ENUM(scalar)                        \
     do {                                                \
         int tmp;                                        \
-        paramIn(cp, #scalar, tmp);                      \
+        ::gem5::paramIn(cp, #scalar, tmp);              \
         scalar = static_cast<decltype(scalar)>(tmp);    \
     } while (0)
 
@@ -608,7 +608,7 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
  * @ingroup api_serialize
  */
 #define SERIALIZE_ARRAY(member, size)           \
-        arrayParamOut(cp, #member, member, size)
+        ::gem5::arrayParamOut(cp, #member, member, size)
 
 /**
  * \def UNSERIALIZE_ARRAY(member, size)
@@ -616,7 +616,7 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
  * @ingroup api_serialize
  */
 #define UNSERIALIZE_ARRAY(member, size)         \
-        arrayParamIn(cp, #member, member, size)
+        ::gem5::arrayParamIn(cp, #member, member, size)
 
 /**
  * \def SERIALIZE_CONTAINER(member)
@@ -624,7 +624,7 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
  * @ingroup api_serialize
  */
 #define SERIALIZE_CONTAINER(member)             \
-        arrayParamOut(cp, #member, member)
+        ::gem5::arrayParamOut(cp, #member, member)
 
 /**
  * \def UNSERIALIZE_CONTAINER(member)
@@ -632,7 +632,7 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
  * @ingroup api_serialize
  */
 #define UNSERIALIZE_CONTAINER(member)           \
-        arrayParamIn(cp, #member, member)
+        ::gem5::arrayParamIn(cp, #member, member)
 
 /**
  * \def SERIALIZE_OBJ(obj)
@@ -658,13 +658,13 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
  * \def SERIALIZE_MAPPING(member, names, size)
  */
 #define SERIALIZE_MAPPING(member, names, size) \
-        mappingParamOut(cp, #member, names, member, size)
+        ::gem5::mappingParamOut(cp, #member, names, member, size)
 
 /**
  * \def UNSERIALIZE_MAPPING(member, names, size)
  */
 #define UNSERIALIZE_MAPPING(member, names, size) \
-        mappingParamIn(cp, #member, names, member, size)
+        ::gem5::mappingParamIn(cp, #member, names, member, size)
 
 } // namespace gem5
 
