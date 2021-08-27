@@ -36,8 +36,8 @@ protocol ExportedClockRateControl
         description = "Exportable version of the clock rate control protocol.";
         version = "1.0";
         dso_safe = 0;
-        sc_slave_base_class_name = "ClockRateControlSlaveBase";
-        sc_slave_socket_class_name = "ClockRateControlTargetSocket";
+        sc_slave_base_class_name = "gem5::ClockRateControlSlaveBase";
+        sc_slave_socket_class_name = "gem5::ClockRateControlTargetSocket";
     }
 
     slave behavior set_mul_div(uint64_t mul, uint64_t div);

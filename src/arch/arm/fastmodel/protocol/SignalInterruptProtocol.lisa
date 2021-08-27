@@ -36,8 +36,8 @@ protocol SignalInterrupt
         description = "Signal an interrupt from gem5.";
         version = "1.0";
         dso_safe = 0;
-        sc_slave_base_class_name = "SignalInterruptSlaveBase";
-        sc_slave_socket_class_name = "SignalInterruptTargetSocket";
+        sc_slave_base_class_name = "gem5::SignalInterruptSlaveBase";
+        sc_slave_socket_class_name = "gem5::SignalInterruptTargetSocket";
     }
 
     slave behavior ppi(uint8_t cpu, uint32_t num, bool state);

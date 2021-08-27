@@ -223,7 +223,7 @@ PL330::allocateIrq(int idx, int count)
     }
 }
 
-::Port &
+gem5::Port &
 PL330::gem5_getPort(const std::string &if_name, int idx)
 {
     if (if_name == "dma") {
