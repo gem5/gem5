@@ -169,7 +169,7 @@ ArmSemihosting::ArmSemihosting(const ArmSemihostingParams &p)
 bool
 ArmSemihosting::call64(ThreadContext *tc, bool gem5_ops)
 {
-    RegVal op = tc->readIntReg(ArmISA::INTREG_X0 & mask(32));
+    RegVal op = tc->readIntReg(ArmISA::INTREG_X0) & mask(32);
     if (op > MaxStandardOp && !gem5_ops) {
         unrecognizedCall<Abi64>(
                 tc, "Gem5 semihosting op (0x%x) disabled from here.", op);
