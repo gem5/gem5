@@ -343,11 +343,11 @@ let {{
         uint8_t op_code = (bits(machInst, 25) << 1)
                           | bits(machInst, 21);
 
-        IntRegIndex vd = (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+        RegIndex vd = (RegIndex)(2 * (bits(machInst, 15, 12) |
                                (bits(machInst, 22) << 4)));
-        IntRegIndex vn = (IntRegIndex)(2 * (bits(machInst, 19, 16) |
+        RegIndex vn = (RegIndex)(2 * (bits(machInst, 19, 16) |
                                (bits(machInst, 7) << 4)));
-        IntRegIndex vm = (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+        RegIndex vm = (RegIndex)(2 * (bits(machInst, 3, 0) |
                                (bits(machInst, 5) << 4)));
         bool q = bits (machInst, 6);
         switch (op_code) {
@@ -397,7 +397,7 @@ let {{
                    return new VcmlaElemD<uint32_t>(machInst, vd, vn, vm,
                                                    index_fp);
             } else {
-               vm = (IntRegIndex)(uint8_t)(2* bits(machInst, 3, 0));
+               vm = (RegIndex)(uint8_t)(2* bits(machInst, 3, 0));
                uint8_t index_fp = bits(machInst, 5);
                if (q)
                    return new VcmlaElemQ<uint16_t>(machInst, vd, vn, vm,
@@ -423,14 +423,14 @@ let {{
         const uint32_t opc = bits(machInst, 11, 8);
         const bool o1 = bits(machInst, 4);
         const uint32_t size = bits(machInst, 21, 20);
-        const IntRegIndex vd =
-            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+        const RegIndex vd =
+            (RegIndex)(2 * (bits(machInst, 15, 12) |
                                (bits(machInst, 22) << 4)));
-        const IntRegIndex vn =
-            (IntRegIndex)(2 * (bits(machInst, 19, 16) |
+        const RegIndex vn =
+            (RegIndex)(2 * (bits(machInst, 19, 16) |
                                (bits(machInst, 7) << 4)));
-        const IntRegIndex vm =
-            (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+        const RegIndex vm =
+            (RegIndex)(2 * (bits(machInst, 3, 0) |
                                (bits(machInst, 5) << 4)));
         const bool q = bits(machInst, 6);
         if (q && ((vd & 0x1) || (vn & 0x1) || (vm & 0x1)))
@@ -905,8 +905,8 @@ let {{
     static StaticInstPtr
     decodeNeonOneRegModImm(ExtMachInst machInst)
     {
-        const IntRegIndex vd =
-            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+        const RegIndex vd =
+            (RegIndex)(2 * (bits(machInst, 15, 12) |
                                (bits(machInst, 22) << 4)));
         const bool q = bits(machInst, 6);
         const bool op = bits(machInst, 5);
@@ -1015,11 +1015,11 @@ let {{
         const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
         const bool q = bits(machInst, 6);
         const bool l = bits(machInst, 7);
-        const IntRegIndex vd =
-            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+        const RegIndex vd =
+            (RegIndex)(2 * (bits(machInst, 15, 12) |
                                (bits(machInst, 22) << 4)));
-        const IntRegIndex vm =
-            (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+        const RegIndex vm =
+            (RegIndex)(2 * (bits(machInst, 3, 0) |
                                (bits(machInst, 5) << 4)));
         unsigned imm6 = bits(machInst, 21, 16);
         unsigned imm = ((l ? 1 : 0) << 6) | imm6;
@@ -1168,14 +1168,14 @@ let {{
     {
         const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
         const uint32_t opc = bits(machInst, 11, 8);
-        const IntRegIndex vd =
-            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+        const RegIndex vd =
+            (RegIndex)(2 * (bits(machInst, 15, 12) |
                                (bits(machInst, 22) << 4)));
-        const IntRegIndex vn =
-            (IntRegIndex)(2 * (bits(machInst, 19, 16) |
+        const RegIndex vn =
+            (RegIndex)(2 * (bits(machInst, 19, 16) |
                                (bits(machInst, 7) << 4)));
-        const IntRegIndex vm =
-            (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+        const RegIndex vm =
+            (RegIndex)(2 * (bits(machInst, 3, 0) |
                                (bits(machInst, 5) << 4)));
         const unsigned size = bits(machInst, 21, 20);
         switch (opc) {
@@ -1261,15 +1261,15 @@ let {{
         const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
         const uint32_t opc = bits(machInst, 11, 8);
         const unsigned size = bits(machInst, 21, 20);
-        const IntRegIndex vd =
-            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+        const RegIndex vd =
+            (RegIndex)(2 * (bits(machInst, 15, 12) |
                                (bits(machInst, 22) << 4)));
-        const IntRegIndex vn =
-            (IntRegIndex)(2 * (bits(machInst, 19, 16) |
+        const RegIndex vn =
+            (RegIndex)(2 * (bits(machInst, 19, 16) |
                                (bits(machInst, 7) << 4)));
-        const IntRegIndex vm = (size == 2) ?
-            (IntRegIndex)(2 * bits(machInst, 3, 0)) :
-            (IntRegIndex)(2 * bits(machInst, 2, 0));
+        const RegIndex vm = (size == 2) ?
+            (RegIndex)(2 * bits(machInst, 3, 0)) :
+            (RegIndex)(2 * bits(machInst, 2, 0));
         const unsigned index = (size == 2) ? (unsigned)bits(machInst, 5) :
             (bits(machInst, 3) | (bits(machInst, 5) << 1));
         switch (opc) {
@@ -1568,11 +1568,11 @@ let {{
         const uint32_t opc1 = bits(machInst, 17, 16);
         const uint32_t b = bits(machInst, 10, 6);
         const bool q = bits(machInst, 6);
-        const IntRegIndex vd =
-            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+        const RegIndex vd =
+            (RegIndex)(2 * (bits(machInst, 15, 12) |
                                (bits(machInst, 22) << 4)));
-        const IntRegIndex vm =
-            (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+        const RegIndex vm =
+            (RegIndex)(2 * (bits(machInst, 3, 0) |
                                (bits(machInst, 5) << 4)));
         const unsigned size = bits(machInst, 19, 18);
         switch (opc1) {
@@ -1922,14 +1922,14 @@ let {{
                 return decodeNeonTwoRegScalar(machInst);
             }
         } else if ((a & 0x16) == 0x16) {
-            const IntRegIndex vd =
-                (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+            const RegIndex vd =
+                (RegIndex)(2 * (bits(machInst, 15, 12) |
                                    (bits(machInst, 22) << 4)));
-            const IntRegIndex vn =
-                (IntRegIndex)(2 * (bits(machInst, 19, 16) |
+            const RegIndex vn =
+                (RegIndex)(2 * (bits(machInst, 19, 16) |
                                    (bits(machInst, 7) << 4)));
-            const IntRegIndex vm =
-                (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+            const RegIndex vm =
+                (RegIndex)(2 * (bits(machInst, 3, 0) |
                                    (bits(machInst, 5) << 4)));
             if (!u) {
                 if (bits(c, 0) == 0) {
@@ -2013,7 +2013,7 @@ def format Thumb32NeonSIMD() {{
 let {{
     header_output = '''
     bool
-    wrongVLdmStmRegs(IntRegIndex start_reg, uint8_t count, bool single);
+    wrongVLdmStmRegs(RegIndex start_reg, uint8_t count, bool single);
 
     StaticInstPtr
     decodeExtensionRegLoadStore(ExtMachInst machInst);
@@ -2041,7 +2041,7 @@ let {{
         const uint32_t opcode = bits(machInst, 24, 20);
         const uint32_t offset = bits(machInst, 7, 0);
         const bool single = (bits(machInst, 8) == 0);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
         RegIndex vd = decodeFpVd(machInst, single ? 0x2 : 0x3, false);
 
         switch (bits(opcode, 4, 3)) {
@@ -2052,10 +2052,10 @@ let {{
                 if ((bits(machInst, 7, 4) & 0xd) != 1) {
                     break;
                 }
-                const IntRegIndex rt =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                const IntRegIndex rt2 =
-                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+                const RegIndex rt =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rt2 =
+                    (RegIndex)(uint32_t)bits(machInst, 19, 16);
                 const bool op = bits(machInst, 20);
                 uint32_t vm;
                 if (single) {
@@ -2066,9 +2066,9 @@ let {{
                 }
                 if (op) {
                     return new Vmov2Core2Reg(machInst, rt, rt2,
-                                             (IntRegIndex)vm);
+                                             (RegIndex)vm);
                 } else {
-                    return new Vmov2Reg2Core(machInst, (IntRegIndex)vm,
+                    return new Vmov2Reg2Core(machInst, (RegIndex)vm,
                                              rt, rt2);
                 }
             }
@@ -2176,40 +2176,40 @@ let {{
     StaticInstPtr
     decodeShortFpTransfer(ExtMachInst machInst);
 
-    IntRegIndex decodeFpVd(ExtMachInst machInst, uint32_t size, bool isInt);
-    IntRegIndex decodeFpVm(ExtMachInst machInst, uint32_t size, bool isInt);
-    IntRegIndex decodeFpVn(ExtMachInst machInst, uint32_t size);
+    RegIndex decodeFpVd(ExtMachInst machInst, uint32_t size, bool isInt);
+    RegIndex decodeFpVm(ExtMachInst machInst, uint32_t size, bool isInt);
+    RegIndex decodeFpVn(ExtMachInst machInst, uint32_t size);
     '''
     decoder_output = '''
-    IntRegIndex decodeFpVd(ExtMachInst machInst, uint32_t size, bool isInt)
+    RegIndex decodeFpVd(ExtMachInst machInst, uint32_t size, bool isInt)
     {
         if (!isInt and size == 3) {
-            return (IntRegIndex)((bits(machInst, 22) << 5) |
+            return (RegIndex)((bits(machInst, 22) << 5) |
                                (bits(machInst, 15, 12) << 1));
         } else {
-            return (IntRegIndex)(bits(machInst, 22) |
+            return (RegIndex)(bits(machInst, 22) |
                               (bits(machInst, 15, 12) << 1));
         }
     }
 
-    IntRegIndex decodeFpVm(ExtMachInst machInst, uint32_t size, bool isInt)
+    RegIndex decodeFpVm(ExtMachInst machInst, uint32_t size, bool isInt)
     {
         if (!isInt and size == 3) {
-            return (IntRegIndex)((bits(machInst, 5) << 5) |
+            return (RegIndex)((bits(machInst, 5) << 5) |
                                (bits(machInst, 3, 0) << 1));
         } else {
-            return (IntRegIndex)(bits(machInst, 5) |
+            return (RegIndex)(bits(machInst, 5) |
                               (bits(machInst, 3, 0) << 1));
         }
     }
 
-    IntRegIndex decodeFpVn(ExtMachInst machInst, uint32_t size)
+    RegIndex decodeFpVn(ExtMachInst machInst, uint32_t size)
     {
         if (size == 3) {
-            return (IntRegIndex)((bits(machInst, 7) << 5) |
+            return (RegIndex)((bits(machInst, 7) << 5) |
                             (bits(machInst, 19, 16) << 1));
         } else {
-            return (IntRegIndex)(bits(machInst, 7) |
+            return (RegIndex)(bits(machInst, 7) |
                             (bits(machInst, 19, 16) << 1));
         }
     }
@@ -2222,10 +2222,10 @@ let {{
         const uint32_t op3 = bits(machInst, 6);
         const uint32_t rm = bits(machInst, 17, 16);
         const uint32_t size = bits(machInst, 9, 8);
-        IntRegIndex vd = decodeFpVd(machInst, size, false);
-        IntRegIndex vm = decodeFpVm(machInst, size, false);
-        IntRegIndex vdInt = decodeFpVd(machInst, size, true);
-        IntRegIndex vn = decodeFpVn(machInst, size);
+        RegIndex vd = decodeFpVd(machInst, size, false);
+        RegIndex vm = decodeFpVm(machInst, size, false);
+        RegIndex vdInt = decodeFpVd(machInst, size, true);
+        RegIndex vn = decodeFpVn(machInst, size);
         if (bits(machInst, 31, 24) == 0xFE && !bits(machInst, 4)) {
             if (bits(op0, 3) == 0 && op2 != 0 && !op3){
                 ConditionCode cond;
@@ -2407,16 +2407,16 @@ let {{
             if (a == 0) {
                 const uint32_t vn = (bits(machInst, 19, 16) << 1) |
                                     bits(machInst, 7);
-                const IntRegIndex rt =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rt =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
                 if (bits(machInst, 20) == 1) {
-                    return new VmovRegCoreW(machInst, rt, (IntRegIndex)vn);
+                    return new VmovRegCoreW(machInst, rt, (RegIndex)vn);
                 } else {
-                    return new VmovCoreRegW(machInst, (IntRegIndex)vn, rt);
+                    return new VmovCoreRegW(machInst, (RegIndex)vn, rt);
                 }
             } else if (a == 0x7) {
-                const IntRegIndex rt =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rt =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
                 uint32_t reg = bits(machInst, 19, 16);
                 uint32_t specReg;
                 switch (reg) {
@@ -2439,11 +2439,11 @@ let {{
                     return new Unknown(machInst);
                 }
                 if (specReg == MISCREG_FPSCR) {
-                    return new VmsrFpscr(machInst, (IntRegIndex)specReg, rt);
+                    return new VmsrFpscr(machInst, (RegIndex)specReg, rt);
                 } else {
                     uint32_t iss = mcrMrcIssBuild(0, bits(machInst, 3, 0), rt,
                         reg, a, bits(machInst, 7, 5));
-                    return new Vmsr(machInst, (IntRegIndex)specReg, rt, iss);
+                    return new Vmsr(machInst, (RegIndex)specReg, rt, iss);
                 }
             }
         } else if (l == 0 && c == 1) {
@@ -2452,25 +2452,25 @@ let {{
                               (bits(machInst, 19, 16) << 1);
                 // Handle accessing each single precision half of the vector.
                 vd += bits(machInst, 21);
-                const IntRegIndex rt =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rt =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
                 if (bits(machInst, 22) == 1) {
-                    return new VmovCoreRegB(machInst, (IntRegIndex)vd,
+                    return new VmovCoreRegB(machInst, (RegIndex)vd,
                                             rt, bits(machInst, 6, 5));
                 } else if (bits(machInst, 5) == 1) {
-                    return new VmovCoreRegH(machInst, (IntRegIndex)vd,
+                    return new VmovCoreRegH(machInst, (RegIndex)vd,
                                             rt, bits(machInst, 6));
                 } else if (bits(machInst, 6) == 0) {
-                    return new VmovCoreRegW(machInst, (IntRegIndex)vd, rt);
+                    return new VmovCoreRegW(machInst, (RegIndex)vd, rt);
                 } else {
                     return new Unknown(machInst);
                 }
             } else if (bits(q, 1) == 0) {
                 bool q = bits(machInst, 21);
                 unsigned be = (bits(machInst, 22) << 1) | (bits(machInst, 5));
-                IntRegIndex vd = (IntRegIndex)(2 * (uint32_t)
+                RegIndex vd = (RegIndex)(2 * (uint32_t)
                     (bits(machInst, 19, 16) | (bits(machInst, 7) << 4)));
-                IntRegIndex rt = (IntRegIndex)(uint32_t)
+                RegIndex rt = (RegIndex)(uint32_t)
                     bits(machInst, 15, 12);
                 if (q) {
                     switch (be) {
@@ -2500,16 +2500,16 @@ let {{
             if (a == 0) {
                 const uint32_t vn = (bits(machInst, 19, 16) << 1) |
                                     bits(machInst, 7);
-                const IntRegIndex rt =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rt =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
                 if (bits(machInst, 20) == 1) {
-                    return new VmovRegCoreW(machInst, rt, (IntRegIndex)vn);
+                    return new VmovRegCoreW(machInst, rt, (RegIndex)vn);
                 } else {
-                    return new VmovCoreRegW(machInst, (IntRegIndex)vn, rt);
+                    return new VmovCoreRegW(machInst, (RegIndex)vn, rt);
                 }
             } else if (a == 7) {
-                const IntRegIndex rt =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rt =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
                 uint32_t reg = bits(machInst, 19, 16);
                 uint32_t specReg;
                 switch (reg) {
@@ -2538,11 +2538,11 @@ let {{
                         return new Unknown(machInst);
                     }
                 } else if (specReg == MISCREG_FPSCR) {
-                    return new VmrsFpscr(machInst, rt, (IntRegIndex)specReg);
+                    return new VmrsFpscr(machInst, rt, (RegIndex)specReg);
                 } else {
                     uint32_t iss = mcrMrcIssBuild(l, bits(machInst, 3, 0), rt,
                         reg, a, bits(machInst, 7, 5));
-                    return new Vmrs(machInst, rt, (IntRegIndex)specReg, iss);
+                    return new Vmrs(machInst, rt, (RegIndex)specReg, iss);
                 }
             }
         } else {
@@ -2551,29 +2551,29 @@ let {{
             // Handle indexing into each single precision half of the vector.
             vd += bits(machInst, 21);
             uint32_t index;
-            const IntRegIndex rt =
-                (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+            const RegIndex rt =
+                (RegIndex)(uint32_t)bits(machInst, 15, 12);
             const bool u = (bits(machInst, 23) == 1);
             if (bits(machInst, 22) == 1) {
                 index = bits(machInst, 6, 5);
                 if (u) {
                     return new VmovRegCoreUB(machInst, rt,
-                                             (IntRegIndex)vd, index);
+                                             (RegIndex)vd, index);
                 } else {
                     return new VmovRegCoreSB(machInst, rt,
-                                             (IntRegIndex)vd, index);
+                                             (RegIndex)vd, index);
                 }
             } else if (bits(machInst, 5) == 1) {
                 index = bits(machInst, 6);
                 if (u) {
                     return new VmovRegCoreUH(machInst, rt,
-                                             (IntRegIndex)vd, index);
+                                             (RegIndex)vd, index);
                 } else {
                     return new VmovRegCoreSH(machInst, rt,
-                                             (IntRegIndex)vd, index);
+                                             (RegIndex)vd, index);
                 }
             } else if (bits(machInst, 6) == 0 && !u) {
-                return new VmovRegCoreW(machInst, rt, (IntRegIndex)vd);
+                return new VmovRegCoreW(machInst, rt, (RegIndex)vd);
             } else {
                 return new Unknown(machInst);
             }
@@ -2605,22 +2605,22 @@ let {{
         const bool single = (bits(machInst, 8) == 0);
         // Used to select between vcmp and vcmpe.
         const bool e = (bits(machInst, 7) == 1);
-        IntRegIndex vd;
-        IntRegIndex vm;
-        IntRegIndex vn;
+        RegIndex vd;
+        RegIndex vm;
+        RegIndex vn;
         if (single) {
-            vd = (IntRegIndex)(bits(machInst, 22) |
+            vd = (RegIndex)(bits(machInst, 22) |
                     (bits(machInst, 15, 12) << 1));
-            vm = (IntRegIndex)(bits(machInst, 5) |
+            vm = (RegIndex)(bits(machInst, 5) |
                     (bits(machInst, 3, 0) << 1));
-            vn = (IntRegIndex)(bits(machInst, 7) |
+            vn = (RegIndex)(bits(machInst, 7) |
                     (bits(machInst, 19, 16) << 1));
         } else {
-            vd = (IntRegIndex)((bits(machInst, 22) << 5) |
+            vd = (RegIndex)((bits(machInst, 22) << 5) |
                     (bits(machInst, 15, 12) << 1));
-            vm = (IntRegIndex)((bits(machInst, 5) << 5) |
+            vm = (RegIndex)((bits(machInst, 5) << 5) |
                     (bits(machInst, 3, 0) << 1));
-            vn = (IntRegIndex)((bits(machInst, 7) << 5) |
+            vn = (RegIndex)((bits(machInst, 7) << 5) |
                     (bits(machInst, 19, 16) << 1));
         }
         switch (opc1 & 0xb /* 1011 */) {
@@ -2863,11 +2863,11 @@ let {{
               case 0x7:
                 if (opc3 == 0x3) {
                     if (single) {
-                        vd = (IntRegIndex)((bits(machInst, 22) << 5) |
+                        vd = (RegIndex)((bits(machInst, 22) << 5) |
                                 (bits(machInst, 15, 12) << 1));
                         return new VcvtFpSFpD(machInst, vd, vm);
                     } else {
-                        vd = (IntRegIndex)(bits(machInst, 22) |
+                        vd = (RegIndex)(bits(machInst, 22) |
                                 (bits(machInst, 15, 12) << 1));
                         return new VcvtFpDFpS(machInst, vd, vm);
                     }
@@ -2878,7 +2878,7 @@ let {{
                     if (single) {
                         return new VcvtUIntFpS(machInst, vd, vm);
                     } else {
-                        vm = (IntRegIndex)(bits(machInst, 5) |
+                        vm = (RegIndex)(bits(machInst, 5) |
                                 (bits(machInst, 3, 0) << 1));
                         return new VcvtUIntFpD(machInst, vd, vm);
                     }
@@ -2886,7 +2886,7 @@ let {{
                     if (single) {
                         return new VcvtSIntFpS(machInst, vd, vm);
                     } else {
-                        vm = (IntRegIndex)(bits(machInst, 5) |
+                        vm = (RegIndex)(bits(machInst, 5) |
                                 (bits(machInst, 3, 0) << 1));
                         return new VcvtSIntFpD(machInst, vd, vm);
                     }
@@ -2894,7 +2894,7 @@ let {{
               case 0x9:
                 if (bits(machInst, 31, 28) != 0xF
                     && bits(machInst, 27, 23) == 0x1D) {
-                    vd = (IntRegIndex)(bits(machInst, 22) |
+                    vd = (RegIndex)(bits(machInst, 22) |
                          (bits(machInst, 15, 12) << 1));
                     return new VjcvtSFixedFpD(machInst, vd, vm);
                 }
@@ -2946,7 +2946,7 @@ let {{
                     if (single) {
                         return new VcvtFpUIntSR(machInst, vd, vm);
                     } else {
-                        vd = (IntRegIndex)(bits(machInst, 22) |
+                        vd = (RegIndex)(bits(machInst, 22) |
                                 (bits(machInst, 15, 12) << 1));
                         return new VcvtFpUIntDR(machInst, vd, vm);
                     }
@@ -2954,7 +2954,7 @@ let {{
                     if (single) {
                         return new VcvtFpUIntS(machInst, vd, vm);
                     } else {
-                        vd = (IntRegIndex)(bits(machInst, 22) |
+                        vd = (RegIndex)(bits(machInst, 22) |
                                 (bits(machInst, 15, 12) << 1));
                         return new VcvtFpUIntD(machInst, vd, vm);
                     }
@@ -2964,7 +2964,7 @@ let {{
                     if (single) {
                         return new VcvtFpSIntSR(machInst, vd, vm);
                     } else {
-                        vd = (IntRegIndex)(bits(machInst, 22) |
+                        vd = (RegIndex)(bits(machInst, 22) |
                                 (bits(machInst, 15, 12) << 1));
                         return new VcvtFpSIntDR(machInst, vd, vm);
                     }
@@ -2972,7 +2972,7 @@ let {{
                     if (single) {
                         return new VcvtFpSIntS(machInst, vd, vm);
                     } else {
-                        vd = (IntRegIndex)(bits(machInst, 22) |
+                        vd = (RegIndex)(bits(machInst, 22) |
                                 (bits(machInst, 15, 12) << 1));
                         return new VcvtFpSIntD(machInst, vd, vm);
                     }

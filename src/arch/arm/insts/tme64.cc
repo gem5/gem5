@@ -112,7 +112,7 @@ MicroTfence64::completeAcc(PacketPtr pkt, ExecContext *xc,
     return NoFault;
 }
 
-Tstart64::Tstart64(ExtMachInst machInst, IntRegIndex _dest)
+Tstart64::Tstart64(ExtMachInst machInst, RegIndex _dest)
     : TmeRegNone64("tstart", machInst, MemReadOp, _dest)
 {
     setRegIdxArrays(
@@ -141,7 +141,7 @@ Tstart64::execute(
     return NoFault;
 }
 
-Ttest64::Ttest64(ExtMachInst machInst, IntRegIndex _dest)
+Ttest64::Ttest64(ExtMachInst machInst, RegIndex _dest)
     : TmeRegNone64("ttest", machInst, MemReadOp, _dest)
 {
     setRegIdxArrays(

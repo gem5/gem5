@@ -121,7 +121,7 @@ BranchRet64::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    if (op1 != INTREG_X30)
+    if (op1 != int_reg::X30)
         printIntReg(ss, op1);
     return ss.str();
 }
@@ -132,7 +132,7 @@ BranchRetA64::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    if (op1 != INTREG_X30)
+    if (op1 != int_reg::X30)
         printIntReg(ss, op1);
     return ss.str();
 }

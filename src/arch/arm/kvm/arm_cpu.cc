@@ -191,7 +191,7 @@ regCp64(uint64_t cpnum, uint64_t opc1, uint64_t crm)
 }
 
 constexpr KvmIntRegInfo
-regCore32(off_t offset, ArmISA::IntRegIndex idx, const char *name)
+regCore32(off_t offset, RegIndex idx, const char *name)
 {
     return { KVM_REG_ARM | KVM_REG_SIZE_U32 | KVM_REG_ARM_CORE | offset,
              idx, name };
@@ -285,43 +285,43 @@ const std::set<uint64_t> ArmKvmCPU::invariant_regs(
 
 
 ArmKvmCPU::KvmIntRegInfo ArmKvmCPU::kvmIntRegs[] = {
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r0), INTREG_R0, "R0"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r1), INTREG_R1, "R1"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r2), INTREG_R2, "R2"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r3), INTREG_R3, "R3"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r4), INTREG_R4, "R4"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r5), INTREG_R5, "R5"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r6), INTREG_R6, "R6"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r7), INTREG_R7, "R7"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r8), INTREG_R8, "R8"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r9), INTREG_R9, "R9"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r10), INTREG_R10, "R10"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_fp), INTREG_R11, "R11"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_ip), INTREG_R12, "R12"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_sp), INTREG_R13, "R13(USR)"),
-    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_lr), INTREG_R14, "R14(USR)"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r0), int_reg::R0, "R0"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r1), int_reg::R1, "R1"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r2), int_reg::R2, "R2"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r3), int_reg::R3, "R3"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r4), int_reg::R4, "R4"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r5), int_reg::R5, "R5"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r6), int_reg::R6, "R6"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r7), int_reg::R7, "R7"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r8), int_reg::R8, "R8"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r9), int_reg::R9, "R9"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r10), int_reg::R10, "R10"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_fp), int_reg::R11, "R11"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_ip), int_reg::R12, "R12"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_sp), int_reg::R13, "R13(USR)"),
+    regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_lr), int_reg::R14, "R14(USR)"),
 
-    regCore32(KVM_REG_ARM_CORE_REG(svc_regs[0]), INTREG_SP_SVC, "R13(SVC)"),
-    regCore32(KVM_REG_ARM_CORE_REG(svc_regs[1]), INTREG_LR_SVC, "R14(SVC)"),
+    regCore32(KVM_REG_ARM_CORE_REG(svc_regs[0]), int_reg::SpSvc, "R13(SVC)"),
+    regCore32(KVM_REG_ARM_CORE_REG(svc_regs[1]), int_reg::LrSvc, "R14(SVC)"),
 
-    regCore32(KVM_REG_ARM_CORE_REG(abt_regs[0]), INTREG_SP_ABT, "R13(ABT)"),
-    regCore32(KVM_REG_ARM_CORE_REG(abt_regs[1]), INTREG_LR_ABT, "R14(ABT)"),
+    regCore32(KVM_REG_ARM_CORE_REG(abt_regs[0]), int_reg::SpAbt, "R13(ABT)"),
+    regCore32(KVM_REG_ARM_CORE_REG(abt_regs[1]), int_reg::LrAbt, "R14(ABT)"),
 
-    regCore32(KVM_REG_ARM_CORE_REG(und_regs[0]), INTREG_SP_UND, "R13(UND)"),
-    regCore32(KVM_REG_ARM_CORE_REG(und_regs[1]), INTREG_LR_UND, "R14(UND)"),
+    regCore32(KVM_REG_ARM_CORE_REG(und_regs[0]), int_reg::SpUnd, "R13(UND)"),
+    regCore32(KVM_REG_ARM_CORE_REG(und_regs[1]), int_reg::LrUnd, "R14(UND)"),
 
-    regCore32(KVM_REG_ARM_CORE_REG(irq_regs[0]), INTREG_SP_IRQ, "R13(IRQ)"),
-    regCore32(KVM_REG_ARM_CORE_REG(irq_regs[1]), INTREG_LR_IRQ, "R14(IRQ)"),
+    regCore32(KVM_REG_ARM_CORE_REG(irq_regs[0]), int_reg::SpIrq, "R13(IRQ)"),
+    regCore32(KVM_REG_ARM_CORE_REG(irq_regs[1]), int_reg::LrIrq, "R14(IRQ)"),
 
 
-    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[0]), INTREG_R8_FIQ, "R8(FIQ)"),
-    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[1]), INTREG_R9_FIQ, "R9(FIQ)"),
-    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[2]), INTREG_R10_FIQ, "R10(FIQ)"),
-    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[3]), INTREG_R11_FIQ, "R11(FIQ)"),
-    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[4]), INTREG_R12_FIQ, "R12(FIQ)"),
-    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[5]), INTREG_R13_FIQ, "R13(FIQ)"),
-    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[6]), INTREG_R14_FIQ, "R14(FIQ)"),
-    { 0, NUM_INTREGS, NULL }
+    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[0]), int_reg::R8Fiq, "R8(FIQ)"),
+    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[1]), int_reg::R9Fiq, "R9(FIQ)"),
+    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[2]), int_reg::R10Fiq, "R10(FIQ)"),
+    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[3]), int_reg::R11Fiq, "R11(FIQ)"),
+    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[4]), int_reg::R12Fiq, "R12(FIQ)"),
+    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[5]), int_reg::R13Fiq, "R13(FIQ)"),
+    regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[6]), int_reg::R14Fiq, "R14(FIQ)"),
+    { 0, int_reg::NumRegs, NULL }
 };
 
 ArmKvmCPU::KvmCoreMiscRegInfo ArmKvmCPU::kvmCoreMiscRegs[] = {
@@ -545,7 +545,7 @@ ArmKvmCPU::dumpKvmStateCore()
     inform("PC: 0x%x\n", pc);
 
     for (const KvmIntRegInfo *ri(kvmIntRegs);
-         ri->idx != NUM_INTREGS; ++ri) {
+         ri->idx != int_reg::NumRegs; ++ri) {
 
         uint32_t value(getOneRegU32(ri->id));
         inform("%s: 0x%x\n", ri->name, value);
@@ -662,9 +662,9 @@ void
 ArmKvmCPU::updateKvmStateCore()
 {
     for (const KvmIntRegInfo *ri(kvmIntRegs);
-         ri->idx != NUM_INTREGS; ++ri) {
+         ri->idx != init_reg::NumRegs; ++ri) {
 
-        uint64_t value = tc->readIntRegFlat(ri->idx);
+        uint64_t value = tc->getRegFlat(RegId(IntRegClass, ri->idx));
         DPRINTF(KvmContext, "kvm(%s) := 0x%x\n", ri->name, value);
         setOneReg(ri->id, value);
     }
@@ -802,9 +802,9 @@ void
 ArmKvmCPU::updateTCStateCore()
 {
     for (const KvmIntRegInfo *ri(kvmIntRegs);
-         ri->idx != NUM_INTREGS; ++ri) {
+         ri->idx != int_reg::NumRegs; ++ri) {
 
-        tc->setIntRegFlat(ri->idx, getOneRegU32(ri->id));
+        tc->setRegFlat(RegId(IntRegClass, ri->idx), getOneRegU32(ri->id));
     }
 
     for (const KvmCoreMiscRegInfo *ri(kvmCoreMiscRegs);

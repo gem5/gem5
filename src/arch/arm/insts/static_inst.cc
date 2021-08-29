@@ -302,17 +302,17 @@ ArmStaticInst::printIntReg(std::ostream &os, RegIndex reg_idx,
     if (opWidth == 0)
         opWidth = intWidth;
     if (aarch64) {
-        if (reg_idx == INTREG_UREG0)
+        if (reg_idx == int_reg::Ureg0)
             ccprintf(os, "ureg0");
-        else if (reg_idx == INTREG_SPX)
+        else if (reg_idx == int_reg::Spx)
             ccprintf(os, "%s%s", (opWidth == 32) ? "w" : "", "sp");
-        else if (reg_idx == INTREG_X31)
+        else if (reg_idx == int_reg::X31)
             ccprintf(os, "%szr", (opWidth == 32) ? "w" : "x");
         else
             ccprintf(os, "%s%d", (opWidth == 32) ? "w" : "x", reg_idx);
     } else {
         switch (reg_idx) {
-          case PCReg:
+          case int_reg::Pc:
             ccprintf(os, "pc");
             break;
           case StackPointerReg:
@@ -496,15 +496,15 @@ ArmStaticInst::printMemSymbol(std::ostream &os,
 
 void
 ArmStaticInst::printShiftOperand(std::ostream &os,
-                                     IntRegIndex rm,
+                                     RegIndex rm,
                                      bool immShift,
                                      uint32_t shiftAmt,
-                                     IntRegIndex rs,
+                                     RegIndex rs,
                                      ArmShiftType type) const
 {
     bool firstOp = false;
 
-    if (rm != INTREG_ZERO) {
+    if (rm != int_reg::Zero) {
         printIntReg(os, rm);
     }
 
@@ -560,7 +560,7 @@ ArmStaticInst::printShiftOperand(std::ostream &os,
 
 void
 ArmStaticInst::printExtendOperand(bool firstOperand, std::ostream &os,
-                                  IntRegIndex rm, ArmExtendType type,
+                                  RegIndex rm, ArmExtendType type,
                                   int64_t shiftAmt) const
 {
     if (!firstOperand)
@@ -592,21 +592,21 @@ ArmStaticInst::printExtendOperand(bool firstOperand, std::ostream &os,
 
 void
 ArmStaticInst::printDataInst(std::ostream &os, bool withImm,
-        bool immShift, bool s, IntRegIndex rd, IntRegIndex rn,
-        IntRegIndex rm, IntRegIndex rs, uint32_t shiftAmt,
+        bool immShift, bool s, RegIndex rd, RegIndex rn,
+        RegIndex rm, RegIndex rs, uint32_t shiftAmt,
         ArmShiftType type, uint64_t imm) const
 {
     printMnemonic(os, s ? "s" : "");
     bool firstOp = true;
 
     // Destination
-    if (rd != INTREG_ZERO) {
+    if (rd != int_reg::Zero) {
         firstOp = false;
         printIntReg(os, rd);
     }
 
     // Source 1.
-    if (rn != INTREG_ZERO) {
+    if (rn != int_reg::Zero) {
         if (!firstOp)
             os << ", ";
         firstOp = false;

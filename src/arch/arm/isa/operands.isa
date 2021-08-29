@@ -111,14 +111,14 @@ let {{
         @overrideInOperand
         def makeRead(self):
             '''Maybe PC read'''
-            return f'{self.base_name} = ({self.reg_spec} == PCReg) ? ' \
+            return f'{self.base_name} = ({self.reg_spec} == int_reg::Pc) ? ' \
                    f'readPC(xc) : xc->getRegOperand(' \
                    f'this, {self.src_reg_idx});\n'
         @overrideInOperand
         def makeWrite(self):
             '''Maybe PC write'''
             return f'''
-            if ({self.reg_spec} == PCReg)
+            if ({self.reg_spec} == int_reg::Pc)
                 setNextPC(xc, {self.base_name});
             else
                 xc->setRegOperand(this, {self.dest_reg_idx}, {self.base_name});
@@ -134,7 +134,7 @@ let {{
         @overrideInOperand
         def makeRead(self):
             '''Maybe aligned PC read'''
-            return f'{self.base_name} = ({self.reg_spec} == PCReg) ? ' \
+            return f'{self.base_name} = ({self.reg_spec} == int_reg::Pc) ? ' \
                    f'(roundDown(readPC(xc), 4)) : ' \
                    f'xc->getRegOperand(this, {self.src_reg_idx});\n'
 
@@ -143,7 +143,7 @@ let {{
         def makeWrite(self):
             '''Maybe interworking PC write'''
             return f'''
-            if ({self.reg_spec} == PCReg)
+            if ({self.reg_spec} == int_reg::Pc)
                 setIWNextPC(xc, {self.base_name});
             else
                 xc->setRegOperand(this, {self.dest_reg_idx}, {self.base_name});
@@ -156,7 +156,7 @@ let {{
         def makeWrite(self):
             '''Maybe aligned interworking PC write'''
             return f'''
-            if ({self.reg_spec} == PCReg) {"{"}
+            if ({self.reg_spec} == int_reg::Pc) {"{"}
                 if ((bool)THUMB)
                     setNextPC(xc, {self.base_name});
                 else
@@ -306,11 +306,12 @@ def operands {{
     'PInt3': PIntReg('reg3'),
 
     #Fixed index integer reg operands
-    'SpMode': IntRegNPC('intRegInMode((OperatingMode)regMode, INTREG_SP)'),
+    'SpMode': IntRegNPC('int_reg::regInMode((OperatingMode)regMode, '
+                        'int_reg::Sp)'),
     'DecodedBankedIntReg':
         IntRegNPC('decodeMrsMsrBankedIntRegIndex(byteMask, r)'),
-    'LR': IntRegNPC('INTREG_LR'),
-    'XLR': IntRegX64('INTREG_X30'),
+    'LR': IntRegNPC('int_reg::Lr'),
+    'XLR': IntRegX64('int_reg::X30'),
     'R7': IntRegNPC('7'),
     # First four arguments are passed in registers
     'R0': IntRegNPC('0'),

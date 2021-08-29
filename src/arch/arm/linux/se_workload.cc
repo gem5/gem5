@@ -872,14 +872,14 @@ EmuLinux::syscall(ThreadContext *tc)
 
     SyscallDesc *desc = nullptr;
     if (dynamic_cast<ArmLinuxProcess64 *>(process)) {
-        int num = tc->readIntReg(INTREG_X8);
+        int num = tc->getReg(int_reg::X8);
         desc = syscallDescs64Low.get(num, false);
         if (!desc)
             desc = syscallDescs64Low.get(num, false);
         if (!desc)
             desc = privSyscallDescs64.get(num);
     } else {
-        int num = tc->readIntReg(INTREG_R7);
+        int num = tc->getReg(int_reg::R7);
         desc = syscallDescs32Low.get(num, false);
         if (!desc)
             desc = syscallDescs32Low.get(num, false);

@@ -49,7 +49,7 @@ using namespace ArmISA;
 
 // Unlike gem5, kvm doesn't count the SP as a normal integer register,
 // which means we only have 31 normal integer registers.
-constexpr static unsigned NUM_XREGS = NUM_ARCH_INTREGS - 1;
+constexpr static unsigned NUM_XREGS = int_reg::NumArchRegs - 1;
 static_assert(NUM_XREGS == 31, "Unexpected number of aarch64 int. regs.");
 
 // The KVM interface accesses vector registers of 4 single precision
@@ -104,8 +104,8 @@ union KvmFPReg
 #define FP_REGS_PER_VFP_REG 4
 
 const std::vector<ArmV8KvmCPU::IntRegInfo> ArmV8KvmCPU::intRegMap = {
-    { INT_REG(regs.sp), INTREG_SP0, "SP(EL0)" },
-    { INT_REG(sp_el1), INTREG_SP1, "SP(EL1)" },
+    { INT_REG(regs.sp), int_reg::Sp0, "SP(EL0)" },
+    { INT_REG(sp_el1), int_reg::Sp1, "SP(EL1)" },
 };
 
 const std::vector<ArmV8KvmCPU::MiscRegInfo> ArmV8KvmCPU::miscRegMap = {
@@ -243,13 +243,13 @@ ArmV8KvmCPU::updateKvmState()
     }
 
     for (int i = 0; i < NUM_XREGS; ++i) {
-        const uint64_t value(tc->readIntReg(INTREG_X0 + i));
+        const uint64_t value = tc->getReg(int_reg::x(i));
         DPRINTF(KvmContext, "  X%i := 0x%x\n", i, value);
         setOneReg(kvmXReg(i), value);
     }
 
     for (const auto &ri : intRegMap) {
-        const uint64_t value(tc->readIntReg(ri.idx));
+        const uint64_t value = tc->getReg(RegId(IntRegClass, ri.idx));
         DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
         setOneReg(ri.kvm, value);
     }
@@ -316,16 +316,16 @@ ArmV8KvmCPU::updateThreadContext()
         // KVM64 returns registers in 64-bit layout. If we are in aarch32
         // mode, we need to map these to banked ARM32 registers.
         if (inAArch64(tc)) {
-            tc->setIntReg(INTREG_X0 + i, value);
+            tc->setReg(int_reg::x(i), value);
         } else {
-            tc->setIntRegFlat(IntReg64Map[INTREG_X0 + i], value);
+            tc->setRegFlat(int_reg::x(i), value);
         }
     }
 
     for (const auto &ri : intRegMap) {
         const auto value(getOneRegU64(ri.kvm));
         DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
-        tc->setIntReg(ri.idx, value);
+        tc->setReg(RegId(IntRegClass, ri.idx), value);
     }
 
     for (int i = 0; i < NUM_QREGS; ++i) {

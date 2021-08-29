@@ -339,7 +339,7 @@ RegImmRegShiftOp::generateDisassembly(
     printMnemonic(ss);
     printIntReg(ss, dest);
     ccprintf(ss, ", #%d, ", imm);
-    printShiftOperand(ss, op1, true, shiftAmt, INTREG_ZERO, shiftType);
+    printShiftOperand(ss, op1, true, shiftAmt, int_reg::Zero, shiftType);
     printIntReg(ss, op1);
     return ss.str();
 }

@@ -46,10 +46,10 @@ namespace gem5
 class MrsOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
+    RegIndex dest;
 
     MrsOp(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass,
-            ArmISA::IntRegIndex _dest) :
+            RegIndex _dest) :
         ArmISA::PredOp(mnem, _machInst, __opClass), dest(_dest)
     {}
 
@@ -87,10 +87,10 @@ class MsrImmOp : public MsrBase
 class MsrRegOp : public MsrBase
 {
   protected:
-    ArmISA::IntRegIndex op1;
+    RegIndex op1;
 
     MsrRegOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-             OpClass __opClass, ArmISA::IntRegIndex _op1, uint8_t _byteMask) :
+             OpClass __opClass, RegIndex _op1, uint8_t _byteMask) :
         MsrBase(mnem, _machInst, __opClass, _byteMask), op1(_op1)
     {}
 
@@ -102,13 +102,13 @@ class MrrcOp : public ArmISA::PredOp
 {
   protected:
     ArmISA::MiscRegIndex op1;
-    ArmISA::IntRegIndex dest;
-    ArmISA::IntRegIndex dest2;
+    RegIndex dest;
+    RegIndex dest2;
     uint32_t imm;
 
     MrrcOp(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass,
-           ArmISA::MiscRegIndex _op1, ArmISA::IntRegIndex _dest,
-           ArmISA::IntRegIndex _dest2, uint32_t _imm) :
+           ArmISA::MiscRegIndex _op1, RegIndex _dest, RegIndex _dest2,
+           uint32_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass), op1(_op1), dest(_dest),
         dest2(_dest2), imm(_imm)
     {}
@@ -120,13 +120,13 @@ class MrrcOp : public ArmISA::PredOp
 class McrrOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex op1;
-    ArmISA::IntRegIndex op2;
+    RegIndex op1;
+    RegIndex op2;
     ArmISA::MiscRegIndex dest;
     uint32_t    imm;
 
     McrrOp(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass,
-           ArmISA::IntRegIndex _op1, ArmISA::IntRegIndex _op2,
+           RegIndex _op1, RegIndex _op2,
            ArmISA::MiscRegIndex _dest, uint32_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass), op1(_op1), op2(_op2),
         dest(_dest), imm(_imm)
@@ -153,11 +153,11 @@ class ImmOp : public ArmISA::PredOp
 class RegImmOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
+    RegIndex dest;
     uint64_t imm;
 
     RegImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-             OpClass __opClass, ArmISA::IntRegIndex _dest, uint64_t _imm) :
+             OpClass __opClass, RegIndex _dest, uint64_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass), dest(_dest), imm(_imm)
     {}
 
@@ -168,12 +168,12 @@ class RegImmOp : public ArmISA::PredOp
 class RegRegOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
-    ArmISA::IntRegIndex op1;
+    RegIndex dest;
+    RegIndex op1;
 
     RegRegOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-             OpClass __opClass, ArmISA::IntRegIndex _dest,
-             ArmISA::IntRegIndex _op1) :
+             OpClass __opClass, RegIndex _dest,
+             RegIndex _op1) :
         ArmISA::PredOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1)
     {}
 
@@ -184,10 +184,10 @@ class RegRegOp : public ArmISA::PredOp
 class RegOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
+    RegIndex dest;
 
     RegOp(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass,
-             ArmISA::IntRegIndex _dest) :
+             RegIndex _dest) :
         ArmISA::PredOp(mnem, _machInst, __opClass), dest(_dest)
     {}
 
@@ -198,13 +198,13 @@ class RegOp : public ArmISA::PredOp
 class RegImmRegOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
+    RegIndex dest;
     uint64_t imm;
-    ArmISA::IntRegIndex op1;
+    RegIndex op1;
 
     RegImmRegOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                OpClass __opClass, ArmISA::IntRegIndex _dest, uint64_t _imm,
-                ArmISA::IntRegIndex _op1) :
+                OpClass __opClass, RegIndex _dest, uint64_t _imm,
+                RegIndex _op1) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
         dest(_dest), imm(_imm), op1(_op1)
     {}
@@ -216,14 +216,14 @@ class RegImmRegOp : public ArmISA::PredOp
 class RegRegRegImmOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
-    ArmISA::IntRegIndex op1;
-    ArmISA::IntRegIndex op2;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex op2;
     uint64_t imm;
 
     RegRegRegImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                   OpClass __opClass, ArmISA::IntRegIndex _dest,
-                   ArmISA::IntRegIndex _op1, ArmISA::IntRegIndex _op2,
+                   OpClass __opClass, RegIndex _dest,
+                   RegIndex _op1, RegIndex _op2,
                    uint64_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), imm(_imm)
@@ -236,15 +236,15 @@ class RegRegRegImmOp : public ArmISA::PredOp
 class RegRegRegRegOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
-    ArmISA::IntRegIndex op1;
-    ArmISA::IntRegIndex op2;
-    ArmISA::IntRegIndex op3;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex op2;
+    RegIndex op3;
 
     RegRegRegRegOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                   OpClass __opClass, ArmISA::IntRegIndex _dest,
-                   ArmISA::IntRegIndex _op1, ArmISA::IntRegIndex _op2,
-                   ArmISA::IntRegIndex _op3) :
+                   OpClass __opClass, RegIndex _dest,
+                   RegIndex _op1, RegIndex _op2,
+                   RegIndex _op3) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), op3(_op3)
     {}
@@ -256,13 +256,13 @@ class RegRegRegRegOp : public ArmISA::PredOp
 class RegRegRegOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
-    ArmISA::IntRegIndex op1;
-    ArmISA::IntRegIndex op2;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex op2;
 
     RegRegRegOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                OpClass __opClass, ArmISA::IntRegIndex _dest,
-                ArmISA::IntRegIndex _op1, ArmISA::IntRegIndex _op2) :
+                OpClass __opClass, RegIndex _dest,
+                RegIndex _op1, RegIndex _op2) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2)
     {}
@@ -274,13 +274,13 @@ class RegRegRegOp : public ArmISA::PredOp
 class RegRegImmOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
-    ArmISA::IntRegIndex op1;
+    RegIndex dest;
+    RegIndex op1;
     uint64_t imm;
 
     RegRegImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                OpClass __opClass, ArmISA::IntRegIndex _dest,
-                ArmISA::IntRegIndex _op1, uint64_t _imm) :
+                OpClass __opClass, RegIndex _dest,
+                RegIndex _op1, uint64_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm(_imm)
     {}
@@ -293,12 +293,12 @@ class MiscRegRegImmOp : public ArmISA::PredOp
 {
   protected:
     ArmISA::MiscRegIndex dest;
-    ArmISA::IntRegIndex op1;
+    RegIndex op1;
     uint64_t imm;
 
     MiscRegRegImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
                     OpClass __opClass, ArmISA::MiscRegIndex _dest,
-                    ArmISA::IntRegIndex _op1, uint64_t _imm) :
+                    RegIndex _op1, uint64_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm(_imm)
     {}
@@ -310,12 +310,12 @@ class MiscRegRegImmOp : public ArmISA::PredOp
 class RegMiscRegImmOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
+    RegIndex dest;
     ArmISA::MiscRegIndex op1;
     uint64_t imm;
 
     RegMiscRegImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                    OpClass __opClass, ArmISA::IntRegIndex _dest,
+                    OpClass __opClass, RegIndex _dest,
                     ArmISA::MiscRegIndex _op1, uint64_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm(_imm)
@@ -328,12 +328,12 @@ class RegMiscRegImmOp : public ArmISA::PredOp
 class RegImmImmOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
+    RegIndex dest;
     uint64_t imm1;
     uint64_t imm2;
 
     RegImmImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                OpClass __opClass, ArmISA::IntRegIndex _dest,
+                OpClass __opClass, RegIndex _dest,
                 uint64_t _imm1, uint64_t _imm2) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
         dest(_dest), imm1(_imm1), imm2(_imm2)
@@ -346,14 +346,14 @@ class RegImmImmOp : public ArmISA::PredOp
 class RegRegImmImmOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
-    ArmISA::IntRegIndex op1;
+    RegIndex dest;
+    RegIndex op1;
     uint64_t imm1;
     uint64_t imm2;
 
     RegRegImmImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                   OpClass __opClass, ArmISA::IntRegIndex _dest,
-                   ArmISA::IntRegIndex _op1, uint64_t _imm1, uint64_t _imm2) :
+                   OpClass __opClass, RegIndex _dest,
+                   RegIndex _op1, uint64_t _imm1, uint64_t _imm2) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm1(_imm1), imm2(_imm2)
     {}
@@ -365,15 +365,15 @@ class RegRegImmImmOp : public ArmISA::PredOp
 class RegImmRegShiftOp : public ArmISA::PredOp
 {
   protected:
-    ArmISA::IntRegIndex dest;
+    RegIndex dest;
     uint64_t imm;
-    ArmISA::IntRegIndex op1;
+    RegIndex op1;
     int32_t shiftAmt;
     ArmISA::ArmShiftType shiftType;
 
     RegImmRegShiftOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                     OpClass __opClass, ArmISA::IntRegIndex _dest,
-                     uint64_t _imm, ArmISA::IntRegIndex _op1,
+                     OpClass __opClass, RegIndex _dest,
+                     uint64_t _imm, RegIndex _op1,
                      int32_t _shiftAmt, ArmISA::ArmShiftType _shiftType) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
         dest(_dest), imm(_imm), op1(_op1),
@@ -444,7 +444,7 @@ class TlbiOp : public MiscRegRegImmOp
   protected:
     TlbiOp(const char *mnem, ArmISA::ExtMachInst _machInst,
            OpClass __opClass, ArmISA::MiscRegIndex _dest,
-           ArmISA::IntRegIndex _op1, uint64_t _imm) :
+           RegIndex _op1, uint64_t _imm) :
         MiscRegRegImmOp(mnem, _machInst, __opClass, _dest, _op1, _imm)
     {}
 

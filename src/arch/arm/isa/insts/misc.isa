@@ -290,7 +290,7 @@ let {{
                 // you look at the generated C code you'll find that they are.
                 // However this is safe as DecodedBankedIntReg (which is used
                 // in operands.isa to get the index of DecodedBankedIntReg)
-                // will return INTREG_ZERO if its not a valid integer
+                // will return int_reg::Zero if its not a valid integer
                 // register, so redirecting the write to somewhere we don't
                 // care about.
                 DecodedBankedIntReg = Op1;

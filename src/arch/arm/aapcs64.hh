@@ -61,7 +61,7 @@ struct Aapcs64
         static const int MAX_SRN = 7;
 
         explicit State(const ThreadContext *tc) :
-            nsaa(tc->readIntReg(ArmISA::INTREG_SPX))
+            nsaa(tc->getReg(ArmISA::int_reg::Spx))
         {}
     };
 };
@@ -238,7 +238,7 @@ struct Argument<Aapcs64, Integer, typename std::enable_if_t<
     get(ThreadContext *tc, Aapcs64::State &state)
     {
         if (state.ngrn <= state.MAX_GRN)
-            return tc->readIntReg(state.ngrn++);
+            return tc->getReg(RegId(IntRegClass, state.ngrn++));
 
         // Max out ngrn since we've effectively saturated it.
         state.ngrn = state.MAX_GRN + 1;
@@ -259,8 +259,8 @@ struct Argument<Aapcs64, Integer, typename std::enable_if_t<
             state.ngrn++;
 
         if (sizeof(Integer) == 16 && state.ngrn + 1 <= state.MAX_GRN) {
-            Integer low = tc->readIntReg(state.ngrn++);
-            Integer high = tc->readIntReg(state.ngrn++);
+            Integer low = tc->getReg(RegId(IntRegClass, state.ngrn++));
+            Integer high = tc->getReg(RegId(IntRegClass, state.ngrn++));
             high = high << 64;
             return high | low;
         }
@@ -279,7 +279,7 @@ struct Result<Aapcs64, Integer, typename std::enable_if_t<
     static void
     store(ThreadContext *tc, const Integer &i)
     {
-        tc->setIntReg(0, i);
+        tc->setReg(ArmISA::int_reg::X0, i);
     }
 };
 
@@ -290,8 +290,8 @@ struct Result<Aapcs64, Integer, typename std::enable_if_t<
     static void
     store(ThreadContext *tc, const Integer &i)
     {
-        tc->setIntReg(0, (uint64_t)i);
-        tc->setIntReg(1, (uint64_t)(i >> 64));
+        tc->setReg(ArmISA::int_reg::X0, (uint64_t)i);
+        tc->setReg(ArmISA::int_reg::X1, (uint64_t)(i >> 64));
     }
 };
 
@@ -379,7 +379,7 @@ struct Argument<Aapcs64, Composite, typename std::enable_if_t<
         if (state.ngrn + regs - 1 <= state.MAX_GRN) {
             alignas(alignof(Composite)) uint8_t buf[bytes];
             for (int i = 0; i < regs; i++) {
-                Chunk val = tc->readIntReg(state.ngrn++);
+                Chunk val = tc->getReg(RegId(IntRegClass, state.ngrn++));
                 val = htog(val, ArmISA::byteOrder(tc));
                 size_t to_copy = std::min<size_t>(bytes, chunk_size);
                 memcpy(buf + i * chunk_size, &val, to_copy);
@@ -403,7 +403,7 @@ struct Result<Aapcs64, Composite, typename std::enable_if_t<
     store(ThreadContext *tc, const Composite &c)
     {
         if (sizeof(Composite) > 16) {
-            Addr addr = tc->readIntReg(ArmISA::INTREG_X8);
+            Addr addr = tc->getReg(ArmISA::int_reg::X8);
             VPtr<Composite> composite(addr, tc);
             *composite = htog(c, ArmISA::byteOrder(tc));
             return;
@@ -426,7 +426,7 @@ struct Result<Aapcs64, Composite, typename std::enable_if_t<
             memcpy(&val, buf, to_copy);
             val = gtoh(val, ArmISA::byteOrder(tc));
 
-            tc->setIntReg(i, val);
+            tc->setReg(ArmISA::int_reg::x(i), val);
 
             bytes -= to_copy;
             buf += to_copy;

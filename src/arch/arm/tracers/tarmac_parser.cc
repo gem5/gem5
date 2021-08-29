@@ -755,7 +755,7 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
         switch (it->type) {
           case REG_R:
           case REG_X:
-            values.push_back(thread->readIntReg(it->index));
+            values.push_back(thread->getReg(RegId(IntRegClass, it->index)));
             break;
           case REG_S:
             if (instRecord.isetstate == ISET_A64) {
@@ -1139,25 +1139,25 @@ TarmacParserRecord::advanceTrace()
             int base_index = atoi(&buf[1]);
             char* pch = strchr(buf, '_');
             if (pch == NULL) {
-                regRecord.index = INTREG_USR(base_index);
+                regRecord.index = int_reg::usr(base_index);
             } else {
                 ++pch;
                 if (strncmp(pch, "usr", 3) == 0)
-                    regRecord.index = INTREG_USR(base_index);
+                    regRecord.index = int_reg::usr(base_index);
                 else if (strncmp(pch, "fiq", 3) == 0)
-                    regRecord.index = INTREG_FIQ(base_index);
+                    regRecord.index = int_reg::fiq(base_index);
                 else if (strncmp(pch, "irq", 3) == 0)
-                    regRecord.index = INTREG_IRQ(base_index);
+                    regRecord.index = int_reg::irq(base_index);
                 else if (strncmp(pch, "svc", 3) == 0)
-                    regRecord.index = INTREG_SVC(base_index);
+                    regRecord.index = int_reg::svc(base_index);
                 else if (strncmp(pch, "mon", 3) == 0)
-                    regRecord.index = INTREG_MON(base_index);
+                    regRecord.index = int_reg::mon(base_index);
                 else if (strncmp(pch, "abt", 3) == 0)
-                    regRecord.index = INTREG_ABT(base_index);
+                    regRecord.index = int_reg::abt(base_index);
                 else if (strncmp(pch, "und", 3) == 0)
-                    regRecord.index = INTREG_UND(base_index);
+                    regRecord.index = int_reg::und(base_index);
                 else if (strncmp(pch, "hyp", 3) == 0)
-                    regRecord.index = INTREG_HYP(base_index);
+                    regRecord.index = int_reg::hyp(base_index);
             }
         } else if (std::tolower(buf[0]) == 'x' && isdigit(buf[1])) {
             // X register (A64)
@@ -1186,7 +1186,7 @@ TarmacParserRecord::advanceTrace()
         } else if (strncmp(buf, "SP_EL", 5) == 0) {
             // A64 stack pointer
             regRecord.type = REG_X;
-            regRecord.index = INTREG_SP0 + atoi(&buf[5]);
+            regRecord.index = int_reg::Sp0 + atoi(&buf[5]);
         } else if (miscRegMap.count(buf)) {
             // Misc. register
             regRecord.type = REG_MISC;

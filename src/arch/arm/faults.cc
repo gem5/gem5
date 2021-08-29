@@ -582,7 +582,7 @@ ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
         tc->setMiscReg(MISCREG_ELR_HYP, cur_pc +
                 (saved_cpsr.t ? thumbPcOffset(true)  : armPcOffset(true)));
     } else {
-        tc->setIntReg(INTREG_LR, cur_pc +
+        tc->setReg(int_reg::Lr, cur_pc +
                 (saved_cpsr.t ? thumbPcOffset(false) : armPcOffset(false)));
     }
 
@@ -619,7 +619,7 @@ ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
 
     Addr new_pc = getVector(tc);
     DPRINTF(Faults, "Invoking Fault:%s cpsr:%#x PC:%#x lr:%#x newVec: %#x "
-            "%s\n", name(), cpsr, cur_pc, tc->readIntReg(INTREG_LR),
+            "%s\n", name(), cpsr, cur_pc, tc->getReg(int_reg::Lr),
             new_pc, arm_inst ? csprintf("inst: %#x", arm_inst->encoding()) :
             std::string());
     PCState pc(new_pc);

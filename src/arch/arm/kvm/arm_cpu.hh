@@ -76,7 +76,7 @@ class ArmKvmCPU : public BaseKvmCPU
         /** KVM ID */
         const uint64_t id;
         /** gem5 index */
-        const ArmISA::IntRegIndex idx;
+        const RegIndex idx;
         /** Name in debug output */
         const char *name;
     };

@@ -46,7 +46,7 @@ def template SveMemFillSpillOpDeclare {{
 
       public:
         %(class_name)s(ExtMachInst machInst,
-                IntRegIndex _dest, IntRegIndex _base, uint64_t _imm) :
+                RegIndex _dest, RegIndex _base, uint64_t _imm) :
             %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                 _dest, _base, _imm)
         {
@@ -79,8 +79,8 @@ def template SveContigMemSSOpDeclare {{
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
-                IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
-                IntRegIndex _offset) :
+                RegIndex _dest, RegIndex _gp, RegIndex _base,
+                RegIndex _offset) :
             %(base_class)s(mnem, machInst, %(op_class)s,
                     _dest, _gp, _base, _offset)
         {
@@ -113,7 +113,7 @@ def template SveContigMemSIOpDeclare {{
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
-                IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
+                RegIndex _dest, RegIndex _gp, RegIndex _base,
                 uint64_t _imm) :
             %(base_class)s(mnem, machInst, %(op_class)s,
                     _dest, _gp, _base, _imm)
@@ -418,9 +418,9 @@ def template SveIndexedMemVIMicroopDeclare {{
       protected:
         typedef RegElemType TPElem;
 
-        IntRegIndex dest;
-        IntRegIndex gp;
-        IntRegIndex base;
+        RegIndex dest;
+        RegIndex gp;
+        RegIndex base;
         uint64_t imm;
 
         int elemIndex;
@@ -431,8 +431,8 @@ def template SveIndexedMemVIMicroopDeclare {{
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
-                OpClass __opClass, IntRegIndex _dest, IntRegIndex _gp,
-                IntRegIndex _base, uint64_t _imm, int _elemIndex,
+                OpClass __opClass, RegIndex _dest, RegIndex _gp,
+                RegIndex _base, uint64_t _imm, int _elemIndex,
                 int _numElems, bool _firstFault) :
             %(base_class)s(mnem, machInst, %(op_class)s),
             dest(_dest), gp(_gp), base(_base), imm(_imm),
@@ -500,10 +500,10 @@ def template SveIndexedMemSVMicroopDeclare {{
       protected:
         typedef RegElemType TPElem;
 
-        IntRegIndex dest;
-        IntRegIndex gp;
-        IntRegIndex base;
-        IntRegIndex offset;
+        RegIndex dest;
+        RegIndex gp;
+        RegIndex base;
+        RegIndex offset;
 
         bool offsetIs32;
         bool offsetIsSigned;
@@ -517,8 +517,8 @@ def template SveIndexedMemSVMicroopDeclare {{
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
-                OpClass __opClass, IntRegIndex _dest, IntRegIndex _gp,
-                IntRegIndex _base, IntRegIndex _offset, bool _offsetIs32,
+                OpClass __opClass, RegIndex _dest, RegIndex _gp,
+                RegIndex _base, RegIndex _offset, bool _offsetIs32,
                 bool _offsetIsSigned, bool _offsetIsScaled, int _elemIndex,
                 int _numElems, bool _firstFault) :
             %(base_class)s(mnem, machInst, %(op_class)s),
@@ -834,13 +834,13 @@ def template SveGatherLoadCpySrcVecMicroopDeclare {{
         %(reg_idx_arr_decl)s;
 
       protected:
-        IntRegIndex op1;
+        RegIndex op1;
 
         StaticInst *macroOp;
 
       public:
         SveGatherLoadCpySrcVecMicroop(const char* mnem, ExtMachInst machInst,
-                IntRegIndex _op1, StaticInst *_macroOp) :
+                RegIndex _op1, StaticInst *_macroOp) :
             MicroOp(mnem, machInst, SimdAluOp), op1(_op1), macroOp(_macroOp)
         {
             %(set_reg_idx_arr)s;
@@ -891,8 +891,8 @@ def template SveStructMemSIMicroopDeclare {{
         typedef _Element TPElem;
 
         RegIndex dest;
-        IntRegIndex gp;
-        IntRegIndex base;
+        RegIndex gp;
+        RegIndex base;
         int64_t imm;
 
         uint8_t numRegs;
@@ -904,7 +904,7 @@ def template SveStructMemSIMicroopDeclare {{
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
-                RegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
+                RegIndex _dest, RegIndex _gp, RegIndex _base,
                 int64_t _imm, uint8_t _numRegs, int _regIndex) :
             %(base_class)s(mnem, machInst, %(op_class)s),
             dest(_dest), gp(_gp), base(_base), imm(_imm),
@@ -1168,9 +1168,9 @@ def template SveStructMemSSMicroopDeclare {{
         typedef _Element TPElem;
 
         RegIndex dest;
-        IntRegIndex gp;
-        IntRegIndex base;
-        IntRegIndex offset;
+        RegIndex gp;
+        RegIndex base;
+        RegIndex offset;
 
         uint8_t numRegs;
         int regIndex;
@@ -1181,8 +1181,8 @@ def template SveStructMemSSMicroopDeclare {{
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
-                RegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
-                IntRegIndex _offset, uint8_t _numRegs, int _regIndex) :
+                RegIndex _dest, RegIndex _gp, RegIndex _base,
+                RegIndex _offset, uint8_t _numRegs, int _regIndex) :
             %(base_class)s(mnem, machInst, %(op_class)s),
             dest(_dest), gp(_gp), base(_base), offset(_offset),
             numRegs(_numRegs), regIndex(_regIndex),
@@ -1253,8 +1253,8 @@ def template SveIntrlvMicroopDeclare {{
       protected:
         typedef _Element Element;
         typedef _Element TPElem;
-        IntRegIndex dest;
-        IntRegIndex op1;
+        RegIndex dest;
+        RegIndex op1;
         uint8_t numRegs;
         int regIndex;
 
@@ -1262,7 +1262,7 @@ def template SveIntrlvMicroopDeclare {{
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
-                IntRegIndex _dest, IntRegIndex _op1,
+                RegIndex _dest, RegIndex _op1,
                 uint8_t _numRegs, int _regIndex, StaticInst *_macroOp) :
             MicroOp(mnem, machInst, SimdAluOp), dest(_dest), op1(_op1),
             numRegs(_numRegs), regIndex(_regIndex), macroOp(_macroOp)
@@ -1295,7 +1295,7 @@ def template SveDeIntrlvMicroopDeclare {{
       protected:
         typedef _Element Element;
         typedef _Element TPElem;
-        IntRegIndex dest;
+        RegIndex dest;
         uint8_t numRegs;
         int regIndex;
 
@@ -1303,7 +1303,7 @@ def template SveDeIntrlvMicroopDeclare {{
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
-                IntRegIndex _dest, uint8_t _numRegs, int _regIndex,
+                RegIndex _dest, uint8_t _numRegs, int _regIndex,
                 StaticInst *_macroOp) :
             MicroOp(mnem, machInst, SimdAluOp), dest(_dest),
             numRegs(_numRegs), regIndex(_regIndex), macroOp(_macroOp)

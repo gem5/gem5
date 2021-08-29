@@ -231,7 +231,7 @@ RegVal getMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
 Affinity getAffinity(ArmSystem *arm_sys, ThreadContext *tc);
 
 static inline uint32_t
-mcrMrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, uint32_t crn,
+mcrMrcIssBuild(bool isRead, uint32_t crm, RegIndex rt, uint32_t crn,
                uint32_t opc1, uint32_t opc2)
 {
     return (isRead << 0) |
@@ -243,19 +243,19 @@ mcrMrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, uint32_t crn,
 }
 
 static inline void
-mcrMrcIssExtract(uint32_t iss, bool &isRead, uint32_t &crm, IntRegIndex &rt,
+mcrMrcIssExtract(uint32_t iss, bool &isRead, uint32_t &crm, RegIndex &rt,
                  uint32_t &crn, uint32_t &opc1, uint32_t &opc2)
 {
     isRead = (iss >> 0) & 0x1;
     crm = (iss >> 1) & 0xF;
-    rt = (IntRegIndex)((iss >> 5) & 0xF);
+    rt = (RegIndex)((iss >> 5) & 0xF);
     crn = (iss >> 10) & 0xF;
     opc1 = (iss >> 14) & 0x7;
     opc2 = (iss >> 17) & 0x7;
 }
 
 static inline uint32_t
-mcrrMrrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, IntRegIndex rt2,
+mcrrMrrcIssBuild(bool isRead, uint32_t crm, RegIndex rt, RegIndex rt2,
                  uint32_t opc1)
 {
     return (isRead << 0) |
@@ -267,7 +267,7 @@ mcrrMrrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, IntRegIndex rt2,
 
 static inline uint32_t
 msrMrs64IssBuild(bool isRead, uint32_t op0, uint32_t op1, uint32_t crn,
-                 uint32_t crm, uint32_t op2, IntRegIndex rt)
+                 uint32_t crm, uint32_t op2, RegIndex rt)
 {
     return isRead |
         (crm << 1) |
@@ -353,7 +353,7 @@ decodeMrsMsrBankedIntRegIndex(uint8_t sysM, bool r)
 
     validReg = decodeMrsMsrBankedReg(
             sysM, r, isIntReg, regIdx, 0, 0, 0, false);
-    return (validReg && isIntReg) ? regIdx : INTREG_ZERO;
+    return (validReg && isIntReg) ? regIdx : int_reg::Zero;
 }
 
 /**

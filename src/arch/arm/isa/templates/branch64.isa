@@ -89,13 +89,13 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1);
+    %(class_name)s(ExtMachInst machInst, RegIndex _op1);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template BranchReg64Constructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _op1) :
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1)
     {
         %(set_reg_idx_arr)s;
@@ -111,14 +111,14 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, IntRegIndex _op2);
+    %(class_name)s(ExtMachInst machInst, RegIndex _op1, RegIndex _op2);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template BranchRegReg64Constructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
-                                   IntRegIndex _op2) :
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _op1,
+                                   RegIndex _op2) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, _op2)
     {
         %(set_reg_idx_arr)s;
@@ -134,14 +134,14 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, int64_t imm, IntRegIndex _op1);
+    %(class_name)s(ExtMachInst machInst, int64_t imm, RegIndex _op1);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template BranchImmReg64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, int64_t _imm,
-                                   IntRegIndex _op1) :
+                                   RegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm, _op1)
     {
         %(set_reg_idx_arr)s;
@@ -158,7 +158,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, int64_t _imm1, int64_t _imm2,
-                   IntRegIndex _op1);
+                   RegIndex _op1);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
@@ -166,7 +166,7 @@ class %(class_name)s : public %(base_class)s
 def template BranchImmImmReg64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                    int64_t _imm1, int64_t _imm2,
-                                   IntRegIndex _op1) :
+                                   RegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _imm1, _imm2, _op1)
     {

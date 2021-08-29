@@ -270,7 +270,7 @@ TarmacTracerRecord::TraceRegEntry::updateInt(
 
     regValid = true;
     switch (regRelIdx) {
-      case PCReg:
+      case int_reg::Pc:
         regName = "pc";
         break;
       case StackPointerReg:
@@ -286,7 +286,7 @@ TarmacTracerRecord::TraceRegEntry::updateInt(
         regName  = "r" + std::to_string(regRelIdx);
         break;
     }
-    values[Lo] = thread->readIntReg(regRelIdx);
+    values[Lo] = thread->getReg(RegId(IntRegClass, regRelIdx));
 }
 
 void

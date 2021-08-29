@@ -567,39 +567,39 @@ namespace ArmISA
         void initializeMiscRegMetadata();
 
         RegVal miscRegs[NUM_MISCREGS];
-        const IntRegIndex *intRegMap;
+        const RegId *intRegMap;
 
         void
         updateRegMap(CPSR cpsr)
         {
             if (cpsr.width == 0) {
-                intRegMap = IntReg64Map;
+                intRegMap = int_reg::Reg64Map;
             } else {
                 switch (cpsr.mode) {
                   case MODE_USER:
                   case MODE_SYSTEM:
-                    intRegMap = IntRegUsrMap;
+                    intRegMap = int_reg::RegUsrMap;
                     break;
                   case MODE_FIQ:
-                    intRegMap = IntRegFiqMap;
+                    intRegMap = int_reg::RegFiqMap;
                     break;
                   case MODE_IRQ:
-                    intRegMap = IntRegIrqMap;
+                    intRegMap = int_reg::RegIrqMap;
                     break;
                   case MODE_SVC:
-                    intRegMap = IntRegSvcMap;
+                    intRegMap = int_reg::RegSvcMap;
                     break;
                   case MODE_MON:
-                    intRegMap = IntRegMonMap;
+                    intRegMap = int_reg::RegMonMap;
                     break;
                   case MODE_ABORT:
-                    intRegMap = IntRegAbtMap;
+                    intRegMap = int_reg::RegAbtMap;
                     break;
                   case MODE_HYP:
-                    intRegMap = IntRegHypMap;
+                    intRegMap = int_reg::RegHypMap;
                     break;
                   case MODE_UNDEFINED:
-                    intRegMap = IntRegUndMap;
+                    intRegMap = int_reg::RegUndMap;
                     break;
                   default:
                     panic("Unrecognized mode setting in CPSR.\n");
@@ -674,25 +674,25 @@ namespace ArmISA
         flattenIntIndex(int reg) const
         {
             assert(reg >= 0);
-            if (reg < NUM_ARCH_INTREGS) {
+            if (reg < int_reg::NumArchRegs) {
                 return intRegMap[reg];
-            } else if (reg < NUM_INTREGS) {
+            } else if (reg < int_reg::NumRegs) {
                 return reg;
-            } else if (reg == INTREG_SPX) {
+            } else if (reg == int_reg::Spx) {
                 CPSR cpsr = miscRegs[MISCREG_CPSR];
                 ExceptionLevel el = opModeToEL(
                     (OperatingMode) (uint8_t) cpsr.mode);
                 if (!cpsr.sp && el != EL0)
-                    return INTREG_SP0;
+                    return int_reg::Sp0;
                 switch (el) {
                   case EL3:
-                    return INTREG_SP3;
+                    return int_reg::Sp3;
                   case EL2:
-                    return INTREG_SP2;
+                    return int_reg::Sp2;
                   case EL1:
-                    return INTREG_SP1;
+                    return int_reg::Sp1;
                   case EL0:
-                    return INTREG_SP0;
+                    return int_reg::Sp0;
                   default:
                     panic("Invalid exception level");
                     return 0;  // Never happens.

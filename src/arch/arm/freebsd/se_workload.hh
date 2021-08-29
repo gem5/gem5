@@ -90,9 +90,9 @@ struct Result<ABI, SyscallReturn,
             tc->setCCReg(ArmISA::CCREG_C, 1);
             val = ret.encodedValue();
         }
-        tc->setIntReg(ArmISA::ReturnValueReg, val);
+        tc->setReg(ArmISA::ReturnValueReg, val);
         if (ret.count() > 1)
-            tc->setIntReg(ArmISA::SyscallPseudoReturnReg, ret.value2());
+            tc->setReg(ArmISA::SyscallPseudoReturnReg, ret.value2());
     }
 };
 

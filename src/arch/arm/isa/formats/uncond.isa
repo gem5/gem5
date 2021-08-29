@@ -36,7 +36,7 @@
 def format ArmUnconditional() {{
     decode_block = '''
     {
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
         const uint32_t op1 = bits(machInst, 27, 20);
         if (bits(op1, 7) == 0) {
             const uint32_t op2 = bits(machInst, 7, 4);
@@ -63,10 +63,10 @@ def format ArmUnconditional() {{
                     const bool add = bits(machInst, 23);
                     const uint32_t imm12 = bits(machInst, 11, 0);
                     if (add) {
-                        return new %(pli_iadd)s(machInst, INTREG_ZERO,
+                        return new %(pli_iadd)s(machInst, int_reg::Zero,
                                                 rn, add, imm12);
                     } else {
-                        return new %(pli_isub)s(machInst, INTREG_ZERO,
+                        return new %(pli_isub)s(machInst, int_reg::Zero,
                                                 rn, add, imm12);
                     }
                 }
@@ -77,18 +77,18 @@ def format ArmUnconditional() {{
                     const uint32_t imm12 = bits(machInst, 11, 0);
                     if (pldw) {
                         if (add) {
-                            return new %(pldw_iadd)s(machInst, INTREG_ZERO,
+                            return new %(pldw_iadd)s(machInst, int_reg::Zero,
                                                      rn, add, imm12);
                         } else {
-                            return new %(pldw_isub)s(machInst, INTREG_ZERO,
+                            return new %(pldw_isub)s(machInst, int_reg::Zero,
                                                      rn, add, imm12);
                         }
                     } else {
                         if (add) {
-                            return new %(pld_iadd)s(machInst, INTREG_ZERO,
+                            return new %(pld_iadd)s(machInst, int_reg::Zero,
                                                     rn, add, imm12);
                         } else {
-                            return new %(pld_isub)s(machInst, INTREG_ZERO,
+                            return new %(pld_isub)s(machInst, int_reg::Zero,
                                                     rn, add, imm12);
                         }
                     }
@@ -114,14 +114,14 @@ def format ArmUnconditional() {{
                         const uint32_t imm5 = bits(machInst, 11, 7);
                         const uint32_t type = bits(machInst, 6, 5);
                         const bool add = bits(machInst, 23);
-                        const IntRegIndex rm =
-                            (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                        const RegIndex rm =
+                            (RegIndex)(uint32_t)bits(machInst, 3, 0);
                         if (add) {
-                            return new %(pli_radd)s(machInst, INTREG_ZERO, rn,
-                                                    add, imm5, type, rm);
+                            return new %(pli_radd)s(machInst, int_reg::Zero,
+                                                    rn, add, imm5, type, rm);
                         } else {
-                            return new %(pli_rsub)s(machInst, INTREG_ZERO, rn,
-                                                    add, imm5, type, rm);
+                            return new %(pli_rsub)s(machInst, int_reg::Zero,
+                                                    rn, add, imm5, type, rm);
                         }
                     }
                   case 0x71:
@@ -131,25 +131,29 @@ def format ArmUnconditional() {{
                         const uint32_t type = bits(machInst, 6, 5);
                         const bool add = bits(machInst, 23);
                         const bool pldw = bits(machInst, 22);
-                        const IntRegIndex rm =
-                            (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                        const RegIndex rm =
+                            (RegIndex)(uint32_t)bits(machInst, 3, 0);
                         if (pldw) {
                             if (add) {
-                                return new %(pldw_radd)s(machInst, INTREG_ZERO,
+                                return new %(pldw_radd)s(machInst,
+                                                         int_reg::Zero,
                                                          rn, add, imm5,
                                                          type, rm);
                             } else {
-                                return new %(pldw_rsub)s(machInst, INTREG_ZERO,
+                                return new %(pldw_rsub)s(machInst,
+                                                         int_reg::Zero,
                                                          rn, add, imm5,
                                                          type, rm);
                             }
                         } else {
                             if (add) {
-                                return new %(pld_radd)s(machInst, INTREG_ZERO,
+                                return new %(pld_radd)s(machInst,
+                                                        int_reg::Zero,
                                                         rn, add, imm5,
                                                         type, rm);
                             } else {
-                                return new %(pld_rsub)s(machInst, INTREG_ZERO,
+                                return new %(pld_rsub)s(machInst,
+                                                        int_reg::Zero,
                                                         rn, add, imm5,
                                                         type, rm);
                             }
@@ -244,7 +248,7 @@ def format ArmUnconditional() {{
                         return decodeExtensionRegLoadStore(machInst);
                     }
                     if (bits(op1, 0) == 1) {
-                        if (rn == INTREG_PC) {
+                        if (rn == int_reg::Pc) {
                             if (bits(op1, 4, 3) != 0x0) {
                                 return new WarnUnimplemented(
                                         "ldc, ldc2 (literal)", machInst);

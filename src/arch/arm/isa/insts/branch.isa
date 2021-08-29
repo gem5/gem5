@@ -122,7 +122,7 @@ let {{
             instFlags += ["IsCall"]
         else:
             linkStr = ""
-            isRasPop = "op1 == INTREG_LR"
+            isRasPop = "op1 == int_reg::Lr"
 
         if imm and link: #blx with imm
             branchStr = '''
@@ -161,7 +161,7 @@ let {{
     bxjIop = ArmInstObjParams("bxj", "BxjReg", "BranchRegCond",
                               { "code": bxjcode,
                                 "predicate_test": predicateTest,
-                                "is_ras_pop": "op1 == INTREG_LR" },
+                                "is_ras_pop": "op1 == int_reg::Lr" },
                               ["IsIndirectControl"])
     header_output += BranchRegCondDeclare.subst(bxjIop)
     decoder_output += BranchRegCondConstructor.subst(bxjIop)

@@ -122,7 +122,7 @@ Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
             tc->getIsaPtr()->globalClearExclusive();
         }
 
-        xc->setRegOperand(this, 0, (Dest64) & mask(intWidth));
+        xc->setRegOperand(this, 0, Dest64 & mask(intWidth));
 
 
         uint64_t final_val = Dest64;
@@ -155,7 +155,7 @@ Ttest64::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 
     if (fault == NoFault) {
         uint64_t final_val = Dest64;
-        xc->setRegOperand(this, 0, (Dest64) & mask(intWidth));
+        xc->setRegOperand(this, 0, Dest64 & mask(intWidth));
         if (traceData) { traceData->setData(final_val); }
     }
 

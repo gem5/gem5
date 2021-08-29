@@ -102,7 +102,7 @@ CortexA76TC::readIntRegFlat(RegIndex idx) const
 
     auto *non_const_this = const_cast<CortexA76TC *>(this);
 
-    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+    if (idx == ArmISA::int_reg::R13Mon || idx == ArmISA::int_reg::R14Mon) {
         orig_cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
         ArmISA::CPSR new_cpsr = orig_cpsr;
         new_cpsr.mode = ArmISA::MODE_MON;
@@ -111,7 +111,7 @@ CortexA76TC::readIntRegFlat(RegIndex idx) const
 
     RegVal val = ThreadContext::readIntRegFlat(idx);
 
-    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+    if (idx == ArmISA::int_reg::R13Mon || idx == ArmISA::int_reg::R14Mon) {
         non_const_this->setMiscReg(ArmISA::MISCREG_CPSR, orig_cpsr);
     }
 
@@ -123,7 +123,7 @@ CortexA76TC::setIntRegFlat(RegIndex idx, RegVal val)
 {
     ArmISA::CPSR orig_cpsr;
 
-    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+    if (idx == ArmISA::int_reg::R13Mon || idx == ArmISA::int_reg::R14Mon) {
         orig_cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
         ArmISA::CPSR new_cpsr = orig_cpsr;
         new_cpsr.mode = ArmISA::MODE_MON;
@@ -132,7 +132,7 @@ CortexA76TC::setIntRegFlat(RegIndex idx, RegVal val)
 
     ThreadContext::setIntRegFlat(idx, val);
 
-    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+    if (idx == ArmISA::int_reg::R13Mon || idx == ArmISA::int_reg::R14Mon) {
         setMiscReg(ArmISA::MISCREG_CPSR, orig_cpsr);
     }
 }
@@ -832,99 +832,99 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
 });
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::intReg32IdxNameMap({
-        { ArmISA::INTREG_R0, "R0" },
-        { ArmISA::INTREG_R1, "R1" },
-        { ArmISA::INTREG_R2, "R2" },
-        { ArmISA::INTREG_R3, "R3" },
-        { ArmISA::INTREG_R4, "R4" },
-        { ArmISA::INTREG_R5, "R5" },
-        { ArmISA::INTREG_R6, "R6" },
-        { ArmISA::INTREG_R7, "R7" },
-        { ArmISA::INTREG_R8, "R8" },
-        { ArmISA::INTREG_R9, "R9" },
-        { ArmISA::INTREG_R10, "R10" },
-        { ArmISA::INTREG_R11, "R11" },
-        { ArmISA::INTREG_R12, "R12" },
-        { ArmISA::INTREG_R13, "R13" },
-        { ArmISA::INTREG_R14, "R14" },
-        { ArmISA::INTREG_R15, "R15" }
+        { ArmISA::int_reg::R0, "R0" },
+        { ArmISA::int_reg::R1, "R1" },
+        { ArmISA::int_reg::R2, "R2" },
+        { ArmISA::int_reg::R3, "R3" },
+        { ArmISA::int_reg::R4, "R4" },
+        { ArmISA::int_reg::R5, "R5" },
+        { ArmISA::int_reg::R6, "R6" },
+        { ArmISA::int_reg::R7, "R7" },
+        { ArmISA::int_reg::R8, "R8" },
+        { ArmISA::int_reg::R9, "R9" },
+        { ArmISA::int_reg::R10, "R10" },
+        { ArmISA::int_reg::R11, "R11" },
+        { ArmISA::int_reg::R12, "R12" },
+        { ArmISA::int_reg::R13, "R13" },
+        { ArmISA::int_reg::R14, "R14" },
+        { ArmISA::int_reg::R15, "R15" }
 });
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::intReg64IdxNameMap({
-        { ArmISA::INTREG_X0, "X0" },
-        { ArmISA::INTREG_X1, "X1" },
-        { ArmISA::INTREG_X2, "X2" },
-        { ArmISA::INTREG_X3, "X3" },
-        { ArmISA::INTREG_X4, "X4" },
-        { ArmISA::INTREG_X5, "X5" },
-        { ArmISA::INTREG_X6, "X6" },
-        { ArmISA::INTREG_X7, "X7" },
-        { ArmISA::INTREG_X8, "X8" },
-        { ArmISA::INTREG_X9, "X9" },
-        { ArmISA::INTREG_X10, "X10" },
-        { ArmISA::INTREG_X11, "X11" },
-        { ArmISA::INTREG_X12, "X12" },
-        { ArmISA::INTREG_X13, "X13" },
-        { ArmISA::INTREG_X14, "X14" },
-        { ArmISA::INTREG_X15, "X15" },
-        { ArmISA::INTREG_X16, "X16" },
-        { ArmISA::INTREG_X17, "X17" },
-        { ArmISA::INTREG_X18, "X18" },
-        { ArmISA::INTREG_X19, "X19" },
-        { ArmISA::INTREG_X20, "X20" },
-        { ArmISA::INTREG_X21, "X21" },
-        { ArmISA::INTREG_X22, "X22" },
-        { ArmISA::INTREG_X23, "X23" },
-        { ArmISA::INTREG_X24, "X24" },
-        { ArmISA::INTREG_X25, "X25" },
-        { ArmISA::INTREG_X26, "X26" },
-        { ArmISA::INTREG_X27, "X27" },
-        { ArmISA::INTREG_X28, "X28" },
-        { ArmISA::INTREG_X29, "X29" },
-        { ArmISA::INTREG_X30, "X30" },
-        { ArmISA::INTREG_SPX, "SP" },
+        { ArmISA::int_reg::X0, "X0" },
+        { ArmISA::int_reg::X1, "X1" },
+        { ArmISA::int_reg::X2, "X2" },
+        { ArmISA::int_reg::X3, "X3" },
+        { ArmISA::int_reg::X4, "X4" },
+        { ArmISA::int_reg::X5, "X5" },
+        { ArmISA::int_reg::X6, "X6" },
+        { ArmISA::int_reg::X7, "X7" },
+        { ArmISA::int_reg::X8, "X8" },
+        { ArmISA::int_reg::X9, "X9" },
+        { ArmISA::int_reg::X10, "X10" },
+        { ArmISA::int_reg::X11, "X11" },
+        { ArmISA::int_reg::X12, "X12" },
+        { ArmISA::int_reg::X13, "X13" },
+        { ArmISA::int_reg::X14, "X14" },
+        { ArmISA::int_reg::X15, "X15" },
+        { ArmISA::int_reg::X16, "X16" },
+        { ArmISA::int_reg::X17, "X17" },
+        { ArmISA::int_reg::X18, "X18" },
+        { ArmISA::int_reg::X19, "X19" },
+        { ArmISA::int_reg::X20, "X20" },
+        { ArmISA::int_reg::X21, "X21" },
+        { ArmISA::int_reg::X22, "X22" },
+        { ArmISA::int_reg::X23, "X23" },
+        { ArmISA::int_reg::X24, "X24" },
+        { ArmISA::int_reg::X25, "X25" },
+        { ArmISA::int_reg::X26, "X26" },
+        { ArmISA::int_reg::X27, "X27" },
+        { ArmISA::int_reg::X28, "X28" },
+        { ArmISA::int_reg::X29, "X29" },
+        { ArmISA::int_reg::X30, "X30" },
+        { ArmISA::int_reg::Spx, "SP" },
 });
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::flattenedIntIdxNameMap({
-        { ArmISA::INTREG_R0, "X0" },
-        { ArmISA::INTREG_R1, "X1" },
-        { ArmISA::INTREG_R2, "X2" },
-        { ArmISA::INTREG_R3, "X3" },
-        { ArmISA::INTREG_R4, "X4" },
-        { ArmISA::INTREG_R5, "X5" },
-        { ArmISA::INTREG_R6, "X6" },
-        { ArmISA::INTREG_R7, "X7" },
-        { ArmISA::INTREG_R8, "X8" },
-        { ArmISA::INTREG_R9, "X9" },
-        { ArmISA::INTREG_R10, "X10" },
-        { ArmISA::INTREG_R11, "X11" },
-        { ArmISA::INTREG_R12, "X12" },
-        { ArmISA::INTREG_R13, "X13" },
-        { ArmISA::INTREG_R14, "X14" },
+        { ArmISA::int_reg::R0, "X0" },
+        { ArmISA::int_reg::R1, "X1" },
+        { ArmISA::int_reg::R2, "X2" },
+        { ArmISA::int_reg::R3, "X3" },
+        { ArmISA::int_reg::R4, "X4" },
+        { ArmISA::int_reg::R5, "X5" },
+        { ArmISA::int_reg::R6, "X6" },
+        { ArmISA::int_reg::R7, "X7" },
+        { ArmISA::int_reg::R8, "X8" },
+        { ArmISA::int_reg::R9, "X9" },
+        { ArmISA::int_reg::R10, "X10" },
+        { ArmISA::int_reg::R11, "X11" },
+        { ArmISA::int_reg::R12, "X12" },
+        { ArmISA::int_reg::R13, "X13" },
+        { ArmISA::int_reg::R14, "X14" },
         // Skip PC.
-        { ArmISA::INTREG_R13_SVC, "X19" },
-        { ArmISA::INTREG_R14_SVC, "X18" },
-        { ArmISA::INTREG_R13_MON, "R13" }, // Need to be in monitor mode?
-        { ArmISA::INTREG_R14_MON, "R14" }, // Need to be in monitor mode?
-        { ArmISA::INTREG_R13_HYP, "X15" },
-        { ArmISA::INTREG_R13_ABT, "X21" },
-        { ArmISA::INTREG_R14_ABT, "X20" },
-        { ArmISA::INTREG_R13_UND, "X23" },
-        { ArmISA::INTREG_R14_UND, "X22" },
-        { ArmISA::INTREG_R13_IRQ, "X17" },
-        { ArmISA::INTREG_R14_IRQ, "X16" },
-        { ArmISA::INTREG_R8_FIQ, "X24" },
-        { ArmISA::INTREG_R9_FIQ, "X25" },
-        { ArmISA::INTREG_R10_FIQ, "X26" },
-        { ArmISA::INTREG_R11_FIQ, "X27" },
-        { ArmISA::INTREG_R12_FIQ, "X28" },
-        { ArmISA::INTREG_R13_FIQ, "X29" },
-        { ArmISA::INTREG_R14_FIQ, "X30" },
+        { ArmISA::int_reg::R13Svc, "X19" },
+        { ArmISA::int_reg::R14Svc, "X18" },
+        { ArmISA::int_reg::R13Mon, "R13" }, // Need to be in monitor mode?
+        { ArmISA::int_reg::R14Mon, "R14" }, // Need to be in monitor mode?
+        { ArmISA::int_reg::R13Hyp, "X15" },
+        { ArmISA::int_reg::R13Abt, "X21" },
+        { ArmISA::int_reg::R14Abt, "X20" },
+        { ArmISA::int_reg::R13Und, "X23" },
+        { ArmISA::int_reg::R14Und, "X22" },
+        { ArmISA::int_reg::R13Irq, "X17" },
+        { ArmISA::int_reg::R14Irq, "X16" },
+        { ArmISA::int_reg::R8Fiq, "X24" },
+        { ArmISA::int_reg::R9Fiq, "X25" },
+        { ArmISA::int_reg::R10Fiq, "X26" },
+        { ArmISA::int_reg::R11Fiq, "X27" },
+        { ArmISA::int_reg::R12Fiq, "X28" },
+        { ArmISA::int_reg::R13Fiq, "X29" },
+        { ArmISA::int_reg::R14Fiq, "X30" },
         // Skip zero, ureg0-2, and dummy regs.
-        { ArmISA::INTREG_SP0, "SP_EL0" },
-        { ArmISA::INTREG_SP1, "SP_EL1" },
-        { ArmISA::INTREG_SP2, "SP_EL2" },
-        { ArmISA::INTREG_SP3, "SP_EL3" },
+        { ArmISA::int_reg::Sp0, "SP_EL0" },
+        { ArmISA::int_reg::Sp1, "SP_EL1" },
+        { ArmISA::int_reg::Sp2, "SP_EL2" },
+        { ArmISA::int_reg::Sp3, "SP_EL3" },
 });
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::ccRegIdxNameMap({

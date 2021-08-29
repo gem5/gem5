@@ -92,7 +92,7 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     _decoderFlavor(p.decoderFlavor), pmu(p.pmu), impdefAsNop(p.impdef_nop),
     afterStartup(false)
 {
-    _regClasses.emplace_back(NUM_INTREGS, debug::IntRegs);
+    _regClasses.emplace_back(int_reg::NumRegs, debug::IntRegs);
     _regClasses.emplace_back(0, debug::FloatRegs);
     _regClasses.emplace_back(NumVecRegs, vecRegClassOps, debug::VecRegs,
             sizeof(VecRegContainer));
@@ -563,8 +563,10 @@ ISA::takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc)
 void
 ISA::copyRegsFrom(ThreadContext *src)
 {
-    for (int i = 0; i < NUM_INTREGS; i++)
-        tc->setIntRegFlat(i, src->readIntRegFlat(i));
+    for (int i = 0; i < int_reg::NumRegs; i++) {
+        RegId reg(IntRegClass, i);
+        tc->setRegFlat(reg, src->getRegFlat(reg));
+    }
 
     for (int i = 0; i < NUM_CCREGS; i++)
         tc->setCCReg(i, src->readCCReg(i));
@@ -947,15 +949,15 @@ ISA::readMiscReg(int misc_reg)
         }
       case MISCREG_SP_EL0:
         {
-            return tc->readIntReg(INTREG_SP0);
+            return tc->getReg(int_reg::Sp0);
         }
       case MISCREG_SP_EL1:
         {
-            return tc->readIntReg(INTREG_SP1);
+            return tc->getReg(int_reg::Sp1);
         }
       case MISCREG_SP_EL2:
         {
-            return tc->readIntReg(INTREG_SP2);
+            return tc->getReg(int_reg::Sp2);
         }
       case MISCREG_SPSEL:
         {
@@ -1889,13 +1891,13 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             }
             break;
           case MISCREG_SP_EL0:
-            tc->setIntReg(INTREG_SP0, newVal);
+            tc->setReg(int_reg::Sp0, newVal);
             break;
           case MISCREG_SP_EL1:
-            tc->setIntReg(INTREG_SP1, newVal);
+            tc->setReg(int_reg::Sp1, newVal);
             break;
           case MISCREG_SP_EL2:
-            tc->setIntReg(INTREG_SP2, newVal);
+            tc->setReg(int_reg::Sp2, newVal);
             break;
           case MISCREG_SPSEL:
             {

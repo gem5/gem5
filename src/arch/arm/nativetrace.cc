@@ -109,7 +109,7 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 
     // Regular int regs
     for (int i = 0; i < 15; i++) {
-        newState[i] = tc->readIntReg(i);
+        newState[i] = tc->getReg(RegId(IntRegClass, i));
         changed[i] = (oldState[i] != newState[i]);
     }
 

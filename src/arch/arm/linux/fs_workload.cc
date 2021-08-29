@@ -179,15 +179,15 @@ FsLinux::initState()
         // originally done because the entry offset changed in kernel v5.8.
         // Previously the bootloader just used a hardcoded address.
         for (auto *tc: system->threads) {
-            tc->setIntReg(0, params().dtb_addr);
-            tc->setIntReg(5, params().cpu_release_addr);
+            tc->setReg(int_reg::X0, params().dtb_addr);
+            tc->setReg(int_reg::X5, params().cpu_release_addr);
         }
     } else {
         // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
         for (auto *tc: system->threads) {
-            tc->setIntReg(0, 0);
-            tc->setIntReg(1, params().machine_type);
-            tc->setIntReg(2, params().dtb_addr);
+            tc->setReg(int_reg::R0, (RegVal)0);
+            tc->setReg(int_reg::R1, params().machine_type);
+            tc->setReg(int_reg::R2, params().dtb_addr);
         }
     }
 }
@@ -301,7 +301,7 @@ DumpStats::getTaskDetails(ThreadContext *tc, uint32_t &pid,
     uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
 
     linux::ThreadInfo ti(tc);
-    Addr task_descriptor = tc->readIntReg(2);
+    Addr task_descriptor = tc->getReg(int_reg::R2);
     pid = ti.curTaskPID(task_descriptor);
     tgid = ti.curTaskTGID(task_descriptor);
     next_task_str = ti.curTaskName(task_descriptor);
@@ -323,7 +323,7 @@ DumpStats64::getTaskDetails(ThreadContext *tc, uint32_t &pid,
     uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
 
     linux::ThreadInfo ti(tc);
-    Addr task_struct = tc->readIntReg(1);
+    Addr task_struct = tc->getReg(int_reg::X1);
     pid = ti.curTaskPIDFromTaskStruct(task_struct);
     tgid = ti.curTaskTGIDFromTaskStruct(task_struct);
     next_task_str = ti.curTaskNameFromTaskStruct(task_struct);

@@ -86,10 +86,10 @@ class TmeImmOp64 : public ArmISA::ArmStaticInst
 class TmeRegNone64 : public ArmISA::ArmStaticInst
 {
   protected:
-    ArmISA::IntRegIndex dest;
+    RegIndex dest;
 
     TmeRegNone64(const char *mnem, ArmISA::ExtMachInst machInst,
-                 OpClass __opClass, ArmISA::IntRegIndex _dest)
+                 OpClass __opClass, RegIndex _dest)
       : ArmISA::ArmStaticInst(mnem, machInst, __opClass),
         dest(_dest)
     {}
@@ -104,7 +104,7 @@ class Tstart64 : public TmeRegNone64
     RegId destRegIdxArr[1];
 
   public:
-    Tstart64(ArmISA::ExtMachInst, ArmISA::IntRegIndex);
+    Tstart64(ArmISA::ExtMachInst, RegIndex);
 
     Fault execute(ExecContext *, Trace::InstRecord *) const;
     Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
@@ -117,7 +117,7 @@ class Ttest64 : public TmeRegNone64
     RegId destRegIdxArr[1];
 
   public:
-    Ttest64(ArmISA::ExtMachInst, ArmISA::IntRegIndex);
+    Ttest64(ArmISA::ExtMachInst, RegIndex);
 
     Fault execute(ExecContext *, Trace::InstRecord *) const;
 };

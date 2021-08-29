@@ -97,14 +97,14 @@ TarmacTracerRecordV8::TraceRegEntryV8::updateInt(
 {
     // Do not trace pseudo register accesses: invalid
     // register entry.
-    if (regRelIdx > NUM_ARCH_INTREGS) {
+    if (regRelIdx > int_reg::NumArchRegs) {
         regValid = false;
         return;
     }
 
     TraceRegEntry::updateInt(tarmCtx, regRelIdx);
 
-    if ((regRelIdx != PCReg) || (regRelIdx != StackPointerReg) ||
+    if ((regRelIdx != int_reg::Pc) || (regRelIdx != StackPointerReg) ||
         (regRelIdx != FramePointerReg) || (regRelIdx != ReturnAddressReg)) {
 
         const auto* arm_inst = static_cast<const ArmStaticInst*>(

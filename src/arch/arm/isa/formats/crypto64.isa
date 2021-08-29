@@ -55,8 +55,8 @@ let {{
         const auto opcode = bits(machInst, 16, 12);
         const auto size = bits(machInst, 23, 22);
 
-        IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex rd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         if (size) {
             // UNALLOCATED
@@ -78,8 +78,8 @@ let {{
         const auto opcode = bits(machInst, 16, 12);
         const auto size = bits(machInst, 23, 22);
 
-        IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex rd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         if (size) {
             // UNALLOCATED
@@ -100,9 +100,9 @@ let {{
         const auto opcode = bits(machInst, 14, 12);
         const auto size = bits(machInst, 23, 22);
 
-        IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex rd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         if (size) {
             // UNALLOCATED
