@@ -192,8 +192,8 @@ RemoteGDB::PowerGdbRegCache::getRegs(ThreadContext *context)
         r.gpr[i] = htog((uint32_t)context->getReg(reg), order);
     }
 
-    for (int i = 0; i < NumFloatArchRegs; i++)
-        r.fpr[i] = context->readFloatReg(i);
+    for (int i = 0; i < float_reg::NumArchRegs; i++)
+        r.fpr[i] = context->getReg(RegId(FloatRegClass, i));
 
     r.pc = htog((uint32_t)context->pcState().instAddr(), order);
     r.msr = 0; // MSR is privileged, hence not exposed here
@@ -215,8 +215,8 @@ RemoteGDB::PowerGdbRegCache::setRegs(ThreadContext *context) const
     for (int i = 0; i < int_reg::NumArchRegs; i++)
         context->setReg(RegId(IntRegClass, i), gtoh(r.gpr[i], order));
 
-    for (int i = 0; i < NumFloatArchRegs; i++)
-        context->setFloatReg(i, r.fpr[i]);
+    for (int i = 0; i < float_reg::NumArchRegs; i++)
+        context->setReg(RegId(FloatRegClass, i), r.fpr[i]);
 
     auto pc = context->pcState().as<PowerISA::PCState>();
     pc.byteOrder(order);
@@ -246,8 +246,8 @@ RemoteGDB::Power64GdbRegCache::getRegs(ThreadContext *context)
     for (int i = 0; i < int_reg::NumArchRegs; i++)
         r.gpr[i] = htog(context->getReg(RegId(IntRegClass, i)), order);
 
-    for (int i = 0; i < NumFloatArchRegs; i++)
-        r.fpr[i] = context->readFloatReg(i);
+    for (int i = 0; i < float_reg::NumArchRegs; i++)
+        r.fpr[i] = context->getReg(RegId(FloatRegClass, i));
 
     r.pc = htog(context->pcState().instAddr(), order);
     r.msr = 0; // MSR is privileged, hence not exposed here
@@ -269,8 +269,8 @@ RemoteGDB::Power64GdbRegCache::setRegs(ThreadContext *context) const
     for (int i = 0; i < int_reg::NumArchRegs; i++)
         context->setReg(RegId(IntRegClass, i), gtoh(r.gpr[i], order));
 
-    for (int i = 0; i < NumFloatArchRegs; i++)
-        context->setFloatReg(i, r.fpr[i]);
+    for (int i = 0; i < float_reg::NumArchRegs; i++)
+        context->setReg(RegId(FloatRegClass, i), r.fpr[i]);
 
     auto pc = context->pcState().as<PowerISA::PCState>();
     pc.byteOrder(order);

@@ -55,7 +55,7 @@ namespace PowerISA
 ISA::ISA(const Params &p) : BaseISA(p)
 {
     _regClasses.emplace_back(int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(NumFloatRegs, debug::FloatRegs);
+    _regClasses.emplace_back(float_reg::NumRegs, debug::FloatRegs);
     _regClasses.emplace_back(1, debug::IntRegs);
     _regClasses.emplace_back(2, debug::IntRegs);
     _regClasses.emplace_back(1, debug::IntRegs);
@@ -74,8 +74,10 @@ ISA::copyRegsFrom(ThreadContext *src)
     }
 
     // Then loop through the floating point registers.
-    for (int i = 0; i < NumFloatRegs; ++i)
-        tc->setFloatReg(i, src->readFloatReg(i));
+    for (int i = 0; i < float_reg::NumRegs; ++i) {
+        RegId reg(FloatRegClass, i);
+        tc->setReg(reg, src->getReg(reg));
+    }
 
     //TODO Copy misc. registers
 
