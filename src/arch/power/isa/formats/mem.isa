@@ -69,7 +69,7 @@ def template LoadExecute {{
     {
         Addr EA;
         Fault fault = NoFault;
-        Msr msr = xc->tcBase()->readIntReg(INTREG_MSR);
+        Msr msr = xc->tcBase()->getReg(int_reg::Msr);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -119,7 +119,7 @@ def template LoadCompleteAcc {{
     {
         [[maybe_unused]] Addr EA;
         Fault fault = NoFault;
-        Msr msr = xc->tcBase()->readIntReg(INTREG_MSR);
+        Msr msr = xc->tcBase()->getReg(int_reg::Msr);
 
         %(op_decl)s;
         EA = pkt->req->getVaddr();
@@ -150,7 +150,7 @@ def template StoreExecute {{
     {
         Addr EA;
         Fault fault = NoFault;
-        Msr msr = xc->tcBase()->readIntReg(INTREG_MSR);
+        Msr msr = xc->tcBase()->getReg(int_reg::Msr);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -184,7 +184,7 @@ def template StoreInitiateAcc {{
     {
         Addr EA;
         Fault fault = NoFault;
-        Msr msr = xc->tcBase()->readIntReg(INTREG_MSR);
+        Msr msr = xc->tcBase()->getReg(int_reg::Msr);
 
         %(op_decl)s;
         %(op_rd)s;

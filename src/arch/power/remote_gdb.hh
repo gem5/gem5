@@ -56,7 +56,7 @@ class RemoteGDB : public BaseRemoteGDB
       private:
         struct GEM5_PACKED
         {
-            uint32_t gpr[NumIntArchRegs];
+            uint32_t gpr[int_reg::NumArchRegs];
             uint64_t fpr[NumFloatArchRegs];
             uint32_t pc;
             uint32_t msr;
@@ -85,7 +85,7 @@ class RemoteGDB : public BaseRemoteGDB
       private:
         struct GEM5_PACKED
         {
-            uint64_t gpr[NumIntArchRegs];
+            uint64_t gpr[int_reg::NumArchRegs];
             uint64_t fpr[NumFloatArchRegs];
             uint64_t pc;
             uint64_t msr;

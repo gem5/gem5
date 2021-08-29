@@ -63,18 +63,18 @@ def operands {{
     'NIA': PCStateOp('ud', 'npc', (None, None, 'IsControl'), 9),
 
     # Control registers
-    'CR': IntRegOp('uw', 'INTREG_CR', 'IsInteger', 9),
-    'LR': IntRegOp('ud', 'INTREG_LR', 'IsInteger', 9),
-    'CTR': IntRegOp('ud', 'INTREG_CTR', 'IsInteger', 9),
-    'TAR': IntRegOp('ud', 'INTREG_TAR', 'IsInteger', 9),
-    'XER': IntRegOp('uw', 'INTREG_XER', 'IsInteger', 9),
-    'MSR': IntRegOp('ud', 'INTREG_MSR', 'IsInteger', 9),
+    'CR': IntRegOp('uw', 'int_reg::Cr', 'IsInteger', 9),
+    'LR': IntRegOp('ud', 'int_reg::Lr', 'IsInteger', 9),
+    'CTR': IntRegOp('ud', 'int_reg::Ctr', 'IsInteger', 9),
+    'TAR': IntRegOp('ud', 'int_reg::Tar', 'IsInteger', 9),
+    'XER': IntRegOp('uw', 'int_reg::Xer', 'IsInteger', 9),
+    'MSR': IntRegOp('ud', 'int_reg::Msr', 'IsInteger', 9),
 
     # Setting as IntReg so things are stored as an integer, not double
-    'FPSCR': IntRegOp('uw', 'INTREG_FPSCR', 'IsFloating', 9),
+    'FPSCR': IntRegOp('uw', 'int_reg::Fpscr', 'IsFloating', 9),
 
     # Registers for linked loads and stores
-    'Rsv': IntRegOp('uw', 'INTREG_RSV', 'IsInteger', 9),
-    'RsvLen': IntRegOp('uw', 'INTREG_RSV_LEN', 'IsInteger', 9),
-    'RsvAddr': IntRegOp('ud', 'INTREG_RSV_ADDR', 'IsInteger', 9),
+    'Rsv': IntRegOp('uw', 'int_reg::Rsv', 'IsInteger', 9),
+    'RsvLen': IntRegOp('uw', 'int_reg::RsvLen', 'IsInteger', 9),
+    'RsvAddr': IntRegOp('ud', 'int_reg::RsvAddr', 'IsInteger', 9),
 }};
