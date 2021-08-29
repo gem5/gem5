@@ -246,7 +246,8 @@ TarmacTracerRecord::TraceRegEntry::updateFloat(
 
     regValid = true;
     regName  = "f" + std::to_string(regRelIdx);
-    values[Lo] = bitsToFloat32(thread->readFloatReg(regRelIdx));
+    RegId reg(FloatRegClass, regRelIdx);
+    values[Lo] = bitsToFloat32(thread->getReg(reg));
 }
 
 void
