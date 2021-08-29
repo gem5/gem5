@@ -328,30 +328,30 @@ def operands {{
     'X5': IntRegX64('5'),
 
     # Condition code registers
-    'CondCodesNZ': CCReg('CCREG_NZ'),
-    'CondCodesC': CCReg('CCREG_C'),
-    'CondCodesV': CCReg('CCREG_V'),
-    'CondCodesGE': CCReg('CCREG_GE'),
+    'CondCodesNZ': CCReg('cc_reg::Nz'),
+    'CondCodesC': CCReg('cc_reg::C'),
+    'CondCodesV': CCReg('cc_reg::V'),
+    'CondCodesGE': CCReg('cc_reg::Ge'),
     'OptCondCodesNZ': CCReg(
             '''((condCode == COND_AL || condCode == COND_UC ||
                  condCode == COND_CC || condCode == COND_CS ||
                  condCode == COND_VS || condCode == COND_VC) ?
-                CCREG_ZERO : CCREG_NZ)'''),
+                cc_reg::Zero : cc_reg::Nz)'''),
     'OptCondCodesC': CCReg(
              '''((condCode == COND_HI || condCode == COND_LS ||
                 condCode == COND_CS || condCode == COND_CC) ?
-               CCREG_C : CCREG_ZERO)'''),
+               cc_reg::C : cc_reg::Zero)'''),
     'OptShiftRmCondCodesC': CCReg(
             '''((condCode == COND_HI || condCode == COND_LS ||
                  condCode == COND_CS || condCode == COND_CC ||
                  shiftType == ROR) ?
-                CCREG_C : CCREG_ZERO)'''),
+                cc_reg::C : cc_reg::Zero)'''),
     'OptCondCodesV': CCReg(
             '''((condCode == COND_VS || condCode == COND_VC ||
                  condCode == COND_GE || condCode == COND_LT ||
                  condCode == COND_GT || condCode == COND_LE) ?
-                CCREG_V : CCREG_ZERO)'''),
-    'FpCondCodes': CCReg('CCREG_FP'),
+                cc_reg::V : cc_reg::Zero)'''),
+    'FpCondCodes': CCReg('cc_reg::Fp'),
 
     #Abstracted floating point reg operands
     'FpDest': VectorElem('dest'),

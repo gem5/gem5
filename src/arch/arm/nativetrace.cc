@@ -119,10 +119,10 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 
     //CPSR
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    cpsr.nz = tc->readCCReg(CCREG_NZ);
-    cpsr.c = tc->readCCReg(CCREG_C);
-    cpsr.v = tc->readCCReg(CCREG_V);
-    cpsr.ge = tc->readCCReg(CCREG_GE);
+    cpsr.nz = tc->getReg(cc_reg::Nz);
+    cpsr.c = tc->getReg(cc_reg::C);
+    cpsr.v = tc->getReg(cc_reg::V);
+    cpsr.ge = tc->getReg(cc_reg::Ge);
 
     newState[STATE_CPSR] = cpsr;
     changed[STATE_CPSR] = (newState[STATE_CPSR] != oldState[STATE_CPSR]);
@@ -134,7 +134,7 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
         newState[STATE_F0 + 2*i + 1] = arr[1];
     }
     newState[STATE_FPSCR] = tc->readMiscRegNoEffect(MISCREG_FPSCR) |
-                            tc->readCCReg(CCREG_FP);
+                            tc->getReg(cc_reg::Fp);
 }
 
 void

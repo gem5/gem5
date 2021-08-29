@@ -832,16 +832,16 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
             if (it->index == MISCREG_CPSR) {
                 // Read condition codes from aliased integer regs
                 CPSR cpsr = thread->readMiscRegNoEffect(it->index);
-                cpsr.nz = thread->readCCReg(CCREG_NZ);
-                cpsr.c = thread->readCCReg(CCREG_C);
-                cpsr.v = thread->readCCReg(CCREG_V);
-                cpsr.ge = thread->readCCReg(CCREG_GE);
+                cpsr.nz = thread->getReg(cc_reg::Nz);
+                cpsr.c = thread->getReg(cc_reg::C);
+                cpsr.v = thread->getReg(cc_reg::V);
+                cpsr.ge = thread->getReg(cc_reg::Ge);
                 values.push_back(cpsr);
             } else if (it->index == MISCREG_NZCV) {
                 CPSR cpsr = 0;
-                cpsr.nz = thread->readCCReg(CCREG_NZ);
-                cpsr.c = thread->readCCReg(CCREG_C);
-                cpsr.v = thread->readCCReg(CCREG_V);
+                cpsr.nz = thread->getReg(cc_reg::Nz);
+                cpsr.c = thread->getReg(cc_reg::C);
+                cpsr.v = thread->getReg(cc_reg::V);
                 values.push_back(cpsr);
             } else if (it->index == MISCREG_FPCR) {
                 // Read FPSCR and extract FPCR value

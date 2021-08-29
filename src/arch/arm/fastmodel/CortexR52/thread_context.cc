@@ -104,10 +104,10 @@ CortexR52TC::readCCRegFlat(RegIndex idx) const
 {
     RegVal result = Iris::ThreadContext::readCCRegFlat(idx);
     switch (idx) {
-      case ArmISA::CCREG_NZ:
+      case ArmISA::cc_reg::Nz:
         result = ((ArmISA::CPSR)result).nz;
         break;
-      case ArmISA::CCREG_FP:
+      case ArmISA::cc_reg::Fp:
         result = bits(result, 31, 28);
         break;
       default:
@@ -120,14 +120,14 @@ void
 CortexR52TC::setCCRegFlat(RegIndex idx, RegVal val)
 {
     switch (idx) {
-      case ArmISA::CCREG_NZ:
+      case ArmISA::cc_reg::Nz:
         {
             ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
             cpsr.nz = val;
             val = cpsr;
         }
         break;
-      case ArmISA::CCREG_FP:
+      case ArmISA::cc_reg::Fp:
         {
             ArmISA::FPSCR fpscr = readMiscRegNoEffect(ArmISA::MISCREG_FPSCR);
             val = insertBits(fpscr, 31, 28, val);
@@ -811,11 +811,11 @@ Iris::ThreadContext::IdxNameMap CortexR52TC::intReg32IdxNameMap({
 });
 
 Iris::ThreadContext::IdxNameMap CortexR52TC::ccRegIdxNameMap({
-        { ArmISA::CCREG_NZ, "CPSR" },
-        { ArmISA::CCREG_C, "CPSR.C" },
-        { ArmISA::CCREG_V, "CPSR.V" },
-        { ArmISA::CCREG_GE, "CPSR.GE" },
-        { ArmISA::CCREG_FP, "FPSCR" },
+        { ArmISA::cc_reg::Nz, "CPSR" },
+        { ArmISA::cc_reg::C, "CPSR.C" },
+        { ArmISA::cc_reg::V, "CPSR.V" },
+        { ArmISA::cc_reg::Ge, "CPSR.GE" },
+        { ArmISA::cc_reg::Fp, "FPSCR" },
 });
 
 std::vector<iris::MemorySpaceId> CortexR52TC::bpSpaceIds;

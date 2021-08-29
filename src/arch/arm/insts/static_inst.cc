@@ -363,7 +363,7 @@ ArmStaticInst::printVecPredReg(std::ostream &os, RegIndex reg_idx) const
 void
 ArmStaticInst::printCCReg(std::ostream &os, RegIndex reg_idx) const
 {
-    ccprintf(os, "cc_%s", ArmISA::ccRegName[reg_idx]);
+    ccprintf(os, "cc_%s", ArmISA::cc_reg::RegName[reg_idx]);
 }
 
 void

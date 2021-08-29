@@ -213,10 +213,10 @@ TarmacTracerRecord::TraceRegEntry::updateMisc(
     // the CC flags on top of the value
     if (regRelIdx == MISCREG_CPSR) {
         CPSR cpsr = thread->readMiscRegNoEffect(MISCREG_CPSR);
-        cpsr.nz = thread->readCCReg(CCREG_NZ);
-        cpsr.c = thread->readCCReg(CCREG_C);
-        cpsr.v = thread->readCCReg(CCREG_V);
-        cpsr.ge = thread->readCCReg(CCREG_GE);
+        cpsr.nz = thread->getReg(cc_reg::Nz);
+        cpsr.c = thread->getReg(cc_reg::C);
+        cpsr.v = thread->getReg(cc_reg::V);
+        cpsr.ge = thread->getReg(cc_reg::Ge);
 
         // update the entry value
         values[Lo] = cpsr;
@@ -232,8 +232,8 @@ TarmacTracerRecord::TraceRegEntry::updateCC(
     auto thread = tarmCtx.thread;
 
     regValid = true;
-    regName = ccRegName[regRelIdx];
-    values[Lo] = thread->readCCReg(regRelIdx);
+    regName = cc_reg::RegName[regRelIdx];
+    values[Lo] = thread->getReg(RegId(CCRegClass, regRelIdx));
 }
 
 void

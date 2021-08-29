@@ -225,11 +225,11 @@ ArmV8KvmCPU::updateKvmState()
 
     // update pstate register state
     CPSR cpsr(tc->readMiscReg(MISCREG_CPSR));
-    cpsr.nz = tc->readCCReg(CCREG_NZ);
-    cpsr.c = tc->readCCReg(CCREG_C);
-    cpsr.v = tc->readCCReg(CCREG_V);
+    cpsr.nz = tc->getReg(cc_reg::Nz);
+    cpsr.c = tc->getReg(cc_reg::C);
+    cpsr.v = tc->getReg(cc_reg::V);
     if (cpsr.width) {
-        cpsr.ge = tc->readCCReg(CCREG_GE);
+        cpsr.ge = tc->getReg(cc_reg::Ge);
     } else {
         cpsr.ge = 0;
     }
@@ -295,11 +295,11 @@ ArmV8KvmCPU::updateThreadContext()
     const CPSR cpsr(getOneRegU64(INT_REG(regs.pstate)));
     DPRINTF(KvmContext, "  %s := 0x%x\n", "PSTATE", cpsr);
     tc->setMiscRegNoEffect(MISCREG_CPSR, cpsr);
-    tc->setCCReg(CCREG_NZ, cpsr.nz);
-    tc->setCCReg(CCREG_C, cpsr.c);
-    tc->setCCReg(CCREG_V, cpsr.v);
+    tc->setReg(cc_reg::Nz, cpsr.nz);
+    tc->setReg(cc_reg::C, cpsr.c);
+    tc->setReg(cc_reg::V, cpsr.v);
     if (cpsr.width) {
-        tc->setCCReg(CCREG_GE, cpsr.ge);
+        tc->setReg(cc_reg::Ge, cpsr.ge);
     }
 
     // Update core misc regs first as they
