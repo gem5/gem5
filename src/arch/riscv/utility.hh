@@ -106,7 +106,7 @@ inline std::string
 registerName(RegId reg)
 {
     if (reg.is(IntRegClass)) {
-        if (reg.index() >= NumIntArchRegs) {
+        if (reg.index() >= int_reg::NumArchRegs) {
             /*
              * This should only happen if a instruction is being speculatively
              * executed along a not-taken branch, and if that instruction's
@@ -120,7 +120,7 @@ registerName(RegId reg)
             str << "?? (x" << reg.index() << ')';
             return str.str();
         }
-        return IntRegNames[reg.index()];
+        return int_reg::RegNames[reg.index()];
     } else {
         if (reg.index() >= NumFloatRegs) {
             std::stringstream str;

@@ -63,7 +63,7 @@ FsLinux::initState()
         delete dtb_file;
 
         for (auto *tc: system->threads) {
-            tc->setIntReg(11, params().dtb_addr);
+            tc->setReg(int_reg::A1, params().dtb_addr);
         }
     } else {
         warn("No DTB file specified\n");

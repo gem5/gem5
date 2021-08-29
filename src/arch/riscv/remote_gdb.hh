@@ -72,7 +72,7 @@ class RemoteGDB : public BaseRemoteGDB
          */
         struct
         {
-            uint64_t gpr[NumIntArchRegs];
+            uint64_t gpr[int_reg::NumArchRegs];
             uint64_t pc;
             uint64_t fpu[NumFloatRegs];
             uint32_t fflags;

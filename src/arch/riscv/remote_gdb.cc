@@ -191,9 +191,8 @@ RemoteGDB::RiscvGdbRegCache::getRegs(ThreadContext *context)
     DPRINTF(GDBAcc, "getregs in remotegdb, size %lu\n", size());
 
     // General registers
-    for (int i = 0; i < NumIntArchRegs; i++)
-    {
-        r.gpr[i] = context->readIntReg(i);
+    for (int i = 0; i < int_reg::NumArchRegs; i++) {
+        r.gpr[i] = context->getReg(RegId(IntRegClass, i));
     }
     r.pc = context->pcState().instAddr();
 
@@ -303,8 +302,8 @@ RemoteGDB::RiscvGdbRegCache::setRegs(ThreadContext *context) const
     RegVal newVal;
 
     DPRINTF(GDBAcc, "setregs in remotegdb \n");
-    for (int i = 0; i < NumIntArchRegs; i++)
-        context->setIntReg(i, r.gpr[i]);
+    for (int i = 0; i < int_reg::NumArchRegs; i++)
+        context->setReg(RegId(IntRegClass, i), r.gpr[i]);
     context->pcState(r.pc);
 
     // Floating point registers
