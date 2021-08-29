@@ -35,9 +35,13 @@ namespace gem5
 namespace SparcISA
 {
 
-const int NumFloatRegs = 64;
-const int NumFloatArchRegs = NumFloatRegs;
+namespace float_reg
+{
 
+const int NumRegs = 64;
+const int NumArchRegs = NumRegs;
+
+} // namespace float_reg
 } // namespace SparcISA
 } // namespace gem5
 
