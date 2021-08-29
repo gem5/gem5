@@ -94,7 +94,7 @@ struct Result<ABI, SyscallReturn,
         // and put the return value itself in the standard return value reg.
         SparcISA::PSTATE pstate =
             tc->readMiscRegNoEffect(SparcISA::MISCREG_PSTATE);
-        SparcISA::CCR ccr = tc->readIntReg(SparcISA::INTREG_CCR);
+        SparcISA::CCR ccr = tc->getReg(SparcISA::int_reg::Ccr);
         RegVal val;
         if (ret.successful()) {
             ccr.xcc.c = ccr.icc.c = 0;
@@ -103,12 +103,12 @@ struct Result<ABI, SyscallReturn,
             ccr.xcc.c = ccr.icc.c = 1;
             val = ret.errnoValue();
         }
-        tc->setIntReg(SparcISA::INTREG_CCR, ccr);
+        tc->setReg(SparcISA::int_reg::Ccr, ccr);
         if (pstate.am)
             val = bits(val, 31, 0);
-        tc->setIntReg(SparcISA::ReturnValueReg, val);
+        tc->setReg(SparcISA::ReturnValueReg, val);
         if (ret.count() == 2)
-            tc->setIntReg(SparcISA::SyscallPseudoReturnReg, ret.value2());
+            tc->setReg(SparcISA::SyscallPseudoReturnReg, ret.value2());
     }
 };
 

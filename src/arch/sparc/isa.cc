@@ -70,7 +70,7 @@ static const PSTATE PstateMask = buildPstateMask();
 
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.emplace_back(NumIntRegs, debug::IntRegs);
+    _regClasses.emplace_back(int_reg::NumRegs, debug::IntRegs);
     _regClasses.emplace_back(NumFloatRegs, debug::FloatRegs);
     _regClasses.emplace_back(1, debug::IntRegs); // Not applicable for SPARC
     _regClasses.emplace_back(2, debug::IntRegs); // Not applicable for SPARC
@@ -226,19 +226,26 @@ ISA::copyRegsFrom(ThreadContext *src)
         src->setMiscReg(MISCREG_GL, x);
         tc->setMiscReg(MISCREG_GL, x);
         // Skip %g0 which is always zero.
-        for (int y = 1; y < 8; y++)
-            tc->setIntReg(y, src->readIntReg(y));
+        for (int y = 1; y < 8; y++) {
+            RegId reg(IntRegClass, y);
+            tc->setReg(reg, src->getReg(reg));
+        }
     }
     // Locals and ins. Outs are all also ins.
     for (int x = 0; x < NWindows; ++x) {
          src->setMiscReg(MISCREG_CWP, x);
          tc->setMiscReg(MISCREG_CWP, x);
-         for (int y = 16; y < 32; y++)
-             tc->setIntReg(y, src->readIntReg(y));
+         for (int y = 16; y < 32; y++) {
+             RegId reg(IntRegClass, y);
+             tc->setReg(reg, src->getReg(reg));
+         }
     }
     // Microcode reg and pseudo int regs (misc regs in the integer regfile).
-    for (int y = NumIntArchRegs; y < NumIntArchRegs + NumMicroIntRegs; ++y)
-        tc->setIntReg(y, src->readIntReg(y));
+    for (int y = int_reg::NumArchRegs;
+            y < int_reg::NumArchRegs + int_reg::NumMicroRegs; ++y) {
+        RegId reg(IntRegClass, y);
+        tc->setReg(reg, src->getReg(reg));
+    }
 
     // Restore src's GL, CWP
     src->setMiscReg(MISCREG_GL, old_gl);
@@ -263,7 +270,7 @@ ISA::reloadRegMap()
     installGlobals(gl, CurrentGlobalsOffset);
     installWindow(cwp, CurrentWindowOffset);
     // Microcode registers.
-    for (int i = 0; i < NumMicroIntRegs; i++)
+    for (int i = 0; i < int_reg::NumMicroRegs; i++)
         intRegMap[MicroIntOffset + i] = i + TotalGlobals + NWindows * 16;
     installGlobals(gl, NextGlobalsOffset);
     installWindow(cwp - 1, NextWindowOffset);
@@ -274,7 +281,7 @@ ISA::reloadRegMap()
 void
 ISA::installWindow(int cwp, int offset)
 {
-    assert(offset >= 0 && offset + NumWindowedRegs <= NumIntRegs);
+    assert(offset >= 0 && offset + NumWindowedRegs <= int_reg::NumRegs);
     RegIndex *mapChunk = intRegMap + offset;
     for (int i = 0; i < NumWindowedRegs; i++)
         mapChunk[i] = TotalGlobals +
@@ -284,7 +291,7 @@ ISA::installWindow(int cwp, int offset)
 void
 ISA::installGlobals(int gl, int offset)
 {
-    assert(offset >= 0 && offset + NumGlobalRegs <= NumIntRegs);
+    assert(offset >= 0 && offset + NumGlobalRegs <= int_reg::NumRegs);
     RegIndex *mapChunk = intRegMap + offset;
     mapChunk[0] = 0;
     for (int i = 1; i < NumGlobalRegs; i++)

@@ -154,7 +154,7 @@ class ISA : public BaseISA
         CurrentGlobalsOffset = 0,
         CurrentWindowOffset = CurrentGlobalsOffset + NumGlobalRegs,
         MicroIntOffset = CurrentWindowOffset + NumWindowedRegs,
-        NextGlobalsOffset = MicroIntOffset + NumMicroIntRegs,
+        NextGlobalsOffset = MicroIntOffset + int_reg::NumMicroRegs,
         NextWindowOffset = NextGlobalsOffset + NumGlobalRegs,
         PreviousGlobalsOffset = NextWindowOffset + NumWindowedRegs,
         PreviousWindowOffset = PreviousGlobalsOffset + NumGlobalRegs,
@@ -214,7 +214,7 @@ class ISA : public BaseISA
     {
         assert(reg < TotalInstIntRegs);
         RegIndex flatIndex = intRegMap[reg];
-        assert(flatIndex < NumIntRegs);
+        assert(flatIndex < int_reg::NumRegs);
         return flatIndex;
     }
 

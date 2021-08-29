@@ -39,7 +39,7 @@ namespace gem5
 
 namespace Trace {
 
-static const char *intRegNames[SparcISA::NumIntArchRegs] = {
+static const char *intRegNames[SparcISA::int_reg::NumArchRegs] = {
     // Global registers
     "g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7",
     // Output registers
@@ -60,10 +60,10 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
     // Integer registers
 
     // I doubt a real SPARC will describe more integer registers than this.
-    assert(SparcISA::NumIntArchRegs == 32);
+    assert(SparcISA::int_reg::NumArchRegs == 32);
     const char **regName = intRegNames;
-    for (int i = 0; i < SparcISA::NumIntArchRegs; i++) {
-        regVal = tc->readIntReg(i);
+    for (int i = 0; i < SparcISA::int_reg::NumArchRegs; i++) {
+        regVal = tc->getReg(RegId(IntRegClass, i));
         read(&realRegVal, sizeof(realRegVal));
         realRegVal = betoh(realRegVal);
         checkReg(*(regName++), regVal, realRegVal);
@@ -85,7 +85,7 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
     // CCR
     read(&realRegVal, sizeof(realRegVal));
     realRegVal = betoh(realRegVal);
-    regVal = tc->readIntReg(SparcISA::INTREG_CCR);
+    regVal = tc->getReg(SparcISA::int_reg::Ccr);
     checkReg("ccr", regVal, realRegVal);
 }
 

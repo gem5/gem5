@@ -30,6 +30,7 @@
 #define __ARCH_SPARC_REGS_INT_HH__
 
 #include "arch/sparc/sparc_traits.hh"
+#include "cpu/reg_class.hh"
 
 namespace gem5
 {
@@ -37,46 +38,119 @@ namespace gem5
 namespace SparcISA
 {
 
+namespace int_reg
+{
+
 // semantically meaningful register indices
 enum {
-    // Globals
-    INTREG_G0, INTREG_G1, INTREG_G2, INTREG_G3,
-    INTREG_G4, INTREG_G5, INTREG_G6, INTREG_G7,
-    // Outputs
-    INTREG_O0, INTREG_O1, INTREG_O2, INTREG_O3,
-    INTREG_O4, INTREG_O5, INTREG_O6, INTREG_O7,
-    // Locals
-    INTREG_L0, INTREG_L1, INTREG_L2, INTREG_L3,
-    INTREG_L4, INTREG_L5, INTREG_L6, INTREG_L7,
-    // Inputs
-    INTREG_I0, INTREG_I1, INTREG_I2, INTREG_I3,
-    INTREG_I4, INTREG_I5, INTREG_I6, INTREG_I7,
+    _G0Idx, _G1Idx, _G2Idx, _G3Idx, _G4Idx, _G5Idx, _G6Idx, _G7Idx,
+    _O0Idx, _O1Idx, _O2Idx, _O3Idx, _O4Idx, _O5Idx, _O6Idx, _O7Idx,
+    _L0Idx, _L1Idx, _L2Idx, _L3Idx, _L4Idx, _L5Idx, _L6Idx, _L7Idx,
+    _I0Idx, _I1Idx, _I2Idx, _I3Idx, _I4Idx, _I5Idx, _I6Idx, _I7Idx,
 
-    NumIntArchRegs,
+    NumArchRegs,
 
-    INTREG_UREG0 = NumIntArchRegs,
-    INTREG_Y,
-    INTREG_CCR,
-    INTREG_CANSAVE,
-    INTREG_CANRESTORE,
-    INTREG_CLEANWIN,
-    INTREG_OTHERWIN,
-    INTREG_WSTATE,
-    INTREG_GSR,
+    _Ureg0Idx = NumArchRegs,
+    _YIdx,
+    _CcrIdx,
+    _CansaveIdx,
+    _CanrestoreIdx,
+    _CleanwinIdx,
+    _OtherwinIdx,
+    _WstateIdx,
+    _GsrIdx,
 
-    NumMicroIntRegs = INTREG_GSR - INTREG_UREG0 + 1
+    NumMicroRegs = _GsrIdx - _Ureg0Idx + 1
 };
 
+inline constexpr RegId
+    // Globals
+    G0(IntRegClass, _G0Idx),
+    G1(IntRegClass, _G1Idx),
+    G2(IntRegClass, _G2Idx),
+    G3(IntRegClass, _G3Idx),
+    G4(IntRegClass, _G4Idx),
+    G5(IntRegClass, _G5Idx),
+    G6(IntRegClass, _G6Idx),
+    G7(IntRegClass, _G7Idx),
+
+    // Outputs
+    O0(IntRegClass, _O0Idx),
+    O1(IntRegClass, _O1Idx),
+    O2(IntRegClass, _O2Idx),
+    O3(IntRegClass, _O3Idx),
+    O4(IntRegClass, _O4Idx),
+    O5(IntRegClass, _O5Idx),
+    O6(IntRegClass, _O6Idx),
+    O7(IntRegClass, _O7Idx),
+
+    // Locals
+    L0(IntRegClass, _L0Idx),
+    L1(IntRegClass, _L1Idx),
+    L2(IntRegClass, _L2Idx),
+    L3(IntRegClass, _L3Idx),
+    L4(IntRegClass, _L4Idx),
+    L5(IntRegClass, _L5Idx),
+    L6(IntRegClass, _L6Idx),
+    L7(IntRegClass, _L7Idx),
+
+    // Inputs
+    I0(IntRegClass, _I0Idx),
+    I1(IntRegClass, _I1Idx),
+    I2(IntRegClass, _I2Idx),
+    I3(IntRegClass, _I3Idx),
+    I4(IntRegClass, _I4Idx),
+    I5(IntRegClass, _I5Idx),
+    I6(IntRegClass, _I6Idx),
+    I7(IntRegClass, _I7Idx),
+
+    Ureg0(IntRegClass, _Ureg0Idx),
+    Y(IntRegClass, _YIdx),
+    Ccr(IntRegClass, _CcrIdx),
+    Cansave(IntRegClass, _CansaveIdx),
+    Canrestore(IntRegClass, _CanrestoreIdx),
+    Cleanwin(IntRegClass, _CleanwinIdx),
+    Otherwin(IntRegClass, _OtherwinIdx),
+    Wstate(IntRegClass, _WstateIdx),
+    Gsr(IntRegClass, _GsrIdx);
+
+inline constexpr RegId
+g(int index)
+{
+    return RegId(IntRegClass, G0 + index);
+}
+
+inline constexpr RegId
+o(int index)
+{
+    return RegId(IntRegClass, O0 + index);
+}
+
+inline constexpr RegId
+l(int index)
+{
+    return RegId(IntRegClass, L0 + index);
+}
+
+inline constexpr RegId
+i(int index)
+{
+    return RegId(IntRegClass, I0 + index);
+}
+
+const int NumRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroRegs;
+
+} // namespace int_reg
+
 // the rest of these depend on the ABI
-const int ReturnAddressReg = INTREG_I7; // post call, precall is 15
-const int ReturnValueReg = INTREG_O0;  // Post return, 24 is pre-return.
-const int StackPointerReg = INTREG_O6;
-const int FramePointerReg = INTREG_I6;
+inline constexpr auto
+    &ReturnAddressReg = int_reg::I7, // post call, precall is 15
+    &ReturnValueReg = int_reg::O0, // Post return, 24 is pre-return.
+    &StackPointerReg = int_reg::O6,
+    &FramePointerReg = int_reg::I6,
 
-// Some OS syscall use a second register to return a second value
-const int SyscallPseudoReturnReg = INTREG_O1;
-
-const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
+    // Some OS syscall use a second register to return a second value
+    &SyscallPseudoReturnReg = int_reg::O1;
 
 } // namespace SparcISA
 } // namespace gem5
