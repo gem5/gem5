@@ -41,7 +41,7 @@ namespace RiscvISA
 //FIXME RISCV needs to handle 64 bit arguments in its 32 bit ISA.
 struct RegABI64 : public GenericSyscallABI64
 {
-    static const std::vector<int> ArgumentRegs;
+    static const std::vector<RegId> ArgumentRegs;
 };
 
 } // namespace RiscvISA

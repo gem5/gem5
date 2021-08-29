@@ -41,12 +41,12 @@ namespace ArmISA
 
 struct RegABI32 : public GenericSyscallABI32
 {
-    static const std::vector<int> ArgumentRegs;
+    static const std::vector<RegId> ArgumentRegs;
 };
 
 struct RegABI64 : public GenericSyscallABI64
 {
-    static const std::vector<int> ArgumentRegs;
+    static const std::vector<RegId> ArgumentRegs;
 };
 
 } // namespace ArmISA

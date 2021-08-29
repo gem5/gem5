@@ -79,13 +79,13 @@ class EmuLinux : public SEWorkload
     struct SyscallABI64 :
         public GenericSyscallABI64, public X86Linux::SyscallABI
     {
-        static const std::vector<RegIndex> ArgumentRegs;
+        static const std::vector<RegId> ArgumentRegs;
     };
 
     struct SyscallABI32 :
         public GenericSyscallABI32, public X86Linux::SyscallABI
     {
-        static const std::vector<RegIndex> ArgumentRegs;
+        static const std::vector<RegId> ArgumentRegs;
     };
 
   private:

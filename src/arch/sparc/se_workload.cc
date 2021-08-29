@@ -41,7 +41,7 @@ namespace gem5
 namespace SparcISA
 {
 
-const std::vector<int> SEWorkload::BaseSyscallABI::ArgumentRegs = {
+const std::vector<RegId> SEWorkload::BaseSyscallABI::ArgumentRegs = {
     int_reg::O0, int_reg::O1, int_reg::O2,
     int_reg::O3, int_reg::O4, int_reg::O5
 };

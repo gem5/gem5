@@ -63,7 +63,7 @@ class SEWorkload : public gem5::SEWorkload
 
     struct BaseSyscallABI
     {
-        static const std::vector<int> ArgumentRegs;
+        static const std::vector<RegId> ArgumentRegs;
     };
 
     struct SyscallABI32 : public GenericSyscallABI32,

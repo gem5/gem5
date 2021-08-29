@@ -33,7 +33,7 @@ namespace gem5
 namespace PowerISA
 {
 
-const std::vector<int> SEWorkload::SyscallABI::ArgumentRegs = {
+const std::vector<RegId> SEWorkload::SyscallABI::ArgumentRegs = {
     ArgumentReg0,
     ArgumentReg1,
     ArgumentReg2,

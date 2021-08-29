@@ -26,6 +26,7 @@
  */
 
 #include "arch/riscv/reg_abi.hh"
+#include "arch/riscv/regs/int.hh"
 
 namespace gem5
 {
@@ -33,7 +34,10 @@ namespace gem5
 namespace RiscvISA
 {
 
-const std::vector<int> RegABI64::ArgumentRegs = {10, 11, 12, 13, 14, 15, 16};
+const std::vector<RegId> RegABI64::ArgumentRegs = {
+    int_reg::A0, int_reg::A1, int_reg::A2, int_reg::A3,
+    int_reg::A4, int_reg::A5, int_reg::A6
+};
 
 } // namespace RiscvISA
 } // namespace gem5

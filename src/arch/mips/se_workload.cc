@@ -33,8 +33,9 @@ namespace gem5
 namespace MipsISA
 {
 
-const std::vector<int> SEWorkload::SyscallABI::ArgumentRegs = {
-    4, 5, 6, 7, 8, 9
+const std::vector<RegId> SEWorkload::SyscallABI::ArgumentRegs = {
+    int_reg::A0, int_reg::A1, int_reg::A2,
+    int_reg::A3, int_reg::T0, int_reg::T1
 };
 
 } // namespace MipsISA
