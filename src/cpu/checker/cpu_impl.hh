@@ -584,19 +584,16 @@ Checker<DynInstPtr>::copyResult(
           case InvalidRegClass:
             break;
           case IntRegClass:
-            thread->setIntReg(idx.index(), mismatch_val.as<RegVal>());
-            break;
           case FloatRegClass:
-            thread->setFloatReg(idx.index(), mismatch_val.as<RegVal>());
+          case VecElemClass:
+          case CCRegClass:
+            thread->setReg(idx, mismatch_val.as<RegVal>());
             break;
           case VecRegClass:
-            thread->setVecReg(idx, mismatch_val.as<TheISA::VecRegContainer>());
-            break;
-          case VecElemClass:
-            thread->setVecElem(idx, mismatch_val.as<RegVal>());
-            break;
-          case CCRegClass:
-            thread->setCCReg(idx.index(), mismatch_val.as<RegVal>());
+            {
+                auto val = mismatch_val.as<TheISA::VecRegContainer>();
+                thread->setReg(idx, &val);
+            }
             break;
           case MiscRegClass:
             thread->setMiscReg(idx.index(), mismatch_val.as<RegVal>());
@@ -614,19 +611,16 @@ Checker<DynInstPtr>::copyResult(
           case InvalidRegClass:
             break;
           case IntRegClass:
-            thread->setIntReg(idx.index(), res.as<RegVal>());
-            break;
           case FloatRegClass:
-            thread->setFloatReg(idx.index(), res.as<RegVal>());
+          case VecElemClass:
+          case CCRegClass:
+            thread->setReg(idx, res.as<RegVal>());
             break;
           case VecRegClass:
-            thread->setVecReg(idx, res.as<TheISA::VecRegContainer>());
-            break;
-          case VecElemClass:
-            thread->setVecElem(idx, res.as<RegVal>());
-            break;
-          case CCRegClass:
-            thread->setCCReg(idx.index(), res.as<RegVal>());
+            {
+                auto val = res.as<TheISA::VecRegContainer>();
+                thread->setReg(idx, &val);
+            }
             break;
           case MiscRegClass:
             // Try to get the proper misc register index for ARM here...
