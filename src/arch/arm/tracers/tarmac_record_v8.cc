@@ -138,8 +138,8 @@ TarmacTracerRecordV8::TraceRegEntryV8::updateVec(
 )
 {
     auto thread = tarmCtx.thread;
-    const auto& vec_container = thread->readVecReg(
-        RegId(regClass, regRelIdx));
+    ArmISA::VecRegContainer vec_container;
+    thread->getReg(RegId(regClass, regRelIdx), &vec_container);
     auto vv = vec_container.as<VecElem>();
 
     regWidth = ArmStaticInst::getCurSveVecLenInBits(thread);

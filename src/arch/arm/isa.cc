@@ -576,11 +576,17 @@ ISA::copyRegsFrom(ThreadContext *src)
     for (int i = 0; i < NUM_MISCREGS; i++)
         tc->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
 
-    for (int i = 0; i < NumVecRegs; i++)
-        tc->setVecRegFlat(i, src->readVecRegFlat(i));
+    ArmISA::VecRegContainer vc;
+    for (int i = 0; i < NumVecRegs; i++) {
+        RegId reg(VecRegClass, i);
+        src->getRegFlat(reg, &vc);
+        tc->setRegFlat(reg, &vc);
+    }
 
-    for (int i = 0; i < NumVecRegs * NumVecElemPerVecReg; i++)
-        tc->setVecElemFlat(i, src->readVecElemFlat(i));
+    for (int i = 0; i < NumVecRegs * NumVecElemPerVecReg; i++) {
+        RegId reg(VecElemClass, i);
+        tc->setRegFlat(reg, src->getRegFlat(reg));
+    }
 
     // setMiscReg "with effect" will set the misc register mapping correctly.
     // e.g. updateRegMap(val)

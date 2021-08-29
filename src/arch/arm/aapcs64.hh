@@ -202,7 +202,9 @@ struct Argument<Aapcs64, Float, typename std::enable_if_t<
     {
         if (state.nsrn <= state.MAX_SRN) {
             RegId id(VecRegClass, state.nsrn++);
-            return tc->readVecReg(id).as<Float>()[0];
+            ArmISA::VecRegContainer vc;
+            tc->getReg(id, &vc);
+            return vc.as<Float>()[0];
         }
 
         return loadFromStack<Float>(tc, state);
@@ -217,9 +219,10 @@ struct Result<Aapcs64, Float, typename std::enable_if_t<
     store(ThreadContext *tc, const Float &f)
     {
         RegId id(VecRegClass, 0);
-        auto reg = tc->readVecReg(id);
+        ArmISA::VecRegContainer reg;
+        tc->getReg(id, &reg);
         reg.as<Float>()[0] = f;
-        tc->setVecReg(id, reg);
+        tc->setReg(id, &reg);
     }
 };
 

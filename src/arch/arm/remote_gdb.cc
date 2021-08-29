@@ -242,7 +242,9 @@ RemoteGDB::AArch64GdbRegCache::getRegs(ThreadContext *context)
 
     size_t base = 0;
     for (int i = 0; i < NumVecV8ArchRegs; i++) {
-        auto v = (context->readVecReg(RegId(VecRegClass, i))).as<VecElem>();
+        ArmISA::VecRegContainer vc;
+        context->getReg(RegId(VecRegClass, i), &vc);
+        auto v = vc.as<VecElem>();
         for (size_t j = 0; j < NumVecElemPerNeonVecReg; j++) {
             r.v[base] = v[j];
             base++;
@@ -270,8 +272,9 @@ RemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
 
     size_t base = 0;
     for (int i = 0; i < NumVecV8ArchRegs; i++) {
-        auto v = (context->getWritableVecReg(
-                RegId(VecRegClass, i))).as<VecElem>();
+        auto *vc = static_cast<ArmISA::VecRegContainer *>(
+                context->getWritableReg(RegId(VecRegClass, i)));
+        auto v = vc->as<VecElem>();
         for (size_t j = 0; j < NumVecElemPerNeonVecReg; j++) {
             v[j] = r.v[base];
             base++;

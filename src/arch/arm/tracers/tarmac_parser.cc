@@ -759,26 +759,26 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
             break;
           case REG_S:
             if (instRecord.isetstate == ISET_A64) {
-                const ArmISA::VecRegContainer& vc = thread->readVecReg(
-                    RegId(VecRegClass, it->index));
+                ArmISA::VecRegContainer vc;
+                thread->getReg(RegId(VecRegClass, it->index), &vc);
                 auto vv = vc.as<uint32_t>();
                 values.push_back(vv[0]);
             } else {
-                const VecElem elem = thread->readVecElem(
+                const VecElem elem = thread->getReg(
                     RegId(VecElemClass, it->index));
                 values.push_back(elem);
             }
             break;
           case REG_D:
             if (instRecord.isetstate == ISET_A64) {
-                const ArmISA::VecRegContainer& vc = thread->readVecReg(
-                    RegId(VecRegClass, it->index));
+                ArmISA::VecRegContainer vc;
+                thread->getReg(RegId(VecRegClass, it->index), &vc);
                 auto vv = vc.as<uint64_t>();
                 values.push_back(vv[0]);
             } else {
-                const VecElem w0 = thread->readVecElem(
+                const VecElem w0 = thread->getReg(
                     RegId(VecElemClass, it->index));
-                const VecElem w1 = thread->readVecElem(
+                const VecElem w1 = thread->getReg(
                     RegId(VecElemClass, it->index + 1));
 
                 values.push_back((uint64_t)(w1) << 32 | w0);
@@ -798,19 +798,19 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
             break;
           case REG_Q:
             if (instRecord.isetstate == ISET_A64) {
-                const ArmISA::VecRegContainer& vc = thread->readVecReg(
-                    RegId(VecRegClass, it->index));
+                ArmISA::VecRegContainer vc;
+                thread->getReg(RegId(VecRegClass, it->index), &vc);
                 auto vv = vc.as<uint64_t>();
                 values.push_back(vv[0]);
                 values.push_back(vv[1]);
             } else {
-                const VecElem w0 = thread->readVecElem(
+                const VecElem w0 = thread->getReg(
                     RegId(VecElemClass, it->index));
-                const VecElem w1 = thread->readVecElem(
+                const VecElem w1 = thread->getReg(
                     RegId(VecElemClass, it->index + 1));
-                const VecElem w2 = thread->readVecElem(
+                const VecElem w2 = thread->getReg(
                     RegId(VecElemClass, it->index + 2));
-                const VecElem w3 = thread->readVecElem(
+                const VecElem w3 = thread->getReg(
                     RegId(VecElemClass, it->index + 3));
 
                 values.push_back((uint64_t)(w1) << 32 | w0);
@@ -820,8 +820,8 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
           case REG_Z:
             {
                 int8_t i = maxVectorLength;
-                const ArmISA::VecRegContainer& vc = thread->readVecReg(
-                    RegId(VecRegClass, it->index));
+                ArmISA::VecRegContainer vc;
+                thread->getReg(RegId(VecRegClass, it->index), &vc);
                 auto vv = vc.as<uint64_t>();
                 while (i > 0) {
                     values.push_back(vv[--i]);

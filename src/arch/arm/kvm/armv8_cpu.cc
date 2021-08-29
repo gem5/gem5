@@ -258,7 +258,9 @@ ArmV8KvmCPU::updateKvmState()
         KvmFPReg reg;
         if (!inAArch64(tc))
             syncVecElemsToRegs(tc);
-        auto v = tc->readVecReg(RegId(VecRegClass, i)).as<VecElem>();
+        ArmISA::VecRegContainer vc;
+        tc->getReg(RegId(VecRegClass, i), &vc);
+        auto v = vc.as<VecElem>();
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
             reg.s[j].i = v[j];
 

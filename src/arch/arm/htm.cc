@@ -82,7 +82,7 @@ ArmISA::HTMCheckpoint::save(ThreadContext *tc)
     // TODO first detect if FP is enabled at this EL
     for (auto n = 0; n < NumVecRegs; n++) {
         RegId idx = RegId(VecRegClass, n);
-        z[n] = tc->readVecReg(idx);
+        tc->getReg(idx, &z[n]);
     }
     for (auto n = 0; n < NumVecPredRegs; n++) {
         RegId idx = RegId(VecPredRegClass, n);
@@ -109,7 +109,7 @@ ArmISA::HTMCheckpoint::restore(ThreadContext *tc, HtmFailureFaultCause cause)
     // TODO first detect if FP is enabled at this EL
     for (auto n = 0; n < NumVecRegs; n++) {
         RegId idx = RegId(VecRegClass, n);
-        tc->setVecReg(idx, z[n]);
+        tc->setReg(idx, &z[n]);
     }
     for (auto n = 0; n < NumVecPredRegs; n++) {
         RegId idx = RegId(VecPredRegClass, n);
