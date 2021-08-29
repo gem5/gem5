@@ -66,8 +66,9 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 
     // First loop through the integer registers.
     for (int i = 0; i < regClasses.at(IntRegClass).numRegs(); ++i) {
-        RegVal t1 = one->readIntReg(i);
-        RegVal t2 = two->readIntReg(i);
+        RegId reg(IntRegClass, i);
+        RegVal t1 = one->getReg(reg);
+        RegVal t2 = two->getReg(reg);
         if (t1 != t2)
             panic("Int reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
@@ -75,8 +76,9 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 
     // Then loop through the floating point registers.
     for (int i = 0; i < regClasses.at(FloatRegClass).numRegs(); ++i) {
-        RegVal t1 = one->readFloatReg(i);
-        RegVal t2 = two->readFloatReg(i);
+        RegId reg(FloatRegClass, i);
+        RegVal t1 = one->getReg(reg);
+        RegVal t2 = two->getReg(reg);
         if (t1 != t2)
             panic("Float reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
@@ -124,8 +126,9 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 
     // loop through the Condition Code registers.
     for (int i = 0; i < regClasses.at(CCRegClass).numRegs(); ++i) {
-        RegVal t1 = one->readCCReg(i);
-        RegVal t2 = two->readCCReg(i);
+        RegId reg(CCRegClass, i);
+        RegVal t1 = one->getReg(reg);
+        RegVal t2 = two->getReg(reg);
         if (t1 != t2)
             panic("CC reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
@@ -222,7 +225,7 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
     const size_t numFloats = regClasses.at(FloatRegClass).numRegs();
     RegVal floatRegs[numFloats];
     for (int i = 0; i < numFloats; ++i)
-        floatRegs[i] = tc.readFloatRegFlat(i);
+        floatRegs[i] = tc.getRegFlat(RegId(FloatRegClass, i));
     // This is a bit ugly, but needed to maintain backwards
     // compatibility.
     arrayParamOut(cp, "floatRegs.i", floatRegs, numFloats);
@@ -230,7 +233,8 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
     const size_t numVecs = regClasses.at(VecRegClass).numRegs();
     std::vector<TheISA::VecRegContainer> vecRegs(numVecs);
     for (int i = 0; i < numVecs; ++i) {
-        vecRegs[i] = tc.readVecRegFlat(i);
+        RegId reg(VecRegClass, i);
+        tc.getRegFlat(RegId(VecRegClass, i), &vecRegs[i]);
     }
     SERIALIZE_CONTAINER(vecRegs);
 
@@ -244,14 +248,14 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
     const size_t numInts = regClasses.at(IntRegClass).numRegs();
     RegVal intRegs[numInts];
     for (int i = 0; i < numInts; ++i)
-        intRegs[i] = tc.readIntRegFlat(i);
+        intRegs[i] = tc.getRegFlat(RegId(IntRegClass, i));
     SERIALIZE_ARRAY(intRegs, numInts);
 
     const size_t numCcs = regClasses.at(CCRegClass).numRegs();
     if (numCcs) {
         RegVal ccRegs[numCcs];
         for (int i = 0; i < numCcs; ++i)
-            ccRegs[i] = tc.readCCRegFlat(i);
+            ccRegs[i] = tc.getRegFlat(RegId(CCRegClass, i));
         SERIALIZE_ARRAY(ccRegs, numCcs);
     }
 
@@ -271,13 +275,13 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
     // compatibility.
     arrayParamIn(cp, "floatRegs.i", floatRegs, numFloats);
     for (int i = 0; i < numFloats; ++i)
-        tc.setFloatRegFlat(i, floatRegs[i]);
+        tc.setRegFlat(RegId(FloatRegClass, i), floatRegs[i]);
 
     const size_t numVecs = regClasses.at(VecRegClass).numRegs();
     std::vector<TheISA::VecRegContainer> vecRegs(numVecs);
     UNSERIALIZE_CONTAINER(vecRegs);
     for (int i = 0; i < numVecs; ++i) {
-        tc.setVecRegFlat(i, vecRegs[i]);
+        tc.setRegFlat(RegId(VecRegClass, i), &vecRegs[i]);
     }
 
     const size_t numPreds = regClasses.at(VecPredRegClass).numRegs();
@@ -291,14 +295,14 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
     RegVal intRegs[numInts];
     UNSERIALIZE_ARRAY(intRegs, numInts);
     for (int i = 0; i < numInts; ++i)
-        tc.setIntRegFlat(i, intRegs[i]);
+        tc.setRegFlat(RegId(IntRegClass, i), intRegs[i]);
 
     const size_t numCcs = regClasses.at(CCRegClass).numRegs();
     if (numCcs) {
         RegVal ccRegs[numCcs];
         UNSERIALIZE_ARRAY(ccRegs, numCcs);
         for (int i = 0; i < numCcs; ++i)
-            tc.setCCRegFlat(i, ccRegs[i]);
+            tc.setRegFlat(RegId(CCRegClass, i), ccRegs[i]);
     }
 
     std::unique_ptr<PCStateBase> pc_state(tc.pcState().clone());
