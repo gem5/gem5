@@ -197,8 +197,8 @@ RemoteGDB::RiscvGdbRegCache::getRegs(ThreadContext *context)
     r.pc = context->pcState().instAddr();
 
     // Floating point registers
-    for (int i = 0; i < NumFloatRegs; i++)
-        r.fpu[i] = context->readFloatReg(i);
+    for (int i = 0; i < float_reg::NumRegs; i++)
+        r.fpu[i] = context->getReg(RegId(FloatRegClass, i));
     r.fflags = context->readMiscRegNoEffect(
         CSRData.at(CSR_FFLAGS).physIndex) & CSRMasks.at(CSR_FFLAGS);
     r.frm = context->readMiscRegNoEffect(
@@ -307,8 +307,8 @@ RemoteGDB::RiscvGdbRegCache::setRegs(ThreadContext *context) const
     context->pcState(r.pc);
 
     // Floating point registers
-    for (int i = 0; i < NumFloatRegs; i++)
-        context->setFloatReg(i, r.fpu[i]);
+    for (int i = 0; i < float_reg::NumRegs; i++)
+        context->setReg(RegId(FloatRegClass, i), r.fpu[i]);
 
     oldVal = context->readMiscRegNoEffect(
         CSRData.at(CSR_FFLAGS).physIndex);

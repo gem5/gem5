@@ -197,7 +197,7 @@ namespace RiscvISA
 ISA::ISA(const Params &p) : BaseISA(p)
 {
     _regClasses.emplace_back(int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(NumFloatRegs, debug::FloatRegs);
+    _regClasses.emplace_back(float_reg::NumRegs, debug::FloatRegs);
     _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to RISCV
     _regClasses.emplace_back(2, debug::IntRegs); // Not applicable to RISCV
     _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to RISCV
@@ -223,8 +223,10 @@ ISA::copyRegsFrom(ThreadContext *src)
     }
 
     // Second loop through the float registers.
-    for (int i = 0; i < NumFloatRegs; ++i)
-        tc->setFloatReg(i, src->readFloatReg(i));
+    for (int i = 0; i < float_reg::NumRegs; ++i) {
+        RegId reg(FloatRegClass, i);
+        tc->setReg(reg, src->getReg(reg));
+    }
 
     // Lastly copy PC/NPC
     tc->pcState(src->pcState());

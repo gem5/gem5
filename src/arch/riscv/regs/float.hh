@@ -54,6 +54,7 @@
 #include <vector>
 
 #include "base/bitfield.hh"
+#include "cpu/reg_class.hh"
 
 namespace gem5
 {
@@ -105,9 +106,90 @@ static constexpr freg_t freg(float32_t f) { return {boxF32(f.v)}; }
 static constexpr freg_t freg(float64_t f) { return f; }
 static constexpr freg_t freg(uint_fast16_t f) { return {f}; }
 
-const int NumFloatRegs = 32;
+namespace float_reg
+{
 
-const std::vector<std::string> FloatRegNames = {
+enum : RegIndex
+{
+    _Ft0Idx,
+    _Ft1Idx,
+    _Ft2Idx,
+    _Ft3Idx,
+    _Ft4Idx,
+    _Ft5Idx,
+    _Ft6Idx,
+    _Ft7Idx,
+
+    _Fs0Idx,
+    _Fs1Idx,
+
+    _Fa0Idx,
+    _Fa1Idx,
+    _Fa2Idx,
+    _Fa3Idx,
+    _Fa4Idx,
+    _Fa5Idx,
+    _Fa6Idx,
+    _Fa7Idx,
+
+    _Fs2Idx,
+    _Fs3Idx,
+    _Fs4Idx,
+    _Fs5Idx,
+    _Fs6Idx,
+    _Fs7Idx,
+    _Fs8Idx,
+    _Fs9Idx,
+    _Fs10Idx,
+    _Fs11Idx,
+
+    _Ft8Idx,
+    _Ft9Idx,
+    _Ft10Idx,
+    _Ft11Idx,
+
+    NumRegs
+};
+
+inline constexpr RegId
+    Ft0(FloatRegClass, _Ft0Idx),
+    Ft1(FloatRegClass, _Ft1Idx),
+    Ft2(FloatRegClass, _Ft2Idx),
+    Ft3(FloatRegClass, _Ft3Idx),
+    Ft4(FloatRegClass, _Ft4Idx),
+    Ft5(FloatRegClass, _Ft5Idx),
+    Ft6(FloatRegClass, _Ft6Idx),
+    Ft7(FloatRegClass, _Ft7Idx),
+
+    Fs0(FloatRegClass, _Fs0Idx),
+    Fs1(FloatRegClass, _Fs1Idx),
+
+    Fa0(FloatRegClass, _Fa0Idx),
+    Fa1(FloatRegClass, _Fa1Idx),
+    Fa2(FloatRegClass, _Fa2Idx),
+    Fa3(FloatRegClass, _Fa3Idx),
+    Fa4(FloatRegClass, _Fa4Idx),
+    Fa5(FloatRegClass, _Fa5Idx),
+    Fa6(FloatRegClass, _Fa6Idx),
+    Fa7(FloatRegClass, _Fa7Idx),
+
+    Fs2(FloatRegClass, _Fs2Idx),
+    Fs3(FloatRegClass, _Fs3Idx),
+    Fs4(FloatRegClass, _Fs4Idx),
+    Fs5(FloatRegClass, _Fs5Idx),
+    Fs6(FloatRegClass, _Fs6Idx),
+    Fs7(FloatRegClass, _Fs7Idx),
+    Fs8(FloatRegClass, _Fs8Idx),
+    Fs9(FloatRegClass, _Fs9Idx),
+    Fs10(FloatRegClass, _Fs10Idx),
+    Fs11(FloatRegClass, _Fs11Idx),
+
+    Ft8(FloatRegClass, _Ft8Idx),
+    Ft9(FloatRegClass, _Ft9Idx),
+    Ft10(FloatRegClass, _Ft10Idx),
+    Ft11(FloatRegClass, _Ft11Idx);
+
+const std::vector<std::string> RegNames = {
     "ft0", "ft1", "ft2", "ft3",
     "ft4", "ft5", "ft6", "ft7",
     "fs0", "fs1", "fa0", "fa1",
@@ -118,6 +200,7 @@ const std::vector<std::string> FloatRegNames = {
     "ft8", "ft9", "ft10", "ft11"
 };
 
+} // namespace float_reg
 } // namespace RiscvISA
 } // namespace gem5
 

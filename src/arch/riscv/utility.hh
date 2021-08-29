@@ -122,12 +122,12 @@ registerName(RegId reg)
         }
         return int_reg::RegNames[reg.index()];
     } else {
-        if (reg.index() >= NumFloatRegs) {
+        if (reg.index() >= float_reg::NumRegs) {
             std::stringstream str;
             str << "?? (f" << reg.index() << ')';
             return str.str();
         }
-        return FloatRegNames[reg.index()];
+        return float_reg::RegNames[reg.index()];
     }
 }
 
