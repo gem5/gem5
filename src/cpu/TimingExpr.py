@@ -66,28 +66,15 @@ class TimingExpr0(TimingExprLiteral):
     value = 0
 
 class TimingExprSrcReg(TimingExpr):
-    """Find the source register number from the current inst"""
+    """Read a source register from the current inst"""
     type = 'TimingExprSrcReg'
     cxx_header = 'cpu/timing_expr.hh'
     cxx_class = 'gem5::TimingExprSrcReg'
 
-    # index = Param.Unsigned("index into inst src regs")
-    index = Param.Unsigned("index into inst src regs")
+    index = Param.Unsigned("index into inst src regs of the reg to read")
 
     def set_params(self, index):
         self.index = index
-        return self
-
-class TimingExprReadIntReg(TimingExpr):
-    """Read an architectural register"""
-    type = 'TimingExprReadIntReg'
-    cxx_header = 'cpu/timing_expr.hh'
-    cxx_class = 'gem5::TimingExprReadIntReg'
-
-    reg = Param.TimingExpr("register raw index to read")
-
-    def set_params(self, reg):
-        self.reg = reg
         return self
 
 class TimingExprLet(TimingExpr):

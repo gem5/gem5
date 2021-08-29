@@ -144,17 +144,10 @@ def if_expr(cond, true_expr, false_expr):
         return ret
     return body
 
-def src(index):
+def src_reg(index):
     def body(env):
         ret = TimingExprSrcReg()
         ret.index = index
-        return ret
-    return body
-
-def int_reg(reg):
-    def body(env):
-        ret = TimingExprReadIntReg()
-        ret.reg = reg(env)
         return ret
     return body
 
@@ -488,8 +481,8 @@ class HPI_SBFX_UBFX_A1(MinorFUTiming):
 ### SDIV
 
 sdiv_lat_expr = expr_top(let([
-    ('left', un('SignExtend32To64', int_reg(src(4)))),
-    ('right', un('SignExtend32To64', int_reg(src(3)))),
+    ('left', un('SignExtend32To64', src_reg(4))),
+    ('right', un('SignExtend32To64', src_reg(3))),
     ('either_signed', bin('Or',
         bin('SLessThan', ref('left'), literal(0)),
         bin('SLessThan', ref('right'), literal(0)))),
@@ -511,8 +504,8 @@ sdiv_lat_expr = expr_top(let([
     ))
 
 sdiv_lat_expr64 = expr_top(let([
-    ('left', un('SignExtend32To64', int_reg(src(0)))),
-    ('right', un('SignExtend32To64', int_reg(src(1)))),
+    ('left', un('SignExtend32To64', src_reg(0))),
+    ('right', un('SignExtend32To64', src_reg(1))),
     ('either_signed', bin('Or',
         bin('SLessThan', ref('left'), literal(0)),
         bin('SLessThan', ref('right'), literal(0)))),
@@ -773,8 +766,8 @@ class HPI_UDIV_T1(MinorFUTiming):
     mask, match = t32_opcode('1111_1011_1011_xxxx__xxxx_xxxx_1111_xxxx')
 
 udiv_lat_expr = expr_top(let([
-    ('left', int_reg(src(4))),
-    ('right', int_reg(src(3))),
+    ('left', src_reg(4)),
+    ('right', src_reg(3)),
     ('left_size', un('SizeInBits', ref('left'))),
     ('right_size', un('SizeInBits',
         bin('UDiv', ref('right'), literal(2)))),

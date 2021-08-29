@@ -98,9 +98,8 @@ SimObject('BaseCPU.py', sim_objects=['BaseCPU'])
 SimObject('CPUTracers.py', sim_objects=[
     'ExeTracer', 'IntelTrace', 'NativeTrace'])
 SimObject('TimingExpr.py', sim_objects=[
-    'TimingExpr', 'TimingExprLiteral', 'TimingExprSrcReg',
-    'TimingExprReadIntReg', 'TimingExprLet', 'TimingExprRef', 'TimingExprUn',
-    'TimingExprBin', 'TimingExprIf'],
+    'TimingExpr', 'TimingExprLiteral', 'TimingExprSrcReg', 'TimingExprLet',
+    'TimingExprRef', 'TimingExprUn', 'TimingExprBin', 'TimingExprIf'],
     enums=['TimingExprOp'])
 
 Source('activity.cc')
