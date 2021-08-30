@@ -30,7 +30,7 @@ from m5.SimObject import SimObject
 from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
-from m5.objects.IntPin import VectorIntSinkPin
+from m5.objects.IntPin import IntSinkPin, VectorIntSinkPin
 from m5.objects.Iris import IrisBaseCPU
 from m5.objects.SystemC import SystemC_ScModule
 
@@ -46,6 +46,11 @@ class FastModelCortexR52(IrisBaseCPU):
     llpp = AmbaInitiatorSocket(64, 'Low Latency Peripheral Port')
     flash = AmbaInitiatorSocket(64, 'Flash')
     amba = AmbaInitiatorSocket(64, 'AMBA initiator socket')
+    core_reset = IntSinkPin('Raising this signal will put the core into ' \
+                            'reset mode.')
+    poweron_reset = IntSinkPin('Power on reset. Initializes all the ' \
+                               'processor logic, including debug logic.')
+    halt = IntSinkPin('Raising this signal will put the core into halt mode.')
 
     CFGEND = Param.Bool(False, "Endianness configuration at reset.  0, " \
             "little endian. 1, big endian.")
@@ -108,6 +113,7 @@ class FastModelCortexR52Cluster(SimObject):
     spi = VectorIntSinkPin('SPI inputs (0-959)')
 
     ext_slave = AmbaTargetSocket(64, 'AMBA target socket')
+    top_reset = IntSinkPin('This signal resets timer and interrupt controller.')
 
     CLUSTER_ID = Param.UInt16(0, "CLUSTER_ID[15:8] equivalent to " \
             "CFGMPIDRAFF2, CLUSTER_ID[7:0] equivalent to CFGMPIDRAFF1")

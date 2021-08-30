@@ -68,12 +68,18 @@ ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
     evs(_evs), cpu(_cpu),
     llpp(evs->llpp[cpu], name + ".llpp", -1),
     flash(evs->flash[cpu], name + ".flash", -1),
-    amba(evs->amba[cpu], name + ".amba", -1)
+    amba(evs->amba[cpu], name + ".amba", -1),
+    core_reset(name + ".core_reset", 0),
+    poweron_reset(name + ".poweron_reset", 0),
+    halt(name + ".halt", 0)
 {
     for (int i = 0; i < Evs::PpiCount; i++) {
         ppis.emplace_back(
                 new CoreInt(csprintf("%s.ppi[%d]", name, i), i, this));
     }
+    core_reset.signal_out.bind(evs->core_reset[cpu]);
+    poweron_reset.signal_out.bind(evs->poweron_reset[cpu]);
+    halt.signal_out.bind(evs->halt[cpu]);
 }
 
 
@@ -82,7 +88,8 @@ ScxEvsCortexR52<Types>::ScxEvsCortexR52(
         const sc_core::sc_module_name &mod_name, const Params &p) :
     Base(mod_name),
     params(p),
-    ext_slave(Base::ext_slave, p.name + ".ext_slave", -1)
+    ext_slave(Base::ext_slave, p.name + ".ext_slave", -1),
+    top_reset(p.name + ".top_reset", 0)
 {
     for (int i = 0; i < CoreCount; i++)
         corePins.emplace_back(new CorePins(this, i));
@@ -91,6 +98,8 @@ ScxEvsCortexR52<Types>::ScxEvsCortexR52(
         spis.emplace_back(
                 new ClstrInt(csprintf("%s.spi[%d]", name(), i), i, this));
     }
+
+    top_reset.signal_out.bind(Base::top_reset);
 
     clockRateControl.bind(this->clock_rate_s);
     signalInterrupt.bind(this->signal_interrupt);
@@ -116,8 +125,16 @@ ScxEvsCortexR52<Types>::gem5_getPort(const std::string &if_name, int idx)
         return this->corePins.at(idx)->flash;
     } else if (if_name == "amba") {
         return this->corePins.at(idx)->amba;
+    } else if (if_name == "core_reset") {
+        return this->corePins.at(idx)->core_reset;
+    } else if (if_name == "poweron_reset") {
+        return this->corePins.at(idx)->poweron_reset;
+    } else if (if_name == "halt") {
+        return this->corePins.at(idx)->halt;
     } else if (if_name == "ext_slave") {
         return this->ext_slave;
+    } else if (if_name == "top_reset") {
+        return this->top_reset;
     } else if (if_name == "spi") {
         return *this->spis.at(idx);
     } else if (if_name.substr(0, 3) == "ppi") {

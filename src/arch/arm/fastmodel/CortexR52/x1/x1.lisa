@@ -45,6 +45,10 @@ component CortexR52x1
         core.flash_m => self.flash;
         core.pvbus_core_m => self.amba;
         self.ext_slave => core.ext_slave_s;
+        self.core_reset => core.reset;
+        self.poweron_reset => core.cpuporeset;
+        self.top_reset => core.topreset;
+        self.halt => core.cpuhalt;
 
         // Clocks.
         clock1Hz.clk_out => clockDiv.clk_in;
@@ -66,6 +70,10 @@ component CortexR52x1
     master port<PVBus> flash[1];
     master port<PVBus> amba[1];
     slave port<PVBus> ext_slave;
+    slave port<Signal> core_reset[1];
+    slave port<Signal> poweron_reset[1];
+    slave port<Signal> halt[1];
+    slave port<Signal> top_reset;
 
     slave port<ExportedClockRateControl> clock_rate_s
     {
