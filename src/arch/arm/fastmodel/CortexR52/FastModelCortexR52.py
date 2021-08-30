@@ -29,7 +29,7 @@ from m5.SimObject import SimObject
 
 from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
-from m5.objects.FastModel import AmbaInitiatorSocket
+from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
 from m5.objects.IntPin import VectorIntSinkPin
 from m5.objects.Iris import IrisBaseCPU
 from m5.objects.SystemC import SystemC_ScModule
@@ -106,6 +106,8 @@ class FastModelCortexR52Cluster(SimObject):
             "Fast mo0del exported virtual subsystem holding cores")
 
     spi = VectorIntSinkPin('SPI inputs (0-959)')
+
+    ext_slave = AmbaTargetSocket(64, 'AMBA target socket')
 
     CLUSTER_ID = Param.UInt16(0, "CLUSTER_ID[15:8] equivalent to " \
             "CFGMPIDRAFF2, CLUSTER_ID[7:0] equivalent to CFGMPIDRAFF1")

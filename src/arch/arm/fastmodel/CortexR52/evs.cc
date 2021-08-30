@@ -81,7 +81,8 @@ template <class Types>
 ScxEvsCortexR52<Types>::ScxEvsCortexR52(
         const sc_core::sc_module_name &mod_name, const Params &p) :
     Base(mod_name),
-    params(p)
+    params(p),
+    ext_slave(Base::ext_slave, p.name + ".ext_slave", -1)
 {
     for (int i = 0; i < CoreCount; i++)
         corePins.emplace_back(new CorePins(this, i));
@@ -115,6 +116,8 @@ ScxEvsCortexR52<Types>::gem5_getPort(const std::string &if_name, int idx)
         return this->corePins.at(idx)->flash;
     } else if (if_name == "amba") {
         return this->corePins.at(idx)->amba;
+    } else if (if_name == "ext_slave") {
+        return this->ext_slave;
     } else if (if_name == "spi") {
         return *this->spis.at(idx);
     } else if (if_name.substr(0, 3) == "ppi") {

@@ -44,6 +44,7 @@ component CortexR52x2
         core.llpp_m => self.llpp;
         core.flash_m => self.flash;
         core.pvbus_core_m => self.amba;
+        self.ext_slave => core.ext_slave_s;
 
         // Clocks.
         clock1Hz.clk_out => clockDiv.clk_in;
@@ -65,6 +66,7 @@ component CortexR52x2
     master port<PVBus> llpp[2];
     master port<PVBus> flash[2];
     master port<PVBus> amba[2];
+    slave port<PVBus> ext_slave;
 
     slave port<ExportedClockRateControl> clock_rate_s
     {

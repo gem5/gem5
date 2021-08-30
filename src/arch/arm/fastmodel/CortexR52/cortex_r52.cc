@@ -150,6 +150,9 @@ CortexR52Cluster::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "spi") {
         return evs->gem5_getPort(if_name, idx);
+    } else if (if_name == "ext_slave") {
+        assert(idx == InvalidPortID);
+        return evs->gem5_getPort(if_name, idx);
     } else {
         return SimObject::getPort(if_name, idx);
     }
