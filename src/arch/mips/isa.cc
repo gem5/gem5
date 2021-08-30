@@ -100,13 +100,17 @@ ISA::miscRegNames[misc_reg::NumRegs] =
 ISA::ISA(const Params &p) : BaseISA(p), numThreads(p.num_threads),
     numVpes(p.num_vpes)
 {
-    _regClasses.emplace_back(int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(float_reg::NumRegs, debug::FloatRegs);
-    _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to MIPS.
-    _regClasses.emplace_back(2, debug::IntRegs); // Not applicable to MIPS.
-    _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to MIPS.
-    _regClasses.emplace_back(0, debug::IntRegs); // Not applicable to MIPS.
-    _regClasses.emplace_back(misc_reg::NumRegs, debug::MiscRegs);
+    _regClasses.emplace_back(IntRegClass, int_reg::NumRegs, debug::IntRegs);
+    _regClasses.emplace_back(FloatRegClass, float_reg::NumRegs,
+            debug::FloatRegs);
+
+    /* Not applicable to MIPS. */
+    _regClasses.emplace_back(VecRegClass, 1, debug::IntRegs);
+    _regClasses.emplace_back(VecElemClass, 2, debug::IntRegs);
+    _regClasses.emplace_back(VecPredRegClass, 1, debug::IntRegs);
+    _regClasses.emplace_back(CCRegClass, 0, debug::IntRegs);
+
+    _regClasses.emplace_back(MiscRegClass, misc_reg::NumRegs, debug::MiscRegs);
 
     miscRegFile.resize(misc_reg::NumRegs);
     bankType.resize(misc_reg::NumRegs);

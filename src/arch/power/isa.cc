@@ -54,13 +54,14 @@ namespace PowerISA
 
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.emplace_back(int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(float_reg::NumRegs, debug::FloatRegs);
-    _regClasses.emplace_back(1, debug::IntRegs);
-    _regClasses.emplace_back(2, debug::IntRegs);
-    _regClasses.emplace_back(1, debug::IntRegs);
-    _regClasses.emplace_back(0, debug::IntRegs);
-    _regClasses.emplace_back(NUM_MISCREGS, debug::MiscRegs);
+    _regClasses.emplace_back(IntRegClass, int_reg::NumRegs, debug::IntRegs);
+    _regClasses.emplace_back(FloatRegClass, float_reg::NumRegs,
+            debug::FloatRegs);
+    _regClasses.emplace_back(VecRegClass, 1, debug::IntRegs);
+    _regClasses.emplace_back(VecElemClass, 2, debug::IntRegs);
+    _regClasses.emplace_back(VecPredRegClass, 1, debug::IntRegs);
+    _regClasses.emplace_back(CCRegClass, 0, debug::IntRegs);
+    _regClasses.emplace_back(MiscRegClass, NUM_MISCREGS, debug::MiscRegs);
     clear();
 }
 

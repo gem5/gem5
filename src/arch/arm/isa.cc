@@ -92,16 +92,19 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     _decoderFlavor(p.decoderFlavor), pmu(p.pmu), impdefAsNop(p.impdef_nop),
     afterStartup(false)
 {
-    _regClasses.emplace_back(int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(0, debug::FloatRegs);
-    _regClasses.emplace_back(NumVecRegs, vecRegClassOps, debug::VecRegs,
-            sizeof(VecRegContainer));
-    _regClasses.emplace_back(NumVecRegs * NumVecElemPerVecReg,
-            vecRegElemClassOps, debug::VecRegs);
-    _regClasses.emplace_back(NumVecPredRegs, vecPredRegClassOps,
-            debug::VecPredRegs, sizeof(VecPredRegContainer));
-    _regClasses.emplace_back(cc_reg::NumRegs, debug::CCRegs);
-    _regClasses.emplace_back(NUM_MISCREGS, miscRegClassOps, debug::MiscRegs);
+    _regClasses.emplace_back(IntRegClass, int_reg::NumRegs, debug::IntRegs);
+    _regClasses.emplace_back(FloatRegClass, 0, debug::FloatRegs);
+    _regClasses.emplace_back(VecRegClass, NumVecRegs, vecRegClassOps,
+            debug::VecRegs, sizeof(VecRegContainer));
+    _regClasses.emplace_back(VecElemClass,
+            NumVecRegs * ArmISA::NumVecElemPerVecReg, vecRegElemClassOps,
+            debug::VecRegs);
+    _regClasses.emplace_back(VecPredRegClass, NumVecPredRegs,
+            vecPredRegClassOps, debug::VecPredRegs,
+            sizeof(VecPredRegContainer));
+    _regClasses.emplace_back(CCRegClass, cc_reg::NumRegs, debug::CCRegs);
+    _regClasses.emplace_back(MiscRegClass, NUM_MISCREGS, miscRegClassOps,
+            debug::MiscRegs);
 
     miscRegs[MISCREG_SCTLR_RST] = 0;
 

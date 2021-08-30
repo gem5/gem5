@@ -146,13 +146,17 @@ ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string)
     fatal_if(vendorString.size() != 12,
              "CPUID vendor string must be 12 characters\n");
 
-    _regClasses.emplace_back(int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(float_reg::NumRegs, debug::FloatRegs);
-    _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to X86
-    _regClasses.emplace_back(2, debug::IntRegs); // Not applicable to X86
-    _regClasses.emplace_back(1, debug::IntRegs); // Not applicable to X86
-    _regClasses.emplace_back(cc_reg::NumRegs, debug::CCRegs);
-    _regClasses.emplace_back(misc_reg::NumRegs, debug::MiscRegs);
+    _regClasses.emplace_back(IntRegClass, int_reg::NumRegs, debug::IntRegs);
+    _regClasses.emplace_back(FloatRegClass, float_reg::NumRegs,
+            debug::FloatRegs);
+
+    /* Not applicable to X86 */
+    _regClasses.emplace_back(VecRegClass, 1, debug::IntRegs);
+    _regClasses.emplace_back(VecElemClass, 2, debug::IntRegs);
+    _regClasses.emplace_back(VecPredRegClass, 1, debug::IntRegs);
+
+    _regClasses.emplace_back(CCRegClass, cc_reg::NumRegs, debug::CCRegs);
+    _regClasses.emplace_back(MiscRegClass, misc_reg::NumRegs, debug::MiscRegs);
 
     clear();
 }
