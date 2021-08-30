@@ -24,19 +24,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.Device import DmaDevice
 
-SimObject('LupioBLK.py', tags='riscv isa')
-SimObject('LupioRNG.py', tags='riscv isa')
-SimObject('LupioRTC.py', tags='riscv isa')
-SimObject('LupioTTY.py', tags='riscv isa')
+from m5.params import Param
+from m5.proxy import Parent
 
-DebugFlag('LupioBLK')
-DebugFlag('LupioRNG')
-DebugFlag('LupioRTC')
-DebugFlag('LupioTTY')
+class LupioBLK(DmaDevice):
 
-Source('lupio_blk.cc', tags='riscv isa')
-Source('lupio_rng.cc', tags='riscv isa')
-Source('lupio_rtc.cc', tags='riscv isa')
-Source('lupio_tty.cc', tags='riscv isa')
+    type = 'LupioBLK'
+    cxx_class='gem5::LupioBLK'
+    cxx_header = 'dev/lupio/lupio_blk.hh'
+    pio_size = Param.Addr(0x1000, "PIO Size")
+    image = Param.DiskImage("Disk image")
+    pio_addr = Param.Addr("Device Address")
+    latency = Param.Latency('0ns', "DMA Device Latency")
+    platform = Param.Platform(Parent.any,
+                              "Platform this device is part of.")
+    int_id = Param.Int("Interrupt ID for the PIC to use")
