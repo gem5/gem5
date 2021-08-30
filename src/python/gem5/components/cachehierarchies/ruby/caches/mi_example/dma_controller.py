@@ -1,4 +1,4 @@
-# Copyright (c) 2020 The Regents of the University of California
+# Copyright (c) 2021 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,46 +24,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
-Test file for the insttest binary running on the SPARC ISA
-"""
-from testlib import *
+from ..abstract_dma_controller import AbstractDMAController
+from ......utils.override import overrides
 
-test_progs = {constants.sparc_tag: ("sparc-insttest",)}
+from m5.objects import MessageBuffer
 
-cpu_types = {constants.sparc_tag: ("atomic", "timing")}
 
-if config.bin_path:
-    resource_path = config.bin_path
-else:
-    resource_path = joinpath(absdirpath(__file__), "..", "resources")
+class DMAController(AbstractDMAController):
+    """
+    A DMA Controller for use in the MI_Example cache hierarchy setup.
+    """
 
-for isa in test_progs:
-    for binary in test_progs[isa]:
-        ref_path = joinpath(getcwd(), "ref")
-        verifiers = (
-            verifier.MatchStdoutNoPerf(joinpath(ref_path, "simout")),
-        )
+    class DMAController(AbstractDMAController):
+        def __init__(self, network, cache_line_size):
+            super(DMAController, self).__init__(network, cache_line_size)
 
-        for cpu in cpu_types[isa]:
-            gem5_verify_config(
-                name="test-" + binary + "-" + cpu,
-                fixtures=(),
-                verifiers=verifiers,
-                config=joinpath(
-                    config.base_dir,
-                    "tests",
-                    "gem5",
-                    "configs",
-                    "simple_binary_run.py",
-                ),
-                config_args=[
-                    binary,
-                    cpu,
-                    "--override-download",
-                    "--resource-directory",
-                    resource_path,
-                ],
-                valid_isas=(isa,),
-                length=constants.long_tag,
-            )
+    @overrides(AbstractDMAController)
+    def connectQueues(self, network):
+        self.mandatoryQueue = MessageBuffer()
+        self.requestToDir = MessageBuffer()
+        self.requestToDir.out_port = network.in_port
+        self.responseFromDir = MessageBuffer(ordered=True)
+        self.responseFromDir.in_port = network.out_port

@@ -73,7 +73,6 @@ def test_parsec(
             "tests",
             "gem5",
             "configs",
-            "components-library",
             "parsec_disk_run.py",
         ),
         config_args=[

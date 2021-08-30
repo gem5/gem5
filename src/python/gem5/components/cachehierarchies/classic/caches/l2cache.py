@@ -1,5 +1,5 @@
-# Copyright (c) 2020 The Regents of the University of California
-# All Rights Reserved.
+# Copyright (c) 2021 The Regents of the University of California
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,46 +24,37 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
-Test file for the insttest binary running on the SPARC ISA
-"""
-from testlib import *
+from .....utils.override import *
 
-test_progs = {constants.sparc_tag: ("sparc-insttest",)}
+from m5.objects import Cache, BasePrefetcher, StridePrefetcher
 
-cpu_types = {constants.sparc_tag: ("atomic", "timing")}
+from typing import Optional, Type
 
-if config.bin_path:
-    resource_path = config.bin_path
-else:
-    resource_path = joinpath(absdirpath(__file__), "..", "resources")
 
-for isa in test_progs:
-    for binary in test_progs[isa]:
-        ref_path = joinpath(getcwd(), "ref")
-        verifiers = (
-            verifier.MatchStdoutNoPerf(joinpath(ref_path, "simout")),
-        )
+class L2Cache(Cache):
+    """
+    A simple L2 Cache with default values.
+    """
 
-        for cpu in cpu_types[isa]:
-            gem5_verify_config(
-                name="test-" + binary + "-" + cpu,
-                fixtures=(),
-                verifiers=verifiers,
-                config=joinpath(
-                    config.base_dir,
-                    "tests",
-                    "gem5",
-                    "configs",
-                    "simple_binary_run.py",
-                ),
-                config_args=[
-                    binary,
-                    cpu,
-                    "--override-download",
-                    "--resource-directory",
-                    resource_path,
-                ],
-                valid_isas=(isa,),
-                length=constants.long_tag,
-            )
+    def __init__(
+        self,
+        size: str,
+        assoc: Optional[int] = 16,
+        tag_latency: Optional[int] = 10,
+        data_latency: Optional[int] = 10,
+        response_latency: Optional[int] = 1,
+        mshrs: Optional[int] = 20,
+        tgts_per_mshr: Optional[int] = 12,
+        writeback_clean: Optional[bool] = True,
+        PrefetcherCls: Type[BasePrefetcher] = StridePrefetcher,
+    ):
+        super(L2Cache, self).__init__()
+        self.size = size
+        self.assoc = assoc
+        self.tag_latency = tag_latency
+        self.data_latency = data_latency
+        self.response_latency = response_latency
+        self.mshrs = mshrs
+        self.tgts_per_mshr = tgts_per_mshr
+        self.writeback_clean = writeback_clean
+        self.prefetcher = PrefetcherCls()

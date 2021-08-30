@@ -80,7 +80,6 @@ def test_boot(
             "tests",
             "gem5",
             "configs",
-            "components-library",
             "boot_exit_disk_run.py",
         ),
         config_args=[

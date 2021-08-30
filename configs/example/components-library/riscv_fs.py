@@ -38,12 +38,12 @@ Characteristics
 import m5
 from m5.objects import Root
 
-from components_library.runtime import get_runtime_isa
-from components_library.boards.riscv_board import RiscvBoard
-from components_library.memory.single_channel import SingleChannelDDR3_1600
-from components_library.processors.simple_processor import SimpleProcessor
-from components_library.processors.cpu_types import CPUTypes
-from components_library.isas import ISA
+from gem5.runtime import get_runtime_isa
+from gem5.components.boards.riscv_board import RiscvBoard
+from gem5.components.memory.single_channel import SingleChannelDDR3_1600
+from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.isas import ISA
 
 import os
 import subprocess
@@ -54,11 +54,11 @@ import shutil
 if get_runtime_isa() != ISA.RISCV:
     raise EnvironmentError("The riscv_fs.py should be run with RISCV ISA.")
 
-from components_library.cachehierarchies.classic.\
-    private_l1_private_l2_cache_hierarchy import (
-    PrivateL1PrivateL2CacheHierarchy,
-)
-from components_library.boards.riscv_board import RiscvBoard
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy \
+    import (
+        PrivateL1PrivateL2CacheHierarchy,
+    )
+from gem5.boards.riscv_board import RiscvBoard
 
 # Setup the cache hierarchy. PrivateL1PrivateL2 and NoCache have been tested.
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(

@@ -1,5 +1,5 @@
-# Copyright (c) 2020 The Regents of the University of California
-# All Rights Reserved.
+# Copyright (c) 2021 The Regents of the University of California
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,46 +24,31 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
-Test file for the insttest binary running on the SPARC ISA
-"""
-from testlib import *
+from abc import abstractmethod
+from ....utils.override import overrides
+from ..abstract_cache_hierarchy import AbstractCacheHierarchy
 
-test_progs = {constants.sparc_tag: ("sparc-insttest",)}
+from m5.objects import Port
 
-cpu_types = {constants.sparc_tag: ("atomic", "timing")}
 
-if config.bin_path:
-    resource_path = config.bin_path
-else:
-    resource_path = joinpath(absdirpath(__file__), "..", "resources")
+class AbstractClassicCacheHierarchy(AbstractCacheHierarchy):
+    """
+    All classic cache hierarchies inherit from this class. This class
+    provides the shared infrastructure that all classic memory system
+    implementations need.
+    """
 
-for isa in test_progs:
-    for binary in test_progs[isa]:
-        ref_path = joinpath(getcwd(), "ref")
-        verifiers = (
-            verifier.MatchStdoutNoPerf(joinpath(ref_path, "simout")),
-        )
+    def __init__(self):
+        super(AbstractClassicCacheHierarchy, self).__init__()
 
-        for cpu in cpu_types[isa]:
-            gem5_verify_config(
-                name="test-" + binary + "-" + cpu,
-                fixtures=(),
-                verifiers=verifiers,
-                config=joinpath(
-                    config.base_dir,
-                    "tests",
-                    "gem5",
-                    "configs",
-                    "simple_binary_run.py",
-                ),
-                config_args=[
-                    binary,
-                    cpu,
-                    "--override-download",
-                    "--resource-directory",
-                    resource_path,
-                ],
-                valid_isas=(isa,),
-                length=constants.long_tag,
-            )
+    @overrides(AbstractCacheHierarchy)
+    def is_ruby(self) -> bool:
+        return False
+
+    @abstractmethod
+    def get_mem_side_port(self) -> Port:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_cpu_side_port(self) -> Port:
+        raise NotImplementedError

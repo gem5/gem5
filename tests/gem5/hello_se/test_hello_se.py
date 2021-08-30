@@ -104,7 +104,6 @@ def verify_config(isa, binary, cpu, hosts):
             "tests",
             "gem5",
             "configs",
-            "components-library",
             "simple_binary_run.py",
         ),
         config_args=[

@@ -25,8 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This tests the gem5 components library memory components with a simple traffic
-generator.
+This tests the gem5 memory components with a simple traffic generator.
 
 TODO: At present all the Single Channel memory components are tested. This
       should be expanded to included DRAMSIM3 memory systems.
@@ -45,7 +44,6 @@ def test_memory(module: str, memory: str, *args) -> None:
             "tests",
             "gem5",
             "configs",
-            "components-library",
             "simple_traffic_run.py",
         ),
         config_args=[
@@ -60,25 +58,27 @@ def test_memory(module: str, memory: str, *args) -> None:
 
 
 test_memory(
-    "components_library.memory.single_channel",
+    "gem5.components.memory.single_channel",
     "SingleChannelDDR3_1600",
     "512MiB",
 )
 test_memory(
-    "components_library.memory.single_channel",
+    "gem5.components.memory.single_channel",
     "SingleChannelDDR3_2133",
     "512MiB",
 )
 test_memory(
-    "components_library.memory.single_channel",
+    "gem5.components.memory.single_channel",
     "SingleChannelDDR4_2400",
     "512MiB",
 )
 test_memory(
-    "components_library.memory.single_channel",
+    "gem5.components.memory.single_channel",
     "SingleChannelLPDDR3_1600",
     "512MiB",
 )
 test_memory(
-    "components_library.memory.single_channel", "SingleChannelHBM", "512MiB"
+    "gem5.components.memory.single_channel",
+    "SingleChannelHBM",
+    "512MiB"
 )

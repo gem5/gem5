@@ -61,7 +61,6 @@ gem5_verify_config(
         "tests",
         "gem5",
         "configs",
-        "components-library",
         "simple_binary_run.py",
     ),
     config_args=[

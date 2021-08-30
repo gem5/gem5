@@ -80,7 +80,6 @@ if have_hdf5():
             "tests",
             "gem5",
             "configs",
-            "components-library",
             "simple_binary_run.py",
         ),
         config_args=[
