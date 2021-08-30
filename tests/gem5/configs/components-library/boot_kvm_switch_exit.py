@@ -29,23 +29,9 @@ This script boots with KVM then switches processors and exits.
 """
 
 import argparse
-import os
-import sys
 
 import m5
 from m5.objects import Root
-
-# This is a lame hack to get the imports working correctly.
-# TODO: This needs fixed.
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        os.pardir,
-        os.pardir,
-        os.pardir,
-        os.pardir,
-    )
-)
 
 from components_library.boards.x86_board import X86Board
 from components_library.coherence_protocol import CoherenceProtocol

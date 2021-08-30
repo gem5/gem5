@@ -34,22 +34,8 @@ import m5
 
 from m5.objects import Root
 
-import sys
-import os
 import argparse
 import importlib
-
-# This is a lame hack to get the imports working correctly.
-# TODO: This needs fixed.
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        os.pardir,
-        os.pardir,
-        os.pardir,
-        os.pardir,
-    )
-)
 
 from components_library.boards.test_board import TestBoard
 from components_library.cachehierarchies.classic.no_cache import NoCache

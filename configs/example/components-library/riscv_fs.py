@@ -38,20 +38,6 @@ Characteristics
 import m5
 from m5.objects import Root
 
-import sys
-import os
-
-# This is a lame hack to get the imports working correctly.
-# TODO: This needs fixed.
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        os.pardir,
-        os.pardir,
-        os.pardir,
-    )
-)
-
 from components_library.runtime import get_runtime_isa
 from components_library.boards.riscv_board import RiscvBoard
 from components_library.memory.single_channel import SingleChannelDDR3_1600

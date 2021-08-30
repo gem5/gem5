@@ -31,21 +31,6 @@ This script will run a simple boot exit test.
 import m5
 from m5.objects import Root
 
-import sys
-import os
-
-# This is a lame hack to get the imports working correctly.
-# TODO: This needs fixed.
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        os.pardir,
-        os.pardir,
-        os.pardir,
-        os.pardir,
-    )
-)
-
 from components_library.runtime import (
     get_runtime_coherence_protocol,
     get_runtime_isa,
@@ -59,7 +44,6 @@ from components_library.isas import ISA
 from components_library.coherence_protocol import CoherenceProtocol
 from components_library.resources.resource import Resource
 
-import os
 import argparse
 
 parser = argparse.ArgumentParser(

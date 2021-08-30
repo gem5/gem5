@@ -28,6 +28,168 @@
 
 Import('*')
 
+PySource('components_library', 'components_library/__init__.py')
+PySource('components_library', 'components_library/coherence_protocol.py')
+PySource('components_library', 'components_library/isas.py')
+PySource('components_library', 'components_library/runtime.py')
+PySource('components_library.boards', 'components_library/boards/__init__.py')
+PySource('components_library.boards',
+    'components_library/boards/abstract_board.py')
+PySource('components_library.boards',
+    'components_library/boards/mem_mode.py')
+PySource('components_library.boards',
+    'components_library/boards/riscv_board.py')
+PySource('components_library.boards',
+    'components_library/boards/simple_board.py')
+PySource('components_library.boards',
+    'components_library/boards/test_board.py')
+PySource('components_library.boards', 'components_library/boards/x86_board.py')
+PySource('components_library.cachehierarchies',
+    'components_library/cachehierarchies/__init__.py')
+PySource('components_library.cachehierarchies',
+    'components_library/cachehierarchies/abstract_cache_hierarchy.py')
+PySource('components_library.cachehierarchies',
+    'components_library/cachehierarchies/'
+    'abstract_two_level_cache_hierarchy.py')
+PySource('components_library.cachehierarchies.classic',
+    'components_library/cachehierarchies/classic/__init__.py')
+PySource('components_library.cachehierarchies.classic',
+    'components_library/cachehierarchies/classic/'
+    'abstract_classic_cache_hierarchy.py')
+PySource('components_library.cachehierarchies.classic',
+    'components_library/cachehierarchies/classic/no_cache.py')
+PySource('components_library.cachehierarchies.classic',
+    'components_library/cachehierarchies/classic/'
+    'private_l1_cache_hierarchy.py')
+PySource('components_library.cachehierarchies.classic',
+    'components_library/cachehierarchies/classic/'
+    'private_l1_private_l2_cache_hierarchy.py')
+PySource('components_library.cachehierarchies.classic.caches',
+    'components_library/cachehierarchies/classic/caches/__init__.py')
+PySource('components_library.cachehierarchies.classic.caches',
+    'components_library/cachehierarchies/classic/caches/l1dcache.py')
+PySource('components_library.cachehierarchies.classic.caches',
+    'components_library/cachehierarchies/classic/caches/l1icache.py')
+PySource('components_library.cachehierarchies.classic.caches',
+    'components_library/cachehierarchies/classic/caches/l2cache.py')
+PySource('components_library.cachehierarchies.classic.caches',
+    'components_library/cachehierarchies/classic/caches/mmu_cache.py')
+PySource('components_library.cachehierarchies.ruby',
+    'components_library/cachehierarchies/ruby/__init__.py')
+PySource('components_library.cachehierarchies.ruby',
+    'components_library/cachehierarchies/ruby/'
+    'abstract_ruby_cache_hierarchy.py')
+PySource('components_library.cachehierarchies.ruby',
+    'components_library/cachehierarchies/ruby/'
+    'mesi_two_level_cache_hierarchy.py')
+PySource('components_library.cachehierarchies.ruby',
+    'components_library/cachehierarchies/ruby/mi_example_cache_hierarchy.py')
+PySource('components_library.cachehierarchies.ruby.caches',
+    'components_library/cachehierarchies/ruby/caches/__init__.py')
+PySource('components_library.cachehierarchies.ruby.caches',
+    'components_library/cachehierarchies/ruby/caches/abstract_directory.py')
+PySource('components_library.cachehierarchies.ruby.caches',
+    'components_library/cachehierarchies/ruby/caches/'
+    'abstract_dma_controller.py')
+PySource('components_library.cachehierarchies.ruby.caches',
+    'components_library/cachehierarchies/ruby/caches/abstract_l1_cache.py')
+PySource('components_library.cachehierarchies.ruby.caches',
+    'components_library/cachehierarchies/ruby/caches/abstract_l2_cache.py')
+PySource('components_library.cachehierarchies.ruby.caches.mesi_two_level',
+    'components_library/cachehierarchies/ruby/caches/mesi_two_level/'
+    '__init__.py')
+PySource('components_library.cachehierarchies.ruby.caches.mesi_two_level',
+    'components_library/cachehierarchies/ruby/caches/mesi_two_level/'
+    'directory.py')
+PySource('components_library.cachehierarchies.ruby.caches.mesi_two_level',
+    'components_library/cachehierarchies/ruby/caches/mesi_two_level/'
+    'dma_controller.py')
+PySource('components_library.cachehierarchies.ruby.caches.mesi_two_level',
+    'components_library/cachehierarchies/ruby/caches/mesi_two_level/'
+    'l1_cache.py')
+PySource('components_library.cachehierarchies.ruby.caches.mesi_two_level',
+    'components_library/cachehierarchies/ruby/caches/mesi_two_level/'
+    'l2_cache.py')
+PySource('components_library.cachehierarchies.ruby.caches.mi_example',
+    'components_library/cachehierarchies/ruby/caches/mi_example/__init__.py')
+PySource('components_library.cachehierarchies.ruby.caches.mi_example',
+    'components_library/cachehierarchies/ruby/caches/mi_example/directory.py')
+PySource('components_library.cachehierarchies.ruby.caches.mi_example',
+    'components_library/cachehierarchies/ruby/caches/mi_example/'
+    'dma_controller.py')
+PySource('components_library.cachehierarchies.ruby.caches.mi_example',
+    'components_library/cachehierarchies/ruby/caches/mi_example/l1_cache.py')
+PySource('components_library.cachehierarchies.ruby.topologies',
+    'components_library/cachehierarchies/ruby/topologies/__init__.py')
+PySource('components_library.cachehierarchies.ruby.topologies',
+    'components_library/cachehierarchies/ruby/topologies/simple_pt2pt.py')
+PySource('components_library.memory', 'components_library/memory/__init__.py')
+PySource('components_library.memory',
+    'components_library/memory/abstract_memory_system.py')
+PySource('components_library.memory', 'components_library/memory/dramsim_3.py')
+PySource('components_library.memory',
+    'components_library/memory/single_channel.py')
+PySource('components_library.memory.dram_interfaces',
+    'components_library/memory/dram_interfaces/__init__.py')
+PySource('components_library.memory.dram_interfaces',
+    'components_library/memory/dram_interfaces/ddr3.py')
+PySource('components_library.memory.dram_interfaces',
+    'components_library/memory/dram_interfaces/ddr4.py')
+PySource('components_library.memory.dram_interfaces',
+    'components_library/memory/dram_interfaces/gddr.py')
+PySource('components_library.memory.dram_interfaces',
+    'components_library/memory/dram_interfaces/hbm.py')
+PySource('components_library.memory.dram_interfaces',
+    'components_library/memory/dram_interfaces/hmc.py')
+PySource('components_library.memory.dram_interfaces',
+    'components_library/memory/dram_interfaces/lpddr2.py')
+PySource('components_library.memory.dram_interfaces',
+    'components_library/memory/dram_interfaces/lpddr3.py')
+PySource('components_library.memory.dram_interfaces',
+    'components_library/memory/dram_interfaces/lpddr5.py')
+PySource('components_library.memory.dram_interfaces',
+    'components_library/memory/dram_interfaces/wideio.py')
+PySource('components_library.processors',
+    'components_library/processors/__init__.py')
+PySource('components_library.processors',
+    'components_library/processors/abstract_core.py')
+PySource('components_library.processors',
+    'components_library/processors/abstract_generator_core.py')
+PySource('components_library.processors',
+    'components_library/processors/abstract_processor.py')
+PySource('components_library.processors',
+    'components_library/processors/complex_generator_core.py')
+PySource('components_library.processors',
+    'components_library/processors/complex_generator.py')
+PySource('components_library.processors',
+    'components_library/processors/cpu_types.py')
+PySource('components_library.processors',
+    'components_library/processors/linear_generator_core.py')
+PySource('components_library.processors',
+    'components_library/processors/linear_generator.py')
+PySource('components_library.processors',
+    'components_library/processors/random_generator_core.py')
+PySource('components_library.processors',
+    'components_library/processors/random_generator.py')
+PySource('components_library.processors',
+    'components_library/processors/simple_core.py')
+PySource('components_library.processors',
+    'components_library/processors/simple_processor.py')
+PySource('components_library.processors',
+    'components_library/processors/simple_switchable_processor.py')
+PySource('components_library.processors',
+    'components_library/processors/switchable_processor.py')
+PySource('components_library.resources',
+    'components_library/resources/__init__.py')
+PySource('components_library.resources',
+    'components_library/resources/downloader.py')
+PySource('components_library.resources',
+    'components_library/resources/resource.py')
+PySource('components_library.utils', 'components_library/utils/__init__.py')
+PySource('components_library.utils', 'components_library/utils/filelock.py')
+PySource('components_library.utils', 'components_library/utils/override.py')
+PySource('components_library.utils', 'components_library/utils/requires.py')
+
 PySource('', 'importer.py')
 PySource('m5', 'm5/__init__.py')
 PySource('m5', 'm5/SimObject.py')
