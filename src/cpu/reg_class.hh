@@ -222,7 +222,7 @@ class RegId
     friend std::ostream&
     operator<<(std::ostream& os, const RegId& rid)
     {
-        return os << rid.className() << "{" << rid.index() << "}";
+        return os << rid.regClass().regName(rid);
     }
 };
 

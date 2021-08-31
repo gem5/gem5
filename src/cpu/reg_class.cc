@@ -52,7 +52,7 @@ namespace gem5
 std::string
 RegClassOps::regName(const RegId &id) const
 {
-    return csprintf("r%d", id.index());
+    return csprintf("%s[%d]", id.className(), id.index());
 }
 
 std::string
