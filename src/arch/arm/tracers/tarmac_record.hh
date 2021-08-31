@@ -249,7 +249,7 @@ class TarmacTracerRecord : public TarmacBaseRecord
 
             // If CPSR entry not present, generate one
             if (cpsr_it == queue.end()) {
-                RegId reg(MiscRegClass, ArmISA::MISCREG_CPSR);
+                RegId reg = ArmISA::miscRegClass[ArmISA::MISCREG_CPSR];
                 queue.push_back(
                     std::make_unique<RegEntry>(
                         genRegister<RegEntry>(tarmCtx, reg))

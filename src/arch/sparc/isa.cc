@@ -236,7 +236,7 @@ ISA::copyRegsFrom(ThreadContext *src)
         tc->setMiscReg(MISCREG_GL, x);
         // Skip %g0 which is always zero.
         for (int y = 1; y < 8; y++) {
-            RegId reg(IntRegClass, y);
+            RegId reg = intRegClass[y];
             tc->setReg(reg, src->getReg(reg));
         }
     }
@@ -245,14 +245,14 @@ ISA::copyRegsFrom(ThreadContext *src)
          src->setMiscReg(MISCREG_CWP, x);
          tc->setMiscReg(MISCREG_CWP, x);
          for (int y = 16; y < 32; y++) {
-             RegId reg(IntRegClass, y);
+             RegId reg = intRegClass[y];
              tc->setReg(reg, src->getReg(reg));
          }
     }
     // Microcode reg and pseudo int regs (misc regs in the integer regfile).
     for (int y = int_reg::NumArchRegs;
             y < int_reg::NumArchRegs + int_reg::NumMicroRegs; ++y) {
-        RegId reg(IntRegClass, y);
+        RegId reg = intRegClass[y];
         tc->setReg(reg, src->getReg(reg));
     }
 
@@ -263,7 +263,7 @@ ISA::copyRegsFrom(ThreadContext *src)
 
     // Then loop through the floating point registers.
     for (int i = 0; i < SparcISA::float_reg::NumArchRegs; ++i) {
-        RegId reg(FloatRegClass, i);
+        RegId reg = floatRegClass[i];
         tc->setReg(reg, src->getReg(reg));
     }
 

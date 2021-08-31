@@ -41,6 +41,7 @@
 #include "arch/mips/mt_constants.hh"
 #include "arch/mips/pcstate.hh"
 #include "arch/mips/pra_constants.hh"
+#include "arch/mips/regs/int.hh"
 #include "arch/mips/regs/misc.hh"
 #include "base/bitfield.hh"
 #include "base/logging.hh"
@@ -173,25 +174,23 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
     int success = 0;
     for (ThreadID tid = 0; tid < num_threads && success == 0; tid++) {
         TCBindReg tidTCBind =
-            readRegOtherThread(tc, RegId(MiscRegClass, misc_reg::TcBind), tid);
+            readRegOtherThread(tc, miscRegClass[misc_reg::TcBind], tid);
         TCBindReg tcBind = tc->readMiscRegNoEffect(misc_reg::TcBind);
 
         if (tidTCBind.curVPE == tcBind.curVPE) {
 
             TCStatusReg tidTCStatus =
-                readRegOtherThread(tc, RegId(MiscRegClass, misc_reg::TcStatus),
-                                       tid);
+                readRegOtherThread(tc, miscRegClass[misc_reg::TcStatus], tid);
 
             TCHaltReg tidTCHalt =
-                readRegOtherThread(tc, RegId(MiscRegClass, misc_reg::TcHalt),
-                                       tid);
+                readRegOtherThread(tc, miscRegClass[misc_reg::TcHalt], tid);
 
             if (tidTCStatus.da == 1 && tidTCHalt.h == 0 &&
                 tidTCStatus.a == 0 && success == 0) {
 
-                setRegOtherThread(tc, RegId(MiscRegClass, misc_reg::TcRestart),
-                                      Rs, tid);
-                setRegOtherThread(tc, RegId(IntRegClass, Rd_bits), Rt, tid);
+                setRegOtherThread(tc, miscRegClass[misc_reg::TcRestart], Rs,
+                                  tid);
+                setRegOtherThread(tc, intRegClass[Rd_bits], Rt, tid);
 
                 StatusReg status = tc->readMiscReg(misc_reg::Status);
                 TCStatusReg tcStatus = tc->readMiscReg(misc_reg::TcStatus);
@@ -210,8 +209,8 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
                 tidTCStatus.asid = tcStatus.asid;
 
                 // Write Status Register
-                setRegOtherThread(tc, RegId(MiscRegClass, misc_reg::TcStatus),
-                                      tidTCStatus, tid);
+                setRegOtherThread(tc, miscRegClass[misc_reg::TcStatus],
+                                  tidTCStatus, tid);
 
                 // Mark As Successful Fork
                 success = 1;
@@ -246,14 +245,11 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
 
         for (ThreadID tid = 0; tid < num_threads; tid++) {
             TCStatusReg tidTCStatus =
-                readRegOtherThread(tc, RegId(MiscRegClass, misc_reg::TcStatus),
-                                       tid);
+                readRegOtherThread(tc, miscRegClass[misc_reg::TcStatus], tid);
             TCHaltReg tidTCHalt =
-                readRegOtherThread(tc, RegId(MiscRegClass, misc_reg::TcHalt),
-                                       tid);
+                readRegOtherThread(tc, miscRegClass[misc_reg::TcHalt], tid);
             TCBindReg tidTCBind =
-                readRegOtherThread(tc, RegId(MiscRegClass, misc_reg::TcBind),
-                                       tid);
+                readRegOtherThread(tc, miscRegClass[misc_reg::TcBind], tid);
 
             if (tidTCBind.curVPE == tcBind.curVPE &&
                 tidTCBind.curTC == tcBind.curTC &&

@@ -1340,13 +1340,10 @@ syncVecRegsToElems(ThreadContext *tc)
 {
     int ei = 0;
     for (int ri = 0; ri < NumVecRegs; ri++) {
-        RegId reg_id(VecRegClass, ri);
         VecRegContainer reg;
-        tc->getReg(reg_id, &reg);
-        for (int j = 0; j < NumVecElemPerVecReg; j++, ei++) {
-            RegId elem_id(VecElemClass, ei);
-            tc->setReg(elem_id, reg.as<VecElem>()[j]);
-        }
+        tc->getReg(vecRegClass[ri], &reg);
+        for (int j = 0; j < NumVecElemPerVecReg; j++, ei++)
+            tc->setReg(vecElemClass[ei], reg.as<VecElem>()[j]);
     }
 }
 
@@ -1360,8 +1357,7 @@ syncVecElemsToRegs(ThreadContext *tc)
             RegId elem_id(VecElemClass, ei);
             reg.as<VecElem>()[j] = tc->getReg(elem_id);
         }
-        RegId reg_id(VecRegClass, ri);
-        tc->setReg(reg_id, &reg);
+        tc->setReg(vecRegClass[ri], &reg);
     }
 }
 

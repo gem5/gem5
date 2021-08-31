@@ -174,7 +174,7 @@ RemoteGDB::MipsGdbRegCache::getRegs(ThreadContext *context)
     DPRINTF(GDBAcc, "getregs in remotegdb \n");
 
     for (int i = 0; i < 32; i++)
-        r.gpr[i] = context->getReg(RegId(IntRegClass, i));
+        r.gpr[i] = context->getReg(intRegClass[i]);
     r.sr = context->readMiscRegNoEffect(misc_reg::Status);
     r.lo = context->getReg(int_reg::Lo);
     r.hi = context->getReg(int_reg::Hi);
@@ -182,7 +182,7 @@ RemoteGDB::MipsGdbRegCache::getRegs(ThreadContext *context)
     r.cause = context->readMiscRegNoEffect(misc_reg::Cause);
     r.pc = context->pcState().instAddr();
     for (int i = 0; i < 32; i++)
-        r.fpr[i] = context->getReg(RegId(FloatRegClass, i));
+        r.fpr[i] = context->getReg(floatRegClass[i]);
     r.fsr = context->getReg(float_reg::Fccr);
     r.fir = context->getReg(float_reg::Fir);
 }
@@ -193,7 +193,7 @@ RemoteGDB::MipsGdbRegCache::setRegs(ThreadContext *context) const
     DPRINTF(GDBAcc, "setregs in remotegdb \n");
 
     for (int i = 1; i < 32; i++)
-        context->setReg(RegId(IntRegClass, i), r.gpr[i]);
+        context->setReg(intRegClass[i], r.gpr[i]);
     context->setMiscRegNoEffect(misc_reg::Status, r.sr);
     context->setReg(int_reg::Lo, r.lo);
     context->setReg(int_reg::Hi, r.hi);
@@ -201,7 +201,7 @@ RemoteGDB::MipsGdbRegCache::setRegs(ThreadContext *context) const
     context->setMiscRegNoEffect(misc_reg::Cause, r.cause);
     context->pcState(r.pc);
     for (int i = 0; i < 32; i++)
-        context->setReg(RegId(FloatRegClass, i), r.fpr[i]);
+        context->setReg(floatRegClass[i], r.fpr[i]);
     context->setReg(float_reg::Fccr, r.fsr);
     context->setReg(float_reg::Fir, r.fir);
 }

@@ -213,7 +213,7 @@ let {{
     if (!isSecure(xc->tcBase()) && (cpsr.mode != MODE_HYP)) {
         HCR hcr = Hcr;
         bool hypTrap = false;
-        switch(xc->tcBase()->flattenRegId(RegId(MiscRegClass, op1)).index()) {
+        switch (xc->tcBase()->flattenRegId(miscRegClass[op1]).index()) {
           case MISCREG_FPSID:
             hypTrap = hcr.tid0;
             break;

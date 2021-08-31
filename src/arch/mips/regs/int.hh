@@ -117,78 +117,86 @@ enum : RegIndex
     NumRegs
 };
 
+} // namespace int_reg
+
+inline constexpr RegClass intRegClass(IntRegClass, int_reg::NumRegs,
+        debug::IntRegs);
+
+namespace int_reg
+{
+
 inline constexpr RegId
     // Zero register.
-    Zero(IntRegClass, _ZeroIdx),
+    Zero = intRegClass[_ZeroIdx],
 
     // Assembly temporary.
-    At(IntRegClass, _AtIdx),
+    At = intRegClass[_AtIdx],
 
     // Value returned by subroutine.
-    V0(IntRegClass, _V0Idx),
-    V1(IntRegClass, _V1Idx),
+    V0 = intRegClass[_V0Idx],
+    V1 = intRegClass[_V1Idx],
 
     // Arguments for subroutine.
-    A0(IntRegClass, _A0Idx),
-    A1(IntRegClass, _A1Idx),
-    A2(IntRegClass, _A2Idx),
-    A3(IntRegClass, _A3Idx),
+    A0 = intRegClass[_A0Idx],
+    A1 = intRegClass[_A1Idx],
+    A2 = intRegClass[_A2Idx],
+    A3 = intRegClass[_A3Idx],
 
     // Temporaries.
-    T0(IntRegClass, _T0Idx),
-    T1(IntRegClass, _T1Idx),
-    T2(IntRegClass, _T2Idx),
-    T3(IntRegClass, _T3Idx),
-    T4(IntRegClass, _T4Idx),
-    T5(IntRegClass, _T5Idx),
-    T6(IntRegClass, _T6Idx),
-    T7(IntRegClass, _T7Idx),
-    T8(IntRegClass, _T8Idx),
-    T9(IntRegClass, _T9Idx),
+    T0 = intRegClass[_T0Idx],
+    T1 = intRegClass[_T1Idx],
+    T2 = intRegClass[_T2Idx],
+    T3 = intRegClass[_T3Idx],
+    T4 = intRegClass[_T4Idx],
+    T5 = intRegClass[_T5Idx],
+    T6 = intRegClass[_T6Idx],
+    T7 = intRegClass[_T7Idx],
+    T8 = intRegClass[_T8Idx],
+    T9 = intRegClass[_T9Idx],
 
     // Subroutine registers.
-    S0(IntRegClass, _S0Idx),
-    S1(IntRegClass, _S1Idx),
-    S2(IntRegClass, _S2Idx),
-    S3(IntRegClass, _S3Idx),
-    S4(IntRegClass, _S4Idx),
-    S5(IntRegClass, _S5Idx),
-    S6(IntRegClass, _S6Idx),
-    S7(IntRegClass, _S7Idx),
+    S0 = intRegClass[_S0Idx],
+    S1 = intRegClass[_S1Idx],
+    S2 = intRegClass[_S2Idx],
+    S3 = intRegClass[_S3Idx],
+    S4 = intRegClass[_S4Idx],
+    S5 = intRegClass[_S5Idx],
+    S6 = intRegClass[_S6Idx],
+    S7 = intRegClass[_S7Idx],
 
     // For use in an interrupt/trap handler.
-    K0(IntRegClass, _K0Idx),
-    K1(IntRegClass, _K1Idx),
+    K0 = intRegClass[_K0Idx],
+    K1 = intRegClass[_K1Idx],
 
     // Global pointer.
-    Gp(IntRegClass, _GpIdx),
+    Gp = intRegClass[_GpIdx],
 
     // Stack pointer.
-    Sp(IntRegClass, _SpIdx),
+    Sp = intRegClass[_SpIdx],
 
     // Frame pointer.
-    Fp(IntRegClass, _FpIdx),
+    Fp = intRegClass[_FpIdx],
 
     // Return address.
-    Ra(IntRegClass, _RaIdx),
+    Ra = intRegClass[_RaIdx],
 
-    DspLo0(IntRegClass, _DspLo0Idx),
-    DspHi0(IntRegClass, _DspHi0Idx),
-    DspAcx0(IntRegClass, _DspAcx0Idx),
+    DspLo0 = intRegClass[_DspLo0Idx],
+    DspHi0 = intRegClass[_DspHi0Idx],
+    DspAcx0 = intRegClass[_DspAcx0Idx],
 
-    DspLo1(IntRegClass, _DspLo1Idx),
-    DspHi1(IntRegClass, _DspHi1Idx),
-    DspAcx1(IntRegClass, _DspAcx1Idx),
+    DspLo1 = intRegClass[_DspLo1Idx],
+    DspHi1 = intRegClass[_DspHi1Idx],
+    DspAcx1 = intRegClass[_DspAcx1Idx],
 
-    DspLo2(IntRegClass, _DspLo2Idx),
-    DspHi2(IntRegClass, _DspHi2Idx),
-    DspAcx2(IntRegClass, _DspAcx2Idx),
+    DspLo2 = intRegClass[_DspLo2Idx],
+    DspHi2 = intRegClass[_DspHi2Idx],
+    DspAcx2 = intRegClass[_DspAcx2Idx],
 
-    DspLo3(IntRegClass, _DspLo3Idx),
-    DspHi3(IntRegClass, _DspHi3Idx),
-    DspAcx3(IntRegClass, _DspAcx3Idx),
+    DspLo3 = intRegClass[_DspLo3Idx],
+    DspHi3 = intRegClass[_DspHi3Idx],
+    DspAcx3 = intRegClass[_DspAcx3Idx],
 
-    DspControl(IntRegClass, _DspControlIdx);
+    DspControl = intRegClass[_DspControlIdx];
 
 // Register aliases.
 inline constexpr auto
@@ -200,10 +208,6 @@ inline constexpr auto
     &SyscallSuccess = A3;
 
 } // namespace int_reg
-
-inline constexpr RegClass intRegClass(IntRegClass, int_reg::NumRegs,
-        debug::IntRegs);
-
 } // namespace MipsISA
 } // namespace gem5
 

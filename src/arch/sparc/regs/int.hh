@@ -64,87 +64,92 @@ enum {
     NumMicroRegs = _GsrIdx - _Ureg0Idx + 1
 };
 
-inline constexpr RegId
-    // Globals
-    G0(IntRegClass, _G0Idx),
-    G1(IntRegClass, _G1Idx),
-    G2(IntRegClass, _G2Idx),
-    G3(IntRegClass, _G3Idx),
-    G4(IntRegClass, _G4Idx),
-    G5(IntRegClass, _G5Idx),
-    G6(IntRegClass, _G6Idx),
-    G7(IntRegClass, _G7Idx),
-
-    // Outputs
-    O0(IntRegClass, _O0Idx),
-    O1(IntRegClass, _O1Idx),
-    O2(IntRegClass, _O2Idx),
-    O3(IntRegClass, _O3Idx),
-    O4(IntRegClass, _O4Idx),
-    O5(IntRegClass, _O5Idx),
-    O6(IntRegClass, _O6Idx),
-    O7(IntRegClass, _O7Idx),
-
-    // Locals
-    L0(IntRegClass, _L0Idx),
-    L1(IntRegClass, _L1Idx),
-    L2(IntRegClass, _L2Idx),
-    L3(IntRegClass, _L3Idx),
-    L4(IntRegClass, _L4Idx),
-    L5(IntRegClass, _L5Idx),
-    L6(IntRegClass, _L6Idx),
-    L7(IntRegClass, _L7Idx),
-
-    // Inputs
-    I0(IntRegClass, _I0Idx),
-    I1(IntRegClass, _I1Idx),
-    I2(IntRegClass, _I2Idx),
-    I3(IntRegClass, _I3Idx),
-    I4(IntRegClass, _I4Idx),
-    I5(IntRegClass, _I5Idx),
-    I6(IntRegClass, _I6Idx),
-    I7(IntRegClass, _I7Idx),
-
-    Ureg0(IntRegClass, _Ureg0Idx),
-    Y(IntRegClass, _YIdx),
-    Ccr(IntRegClass, _CcrIdx),
-    Cansave(IntRegClass, _CansaveIdx),
-    Canrestore(IntRegClass, _CanrestoreIdx),
-    Cleanwin(IntRegClass, _CleanwinIdx),
-    Otherwin(IntRegClass, _OtherwinIdx),
-    Wstate(IntRegClass, _WstateIdx),
-    Gsr(IntRegClass, _GsrIdx);
-
-inline constexpr RegId
-g(int index)
-{
-    return RegId(IntRegClass, G0 + index);
-}
-
-inline constexpr RegId
-o(int index)
-{
-    return RegId(IntRegClass, O0 + index);
-}
-
-inline constexpr RegId
-l(int index)
-{
-    return RegId(IntRegClass, L0 + index);
-}
-
-inline constexpr RegId
-i(int index)
-{
-    return RegId(IntRegClass, I0 + index);
-}
-
 const int NumRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroRegs;
 
 } // namespace int_reg
 
 inline constexpr RegClass intRegClass(IntRegClass, int_reg::NumRegs,
         debug::IntRegs);
+
+namespace int_reg
+{
+
+inline constexpr RegId
+    // Globals
+    G0 = intRegClass[_G0Idx],
+    G1 = intRegClass[_G1Idx],
+    G2 = intRegClass[_G2Idx],
+    G3 = intRegClass[_G3Idx],
+    G4 = intRegClass[_G4Idx],
+    G5 = intRegClass[_G5Idx],
+    G6 = intRegClass[_G6Idx],
+    G7 = intRegClass[_G7Idx],
+
+    // Outputs
+    O0 = intRegClass[_O0Idx],
+    O1 = intRegClass[_O1Idx],
+    O2 = intRegClass[_O2Idx],
+    O3 = intRegClass[_O3Idx],
+    O4 = intRegClass[_O4Idx],
+    O5 = intRegClass[_O5Idx],
+    O6 = intRegClass[_O6Idx],
+    O7 = intRegClass[_O7Idx],
+
+    // Locals
+    L0 = intRegClass[_L0Idx],
+    L1 = intRegClass[_L1Idx],
+    L2 = intRegClass[_L2Idx],
+    L3 = intRegClass[_L3Idx],
+    L4 = intRegClass[_L4Idx],
+    L5 = intRegClass[_L5Idx],
+    L6 = intRegClass[_L6Idx],
+    L7 = intRegClass[_L7Idx],
+
+    // Inputs
+    I0 = intRegClass[_I0Idx],
+    I1 = intRegClass[_I1Idx],
+    I2 = intRegClass[_I2Idx],
+    I3 = intRegClass[_I3Idx],
+    I4 = intRegClass[_I4Idx],
+    I5 = intRegClass[_I5Idx],
+    I6 = intRegClass[_I6Idx],
+    I7 = intRegClass[_I7Idx],
+
+    Ureg0 = intRegClass[_Ureg0Idx],
+    Y = intRegClass[_YIdx],
+    Ccr = intRegClass[_CcrIdx],
+    Cansave = intRegClass[_CansaveIdx],
+    Canrestore = intRegClass[_CanrestoreIdx],
+    Cleanwin = intRegClass[_CleanwinIdx],
+    Otherwin = intRegClass[_OtherwinIdx],
+    Wstate = intRegClass[_WstateIdx],
+    Gsr = intRegClass[_GsrIdx];
+
+inline constexpr RegId
+g(int index)
+{
+    return intRegClass[G0 + index];
+}
+
+inline constexpr RegId
+o(int index)
+{
+    return intRegClass[O0 + index];
+}
+
+inline constexpr RegId
+l(int index)
+{
+    return intRegClass[L0 + index];
+}
+
+inline constexpr RegId
+i(int index)
+{
+    return intRegClass[I0 + index];
+}
+
+} // namespace int_reg
 
 // the rest of these depend on the ABI
 inline constexpr auto

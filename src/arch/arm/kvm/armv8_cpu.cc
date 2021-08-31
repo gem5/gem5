@@ -39,6 +39,8 @@
 
 #include <linux/kvm.h>
 
+#include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/vec.hh"
 #include "debug/KvmContext.hh"
 #include "params/ArmV8KvmCPU.hh"
 
@@ -249,7 +251,7 @@ ArmV8KvmCPU::updateKvmState()
     }
 
     for (const auto &ri : intRegMap) {
-        const uint64_t value = tc->getReg(RegId(IntRegClass, ri.idx));
+        const uint64_t value = tc->getReg(intRegClass[ri.idx]);
         DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
         setOneReg(ri.kvm, value);
     }
@@ -259,7 +261,7 @@ ArmV8KvmCPU::updateKvmState()
         if (!inAArch64(tc))
             syncVecElemsToRegs(tc);
         ArmISA::VecRegContainer vc;
-        tc->getReg(RegId(VecRegClass, i), &vc);
+        tc->getReg(vecRegClass[i], &vc);
         auto v = vc.as<VecElem>();
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
             reg.s[j].i = v[j];
@@ -327,14 +329,14 @@ ArmV8KvmCPU::updateThreadContext()
     for (const auto &ri : intRegMap) {
         const auto value(getOneRegU64(ri.kvm));
         DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
-        tc->setReg(RegId(IntRegClass, ri.idx), value);
+        tc->setReg(intRegClass[ri.idx], value);
     }
 
     for (int i = 0; i < NUM_QREGS; ++i) {
         KvmFPReg reg;
         DPRINTF(KvmContext, "  Q%i: %s\n", i, getAndFormatOneReg(kvmFPReg(i)));
         getOneReg(kvmFPReg(i), reg.data);
-        auto v = tc->getWritableVecReg(RegId(VecRegClass, i)).as<VecElem>();
+        auto v = tc->getWritableVecReg(vecRegClass[i]).as<VecElem>();
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
             v[j] = reg.s[j].i;
         if (!inAArch64(tc))

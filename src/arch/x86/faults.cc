@@ -43,6 +43,7 @@
 #include "arch/x86/generated/decoder.hh"
 #include "arch/x86/insts/static_inst.hh"
 #include "arch/x86/mmu.hh"
+#include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
@@ -184,7 +185,7 @@ InitInterrupt::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     DPRINTF(Faults, "Init interrupt.\n");
     // The otherwise unmodified integer registers should be set to 0.
     for (int index = 0; index < int_reg::NumArchRegs; index++) {
-        tc->setReg(RegId(IntRegClass, index), (RegVal)0);
+        tc->setReg(intRegClass[index], (RegVal)0);
     }
 
     CR0 cr0 = tc->readMiscReg(misc_reg::Cr0);

@@ -63,7 +63,7 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
     assert(SparcISA::int_reg::NumArchRegs == 32);
     const char **regName = intRegNames;
     for (int i = 0; i < SparcISA::int_reg::NumArchRegs; i++) {
-        regVal = tc->getReg(RegId(IntRegClass, i));
+        regVal = tc->getReg(SparcISA::intRegClass[i]);
         read(&realRegVal, sizeof(realRegVal));
         realRegVal = betoh(realRegVal);
         checkReg(*(regName++), regVal, realRegVal);

@@ -123,7 +123,7 @@ Tstart64::Tstart64(ExtMachInst machInst, RegIndex _dest)
 
     _numSrcRegs = 0;
     _numDestRegs = 0;
-    setDestRegIdx(_numDestRegs++, RegId(IntRegClass, dest));
+    setDestRegIdx(_numDestRegs++, intRegClass[dest]);
     _numTypedDestRegs[IntRegClass]++;
     flags[IsHtmStart] = true;
     flags[IsInteger] = true;
@@ -152,7 +152,7 @@ Ttest64::Ttest64(ExtMachInst machInst, RegIndex _dest)
 
     _numSrcRegs = 0;
     _numDestRegs = 0;
-    setDestRegIdx(_numDestRegs++, RegId(IntRegClass, dest));
+    setDestRegIdx(_numDestRegs++, intRegClass[dest]);
     _numTypedDestRegs[IntRegClass]++;
     flags[IsInteger] = true;
     flags[IsMicroop] = true;

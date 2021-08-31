@@ -182,16 +182,12 @@ void
 ISA::copyRegsFrom(ThreadContext *src)
 {
     // First loop through the integer registers.
-    for (int i = 0; i < int_reg::NumRegs; i++) {
-        RegId reg(IntRegClass, i);
-        tc->setRegFlat(reg, src->getRegFlat(reg));
-    }
+    for (auto &id: intRegClass)
+        tc->setRegFlat(id, src->getRegFlat(id));
 
     // Then loop through the floating point registers.
-    for (int i = 0; i < float_reg::NumRegs; i++) {
-        RegId reg(FloatRegClass, i);
-        tc->setRegFlat(reg, src->getRegFlat(reg));
-    }
+    for (auto &id: floatRegClass)
+        tc->setRegFlat(id, src->getRegFlat(id));
 
     // Copy misc. registers
     for (int i = 0; i < misc_reg::NumRegs; i++)

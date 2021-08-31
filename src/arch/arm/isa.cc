@@ -550,30 +550,23 @@ ISA::takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc)
 void
 ISA::copyRegsFrom(ThreadContext *src)
 {
-    for (int i = 0; i < int_reg::NumRegs; i++) {
-        RegId reg(IntRegClass, i);
-        tc->setRegFlat(reg, src->getRegFlat(reg));
-    }
+    for (auto &id: intRegClass)
+        tc->setRegFlat(id, src->getRegFlat(id));
 
-    for (int i = 0; i < cc_reg::NumRegs; i++) {
-        RegId reg(CCRegClass, i);
-        tc->setReg(reg, src->getReg(reg));
-    }
+    for (auto &id: ccRegClass)
+        tc->setReg(id, src->getReg(id));
 
     for (int i = 0; i < NUM_MISCREGS; i++)
         tc->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
 
     ArmISA::VecRegContainer vc;
-    for (int i = 0; i < NumVecRegs; i++) {
-        RegId reg(VecRegClass, i);
-        src->getRegFlat(reg, &vc);
-        tc->setRegFlat(reg, &vc);
+    for (auto &id: vecRegClass) {
+        src->getRegFlat(id, &vc);
+        tc->setRegFlat(id, &vc);
     }
 
-    for (int i = 0; i < NumVecRegs * NumVecElemPerVecReg; i++) {
-        RegId reg(VecElemClass, i);
-        tc->setRegFlat(reg, src->getRegFlat(reg));
-    }
+    for (auto &id: vecElemClass)
+        tc->setRegFlat(id, src->getRegFlat(id));
 
     // setMiscReg "with effect" will set the misc register mapping correctly.
     // e.g. updateRegMap(val)

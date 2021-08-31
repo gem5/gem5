@@ -119,40 +119,48 @@ enum FloatRegIndex
     NumRegs = MicrofpBase + NumMicroFpRegs
 };
 
+} // namespace float_reg
+
+inline constexpr RegClass floatRegClass(FloatRegClass, float_reg::NumRegs,
+        debug::FloatRegs);
+
+namespace float_reg
+{
+
 static inline RegId
 mmx(int index)
 {
-    return RegId(FloatRegClass, MmxBase + index);
+    return floatRegClass[MmxBase + index];
 }
 
 static inline RegId
 fpr(int index)
 {
-    return RegId(FloatRegClass, FprBase + index);
+    return floatRegClass[FprBase + index];
 }
 
 static inline RegId
 xmm(int index)
 {
-    return RegId(FloatRegClass, XmmBase + index);
+    return floatRegClass[XmmBase + index];
 }
 
 static inline RegId
 xmmLow(int index)
 {
-    return RegId(FloatRegClass, XmmBase + 2 * index);
+    return floatRegClass[XmmBase + 2 * index];
 }
 
 static inline RegId
 xmmHigh(int index)
 {
-    return RegId(FloatRegClass, XmmBase + 2 * index + 1);
+    return floatRegClass[XmmBase + 2 * index + 1];
 }
 
 static inline RegId
 microfp(int index)
 {
-    return RegId(FloatRegClass, MicrofpBase + index);
+    return floatRegClass[MicrofpBase + index];
 }
 
 static inline RegId
@@ -162,9 +170,6 @@ stack(int index, int top)
 }
 
 } // namespace float_reg
-
-inline constexpr RegClass floatRegClass(FloatRegClass, float_reg::NumRegs,
-        debug::FloatRegs);
 
 } // namespace X86ISA
 } // namespace gem5

@@ -269,13 +269,13 @@ X86StaticInst::printMem(std::ostream &os, uint8_t segment,
         if (scale != 0 && index != int_reg::NumRegs) {
             if (scale != 1)
                 ccprintf(os, "%d*", scale);
-            printReg(os, RegId(IntRegClass, index), addressSize);
+            printReg(os, intRegClass[index], addressSize);
             someAddr = true;
         }
         if (base != int_reg::NumRegs) {
             if (someAddr)
                 os << " + ";
-            printReg(os, RegId(IntRegClass, base), addressSize);
+            printReg(os, intRegClass[base], addressSize);
             someAddr = true;
         }
     }

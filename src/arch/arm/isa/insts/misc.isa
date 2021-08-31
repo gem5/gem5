@@ -890,7 +890,7 @@ let {{
 
     mrc14code = '''
     MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
-                               RegId(MiscRegClass, op1)).index();
+                               miscRegClass[op1]).index();
     auto [can_read, undefined] = canReadCoprocReg(miscReg, Scr, Cpsr,
                                                   xc->tcBase());
     if (!can_read || undefined) {
@@ -914,7 +914,7 @@ let {{
 
     mcr14code = '''
     MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
-                               RegId(MiscRegClass, dest)).index();
+                               miscRegClass[dest]).index();
     auto [can_write, undefined] = canWriteCoprocReg(miscReg, Scr, Cpsr,
                                                     xc->tcBase());
     if (undefined || !can_write) {
@@ -938,8 +938,8 @@ let {{
     mrc15code = '''
     int preFlatOp1 = snsBankedIndex(op1, xc->tcBase());
     MiscRegIndex miscReg = (MiscRegIndex)
-                           xc->tcBase()->flattenRegId(RegId(MiscRegClass,
-                                                      preFlatOp1)).index();
+                           xc->tcBase()->flattenRegId(miscRegClass[
+                                                      preFlatOp1]).index();
 
     Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
@@ -970,8 +970,8 @@ let {{
     mcr15CheckCode = '''
     int preFlatDest = snsBankedIndex(dest, xc->tcBase());
     MiscRegIndex miscReg = (MiscRegIndex)
-                       xc->tcBase()->flattenRegId(RegId(MiscRegClass,
-                                                  preFlatDest)).index();
+                       xc->tcBase()->flattenRegId(miscRegClass[
+                                                  preFlatDest]).index();
 
     Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
@@ -1016,8 +1016,8 @@ let {{
     mrrc15code = '''
     int preFlatOp1 = snsBankedIndex(op1, xc->tcBase());
     MiscRegIndex miscReg = (MiscRegIndex)
-                           xc->tcBase()->flattenRegId(RegId(MiscRegClass,
-                                                      preFlatOp1)).index();
+                           xc->tcBase()->flattenRegId(miscRegClass[
+                                                      preFlatOp1]).index();
 
     Fault fault = mcrrMrrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
@@ -1048,8 +1048,8 @@ let {{
     mcrr15code = '''
     int preFlatDest = snsBankedIndex(dest, xc->tcBase());
     MiscRegIndex miscReg = (MiscRegIndex)
-                           xc->tcBase()->flattenRegId(RegId(MiscRegClass,
-                                                      preFlatDest)).index();
+                           xc->tcBase()->flattenRegId(miscRegClass[
+                                                      preFlatDest]).index();
 
     Fault fault = mcrrMrrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 

@@ -923,7 +923,7 @@ def template AmoArithmeticOpConstructor {{
         %(set_reg_idx_arr)s;
         %(constructor)s;
         isXZR = false;
-        uint32_t r2 = RegId(IntRegClass, dest).index() ;
+        uint32_t r2 = dest;
         flags[IsStore] = false;
         flags[IsLoad] = false;
         if (r2 == 31) {

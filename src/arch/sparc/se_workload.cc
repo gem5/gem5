@@ -119,7 +119,7 @@ SEWorkload::flushWindows(ThreadContext *tc)
 
         Addr addr = is_64 ? sp + 2047 : sp;
         for (int index = 16; index < 32; index++) {
-            RegId reg(IntRegClass, index);
+            RegId reg = intRegClass[index];
             if (is_64) {
                 uint64_t regVal = htobe<uint64_t>(tc->getReg(reg));
                 memcpy(bytes, &regVal, reg_bytes);

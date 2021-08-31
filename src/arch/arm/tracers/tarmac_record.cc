@@ -233,7 +233,7 @@ TarmacTracerRecord::TraceRegEntry::updateCC(
 
     regValid = true;
     regName = cc_reg::RegName[regRelIdx];
-    values[Lo] = thread->getReg(RegId(CCRegClass, regRelIdx));
+    values[Lo] = thread->getReg(ccRegClass[regRelIdx]);
 }
 
 void
@@ -242,12 +242,9 @@ TarmacTracerRecord::TraceRegEntry::updateFloat(
     RegIndex regRelIdx
 )
 {
-    auto thread = tarmCtx.thread;
-
     regValid = true;
     regName  = "f" + std::to_string(regRelIdx);
-    RegId reg(FloatRegClass, regRelIdx);
-    values[Lo] = bitsToFloat32(thread->getReg(reg));
+    panic("ARM doesn't support float registers.");
 }
 
 void
@@ -287,7 +284,7 @@ TarmacTracerRecord::TraceRegEntry::updateInt(
         regName  = "r" + std::to_string(regRelIdx);
         break;
     }
-    values[Lo] = thread->getReg(RegId(IntRegClass, regRelIdx));
+    values[Lo] = thread->getReg(intRegClass[regRelIdx]);
 }
 
 void

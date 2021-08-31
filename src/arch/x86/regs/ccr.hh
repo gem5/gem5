@@ -59,17 +59,22 @@ enum : RegIndex
     NumRegs
 };
 
-inline constexpr RegId
-    Zaps(CCRegClass, _ZapsIdx),
-    Cfof(CCRegClass, _CfofIdx),
-    Df(CCRegClass, _DfIdx),
-    Ecf(CCRegClass, _EcfIdx),
-    Ezf(CCRegClass, _EzfIdx);
-
 } // namespace cc_reg
 
 inline constexpr RegClass ccRegClass(CCRegClass, cc_reg::NumRegs,
         debug::CCRegs);
+
+namespace cc_reg
+{
+
+inline constexpr RegId
+    Zaps = ccRegClass[_ZapsIdx],
+    Cfof = ccRegClass[_CfofIdx],
+    Df = ccRegClass[_DfIdx],
+    Ecf = ccRegClass[_EcfIdx],
+    Ezf = ccRegClass[_EzfIdx];
+
+} // namespace cc_reg
 
 } // namespace X86ISA
 } // namespace gem5

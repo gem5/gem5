@@ -382,13 +382,12 @@ decode OPCODE_HI default Unknown::unknown() {
                     // Decode MIPS MT MFTR instruction into sub-instructions
                     0x8: decode MT_U {
                         0x0: mftc0({{
-                            data = readRegOtherThread(xc, RegId(MiscRegClass,
-                                                            (RT << 3 | SEL)));
+                            data = readRegOtherThread(xc,
+                                    miscRegClass[RT << 3 | SEL]);
                         }});
                         0x1: decode SEL {
                             0x0: mftgpr({{
-                                data = readRegOtherThread(xc,
-                                                    RegId(IntRegClass, RT));
+                                data = readRegOtherThread(xc, intRegClass[RT]);
                             }});
                             0x1: decode RT {
                                 0x0: mftlo_dsp0({{
@@ -448,11 +447,11 @@ decode OPCODE_HI default Unknown::unknown() {
                             0x2: decode MT_H {
                                 0x0: mftc1({{
                                     data = readRegOtherThread(xc,
-                                                     RegId(FloatRegClass, RT));
+                                            floatRegClass[RT]);
                                 }});
                                 0x1: mfthc1({{
                                     data = readRegOtherThread(xc,
-                                                     RegId(FloatRegClass, RT));
+                                            floatRegClass[RT]);
                                 }});
                             }
                             0x3: cftc1({{
@@ -491,11 +490,11 @@ decode OPCODE_HI default Unknown::unknown() {
                     // Decode MIPS MT MTTR instruction into sub-instructions
                     0xC: decode MT_U {
                         0x0: mttc0({{ setRegOtherThread(xc,
-                                     RegId(MiscRegClass, (RD << 3 | SEL)), Rt);
+                                     miscRegClass[RD << 3 | SEL], Rt);
                                    }});
                         0x1: decode SEL {
                             0x0: mttgpr({{ setRegOtherThread(xc,
-                                                   RegId(IntRegClass, RD), Rt);
+                                                 intRegClass[RD], Rt);
                             }});
                             0x1: decode RT {
                                 0x0: mttlo_dsp0({{ setRegOtherThread(xc,
@@ -542,11 +541,10 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
                             0x2: mttc1({{
                                 uint64_t data = readRegOtherThread(xc,
-                                                     RegId(FloatRegClass, RD));
+                                        floatRegClass[RD]);
                                 data = insertBits(data, MT_H ? 63 : 31,
                                                   MT_H ? 32 : 0, Rt);
-                                setRegOtherThread(xc, RegId(FloatRegClass, RD),
-                                                      data);
+                                setRegOtherThread(xc, floatRegClass[RD], data);
                             }});
                             0x3: cttc1({{
                                 uint32_t data;

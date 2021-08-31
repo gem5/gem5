@@ -34,6 +34,7 @@
 
 #include "arch/generic/isa.hh"
 #include "arch/sparc/pcstate.hh"
+#include "arch/sparc/regs/float.hh"
 #include "arch/sparc/regs/int.hh"
 #include "arch/sparc/regs/misc.hh"
 #include "arch/sparc/sparc_traits.hh"
@@ -196,13 +197,11 @@ class ISA : public BaseISA
     {
         switch (regId.classValue()) {
           case IntRegClass:
-            return RegId(IntRegClass, flattenIntIndex(regId.index()));
+            return intRegClass[flattenIntIndex(regId.index())];
           case FloatRegClass:
-            return RegId(FloatRegClass, flattenFloatIndex(regId.index()));
-          case CCRegClass:
-            return RegId(CCRegClass, flattenCCIndex(regId.index()));
+            return floatRegClass[flattenFloatIndex(regId.index())];
           case MiscRegClass:
-            return RegId(MiscRegClass, flattenMiscIndex(regId.index()));
+            return miscRegClass[flattenMiscIndex(regId.index())];
           default:
             break;
         }

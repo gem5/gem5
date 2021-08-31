@@ -77,17 +77,13 @@ ArmISA::HTMCheckpoint::save(ThreadContext *tc)
     nzcv = tc->readMiscReg(MISCREG_NZCV);
     daif = tc->readMiscReg(MISCREG_DAIF);
     for (auto n = 0; n < int_reg::NumArchRegs; n++) {
-        x[n] = tc->getReg(RegId(IntRegClass, n));
+        x[n] = tc->getReg(intRegClass[n]);
     }
     // TODO first detect if FP is enabled at this EL
-    for (auto n = 0; n < NumVecRegs; n++) {
-        RegId idx = RegId(VecRegClass, n);
-        tc->getReg(idx, &z[n]);
-    }
-    for (auto n = 0; n < NumVecPredRegs; n++) {
-        RegId idx = RegId(VecPredRegClass, n);
-        tc->getReg(idx, &p[n]);
-    }
+    for (auto n = 0; n < NumVecRegs; n++)
+        tc->getReg(vecRegClass[n], &z[n]);
+    for (auto n = 0; n < NumVecPredRegs; n++)
+        tc->getReg(vecPredRegClass[n], &p[n]);
     fpcr = tc->readMiscReg(MISCREG_FPCR);
     fpsr = tc->readMiscReg(MISCREG_FPSR);
     pcstateckpt = tc->pcState().as<PCState>();
@@ -103,18 +99,13 @@ ArmISA::HTMCheckpoint::restore(ThreadContext *tc, HtmFailureFaultCause cause)
     //tc->setMiscReg(MISCREG_ICC_PMR_EL1, tme_checkpoint->iccPmrEl1);
     tc->setMiscReg(MISCREG_NZCV, nzcv);
     tc->setMiscReg(MISCREG_DAIF, daif);
-    for (auto n = 0; n < int_reg::NumArchRegs; n++) {
-        tc->setReg(RegId(IntRegClass, n), x[n]);
-    }
+    for (auto n = 0; n < int_reg::NumArchRegs; n++)
+        tc->setReg(intRegClass[n], x[n]);
     // TODO first detect if FP is enabled at this EL
-    for (auto n = 0; n < NumVecRegs; n++) {
-        RegId idx = RegId(VecRegClass, n);
-        tc->setReg(idx, &z[n]);
-    }
-    for (auto n = 0; n < NumVecPredRegs; n++) {
-        RegId idx = RegId(VecPredRegClass, n);
-        tc->setReg(idx, &p[n]);
-    }
+    for (auto n = 0; n < NumVecRegs; n++)
+        tc->setReg(vecRegClass[n], &z[n]);
+    for (auto n = 0; n < NumVecPredRegs; n++)
+        tc->setReg(vecPredRegClass[n], &p[n]);
     tc->setMiscReg(MISCREG_FPCR, fpcr);
     tc->setMiscReg(MISCREG_FPSR, fpsr);
 
@@ -158,7 +149,7 @@ ArmISA::HTMCheckpoint::restore(ThreadContext *tc, HtmFailureFaultCause cause)
         replaceBits(error_code, 15, 1);
     if (interrupt)
         replaceBits(error_code, 23, 1);
-    tc->setReg(RegId(IntRegClass, rt), error_code);
+    tc->setReg(intRegClass[rt], error_code);
 
     // set next PC
     pcstateckpt.uReset();

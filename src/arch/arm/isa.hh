@@ -650,20 +650,19 @@ namespace ArmISA
         {
             switch (regId.classValue()) {
               case IntRegClass:
-                return RegId(IntRegClass, flattenIntIndex(regId.index()));
+                return intRegClass[flattenIntIndex(regId.index())];
               case FloatRegClass:
-                return RegId(FloatRegClass, flattenFloatIndex(regId.index()));
+                panic("ARM doesn't use FloatRegClass.");
               case VecRegClass:
-                return RegId(VecRegClass, flattenVecIndex(regId.index()));
+                return vecRegClass[flattenVecIndex(regId.index())];
               case VecElemClass:
-                return RegId(VecElemClass, flattenVecElemIndex(regId.index()));
+                return vecElemClass[flattenVecElemIndex(regId.index())];
               case VecPredRegClass:
-                return RegId(VecPredRegClass,
-                             flattenVecPredIndex(regId.index()));
+                return vecPredRegClass[flattenVecPredIndex(regId.index())];
               case CCRegClass:
-                return RegId(CCRegClass, flattenCCIndex(regId.index()));
+                return ccRegClass[flattenCCIndex(regId.index())];
               case MiscRegClass:
-                return RegId(MiscRegClass, flattenMiscIndex(regId.index()));
+                return miscRegClass[flattenMiscIndex(regId.index())];
               case InvalidRegClass:
                 return RegId();
             }

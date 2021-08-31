@@ -79,40 +79,48 @@ enum : RegIndex
     NumRegs
 };
 
+} // namespace int_reg
+
+inline constexpr RegClass intRegClass(IntRegClass, int_reg::NumRegs,
+        debug::IntRegs);
+
+namespace int_reg
+{
+
 inline constexpr RegId
-    Zero(IntRegClass, _ZeroIdx),
-    Ra(IntRegClass, _RaIdx),
-    Sp(IntRegClass, _SpIdx),
-    Gp(IntRegClass, _GpIdx),
-    Tp(IntRegClass, _TpIdx),
-    T0(IntRegClass, _T0Idx),
-    T1(IntRegClass, _T1Idx),
-    T2(IntRegClass, _T2Idx),
-    S0(IntRegClass, _S0Idx),
-    S1(IntRegClass, _S1Idx),
-    A0(IntRegClass, _A0Idx),
-    A1(IntRegClass, _A1Idx),
-    A2(IntRegClass, _A2Idx),
-    A3(IntRegClass, _A3Idx),
-    A4(IntRegClass, _A4Idx),
-    A5(IntRegClass, _A5Idx),
-    A6(IntRegClass, _A6Idx),
-    A7(IntRegClass, _A7Idx),
-    S2(IntRegClass, _S2Idx),
-    S3(IntRegClass, _S3Idx),
-    S4(IntRegClass, _S4Idx),
-    S5(IntRegClass, _S5Idx),
-    S6(IntRegClass, _S6Idx),
-    S7(IntRegClass, _S7Idx),
-    S8(IntRegClass, _S8Idx),
-    S9(IntRegClass, _S9Idx),
-    S10(IntRegClass, _S10Idx),
-    S11(IntRegClass, _S11Idx),
-    T3(IntRegClass, _T3Idx),
-    T4(IntRegClass, _T4Idx),
-    T5(IntRegClass, _T5Idx),
-    T6(IntRegClass, _T6Idx),
-    Ureg0(IntRegClass, _Ureg0Idx);
+    Zero = intRegClass[_ZeroIdx],
+    Ra = intRegClass[_RaIdx],
+    Sp = intRegClass[_SpIdx],
+    Gp = intRegClass[_GpIdx],
+    Tp = intRegClass[_TpIdx],
+    T0 = intRegClass[_T0Idx],
+    T1 = intRegClass[_T1Idx],
+    T2 = intRegClass[_T2Idx],
+    S0 = intRegClass[_S0Idx],
+    S1 = intRegClass[_S1Idx],
+    A0 = intRegClass[_A0Idx],
+    A1 = intRegClass[_A1Idx],
+    A2 = intRegClass[_A2Idx],
+    A3 = intRegClass[_A3Idx],
+    A4 = intRegClass[_A4Idx],
+    A5 = intRegClass[_A5Idx],
+    A6 = intRegClass[_A6Idx],
+    A7 = intRegClass[_A7Idx],
+    S2 = intRegClass[_S2Idx],
+    S3 = intRegClass[_S3Idx],
+    S4 = intRegClass[_S4Idx],
+    S5 = intRegClass[_S5Idx],
+    S6 = intRegClass[_S6Idx],
+    S7 = intRegClass[_S7Idx],
+    S8 = intRegClass[_S8Idx],
+    S9 = intRegClass[_S9Idx],
+    S10 = intRegClass[_S10Idx],
+    S11 = intRegClass[_S11Idx],
+    T3 = intRegClass[_T3Idx],
+    T4 = intRegClass[_T4Idx],
+    T5 = intRegClass[_T5Idx],
+    T6 = intRegClass[_T6Idx],
+    Ureg0 = intRegClass[_Ureg0Idx];
 
 const std::vector<std::string> RegNames = {
     "zero", "ra", "sp", "gp",
@@ -126,9 +134,6 @@ const std::vector<std::string> RegNames = {
 };
 
 } // namespace int_reg
-
-inline constexpr RegClass intRegClass(IntRegClass, int_reg::NumRegs,
-        debug::IntRegs);
 
 // Semantically meaningful register indices
 inline constexpr auto

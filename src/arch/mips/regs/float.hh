@@ -42,7 +42,7 @@ namespace MipsISA
 namespace float_reg
 {
 
-enum FPControlRegNums
+enum : RegIndex
 {
     _F0Idx,
     _F1Idx,
@@ -87,45 +87,53 @@ enum FPControlRegNums
     NumRegs,
 };
 
-inline constexpr RegId
-    F0(FloatRegClass, _F0Idx),
-    F1(FloatRegClass, _F1Idx),
-    F2(FloatRegClass, _F2Idx),
-    F3(FloatRegClass, _F3Idx),
-    F4(FloatRegClass, _F4Idx),
-    F5(FloatRegClass, _F5Idx),
-    F6(FloatRegClass, _F6Idx),
-    F7(FloatRegClass, _F7Idx),
-    F8(FloatRegClass, _F8Idx),
-    F9(FloatRegClass, _F9Idx),
-    F10(FloatRegClass, _F10Idx),
-    F11(FloatRegClass, _F11Idx),
-    F12(FloatRegClass, _F12Idx),
-    F13(FloatRegClass, _F13Idx),
-    F14(FloatRegClass, _F14Idx),
-    F15(FloatRegClass, _F15Idx),
-    F16(FloatRegClass, _F16Idx),
-    F17(FloatRegClass, _F17Idx),
-    F18(FloatRegClass, _F18Idx),
-    F19(FloatRegClass, _F19Idx),
-    F20(FloatRegClass, _F20Idx),
-    F21(FloatRegClass, _F21Idx),
-    F22(FloatRegClass, _F22Idx),
-    F23(FloatRegClass, _F23Idx),
-    F24(FloatRegClass, _F24Idx),
-    F25(FloatRegClass, _F25Idx),
-    F26(FloatRegClass, _F26Idx),
-    F27(FloatRegClass, _F27Idx),
-    F28(FloatRegClass, _F28Idx),
-    F29(FloatRegClass, _F29Idx),
-    F30(FloatRegClass, _F30Idx),
-    F31(FloatRegClass, _F31Idx),
+} // namespace float_reg
 
-    Fir(FloatRegClass, _FirIdx),
-    Fccr(FloatRegClass, _FccrIdx),
-    Fexr(FloatRegClass, _FexrIdx),
-    Fenr(FloatRegClass, _FenrIdx),
-    Fcsr(FloatRegClass, _FcsrIdx);
+inline constexpr RegClass floatRegClass(FloatRegClass, float_reg::NumRegs,
+        debug::FloatRegs);
+
+namespace float_reg
+{
+
+inline constexpr RegId
+    F0 = floatRegClass[_F0Idx],
+    F1 = floatRegClass[_F1Idx],
+    F2 = floatRegClass[_F2Idx],
+    F3 = floatRegClass[_F3Idx],
+    F4 = floatRegClass[_F4Idx],
+    F5 = floatRegClass[_F5Idx],
+    F6 = floatRegClass[_F6Idx],
+    F7 = floatRegClass[_F7Idx],
+    F8 = floatRegClass[_F8Idx],
+    F9 = floatRegClass[_F9Idx],
+    F10 = floatRegClass[_F10Idx],
+    F11 = floatRegClass[_F11Idx],
+    F12 = floatRegClass[_F12Idx],
+    F13 = floatRegClass[_F13Idx],
+    F14 = floatRegClass[_F14Idx],
+    F15 = floatRegClass[_F15Idx],
+    F16 = floatRegClass[_F16Idx],
+    F17 = floatRegClass[_F17Idx],
+    F18 = floatRegClass[_F18Idx],
+    F19 = floatRegClass[_F19Idx],
+    F20 = floatRegClass[_F20Idx],
+    F21 = floatRegClass[_F21Idx],
+    F22 = floatRegClass[_F22Idx],
+    F23 = floatRegClass[_F23Idx],
+    F24 = floatRegClass[_F24Idx],
+    F25 = floatRegClass[_F25Idx],
+    F26 = floatRegClass[_F26Idx],
+    F27 = floatRegClass[_F27Idx],
+    F28 = floatRegClass[_F28Idx],
+    F29 = floatRegClass[_F29Idx],
+    F30 = floatRegClass[_F30Idx],
+    F31 = floatRegClass[_F31Idx],
+
+    Fir = floatRegClass[_FirIdx],
+    Fccr = floatRegClass[_FccrIdx],
+    Fexr = floatRegClass[_FexrIdx],
+    Fenr = floatRegClass[_FenrIdx],
+    Fcsr = floatRegClass[_FcsrIdx];
 
 } // namespace float_reg
 
@@ -148,9 +156,6 @@ enum FCSRFields
 
 const uint32_t MIPS32_QNAN = 0x7fbfffff;
 const uint64_t MIPS64_QNAN = 0x7ff7ffffffffffffULL;
-
-inline constexpr RegClass floatRegClass(FloatRegClass, float_reg::NumRegs,
-        debug::FloatRegs);
 
 } // namespace MipsISA
 } // namespace gem5

@@ -41,7 +41,9 @@
 #include "arch/arm/nativetrace.hh"
 
 #include "arch/arm/regs/cc.hh"
+#include "arch/arm/regs/int.hh"
 #include "arch/arm/regs/misc.hh"
+#include "arch/arm/regs/vec.hh"
 #include "base/compiler.hh"
 #include "cpu/thread_context.hh"
 #include "debug/ExecRegDelta.hh"
@@ -109,7 +111,7 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 
     // Regular int regs
     for (int i = 0; i < 15; i++) {
-        newState[i] = tc->getReg(RegId(IntRegClass, i));
+        newState[i] = tc->getReg(intRegClass[i]);
         changed[i] = (oldState[i] != newState[i]);
     }
 
@@ -129,7 +131,7 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 
     for (int i = 0; i < NumVecV7ArchRegs; i++) {
         ArmISA::VecRegContainer vec_container;
-        tc->getReg(RegId(VecRegClass, i), &vec_container);
+        tc->getReg(vecRegClass[i], &vec_container);
         auto *vec = vec_container.as<uint64_t>();
         newState[STATE_F0 + 2*i] = vec[0];
         newState[STATE_F0 + 2*i + 1] = vec[1];

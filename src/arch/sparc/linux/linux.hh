@@ -230,7 +230,7 @@ class SparcLinux : public Linux, public OpenFlagTable<SparcLinux>
         ctc->setMiscRegNoEffect(SparcISA::MISCREG_TL, (RegVal)0);
         ctc->setMiscReg(SparcISA::MISCREG_ASI, SparcISA::ASI_PRIMARY);
         for (int y = 8; y < 32; y++) {
-            RegId reg(IntRegClass, y);
+            RegId reg = SparcISA::intRegClass[y];
             ctc->setReg(reg, ptc->getReg(reg));
         }
 
