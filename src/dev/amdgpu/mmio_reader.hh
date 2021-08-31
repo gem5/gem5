@@ -99,9 +99,9 @@ class AMDMMIOReader
     trace_BAR_t trace_BARs[6];
 
     /* Indexes used to print driver loading progress. */
-    uint64_t trace_index;
-    uint64_t trace_final_index;
-    uint64_t trace_cur_index;
+    uint64_t trace_index = 0;
+    uint64_t trace_final_index = 0;
+    uint64_t trace_cur_index = 0;
 
     /* An entry in the MMIO trace. */
     struct MmioTrace
