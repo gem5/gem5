@@ -35,89 +35,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import collections
-import sys
+import argparse
 
 from code_formatter import code_formatter
 
-def usage():
-    print(f"Usage: {sys.argv[0]} CC [NAME DESC FMT COMPONENTS]...",
-            file=sys.stderr)
-    sys.exit(1)
+parser = argparse.ArgumentParser()
+parser.add_argument("cc", help="the path of the debug flag cc file")
+parser.add_argument("name", help="the name of the debug flag")
 
-if len(sys.argv) < 2:
-    usage()
-
-cc = sys.argv[1]
-
-
-FlagInfo = collections.namedtuple('FlagInfo',
-        ['name', 'desc', 'fmt', 'components'])
-
-flags = []
-
-pos = 2
-# Extract groups of arguments for each flag.
-while pos < len(sys.argv):
-    if len(sys.argv) < pos + 4:
-        usage()
-
-    name, desc, fmt, components = sys.argv[pos:pos+4]
-    pos += 4
-    fmt = fmt.lower()
-    if fmt == 'true':
-        fmt = True
-    elif fmt == 'false':
-        fmt = False
-    else:
-        print(f'Unrecognized "FMT" value {fmt}', file=sys.stderr)
-        sys.exit(1)
-    components = components.split(':') if components else []
-    flags.append(FlagInfo(name, desc, fmt, components))
-
+args = parser.parse_args()
 
 code = code_formatter()
-
-# File header.
-code('''
-#include "base/compiler.hh" // For namespace deprecation
-#include "base/debug.hh"
-
-namespace gem5
-{
-
-GEM5_DEPRECATED_NAMESPACE(Debug, debug);
-namespace debug
-{
-''')
-
-# Group the flags into either simple flags or compound flags.
-simple_flags = sorted(filter(lambda f: not f.components, flags))
-compound_flags = sorted(filter(lambda f: f.components, flags))
-
-# We intentionally make flag a reference to a heap allocated object so
-# (1) It has a similar interface to a global object like before
-# (2) It does not get destructed at the end of simulation
-# The second property is desirable as global objects from different
-# translation units do not have a defined destruction order, so it'll
-# be unsafe to access debug flags in their destructor in such cases.
-for flag in simple_flags:
-    name, desc, components, fmt = \
-            flag.name, flag.desc, flag.components, flag.fmt
-    fmt = 'true' if fmt else 'false'
-    code('''
-SimpleFlag& $name = *(
-    new SimpleFlag("$name", "$desc", $fmt));''')
-
-for flag in compound_flags:
-    name, desc, components = flag.name, flag.desc, flag.components
-    code('''
-CompoundFlag& $name = *(new CompoundFlag("$name", "$desc", {
-    ${{', '.join('&' + simple for simple in components)}}
-}));''')
-
-code('''
-} // namespace debug
-} // namespace gem5''')
-
-code.write(cc)
+code('#include "debug/${{args.name}}.hh"')
+code.write(args.cc)

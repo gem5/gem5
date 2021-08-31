@@ -43,6 +43,7 @@ from code_formatter import code_formatter
 parser = argparse.ArgumentParser()
 parser.add_argument("hh", help="the path of the debug flag header file")
 parser.add_argument("name", help="the name of the debug flag")
+parser.add_argument("desc", help="a description of the debug flag")
 parser.add_argument("fmt",
         help="whether the flag is a format flag (True or False)")
 parser.add_argument("components",
@@ -50,21 +51,28 @@ parser.add_argument("components",
 
 args = parser.parse_args()
 
-fmt = eval(args.fmt)
+fmt = args.fmt.lower()
+if fmt == 'true':
+    fmt = True
+elif fmt == 'false':
+    fmt = False
+else:
+    print(f'Unrecognized "FMT" value {fmt}', file=sys.stderr)
+    sys.exit(1)
 components = args.components.split(':') if args.components else []
 
 code = code_formatter()
 
-typename = "CompoundFlag" if components else "SimpleFlag"
-component_flag_decls = ''.join(f'extern SimpleFlag &{simple};\n' for
-        simple in components)
-
-code('''\
+code('''
 #ifndef __DEBUG_${{args.name}}_HH__
 #define __DEBUG_${{args.name}}_HH__
 
 #include "base/compiler.hh" // For namespace deprecation
-
+#include "base/debug.hh"
+''')
+for flag in components:
+    code('#include "debug/${flag}.hh"')
+code('''
 namespace gem5
 {
 
@@ -72,10 +80,43 @@ GEM5_DEPRECATED_NAMESPACE(Debug, debug);
 namespace debug
 {
 
-class SimpleFlag;
-class CompoundFlag;
-extern ${typename}& ${{args.name}};
-${component_flag_decls}
+namespace unions
+{
+''')
+
+# Use unions to prevent debug flags from being destructed. It's the
+# responsibility of the programmer to handle object destruction for members
+# of the union. We purposefully leave that destructor empty so that we can
+# use debug flags even in the destructors of other objects.
+if components:
+    code('''
+inline union ${{args.name}}
+{
+    ~${{args.name}}() {}
+    CompoundFlag ${{args.name}} = {
+        "${{args.name}}", "${{args.desc}}", {
+            ${{",\\n            ".join(
+                f"(Flag *)&::gem5::debug::{flag}" for flag in components)}}
+        }
+    };
+} ${{args.name}};
+''')
+else:
+    code('''
+inline union ${{args.name}}
+{
+    ~${{args.name}}() {}
+    SimpleFlag ${{args.name}} = {
+        "${{args.name}}", "${{args.desc}}", ${{"true" if fmt else "false"}}
+    };
+} ${{args.name}};
+''')
+
+code('''
+} // namespace unions
+
+inline constexpr const auto& ${{args.name}} = 
+    ::gem5::debug::unions::${{args.name}}.${{args.name}};
 
 } // namespace debug
 } // namespace gem5

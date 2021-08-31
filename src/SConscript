@@ -373,34 +373,36 @@ Export('GTest')
 # Debug Flags
 #
 
-DebugFlagInfo = collections.namedtuple('DebugFlag',
-        ['name', 'desc', 'components', 'fmt'])
+debug_flags = set()
 def DebugFlagCommon(name, flags, desc, fmt):
     if name == "All":
         raise AttributeError('The "All" flag name is reserved')
-    debug_flags = env.get('DEBUG_FLAGS', [])
-    if any(name == flag.name for flag in debug_flags):
+    if name in debug_flags:
         raise AttributeError(f'Flag {name} already specified')
 
-    flag = DebugFlagInfo(name, desc, flags, fmt)
-    env.Append(DEBUG_FLAGS=[flag])
+    debug_flags.add(name)
 
     hh_file = Dir(env['BUILDDIR']).Dir('debug').File(f'{name}.hh')
     gem5py_env.Command(hh_file,
         [ '${GEM5PY}', '${DEBUGFLAGHH_PY}' ],
         MakeAction('"${GEM5PY}" "${DEBUGFLAGHH_PY}" "${TARGET}" "${NAME}" ' \
-                   '"${FMT}" "${COMPONENTS}"',
+                   '"${DESC}" "${FMT}" "${COMPONENTS}"',
         Transform("TRACING", 0)),
         DEBUGFLAGHH_PY=build_tools.File('debugflaghh.py'),
-        NAME=name, FMT=('True' if fmt else 'False'),
+        NAME=name, DESC=desc, FMT=('True' if fmt else 'False'),
         COMPONENTS=':'.join(flags))
+    cc_file = Dir(env['BUILDDIR']).Dir('debug').File('%s.cc' % name)
+    gem5py_env.Command(cc_file,
+            [ "${GEM5PY}", "${DEBUGFLAGCC_PY}" ],
+            MakeAction('"${GEM5PY}" "${DEBUGFLAGCC_PY}" "${TARGET}" "${NAME}"',
+                Transform("TRACING", 0)),
+            DEBUGFLAGCC_PY=build_tools.File('debugflagcc.py'), NAME=name)
+    Source(cc_file, add_tags='gem5 trace')
 
 def DebugFlag(name, desc=None, fmt=False):
     DebugFlagCommon(name, (), desc, fmt)
-
 def CompoundFlag(name, flags, desc=None):
     DebugFlagCommon(name, flags, desc, False)
-
 def DebugFormatFlag(name, desc=None):
     DebugFlag(name, desc, True)
 
@@ -799,25 +801,6 @@ for name,simobj in sorted(sim_objects.items()):
                             Transform("SO PyB/C")))
     env.Depends(cc_file, depends + extra_deps)
     Source(cc_file, add_tags='python')
-
-#
-# Handle debug flags
-#
-
-# Generate the files for the debug and debug-format flags
-flag_args = []
-for flag in env.get('DEBUG_FLAGS', []):
-    components = ":".join(c for c in flag.components)
-    arg = f'"{flag.name}" "{flag.desc}" "{bool(flag.fmt)}" ' \
-          f'"{components}"'
-    flag_args.append(arg)
-gem5py_env.Command('debug/flags.cc',
-        [ "${GEM5PY}", "${DEBUGFLAGCC_PY}" ],
-        MakeAction('"${GEM5PY}" "${DEBUGFLAGCC_PY}" "${TARGET}" ${FLAGS}',
-            Transform("TRACING", 0)),
-        DEBUGFLAGCC_PY=build_tools.File('debugflagcc.py'),
-        FLAGS=' '.join(flag_args))
-Source('debug/flags.cc', add_tags='gem5 trace')
 
 # version tags
 tags = \
