@@ -800,11 +800,14 @@ MiscRegOp64::checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
 RegVal
 MiscRegImmOp64::miscRegImm() const
 {
-    if (dest == MISCREG_SPSEL) {
+    switch (dest) {
+      case MISCREG_SPSEL:
         return imm & 0x1;
-    } else if (dest == MISCREG_PAN) {
+      case MISCREG_PAN:
         return (imm & 0x1) << 22;
-    } else {
+      case MISCREG_UAO:
+        return (imm & 0x1) << 23;
+      default:
         panic("Not a valid PSTATE field register\n");
     }
 }

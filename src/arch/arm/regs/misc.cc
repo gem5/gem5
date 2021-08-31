@@ -2451,6 +2451,8 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_CURRENTEL;
                       case 3:
                         return MISCREG_PAN;
+                      case 4:
+                        return MISCREG_UAO;
                     }
                     break;
                   case 6:
@@ -4945,6 +4947,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_PAN)
       .allPrivileges().exceptUserMode()
       .implemented(havePAN);
+    InitReg(MISCREG_UAO)
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_NZCV)
       .allPrivileges();
     InitReg(MISCREG_DAIF)

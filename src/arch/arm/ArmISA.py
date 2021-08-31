@@ -116,8 +116,8 @@ class ArmISA(BaseISA):
     # PAN | HPDS | !VHE | VMIDBits
     id_aa64mmfr1_el1 = Param.UInt64(0x0000000000101020,
         "AArch64 Memory Model Feature Register 1")
-    # |VARANGE
-    id_aa64mmfr2_el1 = Param.UInt64(0x0000000000010000,
+    # |VARANGE | UAO
+    id_aa64mmfr2_el1 = Param.UInt64(0x0000000000010010,
         "AArch64 Memory Model Feature Register 2")
 
     # Any access (read/write) to an unimplemented

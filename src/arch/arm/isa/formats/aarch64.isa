@@ -413,6 +413,10 @@ namespace Aarch64
                         // MSR immediate: moving immediate value to selected
                         // bits of the PSTATE
                         switch (op1 << 3 | op2) {
+                          case 0x3:
+                            // UAO
+                            return new MsrImm64(
+                                machInst, MISCREG_UAO, crm);
                           case 0x4:
                             // PAN
                             return new MsrImm64(

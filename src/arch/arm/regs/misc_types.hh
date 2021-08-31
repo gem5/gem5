@@ -55,6 +55,7 @@ namespace ArmISA
         Bitfield<27> q;
         Bitfield<26, 25> it1;
         Bitfield<24> j;
+        Bitfield<23> uao;       // AArch64
         Bitfield<22> pan;
         Bitfield<21> ss;        // AArch64
         Bitfield<20> il;        // AArch64

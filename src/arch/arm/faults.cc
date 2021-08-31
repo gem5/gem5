@@ -682,6 +682,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         ITSTATE it = tc->pcState().itstate();
         spsr.it2 = it.top6;
         spsr.it1 = it.bottom2;
+        spsr.uao = 0;
     }
     tc->setMiscReg(spsr_idx, spsr);
 
@@ -706,6 +707,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     cpsr.il = 0;
     cpsr.ss = 0;
     cpsr.pan = span ? 1 : spsr.pan;
+    cpsr.uao = 0;
     tc->setMiscReg(MISCREG_CPSR, cpsr);
 
     // If we have a valid instruction then use it to annotate this fault with

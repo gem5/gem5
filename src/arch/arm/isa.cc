@@ -773,6 +773,10 @@ ISA::readMiscReg(int misc_reg)
         {
             return miscRegs[MISCREG_CPSR] & 0x400000;
         }
+      case MISCREG_UAO:
+        {
+            return miscRegs[MISCREG_CPSR] & 0x800000;
+        }
       case MISCREG_L2CTLR:
         {
             // mostly unimplemented, just set NumCPUs field from sim and return
@@ -2272,6 +2276,17 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
                 CPSR cpsr = miscRegs[MISCREG_CPSR];
                 cpsr.pan = (uint8_t) ((CPSR) newVal).pan;
+                newVal = cpsr;
+                misc_reg = MISCREG_CPSR;
+            }
+            break;
+          case MISCREG_UAO:
+            {
+                // UAO is affecting data accesses
+                getMMUPtr(tc)->invalidateMiscReg();
+
+                CPSR cpsr = miscRegs[MISCREG_CPSR];
+                cpsr.uao = (uint8_t) ((CPSR) newVal).uao;
                 newVal = cpsr;
                 misc_reg = MISCREG_CPSR;
             }

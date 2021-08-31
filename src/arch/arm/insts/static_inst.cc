@@ -1192,6 +1192,7 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
     } else {
         // aarch64
         new_cpsr.daif = spsr.daif;
+        new_cpsr.uao = spsr.uao;
     }
 
     SelfDebug *sd = ArmISA::ISA::getSelfDebug(tc);

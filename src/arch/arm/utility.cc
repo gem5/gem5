@@ -1245,6 +1245,8 @@ bool
 isUnpriviledgeAccess(ThreadContext *tc)
 {
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+
     // NV Extension not implemented yet
     bool have_nv_ext = false;
     bool unpriv_el1 = currEL(tc) == EL1 &&
@@ -1253,9 +1255,7 @@ isUnpriviledgeAccess(ThreadContext *tc)
     bool unpriv_el2 = ArmSystem::haveEL(tc, EL2) && HaveVirtHostExt(tc) &&
                       currEL(tc) == EL2 && hcr.e2h == 1 && hcr.tge == 1;
 
-    // User Access override, or UAO not implemented yet.
-    bool user_access_override = false;
-    return (unpriv_el1 || unpriv_el2) && !user_access_override;
+    return (unpriv_el1 || unpriv_el2) && !cpsr.uao;
 }
 
 bool

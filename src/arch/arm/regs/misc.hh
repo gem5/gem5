@@ -1091,6 +1091,7 @@ namespace ArmISA
 
         // PSTATE
         MISCREG_PAN,
+        MISCREG_UAO,
 
         // Total number of Misc Registers: Physical + Dummy
         NUM_MISCREGS
@@ -2181,6 +2182,7 @@ namespace ArmISA
 
         // PSTATE
         "pan",
+        "uao",
     };
 
     static_assert(sizeof(miscRegName) / sizeof(*miscRegName) == NUM_MISCREGS,
