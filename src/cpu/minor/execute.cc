@@ -783,8 +783,7 @@ Execute::issue(ThreadID thread_id)
             /* Generate MinorTrace's MinorInst lines.  Do this at commit
              *  to allow better instruction annotation? */
             if (debug::MinorTrace && !inst->isBubble()) {
-                inst->minorTraceInst(*this,
-                        cpu.threads[0]->getIsaPtr()->regClasses());
+                inst->minorTraceInst(*this);
             }
 
             /* Mark up barriers in the LSQ */
