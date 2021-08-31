@@ -49,6 +49,7 @@
 #include "base/debug.hh"
 #include "base/intmath.hh"
 #include "base/types.hh"
+#include "debug/InvalidReg.hh"
 
 namespace gem5
 {
@@ -132,6 +133,9 @@ class RegClass
     inline constexpr RegId operator[](RegIndex idx) const;
 };
 
+inline constexpr RegClass
+    invalidRegClass(InvalidRegClass, 0, debug::InvalidReg);
+
 /** Register ID: describe an architectural register with its class and index.
  * This structure is used instead of just the register index to disambiguate
  * between different classes of registers. For example, a integer register with
@@ -141,7 +145,7 @@ class RegId
 {
   protected:
     static const char* regClassStrings[];
-    RegClassType regClass;
+    const RegClass *_regClass = nullptr;
     RegIndex regIdx;
     int numPinnedWrites;
 
@@ -149,10 +153,10 @@ class RegId
     friend class RegClassIterator;
 
   public:
-    constexpr RegId() : RegId(InvalidRegClass, 0) {}
+    constexpr RegId() : RegId(invalidRegClass, 0) {}
 
-    constexpr RegId(RegClassType reg_class, RegIndex reg_idx)
-        : regClass(reg_class), regIdx(reg_idx), numPinnedWrites(0)
+    constexpr RegId(const RegClass &reg_class, RegIndex reg_idx)
+        : _regClass(&reg_class), regIdx(reg_idx), numPinnedWrites(0)
     {}
 
     constexpr operator RegIndex() const
@@ -163,7 +167,7 @@ class RegId
     constexpr bool
     operator==(const RegId& that) const
     {
-        return regClass == that.classValue() && regIdx == that.index();
+        return classValue() == that.classValue() && regIdx == that.index();
     }
 
     constexpr bool
@@ -178,8 +182,8 @@ class RegId
     constexpr bool
     operator<(const RegId& that) const
     {
-        return regClass < that.classValue() ||
-            (regClass == that.classValue() && (regIdx < that.index()));
+        return classValue() < that.classValue() ||
+            (classValue() == that.classValue() && (regIdx < that.index()));
     }
 
     /**
@@ -188,14 +192,14 @@ class RegId
     constexpr bool
     isRenameable() const
     {
-        return regClass != MiscRegClass && regClass != InvalidRegClass;
+        return classValue() != MiscRegClass && classValue() != InvalidRegClass;
     }
 
     /** @return true if it is of the specified class. */
     constexpr bool
     is(RegClassType reg_class) const
     {
-        return regClass == reg_class;
+        return _regClass->type() == reg_class;
     }
 
     /** Index accessors */
@@ -203,12 +207,13 @@ class RegId
     constexpr RegIndex index() const { return regIdx; }
 
     /** Class accessor */
-    constexpr RegClassType classValue() const { return regClass; }
+    constexpr const RegClass &regClass() const { return *_regClass; }
+    constexpr RegClassType classValue() const { return _regClass->type(); }
     /** Return a const char* with the register class name. */
     constexpr const char*
     className() const
     {
-        return regClassStrings[regClass];
+        return regClassStrings[classValue()];
     }
 
     int getNumPinnedWrites() const { return numPinnedWrites; }
@@ -227,7 +232,7 @@ class RegClassIterator
     RegId id;
 
     RegClassIterator(const RegClass &reg_class, RegIndex idx) :
-        id(reg_class.type(), idx)
+        id(reg_class, idx)
     {}
 
     friend class RegClass;
@@ -285,7 +290,7 @@ RegClass::end() const
 constexpr RegId
 RegClass::operator[](RegIndex idx) const
 {
-    return RegId(type(), idx);
+    return RegId(*this, idx);
 }
 
 template <typename ValueType>
@@ -332,20 +337,21 @@ class PhysRegId : private RegId
     bool pinned;
 
   public:
-    explicit PhysRegId() : RegId(InvalidRegClass, -1), flatIdx(-1),
+    explicit PhysRegId() : RegId(invalidRegClass, -1), flatIdx(-1),
                            numPinnedWritesToComplete(0)
     {}
 
     /** Scalar PhysRegId constructor. */
-    explicit PhysRegId(RegClassType _regClass, RegIndex _regIdx,
+    explicit PhysRegId(const RegClass &reg_class, RegIndex _regIdx,
               RegIndex _flatIdx)
-        : RegId(_regClass, _regIdx), flatIdx(_flatIdx),
+        : RegId(reg_class, _regIdx), flatIdx(_flatIdx),
           numPinnedWritesToComplete(0), pinned(false)
     {}
 
     /** Visible RegId methods */
     /** @{ */
     using RegId::index;
+    using RegId::regClass;
     using RegId::classValue;
     using RegId::className;
     using RegId::is;
@@ -433,7 +439,7 @@ struct hash<gem5::RegId>
     {
         // Extract unique integral values for the effective fields of a RegId.
         const size_t index = static_cast<size_t>(reg_id.index());
-        const size_t class_num = static_cast<size_t>(reg_id.regClass);
+        const size_t class_num = static_cast<size_t>(reg_id.classValue());
 
         const size_t shifted_class_num =
             class_num << (sizeof(gem5::RegIndex) << 3);

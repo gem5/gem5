@@ -103,7 +103,7 @@ let {{
         @overrideInOperand
         def regId(self):
             return f'gem5::ArmISA::couldBeZero({self.reg_spec}) ? RegId() : ' \
-                   f'RegId({self.reg_class}, {self.reg_spec})'
+                   f'{self.reg_class}[{self.reg_spec}]'
         def __init__(self, idx, ctype='uw', id=srtNormal):
             super().__init__(ctype, idx, 'IsInteger', id)
 
@@ -172,7 +172,7 @@ let {{
         @overrideInOperand
         def regId(self):
             return f'gem5::ArmISA::couldBeZero({self.reg_spec}) ? RegId() : ' \
-                   f'RegId({self.reg_class}, {self.reg_spec})'
+                   f'{self.reg_class}[{self.reg_spec}]'
         @overrideInOperand
         def makeRead(self):
             '''aarch64 read'''

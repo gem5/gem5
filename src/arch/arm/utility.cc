@@ -1354,7 +1354,7 @@ syncVecElemsToRegs(ThreadContext *tc)
     for (int ri = 0; ri < NumVecRegs; ri++) {
         VecRegContainer reg;
         for (int j = 0; j < NumVecElemPerVecReg; j++, ei++) {
-            RegId elem_id(VecElemClass, ei);
+            RegId elem_id = vecElemClass[ei];
             reg.as<VecElem>()[j] = tc->getReg(elem_id);
         }
         tc->setReg(vecRegClass[ri], &reg);

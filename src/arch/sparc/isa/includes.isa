@@ -60,6 +60,7 @@ output decoder {{
 #include <algorithm>
 
 #include "arch/sparc/decoder.hh"
+#include "arch/sparc/regs/float.hh"
 #include "base/cprintf.hh"
 #include "base/fenv.hh"
 #include "base/loader/symtab.hh"

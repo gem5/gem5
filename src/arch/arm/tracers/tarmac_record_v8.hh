@@ -103,17 +103,10 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
                            const std::string &prefix = "") const override;
 
       protected:
-        void updateInt(const TarmacContext& tarmCtx,
-                       RegIndex regRelIdx) override;
-
-        void updateMisc(const TarmacContext& tarmCtx,
-                        RegIndex regRelIdx) override;
-
-        void updateVec(const TarmacContext& tarmCtx,
-                       RegIndex regRelIdx) override;
-
-        void updatePred(const TarmacContext& tarmCtx,
-                        RegIndex regRelIdx) override;
+        void updateInt(const TarmacContext& tarmCtx) override;
+        void updateMisc(const TarmacContext& tarmCtx) override;
+        void updateVec(const TarmacContext& tarmCtx) override;
+        void updatePred(const TarmacContext& tarmCtx) override;
 
         /**
          * Returning a string which contains the formatted

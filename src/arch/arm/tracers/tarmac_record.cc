@@ -158,36 +158,33 @@ TarmacTracerRecord::TraceRegEntry::TraceRegEntry(
     const RegId& reg)
       : RegEntry(*tarmCtx.pc),
         regValid(false),
-        regClass(reg.classValue()),
-        regRel(reg.index())
+        regId(reg)
 {
 }
 
 void
-TarmacTracerRecord::TraceRegEntry::update(
-    const TarmacContext& tarmCtx
-)
+TarmacTracerRecord::TraceRegEntry::update(const TarmacContext& tarmCtx)
 {
     // Fill the register entry data, according to register
     // class.
-    switch (regClass) {
+    switch (regId.classValue()) {
       case CCRegClass:
-        updateCC(tarmCtx, regRel);
+        updateCC(tarmCtx);
         break;
       case FloatRegClass:
-        updateFloat(tarmCtx, regRel);
+        updateFloat(tarmCtx);
         break;
       case IntRegClass:
-        updateInt(tarmCtx, regRel);
+        updateInt(tarmCtx);
         break;
       case MiscRegClass:
-        updateMisc(tarmCtx, regRel);
+        updateMisc(tarmCtx);
         break;
       case VecRegClass:
-        updateVec(tarmCtx, regRel);
+        updateVec(tarmCtx);
         break;
       case VecPredRegClass:
-        updatePred(tarmCtx, regRel);
+        updatePred(tarmCtx);
         break;
       default:
         // If unsupported format, do nothing: non updating
@@ -197,21 +194,18 @@ TarmacTracerRecord::TraceRegEntry::update(
 }
 
 void
-TarmacTracerRecord::TraceRegEntry::updateMisc(
-    const TarmacContext& tarmCtx,
-    RegIndex regRelIdx
-)
+TarmacTracerRecord::TraceRegEntry::updateMisc(const TarmacContext& tarmCtx)
 {
     auto thread = tarmCtx.thread;
 
     regValid = true;
-    regName = miscRegName[regRelIdx];
-    values[Lo] = thread->readMiscRegNoEffect(regRelIdx);
+    regName = miscRegName[regId.index()];
+    values[Lo] = thread->readMiscRegNoEffect(regId.index());
 
     // If it is the CPSR:
     // update the value of the CPSR register and add
     // the CC flags on top of the value
-    if (regRelIdx == MISCREG_CPSR) {
+    if (regId.index() == MISCREG_CPSR) {
         CPSR cpsr = thread->readMiscRegNoEffect(MISCREG_CPSR);
         cpsr.nz = thread->getReg(cc_reg::Nz);
         cpsr.c = thread->getReg(cc_reg::C);
@@ -224,34 +218,25 @@ TarmacTracerRecord::TraceRegEntry::updateMisc(
 }
 
 void
-TarmacTracerRecord::TraceRegEntry::updateCC(
-    const TarmacContext& tarmCtx,
-    RegIndex regRelIdx
-)
+TarmacTracerRecord::TraceRegEntry::updateCC(const TarmacContext& tarmCtx)
 {
     auto thread = tarmCtx.thread;
 
     regValid = true;
-    regName = cc_reg::RegName[regRelIdx];
-    values[Lo] = thread->getReg(ccRegClass[regRelIdx]);
+    regName = cc_reg::RegName[regId.index()];
+    values[Lo] = thread->getReg(regId);
 }
 
 void
-TarmacTracerRecord::TraceRegEntry::updateFloat(
-    const TarmacContext& tarmCtx,
-    RegIndex regRelIdx
-)
+TarmacTracerRecord::TraceRegEntry::updateFloat(const TarmacContext& tarmCtx)
 {
     regValid = true;
-    regName  = "f" + std::to_string(regRelIdx);
+    regName  = "f" + std::to_string(regId.index());
     panic("ARM doesn't support float registers.");
 }
 
 void
-TarmacTracerRecord::TraceRegEntry::updateInt(
-    const TarmacContext& tarmCtx,
-    RegIndex regRelIdx
-)
+TarmacTracerRecord::TraceRegEntry::updateInt(const TarmacContext& tarmCtx)
 {
     auto thread = tarmCtx.thread;
 
@@ -267,7 +252,7 @@ TarmacTracerRecord::TraceRegEntry::updateInt(
     }
 
     regValid = true;
-    switch (regRelIdx) {
+    switch (regId.index()) {
       case int_reg::Pc:
         regName = "pc";
         break;
@@ -281,10 +266,10 @@ TarmacTracerRecord::TraceRegEntry::updateInt(
         regName = "lr" + reg_suffix;
         break;
       default:
-        regName  = "r" + std::to_string(regRelIdx);
+        regName  = "r" + std::to_string(regId.index());
         break;
     }
-    values[Lo] = thread->getReg(intRegClass[regRelIdx]);
+    values[Lo] = thread->getReg(regId);
 }
 
 void
