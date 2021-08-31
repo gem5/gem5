@@ -53,11 +53,7 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Arm.hh"
-#include "debug/CCRegs.hh"
-#include "debug/FloatRegs.hh"
-#include "debug/IntRegs.hh"
 #include "debug/LLSC.hh"
-#include "debug/MiscRegs.hh"
 #include "debug/VecPredRegs.hh"
 #include "debug/VecRegs.hh"
 #include "dev/arm/generic_timer.hh"
@@ -74,37 +70,25 @@ namespace gem5
 namespace ArmISA
 {
 
-class MiscRegClassOps : public RegClassOps
+namespace
 {
-  public:
-    std::string
-    regName(const RegId &id) const override
-    {
-        return miscRegName[id.index()];
-    }
-} miscRegClassOps;
 
-VecElemRegClassOps<ArmISA::VecElem> vecRegElemClassOps(NumVecElemPerVecReg);
-TypedRegClassOps<ArmISA::VecRegContainer> vecRegClassOps;
-TypedRegClassOps<ArmISA::VecPredRegContainer> vecPredRegClassOps;
+/* Not applicable to ARM */
+RegClass floatRegClass(FloatRegClass, 0, debug::FloatRegs);
+
+} // anonymous namespace
 
 ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     _decoderFlavor(p.decoderFlavor), pmu(p.pmu), impdefAsNop(p.impdef_nop),
     afterStartup(false)
 {
-    _regClasses.emplace_back(IntRegClass, int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(FloatRegClass, 0, debug::FloatRegs);
-    _regClasses.emplace_back(VecRegClass, NumVecRegs, vecRegClassOps,
-            debug::VecRegs, sizeof(VecRegContainer));
-    _regClasses.emplace_back(VecElemClass,
-            NumVecRegs * ArmISA::NumVecElemPerVecReg, vecRegElemClassOps,
-            debug::VecRegs);
-    _regClasses.emplace_back(VecPredRegClass, NumVecPredRegs,
-            vecPredRegClassOps, debug::VecPredRegs,
-            sizeof(VecPredRegContainer));
-    _regClasses.emplace_back(CCRegClass, cc_reg::NumRegs, debug::CCRegs);
-    _regClasses.emplace_back(MiscRegClass, NUM_MISCREGS, miscRegClassOps,
-            debug::MiscRegs);
+    _regClasses.push_back(&intRegClass);
+    _regClasses.push_back(&floatRegClass);
+    _regClasses.push_back(&vecRegClass);
+    _regClasses.push_back(&vecElemClass);
+    _regClasses.push_back(&vecPredRegClass);
+    _regClasses.push_back(&ccRegClass);
+    _regClasses.push_back(&miscRegClass);
 
     miscRegs[MISCREG_SCTLR_RST] = 0;
 

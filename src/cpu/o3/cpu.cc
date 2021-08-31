@@ -194,19 +194,19 @@ CPU::CPU(const BaseO3CPUParams &params)
     const auto &regClasses = params.isa[0]->regClasses();
 
     assert(params.numPhysIntRegs >=
-            numThreads * regClasses.at(IntRegClass).numRegs());
+            numThreads * regClasses.at(IntRegClass)->numRegs());
     assert(params.numPhysFloatRegs >=
-            numThreads * regClasses.at(FloatRegClass).numRegs());
+            numThreads * regClasses.at(FloatRegClass)->numRegs());
     assert(params.numPhysVecRegs >=
-            numThreads * regClasses.at(VecRegClass).numRegs());
+            numThreads * regClasses.at(VecRegClass)->numRegs());
     assert(params.numPhysVecPredRegs >=
-            numThreads * regClasses.at(VecPredRegClass).numRegs());
+            numThreads * regClasses.at(VecPredRegClass)->numRegs());
     assert(params.numPhysCCRegs >=
-            numThreads * regClasses.at(CCRegClass).numRegs());
+            numThreads * regClasses.at(CCRegClass)->numRegs());
 
     // Just make this a warning and go ahead anyway, to keep from having to
     // add checks everywhere.
-    warn_if(regClasses.at(CCRegClass).numRegs() == 0 &&
+    warn_if(regClasses.at(CCRegClass)->numRegs() == 0 &&
             params.numPhysCCRegs != 0,
             "Non-zero number of physical CC regs specified, even though\n"
             "    ISA does not use them.");
@@ -226,7 +226,7 @@ CPU::CPU(const BaseO3CPUParams &params)
     for (ThreadID tid = 0; tid < active_threads; tid++) {
         for (auto type = (RegClassType)0; type <= CCRegClass;
                 type = (RegClassType)(type + 1)) {
-            for (auto &id: regClasses.at(type)) {
+            for (auto &id: *regClasses.at(type)) {
                 // Note that we can't use the rename() method because we don't
                 // want special treatment for the zero register at this point
                 PhysRegIdPtr phys_reg = freeList.getReg(type);
@@ -692,7 +692,7 @@ CPU::insertThread(ThreadID tid)
 
     for (auto type = (RegClassType)0; type <= CCRegClass;
             type = (RegClassType)(type + 1)) {
-        for (auto &id: regClasses.at(type)) {
+        for (auto &id: *regClasses.at(type)) {
             PhysRegIdPtr phys_reg = freeList.getReg(type);
             renameMap[tid].setEntry(id, phys_reg);
             scoreboard.setReg(phys_reg);

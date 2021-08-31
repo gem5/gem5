@@ -50,6 +50,7 @@
 #include <vector>
 
 #include "cpu/reg_class.hh"
+#include "debug/IntRegs.hh"
 
 namespace gem5
 {
@@ -125,6 +126,9 @@ const std::vector<std::string> RegNames = {
 };
 
 } // namespace int_reg
+
+inline constexpr RegClass intRegClass(IntRegClass, int_reg::NumRegs,
+        debug::IntRegs);
 
 // Semantically meaningful register indices
 inline constexpr auto

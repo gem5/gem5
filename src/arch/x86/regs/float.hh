@@ -40,6 +40,8 @@
 
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
+#include "cpu/reg_class.hh"
+#include "debug/FloatRegs.hh"
 
 namespace gem5
 {
@@ -160,6 +162,9 @@ stack(int index, int top)
 }
 
 } // namespace float_reg
+
+inline constexpr RegClass floatRegClass(FloatRegClass, float_reg::NumRegs,
+        debug::FloatRegs);
 
 } // namespace X86ISA
 } // namespace gem5

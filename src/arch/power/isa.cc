@@ -41,9 +41,6 @@
 #include "arch/power/regs/int.hh"
 #include "arch/power/regs/misc.hh"
 #include "cpu/thread_context.hh"
-#include "debug/FloatRegs.hh"
-#include "debug/IntRegs.hh"
-#include "debug/MiscRegs.hh"
 #include "params/PowerISA.hh"
 
 namespace gem5
@@ -52,16 +49,25 @@ namespace gem5
 namespace PowerISA
 {
 
+namespace
+{
+
+RegClass vecRegClass(VecRegClass, 1, debug::IntRegs);
+RegClass vecElemClass(VecElemClass, 2, debug::IntRegs);
+RegClass vecPredRegClass(VecPredRegClass, 1, debug::IntRegs);
+RegClass ccRegClass(CCRegClass, 0, debug::IntRegs);
+
+} // anonymous namespace
+
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.emplace_back(IntRegClass, int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(FloatRegClass, float_reg::NumRegs,
-            debug::FloatRegs);
-    _regClasses.emplace_back(VecRegClass, 1, debug::IntRegs);
-    _regClasses.emplace_back(VecElemClass, 2, debug::IntRegs);
-    _regClasses.emplace_back(VecPredRegClass, 1, debug::IntRegs);
-    _regClasses.emplace_back(CCRegClass, 0, debug::IntRegs);
-    _regClasses.emplace_back(MiscRegClass, NUM_MISCREGS, debug::MiscRegs);
+    _regClasses.push_back(&intRegClass);
+    _regClasses.push_back(&floatRegClass);
+    _regClasses.push_back(&vecRegClass);
+    _regClasses.push_back(&vecElemClass);
+    _regClasses.push_back(&vecPredRegClass);
+    _regClasses.push_back(&ccRegClass);
+    _regClasses.push_back(&miscRegClass);
     clear();
 }
 

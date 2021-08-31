@@ -38,10 +38,7 @@
 #include "cpu/base.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/thread_context.hh"
-#include "debug/FloatRegs.hh"
-#include "debug/IntRegs.hh"
 #include "debug/MipsPRA.hh"
-#include "debug/MiscRegs.hh"
 #include "params/MipsISA.hh"
 
 namespace gem5
@@ -97,20 +94,27 @@ ISA::miscRegNames[misc_reg::NumRegs] =
     "LLFlag"
 };
 
+namespace
+{
+
+/* Not applicable to MIPS. */
+constexpr RegClass vecRegClass(VecRegClass, 1, debug::IntRegs);
+constexpr RegClass vecElemClass(VecElemClass, 2, debug::IntRegs);
+constexpr RegClass vecPredRegClass(VecPredRegClass, 1, debug::IntRegs);
+constexpr RegClass ccRegClass(CCRegClass, 0, debug::IntRegs);
+
+} // anonymous namespace
+
 ISA::ISA(const Params &p) : BaseISA(p), numThreads(p.num_threads),
     numVpes(p.num_vpes)
 {
-    _regClasses.emplace_back(IntRegClass, int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(FloatRegClass, float_reg::NumRegs,
-            debug::FloatRegs);
-
-    /* Not applicable to MIPS. */
-    _regClasses.emplace_back(VecRegClass, 1, debug::IntRegs);
-    _regClasses.emplace_back(VecElemClass, 2, debug::IntRegs);
-    _regClasses.emplace_back(VecPredRegClass, 1, debug::IntRegs);
-    _regClasses.emplace_back(CCRegClass, 0, debug::IntRegs);
-
-    _regClasses.emplace_back(MiscRegClass, misc_reg::NumRegs, debug::MiscRegs);
+    _regClasses.push_back(&intRegClass);
+    _regClasses.push_back(&floatRegClass);
+    _regClasses.push_back(&vecRegClass);
+    _regClasses.push_back(&vecElemClass);
+    _regClasses.push_back(&vecPredRegClass);
+    _regClasses.push_back(&ccRegClass);
+    _regClasses.push_back(&miscRegClass);
 
     miscRegFile.resize(misc_reg::NumRegs);
     bankType.resize(misc_reg::NumRegs);

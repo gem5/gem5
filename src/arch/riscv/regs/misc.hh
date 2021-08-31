@@ -53,6 +53,8 @@
 #include "arch/generic/vec_reg.hh"
 #include "base/bitunion.hh"
 #include "base/types.hh"
+#include "cpu/reg_class.hh"
+#include "debug/MiscRegs.hh"
 
 namespace gem5
 {
@@ -199,6 +201,9 @@ enum MiscRegIndex
 
     NUM_MISCREGS
 };
+
+inline constexpr RegClass miscRegClass(MiscRegClass, NUM_MISCREGS,
+        debug::MiscRegs);
 
 enum CSRIndex
 {

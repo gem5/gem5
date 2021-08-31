@@ -55,6 +55,7 @@
 
 #include "base/bitfield.hh"
 #include "cpu/reg_class.hh"
+#include "debug/FloatRegs.hh"
 
 namespace gem5
 {
@@ -201,6 +202,10 @@ const std::vector<std::string> RegNames = {
 };
 
 } // namespace float_reg
+
+inline constexpr RegClass floatRegClass(FloatRegClass, float_reg::NumRegs,
+        debug::FloatRegs);
+
 } // namespace RiscvISA
 } // namespace gem5
 

@@ -42,6 +42,7 @@
 #include "base/bitunion.hh"
 #include "base/logging.hh"
 #include "cpu/reg_class.hh"
+#include "debug/IntRegs.hh"
 
 namespace gem5
 {
@@ -144,6 +145,9 @@ inline constexpr auto
     &R15d = R15, &R15w = R15, &R15b = R15;
 
 } // namespace int_reg
+
+inline constexpr RegClass intRegClass(IntRegClass, int_reg::NumRegs,
+        debug::IntRegs);
 
 // This needs to be large enough to miss all the other bits of an index.
 inline constexpr RegIndex IntFoldBit = 1 << 6;

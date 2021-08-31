@@ -46,6 +46,8 @@
 
 #include "arch/arm/regs/misc_types.hh"
 #include "base/compiler.hh"
+#include "cpu/reg_class.hh"
+#include "debug/MiscRegs.hh"
 #include "dev/arm/generic_timer_miscregs_types.hh"
 
 namespace gem5
@@ -2286,6 +2288,21 @@ namespace ArmISA
 
     static_assert(sizeof(miscRegName) / sizeof(*miscRegName) == NUM_MISCREGS,
                   "The miscRegName array and NUM_MISCREGS are inconsistent.");
+
+    class MiscRegClassOps : public RegClassOps
+    {
+      public:
+        std::string
+        regName(const RegId &id) const override
+        {
+            return miscRegName[id.index()];
+        }
+    };
+
+    static inline MiscRegClassOps miscRegClassOps;
+
+    inline constexpr RegClass miscRegClass(MiscRegClass, NUM_MISCREGS,
+            miscRegClassOps, debug::MiscRegs);
 
     // This mask selects bits of the CPSR that actually go in the CondCodes
     // integer register to allow renaming.

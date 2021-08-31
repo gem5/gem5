@@ -46,6 +46,7 @@
 #include "arch/arm/types.hh"
 #include "base/logging.hh"
 #include "cpu/reg_class.hh"
+#include "debug/IntRegs.hh"
 #include "sim/core.hh"
 
 namespace gem5
@@ -549,6 +550,9 @@ regInMode(OperatingMode mode, int reg)
 }
 
 } // namespace int_reg
+
+inline constexpr RegClass intRegClass(IntRegClass, int_reg::NumRegs,
+        debug::IntRegs);
 
 static inline int
 flattenIntRegModeIndex(int reg)

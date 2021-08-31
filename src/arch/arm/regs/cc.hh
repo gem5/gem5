@@ -39,6 +39,7 @@
 #define __ARCH_ARM_REGS_CC_HH__
 
 #include "cpu/reg_class.hh"
+#include "debug/CCRegs.hh"
 
 namespace gem5
 {
@@ -78,6 +79,9 @@ const char * const RegName[NumRegs] = {
 };
 
 } // namespace cc_reg
+
+inline constexpr RegClass ccRegClass(CCRegClass, cc_reg::NumRegs,
+        debug::CCRegs);
 
 enum ConditionCode
 {

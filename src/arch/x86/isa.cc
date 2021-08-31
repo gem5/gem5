@@ -31,15 +31,12 @@
 #include "arch/x86/decoder.hh"
 #include "arch/x86/mmu.hh"
 #include "arch/x86/regs/ccr.hh"
+#include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"
 #include "base/compiler.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "debug/CCRegs.hh"
-#include "debug/FloatRegs.hh"
-#include "debug/IntRegs.hh"
-#include "debug/MiscRegs.hh"
 #include "params/X86ISA.hh"
 #include "sim/serialize.hh"
 
@@ -141,22 +138,28 @@ ISA::clear()
     regVal[misc_reg::ApicBase] = lApicBase;
 }
 
+namespace
+{
+
+/* Not applicable to X86 */
+RegClass vecRegClass(VecRegClass, 1, debug::IntRegs);
+RegClass vecElemClass(VecElemClass, 2, debug::IntRegs);
+RegClass vecPredRegClass(VecPredRegClass, 1, debug::IntRegs);
+
+} // anonymous namespace
+
 ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string)
 {
     fatal_if(vendorString.size() != 12,
              "CPUID vendor string must be 12 characters\n");
 
-    _regClasses.emplace_back(IntRegClass, int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(FloatRegClass, float_reg::NumRegs,
-            debug::FloatRegs);
-
-    /* Not applicable to X86 */
-    _regClasses.emplace_back(VecRegClass, 1, debug::IntRegs);
-    _regClasses.emplace_back(VecElemClass, 2, debug::IntRegs);
-    _regClasses.emplace_back(VecPredRegClass, 1, debug::IntRegs);
-
-    _regClasses.emplace_back(CCRegClass, cc_reg::NumRegs, debug::CCRegs);
-    _regClasses.emplace_back(MiscRegClass, misc_reg::NumRegs, debug::MiscRegs);
+    _regClasses.push_back(&intRegClass);
+    _regClasses.push_back(&floatRegClass);
+    _regClasses.push_back(&vecRegClass);
+    _regClasses.push_back(&vecElemClass);
+    _regClasses.push_back(&vecPredRegClass);
+    _regClasses.push_back(&ccRegClass);
+    _regClasses.push_back(&miscRegClass);
 
     clear();
 }

@@ -30,6 +30,9 @@
 #ifndef __ARCH_MIPS_REGS_MISC_HH__
 #define __ARCH_MIPS_REGS_MISC_HH__
 
+#include "cpu/reg_class.hh"
+#include "debug/MiscRegs.hh"
+
 namespace gem5
 {
 namespace MipsISA
@@ -196,6 +199,10 @@ enum : RegIndex
 };
 
 } // namespace misc_reg
+
+inline constexpr RegClass miscRegClass(MiscRegClass, misc_reg::NumRegs,
+        debug::MiscRegs);
+
 } // namespace MipsISA
 } // namespace gem5
 

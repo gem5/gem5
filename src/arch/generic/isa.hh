@@ -57,7 +57,7 @@ class ExecContext;
 class BaseISA : public SimObject
 {
   public:
-    typedef std::vector<RegClass> RegClasses;
+    typedef std::vector<const RegClass *> RegClasses;
 
   protected:
     using SimObject::SimObject;

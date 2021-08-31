@@ -31,6 +31,7 @@
 #define __ARCH_POWER_REGS_INT_HH__
 
 #include "cpu/reg_class.hh"
+#include "debug/IntRegs.hh"
 
 namespace gem5
 {
@@ -138,6 +139,9 @@ inline constexpr RegId
     RsvAddr(IntRegClass, _RsvAddrIdx);
 
 } // namespace int_reg
+
+inline constexpr RegClass intRegClass(IntRegClass, int_reg::NumRegs,
+        debug::IntRegs);
 
 // Semantically meaningful register indices
 inline constexpr auto

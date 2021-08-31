@@ -71,12 +71,12 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            BaseISA *_isa, InstDecoder *_decoder)
     : ThreadState(_cpu, _thread_num, _process),
       regFiles{{
-          {_isa->regClasses().at(IntRegClass)},
-          {_isa->regClasses().at(FloatRegClass)},
-          {_isa->regClasses().at(VecRegClass)},
-          {_isa->regClasses().at(VecElemClass)},
-          {_isa->regClasses().at(VecPredRegClass)},
-          {_isa->regClasses().at(CCRegClass)}
+          {*_isa->regClasses().at(IntRegClass)},
+          {*_isa->regClasses().at(FloatRegClass)},
+          {*_isa->regClasses().at(VecRegClass)},
+          {*_isa->regClasses().at(VecElemClass)},
+          {*_isa->regClasses().at(VecPredRegClass)},
+          {*_isa->regClasses().at(CCRegClass)}
       }},
       isa(dynamic_cast<TheISA::ISA *>(_isa)),
       predicate(true), memAccPredicate(true),

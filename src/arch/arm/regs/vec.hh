@@ -44,6 +44,9 @@
 #include "arch/arm/types.hh"
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
+#include "cpu/reg_class.hh"
+#include "debug/VecPredRegs.hh"
+#include "debug/VecRegs.hh"
 
 namespace gem5
 {
@@ -89,6 +92,18 @@ const int INTRLVREG3 = INTRLVREG0 + 3;
 const int VECREG_UREG0 = 32;
 const int PREDREG_FFR = 16;
 const int PREDREG_UREG0 = 17;
+
+static inline VecElemRegClassOps<ArmISA::VecElem>
+    vecRegElemClassOps(NumVecElemPerVecReg);
+static inline TypedRegClassOps<ArmISA::VecRegContainer> vecRegClassOps;
+static inline TypedRegClassOps<ArmISA::VecPredRegContainer> vecPredRegClassOps;
+
+inline constexpr RegClass vecRegClass(VecRegClass, NumVecRegs, vecRegClassOps,
+        debug::VecRegs, sizeof(VecRegContainer));
+inline constexpr RegClass vecElemClass(VecElemClass,
+        NumVecRegs * NumVecElemPerVecReg, vecRegElemClassOps, debug::VecRegs);
+inline constexpr RegClass vecPredRegClass(VecPredRegClass, NumVecPredRegs,
+        vecPredRegClassOps, debug::VecPredRegs, sizeof(VecPredRegContainer));
 
 } // namespace ArmISA
 } // namespace gem5

@@ -39,6 +39,7 @@
 #define __ARCH_X86_REGS_CCR_HH__
 
 #include "cpu/reg_class.hh"
+#include "debug/CCRegs.hh"
 
 namespace gem5
 {
@@ -66,6 +67,10 @@ inline constexpr RegId
     Ezf(CCRegClass, _EzfIdx);
 
 } // namespace cc_reg
+
+inline constexpr RegClass ccRegClass(CCRegClass, cc_reg::NumRegs,
+        debug::CCRegs);
+
 } // namespace X86ISA
 } // namespace gem5
 

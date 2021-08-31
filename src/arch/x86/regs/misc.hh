@@ -42,6 +42,8 @@
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 #include "base/logging.hh"
+#include "cpu/reg_class.hh"
+#include "debug/MiscRegs.hh"
 
 //These get defined in some system headers (at least termbits.h). That confuses
 //things here significantly.
@@ -535,6 +537,9 @@ segAttr(int index)
 }
 
 } // namespace misc_reg
+
+inline constexpr RegClass miscRegClass(MiscRegClass, misc_reg::NumRegs,
+        debug::MiscRegs);
 
 /**
  * A type to describe the condition code bits of the RFLAGS register,

@@ -31,6 +31,7 @@
 
 #include "arch/sparc/sparc_traits.hh"
 #include "cpu/reg_class.hh"
+#include "debug/IntRegs.hh"
 
 namespace gem5
 {
@@ -141,6 +142,9 @@ i(int index)
 const int NumRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroRegs;
 
 } // namespace int_reg
+
+inline constexpr RegClass intRegClass(IntRegClass, int_reg::NumRegs,
+        debug::IntRegs);
 
 // the rest of these depend on the ABI
 inline constexpr auto

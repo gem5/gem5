@@ -47,10 +47,7 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "debug/Checkpoint.hh"
-#include "debug/FloatRegs.hh"
-#include "debug/IntRegs.hh"
 #include "debug/LLSC.hh"
-#include "debug/MiscRegs.hh"
 #include "debug/RiscvMisc.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
@@ -194,19 +191,26 @@ namespace RiscvISA
     [MISCREG_NMIP]          = "NMIP",
 }};
 
+namespace
+{
+
+/* Not applicable to RISCV */
+RegClass vecRegClass(VecRegClass, 1, debug::IntRegs);
+RegClass vecElemClass(VecElemClass, 2, debug::IntRegs);
+RegClass vecPredRegClass(VecPredRegClass, 1, debug::IntRegs);
+RegClass ccRegClass(CCRegClass, 0, debug::IntRegs);
+
+} // anonymous namespace
+
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.emplace_back(IntRegClass, int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(FloatRegClass, float_reg::NumRegs,
-            debug::FloatRegs);
-
-    /* Not applicable to RISCV */
-    _regClasses.emplace_back(VecRegClass, 1, debug::IntRegs);
-    _regClasses.emplace_back(VecElemClass, 2, debug::IntRegs);
-    _regClasses.emplace_back(VecPredRegClass, 1, debug::IntRegs);
-    _regClasses.emplace_back(CCRegClass, 0, debug::IntRegs);
-
-    _regClasses.emplace_back(MiscRegClass, NUM_MISCREGS, debug::MiscRegs);
+    _regClasses.push_back(&intRegClass);
+    _regClasses.push_back(&floatRegClass);
+    _regClasses.push_back(&vecRegClass);
+    _regClasses.push_back(&vecElemClass);
+    _regClasses.push_back(&vecPredRegClass);
+    _regClasses.push_back(&ccRegClass);
+    _regClasses.push_back(&miscRegClass);
 
     miscRegFile.resize(NUM_MISCREGS);
     clear();

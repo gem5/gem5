@@ -137,7 +137,7 @@ static void
 printRegName(std::ostream &os, const RegId& reg,
         const BaseISA::RegClasses &reg_classes)
 {
-    const auto &reg_class = reg_classes.at(reg.classValue());
+    const auto &reg_class = *reg_classes.at(reg.classValue());
     switch (reg.classValue()) {
       case InvalidRegClass:
         os << 'z';

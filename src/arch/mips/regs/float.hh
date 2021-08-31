@@ -32,6 +32,9 @@
 
 #include <cstdint>
 
+#include "cpu/reg_class.hh"
+#include "debug/FloatRegs.hh"
+
 namespace gem5
 {
 namespace MipsISA
@@ -145,6 +148,9 @@ enum FCSRFields
 
 const uint32_t MIPS32_QNAN = 0x7fbfffff;
 const uint64_t MIPS64_QNAN = 0x7ff7ffffffffffffULL;
+
+inline constexpr RegClass floatRegClass(FloatRegClass, float_reg::NumRegs,
+        debug::FloatRegs);
 
 } // namespace MipsISA
 } // namespace gem5
