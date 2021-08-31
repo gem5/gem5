@@ -226,14 +226,12 @@ CPU::CPU(const BaseO3CPUParams &params)
     for (ThreadID tid = 0; tid < active_threads; tid++) {
         for (auto type = (RegClassType)0; type <= CCRegClass;
                 type = (RegClassType)(type + 1)) {
-            for (RegIndex ridx = 0; ridx < regClasses.at(type).numRegs();
-                    ++ridx) {
+            for (auto &id: regClasses.at(type)) {
                 // Note that we can't use the rename() method because we don't
                 // want special treatment for the zero register at this point
-                RegId rid = RegId(type, ridx);
                 PhysRegIdPtr phys_reg = freeList.getReg(type);
-                renameMap[tid].setEntry(rid, phys_reg);
-                commitRenameMap[tid].setEntry(rid, phys_reg);
+                renameMap[tid].setEntry(id, phys_reg);
+                commitRenameMap[tid].setEntry(id, phys_reg);
             }
         }
     }
@@ -694,9 +692,9 @@ CPU::insertThread(ThreadID tid)
 
     for (auto type = (RegClassType)0; type <= CCRegClass;
             type = (RegClassType)(type + 1)) {
-        for (RegIndex idx = 0; idx < regClasses.at(type).numRegs(); idx++) {
+        for (auto &id: regClasses.at(type)) {
             PhysRegIdPtr phys_reg = freeList.getReg(type);
-            renameMap[tid].setEntry(RegId(type, idx), phys_reg);
+            renameMap[tid].setEntry(id, phys_reg);
             scoreboard.setReg(phys_reg);
         }
     }
