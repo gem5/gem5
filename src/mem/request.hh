@@ -436,6 +436,12 @@ class Request
      */
     uint32_t _substreamId = 0;
 
+    /**
+     * For fullsystem GPU simulation, this determines if a requests
+     * destination is system (host) memory or dGPU (device) memory.
+     */
+    bool _systemReq = 0;
+
     /** The virtual address of the request. */
     Addr _vaddr = MaxAddr;
 
@@ -861,6 +867,10 @@ class Request
         assert(hasContextId());
         return _contextId;
     }
+
+    /* For GPU fullsystem mark this request is not to device memory. */
+    void setSystemReq(bool sysReq) { _systemReq = sysReq; }
+    bool systemReq() const { return _systemReq; }
 
     bool
     hasStreamId() const
