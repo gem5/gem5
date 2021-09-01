@@ -604,7 +604,8 @@ MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
         return std::make_pair(false, false);
     }
 
-    switch (state.aarch64EL) {
+    ExceptionLevel regime = !is_priv ? EL0 : state.aarch64EL;
+    switch (regime) {
       case EL0:
         {
             grant_read = ap & 0x1;
