@@ -2316,16 +2316,6 @@ ISA::setMiscReg(int misc_reg, RegVal val)
           case MISCREG_AT_S1E3W_Xt:
             addressTranslation64(MMU::S1E3Tran, BaseMMU::Write, 0, val);
             return;
-          case MISCREG_SPSR_EL3:
-          case MISCREG_SPSR_EL2:
-          case MISCREG_SPSR_EL1:
-            {
-                RegVal spsr_mask = havePAN ?
-                    ~(0x2 << 22) : ~(0x3 << 22);
-
-                newVal = val & spsr_mask;
-                break;
-            }
           case MISCREG_L2CTLR:
             warn("miscreg L2CTLR (%s) written with %#x. ignored...\n",
                  miscRegName[misc_reg], uint32_t(val));
