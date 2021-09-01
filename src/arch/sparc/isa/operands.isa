@@ -142,16 +142,7 @@ def operands {{
     'NNPC':             PCStateOp('udw', 'nnpc',
                                   (None, None, 'IsControl'), 30),
     # Registers which are used explicitly in instructions
-    'R0':               IntReg('udw', '0', None, 6),
-    'R1':               IntReg('udw', '1', None, 7),
     'R15':              IntReg('udw', '15', 'IsInteger', 8),
-    'R16':              IntReg('udw', '16', None, 9),
-    'O0':               IntReg('udw', 'INTREG_O0', 'IsInteger', 10),
-    'O1':               IntReg('udw', 'INTREG_O1', 'IsInteger', 11),
-    'O2':               IntReg('udw', 'INTREG_O2', 'IsInteger', 12),
-    'O3':               IntReg('udw', 'INTREG_O3', 'IsInteger', 13),
-    'O4':               IntReg('udw', 'INTREG_O4', 'IsInteger', 14),
-    'O5':               IntReg('udw', 'INTREG_O5', 'IsInteger', 15),
 
     # Control registers
     'Y':                IntReg('udw', 'INTREG_Y', None, 40),
