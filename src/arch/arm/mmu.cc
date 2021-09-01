@@ -453,7 +453,6 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
     // Cache clean operations require read permissions to the specified VA
     bool is_write = !req->isCacheClean() && mode == Write;
     bool is_atomic = req->isAtomic();
-    [[maybe_unused]] bool is_priv = state.isPriv && !(flags & UserMode);
 
     updateMiscReg(tc, state.curTranType, state.isStage2);
 
@@ -497,161 +496,27 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
         }
     }
 
-    uint8_t ap  = 0x3 & (te->ap);  // 2-bit access protection field
     bool grant = false;
-
-    bool wxn = state.sctlr.wxn;
-    uint8_t xn =  te->xn;
-    uint8_t pxn = te->pxn;
-    bool r = (!is_write && !is_fetch);
-    bool w = is_write;
-    bool x = is_fetch;
-
-    if (ArmSystem::haveEL(tc, EL3) && state.isSecure &&
-        te->ns && state.scr.sif) {
-        xn = true;
-    }
-
     // grant_read is used for faults from an atomic instruction that
     // both reads and writes from a memory location. From a ISS point
     // of view they count as read if a read to that address would have
     // generated the fault; they count as writes otherwise
     bool grant_read = true;
-    DPRINTF(TLBVerbose, "Checking permissions: ap:%d, xn:%d, pxn:%d, r:%d, "
-                        "w:%d, x:%d, is_priv: %d, wxn: %d\n", ap, xn,
-                        pxn, r, w, x, is_priv, wxn);
 
     if (state.isStage2) {
-        assert(ArmSystem::haveVirtualization(tc) && state.aarch64EL != EL2);
-        // In stage 2 we use the hypervisor access permission bits.
-        // The following permissions are described in ARM DDI 0487A.f
-        // D4-1802
-        uint8_t hap = 0x3 & te->hap;
-        grant_read = hap & 0x1;
-        if (is_fetch) {
-            // sctlr.wxn overrides the xn bit
-            grant = !wxn && !xn;
-        } else if (is_atomic) {
-            grant = hap;
-        } else if (is_write) {
-            grant = hap & 0x2;
-        } else { // is_read
-            grant = grant_read;
-        }
+        std::tie(grant, grant_read) = s2PermBits64(te, req, mode, tc, state,
+            (!is_write && !is_fetch), is_write, is_fetch);
     } else {
-        switch (state.aarch64EL) {
-          case EL0:
-            {
-                grant_read = ap & 0x1;
-                uint8_t perm = (ap << 2)  | (xn << 1) | pxn;
-                switch (perm) {
-                  case 0:
-                  case 1:
-                  case 8:
-                  case 9:
-                    grant = x;
-                    break;
-                  case 4:
-                  case 5:
-                    grant = r || w || (x && !wxn);
-                    break;
-                  case 6:
-                  case 7:
-                    grant = r || w;
-                    break;
-                  case 12:
-                  case 13:
-                    grant = r || x;
-                    break;
-                  case 14:
-                  case 15:
-                    grant = r;
-                    break;
-                  default:
-                    grant = false;
-                }
-            }
-            break;
-          case EL1:
-            {
-                if (checkPAN(tc, ap, req, mode, is_priv, state)) {
-                    grant = false;
-                    grant_read = false;
-                    break;
-                }
-
-                uint8_t perm = (ap << 2)  | (xn << 1) | pxn;
-                switch (perm) {
-                  case 0:
-                  case 2:
-                    grant = r || w || (x && !wxn);
-                    break;
-                  case 1:
-                  case 3:
-                  case 4:
-                  case 5:
-                  case 6:
-                  case 7:
-                    // regions that are writeable at EL0 should not be
-                    // executable at EL1
-                    grant = r || w;
-                    break;
-                  case 8:
-                  case 10:
-                  case 12:
-                  case 14:
-                    grant = r || x;
-                    break;
-                  case 9:
-                  case 11:
-                  case 13:
-                  case 15:
-                    grant = r;
-                    break;
-                  default:
-                    grant = false;
-                }
-            }
-            break;
-          case EL2:
-            if (state.hcr.e2h && checkPAN(tc, ap, req, mode, is_priv, state)) {
-                grant = false;
-                grant_read = false;
-                break;
-            }
-            [[fallthrough]];
-          case EL3:
-            {
-                uint8_t perm = (ap & 0x2) | xn;
-                switch (perm) {
-                  case 0:
-                    grant = r || w || (x && !wxn);
-                    break;
-                  case 1:
-                    grant = r || w;
-                    break;
-                  case 2:
-                    grant = r || x;
-                    break;
-                  case 3:
-                    grant = r;
-                    break;
-                  default:
-                    grant = false;
-                }
-            }
-            break;
-        }
+        std::tie(grant, grant_read) = s1PermBits64(te, req, mode, tc, state,
+            (!is_write && !is_fetch), is_write, is_fetch);
     }
 
     if (!grant) {
         if (is_fetch) {
             stats.permsFaults++;
             DPRINTF(TLB, "TLB Fault: Prefetch abort on permission check. "
-                    "AP:%d priv:%d write:%d ns:%d sif:%d "
-                    "sctlr.afe: %d\n",
-                    ap, is_priv, is_write, te->ns,
-                    state.scr.sif, state.sctlr.afe);
+                    "ns:%d scr.sif:%d sctlr.afe: %d\n",
+                    te->ns, state.scr.sif, state.sctlr.afe);
             // Use PC value instead of vaddr because vaddr might be aligned to
             // cache line and should not be the address reported in FAR
             return std::make_shared<PrefetchAbort>(
@@ -660,8 +525,8 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
                 state.isStage2, ArmFault::LpaeTran);
         } else {
             stats.permsFaults++;
-            DPRINTF(TLB, "TLB Fault: Data abort on permission check. AP:%d "
-                    "priv:%d write:%d\n", ap, is_priv, is_write);
+            DPRINTF(TLB, "TLB Fault: Data abort on permission check."
+                    "ns:%d", te->ns);
             return std::make_shared<DataAbort>(
                 vaddr_tainted, te->domain,
                 (is_atomic && !grant_read) ? false : is_write,
@@ -671,6 +536,192 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
     }
 
     return NoFault;
+}
+
+std::pair<bool, bool>
+MMU::s2PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
+                  ThreadContext *tc, CachedState &state, bool r, bool w, bool x)
+{
+    assert(ArmSystem::haveVirtualization(tc) && state.aarch64EL != EL2);
+
+    // In stage 2 we use the hypervisor access permission bits.
+    // The following permissions are described in ARM DDI 0487A.f
+    // D4-1802
+    uint8_t hap = te->hap & 0b11;
+    bool grant = false;
+    bool grant_read = hap & 0b1;
+
+    bool wxn = state.sctlr.wxn;
+    uint8_t xn =  te->xn;
+    uint8_t pxn = te->pxn;
+
+    if (ArmSystem::haveEL(tc, EL3) && state.isSecure &&
+        te->ns && state.scr.sif) {
+        xn = true;
+    }
+
+    DPRINTF(TLBVerbose, "Checking S2 permissions: hap:%d, xn:%d, pxn:%d, r:%d, "
+                        "w:%d, x:%d, wxn: %d\n", hap, xn,
+                        pxn, r, w, x, wxn);
+
+    if (x) {
+        // sctlr.wxn overrides the xn bit
+        grant = !wxn && !xn;
+    } else if (req->isAtomic()) {
+        grant = hap;
+    } else if (w) {
+        grant = hap & 0b10;
+    } else { // is_read
+        grant = grant_read;
+    }
+
+    return std::make_pair(grant, grant_read);
+}
+
+std::pair<bool, bool>
+MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
+                  ThreadContext *tc, CachedState &state, bool r, bool w, bool x)
+{
+    bool grant = false, grant_read = true;
+
+    const uint8_t ap  = te->ap & 0b11;  // 2-bit access protection field
+    const bool is_priv = state.isPriv && !(req->getFlags() & UserMode);
+
+    bool wxn = state.sctlr.wxn;
+    uint8_t xn =  te->xn;
+    uint8_t pxn = te->pxn;
+
+    if (ArmSystem::haveEL(tc, EL3) && state.isSecure &&
+        te->ns && state.scr.sif) {
+        xn = true;
+    }
+
+    DPRINTF(TLBVerbose, "Checking S1 permissions: ap:%d, xn:%d, pxn:%d, r:%d, "
+                        "w:%d, x:%d, is_priv: %d, wxn: %d\n", ap, xn,
+                        pxn, r, w, x, is_priv, wxn);
+
+    if (faultPAN(tc, ap, req, mode, is_priv, state)) {
+        return std::make_pair(false, false);
+    }
+
+    switch (state.aarch64EL) {
+      case EL0:
+        {
+            grant_read = ap & 0x1;
+            uint8_t perm = (ap << 2)  | (xn << 1) | pxn;
+            switch (perm) {
+              case 0:
+              case 1:
+              case 8:
+              case 9:
+                grant = x;
+                break;
+              case 4:
+              case 5:
+                grant = r || w || (x && !wxn);
+                break;
+              case 6:
+              case 7:
+                grant = r || w;
+                break;
+              case 12:
+              case 13:
+                grant = r || x;
+                break;
+              case 14:
+              case 15:
+                grant = r;
+                break;
+              default:
+                grant = false;
+            }
+        }
+        break;
+      case EL1:
+        {
+            uint8_t perm = (ap << 2)  | (xn << 1) | pxn;
+            switch (perm) {
+              case 0:
+              case 2:
+                grant = r || w || (x && !wxn);
+                break;
+              case 1:
+              case 3:
+              case 4:
+              case 5:
+              case 6:
+              case 7:
+                // regions that are writeable at EL0 should not be
+                // executable at EL1
+                grant = r || w;
+                break;
+              case 8:
+              case 10:
+              case 12:
+              case 14:
+                grant = r || x;
+                break;
+              case 9:
+              case 11:
+              case 13:
+              case 15:
+                grant = r;
+                break;
+              default:
+                grant = false;
+            }
+        }
+        break;
+      case EL2:
+      case EL3:
+        {
+            uint8_t perm = (ap & 0x2) | xn;
+            switch (perm) {
+              case 0:
+                grant = r || w || (x && !wxn);
+                break;
+              case 1:
+                grant = r || w;
+                break;
+              case 2:
+                grant = r || x;
+                break;
+              case 3:
+                grant = r;
+                break;
+              default:
+                grant = false;
+            }
+        }
+        break;
+    }
+
+    return std::make_pair(grant, grant_read);
+}
+
+bool
+MMU::faultPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req, Mode mode,
+              const bool is_priv, CachedState &state)
+{
+    bool exception = false;
+    switch (state.aarch64EL) {
+      case EL0:
+        break;
+      case EL1:
+        if (checkPAN(tc, ap, req, mode, is_priv, state)) {
+            exception = true;;
+        }
+        break;
+      case EL2:
+        if (state.hcr.e2h && checkPAN(tc, ap, req, mode, is_priv, state)) {
+            exception = true;;
+        }
+        break;
+      case EL3:
+        break;
+    }
+
+    return exception;
 }
 
 bool

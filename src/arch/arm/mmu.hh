@@ -378,8 +378,20 @@ class MMU : public BaseMMU
                              ThreadContext *tc, bool stage2);
     Fault checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
                              ThreadContext *tc, CachedState &state);
+  protected:
     bool checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
                   Mode mode, const bool is_priv, CachedState &state);
+
+    bool faultPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
+                  Mode mode, const bool is_priv, CachedState &state);
+
+    std::pair<bool, bool> s1PermBits64(
+        TlbEntry *te, const RequestPtr &req, Mode mode,
+        ThreadContext *tc, CachedState &state, bool r, bool w, bool x);
+
+    std::pair<bool, bool> s2PermBits64(
+        TlbEntry *te, const RequestPtr &req, Mode mode,
+        ThreadContext *tc, CachedState &state, bool r, bool w, bool x);
 
   public: /* Testing */
     TlbTestInterface *test;
