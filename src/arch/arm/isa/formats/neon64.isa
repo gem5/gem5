@@ -1205,6 +1205,9 @@ namespace Aarch64
             if (!q || (imm4 & mask(imm5_pos)))
                 return new Unknown64(machInst);
 
+            if (imm5_pos > 3)
+                return new Unknown64(machInst);
+
             index1 = bits(imm5, 4, imm5_pos + 1);  // dst
             index2 = bits(imm4, 3, imm5_pos);  // src
 
@@ -1224,6 +1227,9 @@ namespace Aarch64
 
         switch (imm4) {
           case 0x0:
+            if (imm5_pos > 3)
+                return new Unknown64(machInst);
+
             index1 = bits(imm5, 4, imm5_pos + 1);
             switch (imm5_pos) {
               case 0:
@@ -1289,6 +1295,9 @@ namespace Aarch64
                 return new Unknown64(machInst);
             }
           case 0x5:
+            if (imm5_pos > 3)
+                return new Unknown64(machInst);
+
             index1 = bits(imm5, 4, imm5_pos + 1);
             switch (imm5_pos) {
               case 0:
@@ -2431,6 +2440,9 @@ namespace Aarch64
         IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
 
         uint8_t size = findLsbSet(imm5);
+        if (size > 3)
+            return new Unknown64(machInst);
+
         uint8_t index = bits(imm5, 4, size + 1);
 
         return decodeNeonUTwoShiftUReg<DupElemScX>(
