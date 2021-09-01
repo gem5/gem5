@@ -33,6 +33,8 @@ Characteristics
 * Runs exclusively on the RISC-V ISA with the classic caches
 * Assumes that the kernel is compiled into the bootloader
 * Automatically generates the DTB file
+* Will boot but requires a user to login using `m5term` (username: `root`,
+  password: `root`)
 """
 
 import m5
@@ -44,21 +46,16 @@ from gem5.components.memory.single_channel import SingleChannelDDR3_1600
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-
-import os
-import subprocess
-import gzip
-import shutil
+from gem5.utils.requires import requires
+from gem5.resources.resource import Resource
 
 # Run a check to ensure the right version of gem5 is being used.
-if get_runtime_isa() != ISA.RISCV:
-    raise EnvironmentError("The riscv_fs.py should be run with RISCV ISA.")
+requires(isa_required=ISA.RISCV)
 
 from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy \
     import (
         PrivateL1PrivateL2CacheHierarchy,
     )
-from gem5.boards.riscv_board import RiscvBoard
 
 # Setup the cache hierarchy. PrivateL1PrivateL2 and NoCache have been tested.
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
@@ -81,43 +78,19 @@ board = RiscvBoard(
 
 board.connect_things()
 
-# Download the resources as necessary.
-thispath = os.path.dirname(os.path.realpath(__file__))
-
-bootloader_url = (
-    "http://dist.gem5.org/dist/develop/kernels/"
-    "riscv/static/bootloader-vmlinux-5.10"
-)
-bootloader_path = os.path.join(thispath, "bootloader-vmlinux-5.10")
-if not os.path.exists(bootloader_path):
-    subprocess.run(["wget", "-P", thispath, bootloader_url])
-
-boot_img_url = (
-    "http://dist.gem5.org/dist/develop/images/riscv/busybox/riscv-disk.img.gz"
-)
-boot_img_path_gz = os.path.join(thispath, "riscv-disk.img.gz")
-boot_img_path = os.path.join(thispath, "riscv-disk.img")
-
-if not os.path.exists(boot_img_path):
-    subprocess.run(["wget", "-P", thispath, boot_img_url])
-    with gzip.open(boot_img_path_gz, "rb") as f:
-        with open(boot_img_path, "wb") as o:
-            shutil.copyfileobj(f, o)
-
 # Set the Full System workload.
-board.set_workload(disk_image=boot_img_path, bootloader=bootloader_path)
-
-
-# Begin running of the simulation. This will exit once the Linux system boot
-# is complete.
-print("Running with ISA: " + get_runtime_isa().name)
-print()
+board.set_workload(disk_image=Resource("riscv-disk-img"),
+                   bootloader=Resource("riscv-bootloader-vmlinux-5.10"))
 
 root = Root(full_system=True, system=board)
 
 m5.instantiate()
 
 print("Beginning simulation!")
+# Note: This simulation will never stop. You can access the terminal upon boot
+# using m5term (`./util/term`): `./m5term localhost <port>`. Note the `<port>`
+# value is obtained from the gem5 terminal stdout. Look out for
+# "system.platform.terminal: Listening for connections on port <port>".
 exit_event = m5.simulate()
 print(
     "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())

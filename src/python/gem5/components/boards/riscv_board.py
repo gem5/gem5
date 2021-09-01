@@ -33,8 +33,10 @@ from .abstract_board import AbstractBoard
 from ..processors.abstract_processor import AbstractProcessor
 from ..memory.abstract_memory_system import AbstractMemorySystem
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ...resources.resource import AbstractResource
+
 from ...isas import ISA
-from ...runtime import get_runtime_isa
+from ...utils.requires import requires
 
 import m5
 
@@ -85,11 +87,8 @@ class RiscvBoard(SimpleBoard):
     ) -> None:
         super().__init__(clk_freq, processor, memory, cache_hierarchy)
 
-        if get_runtime_isa() != ISA.RISCV:
-            raise EnvironmentError(
-                "RiscvBoard will only work with the RISC-V ISA. Please"
-                " recompile gem5 with ISA=RISCV."
-            )
+        requires(isa_required=ISA.RISCV)
+
         if cache_hierarchy.is_ruby():
             raise EnvironmentError("RiscvBoard is not compatible with Ruby")
 
@@ -176,8 +175,9 @@ class RiscvBoard(SimpleBoard):
         memory.set_memory_range(self.mem_ranges)
 
     def set_workload(
-        self, bootloader: str, disk_image: str, command: Optional[str] = None
-    ):
+        self, bootloader: AbstractResource, disk_image: AbstractResource,
+        command: Optional[str] = None
+    ) -> None:
         """Setup the full system files
 
         See http://resources.gem5.org/resources/riscv-fs for the currently
@@ -195,18 +195,19 @@ class RiscvBoard(SimpleBoard):
         * Disk must be configured correctly to use the command option
         * This board doesn't support the command option
 
-        :param bootloader: The compiled bootloader with the kernel as a payload
-        :param disk_image: A disk image containing the OS data. The first
-            partition should be the root partition.
+        :param bootloader: The resource encapsulating the compiled bootloader
+            with the kernel as a payload
+        :param disk_image: The resource encapsulating the disk image containing
+            the OS data. The first partition should be the root partition.
         :param command: The command(s) to run with bash once the OS is booted
         """
 
-        self.workload.object_file = bootloader
+        self.workload.object_file = bootloader.get_local_path()
 
         image = CowDiskImage(
             child=RawDiskImage(read_only=True), read_only=False
         )
-        image.child.image_file = disk_image
+        image.child.image_file = disk_image.get_local_path()
         self.disk.vio.image = image
 
         self.workload.command_line = "console=ttyS0 root=/dev/vda ro"
