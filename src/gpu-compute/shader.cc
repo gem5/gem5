@@ -35,8 +35,6 @@
 
 #include <limits>
 
-#include "arch/x86/linux/linux.hh"
-#include "arch/x86/page_size.hh"
 #include "base/chunk_generator.hh"
 #include "debug/GPUAgentDisp.hh"
 #include "debug/GPUDisp.hh"
@@ -430,7 +428,7 @@ Shader::functionalTLBAccess(PacketPtr pkt, int cu_id, BaseMMU::Mode mode)
 {
     // update senderState. Need to know the gpuTc and the TLB mode
     pkt->senderState =
-        new TheISA::GpuTLB::TranslationState(mode, gpuTc, false);
+        new GpuTranslationState(mode, gpuTc, false);
 
     // even when the perLaneTLB flag is turned on
     // it's ok tp send all accesses through lane 0
@@ -439,8 +437,8 @@ Shader::functionalTLBAccess(PacketPtr pkt, int cu_id, BaseMMU::Mode mode)
     cuList[cu_id]->tlbPort[0].sendFunctional(pkt);
 
     /* safe_cast the senderState */
-    TheISA::GpuTLB::TranslationState *sender_state =
-               safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
+    GpuTranslationState *sender_state =
+               safe_cast<GpuTranslationState*>(pkt->senderState);
 
     delete sender_state->tlbEntry;
     delete pkt->senderState;

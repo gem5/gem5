@@ -35,7 +35,6 @@
 
 #include <limits>
 
-#include "arch/x86/page_size.hh"
 #include "base/output.hh"
 #include "debug/GPUDisp.hh"
 #include "debug/GPUExec.hh"
@@ -1076,8 +1075,8 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
         pkt->senderState = new DTLBPort::SenderState(gpuDynInst, index);
 
         // This is the senderState needed by the TLB hierarchy to function
-        X86ISA::GpuTLB::TranslationState *translation_state =
-          new X86ISA::GpuTLB::TranslationState(TLB_mode, shader->gpuTc, false,
+        GpuTranslationState *translation_state =
+          new GpuTranslationState(TLB_mode, shader->gpuTc, false,
                                                pkt->senderState);
 
         pkt->senderState = translation_state;
@@ -1091,8 +1090,8 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
             stats.hitsPerTLBLevel[hit_level]++;
 
             // New SenderState for the memory access
-            X86ISA::GpuTLB::TranslationState *sender_state =
-                safe_cast<X86ISA::GpuTLB::TranslationState*>(pkt->senderState);
+            GpuTranslationState *sender_state =
+                safe_cast<GpuTranslationState*>(pkt->senderState);
 
             delete sender_state->tlbEntry;
             delete sender_state->saved;
@@ -1169,7 +1168,7 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
         delete pkt->senderState;
 
         // Because it's atomic operation, only need TLB translation state
-        pkt->senderState = new X86ISA::GpuTLB::TranslationState(TLB_mode,
+        pkt->senderState = new GpuTranslationState(TLB_mode,
                                                                 shader->gpuTc);
 
         tlbPort[tlbPort_index].sendFunctional(pkt);
@@ -1190,8 +1189,8 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
                 new_pkt->req->getPaddr());
 
         // safe_cast the senderState
-        X86ISA::GpuTLB::TranslationState *sender_state =
-             safe_cast<X86ISA::GpuTLB::TranslationState*>(pkt->senderState);
+        GpuTranslationState *sender_state =
+             safe_cast<GpuTranslationState*>(pkt->senderState);
 
         delete sender_state->tlbEntry;
         delete new_pkt;
@@ -1211,7 +1210,7 @@ ComputeUnit::sendScalarRequest(GPUDynInstPtr gpuDynInst, PacketPtr pkt)
         new ComputeUnit::ScalarDTLBPort::SenderState(gpuDynInst);
 
     pkt->senderState =
-        new X86ISA::GpuTLB::TranslationState(tlb_mode, shader->gpuTc, false,
+        new GpuTranslationState(tlb_mode, shader->gpuTc, false,
                                              pkt->senderState);
 
     if (scalarDTLBPort.isStalled()) {
@@ -1397,8 +1396,8 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
     computeUnit->stats.tlbCycles += curTick();
 
     // pop off the TLB translation state
-    X86ISA::GpuTLB::TranslationState *translation_state =
-               safe_cast<X86ISA::GpuTLB::TranslationState*>(pkt->senderState);
+    GpuTranslationState *translation_state =
+               safe_cast<GpuTranslationState*>(pkt->senderState);
 
     // no PageFaults are permitted for data accesses
     if (!translation_state->tlbEntry) {
@@ -1508,15 +1507,15 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
 
             // Because it's atomic operation, only need TLB translation state
             prefetch_pkt->senderState =
-                new X86ISA::GpuTLB::TranslationState(TLB_mode,
+                new GpuTranslationState(TLB_mode,
                     computeUnit->shader->gpuTc, true);
 
             // Currently prefetches are zero-latency, hence the sendFunctional
             sendFunctional(prefetch_pkt);
 
             /* safe_cast the senderState */
-            X86ISA::GpuTLB::TranslationState *tlb_state =
-                 safe_cast<X86ISA::GpuTLB::TranslationState*>(
+            GpuTranslationState *tlb_state =
+                 safe_cast<GpuTranslationState*>(
                          prefetch_pkt->senderState);
 
 
@@ -1663,8 +1662,8 @@ ComputeUnit::ScalarDTLBPort::recvTimingResp(PacketPtr pkt)
 {
     assert(pkt->senderState);
 
-    X86ISA::GpuTLB::TranslationState *translation_state =
-        safe_cast<X86ISA::GpuTLB::TranslationState*>(pkt->senderState);
+    GpuTranslationState *translation_state =
+        safe_cast<GpuTranslationState*>(pkt->senderState);
 
     // Page faults are not allowed
     fatal_if(!translation_state->tlbEntry,
@@ -1728,8 +1727,8 @@ ComputeUnit::ITLBPort::recvTimingResp(PacketPtr pkt)
     assert(pkt->senderState);
 
     // pop off the TLB translation state
-    X86ISA::GpuTLB::TranslationState *translation_state
-        = safe_cast<X86ISA::GpuTLB::TranslationState*>(pkt->senderState);
+    GpuTranslationState *translation_state
+        = safe_cast<GpuTranslationState*>(pkt->senderState);
 
     bool success = translation_state->tlbEntry != nullptr;
     delete translation_state->tlbEntry;

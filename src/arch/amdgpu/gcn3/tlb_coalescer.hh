@@ -39,13 +39,13 @@
 #include <string>
 #include <vector>
 
+#include "arch/amdgpu/gcn3/tlb.hh"
 #include "arch/generic/tlb.hh"
 #include "arch/x86/isa.hh"
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/regs/segment.hh"
 #include "base/logging.hh"
 #include "base/statistics.hh"
-#include "gpu-compute/gpu_tlb.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
 #include "params/TLBCoalescer.hh"

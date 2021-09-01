@@ -39,10 +39,15 @@ if not env['BUILD_GPU']:
     Return()
 
 if env['TARGET_GPU_ISA'] == 'gcn3':
+    SimObject('X86GPUTLB.py')
+
     Source('decoder.cc')
     Source('insts/gpu_static_inst.cc')
     Source('insts/instructions.cc')
     Source('insts/op_encodings.cc')
     Source('isa.cc')
     Source('registers.cc')
+    Source('tlb.cc')
+    Source('tlb_coalescer.cc')
+
     DebugFlag('GCN3', 'Debug flag for GCN3 GPU ISA')

@@ -438,6 +438,8 @@ namespace X86ISA
     };
 }
 
+using GpuTranslationState = X86ISA::GpuTLB::TranslationState;
+
 } // namespace gem5
 
 #endif // __GPU_TLB_HH__

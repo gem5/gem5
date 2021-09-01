@@ -37,6 +37,7 @@
 #include <functional>
 #include <string>
 
+#include "arch/gpu_isa.hh"
 #include "base/statistics.hh"
 #include "base/stats/group.hh"
 #include "base/types.hh"
@@ -47,7 +48,6 @@
 #include "cpu/thread_state.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
-#include "gpu-compute/gpu_tlb.hh"
 #include "gpu-compute/hsa_queue_entry.hh"
 #include "gpu-compute/lds_state.hh"
 #include "mem/page_table.hh"

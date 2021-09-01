@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "gpu-compute/tlb_coalescer.hh"
+#include "arch/amdgpu/gcn3/tlb_coalescer.hh"
 
 #include <cstring>
 
@@ -101,11 +101,11 @@ TLBCoalescer::canCoalesce(PacketPtr incoming_pkt, PacketPtr coalesced_pkt)
     if (disableCoalescing)
         return false;
 
-    TheISA::GpuTLB::TranslationState *incoming_state =
-      safe_cast<TheISA::GpuTLB::TranslationState*>(incoming_pkt->senderState);
+    GpuTranslationState *incoming_state =
+      safe_cast<GpuTranslationState*>(incoming_pkt->senderState);
 
-    TheISA::GpuTLB::TranslationState *coalesced_state =
-     safe_cast<TheISA::GpuTLB::TranslationState*>(coalesced_pkt->senderState);
+    GpuTranslationState *coalesced_state =
+     safe_cast<GpuTranslationState*>(coalesced_pkt->senderState);
 
     // Rule 1: Coalesce requests only if they
     // fall within the same virtual page
@@ -148,8 +148,8 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
     DPRINTF(GPUTLB, "Update phys. addr. for %d coalesced reqs for page %#x\n",
             issuedTranslationsTable[virt_page_addr].size(), virt_page_addr);
 
-    TheISA::GpuTLB::TranslationState *sender_state =
-        safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
+    GpuTranslationState *sender_state =
+        safe_cast<GpuTranslationState*>(pkt->senderState);
 
     TheISA::TlbEntry *tlb_entry = sender_state->tlbEntry;
     assert(tlb_entry);
@@ -167,8 +167,8 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
 
     for (int i = 0; i < issuedTranslationsTable[virt_page_addr].size(); ++i) {
         PacketPtr local_pkt = issuedTranslationsTable[virt_page_addr][i];
-        TheISA::GpuTLB::TranslationState *sender_state =
-            safe_cast<TheISA::GpuTLB::TranslationState*>(
+        GpuTranslationState *sender_state =
+            safe_cast<GpuTranslationState*>(
                     local_pkt->senderState);
 
         // we are sending the packet back, so pop the reqCnt associated
@@ -238,8 +238,8 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
     // number of coalesced reqs for a given window
     int coalescedReq_cnt = 0;
 
-    TheISA::GpuTLB::TranslationState *sender_state =
-        safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
+    GpuTranslationState *sender_state =
+        safe_cast<GpuTranslationState*>(pkt->senderState);
 
     // push back the port to remember the path back
     sender_state->ports.push_back(this);
@@ -337,8 +337,8 @@ void
 TLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
 
-    TheISA::GpuTLB::TranslationState *sender_state =
-        safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
+    GpuTranslationState *sender_state =
+        safe_cast<GpuTranslationState*>(pkt->senderState);
 
     bool update_stats = !sender_state->isPrefetch;
 
@@ -460,8 +460,8 @@ TLBCoalescer::processProbeTLBEvent()
                 rejected = true;
                 ++vector_index;
             } else {
-                TheISA::GpuTLB::TranslationState *tmp_sender_state =
-                    safe_cast<TheISA::GpuTLB::TranslationState*>
+                GpuTranslationState *tmp_sender_state =
+                    safe_cast<GpuTranslationState*>
                     (first_packet->senderState);
 
                 bool update_stats = !tmp_sender_state->isPrefetch;
