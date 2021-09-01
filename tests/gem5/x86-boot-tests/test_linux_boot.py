@@ -80,7 +80,7 @@ def test_boot(
             "tests",
             "gem5",
             "configs",
-            "boot_exit_disk_run.py",
+            "x86_boot_exit_run.py",
         ),
         config_args=[
             "--cpu",
