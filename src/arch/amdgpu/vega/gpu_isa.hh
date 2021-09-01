@@ -36,6 +36,7 @@
 #include <type_traits>
 
 #include "arch/amdgpu/vega/gpu_registers.hh"
+#include "arch/amdgpu/vega/tlb.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "gpu-compute/hsa_queue_entry.hh"
 #include "gpu-compute/misc.hh"

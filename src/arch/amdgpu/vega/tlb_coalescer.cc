@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,12 +29,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/common/tlb_coalescer.hh"
+#include "arch/amdgpu/vega/tlb_coalescer.hh"
 
 #include <cstring>
 
 #include "arch/amdgpu/common/gpu_translation_state.hh"
-#include "arch/x86/page_size.hh"
+#include "arch/amdgpu/vega/pagetable.hh"
+#include "arch/generic/mmu.hh"
 #include "base/logging.hh"
 #include "debug/GPUTLB.hh"
 #include "sim/process.hh"
@@ -42,7 +43,7 @@
 namespace gem5
 {
 
-TLBCoalescer::TLBCoalescer(const Params &p)
+VegaTLBCoalescer::VegaTLBCoalescer(const VegaTLBCoalescerParams &p)
     : ClockedObject(p),
       TLBProbesPerCycle(p.probesPerCycle),
       coalescingWindow(p.coalescingWindow),
@@ -53,7 +54,9 @@ TLBCoalescer::TLBCoalescer(const Params &p)
       cleanupEvent([this]{ processCleanupEvent(); },
                    "Cleanup issuedTranslationsTable hashmap",
                    false, Event::Maximum_Pri),
-      stats(this)
+      tlb_level(p.tlb_level),
+      maxDownstream(p.maxDownstream),
+      numDownstream(0)
 {
     // create the response ports based on the number of connected ports
     for (size_t i = 0; i < p.port_cpu_side_ports_connection_count; ++i) {
@@ -69,22 +72,22 @@ TLBCoalescer::TLBCoalescer(const Params &p)
 }
 
 Port &
-TLBCoalescer::getPort(const std::string &if_name, PortID idx)
+VegaTLBCoalescer::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "cpu_side_ports") {
         if (idx >= static_cast<PortID>(cpuSidePort.size())) {
-            panic("TLBCoalescer::getPort: unknown index %d\n", idx);
+            panic("VegaTLBCoalescer::getPort: unknown index %d\n", idx);
         }
 
         return *cpuSidePort[idx];
     } else  if (if_name == "mem_side_ports") {
         if (idx >= static_cast<PortID>(memSidePort.size())) {
-            panic("TLBCoalescer::getPort: unknown index %d\n", idx);
+            panic("VegaTLBCoalescer::getPort: unknown index %d\n", idx);
         }
 
         return *memSidePort[idx];
     } else {
-        panic("TLBCoalescer::getPort: unknown port %s\n", if_name);
+        panic("VegaTLBCoalescer::getPort: unknown port %s\n", if_name);
     }
 }
 
@@ -95,7 +98,7 @@ TLBCoalescer::getPort(const std::string &if_name, PortID idx)
  * The rules can potentially be modified based on the TLB level.
  */
 bool
-TLBCoalescer::canCoalesce(PacketPtr incoming_pkt, PacketPtr coalesced_pkt)
+VegaTLBCoalescer::canCoalesce(PacketPtr incoming_pkt, PacketPtr coalesced_pkt)
 {
     if (disableCoalescing)
         return false;
@@ -109,10 +112,10 @@ TLBCoalescer::canCoalesce(PacketPtr incoming_pkt, PacketPtr coalesced_pkt)
     // Rule 1: Coalesce requests only if they
     // fall within the same virtual page
     Addr incoming_virt_page_addr = roundDown(incoming_pkt->req->getVaddr(),
-                                             X86ISA::PageBytes);
+                                             VegaISA::PageBytes);
 
     Addr coalesced_virt_page_addr = roundDown(coalesced_pkt->req->getVaddr(),
-                                              X86ISA::PageBytes);
+                                              VegaISA::PageBytes);
 
     if (incoming_virt_page_addr != coalesced_virt_page_addr)
         return false;
@@ -140,9 +143,9 @@ TLBCoalescer::canCoalesce(PacketPtr incoming_pkt, PacketPtr coalesced_pkt)
  * that were coalesced into the one that just returned.
  */
 void
-TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
+VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
 {
-    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), X86ISA::PageBytes);
+    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), VegaISA::PageBytes);
 
     DPRINTF(GPUTLB, "Update phys. addr. for %d coalesced reqs for page %#x\n",
             issuedTranslationsTable[virt_page_addr].size(), virt_page_addr);
@@ -150,13 +153,14 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
     GpuTranslationState *sender_state =
         safe_cast<GpuTranslationState*>(pkt->senderState);
 
-    X86ISA::TlbEntry *tlb_entry =
-        safe_cast<X86ISA::TlbEntry *>(sender_state->tlbEntry);
-    assert(tlb_entry);
-    Addr first_entry_vaddr = tlb_entry->vaddr;
-    Addr first_entry_paddr = tlb_entry->paddr;
-    int page_size = tlb_entry->size();
-    bool uncacheable = tlb_entry->uncacheable;
+    // Make a copy. This gets deleted after the first is sent back on the port
+    assert(sender_state->tlbEntry);
+    VegaISA::VegaTlbEntry tlb_entry =
+        *safe_cast<VegaISA::VegaTlbEntry *>(sender_state->tlbEntry);
+    Addr first_entry_vaddr = tlb_entry.vaddr;
+    Addr first_entry_paddr = tlb_entry.paddr;
+    int page_size = tlb_entry.size();
+    bool uncacheable = tlb_entry.uncacheable();
     int first_hit_level = sender_state->hitLevel;
 
     // Get the physical page address of the translated request
@@ -165,16 +169,19 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
     Addr phys_page_paddr = pkt->req->getPaddr();
     phys_page_paddr &= ~(page_size - 1);
 
+    bool is_system = pkt->req->systemReq();
+
     for (int i = 0; i < issuedTranslationsTable[virt_page_addr].size(); ++i) {
         PacketPtr local_pkt = issuedTranslationsTable[virt_page_addr][i];
         GpuTranslationState *sender_state =
-            safe_cast<GpuTranslationState*>(
-                    local_pkt->senderState);
+            safe_cast<GpuTranslationState*>(local_pkt->senderState);
 
         // we are sending the packet back, so pop the reqCnt associated
         // with this level in the TLB hiearchy
-        if (!sender_state->isPrefetch)
+        if (!sender_state->isPrefetch) {
             sender_state->reqCnt.pop_back();
+            localCycles += curCycle();
+        }
 
         /*
          * Only the first packet from this coalesced request has been
@@ -192,16 +199,26 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
 
             // update senderState->tlbEntry, so we can insert
             // the correct TLBEentry in the TLBs above.
-            auto p = sender_state->tc->getProcessPtr();
-            sender_state->tlbEntry =
-                new TheISA::TlbEntry(p->pid(), first_entry_vaddr,
-                    first_entry_paddr, false, false);
+
+            //auto p = sender_state->tc->getProcessPtr();
+            if (sender_state->tlbEntry == NULL) {
+                // not set by lower(l2) coalescer
+                sender_state->tlbEntry =
+                    new VegaISA::VegaTlbEntry(1 /* VMID TODO */,
+                                              first_entry_vaddr,
+                                              first_entry_paddr,
+                                              tlb_entry.logBytes,
+                                              tlb_entry.pte);
+            }
 
             // update the hitLevel for all uncoalesced reqs
             // so that each packet knows where it hit
             // (used for statistics in the CUs)
             sender_state->hitLevel = first_hit_level;
         }
+
+        // Copy PTE system bit information to coalesced requests
+        local_pkt->req->setSystemReq(is_system);
 
         ResponsePort *return_port = sender_state->ports.back();
         sender_state->ports.pop_back();
@@ -229,7 +246,7 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
 // Receive translation requests, create a coalesced request,
 // and send them to the TLB (TLBProbesPerCycle)
 bool
-TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
+VegaTLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
     // first packet of a coalesced request
     PacketPtr first_packet = nullptr;
@@ -241,10 +258,13 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
     GpuTranslationState *sender_state =
         safe_cast<GpuTranslationState*>(pkt->senderState);
 
+    bool update_stats = !sender_state->isPrefetch;
+
+    if (coalescer->tlb_level == 1 && coalescer->mustStallCUPort(this))
+        return false;
+
     // push back the port to remember the path back
     sender_state->ports.push_back(this);
-
-    bool update_stats = !sender_state->isPrefetch;
 
     if (update_stats) {
         // if reqCnt is empty then this packet does not represent
@@ -260,25 +280,22 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
         sender_state->reqCnt.push_back(req_cnt);
 
         // update statistics
-        coalescer->stats.uncoalescedAccesses++;
+        coalescer->uncoalescedAccesses++;
         req_cnt = sender_state->reqCnt.back();
         DPRINTF(GPUTLB, "receiving pkt w/ req_cnt %d\n", req_cnt);
-        coalescer->stats.queuingCycles -= (curTick() * req_cnt);
-        coalescer->stats.localqueuingCycles -= curTick();
+        coalescer->queuingCycles -= (coalescer->curCycle() * req_cnt);
+        coalescer->localqueuingCycles -= coalescer->curCycle();
+        coalescer->localCycles -= coalescer->curCycle();
     }
 
-    // FIXME if you want to coalesce not based on the issueTime
-    // of the packets (i.e., from the compute unit's perspective)
-    // but based on when they reached this coalescer then
-    // remove the following if statement and use curTick() or
-    // coalescingWindow for the tick_index.
+    // Coalesce based on the time the packet arrives at the coalescer (here).
     if (!sender_state->issueTime)
-       sender_state->issueTime = curTick();
+        sender_state->issueTime = curTick();
 
     // The tick index is used as a key to the coalescerFIFO hashmap.
     // It is shared by all candidates that fall within the
     // given coalescingWindow.
-    int64_t tick_index = sender_state->issueTime / coalescer->coalescingWindow;
+    Tick tick_index = sender_state->issueTime / coalescer->coalescingWindow;
 
     if (coalescer->coalescerFIFO.count(tick_index)) {
         coalescedReq_cnt = coalescer->coalescerFIFO[tick_index].size();
@@ -306,7 +323,7 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
     // and make necessary allocations.
     if (!coalescedReq_cnt || !didCoalesce) {
         if (update_stats)
-            coalescer->stats.coalescedAccesses++;
+            coalescer->coalescedAccesses++;
 
         std::vector<PacketPtr> new_array;
         new_array.push_back(pkt);
@@ -328,13 +345,13 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
 }
 
 void
-TLBCoalescer::CpuSidePort::recvReqRetry()
+VegaTLBCoalescer::CpuSidePort::recvReqRetry()
 {
     panic("recvReqRetry called");
 }
 
 void
-TLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
+VegaTLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
 
     GpuTranslationState *sender_state =
@@ -343,13 +360,9 @@ TLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
     bool update_stats = !sender_state->isPrefetch;
 
     if (update_stats)
-        coalescer->stats.uncoalescedAccesses++;
+        coalescer->uncoalescedAccesses++;
 
-    // If there is a pending timing request for this virtual address
-    // print a warning message. This is a temporary caveat of
-    // the current simulator where atomic and timing requests can
-    // coexist. FIXME remove this check/warning in the future.
-    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), X86ISA::PageBytes);
+    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), VegaISA::PageBytes);
     int map_count = coalescer->issuedTranslationsTable.count(virt_page_addr);
 
     if (map_count) {
@@ -361,7 +374,7 @@ TLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
 }
 
 AddrRangeList
-TLBCoalescer::CpuSidePort::getAddrRanges() const
+VegaTLBCoalescer::CpuSidePort::getAddrRanges() const
 {
     // currently not checked by the requestor
     AddrRangeList ranges;
@@ -369,17 +382,30 @@ TLBCoalescer::CpuSidePort::getAddrRanges() const
     return ranges;
 }
 
+/*
+ *  a translation completed and returned
+ */
 bool
-TLBCoalescer::MemSidePort::recvTimingResp(PacketPtr pkt)
+VegaTLBCoalescer::MemSidePort::recvTimingResp(PacketPtr pkt)
 {
-    // a translation completed and returned
     coalescer->updatePhysAddresses(pkt);
 
+    if (coalescer->tlb_level != 1)
+        return true;
+
+
+    coalescer->decrementNumDownstream();
+
+    DPRINTF(GPUTLB,
+            "recvTimingReq: clscr = %p, numDownstream = %d, max = %d\n",
+            coalescer, coalescer->numDownstream, coalescer->maxDownstream);
+
+    coalescer->unstallPorts();
     return true;
 }
 
 void
-TLBCoalescer::MemSidePort::recvReqRetry()
+VegaTLBCoalescer::MemSidePort::recvReqRetry()
 {
     //we've receeived a retry. Schedule a probeTLBEvent
     if (!coalescer->probeTLBEvent.scheduled())
@@ -388,7 +414,7 @@ TLBCoalescer::MemSidePort::recvReqRetry()
 }
 
 void
-TLBCoalescer::MemSidePort::recvFunctional(PacketPtr pkt)
+VegaTLBCoalescer::MemSidePort::recvFunctional(PacketPtr pkt)
 {
     fatal("Memory side recvFunctional() not implemented in TLB coalescer.\n");
 }
@@ -406,21 +432,25 @@ TLBCoalescer::MemSidePort::recvFunctional(PacketPtr pkt)
  * track of the outstanding reqs)
  */
 void
-TLBCoalescer::processProbeTLBEvent()
+VegaTLBCoalescer::processProbeTLBEvent()
 {
     // number of TLB probes sent so far
     int sent_probes = 0;
-    // rejected denotes a blocking event
-    bool rejected = false;
 
     // It is set to true either when the recvTiming of the TLB below
     // returns false or when there is another outstanding request for the
     // same virt. page.
 
-    DPRINTF(GPUTLB, "triggered TLBCoalescer %s\n", __func__);
+    DPRINTF(GPUTLB, "triggered VegaTLBCoalescer %s\n", __func__);
+
+    if ((tlb_level == 1)
+        && (availDownstreamSlots() == 0)) {
+        DPRINTF(GPUTLB, "IssueProbeEvent - no downstream slots, bail out\n");
+        return;
+    }
 
     for (auto iter = coalescerFIFO.begin();
-         iter != coalescerFIFO.end() && !rejected; ) {
+         iter != coalescerFIFO.end();) {
         int coalescedReq_cnt = iter->second.size();
         int i = 0;
         int vector_index = 0;
@@ -431,10 +461,17 @@ TLBCoalescer::processProbeTLBEvent()
         while (i < coalescedReq_cnt) {
             ++i;
             PacketPtr first_packet = iter->second[vector_index][0];
+            //The request to coalescer is origanized as follows.
+            //The coalescerFIFO is a map which is indexed by coalescingWindow
+            // cycle. Only requests that falls in the same coalescingWindow
+            // considered for coalescing. Each entry of a coalescerFIFO is a
+            // vector of vectors. There is one entry for each different virtual
+            // page number and it contains vector of all request that are
+            // coalesced for the same virtual page address
 
             // compute virtual page address for this request
             Addr virt_page_addr = roundDown(first_packet->req->getVaddr(),
-                    X86ISA::PageBytes);
+                    VegaISA::PageBytes);
 
             // is there another outstanding request for the same page addr?
             int pending_reqs =
@@ -445,24 +482,28 @@ TLBCoalescer::processProbeTLBEvent()
                         "page %#x\n", virt_page_addr);
 
                 ++vector_index;
-                rejected = true;
-
                 continue;
             }
 
             // send the coalesced request for virt_page_addr
             if (!memSidePort[0]->sendTimingReq(first_packet)) {
-                DPRINTF(GPUTLB, "Failed to send TLB request for page %#x\n",
-                       virt_page_addr);
+                DPRINTF(GPUTLB,
+                        "Failed to send TLB request for page %#x",
+                        virt_page_addr);
 
-                // No need for a retries queue since we are already buffering
-                // the coalesced request in coalescerFIFO.
-                rejected = true;
-                ++vector_index;
-            } else {
+                // No need for a retries queue since we are already
+                // buffering the coalesced request in coalescerFIFO.
+                // Arka:: No point trying to send other requests to TLB at
+                // this point since it is busy. Retries will be called later
+                // by the TLB below
+                return;
+             } else {
+
+                if (tlb_level == 1)
+                    incrementNumDownstream();
+
                 GpuTranslationState *tmp_sender_state =
-                    safe_cast<GpuTranslationState*>
-                    (first_packet->senderState);
+                    safe_cast<GpuTranslationState*>(first_packet->senderState);
 
                 bool update_stats = !tmp_sender_state->isPrefetch;
 
@@ -471,7 +512,7 @@ TLBCoalescer::processProbeTLBEvent()
                     // by the one we just sent counting all the way from
                     // the top of TLB hiearchy (i.e., from the CU)
                     int req_cnt = tmp_sender_state->reqCnt.back();
-                    stats.queuingCycles += (curTick() * req_cnt);
+                    queuingCycles += (curCycle() * req_cnt);
 
                     DPRINTF(GPUTLB, "%s sending pkt w/ req_cnt %d\n",
                             name(), req_cnt);
@@ -479,10 +520,10 @@ TLBCoalescer::processProbeTLBEvent()
                     // pkt_cnt is number of packets we coalesced into the one
                     // we just sent but only at this coalescer level
                     int pkt_cnt = iter->second[vector_index].size();
-                    stats.localqueuingCycles += (curTick() * pkt_cnt);
+                    localqueuingCycles += (curCycle() * pkt_cnt);
                 }
 
-                DPRINTF(GPUTLB, "Successfully sent TLB request for page %#x",
+                DPRINTF(GPUTLB, "Successfully sent TLB request for page %#x\n",
                        virt_page_addr);
 
                 //copy coalescedReq to issuedTranslationsTable
@@ -493,11 +534,26 @@ TLBCoalescer::processProbeTLBEvent()
                 iter->second.erase(iter->second.begin() + vector_index);
 
                 if (iter->second.empty())
-                    assert(i == coalescedReq_cnt);
+                    assert( i == coalescedReq_cnt );
 
                 sent_probes++;
-                if (sent_probes == TLBProbesPerCycle)
-                   return;
+
+                if (sent_probes == TLBProbesPerCycle ||
+                    ((tlb_level == 1) && (!availDownstreamSlots()))) {
+                    //Before returning make sure that empty vectors are taken
+                    // out. Not a big issue though since a later invocation
+                    // will take it out anyway.
+                    if (iter->second.empty())
+                        coalescerFIFO.erase(iter);
+
+                    //schedule probeTLBEvent next cycle to send the
+                    //coalesced requests to the TLB
+                    if (!probeTLBEvent.scheduled()) {
+                        schedule(probeTLBEvent,
+                                 cyclesToTicks(curCycle() + Cycles(1)));
+                    }
+                    return;
+                }
             }
         }
 
@@ -512,7 +568,7 @@ TLBCoalescer::processProbeTLBEvent()
 }
 
 void
-TLBCoalescer::processCleanupEvent()
+VegaTLBCoalescer::processCleanupEvent()
 {
     while (!cleanupQueue.empty()) {
         Addr cleanup_addr = cleanupQueue.front();
@@ -524,16 +580,117 @@ TLBCoalescer::processCleanupEvent()
     }
 }
 
-TLBCoalescer::TLBCoalescerStats::TLBCoalescerStats(statistics::Group *parent)
-    : statistics::Group(parent),
-      ADD_STAT(uncoalescedAccesses, "Number of uncoalesced TLB accesses"),
-      ADD_STAT(coalescedAccesses, "Number of coalesced TLB accesses"),
-      ADD_STAT(queuingCycles, "Number of cycles spent in queue"),
-      ADD_STAT(localqueuingCycles,
-               "Number of cycles spent in queue for all incoming reqs"),
-      ADD_STAT(localLatency, "Avg. latency over all incoming pkts")
+void
+VegaTLBCoalescer::regStats()
 {
+    ClockedObject::regStats();
+
+    uncoalescedAccesses
+        .name(name() + ".uncoalesced_accesses")
+        .desc("Number of uncoalesced TLB accesses")
+        ;
+
+    coalescedAccesses
+        .name(name() + ".coalesced_accesses")
+        .desc("Number of coalesced TLB accesses")
+        ;
+
+    queuingCycles
+        .name(name() + ".queuing_cycles")
+        .desc("Number of cycles spent in queue")
+        ;
+
+    localqueuingCycles
+        .name(name() + ".local_queuing_cycles")
+        .desc("Number of cycles spent in queue for all incoming reqs")
+        ;
+
+   localCycles
+        .name(name() + ".local_cycles")
+        .desc("Number of cycles spent in queue for all incoming reqs")
+        ;
+
+    localLatency
+        .name(name() + ".local_latency")
+        .desc("Avg. latency over all incoming pkts")
+        ;
+
+    latency
+        .name(name() + ".latency")
+        .desc("Avg. latency over all incoming pkts")
+        ;
+
     localLatency = localqueuingCycles / uncoalescedAccesses;
+    latency = localCycles / uncoalescedAccesses;
+}
+
+void
+VegaTLBCoalescer::insertStalledPortIfNotMapped(CpuSidePort *port)
+{
+    assert(tlb_level == 1);
+    if (stalledPortsMap.count(port) != 0)
+        return; // we already know this port is stalled
+
+    stalledPortsMap[port] = port;
+    stalledPortsQueue.push(port);
+    DPRINTF(GPUTLB,
+            "insertStalledPortIfNotMapped: port %p, mapSz = %d, qsz = %d\n",
+            port, stalledPortsMap.size(), stalledPortsQueue.size());
+}
+
+bool
+VegaTLBCoalescer::mustStallCUPort(CpuSidePort *port)
+{
+    assert(tlb_level == 1);
+
+    DPRINTF(GPUTLB, "mustStallCUPort: downstream = %d, max = %d\n",
+            numDownstream, maxDownstream);
+
+    if (availDownstreamSlots() == 0 || numDownstream == maxDownstream) {
+        warn("RED ALERT - VegaTLBCoalescer::mustStallCUPort\n");
+        insertStalledPortIfNotMapped(port);
+        return true;
+    }
+    else
+        return false;
+}
+
+void
+VegaTLBCoalescer::unstallPorts()
+{
+    assert(tlb_level == 1);
+    if (!stalledPorts() || availDownstreamSlots() == 0)
+        return;
+
+    DPRINTF(GPUTLB, "unstallPorts()\n");
+    /*
+     * this check is needed because we can be called from recvTiiningResponse()
+     * or, synchronously due to having called sendRetry, from recvTimingReq()
+     */
+    if (availDownstreamSlots() == 0) // can happen if retry sent 1 downstream
+        return;
+    /*
+     *  Consider this scenario
+     *        1) max downstream is reached
+     *        2) port1 tries to send a req, cant => stalledPortsQueue = [port1]
+     *        3) port2 tries to send a req, cant => stalledPortsQueue = [port1,
+     *              port2]
+     *        4) a request completes and we remove port1 from both data
+     *              structures & call
+     *             sendRetry => stalledPortsQueue = [port2]
+     *        5) port1 sends one req downstream and a second is rejected
+     *             => stalledPortsQueue = [port2, port1]
+     *
+     *        so we round robin and each stalled port can send 1 req on retry
+     */
+    assert(availDownstreamSlots() == 1);
+    auto port = stalledPortsQueue.front();
+    DPRINTF(GPUTLB, "sending retry for port = %p(%s)\n", port, port->name());
+    stalledPortsQueue.pop();
+    auto iter = stalledPortsMap.find(port);
+    assert(iter != stalledPortsMap.end());
+    stalledPortsMap.erase(iter);
+    port->sendRetryReq(); // cu will synchronously call recvTimingReq
 }
 
 } // namespace gem5

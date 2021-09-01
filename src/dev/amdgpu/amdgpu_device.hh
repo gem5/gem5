@@ -106,6 +106,53 @@ class AMDGPUDevice : public PciDevice
     bool checkpoint_before_mmios;
     int init_interrupt_count;
 
+    typedef struct GEM5_PACKED
+    {
+        // Page table addresses: from (Base + Start) to (End)
+        union
+        {
+            struct
+            {
+                uint32_t ptBaseL;
+                uint32_t ptBaseH;
+            };
+            Addr ptBase;
+        };
+        union
+        {
+            struct
+            {
+                uint32_t ptStartL;
+                uint32_t ptStartH;
+            };
+            Addr ptStart;
+        };
+        union
+        {
+            struct
+            {
+                uint32_t ptEndL;
+                uint32_t ptEndH;
+            };
+            Addr ptEnd;
+        };
+    } VMContext; // VM Context
+
+    typedef struct SysVMContext : VMContext
+    {
+        Addr agpBase;
+        Addr agpTop;
+        Addr agpBot;
+        Addr fbBase;
+        Addr fbTop;
+        Addr fbOffset;
+        Addr sysAddrL;
+        Addr sysAddrH;
+    } SysVMContext; // System VM Context
+
+    SysVMContext vmContext0;
+    std::vector<VMContext> vmContexts;
+
   public:
     AMDGPUDevice(const AMDGPUDeviceParams &p);
 
@@ -127,6 +174,25 @@ class AMDGPUDevice : public PciDevice
      */
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
+
+    /**
+     * Methods related to translations and system/device memory.
+     */
+    RequestorID vramRequestorId() { return 0; }
+
+    Addr
+    getPageTableBase(uint16_t vmid)
+    {
+        assert(vmid > 0 && vmid < vmContexts.size());
+        return vmContexts[vmid].ptBase;
+    }
+
+    Addr
+    getPageTableStart(uint16_t vmid)
+    {
+        assert(vmid > 0 && vmid < vmContexts.size());
+        return vmContexts[vmid].ptStart;
+    }
 };
 
 } // namespace gem5

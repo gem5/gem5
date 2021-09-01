@@ -33,6 +33,7 @@
 
 #include <limits>
 
+#include "arch/amdgpu/common/gpu_translation_state.hh"
 #include "arch/amdgpu/common/tlb.hh"
 #include "base/output.hh"
 #include "debug/GPUDisp.hh"

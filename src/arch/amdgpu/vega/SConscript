@@ -33,6 +33,21 @@ import sys
 
 Import('*')
 
+if not env['BUILD_GPU']:
+    Return()
+
+SimObject('VegaGPUTLB.py', sim_objects=['VegaPagetableWalker',
+                                        'VegaGPUTLB',
+                                        'VegaTLBCoalescer'])
+
+Source('faults.cc')
+Source('pagetable.cc')
+Source('pagetable_walker.cc')
+Source('tlb.cc')
+Source('tlb_coalescer.cc')
+
+DebugFlag('GPUPTWalker', 'Debug flag for GPU page table walker')
+
 if env['TARGET_GPU_ISA'] == 'vega':
     Source('decoder.cc')
     Source('insts/gpu_static_inst.cc')
@@ -40,4 +55,5 @@ if env['TARGET_GPU_ISA'] == 'vega':
     Source('insts/op_encodings.cc')
     Source('isa.cc')
     Source('registers.cc')
+
     DebugFlag('VEGA', 'Debug flag for VEGA GPU ISA')

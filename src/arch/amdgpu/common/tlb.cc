@@ -35,6 +35,7 @@
 #include <cmath>
 #include <cstring>
 
+#include "arch/amdgpu/common/gpu_translation_state.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/insts/microldstop.hh"
 #include "arch/x86/page_size.hh"
@@ -664,8 +665,8 @@ namespace X86ISA
         Addr virt_page_addr = roundDown(pkt->req->getVaddr(),
                                         X86ISA::PageBytes);
 
-        TranslationState *sender_state =
-                safe_cast<TranslationState*>(pkt->senderState);
+        GpuTranslationState *sender_state =
+                safe_cast<GpuTranslationState*>(pkt->senderState);
 
         bool update_stats = !sender_state->isPrefetch;
         ThreadContext * tmp_tc = sender_state->tc;
@@ -788,8 +789,8 @@ namespace X86ISA
         assert(pkt);
         Addr vaddr = pkt->req->getVaddr();
 
-        TranslationState *sender_state =
-            safe_cast<TranslationState*>(pkt->senderState);
+        GpuTranslationState *sender_state =
+            safe_cast<GpuTranslationState*>(pkt->senderState);
 
         ThreadContext *tc = sender_state->tc;
         Mode mode = sender_state->tlbMode;
@@ -799,7 +800,7 @@ namespace X86ISA
         if (tlb_outcome == TLB_HIT) {
             DPRINTF(GPUTLB, "Translation Done - TLB Hit for addr %#x\n",
                 vaddr);
-            local_entry = sender_state->tlbEntry;
+            local_entry = safe_cast<TlbEntry *>(sender_state->tlbEntry);
         } else {
             DPRINTF(GPUTLB, "Translation Done - TLB Miss for addr %#x\n",
                     vaddr);
@@ -809,7 +810,7 @@ namespace X86ISA
              * lower TLB level. The senderState should be "carrying" a pointer
              * to the correct TLBEntry.
              */
-            new_entry = sender_state->tlbEntry;
+            new_entry = safe_cast<TlbEntry *>(sender_state->tlbEntry);
             assert(new_entry);
             local_entry = new_entry;
 
@@ -877,8 +878,8 @@ namespace X86ISA
         assert(translationReturnEvent[virtPageAddr]);
         assert(pkt);
 
-        TranslationState *tmp_sender_state =
-            safe_cast<TranslationState*>(pkt->senderState);
+        GpuTranslationState *tmp_sender_state =
+            safe_cast<GpuTranslationState*>(pkt->senderState);
 
         int req_cnt = tmp_sender_state->reqCnt.back();
         bool update_stats = !tmp_sender_state->isPrefetch;
@@ -945,8 +946,8 @@ namespace X86ISA
             DPRINTF(GPUTLB, "Doing a page walk for address %#x\n",
                     virtPageAddr);
 
-            TranslationState *sender_state =
-                safe_cast<TranslationState*>(pkt->senderState);
+            GpuTranslationState *sender_state =
+                safe_cast<GpuTranslationState*>(pkt->senderState);
 
             Process *p = sender_state->tc->getProcessPtr();
             Addr vaddr = pkt->req->getVaddr();
@@ -1038,8 +1039,8 @@ namespace X86ISA
     void
     GpuTLB::handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome tlb_outcome)
     {
-        TranslationState *sender_state =
-            safe_cast<TranslationState*>(pkt->senderState);
+        GpuTranslationState *sender_state =
+            safe_cast<GpuTranslationState*>(pkt->senderState);
 
         ThreadContext *tc = sender_state->tc;
         Mode mode = sender_state->tlbMode;
@@ -1051,7 +1052,7 @@ namespace X86ISA
             DPRINTF(GPUTLB, "Functional Translation Done - TLB hit for addr "
                     "%#x\n", vaddr);
 
-            local_entry = sender_state->tlbEntry;
+            local_entry = safe_cast<TlbEntry *>(sender_state->tlbEntry);
         } else {
             DPRINTF(GPUTLB, "Functional Translation Done - TLB miss for addr "
                     "%#x\n", vaddr);
@@ -1061,7 +1062,7 @@ namespace X86ISA
              * lower TLB level. The senderState should be "carrying" a pointer
              * to the correct TLBEntry.
              */
-            new_entry = sender_state->tlbEntry;
+            new_entry = safe_cast<TlbEntry *>(sender_state->tlbEntry);
             assert(new_entry);
             local_entry = new_entry;
 
@@ -1110,8 +1111,8 @@ namespace X86ISA
     void
     GpuTLB::CpuSidePort::recvFunctional(PacketPtr pkt)
     {
-        TranslationState *sender_state =
-            safe_cast<TranslationState*>(pkt->senderState);
+        GpuTranslationState *sender_state =
+            safe_cast<GpuTranslationState*>(pkt->senderState);
 
         ThreadContext *tc = sender_state->tc;
         bool update_stats = !sender_state->isPrefetch;
