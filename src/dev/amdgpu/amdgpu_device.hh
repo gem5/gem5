@@ -47,6 +47,7 @@ namespace gem5
 {
 
 class AMDGPUInterruptHandler;
+class SDMAEngine;
 
 /**
  * Device model for an AMD GPU. This models the interface between the PCI bus
@@ -102,13 +103,15 @@ class AMDGPUDevice : public PciDevice
      */
     AMDMMIOReader mmioReader;
 
-    AMDGPUMemoryManager *gpuMemMgr;
-
     /**
      * Blocks of the GPU
      */
+    AMDGPUMemoryManager *gpuMemMgr;
     AMDGPUInterruptHandler *deviceIH;
     AMDGPUVM gpuvm;
+    SDMAEngine *sdma0;
+    SDMAEngine *sdma1;
+    std::unordered_map<uint32_t, SDMAEngine *> sdmaEngs;
 
     /**
      * Initial checkpoint support variables.
@@ -120,6 +123,11 @@ class AMDGPUDevice : public PciDevice
     // resides in framebuffer memory.
     uint32_t gartBase = 0x0;
     uint32_t gartSize = 0x0;
+
+    // MMHUB aperture. These addresses are set by the GPU. For now we wait
+    // until the driver reads them before setting them.
+    uint64_t mmhubBase = 0x0;
+    uint64_t mmhubTop = 0x0;
 
   public:
     AMDGPUDevice(const AMDGPUDeviceParams &p);
@@ -147,12 +155,15 @@ class AMDGPUDevice : public PciDevice
      * Get handles to GPU blocks.
      */
     AMDGPUInterruptHandler* getIH() { return deviceIH; }
+    SDMAEngine* getSDMAEngine(Addr offset);
     AMDGPUVM &getVM() { return gpuvm; }
+    AMDGPUMemoryManager* getMemMgr() { return gpuMemMgr; }
 
     /**
      * Set handles to GPU blocks.
      */
     void setDoorbellType(uint32_t offset, QueueType qt);
+    void setSDMAEngine(Addr offset, SDMAEngine *eng);
 
     /**
      * Methods related to translations and system/device memory.

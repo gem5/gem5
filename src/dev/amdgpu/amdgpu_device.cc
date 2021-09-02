@@ -36,6 +36,7 @@
 #include "debug/AMDGPUDevice.hh"
 #include "dev/amdgpu/amdgpu_vm.hh"
 #include "dev/amdgpu/interrupt_handler.hh"
+#include "dev/amdgpu/sdma_engine.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/AMDGPUDevice.hh"
@@ -46,7 +47,9 @@ namespace gem5
 {
 
 AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
-    : PciDevice(p), checkpoint_before_mmios(p.checkpoint_before_mmios),
+    : PciDevice(p), gpuMemMgr(p.memory_manager), deviceIH(p.device_ih),
+      sdma0(p.sdma0), sdma1(p.sdma1),
+      checkpoint_before_mmios(p.checkpoint_before_mmios),
       init_interrupt_count(0)
 {
     // Loading the rom binary dumped from hardware.
@@ -65,6 +68,10 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         mmioReader.readMMIOTrace(p.trace_file);
     }
 
+    sdma0->setGPUDevice(this);
+    sdma0->setId(0);
+    sdma1->setGPUDevice(this);
+    sdma1->setId(1);
     deviceIH->setGPUDevice(this);
 }
 
@@ -220,7 +227,6 @@ void
 AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Wrote doorbell %#lx\n", offset);
-    mmioReader.writeFromTrace(pkt, DOORBELL_BAR, offset);
 }
 
 void
@@ -313,6 +319,18 @@ AMDGPUDevice::setDoorbellType(uint32_t offset, QueueType qt)
 {
     DPRINTF(AMDGPUDevice, "Setting doorbell type for %x\n", offset);
     doorbells[offset] = qt;
+}
+
+void
+AMDGPUDevice::setSDMAEngine(Addr offset, SDMAEngine *eng)
+{
+    sdmaEngs[offset] = eng;
+}
+
+SDMAEngine*
+AMDGPUDevice::getSDMAEngine(Addr offset)
+{
+    return sdmaEngs[offset];
 }
 
 void

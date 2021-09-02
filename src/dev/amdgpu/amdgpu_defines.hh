@@ -94,4 +94,3 @@ static constexpr uint32_t NBIO_SIZE = 0x4280;
 } // namespace gem5
 
 #endif // __DEV_AMDGPU_AMDGPU_DEFINES_HH__
-
