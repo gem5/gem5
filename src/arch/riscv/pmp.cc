@@ -92,8 +92,8 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
             match_index = i;
         }
 
-        if ((PMP_OFF != pmpGetAField(pmpTable[match_index].pmpCfg))
-                                            && (match_index > -1)) {
+        if ((match_index > -1)
+            && (PMP_OFF != pmpGetAField(pmpTable[match_index].pmpCfg))) {
             // check the RWX permissions from the pmp entry
             uint8_t allowed_privs = PMP_READ | PMP_WRITE | PMP_EXEC;
 
