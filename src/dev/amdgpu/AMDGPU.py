@@ -95,3 +95,8 @@ class AMDGPUInterruptHandler(DmaDevice):
     type = 'AMDGPUInterruptHandler'
     cxx_header = "dev/amdgpu/interrupt_handler.hh"
     cxx_class = 'gem5::AMDGPUInterruptHandler'
+
+class AMDGPUSystemHub(DmaDevice):
+    type = 'AMDGPUSystemHub'
+    cxx_class = 'gem5::AMDGPUSystemHub'
+    cxx_header = "dev/amdgpu/system_hub.hh"
