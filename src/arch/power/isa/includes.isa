@@ -46,8 +46,10 @@ output header {{
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 
-using namespace gem5;
+namespace gem5::PowerISAInst
+{
 using namespace PowerISA;
+} // namespace gem5::PowerISAInst
 }};
 
 output decoder {{
@@ -60,8 +62,10 @@ output decoder {{
 #include "base/cprintf.hh"
 #include "cpu/thread_context.hh"
 
-using namespace gem5;
+namespace gem5::PowerISAInst
+{
 using namespace PowerISA;
+} // namespace gem5::PowerISAInst
 }};
 
 output exec {{
@@ -78,7 +82,8 @@ output exec {{
 #include "mem/packet_access.hh"
 #include "sim/sim_exit.hh"
 
-using namespace gem5;
+namespace gem5::PowerISAInst
+{
 using namespace PowerISA;
+} // namespace gem5::PowerISAInst
 }};
-

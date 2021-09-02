@@ -74,8 +74,10 @@ output decoder {{
 #include "mem/request.hh"
 #include "sim/full_system.hh"
 
-using namespace gem5;
+namespace gem5::RiscvISAInst
+{
 using namespace RiscvISA;
+} // namespace gem5::RiscvISAInst
 }};
 
 output exec {{
@@ -106,6 +108,8 @@ output exec {{
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
-using namespace gem5;
+namespace gem5::RiscvISAInst
+{
 using namespace RiscvISA;
+} // namespace gem5::RiscvISAInst
 }};

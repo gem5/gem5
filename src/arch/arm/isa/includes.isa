@@ -70,13 +70,10 @@ output header {{
 #include "mem/packet.hh"
 #include "sim/faults.hh"
 
-namespace gem5
-{
-namespace ArmISAInst
+namespace gem5::ArmISAInst
 {
 using namespace ArmISA;
-} // namespace ArmISAInst
-} // namespace gem5
+} // namespace gem5::ArmISAInst
 
 }};
 
@@ -94,8 +91,10 @@ output decoder {{
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
 
-using namespace gem5;
+namespace gem5::ArmISAInst
+{
 using namespace ArmISA;
+} // namespace gem5::ArmISAInst
 }};
 
 output exec {{
@@ -120,7 +119,9 @@ output exec {{
 #include "sim/pseudo_inst.hh"
 #include "sim/sim_exit.hh"
 
-using namespace gem5;
+namespace gem5::ArmISAInst
+{
 using namespace ArmISA;
+} // namespace gem5::ArmISAInst
 
 }};

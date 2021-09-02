@@ -66,8 +66,10 @@ output decoder {{
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
 #include "mem/packet.hh"
 
-using namespace gem5;
+namespace gem5::SparcISAInst
+{
 using namespace SparcISA;
+} // namespace gem5::SparcISAInst
 }};
 
 output exec {{
@@ -87,7 +89,8 @@ output exec {{
 #include "sim/pseudo_inst.hh"
 #include "sim/sim_exit.hh"
 
-using namespace gem5;
+namespace gem5::SparcISAInst
+{
 using namespace SparcISA;
+} // namespace gem5::SparcISAInst
 }};
-

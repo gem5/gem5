@@ -64,8 +64,10 @@ output decoder {{
 #include "mem/packet.hh"
 #include "sim/full_system.hh"
 
-using namespace gem5;
+namespace gem5::MipsISAInst
+{
 using namespace MipsISA;
+} // namespace gem5::MipsISAInst
 }};
 
 output exec {{
@@ -96,7 +98,8 @@ output exec {{
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 
-using namespace gem5;
+namespace gem5::MipsISAInst
+{
 using namespace MipsISA;
+} // namespace gem5::MipsISAInst
 }};
-
