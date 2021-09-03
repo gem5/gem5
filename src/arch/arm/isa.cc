@@ -42,17 +42,14 @@
 #include "arch/arm/interrupts.hh"
 #include "arch/arm/mmu.hh"
 #include "arch/arm/pmu.hh"
-#include "arch/arm/regs/misc.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlbi_op.hh"
-#include "arch/arm/utility.hh"
 #include "base/cprintf.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Arm.hh"
-#include "debug/LLSC.hh"
 #include "debug/MiscRegs.hh"
 #include "dev/arm/generic_timer.hh"
 #include "dev/arm/gic_v3.hh"
@@ -2556,104 +2553,6 @@ ISA::MiscRegLUTEntryInitializer::highest(ArmSystem *const sys) const
       case EL3: mon(); break;
     }
     return *this;
-}
-
-void
-ISA::handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask)
-{
-    // Should only every see invalidations / direct writes
-    assert(pkt->isInvalidate() || pkt->isWrite());
-
-    DPRINTF(LLSC, "%s:  handling snoop for address: %#x locked: %d\n",
-            tc->getCpuPtr()->name(), pkt->getAddr(),
-            tc->readMiscReg(MISCREG_LOCKFLAG));
-    if (!tc->readMiscReg(MISCREG_LOCKFLAG))
-        return;
-
-    Addr locked_addr = tc->readMiscReg(MISCREG_LOCKADDR) & cacheBlockMask;
-    // If no caches are attached, the snoop address always needs to be masked
-    Addr snoop_addr = pkt->getAddr() & cacheBlockMask;
-
-    DPRINTF(LLSC, "%s:  handling snoop for address: %#x locked addr: %#x\n",
-            tc->getCpuPtr()->name(), snoop_addr, locked_addr);
-    if (locked_addr == snoop_addr) {
-        DPRINTF(LLSC, "%s: address match, clearing lock and signaling sev\n",
-                tc->getCpuPtr()->name());
-        tc->setMiscReg(MISCREG_LOCKFLAG, false);
-        // Implement ARMv8 WFE/SEV semantics
-        sendEvent(tc);
-        tc->setMiscReg(MISCREG_SEV_MAILBOX, true);
-    }
-}
-
-void
-ISA::handleLockedRead(const RequestPtr &req)
-{
-    tc->setMiscReg(MISCREG_LOCKADDR, req->getPaddr());
-    tc->setMiscReg(MISCREG_LOCKFLAG, true);
-    DPRINTF(LLSC, "%s: Placing address %#x in monitor\n",
-            tc->getCpuPtr()->name(), req->getPaddr());
-}
-
-void
-ISA::handleLockedSnoopHit()
-{
-    DPRINTF(LLSC, "%s:  handling snoop lock hit address: %#x\n",
-            tc->getCpuPtr()->name(), tc->readMiscReg(MISCREG_LOCKADDR));
-    tc->setMiscReg(MISCREG_LOCKFLAG, false);
-    tc->setMiscReg(MISCREG_SEV_MAILBOX, true);
-}
-
-bool
-ISA::handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
-{
-    if (req->isSwap())
-        return true;
-
-    DPRINTF(LLSC, "%s: handling locked write for  address %#x in monitor\n",
-            tc->getCpuPtr()->name(), req->getPaddr());
-    // Verify that the lock flag is still set and the address
-    // is correct
-    bool lock_flag = tc->readMiscReg(MISCREG_LOCKFLAG);
-    Addr lock_addr = tc->readMiscReg(MISCREG_LOCKADDR) & cacheBlockMask;
-    if (!lock_flag || (req->getPaddr() & cacheBlockMask) != lock_addr) {
-        // Lock flag not set or addr mismatch in CPU;
-        // don't even bother sending to memory system
-        req->setExtraData(0);
-        tc->setMiscReg(MISCREG_LOCKFLAG, false);
-        DPRINTF(LLSC, "%s: clearing lock flag in handle locked write\n",
-                tc->getCpuPtr()->name());
-        // the rest of this code is not architectural;
-        // it's just a debugging aid to help detect
-        // livelock by warning on long sequences of failed
-        // store conditionals
-        int stCondFailures = tc->readStCondFailures();
-        stCondFailures++;
-        tc->setStCondFailures(stCondFailures);
-        if (stCondFailures % 100000 == 0) {
-            warn("context %d: %d consecutive "
-                 "store conditional failures\n",
-                 tc->contextId(), stCondFailures);
-        }
-
-        // store conditional failed already, so don't issue it to mem
-        return false;
-    }
-    return true;
-}
-
-void
-ISA::globalClearExclusive()
-{
-    // A spinlock would typically include a Wait For Event (WFE) to
-    // conserve energy. The ARMv8 architecture specifies that an event
-    // is automatically generated when clearing the exclusive monitor
-    // to wake up the processor in WFE.
-    DPRINTF(LLSC, "Clearing lock and signaling sev\n");
-    tc->setMiscReg(MISCREG_LOCKFLAG, false);
-    // Implement ARMv8 WFE/SEV semantics
-    sendEvent(tc);
-    tc->setMiscReg(MISCREG_SEV_MAILBOX, true);
 }
 
 } // namespace ArmISA

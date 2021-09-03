@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -11,7 +11,8 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright 2020 Google Inc.
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,55 +38,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_GENERIC_ISA_HH__
-#define __ARCH_GENERIC_ISA_HH__
+#ifndef __ARCH_NULL_LOCKED_MEM_HH__
+#define __ARCH_NULL_LOCKED_MEM_HH__
 
-#include <vector>
+/**
+ * @file
+ *
+ * ISA-specific helper functions for locked memory accesses.
+ */
 
-#include "cpu/reg_class.hh"
-#include "enums/VecRegRenameMode.hh"
-#include "sim/sim_object.hh"
+#include "arch/generic/locked_mem.hh"
 
 namespace gem5
 {
 
-class ThreadContext;
-
-class BaseISA : public SimObject
+namespace NullISA
 {
-  public:
-    typedef std::vector<RegClass> RegClasses;
 
-  protected:
-    using SimObject::SimObject;
+using namespace GenericISA::locked_mem;
 
-    ThreadContext *tc = nullptr;
-
-    RegClasses _regClasses;
-
-  public:
-    virtual void takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc) {}
-    virtual void setThreadContext(ThreadContext *_tc) { tc = _tc; }
-
-    virtual uint64_t getExecutingAsid() const { return 0; }
-    virtual bool inUserMode() const = 0;
-    virtual void copyRegsFrom(ThreadContext *src) = 0;
-
-    virtual enums::VecRegRenameMode
-    initVecRegRenameMode() const
-    {
-        return enums::Full;
-    }
-
-    virtual enums::VecRegRenameMode
-    vecRegRenameMode(ThreadContext *_tc) const
-    {
-        return initVecRegRenameMode();
-    }
-
-    const RegClasses &regClasses() const { return _regClasses; }
-};
-
+} // namespace NullISA
 } // namespace gem5
 
-#endif // __ARCH_GENERIC_ISA_HH__
+#endif

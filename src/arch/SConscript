@@ -59,6 +59,7 @@ env.SwitchingHeaders(
     Split('''
         decoder.hh
         isa.hh
+        locked_mem.hh
         page_size.hh
         pcstate.hh
         vecregs.hh

@@ -43,6 +43,7 @@
 #include <csignal>
 
 #include "arch/decoder.hh"
+#include "arch/locked_mem.hh"
 #include "base/logging.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -125,7 +126,7 @@ void GenericHtmFailureFault::invoke(ThreadContext *tc,
     checkpoint->restore(tc, getHtmFailureFaultCause());
 
     // reset the global monitor
-    tc->getIsaPtr()->globalClearExclusive();
+    TheISA::globalClearExclusive(tc);
 
     // send abort packet to ruby (in final breath)
     tc->htmAbortTransaction(htmUid, cause);

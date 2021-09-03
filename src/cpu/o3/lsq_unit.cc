@@ -42,6 +42,7 @@
 #include "cpu/o3/lsq_unit.hh"
 
 #include "arch/generic/debugfaults.hh"
+#include "arch/locked_mem.hh"
 #include "base/str.hh"
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
@@ -451,7 +452,7 @@ LSQUnit::checkSnoop(PacketPtr pkt)
         gem5::ThreadContext *tc = cpu->getContext(x);
         bool no_squash = cpu->thread[x]->noSquashFromTC;
         cpu->thread[x]->noSquashFromTC = true;
-        tc->getIsaPtr()->handleLockedSnoop(pkt, cacheBlockMask);
+        TheISA::handleLockedSnoop(tc, pkt, cacheBlockMask);
         cpu->thread[x]->noSquashFromTC = no_squash;
     }
 
@@ -469,9 +470,8 @@ LSQUnit::checkSnoop(PacketPtr pkt)
     // Check that this snoop didn't just invalidate our lock flag
     if (ld_inst->effAddrValid() &&
         req->isCacheBlockHit(invalidate_addr, cacheBlockMask)
-        && ld_inst->memReqFlags & Request::LLSC) {
-        ld_inst->tcBase()->getIsaPtr()->handleLockedSnoopHit();
-    }
+        && ld_inst->memReqFlags & Request::LLSC)
+        TheISA::handleLockedSnoopHit(ld_inst.get());
 
     bool force_squash = false;
 
@@ -508,7 +508,7 @@ LSQUnit::checkSnoop(PacketPtr pkt)
                 // address since the LOCK* flags don't get updated until
                 // commit.
                 if (ld_inst->memReqFlags & Request::LLSC)
-                    ld_inst->tcBase()->getIsaPtr()->handleLockedSnoopHit();
+                    TheISA::handleLockedSnoopHit(ld_inst.get());
 
                 // If a older load checks this and it's true
                 // then we might have missed the snoop
@@ -882,7 +882,7 @@ LSQUnit::writebackStores()
             // misc regs normally updates the result, but this is not
             // the desired behavior when handling store conditionals.
             inst->recordResult(false);
-            bool success = inst->tcBase()->getIsaPtr()->handleLockedWrite(
+            bool success = TheISA::handleLockedWrite(inst.get(),
                     req->request(), cacheBlockMask);
             inst->recordResult(true);
             req->packetSent();
@@ -1348,7 +1348,7 @@ LSQUnit::read(LSQRequest *req, int load_idx)
         // regs normally updates the result, but this is not the
         // desired behavior when handling store conditionals.
         load_inst->recordResult(false);
-        load_inst->tcBase()->getIsaPtr()->handleLockedRead(req->mainRequest());
+        TheISA::handleLockedRead(load_inst.get(), req->mainRequest());
         load_inst->recordResult(true);
     }
 

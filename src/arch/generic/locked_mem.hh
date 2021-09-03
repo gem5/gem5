@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -11,7 +11,8 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright 2020 Google Inc.
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,55 +38,64 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_GENERIC_ISA_HH__
-#define __ARCH_GENERIC_ISA_HH__
+#ifndef __ARCH_GENERIC_LOCKED_MEM_HH__
+#define __ARCH_GENERIC_LOCKED_MEM_HH__
 
-#include <vector>
+/**
+ * @file
+ *
+ * Generic helper functions for locked memory accesses.
+ */
 
-#include "cpu/reg_class.hh"
-#include "enums/VecRegRenameMode.hh"
-#include "sim/sim_object.hh"
+#include "base/compiler.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
 
 namespace gem5
 {
 
-class ThreadContext;
-
-class BaseISA : public SimObject
+namespace GenericISA
 {
-  public:
-    typedef std::vector<RegClass> RegClasses;
 
-  protected:
-    using SimObject::SimObject;
+GEM5_DEPRECATED_NAMESPACE(LockedMem, locked_mem);
+namespace locked_mem
+{
 
-    ThreadContext *tc = nullptr;
+template <class XC>
+inline void
+handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
+{
+}
 
-    RegClasses _regClasses;
+template <class XC>
+inline void
+handleLockedRead(XC *xc, const RequestPtr &req)
+{
+}
 
-  public:
-    virtual void takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc) {}
-    virtual void setThreadContext(ThreadContext *_tc) { tc = _tc; }
+template <class XC>
+inline void
+handleLockedSnoopHit(XC *xc)
+{
+}
 
-    virtual uint64_t getExecutingAsid() const { return 0; }
-    virtual bool inUserMode() const = 0;
-    virtual void copyRegsFrom(ThreadContext *src) = 0;
 
-    virtual enums::VecRegRenameMode
-    initVecRegRenameMode() const
-    {
-        return enums::Full;
-    }
+template <class XC>
+inline bool
+handleLockedWrite(XC *xc, const RequestPtr &req, Addr cacheBlockMask)
+{
+    return true;
+}
 
-    virtual enums::VecRegRenameMode
-    vecRegRenameMode(ThreadContext *_tc) const
-    {
-        return initVecRegRenameMode();
-    }
+template <class XC>
+inline void
+globalClearExclusive(XC *xc)
+{
+}
 
-    const RegClasses &regClasses() const { return _regClasses; }
-};
+} // namespace locked_mem
 
+} // namespace Generic ISA
 } // namespace gem5
 
-#endif // __ARCH_GENERIC_ISA_HH__
+#endif
