@@ -304,7 +304,7 @@ class LSQUnit
     int numLoads() { return loadQueue.size(); }
 
     /** Returns the number of stores in the SQ. */
-    int numStores() { return stores; }
+    int numStores() { return storeQueue.size(); }
 
     // hardware transactional memory
     int numHtmStarts() const { return htmStarts; }
@@ -334,10 +334,10 @@ class LSQUnit
     bool lqEmpty() const { return loadQueue.size() == 0; }
 
     /** Returns if the SQ is empty. */
-    bool sqEmpty() const { return stores == 0; }
+    bool sqEmpty() const { return storeQueue.size() == 0; }
 
     /** Returns the number of instructions in the LSQ. */
-    unsigned getCount() { return loadQueue.size() + stores; }
+    unsigned getCount() { return loadQueue.size() + storeQueue.size(); }
 
     /** Returns if there are any stores to writeback. */
     bool hasStoresToWB() { return storesToWB; }
@@ -495,8 +495,6 @@ class LSQUnit
     /** Should loads be checked for dependency issues */
     bool checkLoads;
 
-    /** The number of store instructions in the SQ. */
-    int stores;
     /** The number of store instructions in the SQ waiting to writeback. */
     int storesToWB;
 

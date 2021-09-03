@@ -201,7 +201,7 @@ LSQUnit::completeDataAccess(PacketPtr pkt)
 
 LSQUnit::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
     : lsqID(-1), storeQueue(sqEntries+1), loadQueue(lqEntries+1),
-      stores(0), storesToWB(0),
+      storesToWB(0),
       htmStarts(0), htmStops(0),
       lastRetiredHtmUid(0),
       cacheBlockMask(0), stalled(false),
@@ -235,7 +235,7 @@ LSQUnit::init(CPU *cpu_ptr, IEW *iew_ptr, const O3CPUParams &params,
 void
 LSQUnit::resetState()
 {
-    stores = storesToWB = 0;
+    storesToWB = 0;
 
     // hardware transactional memory
     // nesting depth
@@ -390,7 +390,7 @@ LSQUnit::insertStore(const DynInstPtr& store_inst)
 {
     // Make sure it is not full before inserting an instruction.
     assert(!storeQueue.full());
-    assert(stores < storeQueue.capacity());
+    assert(storeQueue.size() < storeQueue.capacity());
 
     DPRINTF(LSQUnit, "Inserting store PC %s, idx:%i [sn:%lli]\n",
             store_inst->pcState(), storeQueue.tail(), store_inst->seqNum);
@@ -402,8 +402,6 @@ LSQUnit::insertStore(const DynInstPtr& store_inst)
     store_inst->lqIt = loadQueue.end();
 
     storeQueue.back().set(store_inst);
-
-    ++stores;
 }
 
 DynInstPtr
@@ -432,8 +430,8 @@ LSQUnit::numFreeStoreEntries()
         //SQ has an extra dummy entry to differentiate
         //empty/full conditions. Subtract 1 from the free entries.
         DPRINTF(LSQUnit, "SQ size: %d, #stores occupied: %d\n",
-                1 + storeQueue.capacity(), stores);
-        return storeQueue.capacity() - stores;
+                1 + storeQueue.capacity(), storeQueue.size());
+        return storeQueue.capacity() - storeQueue.size();
 
  }
 
@@ -670,7 +668,7 @@ Fault
 LSQUnit::executeStore(const DynInstPtr &store_inst)
 {
     // Make sure that a store exists.
-    assert(stores != 0);
+    assert(storeQueue.size() != 0);
 
     int store_idx = store_inst->sqIdx;
 
@@ -765,7 +763,7 @@ LSQUnit::commitLoads(InstSeqNum &youngest_inst)
 void
 LSQUnit::commitStores(InstSeqNum &youngest_inst)
 {
-    assert(stores == 0 || storeQueue.front().valid());
+    assert(storeQueue.size() == 0 || storeQueue.front().valid());
 
     /* Forward iterate the store queue (age order). */
     for (auto& x : storeQueue) {
@@ -940,14 +938,15 @@ LSQUnit::writebackStores()
                     inst->seqNum);
         }
     }
-    assert(stores >= 0 && storesToWB >= 0);
+    assert(storesToWB >= 0);
 }
 
 void
 LSQUnit::squash(const InstSeqNum &squashed_num)
 {
     DPRINTF(LSQUnit, "Squashing until [sn:%lli]!"
-            "(Loads:%i Stores:%i)\n", squashed_num, loadQueue.size(), stores);
+            "(Loads:%i Stores:%i)\n", squashed_num, loadQueue.size(),
+            storeQueue.size());
 
     while (loadQueue.size() != 0 &&
             loadQueue.back().instruction()->seqNum > squashed_num) {
@@ -1023,7 +1022,7 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
         memDepViolator = NULL;
     }
 
-    while (stores != 0 &&
+    while (storeQueue.size() != 0 &&
            storeQueue.back().instruction()->seqNum > squashed_num) {
         // Instructions marked as can WB are already committed.
         if (storeQueue.back().canWB()) {
@@ -1051,7 +1050,6 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
         // memory.  This is quite ugly.  @todo: Figure out the proper
         // place to really handle request deletes.
         storeQueue.back().clear();
-        --stores;
 
         storeQueue.pop_back();
         ++stats.squashedStores;
@@ -1177,7 +1175,6 @@ LSQUnit::completeStore(typename StoreQueue::iterator store_idx)
         do {
             storeQueue.front().clear();
             storeQueue.pop_front();
-            --stores;
         } while (storeQueue.front().completed() &&
                  !storeQueue.empty());
 
@@ -1287,7 +1284,7 @@ LSQUnit::dumpInsts() const
     }
     cprintf("\n");
 
-    cprintf("Store queue size: %i\n", stores);
+    cprintf("Store queue size: %i\n", storeQueue.size());
     cprintf("Store queue: ");
 
     for (const auto& e: storeQueue) {
