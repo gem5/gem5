@@ -201,7 +201,7 @@ LSQUnit::completeDataAccess(PacketPtr pkt)
 
 LSQUnit::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
     : lsqID(-1), storeQueue(sqEntries+1), loadQueue(lqEntries+1),
-      loads(0), stores(0), storesToWB(0),
+      stores(0), storesToWB(0),
       htmStarts(0), htmStops(0),
       lastRetiredHtmUid(0),
       cacheBlockMask(0), stalled(false),
@@ -235,7 +235,7 @@ LSQUnit::init(CPU *cpu_ptr, IEW *iew_ptr, const O3CPUParams &params,
 void
 LSQUnit::resetState()
 {
-    loads = stores = storesToWB = 0;
+    stores = storesToWB = 0;
 
     // hardware transactional memory
     // nesting depth
@@ -329,7 +329,7 @@ void
 LSQUnit::insertLoad(const DynInstPtr &load_inst)
 {
     assert(!loadQueue.full());
-    assert(loads < loadQueue.capacity());
+    assert(loadQueue.size() < loadQueue.capacity());
 
     DPRINTF(LSQUnit, "Inserting load PC %s, idx:%i [sn:%lli]\n",
             load_inst->pcState(), loadQueue.tail(), load_inst->seqNum);
@@ -344,8 +344,6 @@ LSQUnit::insertLoad(const DynInstPtr &load_inst)
     load_inst->lqIdx = loadQueue.tail();
     assert(load_inst->lqIdx > 0);
     load_inst->lqIt = loadQueue.getIterator(load_inst->lqIdx);
-
-    ++loads;
 
     // hardware transactional memory
     // transactional state and nesting depth must be tracked
@@ -424,8 +422,8 @@ LSQUnit::numFreeLoadEntries()
         //LQ has an extra dummy entry to differentiate
         //empty/full conditions. Subtract 1 from the free entries.
         DPRINTF(LSQUnit, "LQ size: %d, #loads occupied: %d\n",
-                1 + loadQueue.capacity(), loads);
-        return loadQueue.capacity() - loads;
+                1 + loadQueue.capacity(), loadQueue.size());
+        return loadQueue.capacity() - loadQueue.size();
 }
 
 unsigned
@@ -751,16 +749,14 @@ LSQUnit::commitLoad()
 
     loadQueue.front().clear();
     loadQueue.pop_front();
-
-    --loads;
 }
 
 void
 LSQUnit::commitLoads(InstSeqNum &youngest_inst)
 {
-    assert(loads == 0 || loadQueue.front().valid());
+    assert(loadQueue.size() == 0 || loadQueue.front().valid());
 
-    while (loads != 0 && loadQueue.front().instruction()->seqNum
+    while (loadQueue.size() != 0 && loadQueue.front().instruction()->seqNum
             <= youngest_inst) {
         commitLoad();
     }
@@ -951,9 +947,9 @@ void
 LSQUnit::squash(const InstSeqNum &squashed_num)
 {
     DPRINTF(LSQUnit, "Squashing until [sn:%lli]!"
-            "(Loads:%i Stores:%i)\n", squashed_num, loads, stores);
+            "(Loads:%i Stores:%i)\n", squashed_num, loadQueue.size(), stores);
 
-    while (loads != 0 &&
+    while (loadQueue.size() != 0 &&
             loadQueue.back().instruction()->seqNum > squashed_num) {
         DPRINTF(LSQUnit,"Load Instruction PC %s squashed, "
                 "[sn:%lli]\n",
@@ -984,8 +980,6 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
         // Clear the smart pointer to make sure it is decremented.
         loadQueue.back().instruction()->setSquashed();
         loadQueue.back().clear();
-
-        --loads;
 
         loadQueue.pop_back();
         ++stats.squashedLoads;
@@ -1284,7 +1278,7 @@ void
 LSQUnit::dumpInsts() const
 {
     cprintf("Load store queue: Dumping instructions.\n");
-    cprintf("Load queue size: %i\n", loads);
+    cprintf("Load queue size: %i\n", loadQueue.size());
     cprintf("Load queue: ");
 
     for (const auto& e: loadQueue) {

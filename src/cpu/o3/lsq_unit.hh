@@ -301,7 +301,7 @@ class LSQUnit
     unsigned numFreeStoreEntries();
 
     /** Returns the number of loads in the LQ. */
-    int numLoads() { return loads; }
+    int numLoads() { return loadQueue.size(); }
 
     /** Returns the number of stores in the SQ. */
     int numStores() { return stores; }
@@ -331,13 +331,13 @@ class LSQUnit
     bool sqFull() { return storeQueue.full(); }
 
     /** Returns if the LQ is empty. */
-    bool lqEmpty() const { return loads == 0; }
+    bool lqEmpty() const { return loadQueue.size() == 0; }
 
     /** Returns if the SQ is empty. */
     bool sqEmpty() const { return stores == 0; }
 
     /** Returns the number of instructions in the LSQ. */
-    unsigned getCount() { return loads + stores; }
+    unsigned getCount() { return loadQueue.size() + stores; }
 
     /** Returns if there are any stores to writeback. */
     bool hasStoresToWB() { return storesToWB; }
@@ -495,8 +495,6 @@ class LSQUnit
     /** Should loads be checked for dependency issues */
     bool checkLoads;
 
-    /** The number of load instructions in the LQ. */
-    int loads;
     /** The number of store instructions in the SQ. */
     int stores;
     /** The number of store instructions in the SQ waiting to writeback. */
