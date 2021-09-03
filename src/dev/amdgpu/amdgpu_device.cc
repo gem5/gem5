@@ -227,6 +227,29 @@ void
 AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Wrote doorbell %#lx\n", offset);
+
+    if (doorbells.find(offset) != doorbells.end()) {
+        QueueType q_type = doorbells[offset];
+        DPRINTF(AMDGPUDevice, "Doorbell offset %p queue: %d\n",
+                              offset, q_type);
+        switch (q_type) {
+          case SDMAGfx: {
+            SDMAEngine *sdmaEng = getSDMAEngine(offset);
+            sdmaEng->processGfx(pkt->getLE<uint64_t>());
+          } break;
+          case SDMAPage: {
+            SDMAEngine *sdmaEng = getSDMAEngine(offset);
+            sdmaEng->processPage(pkt->getLE<uint64_t>());
+          } break;
+          case InterruptHandler:
+            deviceIH->updateRptr(pkt->getLE<uint32_t>());
+            break;
+          default:
+            panic("Write to unkown queue type!");
+        }
+    } else {
+        warn("Unknown doorbell offset: %lx\n", offset);
+    }
 }
 
 void
@@ -238,6 +261,15 @@ AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
     DPRINTF(AMDGPUDevice, "Wrote MMIO %#lx\n", offset);
 
     switch (aperture) {
+      /* Write a register to the first System DMA. */
+      case SDMA0_BASE:
+        sdma0->writeMMIO(pkt, aperture_offset >> SDMA_OFFSET_SHIFT);
+        break;
+      /* Write a register to the second System DMA. */
+      case SDMA1_BASE:
+        sdma1->writeMMIO(pkt, aperture_offset >> SDMA_OFFSET_SHIFT);
+        break;
+      /* Write a register to the interrupt handler. */
       case IH_BASE:
         deviceIH->writeMMIO(pkt, aperture_offset >> IH_OFFSET_SHIFT);
         break;

@@ -98,14 +98,38 @@ def makeGpuFSSystem(args):
     shader.dispatcher = dispatcher
     shader.gpu_cmd_proc = gpu_cmd_proc
 
+    # GPU Interrupt Handler
+    device_ih = AMDGPUInterruptHandler()
+    system.pc.south_bridge.gpu.device_ih = device_ih
+
+    # Setup the SDMA engines
+    sdma0_pt_walker = VegaPagetableWalker()
+    sdma1_pt_walker = VegaPagetableWalker()
+
+    sdma0 = SDMAEngine(walker=sdma0_pt_walker)
+    sdma1 = SDMAEngine(walker=sdma1_pt_walker)
+
+    system.pc.south_bridge.gpu.sdma0 = sdma0
+    system.pc.south_bridge.gpu.sdma1 = sdma1
+
+    # GPU data path
+    gpu_mem_mgr = AMDGPUMemoryManager()
+    system.pc.south_bridge.gpu.memory_manager = gpu_mem_mgr
+
     # GPU, HSAPP, and GPUCommandProc are DMA devices
     system._dma_ports.append(gpu_hsapp)
     system._dma_ports.append(gpu_cmd_proc)
     system._dma_ports.append(system.pc.south_bridge.gpu)
+    system._dma_ports.append(sdma0)
+    system._dma_ports.append(sdma1)
+    system._dma_ports.append(device_ih)
 
     gpu_hsapp.pio = system.iobus.mem_side_ports
     gpu_cmd_proc.pio = system.iobus.mem_side_ports
     system.pc.south_bridge.gpu.pio = system.iobus.mem_side_ports
+    sdma0.pio = system.iobus.mem_side_ports
+    sdma1.pio = system.iobus.mem_side_ports
+    device_ih.pio = system.iobus.mem_side_ports
 
     # Create Ruby system using Ruby.py for now
     Ruby.create_system(args, True, system, system.iobus,
