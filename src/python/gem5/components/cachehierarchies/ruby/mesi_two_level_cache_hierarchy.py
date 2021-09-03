@@ -140,6 +140,8 @@ class MESITwoLevelCacheHierarchy(
                 int_req_port = cache.sequencer.interrupt_out_port
                 int_resp_port = cache.sequencer.in_ports
                 core.connect_interrupt(int_req_port, int_resp_port)
+            else:
+                core.connect_interrupt()
 
             self._l1_controllers.append(cache)
 
