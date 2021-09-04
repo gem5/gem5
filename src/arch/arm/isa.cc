@@ -1973,9 +1973,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             {
                 assert64();
 
-                TLBIMVA tlbiOp(EL3, true,
-                               static_cast<Addr>(bits(newVal, 43, 0)) << 12,
-                               0xbeef);
+                TLBIMVAA tlbiOp(EL3, true,
+                                static_cast<Addr>(bits(newVal, 43, 0)) << 12);
                 tlbiOp(tc);
                 return;
             }
@@ -1985,9 +1984,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             {
                 assert64();
 
-                TLBIMVA tlbiOp(EL3, true,
-                               static_cast<Addr>(bits(newVal, 43, 0)) << 12,
-                               0xbeef);
+                TLBIMVAA tlbiOp(EL3, true,
+                                static_cast<Addr>(bits(newVal, 43, 0)) << 12);
 
                 tlbiOp.broadcast(tc);
                 return;
@@ -1998,12 +1996,24 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             {
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
+                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
 
                 bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-                TLBIMVA tlbiOp(EL2, secure,
-                               static_cast<Addr>(bits(newVal, 43, 0)) << 12,
-                               0xbeef);
-                tlbiOp(tc);
+
+                if (hcr.e2h) {
+                    // The asid will only be used when e2h == 1
+                    auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
+                                                  bits(newVal, 55, 48);
+
+                    TLBIMVA tlbiOp(EL2, secure,
+                                   static_cast<Addr>(bits(newVal, 43, 0)) << 12,
+                                   asid);
+                    tlbiOp(tc);
+                } else {
+                    TLBIMVAA tlbiOp(EL2, secure,
+                                    static_cast<Addr>(bits(newVal, 43, 0)) << 12);
+                    tlbiOp(tc);
+                }
                 return;
             }
           // AArch64 TLB Invalidate by VA, EL2, Inner Shareable
@@ -2012,13 +2022,24 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             {
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
+                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
 
                 bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-                TLBIMVA tlbiOp(EL2, secure,
-                               static_cast<Addr>(bits(newVal, 43, 0)) << 12,
-                               0xbeef);
 
-                tlbiOp.broadcast(tc);
+                if (hcr.e2h) {
+                    // The asid will only be used when e2h == 1
+                    auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
+                                                  bits(newVal, 55, 48);
+
+                    TLBIMVA tlbiOp(EL2, secure,
+                                   static_cast<Addr>(bits(newVal, 43, 0)) << 12,
+                                   asid);
+                    tlbiOp.broadcast(tc);
+                } else {
+                    TLBIMVAA tlbiOp(EL2, secure,
+                                    static_cast<Addr>(bits(newVal, 43, 0)) << 12);
+                    tlbiOp.broadcast(tc);
+                }
                 return;
             }
           // AArch64 TLB Invalidate by VA, EL1
