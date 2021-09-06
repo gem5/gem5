@@ -126,7 +126,7 @@ ListenSocket::listen(int port, bool reuse)
 
     // only create socket if not already created by a previous call
     if (fd == -1) {
-        fd = socketCloexec(PF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
+        fd = socketCloexec(PF_INET, SOCK_STREAM, 0);
         if (fd < 0)
             panic("Can't create socket:%s !", strerror(errno));
     }
