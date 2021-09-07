@@ -43,6 +43,7 @@ gem5_verify_config(
     valid_isas=(constants.gcn3_x86_tag,),
     # dynamically linked
     valid_hosts=constants.target_host[constants.gcn3_x86_tag],
+    length=constants.long_tag,
 )
 
 gem5_verify_config(
@@ -53,4 +54,5 @@ gem5_verify_config(
     protocol = 'MSI',
     # Currently only x86 has the threads test
     valid_isas=(constants.gcn3_x86_tag,),
+    length=constants.long_tag,
 )
