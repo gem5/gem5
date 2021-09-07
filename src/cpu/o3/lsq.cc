@@ -834,9 +834,9 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
             }
             Fault fault;
             if (isLoad)
-                fault = cpu->read(req, inst->lqIdx);
+                fault = read(req, inst->lqIdx);
             else
-                fault = cpu->write(req, data, inst->sqIdx);
+                fault = write(req, data, inst->sqIdx);
             // inst->getFault() may have the first-fault of a
             // multi-access split request at this point.
             // Overwrite that only if we got another type of fault
