@@ -977,7 +977,9 @@ References:
 
 Memory map:
    0x00000000-0x03ffffff: Boot memory (CS0)
-   0x04000000-0x07ffffff: Reserved
+   0x04000000-0x07ffffff: Trusted Memory/Reserved
+        0x04000000-0x0403FFFF: 256kB Trusted SRAM
+        0x06000000-0x07ffffff: 32MB Trusted DRAM
    0x08000000-0x0bffffff: NOR FLASH0 (CS0 alias)
    0x0c000000-0x0fffffff: NOR FLASH1 (Off-chip, CS4)
    0x10000000-0x13ffffff: gem5-specific peripherals (Off-chip, CS5)
@@ -1094,7 +1096,10 @@ Interrupts:
     # Trusted SRAM
     trusted_sram = SimpleMemory(range=AddrRange(0x04000000, size='256KiB'),
                                 conf_table_reported=False)
-
+    # Trusted DRAM
+    # TODO: preventing access from unsecure world to the trusted RAM
+    trusted_dram=SimpleMemory(range=AddrRange(0x06000000, size='32MB'),
+                        conf_table_reported=False)
     # Non-Trusted SRAM
     non_trusted_sram = MmioSRAM(range=AddrRange(0x2e000000, size=0x8000),
                                 conf_table_reported=False)
@@ -1145,6 +1150,7 @@ Interrupts:
         memories = [
             self.bootmem,
             self.trusted_sram,
+            self.trusted_dram,
             self.non_trusted_sram,
             self.flash0,
         ]
