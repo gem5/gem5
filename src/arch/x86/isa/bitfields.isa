@@ -86,5 +86,6 @@ def bitfield MODE mode;
 def bitfield MODE_MODE mode.mode;
 def bitfield MODE_SUBMODE mode.submode;
 
+def bitfield VEX_PRESENT vex.present;
 def bitfield VEX_V vex.v;
 def bitfield VEX_L vex.l;
