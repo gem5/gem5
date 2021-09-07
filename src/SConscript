@@ -541,8 +541,8 @@ class GTest(Executable):
     @classmethod
     def declare_all(cls, env):
         env = env.Clone()
-        env['OBJSUFFIX'] = 't' + env['OBJSUFFIX']
-        env['SHOBJSUFFIX'] = 't' + env['SHOBJSUFFIX']
+        env['OBJSUFFIX'] = '.t' + env['OBJSUFFIX'][1:]
+        env['SHOBJSUFFIX'] = '.t' + env['SHOBJSUFFIX'][1:]
         env.Append(LIBS=env['GTEST_LIBS'])
         env.Append(CPPFLAGS=env['GTEST_CPPFLAGS'])
         env['GTEST_LIB_SOURCES'] = Source.all.with_tag(env, 'gtest lib')
