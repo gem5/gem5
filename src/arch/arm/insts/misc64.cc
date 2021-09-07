@@ -419,7 +419,7 @@ MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
         break;
        // Generic Timer
       case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTVOFF_EL2:
-        trap_to_hyp = el <= EL1 &&
+        trap_to_hyp = EL2Enabled(tc) && el <= EL1 &&
                       isGenericTimerSystemAccessTrapEL2(misc_reg, tc);
         break;
       case MISCREG_DAIF:
