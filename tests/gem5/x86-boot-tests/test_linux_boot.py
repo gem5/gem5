@@ -64,6 +64,9 @@ def test_boot(
     if mem_system == "mesi_two_level":
         protocol_to_use="MESI_Two_Level"
         isa_to_use=constants.x86_tag
+    elif mem_system == "mi_example":
+        protocol_to_use=None
+        isa_to_use=constants.x86_tag
     else:
         protocol_to_use=None
         isa_to_use=constants.gcn3_x86_tag
