@@ -56,10 +56,6 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
         self._start_key = "start"
         self._switch_key = "switch"
         self._current_is_start = True
-        self._prepare_kvm = CPUTypes.KVM in (
-            starting_core_type,
-            switch_core_type,
-        )
 
         if starting_core_type in (CPUTypes.TIMING, CPUTypes.O3):
             self._mem_mode = MemMode.TIMING
@@ -89,9 +85,6 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
     @overrides(SwitchableProcessor)
     def incorporate_processor(self, board: AbstractBoard) -> None:
         super().incorporate_processor(board=board)
-
-        if self._prepare_kvm:
-            board.kvm_vm = KvmVM()
 
         board.set_mem_mode(self._mem_mode)
 

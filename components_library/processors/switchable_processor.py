@@ -26,6 +26,9 @@
 
 from components_library.processors.simple_core import SimpleCore
 from components_library.processors.abstract_core import AbstractCore
+
+from .cpu_types import CPUTypes
+
 import m5
 
 from typing import Dict, Any, List
@@ -65,6 +68,15 @@ class SwitchableProcessor(AbstractProcessor):
                 core.set_switched_out(core not in self._current_cores)
                 all_cores.append(core)
 
+        self._prepare_kvm = CPUTypes.KVM in [
+            core.get_type() for core in all_cores
+        ]
+
+        if self._prepare_kvm:
+            from m5.objects import KvmVM
+
+            self.kvm_vm = KvmVM()
+
         super(SwitchableProcessor, self).__init__(cores=all_cores)
 
     @overrides(AbstractProcessor)
@@ -75,6 +87,16 @@ class SwitchableProcessor(AbstractProcessor):
         # argument. We therefore need to store the board when incorporating the
         # procsesor
         self._board = board
+
+        if self._prepare_kvm:
+            board.kvm_vm = self.kvm_vm
+
+            # To get the KVM CPUs to run on different host CPUs
+            # Specify a different event queue for each CPU
+            for i, core in enumerate(self.cores):
+                for obj in core.get_simobject().descendants():
+                    obj.eventq_index = 0
+                core.get_simobject().eventq_index = i + 1
 
     @overrides(AbstractProcessor)
     def get_num_cores(self) -> int:
