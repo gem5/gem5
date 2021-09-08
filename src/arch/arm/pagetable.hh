@@ -104,7 +104,7 @@ struct PageTableOps
     virtual bool isLeaf(pte_t pte, unsigned level) const = 0;
     virtual bool isWritable(pte_t pte, unsigned level, bool stage2) const = 0;
     virtual Addr nextLevelPointer(pte_t pte, unsigned level) const = 0;
-    virtual Addr index(Addr va, unsigned level) const = 0;
+    virtual Addr index(Addr va, unsigned level, int tsz) const = 0;
     virtual Addr pageMask(pte_t pte, unsigned level) const = 0;
     virtual Addr walkMask(unsigned level) const = 0;
     virtual LookupLevel firstLevel(uint8_t tsz) const = 0;
@@ -118,7 +118,7 @@ struct V7LPageTableOps : public PageTableOps
     bool isLeaf(pte_t pte, unsigned level) const override;
     bool isWritable(pte_t pte, unsigned level, bool stage2) const override;
     Addr nextLevelPointer(pte_t pte, unsigned level) const override;
-    Addr index(Addr va, unsigned level) const override;
+    Addr index(Addr va, unsigned level, int tsz) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
     Addr walkMask(unsigned level) const override;
     LookupLevel firstLevel(uint8_t tsz) const override;
@@ -131,7 +131,7 @@ struct V8PageTableOps4k : public PageTableOps
     bool isLeaf(pte_t pte, unsigned level) const override;
     bool isWritable(pte_t pte, unsigned level, bool stage2) const override;
     Addr nextLevelPointer(pte_t pte, unsigned level) const override;
-    Addr index(Addr va, unsigned level) const override;
+    Addr index(Addr va, unsigned level, int tsz) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
     Addr walkMask(unsigned level) const override;
     LookupLevel firstLevel(uint8_t tsz) const override;
@@ -145,7 +145,7 @@ struct V8PageTableOps16k : public PageTableOps
     bool isLeaf(pte_t pte, unsigned level) const override;
     bool isWritable(pte_t pte, unsigned level, bool stage2) const override;
     Addr nextLevelPointer(pte_t pte, unsigned level) const override;
-    Addr index(Addr va, unsigned level) const override;
+    Addr index(Addr va, unsigned level, int tsz) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
     Addr walkMask(unsigned level) const override;
     LookupLevel firstLevel(uint8_t tsz) const override;
@@ -159,7 +159,7 @@ struct V8PageTableOps64k : public PageTableOps
     bool isLeaf(pte_t pte, unsigned level) const override;
     bool isWritable(pte_t pte, unsigned level, bool stage2) const override;
     Addr nextLevelPointer(pte_t pte, unsigned level) const override;
-    Addr index(Addr va, unsigned level) const override;
+    Addr index(Addr va, unsigned level, int tsz) const override;
     Addr pageMask(pte_t pte, unsigned level) const override;
     Addr walkMask(unsigned level) const override;
     LookupLevel firstLevel(uint8_t tsz) const override;

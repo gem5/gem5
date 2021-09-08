@@ -95,15 +95,15 @@ V7LPageTableOps::nextLevelPointer(pte_t pte, unsigned level) const
 }
 
 Addr
-V7LPageTableOps::index(Addr va, unsigned level) const
+V7LPageTableOps::index(Addr va, unsigned level, int tsz) const
 {
     // In theory this should be configurable...
     const int n = 12;
 
     switch (level) {
-        case 1: return bits(va, 26+n, 30) << 3; break;
-        case 2: return bits(va, 29, 21) << 3; break;
-        case 3: return bits(va, 20, 12) << 3; break;
+        case 1: return bits(va, std::min(26+n, tsz - 1), 30) << 3; break;
+        case 2: return bits(va, std::min(29, tsz - 1), 21) << 3; break;
+        case 3: return bits(va, std::min(20, tsz - 1), 12) << 3; break;
         default: panic("bad level %d", level);
     }
 }
@@ -189,13 +189,13 @@ V8PageTableOps4k::nextLevelPointer(pte_t pte, unsigned level) const
 }
 
 Addr
-V8PageTableOps4k::index(Addr va, unsigned level) const
+V8PageTableOps4k::index(Addr va, unsigned level, int tsz) const
 {
     switch (level) {
-        case 0: return bits(va, 47, 39) << 3; break;
-        case 1: return bits(va, 38, 30) << 3; break;
-        case 2: return bits(va, 29, 21) << 3; break;
-        case 3: return bits(va, 20, 12) << 3; break;
+        case 0: return bits(va, std::min(47, tsz - 1), 39) << 3; break;
+        case 1: return bits(va, std::min(38, tsz - 1), 30) << 3; break;
+        case 2: return bits(va, std::min(29, tsz - 1), 21) << 3; break;
+        case 3: return bits(va, std::min(20, tsz - 1), 12) << 3; break;
         default: panic("bad level %d", level);
     }
 }
@@ -298,13 +298,13 @@ V8PageTableOps16k::nextLevelPointer(pte_t pte, unsigned level) const
 }
 
 Addr
-V8PageTableOps16k::index(Addr va, unsigned level) const
+V8PageTableOps16k::index(Addr va, unsigned level, int tsz) const
 {
     switch (level) {
-        case 0: return bits(va, 47, 47) << 3; break;
-        case 1: return bits(va, 46, 36) << 3; break;
-        case 2: return bits(va, 35, 25) << 3; break;
-        case 3: return bits(va, 24, 14) << 3; break;
+        case 0: return bits(va, std::min(47, tsz - 1), 47) << 3; break;
+        case 1: return bits(va, std::min(46, tsz - 1), 36) << 3; break;
+        case 2: return bits(va, std::min(35, tsz - 1), 25) << 3; break;
+        case 3: return bits(va, std::min(24, tsz - 1), 14) << 3; break;
         default: panic("bad level %d", level);
     }
 }
@@ -407,12 +407,12 @@ V8PageTableOps64k::nextLevelPointer(pte_t pte, unsigned level) const
 }
 
 Addr
-V8PageTableOps64k::index(Addr va, unsigned level) const
+V8PageTableOps64k::index(Addr va, unsigned level, int tsz) const
 {
     switch (level) {
-        case 1: return bits(va, 47, 42) << 3; break;
-        case 2: return bits(va, 41, 29) << 3; break;
-        case 3: return bits(va, 28, 16) << 3; break;
+        case 1: return bits(va, std::min(47, tsz - 1), 42) << 3; break;
+        case 2: return bits(va, std::min(41, tsz - 1), 29) << 3; break;
+        case 3: return bits(va, std::min(28, tsz - 1), 16) << 3; break;
         default: panic("bad level %d", level);
     }
 }

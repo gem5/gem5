@@ -745,7 +745,8 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
     doSemaphoreUp(smmu.cycleSem);
 
     for (; level <= pt_ops->lastLevel(); level++) {
-        Addr pte_addr = walkPtr + pt_ops->index(addr, level);
+        Addr pte_addr = walkPtr + pt_ops->index(
+            addr, level, 64 - context.t0sz);
 
         DPRINTF(SMMUv3, "Fetching S1 L%d PTE from pa=%#08x\n",
                 level, pte_addr);
@@ -829,7 +830,8 @@ SMMUTranslationProcess::walkStage2(Yield &yield, Addr addr, bool final_tr,
     doSemaphoreUp(smmu.cycleSem);
 
     for (; level <= pt_ops->lastLevel(); level++) {
-        Addr pte_addr = walkPtr + pt_ops->index(addr, level);
+        Addr pte_addr = walkPtr + pt_ops->index(
+            addr, level, 64 - context.s2t0sz);
 
         DPRINTF(SMMUv3, "  Fetching S2 L%d PTE from pa=%#08x\n",
                 level, pte_addr);
