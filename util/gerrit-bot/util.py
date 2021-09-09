@@ -60,6 +60,14 @@ def add_maintainers_to_change(change, maintainers, maintainers_account_ids,
     tags, message = parse_commit_subject(change["subject"])
     change_id = change["id"]
     maintainer_emails = set()
+
+    # There are cases that a reviewer being removed from the reviewer list
+    # by another reviewer. We want to respect this removal. To do this,
+    # we can avoid adding reviewers that have been added/removed to the
+    # reviewer list.
+    avoid_emails = set()
+    for update in change["reviewer_updates"]:
+        avoid_emails.add(update["reviewer"]["email"])
     for tag in tags:
         try:
             for name, email in maintainers[tag].maintainers:
@@ -68,6 +76,8 @@ def add_maintainers_to_change(change, maintainers, maintainers_account_ids,
             print((f"warning: `change-{change_id}` has an unknown tag: "
                    f"`{tag}`"))
     for email in maintainer_emails:
+        if email in avoid_emails:
+            continue
         try:
             account_id = maintainers_account_ids[email]
             gerrit_api.add_reviewer(change_id, account_id)

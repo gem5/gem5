@@ -170,9 +170,10 @@ class GerritBot:
     def __query_new_changes(self, query_age):
         query = (f"projects:{self.config.projects_prefix} "
                  f"status:open -is:wip -age:{query_age}")
-        response = self.gerrit_api.query_changes(query,
-                                                 self.config.query_limit,
-                                                 "CURRENT_REVISION")
+        response = self.gerrit_api.query_changes(
+            query, self.config.query_limit,
+            ["CURRENT_REVISION", "REVIEWER_UPDATES", "DETAILED_ACCOUNTS"]
+        )
 
         if response.status_code >= 300:
             print("Error: Couldn't query new Gerrit changes")
