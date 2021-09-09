@@ -81,3 +81,20 @@ unit_test prof
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"/tests --rm gcr.io/gem5-test/ubuntu-20.04_all-dependencies \
         ./main.py run --length long -j${threads} -t${threads}
+
+# Run the GPU tests.
+
+# For the GPU tests we compile and run GCN3_X86 inside a gcn-gpu container.
+docker pull gcr.io/gem5-test/gcn-gpu:latest
+docker run --rm -u $UID:$GUID --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
+    "scons build/GCN3_X86/gem5.opt -j${threads} \
+        || (rm -rf build && scons build/GCN3_X86/gem5.opt -j${threads})"
+
+wget -qN http://dist.gem5.org/dist/develop/test-progs/square/square
+
+mkdir -p tests/testing-results
+
+docker run --rm -u $UID:$GUID --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
+    configs/example/apu_se.py -n3 -c square
