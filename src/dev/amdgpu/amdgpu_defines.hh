@@ -32,6 +32,8 @@
 #ifndef __DEV_AMDGPU_AMDGPU_DEFINES_HH__
 #define __DEV_AMDGPU_AMDGPU_DEFINES_HH__
 
+#include "base/types.hh"
+
 namespace gem5
 {
 
@@ -46,6 +48,9 @@ enum QueueType
     InterruptHandler,
     RLC
 };
+
+// AMD GPUs support 16 different virtual address spaces
+static constexpr int AMDGPU_VM_COUNT = 16;
 
 /* Names of BARs used by the device. */
 constexpr int FRAMEBUFFER_BAR = 0;

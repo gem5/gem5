@@ -34,6 +34,7 @@
 #include <fstream>
 
 #include "debug/AMDGPUDevice.hh"
+#include "dev/amdgpu/amdgpu_vm.hh"
 #include "dev/amdgpu/interrupt_handler.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -63,6 +64,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     if (p.trace_file != "") {
         mmioReader.readMMIOTrace(p.trace_file);
     }
+
+    deviceIH->setGPUDevice(this);
 }
 
 void
@@ -176,15 +179,41 @@ AMDGPUDevice::readDoorbell(PacketPtr pkt, Addr offset)
 void
 AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
 {
+    Addr aperture = gpuvm.getMmioAperture(offset);
+    Addr aperture_offset = offset - aperture;
+
+    // By default read from MMIO trace. Overwrite the packet for a select
+    // few more dynamic MMIOs.
     DPRINTF(AMDGPUDevice, "Read MMIO %#lx\n", offset);
     mmioReader.readFromTrace(pkt, MMIO_BAR, offset);
+
+    switch (aperture) {
+      case GRBM_BASE:
+        gpuvm.readMMIO(pkt, aperture_offset >> GRBM_OFFSET_SHIFT);
+        break;
+      case MMHUB_BASE:
+        gpuvm.readMMIO(pkt, aperture_offset >> MMHUB_OFFSET_SHIFT);
+        break;
+      default:
+        break;
+    }
 }
 
 void
 AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Wrote framebuffer address %#lx\n", offset);
-    mmioReader.writeFromTrace(pkt, FRAMEBUFFER_BAR, offset);
+
+    Addr aperture = gpuvm.getFrameAperture(offset);
+    Addr aperture_offset = offset - aperture;
+
+    // Record the value
+    frame_regs[aperture_offset] = pkt->getLE<uint32_t>();
+    if (aperture == gpuvm.gartBase()) {
+        DPRINTF(AMDGPUDevice, "GART translation %p -> %p\n", aperture_offset,
+            bits(frame_regs[aperture_offset], 48, 12));
+        gpuvm.gartTable[aperture_offset] = pkt->getLE<uint32_t>();
+    }
 }
 
 void
@@ -197,7 +226,7 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
 void
 AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
 {
-    Addr aperture = getMmioAperture(offset);
+    Addr aperture = gpuvm.getMmioAperture(offset);
     Addr aperture_offset = offset - aperture;
 
     DPRINTF(AMDGPUDevice, "Wrote MMIO %#lx\n", offset);

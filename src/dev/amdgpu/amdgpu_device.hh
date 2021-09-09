@@ -36,6 +36,7 @@
 
 #include "base/bitunion.hh"
 #include "dev/amdgpu/amdgpu_defines.hh"
+#include "dev/amdgpu/amdgpu_vm.hh"
 #include "dev/amdgpu/memory_manager.hh"
 #include "dev/amdgpu/mmio_reader.hh"
 #include "dev/io_device.hh"
@@ -107,6 +108,7 @@ class AMDGPUDevice : public PciDevice
      * Blocks of the GPU
      */
     AMDGPUInterruptHandler *deviceIH;
+    AMDGPUVM gpuvm;
 
     /**
      * Initial checkpoint support variables.
@@ -114,52 +116,10 @@ class AMDGPUDevice : public PciDevice
     bool checkpoint_before_mmios;
     int init_interrupt_count;
 
-    typedef struct GEM5_PACKED
-    {
-        // Page table addresses: from (Base + Start) to (End)
-        union
-        {
-            struct
-            {
-                uint32_t ptBaseL;
-                uint32_t ptBaseH;
-            };
-            Addr ptBase;
-        };
-        union
-        {
-            struct
-            {
-                uint32_t ptStartL;
-                uint32_t ptStartH;
-            };
-            Addr ptStart;
-        };
-        union
-        {
-            struct
-            {
-                uint32_t ptEndL;
-                uint32_t ptEndH;
-            };
-            Addr ptEnd;
-        };
-    } VMContext; // VM Context
-
-    typedef struct SysVMContext : VMContext
-    {
-        Addr agpBase;
-        Addr agpTop;
-        Addr agpBot;
-        Addr fbBase;
-        Addr fbTop;
-        Addr fbOffset;
-        Addr sysAddrL;
-        Addr sysAddrH;
-    } SysVMContext; // System VM Context
-
-    SysVMContext vmContext0;
-    std::vector<VMContext> vmContexts;
+    // GART aperture. This is the initial 1-level privledged page table that
+    // resides in framebuffer memory.
+    uint32_t gartBase = 0x0;
+    uint32_t gartSize = 0x0;
 
   public:
     AMDGPUDevice(const AMDGPUDeviceParams &p);
@@ -184,58 +144,20 @@ class AMDGPUDevice : public PciDevice
     void unserialize(CheckpointIn &cp) override;
 
     /**
+     * Get handles to GPU blocks.
+     */
+    AMDGPUInterruptHandler* getIH() { return deviceIH; }
+    AMDGPUVM &getVM() { return gpuvm; }
+
+    /**
+     * Set handles to GPU blocks.
+     */
+    void setDoorbellType(uint32_t offset, QueueType qt);
+
+    /**
      * Methods related to translations and system/device memory.
      */
     RequestorID vramRequestorId() { return gpuMemMgr->getRequestorID(); }
-
-    Addr
-    getPageTableBase(uint16_t vmid)
-    {
-        assert(vmid > 0 && vmid < vmContexts.size());
-        return vmContexts[vmid].ptBase;
-    }
-
-    Addr
-    getPageTableStart(uint16_t vmid)
-    {
-        assert(vmid > 0 && vmid < vmContexts.size());
-        return vmContexts[vmid].ptStart;
-    }
-
-    Addr
-    getMmioAperture(Addr addr)
-    {
-        // Aperture ranges:
-        // NBIO               0x0     - 0x4280
-        // IH                 0x4280  - 0x4980
-        // SDMA0              0x4980  - 0x5180
-        // SDMA1              0x5180  - 0x5980
-        // GRBM               0x8000  - 0xD000
-        // GFX                0x28000 - 0x3F000
-        // MMHUB              0x68000 - 0x6a120
-
-        if (IH_BASE <= addr && addr < IH_BASE + IH_SIZE)
-            return IH_BASE;
-        else if (SDMA0_BASE <= addr && addr < SDMA0_BASE + SDMA_SIZE)
-            return SDMA0_BASE;
-        else if (SDMA1_BASE <= addr && addr < SDMA1_BASE + SDMA_SIZE)
-            return SDMA1_BASE;
-        else if (GRBM_BASE <= addr && addr < GRBM_BASE + GRBM_SIZE)
-            return GRBM_BASE;
-        else if (GFX_BASE <= addr && addr < GFX_BASE + GFX_SIZE)
-            return GFX_BASE;
-        else if (MMHUB_BASE <= addr && addr < MMHUB_BASE + MMHUB_SIZE)
-            return MMHUB_BASE;
-        else {
-            warn_once("Accessing unsupported MMIO aperture! Assuming NBIO\n");
-            return NBIO_BASE;
-        }
-    }
-
-    /**
-     * Setters to set values from other GPU blocks.
-     */
-    void setDoorbellType(uint32_t offset, QueueType qt);
 };
 
 } // namespace gem5

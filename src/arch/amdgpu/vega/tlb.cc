@@ -620,7 +620,7 @@ GpuTLB::translationReturn(Addr virtPageAddr, tlbOutcome outcome,
         DPRINTF(GPUTLB, "Doing a page walk for address %#x\n",
                 virtPageAddr);
 
-        Addr base = gpuDevice->getPageTableBase(1);
+        Addr base = gpuDevice->getVM().getPageTableBase(1);
         Addr vaddr = pkt->req->getVaddr();
         walker->setDevRequestor(gpuDevice->vramRequestorId());
 
@@ -821,7 +821,7 @@ GpuTLB::CpuSidePort::recvFunctional(PacketPtr pkt)
             PageTableEntry pte;
 
             // Initialize walker state for VMID
-            Addr base = tlb->gpuDevice->getPageTableBase(1);
+            Addr base = tlb->gpuDevice->getVM().getPageTableBase(1);
             tlb->walker->setDevRequestor(tlb->gpuDevice->vramRequestorId());
 
             // Do page table walk
