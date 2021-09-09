@@ -62,7 +62,7 @@ TLB::TLB(const ArmTLBParams &p)
     : BaseTLB(p), table(new TlbEntry[p.size]), size(p.size),
       isStage2(p.is_stage2),
       tableWalker(nullptr),
-      stats(this), rangeMRU(1), vmid(0)
+      stats(*this), rangeMRU(1), vmid(0)
 {
 }
 
@@ -545,14 +545,14 @@ TLB::takeOverFrom(BaseTLB *_otlb)
 {
 }
 
-TLB::TlbStats::TlbStats(statistics::Group *parent)
-  : statistics::Group(parent),
-    ADD_STAT(instHits, statistics::units::Count::get(), "ITB inst hits"),
-    ADD_STAT(instMisses, statistics::units::Count::get(), "ITB inst misses"),
-    ADD_STAT(readHits, statistics::units::Count::get(), "DTB read hits"),
-    ADD_STAT(readMisses, statistics::units::Count::get(),  "DTB read misses"),
-    ADD_STAT(writeHits, statistics::units::Count::get(), "DTB write hits"),
-    ADD_STAT(writeMisses, statistics::units::Count::get(), "DTB write misses"),
+TLB::TlbStats::TlbStats(TLB &parent)
+  : statistics::Group(&parent), tlb(parent),
+    ADD_STAT(instHits, statistics::units::Count::get(), "Inst hits"),
+    ADD_STAT(instMisses, statistics::units::Count::get(), "Inst misses"),
+    ADD_STAT(readHits, statistics::units::Count::get(), "Read hits"),
+    ADD_STAT(readMisses, statistics::units::Count::get(),  "Read misses"),
+    ADD_STAT(writeHits, statistics::units::Count::get(), "Write hits"),
+    ADD_STAT(writeMisses, statistics::units::Count::get(), "Write misses"),
     ADD_STAT(inserts, statistics::units::Count::get(),
              "Number of times an entry is inserted into the TLB"),
     ADD_STAT(flushTlb, statistics::units::Count::get(),
@@ -565,11 +565,11 @@ TLB::TlbStats::TlbStats(statistics::Group *parent)
              "Number of times TLB was flushed by ASID"),
     ADD_STAT(flushedEntries, statistics::units::Count::get(),
              "Number of entries that have been flushed from TLB"),
-    ADD_STAT(readAccesses, statistics::units::Count::get(), "DTB read accesses",
+    ADD_STAT(readAccesses, statistics::units::Count::get(), "Read accesses",
              readHits + readMisses),
-    ADD_STAT(writeAccesses, statistics::units::Count::get(), "DTB write accesses",
+    ADD_STAT(writeAccesses, statistics::units::Count::get(), "Write accesses",
              writeHits + writeMisses),
-    ADD_STAT(instAccesses, statistics::units::Count::get(), "ITB inst accesses",
+    ADD_STAT(instAccesses, statistics::units::Count::get(), "Inst accesses",
              instHits + instMisses),
     ADD_STAT(hits, statistics::units::Count::get(),
              "Total TLB (inst and data) hits",
@@ -581,6 +581,28 @@ TLB::TlbStats::TlbStats(statistics::Group *parent)
              "Total TLB (inst and data) accesses",
              readAccesses + writeAccesses + instAccesses)
 {
+    // If this is a pure Data TLB, mark the instruction
+    // stats as nozero, so that they won't make it in
+    // into the final stats file
+    if (tlb.type() == TypeTLB::data) {
+        instHits.flags(statistics::nozero);
+        instMisses.flags(statistics::nozero);
+
+        instAccesses.flags(statistics::nozero);
+    }
+
+    // If this is a pure Instruction TLB, mark the data
+    // stats as nozero, so that they won't make it in
+    // into the final stats file
+    if (tlb.type() & TypeTLB::instruction) {
+        readHits.flags(statistics::nozero);
+        readMisses.flags(statistics::nozero);
+        writeHits.flags(statistics::nozero);
+        writeMisses.flags(statistics::nozero);
+
+        readAccesses.flags(statistics::nozero);
+        writeAccesses.flags(statistics::nozero);
+    }
 }
 
 void

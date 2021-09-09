@@ -123,7 +123,10 @@ class TLB : public BaseTLB
 
     struct TlbStats : public statistics::Group
     {
-        TlbStats(statistics::Group *parent);
+        TlbStats(TLB &parent);
+
+        const TLB &tlb;
+
         // Access Stats
         mutable statistics::Scalar instHits;
         mutable statistics::Scalar instMisses;
