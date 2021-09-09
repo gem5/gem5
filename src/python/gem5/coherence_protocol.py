@@ -43,23 +43,3 @@ class CoherenceProtocol(Enum):
     MI_EXAMPLE = 9
     GPU_VIPER = 10
     CHI = 11
-
-
-def is_ruby(protocol: CoherenceProtocol) -> bool:
-    """Specifies if a given protocol is Ruby or not
-
-    :returns: True if the given protocol is Ruby, otherwise false
-    """
-    ruby = (
-        CoherenceProtocol.MESI_THREE_LEVEL,
-        CoherenceProtocol.MESI_THREE_LEVEL_HTM,
-        CoherenceProtocol.ARM_MOESI_HAMMER,
-        CoherenceProtocol.GARNET_STANDALONE,
-        CoherenceProtocol.MESI_TWO_LEVEL,
-        CoherenceProtocol.MOESI_CMP_DIRECTORY,
-        CoherenceProtocol.MOESI_CMP_TOKEN,
-        CoherenceProtocol.MOESI_AMD_BASE,
-        CoherenceProtocol.GPU_VIPER,
-    )
-
-    return protocol in ruby
