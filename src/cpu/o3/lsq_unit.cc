@@ -200,7 +200,7 @@ LSQUnit::completeDataAccess(PacketPtr pkt)
 }
 
 LSQUnit::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
-    : lsqID(-1), storeQueue(sqEntries+1), loadQueue(lqEntries+1),
+    : lsqID(-1), storeQueue(sqEntries), loadQueue(lqEntries),
       storesToWB(0),
       htmStarts(0), htmStops(0),
       lastRetiredHtmUid(0),
@@ -417,20 +417,16 @@ LSQUnit::getMemDepViolator()
 unsigned
 LSQUnit::numFreeLoadEntries()
 {
-        //LQ has an extra dummy entry to differentiate
-        //empty/full conditions. Subtract 1 from the free entries.
         DPRINTF(LSQUnit, "LQ size: %d, #loads occupied: %d\n",
-                1 + loadQueue.capacity(), loadQueue.size());
+                loadQueue.capacity(), loadQueue.size());
         return loadQueue.capacity() - loadQueue.size();
 }
 
 unsigned
 LSQUnit::numFreeStoreEntries()
 {
-        //SQ has an extra dummy entry to differentiate
-        //empty/full conditions. Subtract 1 from the free entries.
         DPRINTF(LSQUnit, "SQ size: %d, #stores occupied: %d\n",
-                1 + storeQueue.capacity(), storeQueue.size());
+                storeQueue.capacity(), storeQueue.size());
         return storeQueue.capacity() - storeQueue.size();
 
  }
