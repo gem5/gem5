@@ -40,7 +40,7 @@ else:
 
 for isa in test_progs:
     for binary in test_progs[isa]:
-        ref_path = joinpath(getcwd(), "ref", binary)
+        ref_path = joinpath(getcwd(), "ref")
         verifiers = (
             verifier.MatchStdoutNoPerf(joinpath(ref_path, "simout")),
         )
