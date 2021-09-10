@@ -475,10 +475,14 @@ struct Result<Aapcs32Vfp, Float, typename std::enable_if_t<
             return;
         }
 
-        RegId id(VecRegClass, 0);
-        auto reg = tc->readVecReg(id);
-        reg.as<Float>()[0] = f;
-        tc->setVecReg(id, reg);
+        auto bytes = floatToBits(f);
+        auto *vec_elems = static_cast<ArmISA::VecElem *>(&bytes);
+        constexpr int chunks = sizeof(Float) / sizeof(ArmISA::VecElem);
+        for (int chunk = 0; chunk < chunks; chunk++) {
+            int reg = chunk / ArmISA::NumVecElemPerVecReg;
+            int elem = chunk % ArmISA::NumVecElemPerVecReg;
+            tc->setVecElem(RegId(VecElemClass, reg, elem), vec_elems[chunk]);
+        }
     };
 };
 
@@ -494,17 +498,20 @@ struct Argument<Aapcs32Vfp, Float, typename std::enable_if_t<
 
         const int index = state.allocate(Float{}, 1);
 
-        if (index >= 0) {
-            constexpr int lane_per_reg = 16 / sizeof(Float);
-            const int reg = index / lane_per_reg;
-            const int lane = index % lane_per_reg;
+        if (index < 0)
+            return loadFromStack<Float>(tc, state);
 
-            RegId id(VecRegClass, reg);
-            auto val = tc->readVecReg(id);
-            return val.as<Float>()[lane];
+        decltype(floatToBits(Float{})) result;
+        auto *vec_elems = static_cast<ArmISA::VecElem *>(&result);
+
+        constexpr int chunks = sizeof(Float) / sizeof(ArmISA::VecElem);
+        for (int chunk = 0; chunk < chunks; chunk++) {
+            int reg = chunk / ArmISA::NumVecElemPerVecReg;
+            int elem = chunk % ArmISA::NumVecElemPerVecReg;
+            vec_elems[chunk] = tc->readVecElem(RegId(VecElemClass, reg, elem));
         }
 
-        return loadFromStack<Float>(tc, state);
+        return bitsToFloat(result);
     }
 };
 
