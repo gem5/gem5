@@ -154,6 +154,8 @@ class MatchStdout(DerivedGoldStandard):
             re.compile("^info: Standard input is not a terminal"),
             re.compile("^Couldn't unlink "),
             re.compile("^Using GPU kernel code file\(s\) "),
+            re.compile("^.* not found locally\. Downloading"),
+            re.compile("^Finished downloading"),
         ]
 
 class MatchStdoutNoPerf(MatchStdout):
