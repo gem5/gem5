@@ -34,6 +34,7 @@
 #include <utility>
 
 #include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/vec.hh"
 #include "arch/arm/utility.hh"
 #include "base/intmath.hh"
 #include "cpu/thread_context.hh"

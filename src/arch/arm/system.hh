@@ -47,6 +47,7 @@
 #include <vector>
 
 #include "arch/arm/page_size.hh"
+#include "arch/arm/types.hh"
 #include "kern/linux/events.hh"
 #include "params/ArmSystem.hh"
 #include "sim/full_system.hh"

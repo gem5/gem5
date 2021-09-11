@@ -44,7 +44,6 @@
 #include <memory>
 
 #include "arch/generic/pcstate.hh"
-#include "arch/vecregs.hh"
 #include "base/types.hh"
 #include "cpu/inst_res.hh"
 #include "cpu/inst_seq.hh"
