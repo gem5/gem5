@@ -153,7 +153,7 @@ class CheckerThreadContext : public ThreadContext
         return checkerCPU;
     }
 
-    BaseISA *getIsaPtr() override { return actualTC->getIsaPtr(); }
+    BaseISA *getIsaPtr() const override { return actualTC->getIsaPtr(); }
 
     InstDecoder *
     getDecoderPtr() override

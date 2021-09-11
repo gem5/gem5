@@ -107,7 +107,7 @@ class ThreadContext : public gem5::ThreadContext
     CheckerCPU *getCheckerCpuPtr() override { return NULL; }
 
     BaseISA *
-    getIsaPtr() override
+    getIsaPtr() const override
     {
         return cpu->isa[thread->threadId()];
     }

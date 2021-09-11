@@ -220,7 +220,7 @@ class ThreadContext : public gem5::ThreadContext
     System *getSystemPtr() override { return _cpu->system; }
 
     BaseISA *
-    getIsaPtr() override
+    getIsaPtr() const override
     {
         return _isa;
     }

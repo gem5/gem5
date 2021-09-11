@@ -142,7 +142,7 @@ class ThreadContext : public PCEventScope
 
     virtual CheckerCPU *getCheckerCpuPtr() = 0;
 
-    virtual BaseISA *getIsaPtr() = 0;
+    virtual BaseISA *getIsaPtr() const = 0;
 
     virtual InstDecoder *getDecoderPtr() = 0;
 
