@@ -233,7 +233,13 @@ System::System(const Params &p)
         assert(!memories.empty());
         for (const auto &mem : memories) {
             assert(!mem.interleaved());
-            memPools.emplace_back(this, mem.start(), mem.end());
+            if (_m5opRange.valid()) {
+                // Make sure the m5op range is not included.
+                for (const auto &range: mem.exclude({_m5opRange}))
+                    memPools.emplace_back(this, range.start(), range.end());
+            } else {
+                memPools.emplace_back(this, mem.start(), mem.end());
+            }
         }
 
         /*
