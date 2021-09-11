@@ -35,6 +35,7 @@
 #define __MEM_POOL_HH__
 
 #include "base/types.hh"
+#include "sim/serialize.hh"
 
 namespace gem5
 {
@@ -42,21 +43,23 @@ namespace gem5
 class System;
 
 /** Class for handling allocation of physical pages in SE mode. */
-class MemPool
+class MemPool : public Serializable
 {
   private:
-    Addr pageShift;
+    Addr pageShift = 0;
 
     /** Start page of pool. */
-    Counter startPageNum;
+    Counter startPageNum = 0;
 
     /** Page number of free memory. */
-    Counter freePageNum;
+    Counter freePageNum = 0;
 
     /** The size of the pool, in number of pages. */
-    Counter _totalPages;
+    Counter _totalPages = 0;
 
   public:
+    MemPool() {}
+
     MemPool(Addr page_shift, Addr ptr, Addr limit);
 
     Counter startPage() const;
@@ -74,6 +77,9 @@ class MemPool
     Addr totalBytes() const;
 
     Addr allocate(Addr npages);
+
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 } // namespace gem5

@@ -44,6 +44,7 @@
 #include <algorithm>
 
 #include "base/compiler.hh"
+#include "base/cprintf.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/str.hh"
@@ -68,6 +69,7 @@
 #include "sim/debug.hh"
 #include "sim/full_system.hh"
 #include "sim/redirect_path.hh"
+#include "sim/serialize_handlers.hh"
 
 namespace gem5
 {
@@ -430,16 +432,11 @@ System::serialize(CheckpointOut &cp) const
         paramOut(cp, csprintf("quiesceEndTick_%d", id), when);
     }
 
-    std::vector<Addr> ptrs;
-    std::vector<Addr> limits;
+    int num_mem_pools = memPools.size();
+    SERIALIZE_SCALAR(num_mem_pools);
 
-    for (const auto& memPool : memPools) {
-        ptrs.push_back(memPool.freePageAddr());
-        limits.push_back(memPool.totalBytes() + memPool.startAddr());
-    }
-
-    SERIALIZE_CONTAINER(ptrs);
-    SERIALIZE_CONTAINER(limits);
+    for (int i = 0; i < num_mem_pools; i++)
+        memPools[i].serializeSection(cp, csprintf("memPool%d", i));
 
     // also serialize the memories in the system
     physmem.serializeSection(cp, "physmem");
@@ -461,15 +458,14 @@ System::unserialize(CheckpointIn &cp)
 #       endif
     }
 
-    std::vector<Addr> ptrs;
-    std::vector<Addr> limits;
+    int num_mem_pools = 0;
+    UNSERIALIZE_SCALAR(num_mem_pools);
 
-    UNSERIALIZE_CONTAINER(ptrs);
-    UNSERIALIZE_CONTAINER(limits);
-
-    assert(ptrs.size() == limits.size());
-    for (size_t i = 0; i < ptrs.size(); i++)
-        memPools.emplace_back(getPageShift(), ptrs[i], limits[i]);
+    for (int i = 0; i < num_mem_pools; i++) {
+        MemPool pool;
+        pool.unserializeSection(cp, csprintf("memPool%d", i));
+        memPools.push_back(pool);
+    }
 
     // also unserialize the memories in the system
     physmem.unserializeSection(cp, "physmem");

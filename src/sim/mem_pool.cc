@@ -124,4 +124,22 @@ MemPool::allocate(Addr npages)
     return return_addr;
 }
 
+void
+MemPool::serialize(CheckpointOut &cp) const
+{
+    paramOut(cp, "page_shift", pageShift);
+    paramOut(cp, "start_page", startPageNum);
+    paramOut(cp, "free_page_num", freePageNum);
+    paramOut(cp, "total_pages", _totalPages);
+}
+
+void
+MemPool::unserialize(CheckpointIn &cp)
+{
+    paramIn(cp, "page_shift", pageShift);
+    paramIn(cp, "start_page", startPageNum);
+    paramIn(cp, "free_page_num", freePageNum);
+    paramIn(cp, "total_pages", _totalPages);
+}
+
 } // namespace gem5
