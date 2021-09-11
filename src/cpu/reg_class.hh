@@ -69,6 +69,15 @@ enum RegClassType
     InvalidRegClass = -1
 };
 
+// "Standard" register class names. Using these is encouraged but optional.
+inline constexpr char IntRegClassName[] = "integer";
+inline constexpr char FloatRegClassName[] = "floating_point";
+inline constexpr char VecRegClassName[] = "vector";
+inline constexpr char VecElemClassName[] = "vector_element";
+inline constexpr char VecPredRegClassName[] = "vector_predicate";
+inline constexpr char CCRegClassName[] = "condition_code";
+inline constexpr char MiscRegClassName[] = "miscellaneous";
+
 class RegId;
 
 class RegClassOps
@@ -86,6 +95,7 @@ class RegClass
 {
   private:
     RegClassType _type;
+    const char *_name;
 
     size_t _numRegs;
     size_t _regBytes = sizeof(RegVal);
@@ -99,9 +109,9 @@ class RegClass
     const debug::Flag &debugFlag;
 
   public:
-    constexpr RegClass(RegClassType type, size_t num_regs,
-            const debug::Flag &debug_flag) :
-        _type(type), _numRegs(num_regs), debugFlag(debug_flag)
+    constexpr RegClass(RegClassType type, const char *new_name,
+            size_t num_regs, const debug::Flag &debug_flag) :
+        _type(type), _name(new_name), _numRegs(num_regs), debugFlag(debug_flag)
     {}
 
     constexpr RegClass
@@ -123,6 +133,7 @@ class RegClass
     }
 
     constexpr RegClassType type() const { return _type; }
+    constexpr const char *name() const { return _name; }
     constexpr size_t numRegs() const { return _numRegs; }
     constexpr size_t regBytes() const { return _regBytes; }
     constexpr size_t regShift() const { return _regShift; }
@@ -144,7 +155,7 @@ class RegClass
 };
 
 inline constexpr RegClass
-    invalidRegClass(InvalidRegClass, 0, debug::InvalidReg);
+    invalidRegClass(InvalidRegClass, "invalid", 0, debug::InvalidReg);
 
 /** Register ID: describe an architectural register with its class and index.
  * This structure is used instead of just the register index to disambiguate
@@ -154,7 +165,6 @@ inline constexpr RegClass
 class RegId
 {
   protected:
-    static const char* regClassStrings[];
     const RegClass *_regClass = nullptr;
     RegIndex regIdx;
     int numPinnedWrites;
@@ -223,7 +233,7 @@ class RegId
     constexpr const char*
     className() const
     {
-        return regClassStrings[classValue()];
+        return _regClass->name();
     }
 
     int getNumPinnedWrites() const { return numPinnedWrites; }

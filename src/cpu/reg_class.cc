@@ -71,14 +71,4 @@ RegClassOps::valString(const void *val, size_t size) const
     return printByteBuf(val, size, ByteOrder::big);
 }
 
-const char *RegId::regClassStrings[] = {
-    "IntRegClass",
-    "FloatRegClass",
-    "VecRegClass",
-    "VecElemClass",
-    "VecPredRegClass",
-    "CCRegClass",
-    "MiscRegClass"
-};
-
 } // namespace gem5

@@ -52,10 +52,11 @@ namespace PowerISA
 namespace
 {
 
-RegClass vecRegClass(VecRegClass, 1, debug::IntRegs);
-RegClass vecElemClass(VecElemClass, 2, debug::IntRegs);
-RegClass vecPredRegClass(VecPredRegClass, 1, debug::IntRegs);
-RegClass ccRegClass(CCRegClass, 0, debug::IntRegs);
+RegClass vecRegClass(VecRegClass, VecRegClassName, 1, debug::IntRegs);
+RegClass vecElemClass(VecElemClass, VecElemClassName, 2, debug::IntRegs);
+RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
+        debug::IntRegs);
+RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 

@@ -63,8 +63,8 @@ enum : RegIndex
 
 } // namespace cc_reg
 
-inline constexpr RegClass ccRegClass(CCRegClass, cc_reg::NumRegs,
-        debug::CCRegs);
+inline constexpr RegClass ccRegClass(CCRegClass, CCRegClassName,
+        cc_reg::NumRegs, debug::CCRegs);
 
 namespace cc_reg
 {

@@ -68,8 +68,8 @@ const int NumRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroRegs;
 
 } // namespace int_reg
 
-inline constexpr RegClass intRegClass(IntRegClass, int_reg::NumRegs,
-        debug::IntRegs);
+inline constexpr RegClass intRegClass(IntRegClass, IntRegClassName,
+        int_reg::NumRegs, debug::IntRegs);
 
 namespace int_reg
 {

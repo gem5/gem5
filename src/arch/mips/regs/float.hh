@@ -89,8 +89,8 @@ enum : RegIndex
 
 } // namespace float_reg
 
-inline constexpr RegClass floatRegClass(FloatRegClass, float_reg::NumRegs,
-        debug::FloatRegs);
+inline constexpr RegClass floatRegClass(FloatRegClass, FloatRegClassName,
+        float_reg::NumRegs, debug::FloatRegs);
 
 namespace float_reg
 {

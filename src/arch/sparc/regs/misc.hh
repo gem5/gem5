@@ -174,8 +174,8 @@ struct STS
 
 const int NumMiscRegs = MISCREG_NUMMISCREGS;
 
-inline constexpr RegClass miscRegClass(MiscRegClass, NumMiscRegs,
-        debug::MiscRegs);
+inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
+        NumMiscRegs, debug::MiscRegs);
 
 } // namespace SparcISA
 } // namespace gem5

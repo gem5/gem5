@@ -99,14 +99,16 @@ static inline TypedRegClassOps<ArmISA::VecRegContainer> vecRegClassOps;
 static inline TypedRegClassOps<ArmISA::VecPredRegContainer> vecPredRegClassOps;
 
 inline constexpr RegClass vecRegClass =
-    RegClass(VecRegClass, NumVecRegs, debug::VecRegs).
+    RegClass(VecRegClass, VecRegClassName, NumVecRegs, debug::VecRegs).
         ops(vecRegClassOps).
         regType<VecRegContainer>();
 inline constexpr RegClass vecElemClass =
-    RegClass(VecElemClass, NumVecRegs * NumVecElemPerVecReg, debug::VecRegs).
+    RegClass(VecElemClass, VecElemClassName, NumVecRegs * NumVecElemPerVecReg,
+            debug::VecRegs).
         ops(vecRegElemClassOps);
 inline constexpr RegClass vecPredRegClass =
-    RegClass(VecPredRegClass, NumVecPredRegs, debug::VecPredRegs).
+    RegClass(VecPredRegClass, VecPredRegClassName, NumVecPredRegs,
+            debug::VecPredRegs).
         ops(vecPredRegClassOps).
         regType<VecPredRegContainer>();
 

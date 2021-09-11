@@ -202,8 +202,8 @@ enum MiscRegIndex
     NUM_MISCREGS
 };
 
-inline constexpr RegClass miscRegClass(MiscRegClass, NUM_MISCREGS,
-        debug::MiscRegs);
+inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
+        NUM_MISCREGS, debug::MiscRegs);
 
 enum CSRIndex
 {

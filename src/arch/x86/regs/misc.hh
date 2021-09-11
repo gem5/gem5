@@ -538,8 +538,8 @@ segAttr(int index)
 
 } // namespace misc_reg
 
-inline constexpr RegClass miscRegClass(MiscRegClass, misc_reg::NumRegs,
-        debug::MiscRegs);
+inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
+        misc_reg::NumRegs, debug::MiscRegs);
 
 /**
  * A type to describe the condition code bits of the RFLAGS register,

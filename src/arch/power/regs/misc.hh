@@ -48,8 +48,8 @@ enum MiscRegIndex
 const char * const miscRegName[NUM_MISCREGS] = {
 };
 
-inline constexpr RegClass miscRegClass(MiscRegClass, NUM_MISCREGS,
-        debug::MiscRegs);
+inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
+        NUM_MISCREGS, debug::MiscRegs);
 
 BitUnion32(Cr)
     SubBitUnion(cr0, 31, 28)
