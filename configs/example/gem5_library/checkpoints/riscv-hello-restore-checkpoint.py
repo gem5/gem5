@@ -91,7 +91,7 @@ board.set_se_binary_workload(
 # Getting the pre-taken checkpoint from gem5-resources. This checkpoint
 # was taken from running this gem5 configuration script,
 # configs/example/gem5_library/checkpoints/riscv-hello-save-checkpoint.py
-checkpoint_resource = Resource("riscv-hello-example-checkpoint")
+checkpoint_resource = Resource("riscv-hello-example-checkpoint-v22-1")
 
 # Now we restore the checkpoint by passing the path to the checkpoint to
 # the Simulator object. The checkpoint_path could be a string containing

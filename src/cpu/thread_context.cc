@@ -210,43 +210,24 @@ ThreadContext::setRegFlat(const RegId &reg, RegVal val)
 void
 serialize(const ThreadContext &tc, CheckpointOut &cp)
 {
-    // Cast away the const so we can get the non-const ISA ptr, which we then
-    // use to get the const register classes.
-    auto &nc_tc = const_cast<ThreadContext &>(tc);
-    const auto &regClasses = nc_tc.getIsaPtr()->regClasses();
+    for (const auto *reg_class: tc.getIsaPtr()->regClasses()) {
+        // MiscRegs are serialized elsewhere.
+        if (reg_class->type() == MiscRegClass)
+            continue;
 
-    const size_t numFloats = regClasses.at(FloatRegClass)->numRegs();
-    RegVal floatRegs[numFloats];
-    for (auto &id: *regClasses.at(FloatRegClass))
-        floatRegs[id.index()] = tc.getRegFlat(id);
-    // This is a bit ugly, but needed to maintain backwards
-    // compatibility.
-    arrayParamOut(cp, "floatRegs.i", floatRegs, numFloats);
+        const size_t reg_bytes = reg_class->regBytes();
+        const size_t reg_count = reg_class->numRegs();
+        const size_t array_bytes = reg_bytes * reg_count;
 
-    const size_t numVecs = regClasses.at(VecRegClass)->numRegs();
-    std::vector<TheISA::VecRegContainer> vecRegs(numVecs);
-    for (auto &id: *regClasses.at(VecRegClass))
-        tc.getRegFlat(id, &vecRegs[id.index()]);
-    SERIALIZE_CONTAINER(vecRegs);
+        uint8_t regs[array_bytes];
+        auto *reg_ptr = regs;
+        for (const auto &id: *reg_class) {
+            tc.getRegFlat(id, reg_ptr);
+            reg_ptr += reg_bytes;
+        }
 
-    const size_t numPreds = regClasses.at(VecPredRegClass)->numRegs();
-    std::vector<TheISA::VecPredRegContainer> vecPredRegs(numPreds);
-    for (auto &id: *regClasses.at(VecPredRegClass))
-        tc.getRegFlat(id, &vecPredRegs[id.index()]);
-    SERIALIZE_CONTAINER(vecPredRegs);
-
-    const size_t numInts = regClasses.at(IntRegClass)->numRegs();
-    RegVal intRegs[numInts];
-    for (auto &id: *regClasses.at(IntRegClass))
-        intRegs[id.index()] = tc.getRegFlat(id);
-    SERIALIZE_ARRAY(intRegs, numInts);
-
-    const size_t numCcs = regClasses.at(CCRegClass)->numRegs();
-    if (numCcs) {
-        RegVal ccRegs[numCcs];
-        for (auto &id: *regClasses.at(CCRegClass))
-            ccRegs[id.index()] = tc.getRegFlat(id);
-        SERIALIZE_ARRAY(ccRegs, numCcs);
+        arrayParamOut(cp, std::string("regs.") + reg_class->name(), regs,
+                array_bytes);
     }
 
     tc.pcState().serialize(cp);
@@ -257,40 +238,24 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
 void
 unserialize(ThreadContext &tc, CheckpointIn &cp)
 {
-    const auto &regClasses = tc.getIsaPtr()->regClasses();
+    for (const auto *reg_class: tc.getIsaPtr()->regClasses()) {
+        // MiscRegs are serialized elsewhere.
+        if (reg_class->type() == MiscRegClass)
+            continue;
 
-    const size_t numFloats = regClasses.at(FloatRegClass)->numRegs();
-    RegVal floatRegs[numFloats];
-    // This is a bit ugly, but needed to maintain backwards
-    // compatibility.
-    arrayParamIn(cp, "floatRegs.i", floatRegs, numFloats);
-    for (auto &id: *regClasses.at(FloatRegClass))
-        tc.setRegFlat(id, floatRegs[id.index()]);
+        const size_t reg_bytes = reg_class->regBytes();
+        const size_t reg_count = reg_class->numRegs();
+        const size_t array_bytes = reg_bytes * reg_count;
 
-    const size_t numVecs = regClasses.at(VecRegClass)->numRegs();
-    std::vector<TheISA::VecRegContainer> vecRegs(numVecs);
-    UNSERIALIZE_CONTAINER(vecRegs);
-    for (auto &id: *regClasses.at(VecRegClass))
-        tc.setRegFlat(id, &vecRegs[id.index()]);
+        uint8_t regs[array_bytes];
+        arrayParamIn(cp, std::string("regs.") + reg_class->name(), regs,
+                array_bytes);
 
-    const size_t numPreds = regClasses.at(VecPredRegClass)->numRegs();
-    std::vector<TheISA::VecPredRegContainer> vecPredRegs(numPreds);
-    UNSERIALIZE_CONTAINER(vecPredRegs);
-    for (auto &id: *regClasses.at(VecPredRegClass))
-        tc.setRegFlat(id, &vecPredRegs[id.index()]);
-
-    const size_t numInts = regClasses.at(IntRegClass)->numRegs();
-    RegVal intRegs[numInts];
-    UNSERIALIZE_ARRAY(intRegs, numInts);
-    for (auto &id: *regClasses.at(IntRegClass))
-        tc.setRegFlat(id, intRegs[id.index()]);
-
-    const size_t numCcs = regClasses.at(CCRegClass)->numRegs();
-    if (numCcs) {
-        RegVal ccRegs[numCcs];
-        UNSERIALIZE_ARRAY(ccRegs, numCcs);
-        for (auto &id: *regClasses.at(CCRegClass))
-            tc.setRegFlat(id, ccRegs[id.index()]);
+        auto *reg_ptr = regs;
+        for (const auto &id: *reg_class) {
+            tc.setRegFlat(id, reg_ptr);
+            reg_ptr += reg_bytes;
+        }
     }
 
     std::unique_ptr<PCStateBase> pc_state(tc.pcState().clone());
