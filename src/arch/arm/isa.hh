@@ -46,6 +46,7 @@
 #include "arch/arm/pcstate.hh"
 #include "arch/arm/regs/int.hh"
 #include "arch/arm/regs/misc.hh"
+#include "arch/arm/regs/vec.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/types.hh"

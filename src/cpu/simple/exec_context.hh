@@ -41,7 +41,6 @@
 #ifndef __CPU_SIMPLE_EXEC_CONTEXT_HH__
 #define __CPU_SIMPLE_EXEC_CONTEXT_HH__
 
-#include "arch/vecregs.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"

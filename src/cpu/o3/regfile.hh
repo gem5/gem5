@@ -46,7 +46,6 @@
 #include <vector>
 
 #include "arch/generic/isa.hh"
-#include "arch/vecregs.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"

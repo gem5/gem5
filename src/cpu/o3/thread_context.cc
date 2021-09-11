@@ -41,7 +41,6 @@
 
 #include "cpu/o3/thread_context.hh"
 
-#include "arch/vecregs.hh"
 #include "config/the_isa.hh"
 #include "debug/O3CPU.hh"
 
