@@ -109,7 +109,7 @@ output exec {{
             if (isNan(&src_bits, 32) ) {
                 mips_nan = MIPS32_QNAN;
                 xc->setRegOperand(inst, 0, mips_nan);
-                if (traceData) { traceData->setData(mips_nan); }
+                if (traceData) { traceData->setData(floatRegClass, mips_nan); }
                 return true;
             }
         }
@@ -139,7 +139,7 @@ output exec {{
             //Write FCSR from FloatRegFile
             cpu->tcBase()->setReg(float_reg::Fcsr, new_fcsr);
 
-            if (traceData) { traceData->setData(mips_nan); }
+            if (traceData) { traceData->setData(floatRegClass, mips_nan); }
             return true;
         }
 

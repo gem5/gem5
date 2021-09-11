@@ -126,7 +126,7 @@ Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
 
 
         uint64_t final_val = Dest64;
-        if (traceData) { traceData->setData(final_val); }
+        if (traceData) { traceData->setData(intRegClass, final_val); }
     }
 
     return fault;
@@ -156,7 +156,7 @@ Ttest64::execute(ExecContext *xc, Trace::InstRecord *traceData) const
     if (fault == NoFault) {
         uint64_t final_val = Dest64;
         xc->setRegOperand(this, 0, Dest64 & mask(intWidth));
-        if (traceData) { traceData->setData(final_val); }
+        if (traceData) { traceData->setData(intRegClass, final_val); }
     }
 
     return fault;

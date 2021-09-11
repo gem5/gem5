@@ -115,18 +115,11 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
             outs << "Predicated False";
         }
 
-        if (debug::ExecResult && data_status != DataInvalid) {
-            switch (data_status) {
-              case DataVec:
-                ccprintf(outs, " D=%s", *data.as_vec);
-                break;
-              case DataVecPred:
-                ccprintf(outs, " D=%s", *data.as_pred);
-                break;
-              default:
-                ccprintf(outs, " D=%#018x", data.as_int);
-                break;
-            }
+        if (debug::ExecResult && dataStatus != DataInvalid) {
+            if (dataStatus == DataReg)
+                ccprintf(outs, " D=%s", data.asReg.asString());
+            else
+                ccprintf(outs, " D=%#018x", data.asInt);
         }
 
         if (debug::ExecEffAddr && getMemValid())
