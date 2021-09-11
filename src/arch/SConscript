@@ -61,7 +61,6 @@ env.TagImplies(env.subst('${CONF["TARGET_ISA"]} isa'), 'gem5 lib')
 env.SwitchingHeaders(
     Split('''
         isa.hh
-        vecregs.hh
         '''),
     env.subst('${CONF["TARGET_ISA"]}'))
 
