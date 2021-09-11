@@ -55,6 +55,7 @@ def EnvDefaults(env):
         "DISTCC_",         # distcc (distributed compiler wrapper) config
         "INCLUDE_SERVER_", # distcc pump server settings
         "M5",              # M5 configuration (e.g., path to kernels)
+        "NIX_",            # wrapped binaries if using nix package manager
         ]
 
     for key,val in sorted(os.environ.items()):
