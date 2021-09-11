@@ -612,7 +612,7 @@ class AddrRange
      * @ingroup api_addr_range
      */
     std::vector<AddrRange>
-    exclude(const std::vector<AddrRange> &exclude_ranges)
+    exclude(const std::vector<AddrRange> &exclude_ranges) const
     {
         assert(!interleaved());
 
