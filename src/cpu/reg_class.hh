@@ -88,11 +88,11 @@ class RegClass
     RegClassType _type;
 
     size_t _numRegs;
-    size_t _regBytes;
+    size_t _regBytes = sizeof(RegVal);
     // This is how much to shift an index by to get an offset of a register in
     // a register file from the register index, which would otherwise need to
     // be calculated with a multiply.
-    size_t _regShift;
+    size_t _regShift = ceilLog2(sizeof(RegVal));
 
     static inline RegClassOps defaultOps;
     RegClassOps *_ops = &defaultOps;
@@ -100,16 +100,26 @@ class RegClass
 
   public:
     constexpr RegClass(RegClassType type, size_t num_regs,
-            const debug::Flag &debug_flag, size_t reg_bytes=sizeof(RegVal)) :
-        _type(type), _numRegs(num_regs), _regBytes(reg_bytes),
-        _regShift(ceilLog2(reg_bytes)), debugFlag(debug_flag)
+            const debug::Flag &debug_flag) :
+        _type(type), _numRegs(num_regs), debugFlag(debug_flag)
     {}
-    constexpr RegClass(RegClassType type, size_t num_regs,
-            RegClassOps &new_ops, const debug::Flag &debug_flag,
-            size_t reg_bytes=sizeof(RegVal)) :
-        RegClass(type, num_regs, debug_flag, reg_bytes)
+
+    constexpr RegClass
+    ops(RegClassOps &new_ops) const
     {
-        _ops = &new_ops;
+        RegClass reg_class = *this;
+        reg_class._ops = &new_ops;
+        return reg_class;
+    }
+
+    template <class RegType>
+    constexpr RegClass
+    regType() const
+    {
+        RegClass reg_class = *this;
+        reg_class._regBytes = sizeof(RegType);
+        reg_class._regShift = ceilLog2(reg_class._regBytes);
+        return reg_class;
     }
 
     constexpr RegClassType type() const { return _type; }

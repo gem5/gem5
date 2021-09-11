@@ -98,12 +98,17 @@ static inline VecElemRegClassOps<ArmISA::VecElem>
 static inline TypedRegClassOps<ArmISA::VecRegContainer> vecRegClassOps;
 static inline TypedRegClassOps<ArmISA::VecPredRegContainer> vecPredRegClassOps;
 
-inline constexpr RegClass vecRegClass(VecRegClass, NumVecRegs, vecRegClassOps,
-        debug::VecRegs, sizeof(VecRegContainer));
-inline constexpr RegClass vecElemClass(VecElemClass,
-        NumVecRegs * NumVecElemPerVecReg, vecRegElemClassOps, debug::VecRegs);
-inline constexpr RegClass vecPredRegClass(VecPredRegClass, NumVecPredRegs,
-        vecPredRegClassOps, debug::VecPredRegs, sizeof(VecPredRegContainer));
+inline constexpr RegClass vecRegClass =
+    RegClass(VecRegClass, NumVecRegs, debug::VecRegs).
+        ops(vecRegClassOps).
+        regType<VecRegContainer>();
+inline constexpr RegClass vecElemClass =
+    RegClass(VecElemClass, NumVecRegs * NumVecElemPerVecReg, debug::VecRegs).
+        ops(vecRegElemClassOps);
+inline constexpr RegClass vecPredRegClass =
+    RegClass(VecPredRegClass, NumVecPredRegs, debug::VecPredRegs).
+        ops(vecPredRegClassOps).
+        regType<VecPredRegContainer>();
 
 } // namespace ArmISA
 } // namespace gem5
