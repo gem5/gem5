@@ -33,14 +33,14 @@
 
 #include "sim/mem_pool.hh"
 
-#include "sim/system.hh"
+#include "base/logging.hh"
 
 namespace gem5
 {
 
-MemPool::MemPool(System *system, Addr ptr, Addr limit)
-        : sys(system), freePageNum(ptr >> sys->getPageShift()),
-        _totalPages(limit >> sys->getPageShift())
+MemPool::MemPool(Addr page_shift, Addr ptr, Addr limit)
+        : pageShift(page_shift), freePageNum(ptr >> page_shift),
+        _totalPages(limit >> page_shift)
 {
 }
 
@@ -59,7 +59,7 @@ MemPool::setFreePage(Counter value)
 Addr
 MemPool::freePageAddr() const
 {
-    return freePageNum << sys->getPageShift();
+    return freePageNum << pageShift;
 }
 
 Counter
@@ -83,19 +83,19 @@ MemPool::freePages() const
 Addr
 MemPool::allocatedBytes() const
 {
-    return allocatedPages() << sys->getPageShift();
+    return allocatedPages() << pageShift;
 }
 
 Addr
 MemPool::freeBytes() const
 {
-    return freePages() << sys->getPageShift();
+    return freePages() << pageShift;
 }
 
 Addr
 MemPool::totalBytes() const
 {
-    return totalPages() << sys->getPageShift();
+    return totalPages() << pageShift;
 }
 
 Addr

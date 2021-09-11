@@ -45,7 +45,7 @@ class System;
 class MemPool
 {
   private:
-    System *sys;
+    Addr pageShift;
 
     /** Page number to free memory. */
     Counter freePageNum;
@@ -54,7 +54,7 @@ class MemPool
     Counter _totalPages;
 
   public:
-    MemPool(System *system, Addr ptr, Addr limit);
+    MemPool(Addr page_shift, Addr ptr, Addr limit);
 
     Counter freePage() const;
     void setFreePage(Counter value);

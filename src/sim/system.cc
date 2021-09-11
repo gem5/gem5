@@ -236,9 +236,10 @@ System::System(const Params &p)
             if (_m5opRange.valid()) {
                 // Make sure the m5op range is not included.
                 for (const auto &range: mem.exclude({_m5opRange}))
-                    memPools.emplace_back(this, range.start(), range.end());
+                    memPools.emplace_back(getPageShift(),
+                            range.start(), range.end());
             } else {
-                memPools.emplace_back(this, mem.start(), mem.end());
+                memPools.emplace_back(getPageShift(), mem.start(), mem.end());
             }
         }
 
@@ -468,7 +469,7 @@ System::unserialize(CheckpointIn &cp)
 
     assert(ptrs.size() == limits.size());
     for (size_t i = 0; i < ptrs.size(); i++)
-        memPools.emplace_back(this, ptrs[i], limits[i]);
+        memPools.emplace_back(getPageShift(), ptrs[i], limits[i]);
 
     // also unserialize the memories in the system
     physmem.unserializeSection(cp, "physmem");
