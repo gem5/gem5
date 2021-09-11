@@ -38,11 +38,15 @@
 #ifndef __CPU_INST_RES_HH__
 #define __CPU_INST_RES_HH__
 
-#include <any>
-#include <type_traits>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <string>
+#include <variant>
 
 #include "base/logging.hh"
 #include "base/types.hh"
+#include "cpu/reg_class.hh"
 
 namespace gem5
 {
@@ -50,65 +54,65 @@ namespace gem5
 class InstResult
 {
   private:
-    std::any result;
-    std::function<bool(const std::any &a, const std::any &b)> equals;
+    using BlobPtr = std::unique_ptr<const uint8_t[]>;
+
+    std::variant<BlobPtr, RegVal> value;
+    const RegClass *_regClass = nullptr;
+
+    bool blob() const { return std::holds_alternative<BlobPtr>(value); }
+    bool valid() const { return _regClass != nullptr; }
+
+    // Raw accessors with no safety checks.
+    RegVal getRegVal() const { return std::get<RegVal>(value); }
+    const void *getBlob() const { return std::get<BlobPtr>(value).get(); }
+
+    // Store copies of blobs, not a pointer to the original.
+    void
+    set(const void *val)
+    {
+        uint8_t *temp = nullptr;
+        if (val) {
+            const size_t size = _regClass->regBytes();
+            temp = new uint8_t[size];
+            std::memcpy(temp, val, size);
+        }
+        value = BlobPtr(temp);
+    }
+
+    void set(RegVal val) { value = val; }
+
+    void
+    set(const InstResult &other)
+    {
+        other.blob() ? set(other.getBlob()) : set(other.getRegVal());
+    }
 
   public:
     /** Default constructor creates an invalid result. */
-    InstResult() :
-        // This InstResult is empty, and will only equal other InstResults
-        // which are also empty.
-        equals([](const std::any &a, const std::any &b) -> bool {
-            gem5_assert(!a.has_value());
-            return !b.has_value();
-        })
-    {}
-    InstResult(const InstResult &) = default;
-
-    template <typename T>
-    explicit InstResult(T val) : result(val),
-
-        // Set equals so it knows how to compare results of type T.
-        equals([](const std::any &a, const std::any &b) -> bool {
-            // If one has a value but the other doesn't, not equal.
-            if (a.has_value() != b.has_value())
-                return false;
-            // If they are both empty, equal.
-            if (!a.has_value())
-                return true;
-            // At least the local object should be of the right type.
-            gem5_assert(a.type() == typeid(T));
-            // If these aren't the same type, not equal.
-            if (a.type() != b.type())
-                return false;
-            // We now know these both hold a result of the right type.
-            return std::any_cast<const T&>(a) == std::any_cast<const T&>(b);
-        })
+    InstResult() {}
+    InstResult(const InstResult &other) : _regClass(other._regClass)
     {
-        static_assert(!std::is_pointer_v<T>,
-                "InstResult shouldn't point to external data.");
-        // Floating point values should be converted to/from ints using
-        // floatToBits and bitsToFloat, and not stored in InstResult directly.
-        static_assert(!std::is_floating_point_v<T>,
-                "Floating point values should be converted to/from ints.");
+        set(other);
     }
 
-    // Convert floating point values to integers.
-    template <typename T,
-             std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
-    explicit InstResult(T val) : InstResult(floatToBits(val)) {}
+    InstResult(const RegClass &reg_class, RegVal val) :
+        _regClass(&reg_class)
+    {
+        set(val);
+    }
 
-    // Convert all integer types to RegVal.
-    template <typename T,
-        std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, RegVal>,
-                         int> = 0>
-    explicit InstResult(T val) : InstResult(static_cast<RegVal>(val)) {}
+    InstResult(const RegClass &reg_class, const void *val) :
+        _regClass(&reg_class)
+    {
+        set(val);
+    }
 
     InstResult &
-    operator=(const InstResult& that)
+    operator=(const InstResult &that)
     {
-        result = that.result;
-        equals = that.equals;
+        _regClass = that._regClass;
+        set(that);
+
         return *this;
     }
 
@@ -119,7 +123,23 @@ class InstResult
     bool
     operator==(const InstResult& that) const
     {
-        return equals(result, that.result);
+        if (blob() != that.blob() || _regClass != that._regClass)
+            return false;
+
+        if (blob()) {
+            const void *my_blob = getBlob();
+            const void *their_blob = that.getBlob();
+
+            // Invalid results always differ.
+            if (!my_blob || !their_blob)
+                return false;
+
+            // Check the contents of the blobs, not their addresses.
+            return std::memcmp(getBlob(), that.getBlob(),
+                    _regClass->regBytes()) == 0;
+        } else {
+            return getRegVal() == that.getRegVal();
+        }
     }
 
     bool
@@ -128,61 +148,34 @@ class InstResult
         return !operator==(that);
     }
 
-    /** Checks */
-    /** @{ */
+    const RegClass &regClass() const { return *_regClass; }
+    bool isValid() const { return valid(); }
+    bool isBlob() const { return blob(); }
 
-    template <typename T>
-    bool
-    is() const
+    RegVal
+    asRegVal() const
     {
-        static_assert(!std::is_floating_point_v<T>,
-                "Floating point values should be converted to/from ints.");
-        return result.type() == typeid(T);
+        assert(!blob());
+        return getRegVal();
     }
 
-    template <typename T>
-    std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, RegVal>, bool>
-    is() const
+    const void *
+    asBlob() const
     {
-        return is<RegVal>();
+        assert(blob());
+        return getBlob();
     }
 
-    /** Is this a valid result?. */
-    bool isValid() const { return result.has_value(); }
-    /** @} */
-
-    /** Explicit cast-like operations. */
-    /** @{ */
-    template <typename T>
-    T
-    as() const
+    std::string
+    asString() const
     {
-        assert(is<T>());
-        return std::any_cast<T>(result);
+        if (blob()) {
+            return _regClass->valString(getBlob());
+        } else {
+            RegVal reg = getRegVal();
+            return _regClass->valString(&reg);
+        }
     }
-
-    template <typename T>
-    std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, RegVal>,
-                     RegVal>
-    as() const
-    {
-        return as<RegVal>();
-    }
-
-    /** Cast to integer without checking type.
-     * This is required to have the o3 cpu checker happy, as it
-     * compares results as integers without being fully aware of
-     * their nature. */
-    template <typename T>
-    T
-    asNoAssert() const
-    {
-        if (!is<T>())
-            return T{};
-        return as<T>();
-    }
-
-    /** @} */
 };
 
 } // namespace gem5
