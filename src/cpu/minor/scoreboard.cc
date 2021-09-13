@@ -195,7 +195,7 @@ Scoreboard::clearInstDests(MinorDynInstPtr inst, bool clear_unpredictable)
             if (numResults[index] == 0) {
                 returnCycle[index] = Cycles(0);
                 writingInst[index] = 0;
-                fuIndices[index] = -1;
+                fuIndices[index] = invalidFUIndex;
             }
 
             DPRINTF(MinorScoreboard, "Clearing inst: %s"
@@ -245,10 +245,11 @@ Scoreboard::canInstIssue(MinorDynInstPtr inst,
         unsigned short int index;
 
         if (findIndex(reg, index)) {
-            bool cant_forward = fuIndices[index] != 1 &&
+            int src_reg_fu = fuIndices[index];
+            bool cant_forward = src_reg_fu != invalidFUIndex &&
                 cant_forward_from_fu_indices &&
-                index < cant_forward_from_fu_indices->size() &&
-                (*cant_forward_from_fu_indices)[index];
+                src_reg_fu < cant_forward_from_fu_indices->size() &&
+                (*cant_forward_from_fu_indices)[src_reg_fu];
 
             Cycles relative_latency = (cant_forward ? Cycles(0) :
                 (src_index >= num_relative_latencies ?

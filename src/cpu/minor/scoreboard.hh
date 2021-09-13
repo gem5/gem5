@@ -96,6 +96,7 @@ class Scoreboard : public Named
 
     /** Index of the FU generating this result */
     std::vector<int> fuIndices;
+    static constexpr int invalidFUIndex = -1;
 
     /** The estimated cycle number that the result will be presented.
      *  This can be offset from to allow forwarding to be simulated as
@@ -121,7 +122,7 @@ class Scoreboard : public Named
         zeroReg(reg_classes.at(IntRegClass).zeroReg()),
         numResults(numRegs, 0),
         numUnpredictableResults(numRegs, 0),
-        fuIndices(numRegs, 0),
+        fuIndices(numRegs, invalidFUIndex),
         returnCycle(numRegs, Cycles(0)),
         writingInst(numRegs, 0)
     { }
