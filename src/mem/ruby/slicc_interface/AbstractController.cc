@@ -61,6 +61,7 @@ AbstractController::AbstractController(const Params &p)
       m_transitions_per_cycle(p.transitions_per_cycle),
       m_buffer_size(p.buffer_size), m_recycle_latency(p.recycle_latency),
       m_mandatory_queue_latency(p.mandatory_queue_latency),
+      m_waiting_mem_retry(false),
       memoryPort(csprintf("%s.memory", name()), this),
       addrRanges(p.addr_ranges.begin(), p.addr_ranges.end()),
       stats(this)
@@ -255,7 +256,7 @@ AbstractController::serviceMemoryQueue()
 {
     auto mem_queue = getMemReqQueue();
     assert(mem_queue);
-    if (!mem_queue->isReady(clockEdge())) {
+    if (m_waiting_mem_retry || !mem_queue->isReady(clockEdge())) {
         return false;
     }
 
@@ -301,6 +302,7 @@ AbstractController::serviceMemoryQueue()
         scheduleEvent(Cycles(1));
     } else {
         scheduleEvent(Cycles(1));
+        m_waiting_mem_retry = true;
         delete pkt;
         delete s;
     }
@@ -441,6 +443,7 @@ AbstractController::MemoryPort::recvTimingResp(PacketPtr pkt)
 void
 AbstractController::MemoryPort::recvReqRetry()
 {
+    controller->m_waiting_mem_retry = false;
     controller->serviceMemoryQueue();
 }
 

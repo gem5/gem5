@@ -328,6 +328,7 @@ class AbstractController : public ClockedObject, public Consumer
     const unsigned int m_buffer_size;
     Cycles m_recycle_latency;
     const Cycles m_mandatory_queue_latency;
+    bool m_waiting_mem_retry;
 
     /**
      * Port that forwards requests and receives responses from the
