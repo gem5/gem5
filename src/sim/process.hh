@@ -59,6 +59,7 @@ struct ProcessParams;
 
 class EmulatedDriver;
 class EmulationPageTable;
+class SEWorkload;
 class SyscallDesc;
 class SyscallReturn;
 class System;
@@ -160,6 +161,8 @@ class Process : public SimObject
 
     // system object which owns this process
     System *system;
+
+    SEWorkload *seWorkload;
 
     // flag for using architecture specific page table
     bool useArchPT;

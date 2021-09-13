@@ -63,6 +63,7 @@
 #include "sim/fd_array.hh"
 #include "sim/fd_entry.hh"
 #include "sim/redirect_path.hh"
+#include "sim/se_workload.hh"
 #include "sim/syscall_desc.hh"
 #include "sim/system.hh"
 
@@ -112,6 +113,7 @@ normalize(const std::string& directory)
 Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
                  loader::ObjectFile *obj_file)
     : SimObject(params), system(params.system),
+      seWorkload(dynamic_cast<SEWorkload *>(system->workload)),
       useArchPT(params.useArchPT),
       kvmInSE(params.kvmInSE),
       useForClone(false),
@@ -132,12 +134,11 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
       ADD_STAT(numSyscalls, statistics::units::Count::get(),
                "Number of system calls")
 {
-    if (_pid >= System::maxPID)
-        fatal("_pid is too large: %d", _pid);
+    fatal_if(!seWorkload, "Couldn't find appropriate workload object.");
+    fatal_if(_pid >= System::maxPID, "_pid is too large: %d", _pid);
 
     auto ret_pair = system->PIDs.emplace(_pid);
-    if (!ret_pair.second)
-        fatal("_pid %d is already used", _pid);
+    fatal_if(!ret_pair.second, "_pid %d is already used", _pid);
 
     /**
      * Linux bundles together processes into this concept called a thread
