@@ -157,12 +157,6 @@ MemPools::populate(const System &sys)
 
     for (const auto &mem : memories)
         pools.emplace_back(pageShift, mem.start(), mem.end());
-
-    /*
-     * Set freePage to what it was before Gabe Black's page table changes
-     * so allocations don't trample the page table entries.
-     */
-    pools[0].setFreePage(pools[0].freePage() + 70);
 }
 
 Addr
