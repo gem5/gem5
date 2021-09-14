@@ -266,7 +266,8 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    uint64_t granularity() const
+    uint64_t
+    granularity() const
     {
         if (interleaved()) {
             auto combined_mask = 0;
@@ -297,7 +298,8 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    Addr size() const
+    Addr
+    size() const
     {
         return (_end - _start) >> masks.size();
     }
@@ -330,7 +332,8 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    std::string to_string() const
+    std::string
+    to_string() const
     {
         if (interleaved()) {
             std::string str;
@@ -360,7 +363,8 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    bool mergesWith(const AddrRange& r) const
+    bool
+    mergesWith(const AddrRange& r) const
     {
         return r._start == _start && r._end == _end &&
             r.masks == masks;
@@ -376,28 +380,31 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    bool intersects(const AddrRange& r) const
+    bool
+    intersects(const AddrRange& r) const
     {
-        if (_start >= r._end || _end <= r._start)
+        if (_start >= r._end || _end <= r._start) {
             // start with the simple case of no overlap at all,
             // applicable even if we have interleaved ranges
             return false;
-        else if (!interleaved() && !r.interleaved())
+        } else if (!interleaved() && !r.interleaved()) {
             // if neither range is interleaved, we are done
             return true;
+        }
 
         // now it gets complicated, focus on the cases we care about
-        if (r.size() == 1)
+        if (r.size() == 1) {
             // keep it simple and check if the address is within
             // this range
             return contains(r.start());
-        else if (mergesWith(r))
+        } else if (mergesWith(r)) {
             // restrict the check to ranges that belong to the
             // same chunk
             return intlvMatch == r.intlvMatch;
-        else
+        } else {
             panic("Cannot test intersection of %s and %s\n",
                   to_string(), r.to_string());
+        }
     }
 
     /**
@@ -410,7 +417,8 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    bool isSubset(const AddrRange& r) const
+    bool
+    isSubset(const AddrRange& r) const
     {
         if (interleaved())
             panic("Cannot test subset of interleaved range %s\n", to_string());
@@ -435,7 +443,8 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    bool contains(const Addr& a) const
+    bool
+    contains(const Addr& a) const
     {
         // check if the address is in the range and if there is either
         // no interleaving, or with interleaving also if the selected
@@ -480,7 +489,8 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    inline Addr removeIntlvBits(Addr a) const
+    inline Addr
+    removeIntlvBits(Addr a) const
     {
         // Directly return the address if the range is not interleaved
         // to prevent undefined behavior.
@@ -518,7 +528,8 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    inline Addr addIntlvBits(Addr a) const
+    inline Addr
+    addIntlvBits(Addr a) const
     {
         // Directly return the address if the range is not interleaved
         // to prevent undefined behavior.
@@ -572,7 +583,8 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    Addr getOffset(const Addr& a) const
+    Addr
+    getOffset(const Addr& a) const
     {
         bool in_range = a >= _start && a < _end;
         if (!in_range) {
@@ -650,7 +662,8 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    bool operator<(const AddrRange& r) const
+    bool
+    operator<(const AddrRange& r) const
     {
         if (_start != r._start) {
             return _start < r._start;
@@ -670,7 +683,8 @@ class AddrRange
     /**
      * @ingroup api_addr_range
      */
-    bool operator==(const AddrRange& r) const
+    bool
+    operator==(const AddrRange& r) const
     {
         if (_start != r._start)    return false;
         if (_end != r._end)      return false;
@@ -683,7 +697,8 @@ class AddrRange
     /**
      * @ingroup api_addr_range
      */
-    bool operator!=(const AddrRange& r) const
+    bool
+    operator!=(const AddrRange& r) const
     {
         return !(*this == r);
     }
@@ -701,21 +716,27 @@ typedef std::list<AddrRange> AddrRangeList;
  */
 inline AddrRange
 RangeEx(Addr start, Addr end)
-{ return AddrRange(start, end); }
+{
+    return AddrRange(start, end);
+}
 
 /**
  * @ingroup api_addr_range
  */
 inline AddrRange
 RangeIn(Addr start, Addr end)
-{ return AddrRange(start, end + 1); }
+{
+    return AddrRange(start, end + 1);
+}
 
 /**
  * @ingroup api_addr_range
  */
 inline AddrRange
 RangeSize(Addr start, Addr size)
-{ return AddrRange(start, start + size); }
+{
+    return AddrRange(start, start + size);
+}
 
 } // namespace gem5
 
