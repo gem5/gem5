@@ -33,11 +33,8 @@
 
 #include "sim/mem_pool.hh"
 
-#include <cassert>
-
 #include "base/addr_range.hh"
 #include "base/logging.hh"
-#include "sim/system.hh"
 
 namespace gem5
 {
@@ -147,14 +144,8 @@ MemPool::unserialize(CheckpointIn &cp)
 }
 
 void
-MemPools::populate(const System &sys)
+MemPools::populate(const AddrRangeList &memories)
 {
-    AddrRangeList memories = sys.getPhysMem().getConfAddrRanges();
-    const auto &m5op_range = sys.m5opRange();
-
-    if (m5op_range.valid())
-        memories -= m5op_range;
-
     for (const auto &mem : memories)
         pools.emplace_back(pageShift, mem.start(), mem.end());
 }

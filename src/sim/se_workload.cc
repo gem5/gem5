@@ -43,7 +43,14 @@ void
 SEWorkload::setSystem(System *sys)
 {
     Workload::setSystem(sys);
-    memPools.populate(*sys);
+
+    AddrRangeList memories = sys->getPhysMem().getConfAddrRanges();
+    const auto &m5op_range = sys->m5opRange();
+
+    if (m5op_range.valid())
+        memories -= m5op_range;
+
+    memPools.populate(memories);
 }
 
 void

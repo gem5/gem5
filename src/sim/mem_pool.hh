@@ -36,13 +36,12 @@
 
 #include <vector>
 
+#include "base/addr_range.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
 namespace gem5
 {
-
-class System;
 
 /** Class for handling allocation of physical pages in SE mode. */
 class MemPool : public Serializable
@@ -96,7 +95,7 @@ class MemPools : public Serializable
   public:
     MemPools(Addr page_shift) : pageShift(page_shift) {}
 
-    void populate(const System &sys);
+    void populate(const AddrRangeList &memories);
 
     /// Allocate npages contiguous unused physical pages.
     /// @return Starting address of first page
