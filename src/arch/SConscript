@@ -127,7 +127,7 @@ IsaDescBuilder = Builder(action=desc_action)
 
 # ISAs should use this function to set up an IsaDescBuilder and not try to
 # set one up manually.
-def ISADesc(desc, decoder_splits=1, exec_splits=1):
+def ISADesc(desc, decoder_splits=1, exec_splits=1, tags=None, add_tags=None):
     '''Set up a builder for an ISA description.
 
     The decoder_splits and exec_splits parameters let us determine what
@@ -192,7 +192,7 @@ def ISADesc(desc, decoder_splits=1, exec_splits=1):
         append = {}
         if env['CLANG']:
             append['CCFLAGS'] = ['-Wno-self-assign']
-        Source(gen_file(name), append=append)
+        Source(gen_file(name), append=append, tags=tags, add_tags=add_tags)
 
     source_gen('decoder.cc')
 
