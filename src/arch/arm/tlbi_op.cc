@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 ARM Limited
+ * Copyright (c) 2018-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -95,6 +95,7 @@ TLBIVMALL::operator()(ThreadContext* tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
+    el2Enabled = EL2Enabled(tc);
 
     getMMUPtr(tc)->flush(*this);
 
