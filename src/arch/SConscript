@@ -225,3 +225,7 @@ DebugFlag('CCRegs')
 DebugFlag('MiscRegs')
 CompoundFlag('Registers', [ 'IntRegs', 'FloatRegs', 'VecRegs', 'VecPredRegs',
                             'CCRegs', 'MiscRegs' ])
+
+DebugFlag('Decoder', "Decoder debug output")
+DebugFlag('Faults', "Information about faults, exceptions, interrupts, etc")
+DebugFlag('TLBVerbose')

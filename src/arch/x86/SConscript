@@ -72,9 +72,7 @@ SimObject('X86MMU.py')
 SimObject('X86NativeTrace.py')
 SimObject('X86TLB.py')
 
-DebugFlag('Faults', "Trace all faults/exceptions/traps")
 DebugFlag('LocalApic', "Local APIC debugging")
-DebugFlag('Decoder', "Decoder debug output")
 DebugFlag('X86', "Generic X86 ISA debugging")
 DebugFlag('ACPI', "ACPI debugging")
 
