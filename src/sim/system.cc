@@ -199,6 +199,7 @@ int System::numSystemsRunning = 0;
 System::System(const Params &p)
     : SimObject(p), _systemPort("system_port", this),
       multiThread(p.multi_thread),
+      memPools(getPageShift()),
       init_param(p.init_param),
       physProxy(_systemPort, p.cache_line_size),
       workload(p.workload),
@@ -221,6 +222,9 @@ System::System(const Params &p)
     if (workload)
         workload->setSystem(this);
 
+    if (!FullSystem)
+        memPools.populate(*this);
+
     // add self to global system list
     systemList.push_back(this);
 
@@ -229,28 +233,6 @@ System::System(const Params &p)
         kvmVM->setSystem(this);
     }
 #endif
-
-    if (!FullSystem) {
-        AddrRangeList memories = physmem.getConfAddrRanges();
-        assert(!memories.empty());
-        for (const auto &mem : memories) {
-            assert(!mem.interleaved());
-            if (_m5opRange.valid()) {
-                // Make sure the m5op range is not included.
-                for (const auto &range: mem.exclude({_m5opRange}))
-                    memPools.emplace_back(getPageShift(),
-                            range.start(), range.end());
-            } else {
-                memPools.emplace_back(getPageShift(), mem.start(), mem.end());
-            }
-        }
-
-        /*
-         * Set freePage to what it was before Gabe Black's page table changes
-         * so allocations don't trample the page table entries.
-         */
-        memPools[0].setFreePage(memPools[0].freePage() + 70);
-    }
 
     // check if the cache line size is a value known to work
     if (_cacheLineSize != 16 && _cacheLineSize != 32 &&
@@ -361,24 +343,24 @@ System::validKvmEnvironment() const
 }
 
 Addr
-System::allocPhysPages(int npages, int poolID)
+System::allocPhysPages(int npages, int pool_id)
 {
     assert(!FullSystem);
-    return memPools[poolID].allocate(npages);
+    return memPools.allocPhysPages(npages, pool_id);
 }
 
 Addr
-System::memSize(int poolID) const
+System::memSize(int pool_id) const
 {
     assert(!FullSystem);
-    return memPools[poolID].totalBytes();
+    return memPools.memSize(pool_id);
 }
 
 Addr
-System::freeMemSize(int poolID) const
+System::freeMemSize(int pool_id) const
 {
     assert(!FullSystem);
-    return memPools[poolID].freeBytes();
+    return memPools.freeMemSize(pool_id);
 }
 
 bool
@@ -432,11 +414,7 @@ System::serialize(CheckpointOut &cp) const
         paramOut(cp, csprintf("quiesceEndTick_%d", id), when);
     }
 
-    int num_mem_pools = memPools.size();
-    SERIALIZE_SCALAR(num_mem_pools);
-
-    for (int i = 0; i < num_mem_pools; i++)
-        memPools[i].serializeSection(cp, csprintf("memPool%d", i));
+    memPools.serializeSection(cp, "memPools");
 
     // also serialize the memories in the system
     physmem.serializeSection(cp, "physmem");
@@ -458,14 +436,7 @@ System::unserialize(CheckpointIn &cp)
 #       endif
     }
 
-    int num_mem_pools = 0;
-    UNSERIALIZE_SCALAR(num_mem_pools);
-
-    for (int i = 0; i < num_mem_pools; i++) {
-        MemPool pool;
-        pool.unserializeSection(cp, csprintf("memPool%d", i));
-        memPools.push_back(pool);
-    }
+    memPools.unserializeSection(cp, "memPools");
 
     // also unserialize the memories in the system
     physmem.unserializeSection(cp, "physmem");

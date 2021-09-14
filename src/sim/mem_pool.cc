@@ -33,7 +33,11 @@
 
 #include "sim/mem_pool.hh"
 
+#include <cassert>
+
+#include "base/addr_range.hh"
 #include "base/logging.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {
@@ -140,6 +144,72 @@ MemPool::unserialize(CheckpointIn &cp)
     paramIn(cp, "start_page", startPageNum);
     paramIn(cp, "free_page_num", freePageNum);
     paramIn(cp, "total_pages", _totalPages);
+}
+
+void
+MemPools::populate(const System &sys)
+{
+    AddrRangeList memories = sys.getPhysMem().getConfAddrRanges();
+    const auto &m5op_range = sys.m5opRange();
+
+    assert(!memories.empty());
+    for (const auto &mem : memories) {
+        assert(!mem.interleaved());
+        if (m5op_range.valid()) {
+            // Make sure the m5op range is not included.
+            for (const auto &range: mem.exclude({m5op_range}))
+                pools.emplace_back(pageShift, range.start(), range.end());
+        } else {
+            pools.emplace_back(pageShift, mem.start(), mem.end());
+        }
+    }
+
+    /*
+     * Set freePage to what it was before Gabe Black's page table changes
+     * so allocations don't trample the page table entries.
+     */
+    pools[0].setFreePage(pools[0].freePage() + 70);
+}
+
+Addr
+MemPools::allocPhysPages(int npages, int pool_id)
+{
+    return pools[pool_id].allocate(npages);
+}
+
+Addr
+MemPools::memSize(int pool_id) const
+{
+    return pools[pool_id].totalBytes();
+}
+
+Addr
+MemPools::freeMemSize(int pool_id) const
+{
+    return pools[pool_id].freeBytes();
+}
+
+void
+MemPools::serialize(CheckpointOut &cp) const
+{
+    int num_pools = pools.size();
+    SERIALIZE_SCALAR(num_pools);
+
+    for (int i = 0; i < num_pools; i++)
+        pools[i].serializeSection(cp, csprintf("pool%d", i));
+}
+
+void
+MemPools::unserialize(CheckpointIn &cp)
+{
+    int num_pools = 0;
+    UNSERIALIZE_SCALAR(num_pools);
+
+    for (int i = 0; i < num_pools; i++) {
+        MemPool pool;
+        pool.unserializeSection(cp, csprintf("pool%d", i));
+        pools.push_back(pool);
+    }
 }
 
 } // namespace gem5

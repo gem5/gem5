@@ -323,7 +323,7 @@ class System : public SimObject, public PCEventScope
     bool remove(PCEvent *event) override;
 
     /** Memory allocation objects for all physical memories in the system. */
-    std::vector<MemPool> memPools;
+    MemPools memPools;
 
     uint64_t init_param;
 
@@ -346,6 +346,7 @@ class System : public SimObject, public PCEventScope
 
     /** Get a pointer to access the physical memory of the system */
     memory::PhysicalMemory& getPhysMem() { return physmem; }
+    const memory::PhysicalMemory& getPhysMem() const { return physmem; }
 
     /** Amount of physical memory that is still free */
     Addr freeMemSize(int poolID = 0) const;

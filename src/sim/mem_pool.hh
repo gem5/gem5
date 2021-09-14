@@ -34,6 +34,8 @@
 #ifndef __MEM_POOL_HH__
 #define __MEM_POOL_HH__
 
+#include <vector>
+
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
@@ -57,9 +59,11 @@ class MemPool : public Serializable
     /** The size of the pool, in number of pages. */
     Counter _totalPages = 0;
 
-  public:
     MemPool() {}
 
+    friend class MemPools;
+
+  public:
     MemPool(Addr page_shift, Addr ptr, Addr limit);
 
     Counter startPage() const;
@@ -77,6 +81,32 @@ class MemPool : public Serializable
     Addr totalBytes() const;
 
     Addr allocate(Addr npages);
+
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+};
+
+class MemPools : public Serializable
+{
+  private:
+    Addr pageShift;
+
+    std::vector<MemPool> pools;
+
+  public:
+    MemPools(Addr page_shift) : pageShift(page_shift) {}
+
+    void populate(const System &sys);
+
+    /// Allocate npages contiguous unused physical pages.
+    /// @return Starting address of first page
+    Addr allocPhysPages(int npages, int pool_id=0);
+
+    /** Amount of physical memory that exists in a pool. */
+    Addr memSize(int pool_id=0) const;
+
+    /** Amount of physical memory that is still free in a pool. */
+    Addr freeMemSize(int pool_id=0) const;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
