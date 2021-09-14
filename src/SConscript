@@ -141,7 +141,6 @@ class SimObject(PySource):
     it to a list of sim object modules'''
 
     fixed = False
-    modnames = []
 
     def __init__(self, source, tags=None, add_tags=None):
         '''Specify the source file and any tags (automatically in
@@ -149,8 +148,6 @@ class SimObject(PySource):
         super(SimObject, self).__init__('m5.objects', source, tags, add_tags)
         if self.fixed:
             raise AttributeError("Too late to call SimObject now.")
-
-        bisect.insort_right(SimObject.modnames, self.modname)
 
 
 # This regular expression is simplistic and assumes that the import takes up
@@ -589,7 +586,9 @@ sys.meta_path[0:0] = [ importer ]
 
 # import all sim objects so we can populate the all_objects list
 # make sure that we're working with a list, then let's sort it
-for modname in SimObject.modnames:
+gem5_lib_simobjects = SimObject.all.with_tag(env, 'gem5 lib')
+gem5_lib_modnames = sorted(map(lambda so: so.modname, gem5_lib_simobjects))
+for modname in gem5_lib_modnames:
     exec('from m5.objects import %s' % modname)
 
 # we need to unload all of the currently imported modules so that they
