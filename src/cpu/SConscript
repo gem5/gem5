@@ -84,8 +84,8 @@ Source('pc_event.cc')
 if env['TARGET_ISA'] == 'null':
     Return()
 
-# Only build the protocol buffer instructions tracer if we have protobuf support
-if env['HAVE_PROTOBUF'] and env['TARGET_ISA'] != 'x86':
+# Only build the protobuf instructions tracer if we have protobuf support.
+if env['HAVE_PROTOBUF']:
     SimObject('InstPBTrace.py')
     Source('inst_pb_trace.cc')
 
