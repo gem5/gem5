@@ -1933,10 +1933,15 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
-                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = EL1;
+                if (EL2Enabled(tc)) {
+                    HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                    if (hcr.tge && hcr.e2h) {
+                        target_el = EL2;
+                    }
+                }
+
                 bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-                ExceptionLevel target_el = is_host ?  EL2 : EL1;
                 TLBIVMALL tlbiOp(target_el, secure, false);
                 tlbiOp(tc);
                 return;
@@ -1956,10 +1961,15 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
-                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = EL1;
+                if (EL2Enabled(tc)) {
+                    HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                    if (hcr.tge && hcr.e2h) {
+                        target_el = EL2;
+                    }
+                }
+
                 bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-                ExceptionLevel target_el = is_host ?  EL2 : EL1;
                 TLBIVMALL tlbiOp(target_el, secure, false);
                 tlbiOp.broadcast(tc);
                 return;
@@ -2051,10 +2061,15 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
-                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
-                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = EL1;
+                if (EL2Enabled(tc)) {
+                    HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                    if (hcr.tge && hcr.e2h) {
+                        target_el = EL2;
+                    }
+                }
+
                 bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-                ExceptionLevel target_el = is_host ?  EL2 : EL1;
                 TLBIMVA tlbiOp(target_el, secure,
                                static_cast<Addr>(bits(newVal, 43, 0)) << 12,
                                asid);
@@ -2071,10 +2086,15 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
-                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
-                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = EL1;
+                if (EL2Enabled(tc)) {
+                    HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                    if (hcr.tge && hcr.e2h) {
+                        target_el = EL2;
+                    }
+                }
+
                 bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-                ExceptionLevel target_el = is_host ?  EL2 : EL1;
                 TLBIMVA tlbiOp(target_el, secure,
                                 static_cast<Addr>(bits(newVal, 43, 0)) << 12,
                                 asid);
@@ -2090,10 +2110,15 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
-                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
-                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = EL1;
+                if (EL2Enabled(tc)) {
+                    HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                    if (hcr.tge && hcr.e2h) {
+                        target_el = EL2;
+                    }
+                }
+
                 bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-                ExceptionLevel target_el = is_host ?  EL2 : EL1;
                 TLBIASID tlbiOp(target_el, secure, asid);
                 tlbiOp(tc);
                 return;
@@ -2106,10 +2131,15 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 auto asid = haveLargeAsid64 ? bits(newVal, 63, 48) :
                                               bits(newVal, 55, 48);
 
-                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
-                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = EL1;
+                if (EL2Enabled(tc)) {
+                    HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                    if (hcr.tge && hcr.e2h) {
+                        target_el = EL2;
+                    }
+                }
+
                 bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-                ExceptionLevel target_el = is_host ?  EL2 : EL1;
                 TLBIASID tlbiOp(target_el, secure, asid);
                 tlbiOp.broadcast(tc);
                 return;
@@ -2123,10 +2153,15 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
-                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = EL1;
+                if (EL2Enabled(tc)) {
+                    HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                    if (hcr.tge && hcr.e2h) {
+                        target_el = EL2;
+                    }
+                }
+
                 bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-                ExceptionLevel target_el = is_host ?  EL2 : EL1;
                 TLBIMVAA tlbiOp(target_el, secure,
                     static_cast<Addr>(bits(newVal, 43, 0)) << 12);
 
@@ -2140,10 +2175,15 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                HCR hcr = readMiscReg(MISCREG_HCR_EL2);
-                bool is_host = (hcr.tge && hcr.e2h);
+                ExceptionLevel target_el = EL1;
+                if (EL2Enabled(tc)) {
+                    HCR hcr = readMiscReg(MISCREG_HCR_EL2);
+                    if (hcr.tge && hcr.e2h) {
+                        target_el = EL2;
+                    }
+                }
+
                 bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-                ExceptionLevel target_el = is_host ?  EL2 : EL1;
                 TLBIMVAA tlbiOp(target_el, secure,
                     static_cast<Addr>(bits(newVal, 43, 0)) << 12);
 
