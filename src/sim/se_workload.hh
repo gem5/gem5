@@ -78,6 +78,10 @@ class SEWorkload : public Workload
 
     // For now, assume the only type of events are system calls.
     void event(ThreadContext *tc) override { syscall(tc); }
+
+    Addr allocPhysPages(int npages, int pool_id=0);
+    Addr memSize(int pool_id=0) const;
+    Addr freeMemSize(int pool_id=0) const;
 };
 
 } // namespace gem5

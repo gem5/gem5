@@ -39,6 +39,7 @@
 #include "base/types.hh"
 #include "debug/MMU.hh"
 #include "mem/page_table.hh"
+#include "sim/se_workload.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -106,7 +107,9 @@ template <class First, class ...Rest>
 Addr
 prepTopTable(System *system, Addr pageSize)
 {
-    Addr addr = system->allocPhysPages(First::tableSize());
+    auto *se_workload = dynamic_cast<SEWorkload *>(system->workload);
+    fatal_if(!se_workload, "Couldn't find an appropriate workload object.");
+    Addr addr = se_workload->allocPhysPages(First::tableSize());
     PortProxy &p = system->physProxy;
     p.memsetBlob(addr, 0, First::tableSize() * pageSize);
     return addr;

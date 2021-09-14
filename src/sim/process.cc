@@ -332,7 +332,7 @@ Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
     }
 
     int npages = divCeil(size, pTable->pageSize());
-    Addr paddr = system->allocPhysPages(npages);
+    Addr paddr = seWorkload->allocPhysPages(npages);
     pTable->map(vaddr, paddr, size,
                 clobber ? EmulationPageTable::Clobber :
                           EmulationPageTable::MappingFlags(0));
@@ -343,7 +343,7 @@ Process::replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
                        ThreadContext *new_tc, bool allocate_page)
 {
     if (allocate_page)
-        new_paddr = system->allocPhysPages(1);
+        new_paddr = seWorkload->allocPhysPages(1);
 
     // Read from old physical page.
     uint8_t buf_p[pTable->pageSize()];

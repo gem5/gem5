@@ -52,6 +52,7 @@
 #include "params/GPUComputeDriver.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
+#include "sim/se_workload.hh"
 #include "sim/syscall_emul_buf.hh"
 
 namespace gem5
@@ -758,7 +759,8 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 // this as uncacheable from the CPU so that we can implement
                 // direct CPU framebuffer access similar to what we currently
                 // offer in real HW through the so-called Large BAR feature.
-                pa_addr = process->system->allocPhysPages(npages, dGPUPoolID);
+                pa_addr = process->seWorkload->allocPhysPages(
+                        npages, dGPUPoolID);
                 //
                 // TODO: Uncacheable accesses need to be supported by the
                 // CPU-side protocol for this to work correctly.  I believe
@@ -773,7 +775,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 mmap_offset = args->mmap_offset;
                 // USERPTR allocations are system memory mapped into GPUVM
                 // space.  The user provides the driver with the pointer.
-                pa_addr = process->system->allocPhysPages(npages);
+                pa_addr = process->seWorkload->allocPhysPages(npages);
 
                 DPRINTF(GPUDriver, "Mapping VA %p to framebuffer PA %p size "
                         "%d\n", args->va_addr, pa_addr, args->size);
@@ -794,7 +796,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 // We will lazily map it into host memory on first touch.  The
                 // fixupFault will find the original SVM aperture mapped to the
                 // host.
-                pa_addr = process->system->allocPhysPages(npages);
+                pa_addr = process->seWorkload->allocPhysPages(npages);
 
                 DPRINTF(GPUDriver, "Mapping VA %p to framebuffer PA %p size "
                         "%d\n", args->va_addr, pa_addr, args->size);

@@ -36,6 +36,7 @@
 #include "debug/SyscallVerbose.hh"
 #include "sim/mem_state.hh"
 #include "sim/process.hh"
+#include "sim/se_workload.hh"
 #include "sim/system.hh"
 #include "sim/vma.hh"
 
@@ -94,8 +95,8 @@ std::string
 Linux::procMeminfo(Process *process, ThreadContext *tc)
 {
     return csprintf("MemTotal:%12d kB\nMemFree: %12d kB\n",
-            process->system->memSize() >> 10,
-            process->system->freeMemSize() >> 10);
+            process->seWorkload->memSize() >> 10,
+            process->seWorkload->freeMemSize() >> 10);
 }
 
 std::string

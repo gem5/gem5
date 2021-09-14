@@ -30,6 +30,7 @@
 #include "cpu/thread_context.hh"
 #include "params/SEWorkload.hh"
 #include "sim/process.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {
@@ -41,6 +42,24 @@ void
 SEWorkload::syscall(ThreadContext *tc)
 {
     tc->getProcessPtr()->syscall(tc);
+}
+
+Addr
+SEWorkload::allocPhysPages(int npages, int pool_id)
+{
+    return system->allocPhysPages(npages, pool_id);
+}
+
+Addr
+SEWorkload::memSize(int pool_id) const
+{
+    return system->memSize(pool_id);
+}
+
+Addr
+SEWorkload::freeMemSize(int pool_id) const
+{
+    return system->freeMemSize(pool_id);
 }
 
 } // namespace gem5

@@ -179,12 +179,12 @@ X86_64Process::initState()
     if (kvmInSE) {
         PortProxy physProxy = system->physProxy;
 
-        Addr syscallCodePhysAddr = system->allocPhysPages(1);
-        Addr gdtPhysAddr = system->allocPhysPages(1);
-        Addr idtPhysAddr = system->allocPhysPages(1);
-        Addr istPhysAddr = system->allocPhysPages(1);
-        Addr tssPhysAddr = system->allocPhysPages(1);
-        Addr pfHandlerPhysAddr = system->allocPhysPages(1);
+        Addr syscallCodePhysAddr = seWorkload->allocPhysPages(1);
+        Addr gdtPhysAddr = seWorkload->allocPhysPages(1);
+        Addr idtPhysAddr = seWorkload->allocPhysPages(1);
+        Addr istPhysAddr = seWorkload->allocPhysPages(1);
+        Addr tssPhysAddr = seWorkload->allocPhysPages(1);
+        Addr pfHandlerPhysAddr = seWorkload->allocPhysPages(1);
 
         /*
          * Set up the gdt.
