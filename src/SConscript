@@ -68,9 +68,9 @@ build_env = [(opt, env[opt]) for opt in export_vars]
 
 from code_formatter import code_formatter
 
-def GdbXml(xml_id, symbol):
+def GdbXml(xml_id, symbol, tags=None, add_tags=None):
     cc, hh = env.Blob(symbol, xml_id)
-    Source(cc)
+    Source(cc, tags=tags, add_tags=add_tags)
 
 class Source(SourceFile):
     pass
