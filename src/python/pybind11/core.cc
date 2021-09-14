@@ -154,7 +154,8 @@ init_range(py::module_ &m_native)
         .def("mergesWith", &AddrRange::mergesWith)
         .def("intersects", &AddrRange::intersects)
         .def("isSubset", &AddrRange::isSubset)
-        .def("exclude", &AddrRange::exclude)
+        .def("exclude", static_cast<AddrRangeList (AddrRange::*)(
+                    const AddrRangeList &) const>(&AddrRange::exclude))
         ;
 
     m.def("RangeEx", &RangeEx);

@@ -677,6 +677,12 @@ class AddrRange
         return ranges;
     }
 
+    AddrRangeList
+    exclude(const AddrRange &excluded_range) const
+    {
+        return exclude(AddrRangeList{excluded_range});
+    }
+
     /**
      * Less-than operator used to turn an STL map into a binary search
      * tree of non-overlapping address ranges.
@@ -727,6 +733,62 @@ class AddrRange
         return !(*this == r);
     }
 };
+
+static inline AddrRangeList
+operator-(const AddrRange &range, const AddrRangeList &to_exclude)
+{
+    return range.exclude(to_exclude);
+}
+
+static inline AddrRangeList
+operator-(const AddrRange &range, const AddrRange &to_exclude)
+{
+    return range.exclude(to_exclude);
+}
+
+static inline AddrRangeList
+exclude(const AddrRangeList &base, AddrRangeList to_exclude)
+{
+    to_exclude.sort();
+
+    AddrRangeList ret;
+    for (const auto &range: base)
+        ret.splice(ret.end(), range.exclude(to_exclude));
+
+    return ret;
+}
+
+static inline AddrRangeList
+exclude(const AddrRangeList &base, const AddrRange &to_exclude)
+{
+    return exclude(base, AddrRangeList{to_exclude});
+}
+
+static inline AddrRangeList
+operator-(const AddrRangeList &base, const AddrRangeList &to_exclude)
+{
+    return exclude(base, to_exclude);
+}
+
+static inline AddrRangeList
+operator-=(AddrRangeList &base, const AddrRangeList &to_exclude)
+{
+    base = base - to_exclude;
+    return base;
+}
+
+static inline AddrRangeList
+operator-(const AddrRangeList &base, const AddrRange &to_exclude)
+{
+    return exclude(base, to_exclude);
+}
+
+static inline AddrRangeList
+operator-=(AddrRangeList &base, const AddrRange &to_exclude)
+{
+    base = base - to_exclude;
+    return base;
+}
 
 /**
  * @ingroup api_addr_range

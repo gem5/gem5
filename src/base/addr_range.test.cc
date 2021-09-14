@@ -1409,6 +1409,141 @@ TEST(AddrRangeTest, MultipleExclusionUnsorted)
     EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2));
 }
 
+TEST(AddrRangeTest, ExclusionOfSingleRange)
+{
+    const AddrRange expected_range1(0x100, 0x140);
+    const AddrRange expected_range2(0x1c0, 0x200);
+
+    AddrRange r(0x100, 0x200);
+    auto ranges = r.exclude(AddrRange(0x140, 0x1c0));
+
+    EXPECT_EQ(ranges.size(), 2);
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2));
+}
+
+TEST(AddrRangeTest, ExclusionOfRangeFromRangeList)
+{
+    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+
+    const AddrRange expected_range1(0x100, 0x180);
+    const AddrRange expected_range2(0x380, 0x400);
+
+    auto ranges = exclude(base, AddrRange(0x180, 0x380));
+
+    EXPECT_EQ(ranges.size(), 2);
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2));
+}
+
+TEST(AddrRangeTest, ExclusionOfRangeListFromRangeList)
+{
+    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+
+    const AddrRange expected_range1(0x100, 0x140);
+    const AddrRange expected_range2(0x180, 0x200);
+    const AddrRange expected_range3(0x300, 0x340);
+    const AddrRange expected_range4(0x380, 0x400);
+
+    const AddrRangeList to_exclude({
+            AddrRange(0x140, 0x180), AddrRange(0x340, 0x380)});
+    auto ranges = exclude(base, to_exclude);
+
+    EXPECT_EQ(ranges.size(), 4);
+    EXPECT_THAT(ranges, ElementsAre(
+                expected_range1, expected_range2,
+                expected_range3, expected_range4));
+}
+
+TEST(AddrRangeTest, SubtractionOperatorRange)
+{
+    const AddrRange expected_range1(0x100, 0x140);
+    const AddrRange expected_range2(0x1c0, 0x200);
+
+    AddrRange r(0x100, 0x200);
+    auto ranges = r - AddrRange(0x140, 0x1c0);
+
+    EXPECT_EQ(ranges.size(), 2);
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2));
+}
+
+TEST(AddrRangeTest, SubtractionOperatorRangeList)
+{
+    const AddrRange expected_range1(0x100, 0x140);
+    const AddrRange expected_range2(0x160, 0x180);
+    const AddrRange expected_range3(0x1a0, 0x200);
+
+    AddrRange r(0x100, 0x200);
+    auto ranges = r - AddrRangeList(
+            {AddrRange(0x140, 0x160), AddrRange(0x180, 0x1a0)});
+
+    EXPECT_EQ(ranges.size(), 3);
+    EXPECT_THAT(ranges, ElementsAre(
+                expected_range1, expected_range2, expected_range3));
+}
+
+TEST(AddrRangeTest, SubtractionOfRangeFromRangeList)
+{
+    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+
+    const AddrRange expected_range1(0x100, 0x180);
+    const AddrRange expected_range2(0x380, 0x400);
+
+    auto ranges = base - AddrRange(0x180, 0x380);
+
+    EXPECT_EQ(ranges.size(), 2);
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2));
+}
+
+TEST(AddrRangeTest, SubtractionOfRangeListFromRangeList)
+{
+    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+
+    const AddrRange expected_range1(0x100, 0x140);
+    const AddrRange expected_range2(0x180, 0x200);
+    const AddrRange expected_range3(0x300, 0x340);
+    const AddrRange expected_range4(0x380, 0x400);
+
+    const AddrRangeList to_exclude({
+            AddrRange(0x140, 0x180), AddrRange(0x340, 0x380)});
+    auto ranges = base - to_exclude;
+
+    EXPECT_EQ(ranges.size(), 4);
+    EXPECT_THAT(ranges, ElementsAre(
+                expected_range1, expected_range2,
+                expected_range3, expected_range4));
+}
+
+TEST(AddrRangeTest, SubtractionAssignmentOfRangeFromRangeList)
+{
+    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+
+    const AddrRange expected_range1(0x100, 0x180);
+    const AddrRange expected_range2(0x380, 0x400);
+
+    base -= AddrRange(0x180, 0x380);
+
+    EXPECT_EQ(base.size(), 2);
+    EXPECT_THAT(base, ElementsAre(expected_range1, expected_range2));
+}
+
+TEST(AddrRangeTest, SubtractionAssignmentOfRangeListFromRangeList)
+{
+    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+
+    const AddrRange expected_range1(0x100, 0x140);
+    const AddrRange expected_range2(0x180, 0x200);
+    const AddrRange expected_range3(0x300, 0x340);
+    const AddrRange expected_range4(0x380, 0x400);
+
+    const AddrRangeList to_exclude({
+            AddrRange(0x140, 0x180), AddrRange(0x340, 0x380)});
+    base -= to_exclude;
+
+    EXPECT_EQ(base.size(), 4);
+    EXPECT_THAT(base, ElementsAre(
+                expected_range1, expected_range2,
+                expected_range3, expected_range4));
+}
+
 /*
  * InterleavingRanges:
  * The exclude method does not support interleaving ranges
