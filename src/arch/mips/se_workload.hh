@@ -46,7 +46,9 @@ class SEWorkload : public gem5::SEWorkload
   public:
     using Params = MipsSEWorkloadParams;
 
-    SEWorkload(const Params &p) : gem5::SEWorkload(p) {}
+    SEWorkload(const Params &p, Addr page_shift) :
+        gem5::SEWorkload(p, page_shift)
+    {}
 
     void
     setSystem(System *sys) override

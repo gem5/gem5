@@ -29,6 +29,7 @@
 #define __ARCH_ARM_LINUX_SE_WORKLOAD_HH__
 
 #include "arch/arm/linux/linux.hh"
+#include "arch/arm/page_size.hh"
 #include "arch/arm/regs/int.hh"
 #include "arch/arm/se_workload.hh"
 #include "params/ArmEmuLinux.hh"
@@ -45,7 +46,7 @@ class EmuLinux : public SEWorkload
   public:
     using Params = ArmEmuLinuxParams;
 
-    EmuLinux(const Params &p) : SEWorkload(p) {}
+    EmuLinux(const Params &p) : SEWorkload(p, PageShift) {}
 
     struct BaseSyscallABI {};
     struct SyscallABI32 : public SEWorkload::SyscallABI32,

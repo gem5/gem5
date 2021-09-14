@@ -35,6 +35,7 @@
 #define __ARCH_ARM_FREEBSD_SE_WORKLOAD_HH__
 
 #include "arch/arm/freebsd/freebsd.hh"
+#include "arch/arm/page_size.hh"
 #include "arch/arm/regs/cc.hh"
 #include "arch/arm/regs/int.hh"
 #include "arch/arm/se_workload.hh"
@@ -52,7 +53,7 @@ class EmuFreebsd : public SEWorkload
   public:
     using Params = ArmEmuFreebsdParams;
 
-    EmuFreebsd(const Params &p) : SEWorkload(p) {}
+    EmuFreebsd(const Params &p) : SEWorkload(p, PageShift) {}
 
     struct BaseSyscallABI {};
     struct SyscallABI32 : public SEWorkload::SyscallABI32,

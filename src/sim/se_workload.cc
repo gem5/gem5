@@ -35,8 +35,16 @@
 namespace gem5
 {
 
-SEWorkload::SEWorkload(const Params &p) : Workload(p)
+SEWorkload::SEWorkload(const Params &p, Addr page_shift) :
+    Workload(p), memPools(page_shift)
 {}
+
+void
+SEWorkload::setSystem(System *sys)
+{
+    Workload::setSystem(sys);
+    memPools.populate(*sys);
+}
 
 void
 SEWorkload::syscall(ThreadContext *tc)
@@ -47,19 +55,19 @@ SEWorkload::syscall(ThreadContext *tc)
 Addr
 SEWorkload::allocPhysPages(int npages, int pool_id)
 {
-    return system->allocPhysPages(npages, pool_id);
+    return memPools.allocPhysPages(npages, pool_id);
 }
 
 Addr
 SEWorkload::memSize(int pool_id) const
 {
-    return system->memSize(pool_id);
+    return memPools.memSize(pool_id);
 }
 
 Addr
 SEWorkload::freeMemSize(int pool_id) const
 {
-    return system->freeMemSize(pool_id);
+    return memPools.freeMemSize(pool_id);
 }
 
 } // namespace gem5

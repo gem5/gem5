@@ -31,6 +31,7 @@
 #define __ARCH_RISCV_LINUX_SE_WORKLOAD_HH__
 
 #include "arch/riscv/linux/linux.hh"
+#include "arch/riscv/page_size.hh"
 #include "arch/riscv/se_workload.hh"
 #include "params/RiscvEmuLinux.hh"
 #include "sim/syscall_desc.hh"
@@ -54,7 +55,7 @@ class EmuLinux : public SEWorkload
   public:
     using Params = RiscvEmuLinuxParams;
 
-    EmuLinux(const Params &p) : SEWorkload(p) {}
+    EmuLinux(const Params &p) : SEWorkload(p, PageShift) {}
 
     void syscall(ThreadContext *tc) override;
 };

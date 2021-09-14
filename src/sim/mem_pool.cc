@@ -152,17 +152,11 @@ MemPools::populate(const System &sys)
     AddrRangeList memories = sys.getPhysMem().getConfAddrRanges();
     const auto &m5op_range = sys.m5opRange();
 
-    assert(!memories.empty());
-    for (const auto &mem : memories) {
-        assert(!mem.interleaved());
-        if (m5op_range.valid()) {
-            // Make sure the m5op range is not included.
-            for (const auto &range: mem.exclude({m5op_range}))
-                pools.emplace_back(pageShift, range.start(), range.end());
-        } else {
-            pools.emplace_back(pageShift, mem.start(), mem.end());
-        }
-    }
+    if (m5op_range.valid())
+        memories -= m5op_range;
+
+    for (const auto &mem : memories)
+        pools.emplace_back(pageShift, mem.start(), mem.end());
 
     /*
      * Set freePage to what it was before Gabe Black's page table changes

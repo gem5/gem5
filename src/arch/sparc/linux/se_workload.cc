@@ -30,6 +30,7 @@
 
 #include <sys/syscall.h>
 
+#include "arch/sparc/page_size.hh"
 #include "arch/sparc/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/trace.hh"
@@ -76,7 +77,7 @@ LinuxLoader linuxLoader;
 namespace SparcISA
 {
 
-EmuLinux::EmuLinux(const Params &p) : SEWorkload(p)
+EmuLinux::EmuLinux(const Params &p) : SEWorkload(p, PageShift)
 {}
 
 void

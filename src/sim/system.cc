@@ -67,7 +67,6 @@
 #include "params/System.hh"
 #include "sim/byteswap.hh"
 #include "sim/debug.hh"
-#include "sim/full_system.hh"
 #include "sim/redirect_path.hh"
 #include "sim/serialize_handlers.hh"
 
@@ -199,7 +198,6 @@ int System::numSystemsRunning = 0;
 System::System(const Params &p)
     : SimObject(p), _systemPort("system_port", this),
       multiThread(p.multi_thread),
-      memPools(getPageShift()),
       init_param(p.init_param),
       physProxy(_systemPort, p.cache_line_size),
       workload(p.workload),
@@ -221,9 +219,6 @@ System::System(const Params &p)
 {
     if (workload)
         workload->setSystem(this);
-
-    if (!FullSystem)
-        memPools.populate(*this);
 
     // add self to global system list
     systemList.push_back(this);
@@ -343,24 +338,9 @@ System::validKvmEnvironment() const
 }
 
 Addr
-System::allocPhysPages(int npages, int pool_id)
+System::memSize() const
 {
-    assert(!FullSystem);
-    return memPools.allocPhysPages(npages, pool_id);
-}
-
-Addr
-System::memSize(int pool_id) const
-{
-    assert(!FullSystem);
-    return memPools.memSize(pool_id);
-}
-
-Addr
-System::freeMemSize(int pool_id) const
-{
-    assert(!FullSystem);
-    return memPools.freeMemSize(pool_id);
+    return physmem.totalSize();
 }
 
 bool
@@ -414,8 +394,6 @@ System::serialize(CheckpointOut &cp) const
         paramOut(cp, csprintf("quiesceEndTick_%d", id), when);
     }
 
-    memPools.serializeSection(cp, "memPools");
-
     // also serialize the memories in the system
     physmem.serializeSection(cp, "physmem");
 }
@@ -435,8 +413,6 @@ System::unserialize(CheckpointIn &cp)
         t.context->getCpuPtr()->schedule(t.resumeEvent, when);
 #       endif
     }
-
-    memPools.unserializeSection(cp, "memPools");
 
     // also unserialize the memories in the system
     physmem.unserializeSection(cp, "physmem");

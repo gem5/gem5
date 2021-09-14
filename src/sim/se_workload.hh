@@ -29,6 +29,7 @@
 #define __SIM_SE_WORKLOAD_HH__
 
 #include "params/SEWorkload.hh"
+#include "sim/mem_pool.hh"
 #include "sim/workload.hh"
 
 namespace gem5
@@ -36,10 +37,16 @@ namespace gem5
 
 class SEWorkload : public Workload
 {
+  protected:
+    /** Memory allocation objects for all physical memories in the system. */
+    MemPools memPools;
+
   public:
     using Params = SEWorkloadParams;
 
-    SEWorkload(const Params &p);
+    SEWorkload(const Params &p, Addr page_shift=0);
+
+    void setSystem(System *sys) override;
 
     Addr
     getEntry() const override
