@@ -728,7 +728,6 @@ class MetaSimObject(type):
 
 #include "base/compiler.hh"
 #include "params/$cls.hh"
-#include "python/pybind11/core.hh"
 #include "sim/init.hh"
 #include "sim/sim_object.hh"
 

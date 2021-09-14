@@ -36,6 +36,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <cmath>
@@ -44,6 +45,8 @@
 #include "base/bitfield.hh"
 
 using namespace gem5;
+
+using testing::ElementsAre;
 
 TEST(AddrRangeTest, ValidRange)
 {
@@ -921,10 +924,10 @@ TEST(AddrRangeTest, InterleavingNotEqualTo)
 }
 
 /*
- * The AddrRange(std::vector<AddrRange>) constructor "merges" the interleaving
+ * The AddrRange(AddrRangeList) constructor "merges" the interleaving
  * address ranges. It should be noted that this constructor simply checks that
  * these interleaving addresses can be merged then creates a new address from
- * the start and end addresses of the first address range in the vector.
+ * the start and end addresses of the first address range in the list.
  */
 TEST(AddrRangeTest, MergingInterleavingAddressRanges)
 {
@@ -942,7 +945,7 @@ TEST(AddrRangeTest, MergingInterleavingAddressRanges)
     uint8_t intlv_match2 = 1;
     AddrRange r2(start2, end2, masks2, intlv_match2);
 
-    std::vector<AddrRange> to_merge;
+    AddrRangeList to_merge;
     to_merge.push_back(r1);
     to_merge.push_back(r2);
 
@@ -956,7 +959,7 @@ TEST(AddrRangeTest, MergingInterleavingAddressRanges)
 TEST(AddrRangeTest, MergingInterleavingAddressRangesOneRange)
 {
     /*
-     * In the case where there is just one range in the vector, the merged
+     * In the case where there is just one range in the list, the merged
      * address range is equal to that range.
      */
     Addr start = 0x0000;
@@ -966,7 +969,7 @@ TEST(AddrRangeTest, MergingInterleavingAddressRangesOneRange)
     uint8_t intlv_match = 0;
     AddrRange r(start, end, masks, intlv_match);
 
-    std::vector<AddrRange> to_merge;
+    AddrRangeList to_merge;
     to_merge.push_back(r);
 
     AddrRange output(to_merge);
@@ -1105,7 +1108,7 @@ TEST(AddrRangeTest, RangeSizeConstruction){
  */
 TEST(AddrRangeTest, ExcludeAll)
 {
-    const std::vector<AddrRange> exclude_ranges{
+    const AddrRangeList exclude_ranges{
         AddrRange(0x0, 0x200)
     };
 
@@ -1129,7 +1132,7 @@ TEST(AddrRangeTest, ExcludeAll)
  */
 TEST(AddrRangeTest, ExcludeAllEqual)
 {
-    const std::vector<AddrRange> exclude_ranges{
+    const AddrRangeList exclude_ranges{
         AddrRange(0x0, 0x100)
     };
 
@@ -1153,7 +1156,7 @@ TEST(AddrRangeTest, ExcludeAllEqual)
  */
 TEST(AddrRangeTest, ExcludeAllMultiple)
 {
-    const std::vector<AddrRange> exclude_ranges{
+    const AddrRangeList exclude_ranges{
         AddrRange(0x0, 0x30),
         AddrRange(0x30, 0x40),
         AddrRange(0x40, 0x120)
@@ -1183,7 +1186,7 @@ TEST(AddrRangeTest, ExcludeAllMultiple)
  */
 TEST(AddrRangeTest, ExcludeAllOverlapping)
 {
-    const std::vector<AddrRange> exclude_ranges{
+    const AddrRangeList exclude_ranges{
         AddrRange(0x0, 0x150),
         AddrRange(0x140, 0x220)
     };
@@ -1206,7 +1209,7 @@ TEST(AddrRangeTest, ExcludeAllOverlapping)
  */
 TEST(AddrRangeTest, ExcludeEmpty)
 {
-    const std::vector<AddrRange> exclude_ranges;
+    const AddrRangeList exclude_ranges;
 
     AddrRange r(0x00, 0x100);
     auto ranges = r.exclude(exclude_ranges);
@@ -1230,7 +1233,7 @@ TEST(AddrRangeTest, ExcludeEmpty)
  */
 TEST(AddrRangeTest, NoExclusion)
 {
-    const std::vector<AddrRange> exclude_ranges{
+    const AddrRangeList exclude_ranges{
         AddrRange(0x100, 0x200)
     };
 
@@ -1257,7 +1260,7 @@ TEST(AddrRangeTest, NoExclusion)
  */
 TEST(AddrRangeTest, DoubleExclusion)
 {
-    const std::vector<AddrRange> exclude_ranges{
+    const AddrRangeList exclude_ranges{
         AddrRange(0x000, 0x130),
         AddrRange(0x140, 0x170),
     };
@@ -1269,8 +1272,7 @@ TEST(AddrRangeTest, DoubleExclusion)
     auto ranges = r.exclude(exclude_ranges);
 
     EXPECT_EQ(ranges.size(), 2);
-    EXPECT_EQ(ranges[0], expected_range1);
-    EXPECT_EQ(ranges[1], expected_range2);
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2));
 }
 
 /*
@@ -1289,7 +1291,7 @@ TEST(AddrRangeTest, DoubleExclusion)
  */
 TEST(AddrRangeTest, MultipleExclusion)
 {
-    const std::vector<AddrRange> exclude_ranges{
+    const AddrRangeList exclude_ranges{
         AddrRange(0x000, 0x130),
         AddrRange(0x140, 0x170),
         AddrRange(0x180, 0x210)
@@ -1302,8 +1304,7 @@ TEST(AddrRangeTest, MultipleExclusion)
     auto ranges = r.exclude(exclude_ranges);
 
     EXPECT_EQ(ranges.size(), 2);
-    EXPECT_EQ(ranges[0], expected_range1);
-    EXPECT_EQ(ranges[1], expected_range2);
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2));
 }
 
 /*
@@ -1324,7 +1325,7 @@ TEST(AddrRangeTest, MultipleExclusion)
  */
 TEST(AddrRangeTest, MultipleExclusionOverlapping)
 {
-    const std::vector<AddrRange> exclude_ranges{
+    const AddrRangeList exclude_ranges{
         AddrRange(0x000, 0x130),
         AddrRange(0x140, 0x170),
         AddrRange(0x150, 0x210)
@@ -1336,7 +1337,7 @@ TEST(AddrRangeTest, MultipleExclusionOverlapping)
     auto ranges = r.exclude(exclude_ranges);
 
     EXPECT_EQ(ranges.size(), 1);
-    EXPECT_EQ(ranges[0], expected_range1);
+    EXPECT_THAT(ranges, ElementsAre(expected_range1));
 }
 
 /*
@@ -1359,7 +1360,7 @@ TEST(AddrRangeTest, MultipleExclusionOverlapping)
  */
 TEST(AddrRangeTest, ExclusionOverlapping)
 {
-    const std::vector<AddrRange> exclude_ranges{
+    const AddrRangeList exclude_ranges{
         AddrRange(0x120, 0x180),
         AddrRange(0x130, 0x170)
     };
@@ -1371,8 +1372,7 @@ TEST(AddrRangeTest, ExclusionOverlapping)
     auto ranges = r.exclude(exclude_ranges);
 
     EXPECT_EQ(ranges.size(), 2);
-    EXPECT_EQ(ranges[0], expected_range1);
-    EXPECT_EQ(ranges[1], expected_range2);
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2));
 }
 
 /*
@@ -1393,7 +1393,7 @@ TEST(AddrRangeTest, ExclusionOverlapping)
  */
 TEST(AddrRangeTest, MultipleExclusionUnsorted)
 {
-    const std::vector<AddrRange> exclude_ranges{
+    const AddrRangeList exclude_ranges{
         AddrRange(0x180, 0x210),
         AddrRange(0x000, 0x130),
         AddrRange(0x140, 0x170)
@@ -1406,8 +1406,7 @@ TEST(AddrRangeTest, MultipleExclusionUnsorted)
     auto ranges = r.exclude(exclude_ranges);
 
     EXPECT_EQ(ranges.size(), 2);
-    EXPECT_EQ(ranges[0], expected_range1);
-    EXPECT_EQ(ranges[1], expected_range2);
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2));
 }
 
 /*
@@ -1426,7 +1425,7 @@ TEST(AddrRangeDeathTest, ExcludeInterleavingRanges)
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assetions are stripped from fast builds.";
 #endif
-    const std::vector<AddrRange> exclude_ranges{
+    const AddrRangeList exclude_ranges{
         AddrRange(0x180, 0x210),
     };
 

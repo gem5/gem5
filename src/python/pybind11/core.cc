@@ -39,10 +39,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "pybind11/operators.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-
-#include "python/pybind11/core.hh"
 
 #include <ctime>
 
@@ -157,10 +156,6 @@ init_range(py::module_ &m_native)
         .def("isSubset", &AddrRange::isSubset)
         .def("exclude", &AddrRange::exclude)
         ;
-
-    // We need to make vectors of AddrRange opaque to avoid weird
-    // memory allocation issues in PyBind's STL wrappers.
-    py::bind_vector<std::vector<AddrRange>>(m, "AddrRangeVector");
 
     m.def("RangeEx", &RangeEx);
     m.def("RangeIn", &RangeIn);

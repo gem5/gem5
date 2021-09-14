@@ -42,6 +42,7 @@
 #define __BASE_ADDR_RANGE_HH__
 
 #include <algorithm>
+#include <iterator>
 #include <list>
 #include <vector>
 
@@ -52,6 +53,15 @@
 
 namespace gem5
 {
+
+class AddrRange;
+
+/**
+ * Convenience typedef for a collection of address ranges
+ *
+ * @ingroup api_addr_range
+ */
+typedef std::list<AddrRange> AddrRangeList;
 
 /**
  * The AddrRange class encapsulates an address range, and supports a
@@ -88,6 +98,48 @@ class AddrRange
 
     /** The value to compare sel with. */
     uint8_t intlvMatch;
+
+  protected:
+    struct Dummy {};
+
+    // The dummy parameter Dummy distinguishes this from the other two argument
+    // constructor which takes two Addrs.
+    template <class Iterator>
+    AddrRange(Dummy, Iterator begin_it, Iterator end_it)
+        : _start(1), _end(0), intlvMatch(0)
+    {
+        if (begin_it != end_it) {
+            // get the values from the first one and check the others
+            _start = begin_it->_start;
+            _end = begin_it->_end;
+            masks = begin_it->masks;
+            intlvMatch = begin_it->intlvMatch;
+        }
+
+        auto count = std::distance(begin_it, end_it);
+        // either merge if got all ranges or keep this equal to the single
+        // interleaved range
+        if (count > 1) {
+            fatal_if(count != (1ULL << masks.size()),
+                    "Got %d ranges spanning %d interleaving bits.",
+                    count, masks.size());
+
+            uint8_t match = 0;
+            for (auto it = begin_it; it != end_it; it++) {
+                fatal_if(!mergesWith(*it),
+                        "Can only merge ranges with the same start, end "
+                        "and interleaving bits, %s %s.", to_string(),
+                        it->to_string());
+
+                fatal_if(it->intlvMatch != match,
+                        "Expected interleave match %d but got %d when "
+                        "merging.", match, it->intlvMatch);
+                ++match;
+            }
+            masks.clear();
+            intlvMatch = 0;
+        }
+    }
 
   public:
 
@@ -215,40 +267,12 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    AddrRange(const std::vector<AddrRange>& ranges)
-        : _start(1), _end(0), intlvMatch(0)
-    {
-        if (!ranges.empty()) {
-            // get the values from the first one and check the others
-            _start = ranges.front()._start;
-            _end = ranges.front()._end;
-            masks = ranges.front().masks;
-            intlvMatch = ranges.front().intlvMatch;
-        }
-        // either merge if got all ranges or keep this equal to the single
-        // interleaved range
-        if (ranges.size() > 1) {
-
-            if (ranges.size() != (1ULL << masks.size()))
-                fatal("Got %d ranges spanning %d interleaving bits\n",
-                      ranges.size(), masks.size());
-
-            uint8_t match = 0;
-            for (const auto& r : ranges) {
-                if (!mergesWith(r))
-                    fatal("Can only merge ranges with the same start, end "
-                          "and interleaving bits, %s %s\n", to_string(),
-                          r.to_string());
-
-                if (r.intlvMatch != match)
-                    fatal("Expected interleave match %d but got %d when "
-                          "merging\n", match, r.intlvMatch);
-                ++match;
-            }
-            masks.clear();
-            intlvMatch = 0;
-        }
-    }
+    AddrRange(std::vector<AddrRange> ranges)
+        : AddrRange(Dummy{}, ranges.begin(), ranges.end())
+    {}
+    AddrRange(std::list<AddrRange> ranges)
+        : AddrRange(Dummy{}, ranges.begin(), ranges.end())
+    {}
 
     /**
      * Determine if the range is interleaved or not.
@@ -611,15 +635,15 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    std::vector<AddrRange>
-    exclude(const std::vector<AddrRange> &exclude_ranges) const
+    AddrRangeList
+    exclude(const AddrRangeList &exclude_ranges) const
     {
         assert(!interleaved());
 
         auto sorted_ranges = exclude_ranges;
-        std::sort(sorted_ranges.begin(), sorted_ranges.end());
+        sorted_ranges.sort();
 
-        std::vector<AddrRange> ranges;
+        std::list<AddrRange> ranges;
 
         Addr next_start = start();
         for (const auto &e : sorted_ranges) {
@@ -703,13 +727,6 @@ class AddrRange
         return !(*this == r);
     }
 };
-
-/**
- * Convenience typedef for a collection of address ranges
- *
- * @ingroup api_addr_range
- */
-typedef std::list<AddrRange> AddrRangeList;
 
 /**
  * @ingroup api_addr_range
