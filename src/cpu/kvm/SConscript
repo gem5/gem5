@@ -49,9 +49,8 @@ Source('vm.cc')
 Source('perfevent.cc')
 Source('timer.cc')
 
-if env['TARGET_ISA'] == 'x86':
-    SimObject('X86KvmCPU.py')
-    Source('x86_cpu.cc')
+SimObject('X86KvmCPU.py', tags='x86 isa')
+Source('x86_cpu.cc', tags='x86 isa')
 
 DebugFlag('Kvm', 'Basic KVM Functionality')
 DebugFlag('KvmContext', 'KVM/gem5 context synchronization')

@@ -29,5 +29,4 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'mips':
-    GdbXml('mips.xml', 'gdb_xml_mips')
+GdbXml('mips.xml', 'gdb_xml_mips', tags='mips isa')

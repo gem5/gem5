@@ -28,12 +28,11 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'sparc':
-    SimObject('T1000.py')
+SimObject('T1000.py', tags='sparc isa')
 
-    Source('dtod.cc')
-    Source('iob.cc')
-    Source('t1000.cc')
-    Source('mm_disk.cc')
+Source('dtod.cc', tags='sparc isa')
+Source('iob.cc', tags='sparc isa')
+Source('t1000.cc', tags='sparc isa')
+Source('mm_disk.cc', tags='sparc isa')
 
-    DebugFlag('Iob')
+DebugFlag('Iob', tags='sparc isa')

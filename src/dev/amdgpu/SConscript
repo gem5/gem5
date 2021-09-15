@@ -31,13 +31,13 @@
 
 Import('*')
 
-if env['TARGET_ISA'] != 'x86' or not env['BUILD_GPU']:
+if not env['BUILD_GPU']:
     Return()
 
 # Controllers
-SimObject('AMDGPU.py')
+SimObject('AMDGPU.py', tags='x86 isa')
 
-Source('amdgpu_device.cc')
-Source('mmio_reader.cc')
+Source('amdgpu_device.cc', tags='x86 isa')
+Source('mmio_reader.cc', tags='x86 isa')
 
-DebugFlag('AMDGPUDevice')
+DebugFlag('AMDGPUDevice', tags='x86 isa')

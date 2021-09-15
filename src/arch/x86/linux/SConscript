@@ -40,11 +40,8 @@
 
 Import('*')
 
-if env['TARGET_ISA'] != 'x86':
-    Return()
-
-Source('fs_workload.cc')
-Source('se_workload.cc')
-Source('syscalls.cc')
-Source('syscall_tbl32.cc')
-Source('syscall_tbl64.cc')
+Source('fs_workload.cc', tags='x86 isa')
+Source('se_workload.cc', tags='x86 isa')
+Source('syscalls.cc', tags='x86 isa')
+Source('syscall_tbl32.cc', tags='x86 isa')
+Source('syscall_tbl64.cc', tags='x86 isa')

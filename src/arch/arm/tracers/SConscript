@@ -35,10 +35,9 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'arm':
-    SimObject('TarmacTrace.py')
-    Source('tarmac_base.cc')
-    Source('tarmac_parser.cc')
-    Source('tarmac_tracer.cc')
-    Source('tarmac_record.cc')
-    Source('tarmac_record_v8.cc')
+SimObject('TarmacTrace.py', tags='arm isa')
+Source('tarmac_base.cc', tags='arm isa')
+Source('tarmac_parser.cc', tags='arm isa')
+Source('tarmac_tracer.cc', tags='arm isa')
+Source('tarmac_record.cc', tags='arm isa')
+Source('tarmac_record_v8.cc', tags='arm isa')

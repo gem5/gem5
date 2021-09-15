@@ -28,22 +28,20 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'riscv':
+SimObject('HiFive.py', tags='riscv isa')
+SimObject('Clint.py', tags='riscv isa')
+SimObject('PlicDevice.py', tags='riscv isa')
+SimObject('Plic.py', tags='riscv isa')
+SimObject('RTC.py', tags='riscv isa')
+SimObject('RiscvVirtIOMMIO.py', tags='riscv isa')
 
-    SimObject('HiFive.py')
-    SimObject('Clint.py')
-    SimObject('PlicDevice.py')
-    SimObject('Plic.py')
-    SimObject('RTC.py')
-    SimObject('RiscvVirtIOMMIO.py')
+DebugFlag('Clint', tags='riscv isa')
+DebugFlag('Plic', tags='riscv isa')
+DebugFlag('VirtIOMMIO', tags='riscv isa')
 
-    DebugFlag('Clint')
-    DebugFlag('Plic')
-    DebugFlag('VirtIOMMIO')
-
-    Source('hifive.cc')
-    Source('clint.cc')
-    Source('plic_device.cc')
-    Source('plic.cc')
-    Source('rtc.cc')
-    Source('vio_mmio.cc')
+Source('hifive.cc', tags='riscv isa')
+Source('clint.cc', tags='riscv isa')
+Source('plic_device.cc', tags='riscv isa')
+Source('plic.cc', tags='riscv isa')
+Source('rtc.cc', tags='riscv isa')
+Source('vio_mmio.cc', tags='riscv isa')

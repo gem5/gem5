@@ -25,7 +25,7 @@
 
 Import('*')
 
-if not env['USE_ARM_FASTMODEL'] or env['TARGET_ISA'] != 'arm':
+if not env['USE_ARM_FASTMODEL']:
     Return()
 
 protocol_dir = Dir('..').Dir('protocol')

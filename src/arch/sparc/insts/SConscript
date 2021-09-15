@@ -28,12 +28,11 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'sparc':
-    Source('blockmem.cc')
-    Source('branch.cc')
-    Source('integer.cc')
-    Source('mem.cc')
-    Source('micro.cc')
-    Source('priv.cc')
-    Source('static_inst.cc')
-    Source('trap.cc')
+Source('blockmem.cc', tags='sparc isa')
+Source('branch.cc', tags='sparc isa')
+Source('integer.cc', tags='sparc isa')
+Source('mem.cc', tags='sparc isa')
+Source('micro.cc', tags='sparc isa')
+Source('priv.cc', tags='sparc isa')
+Source('static_inst.cc', tags='sparc isa')
+Source('trap.cc', tags='sparc isa')

@@ -43,8 +43,7 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'riscv':
-    GdbXml('riscv.xml', 'gdb_xml_riscv_target')
-    GdbXml('riscv-64bit-cpu.xml', 'gdb_xml_riscv_cpu')
-    GdbXml('riscv-64bit-fpu.xml', 'gdb_xml_riscv_fpu')
-    GdbXml('riscv-64bit-csr.xml', 'gdb_xml_riscv_csr')
+GdbXml('riscv.xml', 'gdb_xml_riscv_target', tags='riscv isa')
+GdbXml('riscv-64bit-cpu.xml', 'gdb_xml_riscv_cpu', tags='riscv isa')
+GdbXml('riscv-64bit-fpu.xml', 'gdb_xml_riscv_fpu', tags='riscv isa')
+GdbXml('riscv-64bit-csr.xml', 'gdb_xml_riscv_csr', tags='riscv isa')
