@@ -905,12 +905,11 @@ ISA::setMiscReg(int misc_reg, RegVal val)
         CPSR old_cpsr = miscRegs[MISCREG_CPSR];
         int old_mode = old_cpsr.mode;
         CPSR cpsr = val;
-        if (old_mode != cpsr.mode || cpsr.il != old_cpsr.il) {
-            getMMUPtr(tc)->invalidateMiscReg();
-        }
-
         if (cpsr.pan != old_cpsr.pan) {
             getMMUPtr(tc)->invalidateMiscReg(MMU::D_TLBS);
+        }
+        if (cpsr.il != old_cpsr.il) {
+            getMMUPtr(tc)->invalidateMiscReg();
         }
 
         DPRINTF(Arm, "Updating CPSR from %#x to %#x f:%d i:%d a:%d mode:%#x\n",
@@ -930,6 +929,24 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             tc->pcStateNoRecord(pc);
         } else {
             tc->pcState(pc);
+        }
+
+        setMiscRegNoEffect(misc_reg, newVal);
+
+        if (old_mode != cpsr.mode) {
+            getMMUPtr(tc)->invalidateMiscReg();
+            if (gicv3CpuInterface) {
+                // The assertion and de-assertion of IRQs and FIQs are
+                // affected by the current Exception level and Security
+                // state of the PE. As part of the Context
+                // Synchronization that occurs as the result of taking
+                // or returning from an exception, the CPU interface
+                // ensures that IRQ and FIQ are both appropriately
+                // asserted or deasserted for the Exception level and
+                // Security state that the PE is entering.
+                static_cast<Gicv3CPUInterface&>(
+                    getGICv3CPUInterface()).update();
+            }
         }
     } else {
 #ifndef NDEBUG
@@ -2333,8 +2350,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             tc->getDecoderPtr()->setSveLen((getCurSveVecLenInBits() >> 7) - 1);
             break;
         }
+        setMiscRegNoEffect(misc_reg, newVal);
     }
-    setMiscRegNoEffect(misc_reg, newVal);
 }
 
 BaseISADevice &

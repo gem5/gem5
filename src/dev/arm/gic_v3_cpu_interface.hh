@@ -50,12 +50,18 @@ namespace gem5
 class Gicv3Distributor;
 class Gicv3Redistributor;
 
+namespace ArmISA
+{
+class ISA;
+}
+
 class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
 {
   private:
 
     friend class Gicv3Distributor;
     friend class Gicv3Redistributor;
+    friend class ArmISA::ISA;
 
   protected:
 
