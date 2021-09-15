@@ -41,12 +41,15 @@
 #include "debug/VirtIOMMIO.hh"
 #include "dev/riscv/hifive.hh"
 #include "mem/packet_access.hh"
-#include "params/MmioVirtIO.hh"
+#include "params/RiscvMmioVirtIO.hh"
 
 namespace gem5
 {
 
-MmioVirtIO::MmioVirtIO(const MmioVirtIOParams &params)
+namespace RiscvISA
+{
+
+MmioVirtIO::MmioVirtIO(const RiscvMmioVirtIOParams &params)
     : PlicIntDevice(params),
       hostFeaturesSelect(0), guestFeaturesSelect(0), pageSize(0),
       interruptStatus(0), vio(*params.vio)
@@ -273,5 +276,7 @@ MmioVirtIO::setInterrupts(uint32_t value)
         platform->clearPciInt(_interruptID);
     }
 }
+
+} // namespace RiscvISA
 
 } // namespace gem5

@@ -42,10 +42,10 @@ from m5.util.fdthelper import *
 from m5.objects.PlicDevice import PlicIntDevice
 from m5.objects.VirtIO import VirtIODummyDevice
 
-class MmioVirtIO(PlicIntDevice):
-    type = 'MmioVirtIO'
+class RiscvMmioVirtIO(PlicIntDevice):
+    type = 'RiscvMmioVirtIO'
     cxx_header = 'dev/riscv/vio_mmio.hh'
-    cxx_class = 'gem5::MmioVirtIO'
+    cxx_class = 'gem5::RiscvISA::MmioVirtIO'
     vio = Param.VirtIODeviceBase(VirtIODummyDevice(), "VirtIO device")
 
     def generateDeviceTree(self, state):

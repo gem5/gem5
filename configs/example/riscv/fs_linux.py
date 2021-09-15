@@ -170,7 +170,7 @@ system.platform.clint.int_pin = system.platform.rtc.int_pin
 if args.disk_image:
     image = CowDiskImage(child=RawDiskImage(read_only=True), read_only=False)
     image.child.image_file = mdesc.disks()[0]
-    system.platform.disk = MmioVirtIO(
+    system.platform.disk = RiscvMmioVirtIO(
         vio=VirtIOBlock(image=image),
         interrupt_id=0x8,
         pio_size=4096,

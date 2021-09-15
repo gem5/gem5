@@ -46,12 +46,15 @@
 namespace gem5
 {
 
-struct MmioVirtIOParams;
+struct RiscvMmioVirtIOParams;
+
+namespace RiscvISA
+{
 
 class MmioVirtIO : public PlicIntDevice
 {
   public:
-    MmioVirtIO(const MmioVirtIOParams &params);
+    MmioVirtIO(const RiscvMmioVirtIOParams &params);
     virtual ~MmioVirtIO();
 
   protected: // BasicPioDevice
@@ -112,6 +115,8 @@ class MmioVirtIO : public PlicIntDevice
   protected: // Params
     VirtIODeviceBase &vio;
 };
+
+} // namespace RiscvISA
 
 } // namespace gem5
 

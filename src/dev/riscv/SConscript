@@ -35,7 +35,7 @@ if env['TARGET_ISA'] == 'riscv':
     SimObject('PlicDevice.py')
     SimObject('Plic.py')
     SimObject('RTC.py')
-    SimObject('VirtIOMMIO.py')
+    SimObject('RiscvVirtIOMMIO.py')
 
     DebugFlag('Clint')
     DebugFlag('Plic')

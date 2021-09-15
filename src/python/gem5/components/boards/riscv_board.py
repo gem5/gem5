@@ -50,7 +50,7 @@ from m5.objects import (
     HiFive,
     CowDiskImage,
     RawDiskImage,
-    MmioVirtIO,
+    RiscvMmioVirtIO,
     VirtIOBlock,
     Frequency,
     Port,
@@ -110,7 +110,7 @@ class RiscvBoard(SimpleBoard):
         self.iobus = IOXBar()
 
         # The virtio disk
-        self.disk = MmioVirtIO(
+        self.disk = RiscvMmioVirtIO(
             vio=VirtIOBlock(),
             interrupt_id=0x8,
             pio_size=4096,
