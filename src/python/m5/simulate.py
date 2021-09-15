@@ -1,4 +1,4 @@
-# Copyright (c) 2012,2019 ARM Limited
+# Copyright (c) 2012, 2019, 2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -347,6 +347,9 @@ def fork(simout="%(parent)s.f%(fork_seq)i"):
         raise RuntimeError("Can not fork a simulator with listeners enabled")
 
     drain()
+
+    # Terminate helper threads that service parallel event queues.
+    _m5.event.terminateEventQueueThreads()
 
     try:
         pid = os.fork()

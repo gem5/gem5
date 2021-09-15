@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -107,6 +107,7 @@ pybind_init_event(py::module_ &m_native)
 
     m.def("simulate", &simulate,
           py::arg("ticks") = MaxTick);
+    m.def("terminateEventQueueThreads", &terminateEventQueueThreads);
     m.def("exitSimLoop", &exitSimLoop);
     m.def("getEventQueue", []() { return curEventQueue(); },
           py::return_value_policy::reference);
