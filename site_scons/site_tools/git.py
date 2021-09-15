@@ -42,6 +42,7 @@ import os
 import sys
 
 import gem5_scons.util
+import SCons.Script
 
 git_style_message = """
 You're missing the gem5 style or commit message hook. These hooks help
@@ -99,11 +100,14 @@ def install_style_hooks(env):
         return
 
     print(git_style_message, end=' ')
-    try:
-        input()
-    except:
-        print("Input exception, exiting scons.\n")
-        sys.exit(1)
+    if SCons.Script.GetOption('install-hooks'):
+        print("Installing revision control hooks automatically.")
+    else:
+        try:
+            input()
+        except:
+            print("Input exception, exiting scons.\n")
+            sys.exit(1)
 
     git_style_script = env.Dir("#util").File("git-pre-commit.py")
     git_msg_script = env.Dir("#ext").File("git-commit-msg")

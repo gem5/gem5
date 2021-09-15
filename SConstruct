@@ -123,6 +123,8 @@ AddOption('--with-asan', action='store_true',
           help='Build with Address Sanitizer if available')
 AddOption('--with-systemc-tests', action='store_true',
           help='Build systemc tests')
+AddOption('--install-hooks', action='store_true',
+          help='Install revision control hooks non-interactively')
 
 # Imports of gem5_scons happen here since it depends on some options which are
 # declared above.
