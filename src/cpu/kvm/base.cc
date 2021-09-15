@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2015, 2017 ARM Limited
+ * Copyright (c) 2012, 2015, 2017, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -154,9 +154,9 @@ BaseKvmCPU::startup()
         inform("KVM: Coalesced not supported by host OS\n");
     }
 
-    Event *startupEvent(
-        new EventFunctionWrapper([this]{ startupThread(); }, name(), true));
-    schedule(startupEvent, curTick());
+    schedule(new EventFunctionWrapper([this]{
+                restartEqThread();
+            }, name(), true), curTick());
 }
 
 BaseKvmCPU::Status
@@ -228,7 +228,7 @@ BaseKvmCPU::finishMMIOPending()
 }
 
 void
-BaseKvmCPU::startupThread()
+BaseKvmCPU::restartEqThread()
 {
     // Do thread-specific initialization. We need to setup signal
     // delivery for counters and timers from within the thread that
@@ -388,6 +388,13 @@ BaseKvmCPU::drainResume()
 
     DPRINTF(Kvm, "drainResume\n");
     verifyMemoryMode();
+
+    /* The simulator may have terminated the threads servicing event
+     * queues. In that case, we need to re-initialize the new
+     * threads. */
+    schedule(new EventFunctionWrapper([this]{
+                restartEqThread();
+            }, name(), true), curTick());
 
     // The tick event is de-scheduled as a part of the draining
     // process. Re-schedule it if the thread context is active.
@@ -1274,6 +1281,11 @@ BaseKvmCPU::setupCounters()
         cfgCycles.wakeupEvents(1)
             .samplePeriod(42);
     }
+
+    // We might be re-attaching counters due threads being
+    // re-initialised after fork.
+    if (hwCycles.attached())
+        hwCycles.detach();
 
     hwCycles.attach(cfgCycles,
                     0); // TID (0 => currentThread)

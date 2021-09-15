@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -682,11 +682,12 @@ class BaseKvmCPU : public BaseCPU
      * example, when setting up timers, we need to know the TID of the
      * thread executing in KVM in order to deliver the timer signal to
      * that thread. This method is called as the first event in this
-     * SimObject's event queue.
+     * SimObject's event queue and after drainResume to handle changes
+     * to event queue service threads.
      *
      * @see startup
      */
-    void startupThread();
+    void restartEqThread();
 
     /** Try to drain the CPU if a drain is pending */
     bool tryDrain();
