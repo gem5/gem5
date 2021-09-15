@@ -289,6 +289,8 @@ pybind_init_core(py::module_ &m_native)
     m_core.attr("compileDate") = py::cast(compileDate);
     m_core.attr("gem5Version") = py::cast(gem5Version);
 
+    m_core.attr("TRACING_ON") = py::cast(TRACING_ON);
+
     m_core.attr("MaxTick") = py::cast(MaxTick);
 
     /*
