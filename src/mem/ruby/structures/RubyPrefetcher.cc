@@ -62,7 +62,7 @@ RubyPrefetcher::RubyPrefetcher(const Params &p)
     negativeFilter(p.unit_filter),
     nonUnitFilter(p.nonunit_filter),
     m_prefetch_cross_pages(p.cross_page),
-    m_page_shift(p.sys->getPageShift()),
+    pageShift(p.page_shift),
     rubyPrefetcherStats(this)
 {
     assert(m_num_streams > 0);
@@ -378,7 +378,7 @@ RubyPrefetcher::print(std::ostream& out) const
 Addr
 RubyPrefetcher::pageAddress(Addr addr) const
 {
-    return mbits<Addr>(addr, 63, m_page_shift);
+    return mbits<Addr>(addr, 63, pageShift);
 }
 
 } // namespace ruby

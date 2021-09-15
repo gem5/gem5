@@ -55,7 +55,6 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "params/RubyPrefetcher.hh"
 #include "sim/sim_object.hh"
-#include "sim/system.hh"
 
 #define MAX_PF_INFLIGHT 8
 
@@ -238,7 +237,7 @@ class RubyPrefetcher : public SimObject
 
         AbstractController *m_controller;
 
-        const Addr m_page_shift;
+        const unsigned pageShift;
 
         struct RubyPrefetcherStats : public statistics::Group
         {

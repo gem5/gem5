@@ -57,7 +57,8 @@ class RubyPrefetcher(SimObject):
     num_startup_pfs = Param.UInt32(1, "")
     cross_page = Param.Bool(False, """True if prefetched address can be on a
             page different from the observed address""")
-    sys = Param.System(Parent.any, "System this prefetcher belongs to")
+    page_shift = Param.UInt32(12,
+        "Number of bits to mask to get a page number")
 
 class Prefetcher(RubyPrefetcher):
     """DEPRECATED"""
