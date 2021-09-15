@@ -226,6 +226,8 @@ class ArmFault : public FaultBase
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 nullStaticInstPtr) override;
+    void invoke32(ThreadContext *tc, const StaticInstPtr &inst =
+                  nullStaticInstPtr);
     void invoke64(ThreadContext *tc, const StaticInstPtr &inst =
                   nullStaticInstPtr);
     void update(ThreadContext *tc);

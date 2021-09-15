@@ -497,15 +497,20 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     if (to64) {
         // Invoke exception handler in AArch64 state
         invoke64(tc, inst);
-        return;
+    } else {
+        // Invoke exception handler in AArch32 state
+        invoke32(tc, inst);
     }
+}
 
+void
+ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
+{
     if (vectorCatch(tc, inst))
         return;
 
     // ARMv7 (ARM ARM issue C B1.9)
-
-    bool have_security       = ArmSystem::haveSecurity(tc);
+    bool have_security = ArmSystem::haveSecurity(tc);
 
     FaultBase::invoke(tc);
     if (!FullSystem)
@@ -520,7 +525,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     saved_cpsr.v = tc->readCCReg(CCREG_V);
     saved_cpsr.ge = tc->readCCReg(CCREG_GE);
 
-    [[maybe_unused]] Addr curPc = tc->pcState().pc();
+    [[maybe_unused]] Addr cur_pc = tc->pcState().pc();
     ITSTATE it = tc->pcState().itstate();
     saved_cpsr.it2 = it.top6;
     saved_cpsr.it1 = it.bottom2;
@@ -578,10 +583,10 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     tc->setMiscReg(MISCREG_LOCKFLAG, 0);
 
     if (cpsr.mode == MODE_HYP) {
-        tc->setMiscReg(MISCREG_ELR_HYP, curPc +
+        tc->setMiscReg(MISCREG_ELR_HYP, cur_pc +
                 (saved_cpsr.t ? thumbPcOffset(true)  : armPcOffset(true)));
     } else {
-        tc->setIntReg(INTREG_LR, curPc +
+        tc->setIntReg(INTREG_LR, cur_pc +
                 (saved_cpsr.t ? thumbPcOffset(false) : armPcOffset(false)));
     }
 
@@ -616,12 +621,12 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         panic("unknown Mode\n");
     }
 
-    Addr newPc = getVector(tc);
+    Addr new_pc = getVector(tc);
     DPRINTF(Faults, "Invoking Fault:%s cpsr:%#x PC:%#x lr:%#x newVec: %#x "
-            "%s\n", name(), cpsr, curPc, tc->readIntReg(INTREG_LR),
-            newPc, arm_inst ? csprintf("inst: %#x", arm_inst->encoding()) :
+            "%s\n", name(), cpsr, cur_pc, tc->readIntReg(INTREG_LR),
+            new_pc, arm_inst ? csprintf("inst: %#x", arm_inst->encoding()) :
             std::string());
-    PCState pc(newPc);
+    PCState pc(new_pc);
     pc.thumb(cpsr.t);
     pc.nextThumb(pc.thumb());
     pc.jazelle(cpsr.j);
