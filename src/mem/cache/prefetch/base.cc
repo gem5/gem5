@@ -98,7 +98,7 @@ Base::Base(const BasePrefetcherParams &p)
       lBlkSize(floorLog2(blkSize)), onMiss(p.on_miss), onRead(p.on_read),
       onWrite(p.on_write), onData(p.on_data), onInst(p.on_inst),
       requestorId(p.sys->getRequestorId(this)),
-      pageBytes(p.sys->getPageBytes()),
+      pageBytes(p.page_bytes),
       prefetchOnAccess(p.prefetch_on_access),
       prefetchOnPfHit(p.prefetch_on_pf_hit),
       useVirtualAddresses(p.use_virtual_addresses),
