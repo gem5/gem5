@@ -134,18 +134,7 @@ pybind_init_event(py::module_ &m_native)
                std::unique_ptr<GlobalSimLoopExitEvent, py::nodelete>>(
                m, "GlobalSimLoopExitEvent")
         .def("getCause", &GlobalSimLoopExitEvent::getCause)
-#if PY_MAJOR_VERSION >= 3
         .def("getCode", &GlobalSimLoopExitEvent::getCode)
-#else
-        // Workaround for an issue where PyBind11 converts the exit
-        // code to a long. This is normally fine, but sys.exit treats
-        // any non-int type as an error and exits with status 1 if it
-        // is passed a long.
-        .def("getCode", [](GlobalSimLoopExitEvent *e) {
-                return py::reinterpret_steal<py::object>(
-                    PyInt_FromLong(e->getCode()));
-            })
-#endif
         ;
 
     // Event base class. These should never be returned directly to
