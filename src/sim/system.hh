@@ -398,11 +398,6 @@ class System : public SimObject, public PCEventScope
     Addr getPageBytes() const { return TheISA::PageBytes; }
 
     /**
-     * Get the number of bits worth of in-page address for the ISA.
-     */
-    Addr getPageShift() const { return TheISA::PageShift; }
-
-    /**
      * The thermal model used for this system (if any).
      */
     ThermalModel * getThermalModel() const { return thermalModel; }
