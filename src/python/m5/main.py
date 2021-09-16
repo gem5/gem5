@@ -334,12 +334,13 @@ def interact(scope):
 
 
 def _check_tracing():
+    import m5
     import _m5.core
 
     if _m5.core.TRACING_ON:
         return
 
-    fatal("Tracing is not enabled.  Compile with TRACING_ON")
+    m5.fatal("Tracing is not enabled.  Compile with TRACING_ON")
 
 
 def main():
