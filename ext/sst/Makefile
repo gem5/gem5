@@ -1,9 +1,10 @@
-# These two variables are designed to be modifiable.
-SST_VERSION=SST-trunk
+SST_VERSION=SST-11.1.0 # Name of the .pc file in lib/pkgconfig where SST is installed
 GEM5_LIB=gem5_opt
+ARCH=RISCV
+OFLAG=3
 
-LDFLAGS=-shared -fno-common ${shell pkg-config ${SST_VERSION} --libs} -L../../build/ARM
-CXXFLAGS=-std=c++0x -g -O2 -fPIC ${shell pkg-config ${SST_VERSION} --cflags} ${shell python-config --includes} -I../../build/ARM
+LDFLAGS=-shared -fno-common ${shell pkg-config ${SST_VERSION} --libs} -L../../build/${ARCH}/ -Wl,-rpath ../../build/${ARCH}
+CXXFLAGS=-std=c++17 -g -O${OFLAG} -fPIC ${shell pkg-config ${SST_VERSION} --cflags} ${shell python3-config --includes} -I../../build/${ARCH}/ -I../../ext/pybind11/include/ -I../../build/softfloat/
 CPPFLAGS+=-MMD -MP
 SRC=$(wildcard *.cc)
 

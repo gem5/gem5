@@ -1,15 +1,6 @@
-// Copyright (c) 2015-2016 ARM Limited
+// Copyright (c) 2021 The Regents of the University of California
 // All rights reserved.
-// 
-// The license below extends only to copyright in the software and shall
-// not be construed as granting a license to any other intellectual
-// property including but not limited to intellectual property relating
-// to a hardware implementation of the functionality of the software
-// licensed hereunder.  You may use the software subject to the license
-// terms below provided that you ensure that this notice is replicated
-// unmodified and in its entirety in all distributions of the software,
-// modified or unmodified, in source code or in binary form.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met: redistributions of source code must retain the above copyright
@@ -20,7 +11,42 @@
 // neither the name of the copyright holders nor the names of its
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
-// 
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// Copyright (c) 2015-2016 ARM Limited
+// All rights reserved.
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -42,23 +68,48 @@
 //
 // For license information, see the LICENSE file in the current directory.
 
-#include <core/sst_config.h>
+#include <sst/core/sst_config.h>
+#include <sst/core/componentInfo.h>
+#include <sst/core/interfaces/simpleMem.h>
+#include <sst/elements/memHierarchy/memEvent.h>
+#include <sst/elements/memHierarchy/memTypes.h>
+#include <sst/elements/memHierarchy/util.h>
+
 #include <Python.h>  // Before serialization to prevent spurious warnings
 
 #include "gem5.hh"
 
+#include "util.hh"
+
 // System headers
-#include <boost/tokenizer.hpp>
+#include <algorithm>
+#include <fstream>
+#include <iterator>
+#include <sstream>
 #include <string>
+#include <vector>
 
 // gem5 Headers
-#include <sim/cur_tick.hh>
+#include <sim/core.hh>
 #include <sim/init.hh>
 #include <sim/init_signals.hh>
+#include <sim/root.hh>
 #include <sim/system.hh>
+#include <sim/sim_events.hh>
 #include <sim/sim_object.hh>
 #include <base/logging.hh>
 #include <base/debug.hh>
+
+#include <base/pollevent.hh>
+#include <base/types.hh>
+#include <sim/async.hh>
+#include <sim/eventq.hh>
+#include <sim/sim_exit.hh>
+#include <sim/stat_control.hh>
+
+#include <sst/outgoing_request_bridge.hh>
+
+#include <cassert>
 
 #ifdef fatal  // gem5 sets this
 #undef fatal
@@ -67,205 +118,352 @@
 // More SST Headers
 #include <core/timeConverter.h>
 
-using namespace SST;
-using namespace SST::gem5;
-
-gem5Component::gem5Component(ComponentId_t id, Params &params) :
-    SST::Component(id)
+gem5Component::gem5Component(SST::ComponentId_t id, SST::Params& params):
+    SST::Component(id), threadInitialized(false)
 {
-    dbg.init("@t:gem5:@p():@l " + getName() + ": ", 0, 0,
-            (Output::output_location_t)params.find<int>("comp_debug", 0));
-    info.init("gem5:" + getName() + ": ", 0, 0, Output::STDOUT);
+    output.init("gem5Component-" + getName() + "->", 1, 0,
+                SST::Output::STDOUT);
 
-    TimeConverter *clock = registerClock(
-            params.find<std::string>("frequency", "1GHz"),
-            new Clock::Handler<gem5Component>(this, &gem5Component::clockTick));
+    std::string cpu_frequency = params.find<std::string>("frequency", "");
+    if (cpu_frequency.empty()) {
+        output.fatal(
+            CALL_INFO, -1, "The frequency of the CPU must be specified.\n"
+        );
+    }
 
-    // This sets how many gem5 cycles we'll need to simulate per clock tick
-    sim_cycles = clock->getFactor();
+    // Register a handler to be called on a set frequency.
+    timeConverter = registerClock(
+        cpu_frequency,
+        new SST::Clock::Handler<gem5Component>(this, &gem5Component::clockTick)
+    );
 
-    // Disable gem5's inform() messages.
-    want_info = false;
-
+    // "cmd" -> gem5's Python
     std::string cmd = params.find<std::string>("cmd", "");
     if (cmd.empty()) {
-        dbg.fatal(CALL_INFO, -1, "Component %s must have a 'cmd' parameter.\n",
-               getName().c_str());
+        output.fatal(
+            CALL_INFO, -1, "Component %s must have a 'cmd' parameter.\n",
+            getName().c_str()
+        );
     }
 
-    std::vector<char*> args;
-    args.push_back(const_cast<char*>("sst.x")); // TODO: Compute this somehow?
+    // Telling SST the command line call to gem5
+    args.push_back(const_cast<char*>("sst.x"));
     splitCommandArgs(cmd, args);
-    args.push_back(const_cast<char*>("--initialize-only"));
-    dbg.output(CALL_INFO, "Command string:  [sst.x %s --initialize-only]\n",
-               cmd.c_str());
+    output.output(CALL_INFO, "Command string:  [sst.x %s]\n", cmd.c_str());
     for (size_t i = 0; i < args.size(); ++i) {
-        dbg.output(CALL_INFO, "  Arg [%02zu] = %s\n", i, args[i]);
+        output.output(CALL_INFO, "  Arg [%02zu] = %s\n", i, args[i]);
     }
 
-    std::vector<char*> flags;
-    std::string gem5DbgFlags = params.find<std::string>("gem5DebugFlags", "");
-    splitCommandArgs(gem5DbgFlags, flags);
-    for (auto flag : flags) {
-        dbg.output(CALL_INFO, "  Setting Debug Flag [%s]\n", flag);
-        ::gem5::setDebugFlag(flag);
+    // Parsing and setting gem5 debug flags
+    std::string gem5_debug_flags = params.find<std::string>("debug_flags", "");
+    for (auto const debug_flag: tokenizeString(gem5_debug_flags, {' ', ','})) {
+        output.output(CALL_INFO, "Debug flag += %s\n", debug_flag.c_str());
+        gem5::setDebugFlag(debug_flag.c_str());
     }
 
-    // These are idempotent
-    ::gem5::ExternalMaster::registerHandler("sst", this);
-    ::gem5::ExternalSlave::registerHandler("sst", this);
-
-    // Initialize gem5's special signal handling.
-    ::gem5::initSignals();
-
-    initPython(args.size(), &args[0]);
-
-    // tell the simulator not to end without us
     registerAsPrimaryComponent();
     primaryComponentDoNotEndSim();
 
-    clocks_processed = 0;
+    systemPort = \
+        loadUserSubComponent<SSTResponderSubComponent>("system_port",0);
+    cachePort = \
+        loadUserSubComponent<SSTResponderSubComponent>("cache_port", 0);
+
+    systemPort->setTimeConverter(timeConverter);
+    systemPort->setOutputStream(&(output));
+    cachePort->setTimeConverter(timeConverter);
+    cachePort->setOutputStream(&(output));
+
 }
 
-gem5Component::~gem5Component(void)
+gem5Component::~gem5Component()
 {
-    Py_Finalize();
 }
 
 void
 gem5Component::init(unsigned phase)
 {
-    for (auto m : masters) {
-        m->init(phase);
+    output.output(CALL_INFO," init phase: %u\n", phase);
+
+    if (phase == 0) {
+        initPython(args.size(), &args[0]);
+
+        const std::vector<std::string> m5_instantiate_commands = {
+            "m5.instantiate()"
+        };
+        execPythonCommands(m5_instantiate_commands);
+
+        // calling SimObject.startup()
+        const std::vector<std::string> simobject_setup_commands = {
+            "import atexit",
+            "import _m5",
+            "root = m5.objects.Root.getInstance()",
+            "for obj in root.descendants(): obj.startup()",
+            "atexit.register(m5.stats.dump)",
+            "atexit.register(_m5.core.doExitCleanup)",
+            "m5.stats.reset()"
+        };
+        execPythonCommands(simobject_setup_commands);
+
+        // find the corresponding SimObject for each SSTResponderSubComponent
+        gem5::Root* gem5_root = gem5::Root::root();
+        systemPort->findCorrespondingSimObject(gem5_root);
+        cachePort->findCorrespondingSimObject(gem5_root);
+
+        // initialize the gem5 event queue
+        if (!(threadInitialized)) {
+            threadInitialized = true;
+            gem5::simulate_limit_event = new gem5::GlobalSimLoopExitEvent(
+                gem5::mainEventQueue[0]->getCurTick(),
+                "simulate() limit reached",
+                0
+            );
+        }
+
     }
-    for (auto s : slaves) {
-        s->init(phase);
-    }
+
+    systemPort->init(phase);
+    cachePort->init(phase);
 }
 
 void
-gem5Component::setup(void)
+gem5Component::setup()
 {
-    // Switch connectors from initData to regular Sends
-    for (auto m : masters) {
-        m->setup();
-    }
-    for (auto s : slaves) {
-        s->setup();
-    }
+    output.verbose(CALL_INFO, 1, 0, "Component is being setup.\n");
+    systemPort->setup();
+    cachePort->setup();
 }
 
 void
-gem5Component::finish(void)
+gem5Component::finish()
 {
-    for (auto m : masters) {
-        m->finish();
-    }
-    info.output("Complete. Clocks Processed: %" PRIu64"\n", clocks_processed);
+    output.verbose(CALL_INFO, 1, 0, "Component is being finished.\n");
 }
 
 bool
-gem5Component::clockTick(Cycle_t cycle)
+gem5Component::clockTick(SST::Cycle_t currentCycle)
 {
-    dbg.output(CALL_INFO, "Cycle %lu\n", cycle);
+    // what to do in a SST's cycle
+    gem5::GlobalSimLoopExitEvent *event = simulateGem5(currentCycle);
+    clocksProcessed++;
+    // gem5 exits due to reasons other than reaching simulation limit
+    if (event != gem5::simulate_limit_event) {
+        output.output("exiting: curTick()=%lu cause=`%s` code=%d\n",
+            gem5::curTick(), event->getCause().c_str(), event->getCode()
+        );
+        // output gem5 stats
+        const std::vector<std::string> output_stats_commands = {
+            "m5.stats.dump()"
+        };
+        execPythonCommands(output_stats_commands);
 
-    for (auto m : masters) {
-        m->clock();
-    }
-
-    ::gem5::GlobalSimLoopExitEvent *event = ::gem5::simulate(sim_cycles);
-    ++clocks_processed;
-    if (event != simulate_limit_event) {
-        info.output("exiting: curTick()=%lu cause=`%s` code=%d\n",
-                ::gem5::curTick(), event->getCause().c_str(),
-                event->getCode());
         primaryComponentOKToEndSim();
         return true;
     }
 
+    // returning False means the simulation should go on
     return false;
+
 }
 
+#define PyCC(x) (const_cast<char *>(x))
 
-void
-gem5Component::splitCommandArgs(std::string &cmd,
-                                std::vector<char *> &args)
+gem5::GlobalSimLoopExitEvent*
+gem5Component::simulateGem5(uint64_t current_cycle)
 {
-    std::string sep1("\\");
-    std::string sep2(" ");
-    std::string sep3("\"\'");
+    // This function should be similar to simulate() of src/sim/simulate.cc
+    // with synchronization barriers removed.
 
-    boost::escaped_list_separator<char> els(sep1, sep2, sep3);
-    boost::tokenizer<boost::escaped_list_separator<char>> tok(cmd, els);
+    inform_once("Entering event queue @ %d.  Starting simulation...\n",
+                gem5::curTick());
 
-    for (auto beg : tok) {
-        args.push_back(strdup(beg.c_str()));
+    // Tick conversion
+    // The main logic for synchronize SST Tick and gem5 Tick is here.
+    // next_end_tick = current_cycle * timeConverter->getFactor()
+    uint64_t next_end_tick = \
+        timeConverter->convertToCoreTime(current_cycle);
+
+    // Here, if the next event in gem5's queue is not executed within the next
+    // cycle, there's no need to enter the gem5's sim loop.
+    if (next_end_tick < gem5::mainEventQueue[0]->getHead()->when())
+        return gem5::simulate_limit_event;
+    gem5::simulate_limit_event->reschedule(next_end_tick);
+    gem5::Event *local_event = doSimLoop(gem5::mainEventQueue[0]);
+    gem5::BaseGlobalEvent *global_event = local_event->globalEvent();
+    gem5::GlobalSimLoopExitEvent *global_exit_event =
+        dynamic_cast<gem5::GlobalSimLoopExitEvent *>(global_event);
+    return global_exit_event;
+}
+
+gem5::Event*
+gem5Component::doSimLoop(gem5::EventQueue* eventq)
+{
+    // This function should be similar to doSimLoop() in src/sim/simulate.cc
+    // with synchronization barriers removed.
+    gem5::curEventQueue(eventq);
+    eventq->handleAsyncInsertions();
+
+    while (true)
+    {
+        // there should always be at least one event (the SimLoopExitEvent
+        // we just scheduled) in the queue
+
+        assert(!eventq->empty());
+        assert(gem5::curTick() <= eventq->nextTick() &&
+               "event scheduled in the past");
+
+        if (gem5::async_event) {
+            // Take the event queue lock in case any of the service
+            // routines want to schedule new events.
+            if (gem5::async_statdump || gem5::async_statreset) {
+                gem5::statistics::schedStatEvent(gem5::async_statdump,
+                                                 gem5::async_statreset);
+                gem5::async_statdump = false;
+                gem5::async_statreset = false;
+            }
+
+            if (gem5::async_io) {
+                gem5::async_io = false;
+                gem5::pollQueue.service();
+            }
+
+            if (gem5::async_exit) {
+                gem5::async_exit = false;
+                gem5::exitSimLoop("user interrupt received");
+            }
+
+            if (gem5::async_exception) {
+                gem5::async_exception = false;
+                return NULL;
+            }
+        }
+
+        gem5::Event *exit_event = eventq->serviceOne();
+        if (exit_event != NULL) {
+            return exit_event;
+        }
     }
 }
 
-
-void
-gem5Component::initPython(int argc, char *argv[])
+int
+gem5Component::execPythonCommands(const std::vector<std::string>& commands)
 {
-    const char * m5MainCommands[] = {
-        "import m5",
-        "m5.main()",
-        0 // sentinel is required
-    };
+    PyObject *dict = PyModule_GetDict(pythonMain);
 
-    PyObject *mainModule,*mainDict;
+    PyObject *result;
 
-    Py_SetProgramName(argv[0]); // optional but recommended
-
-    Py_Initialize();
-
-    int ret = initM5Python();
-    if (ret != 0) {
-        dbg.fatal(CALL_INFO, -1, "Python failed to initialize. Code: %d\n",
-                  ret);
+    for (auto const command: commands) {
+        result = PyRun_String(command.c_str(), Py_file_input, dict, dict);
+        if (!result) {
+            PyErr_Print();
+            return 1;
+        }
+        Py_DECREF(result);
     }
+    return 0;
+}
+
+int
+gem5Component::startM5(int argc, char **_argv)
+{
+    // This function should be similar to m5Main() of src/sim/init.cc
+
+#if HAVE_PROTOBUF
+    // Verify that the version of the protobuf library that we linked
+    // against is compatible with the version of the headers we
+    // compiled against.
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+#endif
+
+
+#if PY_MAJOR_VERSION >= 3
+    typedef std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> WArgUPtr;
+    std::vector<WArgUPtr> v_argv;
+    std::vector<wchar_t *> vp_argv;
+    v_argv.reserve(argc);
+    vp_argv.reserve(argc);
+    for (int i = 0; i < argc; i++) {
+        v_argv.emplace_back(Py_DecodeLocale(_argv[i], NULL), &PyMem_RawFree);
+        vp_argv.emplace_back(v_argv.back().get());
+    }
+
+    wchar_t **argv = vp_argv.data();
+#else
+    char **argv = _argv;
+#endif
 
     PySys_SetArgv(argc, argv);
 
-    mainModule = PyImport_AddModule("__main__");
-    assert(mainModule);
+    // We have to set things up in the special __main__ module
+    pythonMain = PyImport_AddModule(PyCC("__main__"));
+    if (pythonMain == NULL)
+        panic("Could not import __main__");
 
-    mainDict = PyModule_GetDict(mainModule);
-    assert(mainDict);
+    const std::vector<std::string> commands = {
+        "import m5",
+        "m5.main()"
+    };
+    execPythonCommands(commands);
 
-    PyObject *result;
-    const char **command = m5MainCommands;
+#if HAVE_PROTOBUF
+    google::protobuf::ShutdownProtobufLibrary();
+#endif
 
-    // evaluate each command in the m5MainCommands array (basically a
-    // bunch of python statements.
-    while (*command) {
-        result = PyRun_String(*command, Py_file_input, mainDict, mainDict);
-        if (!result) {
-            PyErr_Print();
-            break;
-        }
-        Py_DECREF(result);
+    return 0;
+}
 
-        command++;
+void
+gem5Component::initPython(int argc, char *_argv[])
+{
+    // should be similar to main() in src/sim/main.cc
+    PyObject *mainModule, *mainDict;
+
+    int ret;
+
+    // Initialize m5 special signal handling.
+    gem5::initSignals();
+
+#if PY_MAJOR_VERSION >= 3
+    std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> program(
+        Py_DecodeLocale(_argv[0], NULL),
+        &PyMem_RawFree);
+    Py_SetProgramName(program.get());
+#else
+    Py_SetProgramName(_argv[0]);
+#endif
+
+    // Register native modules with Python's init system before
+    // initializing the interpreter.
+    if (!Py_IsInitialized()) {
+        gem5::registerNativeModules();
+        // initialize embedded Python interpreter
+        Py_Initialize();
+    } else {
+        // https://stackoverflow.com/a/28349174
+        PyImport_AddModule("_m5");
+        PyObject* module = gem5::EmbeddedPyBind::initAll();
+        PyObject* sys_modules = PyImport_GetModuleDict();
+        PyDict_SetItemString(sys_modules, "_m5", module);
+        Py_DECREF(module);
     }
+
+
+    // Initialize the embedded m5 python library
+    ret = gem5::EmbeddedPython::initAll();
+
+    if (ret == 0)
+        startM5(argc, _argv); // start m5
+    else
+        output.output(CALL_INFO, "Not calling m5Main due to ret=%d\n", ret);
 }
 
-::gem5::ExternalMaster::Port*
-gem5Component::getExternalPort(const std::string &name,
-    ::gem5::ExternalMaster &owner, const std::string &port_data)
+void
+gem5Component::splitCommandArgs(std::string &cmd, std::vector<char*> &args)
 {
-    std::string s(name); // bridges non-& result and &-arg
-    auto master = new ExtMaster(this, info, owner, s);
-    masters.push_back(master);
-    return master;
-}
+    std::vector<std::string> parsed_args = tokenizeString(
+        cmd, {'\\', ' ', '\'', '\"'}
+    );
 
-::gem5::ExternalSlave::Port*
-gem5Component::getExternalPort(const std::string &name,
-    ::gem5::ExternalSlave &owner, const std::string &port_data)
-{
-    std::string s(name); // bridges non-& result and &-arg
-    auto slave = new ExtSlave(this, info, owner, s);
-    slaves.push_back(slave);
-    return slave;
+    for (auto part: parsed_args)
+        args.push_back(strdup(part.c_str()));
 }
