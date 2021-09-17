@@ -117,13 +117,6 @@ class MMU : public BaseMMU
         S12E1Tran = 0x100
     };
 
-    enum TLBType
-    {
-        I_TLBS = 0x01,
-        D_TLBS = 0x10,
-        ALL_TLBS = 0x11
-    };
-
     struct CachedState {
         explicit CachedState(MMU *_mmu, bool stage2)
           : mmu(_mmu), isStage2(stage2)
@@ -250,7 +243,7 @@ class MMU : public BaseMMU
 
     void takeOverFrom(BaseMMU *old_mmu) override;
 
-    void invalidateMiscReg(TLBType type = ALL_TLBS);
+    void invalidateMiscReg();
 
     template <typename OP>
     void

@@ -905,10 +905,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
         CPSR old_cpsr = miscRegs[MISCREG_CPSR];
         int old_mode = old_cpsr.mode;
         CPSR cpsr = val;
-        if (cpsr.pan != old_cpsr.pan) {
-            getMMUPtr(tc)->invalidateMiscReg(MMU::D_TLBS);
-        }
-        if (cpsr.il != old_cpsr.il) {
+        if (cpsr.pan != old_cpsr.pan || cpsr.il != old_cpsr.il) {
             getMMUPtr(tc)->invalidateMiscReg();
         }
 
@@ -2271,7 +2268,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
           case MISCREG_PAN:
             {
                 // PAN is affecting data accesses
-                getMMUPtr(tc)->invalidateMiscReg(MMU::D_TLBS);
+                getMMUPtr(tc)->invalidateMiscReg();
 
                 CPSR cpsr = miscRegs[MISCREG_CPSR];
                 cpsr.pan = (uint8_t) ((CPSR) newVal).pan;

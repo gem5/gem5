@@ -160,7 +160,7 @@ MMU::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
 }
 
 void
-MMU::invalidateMiscReg(TLBType type)
+MMU::invalidateMiscReg()
 {
     s1State.miscRegValid = false;
 }
