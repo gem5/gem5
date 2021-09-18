@@ -168,9 +168,10 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         gem5 = fixtures[constants.gem5_binary_fixture_name].path
         command = [
             gem5,
-            '-d',  # Set redirect dir to tempdir.
+            '-d', # Set redirect dir to tempdir.
             tempdir,
-            '-re',# TODO: Change to const. Redirect stdout and stderr
+            '-re', # TODO: Change to const. Redirect stdout and stderr
+            '--silent-redirect',
         ]
         command.extend(_gem5_args)
         command.append(config)
