@@ -206,11 +206,10 @@ motherboard.set_workload(
         resource_directory=args.resource_directory,
     ),
     disk_image=Resource(
-        "x86-boot-exit",
+        "x86-ubuntu-img",
         override=args.override_download,
         resource_directory=args.resource_directory,
     ),
-    command="m5 exit \n",
     kernel_args=additional_kernal_args,
 )
 
