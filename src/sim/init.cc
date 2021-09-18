@@ -193,7 +193,17 @@ EmbeddedPyBind::initAll()
 {
     std::list<EmbeddedPyBind *> pending;
 
-    py::module_ m_m5 = py::module_("_m5");
+    // The PyModuleDef structure needs to live as long as the module it
+    // defines, so we'll leak it here so it lives forever. This is what
+    // pybind11 does internally in the module_ constructor we were using. We
+    // could theoretically keep track of the lifetime of the _m5 module
+    // somehow and clean this up when it goes away, but that doesn't seem
+    // worth the effort. The docs recommend statically allocating it, but that
+    // could be unsafe on the very slim chance this method is called more than
+    // once.
+    auto *py_mod_def = new py::module_::module_def;
+    py::module_ m_m5 = py::module_::create_extension_module(
+            "_m5", nullptr, py_mod_def);
     m_m5.attr("__package__") = py::cast("_m5");
 
     pybind_init_core(m_m5);
