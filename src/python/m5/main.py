@@ -87,6 +87,8 @@ def parse_options():
         help="Redirect stdout (& stderr, without -e) to file")
     option('-e', "--redirect-stderr", action="store_true", default=False,
         help="Redirect stderr to file")
+    option("--silent-redirect", action="store_true", default=False,
+        help="Suppress printing a message when redirecting stdout or stderr")
     option("--stdout-file", metavar="FILE", default="simout",
         help="Filename for -r redirection [Default: %default]")
     option("--stderr-file", metavar="FILE", default="simerr",
@@ -247,14 +249,15 @@ def main(*args):
     stdout_file = os.path.join(options.outdir, options.stdout_file)
     stderr_file = os.path.join(options.outdir, options.stderr_file)
 
-    # Print redirection notices here before doing any redirection
-    if options.redirect_stdout and not options.redirect_stderr:
-        print("Redirecting stdout and stderr to", stdout_file)
-    else:
-        if options.redirect_stdout:
-            print("Redirecting stdout to", stdout_file)
-        if options.redirect_stderr:
-            print("Redirecting stderr to", stderr_file)
+    if not options.silent_redirect:
+        # Print redirection notices here before doing any redirection
+        if options.redirect_stdout and not options.redirect_stderr:
+            print("Redirecting stdout and stderr to", stdout_file)
+        else:
+            if options.redirect_stdout:
+                print("Redirecting stdout to", stdout_file)
+            if options.redirect_stderr:
+                print("Redirecting stderr to", stderr_file)
 
     # Now redirect stdout/stderr as desired
     if options.redirect_stdout:
