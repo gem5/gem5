@@ -100,7 +100,7 @@ def install_style_hooks(env):
         return
 
     print(git_style_message, end=' ')
-    if SCons.Script.GetOption('install-hooks'):
+    if SCons.Script.GetOption('install_hooks'):
         print("Installing revision control hooks automatically.")
     else:
         try:
