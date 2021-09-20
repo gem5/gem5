@@ -547,11 +547,10 @@ MMU::s2PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
     // In stage 2 we use the hypervisor access permission bits.
     // The following permissions are described in ARM DDI 0487A.f
     // D4-1802
-    uint8_t hap = te->hap & 0b11;
     bool grant = false;
-    bool grant_read = hap & 0b1;
+    bool grant_read = te->hap & 0b01;
+    bool grant_write = te->hap & 0b10;
 
-    bool wxn = state.sctlr.wxn;
     uint8_t xn =  te->xn;
     uint8_t pxn = te->pxn;
 
@@ -560,19 +559,20 @@ MMU::s2PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
         xn = true;
     }
 
-    DPRINTF(TLBVerbose, "Checking S2 permissions: hap:%d, xn:%d, pxn:%d, r:%d, "
-                        "w:%d, x:%d, wxn: %d\n", hap, xn,
-                        pxn, r, w, x, wxn);
+    DPRINTF(TLBVerbose,
+            "Checking S2 permissions: hap:%d, xn:%d, pxn:%d, r:%d, "
+            "w:%d, x:%d\n", te->hap, xn, pxn, r, w, x);
 
     if (x) {
-        // sctlr.wxn overrides the xn bit
-        grant = !wxn && !xn;
+        grant = grant_read && !xn;
     } else if (req->isAtomic()) {
-        grant = hap;
+        grant = grant_read || grant_write;
     } else if (w) {
-        grant = hap & 0b10;
-    } else { // is_read
+        grant = grant_write;
+    } else if (r) {
         grant = grant_read;
+    } else {
+        panic("Invalid Operation\n");
     }
 
     return std::make_pair(grant, grant_read);
