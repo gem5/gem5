@@ -47,7 +47,10 @@ class MemPool
   private:
     Addr pageShift;
 
-    /** Page number to free memory. */
+    /** Start page of pool. */
+    Counter startPageNum;
+
+    /** Page number of free memory. */
     Counter freePageNum;
 
     /** The size of the pool, in number of pages. */
@@ -56,6 +59,7 @@ class MemPool
   public:
     MemPool(Addr page_shift, Addr ptr, Addr limit);
 
+    Counter startPage() const;
     Counter freePage() const;
     void setFreePage(Counter value);
     Addr freePageAddr() const;
@@ -64,6 +68,7 @@ class MemPool
     Counter allocatedPages() const;
     Counter freePages() const;
 
+    Addr startAddr() const;
     Addr allocatedBytes() const;
     Addr freeBytes() const;
     Addr totalBytes() const;

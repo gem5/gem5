@@ -39,9 +39,17 @@ namespace gem5
 {
 
 MemPool::MemPool(Addr page_shift, Addr ptr, Addr limit)
-        : pageShift(page_shift), freePageNum(ptr >> page_shift),
-        _totalPages(limit >> page_shift)
+        : pageShift(page_shift), startPageNum(ptr >> page_shift),
+        freePageNum(ptr >> page_shift),
+        _totalPages((limit - ptr) >> page_shift)
 {
+    gem5_assert(_totalPages > 0);
+}
+
+Counter
+MemPool::startPage() const
+{
+    return startPageNum;
 }
 
 Counter
@@ -71,13 +79,19 @@ MemPool::totalPages() const
 Counter
 MemPool::allocatedPages() const
 {
-    return freePageNum;
+    return freePageNum - startPageNum;
 }
 
 Counter
 MemPool::freePages() const
 {
-    return _totalPages - freePageNum;
+    return _totalPages - allocatedPages();
+}
+
+Addr
+MemPool::startAddr() const
+{
+    return startPage() << pageShift;
 }
 
 Addr

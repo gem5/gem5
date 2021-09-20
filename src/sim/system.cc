@@ -435,7 +435,7 @@ System::serialize(CheckpointOut &cp) const
 
     for (const auto& memPool : memPools) {
         ptrs.push_back(memPool.freePageAddr());
-        limits.push_back(memPool.totalBytes());
+        limits.push_back(memPool.totalBytes() + memPool.startAddr());
     }
 
     SERIALIZE_CONTAINER(ptrs);
