@@ -214,7 +214,7 @@ def _check_tracing():
 
     fatal("Tracing is not enabled.  Compile with TRACING_ON")
 
-def main(*args):
+def main():
     import m5
     import _m5.core
 
@@ -229,12 +229,7 @@ def main(*args):
     from .util import inform, fatal, panic, isInteractive
     from m5.util.terminal_formatter import TerminalFormatter
 
-    if len(args) == 0:
-        options, arguments = parse_options()
-    elif len(args) == 2:
-        options, arguments = args
-    else:
-        raise TypeError("main() takes 0 or 2 arguments (%d given)" % len(args))
+    options, arguments = parse_options()
 
     m5.options = options
 
@@ -462,15 +457,3 @@ def main(*args):
     # once the script is done
     if options.interactive:
         interact(scope)
-
-if __name__ == '__main__':
-    from pprint import pprint
-
-    options, arguments = parse_options()
-
-    print('opts:')
-    pprint(options, indent=4)
-    print()
-
-    print('args:')
-    pprint(arguments, indent=4)
