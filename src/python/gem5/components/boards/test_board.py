@@ -128,3 +128,7 @@ class TestBoard(AbstractBoard):
         # memory.
         self.mem_ranges = [AddrRange(memory.get_size())]
         memory.set_memory_range(self.mem_ranges)
+
+    @overrides(AbstractBoard)
+    def has_dma_ports(self) -> bool:
+        return False

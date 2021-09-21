@@ -34,9 +34,24 @@ TODO: At present all the Single Channel memory components are tested. This
 from testlib import *
 
 
-def test_memory(module: str, memory: str, *args) -> None:
+def test_memory(
+    generator: str, cache: str, module: str, memory: str, *args
+) -> None:
+    protocol_map = {"NoCache": None, "MESITwoLevel": "MESI_Two_Level"}
+    tag_map = {
+        "NoCache": constants.quick_tag,
+        "MESITwoLevel": constants.long_tag,
+    }
+
     gem5_verify_config(
-        name="test-memory-" + module + "." + memory,
+        name="test-memory-"
+        + generator
+        + "."
+        + cache
+        + "."
+        + module
+        + "."
+        + memory,
         fixtures=(),
         verifiers=(),
         config=joinpath(
@@ -47,38 +62,156 @@ def test_memory(module: str, memory: str, *args) -> None:
             "simple_traffic_run.py",
         ),
         config_args=[
+            generator,
+            cache,
             module,
             memory,
         ]
         + list(args),
         valid_isas=(constants.null_tag,),
+        protocol=protocol_map[cache],
         valid_hosts=constants.supported_hosts,
-        length=constants.quick_tag,
+        length=tag_map[cache],
     )
 
 
 test_memory(
+    "LinearGenerator",
+    "NoCache",
     "gem5.components.memory.single_channel",
     "SingleChannelDDR3_1600",
     "512MiB",
 )
 test_memory(
+    "LinearGenerator",
+    "NoCache",
     "gem5.components.memory.single_channel",
     "SingleChannelDDR3_2133",
     "512MiB",
 )
 test_memory(
+    "LinearGenerator",
+    "NoCache",
     "gem5.components.memory.single_channel",
     "SingleChannelDDR4_2400",
     "512MiB",
 )
 test_memory(
+    "LinearGenerator",
+    "NoCache",
     "gem5.components.memory.single_channel",
     "SingleChannelLPDDR3_1600",
     "512MiB",
 )
 test_memory(
+    "LinearGenerator",
+    "NoCache",
     "gem5.components.memory.single_channel",
     "SingleChannelHBM",
-    "512MiB"
+    "512MiB",
+)
+test_memory(
+    "RandomGenerator",
+    "NoCache",
+    "gem5.components.memory.single_channel",
+    "SingleChannelDDR3_1600",
+    "512MiB",
+)
+test_memory(
+    "RandomGenerator",
+    "NoCache",
+    "gem5.components.memory.single_channel",
+    "SingleChannelDDR3_2133",
+    "512MiB",
+)
+test_memory(
+    "RandomGenerator",
+    "NoCache",
+    "gem5.components.memory.single_channel",
+    "SingleChannelDDR4_2400",
+    "512MiB",
+)
+test_memory(
+    "RandomGenerator",
+    "NoCache",
+    "gem5.components.memory.single_channel",
+    "SingleChannelLPDDR3_1600",
+    "512MiB",
+)
+test_memory(
+    "RandomGenerator",
+    "NoCache",
+    "gem5.components.memory.single_channel",
+    "SingleChannelHBM",
+    "512MiB",
+)
+test_memory(
+    "LinearGenerator",
+    "MESITwoLevel",
+    "gem5.components.memory.single_channel",
+    "SingleChannelDDR3_1600",
+    "512MiB",
+)
+test_memory(
+    "LinearGenerator",
+    "MESITwoLevel",
+    "gem5.components.memory.single_channel",
+    "SingleChannelDDR3_2133",
+    "512MiB",
+)
+test_memory(
+    "LinearGenerator",
+    "MESITwoLevel",
+    "gem5.components.memory.single_channel",
+    "SingleChannelDDR4_2400",
+    "512MiB",
+)
+test_memory(
+    "LinearGenerator",
+    "MESITwoLevel",
+    "gem5.components.memory.single_channel",
+    "SingleChannelLPDDR3_1600",
+    "512MiB",
+)
+test_memory(
+    "LinearGenerator",
+    "MESITwoLevel",
+    "gem5.components.memory.single_channel",
+    "SingleChannelHBM",
+    "512MiB",
+)
+test_memory(
+    "RandomGenerator",
+    "MESITwoLevel",
+    "gem5.components.memory.single_channel",
+    "SingleChannelDDR3_1600",
+    "512MiB",
+)
+test_memory(
+    "RandomGenerator",
+    "MESITwoLevel",
+    "gem5.components.memory.single_channel",
+    "SingleChannelDDR3_2133",
+    "512MiB",
+)
+test_memory(
+    "RandomGenerator",
+    "MESITwoLevel",
+    "gem5.components.memory.single_channel",
+    "SingleChannelDDR4_2400",
+    "512MiB",
+)
+test_memory(
+    "RandomGenerator",
+    "MESITwoLevel",
+    "gem5.components.memory.single_channel",
+    "SingleChannelLPDDR3_1600",
+    "512MiB",
+)
+test_memory(
+    "RandomGenerator",
+    "MESITwoLevel",
+    "gem5.components.memory.single_channel",
+    "SingleChannelHBM",
+    "512MiB",
 )

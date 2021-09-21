@@ -25,22 +25,55 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This script creates a simple traffic generator. The simulator starts with a
-linear traffic generator, and ends with a random traffic generator. It is used
-for testing purposes.
+This scripts is used for checking the correctness of statistics reported
+by the gem5 simulator. It can excercise certain components in the memory
+subsystem. The reported values could be used to compare against a validated
+set of statistics.
 """
 
 import m5
-
-from m5.objects import Root
-
 import argparse
 import importlib
 
+from os.path import join
+from m5.objects import Root
+from m5.stats import gem5stats
 from gem5.components.boards.test_board import TestBoard
-from gem5.components.cachehierarchies.classic.no_cache import NoCache
-from gem5.components.memory.single_channel import *
-from gem5.components.processors.complex_generator import ComplexGenerator
+from gem5.components.processors.linear_generator import LinearGenerator
+from gem5.components.processors.random_generator import RandomGenerator
+
+
+generator_class_map = {
+    "LinearGenerator": LinearGenerator,
+    "RandomGenerator": RandomGenerator,
+}
+
+generator_initializers = dict(rate="20GB/s")
+
+
+def cache_factory(cache_class):
+    if cache_class == "NoCache":
+        from gem5.components.cachehierarchies.classic.no_cache import NoCache
+
+        return NoCache()
+    elif cache_class == "MESITwoLevel":
+        from gem5.components.cachehierarchies.ruby\
+            .mesi_two_level_cache_hierarchy import (
+            MESITwoLevelCacheHierarchy,
+        )
+
+        return MESITwoLevelCacheHierarchy(
+            l1i_size="32KiB",
+            l1i_assoc="8",
+            l1d_size="32KiB",
+            l1d_assoc="8",
+            l2_size="256KiB",
+            l2_assoc="4",
+            num_l2_banks=1,
+        )
+    else:
+        raise ValueError(f"The cache class {cache_class} is not supported.")
+
 
 parser = argparse.ArgumentParser(
     description="A traffic generator that can be used to test a gem5 "
@@ -48,41 +81,52 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "module",
+    "generator_class",
     type=str,
-    help="The python module to import.",
+    help="The class of generator to use.",
+    choices=["LinearGenerator", "RandomGenerator"],
 )
 
 parser.add_argument(
-    "mem_class",
+    "cache_class",
     type=str,
-    help="The memory class to import and instantiate.",
+    help="The cache class to import and instantiate.",
+    choices=["NoCache", "MESITwoLevel"],
 )
 
 parser.add_argument(
-    "arguments",
+    "mem_module",
+    type=str,
+    help="The python module to import for memory.",
+)
+
+parser.add_argument(
+    "mem_class", type=str, help="The memory class to import and instantiate."
+)
+
+parser.add_argument(
+    "mem_args",
     nargs="*",
     help="The arguments needed to instantiate the memory class.",
 )
 
 args = parser.parse_args()
 
-# This setup does not require a cache heirarchy. We therefore use the `NoCache`
-# setup.
-cache_hierarchy = NoCache()
+generator_class = generator_class_map[args.generator_class]
+generator = generator_class(**generator_initializers)
 
-memory_class = getattr(importlib.import_module(args.module), args.mem_class)
-memory = memory_class(*args.arguments)
+cache_hierarchy = cache_factory(args.cache_class)
 
-cmxgen = ComplexGenerator(num_cores=1)
-cmxgen.add_linear(rate="100GB/s")
-cmxgen.add_random(block_size=32, rate="50MB/s")
+memory_class = getattr(
+    importlib.import_module(args.mem_module), args.mem_class
+)
+memory = memory_class(*args.mem_args)
 
 # We use the Test Board. This is a special board to run traffic generation
 # tasks
 motherboard = TestBoard(
     clk_freq="3GHz",
-    processor=cmxgen,  # We pass the traffic generator as the processor.
+    processor=generator,  # We pass the traffic generator as the processor.
     memory=memory,
     cache_hierarchy=cache_hierarchy,
 )
@@ -93,15 +137,14 @@ root = Root(full_system=False, system=motherboard)
 
 m5.instantiate()
 
-cmxgen.start_traffic()
+generator.start_traffic()
 print("Beginning simulation!")
 exit_event = m5.simulate()
 print(
     "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
 )
-cmxgen.start_traffic()
-print("The Linear taffic has finished. Swiching to random traffic!")
-exit_event = m5.simulate()
-print(
-    "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
-)
+
+stats = gem5stats.get_simstat(root)
+json_out = join(m5.options.outdir, "stats.json")
+with open(json_out, "w") as json_stats:
+    stats.dump(json_stats, indent=2)
