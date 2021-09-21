@@ -108,7 +108,18 @@ class Process : public SimObject
     Addr getStartPC();
     loader::ObjectFile *getInterpreter();
 
-    void allocateMem(Addr vaddr, int64_t size, bool clobber = false);
+    // This function allocates physical memory as backing store, and then maps
+    // it into the virtual address space of the process. The range of virtual
+    // addresses being configured starts at the address "vaddr" and is of size
+    // "size" bytes. If some part of this range of virtual addresses is already
+    // configured, this function will error out unless "clobber" is set. If
+    // clobber is set, then those existing mappings will be replaced.
+    //
+    // If the beginning or end of the virtual address range does not perfectly
+    // align to page boundaries, it will be expanded in either direction until
+    // it does. This function will therefore set up *at least* the range
+    // requested, and may configure more if necessary.
+    void allocateMem(Addr vaddr, int64_t size, bool clobber=false);
 
     /// Attempt to fix up a fault at vaddr by allocating a page on the stack.
     /// @return Whether the fault has been fixed.

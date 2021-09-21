@@ -316,6 +316,10 @@ Process::drain()
 void
 Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
 {
+    const auto page_size = pTable->pageSize();
+
+    const Addr page_addr = roundDown(vaddr, page_size);
+
     // Check if the page has been mapped by other cores if not to clobber.
     // When running multithreaded programs in SE-mode with DerivO3CPU model,
     // there are cases where two or more cores have page faults on the same
@@ -324,16 +328,17 @@ Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
     // a physical page frame to map with the virtual page. Other cores can
     // return if the page has been mapped and `!clobber`.
     if (!clobber) {
-        const EmulationPageTable::Entry *pte = pTable->lookup(vaddr);
+        const EmulationPageTable::Entry *pte = pTable->lookup(page_addr);
         if (pte) {
             warn("Process::allocateMem: addr %#x already mapped\n", vaddr);
             return;
         }
     }
 
-    int npages = divCeil(size, pTable->pageSize());
-    Addr paddr = seWorkload->allocPhysPages(npages);
-    pTable->map(vaddr, paddr, size,
+    const int npages = divCeil(size, page_size);
+    const Addr paddr = seWorkload->allocPhysPages(npages);
+    const Addr pages_size = npages * page_size;
+    pTable->map(page_addr, paddr, pages_size,
                 clobber ? EmulationPageTable::Clobber :
                           EmulationPageTable::MappingFlags(0));
 }
