@@ -56,87 +56,69 @@ namespace gem5
 
 TranslatingPortProxy::TranslatingPortProxy(
         ThreadContext *tc, Request::Flags _flags) :
-    PortProxy(tc, tc->getSystemPtr()->cacheLineSize()), _tc(tc),
-              pageBytes(tc->getSystemPtr()->getPageBytes()),
-              flags(_flags)
+    PortProxy(tc, tc->getSystemPtr()->cacheLineSize()), _tc(tc), flags(_flags)
 {}
 
 bool
-TranslatingPortProxy::tryTLBsOnce(RequestPtr req, BaseMMU::Mode mode) const
+TranslatingPortProxy::tryOnBlob(BaseMMU::Mode mode, TranslationGenPtr gen,
+        std::function<void(const TranslationGen::Range &)> func) const
 {
-    BaseMMU *mmu = _tc->getMMUPtr();
-    return mmu->translateFunctional(req, _tc, mode) == NoFault ||
-           mmu->translateFunctional(req, _tc, BaseMMU::Execute) == NoFault;
-}
+    // Wether we're trying to get past a fault.
+    bool faulting = false;
+    for (const auto &range: *gen) {
+        // Was there a fault this time?
+        if (range.fault) {
+            // If there was a fault last time too, or the fixup this time
+            // fails, then the operation has failed.
+            if (faulting || !fixupRange(range, mode))
+                return false;
+            // This must be the first time we've tried this translation, so
+            // record that we're making a second attempt and continue.
+            faulting = true;
+            continue;
+        }
 
-bool
-TranslatingPortProxy::tryTLBs(RequestPtr req, BaseMMU::Mode mode) const
-{
-    // If at first this doesn't succeed, try to fixup and translate again. If
-    // it still fails, report failure.
-    return tryTLBsOnce(req, mode) ||
-        (fixupAddr(req->getVaddr(), mode) && tryTLBsOnce(req, mode));
+        // Run func() on this successful translation.
+        faulting = false;
+        func(range);
+    }
+    return true;
 }
 
 bool
 TranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
 {
-    for (ChunkGenerator gen(addr, size, pageBytes); !gen.done();
-         gen.next())
-    {
-        auto req = std::make_shared<Request>(
-                gen.addr(), gen.size(), flags, Request::funcRequestorId, 0,
-                _tc->contextId());
-
-        if (!tryTLBs(req, BaseMMU::Read))
-            return false;
-
-        PortProxy::readBlobPhys(
-                req->getPaddr(), req->getFlags(), p, gen.size());
-
-        p = static_cast<uint8_t *>(p) + gen.size();
-    }
-    return true;
+    constexpr auto mode = BaseMMU::Read;
+    return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(
+            addr, size, _tc, mode, flags),
+        [this, &p](const auto &range) {
+            PortProxy::readBlobPhys(range.paddr, flags, p, range.size);
+            p = static_cast<uint8_t *>(p) + range.size;
+    });
 }
 
 bool
 TranslatingPortProxy::tryWriteBlob(
         Addr addr, const void *p, int size) const
 {
-    for (ChunkGenerator gen(addr, size, pageBytes); !gen.done();
-         gen.next())
-    {
-        auto req = std::make_shared<Request>(
-                gen.addr(), gen.size(), flags, Request::funcRequestorId, 0,
-                _tc->contextId());
-
-        if (!tryTLBs(req, BaseMMU::Write))
-            return false;
-
-        PortProxy::writeBlobPhys(
-                req->getPaddr(), req->getFlags(), p, gen.size());
-        p = static_cast<const uint8_t *>(p) + gen.size();
-    }
-    return true;
+    constexpr auto mode = BaseMMU::Write;
+    return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(
+            addr, size, _tc, mode, flags),
+        [this, &p](const auto &range) {
+            PortProxy::writeBlobPhys(range.paddr, flags, p, range.size);
+            p = static_cast<const uint8_t *>(p) + range.size;
+    });
 }
 
 bool
-TranslatingPortProxy::tryMemsetBlob(Addr address, uint8_t v, int size) const
+TranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t v, int size) const
 {
-    for (ChunkGenerator gen(address, size, pageBytes); !gen.done();
-         gen.next())
-    {
-        auto req = std::make_shared<Request>(
-                gen.addr(), gen.size(), flags, Request::funcRequestorId, 0,
-                _tc->contextId());
-
-        if (!tryTLBs(req, BaseMMU::Write))
-            return false;
-
-        PortProxy::memsetBlobPhys(
-                req->getPaddr(), req->getFlags(), v, gen.size());
-    }
-    return true;
+    constexpr auto mode = BaseMMU::Write;
+    return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(
+            addr, size, _tc, mode, flags),
+        [this, v](const auto &range) {
+            PortProxy::memsetBlobPhys(range.paddr, flags, v, range.size);
+    });
 }
 
 } // namespace gem5

@@ -61,7 +61,8 @@ class SETranslatingPortProxy : public TranslatingPortProxy
     AllocType allocating;
 
   protected:
-    bool fixupAddr(Addr addr, BaseMMU::Mode mode) const override;
+    bool fixupRange(const TranslationGen::Range &range,
+            BaseMMU::Mode mode) const override;
 
   public:
     SETranslatingPortProxy(ThreadContext *tc, AllocType alloc=NextPage,
