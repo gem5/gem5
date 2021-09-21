@@ -40,8 +40,9 @@
 
 #include <set>
 
-#include "params/BaseMMU.hh"
 #include "mem/request.hh"
+#include "mem/translation_gen.hh"
+#include "params/BaseMMU.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
@@ -121,6 +122,31 @@ class BaseMMU : public SimObject
     virtual Fault
     translateFunctional(const RequestPtr &req, ThreadContext *tc,
                         Mode mode);
+
+    class MMUTranslationGen : public TranslationGen
+    {
+      private:
+        ThreadContext *tc;
+        ContextID cid;
+        BaseMMU *mmu;
+        BaseMMU::Mode mode;
+        Request::Flags flags;
+        const Addr pageBytes;
+
+        void translate(Range &range) const override;
+
+      public:
+        MMUTranslationGen(Addr page_bytes, Addr new_start, Addr new_size,
+                ThreadContext *new_tc, BaseMMU *new_mmu,
+                BaseMMU::Mode new_mode, Request::Flags new_flags);
+    };
+
+    /**
+     * Returns a translation generator for a region of virtual addresses,
+     * instead of directly translating a specific address.
+     */
+    virtual TranslationGenPtr translateFunctional(Addr start, Addr size,
+            ThreadContext *tc, BaseMMU::Mode mode, Request::Flags flags);
 
     virtual Fault
     finalizePhysical(const RequestPtr &req, ThreadContext *tc,

@@ -43,6 +43,8 @@
 
 #include "arch/generic/mmu.hh"
 #include "arch/generic/tlb.hh"
+#include "cpu/thread_context.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {
@@ -124,6 +126,40 @@ BaseMMU::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
                           BaseMMU::Mode mode) const
 {
     return getTlb(mode)->finalizePhysical(req, tc, mode);
+}
+
+BaseMMU::MMUTranslationGen::MMUTranslationGen(Addr page_bytes,
+        Addr new_start, Addr new_size, ThreadContext *new_tc,
+        BaseMMU *new_mmu, BaseMMU::Mode new_mode, Request::Flags new_flags) :
+    TranslationGen(new_start, new_size), tc(new_tc), cid(tc->contextId()),
+    mmu(new_mmu), mode(new_mode), flags(new_flags),
+    pageBytes(page_bytes)
+{}
+
+void
+BaseMMU::MMUTranslationGen::translate(Range &range) const
+{
+    Addr next = roundUp(range.vaddr, pageBytes);
+    if (next == range.vaddr)
+        next += pageBytes;
+    range.size = std::min(range.size, next - range.vaddr);
+
+    auto req = std::make_shared<Request>(
+            range.vaddr, range.size, flags, Request::funcRequestorId, 0, cid);
+
+    range.fault = mmu->translateFunctional(req, tc, mode);
+
+    if (range.fault == NoFault)
+        range.paddr = req->getPaddr();
+}
+
+TranslationGenPtr
+BaseMMU::translateFunctional(Addr start, Addr size, ThreadContext *tc,
+                    BaseMMU::Mode mode, Request::Flags flags)
+{
+    return TranslationGenPtr(new MMUTranslationGen(
+                tc->getSystemPtr()->getPageBytes(), start, size, tc, this,
+                mode, flags));
 }
 
 void

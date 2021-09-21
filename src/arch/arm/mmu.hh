@@ -166,6 +166,8 @@ class MMU : public BaseMMU
 
     void init() override;
 
+    using BaseMMU::translateFunctional;
+
     /**
      * Do a functional lookup on the TLB (for debugging)
      * and don't modify any internal state
