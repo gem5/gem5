@@ -40,7 +40,7 @@ import m5.ticks
 from m5.objects import Root
 
 
-from gem5.components.resources.resource import Resource
+from gem5.resources.resource import Resource
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.memory.single_channel import SingleChannelDDR3_1600
 from gem5.components.processors.simple_switchable_processor import (
