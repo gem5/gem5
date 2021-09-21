@@ -146,7 +146,7 @@ class BaseMMU : public SimObject
      * instead of directly translating a specific address.
      */
     virtual TranslationGenPtr translateFunctional(Addr start, Addr size,
-            ThreadContext *tc, BaseMMU::Mode mode, Request::Flags flags);
+            ThreadContext *tc, BaseMMU::Mode mode, Request::Flags flags) = 0;
 
     virtual Fault
     finalizePhysical(const RequestPtr &req, ThreadContext *tc,

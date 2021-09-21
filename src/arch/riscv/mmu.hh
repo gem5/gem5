@@ -40,6 +40,7 @@
 
 #include "arch/generic/mmu.hh"
 #include "arch/riscv/isa.hh"
+#include "arch/riscv/page_size.hh"
 #include "arch/riscv/pma_checker.hh"
 #include "arch/riscv/tlb.hh"
 
@@ -58,6 +59,14 @@ class MMU : public BaseMMU
     MMU(const RiscvMMUParams &p)
       : BaseMMU(p), pma(p.pma_checker)
     {}
+
+    TranslationGenPtr
+    translateFunctional(Addr start, Addr size, ThreadContext *tc,
+            Mode mode, Request::Flags flags) override
+    {
+        return TranslationGenPtr(new MMUTranslationGen(
+                PageBytes, start, size, tc, this, mode, flags));
+    }
 
     PrivilegeMode
     getMemPriv(ThreadContext *tc, BaseMMU::Mode mode)

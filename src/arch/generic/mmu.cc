@@ -153,15 +153,6 @@ BaseMMU::MMUTranslationGen::translate(Range &range) const
         range.paddr = req->getPaddr();
 }
 
-TranslationGenPtr
-BaseMMU::translateFunctional(Addr start, Addr size, ThreadContext *tc,
-                    BaseMMU::Mode mode, Request::Flags flags)
-{
-    return TranslationGenPtr(new MMUTranslationGen(
-                tc->getSystemPtr()->getPageBytes(), start, size, tc, this,
-                mode, flags));
-}
-
 void
 BaseMMU::takeOverFrom(BaseMMU *old_mmu)
 {

@@ -41,6 +41,7 @@
 #ifndef __ARCH_ARM_MMU_HH__
 #define __ARCH_ARM_MMU_HH__
 
+#include "arch/arm/page_size.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/generic/mmu.hh"
 
@@ -81,6 +82,14 @@ class MMU : public BaseMMU
     TableWalker *dtbStage2Walker;
 
   public:
+    TranslationGenPtr
+    translateFunctional(Addr start, Addr size, ThreadContext *tc,
+            Mode mode, Request::Flags flags) override
+    {
+        return TranslationGenPtr(new MMUTranslationGen(
+                PageBytes, start, size, tc, this, mode, flags));
+    }
+
     enum ArmFlags
     {
         AlignmentMask = 0x7,

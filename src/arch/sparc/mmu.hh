@@ -39,6 +39,7 @@
 #define __ARCH_SPARC_MMU_HH__
 
 #include "arch/generic/mmu.hh"
+#include "arch/sparc/page_size.hh"
 #include "arch/sparc/tlb.hh"
 
 #include "params/SparcMMU.hh"
@@ -54,6 +55,14 @@ class MMU : public BaseMMU
     MMU(const SparcMMUParams &p)
       : BaseMMU(p)
     {}
+
+    TranslationGenPtr
+    translateFunctional(Addr start, Addr size, ThreadContext *tc,
+            Mode mode, Request::Flags flags) override
+    {
+        return TranslationGenPtr(new MMUTranslationGen(
+                PageBytes, start, size, tc, this, mode, flags));
+    }
 
     void
     insertItlbEntry(Addr vpn, int partition_id, int context_id, bool real,

@@ -39,7 +39,7 @@
 #define __ARCH_MIPS_MMU_HH__
 
 #include "arch/generic/mmu.hh"
-
+#include "arch/mips/page_size.hh"
 #include "params/MipsMMU.hh"
 
 namespace gem5
@@ -53,6 +53,14 @@ class MMU : public BaseMMU
     MMU(const MipsMMUParams &p)
       : BaseMMU(p)
     {}
+
+    TranslationGenPtr
+    translateFunctional(Addr start, Addr size, ThreadContext *tc,
+            Mode mode, Request::Flags flags) override
+    {
+        return TranslationGenPtr(new MMUTranslationGen(
+                PageBytes, start, size, tc, this, mode, flags));
+    }
 };
 
 } // namespace MipsISA
