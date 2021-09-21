@@ -118,6 +118,8 @@ class SimulatorThreads
     terminateThreads()
     {
         assert(!terminate);
+        if (threads.empty())
+            return;
 
         /* This function should only be called when the simulator is
          * handling a global exit event (typically from Python). This
