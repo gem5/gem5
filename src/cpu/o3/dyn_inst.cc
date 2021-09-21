@@ -410,7 +410,7 @@ DynInst::initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
 }
 
 Fault
-DynInst::initiateHtmCmd(Request::Flags flags)
+DynInst::initiateSpecialMemCmd(Request::Flags flags)
 {
     const unsigned int size = 8;
     return cpu->pushRequest(

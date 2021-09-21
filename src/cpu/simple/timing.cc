@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2010-2013,2015,2017-2018, 2020 ARM Limited
+ * Copyright (c) 2010-2013,2015,2017-2018, 2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1216,7 +1216,7 @@ TimingSimpleCPU::printAddr(Addr a)
 }
 
 Fault
-TimingSimpleCPU::initiateHtmCmd(Request::Flags flags)
+TimingSimpleCPU::initiateSpecialMemCmd(Request::Flags flags)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2016-2018, 2020 ARM Limited
+ * Copyright (c) 2014, 2016-2018, 2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -144,10 +144,14 @@ class ExecContext
     }
 
     /**
-     * Initiate an HTM command,
-     * e.g. tell Ruby we're starting/stopping a transaction
+     * Initiate a Special memory command with no valid address.
+     * Currently, these instructions need to bypass squashing in the O3 model
+     * Examples include HTM commands and TLBI commands.
+     * e.g. tell Ruby we're starting/stopping a HTM transaction,
+     *      or tell Ruby to issue a TLBI operation
      */
-    virtual Fault initiateHtmCmd(Request::Flags flags) = 0;
+    virtual Fault initiateSpecialMemCmd(Request::Flags flags) = 0;
+
     /**
      * For atomic-mode contexts, perform an atomic memory write operation.
      * For timing-mode contexts, initiate a timing memory write operation.

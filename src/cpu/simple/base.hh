@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2015,2018,2020 ARM Limited
+ * Copyright (c) 2011-2012,2015,2018,2020-2021 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -190,11 +190,16 @@ class BaseSimpleCPU : public BaseCPU
     void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
     void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
 
-    /** Hardware transactional memory commands (HtmCmds), e.g. start a
+    /**
+     * Special memory commands such as hardware transactional memory
+     * commands (HtmCmds) or TLBI commands, e.g. start a
      * transaction and commit a transaction, are memory operations but are
-     * neither really (true) loads nor stores. For this reason the interface
-     * is extended and initiateHtmCmd() is used to instigate the command. */
-    virtual Fault initiateHtmCmd(Request::Flags flags) = 0;
+     * neither really (true) loads nor stores.
+     * For this reason the interface is extended,
+     * and initiateSpecialMemCmd() is used to instigate the command.
+     */
+    virtual Fault initiateSpecialMemCmd(Request::Flags flags) = 0;
+
 };
 
 } // namespace gem5

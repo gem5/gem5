@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2016 ARM Limited
+ * Copyright (c) 2010, 2016, 2021 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -397,7 +397,7 @@ class DynInst : public ExecContext, public RefCounted
     Fault initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
             const std::vector<bool> &byte_enable) override;
 
-    Fault initiateHtmCmd(Request::Flags flags) override;
+    Fault initiateSpecialMemCmd(Request::Flags flags) override;
 
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
                    Request::Flags flags, uint64_t *res,

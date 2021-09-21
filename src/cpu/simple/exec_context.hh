@@ -446,9 +446,9 @@ class SimpleExecContext : public ExecContext
     }
 
     Fault
-    initiateHtmCmd(Request::Flags flags) override
+    initiateSpecialMemCmd(Request::Flags flags) override
     {
-        return cpu->initiateHtmCmd(flags);
+        return cpu->initiateSpecialMemCmd(flags);
     }
 
     /**

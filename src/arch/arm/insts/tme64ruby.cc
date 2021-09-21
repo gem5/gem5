@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -77,7 +77,7 @@ Tstart64::initiateAcc(ExecContext *xc,
             memAccessFlags = memAccessFlags | Request::NO_ACCESS;
         }
 
-        fault = xc->initiateHtmCmd(memAccessFlags);
+        fault = xc->initiateSpecialMemCmd(memAccessFlags);
     }
 
     return fault;
@@ -175,7 +175,7 @@ Tcancel64::initiateAcc(ExecContext *xc, Trace::InstRecord *traceData) const
     Request::Flags memAccessFlags =
         Request::STRICT_ORDER|Request::PHYSICAL|Request::HTM_CANCEL;
 
-    fault = xc->initiateHtmCmd(memAccessFlags);
+    fault = xc->initiateSpecialMemCmd(memAccessFlags);
 
     return fault;
 }
@@ -231,7 +231,7 @@ MicroTcommit64::initiateAcc(ExecContext *xc,
         memAccessFlags = memAccessFlags | Request::NO_ACCESS;
     }
 
-    fault = xc->initiateHtmCmd(memAccessFlags);
+    fault = xc->initiateSpecialMemCmd(memAccessFlags);
 
     return fault;
 }

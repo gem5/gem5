@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, 2016-2018, 2020 ARM Limited
+ * Copyright (c) 2011-2014, 2016-2018, 2020-2021 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -116,9 +116,10 @@ class ExecContext : public gem5::ExecContext
     }
 
     Fault
-    initiateHtmCmd(Request::Flags flags) override
+    initiateSpecialMemCmd(Request::Flags flags) override
     {
-        panic("ExecContext::initiateHtmCmd() not implemented on MinorCPU\n");
+        panic("ExecContext::initiateSpecialMemCmd() not implemented "
+              " on MinorCPU\n");
         return NoFault;
     }
 
