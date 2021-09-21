@@ -260,9 +260,6 @@ def addCommonOptions(parser):
                       Elastic Trace probe in a capture simulation and
                       Trace CPU in a replay simulation""", default="")
 
-    parser.add_argument("-l", "--lpae", action="store_true")
-    parser.add_argument("-V", "--virtualisation", action="store_true")
-
     # dist-gem5 options
     parser.add_argument("--dist", action="store_true",
                         help="Parallel distributed gem5 simulation.")

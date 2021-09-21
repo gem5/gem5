@@ -132,12 +132,6 @@ def build_test_system(np):
     if args.script is not None:
         test_sys.readfile = args.script
 
-    if args.lpae:
-        test_sys.have_lpae = True
-
-    if args.virtualisation:
-        test_sys.have_virtualization = True
-
     test_sys.init_param = args.init_param
 
     # For now, assign all the CPUs to the same clock domain
