@@ -40,6 +40,7 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
+from m5.objects.ArmSystem import ArmExtension
 from m5.objects.ClockDomain import ClockDomain, SrcClockDomain
 from m5.objects.VoltageDomain import VoltageDomain
 from m5.objects.Device import \
@@ -1308,7 +1309,7 @@ Interrupts:
         system = self.system.unproxy(self)
         if system._have_psci:
             # PSCI functions exposed to the kernel
-            if not system.have_security:
+            if not system.release.has(ArmExtension('SECURITY')):
                 raise AssertionError("PSCI requires EL3 (have_security)")
 
             psci_node = FdtNode('psci')

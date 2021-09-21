@@ -128,7 +128,7 @@ bool
 longDescFormatInUse(ThreadContext *tc)
 {
     TTBCR ttbcr = tc->readMiscReg(MISCREG_TTBCR);
-    return ArmSystem::haveLPAE(tc) && ttbcr.eae;
+    return ArmSystem::has(ArmExtension::LPAE, tc) && ttbcr.eae;
 }
 
 RegVal

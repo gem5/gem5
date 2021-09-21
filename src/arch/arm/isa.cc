@@ -106,19 +106,19 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     // Cache system-level properties
     if (FullSystem && system) {
         highestELIs64 = system->highestELIs64();
-        haveSecurity = system->haveSecurity();
-        haveLPAE = system->haveLPAE();
-        haveCrypto = system->haveCrypto();
-        haveVirtualization = system->haveVirtualization();
+        haveSecurity = system->has(ArmExtension::SECURITY);
+        haveLPAE = system->has(ArmExtension::LPAE);
+        haveCrypto = system->has(ArmExtension::CRYPTO);
+        haveVirtualization = system->has(ArmExtension::VIRTUALIZATION);
         haveLargeAsid64 = system->haveLargeAsid64();
         physAddrRange = system->physAddrRange();
-        haveSVE = system->haveSVE();
-        haveVHE = system->haveVHE();
-        havePAN = system->havePAN();
-        haveSecEL2 = system->haveSecEL2();
+        haveSVE = system->has(ArmExtension::FEAT_SVE);
+        haveVHE = system->has(ArmExtension::FEAT_VHE);
+        havePAN = system->has(ArmExtension::FEAT_PAN);
+        haveSecEL2 = system->has(ArmExtension::FEAT_SEL2);
         sveVL = system->sveVL();
-        haveLSE = system->haveLSE();
-        haveTME = system->haveTME();
+        haveLSE = system->has(ArmExtension::FEAT_LSE);
+        haveTME = system->has(ArmExtension::TME);
     } else {
         highestELIs64 = true; // ArmSystem::highestELIs64 does the same
         haveSecurity = haveLPAE = haveVirtualization = false;

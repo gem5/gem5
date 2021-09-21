@@ -118,14 +118,15 @@ Gicv3Distributor::Gicv3Distributor(Gicv3 * gic, uint32_t it_lines)
      * ITLinesNumber [4:0]   == N
      * (MaxSPIIntId = 32 (N + 1) - 1)
      */
+    bool have_security = gic->getSystem()->has(ArmExtension::SECURITY);
     int max_spi_int_id = itLines - 1;
     int it_lines_number = divCeil(max_spi_int_id + 1, 32) - 1;
     gicdTyper = (1 << 26) | (1 << 25) | (1 << 24) | (IDBITS << 19) |
         (1 << 17) | (1 << 16) |
-        ((gic->getSystem()->haveSecurity() ? 1 : 0) << 10) |
+        ((have_security ? 1 : 0) << 10) |
         (it_lines_number << 0);
 
-    if (gic->getSystem()->haveSecurity()) {
+    if (have_security) {
         DS = false;
     } else {
         DS = true;

@@ -1285,7 +1285,7 @@ GenericTimerMem::validateFrameRange(const AddrRange &range)
 bool
 GenericTimerMem::validateAccessPerm(ArmSystem &sys, bool is_sec)
 {
-    return !sys.haveSecurity() || is_sec;
+    return !sys.has(ArmExtension::SECURITY) || is_sec;
 }
 
 AddrRangeList

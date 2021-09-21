@@ -82,13 +82,13 @@ TableWalker::TableWalker(const Params &p)
 
     // Cache system-level properties
     if (FullSystem) {
-        ArmSystem *armSys = dynamic_cast<ArmSystem *>(p.sys);
-        assert(armSys);
-        haveSecurity = armSys->haveSecurity();
-        _haveLPAE = armSys->haveLPAE();
-        _haveVirtualization = armSys->haveVirtualization();
-        _physAddrRange = armSys->physAddrRange();
-        _haveLargeAsid64 = armSys->haveLargeAsid64();
+        ArmSystem *arm_sys = dynamic_cast<ArmSystem *>(p.sys);
+        assert(arm_sys);
+        haveSecurity = arm_sys->has(ArmExtension::SECURITY);
+        _haveLPAE = arm_sys->has(ArmExtension::LPAE);
+        _haveVirtualization = arm_sys->has(ArmExtension::VIRTUALIZATION);
+        _physAddrRange = arm_sys->physAddrRange();
+        _haveLargeAsid64 = arm_sys->haveLargeAsid64();
     } else {
         haveSecurity = _haveLPAE = _haveVirtualization = false;
         _haveLargeAsid64 = false;

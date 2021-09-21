@@ -72,8 +72,8 @@ MMU::MMU(const ArmMMUParams &p)
     if (FullSystem) {
         ArmSystem *arm_sys = dynamic_cast<ArmSystem *>(p.sys);
         assert(arm_sys);
-        haveLPAE = arm_sys->haveLPAE();
-        haveVirtualization = arm_sys->haveVirtualization();
+        haveLPAE = arm_sys->has(ArmExtension::LPAE);
+        haveVirtualization = arm_sys->has(ArmExtension::VIRTUALIZATION);
         haveLargeAsid64 = arm_sys->haveLargeAsid64();
         physAddrRange = arm_sys->physAddrRange();
     } else {

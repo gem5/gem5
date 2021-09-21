@@ -2333,7 +2333,7 @@ Gicv3CPUInterface::groupEnabled(Gicv3::GroupId group) const
 bool
 Gicv3CPUInterface::inSecureState() const
 {
-    if (!gic->getSystem()->haveSecurity()) {
+    if (!gic->getSystem()->has(ArmExtension::SECURITY)) {
         return false;
     }
 
@@ -2376,10 +2376,10 @@ Gicv3CPUInterface::haveEL(ExceptionLevel el) const
         return true;
 
       case EL2:
-        return gic->getSystem()->haveVirtualization();
+        return gic->getSystem()->has(ArmExtension::VIRTUALIZATION);
 
       case EL3:
-        return gic->getSystem()->haveSecurity();
+        return gic->getSystem()->has(ArmExtension::SECURITY);
 
       default:
         warn("Unimplemented Exception Level\n");
