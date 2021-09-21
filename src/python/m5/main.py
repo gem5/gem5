@@ -45,7 +45,6 @@ import sys
 __all__ = [ 'options', 'arguments', 'main' ]
 
 usage="%prog [gem5 options] script.py [script options]"
-version="%prog 2.0"
 brief_copyright=\
     "gem5 is copyrighted software; use the --copyright option for details."
 
@@ -65,8 +64,7 @@ def parse_options():
     from . import config
     from .options import OptionParser
 
-    options = OptionParser(usage=usage, version=version,
-                           description=brief_copyright)
+    options = OptionParser(usage=usage, description=brief_copyright)
     option = options.add_option
     group = options.set_group
 
