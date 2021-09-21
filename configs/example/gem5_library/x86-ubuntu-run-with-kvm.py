@@ -35,13 +35,10 @@ Usage
 -----
 
 ```
-scons build/X86_MESI_Two_Level/gem5.opt
+scons build/X86/gem5.opt
 ./build/X86/gem5.opt configs/example/gem5_library/x86-ubuntu-run-with-kvm.py
 ```
 """
-
-import m5
-from m5.objects import Root
 
 from gem5.utils.requires import requires
 from gem5.components.boards.x86_board import X86Board
@@ -53,6 +50,8 @@ from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.resources.resource import Resource
+from gem5.simulate.simulator import Simulator
+from gem5.simulate.exit_event import ExitEvent
 
 # This runs a check to ensure the gem5 binary is compiled to X86 and to the
 # MESI Two Level coherence protocol.
@@ -126,19 +125,14 @@ board.set_kernel_disk_workload(
     readfile_contents=command,
 )
 
-
-root = Root(full_system=True, system=board)
-root.sim_quantum = int(1e9)  # sim_quantum must be st if KVM cores are used.
-
-m5.instantiate()
-
-# This first stretch of the simulation runs using the KVM cores. In this setup
-# this will terminate until Ubuntu boot is complete.
-m5.simulate()
-
-# This will switch from the KVM cores to the Timing cores.
-processor.switch()
-
-# This final stretch of the simulation will be run using the Timing cores. In
-# this setup an echo statement will be executed prior to exiting.
-m5.simulate()
+simulator = Simulator(
+    board=board,
+    on_exit_event={
+        # Here we want override the default behavior for the first m5 exit
+        # exit event. Instead of exiting the simulator, we just want to
+        # switch the processor. The 2nd m5 exit after will revert to using
+        # default behavior where the simulator run will exit.
+        ExitEvent.EXIT : (func() for func in [processor.switch]),
+    },
+)
+simulator.run()

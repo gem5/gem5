@@ -29,7 +29,6 @@ This script will run a simple boot exit test.
 """
 
 import m5
-from m5.objects import Root
 
 from gem5.runtime import (
     get_runtime_coherence_protocol,
@@ -42,6 +41,7 @@ from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.simulate.simulator import Simulator
 
 import argparse
 import importlib
@@ -220,20 +220,17 @@ print("Running with ISA: " + get_runtime_isa().name)
 print("Running with protocol: " + get_runtime_coherence_protocol().name)
 print()
 
-root = Root(full_system=True, system=motherboard)
-
-if args.cpu == "kvm":
-    # TODO: This of annoying. Is there a way to fix this to happen
-    # automatically when running KVM?
-    root.sim_quantum = int(1e9)
-
-m5.instantiate()
-
 print("Beginning simulation!")
-if args.tick_exit != None:
-    exit_event = m5.simulate(args.tick_exit)
+simulator = Simulator(board=motherboard)
+
+if args.tick_exit:
+    simulator.run(max_ticks = args.tick_exit)
 else:
-    exit_event = m5.simulate()
+    simulator.run()
+
 print(
-    "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
+    "Exiting @ tick {} because {}.".format(
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
+    )
 )

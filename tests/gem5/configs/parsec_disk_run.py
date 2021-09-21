@@ -35,10 +35,7 @@ Notes
 * This will only function for the X86 ISA.
 """
 
-import m5
-import m5.ticks
-from m5.objects import Root
-
+import m5.stats
 
 from gem5.resources.resource import Resource
 from gem5.components.boards.x86_board import X86Board
@@ -48,10 +45,9 @@ from gem5.components.processors.simple_switchable_processor import (
 )
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.runtime import (
-    get_runtime_isa,
-    get_runtime_coherence_protocol,
-)
+from gem5.runtime import get_runtime_isa, get_runtime_coherence_protocol
+from gem5.simulate.simulator import Simulator
+from gem5.simulate.exit_event import ExitEvent
 from gem5.utils.requires import requires
 
 import time
@@ -220,8 +216,6 @@ command = (
     + "parsecmgmt -a run -p {} ".format(args.benchmark)
     + "-c gcc-hooks -i {} ".format(args.size)
     + "-n {}\n".format(str(args.num_cpus))
-    + "sleep 5 \n"
-    + "m5 exit \n"
 )
 
 board.set_kernel_disk_workload(
@@ -240,103 +234,44 @@ print("Running with ISA: " + get_runtime_isa().name)
 print("Running with protocol: " + get_runtime_coherence_protocol().name)
 print()
 
-root = Root(full_system=True, system=board)
 
-if args.cpu == "kvm" or args.boot_cpu == "kvm":
-    # TODO: This of annoying. Is there a way to fix this to happen
-    # automatically when running KVM?
-    root.sim_quantum = int(1e9)
+# Here we define some custom workbegin/workend exit event generators. Here we
+# want to switch to detailed CPUs at the beginning of the ROI, then continue to
+# the end of of the ROI. Then we exit the simulation.
+def workbegin():
+    processor.switch()
+    yield False
 
-m5.instantiate()
+def workend():
+    yield True
 
-globalStart = time.time()
-print("Beginning the simulation")
+simulator = Simulator(
+    board=board,
+    on_exit_event={
+        ExitEvent.WORKBEGIN : workbegin(),
+        ExitEvent.WORKEND: workend(),
+    },
+)
 
-start_tick = m5.curTick()
-end_tick = m5.curTick()
+global_start = time.time()
+simulator.run()
+global_end = time.time()
+global_time = global_end - global_start
 
-m5.stats.reset()
+roi_ticks = simulator.get_roi_ticks()
+assert len(roi_ticks) == 1
 
-exit_event = m5.simulate()
-
-if exit_event.getCause() == "workbegin":
-    print("Done booting Linux")
-    # Reached the start of ROI.
-    # The start of the ROI is marked by an m5_work_begin() call.
-    print("Resetting stats at the start of ROI!")
-    m5.stats.reset()
-    start_tick = m5.curTick()
-
-    # Switch to the Timing Processor.
-    board.get_processor().switch()
-else:
-    print("Unexpected termination of simulation!")
-    print("Cause: {}".format(exit_event.getCause()))
-    print()
-
-    m5.stats.dump()
-    end_tick = m5.curTick()
-
-    m5.stats.reset()
-    print("Performance statistics:")
-    print("Simulated time: {}s".format((end_tick - start_tick) / 1e12))
-    print("Ran a total of", m5.curTick() / 1e12, "simulated seconds")
-    print(
-        "Total wallclock time: {}s, {} min".format(
-            (
-                time.time() - globalStart,
-                (time.time() - globalStart) / 60,
-            )
-        )
-    )
-    exit(1)
-
-# Simulate the ROI.
-exit_event = m5.simulate()
-
-if exit_event.getCause() == "workend":
-    # Reached the end of ROI
-    # The end of the ROI is marked by an m5_work_end() call.
-    print("Dumping stats at the end of the ROI!")
-    m5.stats.dump()
-    end_tick = m5.curTick()
-
-    m5.stats.reset()
-
-    # Switch back to the Atomic Processor
-    board.get_processor().switch()
-else:
-    print("Unexpected termination of simulation!")
-    print("Cause: {}".format(exit_event.getCause()))
-    print()
-    m5.stats.dump()
-    end_tick = m5.curTick()
-
-    m5.stats.reset()
-    print("Performance statistics:")
-    print("Simulated time: {}s".format((end_tick - start_tick) / 1e12))
-    print("Ran a total of", m5.curTick() / 1e12, "simulated seconds")
-    print(
-        "Total wallclock time: {}s, {} min".format(
-            time.time() - globalStart,
-            (time.time() - globalStart) / 60,
-        )
-    )
-    exit(1)
-
-# Simulate the remaning part of the benchmark
-# Run the rest of the workload until m5 exit
-
-exit_event = m5.simulate()
 
 print("Done running the simulation")
 print()
 print("Performance statistics:")
 
-print("Simulated time in ROI: {}s".format((end_tick - start_tick) / 1e12))
-print("Ran a total of {} simulated seconds".format(m5.curTick() / 1e12))
+print("Simulated time in ROI: {}s".format((roi_ticks[0]) / 1e12))
 print(
-    "Total wallclock time: {}s, {} min".format(
-        time.time() - globalStart, (time.time() - globalStart) / 60
+    "Ran a total of {} simulated seconds".format(
+        simulator.get_current_tick() / 1e12
     )
+)
+print(
+    "Total wallclock time: {}s, {} min".format(global_time, (global_time) / 60)
 )

@@ -30,15 +30,13 @@ The system has no cache heirarchy and is as "bare-bones" as you can get in
 gem5 while still being functinal.
 """
 
-import m5
-from m5.objects import Root
-
 from gem5.resources.resource import Resource
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.simulate.simulator import Simulator
 
 import argparse
 
@@ -98,16 +96,13 @@ binary = Resource(args.resource,
         resource_directory=args.resource_directory)
 motherboard.set_se_binary_workload(binary)
 
-root = Root(full_system=False, system=motherboard)
+# Run the simulation
+simulator = Simulator(board=motherboard, full_system=False)
+simulator.run()
 
-if args.cpu == "kvm":
-    # TODO: This of annoying. Is there a way to fix this to happen
-    # automatically when running KVM?
-    root.sim_quantum = int(1e9)
-
-m5.instantiate()
-
-exit_event = m5.simulate()
 print(
-    "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
+    "Exiting @ tick {} because {}.".format(
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
+    )
 )

@@ -24,42 +24,53 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import m5.stats
+from ..components.processors.abstract_processor import AbstractProcessor
+from ..components.processors.switchable_processor import SwitchableProcessor
+
 """
-This script utilizes the X86DemoBoard to run a simple Ubunutu boot. The script
-will boot the the OS to login before exiting the simulation.
-
-A detailed terminal output can be found in `m5out/system.pc.com_1.device`.
-
-**Warning:** The X86DemoBoard uses the Timing CPU. The boot may take
-considerable time to complete execution.
-`configs/example/gem5_library/x86-ubuntu-run-with-kvm.py` can be referenced as
-an example of booting Ubuntu with a KVM CPU.
-
-Usage
------
-
-```
-scons build/X86/gem5.opt
-./build/X86/gem5.opt configs/example/gem5_library/x86-ubuntu-run.py
-```
+In this package we store generators for simulation exit events.
 """
 
-from gem5.prebuilt.demo.x86_demo_board import X86DemoBoard
-from gem5.resources.resource import Resource
-from gem5.simulate.simulator import Simulator
+
+def default_exit_generator():
+    """
+    A default generator for an exit event. It will return True, indicating that
+    the Simulator run loop should exit.
+    """
+    while True:
+        yield True
 
 
-# Here we setup the board. The prebuilt X86DemoBoard allows for Full-System X86
-# simulation.
-board = X86DemoBoard()
+def default_switch_generator(processor: AbstractProcessor):
+    """
+    A default generator for a switch exit event. If the processor is a
+    SwitchableProcessor, this generator will switch it. Otherwise nothing will
+    happen.
+    """
+    is_switchable = isinstance(processor, SwitchableProcessor)
+    while True:
+        if is_switchable:
+            yield processor.switch()
+        else:
+            yield False
 
-# We then set the workload. Here we use the 5.4.49 Linux kernel with an X86
-# Ubuntu OS. If these cannot be found locally they will be automatically
-# downloaded.
-board.set_kernel_disk_workload(
-    kernel=Resource("x86-linux-kernel-5.4.49"),
-    disk_image=Resource("x86-ubuntu-img"),
-)
 
-simulator = Simulator(board=board)
-simulator.run()
+def default_workbegin_generator():
+    """
+    A default generator for a workbegin exit event. It will reset the
+    simulation statistics.
+    """
+    while True:
+        m5.stats.reset()
+        yield False
+
+
+def default_workend_generator():
+    """
+    A default generator for a workend exit event. It will dump the simulation
+    statistics.
+    """
+    while True:
+        m5.stats.dump()
+        yield False

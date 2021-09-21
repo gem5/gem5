@@ -39,9 +39,6 @@ Characteristics
   password: `root`)
 """
 
-import m5
-from m5.objects import Root
-
 from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.processors.simple_processor import SimpleProcessor
@@ -53,6 +50,7 @@ from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.utils.requires import requires
 from gem5.resources.resource import Resource
+from gem5.simulate.simulator import Simulator
 
 # Run a check to ensure the right version of gem5 is being used.
 requires(isa_required=ISA.RISCV)
@@ -84,13 +82,10 @@ board.set_kernel_disk_workload(
                    disk_image=Resource("riscv-disk-img"),
 )
 
-root = Root(full_system=True, system=board)
-
-m5.instantiate()
-
+simulator = Simulator(board=board)
 print("Beginning simulation!")
 # Note: This simulation will never stop. You can access the terminal upon boot
 # using m5term (`./util/term`): `./m5term localhost <port>`. Note the `<port>`
 # value is obtained from the gem5 terminal stdout. Look out for
 # "system.platform.terminal: Listening for connections on port <port>".
-exit_event = m5.simulate()
+simulator.run()

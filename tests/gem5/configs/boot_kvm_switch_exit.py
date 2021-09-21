@@ -45,6 +45,8 @@ from gem5.resources.resource import Resource
 from gem5.runtime import (
     get_runtime_coherence_protocol, get_runtime_isa
 )
+from gem5.simulate.simulator import Simulator
+from gem5.simulate.exit_event import ExitEvent
 from gem5.utils.requires import requires
 
 parser = argparse.ArgumentParser(
@@ -201,25 +203,24 @@ print("Running with ISA: " + get_runtime_isa().name)
 print("Running with protocol: " + get_runtime_coherence_protocol().name)
 print()
 
-root = Root(full_system=True, system=motherboard)
+simulator = Simulator(
+    board=motherboard,
+    on_exit_event={
+        # When we reach the first exit, we switch cores. For the second exit we
+        # simply exit the simulation (default behavior).
+        ExitEvent.EXIT : (i() for i in [processor.switch]),
+    },
+    # This parameter allows us to state the expected order-of-execution.
+    # That is, we expect two exit events. If anyother event is triggered, an
+    # exeception will be thrown.
+    expected_execution_order=[ExitEvent.EXIT, ExitEvent.EXIT],
+)
 
-root.sim_quantum = int(1e9)
+simulator.run()
 
-m5.instantiate()
-
-print("Booting!")
-exit_event = m5.simulate()
-if exit_event.getCause() != "m5_exit instruction encountered":
-    raise Exception("Expected exit instruction after boot!")
-
-print(f"Switching processors to {args.cpu}!")
-processor.switch()
-
-exit_event = m5.simulate()
-exit_cause = exit_event.getCause()
-
-if exit_cause != "m5_exit instruction encountered":
-    raise Exception(
-        f"Expected exit after switching processors, received: {exit_cause}"
+print(
+    "Exiting @ tick {} because {}.".format(
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
     )
-print("Exiting @ tick {} because {}.".format(m5.curTick(), exit_cause))
+)

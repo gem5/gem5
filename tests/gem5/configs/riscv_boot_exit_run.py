@@ -33,15 +33,13 @@ Characteristics
 * Runs exclusively on the RISC-V ISA with the classic caches
 """
 
-import m5
-from m5.objects import Root
-
 from gem5.isas import ISA
 from gem5.utils.requires import requires
 from gem5.resources.resource import Resource
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.simulate.simulator import Simulator
 
 import argparse
 import importlib
@@ -168,14 +166,16 @@ board.set_kernel_disk_workload(
     ),
 )
 
-root = Root(full_system=True, system=board)
-
-m5.instantiate()
+simulator = Simulator(board=board)
 
 if args.tick_exit:
-    exit_event = m5.simulate(args.tick_exit)
+    simulator.run(max_ticks = args.tick_exit)
 else:
-    exit_event = m5.simulate()
+    simulator.run()
+
 print(
-    "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
+    "Exiting @ tick {} because {}.".format(
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
+    )
 )
