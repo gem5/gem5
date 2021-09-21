@@ -99,13 +99,13 @@ MiscRegOp64::trap(ThreadContext *tc, MiscRegIndex misc_reg,
     }
 
     // Check for traps to hypervisor
-    if ((ArmSystem::haveVirtualization(tc) && el <= EL2) &&
+    if ((ArmSystem::haveEL(tc, EL2) && el <= EL2) &&
         checkEL2Trap(tc, misc_reg, el, ec, immediate)) {
         return std::make_shared<HypervisorTrap>(machInst, immediate, ec);
     }
 
     // Check for traps to secure monitor
-    if ((ArmSystem::haveSecurity(tc) && el <= EL3) &&
+    if ((ArmSystem::haveEL(tc, EL3) && el <= EL3) &&
         checkEL3Trap(tc, misc_reg, el, ec, immediate)) {
         return std::make_shared<SecureMonitorTrap>(machInst, immediate, ec);
     }

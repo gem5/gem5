@@ -99,7 +99,7 @@ let {{
     SCR scr = Scr64;
     CPSR cpsr = Cpsr;
 
-    if (!ArmSystem::haveSecurity(xc->tcBase()) || inUserMode(cpsr) || scr.smd) {
+    if (!ArmSystem::haveEL(xc->tcBase(), EL3) || inUserMode(cpsr) || scr.smd) {
         fault = disabledFault();
     } else {
         fault = std::make_shared<SecureMonitorCall>(machInst);

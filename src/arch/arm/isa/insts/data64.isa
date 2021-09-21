@@ -489,8 +489,8 @@ let {{
            faultAddr = EA;
            HCR hcr = Hcr64;
            SCR scr = Scr64;
-           if (el == EL1 && ArmSystem::haveVirtualization(xc->tcBase()) &&
-               hcr.vm && (scr.ns || !ArmSystem::haveSecurity(xc->tcBase()))) {
+           if (el == EL1 && ArmSystem::haveEL(xc->tcBase(), EL2) &&
+               hcr.vm && (scr.ns || !ArmSystem::haveEL(xc->tcBase(), EL3))) {
                memAccessFlags = memAccessFlags | Request::CLEAN;
            }
            System *sys = xc->tcBase()->getSystemPtr();

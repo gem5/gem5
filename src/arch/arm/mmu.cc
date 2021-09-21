@@ -542,7 +542,7 @@ std::pair<bool, bool>
 MMU::s2PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
                   ThreadContext *tc, CachedState &state, bool r, bool w, bool x)
 {
-    assert(ArmSystem::haveVirtualization(tc) && state.aarch64EL != EL2);
+    assert(ArmSystem::haveEL(tc, EL2) && state.aarch64EL != EL2);
 
     // In stage 2 we use the hypervisor access permission bits.
     // The following permissions are described in ARM DDI 0487A.f

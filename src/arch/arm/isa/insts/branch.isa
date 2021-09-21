@@ -152,7 +152,7 @@ let {{
     HSTR hstr = Hstr;
     CPSR cpsr = Cpsr;
 
-    if (ArmSystem::haveVirtualization(xc->tcBase()) && hstr.tjdbx &&
+    if (ArmSystem::haveEL(xc->tcBase(), EL2) && hstr.tjdbx &&
         !isSecure(xc->tcBase()) && (cpsr.mode != MODE_HYP)) {
        fault = std::make_shared<HypervisorTrap>(machInst, op1, EC_TRAPPED_BXJ);
     }

@@ -700,7 +700,7 @@ ArmStaticInst::checkFPAdvSIMDTrap64(ThreadContext *tc, CPSR cpsr) const
         }
     }
 
-    if (ArmSystem::haveSecurity(tc)) {
+    if (ArmSystem::haveEL(tc, EL3)) {
         CPTR cptr_en_check = tc->readMiscReg(MISCREG_CPTR_EL3);
         if (cptr_en_check.tfp) {
             return advSIMDFPAccessTrap64(EL3);
@@ -728,8 +728,8 @@ ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
                                          NSACR nsacr, FPEXC fpexc,
                                          bool fpexc_check, bool advsimd) const
 {
-    const bool have_virtualization = ArmSystem::haveVirtualization(tc);
-    const bool have_security = ArmSystem::haveSecurity(tc);
+    const bool have_virtualization = ArmSystem::haveEL(tc, EL2);
+    const bool have_security = ArmSystem::haveEL(tc, EL3);
     const bool is_secure = isSecure(tc);
     const ExceptionLevel cur_el = currEL(tc);
 
@@ -1051,7 +1051,7 @@ ArmStaticInst::checkSveEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
     }
 
     // Check if access disabled in CPTR_EL3
-    if (ArmSystem::haveSecurity(tc)) {
+    if (ArmSystem::haveEL(tc, EL3)) {
         CPTR cptr_en_check = tc->readMiscReg(MISCREG_CPTR_EL3);
         if (!cptr_en_check.ez)
             return sveAccessTrap(EL3);

@@ -227,7 +227,7 @@ class ArmStaticInst : public StaticInst
             uint8_t byteMask, bool affectState, bool nmfi, ThreadContext *tc)
     {
         bool privileged   = (cpsr.mode != MODE_USER);
-        bool haveVirt     = ArmSystem::haveVirtualization(tc);
+        bool haveVirt     = ArmSystem::haveEL(tc, EL2);
         bool isSecure     = ArmISA::isSecure(tc);
 
         uint32_t bitMask = 0;

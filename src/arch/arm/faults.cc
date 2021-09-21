@@ -314,8 +314,8 @@ ArmFault::getVector(ThreadContext *tc)
 
     // Check for invalid modes
     CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-    assert(ArmSystem::haveSecurity(tc) || cpsr.mode != MODE_MON);
-    assert(ArmSystem::haveVirtualization(tc) || cpsr.mode != MODE_HYP);
+    assert(ArmSystem::haveEL(tc, EL3) || cpsr.mode != MODE_MON);
+    assert(ArmSystem::haveEL(tc, EL2) || cpsr.mode != MODE_HYP);
 
     switch (cpsr.mode)
     {
@@ -330,7 +330,7 @@ ArmFault::getVector(ThreadContext *tc)
         if (sctlr.v) {
             base = HighVecs;
         } else {
-            base = ArmSystem::haveSecurity(tc) ?
+            base = ArmSystem::haveEL(tc, EL3) ?
                 tc->readMiscReg(MISCREG_VBAR) : 0;
         }
         break;
@@ -345,11 +345,11 @@ ArmFault::getVector64(ThreadContext *tc)
     Addr vbar;
     switch (toEL) {
       case EL3:
-        assert(ArmSystem::haveSecurity(tc));
+        assert(ArmSystem::haveEL(tc, EL3));
         vbar = tc->readMiscReg(MISCREG_VBAR_EL3);
         break;
       case EL2:
-        assert(ArmSystem::haveVirtualization(tc));
+        assert(ArmSystem::haveEL(tc, EL2));
         vbar = tc->readMiscReg(MISCREG_VBAR_EL2);
         break;
       case EL1:
@@ -448,10 +448,10 @@ ArmFault::update(ThreadContext *tc)
 
     // Determine target exception level (aarch64) or target execution
     // mode (aarch32).
-    if (ArmSystem::haveSecurity(tc) && routeToMonitor(tc)) {
+    if (ArmSystem::haveEL(tc, EL3) && routeToMonitor(tc)) {
         toMode = MODE_MON;
         toEL = EL3;
-    } else if (ArmSystem::haveVirtualization(tc) && routeToHyp(tc)) {
+    } else if (ArmSystem::haveEL(tc, EL2) && routeToHyp(tc)) {
         toMode = MODE_HYP;
         toEL = EL2;
         hypRouted = true;
@@ -510,7 +510,7 @@ ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
         return;
 
     // ARMv7 (ARM ARM issue C B1.9)
-    bool have_security = ArmSystem::haveSecurity(tc);
+    bool have_security = ArmSystem::haveEL(tc, EL3);
 
     FaultBase::invoke(tc);
     if (!FullSystem)
@@ -613,7 +613,7 @@ ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
             setSyndrome(tc, MISCREG_HSR);
         break;
       case MODE_HYP:
-        assert(ArmSystem::haveVirtualization(tc));
+        assert(ArmSystem::haveEL(tc, EL2));
         tc->setMiscReg(MISCREG_SPSR_HYP, saved_cpsr);
         setSyndrome(tc, MISCREG_HSR);
         break;
@@ -648,12 +648,12 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         spsr_idx = MISCREG_SPSR_EL1;
         break;
       case EL2:
-        assert(ArmSystem::haveVirtualization(tc));
+        assert(ArmSystem::haveEL(tc, EL2));
         elr_idx = MISCREG_ELR_EL2;
         spsr_idx = MISCREG_SPSR_EL2;
         break;
       case EL3:
-        assert(ArmSystem::haveSecurity(tc));
+        assert(ArmSystem::haveEL(tc, EL3));
         elr_idx = MISCREG_ELR_EL3;
         spsr_idx = MISCREG_SPSR_EL3;
         break;
@@ -766,8 +766,8 @@ Reset::getVector(ThreadContext *tc)
 
     // Check for invalid modes
     [[maybe_unused]] CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-    assert(ArmSystem::haveSecurity(tc) || cpsr.mode != MODE_MON);
-    assert(ArmSystem::haveVirtualization(tc) || cpsr.mode != MODE_HYP);
+    assert(ArmSystem::haveEL(tc, EL3) || cpsr.mode != MODE_MON);
+    assert(ArmSystem::haveEL(tc, EL2) || cpsr.mode != MODE_HYP);
 
     // RVBAR is aliased (implemented as) MVBAR in gem5, since the two
     // are mutually exclusive; there is no need to check here for
@@ -790,8 +790,8 @@ Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
                        getMPIDR(dynamic_cast<ArmSystem*>(tc->getSystemPtr()), tc));
 
         // Unless we have SMC code to get us there, boot in HYP!
-        if (ArmSystem::haveVirtualization(tc) &&
-            !ArmSystem::haveSecurity(tc)) {
+        if (ArmSystem::haveEL(tc, EL2) &&
+            !ArmSystem::haveEL(tc, EL3)) {
             CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
             cpsr.mode = MODE_HYP;
             tc->setMiscReg(MISCREG_CPSR, cpsr);
@@ -1215,7 +1215,7 @@ template<class T>
 bool
 AbortFault<T>::abortDisable(ThreadContext *tc)
 {
-    if (ArmSystem::haveSecurity(tc)) {
+    if (ArmSystem::haveEL(tc, EL3)) {
         SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR);
         return (!scr.ns || scr.aw);
     }
@@ -1472,7 +1472,7 @@ VirtualDataAbort::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 bool
 Interrupt::routeToMonitor(ThreadContext *tc) const
 {
-    assert(ArmSystem::haveSecurity(tc));
+    assert(ArmSystem::haveEL(tc, EL3));
     SCR scr = 0;
     if (from64)
         scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
@@ -1492,7 +1492,7 @@ Interrupt::routeToHyp(ThreadContext *tc) const
 bool
 Interrupt::abortDisable(ThreadContext *tc)
 {
-    if (ArmSystem::haveSecurity(tc)) {
+    if (ArmSystem::haveEL(tc, EL3)) {
         SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR);
         return (!scr.ns || scr.aw);
     }
@@ -1505,7 +1505,7 @@ VirtualInterrupt::VirtualInterrupt()
 bool
 FastInterrupt::routeToMonitor(ThreadContext *tc) const
 {
-    assert(ArmSystem::haveSecurity(tc));
+    assert(ArmSystem::haveEL(tc, EL3));
     SCR scr = 0;
     if (from64)
         scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
@@ -1525,7 +1525,7 @@ FastInterrupt::routeToHyp(ThreadContext *tc) const
 bool
 FastInterrupt::abortDisable(ThreadContext *tc)
 {
-    if (ArmSystem::haveSecurity(tc)) {
+    if (ArmSystem::haveEL(tc, EL3)) {
         SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR);
         return (!scr.ns || scr.aw);
     }
@@ -1535,9 +1535,9 @@ FastInterrupt::abortDisable(ThreadContext *tc)
 bool
 FastInterrupt::fiqDisable(ThreadContext *tc)
 {
-    if (ArmSystem::haveVirtualization(tc)) {
+    if (ArmSystem::haveEL(tc, EL2)) {
         return true;
-    } else if (ArmSystem::haveSecurity(tc)) {
+    } else if (ArmSystem::haveEL(tc, EL3)) {
         SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR);
         return (!scr.ns || scr.fw);
     }
@@ -1587,7 +1587,7 @@ SystemError::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 bool
 SystemError::routeToMonitor(ThreadContext *tc) const
 {
-    assert(ArmSystem::haveSecurity(tc));
+    assert(ArmSystem::haveEL(tc, EL3));
     assert(from64);
     SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
     return scr.ea || fromEL == EL3;
@@ -1659,11 +1659,11 @@ HardwareBreakpoint::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         elr_idx = MISCREG_ELR_EL1;
         break;
       case EL2:
-        assert(ArmSystem::haveVirtualization(tc));
+        assert(ArmSystem::haveEL(tc, EL2));
         elr_idx = MISCREG_ELR_EL2;
         break;
       case EL3:
-        assert(ArmSystem::haveSecurity(tc));
+        assert(ArmSystem::haveEL(tc, EL3));
         elr_idx = MISCREG_ELR_EL3;
         break;
       default:

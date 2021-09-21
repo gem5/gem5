@@ -328,8 +328,8 @@ std::pair<bool, bool>
 ELStateUsingAArch32K(ThreadContext *tc, ExceptionLevel el, bool secure)
 {
     // Return true if the specified EL is in aarch32 state.
-    const bool have_el3 = ArmSystem::haveSecurity(tc);
-    const bool have_el2 = ArmSystem::haveVirtualization(tc);
+    const bool have_el3 = ArmSystem::haveEL(tc, EL3);
+    const bool have_el2 = ArmSystem::haveEL(tc, EL2);
 
     panic_if(el == EL2 && !have_el2, "Asking for EL2 when it doesn't exist");
     panic_if(el == EL3 && !have_el3, "Asking for EL3 when it doesn't exist");
@@ -1250,8 +1250,8 @@ isUnpriviledgeAccess(ThreadContext *tc)
     // NV Extension not implemented yet
     bool have_nv_ext = false;
     bool unpriv_el1 = currEL(tc) == EL1 &&
-                               !(ArmSystem::haveVirtualization(tc) &&
-                                 have_nv_ext && hcr.nv == 1 && hcr.nv1 == 1);
+        !(ArmSystem::haveEL(tc, EL2) &&
+            have_nv_ext && hcr.nv == 1 && hcr.nv1 == 1);
     bool unpriv_el2 = ArmSystem::haveEL(tc, EL2) && HaveVirtHostExt(tc) &&
                       currEL(tc) == EL2 && hcr.e2h == 1 && hcr.tge == 1;
 

@@ -1321,7 +1321,7 @@ snsBankedIndex(MiscRegIndex reg, ThreadContext *tc, bool ns)
 {
     int reg_as_int = static_cast<int>(reg);
     if (miscRegInfo[reg][MISCREG_BANKED]) {
-        reg_as_int += (ArmSystem::haveSecurity(tc) &&
+        reg_as_int += (ArmSystem::haveEL(tc, EL3) &&
                       !ArmSystem::highestELIs64(tc) && !ns) ? 2 : 1;
     }
     return reg_as_int;
@@ -1387,7 +1387,7 @@ canReadAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
             return false;
     }
 
-    bool secure = ArmSystem::haveSecurity(tc) && !scr.ns;
+    bool secure = ArmSystem::haveEL(tc, EL3) && !scr.ns;
     bool el2_host = EL2Enabled(tc) && hcr.e2h;
 
     switch (currEL(cpsr)) {
@@ -1423,7 +1423,7 @@ canWriteAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
         return false;
     ExceptionLevel el = currEL(cpsr);
 
-    bool secure = ArmSystem::haveSecurity(tc) && !scr.ns;
+    bool secure = ArmSystem::haveEL(tc, EL3) && !scr.ns;
     bool el2_host = EL2Enabled(tc) && hcr.e2h;
 
     switch (el) {

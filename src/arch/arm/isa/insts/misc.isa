@@ -124,10 +124,10 @@ let {{
     SCR  scr  = Scr;
 
     // Filter out the various cases where this instruction isn't defined
-    if (!FullSystem || !ArmSystem::haveVirtualization(xc->tcBase()) ||
+    if (!FullSystem || !ArmSystem::haveEL(xc->tcBase(), EL2) ||
         (cpsr.mode == MODE_USER) ||
         (isSecure(xc->tcBase()) && !IsSecureEL2Enabled(xc->tcBase())) ||
-        (ArmSystem::haveSecurity(xc->tcBase()) ? !scr.hce : hcr.hcd)) {
+        (ArmSystem::haveEL(xc->tcBase(), EL3) ? !scr.hce : hcr.hcd)) {
         fault = disabledFault();
     } else {
         fault = std::make_shared<HypervisorCall>(machInst, imm);
