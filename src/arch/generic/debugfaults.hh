@@ -42,6 +42,7 @@
 
 #include "base/logging.hh"
 #include "cpu/null_static_inst.hh"
+#include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "sim/faults.hh"
 

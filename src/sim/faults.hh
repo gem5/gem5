@@ -43,7 +43,7 @@
 
 #include "base/types.hh"
 #include "cpu/null_static_inst.hh"
-#include "cpu/static_inst.hh"
+#include "cpu/static_inst_fwd.hh"
 #include "mem/htm.hh"
 #include "sim/stats.hh"
 
