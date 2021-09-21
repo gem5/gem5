@@ -248,7 +248,7 @@ AMDGPUVM::AGPTranslationGen::translate(Range &range) const
     range.size = std::min(range.size, next - range.vaddr);
     range.paddr = range.vaddr - vm->getAGPBot() + vm->getAGPBase();
 
-    printf("AMDGPUVM: AGP translation %#lx -> %#lx\n",
+    DPRINTF(AMDGPUDevice, "AMDGPUVM: AGP translation %#lx -> %#lx\n",
             range.vaddr, range.paddr);
 }
 
@@ -284,7 +284,7 @@ AMDGPUVM::GARTTranslationGen::translate(Range &range) const
         range.paddr = (bits(pte, 47, 12) << 12) | lower_bits;
     }
 
-    printf("AMDGPUVM: GART translation %#lx -> %#lx\n",
+    DPRINTF(AMDGPUDevice, "AMDGPUVM: GART translation %#lx -> %#lx\n",
             range.vaddr, range.paddr);
 }
 
@@ -300,7 +300,7 @@ AMDGPUVM::MMHUBTranslationGen::translate(Range &range) const
     range.size = std::min(range.size, next - range.vaddr);
     range.paddr = range.vaddr - vm->getMMHUBBase();
 
-    printf("AMDGPUVM: MMHUB translation %#lx -> %#lx\n",
+    DPRINTF(AMDGPUDevice, "AMDGPUVM: MMHUB translation %#lx -> %#lx\n",
             range.vaddr, range.paddr);
 }
 
@@ -310,7 +310,8 @@ AMDGPUVM::UserTranslationGen::translate(Range &range) const
     // Get base address of the page table for this vmid
     Addr base = vm->getPageTableBase(vmid);
     Addr start = vm->getPageTableStart(vmid);
-    printf("User tl base %#lx start %#lx walker %p\n", base, start, walker);
+    DPRINTF(AMDGPUDevice, "User tl base %#lx start %#lx walker %p\n",
+            base, start, walker);
 
     bool dummy;
     unsigned logBytes;

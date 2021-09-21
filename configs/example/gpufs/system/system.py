@@ -98,6 +98,8 @@ def makeGpuFSSystem(args):
     shader.dispatcher = dispatcher
     shader.gpu_cmd_proc = gpu_cmd_proc
 
+    system.pc.south_bridge.gpu.cp = gpu_cmd_proc
+
     # GPU Interrupt Handler
     device_ih = AMDGPUInterruptHandler()
     system.pc.south_bridge.gpu.device_ih = device_ih
@@ -112,6 +114,10 @@ def makeGpuFSSystem(args):
     system.pc.south_bridge.gpu.sdma0 = sdma0
     system.pc.south_bridge.gpu.sdma1 = sdma1
 
+    # Setup PM4 packet processor
+    pm4_pkt_proc = PM4PacketProcessor()
+    system.pc.south_bridge.gpu.pm4_pkt_proc = pm4_pkt_proc
+
     # GPU data path
     gpu_mem_mgr = AMDGPUMemoryManager()
     system.pc.south_bridge.gpu.memory_manager = gpu_mem_mgr
@@ -123,6 +129,7 @@ def makeGpuFSSystem(args):
     system._dma_ports.append(sdma0)
     system._dma_ports.append(sdma1)
     system._dma_ports.append(device_ih)
+    system._dma_ports.append(pm4_pkt_proc)
 
     gpu_hsapp.pio = system.iobus.mem_side_ports
     gpu_cmd_proc.pio = system.iobus.mem_side_ports
@@ -130,6 +137,7 @@ def makeGpuFSSystem(args):
     sdma0.pio = system.iobus.mem_side_ports
     sdma1.pio = system.iobus.mem_side_ports
     device_ih.pio = system.iobus.mem_side_ports
+    pm4_pkt_proc.pio = system.iobus.mem_side_ports
 
     # Create Ruby system using Ruby.py for now
     Ruby.create_system(args, True, system, system.iobus,

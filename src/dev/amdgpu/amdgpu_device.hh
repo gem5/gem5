@@ -112,6 +112,8 @@ class AMDGPUDevice : public PciDevice
     SDMAEngine *sdma0;
     SDMAEngine *sdma1;
     std::unordered_map<uint32_t, SDMAEngine *> sdmaEngs;
+    PM4PacketProcessor *pm4PktProc;
+    GPUCommandProcessor *cp;
 
     /**
      * Initial checkpoint support variables.
@@ -128,6 +130,16 @@ class AMDGPUDevice : public PciDevice
     // until the driver reads them before setting them.
     uint64_t mmhubBase = 0x0;
     uint64_t mmhubTop = 0x0;
+
+    // VMIDs data structures
+    // map of pasids to vmids
+    std::unordered_map<uint16_t, uint16_t> idMap;
+    // map of doorbell offsets to vmids
+    std::unordered_map<Addr, uint16_t> doorbellVMIDMap;
+    // map of vmid to all queue ids using that vmid
+    std::unordered_map<uint16_t, std::set<int>> usedVMIDs;
+    // last vmid allocated by map_process PM4 packet
+    uint16_t _lastVMID;
 
   public:
     AMDGPUDevice(const AMDGPUDeviceParams &p);
@@ -155,9 +167,11 @@ class AMDGPUDevice : public PciDevice
      * Get handles to GPU blocks.
      */
     AMDGPUInterruptHandler* getIH() { return deviceIH; }
+    SDMAEngine* getSDMAById(int id);
     SDMAEngine* getSDMAEngine(Addr offset);
     AMDGPUVM &getVM() { return gpuvm; }
     AMDGPUMemoryManager* getMemMgr() { return gpuMemMgr; }
+    GPUCommandProcessor* CP() { return cp; }
 
     /**
      * Set handles to GPU blocks.
@@ -166,9 +180,27 @@ class AMDGPUDevice : public PciDevice
     void setSDMAEngine(Addr offset, SDMAEngine *eng);
 
     /**
+     * Register value getter/setter. Used by other GPU blocks to change
+     * values from incoming driver/user packets.
+     */
+    uint32_t getRegVal(uint32_t addr);
+    void setRegVal(uint32_t addr, uint32_t value);
+
+    /**
      * Methods related to translations and system/device memory.
      */
     RequestorID vramRequestorId() { return gpuMemMgr->getRequestorID(); }
+
+    /* HW context stuff */
+    uint16_t lastVMID() { return _lastVMID; }
+    uint16_t allocateVMID(uint16_t pasid);
+    void deallocateVmid(uint16_t vmid);
+    void deallocatePasid(uint16_t pasid);
+    void deallocateAllQueues();
+    void mapDoorbellToVMID(Addr doorbell, uint16_t vmid);
+    uint16_t getVMID(Addr doorbell) { return doorbellVMIDMap[doorbell]; }
+    std::unordered_map<uint16_t, std::set<int>>& getUsedVMIDs();
+    void insertQId(uint16_t vmid, int id);
 };
 
 } // namespace gem5

@@ -36,7 +36,6 @@
 #include "dev/amdgpu/interrupt_handler.hh"
 #include "dev/amdgpu/sdma_commands.hh"
 #include "dev/amdgpu/sdma_mmio.hh"
-#include "dev/amdgpu/vega10/soc15_ih_clientid.h"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/SDMAEngine.hh"

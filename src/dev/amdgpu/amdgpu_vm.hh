@@ -45,10 +45,10 @@
  * MMIO offsets for graphics register bus manager (GRBM). These values were
  * taken from linux header files. The header files can be found here:
  *
- * https://github.com/torvalds/linux/blob/master/drivers/gpu/drm/amd/include/
- *      asic_reg/gc/gc_9_0_offset.h
- * https://github.com/torvalds/linux/blob/master/drivers/gpu/drm/amd/include/
- *      asic_reg/mmhub/mmhub_1_0_offset.h
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.2.0/
+ *      drivers/gpu/drm/amd/include/ asic_reg/gc/gc_9_0_offset.h
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.2.0/
+ *      drivers/gpu/drm/amd/include/ asic_reg/mmhub/mmhub_1_0_offset.h
  */
 
 #define mmVM_INVALIDATE_ENG17_ACK                                     0x08c6
@@ -256,6 +256,12 @@ class AMDGPUVM : public Serializable
     /**
      * Page table base/start accessors for user VMIDs.
      */
+    void
+    setPageTableBase(uint16_t vmid, Addr ptBase)
+    {
+        vmContexts[vmid].ptBase = ptBase;
+    }
+
     Addr
     getPageTableBase(uint16_t vmid)
     {

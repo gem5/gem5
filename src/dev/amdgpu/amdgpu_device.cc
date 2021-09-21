@@ -36,7 +36,10 @@
 #include "debug/AMDGPUDevice.hh"
 #include "dev/amdgpu/amdgpu_vm.hh"
 #include "dev/amdgpu/interrupt_handler.hh"
+#include "dev/amdgpu/pm4_packet_processor.hh"
 #include "dev/amdgpu/sdma_engine.hh"
+#include "dev/hsa/hw_scheduler.hh"
+#include "gpu-compute/gpu_command_processor.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/AMDGPUDevice.hh"
@@ -48,9 +51,9 @@ namespace gem5
 
 AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     : PciDevice(p), gpuMemMgr(p.memory_manager), deviceIH(p.device_ih),
-      sdma0(p.sdma0), sdma1(p.sdma1),
+      sdma0(p.sdma0), sdma1(p.sdma1), pm4PktProc(p.pm4_pkt_proc), cp(p.cp),
       checkpoint_before_mmios(p.checkpoint_before_mmios),
-      init_interrupt_count(0)
+      init_interrupt_count(0), _lastVMID(0)
 {
     // Loading the rom binary dumped from hardware.
     std::ifstream romBin;
@@ -73,6 +76,7 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     sdma1->setGPUDevice(this);
     sdma1->setId(1);
     deviceIH->setGPUDevice(this);
+    pm4PktProc->setGPUDevice(this);
 }
 
 void
@@ -233,6 +237,14 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
         DPRINTF(AMDGPUDevice, "Doorbell offset %p queue: %d\n",
                               offset, q_type);
         switch (q_type) {
+          case Compute:
+            pm4PktProc->process(pm4PktProc->getQueue(offset),
+                                pkt->getLE<uint64_t>());
+          break;
+          case Gfx:
+            pm4PktProc->process(pm4PktProc->getQueue(offset, true),
+                                pkt->getLE<uint64_t>());
+          break;
           case SDMAGfx: {
             SDMAEngine *sdmaEng = getSDMAEngine(offset);
             sdmaEng->processGfx(pkt->getLE<uint64_t>());
@@ -241,9 +253,18 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
             SDMAEngine *sdmaEng = getSDMAEngine(offset);
             sdmaEng->processPage(pkt->getLE<uint64_t>());
           } break;
+          case ComputeAQL: {
+            cp->hsaPacketProc().hwScheduler()->write(offset,
+                pkt->getLE<uint64_t>() + 1);
+            pm4PktProc->updateReadIndex(offset, pkt->getLE<uint64_t>() + 1);
+          } break;
           case InterruptHandler:
             deviceIH->updateRptr(pkt->getLE<uint32_t>());
             break;
+          case RLC: {
+            panic("RLC queues not yet supported. Run with the environment "
+                  "variable HSA_ENABLE_SDMA set to False");
+          } break;
           default:
             panic("Write to unkown queue type!");
         }
@@ -268,6 +289,11 @@ AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
       /* Write a register to the second System DMA. */
       case SDMA1_BASE:
         sdma1->writeMMIO(pkt, aperture_offset >> SDMA_OFFSET_SHIFT);
+        break;
+      /* Write a general register to the graphics register bus manager. */
+      case GRBM_BASE:
+        gpuvm.writeMMIO(pkt, aperture_offset >> GRBM_OFFSET_SHIFT);
+        pm4PktProc->writeMMIO(pkt, aperture_offset >> GRBM_OFFSET_SHIFT);
         break;
       /* Write a register to the interrupt handler. */
       case IH_BASE:
@@ -346,6 +372,19 @@ AMDGPUDevice::write(PacketPtr pkt)
     return pioDelay;
 }
 
+uint32_t
+AMDGPUDevice::getRegVal(uint32_t addr)
+{
+    return regs[addr];
+}
+void
+AMDGPUDevice::setRegVal(uint32_t addr, uint32_t value)
+{
+    DPRINTF(AMDGPUDevice, "Setting register 0x%lx to %x\n",
+            addr, value);
+    regs[addr] = value;
+}
+
 void
 AMDGPUDevice::setDoorbellType(uint32_t offset, QueueType qt)
 {
@@ -357,6 +396,28 @@ void
 AMDGPUDevice::setSDMAEngine(Addr offset, SDMAEngine *eng)
 {
     sdmaEngs[offset] = eng;
+}
+
+SDMAEngine*
+AMDGPUDevice::getSDMAById(int id)
+{
+    /**
+     * PM4 packets selected SDMAs using an integer ID. This method simply maps
+     * the integer ID to a pointer to the SDMA and checks for invalid IDs.
+     */
+    switch (id) {
+        case 0:
+            return sdma0;
+            break;
+        case 1:
+            return sdma1;
+            break;
+        default:
+            panic("No SDMA with id %d\n", id);
+            break;
+    }
+
+    return nullptr;
 }
 
 SDMAEngine*
@@ -383,6 +444,64 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
 {
     // Unserialize the PciDevice base class
     PciDevice::unserialize(cp);
+}
+
+uint16_t
+AMDGPUDevice::allocateVMID(uint16_t pasid)
+{
+    for (uint16_t vmid = 1; vmid < AMDGPU_VM_COUNT; vmid++) {
+        auto result = usedVMIDs.find(vmid);
+        if (result == usedVMIDs.end()) {
+            idMap.insert(std::make_pair(pasid, vmid));
+            usedVMIDs[vmid] = {};
+            _lastVMID = vmid;
+            return vmid;
+        }
+    }
+    panic("All VMIDs have been assigned");
+}
+
+void
+AMDGPUDevice::deallocateVmid(uint16_t vmid)
+{
+    usedVMIDs.erase(vmid);
+}
+
+void
+AMDGPUDevice::deallocatePasid(uint16_t pasid)
+{
+    auto result = idMap.find(pasid);
+    assert(result != idMap.end());
+    if (result == idMap.end()) return;
+    uint16_t vmid = result->second;
+
+    idMap.erase(result);
+    usedVMIDs.erase(vmid);
+}
+
+void
+AMDGPUDevice::deallocateAllQueues()
+{
+    idMap.erase(idMap.begin(), idMap.end());
+    usedVMIDs.erase(usedVMIDs.begin(), usedVMIDs.end());
+}
+
+void
+AMDGPUDevice::mapDoorbellToVMID(Addr doorbell, uint16_t vmid)
+{
+    doorbellVMIDMap[doorbell] = vmid;
+}
+
+std::unordered_map<uint16_t, std::set<int>>&
+AMDGPUDevice::getUsedVMIDs()
+{
+    return usedVMIDs;
+}
+
+void
+AMDGPUDevice::insertQId(uint16_t vmid, int id)
+{
+    usedVMIDs[vmid].insert(id);
 }
 
 } // namespace gem5

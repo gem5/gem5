@@ -48,11 +48,27 @@
 namespace gem5
 {
 
-/*
+/**
+ * Defines from driver code. Taken from
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.2.0/
+ *     drivers/gpu/drm/amd/include/soc15_ih_clientid.h
+ */
+enum soc15_ih_clientid
+{
+    SOC15_IH_CLIENTID_RLC       = 0x07,
+    SOC15_IH_CLIENTID_SDMA0     = 0x08,
+    SOC15_IH_CLIENTID_SDMA1     = 0x09
+};
+
+enum ihSourceId
+{
+    TRAP_ID                     = 224
+};
+
+/**
  * MSI-style interrupts. Send a "cookie" response to clear interrupts.
- * From [1] we know the size of the struct is 8 dwords. Then we can look at
- * the register shift offsets in [2] to guess the rest. Or we can also look
- * at [3].
+ * From [1] we know the size of the struct is 8 dwords. Then we can look at the register shift offsets in [2] to guess the rest.
+ * Or we can also look at [3].
  *
  * [1] https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *         drivers/gpu/drm/amd/amdkfd/kfd_device.c#L316
@@ -83,6 +99,9 @@ typedef struct
     uint32_t source_data_dw4;
 } AMDGPUInterruptCookie;
 
+/**
+ * Struct to contain all interrupt handler related registers.
+ */
 typedef struct
 {
     uint32_t IH_Cntl;

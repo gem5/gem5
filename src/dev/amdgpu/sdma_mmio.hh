@@ -37,7 +37,7 @@
  * for SDMA. The header files can be found here:
  *
  * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.3.x/
-*      drivers/gpu/drm/amd/include/asic_reg/sdma0/sdma0_4_0_offset.h
+ *      drivers/gpu/drm/amd/include/asic_reg/sdma0/sdma0_4_0_offset.h
  * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.3.x/
  *     drivers/gpu/drm/amd/include/asic_reg/sdma1/sdma1_4_0_offset.h
  */
