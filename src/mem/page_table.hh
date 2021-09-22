@@ -42,6 +42,7 @@
 #include "base/intmath.hh"
 #include "base/types.hh"
 #include "mem/request.hh"
+#include "mem/translation_gen.hh"
 #include "sim/serialize.hh"
 
 namespace gem5
@@ -153,7 +154,32 @@ class EmulationPageTable : public Serializable
      * @param vaddr The virtual address.
      * @return True if translation exists
      */
-    bool translate(Addr vaddr) { Addr dummy; return translate(vaddr, dummy); }
+    bool
+    translate(Addr vaddr)
+    {
+        Addr dummy;
+        return translate(vaddr, dummy);
+    }
+
+    class PageTableTranslationGen : public TranslationGen
+    {
+      private:
+        EmulationPageTable *pt;
+
+        void translate(Range &range) const override;
+
+      public:
+        PageTableTranslationGen(EmulationPageTable *_pt, Addr vaddr,
+                Addr size) : TranslationGen(vaddr, size), pt(_pt)
+        {}
+    };
+
+    TranslationGenPtr
+    translateRange(Addr vaddr, Addr size)
+    {
+        return TranslationGenPtr(
+                new PageTableTranslationGen(this, vaddr, size));
+    }
 
     /**
      * Perform a translation on the memory request, fills in paddr

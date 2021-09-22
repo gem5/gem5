@@ -169,6 +169,20 @@ EmulationPageTable::translate(const RequestPtr &req)
 }
 
 void
+EmulationPageTable::PageTableTranslationGen::translate(Range &range) const
+{
+    const Addr page_size = pt->pageSize();
+
+    Addr next = roundUp(range.vaddr, page_size);
+    if (next == range.vaddr)
+        next += page_size;
+    range.size = std::min(range.size, next - range.vaddr);
+
+    if (!pt->translate(range.vaddr, range.paddr))
+        range.fault = Fault(new GenericPageTableFault(range.vaddr));
+}
+
+void
 EmulationPageTable::serialize(CheckpointOut &cp) const
 {
     ScopedCheckpointSection sec(cp, "ptable");
