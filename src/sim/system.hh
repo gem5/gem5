@@ -392,11 +392,6 @@ class System : public SimObject, public PCEventScope
         return params().byte_order;
     }
 
-     /**
-     * Get the page bytes for the ISA.
-     */
-    Addr getPageBytes() const { return TheISA::PageBytes; }
-
     /**
      * The thermal model used for this system (if any).
      */
