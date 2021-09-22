@@ -30,7 +30,7 @@ images=("gcc-version-11"
 
 # A subset of the above list: these images will build against every target,
 # ignoring builds_per_compiler.
-comprehensive=("gcc-version-11")
+comprehensive=("gcc-version-11"
                "clang-version-11")
 
 # All build targets in build_opt/ which we want to build using each image.
