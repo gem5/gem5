@@ -61,7 +61,6 @@ env.SwitchingHeaders(
     Split('''
         decoder.hh
         isa.hh
-        page_size.hh
         pcstate.hh
         vecregs.hh
         '''),
