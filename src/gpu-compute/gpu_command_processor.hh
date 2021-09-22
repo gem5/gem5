@@ -135,7 +135,7 @@ class GPUCommandProcessor : public DmaVirtDevice
     typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event*, uint8_t*, Tick);
     void initABI(HSAQueueEntry *task);
     HSAPacketProcessor *hsaPP;
-    void translateOrDie(Addr vaddr, Addr &paddr) override;
+    TranslationGenPtr translate(Addr vaddr, Addr size) override;
 
     /**
      * Perform a DMA read of the read_dispatch_id_field_base_byte_offset

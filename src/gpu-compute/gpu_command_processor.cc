@@ -65,19 +65,15 @@ GPUCommandProcessor::hsaPacketProc()
     return *hsaPP;
 }
 
-void
-GPUCommandProcessor::translateOrDie(Addr vaddr, Addr &paddr)
+TranslationGenPtr
+GPUCommandProcessor::translate(Addr vaddr, Addr size)
 {
-    /**
-     * Grab the process and try to translate the virtual address with it;
-     * with new extensions, it will likely be wrong to just arbitrarily
-     * grab context zero.
-     */
+    // Grab the process and try to translate the virtual address with it; with
+    // new extensions, it will likely be wrong to just arbitrarily grab context
+    // zero.
     auto process = sys->threads[0]->getProcessPtr();
 
-    if (!process->pTable->translate(vaddr, paddr)) {
-        fatal("failed translation: vaddr 0x%x\n", vaddr);
-    }
+    return process->pTable->translateRange(vaddr, size);
 }
 
 /**

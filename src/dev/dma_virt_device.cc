@@ -36,11 +36,6 @@
 namespace gem5
 {
 
-DmaVirtDevice::DmaVirtDevice(const Params& p)
-    : DmaDevice(p), pageBytes(p.system->getPageBytes())
-{
-}
-
 void
 DmaVirtDevice::dmaReadVirt(Addr host_addr, unsigned size,
                                  DmaCallback *cb, void *data, Tick delay)
@@ -68,17 +63,13 @@ DmaVirtDevice::dmaVirt(DmaFnPtr dmaFn, Addr addr, unsigned size,
     // move the buffer data pointer with the chunks
     uint8_t *loc_data = (uint8_t*)data;
 
-    for (ChunkGenerator gen(addr, size, pageBytes); !gen.done(); gen.next()) {
-        Addr phys;
-
-        // translate pages into their corresponding frames
-        translateOrDie(gen.addr(), phys);
+    TranslationGenPtr gen = translate(addr, size);
+    for (const auto &range: *gen) {
+        fatal_if(range.fault, "Failed translation: vaddr 0x%x", range.vaddr);
 
         Event *event = cb ? cb->getChunkEvent() : nullptr;
-
-        (this->*dmaFn)(phys, gen.size(), event, loc_data, delay);
-
-        loc_data += gen.size();
+        (this->*dmaFn)(range.paddr, range.size, event, loc_data, delay);
+        loc_data += range.size;
     }
 }
 

@@ -348,7 +348,7 @@ class HSAPacketProcessor: public DmaVirtDevice
     typedef HSAPacketProcessorParams Params;
     HSAPacketProcessor(const Params &p);
     ~HSAPacketProcessor();
-    void translateOrDie(Addr vaddr, Addr &paddr) override;
+    TranslationGenPtr translate(Addr vaddr, Addr size) override;
     void setDeviceQueueDesc(uint64_t hostReadIndexPointer,
                             uint64_t basePointer,
                             uint64_t queue_id,

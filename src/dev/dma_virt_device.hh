@@ -35,15 +35,13 @@
 #define __DEV_DMA_VIRT_DEVICE_HH__
 
 #include "dev/dma_device.hh"
+#include "mem/translation_gen.hh"
 
 namespace gem5
 {
 
 class DmaVirtDevice : public DmaDevice
 {
-  private:
-    Addr pageBytes;
-
   protected:
     /**
      * Wraps a std::function object in a DmaCallback.  Much cleaner than
@@ -72,7 +70,7 @@ class DmaVirtDevice : public DmaDevice
     };
 
   public:
-    DmaVirtDevice(const Params& p);
+    DmaVirtDevice(const Params& p) : DmaDevice(p) { }
     virtual ~DmaVirtDevice() { }
 
     /**
@@ -119,13 +117,15 @@ class DmaVirtDevice : public DmaDevice
                  DmaCallback *cb, void *data, Tick delay = 0);
 
     /**
-     * Function used to translate from virtual to physical addresses. All
-     * classes inheriting from DmaVirtDevice must define this.
+     * Function used to translate a range of addresses from virtual to
+     * physical addresses. All classes inheriting from DmaVirtDevice must
+     * define this.
      *
-     * @param vaddr Input virtual address
-     * @param paddr Output physical address written by reference
+     * @param vaddr Virtual address of the start of the range
+     * @param size Size of the range in bytes
+     * @return A translation generator for this range
      */
-    virtual void translateOrDie(Addr vaddr, Addr &paddr) = 0;
+    virtual TranslationGenPtr translate(Addr vaddr, Addr size) = 0;
 };
 
 } // namespace gem5
