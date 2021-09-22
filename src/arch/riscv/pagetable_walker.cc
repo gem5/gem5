@@ -53,6 +53,7 @@
 #include <memory>
 
 #include "arch/riscv/faults.hh"
+#include "arch/riscv/page_size.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/tlb.hh"
 #include "base/bitfield.hh"

@@ -39,6 +39,7 @@
 
 #include <cmath>
 
+#include "arch/arm/page_size.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
 #include "base/logging.hh"

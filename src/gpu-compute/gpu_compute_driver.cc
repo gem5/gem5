@@ -35,6 +35,7 @@
 
 #include <memory>
 
+#include "arch/x86/page_size.hh"
 #include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
