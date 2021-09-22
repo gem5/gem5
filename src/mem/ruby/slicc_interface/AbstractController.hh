@@ -214,7 +214,11 @@ class AbstractController : public ClockedObject, public Consumer
     MachineID mapAddressToDownstreamMachine(Addr addr,
                                     MachineType mtype = MachineType_NUM) const;
 
+    /** List of downstream destinations (towards memory) */
     const NetDest& allDownstreamDest() const { return downstreamDestinations; }
+
+    /** List of upstream destinations (towards the CPU) */
+    const NetDest& allUpstreamDest() const { return upstreamDestinations; }
 
   protected:
     //! Profiles original cache requests including PUTs
@@ -375,6 +379,7 @@ class AbstractController : public ClockedObject, public Consumer
     AddrRangeMap<AddrMapEntry, 3> downstreamAddrMap;
 
     NetDest downstreamDestinations;
+    NetDest upstreamDestinations;
 
   public:
     struct ControllerStats : public statistics::Group
