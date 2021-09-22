@@ -42814,12 +42814,7 @@ namespace VegaISA
 
         calcAddr(gpuDynInst, addr, instData.OFFSET);
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -42907,12 +42902,7 @@ namespace VegaISA
 
         calcAddr(gpuDynInst, addr, instData.OFFSET);
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43001,12 +42991,7 @@ namespace VegaISA
 
         calcAddr(gpuDynInst, addr, instData.OFFSET);
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43065,12 +43050,7 @@ namespace VegaISA
 
         calcAddr(gpuDynInst, addr, instData.OFFSET);
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43129,12 +43109,7 @@ namespace VegaISA
 
         calcAddr(gpuDynInst, addr, instData.OFFSET);
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43202,12 +43177,7 @@ namespace VegaISA
 
         calcAddr(gpuDynInst, addr, instData.OFFSET);
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43279,7 +43249,6 @@ namespace VegaISA
         addr.read();
         data.read();
 
-
         calcAddr(gpuDynInst, addr, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -43289,12 +43258,7 @@ namespace VegaISA
             }
         }
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43353,12 +43317,7 @@ namespace VegaISA
             }
         }
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43417,12 +43376,7 @@ namespace VegaISA
             }
         }
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43473,6 +43427,8 @@ namespace VegaISA
         addr.read();
         data.read();
 
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
                 (reinterpret_cast<VecElemU64*>(gpuDynInst->d_data))[lane]
@@ -43480,14 +43436,7 @@ namespace VegaISA
             }
         }
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
-
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43555,12 +43504,7 @@ namespace VegaISA
             }
         }
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43632,13 +43576,7 @@ namespace VegaISA
             }
         }
 
-
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe
-                .issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43704,12 +43642,7 @@ namespace VegaISA
             }
         }
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe.
-                issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43795,12 +43728,7 @@ namespace VegaISA
             }
         }
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe.
-                issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -43870,6 +43798,7 @@ namespace VegaISA
         data.read();
 
         calcAddr(gpuDynInst, addr, instData.OFFSET);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
                 (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
@@ -43877,12 +43806,7 @@ namespace VegaISA
             }
         }
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe.
-                issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -44265,6 +44189,8 @@ namespace VegaISA
         data.read();
         cmp.read();
 
+        calcAddr(gpuDynInst, addr, instData.OFFSET);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
                 (reinterpret_cast<VecElemU64*>(gpuDynInst->x_data))[lane]
@@ -44274,14 +44200,7 @@ namespace VegaISA
             }
         }
 
-        calcAddr(gpuDynInst, addr, instData.OFFSET);
-
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe.
-                issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -44360,12 +44279,7 @@ namespace VegaISA
             }
         }
 
-        if (isFlatGlobal()) {
-            gpuDynInst->computeUnit()->globalMemoryPipe.
-                issueRequest(gpuDynInst);
-        } else {
-            fatal("Non global flat instructions not implemented yet.\n");
-        }
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void

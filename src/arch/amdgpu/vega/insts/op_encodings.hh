@@ -804,6 +804,20 @@ namespace VegaISA
             gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
         }
 
+        void
+        issueRequestHelper(GPUDynInstPtr gpuDynInst)
+        {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                gpuDynInst->computeUnit()->globalMemoryPipe
+                    .issueRequest(gpuDynInst);
+            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                gpuDynInst->computeUnit()->localMemoryPipe
+                    .issueRequest(gpuDynInst);
+            } else {
+                fatal("Unsupported scope for flat instruction.\n");
+            }
+        }
+
         // first instruction DWORD
         InFmt_FLAT instData;
         // second instruction DWORD
