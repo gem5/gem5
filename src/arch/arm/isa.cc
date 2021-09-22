@@ -416,9 +416,7 @@ ISA::initID64(const ArmISAParams &p)
     miscRegs[MISCREG_ID_AA64PFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64PFR0_EL1], 39, 36,
         release->has(ArmExtension::FEAT_SEL2) ? 0x1 : 0x0);
-    miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
-        miscRegs[MISCREG_ID_AA64ISAR0_EL1], 39, 36,
-        release->has(ArmExtension::FEAT_SEL2) ? 0x1 : 0x0);
+
     // Large ASID support
     miscRegs[MISCREG_ID_AA64MMFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64MMFR0_EL1], 7, 4,
