@@ -104,6 +104,12 @@ class ArmDefaultRelease(Armv8):
         'FEAT_HPDS', 'FEAT_VMID16', 'FEAT_RDM', 'FEAT_SEL2'
     ]
 
+class Armv81(Armv8):
+    extensions = Armv8.extensions + [
+        'FEAT_LSE', 'FEAT_VHE', 'FEAT_PAN',
+        'FEAT_HPDS', 'FEAT_VMID16', 'FEAT_RDM'
+    ]
+
 class ArmSystem(System):
     type = 'ArmSystem'
     cxx_header = "arch/arm/system.hh"
