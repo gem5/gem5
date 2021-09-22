@@ -583,19 +583,24 @@ class LSQ
         virtual std::string name() const { return "SingleDataRequest"; }
     };
 
-    // hardware transactional memory
-    // This class extends SingleDataRequest for the sole purpose
-    // of encapsulating hardware transactional memory command requests
-    class HtmCmdRequest : public SingleDataRequest
+    // This class extends SingleDataRequest for the purpose
+    // of allowing special requests (eg Hardware transactional memory, TLB
+    // shootdowns) to bypass irrelevant system elements like translation &
+    // squashing.
+    class UnsquashableDirectRequest : public SingleDataRequest
     {
       public:
-        HtmCmdRequest(LSQUnit* port, const DynInstPtr& inst,
+        UnsquashableDirectRequest(LSQUnit* port, const DynInstPtr& inst,
                 const Request::Flags& flags_);
-        virtual ~HtmCmdRequest() {}
+        inline virtual ~UnsquashableDirectRequest() {}
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
                 gem5::ThreadContext* tc, BaseMMU::Mode mode);
-        virtual std::string name() const { return "HtmCmdRequest"; }
+        virtual std::string
+        name() const
+        {
+            return "UnsquashableDirectRequest";
+        }
     };
 
     class SplitDataRequest : public LSQRequest

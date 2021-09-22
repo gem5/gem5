@@ -784,15 +784,16 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
     assert(!isAtomic || (isAtomic && !needs_burst));
 
     const bool htm_cmd = isLoad && (flags & Request::HTM_CMD);
+    const bool tlbi_cmd = isLoad && (flags & Request::TLBI_CMD);
 
     if (inst->translationStarted()) {
         request = inst->savedRequest;
         assert(request);
     } else {
-        if (htm_cmd) {
+        if (htm_cmd || tlbi_cmd) {
             assert(addr == 0x0lu);
             assert(size == 8);
-            request = new HtmCmdRequest(&thread[tid], inst, flags);
+            request = new UnsquashableDirectRequest(&thread[tid], inst, flags);
         } else if (needs_burst) {
             request = new SplitDataRequest(&thread[tid], inst, isLoad, addr,
                     size, flags, data, res);
@@ -1377,15 +1378,17 @@ LSQ::DcachePort::recvReqRetry()
     lsq->recvReqRetry();
 }
 
-LSQ::HtmCmdRequest::HtmCmdRequest(LSQUnit* port, const DynInstPtr& inst,
-        const Request::Flags& flags_) :
+LSQ::UnsquashableDirectRequest::UnsquashableDirectRequest(
+    LSQUnit* port,
+    const DynInstPtr& inst,
+    const Request::Flags& flags_) :
     SingleDataRequest(port, inst, true, 0x0lu, 8, flags_,
         nullptr, nullptr, nullptr)
 {
 }
 
 void
-LSQ::HtmCmdRequest::initiateTranslation()
+LSQ::UnsquashableDirectRequest::initiateTranslation()
 {
     // Special commands are implemented as loads to avoid significant
     // changes to the cpu and memory interfaces
@@ -1421,8 +1424,9 @@ LSQ::HtmCmdRequest::initiateTranslation()
 }
 
 void
-LSQ::HtmCmdRequest::finish(const Fault &fault, const RequestPtr &req,
-        gem5::ThreadContext* tc, BaseMMU::Mode mode)
+LSQ::UnsquashableDirectRequest::finish(const Fault &fault,
+        const RequestPtr &req, gem5::ThreadContext* tc,
+        BaseMMU::Mode mode)
 {
     panic("unexpected behaviour - finish()");
 }
