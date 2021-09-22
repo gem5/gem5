@@ -49,6 +49,9 @@ class ArmExtension(ScopedEnum):
         'FEAT_VHE',
         'FEAT_PAN',
         'FEAT_LSE',
+        'FEAT_HPDS',
+        'FEAT_VMID16',
+        'FEAT_RDM',
 
         # Armv8.2
         'FEAT_SVE',
@@ -97,7 +100,8 @@ class Armv8(ArmRelease):
 
 class ArmDefaultRelease(Armv8):
     extensions = Armv8.extensions + [
-        'FEAT_SVE', 'FEAT_LSE', 'FEAT_PAN', 'FEAT_SEL2'
+        'FEAT_SVE', 'FEAT_LSE', 'FEAT_PAN',
+        'FEAT_HPDS', 'FEAT_VMID16', 'FEAT_RDM', 'FEAT_SEL2'
     ]
 
 class ArmSystem(System):

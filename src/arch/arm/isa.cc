@@ -355,9 +355,15 @@ ISA::initID32(const ArmISAParams &p)
     miscRegs[MISCREG_ID_MMFR3] = p.id_mmfr3;
     miscRegs[MISCREG_ID_MMFR4] = p.id_mmfr4;
 
+    /** MISCREG_ID_ISAR5 */
+    // Crypto
     miscRegs[MISCREG_ID_ISAR5] = insertBits(
         miscRegs[MISCREG_ID_ISAR5], 19, 4,
         release->has(ArmExtension::CRYPTO) ? 0x1112 : 0x0);
+    // RDM
+    miscRegs[MISCREG_ID_ISAR5] = insertBits(
+        miscRegs[MISCREG_ID_ISAR5], 27, 24,
+        release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0);
 }
 
 void
@@ -421,6 +427,8 @@ ISA::initID64(const ArmISAParams &p)
     miscRegs[MISCREG_ID_AA64MMFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64MMFR0_EL1], 3, 0,
         encodePhysAddrRange64(physAddrRange));
+
+    /** MISCREG_ID_AA64ISAR0_EL1 */
     // Crypto
     miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64ISAR0_EL1], 19, 4,
@@ -429,14 +437,30 @@ ISA::initID64(const ArmISAParams &p)
     miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64ISAR0_EL1], 23, 20,
         release->has(ArmExtension::FEAT_LSE) ? 0x2 : 0x0);
+    // RDM
+    miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64ISAR0_EL1], 31, 28,
+        release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0);
+
+    /** MISCREG_ID_AA64MMFR1_EL1 */
+    // VMID16
+    miscRegs[MISCREG_ID_AA64MMFR1_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64MMFR1_EL1], 7, 4,
+        release->has(ArmExtension::FEAT_VMID16) ? 0x2 : 0x0);
     // VHE
     miscRegs[MISCREG_ID_AA64MMFR1_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64MMFR1_EL1], 11, 8,
         release->has(ArmExtension::FEAT_VHE) ? 0x1 : 0x0);
+    // HPDS
+    miscRegs[MISCREG_ID_AA64MMFR1_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64MMFR1_EL1], 15, 12,
+        release->has(ArmExtension::FEAT_HPDS) ? 0x1 : 0x0);
     // PAN
     miscRegs[MISCREG_ID_AA64MMFR1_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64MMFR1_EL1], 23, 20,
         release->has(ArmExtension::FEAT_PAN) ? 0x1 : 0x0);
+
+
     // TME
     miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64ISAR0_EL1], 27, 24,
