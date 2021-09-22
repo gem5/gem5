@@ -228,23 +228,33 @@ class AbstractController : public ClockedObject, public Consumer
 
     // Tracks outstanding transactions for latency profiling
     struct TransMapPair { unsigned transaction; unsigned state; Tick time; };
-    std::unordered_map<Addr, TransMapPair> m_inTrans;
-    std::unordered_map<Addr, TransMapPair> m_outTrans;
+    std::unordered_map<Addr, TransMapPair> m_inTransAddressed;
+    std::unordered_map<Addr, TransMapPair> m_outTransAddressed;
+
+    std::unordered_map<Addr, TransMapPair> m_inTransUnaddressed;
+    std::unordered_map<Addr, TransMapPair> m_outTransUnaddressed;
 
     /**
      * Profiles an event that initiates a protocol transactions for a specific
      * line (e.g. events triggered by incoming request messages).
      * A histogram with the latency of the transactions is generated for
      * all combinations of trigger event, initial state, and final state.
+     * This function also supports "unaddressed" transactions,
+     * those not associated with an address in memory but
+     * instead associated with a unique ID.
      *
-     * @param addr address of the line
+     * @param addr address of the line, or unique transaction ID
      * @param type event that started the transaction
      * @param initialState state of the line before the transaction
+     * @param isAddressed is addr a line address or a unique ID
      */
     template<typename EventType, typename StateType>
     void incomingTransactionStart(Addr addr,
-        EventType type, StateType initialState, bool retried)
+        EventType type, StateType initialState, bool retried,
+        bool isAddressed=true)
     {
+        auto& m_inTrans =
+          isAddressed ? m_inTransAddressed : m_inTransUnaddressed;
         assert(m_inTrans.find(addr) == m_inTrans.end());
         m_inTrans[addr] = {type, initialState, curTick()};
         if (retried)
@@ -253,13 +263,20 @@ class AbstractController : public ClockedObject, public Consumer
 
     /**
      * Profiles an event that ends a transaction.
+     * This function also supports "unaddressed" transactions,
+     * those not associated with an address in memory but
+     * instead associated with a unique ID.
      *
-     * @param addr address of the line with a outstanding transaction
+     * @param addr address or unique ID with an outstanding transaction
      * @param finalState state of the line after the transaction
+     * @param isAddressed is addr a line address or a unique ID
      */
     template<typename StateType>
-    void incomingTransactionEnd(Addr addr, StateType finalState)
+    void incomingTransactionEnd(Addr addr, StateType finalState,
+        bool isAddressed=true)
     {
+        auto& m_inTrans =
+          isAddressed ? m_inTransAddressed : m_inTransUnaddressed;
         auto iter = m_inTrans.find(addr);
         assert(iter != m_inTrans.end());
         stats.inTransLatHist[iter->second.transaction]
@@ -273,13 +290,20 @@ class AbstractController : public ClockedObject, public Consumer
     /**
      * Profiles an event that initiates a transaction in a peer controller
      * (e.g. an event that sends a request message)
+     * This function also supports "unaddressed" transactions,
+     * those not associated with an address in memory but
+     * instead associated with a unique ID.
      *
-     * @param addr address of the line
+     * @param addr address of the line or a unique transaction ID
      * @param type event that started the transaction
+     * @param isAddressed is addr a line address or a unique ID
      */
     template<typename EventType>
-    void outgoingTransactionStart(Addr addr, EventType type)
+    void outgoingTransactionStart(Addr addr, EventType type,
+        bool isAddressed=true)
     {
+        auto& m_outTrans =
+          isAddressed ? m_outTransAddressed : m_outTransUnaddressed;
         assert(m_outTrans.find(addr) == m_outTrans.end());
         m_outTrans[addr] = {type, 0, curTick()};
     }
@@ -287,11 +311,18 @@ class AbstractController : public ClockedObject, public Consumer
     /**
      * Profiles the end of an outgoing transaction.
      * (e.g. receiving the response for a requests)
+     * This function also supports "unaddressed" transactions,
+     * those not associated with an address in memory but
+     * instead associated with a unique ID.
      *
      * @param addr address of the line with an outstanding transaction
+     * @param isAddressed is addr a line address or a unique ID
      */
-    void outgoingTransactionEnd(Addr addr, bool retried)
+    void outgoingTransactionEnd(Addr addr, bool retried,
+        bool isAddressed=true)
     {
+        auto& m_outTrans =
+          isAddressed ? m_outTransAddressed : m_outTransUnaddressed;
         auto iter = m_outTrans.find(addr);
         assert(iter != m_outTrans.end());
         stats.outTransLatHist[iter->second.transaction]->sample(
