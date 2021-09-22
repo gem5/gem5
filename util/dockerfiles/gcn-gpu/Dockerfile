@@ -98,6 +98,10 @@ RUN apt -y install ./hip-base*.deb ./hip-rocclr*.deb
 RUN ln -s /HIP/build/rocclr/CMakeFiles/Export/_opt/rocm/hip/lib/cmake/hip/* /opt/rocm/hip/lib/cmake/hip/
 WORKDIR /
 
+# rocBLAS downloads the most recent rocm-cmake if it isn't installed before
+# building
+RUN apt install rocm-cmake
+
 RUN git clone -b rocm-4.0.0 \
     https://github.com/ROCmSoftwarePlatform/rocBLAS.git && mkdir rocBLAS/build
 
@@ -109,7 +113,7 @@ RUN ./install.sh -d -a all -i
 WORKDIR /
 
 # MIOpen dependencies + MIOpen
-RUN apt install rocm-cmake rocm-clang-ocl miopen-hip
+RUN apt install rocm-clang-ocl miopen-hip
 
 # Clone MIOpen repo so that we have the kernel sources available
 RUN git clone -b rocm-4.0.1 https://github.com/ROCmSoftwarePlatform/MIOpen.git
