@@ -88,21 +88,14 @@ namespace ArmISA
 
         // Cached copies of system-level properties
         bool highestELIs64;
-        bool haveSecurity;
-        bool haveLPAE;
-        bool haveVirtualization;
-        bool haveCrypto;
         bool haveLargeAsid64;
         uint8_t physAddrRange;
-        bool haveSVE;
-        bool haveLSE;
-        bool haveVHE;
-        bool havePAN;
-        bool haveSecEL2;
-        bool haveTME;
 
         /** SVE vector length in quadwords */
         unsigned sveVL;
+
+        /** This could be either a FS or a SE release */
+        const ArmRelease *release;
 
         /**
          * If true, accesses to IMPLEMENTATION DEFINED registers are treated
@@ -735,10 +728,11 @@ namespace ArmISA
                 }
             } else {
                 if (miscRegInfo[reg][MISCREG_BANKED]) {
-                    bool secureReg = haveSecurity && !highestELIs64 &&
-                                     inSecureState(miscRegs[MISCREG_SCR],
-                                                   miscRegs[MISCREG_CPSR]);
-                    flat_idx += secureReg ? 2 : 1;
+                    bool secure_reg = release->has(ArmExtension::SECURITY) &&
+                                      !highestELIs64 &&
+                                      inSecureState(miscRegs[MISCREG_SCR],
+                                                    miscRegs[MISCREG_CPSR]);
+                    flat_idx += secure_reg ? 2 : 1;
                 } else {
                     flat_idx = snsBankedIndex64((MiscRegIndex)reg,
                         !inSecureState(miscRegs[MISCREG_SCR],
@@ -759,7 +753,7 @@ namespace ArmISA
             if (hcr.e2h == 0x0 || currEL(tc) != EL2)
                 return misc_reg;
             SCR scr = readMiscRegNoEffect(MISCREG_SCR_EL3);
-            bool sec_el2 = scr.eel2 && haveSecEL2;
+            bool sec_el2 = scr.eel2 && release->has(ArmExtension::FEAT_SEL2);
             switch(misc_reg) {
               case MISCREG_SPSR_EL1:
                   return MISCREG_SPSR_EL2;
@@ -825,7 +819,8 @@ namespace ArmISA
         {
             int reg_as_int = static_cast<int>(reg);
             if (miscRegInfo[reg][MISCREG_BANKED64]) {
-                reg_as_int += (haveSecurity && !ns) ? 2 : 1;
+                reg_as_int += (release->has(ArmExtension::SECURITY) && !ns) ?
+                    2 : 1;
             }
             return reg_as_int;
         }
@@ -840,7 +835,7 @@ namespace ArmISA
             }
 
             // do additional S/NS flattenings if mapped to NS while in S
-            bool S = haveSecurity && !highestELIs64 &&
+            bool S = release->has(ArmExtension::SECURITY) && !highestELIs64 &&
                      inSecureState(miscRegs[MISCREG_SCR],
                                    miscRegs[MISCREG_CPSR]);
             int lower = lookUpMiscReg[flat_idx].lower;

@@ -38,12 +38,17 @@ from m5.proxy import *
 
 from m5.SimObject import SimObject
 from m5.objects.ArmPMU import ArmPMU
-from m5.objects.ArmSystem import SveVectorLength
+from m5.objects.ArmSystem import SveVectorLength, ArmRelease
 from m5.objects.BaseISA import BaseISA
 from m5.objects.ISACommon import VecRegRenameMode
 
 # Enum for DecoderFlavor
 class DecoderFlavor(Enum): vals = ['Generic']
+
+class ArmDefaultSERelease(ArmRelease):
+    extensions = [
+        'CRYPTO', 'FEAT_SVE', 'FEAT_LSE', 'TME', 'FEAT_SEL2'
+    ]
 
 class ArmISA(BaseISA):
     type = 'ArmISA'
@@ -55,6 +60,9 @@ class ArmISA(BaseISA):
     pmu = Param.ArmPMU(NULL, "Performance Monitoring Unit")
     decoderFlavor = Param.DecoderFlavor(
             'Generic', "Decoder flavor specification")
+
+    release_se = Param.ArmRelease(ArmDefaultSERelease(),
+        "Set of features/extensions to use in SE mode")
 
     # If no MIDR value is provided, 0x0 is treated by gem5 as follows:
     # When 'highest_el_is_64' (AArch64 support) is:

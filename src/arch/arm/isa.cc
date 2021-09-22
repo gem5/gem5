@@ -106,32 +106,18 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     // Cache system-level properties
     if (FullSystem && system) {
         highestELIs64 = system->highestELIs64();
-        haveSecurity = system->has(ArmExtension::SECURITY);
-        haveLPAE = system->has(ArmExtension::LPAE);
-        haveCrypto = system->has(ArmExtension::CRYPTO);
-        haveVirtualization = system->has(ArmExtension::VIRTUALIZATION);
         haveLargeAsid64 = system->haveLargeAsid64();
         physAddrRange = system->physAddrRange();
-        haveSVE = system->has(ArmExtension::FEAT_SVE);
-        haveVHE = system->has(ArmExtension::FEAT_VHE);
-        havePAN = system->has(ArmExtension::FEAT_PAN);
-        haveSecEL2 = system->has(ArmExtension::FEAT_SEL2);
         sveVL = system->sveVL();
-        haveLSE = system->has(ArmExtension::FEAT_LSE);
-        haveTME = system->has(ArmExtension::TME);
+
+        release = system->releaseFS();
     } else {
         highestELIs64 = true; // ArmSystem::highestELIs64 does the same
-        haveSecurity = haveLPAE = haveVirtualization = false;
-        haveCrypto = true;
         haveLargeAsid64 = false;
         physAddrRange = 32;  // dummy value
-        haveSVE = true;
-        haveVHE = false;
-        havePAN = false;
-        haveSecEL2 = true;
         sveVL = p.sve_vl_se;
-        haveLSE = true;
-        haveTME = true;
+
+        release = p.release_se;
     }
 
     selfDebug = new SelfDebug();
@@ -267,7 +253,7 @@ ISA::clear32(const ArmISAParams &p, const SCTLR &sctlr_rst)
 
     miscRegs[MISCREG_FPSID] = p.fpsid;
 
-    if (haveLPAE) {
+    if (release->has(ArmExtension::LPAE)) {
         TTBCR ttbcr = miscRegs[MISCREG_TTBCR_NS];
         ttbcr.eae = 0;
         miscRegs[MISCREG_TTBCR_NS] = ttbcr;
@@ -275,7 +261,7 @@ ISA::clear32(const ArmISAParams &p, const SCTLR &sctlr_rst)
         miscRegs[MISCREG_ID_MMFR0] = (miscRegs[MISCREG_ID_MMFR0] & ~0xf) | 0x5;
     }
 
-    if (haveSecurity) {
+    if (release->has(ArmExtension::SECURITY)) {
         miscRegs[MISCREG_SCTLR_S] = sctlr;
         miscRegs[MISCREG_SCR] = 0;
         miscRegs[MISCREG_VBAR_S] = 0;
@@ -322,10 +308,10 @@ ISA::clear64(const ArmISAParams &p)
 
     // Initialize other control registers
     miscRegs[MISCREG_MPIDR_EL1] = 0x80000000;
-    if (haveSecurity) {
+    if (release->has(ArmExtension::SECURITY)) {
         miscRegs[MISCREG_SCTLR_EL3] = 0x30c50830;
         miscRegs[MISCREG_SCR_EL3]   = 0x00000030;  // RES1 fields
-    } else if (haveVirtualization) {
+    } else if (release->has(ArmExtension::VIRTUALIZATION)) {
         // also  MISCREG_SCTLR_EL2 (by mapping)
         miscRegs[MISCREG_HSCTLR] = 0x30c50830;
     } else {
@@ -371,7 +357,7 @@ ISA::initID32(const ArmISAParams &p)
 
     miscRegs[MISCREG_ID_ISAR5] = insertBits(
         miscRegs[MISCREG_ID_ISAR5], 19, 4,
-        haveCrypto ? 0x1112 : 0x0);
+        release->has(ArmExtension::CRYPTO) ? 0x1112 : 0x0);
 }
 
 void
@@ -398,9 +384,9 @@ ISA::initID64(const ArmISAParams &p)
 
     // SVE
     miscRegs[MISCREG_ID_AA64ZFR0_EL1] = 0;  // SVEver 0
-    if (haveSecurity) {
+    if (release->has(ArmExtension::SECURITY)) {
         miscRegs[MISCREG_ZCR_EL3] = sveVL - 1;
-    } else if (haveVirtualization) {
+    } else if (release->has(ArmExtension::VIRTUALIZATION)) {
         miscRegs[MISCREG_ZCR_EL2] = sveVL - 1;
     } else {
         miscRegs[MISCREG_ZCR_EL1] = sveVL - 1;
@@ -411,22 +397,22 @@ ISA::initID64(const ArmISAParams &p)
     // EL3
     miscRegs[MISCREG_ID_AA64PFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64PFR0_EL1], 15, 12,
-        haveSecurity ? 0x2 : 0x0);
+        release->has(ArmExtension::SECURITY) ? 0x2 : 0x0);
     // EL2
     miscRegs[MISCREG_ID_AA64PFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64PFR0_EL1], 11, 8,
-        haveVirtualization ? 0x2 : 0x0);
+        release->has(ArmExtension::VIRTUALIZATION) ? 0x2 : 0x0);
     // SVE
     miscRegs[MISCREG_ID_AA64PFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64PFR0_EL1], 35, 32,
-        haveSVE ? 0x1 : 0x0);
+        release->has(ArmExtension::FEAT_SVE) ? 0x1 : 0x0);
     // SecEL2
     miscRegs[MISCREG_ID_AA64PFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64PFR0_EL1], 39, 36,
-        haveSecEL2 ? 0x1 : 0x0);
+        release->has(ArmExtension::FEAT_SEL2) ? 0x1 : 0x0);
     miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64ISAR0_EL1], 39, 36,
-        haveSecEL2 ? 0x1 : 0x0);
+        release->has(ArmExtension::FEAT_SEL2) ? 0x1 : 0x0);
     // Large ASID support
     miscRegs[MISCREG_ID_AA64MMFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64MMFR0_EL1], 7, 4,
@@ -438,23 +424,23 @@ ISA::initID64(const ArmISAParams &p)
     // Crypto
     miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64ISAR0_EL1], 19, 4,
-        haveCrypto ? 0x1112 : 0x0);
+        release->has(ArmExtension::CRYPTO) ? 0x1112 : 0x0);
     // LSE
     miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64ISAR0_EL1], 23, 20,
-        haveLSE ? 0x2 : 0x0);
+        release->has(ArmExtension::FEAT_LSE) ? 0x2 : 0x0);
     // VHE
     miscRegs[MISCREG_ID_AA64MMFR1_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64MMFR1_EL1], 11, 8,
-        haveVHE ? 0x1 : 0x0);
+        release->has(ArmExtension::FEAT_VHE) ? 0x1 : 0x0);
     // PAN
     miscRegs[MISCREG_ID_AA64MMFR1_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64MMFR1_EL1], 23, 20,
-        havePAN ? 0x1 : 0x0);
+        release->has(ArmExtension::FEAT_PAN) ? 0x1 : 0x0);
     // TME
     miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64ISAR0_EL1], 27, 24,
-        haveTME ? 0x1 : 0x0);
+        release->has(ArmExtension::TME) ? 0x1 : 0x0);
 }
 
 void
@@ -465,7 +451,7 @@ ISA::startup()
     if (tc) {
         setupThreadContext();
 
-        if (haveTME) {
+        if (release->has(ArmExtension::TME)) {
             std::unique_ptr<BaseHTMCheckpoint> cpt(new HTMCheckpoint());
             tc->setHtmCheckpointPtr(std::move(cpt));
         }
@@ -599,7 +585,7 @@ ISA::readMiscReg(int misc_reg)
     switch (unflattenMiscReg(misc_reg)) {
       case MISCREG_HCR:
       case MISCREG_HCR2:
-            if (!haveVirtualization)
+            if (!release->has(ArmExtension::VIRTUALIZATION))
                 return 0;
             break;
       case MISCREG_CPACR:
@@ -613,7 +599,7 @@ ISA::readMiscReg(int misc_reg)
             cpacrMask.asedis = ones;
 
             // Security Extensions may limit the readability of CPACR
-            if (haveSecurity) {
+            if (release->has(ArmExtension::SECURITY)) {
                 scr = readMiscRegNoEffect(MISCREG_SCR);
                 cpsr = readMiscRegNoEffect(MISCREG_CPSR);
                 if (scr.ns && (cpsr.mode != MODE_MON) && ELIs32(tc, EL3)) {
@@ -822,7 +808,8 @@ ISA::readMiscReg(int misc_reg)
             val &= ~(1 << 14);
             // If a CP bit in NSACR is 0 then the corresponding bit in
             // HCPTR is RAO/WI
-            bool secure_lookup = haveSecurity && isSecure(tc);
+            bool secure_lookup = release->has(ArmExtension::SECURITY) &&
+                isSecure(tc);
             if (!secure_lookup) {
                 RegVal mask = readMiscRegNoEffect(MISCREG_NSACR);
                 val |= (mask ^ 0x7FFF) & 0xBFFF;
@@ -841,19 +828,25 @@ ISA::readMiscReg(int misc_reg)
         return 0x00000031;
       case MISCREG_ID_PFR1:
         {   // Timer | Virti | !M Profile | TrustZone | ARMv4
-            bool haveTimer = (system->getGenericTimer() != NULL);
-            return 0x00000001
-                 | (haveSecurity       ? 0x00000010 : 0x0)
-                 | (haveVirtualization ? 0x00001000 : 0x0)
-                 | (haveTimer          ? 0x00010000 : 0x0);
+            bool have_timer = (system->getGenericTimer() != nullptr);
+            return 0x00000001 |
+                (release->has(ArmExtension::SECURITY) ?
+                    0x00000010 : 0x0) |
+                (release->has(ArmExtension::VIRTUALIZATION) ?
+                    0x00001000 : 0x0) |
+                (have_timer ? 0x00010000 : 0x0);
         }
       case MISCREG_ID_AA64PFR0_EL1:
         return 0x0000000000000002 | // AArch{64,32} supported at EL0
-               0x0000000000000020                               | // EL1
-               (haveVirtualization    ? 0x0000000000000200 : 0) | // EL2
-               (haveSecurity          ? 0x0000000000002000 : 0) | // EL3
-               (haveSVE               ? 0x0000000100000000 : 0) | // SVE
-               (haveSecEL2            ? 0x0000001000000000 : 0) | // SecEL2
+               0x0000000000000020 | // EL1
+               (release->has(ArmExtension::VIRTUALIZATION) ?
+                    0x0000000000000200 : 0) | // EL2
+               (release->has(ArmExtension::SECURITY) ?
+                    0x0000000000002000 : 0) | // EL3
+               (release->has(ArmExtension::FEAT_SVE) ?
+                    0x0000000100000000 : 0) | // SVE
+               (release->has(ArmExtension::FEAT_SEL2) ?
+                    0x0000001000000000 : 0) | // SecEL2
                (gicv3CpuInterface     ? 0x0000000001000000 : 0);
       case MISCREG_ID_AA64PFR1_EL1:
         return 0; // bits [63:0] RES0 (reserved for future use)
@@ -978,7 +971,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 cpacrMask.asedis = ones;
 
                 // Security Extensions may limit the writability of CPACR
-                if (haveSecurity) {
+                if (release->has(ArmExtension::SECURITY)) {
                     scr = readMiscRegNoEffect(MISCREG_SCR);
                     CPSR cpsr = readMiscRegNoEffect(MISCREG_CPSR);
                     if (scr.ns && (cpsr.mode != MODE_MON) && ELIs32(tc, EL3)) {
@@ -1002,7 +995,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 CPACR cpacrMask = 0;
                 cpacrMask.tta = ones;
                 cpacrMask.fpen = ones;
-                if (haveSVE) {
+                if (release->has(ArmExtension::FEAT_SVE)) {
                     cpacrMask.zen = ones;
                 }
                 newVal &= cpacrMask;
@@ -1018,7 +1011,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 cptrMask.tcpac = ones;
                 cptrMask.tta = ones;
                 cptrMask.tfp = ones;
-                if (haveSVE) {
+                if (release->has(ArmExtension::FEAT_SVE)) {
                     cptrMask.tz = ones;
                     cptrMask.zen = hcr.e2h ? ones : 0;
                 }
@@ -1027,7 +1020,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 cptrMask = 0;
                 cptrMask.res1_13_12_el2 = ones;
                 cptrMask.res1_7_0_el2 = ones;
-                if (!haveSVE) {
+                if (!release->has(ArmExtension::FEAT_SVE)) {
                     cptrMask.res1_8_el2 = ones;
                 }
                 cptrMask.res1_9_el2 = ones;
@@ -1043,7 +1036,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 cptrMask.tcpac = ones;
                 cptrMask.tta = ones;
                 cptrMask.tfp = ones;
-                if (haveSVE) {
+                if (release->has(ArmExtension::FEAT_SVE)) {
                     cptrMask.ez = ones;
                 }
                 newVal &= cptrMask;
@@ -1162,14 +1155,14 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             }
             break;
           case MISCREG_HCR2:
-                if (!haveVirtualization)
+                if (!release->has(ArmExtension::VIRTUALIZATION))
                     return;
                 break;
           case MISCREG_HCR:
             {
                 const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
                 selfDebug->setenableTDETGE((HCR)val, mdcr);
-                if (!haveVirtualization)
+                if (!release->has(ArmExtension::VIRTUALIZATION))
                     return;
             }
             break;
@@ -1443,7 +1436,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             {
                 // ARM ARM (ARM DDI 0406C.b) B4.1.5
                 // Valid only with LPAE
-                if (!haveLPAE)
+                if (!release->has(ArmExtension::LPAE))
                     return;
                 DPRINTF(MiscRegs, "Writing AMAIR: %#x\n", newVal);
             }
@@ -1457,7 +1450,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 scr = readMiscRegNoEffect(MISCREG_SCR);
 
                 MiscRegIndex sctlr_idx;
-                if (haveSecurity && !highestELIs64 && !scr.ns) {
+                if (release->has(ArmExtension::SECURITY) &&
+                    !highestELIs64 && !scr.ns) {
                     sctlr_idx = MISCREG_SCTLR_S;
                 } else {
                     sctlr_idx =  MISCREG_SCTLR_NS;
@@ -1465,7 +1459,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
                 SCTLR sctlr = miscRegs[sctlr_idx];
                 SCTLR new_sctlr = newVal;
-                new_sctlr.nmfi =  ((bool)sctlr.nmfi) && !haveVirtualization;
+                new_sctlr.nmfi =  ((bool)sctlr.nmfi) &&
+                    !release->has(ArmExtension::VIRTUALIZATION);
                 miscRegs[sctlr_idx] = (RegVal)new_sctlr;
                 getMMUPtr(tc)->invalidateMiscReg();
             }
@@ -1511,7 +1506,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIALL tlbiOp(EL1, secure);
                 tlbiOp(tc);
                 return;
             }
@@ -1521,7 +1517,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIALL tlbiOp(EL1, secure);
                 tlbiOp.broadcast(tc);
                 return;
             }
@@ -1531,7 +1528,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
-                ITLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                ITLBIALL tlbiOp(EL1, secure);
                 tlbiOp(tc);
                 return;
             }
@@ -1541,7 +1539,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
-                DTLBIALL tlbiOp(EL1, haveSecurity && !scr.ns);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                DTLBIALL tlbiOp(EL1, secure);
                 tlbiOp(tc);
                 return;
             }
@@ -1555,8 +1554,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 TLBIMVA tlbiOp(EL1,
-                               haveSecurity && !scr.ns,
+                               secure,
                                mbits(newVal, 31, 12),
                                bits(newVal, 7,0));
 
@@ -1570,8 +1570,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 TLBIMVA tlbiOp(EL1,
-                               haveSecurity && !scr.ns,
+                               secure,
                                mbits(newVal, 31, 12),
                                bits(newVal, 7,0));
 
@@ -1584,8 +1585,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 TLBIASID tlbiOp(EL1,
-                                haveSecurity && !scr.ns,
+                                secure,
                                 bits(newVal, 7,0));
 
                 tlbiOp(tc);
@@ -1597,8 +1599,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 TLBIASID tlbiOp(EL1,
-                                haveSecurity && !scr.ns,
+                                secure,
                                 bits(newVal, 7,0));
 
                 tlbiOp.broadcast(tc);
@@ -1614,7 +1617,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIMVAA tlbiOp(EL1, haveSecurity && !scr.ns,
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIMVAA tlbiOp(EL1, secure,
                                 mbits(newVal, 31,12));
 
                 tlbiOp(tc);
@@ -1627,7 +1631,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIMVAA tlbiOp(EL1, haveSecurity && !scr.ns,
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIMVAA tlbiOp(EL1, secure,
                                 mbits(newVal, 31,12));
 
                 tlbiOp.broadcast(tc);
@@ -1643,7 +1648,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIMVAA tlbiOp(EL2, haveSecurity && !scr.ns,
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIMVAA tlbiOp(EL2, secure,
                                 mbits(newVal, 31,12));
 
                 tlbiOp(tc);
@@ -1656,7 +1662,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIMVAA tlbiOp(EL2, haveSecurity && !scr.ns,
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIMVAA tlbiOp(EL2, secure,
                                 mbits(newVal, 31,12));
 
                 tlbiOp.broadcast(tc);
@@ -1672,8 +1679,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 TLBIIPA tlbiOp(EL1,
-                               haveSecurity && !scr.ns,
+                               secure,
                                static_cast<Addr>(bits(newVal, 35, 0)) << 12);
 
                 tlbiOp(tc);
@@ -1687,8 +1695,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 TLBIIPA tlbiOp(EL1,
-                               haveSecurity && !scr.ns,
+                               secure,
                                static_cast<Addr>(bits(newVal, 35, 0)) << 12);
 
                 tlbiOp.broadcast(tc);
@@ -1700,8 +1709,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 ITLBIMVA tlbiOp(EL1,
-                                haveSecurity && !scr.ns,
+                                secure,
                                 mbits(newVal, 31, 12),
                                 bits(newVal, 7,0));
 
@@ -1714,8 +1724,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 DTLBIMVA tlbiOp(EL1,
-                                haveSecurity && !scr.ns,
+                                secure,
                                 mbits(newVal, 31, 12),
                                 bits(newVal, 7,0));
 
@@ -1728,8 +1739,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 ITLBIASID tlbiOp(EL1,
-                                 haveSecurity && !scr.ns,
+                                 secure,
                                  bits(newVal, 7,0));
 
                 tlbiOp(tc);
@@ -1741,8 +1753,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert32();
                 scr = readMiscReg(MISCREG_SCR);
 
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 DTLBIASID tlbiOp(EL1,
-                                 haveSecurity && !scr.ns,
+                                 secure,
                                  bits(newVal, 7,0));
 
                 tlbiOp(tc);
@@ -1808,7 +1821,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIALLEL tlbiOp(EL2, haveSecurity && !scr.ns);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIALLEL tlbiOp(EL2, secure);
                 tlbiOp(tc);
                 return;
             }
@@ -1818,7 +1832,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIALLEL tlbiOp(EL2, haveSecurity && !scr.ns);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIALLEL tlbiOp(EL2, secure);
                 tlbiOp.broadcast(tc);
                 return;
             }
@@ -1828,7 +1843,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIALLEL tlbiOp(EL1, haveSecurity && !scr.ns);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIALLEL tlbiOp(EL1, secure);
                 tlbiOp(tc);
                 return;
             }
@@ -1838,7 +1854,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIALLEL tlbiOp(EL1, haveSecurity && !scr.ns);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIALLEL tlbiOp(EL1, secure);
                 tlbiOp.broadcast(tc);
                 return;
             }
@@ -1847,7 +1864,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIVMALL tlbiOp(EL1, haveSecurity && !scr.ns, true);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIVMALL tlbiOp(EL1, secure, true);
                 tlbiOp(tc);
                 return;
             }
@@ -1858,8 +1876,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
                 HCR hcr = readMiscReg(MISCREG_HCR_EL2);
                 bool is_host = (hcr.tge && hcr.e2h);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 ExceptionLevel target_el = is_host ?  EL2 : EL1;
-                TLBIVMALL tlbiOp(target_el, haveSecurity && !scr.ns, false);
+                TLBIVMALL tlbiOp(target_el, secure, false);
                 tlbiOp(tc);
                 return;
             }
@@ -1868,7 +1887,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIVMALL tlbiOp(EL1, haveSecurity && !scr.ns, true);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIVMALL tlbiOp(EL1, secure, true);
                 tlbiOp.broadcast(tc);
                 return;
             }
@@ -1879,8 +1899,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
                 HCR hcr = readMiscReg(MISCREG_HCR_EL2);
                 bool is_host = (hcr.tge && hcr.e2h);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 ExceptionLevel target_el = is_host ?  EL2 : EL1;
-                TLBIVMALL tlbiOp(target_el, haveSecurity && !scr.ns, false);
+                TLBIVMALL tlbiOp(target_el, secure, false);
                 tlbiOp.broadcast(tc);
                 return;
             }
@@ -1919,7 +1940,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIMVA tlbiOp(EL2, haveSecurity && !scr.ns,
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIMVA tlbiOp(EL2, secure,
                                static_cast<Addr>(bits(newVal, 43, 0)) << 12,
                                0xbeef);
                 tlbiOp(tc);
@@ -1932,7 +1954,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIMVA tlbiOp(EL2, haveSecurity && !scr.ns,
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIMVA tlbiOp(EL2, secure,
                                static_cast<Addr>(bits(newVal, 43, 0)) << 12,
                                0xbeef);
 
@@ -1950,8 +1973,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
                 HCR hcr = readMiscReg(MISCREG_HCR_EL2);
                 bool is_host = (hcr.tge && hcr.e2h);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 ExceptionLevel target_el = is_host ?  EL2 : EL1;
-                TLBIMVA tlbiOp(target_el, haveSecurity && !scr.ns,
+                TLBIMVA tlbiOp(target_el, secure,
                                static_cast<Addr>(bits(newVal, 43, 0)) << 12,
                                asid);
 
@@ -1969,8 +1993,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
                 HCR hcr = readMiscReg(MISCREG_HCR_EL2);
                 bool is_host = (hcr.tge && hcr.e2h);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 ExceptionLevel target_el = is_host ?  EL2 : EL1;
-                TLBIMVA tlbiOp(target_el, haveSecurity && !scr.ns,
+                TLBIMVA tlbiOp(target_el, secure,
                                 static_cast<Addr>(bits(newVal, 43, 0)) << 12,
                                 asid);
 
@@ -1987,8 +2012,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
                 HCR hcr = readMiscReg(MISCREG_HCR_EL2);
                 bool is_host = (hcr.tge && hcr.e2h);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 ExceptionLevel target_el = is_host ?  EL2 : EL1;
-                TLBIASID tlbiOp(target_el, haveSecurity && !scr.ns, asid);
+                TLBIASID tlbiOp(target_el, secure, asid);
                 tlbiOp(tc);
                 return;
             }
@@ -2002,8 +2028,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
                 HCR hcr = readMiscReg(MISCREG_HCR_EL2);
                 bool is_host = (hcr.tge && hcr.e2h);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 ExceptionLevel target_el = is_host ?  EL2 : EL1;
-                TLBIASID tlbiOp(target_el, haveSecurity && !scr.ns, asid);
+                TLBIASID tlbiOp(target_el, secure, asid);
                 tlbiOp.broadcast(tc);
                 return;
             }
@@ -2018,8 +2045,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
                 HCR hcr = readMiscReg(MISCREG_HCR_EL2);
                 bool is_host = (hcr.tge && hcr.e2h);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 ExceptionLevel target_el = is_host ?  EL2 : EL1;
-                TLBIMVAA tlbiOp(target_el, haveSecurity && !scr.ns,
+                TLBIMVAA tlbiOp(target_el, secure,
                     static_cast<Addr>(bits(newVal, 43, 0)) << 12);
 
                 tlbiOp(tc);
@@ -2034,8 +2062,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
                 HCR hcr = readMiscReg(MISCREG_HCR_EL2);
                 bool is_host = (hcr.tge && hcr.e2h);
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
                 ExceptionLevel target_el = is_host ?  EL2 : EL1;
-                TLBIMVAA tlbiOp(target_el, haveSecurity && !scr.ns,
+                TLBIMVAA tlbiOp(target_el, secure,
                     static_cast<Addr>(bits(newVal, 43, 0)) << 12);
 
                 tlbiOp.broadcast(tc);
@@ -2049,7 +2078,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIIPA tlbiOp(EL1, haveSecurity && !scr.ns,
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIIPA tlbiOp(EL1, secure,
                                static_cast<Addr>(bits(newVal, 35, 0)) << 12);
 
                 tlbiOp(tc);
@@ -2063,7 +2093,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 assert64();
                 scr = readMiscReg(MISCREG_SCR);
 
-                TLBIIPA tlbiOp(EL1, haveSecurity && !scr.ns,
+                bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+                TLBIIPA tlbiOp(EL1, secure,
                                static_cast<Addr>(bits(newVal, 35, 0)) << 12);
 
                 tlbiOp.broadcast(tc);
@@ -2092,7 +2123,8 @@ ISA::setMiscReg(int misc_reg, RegVal val)
             {
                 // If a CP bit in NSACR is 0 then the corresponding bit in
                 // HCPTR is RAO/WI. Same applies to NSASEDIS
-                secure_lookup = haveSecurity && isSecure(tc);
+                secure_lookup = release->has(ArmExtension::SECURITY) &&
+                    isSecure(tc);
                 if (!secure_lookup) {
                     RegVal oldValue = readMiscRegNoEffect(MISCREG_HCPTR);
                     RegVal mask =
@@ -2122,23 +2154,23 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 MMU::UserMode, val);
             return;
           case MISCREG_ATS12NSOPR:
-            if (!haveSecurity)
+            if (!release->has(ArmExtension::SECURITY))
                 panic("Security Extensions required for ATS12NSOPR");
             addressTranslation(MMU::S1S2NsTran, BaseMMU::Read, 0, val);
             return;
           case MISCREG_ATS12NSOPW:
-            if (!haveSecurity)
+            if (!release->has(ArmExtension::SECURITY))
                 panic("Security Extensions required for ATS12NSOPW");
             addressTranslation(MMU::S1S2NsTran, BaseMMU::Write, 0, val);
             return;
           case MISCREG_ATS12NSOUR:
-            if (!haveSecurity)
+            if (!release->has(ArmExtension::SECURITY))
                 panic("Security Extensions required for ATS12NSOUR");
             addressTranslation(MMU::S1S2NsTran, BaseMMU::Read,
                 MMU::UserMode, val);
             return;
           case MISCREG_ATS12NSOUW:
-            if (!haveSecurity)
+            if (!release->has(ArmExtension::SECURITY))
                 panic("Security Extensions required for ATS12NSOUW");
             addressTranslation(MMU::S1S2NsTran, BaseMMU::Write,
                 MMU::UserMode, val);
@@ -2158,7 +2190,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
                 // ARM DDI 0406C.b, ARMv7-32
                 ttbcrMask.n = ones; // T0SZ
-                if (haveSecurity) {
+                if (release->has(ArmExtension::SECURITY)) {
                     ttbcrMask.pd0 = ones;
                     ttbcrMask.pd1 = ones;
                 }
@@ -2172,10 +2204,10 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 ttbcrMask.irgn1 = ones;
                 ttbcrMask.orgn1 = ones;
                 ttbcrMask.sh1 = ones;
-                if (haveLPAE)
+                if (release->has(ArmExtension::LPAE))
                     ttbcrMask.eae = ones;
 
-                if (haveLPAE && ttbcrNew.eae) {
+                if (release->has(ArmExtension::LPAE) && ttbcrNew.eae) {
                     newVal = newVal & ttbcrMask;
                 } else {
                     newVal = (newVal & ttbcrMask) | (ttbcr & (~ttbcrMask));
@@ -2188,7 +2220,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
           case MISCREG_TTBR1:
             {
                 TTBCR ttbcr = readMiscRegNoEffect(MISCREG_TTBCR);
-                if (haveLPAE) {
+                if (release->has(ArmExtension::LPAE)) {
                     if (ttbcr.eae) {
                         // ARMv7 bit 63-56, 47-40 reserved, UNK/SBZP
                         // ARMv8 AArch32 bit 63-56 only
@@ -2409,7 +2441,7 @@ ISA::getCurSveVecLenInBits() const
 
     if (el == EL2 || (el == EL0 && ELIsInHost(tc, el))) {
         len = static_cast<ZCR>(miscRegs[MISCREG_ZCR_EL2]).len;
-    } else if (haveVirtualization && !isSecure(tc) &&
+    } else if (release->has(ArmExtension::VIRTUALIZATION) && !isSecure(tc) &&
                (el == EL0 || el == EL1)) {
         len = std::min(
             len,
@@ -2419,7 +2451,7 @@ ISA::getCurSveVecLenInBits() const
 
     if (el == EL3) {
         len = static_cast<ZCR>(miscRegs[MISCREG_ZCR_EL3]).len;
-    } else if (haveSecurity) {
+    } else if (release->has(ArmExtension::SECURITY)) {
         len = std::min(
             len,
             static_cast<unsigned>(
@@ -2524,7 +2556,8 @@ ISA::addressTranslation(MMU::ArmTranslationType tran_type,
         HCR hcr = readMiscRegNoEffect(MISCREG_HCR);
 
         uint8_t max_paddr_bit = 0;
-        if (haveLPAE && (ttbcr.eae || tran_type & MMU::HypMode ||
+        if (release->has(ArmExtension::LPAE) &&
+            (ttbcr.eae || tran_type & MMU::HypMode ||
             ((tran_type & MMU::S1S2NsTran) && hcr.vm) )) {
 
             max_paddr_bit = 39;

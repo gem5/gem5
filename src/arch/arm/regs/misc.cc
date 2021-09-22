@@ -3410,7 +3410,7 @@ ISA::initializeMiscRegMetadata()
     // This boolean variable specifies if the system is running in aarch32 at
     // EL3 (aarch32EL3 = true). It is false if EL3 is not implemented, or it
     // is running in aarch64 (aarch32EL3 = false)
-    bool aarch32EL3 = haveSecurity && !highestELIs64;
+    bool aarch32EL3 = release->has(ArmExtension::SECURITY) && !highestELIs64;
 
     // Set Privileged Access Never on taking an exception to EL1 (Arm 8.1+),
     // unsupported
@@ -4946,7 +4946,7 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_PAN)
       .allPrivileges().exceptUserMode()
-      .implemented(havePAN);
+      .implemented(release->has(ArmExtension::FEAT_PAN));
     InitReg(MISCREG_UAO)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_NZCV)
