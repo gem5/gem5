@@ -337,12 +337,22 @@ transition({I, SC, UC, SD, UD, RU, RSC, RSD, RUSD, RUSC,
 
 // WriteUniquePtl
 
-transition({UD,UD_RU,UD_RSD,UD_RSC,UC,UC_RU,UC_RSC},
+transition({UD,UD_RSD,UD_RSC,UC,UC_RSC},
            {WriteUnique, WriteUniquePtl_PoC, WriteUniqueFull_PoC, WriteUniqueFull_PoC_Alloc},
            BUSY_BLKD) {
   Initiate_Request;
   Initiate_WriteUnique_LocalWrite;
   Profile_Hit;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({UD_RU,UC_RU},
+           {WriteUnique, WriteUniquePtl_PoC, WriteUniqueFull_PoC, WriteUniqueFull_PoC_Alloc},
+           BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_WriteUnique_LocalWrite;
+  Profile_Miss;
   Pop_ReqRdyQueue;
   ProcessNextState;
 }
