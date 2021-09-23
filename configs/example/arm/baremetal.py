@@ -141,8 +141,6 @@ def create(args):
     system.realview.gic.gicv4 = False
 
     system.highest_el_is_64 = True
-    system.release.add(ArmExtension('SECURITY'))
-    system.release.add(ArmExtension('VIRTUALIZATION'))
 
     workload_class = workloads.workload_list.get(args.workload)
     system.workload = workload_class(
