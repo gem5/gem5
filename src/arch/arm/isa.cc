@@ -458,6 +458,16 @@ ISA::initID64(const ArmISAParams &p)
         miscRegs[MISCREG_ID_AA64MMFR1_EL1], 23, 20,
         release->has(ArmExtension::FEAT_PAN) ? 0x1 : 0x0);
 
+    /** MISCREG_ID_AA64MMFR2_EL1 */
+    // UAO
+    miscRegs[MISCREG_ID_AA64MMFR2_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64MMFR2_EL1], 7, 4,
+        release->has(ArmExtension::FEAT_UAO) ? 0x1 : 0x0);
+    // LVA
+    miscRegs[MISCREG_ID_AA64MMFR2_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64MMFR2_EL1], 19, 16,
+        release->has(ArmExtension::FEAT_LVA) ? 0x1 : 0x0);
+
 
     // TME
     miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(

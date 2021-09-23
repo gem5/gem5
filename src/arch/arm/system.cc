@@ -102,7 +102,9 @@ ArmSystem::ArmSystem(const Params &p)
     if (_highestELIs64 && (
             _physAddrRange64 < 32 ||
             _physAddrRange64 > MaxPhysAddrRange ||
-            (_physAddrRange64 % 4 != 0 && _physAddrRange64 != 42))) {
+            (_physAddrRange64 % 4 != 0 && _physAddrRange64 != 42) ||
+            (_physAddrRange64 == 52 && !release->has(ArmExtension::FEAT_LPA))))
+    {
         fatal("Invalid physical address range (%d)\n", _physAddrRange64);
     }
 }
