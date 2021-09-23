@@ -59,6 +59,11 @@ class ArmExtension(ScopedEnum):
         'FEAT_LVA', # Optional in Armv8.2
         'FEAT_LPA', # Optional in Armv8.2
 
+        # Armv8.3
+        'FEAT_FCMA',
+        'FEAT_JSCVT',
+        'FEAT_PAuth',
+
         # Armv8.4
         'FEAT_SEL2',
 
@@ -107,6 +112,8 @@ class ArmDefaultRelease(Armv8):
         'FEAT_LSE', 'FEAT_PAN', 'FEAT_HPDS', 'FEAT_VMID16', 'FEAT_RDM',
         # Armv8.2
         'FEAT_UAO', 'FEAT_LVA', 'FEAT_LPA', 'FEAT_SVE',
+        # Armv8.3
+        'FEAT_FCMA', 'FEAT_JSCVT', 'FEAT_PAuth',
         # Armv8.4
         'FEAT_SEL2'
     ]

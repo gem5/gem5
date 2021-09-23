@@ -364,6 +364,15 @@ ISA::initID32(const ArmISAParams &p)
     miscRegs[MISCREG_ID_ISAR5] = insertBits(
         miscRegs[MISCREG_ID_ISAR5], 27, 24,
         release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0);
+    // FCMA
+    miscRegs[MISCREG_ID_ISAR5] = insertBits(
+        miscRegs[MISCREG_ID_ISAR5], 31, 28,
+        release->has(ArmExtension::FEAT_FCMA) ? 0x1 : 0x0);
+
+    /** ID_ISAR6 */
+    miscRegs[MISCREG_ID_ISAR6] = insertBits(
+        miscRegs[MISCREG_ID_ISAR6], 3, 0,
+        release->has(ArmExtension::FEAT_JSCVT) ? 0x1 : 0x0);
 }
 
 void
@@ -439,6 +448,24 @@ ISA::initID64(const ArmISAParams &p)
     miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64ISAR0_EL1], 31, 28,
         release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0);
+
+    /** MISCREG_ID_AA64ISAR1_EL1 */
+    // PAuth, APA
+    miscRegs[MISCREG_ID_AA64ISAR1_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64ISAR1_EL1], 7, 4,
+        release->has(ArmExtension::FEAT_PAuth) ? 0x1 : 0x0);
+    // JSCVT
+    miscRegs[MISCREG_ID_AA64ISAR1_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64ISAR1_EL1], 15, 12,
+        release->has(ArmExtension::FEAT_JSCVT) ? 0x1 : 0x0);
+    // FCMA
+    miscRegs[MISCREG_ID_AA64ISAR1_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64ISAR1_EL1], 19, 16,
+        release->has(ArmExtension::FEAT_FCMA) ? 0x1 : 0x0);
+    // PAuth, GPA
+    miscRegs[MISCREG_ID_AA64ISAR1_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64ISAR1_EL1], 27, 24,
+        release->has(ArmExtension::FEAT_PAuth) ? 0x1 : 0x0);
 
     /** MISCREG_ID_AA64MMFR1_EL1 */
     // VMID16

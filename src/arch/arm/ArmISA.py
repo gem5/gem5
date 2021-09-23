@@ -47,7 +47,15 @@ class DecoderFlavor(Enum): vals = ['Generic']
 
 class ArmDefaultSERelease(ArmRelease):
     extensions = [
-        'CRYPTO', 'FEAT_SVE', 'FEAT_LSE', 'FEAT_RDM', 'TME'
+        'CRYPTO',
+        # Armv8.1
+        'FEAT_LSE', 'FEAT_RDM',
+        # Armv8.2
+        'FEAT_SVE',
+        # Armv8.3
+        'FEAT_FCMA', 'FEAT_JSCVT', 'FEAT_PAuth',
+        # Other
+        'TME'
     ]
 
 class ArmISA(BaseISA):
