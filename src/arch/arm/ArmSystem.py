@@ -117,6 +117,11 @@ class Armv81(Armv8):
         'FEAT_HPDS', 'FEAT_VMID16', 'FEAT_RDM'
     ]
 
+class Armv82(Armv81):
+    extensions = Armv81.extensions + [
+        'FEAT_UAO', 'FEAT_LVA', 'FEAT_LPA', 'FEAT_SVE'
+    ]
+
 class ArmSystem(System):
     type = 'ArmSystem'
     cxx_header = "arch/arm/system.hh"
