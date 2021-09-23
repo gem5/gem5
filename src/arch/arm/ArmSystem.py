@@ -129,6 +129,11 @@ class Armv82(Armv81):
         'FEAT_UAO', 'FEAT_LVA', 'FEAT_LPA', 'FEAT_SVE'
     ]
 
+class Armv83(Armv82):
+    extensions = Armv82.extensions + [
+        'FEAT_FCMA', 'FEAT_JSCVT', 'FEAT_PAuth',
+    ]
+
 class ArmSystem(System):
     type = 'ArmSystem'
     cxx_header = "arch/arm/system.hh"
