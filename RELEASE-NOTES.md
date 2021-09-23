@@ -1,3 +1,9 @@
+# Version 21.1.0.2
+
+**[HOTFIX]** [A commit introduced `std::vector` with `resize()` to initialize all storages](https://gem5-review.googlesource.com/c/public/gem5/+/27085).
+This caused data duplication in statistics and broke the Vector statistics.
+This hotfix initializes using loops which fixes the broken statistics.
+
 # Version 21.1.0.1
 
 **[HOTFIX]** [A "'deprecated' attribute directive ignored" warning was being thrown frequently when trying to build v21.1.0.0](https://gem5.atlassian.net/browse/GEM5-1063). While this issue did not break the build, it made reading the build output difficult and caused confused. As such a patch has been applied to fix this issue.
