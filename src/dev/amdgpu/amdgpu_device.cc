@@ -437,6 +437,55 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
 {
     // Serialize the PciDevice base class
     PciDevice::serialize(cp);
+
+    uint64_t regs_size = regs.size();
+    uint64_t doorbells_size = doorbells.size();
+    uint64_t sdma_engs_size = sdmaEngs.size();
+
+    SERIALIZE_SCALAR(regs_size);
+    SERIALIZE_SCALAR(doorbells_size);
+    SERIALIZE_SCALAR(sdma_engs_size);
+
+    // Make a c-style array of the regs to serialize
+    uint32_t reg_addrs[regs_size];
+    uint64_t reg_values[regs_size];
+    uint32_t doorbells_offset[doorbells_size];
+    QueueType doorbells_queues[doorbells_size];
+    uint32_t sdma_engs_offset[sdma_engs_size];
+    int sdma_engs[sdma_engs_size];
+
+    int idx = 0;
+    for (auto & it : regs) {
+        reg_addrs[idx] = it.first;
+        reg_values[idx] = it.second;
+        ++idx;
+    }
+
+    idx = 0;
+    for (auto & it : doorbells) {
+        doorbells_offset[idx] = it.first;
+        doorbells_queues[idx] = it.second;
+        ++idx;
+    }
+
+    idx = 0;
+    for (auto & it : sdmaEngs) {
+        sdma_engs_offset[idx] = it.first;
+        sdma_engs[idx] = it.second == sdma0 ? 0 : 1;
+        ++idx;
+    }
+
+    SERIALIZE_ARRAY(reg_addrs, sizeof(reg_addrs)/sizeof(reg_addrs[0]));
+    SERIALIZE_ARRAY(reg_values, sizeof(reg_values)/sizeof(reg_values[0]));
+    SERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset)/
+        sizeof(doorbells_offset[0]));
+    SERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues)/
+        sizeof(doorbells_queues[0]));
+    SERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset)/
+        sizeof(sdma_engs_offset[0]));
+    SERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
+
+    // Serialize the device memory
 }
 
 void
@@ -444,6 +493,59 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
 {
     // Unserialize the PciDevice base class
     PciDevice::unserialize(cp);
+
+    uint64_t regs_size = 0;
+    uint64_t doorbells_size = 0;
+    uint64_t sdma_engs_size = 0;
+
+    UNSERIALIZE_SCALAR(regs_size);
+    UNSERIALIZE_SCALAR(doorbells_size);
+    UNSERIALIZE_SCALAR(sdma_engs_size);
+
+    if (regs_size > 0) {
+        uint32_t reg_addrs[regs_size];
+        uint64_t reg_values[regs_size];
+
+        UNSERIALIZE_ARRAY(reg_addrs, sizeof(reg_addrs)/sizeof(reg_addrs[0]));
+        UNSERIALIZE_ARRAY(reg_values,
+                          sizeof(reg_values)/sizeof(reg_values[0]));
+
+        for (int idx = 0; idx < regs_size; ++idx) {
+            regs.insert(std::make_pair(reg_addrs[idx], reg_values[idx]));
+        }
+    }
+
+    if (doorbells_size > 0) {
+        uint32_t doorbells_offset[doorbells_size];
+        QueueType doorbells_queues[doorbells_size];
+
+        UNSERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset)/
+                sizeof(doorbells_offset[0]));
+        UNSERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues)/
+                sizeof(doorbells_queues[0]));
+
+        for (int idx = 0; idx < doorbells_size; ++idx) {
+            regs.insert(std::make_pair(doorbells_offset[idx],
+                      doorbells_queues[idx]));
+            doorbells[doorbells_offset[idx]] = doorbells_queues[idx];
+        }
+    }
+
+    if (sdma_engs_size > 0) {
+        uint32_t sdma_engs_offset[sdma_engs_size];
+        int sdma_engs[sdma_engs_size];
+
+        UNSERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset)/
+            sizeof(sdma_engs_offset[0]));
+        UNSERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
+
+        for (int idx = 0; idx < sdma_engs_size; ++idx) {
+            SDMAEngine *sdma = sdma_engs[idx] == 0 ? sdma0 : sdma1;
+            sdmaEngs.insert(std::make_pair(sdma_engs_offset[idx], sdma));
+        }
+    }
+
+    // Unserialize the device memory
 }
 
 uint16_t
