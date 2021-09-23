@@ -30,6 +30,7 @@ still function. They simply check the simulation completed.
 """
 from testlib import *
 import re
+import os
 
 hello_verifier = verifier.MatchRegex(re.compile(r"Hello world!"))
 
@@ -49,3 +50,25 @@ gem5_verify_config(
     valid_hosts=constants.supported_hosts,
     length=constants.quick_tag,
 )
+
+
+if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
+    # The x86-ubuntu-run uses KVM cores, this test will therefore only be run
+    # on systems that support KVM.
+    gem5_verify_config(
+        name="test-gem5-library-example-x86-ubuntu-run",
+        fixtures=(),
+        verifiers=(),
+        config=joinpath(
+            config.base_dir,
+            "configs",
+            "example",
+            "gem5_library",
+            "x86-ubuntu-run.py",
+        ),
+        config_args=[],
+        valid_isas=(constants.x86_tag,),
+        protocol="MESI_Two_Level",
+        valid_hosts=constants.supported_hosts,
+        length=constants.long_tag,
+    )
