@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,33 +24,34 @@
  * SUCH DAMAGE.
  */
 
-
 #include <ar.h>
-#include "libelf.h"
+#include <libelf.h>
 
 #include "_libelf.h"
+
+ELFTC_VCSID("$Id: elf_rand.c 3174 2015-03-27 17:13:41Z emaste $");
 
 off_t
 elf_rand(Elf *ar, off_t offset)
 {
-        struct ar_hdr *arh;
+	struct ar_hdr *arh;
 
-        if (ar == NULL || ar->e_kind != ELF_K_AR ||
-            (offset & 1) || offset < SARMAG ||
-            offset + sizeof(struct ar_hdr) >= ar->e_rawsize) {
-                LIBELF_SET_ERROR(ARGUMENT, 0);
-                return 0;
-        }
+	if (ar == NULL || ar->e_kind != ELF_K_AR ||
+	    (offset & 1) || offset < SARMAG ||
+	    (size_t) offset + sizeof(struct ar_hdr) >= ar->e_rawsize) {
+		LIBELF_SET_ERROR(ARGUMENT, 0);
+		return 0;
+	}
 
-        arh = (struct ar_hdr *) (ar->e_rawfile + offset);
+	arh = (struct ar_hdr *) (ar->e_rawfile + offset);
 
-        /* a too simple sanity check */
-        if (arh->ar_fmag[0] != '`' || arh->ar_fmag[1] != '\n') {
-                LIBELF_SET_ERROR(ARCHIVE, 0);
-                return 0;
-        }
+	/* a too simple sanity check */
+	if (arh->ar_fmag[0] != '`' || arh->ar_fmag[1] != '\n') {
+		LIBELF_SET_ERROR(ARCHIVE, 0);
+		return 0;
+	}
 
-        ar->e_u.e_ar.e_next = offset;
+	ar->e_u.e_ar.e_next = offset;
 
-        return (offset);
+	return (offset);
 }

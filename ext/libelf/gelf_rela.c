@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,120 +24,142 @@
  * SUCH DAMAGE.
  */
 
-#include <limits.h>
-
 #include <assert.h>
-#include "gelf.h"
+#include <gelf.h>
+#include <limits.h>
+#include <stdint.h>
 
 #include "_libelf.h"
 
+ELFTC_VCSID("$Id: gelf_rela.c 3177 2015-03-30 18:19:41Z emaste $");
+
 GElf_Rela *
-gelf_getrela(Elf_Data *d, int ndx, GElf_Rela *dst)
+gelf_getrela(Elf_Data *ed, int ndx, GElf_Rela *dst)
 {
-        int ec;
-        Elf *e;
-        Elf_Scn *scn;
-        Elf32_Rela *rela32;
-        Elf64_Rela *rela64;
-        size_t msz;
-        uint32_t sh_type;
+	int ec;
+	Elf *e;
+	size_t msz;
+	Elf_Scn *scn;
+	uint32_t sh_type;
+	Elf32_Rela *rela32;
+	Elf64_Rela *rela64;
+	struct _Libelf_Data *d;
 
-        if (d == NULL || ndx < 0 || dst == NULL ||
-            (scn = d->d_scn) == NULL ||
-            (e = scn->s_elf) == NULL) {
-                LIBELF_SET_ERROR(ARGUMENT, 0);
-                return (NULL);
-        }
+	d = (struct _Libelf_Data *) ed;
 
-        ec = e->e_class;
-        assert(ec == ELFCLASS32 || ec == ELFCLASS64);
+	if (d == NULL || ndx < 0 || dst == NULL ||
+	    (scn = d->d_scn) == NULL ||
+	    (e = scn->s_elf) == NULL) {
+		LIBELF_SET_ERROR(ARGUMENT, 0);
+		return (NULL);
+	}
 
-        if (ec == ELFCLASS32)
-                sh_type = scn->s_shdr.s_shdr32.sh_type;
-        else
-                sh_type = scn->s_shdr.s_shdr64.sh_type;
+	ec = e->e_class;
+	assert(ec == ELFCLASS32 || ec == ELFCLASS64);
 
-        if (_libelf_xlate_shtype(sh_type) != ELF_T_RELA) {
-                LIBELF_SET_ERROR(ARGUMENT, 0);
-                return (NULL);
-        }
+	if (ec == ELFCLASS32)
+		sh_type = scn->s_shdr.s_shdr32.sh_type;
+	else
+		sh_type = scn->s_shdr.s_shdr64.sh_type;
 
-        msz = _libelf_msize(ELF_T_RELA, ec, e->e_version);
+	if (_libelf_xlate_shtype(sh_type) != ELF_T_RELA) {
+		LIBELF_SET_ERROR(ARGUMENT, 0);
+		return (NULL);
+	}
 
-        assert(msz > 0);
+	msz = _libelf_msize(ELF_T_RELA, ec, e->e_version);
 
-        if (msz * ndx >= d->d_size) {
-                LIBELF_SET_ERROR(ARGUMENT, 0);
-                return (NULL);
-        }
+	assert(msz > 0);
+	assert(ndx >= 0);
 
-        if (ec == ELFCLASS32) {
-                rela32 = (Elf32_Rela *) d->d_buf + ndx;
+	if (msz * (size_t) ndx >= d->d_data.d_size) {
+		LIBELF_SET_ERROR(ARGUMENT, 0);
+		return (NULL);
+	}
 
-                dst->r_offset = (Elf64_Addr) rela32->r_offset;
-                dst->r_info   = (Elf64_Xword) rela32->r_info;
-                dst->r_addend = (Elf64_Sxword) rela32->r_addend;
+	if (ec == ELFCLASS32) {
+		rela32 = (Elf32_Rela *) d->d_data.d_buf + ndx;
 
-        } else {
+		dst->r_offset = (Elf64_Addr) rela32->r_offset;
+		dst->r_info   = ELF64_R_INFO(
+		    (Elf64_Xword) ELF32_R_SYM(rela32->r_info),
+		    ELF32_R_TYPE(rela32->r_info));
+		dst->r_addend = (Elf64_Sxword) rela32->r_addend;
 
-                rela64 = (Elf64_Rela *) d->d_buf + ndx;
+	} else {
 
-                *dst = *rela64;
-        }
+		rela64 = (Elf64_Rela *) d->d_data.d_buf + ndx;
 
-        return (dst);
+		*dst = *rela64;
+	}
+
+	return (dst);
 }
 
 int
-gelf_update_rela(Elf_Data *d, int ndx, GElf_Rela *dr)
+gelf_update_rela(Elf_Data *ed, int ndx, GElf_Rela *dr)
 {
-        int ec;
-        Elf *e;
-        Elf_Scn *scn;
-        Elf32_Rela *rela32;
-        Elf64_Rela *rela64;
-        size_t msz;
-        uint32_t sh_type;
+	int ec;
+	Elf *e;
+	size_t msz;
+	Elf_Scn *scn;
+	uint32_t sh_type;
+	Elf32_Rela *rela32;
+	Elf64_Rela *rela64;
+	struct _Libelf_Data *d;
 
-        if (d == NULL || ndx < 0 || dr == NULL ||
-            (scn = d->d_scn) == NULL ||
-            (e = scn->s_elf) == NULL) {
-                LIBELF_SET_ERROR(ARGUMENT, 0);
-                return (0);
-        }
+	d = (struct _Libelf_Data *) ed;
 
-        ec = e->e_class;
-        assert(ec == ELFCLASS32 || ec == ELFCLASS64);
+	if (d == NULL || ndx < 0 || dr == NULL ||
+	    (scn = d->d_scn) == NULL ||
+	    (e = scn->s_elf) == NULL) {
+		LIBELF_SET_ERROR(ARGUMENT, 0);
+		return (0);
+	}
 
-        if (ec == ELFCLASS32)
-                sh_type = scn->s_shdr.s_shdr32.sh_type;
-        else
-                sh_type = scn->s_shdr.s_shdr64.sh_type;
+	ec = e->e_class;
+	assert(ec == ELFCLASS32 || ec == ELFCLASS64);
 
-        if (_libelf_xlate_shtype(sh_type) != ELF_T_RELA) {
-                LIBELF_SET_ERROR(ARGUMENT, 0);
-                return (0);
-        }
+	if (ec == ELFCLASS32)
+		sh_type = scn->s_shdr.s_shdr32.sh_type;
+	else
+		sh_type = scn->s_shdr.s_shdr64.sh_type;
 
-        msz = _libelf_msize(ELF_T_RELA, ec, e->e_version);
-        assert(msz > 0);
+	if (_libelf_xlate_shtype(sh_type) != ELF_T_RELA) {
+		LIBELF_SET_ERROR(ARGUMENT, 0);
+		return (0);
+	}
 
-        if (msz * ndx >= d->d_size) {
-                LIBELF_SET_ERROR(ARGUMENT, 0);
-                return (0);
-        }
+	msz = _libelf_msize(ELF_T_RELA, ec, e->e_version);
 
-        if (ec == ELFCLASS32) {
-                rela32 = (Elf32_Rela *) d->d_buf + ndx;
+	assert(msz > 0);
+	assert(ndx >= 0);
 
-                LIBELF_COPY_U32(rela32, dr, r_offset);
-                LIBELF_COPY_U32(rela32, dr, r_info);
-                LIBELF_COPY_S32(rela32, dr, r_addend);
-        } else {
-                rela64 = (Elf64_Rela *) d->d_buf + ndx;
+	if (msz * (size_t) ndx >= d->d_data.d_size) {
+		LIBELF_SET_ERROR(ARGUMENT, 0);
+		return (0);
+	}
 
-                *rela64 = *dr;
-        }
+	if (ec == ELFCLASS32) {
+		rela32 = (Elf32_Rela *) d->d_data.d_buf + ndx;
 
-        return (1);
+		LIBELF_COPY_U32(rela32, dr, r_offset);
+
+		if (ELF64_R_SYM(dr->r_info) > ELF32_R_SYM(~0UL) ||
+		    ELF64_R_TYPE(dr->r_info) > ELF32_R_TYPE(~0U)) {
+			LIBELF_SET_ERROR(RANGE, 0);
+			return (0);
+		}
+		rela32->r_info = ELF32_R_INFO(
+			(Elf32_Word) ELF64_R_SYM(dr->r_info),
+			(Elf32_Word) ELF64_R_TYPE(dr->r_info));
+
+		LIBELF_COPY_S32(rela32, dr, r_addend);
+	} else {
+		rela64 = (Elf64_Rela *) d->d_data.d_buf + ndx;
+
+		*rela64 = *dr;
+	}
+
+	return (1);
 }

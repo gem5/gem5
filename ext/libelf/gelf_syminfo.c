@@ -26,24 +26,22 @@
 
 #include <assert.h>
 #include <gelf.h>
-#include <limits.h>
-#include <stdint.h>
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id: gelf_rel.c 3177 2015-03-30 18:19:41Z emaste $");
+ELFTC_VCSID("$Id: gelf_syminfo.c 3174 2015-03-27 17:13:41Z emaste $");
 
-GElf_Rel *
-gelf_getrel(Elf_Data *ed, int ndx, GElf_Rel *dst)
+GElf_Syminfo *
+gelf_getsyminfo(Elf_Data *ed, int ndx, GElf_Syminfo *dst)
 {
 	int ec;
 	Elf *e;
 	size_t msz;
 	Elf_Scn *scn;
 	uint32_t sh_type;
-	Elf32_Rel *rel32;
-	Elf64_Rel *rel64;
 	struct _Libelf_Data *d;
+	Elf32_Syminfo *syminfo32;
+	Elf64_Syminfo *syminfo64;
 
 	d = (struct _Libelf_Data *) ed;
 
@@ -62,12 +60,12 @@ gelf_getrel(Elf_Data *ed, int ndx, GElf_Rel *dst)
 	else
 		sh_type = scn->s_shdr.s_shdr64.sh_type;
 
-	if (_libelf_xlate_shtype(sh_type) != ELF_T_REL) {
+	if (_libelf_xlate_shtype(sh_type) != ELF_T_SYMINFO) {
 		LIBELF_SET_ERROR(ARGUMENT, 0);
 		return (NULL);
 	}
 
-	msz = _libelf_msize(ELF_T_REL, ec, e->e_version);
+	msz = _libelf_msize(ELF_T_SYMINFO, ec, e->e_version);
 
 	assert(msz > 0);
 	assert(ndx >= 0);
@@ -78,38 +76,37 @@ gelf_getrel(Elf_Data *ed, int ndx, GElf_Rel *dst)
 	}
 
 	if (ec == ELFCLASS32) {
-		rel32 = (Elf32_Rel *) d->d_data.d_buf + ndx;
 
-		dst->r_offset = (Elf64_Addr) rel32->r_offset;
-		dst->r_info   = ELF64_R_INFO(
-		    (Elf64_Xword) ELF32_R_SYM(rel32->r_info),
-		    ELF32_R_TYPE(rel32->r_info));
+		syminfo32 = (Elf32_Syminfo *) d->d_data.d_buf + ndx;
+
+		dst->si_boundto = syminfo32->si_boundto;
+		dst->si_flags   = syminfo32->si_flags;
 
 	} else {
 
-		rel64 = (Elf64_Rel *) d->d_data.d_buf + ndx;
+		syminfo64 = (Elf64_Syminfo *) d->d_data.d_buf + ndx;
 
-		*dst = *rel64;
+		*dst = *syminfo64;
 	}
 
 	return (dst);
 }
 
 int
-gelf_update_rel(Elf_Data *ed, int ndx, GElf_Rel *dr)
+gelf_update_syminfo(Elf_Data *ed, int ndx, GElf_Syminfo *gs)
 {
 	int ec;
 	Elf *e;
 	size_t msz;
 	Elf_Scn *scn;
 	uint32_t sh_type;
-	Elf32_Rel *rel32;
-	Elf64_Rel *rel64;
 	struct _Libelf_Data *d;
+	Elf32_Syminfo *syminfo32;
+	Elf64_Syminfo *syminfo64;
 
 	d = (struct _Libelf_Data *) ed;
 
-	if (d == NULL || ndx < 0 || dr == NULL ||
+	if (d == NULL || ndx < 0 || gs == NULL ||
 	    (scn = d->d_scn) == NULL ||
 	    (e = scn->s_elf) == NULL) {
 		LIBELF_SET_ERROR(ARGUMENT, 0);
@@ -124,12 +121,12 @@ gelf_update_rel(Elf_Data *ed, int ndx, GElf_Rel *dr)
 	else
 		sh_type = scn->s_shdr.s_shdr64.sh_type;
 
-	if (_libelf_xlate_shtype(sh_type) != ELF_T_REL) {
+	if (_libelf_xlate_shtype(sh_type) != ELF_T_SYMINFO) {
 		LIBELF_SET_ERROR(ARGUMENT, 0);
 		return (0);
 	}
 
-	msz = _libelf_msize(ELF_T_REL, ec, e->e_version);
+	msz = _libelf_msize(ELF_T_SYMINFO, ec, e->e_version);
 
 	assert(msz > 0);
 	assert(ndx >= 0);
@@ -140,22 +137,15 @@ gelf_update_rel(Elf_Data *ed, int ndx, GElf_Rel *dr)
 	}
 
 	if (ec == ELFCLASS32) {
-		rel32 = (Elf32_Rel *) d->d_data.d_buf + ndx;
+		syminfo32 = (Elf32_Syminfo *) d->d_data.d_buf + ndx;
 
-		LIBELF_COPY_U32(rel32, dr, r_offset);
+		syminfo32->si_boundto  = gs->si_boundto;
+		syminfo32->si_flags  = gs->si_flags;
 
-		if (ELF64_R_SYM(dr->r_info) > ELF32_R_SYM(~0UL) ||
-		    ELF64_R_TYPE(dr->r_info) > ELF32_R_TYPE(~0U)) {
-			LIBELF_SET_ERROR(RANGE, 0);
-			return (0);
-		}
-		rel32->r_info = ELF32_R_INFO(
-			(Elf32_Word) ELF64_R_SYM(dr->r_info),
-			(Elf32_Word) ELF64_R_TYPE(dr->r_info));
 	} else {
-		rel64 = (Elf64_Rel *) d->d_data.d_buf + ndx;
+		syminfo64 = (Elf64_Syminfo *) d->d_data.d_buf + ndx;
 
-		*rel64 = *dr;
+		*syminfo64 = *gs;
 	}
 
 	return (1);

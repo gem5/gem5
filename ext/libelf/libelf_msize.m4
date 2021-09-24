@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008-2011 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,15 +24,13 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
 #include <assert.h>
+#include <libelf.h>
 #include <string.h>
 
-#include "elf32.h"
-#include "elf64.h"
-#include "libelf.h"
 #include "_libelf.h"
+
+ELFTC_VCSID("$Id: libelf_msize.m4 3174 2015-03-27 17:13:41Z emaste $");
 
 /* WARNING: GENERATED FROM __file__. */
 
@@ -44,8 +42,14 @@ struct msize {
 divert(-1)
 include(SRCDIR`/elf_types.m4')
 
+/*
+ * ELF types whose memory representations have a variable size.
+ */
 define(BYTE_SIZE,	1)
+define(GNUHASH_SIZE,	1)
 define(NOTE_SIZE,	1)
+define(VDEF_SIZE,	1)
+define(VNEED_SIZE,	1)
 
 /*
  * Unimplemented types.
@@ -70,7 +74,8 @@ define(`DEFINE_ELF_MSIZES',
 DEFINE_ELF_MSIZES(ELF_TYPE_LIST)
 
 define(`MSIZE',
-  `[ELF_T_$1] = { .msz32 = $1_SIZE32, .msz64 = $1_SIZE64 },')
+  `[ELF_T_$1] = { .msz32 = $1_SIZE32, .msz64 = $1_SIZE64 },
+')
 define(`MSIZES',
   `ifelse($#,1,`',
     `MSIZE($1)

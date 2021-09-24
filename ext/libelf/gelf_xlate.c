@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,53 +24,56 @@
  * SUCH DAMAGE.
  */
 
-#include "gelf.h"
-#include "libelf.h"
+#include <gelf.h>
+#include <libelf.h>
 #include <string.h>
 
 #include "_libelf.h"
 
+ELFTC_VCSID("$Id: gelf_xlate.c 3174 2015-03-27 17:13:41Z emaste $");
 
 Elf_Data *
 elf32_xlatetof(Elf_Data *dst, const Elf_Data *src, unsigned int encoding)
 {
-        return _libelf_xlate(dst, src, encoding, ELFCLASS32, ELF_TOFILE);
+	return _libelf_xlate(dst, src, encoding, ELFCLASS32, ELF_TOFILE);
 }
 
 Elf_Data *
 elf64_xlatetof(Elf_Data *dst, const Elf_Data *src, unsigned int encoding)
 {
-        return _libelf_xlate(dst, src, encoding, ELFCLASS64, ELF_TOFILE);
+	return _libelf_xlate(dst, src, encoding, ELFCLASS64, ELF_TOFILE);
 }
 
 Elf_Data *
 elf32_xlatetom(Elf_Data *dst, const Elf_Data *src, unsigned int encoding)
 {
-        return _libelf_xlate(dst, src, encoding, ELFCLASS32, ELF_TOMEMORY);
+	return _libelf_xlate(dst, src, encoding, ELFCLASS32, ELF_TOMEMORY);
 }
 
 Elf_Data *
 elf64_xlatetom(Elf_Data *dst, const Elf_Data *src, unsigned int encoding)
 {
-        return _libelf_xlate(dst, src, encoding, ELFCLASS64, ELF_TOMEMORY);
+	return _libelf_xlate(dst, src, encoding, ELFCLASS64, ELF_TOMEMORY);
 }
 
 Elf_Data *
-gelf_xlatetom(Elf *e, Elf_Data *dst, const Elf_Data *src, unsigned int encoding)
+gelf_xlatetom(Elf *e, Elf_Data *dst, const Elf_Data *src,
+    unsigned int encoding)
 {
-        if (e != NULL)
-                return (_libelf_xlate(dst, src, encoding, e->e_class,
-                    ELF_TOMEMORY));
-        LIBELF_SET_ERROR(ARGUMENT, 0);
-        return (NULL);
+	if (e != NULL)
+		return (_libelf_xlate(dst, src, encoding, e->e_class,
+		    ELF_TOMEMORY));
+	LIBELF_SET_ERROR(ARGUMENT, 0);
+	return (NULL);
 }
 
 Elf_Data *
-gelf_xlatetof(Elf *e, Elf_Data *dst, const Elf_Data *src, unsigned int encoding)
+gelf_xlatetof(Elf *e, Elf_Data *dst, const Elf_Data *src,
+    unsigned int encoding)
 {
-        if (e != NULL)
-                return (_libelf_xlate(dst, src, encoding, e->e_class,
-                    ELF_TOFILE));
-        LIBELF_SET_ERROR(ARGUMENT, 0);
-        return (NULL);
+	if (e != NULL)
+		return (_libelf_xlate(dst, src, encoding, e->e_class,
+		    ELF_TOFILE));
+	LIBELF_SET_ERROR(ARGUMENT, 0);
+	return (NULL);
 }

@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,18 +23,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/lib/libelf/gelf.h,v 1.3 2007/03/08 04:01:30 jkoshy Exp $
+ * $Id: gelf.h 3174 2015-03-27 17:13:41Z emaste $
  */
 
 #ifndef	_GELF_H_
 #define	_GELF_H_
 
-
-#include "libelf.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <libelf.h>
 
 typedef Elf64_Addr	GElf_Addr;	/* Addresses */
 typedef Elf64_Half	GElf_Half;	/* Half words (16 bit) */
@@ -72,9 +67,12 @@ typedef Elf64_Syminfo	GElf_Syminfo;	/* Symbol information */
 #define	GELF_ST_TYPE			ELF64_ST_TYPE
 #define	GELF_ST_VISIBILITY		ELF64_ST_VISIBILITY
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 long		gelf_checksum(Elf *_elf);
 size_t		gelf_fsize(Elf *_elf, Elf_Type _type, size_t _count,
-                        unsigned int _version);
+			unsigned int _version);
 int		gelf_getclass(Elf *_elf);
 GElf_Dyn	*gelf_getdyn(Elf_Data *_data, int _index, GElf_Dyn *_dst);
 GElf_Ehdr	*gelf_getehdr(Elf *_elf, GElf_Ehdr *_dst);
@@ -84,7 +82,7 @@ GElf_Rela	*gelf_getrela(Elf_Data *_src, int _index, GElf_Rela *_dst);
 GElf_Shdr	*gelf_getshdr(Elf_Scn *_scn, GElf_Shdr *_dst);
 GElf_Sym	*gelf_getsym(Elf_Data *_src, int _index, GElf_Sym *_dst);
 GElf_Sym	*gelf_getsymshndx(Elf_Data *_src, Elf_Data *_shindexsrc,
-                        int _index, GElf_Sym *_dst, Elf32_Word *_shindexdst);
+			int _index, GElf_Sym *_dst, Elf32_Word *_shindexdst);
 void *		gelf_newehdr(Elf *_elf, int _class);
 void *		gelf_newphdr(Elf *_elf, size_t _phnum);
 int		gelf_update_dyn(Elf_Data *_dst, int _index, GElf_Dyn *_src);
@@ -95,7 +93,7 @@ int		gelf_update_rela(Elf_Data *_dst, int _index, GElf_Rela *_src);
 int		gelf_update_shdr(Elf_Scn *_dst, GElf_Shdr *_src);
 int		gelf_update_sym(Elf_Data *_dst, int _index, GElf_Sym *_src);
 int		gelf_update_symshndx(Elf_Data *_symdst, Elf_Data *_shindexdst,
-                        int _index, GElf_Sym *_symsrc, Elf32_Word _shindexsrc);
+			int _index, GElf_Sym *_symsrc, Elf32_Word _shindexsrc);
 Elf_Data 	*gelf_xlatetof(Elf *_elf, Elf_Data *_dst, const Elf_Data *_src, unsigned int _encode);
 Elf_Data 	*gelf_xlatetom(Elf *_elf, Elf_Data *_dst, const Elf_Data *_src, unsigned int _encode);
 
@@ -105,7 +103,6 @@ GElf_Syminfo	*gelf_getsyminfo(Elf_Data *_src, int _index, GElf_Syminfo *_dst);
 int		gelf_update_cap(Elf_Data *_dst, int _index, GElf_Cap *_src);
 int		gelf_update_move(Elf_Data *_dst, int _index, GElf_Move *_src);
 int		gelf_update_syminfo(Elf_Data *_dst, int _index, GElf_Syminfo *_src);
-
 #ifdef __cplusplus
 }
 #endif

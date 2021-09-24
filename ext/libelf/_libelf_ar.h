@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006,2008 Joseph Koshy
+ * Copyright (c) 2010 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -11,7 +11,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS `AS IS' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
@@ -22,37 +22,36 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ *
+ * $Id: _libelf_ar.h 3013 2014-03-23 06:16:59Z jkoshy $
  */
 
-#include <libelf.h>
+#ifndef	__LIBELF_AR_H_
+#define	__LIBELF_AR_H_
 
-#include "_libelf.h"
+/*
+ * Prototypes and declarations needed by libelf's ar(1) archive
+ * handling code.
+ */
 
-ELFTC_VCSID("$Id: elf_cntl.c 2225 2011-11-26 18:55:54Z jkoshy $");
+#include <ar.h>
 
-int
-elf_cntl(Elf *e, Elf_Cmd c)
-{
-	if (e == NULL ||
-	    (c != ELF_C_FDDONE && c != ELF_C_FDREAD)) {
-		LIBELF_SET_ERROR(ARGUMENT, 0);
-		return (-1);
-	}
+#define	LIBELF_AR_BSD_EXTENDED_NAME_PREFIX	"#1/"
+#define	LIBELF_AR_BSD_SYMTAB_NAME		"__.SYMDEF"
+#define	LIBELF_AR_BSD_EXTENDED_NAME_PREFIX_SIZE	\
+	(sizeof(LIBELF_AR_BSD_EXTENDED_NAME_PREFIX) - 1)
 
-	if (e->e_parent) {
-		LIBELF_SET_ERROR(ARCHIVE, 0);
-		return (-1);
-	}
+#define	IS_EXTENDED_BSD_NAME(NAME)				\
+	(strncmp((const char *) (NAME),				\
+	 LIBELF_AR_BSD_EXTENDED_NAME_PREFIX,			\
+	 LIBELF_AR_BSD_EXTENDED_NAME_PREFIX_SIZE) == 0)
 
-	if (c == ELF_C_FDREAD) {
-		if (e->e_cmd == ELF_C_WRITE) {
-			LIBELF_SET_ERROR(MODE, 0);
-			return (-1);
-		}
-		else
-			return (0);
-	}
 
-	e->e_fd = -1;
-	return 0;
-}
+unsigned char *_libelf_ar_get_string(const char *_buf, size_t _sz,
+    unsigned int _rawname, int _svr4names);
+char	*_libelf_ar_get_raw_name(const struct ar_hdr *_arh);
+char	*_libelf_ar_get_translated_name(const struct ar_hdr *_arh, Elf *_ar);
+int	_libelf_ar_get_number(const char *_buf, size_t _sz,
+    unsigned int _base, size_t *_ret);
+
+#endif	/* __LIBELF_AR_H_ */

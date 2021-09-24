@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,42 +24,43 @@
  * SUCH DAMAGE.
  */
 
-
 #include <ar.h>
 #include <assert.h>
-#include "libelf.h"
+#include <libelf.h>
 
 #include "_libelf.h"
+
+ELFTC_VCSID("$Id: elf_getident.c 3174 2015-03-27 17:13:41Z emaste $");
 
 char *
 elf_getident(Elf *e, size_t *sz)
 {
 
-        if (e == NULL) {
-                LIBELF_SET_ERROR(ARGUMENT, 0);
-                goto error;
-        }
+	if (e == NULL) {
+		LIBELF_SET_ERROR(ARGUMENT, 0);
+		goto error;
+	}
 
-        if (e->e_cmd == ELF_C_WRITE && e->e_rawfile == NULL) {
-                LIBELF_SET_ERROR(SEQUENCE, 0);
-                goto error;
-        }
+	if (e->e_cmd == ELF_C_WRITE && e->e_rawfile == NULL) {
+		LIBELF_SET_ERROR(SEQUENCE, 0);
+		goto error;
+	}
 
-        assert(e->e_kind != ELF_K_AR || e->e_cmd == ELF_C_READ);
+	assert(e->e_kind != ELF_K_AR || e->e_cmd == ELF_C_READ);
 
-        if (sz) {
-                if (e->e_kind == ELF_K_AR)
-                        *sz = SARMAG;
-                else if (e->e_kind == ELF_K_ELF)
-                        *sz = EI_NIDENT;
-                else
-                        *sz = e->e_rawsize;
-        }
+	if (sz) {
+		if (e->e_kind == ELF_K_AR)
+			*sz = SARMAG;
+		else if (e->e_kind == ELF_K_ELF)
+			*sz = EI_NIDENT;
+		else
+			*sz = e->e_rawsize;
+	}
 
-        return (e->e_rawfile);
+	return ((char *) e->e_rawfile);
 
  error:
-        if (sz)
-                *sz = 0;
-        return (NULL);
+	if (sz)
+		*sz = 0;
+	return (NULL);
 }

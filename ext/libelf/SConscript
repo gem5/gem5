@@ -36,6 +36,7 @@ elf_files = []
 def ElfFile(filename):
     elf_files.append(File(filename))
 
+ElfFile('elf.c')
 ElfFile('elf_begin.c')
 ElfFile('elf_cntl.c')
 ElfFile('elf_data.c')
@@ -52,6 +53,7 @@ ElfFile('elf_hash.c')
 ElfFile('elf_kind.c')
 ElfFile('elf_memory.c')
 ElfFile('elf_next.c')
+ElfFile('elf_open.c')
 ElfFile('elf_phnum.c')
 ElfFile('elf_rand.c')
 ElfFile('elf_rawfile.c')
@@ -61,26 +63,32 @@ ElfFile('elf_shstrndx.c')
 ElfFile('elf_strptr.c')
 ElfFile('elf_update.c')
 ElfFile('elf_version.c')
+ElfFile('gelf_cap.c')
 ElfFile('gelf_checksum.c')
 ElfFile('gelf_dyn.c')
 ElfFile('gelf_ehdr.c')
 ElfFile('gelf_fsize.c')
 ElfFile('gelf_getclass.c')
+ElfFile('gelf_move.c')
 ElfFile('gelf_phdr.c')
 ElfFile('gelf_rel.c')
 ElfFile('gelf_rela.c')
 ElfFile('gelf_shdr.c')
 ElfFile('gelf_sym.c')
+ElfFile('gelf_syminfo.c')
 ElfFile('gelf_symshndx.c')
 ElfFile('gelf_xlate.c')
 ElfFile('libelf.c')
 ElfFile('libelf_align.c')
 ElfFile('libelf_allocate.c')
 ElfFile('libelf_ar.c')
+ElfFile('libelf_ar_util.c')
 ElfFile('libelf_checksum.c')
 ElfFile('libelf_data.c')
 ElfFile('libelf_ehdr.c')
 ElfFile('libelf_extended.c')
+ElfFile('libelf_memory.c')
+ElfFile('libelf_open.c')
 ElfFile('libelf_phdr.c')
 ElfFile('libelf_shdr.c')
 ElfFile('libelf_xlate.c')
@@ -102,7 +110,7 @@ if m4env['CLANG']:
     # linking problems with multiple definitions of the symbols in
     # sysmacros.h for older versions of glibc
     m4env.Append(CCFLAGS=['-std=gnu89'])
-m4env.Append(CCFLAGS=['-Wno-implicit'])
+m4env.Append(CCFLAGS=['-Wno-implicit', '-Wno-undef'])
 del m4env['CPPPATH']
 
 # If we have gm4 use it
@@ -128,11 +136,16 @@ m4env.M4(target=File('libelf_fsize.c'),
 m4env.M4(target=File('libelf_msize.c'),
          source=[File('elf_types.m4'), File('libelf_msize.m4')])
 
+m4env.Append(CPPPATH=Dir('.'))
+
 # Build libelf as a static library with PIC code so it can be linked
 # into either m5 or the library
 m4env.Library('elf', [m4env.SharedObject(f) for f in elf_files])
 
+# Generate the native-elf-format header file based on the build system
+m4env.Command(File('native-elf-format.h'), File('native-elf-format'),
+              '${SOURCE} > ${TARGET}')
+
 main.Prepend(CPPPATH=Dir('.'))
 main.Append(LIBS=[File('libelf.a')])
 main.Prepend(LIBPATH=[Dir('.')])
-

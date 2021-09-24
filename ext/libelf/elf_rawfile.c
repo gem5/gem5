@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,27 +24,28 @@
  * SUCH DAMAGE.
  */
 
-
-#include "libelf.h"
+#include <libelf.h>
 
 #include "_libelf.h"
+
+ELFTC_VCSID("$Id: elf_rawfile.c 3174 2015-03-27 17:13:41Z emaste $");
 
 char *
 elf_rawfile(Elf *e, size_t *sz)
 {
-        char *ptr;
-        size_t size;
+	size_t size;
+	unsigned char *ptr;
 
-        size = e ? e->e_rawsize : 0;
-        ptr = NULL;
+	size = e ? e->e_rawsize : 0;
+	ptr = NULL;
 
-        if (e == NULL)
-                LIBELF_SET_ERROR(ARGUMENT, 0);
-        else if ((ptr = e->e_rawfile) == NULL && e->e_cmd == ELF_C_WRITE)
-                LIBELF_SET_ERROR(SEQUENCE, 0);
+	if (e == NULL)
+		LIBELF_SET_ERROR(ARGUMENT, 0);
+	else if ((ptr = e->e_rawfile) == NULL && e->e_cmd == ELF_C_WRITE)
+		LIBELF_SET_ERROR(SEQUENCE, 0);
 
-        if (sz)
-                *sz = size;
+	if (sz)
+		*sz = size;
 
-        return (ptr);
+	return ((char *) ptr);
 }

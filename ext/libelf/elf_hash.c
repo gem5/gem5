@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,29 +24,31 @@
  * SUCH DAMAGE.
  */
 
+#include <libelf.h>
 
-#include "libelf.h"
+#include "_libelf.h"
+
+ELFTC_VCSID("$Id: elf_hash.c 3174 2015-03-27 17:13:41Z emaste $");
 
 /*
- * This elf_hash function is defined by the System V ABI.  It must be
- * kept compatible with "src/libexec/rtld-elf/rtld.c".
+ * This elf_hash function is defined by the System V ABI.
  */
 
 unsigned long
 elf_hash(const char *name)
 {
-        unsigned long h, t;
-        const unsigned char *s;
+	unsigned long h, t;
+	const unsigned char *s;
 
-        s = (const unsigned char *) name;
-        h = t = 0;
+	s = (const unsigned char *) name;
+	h = t = 0;
 
-        for (; *s != '\0'; h = h & ~t) {
-                h = (h << 4) + *s++;
-                t = h & 0xF0000000UL;
-                if (t)
-                        h ^= t >> 24;
-        }
+	for (; *s != '\0'; h = h & ~t) {
+		h = (h << 4) + *s++;
+		t = h & 0xF0000000UL;
+		if (t)
+			h ^= t >> 24;
+	}
 
-        return (h);
+	return (h);
 }

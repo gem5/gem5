@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,36 +24,41 @@
  * SUCH DAMAGE.
  */
 
-
 #include <ar.h>
 #include <assert.h>
-#include "libelf.h"
+#include <libelf.h>
 
 #include "_libelf.h"
+
+ELFTC_VCSID("$Id: elf_next.c 3174 2015-03-27 17:13:41Z emaste $");
 
 Elf_Cmd
 elf_next(Elf *e)
 {
-        off_t next;
-        Elf *parent;
+	off_t next;
+	Elf *parent;
 
-        if (e == NULL)
-                return (ELF_C_NULL);
+	if (e == NULL)
+		return (ELF_C_NULL);
 
-         if ((parent = e->e_parent) == NULL) {
-                 LIBELF_SET_ERROR(ARGUMENT, 0);
-                 return (ELF_C_NULL);
-         }
+	 if ((parent = e->e_parent) == NULL) {
+		 LIBELF_SET_ERROR(ARGUMENT, 0);
+		 return (ELF_C_NULL);
+	 }
 
-        assert (parent->e_kind == ELF_K_AR);
-        assert (parent->e_cmd == ELF_C_READ);
-        assert((uintptr_t) e->e_rawfile % 2 == 0);
-        assert(e->e_rawfile > parent->e_rawfile);
+	assert(parent->e_kind == ELF_K_AR);
+	assert(parent->e_cmd == ELF_C_READ);
+	assert(e->e_rawfile > parent->e_rawfile);
 
-        next = e->e_rawfile - parent->e_rawfile + e->e_rawsize;
-        next = (next + 1) & ~1;	/* round up to an even boundary */
+	next = e->e_rawfile - parent->e_rawfile + (off_t) e->e_rawsize;
+	next = (next + 1) & ~1;	/* round up to an even boundary */
 
-        parent->e_u.e_ar.e_next = (next >= (off_t) parent->e_rawsize) ? (off_t) 0 : next;
+	/*
+	 * Setup the 'e_next' field of the archive descriptor for the
+	 * next call to 'elf_begin()'.
+	 */
+	parent->e_u.e_ar.e_next = (next >= (off_t) parent->e_rawsize) ?
+	    (off_t) 0 : next;
 
-        return (ELF_C_READ);
+	return (ELF_C_READ);
 }

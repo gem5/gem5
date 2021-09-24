@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,9 +25,11 @@
  */
 
 #include <assert.h>
-#include "libelf.h"
+#include <libelf.h>
 
 #include "_libelf.h"
+
+ELFTC_VCSID("$Id: libelf_extended.c 3174 2015-03-27 17:13:41Z emaste $");
 
 /*
  * Retrieve section #0, allocating a new section if needed.
@@ -35,99 +37,98 @@
 static Elf_Scn *
 _libelf_getscn0(Elf *e)
 {
-        Elf_Scn *s;
+	Elf_Scn *s;
 
-        if ((s = STAILQ_FIRST(&e->e_u.e_elf.e_scn)) != NULL)
-                return (s);
+	if ((s = STAILQ_FIRST(&e->e_u.e_elf.e_scn)) != NULL)
+		return (s);
 
-        return (_libelf_allocate_scn(e, (size_t) SHN_UNDEF));
+	return (_libelf_allocate_scn(e, (size_t) SHN_UNDEF));
 }
 
 int
 _libelf_setshnum(Elf *e, void *eh, int ec, size_t shnum)
 {
-        Elf_Scn *scn;
+	Elf_Scn *scn;
 
-        if (shnum >= SHN_LORESERVE) {
-                if ((scn = _libelf_getscn0(e)) == NULL)
-                        return (0);
+	if (shnum >= SHN_LORESERVE) {
+		if ((scn = _libelf_getscn0(e)) == NULL)
+			return (0);
 
-                assert(scn->s_ndx == SHN_UNDEF);
+		assert(scn->s_ndx == SHN_UNDEF);
 
-                if (ec == ELFCLASS32)
-                        scn->s_shdr.s_shdr32.sh_size = shnum;
-                else
-                        scn->s_shdr.s_shdr64.sh_size = shnum;
+		if (ec == ELFCLASS32)
+			scn->s_shdr.s_shdr32.sh_size = shnum;
+		else
+			scn->s_shdr.s_shdr64.sh_size = shnum;
 
-                (void) elf_flagshdr(scn, ELF_C_SET, ELF_F_DIRTY);
+		(void) elf_flagshdr(scn, ELF_C_SET, ELF_F_DIRTY);
 
-                shnum = 0;
-        }
+		shnum = 0;
+	}
 
-        if (ec == ELFCLASS32)
-                ((Elf32_Ehdr *) eh)->e_shnum = shnum;
-        else
-                ((Elf64_Ehdr *) eh)->e_shnum = shnum;
+	if (ec == ELFCLASS32)
+		((Elf32_Ehdr *) eh)->e_shnum = shnum & 0xFFFFU;
+	else
+		((Elf64_Ehdr *) eh)->e_shnum = shnum & 0xFFFFU;
 
 
-        return (1);
+	return (1);
 }
 
 int
 _libelf_setshstrndx(Elf *e, void *eh, int ec, size_t shstrndx)
 {
-        Elf_Scn *scn;
+	Elf_Scn *scn;
 
-        if (shstrndx >= SHN_LORESERVE) {
-                if ((scn = _libelf_getscn0(e)) == NULL)
-                        return (0);
+	if (shstrndx >= SHN_LORESERVE) {
+		if ((scn = _libelf_getscn0(e)) == NULL)
+			return (0);
 
-                assert(scn->s_ndx == SHN_UNDEF);
+		assert(scn->s_ndx == SHN_UNDEF);
 
-                if (ec == ELFCLASS32)
-                        scn->s_shdr.s_shdr32.sh_link = shstrndx;
-                else
-                        scn->s_shdr.s_shdr64.sh_link = shstrndx;
+		if (ec == ELFCLASS32)
+			scn->s_shdr.s_shdr32.sh_link = shstrndx;
+		else
+			scn->s_shdr.s_shdr64.sh_link = shstrndx;
 
-                (void) elf_flagshdr(scn, ELF_C_SET, ELF_F_DIRTY);
+		(void) elf_flagshdr(scn, ELF_C_SET, ELF_F_DIRTY);
 
-                shstrndx = SHN_XINDEX;
-        }
+		shstrndx = SHN_XINDEX;
+	}
 
-        if (ec == ELFCLASS32)
-                ((Elf32_Ehdr *) eh)->e_shstrndx = shstrndx;
-        else
-                ((Elf64_Ehdr *) eh)->e_shstrndx = shstrndx;
+	if (ec == ELFCLASS32)
+		((Elf32_Ehdr *) eh)->e_shstrndx = shstrndx & 0xFFFFU;
+	else
+		((Elf64_Ehdr *) eh)->e_shstrndx = shstrndx & 0xFFFFU;
 
-        return (1);
+	return (1);
 }
 
 int
 _libelf_setphnum(Elf *e, void *eh, int ec, size_t phnum)
 {
-        Elf_Scn *scn;
+	Elf_Scn *scn;
 
-        if (phnum >= PN_XNUM) {
-                if ((scn = _libelf_getscn0(e)) == NULL)
-                        return (0);
+	if (phnum >= PN_XNUM) {
+		if ((scn = _libelf_getscn0(e)) == NULL)
+			return (0);
 
-                assert(scn->s_ndx == SHN_UNDEF);
+		assert(scn->s_ndx == SHN_UNDEF);
 
-                if (ec == ELFCLASS32)
-                        scn->s_shdr.s_shdr32.sh_info = phnum;
-                else
-                        scn->s_shdr.s_shdr64.sh_info = phnum;
+		if (ec == ELFCLASS32)
+			scn->s_shdr.s_shdr32.sh_info = phnum;
+		else
+			scn->s_shdr.s_shdr64.sh_info = phnum;
 
-                (void) elf_flagshdr(scn, ELF_C_SET, ELF_F_DIRTY);
+		(void) elf_flagshdr(scn, ELF_C_SET, ELF_F_DIRTY);
 
-                phnum = PN_XNUM;
-        }
+		phnum = PN_XNUM;
+	}
 
-        if (ec == ELFCLASS32)
-                ((Elf32_Ehdr *) eh)->e_phnum = phnum;
-        else
-                ((Elf64_Ehdr *) eh)->e_phnum = phnum;
+	if (ec == ELFCLASS32)
+		((Elf32_Ehdr *) eh)->e_phnum = phnum & 0xFFFFU;
+	else
+		((Elf64_Ehdr *) eh)->e_phnum = phnum & 0xFFFFU;
 
-        return (1);
+	return (1);
 }
-

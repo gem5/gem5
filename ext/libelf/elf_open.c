@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006,2008 Joseph Koshy
+ * Copyright (c) 2011 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,31 +28,40 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id: elf_cntl.c 2225 2011-11-26 18:55:54Z jkoshy $");
+ELFTC_VCSID("$Id$");
 
-int
-elf_cntl(Elf *e, Elf_Cmd c)
+/*
+ * Extension API: open a file for reading, ignoring parse errors.
+ */
+
+Elf *
+elf_open(int fd)
 {
-	if (e == NULL ||
-	    (c != ELF_C_FDDONE && c != ELF_C_FDREAD)) {
+	if (LIBELF_PRIVATE(version) == EV_NONE) {
+		LIBELF_SET_ERROR(SEQUENCE, 0);
+		return (NULL);
+	}
+
+	return (_libelf_open_object(fd, ELF_C_READ, 0));
+}
+
+/*
+ * Extension API: create an ELF descriptor for an in-memory object,
+ * ignoring parse errors.
+ */
+
+Elf *
+elf_openmemory(char *image, size_t sz)
+{
+	if (LIBELF_PRIVATE(version) == EV_NONE) {
+		LIBELF_SET_ERROR(SEQUENCE, 0);
+		return (NULL);
+	}
+
+	if (image == NULL || sz == 0) {
 		LIBELF_SET_ERROR(ARGUMENT, 0);
-		return (-1);
+		return (NULL);
 	}
 
-	if (e->e_parent) {
-		LIBELF_SET_ERROR(ARCHIVE, 0);
-		return (-1);
-	}
-
-	if (c == ELF_C_FDREAD) {
-		if (e->e_cmd == ELF_C_WRITE) {
-			LIBELF_SET_ERROR(MODE, 0);
-			return (-1);
-		}
-		else
-			return (0);
-	}
-
-	e->e_fd = -1;
-	return 0;
+	return (_libelf_memory((unsigned char *) image, sz, 0));
 }

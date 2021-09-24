@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,13 +24,14 @@
  * SUCH DAMAGE.
  */
 
-
-#include "libelf.h"
+#include <libelf.h>
 
 #include "_libelf.h"
+
+ELFTC_VCSID("$Id: elf_fill.c 3174 2015-03-27 17:13:41Z emaste $");
 
 void
 elf_fill(int fill)
 {
-        LIBELF_PRIVATE(fillchar) = fill;
+	LIBELF_PRIVATE(fillchar) = fill;
 }

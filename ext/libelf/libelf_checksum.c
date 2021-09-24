@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2006 Joseph Koshy
+ * Copyright (c) 2006,2008 Joseph Koshy
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,73 +24,75 @@
  * SUCH DAMAGE.
  */
 
-#include "gelf.h"
+#include <gelf.h>
 
 #include "_libelf.h"
+
+ELFTC_VCSID("$Id: libelf_checksum.c 3174 2015-03-27 17:13:41Z emaste $");
 
 static unsigned long
 _libelf_sum(unsigned long c, const unsigned char *s, size_t size)
 {
-        if (s == NULL || size == 0)
-                return (c);
+	if (s == NULL || size == 0)
+		return (c);
 
-        while (size--)
-                c += *s++;
+	while (size--)
+		c += *s++;
 
-        return (c);
+	return (c);
 }
 
-unsigned long
+long
 _libelf_checksum(Elf *e, int elfclass)
 {
-        size_t shn;
-        Elf_Scn *scn;
-        Elf_Data *d;
-        unsigned long checksum;
-        GElf_Ehdr eh;
-        GElf_Shdr shdr;
+	size_t shn;
+	Elf_Scn *scn;
+	Elf_Data *d;
+	unsigned long checksum;
+	GElf_Ehdr eh;
+	GElf_Shdr shdr;
 
-        if (e == NULL) {
-                LIBELF_SET_ERROR(ARGUMENT, 0);
-                return (0L);
-        }
+	if (e == NULL) {
+		LIBELF_SET_ERROR(ARGUMENT, 0);
+		return (0L);
+	}
 
-        if (e->e_class != elfclass) {
-                LIBELF_SET_ERROR(CLASS, 0);
-                return (0L);
-        }
+	if (e->e_class != elfclass) {
+		LIBELF_SET_ERROR(CLASS, 0);
+		return (0L);
+	}
 
-        if (gelf_getehdr(e, &eh) == NULL)
-                return (0);
+	if (gelf_getehdr(e, &eh) == NULL)
+		return (0);
 
-        /*
-         * Iterate over all sections in the ELF file, computing the
-         * checksum along the way.
-         *
-         * The first section is always SHN_UNDEF and can be skipped.
-         * Non-allocatable sections are skipped, as are sections that
-         * could be affected by utilities such as strip(1).
-         */
+	/*
+	 * Iterate over all sections in the ELF file, computing the
+	 * checksum along the way.
+	 *
+	 * The first section is always SHN_UNDEF and can be skipped.
+	 * Non-allocatable sections are skipped, as are sections that
+	 * could be affected by utilities such as strip(1).
+	 */
 
-        checksum = 0;
-        for (shn = 1; shn < e->e_u.e_elf.e_nscn; shn++) {
-                if ((scn = elf_getscn(e, shn)) == NULL)
-                        return (0);
-                if (gelf_getshdr(scn, &shdr) == NULL)
-                        return (0);
-                if ((shdr.sh_flags & SHF_ALLOC) == 0 ||
-                    shdr.sh_type == SHT_DYNAMIC ||
-                    shdr.sh_type == SHT_DYNSYM)
-                        continue;
+	checksum = 0;
+	for (shn = 1; shn < e->e_u.e_elf.e_nscn; shn++) {
+		if ((scn = elf_getscn(e, shn)) == NULL)
+			return (0);
+		if (gelf_getshdr(scn, &shdr) == NULL)
+			return (0);
+		if ((shdr.sh_flags & SHF_ALLOC) == 0 ||
+		    shdr.sh_type == SHT_DYNAMIC ||
+		    shdr.sh_type == SHT_DYNSYM)
+			continue;
 
-                d = NULL;
-                while ((d = elf_rawdata(scn, d)) != NULL)
-                        checksum = _libelf_sum(checksum,
-                            (unsigned char *) d->d_buf, d->d_size);
-        }
+		d = NULL;
+		while ((d = elf_rawdata(scn, d)) != NULL)
+			checksum = _libelf_sum(checksum,
+			    (unsigned char *) d->d_buf, (size_t) d->d_size);
+	}
 
-        /*
-         * Return a 16-bit checksum compatible with Solaris.
-         */
-        return (((checksum >> 16) & 0xFFFFUL) + (checksum & 0xFFFFUL));
+	/*
+	 * Return a 16-bit checksum compatible with Solaris.
+	 */
+	return (long) (((checksum >> 16) & 0xFFFFUL) + (checksum & 0xFFFFUL));
 }
