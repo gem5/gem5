@@ -91,10 +91,14 @@ docker run --rm -u $UID:$GUID --volume "${gem5_root}":"${gem5_root}" -w \
     "scons build/GCN3_X86/gem5.opt -j${threads} \
         || (rm -rf build && scons build/GCN3_X86/gem5.opt -j${threads})"
 
+# get square
 wget -qN http://dist.gem5.org/dist/develop/test-progs/square/square
 
 mkdir -p tests/testing-results
 
+# Square is the simplest, fastest, more heavily tested GPU application
+# Thus, we always want to run this in the nightly regressions to make sure
+# basic GPU functionality is working.
 docker run --rm -u $UID:$GUID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
     configs/example/apu_se.py -n3 -c square
