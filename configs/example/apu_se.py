@@ -342,8 +342,9 @@ for i in range(n_cu):
         compute_units[-1].prefetch_prev_type = args.pf_type
 
     # attach the LDS and the CU to the bus (actually a Bridge)
-    compute_units[-1].ldsPort = compute_units[-1].ldsBus.slave
-    compute_units[-1].ldsBus.master = compute_units[-1].localDataStore.cuPort
+    compute_units[-1].ldsPort = compute_units[-1].ldsBus.cpu_side_port
+    compute_units[-1].ldsBus.mem_side_port = \
+        compute_units[-1].localDataStore.cuPort
 
 # Attach compute units to GPU
 shader.CUs = compute_units
@@ -561,8 +562,8 @@ dma_list = [gpu_hsapp, gpu_cmd_proc]
 Ruby.create_system(args, None, system, None, dma_list, None)
 system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
                                     voltage_domain = system.voltage_domain)
-gpu_cmd_proc.pio = system.piobus.master
-gpu_hsapp.pio = system.piobus.master
+gpu_cmd_proc.pio = system.piobus.mem_side_ports
+gpu_hsapp.pio = system.piobus.mem_side_ports
 
 for i, dma_device in enumerate(dma_list):
     exec('system.dma_cntrl%d.clk_domain = system.ruby.clk_domain' % i)
@@ -575,17 +576,19 @@ for i in range(args.num_cpus):
     system.cpu[i].createInterruptController()
 
     # Connect cache port's to ruby
-    system.cpu[i].icache_port = ruby_port.slave
-    system.cpu[i].dcache_port = ruby_port.slave
+    system.cpu[i].icache_port = ruby_port.in_ports
+    system.cpu[i].dcache_port = ruby_port.in_ports
 
-    ruby_port.mem_master_port = system.piobus.slave
+    ruby_port.mem_request_port = system.piobus.cpu_side_ports
     if buildEnv['TARGET_ISA'] == "x86":
-        system.cpu[i].interrupts[0].pio = system.piobus.master
-        system.cpu[i].interrupts[0].int_master = system.piobus.slave
-        system.cpu[i].interrupts[0].int_slave = system.piobus.master
+        system.cpu[i].interrupts[0].pio = system.piobus.mem_side_ports
+        system.cpu[i].interrupts[0].int_requestor = \
+            system.piobus.cpu_side_ports
+        system.cpu[i].interrupts[0].int_responder = \
+            system.piobus.mem_side_ports
         if fast_forward:
             system.cpu[i].mmu.connectWalkerPorts(
-                ruby_port.slave, ruby_port.slave)
+                ruby_port.in_ports, ruby_port.in_ports)
 
 # attach CU ports to Ruby
 # Because of the peculiarities of the CP core, you may have 1 CPU but 2
@@ -615,7 +618,7 @@ for i in range(n_cu):
     # in one GPU issue cycle. Hence wavefront_size mem ports.
     for j in range(wavefront_size):
         system.cpu[shader_idx].CUs[i].memory_port[j] = \
-                  system.ruby._cpu_ports[gpu_port_idx].slave[j]
+                  system.ruby._cpu_ports[gpu_port_idx].in_ports[j]
     gpu_port_idx += 1
 
 for i in range(n_cu):
@@ -623,7 +626,7 @@ for i in range(n_cu):
         print("incrementing idx on ", i)
         gpu_port_idx += 1
     system.cpu[shader_idx].CUs[i].sqc_port = \
-            system.ruby._cpu_ports[gpu_port_idx].slave
+            system.ruby._cpu_ports[gpu_port_idx].in_ports
 gpu_port_idx = gpu_port_idx + 1
 
 for i in range(n_cu):
@@ -631,19 +634,21 @@ for i in range(n_cu):
         print("incrementing idx on ", i)
         gpu_port_idx += 1
     system.cpu[shader_idx].CUs[i].scalar_port = \
-        system.ruby._cpu_ports[gpu_port_idx].slave
+        system.ruby._cpu_ports[gpu_port_idx].in_ports
 gpu_port_idx = gpu_port_idx + 1
 
 # attach CP ports to Ruby
 for i in range(args.num_cp):
     system.cpu[cp_idx].createInterruptController()
     system.cpu[cp_idx].dcache_port = \
-                system.ruby._cpu_ports[gpu_port_idx + i * 2].slave
+                system.ruby._cpu_ports[gpu_port_idx + i * 2].in_ports
     system.cpu[cp_idx].icache_port = \
-                system.ruby._cpu_ports[gpu_port_idx + i * 2 + 1].slave
-    system.cpu[cp_idx].interrupts[0].pio = system.piobus.master
-    system.cpu[cp_idx].interrupts[0].int_master = system.piobus.slave
-    system.cpu[cp_idx].interrupts[0].int_slave = system.piobus.master
+                system.ruby._cpu_ports[gpu_port_idx + i * 2 + 1].in_ports
+    system.cpu[cp_idx].interrupts[0].pio = system.piobus.mem_side_ports
+    system.cpu[cp_idx].interrupts[0].int_requestor = \
+        system.piobus.cpu_side_ports
+    system.cpu[cp_idx].interrupts[0].int_responder = \
+        system.piobus.mem_side_ports
     cp_idx = cp_idx + 1
 
 ################# Connect the CPU and GPU via GPU Dispatcher ##################
