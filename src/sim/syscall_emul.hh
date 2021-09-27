@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015, 2019-2020 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2019-2021 Arm Limited
  * Copyright (c) 2015 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -379,6 +379,25 @@ SyscallReturn getcpuFunc(SyscallDesc *desc, ThreadContext *tc,
 // Target getsockname() handler.
 SyscallReturn getsocknameFunc(SyscallDesc *desc, ThreadContext *tc,
                               int tgt_fd, VPtr<> addrPtr, VPtr<> lenPtr);
+
+template <class OS>
+SyscallReturn
+atSyscallPath(ThreadContext *tc, int dirfd, std::string &path)
+{
+    // If pathname is absolute, then dirfd is ignored.
+    if (dirfd != OS::TGT_AT_FDCWD && !startswith(path, "/")) {
+        auto process = tc->getProcessPtr();
+
+        std::shared_ptr<FDEntry> fdep = ((*process->fds)[dirfd]);
+        auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
+        if (!ffdp)
+            return -EBADF;
+
+        path = ffdp->getFileName() + "/" + path;
+    }
+
+    return 0;
+}
 
 /// Futex system call
 /// Implemented by Daniel Sanchez
@@ -928,8 +947,10 @@ unlinkatFunc(SyscallDesc *desc, ThreadContext *tc, int dirfd, VPtr<> pathname)
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
 
-    if (dirfd != OS::TGT_AT_FDCWD)
-        warn("unlinkat: first argument not AT_FDCWD; unlikely to work");
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
 
     return unlinkImpl(desc, tc, path);
 }
@@ -944,8 +965,10 @@ faccessatFunc(SyscallDesc *desc, ThreadContext *tc,
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
 
-    if (dirfd != OS::TGT_AT_FDCWD)
-        warn("faccessat: first argument not AT_FDCWD; unlikely to work");
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
 
     return accessImpl(desc, tc, path, mode);
 }
@@ -960,8 +983,10 @@ readlinkatFunc(SyscallDesc *desc, ThreadContext *tc,
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
 
-    if (dirfd != OS::TGT_AT_FDCWD)
-        warn("openat: first argument not AT_FDCWD; unlikely to work");
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
 
     return readlinkImpl(desc, tc, path, buf, bufsiz);
 }
@@ -981,11 +1006,15 @@ renameatFunc(SyscallDesc *desc, ThreadContext *tc,
     if (!proxy.tryReadString(new_name, newpath))
         return -EFAULT;
 
-    if (olddirfd != OS::TGT_AT_FDCWD)
-        warn("renameat: first argument not AT_FDCWD; unlikely to work");
+    // Modifying old_name from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, olddirfd, old_name); !res.successful()) {
+        return res;
+    }
 
-    if (newdirfd != OS::TGT_AT_FDCWD)
-        warn("renameat: third argument not AT_FDCWD; unlikely to work");
+    // Modifying new_name from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, newdirfd, new_name); !res.successful()) {
+        return res;
+    }
 
     return renameImpl(desc, tc, old_name, new_name);
 }
@@ -1233,39 +1262,6 @@ statFunc(SyscallDesc *desc, ThreadContext *tc,
     return 0;
 }
 
-
-/// Target stat64() handler.
-template <class OS>
-SyscallReturn
-stat64Func(SyscallDesc *desc, ThreadContext *tc,
-           VPtr<> pathname, VPtr<typename OS::tgt_stat64> tgt_stat)
-{
-    std::string path;
-    auto process = tc->getProcessPtr();
-
-    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
-        return -EFAULT;
-
-    // Adjust path for cwd and redirection
-    path = process->checkPathRedirect(path);
-
-#if NO_STAT64
-    struct stat  hostBuf;
-    int result = stat(path.c_str(), &hostBuf);
-#else
-    struct stat64 hostBuf;
-    int result = stat64(path.c_str(), &hostBuf);
-#endif
-
-    if (result < 0)
-        return -errno;
-
-    copyOutStat64Buf<OS>(tgt_stat, &hostBuf);
-
-    return 0;
-}
-
-
 /// Target fstatat64() handler.
 template <class OS>
 SyscallReturn
@@ -1273,16 +1269,19 @@ fstatat64Func(SyscallDesc *desc, ThreadContext *tc,
               int dirfd, VPtr<> pathname,
               VPtr<typename OS::tgt_stat64> tgt_stat)
 {
-    auto process = tc->getProcessPtr();
-    if (dirfd != OS::TGT_AT_FDCWD)
-        warn("fstatat64: first argument not AT_FDCWD; unlikely to work");
-
     std::string path;
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
 
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
+
+    auto p = tc->getProcessPtr();
+
     // Adjust path for cwd and redirection
-    path = process->checkPathRedirect(path);
+    path = p->checkPathRedirect(path);
 
 #if NO_STAT64
     struct stat  hostBuf;
@@ -1300,6 +1299,14 @@ fstatat64Func(SyscallDesc *desc, ThreadContext *tc,
     return 0;
 }
 
+/// Target stat64() handler.
+template <class OS>
+SyscallReturn
+stat64Func(SyscallDesc *desc, ThreadContext *tc,
+           VPtr<> pathname, VPtr<typename OS::tgt_stat64> tgt_stat)
+{
+    return fstatat64Func<OS>(desc, tc, OS::TGT_AT_FDCWD, pathname, tgt_stat);
+}
 
 /// Target fstat64() handler.
 template <class OS>
