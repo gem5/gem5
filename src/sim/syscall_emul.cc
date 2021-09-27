@@ -657,10 +657,17 @@ chownFunc(SyscallDesc *desc, ThreadContext *tc,
           VPtr<> pathname, uint32_t owner, uint32_t group)
 {
     std::string path;
-    auto p = tc->getProcessPtr();
-
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
+
+    return chownImpl(desc, tc, path, owner, group);
+}
+
+SyscallReturn
+chownImpl(SyscallDesc *desc, ThreadContext *tc,
+          std::string path, uint32_t owner, uint32_t group)
+{
+    auto p = tc->getProcessPtr();
 
     /* XXX endianess */
     uid_t hostOwner = owner;

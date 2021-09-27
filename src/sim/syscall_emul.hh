@@ -256,6 +256,8 @@ SyscallReturn gettidFunc(SyscallDesc *desc, ThreadContext *tc);
 /// Target chown() handler.
 SyscallReturn chownFunc(SyscallDesc *desc, ThreadContext *tc,
                         VPtr<> pathname, uint32_t owner, uint32_t group);
+SyscallReturn chownImpl(SyscallDesc *desc, ThreadContext *tc,
+                        std::string path, uint32_t owner, uint32_t group);
 
 /// Target getpgrpFunc() handler.
 SyscallReturn getpgrpFunc(SyscallDesc *desc, ThreadContext *tc);
@@ -1017,6 +1019,25 @@ renameatFunc(SyscallDesc *desc, ThreadContext *tc,
     }
 
     return renameImpl(desc, tc, old_name, new_name);
+}
+
+/// Target fchownat() handler
+template <class OS>
+SyscallReturn
+fchownatFunc(SyscallDesc *desc, ThreadContext *tc,
+             int dirfd, VPtr<> pathname, uint32_t owner, uint32_t group,
+             int flags)
+{
+    std::string path;
+    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
+        return -EFAULT;
+
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
+
+    return chownImpl(desc, tc, path, owner, group);
 }
 
 /// Target sysinfo() handler.
