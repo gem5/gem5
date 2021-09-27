@@ -403,10 +403,17 @@ readlinkFunc(SyscallDesc *desc, ThreadContext *tc,
              VPtr<> pathname, VPtr<> buf_ptr, size_t bufsiz)
 {
     std::string path;
-    auto p = tc->getProcessPtr();
-
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
+
+    return readlinkImpl(desc, tc, path, buf_ptr, bufsiz);
+}
+
+SyscallReturn
+readlinkImpl(SyscallDesc *desc, ThreadContext *tc,
+             std::string path, VPtr<> buf_ptr, size_t bufsiz)
+{
+    auto p = tc->getProcessPtr();
 
     // Adjust path for cwd and redirection
     path = p->checkPathRedirect(path);
@@ -460,11 +467,16 @@ SyscallReturn
 unlinkFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname)
 {
     std::string path;
-    auto p = tc->getProcessPtr();
-
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
 
+    return unlinkImpl(desc, tc, path);
+}
+
+SyscallReturn
+unlinkImpl(SyscallDesc *desc, ThreadContext *tc, std::string path)
+{
+    auto p = tc->getProcessPtr();
     path = p->checkPathRedirect(path);
 
     int result = unlink(path.c_str());
@@ -531,8 +543,6 @@ SyscallReturn
 renameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> oldpath,
            VPtr<> newpath)
 {
-    auto p = tc->getProcessPtr();
-
     SETranslatingPortProxy proxy(tc);
     std::string old_name;
     if (!proxy.tryReadString(old_name, oldpath))
@@ -542,6 +552,15 @@ renameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> oldpath,
     if (!proxy.tryReadString(new_name, newpath))
         return -EFAULT;
 
+    return renameImpl(desc, tc, old_name, new_name);
+}
+
+SyscallReturn
+renameImpl(SyscallDesc *desc, ThreadContext *tc,
+           std::string old_name, std::string new_name)
+{
+    auto p = tc->getProcessPtr();
+
     // Adjust path for cwd and redirection
     old_name = p->checkPathRedirect(old_name);
     new_name = p->checkPathRedirect(new_name);
@@ -549,6 +568,7 @@ renameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> oldpath,
     int64_t result = rename(old_name.c_str(), new_name.c_str());
     return (result == -1) ? -errno : result;
 }
+
 
 SyscallReturn
 truncateFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
@@ -1011,10 +1031,17 @@ accessFunc(SyscallDesc *desc, ThreadContext *tc,
            VPtr<> pathname, mode_t mode)
 {
     std::string path;
-    auto p = tc->getProcessPtr();
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
 
+    return accessImpl(desc, tc, path, mode);
+}
+
+SyscallReturn
+accessImpl(SyscallDesc *desc, ThreadContext *tc,
+           std::string path, mode_t mode)
+{
+    auto p = tc->getProcessPtr();
     // Adjust path for cwd and redirection
     path = p->checkPathRedirect(path);
 

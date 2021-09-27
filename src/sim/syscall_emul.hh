@@ -191,10 +191,14 @@ SyscallReturn getcwdFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Target readlink() handler.
 SyscallReturn readlinkFunc(SyscallDesc *desc, ThreadContext *tc,
                            VPtr<> pathname, VPtr<> buf, size_t bufsiz);
+SyscallReturn readlinkImpl(SyscallDesc *desc, ThreadContext *tc,
+                           std::string path, VPtr<> buf, size_t bufsiz);
 
 /// Target unlink() handler.
 SyscallReturn unlinkFunc(SyscallDesc *desc, ThreadContext *tc,
                          VPtr<> pathname);
+SyscallReturn unlinkImpl(SyscallDesc *desc, ThreadContext *tc,
+                         std::string path);
 
 /// Target link() handler
 SyscallReturn linkFunc(SyscallDesc *desc, ThreadContext *tc,
@@ -221,6 +225,8 @@ SyscallReturn rmdirFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname);
 /// Target rename() handler.
 SyscallReturn renameFunc(SyscallDesc *desc, ThreadContext *tc,
                          VPtr<> oldpath, VPtr<> newpath);
+SyscallReturn renameImpl(SyscallDesc *desc, ThreadContext *tc,
+                         std::string oldpath, std::string newpath);
 
 
 /// Target truncate() handler.
@@ -353,6 +359,8 @@ SyscallReturn getegidFunc(SyscallDesc *desc, ThreadContext *tc);
 /// Target access() handler
 SyscallReturn accessFunc(SyscallDesc *desc, ThreadContext *tc,
                          VPtr<> pathname, mode_t mode);
+SyscallReturn accessImpl(SyscallDesc *desc, ThreadContext *tc,
+                         std::string path, mode_t mode);
 
 // Target getsockopt() handler.
 SyscallReturn getsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
@@ -916,10 +924,14 @@ template <class OS>
 SyscallReturn
 unlinkatFunc(SyscallDesc *desc, ThreadContext *tc, int dirfd, VPtr<> pathname)
 {
+    std::string path;
+    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
+        return -EFAULT;
+
     if (dirfd != OS::TGT_AT_FDCWD)
         warn("unlinkat: first argument not AT_FDCWD; unlikely to work");
 
-    return unlinkFunc(desc, tc, pathname);
+    return unlinkImpl(desc, tc, path);
 }
 
 /// Target facessat() handler
@@ -928,9 +940,14 @@ SyscallReturn
 faccessatFunc(SyscallDesc *desc, ThreadContext *tc,
               int dirfd, VPtr<> pathname, int mode)
 {
+    std::string path;
+    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
+        return -EFAULT;
+
     if (dirfd != OS::TGT_AT_FDCWD)
         warn("faccessat: first argument not AT_FDCWD; unlikely to work");
-    return accessFunc(desc, tc, pathname, mode);
+
+    return accessImpl(desc, tc, path, mode);
 }
 
 /// Target readlinkat() handler
@@ -939,9 +956,14 @@ SyscallReturn
 readlinkatFunc(SyscallDesc *desc, ThreadContext *tc,
                int dirfd, VPtr<> pathname, VPtr<> buf, size_t bufsiz)
 {
+    std::string path;
+    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
+        return -EFAULT;
+
     if (dirfd != OS::TGT_AT_FDCWD)
         warn("openat: first argument not AT_FDCWD; unlikely to work");
-    return readlinkFunc(desc, tc, pathname, buf, bufsiz);
+
+    return readlinkImpl(desc, tc, path, buf, bufsiz);
 }
 
 /// Target renameat() handler.
@@ -950,13 +972,22 @@ SyscallReturn
 renameatFunc(SyscallDesc *desc, ThreadContext *tc,
              int olddirfd, VPtr<> oldpath, int newdirfd, VPtr<> newpath)
 {
+    SETranslatingPortProxy proxy(tc);
+    std::string old_name;
+    if (!proxy.tryReadString(old_name, oldpath))
+        return -EFAULT;
+
+    std::string new_name;
+    if (!proxy.tryReadString(new_name, newpath))
+        return -EFAULT;
+
     if (olddirfd != OS::TGT_AT_FDCWD)
         warn("renameat: first argument not AT_FDCWD; unlikely to work");
 
     if (newdirfd != OS::TGT_AT_FDCWD)
         warn("renameat: third argument not AT_FDCWD; unlikely to work");
 
-    return renameFunc(desc, tc, oldpath, newpath);
+    return renameImpl(desc, tc, old_name, new_name);
 }
 
 /// Target sysinfo() handler.
