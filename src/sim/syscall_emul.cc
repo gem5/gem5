@@ -443,11 +443,17 @@ symlinkFunc(SyscallDesc *desc, ThreadContext *tc,
 SyscallReturn
 mkdirFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname, mode_t mode)
 {
-    auto p = tc->getProcessPtr();
     std::string path;
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
 
+    return mkdirImpl(desc, tc, path, mode);
+}
+
+SyscallReturn
+mkdirImpl(SyscallDesc *desc, ThreadContext *tc, std::string path, mode_t mode)
+{
+    auto p = tc->getProcessPtr();
     path = p->checkPathRedirect(path);
 
     auto result = mkdir(path.c_str(), mode);

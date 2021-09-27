@@ -197,6 +197,8 @@ SyscallReturn symlinkFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Target mkdir() handler.
 SyscallReturn mkdirFunc(SyscallDesc *desc, ThreadContext *tc,
                         VPtr<> pathname, mode_t mode);
+SyscallReturn mkdirImpl(SyscallDesc *desc, ThreadContext *tc,
+                        std::string path, mode_t mode);
 
 /// Target mknod() handler.
 SyscallReturn mknodFunc(SyscallDesc *desc, ThreadContext *tc,
@@ -1070,6 +1072,24 @@ fchownatFunc(SyscallDesc *desc, ThreadContext *tc,
     }
 
     return chownImpl(desc, tc, path, owner, group);
+}
+
+/// Target mkdirat() handler
+template <class OS>
+SyscallReturn
+mkdiratFunc(SyscallDesc *desc, ThreadContext *tc,
+            int dirfd, VPtr<> pathname, mode_t mode)
+{
+    std::string path;
+    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
+        return -EFAULT;
+
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
+
+    return mkdirImpl(desc, tc, path, mode);
 }
 
 /// Target sysinfo() handler.
