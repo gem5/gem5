@@ -2301,7 +2301,7 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
     te.pfn            = descriptor.pfn();
     te.domain         = descriptor.domain();
     te.lookupLevel    = descriptor.lookupLevel;
-    te.ns             = !descriptor.secure(haveSecurity, currState) || isStage2;
+    te.ns             = !descriptor.secure(haveSecurity, currState);
     te.nstid          = !currState->isSecure;
     te.xn             = descriptor.xn();
     te.type           = currState->mode == BaseMMU::Execute ?
