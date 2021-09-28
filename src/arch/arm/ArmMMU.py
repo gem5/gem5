@@ -70,8 +70,6 @@ class ArmMMU(BaseMMU):
     itb = ArmTLB(entry_type="instruction", next_level=Parent.l2_shared)
     dtb = ArmTLB(entry_type="data", next_level=Parent.l2_shared)
 
-    sys = Param.System(Parent.any, "system object parameter")
-
     stage2_itb = Param.ArmTLB(
         ArmStage2TLB(entry_type="instruction"),
         "Stage 2 Instruction TLB")
