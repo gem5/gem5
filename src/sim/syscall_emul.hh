@@ -2075,18 +2075,20 @@ gettimeofdayFunc(SyscallDesc *desc, ThreadContext *tc,
     return 0;
 }
 
-
-/// Target utimes() handler.
+/// Target futimesat() handler.
 template <class OS>
 SyscallReturn
-utimesFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
-           VPtr<typename OS::timeval [2]> tp)
+futimesatFunc(SyscallDesc *desc, ThreadContext *tc,
+              int dirfd, VPtr<> pathname, VPtr<typename OS::timeval [2]> tp)
 {
     std::string path;
-    auto process = tc->getProcessPtr();
-
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
+
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
 
     struct timeval hostTimeval[2];
     for (int i = 0; i < 2; ++i) {
@@ -2095,6 +2097,7 @@ utimesFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
     }
 
     // Adjust path for cwd and redirection
+    auto process = tc->getProcessPtr();
     path = process->checkPathRedirect(path);
 
     int result = utimes(path.c_str(), hostTimeval);
@@ -2103,6 +2106,15 @@ utimesFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
         return -errno;
 
     return 0;
+}
+
+/// Target utimes() handler.
+template <class OS>
+SyscallReturn
+utimesFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
+           VPtr<typename OS::timeval [2]> tp)
+{
+    return futimesatFunc<OS>(desc, tc, OS::TGT_AT_FDCWD, pathname, tp);
 }
 
 template <class OS>
