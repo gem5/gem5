@@ -35,6 +35,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects.ArmSystem import ArmRelease
 from m5.objects.ArmTLB import ArmTLB, ArmStage2TLB
 from m5.objects.BaseMMU import BaseMMU
 from m5.objects.ClockedObject import ClockedObject
@@ -88,6 +89,9 @@ class ArmMMU(BaseMMU):
         ArmStage2TableWalker(), "HW Table walker")
 
     sys = Param.System(Parent.any, "system object parameter")
+
+    release_se = Param.ArmRelease(Parent.isa[0].release_se,
+        "Set of features/extensions to use in SE mode")
 
     @classmethod
     def walkerPorts(cls):

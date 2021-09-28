@@ -1040,9 +1040,7 @@ class TableWalker : public ClockedObject
     unsigned numSquashable;
 
     /** Cached copies of system-level properties */
-    bool haveSecurity;
-    bool _haveLPAE;
-    bool _haveVirtualization;
+    const ArmRelease *release;
     uint8_t _physAddrRange;
     bool _haveLargeAsid64;
 
@@ -1076,8 +1074,6 @@ class TableWalker : public ClockedObject
     TableWalker(const Params &p);
     virtual ~TableWalker();
 
-    bool haveLPAE() const { return _haveLPAE; }
-    bool haveVirtualization() const { return _haveVirtualization; }
     bool haveLargeAsid64() const { return _haveLargeAsid64; }
     uint8_t physAddrRange() const { return _physAddrRange; }
     /** Checks if all state is cleared and if so, completes drain */
@@ -1096,7 +1092,7 @@ class TableWalker : public ClockedObject
                bool timing, bool functional, bool secure,
                MMU::ArmTranslationType tranType, bool _stage2Req);
 
-    void setMmu(MMU *_mmu) { mmu = _mmu; }
+    void setMmu(MMU *_mmu);
     void setTlb(TLB *_tlb) { tlb = _tlb; }
     TLB* getTlb() { return tlb; }
     void memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,

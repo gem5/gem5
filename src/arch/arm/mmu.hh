@@ -342,6 +342,8 @@ class MMU : public BaseMMU
         _attr = attr;
     }
 
+    const ArmRelease* release() const { return _release; }
+
     /**
      * Determine the EL to use for the purpose of a translation given
      * a specific translation type. If the translation type doesn't
@@ -432,8 +434,7 @@ class MMU : public BaseMMU
     uint64_t _attr;      // Memory attributes for last accessed TLB entry
 
     // Cached copies of system-level properties
-    bool haveLPAE;
-    bool haveVirtualization;
+    const ArmRelease *_release;
     bool haveLargeAsid64;
     uint8_t physAddrRange;
 

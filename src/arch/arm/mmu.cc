@@ -66,21 +66,22 @@ MMU::MMU(const ArmMMUParams &p)
     miscRegContext(0),
     s1State(this, false), s2State(this, true),
     _attr(0),
+    _release(nullptr),
     stats(this)
 {
     // Cache system-level properties
     if (FullSystem) {
         ArmSystem *arm_sys = dynamic_cast<ArmSystem *>(p.sys);
         assert(arm_sys);
-        haveLPAE = arm_sys->has(ArmExtension::LPAE);
-        haveVirtualization = arm_sys->has(ArmExtension::VIRTUALIZATION);
         haveLargeAsid64 = arm_sys->haveLargeAsid64();
         physAddrRange = arm_sys->physAddrRange();
+
+        _release = arm_sys->releaseFS();
     } else {
-        haveLPAE = false;
-        haveVirtualization = false;
         haveLargeAsid64 = false;
         physAddrRange = 48;
+
+        _release = p.release_se;
     }
 
     m5opRange = p.sys->m5opRange();
@@ -1249,7 +1250,7 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
 
         scr = tc->readMiscReg(MISCREG_SCR_EL3);
         isPriv = aarch64EL != EL0;
-        if (mmu->haveVirtualization) {
+        if (mmu->release()->has(ArmExtension::VIRTUALIZATION)) {
             vmid = getVMID(tc);
             isHyp = aarch64EL == EL2;
             isHyp |= tran_type & HypMode;
@@ -1312,7 +1313,7 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
                                !isSecure));
         hcr  = tc->readMiscReg(MISCREG_HCR);
 
-        if (mmu->haveVirtualization) {
+        if (mmu->release()->has(ArmExtension::VIRTUALIZATION)) {
             vmid   = bits(tc->readMiscReg(MISCREG_VTTBR), 55, 48);
             isHyp  = cpsr.mode == MODE_HYP;
             isHyp |=  tran_type & HypMode;

@@ -66,6 +66,7 @@ TableWalker::TableWalker(const Params &p)
       isStage2(p.is_stage2), tlb(NULL),
       currState(NULL), pending(false),
       numSquashable(p.num_squash_per_cycle),
+      release(nullptr),
       stats(this),
       pendingReqs(0),
       pendingChangeTick(curTick()),
@@ -85,13 +86,9 @@ TableWalker::TableWalker(const Params &p)
     if (FullSystem) {
         ArmSystem *arm_sys = dynamic_cast<ArmSystem *>(p.sys);
         assert(arm_sys);
-        haveSecurity = arm_sys->has(ArmExtension::SECURITY);
-        _haveLPAE = arm_sys->has(ArmExtension::LPAE);
-        _haveVirtualization = arm_sys->has(ArmExtension::VIRTUALIZATION);
         _physAddrRange = arm_sys->physAddrRange();
         _haveLargeAsid64 = arm_sys->haveLargeAsid64();
     } else {
-        haveSecurity = _haveLPAE = _haveVirtualization = false;
         _haveLargeAsid64 = false;
         _physAddrRange = 48;
     }
@@ -116,6 +113,13 @@ TableWalker::getPort(const std::string &if_name, PortID idx)
         return *port;
     }
     return ClockedObject::getPort(if_name, idx);
+}
+
+void
+TableWalker::setMmu(MMU *_mmu)
+{
+    mmu = _mmu;
+    release = mmu->release();
 }
 
 TableWalker::WalkerState::WalkerState() :
@@ -388,12 +392,12 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
             currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL1);
             break;
           case EL2:
-            assert(_haveVirtualization);
+            assert(release->has(ArmExtension::VIRTUALIZATION));
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL2);
             currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL2);
             break;
           case EL3:
-            assert(haveSecurity);
+            assert(release->has(ArmExtension::SECURITY));
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL3);
             currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL3);
             break;
@@ -579,6 +583,7 @@ TableWalker::processWalk()
     // If translation isn't enabled, we shouldn't be here
     assert(currState->sctlr.m || isStage2);
     const bool is_atomic = currState->req->isAtomic();
+    const bool have_security = release->has(ArmExtension::SECURITY);
 
     DPRINTF(TLB, "Beginning table walk for address %#x, TTBCR: %#x, bits:%#x\n",
             currState->vaddr_tainted, currState->ttbcr, mbits(currState->vaddr, 31,
@@ -590,7 +595,7 @@ TableWalker::processWalk()
                                           32 - currState->ttbcr.n)) {
         DPRINTF(TLB, " - Selecting TTBR0\n");
         // Check if table walk is allowed when Security Extensions are enabled
-        if (haveSecurity && currState->ttbcr.pd0) {
+        if (have_security && currState->ttbcr.pd0) {
             if (currState->isFetch)
                 return std::make_shared<PrefetchAbort>(
                     currState->vaddr_tainted,
@@ -610,7 +615,7 @@ TableWalker::processWalk()
     } else {
         DPRINTF(TLB, " - Selecting TTBR1\n");
         // Check if table walk is allowed when Security Extensions are enabled
-        if (haveSecurity && currState->ttbcr.pd1) {
+        if (have_security && currState->ttbcr.pd1) {
             if (currState->isFetch)
                 return std::make_shared<PrefetchAbort>(
                     currState->vaddr_tainted,
@@ -1414,7 +1419,7 @@ void
 TableWalker::memAttrsLPAE(ThreadContext *tc, TlbEntry &te,
     LongDescriptor &l_descriptor)
 {
-    assert(_haveLPAE);
+    assert(release->has(ArmExtension::LPAE));
 
     uint8_t attr;
     uint8_t sh = l_descriptor.sh();
@@ -2250,6 +2255,7 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
 void
 TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
 {
+    const bool have_security = release->has(ArmExtension::SECURITY);
     TlbEntry te;
 
     // Create and fill a new page table entry
@@ -2264,7 +2270,7 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
     te.pfn            = descriptor.pfn();
     te.domain         = descriptor.domain();
     te.lookupLevel    = descriptor.lookupLevel;
-    te.ns             = !descriptor.secure(haveSecurity, currState);
+    te.ns             = !descriptor.secure(have_security, currState);
     te.nstid          = !currState->isSecure;
     te.xn             = descriptor.xn();
     te.type           = currState->mode == BaseMMU::Execute ?
