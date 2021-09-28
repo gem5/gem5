@@ -143,7 +143,7 @@ IEW::regProbePoints()
 }
 
 IEW::IEWStats::IEWStats(CPU *cpu)
-    : statistics::Group(cpu),
+    : statistics::Group(cpu, "iew"),
     ADD_STAT(idleCycles, statistics::units::Cycle::get(),
              "Number of cycles IEW is idle"),
     ADD_STAT(squashCycles, statistics::units::Cycle::get(),

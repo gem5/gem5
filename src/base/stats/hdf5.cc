@@ -39,6 +39,8 @@
 
 #include "base/logging.hh"
 #include "base/stats/info.hh"
+#include "base/trace.hh"
+#include "debug/Stats.hh"
 
 namespace gem5
 {
@@ -254,6 +256,8 @@ Hdf5::appendStat(const Info &info, int rank, hsize_t *dims, const double *data)
 
         fspace = H5::DataSpace(rank, dims, max_dims.data());
         try {
+            DPRINTF(Stats, "Creating dataset %s in group %s\n",
+                info.name, group.getObjName());
             data_set = group.createDataSet(info.name,
                 H5::PredType::NATIVE_DOUBLE, fspace, props);
         } catch (const H5::Exception &e) {

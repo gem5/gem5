@@ -44,7 +44,6 @@ import re
 import os
 from testlib import *
 
-
 if config.bin_path:
     resource_path = config.bin_path
 else:
@@ -68,12 +67,20 @@ if have_hdf5():
     ok_exit_regex = re.compile(
         r"Exiting @ tick \d+ because exiting with last active thread context"
     )
+    ok_verifier = verifier.MatchRegex(ok_exit_regex)
 
-    stdout_verifier = verifier.MatchRegex(ok_exit_regex)
+    # FIXME: flaky, should check return code instead...
+    # See: https://gem5.atlassian.net/browse/GEM5-1099
+    err_regex = re.compile(
+        r'RuntimeError: Failed creating H5::DataSet \w+; .*'
+    )
+    err_verifier = verifier.NoMatchRegex(err_regex, True, False)
+
     h5_verifier = verifier.CheckH5StatsExist()
+
     gem5_verify_config(
         name="hdf5_test",
-        verifiers=[stdout_verifier, h5_verifier],
+        verifiers=[ok_verifier, err_verifier, h5_verifier],
         fixtures=(),
         config=joinpath(
             config.base_dir,
@@ -92,3 +99,4 @@ if have_hdf5():
         gem5_args=["--stats-file=h5://stats.h5"],
         valid_isas=(constants.arm_tag,),
     )
+
