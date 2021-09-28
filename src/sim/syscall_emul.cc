@@ -928,11 +928,18 @@ SyscallReturn
 mknodFunc(SyscallDesc *desc, ThreadContext *tc,
           VPtr<> pathname, mode_t mode, dev_t dev)
 {
-    auto p = tc->getProcessPtr();
     std::string path;
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
 
+    return mknodImpl(desc, tc, path, mode, dev);
+}
+
+SyscallReturn
+mknodImpl(SyscallDesc *desc, ThreadContext *tc,
+          std::string path, mode_t mode, dev_t dev)
+{
+    auto p = tc->getProcessPtr();
     path = p->checkPathRedirect(path);
 
     auto result = mknod(path.c_str(), mode, dev);

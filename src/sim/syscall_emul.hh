@@ -203,6 +203,8 @@ SyscallReturn mkdirImpl(SyscallDesc *desc, ThreadContext *tc,
 /// Target mknod() handler.
 SyscallReturn mknodFunc(SyscallDesc *desc, ThreadContext *tc,
                         VPtr<> pathname, mode_t mode, dev_t dev);
+SyscallReturn mknodImpl(SyscallDesc *desc, ThreadContext *tc,
+                        std::string path, mode_t mode, dev_t dev);
 
 /// Target chdir() handler.
 SyscallReturn chdirFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname);
@@ -1090,6 +1092,24 @@ mkdiratFunc(SyscallDesc *desc, ThreadContext *tc,
     }
 
     return mkdirImpl(desc, tc, path, mode);
+}
+
+/// Target mknodat() handler
+template <class OS>
+SyscallReturn
+mknodatFunc(SyscallDesc *desc, ThreadContext *tc,
+            int dirfd, VPtr<> pathname, mode_t mode, dev_t dev)
+{
+    std::string path;
+    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
+        return -EFAULT;
+
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
+
+    return mknodImpl(desc, tc, path, mode, dev);
 }
 
 /// Target sysinfo() handler.
