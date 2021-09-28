@@ -448,7 +448,7 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 323, "mkdirat", mkdiratFunc<ArmLinux32> },
         { base + 324, "mknodat", mknodatFunc<ArmLinux32> },
         { base + 325, "fchownat", fchownatFunc<ArmLinux32> },
-        { base + 326, "futimesat" },
+        { base + 326, "futimesat", futimesatFunc<ArmLinux32> },
         { base + 327, "fstatat64" },
         { base + 328, "unlinkat", unlinkatFunc<ArmLinux32> },
         { base + 329, "renameat", renameatFunc<ArmLinux32> },
@@ -804,7 +804,7 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
 #else
         { base + 1065, "getdents" },
 #endif
-        { base + 1066, "futimesat" },
+        { base + 1066, "futimesat", futimesatFunc<ArmLinux64> },
         { base + 1067, "select" },
         { base + 1068, "poll" },
         { base + 1069, "epoll_wait" },
