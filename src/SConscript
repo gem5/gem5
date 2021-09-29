@@ -307,10 +307,7 @@ class Executable(TopLevelBase):
         env['BIN_RPATH_PREFIX'] = os.path.relpath(
                 env['BUILDDIR'], self.path(env).dir.abspath)
 
-        date_obj = env.StaticObject(date_source)
-        env.Depends(date_obj, objs)
-
-        executable = env.Program(self.path(env).abspath, [date_obj, objs])[0]
+        executable = env.Program(self.path(env).abspath, objs)[0]
 
         if sys.platform == 'sunos5':
             cmd = 'cp $SOURCE $TARGET; strip $TARGET'
@@ -320,6 +317,19 @@ class Executable(TopLevelBase):
                 executable, MakeAction(cmd, Transform("STRIP")))[0]
 
         return [executable, stripped]
+
+class Gem5(Executable):
+    '''Base class for the main gem5 executable.'''
+
+    def declare(self, env):
+        objs = self.srcs_to_objs(env, self.sources(env))
+
+        date_obj = env.StaticObject(date_source)
+        env.Depends(date_obj, objs)
+        objs.append(date_obj)
+
+        return super(Gem5, self).declare(env, objs)
+
 
 class GTest(Executable):
     '''Create a unit test based on the google test framework.'''
@@ -990,7 +1000,7 @@ if GetOption('without_python'):
 StaticLib(lib_name, lib_filter)
 SharedLib(lib_name, lib_filter)
 
-Executable('gem5', with_any_tags('gem5 lib', 'main'))
+Gem5('gem5', with_any_tags('gem5 lib', 'main'))
 
 
 # Function to create a new build environment as clone of current
