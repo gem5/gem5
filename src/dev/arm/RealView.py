@@ -1449,5 +1449,5 @@ class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
 
     def setupBootLoader(self, cur_sys, loc, boot_loader=None):
         if boot_loader is None:
-            boot_loader = [ loc('boot_v2.arm64') ]
+            boot_loader = [ loc('boot_foundation.arm64') ]
         super().setupBootLoader(cur_sys, boot_loader)
