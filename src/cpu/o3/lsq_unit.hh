@@ -97,9 +97,9 @@ class LSQUnit
     {
       private:
         /** The instruction. */
-        DynInstPtr inst;
+        DynInstPtr _inst;
         /** The request. */
-        LSQRequest* req = nullptr;
+        LSQRequest* _request = nullptr;
         /** The size of the operation. */
         uint32_t _size = 0;
         /** Valid entry. */
@@ -108,20 +108,20 @@ class LSQUnit
       public:
         ~LSQEntry()
         {
-            if (req != nullptr) {
-                req->freeLSQEntry();
-                req = nullptr;
+            if (_request != nullptr) {
+                _request->freeLSQEntry();
+                _request = nullptr;
             }
         }
 
         void
         clear()
         {
-            inst = nullptr;
-            if (req != nullptr) {
-                req->freeLSQEntry();
+            _inst = nullptr;
+            if (_request != nullptr) {
+                _request->freeLSQEntry();
             }
-            req = nullptr;
+            _request = nullptr;
             _valid = false;
             _size = 0;
         }
@@ -130,20 +130,20 @@ class LSQUnit
         set(const DynInstPtr& new_inst)
         {
             assert(!_valid);
-            inst = new_inst;
+            _inst = new_inst;
             _valid = true;
             _size = 0;
         }
 
-        LSQRequest* request() { return req; }
-        void setRequest(LSQRequest* r) { req = r; }
-        bool hasRequest() { return req != nullptr; }
+        LSQRequest* request() { return _request; }
+        void setRequest(LSQRequest* r) { _request = r; }
+        bool hasRequest() { return _request != nullptr; }
         /** Member accessors. */
         /** @{ */
         bool valid() const { return _valid; }
         uint32_t& size() { return _size; }
         const uint32_t& size() const { return _size; }
-        const DynInstPtr& instruction() const { return inst; }
+        const DynInstPtr& instruction() const { return _inst; }
         /** @} */
     };
 
@@ -443,7 +443,7 @@ class LSQUnit
     ThreadID lsqID;
   public:
     /** The store queue. */
-    CircularQueue<SQEntry> storeQueue;
+    StoreQueue storeQueue;
 
     /** The load queue. */
     LoadQueue loadQueue;
@@ -539,10 +539,10 @@ class LSQUnit
 
   public:
     /** Executes the load at the given index. */
-    Fault read(LSQRequest *req, int load_idx);
+    Fault read(LSQRequest *request, int load_idx);
 
     /** Executes the store at the given index. */
-    Fault write(LSQRequest *req, uint8_t *data, int store_idx);
+    Fault write(LSQRequest *request, uint8_t *data, int store_idx);
 
     /** Returns the index of the head load instruction. */
     int getLoadHead() { return loadQueue.head(); }
@@ -560,8 +560,6 @@ class LSQUnit
   public:
     typedef typename CircularQueue<LQEntry>::iterator LQIterator;
     typedef typename CircularQueue<SQEntry>::iterator SQIterator;
-    typedef CircularQueue<LQEntry> LQueue;
-    typedef CircularQueue<SQEntry> SQueue;
 };
 
 } // namespace o3

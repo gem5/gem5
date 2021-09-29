@@ -248,7 +248,7 @@ class LSQ
         uint32_t _taskId;
         PacketDataPtr _data;
         std::vector<PacketPtr> _packets;
-        std::vector<RequestPtr> _requests;
+        std::vector<RequestPtr> _reqs;
         std::vector<Fault> _fault;
         uint64_t* _res;
         const Addr _addr;
@@ -257,6 +257,7 @@ class LSQ
         std::vector<bool> _byteEnable;
         uint32_t _numOutstandingPackets;
         AtomicOpFunctorPtr _amo_op;
+
       protected:
         LSQUnit* lsqUnit() { return &_port; }
         LSQRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad);
@@ -309,7 +310,7 @@ class LSQ
          * The request is only added if there is at least one active
          * element in the mask.
          */
-        void addRequest(Addr addr, unsigned size,
+        void addReq(Addr addr, unsigned size,
                 const std::vector<bool>& byte_enable);
 
         /** Destructor.
@@ -325,7 +326,7 @@ class LSQ
         void
         setContext(const ContextID& context_id)
         {
-            request()->setContext(context_id);
+            req()->setContext(context_id);
         }
 
         const DynInstPtr& instruction() { return _inst; }
@@ -337,7 +338,7 @@ class LSQ
         setVirt(Addr vaddr, unsigned size, Request::Flags flags_,
                 RequestorID requestor_id, Addr pc)
         {
-            request()->setVirt(vaddr, size, flags_, requestor_id, pc);
+            req()->setVirt(vaddr, size, flags_, requestor_id, pc);
         }
 
         ContextID contextId() const;
@@ -346,20 +347,16 @@ class LSQ
         taskId(const uint32_t& v)
         {
             _taskId = v;
-            for (auto& r: _requests)
+            for (auto& r: _reqs)
                 r->taskId(v);
         }
 
         uint32_t taskId() const { return _taskId; }
-        RequestPtr request(int idx = 0) { return _requests.at(idx); }
 
-        const RequestPtr
-        request(int idx = 0) const
-        {
-            return _requests.at(idx);
-        }
+        RequestPtr req(int idx = 0) { return _reqs.at(idx); }
+        const RequestPtr req(int idx = 0) const { return _reqs.at(idx); }
 
-        Addr getVaddr(int idx = 0) const { return request(idx)->getVaddr(); }
+        Addr getVaddr(int idx = 0) const { return req(idx)->getVaddr(); }
         virtual void initiateTranslation() = 0;
 
         PacketPtr packet(int idx = 0) { return _packets.at(idx); }
@@ -372,10 +369,10 @@ class LSQ
         }
 
         virtual RequestPtr
-        mainRequest()
+        mainReq()
         {
-            assert (_requests.size() == 1);
-            return request();
+            assert (_reqs.size() == 1);
+            return req();
         }
 
         /**
@@ -575,7 +572,7 @@ class LSQ
         using LSQRequest::_flags;
         using LSQRequest::_size;
         using LSQRequest::_byteEnable;
-        using LSQRequest::_requests;
+        using LSQRequest::_reqs;
         using LSQRequest::_inst;
         using LSQRequest::_packets;
         using LSQRequest::_port;
@@ -586,7 +583,7 @@ class LSQ
         using LSQRequest::isLoad;
         using LSQRequest::isTranslationComplete;
         using LSQRequest::lsqUnit;
-        using LSQRequest::request;
+        using LSQRequest::req;
         using LSQRequest::sendFragmentToTranslation;
         using LSQRequest::setState;
         using LSQRequest::numInTranslationFragments;
@@ -627,7 +624,7 @@ class LSQ
         using LSQRequest::_addr;
         using LSQRequest::_size;
         using LSQRequest::_byteEnable;
-        using LSQRequest::_requests;
+        using LSQRequest::_reqs;
         using LSQRequest::_inst;
         using LSQRequest::_taskId;
         using LSQRequest::flags;
@@ -656,7 +653,7 @@ class LSQ
         using LSQRequest::_inst;
         using LSQRequest::_packets;
         using LSQRequest::_port;
-        using LSQRequest::_requests;
+        using LSQRequest::_reqs;
         using LSQRequest::_res;
         using LSQRequest::_byteEnable;
         using LSQRequest::_size;
@@ -668,14 +665,14 @@ class LSQ
         using LSQRequest::lsqUnit;
         using LSQRequest::numInTranslationFragments;
         using LSQRequest::numTranslatedFragments;
-        using LSQRequest::request;
+        using LSQRequest::req;
         using LSQRequest::sendFragmentToTranslation;
         using LSQRequest::setState;
         using LSQRequest::_numOutstandingPackets;
 
         uint32_t numFragments;
         uint32_t numReceivedPackets;
-        RequestPtr mainReq;
+        RequestPtr _mainReq;
         PacketPtr _mainPacket;
 
       public:
@@ -687,15 +684,15 @@ class LSQ
                        nullptr),
             numFragments(0),
             numReceivedPackets(0),
-            mainReq(nullptr),
+            _mainReq(nullptr),
             _mainPacket(nullptr)
         {
             flags.set(Flag::IsSplit);
         }
         virtual ~SplitDataRequest()
         {
-            if (mainReq) {
-                mainReq = nullptr;
+            if (_mainReq) {
+                _mainReq = nullptr;
             }
             if (_mainPacket) {
                 delete _mainPacket;
@@ -713,7 +710,7 @@ class LSQ
                 gem5::ThreadContext *thread, PacketPtr pkt);
         virtual bool isCacheBlockHit(Addr blockAddr, Addr cacheBlockMask);
 
-        virtual RequestPtr mainRequest();
+        virtual RequestPtr mainReq();
         virtual PacketPtr mainPacket();
         virtual std::string name() const { return "SplitDataRequest"; }
     };
@@ -899,12 +896,12 @@ class LSQ
     /** Executes a read operation, using the load specified at the load
      * index.
      */
-    Fault read(LSQRequest* req, int load_idx);
+    Fault read(LSQRequest* request, int load_idx);
 
     /** Executes a store operation, using the store specified at the store
      * index.
      */
-    Fault write(LSQRequest* req, uint8_t *data, int store_idx);
+    Fault write(LSQRequest* request, uint8_t *data, int store_idx);
 
     /**
      * Retry the previous send that failed.

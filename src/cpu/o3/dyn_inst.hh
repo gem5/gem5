@@ -400,7 +400,7 @@ class DynInst : public ExecContext, public RefCounted
      * Saved memory request (needed when the DTB address translation is
      * delayed due to a hw page table walk).
      */
-    LSQ::LSQRequest *savedReq;
+    LSQ::LSQRequest *savedRequest;
 
     /////////////////////// Checker //////////////////////
     // Need a copy of main request pointer to verify on writes.
