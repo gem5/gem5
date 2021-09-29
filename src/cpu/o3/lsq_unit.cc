@@ -92,25 +92,21 @@ LSQUnit::WritebackEvent::description() const
 bool
 LSQUnit::recvTimingResp(PacketPtr pkt)
 {
-    auto senderState = dynamic_cast<LSQSenderState*>(pkt->senderState);
-    LSQRequest* req = senderState->request();
-    assert(req != nullptr);
+    LSQRequest *request = dynamic_cast<LSQRequest*>(pkt->senderState);
+    assert(request != nullptr);
     bool ret = true;
     /* Check that the request is still alive before any further action. */
-    if (senderState->alive()) {
-        ret = req->recvTimingResp(pkt);
-    } else {
-        senderState->outstanding--;
+    if (!request->isReleased()) {
+        ret = request->recvTimingResp(pkt);
     }
     return ret;
-
 }
 
 void
 LSQUnit::completeDataAccess(PacketPtr pkt)
 {
-    LSQSenderState *state = dynamic_cast<LSQSenderState *>(pkt->senderState);
-    DynInstPtr inst = state->inst;
+    LSQRequest *request = dynamic_cast<LSQRequest *>(pkt->senderState);
+    DynInstPtr inst = request->instruction();
 
     // hardware transactional memory
     // sanity check
@@ -167,13 +163,9 @@ LSQUnit::completeDataAccess(PacketPtr pkt)
 
     cpu->ppDataAccessComplete->notify(std::make_pair(inst, pkt));
 
-    /* Notify the sender state that the access is complete (for ownership
-     * tracking). */
-    state->complete();
-
     assert(!cpu->switchedOut());
     if (!inst->isSquashed()) {
-        if (state->needWB) {
+        if (request->needWBToRegister()) {
             // Only loads, store conditionals and atomics perform the writeback
             // after receving the response from the memory
             assert(inst->isLoad() || inst->isStoreConditional() ||
@@ -181,20 +173,19 @@ LSQUnit::completeDataAccess(PacketPtr pkt)
 
             // hardware transactional memory
             if (pkt->htmTransactionFailedInCache()) {
-                state->request()->mainPacket()->setHtmTransactionFailedInCache(
+                request->mainPacket()->setHtmTransactionFailedInCache(
                     pkt->getHtmTransactionFailedInCacheRC() );
             }
 
-            writeback(inst, state->request()->mainPacket());
+            writeback(inst, request->mainPacket());
             if (inst->isStore() || inst->isAtomic()) {
-                auto ss = dynamic_cast<SQSenderState*>(state);
-                ss->writebackDone();
-                completeStore(ss->idx);
+                request->writebackDone();
+                completeStore(request->instruction()->sqIt);
             }
         } else if (inst->isStore()) {
             // This is a regular store (i.e., not store conditionals and
             // atomics), so it can complete without writing back
-            completeStore(dynamic_cast<SQSenderState*>(state)->idx);
+            completeStore(request->instruction()->sqIt);
         }
     }
 }
@@ -397,6 +388,8 @@ LSQUnit::insertStore(const DynInstPtr& store_inst)
     storeQueue.advance_tail();
 
     store_inst->sqIdx = storeQueue.tail();
+    store_inst->sqIt = storeQueue.getIterator(store_inst->sqIdx);
+
     store_inst->lqIdx = loadQueue.tail() + 1;
     assert(store_inst->lqIdx > 0);
     store_inst->lqIt = loadQueue.end();
@@ -859,18 +852,6 @@ LSQUnit::writebackStores()
             memcpy(inst->memData, storeWBIt->data(), req->_size);
 
 
-        if (req->senderState() == nullptr) {
-            SQSenderState *state = new SQSenderState(storeWBIt);
-            state->isLoad = false;
-            state->needWB = false;
-            state->inst = inst;
-
-            req->senderState(state);
-            if (inst->isStoreConditional() || inst->isAtomic()) {
-                /* Only store conditionals and atomics need a writeback. */
-                state->needWB = true;
-            }
-        }
         req->buildPackets();
 
         DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%s "
@@ -1221,7 +1202,7 @@ LSQUnit::trySendPacket(bool isLoad, PacketPtr data_pkt)
     bool ret = true;
     bool cache_got_blocked = false;
 
-    auto state = dynamic_cast<LSQSenderState*>(data_pkt->senderState);
+    LSQRequest *request = dynamic_cast<LSQRequest*>(data_pkt->senderState);
 
     if (!lsq->cacheBlocked() &&
         lsq->cachePortAvailable(isLoad)) {
@@ -1238,22 +1219,21 @@ LSQUnit::trySendPacket(bool isLoad, PacketPtr data_pkt)
             isStoreBlocked = false;
         }
         lsq->cachePortBusy(isLoad);
-        state->outstanding++;
-        state->request()->packetSent();
+        request->packetSent();
     } else {
         if (cache_got_blocked) {
             lsq->cacheBlocked(true);
             ++stats.blockedByCache;
         }
         if (!isLoad) {
-            assert(state->request() == storeWBIt->request());
+            assert(request == storeWBIt->request());
             isStoreBlocked = true;
         }
-        state->request()->packetNotSent();
+        request->packetNotSent();
     }
     DPRINTF(LSQUnit, "Memory request (pkt: %s) from inst [sn:%llu] was"
             " %ssent (cache is blocked: %d, cache_got_blocked: %d)\n",
-            data_pkt->print(), state->inst->seqNum,
+            data_pkt->print(), request->instruction()->seqNum,
             ret ? "": "not ", lsq->cacheBlocked(), cache_got_blocked);
     return ret;
 }
@@ -1528,7 +1508,7 @@ LSQUnit::read(LSQRequest *req, int load_idx)
                     // This may happen if the store was not complete the
                     // first time this load got executed. Signal the senderSate
                     // that response packets should be discarded.
-                    req->discardSenderState();
+                    req->discard();
                 }
 
                 WritebackEvent *wb = new WritebackEvent(load_inst, data_pkt,
@@ -1609,14 +1589,6 @@ LSQUnit::read(LSQRequest *req, int load_idx)
     // and arbitrate between loads and stores.
 
     // if we the cache is not blocked, do cache access
-    if (req->senderState() == nullptr) {
-        LQSenderState *state = new LQSenderState(
-                loadQueue.getIterator(load_idx));
-        state->isLoad = true;
-        state->inst = load_inst;
-        state->isSplit = req->isSplit();
-        req->senderState(state);
-    }
     req->buildPackets();
     req->sendPacketToCache();
     if (!req->isSent())

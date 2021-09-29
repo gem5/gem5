@@ -64,16 +64,6 @@ namespace gem5
 namespace o3
 {
 
-LSQ::LSQSenderState::LSQSenderState(LSQRequest *request, bool is_load) :
-    _request(request), isLoad(is_load), needWB(is_load)
-{}
-
-ContextID
-LSQ::LSQSenderState::contextId()
-{
-    return inst->contextId();
-}
-
 LSQ::DcachePort::DcachePort(LSQ *_lsq, CPU *_cpu) :
     RequestPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq), cpu(_cpu)
 {}
@@ -402,8 +392,8 @@ LSQ::recvReqRetry()
 void
 LSQ::completeDataAccess(PacketPtr pkt)
 {
-    auto senderState = dynamic_cast<LSQSenderState*>(pkt->senderState);
-    thread[cpu->contextToThread(senderState->contextId())]
+    LSQRequest *request = dynamic_cast<LSQRequest*>(pkt->senderState);
+    thread[cpu->contextToThread(request->contextId())]
         .completeDataAccess(pkt);
 }
 
@@ -414,10 +404,10 @@ LSQ::recvTimingResp(PacketPtr pkt)
         DPRINTF(LSQ, "Got error packet back for address: %#X\n",
                 pkt->getAddr());
 
-    auto senderState = dynamic_cast<LSQSenderState*>(pkt->senderState);
-    panic_if(!senderState, "Got packet back with unknown sender state\n");
+    LSQRequest *request = dynamic_cast<LSQRequest*>(pkt->senderState);
+    panic_if(!request, "Got packet back with unknown sender state\n");
 
-    thread[cpu->contextToThread(senderState->contextId())].recvTimingResp(pkt);
+    thread[cpu->contextToThread(request->contextId())].recvTimingResp(pkt);
 
     if (pkt->isInvalidate()) {
         // This response also contains an invalidate; e.g. this can be the case
@@ -439,7 +429,7 @@ LSQ::recvTimingResp(PacketPtr pkt)
         }
     }
     // Update the LSQRequest state (this may delete the request)
-    senderState->request()->packetReplied();
+    request->packetReplied();
 
     return true;
 }
@@ -1041,14 +1031,15 @@ LSQ::SplitDataRequest::initiateTranslation()
 
 LSQ::LSQRequest::LSQRequest(
         LSQUnit *port, const DynInstPtr& inst, bool isLoad) :
-    _state(State::NotIssued), _senderState(nullptr),
+    _state(State::NotIssued),
     _port(*port), _inst(inst), _data(nullptr),
     _res(nullptr), _addr(0), _size(0), _flags(0),
     _numOutstandingPackets(0), _amo_op(nullptr)
 {
     flags.set(Flag::IsLoad, isLoad);
-    flags.set(Flag::WbStore,
-              _inst->isStoreConditional() || _inst->isAtomic());
+    flags.set(Flag::WriteBackToRegister,
+              _inst->isStoreConditional() || _inst->isAtomic() ||
+              _inst->isLoad());
     flags.set(Flag::IsAtomic, _inst->isAtomic());
     install();
 }
@@ -1057,7 +1048,7 @@ LSQ::LSQRequest::LSQRequest(
         LSQUnit *port, const DynInstPtr& inst, bool isLoad,
         const Addr& addr, const uint32_t& size, const Request::Flags& flags_,
            PacketDataPtr data, uint64_t* res, AtomicOpFunctorPtr amo_op)
-    : _state(State::NotIssued), _senderState(nullptr),
+    : _state(State::NotIssued),
     numTranslatedFragments(0),
     numInTranslationFragments(0),
     _port(*port), _inst(inst), _data(data),
@@ -1067,8 +1058,9 @@ LSQ::LSQRequest::LSQRequest(
     _amo_op(std::move(amo_op))
 {
     flags.set(Flag::IsLoad, isLoad);
-    flags.set(Flag::WbStore,
-              _inst->isStoreConditional() || _inst->isAtomic());
+    flags.set(Flag::WriteBackToRegister,
+              _inst->isStoreConditional() || _inst->isAtomic() ||
+              _inst->isLoad());
     flags.set(Flag::IsAtomic, _inst->isAtomic());
     install();
 }
@@ -1105,12 +1097,16 @@ LSQ::LSQRequest::~LSQRequest()
 {
     assert(!isAnyOutstandingRequest());
     _inst->savedReq = nullptr;
-    if (_senderState)
-        delete _senderState;
 
     for (auto r: _packets)
         delete r;
 };
+
+ContextID
+LSQ::LSQRequest::contextId() const
+{
+    return _inst->contextId();
+}
 
 void
 LSQ::LSQRequest::sendFragmentToTranslation(int i)
@@ -1124,9 +1120,7 @@ bool
 LSQ::SingleDataRequest::recvTimingResp(PacketPtr pkt)
 {
     assert(_numOutstandingPackets == 1);
-    auto state = dynamic_cast<LSQSenderState*>(pkt->senderState);
     flags.set(Flag::Complete);
-    state->outstanding--;
     assert(pkt == _packets.front());
     _port.completeDataAccess(pkt);
     return true;
@@ -1135,13 +1129,11 @@ LSQ::SingleDataRequest::recvTimingResp(PacketPtr pkt)
 bool
 LSQ::SplitDataRequest::recvTimingResp(PacketPtr pkt)
 {
-    auto state = dynamic_cast<LSQSenderState*>(pkt->senderState);
     uint32_t pktIdx = 0;
     while (pktIdx < _packets.size() && pkt != _packets[pktIdx])
         pktIdx++;
     assert(pktIdx < _packets.size());
     numReceivedPackets++;
-    state->outstanding--;
     if (numReceivedPackets == _packets.size()) {
         flags.set(Flag::Complete);
         /* Assemble packets. */
@@ -1152,7 +1144,7 @@ LSQ::SplitDataRequest::recvTimingResp(PacketPtr pkt)
             resp->dataStatic(_inst->memData);
         else
             resp->dataStatic(_data);
-        resp->senderState = _senderState;
+        resp->senderState = this;
         _port.completeDataAccess(resp);
         delete resp;
     }
@@ -1162,7 +1154,6 @@ LSQ::SplitDataRequest::recvTimingResp(PacketPtr pkt)
 void
 LSQ::SingleDataRequest::buildPackets()
 {
-    assert(_senderState);
     /* Retries do not create new packets. */
     if (_packets.size() == 0) {
         _packets.push_back(
@@ -1170,7 +1161,7 @@ LSQ::SingleDataRequest::buildPackets()
                     ?  Packet::createRead(request())
                     :  Packet::createWrite(request()));
         _packets.back()->dataStatic(_inst->memData);
-        _packets.back()->senderState = _senderState;
+        _packets.back()->senderState = this;
 
         // hardware transactional memory
         // If request originates in a transaction (not necessarily a HtmCmd),
@@ -1233,7 +1224,7 @@ LSQ::SplitDataRequest::buildPackets()
                         r->getSize());
                 pkt->dataDynamic(req_data);
             }
-            pkt->senderState = _senderState;
+            pkt->senderState = this;
             _packets.push_back(pkt);
 
             // hardware transactional memory

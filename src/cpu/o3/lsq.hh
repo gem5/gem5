@@ -76,48 +76,6 @@ class LSQ
 {
   public:
     class LSQRequest;
-    /** Derived class to hold any sender state the LSQ needs. */
-    class LSQSenderState : public Packet::SenderState
-    {
-      protected:
-        /** The senderState needs to know the LSQRequest who owns it. */
-        LSQRequest* _request;
-
-        /** Default constructor. */
-        LSQSenderState(LSQRequest* request, bool is_load);
-
-      public:
-        /** Instruction which initiated the access to memory. */
-        DynInstPtr inst;
-        /** The main packet from a split load, used during writeback. */
-        PacketPtr mainPkt = nullptr;
-        /** A second packet from a split store that needs sending. */
-        PacketPtr pendingPacket = nullptr;
-        /** Number of outstanding packets to complete. */
-        uint8_t outstanding = 0;
-        /** Whether or not it is a load. */
-        bool isLoad = false;
-        /** Whether or not the instruction will need to writeback. */
-        bool needWB = false;
-        /** Whether or not this access is split in two. */
-        bool isSplit = false;
-        /** Whether or not there is a packet that needs sending. */
-        bool pktToSend = false;
-        /** Has the request been deleted?
-         * LSQ entries can be squashed before the response comes back. in that
-         * case the SenderState knows.
-         */
-        bool deleted = false;
-        ContextID contextId();
-
-        /** Completes a packet and returns whether the access is finished. */
-        bool isComplete() { return outstanding == 0; }
-        void deleteRequest() { deleted = true; }
-        bool alive() { return !deleted; }
-        LSQRequest* request() { return _request; }
-        virtual void complete() = 0;
-        void writebackDone() { _request->writebackDone(); }
-    };
 
     /**
      * DcachePort class for the load/store queue.
@@ -164,12 +122,12 @@ class LSQ
      * This class holds the information about a memory operation. It lives
      * from initiateAcc to resource deallocation at commit or squash.
      * LSQRequest objects are owned by the LQ/SQ Entry in the LSQUnit that
-     * holds the operation. It is also used by the LSQSenderState. In addition,
-     * the LSQRequest is a TranslationState, therefore, upon squash, there must
-     * be a defined ownership transferal in case the LSQ resources are
-     * deallocated before the TLB is done using the TranslationState. If that
-     * happens, the LSQRequest will be self-owned, and responsible to detect
-     * that its services are no longer required and self-destruct.
+     * holds the operation. In addition, the LSQRequest is a TranslationState,
+     * therefore, upon squash, there must be a defined ownership transferal
+     * in case the LSQ resources are deallocated before the TLB is done using
+     * the TranslationState.
+     * If that happens, the LSQRequest will be self-owned, and responsible to
+     * detect that its services are no longer required and self-destruct.
      *
      * Lifetime of a LSQRequest:
      *                 +--------------------+
@@ -215,8 +173,8 @@ class LSQ
      *            | |  +--------------------+
      *            | |
      *            | |  +--------------------+
-     *            | |  |  senderState owns  |
-     *            | +->|  onRecvTimingResp  |
+     *            | |  |    self owned      |
+     *            | +->|  on recvTimingResp |
      *            |    |   free resources   |
      *            |    +--------------------+
      *            |
@@ -228,7 +186,7 @@ class LSQ
      *
      *
      */
-    class LSQRequest : public BaseMMU::Translation
+    class LSQRequest : public BaseMMU::Translation, public Packet::SenderState
     {
       protected:
         typedef uint32_t FlagsStorage;
@@ -237,8 +195,11 @@ class LSQ
         enum Flag : FlagsStorage
         {
             IsLoad              = 0x00000001,
-            /** True if this is a store/atomic that writes registers (SC). */
-            WbStore             = 0x00000002,
+            /** True if this request needs to writeBack to register.
+              * Will be set in case of load or a store/atomic
+              * that writes registers (SC)
+              */
+            WriteBackToRegister = 0x00000002,
             Delayed             = 0x00000004,
             IsSplit             = 0x00000008,
             /** True if any translation has been sent to TLB. */
@@ -272,14 +233,11 @@ class LSQ
             PartialFault,
         };
         State _state;
-        LSQSenderState* _senderState;
         void setState(const State& newState) { _state = newState; }
 
         uint32_t numTranslatedFragments;
         uint32_t numInTranslationFragments;
 
-        /** LQ/SQ entry idx. */
-        uint32_t _entryIdx;
 
         void markDelayed() override { flags.set(Flag::Delayed); }
         bool isDelayed() { return flags.isSet(Flag::Delayed); }
@@ -324,17 +282,6 @@ class LSQ
 
         bool squashed() const override;
 
-        /**
-         * Test if the LSQRequest has been released, i.e. self-owned.
-         * An LSQRequest manages itself when the resources on the LSQ are freed
-         * but the translation is still going on and the LSQEntry was freed.
-         */
-        bool
-        isReleased()
-        {
-            return flags.isSet(Flag::LSQEntryFreed) ||
-                flags.isSet(Flag::Discarded);
-        }
 
         /** Release the LSQRequest.
          * Notify the sender state that the request it points to is not valid
@@ -352,9 +299,6 @@ class LSQ
             if (!isAnyOutstandingRequest()) {
                 delete this;
             } else {
-                if (_senderState) {
-                    _senderState->deleteRequest();
-                }
                 flags.set(reason);
             }
         }
@@ -396,6 +340,8 @@ class LSQ
             request()->setVirt(vaddr, size, flags_, requestor_id, pc);
         }
 
+        ContextID contextId() const;
+
         void
         taskId(const uint32_t& v)
         {
@@ -432,33 +378,6 @@ class LSQ
             return request();
         }
 
-        void
-        senderState(LSQSenderState* st)
-        {
-            _senderState = st;
-            for (auto& pkt: _packets) {
-                if (pkt)
-                    pkt->senderState = st;
-            }
-        }
-
-        const LSQSenderState*
-        senderState() const
-        {
-            return _senderState;
-        }
-
-        /**
-         * Mark senderState as discarded. This will cause to discard response
-         * packets from the cache.
-         */
-        void
-        discardSenderState()
-        {
-            assert(_senderState);
-            _senderState->deleteRequest();
-        }
-
         /**
          * Test if there is any in-flight translation or mem access request
          */
@@ -471,10 +390,28 @@ class LSQ
                  !flags.isSet(Flag::WritebackDone));
         }
 
+        /**
+         * Test if the LSQRequest has been released, i.e. self-owned.
+         * An LSQRequest manages itself when the resources on the LSQ are freed
+         * but the translation is still going on and the LSQEntry was freed.
+         */
+        bool
+        isReleased()
+        {
+            return flags.isSet(Flag::LSQEntryFreed) ||
+                flags.isSet(Flag::Discarded);
+        }
+
         bool
         isSplit() const
         {
             return flags.isSet(Flag::IsSplit);
+        }
+
+        bool
+        needWBToRegister() const
+        {
+            return flags.isSet(Flag::WriteBackToRegister);
         }
         /** @} */
         virtual bool recvTimingResp(PacketPtr pkt) = 0;
@@ -644,7 +581,6 @@ class LSQ
         using LSQRequest::_port;
         using LSQRequest::_res;
         using LSQRequest::_taskId;
-        using LSQRequest::_senderState;
         using LSQRequest::_state;
         using LSQRequest::flags;
         using LSQRequest::isLoad;
@@ -723,7 +659,6 @@ class LSQ
         using LSQRequest::_requests;
         using LSQRequest::_res;
         using LSQRequest::_byteEnable;
-        using LSQRequest::_senderState;
         using LSQRequest::_size;
         using LSQRequest::_state;
         using LSQRequest::_taskId;

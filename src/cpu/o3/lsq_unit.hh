@@ -91,7 +91,6 @@ class LSQUnit
   public:
     static constexpr auto MaxDataBytes = MaxVecRegLenInBytes;
 
-    using LSQSenderState = LSQ::LSQSenderState;
     using LSQRequest = LSQ::LSQRequest;
   private:
     class LSQEntry
@@ -404,43 +403,6 @@ class LSQUnit
 
     /** Pointer to the dcache port.  Used only for sending. */
     RequestPort *dcachePort;
-
-    /** Particularisation of the LSQSenderState to the LQ. */
-    class LQSenderState : public LSQSenderState
-    {
-        using LSQSenderState::alive;
-      public:
-        LQSenderState(typename LoadQueue::iterator idx_)
-            : LSQSenderState(idx_->request(), true), idx(idx_) { }
-
-        /** The LQ index of the instruction. */
-        typename LoadQueue::iterator idx;
-        //virtual LSQRequest* request() { return idx->request(); }
-        virtual void
-        complete()
-        {
-            //if (alive())
-            //  idx->request()->senderState(nullptr);
-        }
-    };
-
-    /** Particularisation of the LSQSenderState to the SQ. */
-    class SQSenderState : public LSQSenderState
-    {
-        using LSQSenderState::alive;
-      public:
-        SQSenderState(typename StoreQueue::iterator idx_)
-            : LSQSenderState(idx_->request(), false), idx(idx_) { }
-        /** The SQ index of the instruction. */
-        typename StoreQueue::iterator idx;
-        //virtual LSQRequest* request() { return idx->request(); }
-        virtual void
-        complete()
-        {
-            //if (alive())
-            //   idx->request()->senderState(nullptr);
-        }
-    };
 
     /** Writeback event, specifically for when stores forward data to loads. */
     class WritebackEvent : public Event
