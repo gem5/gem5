@@ -58,4 +58,86 @@ mkdir -p tests/testing-results
 
 # LULESH is heavily used in the HPC community on GPUs, and does a good job of
 # stressing several GPU compute and memory components
-docker run --rm -v ${PWD}:${PWD} -w ${PWD} -u $UID:$GID gcr.io/gem5-test/gcn-gpu gem5/build/GCN3_X86/gem5.opt gem5/configs/example/apu_se.py -n3 --mem-size=8GB --benchmark-root=gem5-resources/src/gpu/lulesh/bin -clulesh
+docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
+    configs/example/apu_se.py -n3 --mem-size=8GB -clulesh
+
+# get DNNMark
+# Delete gem5 resources repo if it already exists -- need to do in docker
+# because of cachefiles DNNMark creates
+docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
+       "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
+       "rm -rf ${gem5_root}/gem5-resources"
+
+# Pull the gem5 resources to the root of the gem5 directory -- DNNMark
+# builds a library and thus doesn't have a binary, so we need to build
+# it before we run it
+git clone -b develop https://gem5.googlesource.com/public/gem5-resources \
+    "${gem5_root}/gem5-resources"
+
+# setup cmake for DNNMark
+docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
+     "${gem5_root}/gem5-resources/src/gpu/DNNMark" \
+     gcr.io/gem5-test/gcn-gpu:latest bash -c "./setup.sh HIP"
+
+# make the DNNMark library
+docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}/gem5-resources/src/gpu/DNNMark/build" \
+    gcr.io/gem5-test/gcn-gpu:latest bash -c "make -j${threads}"
+
+# generate cachefiles -- since we are testing gfx801 and 4 CUs (default config)
+# in tester, we want cachefiles for this setup
+docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}/gem5-resources/src/gpu/DNNMark" \
+    "-v${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
+    gcr.io/gem5-test/gcn-gpu:latest bash -c \
+    "python3 generate_cachefiles.py cachefiles.csv --gfx-version=gfx801 \
+    --num-cus=4"
+
+# generate mmap data for DNNMark (makes simulation much faster)
+docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu:latest bash -c \
+    "g++ -std=c++0x generate_rand_data.cpp -o generate_rand_data"
+
+docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu:latest bash -c \
+    "./generate_rand_data"
+
+# now we can run DNNMark!
+# DNNMark is representative of several simple (fast) layers within ML
+# applications, which are heavily used in modern GPU applications.  So, we want
+# to make sure support for these applications are tested.  Run three variants:
+# fwd_softmax, bwd_bn, fwd_pool; these tests ensure we run a variety of ML kernels,
+# including both inference and training
+docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
+       "${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
+       -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu \
+       "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
+       --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_fwd_softmax" \
+       -cdnnmark_test_fwd_softmax \
+       --options="-config ${gem5_root}/gem5-resources/src/gpu/DNNMark/config_example/softmax_config.dnnmark \
+       -mmap ${gem5_root}/gem5-resources/src/gpu/DNNMark/mmap.bin"
+
+docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
+       "${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
+       -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu \
+       "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
+       --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_fwd_pool" \
+       -cdnnmark_test_fwd_pool \
+       --options="-config ${gem5_root}/gem5-resources/src/gpu/DNNMark/config_example/pool_config.dnnmark \
+       -mmap ${gem5_root}/gem5-resources/src/gpu/DNNMark/mmap.bin"
+
+docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
+       "${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
+       -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu \
+       "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
+       --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_bwd_bn" \
+       -cdnnmark_test_bwd_bn \
+       --options="-config ${gem5_root}/gem5-resources/src/gpu/DNNMark/config_example/bn_config.dnnmark \
+       -mmap ${gem5_root}/gem5-resources/src/gpu/DNNMark/mmap.bin"
+
+# Delete the gem5 resources repo we created -- need to do in docker because of
+# cachefiles DNNMark creates
+docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
+       "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
+       "rm -rf ${gem5_root}/gem5-resources"
