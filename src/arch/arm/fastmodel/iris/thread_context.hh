@@ -393,13 +393,6 @@ class ThreadContext : public gem5::ThreadContext
      * serialization code to access all registers.
      */
 
-    RegVal getRegFlat(const RegId &reg) const override;
-    void getRegFlat(const RegId &reg, void *val) const override;
-    void *getWritableRegFlat(const RegId &reg) override;
-
-    void setRegFlat(const RegId &reg, RegVal val) override;
-    void setRegFlat(const RegId &reg, const void *val) override;
-
     virtual RegVal readIntRegFlat(RegIndex idx) const;
     virtual void setIntRegFlat(RegIndex idx, uint64_t val);
 

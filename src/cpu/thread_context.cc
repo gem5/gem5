@@ -166,45 +166,47 @@ ThreadContext::quiesceTick(Tick resume)
 RegVal
 ThreadContext::getReg(const RegId &reg) const
 {
-    return getRegFlat(flattenRegId(reg));
-}
-
-void *
-ThreadContext::getWritableReg(const RegId &reg)
-{
-    return getWritableRegFlat(flattenRegId(reg));
+    RegVal val;
+    getReg(reg, &val);
+    return val;
 }
 
 void
 ThreadContext::setReg(const RegId &reg, RegVal val)
 {
-    setRegFlat(flattenRegId(reg), val);
-}
-
-void
-ThreadContext::getReg(const RegId &reg, void *val) const
-{
-    getRegFlat(flattenRegId(reg), val);
-}
-
-void
-ThreadContext::setReg(const RegId &reg, const void *val)
-{
-    setRegFlat(flattenRegId(reg), val);
+    setReg(reg, &val);
 }
 
 RegVal
 ThreadContext::getRegFlat(const RegId &reg) const
 {
     RegVal val;
-    getRegFlat(reg, &val);
+    getReg(reg, &val);
     return val;
+}
+
+void
+ThreadContext::getRegFlat(const RegId &reg, void *val) const
+{
+    getReg(reg, val);
+}
+
+void *
+ThreadContext::getWritableRegFlat(const RegId &reg)
+{
+    return getWritableReg(reg);
 }
 
 void
 ThreadContext::setRegFlat(const RegId &reg, RegVal val)
 {
-    setRegFlat(reg, &val);
+    setReg(reg, &val);
+}
+
+void
+ThreadContext::setRegFlat(const RegId &reg, const void *val)
+{
+    setReg(reg, val);
 }
 
 void
@@ -222,7 +224,7 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
         uint8_t regs[array_bytes];
         auto *reg_ptr = regs;
         for (const auto &id: *reg_class) {
-            tc.getRegFlat(id, reg_ptr);
+            tc.getReg(id, reg_ptr);
             reg_ptr += reg_bytes;
         }
 
@@ -253,7 +255,7 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
 
         auto *reg_ptr = regs;
         for (const auto &id: *reg_class) {
-            tc.setRegFlat(id, reg_ptr);
+            tc.setReg(id, reg_ptr);
             reg_ptr += reg_bytes;
         }
     }

@@ -239,12 +239,12 @@ class ThreadContext : public gem5::ThreadContext
             cpu->squashFromTC(thread->threadId());
     }
 
-    RegVal getRegFlat(const RegId &reg) const override;
-    void getRegFlat(const RegId &reg, void *val) const override;
-    void *getWritableRegFlat(const RegId &reg) override;
+    RegVal getReg(const RegId &reg) const override;
+    void getReg(const RegId &reg, void *val) const override;
+    void *getWritableReg(const RegId &reg) override;
 
-    void setRegFlat(const RegId &reg, RegVal val) override;
-    void setRegFlat(const RegId &reg, const void *val) override;
+    void setReg(const RegId &reg, RegVal val) override;
+    void setReg(const RegId &reg, const void *val) override;
 
     // hardware transactional memory
     void htmAbortTransaction(uint64_t htm_uid,

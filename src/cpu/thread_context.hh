@@ -193,11 +193,11 @@ class ThreadContext : public PCEventScope
     // New accessors for new decoder.
     //
     virtual RegVal getReg(const RegId &reg) const;
-    virtual void getReg(const RegId &reg, void *val) const;
-    virtual void *getWritableReg(const RegId &reg);
+    virtual void getReg(const RegId &reg, void *val) const = 0;
+    virtual void *getWritableReg(const RegId &reg) = 0;
 
     virtual void setReg(const RegId &reg, RegVal val);
-    virtual void setReg(const RegId &reg, const void *val);
+    virtual void setReg(const RegId &reg, const void *val) = 0;
 
     virtual const PCStateBase &pcState() const = 0;
 
@@ -248,11 +248,11 @@ class ThreadContext : public PCEventScope
      */
 
     virtual RegVal getRegFlat(const RegId &reg) const;
-    virtual void getRegFlat(const RegId &reg, void *val) const = 0;
-    virtual void *getWritableRegFlat(const RegId &reg) = 0;
+    virtual void getRegFlat(const RegId &reg, void *val) const;
+    virtual void *getWritableRegFlat(const RegId &reg);
 
     virtual void setRegFlat(const RegId &reg, RegVal val);
-    virtual void setRegFlat(const RegId &reg, const void *val) = 0;
+    virtual void setRegFlat(const RegId &reg, const void *val);
     /** @} */
 
     // hardware transactional memory

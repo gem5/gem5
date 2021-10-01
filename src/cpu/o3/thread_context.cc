@@ -149,32 +149,32 @@ ThreadContext::clearArchRegs()
 }
 
 RegVal
-ThreadContext::getRegFlat(const RegId &reg) const
+ThreadContext::getReg(const RegId &reg) const
 {
     return cpu->getArchReg(reg, thread->threadId());
 }
 
 void *
-ThreadContext::getWritableRegFlat(const RegId &reg)
+ThreadContext::getWritableReg(const RegId &reg)
 {
     return cpu->getWritableArchReg(reg, thread->threadId());
 }
 
 void
-ThreadContext::getRegFlat(const RegId &reg, void *val) const
+ThreadContext::getReg(const RegId &reg, void *val) const
 {
     cpu->getArchReg(reg, val, thread->threadId());
 }
 
 void
-ThreadContext::setRegFlat(const RegId &reg, RegVal val)
+ThreadContext::setReg(const RegId &reg, RegVal val)
 {
     cpu->setArchReg(reg, val, thread->threadId());
     conditionalSquash();
 }
 
 void
-ThreadContext::setRegFlat(const RegId &reg, const void *val)
+ThreadContext::setReg(const RegId &reg, const void *val)
 {
     cpu->setArchReg(reg, val, thread->threadId());
     conditionalSquash();
