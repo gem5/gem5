@@ -235,26 +235,6 @@ class ThreadContext : public PCEventScope
     /** function to compare two thread contexts (for debugging) */
     static void compare(ThreadContext *one, ThreadContext *two);
 
-    /** @{ */
-    /**
-     * Flat register interfaces
-     *
-     * Some architectures have different registers visible in
-     * different modes. Such architectures "flatten" a register (see
-     * flattenRegId()) to map it into the
-     * gem5 register file. This interface provides a flat interface to
-     * the underlying register file, which allows for example
-     * serialization code to access all registers.
-     */
-
-    virtual RegVal getRegFlat(const RegId &reg) const;
-    virtual void getRegFlat(const RegId &reg, void *val) const;
-    virtual void *getWritableRegFlat(const RegId &reg);
-
-    virtual void setRegFlat(const RegId &reg, RegVal val);
-    virtual void setRegFlat(const RegId &reg, const void *val);
-    /** @} */
-
     // hardware transactional memory
     virtual void htmAbortTransaction(uint64_t htm_uid,
                                      HtmFailureFaultCause cause) = 0;

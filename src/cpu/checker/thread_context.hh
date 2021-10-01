@@ -326,38 +326,6 @@ class CheckerThreadContext : public ThreadContext
         actualTC->setStCondFailures(sc_failures);
     }
 
-    RegVal
-    getRegFlat(const RegId &reg) const override
-    {
-        return actualTC->getRegFlat(reg);
-    }
-
-    void
-    getRegFlat(const RegId &reg, void *val) const override
-    {
-        actualTC->getRegFlat(reg, val);
-    }
-
-    void *
-    getWritableRegFlat(const RegId &reg) override
-    {
-        return actualTC->getWritableRegFlat(reg);
-    }
-
-    void
-    setRegFlat(const RegId &reg, RegVal val) override
-    {
-        actualTC->setRegFlat(reg, val);
-        checkerTC->setRegFlat(reg, val);
-    }
-
-    void
-    setRegFlat(const RegId &reg, const void *val) override
-    {
-        actualTC->setRegFlat(reg, val);
-        checkerTC->setRegFlat(reg, val);
-    }
-
     // hardware transactional memory
     void
     htmAbortTransaction(uint64_t htm_uid, HtmFailureFaultCause cause) override
