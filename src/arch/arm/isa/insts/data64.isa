@@ -312,8 +312,8 @@ let {{
 
     msrMrs64EnabledCheckCode = '''
         auto pre_flat = (MiscRegIndex)snsBankedIndex64(%s, xc->tcBase());
-        MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
-            flattenRegId(miscRegClass[pre_flat]).index();
+        auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+        auto flat_idx = (MiscRegIndex)isa->flattenMiscIndex(pre_flat);
 
         // Check for read/write access right
         if (fault = checkFaultAccessAArch64SysReg(flat_idx, Cpsr,
@@ -531,8 +531,8 @@ let {{
         msrImmPermission = '''
             auto pre_flat =
                 (MiscRegIndex)snsBankedIndex64(dest, xc->tcBase());
-            MiscRegIndex misc_index = (MiscRegIndex) xc->tcBase()->
-                flattenRegId(miscRegClass[pre_flat]).index();
+            auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+            auto misc_index = (MiscRegIndex)isa->flattenMiscIndex(pre_flat);
 
             if (!lookUpMiscReg[misc_index].info[MISCREG_IMPLEMENTED]) {
                     return std::make_shared<UndefinedInstruction>(
