@@ -49,31 +49,9 @@ CortexR52TC::CortexR52TC(
 bool
 CortexR52TC::translateAddress(Addr &paddr, Addr vaddr)
 {
-    // Determine what memory spaces are currently active.
-    Iris::CanonicalMsn in_msn;
-    switch (ArmISA::currEL(this)) {
-      case ArmISA::EL3:
-        in_msn = Iris::SecureMonitorMsn;
-        break;
-      case ArmISA::EL2:
-        in_msn = Iris::NsHypMsn;
-        break;
-      default:
-        in_msn = Iris::GuestMsn;
-        break;
-    }
-
-    Iris::CanonicalMsn out_msn = ArmISA::isSecure(this) ?
-        Iris::PhysicalMemorySecureMsn : Iris::PhysicalMemoryNonSecureMsn;
-
-    // Figure out what memory spaces match the canonical numbers we need.
-    iris::MemorySpaceId in = getMemorySpaceId(in_msn);
-    iris::MemorySpaceId out = getMemorySpaceId(out_msn);
-
-    panic_if(in == iris::IRIS_UINT64_MAX || out == iris::IRIS_UINT64_MAX,
-            "Canonical IRIS memory space numbers not found.");
-
-    return ThreadContext::translateAddress(paddr, out, vaddr, in);
+    // No MMU here.
+    paddr = vaddr;
+    return true;
 }
 
 void
@@ -87,6 +65,23 @@ CortexR52TC::initFromIrisInstance(const ResourceMap &resources)
 
     extractResourceMap(intReg32Ids, resources, intReg32IdxNameMap);
     extractResourceMap(ccRegIds, resources, ccRegIdxNameMap);
+}
+
+void
+CortexR52TC::sendFunctional(PacketPtr pkt)
+{
+  auto msn = Iris::PhysicalMemoryMsn;
+  auto id = getMemorySpaceId(msn);
+
+  auto addr = pkt->getAddr();
+  auto size = pkt->getSize();
+  auto data = pkt->getPtr<uint8_t>();
+
+  pkt->makeResponse();
+  if (pkt->isRead())
+      readMem(id, addr, data, size);
+  else
+      writeMem(id, addr, data, size);
 }
 
 RegVal
@@ -148,9 +143,7 @@ const std::vector<iris::MemorySpaceId> &
 CortexR52TC::getBpSpaceIds() const
 {
     if (bpSpaceIds.empty()) {
-        std::vector<Iris::CanonicalMsn> msns{
-            Iris::SecureMonitorMsn, Iris::GuestMsn, Iris::NsHypMsn,
-            Iris::HypAppMsn};
+        std::vector<Iris::CanonicalMsn> msns{Iris::GuestMsn, Iris::NsHypMsn};
         for (auto &msn : msns) {
             auto id = getMemorySpaceId(msn);
             if (id != iris::IRIS_UINT64_MAX)
@@ -609,7 +602,7 @@ Iris::ThreadContext::IdxNameMap CortexR52TC::miscRegIdxNameMap({
         // ArmISA::MISCREG_NZCV?
         // ArmISA::MISCREG_DAIF?
         // ArmISA::MISCREG_FPCR?
-        // ArmISA::MISCREG_FPSR?
+        { ArmISA::MISCREG_FPSCR, "FPSCR" },
         // ArmISA::MISCREG_DSPSR_EL0?
         // ArmISA::MISCREG_DLR_EL0?
         // ArmISA::MISCREG_SPSR_EL2?

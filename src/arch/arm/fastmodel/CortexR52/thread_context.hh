@@ -56,6 +56,7 @@ class CortexR52TC : public Iris::ThreadContext
     bool translateAddress(Addr &paddr, Addr vaddr) override;
 
     void initFromIrisInstance(const ResourceMap &resources) override;
+    void sendFunctional(PacketPtr pkt) override;
 
     // Since this CPU doesn't support aarch64, we override these two methods
     // and always assume we're 32 bit. More than likely we could be more
