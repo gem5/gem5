@@ -116,6 +116,9 @@ namespace ArmISA
 
         void initializeMiscRegMetadata();
 
+        BaseISADevice &getGenericTimer();
+        BaseISADevice &getGICv3CPUInterface();
+
         RegVal miscRegs[NUM_MISCREGS];
         const RegId *intRegMap;
 
@@ -157,8 +160,8 @@ namespace ArmISA
             }
         }
 
-        BaseISADevice &getGenericTimer();
-        BaseISADevice &getGICv3CPUInterface();
+      public:
+        const RegId &mapIntRegId(RegIndex idx) const { return intRegMap[idx]; }
 
       public:
         void clear();
