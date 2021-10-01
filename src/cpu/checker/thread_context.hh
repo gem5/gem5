@@ -308,12 +308,6 @@ class CheckerThreadContext : public ThreadContext
         actualTC->setMiscReg(misc_reg, val);
     }
 
-    RegId
-    flattenRegId(const RegId& regId) const override
-    {
-        return actualTC->flattenRegId(regId);
-    }
-
     unsigned
     readStCondFailures() const override
     {

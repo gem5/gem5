@@ -361,12 +361,6 @@ class ThreadContext : public gem5::ThreadContext
         setMiscRegNoEffect(misc_reg, val);
     }
 
-    RegId
-    flattenRegId(const RegId& regId) const override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-
     // Also not necessarily the best location for these two.  Hopefully will go
     // away once we decide upon where st cond failures goes.
     unsigned
