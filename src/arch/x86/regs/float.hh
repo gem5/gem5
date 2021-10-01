@@ -35,8 +35,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_X86_FLOATREGS_HH__
-#define __ARCH_X86_FLOATREGS_HH__
+#ifndef __ARCH_X86_REGS_FLOAT_HH__
+#define __ARCH_X86_REGS_FLOAT_HH__
 
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
@@ -121,8 +121,30 @@ enum FloatRegIndex
 
 } // namespace float_reg
 
-inline constexpr RegClass floatRegClass(FloatRegClass, FloatRegClassName,
-        float_reg::NumRegs, debug::FloatRegs);
+class FlatFloatRegClassOps : public RegClassOps
+{
+    std::string regName(const RegId &id) const override;
+};
+
+inline constexpr FlatFloatRegClassOps flatFloatRegClassOps;
+
+inline constexpr RegClass flatFloatRegClass =
+    RegClass(FloatRegClass, FloatRegClassName, float_reg::NumRegs,
+            debug::FloatRegs).
+    ops(flatFloatRegClassOps);
+
+class FloatRegClassOps : public FlatFloatRegClassOps
+{
+    RegId flatten(const BaseISA &isa, const RegId &id) const override;
+};
+
+inline constexpr FloatRegClassOps floatRegClassOps;
+
+inline constexpr RegClass floatRegClass =
+    RegClass(FloatRegClass, FloatRegClassName, float_reg::NumRegs,
+            debug::FloatRegs).
+    ops(floatRegClassOps).
+    needsFlattening();
 
 namespace float_reg
 {
@@ -174,4 +196,4 @@ stack(int index, int top)
 } // namespace X86ISA
 } // namespace gem5
 
-#endif // __ARCH_X86_FLOATREGS_HH__
+#endif // __ARCH_X86_REGS_FLOAT_HH__
