@@ -35,8 +35,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_X86_INTREGS_HH__
-#define __ARCH_X86_INTREGS_HH__
+#ifndef __ARCH_X86_REGS_INT_HH__
+#define __ARCH_X86_REGS_INT_HH__
 
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
@@ -102,8 +102,28 @@ enum : RegIndex
 
 } // namespace int_reg
 
-inline constexpr RegClass intRegClass(IntRegClass, IntRegClassName,
-        int_reg::NumRegs, debug::IntRegs);
+class FlatIntRegClassOps : public RegClassOps
+{
+    std::string regName(const RegId &id) const override;
+};
+
+inline constexpr FlatIntRegClassOps flatIntRegClassOps;
+
+inline constexpr RegClass flatIntRegClass =
+    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs).
+    ops(flatIntRegClassOps);
+
+class IntRegClassOps : public FlatIntRegClassOps
+{
+    RegId flatten(const BaseISA &isa, const RegId &id) const override;
+};
+
+inline constexpr IntRegClassOps intRegClassOps;
+
+inline constexpr RegClass intRegClass =
+    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs).
+    ops(intRegClassOps).
+    needsFlattening();
 
 namespace int_reg
 {
@@ -174,4 +194,4 @@ intRegFolded(RegIndex index, RegIndex foldBit)
 } // namespace X86ISA
 } // namespace gem5
 
-#endif // __ARCH_X86_INTREGS_HH__
+#endif // __ARCH_X86_REGS_INT_HH__
