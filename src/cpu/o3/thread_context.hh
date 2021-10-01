@@ -210,8 +210,6 @@ class ThreadContext : public gem5::ThreadContext
      * write might have as defined by the architecture. */
     void setMiscReg(RegIndex misc_reg, RegVal val) override;
 
-    RegId flattenRegId(const RegId& regId) const override;
-
     /** Returns the number of consecutive store conditional failures. */
     // @todo: Figure out where these store cond failures should go.
     unsigned

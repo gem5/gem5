@@ -219,8 +219,6 @@ class ThreadContext : public PCEventScope
 
     virtual void setMiscReg(RegIndex misc_reg, RegVal val) = 0;
 
-    virtual RegId flattenRegId(const RegId& reg_id) const = 0;
-
     // Also not necessarily the best location for these two.  Hopefully will go
     // away once we decide upon where st cond failures goes.
     virtual unsigned readStCondFailures() const = 0;

@@ -290,12 +290,6 @@ class SimpleThread : public ThreadState, public ThreadContext
         return isa->setMiscReg(misc_reg, val);
     }
 
-    RegId
-    flattenRegId(const RegId& regId) const override
-    {
-        return isa->flattenRegId(regId);
-    }
-
     unsigned readStCondFailures() const override { return storeCondFailures; }
 
     bool
