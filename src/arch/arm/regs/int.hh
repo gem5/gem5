@@ -163,8 +163,20 @@ enum : RegIndex
 
 } // namespace int_reg
 
-inline constexpr RegClass intRegClass(IntRegClass, IntRegClassName,
-        int_reg::NumRegs, debug::IntRegs);
+class IntRegClassOps : public RegClassOps
+{
+    RegId flatten(const BaseISA &isa, const RegId &id) const override;
+};
+
+inline constexpr IntRegClassOps intRegClassOps;
+
+inline constexpr RegClass intRegClass =
+    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs).
+    ops(intRegClassOps).
+    needsFlattening();
+
+inline constexpr RegClass flatIntRegClass =
+    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs);
 
 namespace int_reg
 {
@@ -559,7 +571,7 @@ regInMode(OperatingMode mode, int reg)
 
 } // namespace int_reg
 
-static inline int
+static inline const RegId &
 flattenIntRegModeIndex(int reg)
 {
     int mode = reg / int_reg::regsPerMode;
