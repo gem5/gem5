@@ -177,38 +177,6 @@ ThreadContext::setReg(const RegId &reg, RegVal val)
     setReg(reg, &val);
 }
 
-RegVal
-ThreadContext::getRegFlat(const RegId &reg) const
-{
-    RegVal val;
-    getReg(reg, &val);
-    return val;
-}
-
-void
-ThreadContext::getRegFlat(const RegId &reg, void *val) const
-{
-    getReg(reg, val);
-}
-
-void *
-ThreadContext::getWritableRegFlat(const RegId &reg)
-{
-    return getWritableReg(reg);
-}
-
-void
-ThreadContext::setRegFlat(const RegId &reg, RegVal val)
-{
-    setReg(reg, &val);
-}
-
-void
-ThreadContext::setRegFlat(const RegId &reg, const void *val)
-{
-    setReg(reg, val);
-}
-
 void
 serialize(const ThreadContext &tc, CheckpointOut &cp)
 {
