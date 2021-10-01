@@ -194,40 +194,6 @@ class ISA : public BaseISA
     void setMiscRegNoEffect(int miscReg, RegVal val);
     void setMiscReg(int miscReg, RegVal val);
 
-    RegId
-    flattenRegId(const RegId& regId) const
-    {
-        switch (regId.classValue()) {
-          case IntRegClass:
-            return intRegClass[flattenIntIndex(regId.index())];
-          case FloatRegClass:
-            return floatRegClass[flattenFloatIndex(regId.index())];
-          case MiscRegClass:
-            return miscRegClass[flattenMiscIndex(regId.index())];
-          default:
-            break;
-        }
-        return regId;
-    }
-
-    int
-    flattenIntIndex(int reg) const
-    {
-        assert(reg < TotalInstIntRegs);
-        RegIndex flatIndex = intRegMap[reg];
-        assert(flatIndex < int_reg::NumRegs);
-        return flatIndex;
-    }
-
-    int flattenFloatIndex(int reg) const { return reg; }
-    int flattenVecIndex(int reg) const { return reg; }
-    int flattenVecElemIndex(int reg) const { return reg; }
-    int flattenVecPredIndex(int reg) const { return reg; }
-
-    // dummy
-    int flattenCCIndex(int reg) const { return reg; }
-    int flattenMiscIndex(int reg) const { return reg; }
-
     uint64_t
     getExecutingAsid() const override
     {
