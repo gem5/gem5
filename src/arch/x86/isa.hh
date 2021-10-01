@@ -78,42 +78,6 @@ class ISA : public BaseISA
     void setMiscRegNoEffect(int miscReg, RegVal val);
     void setMiscReg(int miscReg, RegVal val);
 
-    RegId
-    flattenRegId(const RegId& regId) const
-    {
-        switch (regId.classValue()) {
-          case IntRegClass:
-            return intRegClass[flattenIntIndex(regId.index())];
-          case FloatRegClass:
-            return floatRegClass[flattenFloatIndex(regId.index())];
-          case CCRegClass:
-            return ccRegClass[flattenCCIndex(regId.index())];
-          case MiscRegClass:
-            return miscRegClass[flattenMiscIndex(regId.index())];
-          default:
-            break;
-        }
-        return regId;
-    }
-
-    int flattenIntIndex(int reg) const { return reg & ~IntFoldBit; }
-
-    int
-    flattenFloatIndex(int reg) const
-    {
-        if (reg >= float_reg::NumRegs) {
-            reg = float_reg::stack(reg - float_reg::NumRegs,
-                                   regVal[misc_reg::X87Top]);
-        }
-        return reg;
-    }
-
-    int flattenVecIndex(int reg) const { return reg; }
-    int flattenVecElemIndex(int reg) const { return reg; }
-    int flattenVecPredIndex(int reg) const { return reg; }
-    int flattenCCIndex(int reg) const { return reg; }
-    int flattenMiscIndex(int reg) const { return reg; }
-
     bool
     inUserMode() const override
     {

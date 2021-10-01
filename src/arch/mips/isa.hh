@@ -142,17 +142,6 @@ namespace MipsISA
       public:
         ISA(const Params &p);
 
-        RegId flattenRegId(const RegId& regId) const { return regId; }
-
-        int flattenIntIndex(int reg) const { return reg; }
-        int flattenFloatIndex(int reg) const { return reg; }
-        int flattenVecIndex(int reg) const { return reg; }
-        int flattenVecElemIndex(int reg) const { return reg; }
-        int flattenVecPredIndex(int reg) const { return reg; }
-        // dummy
-        int flattenCCIndex(int reg) const { return reg; }
-        int flattenMiscIndex(int reg) const { return reg; }
-
         bool
         inUserMode() const override
         {
