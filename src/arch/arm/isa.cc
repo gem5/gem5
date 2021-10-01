@@ -548,8 +548,8 @@ ISA::takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc)
 void
 ISA::copyRegsFrom(ThreadContext *src)
 {
-    for (auto &id: intRegClass)
-        tc->setRegFlat(id, src->getRegFlat(id));
+    for (auto &id: flatIntRegClass)
+        tc->setReg(id, src->getReg(id));
 
     for (auto &id: ccRegClass)
         tc->setReg(id, src->getReg(id));
@@ -559,12 +559,12 @@ ISA::copyRegsFrom(ThreadContext *src)
 
     ArmISA::VecRegContainer vc;
     for (auto &id: vecRegClass) {
-        src->getRegFlat(id, &vc);
-        tc->setRegFlat(id, &vc);
+        src->getReg(id, &vc);
+        tc->setReg(id, &vc);
     }
 
     for (auto &id: vecElemClass)
-        tc->setRegFlat(id, src->getRegFlat(id));
+        tc->setReg(id, src->getReg(id));
 
     // setMiscReg "with effect" will set the misc register mapping correctly.
     // e.g. updateRegMap(val)

@@ -322,7 +322,7 @@ ArmV8KvmCPU::updateThreadContext()
         if (inAArch64(tc)) {
             tc->setReg(int_reg::x(i), value);
         } else {
-            tc->setRegFlat(int_reg::x(i), value);
+            tc->setReg(flatIntRegClass[i], value);
         }
     }
 

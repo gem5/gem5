@@ -1157,35 +1157,40 @@ CPU::setReg(PhysRegIdPtr phys_reg, const void *val)
 RegVal
 CPU::getArchReg(const RegId &reg, ThreadID tid)
 {
-    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    const RegId flat = reg.flatten(*isa[tid]);
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(flat);
     return regFile.getReg(phys_reg);
 }
 
 void
 CPU::getArchReg(const RegId &reg, void *val, ThreadID tid)
 {
-    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    const RegId flat = reg.flatten(*isa[tid]);
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(flat);
     regFile.getReg(phys_reg, val);
 }
 
 void *
 CPU::getWritableArchReg(const RegId &reg, ThreadID tid)
 {
-    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    const RegId flat = reg.flatten(*isa[tid]);
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(flat);
     return regFile.getWritableReg(phys_reg);
 }
 
 void
 CPU::setArchReg(const RegId &reg, RegVal val, ThreadID tid)
 {
-    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    const RegId flat = reg.flatten(*isa[tid]);
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(flat);
     regFile.setReg(phys_reg, val);
 }
 
 void
 CPU::setArchReg(const RegId &reg, const void *val, ThreadID tid)
 {
-    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    const RegId flat = reg.flatten(*isa[tid]);
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(flat);
     regFile.setReg(phys_reg, val);
 }
 
