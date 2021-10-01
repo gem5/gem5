@@ -889,8 +889,8 @@ let {{
     exec_output += PredOpExecute.subst(bfiIop)
 
     mrc14code = '''
-    MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
-                               miscRegClass[op1]).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(op1);
     auto [can_read, undefined] = canReadCoprocReg(miscReg, Scr, Cpsr,
                                                   xc->tcBase());
     if (!can_read || undefined) {
@@ -913,8 +913,8 @@ let {{
 
 
     mcr14code = '''
-    MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
-                               miscRegClass[dest]).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(dest);
     auto [can_write, undefined] = canWriteCoprocReg(miscReg, Scr, Cpsr,
                                                     xc->tcBase());
     if (undefined || !can_write) {
@@ -937,9 +937,8 @@ let {{
 
     mrc15code = '''
     int preFlatOp1 = snsBankedIndex(op1, xc->tcBase());
-    MiscRegIndex miscReg = (MiscRegIndex)
-                           xc->tcBase()->flattenRegId(miscRegClass[
-                                                      preFlatOp1]).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(preFlatOp1);
 
     Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
@@ -969,9 +968,8 @@ let {{
 
     mcr15CheckCode = '''
     int preFlatDest = snsBankedIndex(dest, xc->tcBase());
-    MiscRegIndex miscReg = (MiscRegIndex)
-                       xc->tcBase()->flattenRegId(miscRegClass[
-                                                  preFlatDest]).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(preFlatDest);
 
     Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
@@ -1015,9 +1013,8 @@ let {{
 
     mrrc15code = '''
     int preFlatOp1 = snsBankedIndex(op1, xc->tcBase());
-    MiscRegIndex miscReg = (MiscRegIndex)
-                           xc->tcBase()->flattenRegId(miscRegClass[
-                                                      preFlatOp1]).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(preFlatOp1);
 
     Fault fault = mcrrMrrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
@@ -1047,9 +1044,8 @@ let {{
 
     mcrr15code = '''
     int preFlatDest = snsBankedIndex(dest, xc->tcBase());
-    MiscRegIndex miscReg = (MiscRegIndex)
-                           xc->tcBase()->flattenRegId(miscRegClass[
-                                                      preFlatDest]).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(preFlatDest);
 
     Fault fault = mcrrMrrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 

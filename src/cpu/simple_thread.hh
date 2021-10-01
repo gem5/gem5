@@ -319,7 +319,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     RegVal
     getReg(const RegId &arch_reg) const override
     {
-        const RegId reg = flattenRegId(arch_reg);
+        const RegId reg = arch_reg.flatten(*isa);
 
         const RegIndex idx = reg.index();
 
@@ -335,7 +335,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     void
     getReg(const RegId &arch_reg, void *val) const override
     {
-        const RegId reg = flattenRegId(arch_reg);
+        const RegId reg = arch_reg.flatten(*isa);
 
         const RegIndex idx = reg.index();
 
@@ -351,7 +351,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     void *
     getWritableReg(const RegId &arch_reg) override
     {
-        const RegId reg = flattenRegId(arch_reg);
+        const RegId reg = arch_reg.flatten(*isa);
         const RegIndex idx = reg.index();
         auto &reg_file = regFiles[reg.classValue()];
 
@@ -361,7 +361,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     void
     setReg(const RegId &arch_reg, RegVal val) override
     {
-        const RegId reg = flattenRegId(arch_reg);
+        const RegId reg = arch_reg.flatten(*isa);
 
         if (reg.is(InvalidRegClass))
             return;
@@ -379,7 +379,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     void
     setReg(const RegId &arch_reg, const void *val) override
     {
-        const RegId reg = flattenRegId(arch_reg);
+        const RegId reg = arch_reg.flatten(*isa);
 
         const RegIndex idx = reg.index();
 
