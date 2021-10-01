@@ -79,7 +79,7 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.push_back(&intRegClass);
+    _regClasses.push_back(&flatIntRegClass);
     _regClasses.push_back(&floatRegClass);
     _regClasses.push_back(&vecRegClass);
     _regClasses.push_back(&vecElemClass);
