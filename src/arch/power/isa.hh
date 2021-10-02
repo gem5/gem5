@@ -57,15 +57,12 @@ class ISA : public BaseISA
     RegVal miscRegs[NUM_MISCREGS];
 
   public:
-    void clear() {}
-
     PCStateBase *
     newPCState(Addr new_inst_addr=0) const override
     {
         return new PCState(new_inst_addr);
     }
 
-  public:
     RegVal
     readMiscRegNoEffect(int misc_reg) const
     {
