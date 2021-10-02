@@ -68,6 +68,8 @@ class BaseISA : public SimObject
 
   public:
     virtual PCStateBase *newPCState(Addr new_inst_addr=0) const = 0;
+    virtual void clear() {}
+
     virtual void takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc) {}
     virtual void setThreadContext(ThreadContext *_tc) { tc = _tc; }
 

@@ -164,7 +164,7 @@ namespace ArmISA
         const RegId &mapIntRegId(RegIndex idx) const { return intRegMap[idx]; }
 
       public:
-        void clear();
+        void clear() override;
 
       protected:
         void clear32(const ArmISAParams &p, const SCTLR &sctlr_rst);

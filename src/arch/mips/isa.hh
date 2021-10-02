@@ -77,7 +77,7 @@ namespace MipsISA
         std::vector<BankType> bankType;
 
       public:
-        void clear();
+        void clear() override;
 
         PCStateBase *
         newPCState(Addr new_inst_addr=0) const override

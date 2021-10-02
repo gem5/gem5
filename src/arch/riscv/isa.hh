@@ -75,7 +75,7 @@ class ISA : public BaseISA
   public:
     using Params = RiscvISAParams;
 
-    void clear();
+    void clear() override;
 
     PCStateBase *
     newPCState(Addr new_inst_addr=0) const override
