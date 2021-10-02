@@ -216,7 +216,7 @@ CPU::CPU(const BaseO3CPUParams &params)
 
     // Setup the rename map for whichever stages need it.
     for (ThreadID tid = 0; tid < numThreads; tid++) {
-        isa[tid] = dynamic_cast<TheISA::ISA *>(params.isa[tid]);
+        isa[tid] = params.isa[tid];
         commitRenameMap[tid].init(regClasses, &regFile, &freeList);
         renameMap[tid].init(regClasses, &regFile, &freeList);
     }
