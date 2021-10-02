@@ -38,7 +38,6 @@
 #include <vector>
 
 #include "arch/amdgpu/vega/tlb.hh"
-#include "arch/isa.hh"
 #include "base/statistics.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
