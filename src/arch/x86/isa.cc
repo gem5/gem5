@@ -202,49 +202,49 @@ ISA::copyRegsFrom(ThreadContext *src)
 }
 
 RegVal
-ISA::readMiscRegNoEffect(int miscReg) const
+ISA::readMiscRegNoEffect(RegIndex idx) const
 {
     // Make sure we're not dealing with an illegal control register.
     // Instructions should filter out these indexes, and nothing else should
     // attempt to read them directly.
-    assert(misc_reg::isValid(miscReg));
+    assert(misc_reg::isValid(idx));
 
-    return regVal[miscReg];
+    return regVal[idx];
 }
 
 RegVal
-ISA::readMiscReg(int miscReg)
+ISA::readMiscReg(RegIndex idx)
 {
-    if (miscReg == misc_reg::Tsc) {
+    if (idx == misc_reg::Tsc) {
         return regVal[misc_reg::Tsc] + tc->getCpuPtr()->curCycle();
     }
 
-    if (miscReg == misc_reg::Fsw) {
+    if (idx == misc_reg::Fsw) {
         RegVal fsw = regVal[misc_reg::Fsw];
         RegVal top = regVal[misc_reg::X87Top];
         return insertBits(fsw, 13, 11, top);
     }
 
-    if (miscReg == misc_reg::ApicBase) {
+    if (idx == misc_reg::ApicBase) {
         LocalApicBase base = regVal[misc_reg::ApicBase];
         base.bsp = (tc->contextId() == 0);
         return base;
     }
 
-    return readMiscRegNoEffect(miscReg);
+    return readMiscRegNoEffect(idx);
 }
 
 void
-ISA::setMiscRegNoEffect(int miscReg, RegVal val)
+ISA::setMiscRegNoEffect(RegIndex idx, RegVal val)
 {
     // Make sure we're not dealing with an illegal control register.
     // Instructions should filter out these indexes, and nothing else should
     // attempt to write to them directly.
-    assert(misc_reg::isValid(miscReg));
+    assert(misc_reg::isValid(idx));
 
     HandyM5Reg m5Reg = regVal[misc_reg::M5Reg];
     int reg_width = 64;
-    switch (miscReg) {
+    switch (idx) {
       case misc_reg::X87Top:
         reg_width = 3;
         break;
@@ -273,18 +273,17 @@ ISA::setMiscRegNoEffect(int miscReg, RegVal val)
         break;
     }
 
-    regVal[miscReg] = val & mask(reg_width);
+    regVal[idx] = val & mask(reg_width);
 }
 
 void
-ISA::setMiscReg(int miscReg, RegVal val)
+ISA::setMiscReg(RegIndex idx, RegVal val)
 {
     RegVal newVal = val;
-    switch(miscReg)
-    {
+    switch (idx) {
       case misc_reg::Cr0:
         {
-            CR0 toggled = regVal[miscReg] ^ val;
+            CR0 toggled = regVal[idx] ^ val;
             CR0 newCR0 = val;
             Efer efer = regVal[misc_reg::Efer];
             if (toggled.pg && efer.lme) {
@@ -318,7 +317,7 @@ ISA::setMiscReg(int miscReg, RegVal val)
         break;
       case misc_reg::Cr4:
         {
-            CR4 toggled = regVal[miscReg] ^ val;
+            CR4 toggled = regVal[idx] ^ val;
             if (toggled.pae || toggled.pse || toggled.pge) {
                 tc->getMMUPtr()->flushAll();
             }
@@ -334,7 +333,7 @@ ISA::setMiscReg(int miscReg, RegVal val)
         }
       case misc_reg::CsAttr:
         {
-            SegAttr toggled = regVal[miscReg] ^ val;
+            SegAttr toggled = regVal[idx] ^ val;
             SegAttr newCSAttr = val;
             if (toggled.longMode) {
                 if (newCSAttr.longMode) {
@@ -372,7 +371,7 @@ ISA::setMiscReg(int miscReg, RegVal val)
       case misc_reg::TsgBase:
       case misc_reg::TrBase:
       case misc_reg::IdtrBase:
-        regVal[misc_reg::segEffBase(miscReg - misc_reg::SegBaseBase)] = val;
+        regVal[misc_reg::segEffBase(idx - misc_reg::SegBaseBase)] = val;
         break;
       // These segments ignore their bases in 64 bit mode.
       // their effective bases must stay equal to their actual bases.
@@ -384,7 +383,7 @@ ISA::setMiscReg(int miscReg, RegVal val)
             Efer efer = regVal[misc_reg::Efer];
             SegAttr csAttr = regVal[misc_reg::CsAttr];
             if (!efer.lma || !csAttr.longMode) // Check for non 64 bit mode.
-                regVal[misc_reg::segEffBase(miscReg -
+                regVal[misc_reg::segEffBase(idx -
                         misc_reg::SegBaseBase)] = val;
         }
         break;
@@ -398,7 +397,7 @@ ISA::setMiscReg(int miscReg, RegVal val)
         /* These should eventually set up breakpoints. */
         break;
       case misc_reg::Dr4:
-        miscReg = misc_reg::Dr6;
+        idx = misc_reg::Dr6;
         [[fallthrough]];
       case misc_reg::Dr6:
         {
@@ -415,7 +414,7 @@ ISA::setMiscReg(int miscReg, RegVal val)
         }
         break;
       case misc_reg::Dr5:
-        miscReg = misc_reg::Dr7;
+        idx = misc_reg::Dr7;
         [[fallthrough]];
       case misc_reg::Dr7:
         {
@@ -473,7 +472,7 @@ ISA::setMiscReg(int miscReg, RegVal val)
       default:
         break;
     }
-    setMiscRegNoEffect(miscReg, newVal);
+    setMiscRegNoEffect(idx, newVal);
 }
 
 void

@@ -188,11 +188,11 @@ class ISA : public BaseISA
 
   public:
 
-    RegVal readMiscRegNoEffect(int miscReg) const;
-    RegVal readMiscReg(int miscReg);
+    RegVal readMiscRegNoEffect(RegIndex idx) const override;
+    RegVal readMiscReg(RegIndex idx) override;
 
-    void setMiscRegNoEffect(int miscReg, RegVal val);
-    void setMiscReg(int miscReg, RegVal val);
+    void setMiscRegNoEffect(RegIndex idx, RegVal val) override;
+    void setMiscReg(RegIndex idx, RegVal val) override;
 
     uint64_t
     getExecutingAsid() const override

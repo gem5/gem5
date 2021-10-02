@@ -98,18 +98,37 @@ namespace MipsISA
         //////////////////////////////////////////////////////////
         //@TODO: MIPS MT's register view automatically connects
         //       Status to TCStatus depending on current thread
-        void updateCP0ReadView(int misc_reg, ThreadID tid) { }
-        RegVal readMiscRegNoEffect(int misc_reg, ThreadID tid = 0) const;
+        void updateCP0ReadView(RegIndex idx, ThreadID tid) { }
+        RegVal readMiscRegNoEffect(RegIndex idx, ThreadID tid) const;
+        RegVal
+        readMiscRegNoEffect(RegIndex idx) const override
+        {
+            return readMiscRegNoEffect(idx, 0);
+        }
 
-        //template <class TC>
-        RegVal readMiscReg(int misc_reg, ThreadID tid = 0);
+        RegVal readMiscReg(RegIndex idx, ThreadID tid);
+        RegVal
+        readMiscReg(RegIndex idx) override
+        {
+            return readMiscReg(idx, 0);
+        }
 
-        RegVal filterCP0Write(int misc_reg, int reg_sel, RegVal val);
-        void setRegMask(int misc_reg, RegVal val, ThreadID tid = 0);
-        void setMiscRegNoEffect(int misc_reg, RegVal val, ThreadID tid=0);
+        RegVal filterCP0Write(RegIndex idx, int reg_sel, RegVal val);
+        void setRegMask(RegIndex idx, RegVal val, ThreadID tid = 0);
 
-        //template <class TC>
-        void setMiscReg(int misc_reg, RegVal val, ThreadID tid=0);
+        void setMiscRegNoEffect(RegIndex idx, RegVal val, ThreadID tid);
+        void
+        setMiscRegNoEffect(RegIndex idx, RegVal val) override
+        {
+            setMiscRegNoEffect(idx, val, 0);
+        }
+
+        void setMiscReg(RegIndex idx, RegVal val, ThreadID tid);
+        void
+        setMiscReg(RegIndex idx, RegVal val) override
+        {
+            setMiscReg(idx, val, 0);
+        }
 
         //////////////////////////////////////////////////////////
         //

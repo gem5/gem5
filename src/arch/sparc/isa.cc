@@ -373,17 +373,17 @@ ISA::clear()
 }
 
 RegVal
-ISA::readMiscRegNoEffect(int miscReg) const
+ISA::readMiscRegNoEffect(RegIndex idx) const
 {
 
-  // The three miscRegs are moved up from the switch statement
+  // The three idxs are moved up from the switch statement
   // due to more frequent calls.
 
-  if (miscReg == MISCREG_GL)
+  if (idx == MISCREG_GL)
     return gl;
-  if (miscReg == MISCREG_CWP)
+  if (idx == MISCREG_CWP)
     return cwp;
-  if (miscReg == MISCREG_TLB_DATA) {
+  if (idx == MISCREG_TLB_DATA) {
     /* Package up all the data for the tlb:
      * 6666555555555544444444443333333333222222222211111111110000000000
      * 3210987654321098765432109876543210987654321098765432109876543210
@@ -405,7 +405,7 @@ ISA::readMiscRegNoEffect(int miscReg) const
                 (uint64_t)secContext << 48;
   }
 
-    switch (miscReg) {
+    switch (idx) {
       // case MISCREG_TLB_DATA:
       //  [original contents see above]
       // case MISCREG_Y:
@@ -529,14 +529,14 @@ ISA::readMiscRegNoEffect(int miscReg) const
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
         return nres_error_tail;
       default:
-        panic("Miscellaneous register %d not implemented\n", miscReg);
+        panic("Miscellaneous register %d not implemented\n", idx);
     }
 }
 
 RegVal
-ISA::readMiscReg(int miscReg)
+ISA::readMiscReg(RegIndex idx)
 {
-    switch (miscReg) {
+    switch (idx) {
         // tick and stick are aliased to each other in niagra
         // well store the tick data in stick and the interrupt bit in tick
       case MISCREG_STICK:
@@ -576,15 +576,15 @@ ISA::readMiscReg(int miscReg)
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
       case MISCREG_HPSTATE:
-        return readFSReg(miscReg);
+        return readFSReg(idx);
     }
-    return readMiscRegNoEffect(miscReg);
+    return readMiscRegNoEffect(idx);
 }
 
 void
-ISA::setMiscRegNoEffect(int miscReg, RegVal val)
+ISA::setMiscRegNoEffect(RegIndex idx, RegVal val)
 {
-    switch (miscReg) {
+    switch (idx) {
 //      case MISCREG_Y:
 //        y = val;
 //        break;
@@ -758,16 +758,16 @@ ISA::setMiscRegNoEffect(int miscReg, RegVal val)
         nres_error_tail = val;
         break;
       default:
-        panic("Miscellaneous register %d not implemented\n", miscReg);
+        panic("Miscellaneous register %d not implemented\n", idx);
     }
 }
 
 void
-ISA::setMiscReg(int miscReg, RegVal val)
+ISA::setMiscReg(RegIndex idx, RegVal val)
 {
     RegVal new_val = val;
 
-    switch (miscReg) {
+    switch (idx) {
       case MISCREG_ASI:
         tc->getDecoderPtr()->as<Decoder>().setContext(val);
         break;
@@ -832,10 +832,10 @@ ISA::setMiscReg(int miscReg, RegVal val)
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
       case MISCREG_HPSTATE:
-        setFSReg(miscReg, val);
+        setFSReg(idx, val);
         return;
     }
-    setMiscRegNoEffect(miscReg, new_val);
+    setMiscRegNoEffect(idx, new_val);
 }
 
 void
