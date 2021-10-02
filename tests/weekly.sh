@@ -46,21 +46,35 @@ docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
 
 # For the GPU tests we compile and run GCN3_X86 inside a gcn-gpu container.
 docker pull gcr.io/gem5-test/gcn-gpu:latest
-docker run --rm -u $UID:$GUID --volume "${gem5_root}":"${gem5_root}" -w \
+docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
     "scons build/GCN3_X86/gem5.opt -j${threads} \
         || (rm -rf build && scons build/GCN3_X86/gem5.opt -j${threads})"
 
-# get LULESH
-wget -qN http://dist.gem5.org/dist/develop/test-progs/lulesh/lulesh
+# test LULESH
+# before pulling gem5 resources, make sure it doesn't exist already
+rm -rf ${gem5_root}/gem5-resources
+
+# Pull gem5 resources to the root of the gem5 directory -- currently the
+# pre-built binares for LULESH are out-of-date and won't run correctly with
+# ROCm 4.0.  In the meantime, we can build the binary as part of this script
+git clone -b develop https://gem5.googlesource.com/public/gem5-resources \
+    "${gem5_root}/gem5-resources"
 
 mkdir -p tests/testing-results
+
+# build LULESH
+docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
+       "${gem5_root}/gem5-resources/src/gpu/lulesh" \
+       -u $UID:$GID gcr.io/gem5-test/gcn-gpu:latest bash -c \
+       "make"
 
 # LULESH is heavily used in the HPC community on GPUs, and does a good job of
 # stressing several GPU compute and memory components
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
-    configs/example/apu_se.py -n3 --mem-size=8GB -clulesh
+    configs/example/apu_se.py -n3 --mem-size=8GB \
+    --benchmark-root="${gem5_root}/gem5-resources/src/gpu/lulesh/bin" -c lulesh
 
 # get DNNMark
 # Delete gem5 resources repo if it already exists -- need to do in docker
