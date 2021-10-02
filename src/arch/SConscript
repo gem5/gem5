@@ -51,18 +51,12 @@ Import('*')
 #
 # ISA "switch header" generation.
 #
-# Auto-generate arch headers that include the right ISA-specific
-# header based on the setting of TARGET_ISA setting.
+# Auto-generate gpu headers that include the right GPU-specific
+# header based on the setting of TARGET_GPU_ISA setting.
 #
 #################################################################
 
 env.TagImplies(env.subst('${CONF["TARGET_ISA"]} isa'), 'gem5 lib')
-
-env.SwitchingHeaders(
-    Split('''
-        isa.hh
-        '''),
-    env.subst('${CONF["TARGET_ISA"]}'))
 
 amdgpu_isa = ['gcn3', 'vega']
 
