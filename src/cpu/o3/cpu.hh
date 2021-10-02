@@ -442,7 +442,7 @@ class CPU : public BaseCPU
     /** Integer Register Scoreboard */
     Scoreboard scoreboard;
 
-    std::vector<TheISA::ISA *> isa;
+    std::vector<BaseISA *> isa;
 
   public:
     /** Enum to give each stage a specific index, so when calling
