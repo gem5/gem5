@@ -41,10 +41,11 @@
 namespace gem5
 {
 
+class BaseISA;
+
 namespace MipsISA
 {
 
-class ISA;
 class Decoder : public InstDecoder
 {
   protected:

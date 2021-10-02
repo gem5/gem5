@@ -56,10 +56,11 @@
 namespace gem5
 {
 
+class BaseISA;
+
 namespace ArmISA
 {
 
-class ISA;
 class Decoder : public InstDecoder
 {
   public: // Public decoder parameters

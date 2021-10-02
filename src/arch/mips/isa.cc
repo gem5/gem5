@@ -458,54 +458,52 @@ ISA::getVPENum(ThreadID tid) const
 }
 
 RegVal
-ISA::readMiscRegNoEffect(int misc_reg, ThreadID tid) const
+ISA::readMiscRegNoEffect(RegIndex idx, ThreadID tid) const
 {
-    unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
+    unsigned reg_sel = (bankType[idx] == perThreadContext)
         ? tid : getVPENum(tid);
     DPRINTF(MipsPRA, "Reading CP0 Register:%u Select:%u (%s) (%lx).\n",
-            misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg],
-            miscRegFile[misc_reg][reg_sel]);
-    return miscRegFile[misc_reg][reg_sel];
+            idx / 8, idx % 8, miscRegNames[idx], miscRegFile[idx][reg_sel]);
+    return miscRegFile[idx][reg_sel];
 }
 
 //@TODO: MIPS MT's register view automatically connects
 //       Status to TCStatus depending on current thread
 //template <class TC>
 RegVal
-ISA::readMiscReg(int misc_reg, ThreadID tid)
+ISA::readMiscReg(RegIndex idx, ThreadID tid)
 {
-    unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
+    unsigned reg_sel = (bankType[idx] == perThreadContext)
         ? tid : getVPENum(tid);
     DPRINTF(MipsPRA,
             "Reading CP0 Register:%u Select:%u (%s) with effect (%lx).\n",
-            misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg],
-            miscRegFile[misc_reg][reg_sel]);
+            idx / 8, idx % 8, miscRegNames[idx], miscRegFile[idx][reg_sel]);
 
-    return miscRegFile[misc_reg][reg_sel];
+    return miscRegFile[idx][reg_sel];
 }
 
 void
-ISA::setMiscRegNoEffect(int misc_reg, RegVal val, ThreadID tid)
+ISA::setMiscRegNoEffect(RegIndex idx, RegVal val, ThreadID tid)
 {
-    unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
+    unsigned reg_sel = (bankType[idx] == perThreadContext)
         ? tid : getVPENum(tid);
     DPRINTF(MipsPRA,
             "[tid:%i] Setting (direct set) CP0 Register:%u "
             "Select:%u (%s) to %#x.\n",
-            tid, misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg], val);
+            tid, idx / 8, idx % 8, miscRegNames[idx], val);
 
-    miscRegFile[misc_reg][reg_sel] = val;
+    miscRegFile[idx][reg_sel] = val;
 }
 
 void
-ISA::setRegMask(int misc_reg, RegVal val, ThreadID tid)
+ISA::setRegMask(RegIndex idx, RegVal val, ThreadID tid)
 {
-    unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
+    unsigned reg_sel = (bankType[idx] == perThreadContext)
         ? tid : getVPENum(tid);
     DPRINTF(MipsPRA,
             "[tid:%i] Setting CP0 Register: %u Select: %u (%s) to %#x\n",
-            tid, misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg], val);
-    miscRegFile_WriteMask[misc_reg][reg_sel] = val;
+            tid, idx / 8, idx % 8, miscRegNames[idx], val);
+    miscRegFile_WriteMask[idx][reg_sel] = val;
 }
 
 // PROGRAMMER'S NOTES:
@@ -513,19 +511,19 @@ ISA::setRegMask(int misc_reg, RegVal val, ThreadID tid)
 // be overwritten. Make sure to handle those particular registers
 // with care!
 void
-ISA::setMiscReg(int misc_reg, RegVal val, ThreadID tid)
+ISA::setMiscReg(RegIndex idx, RegVal val, ThreadID tid)
 {
-    int reg_sel = (bankType[misc_reg] == perThreadContext)
+    int reg_sel = (bankType[idx] == perThreadContext)
         ? tid : getVPENum(tid);
 
     DPRINTF(MipsPRA,
             "[tid:%i] Setting CP0 Register:%u "
             "Select:%u (%s) to %#x, with effect.\n",
-            tid, misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg], val);
+            tid, idx / 8, idx % 8, miscRegNames[idx], val);
 
-    RegVal cp0_val = filterCP0Write(misc_reg, reg_sel, val);
+    RegVal cp0_val = filterCP0Write(idx, reg_sel, val);
 
-    miscRegFile[misc_reg][reg_sel] = cp0_val;
+    miscRegFile[idx][reg_sel] = cp0_val;
 
     scheduleCP0Update(tc->getCpuPtr(), Cycles(1));
 }
@@ -536,22 +534,22 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadID tid)
  * (setRegWithEffect)
 */
 RegVal
-ISA::filterCP0Write(int misc_reg, int reg_sel, RegVal val)
+ISA::filterCP0Write(RegIndex idx, int reg_sel, RegVal val)
 {
     RegVal retVal = val;
 
     // Mask off read-only regions
-    retVal &= miscRegFile_WriteMask[misc_reg][reg_sel];
-    RegVal curVal = miscRegFile[misc_reg][reg_sel];
+    retVal &= miscRegFile_WriteMask[idx][reg_sel];
+    RegVal curVal = miscRegFile[idx][reg_sel];
     // Mask off current alue with inverse mask (clear writeable bits)
-    curVal &= (~miscRegFile_WriteMask[misc_reg][reg_sel]);
+    curVal &= (~miscRegFile_WriteMask[idx][reg_sel]);
     retVal |= curVal; // Combine the two
     DPRINTF(MipsPRA,
             "filterCP0Write: Mask: %lx, Inverse Mask: %lx, write Val: %x, "
             "current val: %lx, written val: %x\n",
-            miscRegFile_WriteMask[misc_reg][reg_sel],
-            ~miscRegFile_WriteMask[misc_reg][reg_sel],
-            val, miscRegFile[misc_reg][reg_sel], retVal);
+            miscRegFile_WriteMask[idx][reg_sel],
+            ~miscRegFile_WriteMask[idx][reg_sel],
+            val, miscRegFile[idx][reg_sel], retVal);
     return retVal;
 }
 

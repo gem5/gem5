@@ -40,10 +40,11 @@
 namespace gem5
 {
 
+class BaseISA;
+
 namespace PowerISA
 {
 
-class ISA;
 class Decoder : public InstDecoder
 {
   protected:
