@@ -41,6 +41,7 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/interrupts.hh"
+#include "arch/arm/isa.hh"
 #include "arch/arm/mmu.hh"
 #include "arch/arm/page_size.hh"
 #include "arch/arm/regs/cc.hh"
