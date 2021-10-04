@@ -1443,6 +1443,12 @@ class SimObject(object, metaclass=MetaSimObject):
                 e.args = (msg, )
                 raise
             self._values[attr] = value
+
+            # If we assign NULL to an attr that is a SimObject,
+            # remove the corresponding children
+            if attr in self._children and isNullPointer(value):
+                self.clear_child(attr)
+
             # implicitly parent unparented objects assigned as params
             if isSimObjectOrVector(value) and not value.has_parent():
                 self.add_child(attr, value)
