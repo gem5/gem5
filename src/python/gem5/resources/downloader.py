@@ -88,12 +88,15 @@ def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
 
     to_return = {}
     for resource in resources_group:
-        if resource["type"] == "artifact":
-            # If the type is "artifact" then we add it directly to the map
+        # 'artifact' is the old naming, we keep it here for
+        # backwards compatibility, but it can be removed with time:
+        # https://gem5-review.googlesource.com/c/public/gem5-resources/+/51169.
+        if resource["type"] == "artifact" or resource["type"] == "resource":
+            # If the type is "resource" then we add it directly to the map
             # after a check that the name is unique.
             if resource["name"] in to_return.keys():
                 raise Exception(
-                    "Error: Duplicate artifact with name '{}'.".format(
+                    "Error: Duplicate resource with name '{}'.".format(
                         resource["name"]
                     )
                 )
@@ -108,7 +111,7 @@ def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
                 # the resources.json file. The resources names need to be
                 # unique keyes.
                 raise Exception(
-                    "Error: Duplicate artifacts with names: {}.".format(
+                    "Error: Duplicate resources with names: {}.".format(
                         str(intersection)
                     )
                 )
@@ -179,16 +182,16 @@ def get_resources_json_obj(resource_name: str) -> Dict:
     :raises Exception: An exception is raised if the specified resources does
     not exist.
     """
-    artifact_map = _get_resources(_get_resources_json()["resources"])
+    resource_map = _get_resources(_get_resources_json()["resources"])
 
-    if resource_name not in artifact_map:
+    if resource_name not in resource_map:
         raise Exception(
             "Error: Resource with name '{}' does not exist".format(
                 resource_name
             )
         )
 
-    return artifact_map[resource_name]
+    return resource_map[resource_name]
 
 
 def get_resource(
