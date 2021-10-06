@@ -251,7 +251,24 @@ def get_resource(
                 )
 
         download_dest = to_path
-        run_unzip = unzip and resource_json["is_zipped"].lower() == "true"
+
+        # This if-statement is remain backwards compatable with the older,
+        # string-based way of doing things. It can be refactored away over
+        # time:
+        # https://gem5-review.googlesource.com/c/public/gem5-resources/+/51168
+        if isinstance(resource_json["is_zipped"], str):
+            run_unzip = unzip and resource_json["is_zipped"].lower() == "true"
+        elif isinstance(resource_json["is_zipped"], bool):
+            run_unzip = unzip and resource_json["is_zipped"]
+        else:
+            raise Exception(
+                "The resource.json entry for '{}' has a value for the "
+                "'is_zipped' field which is neither a string or a boolean."
+                .format(
+                    resource_name
+                )
+            )
+
         if run_unzip:
             download_dest += ".gz"
 
