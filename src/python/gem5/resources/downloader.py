@@ -67,6 +67,18 @@ def _get_resources_json() -> Dict:
         return json.loads(base64.b64decode(url.read()).decode("utf-8"))
 
 
+def _get_url_base() -> str:
+    """
+    Obtains the "url_base" string from the resources.json file.
+
+    :returns: The "url_base" string value from the resources.json file.
+    """
+    json = _get_resources_json()
+    if "url_base" in json.keys():
+        return json["url_base"]
+    return ""
+
+
 def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
     """
     A recursive function to get all the resources.
@@ -243,7 +255,12 @@ def get_resource(
         # TODO: Might be nice to have some kind of download status bar here.
         # TODO: There might be a case where this should be silenced.
         print("'{}' not found locally. Downloading...".format(resource_name))
-        _download(url=resource_json["url"], download_to=download_dest)
+
+        # Get the URL. The URL may contain '{url_base}' which needs replaced
+        # with the correct value.
+        url = resource_json["url"].format(url_base=_get_url_base())
+
+        _download(url=url, download_to=download_dest)
         print("Finished downloading '{}'.".format(resource_name))
 
         if run_unzip:
