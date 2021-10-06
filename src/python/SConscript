@@ -115,6 +115,7 @@ PySource('gem5.components.memory', 'gem5/components/memory/abstract_memory_syste
 PySource('gem5.components.memory', 'gem5/components/memory/dramsim_3.py')
 PySource('gem5.components.memory', 'gem5/components/memory/single_channel.py')
 PySource('gem5.components.memory', 'gem5/components/memory/simple.py')
+PySource('gem5.components.memory', 'gem5/components/memory/multi_channel.py')
 PySource('gem5.components.memory.dram_interfaces',
     'gem5/components/memory/dram_interfaces/__init__.py')
 PySource('gem5.components.memory.dram_interfaces',

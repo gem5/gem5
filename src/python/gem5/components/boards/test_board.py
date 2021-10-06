@@ -72,13 +72,11 @@ class TestBoard(AbstractBoard):
         self.system_port = port
 
     def connect_things(self) -> None:
-        self.setup_memory_ranges()
-
-        self.get_cache_hierarchy().incorporate_cache(self)
-
         self.get_processor().incorporate_processor(self)
 
         self.get_memory().incorporate_memory(self)
+
+        self.get_cache_hierarchy().incorporate_cache(self)
 
     def get_clock_domain(self) -> ClockDomain:
         return self.clk_domain

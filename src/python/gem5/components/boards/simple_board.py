@@ -92,9 +92,6 @@ class SimpleBoard(AbstractBoard):
 
     @overrides(AbstractBoard)
     def connect_things(self) -> None:
-        # Before incorporating the memory, set up the memory ranges
-        self.setup_memory_ranges()
-
         # Incorporate the cache hierarchy for the motherboard.
         self.get_cache_hierarchy().incorporate_cache(self)
 

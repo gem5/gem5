@@ -253,10 +253,6 @@ class X86Board(SimpleBoard):
         # This board is a bit particular about the order that things are
         # connected together.
 
-        # Before incorporating the memory or creating the I/O devices figure
-        # out the memory ranges.
-        self.setup_memory_ranges()
-
         # Set up all of the I/O before we incorporate anything else.
         self._setup_io_devices()
 

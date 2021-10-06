@@ -71,6 +71,8 @@ class AbstractBoard(System):
         self.memory = memory
         self.cache_hierarchy = cache_hierarchy
 
+        self.setup_memory_ranges()
+
     def get_processor(self) -> "AbstractProcessor":
         """Get the processor connected to the board.
 
@@ -188,9 +190,9 @@ class AbstractBoard(System):
         """
         Set the memory ranges for this board.
 
-        This is called by `connect_things`. It can query the board's memory
-        to determine the size and the set the memory ranges on the memory if
-        it needs to move the memory devices.
+        This is called by at the end of the constructor. It can query the
+        board's memory to determine the size and the set the memory ranges on
+        the memory if it needs to move the memory devices.
 
         The simplest implementation just sets the board's memory range to be
         the size of memory and memory's memory range to be the same as the
