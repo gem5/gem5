@@ -562,34 +562,6 @@ class LSQ
 
     class SingleDataRequest : public LSQRequest
     {
-      protected:
-        /* Given that we are inside templates, children need explicit
-         * declaration of the names in the parent class. */
-        using Flag = LSQRequest::Flag;
-        using State = LSQRequest::State;
-        using LSQRequest::_addr;
-        using LSQRequest::_fault;
-        using LSQRequest::_flags;
-        using LSQRequest::_size;
-        using LSQRequest::_byteEnable;
-        using LSQRequest::_reqs;
-        using LSQRequest::_inst;
-        using LSQRequest::_packets;
-        using LSQRequest::_port;
-        using LSQRequest::_res;
-        using LSQRequest::_taskId;
-        using LSQRequest::_state;
-        using LSQRequest::flags;
-        using LSQRequest::isLoad;
-        using LSQRequest::isTranslationComplete;
-        using LSQRequest::lsqUnit;
-        using LSQRequest::req;
-        using LSQRequest::sendFragmentToTranslation;
-        using LSQRequest::setState;
-        using LSQRequest::numInTranslationFragments;
-        using LSQRequest::numTranslatedFragments;
-        using LSQRequest::_numOutstandingPackets;
-        using LSQRequest::_amo_op;
       public:
         SingleDataRequest(LSQUnit* port, const DynInstPtr& inst,
                 bool isLoad, const Addr& addr, const uint32_t& size,
@@ -616,19 +588,6 @@ class LSQ
     // of encapsulating hardware transactional memory command requests
     class HtmCmdRequest : public SingleDataRequest
     {
-      protected:
-        /* Given that we are inside templates, children need explicit
-         * declaration of the names in the parent class. */
-        using Flag = LSQRequest::Flag;
-        using State = LSQRequest::State;
-        using LSQRequest::_addr;
-        using LSQRequest::_size;
-        using LSQRequest::_byteEnable;
-        using LSQRequest::_reqs;
-        using LSQRequest::_inst;
-        using LSQRequest::_taskId;
-        using LSQRequest::flags;
-        using LSQRequest::setState;
       public:
         HtmCmdRequest(LSQUnit* port, const DynInstPtr& inst,
                 const Request::Flags& flags_);
@@ -642,34 +601,6 @@ class LSQ
     class SplitDataRequest : public LSQRequest
     {
       protected:
-        /* Given that we are inside templates, children need explicit
-         * declaration of the names in the parent class. */
-        using Flag = LSQRequest::Flag;
-        using State = LSQRequest::State;
-        using LSQRequest::_addr;
-        using LSQRequest::_data;
-        using LSQRequest::_fault;
-        using LSQRequest::_flags;
-        using LSQRequest::_inst;
-        using LSQRequest::_packets;
-        using LSQRequest::_port;
-        using LSQRequest::_reqs;
-        using LSQRequest::_res;
-        using LSQRequest::_byteEnable;
-        using LSQRequest::_size;
-        using LSQRequest::_state;
-        using LSQRequest::_taskId;
-        using LSQRequest::flags;
-        using LSQRequest::isLoad;
-        using LSQRequest::isTranslationComplete;
-        using LSQRequest::lsqUnit;
-        using LSQRequest::numInTranslationFragments;
-        using LSQRequest::numTranslatedFragments;
-        using LSQRequest::req;
-        using LSQRequest::sendFragmentToTranslation;
-        using LSQRequest::setState;
-        using LSQRequest::_numOutstandingPackets;
-
         uint32_t numFragments;
         uint32_t numReceivedPackets;
         RequestPtr _mainReq;
