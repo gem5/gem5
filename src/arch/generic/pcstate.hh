@@ -50,11 +50,17 @@
 namespace gem5
 {
 
+class PCStateBase : public Serializable
+{
+  public:
+    virtual ~PCStateBase() = default;
+};
+
 namespace GenericISA
 {
 
 // The guaranteed interface.
-class PCStateBase : public Serializable
+class PCStateCommon : public PCStateBase
 {
   protected:
     Addr _pc = 0;
@@ -63,8 +69,7 @@ class PCStateBase : public Serializable
     MicroPC _upc = 0;
     MicroPC _nupc = 1;
 
-    PCStateBase() {}
-    PCStateBase(Addr val) { set(val); }
+    PCStateCommon() {}
 
   public:
     /**
@@ -100,6 +105,12 @@ class PCStateBase : public Serializable
         return _upc;
     }
 
+    Addr pc() const { return _pc; }
+    void pc(Addr val) { _pc = val; }
+
+    Addr npc() const { return _npc; }
+    void npc(Addr val) { _npc = val; }
+
     // Reset the macroop's upc without advancing the regular pc.
     void
     uReset()
@@ -108,22 +119,20 @@ class PCStateBase : public Serializable
         _nupc = 1;
     }
 
-    /**
-     * Force this PC to reflect a particular value, resetting all its other
-     * fields around it. This is useful for in place (re)initialization.
-     *
-     * @param val The value to set the PC to.
-     */
-    void set(Addr val);
+    void
+    setNPC(Addr val)
+    {
+        npc(val);
+    }
 
     bool
-    operator == (const PCStateBase &opc) const
+    operator == (const PCStateCommon &opc) const
     {
         return _pc == opc._pc && _npc == opc._npc;
     }
 
     bool
-    operator != (const PCStateBase &opc) const
+    operator != (const PCStateCommon &opc) const
     {
         return !(*this == opc);
     }
@@ -156,34 +165,27 @@ class PCStateBase : public Serializable
 
 // The most basic type of PC.
 template <int InstWidth>
-class SimplePCState : public PCStateBase
+class SimplePCState : public PCStateCommon
 {
   protected:
-    typedef PCStateBase Base;
+    typedef PCStateCommon Base;
 
   public:
+    SimplePCState() {}
+    SimplePCState(Addr val) { set(val); }
 
-    Addr pc() const { return _pc; }
-    void pc(Addr val) { _pc = val; }
-
-    Addr npc() const { return _npc; }
-    void npc(Addr val) { _npc = val; }
-
+    /**
+     * Force this PC to reflect a particular value, resetting all its other
+     * fields around it. This is useful for in place (re)initialization.
+     *
+     * @param val The value to set the PC to.
+     */
     void
     set(Addr val)
     {
         pc(val);
         npc(val + InstWidth);
     };
-
-    void
-    setNPC(Addr val)
-    {
-        npc(val);
-    }
-
-    SimplePCState() {}
-    SimplePCState(Addr val) { set(val); }
 
     bool
     branching() const
