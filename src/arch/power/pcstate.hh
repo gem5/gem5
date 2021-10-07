@@ -42,24 +42,10 @@ namespace PowerISA
 class PCState : public GenericISA::SimplePCState<4>
 {
   private:
-    typedef GenericISA::SimplePCState<4> Base;
     ByteOrder guestByteOrder = ByteOrder::big;
 
   public:
-    PCState()
-    {}
-
-    void
-    set(Addr val)
-    {
-        Base::set(val);
-        npc(val + 4);
-    }
-
-    PCState(Addr val)
-    {
-        set(val);
-    }
+    using GenericISA::SimplePCState<4>::SimplePCState;
 
     ByteOrder
     byteOrder() const

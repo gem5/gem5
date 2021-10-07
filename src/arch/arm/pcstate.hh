@@ -79,22 +79,19 @@ class PCState : public GenericISA::UPCState<4>
         AArch64Bit = (1 << 2)
     };
 
-    uint8_t flags;
-    uint8_t nextFlags;
-    uint8_t _itstate;
-    uint8_t _nextItstate;
-    uint8_t _size;
-    bool _illegalExec;
+    uint8_t flags = 0;
+    uint8_t nextFlags = 0;
+    uint8_t _itstate = 0;
+    uint8_t _nextItstate = 0;
+    uint8_t _size = 0;
+    bool _illegalExec = false;
 
     // Software Step flags
-    bool _debugStep;
-    bool _stepped;
+    bool _debugStep = false;
+    bool _stepped = false;
 
   public:
-    PCState() : flags(0), nextFlags(0), _itstate(0), _nextItstate(0),
-                _size(0), _illegalExec(false), _debugStep(false),
-                _stepped(false)
-    {}
+    PCState() {}
 
     void
     set(Addr val)
@@ -103,10 +100,7 @@ class PCState : public GenericISA::UPCState<4>
         npc(val + (thumb() ? 2 : 4));
     }
 
-    PCState(Addr val) : flags(0), nextFlags(0), _itstate(0),
-                        _nextItstate(0), _size(0), _illegalExec(false),
-                        _debugStep(false), _stepped(false)
-    { set(val); }
+    PCState(Addr val) { set(val); }
 
     bool
     illegalExec() const

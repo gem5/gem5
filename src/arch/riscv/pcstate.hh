@@ -53,15 +53,14 @@ namespace RiscvISA
 class PCState : public GenericISA::UPCState<4>
 {
   private:
-    bool _compressed;
-    bool _rv32;
+    bool _compressed = false;
+    bool _rv32 = false;
 
   public:
-    PCState() : UPCState() { _compressed = false; _rv32 = false; }
-    PCState(Addr val) : UPCState(val) { _compressed = false; _rv32 = false; }
+    using GenericISA::UPCState<4>::UPCState;
 
     void compressed(bool c) { _compressed = c; }
-    bool compressed() { return _compressed; }
+    bool compressed() const { return _compressed; }
 
     void rv32(bool val) { _rv32 = val; }
     bool rv32() const { return _rv32; }

@@ -97,14 +97,14 @@ class PCState : public GenericISA::UPCState<8>
     }
 
     void
-    serialize(CheckpointOut &cp) const
+    serialize(CheckpointOut &cp) const override
     {
         Base::serialize(cp);
         SERIALIZE_SCALAR(_size);
     }
 
     void
-    unserialize(CheckpointIn &cp)
+    unserialize(CheckpointIn &cp) override
     {
         Base::unserialize(cp);
         UNSERIALIZE_SCALAR(_size);
