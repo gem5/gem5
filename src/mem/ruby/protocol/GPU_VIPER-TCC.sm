@@ -268,7 +268,6 @@ machine(MachineType:TCC, "TCC Cache")
         if (tbe.numAtomics == 0 && tbe.atomicDoneCnt == 1) {
             trigger(Event:AtomicDone, in_msg.addr, cache_entry, tbe);
         } else {
-            tbe.atomicDoneCnt := tbe.atomicDoneCnt - 1;
             trigger(Event:AtomicNotDone, in_msg.addr, cache_entry, tbe);
         }
       }
@@ -599,6 +598,10 @@ machine(MachineType:TCC, "TCC Cache")
     }
   }
 
+  action(dadc_decrementAtomicDoneCnt, "dadc", desc="decrement atomics done cnt flag") {
+    tbe.atomicDoneCnt := tbe.atomicDoneCnt - 1;
+  }
+
   action(ptr_popTriggerQueue, "ptr", desc="pop Trigger") {
     triggerQueue_in.dequeue(clockEdge());
   }
@@ -787,6 +790,7 @@ transition(I, Atomic, A) {TagArrayRead} {
   }
 
   transition(A, AtomicNotDone) {TagArrayRead} {
+    dadc_decrementAtomicDoneCnt;
     ptr_popTriggerQueue;
   }
 
