@@ -274,19 +274,30 @@ def get_resource(
 
         # TODO: Might be nice to have some kind of download status bar here.
         # TODO: There might be a case where this should be silenced.
-        print("'{}' not found locally. Downloading...".format(resource_name))
+        print(
+            "Resource '{}' was not found locally. Downloading to '{}'..."
+            .format(
+                resource_name, download_dest
+            )
+        )
 
         # Get the URL. The URL may contain '{url_base}' which needs replaced
         # with the correct value.
         url = resource_json["url"].format(url_base=_get_url_base())
 
         _download(url=url, download_to=download_dest)
-        print("Finished downloading '{}'.".format(resource_name))
+        print("Finished downloading resource '{}'.".format(resource_name))
 
         if run_unzip:
-            print("Decompressing '{}'...".format(resource_name))
+            print(
+                "Decompressing resource '{}' ('{}')...".format(
+                    resource_name, download_dest
+                )
+            )
             with gzip.open(download_dest, "rb") as f:
                 with open(to_path, "wb") as o:
                     shutil.copyfileobj(f, o)
             os.remove(download_dest)
-            print("Finished decompressing '{}.".format(resource_name))
+            print(
+                "Finished decompressing resource '{}'.".format(resource_name)
+            )
