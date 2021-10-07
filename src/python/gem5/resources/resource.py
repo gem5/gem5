@@ -26,6 +26,7 @@
 
 from abc import ABCMeta
 import os
+from pathlib import Path
 
 from .downloader import get_resource
 
@@ -89,21 +90,42 @@ class Resource(AbstractResource):
         """
         :param resource_name: The name of the gem5 resource.
         :param resource_directory: The location of the directory in which the
-        resource is to be stored.
+        resource is to be stored. If this parameter is not set, it will set to
+        the environment variable `GEM5_RESOURCE_DIR`. If the environment is not
+        set it will default to `~/.cache/gem5`.
         :param override: If the resource is present, but does not have the
         correct md5 value, the resoruce will be deleted and re-downloaded if
         this value is True. Otherwise an exception will be thrown. False by
         default.
         """
 
-        if resource_directory != None:
-            if not os.path.exists(resource_directory):
-                os.makedirs(resource_directory)
-            to_path = os.path.join(resource_directory, resource_name)
+        if resource_directory == None:
+            resource_directory = os.getenv(
+                "GEM5_RESOURCE_DIR", self._get_default_resource_dir()
+            )
+
+        if os.path.exists(resource_directory):
+            if not os.path.isdir(resource_directory):
+                raise Exception(
+                    "gem5 resource directory, "
+                    "'{}', exists but is not a directory".format(
+                        resource_directory
+                    )
+                )
         else:
-            to_path = resource_name
+            os.makedirs(resource_directory)
+
+        to_path = os.path.join(resource_directory, resource_name)
 
         super(Resource, self).__init__(local_path=to_path)
         get_resource(
             resource_name=resource_name, to_path=to_path, override=override
         )
+
+    def _get_default_resource_dir(cls) -> str:
+        """
+        Obtain the default gem5 resources directory on the host system.
+
+        :returns: The default gem5 resources directory.
+        """
+        return os.path.join(Path.home(), ".cache", "gem5")
