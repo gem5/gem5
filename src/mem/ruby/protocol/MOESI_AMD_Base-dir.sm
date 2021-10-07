@@ -1092,15 +1092,15 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     stall_and_wait(dmaRequestQueue_in, address);
   }
 
-  action(wa_wakeUpDependents, "wa", desc="Wake up any requests waiting for this address") {
+  action(wad_wakeUpDependents, "wad", desc="Wake up any requests waiting for this address") {
     wakeUpBuffers(address);
   }
 
-  action(wa_wakeUpAllDependents, "waa", desc="Wake up any requests waiting for this region") {
+  action(wa_wakeUpAllDependents, "wa", desc="Wake up any requests waiting for this region") {
     wakeUpAllBuffers();
   }
 
-  action(wa_wakeUpAllDependentsAddr, "waaa", desc="Wake up any requests waiting for this address") {
+  action(wada_wakeUpAllDependentsAddr, "wada", desc="Wake up any requests waiting for this address") {
     wakeUpAllBuffers(address);
   }
 
@@ -1206,7 +1206,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     d_writeDataToMemory;
     al_allocateL3Block;
     pr_profileL3HitMiss; //Must come after al_allocateL3Block and before dt_deallocateTBE
-    wa_wakeUpDependents;
+    wad_wakeUpDependents;
     dt_deallocateTBE;
     pr_popResponseQueue;
   }
@@ -1232,12 +1232,12 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   transition({B}, CoreUnblock, U) {
-    wa_wakeUpAllDependentsAddr;
+    wada_wakeUpAllDependentsAddr;
     pu_popUnblockQueue;
   }
 
   transition(B, UnblockWriteThrough, U) {
-    wa_wakeUpDependents;
+    wada_wakeUpAllDependentsAddr;
     pt_popTriggerQueue;
   }
 
@@ -1280,7 +1280,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   transition(BDR_M, MemData, U) {
     mt_writeMemDataToTBE;
     dd_sendResponseDmaData;
-    wa_wakeUpAllDependentsAddr;
+    wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pm_popMemQueue;
   }
@@ -1365,7 +1365,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   transition(BDW_P, ProbeAcksComplete, U) {
     // Check for pending requests from the core we put to sleep while waiting
     // for a response
-    wa_wakeUpAllDependentsAddr;
+    wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pt_popTriggerQueue;
   }
@@ -1374,7 +1374,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     dd_sendResponseDmaData;
     // Check for pending requests from the core we put to sleep while waiting
     // for a response
-    wa_wakeUpAllDependentsAddr;
+    wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pt_popTriggerQueue;
   }

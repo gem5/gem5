@@ -126,6 +126,7 @@ machine(MachineType:TCC, "TCC Cache")
   void unset_tbe();
   void wakeUpAllBuffers();
   void wakeUpBuffers(Addr a);
+  void wakeUpAllBuffers(Addr a);
 
   MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
@@ -569,6 +570,14 @@ machine(MachineType:TCC, "TCC Cache")
     probeNetwork_in.dequeue(clockEdge());
   }
 
+  action(st_stallAndWaitRequest, "st", desc="Stall and wait on the address") {
+    stall_and_wait(coreRequestNetwork_in, address);
+  }
+
+  action(wada_wakeUpAllDependentsAddr, "wada", desc="Wake up any requests waiting for this address") {
+    wakeUpAllBuffers(address);
+  }
+
   action(z_stall, "z", desc="stall") {
       // built-in
   }
@@ -606,13 +615,22 @@ machine(MachineType:TCC, "TCC Cache")
   // they can cause a resource stall deadlock!
 
   transition(WI, {RdBlk, WrVicBlk, Atomic, WrVicBlkBack}) { //TagArrayRead} {
-      z_stall;
+      // put putting the stalled requests in a buffer, we reduce resource contention
+      // since they won't try again every cycle and will instead only try again once
+      // woken up
+      st_stallAndWaitRequest;
   }
   transition(A, {RdBlk, WrVicBlk, WrVicBlkBack}) { //TagArrayRead} {
-      z_stall;
+      // put putting the stalled requests in a buffer, we reduce resource contention
+      // since they won't try again every cycle and will instead only try again once
+      // woken up
+      st_stallAndWaitRequest;
   }
   transition(IV, {WrVicBlk, Atomic, WrVicBlkBack}) { //TagArrayRead} {
-      z_stall;
+      // put putting the stalled requests in a buffer, we reduce resource contention
+      // since they won't try again every cycle and will instead only try again once
+      // woken up
+      st_stallAndWaitRequest;
   }
   transition({M, V}, RdBlk) {TagArrayRead, DataArrayRead} {
     p_profileHit;
@@ -660,9 +678,10 @@ transition(I, Atomic, A) {TagArrayRead} {
 
   transition(A, Atomic) {
     p_profileMiss;
-    at_atomicThrough;
-    ina_incrementNumAtomics;
-    p_popRequestQueue;
+    // put putting the stalled requests in a buffer, we reduce resource contention
+    // since they won't try again every cycle and will instead only try again once
+    // woken up
+    st_stallAndWaitRequest;
   }
 
   transition({M, W}, Atomic, WI) {TagArrayRead} {
@@ -750,6 +769,7 @@ transition(I, Atomic, A) {TagArrayRead} {
     wcb_writeCacheBlock;
     sdr_sendDataResponse;
     pr_popResponseQueue;
+    wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
   }
 
@@ -762,6 +782,7 @@ transition(I, Atomic, A) {TagArrayRead} {
 
   transition(A, AtomicDone, I) {TagArrayRead, TagArrayWrite} {
     dt_deallocateTBE;
+    wada_wakeUpAllDependentsAddr;
     ptr_popTriggerQueue;
   }
 
