@@ -121,9 +121,11 @@ class Template(object):
             &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
             '''
 
+            pcstate_decl = f'{self.parser.namespace}::PCState ' \
+                    '__parserAutoPCState;\n'
             myDict['op_decl'] = operands.concatAttrStrings('op_decl')
             if operands.readPC or operands.setPC:
-                myDict['op_decl'] += 'TheISA::PCState __parserAutoPCState;\n'
+                myDict['op_decl'] += pcstate_decl
 
             # In case there are predicated register reads and write, declare
             # the variables for register indicies. It is being assumed that
@@ -144,11 +146,9 @@ class Template(object):
             myDict['op_dest_decl'] = \
                       operands.concatSomeAttrStrings(is_dest, 'op_dest_decl')
             if operands.readPC:
-                myDict['op_src_decl'] += \
-                    'TheISA::PCState __parserAutoPCState;\n'
+                myDict['op_src_decl'] += pcstate_decl
             if operands.setPC:
-                myDict['op_dest_decl'] += \
-                    'TheISA::PCState __parserAutoPCState;\n'
+                myDict['op_dest_decl'] += pcstate_decl
 
             myDict['op_rd'] = operands.concatAttrStrings('op_rd')
             if operands.readPC:

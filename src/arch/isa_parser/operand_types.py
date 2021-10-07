@@ -737,6 +737,10 @@ class MemOperand(Operand):
         return ''
 
 class PCStateOperand(Operand):
+    def __init__(self, parser, *args, **kwargs):
+        super(PCStateOperand, self).__init__(parser, *args, **kwargs)
+        self.parser = parser
+
     def makeConstructor(self, predRead, predWrite):
         return ''
 
@@ -759,7 +763,7 @@ class PCStateOperand(Operand):
             return 'xc->pcState(%s);\n' % self.base_name
 
     def makeDecl(self):
-        ctype = 'TheISA::PCState'
+        ctype = f'{self.parser.namespace}::PCState'
         if self.isPCPart():
             ctype = self.ctype
         # Note that initializations in the declarations are solely
