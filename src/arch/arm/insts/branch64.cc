@@ -43,31 +43,34 @@ namespace gem5
 namespace ArmISA
 {
 
-ArmISA::PCState
-BranchImm64::branchTarget(const ArmISA::PCState &branchPC) const
+std::unique_ptr<PCStateBase>
+BranchImm64::branchTarget(const PCStateBase &branch_pc) const
 {
-    ArmISA::PCState pcs = branchPC;
-    pcs.instNPC(pcs.pc() + imm);
-    pcs.advance();
-    return pcs;
+    PCStateBase *pcs = branch_pc.clone();
+    auto &apc = pcs->as<PCState>();
+    apc.instNPC(apc.pc() + imm);
+    apc.advance();
+    return std::unique_ptr<PCStateBase>{pcs};
 }
 
-ArmISA::PCState
-BranchImmReg64::branchTarget(const ArmISA::PCState &branchPC) const
+std::unique_ptr<PCStateBase>
+BranchImmReg64::branchTarget(const PCStateBase &branch_pc) const
 {
-    ArmISA::PCState pcs = branchPC;
-    pcs.instNPC(pcs.pc() + imm);
-    pcs.advance();
-    return pcs;
+    PCStateBase *pcs = branch_pc.clone();
+    auto &apc = pcs->as<PCState>();
+    apc.instNPC(apc.pc() + imm);
+    apc.advance();
+    return std::unique_ptr<PCStateBase>{pcs};
 }
 
-ArmISA::PCState
-BranchImmImmReg64::branchTarget(const ArmISA::PCState &branchPC) const
+std::unique_ptr<PCStateBase>
+BranchImmImmReg64::branchTarget(const PCStateBase &branch_pc) const
 {
-    ArmISA::PCState pcs = branchPC;
-    pcs.instNPC(pcs.pc() + imm2);
-    pcs.advance();
-    return pcs;
+    PCStateBase *pcs = branch_pc.clone();
+    auto &apc = pcs->as<PCState>();
+    apc.instNPC(apc.pc() + imm2);
+    apc.advance();
+    return std::unique_ptr<PCStateBase>{pcs};
 }
 
 std::string

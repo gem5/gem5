@@ -47,10 +47,9 @@
 #include <memory>
 #include <string>
 
-#include "arch/pcstate.hh"
+#include "arch/generic/pcstate.hh"
 #include "base/logging.hh"
 #include "base/refcnt.hh"
-#include "config/the_isa.hh"
 #include "cpu/op_class.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/static_inst_fwd.hh"
@@ -339,7 +338,8 @@ class StaticInst : public RefCounted, public StaticInstFlags
      * Invalid if not a PC-relative branch (i.e. isDirectCtrl()
      * should be true).
      */
-    virtual TheISA::PCState branchTarget(const TheISA::PCState &pc) const;
+    virtual std::unique_ptr<PCStateBase> branchTarget(
+            const PCStateBase &pc) const;
 
     /**
      * Return the target address for an indirect branch (jump).  The
@@ -348,7 +348,8 @@ class StaticInst : public RefCounted, public StaticInstFlags
      * execute the branch in question.  Invalid if not an indirect
      * branch (i.e. isIndirectCtrl() should be true).
      */
-    virtual TheISA::PCState branchTarget(ThreadContext *tc) const;
+    virtual std::unique_ptr<PCStateBase> branchTarget(
+            ThreadContext *tc) const;
 
     /**
      * Return string representation of disassembled instruction.

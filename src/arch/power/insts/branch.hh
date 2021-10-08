@@ -88,7 +88,8 @@ class BranchOp : public PCDependentDisassembly
     {
     }
 
-    PowerISA::PCState branchTarget(ThreadContext *tc) const override;
+    std::unique_ptr<PCStateBase> branchTarget(
+            ThreadContext *tc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
@@ -159,7 +160,8 @@ class BranchDispCondOp : public BranchCondOp
     {
     }
 
-    PowerISA::PCState branchTarget(ThreadContext *tc) const override;
+    std::unique_ptr<PCStateBase> branchTarget(
+            ThreadContext *tc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
@@ -186,7 +188,8 @@ class BranchRegCondOp : public BranchCondOp
     {
     }
 
-    PowerISA::PCState branchTarget(ThreadContext *tc) const override;
+    std::unique_ptr<PCStateBase> branchTarget(
+            ThreadContext *tc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;

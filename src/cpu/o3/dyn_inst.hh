@@ -717,7 +717,7 @@ class DynInst : public ExecContext, public RefCounted
     OpClass opClass() const { return staticInst->opClass(); }
 
     /** Returns the branch target address. */
-    TheISA::PCState
+    std::unique_ptr<PCStateBase>
     branchTarget() const
     {
         return staticInst->branchTarget(pc);

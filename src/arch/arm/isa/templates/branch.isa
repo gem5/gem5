@@ -46,8 +46,8 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst, int32_t _imm,
                    ConditionCode _condCode);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
-    ArmISA::PCState branchTarget(
-            const ArmISA::PCState &branchPC) const override;
+    std::unique_ptr<PCStateBase> branchTarget(
+            const PCStateBase &branch_pc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
@@ -150,8 +150,8 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, int32_t imm, IntRegIndex _op1);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
-    ArmISA::PCState branchTarget(
-            const ArmISA::PCState &branchPC) const override;
+    std::unique_ptr<PCStateBase> branchTarget(
+            const PCStateBase &branch_pc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
@@ -173,16 +173,17 @@ def template BranchImmRegConstructor {{
 
 def template BranchTarget {{
 
-    ArmISA::PCState
-    %(class_name)s::branchTarget(const ArmISA::PCState &branchPC) const
+    std::unique_ptr<PCStateBase>
+    %(class_name)s::branchTarget(const PCStateBase &branch_pc) const
     {
         %(op_decl)s;
         %(op_rd)s;
 
-        ArmISA::PCState pcs = branchPC;
+        PCStateBase *pc_ptr = branch_pc.clone();
+        auto &pcs = pc_ptr->as<ArmISA::PCState>();
         %(brTgtCode)s
         pcs.advance();
-        return pcs;
+        return std::unique_ptr<PCStateBase>{pc_ptr};
     }
 }};
 

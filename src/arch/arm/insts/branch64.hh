@@ -57,8 +57,8 @@ class BranchImm64 : public ArmStaticInst
         ArmStaticInst(mnem, _machInst, __opClass), imm(_imm)
     {}
 
-    ArmISA::PCState branchTarget(
-            const ArmISA::PCState &branchPC) const override;
+    std::unique_ptr<PCStateBase> branchTarget(
+            const PCStateBase &branch_pc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
@@ -180,8 +180,8 @@ class BranchImmReg64 : public ArmStaticInst
         ArmStaticInst(mnem, _machInst, __opClass), imm(_imm), op1(_op1)
     {}
 
-    ArmISA::PCState branchTarget(
-            const ArmISA::PCState &branchPC) const override;
+    std::unique_ptr<PCStateBase> branchTarget(
+            const PCStateBase &branch_pc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
@@ -206,8 +206,8 @@ class BranchImmImmReg64 : public ArmStaticInst
         imm1(_imm1), imm2(_imm2), op1(_op1)
     {}
 
-    ArmISA::PCState branchTarget(
-            const ArmISA::PCState &branchPC) const override;
+    std::unique_ptr<PCStateBase> branchTarget(
+            const PCStateBase &branch_pc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;

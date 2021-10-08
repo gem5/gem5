@@ -46,7 +46,7 @@ let {{
         bCode = '''
         NPC = (uint32_t)(PC + imm);
         '''
-        br_tgt_code = '''pcs.instNPC((uint32_t)(branchPC.instPC() + imm));'''
+        br_tgt_code = '''pcs.instNPC((uint32_t)(pcs.instPC() + imm));'''
         instFlags = ["IsDirectControl"]
         if (link):
             bCode += '''
@@ -86,8 +86,8 @@ let {{
             # of the current ISA. Thumb is whether the target is ARM.
             newPC = '(uint32_t)(Thumb ? (roundDown(PC, 4) + imm) : (PC + imm))'
             br_tgt_code = '''
-            pcs.instNPC((uint32_t)(branchPC.thumb() ? (roundDown(branchPC.instPC(),4) + imm) :
-                                (branchPC.instPC() + imm)));
+            pcs.instNPC((uint32_t)(pcs.thumb() ? (roundDown(pcs.instPC(), 4) +
+                            imm) : (pcs.instPC() + imm)));
             '''
             base = "BranchImmCond"
             declare = BranchImmCondDeclare
@@ -129,8 +129,7 @@ let {{
                 NextThumb = !Thumb;
                 NPC = %(newPC)s;
             '''
-            br_tgt_code = '''pcs.nextThumb(!branchPC.thumb());\n''' + \
-                          br_tgt_code
+            br_tgt_code = '''pcs.nextThumb(!pcs.thumb());\n''' + br_tgt_code
         else:
             branchStr = "IWNPC = %(newPC)s;"
         branchStr = branchStr % { "newPC" : newPC }
@@ -171,7 +170,7 @@ let {{
     #CBNZ, CBZ. These are always unconditional as far as predicates
     for (mnem, test) in (("cbz", "=="), ("cbnz", "!=")):
         code = 'NPC = (uint32_t)(PC + imm);\n'
-        br_tgt_code = '''pcs.instNPC((uint32_t)(branchPC.instPC() + imm));'''
+        br_tgt_code = '''pcs.instNPC((uint32_t)(pcs.instPC() + imm));'''
         predTest = "Op1 %(test)s 0" % {"test": test}
         iop = ArmInstObjParams(mnem, mnem.capitalize(), "BranchImmReg",
                                { "code" : code, "predicate_test" : predTest,

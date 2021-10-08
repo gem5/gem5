@@ -122,15 +122,16 @@ X86MicroopBase::checkCondition(uint64_t flags, int condition) const
     return true;
 }
 
-PCState
-X86MicroopBase::branchTarget(const PCState &branchPC) const
+std::unique_ptr<PCStateBase>
+X86MicroopBase::branchTarget(const PCStateBase &branch_pc) const
 {
-    PCState pcs = branchPC;
-        DPRINTF(X86, "branchTarget PC info: %s, Immediate: %lx\n", pcs,
-                (int64_t)machInst.immediate);
-    pcs.npc(pcs.npc() + (int64_t)machInst.immediate);
-    pcs.uEnd();
-    return pcs;
+    PCStateBase *pcs = branch_pc.clone();
+    DPRINTF(X86, "branchTarget PC info: %s, Immediate: %lx\n", *pcs,
+            (int64_t)machInst.immediate);
+    auto &xpc = pcs->as<PCState>();
+    xpc.npc(xpc.npc() + (int64_t)machInst.immediate);
+    xpc.uEnd();
+    return std::unique_ptr<PCStateBase>{pcs};
 }
 
 } // namespace X86ISA

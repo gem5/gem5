@@ -51,15 +51,16 @@ def template BrDeclare {{
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
-        X86ISA::PCState
-        branchTarget(const X86ISA::PCState &branchPC) const override
+        std::unique_ptr<PCStateBase>
+        branchTarget(const PCStateBase &branch_pc) const override
         {
-            X86ISA::PCState pcs = branchPC;
+            PCStateBase *pcs = branch_pc.clone();
             DPRINTF(X86, "Br branchTarget PC info: %s, Target: %d\n",
-                    pcs, (int16_t)target);
-            pcs.nupc(target);
-            pcs.uAdvance();
-            return pcs;
+                    *pcs, (int16_t)target);
+            auto &xpc = pcs->as<PCState>();
+            xpc.nupc(target);
+            xpc.uAdvance();
+            return std::unique_ptr<PCStateBase>{pcs};
         }
 
         /// Explicitly import the otherwise hidden branchTarget

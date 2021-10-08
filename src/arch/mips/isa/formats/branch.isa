@@ -86,8 +86,8 @@ output header {{
             }
         }
 
-        MipsISA::PCState branchTarget(
-                const MipsISA::PCState &branchPC) const override;
+        std::unique_ptr<PCStateBase> branchTarget(
+                const PCStateBase &branch_pc) const override;
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;
@@ -117,7 +117,8 @@ output header {{
         {
         }
 
-        MipsISA::PCState branchTarget(ThreadContext *tc) const override;
+        std::unique_ptr<PCStateBase> branchTarget(
+                ThreadContext *tc) const override;
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;
@@ -128,25 +129,27 @@ output header {{
 }};
 
 output decoder {{
-    MipsISA::PCState
-    Branch::branchTarget(const MipsISA::PCState &branchPC) const
+    std::unique_ptr<PCStateBase>
+    Branch::branchTarget(const PCStateBase &branch_pc) const
     {
-        MipsISA::PCState target = branchPC;
+        PCStateBase *target_ptr = branch_pc.clone();
+        auto &target = target_ptr->as<MipsISA::PCState>();
         target.advance();
-        target.npc(branchPC.pc() + sizeof(MachInst) + disp);
+        target.npc(branch_pc.instAddr() + sizeof(MachInst) + disp);
         target.nnpc(target.npc() + sizeof(MachInst));
-        return target;
+        return std::unique_ptr<PCStateBase>{target_ptr};
     }
 
-    MipsISA::PCState
+    std::unique_ptr<PCStateBase>
     Jump::branchTarget(ThreadContext *tc) const
     {
-        MipsISA::PCState target = tc->pcState();
+        PCStateBase *target_ptr = tc->pcState().clone();
+        auto &target = target_ptr->as<MipsISA::PCState>();
         Addr pc = target.pc();
         target.advance();
         target.npc((pc & 0xF0000000) | disp);
         target.nnpc(target.npc() + sizeof(MachInst));
-        return target;
+        return std::unique_ptr<PCStateBase>{target_ptr};
     }
 
     const std::string &

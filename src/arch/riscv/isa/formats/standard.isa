@@ -175,8 +175,8 @@ def template BranchDeclare {{
         generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;
 
-        RiscvISA::PCState
-        branchTarget(const RiscvISA::PCState &branchPC) const override;
+        std::unique_ptr<PCStateBase> branchTarget(
+                const PCStateBase &branch_pc) const override;
 
         using StaticInst::branchTarget;
     };
@@ -194,10 +194,11 @@ def template BranchExecute {{
         return NoFault;
     }
 
-    RiscvISA::PCState
-    %(class_name)s::branchTarget(const RiscvISA::PCState &branchPC) const
+    std::unique_ptr<PCStateBase>
+    %(class_name)s::branchTarget(const PCStateBase &branch_pc) const
     {
-        return RiscvISA::PCState(branchPC.pc() + imm);
+        auto &rpc = branch_pc.as<RiscvISA::PCState>();
+        return std::make_unique<PCState>(rpc.pc() + imm);
     }
 
     std::string
@@ -232,8 +233,8 @@ def template JumpDeclare {{
         generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;
 
-        RiscvISA::PCState
-        branchTarget(ThreadContext *tc) const override;
+        std::unique_ptr<PCStateBase> branchTarget(
+                ThreadContext *tc) const override;
 
         using StaticInst::branchTarget;
     };
@@ -251,12 +252,12 @@ def template JumpExecute {{
         return NoFault;
     }
 
-    RiscvISA::PCState
+    std::unique_ptr<PCStateBase>
     %(class_name)s::branchTarget(ThreadContext *tc) const
     {
         PCState pc = tc->pcState();
         pc.set((tc->readIntReg(srcRegIdx(0).index()) + imm)&~0x1);
-        return pc;
+        return std::unique_ptr<PCStateBase>{pc.clone()};
     }
 
     std::string

@@ -111,8 +111,8 @@ def template MicroRegOpBranchDeclare {{
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
 
-        X86ISA::PCState branchTarget(
-                const X86ISA::PCState &branchPC) const override;
+        std::unique_ptr<PCStateBase> branchTarget(
+                const PCStateBase &branchPC) const override;
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;
@@ -120,15 +120,16 @@ def template MicroRegOpBranchDeclare {{
 }};
 
 def template MicroRegOpBranchTarget {{
-    X86ISA::PCState
-    %(class_name)s::branchTarget(const X86ISA::PCState &branchPC) const
+    std::unique_ptr<PCStateBase>
+    %(class_name)s::branchTarget(const PCStateBase &branch_pc) const
     {
-        X86ISA::PCState pcs = branchPC;
+        PCStateBase *pcs = branch_pc.clone();
         DPRINTF(X86, "branchTarget PC info: %s, Immediate (imm8): %lx\n",
-                pcs, (int8_t)imm8);
-        pcs.npc(pcs.npc() + (int8_t)imm8);
-        pcs.uEnd();
-        return pcs;
+                *pcs, (int8_t)imm8);
+        auto &xpc = pcs->as<PCState>();
+        xpc.npc(xpc.npc() + (int8_t)imm8);
+        xpc.uEnd();
+        return std::unique_ptr<PCStateBase>{pcs};
     }
 }};
 

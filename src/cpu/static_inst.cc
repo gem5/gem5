@@ -40,14 +40,14 @@ StaticInst::fetchMicroop(MicroPC upc) const
           "that is not microcoded.");
 }
 
-TheISA::PCState
-StaticInst::branchTarget(const TheISA::PCState &pc) const
+std::unique_ptr<PCStateBase>
+StaticInst::branchTarget(const PCStateBase &pc) const
 {
     panic("StaticInst::branchTarget() called on instruction "
           "that is not a PC-relative branch.");
 }
 
-TheISA::PCState
+std::unique_ptr<PCStateBase>
 StaticInst::branchTarget(ThreadContext *tc) const
 {
     panic("StaticInst::branchTarget() called on instruction "

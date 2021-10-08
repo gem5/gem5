@@ -142,7 +142,8 @@ class X86MicroopBase : public X86StaticInst
             xpc.uAdvance();
     }
 
-    PCState branchTarget(const PCState &branchPC) const override;
+    std::unique_ptr<PCStateBase> branchTarget(
+            const PCStateBase &branch_pc) const override;
 
     // Explicitly import the otherwise hidden branchTarget.
     using StaticInst::branchTarget;

@@ -29,6 +29,7 @@
 #include "cpu/nop_static_inst.hh"
 
 #include "arch/pcstate.hh"
+#include "config/the_isa.hh"
 #include "cpu/static_inst.hh"
 
 namespace gem5
