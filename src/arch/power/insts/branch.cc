@@ -67,7 +67,7 @@ BranchOp::branchTarget(ThreadContext *tc) const
     else
         addr = tc->pcState().pc() + li;
 
-    return msr.sf ? addr : addr & UINT32_MAX;
+    return PowerISA::PCState(msr.sf ? addr : addr & UINT32_MAX);
 }
 
 
@@ -115,7 +115,7 @@ BranchDispCondOp::branchTarget(ThreadContext *tc) const
     else
         addr = tc->pcState().pc() + bd;
 
-    return msr.sf ? addr : addr & UINT32_MAX;
+    return PowerISA::PCState(msr.sf ? addr : addr & UINT32_MAX);
 }
 
 
@@ -160,7 +160,7 @@ BranchRegCondOp::branchTarget(ThreadContext *tc) const
 {
     Msr msr = tc->readIntReg(INTREG_MSR);
     Addr addr = tc->readIntReg(srcRegIdx(_numSrcRegs - 1).index()) & -4ULL;
-    return msr.sf ? addr : addr & UINT32_MAX;
+    return PowerISA::PCState(msr.sf ? addr : addr & UINT32_MAX);
 }
 
 

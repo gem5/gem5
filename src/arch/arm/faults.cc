@@ -807,7 +807,7 @@ Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         }
     } else {
         // Advance the PC to the IMPLEMENTATION DEFINED reset value
-        PCState pc = ArmSystem::resetAddr(tc);
+        PCState pc(ArmSystem::resetAddr(tc));
         pc.aarch64(true);
         pc.nextAArch64(true);
         tc->pcState(pc);

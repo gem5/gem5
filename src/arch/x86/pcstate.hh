@@ -50,7 +50,7 @@ namespace X86ISA
 class PCState : public GenericISA::UPCState<8>
 {
   protected:
-    typedef GenericISA::UPCState<8> Base;
+    using Base = GenericISA::UPCState<8>;
 
     uint8_t _size;
 
@@ -64,8 +64,10 @@ class PCState : public GenericISA::UPCState<8>
         _size = 0;
     }
 
+    PCState(const PCState &other) : Base(other), _size(other._size) {}
+    PCState &operator=(const PCState &other) = default;
     PCState() {}
-    PCState(Addr val) { set(val); }
+    explicit PCState(Addr val) { set(val); }
 
     void
     setNPC(Addr val)

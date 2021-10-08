@@ -120,7 +120,7 @@ Fetch::Fetch(CPU *_cpu, const O3CPUParams &params)
     for (int i = 0; i < MaxThreads; i++) {
         fetchStatus[i] = Idle;
         decoder[i] = nullptr;
-        pc[i] = 0;
+        pc[i].set(0);
         fetchOffset[i] = 0;
         macroop[i] = nullptr;
         delayedCommit[i] = false;

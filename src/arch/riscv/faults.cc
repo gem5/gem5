@@ -149,7 +149,8 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     tc->pcState(pcState);
 }
 
-void Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+void
+Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     tc->setMiscReg(MISCREG_PRV, PRV_M);
     STATUS status = tc->readMiscReg(MISCREG_STATUS);
@@ -160,7 +161,7 @@ void Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     // Advance the PC to the implementation-defined reset vector
     auto workload = dynamic_cast<Workload *>(tc->getSystemPtr()->workload);
-    PCState pc = workload->getEntry();
+    PCState pc(workload->getEntry());
     tc->pcState(pc);
 }
 

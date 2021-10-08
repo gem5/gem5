@@ -249,7 +249,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     void
     clearArchRegs() override
     {
-        _pcState = 0;
+        _pcState.set(0);
         std::fill(intRegs.begin(), intRegs.end(), 0);
         std::fill(floatRegs.begin(), floatRegs.end(), 0);
         for (auto &vec_reg: vecRegs)

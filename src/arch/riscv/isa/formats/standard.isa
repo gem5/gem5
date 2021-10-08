@@ -197,7 +197,7 @@ def template BranchExecute {{
     RiscvISA::PCState
     %(class_name)s::branchTarget(const RiscvISA::PCState &branchPC) const
     {
-        return branchPC.pc() + imm;
+        return RiscvISA::PCState(branchPC.pc() + imm);
     }
 
     std::string

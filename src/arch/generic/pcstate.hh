@@ -85,6 +85,10 @@ class PCStateCommon : public PCStateBase
     MicroPC _upc = 0;
     MicroPC _nupc = 1;
 
+    PCStateCommon(const PCStateCommon &other) :
+        _pc(other._pc), _npc(other._npc), _upc(other._upc), _nupc(other._nupc)
+    {}
+    PCStateCommon &operator=(const PCStateCommon &other) = default;
     PCStateCommon() {}
 
   public:
@@ -187,8 +191,10 @@ class SimplePCState : public PCStateCommon
     typedef PCStateCommon Base;
 
   public:
+    SimplePCState(const SimplePCState &other) : Base(other) {}
+    SimplePCState &operator=(const SimplePCState &other) = default;
     SimplePCState() {}
-    SimplePCState(Addr val) { set(val); }
+    explicit SimplePCState(Addr val) { set(val); }
 
     PCStateBase *
     clone() const override
@@ -260,8 +266,10 @@ class UPCState : public SimplePCState<InstWidth>
         nupc(1);
     }
 
+    UPCState(const UPCState &other) : Base(other) {}
+    UPCState &operator=(const UPCState &other) = default;
     UPCState() {}
-    UPCState(Addr val) { set(val); }
+    explicit UPCState(Addr val) { set(val); }
 
     bool
     branching() const
@@ -336,8 +344,12 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
         nnpc(val + 2 * InstWidth);
     }
 
+    DelaySlotPCState(const DelaySlotPCState &other) :
+        Base(other), _nnpc(other._nnpc)
+    {}
+    DelaySlotPCState &operator=(const DelaySlotPCState &other) = default;
     DelaySlotPCState() {}
-    DelaySlotPCState(Addr val) { set(val); }
+    explicit DelaySlotPCState(Addr val) { set(val); }
 
     bool
     branching() const
@@ -431,8 +443,12 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
         nupc(1);
     }
 
+    DelaySlotUPCState(const DelaySlotUPCState &other) :
+        Base(other), _upc(other._upc), _nupc(other._nupc)
+    {}
+    DelaySlotUPCState &operator=(const DelaySlotUPCState &other) = default;
     DelaySlotUPCState() {}
-    DelaySlotUPCState(Addr val) { set(val); }
+    explicit DelaySlotUPCState(Addr val) { set(val); }
 
     bool
     branching() const

@@ -91,8 +91,6 @@ class PCState : public GenericISA::UPCState<4>
     bool _stepped = false;
 
   public:
-    PCState() {}
-
     void
     set(Addr val)
     {
@@ -100,7 +98,16 @@ class PCState : public GenericISA::UPCState<4>
         npc(val + (thumb() ? 2 : 4));
     }
 
-    PCState(Addr val) { set(val); }
+    PCState(const PCState &other) : Base(other),
+        flags(other.flags), nextFlags(other.nextFlags),
+        _itstate(other._itstate), _nextItstate(other._nextItstate),
+        _size(other._size), _illegalExec(other._illegalExec),
+        _debugStep(other._debugStep), _stepped(other._stepped)
+    {}
+    PCState &operator=(const PCState &other) = default;
+
+    PCState() {}
+    explicit PCState(Addr val) { set(val); }
 
     PCStateBase *clone() const override { return new PCState(*this); }
 

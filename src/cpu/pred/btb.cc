@@ -126,7 +126,7 @@ DefaultBTB::lookup(Addr instPC, ThreadID tid)
         && btb[btb_idx].tid == tid) {
         return btb[btb_idx].target;
     } else {
-        return 0;
+        return TheISA::PCState(0);
     }
 }
 

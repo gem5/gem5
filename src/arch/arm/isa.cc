@@ -607,7 +607,7 @@ RegVal
 ISA::readMiscReg(int misc_reg)
 {
     CPSR cpsr = 0;
-    PCState pc = 0;
+    PCState pc(0);
     SCR scr = 0;
 
     if (misc_reg == MISCREG_CPSR) {
