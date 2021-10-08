@@ -80,6 +80,8 @@ class PCStateBase : public Serializable
 
     virtual PCStateBase *clone() const = 0;
 
+    virtual void output(std::ostream &os) const = 0;
+
     virtual bool
     equals(const PCStateBase &other) const
     {
@@ -122,6 +124,13 @@ class PCStateBase : public Serializable
         UNSERIALIZE_SCALAR(_upc);
     }
 };
+
+static inline std::ostream &
+operator<<(std::ostream & os, const PCStateBase &pc)
+{
+    pc.output(os);
+    return os;
+}
 
 static inline bool
 operator==(const PCStateBase &a, const PCStateBase &b)
@@ -187,6 +196,12 @@ class PCStateCommon : public PCStateBase
     setNPC(Addr val)
     {
         npc(val);
+    }
+
+    void
+    output(std::ostream &os) const override
+    {
+        ccprintf(os, "(%#x=>%#x)", this->pc(), this->npc());
     }
 
     bool
@@ -268,14 +283,6 @@ class SimplePCState : public PCStateCommon
     }
 };
 
-template <int InstWidth>
-std::ostream &
-operator<<(std::ostream & os, const SimplePCState<InstWidth> &pc)
-{
-    ccprintf(os, "(%#x=>%#x)", pc.pc(), pc.npc());
-    return os;
-}
-
 // A PC and microcode PC.
 template <int InstWidth>
 class UPCState : public SimplePCState<InstWidth>
@@ -284,6 +291,13 @@ class UPCState : public SimplePCState<InstWidth>
     typedef SimplePCState<InstWidth> Base;
 
   public:
+    void
+    output(std::ostream &os) const override
+    {
+        Base::output(os);
+        ccprintf(os, ".(%d=>%d)", this->upc(), this->nupc());
+    }
+
     PCStateBase *
     clone() const override
     {
@@ -328,15 +342,6 @@ class UPCState : public SimplePCState<InstWidth>
     }
 };
 
-template <int InstWidth>
-std::ostream &
-operator<<(std::ostream & os, const UPCState<InstWidth> &pc)
-{
-    ccprintf(os, "(%#x=>%#x).(%d=>%d)",
-            pc.pc(), pc.npc(), pc.upc(), pc.nupc());
-    return os;
-}
-
 // A PC with a delay slot.
 template <int InstWidth>
 class DelaySlotPCState : public SimplePCState<InstWidth>
@@ -347,6 +352,12 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
     Addr _nnpc;
 
   public:
+    void
+    output(std::ostream &os) const override
+    {
+        ccprintf(os, "(%#x=>%#x=>%#x)", this->pc(), this->npc(), nnpc());
+    }
+
     PCStateBase *
     clone() const override
     {
@@ -409,15 +420,6 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
     }
 };
 
-template <int InstWidth>
-std::ostream &
-operator<<(std::ostream & os, const DelaySlotPCState<InstWidth> &pc)
-{
-    ccprintf(os, "(%#x=>%#x=>%#x)",
-            pc.pc(), pc.npc(), pc.nnpc());
-    return os;
-}
-
 // A PC with a delay slot and a microcode PC.
 template <int InstWidth>
 class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
@@ -426,6 +428,13 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
     typedef DelaySlotPCState<InstWidth> Base;
 
   public:
+    void
+    output(std::ostream &os) const override
+    {
+        Base::output(os);
+        ccprintf(os, ".(%d=>%d)", this->upc(), this->nupc());
+    }
+
     PCStateBase *
     clone() const override
     {
@@ -468,15 +477,6 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
         this->_nupc = 1;
     }
 };
-
-template <int InstWidth>
-std::ostream &
-operator<<(std::ostream & os, const DelaySlotUPCState<InstWidth> &pc)
-{
-    ccprintf(os, "(%#x=>%#x=>%#x).(%d=>%d)",
-            pc.pc(), pc.npc(), pc.nnpc(), pc.upc(), pc.nupc());
-    return os;
-}
 
 }
 
