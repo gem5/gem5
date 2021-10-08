@@ -918,7 +918,7 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
 
         if (!same) {
             if (!mismatch) {
-                TarmacParserRecord::printMismatchHeader(inst, pc);
+                TarmacParserRecord::printMismatchHeader(inst, *pc);
                 mismatch = true;
             }
             outs << "diff> [" << it->repr << "] gem5: 0x" << std::hex;
@@ -951,21 +951,21 @@ TarmacParserRecord::TarmacParserRecordEvent::description() const
 
 void
 TarmacParserRecord::printMismatchHeader(const StaticInstPtr staticInst,
-                                        ArmISA::PCState pc)
+                                        const PCStateBase &pc)
 {
     std::ostream &outs = Trace::output();
     outs << "\nMismatch between gem5 and TARMAC trace @ " << std::dec
          << curTick() << " ticks\n"
          << "[seq_num: " << std::dec << instRecord.seq_num
          << ", opcode: 0x" << std::hex << (staticInst->getEMI() & 0xffffffff)
-         << ", PC: 0x" << pc.pc()
-         << ", disasm: " <<  staticInst->disassemble(pc.pc()) << "]"
+         << ", PC: 0x" << pc.instAddr()
+         << ", disasm: " <<  staticInst->disassemble(pc.instAddr()) << "]"
          << std::endl;
 }
 
 TarmacParserRecord::TarmacParserRecord(Tick _when, ThreadContext *_thread,
                                        const StaticInstPtr _staticInst,
-                                       PCState _pc,
+                                       const PCStateBase &_pc,
                                        TarmacParser& _parent,
                                        const StaticInstPtr _macroStaticInst)
     : TarmacBaseRecord(_when, _thread, _staticInst,
@@ -1008,10 +1008,10 @@ TarmacParserRecord::dump()
 
               case TARMAC_INST:
                 parsingStarted = true;
-                if (pc.instAddr() != instRecord.addr) {
+                if (pc->instAddr() != instRecord.addr) {
                     if (!mismatch)
-                        printMismatchHeader(staticInst, pc);
-                    outs << "diff> [PC] gem5: 0x" << std::hex << pc.instAddr()
+                        printMismatchHeader(staticInst, *pc);
+                    outs << "diff> [PC] gem5: 0x" << std::hex << pc->instAddr()
                          << ", TARMAC: 0x" << instRecord.addr << std::endl;
                     mismatch = true;
                     mismatchOnPcOrOpcode = true;
@@ -1019,7 +1019,7 @@ TarmacParserRecord::dump()
 
                 if (arm_inst->encoding() != instRecord.opcode) {
                     if (!mismatch)
-                        printMismatchHeader(staticInst, pc);
+                        printMismatchHeader(staticInst, *pc);
                     outs << "diff> [opcode] gem5: 0x" << std::hex
                          << arm_inst->encoding()
                          << ", TARMAC: 0x" << instRecord.opcode << std::endl;
@@ -1028,12 +1028,12 @@ TarmacParserRecord::dump()
                 }
 
                 // Set the Instruction set state.
-                isetstate = pcToISetState(pc);
+                isetstate = pcToISetState(*pc);
 
                 if (instRecord.isetstate != isetstate &&
                     isetstate != ISET_UNSUPPORTED) {
                     if (!mismatch)
-                        printMismatchHeader(staticInst, pc);
+                        printMismatchHeader(staticInst, *pc);
                     outs << "diff> [iset_state] gem5: "
                          << iSetStateToStr(isetstate)
                          << ", TARMAC: "
@@ -1054,7 +1054,7 @@ TarmacParserRecord::dump()
                     break;
                 if (written_data != memRecord.data) {
                     if (!mismatch)
-                        printMismatchHeader(staticInst, pc);
+                        printMismatchHeader(staticInst, *pc);
                     outs << "diff> [mem(0x" << std::hex << memRecord.addr
                          << ")] gem5: 0x" << written_data
                          << ", TARMAC: 0x" << memRecord.data
@@ -1073,7 +1073,7 @@ TarmacParserRecord::dump()
         // entries in the TARMAC trace have been parsed
         if (destRegRecords.size()) {
             TarmacParserRecordEvent *event = new TarmacParserRecordEvent(
-                parent, thread, staticInst, pc, mismatch,
+                parent, thread, staticInst, *pc, mismatch,
                 mismatchOnPcOrOpcode);
             mainEventQueue[0]->schedule(event, curTick());
         } else if (mismatchOnPcOrOpcode && (parent.exitOnDiff ||

@@ -43,6 +43,8 @@
 #ifndef __ARCH_ARM_TRACERS_TARMAC_TRACER_HH__
 #define __ARCH_ARM_TRACERS_TARMAC_TRACER_HH__
 
+#include <memory>
+
 #include "arch/arm/tracers/tarmac_record.hh"
 #include "arch/arm/tracers/tarmac_record_v8.hh"
 #include "params/TarmacTracer.hh"
@@ -64,8 +66,8 @@ class TarmacContext
   public:
     TarmacContext(ThreadContext* _thread,
                   const StaticInstPtr _staticInst,
-                  ArmISA::PCState _pc)
-      : thread(_thread), staticInst(_staticInst), pc(_pc)
+                  const PCStateBase &_pc)
+      : thread(_thread), staticInst(_staticInst), pc(_pc.clone())
     {}
 
     std::string tarmacCpuName() const;
@@ -73,7 +75,7 @@ class TarmacContext
   public:
     ThreadContext* thread;
     const StaticInstPtr staticInst;
-    ArmISA::PCState pc;
+    std::unique_ptr<PCStateBase> pc;
 };
 
 /**
@@ -99,9 +101,8 @@ class TarmacTracer : public InstTracer
      * - TarmacV8
      */
     InstRecord* getInstRecord(Tick when, ThreadContext *tc,
-                              const StaticInstPtr staticInst,
-                              ArmISA::PCState pc,
-                              const StaticInstPtr macroStaticInst = NULL);
+            const StaticInstPtr staticInst, const PCStateBase &pc,
+            const StaticInstPtr macroStaticInst=nullptr) override;
 
   protected:
     typedef std::unique_ptr<Printable> PEntryPtr;

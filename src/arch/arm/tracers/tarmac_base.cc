@@ -54,7 +54,7 @@ namespace Trace {
 
 TarmacBaseRecord::TarmacBaseRecord(Tick _when, ThreadContext *_thread,
                                    const StaticInstPtr _staticInst,
-                                   PCState _pc,
+                                   const PCStateBase &_pc,
                                    const StaticInstPtr _macroStaticInst)
     : InstRecord(_when, _thread, _staticInst, _pc, _macroStaticInst)
 {
@@ -62,7 +62,7 @@ TarmacBaseRecord::TarmacBaseRecord(Tick _when, ThreadContext *_thread,
 
 TarmacBaseRecord::InstEntry::InstEntry(
     ThreadContext* thread,
-    PCState pc,
+    const PCStateBase &pc,
     const StaticInstPtr staticInst,
     bool predicate)
         : taken(predicate) ,
@@ -83,7 +83,7 @@ TarmacBaseRecord::InstEntry::InstEntry(
                   [](char& c) { c = toupper(c); });
 }
 
-TarmacBaseRecord::RegEntry::RegEntry(PCState pc)
+TarmacBaseRecord::RegEntry::RegEntry(const PCStateBase &pc)
   : isetstate(pcToISetState(pc)),
     values(2, 0)
 {
@@ -100,15 +100,16 @@ TarmacBaseRecord::MemEntry::MemEntry (
 }
 
 TarmacBaseRecord::ISetState
-TarmacBaseRecord::pcToISetState(PCState pc)
+TarmacBaseRecord::pcToISetState(const PCStateBase &pc)
 {
+    auto &apc = pc.as<ArmISA::PCState>();
     TarmacBaseRecord::ISetState isetstate;
 
-    if (pc.aarch64())
+    if (apc.aarch64())
         isetstate = TarmacBaseRecord::ISET_A64;
-    else if (!pc.thumb() && !pc.jazelle())
+    else if (!apc.thumb() && !apc.jazelle())
         isetstate = TarmacBaseRecord::ISET_ARM;
-    else if (pc.thumb() && !pc.jazelle())
+    else if (apc.thumb() && !apc.jazelle())
         isetstate = TarmacBaseRecord::ISET_THUMB;
     else
         // No Jazelle state in TARMAC

@@ -62,7 +62,7 @@ InstPBTraceRecord::dump()
     // instructions that aren't macro-oped
     if ((macroStaticInst && staticInst->isFirstMicroop()) ||
             !staticInst->isMicroop()) {
-        tracer.traceInst(thread, staticInst, pc);
+        tracer.traceInst(thread, staticInst, *pc);
     }
 
     // If this instruction accessed memory lets record it
@@ -121,7 +121,7 @@ InstPBTrace::~InstPBTrace()
 
 InstPBTraceRecord*
 InstPBTrace::getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr si,
-                           TheISA::PCState pc, const StaticInstPtr mi)
+                           const PCStateBase &pc, const StaticInstPtr mi)
 {
     // Only record the trace if Exec debugging is enabled
     if (!debug::ExecEnable)
@@ -132,10 +132,11 @@ InstPBTrace::getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr si,
 }
 
 void
-InstPBTrace::traceInst(ThreadContext *tc, StaticInstPtr si, TheISA::PCState pc)
+InstPBTrace::traceInst(ThreadContext *tc, StaticInstPtr si,
+        const PCStateBase &pc)
 {
     if (curMsg) {
-        /// @todo if we are running multi-threaded I assume we'd need a lock here
+        //TODO if we are running multi-threaded I assume we'd need a lock here
         traceStream->write(*curMsg);
         delete curMsg;
         curMsg = NULL;
@@ -150,7 +151,7 @@ InstPBTrace::traceInst(ThreadContext *tc, StaticInstPtr si, TheISA::PCState pc)
 
     // Create a new instruction message and fill out the fields
     curMsg = new ProtoMessage::Inst;
-    curMsg->set_pc(pc.pc());
+    curMsg->set_pc(pc.instAddr());
     if (instSize == sizeof(uint32_t)) {
         curMsg->set_inst(letoh(*reinterpret_cast<uint32_t *>(buf.get())));
     } else if (instSize) {

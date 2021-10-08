@@ -76,7 +76,7 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     if (debug::ExecThread)
         outs << "T" << thread->threadId() << " : ";
 
-    Addr cur_pc = pc.instAddr();
+    Addr cur_pc = pc->instAddr();
     loader::SymbolTable::const_iterator it;
     ccprintf(outs, "%#x", cur_pc);
     if (debug::ExecSymbol && (!FullSystem || !in_user_mode) &&
@@ -90,7 +90,7 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     }
 
     if (inst->isMicroop()) {
-        ccprintf(outs, ".%2d", pc.microPC());
+        ccprintf(outs, ".%2d", pc->microPC());
     } else {
         ccprintf(outs, "   ");
     }

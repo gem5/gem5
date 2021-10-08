@@ -85,7 +85,7 @@ class TarmacBaseRecord : public InstRecord
     {
         InstEntry() = default;
         InstEntry(ThreadContext* thread,
-                  ArmISA::PCState pc,
+                  const PCStateBase &pc,
                   const StaticInstPtr staticInst,
                   bool predicate);
 
@@ -109,7 +109,7 @@ class TarmacBaseRecord : public InstRecord
         };
 
         RegEntry() = default;
-        RegEntry(ArmISA::PCState pc);
+        RegEntry(const PCStateBase &pc);
 
         RegType type;
         RegIndex index;
@@ -130,8 +130,8 @@ class TarmacBaseRecord : public InstRecord
 
   public:
     TarmacBaseRecord(Tick _when, ThreadContext *_thread,
-                     const StaticInstPtr _staticInst, ArmISA::PCState _pc,
-                     const StaticInstPtr _macroStaticInst = NULL);
+                     const StaticInstPtr _staticInst, const PCStateBase &_pc,
+                     const StaticInstPtr _macroStaticInst=nullptr);
 
     virtual void dump() = 0;
 
@@ -142,7 +142,7 @@ class TarmacBaseRecord : public InstRecord
      * @param pc program counter (PCState) variable
      * @return Instruction Set State for the given PCState
      */
-    static ISetState pcToISetState(ArmISA::PCState pc);
+    static ISetState pcToISetState(const PCStateBase &pc);
 };
 
 

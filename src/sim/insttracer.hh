@@ -41,6 +41,9 @@
 #ifndef __INSTRECORD_HH__
 #define __INSTRECORD_HH__
 
+#include <memory>
+
+#include "arch/generic/pcstate.hh"
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
 #include "base/types.hh"
@@ -66,7 +69,7 @@ class InstRecord
     // need to make this ref-counted so it doesn't go away before we
     // dump the record
     StaticInstPtr staticInst;
-    TheISA::PCState pc;
+    std::unique_ptr<PCStateBase> pc;
     StaticInstPtr macroStaticInst;
 
     // The remaining fields are only valid for particular instruction
@@ -155,14 +158,13 @@ class InstRecord
 
   public:
     InstRecord(Tick _when, ThreadContext *_thread,
-               const StaticInstPtr _staticInst,
-               TheISA::PCState _pc,
-               const StaticInstPtr _macroStaticInst = NULL)
-        : when(_when), thread(_thread), staticInst(_staticInst), pc(_pc),
-        macroStaticInst(_macroStaticInst), addr(0), size(0), flags(0),
-        fetch_seq(0), cp_seq(0), data_status(DataInvalid), mem_valid(false),
-        fetch_seq_valid(false), cp_seq_valid(false), predicate(true),
-        faulting(false)
+               const StaticInstPtr _staticInst, const PCStateBase &_pc,
+               const StaticInstPtr _macroStaticInst=nullptr)
+        : when(_when), thread(_thread), staticInst(_staticInst),
+        pc(_pc.clone()), macroStaticInst(_macroStaticInst), addr(0), size(0),
+        flags(0), fetch_seq(0), cp_seq(0), data_status(DataInvalid),
+        mem_valid(false), fetch_seq_valid(false), cp_seq_valid(false),
+        predicate(true), faulting(false)
     { }
 
     virtual ~InstRecord()
@@ -235,7 +237,7 @@ class InstRecord
     Tick getWhen() const { return when; }
     ThreadContext *getThread() const { return thread; }
     StaticInstPtr getStaticInst() const { return staticInst; }
-    TheISA::PCState getPCState() const { return pc; }
+    const PCStateBase &getPCState() const { return *pc; }
     StaticInstPtr getMacroStaticInst() const { return macroStaticInst; }
 
     Addr getAddr() const { return addr; }
@@ -267,8 +269,8 @@ class InstTracer : public SimObject
 
     virtual InstRecord *
         getInstRecord(Tick when, ThreadContext *tc,
-                const StaticInstPtr staticInst, TheISA::PCState pc,
-                const StaticInstPtr macroStaticInst = NULL) = 0;
+                const StaticInstPtr staticInst, const PCStateBase &pc,
+                const StaticInstPtr macroStaticInst=nullptr) = 0;
 };
 
 } // namespace Trace

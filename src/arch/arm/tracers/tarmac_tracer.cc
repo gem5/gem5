@@ -76,7 +76,7 @@ TarmacTracer::TarmacTracer(const Params &p)
 InstRecord *
 TarmacTracer::getInstRecord(Tick when, ThreadContext *tc,
                            const StaticInstPtr staticInst,
-                           ArmISA::PCState pc,
+                           const PCStateBase &pc,
                            const StaticInstPtr macroStaticInst)
 {
     // Check if we need to start tracing since we have passed the

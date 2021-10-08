@@ -47,6 +47,7 @@
 #define __ARCH_ARM_TRACERS_TARMAC_PARSER_HH__
 
 #include <fstream>
+#include <memory>
 #include <unordered_map>
 
 #include "base/trace.hh"
@@ -83,7 +84,7 @@ class TarmacParserRecord : public TarmacBaseRecord
         /** Current instruction. */
         const StaticInstPtr inst;
         /** PC of the current instruction. */
-        ArmISA::PCState pc;
+        std::unique_ptr<PCStateBase> pc;
         /** True if a mismatch has been detected for this instruction. */
         bool mismatch;
         /**
@@ -95,10 +96,10 @@ class TarmacParserRecord : public TarmacBaseRecord
         TarmacParserRecordEvent(TarmacParser& _parent,
                                 ThreadContext *_thread,
                                 const StaticInstPtr _inst,
-                                ArmISA::PCState _pc,
+                                const PCStateBase &_pc,
                                 bool _mismatch,
                                 bool _mismatch_on_pc_or_opcode) :
-            parent(_parent), thread(_thread), inst(_inst), pc(_pc),
+            parent(_parent), thread(_thread), inst(_inst), pc(_pc.clone()),
             mismatch(_mismatch),
             mismatchOnPcOrOpcode(_mismatch_on_pc_or_opcode)
         {
@@ -130,10 +131,11 @@ class TarmacParserRecord : public TarmacBaseRecord
      * by gem5.
      */
     static void printMismatchHeader(const StaticInstPtr inst,
-                                    ArmISA::PCState pc);
+                                    const PCStateBase &pc);
 
     TarmacParserRecord(Tick _when, ThreadContext *_thread,
-                       const StaticInstPtr _staticInst, ArmISA::PCState _pc,
+                       const StaticInstPtr _staticInst,
+                       const PCStateBase &_pc,
                        TarmacParser& _parent,
                        const StaticInstPtr _macroStaticInst = NULL);
 
@@ -244,17 +246,18 @@ class TarmacParser : public InstTracer
 
     InstRecord *
     getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
-                  ArmISA::PCState pc,
-                  const StaticInstPtr macroStaticInst = NULL)
+                  const PCStateBase &pc,
+                  const StaticInstPtr macroStaticInst=nullptr) override
     {
-        if (!started && pc.pc() == startPc)
+        if (!started && pc.instAddr() == startPc)
             started = true;
 
-        if (started)
+        if (started) {
             return new TarmacParserRecord(when, tc, staticInst, pc, *this,
                                           macroStaticInst);
-        else
-            return NULL;
+        } else {
+            return nullptr;
+        }
     }
 
   private:

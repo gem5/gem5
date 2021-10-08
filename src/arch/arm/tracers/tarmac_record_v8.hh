@@ -147,8 +147,8 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
 
   public:
     TarmacTracerRecordV8(Tick _when, ThreadContext *_thread,
-                         const StaticInstPtr _staticInst, ArmISA::PCState _pc,
-                         TarmacTracer& _parent,
+                         const StaticInstPtr _staticInst,
+                         const PCStateBase &_pc, TarmacTracer& _parent,
                          const StaticInstPtr _macroStaticInst = NULL)
       : TarmacTracerRecord(_when, _thread, _staticInst, _pc,
                            _parent, _macroStaticInst)
