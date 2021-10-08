@@ -50,8 +50,17 @@
 namespace gem5
 {
 
+// The guaranteed interface.
 class PCStateBase : public Serializable
 {
+  protected:
+    Addr _pc = 0;
+    MicroPC _upc = 0;
+
+    PCStateBase(const PCStateBase &other) : _pc(other._pc), _upc(other._upc) {}
+    PCStateBase &operator=(const PCStateBase &other) = default;
+    PCStateBase() {}
+
   public:
     virtual ~PCStateBase() = default;
 
@@ -70,48 +79,16 @@ class PCStateBase : public Serializable
     }
 
     virtual PCStateBase *clone() const = 0;
-};
 
-namespace GenericISA
-{
-
-// The guaranteed interface.
-class PCStateCommon : public PCStateBase
-{
-  protected:
-    Addr _pc = 0;
-    Addr _npc = 0;
-
-    MicroPC _upc = 0;
-    MicroPC _nupc = 1;
-
-    PCStateCommon(const PCStateCommon &other) :
-        _pc(other._pc), _npc(other._npc), _upc(other._upc), _nupc(other._nupc)
-    {}
-    PCStateCommon &operator=(const PCStateCommon &other) = default;
-    PCStateCommon() {}
-
-  public:
     /**
-     * Returns the memory address the bytes of this instruction came from.
+     * Returns the memory address of the instruction this PC points to.
      *
-     * @return Memory address of the current instruction's encoding.
+     * @return Memory address of the instruction this PC points to.
      */
     Addr
     instAddr() const
     {
         return _pc;
-    }
-
-    /**
-     * Returns the memory address the bytes of the next instruction came from.
-     *
-     * @return Memory address of the next instruction's encoding.
-     */
-    Addr
-    nextInstAddr() const
-    {
-        return _npc;
     }
 
     /**
@@ -125,11 +102,60 @@ class PCStateCommon : public PCStateBase
         return _upc;
     }
 
+    void
+    serialize(CheckpointOut &cp) const override
+    {
+        SERIALIZE_SCALAR(_pc);
+        SERIALIZE_SCALAR(_upc);
+    }
+
+    void
+    unserialize(CheckpointIn &cp) override
+    {
+        UNSERIALIZE_SCALAR(_pc);
+        UNSERIALIZE_SCALAR(_upc);
+    }
+};
+
+namespace GenericISA
+{
+
+class PCStateCommon : public PCStateBase
+{
+  protected:
+    Addr _npc = 0;
+
+    MicroPC _nupc = 1;
+
+    PCStateCommon(const PCStateCommon &other) : PCStateBase(other),
+        _npc(other._npc), _nupc(other._nupc)
+    {}
+    PCStateCommon &operator=(const PCStateCommon &other) = default;
+    PCStateCommon() {}
+
+  public:
     Addr pc() const { return _pc; }
     void pc(Addr val) { _pc = val; }
 
     Addr npc() const { return _npc; }
     void npc(Addr val) { _npc = val; }
+
+    MicroPC upc() const { return _upc; }
+    void upc(MicroPC val) { _upc = val; }
+
+    MicroPC nupc() const { return _nupc; }
+    void nupc(MicroPC val) { _nupc = val; }
+
+    /**
+     * Returns the memory address the bytes of the next instruction came from.
+     *
+     * @return Memory address of the next instruction's encoding.
+     */
+    Addr
+    nextInstAddr() const
+    {
+        return _npc;
+    }
 
     // Reset the macroop's upc without advancing the regular pc.
     void
@@ -160,18 +186,16 @@ class PCStateCommon : public PCStateBase
     void
     serialize(CheckpointOut &cp) const override
     {
-        SERIALIZE_SCALAR(_pc);
+        PCStateBase::serialize(cp);
         SERIALIZE_SCALAR(_npc);
-        SERIALIZE_SCALAR(_upc);
         SERIALIZE_SCALAR(_nupc);
     }
 
     void
     unserialize(CheckpointIn &cp) override
     {
-        UNSERIALIZE_SCALAR(_pc);
+        PCStateBase::unserialize(cp);
         UNSERIALIZE_SCALAR(_npc);
-        UNSERIALIZE_SCALAR(_upc);
         UNSERIALIZE_SCALAR(_nupc);
     }
 };
@@ -211,8 +235,8 @@ class SimplePCState : public PCStateCommon
     void
     set(Addr val)
     {
-        pc(val);
-        npc(val + InstWidth);
+        this->pc(val);
+        this->npc(val + InstWidth);
     };
 
     bool
@@ -225,8 +249,8 @@ class SimplePCState : public PCStateCommon
     void
     advance()
     {
-        _pc = _npc;
-        _npc += InstWidth;
+        this->_pc = this->_npc;
+        this->_npc += InstWidth;
     }
 };
 
@@ -252,18 +276,12 @@ class UPCState : public SimplePCState<InstWidth>
         return new UPCState<InstWidth>(*this);
     }
 
-    MicroPC upc() const { return this->_upc; }
-    void upc(MicroPC val) { this->_upc = val; }
-
-    MicroPC nupc() const { return this->_nupc; }
-    void nupc(MicroPC val) { this->_nupc = val; }
-
     void
     set(Addr val)
     {
         Base::set(val);
-        upc(0);
-        nupc(1);
+        this->upc(0);
+        this->nupc(1);
     }
 
     UPCState(const UPCState &other) : Base(other) {}
@@ -282,8 +300,8 @@ class UPCState : public SimplePCState<InstWidth>
     void
     uAdvance()
     {
-        upc(nupc());
-        nupc(nupc() + 1);
+        this->upc(this->nupc());
+        this->nupc(this->nupc() + 1);
     }
 
     // End the macroop by resetting the upc and advancing the regular pc.
@@ -291,8 +309,8 @@ class UPCState : public SimplePCState<InstWidth>
     uEnd()
     {
         this->advance();
-        upc(0);
-        nupc(1);
+        this->upc(0);
+        this->nupc(1);
     }
 
     bool
@@ -363,17 +381,17 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
     void
     advance()
     {
-        Base::_pc = Base::_npc;
-        Base::_npc = _nnpc;
-        _nnpc += InstWidth;
+        this->_pc = this->_npc;
+        this->_npc = this->_nnpc;
+        this->_nnpc += InstWidth;
     }
 
     bool
     operator == (const DelaySlotPCState<InstWidth> &opc) const
     {
-        return Base::_pc == opc._pc &&
-               Base::_npc == opc._npc &&
-               _nnpc == opc._nnpc;
+        return this->_pc == opc._pc &&
+               this->_npc == opc._npc &&
+               this->_nnpc == opc._nnpc;
     }
 
     bool
@@ -413,9 +431,6 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
   protected:
     typedef DelaySlotPCState<InstWidth> Base;
 
-    MicroPC _upc;
-    MicroPC _nupc;
-
   public:
     PCStateBase *
     clone() const override
@@ -423,29 +438,15 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
         return new DelaySlotUPCState<InstWidth>(*this);
     }
 
-    MicroPC upc() const { return _upc; }
-    void upc(MicroPC val) { _upc = val; }
-
-    MicroPC nupc() const { return _nupc; }
-    void nupc(MicroPC val) { _nupc = val; }
-
-    MicroPC
-    microPC() const
-    {
-        return _upc;
-    }
-
     void
     set(Addr val)
     {
         Base::set(val);
-        upc(0);
-        nupc(1);
+        this->upc(0);
+        this->nupc(1);
     }
 
-    DelaySlotUPCState(const DelaySlotUPCState &other) :
-        Base(other), _upc(other._upc), _nupc(other._nupc)
-    {}
+    DelaySlotUPCState(const DelaySlotUPCState &other) : Base(other) {}
     DelaySlotUPCState &operator=(const DelaySlotUPCState &other) = default;
     DelaySlotUPCState() {}
     explicit DelaySlotUPCState(Addr val) { set(val); }
@@ -460,8 +461,8 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
     void
     uAdvance()
     {
-        _upc = _nupc;
-        _nupc++;
+        this->_upc = this->_nupc;
+        this->_nupc++;
     }
 
     // End the macroop by resetting the upc and advancing the regular pc.
@@ -469,39 +470,24 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
     uEnd()
     {
         this->advance();
-        _upc = 0;
-        _nupc = 1;
+        this->_upc = 0;
+        this->_nupc = 1;
     }
 
     bool
     operator == (const DelaySlotUPCState<InstWidth> &opc) const
     {
-        return Base::_pc == opc._pc &&
-               Base::_npc == opc._npc &&
-               Base::_nnpc == opc._nnpc &&
-               _upc == opc._upc && _nupc == opc._nupc;
+        return this->_pc == opc._pc &&
+               this->_npc == opc._npc &&
+               this->_nnpc == opc._nnpc &&
+               this->_upc == opc._upc &&
+               this->_nupc == opc._nupc;
     }
 
     bool
     operator != (const DelaySlotUPCState<InstWidth> &opc) const
     {
         return !(*this == opc);
-    }
-
-    void
-    serialize(CheckpointOut &cp) const override
-    {
-        Base::serialize(cp);
-        SERIALIZE_SCALAR(_upc);
-        SERIALIZE_SCALAR(_nupc);
-    }
-
-    void
-    unserialize(CheckpointIn &cp) override
-    {
-        Base::unserialize(cp);
-        UNSERIALIZE_SCALAR(_upc);
-        UNSERIALIZE_SCALAR(_nupc);
     }
 };
 
