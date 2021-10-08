@@ -105,7 +105,7 @@ MemDispOp::generateDisassembly(
 
 std::string
 MemDispShiftOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -164,7 +164,7 @@ MemDispShiftOp::generateDisassembly(
 
 std::string
 MemIndexOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

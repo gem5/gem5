@@ -364,7 +364,7 @@ class IntArithOp : public IntOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -385,7 +385,7 @@ class IntImmArithOp : public IntArithOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -406,7 +406,7 @@ class IntDispArithOp : public IntArithOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -429,7 +429,7 @@ class IntCompOp : public IntOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -450,7 +450,7 @@ class IntImmCompOp : public IntCompOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -471,7 +471,7 @@ class IntImmCompLogicOp : public IntCompOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -557,7 +557,7 @@ class IntLogicOp : public IntOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -578,7 +578,7 @@ class IntImmLogicOp : public IntLogicOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -622,7 +622,7 @@ class IntConcatShiftOp : public IntOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -714,7 +714,7 @@ class IntConcatRotateOp : public IntConcatShiftOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -770,7 +770,7 @@ class IntTrapOp : public IntOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 
@@ -790,7 +790,7 @@ class IntImmTrapOp : public IntTrapOp
     }
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA
