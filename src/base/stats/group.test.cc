@@ -38,15 +38,15 @@ using namespace gem5;
 /** Test that the constructor without a parent doesn't do anything. */
 TEST(StatsGroupTest, ConstructNoParent)
 {
-    Stats::Group root(nullptr);
+    statistics::Group root(nullptr);
     ASSERT_EQ(root.getStatGroups().size(), 0);
 }
 
 /** Test adding a single stat group to a root node. */
 TEST(StatsGroupTest, AddGetSingleStatGroup)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
     root.addStatGroup("Node1", &node1);
 
     const auto root_map = root.getStatGroups();
@@ -59,9 +59,9 @@ TEST(StatsGroupTest, AddGetSingleStatGroup)
 /** Test that group names are unique within a node's stat group. */
 TEST(StatsGroupDeathTest, AddUniqueNameStatGroup)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
-    Stats::Group node2(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
+    statistics::Group node2(nullptr);
     root.addStatGroup("Node1", &node1);
     ASSERT_ANY_THROW(root.addStatGroup("Node1", &node2));
 }
@@ -69,10 +69,10 @@ TEST(StatsGroupDeathTest, AddUniqueNameStatGroup)
 /** Test that group names are not unique among two nodes' stat groups. */
 TEST(StatsGroupTest, AddNotUniqueNameAmongGroups)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
-    Stats::Group node2(nullptr);
-    Stats::Group node1_1(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
+    statistics::Group node2(nullptr);
+    statistics::Group node1_1(nullptr);
     root.addStatGroup("Node1", &node1);
     node1.addStatGroup("Node1_1", &node1_1);
     ASSERT_NO_THROW(node1.addStatGroup("Node1", &node2));
@@ -81,23 +81,23 @@ TEST(StatsGroupTest, AddNotUniqueNameAmongGroups)
 /** Test that a group cannot add a non-existent group. */
 TEST(StatsGroupDeathTest, AddNull)
 {
-    Stats::Group root(nullptr);
+    statistics::Group root(nullptr);
     ASSERT_ANY_THROW(root.addStatGroup("Node1", nullptr));
 }
 
 /** Test that a group cannot add itself. */
 TEST(StatsGroupDeathTest, AddItself)
 {
-    Stats::Group root(nullptr);
+    statistics::Group root(nullptr);
     ASSERT_ANY_THROW(root.addStatGroup("Node1", &root));
 }
 
 /** @todo Test that a group cannot be added in a cycle. */
 TEST(StatsGroupDeathTest, DISABLED_AddCycle)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
-    Stats::Group node1_1(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
+    statistics::Group node1_1(nullptr);
     root.addStatGroup("Node1", &node1);
     node1.addStatGroup("Node1_1", &node1_1);
     ASSERT_ANY_THROW(node1_1.addStatGroup("Root", &root));
@@ -106,9 +106,9 @@ TEST(StatsGroupDeathTest, DISABLED_AddCycle)
 /** Test adding multiple stat groups to a root node. */
 TEST(StatsGroupTest, AddGetMultipleStatGroup)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
-    Stats::Group node2(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
+    statistics::Group node2(nullptr);
     root.addStatGroup("Node1", &node1);
     root.addStatGroup("Node2", &node2);
 
@@ -124,10 +124,10 @@ TEST(StatsGroupTest, AddGetMultipleStatGroup)
 /** Make sure that the groups are correctly assigned in the map. */
 TEST(StatsGroupTest, ConstructCorrectlyAssigned)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
-    Stats::Group node1_1(nullptr);
-    Stats::Group node1_1_1(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
+    statistics::Group node1_1(nullptr);
+    statistics::Group node1_1_1(nullptr);
     root.addStatGroup("Node1", &node1);
     node1.addStatGroup("Node1_1", &node1_1);
     node1_1.addStatGroup("Node1_1_1", &node1_1_1);
@@ -146,8 +146,8 @@ TEST(StatsGroupTest, ConstructCorrectlyAssigned)
  */
 TEST(StatsGroupTest, ConstructOneLevelLinear)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(&root, "Node1");
+    statistics::Group root(nullptr);
+    statistics::Group node1(&root, "Node1");
 
     const auto root_map = root.getStatGroups();
     ASSERT_EQ(root_map.size(), 1);
@@ -166,9 +166,9 @@ TEST(StatsGroupTest, ConstructOneLevelLinear)
  */
 TEST(StatsGroupTest, ConstructOneLevelOfTwoNodes)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(&root, "Node1");
-    Stats::Group node2(&root, "Node2");
+    statistics::Group root(nullptr);
+    statistics::Group node1(&root, "Node1");
+    statistics::Group node2(&root, "Node2");
 
     const auto root_map = root.getStatGroups();
     ASSERT_EQ(root_map.size(), 2);
@@ -191,9 +191,9 @@ TEST(StatsGroupTest, ConstructOneLevelOfTwoNodes)
  */
 TEST(StatsGroupTest, ConstructTwoLevelsLinear)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(&root, "Node1");
-    Stats::Group node1_1(&node1, "Node1_1");
+    statistics::Group root(nullptr);
+    statistics::Group node1(&root, "Node1");
+    statistics::Group node1_1(&node1, "Node1_1");
 
     const auto root_map = root.getStatGroups();
     ASSERT_EQ(root_map.size(), 1);
@@ -219,12 +219,12 @@ TEST(StatsGroupTest, ConstructTwoLevelsLinear)
  */
 TEST(StatsGroupTest, ConstructTwoLevelsUnbalancedTree)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(&root, "Node1");
-    Stats::Group node2(&root, "Node2");
-    Stats::Group node1_1(&node1, "Node1_1");
-    Stats::Group node2_1(&node2, "Node2_1");
-    Stats::Group node2_2(&node2, "Node2_2");
+    statistics::Group root(nullptr);
+    statistics::Group node1(&root, "Node1");
+    statistics::Group node2(&root, "Node2");
+    statistics::Group node1_1(&node1, "Node1_1");
+    statistics::Group node2_1(&node2, "Node2_1");
+    statistics::Group node2_2(&node2, "Node2_2");
 
     const auto root_map = root.getStatGroups();
     ASSERT_EQ(root_map.size(), 2);
@@ -272,7 +272,7 @@ class DummyInfo : public Stats::Info
 /** Test adding stats to a group. */
 TEST(StatsGroupTest, AddGetStat)
 {
-    Stats::Group root(nullptr);
+    statistics::Group root(nullptr);
     auto info_vec = root.getStats();
     ASSERT_EQ(info_vec.size(), 0);
 
@@ -295,22 +295,22 @@ TEST(StatsGroupTest, AddGetStat)
 /** Test that a group cannot merge if another group is not provided. */
 TEST(StatsGroupDeathTest, MergeStatGroupNoGroup)
 {
-    Stats::Group root(nullptr);
+    statistics::Group root(nullptr);
     ASSERT_ANY_THROW(root.mergeStatGroup(nullptr));
 }
 
 /** Test that a group cannot merge with itself. */
 TEST(StatsGroupDeathTest, MergeStatGroupItself)
 {
-    Stats::Group root(nullptr);
+    statistics::Group root(nullptr);
     ASSERT_ANY_THROW(root.mergeStatGroup(&root));
 }
 
 /** Test merging groups. */
 TEST(StatsGroupTest, MergeStatGroup)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
 
     DummyInfo info;
     info.setName("InfoMergeStatGroup");
@@ -329,9 +329,9 @@ TEST(StatsGroupTest, MergeStatGroup)
 /** Test that a group that has already been merged cannot be merged again. */
 TEST(StatsGroupDeathTest, MergeStatGroupMergedParent)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
-    Stats::Group node2(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
+    statistics::Group node2(nullptr);
     root.mergeStatGroup(&node2);
     ASSERT_ANY_THROW(node1.mergeStatGroup(&node2));
 }
@@ -342,9 +342,9 @@ TEST(StatsGroupDeathTest, MergeStatGroupMergedParent)
  */
 TEST(StatsGroupTest, AddStatMergedParent)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
-    Stats::Group node1_1(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
+    statistics::Group node1_1(nullptr);
 
     root.mergeStatGroup(&node1);
     root.mergeStatGroup(&node1_1);
@@ -369,8 +369,8 @@ TEST(StatsGroupTest, AddStatMergedParent)
  */
 TEST(StatsGroupTest, AddStatMergedParentMain)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
 
     root.mergeStatGroup(&node1);
 
@@ -391,8 +391,8 @@ TEST(StatsGroupTest, AddStatMergedParentMain)
  */
 TEST(StatsGroupTest, ConstructNoName)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(&root);
+    statistics::Group root(nullptr);
+    statistics::Group node1(&root);
 
     DummyInfo info;
     info.setName("InfoConstructNoName");
@@ -409,10 +409,10 @@ TEST(StatsGroupTest, ConstructNoName)
  */
 TEST(StatsGroupTest, RegStats)
 {
-    class TestGroup : public Stats::Group
+    class TestGroup : public statistics::Group
     {
       public:
-        using Stats::Group::Group;
+        using statistics::Group::Group;
 
         int value = 0;
 
@@ -420,7 +420,7 @@ TEST(StatsGroupTest, RegStats)
         regStats() override
         {
             value++;
-            Stats::Group::regStats();
+            statistics::Group::regStats();
         }
     };
 
@@ -447,10 +447,10 @@ TEST(StatsGroupTest, RegStats)
  */
 TEST(StatsGroupTest, ResetStats)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(&root, "Node1");
-    Stats::Group node1_1(&node1, "Node1_1");
-    Stats::Group node1_2(&node1_1);
+    statistics::Group root(nullptr);
+    statistics::Group node1(&root, "Node1");
+    statistics::Group node1_1(&node1, "Node1_1");
+    statistics::Group node1_2(&node1_1);
 
     DummyInfo info;
     info.setName("InfoResetStats");
@@ -491,10 +491,10 @@ TEST(StatsGroupTest, ResetStats)
  */
 TEST(StatsGroupTest, PreDumpStats)
 {
-    class TestGroup : public Stats::Group
+    class TestGroup : public statistics::Group
     {
       public:
-        using Stats::Group::Group;
+        using statistics::Group::Group;
 
         int value = 0;
 
@@ -502,7 +502,7 @@ TEST(StatsGroupTest, PreDumpStats)
         preDumpStats() override
         {
             value++;
-            Stats::Group::preDumpStats();
+            statistics::Group::preDumpStats();
         }
     };
 
@@ -525,7 +525,7 @@ TEST(StatsGroupTest, PreDumpStats)
 /** Test that resolving a non-existent stat returns a nullptr. */
 TEST(StatsGroupTest, ResolveStatNone)
 {
-    Stats::Group root(nullptr);
+    statistics::Group root(nullptr);
 
     DummyInfo info;
     info.setName("InfoResolveStatNone");
@@ -538,7 +538,7 @@ TEST(StatsGroupTest, ResolveStatNone)
 /** Test resolving a stat belonging to the caller group. */
 TEST(StatsGroupTest, ResolveStatSelf)
 {
-    Stats::Group root(nullptr);
+    statistics::Group root(nullptr);
 
     DummyInfo info;
     info.setName("InfoResolveStatSelf");
@@ -568,10 +568,10 @@ TEST(StatsGroupTest, ResolveStatSelf)
 /** Test that resolving stats from sub-groups is possible. */
 TEST(StatsGroupTest, ResolveSubGroupStatFromParent)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(&root, "Node1");
-    Stats::Group node1_1(&node1, "Node1_1");
-    Stats::Group node1_1_1(&node1_1, "Node1_1_1");
+    statistics::Group root(nullptr);
+    statistics::Group node1(&root, "Node1");
+    statistics::Group node1_1(&node1, "Node1_1");
+    statistics::Group node1_1_1(&node1_1, "Node1_1_1");
 
     DummyInfo info;
     info.setName("InfoResolveSubGroupStatFromParent");
@@ -604,8 +604,8 @@ TEST(StatsGroupTest, ResolveSubGroupStatFromParent)
 /** Test that resolving a stat from the parent is not possible. */
 TEST(StatsGroupTest, ResolveStatSubGroupOnSubGroup)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(&root, "Node1");
+    statistics::Group root(nullptr);
+    statistics::Group node1(&root, "Node1");
 
     DummyInfo info;
     info.setName("InfoResolveStatSubGroupOnSubGroup");
@@ -618,8 +618,8 @@ TEST(StatsGroupTest, ResolveStatSubGroupOnSubGroup)
 /** Test that resolving a merged stat is possible. */
 TEST(StatsGroupTest, ResolveStatMerged)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
 
     DummyInfo info;
     info.setName("InfoResolveStatMerged");
@@ -642,9 +642,9 @@ TEST(StatsGroupTest, ResolveStatMerged)
 /** Test that resolving a stat belonging to a merged sub-group is possible. */
 TEST(StatsGroupTest, ResolveStatMergedSubGroup)
 {
-    Stats::Group root(nullptr);
-    Stats::Group node1(nullptr);
-    Stats::Group node2(nullptr);
+    statistics::Group root(nullptr);
+    statistics::Group node1(nullptr);
+    statistics::Group node2(nullptr);
 
     DummyInfo info;
     info.setName("InfoResolveStatMergedSubGroup");

@@ -2519,8 +2519,8 @@ TableWalker::Stage2Walk::translateTiming(ThreadContext *tc)
     parent.mmu->translateTiming(req, tc, this, mode, tranType, true);
 }
 
-TableWalker::TableWalkerStats::TableWalkerStats(Stats::Group *parent)
-    : Stats::Group(parent),
+TableWalker::TableWalkerStats::TableWalkerStats(statistics::Group *parent)
+    : statistics::Group(parent),
     ADD_STAT(walks, statistics::units::Count::get(),
              "Table walker walks requested"),
     ADD_STAT(walksShortDescriptor, statistics::units::Count::get(),
