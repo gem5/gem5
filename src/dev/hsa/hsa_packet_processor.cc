@@ -44,6 +44,7 @@
 #include "dev/dma_device.hh"
 #include "dev/hsa/hsa_packet.hh"
 #include "dev/hsa/hw_scheduler.hh"
+#include "enums/GfxVersion.hh"
 #include "gpu-compute/gpu_command_processor.hh"
 #include "mem/packet_access.hh"
 #include "mem/page_table.hh"
@@ -100,13 +101,15 @@ void
 HSAPacketProcessor::setDeviceQueueDesc(uint64_t hostReadIndexPointer,
                                        uint64_t basePointer,
                                        uint64_t queue_id,
-                                       uint32_t size, int doorbellSize)
+                                       uint32_t size, int doorbellSize,
+                                       GfxVersion gfxVersion)
 {
     DPRINTF(HSAPacketProcessor,
              "%s:base = %p, qID = %d, ze = %d\n", __FUNCTION__,
              (void *)basePointer, queue_id, size);
     hwSchdlr->registerNewQueue(hostReadIndexPointer,
-                               basePointer, queue_id, size, doorbellSize);
+                               basePointer, queue_id, size, doorbellSize,
+                               gfxVersion);
 }
 
 AddrRangeList

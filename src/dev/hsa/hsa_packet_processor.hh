@@ -39,9 +39,11 @@
 #include <vector>
 
 #include "base/types.hh"
+#include "debug/HSAPacketProcessor.hh"
 #include "dev/dma_virt_device.hh"
 #include "dev/hsa/hsa.h"
 #include "dev/hsa/hsa_queue.hh"
+#include "enums/GfxVersion.hh"
 #include "params/HSAPacketProcessor.hh"
 #include "sim/eventq.hh"
 
@@ -84,14 +86,16 @@ class HSAQueueDescriptor
         uint64_t     hostReadIndexPtr;
         bool         stalledOnDmaBufAvailability;
         bool         dmaInProgress;
+        GfxVersion   gfxVersion;
 
         HSAQueueDescriptor(uint64_t base_ptr, uint64_t db_ptr,
-                           uint64_t hri_ptr, uint32_t size)
+                           uint64_t hri_ptr, uint32_t size,
+                           GfxVersion gfxVersion)
           : basePointer(base_ptr), doorbellPointer(db_ptr),
             writeIndex(0), readIndex(0),
             numElts(size / AQL_PACKET_SIZE), hostReadIndexPtr(hri_ptr),
             stalledOnDmaBufAvailability(false),
-            dmaInProgress(false)
+            dmaInProgress(false), gfxVersion(gfxVersion)
         {  }
         uint64_t spaceRemaining() { return numElts - (writeIndex - readIndex); }
         uint64_t spaceUsed() { return writeIndex - readIndex; }
@@ -102,15 +106,38 @@ class HSAQueueDescriptor
 
         uint64_t ptr(uint64_t ix)
         {
-            /**
-             * Sometimes queues report that their size is 512k, which would
-             * indicate numElts of 0x2000. However, they only have 256k
-             * mapped which means any index over 0x1000 will fail an
-             * address translation.
+            /*
+             * Based on ROCm Documentation:
+             * - https://github.com/RadeonOpenCompute/ROCm_Documentation/blob/
+                     10ca0a99bbd0252f5bf6f08d1503e59f1129df4a/ROCm_Libraries/
+                     rocr/src/core/runtime/amd_aql_queue.cpp#L99
+             * - https://github.com/RadeonOpenCompute/ROCm_Documentation/blob/
+                     10ca0a99bbd0252f5bf6f08d1503e59f1129df4a/ROCm_Libraries/
+                     rocr/src/core/runtime/amd_aql_queue.cpp#L624
+             *
+             * GFX7 and GFX8 will allocate twice as much space for their HSA
+             * queues as they actually access (using mod operations to map the
+             * virtual addresses from the upper half of the queue to the same
+             * virtual addresses as the lower half).  Thus, we need to check if
+             * the ISA is GFX8 and mod the address by half of the queue size if
+             * so.
              */
-            assert(ix % numElts < 0x1000);
-            return basePointer +
-                ((ix % numElts) * objSize());
+            uint64_t retAddr = 0ll;
+            if ((gfxVersion == GfxVersion::gfx801) ||
+                (gfxVersion == GfxVersion::gfx803)) {
+              retAddr = basePointer + ((ix % (numElts/2)) * objSize());
+              DPRINTF(HSAPacketProcessor, "ptr() gfx8: base: 0x%x, "
+                      "index: 0x%x, numElts: 0x%x, numElts/2: 0x%x, "
+                      "objSize: 0x%x, retAddr: 0x%x\n", basePointer, ix,
+                      numElts, numElts/2, objSize(), retAddr);
+            } else {
+              retAddr = basePointer + ((ix % numElts) * objSize());
+              DPRINTF(HSAPacketProcessor, "ptr() gfx9: base: 0x%x, "
+                      "index: 0x%x, numElts: 0x%x, objSize: 0x%x, "
+                      "retAddr: 0x%x\n", basePointer, ix, numElts, objSize(),
+                      retAddr);
+            }
+            return retAddr;
         }
 };
 
@@ -325,7 +352,8 @@ class HSAPacketProcessor: public DmaVirtDevice
     void setDeviceQueueDesc(uint64_t hostReadIndexPointer,
                             uint64_t basePointer,
                             uint64_t queue_id,
-                            uint32_t size, int doorbellSize);
+                            uint32_t size, int doorbellSize,
+                            GfxVersion gfxVersion);
     void unsetDeviceQueueDesc(uint64_t queue_id, int doorbellSize);
     void setDevice(GPUCommandProcessor * dev);
     void updateReadIndex(int, uint32_t);

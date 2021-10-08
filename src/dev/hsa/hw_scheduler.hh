@@ -39,6 +39,7 @@
 
 #include "base/types.hh"
 #include "dev/hsa/hsa_packet_processor.hh"
+#include "enums/GfxVersion.hh"
 #include "sim/eventq.hh"
 
 // We allocate one PIO page for doorbells and each
@@ -59,7 +60,8 @@ class HWScheduler
     void registerNewQueue(uint64_t hostReadIndexPointer,
                           uint64_t basePointer,
                           uint64_t queue_id,
-                          uint32_t size, int doorbellSize);
+                          uint32_t size, int doorbellSize,
+                          GfxVersion gfxVersion);
     void unregisterQueue(uint64_t queue_id, int doorbellSize);
     void wakeup();
     void schedWakeup();

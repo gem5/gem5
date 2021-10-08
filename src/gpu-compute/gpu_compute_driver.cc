@@ -173,7 +173,7 @@ GPUComputeDriver::allocateQueue(PortProxy &mem_proxy, Addr ioc_buf)
     auto &hsa_pp = device->hsaPacketProc();
     hsa_pp.setDeviceQueueDesc(args->read_pointer_address,
                               args->ring_base_address, args->queue_id,
-                              args->ring_size, doorbellSize());
+                              args->ring_size, doorbellSize(), gfxVersion);
     args.copyOut(mem_proxy);
 }
 
