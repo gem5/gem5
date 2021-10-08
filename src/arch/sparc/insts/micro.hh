@@ -101,12 +101,13 @@ class SparcMicroInst : public SparcStaticInst
     }
 
     void
-    advancePC(SparcISA::PCState &pcState) const override
+    advancePC(PCStateBase &pc_state) const override
     {
+        auto &spc = pc_state.as<PCState>();
         if (flags[IsLastMicroop])
-            pcState.uEnd();
+            spc.uEnd();
         else
-            pcState.uAdvance();
+            spc.uAdvance();
     }
 };
 

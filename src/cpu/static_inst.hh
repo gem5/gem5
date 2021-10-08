@@ -320,7 +320,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
         panic("completeAcc not defined!");
     }
 
-    virtual void advancePC(TheISA::PCState &pc_state) const = 0;
+    virtual void advancePC(PCStateBase &pc_state) const = 0;
 
     virtual TheISA::PCState
     buildRetPC(const TheISA::PCState &cur_pc,

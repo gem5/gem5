@@ -59,9 +59,9 @@ output header {{
         ExtMachInst machInst;
 
         void
-        advancePC(MipsISA::PCState &pc) const override
+        advancePC(PCStateBase &pc) const override
         {
-            pc.advance();
+            pc.as<PCState>().advance();
         }
 
         PCState

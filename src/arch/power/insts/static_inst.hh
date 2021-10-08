@@ -29,6 +29,7 @@
 #ifndef __ARCH_POWER_INSTS_STATICINST_HH__
 #define __ARCH_POWER_INSTS_STATICINST_HH__
 
+#include "arch/power/pcstate.hh"
 #include "arch/power/types.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
@@ -68,9 +69,9 @@ class PowerStaticInst : public StaticInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 
     void
-    advancePC(PowerISA::PCState &pcState) const override
+    advancePC(PCStateBase &pc_state) const override
     {
-        pcState.advance();
+        pc_state.as<PCState>().advance();
     }
 
     PCState

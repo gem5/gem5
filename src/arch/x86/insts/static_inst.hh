@@ -38,6 +38,7 @@
 #ifndef __ARCH_X86_INSTS_STATICINST_HH__
 #define __ARCH_X86_INSTS_STATICINST_HH__
 
+#include "arch/x86/pcstate.hh"
 #include "arch/x86/types.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
@@ -198,9 +199,9 @@ class X86StaticInst : public StaticInst
     }
 
     void
-    advancePC(PCState &pcState) const override
+    advancePC(PCStateBase &pcState) const override
     {
-        pcState.advance();
+        pcState.as<PCState>().advance();
     }
 
     PCState

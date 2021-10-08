@@ -32,6 +32,7 @@
 
 #include <string>
 
+#include "arch/riscv/pcstate.hh"
 #include "arch/riscv/types.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
@@ -57,7 +58,11 @@ class RiscvStaticInst : public StaticInst
   public:
     ExtMachInst machInst;
 
-    void advancePC(PCState &pc) const override { pc.advance(); }
+    void
+    advancePC(PCStateBase &pc) const override
+    {
+        pc.as<PCState>().advance();
+    }
 
     PCState
     buildRetPC(const PCState &curPC, const PCState &callPC) const override
@@ -131,7 +136,7 @@ class RiscvMicroInst : public RiscvStaticInst
         flags[IsMicroop] = true;
     }
 
-    void advancePC(PCState &pcState) const override;
+    void advancePC(PCStateBase &pcState) const override;
 };
 
 } // namespace RiscvISA

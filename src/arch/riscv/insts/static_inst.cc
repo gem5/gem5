@@ -29,6 +29,7 @@
 
 #include "arch/riscv/insts/static_inst.hh"
 
+#include "arch/riscv/pcstate.hh"
 #include "arch/riscv/types.hh"
 #include "cpu/static_inst.hh"
 
@@ -39,12 +40,13 @@ namespace RiscvISA
 {
 
 void
-RiscvMicroInst::advancePC(PCState &pcState) const
+RiscvMicroInst::advancePC(PCStateBase &pcState) const
 {
+    auto &rpc = pcState.as<PCState>();
     if (flags[IsLastMicroop]) {
-        pcState.uEnd();
+        rpc.uEnd();
     } else {
-        pcState.uAdvance();
+        rpc.uAdvance();
     }
 }
 

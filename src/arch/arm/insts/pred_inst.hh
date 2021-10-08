@@ -42,6 +42,7 @@
 #define __ARCH_ARM_INSTS_PREDINST_HH__
 
 #include "arch/arm/insts/static_inst.hh"
+#include "arch/arm/pcstate.hh"
 #include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
@@ -391,12 +392,13 @@ class PredMicroop : public PredOp
     }
 
     void
-    advancePC(PCState &pcState) const override
+    advancePC(PCStateBase &pcState) const override
     {
+        auto &apc = pcState.as<PCState>();
         if (flags[IsLastMicroop])
-            pcState.uEnd();
+            apc.uEnd();
         else
-            pcState.uAdvance();
+            apc.uAdvance();
     }
 };
 

@@ -46,6 +46,7 @@
 #include "arch/arm/faults.hh"
 #include "arch/arm/utility.hh"
 #include "arch/arm/isa.hh"
+#include "arch/arm/pcstate.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "base/trace.hh"
@@ -197,9 +198,9 @@ class ArmStaticInst : public StaticInst
                        uint64_t imm) const;
 
     void
-    advancePC(PCState &pcState) const override
+    advancePC(PCStateBase &pcState) const override
     {
-        pcState.advance();
+        pcState.as<PCState>().advance();
     }
 
     uint64_t getEMI() const override { return machInst; }

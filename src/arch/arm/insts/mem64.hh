@@ -40,6 +40,7 @@
 
 #include "arch/arm/insts/misc64.hh"
 #include "arch/arm/insts/static_inst.hh"
+#include "arch/arm/pcstate.hh"
 
 namespace gem5
 {
@@ -75,14 +76,15 @@ class MightBeMicro64 : public ArmStaticInst
     {}
 
     void
-    advancePC(PCState &pcState) const override
+    advancePC(PCStateBase &pcState) const override
     {
+        auto &apc = pcState.as<PCState>();
         if (flags[IsLastMicroop]) {
-            pcState.uEnd();
+            apc.uEnd();
         } else if (flags[IsMicroop]) {
-            pcState.uAdvance();
+            apc.uAdvance();
         } else {
-            pcState.advance();
+            apc.advance();
         }
     }
 };

@@ -39,6 +39,7 @@
 #define __ARCH_X86_INSTS_MICROOP_HH__
 
 #include "arch/x86/insts/static_inst.hh"
+#include "arch/x86/pcstate.hh"
 #include "base/compiler.hh"
 
 namespace gem5
@@ -132,12 +133,13 @@ class X86MicroopBase : public X86StaticInst
     bool checkCondition(uint64_t flags, int condition) const;
 
     void
-    advancePC(PCState &pcState) const override
+    advancePC(PCStateBase &pcState) const override
     {
+        auto &xpc = pcState.as<PCState>();
         if (flags[IsLastMicroop])
-            pcState.uEnd();
+            xpc.uEnd();
         else
-            pcState.uAdvance();
+            xpc.uAdvance();
     }
 
     PCState branchTarget(const PCState &branchPC) const override;

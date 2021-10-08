@@ -43,6 +43,7 @@
 #include <cmath>
 
 #include "arch/arm/insts/misc.hh"
+#include "arch/arm/pcstate.hh"
 #include "arch/arm/regs/misc.hh"
 
 namespace gem5
@@ -853,14 +854,15 @@ class FpOp : public PredOp
             bool flush, uint32_t rMode) const;
 
     void
-    advancePC(PCState &pcState) const override
+    advancePC(PCStateBase &pcState) const override
     {
+        auto &apc = pcState.as<PCState>();
         if (flags[IsLastMicroop]) {
-            pcState.uEnd();
+            apc.uEnd();
         } else if (flags[IsMicroop]) {
-            pcState.uAdvance();
+            apc.uAdvance();
         } else {
-            pcState.advance();
+            apc.advance();
         }
     }
 

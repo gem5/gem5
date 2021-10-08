@@ -32,6 +32,7 @@
 
 #include <cstdint>
 
+#include "arch/sparc/pcstate.hh"
 #include "arch/sparc/types.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
@@ -110,7 +111,7 @@ class SparcStaticInst : public StaticInst
     void printRegArray(std::ostream &os,
         const RegId *indexArray, int num) const;
 
-    void advancePC(PCState &pcState) const override;
+    void advancePC(PCStateBase &pcState) const override;
 
     static bool passesFpCondition(uint32_t fcc, uint32_t condition);
     static bool passesCondition(uint32_t codes, uint32_t condition);
