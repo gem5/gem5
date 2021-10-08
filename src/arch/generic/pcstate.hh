@@ -54,6 +54,20 @@ class PCStateBase : public Serializable
 {
   public:
     virtual ~PCStateBase() = default;
+
+    template<class Target>
+    Target &
+    as()
+    {
+        return static_cast<Target &>(*this);
+    }
+
+    template<class Target>
+    const Target &
+    as() const
+    {
+        return static_cast<const Target &>(*this);
+    }
 };
 
 namespace GenericISA
