@@ -39,12 +39,12 @@ namespace gem5
 void
 SkipFuncBase::process(ThreadContext *tc)
 {
-    [[maybe_unused]] TheISA::PCState oldPC = tc->pcState();
+    std::unique_ptr<PCStateBase> old_pc(tc->pcState().clone());
 
     returnFromFuncIn(tc);
 
     DPRINTF(PCEvent, "skipping %s: pc = %s, newpc = %s\n", description,
-            oldPC, tc->pcState());
+            *old_pc, tc->pcState());
 }
 
 } // namespace gem5
