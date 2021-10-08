@@ -33,23 +33,6 @@
 namespace gem5
 {
 
-bool
-StaticInst::hasBranchTarget(const TheISA::PCState &pc, ThreadContext *tc,
-                            TheISA::PCState &tgt) const
-{
-    if (isDirectCtrl()) {
-        tgt = branchTarget(pc);
-        return true;
-    }
-
-    if (isIndirectCtrl()) {
-        tgt = branchTarget(tc);
-        return true;
-    }
-
-    return false;
-}
-
 StaticInstPtr
 StaticInst::fetchMicroop(MicroPC upc) const
 {

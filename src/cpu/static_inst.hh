@@ -352,13 +352,6 @@ class StaticInst : public RefCounted, public StaticInstFlags
     virtual TheISA::PCState branchTarget(ThreadContext *tc) const;
 
     /**
-     * Return true if the instruction is a control transfer, and if so,
-     * return the target address as well.
-     */
-    bool hasBranchTarget(const TheISA::PCState &pc, ThreadContext *tc,
-            TheISA::PCState &tgt) const;
-
-    /**
      * Return string representation of disassembled instruction.
      * The default version of this function will call the internal
      * virtual generateDisassembly() function to get the string,
