@@ -68,6 +68,8 @@ class PCStateBase : public Serializable
     {
         return static_cast<const Target &>(*this);
     }
+
+    virtual PCStateBase *clone() const = 0;
 };
 
 namespace GenericISA
@@ -188,6 +190,12 @@ class SimplePCState : public PCStateCommon
     SimplePCState() {}
     SimplePCState(Addr val) { set(val); }
 
+    PCStateBase *
+    clone() const override
+    {
+        return new SimplePCState<InstWidth>(*this);
+    }
+
     /**
      * Force this PC to reflect a particular value, resetting all its other
      * fields around it. This is useful for in place (re)initialization.
@@ -232,6 +240,11 @@ class UPCState : public SimplePCState<InstWidth>
     typedef SimplePCState<InstWidth> Base;
 
   public:
+    PCStateBase *
+    clone() const override
+    {
+        return new UPCState<InstWidth>(*this);
+    }
 
     MicroPC upc() const { return this->_upc; }
     void upc(MicroPC val) { this->_upc = val; }
@@ -307,6 +320,11 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
     Addr _nnpc;
 
   public:
+    PCStateBase *
+    clone() const override
+    {
+        return new DelaySlotPCState<InstWidth>(*this);
+    }
 
     Addr nnpc() const { return _nnpc; }
     void nnpc(Addr val) { _nnpc = val; }
@@ -387,6 +405,11 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
     MicroPC _nupc;
 
   public:
+    PCStateBase *
+    clone() const override
+    {
+        return new DelaySlotUPCState<InstWidth>(*this);
+    }
 
     MicroPC upc() const { return _upc; }
     void upc(MicroPC val) { _upc = val; }

@@ -102,6 +102,8 @@ class PCState : public GenericISA::UPCState<4>
 
     PCState(Addr val) { set(val); }
 
+    PCStateBase *clone() const override { return new PCState(*this); }
+
     bool
     illegalExec() const
     {

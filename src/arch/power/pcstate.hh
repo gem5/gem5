@@ -47,6 +47,8 @@ class PCState : public GenericISA::SimplePCState<4>
   public:
     using GenericISA::SimplePCState<4>::SimplePCState;
 
+    PCStateBase *clone() const override { return new PCState(*this); }
+
     ByteOrder
     byteOrder() const
     {

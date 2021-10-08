@@ -59,6 +59,8 @@ class PCState : public GenericISA::UPCState<4>
   public:
     using GenericISA::UPCState<4>::UPCState;
 
+    PCStateBase *clone() const override { return new PCState(*this); }
+
     void compressed(bool c) { _compressed = c; }
     bool compressed() const { return _compressed; }
 
