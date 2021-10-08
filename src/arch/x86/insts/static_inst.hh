@@ -204,12 +204,13 @@ class X86StaticInst : public StaticInst
         pcState.as<PCState>().advance();
     }
 
-    PCState
-    buildRetPC(const PCState &curPC, const PCState &callPC) const override
+    std::unique_ptr<PCStateBase>
+    buildRetPC(const PCStateBase &cur_pc,
+            const PCStateBase &call_pc) const override
     {
-        PCState retPC = callPC;
-        retPC.uEnd();
-        return retPC;
+        PCStateBase *ret_pc_ptr = call_pc.clone();
+        ret_pc_ptr->as<PCState>().uEnd();
+        return std::unique_ptr<PCStateBase>{ret_pc_ptr};
     }
 };
 

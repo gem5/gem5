@@ -205,12 +205,13 @@ class ArmStaticInst : public StaticInst
 
     uint64_t getEMI() const override { return machInst; }
 
-    PCState
-    buildRetPC(const PCState &curPC, const PCState &callPC) const override
+    std::unique_ptr<PCStateBase>
+    buildRetPC(const PCStateBase &cur_pc,
+            const PCStateBase &call_pc) const override
     {
-        PCState retPC = callPC;
-        retPC.uEnd();
-        return retPC;
+        PCStateBase *ret_pc = call_pc.clone();
+        ret_pc->as<PCState>().uEnd();
+        return std::unique_ptr<PCStateBase>{ret_pc};
     }
 
     std::string generateDisassembly(

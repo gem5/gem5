@@ -322,9 +322,8 @@ class StaticInst : public RefCounted, public StaticInstFlags
 
     virtual void advancePC(PCStateBase &pc_state) const = 0;
 
-    virtual TheISA::PCState
-    buildRetPC(const TheISA::PCState &cur_pc,
-            const TheISA::PCState &call_pc) const
+    virtual std::unique_ptr<PCStateBase>
+    buildRetPC(const PCStateBase &cur_pc, const PCStateBase &call_pc) const
     {
         panic("buildRetPC not defined!");
     }

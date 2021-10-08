@@ -74,12 +74,13 @@ class PowerStaticInst : public StaticInst
         pc_state.as<PCState>().advance();
     }
 
-    PCState
-    buildRetPC(const PCState &curPC, const PCState &callPC) const override
+    std::unique_ptr<PCStateBase>
+    buildRetPC(const PCStateBase &cur_pc,
+            const PCStateBase &call_pc) const override
     {
-        PCState retPC = callPC;
-        retPC.advance();
-        return retPC;
+        PCStateBase *ret_pc = call_pc.clone();
+        ret_pc->as<PCState>().advance();
+        return std::unique_ptr<PCStateBase>{ret_pc};
     }
 
     size_t

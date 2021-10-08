@@ -64,13 +64,15 @@ class RiscvStaticInst : public StaticInst
         pc.as<PCState>().advance();
     }
 
-    PCState
-    buildRetPC(const PCState &curPC, const PCState &callPC) const override
+    std::unique_ptr<PCStateBase>
+    buildRetPC(const PCStateBase &cur_pc,
+            const PCStateBase &call_pc) const override
     {
-        PCState retPC = callPC;
-        retPC.advance();
-        retPC.pc(curPC.npc());
-        return retPC;
+        PCStateBase *ret_pc_ptr = call_pc.clone();
+        auto &ret_pc = ret_pc_ptr->as<PCState>();
+        ret_pc.advance();
+        ret_pc.pc(cur_pc.as<PCState>().npc());
+        return std::unique_ptr<PCStateBase>{ret_pc_ptr};
     }
 
     size_t

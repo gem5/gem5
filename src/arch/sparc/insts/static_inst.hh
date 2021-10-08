@@ -122,13 +122,15 @@ class SparcStaticInst : public StaticInst
         return simpleAsBytes(buf, size, machInst);
     }
 
-    PCState
-    buildRetPC(const PCState &curPC, const PCState &callPC) const override
+    std::unique_ptr<PCStateBase>
+    buildRetPC(const PCStateBase &cur_pc,
+            const PCStateBase &call_pc) const override
     {
-        PCState ret = callPC;
+        PCStateBase *ret_ptr = call_pc.clone();
+        auto &ret = ret_ptr->as<PCState>();
         ret.uEnd();
-        ret.pc(curPC.npc());
-        return ret;
+        ret.pc(cur_pc.as<PCState>().npc());
+        return std::unique_ptr<PCStateBase>{ret_ptr};
     }
 };
 
