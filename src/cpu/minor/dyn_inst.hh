@@ -173,64 +173,64 @@ class MinorDynInst : public RefCounted
     InstId id;
 
     /** Trace information for this instruction's execution */
-    Trace::InstRecord *traceData;
+    Trace::InstRecord *traceData = nullptr;
 
     /** The fetch address of this instruction */
-    TheISA::PCState pc;
+    std::unique_ptr<PCStateBase> pc;
 
     /** This is actually a fault masquerading as an instruction */
     Fault fault;
 
     /** Tried to predict the destination of this inst (if a control
      *  instruction or a sys call) */
-    bool triedToPredict;
+    bool triedToPredict = false;
 
     /** This instruction was predicted to change control flow and
      *  the following instructions will have a newer predictionSeqNum */
-    bool predictedTaken;
+    bool predictedTaken = false;
 
     /** Predicted branch target */
-    TheISA::PCState predictedTarget;
+    std::unique_ptr<PCStateBase> predictedTarget;
 
     /** Fields only set during execution */
 
     /** FU this instruction is issued to */
-    unsigned int fuIndex;
+    unsigned int fuIndex = 0;
 
     /** This instruction is in the LSQ, not a functional unit */
-    bool inLSQ;
+    bool inLSQ = false;
 
     /** Translation fault in case of a mem ref */
     Fault translationFault;
 
     /** The instruction has been sent to the store buffer */
-    bool inStoreBuffer;
+    bool inStoreBuffer = false;
 
     /** Can this instruction be executed out of order.  In this model,
      *  this only happens with mem refs that need to be issued early
      *  to allow other instructions to fill the fetch delay */
-    bool canEarlyIssue;
+    bool canEarlyIssue = false;
 
     /** Flag controlling conditional execution of the instruction */
-    bool predicate;
+    bool predicate = true;
 
     /** Flag controlling conditional execution of the memory access associated
      *  with the instruction (only meaningful for loads/stores) */
-    bool memAccPredicate;
+    bool memAccPredicate = true;
 
     /** execSeqNum of the latest inst on which this inst depends.
      *  This can be used as a sanity check for dependency ordering
      *  where slightly out of order execution is required (notably
      *  initiateAcc for memory ops) */
-    InstSeqNum instToWaitFor;
+    InstSeqNum instToWaitFor = 0;
 
     /** Extra delay at the end of the pipeline */
-    Cycles extraCommitDelay;
-    TimingExpr *extraCommitDelayExpr;
+    Cycles extraCommitDelay{0};
+    TimingExpr *extraCommitDelayExpr = nullptr;
 
     /** Once issued, extraCommitDelay becomes minimumCommitCycle
      *  to account for delay in absolute time */
-    Cycles minimumCommitCycle;
+    Cycles minimumCommitCycle{0};
 
     /** Flat register indices so that, when clearing the scoreboard, we
      *  have the same register indices as when the instruction was marked
@@ -239,13 +239,7 @@ class MinorDynInst : public RefCounted
 
   public:
     MinorDynInst(StaticInstPtr si, InstId id_=InstId(), Fault fault_=NoFault) :
-        staticInst(si), id(id_), traceData(NULL),
-        pc(TheISA::PCState(0)), fault(fault_),
-        triedToPredict(false), predictedTaken(false),
-        fuIndex(0), inLSQ(false), translationFault(NoFault),
-        inStoreBuffer(false), canEarlyIssue(false), predicate(true),
-        memAccPredicate(true), instToWaitFor(0), extraCommitDelay(Cycles(0)),
-        extraCommitDelayExpr(NULL), minimumCommitCycle(Cycles(0)),
+        staticInst(si), id(id_), fault(fault_), translationFault(NoFault),
         flatDestRegIdx(si ? si->numDestRegs() : 0)
     { }
 

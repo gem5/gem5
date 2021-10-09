@@ -192,26 +192,24 @@ void
 Fetch2::predictBranch(MinorDynInstPtr inst, BranchData &branch)
 {
     Fetch2ThreadInfo &thread = fetchInfo[inst->id.threadId];
-    TheISA::PCState inst_pc = inst->pc;
 
     assert(!inst->predictedTaken);
 
     /* Skip non-control/sys call instructions */
-    if (inst->staticInst->isControl() ||
-        inst->staticInst->isSyscall())
-    {
+    if (inst->staticInst->isControl() || inst->staticInst->isSyscall()){
+        std::unique_ptr<PCStateBase> inst_pc(inst->pc->clone());
+
         /* Tried to predict */
         inst->triedToPredict = true;
 
         DPRINTF(Branch, "Trying to predict for inst: %s\n", *inst);
 
         if (branchPredictor.predict(inst->staticInst,
-            inst->id.fetchSeqNum, inst_pc,
-            inst->id.threadId))
-        {
+                    inst->id.fetchSeqNum, inst_pc->as<TheISA::PCState>(),
+                    inst->id.threadId)) {
+            set(branch.target, *inst_pc);
             inst->predictedTaken = true;
-            inst->predictedTarget = inst_pc;
-            branch.target = inst_pc;
+            set(inst->predictedTarget, inst_pc);
         }
     } else {
         DPRINTF(Branch, "Not attempting prediction for inst: %s\n", *inst);
@@ -226,7 +224,7 @@ Fetch2::predictBranch(MinorDynInstPtr inst, BranchData &branch)
         BranchData new_branch = BranchData(BranchData::BranchPrediction,
             inst->id.threadId,
             inst->id.streamSeqNum, thread.predictionSeqNum + 1,
-            inst->predictedTarget, inst);
+            inst->predictedTarget->as<TheISA::PCState>(), inst);
 
         /* Mark with a new prediction number by the stream number of the
          *  instruction causing the prediction */
@@ -235,7 +233,7 @@ Fetch2::predictBranch(MinorDynInstPtr inst, BranchData &branch)
 
         DPRINTF(Branch, "Branch predicted taken inst: %s target: %s"
             " new predictionSeqNum: %d\n",
-            *inst, inst->predictedTarget, thread.predictionSeqNum);
+            *inst, *inst->predictedTarget, thread.predictionSeqNum);
     }
 }
 
@@ -369,7 +367,7 @@ Fetch2::evaluate()
                  *  not been set */
                 assert(dyn_inst->id.execSeqNum == 0);
 
-                dyn_inst->pc = fetch_info.pc;
+                set(dyn_inst->pc, fetch_info.pc);
 
                 /* Pack a faulting instruction but allow other
                  *  instructions to be generated. (Fetch2 makes no
@@ -412,7 +410,7 @@ Fetch2::evaluate()
                      *  has not been set */
                     assert(dyn_inst->id.execSeqNum == 0);
 
-                    dyn_inst->pc = fetch_info.pc;
+                    set(dyn_inst->pc, fetch_info.pc);
                     DPRINTF(Fetch, "decoder inst %s\n", *dyn_inst);
 
                     // Collect some basic inst class stats

@@ -115,7 +115,7 @@ dynInstAddTracing(MinorDynInstPtr inst, StaticInstPtr static_inst,
 {
     inst->traceData = cpu.getTracer()->getInstRecord(curTick(),
         cpu.getContext(inst->id.threadId),
-        inst->staticInst, inst->pc, static_inst);
+        inst->staticInst, *inst->pc, static_inst);
 
     /* Use the execSeqNum as the fetch sequence number as this most closely
      *  matches the other processor models' idea of fetch sequence */
@@ -176,7 +176,7 @@ Decode::evaluate()
 
                     /* Set up PC for the next micro-op emitted */
                     if (!decode_info.inMacroop) {
-                        decode_info.microopPC = inst->pc;
+                        set(decode_info.microopPC, *inst->pc);
                         decode_info.inMacroop = true;
                     }
 
@@ -188,14 +188,15 @@ Decode::evaluate()
 
                     output_inst =
                         new MinorDynInst(static_micro_inst, inst->id);
-                    output_inst->pc = decode_info.microopPC;
+                    set(output_inst->pc, decode_info.microopPC);
                     output_inst->fault = NoFault;
 
                     /* Allow a predicted next address only on the last
                      *  microop */
                     if (static_micro_inst->isLastMicroop()) {
                         output_inst->predictedTaken = inst->predictedTaken;
-                        output_inst->predictedTarget = inst->predictedTarget;
+                        set(output_inst->predictedTarget,
+                                inst->predictedTarget);
                     }
 
                     DPRINTF(Decode, "Microop decomposition inputIndex:"

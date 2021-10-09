@@ -93,8 +93,8 @@ class ExecContext : public gem5::ExecContext
         execute(execute_),
         inst(inst_)
     {
-        DPRINTF(MinorExecute, "ExecContext setting PC: %s\n", inst->pc);
-        pcState(inst->pc);
+        DPRINTF(MinorExecute, "ExecContext setting PC: %s\n", *inst->pc);
+        pcState(inst->pc->as<TheISA::PCState>());
         setPredicate(inst->readPredicate());
         setMemAccPredicate(inst->readMemAccPredicate());
         thread.setIntReg(zeroReg, 0);

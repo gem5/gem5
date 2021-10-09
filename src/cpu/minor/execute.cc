@@ -224,7 +224,7 @@ void
 Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
 {
     ThreadContext *thread = cpu.getContext(inst->id.threadId);
-    const TheISA::PCState &pc_before = inst->pc;
+    const std::unique_ptr<PCStateBase> pc_before(inst->pc->clone());
     TheISA::PCState target = thread->pcState();
 
     /* Force a branch for SerializeAfter/SquashAfter instructions
@@ -236,10 +236,10 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
          inst->staticInst->isSquashAfter());
 
     DPRINTF(Branch, "tryToBranch before: %s after: %s%s\n",
-        pc_before, target, (force_branch ? " (forcing)" : ""));
+        *pc_before, target, (force_branch ? " (forcing)" : ""));
 
     /* Will we change the PC to something other than the next instruction? */
-    bool must_branch = pc_before != target ||
+    bool must_branch = *pc_before != target ||
         fault != NoFault ||
         force_branch;
 
@@ -251,7 +251,7 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
         thread->pcState(target);
 
         DPRINTF(Branch, "Advancing current PC from: %s to: %s\n",
-            pc_before, target);
+            *pc_before, target);
     }
 
     if (inst->predictedTaken && !force_branch) {
@@ -261,24 +261,26 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
              *  intended PC value */
             DPRINTF(Branch, "Predicted a branch from 0x%x to 0x%x but"
                 " none happened inst: %s\n",
-                inst->pc.instAddr(), inst->predictedTarget.instAddr(), *inst);
+                inst->pc->instAddr(), inst->predictedTarget->instAddr(),
+                *inst);
 
             reason = BranchData::BadlyPredictedBranch;
-        } else if (inst->predictedTarget == target) {
+        } else if (*inst->predictedTarget == target) {
             /* Branch prediction got the right target, kill the branch and
              *  carry on.
              *  Note that this information to the branch predictor might get
              *  overwritten by a "real" branch during this cycle */
             DPRINTF(Branch, "Predicted a branch from 0x%x to 0x%x correctly"
                 " inst: %s\n",
-                inst->pc.instAddr(), inst->predictedTarget.instAddr(), *inst);
+                inst->pc->instAddr(), inst->predictedTarget->instAddr(),
+                *inst);
 
             reason = BranchData::CorrectlyPredictedBranch;
         } else {
             /* Branch prediction got the wrong target */
             DPRINTF(Branch, "Predicted a branch from 0x%x to 0x%x"
                     " but got the wrong target (actual: 0x%x) inst: %s\n",
-                    inst->pc.instAddr(), inst->predictedTarget.instAddr(),
+                    inst->pc->instAddr(), inst->predictedTarget->instAddr(),
                     target.instAddr(), *inst);
 
             reason = BranchData::BadlyPredictedBranchTarget;
@@ -286,7 +288,7 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
     } else if (must_branch) {
         /* Unpredicted branch */
         DPRINTF(Branch, "Unpredicted branch from 0x%x to 0x%x inst: %s\n",
-            inst->pc.instAddr(), target.instAddr(), *inst);
+            inst->pc->instAddr(), target.instAddr(), *inst);
 
         reason = BranchData::UnpredictedBranch;
     } else {
@@ -890,7 +892,7 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     if (inst->traceData)
         inst->traceData->setCPSeq(thread->numOp);
 
-    cpu.probeInstCommit(inst->staticInst, inst->pc.instAddr());
+    cpu.probeInstCommit(inst->staticInst, inst->pc->instAddr());
 }
 
 bool
