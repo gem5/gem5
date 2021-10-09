@@ -33,6 +33,7 @@
 #include <string>
 
 #include "arch/generic/isa.hh"
+#include "arch/sparc/pcstate.hh"
 #include "arch/sparc/regs/int.hh"
 #include "arch/sparc/regs/misc.hh"
 #include "arch/sparc/sparc_traits.hh"
@@ -166,8 +167,13 @@ class ISA : public BaseISA
     void reloadRegMap();
 
   public:
-
     void clear();
+
+    PCStateBase *
+    newPCState(Addr new_inst_addr=0) const override
+    {
+        return new PCState(new_inst_addr);
+    }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

@@ -43,6 +43,7 @@
 
 #include "arch/arm/isa_device.hh"
 #include "arch/arm/mmu.hh"
+#include "arch/arm/pcstate.hh"
 #include "arch/arm/regs/int.hh"
 #include "arch/arm/regs/misc.hh"
 #include "arch/arm/self_debug.hh"
@@ -867,6 +868,12 @@ namespace ArmISA
         void startup() override;
 
         void setupThreadContext();
+
+        PCStateBase *
+        newPCState(Addr new_inst_addr=0) const override
+        {
+            return new PCState(new_inst_addr);
+        }
 
         void takeOverFrom(ThreadContext *new_tc,
                           ThreadContext *old_tc) override;

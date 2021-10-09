@@ -32,6 +32,7 @@
 #define __ARCH_POWER_ISA_HH__
 
 #include "arch/generic/isa.hh"
+#include "arch/power/pcstate.hh"
 #include "arch/power/regs/misc.hh"
 #include "arch/power/types.hh"
 #include "base/logging.hh"
@@ -57,6 +58,12 @@ class ISA : public BaseISA
 
   public:
     void clear() {}
+
+    PCStateBase *
+    newPCState(Addr new_inst_addr=0) const override
+    {
+        return new PCState(new_inst_addr);
+    }
 
   public:
     RegVal

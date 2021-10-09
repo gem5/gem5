@@ -52,6 +52,12 @@ class ISA : public BaseISA
         ArmISA::CPSR cpsr = tc->readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
         return ArmISA::inUserMode(cpsr);
     }
+
+    PCStateBase *
+    newPCState(Addr new_inst_addr=0) const override
+    {
+        return new ArmISA::PCState(new_inst_addr);
+    }
 };
 
 } // namespace Iris

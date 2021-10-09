@@ -37,6 +37,7 @@
 #include <vector>
 
 #include "arch/generic/isa.hh"
+#include "arch/riscv/pcstate.hh"
 #include "arch/riscv/types.hh"
 #include "base/types.hh"
 
@@ -75,6 +76,12 @@ class ISA : public BaseISA
     using Params = RiscvISAParams;
 
     void clear();
+
+    PCStateBase *
+    newPCState(Addr new_inst_addr=0) const override
+    {
+        return new PCState(new_inst_addr);
+    }
 
   public:
     RegVal readMiscRegNoEffect(int misc_reg) const;

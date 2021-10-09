@@ -33,6 +33,7 @@
 #include <string>
 
 #include "arch/generic/isa.hh"
+#include "arch/x86/pcstate.hh"
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/misc.hh"
 #include "base/types.hh"
@@ -58,6 +59,12 @@ class ISA : public BaseISA
 
   public:
     void clear();
+
+    PCStateBase *
+    newPCState(Addr new_inst_addr=0) const override
+    {
+        return new PCState(new_inst_addr);
+    }
 
     using Params = X86ISAParams;
 

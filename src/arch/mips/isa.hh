@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "arch/generic/isa.hh"
+#include "arch/mips/pcstate.hh"
 #include "arch/mips/regs/misc.hh"
 #include "arch/mips/types.hh"
 #include "base/types.hh"
@@ -77,6 +78,12 @@ namespace MipsISA
 
       public:
         void clear();
+
+        PCStateBase *
+        newPCState(Addr new_inst_addr=0) const override
+        {
+            return new PCState(new_inst_addr);
+        }
 
       public:
         void configCP();
