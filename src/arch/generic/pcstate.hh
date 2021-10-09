@@ -80,6 +80,12 @@ class PCStateBase : public Serializable
 
     virtual PCStateBase *clone() const = 0;
 
+    virtual bool
+    equals(const PCStateBase &other) const
+    {
+        return _pc == other._pc && _upc == other._upc;
+    }
+
     /**
      * Returns the memory address of the instruction this PC points to.
      *
@@ -116,6 +122,18 @@ class PCStateBase : public Serializable
         UNSERIALIZE_SCALAR(_upc);
     }
 };
+
+static inline bool
+operator==(const PCStateBase &a, const PCStateBase &b)
+{
+    return a.equals(b);
+}
+
+static inline bool
+operator!=(const PCStateBase &a, const PCStateBase &b)
+{
+    return !a.equals(b);
+}
 
 namespace GenericISA
 {
@@ -172,15 +190,11 @@ class PCStateCommon : public PCStateBase
     }
 
     bool
-    operator == (const PCStateCommon &opc) const
+    equals(const PCStateBase &other) const override
     {
-        return _pc == opc._pc && _npc == opc._npc;
-    }
-
-    bool
-    operator != (const PCStateCommon &opc) const
-    {
-        return !(*this == opc);
+        auto &ps = other.as<PCStateCommon>();
+        return PCStateBase::equals(other) &&
+            _npc == ps._npc && _nupc == ps._nupc;
     }
 
     void
@@ -312,19 +326,6 @@ class UPCState : public SimplePCState<InstWidth>
         this->upc(0);
         this->nupc(1);
     }
-
-    bool
-    operator == (const UPCState<InstWidth> &opc) const
-    {
-        return this->pc() == opc.pc() && this->npc() == opc.npc() &&
-               this->upc() == opc.upc() && this->nupc() == opc.nupc();
-    }
-
-    bool
-    operator != (const UPCState<InstWidth> &opc) const
-    {
-        return !(*this == opc);
-    }
 };
 
 template <int InstWidth>
@@ -387,17 +388,10 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
     }
 
     bool
-    operator == (const DelaySlotPCState<InstWidth> &opc) const
+    equals(const PCStateBase &other) const override
     {
-        return this->_pc == opc._pc &&
-               this->_npc == opc._npc &&
-               this->_nnpc == opc._nnpc;
-    }
-
-    bool
-    operator != (const DelaySlotPCState<InstWidth> &opc) const
-    {
-        return !(*this == opc);
+        auto &ps = other.as<DelaySlotPCState<InstWidth>>();
+        return Base::equals(other) && ps._nnpc == this->_nnpc;
     }
 
     void
@@ -472,22 +466,6 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
         this->advance();
         this->_upc = 0;
         this->_nupc = 1;
-    }
-
-    bool
-    operator == (const DelaySlotUPCState<InstWidth> &opc) const
-    {
-        return this->_pc == opc._pc &&
-               this->_npc == opc._npc &&
-               this->_nnpc == opc._nnpc &&
-               this->_upc == opc._upc &&
-               this->_nupc == opc._nupc;
-    }
-
-    bool
-    operator != (const DelaySlotUPCState<InstWidth> &opc) const
-    {
-        return !(*this == opc);
     }
 };
 

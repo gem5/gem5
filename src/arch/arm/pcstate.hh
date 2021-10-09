@@ -376,21 +376,16 @@ class PCState : public GenericISA::UPCState<4>
     }
 
     bool
-    operator == (const PCState &opc) const
+    equals(const PCStateBase &other) const override
     {
-        return Base::operator == (opc) &&
+        auto &opc = other.as<PCState>();
+        return Base::equals(other) &&
             flags == opc.flags && nextFlags == opc.nextFlags &&
             _itstate == opc._itstate &&
             _nextItstate == opc._nextItstate &&
             _illegalExec == opc._illegalExec &&
             _debugStep == opc._debugStep &&
             _stepped == opc._stepped;
-    }
-
-    bool
-    operator != (const PCState &opc) const
-    {
-        return !(*this == opc);
     }
 
     void
