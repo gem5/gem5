@@ -139,7 +139,7 @@ class Fetch1 : public Named
         RequestPtr request;
 
         /** PC to fixup with line address */
-        TheISA::PCState pc;
+        Addr pc;
 
         /** Fill in a fault if one happens during fetch, check this by
          *  picking apart the response packet */
@@ -173,7 +173,7 @@ class Fetch1 : public Named
                     ThreadContext *tc, BaseMMU::Mode mode);
 
       public:
-        FetchRequest(Fetch1 &fetch_, InstId id_, TheISA::PCState pc_) :
+        FetchRequest(Fetch1 &fetch_, InstId id_, Addr pc_) :
             SenderState(),
             fetch(fetch_),
             state(NotIssued),
@@ -248,6 +248,7 @@ class Fetch1 : public Named
         Fetch1ThreadInfo() :
             state(FetchWaitingForPC),
             pc(TheISA::PCState(0)),
+            fetchAddr(0),
             streamSeqNum(InstId::firstStreamSeqNum),
             predictionSeqNum(InstId::firstPredictionSeqNum),
             blocked(false),
@@ -265,9 +266,12 @@ class Fetch1 : public Named
         FetchState state;
 
         /** Fetch PC value. This is updated by branches from Execute, branch
-         *  prediction targets from Fetch2 and by incrementing it as we fetch
-         *  lines subsequent to those two sources. */
+         *  prediction targets from Fetch2. This is only valid immediately
+         *  following a redirect from one of those two sources. */
         TheISA::PCState pc;
+
+        /** The address we're currently fetching lines from. */
+        Addr fetchAddr;
 
         /** Stream sequence number.  This changes on request from Execute and is
          *  used to tag instructions by the fetch stream to which they belong.

@@ -184,8 +184,11 @@ class ForwardLineData /* : public ReportIF, public BubbleIF */
      *  <= pc.instAddr() */
     Addr lineBaseAddr;
 
-    /** PC of the first requested inst within this line */
+    /** PC of the first inst within this sequence */
     TheISA::PCState pc;
+
+    /** Address of this line of data */
+    Addr fetchAddr;
 
     /** Explicit line width, don't rely on data.size */
     unsigned int lineWidth;
