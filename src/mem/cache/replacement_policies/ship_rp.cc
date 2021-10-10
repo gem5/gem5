@@ -71,7 +71,7 @@ SHiP::SHiPReplData::wasReReferenced() const
 
 SHiP::SHiP(const Params &p)
   : BRRIP(p), insertionThreshold(p.insertion_threshold / 100.0),
-    SHCT(p.shct_size, SatCounter(numRRPVBits))
+    SHCT(p.shct_size, SatCounter8(numRRPVBits))
 {
 }
 
