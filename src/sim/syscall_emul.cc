@@ -963,11 +963,17 @@ chdirFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname)
 SyscallReturn
 rmdirFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname)
 {
-    auto p = tc->getProcessPtr();
     std::string path;
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
 
+    return rmdirImpl(desc, tc, path);
+}
+
+SyscallReturn
+rmdirImpl(SyscallDesc *desc, ThreadContext *tc, std::string path)
+{
+    auto p = tc->getProcessPtr();
     path = p->checkPathRedirect(path);
 
     auto result = rmdir(path.c_str());

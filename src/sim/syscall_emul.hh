@@ -206,7 +206,10 @@ SyscallReturn mknodFunc(SyscallDesc *desc, ThreadContext *tc,
 SyscallReturn chdirFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname);
 
 // Target rmdir() handler.
-SyscallReturn rmdirFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname);
+SyscallReturn rmdirFunc(SyscallDesc *desc, ThreadContext *tc,
+                        VPtr<> pathname);
+SyscallReturn rmdirImpl(SyscallDesc *desc, ThreadContext *tc,
+                        std::string path);
 
 /// Target rename() handler.
 SyscallReturn renameFunc(SyscallDesc *desc, ThreadContext *tc,
