@@ -89,9 +89,6 @@ class RiscvBoard(SimpleBoard):
 
         requires(isa_required=ISA.RISCV)
 
-        if cache_hierarchy.is_ruby():
-            raise EnvironmentError("RiscvBoard is not compatible with Ruby")
-
         self.workload = RiscvLinux()
 
         # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.
@@ -124,20 +121,26 @@ class RiscvBoard(SimpleBoard):
 
     def _setup_io_devices(self) -> None:
         """Connect the I/O devices to the I/O bus"""
-        for device in self._off_chip_devices:
-            device.pio = self.iobus.mem_side_ports
-        for device in self._on_chip_devices:
-            device.pio = self.get_cache_hierarchy().get_mem_side_port()
 
-        self.bridge = Bridge(delay="10ns")
-        self.bridge.mem_side_port = self.iobus.cpu_side_ports
-        self.bridge.cpu_side_port = (
-            self.get_cache_hierarchy().get_mem_side_port()
-        )
-        self.bridge.ranges = [
-            AddrRange(dev.pio_addr, size=dev.pio_size)
-            for dev in self._off_chip_devices
-        ]
+        if self.get_cache_hierarchy().is_ruby():
+            for device in self._off_chip_devices + self._on_chip_devices:
+                device.pio = self.iobus.mem_side_ports
+
+        else:
+            for device in self._off_chip_devices:
+                device.pio = self.iobus.mem_side_ports
+            for device in self._on_chip_devices:
+                device.pio = self.get_cache_hierarchy().get_mem_side_port()
+
+            self.bridge = Bridge(delay="10ns")
+            self.bridge.mem_side_port = self.iobus.cpu_side_ports
+            self.bridge.cpu_side_port = (
+                self.get_cache_hierarchy().get_mem_side_port()
+            )
+            self.bridge.ranges = [
+                AddrRange(dev.pio_addr, size=dev.pio_size)
+                for dev in self._off_chip_devices
+            ]
 
     def _setup_pma(self) -> None:
         """Set the PMA devices on each core"""
