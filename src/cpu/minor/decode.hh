@@ -94,40 +94,35 @@ class Decode : public Named
 
     struct DecodeThreadInfo
     {
-
-        /** Default Constructor */
-        DecodeThreadInfo() :
-            inputIndex(0),
-            inMacroop(false),
-            execSeqNum(InstId::firstExecSeqNum),
-            blocked(false)
-        { }
+        DecodeThreadInfo() {}
 
         DecodeThreadInfo(const DecodeThreadInfo& other) :
             inputIndex(other.inputIndex),
             inMacroop(other.inMacroop),
             execSeqNum(other.execSeqNum),
             blocked(other.blocked)
-        { }
+        {
+            set(microopPC, other.microopPC);
+        }
 
 
         /** Index into the inputBuffer's head marking the start of unhandled
          *  instructions */
-        unsigned int inputIndex;
+        unsigned int inputIndex = 0;
 
         /** True when we're in the process of decomposing a micro-op and
          *  microopPC will be valid.  This is only the case when there isn't
          *  sufficient space in Executes input buffer to take the whole of a
          *  decomposed instruction and some of that instructions micro-ops must
          *  be generated in a later cycle */
-        bool inMacroop;
-        TheISA::PCState microopPC;
+        bool inMacroop = false;
+        std::unique_ptr<PCStateBase> microopPC;
 
         /** Source of execSeqNums to number instructions. */
-        InstSeqNum execSeqNum;
+        InstSeqNum execSeqNum = InstId::firstExecSeqNum;
 
         /** Blocked indication for report */
-        bool blocked;
+        bool blocked = false;
     };
 
     std::vector<DecodeThreadInfo> decodeInfo;

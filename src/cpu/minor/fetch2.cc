@@ -156,7 +156,7 @@ Fetch2::updateBranchPrediction(const BranchData &branch)
         /* Unpredicted branch or barrier */
         DPRINTF(Branch, "Unpredicted branch seen inst: %s\n", *inst);
         branchPredictor.squash(inst->id.fetchSeqNum,
-            branch.target, true, inst->id.threadId);
+            branch.target->as<TheISA::PCState>(), true, inst->id.threadId);
         // Update after squashing to accomodate O3CPU
         // using the branch prediction code.
         branchPredictor.update(inst->id.fetchSeqNum,
@@ -172,7 +172,8 @@ Fetch2::updateBranchPrediction(const BranchData &branch)
         /* Predicted taken, not taken */
         DPRINTF(Branch, "Branch mis-predicted inst: %s\n", *inst);
         branchPredictor.squash(inst->id.fetchSeqNum,
-            branch.target /* Not used */, false, inst->id.threadId);
+            branch.target->as<TheISA::PCState>() /* Not used */,
+            false, inst->id.threadId);
         // Update after squashing to accomodate O3CPU
         // using the branch prediction code.
         branchPredictor.update(inst->id.fetchSeqNum,
@@ -181,9 +182,9 @@ Fetch2::updateBranchPrediction(const BranchData &branch)
       case BranchData::BadlyPredictedBranchTarget:
         /* Predicted taken, was taken but to a different target */
         DPRINTF(Branch, "Branch mis-predicted target inst: %s target: %s\n",
-            *inst, branch.target);
+            *inst, *branch.target);
         branchPredictor.squash(inst->id.fetchSeqNum,
-            branch.target, true, inst->id.threadId);
+            branch.target->as<TheISA::PCState>(), true, inst->id.threadId);
         break;
     }
 }
@@ -224,7 +225,7 @@ Fetch2::predictBranch(MinorDynInstPtr inst, BranchData &branch)
         BranchData new_branch = BranchData(BranchData::BranchPrediction,
             inst->id.threadId,
             inst->id.streamSeqNum, thread.predictionSeqNum + 1,
-            inst->predictedTarget->as<TheISA::PCState>(), inst);
+            *inst->predictedTarget, inst);
 
         /* Mark with a new prediction number by the stream number of the
          *  instruction causing the prediction */
@@ -331,13 +332,13 @@ Fetch2::evaluate()
                 /* Set the inputIndex to be the MachInst-aligned offset
                  *  from lineBaseAddr of the new PC value */
                 fetch_info.inputIndex =
-                    (line_in->pc.instAddr() & decoder->pcMask()) -
+                    (line_in->pc->instAddr() & decoder->pcMask()) -
                     line_in->lineBaseAddr;
                 DPRINTF(Fetch, "Setting new PC value: %s inputIndex: 0x%x"
                     " lineBaseAddr: 0x%x lineWidth: 0x%x\n",
-                    line_in->pc, fetch_info.inputIndex, line_in->lineBaseAddr,
+                    *line_in->pc, fetch_info.inputIndex, line_in->lineBaseAddr,
                     line_in->lineWidth);
-                fetch_info.pc = line_in->pc;
+                set(fetch_info.pc, line_in->pc);
                 fetch_info.havePC = true;
                 decoder->reset();
             }
@@ -383,7 +384,7 @@ Fetch2::evaluate()
                         decoder->moreBytesSize());
 
                 if (!decoder->instReady()) {
-                    decoder->moreBytes(fetch_info.pc,
+                    decoder->moreBytes(fetch_info.pc->as<TheISA::PCState>(),
                         line_in->lineBaseAddr + fetch_info.inputIndex);
                     DPRINTF(Fetch, "Offering MachInst to decoder addr: 0x%x\n",
                             line_in->lineBaseAddr + fetch_info.inputIndex);
@@ -397,7 +398,7 @@ Fetch2::evaluate()
                      *  Remember not to assign it until *after* calling
                      *  decode */
                     StaticInstPtr decoded_inst =
-                        decoder->decode(fetch_info.pc);
+                        decoder->decode(fetch_info.pc->as<TheISA::PCState>());
 
                     /* Make a new instruction and pick up the line, stream,
                      *  prediction, thread ids from the incoming line */
@@ -432,7 +433,7 @@ Fetch2::evaluate()
                         " pc: %s inst: %s\n",
                         line_in->id,
                         line_in->lineWidth, output_index, fetch_info.inputIndex,
-                        fetch_info.pc, *dyn_inst);
+                        *fetch_info.pc, *dyn_inst);
 
                     /*
                      * In SE mode, it's possible to branch to a microop when
@@ -448,10 +449,10 @@ Fetch2::evaluate()
                      * may be pointing to a microop other than 0.  Once
                      * advanced, however, the microop number *must* be 0
                      */
-                    fetch_info.pc.uReset();
+                    fetch_info.pc->as<TheISA::PCState>().uReset();
 
                     /* Advance PC for the next instruction */
-                    decoded_inst->advancePC(fetch_info.pc);
+                    decoded_inst->advancePC(*fetch_info.pc);
 
                     /* Predict any branches and issue a branch if
                      *  necessary */
@@ -467,7 +468,7 @@ Fetch2::evaluate()
 
                 DPRINTF(Fetch, "Updated inputIndex value PC: %s"
                     " inputIndex: 0x%x lineBaseAddr: 0x%x lineWidth: 0x%x\n",
-                    line_in->pc, fetch_info.inputIndex, line_in->lineBaseAddr,
+                    *line_in->pc, fetch_info.inputIndex, line_in->lineBaseAddr,
                     line_in->lineWidth);
                 }
             }

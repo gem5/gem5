@@ -184,7 +184,7 @@ Decode::evaluate()
                      * static_inst. */
                     static_micro_inst =
                         static_inst->fetchMicroop(
-                                decode_info.microopPC.microPC());
+                                decode_info.microopPC->microPC());
 
                     output_inst =
                         new MinorDynInst(static_micro_inst, inst->id);
@@ -201,19 +201,18 @@ Decode::evaluate()
 
                     DPRINTF(Decode, "Microop decomposition inputIndex:"
                         " %d output_index: %d lastMicroop: %s microopPC:"
-                        " %d.%d inst: %d\n",
+                        " %s inst: %d\n",
                         decode_info.inputIndex, output_index,
                         (static_micro_inst->isLastMicroop() ?
                             "true" : "false"),
-                        decode_info.microopPC.instAddr(),
-                        decode_info.microopPC.microPC(),
+                        *decode_info.microopPC,
                         *output_inst);
 
                     /* Acknowledge that the static_inst isn't mine, it's my
                      * parent macro-op's */
                     parent_static_inst = static_inst;
 
-                    static_micro_inst->advancePC(decode_info.microopPC);
+                    static_micro_inst->advancePC(*decode_info.microopPC);
 
                     /* Step input if this is the last micro-op */
                     if (static_micro_inst->isLastMicroop()) {

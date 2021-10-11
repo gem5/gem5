@@ -104,32 +104,22 @@ class Fetch2 : public Named
 
     struct Fetch2ThreadInfo
     {
-
-        /** Default constructor */
-        Fetch2ThreadInfo() :
-            inputIndex(0),
-            pc(TheISA::PCState(0)),
-            havePC(false),
-            lastStreamSeqNum(InstId::firstStreamSeqNum),
-            fetchSeqNum(InstId::firstFetchSeqNum),
-            expectedStreamSeqNum(InstId::firstStreamSeqNum),
-            predictionSeqNum(InstId::firstPredictionSeqNum),
-            blocked(false)
-        { }
+        Fetch2ThreadInfo() {}
 
         Fetch2ThreadInfo(const Fetch2ThreadInfo& other) :
             inputIndex(other.inputIndex),
-            pc(other.pc),
             havePC(other.havePC),
             lastStreamSeqNum(other.lastStreamSeqNum),
             expectedStreamSeqNum(other.expectedStreamSeqNum),
             predictionSeqNum(other.predictionSeqNum),
             blocked(other.blocked)
-        { }
+        {
+            set(pc, other.pc);
+        }
 
         /** Index into an incompletely processed input line that instructions
          *  are to be extracted from */
-        unsigned int inputIndex;
+        unsigned int inputIndex = 0;
 
 
         /** Remembered program counter value.  Between contiguous lines, this
@@ -138,34 +128,34 @@ class Fetch2 : public Named
          *  havePC is needed to accomodate instructions which span across
          *  lines meaning that Fetch2 and the decoder need to remember a PC
          *  value and a partially-offered instruction from the previous line */
-        TheISA::PCState pc;
+        std::unique_ptr<PCStateBase> pc;
 
         /** PC is currently valid.  Initially false, gets set to true when a
          *  change-of-stream line is received and false again when lines are
          *  discarded for any reason */
-        bool havePC;
+        bool havePC = false;
 
         /** Stream sequence number of the last seen line used to identify
          *  changes of instruction stream */
-        InstSeqNum lastStreamSeqNum;
+        InstSeqNum lastStreamSeqNum = InstId::firstStreamSeqNum;
 
         /** Fetch2 is the source of fetch sequence numbers.  These represent the
          *  sequence that instructions were extracted from fetched lines. */
-        InstSeqNum fetchSeqNum;
+        InstSeqNum fetchSeqNum = InstId::firstFetchSeqNum;
 
         /** Stream sequence number remembered from last time the
          *  predictionSeqNum changed.  Lines should only be discarded when their
          *  predictionSeqNums disagree with Fetch2::predictionSeqNum *and* they
          *  are from the same stream that bore that prediction number */
-        InstSeqNum expectedStreamSeqNum;
+        InstSeqNum expectedStreamSeqNum = InstId::firstStreamSeqNum;
 
         /** Fetch2 is the source of prediction sequence numbers.  These
          *  represent predicted changes of control flow sources from branch
          *  prediction in Fetch2. */
-        InstSeqNum predictionSeqNum;
+        InstSeqNum predictionSeqNum = InstId::firstPredictionSeqNum;
 
         /** Blocked indication for report */
-        bool blocked;
+        bool blocked = false;
     };
 
     std::vector<Fetch2ThreadInfo> fetchInfo;

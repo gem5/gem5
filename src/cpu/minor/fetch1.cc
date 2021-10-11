@@ -83,6 +83,9 @@ Fetch1::Fetch1(const std::string &name_,
     numFetchesInMemorySystem(0),
     numFetchesInITLB(0)
 {
+    for (auto &info: fetchInfo)
+        info.pc.reset(params.isa[0]->newPCState());
+
     if (lineSnap == 0) {
         lineSnap = cpu.cacheLineSize();
         DPRINTF(Fetch, "lineSnap set to cache line size of: %d\n",
@@ -511,8 +514,8 @@ Fetch1::changeStream(const BranchData &branch)
         thread.state = FetchRunning;
         break;
     }
-    thread.pc = branch.target;
-    thread.fetchAddr = thread.pc.instAddr();
+    set(thread.pc, branch.target);
+    thread.fetchAddr = thread.pc->instAddr();
 }
 
 void
@@ -546,7 +549,7 @@ Fetch1::processResponse(Fetch1::FetchRequestPtr response,
     /* Make sequence numbers valid in return */
     line.id = response->id;
     /* Set the PC in case there was a sequence change */
-    line.pc = thread.pc;
+    set(line.pc, thread.pc);
     /* Set fetch address to virtual address */
     line.fetchAddr = response->pc;
     /* Set the lineBase, which is a sizeof(MachInst) aligned address <=
@@ -715,12 +718,11 @@ Fetch1::wakeupFetch(ThreadID tid)
 {
     ThreadContext *thread_ctx = cpu.getContext(tid);
     Fetch1ThreadInfo &thread = fetchInfo[tid];
-    thread.pc = thread_ctx->pcState();
-    thread.fetchAddr = thread.pc.instAddr();
+    set(thread.pc, thread_ctx->pcState());
+    thread.fetchAddr = thread.pc->instAddr();
     thread.state = FetchRunning;
     thread.wakeupGuard = true;
-    DPRINTF(Fetch, "[tid:%d]: Changing stream wakeup %s\n",
-            tid, thread_ctx->pcState());
+    DPRINTF(Fetch, "[tid:%d]: Changing stream wakeup %s\n", tid, *thread.pc);
 
     cpu.wakeupOnEvent(Pipeline::Fetch1StageId);
 }

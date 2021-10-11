@@ -145,7 +145,7 @@ BranchData::reportData(std::ostream &os) const
     } else {
         os << reason
             << ';' << newStreamSeqNum << '.' << newPredictionSeqNum
-            << ";0x" << std::hex << target.instAddr() << std::dec
+            << ";0x" << std::hex << target->instAddr() << std::dec
             << ';';
         inst->reportData(os);
     }
@@ -155,7 +155,7 @@ std::ostream &
 operator <<(std::ostream &os, const BranchData &branch)
 {
     os << branch.reason << " target: 0x"
-        << std::hex << branch.target.instAddr() << std::dec
+        << std::hex << branch.target->instAddr() << std::dec
         << ' ' << *branch.inst
         << ' ' << branch.newStreamSeqNum << "(stream)."
         << branch.newPredictionSeqNum << "(pred)";
