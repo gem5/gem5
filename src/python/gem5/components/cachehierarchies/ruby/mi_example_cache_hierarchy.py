@@ -97,21 +97,14 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
                 clk_domain=board.get_clock_domain(),
             )
 
+            cache.sequencer = RubySequencer(
+                version=i,
+                dcache=cache.cacheMemory,
+                clk_domain=cache.clk_domain,
+            )
+
             if board.has_io_bus():
-                cache.sequencer = RubySequencer(
-                    version=i,
-                    dcache=cache.cacheMemory,
-                    clk_domain=cache.clk_domain,
-                    pio_request_port=board.get_io_bus().cpu_side_ports,
-                    mem_request_port=board.get_io_bus().cpu_side_ports,
-                    pio_response_port=board.get_io_bus().mem_side_ports,
-                )
-            else:
-                cache.sequencer = RubySequencer(
-                    version=i,
-                    dcache=cache.L1Dcache,
-                    clk_domain=cache.clk_domain,
-                )
+                cache.sequencer.connectIOPorts(board.get_io_bus())
 
             cache.ruby_system = self.ruby_system
 
