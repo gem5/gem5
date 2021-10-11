@@ -210,40 +210,6 @@ HTMSequencer::htmCallback(Addr address,
 }
 
 void
-HTMSequencer::regStats()
-{
-    // hardware transactional memory
-    m_htm_transaction_cycles
-        .init(10)
-        .name(name() + ".htm_transaction_cycles")
-        .desc("number of cycles spent in an outer transaction")
-        .flags(statistics::pdf | statistics::dist | statistics::nozero |
-            statistics::nonan)
-        ;
-    m_htm_transaction_instructions
-        .init(10)
-        .name(name() + ".htm_transaction_instructions")
-        .desc("number of instructions spent in an outer transaction")
-        .flags(statistics::pdf | statistics::dist | statistics::nozero |
-            statistics::nonan)
-        ;
-    auto num_causes = static_cast<int>(HtmFailureFaultCause::NUM_CAUSES);
-    m_htm_transaction_abort_cause
-        .init(num_causes)
-        .name(name() + ".htm_transaction_abort_cause")
-        .desc("cause of htm transaction abort")
-        .flags(statistics::total | statistics::pdf | statistics::dist |
-            statistics::nozero)
-        ;
-
-    for (unsigned cause_idx = 0; cause_idx < num_causes; ++cause_idx) {
-        m_htm_transaction_abort_cause.subname(
-            cause_idx,
-            htmFailureToStr(HtmFailureFaultCause(cause_idx)));
-    }
-}
-
-void
 HTMSequencer::rubyHtmCallback(PacketPtr pkt,
                           const HtmFailedInCacheReason htm_return_code)
 {

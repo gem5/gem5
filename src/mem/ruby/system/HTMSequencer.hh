@@ -68,7 +68,6 @@ class HTMSequencer : public Sequencer
 
     bool empty() const override;
     void print(std::ostream& out) const override;
-    void regStats() override;
     void wakeup() override;
 
   private:
