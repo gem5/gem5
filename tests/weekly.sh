@@ -128,7 +128,7 @@ docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
        -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu \
        "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
        --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_fwd_softmax" \
-       -cdnnmark_test_fwd_softmax \
+       -c dnnmark_test_fwd_softmax \
        --options="-config ${gem5_root}/gem5-resources/src/gpu/DNNMark/config_example/softmax_config.dnnmark \
        -mmap ${gem5_root}/gem5-resources/src/gpu/DNNMark/mmap.bin"
 
@@ -137,7 +137,7 @@ docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
        -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu \
        "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
        --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_fwd_pool" \
-       -cdnnmark_test_fwd_pool \
+       -c dnnmark_test_fwd_pool \
        --options="-config ${gem5_root}/gem5-resources/src/gpu/DNNMark/config_example/pool_config.dnnmark \
        -mmap ${gem5_root}/gem5-resources/src/gpu/DNNMark/mmap.bin"
 
@@ -146,7 +146,7 @@ docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
        -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu \
        "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
        --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_bwd_bn" \
-       -cdnnmark_test_bwd_bn \
+       -c dnnmark_test_bwd_bn \
        --options="-config ${gem5_root}/gem5-resources/src/gpu/DNNMark/config_example/bn_config.dnnmark \
        -mmap ${gem5_root}/gem5-resources/src/gpu/DNNMark/mmap.bin"
 
