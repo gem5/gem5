@@ -1244,7 +1244,6 @@ CPU::setCCReg(PhysRegIdPtr phys_reg, RegVal val)
 RegVal
 CPU::readArchIntReg(int reg_idx, ThreadID tid)
 {
-    cpuStats.intRegfileReads++;
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
             RegId(IntRegClass, reg_idx));
 
@@ -1254,7 +1253,6 @@ CPU::readArchIntReg(int reg_idx, ThreadID tid)
 RegVal
 CPU::readArchFloatReg(int reg_idx, ThreadID tid)
 {
-    cpuStats.fpRegfileReads++;
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
         RegId(FloatRegClass, reg_idx));
 
@@ -1266,7 +1264,7 @@ CPU::readArchVecReg(int reg_idx, ThreadID tid) const
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecRegClass, reg_idx));
-    return readVecReg(phys_reg);
+    return regFile.readVecReg(phys_reg);
 }
 
 TheISA::VecRegContainer&
@@ -1274,7 +1272,7 @@ CPU::getWritableArchVecReg(int reg_idx, ThreadID tid)
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecRegClass, reg_idx));
-    return getWritableVecReg(phys_reg);
+    return regFile.getWritableVecReg(phys_reg);
 }
 
 RegVal
@@ -1283,7 +1281,7 @@ CPU::readArchVecElem(
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                                 RegId(VecElemClass, reg_idx, ldx));
-    return readVecElem(phys_reg);
+    return regFile.readVecElem(phys_reg);
 }
 
 const TheISA::VecPredRegContainer&
@@ -1291,7 +1289,7 @@ CPU::readArchVecPredReg(int reg_idx, ThreadID tid) const
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecPredRegClass, reg_idx));
-    return readVecPredReg(phys_reg);
+    return regFile.readVecPredReg(phys_reg);
 }
 
 TheISA::VecPredRegContainer&
@@ -1299,13 +1297,12 @@ CPU::getWritableArchVecPredReg(int reg_idx, ThreadID tid)
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecPredRegClass, reg_idx));
-    return getWritableVecPredReg(phys_reg);
+    return regFile.getWritableVecPredReg(phys_reg);
 }
 
 RegVal
 CPU::readArchCCReg(int reg_idx, ThreadID tid)
 {
-    cpuStats.ccRegfileReads++;
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
         RegId(CCRegClass, reg_idx));
 
@@ -1315,7 +1312,6 @@ CPU::readArchCCReg(int reg_idx, ThreadID tid)
 void
 CPU::setArchIntReg(int reg_idx, RegVal val, ThreadID tid)
 {
-    cpuStats.intRegfileWrites++;
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
             RegId(IntRegClass, reg_idx));
 
@@ -1325,7 +1321,6 @@ CPU::setArchIntReg(int reg_idx, RegVal val, ThreadID tid)
 void
 CPU::setArchFloatReg(int reg_idx, RegVal val, ThreadID tid)
 {
-    cpuStats.fpRegfileWrites++;
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
             RegId(FloatRegClass, reg_idx));
 
@@ -1338,7 +1333,7 @@ CPU::setArchVecReg(int reg_idx, const TheISA::VecRegContainer& val,
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecRegClass, reg_idx));
-    setVecReg(phys_reg, val);
+    regFile.setVecReg(phys_reg, val);
 }
 
 void
@@ -1347,7 +1342,7 @@ CPU::setArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecElemClass, reg_idx, ldx));
-    setVecElem(phys_reg, val);
+    regFile.setVecElem(phys_reg, val);
 }
 
 void
@@ -1356,13 +1351,12 @@ CPU::setArchVecPredReg(int reg_idx,
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
                 RegId(VecPredRegClass, reg_idx));
-    setVecPredReg(phys_reg, val);
+    regFile.setVecPredReg(phys_reg, val);
 }
 
 void
 CPU::setArchCCReg(int reg_idx, RegVal val, ThreadID tid)
 {
-    cpuStats.ccRegfileWrites++;
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
             RegId(CCRegClass, reg_idx));
 
