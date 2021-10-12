@@ -102,7 +102,7 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
         ]
 
         self.l1dcaches = [
-            L1DCache(size=self._l1i_size)
+            L1DCache(size=self._l1d_size)
             for i in range(board.get_processor().get_num_cores())
         ]
         # ITLB Page walk caches

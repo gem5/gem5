@@ -127,7 +127,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             for i in range(board.get_processor().get_num_cores())
         ]
         self.l1dcaches = [
-            L1DCache(size=self._l1i_size)
+            L1DCache(size=self._l1d_size)
             for i in range(board.get_processor().get_num_cores())
         ]
         self.l2buses = [
