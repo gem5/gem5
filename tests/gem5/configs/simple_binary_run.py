@@ -43,8 +43,7 @@ from gem5.components.processors.cpu_types import CPUTypes
 import argparse
 
 parser = argparse.ArgumentParser(
-    description="A script to run the gem5 boot test. This test boots the "
-    "linux kernel."
+    description="A gem5 script for running simple binaries in SE mode."
 )
 
 parser.add_argument(
