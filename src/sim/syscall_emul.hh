@@ -140,10 +140,6 @@ SyscallReturn ignoreFunc(SyscallDesc *desc, ThreadContext *tc);
 SyscallReturn
 ignoreWarnOnceFunc(SyscallDesc *desc, ThreadContext *tc);
 
-// Target fallocateFunc() handler.
-SyscallReturn fallocateFunc(SyscallDesc *desc, ThreadContext *tc,
-                            int tgt_fd, int mode, off_t offset, off_t len);
-
 /// Target exit() handler: terminate current context.
 SyscallReturn exitFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 
@@ -217,17 +213,6 @@ SyscallReturn renameFunc(SyscallDesc *desc, ThreadContext *tc,
                          VPtr<> oldpath, VPtr<> newpath);
 SyscallReturn renameImpl(SyscallDesc *desc, ThreadContext *tc,
                          std::string oldpath, std::string newpath);
-
-
-/// Target truncate() handler.
-SyscallReturn truncateFunc(SyscallDesc *desc, ThreadContext *tc,
-                           VPtr<> pathname, off_t length);
-
-
-/// Target ftruncate() handler.
-SyscallReturn ftruncateFunc(SyscallDesc *desc, ThreadContext *tc,
-                            int tgt_fd, off_t length);
-
 
 /// Target truncate64() handler.
 SyscallReturn truncate64Func(SyscallDesc *desc, ThreadContext *tc,
@@ -2875,6 +2860,67 @@ munmapFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> start,
     p->memState->unmapRegion(start, length);
 
     return 0;
+}
+
+// Target fallocate() handler.
+template <typename OS>
+SyscallReturn
+fallocateFunc(SyscallDesc *desc, ThreadContext *tc,
+              int tgt_fd, int mode, typename OS::off_t offset,
+              typename OS::off_t len)
+{
+#if defined(__linux__)
+    auto p = tc->getProcessPtr();
+
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
+        return -EBADF;
+    int sim_fd = ffdp->getSimFD();
+
+    int result = fallocate(sim_fd, mode, offset, len);
+    if (result < 0)
+        return -errno;
+    return 0;
+#else
+    warnUnsupportedOS("fallocate");
+    return -1;
+#endif
+}
+
+/// Target truncate() handler.
+template <typename OS>
+SyscallReturn
+truncateFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
+             typename OS::off_t length)
+{
+    std::string path;
+    auto p = tc->getProcessPtr();
+
+    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
+        return -EFAULT;
+
+    // Adjust path for cwd and redirection
+    path = p->checkPathRedirect(path);
+
+    int result = truncate(path.c_str(), length);
+    return (result == -1) ? -errno : result;
+}
+
+/// Target ftruncate() handler.
+template <typename OS>
+SyscallReturn
+ftruncateFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd,
+              typename OS::off_t length)
+{
+    auto p = tc->getProcessPtr();
+
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
+        return -EBADF;
+    int sim_fd = ffdp->getSimFD();
+
+    int result = ftruncate(sim_fd, length);
+    return (result == -1) ? -errno : result;
 }
 
 } // namespace gem5

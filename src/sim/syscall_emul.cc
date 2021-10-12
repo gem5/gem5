@@ -486,37 +486,6 @@ renameImpl(SyscallDesc *desc, ThreadContext *tc,
 
 
 SyscallReturn
-truncateFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
-        off_t length)
-{
-    std::string path;
-    auto p = tc->getProcessPtr();
-
-    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
-        return -EFAULT;
-
-    // Adjust path for cwd and redirection
-    path = p->checkPathRedirect(path);
-
-    int result = truncate(path.c_str(), length);
-    return (result == -1) ? -errno : result;
-}
-
-SyscallReturn
-ftruncateFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, off_t length)
-{
-    auto p = tc->getProcessPtr();
-
-    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
-    if (!ffdp)
-        return -EBADF;
-    int sim_fd = ffdp->getSimFD();
-
-    int result = ftruncate(sim_fd, length);
-    return (result == -1) ? -errno : result;
-}
-
-SyscallReturn
 truncate64Func(SyscallDesc *desc, ThreadContext *tc,
                VPtr<> pathname, int64_t length)
 {
@@ -924,28 +893,6 @@ getegidFunc(SyscallDesc *desc, ThreadContext *tc)
 {
     auto process = tc->getProcessPtr();
     return process->egid();
-}
-
-SyscallReturn
-fallocateFunc(SyscallDesc *desc, ThreadContext *tc,
-              int tgt_fd, int mode, off_t offset, off_t len)
-{
-#if defined(__linux__)
-    auto p = tc->getProcessPtr();
-
-    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
-    if (!ffdp)
-        return -EBADF;
-    int sim_fd = ffdp->getSimFD();
-
-    int result = fallocate(sim_fd, mode, offset, len);
-    if (result < 0)
-        return -errno;
-    return 0;
-#else
-    warnUnsupportedOS("fallocate");
-    return -1;
-#endif
 }
 
 SyscallReturn

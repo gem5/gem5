@@ -115,8 +115,8 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     {  73, "flock" },
     {  74, "fsync" },
     {  75, "fdatasync", ignoreFunc },
-    {  76, "truncate", truncateFunc },
-    {  77, "ftruncate", ftruncateFunc },
+    {  76, "truncate", truncateFunc<X86Linux64> },
+    {  77, "ftruncate", ftruncateFunc<X86Linux64> },
 #if defined(SYS_getdents)
     {  78, "getdents", getdentsFunc },
 #else
@@ -332,7 +332,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 282, "signalfd" },
     { 283, "timerfd_create" },
     { 284, "eventfd", eventfdFunc<X86Linux64> },
-    { 285, "fallocate", fallocateFunc },
+    { 285, "fallocate", fallocateFunc<X86Linux64> },
     { 286, "timerfd_settime" },
     { 287, "timerfd_gettime" },
     { 288, "accept4" },
