@@ -37,10 +37,12 @@ else:
 def test_boot(
     cpu: str,
     num_cpus: int,
+    cache_type: str,
     to_tick: int,
     length: str,
 ):
-    name = "{}-cpu_{}-cores_riscv-boot-test_to-tick".format(cpu, str(num_cpus))
+    name = "{}-cpu_{}-{}-cores_riscv-boot-test_to-tick".format(
+        cpu, str(num_cpus), cache_type)
 
     verifiers = []
     exit_regex = re.compile(
@@ -66,6 +68,8 @@ def test_boot(
             cpu,
             "--num-cpus",
             str(num_cpus),
+            "--mem-system",
+            cache_type,
             "--tick-exit",
             str(to_tick),
             "--override-download",
@@ -83,6 +87,7 @@ def test_boot(
 test_boot(
     cpu="atomic",
     num_cpus=1,
+    cache_type="classic",
     to_tick=10000000000,  # Simulates 1/100th of a second.
     length=constants.quick_tag,
 )
@@ -90,6 +95,15 @@ test_boot(
 test_boot(
     cpu="timing",
     num_cpus=1,
+    cache_type="classic",
+    to_tick=10000000000,
+    length=constants.quick_tag,
+)
+
+test_boot(
+    cpu="timing",
+    num_cpus=1,
+    cache_type="mi_example",
     to_tick=10000000000,
     length=constants.quick_tag,
 )
@@ -97,6 +111,7 @@ test_boot(
 test_boot(
     cpu="o3",
     num_cpus=1,
+    cache_type="classic",
     to_tick=10000000000,
     length=constants.quick_tag,
 )
@@ -104,6 +119,15 @@ test_boot(
 test_boot(
     cpu="timing",
     num_cpus=4,
+    cache_type="classic",
+    to_tick=10000000000,
+    length=constants.quick_tag,
+)
+
+test_boot(
+    cpu="timing",
+    num_cpus=4,
+    cache_type="mi_example",
     to_tick=10000000000,
     length=constants.quick_tag,
 )

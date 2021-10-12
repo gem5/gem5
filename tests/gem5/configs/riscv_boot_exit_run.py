@@ -36,6 +36,7 @@ Characteristics
 import m5
 from m5.objects import Root
 
+from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.memory.single_channel import SingleChannelDDR3_1600
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
@@ -67,6 +68,15 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "-m",
+    "--mem-system",
+    type=str,
+    choices=("classic", "mi_example",),
+    required=True,
+    help="The memory system.",
+)
+
+parser.add_argument(
     "-t",
     "--tick-exit",
     type=int,
@@ -94,15 +104,24 @@ args = parser.parse_args()
 # Run a check to ensure the right version of gem5 is being used.
 requires(isa_required=ISA.RISCV)
 
-from gem5.components.cachehierarchies.classic.\
-    private_l1_private_l2_cache_hierarchy import \
-        PrivateL1PrivateL2CacheHierarchy
-from gem5.components.boards.riscv_board import RiscvBoard
+if args.mem_system == "classic":
+    from gem5.components.cachehierarchies.classic.\
+        private_l1_private_l2_cache_hierarchy import \
+            PrivateL1PrivateL2CacheHierarchy
 
-# Setup the cache hierarchy.
-cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-    l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
-)
+    # Setup the cache hierarchy.
+    cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+        l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
+    )
+elif args.mem_system == "mi_example":
+    from gem5.components.cachehierarchies.ruby.\
+        mi_example_cache_hierarchy import \
+            MIExampleCacheHierarchy
+
+    # Setup the cache hierarchy.
+    cache_hierarchy = MIExampleCacheHierarchy(
+        size="32KiB", assoc=8
+    )
 
 # Setup the system memory.
 memory = SingleChannelDDR3_1600()
