@@ -172,10 +172,6 @@ SyscallReturn _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
                           int tgt_fd, uint64_t offset_high,
                           uint32_t offset_low, VPtr<> result_ptr, int whence);
 
-/// Target munmap() handler.
-SyscallReturn munmapFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> start,
-                         size_t length);
-
 /// Target shutdown() handler.
 SyscallReturn shutdownFunc(SyscallDesc *desc, ThreadContext *tc,
                            int tgt_fd, int how);
@@ -187,12 +183,6 @@ SyscallReturn gethostnameFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Target getcwd() handler.
 SyscallReturn getcwdFunc(SyscallDesc *desc, ThreadContext *tc,
                          VPtr<> buf_ptr, unsigned long size);
-
-/// Target readlink() handler.
-SyscallReturn readlinkFunc(SyscallDesc *desc, ThreadContext *tc,
-                           VPtr<> pathname, VPtr<> buf, size_t bufsiz);
-SyscallReturn readlinkImpl(SyscallDesc *desc, ThreadContext *tc,
-                           std::string path, VPtr<> buf, size_t bufsiz);
 
 /// Target unlink() handler.
 SyscallReturn unlinkFunc(SyscallDesc *desc, ThreadContext *tc,
@@ -324,16 +314,6 @@ SyscallReturn getdentsFunc(SyscallDesc *desc, ThreadContext *tc,
 SyscallReturn getdents64Func(SyscallDesc *desc, ThreadContext *tc,
                              int tgt_fd, VPtr<> buf_ptr, unsigned count);
 #endif
-
-// Target sendto() handler.
-SyscallReturn sendtoFunc(SyscallDesc *desc, ThreadContext *tc,
-                         int tgt_fd, VPtr<> bufrPtr, size_t bufrLen, int flags,
-                         VPtr<> addrPtr, socklen_t addrLen);
-
-// Target recvfrom() handler.
-SyscallReturn recvfromFunc(SyscallDesc *desc, ThreadContext *tc,
-                           int tgt_fd, VPtr<> bufrPtr, size_t bufrLen,
-                           int flags, VPtr<> addrPtr, VPtr<> addrlenPtr);
 
 // Target recvmsg() handler.
 SyscallReturn recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
@@ -979,7 +959,8 @@ faccessatFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 readlinkatFunc(SyscallDesc *desc, ThreadContext *tc,
-               int dirfd, VPtr<> pathname, VPtr<> buf, size_t bufsiz)
+               int dirfd, VPtr<> pathname, VPtr<> buf_ptr,
+               typename OS::size_t bufsiz)
 {
     std::string path;
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
@@ -990,7 +971,65 @@ readlinkatFunc(SyscallDesc *desc, ThreadContext *tc,
         return res;
     }
 
-    return readlinkImpl(desc, tc, path, buf, bufsiz);
+    auto p = tc->getProcessPtr();
+
+    // Adjust path for cwd and redirection
+    path = p->checkPathRedirect(path);
+
+    BufferArg buf(buf_ptr, bufsiz);
+
+    int result = -1;
+    if (path != "/proc/self/exe") {
+        result = readlink(path.c_str(), (char *)buf.bufferPtr(), bufsiz);
+    } else {
+        // Emulate readlink() called on '/proc/self/exe' should return the
+        // absolute path of the binary running in the simulated system (the
+        // Process' executable). It is possible that using this path in
+        // the simulated system will result in unexpected behavior if:
+        //  1) One binary runs another (e.g., -c time -o "my_binary"), and
+        //     called binary calls readlink().
+        //  2) The host's full path to the running benchmark changes from one
+        //     simulation to another. This can result in different simulated
+        //     performance since the simulated system will process the binary
+        //     path differently, even if the binary itself does not change.
+
+        // Get the absolute canonical path to the running application
+        char real_path[PATH_MAX];
+        char *check_real_path = realpath(p->progName(), real_path);
+        if (!check_real_path) {
+            fatal("readlink('/proc/self/exe') unable to resolve path to "
+                  "executable: %s", p->progName());
+        }
+        strncpy((char*)buf.bufferPtr(), real_path, bufsiz);
+        typename OS::size_t real_path_len = strlen(real_path);
+        if (real_path_len > bufsiz) {
+            // readlink will truncate the contents of the
+            // path to ensure it is no more than bufsiz
+            result = bufsiz;
+        } else {
+            result = real_path_len;
+        }
+
+        // Issue a warning about potential unexpected results
+        warn_once("readlink() called on '/proc/self/exe' may yield unexpected "
+                  "results in various settings.\n      Returning '%s'\n",
+                  (char*)buf.bufferPtr());
+    }
+
+    buf.copyOut(SETranslatingPortProxy(tc));
+
+    return (result == -1) ? -errno : result;
+}
+
+/// Target readlink() handler
+template <class OS>
+SyscallReturn
+readlinkFunc(SyscallDesc *desc, ThreadContext *tc,
+             VPtr<> pathname, VPtr<> buf_ptr,
+             typename OS::size_t bufsiz)
+{
+    return readlinkatFunc<OS>(desc, tc, OS::TGT_AT_FDCWD,
+        pathname, buf_ptr, bufsiz);
 }
 
 /// Target renameat() handler.
@@ -1625,7 +1664,8 @@ fstatfsFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 readvFunc(SyscallDesc *desc, ThreadContext *tc,
-          int tgt_fd, uint64_t tiov_base, size_t count)
+          int tgt_fd, uint64_t tiov_base,
+          typename OS::size_t count)
 {
     auto p = tc->getProcessPtr();
 
@@ -1637,7 +1677,7 @@ readvFunc(SyscallDesc *desc, ThreadContext *tc,
     SETranslatingPortProxy prox(tc);
     typename OS::tgt_iovec tiov[count];
     struct iovec hiov[count];
-    for (size_t i = 0; i < count; ++i) {
+    for (typename OS::size_t i = 0; i < count; ++i) {
         prox.readBlob(tiov_base + (i * sizeof(typename OS::tgt_iovec)),
                       &tiov[i], sizeof(typename OS::tgt_iovec));
         hiov[i].iov_len = gtoh(tiov[i].iov_len, OS::byteOrder);
@@ -1647,7 +1687,7 @@ readvFunc(SyscallDesc *desc, ThreadContext *tc,
     int result = readv(sim_fd, hiov, count);
     int local_errno = errno;
 
-    for (size_t i = 0; i < count; ++i) {
+    for (typename OS::size_t i = 0; i < count; ++i) {
         if (result != -1) {
             prox.writeBlob(htog(tiov[i].iov_base, OS::byteOrder),
                            hiov[i].iov_base, hiov[i].iov_len);
@@ -1662,7 +1702,8 @@ readvFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 writevFunc(SyscallDesc *desc, ThreadContext *tc,
-           int tgt_fd, uint64_t tiov_base, size_t count)
+           int tgt_fd, uint64_t tiov_base,
+           typename OS::size_t count)
 {
     auto p = tc->getProcessPtr();
 
@@ -1673,7 +1714,7 @@ writevFunc(SyscallDesc *desc, ThreadContext *tc,
 
     SETranslatingPortProxy prox(tc);
     struct iovec hiov[count];
-    for (size_t i = 0; i < count; ++i) {
+    for (typename OS::size_t i = 0; i < count; ++i) {
         typename OS::tgt_iovec tiov;
 
         prox.readBlob(tiov_base + i*sizeof(typename OS::tgt_iovec),
@@ -1686,7 +1727,7 @@ writevFunc(SyscallDesc *desc, ThreadContext *tc,
 
     int result = writev(sim_fd, hiov, count);
 
-    for (size_t i = 0; i < count; ++i)
+    for (typename OS::size_t i = 0; i < count; ++i)
         delete [] (char *)hiov[i].iov_base;
 
     return (result == -1) ? -errno : result;
@@ -2695,7 +2736,8 @@ eventfdFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 schedGetaffinityFunc(SyscallDesc *desc, ThreadContext *tc,
-                     pid_t pid, size_t cpusetsize, VPtr<> cpu_set_mask)
+                     pid_t pid, typename OS::size_t cpusetsize,
+                     VPtr<> cpu_set_mask)
 {
 #if defined(__linux__)
     if (cpusetsize < CPU_ALLOC_SIZE(tc->getSystemPtr()->threads.size()))
@@ -2713,6 +2755,126 @@ schedGetaffinityFunc(SyscallDesc *desc, ThreadContext *tc,
     warnUnsupportedOS("sched_getaffinity");
     return -1;
 #endif
+}
+
+// Target recvfrom() handler.
+template <class OS>
+SyscallReturn
+recvfromFunc(SyscallDesc *desc, ThreadContext *tc,
+             int tgt_fd, VPtr<> buf_ptr, typename OS::size_t buf_len,
+             int flags, VPtr<> addr_ptr, VPtr<> addrlen_ptr)
+{
+    auto p = tc->getProcessPtr();
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    // Reserve buffer space.
+    BufferArg buf(buf_ptr, buf_len);
+
+    SETranslatingPortProxy proxy(tc);
+
+    // Get address length.
+    socklen_t addr_len = 0;
+    if (addrlen_ptr != 0) {
+        // Read address length parameter.
+        BufferArg addrlen_buf(addrlen_ptr, sizeof(socklen_t));
+        addrlen_buf.copyIn(proxy);
+        addr_len = *((socklen_t *)addrlen_buf.bufferPtr());
+    }
+
+    struct sockaddr sa, *sap = NULL;
+    if (addr_len != 0) {
+        BufferArg addr_buf(addr_ptr, addr_len);
+        addr_buf.copyIn(proxy);
+        memcpy(&sa, (struct sockaddr *)addr_buf.bufferPtr(),
+               sizeof(struct sockaddr));
+        sap = &sa;
+    }
+
+    ssize_t recvd_size = recvfrom(sim_fd,
+                                  (void *)buf.bufferPtr(),
+                                  buf_len, flags, sap, (socklen_t *)&addr_len);
+
+    if (recvd_size == -1)
+        return -errno;
+
+    // Pass the received data out.
+    buf.copyOut(proxy);
+
+    // Copy address to addr_ptr and pass it on.
+    if (sap != NULL) {
+        BufferArg addr_buf(addr_ptr, addr_len);
+        memcpy(addr_buf.bufferPtr(), sap, sizeof(sa));
+        addr_buf.copyOut(proxy);
+    }
+
+    // Copy len to addrlen_ptr and pass it on.
+    if (addr_len != 0) {
+        BufferArg addrlen_buf(addrlen_ptr, sizeof(socklen_t));
+        *(socklen_t *)addrlen_buf.bufferPtr() = addr_len;
+        addrlen_buf.copyOut(proxy);
+    }
+
+    return recvd_size;
+}
+
+// Target sendto() handler.
+template <typename OS>
+SyscallReturn
+sendtoFunc(SyscallDesc *desc, ThreadContext *tc,
+           int tgt_fd, VPtr<> buf_ptr, typename OS::size_t buf_len, int flags,
+           VPtr<> addr_ptr, socklen_t addr_len)
+{
+    auto p = tc->getProcessPtr();
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    // Reserve buffer space.
+    BufferArg buf(buf_ptr, buf_len);
+    buf.copyIn(SETranslatingPortProxy(tc));
+
+    struct sockaddr sa, *sap = nullptr;
+    memset(&sa, 0, sizeof(sockaddr));
+    if (addr_len != 0) {
+        BufferArg addr_buf(addr_ptr, addr_len);
+        addr_buf.copyIn(SETranslatingPortProxy(tc));
+        memcpy(&sa, (sockaddr*)addr_buf.bufferPtr(), addr_len);
+        sap = &sa;
+    }
+
+    ssize_t sent_size = sendto(sim_fd,
+                               (void *)buf.bufferPtr(),
+                               buf_len, flags, sap, (socklen_t)addr_len);
+
+    return (sent_size == -1) ? -errno : sent_size;
+}
+
+/// Target munmap() handler.
+template <typename OS>
+SyscallReturn
+munmapFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> start,
+           typename OS::size_t length)
+{
+    // Even if the system is currently not capable of recycling physical
+    // pages, there is no reason we can't unmap them so that we trigger
+    // appropriate seg faults when the application mistakenly tries to
+    // access them again.
+    auto p = tc->getProcessPtr();
+
+    if (p->pTable->pageOffset(start))
+        return -EINVAL;
+
+    length = roundUp(length, p->pTable->pageSize());
+
+    p->memState->unmapRegion(start, length);
+
+    return 0;
 }
 
 } // namespace gem5

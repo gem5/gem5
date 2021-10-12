@@ -336,26 +336,6 @@ _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 
-SyscallReturn
-munmapFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> start, size_t length)
-{
-    // Even if the system is currently not capable of recycling physical
-    // pages, there is no reason we can't unmap them so that we trigger
-    // appropriate seg faults when the application mistakenly tries to
-    // access them again.
-    auto p = tc->getProcessPtr();
-
-    if (p->pTable->pageOffset(start))
-        return -EINVAL;
-
-    length = roundUp(length, p->pTable->pageSize());
-
-    p->memState->unmapRegion(start, length);
-
-    return 0;
-}
-
-
 const char *hostname = "m5.eecs.umich.edu";
 
 SyscallReturn
@@ -391,71 +371,6 @@ getcwdFunc(SyscallDesc *desc, ThreadContext *tc,
         } else {
             result = -1;
         }
-    }
-
-    buf.copyOut(SETranslatingPortProxy(tc));
-
-    return (result == -1) ? -errno : result;
-}
-
-SyscallReturn
-readlinkFunc(SyscallDesc *desc, ThreadContext *tc,
-             VPtr<> pathname, VPtr<> buf_ptr, size_t bufsiz)
-{
-    std::string path;
-    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
-        return -EFAULT;
-
-    return readlinkImpl(desc, tc, path, buf_ptr, bufsiz);
-}
-
-SyscallReturn
-readlinkImpl(SyscallDesc *desc, ThreadContext *tc,
-             std::string path, VPtr<> buf_ptr, size_t bufsiz)
-{
-    auto p = tc->getProcessPtr();
-
-    // Adjust path for cwd and redirection
-    path = p->checkPathRedirect(path);
-
-    BufferArg buf(buf_ptr, bufsiz);
-
-    int result = -1;
-    if (path != "/proc/self/exe") {
-        result = readlink(path.c_str(), (char *)buf.bufferPtr(), bufsiz);
-    } else {
-        // Emulate readlink() called on '/proc/self/exe' should return the
-        // absolute path of the binary running in the simulated system (the
-        // Process' executable). It is possible that using this path in
-        // the simulated system will result in unexpected behavior if:
-        //  1) One binary runs another (e.g., -c time -o "my_binary"), and
-        //     called binary calls readlink().
-        //  2) The host's full path to the running benchmark changes from one
-        //     simulation to another. This can result in different simulated
-        //     performance since the simulated system will process the binary
-        //     path differently, even if the binary itself does not change.
-
-        // Get the absolute canonical path to the running application
-        char real_path[PATH_MAX];
-        char *check_real_path = realpath(p->progName(), real_path);
-        if (!check_real_path) {
-            fatal("readlink('/proc/self/exe') unable to resolve path to "
-                  "executable: %s", p->progName());
-        }
-        strncpy((char*)buf.bufferPtr(), real_path, bufsiz);
-        size_t real_path_len = strlen(real_path);
-        if (real_path_len > bufsiz) {
-            // readlink will truncate the contents of the
-            // path to ensure it is no more than bufsiz
-            result = bufsiz;
-        } else {
-            result = real_path_len;
-        }
-
-        // Issue a warning about potential unexpected results
-        warn_once("readlink() called on '/proc/self/exe' may yield unexpected "
-                  "results in various settings.\n      Returning '%s'\n",
-                  (char*)buf.bufferPtr());
     }
 
     buf.copyOut(SETranslatingPortProxy(tc));
@@ -1263,99 +1178,6 @@ connectFunc(SyscallDesc *desc, ThreadContext *tc,
     return (status == -1) ? -errno : status;
 }
 
-SyscallReturn
-recvfromFunc(SyscallDesc *desc, ThreadContext *tc,
-             int tgt_fd, VPtr<> bufrPtr, size_t bufrLen, int flags,
-             VPtr<> addrPtr, VPtr<> addrlenPtr)
-{
-    auto p = tc->getProcessPtr();
-
-    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
-    if (!sfdp)
-        return -EBADF;
-    int sim_fd = sfdp->getSimFD();
-
-    // Reserve buffer space.
-    BufferArg bufrBuf(bufrPtr, bufrLen);
-
-    SETranslatingPortProxy proxy(tc);
-
-    // Get address length.
-    socklen_t addrLen = 0;
-    if (addrlenPtr != 0) {
-        // Read address length parameter.
-        BufferArg addrlenBuf(addrlenPtr, sizeof(socklen_t));
-        addrlenBuf.copyIn(proxy);
-        addrLen = *((socklen_t *)addrlenBuf.bufferPtr());
-    }
-
-    struct sockaddr sa, *sap = NULL;
-    if (addrLen != 0) {
-        BufferArg addrBuf(addrPtr, addrLen);
-        addrBuf.copyIn(proxy);
-        memcpy(&sa, (struct sockaddr *)addrBuf.bufferPtr(),
-               sizeof(struct sockaddr));
-        sap = &sa;
-    }
-
-    ssize_t recvd_size = recvfrom(sim_fd,
-                                  (void *)bufrBuf.bufferPtr(),
-                                  bufrLen, flags, sap, (socklen_t *)&addrLen);
-
-    if (recvd_size == -1)
-        return -errno;
-
-    // Pass the received data out.
-    bufrBuf.copyOut(proxy);
-
-    // Copy address to addrPtr and pass it on.
-    if (sap != NULL) {
-        BufferArg addrBuf(addrPtr, addrLen);
-        memcpy(addrBuf.bufferPtr(), sap, sizeof(sa));
-        addrBuf.copyOut(proxy);
-    }
-
-    // Copy len to addrlenPtr and pass it on.
-    if (addrLen != 0) {
-        BufferArg addrlenBuf(addrlenPtr, sizeof(socklen_t));
-        *(socklen_t *)addrlenBuf.bufferPtr() = addrLen;
-        addrlenBuf.copyOut(proxy);
-    }
-
-    return recvd_size;
-}
-
-SyscallReturn
-sendtoFunc(SyscallDesc *desc, ThreadContext *tc,
-           int tgt_fd, VPtr<> bufrPtr, size_t bufrLen, int flags,
-           VPtr<> addrPtr, socklen_t addrLen)
-{
-    auto p = tc->getProcessPtr();
-
-    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
-    if (!sfdp)
-        return -EBADF;
-    int sim_fd = sfdp->getSimFD();
-
-    // Reserve buffer space.
-    BufferArg bufrBuf(bufrPtr, bufrLen);
-    bufrBuf.copyIn(SETranslatingPortProxy(tc));
-
-    struct sockaddr sa, *sap = nullptr;
-    memset(&sa, 0, sizeof(sockaddr));
-    if (addrLen != 0) {
-        BufferArg addrBuf(addrPtr, addrLen);
-        addrBuf.copyIn(SETranslatingPortProxy(tc));
-        memcpy(&sa, (sockaddr*)addrBuf.bufferPtr(), addrLen);
-        sap = &sa;
-    }
-
-    ssize_t sent_size = sendto(sim_fd,
-                               (void *)bufrBuf.bufferPtr(),
-                               bufrLen, flags, sap, (socklen_t)addrLen);
-
-    return (sent_size == -1) ? -errno : sent_size;
-}
 
 SyscallReturn
 recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,

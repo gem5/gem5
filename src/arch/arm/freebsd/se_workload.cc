@@ -136,7 +136,7 @@ static SyscallDescTable<EmuFreebsd::SyscallABI64> syscallDescs64 = {
     {    4, "write", writeFunc<ArmFreebsd64> },
     {   17, "obreak", brkFunc },
     {   54, "ioctl", ioctlFunc<ArmFreebsd64> },
-    {   58, "readlink", readlinkFunc },
+    {   58, "readlink", readlinkFunc<ArmFreebsd64> },
     {  117, "getrusage", getrusageFunc<ArmFreebsd64> },
     {  189, "fstat", fstatFunc<ArmFreebsd64> },
 #if !defined ( __GNU_LIBRARY__ )
