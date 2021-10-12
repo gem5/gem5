@@ -545,7 +545,7 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
         {   base + 44, "fstatfs64" },
         {   base + 45, "truncate64" },
         {   base + 46, "ftruncate64", ftruncate64Func },
-        {   base + 47, "fallocate" },
+        {   base + 47, "fallocate", fallocateFunc },
         {   base + 48, "faccessat", faccessatFunc<ArmLinux64> },
         {   base + 49, "chdir" },
         {   base + 50, "fchdir" },
