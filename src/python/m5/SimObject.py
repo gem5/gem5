@@ -479,6 +479,7 @@ class MetaSimObject(type):
         cls._children = multidict() # SimObject children
         cls._port_refs = multidict() # port ref objects
         cls._instantiated = False # really instantiated, cloned, or subclassed
+        cls._init_called = False # Used to check if __init__ overridden
 
         # We don't support multiple inheritance of sim objects.  If you want
         # to, you must fix multidict to deal with it properly. Non sim-objects
@@ -1323,6 +1324,7 @@ class SimObject(object, metaclass=MetaSimObject):
         self._ccObject = None  # pointer to C++ object
         self._ccParams = None
         self._instantiated = False # really "cloned"
+        self._init_called = True # Checked so subclasses don't forget __init__
 
         # Clone children specified at class level.  No need for a
         # multidict here since we will be cloning everything.
@@ -1351,6 +1353,14 @@ class SimObject(object, metaclass=MetaSimObject):
         # apply attribute assignments from keyword args, if any
         for key,val in kwargs.items():
             setattr(self, key, val)
+
+    def _check_init(self):
+        """Utility function to check to make sure that all subclasses call
+        __init__
+        """
+        if not self._init_called:
+            raise RuntimeError(f"{str(self.__class__)} is missing a call "
+                "to super().__init__()")
 
     # "Clone" the current instance by creating another instance of
     # this instance's class, but that inherits its parameter values
@@ -1385,6 +1395,11 @@ class SimObject(object, metaclass=MetaSimObject):
         return ref
 
     def __getattr__(self, attr):
+        # Check for infinite recursion. If this SimObject hasn't been
+        # initialized with SimObject.__init__ this function will experience an
+        # infinite recursion checking for attributes that don't exist.
+        self._check_init()
+
         if attr in self._deprecated_params:
             dep_param = self._deprecated_params[attr]
             dep_param.printWarning(self._name, self.__class__.__name__)
