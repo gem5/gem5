@@ -1130,19 +1130,24 @@ sysinfoFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Target chmod() handler.
 template <class OS>
 SyscallReturn
-chmodFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname, mode_t mode)
+fchmodatFunc(SyscallDesc *desc, ThreadContext *tc,
+             int dirfd, VPtr<> pathname, mode_t mode)
 {
     std::string path;
-    auto process = tc->getProcessPtr();
-
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
         return -EFAULT;
+
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
 
     mode_t hostMode = 0;
 
     // XXX translate mode flags via OS::something???
     hostMode = mode;
 
+    auto process = tc->getProcessPtr();
     // Adjust path for cwd and redirection
     path = process->checkPathRedirect(path);
 
@@ -1152,6 +1157,14 @@ chmodFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname, mode_t mode)
         return -errno;
 
     return 0;
+}
+
+/// Target chmod() handler.
+template <class OS>
+SyscallReturn
+chmodFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname, mode_t mode)
+{
+    return fchmodatFunc<OS>(desc, tc, OS::TGT_AT_FDCWD, pathname, mode);
 }
 
 template <class OS>
