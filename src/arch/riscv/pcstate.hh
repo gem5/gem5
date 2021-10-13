@@ -61,6 +61,15 @@ class PCState : public GenericISA::UPCState<4>
 
     PCStateBase *clone() const override { return new PCState(*this); }
 
+    void
+    update(const PCStateBase &other) override
+    {
+        Base::update(other);
+        auto &pcstate = other.as<PCState>();
+        _compressed = pcstate._compressed;
+        _rv32 = pcstate._rv32;
+    }
+
     void compressed(bool c) { _compressed = c; }
     bool compressed() const { return _compressed; }
 

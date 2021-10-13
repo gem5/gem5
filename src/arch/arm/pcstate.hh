@@ -111,6 +111,21 @@ class PCState : public GenericISA::UPCState<4>
 
     PCStateBase *clone() const override { return new PCState(*this); }
 
+    void
+    update(const PCStateBase &other) override
+    {
+        Base::update(other);
+        auto &pcstate = other.as<PCState>();
+        flags = pcstate.flags;
+        nextFlags = pcstate.nextFlags;
+        _itstate = pcstate._itstate;
+        _nextItstate = pcstate._nextItstate;
+        _size = pcstate._size;
+        _illegalExec = pcstate._illegalExec;
+        _debugStep = pcstate._debugStep;
+        _stepped = pcstate._stepped;
+    }
+
     bool
     illegalExec() const
     {

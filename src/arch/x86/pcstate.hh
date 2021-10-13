@@ -58,6 +58,14 @@ class PCState : public GenericISA::UPCState<8>
     PCStateBase *clone() const override { return new PCState(*this); }
 
     void
+    update(const PCStateBase &other) override
+    {
+        Base::update(other);
+        auto &pcstate = other.as<PCState>();
+        _size = pcstate._size;
+    }
+
+    void
     set(Addr val)
     {
         Base::set(val);

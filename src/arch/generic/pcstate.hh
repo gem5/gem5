@@ -42,7 +42,10 @@
 #define __ARCH_GENERIC_TYPES_HH__
 
 #include <iostream>
+#include <memory>
+#include <type_traits>
 
+#include "base/compiler.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"
@@ -79,6 +82,13 @@ class PCStateBase : public Serializable
     }
 
     virtual PCStateBase *clone() const = 0;
+    virtual void
+    update(const PCStateBase &other)
+    {
+        _pc = other._pc;
+        _upc = other._upc;
+    }
+    void update(const PCStateBase *ptr) { update(*ptr); }
 
     virtual void output(std::ostream &os) const = 0;
 
@@ -144,6 +154,86 @@ operator!=(const PCStateBase &a, const PCStateBase &b)
     return !a.equals(b);
 }
 
+namespace
+{
+
+inline void
+set(PCStateBase *&dest, const PCStateBase *src)
+{
+    if (GEM5_LIKELY(dest)) {
+        if (GEM5_LIKELY(src)) {
+            // Both src and dest already have storage, so just copy contents.
+            dest->update(src);
+        } else {
+            // src is empty, so clear out dest.
+            dest = nullptr;
+        }
+    } else {
+        if (GEM5_LIKELY(src)) {
+            // dest doesn't have storage, so create some as a copy of src.
+            dest = src->clone();
+        } else {
+            // dest is already nullptr, so nothing to do.
+        }
+    }
+}
+
+inline void
+set(std::unique_ptr<PCStateBase> &dest, const PCStateBase *src)
+{
+    PCStateBase *dest_ptr = dest.get();
+    set(dest_ptr, src);
+    if (dest.get() != dest_ptr)
+        dest.reset(dest_ptr);
+}
+
+inline void
+set(PCStateBase *&dest, const std::unique_ptr<PCStateBase> &src)
+{
+    const PCStateBase *src_ptr = src.get();
+    set(dest, src_ptr);
+}
+
+inline void
+set(std::unique_ptr<PCStateBase> &dest,
+        const std::unique_ptr<PCStateBase> &src)
+{
+    PCStateBase *dest_ptr = dest.get();
+    const PCStateBase *src_ptr = src.get();
+    set(dest_ptr, src_ptr);
+    if (dest.get() != dest_ptr)
+        dest.reset(dest_ptr);
+}
+
+inline void
+set(PCStateBase *&dest, const PCStateBase &src)
+{
+    if (GEM5_LIKELY(dest)) {
+        // Update dest with the contents of src.
+        dest->update(src);
+    } else {
+        // Clone src over to dest.
+        dest = src.clone();
+    }
+}
+
+inline void
+set(std::unique_ptr<PCStateBase> &dest, const PCStateBase &src)
+{
+    PCStateBase *dest_ptr = dest.get();
+    set(dest_ptr, src);
+    if (dest.get() != dest_ptr)
+        dest.reset(dest_ptr);
+}
+
+inline void
+set(PCStateBase &dest, const PCStateBase &src)
+{
+    dest.update(src);
+}
+
+} // anonymous namespace
+
 namespace GenericISA
 {
 
@@ -202,6 +292,15 @@ class PCStateCommon : public PCStateBase
     output(std::ostream &os) const override
     {
         ccprintf(os, "(%#x=>%#x)", this->pc(), this->npc());
+    }
+
+    void
+    update(const PCStateBase &other) override
+    {
+        PCStateBase::update(other);
+        auto &pcstate = other.as<PCStateCommon>();
+        _npc = pcstate._npc;
+        _nupc = pcstate._nupc;
     }
 
     bool
@@ -362,6 +461,14 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
     clone() const override
     {
         return new DelaySlotPCState<InstWidth>(*this);
+    }
+
+    void
+    update(const PCStateBase &other) override
+    {
+        Base::update(other);
+        auto &pcstate = other.as<DelaySlotPCState<InstWidth>>();
+        _nnpc = pcstate._nnpc;
     }
 
     Addr nnpc() const { return _nnpc; }
