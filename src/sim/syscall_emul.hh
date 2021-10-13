@@ -911,7 +911,8 @@ openFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Target unlinkat() handler.
 template <class OS>
 SyscallReturn
-unlinkatFunc(SyscallDesc *desc, ThreadContext *tc, int dirfd, VPtr<> pathname)
+unlinkatFunc(SyscallDesc *desc, ThreadContext *tc,
+             int dirfd, VPtr<> pathname, int flags)
 {
     std::string path;
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
@@ -922,7 +923,11 @@ unlinkatFunc(SyscallDesc *desc, ThreadContext *tc, int dirfd, VPtr<> pathname)
         return res;
     }
 
-    return unlinkImpl(desc, tc, path);
+    if (flags & OS::TGT_AT_REMOVEDIR) {
+        return rmdirImpl(desc, tc, path);
+    } else {
+        return unlinkImpl(desc, tc, path);
+    }
 }
 
 /// Target facessat() handler
