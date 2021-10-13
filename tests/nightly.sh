@@ -86,7 +86,7 @@ docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
 
 # For the GPU tests we compile and run GCN3_X86 inside a gcn-gpu container.
 docker pull gcr.io/gem5-test/gcn-gpu:latest
-docker run --rm -u $UID:$GUID --volume "${gem5_root}":"${gem5_root}" -w \
+docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
     "scons build/GCN3_X86/gem5.opt -j${threads} \
         || (rm -rf build && scons build/GCN3_X86/gem5.opt -j${threads})"
@@ -99,7 +99,7 @@ mkdir -p tests/testing-results
 # Square is the simplest, fastest, more heavily tested GPU application
 # Thus, we always want to run this in the nightly regressions to make sure
 # basic GPU functionality is working.
-docker run --rm -u $UID:$GUID --volume "${gem5_root}":"${gem5_root}" -w \
+docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
     configs/example/apu_se.py -n3 -c square
 
@@ -110,7 +110,7 @@ wget -qN http://dist.gem5.org/dist/develop/test-progs/heterosync/gcn3/allSyncPri
 # 10 Ld/St per thread and 4 iterations of the critical section is a reasonable
 # moderate contention case for the default 4 CU GPU config and help ensure GPU
 # atomics are tested.
-docker run --rm -u $UID:$GUID --volume "${gem5_root}":"${gem5_root}" -w \
+docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
     configs/example/apu_se.py -n3  -c allSyncPrims-1kernel \
     --options="sleepMutex 10 16 4"
@@ -120,7 +120,7 @@ docker run --rm -u $UID:$GUID --volume "${gem5_root}":"${gem5_root}" -w \
 # thread, 4 iterations of critical section.  Again this is representative of a
 # moderate contention case for the default 4 CU GPU config and help ensure GPU
 # atomics are tested.
-docker run --rm -u $UID:$GUID --volume "${gem5_root}":"${gem5_root}" -w \
+docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
     configs/example/apu_se.py -n3  -c allSyncPrims-1kernel \
     --options="lfTreeBarrUniq 10 16 4"
