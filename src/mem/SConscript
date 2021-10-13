@@ -58,6 +58,7 @@ SimObject('XBar.py')
 SimObject('HMCController.py')
 SimObject('SerialLink.py')
 SimObject('MemDelay.py')
+SimObject('PortTerminator.py')
 
 Source('abstract_mem.cc')
 Source('addr_mapper.cc')
@@ -85,6 +86,7 @@ Source('hmc_controller.cc')
 Source('htm.cc')
 Source('serial_link.cc')
 Source('mem_delay.cc')
+Source('port_terminator.cc')
 
 GTest('translation_gen.test', 'translation_gen.test.cc')
 
