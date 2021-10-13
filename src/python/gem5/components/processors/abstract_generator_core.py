@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from m5.objects import Port, PyTrafficGen
+from m5.objects import Port, PortTerminator
 from ...utils.override import overrides
 
 from .cpu_types import CPUTypes
@@ -52,24 +52,25 @@ class AbstractGeneratorCore(AbstractCore):
         # TODO: Remove the CPU Type parameter. This not needed.
         # Jira issue here: https://gem5.atlassian.net/browse/GEM5-1031
         super(AbstractGeneratorCore, self).__init__(CPUTypes.TIMING)
-        self.dummy_generator = PyTrafficGen()
+        self.port_end = PortTerminator()
 
     @overrides(AbstractCore)
     def connect_icache(self, port: Port) -> None:
         """
         Generator cores only have one request port which we will connect to
-        the data cache not the icache. Just connect the icache to the dummy
-        generator here.
+        the data cache not the icache. Just connect the icache to the
+        PortTerminator here.
         """
-        self.dummy_generator.port = port
+        self.port_end.req_ports = port
 
     @overrides(AbstractCore)
     def connect_walker_ports(self, port1: Port, port2: Port) -> None:
         """
         Since generator cores are not used in full system mode, no need to
-        connect them to walker ports. Just pass here.
+        connect them to walker ports. connect them to PortTerminator here.
         """
-        pass
+        self.port_end.req_ports = port1
+        self.port_end.req_ports = port2
 
     @overrides(AbstractCore)
     def set_workload(self, process: "Process") -> None:
