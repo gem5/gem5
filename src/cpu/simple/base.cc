@@ -369,9 +369,10 @@ BaseSimpleCPU::preExecute()
         // Use a fake sequence number since we only have one
         // instruction in flight at the same time.
         const InstSeqNum cur_sn(0);
-        t_info.predPC = thread->pcState();
+        set(t_info.predPC, thread->pcState());
         const bool predict_taken(
-            branchPred->predict(curStaticInst, cur_sn, t_info.predPC,
+            branchPred->predict(curStaticInst, cur_sn,
+                                t_info.predPC->as<TheISA::PCState>(),
                                 curThread));
 
         if (predict_taken)
@@ -386,8 +387,7 @@ BaseSimpleCPU::postExecute()
 
     assert(curStaticInst);
 
-    TheISA::PCState pc = threadContexts[curThread]->pcState();
-    Addr instAddr = pc.instAddr();
+    Addr instAddr = threadContexts[curThread]->pcState().instAddr();
 
     if (curStaticInst->isMemRef()) {
         t_info.execContextStats.numMemRefs++;
@@ -484,7 +484,7 @@ BaseSimpleCPU::advancePC(const Fault &fault)
         // instruction in flight at the same time.
         const InstSeqNum cur_sn(0);
 
-        if (t_info.predPC == thread->pcState()) {
+        if (t_info.predPC->as<TheISA::PCState>() == thread->pcState()) {
             // Correctly predicted branch
             branchPred->update(cur_sn, curThread);
         } else {
