@@ -715,13 +715,13 @@ Decode::decodeInsts(ThreadID tid)
         {
             ++stats.branchResolved;
 
-            if (*inst->branchTarget() != inst->readPredTarg()) {
+            std::unique_ptr<PCStateBase> target = inst->branchTarget();
+            if (*target != inst->readPredTarg()) {
                 ++stats.branchMispred;
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end
                 squash(inst, inst->threadNumber);
-                std::unique_ptr<PCStateBase> target = inst->branchTarget();
 
                 DPRINTF(Decode,
                         "[tid:%i] [sn:%llu] "
@@ -729,7 +729,7 @@ Decode::decodeInsts(ThreadID tid)
                         PredPC: %s\n",
                         tid, inst->seqNum, inst->readPredTarg(), *target);
                 //The micro pc after an instruction level branch should be 0
-                inst->setPredTarg(target->as<TheISA::PCState>());
+                inst->setPredTarg(*target);
                 break;
             }
         }

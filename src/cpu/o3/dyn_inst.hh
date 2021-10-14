@@ -75,13 +75,17 @@ namespace o3
 
 class DynInst : public ExecContext, public RefCounted
 {
+  private:
+    DynInst(const StaticInstPtr &staticInst, const StaticInstPtr &macroop,
+            InstSeqNum seq_num, CPU *cpu);
+
   public:
     // The list of instructions iterator type.
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
     /** BaseDynInst constructor given a binary instruction. */
     DynInst(const StaticInstPtr &staticInst, const StaticInstPtr
-            &macroop, TheISA::PCState pc, TheISA::PCState predPC,
+            &macroop, const PCStateBase &pc, const PCStateBase &pred_pc,
             InstSeqNum seq_num, CPU *cpu);
 
     /** BaseDynInst constructor given a static inst pointer. */
@@ -182,7 +186,7 @@ class DynInst : public ExecContext, public RefCounted
     std::queue<InstResult> instResult;
 
     /** PC state for this instruction. */
-    TheISA::PCState pc;
+    std::unique_ptr<PCStateBase> pc;
 
     /** Values to be written to the destination misc. registers. */
     std::vector<RegVal> _destMiscRegVal;
@@ -361,7 +365,7 @@ class DynInst : public ExecContext, public RefCounted
 
     ////////////////////// Branch Data ///////////////
     /** Predicted PC state after this instruction. */
-    TheISA::PCState predPC;
+    std::unique_ptr<PCStateBase> predPC;
 
     /** The Macroop if one exists */
     const StaticInstPtr macroop;
@@ -551,18 +555,22 @@ class DynInst : public ExecContext, public RefCounted
     bool doneTargCalc() { return false; }
 
     /** Set the predicted target of this current instruction. */
-    void setPredTarg(const TheISA::PCState &_predPC) { predPC = _predPC; }
+    void setPredTarg(const PCStateBase &pred_pc) { set(predPC, pred_pc); }
 
-    const TheISA::PCState &readPredTarg() { return predPC; }
+    const PCStateBase &readPredTarg() { return *predPC; }
 
     /** Returns the predicted PC immediately after the branch. */
-    Addr predInstAddr() { return predPC.instAddr(); }
+    Addr predInstAddr() { return predPC->instAddr(); }
 
     /** Returns the predicted PC two instructions after the branch */
-    Addr predNextInstAddr() { return predPC.nextInstAddr(); }
+    Addr
+    predNextInstAddr()
+    {
+        return predPC->as<TheISA::PCState>().nextInstAddr();
+    }
 
     /** Returns the predicted micro PC after the branch */
-    Addr predMicroPC() { return predPC.microPC(); }
+    Addr predMicroPC() { return predPC->microPC(); }
 
     /** Returns whether the instruction was predicted taken or not. */
     bool readPredTaken() { return instFlags[PredTaken]; }
@@ -577,9 +585,9 @@ class DynInst : public ExecContext, public RefCounted
     bool
     mispredicted()
     {
-        TheISA::PCState tempPC = pc;
-        staticInst->advancePC(tempPC);
-        return !(tempPC == predPC);
+        std::unique_ptr<PCStateBase> next_pc(pc->clone());
+        staticInst->advancePC(*next_pc);
+        return *next_pc != *predPC;
     }
 
     //
@@ -720,7 +728,7 @@ class DynInst : public ExecContext, public RefCounted
     std::unique_ptr<PCStateBase>
     branchTarget() const
     {
-        return staticInst->branchTarget(pc);
+        return staticInst->branchTarget(*pc);
     }
 
     /** Returns the number of source registers. */
@@ -941,19 +949,27 @@ class DynInst : public ExecContext, public RefCounted
     }
 
     /** Read the PC state of this instruction. */
-    TheISA::PCState pcState() const override { return pc; }
+    TheISA::PCState
+    pcState() const override
+    {
+        return pc->as<TheISA::PCState>();
+    }
 
     /** Set the PC state of this instruction. */
-    void pcState(const TheISA::PCState &val) override { pc = val; }
+    void pcState(const TheISA::PCState &val) override { set(pc, val); }
 
     /** Read the PC of this instruction. */
-    Addr instAddr() const { return pc.instAddr(); }
+    Addr instAddr() const { return pc->instAddr(); }
 
     /** Read the PC of the next instruction. */
-    Addr nextInstAddr() const { return pc.nextInstAddr(); }
+    Addr
+    nextInstAddr() const
+    {
+        return pc->as<TheISA::PCState>().nextInstAddr();
+    }
 
     /**Read the micro PC of this instruction. */
-    Addr microPC() const { return pc.microPC(); }
+    Addr microPC() const { return pc->microPC(); }
 
     bool readPredicate() const override { return instFlags[Predicate]; }
 

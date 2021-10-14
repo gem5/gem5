@@ -53,11 +53,10 @@ namespace o3
 {
 
 DynInst::DynInst(const StaticInstPtr &static_inst,
-        const StaticInstPtr &_macroop, TheISA::PCState _pc,
-        TheISA::PCState pred_pc, InstSeqNum seq_num, CPU *_cpu)
-    : seqNum(seq_num), staticInst(static_inst), cpu(_cpu), pc(_pc),
+        const StaticInstPtr &_macroop, InstSeqNum seq_num, CPU *_cpu)
+    : seqNum(seq_num), staticInst(static_inst), cpu(_cpu),
       regs(staticInst->numSrcRegs(), staticInst->numDestRegs()),
-      predPC(pred_pc), macroop(_macroop)
+      macroop(_macroop)
 {
     regs.init();
 
@@ -90,9 +89,18 @@ DynInst::DynInst(const StaticInstPtr &static_inst,
 
 }
 
+DynInst::DynInst(const StaticInstPtr &static_inst,
+        const StaticInstPtr &_macroop, const PCStateBase &_pc,
+        const PCStateBase &pred_pc, InstSeqNum seq_num, CPU *_cpu)
+    : DynInst(static_inst, _macroop, seq_num, _cpu)
+{
+    set(pc, _pc);
+    set(predPC, pred_pc);
+}
+
 DynInst::DynInst(const StaticInstPtr &_staticInst,
         const StaticInstPtr &_macroop)
-    : DynInst(_staticInst, _macroop, {}, {}, 0, nullptr)
+    : DynInst(_staticInst, _macroop, 0, nullptr)
 {}
 
 DynInst::~DynInst()
@@ -166,8 +174,8 @@ DynInst::dumpSNList()
 void
 DynInst::dump()
 {
-    cprintf("T%d : %#08d `", threadNumber, pc.instAddr());
-    std::cout << staticInst->disassemble(pc.instAddr());
+    cprintf("T%d : %#08d `", threadNumber, pc->instAddr());
+    std::cout << staticInst->disassemble(pc->instAddr());
     cprintf("'\n");
 }
 
@@ -175,8 +183,8 @@ void
 DynInst::dump(std::string &outstring)
 {
     std::ostringstream s;
-    s << "T" << threadNumber << " : 0x" << pc.instAddr() << " "
-      << staticInst->disassemble(pc.instAddr());
+    s << "T" << threadNumber << " : 0x" << pc->instAddr() << " "
+      << staticInst->disassemble(pc->instAddr());
 
     outstring = s.str();
 }

@@ -284,7 +284,7 @@ class Fetch
      * @param next_NPC Used for ISAs which use delay slots.
      * @return Whether or not a branch was predicted as taken.
      */
-    bool lookupAndUpdateNextPC(const DynInstPtr &inst, TheISA::PCState &pc);
+    bool lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &pc);
 
     /**
      * Fetches the cache line that contains the fetch PC.  Returns any
@@ -306,14 +306,14 @@ class Fetch
     bool checkInterrupt(Addr pc) { return interruptPending; }
 
     /** Squashes a specific thread and resets the PC. */
-    void doSquash(const TheISA::PCState &newPC,
-            const DynInstPtr squashInst, ThreadID tid);
+    void doSquash(const PCStateBase &new_pc, const DynInstPtr squashInst,
+            ThreadID tid);
 
     /** Squashes a specific thread and resets the PC. Also tells the CPU to
      * remove any instructions between fetch and decode
      *  that should be sqaushed.
      */
-    void squashFromDecode(const TheISA::PCState &newPC,
+    void squashFromDecode(const PCStateBase &new_pc,
                           const DynInstPtr squashInst,
                           const InstSeqNum seq_num, ThreadID tid);
 
@@ -329,7 +329,7 @@ class Fetch
      * remove any instructions that are not in the ROB. The source of this
      * squash should be the commit stage.
      */
-    void squash(const TheISA::PCState &newPC, const InstSeqNum seq_num,
+    void squash(const PCStateBase &new_pc, const InstSeqNum seq_num,
                 DynInstPtr squashInst, ThreadID tid);
 
     /** Ticks the fetch stage, processing all inputs signals and fetching
@@ -362,8 +362,8 @@ class Fetch
 
   private:
     DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,
-            StaticInstPtr curMacroop, TheISA::PCState thisPC,
-            TheISA::PCState nextPC, bool trace);
+            StaticInstPtr curMacroop, const PCStateBase &this_pc,
+            const PCStateBase &next_pc, bool trace);
 
     /** Returns the appropriate thread to fetch, given the fetch policy. */
     ThreadID getFetchingThread();
@@ -413,7 +413,7 @@ class Fetch
     /** BPredUnit. */
     branch_prediction::BPredUnit *branchPred;
 
-    TheISA::PCState pc[MaxThreads];
+    std::unique_ptr<PCStateBase> pc[MaxThreads];
 
     Addr fetchOffset[MaxThreads];
 

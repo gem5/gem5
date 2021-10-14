@@ -120,7 +120,7 @@ Commit::Commit(CPU *_cpu, const O3CPUParams &params)
         trapSquash[tid] = false;
         tcSquash[tid] = false;
         squashAfterInst[tid] = nullptr;
-        pc[tid].set(0);
+        pc[tid].reset(params.isa[0]->newPCState());
         youngestSeqNum[tid] = 0;
         lastCommitedSeqNum[tid] = 0;
         trapInFlight[tid] = false;
@@ -340,7 +340,7 @@ Commit::clearStates(ThreadID tid)
     committedStores[tid] = false;
     trapSquash[tid] = false;
     tcSquash[tid] = false;
-    pc[tid].set(0);
+    pc[tid].reset(cpu->tcBase(tid)->getIsaPtr()->newPCState());
     lastCommitedSeqNum[tid] = 0;
     squashAfterInst[tid] = NULL;
 }
@@ -382,7 +382,7 @@ Commit::isDrained() const
      *   address mappings. This can happen on for example x86.
      */
     for (ThreadID tid = 0; tid < numThreads; tid++) {
-        if (pc[tid].microPC() != 0)
+        if (pc[tid]->microPC() != 0)
             return false;
     }
 
@@ -561,7 +561,7 @@ Commit::squashAll(ThreadID tid)
     toIEW->commitInfo[tid].mispredictInst = NULL;
     toIEW->commitInfo[tid].squashInst = NULL;
 
-    toIEW->commitInfo[tid].pc = pc[tid];
+    set(toIEW->commitInfo[tid].pc, pc[tid]);
 }
 
 void
@@ -569,7 +569,7 @@ Commit::squashFromTrap(ThreadID tid)
 {
     squashAll(tid);
 
-    DPRINTF(Commit, "Squashing from trap, restarting at PC %s\n", pc[tid]);
+    DPRINTF(Commit, "Squashing from trap, restarting at PC %s\n", *pc[tid]);
 
     thread[tid]->trapPending = false;
     thread[tid]->noSquashFromTC = false;
@@ -586,7 +586,7 @@ Commit::squashFromTC(ThreadID tid)
 {
     squashAll(tid);
 
-    DPRINTF(Commit, "Squashing from TC, restarting at PC %s\n", pc[tid]);
+    DPRINTF(Commit, "Squashing from TC, restarting at PC %s\n", *pc[tid]);
 
     thread[tid]->noSquashFromTC = false;
     assert(!thread[tid]->trapPending);
@@ -601,7 +601,7 @@ void
 Commit::squashFromSquashAfter(ThreadID tid)
 {
     DPRINTF(Commit, "Squashing after squash after request, "
-            "restarting at PC %s\n", pc[tid]);
+            "restarting at PC %s\n", *pc[tid]);
 
     squashAll(tid);
     // Make sure to inform the fetch stage of which instruction caused
@@ -843,8 +843,7 @@ Commit::commit()
             }
 
             DPRINTF(Commit, "[tid:%i] Redirecting to PC %#x\n",
-                    tid,
-                    fromIEW->pc[tid].nextInstAddr());
+                    tid, *fromIEW->pc[tid]);
 
             commitStatus[tid] = ROBSquashing;
 
@@ -884,7 +883,7 @@ Commit::commit()
                 ++stats.branchMispredicts;
             }
 
-            toIEW->commitInfo[tid].pc = fromIEW->pc[tid];
+            set(toIEW->commitInfo[tid].pc, fromIEW->pc[tid]);
         }
 
         if (commitStatus[tid] == ROBSquashing) {
@@ -1014,7 +1013,7 @@ Commit::commitInsts()
             // Record that the number of ROB entries has changed.
             changedROBNumEntries[tid] = true;
         } else {
-            pc[tid] = head_inst->pcState();
+            set(pc[tid], head_inst->pcState());
 
             // Try to commit the head instruction.
             bool commit_success = commitHead(head_inst, num_committed);
@@ -1064,9 +1063,9 @@ Commit::commitInsts()
                     cpu->checker->verify(head_inst);
                 }
 
-                cpu->traceFunctions(pc[tid].instAddr());
+                cpu->traceFunctions(pc[tid]->instAddr());
 
-                head_inst->staticInst->advancePC(pc[tid]);
+                head_inst->staticInst->advancePC(*pc[tid]);
 
                 // Keep track of the last sequence number commited
                 lastCommitedSeqNum[tid] = head_inst->seqNum;
@@ -1077,12 +1076,12 @@ Commit::commitInsts()
                     squashAfter(tid, head_inst);
 
                 if (drainPending) {
-                    if (pc[tid].microPC() == 0 && interrupt == NoFault &&
+                    if (pc[tid]->microPC() == 0 && interrupt == NoFault &&
                         !thread[tid]->trapPending) {
                         // Last architectually committed instruction.
                         // Squash the pipeline, stall fetch, and use
                         // drainImminent to disable interrupts
-                        DPRINTF(Drain, "Draining: %i:%s\n", tid, pc[tid]);
+                        DPRINTF(Drain, "Draining: %i:%s\n", tid, *pc[tid]);
                         squashAfter(tid, head_inst);
                         cpu->commitDrained(tid);
                         drainImminent = true;
@@ -1101,11 +1100,11 @@ Commit::commitInsts()
                     assert(!thread[tid]->noSquashFromTC &&
                            !thread[tid]->trapPending);
                     do {
-                        oldpc = pc[tid].instAddr();
+                        oldpc = pc[tid]->instAddr();
                         thread[tid]->pcEventQueue.service(
                                 oldpc, thread[tid]->getTC());
                         count++;
-                    } while (oldpc != pc[tid].instAddr());
+                    } while (oldpc != pc[tid]->instAddr());
                     if (count > 1) {
                         DPRINTF(Commit,
                                 "PC skip function event, stopping commit\n");

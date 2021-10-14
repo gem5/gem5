@@ -94,7 +94,7 @@ struct IEWStruct
     DynInstPtr mispredictInst[MaxThreads];
     Addr mispredPC[MaxThreads];
     InstSeqNum squashedSeqNum[MaxThreads];
-    TheISA::PCState pc[MaxThreads];
+    std::unique_ptr<PCStateBase> pc[MaxThreads];
 
     bool squash[MaxThreads];
     bool branchMispredict[MaxThreads];
@@ -114,7 +114,7 @@ struct TimeStruct
 {
     struct DecodeComm
     {
-        TheISA::PCState nextPC;
+        std::unique_ptr<PCStateBase> nextPC;
         DynInstPtr mispredictInst;
         DynInstPtr squashInst;
         InstSeqNum doneSeqNum;
@@ -169,7 +169,7 @@ struct TimeStruct
         /// The pc of the next instruction to execute. This is the next
         /// instruction for a branch mispredict, but the same instruction for
         /// order violation and the like
-        TheISA::PCState pc; // *F
+        std::unique_ptr<PCStateBase> pc; // *F
 
         /// Provide fetch the instruction that mispredicted, if this
         /// pointer is not-null a misprediction occured

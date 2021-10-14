@@ -120,7 +120,7 @@ Fetch::Fetch(CPU *_cpu, const O3CPUParams &params)
     for (int i = 0; i < MaxThreads; i++) {
         fetchStatus[i] = Idle;
         decoder[i] = nullptr;
-        pc[i].set(0);
+        pc[i].reset(params.isa[0]->newPCState());
         fetchOffset[i] = 0;
         macroop[i] = nullptr;
         delayedCommit[i] = false;
@@ -299,7 +299,7 @@ void
 Fetch::clearStates(ThreadID tid)
 {
     fetchStatus[tid] = Running;
-    pc[tid] = cpu->pcState(tid);
+    set(pc[tid], cpu->pcState(tid));
     fetchOffset[tid] = 0;
     macroop[tid] = NULL;
     delayedCommit[tid] = false;
@@ -326,7 +326,7 @@ Fetch::resetStage()
     // Setup PC and nextPC with initial state.
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
         fetchStatus[tid] = Running;
-        pc[tid] = cpu->pcState(tid);
+        set(pc[tid], cpu->pcState(tid));
         fetchOffset[tid] = 0;
         macroop[tid] = NULL;
 
@@ -508,7 +508,7 @@ Fetch::deactivateThread(ThreadID tid)
 }
 
 bool
-Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, TheISA::PCState &nextPC)
+Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
 {
     // Do branch prediction check here.
     // A bit of a misnomer...next_PC is actually the current PC until
@@ -516,20 +516,20 @@ Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, TheISA::PCState &nextPC)
     bool predict_taken;
 
     if (!inst->isControl()) {
-        inst->staticInst->advancePC(nextPC);
-        inst->setPredTarg(nextPC);
+        inst->staticInst->advancePC(next_pc);
+        inst->setPredTarg(next_pc);
         inst->setPredTaken(false);
         return false;
     }
 
     ThreadID tid = inst->threadNumber;
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
-                                        nextPC, tid);
+                                        next_pc.as<TheISA::PCState>(), tid);
 
     if (predict_taken) {
         DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
                 "predicted to be taken to %s\n",
-                tid, inst->seqNum, inst->pcState().instAddr(), nextPC);
+                tid, inst->seqNum, inst->pcState().instAddr(), next_pc);
     } else {
         DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
                 "predicted to be not taken\n",
@@ -538,8 +538,8 @@ Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, TheISA::PCState &nextPC)
 
     DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
             "predicted to go to %s\n",
-            tid, inst->seqNum, inst->pcState().instAddr(), nextPC);
-    inst->setPredTarg(nextPC);
+            tid, inst->seqNum, inst->pcState().instAddr(), next_pc);
+    inst->setPredTarg(next_pc);
     inst->setPredTaken(predict_taken);
 
     ++fetchStats.branches;
@@ -683,15 +683,15 @@ Fetch::finishTranslation(const Fault &fault, const RequestPtr &mem_req)
         // Send the fault to commit.  This thread will not do anything
         // until commit handles the fault.  The only other way it can
         // wake up is if a squash comes along and changes the PC.
-        TheISA::PCState fetchPC = pc[tid];
+        const PCStateBase &fetch_pc = *pc[tid];
 
         DPRINTF(Fetch, "[tid:%i] Translation faulted, building noop.\n", tid);
         // We will use a nop in ordier to carry the fault.
         DynInstPtr instruction = buildInst(tid, nopStaticInstPtr, nullptr,
-                fetchPC, fetchPC, false);
+                fetch_pc, fetch_pc, false);
         instruction->setNotAnInst();
 
-        instruction->setPredTarg(fetchPC);
+        instruction->setPredTarg(fetch_pc);
         instruction->fault = fault;
         wroteToTimeBuffer = true;
 
@@ -702,21 +702,21 @@ Fetch::finishTranslation(const Fault &fault, const RequestPtr &mem_req)
 
         DPRINTF(Fetch, "[tid:%i] Blocked, need to handle the trap.\n", tid);
         DPRINTF(Fetch, "[tid:%i] fault (%s) detected @ PC %s.\n",
-                tid, fault->name(), pc[tid]);
+                tid, fault->name(), *pc[tid]);
     }
     _status = updateFetchStatus();
 }
 
 void
-Fetch::doSquash(const TheISA::PCState &newPC, const DynInstPtr squashInst,
+Fetch::doSquash(const PCStateBase &new_pc, const DynInstPtr squashInst,
         ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%i] Squashing, setting PC to: %s.\n",
-            tid, newPC);
+            tid, new_pc);
 
-    pc[tid] = newPC;
+    set(pc[tid], new_pc);
     fetchOffset[tid] = 0;
-    if (squashInst && squashInst->pcState().instAddr() == newPC.instAddr())
+    if (squashInst && squashInst->pcState().instAddr() == new_pc.instAddr())
         macroop[tid] = squashInst->macroop;
     else
         macroop[tid] = NULL;
@@ -759,12 +759,12 @@ Fetch::doSquash(const TheISA::PCState &newPC, const DynInstPtr squashInst,
 }
 
 void
-Fetch::squashFromDecode(const TheISA::PCState &newPC,
-        const DynInstPtr squashInst, const InstSeqNum seq_num, ThreadID tid)
+Fetch::squashFromDecode(const PCStateBase &new_pc, const DynInstPtr squashInst,
+        const InstSeqNum seq_num, ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%i] Squashing from decode.\n", tid);
 
-    doSquash(newPC, squashInst, tid);
+    doSquash(new_pc, squashInst, tid);
 
     // Tell the CPU to remove any instructions that are in flight between
     // fetch and decode.
@@ -825,12 +825,12 @@ Fetch::updateFetchStatus()
 }
 
 void
-Fetch::squash(const TheISA::PCState &newPC, const InstSeqNum seq_num,
+Fetch::squash(const PCStateBase &new_pc, const InstSeqNum seq_num,
         DynInstPtr squashInst, ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%i] Squash from commit.\n", tid);
 
-    doSquash(newPC, squashInst, tid);
+    doSquash(new_pc, squashInst, tid);
 
     // Tell the CPU to remove any instructions that are not in the ROB.
     cpu->removeInstsNotInROB(tid);
@@ -958,7 +958,7 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
         DPRINTF(Fetch, "[tid:%i] Squashing instructions due to squash "
                 "from commit.\n",tid);
         // In any case, squash.
-        squash(fromCommit->commitInfo[tid].pc,
+        squash(*fromCommit->commitInfo[tid].pc,
                fromCommit->commitInfo[tid].doneSeqNum,
                fromCommit->commitInfo[tid].squashInst, tid);
 
@@ -968,9 +968,8 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
         if (fromCommit->commitInfo[tid].mispredictInst &&
             fromCommit->commitInfo[tid].mispredictInst->isControl()) {
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
-                              fromCommit->commitInfo[tid].pc,
-                              fromCommit->commitInfo[tid].branchTaken,
-                              tid);
+                    fromCommit->commitInfo[tid].pc->as<TheISA::PCState>(),
+                    fromCommit->commitInfo[tid].branchTaken, tid);
         } else {
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                               tid);
@@ -991,9 +990,8 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
         // Update the branch predictor.
         if (fromDecode->decodeInfo[tid].branchMispredict) {
             branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,
-                              fromDecode->decodeInfo[tid].nextPC,
-                              fromDecode->decodeInfo[tid].branchTaken,
-                              tid);
+                    fromDecode->decodeInfo[tid].nextPC->as<TheISA::PCState>(),
+                    fromDecode->decodeInfo[tid].branchTaken, tid);
         } else {
             branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,
                               tid);
@@ -1002,9 +1000,9 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
         if (fetchStatus[tid] != Squashing) {
 
             DPRINTF(Fetch, "Squashing from decode with PC = %s\n",
-                fromDecode->decodeInfo[tid].nextPC);
+                *fromDecode->decodeInfo[tid].nextPC);
             // Squash unless we're already squashing
-            squashFromDecode(fromDecode->decodeInfo[tid].nextPC,
+            squashFromDecode(*fromDecode->decodeInfo[tid].nextPC,
                              fromDecode->decodeInfo[tid].squashInst,
                              fromDecode->decodeInfo[tid].doneSeqNum,
                              tid);
@@ -1044,32 +1042,30 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
 
 DynInstPtr
 Fetch::buildInst(ThreadID tid, StaticInstPtr staticInst,
-        StaticInstPtr curMacroop, TheISA::PCState thisPC,
-        TheISA::PCState nextPC, bool trace)
+        StaticInstPtr curMacroop, const PCStateBase &this_pc,
+        const PCStateBase &next_pc, bool trace)
 {
     // Get a sequence number.
     InstSeqNum seq = cpu->getAndIncrementInstSeq();
 
     // Create a new DynInst from the instruction fetched.
     DynInstPtr instruction =
-        new DynInst(staticInst, curMacroop, thisPC, nextPC, seq, cpu);
+        new DynInst(staticInst, curMacroop, this_pc, next_pc, seq, cpu);
     instruction->setTid(tid);
 
     instruction->setThreadState(cpu->thread[tid]);
 
-    DPRINTF(Fetch, "[tid:%i] Instruction PC %#x (%d) created "
-            "[sn:%lli].\n", tid, thisPC.instAddr(),
-            thisPC.microPC(), seq);
+    DPRINTF(Fetch, "[tid:%i] Instruction PC %s created [sn:%lli].\n",
+            tid, this_pc, seq);
 
     DPRINTF(Fetch, "[tid:%i] Instruction is: %s\n", tid,
-            instruction->staticInst->
-            disassemble(thisPC.instAddr()));
+            instruction->staticInst->disassemble(this_pc.instAddr()));
 
 #if TRACING_ON
     if (trace) {
         instruction->traceData =
             cpu->getTracer()->getInstRecord(curTick(), cpu->tcBase(tid),
-                    instruction->staticInst, thisPC, curMacroop);
+                    instruction->staticInst, this_pc, curMacroop);
     }
 #else
     instruction->traceData = NULL;
@@ -1117,12 +1113,12 @@ Fetch::fetch(bool &status_change)
     DPRINTF(Fetch, "Attempting to fetch from [tid:%i]\n", tid);
 
     // The current PC.
-    TheISA::PCState thisPC = pc[tid];
+    PCStateBase &this_pc = *pc[tid];
 
     Addr pcOffset = fetchOffset[tid];
-    Addr fetchAddr = (thisPC.instAddr() + pcOffset) & decoder[tid]->pcMask();
+    Addr fetchAddr = (this_pc.instAddr() + pcOffset) & decoder[tid]->pcMask();
 
-    bool inRom = isRomMicroPC(thisPC.microPC());
+    bool inRom = isRomMicroPC(this_pc.microPC());
 
     // If returning from the delay of a cache miss, then update the status
     // to running, otherwise do the cache access.  Possibly move this up
@@ -1143,9 +1139,9 @@ Fetch::fetch(bool &status_change)
                     fetchBufferBlockPC == fetchBufferPC[tid]) && !inRom &&
                 !macroop[tid]) {
             DPRINTF(Fetch, "[tid:%i] Attempting to translate and read "
-                    "instruction, starting at PC %s.\n", tid, thisPC);
+                    "instruction, starting at PC %s.\n", tid, this_pc);
 
-            fetchCacheLine(fetchAddr, tid, thisPC.instAddr());
+            fetchCacheLine(fetchAddr, tid, this_pc.instAddr());
 
             if (fetchStatus[tid] == IcacheWaitResponse)
                 ++fetchStats.icacheStallCycles;
@@ -1154,7 +1150,8 @@ Fetch::fetch(bool &status_change)
             else
                 ++fetchStats.miscStallCycles;
             return;
-        } else if (checkInterrupt(thisPC.instAddr()) && !delayedCommit[tid]) {
+        } else if (checkInterrupt(this_pc.instAddr()) &&
+                !delayedCommit[tid]) {
             // Stall CPU if an interrupt is posted and we're not issuing
             // an delayed commit micro-op currently (delayed commit
             // instructions are not interruptable by interrupts, only faults)
@@ -1174,7 +1171,7 @@ Fetch::fetch(bool &status_change)
 
     ++fetchStats.cycles;
 
-    TheISA::PCState nextPC = thisPC;
+    std::unique_ptr<PCStateBase> next_pc(this_pc.clone());
 
     StaticInstPtr staticInst = NULL;
     StaticInstPtr curMacroop = macroop[tid];
@@ -1208,7 +1205,7 @@ Fetch::fetch(bool &status_change)
         // StaticInst from the rom, the current macroop, or what's already
         // in the decoder.
         bool needMem = !inRom && !curMacroop && !dec_ptr->instReady();
-        fetchAddr = (thisPC.instAddr() + pcOffset) & pc_mask;
+        fetchAddr = (this_pc.instAddr() + pcOffset) & pc_mask;
         Addr fetchBufferBlockPC = fetchBufferAlignPC(fetchAddr);
 
         if (needMem) {
@@ -1226,7 +1223,7 @@ Fetch::fetch(bool &status_change)
 
             memcpy(dec_ptr->moreBytesPtr(),
                     fetchBuffer[tid] + blkOffset * instSize, instSize);
-            decoder[tid]->moreBytes(thisPC, fetchAddr);
+            decoder[tid]->moreBytes(this_pc.as<TheISA::PCState>(), fetchAddr);
 
             if (dec_ptr->needMoreBytes()) {
                 blkOffset++;
@@ -1240,7 +1237,8 @@ Fetch::fetch(bool &status_change)
         do {
             if (!(curMacroop || inRom)) {
                 if (dec_ptr->instReady()) {
-                    staticInst = dec_ptr->decode(thisPC);
+                    staticInst = dec_ptr->decode(
+                            this_pc.as<TheISA::PCState>());
 
                     // Increment stat of fetched instructions.
                     ++fetchStats.insts;
@@ -1263,15 +1261,15 @@ Fetch::fetch(bool &status_change)
             if (curMacroop || inRom) {
                 if (inRom) {
                     staticInst = dec_ptr->fetchRomMicroop(
-                            thisPC.microPC(), curMacroop);
+                            this_pc.microPC(), curMacroop);
                 } else {
-                    staticInst = curMacroop->fetchMicroop(thisPC.microPC());
+                    staticInst = curMacroop->fetchMicroop(this_pc.microPC());
                 }
                 newMacro |= staticInst->isLastMicroop();
             }
 
-            DynInstPtr instruction =
-                buildInst(tid, staticInst, curMacroop, thisPC, nextPC, true);
+            DynInstPtr instruction = buildInst(
+                    tid, staticInst, curMacroop, this_pc, *next_pc, true);
 
             ppFetch->notify(instruction);
             numInst++;
@@ -1282,25 +1280,24 @@ Fetch::fetch(bool &status_change)
             }
 #endif
 
-            nextPC = thisPC;
+            set(next_pc, this_pc);
 
             // If we're branching after this instruction, quit fetching
             // from the same block.
-            predictedBranch |= thisPC.branching();
-            predictedBranch |=
-                lookupAndUpdateNextPC(instruction, nextPC);
+            predictedBranch |= this_pc.as<TheISA::PCState>().branching();
+            predictedBranch |= lookupAndUpdateNextPC(instruction, *next_pc);
             if (predictedBranch) {
-                DPRINTF(Fetch, "Branch detected with PC = %s\n", thisPC);
+                DPRINTF(Fetch, "Branch detected with PC = %s\n", this_pc);
             }
 
-            newMacro |= thisPC.instAddr() != nextPC.instAddr();
+            newMacro |= this_pc.instAddr() != next_pc->instAddr();
 
             // Move to the next instruction, unless we have a branch.
-            thisPC = nextPC;
-            inRom = isRomMicroPC(thisPC.microPC());
+            set(this_pc, *next_pc);
+            inRom = isRomMicroPC(this_pc.microPC());
 
             if (newMacro) {
-                fetchAddr = thisPC.instAddr() & pc_mask;
+                fetchAddr = this_pc.instAddr() & pc_mask;
                 blkOffset = (fetchAddr - fetchBufferPC[tid]) / instSize;
                 pcOffset = 0;
                 curMacroop = NULL;
@@ -1320,7 +1317,7 @@ Fetch::fetch(bool &status_change)
 
         // Re-evaluate whether the next instruction to fetch is in micro-op ROM
         // or not.
-        inRom = isRomMicroPC(thisPC.microPC());
+        inRom = isRomMicroPC(this_pc.microPC());
     }
 
     if (predictedBranch) {
@@ -1341,11 +1338,9 @@ Fetch::fetch(bool &status_change)
         wroteToTimeBuffer = true;
     }
 
-    pc[tid] = thisPC;
-
     // pipeline a fetch if we're crossing a fetch buffer boundary and not in
     // a state that would preclude fetching
-    fetchAddr = (thisPC.instAddr() + pcOffset) & pc_mask;
+    fetchAddr = (this_pc.instAddr() + pcOffset) & pc_mask;
     Addr fetchBufferBlockPC = fetchBufferAlignPC(fetchAddr);
     issuePipelinedIfetch[tid] = fetchBufferBlockPC != fetchBufferPC[tid] &&
         fetchStatus[tid] != IcacheWaitResponse &&
@@ -1535,14 +1530,14 @@ Fetch::pipelineIcacheAccesses(ThreadID tid)
     }
 
     // The next PC to access.
-    TheISA::PCState thisPC = pc[tid];
+    const PCStateBase &this_pc = *pc[tid];
 
-    if (isRomMicroPC(thisPC.microPC())) {
+    if (isRomMicroPC(this_pc.microPC())) {
         return;
     }
 
     Addr pcOffset = fetchOffset[tid];
-    Addr fetchAddr = (thisPC.instAddr() + pcOffset) & decoder[tid]->pcMask();
+    Addr fetchAddr = (this_pc.instAddr() + pcOffset) & decoder[tid]->pcMask();
 
     // Align the fetch PC so its at the start of a fetch buffer segment.
     Addr fetchBufferBlockPC = fetchBufferAlignPC(fetchAddr);
@@ -1550,9 +1545,9 @@ Fetch::pipelineIcacheAccesses(ThreadID tid)
     // Unless buffer already got the block, fetch it from icache.
     if (!(fetchBufferValid[tid] && fetchBufferBlockPC == fetchBufferPC[tid])) {
         DPRINTF(Fetch, "[tid:%i] Issuing a pipelined I-cache access, "
-                "starting at PC %s.\n", tid, thisPC);
+                "starting at PC %s.\n", tid, this_pc);
 
-        fetchCacheLine(fetchAddr, tid, thisPC.instAddr());
+        fetchCacheLine(fetchAddr, tid, this_pc.instAddr());
     }
 }
 

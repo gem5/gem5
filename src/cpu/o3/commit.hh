@@ -306,20 +306,23 @@ class Commit
 
   public:
     /** Reads the PC of a specific thread. */
-    TheISA::PCState pcState(ThreadID tid) { return pc[tid]; }
+    const PCStateBase &pcState(ThreadID tid) { return *pc[tid]; }
 
     /** Sets the PC of a specific thread. */
-    void pcState(const TheISA::PCState &val, ThreadID tid)
-    { pc[tid] = val; }
+    void pcState(const PCStateBase &val, ThreadID tid) { set(pc[tid], val); }
 
     /** Returns the PC of a specific thread. */
-    Addr instAddr(ThreadID tid) { return pc[tid].instAddr(); }
+    Addr instAddr(ThreadID tid) { return pc[tid]->instAddr(); }
 
     /** Returns the next PC of a specific thread. */
-    Addr nextInstAddr(ThreadID tid) { return pc[tid].nextInstAddr(); }
+    Addr
+    nextInstAddr(ThreadID tid)
+    {
+        return pc[tid]->as<TheISA::PCState>().nextInstAddr();
+    }
 
     /** Reads the micro PC of a specific thread. */
-    Addr microPC(ThreadID tid) { return pc[tid].microPC(); }
+    Addr microPC(ThreadID tid) { return pc[tid]->microPC(); }
 
   private:
     /** Time buffer interface. */
@@ -431,7 +434,7 @@ class Commit
     /** The commit PC state of each thread.  Refers to the instruction that
      * is currently being processed/committed.
      */
-    TheISA::PCState pc[MaxThreads];
+    std::unique_ptr<PCStateBase> pc[MaxThreads];
 
     /** The sequence number of the youngest valid instruction in the ROB. */
     InstSeqNum youngestSeqNum[MaxThreads];

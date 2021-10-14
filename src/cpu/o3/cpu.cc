@@ -1310,7 +1310,7 @@ CPU::setArchCCReg(int reg_idx, RegVal val, ThreadID tid)
 TheISA::PCState
 CPU::pcState(ThreadID tid)
 {
-    return commit.pcState(tid);
+    return commit.pcState(tid).as<TheISA::PCState>();
 }
 
 void
