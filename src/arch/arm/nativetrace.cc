@@ -142,7 +142,7 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
     ThreadContext *tc = record->getThread();
     // This area is read only on the target. It can't stop there to tell us
     // what's going on, so we should skip over anything there also.
-    if (tc->nextInstAddr() > 0xffff0000)
+    if (tc->pcState().npc() > 0xffff0000)
         return;
     nState.update(this);
     mState.update(tc);

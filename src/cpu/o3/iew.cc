@@ -1602,17 +1602,12 @@ IEW::checkMisprediction(const DynInstPtr& inst)
 
             DPRINTF(IEW, "[tid:%i] [sn:%llu] Execute: "
                     "Branch mispredict detected.\n",
-                    tid,inst->seqNum);
-            DPRINTF(IEW, "[tid:%i] [sn:%llu] Predicted target "
-                    "was PC:%#x, NPC:%#x\n",
-                    tid,inst->seqNum,
-                    inst->predInstAddr(), inst->predNextInstAddr());
+                    tid, inst->seqNum);
+            DPRINTF(IEW, "[tid:%i] [sn:%llu] Predicted target was PC: %s\n",
+                    tid, inst->seqNum, inst->readPredTarg());
             DPRINTF(IEW, "[tid:%i] [sn:%llu] Execute: "
-                    "Redirecting fetch to PC: %#x, "
-                    "NPC: %#x.\n",
-                    tid,inst->seqNum,
-                    inst->nextInstAddr(),
-                    inst->nextInstAddr());
+                    "Redirecting fetch to PC: %s\n",
+                    tid, inst->seqNum, inst->pcState());
             // If incorrect, then signal the ROB that it must be squashed.
             squashDueToBranch(inst, tid);
 
