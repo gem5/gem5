@@ -213,12 +213,12 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
             DPRINTF(Checker, "Changed PC recently to %s\n",
                     thread->pcState());
             if (willChangePC) {
-                if (newPCState == thread->pcState()) {
+                if (*newPCState == thread->pcState()) {
                     DPRINTF(Checker, "Changed PC matches expected PC\n");
                 } else {
                     warn("%lli: Changed PC does not match expected PC, "
                          "changed: %s, expected: %s",
-                         curTick(), thread->pcState(), newPCState);
+                         curTick(), thread->pcState(), *newPCState);
                     CheckerCPU::handleError();
                 }
                 willChangePC = false;
@@ -386,8 +386,8 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
             if (FullSystem) {
                 fault->invoke(tc, curStaticInst);
                 willChangePC = true;
-                newPCState = thread->pcState();
-                DPRINTF(Checker, "Fault, PC is now %s\n", newPCState);
+                set(newPCState, thread->pcState());
+                DPRINTF(Checker, "Fault, PC is now %s\n", *newPCState);
                 curMacroStaticInst = nullStaticInstPtr;
             }
         } else {
@@ -407,8 +407,8 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
             } while (oldpc != thread->instAddr());
             if (count > 1) {
                 willChangePC = true;
-                newPCState = thread->pcState();
-                DPRINTF(Checker, "PC Event, PC is now %s\n", newPCState);
+                set(newPCState, thread->pcState());
+                DPRINTF(Checker, "PC Event, PC is now %s\n", *newPCState);
             }
         }
 
